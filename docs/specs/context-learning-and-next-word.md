@@ -274,11 +274,11 @@ words each asset lists).
 - **`ScoreBreakdown`** carries every component + `ContextWinner` (STATIC/LEARNED/NONE — which
   context model actually supplied the applied signal).
 - **`SuggestionMeta(origin, breakdown?, note?)`** rides alongside the bar's parallel
-  words/scores lists; breakdown is non-null only for the dictionary-prefix path (decoder
-  confidence / learned-LM probability / injections are scored elsewhere).
-- **Long-press** any suggestion → provenance popup (`ProvenanceFormatter.format`): origin
-  label, bar score, origin-specific note, full score-component list, and
-  `PersonalizationEngine.explainBoost()` text.
+  words/scores lists. `note` is a structured `ProvenanceNote`, never a rendered sentence;
+  breakdown is non-null only for the dictionary-prefix path.
+- **Long-press** any suggestion → provenance popup (`ProvenanceFormatter.format`). The Android
+  layer passes resource-resolved labels/templates plus structured personalization fields, so
+  origin labels, notes, score components, and usage details all follow the active locale.
 - **Origin markers** (opt-in, `suggestion_provenance_markers`, default OFF, Advanced
   section): colored dot per suggestion keyed by origin. Long-press inspection is always
   available regardless.

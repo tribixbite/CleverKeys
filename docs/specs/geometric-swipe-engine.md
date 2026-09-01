@@ -613,16 +613,26 @@ QWERTY CLEAN top-3 98.1→95.6% (< 0.97) and the tail-canary gap 0.05→0.11 (> 
 min-over-window relaxes clean-trace location discrimination, exactly why v1 dropped it
 (OQ-1). Knob retained OFF for future gated/calibrated experiments.
 
-**FINAL measured (N=32 defaults, full grid 500×K=5):**
+**CURRENT measured (N=32 defaults, full grid 500×K=5):**
+
+The fr/de/ru rows were re-measured on 2026-07-20 after the evidence-classifier
+dictionary regeneration (fr/de 25k→40k; ru re-curated at 50k). The executable source of
+truth is `GeoAccuracyThresholds.kt`; unlike the historical table previously printed here,
+these figures describe the dictionaries now shipped.
+
 ```
   layout      CLEAN t1/t3   TYPICAL t1/t3/t5    SLOPPY t1/t3/t5     recall C/T/S
   en/QWERTY   87.2/98.2     83.4/95.9/98.2      63.8/80.7/85.7      100/99.3/96.5
-  ru/JCUKEN   94.5/99.6     91.3/98.5/98.9      75.2/89.8/92.7      100/99.0/96.9
+  ru/JCUKEN   95.3/100.0    91.2/98.4/99.0      75.6/90.1/93.4      100/99.2/97.6
   en/Dvorak   ~85/97.7      78.0/93.8/96.5      56.4/75.8/81.7      ~100/99/93
   en/weird    ~88/99.0      81.0/94.6/96.6      51.9/68.5/74.3       98/99/88
-  fr/AZERTY   86.2/98.5     80.8/96.8/98.6      64.4/85.5/90.0        –/99.8/–
-  de/QWERTZ   91.2/99.6     86.4/98.3/99.3      71.0/88.8/93.2        –/99.8/–
+  fr/AZERTY   87.3/98.7     81.4/95.7/98.2      60.9/80.6/86.8        –/99.6/–
+  de/QWERTZ   91.1/98.9     85.7/97.6/99.2      70.0/86.9/92.2        –/99.8/–
 ```
+
+Historical pre-regeneration rows retained for triage context: fr `86.2/98.5 ·
+80.8/96.8/98.6 · 64.4/85.5/90.0`; de `91.2/99.6 · 86.4/98.3/99.3 ·
+71.0/88.8/93.2`; ru `94.5/99.6 · 91.3/98.5/98.9 · 75.2/89.8/92.7`.
 
 **Floor outcomes.**
 - **en/weird → documented per-layout fixture floor** `WEIRD_SLOPPY_TOP3 = 0.66` (measured
@@ -697,8 +707,9 @@ of the synthetic Dvorak KNOWN PARTIAL.
 - **Corpus**: `scripts/fetch_futo_multilayout_sample.mjs` pulls ALL rows for each layout
   via the datasets-server `/filter` API (`dual_finger=0 AND language=<mapped>`), writing
   per-layout `~/.cache/cleverkeys-test/futo_swipe5_<layout>.jsonl.gz` (NOT committed; the
-  SCRIPT is the artifact). Dictionary mapping: dvorak→en (98k), azerty→fr (25k), qwertz &
-  german→de (25k), spanish→es (50k).
+  SCRIPT is the artifact). Dictionary mapping: dvorak→en (98k), azerty→fr (40k), qwertz &
+  german→de (40k), spanish→es (50k). The original run used 25k fr/de dictionaries; the
+  regeneration note below gives the current fixed-sample replay.
 - **Geometry**: the OFFICIAL FUTO per-layout `swipe-5/layouts/<layout>.json`, committed at
   `src/test/resources/layouts/futo_<layout>.json` (26–29 keys incl. `'` / ä ö ü / ñ; NO
   bottom row). The Dvorak geometry is a 4-row FUTO canvas (`q`/`z` on a separate low row,
@@ -707,8 +718,16 @@ of the synthetic Dvorak KNOWN PARTIAL.
 - **Coverage & projection**: decoded only if BOTH in-dictionary AND projectable. Accents
   (é/ä/ñ) project via the engine's NFD/alias tiers (kept). `ß` has NO NFD decomposition and
   no key on german/qwertz → untypeable → counted+reported (0 hit the decode set in this
-  sample; azerty's only proj-fail was 1 `œ`). The smaller 25k fr/de dicts show lower
-  coverage (OOV 84–87%) than en's 98k (96%) / es's 50k (93%) — reported prominently below.
+  sample; azerty's only proj-fail was 1 `œ`). The current 40k fr/de dictionaries improve
+  coverage over the historical 25k run; exact current values are recorded below.
+
+> **Historical pre-regeneration A/B table.** The table below is the original fixed-sample
+> experiment and remains useful for the A-vs-B tuning comparison, but its fr/de coverage
+> and accuracy are not current-dictionary claims. The 40k rerun recorded in
+> `GeoRealCorpusMultiLayoutTest` reports current A headlines: azerty
+> `76.9/89.9/93.7` (89.6% coverage), qwertz `76.2/87.4/90.6` (87.5%), german
+> `71.1/81.7/84.3` (87.9%), and spanish `73.9/86.6/89.8` (93.3%). Dvorak/en is
+> unchanged. The same test retains the per-layout A≥B−1 point guard.
 
 **A/B on 10 429 in-dict real traces (A = shipped defaults, B = pre-fix
 endpointInset=0/dirPenalty=0/cap=800):**
@@ -769,16 +788,15 @@ inputs (neural side NOT implemented here — that is the Phase-7 / WP9 bridge).
   the shipped en dictionary carries ZERO apostrophe words → apostrophe words are untypeable
   by construction.
 - **Geometry source (repo-authoritative, NOT srcs/layouts XML)**: the `qwerty_english` grid
-  per-key PIXEL centroids from `tools/test_cli_predict.py` / `.ts` (`QWERTY_KEYS`), identical
-  to the `KeyboardGrid` derived from `model/train_character_model.py`'s
-  `data/data_preprocessed/gridname_to_grid.json`. 26 letter keys on a 36 px horizontal /
-  59 px vertical pitch, NO bottom row. Transcribed verbatim into the test's
-  `QWERTY_ENGLISH_KEYS`; centroids normalized to [0,1] over the canvas.
+  per-key PIXEL centroids from `src/test/resources/layouts/qwerty_english_pixels.csv`,
+  extracted from the retired neural CLI and identical to the training repo grid JSON.
+  26 letter keys use a 36 px horizontal / 59 px vertical pitch with no bottom row.
+  `GeoLocalCorpusReplayTest` loads and validates the fixture before decoding.
 - **Canvas reconciliation (evidence-checked, per the GEOMETRY CAUTION)**: measured extents
   across all 8,607 traces are x ∈ [0.87, 360.00], y ∈ [0.00, 215.00] → canonical canvas is
-  **360 × 215 px**. The `/280` divisor in `test_cli_predict.py` is an unrelated NEURAL-input
+  **360 × 215 px**. The retired neural runner's `/280` divisor was an unrelated model-input
   squash, not the geometric coordinate frame, and is deliberately ignored. Two independent
-  geometry sanity checks were run BEFORE the full grid:
+  geometry sanity checks were run before the full grid:
   - **START-key nearest-match 73.1% / END-key 66.4%** — much lower than FUTO's 94.7% start,
     BUT the median start-point distance to the true first-key centroid is only **14.3 px**
     (< the 36 px key pitch) and misses are to ADJACENT keys (`d`→`f`, `e`→`r`). This is

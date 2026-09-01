@@ -762,18 +762,56 @@ private fun LangSubgroup(
     }
 }
 
+@Composable
+private fun LearnedDataPreviewCard(learned: LearnedDataImportPlan) {
+    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = stringResource(R.string.import_preview_learned_title),
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = stringResource(R.string.import_preview_learned_desc),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (learned.bigramEntries > 0) {
+                Text(
+                    stringResource(
+                        R.string.import_preview_learned_bigrams,
+                        learned.bigramEntries,
+                    ),
+                    fontSize = 12.sp,
+                )
+            }
+            if (learned.trigramEntries > 0) {
+                Text(
+                    stringResource(
+                        R.string.import_preview_learned_trigrams,
+                        learned.trigramEntries,
+                    ),
+                    fontSize = 12.sp,
+                )
+            }
+            if (learned.vocabularyPresent) {
+                Text(
+                    stringResource(
+                        R.string.import_preview_learned_vocabulary,
+                        learned.vocabularyWords,
+                    ),
+                    fontSize = 12.sp,
+                )
+            }
+        }
+    }
+}
+
 /**
  * Top-level entry point for the dictionary import preview.
  *
- * onApply receives two exclusion sets — one for custom-word LangWords, one
- * for disabled-word LangWords. Empty sets + tapping Apply imports the full
- * delta; non-empty sets uncheck individual words within the deltas.
- *
- * Per-language sections start collapsed; expand reveals two LazyColumn
- * sub-groups (Custom / Disabled) each with their own search field. The
- * language-header checkbox is 2-state with a "X of Y selected" badge —
- * NOT Material's TriStateCheckbox (which would destroy cherry-picked
- * deselections on tap).
+ * Custom and disabled words remain individually selectable. Learned-data rows are a
+ * non-selectable group: phrase counts merge and the personal vocabulary replaces its current
+ * list, exactly as stated in the card rendered above the language sections.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -788,7 +826,7 @@ fun DictionaryImportPreviewDialog(
     val totalCustom = plan.perLanguage.values.sumOf { it.newCustomWords.size }
     val totalDisabled = plan.perLanguage.values.sumOf { it.newDisabledWords.size }
     val applyCount = (totalCustom - excludedCustom.value.size) +
-        (totalDisabled - excludedDisabled.value.size)
+        (totalDisabled - excludedDisabled.value.size) + plan.learnedData.totalEntries
 
     Dialog(
         onDismissRequest = onCancel,
@@ -818,6 +856,11 @@ fun DictionaryImportPreviewDialog(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
                 LazyColumn(modifier = Modifier.weight(1f)) {
+                    if (plan.learnedData.hasEffect) {
+                        item(key = "learned-data") {
+                            LearnedDataPreviewCard(plan.learnedData)
+                        }
+                    }
                     items(plan.perLanguage.entries.toList(), key = { it.key }) { (lang, changes) ->
                         LanguageSection(
                             lang = lang,

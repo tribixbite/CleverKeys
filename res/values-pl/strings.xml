@@ -559,7 +559,7 @@
     <string name="extra_keys_enabled_count">%1$d z %2$d dodatkowych klawiszy włączonych</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Silnik przewidywania</string>
-    <string name="swipe_engine_mode_desc">CTC: wiązka CTC na układach łacińskich dla angielskiego, francuskiego, niemieckiego, hiszpańskiego, włoskiego, portugalskiego i szwedzkiego; dla pozostałych języków i układów niełacińskich geometryczny. Geometryczny: wszystkie układy.</string>
+    <string name="swipe_engine_mode_desc">CTC: używa CTC na urządzeniu, gdy wybrany język i układ są obsługiwane; stan tej konfiguracji znajduje się poniżej. Geometryczny: dostępny dla wszystkich układów.</string>
     <string name="advanced_provenance_markers_title">Znaczniki pochodzenia podpowiedzi</string>
     <string name="advanced_provenance_markers_desc">Pokazuje przy każdej podpowiedzi kolorową kropkę wskazującą silnik, który ją utworzył (przytrzymaj podpowiedź, aby zobaczyć pełne szczegóły)</string>
     <string name="input_next_word_title">Przewidywanie następnego słowa</string>

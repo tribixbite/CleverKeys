@@ -72,6 +72,17 @@ A complete layout consists of:
 | `width` | `width="1.5"` | Key width multiplier |
 | `shift` | `shift="0.5"` | Left margin/indent |
 
+### Keeping CTC swipe available
+
+If a custom layout should use the CTC engine, declare the correct `script` on its
+`<keyboard>` element and put every letter used by the active language on a primary key
+(`c` or `key0`). A letter that appears only in a directional/corner property does not count:
+CTC receives primary-key geometry only.
+
+When either requirement is missing, swipe typing still works through the geometric engine.
+Settings → Swipe Typing shows a fallback card naming the affected layout and, where possible,
+the corner-only or missing letters. This fallback is safe; changing the Prediction Engine
+setting is not required.
 ## For Developers
 
 Custom layouts use the same XML format as `src/main/layouts/*.xml` in the source code. Review existing layouts for syntax examples.

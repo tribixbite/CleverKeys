@@ -3,6 +3,15 @@ package tribixbite.cleverkeys
 import android.util.Log
 
 /**
+ * Constructor-scoped test seam for the crash guard. Production never supplies one; tests use it
+ * to throw an [Error] from inside [ConfigPropagator.propagateConfig] without global state or
+ * subclassing the final manager implementations.
+ */
+internal fun interface ConfigPropagationProbe {
+    fun beforePropagation()
+}
+
+/**
  * Propagates configuration changes to all keyboard managers and components.
  *
  * This class centralizes the logic for updating configuration across multiple
@@ -43,6 +52,24 @@ class ConfigPropagator(
     private val keyboardView: Keyboard2View?,
     private val subtypeManager: SubtypeManager?
 ) {
+    private var propagationProbe: ConfigPropagationProbe? = null
+
+    internal constructor(
+        clipboardManager: ClipboardManager?,
+        predictionCoordinator: PredictionCoordinator?,
+        inputCoordinator: InputCoordinator?,
+        suggestionHandler: SuggestionHandler?,
+        keyboardDimensionsHelper: KeyboardDimensionsHelper?,
+        layoutManager: LayoutManager?,
+        keyboardView: Keyboard2View?,
+        subtypeManager: SubtypeManager?,
+        propagationProbe: ConfigPropagationProbe
+    ) : this(
+        clipboardManager, predictionCoordinator, inputCoordinator, suggestionHandler,
+        keyboardDimensionsHelper, layoutManager, keyboardView, subtypeManager
+    ) {
+        this.propagationProbe = propagationProbe
+    }
     /**
      * Propagate configuration to all managers.
      *
@@ -57,6 +84,10 @@ class ConfigPropagator(
      */
     fun propagateConfig(config: Config, resources: android.content.res.Resources? = null) {
         try {
+            // ARC-074: constructor-scoped injection point that lets instrumentation prove the
+            // Throwable guard with an Error (not merely exercise the quiet path).
+            propagationProbe?.beforePropagation()
+
             // Refresh subtitle IME (requires resources)
             if (resources != null) {
                 subtypeManager?.refreshSubtype(config, resources)

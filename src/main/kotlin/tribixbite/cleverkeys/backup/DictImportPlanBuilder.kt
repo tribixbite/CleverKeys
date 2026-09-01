@@ -37,6 +37,7 @@ object DictImportPlanBuilder {
 
         val mergedCustom = mergeCustomWords(root)
         val mergedDisabled = mergeDisabledWords(root)
+        val learnedData = parseLearnedData(root)
 
         // Compute deltas: subtract current state from merged.
         val perLanguage = HashMap<String, LangChanges>()
@@ -65,6 +66,7 @@ object DictImportPlanBuilder {
             perLanguage = perLanguage,
             mergedCustomWordsByLang = mergedCustom,
             mergedDisabledWordsByLang = mergedDisabled,
+            learnedData = learnedData,
         )
     }
 
@@ -133,5 +135,38 @@ object DictImportPlanBuilder {
         }
 
         return merged
+    }
+
+    /**
+     * Count and retain only learned-data sections. The preview displays these counts and the
+     * apply step consumes [LearnedDataImportPlan.rawJson], so the URI is never reopened after
+     * confirmation and the bytes described by the preview are the bytes that are applied.
+     */
+    private fun parseLearnedData(root: JsonObject): LearnedDataImportPlan {
+        val payload = JsonObject()
+
+        fun phraseSection(name: String): Int {
+            val section = root.get(name)?.takeIf { it.isJsonObject }?.asJsonObject ?: return 0
+            val count = section.entrySet().sumOf { (_, value) ->
+                if (value.isJsonArray) value.asJsonArray.size() else 0
+            }
+            if (count > 0) payload.add(name, section.deepCopy())
+            return count
+        }
+
+        val bigrams = phraseSection("learned_bigrams_by_language")
+        val trigrams = phraseSection("learned_trigrams_by_language")
+        val vocabulary = root.get("user_vocabulary")?.takeIf { it.isJsonArray }?.asJsonArray
+        val vocabularyPresent = vocabulary != null
+        if (vocabulary != null) payload.add("user_vocabulary", vocabulary.deepCopy())
+
+        val hasEffect = bigrams > 0 || trigrams > 0 || vocabularyPresent
+        return LearnedDataImportPlan(
+            bigramEntries = bigrams,
+            trigramEntries = trigrams,
+            vocabularyWords = vocabulary?.size() ?: 0,
+            vocabularyPresent = vocabularyPresent,
+            rawJson = if (hasEffect) payload.toString() else null,
+        )
     }
 }

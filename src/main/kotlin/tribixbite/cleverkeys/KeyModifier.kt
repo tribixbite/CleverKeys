@@ -8,21 +8,104 @@ object KeyModifier {
         [null] to disable. */
     private var modmap: Modmap? = null
 
+    /**
+     * Ceiling on resident memo entries (ARC-088).
+     *
+     * The sibling cache this mirrors (`Keyboard2View._keyCodeLowerCache`) is naturally bounded
+     * — one entry per laid-out key, fully rebuilt in `setKeyboard`. This memo's key space is
+     * open by comparison (modifier permutations x every [KeyValue] ever drawn). `Keyboard2View`
+     * invalidates it on every layout change by calling [set_modmap], including with `null`; a
+     * hard ceiling is still required because the active layout can expose open-ended macro and
+     * compose values over a process lifetime. In practice a single layout with every modifier combination stays far below it.
+     */
+    internal const val MODIFY_MEMO_MAX_ENTRIES = 2048
+
+    /**
+     * Memo for [modify]'s `(key, modifiers) -> key` mapping (ARC-088).
+     *
+     * `Keyboard2View.onDraw` reaches [modify] through `modifyKey` once per label plus once per
+     * sub-label — up to nine calls per key per frame — and a transforming modifier can allocate a fresh [KeyValue]. Nested rather than keyed on a composite `(key, mods)` pair
+     * so that a HIT allocates nothing at all; a `Pair`/data-class key would reintroduce the
+     * per-label allocation this exists to remove.
+     *
+     * Both key types have value semantics: [KeyValue] overrides `equals`/`hashCode`, and
+     * `Pointers.Modifiers` compares its backing array by content. Value keys are required, not
+     * incidental — `Keyboard2View` reassigns `_mods` from a freshly allocated
+     * `Pointers.getModifiers()` on every key up/down, so identity keys would never hit.
+     * Neither type is interned or compared by identity anywhere, and a `Modifiers`' array is
+     * never mutated after construction, so it is stable as a hash key.
+     *
+     * Not synchronized, matching the sibling cache's house style: every caller — `onDraw`,
+     * `KeyEventHandler`'s macro loop, and the TalkBack `describe` lambda — runs on the UI
+     * thread. Confined there by convention, as `Keyboard2View`'s caches are.
+     */
+    private val modifyMemo = HashMap<Pointers.Modifiers, HashMap<KeyValue, KeyValue?>>()
+
+    /** Resident entry count across all per-modifier sub-maps, tracked to avoid an O(n) sum. */
+    private var modifyMemoEntries = 0
+
     @JvmStatic
     fun set_modmap(mm: Modmap?) {
         modmap = mm
+        // The modmap is consulted FIRST by applyShift/applyFn/applyCtrl, so the same
+        // (key, modifiers) pair maps to a different result once it changes. Dropping the memo
+        // here is a correctness requirement, not housekeeping.
+        invalidateModifyMemo()
     }
 
     @JvmStatic
     @Deprecated("Use setModmap instead", ReplaceWith("setModmap(mm)"))
     fun setModmap(mm: Modmap?) {
         modmap = mm
+        invalidateModifyMemo()
     }
 
-    /** Modify a key according to modifiers. */
+    /** Drops every memoized [modify] result. See [modifyMemo]. */
+    private fun invalidateModifyMemo() {
+        modifyMemo.clear()
+        modifyMemoEntries = 0
+    }
+
+    /** Test seam: resident memo entries. See [MODIFY_MEMO_MAX_ENTRIES]. */
+    internal fun memoSizeForTest(): Int = modifyMemoEntries
+
+    /**
+     * Modify a key according to modifiers.
+     *
+     * Memoized — see [modifyMemo] for why, and for the invalidation contract.
+     */
     @JvmStatic
     fun modify(k: KeyValue?, mods: Pointers.Modifiers): KeyValue? {
         if (k == null) return null
+
+        var perMods = modifyMemo[mods]
+        if (perMods != null) {
+            val hit = perMods[k]
+            // One lookup on the common path; the containsKey probe only runs for the rare
+            // placeholder keys, whose memoized answer is a legitimate null.
+            if (hit != null) return hit
+            if (perMods.containsKey(k)) return null
+        }
+
+        val r = computeModify(k, mods)
+
+        if (modifyMemoEntries >= MODIFY_MEMO_MAX_ENTRIES) {
+            // Coarse generational eviction: clearing wholesale keeps the hit path free of any
+            // LRU bookkeeping, which is the path that runs per label per frame.
+            invalidateModifyMemo()
+            perMods = null
+        }
+        if (perMods == null) {
+            perMods = HashMap()
+            modifyMemo[mods] = perMods
+        }
+        perMods[k] = r
+        modifyMemoEntries++
+        return r
+    }
+
+    /** The uncached [modify] body. */
+    private fun computeModify(k: KeyValue, mods: Pointers.Modifiers): KeyValue? {
         val nMods = mods.size()
         var r: KeyValue = k
         for (i in 0 until nMods) {

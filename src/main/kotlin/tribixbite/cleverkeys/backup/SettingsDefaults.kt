@@ -162,6 +162,10 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // ── Multi-language ──────────────────────────────────────────────
     "pref_enable_multilang" to PrefValue.Bool(Defaults.ENABLE_MULTILANG),
     "pref_primary_language" to PrefValue.Str(Defaults.PRIMARY_LANGUAGE),
+    // Literal read-site defaults; ARC-100 reclassified these after preview-behavior tests.
+    "pref_primary_language_alt" to PrefValue.Str("es"),
+    "pref_secondary_language" to PrefValue.Str("none"),
+    "pref_secondary_language_alt" to PrefValue.Str("none"),
     "pref_auto_detect_language" to PrefValue.Bool(Defaults.AUTO_DETECT_LANGUAGE),
     "pref_language_detection_sensitivity" to PrefValue.FloatV(Defaults.LANGUAGE_DETECTION_SENSITIVITY),
     "pref_secondary_prediction_weight" to PrefValue.FloatV(Defaults.SECONDARY_PREDICTION_WEIGHT),
@@ -278,7 +282,4 @@ internal fun lookupDefault(key: String): PrefValue? = SETTINGS_DEFAULTS[key]
  */
 internal val NON_DEFAULTED_KEYS: Set<String> = setOf(
     "clipboard_custom_rules_uri",      // SAF URI for user-supplied URL rules
-    "pref_primary_language_alt",       // Optional alt-primary multi-lang slot
-    "pref_secondary_language",         // Optional secondary multi-lang slot
-    "pref_secondary_language_alt",     // Optional alt-secondary multi-lang slot
 )

@@ -192,36 +192,34 @@ android {
       // Kotlin coroutines debug probes (non-deterministic)
       excludes += "DebugProbesKt.bin"
 
-      // Kotlin coroutines service files (non-deterministic order).
+      // DO NOT ADD `META-INF/services/kotlinx.coroutines.**` EXCLUDES HERE.
       //
-      // WARNING: THESE TWO EXCLUDES DO NOT WORK, AND THAT IS NOW LOAD-BEARING.
-      // Verified 2026-08-29 (ARC-008): both entries are still present in the
-      // packaged APK — in the R8-off baseline AND in the minified build. Do NOT
-      // "fix" the patterns to make them take effect. Here is why:
+      // Two such excludes lived at this spot for the "non-deterministic order"
+      // reason and NEVER took effect (verified 2026-08-29, ARC-008: both service
+      // files were still present in the packaged APK, R8-off baseline and
+      // minified build alike). ARC-062 deleted the dead lines; this comment
+      // exists so nobody re-adds them in a working form, because the release
+      // build now DEPENDS on those files shipping:
       //
       //   proguard-rules.pro carries `-assumenosideeffects MainDispatcherLoader
-      //   { boolean FAST_SERVICE_LOADER_ENABLED return false; }`. That rule was
-      //   inert while minifyEnabled was false, but with R8 on it now folds the
-      //   flag to false, and the shipped DEX (baksmali'd to confirm) takes the
-      //   `java.util.ServiceLoader.load(...)` branch — the FastServiceLoader
-      //   path is gone from the bytecode entirely.
+      //   { boolean FAST_SERVICE_LOADER_ENABLED return false; }`. With R8 on,
+      //   that folds the flag to false, and the shipped DEX (baksmali'd to
+      //   confirm) takes the `java.util.ServiceLoader.load(...)` branch — the
+      //   FastServiceLoader (Class.forName) path is gone from the bytecode.
       //
       //   That branch resolves Dispatchers.Main by READING
       //   META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory
-      //   out of the APK. It works today only because this exclude is a no-op
-      //   and the file ships (contents: kotlinx.coroutines.android.
+      //   out of the APK (contents: kotlinx.coroutines.android.
       //   AndroidDispatcherFactory, a name kept un-obfuscated by the
       //   `-keep class kotlinx.coroutines.**` rule).
       //
-      //   Make the exclude effective and Dispatchers.Main initialises to
+      //   Exclude it and Dispatchers.Main initialises to
       //   MissingMainCoroutineDispatcher — every withContext(Dispatchers.Main)
       //   in the IME throws, in release only. The ew-cli suite would not catch
       //   it: instrumented tests run against the unminified debug variant.
       //
       // To genuinely drop these files, first delete the -assumenosideeffects
       // rule so the FastServiceLoader (Class.forName) path returns.
-      excludes += "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory"
-      excludes += "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler"
 
       // License files and kotlin modules (reduce APK noise)
       excludes += "META-INF/DEPENDENCIES"
@@ -501,6 +499,9 @@ tasks.register('runPureTests', JavaExec) {
     // swipe_correction_preset control, and that both routed-engine dispatches derive their
     // suggestion origin from SuggestionOrigin.forRoutedEngine rather than an enum literal.
     'tribixbite.cleverkeys.DeadPlumbingDriftTest',
+    // ARC-088 (2026-08-30): pins the KeyModifier.modify memo — identity stability on repeat
+    // lookups, invalidation at the modmap hook, and the entry ceiling.
+    'tribixbite.cleverkeys.KeyModifierMemoTest',
     // ARC-048 R6 (2026-08-29): drives the prediction contract through a FakePredictor
     // instead of the real 2,600-line WordPredictor — the milestone the plan asked for.
     'tribixbite.cleverkeys.PredictorContractTest',
@@ -539,6 +540,8 @@ tasks.register('runPureTests', JavaExec) {
     // Append-only release record book (docs/RELEASE_RECORD.md): anchors resolve, every
     // published fastlane changelog has a section, released sections are hash-pinned.
     'tribixbite.cleverkeys.ReleaseRecordDriftTest',
+    // ARC-090: every packaged .onnx must carry a NOTICE provenance line, and vice versa.
+    'tribixbite.cleverkeys.NoticeModelAttributionDriftTest',
     'tribixbite.cleverkeys.SourceTextHygieneTest',
     // Pins the curated instrumented gate in .github/scripts/emulator-ci.sh (CK-150-028):
     // a renamed/deleted curated class used to false-green the release device gate.
@@ -574,6 +577,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.geometric.LayoutGeometryTest',
     // WP9 R-1 step 9: layout-routed engine selection (steps 7-8 wiring)
     'tribixbite.cleverkeys.swipe.SwipeEngineRouterTest',
+    // ARC-086 (2026-08-30): the swipe-engine fallback card's predicate on BOTH axes. A
+    // layout-caused CTC→geometric fallback (non-routed script, a–z-incomplete board,
+    // letters only in corners) was completely invisible; the card only knew about languages.
+    'tribixbite.cleverkeys.swipe.SwipeEngineFallbackTest',
     // ARC-083 (2026-08-29): the CTC decode/dispatch seam. A TRANSIENT decode failure must
     // reach the geometric engine; only a SUPERSEDED decode is silent, and neither latches.
     'tribixbite.cleverkeys.swipe.CtcDecodeDeliveryTest',
@@ -581,6 +588,9 @@ tasks.register('runPureTests', JavaExec) {
     // engines (it previously reached only tap), must be in the lexicon memo fingerprint, and a
     // dictionary mutation must re-warm in the background instead of stalling the next swipe.
     'tribixbite.cleverkeys.swipe.UserDictionaryReachesSwipeTest',
+    // ARC-102 (2026-08-30): the epoch-gated cache in front of that provider read — one query
+    // per epoch per language while the observer is live, no caching at all while it is not.
+    'tribixbite.cleverkeys.UserDictionarySnapshotCacheTest',
     // script="latin" is gate 1 of 3 in swipe routing and is a hand-written XML attribute.
     // grek_qwerty.xml shipped declaring latin; the fix landed in srcs/layouts/, which no build
     // task reads (PHASE_O §3.3 makes this a prerequisite for multi-script work).

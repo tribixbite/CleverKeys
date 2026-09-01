@@ -92,7 +92,7 @@ class ReleaseMetadataDriftTest {
             announced + SERVED_BUT_NOT_YET_ANNOUNCED,
             CtcLanguageSupport.SUPPORTED.keys,
         )
-        assertEquals(setOf("it", "pt", "sv"), CtcLanguageSupport.PROVISIONAL)
+        assertEquals(setOf("it", "pt", "sv", "el"), CtcLanguageSupport.PROVISIONAL)
         assertEquals(setOf("ru"), CtcLanguageSupport.VAL_ONLY)
         // The two halves must not silently disagree: a language listed as unannounced must
         // genuinely be absent from the notes.
@@ -120,12 +120,19 @@ class ReleaseMetadataDriftTest {
          * Milestone A on the release branch"). v1.6.0 is not tagged, so main now carries a
          * language its pending notes do not mention.
          *
-         * # TODO(release): before the v1.6.0 tag, DECIDE — either announce Russian in
-         * RELEASE_NOTES.md and all three ABI changelogs (at its real evidence tier: val-only,
-         * eval-only corpus, no on-device latency or memory measurement, and served only when the
-         * ru language pack is imported) and empty this set, or hold the ru wiring back from that
-         * release. This set exists so the decision cannot be made by forgetting.
+         * `el` (2026-08-30) is the second, on the same footing and for the same reason — and its
+         * evidence tier is WEAKER than ru's, not merely different. Greek has NO real-swipe probe
+         * at ANY tier; its 92.12 is a synthesis-holdout level and may never be quoted as
+         * accuracy. So there is no Greek accuracy number that can lawfully appear in a release
+         * note at all.
+         *
+         * # TODO(release): before the v1.6.0 tag, DECIDE — either announce Russian and Greek in
+         * RELEASE_NOTES.md and all three ABI changelogs (each at its real evidence tier: ru
+         * val-only on an eval-only corpus; el with NO accuracy claim whatsoever; neither with an
+         * on-device latency or memory measurement; both served only when that language's pack is
+         * imported) and empty this set, or hold the script wiring back from that release. This
+         * set exists so the decision cannot be made by forgetting.
          */
-        val SERVED_BUT_NOT_YET_ANNOUNCED = setOf("ru")
+        val SERVED_BUT_NOT_YET_ANNOUNCED = setOf("ru", "el")
     }
 }

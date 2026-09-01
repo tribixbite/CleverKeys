@@ -98,4 +98,45 @@ class DictImportPlanBuilderTest {
         val en = plan.perLanguage["en"]!!
         assertThat(en.newCustomWords["foo"]).isEqualTo(100)
     }
+
+    @Test
+    fun learnedDataSections_areCountedAndCarriedInThePlan() {
+        val json = """{
+            "custom_words_by_language":{"en":{"visible":50}},
+            "learned_bigrams_by_language":{
+                "en":[{"a":1},{"b":2}],
+                "fr":[{"c":3}]
+            },
+            "learned_trigrams_by_language":{"en":[{"t":1}]},
+            "user_vocabulary":[{"word":"one"},{"word":"two"}]
+        }""".trimIndent()
+
+        val plan = DictImportPlanBuilder.fromJson(json, emptyMap(), emptyMap())
+
+        assertThat(plan.learnedData.bigramEntries).isEqualTo(3)
+        assertThat(plan.learnedData.trigramEntries).isEqualTo(1)
+        assertThat(plan.learnedData.vocabularyWords).isEqualTo(2)
+        assertThat(plan.learnedData.vocabularyPresent).isTrue()
+        assertThat(plan.learnedData.hasEffect).isTrue()
+        assertThat(plan.learnedData.totalEntries).isEqualTo(6)
+        assertThat(plan.learnedData.rawJson).contains("learned_bigrams_by_language")
+        assertThat(plan.learnedData.rawJson).contains("learned_trigrams_by_language")
+        assertThat(plan.learnedData.rawJson).contains("user_vocabulary")
+        assertThat(plan.learnedData.rawJson).doesNotContain("custom_words_by_language")
+    }
+
+    @Test
+    fun emptyVocabularySection_isStillAPreviewedReplaceOperation() {
+        val plan = DictImportPlanBuilder.fromJson(
+            """{"user_vocabulary":[]}""",
+            emptyMap(),
+            emptyMap(),
+        )
+
+        assertThat(plan.perLanguage).isEmpty()
+        assertThat(plan.learnedData.vocabularyWords).isEqualTo(0)
+        assertThat(plan.learnedData.vocabularyPresent).isTrue()
+        assertThat(plan.learnedData.hasEffect).isTrue()
+        assertThat(plan.learnedData.rawJson).contains("user_vocabulary")
+    }
 }

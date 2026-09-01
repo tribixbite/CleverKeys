@@ -558,7 +558,7 @@
     <string name="extra_keys_enabled_count">%1$d ng %2$d extra key ang naka-enable</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Makina ng hula</string>
-    <string name="swipe_engine_mode_desc">CTC: CTC beam sa mga Latin na layout para sa Ingles, Pranses, Aleman, Espanyol, Italyano, Portuges at Suweko; geometric para sa ibang wika at sa mga hindi Latin na layout. Geometric: lahat ng layout.</string>
+    <string name="swipe_engine_mode_desc">CTC: gumagamit ng CTC sa device kapag suportado ang napiling wika at layout; tingnan sa ibaba ang katayuan ng configuration na ito. Geometric: available sa lahat ng layout.</string>
     <string name="advanced_provenance_markers_title">Mga marka ng pinagmulan ng mungkahi</string>
     <string name="advanced_provenance_markers_desc">Nagpapakita sa bawat mungkahi ng may kulay na tuldok na nagsasaad kung aling makina ang gumawa nito (pindutin nang matagal ang isang mungkahi para sa buong detalye)</string>
     <string name="input_next_word_title">Hula sa susunod na salita</string>

@@ -216,3 +216,22 @@ Key attributes:
 - `key1`-`key8`: Swipe directions (N, NE, E, SE, S, SW, W, NW)
 - `width`: Key width multiplier (default 1.0)
 - `shift`: Behavior on shift (0=normal, 1=uppercase)
+
+### CTC swipe eligibility
+
+A layout can reach the CTC engine only when all of these checks pass:
+
+1. Its `script` value is registered as routable in `CtcScriptSupport`.
+2. CTC serves the active language.
+3. Every character in that language's emission alphabet appears as a **primary/centre**
+   key value: `c="…"` in the compact schema or `key0="…"` in the numbered schema.
+
+Directional values (`n`, `ne`, … or `key1`–`key8`) do not satisfy the third check.
+The encoder receives geometry only for primary keys, so a letter available solely as a corner
+character is still absent from the CTC layout. Promote it to `c`/`key0` or accept geometric
+fallback for that board. A missing or unknown `script` also falls back to geometric.
+
+Settings → Swipe Typing reports these layout-axis fallbacks separately from language/dictionary
+fallbacks and names corner-only or missing letters. `SwipeEngineFallback.factsFor` and
+`CtcEngineAdapter.supportsLayout` share this primary-value definition; authoring tools and
+tests must recognize both live XML schemas.

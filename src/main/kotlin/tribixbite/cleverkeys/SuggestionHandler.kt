@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.res.Resources
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -489,6 +490,82 @@ class SuggestionHandler(
         }
     }
 
+    /** Resolve every provenance-sheet label at the Android boundary (ARC-087). */
+    private fun localizedProvenanceStrings(): ProvenanceFormatter.Strings {
+        val configuration = context.resources.configuration
+        @Suppress("DEPRECATION")
+        val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            configuration.locales[0]
+        } else {
+            configuration.locale
+        }
+        fun text(id: Int): String = context.getString(id)
+        return ProvenanceFormatter.Strings(
+            locale = locale,
+            originLabels = mapOf(
+                SuggestionOrigin.GEOMETRIC to text(R.string.provenance_origin_geometric),
+                SuggestionOrigin.CTC to text(R.string.provenance_origin_ctc),
+                SuggestionOrigin.DICTIONARY_PREFIX to text(R.string.provenance_origin_dictionary_prefix),
+                SuggestionOrigin.CONTRACTION to text(R.string.provenance_origin_contraction),
+                SuggestionOrigin.POSSESSIVE to text(R.string.provenance_origin_possessive),
+                SuggestionOrigin.EXACT_ADD to text(R.string.provenance_origin_exact_add),
+                SuggestionOrigin.NEXT_WORD to text(R.string.provenance_origin_next_word),
+                SuggestionOrigin.AUTOCORRECT to text(R.string.provenance_origin_autocorrect)
+            ),
+            unknown = text(R.string.provenance_unknown),
+            source = text(R.string.provenance_source),
+            score = text(R.string.provenance_score),
+            scoreComponents = text(R.string.provenance_score_components),
+            prefixMatch = text(R.string.provenance_prefix_match),
+            adaptation = text(R.string.provenance_adaptation),
+            contextBuiltIn = text(R.string.provenance_context_built_in),
+            contextLearned = text(R.string.provenance_context_learned),
+            contextWinnerLearned = text(R.string.provenance_context_winner_learned),
+            contextWinnerBuiltIn = text(R.string.provenance_context_winner_built_in),
+            contextNoBoost = text(R.string.provenance_context_no_boost),
+            contextBoostSetting = text(R.string.provenance_context_boost_setting),
+            personalization = text(R.string.provenance_personalization),
+            frequencyFactor = text(R.string.provenance_frequency_factor),
+            finalScore = text(R.string.provenance_final_score),
+            personalUsage = text(R.string.provenance_personal_usage),
+            usageCount = text(R.string.provenance_usage_count),
+            frequencyScore = text(R.string.provenance_frequency_score),
+            recencyScore = text(R.string.provenance_recency_score),
+            baseBoost = text(R.string.provenance_base_boost),
+            aggression = text(R.string.provenance_aggression),
+            finalBoost = text(R.string.provenance_final_boost),
+            promotedByLearnedContext = text(R.string.provenance_note_promoted_learned),
+            nextWordBuiltIn = text(R.string.provenance_note_next_built_in),
+            nextWordLearned = text(R.string.provenance_note_next_learned),
+            typedWordUndo = text(R.string.provenance_note_typed_undo),
+            autocorrectedFrom = text(R.string.provenance_note_autocorrected_from)
+        )
+    }
+
+    private fun localizedPersonalizationDetails(
+        explanation: tribixbite.cleverkeys.personalization.BoostExplanation?
+    ): PersonalizationDetails? {
+        if (explanation?.inVocabulary != true) return null
+        val aggressionLabel = when (explanation.aggression) {
+            tribixbite.cleverkeys.personalization.PersonalizationEngine.LearningAggression.CONSERVATIVE ->
+                context.getString(R.string.provenance_aggression_conservative)
+            tribixbite.cleverkeys.personalization.PersonalizationEngine.LearningAggression.BALANCED ->
+                context.getString(R.string.provenance_aggression_balanced)
+            tribixbite.cleverkeys.personalization.PersonalizationEngine.LearningAggression.AGGRESSIVE ->
+                context.getString(R.string.provenance_aggression_aggressive)
+            null -> return null
+        }
+        return PersonalizationDetails(
+            usageCount = explanation.usageCount,
+            frequencyScore = explanation.frequencyScore,
+            recencyScore = explanation.recencyScore,
+            baseBoost = explanation.baseBoost,
+            aggressionLabel = aggressionLabel,
+            aggressionMultiplier = explanation.aggressionMultiplier,
+            finalBoost = explanation.finalBoost
+        )
+    }
+
     /**
      * Task B Tier 1: compose and display the provenance sheet for a long-pressed
      * suggestion — which engine/source produced it plus its score components
@@ -536,8 +613,10 @@ class SuggestionHandler(
             word = displayWord,
             meta = effectiveMeta,
             barScore = null, // breakdown carries the meaningful score; raw bar ints are debug-only
-            personalizationExplanation = predictor?.explainPersonalization(displayWord)
-                ?.takeIf { it.inVocabulary }?.explanation
+            personalization = localizedPersonalizationDetails(
+                predictor?.explainPersonalization(displayWord)
+            ),
+            strings = localizedProvenanceStrings()
         )
         bar.showProvenancePopup(text)
     }
@@ -747,7 +826,7 @@ class SuggestionHandler(
         // diagnosable from the long-press sheet instead of being invisible. The engine ORIGIN is
         // deliberately kept — the word still came from the decoder; context only moved it.
         if (promotedIndex != null && barMetas.isNotEmpty()) {
-            barMetas[0] = barMetas[0].copy(note = "promoted by learned context")
+            barMetas[0] = barMetas[0].copy(note = ProvenanceNote.PromotedByLearnedContext)
         }
 
         suggestionBar?.let { bar ->
@@ -1883,8 +1962,14 @@ class SuggestionHandler(
                                     listOf(completedWord, correctedWord), // Original word first for undo
                                     listOf(0, 0),
                                     listOf(
-                                        SuggestionMeta(SuggestionOrigin.AUTOCORRECT, note = "Your typed word (tap to undo)"),
-                                        SuggestionMeta(SuggestionOrigin.AUTOCORRECT, note = "Autocorrected from “$completedWord”")
+                                        SuggestionMeta(
+                                            SuggestionOrigin.AUTOCORRECT,
+                                            note = ProvenanceNote.TypedWordUndo
+                                        ),
+                                        SuggestionMeta(
+                                            SuggestionOrigin.AUTOCORRECT,
+                                            note = ProvenanceNote.AutocorrectedFrom(completedWord)
+                                        )
                                     )
                                 )
 
@@ -1912,6 +1997,11 @@ class SuggestionHandler(
                         val shouldPrompt = AutocorrectContextGuard.shouldOfferAddToDictionary(
                             token = completedWord,
                             inNonProseToken = inNonProseToken,
+                            /**
+                             * ARC-101: this UI prompt intentionally asks the exact-case user-word
+                             * view. A differently cased stored word may still offer an additive
+                             * prompt; folding would change prompt timing, not protect any data.
+                             */
                             isKnownWord = { w ->
                                 // Predictor not ready → treat as known (never prompt),
                                 // preserving the original `?: true` behavior.
@@ -2206,6 +2296,11 @@ class SuggestionHandler(
                     }
                     val exactLower = exactTyped.lowercase()
                     val alreadyInPredictions = transformedWords.any { it.lowercase() == exactLower }
+                    /**
+                     * ARC-101: ExactAdd remains exact-case by design. Adding a second casing is
+                     * additive and reversible; case-folding here would silently change when this
+                     * explicit UI choice appears, rather than fixing a destructive collision.
+                     */
                     val isUserWord = predictionCoordinator.getDictionaryManager()?.isUserWord(exactTyped) ?: false
                     val isInDictionary = predictionCoordinator.getWordPredictor()?.isInDictionary(exactTyped) ?: true
 

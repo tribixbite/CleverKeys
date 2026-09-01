@@ -128,7 +128,8 @@ class CtcImportedPackSupportTest {
      * HANDOFF rule 4: a non-Latin script needs its own model, trie and golden fixture. This path
      * hands the Latin a–z encoder a lexicon, so admitting a scripted language here would decode it
      * against the wrong emission head — the silently-wrong-decode failure the rule exists for.
-     * `ru` reaches CKDT_LANGPACK through the static table instead, which is why it is unaffected.
+     * `ru` and `el` reach CKDT_LANGPACK through the static table instead, which is why they are
+     * unaffected.
      */
     @Test
     fun `a scripted language is never served through the imported-Latin path`() {
@@ -137,9 +138,19 @@ class CtcImportedPackSupportTest {
                 .that(CtcImportedPackSupport.mayServeImportedPack(scripted)).isFalse()
         }
         CtcImportedPackSupport.installResolver { true }
-        for (unrouted in listOf("el", "uk", "bg", "mk", "he")) {
-            assertWithMessage("$unrouted is INFRASTRUCTURE-only and must stay unserved")
-                .that(CtcLanguageSupport.sourceFor(unrouted)).isNull()
+        // DERIVED from the script table rather than listed, so wiring a script (el, 2026-08-30)
+        // moves it out of this loop automatically instead of turning a correct table edit into a
+        // spurious red here.
+        val unrouted = CtcScriptSupport.SCRIPTS
+            .filterValues { it.status != CtcScriptSupport.Status.ROUTED }
+            .keys
+        assertWithMessage(
+            "no INFRASTRUCTURE script remains, so this half asserts nothing — delete it " +
+                "deliberately rather than leaving a vacuous green"
+        ).that(unrouted).isNotEmpty()
+        for (language in unrouted) {
+            assertWithMessage("$language is INFRASTRUCTURE-only and must stay unserved")
+                .that(CtcLanguageSupport.sourceFor(language)).isNull()
         }
     }
 

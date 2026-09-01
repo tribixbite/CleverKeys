@@ -150,18 +150,14 @@ object CtcScriptSupport {
             layoutXml = "grek_qwerty.xml",
             // K = 25, and ς (U+03C2) is its OWN slot, in a different row from σ (U+03C3).
             alphabet = "αβγδεζηθικλμνξοπρςστυφχψω",
-            modelAsset = null,
-            goldenFixture = null,
-            status = Status.INFRASTRUCTURE,
-            gap = "el_synth_v3_ch80_fp16w.onnx (sha 7083794c…) and its golden fixture " +
-                "(sha d08d5501…) are not shipped. Everything else is ready: grek_qwerty.xml " +
-                "exposes all 25 letters as centre keys, langpack-el.zip exists on the same " +
-                "CKDT 255−rank scale, and BOTH halves of the el projection are implemented " +
-                "and unit-tested (CtcScriptProjection: NFD → drop Mn → NFC, then word-final " +
-                "σ→ς via CtcGreekOrthography). Unblocking condition: ship the two artifacts, " +
-                "flip this row to ROUTED, add el to CtcLanguageSupport.SUPPORTED, and run the " +
-                "ew-cli parity + latency gate — Greek has NO real-swipe probe at any tier, so " +
-                "the on-device run is the only evidence that will ever exist for it.",
+            // Generation 4, sha 7083794c501566f411b1f81495ba1f7f3df273c3eb58f6ee635caf168a4f8c3d,
+            // 589,406 B. Fixture sha d08d5501961e971db2ca120f6ee868b7b67ed37e34b6412dddbc7f7116de5753.
+            // Greek has NO real-swipe probe at any tier; never quote the synthesis-holdout
+            // fixture level as accuracy. The device parity/latency run is its only runtime bar.
+            modelAsset = "models/el_synth_v3_ch80_fp16w.onnx",
+            goldenFixture = "el_synth_v3_ch80_fp16w_golden.json",
+            status = Status.ROUTED,
+            gap = null,
         ),
         "uk" to ScriptWiring(
             language = "uk",

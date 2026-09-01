@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import tribixbite.cleverkeys.autocorrect.FrequencyFloor
+import tribixbite.cleverkeys.backup.SettingsValidation
 import java.io.File
 
 /**
@@ -67,10 +68,8 @@ class AutocorrectDefaultsDriftTest {
 
     @Test
     fun settingsValidation_minFrequencyRange_upperBound_isSliderMax() {
-        val validation = read("backup/SettingsValidation.kt")
-        val m = Regex("""autocorrect_confidence_min_frequency"\s*->\s*value in 100\.\.(\d+)""").find(validation)
         assertWithMessage("SettingsValidation min-frequency accepted range upper bound")
-            .that(m?.groupValues?.get(1)?.toInt())
+            .that(SettingsValidation.intRangeFor("autocorrect_confidence_min_frequency")?.last)
             .isEqualTo(FrequencyFloor.SLIDER_MAX)
     }
 }

@@ -557,7 +557,7 @@
     <string name="extra_keys_enabled_count">%2$d ek tuştan %1$d tanesi etkin</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Tahmin motoru</string>
-    <string name="swipe_engine_mode_desc">CTC: İngilizce, Fransızca, Almanca, İspanyolca, İtalyanca, Portekizce ve İsveççede Latin düzenlerinde CTC ışın araması; diğer diller ve Latin olmayan düzenler için geometrik. Geometrik: tüm düzenler.</string>
+    <string name="swipe_engine_mode_desc">CTC: seçilen dil ve düzen desteklendiğinde cihaz üzerinde CTC kullanır; bu yapılandırmanın durumunu aşağıdan kontrol edin. Geometrik: tüm düzenlerde kullanılabilir.</string>
     <string name="advanced_provenance_markers_title">Öneri kaynağı işaretleri</string>
     <string name="advanced_provenance_markers_desc">Her öneride, onu üreten motoru gösteren renkli bir nokta gösterir (tüm ayrıntılar için bir öneriye uzun basın)</string>
     <string name="input_next_word_title">Sonraki kelime tahmini</string>

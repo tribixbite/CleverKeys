@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.a11y
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
@@ -231,6 +232,43 @@ class KeyboardGeometryTest {
             // Vertical geometry unaffected by horizontal margin.
             assertThat(shifted[i].bounds.top).isEqualTo(base[i].bounds.top)
             assertThat(shifted[i].bounds.bottom).isEqualTo(base[i].bounds.bottom)
+        }
+    }
+
+    @Test
+    fun accessibilityRectsMatchFilteredKeyAtAcrossEveryPixel() {
+        val p = params(keyWidth = 100f, marginLeft = 50f)
+        val hostWidth = 1_200
+        val fixtures = listOf(
+            "qwerty" to rows,
+            "pre-a overlap" to listOf(row(charKey('x'), charKey('a'), charKey('l'))),
+            "middle placeholder" to listOf(row(charKey('q'), placeholder(), charKey('w'))),
+            "trailing placeholder" to listOf(row(charKey('q'), charKey('w'), placeholder())),
+        )
+
+        for ((label, fixtureRows) in fixtures) {
+            val rects = KeyboardGeometry.computeAccessibilityKeyRects(
+                fixtureRows, p, hostWidth.toFloat()
+            )
+            var rowTop = p.marginTop
+            for ((rowIndex, fixtureRow) in fixtureRows.withIndex()) {
+                val rowBottom = rowTop + (fixtureRow.shift + fixtureRow.height) * p.rowHeight
+                val y = (rowTop + rowBottom) / 2f
+                for (x in 0 until hostWidth) {
+                    val expected = KeyboardGeometry.keyAt(fixtureRows, p, x.toFloat(), y)
+                        ?.takeIf { it.keys[0] != null }
+                    val actual = rects.firstOrNull { rect ->
+                        val bounds = rect.bounds
+                        x >= bounds.left && x < bounds.right &&
+                            y >= bounds.top && y < bounds.bottom
+                    }?.key
+                    assertWithMessage(
+                        "CK-150-027: fixture=" + label + " row=" + rowIndex +
+                            " x=" + x + " y=" + y
+                    ).that(actual).isSameInstanceAs(expected)
+                }
+                rowTop = rowBottom
+            }
         }
     }
 

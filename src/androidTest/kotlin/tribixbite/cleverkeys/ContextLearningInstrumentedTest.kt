@@ -273,9 +273,10 @@ class ContextLearningInstrumentedTest {
             assertEquals("to", bar.getTopSuggestion())
             val meta = bar.getMetaForSuggestion("to")
             assertEquals(SuggestionOrigin.NEXT_WORD, meta?.origin)
-            // Provenance note carries the learned statistics (Task B sheet).
-            assertTrue(meta?.note?.contains("14×") == true)
-            assertTrue(meta?.note?.contains("want") == true)
+            // Structured provenance carries the learned statistics to the localized sheet.
+            val note = meta?.note as? ProvenanceNote.NextWord
+            assertEquals(14, note?.frequency)
+            assertEquals("want", note?.context)
 
             // M6 substrate: posting content bumps the bar generation, which is
             // what invalidates stale queued next-word posts.

@@ -249,6 +249,9 @@ class CtcEngineAdapter(
     /** Failed load attempts so far, per asset (audit L5: bounded retry, then latch). */
     private val modelLoadAttempts = HashMap<String, Int>()
 
+    /** Test census; call only after a decode callback, when the owned worker is idle. */
+    internal fun liveModelAssetsForTest(): List<String> = emissionModels.keys.toList()
+
     /**
      * Assets whose ONNX session has permanently failed to load for this adapter
      * ([MAX_MODEL_LOAD_ATTEMPTS] exhausted).
@@ -533,6 +536,9 @@ class CtcEngineAdapter(
      * merge path.
      */
     internal fun trieFor(language: String): CtcLexiconTrie? = lexiconFor(language)?.trie
+
+    /** Test census for the access-ordered two-entry trie memo. */
+    internal fun trieLanguagesForTest(): List<String> = trieMemos.keys.toList()
 
     /**
      * [language]'s bounded rescue index — see [applyFuzzyRescue]. `internal` for the same reason

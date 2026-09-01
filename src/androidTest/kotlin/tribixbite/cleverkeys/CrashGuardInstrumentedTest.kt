@@ -49,16 +49,13 @@ import org.junit.runner.RunWith
  * `Config` (e.g. `GeometricSwipeOracleTest.harness()` sets `swipe_engine_mode`),
  * and an absolute expectation would make this class order-dependent.
  *
- * TODO(ARC-044): the `catch (Throwable)` guard itself is still not EXERCISED — with
- * eight null managers nothing can throw, so `propagateConfigCatchesThrowable` only
- * proves the happy path stays quiet. Exercising it needs a collaborator that throws
- * from `setConfig`/`reset`, and every one of the eight parameter types is a final
- * Kotlin class (`Keyboard2View`, `SuggestionHandler`, …) that cannot be subclassed
- * here. Closing it means introducing a seam in production code, so it is recorded
- * rather than faked.
+ * ARC-074 adds a constructor-scoped [ConfigPropagationProbe]. The guard test injects an
+ * [Error] through that seam, proving the `catch (Throwable)` branch rather than a quiet path.
  */
 @RunWith(AndroidJUnit4::class)
 class CrashGuardInstrumentedTest {
+
+    private class DeliberatePropagationError : Error("ARC-074 injected Error")
 
     private lateinit var context: Context
 
@@ -204,21 +201,25 @@ class CrashGuardInstrumentedTest {
 
     @Test
     fun configPropagator_propagateConfigCatchesThrowable() {
-        // Verify the try-catch(Throwable) block in propagateConfig keeps the
-        // method from throwing even with valid Config + null managers.
-        // See the class TODO: with null managers nothing THROWS, so this pins the
-        // quiet path only.
-        val propagator = nullPropagator()
         val config = Config.globalConfig()
         val before = snapshot(config)
+        var probeInvoked = false
+        val propagator = ConfigPropagator(
+            null, null, null, null, null, null, null, null,
+            ConfigPropagationProbe {
+                probeInvoked = true
+                throw DeliberatePropagationError()
+            }
+        )
+
         try {
             propagator.propagateConfig(config)
         } catch (t: Throwable) {
-            fail("propagateConfig should catch Throwable, but threw: ${t.javaClass.simpleName}: ${t.message}")
+            fail("propagateConfig should catch Throwable, but leaked " + t.javaClass.simpleName)
         }
-        // A swallowed Throwable must not leave the config half-written either: the
-        // guard's value is that the IME survives WITH ITS SETTINGS INTACT.
-        assertUnchanged(before, config, "propagateConfig under the Throwable guard")
+
+        assertTrue("failure probe must run inside the guarded region", probeInvoked)
+        assertUnchanged(before, config, "propagateConfig after caught Error")
     }
 
     @Test

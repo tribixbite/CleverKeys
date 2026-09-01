@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
+import android.content.Intent
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
@@ -82,6 +84,58 @@ class PrivateCopyEditingKeyTest {
         assertFalse(ClipboardHistoryService.privateCopy(context, "", "com.x"))
         assertFalse(ClipboardHistoryService.privateCopy(context, null, "com.x"))
         assertEquals(0, db.getActiveClipboardEntries().size)
+    }
+
+    @Test
+    fun privateCopy_worksWithHistoryMonitoringDisabled_andNotifiesListener() {
+        val config = Config.globalConfig()
+        val originalHistoryEnabled = config.clipboard_history_enabled
+        val service = ClipboardHistoryService.get_service(context)!!
+        var callbacks = 0
+        service.setOnClipboardHistoryChange { callbacks++ }
+        config.clipboard_history_enabled = false
+        try {
+            assertTrue(ClipboardHistoryService.privateCopy(context, "private-only note", "com.private.app"))
+            val entry = db.getActiveClipboardEntries().firstOrNull { it.content == "private-only note" }
+            assertNotNull("private copy must bypass the OS-monitoring gate", entry)
+            assertTrue(entry!!.isPrivate)
+            assertEquals("successful private insert must refresh clipboard UI", 1, callbacks)
+        } finally {
+            service.setOnClipboardHistoryChange(null)
+            config.clipboard_history_enabled = originalHistoryEnabled
+        }
+    }
+
+    @Test
+    fun privateCopy_runsTheSameUrlSanitizerAsNormalHistory() {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val config = Config.globalConfig()
+        val originalSanitize = config.clipboard_sanitize_links_enabled
+        val originalEmbed = config.clipboard_embed_enrich_enabled
+        val originalCustom = config.clipboard_custom_rules_enabled
+        val reload = Intent(SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED)
+        try {
+            prefs.edit()
+                .putBoolean("clipboard_sanitize_links_enabled", true)
+                .putBoolean("clipboard_embed_enrich_enabled", false)
+                .putBoolean("clipboard_custom_rules_enabled", false)
+                .commit()
+            LocalBroadcastManager.getInstance(context).sendBroadcastSync(reload)
+
+            val tracked = "https://example.com/x?utm_source=a&utm_medium=b&keep=yes"
+            assertTrue(ClipboardHistoryService.privateCopy(context, tracked, "com.private.app"))
+            val entry = db.getActiveClipboardEntries().singleOrNull()
+            assertNotNull("sanitized private entry stored", entry)
+            assertEquals("https://example.com/x?keep=yes", entry!!.content)
+            assertTrue(entry.isPrivate)
+        } finally {
+            prefs.edit()
+                .putBoolean("clipboard_sanitize_links_enabled", originalSanitize)
+                .putBoolean("clipboard_embed_enrich_enabled", originalEmbed)
+                .putBoolean("clipboard_custom_rules_enabled", originalCustom)
+                .commit()
+            LocalBroadcastManager.getInstance(context).sendBroadcastSync(reload)
+        }
     }
 
     /**

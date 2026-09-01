@@ -13,6 +13,7 @@ import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The device-side half of imported-language-pack support for the CTC swipe engine: finds each
@@ -70,6 +71,9 @@ object CtcInstalledPacks {
     @Volatile
     private var appContext: Context? = null
 
+    /** One process-start scan; repeated bind calls must not reread every pack manifest. */
+    private val initialScanScheduled = AtomicBoolean(false)
+
     /**
      * Serializes background measurements; created on first use so an install that never imports a
      * pack never spawns a thread. Daemon, because this object outlives no one and must not hold
@@ -95,6 +99,7 @@ object CtcInstalledPacks {
     fun bind(context: Context) {
         appContext = context.applicationContext
         CtcImportedPackSupport.installResolver(::servesImportedPack)
+        scheduleInitialPackScan(context.applicationContext)
     }
 
     /**
@@ -243,6 +248,36 @@ object CtcInstalledPacks {
                 .edit()
                 .putString(PREF_KEY, CtcImportedPackSupport.encodeVerdicts(cache))
                 .apply()
+        }
+    }
+
+    /**
+     * Discovers restored or legacy-imported packs once per process and schedules their normal
+     * eligibility measurements before the first swipe. Manifest and dictionary I/O stay on the
+     * serial evaluator; [servesImportedPack] preserves fingerprint caching and [inFlight] dedup.
+     */
+    private fun scheduleInitialPackScan(context: Context) {
+        if (!initialScanScheduled.compareAndSet(false, true)) return
+        val app = context.applicationContext
+        try {
+            evaluator.execute {
+                try {
+                    LanguagePackManager.getInstance(app)
+                        .getInstalledPacks()
+                        .asSequence()
+                        .map { CtcLanguageSupport.normalize(it.code) }
+                        .filter(CtcImportedPackSupport::mayServeImportedPack)
+                        .distinct()
+                        .forEach(::servesImportedPack)
+                } catch (e: Exception) {
+                    // Permit a later process entry point to retry discovery after transient I/O.
+                    initialScanScheduled.set(false)
+                    Log.e(TAG, "initial language-pack discovery failed", e)
+                }
+            }
+        } catch (e: RuntimeException) {
+            initialScanScheduled.set(false)
+            Log.w(TAG, "could not schedule initial language-pack discovery", e)
         }
     }
 

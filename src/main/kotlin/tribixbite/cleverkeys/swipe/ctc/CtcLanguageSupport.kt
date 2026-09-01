@@ -133,6 +133,10 @@ object CtcLanguageSupport {
         // 2026-08-29, the first NON-LATIN language — see [VAL_ONLY] before quoting any number
         // for it, and [CtcScriptSupport] for the alphabet, the layout and the model.
         "ru" to LexiconSource.CKDT_LANGPACK,
+        // 2026-08-30, the second script language. Greek has NO real-swipe probe at any tier:
+        // PROVISIONAL means scale-transferred serving, not measured accuracy. Its lexicon is
+        // the imported langpack-el on the same CKDT scale as ru and the bundled binaries.
+        "el" to LexiconSource.CKDT_LANGPACK,
     )
 
     /**
@@ -169,7 +173,7 @@ object CtcLanguageSupport {
      * This set is the STATIC membership of the tier. Every imported-pack language is provisional
      * too and can never leave the tier — see [isProvisional] and [CtcImportedPackSupport].
      */
-    val PROVISIONAL: Set<String> = setOf("it", "pt", "sv")
+    val PROVISIONAL: Set<String> = setOf("it", "pt", "sv", "el")
 
     /**
      * True when [language] is served on SCALE-TRANSFERRED evidence rather than its own measured

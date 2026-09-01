@@ -1,19 +1,30 @@
 package tribixbite.cleverkeys.swipe
 
 import android.content.Context
+import android.graphics.PointF
 import android.net.Uri
+import android.os.Debug
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import tribixbite.cleverkeys.ContractionCollisionScanner
+import tribixbite.cleverkeys.KeyValue
+import tribixbite.cleverkeys.KeyboardData
+import tribixbite.cleverkeys.PredictionResult
+import tribixbite.cleverkeys.TestConfigHelper
+import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.langpack.ImportResult
 import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupport
@@ -23,8 +34,11 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import org.json.JSONObject
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * The imported-language-pack path, end to end on a device: build a real language pack, import it
@@ -72,6 +86,10 @@ class CtcImportedPackInstrumentedTest {
         // Production does this from CleverKeysService/SettingsActivity; an instrumented test
         // reaching the adapter directly is the third bind site.
         CtcInstalledPacks.bind(context)
+        assertTrue(
+            "Config must initialize before ARC-064 decode coverage",
+            TestConfigHelper.ensureConfigInitialized(context)
+        )
     }
 
     @After
@@ -156,6 +174,126 @@ class CtcImportedPackInstrumentedTest {
             }
         }
         return LanguagePackManager.getInstance(context).importLanguagePack(Uri.fromFile(zip))
+    }
+
+    private fun importNamedPack(language: String, words: List<String>): ImportResult {
+        val zip = File(context.cacheDir, "langpack-" + language + ".zip")
+        ZipOutputStream(FileOutputStream(zip)).use { out ->
+            val manifest = JSONObject().apply {
+                put("code", language)
+                put("name", "ARC-058 fixture")
+                put("version", 1)
+                put("wordCount", words.size)
+            }
+            out.putNextEntry(ZipEntry("manifest.json"))
+            out.write(manifest.toString().toByteArray(Charsets.UTF_8))
+            out.closeEntry()
+            out.putNextEntry(ZipEntry("dictionary.bin"))
+            out.write(ckdtBytes(language, words))
+            out.closeEntry()
+        }
+        return LanguagePackManager.getInstance(context).importLanguagePack(Uri.fromFile(zip))
+    }
+
+    private fun russianWord(index: Int): String {
+        val alphabet = "абвгдежзийклмнопрстуфхцчшщыьэюя"
+        var value = index
+        val out = StringBuilder("п")
+        repeat(4) {
+            out.append(alphabet[value % alphabet.length])
+            value /= alphabet.length
+        }
+        return out.toString()
+    }
+
+    private fun settledPssKb(): Long {
+        repeat(2) {
+            Runtime.getRuntime().gc()
+            Thread.sleep(120L)
+        }
+        return Debug.getPss()
+    }
+
+    private fun loadLayout(name: String): KeyboardData {
+        val id = context.resources.getIdentifier(name, "raw", context.packageName)
+        assertTrue("layout resource missing: " + name, id != 0)
+        return KeyboardData.load(context.resources, id)
+            ?: throw AssertionError("layout failed to parse: " + name)
+    }
+
+    private fun paramsFor(kd: KeyboardData) = KeyboardGeometry.Params(
+        keyWidth = 1080f / kd.keysWidth,
+        rowHeight = 640f / kd.keysHeight,
+        marginTop = 0f,
+        marginLeft = 0f,
+    )
+
+    private fun traceFor(
+        kd: KeyboardData,
+        params: KeyboardGeometry.Params,
+        word: String,
+    ): Pair<List<PointF>, List<Long>> {
+        val rects = KeyboardGeometry.computeKeyRects(kd, params)
+        val centers = word.map { wanted ->
+            val rect = rects.firstOrNull {
+                it.kv.getKind() == KeyValue.Kind.Char &&
+                    it.kv.getChar().lowercaseChar() == wanted
+            } ?: throw AssertionError("layout has no centre key for " + wanted)
+            PointF(
+                (rect.bounds.left + rect.bounds.right) / 2f,
+                (rect.bounds.top + rect.bounds.bottom) / 2f,
+            )
+        }
+        val points = ArrayList<PointF>()
+        val times = ArrayList<Long>()
+        var time = 0L
+        for (index in 0 until centers.lastIndex) {
+            val start = centers[index]
+            val end = centers[index + 1]
+            repeat(12) { step ->
+                val fraction = step / 12f
+                points.add(PointF(
+                    start.x + (end.x - start.x) * fraction,
+                    start.y + (end.y - start.y) * fraction,
+                ))
+                times.add(time)
+                time += 16L
+            }
+        }
+        points.add(centers.last())
+        times.add(time)
+        return points to times
+    }
+
+    private fun decodeBlocking(
+        adapter: CtcEngineAdapter,
+        kd: KeyboardData,
+        word: String,
+        language: String,
+        secondaryLanguage: String? = null,
+    ): PredictionResult {
+        val params = paramsFor(kd)
+        val (path, times) = traceFor(kd, params, word)
+        val latch = CountDownLatch(1)
+        var result: PredictionResult? = null
+        var failed = false
+        Handler(Looper.getMainLooper()).post {
+            adapter.decodeAsync(
+                keyboard = kd,
+                params = params,
+                frameWidthPx = 1080f,
+                frameHeightPx = 640f,
+                swipePath = path,
+                timestamps = times,
+                language = language,
+                secondaryLanguage = secondaryLanguage,
+                onDecodeFailure = { failed = true; latch.countDown() },
+                onResult = { result = it; latch.countDown() },
+            )
+        }
+        assertTrue("decode timed out", latch.await(60, TimeUnit.SECONDS))
+        assertFalse("CTC handed the fixture trace to geometric fallback", failed)
+        return result ?: throw AssertionError("decode completed without a result")
     }
 
     // ── 1–4: the pack reaches the engine, and lets go ─────────────────────────────────
@@ -283,6 +421,164 @@ class CtcImportedPackInstrumentedTest {
             after.verdict
         )
         assertFalse(CtcEngineAdapter.supportsLanguage(code))
+    }
+
+    // ── ARC-064: imported-pack dispatch and trie edges ────────────────────────────────
+
+    @Test
+    fun importedPackParticipatesInSecondaryLanguageDualDecode() {
+        val target = "tambien"
+        val words = listOf(target) + List(1_199) { azWord(it) }
+        assertTrue(importFixturePack(words = words) is ImportResult.Success)
+        assertTrue(CtcInstalledPacks.evaluateNow(context, code)!!.eligible)
+
+        val keyboard = loadLayout("latn_qwerty_us")
+        val adapter = CtcEngineAdapter(context)
+        try {
+            assertFalse("control: target must be absent from English", adapter.trieFor("en")!!.contains(target))
+            assertTrue("target must come from the imported pack", adapter.trieFor(code)!!.contains(target))
+
+            val primaryOnly = decodeBlocking(adapter, keyboard, target, "en")
+            assertTrue("English control decode must be non-empty", primaryOnly.words.isNotEmpty())
+            assertFalse("English control unexpectedly contains imported target", primaryOnly.words.contains(target))
+
+            val dual = decodeBlocking(adapter, keyboard, target, "en", secondaryLanguage = code)
+            assertTrue(
+                "dual decode must surface the imported-pack target; slate=" + dual.words,
+                dual.words.contains(target)
+            )
+            assertEquals(
+                "secondary pack must not replace primary rank one",
+                primaryOnly.words.first(),
+                dual.words.first()
+            )
+        } finally {
+            adapter.shutdown()
+        }
+    }
+
+    @Test
+    fun importedLatinPackIsRejectedOnANonLatinBoard() {
+        assertTrue(importFixturePack() is ImportResult.Success)
+        assertTrue(CtcInstalledPacks.evaluateNow(context, code)!!.eligible)
+        val keyboard = loadLayout("cyrl_jcuken_ru")
+        val params = paramsFor(keyboard)
+        val adapter = CtcEngineAdapter(context)
+        try {
+            assertEquals(
+                "the metadata router recognizes the routed Cyrillic script",
+                SwipeEngineRouter.Engine.CTC,
+                SwipeEngineRouter.route(keyboard, SwipeEngineRouter.Mode.CTC)
+            )
+            assertTrue("the imported pack itself is a served CTC language", CtcEngineAdapter.supportsLanguage(code))
+            assertFalse(
+                "dispatch-time alphabet gate must reject an a-z pack on a Cyrillic board",
+                adapter.supportsLayout(keyboard, params, 1080f, 640f, code)
+            )
+        } finally {
+            adapter.shutdown()
+        }
+    }
+
+    @Test
+    fun importedPackContractionAliasIsInjectedIntoTheCtcTrie() {
+        val alias = "wouldve"
+        assertTrue(
+            importFixturePack(contractions = """{"wouldve":"would-ve"}""")
+                is ImportResult.Success
+        )
+        assertTrue(CtcInstalledPacks.evaluateNow(context, code)!!.eligible)
+
+        val adapter = CtcEngineAdapter(context)
+        try {
+            val trie = adapter.trieFor(code)!!
+            assertTrue("fixture dictionary must not already contain the alias", alias !in List(1_200) { azWord(it) })
+            assertTrue("pack contraction key must be reachable by the beam", trie.contains(alias))
+            assertTrue(
+                "injected pseudo-word must rank below a real pack word",
+                trie.logFrequencyOf(alias)!! < trie.logFrequencyOf(azWord(0))!!
+            )
+        } finally {
+            adapter.shutdown()
+        }
+    }
+
+    // ── ARC-058: multi-script model + trie rotation memory ───────────────────────────
+
+    @Test
+    fun russianPrimaryThreeLanguageRotationKeepsMemoryAndMemosBounded() {
+        val ruWords = listOf("привет") + List(1_199) { russianWord(it) }
+        val manager = LanguagePackManager.getInstance(context)
+        manager.deletePack("ru")
+        try {
+            val imported = importNamedPack("ru", ruWords)
+            assertTrue("synthetic Russian pack failed: " + imported, imported is ImportResult.Success)
+            CtcInstalledPacks.invalidate(context, "ru")
+
+            val adapter = CtcEngineAdapter(context)
+            try {
+                val baselinePss = settledPssKb()
+                val enTrie = adapter.trieFor("en")
+                assertNotNull("English trie must build", enTrie)
+                decodeBlocking(adapter, loadLayout("latn_qwerty_us"), "keyboard", "en")
+                val latinPss = settledPssKb()
+                assertEquals(
+                    listOf(CtcEngineAdapter.modelAssetFor("en")),
+                    adapter.liveModelAssetsForTest()
+                )
+
+                decodeBlocking(adapter, loadLayout("cyrl_jcuken_ru"), "привет", "ru")
+                val russianPss = settledPssKb()
+                assertEquals(
+                    setOf(
+                        CtcEngineAdapter.modelAssetFor("en"),
+                        CtcEngineAdapter.modelAssetFor("ru")
+                    ),
+                    adapter.liveModelAssetsForTest().toSet()
+                )
+                assertEquals("two language tries must fill the memo", listOf("en", "ru"), adapter.trieLanguagesForTest())
+
+                val ruTrie = adapter.trieFor("ru")
+                assertNotNull("Russian trie must remain resident", ruTrie)
+                assertNotNull("French trie must build for the third rotation leg", adapter.trieFor("fr"))
+                assertEquals(
+                    "third language must evict least-recent English, not grow the memo",
+                    listOf("ru", "fr"),
+                    adapter.trieLanguagesForTest()
+                )
+                assertNotSame(
+                    "returning to English after a three-language rotation must rebuild the evicted trie",
+                    enTrie,
+                    adapter.trieFor("en")
+                )
+                val rotatedPss = settledPssKb()
+
+                val secondSessionDelta = russianPss - latinPss
+                val totalRotationDelta = rotatedPss - baselinePss
+                Log.i(
+                    "CtcRotationMemory",
+                    "pssKb baseline=" + baselinePss + " latin=" + latinPss +
+                        " russian=" + russianPss + " rotated=" + rotatedPss +
+                        " secondSessionDelta=" + secondSessionDelta +
+                        " totalDelta=" + totalRotationDelta
+                )
+                assertTrue(
+                    "second ORT session retained more than 64 MiB: " + secondSessionDelta + " KiB",
+                    secondSessionDelta < 64L * 1024L
+                )
+                assertTrue(
+                    "bounded two-trie/two-session rotation retained more than 128 MiB: " +
+                        totalRotationDelta + " KiB",
+                    totalRotationDelta < 128L * 1024L
+                )
+            } finally {
+                adapter.shutdown()
+            }
+        } finally {
+            manager.deletePack("ru")
+            CtcInstalledPacks.invalidate(context, "ru")
+            File(context.cacheDir, "langpack-ru.zip").delete()
+        }
     }
 
     // ── The collision-warning precondition ────────────────────────────────────────────

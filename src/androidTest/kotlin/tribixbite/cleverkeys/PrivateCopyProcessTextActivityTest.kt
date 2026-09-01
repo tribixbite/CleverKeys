@@ -1,9 +1,11 @@
 package tribixbite.cleverkeys
 
+import android.content.ClipData
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -265,6 +267,25 @@ class PrivateCopyProcessTextActivityTest {
         } finally {
             cfg.clipboard_max_item_size_kb = originalCap
         }
+    }
+
+    @Test
+    fun hostileUriAttachments_areIgnored_andOnlyProcessTextIsStored() {
+        val hostileUri = Uri.parse("content://hostile.example/private/secret")
+        val intent = processTextIntent("safe selected text", readonly = false).apply {
+            clipData = ClipData.newUri(context.contentResolver, "hostile", hostileUri)
+            putExtra(Intent.EXTRA_STREAM, hostileUri)
+        }
+
+        ActivityScenario.launchActivityForResult<PrivateCopyProcessTextActivity>(intent).use { scenario ->
+            assertEquals(android.app.Activity.RESULT_CANCELED, scenario.result.resultCode)
+            assertNull(scenario.result.resultData)
+        }
+
+        val entries = db.getActiveClipboardEntries()
+        assertEquals("URI-bearing extras must not create additional rows", 1, entries.size)
+        assertEquals("only EXTRA_PROCESS_TEXT is accepted", "safe selected text", entries.single().content)
+        assertTrue(entries.single().isPrivate)
     }
 
     // ── Component gating ──────────────────────────────────────────────────────

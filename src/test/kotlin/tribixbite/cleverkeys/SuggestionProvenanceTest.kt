@@ -5,6 +5,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tribixbite.cleverkeys.swipe.SwipeEngineRouter
+import java.util.Locale
 import kotlin.math.ln1p
 
 /**
@@ -28,6 +29,38 @@ class SuggestionProvenanceTest {
     ) = UnifiedScore.combine(
         prefixScore, adaptation, static, dynamic, source,
         boost, weight, frequency, frequencyScale, contextBoost
+    )
+
+    private fun strings() = ProvenanceFormatter.Strings(
+        locale = Locale.US,
+        originLabels = SuggestionOrigin.values().associateWith { "Origin ${it.name}" },
+        unknown = "Unknown",
+        source = "Source: %1\$s",
+        score = "Score: %1\$d",
+        scoreComponents = "Score components:",
+        prefixMatch = "• Prefix match: %1\$d",
+        adaptation = "• Adaptation: %1\$.2f×",
+        contextBuiltIn = "• Context (built-in): %1\$.2f×",
+        contextLearned = "• Context (learned): %1\$.2f×",
+        contextWinnerLearned = "• Context winner: your learned patterns",
+        contextWinnerBuiltIn = "• Context winner: built-in model",
+        contextNoBoost = "• Context: no boost",
+        contextBoostSetting = "• Context boost setting: %1\$.1f×",
+        personalization = "• Personalization: %1\$.2f → %2\$.2f×",
+        frequencyFactor = "• Frequency factor: %1\$.2f×",
+        finalScore = "= Final score: %1\$d",
+        personalUsage = "Personal usage:",
+        usageCount = "Used %1\$d times",
+        frequencyScore = "Frequency score: %1\$.2f",
+        recencyScore = "Recency score: %1\$.2f",
+        baseBoost = "Base boost: %1\$.2f",
+        aggression = "Aggression: %1\$s (%2\$.2f×)",
+        finalBoost = "Final boost: %1\$.2f",
+        promotedByLearnedContext = "Promoted by learned context",
+        nextWordBuiltIn = "After “%1\$s”: common continuation (built-in, not learned)",
+        nextWordLearned = "After “%1\$s”: seen %2\$d×, %3\$d%%",
+        typedWordUndo = "Your typed word (tap to undo)",
+        autocorrectedFrom = "Autocorrected from “%1\$s”"
     )
 
     // ------------------------------------------------------------- formula
@@ -169,7 +202,8 @@ class SuggestionProvenanceTest {
 
     @Test
     fun `every origin has a distinct human label`() {
-        val labels = SuggestionOrigin.values().map { ProvenanceFormatter.originLabel(it) }
+        val strings = strings()
+        val labels = SuggestionOrigin.values().map { ProvenanceFormatter.originLabel(it, strings) }
         assertEquals(labels.size, labels.toSet().size)
         assertTrue(labels.all { it.isNotBlank() })
     }
@@ -186,11 +220,12 @@ class SuggestionProvenanceTest {
             word = "hello",
             meta = SuggestionMeta(SuggestionOrigin.DICTIONARY_PREFIX, breakdown),
             barScore = null,
-            personalizationExplanation = "Used 12 times\nFinal boost: 2.00"
+            personalization = PersonalizationDetails(12, 1.2f, 0.8f, 2.0f, "Balanced", 1.0f, 2.0f),
+            strings = strings()
         )
 
         assertTrue(text.contains("hello"))
-        assertTrue(text.contains("Dictionary prefix match"))
+        assertTrue(text.contains("Origin DICTIONARY_PREFIX"))
         assertTrue(text.contains("Prefix match: 900"))
         assertTrue(text.contains("learned patterns")) // dynamic 1.8 beat static 1.2
         assertTrue(text.contains("Final score: ${breakdown.finalScore}"))
@@ -203,17 +238,18 @@ class SuggestionProvenanceTest {
             word = "to",
             meta = SuggestionMeta(
                 SuggestionOrigin.NEXT_WORD,
-                note = "After “want”: seen 14×, 63%"
+                note = ProvenanceNote.NextWord("want", 14, 63, fromStaticSeed = false)
             ),
             barScore = 700,
-            personalizationExplanation = null
+            personalization = null,
+            strings = strings()
         )
-        assertTrue(text.contains("Next-word prediction"))
+        assertTrue(text.contains("Origin NEXT_WORD"))
         assertTrue(text.contains("seen 14×"))
         assertTrue(text.contains("Score: 700"))
         assertFalse(text.contains("Score components"))
 
-        val unknown = ProvenanceFormatter.format("x", null, null, null)
+        val unknown = ProvenanceFormatter.format("x", null, null, null, strings())
         assertTrue(unknown.contains("Unknown"))
     }
 }

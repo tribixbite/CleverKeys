@@ -32,29 +32,24 @@ import org.junit.Test
  * Run: `sh gradlew runPureTests -PtestClass=swipe.geometric.GeoLocalCorpusReplayTest -PgeoFull=true`
  *
  * ## Geometry source (DOCUMENTED, per spec deliverable — reconciled with evidence)
- * The `qwerty_english` grid geometry is defined in the repo at
- * `tools/test_cli_predict.ts` (the `QWERTY_KEYS` centroid table) and
- * `model/train_character_model.py` (`KeyboardGrid`, loading
- * `data/data_preprocessed/gridname_to_grid.json`). Both agree on the SAME per-key
- * PIXEL centroids, laid out on a 36 px horizontal / 59 px vertical pitch:
+ * The `qwerty_english` grid geometry is pinned at
+ * `src/test/resources/layouts/qwerty_english_pixels.csv`, extracted verbatim from the
+ * retired neural CLI and identical to the training repo's grid JSON. The pixel centroids
+ * use a 36 px horizontal / 59 px vertical pitch:
  * ```
  *   q(18,34) w(54,34) e(90,34) r(126,34) t(162,34) y(198,34) u(234,34) i(270,34) o(306,34) p(342,34)
  *   a(36,93) s(72,93) d(108,93) f(144,93) g(180,93) h(216,93) j(252,93) k(288,93) l(324,93)
  *   z(72,152) x(108,152) c(144,152) v(180,152) b(216,152) n(252,152) m(288,152)
  * ```
- * The replay [LayoutGeometry] is built directly from THIS table (NOT from an
- * `srcs/layouts` XML) — [QWERTY_ENGLISH_KEYS] below is a verbatim transcription. This is
- * the exact geometry the neural pipeline's nearest-key feature uses, so the replay is
- * faithful to the corpus's coordinate frame.
+ * The replay [LayoutGeometry] is built directly from this fixture (not from an
+ * `srcs/layouts` XML), preserving the corpus coordinate frame without depending on the
+ * retired CLI.
  *
  * ### Canvas reconciliation (evidence-checked, per the GEOMETRY CAUTION)
  * Measured extents across all 8,607 traces: x ∈ [0.87, 360.00], y ∈ [0.00, 215.00].
  * The canonical grid canvas is therefore **360 × 215 px** (bottom-row centroid 152 +
- * half key height). The `/280` divisor in `test_cli_predict.ts`'s `extractFeatures` is an
- * unrelated NEURAL-MODEL input squash (it just maps px into a [0,1)-ish band the encoder
- * was trained on) — it is NOT the geometric coordinate frame and is deliberately ignored
- * here. (The `.py` twin of that runner was deleted 2026-08-28, ARC-047 — its models went
- * with ADR-011. The `.ts` copy is retained precisely because it carries this table.)
+ * half key height). The retired neural runner's `/280` y normalization was an unrelated
+ * model-input squash, not the geometric coordinate frame, and is deliberately ignored.
  * Geometry validated by two independent evidence checks BEFORE the full grid run:
  *  - START-key nearest-match 73.0% / END-key 66.1% — LOWER than FUTO's 94.7% start match,
  *    but the median start-point distance to the true first-key centroid is only 14.3 px
@@ -79,6 +74,17 @@ import org.junit.Test
  * brittleness, plus a hard A ≥ B − 1pt non-regression guard (the non-circular claim).
  */
 class GeoLocalCorpusReplayTest {
+
+    @Test
+    fun pinnedQwertyEnglishPixelFixtureIsComplete() {
+        val keys = QWERTY_ENGLISH_KEYS
+        assertWithMessage("fixture key count").that(keys).hasSize(26)
+        assertWithMessage("fixture letters")
+            .that(keys.map { it.letter }.joinToString(""))
+            .isEqualTo("qwertyuiopasdfghjklzxcvbnm")
+        assertWithMessage("q centroid").that(keys.first()).isEqualTo(GridKey("q", 18f, 34f))
+        assertWithMessage("m centroid").that(keys.last()).isEqualTo(GridKey("m", 288f, 152f))
+    }
 
     // ── corpus + geometry sources ────────────────────────────────────────────
 
@@ -219,7 +225,7 @@ class GeoLocalCorpusReplayTest {
         println("[replay] LOCAL combined-test: ${pct(a.overall.top1())} / ${pct(a.overall.top3())} / " +
             "${pct(a.overall.top5())}  (t1/t3/t5) @ ${pct(coverage)} cov")
         println("[replay] NOTE this is the NEURAL model's held-out set (neural top-1 ~53% per " +
-            "tools/test_cli_predict.py); the geometric-vs-neural bridge decodes IDENTICAL inputs.")
+            "the retired neural CLI measurement); the geometric-vs-neural bridge decodes IDENTICAL inputs.")
 
         // ── regression floors (PROVISIONAL — ~4 pts below the first measured run) ──
         // Added AFTER the report-only first run (measured A: see the constants). These
@@ -420,7 +426,7 @@ class GeoLocalCorpusReplayTest {
     ) {
         println("")
         println("===================== LOCAL COMBINED-CORPUS REPLAY (neural held-out test) =====================")
-        println("geometry: repo qwerty_english centroids (tools/test_cli_predict.*, 26 keys, 360x215px, no bottom row)")
+        println("geometry: qwerty_english_pixels.csv (26 keys, 360x215px, no bottom row)")
         println("sanity: start-key ${pct(startMatch)}  end-key ${pct(endMatch)}   (adjacent-key noise; geometry OK)")
         println("decoded (in-dict): $decoded traces   coverage: ${pct(coverage)}   OOV: $oov")
         println("-----------------------------------------------------------------------------------------------")
@@ -490,23 +496,23 @@ class GeoLocalCorpusReplayTest {
         private const val KEY_PITCH_Y_PX = 59f // 34 → 93 → 152 row spacing
 
         /**
-         * The repo-authoritative `qwerty_english` per-key PIXEL centroids, transcribed
-         * verbatim from `tools/test_cli_predict.py` / `.ts` `QWERTY_KEYS` (identical to the
-         * `KeyboardGrid` derived from `model/train_character_model.py`'s grid JSON). NO
-         * bottom/function row — this IS the letter area the corpus x,y live in.
+         * Repo-authoritative `qwerty_english` per-key pixel centroids loaded from the
+         * pinned test fixture extracted from the retired neural CLI.
          */
-        private val QWERTY_ENGLISH_KEYS: List<GridKey> = listOf(
-            GridKey("q", 18f, 34f), GridKey("w", 54f, 34f), GridKey("e", 90f, 34f),
-            GridKey("r", 126f, 34f), GridKey("t", 162f, 34f), GridKey("y", 198f, 34f),
-            GridKey("u", 234f, 34f), GridKey("i", 270f, 34f), GridKey("o", 306f, 34f),
-            GridKey("p", 342f, 34f),
-            GridKey("a", 36f, 93f), GridKey("s", 72f, 93f), GridKey("d", 108f, 93f),
-            GridKey("f", 144f, 93f), GridKey("g", 180f, 93f), GridKey("h", 216f, 93f),
-            GridKey("j", 252f, 93f), GridKey("k", 288f, 93f), GridKey("l", 324f, 93f),
-            GridKey("z", 72f, 152f), GridKey("x", 108f, 152f), GridKey("c", 144f, 152f),
-            GridKey("v", 180f, 152f), GridKey("b", 216f, 152f), GridKey("n", 252f, 152f),
-            GridKey("m", 288f, 152f),
-        )
+        private val QWERTY_ENGLISH_KEYS: List<GridKey> by lazy {
+            val fixture = File("src/test/resources/layouts/qwerty_english_pixels.csv")
+            check(fixture.isFile) { "missing qwerty_english pixel fixture: $fixture" }
+            fixture.readLines().filter { it.isNotBlank() }.mapIndexed { index, line ->
+                val fields = line.split(',')
+                check(fields.size == 3) { "bad qwerty fixture row ${index + 1}: $line" }
+                GridKey(fields[0], fields[1].toFloat(), fields[2].toFloat())
+            }.also { keys ->
+                check(keys.size == 26) { "qwerty fixture must contain 26 keys, got ${keys.size}" }
+                check(keys.map { it.letter }.joinToString("") == "qwertyuiopasdfghjklzxcvbnm") {
+                    "qwerty fixture letter order drifted"
+                }
+            }
+        }
 
         /**
          * Tolerance (absolute fraction) for the A-vs-B non-regression guard and the

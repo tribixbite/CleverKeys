@@ -281,6 +281,7 @@ class PersonalizationEngine(private val context: Context) {
                 frequencyScore = 0.0f,
                 recencyScore = 0.0f,
                 baseBoost = 0.0f,
+                aggression = null,
                 aggressionMultiplier = 0.0f,
                 finalBoost = 0.0f,
                 explanation = "Personalization is disabled"
@@ -298,6 +299,7 @@ class PersonalizationEngine(private val context: Context) {
                 frequencyScore = 0.0f,
                 recencyScore = 0.0f,
                 baseBoost = 0.0f,
+                aggression = aggression,
                 aggressionMultiplier = aggression.multiplier,
                 finalBoost = 0.0f,
                 explanation = "Word not in user vocabulary"
@@ -326,6 +328,7 @@ class PersonalizationEngine(private val context: Context) {
             frequencyScore = frequencyScore,
             recencyScore = recencyScore,
             baseBoost = baseBoost,
+            aggression = aggression,
             aggressionMultiplier = aggression.multiplier,
             finalBoost = finalBoost,
             explanation = explanation
@@ -369,6 +372,7 @@ data class BoostExplanation(
     val frequencyScore: Float,
     val recencyScore: Float,
     val baseBoost: Float,
+    val aggression: PersonalizationEngine.LearningAggression?,
     val aggressionMultiplier: Float,
     val finalBoost: Float,
     val explanation: String

@@ -567,7 +567,7 @@
     <!-- END wp8b_new_strings block -->
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Motor de predicción</string>
-    <string name="swipe_engine_mode_desc">CTC: haz CTC en distribuciones latinas para inglés, francés, alemán, español, italiano, portugués y sueco; geométrico para otros idiomas y distribuciones no latinas. Geométrico: todas las distribuciones.</string>
+    <string name="swipe_engine_mode_desc">CTC: usa CTC en el dispositivo cuando el idioma y la distribución seleccionados son compatibles; consulta abajo el estado de esta configuración. Geométrico: disponible para todas las distribuciones.</string>
     <string name="advanced_provenance_markers_title">Marcadores de origen de las sugerencias</string>
     <string name="advanced_provenance_markers_desc">Muestra en cada sugerencia un punto de color que indica qué motor la generó (mantén pulsada una sugerencia para ver todos los detalles)</string>
     <string name="input_next_word_title">Predicción de la siguiente palabra</string>

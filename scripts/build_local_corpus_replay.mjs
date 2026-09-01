@@ -20,8 +20,8 @@
  *              "grid_name": "qwerty_english"}, "word": "..."}
  * Coordinates are RAW PIXELS over the `qwerty_english` grid canvas. Measured extents
  * across the whole file: x ∈ [0.87, 360.00], y ∈ [0.00, 215.00] → the canonical grid
- * canvas is 360 × 215 px (the same frame `tools/test_cli_predict.ts` /
- * `model/train_character_model.py` define the per-key centroids in; the neural
+ * canvas is 360 × 215 px (the same frame the pinned
+ * `src/test/resources/layouts/qwerty_english_pixels.csv` fixture defines; the neural
  * pipeline's separate `/280` normalization is an unrelated model-input squash and is
  * NOT the geometric coordinate frame).
  *
@@ -62,7 +62,7 @@ import { createInterface } from "node:readline";
 
 // ── config ──────────────────────────────────────────────────────────────────
 
-/** Canonical `qwerty_english` grid canvas (px). See file header + tools/test_cli_predict.ts. */
+/** Canonical `qwerty_english` grid canvas (px). See the pinned test-resource fixture. */
 const CANVAS_W = 360;
 const CANVAS_H = 215;
 

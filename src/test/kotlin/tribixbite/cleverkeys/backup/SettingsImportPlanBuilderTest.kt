@@ -649,4 +649,199 @@ class SettingsImportPlanBuilderTest {
         assertThat(plan.changes.single().current).isEqualTo(PrefValue.Unset)
         assertThat(plan.changes.single().type).isEqualTo(ChangeType.ADDED)
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // ARC-093: legacy FRACTIONAL literals for int-typed preferences.
+    //
+    // v1.5.x wrote `finger_occlusion_offset` through a float slider, so every
+    // backup from that era carries `12.5` / `40.0` where the current app reads
+    // `safeGetInt`. Before the fix `parsePrefValue` dispatched such a literal
+    // by JSON SHAPE — a fractional literal became `FloatV`, which
+    // `validateFloat` waves through (`else -> true`), so the int guard
+    // (`-25..25`) never saw the value and the wrong SharedPreferences TYPE was
+    // written. `Config.safeGetInt` then papered over it by catching the
+    // ClassCastException, truncating and clamping at READ time — invisible in
+    // the preview and lossy (12.5 → 12).
+    //
+    // The fix treats a fractional literal for a key whose declared default is
+    // `IntV` as a legacy-format migration: round, clamp into the key's own
+    // validated range, emit a normal preview row. Same shape as
+    // `applyLegacyMigration`'s dp→% conversion, which likewise rewrites the
+    // value at build time and shows the converted number.
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun legacyFractionalIntPref_isCoercedToARoundedIntNotAFloat() {
+        // 12.5 was the v1.5.x calibrated value. roundToInt() → 13 (half-up),
+        // NOT the 12 that Config's read-time truncation produced.
+        val json = """{"preferences":{"finger_occlusion_offset":12.5}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        assertThat(plan.parseSkippedKeys.map { it.key })
+            .doesNotContain("finger_occlusion_offset")
+        val change = plan.changes.single { it.key == "finger_occlusion_offset" }
+        assertThat(change.proposed).isEqualTo(PrefValue.IntV(13))
+        // Effective current renders as the compile-time default (0), not Unset.
+        assertThat(change.current).isEqualTo(PrefValue.IntV(0))
+        assertThat(change.type).isEqualTo(ChangeType.ADDED)
+    }
+
+    @Test
+    fun legacyFractionalIntPref_negativeValueRoundsHalfUp() {
+        // Kotlin's roundToInt is half-UP (toward +∞), so -12.5 → -12. Pinned
+        // because the offset is SIGNED and a half-away-from-zero implementation
+        // would silently shift every negative calibration by one percent.
+        val json = """{"preferences":{"finger_occlusion_offset":-12.5}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        val change = plan.changes.single { it.key == "finger_occlusion_offset" }
+        assertThat(change.proposed).isEqualTo(PrefValue.IntV(-12))
+    }
+
+    @Test
+    fun legacyFractionalIntPref_outOfRange_isClampedByTheKeysIntGuard() {
+        // 40.0 previously slipped past `validateFloat` and landed in prefs as a
+        // float, leaving Config's read-time coerceIn(-25, 25) as the only guard.
+        // Now the int guard applies at BUILD time and the preview shows the
+        // value that will actually be written.
+        val json = """{"preferences":{"finger_occlusion_offset":40.0}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        assertThat(plan.parseSkippedKeys.map { it.key })
+            .doesNotContain("finger_occlusion_offset")
+        val change = plan.changes.single { it.key == "finger_occlusion_offset" }
+        assertThat(change.proposed).isEqualTo(PrefValue.IntV(25))
+    }
+
+    @Test
+    fun integerLiteralOutOfRange_isStillRejectedNotClamped() {
+        // The clamp is confined to the LEGACY FRACTIONAL path. A well-formed
+        // integer literal out of range is a corrupt/hand-edited value, and keeps
+        // its existing visible rejection — clamping it would be a new silent
+        // value rewrite.
+        val json = """{"preferences":{"finger_occlusion_offset":40}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        assertThat(plan.changes.map { it.key }).doesNotContain("finger_occlusion_offset")
+        val skipped = plan.parseSkippedKeys.single { it.key == "finger_occlusion_offset" }
+        assertThat(skipped.reason).isEqualTo("out of range, got 40")
+    }
+
+    @Test
+    fun legacyFractionalIntPref_ruleIsGeneralNotOneKey() {
+        // The rule keys off the DECLARED type in SETTINGS_DEFAULTS, so every
+        // getInt-read pref is protected, not just the one ARC-093 reported.
+        val json = """{"preferences":{"keyboard_height":33.4,"ctc_beam_width":180.6}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        val byKey = plan.changes.associateBy { it.key }
+        assertThat(byKey["keyboard_height"]!!.proposed).isEqualTo(PrefValue.IntV(33))
+        assertThat(byKey["ctc_beam_width"]!!.proposed).isEqualTo(PrefValue.IntV(181))
+    }
+
+    @Test
+    fun floatTypedPref_fractionalLiteral_isUnaffectedByTheIntCoercion() {
+        // Guard against over-reach: `isFloatPreference` is consulted FIRST, so a
+        // genuinely float-typed pref keeps its fractional value.
+        val json = """{"preferences":{"character_size":1.25}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        val change = plan.changes.single { it.key == "character_size" }
+        assertThat(change.proposed).isEqualTo(PrefValue.FloatV(1.25f))
+    }
+
+    @Test
+    fun unknownFractionalKey_stillFallsBackToJsonShape() {
+        // No declared default → no type discipline to enforce → version-tolerant
+        // shape dispatch, exactly as before.
+        val json = """{"preferences":{"totally_unknown_key":3.14}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        val change = plan.changes.single { it.key == "totally_unknown_key" }
+        assertThat(change.proposed).isEqualTo(PrefValue.FloatV(3.14f))
+    }
+
+    @Test
+    fun intRangeTable_matchesTheValidatorItBacks() {
+        // The range table replaced an inline `when` block inside `validateInt`.
+        // Spot-check that the extraction is faithful for the boundaries the
+        // rest of this suite does NOT already cover, so a transcription slip
+        // cannot pass silently.
+        assertThat(SettingsValidation.intRangeFor("finger_occlusion_offset")).isEqualTo(-25..25)
+        assertThat(SettingsValidation.intRangeFor("ctc_beam_width")).isEqualTo(10..300)
+        assertThat(SettingsValidation.intRangeFor("longpress_timeout")).isEqualTo(50..2000)
+        assertThat(SettingsValidation.intRangeFor("keyboard_height_landscape")).isEqualTo(20..65)
+        assertThat(SettingsValidation.intRangeFor("margin_left_portrait")).isEqualTo(0..45)
+        assertThat(SettingsValidation.intRangeFor("horizontal_margin_portrait")).isEqualTo(0..200)
+        assertThat(SettingsValidation.intRangeFor("autocorrect_confidence_min_frequency"))
+            .isEqualTo(100..2000)
+        // Unknown key → no range → version-tolerant accept in validateInt.
+        assertThat(SettingsValidation.intRangeFor("totally_unknown_key")).isNull()
+    }
+
+    @Test
+    fun absentLanguageSlots_importingLiveDefaults_areNotPreviewedAsAdditions() {
+        val plan = SettingsImportPlanBuilder.fromJson(
+            """{"preferences":{
+                "pref_primary_language_alt":"es",
+                "pref_secondary_language":"none",
+                "pref_secondary_language_alt":"none"
+            }}""".trimIndent(),
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        assertThat(plan.changes).isEmpty()
+    }
+
+    @Test
+    fun absentSecondaryLanguage_importingDifferentValue_showsEffectiveCurrentDefault() {
+        val plan = SettingsImportPlanBuilder.fromJson(
+            """{"preferences":{"pref_secondary_language":"fr"}}""",
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+
+        val change = plan.changes.single()
+        assertThat(change.current).isEqualTo(PrefValue.Str("none"))
+        assertThat(change.proposed).isEqualTo(PrefValue.Str("fr"))
+        assertThat(change.type).isEqualTo(ChangeType.ADDED)
+    }
 }

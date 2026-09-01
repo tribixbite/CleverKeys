@@ -29,6 +29,8 @@ object UserDictionaryWords {
 
     private const val TAG = "UserDictionaryWords"
 
+    private val snapshotCache = UserDictionarySnapshotCache()
+
     /**
      * Frequency used when the provider omits the column. Matches what the tap path has always
      * substituted, so the two paths rank a column-less row identically.
@@ -80,23 +82,19 @@ object UserDictionaryWords {
 
     /**
      * [read] normalized into the pure snapshot the swipe adapters merge and fingerprint
-     * (ARC-081). This is the Android half of that seam; everything downstream of it is pure.
-     *
-     * Called once per lexicon build, which means once per decode (twice under
-     * `enable_multilang`), because the snapshot is an INPUT to the memo key and so has to be
-     * known before the memo can be consulted. That is a deliberate correctness-first choice:
-     * the whole point of ARC-081 is that an edit made outside this app must be picked up, and
-     * any cache that can go stale reintroduces exactly the bug being fixed. It also sits beside
-     * work of the same order that both adapters already do per build — a `SharedPreferences`
-     * read plus, for a langpack language, three `stat` calls on the pack file.
-     *
-     * TODO(perf): if a measured swipe-latency budget ever shows this binder round trip
-     * mattering, cache the snapshot per language behind an epoch bumped by
-     * [UserDictionaryObserver.onChange] — that observer is registered on the whole
-     * `UserDictionary.Words` URI with descendants, so it sees every provider change regardless
-     * of locale. Caching MUST be disabled while that observer is not running, or a device where
-     * the tap predictor never initialised would serve a snapshot frozen at process start.
+     * (ARC-081), reused through the observer-gated epoch cache from ARC-102.
      */
     fun snapshot(context: Context, language: String): UserDictionarySnapshot =
-        UserDictionarySnapshot.of(read(context, language))
+        snapshotCache.snapshot(language) { lang ->
+            UserDictionarySnapshot.of(read(context, lang))
+        }
+
+    /** Provider-wide invalidation signal; called before an observer reloads its local cache. */
+    internal fun onProviderChanged() = snapshotCache.providerChanged()
+
+    /** Enables snapshot reuse only after a real observer has been registered. */
+    internal fun onObserverStarted() = snapshotCache.observerStarted()
+
+    /** Disables and drops snapshot reuse when the final observer is gone. */
+    internal fun onObserverStopped() = snapshotCache.observerStopped()
 }

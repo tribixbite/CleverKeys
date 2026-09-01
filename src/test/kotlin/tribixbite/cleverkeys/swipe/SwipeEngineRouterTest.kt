@@ -49,7 +49,8 @@ class SwipeEngineRouterTest {
      * script have a COMPLETE wiring" — a per-script model, a per-script trie at the app's own
      * frequency scale, and a golden fixture at the shipping preset (HANDOFF rule 4).
      *
-     * Cyrillic flipped when ru's artifacts landed; Greek has not, and asserting BOTH directions
+     * Cyrillic flipped when ru's artifacts landed (2026-08-29) and Greek when el's did
+     * (2026-08-30); `hebrew` has a table row and has NOT flipped, and asserting BOTH directions
      * here is the point: the router is driven by a table, so a script cannot be widened by
      * editing the router, and an unwired script cannot drift into CTC by accident.
      */
@@ -57,13 +58,19 @@ class SwipeEngineRouterTest {
     fun `a wired script routes ctc and an unwired one stays geometric`() {
         assertThat(SwipeEngineRouter.route("ЙЦУКЕН", "cyrillic", Mode.CTC))
             .isEqualTo(Engine.CTC)
-        // The Greek QWERTY trap still holds, now for a different reason: script wins over the
-        // QWERTY-shaped name, and `greek` has no ROUTED row (its model and fixture are not
-        // shipped), so it stays on the geometric engine.
+        // The Greek QWERTY trap resolves the other way now: script still wins over the
+        // QWERTY-shaped name, and `greek` finally HAS a ROUTED row, so the board that used to be
+        // the canonical "name says QWERTY, script says otherwise" case routes CTC — on the Greek
+        // encoder and the Greek trie, never the Latin ones.
         assertThat(SwipeEngineRouter.route("QWERTY (Ελληνικά)", "greek", Mode.CTC))
+            .isEqualTo(Engine.CTC)
+        // `hebrew` is the live negative: a table row exists, its model, fixture and lexicon do
+        // not, so it must stay geometric. This is the assertion that would catch a router
+        // widened ahead of its artifacts.
+        assertThat(SwipeEngineRouter.route("עברית", "hebrew", Mode.CTC))
             .isEqualTo(Engine.GEOMETRIC)
         // Scripts with no table row at all can never reach CTC.
-        for (script in listOf("arabic", "hebrew", "devanagari", "hangul", "georgian")) {
+        for (script in listOf("arabic", "devanagari", "hangul", "georgian")) {
             assertThat(SwipeEngineRouter.route("board", script, Mode.CTC))
                 .isEqualTo(Engine.GEOMETRIC)
         }
@@ -87,6 +94,10 @@ class SwipeEngineRouterTest {
         for (language in listOf("uk", "bg", "mk", "sr", "kk")) {
             assertThat(CtcLanguageSupport.isSupported(language)).isFalse()
         }
+        // Greek is the clean case rather than the counter-example — `greek` is one layout and
+        // one language — but the same division of labour applies, so it is asserted the same
+        // way rather than by inspection.
+        assertThat(CtcLanguageSupport.isSupported("el")).isTrue()
     }
 
     @Test

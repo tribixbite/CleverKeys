@@ -396,7 +396,9 @@ class Keyboard2View @JvmOverloads constructor(
         val composeKv = KeyValue.getKeyByName("compose")
         _compose_kv = composeKv
         _compose_key = kw.findKeyWithValue(composeKv)
-        kw.modmap?.let { KeyModifier.set_modmap(it) }
+        // ARC-088: null is a real layout transition, not "leave the previous modmap active".
+        // It also invalidates KeyModifier's per-(key, modifiers) render memo.
+        KeyModifier.set_modmap(kw.modmap)
 
         // Refresh swipe trail paint with latest config settings
         initSwipeTrailPaint()

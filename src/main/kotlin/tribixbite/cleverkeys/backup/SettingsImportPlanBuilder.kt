@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.backup
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import kotlin.math.roundToInt
 
 /**
  * Pure JSON → `SettingsImportPlan` builder. No Android deps — all
@@ -232,6 +233,19 @@ object SettingsImportPlanBuilder {
      * ClassCastException on next `prefs.getFloat`). For unknown numeric keys
      * we fall back to JSON shape (fractional digits → FloatV) which mirrors
      * the version-tolerant default of the legacy validators.
+     *
+     * ARC-093: shape dispatch is WRONG in the other direction too. A pref the
+     * app reads with `getInt` can still appear as a fractional literal in a
+     * legacy export — `finger_occlusion_offset` shipped behind a float slider
+     * in v1.5.x, so those backups carry `12.5` / `40.0`. Dispatching those by
+     * shape produced a `FloatV`, which `validateFloat` waves through
+     * (`else -> true`), so the key's own int guard never ran and the wrong
+     * storage TYPE was written; `Config.safeGetInt` then rescued it by
+     * catching the ClassCastException and truncating + clamping at READ time —
+     * lossy and invisible in the preview. [coerceLegacyFractionalInt] treats
+     * that case as what it is, a legacy-format migration: round, clamp into
+     * the key's validated range, and let the row render normally. Same shape
+     * as [applyLegacyMigration]'s dp→% conversion.
      */
     private fun parsePrefValue(key: String, element: JsonElement): PrefValue? {
         if (key in JSON_BLOB_KEYS) {
@@ -253,18 +267,47 @@ object SettingsImportPlanBuilder {
                 if (SettingsValidation.isFloatPreference(key)) {
                     PrefValue.FloatV(p.asFloat)
                 } else {
-                    // Unknown numeric key: dispatch by JSON shape. A fractional
-                    // literal (e.g. 3.14) lands as FloatV; an integer literal
-                    // (e.g. 42, 50) lands as IntV. Known int-typed prefs are
-                    // never fractional in well-formed exports.
+                    // Dispatch by JSON shape. A fractional literal (e.g. 3.14)
+                    // lands as FloatV; an integer literal (e.g. 42, 50) lands as
+                    // IntV — unless the key's DECLARED default says it is
+                    // int-typed, in which case the fractional literal is a legacy
+                    // representation to migrate rather than a value to preserve.
                     val raw = p.asString
-                    if ('.' in raw || 'e' in raw || 'E' in raw) PrefValue.FloatV(p.asFloat)
-                    else PrefValue.IntV(p.asInt)
+                    val fractional = '.' in raw || 'e' in raw || 'E' in raw
+                    when {
+                        !fractional -> PrefValue.IntV(p.asInt)
+                        lookupDefault(key) is PrefValue.IntV ->
+                            PrefValue.IntV(coerceLegacyFractionalInt(key, p.asFloat))
+                        else -> PrefValue.FloatV(p.asFloat)
+                    }
                 }
             }
             p.isString -> PrefValue.Str(p.asString)
             else -> null
         }
+    }
+
+    /**
+     * ARC-093: turn a legacy FRACTIONAL literal for an int-typed pref into the
+     * integer that pref will actually be read as.
+     *
+     * Rounding is [kotlin.math.roundToInt] (half-up), which keeps a calibrated
+     * 12.5 as 13 rather than the 12 that `Config.safeGetInt`'s `toInt()`
+     * truncation produced. Clamping into [SettingsValidation.intRangeFor] then
+     * puts the migrated value inside the same bounds the validator enforces, so
+     * the row survives validation and the preview shows the number that will be
+     * written — instead of the value slipping through as a float and being
+     * clamped later, unseen, by the read site's own `coerceIn`.
+     *
+     * The clamp is deliberately confined to this legacy path. A well-formed
+     * INTEGER literal out of range keeps its visible rejection in
+     * `SettingsValidation.validate`; clamping that too would be a new silent
+     * value rewrite, which is the very behaviour ARC-093 was filed against.
+     */
+    private fun coerceLegacyFractionalInt(key: String, value: Float): Int {
+        val rounded = value.roundToInt()
+        val range = SettingsValidation.intRangeFor(key) ?: return rounded
+        return rounded.coerceIn(range.first, range.last)
     }
 
     private fun currentToPrefValue(value: Any?, isJsonBlob: Boolean): PrefValue {

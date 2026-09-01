@@ -210,7 +210,10 @@ object KeyboardGeometry {
     }
 
     /**
-     * Finite, non-overlapping TalkBack ownership cells matching [keyAt]'s slop rules.
+     * Finite TalkBack ownership entries matching [keyAt]'s first-match slop rules.
+     * Entries are row-major and may overlap when an a/l row has a real key before `a`: `a` owns
+     * the left-edge slop, while the earlier key keeps its physical cell, and the helper resolves
+     * the overlap with the same row-major first match as [keyAt].
      * Physical key rectangles remain available through [computeKeyRects] for swipe-model centers.
      */
     fun computeAccessibilityKeyRects(

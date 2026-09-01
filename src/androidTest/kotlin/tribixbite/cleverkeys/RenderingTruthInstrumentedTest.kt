@@ -141,6 +141,33 @@ class RenderingTruthInstrumentedTest {
     }
 
     @Test
+    fun suggestionBar_rebindReusesChildViewsWhenContentChanges() {
+        val bar = makeSuggestionBarOnMainThread()
+        lateinit var firstChildren: List<android.view.View>
+        lateinit var reboundChildren: List<android.view.View>
+
+        runOnMain {
+            bar.setSuggestionsWithScores(listOf("alpha", "beta", "gamma"), listOf(3, 2, 1))
+            firstChildren = (0 until bar.childCount).map(bar::getChildAt)
+            bar.setSuggestionsWithScores(listOf("delta", "epsilon", "zeta"), listOf(6, 5, 4))
+            reboundChildren = (0 until bar.childCount).map(bar::getChildAt)
+        }
+
+        assertEquals("three suggestions plus two dividers", 5, firstChildren.size)
+        assertEquals(firstChildren.size, reboundChildren.size)
+        firstChildren.indices.forEach { index ->
+            assertSame(
+                "ARC-095: rebind must reuse child view at index " + index,
+                firstChildren[index],
+                reboundChildren[index]
+            )
+        }
+        assertEquals("delta", (reboundChildren[0] as android.widget.TextView).text.toString())
+        assertEquals("epsilon", (reboundChildren[2] as android.widget.TextView).text.toString())
+        assertEquals("zeta", (reboundChildren[4] as android.widget.TextView).text.toString())
+    }
+
+    @Test
     fun suggestionBar_emptyList_clearsSuggestions() {
         val bar = makeSuggestionBarOnMainThread()
         runOnMain { bar.setSuggestionsWithScores(listOf("x"), listOf(1)) }

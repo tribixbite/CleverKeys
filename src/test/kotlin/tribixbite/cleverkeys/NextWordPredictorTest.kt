@@ -431,16 +431,16 @@ class NextWordPredictorTest {
             NextWordPredictor.Candidate("to", 700, 14, 0.63f, fromTrigram = false),
             listOf("i", "want")
         )
-        assertTrue(bigramNote.contains("want"))
-        assertFalse(bigramNote.contains("i want"))
-        assertTrue(bigramNote.contains("14×"))
-        assertTrue(bigramNote.contains("63%"))
+        assertEquals("want", bigramNote.context)
+        assertEquals(14, bigramNote.frequency)
+        assertEquals(63, bigramNote.percent)
+        assertFalse(bigramNote.fromStaticSeed)
 
         val trigramNote = NextWordPredictor.provenanceNote(
             NextWordPredictor.Candidate("go", 700, 5, 0.5f, fromTrigram = true),
             listOf("i", "want", "to")
         )
-        assertTrue(trigramNote.contains("want to"))
+        assertEquals("want to", trigramNote.context)
     }
 
     @Test
@@ -452,10 +452,9 @@ class NextWordPredictorTest {
             ),
             listOf("i", "want", "the")
         )
-        assertTrue(note.contains("the"))
-        assertTrue(note.contains("built-in"))
-        // "seen 0×, 0%" would read as real evidence that does not exist.
-        assertFalse(note.contains("seen"))
-        assertFalse(note.contains("0%"))
+        assertEquals("the", note.context)
+        assertTrue(note.fromStaticSeed)
+        assertEquals(0, note.frequency)
+        assertEquals(0, note.percent)
     }
 }

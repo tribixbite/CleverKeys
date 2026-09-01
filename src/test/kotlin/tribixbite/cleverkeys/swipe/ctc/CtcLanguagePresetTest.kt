@@ -82,7 +82,7 @@ class CtcLanguagePresetTest {
 
     @Test
     fun `script preset selection is case and region insensitive`() {
-        for (tag in listOf("RU", "ru-RU", "ru_RU")) {
+        for (tag in listOf("RU", "ru-RU", "ru_RU", "EL", "el-GR", "el_GR")) {
             assertWithMessage(tag)
                 .that(CtcScoringParams.presetFor(tag))
                 .isEqualTo(CtcScoringParams.tunedRuCkdt())
@@ -152,12 +152,13 @@ class CtcLanguagePresetTest {
     // ── The language table ─────────────────────────────────────────────────────────
 
     @Test
-    fun `the served set is the seven latin languages plus ru`() {
-        // Seven bundled Latin dictionaries, plus ru — the first non-Latin language, whose
-        // lexicon is NOT bundled (it rides the importable langpack, which is the exact pack
-        // every published Russian number was measured on).
+    fun `the served set is the seven latin languages plus ru and el`() {
+        // Seven bundled Latin dictionaries, plus the two script languages — ru (2026-08-29) and
+        // el (2026-08-30) — whose lexicons are NOT bundled: both ride an importable langpack,
+        // which for ru is the exact pack every published Russian number was measured on and for
+        // el is `langpack-el.zip` / `scripts/dictionaries/el/el_enhanced.bin`.
         assertThat(CtcLanguageSupport.SUPPORTED.keys)
-            .containsExactly("en", "fr", "de", "es", "it", "pt", "sv", "ru")
+            .containsExactly("en", "fr", "de", "es", "it", "pt", "sv", "ru", "el")
     }
 
     @Test
@@ -175,6 +176,12 @@ class CtcLanguagePresetTest {
         // The test-validated four must never acquire either flag.
         assertThat(CtcLanguageSupport.VAL_ONLY)
             .containsNoneIn(listOf("en", "fr", "de", "es"))
+        // el is a SCRIPT language like ru and it is NOT val-only, because being non-Latin is
+        // not what puts a language in that set — having a real-swipe probe is. Greek has NO
+        // real-swipe probe at ANY tier: its 92.12 is a synthesis-holdout level, measured
+        // against the generator's own distribution, and may never be quoted as accuracy.
+        // Filing it beside ru would assert a measured number that does not exist.
+        assertThat(CtcLanguageSupport.VAL_ONLY).doesNotContain("el")
     }
 
     @Test
@@ -202,6 +209,29 @@ class CtcLanguagePresetTest {
     }
 
     @Test
+    fun `el is provisional — the tier for a language with no accuracy bar at all`() {
+        // 2026-08-30. el is the second script language and it enters at the WEAKEST tier the
+        // table offers, not at ru's. Greek has NO real-swipe probe at ANY tier: its 92.12 is a
+        // synthesis-holdout level and may never be quoted as accuracy. PROVISIONAL is exactly
+        // "served on scale-transferred evidence rather than its own measured bar", which is the
+        // true statement about Greek; VAL_ONLY would claim a real measured number exists.
+        assertThat(CtcLanguageSupport.isSupported("el")).isTrue()
+        assertThat(CtcLanguageSupport.PROVISIONAL).contains("el")
+        assertThat(CtcLanguageSupport.isProvisional("el")).isTrue()
+        assertThat(CtcLanguageSupport.isProvisional("EL-gr")).isTrue()
+        // Scale transfer is the whole justification, and it holds for the same reason it holds
+        // for ru: the el langpack is CKDT v2 read at `freq = max(1, 255 − rank)`, the scale
+        // λ 2.0 was fitted on. A different source here would apply the wrong λ.
+        assertThat(CtcLanguageSupport.sourceFor("el"))
+            .isEqualTo(CtcLanguageSupport.LexiconSource.CKDT_LANGPACK)
+        assertThat(CtcScoringParams.presetFor("el").lambda)
+            .isEqualTo(CtcScoringParams.LAMBDA_CKDT_SCALE)
+        // …and it decodes at the SCRIPT footing, verbatim — the preset every el artifact was
+        // gated and fixture-generated at.
+        assertThat(CtcScoringParams.presetFor("el")).isEqualTo(CtcScoringParams.tunedRuCkdt())
+    }
+
+    @Test
     fun `no bundled dictionary language is left unserved`() {
         // Every language with a bundled CTC lexicon is now routed to CTC; NEEDS_VALIDATION is
         // empty. It is retained as a concept for the NEXT language added, so this asserts the
@@ -219,11 +249,13 @@ class CtcLanguagePresetTest {
             assertThat(CtcLanguageSupport.sourceFor(lang))
                 .isEqualTo(CtcLanguageSupport.LexiconSource.CKDT_BIN)
         }
-        // ru reads the SAME CKDT container and the SAME 255-rank scale, delivered by the
+        // ru and el read the SAME CKDT container and the SAME 255-rank scale, delivered by the
         // language-pack import rather than bundled — which is why it is its own constant and
         // not just "asset, else langpack" on CKDT_BIN. See the enum's KDoc.
-        assertThat(CtcLanguageSupport.sourceFor("ru"))
-            .isEqualTo(CtcLanguageSupport.LexiconSource.CKDT_LANGPACK)
+        for (script in listOf("ru", "el")) {
+            assertWithMessage(script).that(CtcLanguageSupport.sourceFor(script))
+                .isEqualTo(CtcLanguageSupport.LexiconSource.CKDT_LANGPACK)
+        }
     }
 
     @Test
@@ -232,10 +264,13 @@ class CtcLanguagePresetTest {
         assertThat(CtcLanguageSupport.assetFor("fr")).isEqualTo("dictionaries/fr_enhanced.bin")
         assertThat(CtcLanguageSupport.assetFor("de")).isEqualTo("dictionaries/de_enhanced.bin")
         assertThat(CtcLanguageSupport.assetFor("es")).isEqualTo("dictionaries/es_enhanced.bin")
-        // ru has NO bundled asset: a null here means "not bundled", not "unsupported".
+        // ru and el have NO bundled asset: a null here means "not bundled", not "unsupported".
         assertThat(CtcLanguageSupport.assetFor("ru")).isNull()
+        assertThat(CtcLanguageSupport.assetFor("el")).isNull()
         assertThat(CtcLanguageSupport.langpackRelativePath("ru"))
             .isEqualTo("langpacks/ru/dictionary.bin")
+        assertThat(CtcLanguageSupport.langpackRelativePath("el"))
+            .isEqualTo("langpacks/el/dictionary.bin")
         // …and the converse, so the two resolutions can never both answer for one language.
         for (lang in listOf("en", "fr", "de", "es", "it", "pt", "sv")) {
             assertThat(CtcLanguageSupport.langpackRelativePath(lang)).isNull()
@@ -252,6 +287,8 @@ class CtcLanguagePresetTest {
         assertThat(CtcLanguageSupport.isSupported("")).isFalse()
         assertThat(CtcLanguageSupport.isSupported("ru")).isTrue()
         assertThat(CtcLanguageSupport.isSupported("RU-ru")).isTrue()
+        assertThat(CtcLanguageSupport.isSupported("el")).isTrue()
+        assertThat(CtcLanguageSupport.isSupported("EL_gr")).isTrue()
         assertThat(CtcLanguageSupport.isSupported("uk")).isFalse()
     }
 

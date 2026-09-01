@@ -23,6 +23,8 @@ import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.swipe.CtcInstalledPacks
+import tribixbite.cleverkeys.swipe.SwipeEngineFallback
+import tribixbite.cleverkeys.swipe.SwipeEngineRouter
 import tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
@@ -122,9 +124,14 @@ internal fun SettingsActivity.SwipeTypingSection() {
                             )
                         }
                     }
-                    if (swipeEngineMode != "geometric" &&
-                        !CtcLanguageSupport.isSupported(primaryLanguage)
-                    ) {
+                    val fallback = SwipeEngineFallback.diagnose(
+                        mode = SwipeEngineRouter.Mode.fromPref(swipeEngineMode),
+                        language = primaryLanguage,
+                        layouts = config.layouts
+                            .filterNotNull()
+                            .map { SwipeEngineFallback.factsFor(it, primaryLanguage) },
+                    )
+                    if (fallback.hasAny) {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -135,57 +142,77 @@ internal fun SettingsActivity.SwipeTypingSection() {
                                     text = stringResource(R.string.swipe_engine_fallback_title),
                                     fontWeight = FontWeight.Medium
                                 )
-                                Text(
-                                    text = stringResource(
-                                        R.string.swipe_engine_fallback_desc,
-                                        primaryLanguage.uppercase(),
-                                        // SUPPORTED.keys alone would UNDERSTATE coverage on a
-                                        // device with an eligible imported pack — that language
-                                        // is served, and listing only the table would tell the
-                                        // user otherwise. Falls back to the table until the
-                                        // background read lands.
-                                        (ctcSurface?.servedCodes
-                                            ?: CtcLanguageSupport.SUPPORTED.keys.toList())
-                                            .distinct()
-                                            .joinToString(", ") { it.uppercase() }
-                                    ),
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                // The measured reason, when there IS an imported pack for this
-                                // language and it was refused. Without this the user sees "CTC has
-                                // no dictionary for TR" while a Turkish pack sits installed and
-                                // working on the geometric engine — true but useless.
-                                ctcSurface?.report?.let { report ->
-                                    val reason = when (report.verdict) {
-                                        CtcImportedPackSupport.Verdict.NOT_AZ_PROJECTABLE ->
-                                            stringResource(
-                                                R.string.swipe_engine_pack_not_typeable,
-                                                primaryLanguage.uppercase(),
-                                                report.projectablePercent
+                                if (fallback.languageFallback) {
+                                    Text(
+                                        text = stringResource(
+                                            R.string.swipe_engine_fallback_desc,
+                                            primaryLanguage.uppercase(),
+                                            // SUPPORTED.keys alone would UNDERSTATE coverage on a
+                                            // device with an eligible imported pack.
+                                            (ctcSurface?.servedCodes
+                                                ?: CtcLanguageSupport.SUPPORTED.keys.toList())
+                                                .distinct()
+                                                .joinToString(", ") { it.uppercase() }
+                                        ),
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    // When an installed pack was measured but refused, explain the
+                                    // measured reason rather than claiming only that it is absent.
+                                    ctcSurface?.report?.let { report ->
+                                        val reason = when (report.verdict) {
+                                            CtcImportedPackSupport.Verdict.NOT_AZ_PROJECTABLE ->
+                                                stringResource(
+                                                    R.string.swipe_engine_pack_not_typeable,
+                                                    primaryLanguage.uppercase(),
+                                                    report.projectablePercent
+                                                )
+                                            CtcImportedPackSupport.Verdict.HEAD_NOT_AZ_PROJECTABLE ->
+                                                stringResource(
+                                                    R.string.swipe_engine_pack_head_not_typeable,
+                                                    primaryLanguage.uppercase()
+                                                )
+                                            CtcImportedPackSupport.Verdict.TOO_FEW_WORDS ->
+                                                stringResource(
+                                                    R.string.swipe_engine_pack_unusable,
+                                                    primaryLanguage.uppercase()
+                                                )
+                                            else -> null
+                                        }
+                                        if (reason != null) {
+                                            Text(
+                                                text = reason,
+                                                fontSize = 12.sp,
+                                                color = MaterialTheme.colorScheme.error
                                             )
-                                        CtcImportedPackSupport.Verdict.HEAD_NOT_AZ_PROJECTABLE ->
-                                            stringResource(
-                                                R.string.swipe_engine_pack_head_not_typeable,
-                                                primaryLanguage.uppercase()
-                                            )
-                                        CtcImportedPackSupport.Verdict.TOO_FEW_WORDS ->
-                                            stringResource(
-                                                R.string.swipe_engine_pack_unusable,
-                                                primaryLanguage.uppercase()
-                                            )
-                                        // ELIGIBLE cannot reach here (the card is hidden for a
-                                        // served language) and NOT_AN_IMPORT_CANDIDATE never
-                                        // produces a report at all.
-                                        else -> null
+                                        }
                                     }
-                                    if (reason != null) {
-                                        Text(
-                                            text = reason,
-                                            fontSize = 12.sp,
-                                            color = MaterialTheme.colorScheme.error
-                                        )
+                                }
+                                fallback.layoutFindings.forEach { finding ->
+                                    val reason = when (finding.reason) {
+                                        SwipeEngineFallback.LayoutReason.SCRIPT_NOT_ROUTED ->
+                                            stringResource(
+                                                R.string.swipe_engine_layout_script_fallback,
+                                                finding.layout.displayName,
+                                            )
+                                        SwipeEngineFallback.LayoutReason.LETTERS_CORNER_ONLY ->
+                                            stringResource(
+                                                R.string.swipe_engine_layout_corner_fallback,
+                                                finding.layout.displayName,
+                                                finding.lettersForDisplay,
+                                            )
+                                        SwipeEngineFallback.LayoutReason.ALPHABET_INCOMPLETE ->
+                                            stringResource(
+                                                R.string.swipe_engine_layout_incomplete_fallback,
+                                                finding.layout.displayName,
+                                                finding.lettersForDisplay,
+                                            )
                                     }
+                                    Text(
+                                        text = reason,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
                                 }
                             }
                         }

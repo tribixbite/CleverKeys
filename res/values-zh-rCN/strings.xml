@@ -547,7 +547,7 @@
     <string name="extra_keys_enabled_count">%1$d / %2$d 个附加键已启用</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">预测引擎</string>
-    <string name="swipe_engine_mode_desc">CTC：在英语、法语、德语、西班牙语、意大利语、葡萄牙语和瑞典语的拉丁布局上使用 CTC 集束搜索；其他语言和非拉丁布局使用几何算法。几何：所有布局。</string>
+    <string name="swipe_engine_mode_desc">CTC：所选语言和布局受支持时使用设备端 CTC；可在下方查看此配置的状态。几何：适用于所有布局。</string>
     <string name="advanced_provenance_markers_title">候选来源标记</string>
     <string name="advanced_provenance_markers_desc">在每个候选词上显示彩色圆点，指示生成它的引擎（长按候选词可查看完整详情）。</string>
     <string name="input_next_word_title">下一个词预测</string>

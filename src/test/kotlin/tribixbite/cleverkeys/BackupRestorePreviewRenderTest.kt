@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -276,5 +277,31 @@ class BackupRestorePreviewRenderTest {
         )
         val out = renderDelta(change)
         assertThat(out).isEqualTo("30  \u2192  27")
+    }
+
+    @Test
+    fun learnedDataPreviewIsNotDroppedBetweenPlanDialogAndApply() {
+        val dialog = File(
+            "src/main/kotlin/tribixbite/cleverkeys/BackupRestorePreviewDialogs.kt"
+        ).readText()
+        assertThat(dialog).contains("LearnedDataPreviewCard(plan.learnedData)")
+        assertThat(dialog).contains("plan.learnedData.totalEntries")
+
+        val handler = File(
+            "src/main/kotlin/tribixbite/cleverkeys/ui/settings/io/SettingsDictionaryHandlers.kt"
+        ).readText()
+        assertThat(handler).contains("!plan.learnedData.hasEffect")
+
+        val manager = File(
+            "src/main/kotlin/tribixbite/cleverkeys/BackupRestoreManager.kt"
+        ).readText()
+        val applyBlock = manager
+            .substringAfter("fun applyDictImportPlan(")
+            .substringBefore("private fun readCurrentCustomWordsByLang")
+        assertThat(applyBlock).contains("plan.learnedData.rawJson")
+        assertThat(applyBlock).contains("let(::importLearnedDataFromJson)")
+        assertThat(applyBlock).contains("learnedBigramsImported = learned.first")
+        assertThat(applyBlock).contains("learnedTrigramsImported = learned.second")
+        assertThat(applyBlock).contains("learnedVocabularyImported = learned.third")
     }
 }

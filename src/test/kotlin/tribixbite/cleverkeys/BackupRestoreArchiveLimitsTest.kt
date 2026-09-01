@@ -123,10 +123,13 @@ class BackupRestoreArchiveLimitsTest {
         coEvery { shortSwipeManager.loadMappings() } returns Unit
         every { shortSwipeManager.exportToJson() } returns "{}"
 
-        // No real media operations — getMediaFile writes under the (fake) tmp filesDir.
+        // Exercise the production canonical-path guard even though the expensive media helpers
+        // remain constructor-mocked. This keeps importer tests from replacing getMediaFile with
+        // the unchecked pass-through that originally left ARC-091 unpinned.
+        val realMediaManager = ClipboardMediaManager(context)
         mockkConstructor(ClipboardMediaManager::class)
         every { anyConstructed<ClipboardMediaManager>().getMediaFile(any()) } answers {
-            File(testRoot, "files/${firstArg<String>()}")
+            realMediaManager.getMediaFile(firstArg())
         }
         every { anyConstructed<ClipboardMediaManager>().generateThumbnail(any(), any()) } returns null
         every { anyConstructed<ClipboardMediaManager>().cleanupOrphans(any()) } returns Unit
@@ -473,6 +476,33 @@ class BackupRestoreArchiveLimitsTest {
             assertEquals("original", firstLive.readText())
             verify(exactly = 0) { clipboardDb.importFromJSON(any()) }
         }
+    }
+
+    // ── ARC-091: traversal is rejected through the real importer ──────────────
+
+    @Test
+    fun importClipboardHistoryZip_parentTraversalFailsBeforeAnyWrite() {
+        val zipBytes = buildZip(listOf(
+            "clipboard_data.json" to emptyClipboardJsonBytes(),
+            "clipboard_media/../evil.txt" to "hostile".toByteArray(),
+        ))
+
+        try {
+            newManager().importClipboardHistoryZip(fakeUriForInput(zipBytes))
+            fail("Expected clipboard ZIP traversal to be rejected")
+        } catch (e: Exception) {
+            assertTrue(
+                "failure should retain the canonical-path reason",
+                e.message.orEmpty().contains("escapes clipboard_media") ||
+                    e.cause?.message.orEmpty().contains("escapes clipboard_media")
+            )
+        }
+
+        assertFalse(
+            "validation must run before a traversal member can touch live files",
+            File(testRoot, "files/evil.txt").exists()
+        )
+        verify(exactly = 0) { clipboardDb.importFromJSON(any()) }
     }
 
     // ── CK-150-021: ZIP directory members are not media files ─────────────────

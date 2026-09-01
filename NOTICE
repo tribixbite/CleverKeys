@@ -71,3 +71,36 @@ shape-writing dataset.
 
 MIT is GPLv3-compatible; the trained weights distributed with CleverKeys are
 redistributed under GPL-3.0, with attribution preserved here.
+
+================================================================================
+Shipped CTC script models — per-model provenance
+================================================================================
+CleverKeys ships one CTC swipe-emission encoder per script. Every one of them is
+original CleverKeys work, trained from scratch, distributed under GPL-3.0 with
+the app. This list is exhaustive for src/main/assets/models/; add a line here
+whenever a script model is added.
+
+  src/main/assets/models/ctc_swipe_encoder.onnx — Latin (en/fr/de/es/…).
+    Trained on gesture data derived from the FUTO swipe corpus (MIT) and the
+    How-We-Swipe shape-writing dataset (MIT); see the two sections above.
+
+  src/main/assets/models/ru_synth_v3_ch80_fp16w.onnx — Cyrillic (ru).
+    Trained on 100% SYNTHESIZED gesture data: a learned trace generator fitted
+    only to the same two MIT corpora above (FUTO + How-We-Swipe) emits Russian
+    traces from a Russian word list and the on-screen layout geometry. No real
+    Cyrillic gesture row appears anywhere in its pipeline — not in training, not
+    in the validation split used for checkpoint selection. The Russian corpus
+    used to *report* this model's accuracy (Yandex Cup 2023) carries no license
+    grant, was therefore treated as research/held-out evaluation only, and
+    contributed no bytes to any shipped artifact; the generator track that
+    touched it is permanently unshippable. See
+    docs/specs/ctc-architecture-and-multiscript-guide.md §3.3 and the licence
+    seal note for the full record.
+
+  src/main/assets/models/el_synth_v3_ch80_fp16w.onnx — Greek (el).
+    Trained on 100% SYNTHESIZED gesture data from the same learned trace
+    generator and MIT-only FUTO + How-We-Swipe source corpora described above,
+    using a Greek word list and the shipped Greek layout geometry. No real Greek
+    gesture row appears in training or checkpoint selection. Greek has no
+    real-swipe evaluation corpus at any evidence tier; synthesis-holdout levels
+    are not reported as accuracy.

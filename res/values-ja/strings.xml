@@ -548,7 +548,7 @@
     <string name="extra_keys_enabled_count">%1$d / %2$d 個の追加キーが有効</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">予測エンジン</string>
-    <string name="swipe_engine_mode_desc">CTC: 英語・フランス語・ドイツ語・スペイン語・イタリア語・ポルトガル語・スウェーデン語のラテン系レイアウトではCTCビーム、その他の言語およびラテン系以外のレイアウトでは幾何。幾何: すべてのレイアウト。</string>
+    <string name="swipe_engine_mode_desc">CTC：選択した言語とレイアウトが対応している場合に、端末上の CTC を使用します。この設定の状態は下に表示されます。幾何：すべてのレイアウトで利用できます。</string>
     <string name="advanced_provenance_markers_title">候補の生成元マーカー</string>
     <string name="advanced_provenance_markers_desc">各候補に、それを生成したエンジンを示す色付きの点を表示します（候補を長押しすると詳細が表示されます）</string>
     <string name="input_next_word_title">次単語予測</string>

@@ -246,73 +246,107 @@ object SettingsValidation {
     }
 
     /**
-     * Verbatim port of BackupRestoreManager.validateIntPreference (lines 750-806).
+     * Accepted value range for every int-validated preference key.
+     *
+     * Port of BackupRestoreManager.validateIntPreference (lines 750-806), held as
+     * DATA rather than as an inline `when` block so the same bounds serve two
+     * callers instead of one:
+     *
+     *   1. [validateInt] — reject an out-of-range value with a visible skip row.
+     *   2. [intRangeFor] — let `SettingsImportPlanBuilder` clamp a value it is
+     *      already migrating out of a legacy representation (ARC-093), so the
+     *      migrated number lands inside the same bounds the validator enforces
+     *      instead of being rewritten silently at Config read time.
+     *
+     * A key absent from this table is version-tolerant: unknown integer prefs are
+     * accepted unchanged, matching the legacy validator's `else -> true`.
      */
-    private fun validateInt(key: String, value: Int): String? {
-        if (isFloatPreference(key)) return "expected Float, got Int"
-        val ok = when (key) {
-            // CTC beam width. Bounds mirror CtcEngineAdapter's own coerceIn(10, 300) at read
-            // time, so a hostile or hand-edited backup cannot smuggle a value the engine will
-            // silently clamp anyway — the import preview should reject it visibly instead. This
-            // key previously fell through to `else -> true` while the DELETED engine's
-            // neural_beam_width was still the one named in this file: validation was pointed at
-            // the engine that no longer exists and not at the one that ships.
-            "ctc_beam_width" -> value in 10..300
+    private val INT_RANGES: Map<String, IntRange> = buildMap {
+        // CTC beam width. Bounds mirror CtcEngineAdapter's own coerceIn(10, 300) at read
+        // time, so a hostile or hand-edited backup cannot smuggle a value the engine will
+        // silently clamp anyway — the import preview should reject it visibly instead. This
+        // key previously fell through to `else -> true` while the DELETED engine's
+        // neural_beam_width was still the one named in this file: validation was pointed at
+        // the engine that no longer exists and not at the one that ships.
+        put("ctc_beam_width", 10..300)
 
-            // Finger-occlusion offset: SIGNED percent of one key row, 0 = off.
-            "finger_occlusion_offset" -> value in -25..25
+        // Finger-occlusion offset: SIGNED percent of one key row, 0 = off.
+        put("finger_occlusion_offset", -25..25)
 
-            // Opacity values (0-100)
+        // Opacity values (0-100)
+        for (k in listOf(
             "label_brightness", "keyboard_opacity", "key_opacity",
-            "key_activated_opacity", "suggestion_bar_opacity" -> value in 0..100
+            "key_activated_opacity", "suggestion_bar_opacity",
+        )) put(k, 0..100)
 
-            // Keyboard height percentages
-            "keyboard_height", "keyboard_height_unfolded" -> value in 10..100
-            "keyboard_height_landscape", "keyboard_height_landscape_unfolded" -> value in 20..65
+        // Keyboard height percentages
+        for (k in listOf("keyboard_height", "keyboard_height_unfolded")) put(k, 10..100)
+        for (k in listOf(
+            "keyboard_height_landscape", "keyboard_height_landscape_unfolded",
+        )) put(k, 20..65)
 
-            // Bottom margins (0-30% of screen height)
+        // Bottom margins (0-30% of screen height)
+        for (k in listOf(
             "margin_bottom_portrait", "margin_bottom_landscape",
-            "margin_bottom_portrait_unfolded", "margin_bottom_landscape_unfolded" -> value in 0..30
+            "margin_bottom_portrait_unfolded", "margin_bottom_landscape_unfolded",
+        )) put(k, 0..30)
 
-            // Left/right margins (0-45% of screen width each, capped at 90% total)
+        // Left/right margins (0-45% of screen width each, capped at 90% total)
+        for (k in listOf(
             "margin_left_portrait", "margin_left_landscape",
             "margin_left_portrait_unfolded", "margin_left_landscape_unfolded",
             "margin_right_portrait", "margin_right_landscape",
-            "margin_right_portrait_unfolded", "margin_right_landscape_unfolded" -> value in 0..45
+            "margin_right_portrait_unfolded", "margin_right_landscape_unfolded",
+        )) put(k, 0..45)
 
-            // Legacy horizontal_margin (kept for backward compatibility, 0-200 dp)
+        // Legacy horizontal_margin (kept for backward compatibility, 0-200 dp)
+        for (k in listOf(
             "horizontal_margin_portrait", "horizontal_margin_landscape",
-            "horizontal_margin_portrait_unfolded", "horizontal_margin_landscape_unfolded" -> value in 0..200
+            "horizontal_margin_portrait_unfolded", "horizontal_margin_landscape_unfolded",
+        )) put(k, 0..200)
 
-            // Border radius (0-100%)
-            "custom_border_radius" -> value in 0..100
+        // Border radius (0-100%)
+        put("custom_border_radius", 0..100)
 
-            // Timing values (milliseconds)
-            "vibrate_duration" -> value in 0..100
-            "longpress_timeout" -> value in 50..2000
-            "longpress_interval" -> value in 5..100
+        // Timing values (milliseconds)
+        put("vibrate_duration", 0..100)
+        put("longpress_timeout", 50..2000)
+        put("longpress_interval", 5..100)
 
-            // Short gesture distance (10-95% min, 50-200% max)
-            "short_gesture_min_distance" -> value in 10..95
-            "short_gesture_max_distance" -> value in 50..200
+        // Short gesture distance (10-95% min, 50-200% max)
+        put("short_gesture_min_distance", 10..95)
+        put("short_gesture_max_distance", 50..200)
 
-            // Neural network parameters
-            "swipe_smoothing_window" -> value in 1..7
+        // Gesture resampling window
+        put("swipe_smoothing_window", 1..7)
 
-            // Auto-correction parameters
-            "autocorrect_min_word_length" -> value in 2..5
-            "autocorrect_confidence_min_frequency" -> value in 100..2000
+        // Auto-correction parameters
+        put("autocorrect_min_word_length", 2..5)
+        put("autocorrect_confidence_min_frequency", 100..2000)
 
-            // Clipboard history limit (0 = unlimited)
-            "clipboard_history_limit" -> value in 0..500
+        // Clipboard history limit (0 = unlimited)
+        put("clipboard_history_limit", 0..500)
 
-            // Circle sensitivity
-            "circle_sensitivity" -> value in 1..5
+        // Circle sensitivity
+        put("circle_sensitivity", 1..5)
+    }
 
-            // Unknown integer preference - allow it (version-tolerant)
-            else -> true
-        }
-        return if (ok) null else "out of range, got $value"
+    /**
+     * The validated range for [key], or `null` when the key has no int range
+     * (unknown / not int-validated). See [INT_RANGES] for why this is public.
+     */
+    fun intRangeFor(key: String): IntRange? = INT_RANGES[key]
+
+    /**
+     * Port of BackupRestoreManager.validateIntPreference (lines 750-806) — the
+     * bounds now live in [INT_RANGES]; the accept/reject decision and its message
+     * are unchanged.
+     */
+    private fun validateInt(key: String, value: Int): String? {
+        if (isFloatPreference(key)) return "expected Float, got Int"
+        // Unknown integer preference - allow it (version-tolerant)
+        val range = INT_RANGES[key] ?: return null
+        return if (value in range) null else "out of range, got $value"
     }
 
     /**

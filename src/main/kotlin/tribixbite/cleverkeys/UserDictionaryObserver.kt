@@ -138,6 +138,8 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
         loadUserDictionaryCache()
         loadCustomWordsCache()
 
+        UserDictionaryWords.onObserverStarted()
+
         Log.d(TAG, "Started observing dictionary changes")
     }
 
@@ -146,10 +148,18 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
      * Unregisters all observers and listeners.
      */
     fun stop() {
-        context.contentResolver.unregisterContentObserver(this)
-
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-        prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
+        try {
+            context.contentResolver.unregisterContentObserver(this)
+        } finally {
+            try {
+                val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+                prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
+            } finally {
+                // Cache safety wins even if a ROM throws while unregistering: after stop was
+                // requested we can no longer promise that a future provider edit is observed.
+                UserDictionaryWords.onObserverStopped()
+            }
+        }
 
         Log.d(TAG, "Stopped observing dictionary changes")
     }
@@ -159,6 +169,9 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
      */
     override fun onChange(selfChange: Boolean, uri: Uri?) {
         Log.d(TAG, "UserDictionary changed: $uri")
+        // Invalidate BEFORE the slower diff query so a concurrent lexicon build cannot reuse
+        // rows known to predate this provider notification.
+        UserDictionaryWords.onProviderChanged()
         checkUserDictionaryChanges()
     }
 

@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import tribixbite.cleverkeys.swipe.SwipeEngineRouter
+import java.util.Locale
 import kotlin.math.ln1p
 import kotlin.math.max
 
@@ -111,13 +112,37 @@ data class ScoreBreakdown(
  * @property breakdown per-signal scores when the origin flows through the
  *   unified scorer (dictionary-prefix path); null for origins scored elsewhere
  *   (decoder scores, learned-LM probability, injections)
- * @property note origin-specific human-readable detail (e.g. the learned
- *   next-word statistics: "after 'want': seen 14×, 63%")
+ * @property note structured origin-specific detail, rendered only after the
+ *   Android layer supplies localized templates
  */
 data class SuggestionMeta(
     val origin: SuggestionOrigin,
     val breakdown: ScoreBreakdown? = null,
-    val note: String? = null
+    val note: ProvenanceNote? = null
+)
+
+/** Structured details which must not carry display-language text through the pipeline. */
+sealed class ProvenanceNote {
+    data object PromotedByLearnedContext : ProvenanceNote()
+    data class NextWord(
+        val context: String,
+        val frequency: Int,
+        val percent: Int,
+        val fromStaticSeed: Boolean
+    ) : ProvenanceNote()
+    data object TypedWordUndo : ProvenanceNote()
+    data class AutocorrectedFrom(val originalWord: String) : ProvenanceNote()
+}
+
+/** Structured personalization values used by the localized provenance formatter. */
+data class PersonalizationDetails(
+    val usageCount: Int,
+    val frequencyScore: Float,
+    val recencyScore: Float,
+    val baseBoost: Float,
+    val aggressionLabel: String,
+    val aggressionMultiplier: Float,
+    val finalBoost: Float
 )
 
 /**
@@ -210,20 +235,56 @@ object UnifiedScore {
  */
 object ProvenanceFormatter {
 
-    /** Short human label for an origin. */
-    fun originLabel(origin: SuggestionOrigin): String = when (origin) {
-        SuggestionOrigin.GEOMETRIC -> "Geometric swipe decoder"
-        SuggestionOrigin.CTC -> "CTC swipe (trie beam)"
-        SuggestionOrigin.DICTIONARY_PREFIX -> "Dictionary prefix match"
-        SuggestionOrigin.CONTRACTION -> "Contraction injection"
-        SuggestionOrigin.POSSESSIVE -> "Possessive form"
-        SuggestionOrigin.EXACT_ADD -> "Exact typed word (tap to add)"
-        // ARC-020: no longer "(learned)" — the same origin now also carries
-        // shipped cold-start entries. Which tier a given candidate came from is
-        // stated in its NOTE (learned statistics vs "built-in, not learned"),
-        // because that distinction is per-suggestion, not per-origin.
-        SuggestionOrigin.NEXT_WORD -> "Next-word prediction"
-        SuggestionOrigin.AUTOCORRECT -> "Autocorrect prompt"
+    /** Android-resolved wording. Templates use `String.format` argument syntax. */
+    data class Strings(
+        val locale: Locale,
+        val originLabels: Map<SuggestionOrigin, String>,
+        val unknown: String,
+        val source: String,
+        val score: String,
+        val scoreComponents: String,
+        val prefixMatch: String,
+        val adaptation: String,
+        val contextBuiltIn: String,
+        val contextLearned: String,
+        val contextWinnerLearned: String,
+        val contextWinnerBuiltIn: String,
+        val contextNoBoost: String,
+        val contextBoostSetting: String,
+        val personalization: String,
+        val frequencyFactor: String,
+        val finalScore: String,
+        val personalUsage: String,
+        val usageCount: String,
+        val frequencyScore: String,
+        val recencyScore: String,
+        val baseBoost: String,
+        val aggression: String,
+        val finalBoost: String,
+        val promotedByLearnedContext: String,
+        val nextWordBuiltIn: String,
+        val nextWordLearned: String,
+        val typedWordUndo: String,
+        val autocorrectedFrom: String
+    )
+
+    /** Short localized human label for an origin. */
+    fun originLabel(origin: SuggestionOrigin, strings: Strings): String =
+        strings.originLabels.getValue(origin)
+
+    private fun Strings.render(template: String, vararg args: Any): String =
+        String.format(locale, template, *args)
+
+    private fun renderNote(note: ProvenanceNote, strings: Strings): String = when (note) {
+        ProvenanceNote.PromotedByLearnedContext -> strings.promotedByLearnedContext
+        is ProvenanceNote.NextWord -> if (note.fromStaticSeed) {
+            strings.render(strings.nextWordBuiltIn, note.context)
+        } else {
+            strings.render(strings.nextWordLearned, note.context, note.frequency, note.percent)
+        }
+        ProvenanceNote.TypedWordUndo -> strings.typedWordUndo
+        is ProvenanceNote.AutocorrectedFrom ->
+            strings.render(strings.autocorrectedFrom, note.originalWord)
     }
 
     /**
@@ -232,48 +293,50 @@ object ProvenanceFormatter {
      * @param word the displayed suggestion
      * @param meta origin/breakdown/note metadata (null → origin unknown)
      * @param barScore the score shown/stored in the bar's parallel score list
-     * @param personalizationExplanation `PersonalizationEngine.explainBoost()`
-     *   text (null when the engine is unavailable)
+     * @param personalization structured usage values (null when unavailable)
+     * @param strings wording pre-resolved by the Android resource layer
      */
     fun format(
         word: String,
         meta: SuggestionMeta?,
         barScore: Int?,
-        personalizationExplanation: String?
+        personalization: PersonalizationDetails?,
+        strings: Strings
     ): String = buildString {
         append("“").append(word).append("”\n")
-        append("Source: ").append(meta?.origin?.let { originLabel(it) } ?: "Unknown").append('\n')
-        barScore?.let { append("Score: ").append(it).append('\n') }
-        meta?.note?.let { append(it).append('\n') }
+        append(strings.render(strings.source, meta?.origin?.let { originLabel(it, strings) } ?: strings.unknown)).append('\n')
+        barScore?.let { append(strings.render(strings.score, it)).append('\n') }
+        meta?.note?.let { append(renderNote(it, strings)).append('\n') }
 
         meta?.breakdown?.let { b ->
             append('\n')
-            append("Score components:\n")
-            append("• Prefix match: ${b.prefixScore}\n")
-            append("• Adaptation: ${"%.2f".format(b.adaptationMultiplier)}×\n")
-            append("• Context (built-in): ${"%.2f".format(b.staticContextMultiplier)}×\n")
-            append("• Context (learned): ${"%.2f".format(b.dynamicContextBoost)}×\n")
+            append(strings.scoreComponents).append('\n')
+            append(strings.render(strings.prefixMatch, b.prefixScore)).append('\n')
+            append(strings.render(strings.adaptation, b.adaptationMultiplier)).append('\n')
+            append(strings.render(strings.contextBuiltIn, b.staticContextMultiplier)).append('\n')
+            append(strings.render(strings.contextLearned, b.dynamicContextBoost)).append('\n')
             append(
                 when (b.contextWinner) {
-                    ContextWinner.LEARNED -> "• Context winner: your learned patterns\n"
-                    ContextWinner.STATIC -> "• Context winner: built-in model\n"
-                    ContextWinner.NONE -> "• Context: no boost\n"
+                    ContextWinner.LEARNED -> strings.contextWinnerLearned
+                    ContextWinner.STATIC -> strings.contextWinnerBuiltIn
+                    ContextWinner.NONE -> strings.contextNoBoost
                 }
-            )
-            append("• Context boost setting: ${"%.1f".format(b.contextBoostSetting)}×\n")
-            append(
-                "• Personalization: ${"%.2f".format(b.personalizationBoost)} → " +
-                    "${"%.2f".format(b.personalizationMultiplier)}×\n"
-            )
-            append("• Frequency factor: ${"%.2f".format(b.frequencyFactor)}×\n")
-            append("= Final score: ${b.finalScore}\n")
+            ).append('\n')
+            append(strings.render(strings.contextBoostSetting, b.contextBoostSetting)).append('\n')
+            append(strings.render(strings.personalization, b.personalizationBoost, b.personalizationMultiplier)).append('\n')
+            append(strings.render(strings.frequencyFactor, b.frequencyFactor)).append('\n')
+            append(strings.render(strings.finalScore, b.finalScore)).append('\n')
         }
 
-        personalizationExplanation?.let {
+        personalization?.let { p ->
             append('\n')
-            append("Personal usage:\n")
-            append(it)
-            append('\n')
+            append(strings.personalUsage).append('\n')
+            append(strings.render(strings.usageCount, p.usageCount)).append('\n')
+            append(strings.render(strings.frequencyScore, p.frequencyScore)).append('\n')
+            append(strings.render(strings.recencyScore, p.recencyScore)).append('\n')
+            append(strings.render(strings.baseBoost, p.baseBoost)).append('\n')
+            append(strings.render(strings.aggression, p.aggressionLabel, p.aggressionMultiplier)).append('\n')
+            append(strings.render(strings.finalBoost, p.finalBoost)).append('\n')
         }
     }.trimEnd()
 }

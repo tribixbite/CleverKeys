@@ -118,7 +118,7 @@
     <!-- Swipe Typing Section -->
     <string name="settings_section_swipe_typing">👆 Swipe Typing</string>
     <string name="swipe_engine_mode_title">Prediction Engine</string>
-    <string name="swipe_engine_mode_desc">CTC: CTC beam search on Latin layouts for English, French, German, Spanish, Italian, Portuguese and Swedish; geometric for other languages and non-Latin layouts. Geometric: all layouts.</string>
+    <string name="swipe_engine_mode_desc">CTC: uses on-device CTC when the selected language and layout are supported; check the status below for this configuration. Geometric: available for every layout.</string>
     <!-- Swipe copy added 2026-08-19. Every name in this group now has a real translation in
          all 21 res/values-*/ locales and is pinned by TranslationCoverageDriftTest, so dropping
          one (or adding a locale without it) fails the pure test suite instead of silently
@@ -148,6 +148,12 @@
     <string name="swipe_engine_pack_not_typeable" tools:ignore="MissingTranslation">The %1$s language pack you imported cannot be decoded by CTC: only %2$d%% of its words can be spelled with the a–z keys. Letters such as ı, ł and đ have no a–z form, so those words could not be swiped at all. Geometric decodes them instead.</string>
     <string name="swipe_engine_pack_head_not_typeable" tools:ignore="MissingTranslation">The %1$s language pack you imported cannot be decoded by CTC: too many of its most common words use letters with no a–z form, so they could not be swiped at all. Geometric decodes them instead.</string>
     <string name="swipe_engine_pack_unusable" tools:ignore="MissingTranslation">The %1$s language pack you imported does not contain a readable word list, so CTC cannot use it. Try importing the pack again.</string>
+    <!-- ARC-086 (2026-08-31): layout-axis fallback reasons. CTC reads only primary
+         (centre/key0) labels and only scripts with a routed model. English-only until the
+         translation-debt wave closes these alongside the imported-pack reasons above. -->
+    <string name="swipe_engine_layout_script_fallback" tools:ignore="MissingTranslation">CTC cannot route the script used by %1$s, so swipes on that layout use the geometric engine.</string>
+    <string name="swipe_engine_layout_corner_fallback" tools:ignore="MissingTranslation">On %1$s, CTC cannot read %2$s because they are corner characters rather than primary key labels. Swipes on that layout use the geometric engine.</string>
+    <string name="swipe_engine_layout_incomplete_fallback" tools:ignore="MissingTranslation">On %1$s, CTC needs primary keys for %2$s. Swipes on that layout use the geometric engine.</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Appearance</string>
@@ -447,6 +453,47 @@
     <string name="advanced_open_debug_log">Open Debug Log</string>
     <string name="advanced_provenance_markers_title">Suggestion Origin Markers</string>
     <string name="advanced_provenance_markers_desc">Show a colored dot on each suggestion indicating which engine produced it (long-press any suggestion for full details)</string>
+
+    <!-- Long-press suggestion provenance sheet. All pipeline metadata remains structured;
+         these Android-layer templates are the only user-facing wording. -->
+    <string name="provenance_origin_geometric">Geometric swipe decoder</string>
+    <string name="provenance_origin_ctc">CTC swipe (trie beam)</string>
+    <string name="provenance_origin_dictionary_prefix">Dictionary prefix match</string>
+    <string name="provenance_origin_contraction">Contraction injection</string>
+    <string name="provenance_origin_possessive">Possessive form</string>
+    <string name="provenance_origin_exact_add">Exact typed word (tap to add)</string>
+    <string name="provenance_origin_next_word">Next-word prediction</string>
+    <string name="provenance_origin_autocorrect">Autocorrect prompt</string>
+    <string name="provenance_unknown">Unknown</string>
+    <string name="provenance_source">Source: %1$s</string>
+    <string name="provenance_score">Score: %1$d</string>
+    <string name="provenance_score_components">Score components:</string>
+    <string name="provenance_prefix_match">• Prefix match: %1$d</string>
+    <string name="provenance_adaptation">• Adaptation: %1$.2f×</string>
+    <string name="provenance_context_built_in">• Context (built-in): %1$.2f×</string>
+    <string name="provenance_context_learned">• Context (learned): %1$.2f×</string>
+    <string name="provenance_context_winner_learned">• Context winner: your learned patterns</string>
+    <string name="provenance_context_winner_built_in">• Context winner: built-in model</string>
+    <string name="provenance_context_no_boost">• Context: no boost</string>
+    <string name="provenance_context_boost_setting">• Context boost setting: %1$.1f×</string>
+    <string name="provenance_personalization">• Personalization: %1$.2f → %2$.2f×</string>
+    <string name="provenance_frequency_factor">• Frequency factor: %1$.2f×</string>
+    <string name="provenance_final_score">= Final score: %1$d</string>
+    <string name="provenance_personal_usage">Personal usage:</string>
+    <string name="provenance_usage_count">Used %1$d times</string>
+    <string name="provenance_frequency_score">Frequency score: %1$.2f</string>
+    <string name="provenance_recency_score">Recency score: %1$.2f</string>
+    <string name="provenance_base_boost">Base boost: %1$.2f</string>
+    <string name="provenance_aggression">Aggression: %1$s (%2$.2f×)</string>
+    <string name="provenance_final_boost">Final boost: %1$.2f</string>
+    <string name="provenance_aggression_conservative">Conservative</string>
+    <string name="provenance_aggression_balanced">Balanced</string>
+    <string name="provenance_aggression_aggressive">Aggressive</string>
+    <string name="provenance_note_promoted_learned">Promoted by learned context</string>
+    <string name="provenance_note_next_built_in">After “%1$s”: common continuation (built-in, not learned)</string>
+    <string name="provenance_note_next_learned">After “%1$s”: seen %2$d×, %3$d%%</string>
+    <string name="provenance_note_typed_undo">Your typed word (tap to undo)</string>
+    <string name="provenance_note_autocorrected_from">Autocorrected from “%1$s”</string>
 
     <!-- AppearanceSection -->
     <string name="appearance_height_portrait_title">Keyboard Height (Portrait)</string>
@@ -1139,6 +1186,13 @@
     <string name="import_preview_word_freq" tools:ignore="MissingTranslation">freq %1$d</string>
     <string name="import_preview_search_hint" tools:ignore="MissingTranslation">Search…</string>
     <string name="import_preview_dict_title" tools:ignore="MissingTranslation">Dictionary import preview</string>
+    <!-- ARC-094: learned context is restored with dictionary imports but is not individually
+         selectable. Phrase entries merge; the vocabulary section replaces the current list. -->
+    <string name="import_preview_learned_title" tools:ignore="MissingTranslation">Learned data</string>
+    <string name="import_preview_learned_desc" tools:ignore="MissingTranslation">Learned phrase counts are merged as a group. If this backup includes a personal vocabulary, it replaces the current learned-word list.</string>
+    <string name="import_preview_learned_bigrams" tools:ignore="MissingTranslation,PluralsCandidate">Word pairs to merge: %1$d</string>
+    <string name="import_preview_learned_trigrams" tools:ignore="MissingTranslation,PluralsCandidate">Word triples to merge: %1$d</string>
+    <string name="import_preview_learned_vocabulary" tools:ignore="MissingTranslation,PluralsCandidate">Personal vocabulary will be replaced with %1$d words</string>
     <!-- Section headers in the settings preview. %1$d = rows in the section. -->
     <string name="import_preview_modified" tools:ignore="MissingTranslation,PluralsCandidate">Modified (%1$d)</string>
     <string name="import_preview_added" tools:ignore="MissingTranslation,PluralsCandidate">Added (%1$d)</string>

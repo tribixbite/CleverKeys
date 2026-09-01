@@ -70,7 +70,7 @@ internal fun SettingsActivity.performDictionaryImport(uri: Uri, retryPassphrase:
             val plan = withContext(Dispatchers.IO) {
                 backupRestoreManager.buildDictImportPlan(uri, prefs)
             }
-            val nothingToImport = plan.perLanguage.values.all {
+            val nothingToImport = !plan.learnedData.hasEffect && plan.perLanguage.values.all {
                 it.newCustomWords.isEmpty() && it.newDisabledWords.isEmpty()
             }
             if (nothingToImport) {

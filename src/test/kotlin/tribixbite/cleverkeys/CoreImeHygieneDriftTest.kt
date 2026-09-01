@@ -1297,4 +1297,28 @@ class CoreImeHygieneDriftTest {
                 .that(adapter).contains(expected)
         }
     }
+
+    /**
+     * ARC-065 — restored packs must be measured before the user's first swipe rather than only
+     * after that swipe has already fallen through to geometric.
+     */
+    @Test
+    fun bindDiscoversInstalledPacksOffTheMainThread() {
+        val installedPacks = source("tribixbite/cleverkeys/swipe/CtcInstalledPacks.kt")
+        assertWithMessage("bind must schedule the one-per-process installed-pack scan")
+            .that(installedPacks)
+            .contains("scheduleInitialPackScan(context.applicationContext)")
+
+        val scan = installedPacks
+            .substringAfter("private fun scheduleInitialPackScan")
+            .substringBefore("private fun scheduleEvaluation")
+        assertWithMessage("manifest and dictionary discovery must run on the background evaluator")
+            .that(scan).contains("evaluator.execute")
+        assertWithMessage("startup discovery must enumerate packs restored outside this build")
+            .that(scan).contains(".getInstalledPacks()")
+        assertWithMessage(
+            "startup discovery must reuse servesImportedPack so fingerprint caching and " +
+                "in-flight dedup stay identical to the swipe path"
+        ).that(scan).contains(".forEach(::servesImportedPack)")
+    }
 }

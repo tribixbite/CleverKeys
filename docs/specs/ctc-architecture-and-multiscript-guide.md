@@ -52,6 +52,28 @@ languages, the neural engine deleted, and the 2026-08-20 remediation wave landed
 >   eligible pack — it appends `CtcInstalledPacks.servedCodes`, and adds the measured refusal
 >   reason when the user's own pack was the thing rejected.
 >
+>
+> **Third app-state addendum — 2026-08-31 (unreleased; not a release announcement).**
+> Greek (`el`) is now the second routed script language:
+>
+> - `CtcScriptSupport["el"]` is `ROUTED` with the 25-slot codepoint-sorted alphabet,
+>   `models/el_synth_v3_ch80_fp16w.onnx` (589,406 B,
+>   SHA-256 `7083794c501566f411b1f81495ba1f7f3df273c3eb58f6ee635caf168a4f8c3d`) and
+>   byte-identical JVM/device fixtures
+>   `el_synth_v3_ch80_fp16w_golden.json` (SHA-256
+>   `d08d5501961e971db2ca120f6ee868b7b67ed37e34b6412dddbc7f7116de5753`).
+> - `CtcLanguageSupport.SUPPORTED` is nine languages and `PROVISIONAL` includes `el`.
+>   Greek reads the importable CKDT `langpack-el`, with the full NFD/mark-drop/NFC plus
+>   final-sigma projection already implemented. Sections below that say the projection is
+>   missing, Greek is unwired, or exactly one CTC model ships are historical and superseded.
+> - The evidence tier is deliberately the weakest served tier: Greek has **no real-swipe
+>   probe at any tier**. Its synthesis-holdout level is not an accuracy result and must never
+>   be quoted as one. `ReleaseMetadataDriftTest.SERVED_BUT_NOT_YET_ANNOUNCED` keeps both
+>   `ru` and `el` out of release claims until the maintainer makes that decision.
+> - Settings now diagnoses both language and layout fallbacks. A routable script still needs
+>   every emission-alphabet letter as a centre (`c`/`key0`) value; corner-only letters do
+>   not enter the encoder geometry and the board falls back to geometric with an explanation.
+>
 > App-side wiring work is planned in `docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md`.
 
 This document exists to kill four recurring confusions permanently:

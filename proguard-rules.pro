@@ -181,7 +181,19 @@
 -keep class kotlinx.coroutines.internal.MainDispatcherFactory { *; }
 -keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
 -keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
-# Force deterministic ServiceLoader behavior
+# Force deterministic ServiceLoader behavior.
+#
+# ARC-062: this rule is why `Dispatchers.Main` in a RELEASE build resolves through
+# `java.util.ServiceLoader` reading META-INF/services/...MainDispatcherFactory out of the
+# APK — with R8 on, the flag folds to false and the FastServiceLoader (Class.forName) path
+# is gone from the shipped DEX entirely (baksmali-verified). Two consequences, both of
+# which look fine at compile time and fail only at runtime, only in release:
+#   - the `-keep` / `-keepnames` above must stay (they keep
+#     kotlinx.coroutines.android.AndroidDispatcherFactory's NAME, which is the string
+#     inside that service file);
+#   - build.gradle must not exclude META-INF/services/kotlinx.coroutines.** from packaging
+#     (see the comment at that spot).
+# Deleting THIS rule is the safe direction: it restores the Class.forName path.
 -assumenosideeffects class kotlinx.coroutines.internal.MainDispatcherLoader {
     boolean FAST_SERVICE_LOADER_ENABLED return false;
 }

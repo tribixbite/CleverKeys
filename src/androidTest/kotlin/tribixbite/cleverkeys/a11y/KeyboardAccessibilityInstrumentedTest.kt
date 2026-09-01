@@ -1,9 +1,13 @@
 package tribixbite.cleverkeys.a11y
 
 import android.content.Context
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.app.UiAutomation
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -11,6 +15,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -216,6 +221,58 @@ class KeyboardAccessibilityInstrumentedTest {
         provider().createAccessibilityNodeInfo(id)?.contentDescription?.toString()
 
     // ── hover routing ─────────────────────────────────────────────────────────
+
+    @Test
+    fun touchExplorationOnConsumesHoverButDoesNotSwallowOrdinaryHardwareKeys() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.getUiAutomation(
+            UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES
+        )
+        val manager = context.getSystemService(Context.ACCESSIBILITY_SERVICE)
+            as AccessibilityManager
+        val info = automation.serviceInfo
+        val originalFlags = info.flags
+        try {
+            info.flags = originalFlags or AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE
+            automation.serviceInfo = info
+            val deadline = android.os.SystemClock.uptimeMillis() + 5_000L
+            while (!manager.isTouchExplorationEnabled &&
+                android.os.SystemClock.uptimeMillis() < deadline
+            ) {
+                Thread.sleep(50L)
+            }
+            assumeTrue(
+                "emulator image rejected UiAutomation touch-exploration mode",
+                manager.isTouchExplorationEnabled
+            )
+
+            val id = findKeyId('q')
+            val node = provider().createAccessibilityNodeInfo(id)!!
+            val bounds = android.graphics.Rect()
+            node.getBoundsInScreen(bounds)
+            val downsBefore = recorder.downs.size
+            val upsBefore = recorder.ups.size
+            var hoverConsumed = false
+            var keyConsumed = true
+            instrumentation.runOnMainSync {
+                val hover = MotionEvent.obtain(
+                    0L, 0L, MotionEvent.ACTION_HOVER_ENTER,
+                    bounds.exactCenterX(), bounds.exactCenterY(), 0
+                )
+                hoverConsumed = view.dispatchHoverEvent(hover)
+                hover.recycle()
+                keyConsumed = view.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_A))
+            }
+
+            assertTrue("touch exploration must route hover through the virtual-key helper", hoverConsumed)
+            assertFalse("ordinary hardware letter events must not be swallowed", keyConsumed)
+            assertEquals("hover must not type", downsBefore, recorder.downs.size)
+            assertEquals("hover must not emit key-up", upsBefore, recorder.ups.size)
+        } finally {
+            info.flags = originalFlags
+            automation.serviceInfo = info
+        }
+    }
 
     @Test
     fun hoverEventIsNotConsumedWhenTouchExplorationOff() {

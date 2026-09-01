@@ -92,13 +92,13 @@ Constants: `MAX_SUGGESTIONS = 3`, `MAX_SWIPE_APPEND = 2`, `MIN_LEARNED_FREQUENCY
 
 ## Provenance
 
-Each candidate carries `SuggestionMeta(SuggestionOrigin.NEXT_WORD, note = provenanceNote)`
-where the note renders the learned statistics, e.g. `After "want to": seen 14×, 63%`
-(trigram context shows two words, bigram one). A static-seed candidate has no such
-statistics and says so — `After "the": common continuation (built-in, not learned)` — which
-is also why the origin label is `Next-word prediction` rather than `… (learned)`. Long-press opens the provenance sheet
-(`ProvenanceFormatter.format`); the opt-in origin-marker dot uses a per-origin color
-(`SuggestionBar.originMarkerColor`).
+Each candidate carries `SuggestionMeta(SuggestionOrigin.NEXT_WORD, note = provenanceNote)`.
+The note is a structured `ProvenanceNote.NextWord` value containing the effective context,
+frequency, percentage, and static-seed flag; no display-language sentence travels through the
+prediction pipeline. At long-press time, `SuggestionHandler` resolves Android resources and
+`ProvenanceFormatter` renders the learned-statistics or built-in-continuation template. The
+origin stays `NEXT_WORD` for both tiers. The opt-in marker dot uses the same origin metadata
+through `SuggestionBar.originMarkerColor`.
 
 ## Test Coverage
 

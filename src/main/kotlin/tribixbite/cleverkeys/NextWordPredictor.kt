@@ -304,16 +304,17 @@ object NextWordPredictor {
      * A static-seed candidate (ARC-020) says so instead of reporting `seen 0×,
      * 0%` — it has no learned statistics, and the sheet must not imply it does.
      */
-    fun provenanceNote(candidate: Candidate, contextWords: List<String>): String {
+    fun provenanceNote(candidate: Candidate, contextWords: List<String>): ProvenanceNote.NextWord {
         val contextShown = if (candidate.fromTrigram && contextWords.size >= 2) {
             contextWords.takeLast(2).joinToString(" ")
         } else {
             contextWords.lastOrNull() ?: ""
         }
-        if (candidate.fromStaticSeed) {
-            return "After “$contextShown”: common continuation (built-in, not learned)"
-        }
-        val pct = (candidate.probability * 100).toInt()
-        return "After “$contextShown”: seen ${candidate.frequency}×, $pct%"
+        return ProvenanceNote.NextWord(
+            context = contextShown,
+            frequency = candidate.frequency,
+            percent = (candidate.probability * 100).toInt(),
+            fromStaticSeed = candidate.fromStaticSeed
+        )
     }
 }

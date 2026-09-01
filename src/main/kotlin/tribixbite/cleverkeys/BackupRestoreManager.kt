@@ -1307,10 +1307,16 @@ open class BackupRestoreManager(
         val (customApplied, disabledApplied) = DictImportApplier.apply(
             plan, excludedCustom, excludedDisabled, prefs
         )
+        val learned = plan.learnedData.rawJson
+            ?.let(::importLearnedDataFromJson)
+            ?: Triple(0, 0, 0)
         return DictionaryImportResult().apply {
             sourceVersion = plan.sourceVersion
             userWordsImported = customApplied
             disabledWordsImported = disabledApplied
+            learnedBigramsImported = learned.first
+            learnedTrigramsImported = learned.second
+            learnedVocabularyImported = learned.third
             excludedByUserCount = excludedCustom.size + excludedDisabled.size
         }
     }
@@ -1364,15 +1370,6 @@ open class BackupRestoreManager(
             val currentDisabled = readCurrentDisabledWordsByLang(prefs)
             val plan = DictImportPlanBuilder.fromJson(jsonString, currentCustom, currentDisabled)
             val result = applyDictImportPlan(plan, emptySet(), emptySet(), prefs)
-
-            // Learned data (context-LM bigrams + trigrams + user vocabulary) — audit
-            // 2026-08-06 §3.2-6, trigrams added by ARC-022.
-            // TODO: surface learned-data counts in the interactive import-preview dialog
-            // (DictImportPlan currently only models custom/disabled words).
-            val (bigrams, trigrams, vocab) = importLearnedDataFromJson(jsonString)
-            result.learnedBigramsImported = bigrams
-            result.learnedTrigramsImported = trigrams
-            result.learnedVocabularyImported = vocab
 
             Log.i(TAG, "Imported dictionaries: ${result.userWordsImported} custom words, ${result.disabledWordsImported} disabled words")
             result
