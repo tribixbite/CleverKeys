@@ -480,7 +480,13 @@
     <string name="provenance_frequency_factor">• Frequency factor: %1$.2f×</string>
     <string name="provenance_final_score">= Final score: %1$d</string>
     <string name="provenance_personal_usage">Personal usage:</string>
-    <string name="provenance_usage_count">Used %1$d times</string>
+    <!-- ARC-109: quantity-aware usage count for the provenance sheet; resolved via
+         getQuantityString at the Android boundary (SuggestionHandler), threaded into the
+         pure ProvenanceFormatter as an (Int) -> String resolver. -->
+    <plurals name="provenance_usage_count">
+        <item quantity="one">Used %1$d time</item>
+        <item quantity="other">Used %1$d times</item>
+    </plurals>
     <string name="provenance_frequency_score">Frequency score: %1$.2f</string>
     <string name="provenance_recency_score">Recency score: %1$.2f</string>
     <string name="provenance_base_boost">Base boost: %1$.2f</string>

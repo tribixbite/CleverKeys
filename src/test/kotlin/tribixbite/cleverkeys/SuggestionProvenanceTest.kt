@@ -50,7 +50,9 @@ class SuggestionProvenanceTest {
         frequencyFactor = "• Frequency factor: %1\$.2f×",
         finalScore = "= Final score: %1\$d",
         personalUsage = "Personal usage:",
-        usageCount = "Used %1\$d times",
+        // Fake of the Android layer's getQuantityString(R.plurals.provenance_usage_count, n, n)
+        // under English CLDR rules (one → "time", other → "times").
+        usageCount = { n -> if (n == 1) "Used $n time" else "Used $n times" },
         frequencyScore = "Frequency score: %1\$.2f",
         recencyScore = "Recency score: %1\$.2f",
         baseBoost = "Base boost: %1\$.2f",
@@ -230,6 +232,27 @@ class SuggestionProvenanceTest {
         assertTrue(text.contains("learned patterns")) // dynamic 1.8 beat static 1.2
         assertTrue(text.contains("Final score: ${breakdown.finalScore}"))
         assertTrue(text.contains("Used 12 times"))
+    }
+
+    /**
+     * ARC-109: the usage-count line must be quantity-aware — English says
+     * "Used 1 time" (or "once"), never "Used 1 times". Impossible with a single
+     * raw template flowing into the pure formatter; the [ProvenanceFormatter.Strings]
+     * bundle therefore carries a `(Int) -> String` resolver the Android layer backs
+     * with `getQuantityString(R.plurals.provenance_usage_count, n, n)`.
+     */
+    @Test
+    fun `usage count inflects between singular and plural in English`() {
+        fun sheet(count: Int) = ProvenanceFormatter.format(
+            word = "hello",
+            meta = null,
+            barScore = null,
+            personalization = PersonalizationDetails(count, 1.2f, 0.8f, 2.0f, "Balanced", 1.0f, 2.0f),
+            strings = strings()
+        )
+        assertTrue(sheet(5).contains("Used 5 times"))
+        assertTrue(sheet(1).contains("Used 1 time"))
+        assertFalse("singular count must not render the plural form", sheet(1).contains("Used 1 times"))
     }
 
     @Test

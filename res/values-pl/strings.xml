@@ -619,7 +619,7 @@
     <string name="provenance_frequency_factor">• Współczynnik częstotliwości: %1$.2f×</string>
     <string name="provenance_final_score">= Wynik końcowy: %1$d</string>
     <string name="provenance_personal_usage">Osobiste użycie:</string>
-    <string name="provenance_usage_count">Użyto %1$d razy</string>
+    <plurals name="provenance_usage_count"><item quantity="one">Użyto %1$d raz</item><item quantity="few">Użyto %1$d razy</item><item quantity="many">Użyto %1$d razy</item><item quantity="other">Użyto %1$d raza</item></plurals>
     <string name="provenance_frequency_score">Wynik częstotliwości: %1$.2f</string>
     <string name="provenance_recency_score">Wynik świeżości: %1$.2f</string>
     <string name="provenance_base_boost">Wzmocnienie bazowe: %1$.2f</string>

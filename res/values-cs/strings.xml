@@ -609,7 +609,7 @@
     <string name="provenance_frequency_factor">• Faktor četnosti: %1$.2f×</string>
     <string name="provenance_final_score">= Výsledné skóre: %1$d</string>
     <string name="provenance_personal_usage">Osobní používání:</string>
-    <string name="provenance_usage_count">Použito %1$d×</string>
+    <plurals name="provenance_usage_count"><item quantity="one">Použito %1$d×</item><item quantity="few">Použito %1$d×</item><item quantity="many">Použito %1$d×</item><item quantity="other">Použito %1$d×</item></plurals>
     <string name="provenance_frequency_score">Skóre četnosti: %1$.2f</string>
     <string name="provenance_recency_score">Skóre aktuálnosti: %1$.2f</string>
     <string name="provenance_base_boost">Základní zesílení: %1$.2f</string>

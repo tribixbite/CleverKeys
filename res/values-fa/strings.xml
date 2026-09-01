@@ -644,7 +644,7 @@
     <string name="provenance_frequency_factor">• ضریب بسامد: %1$.2f×</string>
     <string name="provenance_final_score">= امتیاز نهایی: %1$d</string>
     <string name="provenance_personal_usage">کاربرد شخصی:</string>
-    <string name="provenance_usage_count">%1$d بار استفاده شده</string>
+    <plurals name="provenance_usage_count"><item quantity="one">%1$d بار استفاده شده</item><item quantity="other">%1$d بار استفاده شده</item></plurals>
     <string name="provenance_frequency_score">امتیاز بسامد: %1$.2f</string>
     <string name="provenance_recency_score">امتیاز تازگی: %1$.2f</string>
     <string name="provenance_base_boost">تقویت پایه: %1$.2f</string>

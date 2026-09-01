@@ -960,7 +960,7 @@
     <string name="provenance_score_components">Thành phần điểm:</string>
     <string name="provenance_source">Nguồn: %1$s</string>
     <string name="provenance_unknown">Không rõ</string>
-    <string name="provenance_usage_count">Đã dùng %1$d lần</string>
+    <plurals name="provenance_usage_count"><item quantity="other">Đã dùng %1$d lần</item></plurals>
     <string name="swipe_engine_layout_corner_fallback">Trên %1$s, CTC không đọc được %2$s vì đó là ký tự ở góc phím chứ không phải nhãn phím chính. Vuốt trên bố cục đó dùng bộ máy hình học.</string>
     <string name="swipe_engine_layout_incomplete_fallback">Trên %1$s, CTC cần phím chính cho %2$s. Vuốt trên bố cục đó dùng bộ máy hình học.</string>
     <string name="swipe_engine_layout_script_fallback">CTC không xử lý được hệ chữ của %1$s, nên vuốt trên bố cục đó dùng bộ máy hình học.</string>

@@ -528,7 +528,11 @@ class SuggestionHandler(
             frequencyFactor = text(R.string.provenance_frequency_factor),
             finalScore = text(R.string.provenance_final_score),
             personalUsage = text(R.string.provenance_personal_usage),
-            usageCount = text(R.string.provenance_usage_count),
+            // ARC-109: quantity-aware — the plurals lookup happens here at the Android
+            // boundary so the pure formatter never selects a CLDR plural form itself.
+            usageCount = { n ->
+                context.resources.getQuantityString(R.plurals.provenance_usage_count, n, n)
+            },
             frequencyScore = text(R.string.provenance_frequency_score),
             recencyScore = text(R.string.provenance_recency_score),
             baseBoost = text(R.string.provenance_base_boost),

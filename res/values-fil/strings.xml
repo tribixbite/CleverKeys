@@ -618,7 +618,7 @@
     <string name="provenance_frequency_factor">• Factor ng dalas: %1$.2f×</string>
     <string name="provenance_final_score">= Final na score: %1$d</string>
     <string name="provenance_personal_usage">Personal na paggamit:</string>
-    <string name="provenance_usage_count">Ginamit nang %1$d beses</string>
+    <plurals name="provenance_usage_count"><item quantity="one">Ginamit nang %1$d beses</item><item quantity="other">Ginamit nang %1$d beses</item></plurals>
     <string name="provenance_frequency_score">Score ng dalas: %1$.2f</string>
     <string name="provenance_recency_score">Score ng recency: %1$.2f</string>
     <string name="provenance_base_boost">Base boost: %1$.2f</string>

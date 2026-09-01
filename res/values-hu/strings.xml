@@ -615,7 +615,7 @@
     <string name="provenance_frequency_factor">• Gyakorisági tényező: %1$.2f×</string>
     <string name="provenance_final_score">= Végső pontszám: %1$d</string>
     <string name="provenance_personal_usage">Személyes használat:</string>
-    <string name="provenance_usage_count">%1$d alkalommal használva</string>
+    <plurals name="provenance_usage_count"><item quantity="one">%1$d alkalommal használva</item><item quantity="other">%1$d alkalommal használva</item></plurals>
     <string name="provenance_frequency_score">Gyakorisági pontszám: %1$.2f</string>
     <string name="provenance_recency_score">Frissességi pontszám: %1$.2f</string>
     <string name="provenance_base_boost">Alap erősítés: %1$.2f</string>

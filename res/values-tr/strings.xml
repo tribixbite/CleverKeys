@@ -617,7 +617,7 @@
     <string name="provenance_frequency_factor">• Sıklık katsayısı: %1$.2f×</string>
     <string name="provenance_final_score">= Son puan: %1$d</string>
     <string name="provenance_personal_usage">Kişisel kullanım:</string>
-    <string name="provenance_usage_count">%1$d kez kullanıldı</string>
+    <plurals name="provenance_usage_count"><item quantity="one">%1$d kez kullanıldı</item><item quantity="other">%1$d kez kullanıldı</item></plurals>
     <string name="provenance_frequency_score">Sıklık puanı: %1$.2f</string>
     <string name="provenance_recency_score">Yenilik puanı: %1$.2f</string>
     <string name="provenance_base_boost">Temel artırım: %1$.2f</string>

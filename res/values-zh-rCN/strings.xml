@@ -930,7 +930,7 @@
     <string name="provenance_score_components">得分组成：</string>
     <string name="provenance_source">来源：%1$s</string>
     <string name="provenance_unknown">未知</string>
-    <string name="provenance_usage_count">已使用 %1$d 次</string>
+    <plurals name="provenance_usage_count"><item quantity="other">已使用 %1$d 次</item></plurals>
     <string name="swipe_engine_layout_corner_fallback">在 %1$s 上，CTC 无法读取 %2$s，因为它们是角标字符而非按键主标签。该布局上的滑动将使用几何引擎。</string>
     <string name="swipe_engine_layout_incomplete_fallback">在 %1$s 上，CTC 需要 %2$s 的主按键。该布局上的滑动将使用几何引擎。</string>
     <string name="swipe_engine_layout_script_fallback">CTC 无法处理 %1$s 使用的文字系统，因此该布局上的滑动将使用几何引擎。</string>

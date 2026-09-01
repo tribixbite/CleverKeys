@@ -609,7 +609,7 @@
     <string name="provenance_frequency_factor">• 빈도 계수: %1$.2f×</string>
     <string name="provenance_final_score">= 최종 점수: %1$d</string>
     <string name="provenance_personal_usage">개인 사용 기록:</string>
-    <string name="provenance_usage_count">%1$d회 사용</string>
+    <plurals name="provenance_usage_count"><item quantity="other">%1$d회 사용</item></plurals>
     <string name="provenance_frequency_score">빈도 점수: %1$.2f</string>
     <string name="provenance_recency_score">최근 사용 점수: %1$.2f</string>
     <string name="provenance_base_boost">기본 부스트: %1$.2f</string>

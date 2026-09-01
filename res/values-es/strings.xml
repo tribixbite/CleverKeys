@@ -627,7 +627,7 @@
     <string name="provenance_frequency_factor">• Factor de frecuencia: %1$.2f×</string>
     <string name="provenance_final_score">= Puntuación final: %1$d</string>
     <string name="provenance_personal_usage">Uso personal:</string>
-    <string name="provenance_usage_count">Usada %1$d veces</string>
+    <plurals name="provenance_usage_count"><item quantity="one">Usada %1$d vez</item><item quantity="many">Usada %1$d veces</item><item quantity="other">Usada %1$d veces</item></plurals>
     <string name="provenance_frequency_score">Puntuación de frecuencia: %1$.2f</string>
     <string name="provenance_recency_score">Puntuación de recencia: %1$.2f</string>
     <string name="provenance_base_boost">Refuerzo base: %1$.2f</string>

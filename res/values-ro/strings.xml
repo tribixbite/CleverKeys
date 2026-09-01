@@ -632,7 +632,7 @@
     <string name="provenance_frequency_factor">• Factor de frecvență: %1$.2f×</string>
     <string name="provenance_final_score">= Scor final: %1$d</string>
     <string name="provenance_personal_usage">Utilizare personală:</string>
-    <string name="provenance_usage_count">Folosit de %1$d ori</string>
+    <plurals name="provenance_usage_count"><item quantity="one">Folosit %1$d dată</item><item quantity="few">Folosit de %1$d ori</item><item quantity="other">Folosit de %1$d de ori</item></plurals>
     <string name="provenance_frequency_score">Scor de frecvență: %1$.2f</string>
     <string name="provenance_recency_score">Scor de recență: %1$.2f</string>
     <string name="provenance_base_boost">Amplificare de bază: %1$.2f</string>

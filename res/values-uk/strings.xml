@@ -943,7 +943,7 @@
     <string name="provenance_score_components">Складові балу:</string>
     <string name="provenance_source">Джерело: %1$s</string>
     <string name="provenance_unknown">Невідомо</string>
-    <string name="provenance_usage_count">Використано %1$d разів</string>
+    <plurals name="provenance_usage_count"><item quantity="one">Використано %1$d раз</item><item quantity="few">Використано %1$d рази</item><item quantity="many">Використано %1$d разів</item><item quantity="other">Використано %1$d разу</item></plurals>
     <string name="swipe_engine_layout_corner_fallback">На макеті %1$s CTC не може зчитати %2$s, бо це кутові символи, а не основні позначки клавіш. Свайпи на цьому макеті використовують геометричний рушій.</string>
     <string name="swipe_engine_layout_incomplete_fallback">На макеті %1$s CTC потребує основних клавіш для %2$s. Свайпи на цьому макеті використовують геометричний рушій.</string>
     <string name="swipe_engine_layout_script_fallback">CTC не підтримує писемність макета %1$s, тому свайпи на цьому макеті використовують геометричний рушій.</string>

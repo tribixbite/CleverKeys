@@ -620,7 +620,7 @@
     <string name="provenance_frequency_factor">• Biežuma koeficients: %1$.2f×</string>
     <string name="provenance_final_score">= Galīgais vērtējums: %1$d</string>
     <string name="provenance_personal_usage">Personiskais lietojums:</string>
-    <string name="provenance_usage_count">Lietots %1$d reizes</string>
+    <plurals name="provenance_usage_count"><item quantity="zero">Lietots %1$d reižu</item><item quantity="one">Lietots %1$d reizi</item><item quantity="other">Lietots %1$d reizes</item></plurals>
     <string name="provenance_frequency_score">Biežuma vērtējums: %1$.2f</string>
     <string name="provenance_recency_score">Nesenības vērtējums: %1$.2f</string>
     <string name="provenance_base_boost">Bāzes pastiprinājums: %1$.2f</string>

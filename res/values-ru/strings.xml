@@ -609,7 +609,7 @@
     <string name="provenance_frequency_factor">• Частотный коэффициент: %1$.2f×</string>
     <string name="provenance_final_score">= Итоговая оценка: %1$d</string>
     <string name="provenance_personal_usage">Личное использование:</string>
-    <string name="provenance_usage_count">Использовано %1$d раз</string>
+    <plurals name="provenance_usage_count"><item quantity="one">Использовано %1$d раз</item><item quantity="few">Использовано %1$d раза</item><item quantity="many">Использовано %1$d раз</item><item quantity="other">Использовано %1$d раза</item></plurals>
     <string name="provenance_frequency_score">Оценка частоты: %1$.2f</string>
     <string name="provenance_recency_score">Оценка недавности: %1$.2f</string>
     <string name="provenance_base_boost">Базовое усиление: %1$.2f</string>

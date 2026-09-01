@@ -608,7 +608,7 @@
     <string name="provenance_frequency_factor">• 頻度係数: %1$.2f×</string>
     <string name="provenance_final_score">= 最終スコア: %1$d</string>
     <string name="provenance_personal_usage">個人の使用状況:</string>
-    <string name="provenance_usage_count">%1$d 回使用</string>
+    <plurals name="provenance_usage_count"><item quantity="other">%1$d 回使用</item></plurals>
     <string name="provenance_frequency_score">頻度スコア: %1$.2f</string>
     <string name="provenance_recency_score">最近使用スコア: %1$.2f</string>
     <string name="provenance_base_boost">基本ブースト: %1$.2f</string>

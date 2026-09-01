@@ -235,7 +235,15 @@ object UnifiedScore {
  */
 object ProvenanceFormatter {
 
-    /** Android-resolved wording. Templates use `String.format` argument syntax. */
+    /**
+     * Android-resolved wording. Templates use `String.format` argument syntax.
+     *
+     * [usageCount] is a quantity-aware resolver rather than a raw template (ARC-109):
+     * `provenance_usage_count` is a `<plurals>` resource, and CLDR plural selection
+     * belongs to the Android resource layer — SuggestionHandler backs the lambda with
+     * `resources.getQuantityString(R.plurals.provenance_usage_count, n, n)` while the
+     * formatter stays pure (tests back it with a fake).
+     */
     data class Strings(
         val locale: Locale,
         val originLabels: Map<SuggestionOrigin, String>,
@@ -255,7 +263,8 @@ object ProvenanceFormatter {
         val frequencyFactor: String,
         val finalScore: String,
         val personalUsage: String,
-        val usageCount: String,
+        /** Resolves the localized "used N times" line for a concrete count (quantity-aware). */
+        val usageCount: (Int) -> String,
         val frequencyScore: String,
         val recencyScore: String,
         val baseBoost: String,
@@ -331,7 +340,7 @@ object ProvenanceFormatter {
         personalization?.let { p ->
             append('\n')
             append(strings.personalUsage).append('\n')
-            append(strings.render(strings.usageCount, p.usageCount)).append('\n')
+            append(strings.usageCount(p.usageCount)).append('\n')
             append(strings.render(strings.frequencyScore, p.frequencyScore)).append('\n')
             append(strings.render(strings.recencyScore, p.recencyScore)).append('\n')
             append(strings.render(strings.baseBoost, p.baseBoost)).append('\n')

@@ -46,6 +46,9 @@ class TranslationCoverageDriftTest {
         "import_preview_short_swipe_count",
         "import_preview_short_swipe_warning",
         "import_preview_learned_vocabulary",
+        // ARC-109: converted after ARC-103 (needed plumbing — the provenance sheet's
+        // pure formatter now takes a quantity-aware resolver instead of a raw template).
+        "provenance_usage_count",
     )
 
     /** Names that MUST be `<plurals>` everywhere — the code calls `getQuantityString`. */

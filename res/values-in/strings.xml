@@ -621,7 +621,7 @@
     <string name="provenance_frequency_factor">• Faktor frekuensi: %1$.2f×</string>
     <string name="provenance_final_score">= Skor akhir: %1$d</string>
     <string name="provenance_personal_usage">Penggunaan pribadi:</string>
-    <string name="provenance_usage_count">Digunakan %1$d kali</string>
+    <plurals name="provenance_usage_count"><item quantity="other">Digunakan %1$d kali</item></plurals>
     <string name="provenance_frequency_score">Skor frekuensi: %1$.2f</string>
     <string name="provenance_recency_score">Skor kebaruan: %1$.2f</string>
     <string name="provenance_base_boost">Dorongan dasar: %1$.2f</string>

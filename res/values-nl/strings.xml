@@ -609,7 +609,7 @@
     <string name="provenance_frequency_factor">• Frequentiefactor: %1$.2f×</string>
     <string name="provenance_final_score">= Eindscore: %1$d</string>
     <string name="provenance_personal_usage">Persoonlijk gebruik:</string>
-    <string name="provenance_usage_count">%1$d keer gebruikt</string>
+    <plurals name="provenance_usage_count"><item quantity="one">%1$d keer gebruikt</item><item quantity="other">%1$d keer gebruikt</item></plurals>
     <string name="provenance_frequency_score">Frequentiescore: %1$.2f</string>
     <string name="provenance_recency_score">Recentheidsscore: %1$.2f</string>
     <string name="provenance_base_boost">Basisversterking: %1$.2f</string>

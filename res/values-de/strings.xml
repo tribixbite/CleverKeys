@@ -629,7 +629,7 @@
     <string name="provenance_frequency_factor">• Häufigkeitsfaktor: %1$.2f×</string>
     <string name="provenance_final_score">= Endpunktzahl: %1$d</string>
     <string name="provenance_personal_usage">Persönliche Nutzung:</string>
-    <string name="provenance_usage_count">%1$d-mal verwendet</string>
+    <plurals name="provenance_usage_count"><item quantity="one">%1$d-mal verwendet</item><item quantity="other">%1$d-mal verwendet</item></plurals>
     <string name="provenance_frequency_score">Häufigkeitswert: %1$.2f</string>
     <string name="provenance_recency_score">Aktualitätswert: %1$.2f</string>
     <string name="provenance_base_boost">Basis-Verstärkung: %1$.2f</string>
