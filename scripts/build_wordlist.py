@@ -27,8 +27,8 @@ Band structure (per maintainer spec, 2026-06-25):
 Oracle-availability tiers (see LANG_CONFIG):
   Tier A (spellcheckers + AOSP): en fr de es nl ru
   Tier B (pyspellchecker + AOSP): it pt
-  Tier C (AOSP only): sv el tr — AOSP LatinIME is the sole band-2 oracle
-  Tier D (no positive oracles): id ms tl — band == top, negatives-only
+  Tier C (AOSP only): sv el tr he — AOSP LatinIME is the sole band-2 oracle
+  Tier D (no positive oracles): id ms tl uk bg mk — band == top, negatives-only
   sw is NOT ported (no wordfreq data; corpus-file pipeline unchanged).
 
 English-only elements with no non-EN analog (documented omissions):
@@ -101,6 +101,7 @@ WORD_RE_BY_SCRIPT = {
     "latin": re.compile(r"[a-z][a-z'-]*"),
     "greek": re.compile(r"[Ͱ-Ͽἀ-῿][Ͱ-Ͽἀ-῿'-]*"),
     "cyrillic": re.compile(r"[Ѐ-ӿ][Ѐ-ӿ'-]*"),
+    "hebrew": re.compile(r"[֐-׿][֐-׿'-]*"),
 }
 WORD_RE = WORD_RE_BY_SCRIPT["latin"]  # back-compat alias (en behaviour)
 
@@ -235,6 +236,18 @@ LANG_CONFIG: "dict[str, LangConfig]" = {
         top=65_000, band=40_000, limit=40_000,  # stream is 61,076 deep (full small list)
         must_include=("için", "değil", "büyük"),
     ),
+    "he": LangConfig(
+        # ARC-056 (2026-09-01). Sole oracle: AOSP LatinIME `iw` snapshot
+        # (94,799 headwords, 2014/v44). No hunspell/aspell he dictionary is
+        # packaged for this build host and pyspellchecker has no he data.
+        # Alphabet = 22 letters + 5 final forms; wordfreq's he stream is
+        # unvocalized so niqqud never reaches the ed1 detector.
+        name="Hebrew", alphabet="אבגדהוזחטיכךלמםנןסעפףצץקרשת", script="hebrew",
+        aosp="aosp_he_wordlist.txt.gz",
+        foreign=(),  # no same-script wordfreq neighbour — filter inert
+        top=90_000, band=50_000, limit=50_000,
+        must_include=("שלום", "אני", "תודה"),
+    ),
     # ── Tier D: no positive oracles — band == top, negatives-only ─────────────
     "id": LangConfig(
         name="Indonesian", alphabet=ASCII_LOWER,
@@ -250,6 +263,36 @@ LANG_CONFIG: "dict[str, LangConfig]" = {
         name="Tagalog", alphabet=ASCII_LOWER,
         foreign=("en", "es"), top=30_000, band=30_000,
         must_include=("ang", "hindi"),
+    ),
+    # uk/bg/mk (ARC-056, 2026-09-01) are Tier D by circumstance, not design:
+    # no AOSP LatinIME dictionary exists upstream (probed 2026-09-01 — only
+    # el/iw/ru of the target scripts are in the LatinIME tree), no hunspell/
+    # aspell dictionary is packaged for this build host, and pyspellchecker
+    # has no data for any of the three. The cross-Cyrillic foreign-dominance
+    # filter is the load-bearing negative here (uk/bg/mk corpora carry real
+    # Russian contamination). Ukrainian apostrophe forms (м'ясо, ім'я) are a
+    # documented gap: wordfreq spells them with U+02BC, which the Cyrillic
+    # script gate rejects — same "stream is what it is" posture as el's σ/ς.
+    "uk": LangConfig(
+        name="Ukrainian", alphabet="абвгґдеєжзиіїйклмнопрстуфхцчшщьюя",
+        script="cyrillic",
+        foreign=("ru", "bg", "mk", "sh"), top=55_000, band=55_000, limit=50_000,
+        must_include=("що", "також", "який"),
+    ),
+    "bg": LangConfig(
+        # wordfreq bg is a SMALL list: the script-gated stream is only
+        # 35,791 deep (measured 2026-09-01), so top covers all of it and the
+        # pack ships the survivors (same posture as el's survivor count).
+        name="Bulgarian", alphabet="абвгдежзийклмнопрстуфхцчшщъьюя",
+        script="cyrillic",
+        foreign=("ru", "uk", "mk", "sh"), top=36_000, band=36_000,
+        must_include=("това", "може", "какво"),
+    ),
+    "mk": LangConfig(
+        name="Macedonian", alphabet="абвгдѓежзѕијклљмнњопрстќуфхцчџш",
+        script="cyrillic",
+        foreign=("bg", "sh", "ru", "uk"), top=55_000, band=55_000, limit=50_000,
+        must_include=("што", "може", "како"),
     ),
 }
 
@@ -278,6 +321,12 @@ def _is_script_word(word: str, script: str) -> bool:
         return all(0x0370 <= ord(c) <= 0x03FF or 0x1F00 <= ord(c) <= 0x1FFF for c in word)
     if script == "cyrillic":
         return all(0x0400 <= ord(c) <= 0x04FF for c in word)
+    if script == "hebrew":
+        # Full Hebrew block (letters + points/geresh); wordfreq's he stream is
+        # unvocalized, and `w.isalpha()` upstream already rejects tokens whose
+        # characters are combining marks, so in practice this admits the 22
+        # letters + 5 finals.
+        return all(0x0590 <= ord(c) <= 0x05FF for c in word)
     raise ValueError(f"unknown script {script!r}")
 
 
@@ -429,22 +478,33 @@ def read_ckdt_words(data: bytes, origin: str) -> "set[str]":
     return words
 
 
-def load_shipped(lang: str, cfg: LangConfig) -> "set[str]":
+def load_shipped(lang: str, cfg: LangConfig, bootstrap: bool = False) -> "set[str]":
     """Currently-shipped word set (the carryover basis).
 
     en        → assets en_enhanced.json (the original EN builder's basis)
     bundled   → assets <lang>_enhanced.bin
     pack-only → scripts/dictionaries/langpack-<lang>.zip :: dictionary.bin
+
+    `bootstrap` permits a MISSING basis for a language that has never shipped
+    (first build → empty carryover, announced loudly). It never silences a
+    parse failure, and without the flag a missing basis stays a hard exit —
+    an established language losing its basis is a regression, not a bootstrap.
     """
     if lang == "en":
         return {w.lower() for w in json.loads((ASSETS / "en_enhanced.json").read_text()).keys()}
     if cfg.bundle:
         path = ASSETS / f"{lang}_enhanced.bin"
         if not path.exists():
+            if bootstrap:
+                print(f"carryover basis: NONE — bootstrap build ({path} does not exist yet)")
+                return set()
             sys.exit(f"carryover basis missing: {path}")
         return read_ckdt_words(path.read_bytes(), str(path))
     zpath = DICT_DIR / f"langpack-{lang}.zip"
     if not zpath.exists():
+        if bootstrap:
+            print(f"carryover basis: NONE — bootstrap build ({zpath} does not exist yet)")
+            return set()
         sys.exit(f"carryover basis missing: {zpath}")
     with zipfile.ZipFile(zpath) as zf:
         return read_ckdt_words(zf.read("dictionary.bin"), f"{zpath}::dictionary.bin")
@@ -463,6 +523,10 @@ def main() -> None:
                          "protected). Default per-language; 0 disables the cap.")
     ap.add_argument("--write", action="store_true",
                     help="regenerate <lang>_words.txt + binary dict (en: + json)")
+    ap.add_argument("--bootstrap", action="store_true",
+                    help="first build of a NEW language: tolerate a missing carryover "
+                         "basis (empty shipped set). Established languages must not use "
+                         "this — a lost basis is a regression, not a bootstrap.")
     ap.add_argument("--review-dir", type=Path, default=Path.home() / "git" / "swype",
                     help="where the annotated review artifacts are written")
     ap.add_argument("--eval", type=Path, default=None,
@@ -528,7 +592,7 @@ def main() -> None:
                      f"load: {exc}. Never silently degrade a configured oracle.")
     else:
         pyspell_set = set()
-    shipped = load_shipped(lang, cfg)
+    shipped = load_shipped(lang, cfg, bootstrap=args.bootstrap)
     print(f"resources: allow={len(allow)} block={len(block)} func={len(func)}"
           f"{'' if func_forcekeep else '(evidence-only)'} aosp={len(aosp)} "
           f"nltk={len(nltk_set)} names={len(name_set)} pyspell={len(pyspell_set)} shipped={len(shipped)}")
@@ -674,8 +738,12 @@ def main() -> None:
             # Casual 2-char tokens (gf, jk, ew, ol, tf) rarely have spell-oracle
             # coverage; grandfather shipped ones that are genuinely typed
             # (zipf >= 3.0) while still shedding the shipped bigram noise
-            # (xc, zx, qp all sit below 3.0).
-            ok2 = pos or (w in shipped and zc[w] >= 3.0)
+            # (xc, zx, qp all sit below 3.0). A bootstrap build has no shipped
+            # set to grandfather from, so the zipf bar stands alone there —
+            # without it an oracle-less first build ships ZERO 2-char words
+            # and loses core function words (uk що, bg не/на/да, mk не/на/се).
+            ok2 = pos or ((w in shipped or (args.bootstrap and not shipped))
+                          and zc[w] >= 3.0)
             (keep if ok2 else drop)[w] = "2char" if ok2 else "2char-no-evidence"
             continue
         if rank is not None and rank < band:                  # band 1: conservative

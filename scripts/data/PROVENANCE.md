@@ -25,12 +25,15 @@ is recorded in the Source column.
 | `aosp_ru_wordlist.txt.gz` | `ru`, version 54, date=1414726277 | Apache-2.0 | 2026-07-20 | 220,492 | d79dd24f169d |
 | `aosp_el_wordlist.txt.gz` | `el`, version 44, date=1393228134 | Apache-2.0 | 2026-07-20 | 184,303 | 77075623925a |
 | `aosp_tr_wordlist.txt.gz` | `tr`, version 54, date=1414726261 | Apache-2.0 | 2026-07-20 | 180,841 | f73f52b2e2f7 |
+| `aosp_he_wordlist.txt.gz` | `iw` (legacy code for he), version 44, date=1393228136 | Apache-2.0 | 2026-09-01 | 94,799 | 3f3b47d53ae8 |
 
 Role: positive keep-oracle — mobile-keyboard-curated vocabulary (names, casual
-register, abbreviations). For sv/el/tr the AOSP snapshot is the SOLE band-2
-oracle (Tier C in `build_wordlist.py`'s LANG_CONFIG). id/ms/tl have no AOSP
-dictionary upstream (probed 2026-07-20 — no `<code>_wordlist.combined.gz` in
-the LatinIME tree) and run oracle-less (Tier D, band == top).
+register, abbreviations). For sv/el/tr/he the AOSP snapshot is the SOLE band-2
+oracle (Tier C in `build_wordlist.py`'s LANG_CONFIG); he's is published under
+the legacy ISO code `iw`. id/ms/tl have no AOSP dictionary upstream (probed
+2026-07-20 — no `<code>_wordlist.combined.gz` in the LatinIME tree) and run
+oracle-less (Tier D, band == top); the same probe on 2026-09-01 found no
+uk/bg/mk dictionary either, so those three also run Tier D.
 
 Notes:
 - The AOSP lists are 2014-vintage (el is 2014/v44): excellent for

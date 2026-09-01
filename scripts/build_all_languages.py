@@ -78,6 +78,11 @@ SUPPORTED_LANGUAGES = {
     'id': {'name': 'Indonesian', 'words': 0,     'bundle': False, 'boost': True,  'version': 2},  # ~ survivors (ceiling 30,718)
     'ms': {'name': 'Malay',      'words': 0,     'bundle': False, 'boost': True,  'version': 2},  # ~ survivors (ceiling 28,361)
     'tl': {'name': 'Tagalog',    'words': 0,     'bundle': False, 'boost': True,  'version': 2},  # ~ survivors (ceiling 29,877)
+    # ARC-056 additions (2026-09-01): pack-only, non-Latin script → no boosts.
+    'uk': {'name': 'Ukrainian',  'words': 50000, 'bundle': False, 'boost': False, 'version': 1},
+    'bg': {'name': 'Bulgarian',  'words': 0,     'bundle': False, 'boost': False, 'version': 1},  # ~ survivors of 35,791
+    'mk': {'name': 'Macedonian', 'words': 50000, 'bundle': False, 'boost': False, 'version': 1},
+    'he': {'name': 'Hebrew',     'words': 50000, 'bundle': False, 'boost': False, 'version': 1},
     # Swahili uses the wiki-corpus word list (wordfreq has no sw data)
     'sw': {'name': 'Swahili',    'words': 20000, 'bundle': False, 'boost': True,  'version': 2,
            'wordlist': 'sw_words.txt'},
