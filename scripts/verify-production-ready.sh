@@ -1,6 +1,16 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 # CleverKeys Production Readiness Verification
-# Automated checks that don't require manual device interaction
+#
+# Cheap, offline structural checks — "is this tree shaped like something we could
+# ship?". It is NOT a test suite: correctness gates are `scripts/gradle-guard.sh
+# runPureTests`, the ew-cli instrumented suite, and `lintVitalRelease`.
+#
+# Rewritten 2026-09-01 (ARC-098). Every assertion below was re-derived from live
+# code; the previous version asserted against a `tribixbite/keyboard2/` source
+# tree that never existed, a `DisabledWordsManager.kt` and a
+# `loadDefaultKeyboardLayout()` that do not exist, a `performanceProfiler?.cleanup()`
+# call replaced by CleanupHandler, four deleted root markdown files, and an ADR
+# count of 7 when there are 11 — i.e. it could only ever report failure.
 
 set -e
 
@@ -20,195 +30,190 @@ pass_count=0
 fail_count=0
 total_checks=0
 
-check_item() {
+pass() {
+    echo -e "${GREEN}✅ PASS${NC}: $1"
+    pass_count=$((pass_count + 1))
     total_checks=$((total_checks + 1))
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ PASS${NC}: $1"
-        pass_count=$((pass_count + 1))
-    else
-        echo -e "${RED}❌ FAIL${NC}: $1"
-        fail_count=$((fail_count + 1))
-    fi
+}
+
+fail() {
+    echo -e "${RED}❌ FAIL${NC}: $1"
+    fail_count=$((fail_count + 1))
+    total_checks=$((total_checks + 1))
+}
+
+warn() {
+    echo -e "${YELLOW}⚠️  WARN${NC}: $1"
+    total_checks=$((total_checks + 1))
 }
 
 echo "📦 1. APK BUILD VERIFICATION"
 echo "----------------------------"
 
-# Check APK exists
-if [ -f "build/outputs/apk/debug/tribixbite.keyboard2.debug.apk" ]; then
-    APK_SIZE=$(du -h build/outputs/apk/debug/tribixbite.keyboard2.debug.apk | cut -f1)
-    echo -e "${GREEN}✅ PASS${NC}: APK exists ($APK_SIZE)"
-    pass_count=$((pass_count + 1))
-else
-    echo -e "${RED}❌ FAIL${NC}: APK not found"
-    fail_count=$((fail_count + 1))
-fi
-total_checks=$((total_checks + 1))
+# AGP names outputs "CleverKeys-v<versionName>-<abi>.apk" (build.gradle
+# outputFileName), one per ABI split — there is no single fixed filename.
+RELEASE_APK="$(ls -t build/outputs/apk/release/CleverKeys-v*.apk 2>/dev/null | head -1)"
+DEBUG_APK="$(ls -t build/outputs/apk/debug/CleverKeys-v*.apk 2>/dev/null | head -1)"
+APK="${RELEASE_APK:-$DEBUG_APK}"
 
-# Check APK on device
-if adb shell pm list packages | grep -q "tribixbite.keyboard2"; then
-    INSTALLED_VERSION=$(adb shell dumpsys package tribixbite.keyboard2 | grep versionName | head -1 | cut -d= -f2)
-    echo -e "${GREEN}✅ PASS${NC}: APK installed on device (v$INSTALLED_VERSION)"
-    pass_count=$((pass_count + 1))
+if [ -n "$APK" ]; then
+    pass "APK exists: $APK ($(du -h "$APK" | cut -f1))"
 else
-    echo -e "${YELLOW}⚠️  WARN${NC}: Cannot verify device (ADB not connected)"
+    fail "No APK in build/outputs/apk/{release,debug}/ — run ./build-on-termux.sh"
 fi
-total_checks=$((total_checks + 1))
+
+# APK payload: the shipped CTC encoder and the bundled English lexicon must be
+# packaged. (Folded in from the deleted scripts/test-runtime.sh, whose version of
+# this check still looked for the ADR-011-removed neural encoder/decoder pair.)
+if [ -n "$APK" ] && command -v unzip >/dev/null 2>&1; then
+    if unzip -l "$APK" | grep -q "assets/models/ctc_swipe_encoder.onnx"; then
+        pass "CTC encoder packaged (assets/models/ctc_swipe_encoder.onnx)"
+    else
+        fail "CTC encoder missing from APK"
+    fi
+
+    if unzip -l "$APK" | grep -q "assets/dictionaries/en_enhanced.bin"; then
+        pass "English lexicon packaged (assets/dictionaries/en_enhanced.bin)"
+    else
+        fail "English lexicon missing from APK"
+    fi
+else
+    warn "Skipping APK payload check (no APK, or unzip unavailable)"
+fi
 
 echo ""
 echo "📝 2. SOURCE CODE VERIFICATION"
 echo "------------------------------"
 
-# Check critical files exist
+# The R4 reorg moved *Activity.kt into activities/ WITHOUT changing packages, so
+# these must be addressed by repo path, not by an `.activities.` FQCN.
 CRITICAL_FILES=(
-    "src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt"
-    "src/main/kotlin/tribixbite/keyboard2/Keyboard2View.kt"
-    "src/main/kotlin/tribixbite/keyboard2/DictionaryManagerActivity.kt"
-    "src/main/kotlin/tribixbite/keyboard2/DisabledWordsManager.kt"
+    "src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt"
+    "src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt"
+    "src/main/kotlin/tribixbite/cleverkeys/SuggestionHandler.kt"
+    "src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt"
+    "src/main/kotlin/tribixbite/cleverkeys/activities/DictionaryManagerActivity.kt"
+    "src/main/kotlin/tribixbite/cleverkeys/swipe/SwipeEngineRouter.kt"
+    "src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcBeamDecoder.kt"
 )
 
 for file in "${CRITICAL_FILES[@]}"; do
     if [ -f "$file" ]; then
-        LINE_COUNT=$(wc -l < "$file")
-        echo -e "${GREEN}✅ PASS${NC}: $(basename $file) exists ($LINE_COUNT lines)"
-        pass_count=$((pass_count + 1))
+        pass "$(basename "$file") exists ($(wc -l < "$file") lines)"
     else
-        echo -e "${RED}❌ FAIL${NC}: $file missing"
-        fail_count=$((fail_count + 1))
+        fail "$file missing"
     fi
-    total_checks=$((total_checks + 1))
 done
 
 echo ""
-echo "🔍 3. CRITICAL BUG VERIFICATION"
-echo "--------------------------------"
+echo "🔍 3. WIRING VERIFICATION"
+echo "--------------------------"
 
-# Check for duplicate function (Bug fixed Nov 16)
-DUPLICATE_COUNT=$(grep -c "fun loadDefaultKeyboardLayout()" src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt || echo "0")
-if [ "$DUPLICATE_COUNT" -eq 1 ]; then
-    echo -e "${GREEN}✅ PASS${NC}: No duplicate loadDefaultKeyboardLayout() (crash fix verified)"
-    pass_count=$((pass_count + 1))
+# Both swipe engines must be reachable from the router (ADR-011 left exactly two).
+if grep -q "GEOMETRIC" src/main/kotlin/tribixbite/cleverkeys/swipe/SwipeEngineRouter.kt &&
+   grep -q "CTC" src/main/kotlin/tribixbite/cleverkeys/swipe/SwipeEngineRouter.kt; then
+    pass "SwipeEngineRouter exposes both engines (GEOMETRIC + CTC)"
 else
-    echo -e "${RED}❌ FAIL${NC}: Found $DUPLICATE_COUNT instances (expected 1)"
-    fail_count=$((fail_count + 1))
+    fail "SwipeEngineRouter does not expose both engines"
 fi
-total_checks=$((total_checks + 1))
 
-# Check Dictionary Manager implemented
-if grep -q "class DictionaryManagerActivity" src/main/kotlin/tribixbite/keyboard2/DictionaryManagerActivity.kt; then
-    LINES=$(wc -l < src/main/kotlin/tribixbite/keyboard2/DictionaryManagerActivity.kt)
-    echo -e "${GREEN}✅ PASS${NC}: Dictionary Manager implemented ($LINES lines)"
-    pass_count=$((pass_count + 1))
+# ADR-011 deleted the neural engine's implementation files. Assert file absence
+# rather than grepping for the name — surviving KDoc that says "extracted from
+# OnnxSwipePredictor" is provenance, not residue. Semantic ADR-011 invariants are
+# pinned by DeadPlumbingDriftTest, not by this script.
+NEURAL_RESIDUE=0
+for f in \
+    src/main/kotlin/tribixbite/cleverkeys/OnnxSwipePredictorImpl.kt \
+    src/main/kotlin/tribixbite/cleverkeys/onnx/BeamSearchEngine.kt \
+    src/main/kotlin/tribixbite/cleverkeys/onnx/DecoderWrapper.kt \
+    src/main/kotlin/tribixbite/cleverkeys/onnx/EncoderWrapper.kt
+do
+    [ -f "$f" ] && { echo "   residue: $f"; NEURAL_RESIDUE=1; }
+done
+if [ "$NEURAL_RESIDUE" -eq 0 ]; then
+    pass "Neural-engine implementation files absent (ADR-011)"
 else
-    echo -e "${RED}❌ FAIL${NC}: Dictionary Manager not found"
-    fail_count=$((fail_count + 1))
+    fail "Neural-engine implementation files present (ADR-011 removed them)"
 fi
-total_checks=$((total_checks + 1))
 
-# Check DisabledWordsManager exists
-if [ -f "src/main/kotlin/tribixbite/keyboard2/DisabledWordsManager.kt" ]; then
-    echo -e "${GREEN}✅ PASS${NC}: DisabledWordsManager singleton exists"
-    pass_count=$((pass_count + 1))
-else
-    echo -e "${RED}❌ FAIL${NC}: DisabledWordsManager not found"
-    fail_count=$((fail_count + 1))
-fi
-total_checks=$((total_checks + 1))
-
-echo ""
-echo "⚙️  4. PERFORMANCE VERIFICATION"
-echo "-------------------------------"
-
-# Check hardware acceleration
-if grep -q 'android:hardwareAccelerated="true"' AndroidManifest.xml; then
-    echo -e "${GREEN}✅ PASS${NC}: Hardware acceleration enabled in manifest"
-    pass_count=$((pass_count + 1))
-else
-    echo -e "${RED}❌ FAIL${NC}: Hardware acceleration not enabled"
-    fail_count=$((fail_count + 1))
-fi
-total_checks=$((total_checks + 1))
-
-# Check onDestroy cleanup exists
-if grep -q "override fun onDestroy()" src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt; then
-    if grep -q "performanceProfiler?.cleanup()" src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt; then
-        echo -e "${GREEN}✅ PASS${NC}: Performance cleanup implemented (90+ components)"
-        pass_count=$((pass_count + 1))
+# Service teardown must exist and route through CleanupHandler.
+if grep -q "override fun onDestroy()" src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt; then
+    if grep -q "CleanupHandler" src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt; then
+        pass "Service teardown wired (onDestroy → CleanupHandler)"
     else
-        echo -e "${YELLOW}⚠️  WARN${NC}: onDestroy exists but cleanup uncertain"
-        fail_count=$((fail_count + 1))
+        fail "onDestroy exists but does not call CleanupHandler"
     fi
 else
-    echo -e "${RED}❌ FAIL${NC}: onDestroy not found"
-    fail_count=$((fail_count + 1))
+    fail "CleverKeysService.onDestroy not found"
 fi
-total_checks=$((total_checks + 1))
+
+echo ""
+echo "⚙️  4. MANIFEST VERIFICATION"
+echo "-------------------------------"
+
+if grep -q 'android:hardwareAccelerated="true"' AndroidManifest.xml; then
+    pass "Hardware acceleration enabled in manifest"
+else
+    fail "Hardware acceleration not enabled"
+fi
+
+# No INTERNET permission — a hard product invariant (GIF/dict packs are SAF imports).
+if grep -q 'android.permission.INTERNET' AndroidManifest.xml; then
+    fail "INTERNET permission present — the app must stay offline"
+else
+    pass "No INTERNET permission (offline invariant holds)"
+fi
+
+if grep -q 'tribixbite.cleverkeys.CleverKeysService' AndroidManifest.xml; then
+    pass "IME service declared (tribixbite.cleverkeys.CleverKeysService)"
+else
+    fail "IME service not declared in manifest"
+fi
 
 echo ""
 echo "📚 5. DOCUMENTATION VERIFICATION"
 echo "---------------------------------"
 
-# Check key documentation files
 DOC_FILES=(
-    "PRODUCTION_READY_NOV_16_2025.md"
-    "SESSION_FINAL_NOV_16_2025.md"
-    "00_START_HERE_FIRST.md"
-    "QUICK_REFERENCE.md"
+    "README.md"
+    "CONTRIBUTING.md"
+    "CLAUDE.md"
+    "docs/TABLE_OF_CONTENTS.md"
+    "docs/specs/architectural-decisions.md"
+    "memory/HANDOFF.md"
 )
 
 for file in "${DOC_FILES[@]}"; do
     if [ -f "$file" ]; then
-        echo -e "${GREEN}✅ PASS${NC}: $file exists"
-        pass_count=$((pass_count + 1))
+        pass "$file exists"
     else
-        echo -e "${RED}❌ FAIL${NC}: $file missing"
-        fail_count=$((fail_count + 1))
+        fail "$file missing"
     fi
-    total_checks=$((total_checks + 1))
 done
 
-# Check ADR count
-ADR_COUNT=$(grep -c "^### ADR-" docs/specs/architectural-decisions.md || echo "0")
-if [ "$ADR_COUNT" -eq 7 ]; then
-    echo -e "${GREEN}✅ PASS${NC}: All 7 ADRs documented"
-    pass_count=$((pass_count + 1))
+# ADR count is informational — it grows. Only an unreadable/empty file is a failure.
+ADR_COUNT=$(grep -c "^## ADR-" docs/specs/architectural-decisions.md || echo "0")
+if [ "$ADR_COUNT" -gt 0 ]; then
+    pass "$ADR_COUNT ADRs documented"
 else
-    echo -e "${YELLOW}⚠️  WARN${NC}: Found $ADR_COUNT ADRs (expected 7)"
+    fail "No ADRs parsed from docs/specs/architectural-decisions.md"
 fi
-total_checks=$((total_checks + 1))
 
 echo ""
 echo "🔧 6. GIT REPOSITORY VERIFICATION"
 echo "----------------------------------"
 
-# Check git status
 if git diff --quiet; then
-    echo -e "${GREEN}✅ PASS${NC}: Working tree clean (no uncommitted changes)"
-    pass_count=$((pass_count + 1))
+    pass "Working tree clean (no unstaged changes)"
 else
-    echo -e "${YELLOW}⚠️  WARN${NC}: Uncommitted changes present"
+    warn "Uncommitted changes present"
 fi
-total_checks=$((total_checks + 1))
 
-# Check commits ahead
-AHEAD=$(git rev-list --count origin/main..HEAD 2>/dev/null || echo "0")
-if [ "$AHEAD" -gt 0 ]; then
-    echo -e "${GREEN}✅ PASS${NC}: $AHEAD commits ahead of origin/main"
-    pass_count=$((pass_count + 1))
+if [ -z "$(git ls-files --others --exclude-standard)" ]; then
+    pass "No untracked files"
 else
-    echo -e "${YELLOW}⚠️  WARN${NC}: No commits ahead of origin"
+    warn "Untracked files present: $(git ls-files --others --exclude-standard | wc -l)"
 fi
-total_checks=$((total_checks + 1))
-
-# Recent commits
-RECENT_COMMITS=$(git log --oneline -5 | wc -l)
-if [ "$RECENT_COMMITS" -eq 5 ]; then
-    echo -e "${GREEN}✅ PASS${NC}: Recent commit history intact"
-    pass_count=$((pass_count + 1))
-else
-    echo -e "${YELLOW}⚠️  WARN${NC}: Fewer than 5 recent commits"
-fi
-total_checks=$((total_checks + 1))
 
 echo ""
 echo "============================================="
@@ -220,18 +225,13 @@ echo -e "${GREEN}Passed: $pass_count${NC}"
 echo -e "${RED}Failed: $fail_count${NC}"
 echo ""
 
-# Calculate percentage
-PASS_PERCENT=$((pass_count * 100 / total_checks))
-
 if [ "$fail_count" -eq 0 ]; then
-    echo -e "${GREEN}🎉 ALL CHECKS PASSED ($PASS_PERCENT%)${NC}"
+    echo -e "${GREEN}🎉 ALL STRUCTURAL CHECKS PASSED${NC}"
     echo ""
-    echo "✅ CleverKeys is PRODUCTION READY"
-    echo ""
-    echo "⏭️  NEXT STEP: Manual device testing required"
-    echo "   → Settings → Enable keyboard"
-    echo "   → Test in any app"
-    echo "   → Verify keys display (crash fix)"
+    echo "⏭️  These are structural checks only. Before shipping, still run:"
+    echo "   scripts/gradle-guard.sh runPureTests"
+    echo "   scripts/gradle-guard.sh lintVitalRelease"
+    echo "   the ew-cli instrumented suite"
     echo ""
     exit 0
 else

@@ -4,7 +4,10 @@
 
 set -e
 
-PACKAGE_NAME="tribixbite.keyboard2"
+# Release applicationId is tribixbite.cleverkeys; the debug variant carries
+# applicationIdSuffix '.debug' so both can be installed side by side.
+# Override with PACKAGE_NAME=tribixbite.cleverkeys.debug to inspect a debug build.
+PACKAGE_NAME="${PACKAGE_NAME:-tribixbite.cleverkeys}"
 APP_NAME="CleverKeys"
 
 echo "========================================="
@@ -97,7 +100,7 @@ else
     echo "  4. Run this script again to verify"
     echo ""
     echo "APK Location:"
-    echo "  build/outputs/apk/debug/tribixbite.keyboard2.debug.apk"
+    echo "  build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk"
 fi
 
 echo ""

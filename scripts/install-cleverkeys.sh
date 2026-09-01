@@ -3,7 +3,12 @@
 # CleverKeys Installation Helper
 # This script helps install and switch to CleverKeys keyboard
 
-APK="build/outputs/apk/debug/tribixbite.keyboard2.apk"
+# AGP names debug outputs "CleverKeys-v<versionName>-<abi>.apk" (build.gradle
+# outputFileName), one per ABI split. Prefer arm64-v8a, else newest debug APK.
+APK="$(ls -t build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk 2>/dev/null | head -1)"
+if [ -z "$APK" ]; then
+    APK="$(ls -t build/outputs/apk/debug/*.apk 2>/dev/null | head -1)"
+fi
 
 echo "════════════════════════════════════════════════════════"
 echo "  CleverKeys Installation & Setup Helper"
@@ -11,9 +16,9 @@ echo "════════════════════════�
 echo
 
 # Check if APK exists
-if [ ! -f "$APK" ]; then
-    echo "❌ APK not found at: $APK"
-    echo "   Run ./gradlew assembleDebug first"
+if [ -z "$APK" ] || [ ! -f "$APK" ]; then
+    echo "❌ No debug APK in build/outputs/apk/debug/"
+    echo "   Build one first: ./build-on-termux.sh"
     exit 1
 fi
 
@@ -44,7 +49,7 @@ if [ -n "$ADB_DEVICE" ] && [ "$ADB_DEVICE" != "offline" ]; then
     
     echo
     echo "Switching to CleverKeys..."
-    adb shell ime set tribixbite.keyboard2/.CleverKeysService
+    adb shell ime set tribixbite.cleverkeys.debug/tribixbite.cleverkeys.CleverKeysService
     
     echo
     echo "Current keyboard:"

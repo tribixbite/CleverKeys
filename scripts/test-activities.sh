@@ -4,9 +4,9 @@
 
 set -e
 
-PACKAGE="tribixbite.keyboard2.debug"
-ACTIVITY_PACKAGE="tribixbite.keyboard2"
-APK_PATH="build/outputs/apk/debug/tribixbite.keyboard2.debug.apk"
+PACKAGE="tribixbite.cleverkeys.debug"
+ACTIVITY_PACKAGE="tribixbite.cleverkeys"
+APK_PATH="$(ls -t build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk build/outputs/apk/debug/*.apk 2>/dev/null | head -1)"
 
 echo "════════════════════════════════════════════════════════════════"
 echo "  CleverKeys Material 3 Activities - Automated Testing Suite"

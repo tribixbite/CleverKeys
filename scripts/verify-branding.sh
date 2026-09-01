@@ -53,7 +53,7 @@ section() {
 # 1. Check APK exists
 section "1. Checking APK"
 
-APK_PATH="build/outputs/apk/debug/tribixbite.keyboard2.apk"
+APK_PATH="$(ls -t build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk build/outputs/apk/debug/*.apk 2>/dev/null | head -1)"
 if [ -f "$APK_PATH" ]; then
     APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
     pass "APK exists: $APK_PATH ($APK_SIZE)"
@@ -95,7 +95,7 @@ fi
 # 3. Check branding code exists in Keyboard2View.kt
 section "3. Checking Branding Code"
 
-KEYBOARD_VIEW="src/main/kotlin/tribixbite/keyboard2/Keyboard2View.kt"
+KEYBOARD_VIEW="src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt"
 if [ -f "$KEYBOARD_VIEW" ]; then
     pass "Keyboard2View.kt exists"
 
@@ -153,10 +153,10 @@ fi
 section "5. Checking Installation"
 
 if [ "$ADB_CONNECTED" = true ]; then
-    INSTALLED=$(adb shell pm list packages | grep "tribixbite.keyboard2" | wc -l)
+    INSTALLED=$(adb shell pm list packages | grep "tribixbite.cleverkeys" | wc -l)
     if [ "$INSTALLED" -gt 0 ]; then
         pass "CleverKeys is installed on device"
-        adb shell pm list packages | grep "tribixbite.keyboard2" | while read line; do
+        adb shell pm list packages | grep "tribixbite.cleverkeys" | while read line; do
             info "  $line"
         done
     else

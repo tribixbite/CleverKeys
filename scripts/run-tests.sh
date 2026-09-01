@@ -31,13 +31,13 @@ echo "
 
 echo "
 🧪 Running ONNX prediction tests..."
-echo "   Test package: tribixbite.keyboard2.test"
+echo "   Test package: tribixbite.cleverkeys.test"
 echo "   Test runner: androidx.test.runner.AndroidJUnitRunner"
 echo ""
 
 # Run all tests
 adb shell am instrument -w \
-    tribixbite.keyboard2.test/androidx.test.runner.AndroidJUnitRunner
+    tribixbite.cleverkeys.test/androidx.test.runner.AndroidJUnitRunner
 
 echo "
 ✅ Test execution complete!"
@@ -46,5 +46,5 @@ echo "📊 View full logs:"
 echo "   adb logcat -s TestRunner:* OnnxSwipe:* SwipeTrajectory:*"
 echo ""
 echo "🔍 Run specific test:"
-echo "   adb shell am instrument -w -e class tribixbite.keyboard2.OnnxPredictionTest#testSwipeHello \\"
-echo "     tribixbite.keyboard2.test/androidx.test.runner.AndroidJUnitRunner"
+echo "   adb shell am instrument -w -e class tribixbite.cleverkeys.OnnxPredictionTest#testSwipeHello \\"
+echo "     tribixbite.cleverkeys.test/androidx.test.runner.AndroidJUnitRunner"

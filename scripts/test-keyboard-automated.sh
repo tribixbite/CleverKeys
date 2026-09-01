@@ -97,7 +97,7 @@ check_adb() {
 # Check if CleverKeys is installed
 check_keyboard_installed() {
     log_info "Checking if CleverKeys is installed..."
-    if adb shell pm list packages | grep -q "tribixbite.keyboard2"; then
+    if adb shell pm list packages | grep -q "tribixbite.cleverkeys"; then
         log_success "CleverKeys is installed"
     else
         log_error "CleverKeys is not installed"

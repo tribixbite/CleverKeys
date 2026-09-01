@@ -124,10 +124,10 @@ echo ""
 # Section 2: APK Installation Status
 echo "2. APK INSTALLATION STATUS"
 echo "────────────────────────────────────────────────────────────────────────────"
-if pm list packages | grep -q "tribixbite.keyboard2.debug"; then
+if pm list packages | grep -q "tribixbite.cleverkeys.debug"; then
     echo -e "${GREEN}✅ INSTALLED${NC}"
-    APK_PATH=$(pm path tribixbite.keyboard2.debug | cut -d: -f2)
-    echo "Package: tribixbite.keyboard2.debug"
+    APK_PATH=$(pm path tribixbite.cleverkeys.debug | cut -d: -f2)
+    echo "Package: tribixbite.cleverkeys.debug"
     echo "Path: $APK_PATH"
 
     if [ -f "$APK_PATH" ]; then
@@ -138,7 +138,7 @@ if pm list packages | grep -q "tribixbite.keyboard2.debug"; then
     # Get app info
     echo ""
     echo "App Info:"
-    dumpsys package tribixbite.keyboard2.debug | grep -E "(versionName|versionCode|targetSdk|minSdk)" | head -4
+    dumpsys package tribixbite.cleverkeys.debug | grep -E "(versionName|versionCode|targetSdk|minSdk)" | head -4
 else
     echo -e "${RED}❌ NOT INSTALLED${NC}"
     echo "CleverKeys APK is not installed on this device"
@@ -148,12 +148,12 @@ echo ""
 # Section 3: Permissions
 echo "3. PERMISSIONS STATUS"
 echo "────────────────────────────────────────────────────────────────────────────"
-if pm list packages | grep -q "tribixbite.keyboard2.debug"; then
+if pm list packages | grep -q "tribixbite.cleverkeys.debug"; then
     echo "Granted Permissions:"
-    dumpsys package tribixbite.keyboard2.debug | grep -A 20 "granted=true" | grep "android.permission" || echo "None found"
+    dumpsys package tribixbite.cleverkeys.debug | grep -A 20 "granted=true" | grep "android.permission" || echo "None found"
     echo ""
     echo "Requested Permissions:"
-    dumpsys package tribixbite.keyboard2.debug | grep "android.permission" | head -10 || echo "None found"
+    dumpsys package tribixbite.cleverkeys.debug | grep "android.permission" | head -10 || echo "None found"
 else
     echo "Cannot check permissions - APK not installed"
 fi
@@ -170,7 +170,7 @@ if [[ "$ENABLED" == "Permission denied"* ]] || [[ -z "$ENABLED" ]]; then
 else
     echo "$ENABLED" | tr ':' '\n' | grep -E "keyboard|input" || echo "None found"
 
-    if echo "$ENABLED" | grep -q "tribixbite.keyboard2"; then
+    if echo "$ENABLED" | grep -q "tribixbite.cleverkeys"; then
         echo -e "\n${GREEN}✅ CleverKeys is in enabled keyboards list${NC}"
     else
         echo -e "\n${RED}❌ CleverKeys is NOT in enabled keyboards list${NC}"
@@ -184,7 +184,7 @@ if [[ "$CURRENT" == "Permission denied"* ]] || [[ -z "$CURRENT" ]]; then
     echo "⚠️  Cannot check (Termux permission limitation)"
 else
     echo "$CURRENT"
-    if echo "$CURRENT" | grep -q "tribixbite.keyboard2"; then
+    if echo "$CURRENT" | grep -q "tribixbite.cleverkeys"; then
         echo -e "${GREEN}✅ CleverKeys is currently active${NC}"
     else
         echo -e "${YELLOW}⚠️  CleverKeys is not the active keyboard${NC}"
@@ -218,14 +218,14 @@ echo ""
 echo "7. RECENT APPLICATION LOGS (Last 100 lines)"
 echo "────────────────────────────────────────────────────────────────────────────"
 echo "Collecting logs related to CleverKeys..."
-logcat -d -t 100 | grep -iE "(cleverkeys|keyboard2|tribixbite)" || echo "No recent logs found"
+logcat -d -t 100 | grep -iE "(cleverkeys|tribixbite)" || echo "No recent logs found"
 echo ""
 
 # Section 8: Crash Logs
 echo "8. CRASH DETECTION"
 echo "────────────────────────────────────────────────────────────────────────────"
 echo "Checking for crash logs..."
-CRASHES=$(logcat -d | grep -i "FATAL" | grep -i "cleverkeys\|keyboard2\|tribixbite" | tail -20)
+CRASHES=$(logcat -d | grep -i "FATAL" | grep -i "cleverkeys\|tribixbite" | tail -20)
 if [ -z "$CRASHES" ]; then
     echo -e "${GREEN}✅ No crashes detected in recent logs${NC}"
 else
@@ -238,8 +238,11 @@ echo ""
 echo "9. STORAGE & FILE STATUS"
 echo "────────────────────────────────────────────────────────────────────────────"
 echo "APK File:"
-if [ -f "build/outputs/apk/debug/tribixbite.keyboard2.debug.apk" ]; then
-    ls -lh build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
+# AGP names debug outputs "CleverKeys-v<versionName>-<abi>.apk" (build.gradle
+# outputFileName), one per ABI split. Prefer arm64-v8a, else newest debug APK.
+DEBUG_APK="$(ls -t build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk build/outputs/apk/debug/*.apk 2>/dev/null | head -1)"
+if [ -n "$DEBUG_APK" ]; then
+    ls -lh "$DEBUG_APK"
 else
     echo "⚠️  APK not found in build directory"
 fi
@@ -260,14 +263,14 @@ echo "────────────────────────�
 ISSUES_FOUND=0
 
 # Check if APK is installed
-if ! pm list packages | grep -q "tribixbite.keyboard2.debug"; then
+if ! pm list packages | grep -q "tribixbite.cleverkeys.debug"; then
     echo -e "${RED}❌ ISSUE: APK not installed${NC}"
     echo "   Solution: Run ./gradlew assembleDebug && termux-open build/outputs/apk/debug/*.apk"
     ((ISSUES_FOUND++))
 fi
 
 # Check if enabled
-if settings get secure enabled_input_methods 2>/dev/null | grep -q "tribixbite.keyboard2"; then
+if settings get secure enabled_input_methods 2>/dev/null | grep -q "tribixbite.cleverkeys"; then
     echo -e "${GREEN}✅ Keyboard is enabled${NC}"
 else
     echo -e "${YELLOW}⚠️  POTENTIAL ISSUE: Cannot verify if keyboard is enabled${NC}"
@@ -276,7 +279,7 @@ else
 fi
 
 # Check if active
-if settings get secure default_input_method 2>/dev/null | grep -q "tribixbite.keyboard2"; then
+if settings get secure default_input_method 2>/dev/null | grep -q "tribixbite.cleverkeys"; then
     echo -e "${GREEN}✅ Keyboard is active${NC}"
 else
     echo -e "${YELLOW}⚠️  POTENTIAL ISSUE: Keyboard may not be active${NC}"
@@ -285,7 +288,7 @@ else
 fi
 
 # Check for crash logs
-if logcat -d | grep -i "FATAL" | grep -iq "cleverkeys\|keyboard2\|tribixbite"; then
+if logcat -d | grep -i "FATAL" | grep -iq "cleverkeys\|tribixbite"; then
     echo -e "${RED}❌ ISSUE: Crash logs detected${NC}"
     echo "   Solution: Check crash logs in Section 8 above"
     ((ISSUES_FOUND++))

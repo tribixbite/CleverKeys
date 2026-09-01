@@ -49,7 +49,7 @@ BUILD PIPELINE:
 
     Step 3: Build APK
         - Run ./gradlew assembleDebug
-        - Generate tribixbite.keyboard2.debug.apk
+        - Generate tribixbite.cleverkeys.debug.apk
 
     Step 4: Install APK
         - Method 1: termux-open (recommended)
@@ -195,7 +195,7 @@ if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ APK built successfully${NC}"
 
     # Get APK info
-    APK_PATH="build/outputs/apk/debug/tribixbite.keyboard2.debug.apk"
+    APK_PATH="$(ls -t build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk build/outputs/apk/debug/*.apk 2>/dev/null | head -1)"
     if [ -f "$APK_PATH" ]; then
         APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
         echo "   📦 Location: $APK_PATH"
@@ -223,7 +223,7 @@ echo "  2. ADB wireless"
 echo "  3. Manual copy to shared storage"
 echo ""
 
-APK_PATH="build/outputs/apk/debug/tribixbite.keyboard2.debug.apk"
+APK_PATH="$(ls -t build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk build/outputs/apk/debug/*.apk 2>/dev/null | head -1)"
 
 if [ ! -f "$APK_PATH" ]; then
     echo -e "${RED}❌ ERROR: APK not found at $APK_PATH${NC}"
@@ -262,9 +262,9 @@ read -p "After installation completes, press ENTER to verify..."
 # Verify installation
 echo ""
 echo "Verifying installation..."
-if pm list packages | grep -q "tribixbite.keyboard2.debug"; then
+if pm list packages | grep -q "tribixbite.cleverkeys.debug"; then
     echo -e "${GREEN}✅ APK successfully installed${NC}"
-    echo "   Package: tribixbite.keyboard2.debug"
+    echo "   Package: tribixbite.cleverkeys.debug"
 else
     echo -e "${RED}❌ Installation verification failed${NC}"
     echo ""

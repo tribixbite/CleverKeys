@@ -22,12 +22,12 @@ echo
 # Check if CleverKeys is installed
 echo "2. Checking CleverKeys installation..."
 if [ "$ADB_AVAILABLE" = true ]; then
-    PACKAGE_CHECK=$(adb shell pm list packages | grep tribixbite.keyboard2)
+    PACKAGE_CHECK=$(adb shell pm list packages | grep tribixbite.cleverkeys)
     if [ -n "$PACKAGE_CHECK" ]; then
         echo "   ✅ CleverKeys installed: $PACKAGE_CHECK"
         
         # Get version info
-        VERSION=$(adb shell dumpsys package tribixbite.keyboard2 | grep versionName | head -1)
+        VERSION=$(adb shell dumpsys package tribixbite.cleverkeys | grep versionName | head -1)
         echo "   Version: $VERSION"
     else
         echo "   ❌ CleverKeys not installed"
@@ -42,7 +42,7 @@ echo
 # Check if CleverKeys is enabled
 echo "3. Checking if CleverKeys is enabled..."
 if [ "$ADB_AVAILABLE" = true ]; then
-    ENABLED=$(adb shell settings get secure enabled_input_methods | grep tribixbite.keyboard2)
+    ENABLED=$(adb shell settings get secure enabled_input_methods | grep tribixbite.cleverkeys)
     if [ -n "$ENABLED" ]; then
         echo "   ✅ CleverKeys is enabled"
     else
@@ -60,7 +60,7 @@ if [ "$ADB_AVAILABLE" = true ]; then
     CURRENT_IME=$(adb shell settings get secure default_input_method)
     echo "   Current keyboard: $CURRENT_IME"
     
-    if [[ "$CURRENT_IME" == *"tribixbite.keyboard2"* ]]; then
+    if [[ "$CURRENT_IME" == *"tribixbite.cleverkeys"* ]]; then
         echo "   ✅ CleverKeys IS ACTIVE!"
         CLEVERKEYS_ACTIVE=true
     else
@@ -77,12 +77,12 @@ echo
 # Check if CleverKeys process is running
 echo "5. Checking CleverKeys process..."
 if [ "$ADB_AVAILABLE" = true ]; then
-    PID=$(adb shell pidof tribixbite.keyboard2)
+    PID=$(adb shell pidof tribixbite.cleverkeys)
     if [ -n "$PID" ]; then
         echo "   ✅ CleverKeys running (PID: $PID)"
         
         # Get memory usage
-        MEM=$(adb shell dumpsys meminfo tribixbite.keyboard2 | grep "TOTAL PSS" | awk '{print $3}')
+        MEM=$(adb shell dumpsys meminfo tribixbite.cleverkeys | grep "TOTAL PSS" | awk '{print $3}')
         echo "   Memory: ${MEM}KB"
     else
         echo "   ⚠️  CleverKeys not running"

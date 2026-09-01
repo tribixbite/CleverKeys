@@ -13,14 +13,14 @@ Step 1: Open File Manager
 ──────────────────────────────────────────────────────────────
    • Use any file manager app (Files, Total Commander, etc.)
    • Or copy APK to Downloads:
-     cp build/outputs/apk/debug/tribixbite.keyboard2.apk \
+     cp build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk \
         ~/storage/downloads/cleverkeys.apk
 
 Step 2: Navigate to APK
 ──────────────────────────────────────────────────────────────
    Path: /storage/emulated/0/Download/cleverkeys.apk
    OR:   Termux home → git → swype → cleverkeys → build →
-         outputs → apk → debug → tribixbite.keyboard2.apk
+         outputs → apk → debug → tribixbite.cleverkeys.apk
 
 Step 3: Install APK
 ──────────────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ Problem: CleverKeys not in keyboard list
 Solution:
   • Installation may have failed
   • Check: Settings → Apps → See all apps
-  • Look for "CleverKeys" or "tribixbite.keyboard2"
+  • Look for "CleverKeys" or "tribixbite.cleverkeys"
   • If not there, reinstall
 
 Problem: Keyboard crashes when switching
@@ -114,7 +114,7 @@ Problem: Can't find APK file
 ───────────────────────────────────────────────────────────────
 Solution:
   • Run this to copy to Downloads:
-    cp build/outputs/apk/debug/tribixbite.keyboard2.apk \
+    cp build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk \
        ~/storage/downloads/cleverkeys.apk
   • Then open Downloads folder and tap cleverkeys.apk
 
@@ -123,18 +123,22 @@ Solution:
 ══════════════════════════════════════════════════════════════
 GUIDE
 
+# AGP names debug outputs "CleverKeys-v<versionName>-<abi>.apk" (build.gradle
+# outputFileName), one per ABI split. Prefer arm64-v8a, else newest debug APK.
+DEBUG_APK="$(ls -t build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk build/outputs/apk/debug/*.apk 2>/dev/null | head -1)"
 # Show APK info
-if [ -f "build/outputs/apk/debug/tribixbite.keyboard2.apk" ]; then
-    SIZE=$(du -h "build/outputs/apk/debug/tribixbite.keyboard2.apk" | cut -f1)
-    DATE=$(stat -c '%y' "build/outputs/apk/debug/tribixbite.keyboard2.apk" | cut -d' ' -f1,2 | cut -d'.' -f1)
-    echo "File:     build/outputs/apk/debug/tribixbite.keyboard2.apk"
+if [ -n "$DEBUG_APK" ]; then
+    SIZE=$(du -h "$DEBUG_APK" | cut -f1)
+    DATE=$(stat -c '%y' "$DEBUG_APK" | cut -d' ' -f1,2 | cut -d'.' -f1)
+    echo "File:     $DEBUG_APK"
     echo "Size:     $SIZE"
     echo "Built:    $DATE"
-    echo "Package:  tribixbite.keyboard2"
-    echo "Service:  tribixbite.keyboard2.CleverKeysService"
-    echo "Fix:      Nov 21 - applicationIdSuffix removed ✅"
+    echo "Package:  tribixbite.cleverkeys.debug   (release: tribixbite.cleverkeys)"
+    echo "Service:  tribixbite.cleverkeys.CleverKeysService"
+    echo "Note:     the debug variant keeps applicationIdSuffix '.debug' so it"
+    echo "          installs alongside the prod-signed app without wiping its data."
 else
-    echo "❌ APK not found! Run: ./gradlew assembleDebug"
+    echo "❌ APK not found! Run: ./build-on-termux.sh"
 fi
 
 cat << 'GUIDE'
@@ -151,9 +155,9 @@ echo "Press ENTER to copy APK to Downloads folder..."
 echo "(Or Ctrl+C to skip)"
 read -r
 
-if [ -f "build/outputs/apk/debug/tribixbite.keyboard2.apk" ]; then
+if [ -n "$DEBUG_APK" ]; then
     echo "Copying APK to Downloads..."
-    cp build/outputs/apk/debug/tribixbite.keyboard2.apk ~/storage/downloads/cleverkeys.apk
+    cp "$DEBUG_APK" ~/storage/downloads/cleverkeys.apk
     if [ $? -eq 0 ]; then
         echo "✅ Copied to: ~/storage/downloads/cleverkeys.apk"
         echo "   (Also accessible at: /storage/emulated/0/Download/cleverkeys.apk)"

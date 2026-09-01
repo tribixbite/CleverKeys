@@ -7,10 +7,13 @@ echo "  CleverKeys Status Check"
 echo "════════════════════════════════════════════════════════"
 echo
 
+# AGP names debug outputs "CleverKeys-v<versionName>-<abi>.apk" (build.gradle
+# outputFileName), one per ABI split. Prefer arm64-v8a, else newest debug APK.
+DEBUG_APK="$(ls -t build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk build/outputs/apk/debug/*.apk 2>/dev/null | head -1)"
 # Check if APK exists
-if [ -f "build/outputs/apk/debug/tribixbite.keyboard2.apk" ]; then
-    APK_SIZE=$(du -h "build/outputs/apk/debug/tribixbite.keyboard2.apk" | cut -f1)
-    APK_DATE=$(stat -c '%y' "build/outputs/apk/debug/tribixbite.keyboard2.apk" | cut -d' ' -f1,2 | cut -d'.' -f1)
+if [ -n "$DEBUG_APK" ]; then
+    APK_SIZE=$(du -h "$DEBUG_APK" | cut -f1)
+    APK_DATE=$(stat -c '%y' "$DEBUG_APK" | cut -d' ' -f1,2 | cut -d'.' -f1)
     echo "✅ APK Ready: $APK_SIZE (built: $APK_DATE)"
 else
     echo "❌ APK not found"
@@ -36,7 +39,7 @@ if [ "$DEVICES" -gt 0 ]; then
     CURRENT_IME=$(adb shell settings get secure default_input_method 2>/dev/null)
     if [ -n "$CURRENT_IME" ]; then
         echo "  $CURRENT_IME"
-        if [[ "$CURRENT_IME" == *"tribixbite.keyboard2"* ]]; then
+        if [[ "$CURRENT_IME" == *"tribixbite.cleverkeys"* ]]; then
             echo "  ✅ CleverKeys is active!"
         else
             echo "  ℹ️  CleverKeys not active (using other keyboard)"
@@ -46,7 +49,7 @@ if [ "$DEVICES" -gt 0 ]; then
     # Check if CleverKeys service is running
     echo
     echo "CleverKeys process status:"
-    CLEVERKEYS_PID=$(adb shell pidof tribixbite.keyboard2 2>/dev/null)
+    CLEVERKEYS_PID=$(adb shell pidof tribixbite.cleverkeys 2>/dev/null)
     if [ -n "$CLEVERKEYS_PID" ]; then
         echo "  ✅ Running (PID: $CLEVERKEYS_PID)"
     else

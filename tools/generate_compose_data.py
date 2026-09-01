@@ -65,7 +65,7 @@ def gen_kotlin_with_binary(entry_states, machine, binary_path):
 
     constants_formatted = "\n".join(constants)
 
-    return f"""package tribixbite.keyboard2
+    return f"""package tribixbite.cleverkeys
 
 import android.content.Context
 import java.io.DataInputStream

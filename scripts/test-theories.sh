@@ -69,7 +69,7 @@ for i in "${!theories[@]}"; do
             else
                 echo "❌ $theory_name: FAILED"
                 echo "   Uninstalling and moving to next theory..."
-                adb uninstall tribixbite.keyboard2 2>/dev/null
+                adb uninstall tribixbite.cleverkeys 2>/dev/null
             fi
         else
             echo "❌ ADB installation failed"

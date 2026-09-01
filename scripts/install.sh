@@ -4,8 +4,14 @@
 
 set -e
 
-APK_PATH="build/outputs/apk/debug/tribixbite.keyboard2.debug.apk"
-PACKAGE_NAME="tribixbite.keyboard2"
+# AGP names debug outputs "CleverKeys-v<versionName>-<abi>.apk" (build.gradle
+# outputFileName), one per ABI split. Prefer arm64-v8a, else newest debug APK.
+APK_PATH="$(ls -t build/outputs/apk/debug/CleverKeys-v*-arm64-v8a.apk 2>/dev/null | head -1)"
+if [ -z "$APK_PATH" ]; then
+    APK_PATH="$(ls -t build/outputs/apk/debug/*.apk 2>/dev/null | head -1)"
+fi
+# The debug variant carries applicationIdSuffix '.debug'.
+PACKAGE_NAME="tribixbite.cleverkeys.debug"
 
 echo "========================================="
 echo "CleverKeys Auto-Install Script"
@@ -13,13 +19,13 @@ echo "========================================="
 echo ""
 
 # Check if APK exists
-if [ ! -f "$APK_PATH" ]; then
-    echo "❌ APK not found at: $APK_PATH"
+if [ -z "$APK_PATH" ] || [ ! -f "$APK_PATH" ]; then
+    echo "❌ No debug APK in build/outputs/apk/debug/"
     echo ""
     echo "Build the APK first with:"
-    echo "  ./gradlew assembleDebug"
-    echo "  or"
     echo "  ./build-on-termux.sh"
+    echo "  or"
+    echo "  scripts/gradle-guard.sh assembleDebug"
     exit 1
 fi
 
