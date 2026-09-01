@@ -747,6 +747,19 @@ class CtcMultiLanguageInstrumentedTest {
         val adapter = CtcEngineAdapter(context)
         try {
             for (language in CtcLanguageSupport.PROVISIONAL) {
+                // Wave-J fix (2026-09-02): PROVISIONAL no longer implies BUNDLED. el joined
+                // the tier with LexiconSource.CKDT_LANGPACK — its lexicon is the importable
+                // langpack, by design (HANDOFF "Russian, exactly" precedent), so it has no
+                // bundled asset and, on a clean emulator with no pack installed, must not
+                // even claim a lexicon source. Its serving path is covered end-to-end by
+                // CtcImportedPackInstrumentedTest; here we pin the clean-device contract.
+                if (CtcLanguageSupport.sourceFor(language) == CtcLanguageSupport.LexiconSource.CKDT_LANGPACK) {
+                    assertEquals(
+                        "$language is langpack-sourced and must have NO bundled asset",
+                        null, CtcLanguageSupport.assetFor(language)
+                    )
+                    continue
+                }
                 val asset = CtcLanguageSupport.assetFor(language)
                 assertEquals(
                     "$language must resolve to its bundled CKDT asset",

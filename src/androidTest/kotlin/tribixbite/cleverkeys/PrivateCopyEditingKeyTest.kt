@@ -108,7 +108,12 @@ class PrivateCopyEditingKeyTest {
 
     @Test
     fun privateCopy_runsTheSameUrlSanitizerAsNormalHistory() {
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        // Wave-J fix round 2 (2026-09-02): write to Config.globalPrefs() — the EXACT store
+        // reloadSanitizationSettings() reads — not to DirectBootAwarePreferences. In a test
+        // process, whichever class ran initGlobalConfig first decided Config's store, and
+        // guessing it via DirectBootAware left the reload reading the OTHER store's stale
+        // false: the first Wave-J run stored the URL unsanitized for exactly that reason.
+        val prefs = Config.globalPrefs()
         val config = Config.globalConfig()
         val originalSanitize = config.clipboard_sanitize_links_enabled
         val originalEmbed = config.clipboard_embed_enrich_enabled
@@ -121,6 +126,13 @@ class PrivateCopyEditingKeyTest {
                 .putBoolean("clipboard_custom_rules_enabled", false)
                 .commit()
             LocalBroadcastManager.getInstance(context).sendBroadcastSync(reload)
+            // Wave-J fix (2026-09-02): the broadcast only reaches an ALREADY-constructed
+            // service instance. On a clean test process, privateCopy() below constructs the
+            // singleton lazily AFTER this point — the receiver never ran, so the lazily
+            // built sanitizer would read the STALE startup Config field (false) even though
+            // the pref is true. Mirror the receiver's refresh directly; the broadcast above
+            // still covers the pre-existing-instance case.
+            Config.globalConfig().reloadSanitizationSettings()
 
             val tracked = "https://example.com/x?utm_source=a&utm_medium=b&keep=yes"
             assertTrue(ClipboardHistoryService.privateCopy(context, tracked, "com.private.app"))
@@ -135,6 +147,7 @@ class PrivateCopyEditingKeyTest {
                 .putBoolean("clipboard_custom_rules_enabled", originalCustom)
                 .commit()
             LocalBroadcastManager.getInstance(context).sendBroadcastSync(reload)
+            Config.globalConfig().reloadSanitizationSettings()
         }
     }
 

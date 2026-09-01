@@ -350,8 +350,18 @@ class PointersGestureRoutingTest {
         inst.runOnMainSync { pointers.onTouchDown(60f, 80f, 0, keyA) }
 
         // Halfway through the gesture, raise the short-swipe minimum out of its reach.
-        // 120% of the 200px diagonal = 240px, well above this gesture's 130px.
-        inst.runOnMainSync { config.edit { short_gesture_min_distance = PercentOfKey(120) } }
+        // 120% of the 200px diagonal = 240px, well above this gesture's 130px. ALSO raise
+        // swipe_dist_px: ConfigSnapshot.shortGestureMinDistancePx caps the minimum at
+        // 0.8 × swipe_dist_px (so short swipes can't outgrow the word-swipe threshold),
+        // and the device default put that cap BELOW 130px — which made the first Wave-J
+        // run of this test fail on production behaving correctly. 400f puts the cap at
+        // 320px so the 240px percent minimum is what binds.
+        inst.runOnMainSync {
+            config.edit {
+                short_gesture_min_distance = PercentOfKey(120)
+                swipe_dist_px = 400f
+            }
+        }
         assertEquals(
             "sanity: the edit must actually be published to the read-model",
             120, config.snapshot.short_gesture_min_distance.v
