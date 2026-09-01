@@ -289,15 +289,73 @@ class PathScorer(private val config: GeometricEngineConfig) {
      * end being beyond `startNeighborRadius` / `endNeighborRadius` (kw) of the first /
      * last TEMPLATE point. Ends are looser than starts (ASK precedent — users overshoot
      * ends). Within the radius the penalty is 0.
+     *
+     * With the OQ-9 direction-aware overshoot clamp enabled
+     * (`endOvershootCostScale < 1`), the END distance is replaced by
+     * [endAnchorDistanceKw], which discounts the along-travel overshoot component of
+     * the end error before the radius slack. At the default `1.0` the symmetric
+     * `d_kw` path is taken verbatim (bit-identical no-op).
      */
     internal fun endpointPenalty(gesture: ProcessedGesture, t: FloatArray, layout: LayoutGeometry): Float {
         val g = gesture.points
-        val last = n - 1
         val dStart = layout.dKw(g[0], g[1], t[0], t[1])
-        val dEnd = layout.dKw(g[2 * last], g[2 * last + 1], t[2 * last], t[2 * last + 1])
+        val dEnd = endAnchorDistanceKw(g, t, layout)
         val overStart = (dStart - config.startNeighborRadius).coerceAtLeast(0f)
         val overEnd = (dEnd - config.endNeighborRadius).coerceAtLeast(0f)
         return overStart * overStart + overEnd * overEnd
+    }
+
+    /**
+     * Effective END-anchor distance (kw) for [endpointPenalty] — the OQ-9 / ARC-027
+     * direction-aware overshoot clamp.
+     *
+     * The end error vector (template end → gesture end) is expressed in PHYSICAL kw
+     * coordinates (the same anisotropy correction as [LayoutGeometry.dKw]: Δv is
+     * divided by `aspect` before the kw scale) and decomposed against the gesture's
+     * final travel direction (the last non-degenerate resampled segment, same frame):
+     *
+     *  - `along > 0` (the gesture ended PAST the template end, continuing its travel —
+     *    classic momentum overshoot): that component is scaled by
+     *    `endOvershootCostScale` before recombining, so pure overshoot is cheaper
+     *    than an orthogonal miss of the same magnitude.
+     *  - `along ≤ 0` (undershoot / lateral miss): full symmetric distance, unchanged —
+     *    stopping short of the last key remains fully suspicious (ASK asymmetry).
+     *
+     * `endOvershootCostScale == 1` returns the plain `d_kw` end distance via an early
+     * exit (bit-identical to the pre-OQ-9 scorer). A degenerate gesture with no
+     * non-zero segment (all points coincident) has no travel direction and also falls
+     * back to the symmetric distance. Always finite.
+     */
+    internal fun endAnchorDistanceKw(g: FloatArray, t: FloatArray, layout: LayoutGeometry): Float {
+        val last = n - 1
+        val dEnd = layout.dKw(g[2 * last], g[2 * last + 1], t[2 * last], t[2 * last + 1])
+        val scale = config.endOvershootCostScale
+        if (scale >= 1f) return dEnd // symmetric default — bit-identical no-op
+        // End error vector in physical kw units (matches d_kw's metric exactly, so
+        // sqrt(eu² + ev²) == dEnd and the scale==1 recombination is the identity).
+        val kw = layout.meanKeyWidth
+        val eu = (g[2 * last] - t[2 * last]) / kw
+        val ev = ((g[2 * last + 1] - t[2 * last + 1]) / layout.aspect) / kw
+        // Final travel direction: last non-degenerate resampled segment (physical frame).
+        var i = last
+        var du = 0f
+        var dv = 0f
+        while (i >= 1) {
+            du = g[2 * i] - g[2 * (i - 1)]
+            dv = (g[2 * i + 1] - g[2 * (i - 1) + 1]) / layout.aspect
+            if (du != 0f || dv != 0f) break
+            i--
+        }
+        val dn = sqrt(du * du + dv * dv)
+        if (dn <= 0f) return dEnd // no travel direction (degenerate) → symmetric
+        val ux = du / dn
+        val uy = dv / dn
+        val along = eu * ux + ev * uy
+        if (along <= 0f) return dEnd // undershoot / behind travel → full cost
+        val errSq = eu * eu + ev * ev
+        val perpSq = (errSq - along * along).coerceAtLeast(0f) // float-slop guard
+        val discounted = along * scale
+        return sqrt(discounted * discounted + perpSq)
     }
 
     /**

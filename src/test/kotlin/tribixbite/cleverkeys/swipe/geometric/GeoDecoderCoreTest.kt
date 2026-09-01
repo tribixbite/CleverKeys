@@ -482,6 +482,90 @@ class GeoDecoderCoreTest {
             .that(bonus).isAtMost(config.cornerAnchorBonus)
     }
 
+    // ── OQ-9 / ARC-027: direction-aware end-overshoot clamp ───────────────────────
+
+    /** Straight rightward N-point gesture polyline from (0.1, 0.5) to (0.9, 0.5). */
+    private fun straightRightGesture(n: Int): FloatArray {
+        val g = FloatArray(n * 2)
+        for (i in 0 until n) {
+            g[2 * i] = 0.1f + 0.8f * i / (n - 1)
+            g[2 * i + 1] = 0.5f
+        }
+        return g
+    }
+
+    /** Wrap an interleaved polyline in a minimal [ProcessedGesture] (endpoint tests only). */
+    private fun gestureOf(points: FloatArray): ProcessedGesture = ProcessedGesture(
+        points = points,
+        pathLengthKw = 1f,
+        bbox = floatArrayOf(0f, 0f, 1f, 1f),
+        cornerIndices = IntArray(0),
+        startNearest = IntArray(0),
+        endNearest = IntArray(0),
+        startNearestInset = IntArray(0),
+        endNearestInset = IntArray(0),
+    )
+
+    @Test
+    fun pathScorer_endOvershootClamp_defaultScaleIsBitIdenticalToSymmetric() {
+        // scale = 1.0 (the shipped default) must reproduce the symmetric d_kw endpoint
+        // penalty EXACTLY — the knob is a bit-identical no-op until turned down.
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val scorer = PathScorer(config) // default endOvershootCostScale = 1.0
+        val n = config.resamplePoints
+        val g = straightRightGesture(n)
+        // Template ends 0.25 normalized-u short of the gesture end (pure along-travel
+        // overshoot, ~2.5 kw — well past endNeighborRadius) and starts at the gesture start.
+        val t = g.copyOf()
+        t[2 * (n - 1)] = g[2 * (n - 1)] - 0.25f
+        val dEnd = layout.dKw(g[2 * (n - 1)], g[2 * (n - 1) + 1], t[2 * (n - 1)], t[2 * (n - 1) + 1])
+        assertWithMessage("effective end distance at scale=1 must equal the symmetric d_kw")
+            .that(scorer.endAnchorDistanceKw(g, t, layout)).isEqualTo(dEnd)
+        val overEnd = (dEnd - config.endNeighborRadius).coerceAtLeast(0f)
+        assertWithMessage("endpointPenalty at scale=1 must equal the symmetric formula")
+            .that(scorer.endpointPenalty(gestureOf(g), t, layout)).isEqualTo(overEnd * overEnd)
+    }
+
+    @Test
+    fun pathScorer_endOvershootClamp_discountsAlongTravelOvershootOnly() {
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val symmetric = PathScorer(config)
+        val clamped = PathScorer(config.copy(endOvershootCostScale = 0.25f))
+        val free = PathScorer(config.copy(endOvershootCostScale = 0f))
+        val n = config.resamplePoints
+        val g = straightRightGesture(n)
+
+        // 1) PURE OVERSHOOT (gesture ends past the template end, along +x travel):
+        //    clamped < symmetric; at scale=0 the end anchor cost vanishes entirely.
+        val tOver = g.copyOf()
+        tOver[2 * (n - 1)] = g[2 * (n - 1)] - 0.25f
+        val pSym = symmetric.endpointPenalty(gestureOf(g), tOver, layout)
+        val pClamp = clamped.endpointPenalty(gestureOf(g), tOver, layout)
+        val pFree = free.endpointPenalty(gestureOf(g), tOver, layout)
+        assertWithMessage("symmetric penalty must be positive for a 2.5 kw overshoot")
+            .that(pSym).isGreaterThan(0f)
+        assertWithMessage("scaled overshoot must cost strictly less than symmetric")
+            .that(pClamp).isLessThan(pSym)
+        assertWithMessage("scale=0 must make pure along-travel overshoot free")
+            .that(pFree).isEqualTo(0f)
+
+        // 2) ORTHOGONAL MISS (template end displaced perpendicular to travel): the
+        //    clamp must NOT discount it — identical penalty at every scale.
+        val tOrtho = g.copyOf()
+        tOrtho[2 * (n - 1) + 1] = g[2 * (n - 1) + 1] - 0.25f * layout.aspect // equal physical size
+        assertWithMessage("orthogonal end miss must be unaffected by the overshoot clamp")
+            .that(clamped.endpointPenalty(gestureOf(g), tOrtho, layout))
+            .isEqualTo(symmetric.endpointPenalty(gestureOf(g), tOrtho, layout))
+
+        // 3) UNDERSHOOT (template end past the gesture end — the gesture stopped short):
+        //    full symmetric cost is kept (the ASK asymmetry: undershoot stays expensive).
+        val tUnder = g.copyOf()
+        tUnder[2 * (n - 1)] = g[2 * (n - 1)] + 0.25f
+        assertWithMessage("undershoot must keep the full symmetric cost")
+            .that(clamped.endpointPenalty(gestureOf(g), tUnder, layout))
+            .isEqualTo(symmetric.endpointPenalty(gestureOf(g), tUnder, layout))
+    }
+
     // ── Engine-level concurrency stress (spec threading contract / NFR-4) ─────────
 
     @Test

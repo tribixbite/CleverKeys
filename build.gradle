@@ -623,6 +623,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.geometric.GeoDecoderCoreTest',
     // Step-0 SLOPPY prune-recall decomposition (geoFull-gated measurement)
     'tribixbite.cleverkeys.swipe.geometric.GeoSloppyPruneRecallTest',
+    // Wave-G OQ-9/10/11 sweep instrument (geoSweep-gated measurement, ARC-027/028/029)
+    'tribixbite.cleverkeys.swipe.geometric.GeoOqSweepTest',
     // Real-corpus REPLAY (FUTO swipe-1/test) — non-circular A/B validation (geoFull + local-cache gated)
     'tribixbite.cleverkeys.swipe.geometric.GeoRealCorpusReplayTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoFutoTrain100kReplayTest',
@@ -789,6 +791,9 @@ tasks.register('runPureTests', JavaExec) {
   // tests read System.getProperty("geoFull") — this line bridges `-PgeoFull=true`
   // into that system property (default "false"). See spec Phase-6 item m27.
   systemProperty 'geoFull', (project.findProperty('geoFull') ?: 'false')
+  // Wave-G OQ sweep instrument (GeoOqSweepTest) — same bridge pattern; double-heavy
+  // measurement runs stay opt-in and skip in milliseconds otherwise.
+  systemProperty 'geoSweep', (project.findProperty('geoSweep') ?: 'false')
   // Sampling knobs for ContextRescoringReplayTest, same -P-to-system-property bridge. Only set
   // when supplied, so the defaults stay in the Kotlin where they are documented. Lets a
   // measurement run be scaled (`-PreplayPairs=800 -PreplayDecoys=6`) without editing the test,

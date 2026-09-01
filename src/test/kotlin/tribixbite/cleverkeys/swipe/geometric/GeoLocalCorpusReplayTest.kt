@@ -2,7 +2,6 @@ package tribixbite.cleverkeys.swipe.geometric
 
 import com.google.common.truth.Truth.assertWithMessage
 import java.io.File
-import java.util.zip.GZIPInputStream
 import org.junit.Assume
 import org.junit.Test
 
@@ -77,24 +76,19 @@ class GeoLocalCorpusReplayTest {
 
     @Test
     fun pinnedQwertyEnglishPixelFixtureIsComplete() {
-        val keys = QWERTY_ENGLISH_KEYS
+        val keys = GeoLocalCorpus.QWERTY_ENGLISH_KEYS
         assertWithMessage("fixture key count").that(keys).hasSize(26)
         assertWithMessage("fixture letters")
             .that(keys.map { it.letter }.joinToString(""))
             .isEqualTo("qwertyuiopasdfghjklzxcvbnm")
-        assertWithMessage("q centroid").that(keys.first()).isEqualTo(GridKey("q", 18f, 34f))
-        assertWithMessage("m centroid").that(keys.last()).isEqualTo(GridKey("m", 288f, 152f))
+        assertWithMessage("q centroid").that(keys.first()).isEqualTo(GeoLocalCorpus.GridKey("q", 18f, 34f))
+        assertWithMessage("m centroid").that(keys.last()).isEqualTo(GeoLocalCorpus.GridKey("m", 288f, 152f))
     }
 
     // ── corpus + geometry sources ────────────────────────────────────────────
 
-    /** LOCAL-ONLY gzipped JSONL cache (regenerate via scripts/build_local_corpus_replay.mjs). */
-    private val cacheFile: File = run {
-        val override = System.getenv("CLEVERKEYS_TEST_CACHE")
-        val dir = if (!override.isNullOrEmpty()) File(override)
-        else File(System.getProperty("user.home"), ".cache/cleverkeys-test")
-        File(dir, "combined_english_swipes.jsonl.gz")
-    }
+    /** LOCAL-ONLY gzipped JSONL cache (shared loader — see [GeoLocalCorpus]). */
+    private val cacheFile: File = GeoLocalCorpus.cacheFile
 
     /** Full shipped English dictionary (98,140 CKDT) — the same lexicon every en replay
      *  and the synthetic QWERTY accuracy test decode against. */
@@ -118,14 +112,6 @@ class GeoLocalCorpusReplayTest {
     )
 
     // ── data model ─────────────────────────────────────────────────────────────
-
-    /** One replay row: canonical word + canvas px extents + normalized trace points. */
-    private data class ReplayRow(
-        val word: String,
-        val w: Float,
-        val h: Float,
-        val pts: List<FloatArray>, // each = [x, y, t] with x,y normalized [0,1]
-    )
 
     /** Length stratum by codepoint count (apostrophes stripped — none in this corpus). */
     private enum class LenStratum(val label: String) { SHORT_2_3("2-3"), MID_4_6("4-6"), LONG_7_PLUS("7+") }
@@ -169,7 +155,7 @@ class GeoLocalCorpusReplayTest {
             cacheFile.exists(),
         )
 
-        val rows = loadSample(cacheFile)
+        val rows = GeoLocalCorpus.load(cacheFile)
         println("[replay] loaded ${rows.size} real traces from ${cacheFile.name}")
 
         // ── dictionary coverage: fraction of corpus words present in the full en dict ──
@@ -184,8 +170,8 @@ class GeoLocalCorpusReplayTest {
             "(OOV=$oovCount — rare/technical terms absent from the 98k en dict; decoding only in-dict words)")
 
         // ── single fixed canvas → single aspect bucket → one warmed engine per config ──
-        val aspect = if (inDict.isNotEmpty()) inDict[0].w / inDict[0].h else CANVAS_ASPECT
-        val layout = buildQwertyEnglishLayout(aspect)
+        val aspect = if (inDict.isNotEmpty()) inDict[0].w / inDict[0].h else GeoLocalCorpus.CANVAS_ASPECT
+        val layout = GeoLocalCorpus.buildQwertyEnglishLayout(aspect)
         // Endpoint sanity match-rates on the SHIPPED geometry (documented in the report,
         // reconciled above — LOW start/end match is corpus difficulty, not a bad grid).
         val (startMatch, endMatch) = endpointMatchRates(inDict, layout)
@@ -206,7 +192,7 @@ class GeoLocalCorpusReplayTest {
 
         for (r in inDict) {
             val ordinal = ordinalOf(r.word)
-            val trace = toTrace(r)
+            val trace = GeoLocalCorpus.toTrace(r)
             if (trace.size < 3) continue
             decodeInto(a, r, trace, layout, engineA, prepA, prunerA, indexA, ordinal)
             decodeInto(b, r, trace, layout, engineB, prepB, prunerB, indexB, ordinal)
@@ -245,7 +231,7 @@ class GeoLocalCorpusReplayTest {
     /** Decode one trace under a config's engine and record top-K + prune survival. */
     private fun decodeInto(
         tallies: ConfigTallies,
-        row: ReplayRow,
+        row: GeoLocalCorpus.Row,
         trace: List<TracePoint>,
         layout: LayoutGeometry,
         engine: GeometricSwipeEngine,
@@ -276,61 +262,10 @@ class GeoLocalCorpusReplayTest {
         }
     }
 
-    // ── qwerty_english geometry builder ─────────────────────────────────────────
-
-    /** One `qwerty_english` key: letter + PIXEL centroid (from the repo grid tables). */
-    private data class GridKey(val letter: String, val px: Float, val py: Float)
-
-    /**
-     * Build the replay [LayoutGeometry] for a given [aspect] from the repo-authoritative
-     * `qwerty_english` PIXEL centroids ([QWERTY_ENGLISH_KEYS]). Pixel centroids are
-     * normalized to [0,1] over the 360×215 canvas (matching the loader's normalized pts);
-     * key hit-boxes use the uniform grid pitch (36 px wide, 59 px tall). Row/col are
-     * assigned row-major by (py, px) so ids are deterministic. NO bottom/function row is
-     * appended (the corpus canvas IS the letter area — same as the FUTO builder).
-     */
-    private fun buildQwertyEnglishLayout(aspect: Float): LayoutGeometry {
-        // Row grouping by py; col by px within row.
-        val distinctPy = QWERTY_ENGLISH_KEYS.map { it.py }.distinct().sorted()
-        val rowIndexOf = HashMap<Float, Int>()
-        distinctPy.forEachIndexed { i, py -> rowIndexOf[py] = i }
-
-        val ordered = QWERTY_ENGLISH_KEYS.sortedWith(compareBy({ rowIndexOf.getValue(it.py) }, { it.px }))
-        val keys = ArrayList<SwipeKey>(ordered.size)
-        val chars = HashMap<Int, MutableList<Int>>()
-        val colCounters = HashMap<Int, Int>()
-        // Uniform key hit-box (px pitch), normalized to the canvas.
-        val kwNorm = KEY_PITCH_X_PX / CANVAS_W
-        val khNorm = KEY_PITCH_Y_PX / CANVAS_H
-        ordered.forEachIndexed { id, k ->
-            val row = rowIndexOf.getValue(k.py)
-            val col = colCounters.getOrDefault(row, 0)
-            colCounters[row] = col + 1
-            keys.add(
-                SwipeKey(
-                    id = id,
-                    label = k.letter,
-                    cx = k.px / CANVAS_W, cy = k.py / CANVAS_H,
-                    w = kwNorm, h = khNorm,
-                    row = row, col = col,
-                    isLetterNode = true,
-                ),
-            )
-            chars.getOrPut(k.letter.codePointAt(0)) { ArrayList() }.add(id)
-        }
-        val frozen = HashMap<Int, IntArray>(chars.size)
-        for ((cp, ids) in chars) frozen[cp] = ids.toIntArray()
-        return LayoutGeometry(
-            keys = keys,
-            chars = frozen,
-            aliases = emptyMap(),
-            aspect = aspect,
-            meanKeyWidth = kwNorm,
-        )
-    }
+    // ── qwerty_english geometry builder moved to [GeoLocalCorpus] ────────────────
 
     /** Start/end nearest-key match rate on [layout] over [rows] — geometry sanity check. */
-    private fun endpointMatchRates(rows: List<ReplayRow>, layout: LayoutGeometry): Pair<Double, Double> {
+    private fun endpointMatchRates(rows: List<GeoLocalCorpus.Row>, layout: LayoutGeometry): Pair<Double, Double> {
         var startHit = 0; var endHit = 0; var tot = 0
         for (r in rows) {
             val letters = r.word.filter { it in 'a'..'z' }
@@ -359,41 +294,7 @@ class GeoLocalCorpusReplayTest {
         return best
     }
 
-    // ── loading / helpers (identical contract to GeoRealCorpusReplayTest) ────────
-
-    /** Read the gzipped JSONL cache into [ReplayRow]s (tiny hand parse per line). */
-    private fun loadSample(file: File): List<ReplayRow> {
-        val out = ArrayList<ReplayRow>(9000)
-        GZIPInputStream(file.inputStream()).bufferedReader().useLines { seq ->
-            for (line in seq) {
-                if (line.isBlank()) continue
-                out.add(parseLine(line))
-            }
-        }
-        return out
-    }
-
-    /** Parse one `{"word":..,"w":..,"h":..,"pts":[[x,y,t],...]}` line. */
-    private fun parseLine(line: String): ReplayRow {
-        val word = Regex("\"word\"\\s*:\\s*\"([^\"]*)\"").find(line)!!.groupValues[1]
-        val w = Regex("\"w\"\\s*:\\s*(-?[0-9.eE]+)").find(line)!!.groupValues[1].toFloat()
-        val h = Regex("\"h\"\\s*:\\s*(-?[0-9.eE]+)").find(line)!!.groupValues[1].toFloat()
-        val ptsStr = Regex("\"pts\"\\s*:\\s*\\[(.*)\\]\\s*\\}\\s*$").find(line)!!.groupValues[1]
-        val pts = ArrayList<FloatArray>()
-        for (m in Regex("\\[\\s*(-?[0-9.eE]+)\\s*,\\s*(-?[0-9.eE]+)\\s*,\\s*(-?[0-9.eE]+)\\s*\\]").findAll(ptsStr)) {
-            pts.add(floatArrayOf(m.groupValues[1].toFloat(), m.groupValues[2].toFloat(), m.groupValues[3].toFloat()))
-        }
-        return ReplayRow(word, w, h, pts)
-    }
-
-    /** Convert a [ReplayRow] to key-area-local-PIXEL [TracePoint]s (normalized × canvas). */
-    private fun toTrace(r: ReplayRow): List<TracePoint> {
-        val out = ArrayList<TracePoint>(r.pts.size)
-        for (p in r.pts) {
-            out.add(TracePoint(p[0] * r.w, p[1] * r.h, p[2].toLong()))
-        }
-        return out
-    }
+    // ── loading / helpers moved to [GeoLocalCorpus] ─────────────────────────────
 
     /** 0-based rank of [word] in [result], or -1 if absent. */
     private fun rankOf(word: String, result: tribixbite.cleverkeys.PredictionResult): Int {
@@ -486,34 +387,6 @@ class GeoLocalCorpusReplayTest {
     private fun pct(x: Double): String = "%.1f%%".format(x * 100).padStart(6)
 
     companion object {
-        /** Canonical `qwerty_english` grid canvas (px) — see class KDoc reconciliation. */
-        private const val CANVAS_W = 360f
-        private const val CANVAS_H = 215f
-        private const val CANVAS_ASPECT = CANVAS_W / CANVAS_H // ≈ 1.674
-
-        /** Uniform key hit-box pitch on the `qwerty_english` grid (px). */
-        private const val KEY_PITCH_X_PX = 36f
-        private const val KEY_PITCH_Y_PX = 59f // 34 → 93 → 152 row spacing
-
-        /**
-         * Repo-authoritative `qwerty_english` per-key pixel centroids loaded from the
-         * pinned test fixture extracted from the retired neural CLI.
-         */
-        private val QWERTY_ENGLISH_KEYS: List<GridKey> by lazy {
-            val fixture = File("src/test/resources/layouts/qwerty_english_pixels.csv")
-            check(fixture.isFile) { "missing qwerty_english pixel fixture: $fixture" }
-            fixture.readLines().filter { it.isNotBlank() }.mapIndexed { index, line ->
-                val fields = line.split(',')
-                check(fields.size == 3) { "bad qwerty fixture row ${index + 1}: $line" }
-                GridKey(fields[0], fields[1].toFloat(), fields[2].toFloat())
-            }.also { keys ->
-                check(keys.size == 26) { "qwerty fixture must contain 26 keys, got ${keys.size}" }
-                check(keys.map { it.letter }.joinToString("") == "qwertyuiopasdfghjklzxcvbnm") {
-                    "qwerty fixture letter order drifted"
-                }
-            }
-        }
-
         /**
          * Tolerance (absolute fraction) for the A-vs-B non-regression guard and the
          * CRITICAL-finding banner. ~1 pt absorbs decode-count sampling noise between the

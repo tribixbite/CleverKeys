@@ -711,3 +711,21 @@ dictionary words restored). Verified green on HEAD and **failing against the pre
 `demo/vendor/tailwind/` (sha256 in its PROVENANCE.md), CDN `<script>` removed — the demo now
 has **zero network dependencies**, matching the app's no-INTERNET posture (closes the F6
 README follow-up too).
+
+## Wave G — 2026-09-01: geo OQ backlog measured (ARC-027/028/029)
+
+Instrument: `GeoOqSweepTest` (`-PgeoSweep=true`) — same-JVM baseline-vs-variant decode of a
+deterministic 250×3 stratified sample on en/qwerty + en/dvorak + en/weird across
+CLEAN/TYPICAL/SLOPPY, plus the full ~8.5k-trace local real-corpus replay via the shared
+`GeoLocalCorpus` loader (identical rows/geometry to the official A/B replay gate). Full
+method + numbers: `docs/specs/geometric-swipe-engine.md` § "As-Built Notes — Wave-G OQ
+sweep (2026-09-01)".
+
+**ARC-027 CLOSED — tried, measured, DECLINED.** OQ-9 direction-aware overshoot clamp
+implemented (`PathScorer.endAnchorDistanceKw` + `endOvershootCostScale`, bit-identical
+no-op at the 1.0 default, unit-tested for the no-op identity, overshoot-only discount and
+undershoot/orthogonal invariance). Sweep {0.5, 0.25, 0.0}: synthetic deltas all within
+±0.1 pt and never positive; real corpus (n=8521) flat 55.2/68.0/71.7 at every scale. The
+audit's "universal small lift" premise fails because `endNeighborRadius` (1.1 kw) already
+exceeds real overshoot magnitudes (≤0.4 kw) — the symmetric penalty was already
+effectively overshoot-free. Knob retained as a documented ablatable no-op.

@@ -956,3 +956,30 @@ the batched decoder call, which returns numerically identical per-position log-p
 (position-only) is unchanged and measured ~free on this corpus. (4) Per-trace outputs
 LOCAL-ONLY at `~/.cache/cleverkeys-test/neural_head2head_pos_beam8.jsonl` (bare) and
 `~/.cache/cleverkeys-test/neural_head2head_production.jsonl` (production; never committed).
+
+## As-Built Notes — Wave-G OQ sweep (2026-09-01, ARC-027/028/029)
+
+The three OQ items the 2026-07-20 research doc left open (§4: OQ-9/OQ-10/OQ-11) were
+implemented behind bit-identical no-op defaults and measured with a dedicated instrument,
+`GeoOqSweepTest` (`-PgeoSweep=true`): per knob value, the SAME deterministic 250-word ×
+3-seed stratified sample across en/qwerty + en/dvorak + en/weird × CLEAN/TYPICAL/SLOPPY,
+side by side with the shipped baseline in one JVM run, plus the full ~8.5k-trace LOCAL
+real-corpus replay (shared loader `GeoLocalCorpus` — identical rows/geometry to the
+official `GeoLocalCorpusReplayTest` A/B gate). Campaign rule: no default changes without
+these tables showing a non-regressing improvement.
+
+**OQ-9 / ARC-027 — direction-aware end-overshoot clamp: MEASURED NEUTRAL, DECLINED as a
+default.** Mechanism (`PathScorer.endAnchorDistanceKw`, knob `endOvershootCostScale`):
+decompose the end-anchor error against the gesture's final travel direction and scale the
+along-travel (overshoot) component before the `endNeighborRadius` slack; orthogonal miss
+and undershoot keep full cost (ASK overshoot≈free / undershoot-expensive asymmetry).
+Sweep {1.0, 0.5, 0.25, 0.0}: every synthetic top-1/3/5 delta within ±0.1 pt and never
+positive (the only movement was −0.1 pt: qwerty TYPICAL top-1; dvorak SLOPPY top-3/5);
+real corpus (n=8521) flat at 55.2/68.0/71.7 for every scale (len-strata ±0.1). Root
+cause of the null: `endNeighborRadius = 1.1 kw` already exceeds realistic overshoot
+(SLOPPY caps at 0.4 kw), so pure overshoot almost never clears the radius — the research
+doc's "universal small lift" premise does not hold on this scorer because the symmetric
+penalty was ALREADY effectively overshoot-free at real magnitudes; the residual overshoot
+cost sits in the length-ratio penalty, out of the item's scope. Disposition: knob kept as
+a documented no-op (default 1.0, same policy as the rejected location tunnel); OQ-9
+closes as "tried, measured, declined".

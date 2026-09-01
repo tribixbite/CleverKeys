@@ -96,6 +96,35 @@ data class GeometricEngineConfig(
     val startNeighborRadius: Float = 0.9f,
     /** Soft end-anchor radius (kw); ends are looser than starts (ASK precedent — users overshoot ends). */
     val endNeighborRadius: Float = 1.1f,
+    /**
+     * DIRECTION-AWARE OVERSHOOT CLAMP on the END anchor (research doc OQ-9 / ARC-027,
+     * ASK `ask` §6-D + `urik` §3 precedent: overshoot≈free, undershoot-expensive).
+     * The symmetric endpoint penalty charges a gesture that ends PAST the template's
+     * last key — continuing in the direction of travel — exactly as much as one that
+     * misses ORTHOGONALLY to it, yet end overshoot is the dominant benign noise mode
+     * (the synthetic SLOPPY tier models it at p=0.6, o ∈ [0, 0.4] kw; real swipes
+     * carry momentum through the last key). When `< 1`, the END-anchor error vector
+     * is decomposed against the gesture's final travel direction and the ALONG-TRAVEL
+     * positive (overshoot) component is scaled by this factor before the radial
+     * `endNeighborRadius` slack is applied; the orthogonal component and any
+     * undershoot (error opposite to travel) keep full cost. `1.0` is a bit-identical
+     * no-op (the symmetric penalty).
+     *
+     * **Default `1.0` (OFF) — measured NEUTRAL, DECLINED as a default (2026-09-01,
+     * ARC-027).** The {1.0, 0.5, 0.25, 0.0} sweep (`GeoOqSweepTest`: 250 words × 3
+     * seeds × en/qwerty + en/dvorak + en/weird × CLEAN/TYPICAL/SLOPPY, plus the
+     * 8,521-trace local real-corpus replay) measured every top-1/3/5 delta within
+     * ±0.1 pt with NO improvement anywhere (the only movement was −0.1: qwerty
+     * TYPICAL top-1, dvorak SLOPPY top-3/top-5). Root cause of the null result: the
+     * end-anchor slack `endNeighborRadius = 1.1 kw` already EXCEEDS the realistic
+     * overshoot magnitude (synthetic SLOPPY caps at 0.4 kw), so pure along-travel
+     * overshoot almost never clears the radius and there is nothing left for the
+     * clamp to discount; the residual overshoot cost lives in the LENGTH-RATIO
+     * penalty (which overshoot also inflates), deliberately out of this knob's
+     * scope. Kept as an ablatable no-op knob (same policy as the rejected
+     * [locationTunnelHalfWidth]) for corpora/layouts with heavier end noise.
+     */
+    val endOvershootCostScale: Float = 1.0f,
     /** Length-ratio prune lower bound (gesturePathLen / templatePathLen). */
     val lengthRatioMin: Float = 0.55f,
     /** Length-ratio prune upper bound. */
@@ -182,6 +211,9 @@ data class GeometricEngineConfig(
         require(maxCandidatesScored >= 1) { "maxCandidatesScored must be >= 1, was $maxCandidatesScored" }
         require(extremityNeighbors >= 1) { "extremityNeighbors must be >= 1, was $extremityNeighbors" }
         require(endpointInsetKw >= 0f) { "endpointInsetKw must be >= 0 (0 = no-op), was $endpointInsetKw" }
+        require(endOvershootCostScale in 0f..1f) {
+            "endOvershootCostScale must be in [0, 1] (1 = symmetric no-op), was $endOvershootCostScale"
+        }
         require(locationTunnelHalfWidth >= 0) {
             "locationTunnelHalfWidth must be >= 0 (0 = strict alignment), was $locationTunnelHalfWidth"
         }
