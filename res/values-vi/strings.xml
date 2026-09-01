@@ -571,7 +571,7 @@
     <string name="theme_color_high_confidence">Độ tin cậy cao</string>
     <string name="theme_color_keyboard_background">Màu nền bàn phím</string>
     <string name="theme_color_keyboard_surface">Màu bề mặt bàn phím</string>
-    <string name="short_swipe_mappings_summary">%1$d ánh xạ tùy chỉnh • %2$d lệnh có sẵn</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="other">%1$d ánh xạ tùy chỉnh • %2$d lệnh có sẵn</item></plurals>
     <string name="short_swipe_last_key">Phím cuối: %1$s</string>
     <string name="short_swipe_customize_key">Tùy chỉnh phím \"%1$s\"</string>
     <string name="extra_keys_enabled_count">%1$d trong số %2$d phím bổ sung được bật</string>
@@ -687,10 +687,10 @@
     <string name="command_palette_action_text">Văn bản: \"%1$s\"</string>
     <string name="command_palette_action_timestamp">Dấu thời gian: %1$s (bây giờ → \"%2$s\")</string>
     <string name="command_palette_browse_all">Duyệt tất cả %1$d lệnh</string>
-    <string name="command_palette_char_count">%1$d ký tự</string>
+    <plurals name="command_palette_char_count"><item quantity="other">%1$d ký tự</item></plurals>
     <string name="command_palette_confirm">Xác nhận</string>
     <string name="command_palette_count_available">%1$d lệnh khả dụng</string>
-    <string name="command_palette_count_results">%1$d kết quả cho \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="other">%1$d kết quả cho \"%2$s\"</item></plurals>
     <string name="command_palette_custom_text_desc">Nhập văn bản bất kỳ để chèn (macro, đoạn trích, v.v.)</string>
     <string name="command_palette_custom_text_intro">Nhập văn bản sẽ được chèn khi bạn vuốt theo hướng này.</string>
     <string name="command_palette_custom_text_title">Văn bản tùy chỉnh</string>
@@ -775,11 +775,11 @@
     <string name="gesture_tap_typing_header">Chạm và gõ</string>
     <string name="gesture_tuning_tip">Nếu cử chỉ có vẻ chậm, hãy giảm thời gian giữ và ngưỡng nhiễu. Nếu chạm bị nhận nhầm thành vuốt, hãy tăng thời lượng chạm.</string>
     <string name="gif_get_packs">Tải gói GIF (mở trình duyệt)</string>
-    <string name="gif_grid_columns_display">%1$d cột</string>
+    <plurals name="gif_grid_columns_display"><item quantity="other">%1$d cột</item></plurals>
     <string name="gif_import_pack">Nhập gói từ ZIP</string>
     <string name="gif_importing">Đang nhập...</string>
     <string name="gif_installed_packs">Gói đã cài</string>
-    <string name="gif_pack_stats">%1$d GIF | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="other">%1$d GIF | %2$s</item></plurals>
     <string name="gif_remove_all">Xóa toàn bộ dữ liệu GIF</string>
     <string name="gif_remove_all_body">Thao tác này sẽ xóa mọi gói GIF đã nhập, ảnh thu nhỏ và cơ sở dữ liệu. Không thể hoàn tác.</string>
     <string name="gif_remove_all_confirm">Xóa tất cả</string>
@@ -807,17 +807,17 @@
     <string name="import_preview_learned_desc">Số liệu cụm từ đã học được gộp theo nhóm. Nếu bản sao lưu này có kho từ vựng cá nhân, nó sẽ thay thế danh sách từ đã học hiện tại.</string>
     <string name="import_preview_learned_title">Dữ liệu đã học</string>
     <string name="import_preview_learned_trigrams">Bộ ba từ sẽ gộp: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Kho từ vựng cá nhân sẽ được thay bằng %1$d từ</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="other">Kho từ vựng cá nhân sẽ được thay bằng %1$d từ</item></plurals>
     <string name="import_preview_modified">Đã sửa (%1$d)</string>
     <string name="import_preview_screen_mismatch">Kích thước màn hình không khớp — một số cài đặt hiển thị có thể cần điều chỉnh.</string>
     <string name="import_preview_search_hint">Tìm kiếm…</string>
     <string name="import_preview_selected_count">Đã chọn %1$d trong %2$d</string>
-    <string name="import_preview_short_swipe_count">%1$d ánh xạ vuốt ngắn trong bản sao lưu này</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="other">%1$d ánh xạ vuốt ngắn trong bản sao lưu này</item></plurals>
     <string name="import_preview_short_swipe_header">Tùy chỉnh vuốt ngắn</string>
     <string name="import_preview_short_swipe_merge">Gộp — bổ sung chỗ thiếu, giữ cái hiện có (khuyên dùng)</string>
     <string name="import_preview_short_swipe_replace">Thay thế — xóa cái hiện có, cài bộ trong tệp</string>
     <string name="import_preview_short_swipe_skip">Bỏ qua — không nhập</string>
-    <string name="import_preview_short_swipe_warning">Thao tác này sẽ THAY THẾ toàn bộ tùy chỉnh vuốt ngắn hiện có của bạn bằng %1$d ánh xạ trong tệp.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="other">Thao tác này sẽ THAY THẾ toàn bộ tùy chỉnh vuốt ngắn hiện có của bạn bằng %1$d ánh xạ trong tệp.</item></plurals>
     <string name="import_preview_skipped_collapse">▼ Không hợp lệ/bỏ qua (%1$d) — chạm để thu gọn</string>
     <string name="import_preview_skipped_expand">▶ Không hợp lệ/bỏ qua (%1$d) — chạm để mở rộng</string>
     <string name="import_preview_source_screen">Màn hình nguồn: %1$d×%2$d@%3$s</string>
@@ -873,24 +873,24 @@
     <string name="learning_data_browse_phrases">Duyệt cụm từ</string>
     <string name="learning_data_browse_words">Duyệt từ</string>
     <string name="learning_data_forget_phrases">Quên cụm từ</string>
-    <string name="learning_data_forget_phrases_body">Xóa %1$d cặp và bộ ba từ đã học trên tất cả ngôn ngữ? Gợi ý theo ngữ cảnh sẽ học lại từ cách gõ của bạn.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="other">Xóa %1$d cặp và bộ ba từ đã học trên tất cả ngôn ngữ? Gợi ý theo ngữ cảnh sẽ học lại từ cách gõ của bạn.</item></plurals>
     <string name="learning_data_forget_phrases_title">Quên mẫu cụm từ?</string>
     <string name="learning_data_forget_words">Quên từ</string>
-    <string name="learning_data_forget_words_body">Xóa %1$d từ đã học? Tăng cường cá nhân hóa sẽ học lại từ cách gõ của bạn.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="other">Xóa %1$d từ đã học? Tăng cường cá nhân hóa sẽ học lại từ cách gõ của bạn.</item></plurals>
     <string name="learning_data_forget_words_title">Quên mức dùng từ?</string>
     <string name="learning_data_loading">Đang tải…</string>
     <string name="learning_data_most_used">dùng nhiều nhất: “%1$s” (%2$d×)</string>
     <string name="learning_data_no_pairs">Chưa có cặp từ nào được học</string>
     <string name="learning_data_no_words">Chưa có từ nào được học</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d cặp</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="other">%1$s: %2$d cặp</item></plurals>
     <string name="learning_data_phrase_patterns">Mẫu cụm từ — %1$s</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
     <string name="learning_data_phrases_dialog_empty">Không có cụm từ đã học.</string>
     <string name="learning_data_phrases_dialog_title">Cụm từ đã học</string>
     <string name="learning_data_privacy_note">Mọi việc học đều diễn ra trên thiết bị này. Mẫu cụm từ và mức dùng từ đã học được đưa vào bản xuất từ điển (Sao lưu &amp; Khôi phục).</string>
     <string name="learning_data_title">Học &amp; Dữ liệu</string>
-    <string name="learning_data_triples_suffix">, %1$d bộ ba</string>
-    <string name="learning_data_word_count">%1$d từ</string>
+    <plurals name="learning_data_triples_suffix"><item quantity="other">, %1$d bộ ba</item></plurals>
+    <plurals name="learning_data_word_count"><item quantity="other">%1$d từ</item></plurals>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
     <string name="learning_data_word_usage">Mức dùng từ — %1$s</string>
     <string name="learning_data_words_dialog_empty">Không có từ đã học.</string>
@@ -898,9 +898,9 @@
     <string name="multilang_browse_packs">Duyệt các gói hiện có ↗</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_import_pack">Nhập gói</string>
-    <string name="multilang_installed_count">Đã cài: %1$d gói ngôn ngữ</string>
+    <plurals name="multilang_installed_count"><item quantity="other">Đã cài: %1$d gói ngôn ngữ</item></plurals>
     <string name="multilang_manage">Quản lý</string>
-    <string name="multilang_pack_stats">Mã: %1$s • %2$d từ</string>
+    <plurals name="multilang_pack_stats"><item quantity="other">Mã: %1$s • %2$d từ</item></plurals>
     <string name="multilang_packs_desc">Nhập thêm từ điển ngôn ngữ từ tệp ZIP. Tải gói từ bên ngoài rồi nhập tại đây (không cần quyền internet).</string>
     <string name="multilang_packs_dialog_empty">Chưa cài gói ngôn ngữ nào.\n\nDùng \'Duyệt các gói hiện có\' để tải ZIP, rồi \'Nhập gói\' để thêm.</string>
     <string name="multilang_packs_dialog_title">Gói ngôn ngữ đã cài</string>

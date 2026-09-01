@@ -560,7 +560,7 @@
     <string name="theme_color_high_confidence">Alta confianza</string>
     <string name="theme_color_keyboard_background">Fondo del teclado</string>
     <string name="theme_color_keyboard_surface">Superficie del teclado</string>
-    <string name="short_swipe_mappings_summary">%1$d asignaciones personalizadas • %2$d comandos disponibles</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d asignación personalizada • %2$d comandos disponibles</item><item quantity="many">%1$d asignaciones personalizadas • %2$d comandos disponibles</item><item quantity="other">%1$d asignaciones personalizadas • %2$d comandos disponibles</item></plurals>
     <string name="short_swipe_last_key">Última tecla: %1$s</string>
     <string name="short_swipe_customize_key">Personalizar tecla \"%1$s\"</string>
     <string name="extra_keys_enabled_count">%1$d de %2$d teclas adicionales activadas</string>
@@ -648,11 +648,11 @@
     <string name="learning_data_title">Aprendizaje y datos</string>
     <string name="learning_data_privacy_note">Todo el aprendizaje permanece en este dispositivo. Los patrones de frases aprendidos y el uso de palabras se incluyen en las exportaciones del diccionario (Copia de seguridad y restauración).</string>
     <string name="learning_data_loading">Cargando…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d pares</string>
-    <string name="learning_data_triples_suffix">, %1$d tríos</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: %2$d par</item><item quantity="many">%1$s: %2$d pares</item><item quantity="other">%1$s: %2$d pares</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">, %1$d trío</item><item quantity="many">, %1$d tríos</item><item quantity="other">, %1$d tríos</item></plurals>
     <string name="learning_data_no_pairs">Aún no hay pares de palabras aprendidos</string>
     <string name="learning_data_no_words">Aún no hay palabras aprendidas</string>
-    <string name="learning_data_word_count">%1$d palabras</string>
+    <plurals name="learning_data_word_count"><item quantity="one">%1$d palabra</item><item quantity="many">%1$d palabras</item><item quantity="other">%1$d palabras</item></plurals>
     <string name="learning_data_most_used">más usada: «%1$s» (%2$d×)</string>
     <string name="learning_data_phrase_patterns">Patrones de frases — %1$s</string>
     <string name="learning_data_word_usage">Uso de palabras — %1$s</string>
@@ -661,9 +661,9 @@
     <string name="learning_data_forget_phrases">Olvidar frases</string>
     <string name="learning_data_forget_words">Olvidar palabras</string>
     <string name="learning_data_forget_phrases_title">¿Olvidar los patrones de frases?</string>
-    <string name="learning_data_forget_phrases_body">¿Eliminar %1$d pares y tríos de palabras aprendidos en todos los idiomas? Las sugerencias según contexto volverán a aprender de tu escritura.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">¿Eliminar %1$d par o trío de palabras aprendido en todos los idiomas? Las sugerencias según contexto volverán a aprender de tu escritura.</item><item quantity="many">¿Eliminar %1$d pares y tríos de palabras aprendidos en todos los idiomas? Las sugerencias según contexto volverán a aprender de tu escritura.</item><item quantity="other">¿Eliminar %1$d pares y tríos de palabras aprendidos en todos los idiomas? Las sugerencias según contexto volverán a aprender de tu escritura.</item></plurals>
     <string name="learning_data_forget_words_title">¿Olvidar el uso de palabras?</string>
-    <string name="learning_data_forget_words_body">¿Eliminar %1$d palabras aprendidas? El refuerzo personalizado volverá a aprender de tu escritura.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">¿Eliminar %1$d palabra aprendida? El refuerzo personalizado volverá a aprender de tu escritura.</item><item quantity="many">¿Eliminar %1$d palabras aprendidas? El refuerzo personalizado volverá a aprender de tu escritura.</item><item quantity="other">¿Eliminar %1$d palabras aprendidas? El refuerzo personalizado volverá a aprender de tu escritura.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Frases aprendidas</string>
     <string name="learning_data_phrases_dialog_empty">No hay frases aprendidas.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -729,9 +729,9 @@
     <string name="gif_importing">Importando...</string>
     <string name="gif_import_pack">Importar paquete desde ZIP</string>
     <string name="gif_installed_packs">Paquetes instalados</string>
-    <string name="gif_pack_stats">%1$d GIF | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">%1$d GIF | %2$s</item><item quantity="many">%1$d GIF | %2$s</item><item quantity="other">%1$d GIF | %2$s</item></plurals>
     <string name="gif_total_storage">Total: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d columnas</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">%1$d columna</item><item quantity="many">%1$d columnas</item><item quantity="other">%1$d columnas</item></plurals>
     <string name="gif_remove_all">Eliminar todos los datos de GIF</string>
     <string name="gif_remove_all_title">¿Eliminar todos los datos de GIF?</string>
     <string name="gif_remove_all_body">Esto eliminará todos los paquetes de GIF importados, las miniaturas y la base de datos. No se puede deshacer.</string>
@@ -758,13 +758,13 @@
     <string name="multilang_packs_header">Paquetes de idioma</string>
     <string name="multilang_packs_desc">Importa diccionarios de idiomas adicionales desde archivos ZIP. Descarga los paquetes externamente e impórtalos aquí (no se necesita permiso de internet).</string>
     <string name="multilang_browse_packs">Ver paquetes disponibles ↗</string>
-    <string name="multilang_installed_count">Instalados: %1$d paquete(s) de idioma</string>
+    <plurals name="multilang_installed_count"><item quantity="one">Instalado: %1$d paquete de idioma</item><item quantity="many">Instalados: %1$d paquetes de idioma</item><item quantity="other">Instalados: %1$d paquetes de idioma</item></plurals>
     <string name="multilang_import_pack">Importar paquete</string>
     <string name="multilang_manage">Gestionar</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Paquetes de idioma instalados</string>
     <string name="multilang_packs_dialog_empty">No hay paquetes de idioma instalados.\n\nUsa «Ver paquetes disponibles» para descargar un ZIP y luego «Importar paquete» para añadirlo.</string>
-    <string name="multilang_pack_stats">Código: %1$s • %2$d palabras</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">Código: %1$s • %2$d palabra</item><item quantity="many">Código: %1$s • %2$d palabras</item><item quantity="other">Código: %1$s • %2$d palabras</item></plurals>
     <string name="input_manage_layouts">Gestionar diseños de teclado</string>
     <string name="input_configure_extra_keys">Configurar teclas adicionales</string>
     <string name="input_advanced_prediction">Ajustes avanzados de predicción</string>
@@ -820,13 +820,13 @@
     <string name="command_palette_timestamp_title">Marca de tiempo</string>
     <string name="command_palette_timestamp_desc">Inserta fecha/hora con formato (p. ej. yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">%1$d comandos disponibles</string>
-    <string name="command_palette_count_results">%1$d resultados para \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="one">%1$d resultado para \"%2$s\"</item><item quantity="many">%1$d resultados para \"%2$s\"</item><item quantity="other">%1$d resultados para \"%2$s\"</item></plurals>
     <string name="command_palette_browse_all">Ver los %1$d comandos</string>
     <string name="command_palette_quick_commands">Comandos rápidos</string>
     <string name="command_palette_custom_text_intro">Introduce el texto que se insertará cuando deslices en esta dirección.</string>
     <string name="command_palette_text_to_insert">Texto a insertar</string>
     <string name="command_palette_text_placeholder">p. ej., ¡Hola, mundo!</string>
-    <string name="command_palette_char_count">%1$d caracteres</string>
+    <plurals name="command_palette_char_count"><item quantity="one">%1$d carácter</item><item quantity="many">%1$d caracteres</item><item quantity="other">%1$d caracteres</item></plurals>
     <string name="command_palette_paste_desc">Pegar desde el portapapeles</string>
     <string name="command_palette_quick_suggestions">Sugerencias rápidas:</string>
     <string name="command_palette_use_text">Usar este texto</string>
@@ -878,11 +878,11 @@
     <string name="import_preview_diff_removed">−%1$d eliminadas</string>
     <string name="import_preview_diff_changed">~%1$d cambiadas</string>
     <string name="import_preview_diff_unchanged">(%1$d sin cambios)</string>
-    <string name="import_preview_short_swipe_count">%1$d asignaciones de deslizamiento corto en esta copia</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d asignación de deslizamiento corto en esta copia</item><item quantity="many">%1$d asignaciones de deslizamiento corto en esta copia</item><item quantity="other">%1$d asignaciones de deslizamiento corto en esta copia</item></plurals>
     <string name="import_preview_short_swipe_skip">Omitir — no importar</string>
     <string name="import_preview_short_swipe_merge">Combinar — rellena huecos, conserva lo existente (recomendado)</string>
     <string name="import_preview_short_swipe_replace">Reemplazar — borra lo existente, instala el conjunto del archivo</string>
-    <string name="import_preview_short_swipe_warning">Esto REEMPLAZARÁ todas tus personalizaciones de deslizamiento corto por las %1$d asignaciones del archivo.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">Esto REEMPLAZARÁ todas tus personalizaciones de deslizamiento corto por la %1$d asignación del archivo.</item><item quantity="many">Esto REEMPLAZARÁ todas tus personalizaciones de deslizamiento corto por las %1$d asignaciones del archivo.</item><item quantity="other">Esto REEMPLAZARÁ todas tus personalizaciones de deslizamiento corto por las %1$d asignaciones del archivo.</item></plurals>
     <string name="import_preview_selected_count">%1$d de %2$d seleccionadas</string>
     <string name="import_preview_expand">Expandir</string>
     <string name="import_preview_hide">Ocultar</string>
@@ -895,7 +895,7 @@
     <string name="import_preview_learned_desc">Los recuentos de frases aprendidas se combinan como grupo. Si esta copia incluye un vocabulario personal, sustituirá la lista actual de palabras aprendidas.</string>
     <string name="import_preview_learned_bigrams">Pares de palabras a combinar: %1$d</string>
     <string name="import_preview_learned_trigrams">Tríos de palabras a combinar: %1$d</string>
-    <string name="import_preview_learned_vocabulary">El vocabulario personal se sustituirá por %1$d palabras</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">El vocabulario personal se sustituirá por %1$d palabra</item><item quantity="many">El vocabulario personal se sustituirá por %1$d palabras</item><item quantity="other">El vocabulario personal se sustituirá por %1$d palabras</item></plurals>
     <string name="import_preview_modified">Modificadas (%1$d)</string>
     <string name="import_preview_added">Añadidas (%1$d)</string>
     <string name="import_preview_short_swipe_header">Personalizaciones de deslizamiento corto</string>

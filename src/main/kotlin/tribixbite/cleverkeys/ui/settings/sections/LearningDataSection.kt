@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -86,13 +87,19 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
                 val triples = trigrams.getTotalTrigramCount(lang)
                 if (s.totalBigrams > 0 || triples > 0) {
                     buildString {
+                        // ARC-103: quantity strings — the pair/triple counts inflect the noun.
                         append(
-                            activity.getString(
-                                R.string.learning_data_pairs_for_language, lang, s.totalBigrams
+                            activity.resources.getQuantityString(
+                                R.plurals.learning_data_pairs_for_language,
+                                s.totalBigrams, lang, s.totalBigrams
                             )
                         )
                         if (triples > 0) {
-                            append(activity.getString(R.string.learning_data_triples_suffix, triples))
+                            append(
+                                activity.resources.getQuantityString(
+                                    R.plurals.learning_data_triples_suffix, triples, triples
+                                )
+                            )
                         }
                     }
                 } else {
@@ -113,7 +120,11 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
                 activity.getString(R.string.learning_data_no_words)
             } else {
                 buildString {
-                    append(activity.getString(R.string.learning_data_word_count, vStats.totalWords))
+                    append(
+                        activity.resources.getQuantityString(
+                            R.plurals.learning_data_word_count, vStats.totalWords, vStats.totalWords
+                        )
+                    )
                     vStats.mostUsedWord?.let {
                         append(SUMMARY_SEPARATOR)
                         append(
@@ -180,7 +191,9 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
                     Config.globalConfig()?.personalization_max_words = snapped
                 }
             },
-            displayValue = stringResource(R.string.learning_data_word_count, personalizationMaxWords)
+            displayValue = pluralStringResource(
+                R.plurals.learning_data_word_count, personalizationMaxWords, personalizationMaxWords
+            )
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -232,7 +245,11 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
             onDismissRequest = { showClearBigrams = false },
             title = { Text(stringResource(R.string.learning_data_forget_phrases_title)) },
             text = {
-                Text(stringResource(R.string.learning_data_forget_phrases_body, bigramTotal))
+                Text(
+                    pluralStringResource(
+                        R.plurals.learning_data_forget_phrases_body, bigramTotal, bigramTotal
+                    )
+                )
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -257,7 +274,11 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
             onDismissRequest = { showClearVocab = false },
             title = { Text(stringResource(R.string.learning_data_forget_words_title)) },
             text = {
-                Text(stringResource(R.string.learning_data_forget_words_body, vocabTotal))
+                Text(
+                    pluralStringResource(
+                        R.plurals.learning_data_forget_words_body, vocabTotal, vocabTotal
+                    )
+                )
             },
             confirmButton = {
                 TextButton(onClick = {

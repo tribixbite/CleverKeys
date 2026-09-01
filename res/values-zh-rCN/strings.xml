@@ -541,7 +541,7 @@
     <string name="theme_color_high_confidence">高置信度颜色</string>
     <string name="theme_color_keyboard_background">键盘背景色</string>
     <string name="theme_color_keyboard_surface">键盘表面色</string>
-    <string name="short_swipe_mappings_summary">%1$d 个自定义映射 • %2$d 个可用命令</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="other">%1$d 个自定义映射 • %2$d 个可用命令</item></plurals>
     <string name="short_swipe_last_key">上一个键：%1$s</string>
     <string name="short_swipe_customize_key">自定义「%1$s」键</string>
     <string name="extra_keys_enabled_count">%1$d / %2$d 个附加键已启用</string>
@@ -657,10 +657,10 @@
     <string name="command_palette_action_text">文本：“%1$s”</string>
     <string name="command_palette_action_timestamp">时间戳：%1$s（现在 → “%2$s”）</string>
     <string name="command_palette_browse_all">浏览全部 %1$d 个命令</string>
-    <string name="command_palette_char_count">%1$d 个字符</string>
+    <plurals name="command_palette_char_count"><item quantity="other">%1$d 个字符</item></plurals>
     <string name="command_palette_confirm">确认</string>
     <string name="command_palette_count_available">共 %1$d 个可用命令</string>
-    <string name="command_palette_count_results">“%2$s”的结果共 %1$d 条</string>
+    <plurals name="command_palette_count_results"><item quantity="other">“%2$s”的结果共 %1$d 条</item></plurals>
     <string name="command_palette_custom_text_desc">输入要插入的任意文本（宏、片段等）</string>
     <string name="command_palette_custom_text_intro">输入当你朝此方向滑动时要插入的文本。</string>
     <string name="command_palette_custom_text_title">自定义文本</string>
@@ -745,11 +745,11 @@
     <string name="gesture_tap_typing_header">点按与输入</string>
     <string name="gesture_tuning_tip">如果手势感觉迟缓，请降低停留时间和噪声阈值。如果点按被识别为滑动，请增加点按时长。</string>
     <string name="gif_get_packs">获取 GIF 包（打开浏览器）</string>
-    <string name="gif_grid_columns_display">%1$d 列</string>
+    <plurals name="gif_grid_columns_display"><item quantity="other">%1$d 列</item></plurals>
     <string name="gif_import_pack">从 ZIP 导入包</string>
     <string name="gif_importing">正在导入...</string>
     <string name="gif_installed_packs">已安装的包</string>
-    <string name="gif_pack_stats">%1$d 个 GIF | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="other">%1$d 个 GIF | %2$s</item></plurals>
     <string name="gif_remove_all">移除所有 GIF 数据</string>
     <string name="gif_remove_all_body">这将删除所有已导入的 GIF 包、缩略图和数据库。此操作无法撤销。</string>
     <string name="gif_remove_all_confirm">全部移除</string>
@@ -777,17 +777,17 @@
     <string name="import_preview_learned_desc">已学短语计数按组合并。若此备份包含个人词汇表，它将替换当前的已学单词列表。</string>
     <string name="import_preview_learned_title">已学数据</string>
     <string name="import_preview_learned_trigrams">待合并三词组：%1$d</string>
-    <string name="import_preview_learned_vocabulary">个人词汇表将被替换为 %1$d 个单词</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="other">个人词汇表将被替换为 %1$d 个单词</item></plurals>
     <string name="import_preview_modified">已修改（%1$d）</string>
     <string name="import_preview_screen_mismatch">屏幕尺寸不匹配 — 部分显示设置可能需要调整。</string>
     <string name="import_preview_search_hint">搜索…</string>
     <string name="import_preview_selected_count">已选择 %1$d/%2$d</string>
-    <string name="import_preview_short_swipe_count">此备份中有 %1$d 条短滑动映射</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="other">此备份中有 %1$d 条短滑动映射</item></plurals>
     <string name="import_preview_short_swipe_header">短滑动自定义</string>
     <string name="import_preview_short_swipe_merge">合并 — 补齐缺口，保留现有（推荐）</string>
     <string name="import_preview_short_swipe_replace">替换 — 清除现有，安装文件中的集合</string>
     <string name="import_preview_short_swipe_skip">跳过 — 不导入</string>
-    <string name="import_preview_short_swipe_warning">这将用文件中的 %1$d 条映射替换你现有的全部短滑动自定义。</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="other">这将用文件中的 %1$d 条映射替换你现有的全部短滑动自定义。</item></plurals>
     <string name="import_preview_skipped_collapse">▼ 无效/已跳过（%1$d）— 点按收起</string>
     <string name="import_preview_skipped_expand">▶ 无效/已跳过（%1$d）— 点按展开</string>
     <string name="import_preview_source_screen">来源屏幕：%1$d×%2$d@%3$s</string>
@@ -843,24 +843,24 @@
     <string name="learning_data_browse_phrases">浏览短语</string>
     <string name="learning_data_browse_words">浏览单词</string>
     <string name="learning_data_forget_phrases">忘记短语</string>
-    <string name="learning_data_forget_phrases_body">删除所有语言的 %1$d 个已学词对和三词组？上下文感知建议将从你的输入中重新学习。</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="other">删除所有语言的 %1$d 个已学词对和三词组？上下文感知建议将从你的输入中重新学习。</item></plurals>
     <string name="learning_data_forget_phrases_title">忘记短语模式？</string>
     <string name="learning_data_forget_words">忘记单词</string>
-    <string name="learning_data_forget_words_body">删除 %1$d 个已学单词？个性化加权将从你的输入中重新学习。</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="other">删除 %1$d 个已学单词？个性化加权将从你的输入中重新学习。</item></plurals>
     <string name="learning_data_forget_words_title">忘记用词数据？</string>
     <string name="learning_data_loading">正在加载…</string>
     <string name="learning_data_most_used">最常用：“%1$s”（%2$d×）</string>
     <string name="learning_data_no_pairs">尚无已学词对</string>
     <string name="learning_data_no_words">尚无已学单词</string>
-    <string name="learning_data_pairs_for_language">%1$s：%2$d 个词对</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="other">%1$s：%2$d 个词对</item></plurals>
     <string name="learning_data_phrase_patterns">短语模式 — %1$s</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
     <string name="learning_data_phrases_dialog_empty">没有已学短语。</string>
     <string name="learning_data_phrases_dialog_title">已学短语</string>
     <string name="learning_data_privacy_note">所有学习都保留在本设备上。已学的短语模式和用词数据会包含在词典导出中（备份与恢复）。</string>
     <string name="learning_data_title">学习与数据</string>
-    <string name="learning_data_triples_suffix">，%1$d 个三词组</string>
-    <string name="learning_data_word_count">%1$d 个单词</string>
+    <plurals name="learning_data_triples_suffix"><item quantity="other">，%1$d 个三词组</item></plurals>
+    <plurals name="learning_data_word_count"><item quantity="other">%1$d 个单词</item></plurals>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
     <string name="learning_data_word_usage">用词情况 — %1$s</string>
     <string name="learning_data_words_dialog_empty">没有已学单词。</string>
@@ -868,9 +868,9 @@
     <string name="multilang_browse_packs">浏览可用的包 ↗</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_import_pack">导入包</string>
-    <string name="multilang_installed_count">已安装：%1$d 个语言包</string>
+    <plurals name="multilang_installed_count"><item quantity="other">已安装：%1$d 个语言包</item></plurals>
     <string name="multilang_manage">管理</string>
-    <string name="multilang_pack_stats">代码：%1$s • %2$d 个单词</string>
+    <plurals name="multilang_pack_stats"><item quantity="other">代码：%1$s • %2$d 个单词</item></plurals>
     <string name="multilang_packs_desc">从 ZIP 文件导入更多语言词典。请在外部下载包后在此导入（无需联网权限）。</string>
     <string name="multilang_packs_dialog_empty">未安装语言包。\n\n请用“浏览可用的包”下载 ZIP，再用“导入包”添加。</string>
     <string name="multilang_packs_dialog_title">已安装的语言包</string>

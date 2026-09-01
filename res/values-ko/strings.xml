@@ -543,7 +543,7 @@
     <string name="theme_color_high_confidence">높은 신뢰도 색상</string>
     <string name="theme_color_keyboard_background">키보드 배경 색상</string>
     <string name="theme_color_keyboard_surface">키보드 표면 색상</string>
-    <string name="short_swipe_mappings_summary">%1$d개의 사용자 정의 매핑 • %2$d개의 명령 사용 가능</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="other">%1$d개의 사용자 정의 매핑 • %2$d개의 명령 사용 가능</item></plurals>
     <string name="short_swipe_last_key">마지막 키: %1$s</string>
     <string name="short_swipe_customize_key">\"%1$s\" 키 사용자 정의</string>
     <string name="extra_keys_enabled_count">%1$d / %2$d개의 추가 키 활성화됨</string>
@@ -630,11 +630,11 @@
     <string name="learning_data_title">학습 및 데이터</string>
     <string name="learning_data_privacy_note">모든 학습은 이 기기에만 저장됩니다. 학습된 표현 패턴과 단어 사용 기록은 사전 내보내기(백업 및 복원)에 포함됩니다.</string>
     <string name="learning_data_loading">불러오는 중…</string>
-    <string name="learning_data_pairs_for_language">%1$s: 단어 쌍 %2$d개</string>
-    <string name="learning_data_triples_suffix">, 트리플 %1$d개</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="other">%1$s: 단어 쌍 %2$d개</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="other">, 트리플 %1$d개</item></plurals>
     <string name="learning_data_no_pairs">아직 학습된 단어 쌍이 없습니다</string>
     <string name="learning_data_no_words">아직 학습된 단어가 없습니다</string>
-    <string name="learning_data_word_count">단어 %1$d개</string>
+    <plurals name="learning_data_word_count"><item quantity="other">단어 %1$d개</item></plurals>
     <string name="learning_data_most_used">가장 많이 사용: “%1$s”(%2$d회)</string>
     <string name="learning_data_phrase_patterns">표현 패턴 — %1$s</string>
     <string name="learning_data_word_usage">단어 사용 — %1$s</string>
@@ -643,9 +643,9 @@
     <string name="learning_data_forget_phrases">표현 삭제</string>
     <string name="learning_data_forget_words">단어 삭제</string>
     <string name="learning_data_forget_phrases_title">표현 패턴을 삭제할까요?</string>
-    <string name="learning_data_forget_phrases_body">모든 언어에서 학습된 단어 쌍과 트리플 %1$d개를 삭제할까요? 문맥 인식 추천은 입력에서 다시 학습됩니다.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="other">모든 언어에서 학습된 단어 쌍과 트리플 %1$d개를 삭제할까요? 문맥 인식 추천은 입력에서 다시 학습됩니다.</item></plurals>
     <string name="learning_data_forget_words_title">단어 사용 기록을 삭제할까요?</string>
-    <string name="learning_data_forget_words_body">학습된 단어 %1$d개를 삭제할까요? 개인화 부스트는 입력에서 다시 학습됩니다.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="other">학습된 단어 %1$d개를 삭제할까요? 개인화 부스트는 입력에서 다시 학습됩니다.</item></plurals>
     <string name="learning_data_phrases_dialog_title">학습된 표현</string>
     <string name="learning_data_phrases_dialog_empty">학습된 표현이 없습니다.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d회, %4$s)"</string>
@@ -711,9 +711,9 @@
     <string name="gif_importing">가져오는 중...</string>
     <string name="gif_import_pack">ZIP에서 팩 가져오기</string>
     <string name="gif_installed_packs">설치된 팩</string>
-    <string name="gif_pack_stats">GIF %1$d개 | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="other">GIF %1$d개 | %2$s</item></plurals>
     <string name="gif_total_storage">합계: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d열</string>
+    <plurals name="gif_grid_columns_display"><item quantity="other">%1$d열</item></plurals>
     <string name="gif_remove_all">모든 GIF 데이터 제거</string>
     <string name="gif_remove_all_title">모든 GIF 데이터를 제거할까요?</string>
     <string name="gif_remove_all_body">가져온 모든 GIF 팩, 썸네일, 데이터베이스가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</string>
@@ -740,13 +740,13 @@
     <string name="multilang_packs_header">언어 팩</string>
     <string name="multilang_packs_desc">ZIP 파일에서 추가 언어 사전을 가져옵니다. 팩을 외부에서 다운로드한 후 여기서 가져오세요(인터넷 권한 불필요).</string>
     <string name="multilang_browse_packs">사용 가능한 팩 보기 ↗</string>
-    <string name="multilang_installed_count">설치됨: 언어 팩 %1$d개</string>
+    <plurals name="multilang_installed_count"><item quantity="other">설치됨: 언어 팩 %1$d개</item></plurals>
     <string name="multilang_import_pack">팩 가져오기</string>
     <string name="multilang_manage">관리</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">설치된 언어 팩</string>
     <string name="multilang_packs_dialog_empty">설치된 언어 팩이 없습니다.\n\n\'사용 가능한 팩 보기\'로 ZIP을 다운로드한 다음 \'팩 가져오기\'로 추가하세요.</string>
-    <string name="multilang_pack_stats">코드: %1$s • 단어 %2$d개</string>
+    <plurals name="multilang_pack_stats"><item quantity="other">코드: %1$s • 단어 %2$d개</item></plurals>
     <string name="input_manage_layouts">키보드 레이아웃 관리</string>
     <string name="input_configure_extra_keys">추가 키 설정</string>
     <string name="input_advanced_prediction">고급 예측 설정</string>
@@ -802,13 +802,13 @@
     <string name="command_palette_timestamp_title">타임스탬프</string>
     <string name="command_palette_timestamp_desc">형식화된 날짜/시간 삽입(예: yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">사용 가능한 명령 %1$d개</string>
-    <string name="command_palette_count_results">\"%2$s\"에 대한 결과 %1$d개</string>
+    <plurals name="command_palette_count_results"><item quantity="other">\"%2$s\"에 대한 결과 %1$d개</item></plurals>
     <string name="command_palette_browse_all">전체 명령 %1$d개 모두 보기</string>
     <string name="command_palette_quick_commands">빠른 명령</string>
     <string name="command_palette_custom_text_intro">이 방향으로 스와이프할 때 삽입될 텍스트를 입력하세요.</string>
     <string name="command_palette_text_to_insert">삽입할 텍스트</string>
     <string name="command_palette_text_placeholder">예: Hello, World!</string>
-    <string name="command_palette_char_count">%1$d자</string>
+    <plurals name="command_palette_char_count"><item quantity="other">%1$d자</item></plurals>
     <string name="command_palette_paste_desc">클립보드에서 붙여넣기</string>
     <string name="command_palette_quick_suggestions">빠른 제안:</string>
     <string name="command_palette_use_text">이 텍스트 사용</string>
@@ -860,11 +860,11 @@
     <string name="import_preview_diff_removed">−%1$d 제거</string>
     <string name="import_preview_diff_changed">~%1$d 변경</string>
     <string name="import_preview_diff_unchanged">(%1$d 변경 없음)</string>
-    <string name="import_preview_short_swipe_count">이 백업에 짧은 스와이프 매핑 %1$d개가 있습니다</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="other">이 백업에 짧은 스와이프 매핑 %1$d개가 있습니다</item></plurals>
     <string name="import_preview_short_swipe_skip">건너뛰기 — 가져오지 않음</string>
     <string name="import_preview_short_swipe_merge">병합 — 빈 곳만 채우고 기존 유지(권장)</string>
     <string name="import_preview_short_swipe_replace">교체 — 기존을 지우고 파일의 세트 설치</string>
-    <string name="import_preview_short_swipe_warning">기존의 모든 짧은 스와이프 사용자 지정이 파일의 매핑 %1$d개로 교체됩니다.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="other">기존의 모든 짧은 스와이프 사용자 지정이 파일의 매핑 %1$d개로 교체됩니다.</item></plurals>
     <string name="import_preview_selected_count">%2$d개 중 %1$d개 선택됨</string>
     <string name="import_preview_expand">펼치기</string>
     <string name="import_preview_hide">숨기기</string>
@@ -877,7 +877,7 @@
     <string name="import_preview_learned_desc">학습된 표현 카운트는 그룹으로 병합됩니다. 이 백업에 개인 어휘가 포함되어 있으면 현재 학습된 단어 목록을 교체합니다.</string>
     <string name="import_preview_learned_bigrams">병합할 단어 쌍: %1$d</string>
     <string name="import_preview_learned_trigrams">병합할 단어 트리플: %1$d</string>
-    <string name="import_preview_learned_vocabulary">개인 어휘가 단어 %1$d개로 교체됩니다</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="other">개인 어휘가 단어 %1$d개로 교체됩니다</item></plurals>
     <string name="import_preview_modified">수정됨(%1$d)</string>
     <string name="import_preview_added">추가됨(%1$d)</string>
     <string name="import_preview_short_swipe_header">짧은 스와이프 사용자 지정</string>

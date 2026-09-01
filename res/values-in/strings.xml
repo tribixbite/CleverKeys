@@ -554,7 +554,7 @@
     <string name="theme_color_high_confidence">Keyakinan Tinggi</string>
     <string name="theme_color_keyboard_background">Latar Belakang Keyboard</string>
     <string name="theme_color_keyboard_surface">Permukaan Keyboard</string>
-    <string name="short_swipe_mappings_summary">%1$d pemetaan kustom • %2$d perintah tersedia</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="other">%1$d pemetaan kustom • %2$d perintah tersedia</item></plurals>
     <string name="short_swipe_last_key">Tombol terakhir: %1$s</string>
     <string name="short_swipe_customize_key">Sesuaikan Tombol "%1$s"</string>
     <string name="extra_keys_enabled_count">%1$d dari %2$d tombol tambahan diaktifkan</string>
@@ -642,11 +642,11 @@
     <string name="learning_data_title">Pembelajaran &amp; Data</string>
     <string name="learning_data_privacy_note">Semua pembelajaran tetap di perangkat ini. Pola frasa dan penggunaan kata yang dipelajari disertakan dalam ekspor kamus (Cadangkan &amp; Pulihkan).</string>
     <string name="learning_data_loading">Memuat…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d pasangan</string>
-    <string name="learning_data_triples_suffix">, %1$d tripel</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="other">%1$s: %2$d pasangan</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="other">, %1$d tripel</item></plurals>
     <string name="learning_data_no_pairs">Belum ada pasangan kata yang dipelajari</string>
     <string name="learning_data_no_words">Belum ada kata yang dipelajari</string>
-    <string name="learning_data_word_count">%1$d kata</string>
+    <plurals name="learning_data_word_count"><item quantity="other">%1$d kata</item></plurals>
     <string name="learning_data_most_used">paling sering digunakan: “%1$s” (%2$d×)</string>
     <string name="learning_data_phrase_patterns">Pola frasa — %1$s</string>
     <string name="learning_data_word_usage">Penggunaan kata — %1$s</string>
@@ -655,9 +655,9 @@
     <string name="learning_data_forget_phrases">Lupakan frasa</string>
     <string name="learning_data_forget_words">Lupakan kata</string>
     <string name="learning_data_forget_phrases_title">Lupakan pola frasa?</string>
-    <string name="learning_data_forget_phrases_body">Hapus %1$d pasangan dan tripel kata yang dipelajari di semua bahasa? Saran kontekstual akan belajar ulang dari ketikan Anda.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="other">Hapus %1$d pasangan dan tripel kata yang dipelajari di semua bahasa? Saran kontekstual akan belajar ulang dari ketikan Anda.</item></plurals>
     <string name="learning_data_forget_words_title">Lupakan penggunaan kata?</string>
-    <string name="learning_data_forget_words_body">Hapus %1$d kata yang dipelajari? Peningkatan personal akan belajar ulang dari ketikan Anda.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="other">Hapus %1$d kata yang dipelajari? Peningkatan personal akan belajar ulang dari ketikan Anda.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Frasa yang dipelajari</string>
     <string name="learning_data_phrases_dialog_empty">Tidak ada frasa yang dipelajari.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -723,9 +723,9 @@
     <string name="gif_importing">Mengimpor...</string>
     <string name="gif_import_pack">Impor Paket dari ZIP</string>
     <string name="gif_installed_packs">Paket Terpasang</string>
-    <string name="gif_pack_stats">%1$d GIF | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="other">%1$d GIF | %2$s</item></plurals>
     <string name="gif_total_storage">Total: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d kolom</string>
+    <plurals name="gif_grid_columns_display"><item quantity="other">%1$d kolom</item></plurals>
     <string name="gif_remove_all">Hapus Semua Data GIF</string>
     <string name="gif_remove_all_title">Hapus Semua Data GIF?</string>
     <string name="gif_remove_all_body">Ini akan menghapus semua paket GIF yang diimpor, gambar mini, dan basis data. Tindakan ini tidak dapat dibatalkan.</string>
@@ -752,13 +752,13 @@
     <string name="multilang_packs_header">Paket Bahasa</string>
     <string name="multilang_packs_desc">Impor kamus bahasa tambahan dari file ZIP. Unduh paket secara eksternal dan impor di sini (tidak perlu izin internet).</string>
     <string name="multilang_browse_packs">Telusuri paket yang tersedia ↗</string>
-    <string name="multilang_installed_count">Terpasang: %1$d paket bahasa</string>
+    <plurals name="multilang_installed_count"><item quantity="other">Terpasang: %1$d paket bahasa</item></plurals>
     <string name="multilang_import_pack">Impor Paket</string>
     <string name="multilang_manage">Kelola</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Paket Bahasa Terpasang</string>
     <string name="multilang_packs_dialog_empty">Tidak ada paket bahasa terpasang.\n\nGunakan \'Telusuri paket yang tersedia\' untuk mengunduh ZIP, lalu \'Impor Paket\' untuk menambahkannya.</string>
-    <string name="multilang_pack_stats">Kode: %1$s • %2$d kata</string>
+    <plurals name="multilang_pack_stats"><item quantity="other">Kode: %1$s • %2$d kata</item></plurals>
     <string name="input_manage_layouts">Kelola Tata Letak Keyboard</string>
     <string name="input_configure_extra_keys">Konfigurasikan Tombol Tambahan</string>
     <string name="input_advanced_prediction">Pengaturan Prediksi Lanjutan</string>
@@ -814,13 +814,13 @@
     <string name="command_palette_timestamp_title">Stempel Waktu</string>
     <string name="command_palette_timestamp_desc">Sisipkan tanggal/waktu terformat (mis. yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">%1$d perintah tersedia</string>
-    <string name="command_palette_count_results">%1$d hasil untuk \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="other">%1$d hasil untuk \"%2$s\"</item></plurals>
     <string name="command_palette_browse_all">Telusuri Semua %1$d Perintah</string>
     <string name="command_palette_quick_commands">Perintah Cepat</string>
     <string name="command_palette_custom_text_intro">Masukkan teks yang akan disisipkan saat Anda menggeser ke arah ini.</string>
     <string name="command_palette_text_to_insert">Teks untuk disisipkan</string>
     <string name="command_palette_text_placeholder">mis. Halo, Dunia!</string>
-    <string name="command_palette_char_count">%1$d karakter</string>
+    <plurals name="command_palette_char_count"><item quantity="other">%1$d karakter</item></plurals>
     <string name="command_palette_paste_desc">Tempel dari clipboard</string>
     <string name="command_palette_quick_suggestions">Saran cepat:</string>
     <string name="command_palette_use_text">Gunakan Teks Ini</string>
@@ -872,11 +872,11 @@
     <string name="import_preview_diff_removed">−%1$d dihapus</string>
     <string name="import_preview_diff_changed">~%1$d berubah</string>
     <string name="import_preview_diff_unchanged">(%1$d tidak berubah)</string>
-    <string name="import_preview_short_swipe_count">%1$d pemetaan geser pendek dalam cadangan ini</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="other">%1$d pemetaan geser pendek dalam cadangan ini</item></plurals>
     <string name="import_preview_short_swipe_skip">Lewati — jangan impor</string>
     <string name="import_preview_short_swipe_merge">Gabung — isi kekosongan, pertahankan yang ada (disarankan)</string>
     <string name="import_preview_short_swipe_replace">Ganti — hapus yang ada, pasang set dari file</string>
-    <string name="import_preview_short_swipe_warning">Ini akan MENGGANTI semua kustomisasi geser pendek Anda dengan %1$d pemetaan dari file.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="other">Ini akan MENGGANTI semua kustomisasi geser pendek Anda dengan %1$d pemetaan dari file.</item></plurals>
     <string name="import_preview_selected_count">%1$d dari %2$d dipilih</string>
     <string name="import_preview_expand">Bentangkan</string>
     <string name="import_preview_hide">Sembunyikan</string>
@@ -889,7 +889,7 @@
     <string name="import_preview_learned_desc">Jumlah frasa yang dipelajari digabung sebagai satu kelompok. Jika cadangan ini berisi kosakata pribadi, kosakata itu menggantikan daftar kata yang dipelajari saat ini.</string>
     <string name="import_preview_learned_bigrams">Pasangan kata untuk digabung: %1$d</string>
     <string name="import_preview_learned_trigrams">Tripel kata untuk digabung: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Kosakata pribadi akan diganti dengan %1$d kata</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="other">Kosakata pribadi akan diganti dengan %1$d kata</item></plurals>
     <string name="import_preview_modified">Diubah (%1$d)</string>
     <string name="import_preview_added">Ditambahkan (%1$d)</string>
     <string name="import_preview_short_swipe_header">Kustomisasi geser pendek</string>

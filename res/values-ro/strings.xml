@@ -565,7 +565,7 @@
     <string name="theme_color_high_confidence">Încredere ridicată</string>
     <string name="theme_color_keyboard_background">Fundal tastatură</string>
     <string name="theme_color_keyboard_surface">Suprafață tastatură</string>
-    <string name="short_swipe_mappings_summary">%1$d mapări personalizate • %2$d comenzi disponibile</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d mapare personalizată • %2$d comenzi disponibile</item><item quantity="few">%1$d mapări personalizate • %2$d comenzi disponibile</item><item quantity="other">%1$d de mapări personalizate • %2$d comenzi disponibile</item></plurals>
     <string name="short_swipe_last_key">Ultima tastă: %1$s</string>
     <string name="short_swipe_customize_key">Personalizați tasta \"%1$s\"</string>
     <string name="extra_keys_enabled_count">%1$d din %2$d taste extra activate</string>
@@ -653,11 +653,11 @@
     <string name="learning_data_title">Învățare &amp; Date</string>
     <string name="learning_data_privacy_note">Toată învățarea rămâne pe acest dispozitiv. Tiparele de expresii învățate și utilizarea cuvintelor sunt incluse în exporturile de dicționar (Backup și restaurare).</string>
     <string name="learning_data_loading">Se încarcă…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d perechi</string>
-    <string name="learning_data_triples_suffix">, %1$d triplete</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: %2$d pereche</item><item quantity="few">%1$s: %2$d perechi</item><item quantity="other">%1$s: %2$d de perechi</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">, %1$d triplet</item><item quantity="few">, %1$d triplete</item><item quantity="other">, %1$d de triplete</item></plurals>
     <string name="learning_data_no_pairs">Nicio pereche de cuvinte învățată încă</string>
     <string name="learning_data_no_words">Niciun cuvânt învățat încă</string>
-    <string name="learning_data_word_count">%1$d cuvinte</string>
+    <plurals name="learning_data_word_count"><item quantity="one">%1$d cuvânt</item><item quantity="few">%1$d cuvinte</item><item quantity="other">%1$d de cuvinte</item></plurals>
     <string name="learning_data_most_used">cel mai folosit: „%1$s” (%2$d×)</string>
     <string name="learning_data_phrase_patterns">Tipare de expresii — %1$s</string>
     <string name="learning_data_word_usage">Utilizarea cuvintelor — %1$s</string>
@@ -666,9 +666,9 @@
     <string name="learning_data_forget_phrases">Uită expresiile</string>
     <string name="learning_data_forget_words">Uită cuvintele</string>
     <string name="learning_data_forget_phrases_title">Uitați tiparele de expresii?</string>
-    <string name="learning_data_forget_phrases_body">Ștergeți %1$d perechi și triplete de cuvinte învățate din toate limbile? Sugestiile contextuale vor reînvăța din tastarea dvs.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">Ștergeți %1$d pereche sau triplet de cuvinte învățat din toate limbile? Sugestiile contextuale vor reînvăța din tastarea dvs.</item><item quantity="few">Ștergeți %1$d perechi și triplete de cuvinte învățate din toate limbile? Sugestiile contextuale vor reînvăța din tastarea dvs.</item><item quantity="other">Ștergeți %1$d de perechi și triplete de cuvinte învățate din toate limbile? Sugestiile contextuale vor reînvăța din tastarea dvs.</item></plurals>
     <string name="learning_data_forget_words_title">Uitați utilizarea cuvintelor?</string>
-    <string name="learning_data_forget_words_body">Ștergeți %1$d cuvinte învățate? Amplificarea personalizată va reînvăța din tastarea dvs.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">Ștergeți %1$d cuvânt învățat? Amplificarea personalizată va reînvăța din tastarea dvs.</item><item quantity="few">Ștergeți %1$d cuvinte învățate? Amplificarea personalizată va reînvăța din tastarea dvs.</item><item quantity="other">Ștergeți %1$d de cuvinte învățate? Amplificarea personalizată va reînvăța din tastarea dvs.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Expresii învățate</string>
     <string name="learning_data_phrases_dialog_empty">Nicio expresie învățată.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -734,9 +734,9 @@
     <string name="gif_importing">Se importă…</string>
     <string name="gif_import_pack">Importă pachet din ZIP</string>
     <string name="gif_installed_packs">Pachete instalate</string>
-    <string name="gif_pack_stats">%1$d GIF-uri | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">%1$d GIF | %2$s</item><item quantity="few">%1$d GIF-uri | %2$s</item><item quantity="other">%1$d de GIF-uri | %2$s</item></plurals>
     <string name="gif_total_storage">Total: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d coloane</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">%1$d coloană</item><item quantity="few">%1$d coloane</item><item quantity="other">%1$d de coloane</item></plurals>
     <string name="gif_remove_all">Elimină toate datele GIF</string>
     <string name="gif_remove_all_title">Eliminați toate datele GIF?</string>
     <string name="gif_remove_all_body">Aceasta va șterge toate pachetele GIF importate, miniaturile și baza de date. Nu se poate anula.</string>
@@ -763,13 +763,13 @@
     <string name="multilang_packs_header">Pachete de limbă</string>
     <string name="multilang_packs_desc">Importați dicționare de limbă suplimentare din fișiere ZIP. Descărcați pachetele extern și importați-le aici (nu este nevoie de permisiune de internet).</string>
     <string name="multilang_browse_packs">Răsfoiește pachetele disponibile ↗</string>
-    <string name="multilang_installed_count">Instalate: %1$d pachet(e) de limbă</string>
+    <plurals name="multilang_installed_count"><item quantity="one">Instalat: %1$d pachet de limbă</item><item quantity="few">Instalate: %1$d pachete de limbă</item><item quantity="other">Instalate: %1$d de pachete de limbă</item></plurals>
     <string name="multilang_import_pack">Importă pachet</string>
     <string name="multilang_manage">Gestionează</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Pachete de limbă instalate</string>
     <string name="multilang_packs_dialog_empty">Niciun pachet de limbă instalat.\n\nFolosiți „Răsfoiește pachetele disponibile” pentru a descărca un ZIP, apoi „Importă pachet” pentru a-l adăuga.</string>
-    <string name="multilang_pack_stats">Cod: %1$s • %2$d cuvinte</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">Cod: %1$s • %2$d cuvânt</item><item quantity="few">Cod: %1$s • %2$d cuvinte</item><item quantity="other">Cod: %1$s • %2$d de cuvinte</item></plurals>
     <string name="input_manage_layouts">Gestionează aranjamentele tastaturii</string>
     <string name="input_configure_extra_keys">Configurează tastele suplimentare</string>
     <string name="input_advanced_prediction">Setări avansate de predicție</string>
@@ -825,13 +825,13 @@
     <string name="command_palette_timestamp_title">Marcaj temporal</string>
     <string name="command_palette_timestamp_desc">Inserează data/ora formatată (ex.: yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">%1$d comenzi disponibile</string>
-    <string name="command_palette_count_results">%1$d rezultate pentru \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="one">%1$d rezultat pentru \"%2$s\"</item><item quantity="few">%1$d rezultate pentru \"%2$s\"</item><item quantity="other">%1$d de rezultate pentru \"%2$s\"</item></plurals>
     <string name="command_palette_browse_all">Răsfoiește toate cele %1$d comenzi</string>
     <string name="command_palette_quick_commands">Comenzi rapide</string>
     <string name="command_palette_custom_text_intro">Introduceți textul care va fi inserat când glisați în această direcție.</string>
     <string name="command_palette_text_to_insert">Text de inserat</string>
     <string name="command_palette_text_placeholder">ex.: Salut, lume!</string>
-    <string name="command_palette_char_count">%1$d caractere</string>
+    <plurals name="command_palette_char_count"><item quantity="one">%1$d caracter</item><item quantity="few">%1$d caractere</item><item quantity="other">%1$d de caractere</item></plurals>
     <string name="command_palette_paste_desc">Lipește din clipboard</string>
     <string name="command_palette_quick_suggestions">Sugestii rapide:</string>
     <string name="command_palette_use_text">Folosește acest text</string>
@@ -888,11 +888,11 @@
     <string name="import_preview_diff_removed">−%1$d eliminate</string>
     <string name="import_preview_diff_changed">~%1$d modificate</string>
     <string name="import_preview_diff_unchanged">(%1$d neschimbate)</string>
-    <string name="import_preview_short_swipe_count">%1$d mapări de glisare scurtă în acest backup</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d mapare de glisare scurtă în acest backup</item><item quantity="few">%1$d mapări de glisare scurtă în acest backup</item><item quantity="other">%1$d de mapări de glisare scurtă în acest backup</item></plurals>
     <string name="import_preview_short_swipe_skip">Omite — nu importa</string>
     <string name="import_preview_short_swipe_merge">Îmbină — completează golurile, păstrează existentul (recomandat)</string>
     <string name="import_preview_short_swipe_replace">Înlocuiește — șterge existentul, instalează setul din fișier</string>
-    <string name="import_preview_short_swipe_warning">Aceasta va ÎNLOCUI toate personalizările dvs. de glisare scurtă cu cele %1$d mapări din fișier.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">Aceasta va ÎNLOCUI toate personalizările dvs. de glisare scurtă cu %1$d mapare din fișier.</item><item quantity="few">Aceasta va ÎNLOCUI toate personalizările dvs. de glisare scurtă cu cele %1$d mapări din fișier.</item><item quantity="other">Aceasta va ÎNLOCUI toate personalizările dvs. de glisare scurtă cu cele %1$d de mapări din fișier.</item></plurals>
     <string name="import_preview_selected_count">%1$d din %2$d selectate</string>
     <string name="import_preview_expand">Extinde</string>
     <string name="import_preview_hide">Ascunde</string>
@@ -905,7 +905,7 @@
     <string name="import_preview_learned_desc">Numărătorile expresiilor învățate se îmbină ca grup. Dacă acest backup include un vocabular personal, acesta înlocuiește lista curentă de cuvinte învățate.</string>
     <string name="import_preview_learned_bigrams">Perechi de cuvinte de îmbinat: %1$d</string>
     <string name="import_preview_learned_trigrams">Triplete de cuvinte de îmbinat: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Vocabularul personal va fi înlocuit cu %1$d cuvinte</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">Vocabularul personal va fi înlocuit cu %1$d cuvânt</item><item quantity="few">Vocabularul personal va fi înlocuit cu %1$d cuvinte</item><item quantity="other">Vocabularul personal va fi înlocuit cu %1$d de cuvinte</item></plurals>
     <string name="import_preview_modified">Modificate (%1$d)</string>
     <string name="import_preview_added">Adăugate (%1$d)</string>
     <string name="import_preview_short_swipe_header">Personalizări de glisare scurtă</string>

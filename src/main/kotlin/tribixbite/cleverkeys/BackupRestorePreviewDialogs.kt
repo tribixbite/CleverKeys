@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -559,7 +560,7 @@ private fun ShortSwipeModeRadio(
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
-            stringResource(R.string.import_preview_short_swipe_count, size),
+            pluralStringResource(R.plurals.import_preview_short_swipe_count, size, size),
             fontWeight = FontWeight.SemiBold,
         )
         ShortSwipeImportMode.entries.forEach { mode ->
@@ -587,7 +588,7 @@ private fun ShortSwipeModeRadio(
         // "Red warning text shown only when REPLACE is selected".
         if (selected == ShortSwipeImportMode.REPLACE) {
             Text(
-                text = stringResource(R.string.import_preview_short_swipe_warning, size),
+                text = pluralStringResource(R.plurals.import_preview_short_swipe_warning, size, size),
                 color = MaterialTheme.colorScheme.error,
                 fontSize = 11.sp,
                 modifier = Modifier.padding(start = 48.dp, top = 4.dp),
@@ -795,8 +796,9 @@ private fun LearnedDataPreviewCard(learned: LearnedDataImportPlan) {
             }
             if (learned.vocabularyPresent) {
                 Text(
-                    stringResource(
-                        R.string.import_preview_learned_vocabulary,
+                    pluralStringResource(
+                        R.plurals.import_preview_learned_vocabulary,
+                        learned.vocabularyWords,
                         learned.vocabularyWords,
                     ),
                     fontSize = 12.sp,

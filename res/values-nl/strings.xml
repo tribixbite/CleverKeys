@@ -543,7 +543,7 @@
     <string name="theme_color_high_confidence">Hoge betrouwbaarheid</string>
     <string name="theme_color_keyboard_background">Toetsenbordachtergrond</string>
     <string name="theme_color_keyboard_surface">Toetsenbordoppervlak</string>
-    <string name="short_swipe_mappings_summary">%1$d aangepaste toewijzingen • %2$d opdrachten beschikbaar</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d aangepaste toewijzing • %2$d opdrachten beschikbaar</item><item quantity="other">%1$d aangepaste toewijzingen • %2$d opdrachten beschikbaar</item></plurals>
     <string name="short_swipe_last_key">Laatste toets: %1$s</string>
     <string name="short_swipe_customize_key">Toets "%1$s" aanpassen</string>
     <string name="extra_keys_enabled_count">%1$d van %2$d extra toetsen ingeschakeld</string>
@@ -630,11 +630,11 @@
     <string name="learning_data_title">Leren &amp; gegevens</string>
     <string name="learning_data_privacy_note">Al het leren blijft op dit apparaat. Geleerde uitdrukkingspatronen en woordgebruik worden opgenomen in woordenboekexports (Back-up &amp; herstel).</string>
     <string name="learning_data_loading">Laden…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d paren</string>
-    <string name="learning_data_triples_suffix">, %1$d drietallen</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: %2$d paar</item><item quantity="other">%1$s: %2$d paren</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">, %1$d drietal</item><item quantity="other">, %1$d drietallen</item></plurals>
     <string name="learning_data_no_pairs">Nog geen geleerde woordparen</string>
     <string name="learning_data_no_words">Nog geen geleerde woorden</string>
-    <string name="learning_data_word_count">%1$d woorden</string>
+    <plurals name="learning_data_word_count"><item quantity="one">%1$d woord</item><item quantity="other">%1$d woorden</item></plurals>
     <string name="learning_data_most_used">meest gebruikt: “%1$s” (%2$d×)</string>
     <string name="learning_data_phrase_patterns">Uitdrukkingspatronen — %1$s</string>
     <string name="learning_data_word_usage">Woordgebruik — %1$s</string>
@@ -643,9 +643,9 @@
     <string name="learning_data_forget_phrases">Uitdrukkingen vergeten</string>
     <string name="learning_data_forget_words">Woorden vergeten</string>
     <string name="learning_data_forget_phrases_title">Uitdrukkingspatronen vergeten?</string>
-    <string name="learning_data_forget_phrases_body">%1$d geleerde woordparen en -drietallen in alle talen verwijderen? Contextbewuste suggesties leren opnieuw van je typen.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">%1$d geleerd woordpaar of -drietal in alle talen verwijderen? Contextbewuste suggesties leren opnieuw van je typen.</item><item quantity="other">%1$d geleerde woordparen en -drietallen in alle talen verwijderen? Contextbewuste suggesties leren opnieuw van je typen.</item></plurals>
     <string name="learning_data_forget_words_title">Woordgebruik vergeten?</string>
-    <string name="learning_data_forget_words_body">%1$d geleerde woorden verwijderen? Gepersonaliseerde versterking leert opnieuw van je typen.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">%1$d geleerd woord verwijderen? Gepersonaliseerde versterking leert opnieuw van je typen.</item><item quantity="other">%1$d geleerde woorden verwijderen? Gepersonaliseerde versterking leert opnieuw van je typen.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Geleerde uitdrukkingen</string>
     <string name="learning_data_phrases_dialog_empty">Geen geleerde uitdrukkingen.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -711,9 +711,9 @@
     <string name="gif_importing">Importeren...</string>
     <string name="gif_import_pack">Pakket importeren uit ZIP</string>
     <string name="gif_installed_packs">Geïnstalleerde pakketten</string>
-    <string name="gif_pack_stats">%1$d GIF\'s | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">%1$d GIF | %2$s</item><item quantity="other">%1$d GIF\'s | %2$s</item></plurals>
     <string name="gif_total_storage">Totaal: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d kolommen</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">%1$d kolom</item><item quantity="other">%1$d kolommen</item></plurals>
     <string name="gif_remove_all">Alle GIF-gegevens verwijderen</string>
     <string name="gif_remove_all_title">Alle GIF-gegevens verwijderen?</string>
     <string name="gif_remove_all_body">Hiermee worden alle geïmporteerde GIF-pakketten, miniaturen en de database verwijderd. Dit kan niet ongedaan worden gemaakt.</string>
@@ -740,13 +740,13 @@
     <string name="multilang_packs_header">Taalpakketten</string>
     <string name="multilang_packs_desc">Importeer extra taalwoordenboeken uit ZIP-bestanden. Download pakketten extern en importeer ze hier (geen internettoestemming nodig).</string>
     <string name="multilang_browse_packs">Beschikbare pakketten bekijken ↗</string>
-    <string name="multilang_installed_count">Geïnstalleerd: %1$d taalpakket(ten)</string>
+    <plurals name="multilang_installed_count"><item quantity="one">Geïnstalleerd: %1$d taalpakket</item><item quantity="other">Geïnstalleerd: %1$d taalpakketten</item></plurals>
     <string name="multilang_import_pack">Pakket importeren</string>
     <string name="multilang_manage">Beheren</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Geïnstalleerde taalpakketten</string>
     <string name="multilang_packs_dialog_empty">Geen taalpakketten geïnstalleerd.\n\nGebruik \'Beschikbare pakketten bekijken\' om een ZIP te downloaden en daarna \'Pakket importeren\' om het toe te voegen.</string>
-    <string name="multilang_pack_stats">Code: %1$s • %2$d woorden</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">Code: %1$s • %2$d woord</item><item quantity="other">Code: %1$s • %2$d woorden</item></plurals>
     <string name="input_manage_layouts">Toetsenbordlay-outs beheren</string>
     <string name="input_configure_extra_keys">Extra toetsen configureren</string>
     <string name="input_advanced_prediction">Geavanceerde voorspellingsinstellingen</string>
@@ -802,13 +802,13 @@
     <string name="command_palette_timestamp_title">Tijdstempel</string>
     <string name="command_palette_timestamp_desc">Opgemaakte datum/tijd invoegen (bijv. yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">%1$d opdrachten beschikbaar</string>
-    <string name="command_palette_count_results">%1$d resultaten voor \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="one">%1$d resultaat voor \"%2$s\"</item><item quantity="other">%1$d resultaten voor \"%2$s\"</item></plurals>
     <string name="command_palette_browse_all">Alle %1$d opdrachten bekijken</string>
     <string name="command_palette_quick_commands">Snelle opdrachten</string>
     <string name="command_palette_custom_text_intro">Voer de tekst in die wordt ingevoegd wanneer je in deze richting veegt.</string>
     <string name="command_palette_text_to_insert">In te voegen tekst</string>
     <string name="command_palette_text_placeholder">bijv. Hallo, wereld!</string>
-    <string name="command_palette_char_count">%1$d tekens</string>
+    <plurals name="command_palette_char_count"><item quantity="one">%1$d teken</item><item quantity="other">%1$d tekens</item></plurals>
     <string name="command_palette_paste_desc">Plakken vanaf klembord</string>
     <string name="command_palette_quick_suggestions">Snelle suggesties:</string>
     <string name="command_palette_use_text">Deze tekst gebruiken</string>
@@ -860,11 +860,11 @@
     <string name="import_preview_diff_removed">−%1$d verwijderd</string>
     <string name="import_preview_diff_changed">~%1$d gewijzigd</string>
     <string name="import_preview_diff_unchanged">(%1$d ongewijzigd)</string>
-    <string name="import_preview_short_swipe_count">%1$d korte-veegtoewijzingen in deze back-up</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d korte-veegtoewijzing in deze back-up</item><item quantity="other">%1$d korte-veegtoewijzingen in deze back-up</item></plurals>
     <string name="import_preview_short_swipe_skip">Overslaan — niet importeren</string>
     <string name="import_preview_short_swipe_merge">Samenvoegen — hiaten vullen, bestaande behouden (aanbevolen)</string>
     <string name="import_preview_short_swipe_replace">Vervangen — bestaande wissen, set uit het bestand installeren</string>
-    <string name="import_preview_short_swipe_warning">Dit VERVANGT al je bestaande korte-veegaanpassingen door de %1$d toewijzingen uit het bestand.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">Dit VERVANGT al je bestaande korte-veegaanpassingen door de %1$d toewijzing uit het bestand.</item><item quantity="other">Dit VERVANGT al je bestaande korte-veegaanpassingen door de %1$d toewijzingen uit het bestand.</item></plurals>
     <string name="import_preview_selected_count">%1$d van %2$d geselecteerd</string>
     <string name="import_preview_expand">Uitvouwen</string>
     <string name="import_preview_hide">Verbergen</string>
@@ -877,7 +877,7 @@
     <string name="import_preview_learned_desc">Geleerde uitdrukkingsaantallen worden als groep samengevoegd. Bevat deze back-up een persoonlijke woordenschat, dan vervangt die de huidige lijst met geleerde woorden.</string>
     <string name="import_preview_learned_bigrams">Samen te voegen woordparen: %1$d</string>
     <string name="import_preview_learned_trigrams">Samen te voegen woorddrietallen: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Persoonlijke woordenschat wordt vervangen door %1$d woorden</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">Persoonlijke woordenschat wordt vervangen door %1$d woord</item><item quantity="other">Persoonlijke woordenschat wordt vervangen door %1$d woorden</item></plurals>
     <string name="import_preview_modified">Gewijzigd (%1$d)</string>
     <string name="import_preview_added">Toegevoegd (%1$d)</string>
     <string name="import_preview_short_swipe_header">Korte-veegaanpassingen</string>

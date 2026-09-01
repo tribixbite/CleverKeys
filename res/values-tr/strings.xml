@@ -551,7 +551,7 @@
     <string name="theme_color_high_confidence">Yüksek Güven</string>
     <string name="theme_color_keyboard_background">Klavye Arka Planı</string>
     <string name="theme_color_keyboard_surface">Klavye Yüzeyi</string>
-    <string name="short_swipe_mappings_summary">%1$d özel eşleme • %2$d komut mevcut</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d özel eşleme • %2$d komut mevcut</item><item quantity="other">%1$d özel eşleme • %2$d komut mevcut</item></plurals>
     <string name="short_swipe_last_key">Son tuş: %1$s</string>
     <string name="short_swipe_customize_key">\"%1$s\" Tuşunu Özelleştir</string>
     <string name="extra_keys_enabled_count">%2$d ek tuştan %1$d tanesi etkin</string>
@@ -638,11 +638,11 @@
     <string name="learning_data_title">Öğrenme ve Veri</string>
     <string name="learning_data_privacy_note">Tüm öğrenme bu cihazda kalır. Öğrenilen ifade kalıpları ve kelime kullanımı, sözlük dışa aktarmalarına dahil edilir (Yedekle &amp; Geri Yükle).</string>
     <string name="learning_data_loading">Yükleniyor…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d çift</string>
-    <string name="learning_data_triples_suffix">, %1$d üçlü</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: %2$d çift</item><item quantity="other">%1$s: %2$d çift</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">, %1$d üçlü</item><item quantity="other">, %1$d üçlü</item></plurals>
     <string name="learning_data_no_pairs">Henüz öğrenilmiş kelime çifti yok</string>
     <string name="learning_data_no_words">Henüz öğrenilmiş kelime yok</string>
-    <string name="learning_data_word_count">%1$d kelime</string>
+    <plurals name="learning_data_word_count"><item quantity="one">%1$d kelime</item><item quantity="other">%1$d kelime</item></plurals>
     <string name="learning_data_most_used">en çok kullanılan: \"%1$s\" (%2$d×)</string>
     <string name="learning_data_phrase_patterns">İfade kalıpları — %1$s</string>
     <string name="learning_data_word_usage">Kelime kullanımı — %1$s</string>
@@ -651,9 +651,9 @@
     <string name="learning_data_forget_phrases">İfadeleri unut</string>
     <string name="learning_data_forget_words">Kelimeleri unut</string>
     <string name="learning_data_forget_phrases_title">İfade kalıpları unutulsun mu?</string>
-    <string name="learning_data_forget_phrases_body">Tüm dillerdeki %1$d öğrenilmiş kelime çifti ve üçlüsü silinsin mi? Bağlama duyarlı öneriler yazdıklarınızdan yeniden öğrenecek.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">Tüm dillerdeki %1$d öğrenilmiş kelime çifti ve üçlüsü silinsin mi? Bağlama duyarlı öneriler yazdıklarınızdan yeniden öğrenecek.</item><item quantity="other">Tüm dillerdeki %1$d öğrenilmiş kelime çifti ve üçlüsü silinsin mi? Bağlama duyarlı öneriler yazdıklarınızdan yeniden öğrenecek.</item></plurals>
     <string name="learning_data_forget_words_title">Kelime kullanımı unutulsun mu?</string>
-    <string name="learning_data_forget_words_body">%1$d öğrenilmiş kelime silinsin mi? Kişiselleştirilmiş artırım yazdıklarınızdan yeniden öğrenecek.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">%1$d öğrenilmiş kelime silinsin mi? Kişiselleştirilmiş artırım yazdıklarınızdan yeniden öğrenecek.</item><item quantity="other">%1$d öğrenilmiş kelime silinsin mi? Kişiselleştirilmiş artırım yazdıklarınızdan yeniden öğrenecek.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Öğrenilen ifadeler</string>
     <string name="learning_data_phrases_dialog_empty">Öğrenilmiş ifade yok.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -719,9 +719,9 @@
     <string name="gif_importing">İçe aktarılıyor…</string>
     <string name="gif_import_pack">ZIP\'ten Paket İçe Aktar</string>
     <string name="gif_installed_packs">Yüklü Paketler</string>
-    <string name="gif_pack_stats">%1$d GIF | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">%1$d GIF | %2$s</item><item quantity="other">%1$d GIF | %2$s</item></plurals>
     <string name="gif_total_storage">Toplam: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d sütun</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">%1$d sütun</item><item quantity="other">%1$d sütun</item></plurals>
     <string name="gif_remove_all">Tüm GIF Verisini Kaldır</string>
     <string name="gif_remove_all_title">Tüm GIF Verisi Kaldırılsın mı?</string>
     <string name="gif_remove_all_body">Bu, içe aktarılan tüm GIF paketlerini, küçük resimleri ve veritabanını siler. Bu işlem geri alınamaz.</string>
@@ -748,13 +748,13 @@
     <string name="multilang_packs_header">Dil Paketleri</string>
     <string name="multilang_packs_desc">ZIP dosyalarından ek dil sözlükleri içe aktarın. Paketleri dışarıdan indirin ve burada içe aktarın (internet izni gerekmez).</string>
     <string name="multilang_browse_packs">Mevcut paketlere göz at ↗</string>
-    <string name="multilang_installed_count">Yüklü: %1$d dil paketi</string>
+    <plurals name="multilang_installed_count"><item quantity="one">Yüklü: %1$d dil paketi</item><item quantity="other">Yüklü: %1$d dil paketi</item></plurals>
     <string name="multilang_import_pack">Paket İçe Aktar</string>
     <string name="multilang_manage">Yönet</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Yüklü Dil Paketleri</string>
     <string name="multilang_packs_dialog_empty">Yüklü dil paketi yok.\n\nBir ZIP indirmek için \'Mevcut paketlere göz at\', ardından eklemek için \'Paket İçe Aktar\' seçeneğini kullanın.</string>
-    <string name="multilang_pack_stats">Kod: %1$s • %2$d kelime</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">Kod: %1$s • %2$d kelime</item><item quantity="other">Kod: %1$s • %2$d kelime</item></plurals>
     <string name="input_manage_layouts">Klavye Düzenlerini Yönet</string>
     <string name="input_configure_extra_keys">Ek Tuşları Yapılandır</string>
     <string name="input_advanced_prediction">Gelişmiş Tahmin Ayarları</string>
@@ -810,13 +810,13 @@
     <string name="command_palette_timestamp_title">Zaman Damgası</string>
     <string name="command_palette_timestamp_desc">Biçimlendirilmiş tarih/saat ekle (örn. yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">%1$d komut mevcut</string>
-    <string name="command_palette_count_results">\"%2$s\" için %1$d sonuç</string>
+    <plurals name="command_palette_count_results"><item quantity="one">\"%2$s\" için %1$d sonuç</item><item quantity="other">\"%2$s\" için %1$d sonuç</item></plurals>
     <string name="command_palette_browse_all">Tüm %1$d Komuta Göz At</string>
     <string name="command_palette_quick_commands">Hızlı Komutlar</string>
     <string name="command_palette_custom_text_intro">Bu yönde kaydırdığınızda eklenecek metni girin.</string>
     <string name="command_palette_text_to_insert">Eklenecek metin</string>
     <string name="command_palette_text_placeholder">örn. Merhaba dünya!</string>
-    <string name="command_palette_char_count">%1$d karakter</string>
+    <plurals name="command_palette_char_count"><item quantity="one">%1$d karakter</item><item quantity="other">%1$d karakter</item></plurals>
     <string name="command_palette_paste_desc">Panodan yapıştır</string>
     <string name="command_palette_quick_suggestions">Hızlı öneriler:</string>
     <string name="command_palette_use_text">Bu Metni Kullan</string>
@@ -872,11 +872,11 @@
     <string name="import_preview_diff_removed">−%1$d kaldırıldı</string>
     <string name="import_preview_diff_changed">~%1$d değişti</string>
     <string name="import_preview_diff_unchanged">(%1$d değişmedi)</string>
-    <string name="import_preview_short_swipe_count">Bu yedekte %1$d kısa kaydırma eşlemesi var</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">Bu yedekte %1$d kısa kaydırma eşlemesi var</item><item quantity="other">Bu yedekte %1$d kısa kaydırma eşlemesi var</item></plurals>
     <string name="import_preview_short_swipe_skip">Atla — içe aktarma</string>
     <string name="import_preview_short_swipe_merge">Birleştir — boşlukları doldur, mevcut olanları koru (önerilen)</string>
     <string name="import_preview_short_swipe_replace">Değiştir — mevcut olanları sil, dosyadaki kümeyi yükle</string>
-    <string name="import_preview_short_swipe_warning">Bu, mevcut tüm kısa kaydırma özelleştirmelerinizi dosyadaki %1$d eşlemeyle DEĞİŞTİRİR.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">Bu, mevcut tüm kısa kaydırma özelleştirmelerinizi dosyadaki %1$d eşlemeyle DEĞİŞTİRİR.</item><item quantity="other">Bu, mevcut tüm kısa kaydırma özelleştirmelerinizi dosyadaki %1$d eşlemeyle DEĞİŞTİRİR.</item></plurals>
     <string name="import_preview_selected_count">%2$d öğeden %1$d tanesi seçili</string>
     <string name="import_preview_expand">Genişlet</string>
     <string name="import_preview_hide">Gizle</string>
@@ -889,7 +889,7 @@
     <string name="import_preview_learned_desc">Öğrenilen ifade sayaçları grup olarak birleştirilir. Bu yedek kişisel bir kelime dağarcığı içeriyorsa, mevcut öğrenilmiş kelime listesinin yerini alır.</string>
     <string name="import_preview_learned_bigrams">Birleştirilecek kelime çifti: %1$d</string>
     <string name="import_preview_learned_trigrams">Birleştirilecek kelime üçlüsü: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Kişisel kelime dağarcığı %1$d kelimeyle değiştirilecek</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">Kişisel kelime dağarcığı %1$d kelimeyle değiştirilecek</item><item quantity="other">Kişisel kelime dağarcığı %1$d kelimeyle değiştirilecek</item></plurals>
     <string name="import_preview_modified">Değiştirilen (%1$d)</string>
     <string name="import_preview_added">Eklenen (%1$d)</string>
     <string name="import_preview_short_swipe_header">Kısa kaydırma özelleştirmeleri</string>

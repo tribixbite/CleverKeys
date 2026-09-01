@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.R
@@ -139,8 +140,9 @@ internal fun SettingsActivity.GifPanelSection() {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(pack.name, fontSize = 14.sp)
                                     Text(
-                                        stringResource(
-                                            R.string.gif_pack_stats,
+                                        pluralStringResource(
+                                            R.plurals.gif_pack_stats,
+                                            pack.gifCount,
                                             pack.gifCount,
                                             tribixbite.cleverkeys.gif.GifPackManager.formatBytes(pack.sizeBytes)
                                         ),
@@ -179,7 +181,9 @@ internal fun SettingsActivity.GifPanelSection() {
                             gifThumbnailColumns = it.toInt()
                             saveSetting("gif_thumbnail_columns", gifThumbnailColumns)
                         },
-                        displayValue = stringResource(R.string.gif_grid_columns_display, gifThumbnailColumns)
+                        displayValue = pluralStringResource(
+                            R.plurals.gif_grid_columns_display, gifThumbnailColumns, gifThumbnailColumns
+                        )
                     )
 
                     // Remove all GIF data (destructive, with confirmation)

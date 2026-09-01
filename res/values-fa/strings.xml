@@ -578,7 +578,7 @@
     <string name="theme_color_high_confidence">اطمینان بالا</string>
     <string name="theme_color_keyboard_background">پس‌زمینه صفحه‌کلید</string>
     <string name="theme_color_keyboard_surface">سطح صفحه‌کلید</string>
-    <string name="short_swipe_mappings_summary">%1$d نگاشت سفارشی • %2$d دستور در دسترس</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d نگاشت سفارشی • %2$d دستور در دسترس</item><item quantity="other">%1$d نگاشت سفارشی • %2$d دستور در دسترس</item></plurals>
     <string name="short_swipe_last_key">آخرین کلید: %1$s</string>
     <string name="short_swipe_customize_key">سفارشی‌سازی کلید "%1$s"</string>
     <string name="extra_keys_enabled_count">%1$d از %2$d کلید اضافی فعال</string>
@@ -665,11 +665,11 @@
     <string name="learning_data_title">یادگیری و داده‌ها</string>
     <string name="learning_data_privacy_note">همهٔ یادگیری روی همین دستگاه می‌ماند. الگوهای عبارت آموخته‌شده و کاربرد واژه‌ها در برون‌بری واژه‌نامه (پشتیبان‌گیری و بازیابی) گنجانده می‌شوند.</string>
     <string name="learning_data_loading">در حال بارگذاری…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d جفت</string>
-    <string name="learning_data_triples_suffix">، %1$d سه‌تایی</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: %2$d جفت</item><item quantity="other">%1$s: %2$d جفت</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">، %1$d سه‌تایی</item><item quantity="other">، %1$d سه‌تایی</item></plurals>
     <string name="learning_data_no_pairs">هنوز جفت‌واژهٔ آموخته‌شده‌ای نیست</string>
     <string name="learning_data_no_words">هنوز واژهٔ آموخته‌شده‌ای نیست</string>
-    <string name="learning_data_word_count">%1$d واژه</string>
+    <plurals name="learning_data_word_count"><item quantity="one">%1$d واژه</item><item quantity="other">%1$d واژه</item></plurals>
     <string name="learning_data_most_used">پرکاربردترین: «%1$s» (%2$d×)</string>
     <string name="learning_data_phrase_patterns">الگوهای عبارت — %1$s</string>
     <string name="learning_data_word_usage">کاربرد واژه‌ها — %1$s</string>
@@ -678,9 +678,9 @@
     <string name="learning_data_forget_phrases">فراموشی عبارت‌ها</string>
     <string name="learning_data_forget_words">فراموشی واژه‌ها</string>
     <string name="learning_data_forget_phrases_title">الگوهای عبارت فراموش شوند؟</string>
-    <string name="learning_data_forget_phrases_body">%1$d جفت و سه‌تایی واژهٔ آموخته‌شده در همهٔ زبان‌ها حذف شود؟ پیشنهادهای آگاه به زمینه از تایپ شما دوباره یاد می‌گیرند.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">%1$d جفت و سه‌تایی واژهٔ آموخته‌شده در همهٔ زبان‌ها حذف شود؟ پیشنهادهای آگاه به زمینه از تایپ شما دوباره یاد می‌گیرند.</item><item quantity="other">%1$d جفت و سه‌تایی واژهٔ آموخته‌شده در همهٔ زبان‌ها حذف شود؟ پیشنهادهای آگاه به زمینه از تایپ شما دوباره یاد می‌گیرند.</item></plurals>
     <string name="learning_data_forget_words_title">کاربرد واژه‌ها فراموش شود؟</string>
-    <string name="learning_data_forget_words_body">%1$d واژهٔ آموخته‌شده حذف شود؟ تقویت شخصی‌سازی‌شده از تایپ شما دوباره یاد می‌گیرد.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">%1$d واژهٔ آموخته‌شده حذف شود؟ تقویت شخصی‌سازی‌شده از تایپ شما دوباره یاد می‌گیرد.</item><item quantity="other">%1$d واژهٔ آموخته‌شده حذف شود؟ تقویت شخصی‌سازی‌شده از تایپ شما دوباره یاد می‌گیرد.</item></plurals>
     <string name="learning_data_phrases_dialog_title">عبارت‌های آموخته‌شده</string>
     <string name="learning_data_phrases_dialog_empty">عبارت آموخته‌شده‌ای نیست.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -746,9 +746,9 @@
     <string name="gif_importing">در حال وارد کردن...</string>
     <string name="gif_import_pack">وارد کردن بسته از ZIP</string>
     <string name="gif_installed_packs">بسته‌های نصب‌شده</string>
-    <string name="gif_pack_stats">%1$d گیف | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">%1$d گیف | %2$s</item><item quantity="other">%1$d گیف | %2$s</item></plurals>
     <string name="gif_total_storage">مجموع: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d ستون</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">%1$d ستون</item><item quantity="other">%1$d ستون</item></plurals>
     <string name="gif_remove_all">حذف همهٔ داده‌های گیف</string>
     <string name="gif_remove_all_title">همهٔ داده‌های گیف حذف شود؟</string>
     <string name="gif_remove_all_body">این کار همهٔ بسته‌های گیف واردشده، بندانگشتی‌ها و پایگاه داده را حذف می‌کند. قابل بازگشت نیست.</string>
@@ -775,13 +775,13 @@
     <string name="multilang_packs_header">بسته‌های زبان</string>
     <string name="multilang_packs_desc">واژه‌نامه‌های زبان بیشتری را از فایل‌های ZIP وارد کنید. بسته‌ها را جای دیگری دانلود کنید و اینجا وارد کنید (نیازی به مجوز اینترنت نیست).</string>
     <string name="multilang_browse_packs">مرور بسته‌های موجود ↗</string>
-    <string name="multilang_installed_count">نصب‌شده: %1$d بستهٔ زبان</string>
+    <plurals name="multilang_installed_count"><item quantity="one">نصب‌شده: %1$d بستهٔ زبان</item><item quantity="other">نصب‌شده: %1$d بستهٔ زبان</item></plurals>
     <string name="multilang_import_pack">وارد کردن بسته</string>
     <string name="multilang_manage">مدیریت</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">بسته‌های زبان نصب‌شده</string>
     <string name="multilang_packs_dialog_empty">هیچ بستهٔ زبانی نصب نشده است.\n\nبا «مرور بسته‌های موجود» یک ZIP دانلود کنید، سپس با «وارد کردن بسته» آن را بیفزایید.</string>
-    <string name="multilang_pack_stats">کد: %1$s • %2$d واژه</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">کد: %1$s • %2$d واژه</item><item quantity="other">کد: %1$s • %2$d واژه</item></plurals>
     <string name="input_manage_layouts">مدیریت چیدمان‌های صفحه‌کلید</string>
     <string name="input_configure_extra_keys">پیکربندی کلیدهای اضافی</string>
     <string name="input_advanced_prediction">تنظیمات پیشرفتهٔ پیش‌بینی</string>
@@ -837,13 +837,13 @@
     <string name="command_palette_timestamp_title">برچسب زمانی</string>
     <string name="command_palette_timestamp_desc">درج تاریخ/زمان قالب‌بندی‌شده (مثلاً yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">%1$d فرمان در دسترس</string>
-    <string name="command_palette_count_results">%1$d نتیجه برای \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="one">%1$d نتیجه برای \"%2$s\"</item><item quantity="other">%1$d نتیجه برای \"%2$s\"</item></plurals>
     <string name="command_palette_browse_all">مرور همهٔ %1$d فرمان</string>
     <string name="command_palette_quick_commands">فرمان‌های سریع</string>
     <string name="command_palette_custom_text_intro">متنی را وارد کنید که هنگام کشیدن در این جهت درج می‌شود.</string>
     <string name="command_palette_text_to_insert">متن برای درج</string>
     <string name="command_palette_text_placeholder">مثلاً سلام دنیا!</string>
-    <string name="command_palette_char_count">%1$d نویسه</string>
+    <plurals name="command_palette_char_count"><item quantity="one">%1$d نویسه</item><item quantity="other">%1$d نویسه</item></plurals>
     <string name="command_palette_paste_desc">چسباندن از بریده‌دان</string>
     <string name="command_palette_quick_suggestions">پیشنهادهای سریع:</string>
     <string name="command_palette_use_text">استفاده از این متن</string>
@@ -899,11 +899,11 @@
     <string name="import_preview_diff_removed">−%1$d حذف‌شده</string>
     <string name="import_preview_diff_changed">~%1$d تغییریافته</string>
     <string name="import_preview_diff_unchanged">(%1$d بدون تغییر)</string>
-    <string name="import_preview_short_swipe_count">%1$d نگاشت کشیدن کوتاه در این پشتیبان</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d نگاشت کشیدن کوتاه در این پشتیبان</item><item quantity="other">%1$d نگاشت کشیدن کوتاه در این پشتیبان</item></plurals>
     <string name="import_preview_short_swipe_skip">رد شدن — وارد نکن</string>
     <string name="import_preview_short_swipe_merge">ادغام — پر کردن جاهای خالی، حفظ موجود (توصیه‌شده)</string>
     <string name="import_preview_short_swipe_replace">جایگزینی — پاک کردن موجود، نصب مجموعهٔ فایل</string>
-    <string name="import_preview_short_swipe_warning">این کار همهٔ سفارشی‌سازی‌های کشیدن کوتاه موجود شما را با %1$d نگاشت فایل جایگزین می‌کند.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">این کار همهٔ سفارشی‌سازی‌های کشیدن کوتاه موجود شما را با %1$d نگاشت فایل جایگزین می‌کند.</item><item quantity="other">این کار همهٔ سفارشی‌سازی‌های کشیدن کوتاه موجود شما را با %1$d نگاشت فایل جایگزین می‌کند.</item></plurals>
     <string name="import_preview_selected_count">%1$d از %2$d انتخاب شده</string>
     <string name="import_preview_expand">گسترش</string>
     <string name="import_preview_hide">پنهان کردن</string>
@@ -916,7 +916,7 @@
     <string name="import_preview_learned_desc">شمار عبارت‌های آموخته‌شده به‌صورت گروهی ادغام می‌شود. اگر این پشتیبان واژگان شخصی داشته باشد، جایگزین فهرست کنونی واژه‌های آموخته‌شده می‌شود.</string>
     <string name="import_preview_learned_bigrams">جفت‌واژه‌ها برای ادغام: %1$d</string>
     <string name="import_preview_learned_trigrams">سه‌تایی‌واژه‌ها برای ادغام: %1$d</string>
-    <string name="import_preview_learned_vocabulary">واژگان شخصی با %1$d واژه جایگزین می‌شود</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">واژگان شخصی با %1$d واژه جایگزین می‌شود</item><item quantity="other">واژگان شخصی با %1$d واژه جایگزین می‌شود</item></plurals>
     <string name="import_preview_modified">تغییریافته (%1$d)</string>
     <string name="import_preview_added">افزوده‌شده (%1$d)</string>
     <string name="import_preview_short_swipe_header">سفارشی‌سازی‌های کشیدن کوتاه</string>

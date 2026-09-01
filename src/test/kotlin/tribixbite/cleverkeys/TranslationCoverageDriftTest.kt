@@ -24,11 +24,35 @@ import org.w3c.dom.Element
  */
 class TranslationCoverageDriftTest {
 
+    /**
+     * ARC-103: the `%1$d … (s)`-style count strings the wave-D pl/uk lanes flagged. A single
+     * form cannot render correctly under Slavic/Baltic plural rules, so these were converted
+     * from `<string>` to `<plurals>`; the consumers format them via
+     * `getQuantityString`/`pluralStringResource`.
+     */
+    private val convertedCountPlurals = setOf(
+        "multilang_installed_count",
+        "multilang_pack_stats",
+        "learning_data_pairs_for_language",
+        "learning_data_triples_suffix",
+        "learning_data_word_count",
+        "learning_data_forget_phrases_body",
+        "learning_data_forget_words_body",
+        "gif_pack_stats",
+        "gif_grid_columns_display",
+        "short_swipe_mappings_summary",
+        "command_palette_count_results",
+        "command_palette_char_count",
+        "import_preview_short_swipe_count",
+        "import_preview_short_swipe_warning",
+        "import_preview_learned_vocabulary",
+    )
+
     /** Names that MUST be `<plurals>` everywhere — the code calls `getQuantityString`. */
     private val requiredPlurals = setOf(
         "dict_word_too_long_for_swipe_msg",
         "collision_warning_body",
-    )
+    ) + convertedCountPlurals
 
     private val required = setOf(
         "collision_warning_title", "collision_warning_body", "collision_warning_examples",
@@ -41,7 +65,7 @@ class TranslationCoverageDriftTest {
         "backup_protection_state_keystore", "backup_protection_state_legacy",
         "backup_protection_state_not_set", "backup_protection_status",
         "backup_passphrase_storage_unavailable",
-    )
+    ) + convertedCountPlurals
 
     /**
      * How many of the 21 locales must carry a value textually DIFFERENT from the default
@@ -114,6 +138,77 @@ class TranslationCoverageDriftTest {
                         "(a <${entry.element}> here breaks the runtime lookup)",
                     expected, entry.element
                 )
+            }
+        }
+    }
+
+    /** Parses one `<plurals>` element into its quantity→text item map. */
+    private fun parsePluralItems(file: File, name: String): Map<String, String> {
+        val factory = DocumentBuilderFactory.newInstance().apply {
+            isNamespaceAware = false
+            isValidating = false
+            setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+        }
+        val doc = factory.newDocumentBuilder().parse(file)
+        val children = doc.documentElement.childNodes
+        for (i in 0 until children.length) {
+            val node = children.item(i) as? Element ?: continue
+            if (node.tagName != "plurals" || node.getAttribute("name") != name) continue
+            val items = LinkedHashMap<String, String>()
+            val itemNodes = node.childNodes
+            for (j in 0 until itemNodes.length) {
+                val item = itemNodes.item(j) as? Element ?: continue
+                if (item.tagName != "item") continue
+                items[item.getAttribute("quantity")] = item.textContent.orEmpty().trim()
+            }
+            return items
+        }
+        throw AssertionError("${file.path} has no <plurals name=\"$name\">")
+    }
+
+    /**
+     * ARC-103 conversion guard: the default (English) locale must actually INFLECT each
+     * converted count string — `getQuantityString(…, 1, 1)` and `getQuantityString(…, 5, 5)`
+     * resolve to the `one` and `other` items, so those two items differing is exactly
+     * "n=1 renders differently from n=5". A conversion that pasted the plural text into
+     * both items would silently reintroduce the "(s)" hack.
+     */
+    @Test fun convertedCountPluralsInflectInEnglish() {
+        val en = File("res/values/strings.xml")
+        for (name in convertedCountPlurals) {
+            val items = parsePluralItems(en, name)
+            val one = items["one"]
+                ?: throw AssertionError("res/values/strings.xml: $name has no quantity=\"one\" item")
+            val other = items["other"]
+                ?: throw AssertionError("res/values/strings.xml: $name has no quantity=\"other\" item")
+            assertTrue(
+                "res/values/strings.xml: $name must inflect — its one/other items are identical",
+                one != other
+            )
+        }
+    }
+
+    /**
+     * Every `<item>` of every converted plural, in every locale, must carry the same
+     * multiset of positional format specifiers as the default locale's `other` item —
+     * a dropped `%1$d` in one quantity bucket is a runtime `MissingFormatArgumentException`
+     * (or silently wrong output) only for speakers of that language at that count.
+     */
+    @Test fun convertedCountPluralItemsKeepPlaceholdersPerQuantityItem() {
+        val spec = Regex("%[0-9]+\\$[sd]")
+        val expected = convertedCountPlurals.associateWith { name ->
+            val other = parsePluralItems(File("res/values/strings.xml"), name).getValue("other")
+            spec.findAll(other).map { it.value }.sorted().toList()
+        }
+        for (dir in localeDirs + File("res/values")) {
+            for (name in convertedCountPlurals) {
+                for ((quantity, text) in parsePluralItems(File(dir, "strings.xml"), name)) {
+                    val found = spec.findAll(text).map { it.value }.sorted().toList()
+                    assertEquals(
+                        "${dir.name}: $name item quantity=\"$quantity\" placeholder mismatch",
+                        expected.getValue(name), found
+                    )
+                }
             }
         }
     }

@@ -543,7 +543,7 @@
     <string name="theme_color_high_confidence">Высокая уверенность</string>
     <string name="theme_color_keyboard_background">Фон клавиатуры</string>
     <string name="theme_color_keyboard_surface">Поверхность клавиатуры</string>
-    <string name="short_swipe_mappings_summary">%1$d назначений • доступно %2$d команд</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d назначение • доступно %2$d команд</item><item quantity="few">%1$d назначения • доступно %2$d команд</item><item quantity="many">%1$d назначений • доступно %2$d команд</item><item quantity="other">%1$d назначений • доступно %2$d команд</item></plurals>
     <string name="short_swipe_last_key">Последняя клавиша: %1$s</string>
     <string name="short_swipe_customize_key">Настроить клавишу «%1$s»</string>
     <string name="extra_keys_enabled_count">%1$d из %2$d дополнительных клавиш включено</string>
@@ -630,11 +630,11 @@
     <string name="learning_data_title">Обучение и данные</string>
     <string name="learning_data_privacy_note">Всё обучение остаётся на этом устройстве. Выученные сочетания слов и словоупотребление включаются в экспорт словаря (Резервное копирование и восстановление).</string>
     <string name="learning_data_loading">Загрузка…</string>
-    <string name="learning_data_pairs_for_language">%1$s: пар — %2$d</string>
-    <string name="learning_data_triples_suffix">, триплетов — %1$d</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: пар — %2$d</item><item quantity="few">%1$s: пар — %2$d</item><item quantity="many">%1$s: пар — %2$d</item><item quantity="other">%1$s: пар — %2$d</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">, триплетов — %1$d</item><item quantity="few">, триплетов — %1$d</item><item quantity="many">, триплетов — %1$d</item><item quantity="other">, триплетов — %1$d</item></plurals>
     <string name="learning_data_no_pairs">Выученных пар слов пока нет</string>
     <string name="learning_data_no_words">Выученных слов пока нет</string>
-    <string name="learning_data_word_count">слов: %1$d</string>
+    <plurals name="learning_data_word_count"><item quantity="one">слов: %1$d</item><item quantity="few">слов: %1$d</item><item quantity="many">слов: %1$d</item><item quantity="other">слов: %1$d</item></plurals>
     <string name="learning_data_most_used">чаще всего: «%1$s» (%2$d×)</string>
     <string name="learning_data_phrase_patterns">Сочетания слов — %1$s</string>
     <string name="learning_data_word_usage">Словоупотребление — %1$s</string>
@@ -643,9 +643,9 @@
     <string name="learning_data_forget_phrases">Забыть сочетания</string>
     <string name="learning_data_forget_words">Забыть слова</string>
     <string name="learning_data_forget_phrases_title">Забыть сочетания слов?</string>
-    <string name="learning_data_forget_phrases_body">Удалить %1$d выученных пар и триплетов слов по всем языкам? Контекстные подсказки заново обучатся на вашем наборе.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">Удалить %1$d выученную пару или триплет слов по всем языкам? Контекстные подсказки заново обучатся на вашем наборе.</item><item quantity="few">Удалить %1$d выученные пары и триплеты слов по всем языкам? Контекстные подсказки заново обучатся на вашем наборе.</item><item quantity="many">Удалить %1$d выученных пар и триплетов слов по всем языкам? Контекстные подсказки заново обучатся на вашем наборе.</item><item quantity="other">Удалить %1$d выученных пар и триплетов слов по всем языкам? Контекстные подсказки заново обучатся на вашем наборе.</item></plurals>
     <string name="learning_data_forget_words_title">Забыть словоупотребление?</string>
-    <string name="learning_data_forget_words_body">Удалить %1$d выученных слов? Персонализированное усиление заново обучится на вашем наборе.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">Удалить %1$d выученное слово? Персонализированное усиление заново обучится на вашем наборе.</item><item quantity="few">Удалить %1$d выученных слова? Персонализированное усиление заново обучится на вашем наборе.</item><item quantity="many">Удалить %1$d выученных слов? Персонализированное усиление заново обучится на вашем наборе.</item><item quantity="other">Удалить %1$d выученных слов? Персонализированное усиление заново обучится на вашем наборе.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Выученные сочетания</string>
     <string name="learning_data_phrases_dialog_empty">Выученных сочетаний нет.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -711,9 +711,9 @@
     <string name="gif_importing">Импорт…</string>
     <string name="gif_import_pack">Импортировать пакет из ZIP</string>
     <string name="gif_installed_packs">Установленные пакеты</string>
-    <string name="gif_pack_stats">GIF: %1$d | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">GIF: %1$d | %2$s</item><item quantity="few">GIF: %1$d | %2$s</item><item quantity="many">GIF: %1$d | %2$s</item><item quantity="other">GIF: %1$d | %2$s</item></plurals>
     <string name="gif_total_storage">Всего: %1$s</string>
-    <string name="gif_grid_columns_display">Столбцов: %1$d</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">Столбцов: %1$d</item><item quantity="few">Столбцов: %1$d</item><item quantity="many">Столбцов: %1$d</item><item quantity="other">Столбцов: %1$d</item></plurals>
     <string name="gif_remove_all">Удалить все данные GIF</string>
     <string name="gif_remove_all_title">Удалить все данные GIF?</string>
     <string name="gif_remove_all_body">Будут удалены все импортированные пакеты GIF, миниатюры и база данных. Это нельзя отменить.</string>
@@ -740,13 +740,13 @@
     <string name="multilang_packs_header">Языковые пакеты</string>
     <string name="multilang_packs_desc">Импортируйте дополнительные языковые словари из ZIP-файлов. Скачайте пакеты отдельно и импортируйте их здесь (разрешение на интернет не требуется).</string>
     <string name="multilang_browse_packs">Просмотреть доступные пакеты ↗</string>
-    <string name="multilang_installed_count">Установлено языковых пакетов: %1$d</string>
+    <plurals name="multilang_installed_count"><item quantity="one">Установлено языковых пакетов: %1$d</item><item quantity="few">Установлено языковых пакетов: %1$d</item><item quantity="many">Установлено языковых пакетов: %1$d</item><item quantity="other">Установлено языковых пакетов: %1$d</item></plurals>
     <string name="multilang_import_pack">Импортировать пакет</string>
     <string name="multilang_manage">Управление</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Установленные языковые пакеты</string>
     <string name="multilang_packs_dialog_empty">Языковые пакеты не установлены.\n\nИспользуйте «Просмотреть доступные пакеты», чтобы скачать ZIP, затем «Импортировать пакет», чтобы добавить его.</string>
-    <string name="multilang_pack_stats">Код: %1$s • слов: %2$d</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">Код: %1$s • слов: %2$d</item><item quantity="few">Код: %1$s • слов: %2$d</item><item quantity="many">Код: %1$s • слов: %2$d</item><item quantity="other">Код: %1$s • слов: %2$d</item></plurals>
     <string name="input_manage_layouts">Управление раскладками клавиатуры</string>
     <string name="input_configure_extra_keys">Настроить дополнительные клавиши</string>
     <string name="input_advanced_prediction">Расширенные настройки предсказаний</string>
@@ -802,13 +802,13 @@
     <string name="command_palette_timestamp_title">Метка времени</string>
     <string name="command_palette_timestamp_desc">Вставить отформатированные дату/время (например: yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">Доступно команд: %1$d</string>
-    <string name="command_palette_count_results">Результатов по запросу \"%2$s\": %1$d</string>
+    <plurals name="command_palette_count_results"><item quantity="one">Результатов по запросу \"%2$s\": %1$d</item><item quantity="few">Результатов по запросу \"%2$s\": %1$d</item><item quantity="many">Результатов по запросу \"%2$s\": %1$d</item><item quantity="other">Результатов по запросу \"%2$s\": %1$d</item></plurals>
     <string name="command_palette_browse_all">Просмотреть все команды (%1$d)</string>
     <string name="command_palette_quick_commands">Быстрые команды</string>
     <string name="command_palette_custom_text_intro">Введите текст, который будет вставляться при свайпе в этом направлении.</string>
     <string name="command_palette_text_to_insert">Текст для вставки</string>
     <string name="command_palette_text_placeholder">например: Привет, мир!</string>
-    <string name="command_palette_char_count">Символов: %1$d</string>
+    <plurals name="command_palette_char_count"><item quantity="one">Символов: %1$d</item><item quantity="few">Символов: %1$d</item><item quantity="many">Символов: %1$d</item><item quantity="other">Символов: %1$d</item></plurals>
     <string name="command_palette_paste_desc">Вставить из буфера обмена</string>
     <string name="command_palette_quick_suggestions">Быстрые подсказки:</string>
     <string name="command_palette_use_text">Использовать этот текст</string>
@@ -866,11 +866,11 @@
     <string name="import_preview_diff_removed">−%1$d удалённых</string>
     <string name="import_preview_diff_changed">~%1$d изменённых</string>
     <string name="import_preview_diff_unchanged">(%1$d без изменений)</string>
-    <string name="import_preview_short_swipe_count">Назначений коротких свайпов в этой резервной копии: %1$d</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">Назначений коротких свайпов в этой резервной копии: %1$d</item><item quantity="few">Назначений коротких свайпов в этой резервной копии: %1$d</item><item quantity="many">Назначений коротких свайпов в этой резервной копии: %1$d</item><item quantity="other">Назначений коротких свайпов в этой резервной копии: %1$d</item></plurals>
     <string name="import_preview_short_swipe_skip">Пропустить — не импортировать</string>
     <string name="import_preview_short_swipe_merge">Объединить — заполнить пробелы, сохранить существующие (рекомендуется)</string>
     <string name="import_preview_short_swipe_replace">Заменить — стереть существующие, установить набор из файла</string>
-    <string name="import_preview_short_swipe_warning">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item><item quantity="few">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item><item quantity="many">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item><item quantity="other">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item></plurals>
     <string name="import_preview_selected_count">Выбрано %1$d из %2$d</string>
     <string name="import_preview_expand">Развернуть</string>
     <string name="import_preview_hide">Скрыть</string>
@@ -883,7 +883,7 @@
     <string name="import_preview_learned_desc">Счётчики выученных сочетаний объединяются как группа. Если резервная копия содержит личный словарь, он заменит текущий список выученных слов.</string>
     <string name="import_preview_learned_bigrams">Пар слов для объединения: %1$d</string>
     <string name="import_preview_learned_trigrams">Триплетов слов для объединения: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Личный словарь будет заменён (%1$d слов)</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">Личный словарь будет заменён (%1$d слово)</item><item quantity="few">Личный словарь будет заменён (%1$d слова)</item><item quantity="many">Личный словарь будет заменён (%1$d слов)</item><item quantity="other">Личный словарь будет заменён (%1$d слов)</item></plurals>
     <string name="import_preview_modified">Изменённые (%1$d)</string>
     <string name="import_preview_added">Добавленные (%1$d)</string>
     <string name="import_preview_short_swipe_header">Настройки коротких свайпов</string>

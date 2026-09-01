@@ -548,7 +548,7 @@
     <string name="theme_color_high_confidence">Magas bizalom</string>
     <string name="theme_color_keyboard_background">Billentyűzet háttere</string>
     <string name="theme_color_keyboard_surface">Billentyűzet felülete</string>
-    <string name="short_swipe_mappings_summary">%1$d egyéni leképezés • %2$d parancs érhető el</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d egyéni leképezés • %2$d parancs érhető el</item><item quantity="other">%1$d egyéni leképezés • %2$d parancs érhető el</item></plurals>
     <string name="short_swipe_last_key">Utolsó billentyű: %1$s</string>
     <string name="short_swipe_customize_key">\"%1$s\" billentyű testreszabása</string>
     <string name="extra_keys_enabled_count">%2$d extra billentyűből %1$d engedélyezve</string>
@@ -636,11 +636,11 @@
     <string name="learning_data_title">Tanulás &amp; adatok</string>
     <string name="learning_data_privacy_note">Minden tanulás ezen az eszközön marad. A tanult kifejezésminták és a szóhasználat bekerülnek a szótárexportokba (Biztonsági mentés &amp; Visszaállítás).</string>
     <string name="learning_data_loading">Betöltés…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d pár</string>
-    <string name="learning_data_triples_suffix">, %1$d hármas</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: %2$d pár</item><item quantity="other">%1$s: %2$d pár</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">, %1$d hármas</item><item quantity="other">, %1$d hármas</item></plurals>
     <string name="learning_data_no_pairs">Még nincsenek tanult szópárok</string>
     <string name="learning_data_no_words">Még nincsenek tanult szavak</string>
-    <string name="learning_data_word_count">%1$d szó</string>
+    <plurals name="learning_data_word_count"><item quantity="one">%1$d szó</item><item quantity="other">%1$d szó</item></plurals>
     <string name="learning_data_most_used">leggyakrabban használt: „%1$s” (%2$d×)</string>
     <string name="learning_data_phrase_patterns">Kifejezésminták — %1$s</string>
     <string name="learning_data_word_usage">Szóhasználat — %1$s</string>
@@ -649,9 +649,9 @@
     <string name="learning_data_forget_phrases">Kifejezések elfelejtése</string>
     <string name="learning_data_forget_words">Szavak elfelejtése</string>
     <string name="learning_data_forget_phrases_title">Elfelejti a kifejezésmintákat?</string>
-    <string name="learning_data_forget_phrases_body">Törli mind a(z) %1$d tanult szópárt és hármast az összes nyelvből? A környezetérzékeny javaslatok újratanulnak a gépeléséből.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">Törli a(z) %1$d tanult szópárt vagy hármast az összes nyelvből? A környezetérzékeny javaslatok újratanulnak a gépeléséből.</item><item quantity="other">Törli mind a(z) %1$d tanult szópárt és hármast az összes nyelvből? A környezetérzékeny javaslatok újratanulnak a gépeléséből.</item></plurals>
     <string name="learning_data_forget_words_title">Elfelejti a szóhasználatot?</string>
-    <string name="learning_data_forget_words_body">Törli a(z) %1$d tanult szót? A személyre szabott erősítés újratanul a gépeléséből.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">Törli a(z) %1$d tanult szót? A személyre szabott erősítés újratanul a gépeléséből.</item><item quantity="other">Törli a(z) %1$d tanult szót? A személyre szabott erősítés újratanul a gépeléséből.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Tanult kifejezések</string>
     <string name="learning_data_phrases_dialog_empty">Nincsenek tanult kifejezések.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -717,9 +717,9 @@
     <string name="gif_importing">Importálás...</string>
     <string name="gif_import_pack">Csomag importálása ZIP-ből</string>
     <string name="gif_installed_packs">Telepített csomagok</string>
-    <string name="gif_pack_stats">%1$d GIF | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">%1$d GIF | %2$s</item><item quantity="other">%1$d GIF | %2$s</item></plurals>
     <string name="gif_total_storage">Összesen: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d oszlop</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">%1$d oszlop</item><item quantity="other">%1$d oszlop</item></plurals>
     <string name="gif_remove_all">Összes GIF-adat eltávolítása</string>
     <string name="gif_remove_all_title">Eltávolítja az összes GIF-adatot?</string>
     <string name="gif_remove_all_body">Ez törli az összes importált GIF-csomagot, bélyegképet és az adatbázist. Ez nem vonható vissza.</string>
@@ -746,13 +746,13 @@
     <string name="multilang_packs_header">Nyelvi csomagok</string>
     <string name="multilang_packs_desc">További nyelvi szótárak importálása ZIP-fájlokból. Töltse le a csomagokat külső forrásból, és importálja itt (nincs szükség internetengedélyre).</string>
     <string name="multilang_browse_packs">Elérhető csomagok böngészése ↗</string>
-    <string name="multilang_installed_count">Telepítve: %1$d nyelvi csomag</string>
+    <plurals name="multilang_installed_count"><item quantity="one">Telepítve: %1$d nyelvi csomag</item><item quantity="other">Telepítve: %1$d nyelvi csomag</item></plurals>
     <string name="multilang_import_pack">Csomag importálása</string>
     <string name="multilang_manage">Kezelés</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Telepített nyelvi csomagok</string>
     <string name="multilang_packs_dialog_empty">Nincsenek telepített nyelvi csomagok.\n\nHasználja az \'Elérhető csomagok böngészése\' lehetőséget egy ZIP letöltéséhez, majd a \'Csomag importálása\' gombot a hozzáadásához.</string>
-    <string name="multilang_pack_stats">Kód: %1$s • %2$d szó</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">Kód: %1$s • %2$d szó</item><item quantity="other">Kód: %1$s • %2$d szó</item></plurals>
     <string name="input_manage_layouts">Billentyűzetkiosztások kezelése</string>
     <string name="input_configure_extra_keys">Extra billentyűk beállítása</string>
     <string name="input_advanced_prediction">Speciális előrejelzési beállítások</string>
@@ -808,13 +808,13 @@
     <string name="command_palette_timestamp_title">Időbélyeg</string>
     <string name="command_palette_timestamp_desc">Formázott dátum/idő beszúrása (pl. yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">%1$d parancs érhető el</string>
-    <string name="command_palette_count_results">%1$d találat erre: \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="one">%1$d találat erre: \"%2$s\"</item><item quantity="other">%1$d találat erre: \"%2$s\"</item></plurals>
     <string name="command_palette_browse_all">Mind a(z) %1$d parancs böngészése</string>
     <string name="command_palette_quick_commands">Gyorsparancsok</string>
     <string name="command_palette_custom_text_intro">Adja meg a szöveget, amely ebbe az irányba csúsztatáskor beszúrásra kerül.</string>
     <string name="command_palette_text_to_insert">Beszúrandó szöveg</string>
     <string name="command_palette_text_placeholder">pl. Helló, világ!</string>
-    <string name="command_palette_char_count">%1$d karakter</string>
+    <plurals name="command_palette_char_count"><item quantity="one">%1$d karakter</item><item quantity="other">%1$d karakter</item></plurals>
     <string name="command_palette_paste_desc">Beillesztés a vágólapról</string>
     <string name="command_palette_quick_suggestions">Gyors javaslatok:</string>
     <string name="command_palette_use_text">Szöveg használata</string>
@@ -866,11 +866,11 @@
     <string name="import_preview_diff_removed">−%1$d eltávolítva</string>
     <string name="import_preview_diff_changed">~%1$d módosítva</string>
     <string name="import_preview_diff_unchanged">(%1$d változatlan)</string>
-    <string name="import_preview_short_swipe_count">%1$d rövidcsúsztatás-leképezés ebben a mentésben</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d rövidcsúsztatás-leképezés ebben a mentésben</item><item quantity="other">%1$d rövidcsúsztatás-leképezés ebben a mentésben</item></plurals>
     <string name="import_preview_short_swipe_skip">Kihagyás — ne importálja</string>
     <string name="import_preview_short_swipe_merge">Egyesítés — hiányok pótlása, meglévők megőrzése (ajánlott)</string>
     <string name="import_preview_short_swipe_replace">Csere — meglévők törlése, a fájl készletének telepítése</string>
-    <string name="import_preview_short_swipe_warning">Ez LECSERÉLI az összes meglévő rövid csúsztatási testreszabását a fájl %1$d leképezésére.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">Ez LECSERÉLI az összes meglévő rövid csúsztatási testreszabását a fájl %1$d leképezésére.</item><item quantity="other">Ez LECSERÉLI az összes meglévő rövid csúsztatási testreszabását a fájl %1$d leképezésére.</item></plurals>
     <string name="import_preview_selected_count">%1$d/%2$d kiválasztva</string>
     <string name="import_preview_expand">Kibontás</string>
     <string name="import_preview_hide">Elrejtés</string>
@@ -883,7 +883,7 @@
     <string name="import_preview_learned_desc">A tanult kifejezésszámlálók csoportként egyesülnek. Ha ez a mentés személyes szókincset tartalmaz, az lecseréli a jelenlegi tanultszó-listát.</string>
     <string name="import_preview_learned_bigrams">Egyesítendő szópárok: %1$d</string>
     <string name="import_preview_learned_trigrams">Egyesítendő szóhármasok: %1$d</string>
-    <string name="import_preview_learned_vocabulary">A személyes szókincs %1$d szóra lesz lecserélve</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">A személyes szókincs %1$d szóra lesz lecserélve</item><item quantity="other">A személyes szókincs %1$d szóra lesz lecserélve</item></plurals>
     <string name="import_preview_modified">Módosítva (%1$d)</string>
     <string name="import_preview_added">Hozzáadva (%1$d)</string>
     <string name="import_preview_short_swipe_header">Rövid csúsztatási testreszabások</string>

@@ -562,7 +562,7 @@
     <string name="theme_color_high_confidence">Hohe Konfidenz</string>
     <string name="theme_color_keyboard_background">Tastaturhintergrund</string>
     <string name="theme_color_keyboard_surface">Tastaturoberfläche</string>
-    <string name="short_swipe_mappings_summary">%1$d benutzerdefinierte Zuordnungen • %2$d Befehle verfügbar</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d benutzerdefinierte Zuordnung • %2$d Befehle verfügbar</item><item quantity="other">%1$d benutzerdefinierte Zuordnungen • %2$d Befehle verfügbar</item></plurals>
     <string name="short_swipe_last_key">Letzte Taste: %1$s</string>
     <string name="short_swipe_customize_key">Taste \"%1$s\" anpassen</string>
     <string name="extra_keys_enabled_count">%1$d von %2$d Zusatztasten aktiviert</string>
@@ -650,11 +650,11 @@
     <string name="learning_data_title">Lernen &amp; Daten</string>
     <string name="learning_data_privacy_note">Alles Gelernte bleibt auf diesem Gerät. Gelernte Wendungsmuster und Wortnutzung sind in Wörterbuch-Exporten enthalten (Sichern &amp; Wiederherstellen).</string>
     <string name="learning_data_loading">Wird geladen…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d Paare</string>
-    <string name="learning_data_triples_suffix">, %1$d Tripel</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: %2$d Paar</item><item quantity="other">%1$s: %2$d Paare</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">, %1$d Tripel</item><item quantity="other">, %1$d Tripel</item></plurals>
     <string name="learning_data_no_pairs">Noch keine gelernten Wortpaare</string>
     <string name="learning_data_no_words">Noch keine gelernten Wörter</string>
-    <string name="learning_data_word_count">%1$d Wörter</string>
+    <plurals name="learning_data_word_count"><item quantity="one">%1$d Wort</item><item quantity="other">%1$d Wörter</item></plurals>
     <string name="learning_data_most_used">am häufigsten: „%1$s“ (%2$d×)</string>
     <string name="learning_data_phrase_patterns">Wendungsmuster — %1$s</string>
     <string name="learning_data_word_usage">Wortnutzung — %1$s</string>
@@ -663,9 +663,9 @@
     <string name="learning_data_forget_phrases">Wendungen vergessen</string>
     <string name="learning_data_forget_words">Wörter vergessen</string>
     <string name="learning_data_forget_phrases_title">Wendungsmuster vergessen?</string>
-    <string name="learning_data_forget_phrases_body">%1$d gelernte Wortpaare und Tripel in allen Sprachen löschen? Kontextabhängige Vorschläge lernen aus Ihren Eingaben neu.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">%1$d gelerntes Wortpaar oder Tripel in allen Sprachen löschen? Kontextabhängige Vorschläge lernen aus Ihren Eingaben neu.</item><item quantity="other">%1$d gelernte Wortpaare und Tripel in allen Sprachen löschen? Kontextabhängige Vorschläge lernen aus Ihren Eingaben neu.</item></plurals>
     <string name="learning_data_forget_words_title">Wortnutzung vergessen?</string>
-    <string name="learning_data_forget_words_body">%1$d gelernte Wörter löschen? Die personalisierte Verstärkung lernt aus Ihren Eingaben neu.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">%1$d gelerntes Wort löschen? Die personalisierte Verstärkung lernt aus Ihren Eingaben neu.</item><item quantity="other">%1$d gelernte Wörter löschen? Die personalisierte Verstärkung lernt aus Ihren Eingaben neu.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Gelernte Wendungen</string>
     <string name="learning_data_phrases_dialog_empty">Keine gelernten Wendungen.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -731,9 +731,9 @@
     <string name="gif_importing">Wird importiert...</string>
     <string name="gif_import_pack">Paket aus ZIP importieren</string>
     <string name="gif_installed_packs">Installierte Pakete</string>
-    <string name="gif_pack_stats">%1$d GIFs | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">%1$d GIF | %2$s</item><item quantity="other">%1$d GIFs | %2$s</item></plurals>
     <string name="gif_total_storage">Gesamt: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d Spalten</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">%1$d Spalte</item><item quantity="other">%1$d Spalten</item></plurals>
     <string name="gif_remove_all">Alle GIF-Daten entfernen</string>
     <string name="gif_remove_all_title">Alle GIF-Daten entfernen?</string>
     <string name="gif_remove_all_body">Dies löscht alle importierten GIF-Pakete, Miniaturansichten und die Datenbank. Dies kann nicht rückgängig gemacht werden.</string>
@@ -760,13 +760,13 @@
     <string name="multilang_packs_header">Sprachpakete</string>
     <string name="multilang_packs_desc">Zusätzliche Sprachwörterbücher aus ZIP-Dateien importieren. Pakete extern herunterladen und hier importieren (keine Internetberechtigung nötig).</string>
     <string name="multilang_browse_packs">Verfügbare Pakete ansehen ↗</string>
-    <string name="multilang_installed_count">Installiert: %1$d Sprachpaket(e)</string>
+    <plurals name="multilang_installed_count"><item quantity="one">Installiert: %1$d Sprachpaket</item><item quantity="other">Installiert: %1$d Sprachpakete</item></plurals>
     <string name="multilang_import_pack">Paket importieren</string>
     <string name="multilang_manage">Verwalten</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Installierte Sprachpakete</string>
     <string name="multilang_packs_dialog_empty">Keine Sprachpakete installiert.\n\nÜber „Verfügbare Pakete ansehen“ ein ZIP herunterladen und es dann mit „Paket importieren“ hinzufügen.</string>
-    <string name="multilang_pack_stats">Code: %1$s • %2$d Wörter</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">Code: %1$s • %2$d Wort</item><item quantity="other">Code: %1$s • %2$d Wörter</item></plurals>
     <string name="input_manage_layouts">Tastaturlayouts verwalten</string>
     <string name="input_configure_extra_keys">Zusatztasten konfigurieren</string>
     <string name="input_advanced_prediction">Erweiterte Vorhersage-Einstellungen</string>
@@ -822,13 +822,13 @@
     <string name="command_palette_timestamp_title">Zeitstempel</string>
     <string name="command_palette_timestamp_desc">Formatiertes Datum/Uhrzeit einfügen (z. B. yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">%1$d Befehle verfügbar</string>
-    <string name="command_palette_count_results">%1$d Ergebnisse für \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="one">%1$d Ergebnis für \"%2$s\"</item><item quantity="other">%1$d Ergebnisse für \"%2$s\"</item></plurals>
     <string name="command_palette_browse_all">Alle %1$d Befehle durchsuchen</string>
     <string name="command_palette_quick_commands">Schnellbefehle</string>
     <string name="command_palette_custom_text_intro">Geben Sie den Text ein, der beim Wischen in diese Richtung eingefügt wird.</string>
     <string name="command_palette_text_to_insert">Einzufügender Text</string>
     <string name="command_palette_text_placeholder">z. B. Hallo, Welt!</string>
-    <string name="command_palette_char_count">%1$d Zeichen</string>
+    <plurals name="command_palette_char_count"><item quantity="one">%1$d Zeichen</item><item quantity="other">%1$d Zeichen</item></plurals>
     <string name="command_palette_paste_desc">Aus der Zwischenablage einfügen</string>
     <string name="command_palette_quick_suggestions">Schnellvorschläge:</string>
     <string name="command_palette_use_text">Diesen Text verwenden</string>
@@ -880,11 +880,11 @@
     <string name="import_preview_diff_removed">−%1$d entfernt</string>
     <string name="import_preview_diff_changed">~%1$d geändert</string>
     <string name="import_preview_diff_unchanged">(%1$d unverändert)</string>
-    <string name="import_preview_short_swipe_count">%1$d Kurzwisch-Zuordnungen in dieser Sicherung</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d Kurzwisch-Zuordnung in dieser Sicherung</item><item quantity="other">%1$d Kurzwisch-Zuordnungen in dieser Sicherung</item></plurals>
     <string name="import_preview_short_swipe_skip">Überspringen — nicht importieren</string>
     <string name="import_preview_short_swipe_merge">Zusammenführen — Lücken füllen, Vorhandenes bewahren (empfohlen)</string>
     <string name="import_preview_short_swipe_replace">Ersetzen — Vorhandenes löschen, Satz aus der Datei installieren</string>
-    <string name="import_preview_short_swipe_warning">Dies ERSETZT alle Ihre vorhandenen Kurzwisch-Anpassungen durch die %1$d Zuordnungen der Datei.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">Dies ERSETZT alle Ihre vorhandenen Kurzwisch-Anpassungen durch die %1$d Zuordnung der Datei.</item><item quantity="other">Dies ERSETZT alle Ihre vorhandenen Kurzwisch-Anpassungen durch die %1$d Zuordnungen der Datei.</item></plurals>
     <string name="import_preview_selected_count">%1$d von %2$d ausgewählt</string>
     <string name="import_preview_expand">Ausklappen</string>
     <string name="import_preview_hide">Ausblenden</string>
@@ -897,7 +897,7 @@
     <string name="import_preview_learned_desc">Gelernte Wendungszähler werden als Gruppe zusammengeführt. Enthält diese Sicherung ein persönliches Vokabular, ersetzt es die aktuelle Liste gelernter Wörter.</string>
     <string name="import_preview_learned_bigrams">Zusammenzuführende Wortpaare: %1$d</string>
     <string name="import_preview_learned_trigrams">Zusammenzuführende Worttripel: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Das persönliche Vokabular wird durch %1$d Wörter ersetzt</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">Das persönliche Vokabular wird durch %1$d Wort ersetzt</item><item quantity="other">Das persönliche Vokabular wird durch %1$d Wörter ersetzt</item></plurals>
     <string name="import_preview_modified">Geändert (%1$d)</string>
     <string name="import_preview_added">Hinzugefügt (%1$d)</string>
     <string name="import_preview_short_swipe_header">Kurzwisch-Anpassungen</string>

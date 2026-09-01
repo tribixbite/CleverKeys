@@ -543,7 +543,7 @@
     <string name="theme_color_high_confidence">Vysoká spolehlivost</string>
     <string name="theme_color_keyboard_background">Pozadí klávesnice</string>
     <string name="theme_color_keyboard_surface">Povrch klávesnice</string>
-    <string name="short_swipe_mappings_summary">%1$d vlastních mapování • %2$d příkazů k dispozici</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d vlastní mapování • %2$d příkazů k dispozici</item><item quantity="few">%1$d vlastní mapování • %2$d příkazů k dispozici</item><item quantity="many">%1$d vlastních mapování • %2$d příkazů k dispozici</item><item quantity="other">%1$d vlastních mapování • %2$d příkazů k dispozici</item></plurals>
     <string name="short_swipe_last_key">Poslední klávesa: %1$s</string>
     <string name="short_swipe_customize_key">Přizpůsobit klávesu "%1$s"</string>
     <string name="extra_keys_enabled_count">%1$d z %2$d extra kláves povoleno</string>
@@ -630,11 +630,11 @@
     <string name="learning_data_title">Učení &amp; data</string>
     <string name="learning_data_privacy_note">Veškeré učení zůstává v tomto zařízení. Naučené vzory frází a používání slov jsou součástí exportů slovníku (Záloha &amp; obnovení).</string>
     <string name="learning_data_loading">Načítání…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d dvojic</string>
-    <string name="learning_data_triples_suffix">, %1$d trojic</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: %2$d dvojice</item><item quantity="few">%1$s: %2$d dvojice</item><item quantity="many">%1$s: %2$d dvojic</item><item quantity="other">%1$s: %2$d dvojic</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">, %1$d trojice</item><item quantity="few">, %1$d trojice</item><item quantity="many">, %1$d trojic</item><item quantity="other">, %1$d trojic</item></plurals>
     <string name="learning_data_no_pairs">Zatím žádné naučené dvojice slov</string>
     <string name="learning_data_no_words">Zatím žádná naučená slova</string>
-    <string name="learning_data_word_count">%1$d slov</string>
+    <plurals name="learning_data_word_count"><item quantity="one">%1$d slovo</item><item quantity="few">%1$d slova</item><item quantity="many">%1$d slov</item><item quantity="other">%1$d slov</item></plurals>
     <string name="learning_data_most_used">nejčastější: „%1$s“ (%2$d×)</string>
     <string name="learning_data_phrase_patterns">Vzory frází — %1$s</string>
     <string name="learning_data_word_usage">Používání slov — %1$s</string>
@@ -643,9 +643,9 @@
     <string name="learning_data_forget_phrases">Zapomenout fráze</string>
     <string name="learning_data_forget_words">Zapomenout slova</string>
     <string name="learning_data_forget_phrases_title">Zapomenout vzory frází?</string>
-    <string name="learning_data_forget_phrases_body">Smazat %1$d naučených dvojic a trojic slov ve všech jazycích? Návrhy podle kontextu se z vašeho psaní naučí znovu.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">Smazat %1$d naučenou dvojici či trojici slov ve všech jazycích? Návrhy podle kontextu se z vašeho psaní naučí znovu.</item><item quantity="few">Smazat %1$d naučené dvojice a trojice slov ve všech jazycích? Návrhy podle kontextu se z vašeho psaní naučí znovu.</item><item quantity="many">Smazat %1$d naučených dvojic a trojic slov ve všech jazycích? Návrhy podle kontextu se z vašeho psaní naučí znovu.</item><item quantity="other">Smazat %1$d naučených dvojic a trojic slov ve všech jazycích? Návrhy podle kontextu se z vašeho psaní naučí znovu.</item></plurals>
     <string name="learning_data_forget_words_title">Zapomenout používání slov?</string>
-    <string name="learning_data_forget_words_body">Smazat %1$d naučených slov? Personalizované zvýhodnění se z vašeho psaní naučí znovu.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">Smazat %1$d naučené slovo? Personalizované zvýhodnění se z vašeho psaní naučí znovu.</item><item quantity="few">Smazat %1$d naučená slova? Personalizované zvýhodnění se z vašeho psaní naučí znovu.</item><item quantity="many">Smazat %1$d naučených slov? Personalizované zvýhodnění se z vašeho psaní naučí znovu.</item><item quantity="other">Smazat %1$d naučených slov? Personalizované zvýhodnění se z vašeho psaní naučí znovu.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Naučené fráze</string>
     <string name="learning_data_phrases_dialog_empty">Žádné naučené fráze.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -711,9 +711,9 @@
     <string name="gif_importing">Importuje se...</string>
     <string name="gif_import_pack">Importovat balíček ze ZIP</string>
     <string name="gif_installed_packs">Nainstalované balíčky</string>
-    <string name="gif_pack_stats">%1$d GIFů | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">%1$d GIF | %2$s</item><item quantity="few">%1$d GIFy | %2$s</item><item quantity="many">%1$d GIFů | %2$s</item><item quantity="other">%1$d GIFů | %2$s</item></plurals>
     <string name="gif_total_storage">Celkem: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d sloupců</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">%1$d sloupec</item><item quantity="few">%1$d sloupce</item><item quantity="many">%1$d sloupců</item><item quantity="other">%1$d sloupců</item></plurals>
     <string name="gif_remove_all">Odstranit všechna data GIF</string>
     <string name="gif_remove_all_title">Odstranit všechna data GIF?</string>
     <string name="gif_remove_all_body">Smaže všechny importované balíčky GIF, miniatury i databázi. Nelze vrátit zpět.</string>
@@ -740,13 +740,13 @@
     <string name="multilang_packs_header">Jazykové balíčky</string>
     <string name="multilang_packs_desc">Importujte další jazykové slovníky ze souborů ZIP. Balíčky stáhněte externě a importujte je zde (není potřeba oprávnění k internetu).</string>
     <string name="multilang_browse_packs">Procházet dostupné balíčky ↗</string>
-    <string name="multilang_installed_count">Nainstalováno: %1$d jazykových balíčků</string>
+    <plurals name="multilang_installed_count"><item quantity="one">Nainstalováno: %1$d jazykový balíček</item><item quantity="few">Nainstalováno: %1$d jazykové balíčky</item><item quantity="many">Nainstalováno: %1$d jazykových balíčků</item><item quantity="other">Nainstalováno: %1$d jazykových balíčků</item></plurals>
     <string name="multilang_import_pack">Importovat balíček</string>
     <string name="multilang_manage">Spravovat</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Nainstalované jazykové balíčky</string>
     <string name="multilang_packs_dialog_empty">Žádné jazykové balíčky nejsou nainstalované.\n\nPřes „Procházet dostupné balíčky“ stáhněte ZIP a pak jej přidejte přes „Importovat balíček“.</string>
-    <string name="multilang_pack_stats">Kód: %1$s • %2$d slov</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">Kód: %1$s • %2$d slovo</item><item quantity="few">Kód: %1$s • %2$d slova</item><item quantity="many">Kód: %1$s • %2$d slov</item><item quantity="other">Kód: %1$s • %2$d slov</item></plurals>
     <string name="input_manage_layouts">Spravovat rozložení klávesnice</string>
     <string name="input_configure_extra_keys">Nastavit doplňkové klávesy</string>
     <string name="input_advanced_prediction">Pokročilá nastavení předpovědí</string>
@@ -802,13 +802,13 @@
     <string name="command_palette_timestamp_title">Časové razítko</string>
     <string name="command_palette_timestamp_desc">Vložit formátované datum/čas (např. yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">Dostupných příkazů: %1$d</string>
-    <string name="command_palette_count_results">%1$d výsledků pro \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="one">%1$d výsledek pro \"%2$s\"</item><item quantity="few">%1$d výsledky pro \"%2$s\"</item><item quantity="many">%1$d výsledků pro \"%2$s\"</item><item quantity="other">%1$d výsledků pro \"%2$s\"</item></plurals>
     <string name="command_palette_browse_all">Procházet všech %1$d příkazů</string>
     <string name="command_palette_quick_commands">Rychlé příkazy</string>
     <string name="command_palette_custom_text_intro">Zadejte text, který se vloží při tahu tímto směrem.</string>
     <string name="command_palette_text_to_insert">Text k vložení</string>
     <string name="command_palette_text_placeholder">např. Ahoj světe!</string>
-    <string name="command_palette_char_count">%1$d znaků</string>
+    <plurals name="command_palette_char_count"><item quantity="one">%1$d znak</item><item quantity="few">%1$d znaky</item><item quantity="many">%1$d znaků</item><item quantity="other">%1$d znaků</item></plurals>
     <string name="command_palette_paste_desc">Vložit ze schránky</string>
     <string name="command_palette_quick_suggestions">Rychlé návrhy:</string>
     <string name="command_palette_use_text">Použít tento text</string>
@@ -860,11 +860,11 @@
     <string name="import_preview_diff_removed">−%1$d odebraných</string>
     <string name="import_preview_diff_changed">~%1$d změněných</string>
     <string name="import_preview_diff_unchanged">(%1$d beze změny)</string>
-    <string name="import_preview_short_swipe_count">Mapování krátkých tahů v této záloze: %1$d</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">Mapování krátkých tahů v této záloze: %1$d</item><item quantity="few">Mapování krátkých tahů v této záloze: %1$d</item><item quantity="many">Mapování krátkých tahů v této záloze: %1$d</item><item quantity="other">Mapování krátkých tahů v této záloze: %1$d</item></plurals>
     <string name="import_preview_short_swipe_skip">Přeskočit — neimportovat</string>
     <string name="import_preview_short_swipe_merge">Sloučit — doplní mezery, zachová stávající (doporučeno)</string>
     <string name="import_preview_short_swipe_replace">Nahradit — smaže stávající, nainstaluje sadu ze souboru</string>
-    <string name="import_preview_short_swipe_warning">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováními ze souboru.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováním ze souboru.</item><item quantity="few">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováními ze souboru.</item><item quantity="many">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováními ze souboru.</item><item quantity="other">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováními ze souboru.</item></plurals>
     <string name="import_preview_selected_count">Vybráno %1$d z %2$d</string>
     <string name="import_preview_expand">Rozbalit</string>
     <string name="import_preview_hide">Skrýt</string>
@@ -877,7 +877,7 @@
     <string name="import_preview_learned_desc">Počty naučených frází se slučují jako skupina. Pokud tato záloha obsahuje osobní slovní zásobu, nahradí aktuální seznam naučených slov.</string>
     <string name="import_preview_learned_bigrams">Dvojic slov ke sloučení: %1$d</string>
     <string name="import_preview_learned_trigrams">Trojic slov ke sloučení: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Osobní slovní zásoba bude nahrazena %1$d slovy</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">Osobní slovní zásoba bude nahrazena %1$d slovem</item><item quantity="few">Osobní slovní zásoba bude nahrazena %1$d slovy</item><item quantity="many">Osobní slovní zásoba bude nahrazena %1$d slovy</item><item quantity="other">Osobní slovní zásoba bude nahrazena %1$d slovy</item></plurals>
     <string name="import_preview_modified">Změněno (%1$d)</string>
     <string name="import_preview_added">Přidáno (%1$d)</string>
     <string name="import_preview_short_swipe_header">Přizpůsobení krátkých tahů</string>

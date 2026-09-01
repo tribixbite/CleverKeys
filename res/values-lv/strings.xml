@@ -554,7 +554,7 @@
     <string name="theme_color_high_confidence">Augsta pārliecība</string>
     <string name="theme_color_keyboard_background">Tastatūras fons</string>
     <string name="theme_color_keyboard_surface">Tastatūras virsma</string>
-    <string name="short_swipe_mappings_summary">%1$d pielāgoti piešķīrumi • %2$d pieejamās komandas</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="zero">%1$d pielāgotu piešķīrumu • %2$d pieejamās komandas</item><item quantity="one">%1$d pielāgots piešķīrums • %2$d pieejamās komandas</item><item quantity="other">%1$d pielāgoti piešķīrumi • %2$d pieejamās komandas</item></plurals>
     <string name="short_swipe_last_key">Pēdējais taustiņš: %1$s</string>
     <string name="short_swipe_customize_key">Pielāgot taustiņu "%1$s"</string>
     <string name="extra_keys_enabled_count">%1$d no %2$d papildu taustiņiem iespējoti</string>
@@ -641,11 +641,11 @@
     <string name="learning_data_title">Mācīšanās un dati</string>
     <string name="learning_data_privacy_note">Visa mācīšanās paliek šajā ierīcē. Apgūtie frāžu paradumi un vārdu lietojums tiek iekļauti vārdnīcas eksportos (Dublēšana un atjaunošana).</string>
     <string name="learning_data_loading">Ielādē…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d pāri</string>
-    <string name="learning_data_triples_suffix">, %1$d trijnieki</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="zero">%1$s: %2$d pāru</item><item quantity="one">%1$s: %2$d pāris</item><item quantity="other">%1$s: %2$d pāri</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="zero">, %1$d trijnieku</item><item quantity="one">, %1$d trijnieks</item><item quantity="other">, %1$d trijnieki</item></plurals>
     <string name="learning_data_no_pairs">Vēl nav apgūtu vārdu pāru</string>
     <string name="learning_data_no_words">Vēl nav apgūtu vārdu</string>
-    <string name="learning_data_word_count">%1$d vārdi</string>
+    <plurals name="learning_data_word_count"><item quantity="zero">%1$d vārdu</item><item quantity="one">%1$d vārds</item><item quantity="other">%1$d vārdi</item></plurals>
     <string name="learning_data_most_used">visbiežāk lietots: “%1$s” (%2$d×)</string>
     <string name="learning_data_phrase_patterns">Frāžu paradumi — %1$s</string>
     <string name="learning_data_word_usage">Vārdu lietojums — %1$s</string>
@@ -654,9 +654,9 @@
     <string name="learning_data_forget_phrases">Aizmirst frāzes</string>
     <string name="learning_data_forget_words">Aizmirst vārdus</string>
     <string name="learning_data_forget_phrases_title">Aizmirst frāžu paradumus?</string>
-    <string name="learning_data_forget_phrases_body">Dzēst %1$d apgūtos vārdu pārus un trijniekus visās valodās? Kontekstuālie ieteikumi mācīsies no jauna no jūsu rakstīšanas.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="zero">Dzēst %1$d apgūto vārdu pāru un trijnieku visās valodās? Kontekstuālie ieteikumi mācīsies no jauna no jūsu rakstīšanas.</item><item quantity="one">Dzēst %1$d apgūto vārdu pāri vai trijnieku visās valodās? Kontekstuālie ieteikumi mācīsies no jauna no jūsu rakstīšanas.</item><item quantity="other">Dzēst %1$d apgūtos vārdu pārus un trijniekus visās valodās? Kontekstuālie ieteikumi mācīsies no jauna no jūsu rakstīšanas.</item></plurals>
     <string name="learning_data_forget_words_title">Aizmirst vārdu lietojumu?</string>
-    <string name="learning_data_forget_words_body">Dzēst %1$d apgūtos vārdus? Personalizētais pastiprinājums mācīsies no jauna no jūsu rakstīšanas.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="zero">Dzēst %1$d apgūtu vārdu? Personalizētais pastiprinājums mācīsies no jauna no jūsu rakstīšanas.</item><item quantity="one">Dzēst %1$d apgūto vārdu? Personalizētais pastiprinājums mācīsies no jauna no jūsu rakstīšanas.</item><item quantity="other">Dzēst %1$d apgūtos vārdus? Personalizētais pastiprinājums mācīsies no jauna no jūsu rakstīšanas.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Apgūtās frāzes</string>
     <string name="learning_data_phrases_dialog_empty">Nav apgūtu frāžu.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -722,9 +722,9 @@
     <string name="gif_importing">Importē...</string>
     <string name="gif_import_pack">Importēt pakotni no ZIP</string>
     <string name="gif_installed_packs">Instalētās pakotnes</string>
-    <string name="gif_pack_stats">%1$d GIF | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="zero">%1$d GIF | %2$s</item><item quantity="one">%1$d GIF | %2$s</item><item quantity="other">%1$d GIF | %2$s</item></plurals>
     <string name="gif_total_storage">Kopā: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d kolonnas</string>
+    <plurals name="gif_grid_columns_display"><item quantity="zero">%1$d kolonnu</item><item quantity="one">%1$d kolonna</item><item quantity="other">%1$d kolonnas</item></plurals>
     <string name="gif_remove_all">Noņemt visus GIF datus</string>
     <string name="gif_remove_all_title">Noņemt visus GIF datus?</string>
     <string name="gif_remove_all_body">Tiks dzēstas visas importētās GIF pakotnes, sīktēli un datubāze. To nevar atsaukt.</string>
@@ -751,13 +751,13 @@
     <string name="multilang_packs_header">Valodu pakotnes</string>
     <string name="multilang_packs_desc">Importējiet papildu valodu vārdnīcas no ZIP failiem. Lejupielādējiet pakotnes ārēji un importējiet šeit (interneta atļauja nav nepieciešama).</string>
     <string name="multilang_browse_packs">Pārlūkot pieejamās pakotnes ↗</string>
-    <string name="multilang_installed_count">Instalētas: %1$d valodu pakotne(s)</string>
+    <plurals name="multilang_installed_count"><item quantity="zero">Instalēts: %1$d valodu pakotņu</item><item quantity="one">Instalēta: %1$d valodu pakotne</item><item quantity="other">Instalētas: %1$d valodu pakotnes</item></plurals>
     <string name="multilang_import_pack">Importēt pakotni</string>
     <string name="multilang_manage">Pārvaldīt</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Instalētās valodu pakotnes</string>
     <string name="multilang_packs_dialog_empty">Nav instalētu valodu pakotņu.\n\nIzmantojiet \'Pārlūkot pieejamās pakotnes\', lai lejupielādētu ZIP, un pēc tam \'Importēt pakotni\', lai to pievienotu.</string>
-    <string name="multilang_pack_stats">Kods: %1$s • %2$d vārdi</string>
+    <plurals name="multilang_pack_stats"><item quantity="zero">Kods: %1$s • %2$d vārdu</item><item quantity="one">Kods: %1$s • %2$d vārds</item><item quantity="other">Kods: %1$s • %2$d vārdi</item></plurals>
     <string name="input_manage_layouts">Pārvaldīt tastatūras izkārtojumus</string>
     <string name="input_configure_extra_keys">Konfigurēt papildu taustiņus</string>
     <string name="input_advanced_prediction">Papildu prognožu iestatījumi</string>
@@ -813,13 +813,13 @@
     <string name="command_palette_timestamp_title">Laikspiedols</string>
     <string name="command_palette_timestamp_desc">Ievietot formatētu datumu/laiku (piem., yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">Pieejamas %1$d komandas</string>
-    <string name="command_palette_count_results">%1$d rezultāti vaicājumam \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="zero">%1$d rezultātu vaicājumam \"%2$s\"</item><item quantity="one">%1$d rezultāts vaicājumam \"%2$s\"</item><item quantity="other">%1$d rezultāti vaicājumam \"%2$s\"</item></plurals>
     <string name="command_palette_browse_all">Pārlūkot visas %1$d komandas</string>
     <string name="command_palette_quick_commands">Ātrās komandas</string>
     <string name="command_palette_custom_text_intro">Ievadiet tekstu, kas tiks ievietots, velkot šajā virzienā.</string>
     <string name="command_palette_text_to_insert">Ievietojamais teksts</string>
     <string name="command_palette_text_placeholder">piem., Sveika, pasaule!</string>
-    <string name="command_palette_char_count">%1$d rakstzīmes</string>
+    <plurals name="command_palette_char_count"><item quantity="zero">%1$d rakstzīmju</item><item quantity="one">%1$d rakstzīme</item><item quantity="other">%1$d rakstzīmes</item></plurals>
     <string name="command_palette_paste_desc">Ielīmēt no starpliktuves</string>
     <string name="command_palette_quick_suggestions">Ātrie ieteikumi:</string>
     <string name="command_palette_use_text">Izmantot šo tekstu</string>
@@ -871,11 +871,11 @@
     <string name="import_preview_diff_removed">−%1$d noņemti</string>
     <string name="import_preview_diff_changed">~%1$d mainīti</string>
     <string name="import_preview_diff_unchanged">(%1$d nemainīti)</string>
-    <string name="import_preview_short_swipe_count">Šajā dublējumā ir %1$d īso vilkumu piešķīrumi</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="zero">Šajā dublējumā ir %1$d īso vilkumu piešķīrumu</item><item quantity="one">Šajā dublējumā ir %1$d īsā vilkuma piešķīrums</item><item quantity="other">Šajā dublējumā ir %1$d īso vilkumu piešķīrumi</item></plurals>
     <string name="import_preview_short_swipe_skip">Izlaist — neimportēt</string>
     <string name="import_preview_short_swipe_merge">Apvienot — aizpildīt tukšumus, saglabāt esošos (ieteicams)</string>
     <string name="import_preview_short_swipe_replace">Aizstāt — dzēst esošos, instalēt faila kopu</string>
-    <string name="import_preview_short_swipe_warning">Tas AIZSTĀS visus jūsu esošos īso vilkumu pielāgojumus ar faila %1$d piešķīrumiem.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="zero">Tas AIZSTĀS visus jūsu esošos īso vilkumu pielāgojumus ar faila %1$d piešķīrumiem.</item><item quantity="one">Tas AIZSTĀS visus jūsu esošos īso vilkumu pielāgojumus ar faila %1$d piešķīrumu.</item><item quantity="other">Tas AIZSTĀS visus jūsu esošos īso vilkumu pielāgojumus ar faila %1$d piešķīrumiem.</item></plurals>
     <string name="import_preview_selected_count">Atlasīti %1$d no %2$d</string>
     <string name="import_preview_expand">Izvērst</string>
     <string name="import_preview_hide">Paslēpt</string>
@@ -888,7 +888,7 @@
     <string name="import_preview_learned_desc">Apgūtie frāžu skaitītāji tiek apvienoti kā grupa. Ja šajā dublējumā ir personiskais vārdu krājums, tas aizstāj pašreizējo apgūto vārdu sarakstu.</string>
     <string name="import_preview_learned_bigrams">Apvienojamie vārdu pāri: %1$d</string>
     <string name="import_preview_learned_trigrams">Apvienojamie vārdu trijnieki: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Personiskais vārdu krājums tiks aizstāts ar %1$d vārdiem</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="zero">Personiskais vārdu krājums tiks aizstāts ar %1$d vārdiem</item><item quantity="one">Personiskais vārdu krājums tiks aizstāts ar %1$d vārdu</item><item quantity="other">Personiskais vārdu krājums tiks aizstāts ar %1$d vārdiem</item></plurals>
     <string name="import_preview_modified">Mainīti (%1$d)</string>
     <string name="import_preview_added">Pievienoti (%1$d)</string>
     <string name="import_preview_short_swipe_header">Īso vilkumu pielāgojumi</string>

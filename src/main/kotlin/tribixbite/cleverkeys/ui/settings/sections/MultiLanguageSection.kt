@@ -240,7 +240,11 @@ internal fun SettingsActivity.MultiLanguageSection() {
 
                     // Installed packs count
                     Text(
-                        text = stringResource(R.string.multilang_installed_count, installedLanguagePacks.size),
+                        text = pluralStringResource(
+                            R.plurals.multilang_installed_count,
+                            installedLanguagePacks.size,
+                            installedLanguagePacks.size
+                        ),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -361,7 +365,12 @@ internal fun SettingsActivity.MultiLanguageSection() {
                                                     fontWeight = FontWeight.Medium
                                                 )
                                                 Text(
-                                                    text = stringResource(R.string.multilang_pack_stats, pack.code, pack.wordCount),
+                                                    text = pluralStringResource(
+                                                        R.plurals.multilang_pack_stats,
+                                                        pack.wordCount,
+                                                        pack.code,
+                                                        pack.wordCount
+                                                    ),
                                                     fontSize = 11.sp,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )

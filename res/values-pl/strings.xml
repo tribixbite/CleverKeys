@@ -553,7 +553,7 @@
     <string name="theme_color_high_confidence">Wysoka pewność</string>
     <string name="theme_color_keyboard_background">Tło klawiatury</string>
     <string name="theme_color_keyboard_surface">Powierzchnia klawiatury</string>
-    <string name="short_swipe_mappings_summary">%1$d własnych mapowań • %2$d dostępnych poleceń</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d własne mapowanie • %2$d dostępnych poleceń</item><item quantity="few">%1$d własne mapowania • %2$d dostępnych poleceń</item><item quantity="many">%1$d własnych mapowań • %2$d dostępnych poleceń</item><item quantity="other">%1$d własnych mapowań • %2$d dostępnych poleceń</item></plurals>
     <string name="short_swipe_last_key">Ostatni klawisz: %1$s</string>
     <string name="short_swipe_customize_key">Dostosuj klawisz "%1$s"</string>
     <string name="extra_keys_enabled_count">%1$d z %2$d dodatkowych klawiszy włączonych</string>
@@ -640,11 +640,11 @@
     <string name="learning_data_title">Uczenie &amp; dane</string>
     <string name="learning_data_privacy_note">Całe uczenie pozostaje na tym urządzeniu. Wyuczone wzorce zwrotów i użycie słów są uwzględniane w eksportach słownika (Kopia zapasowa &amp; przywracanie).</string>
     <string name="learning_data_loading">Wczytywanie…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d par</string>
-    <string name="learning_data_triples_suffix">, %1$d trójek</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: %2$d para</item><item quantity="few">%1$s: %2$d pary</item><item quantity="many">%1$s: %2$d par</item><item quantity="other">%1$s: %2$d par</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">, %1$d trójka</item><item quantity="few">, %1$d trójki</item><item quantity="many">, %1$d trójek</item><item quantity="other">, %1$d trójek</item></plurals>
     <string name="learning_data_no_pairs">Brak wyuczonych par słów</string>
     <string name="learning_data_no_words">Brak wyuczonych słów</string>
-    <string name="learning_data_word_count">%1$d słów</string>
+    <plurals name="learning_data_word_count"><item quantity="one">%1$d słowo</item><item quantity="few">%1$d słowa</item><item quantity="many">%1$d słów</item><item quantity="other">%1$d słów</item></plurals>
     <string name="learning_data_most_used">najczęściej używane: „%1$s” (%2$d×)</string>
     <string name="learning_data_phrase_patterns">Wzorce zwrotów — %1$s</string>
     <string name="learning_data_word_usage">Użycie słów — %1$s</string>
@@ -653,9 +653,9 @@
     <string name="learning_data_forget_phrases">Zapomnij zwroty</string>
     <string name="learning_data_forget_words">Zapomnij słowa</string>
     <string name="learning_data_forget_phrases_title">Zapomnieć wzorce zwrotów?</string>
-    <string name="learning_data_forget_phrases_body">Usunąć %1$d wyuczonych par i trójek słów we wszystkich językach? Podpowiedzi kontekstowe nauczą się ponownie z Twojego pisania.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">Usunąć %1$d wyuczoną parę lub trójkę słów we wszystkich językach? Podpowiedzi kontekstowe nauczą się ponownie z Twojego pisania.</item><item quantity="few">Usunąć %1$d wyuczone pary i trójki słów we wszystkich językach? Podpowiedzi kontekstowe nauczą się ponownie z Twojego pisania.</item><item quantity="many">Usunąć %1$d wyuczonych par i trójek słów we wszystkich językach? Podpowiedzi kontekstowe nauczą się ponownie z Twojego pisania.</item><item quantity="other">Usunąć %1$d wyuczonych par i trójek słów we wszystkich językach? Podpowiedzi kontekstowe nauczą się ponownie z Twojego pisania.</item></plurals>
     <string name="learning_data_forget_words_title">Zapomnieć użycie słów?</string>
-    <string name="learning_data_forget_words_body">Usunąć %1$d wyuczonych słów? Spersonalizowane wzmacnianie nauczy się ponownie z Twojego pisania.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">Usunąć %1$d wyuczone słowo? Spersonalizowane wzmacnianie nauczy się ponownie z Twojego pisania.</item><item quantity="few">Usunąć %1$d wyuczone słowa? Spersonalizowane wzmacnianie nauczy się ponownie z Twojego pisania.</item><item quantity="many">Usunąć %1$d wyuczonych słów? Spersonalizowane wzmacnianie nauczy się ponownie z Twojego pisania.</item><item quantity="other">Usunąć %1$d wyuczonych słów? Spersonalizowane wzmacnianie nauczy się ponownie z Twojego pisania.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Wyuczone zwroty</string>
     <string name="learning_data_phrases_dialog_empty">Brak wyuczonych zwrotów.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -721,9 +721,9 @@
     <string name="gif_importing">Importowanie...</string>
     <string name="gif_import_pack">Importuj pakiet z ZIP</string>
     <string name="gif_installed_packs">Zainstalowane pakiety</string>
-    <string name="gif_pack_stats">%1$d GIF-ów | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">%1$d GIF | %2$s</item><item quantity="few">%1$d GIF-y | %2$s</item><item quantity="many">%1$d GIF-ów | %2$s</item><item quantity="other">%1$d GIF-ów | %2$s</item></plurals>
     <string name="gif_total_storage">Łącznie: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d kolumn</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">%1$d kolumna</item><item quantity="few">%1$d kolumny</item><item quantity="many">%1$d kolumn</item><item quantity="other">%1$d kolumn</item></plurals>
     <string name="gif_remove_all">Usuń wszystkie dane GIF</string>
     <string name="gif_remove_all_title">Usunąć wszystkie dane GIF?</string>
     <string name="gif_remove_all_body">Spowoduje to usunięcie wszystkich zaimportowanych pakietów GIF, miniatur i bazy danych. Nie można tego cofnąć.</string>
@@ -750,13 +750,13 @@
     <string name="multilang_packs_header">Pakiety językowe</string>
     <string name="multilang_packs_desc">Importuj dodatkowe słowniki językowe z plików ZIP. Pobierz pakiety zewnętrznie i zaimportuj tutaj (bez uprawnienia do internetu).</string>
     <string name="multilang_browse_packs">Przeglądaj dostępne pakiety ↗</string>
-    <string name="multilang_installed_count">Zainstalowano: %1$d pakiet(y) językowe</string>
+    <plurals name="multilang_installed_count"><item quantity="one">Zainstalowano: %1$d pakiet językowy</item><item quantity="few">Zainstalowano: %1$d pakiety językowe</item><item quantity="many">Zainstalowano: %1$d pakietów językowych</item><item quantity="other">Zainstalowano: %1$d pakietów językowych</item></plurals>
     <string name="multilang_import_pack">Importuj pakiet</string>
     <string name="multilang_manage">Zarządzaj</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Zainstalowane pakiety językowe</string>
     <string name="multilang_packs_dialog_empty">Brak zainstalowanych pakietów językowych.\n\nUżyj \'Przeglądaj dostępne pakiety\', aby pobrać ZIP, a następnie \'Importuj pakiet\', aby go dodać.</string>
-    <string name="multilang_pack_stats">Kod: %1$s • %2$d słów</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">Kod: %1$s • %2$d słowo</item><item quantity="few">Kod: %1$s • %2$d słowa</item><item quantity="many">Kod: %1$s • %2$d słów</item><item quantity="other">Kod: %1$s • %2$d słów</item></plurals>
     <string name="input_manage_layouts">Zarządzaj układami klawiatury</string>
     <string name="input_configure_extra_keys">Skonfiguruj dodatkowe klawisze</string>
     <string name="input_advanced_prediction">Zaawansowane ustawienia przewidywania</string>
@@ -812,13 +812,13 @@
     <string name="command_palette_timestamp_title">Znacznik czasu</string>
     <string name="command_palette_timestamp_desc">Wstaw sformatowaną datę/godzinę (np. yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">%1$d dostępnych poleceń</string>
-    <string name="command_palette_count_results">%1$d wyników dla \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="one">%1$d wynik dla \"%2$s\"</item><item quantity="few">%1$d wyniki dla \"%2$s\"</item><item quantity="many">%1$d wyników dla \"%2$s\"</item><item quantity="other">%1$d wyników dla \"%2$s\"</item></plurals>
     <string name="command_palette_browse_all">Przeglądaj wszystkie polecenia (%1$d)</string>
     <string name="command_palette_quick_commands">Szybkie polecenia</string>
     <string name="command_palette_custom_text_intro">Wpisz tekst, który zostanie wstawiony po wykonaniu gestu w tym kierunku.</string>
     <string name="command_palette_text_to_insert">Tekst do wstawienia</string>
     <string name="command_palette_text_placeholder">np. Witaj, świecie!</string>
-    <string name="command_palette_char_count">%1$d znaków</string>
+    <plurals name="command_palette_char_count"><item quantity="one">%1$d znak</item><item quantity="few">%1$d znaki</item><item quantity="many">%1$d znaków</item><item quantity="other">%1$d znaków</item></plurals>
     <string name="command_palette_paste_desc">Wklej ze schowka</string>
     <string name="command_palette_quick_suggestions">Szybkie sugestie:</string>
     <string name="command_palette_use_text">Użyj tego tekstu</string>
@@ -870,11 +870,11 @@
     <string name="import_preview_diff_removed">−%1$d usuniętych</string>
     <string name="import_preview_diff_changed">~%1$d zmienionych</string>
     <string name="import_preview_diff_unchanged">(%1$d bez zmian)</string>
-    <string name="import_preview_short_swipe_count">%1$d mapowań krótkich gestów w tej kopii zapasowej</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d mapowanie krótkich gestów w tej kopii zapasowej</item><item quantity="few">%1$d mapowania krótkich gestów w tej kopii zapasowej</item><item quantity="many">%1$d mapowań krótkich gestów w tej kopii zapasowej</item><item quantity="other">%1$d mapowań krótkich gestów w tej kopii zapasowej</item></plurals>
     <string name="import_preview_short_swipe_skip">Pomiń — nie importuj</string>
     <string name="import_preview_short_swipe_merge">Scal — uzupełnij braki, zachowaj istniejące (zalecane)</string>
     <string name="import_preview_short_swipe_replace">Zastąp — usuń istniejące, zainstaluj zestaw z pliku</string>
-    <string name="import_preview_short_swipe_warning">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniami z pliku.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniem z pliku.</item><item quantity="few">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniami z pliku.</item><item quantity="many">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniami z pliku.</item><item quantity="other">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniami z pliku.</item></plurals>
     <string name="import_preview_selected_count">Wybrano %1$d z %2$d</string>
     <string name="import_preview_expand">Rozwiń</string>
     <string name="import_preview_hide">Ukryj</string>
@@ -887,7 +887,7 @@
     <string name="import_preview_learned_desc">Wyuczone liczniki zwrotów są scalane jako grupa. Jeśli ta kopia zawiera osobiste słownictwo, zastąpi ono bieżącą listę wyuczonych słów.</string>
     <string name="import_preview_learned_bigrams">Pary słów do scalenia: %1$d</string>
     <string name="import_preview_learned_trigrams">Trójki słów do scalenia: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Osobiste słownictwo zostanie zastąpione %1$d słowami</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">Osobiste słownictwo zostanie zastąpione %1$d słowem</item><item quantity="few">Osobiste słownictwo zostanie zastąpione %1$d słowami</item><item quantity="many">Osobiste słownictwo zostanie zastąpione %1$d słowami</item><item quantity="other">Osobiste słownictwo zostanie zastąpione %1$d słowami</item></plurals>
     <string name="import_preview_modified">Zmodyfikowane (%1$d)</string>
     <string name="import_preview_added">Dodane (%1$d)</string>
     <string name="import_preview_short_swipe_header">Dostosowania krótkich gestów</string>

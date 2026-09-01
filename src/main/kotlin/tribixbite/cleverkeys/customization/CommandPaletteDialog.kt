@@ -23,6 +23,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import android.content.ClipboardManager
@@ -649,9 +650,11 @@ private fun CommandSearchSection(
             text = if (searchQuery.isBlank()) {
                 stringResource(R.string.command_palette_count_available, CommandRegistry.totalCount)
             } else {
-                stringResource(
-                    R.string.command_palette_count_results,
-                    filteredCommands.values.sumOf { it.size },
+                val resultCount = filteredCommands.values.sumOf { it.size }
+                pluralStringResource(
+                    R.plurals.command_palette_count_results,
+                    resultCount,
+                    resultCount,
                     searchQuery
                 )
             },
@@ -845,7 +848,13 @@ private fun CustomTextInputSection(
                 .focusRequester(focusRequester),
             label = { Text(stringResource(R.string.command_palette_text_to_insert)) },
             placeholder = { Text(stringResource(R.string.command_palette_text_placeholder)) },
-            supportingText = { Text(stringResource(R.string.command_palette_char_count, text.length)) },
+            supportingText = {
+                Text(
+                    pluralStringResource(
+                        R.plurals.command_palette_char_count, text.length, text.length
+                    )
+                )
+            },
             trailingIcon = {
                 // Paste button — Compose text fields don't reliably receive
                 // performContextMenuAction(paste) from the IME, so provide

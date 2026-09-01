@@ -798,15 +798,20 @@
          (short-swipe & extra-keys activities). Format args instead of
          Kotlin string templates so translators can reorder.
          ══════════════════════════════════════════════════════════════════ -->
-    <!-- %1$d = number of custom short-swipe mappings, %2$d = total available commands -->
-    <!-- TODO(i18n): convert the two count strings below to <plurals> (proper
-         Slavic/Baltic plural forms); deferred — needs a 21-locale re-translation pass. -->
-    <string name="short_swipe_mappings_summary" tools:ignore="PluralsCandidate">%1$d custom mappings • %2$d commands available</string>
+    <!-- %1$d = number of custom short-swipe mappings (the plural quantity), %2$d = total
+         available commands. ARC-103: converted to <plurals> keyed on %1$d; %2$d is the
+         fixed registry size, so locales phrase that clause numeral-neutrally. -->
+    <plurals name="short_swipe_mappings_summary">
+        <item quantity="one">%1$d custom mapping • %2$d commands available</item>
+        <item quantity="other">%1$d custom mappings • %2$d commands available</item>
+    </plurals>
     <!-- %1$s = the last key that was tapped (uppercased) -->
     <string name="short_swipe_last_key">Last key: %1$s</string>
     <!-- %1$s = the key being customized (uppercased) -->
     <string name="short_swipe_customize_key">Customize \"%1$s\" Key</string>
-    <!-- %1$d = number of enabled extra keys, %2$d = total extra keys -->
+    <!-- %1$d = number of enabled extra keys, %2$d = total extra keys. Left as a <string>
+         in the ARC-103 plurals pass: the noun binds to the fixed total (%2$d) in an
+         "X of Y" construction, which every locale can phrase numeral-neutrally. -->
     <string name="extra_keys_enabled_count" tools:ignore="PluralsCandidate">%1$d of %2$d extra keys enabled</string>
     <!-- Cross-language contraction collision warning (2026-08-20). Shown after a language
          selection when an IMPORTED pack holds a REPLACE-mode contraction key that is also a real
@@ -850,13 +855,22 @@
     <string name="learning_data_privacy_note">All learning stays on this device. Learned phrase patterns and word usage are included in dictionary exports (Backup &amp; Restore).</string>
     <string name="learning_data_loading">Loading…</string>
     <!-- %1$s = language code, %2$d = learned word-pair count -->
-    <string name="learning_data_pairs_for_language" tools:ignore="PluralsCandidate">%1$s: %2$d pairs</string>
+    <plurals name="learning_data_pairs_for_language">
+        <item quantity="one">%1$s: %2$d pair</item>
+        <item quantity="other">%1$s: %2$d pairs</item>
+    </plurals>
     <!-- %1$d = learned word-triple count; appended after learning_data_pairs_for_language -->
-    <string name="learning_data_triples_suffix" tools:ignore="PluralsCandidate">, %1$d triples</string>
+    <plurals name="learning_data_triples_suffix">
+        <item quantity="one">, %1$d triple</item>
+        <item quantity="other">, %1$d triples</item>
+    </plurals>
     <string name="learning_data_no_pairs">No learned word pairs yet</string>
     <string name="learning_data_no_words">No learned words yet</string>
     <!-- %1$d = number of words. Also the personalization word-cap slider's display value. -->
-    <string name="learning_data_word_count" tools:ignore="PluralsCandidate">%1$d words</string>
+    <plurals name="learning_data_word_count">
+        <item quantity="one">%1$d word</item>
+        <item quantity="other">%1$d words</item>
+    </plurals>
     <!-- %1$s = the most-used learned word, %2$d = its usage count -->
     <string name="learning_data_most_used">most used: “%1$s” (%2$d×)</string>
     <!-- %1$s = the per-language phrase-pattern summary -->
@@ -869,10 +883,16 @@
     <string name="learning_data_forget_words">Forget words</string>
     <string name="learning_data_forget_phrases_title">Forget phrase patterns?</string>
     <!-- %1$d = number of learned pairs and triples that will be deleted -->
-    <string name="learning_data_forget_phrases_body" tools:ignore="PluralsCandidate">Delete %1$d learned word pairs and triples across all languages? Context-aware suggestions will relearn from your typing.</string>
+    <plurals name="learning_data_forget_phrases_body">
+        <item quantity="one">Delete %1$d learned word pair or triple across all languages? Context-aware suggestions will relearn from your typing.</item>
+        <item quantity="other">Delete %1$d learned word pairs and triples across all languages? Context-aware suggestions will relearn from your typing.</item>
+    </plurals>
     <string name="learning_data_forget_words_title">Forget word usage?</string>
     <!-- %1$d = number of learned words that will be deleted -->
-    <string name="learning_data_forget_words_body" tools:ignore="PluralsCandidate">Delete %1$d learned words? Personalized boosting will relearn from your typing.</string>
+    <plurals name="learning_data_forget_words_body">
+        <item quantity="one">Delete %1$d learned word? Personalized boosting will relearn from your typing.</item>
+        <item quantity="other">Delete %1$d learned words? Personalized boosting will relearn from your typing.</item>
+    </plurals>
     <string name="learning_data_phrases_dialog_title">Learned phrases</string>
     <string name="learning_data_phrases_dialog_empty">No learned phrases.</string>
     <!-- %1$s = first word, %2$s = learned continuation, %3$d = frequency, %4$s = language code -->
@@ -954,11 +974,17 @@
     <string name="gif_import_pack">Import Pack from ZIP</string>
     <string name="gif_installed_packs">Installed Packs</string>
     <!-- %1$d = number of GIFs in the pack, %2$s = human-readable pack size -->
-    <string name="gif_pack_stats" tools:ignore="PluralsCandidate">%1$d GIFs | %2$s</string>
+    <plurals name="gif_pack_stats">
+        <item quantity="one">%1$d GIF | %2$s</item>
+        <item quantity="other">%1$d GIFs | %2$s</item>
+    </plurals>
     <!-- %1$s = human-readable total storage used by all installed packs -->
     <string name="gif_total_storage">Total: %1$s</string>
     <!-- %1$d = number of thumbnail grid columns -->
-    <string name="gif_grid_columns_display" tools:ignore="PluralsCandidate">%1$d columns</string>
+    <plurals name="gif_grid_columns_display">
+        <item quantity="one">%1$d column</item>
+        <item quantity="other">%1$d columns</item>
+    </plurals>
     <string name="gif_remove_all">Remove All GIF Data</string>
     <string name="gif_remove_all_title">Remove All GIF Data?</string>
     <string name="gif_remove_all_body">This will delete all imported GIF packs, thumbnails, and database. This cannot be undone.</string>
@@ -992,7 +1018,10 @@
     <string name="multilang_packs_desc">Import additional language dictionaries from ZIP files. Download packs externally and import here (no internet permission needed).</string>
     <string name="multilang_browse_packs">Browse available packs ↗</string>
     <!-- %1$d = number of installed language packs -->
-    <string name="multilang_installed_count" tools:ignore="PluralsCandidate">Installed: %1$d language pack(s)</string>
+    <plurals name="multilang_installed_count">
+        <item quantity="one">Installed: %1$d language pack</item>
+        <item quantity="other">Installed: %1$d language packs</item>
+    </plurals>
     <string name="multilang_import_pack">Import Pack</string>
     <string name="multilang_manage">Manage</string>
     <!-- One contraction-collision example row. %1$s = the shortcut key, %2$s = what it
@@ -1001,7 +1030,10 @@
     <string name="multilang_packs_dialog_title">Installed Language Packs</string>
     <string name="multilang_packs_dialog_empty">No language packs installed.\n\nUse \'Browse available packs\' to download a ZIP, then \'Import Pack\' to add it.</string>
     <!-- %1$s = ISO 639-1 language code, %2$d = words in the pack\'s dictionary -->
-    <string name="multilang_pack_stats" tools:ignore="PluralsCandidate">Code: %1$s • %2$d words</string>
+    <plurals name="multilang_pack_stats">
+        <item quantity="one">Code: %1$s • %2$d word</item>
+        <item quantity="other">Code: %1$s • %2$d words</item>
+    </plurals>
 
     <!-- InputBehaviorSection.kt -->
     <string name="input_manage_layouts">Manage Keyboard Layouts</string>
@@ -1079,10 +1111,15 @@
     <string name="command_palette_send_intent_desc">Create advanced Android intent (activity, service, broadcast)</string>
     <string name="command_palette_timestamp_title">Timestamp</string>
     <string name="command_palette_timestamp_desc">Insert formatted date/time (e.g. yyyy-MM-dd HH:mm)</string>
-    <!-- %1$d = total commands in the registry -->
+    <!-- %1$d = total commands in the registry. Left as a <string> in the ARC-103 plurals
+         pass: the registry size is fixed at runtime (never 1), so a single form renders
+         correctly per locale. -->
     <string name="command_palette_count_available" tools:ignore="PluralsCandidate">%1$d commands available</string>
     <!-- %1$d = matching commands, %2$s = the search query -->
-    <string name="command_palette_count_results" tools:ignore="PluralsCandidate">%1$d results for \"%2$s\"</string>
+    <plurals name="command_palette_count_results">
+        <item quantity="one">%1$d result for \"%2$s\"</item>
+        <item quantity="other">%1$d results for \"%2$s\"</item>
+    </plurals>
     <!-- %1$d = total commands in the registry -->
     <string name="command_palette_browse_all">Browse All %1$d Commands</string>
     <string name="command_palette_quick_commands">Quick Commands</string>
@@ -1090,7 +1127,10 @@
     <string name="command_palette_text_to_insert">Text to insert</string>
     <string name="command_palette_text_placeholder">e.g., Hello, World!</string>
     <!-- %1$d = characters typed so far -->
-    <string name="command_palette_char_count" tools:ignore="PluralsCandidate">%1$d characters</string>
+    <plurals name="command_palette_char_count">
+        <item quantity="one">%1$d character</item>
+        <item quantity="other">%1$d characters</item>
+    </plurals>
     <string name="command_palette_paste_desc">Paste from clipboard</string>
     <string name="command_palette_quick_suggestions">Quick suggestions:</string>
     <string name="command_palette_use_text">Use This Text</string>
@@ -1169,12 +1209,18 @@
     <string name="import_preview_diff_changed" tools:ignore="PluralsCandidate">~%1$d changed</string>
     <string name="import_preview_diff_unchanged" tools:ignore="PluralsCandidate">(%1$d unchanged)</string>
     <!-- %1$d = short-swipe mappings present in the backup file -->
-    <string name="import_preview_short_swipe_count" tools:ignore="PluralsCandidate">%1$d short-swipe mappings in this backup</string>
+    <plurals name="import_preview_short_swipe_count">
+        <item quantity="one">%1$d short-swipe mapping in this backup</item>
+        <item quantity="other">%1$d short-swipe mappings in this backup</item>
+    </plurals>
     <string name="import_preview_short_swipe_skip">Skip — don\'t import</string>
     <string name="import_preview_short_swipe_merge">Merge — fill gaps, preserve existing (recommended)</string>
     <string name="import_preview_short_swipe_replace">Replace — wipe existing, install file\'s set</string>
     <!-- %1$d = mappings in the file that would overwrite everything the user has -->
-    <string name="import_preview_short_swipe_warning" tools:ignore="PluralsCandidate">This will REPLACE all your existing short-swipe customizations with the file\'s %1$d mappings.</string>
+    <plurals name="import_preview_short_swipe_warning">
+        <item quantity="one">This will REPLACE all your existing short-swipe customizations with the file\'s %1$d mapping.</item>
+        <item quantity="other">This will REPLACE all your existing short-swipe customizations with the file\'s %1$d mappings.</item>
+    </plurals>
     <!-- %1$d = words kept selected, %2$d = words offered -->
     <string name="import_preview_selected_count">%1$d of %2$d selected</string>
     <string name="import_preview_expand">Expand</string>
@@ -1192,7 +1238,10 @@
     <string name="import_preview_learned_desc">Learned phrase counts are merged as a group. If this backup includes a personal vocabulary, it replaces the current learned-word list.</string>
     <string name="import_preview_learned_bigrams" tools:ignore="PluralsCandidate">Word pairs to merge: %1$d</string>
     <string name="import_preview_learned_trigrams" tools:ignore="PluralsCandidate">Word triples to merge: %1$d</string>
-    <string name="import_preview_learned_vocabulary" tools:ignore="PluralsCandidate">Personal vocabulary will be replaced with %1$d words</string>
+    <plurals name="import_preview_learned_vocabulary">
+        <item quantity="one">Personal vocabulary will be replaced with %1$d word</item>
+        <item quantity="other">Personal vocabulary will be replaced with %1$d words</item>
+    </plurals>
     <!-- Section headers in the settings preview. %1$d = rows in the section. -->
     <string name="import_preview_modified" tools:ignore="PluralsCandidate">Modified (%1$d)</string>
     <string name="import_preview_added" tools:ignore="PluralsCandidate">Added (%1$d)</string>

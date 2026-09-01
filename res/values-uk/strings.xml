@@ -554,7 +554,7 @@
     <string name="theme_color_high_confidence">Висока впевненість</string>
     <string name="theme_color_keyboard_background">Фон клавіатури</string>
     <string name="theme_color_keyboard_surface">Поверхня клавіатури</string>
-    <string name="short_swipe_mappings_summary">%1$d призначень • доступно %2$d команд</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d призначення • доступно %2$d команд</item><item quantity="few">%1$d призначення • доступно %2$d команд</item><item quantity="many">%1$d призначень • доступно %2$d команд</item><item quantity="other">%1$d призначень • доступно %2$d команд</item></plurals>
     <string name="short_swipe_last_key">Остання клавіша: %1$s</string>
     <string name="short_swipe_customize_key">Налаштувати клавішу «%1$s»</string>
     <string name="extra_keys_enabled_count">%1$d із %2$d додаткових клавіш увімкнено</string>
@@ -670,10 +670,10 @@
     <string name="command_palette_action_text">Текст: \"%1$s\"</string>
     <string name="command_palette_action_timestamp">Мітка часу: %1$s (зараз → \"%2$s\")</string>
     <string name="command_palette_browse_all">Переглянути всі %1$d команд</string>
-    <string name="command_palette_char_count">%1$d символів</string>
+    <plurals name="command_palette_char_count"><item quantity="one">%1$d символ</item><item quantity="few">%1$d символи</item><item quantity="many">%1$d символів</item><item quantity="other">%1$d символів</item></plurals>
     <string name="command_palette_confirm">Підтвердити</string>
     <string name="command_palette_count_available">Доступно команд: %1$d</string>
-    <string name="command_palette_count_results">%1$d результатів для \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="one">%1$d результат для \"%2$s\"</item><item quantity="few">%1$d результати для \"%2$s\"</item><item quantity="many">%1$d результатів для \"%2$s\"</item><item quantity="other">%1$d результатів для \"%2$s\"</item></plurals>
     <string name="command_palette_custom_text_desc">Введіть будь-який текст для вставлення (макроси, фрагменти тощо)</string>
     <string name="command_palette_custom_text_intro">Введіть текст, який буде вставлено, коли ви свайпнете в цьому напрямку.</string>
     <string name="command_palette_custom_text_title">Власний текст</string>
@@ -758,11 +758,11 @@
     <string name="gesture_tap_typing_header">Дотики та набір</string>
     <string name="gesture_tuning_tip">Якщо жести здаються повільними, зменшіть час утримання й поріг шуму. Якщо дотики розпізнаються як свайпи, збільшіть тривалість дотику.</string>
     <string name="gif_get_packs">Отримати GIF-пакети (відкриє браузер)</string>
-    <string name="gif_grid_columns_display">%1$d стовпців</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">%1$d стовпець</item><item quantity="few">%1$d стовпці</item><item quantity="many">%1$d стовпців</item><item quantity="other">%1$d стовпців</item></plurals>
     <string name="gif_import_pack">Імпортувати пакет із ZIP</string>
     <string name="gif_importing">Імпортування...</string>
     <string name="gif_installed_packs">Встановлені пакети</string>
-    <string name="gif_pack_stats">%1$d GIF | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">%1$d GIF | %2$s</item><item quantity="few">%1$d GIF | %2$s</item><item quantity="many">%1$d GIF | %2$s</item><item quantity="other">%1$d GIF | %2$s</item></plurals>
     <string name="gif_remove_all">Видалити всі дані GIF</string>
     <string name="gif_remove_all_body">Це видалить усі імпортовані GIF-пакети, мініатюри та базу даних. Цю дію не можна скасувати.</string>
     <string name="gif_remove_all_confirm">Видалити все</string>
@@ -790,17 +790,17 @@
     <string name="import_preview_learned_desc">Вивчені лічильники фраз зливаються групою. Якщо ця копія містить особистий словниковий запас, він замінює поточний список вивчених слів.</string>
     <string name="import_preview_learned_title">Вивчені дані</string>
     <string name="import_preview_learned_trigrams">Трійок слів до злиття: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Особистий словниковий запас буде замінено %1$d словами</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">Особистий словниковий запас буде замінено %1$d словом</item><item quantity="few">Особистий словниковий запас буде замінено %1$d словами</item><item quantity="many">Особистий словниковий запас буде замінено %1$d словами</item><item quantity="other">Особистий словниковий запас буде замінено %1$d словами</item></plurals>
     <string name="import_preview_modified">Змінено (%1$d)</string>
     <string name="import_preview_screen_mismatch">Невідповідність розміру екрана — деякі візуальні налаштування можуть потребувати коригування.</string>
     <string name="import_preview_search_hint">Пошук…</string>
     <string name="import_preview_selected_count">Вибрано %1$d з %2$d</string>
-    <string name="import_preview_short_swipe_count">Зіставлень коротких свайпів у цій копії: %1$d</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">Зіставлень коротких свайпів у цій копії: %1$d</item><item quantity="few">Зіставлень коротких свайпів у цій копії: %1$d</item><item quantity="many">Зіставлень коротких свайпів у цій копії: %1$d</item><item quantity="other">Зіставлень коротких свайпів у цій копії: %1$d</item></plurals>
     <string name="import_preview_short_swipe_header">Налаштування коротких свайпів</string>
     <string name="import_preview_short_swipe_merge">Злити — заповнити прогалини, зберегти наявні (рекомендовано)</string>
     <string name="import_preview_short_swipe_replace">Замінити — стерти наявні, встановити набір із файлу</string>
     <string name="import_preview_short_swipe_skip">Пропустити — не імпортувати</string>
-    <string name="import_preview_short_swipe_warning">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленням з файлу.</item><item quantity="few">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item><item quantity="many">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item><item quantity="other">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item></plurals>
     <string name="import_preview_skipped_collapse">▼ Недійсні/пропущені (%1$d) — торкніться, щоб згорнути</string>
     <string name="import_preview_skipped_expand">▶ Недійсні/пропущені (%1$d) — торкніться, щоб розгорнути</string>
     <string name="import_preview_source_screen">Екран джерела: %1$d×%2$d@%3$s</string>
@@ -856,24 +856,24 @@
     <string name="learning_data_browse_phrases">Переглянути фрази</string>
     <string name="learning_data_browse_words">Переглянути слова</string>
     <string name="learning_data_forget_phrases">Забути фрази</string>
-    <string name="learning_data_forget_phrases_body">Видалити %1$d вивчених пар і трійок слів для всіх мов? Контекстні пропозиції навчаться заново з вашого набору.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">Видалити %1$d вивчену пару або трійку слів для всіх мов? Контекстні пропозиції навчаться заново з вашого набору.</item><item quantity="few">Видалити %1$d вивчені пари і трійки слів для всіх мов? Контекстні пропозиції навчаться заново з вашого набору.</item><item quantity="many">Видалити %1$d вивчених пар і трійок слів для всіх мов? Контекстні пропозиції навчаться заново з вашого набору.</item><item quantity="other">Видалити %1$d вивчених пар і трійок слів для всіх мов? Контекстні пропозиції навчаться заново з вашого набору.</item></plurals>
     <string name="learning_data_forget_phrases_title">Забути шаблони фраз?</string>
     <string name="learning_data_forget_words">Забути слова</string>
-    <string name="learning_data_forget_words_body">Видалити %1$d вивчених слів? Персоналізоване підсилення навчиться заново з вашого набору.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">Видалити %1$d вивчене слово? Персоналізоване підсилення навчиться заново з вашого набору.</item><item quantity="few">Видалити %1$d вивчені слова? Персоналізоване підсилення навчиться заново з вашого набору.</item><item quantity="many">Видалити %1$d вивчених слів? Персоналізоване підсилення навчиться заново з вашого набору.</item><item quantity="other">Видалити %1$d вивчених слів? Персоналізоване підсилення навчиться заново з вашого набору.</item></plurals>
     <string name="learning_data_forget_words_title">Забути вживання слів?</string>
     <string name="learning_data_loading">Завантаження…</string>
     <string name="learning_data_most_used">найуживаніше: «%1$s» (%2$d×)</string>
     <string name="learning_data_no_pairs">Ще немає вивчених пар слів</string>
     <string name="learning_data_no_words">Ще немає вивчених слів</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d пар</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: %2$d пара</item><item quantity="few">%1$s: %2$d пари</item><item quantity="many">%1$s: %2$d пар</item><item quantity="other">%1$s: %2$d пар</item></plurals>
     <string name="learning_data_phrase_patterns">Шаблони фраз — %1$s</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
     <string name="learning_data_phrases_dialog_empty">Немає вивчених фраз.</string>
     <string name="learning_data_phrases_dialog_title">Вивчені фрази</string>
     <string name="learning_data_privacy_note">Усе навчання залишається на цьому пристрої. Вивчені шаблони фраз і вживання слів включаються в експорт словника (Резервне копіювання та відновлення).</string>
     <string name="learning_data_title">Навчання та дані</string>
-    <string name="learning_data_triples_suffix">, %1$d трійок</string>
-    <string name="learning_data_word_count">%1$d слів</string>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">, %1$d трійка</item><item quantity="few">, %1$d трійки</item><item quantity="many">, %1$d трійок</item><item quantity="other">, %1$d трійок</item></plurals>
+    <plurals name="learning_data_word_count"><item quantity="one">%1$d слово</item><item quantity="few">%1$d слова</item><item quantity="many">%1$d слів</item><item quantity="other">%1$d слів</item></plurals>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
     <string name="learning_data_word_usage">Вживання слів — %1$s</string>
     <string name="learning_data_words_dialog_empty">Немає вивчених слів.</string>
@@ -881,9 +881,9 @@
     <string name="multilang_browse_packs">Переглянути доступні пакети ↗</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_import_pack">Імпортувати пакет</string>
-    <string name="multilang_installed_count">Встановлено: %1$d мовних пакетів</string>
+    <plurals name="multilang_installed_count"><item quantity="one">Встановлено: %1$d мовний пакет</item><item quantity="few">Встановлено: %1$d мовні пакети</item><item quantity="many">Встановлено: %1$d мовних пакетів</item><item quantity="other">Встановлено: %1$d мовних пакетів</item></plurals>
     <string name="multilang_manage">Керувати</string>
-    <string name="multilang_pack_stats">Код: %1$s • %2$d слів</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">Код: %1$s • %2$d слово</item><item quantity="few">Код: %1$s • %2$d слова</item><item quantity="many">Код: %1$s • %2$d слів</item><item quantity="other">Код: %1$s • %2$d слів</item></plurals>
     <string name="multilang_packs_desc">Імпортуйте додаткові мовні словники із ZIP-файлів. Завантажуйте пакети окремо та імпортуйте тут (дозвіл на інтернет не потрібен).</string>
     <string name="multilang_packs_dialog_empty">Мовні пакети не встановлено.\n\nСкористайтеся «Переглянути доступні пакети», щоб завантажити ZIP, а потім «Імпортувати пакет», щоб додати його.</string>
     <string name="multilang_packs_dialog_title">Встановлені мовні пакети</string>

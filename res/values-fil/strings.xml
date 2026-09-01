@@ -552,7 +552,7 @@
     <string name="theme_color_high_confidence">Mataas na Confidence</string>
     <string name="theme_color_keyboard_background">Background ng Keyboard</string>
     <string name="theme_color_keyboard_surface">Surface ng Keyboard</string>
-    <string name="short_swipe_mappings_summary">%1$d custom na mapping • %2$d command na available</string>
+    <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d custom na mapping • %2$d command na available</item><item quantity="other">%1$d custom na mapping • %2$d command na available</item></plurals>
     <string name="short_swipe_last_key">Huling key: %1$s</string>
     <string name="short_swipe_customize_key">I-customize ang "%1$s" Key</string>
     <string name="extra_keys_enabled_count">%1$d ng %2$d extra key ang naka-enable</string>
@@ -639,11 +639,11 @@
     <string name="learning_data_title">Pagkatuto at Data</string>
     <string name="learning_data_privacy_note">Lahat ng pagkatuto ay nananatili sa device na ito. Kasama sa mga export ng diksyunaryo (Backup at Restore) ang mga natutunang pattern ng parirala at paggamit ng salita.</string>
     <string name="learning_data_loading">Naglo-load…</string>
-    <string name="learning_data_pairs_for_language">%1$s: %2$d pares</string>
-    <string name="learning_data_triples_suffix">, %1$d triple</string>
+    <plurals name="learning_data_pairs_for_language"><item quantity="one">%1$s: %2$d pares</item><item quantity="other">%1$s: %2$d pares</item></plurals>
+    <plurals name="learning_data_triples_suffix"><item quantity="one">, %1$d triple</item><item quantity="other">, %1$d triple</item></plurals>
     <string name="learning_data_no_pairs">Wala pang natutunang pares ng salita</string>
     <string name="learning_data_no_words">Wala pang natutunang salita</string>
-    <string name="learning_data_word_count">%1$d salita</string>
+    <plurals name="learning_data_word_count"><item quantity="one">%1$d salita</item><item quantity="other">%1$d salita</item></plurals>
     <string name="learning_data_most_used">pinakaginagamit: “%1$s” (%2$d×)</string>
     <string name="learning_data_phrase_patterns">Mga pattern ng parirala — %1$s</string>
     <string name="learning_data_word_usage">Paggamit ng salita — %1$s</string>
@@ -652,9 +652,9 @@
     <string name="learning_data_forget_phrases">Kalimutan ang mga parirala</string>
     <string name="learning_data_forget_words">Kalimutan ang mga salita</string>
     <string name="learning_data_forget_phrases_title">Kalimutan ang mga pattern ng parirala?</string>
-    <string name="learning_data_forget_phrases_body">Tanggalin ang %1$d natutunang pares at triple ng salita sa lahat ng wika? Muling matututo ang mga context-aware na mungkahi mula sa iyong pag-type.</string>
+    <plurals name="learning_data_forget_phrases_body"><item quantity="one">Tanggalin ang %1$d natutunang pares at triple ng salita sa lahat ng wika? Muling matututo ang mga context-aware na mungkahi mula sa iyong pag-type.</item><item quantity="other">Tanggalin ang %1$d natutunang pares at triple ng salita sa lahat ng wika? Muling matututo ang mga context-aware na mungkahi mula sa iyong pag-type.</item></plurals>
     <string name="learning_data_forget_words_title">Kalimutan ang paggamit ng salita?</string>
-    <string name="learning_data_forget_words_body">Tanggalin ang %1$d natutunang salita? Muling matututo ang personalized na boosting mula sa iyong pag-type.</string>
+    <plurals name="learning_data_forget_words_body"><item quantity="one">Tanggalin ang %1$d natutunang salita? Muling matututo ang personalized na boosting mula sa iyong pag-type.</item><item quantity="other">Tanggalin ang %1$d natutunang salita? Muling matututo ang personalized na boosting mula sa iyong pag-type.</item></plurals>
     <string name="learning_data_phrases_dialog_title">Mga natutunang parirala</string>
     <string name="learning_data_phrases_dialog_empty">Walang natutunang parirala.</string>
     <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
@@ -720,9 +720,9 @@
     <string name="gif_importing">Nag-i-import...</string>
     <string name="gif_import_pack">Mag-import ng Pack mula sa ZIP</string>
     <string name="gif_installed_packs">Mga Naka-install na Pack</string>
-    <string name="gif_pack_stats">%1$d GIF | %2$s</string>
+    <plurals name="gif_pack_stats"><item quantity="one">%1$d GIF | %2$s</item><item quantity="other">%1$d GIF | %2$s</item></plurals>
     <string name="gif_total_storage">Kabuuan: %1$s</string>
-    <string name="gif_grid_columns_display">%1$d kolum</string>
+    <plurals name="gif_grid_columns_display"><item quantity="one">%1$d kolum</item><item quantity="other">%1$d kolum</item></plurals>
     <string name="gif_remove_all">Tanggalin ang Lahat ng GIF Data</string>
     <string name="gif_remove_all_title">Tanggalin ang Lahat ng GIF Data?</string>
     <string name="gif_remove_all_body">Tatanggalin nito ang lahat ng na-import na GIF pack, thumbnail, at database. Hindi ito maibabalik.</string>
@@ -749,13 +749,13 @@
     <string name="multilang_packs_header">Mga Language Pack</string>
     <string name="multilang_packs_desc">Mag-import ng karagdagang mga diksyunaryo ng wika mula sa mga ZIP file. Mag-download ng mga pack sa labas at i-import dito (hindi kailangan ng internet permission).</string>
     <string name="multilang_browse_packs">I-browse ang mga available na pack ↗</string>
-    <string name="multilang_installed_count">Naka-install: %1$d language pack</string>
+    <plurals name="multilang_installed_count"><item quantity="one">Naka-install: %1$d language pack</item><item quantity="other">Naka-install: %1$d language pack</item></plurals>
     <string name="multilang_import_pack">Mag-import ng Pack</string>
     <string name="multilang_manage">Pamahalaan</string>
     <string name="multilang_collision_example">"  %1$s → %2$s"</string>
     <string name="multilang_packs_dialog_title">Mga Naka-install na Language Pack</string>
     <string name="multilang_packs_dialog_empty">Walang naka-install na language pack.\n\nGamitin ang \'I-browse ang mga available na pack\' para mag-download ng ZIP, pagkatapos ay \'Mag-import ng Pack\' para idagdag ito.</string>
-    <string name="multilang_pack_stats">Code: %1$s • %2$d salita</string>
+    <plurals name="multilang_pack_stats"><item quantity="one">Code: %1$s • %2$d salita</item><item quantity="other">Code: %1$s • %2$d salita</item></plurals>
     <string name="input_manage_layouts">Pamahalaan ang mga Keyboard Layout</string>
     <string name="input_configure_extra_keys">I-configure ang Karagdagang Key</string>
     <string name="input_advanced_prediction">Mga Advanced na Setting ng Prediction</string>
@@ -811,13 +811,13 @@
     <string name="command_palette_timestamp_title">Timestamp</string>
     <string name="command_palette_timestamp_desc">Mag-insert ng naka-format na petsa/oras (hal. yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">%1$d command ang available</string>
-    <string name="command_palette_count_results">%1$d resulta para sa \"%2$s\"</string>
+    <plurals name="command_palette_count_results"><item quantity="one">%1$d resulta para sa \"%2$s\"</item><item quantity="other">%1$d resulta para sa \"%2$s\"</item></plurals>
     <string name="command_palette_browse_all">I-browse Lahat ng %1$d Command</string>
     <string name="command_palette_quick_commands">Mga Mabilisang Command</string>
     <string name="command_palette_custom_text_intro">Ilagay ang tekstong ii-insert kapag nag-swipe ka sa direksyong ito.</string>
     <string name="command_palette_text_to_insert">Tekstong ii-insert</string>
     <string name="command_palette_text_placeholder">hal., Kumusta, Mundo!</string>
-    <string name="command_palette_char_count">%1$d character</string>
+    <plurals name="command_palette_char_count"><item quantity="one">%1$d character</item><item quantity="other">%1$d character</item></plurals>
     <string name="command_palette_paste_desc">I-paste mula sa clipboard</string>
     <string name="command_palette_quick_suggestions">Mga mabilisang suhestiyon:</string>
     <string name="command_palette_use_text">Gamitin ang Tekstong Ito</string>
@@ -873,11 +873,11 @@
     <string name="import_preview_diff_removed">−%1$d tinanggal</string>
     <string name="import_preview_diff_changed">~%1$d binago</string>
     <string name="import_preview_diff_unchanged">(%1$d hindi binago)</string>
-    <string name="import_preview_short_swipe_count">%1$d short-swipe mapping sa backup na ito</string>
+    <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d short-swipe mapping sa backup na ito</item><item quantity="other">%1$d short-swipe mapping sa backup na ito</item></plurals>
     <string name="import_preview_short_swipe_skip">Laktawan — huwag i-import</string>
     <string name="import_preview_short_swipe_merge">I-merge — punan ang mga puwang, panatilihin ang umiiral (inirerekomenda)</string>
     <string name="import_preview_short_swipe_replace">Palitan — burahin ang umiiral, i-install ang set ng file</string>
-    <string name="import_preview_short_swipe_warning">PAPALITAN nito ang lahat ng iyong umiiral na short-swipe customization ng %1$d mapping ng file.</string>
+    <plurals name="import_preview_short_swipe_warning"><item quantity="one">PAPALITAN nito ang lahat ng iyong umiiral na short-swipe customization ng %1$d mapping ng file.</item><item quantity="other">PAPALITAN nito ang lahat ng iyong umiiral na short-swipe customization ng %1$d mapping ng file.</item></plurals>
     <string name="import_preview_selected_count">%1$d sa %2$d ang napili</string>
     <string name="import_preview_expand">I-expand</string>
     <string name="import_preview_hide">Itago</string>
@@ -890,7 +890,7 @@
     <string name="import_preview_learned_desc">Ang mga bilang ng natutunang parirala ay minu-merge bilang isang grupo. Kung may kasamang personal na bokabularyo ang backup na ito, papalitan nito ang kasalukuyang listahan ng natutunang salita.</string>
     <string name="import_preview_learned_bigrams">Mga pares ng salitang imi-merge: %1$d</string>
     <string name="import_preview_learned_trigrams">Mga triple ng salitang imi-merge: %1$d</string>
-    <string name="import_preview_learned_vocabulary">Papalitan ang personal na bokabularyo ng %1$d salita</string>
+    <plurals name="import_preview_learned_vocabulary"><item quantity="one">Papalitan ang personal na bokabularyo ng %1$d salita</item><item quantity="other">Papalitan ang personal na bokabularyo ng %1$d salita</item></plurals>
     <string name="import_preview_modified">Binago (%1$d)</string>
     <string name="import_preview_added">Idinagdag (%1$d)</string>
     <string name="import_preview_short_swipe_header">Mga short-swipe customization</string>
