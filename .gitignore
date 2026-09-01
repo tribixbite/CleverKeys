@@ -136,6 +136,10 @@ scripts/dictionaries/en/*
 !scripts/dictionaries/id/
 !scripts/dictionaries/ms/
 !scripts/dictionaries/tl/
+!scripts/dictionaries/uk/
+!scripts/dictionaries/bg/
+!scripts/dictionaries/mk/
+!scripts/dictionaries/he/
 scripts/dictionaries/es/*
 scripts/dictionaries/fr/*
 scripts/dictionaries/de/*
@@ -149,6 +153,10 @@ scripts/dictionaries/tr/*
 scripts/dictionaries/id/*
 scripts/dictionaries/ms/*
 scripts/dictionaries/tl/*
+scripts/dictionaries/uk/*
+scripts/dictionaries/bg/*
+scripts/dictionaries/mk/*
+scripts/dictionaries/he/*
 !scripts/dictionaries/*/*_words.txt
 !scripts/dictionaries/*/*_allowlist.txt
 !scripts/dictionaries/*/*_blocklist.txt

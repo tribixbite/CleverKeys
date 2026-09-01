@@ -1,0 +1,4 @@
+# CleverKeys uk force-keep allowlist (curation loop).
+# One word per line; "#" starts a comment. Words here are kept unconditionally
+# (blocklist still overrides). Add words rescued from the review artifacts
+# (cleverkeys-dictgen-uk-drops-review.txt) and re-run build_wordlist.py --lang uk.
