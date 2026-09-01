@@ -566,6 +566,55 @@ class GeoDecoderCoreTest {
             .isEqualTo(symmetric.endpointPenalty(gestureOf(g), tUnder, layout))
     }
 
+    // ── OQ-10 / ARC-028: length-scaled ordering slack ─────────────────────────────
+
+    @Test
+    fun pathScorer_orderingSlack_shortTemplateStaysStrict_andEndpointsNeverRelax() {
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val strict = PathScorer(config) // both tunnels off
+        val slack = PathScorer(config.copy(orderingSlackTunnelW = 1, orderingSlackMinTemplateLenKw = 3f))
+        val n = config.resamplePoints
+        val g = straightRightGesture(n)
+
+        // Template with a MID-PATH wobble (interior points shifted one index's worth):
+        // a reordering-style residual the ±1 interior window can absorb.
+        val tWobble = g.copyOf()
+        for (i in 1 until n - 1) tWobble[2 * i] = g[2 * (if (i < n - 1) i + 1 else i)]
+
+        // (a) Below the length gate the slack path must be BIT-IDENTICAL to strict.
+        assertWithMessage("template below orderingSlackMinTemplateLenKw must score strictly")
+            .that(slack.locationDistance(g, tWobble, layout, templateLenKw = 1f))
+            .isEqualTo(strict.locationDistance(g, tWobble, layout))
+
+        // (b) At/above the gate the interior ±W min can only reduce the distance, and
+        // must strictly help on this constructed index-shift wobble.
+        val dStrict = strict.locationDistance(g, tWobble, layout)
+        val dSlack = slack.locationDistance(g, tWobble, layout, templateLenKw = 5f)
+        assertWithMessage("ordering slack must not increase the location distance")
+            .that(dSlack).isAtMost(dStrict)
+        assertWithMessage("ordering slack must absorb an interior index-shift wobble")
+            .that(dSlack).isLessThan(dStrict)
+
+        // (c) An ENDPOINT-ONLY deviation must be untouched by the slack (endpoints
+        // always strict — the anti-CLEAN-regression property the global tunnel lacked).
+        val tEnd = g.copyOf()
+        tEnd[2 * (n - 1)] = g[2 * (n - 1)] - 0.2f
+        assertWithMessage("endpoint deviations must not be relaxed by the ordering slack")
+            .that(slack.locationDistance(g, tEnd, layout, templateLenKw = 5f))
+            .isEqualTo(strict.locationDistance(g, tEnd, layout))
+    }
+
+    @Test
+    fun config_orderingSlack_andLegacyTunnel_areMutuallyExclusive() {
+        var threw = false
+        try {
+            GeometricEngineConfig(locationTunnelHalfWidth = 1, orderingSlackTunnelW = 1)
+        } catch (e: IllegalArgumentException) {
+            threw = true
+        }
+        assertWithMessage("setting both tunnel knobs must fail fast").that(threw).isTrue()
+    }
+
     // ── Engine-level concurrency stress (spec threading contract / NFR-4) ─────────
 
     @Test

@@ -105,7 +105,7 @@ class PathScorer(private val config: GeometricEngineConfig) {
         val wShape = (templateLenKw / config.shortWordShapeFloorKw).coerceIn(0f, 1f)
 
         // ── Location channel (§4): α-end-weighted absolute kw distance, unnormalized.
-        val dLoc = locationDistance(g, t, layout)
+        val dLoc = locationDistance(g, t, layout, templateLenKw)
 
         // ── Combined score (§5) — log-domain Bayes; all channel terms ≤ 0.
         var s = -wShape * dShape * dShape / twoSigmaShapeSq
@@ -193,22 +193,59 @@ class PathScorer(private val config: GeometricEngineConfig) {
      * MOST — one reason the tunnel regressed CLEAN. This is partially compensated by
      * [endpointPenalty], which anchors the RAW (untunneled) endpoints; but it is a core
      * reason the tunnel is OFF by default (see GeometricEngineConfig.locationTunnelHalfWidth).
+     *
+     * The OQ-10 / ARC-028 ORDERING SLACK (`orderingSlackTunnelW > 0`) is the graded
+     * re-cut of that tunnel addressing exactly this note: the ±W min applies ONLY to
+     * templates at/above `orderingSlackMinTemplateLenKw` path length ([templateLenKw]
+     * gates per variant) and ONLY at INTERIOR indices — both endpoints always match
+     * strictly, so end-weighted endpoint fidelity is never relaxed. Short templates
+     * take the strict path bit-identically. The two tunnel knobs are mutually
+     * exclusive (config init enforces it).
      */
-    internal fun locationDistance(g: FloatArray, t: FloatArray, layout: LayoutGeometry): Float {
-        val w = config.locationTunnelHalfWidth
+    internal fun locationDistance(
+        g: FloatArray,
+        t: FloatArray,
+        layout: LayoutGeometry,
+        templateLenKw: Float = Float.POSITIVE_INFINITY,
+    ): Float {
+        val legacyW = config.locationTunnelHalfWidth
+        val slackW = if (
+            config.orderingSlackTunnelW > 0 &&
+            templateLenKw >= config.orderingSlackMinTemplateLenKw
+        ) config.orderingSlackTunnelW else 0
         var acc = 0f
-        if (w <= 0) {
+        if (legacyW <= 0 && slackW <= 0) {
             // Strict index-aligned location term (default) — single j = i comparison.
             for (i in 0 until n) {
                 acc += alpha[i] * layout.dKw(g[2 * i], g[2 * i + 1], t[2 * i], t[2 * i + 1])
             }
             return acc
         }
-        // Tunnel: minimum over the ±W template-index window around i (clamped to [0, N)).
+        if (slackW > 0) {
+            // OQ-10 ordering slack: strict endpoints + ±W min over interior indices.
+            val last = n - 1
+            acc += alpha[0] * layout.dKw(g[0], g[1], t[0], t[1])
+            acc += alpha[last] * layout.dKw(g[2 * last], g[2 * last + 1], t[2 * last], t[2 * last + 1])
+            for (i in 1 until last) {
+                val gu = g[2 * i]; val gv = g[2 * i + 1]
+                val lo = if (i - slackW > 1) i - slackW else 1
+                val hi = if (i + slackW < last - 1) i + slackW else last - 1
+                var best = Float.POSITIVE_INFINITY
+                var j = lo
+                while (j <= hi) {
+                    val d = layout.dKw(gu, gv, t[2 * j], t[2 * j + 1])
+                    if (d < best) best = d
+                    j++
+                }
+                acc += alpha[i] * best
+            }
+            return acc
+        }
+        // Legacy tunnel: minimum over the ±W template-index window around i (clamped to [0, N)).
         for (i in 0 until n) {
             val gu = g[2 * i]; val gv = g[2 * i + 1]
-            val lo = if (i - w > 0) i - w else 0
-            val hi = if (i + w < n - 1) i + w else n - 1
+            val lo = if (i - legacyW > 0) i - legacyW else 0
+            val hi = if (i + legacyW < n - 1) i + legacyW else n - 1
             var best = Float.POSITIVE_INFINITY
             var j = lo
             while (j <= hi) {

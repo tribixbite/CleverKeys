@@ -729,3 +729,13 @@ undershoot/orthogonal invariance). Sweep {0.5, 0.25, 0.0}: synthetic deltas all 
 audit's "universal small lift" premise fails because `endNeighborRadius` (1.1 kw) already
 exceeds real overshoot magnitudes (≤0.4 kw) — the symmetric penalty was already
 effectively overshoot-free. Knob retained as a documented ablatable no-op.
+
+**ARC-028 CLOSED — tried, measured, DECLINED (finding recorded).** OQ-10 length-scaled
+ordering slack implemented (interior-only, length-gated location tunnel; bit-identical
+no-op at `orderingSlackTunnelW = 0`). Sweep (W∈{1,2} × minLen∈{2,3,4} kw): SLOPPY lifts
+everywhere (dvorak top-3 +3.6) but CLEAN/TYPICAL top-1/top-3 regress on every layout
+(dvorak CLEAN top-1 −5.9; qwerty CLEAN top-3 would break its 0.97 floor) — the global
+tunnel's failure mode survives the length gate and strict endpoints. Real-corpus
+counterpoint recorded: +3.0 top-1 / +1.9 top-3 overall on the 8,521-trace local replay
+(len≥4 driven) — a per-decode ADAPTIVE slack gate is the recorded follow-up; a static
+default is barred by the any-tier non-regression rule. Knobs retained default-off.

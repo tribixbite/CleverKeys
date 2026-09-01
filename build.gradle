@@ -794,6 +794,7 @@ tasks.register('runPureTests', JavaExec) {
   // Wave-G OQ sweep instrument (GeoOqSweepTest) — same bridge pattern; double-heavy
   // measurement runs stay opt-in and skip in milliseconds otherwise.
   systemProperty 'geoSweep', (project.findProperty('geoSweep') ?: 'false')
+  systemProperty 'oqOnly', (project.findProperty('oqOnly') ?: '')
   // Sampling knobs for ContextRescoringReplayTest, same -P-to-system-property bridge. Only set
   // when supplied, so the defaults stay in the Kotlin where they are documented. Lets a
   // measurement run be scaled (`-PreplayPairs=800 -PreplayDecoys=6`) without editing the test,

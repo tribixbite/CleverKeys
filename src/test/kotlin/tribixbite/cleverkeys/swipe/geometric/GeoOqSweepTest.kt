@@ -35,6 +35,18 @@ class GeoOqSweepTest {
 
     private fun sweepEnabled(): Boolean = System.getProperty("geoSweep") == "true"
 
+    /**
+     * Per-method selector: `-PoqOnly=oq9|oq10|oq11` (bridged like `geoSweep`) runs just
+     * one instrument method — each is many minutes of full-dictionary decoding, and a
+     * re-measurement of one OQ should not pay for the other two. Empty/unset runs all.
+     */
+    private fun oqSelected(name: String): Boolean {
+        if (!sweepEnabled()) { println("[skip] OQ sweep — set -PgeoSweep=true to run"); return false }
+        val only = System.getProperty("oqOnly") ?: ""
+        if (only.isNotEmpty() && only != name) { println("[skip] $name — oqOnly=$only"); return false }
+        return true
+    }
+
     // ── shared fixtures ─────────────────────────────────────────────────────────
 
     private val en = GeoTestFixtures.englishCkdt()
@@ -64,11 +76,27 @@ class GeoOqSweepTest {
 
     @Test
     fun oq9_endOvershootCostScale_sweep() {
-        if (!sweepEnabled()) { println("[skip] OQ sweep — set -PgeoSweep=true to run"); return }
+        if (!oqSelected("oq9")) return
         val scales = listOf(1.0f, 0.5f, 0.25f, 0.0f)
         val configs = scales.map { s -> "scale=$s" to GeometricEngineConfig(endOvershootCostScale = s) }
         runSyntheticSweep("OQ-9 endOvershootCostScale", configs)
         runLocalCorpusSweep("OQ-9 endOvershootCostScale", configs)
+    }
+
+    // ── OQ-10 / ARC-028: length-scaled ordering slack ───────────────────────────
+
+    @Test
+    fun oq10_orderingSlack_sweep() {
+        if (!oqSelected("oq10")) return
+        val configs = listOf(
+            "off(base)" to GeometricEngineConfig(),
+            "W1,len2" to GeometricEngineConfig(orderingSlackTunnelW = 1, orderingSlackMinTemplateLenKw = 2f),
+            "W1,len3" to GeometricEngineConfig(orderingSlackTunnelW = 1, orderingSlackMinTemplateLenKw = 3f),
+            "W1,len4" to GeometricEngineConfig(orderingSlackTunnelW = 1, orderingSlackMinTemplateLenKw = 4f),
+            "W2,len3" to GeometricEngineConfig(orderingSlackTunnelW = 2, orderingSlackMinTemplateLenKw = 3f),
+        )
+        runSyntheticSweep("OQ-10 orderingSlack", configs)
+        runLocalCorpusSweep("OQ-10 orderingSlack", configs)
     }
 
     // ── shared sweep drivers ────────────────────────────────────────────────────

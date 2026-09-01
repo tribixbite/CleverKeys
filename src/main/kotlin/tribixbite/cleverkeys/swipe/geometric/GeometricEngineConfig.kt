@@ -56,6 +56,50 @@ data class GeometricEngineConfig(
      * As-Built Notes.
      */
     val locationTunnelHalfWidth: Int = 0,
+    /**
+     * LENGTH-SCALED ORDERING SLACK (research doc OQ-10 / ARC-028, `urik` §1 L812-817:
+     * graded, word-length-scaled ordering tolerance — 0 violations for short words,
+     * 1 for longer). The graded re-cut of the REJECTED global location tunnel above,
+     * differing on exactly the two axes that made the global tunnel regress CLEAN:
+     *
+     *  1. **Length-gated**: the ±W window applies ONLY to template variants whose
+     *     path length (kw) is ≥ [orderingSlackMinTemplateLenKw]. Short templates —
+     *     where colliding near-collinear paths are separated by tiny location margins
+     *     and the shape channel is faded out — keep STRICT index alignment.
+     *  2. **Interior-only**: the endpoints (i = 0, N−1) always match strictly. The
+     *     global tunnel's one-sided clamped window relaxed location fidelity exactly
+     *     where the α end-weights say it matters most — a core reason it broke CLEAN
+     *     (see [locationTunnelHalfWidth]'s DESIGN NOTE).
+     *
+     * `0` (default) is a bit-identical no-op. Mutually exclusive with the legacy
+     * global tunnel (`init` fails fast if both are set).
+     *
+     * **Default `0` (OFF) — measured, DECLINED as a default (2026-09-01, ARC-028).**
+     * The sweep (`GeoOqSweepTest`: W∈{1,2} × minLen∈{2,3,4} kw, 250 words × 3 seeds ×
+     * qwerty/dvorak/weird × CLEAN/TYPICAL/SLOPPY + the 8,521-trace local real-corpus
+     * replay) reproduced the global tunnel's trade-off DESPITE the length gate and
+     * strict endpoints: SLOPPY improves everywhere (dvorak top-3 74.0→77.6, qwerty
+     * 79.5→81.2) but CLEAN/TYPICAL top-1/top-3 REGRESS on every layout (dvorak CLEAN
+     * top-1 85.6→79.7, qwerty CLEAN top-3 98.4→96.5 — under the 0.97 floor; W=2 is
+     * strictly worse). The min-over-window helps colliding candidates on careful
+     * traces just as much as it forgives jitter, and the interior indices it relaxes
+     * are exactly where clean-trace discrimination lives — the length gate cannot
+     * separate those. NOTABLE recorded finding: on the REAL corpus the slack is a NET
+     * WIN (+3.0 top-1 / +1.9 top-3 overall at W=1; +3.2…+4.0 top-1 on len≥4 words,
+     * −0.3/−1.0 on len 2–3) because real traces sit closer to SLOPPY than CLEAN —
+     * so a future PER-DECODE ADAPTIVE gate (enable slack only for traces measured
+     * messy) is a plausible follow-up; a static default cannot ship under the
+     * any-tier non-regression rule. Knob retained for that experiment.
+     */
+    val orderingSlackTunnelW: Int = 0,
+    /**
+     * Minimum template path length (kw units) at/above which [orderingSlackTunnelW]
+     * applies — the "length-scaled" half of OQ-10. Path length is the same per-variant
+     * kw measure the short-word shape fade keys off ([shortWordShapeFloorKw]), i.e.
+     * the natural word-length proxy already carried by every template. Ignored while
+     * `orderingSlackTunnelW == 0`.
+     */
+    val orderingSlackMinTemplateLenKw: Float = 3.0f,
     /** λ_f, frequency-prior weight: prior term = −λ_f·ln(1 + ordinalRank). §5 derivation. */
     val frequencyWeight: Float = 0.12f,
     /**
@@ -216,6 +260,16 @@ data class GeometricEngineConfig(
         }
         require(locationTunnelHalfWidth >= 0) {
             "locationTunnelHalfWidth must be >= 0 (0 = strict alignment), was $locationTunnelHalfWidth"
+        }
+        require(orderingSlackTunnelW >= 0) {
+            "orderingSlackTunnelW must be >= 0 (0 = off), was $orderingSlackTunnelW"
+        }
+        require(orderingSlackMinTemplateLenKw >= 0f) {
+            "orderingSlackMinTemplateLenKw must be >= 0, was $orderingSlackMinTemplateLenKw"
+        }
+        require(locationTunnelHalfWidth == 0 || orderingSlackTunnelW == 0) {
+            "the legacy global location tunnel and the OQ-10 ordering slack are mutually " +
+                "exclusive; set only one of locationTunnelHalfWidth/orderingSlackTunnelW"
         }
         require(directionPenaltyWeight >= 0f) {
             "directionPenaltyWeight must be >= 0 (0 = off), was $directionPenaltyWeight"

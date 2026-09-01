@@ -983,3 +983,24 @@ penalty was ALREADY effectively overshoot-free at real magnitudes; the residual 
 cost sits in the length-ratio penalty, out of the item's scope. Disposition: knob kept as
 a documented no-op (default 1.0, same policy as the rejected location tunnel); OQ-9
 closes as "tried, measured, declined".
+
+**OQ-10 / ARC-028 — length-scaled ordering slack: MEASURED, DECLINED as a default (with a
+notable recorded finding).** Mechanism (`PathScorer.locationDistance` slack path, knobs
+`orderingSlackTunnelW` + `orderingSlackMinTemplateLenKw`): the graded re-cut of the
+rejected global location tunnel — the ±W min applies only to templates ≥ minLen kw path
+length and only at INTERIOR indices (endpoints always strict), the two axes blamed for
+the global tunnel's CLEAN regression. Sweep (W∈{1,2} × minLen∈{2,3,4} kw): the trade-off
+survives both fixes. SLOPPY lifts everywhere (dvorak top-3 74.0→77.6, qwerty 79.5→81.2,
+weird 66.4→67.6 at W=1) but CLEAN/TYPICAL top-1/top-3 regress on EVERY layout (dvorak
+CLEAN top-1 −5.9, qwerty CLEAN top-3 98.4→96.5 < the 0.97 floor, weird CLEAN top-1 −2.4;
+W=2 strictly worse, dvorak CLEAN top-1 −10.5). minLen {2,3,4} barely differentiates —
+most decodable words exceed 4 kw of path, so the gate excludes only the shortest words
+and cannot protect clean-trace discrimination at the relaxed interior indices.
+REAL-CORPUS finding worth keeping: on the 8,521-trace local replay the slack is a NET
+WIN — W1 +3.0 top-1 / +1.9 top-3 overall (len≥4 strata +3.2…+4.0 top-1; len 2–3
+−0.3/−1.0) — consistent with real swipes sitting between TYPICAL and SLOPPY. A STATIC
+default cannot ship under the any-tier non-regression rule, but a PER-DECODE adaptive
+gate (enable slack only for traces measured messy) is a recorded follow-up idea; the
+knobs remain for that experiment. Disposition: OQ-10 closes as "tried, measured,
+declined"; unit tests pin the no-op identity, the strict endpoints, and the
+tunnel-mutual-exclusion fail-fast.
