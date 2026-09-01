@@ -681,6 +681,39 @@ jargon, the `command_palette_ts_*` preset labels, the launcher tagline, aggressi
 - **ARC-105 (LOW)** — `PipelineCharacterizationTest.kt` KDoc cites "IC:539";
   `handlePredictionResults` is now `InputCoordinator.kt:428` (code-owned KDoc, one line).
 
+## Final implementation batch — 2026-09-01/02 (waves G/044/inversions/103)
+
+- **ARC-044 remainder CLOSED** (`da5171d0`/`cc07765f`/`a8f7ac03`): 16 classes strengthened,
+  suite `assertNotNull` 282→163, `assertEquals` 1243→1351; the incident-class guards applied
+  (WordPredictorTest setConfig; ClipboardHistoryTest loud-null setup); ~20 classes examined
+  and left with recorded reasons. Runtime verification = Wave J.
+- **ARC-103 CLOSED** (`f9b578fb`): 15 count strings → `<plurals>` across all 22 files
+  (795 items, per-locale CLDR templates); 14 candidates re-judged and kept with in-file
+  rationale; drift pins extended fail-first.
+- **HANDOFF §1 verb inversions CLOSED** (`bd8984fe`): 272 PAIRED-only entries (fr pairs
+  183→455), closed grammatical family, zero REPLACE, landmines pinned through the real
+  overlay, sidecars byte-identical, reachability via existing trie injection.
+- **ARC-027/028/029 CLOSED as measured declines** (`3237d23b`/`16d3ea8d`/`80238617`) — see
+  the Wave-G section the executing agent wrote (mechanisms kept default-off + re-runnable
+  `GeoOqSweepTest`, per the endpointInsetKw precedent).
+
+**New items from the batch**
+- **ARC-106 (P3)** — `Emoji.initNameMap` duplicate literal keys: later entries silently
+  overwrite earlier ("heart" resolves to the `<3` emoticon, ❤️'s canonical name shifts).
+  Dedup pass + a no-duplicate-keys test.
+- **ARC-107 (LOW, decision)** — `"escape"` is not a special-key name (`"esc"` is); a layout
+  using `escape` types literal text (now pinned as documented behavior). Consider an alias
+  or a layout-docs note.
+- **ARC-108 (P3, follow-up lead)** — OQ-10's ordering slack is **+3.0 top-1 on the real
+  corpus** while regressing CLEAN synthetics: a per-decode ADAPTIVE slack gate could capture
+  the real-corpus win without violating the any-tier rule. The mechanism + sweep instrument
+  are in-tree default-off.
+- **ARC-109 (LOW)** — `provenance_usage_count` ("Used %1$d times") is EN-wrong at n=1 but
+  flows as a raw template into the pure formatter; plurals conversion needs a small
+  plumbing refactor (quantity-aware string resolution at the Android layer).
+- Process addendum: never use `git stash` on the shared tree (one agent did, recovered,
+  rule now recorded in the shared-tree protocol memory).
+
 **Closed by R3 (Opus agents + codex + audit fixes)**: ARC-055, 059, 062, 065, 066(EN+21 MT),
 074, 075, 076, 086, 087(structure; translations = 067), 088, 089, 090, 091, 092, 093, 094,
 095, 096, 099, 100, 101, 102 — plus ARC-058/064/077 instrumented COVERAGE written (execution
