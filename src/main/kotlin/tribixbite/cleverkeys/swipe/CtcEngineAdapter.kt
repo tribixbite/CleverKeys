@@ -420,26 +420,10 @@ class CtcEngineAdapter(
         return layoutFor(keyboard, params, frameWidthPx, frameHeightPx, language) != null
     }
 
-    /**
-     * The lowercase single character of [kv]'s CENTRE value, or null when it is not one.
-     *
-     * Deliberately NOT alphabet-filtered here — [buildMappedLayout] applies the alphabet, so
-     * this stays a pure "is this key a single letter" question. Corner values (`key1..key4`,
-     * `ne/nw/se/sw`) never reach it: `KeyboardGeometry.computeKeyRects` emits `keys[0]` only,
-     * which is exactly why ЙЦУКЕН's `ё`/`ъ` are not emission slots and are folded away by the
-     * projection instead.
-     */
-    private fun letterOf(kv: KeyValue): Char? {
-        val raw = when (kv.getKind()) {
-            KeyValue.Kind.Char -> kv.getChar().toString()
-            KeyValue.Kind.String -> kv.getString()
-            else -> return null
-        }
-        if (raw.length != 1) return null
-        val c = raw.lowercase(Locale.ROOT)
-        if (c.length != 1) return null
-        return c[0]
-    }
+    // Centre-letter extraction lives in [KeyLetter.centreLetterOf] — the ONE implementation
+    // shared with the settings card's fallback predicate (`SwipeEngineFallback`), so the card
+    // can never disagree with this gate about which keys count. Pinned by
+    // SwipeEngineFallbackTest's one-implementation scan.
 
     /**
      * Builds the [CtcLayout] over [alphabet] from the final modified layout, or null when any
@@ -468,7 +452,7 @@ class CtcEngineAdapter(
         var left = Float.MAX_VALUE; var top = Float.MAX_VALUE
         var right = -Float.MAX_VALUE; var bottom = -Float.MAX_VALUE
         for (rect in rects) {
-            val letter = letterOf(rect.kv) ?: continue
+            val letter = KeyLetter.centreLetterOf(rect.kv) ?: continue
             val i = slotOf[letter] ?: continue
             if (seen[i]) continue
             seen[i] = true

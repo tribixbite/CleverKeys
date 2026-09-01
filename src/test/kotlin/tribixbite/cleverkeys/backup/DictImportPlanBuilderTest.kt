@@ -139,4 +139,26 @@ class DictImportPlanBuilderTest {
         assertThat(plan.learnedData.hasEffect).isTrue()
         assertThat(plan.learnedData.rawJson).contains("user_vocabulary")
     }
+
+    /**
+     * ARC-094 no-noise guarantee (2026-09-01 audit fill-in): a payload carrying NO learned
+     * sections must yield the inert NONE plan, so the preview renders no learned-data card.
+     * This was guaranteed by the default but never asserted — an accidental fallback to a
+     * non-NONE default would have added a phantom row to every dictionary-only import.
+     */
+    @Test
+    fun payloadWithoutLearnedSections_yieldsNonePlan_soPreviewAddsNoRow() {
+        val plan = DictImportPlanBuilder.fromJson(
+            jsonString = """{"custom_words_by_language":{"en":{"foo":50}}}""",
+            currentCustomByLang = emptyMap(),
+            currentDisabledByLang = emptyMap(),
+        )
+
+        // Value equality, deliberately not identity: the builder constructs an equal inert
+        // plan rather than returning the NONE singleton, and the no-noise guarantee hinges
+        // on hasEffect/rawJson, not on which instance carries them.
+        assertThat(plan.learnedData).isEqualTo(LearnedDataImportPlan.NONE)
+        assertThat(plan.learnedData.hasEffect).isFalse()
+        assertThat(plan.learnedData.rawJson).isNull()
+    }
 }

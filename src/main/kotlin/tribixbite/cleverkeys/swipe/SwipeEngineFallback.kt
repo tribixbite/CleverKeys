@@ -1,10 +1,8 @@
 package tribixbite.cleverkeys.swipe
 
 import tribixbite.cleverkeys.KeyboardData
-import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcScriptSupport
-import java.util.Locale
 
 /** Pure diagnosis behind the Settings swipe-engine fallback card (ARC-086). */
 object SwipeEngineFallback {
@@ -79,9 +77,9 @@ object SwipeEngineFallback {
         val corners = HashSet<Char>()
         for (row in layout.rows) {
             for (key in row.keys) {
-                letterOf(key.keys.getOrNull(0))?.let(centres::add)
+                KeyLetter.centreLetterOf(key.keys.getOrNull(0))?.let(centres::add)
                 for (i in 1 until key.keys.size) {
-                    letterOf(key.keys[i])?.let(corners::add)
+                    KeyLetter.centreLetterOf(key.keys[i])?.let(corners::add)
                 }
             }
         }
@@ -92,16 +90,6 @@ object SwipeEngineFallback {
             missingCentreLetters = missing.joinToString(""),
             cornerOnlyLetters = missing.filter { it in corners }.joinToString(""),
         )
-    }
-
-    private fun letterOf(value: KeyValue?): Char? {
-        val raw = when (value?.getKind()) {
-            KeyValue.Kind.Char -> value.getChar().toString()
-            KeyValue.Kind.String -> value.getString()
-            else -> return null
-        }
-        val folded = raw.lowercase(Locale.ROOT)
-        return folded.singleOrNull()?.takeIf(Char::isLetter)
     }
 
     private fun formatLetters(raw: String): String {

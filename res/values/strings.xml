@@ -456,44 +456,44 @@
 
     <!-- Long-press suggestion provenance sheet. All pipeline metadata remains structured;
          these Android-layer templates are the only user-facing wording. -->
-    <string name="provenance_origin_geometric">Geometric swipe decoder</string>
-    <string name="provenance_origin_ctc">CTC swipe (trie beam)</string>
-    <string name="provenance_origin_dictionary_prefix">Dictionary prefix match</string>
-    <string name="provenance_origin_contraction">Contraction injection</string>
-    <string name="provenance_origin_possessive">Possessive form</string>
-    <string name="provenance_origin_exact_add">Exact typed word (tap to add)</string>
-    <string name="provenance_origin_next_word">Next-word prediction</string>
-    <string name="provenance_origin_autocorrect">Autocorrect prompt</string>
-    <string name="provenance_unknown">Unknown</string>
-    <string name="provenance_source">Source: %1$s</string>
-    <string name="provenance_score">Score: %1$d</string>
-    <string name="provenance_score_components">Score components:</string>
-    <string name="provenance_prefix_match">• Prefix match: %1$d</string>
-    <string name="provenance_adaptation">• Adaptation: %1$.2f×</string>
-    <string name="provenance_context_built_in">• Context (built-in): %1$.2f×</string>
-    <string name="provenance_context_learned">• Context (learned): %1$.2f×</string>
-    <string name="provenance_context_winner_learned">• Context winner: your learned patterns</string>
-    <string name="provenance_context_winner_built_in">• Context winner: built-in model</string>
-    <string name="provenance_context_no_boost">• Context: no boost</string>
-    <string name="provenance_context_boost_setting">• Context boost setting: %1$.1f×</string>
-    <string name="provenance_personalization">• Personalization: %1$.2f → %2$.2f×</string>
-    <string name="provenance_frequency_factor">• Frequency factor: %1$.2f×</string>
-    <string name="provenance_final_score">= Final score: %1$d</string>
-    <string name="provenance_personal_usage">Personal usage:</string>
-    <string name="provenance_usage_count">Used %1$d times</string>
-    <string name="provenance_frequency_score">Frequency score: %1$.2f</string>
-    <string name="provenance_recency_score">Recency score: %1$.2f</string>
-    <string name="provenance_base_boost">Base boost: %1$.2f</string>
-    <string name="provenance_aggression">Aggression: %1$s (%2$.2f×)</string>
-    <string name="provenance_final_boost">Final boost: %1$.2f</string>
-    <string name="provenance_aggression_conservative">Conservative</string>
-    <string name="provenance_aggression_balanced">Balanced</string>
-    <string name="provenance_aggression_aggressive">Aggressive</string>
-    <string name="provenance_note_promoted_learned">Promoted by learned context</string>
-    <string name="provenance_note_next_built_in">After “%1$s”: common continuation (built-in, not learned)</string>
-    <string name="provenance_note_next_learned">After “%1$s”: seen %2$d×, %3$d%%</string>
-    <string name="provenance_note_typed_undo">Your typed word (tap to undo)</string>
-    <string name="provenance_note_autocorrected_from">Autocorrected from “%1$s”</string>
+    <string tools:ignore="MissingTranslation" name="provenance_origin_geometric">Geometric swipe decoder</string>
+    <string tools:ignore="MissingTranslation" name="provenance_origin_ctc">CTC swipe (trie beam)</string>
+    <string tools:ignore="MissingTranslation" name="provenance_origin_dictionary_prefix">Dictionary prefix match</string>
+    <string tools:ignore="MissingTranslation" name="provenance_origin_contraction">Contraction injection</string>
+    <string tools:ignore="MissingTranslation" name="provenance_origin_possessive">Possessive form</string>
+    <string tools:ignore="MissingTranslation" name="provenance_origin_exact_add">Exact typed word (tap to add)</string>
+    <string tools:ignore="MissingTranslation" name="provenance_origin_next_word">Next-word prediction</string>
+    <string tools:ignore="MissingTranslation" name="provenance_origin_autocorrect">Autocorrect prompt</string>
+    <string tools:ignore="MissingTranslation" name="provenance_unknown">Unknown</string>
+    <string tools:ignore="MissingTranslation" name="provenance_source">Source: %1$s</string>
+    <string tools:ignore="MissingTranslation" name="provenance_score">Score: %1$d</string>
+    <string tools:ignore="MissingTranslation" name="provenance_score_components">Score components:</string>
+    <string tools:ignore="MissingTranslation" name="provenance_prefix_match">• Prefix match: %1$d</string>
+    <string tools:ignore="MissingTranslation" name="provenance_adaptation">• Adaptation: %1$.2f×</string>
+    <string tools:ignore="MissingTranslation" name="provenance_context_built_in">• Context (built-in): %1$.2f×</string>
+    <string tools:ignore="MissingTranslation" name="provenance_context_learned">• Context (learned): %1$.2f×</string>
+    <string tools:ignore="MissingTranslation" name="provenance_context_winner_learned">• Context winner: your learned patterns</string>
+    <string tools:ignore="MissingTranslation" name="provenance_context_winner_built_in">• Context winner: built-in model</string>
+    <string tools:ignore="MissingTranslation" name="provenance_context_no_boost">• Context: no boost</string>
+    <string tools:ignore="MissingTranslation" name="provenance_context_boost_setting">• Context boost setting: %1$.1f×</string>
+    <string tools:ignore="MissingTranslation" name="provenance_personalization">• Personalization: %1$.2f → %2$.2f×</string>
+    <string tools:ignore="MissingTranslation" name="provenance_frequency_factor">• Frequency factor: %1$.2f×</string>
+    <string tools:ignore="MissingTranslation" name="provenance_final_score">= Final score: %1$d</string>
+    <string tools:ignore="MissingTranslation" name="provenance_personal_usage">Personal usage:</string>
+    <string tools:ignore="MissingTranslation" name="provenance_usage_count">Used %1$d times</string>
+    <string tools:ignore="MissingTranslation" name="provenance_frequency_score">Frequency score: %1$.2f</string>
+    <string tools:ignore="MissingTranslation" name="provenance_recency_score">Recency score: %1$.2f</string>
+    <string tools:ignore="MissingTranslation" name="provenance_base_boost">Base boost: %1$.2f</string>
+    <string tools:ignore="MissingTranslation" name="provenance_aggression">Aggression: %1$s (%2$.2f×)</string>
+    <string tools:ignore="MissingTranslation" name="provenance_final_boost">Final boost: %1$.2f</string>
+    <string tools:ignore="MissingTranslation" name="provenance_aggression_conservative">Conservative</string>
+    <string tools:ignore="MissingTranslation" name="provenance_aggression_balanced">Balanced</string>
+    <string tools:ignore="MissingTranslation" name="provenance_aggression_aggressive">Aggressive</string>
+    <string tools:ignore="MissingTranslation" name="provenance_note_promoted_learned">Promoted by learned context</string>
+    <string tools:ignore="MissingTranslation" name="provenance_note_next_built_in">After “%1$s”: common continuation (built-in, not learned)</string>
+    <string tools:ignore="MissingTranslation" name="provenance_note_next_learned">After “%1$s”: seen %2$d×, %3$d%%</string>
+    <string tools:ignore="MissingTranslation" name="provenance_note_typed_undo">Your typed word (tap to undo)</string>
+    <string tools:ignore="MissingTranslation" name="provenance_note_autocorrected_from">Autocorrected from “%1$s”</string>
 
     <!-- AppearanceSection -->
     <string name="appearance_height_portrait_title">Keyboard Height (Portrait)</string>

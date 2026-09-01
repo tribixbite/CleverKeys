@@ -607,3 +607,55 @@ config-change test; the ARC-083 rider's `onDecodeFailure` assertion; an instrume
 through the injectable `userDictionarySource` seam (adapter wiring is currently source-scan
 pinned only); an end-to-end typing test for the total user-word guard (mock-tier pinned today).
 Gates after R2: `runPureTests` **2034**, `runMockTests` **342**.
+
+---
+
+## Wave R3 — 2026-09-01: audit of the third-party continuation (codex `5fb58037`/`bbbdc06e`)
+
+The six wave-A/B/EL Opus agents were killed mid-flight by a spend limit; four of their commits
+had landed first (ARC-099 `b16d9dd9`, ARC-075 `1e2cc2a0`, ARC-059 `395c8341`, ARC-096
+`7c2628f1` — all reviewed OK, ARC-059 keeps `CtcSwipeDecoder` because CtcReplayEngine and
+CtcModuleTest decode through it). A codex agent (`— gpt-5.6-sol`) then completed the remaining
+briefs in one 88-file commit `5fb58037` + handoff `bbbdc06e`.
+
+**Audit (2 Fable line-reviewers + independent gate re-runs + orchestrator spot-checks): PASS
+with 2 defects, both fixed same-day.** Verified clean: NOTICE FUTO block untouched (new
+per-model provenance section is additive and correct incl. Yandex eval-only wording); zero
+decoder-constant diffs; every el `92.12` mention labeled synthesis-holdout-never-accuracy;
+el model+fixtures byte-identical to CleverKeys-ML with tied shas, parity/sha coverage
+TABLE-DERIVED from `CtcScriptSupport` with double vacuity guards; ARC-076 geometry CSV proven
+value-equal to the deleted TS (26/26 keys, zero mismatches); ARC-089 "replacements" all trace
+to the measured `GeoAccuracyThresholds.kt`; ARC-088 memoize (bounded 2048 + modmap-hook
+invalidation, and the old `kw.modmap?.let{}` null-skip was itself a latent stale-modmap bug,
+fixed); ARC-102 epoch cache (observer-down ⇒ bypass; @Synchronized across the binder read so
+a torn epoch can only cause a spurious re-query); ARC-093 (12.5→13, 40.0→25, integer 40 still
+rejected); ARC-100 RECLASSIFIED with preview tests after verifying no null-default read
+remains; ARC-094 (interactive apply now consumes the previewed bytes — a bonus correctness
+fix); ARC-065/074/077/091/092/095/101 all genuinely implemented (ARC-074's production seam =
+`ConfigPropagationProbe`); ARC-066 reworded in EN + all 21 locales. Gates independently
+reproduced: runPureTests 2087, runMockTests 343, lintVitalRelease green.
+
+**Defects found and fixed (audit-fix commit, this wave):**
+- The ARC-086 alphabet axis RE-IMPLEMENTED the adapter's centre-letter extraction (second
+  private `letterOf`), and `SwipeEngineFallbackTest` carried a FALSE comment citing a
+  nonexistent `CtcEngineAdapter.coveredSlots` as the queried gate. Fixed: single
+  `swipe/KeyLetter.centreLetterOf` (strictest-union semantics, behavior-neutral) consumed by
+  both `buildMappedLayout` and the card; comment corrected; new one-implementation scan
+  `theCentreLetterDefinitionHasExactlyOneImplementation`.
+- The 38 new `provenance_*` strings were the file's only English-only cluster without
+  `tools:ignore="MissingTranslation"`. The predicted release-gate red did NOT materialize
+  (lintVitalRelease green — MissingTranslation is not in the vital set here), so this was
+  convention-consistency, not a blocker; ignores added pending the ARC-067 translations.
+- Small coverage fill: ARC-094 empty-payload NONE assertion. Still owed to Wave J: one
+  instrumented out-of-band pack-arrival case for ARC-065.
+
+**Maintainer flag (carried to the needs-input list): the ARC-066 reword shipped with
+codex-authored translations in all 21 locales** — samples read correct but they are
+unreviewed machine translations.
+
+**Closed by R3 (Opus agents + codex + audit fixes)**: ARC-055, 059, 062, 065, 066(EN+21 MT),
+074, 075, 076, 086, 087(structure; translations = 067), 088, 089, 090, 091, 092, 093, 094,
+095, 096, 099, 100, 101, 102 — plus ARC-058/064/077 instrumented COVERAGE written (execution
+= Wave J). Remaining open: ARC-067; ARC-027/028/029/030-floors-context; ARC-044-rest;
+ARC-046; ARC-071; ARC-072 slice 3 + ARC-098; ARC-073; ARC-056/060/061 (ML-side, on-device);
+verb inversions; user-gated ARC-053/054/063; Waves J (ew-cli) and K (device adb).

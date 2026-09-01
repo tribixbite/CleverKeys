@@ -232,9 +232,12 @@ class SwipeEngineFallbackTest {
      * someone promotes `w` to `key0` on the Azerbaijani QWERTY the layout becomes CTC-eligible
      * and [cornerOnlyLatin] stops describing anything real, which this test would catch.
      *
-     * Deliberately a characterization pin on the FILE, not a second implementation of the layout
-     * gate: the gate itself lives in `CtcEngineAdapter.coveredSlots` and is queried, never
-     * re-derived, by the card.
+     * Deliberately a characterization pin on the FILE, not a second implementation of the
+     * layout gate. (The 2026-09-01 audit corrected this comment: it used to cite a
+     * `CtcEngineAdapter.coveredSlots` that never existed while the card in fact re-derived
+     * centre letters privately. The shared implementation is now `KeyLetter.centreLetterOf`,
+     * consumed by BOTH `CtcEngineAdapter.buildMappedLayout` and `SwipeEngineFallback`, and
+     * [theCentreLetterDefinitionHasExactlyOneImplementation] pins that.)
      */
     @Test
     fun shippedAzerbaijaniBoardIsStillTheCornerOnlyExample() {
@@ -245,5 +248,29 @@ class SwipeEngineFallbackTest {
             .that(Regex("""<key\b[^>]*?\b(?:c|key0)="w"""").containsMatchIn(xml)).isFalse()
         assertWithMessage("w must still be reachable as a CORNER value")
             .that(Regex("""<key\b[^>]*?\bkey[1-8]="w"""").containsMatchIn(xml)).isTrue()
+    }
+
+    /**
+     * One-implementation pin (2026-09-01 audit fix): the routing gate
+     * (`CtcEngineAdapter.buildMappedLayout`) and this card's predicate briefly held two
+     * private copies of the centre-letter definition that agreed on every practical input
+     * but had nothing tying them together. Both must consume `KeyLetter.centreLetterOf` and
+     * neither may re-grow a private variant — a card that disagrees with the gate about
+     * which keys count would explain a fallback that isn't happening (or miss one that is).
+     */
+    @Test
+    fun theCentreLetterDefinitionHasExactlyOneImplementation() {
+        val adapter = File("src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt").readText()
+        val card = File("src/main/kotlin/tribixbite/cleverkeys/swipe/SwipeEngineFallback.kt").readText()
+        val helper = File("src/main/kotlin/tribixbite/cleverkeys/swipe/KeyLetter.kt").readText()
+
+        assertWithMessage("the shared helper must exist and own the definition")
+            .that(helper).contains("fun centreLetterOf(")
+        for ((name, src) in mapOf("CtcEngineAdapter" to adapter, "SwipeEngineFallback" to card)) {
+            assertWithMessage("$name must consume the shared KeyLetter.centreLetterOf")
+                .that(src).contains("KeyLetter.centreLetterOf(")
+            assertWithMessage("$name must not re-declare a private centre-letter extractor")
+                .that(Regex("""private fun letterOf\(""").containsMatchIn(src)).isFalse()
+        }
     }
 }
