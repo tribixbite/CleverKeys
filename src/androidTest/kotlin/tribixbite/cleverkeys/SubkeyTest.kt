@@ -56,20 +56,25 @@ class SubkeyTest {
 
     @Test
     fun testKeyPositionsAreDirectional() {
-        // Verify the directional layout:
-        // 1=NW, 2=NE, 3=SW, 4=SE, 5=W, 6=E, 7=N, 8=S
-        val positions = mapOf(
-            0 to "CENTER",
-            1 to "NW",
-            2 to "NE",
-            3 to "SW",
-            4 to "SE",
-            5 to "W",
-            6 to "E",
-            7 to "N",
-            8 to "S"
-        )
-        assertEquals("Should have 9 directional positions", 9, positions.size)
+        // Directional layout: 1=NW, 2=NE, 3=SW, 4=SE, 5=W, 6=E, 7=N, 8=S.
+        // Each of the 9 positions must be independently addressable: writing a
+        // distinct KeyValue to position i must be readable back at i and must
+        // not bleed into any other position.
+        for (i in 0 until 9) {
+            val marker = KeyValue.makeCharKey('a' + i)
+            val key = KeyboardData.Key.EMPTY.withKeyValue(i, marker)
+            assertEquals(
+                "Position $i must hold exactly the value written to it",
+                marker, key.getKeyValue(i)
+            )
+            for (j in 0 until 9) {
+                if (j == i) continue
+                assertNull(
+                    "Writing position $i must not populate position $j",
+                    key.getKeyValue(j)
+                )
+            }
+        }
     }
 
     // =========================================================================
@@ -79,32 +84,43 @@ class SubkeyTest {
     @Test
     fun testKeyValueCharCreation() {
         val keyValue = KeyValue.makeCharKey('a')
-        assertNotNull("Char key should be created", keyValue)
         assertEquals("Should have CHAR kind", KeyValue.Kind.Char, keyValue.getKind())
+        assertEquals("Char key must carry the requested char", 'a', keyValue.getChar())
     }
 
     @Test
     fun testKeyValueStringCreation() {
         val keyValue = KeyValue.makeStringKey("test")
-        assertNotNull("String key should be created", keyValue)
+        assertEquals("Multi-char string must be a String key", KeyValue.Kind.String, keyValue.getKind())
+        assertEquals("Payload must be the input verbatim", "test", keyValue.getString())
     }
 
     @Test
     fun testKeyValueModifierCreation() {
         val shiftKey = KeyValue.getKeyByName("shift")
-        assertNotNull("Shift modifier should exist", shiftKey)
+        assertEquals("Shift must be a Modifier key", KeyValue.Kind.Modifier, shiftKey.getKind())
+        assertEquals("Shift must carry the SHIFT modifier", KeyValue.Modifier.SHIFT, shiftKey.getModifier())
     }
 
     @Test
     fun testKeyValueSpecialKeys() {
         val backspace = KeyValue.getKeyByName("backspace")
-        assertNotNull("Backspace should exist", backspace)
+        assertEquals("Backspace must be a Keyevent key", KeyValue.Kind.Keyevent, backspace.getKind())
+        assertEquals(
+            "Backspace must emit KEYCODE_DEL",
+            android.view.KeyEvent.KEYCODE_DEL, backspace.getKeyevent()
+        )
 
         val enter = KeyValue.getKeyByName("enter")
-        assertNotNull("Enter should exist", enter)
+        assertEquals("Enter must be a Keyevent key", KeyValue.Kind.Keyevent, enter.getKind())
+        assertEquals(
+            "Enter must emit KEYCODE_ENTER",
+            android.view.KeyEvent.KEYCODE_ENTER, enter.getKeyevent()
+        )
 
         val space = KeyValue.getKeyByName("space")
-        assertNotNull("Space should exist", space)
+        assertEquals("Space is a Char key", KeyValue.Kind.Char, space.getKind())
+        assertEquals("Space must type the space character", ' ', space.getChar())
     }
 
     // =========================================================================
@@ -120,6 +136,10 @@ class SubkeyTest {
 
         assertNotSame("Should create new key instance", emptyKey, keyWithA)
         assertEquals("New key should have 'a' at center", charKey, keyWithA.getKeyValue(0))
+        assertNull(
+            "withKeyValue must not mutate the source key (EMPTY stays empty)",
+            emptyKey.getKeyValue(0)
+        )
     }
 
     @Test
@@ -148,9 +168,14 @@ class SubkeyTest {
         key = key.withKeyValue(1, nwSubkey)  // NW
         key = key.withKeyValue(7, nSubkey)   // N
 
-        assertNotNull("NE subkey should exist", key.getKeyValue(2))
-        assertNotNull("NW subkey should exist", key.getKeyValue(1))
-        assertNotNull("N subkey should exist", key.getKeyValue(7))
+        assertEquals("Center must keep the main key", mainKey, key.getKeyValue(0))
+        assertEquals("NE subkey must be 'á'", neSubkey, key.getKeyValue(2))
+        assertEquals("NW subkey must be 'à'", nwSubkey, key.getKeyValue(1))
+        assertEquals("N subkey must be 'â'", nSubkey, key.getKeyValue(7))
+        // Untouched positions must remain empty
+        for (pos in intArrayOf(3, 4, 5, 6, 8)) {
+            assertNull("Position $pos was never written and must be null", key.getKeyValue(pos))
+        }
     }
 
     @Test
@@ -200,6 +225,7 @@ class SubkeyTest {
         val scaledKey = key.scaleWidth(1.5f)
 
         assertEquals("Scaled width should be 1.5", 1.5f, scaledKey.width, 0.001f)
+        assertEquals("scaleWidth must not mutate the source key", 1f, key.width, 0.001f)
     }
 
     @Test

@@ -182,7 +182,11 @@ class ShortSwipeGestureTest {
         val retrieved = manager.getMapping("testkey", SwipeDirection.N)
 
         assertNotNull("Should retrieve mapping", retrieved)
-        assertEquals("!", retrieved?.actionValue)
+        assertEquals("Retrieved actionValue must round-trip", "!", retrieved!!.actionValue)
+        assertEquals("Retrieved keyCode must round-trip", "testkey", retrieved.keyCode)
+        assertEquals("Retrieved direction must round-trip", SwipeDirection.N, retrieved.direction)
+        assertEquals("Retrieved actionType must round-trip", ActionType.TEXT, retrieved.actionType)
+        assertEquals("Retrieved displayText must round-trip", "!", retrieved.displayText)
     }
 
     @Test
@@ -222,12 +226,21 @@ class ShortSwipeGestureTest {
         val mappings = manager.getMappingsForKey("a")
 
         assertTrue("Should have N direction", mappings.containsKey(SwipeDirection.N))
+        assertTrue("Should have NE direction", mappings.containsKey(SwipeDirection.NE))
+        assertEquals("N mapping value must round-trip", "!", mappings[SwipeDirection.N]?.actionValue)
+        assertEquals("NE mapping value must round-trip", "@", mappings[SwipeDirection.NE]?.actionValue)
     }
 
     @Test
-    fun testGetAllMappings() {
+    fun testGetAllMappings() = runBlocking {
+        // A freshly set mapping must be visible in the all-mappings view under
+        // its storage key.
+        manager.setMapping(ShortSwipeMapping.textInput("testkey", SwipeDirection.N, "!", "!"))
         val allMappings = manager.getAllMappings()
-        assertNotNull("Should return list", allMappings)
+        assertTrue(
+            "getAllMappings must contain the mapping just set (storage key testkey:N)",
+            allMappings.any { it.keyCode == "testkey" && it.direction == SwipeDirection.N }
+        )
     }
 
     // =========================================================================
@@ -237,38 +250,51 @@ class ShortSwipeGestureTest {
     @Test
     fun testDeleteWordCommand() {
         val cmd = AvailableCommand.DELETE_WORD
-        assertNotNull("DELETE_WORD should exist", cmd)
-        assertNotNull("Should have display name", cmd.displayName)
+        assertEquals("DELETE_WORD display name", "Delete Word", cmd.displayName)
+        assertTrue("DELETE_WORD must have a description", cmd.description.isNotBlank())
+        assertEquals(
+            "DELETE_WORD must round-trip through fromString",
+            cmd, AvailableCommand.fromString("DELETE_WORD")
+        )
     }
 
     @Test
     fun testSelectAllCommand() {
-        val cmd = AvailableCommand.SELECT_ALL
-        assertNotNull("SELECT_ALL should exist", cmd)
+        assertEquals("SELECT_ALL display name", "Select All", AvailableCommand.SELECT_ALL.displayName)
     }
 
     @Test
     fun testCopyCommand() {
-        val cmd = AvailableCommand.COPY
-        assertNotNull("COPY should exist", cmd)
+        assertEquals("COPY display name", "Copy", AvailableCommand.COPY.displayName)
     }
 
     @Test
     fun testPasteCommand() {
-        val cmd = AvailableCommand.PASTE
-        assertNotNull("PASTE should exist", cmd)
+        assertEquals("PASTE display name", "Paste", AvailableCommand.PASTE.displayName)
     }
 
     @Test
     fun testUndoCommand() {
-        val cmd = AvailableCommand.UNDO
-        assertNotNull("UNDO should exist", cmd)
+        assertEquals("UNDO display name", "Undo", AvailableCommand.UNDO.displayName)
     }
 
     @Test
     fun testRedoCommand() {
-        val cmd = AvailableCommand.REDO
-        assertNotNull("REDO should exist", cmd)
+        assertEquals("REDO display name", "Redo", AvailableCommand.REDO.displayName)
+    }
+
+    @Test
+    fun testEveryCommandRoundTripsThroughFromString() {
+        // The persistence layer stores commands by enum name; every constant
+        // must survive the round trip, and display metadata must be complete.
+        for (cmd in AvailableCommand.entries) {
+            assertEquals(
+                "${cmd.name} must round-trip through fromString",
+                cmd, AvailableCommand.fromString(cmd.name)
+            )
+            assertTrue("${cmd.name} must have a display name", cmd.displayName.isNotBlank())
+            assertTrue("${cmd.name} must have a description", cmd.description.isNotBlank())
+        }
     }
 
     @Test
@@ -290,9 +316,12 @@ class ShortSwipeGestureTest {
     @Test
     fun testShortGesturesEnabledSetting() {
         val config = Config.globalConfig()
-        // Just verify the property is accessible
-        val enabled = config.short_gestures_enabled
-        // Can be true or false
+        // The hot-path snapshot (what Pointers actually reads per gesture) must
+        // mirror the live Config field.
+        assertEquals(
+            "Snapshot must mirror the live short_gestures_enabled",
+            config.short_gestures_enabled, config.snapshot.short_gestures_enabled
+        )
     }
 
     @Test
@@ -300,6 +329,10 @@ class ShortSwipeGestureTest {
         val config = Config.globalConfig()
         val minDist = config.short_gesture_min_distance
         assertTrue("Min distance should be non-negative", minDist.v >= 0)
+        assertEquals(
+            "Snapshot must mirror the live short_gesture_min_distance",
+            minDist, config.snapshot.short_gesture_min_distance
+        )
     }
 
     @Test
@@ -307,5 +340,9 @@ class ShortSwipeGestureTest {
         val config = Config.globalConfig()
         val maxDist = config.short_gesture_max_distance
         assertTrue("Max distance should be positive", maxDist.v > 0)
+        assertEquals(
+            "Snapshot must mirror the live short_gesture_max_distance",
+            maxDist, config.snapshot.short_gesture_max_distance
+        )
     }
 }

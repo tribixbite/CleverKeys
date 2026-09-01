@@ -12,6 +12,11 @@ import org.junit.runner.RunWith
 /**
  * Instrumented tests for Emoticons feature (Issue #76).
  * Tests that text emoticons are properly loaded as a separate group in the emoji picker.
+ *
+ * ARC-044: strengthened from liveness to behavior. `Emoji.getEmojiByString(s)` is a
+ * lookup in a map keyed by the raw emoji line, and `Emoji.kv()` wraps that same
+ * string as a String-kind KeyValue — so every lookup test now pins the round trip
+ * (the returned entry types exactly the queried text) instead of only non-null.
  */
 @RunWith(AndroidJUnit4::class)
 class EmoticonsTest {
@@ -31,6 +36,18 @@ class EmoticonsTest {
         runBlocking { EmojiKeywordIndex.awaitReady() }
     }
 
+    /**
+     * Assert the emoticon exists AND that tapping it would type exactly [s]:
+     * the stored KeyValue must be a String key whose payload is the queried text.
+     */
+    private fun assertEmoticonTypes(s: String) {
+        val emoji = Emoji.getEmojiByString(s)
+        assertNotNull("'$s' emoticon should exist", emoji)
+        val kv = emoji!!.kv()
+        assertEquals("'$s' must be stored as a String key", KeyValue.Kind.String, kv.getKind())
+        assertEquals("'$s' entry must type exactly the queried text", s, kv.getString())
+    }
+
     // =========================================================================
     // Basic emoticons group tests
     // =========================================================================
@@ -48,12 +65,24 @@ class EmoticonsTest {
         val numGroups = Emoji.getNumGroups()
         val emoticonsGroup = Emoji.getEmojisByGroup(numGroups - 1)
 
-        assertNotNull("Emoticons group should exist", emoticonsGroup)
         assertTrue("Emoticons group should not be empty", emoticonsGroup.isNotEmpty())
 
         // Check that the first emoticon is ":)"
         val firstEmoticon = emoticonsGroup[0].kv().getString()
         assertEquals("First emoticon should be ':)'", ":)", firstEmoticon)
+
+        // Every entry in the emoticons group must be a usable String key with
+        // non-blank payload — a blank entry would render an empty picker cell.
+        emoticonsGroup.forEachIndexed { i, e ->
+            assertEquals(
+                "Emoticon at index $i must be a String key",
+                KeyValue.Kind.String, e.kv().getKind()
+            )
+            assertTrue(
+                "Emoticon at index $i must have a non-blank payload",
+                e.kv().getString().isNotBlank()
+            )
+        }
     }
 
     @Test
@@ -63,6 +92,14 @@ class EmoticonsTest {
 
         // We added 119 emoticons
         assertTrue("Emoticons group should have at least 100 items", emoticonsGroup.size >= 100)
+
+        // No duplicate emoticon in the group — a duplicate line in the raw
+        // resource would collapse in stringMap but still render twice.
+        val payloads = emoticonsGroup.map { it.kv().getString() }
+        assertEquals(
+            "Emoticons group must contain no duplicates",
+            payloads.size, payloads.toSet().size
+        )
     }
 
     // =========================================================================
@@ -71,62 +108,52 @@ class EmoticonsTest {
 
     @Test
     fun testClassicSmileyFaceExists() {
-        val emoji = Emoji.getEmojiByString(":)")
-        assertNotNull("':)' emoticon should exist", emoji)
+        assertEmoticonTypes(":)")
     }
 
     @Test
     fun testClassicSadFaceExists() {
-        val emoji = Emoji.getEmojiByString(":(")
-        assertNotNull("':(' emoticon should exist", emoji)
+        assertEmoticonTypes(":(")
     }
 
     @Test
     fun testClassicGrinExists() {
-        val emoji = Emoji.getEmojiByString(":D")
-        assertNotNull("':D' emoticon should exist", emoji)
+        assertEmoticonTypes(":D")
     }
 
     @Test
     fun testClassicWinkExists() {
-        val emoji = Emoji.getEmojiByString(";)")
-        assertNotNull("';)' emoticon should exist", emoji)
+        assertEmoticonTypes(";)")
     }
 
     @Test
     fun testClassicTongueExists() {
-        val emoji = Emoji.getEmojiByString(":P")
-        assertNotNull("':P' emoticon should exist", emoji)
+        assertEmoticonTypes(":P")
     }
 
     @Test
     fun testClassicSurprisedExists() {
-        val emoji = Emoji.getEmojiByString(":O")
-        assertNotNull("':O' emoticon should exist", emoji)
+        assertEmoticonTypes(":O")
     }
 
     @Test
     fun testClassicNeutralExists() {
-        val emoji = Emoji.getEmojiByString(":|")
-        assertNotNull("':|' emoticon should exist", emoji)
+        assertEmoticonTypes(":|")
     }
 
     @Test
     fun testClassicSkepticalExists() {
-        val emoji = Emoji.getEmojiByString(":/")
-        assertNotNull("':/' emoticon should exist", emoji)
+        assertEmoticonTypes(":/")
     }
 
     @Test
     fun testHeartEmoticonExists() {
-        val emoji = Emoji.getEmojiByString("<3")
-        assertNotNull("'<3' emoticon should exist", emoji)
+        assertEmoticonTypes("<3")
     }
 
     @Test
     fun testLaughingEmoticonExists() {
-        val emoji = Emoji.getEmojiByString("XD")
-        assertNotNull("'XD' emoticon should exist", emoji)
+        assertEmoticonTypes("XD")
     }
 
     // =========================================================================
@@ -135,44 +162,37 @@ class EmoticonsTest {
 
     @Test
     fun testShrugExists() {
-        val emoji = Emoji.getEmojiByString("¯\\_(ツ)_/¯")
-        assertNotNull("Shrug kaomoji should exist", emoji)
+        assertEmoticonTypes("¯\\_(ツ)_/¯")
     }
 
     @Test
     fun testTableFlipExists() {
-        val emoji = Emoji.getEmojiByString("(╯°□°)╯︵┻━┻")
-        assertNotNull("Table flip kaomoji should exist", emoji)
+        assertEmoticonTypes("(╯°□°)╯︵┻━┻")
     }
 
     @Test
     fun testLennyFaceExists() {
-        val emoji = Emoji.getEmojiByString("( ͡° ͜ʖ ͡°)")
-        assertNotNull("Lenny face should exist", emoji)
+        assertEmoticonTypes("( ͡° ͜ʖ ͡°)")
     }
 
     @Test
     fun testDisapprovalFaceExists() {
-        val emoji = Emoji.getEmojiByString("ಠ_ಠ")
-        assertNotNull("Look of disapproval should exist", emoji)
+        assertEmoticonTypes("ಠ_ಠ")
     }
 
     @Test
     fun testCuteKaomojiExists() {
-        val emoji = Emoji.getEmojiByString("(◕‿◕)")
-        assertNotNull("Cute kaomoji should exist", emoji)
+        assertEmoticonTypes("(◕‿◕)")
     }
 
     @Test
     fun testCatFaceKaomojiExists() {
-        val emoji = Emoji.getEmojiByString("(=^･ω･^=)")
-        assertNotNull("Cat face kaomoji should exist", emoji)
+        assertEmoticonTypes("(=^･ω･^=)")
     }
 
     @Test
     fun testBearFaceExists() {
-        val emoji = Emoji.getEmojiByString("ʕ•ᴥ•ʔ")
-        assertNotNull("Bear face kaomoji should exist", emoji)
+        assertEmoticonTypes("ʕ•ᴥ•ʔ")
     }
 
     // =========================================================================
@@ -186,6 +206,13 @@ class EmoticonsTest {
         // Search for "emoticon"
         val results = Emoji.searchByName("emoticon")
         assertTrue("Searching 'emoticon' should return results", results.isNotEmpty())
+        // Every result must be a resolvable picker entry (non-blank payload)
+        results.forEach {
+            assertTrue(
+                "Search result must have a non-blank payload",
+                it.kv().getString().isNotBlank()
+            )
+        }
     }
 
     @Test
@@ -206,6 +233,10 @@ class EmoticonsTest {
 
         val results = Emoji.searchByName("tableflip")
         assertTrue("Searching 'tableflip' should return results", results.isNotEmpty())
+        assertTrue(
+            "Table flip kaomoji should be in 'tableflip' results",
+            results.any { it.kv().getString() == "(╯°□°)╯︵┻━┻" }
+        )
     }
 
     @Test
@@ -214,6 +245,10 @@ class EmoticonsTest {
 
         val results = Emoji.searchByName("lenny")
         assertTrue("Searching 'lenny' should return results", results.isNotEmpty())
+        assertTrue(
+            "Lenny face should be in 'lenny' results",
+            results.any { it.kv().getString() == "( ͡° ͜ʖ ͡°)" }
+        )
     }
 
     @Test
@@ -230,25 +265,33 @@ class EmoticonsTest {
 
     @Test
     fun testRegularSmileyEmojiStillExists() {
-        val emoji = Emoji.getEmojiByString("😀")
-        assertNotNull("Regular grinning emoji should still exist", emoji)
+        assertEmoticonTypes("😀")
     }
 
     @Test
     fun testRegularHeartEmojiStillExists() {
-        val emoji = Emoji.getEmojiByString("❤️")
-        assertNotNull("Regular heart emoji should still exist", emoji)
+        assertEmoticonTypes("❤️")
     }
 
     @Test
     fun testEmojiGroupsRemainIntact() {
         // Verify original emoji groups still work
         val smileys = Emoji.getEmojisByGroup(0)
-        assertNotNull("Smileys group should exist", smileys)
         assertTrue("Smileys group should have emojis", smileys.isNotEmpty())
 
         // First emoji in smileys should be 😀
         assertEquals("First smiley should be grinning face", "😀", smileys[0].kv().getString())
+
+        // Group partition sanity: groups must not be empty and their union is
+        // exactly the full emoji list (subList partition by construction).
+        val numGroups = Emoji.getNumGroups()
+        var totalAcrossGroups = 0
+        for (g in 0 until numGroups) {
+            val group = Emoji.getEmojisByGroup(g)
+            assertTrue("Group $g must not be empty", group.isNotEmpty())
+            totalAcrossGroups += group.size
+        }
+        assertTrue("Groups must jointly contain at least 100 entries", totalAcrossGroups >= 100)
     }
 
     // =========================================================================
@@ -257,19 +300,23 @@ class EmoticonsTest {
 
     @Test
     fun testEmoticonWithVariantExists() {
-        // Test emoticon with alternate forms
-        val emoji1 = Emoji.getEmojiByString(":-)")
-        val emoji2 = Emoji.getEmojiByString(":)")
-        assertNotNull("':-)'  emoticon should exist", emoji1)
-        assertNotNull("':)' emoticon should exist", emoji2)
+        // Test emoticon with alternate forms — both must exist as DISTINCT entries
+        assertEmoticonTypes(":-)")
+        assertEmoticonTypes(":)")
+        assertFalse(
+            "':-)' and ':)' must be distinct entries",
+            Emoji.getEmojiByString(":-)")!!.kv().sameKey(Emoji.getEmojiByString(":)")!!.kv())
+        )
     }
 
     @Test
     fun testEmoticonCaseVariants() {
-        val lower = Emoji.getEmojiByString("xd")
-        val upper = Emoji.getEmojiByString("XD")
-        // Both should exist as separate emoticons
-        assertNotNull("'XD' emoticon should exist", upper)
-        assertNotNull("'xD' emoticon should exist", Emoji.getEmojiByString("xD"))
+        // Case variants are separate emoticons, not case-folded lookups
+        assertEmoticonTypes("XD")
+        assertEmoticonTypes("xD")
+        assertFalse(
+            "'XD' and 'xD' must be distinct entries",
+            Emoji.getEmojiByString("XD")!!.kv().sameKey(Emoji.getEmojiByString("xD")!!.kv())
+        )
     }
 }

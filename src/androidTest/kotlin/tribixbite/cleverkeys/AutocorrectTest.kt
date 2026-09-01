@@ -49,14 +49,29 @@ class AutocorrectTest {
         config.autocorrect_prefix_length = 0
     }
 
+    /**
+     * ARC-044 structural invariant for inputs whose exact winner is dictionary-
+     * dependent: autoCorrect must return either the typed word untouched or a
+     * word the predictor can vouch for (dictionary/adaptation vocabulary).
+     * It must never invent a word.
+     */
+    private fun assertReturnsInputOrKnownWord(typed: String): String {
+        val result = predictor.autoCorrect(typed)
+        assertTrue(
+            "autoCorrect('$typed') must return the input or a known word, got '$result'",
+            result == typed || predictor.isInDictionary(result)
+        )
+        return result
+    }
+
     // =========================================================================
     // Basic autocorrect tests
     // =========================================================================
 
     @Test
     fun testAutocorrectReturnsString() {
-        val result = predictor.autoCorrect("teh")
-        assertNotNull("Should return non-null result", result)
+        val result = assertReturnsInputOrKnownWord("teh")
+        assertTrue("Correction for 'teh' must not be blank", result.isNotBlank())
     }
 
     @Test
@@ -143,16 +158,22 @@ class AutocorrectTest {
 
     @Test
     fun testAutocorrectAdn() {
-        val result = predictor.autoCorrect("adn")
-        // "adn" is a typo for "and"
-        assertNotNull(result)
+        // "adn" is a typo for "and" — exact winner depends on the bundled
+        // dictionary (an in-dictionary "adn" would legitimately stay), so pin
+        // the invariant rather than the word.
+        val result = assertReturnsInputOrKnownWord("adn")
+        // Length may only move within the configured autocorrect_max_length_diff (2)
+        assertTrue(
+            "Correction '$result' must respect autocorrect_max_length_diff=2",
+            kotlin.math.abs(result.length - 3) <= 2
+        )
     }
 
     @Test
     fun testAutocorrectWaht() {
-        val result = predictor.autoCorrect("waht")
-        // "waht" is a typo for "what"
-        assertNotNull(result)
+        // "waht" is a typo for "what" (adjacent transposition)
+        val result = assertReturnsInputOrKnownWord("waht")
+        assertTrue("Correction for 'waht' must not be blank", result.isNotBlank())
     }
 
     // =========================================================================
@@ -161,9 +182,9 @@ class AutocorrectTest {
 
     @Test
     fun testAutocorrectShortWord() {
-        // Very short words may not be autocorrected
-        val result = predictor.autoCorrect("th")
-        assertNotNull(result)
+        // Very short words may not be autocorrected, but the output must still
+        // be the input or a real word — never an invented token.
+        assertReturnsInputOrKnownWord("th")
     }
 
     @Test
@@ -729,14 +750,12 @@ class AutocorrectTest {
 
     @Test
     fun testAutocorrectWithNumbers() {
-        val result = predictor.autoCorrect("test123")
-        assertNotNull(result)
+        assertReturnsInputOrKnownWord("test123")
     }
 
     @Test
     fun testAutocorrectWithApostrophe() {
-        val result = predictor.autoCorrect("don't")
-        assertNotNull(result)
+        assertReturnsInputOrKnownWord("don't")
     }
 
     // =========================================================================
@@ -745,9 +764,8 @@ class AutocorrectTest {
 
     @Test
     fun testAutocorrectNonsenseWord() {
-        val result = predictor.autoCorrect("xyzqwerty")
-        // Nonsense words may or may not be corrected
-        assertNotNull(result)
+        // Nonsense words may or may not be corrected, but never to a non-word
+        assertReturnsInputOrKnownWord("xyzqwerty")
     }
 
     @Test
@@ -758,15 +776,13 @@ class AutocorrectTest {
 
     @Test
     fun testAutocorrectTwoChars() {
-        val result = predictor.autoCorrect("ab")
-        assertNotNull(result)
+        assertReturnsInputOrKnownWord("ab")
     }
 
     @Test
     fun testAutocorrectWhitespace() {
-        val result = predictor.autoCorrect("  ")
-        // Whitespace handling
-        assertNotNull(result)
+        // Whitespace handling: output is the input or (at worst) a real word
+        assertReturnsInputOrKnownWord("  ")
     }
 
     // =========================================================================

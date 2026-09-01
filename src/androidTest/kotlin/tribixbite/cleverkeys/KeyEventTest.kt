@@ -12,6 +12,12 @@ import org.junit.runner.RunWith
 /**
  * Instrumented tests for key event handling and KeyValue functionality.
  * Tests key creation, modifier handling, and event codes.
+ *
+ * ARC-044: strengthened from liveness (`assertNotNull`) to behavior. Every named
+ * special key is pinned to the Kind + payload the `KeyValue.getSpecialKeyByName`
+ * table actually declares (keyevent code, modifier ordinal, event id, char), so a
+ * table regression now fails the specific test instead of sailing through a
+ * null-check.
  */
 @RunWith(AndroidJUnit4::class)
 class KeyEventTest {
@@ -26,6 +32,27 @@ class KeyEventTest {
         config = Config.globalConfig()
     }
 
+    /** Resolve a name that MUST be a special key and pin its Keyevent code. */
+    private fun assertKeyeventKey(name: String, expectedCode: Int) {
+        val key = KeyValue.getSpecialKeyByName(name)
+        assertNotNull("'$name' must be in the special-key table", key)
+        assertEquals("'$name' must be a Keyevent key", KeyValue.Kind.Keyevent, key!!.getKind())
+        assertEquals("'$name' must emit its documented key event code", expectedCode, key.getKeyevent())
+        // getKeyByName must resolve through the same table entry
+        assertTrue(
+            "getKeyByName('$name') must return the special key, not a string fallback",
+            key.sameKey(KeyValue.getKeyByName(name))
+        )
+    }
+
+    /** Resolve a name that MUST be a modifier key and pin its Modifier. */
+    private fun assertModifierKey(name: String, expected: KeyValue.Modifier) {
+        val key = KeyValue.getSpecialKeyByName(name)
+        assertNotNull("'$name' must be in the special-key table", key)
+        assertEquals("'$name' must be a Modifier key", KeyValue.Kind.Modifier, key!!.getKind())
+        assertEquals("'$name' must carry the $expected modifier", expected, key.getModifier())
+    }
+
     // =========================================================================
     // KeyValue creation tests
     // =========================================================================
@@ -33,44 +60,76 @@ class KeyEventTest {
     @Test
     fun testCharKeyCreation() {
         val key = KeyValue.makeCharKey('a')
-        assertNotNull("Char key should be created", key)
         assertEquals("Should have CHAR kind", KeyValue.Kind.Char, key.getKind())
+        assertEquals("Char payload must be the requested char", 'a', key.getChar())
+        assertEquals("Symbol must default to the char itself", "a", key.getString())
+        assertEquals("makeCharKey(c) must not set flags", 0, key.getFlags())
     }
 
     @Test
     fun testCharKeyUppercase() {
         val key = KeyValue.makeCharKey('A')
-        assertNotNull("Uppercase char key should be created", key)
+        assertEquals("Uppercase char must be preserved, not case-folded", 'A', key.getChar())
+        assertEquals("Symbol must be the uppercase char", "A", key.getString())
+        assertEquals("Should have CHAR kind", KeyValue.Kind.Char, key.getKind())
     }
 
     @Test
     fun testCharKeyDigit() {
         val key = KeyValue.makeCharKey('5')
-        assertNotNull("Digit key should be created", key)
+        assertEquals("Digit char must be preserved", '5', key.getChar())
+        assertEquals("Should have CHAR kind", KeyValue.Kind.Char, key.getKind())
     }
 
     @Test
     fun testCharKeySymbol() {
         val key = KeyValue.makeCharKey('@')
-        assertNotNull("Symbol key should be created", key)
+        assertEquals("Symbol char must be preserved", '@', key.getChar())
+        assertEquals("Should have CHAR kind", KeyValue.Kind.Char, key.getKind())
+    }
+
+    @Test
+    fun testCharKeyEquality() {
+        // sameKey is the type-safe equality the layout system relies on
+        assertTrue(
+            "Two char keys for the same char must be the same key",
+            KeyValue.makeCharKey('a').sameKey(KeyValue.makeCharKey('a'))
+        )
+        assertFalse(
+            "Char keys for different chars must not be the same key",
+            KeyValue.makeCharKey('a').sameKey(KeyValue.makeCharKey('b'))
+        )
     }
 
     @Test
     fun testStringKeyCreation() {
         val key = KeyValue.makeStringKey("test")
-        assertNotNull("String key should be created", key)
+        assertEquals("Multi-char string must have String kind", KeyValue.Kind.String, key.getKind())
+        assertEquals("String payload must be the input verbatim", "test", key.getString())
     }
 
     @Test
     fun testStringKeyEmoji() {
+        // "😀" is one code point but TWO UTF-16 units, so it takes the String
+        // branch of makeStringKey (only length==1 collapses to a Char key).
         val key = KeyValue.makeStringKey("😀")
-        assertNotNull("Emoji string key should be created", key)
+        assertEquals("Surrogate-pair emoji must be a String key", KeyValue.Kind.String, key.getKind())
+        assertEquals("Emoji payload must be preserved verbatim", "😀", key.getString())
     }
 
     @Test
     fun testStringKeyMultiChar() {
         val key = KeyValue.makeStringKey("abc")
-        assertNotNull("Multi-char string key should be created", key)
+        assertEquals("Multi-char string must have String kind", KeyValue.Kind.String, key.getKind())
+        assertEquals("String payload must be the input verbatim", "abc", key.getString())
+    }
+
+    @Test
+    fun testStringKeySingleCharCollapsesToCharKey() {
+        // Documented contract: "A char key is returned for a string of length 1."
+        val key = KeyValue.makeStringKey("x")
+        assertEquals("Length-1 string must collapse to a Char key", KeyValue.Kind.Char, key.getKind())
+        assertEquals("Collapsed char key must carry the char", 'x', key.getChar())
     }
 
     // =========================================================================
@@ -79,32 +138,41 @@ class KeyEventTest {
 
     @Test
     fun testBackspaceKey() {
-        val key = KeyValue.getKeyByName("backspace")
-        assertNotNull("Backspace key should exist", key)
+        assertKeyeventKey("backspace", KeyEvent.KEYCODE_DEL)
     }
 
     @Test
     fun testEnterKey() {
-        val key = KeyValue.getKeyByName("enter")
-        assertNotNull("Enter key should exist", key)
+        assertKeyeventKey("enter", KeyEvent.KEYCODE_ENTER)
     }
 
     @Test
     fun testSpaceKey() {
-        val key = KeyValue.getKeyByName("space")
-        assertNotNull("Space key should exist", key)
+        val key = KeyValue.getSpecialKeyByName("space")
+        assertNotNull("'space' must be in the special-key table", key)
+        assertEquals("Space is a Char key, not a Keyevent", KeyValue.Kind.Char, key!!.getKind())
+        assertEquals("Space must type the space character", ' ', key.getChar())
     }
 
     @Test
     fun testTabKey() {
-        val key = KeyValue.getKeyByName("tab")
-        assertNotNull("Tab key should exist", key)
+        assertKeyeventKey("tab", KeyEvent.KEYCODE_TAB)
     }
 
     @Test
     fun testEscapeKey() {
-        val key = KeyValue.getKeyByName("escape")
-        assertNotNull("Escape key should exist", key)
+        // The special-key table names it "esc" — "escape" is NOT a registered
+        // name and would fall back to a String key typing the literal text.
+        assertKeyeventKey("esc", KeyEvent.KEYCODE_ESCAPE)
+        assertNull(
+            "'escape' must not be in the special-key table (the name is 'esc')",
+            KeyValue.getSpecialKeyByName("escape")
+        )
+    }
+
+    @Test
+    fun testDeleteKey() {
+        assertKeyeventKey("delete", KeyEvent.KEYCODE_FORWARD_DEL)
     }
 
     // =========================================================================
@@ -113,32 +181,35 @@ class KeyEventTest {
 
     @Test
     fun testShiftKey() {
-        val key = KeyValue.getKeyByName("shift")
-        assertNotNull("Shift key should exist", key)
+        assertModifierKey("shift", KeyValue.Modifier.SHIFT)
+        // Shift is the double-tap-lockable modifier
+        assertTrue(
+            "Shift must carry FLAG_DOUBLE_TAP_LOCK",
+            KeyValue.getKeyByName("shift").hasFlagsAny(KeyValue.FLAG_DOUBLE_TAP_LOCK)
+        )
     }
 
     @Test
     fun testCtrlKey() {
-        val key = KeyValue.getKeyByName("ctrl")
-        assertNotNull("Ctrl key should exist", key)
+        assertModifierKey("ctrl", KeyValue.Modifier.CTRL)
     }
 
     @Test
     fun testAltKey() {
-        val key = KeyValue.getKeyByName("alt")
-        assertNotNull("Alt key should exist", key)
+        assertModifierKey("alt", KeyValue.Modifier.ALT)
     }
 
     @Test
     fun testMetaKey() {
-        val key = KeyValue.getKeyByName("meta")
-        assertNotNull("Meta key should exist", key)
+        assertModifierKey("meta", KeyValue.Modifier.META)
     }
 
     @Test
     fun testCapsLockKey() {
-        val key = KeyValue.getKeyByName("capslock")
-        assertNotNull("Caps lock key should exist", key)
+        val key = KeyValue.getSpecialKeyByName("capslock")
+        assertNotNull("'capslock' must be in the special-key table", key)
+        assertEquals("Caps lock is an Event key, not a modifier", KeyValue.Kind.Event, key!!.getKind())
+        assertEquals("Caps lock must fire the CAPS_LOCK event", KeyValue.Event.CAPS_LOCK, key.getEvent())
     }
 
     // =========================================================================
@@ -147,50 +218,42 @@ class KeyEventTest {
 
     @Test
     fun testUpKey() {
-        val key = KeyValue.getKeyByName("up")
-        assertNotNull("Up arrow key should exist", key)
+        assertKeyeventKey("up", KeyEvent.KEYCODE_DPAD_UP)
     }
 
     @Test
     fun testDownKey() {
-        val key = KeyValue.getKeyByName("down")
-        assertNotNull("Down arrow key should exist", key)
+        assertKeyeventKey("down", KeyEvent.KEYCODE_DPAD_DOWN)
     }
 
     @Test
     fun testLeftKey() {
-        val key = KeyValue.getKeyByName("left")
-        assertNotNull("Left arrow key should exist", key)
+        assertKeyeventKey("left", KeyEvent.KEYCODE_DPAD_LEFT)
     }
 
     @Test
     fun testRightKey() {
-        val key = KeyValue.getKeyByName("right")
-        assertNotNull("Right arrow key should exist", key)
+        assertKeyeventKey("right", KeyEvent.KEYCODE_DPAD_RIGHT)
     }
 
     @Test
     fun testHomeKey() {
-        val key = KeyValue.getKeyByName("home")
-        assertNotNull("Home key should exist", key)
+        assertKeyeventKey("home", KeyEvent.KEYCODE_MOVE_HOME)
     }
 
     @Test
     fun testEndKey() {
-        val key = KeyValue.getKeyByName("end")
-        assertNotNull("End key should exist", key)
+        assertKeyeventKey("end", KeyEvent.KEYCODE_MOVE_END)
     }
 
     @Test
     fun testPageUpKey() {
-        val key = KeyValue.getKeyByName("page_up")
-        assertNotNull("Page up key should exist", key)
+        assertKeyeventKey("page_up", KeyEvent.KEYCODE_PAGE_UP)
     }
 
     @Test
     fun testPageDownKey() {
-        val key = KeyValue.getKeyByName("page_down")
-        assertNotNull("Page down key should exist", key)
+        assertKeyeventKey("page_down", KeyEvent.KEYCODE_PAGE_DOWN)
     }
 
     // =========================================================================
@@ -199,14 +262,14 @@ class KeyEventTest {
 
     @Test
     fun testF1Key() {
-        val key = KeyValue.getKeyByName("f1")
-        assertNotNull("F1 key should exist", key)
+        assertKeyeventKey("f1", KeyEvent.KEYCODE_F1)
+        assertEquals("F1 must display as 'F1'", "F1", KeyValue.getKeyByName("f1").getString())
     }
 
     @Test
     fun testF12Key() {
-        val key = KeyValue.getKeyByName("f12")
-        assertNotNull("F12 key should exist", key)
+        assertKeyeventKey("f12", KeyEvent.KEYCODE_F12)
+        assertEquals("F12 must display as 'F12'", "F12", KeyValue.getKeyByName("f12").getString())
     }
 
     // =========================================================================
@@ -217,13 +280,14 @@ class KeyEventTest {
     fun testCharKind() {
         val key = KeyValue.makeCharKey('x')
         assertEquals("Char key should have Char kind", KeyValue.Kind.Char, key.getKind())
+        assertEquals("Char key must carry its char", 'x', key.getChar())
     }
 
     @Test
     fun testModifierKind() {
         val key = KeyValue.getKeyByName("shift")
-        assertNotNull(key)
-        assertEquals("Shift should have Modifier kind", KeyValue.Kind.Modifier, key!!.getKind())
+        assertEquals("Shift should have Modifier kind", KeyValue.Kind.Modifier, key.getKind())
+        assertEquals("Shift must carry the SHIFT modifier", KeyValue.Modifier.SHIFT, key.getModifier())
     }
 
     // =========================================================================
@@ -232,44 +296,72 @@ class KeyEventTest {
 
     @Test
     fun testUnknownKeyCreatesStringKey() {
-        // getKeyByName creates string keys for unknown names - allows custom strings
+        // getKeyByName falls back to a string key for unknown names, so custom
+        // layouts can put arbitrary text on a key. The payload must be verbatim.
         val key = KeyValue.getKeyByName("nonexistent_key_xyz")
-        assertNotNull("Unknown name should create string key", key)
+        assertEquals("Unknown name must become a String key", KeyValue.Kind.String, key.getKind())
+        assertEquals(
+            "String fallback must type the name verbatim",
+            "nonexistent_key_xyz", key.getString()
+        )
+        assertNull(
+            "The fallback must not shadow a real special key",
+            KeyValue.getSpecialKeyByName("nonexistent_key_xyz")
+        )
     }
 
     @Test
     fun testEmptyKeyNameCreatesKey() {
-        // Empty string creates an empty string key
+        // "" fails the parser (no kind after ':' syntax) and falls back to an
+        // empty string key.
         val key = KeyValue.getKeyByName("")
-        assertNotNull("Empty name should create key", key)
+        assertEquals("Empty name must become a String key", KeyValue.Kind.String, key.getKind())
+        assertEquals("Empty name must carry an empty payload", "", key.getString())
     }
 
     // =========================================================================
     // Config key event settings
+    //
+    // Values come from prefs (possibly user-set on a real device), so exact
+    // values are not pinned; instead each field is checked against the published
+    // ConfigSnapshot — the hot-path read model that publishSnapshot() must keep
+    // in sync with the live Config on every refresh.
     // =========================================================================
 
     @Test
     fun testLongPressTimeout() {
         val timeout = config.longPressTimeout
         assertTrue("Longpress timeout should be non-negative", timeout >= 0)
+        assertEquals(
+            "Snapshot must mirror the live longPressTimeout",
+            timeout, config.snapshot.longPressTimeout
+        )
     }
 
     @Test
     fun testLongPressInterval() {
         val interval = config.longPressInterval
         assertTrue("Longpress interval should be non-negative", interval >= 0)
+        assertEquals(
+            "Snapshot must mirror the live longPressInterval",
+            interval, config.snapshot.longPressInterval
+        )
     }
 
     @Test
     fun testKeyRepeatEnabled() {
-        // Just verify property is accessible
-        val enabled = config.keyrepeat_enabled
+        assertEquals(
+            "Snapshot must mirror the live keyrepeat_enabled",
+            config.keyrepeat_enabled, config.snapshot.keyrepeat_enabled
+        )
     }
 
     @Test
     fun testDoubleTapLockShift() {
-        // Just verify property is accessible
-        val enabled = config.double_tap_lock_shift
+        assertEquals(
+            "Snapshot must mirror the live double_tap_lock_shift",
+            config.double_tap_lock_shift, config.snapshot.double_tap_lock_shift
+        )
     }
 
     // =========================================================================
@@ -278,8 +370,17 @@ class KeyEventTest {
 
     @Test
     fun testHapticEnabled() {
-        // Just verify property is accessible
-        val enabled = config.haptic_enabled
+        // The global Config must be a stable singleton: haptic gating reads it
+        // from many sites and they must all see the same instance.
+        assertSame(
+            "Config.globalConfig() must return the same instance",
+            config, Config.globalConfig()
+        )
+        // Read must not throw and must be stable across reads
+        assertEquals(
+            "haptic_enabled must be stable across reads",
+            config.haptic_enabled, Config.globalConfig().haptic_enabled
+        )
     }
 
     @Test
@@ -296,17 +397,29 @@ class KeyEventTest {
     fun testKeyPadding() {
         val padding = config.keyPadding
         assertTrue("Key padding should be non-negative", padding >= 0)
+        assertEquals(
+            "Snapshot must mirror the live keyPadding",
+            padding, config.snapshot.keyPadding, 0.0f
+        )
     }
 
     @Test
     fun testKeyboardMarginBottom() {
         val margin = config.margin_bottom
         assertTrue("Margin should be non-negative", margin >= 0)
+        assertEquals(
+            "Snapshot must mirror the live margin_bottom",
+            margin, config.snapshot.margin_bottom, 0.0f
+        )
     }
 
     @Test
     fun testKeyboardMarginRight() {
         val margin = config.margin_right
         assertTrue("Margin should be non-negative", margin >= 0)
+        assertEquals(
+            "Snapshot must mirror the live margin_right",
+            margin, config.snapshot.margin_right, 0.0f
+        )
     }
 }
