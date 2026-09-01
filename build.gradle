@@ -491,6 +491,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ClipboardEditJvmTest',
     'tribixbite.cleverkeys.Issue78SuggestionReplaceTest',
     'tribixbite.cleverkeys.Issue118EmojiOverflowTest',
+    // ARC-106 (2026-09-01): nameToEmoji literal has no silently-overwritten duplicate keys;
+    // emoji own bare names, displaced emoticons keep a qualified key containing the bare name.
+    'tribixbite.cleverkeys.EmojiNameMapDriftTest',
     'tribixbite.cleverkeys.backup.SettingsImportPlanBuilderTest',
     'tribixbite.cleverkeys.backup.SettingsDefaultsDriftTest',
     'tribixbite.cleverkeys.SettingsSearchCoverageTest',

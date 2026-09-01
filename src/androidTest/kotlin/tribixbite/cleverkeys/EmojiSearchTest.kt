@@ -193,17 +193,14 @@ class EmojiSearchTest {
 
     @Test
     fun testGetEmojiNameForHeart() {
-        // The literal "heart" key is DUPLICATED in initNameMap (a later
-        // "heart" → "<3" emoticon entry overwrites its value, keeping its
-        // position — LinkedHashMap semantics), so ❤️'s canonical name resolves
-        // to a heart-family name rather than a Unicode fallback. Pin the family,
-        // not the exact winner of the duplicate-key collision.
+        // ARC-106: initNameMap's duplicate "heart" key (the "<3" emoticon used to
+        // overwrite ❤️'s entry) is fixed — the emoji owns the bare name, so ❤️'s
+        // canonical long-press name is exactly "heart" (its first declared name;
+        // the emoticon moved to "heart emoticon"). Uniqueness of the literal keys
+        // is pinned by the pure EmojiNameMapDriftTest.
         val name = Emoji.getEmojiName("❤️")
         assertNotNull("Heart emoji should have a name", name)
-        assertTrue(
-            "Heart emoji name must come from the heart nameMap family, got '$name'",
-            name == "heart" || name == "red heart"
-        )
+        assertEquals("Heart emoji canonical name", "heart", name)
     }
 
     @Test
