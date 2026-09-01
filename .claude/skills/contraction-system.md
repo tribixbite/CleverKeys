@@ -295,8 +295,13 @@ guard.
 
 ---
 
-## 13. Known dead data
+## 13. Known dead data — RESOLVED
 
-`contraction_pairings_cleaned.json` (32 entries, 5,177 bytes) has **zero** code references —
-verified 2026-08-21 across `src/`, `scripts/`, `tools/`. Left in place pending a decision; it is a
-candidate for deletion alongside the next data change.
+`contraction_pairings_cleaned.json` (32 entries, 5,177 bytes) had **zero** code references
+(verified 2026-08-21 across `src/`, `scripts/`, `tools/`, including the one dynamic route —
+`detectAvailableV2Dictionaries` enumerates `assets/dictionaries/` but filters on
+`endsWith("_enhanced.bin")`). **DELETED** in `030265ee`. Re-confirmed absent 2026-09-01, and
+both contraction gates green after the deletion: `swipe.BundledContractionDataTest` 18/18,
+`swipe.ContractionCollisionDataTest` 6/6.
+
+No known dead data remains in `assets/dictionaries/`.

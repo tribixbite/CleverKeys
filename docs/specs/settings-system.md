@@ -13,18 +13,18 @@ The settings system manages user preferences through SharedPreferences, provides
 | File | Class/Function | Purpose |
 |------|----------------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Config`, `Defaults` | Global configuration singleton, centralized defaults |
-| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | `SettingsActivity` | Activity shell: state + SAF launchers + `setContent { SettingsScreen() }` (801 lines as of 2026-08-21 — the old "~3000-line" monolith was decomposed into `ui/settings/`) |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | `SettingsActivity` | Activity shell: state + SAF launchers + `setContent { SettingsScreen() }` (845 lines as of 2026-09-01 — the old "~3000-line" monolith was decomposed into `ui/settings/`) |
 | `src/main/kotlin/tribixbite/cleverkeys/ui/settings/` | `SettingsScreen` + sections/io | The actual Material 3 Compose settings UI (see Architecture tree below) |
 | `src/main/kotlin/tribixbite/cleverkeys/ConfigurationManager.kt` | `ConfigurationManager` | Runtime configuration application |
 | `src/main/kotlin/tribixbite/cleverkeys/Theme.kt` + `theme/ThemeProvider.kt` | `Theme`, `ThemeProvider` | Keyboard-view theme data and loading (`theme/KeyboardTheme.kt` is only a retained composable alias for `CleverKeysTheme`, the Compose settings-UI wrapper — not a theme store) |
 
 ## Architecture
 
-Real file layout (verified 2026-08-21 via `rg --files src/main/kotlin/tribixbite/cleverkeys/ui/settings/`
-— an earlier revision showed a fictional `PreferenceScreen` tree):
+Real file layout (re-derived 2026-09-01 from `git ls-tree HEAD src/main/kotlin/tribixbite/cleverkeys/ui/settings/`
+— an earlier revision showed a fictional `PreferenceScreen` tree; counts below are exact, not approximate):
 
 ```
-SettingsActivity.kt (root package — 801-line shell: state, SAF launchers, listeners)
+SettingsActivity.kt (activities/ — 845-line shell: state, SAF launchers, listeners)
     └── setContent { SettingsScreen() }
 
 ui/settings/                       # 10 files — screen scaffolding
@@ -42,10 +42,10 @@ ui/settings/sections/              # 20 files — one composable per section
     BackupPassphrasePromptDialog), AccessibilitySection, AdvancedSection,
     ActivitiesSection, TestKeyboardSection, VersionActionsSection, HelpSection
 
-ui/settings/io/                    # 8 files — import/export handlers
+ui/settings/io/                    # 9 files — import/export handlers
     SettingsBackupHandlers, SettingsClipboardHandlers, SettingsDictionaryHandlers,
     SettingsGifHandlers, SettingsLanguagePackHandlers, SettingsPrivacyDataHandlers,
-    SettingsSwipeDataHandlers, SettingsCollisionScanHandlers
+    SettingsSwipeDataHandlers, SettingsCollisionScanHandlers, CreateBackupDocument
 
 Supporting singletons:
     Config (reads SharedPreferences)

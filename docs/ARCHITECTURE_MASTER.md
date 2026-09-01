@@ -337,7 +337,7 @@ Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
 
 | Constant | Value | Description |
 |----------|-------|-------------|
-| `DATABASE_VERSION` | 5 | SQLite schema version (`ClipboardDatabase.kt:1828` — v5 added `is_private`/`source_package` for #156 Private copy) |
+| `DATABASE_VERSION` | 5 | SQLite schema version (`ClipboardDatabase.kt:1869` — v5 added `is_private`/`source_package` for #156 Private copy) |
 
 > There is no `HISTORY_TTL_MS` constant (verified 2026-08-21 — a "7 days" constant was
 > listed here in error). Retention is user-configured: `clipboard_history_duration`

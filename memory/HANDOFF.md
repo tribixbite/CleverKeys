@@ -83,9 +83,11 @@ consolidation follows it. Nothing was pushed, tagged, or released.
   earlier ARC-045/wave strings still fall back to English. Google/SimplyTranslate/Lingva public
   endpoints were unavailable; MyMemory worked but cannot cover the volume under anonymous quota.
   Preserve every `%N$` placeholder and plurals element shape; do not paste English copies.
-- Wave E remainder: ARC-073 doc/citation drift and micro-bucket, ARC-098 phantom-`keyboard2`
-  tooling sweep, the four verified-doc-claim audits, and deletion of the zero-reference
-  `contraction_pairings_cleaned.json` after a gate run.
+- ~~Wave E remainder~~ — **DONE 2026-09-01**: ARC-073 doc/citation drift + micro-bucket
+  (`d20ed3b5`), ARC-098 phantom-`keyboard2` tooling sweep (`f482faf4`), the four
+  verified-doc-claim audits and the `contraction_pairings_cleaned.json` gate run (see §3).
+  ARC-098's `gesture/` + Bridges/Initializers→`wiring/` half is NOT in that commit — it is
+  source-tree work and stays with ARC-072 slice 3 below.
 - ARC-072 slice 3: Initializers → `wiring/KeyboardComponentGraph`, folded with the gesture/
   reorg portion of ARC-098. Then continue later Config/SettingsActivity decomposition slices.
 - Evidence-gated geometric OQs ARC-027/028/029: do not change defaults unless local-corpus replay
@@ -149,16 +151,30 @@ Everything is in git history and these references — do not re-derive:
 
 ### 3. Smaller, ride-along
 
-- `contraction_pairings_cleaned.json` (32 entries, 5,177 bytes) has ZERO code references —
-  verified 2026-08-21 across `src/`, `scripts/`, `tools/`. Candidate for deletion with the next
-  data change; needs a gate run, not a decision.
-- **Doc claims found but deliberately not fixed** during the 2026-08-21 deleted-class sweep,
-  each needing verification against live code rather than a mechanical edit: invented API
-  signatures in `core-keyboard-system.md` (`CleverKeysService.switchLayout`,
-  `KeyEventHandler.handleKeyDown`); a self-contradicting test inventory in `testing-strategy.md`
-  ("5 Robolectric / 6 instrumented" vs its own later 987/176/887); a `SwipeDetector` box and a
-  `DATABASE_VERSION = 1` claim in `ARCHITECTURE_MASTER.md` §9/§7.2 (clipboard schema is V4); and
-  an unverified file tree + "~3000 lines" in `settings-system.md`.
+- ~~`contraction_pairings_cleaned.json`~~ — **CLOSED 2026-09-01.** The deletion had already
+  landed in `030265ee` (this entry was stale); absence re-confirmed across `src/`, `scripts/`,
+  `tools/`, `build.gradle`. The gate run this entry asked for has now happened:
+  `swipe.BundledContractionDataTest` 18/18 and `swipe.ContractionCollisionDataTest` 6/6 green,
+  plus the full `runPureTests` 2093/2093.
+- **Doc claims found but deliberately not fixed** during the 2026-08-21 deleted-class sweep —
+  **all four re-verified against live code 2026-09-01 (ARC-073/§3):**
+  - `core-keyboard-system.md` invented API signatures (`CleverKeysService.switchLayout`,
+    `KeyEventHandler.handleKeyDown`) — ALREADY CORRECT. The 2026-08-21 pass replaced them with
+    an explicit "none of those methods exist" note plus the real event-driven flow. All six
+    live signatures re-verified at HEAD (`current_layout`, `current_layout_unmodified`,
+    `setTextLayout`, `incrTextLayout`, `setSpecialLayout`, `loadLayout`), as was
+    `KeyEventHandler.key_up → recv.handle_event_key`. No edit needed.
+  - `testing-strategy.md` self-contradicting inventory — the contradiction was already removed;
+    the COUNTS were stale. Re-measured and rewritten: pure **2093** and mock **343**
+    (both run 2026-09-01 on this device), instrumented 1395 carried as the last recorded ew-cli
+    sweep (2026-08-18) and explicitly labelled as a floor, since ew-cli was not re-run.
+  - `ARCHITECTURE_MASTER.md` §9 `SwipeDetector` box + §7.2 `DATABASE_VERSION` — both already
+    corrected (the box states no such class exists; `DATABASE_VERSION` reads 5, not 1, and the
+    live constant IS 5). Only the line anchor was stale: `ClipboardDatabase.kt:1828` → `:1869`.
+  - `settings-system.md` file tree + "~3000 lines" — tree re-derived from
+    `git ls-tree HEAD`: SettingsActivity 801→**845** lines, `ui/settings/io/` 8→**9** files
+    (`CreateBackupDocument.kt` was missing). `ui/settings/` 10 and `sections/` 20 confirmed.
+    CLAUDE.md's architecture block carried the same drift and was refreshed with it.
 - Translation debt is consolidated under ARC-067: the same 384 default entries are missing
   from every locale, including `pref_secondary_prediction_weight`, backup/private-copy copy,
   pack refusal reasons, and the new provenance sheet. `swipe_engine_mode_desc` itself is now

@@ -18,9 +18,11 @@ explicit authorization.
 
 - [ ] ARC-067: translate the common 384 missing resources into all 21 locale files. Preserve
   placeholders and plurals shapes; do not use English copies. ARC-066/087 are complete.
-- [ ] Finish Wave E: ARC-073 citation/doc drift, ARC-098 phantom-`keyboard2` tooling sweep,
-  four verified doc-claim repairs, and gated deletion of `contraction_pairings_cleaned.json`.
-  ARC-076 and ARC-089 are complete.
+- [x] Finish Wave E: ARC-073 citation/doc drift (`d20ed3b5`), ARC-098 phantom-`keyboard2`
+  tooling sweep (`f482faf4`), the four verified doc-claim repairs, and the
+  `contraction_pairings_cleaned.json` gate run (the file was already deleted in `030265ee`).
+  ARC-076 and ARC-089 are complete. ARC-098's source-tree half (`gesture/`,
+  Bridges/Initializers→`wiring/`) remains under ARC-072 slice 3 below.
 - [ ] ARC-072 slice 3 composition-root/reorg work, folded with the gesture portion of ARC-098.
 - [ ] ARC-027/028/029 geometric experiments, evidence-gated on non-regressing corpus replay.
 - [ ] ARC-071 Astro 6 migration and ARC-046 web regression gate/Tailwind vendoring.

@@ -31,7 +31,7 @@ Use this skill when building, modifying, or quality-checking dictionaries and co
 | File | Status | Notes |
 |------|--------|-------|
 | `en_enhanced.txt` | Deleted | V1 word list. DELETED 2026-07-03 (was never loaded at runtime). |
-| `contraction_pairings_cleaned.json` | Unused | Cleaned subset, never referenced in code |
+| ~~`contraction_pairings_cleaned.json`~~ | Deleted | Cleaned subset, never referenced in code. DELETED (`030265ee`); absence re-confirmed 2026-09-01. |
 | `contractions_en.json` | Redundant | Identical to `contractions_non_paired.json` |
 
 ## Build Commands
@@ -130,7 +130,7 @@ with open('en_enhanced.bin', 'rb') as f:
 ### Contraction Files Explained
 - **`contractions_non_paired.json`** (119 entries): Direct mappings where the apostrophe-free form is NOT a real word. `dont→don't`, `cant→can't`, `im→i'm`
 - **`contraction_pairings.json`** (10,637 lines): Mappings where the base IS a real word. `well→we'll`, `shell→she'll`. Includes every possessive (`aaron→aaron's`).
-- **`contraction_pairings_cleaned.json`** (345 lines): Real contractions only, no possessives. NOT currently loaded.
+- ~~**`contraction_pairings_cleaned.json`**~~: real contractions only, no possessives. Never loaded; DELETED (`030265ee`).
 
 ### Adding a Contraction
 1. Add to `contractions_non_paired.json` (and `contractions_en.json` — they must stay in sync)

@@ -4,13 +4,18 @@
 
 Comprehensive testing strategy for CleverKeys Android keyboard, designed to enable testing without ADB/emulator dependencies.
 
-## Current State (2026-08-21)
+## Current State (2026-09-01)
 
-**One authoritative number**: `./gradlew runPureTests` ran **1696 pure JVM tests** green on
-2026-08-21. The last full instrumented sweep (ew-cli, on-device) was **1395 tests / 0
-failures** on 2026-08-18. The per-type breakdown and runner details live in the
-"Current Test Suite" section below (whose table is a dated 2026-03-15 snapshot — counts
-have grown since; the pure count above supersedes it).
+**Measured, not estimated** — the two on-device suites were re-run for this line:
+
+| Suite | Count | How it was obtained |
+|---|---|---|
+| Pure JVM | **2093** green | `scripts/gradle-guard.sh runPureTests`, 2026-09-01, 81 s |
+| MockK | **343** green | `scripts/gradle-guard.sh runMockTests`, 2026-09-01, 56 s |
+| Instrumented | 1395 / 0 failures | last full ew-cli sweep, 2026-08-18 — NOT re-run for this update (needs the device + `EW_API_TOKEN`), so treat it as a floor, not a current count |
+
+Every other count in this document is a DATED SNAPSHOT and is labelled as such. Where a
+snapshot and this section disagree, this section wins.
 
 > A "5 Robolectric unit / 6 instrumented" table stood here from the original 2026-01-18
 > draft until 2026-08-21; it described the pre-`runPureTests` era and contradicted the
@@ -255,13 +260,16 @@ jobs:
 - [ ] Replace android.* imports with abstractions
 - [ ] Achieve 80% coverage on `:core`
 
-## Current Test Suite (as of 2026-03-15)
+## Current Test Suite
 
-| Type | Location | Count | Framework | Runner |
-|------|----------|-------|-----------|--------|
-| Pure JVM | `src/test/kotlin/` | 987 | JUnit4 + Truth | `./gradlew runPureTests` |
-| MockK | `src/test/kotlin/` | ~176 | JUnit4 + MockK | `./gradlew runMockTests` |
-| Instrumented | `src/androidTest/kotlin/` | 887 | AndroidJUnit4 | emulator.wtf (Pixel7 API 34) |
+> Counts re-measured 2026-09-01. The 2026-03-15 column is kept beside them because the
+> growth rate is the useful signal; do not quote the old column on its own.
+
+| Type | Location | Count (2026-09-01) | was 2026-03-15 | Framework | Runner |
+|------|----------|-------|-------|-----------|--------|
+| Pure JVM | `src/test/kotlin/` | **2093** | 987 | JUnit4 + Truth | `scripts/gradle-guard.sh runPureTests` |
+| MockK | `src/test/kotlin/` | **343** | ~176 | JUnit4 + MockK | `scripts/gradle-guard.sh runMockTests` |
+| Instrumented | `src/androidTest/kotlin/` | 1395 (2026-08-18 sweep) | 887 | AndroidJUnit4 | emulator.wtf (Pixel7 API 34) |
 
 ### ARM64 Termux Compatibility
 Standard `testDebugUnitTest` is disabled — custom `runPureTests` JavaExec task runs
@@ -357,13 +365,13 @@ The pipeline approach gives us 95% of the coverage at 5% of the complexity. The 
 
 ## Metrics
 
-### Coverage (2026-03-15)
+### Coverage (2026-09-01, measured on this device)
 | Type | Count | Execution Time |
 |------|-------|---------------|
-| Pure JVM | 987 | ~10s |
-| MockK | ~176 | ~12s |
-| Instrumented | 887 | ~15min (emulator.wtf with orchestrator) |
-| **Total** | **~2,050** | — |
+| Pure JVM | 2093 | 81 s |
+| MockK | 343 | 56 s |
+| Instrumented | 1395 (2026-08-18 sweep, not re-run) | ~31 min (emulator.wtf with orchestrator; use `--timeout 40m`) |
+| **Total** | **~3,831** | — |
 
 ### New Test Classes (v1.3.0+)
 

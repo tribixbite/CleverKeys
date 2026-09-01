@@ -103,19 +103,19 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 
 ```
 src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
-├── *.kt                            # ~113 files flat at the package root
+├── *.kt                            # 117 files flat at the package root
 │                                   #   (IME service, keyboard views, Config,
 │                                   #    predictors, gesture recognisers, etc.)
 ├── activities/                     # 14 *Activity.kt (Settings, Launcher, managers)
-├── clipboard/                      # Clipboard history/db/views (12 files) + the
-│   └── sanitize/                   #   private-copy plumbing and PII sanitizers
+├── clipboard/                      # Clipboard history/db/views (16 files) + the
+│   └── sanitize/                   #   private-copy plumbing and PII sanitizers (4)
 ├── emoji/                          # Emoji panel: grid, search, keyword index (6 files)
 ├── onnx/                           # ONNX session loader (ModelLoader.kt — CTC only)
-├── ui/                             # UI (36 files)
-│   └── settings/                   #   Settings screens
-│       ├── sections/               #     Per-section composables (17 files)
-│       └── io/                     #     Import/export UI (7 files)
-├── backup/                         # Backup & restore, import-plan diff (13 files)
+├── ui/                             # UI (41 files; 2 at ui/ root)
+│   └── settings/                   #   Settings screens (39 incl. subdirs)
+│       ├── sections/               #     Per-section composables (20 files)
+│       └── io/                     #     Import/export UI (9 files)
+├── backup/                         # Backup & restore, import-plan diff (20 files)
 ├── swipe/                          # Engine routing + CTC (SwipeEngineRouter,
 │   ├── ctc/                        #   CtcEngineAdapter, pure-JVM CTC beam decode)
 │   └── geometric/                  # Geometric decoder (pure JVM) — WIRED since
@@ -123,9 +123,9 @@ src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
 │                                   #   non-Latin/incomplete layouts + user-selectable
 │                                   #   mode; spec: docs/specs/geometric-swipe-engine.md
 ├── customization/                  # Short Swipes, Profiles (14 files)
-├── theme/                          # Theming (8 files)
+├── theme/                          # Theming (9 files)
 ├── gif/                            # GIF panel (7 files)
-├── prefs/                          # Preference helpers (6 files)
+├── prefs/                          # Preference helpers (7 files)
 ├── personalization/               # Personalization
 ├── contextaware/                  # Context-aware prediction
 ├── autocorrect/                    # Autocorrect
@@ -134,7 +134,10 @@ src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
 └── autofill/                       # Autofill integration
 ```
 
-> Counts re-derived 2026-08-29 (313 total .kt, 113 flat; post-ADR-011, post-ARC-048 R4).
+> Counts re-derived 2026-09-01 from `git ls-tree -r HEAD` (334 total .kt under
+> `src/main/kotlin`, 117 flat at the package root; post-ADR-011, post-ARC-048 R4).
+> Re-derive from HEAD, never from the working tree — concurrent sessions leave
+> uncommitted moves in this shared checkout and a tree scan reports false drift.
 > Subdirs not shown: `a11y/` (TalkBack), `persist/` (DebouncedPersister). The old
 > `tribixbite/keyboard2/` tree with `core/swipe/data/config/…` never existed —
 > the package is `tribixbite.cleverkeys` with a large flat root plus the
