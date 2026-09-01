@@ -137,7 +137,7 @@ All readable via `SafePreferences` per the project pattern. Settings UI section 
 | `src/main/kotlin/tribixbite/cleverkeys/customization/CustomShortSwipeExecutor.kt` | Add `"full_trackpad_mode"` branch in `executeCommandByName()` |
 | `src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt` | Add `_fullTrackpadActive` flag, `handleFullTrackpadTouch()` method, `onTouch()` interception, `onDraw()` dimming |
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | Add 4 new pref keys to Defaults + Config fields + refresh() reads |
-| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | New section under Gestures with the 4 toggles |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | New section under Gestures with the 4 toggles |
 | `src/main/kotlin/tribixbite/cleverkeys/backup/SettingsValidation.kt` | Classify the 4 new keys |
 | `src/main/kotlin/tribixbite/cleverkeys/backup/SettingsDefaults.kt` | Add defaults to `SETTINGS_DEFAULTS` map |
 | `src/test/kotlin/tribixbite/cleverkeys/FullTrackpadModeTest.kt` | New pure-JVM tests for the touch math (dead zone, speed scaling, quick-tap exit) |

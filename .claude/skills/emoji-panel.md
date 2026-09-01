@@ -7,12 +7,12 @@ Use this skill when making changes to the emoji picker, emoji search, emoji cate
 ### Core Emoji Logic
 | File | Purpose |
 |------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/Emoji.kt` | Emoji data model, name mappings, search by name |
-| `src/main/kotlin/tribixbite/cleverkeys/EmojiGridView.kt` | Grid display, cell rendering, long-press handling |
-| `src/main/kotlin/tribixbite/cleverkeys/EmojiGroupButtonsBar.kt` | Category tabs at top of emoji pane |
-| `src/main/kotlin/tribixbite/cleverkeys/EmojiSearchManager.kt` | Search logic, context word detection |
-| `src/main/kotlin/tribixbite/cleverkeys/EmojiKeywordIndex.kt` | Trie-based keyword search (9800+ keywords) |
-| `src/main/kotlin/tribixbite/cleverkeys/EmojiTooltipManager.kt` | Long-press tooltip (PopupWindow) |
+| `src/main/kotlin/tribixbite/cleverkeys/emoji/Emoji.kt` | Emoji data model, name mappings, search by name |
+| `src/main/kotlin/tribixbite/cleverkeys/emoji/EmojiGridView.kt` | Grid display, cell rendering, long-press handling |
+| `src/main/kotlin/tribixbite/cleverkeys/emoji/EmojiGroupButtonsBar.kt` | Category tabs at top of emoji pane |
+| `src/main/kotlin/tribixbite/cleverkeys/emoji/EmojiSearchManager.kt` | Search logic, context word detection |
+| `src/main/kotlin/tribixbite/cleverkeys/emoji/EmojiKeywordIndex.kt` | Trie-based keyword search (9800+ keywords) |
+| `src/main/kotlin/tribixbite/cleverkeys/emoji/EmojiTooltipManager.kt` | Long-press tooltip (PopupWindow) |
 
 ### Data Files
 | File | Purpose |

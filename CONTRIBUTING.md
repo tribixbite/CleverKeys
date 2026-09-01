@@ -274,21 +274,36 @@ fun collectUsageData() {
 ## 🏗️ Architecture Guidelines
 
 ### Project Structure
+
+The package is `tribixbite.cleverkeys`: a large flat root (~114 `.kt` files — the IME
+service, keyboard views, `Config`, predictors, gesture recognisers) plus subpackages.
+
 ```
-src/main/kotlin/tribixbite/keyboard2/
-├── swipe/              # Swipe prediction components
-├── ui/                  # User interface components
-├── config/              # Configuration management
-├── gestures/            # Gesture recognition
-└── layouts/             # Keyboard layout handling
+src/main/kotlin/tribixbite/cleverkeys/
+├── *.kt                # flat root: CleverKeysService, Keyboard2View, Config, …
+├── activities/         # *Activity.kt (Settings, Launcher, managers)
+├── swipe/              # engine routing + ctc/ and geometric/ decoders
+├── ui/                 # Compose UI, incl. ui/settings/sections/
+├── clipboard/          # clipboard history/db/views + sanitize/
+├── emoji/  gif/        # emoji and GIF panels
+├── backup/  langpack/  # backup & restore, language-pack import
+├── customization/      # short swipes, profiles
+├── theme/  prefs/      # theming, preference helpers
+├── autocorrect/  contextaware/  personalization/  ml/
+├── onnx/  a11y/  persist/  autofill/  wiring/
 ```
+
+`activities/`, `clipboard/` and `emoji/` are **directory-only** groupings — the files
+inside still declare `package tribixbite.cleverkeys` (Kotlin does not couple directory
+to package). Address them by repo path, not by a `.activities.` FQCN.
 
 ### Key Components
 - **CleverKeysService**: Main input method service
-- **SwipePredictionPipeline**: Core swipe prediction orchestrator
-- **SwipeGestureRecognizer**: Gesture detection and processing
+- **SuggestionHandler** / **InputCoordinator**: the single prediction + commit pipeline
+- **SwipeEngineRouter**: picks the CTC or geometric engine per swipe
+- **EnhancedSwipeGestureRecognizer** / **ImprovedSwipeGestureRecognizer**: gesture detection
 - **ConfigurationManager**: Settings and preferences
-- **CleverKeysView**: Main keyboard rendering
+- **Keyboard2View**: Main keyboard rendering
 
 ### Design Patterns
 - **Repository Pattern**: Data access abstraction

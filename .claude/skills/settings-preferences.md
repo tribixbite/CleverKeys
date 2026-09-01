@@ -11,7 +11,7 @@ Use this skill when adding, modifying, or removing settings/preferences in the C
 | File | Purpose |
 |------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | All defaults, preference reading, setter methods |
-| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | Compose-based settings UI (~4800 lines) |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | Compose settings shell — state, SAF launchers, `setContent { SettingsScreen() }` (845 lines; the screen body lives in `ui/settings/` + `ui/settings/sections/`) |
 | `src/main/kotlin/tribixbite/cleverkeys/ConfigurationManager.kt` | Manages Config instance, notifies listeners |
 
 ### Config.kt Structure (3 sections to modify)

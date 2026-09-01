@@ -13,10 +13,10 @@ CleverKeys includes privacy features for the clipboard history system, primarily
 | File | Class/Function | Purpose |
 |------|----------------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `PASSWORD_MANAGER_PACKAGES` | Set of excluded package names |
-| `src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt` | `getForegroundAppPackage()` | Detects current foreground app |
-| `src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt` | `isPasswordManagerApp()` | Checks if package is excluded |
-| `src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt` | `addCurrentClip()` | Skips storage if excluded app |
-| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | Clipboard section | UI toggle for feature |
+| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `getForegroundAppPackage()` | Detects current foreground app |
+| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `isPasswordManagerApp()` | Checks if package is excluded |
+| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `addCurrentClip()` | Skips storage if excluded app |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | Clipboard section | UI toggle for feature |
 
 ## Architecture
 

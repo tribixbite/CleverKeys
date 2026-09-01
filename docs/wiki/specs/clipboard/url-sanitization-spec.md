@@ -22,7 +22,7 @@ The feature operates exclusively on clipboard insert events, not on typed text (
 | `systemClipboardRewrite` | `UrlSanitizer.kt:34-35` | Pure gating function for the system-clipboard write-back |
 | `SanitizationConfig` | `src/main/kotlin/tribixbite/cleverkeys/clipboard/sanitize/SanitizationConfig.kt` | Toggle resolution, asset loading, rebuild on settings change |
 | `RulesetParser` | `src/main/kotlin/tribixbite/cleverkeys/clipboard/sanitize/RulesetParser.kt` | ClearURLs JSON parse + merge (LinkedHashMap preserves provider order) |
-| `ClipboardHistoryService` | `src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt:298` | Entry point — `addClip(text)` calls `_sanitizationConfig.sanitizer().process(clip)` |
+| `ClipboardHistoryService` | `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt:273` | Entry point — `addClip(text)` delegates to the shared `storeClip()`, which calls `_sanitizationConfig.sanitizer().process(clip)` (`:345`) |
 | `clearurls.json` | `src/main/assets/url_rules/clearurls.json` | Bundled ruleset (207 providers including globalRules and a `reddit_embed_host_url` provider) |
 | `embed_enrich.json` | `src/main/assets/url_rules/embed_enrich.json` | Bundled embed-rewrite redirections (x.com → fxtwitter.com, reddit → rxddit, instagram → ddinstagram, tiktok → vxtiktok, bsky → fxbsky, pixiv → phixiv, furaffinity/deviantart → fx*) |
 | Custom rules | `<filesDir>/url_rules/custom.substitutions.json` | User-supplied ClearURLs-format JSON loaded via SAF (`SanitizationConfig.kt:98-99`) |

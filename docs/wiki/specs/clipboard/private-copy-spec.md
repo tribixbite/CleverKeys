@@ -20,7 +20,7 @@ Design source: `docs/history/audits/remediation-plans/156-private-copy-paste.md`
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| PROCESS_TEXT activity (entry point B) | `src/main/kotlin/tribixbite/cleverkeys/PrivateCopyProcessTextActivity.kt:35` | Exported selection-toolbar receiver; entire lifecycle in `onCreate` → `handle()` → `finish()` |
+| PROCESS_TEXT activity (entry point B) | `src/main/kotlin/tribixbite/cleverkeys/activities/PrivateCopyProcessTextActivity.kt:73` | Exported selection-toolbar receiver; entire lifecycle in `onCreate` → `handle()` → `finish()` |
 | Intent parser (pure JVM) | `src/main/kotlin/tribixbite/cleverkeys/clipboard/PrivateCopyIntentParser.kt:17` | Only intent-reading code; validates action + single `EXTRA_PROCESS_TEXT`, trims, UTF-8 byte cap |
 | Rate limiter (pure JVM) | `src/main/kotlin/tribixbite/cleverkeys/clipboard/PrivateCopyRateLimiter.kt:17` | Sliding-window 10/caller/min + 30/min global; injectable clock; process-lifetime state |
 | Merge rule (pure JVM object) | `ClipboardDatabase.kt:68` (`object PrivateClipMergeRule`) | Sticky-privacy dedup: `mergeIsPrivate` (OR), `mergeSourcePackage` (most-recent-non-null) |

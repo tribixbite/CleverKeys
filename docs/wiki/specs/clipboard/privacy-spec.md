@@ -18,10 +18,10 @@ For the underlying database schema, pinned/todo tables, and overall clipboard da
 | File | Class/Function | Purpose |
 |------|----------------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Defaults.PASSWORD_MANAGER_PACKAGES` | Set of excluded package names (Config.kt:236) |
-| `src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt` | `getForegroundAppPackage()` | Detects current foreground app (ClipboardHistoryService.kt:480) |
-| `src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt` | `isPasswordManagerApp()` | Checks if package is excluded (ClipboardHistoryService.kt:525) |
-| `src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt` | `addCurrentClip()` | Skips storage if excluded app or sensitive flag set (ClipboardHistoryService.kt:541) |
-| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | Clipboard section | UI toggle for feature |
+| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `getForegroundAppPackage()` | Detects current foreground app (`ClipboardHistoryService.kt:585`) |
+| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `isPasswordManagerApp()` | Checks if package is excluded (`ClipboardHistoryService.kt:630`) |
+| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `addCurrentClip()` | Skips storage if excluded app or sensitive flag set (`ClipboardHistoryService.kt:646`) |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | Clipboard section | UI toggle for feature |
 
 ## Architecture
 

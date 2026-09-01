@@ -11,7 +11,7 @@ Proposed extension to store short swipe customizations per-layout instead of glo
 | `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeCustomizationManager.kt` | Storage/retrieval | JSON persistence |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeMapping.kt` | `layoutId` field | Data model |
 | `src/main/kotlin/tribixbite/cleverkeys/prefs/LayoutsPreference.kt` | `getLayoutId()` | Layout identification |
-| `src/main/kotlin/tribixbite/cleverkeys/ui/customization/ShortSwipeCustomizationActivity.kt` | Layout selector | UI |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/ShortSwipeCustomizationActivity.kt` | Layout selector | UI |
 
 ## Current Implementation
 

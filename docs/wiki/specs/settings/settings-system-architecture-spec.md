@@ -18,7 +18,7 @@ This document covers the cross-cutting architecture (defaults, Config singleton,
 | File | Class/Function | Purpose |
 |------|----------------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Config`, `Defaults` | Global configuration class, centralized defaults |
-| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | `SettingsActivity` | Settings shell — hosts the Compose screen, launchers, and search index |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | `SettingsActivity` | Settings shell — hosts the Compose screen, launchers, and search index |
 | `src/main/kotlin/tribixbite/cleverkeys/ui/settings/` | `SettingsScreen`, `SettingsSearch`, controls/dialogs/persistence | Decomposed settings UI layer (v1.5.0 refactor) |
 | `src/main/kotlin/tribixbite/cleverkeys/ui/settings/sections/` | 17 per-section composables (`AppearanceSection`, `ClipboardSection`, ...) | One file per collapsible section |
 | `src/main/kotlin/tribixbite/cleverkeys/ConfigurationManager.kt` | `ConfigurationManager` | Owns Config + FoldStateTracker; observes prefs and notifies listeners |

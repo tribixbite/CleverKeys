@@ -21,12 +21,10 @@ committed coordination over working-tree edits.
 - Neural swipe engine REMOVED (ADR-011). Swipe = CTC (default) + geometric. See
   `docs/plans/2026-08-18-neural-engine-removal.md` and `docs/history/neural-engine/`.
 
-**PREVIOUS STATUS (2026-07-17):**
-- Feature-complete and released (v1.5.x on F-Droid).
-- Latest code-quality audit: `docs/history/audits/2026-07-17-code-quality-audit.md`.
-- Tier-1/Tier-2 remediation from that audit is in progress (clipboard PII log
-  gating, migration rollback, Config null-safety, docs accuracy).
-- Features shipped: Short Swipe Customization, Profile System, Media Clipboard (v4).
+**HISTORICAL (2026-07-17) — closed, kept for provenance only:**
+- The 2026-07-17 code-quality audit (`docs/history/audits/2026-07-17-code-quality-audit.md`)
+  and its Tier-1/Tier-2 remediation are DONE; do not treat that list as an open queue.
+  Open work lives in `memory/HANDOFF.md` and `docs/audit/2026-08-28-archive-verification.md`.
 
 **SPEC-DRIVEN DEVELOPMENT WORKFLOW:**
 1. **Check Spec**: Is there a spec in `docs/specs/` for this feature?

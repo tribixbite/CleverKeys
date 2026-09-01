@@ -94,7 +94,7 @@ and is the honest, implementable version of the request.
 | Contractions | ✅ script | `generate_binary_contractions.py` (Greek: minimal/empty) |
 | Importable language pack | ✅ exists | `build_langpack.py` + `LanguagePackManager.kt:59-83` |
 | UserDictionary user-words import | ✅ already works | `OptimizedVocabulary.kt:1734-1768` |
-| Greek language detection | ❌ missing | no Greek patterns in `data/LanguageDetector.kt` |
+| Greek language detection | ❌ missing | no Greek patterns in `LanguageDetector.kt` |
 | Bundled/packaged `el` dictionary | ❌ not yet | generated 1.82 MB artifact, not yet committed |
 | Swipe model support for Greek | ❌ missing | tokenizer is Latin-only (Phase 2) |
 
@@ -124,7 +124,7 @@ main go/no-go input for bundle-vs-pack.
 ### Phase 1 — suggestions + dictionary (~½–1 day)
 1. Generate + commit `src/main/assets/dictionaries/el_enhanced.bin` (or the
    pack). Add the NOTICE attribution.
-2. `data/LanguageDetector.kt`: `initializeGreekPatterns()` — char-frequency
+2. `LanguageDetector.kt`: `initializeGreekPatterns()` — char-frequency
    + common-word block (Greek α–ω is highly distinctive → reliable). Wire
    `el_unigrams.txt` from `generate_unigrams.py`.
 3. Register `el` so it's selectable; verify `grek_qwerty.xml` is offered.
@@ -175,7 +175,7 @@ main go/no-go input for bundle-vs-pack.
 |------|--------|
 | `src/main/assets/dictionaries/el_enhanced.bin` | New (1.82 MB @ 46k, or trimmed) — if bundling |
 | `src/main/assets/unigrams/el_unigrams.txt` | New — language detection |
-| `data/LanguageDetector.kt` | `initializeGreekPatterns()` + registration |
+| `LanguageDetector.kt` | `initializeGreekPatterns()` + registration |
 | `src/main/assets/dictionaries/contractions_el.json` | Optional, minimal |
 | NOTICE / credits screen | wordfreq attribution text (above) |
 | Settings (Languages) | "Import dictionary" SAF action → `LanguagePackManager` |

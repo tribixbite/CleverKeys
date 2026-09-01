@@ -18,12 +18,12 @@ added the same day, is the first non-Latin script and also reads its lexicon fro
 pack, so it too is served only while that pack is installed. Any other language, and every layout
 whose script has no complete wiring, is served by the GEOMETRIC engine, so selecting CTC never
 yields less coverage than geometric. The two-model ensemble, the rescorer, and contract-v2 remain
-future options recorded in the plan.
+future options recorded in `CleverKeys-ML/ctc/APP_INTEGRATION_PLAN.md`.
 **Package:** `tribixbite.cleverkeys.swipe.ctc` (`src/main/kotlin/.../swipe/ctc/`), with the
 Android-side adapter at `swipe/CtcEngineAdapter.kt` + `swipe/OnnxCtcEmissionModel.kt`.
 **Origin:** Track (ii) of `docs/history/audits/2026-08-06-futo-upgrade-plan.md`; algorithm ground
 truth is the integration study `docs/history/audits/2026-08-06-futo-decoder-integration-study.md`
-(cited "study §N") + the Python port `scripts/futo_decoder_{eval,ceiling}.py` and FUTO C++
+(cited "study §N"; "plan §N" cites `CleverKeys-ML/ctc/APP_INTEGRATION_PLAN.md`, which is not in this repo) + the Python port `scripts/futo_decoder_{eval,ceiling}.py` and FUTO C++
 `~/.cache/cleverkeys-test/swipe-library-src` (`resampler.cpp`, `beam_search.cpp`).
 
 > **Architecture reference.** `docs/specs/ctc-architecture-and-multiscript-guide.md` is the
@@ -236,7 +236,7 @@ unreachable. Pure JVM, pinned by `CtcContractionKeysTest`.
    language packs").
    **Langpack swap is deliberately unsupported for a BUNDLED language** (audit L2): an installed
    en langpack's CKDT `dictionary.bin` stores the INVERTED 255−rank scale the en λ was NOT fitted
-   for — swapping THAT source requires its own λ validation round (plan §7.1) — and the same
+   for — swapping THAT source requires its own λ validation round (`APP_INTEGRATION_PLAN.md` §7.1) — and the same
    lookup order keeps fr/de/es/it/pt/sv on their bundled binaries. Known limitation: the CTC en
    vocabulary can diverge from the en dictionary source the other engines see.
 3. **Per-decode trie freshness.** The trie memo is keyed by (LANGUAGE, SHA-256
@@ -678,7 +678,7 @@ Instrumented (ew-cli, Pixel7/API34 — all green on-device 2026-08-08; the full 
 > marks are now unsettled (`CtcEngineAdapter.kt`, `lexiconFor`/`trieFor`): a settled mark
 > costs two forced GCs plus 2×120 ms, which is not a price a decode-path probe may charge.
 
-Remaining manual QA (plan §4.5, none of it automatable): first-swipe warm-up feel, long-word
+Remaining manual QA (`APP_INTEGRATION_PLAN.md` §4.5, none of it automatable): first-swipe warm-up feel, long-word
 feel, the non-Latin geometric hedge, the unsupported-language geometric fallthrough,
 don't/I'm display, the provenance label, thermals — plus, per language, an accented commit
 (fr "café", de "über", es "niño"), a language SWITCH mid-session (the next swipe must decode
@@ -723,7 +723,7 @@ The measured levers (study §5a, plan "Framing"):
 - **FR-1** Decode a `[frames][K+1]` log-emission matrix + a lexicon trie into a top-k word
   slate via FUTO's single-stream Viterbi trie CTC beam (3 transitions/frame:
   blank / advance-to-child / repeat-char; MAX-merge dedup; length-aware pruning; final
-  `ctc/L^gamma + weight*beta*L + lambda*logFreq`). — **DONE** (`CtcBeamDecoder`).
+  `ctc/L^gamma + beta*L + lambda*logFreq`). — **DONE** (`CtcBeamDecoder`).
 - **FR-2** Featurize a normalized touch path into the encoder's `[2,64]` tensor via FUTO's
   two-stage resample (60 Hz linspace `round(dur/16.667)+1` → fixed-64, index-uniform,
   clamp [0,1]) + build the layout key-center/mask tensors, honoring the 4/3 vertical aspect
@@ -1011,7 +1011,7 @@ matter more than the sealed-split evidence tier and the size, and never without 
 the fixture in the same change.
 
 Also recorded and not scheduled: the 21.8 KB rescorer, contract-v2 T′=64, a two-phase
-preview decode, and user-dictionary alpha-boost with a cap (plan §7.3).
+preview decode, and user-dictionary alpha-boost with a cap (`APP_INTEGRATION_PLAN.md` §7.3).
 
 ---
 

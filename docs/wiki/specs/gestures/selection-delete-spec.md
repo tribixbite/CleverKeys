@@ -19,7 +19,7 @@ Selection-Delete Mode is a gesture that enables text selection by swiping and ho
 | Pointers | `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | Selection mode state machine, `handleSelectionDeleteRepeat()` |
 | KeyEventHandler | `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt` | Shift+Arrow key simulation |
 | Config | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | Vertical threshold/speed settings |
-| SettingsActivity | `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | Threshold and speed sliders |
+| SettingsActivity | `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | Threshold and speed sliders |
 | VibratorCompat | `src/main/kotlin/tribixbite/cleverkeys/VibratorCompat.kt` | `TRACKPOINT_ACTIVATE` haptic on mode entry |
 
 ## State Flag

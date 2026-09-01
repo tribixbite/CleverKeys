@@ -11,7 +11,7 @@ The Profile System enables importing and exporting keyboard layouts as XML files
 | `src/main/kotlin/tribixbite/cleverkeys/customization/XmlLayoutExporter.kt` | `XmlLayoutExporter` | Parses layout XML, injects short swipe mappings |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/XmlAttributeMapper.kt` | `XmlAttributeMapper` | Converts mappings to UK XML attributes |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeCustomizationManager.kt` | Gesture storage | Stores/loads gesture mappings |
-| `src/main/kotlin/tribixbite/cleverkeys/LayoutManagerActivity.kt` | Import/Export UI | SAF-based file operations |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/LayoutManagerActivity.kt` | Import/Export UI | SAF-based file operations |
 
 ## Architecture
 

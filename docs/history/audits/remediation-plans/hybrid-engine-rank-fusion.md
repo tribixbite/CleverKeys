@@ -4,11 +4,13 @@
 > The host `hybrid` mode and the neural engine were deleted by ADR-011; `SwipeEngineRouter.Mode`
 > is `{GEOMETRIC, CTC}` and `"hybrid"` prefs funnel to CTC. The rank-merge technique survives in
 > `CtcRankMerger` (dual-language, single-engine); cross-engine fusion remains a phase-2 option
-> per `SwipeEngineRouter.kt:41-44` and would need its own oracle round.
+> per `SwipeEngineRouter.kt:48-51` and would need its own oracle round.
 > **LICENSING CORRECTION** for the §Strategic-alternative below: the FUTO *model weights* are NOT
 > MIT — they are FUTO Model Weights License 1.0 (non-sublicensable, attribution-mandatory); only
 > the 1M-swipe *dataset* is MIT. Fine-tuning from those weights produces a licence-encumbered
-> Derivative Model. See `2026-08-06-futo-engine-integration-decision.md` §2c.1 and
+> Derivative Model. See `2026-08-06-futo-engine-integration-decision.md` §2a (the licence
+> terms, from the primary source) and §2c item 1 (which names this file's line 40 as the
+> dataset/weights conflation being corrected), plus
 > `memory/HANDOFF.md` rule 2 (no FUTO weights or outputs in anything we train or ship).
 
 **Date:** 2026-07-23

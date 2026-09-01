@@ -11,8 +11,8 @@ Per-language storage for custom and disabled words. Each language has its own wo
 | `src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt` | `loadDisabledWords()`, custom-word loading | Language-aware loading for tap prediction (`OptimizedVocabulary`, the neural-era consumer, was deleted 2026-08-18 — ADR-011) |
 | `src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt` / `swipe/GeometricEngineAdapter.kt` | Lexicon merge (`CtcLexiconMerge`) | Swipe engines read the same per-language keys: custom words − disabled words |
 | `src/main/kotlin/tribixbite/cleverkeys/LanguagePreferenceKeys.kt` | `customWordsKey()`, `disabledWordsKey()` | Key generation |
-| `src/main/kotlin/tribixbite/cleverkeys/DisabledDictionarySource.kt` | Constructor parameter | Language code support |
-| `src/main/kotlin/tribixbite/cleverkeys/DictionaryManagerActivity.kt` | Tab generation | Multi-language UI |
+| `src/main/kotlin/tribixbite/cleverkeys/DictionaryDataSource.kt` | Constructor parameter | Language code support |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/DictionaryManagerActivity.kt` | Tab generation | Multi-language UI |
 
 ## Storage Format
 

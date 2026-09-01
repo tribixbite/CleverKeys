@@ -472,7 +472,7 @@ Persistent, language-keyed, process-singleton learned n-gram stores. Full spec:
 | `src/main/kotlin/tribixbite/cleverkeys/swipe/OnnxCtcEmissionModel.kt` | ONNX tensor creation for the CTC encoder (`TensorFactory`, `ContinuousGestureRecognizer` and `LoopGestureDetector` are deleted — §3.1/§3.3/§1.5 notes) |
 | `src/main/kotlin/tribixbite/cleverkeys/GestureClassifier.kt` | Tap-vs-swipe classification |
 | `src/main/kotlin/tribixbite/cleverkeys/BigramModel.kt` | Language model |
-| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` + `ui/settings/sections/` | Settings UI (Compose — there is no `res/xml/settings.xml`) |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` + `ui/settings/sections/` | Settings UI (Compose — there is no `res/xml/settings.xml`) |
 
 ---
 
