@@ -39,16 +39,28 @@ file an entry lives in*.
 The rank guard still exists as defence in depth for **imported language packs**, which ship only
 an uncurated `contractions.json`.
 
-### Shipped inventory (verified 2026-08-21)
+### Shipped inventory (verified 2026-08-21; fr pairs updated 2026-09-01)
 
 ```
-contractions_fr.json     17,976   contraction_pairs_fr.json   183   collisions_fr   238
+contractions_fr.json     17,976   contraction_pairs_fr.json   455   collisions_fr   238
 contractions_it.json     21,214   contraction_pairs_it.json   148   collisions_it   103
 contractions_de.json         21   (no pairs file)                   collisions_de     7
 contractions_en.json        119   contraction_pairings.json 1,744   collisions_en    10
 contractions_nl.json        118   (import-only pack language)
 es / pt / sv / id / ms / sw / tl = 0 entries — EMPTY ON PURPOSE, see §7
 ```
+
+**French verb inversions (2026-09-01, commit `bd8984fe`)**: the fr pairs file carries 272
+subject-pronoun inversions (`est-elle`, `a-t-on`, `va-t-il` …) on top of the 183 elisions.
+They are PAIRED-ONLY BY DESIGN — an inversion key can be a native word (`estelle` @16343,
+ASK-attested `aton`), so REPLACE is forbidden for the whole family. Generated from the
+person-keyed `FRENCH_INVERSION_VERBS` table in `extract_apostrophe_words.py` (closed pronoun
+set, Grevisse `-t-` epenthesis for vowel-final 3sg, lexicon attestation per form) and passed
+to `classify_mappings` as forced-append so a regeneration can never reclassify them.
+`BundledContractionDataTest` pins the exact samples, the closed-family shape over every
+hyphenated PAIRED value (`rendez-vous` noun exempted — it is REPLACE + sidecar), and the
+agreement negatives (`fauton`, `pleutelle`, `peuxje`). 271/272 keys are non-words reachable
+only via trie injection; `estelle` rides its own lexicon frequency.
 
 ---
 
@@ -260,7 +272,8 @@ guard.
 | the two files are disjoint; REPLACE holds no common word | `BundledContractionDataTest` |
 | value differs from key by apostrophes, hyphens and **accents** only — never a letter | `BundledContractionDataTest` |
 | curated table pinned to exact values + landmines absent | `BundledContractionDataTest` |
-| entry-count ratchets (fr 17,976 / 18,159) | `BundledContractionDataTest` |
+| verb inversions PAIRED-only, closed pronoun family, agreement negatives | `BundledContractionDataTest` |
+| entry-count ratchets (fr 17,976 / 18,431) | `BundledContractionDataTest` |
 | sidecars equal a full recomputation from the lexicons | `ContractionCollisionDataTest` |
 | demotion rule: intersect collisions against ACTIVE languages | `ContractionCollisionDemotionTest` |
 | demotion is actually wired into `loadTypingMappings` | `ContractionManagerTest` (instrumented) |

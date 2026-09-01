@@ -118,9 +118,14 @@ under ARC-067.
   `userWords` keeps its exact case-sensitive add/remove/dedup semantics, pinned by
   `ContractionUserWordGuardTest.storedUserWordsStayCaseSensitive`. Commit
   `fix(contractions): make the user-word REPLACE guard case-total via a read-side fold`.
-- **Verb inversions** (`est-elle`, `a-t-on`) deferred with named landmines: `estelle` is a native
-  word @16343, `aton` is ASK-attested, `entretemps` is a classifier misfire needing
-  `FORCED_APPEND`.
+- **RESOLVED 2026-09-01 — verb inversions shipped as a PAIRED-only closed family** (commit
+  `bd8984fe`): 272 subject-pronoun inversions (`est-elle`, `a-t-on`, `va-t-il` …) generated from
+  the person-keyed `FRENCH_INVERSION_VERBS` table into `contraction_pairs_fr.json` (183 → 455),
+  forced-append at classification so regeneration cannot flip them to REPLACE. The named
+  landmines are pinned in `BundledContractionDataTest`: `estelle` (native @16343) and `aton`
+  (ASK-attested) survive in-slot through the real overlay and are REPLACE-forbidden forever;
+  `entretemps` stays out of both files and sits in `FORCED_APPEND["fr"]` as defence in depth
+  against a future extraction misfire. Zero new REPLACE keys, sidecars byte-identical.
 
 ### 2. Context-LM: rescoring CLOSED; next-word is the consumer
 
