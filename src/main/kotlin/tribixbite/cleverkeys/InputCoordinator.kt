@@ -242,7 +242,7 @@ class InputCoordinator(
      */
     private var swipeResultDelegate: SuggestionHandler? = null
 
-    /** Wires the unified-swipe delegate (see [swipeResultDelegate]); set by ManagerInitializer. */
+    /** Wires the unified-swipe delegate (see [swipeResultDelegate]); set by KeyboardComponentGraph. */
     fun setSwipeResultDelegate(handler: SuggestionHandler?) {
         swipeResultDelegate = handler
     }
@@ -258,7 +258,7 @@ class InputCoordinator(
      */
     private var cursorSyncDelegate: SuggestionHandler? = null
 
-    /** Wires the unified cursor-sync delegate (see [cursorSyncDelegate]); set by ManagerInitializer. */
+    /** Wires the unified cursor-sync delegate (see [cursorSyncDelegate]); set by KeyboardComponentGraph. */
     fun setCursorSyncDelegate(handler: SuggestionHandler?) {
         cursorSyncDelegate = handler
     }
@@ -411,7 +411,7 @@ class InputCoordinator(
      * [shiftActive] / [shiftLocked] default to this instance's fields so callers that don't thread
      * the state (none in production — the async callback always passes it) stay behavior-identical.
      * WP9 step 6: the legacy IC-only presentation/commit path and the `unified_swipe_pipeline`
-     * flag were deleted; the delegate is mandatory (ManagerInitializer wires it) and an unwired
+     * flag were deleted; the delegate is mandatory (KeyboardComponentGraph wires it) and an unwired
      * delegate clears the bar and logs rather than running a divergent fallback.
      *
      * @param shiftActive True if shift was latched (single tap) when the swipe started.

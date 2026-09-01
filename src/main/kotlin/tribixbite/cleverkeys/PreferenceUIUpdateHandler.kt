@@ -99,7 +99,7 @@ class PreferenceUIUpdateHandler(
                     Log.i(TAG, "Primary language changed to '$newPrimaryLang' - touch typing dictionary reload triggered")
 
                     // v1.2.0: Reload contractions for the new language.
-                    // Must match ManagerInitializer — both go through loadTypingMappings, which
+                    // Must match KeyboardComponentGraph — both go through loadTypingMappings, which
                     // owns the precedence rule (primary, then secondary, then the English base
                     // ONLY if English is one of the two). Before 2026-08-19 both call sites
                     // hand-rolled "base + language + always English", which is how a German user

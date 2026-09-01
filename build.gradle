@@ -535,6 +535,10 @@ tasks.register('runPureTests', JavaExec) {
     // with NO Config.initGlobalConfig at all.
     'tribixbite.cleverkeys.ConfigSnapshotRatchetTest',
     'tribixbite.cleverkeys.ConfigSnapshotBehaviorTest',
+    // ARC-072 slice 3 (2026-09-01): the six *Initializer factory files collapsed into
+    // wiring/KeyboardComponentGraph; this pins the end state (no Initializer files, the
+    // graph exists, the service wires through graph reads not Initializer.create calls).
+    'tribixbite.cleverkeys.WiringCompositionRootDriftTest',
     'tribixbite.cleverkeys.CoreImeHygieneDriftTest',
     'tribixbite.cleverkeys.ReleaseMetadataDriftTest',
     // Append-only release record book (docs/RELEASE_RECORD.md): anchors resolve, every

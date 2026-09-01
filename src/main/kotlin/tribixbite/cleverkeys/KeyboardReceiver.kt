@@ -128,7 +128,7 @@ class KeyboardReceiver(
         val content = contentPaneContainer ?: return
         val scroll = scrollView ?: return
 
-        SuggestionBarInitializer.switchToContentPaneMode(top, content, scroll, contentPaneHeight)
+        SuggestionBarPane.switchToContentPaneMode(top, content, scroll, contentPaneHeight)
         isContentPaneShowing = true
     }
 
@@ -149,7 +149,7 @@ class KeyboardReceiver(
             return
         }
 
-        SuggestionBarInitializer.switchToSuggestionBarMode(top, content, scroll, suggestionBarHeight)
+        SuggestionBarPane.switchToSuggestionBarMode(top, content, scroll, suggestionBarHeight)
     }
 
     /**

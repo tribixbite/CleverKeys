@@ -75,7 +75,7 @@ class PredictionViewSetup(
         if (config.word_prediction_enabled || config.swipe_typing_enabled) {
             // Re-wire the view's predictor handle whenever a prediction-capable input view is
             // built. `setSwipeTypingComponents` is null-tolerant and idempotent; the initial
-            // (unconditional) wiring happens in PredictionInitializer.
+            // (unconditional) wiring happens in KeyboardComponentGraph.wireSwipeTypingComponents.
             if (predictionCoordinator != null) {
                 keyboardView.setSwipeTypingComponents(
                     predictionCoordinator.getWordPredictor(),
@@ -95,7 +95,7 @@ class PredictionViewSetup(
             if (suggestionBar == null) {
                 // Initialize suggestion bar and input view hierarchy
                 val theme = keyboardView.getTheme()
-                val result = SuggestionBarInitializer.initialize(
+                val result = SuggestionBarPane.initialize(
                     keyboard2,
                     theme,
                     config.suggestion_bar_opacity,
@@ -117,7 +117,7 @@ class PredictionViewSetup(
                     40f,
                     keyboard2.resources.displayMetrics
                 ).toInt()
-                val contentPaneHeight = SuggestionBarInitializer.calculateContentPaneHeight(
+                val contentPaneHeight = SuggestionBarPane.calculateContentPaneHeight(
                     keyboard2,
                     config.clipboard_pane_height_percent
                 )
@@ -161,7 +161,7 @@ class PredictionViewSetup(
                     40f,
                     keyboard2.resources.displayMetrics
                 ).toInt()
-                val contentPaneHeight = SuggestionBarInitializer.calculateContentPaneHeight(
+                val contentPaneHeight = SuggestionBarPane.calculateContentPaneHeight(
                     keyboard2,
                     config.clipboard_pane_height_percent
                 )
@@ -218,7 +218,7 @@ class PredictionViewSetup(
 
             if (suggestionBar == null) {
                 val theme = keyboardView.getTheme()
-                val result = SuggestionBarInitializer.initialize(
+                val result = SuggestionBarPane.initialize(
                     keyboard2,
                     theme,
                     config.suggestion_bar_opacity,
@@ -244,7 +244,7 @@ class PredictionViewSetup(
             // Propagate with suggestionBarHeight = 0: hideContentPane restores the strip to
             // this stored height, so pane close returns to a 0-height (invisible) strip
             // rather than an empty 40 dp suggestion row.
-            val contentPaneHeight = SuggestionBarInitializer.calculateContentPaneHeight(
+            val contentPaneHeight = SuggestionBarPane.calculateContentPaneHeight(
                 keyboard2,
                 config.clipboard_pane_height_percent
             )

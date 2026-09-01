@@ -234,7 +234,7 @@ class GeometricEngineAdapter(
      * pipeline already makes for possessives (`SuggestionHandler.shouldAugmentPossessives`).
      *
      * Until 2026-08-16 this adapter loaded the bundled ENGLISH base for EVERY language
-     * (mirroring the typing pipeline's `PreferenceUIUpdateHandler`/`ManagerInitializer`
+     * (mirroring the typing pipeline's `PreferenceUIUpdateHandler`/`KeyboardComponentGraph`
      * order), which let an English pairing keyed on a word that also exists in the active
      * language inject an English variant — a `fr` decode of `franco` also offering
      * `franco's`, whose base `francos` is not a French word.

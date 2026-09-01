@@ -611,7 +611,7 @@ class SwipeContractionLanguageIsolationTest {
      *
      * ### The bug this pins
      *
-     * `ManagerInitializer` and `PreferenceUIUpdateHandler` both hand-rolled the same load
+     * `ManagerInitializer` (now `KeyboardComponentGraph`) and `PreferenceUIUpdateHandler` both hand-rolled the same load
      * order: English base, then the primary language, then `loadLanguageContractions("en")`
      * AGAIN, unconditionally. Both loaders are earlier-wins, so the English base — loaded
      * first — owned every colliding key for every user of every language.

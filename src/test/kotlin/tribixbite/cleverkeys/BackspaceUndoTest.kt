@@ -198,31 +198,31 @@ class BackspaceUndoTest {
 
     @Test
     fun `KeyEventReceiverBridge delegates getLastAutoInsertedWord`() {
-        val source = readSource("KeyEventReceiverBridge.kt")
+        val source = readSource("wiring/KeyEventReceiverBridge.kt")
         assertThat(source).contains("override fun getLastAutoInsertedWord()")
     }
 
     @Test
     fun `KeyEventReceiverBridge delegates wasLastInputSwipe`() {
-        val source = readSource("KeyEventReceiverBridge.kt")
+        val source = readSource("wiring/KeyEventReceiverBridge.kt")
         assertThat(source).contains("override fun wasLastInputSwipe()")
     }
 
     @Test
     fun `KeyEventReceiverBridge delegates clearSwipeUndoState`() {
-        val source = readSource("KeyEventReceiverBridge.kt")
+        val source = readSource("wiring/KeyEventReceiverBridge.kt")
         assertThat(source).contains("override fun clearSwipeUndoState()")
     }
 
     @Test
     fun `KeyEventReceiverBridge delegates getLastAutocorrectOriginalWord`() {
-        val source = readSource("KeyEventReceiverBridge.kt")
+        val source = readSource("wiring/KeyEventReceiverBridge.kt")
         assertThat(source).contains("override fun getLastAutocorrectOriginalWord()")
     }
 
     @Test
     fun `KeyEventReceiverBridge delegates clearAutocorrectUndoState`() {
-        val source = readSource("KeyEventReceiverBridge.kt")
+        val source = readSource("wiring/KeyEventReceiverBridge.kt")
         assertThat(source).contains("override fun clearAutocorrectUndoState()")
     }
 

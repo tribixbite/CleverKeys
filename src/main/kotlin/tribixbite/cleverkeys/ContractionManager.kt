@@ -136,7 +136,7 @@ class ContractionManager(private val context: Context) {
      * contractions before loading the target language's) — the geo/CTC adapters were the
      * last engines still contaminating non-English slates.
      *
-     * NOTE — swipe only. The TYPING pipeline's shared manager (`ManagerInitializer` /
+     * NOTE — swipe only. The TYPING pipeline's shared manager (`KeyboardComponentGraph` /
      * `PreferenceUIUpdateHandler`) keeps its own load order; changing that is a separate
      * decision with a separate blast radius.
      *
@@ -151,7 +151,7 @@ class ContractionManager(private val context: Context) {
      *
      * ## The bug this fixes
      *
-     * `ManagerInitializer` used to call `loadMappings()` (English base), then the primary
+     * The service wiring (now `KeyboardComponentGraph`) used to call `loadMappings()` (English base), then the primary
      * language, then `loadLanguageContractions("en")` AGAIN — unconditionally. So every user of
      * every language carried the full English set, and because the base loaded first and both
      * loaders are earlier-wins, English owned every colliding key. Two high-frequency

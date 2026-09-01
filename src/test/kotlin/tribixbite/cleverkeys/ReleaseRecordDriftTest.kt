@@ -271,6 +271,40 @@ class ReleaseRecordDriftTest {
         assertTrue("$RECORD_PATH resolved no anchors at all — the book has lost its value", checked > 0)
     }
 
+    /**
+     * Dir-only file moves applied AFTER a section containing the anchor was hash-pinned.
+     *
+     * Released sections are byte-immutable, so when a whole FILE moves (git mv, package and
+     * symbols unchanged — the ARC-048 R4 dir-only convention) the pinned markdown cannot be
+     * updated to the new path without rewriting history. This map is the sanctioned escape:
+     * the old path stays in the pinned prose, resolution follows the move. Entries are only
+     * legitimate for moves that keep the SYMBOL check meaningful (same file content, same
+     * declarations); a rename or split still requires a superseding row in the current
+     * release's section. [movedAnchorPathsAreRealMoves] keeps this map honest: the old path
+     * must be GONE and the new one present.
+     */
+    private val movedAnchorPaths = mapOf(
+        // ARC-072 slice 3 (2026-09-01): the kept Bridges moved into wiring/ with the
+        // composition root; package unchanged.
+        "src/main/kotlin/tribixbite/cleverkeys/SuggestionBridge.kt" to
+            "src/main/kotlin/tribixbite/cleverkeys/wiring/SuggestionBridge.kt",
+    )
+
+    @Test
+    fun movedAnchorPathsAreRealMoves() {
+        for ((old, new) in movedAnchorPaths) {
+            assertTrue(
+                "movedAnchorPaths: old path '$old' still exists — a redirect over a live file " +
+                    "would silently resolve anchors against the wrong copy. Remove the entry.",
+                !File(old).exists(),
+            )
+            assertTrue(
+                "movedAnchorPaths: redirect target '$new' does not exist — the map has rotted.",
+                File(new).isFile,
+            )
+        }
+    }
+
     private fun assertAnchorResolves(row: Row, column: String, anchor: String) {
         val at = anchor.lastIndexOf('#')
         assertTrue(
@@ -278,7 +312,8 @@ class ReleaseRecordDriftTest {
                 "'path#Symbol' (no line numbers — they rot)",
             at > 0 && at < anchor.length - 1,
         )
-        val path = anchor.substring(0, at)
+        val rawPath = anchor.substring(0, at)
+        val path = movedAnchorPaths[rawPath] ?: rawPath
         val symbol = anchor.substring(at + 1)
         assertTrue(
             "$RECORD_PATH ${row.version} '${row.item}': $column anchor '$anchor' must name a " +

@@ -123,8 +123,8 @@ class CoreImeHygieneDriftTest {
         val disabledBranch = setup.substringAfterLast("} else {").substringBefore("companion object")
         assertWithMessage(
             "The disabled branch must build the same container hierarchy via " +
-                "SuggestionBarInitializer.initialize (strip collapsed to 0 height)."
-        ).that(disabledBranch).contains("SuggestionBarInitializer.initialize")
+                "SuggestionBarPane.initialize (strip collapsed to 0 height)."
+        ).that(disabledBranch).contains("SuggestionBarPane.initialize")
         assertWithMessage(
             "The disabled branch must propagate the container/heights to the receiver " +
                 "(suggestionBarHeight = 0), or showContentPane/hideContentPane cannot work."
@@ -672,7 +672,8 @@ class CoreImeHygieneDriftTest {
      *
      * ### The bug this pins
      *
-     * `ManagerInitializer` and `PreferenceUIUpdateHandler` each hand-rolled the same sequence —
+     * `ManagerInitializer` (now the manager cluster in `wiring/KeyboardComponentGraph`) and
+     * `PreferenceUIUpdateHandler` each hand-rolled the same sequence —
      * English base, then the primary language, then `loadLanguageContractions("en")` again,
      * unconditionally. Both loaders are earlier-wins, so English owned every colliding key:
      * a German user typing `im` was offered "I'm", a French user typing `dont` got "don't".
@@ -685,7 +686,7 @@ class CoreImeHygieneDriftTest {
     @Test
     fun typingContractionLoadSitesUseTheSharedLanguageScopedPolicy() {
         for (relative in listOf(
-            "tribixbite/cleverkeys/ManagerInitializer.kt",
+            "tribixbite/cleverkeys/wiring/KeyboardComponentGraph.kt",
             "tribixbite/cleverkeys/PreferenceUIUpdateHandler.kt",
         )) {
             val src = source(relative)

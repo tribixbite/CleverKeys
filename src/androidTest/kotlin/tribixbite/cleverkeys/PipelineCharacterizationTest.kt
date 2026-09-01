@@ -221,7 +221,7 @@ class PipelineCharacterizationTest {
         val inputCoordinator = InputCoordinator(
             context, config, contextTracker, predCoord, bar, keyboardView
         )
-        // WP9 R-1 steps 4-6: wire the unified delegates exactly as ManagerInitializer does in
+        // WP9 R-1 steps 4-6: wire the unified delegates exactly as KeyboardComponentGraph does in
         // production. MANDATORY since step 6 — IC has no fallback pipelines.
         inputCoordinator.setSwipeResultDelegate(suggestionHandler)
         inputCoordinator.setCursorSyncDelegate(suggestionHandler)
@@ -1023,7 +1023,8 @@ class PipelineCharacterizationTest {
      * handleRegularTyping (SH path) then handlePredictionResults (IC path) with a shared
      * tracker; but SH.handleRegularTyping does NOT append to the tracker's currentWord in a way
      * IC.handlePredictionResults reads for the "add space after manual typing" branch
-     * (IC:539) — the two use different tracking. SKIP: needs the real service to couple the
+     * (InputCoordinator.handlePredictionResults) — the two use different tracking. SKIP:
+     * needs the real service to couple the
      * KeyEventHandler-commit and tracker-append. Reported.
      *
      * Scenario 10's "ML capture fires (D5)" sub-assertion remains SKIPPED after step 6 LANDED

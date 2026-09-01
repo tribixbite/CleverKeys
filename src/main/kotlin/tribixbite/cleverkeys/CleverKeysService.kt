@@ -118,6 +118,11 @@ class CleverKeysService : InputMethodService(),
     // KeyEventHandler bridge (v1.32.390: extracted to KeyEventReceiverBridge)
     private lateinit var _receiverBridge: KeyEventReceiverBridge
 
+    // Composition root (ARC-072 slice 3: the six *Initializer files collapsed into
+    // wiring/KeyboardComponentGraph). Built in onCreate once config exists; the
+    // manager fields below are cached reads from it.
+    private lateinit var _graph: KeyboardComponentGraph
+
     // ML data collection (v1.32.370: extracted to MLDataCollector)
     private lateinit var _mlDataCollector: MLDataCollector
 
@@ -427,37 +432,29 @@ class CleverKeysService : InputMethodService(),
 
         // Fold state change callback is handled by ConfigurationManager
 
-        // Initialize all managers (v1.32.388: extracted to ManagerInitializer)
+        // Build the composition root (ARC-072 slice 3: was ManagerInitializer +
+        // PredictionInitializer + PropagatorInitializer wiring spread over 6 files).
+        // The read order below is the construction order — the graph's `by lazy` members
+        // fire on first read, preserving the retired Initializers' exact sequence.
         val config = _config ?: return  // Early return if config not initialized
-        val managers = ManagerInitializer.create(this, config, _keyboardView, _keyeventhandler).initialize()
+        _graph = KeyboardComponentGraph(this, config, _keyboardView, _keyeventhandler, _handler, _receiverBridge)
 
-        _contractionManager = managers.contractionManager
-        _clipboardManager = managers.clipboardManager
-        _contextTracker = managers.contextTracker
+        // Managers (first read constructs the whole cluster in dependency order)
+        _contractionManager = _graph.contractionManager
+        _clipboardManager = _graph.clipboardManager
+        _contextTracker = _graph.contextTracker
         _receiverBridge.setContextTracker(_contextTracker)  // v1.2.7: for smart punctuation
-        _predictionCoordinator = managers.predictionCoordinator
-        _inputCoordinator = managers.inputCoordinator
-        _suggestionHandler = managers.suggestionHandler
-        _keyboardDimensionsHelper = managers.keyboardDimensionsHelper
-        _mlDataCollector = managers.mlDataCollector
+        _predictionCoordinator = _graph.predictionCoordinator
+        _inputCoordinator = _graph.inputCoordinator
+        _suggestionHandler = _graph.suggestionHandler
+        _keyboardDimensionsHelper = _graph.keyboardDimensionsHelper
+        _mlDataCollector = _graph.mlDataCollector
 
-        // Initialize suggestion bridge (v1.32.406: extracted to SuggestionBridge)
-        val predictionCoord = _predictionCoordinator  // Capture for smart cast
-        _suggestionBridge = SuggestionBridge.create(
-            this,
-            _suggestionHandler,
-            _mlDataCollector,
-            _inputCoordinator,
-            _contextTracker,
-            predictionCoord,
-            _keyboardView
-        )
+        // Suggestion bridge (v1.32.406: extracted to SuggestionBridge; built by the graph)
+        _suggestionBridge = _graph.suggestionBridge
 
-
-        // Initialize prediction components if enabled (v1.32.405: extracted to PredictionInitializer)
-        val predCoord = _predictionCoordinator  // Capture for smart cast
-        PredictionInitializer.create(config, predCoord, _keyboardView, this)
-            .initializeIfEnabled()
+        // Wire the view's service handle (unconditional) and load prediction models if enabled
+        _graph.wireSwipeTypingComponents()
 
         // Initialize debug logging manager (v1.32.384)
         _debugLoggingManager = DebugLoggingManager(this, packageName)
@@ -472,22 +469,16 @@ class CleverKeysService : InputMethodService(),
         // into a stale/other field). Reads the service's current values at call time.
         _inputCoordinator.setCurrentInputProvider { currentInputConnection to currentInputEditorInfo }
 
-        // Initialize propagators (v1.32.396: extracted propagator initialization)
-        // Creates and registers DebugModePropagator, builds ConfigPropagator with all managers
-        val propagators = PropagatorInitializer.create(
-            _suggestionHandler,
-            _keyboardDimensionsHelper,
+        // Propagators (v1.32.396; ARC-072: built by the graph). Creates and registers the
+        // DebugModePropagator, then builds the ConfigPropagator with all managers.
+        // _layoutManager/_subtypeManager are still null here — same values the retired
+        // PropagatorInitializer captured at this point in onCreate.
+        _configPropagator = _graph.buildConfigPropagator(
             _debugLoggerImpl,
             _debugLoggingManager,
-            _clipboardManager,
-            _predictionCoordinator,
-            _inputCoordinator,
             _layoutManager,
-            _keyboardView,
             _subtypeManager
-        ).initialize()
-
-        _configPropagator = propagators.configPropagator
+        )
 
         // Register broadcast receiver for debug mode control (v1.32.384: delegated to DebugLoggingManager)
         _debugLoggingManager.registerDebugModeReceiver(this)
@@ -554,12 +545,17 @@ class CleverKeysService : InputMethodService(),
     /**
      * Refreshes IME subtype settings and initializes managers.
      * (v1.32.365: Simplified by delegating to SubtypeManager)
-     * (v1.32.409: Delegated to SubtypeLayoutInitializer)
+     * (v1.32.409: extracted to SubtypeLayoutInitializer; ARC-072: absorbed into the graph)
      */
     private fun refreshSubtypeImm() {
-        val config = _config  // Capture for null safety
-        val result = SubtypeLayoutInitializer.create(this, config, _keyboardView)
-            .refreshSubtypeAndLayout(_subtypeManager, _layoutManager, resources)
+        if (!::_graph.isInitialized) {
+            // Degenerate pre-config path: onCreate early-returned before building the graph
+            // (config was null). Preserves the retired SubtypeLayoutInitializer's null-config
+            // behavior — create the SubtypeManager, leave LayoutManager/LayoutBridge unset.
+            _subtypeManager = _subtypeManager ?: SubtypeManager(this)
+            return
+        }
+        val result = _graph.refreshSubtypeAndLayout(_subtypeManager, _layoutManager, resources)
 
         _subtypeManager = result.subtypeManager
         _layoutManager = result.layoutManager
@@ -620,7 +616,7 @@ class CleverKeysService : InputMethodService(),
         _keyboardView.setKeyboard(current_layout())
 
         // Re-initialize swipe typing components on the new view
-        // Pass null for word predictor (will be initialized by PredictionInitializer on next input)
+        // Pass null for word predictor (re-wired by PredictionViewSetup on next input)
         // The service reference enables swipe handling callbacks
         _keyboardView.setSwipeTypingComponents(null, this)
 
@@ -665,22 +661,11 @@ class CleverKeysService : InputMethodService(),
             refreshSubtypeImm()
         }
 
-        // Initialize KeyboardReceiver if needed (v1.32.397: extracted to ReceiverInitializer)
+        // Initialize KeyboardReceiver if needed (v1.32.397: extracted to ReceiverInitializer;
+        // ARC-072: absorbed into the graph)
         // Lazy initialization: creates receiver on first call, returns existing on subsequent calls
-        // Note: initializeIfNeeded() may return null if layoutManager not ready (rare edge case)
-        val subtypeMan = _subtypeManager  // Capture for null safety
-        _receiver = ReceiverInitializer.create(
-            this,
-            this,
-            _keyboardView,
-            _layoutManager,
-            _clipboardManager,
-            _contextTracker,
-            _inputCoordinator,
-            subtypeMan,
-            _handler,
-            _receiverBridge
-        ).initializeIfNeeded(_receiver)
+        // Note: createReceiverIfNeeded() may return null if layoutManager not ready (rare edge case)
+        _receiver = _graph.createReceiverIfNeeded(_receiver, _layoutManager, _subtypeManager)
 
         // NOTE: Content pane state is now managed by KeyboardReceiver.resetContentPaneState()
         // which is called in onFinishInputView. No visibility manipulation needed here.
