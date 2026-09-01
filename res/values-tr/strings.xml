@@ -716,7 +716,7 @@
     <string name="gif_toast_no_browser">Tarayıcı açılamadı</string>
     <string name="gif_toast_no_file_picker">Dosya seçici açılamadı</string>
     <string name="gif_get_packs">GIF Paketleri Al (tarayıcıyı açar)</string>
-    <string name="gif_importing">İçe aktarılıyor...</string>
+    <string name="gif_importing">İçe aktarılıyor…</string>
     <string name="gif_import_pack">ZIP\'ten Paket İçe Aktar</string>
     <string name="gif_installed_packs">Yüklü Paketler</string>
     <string name="gif_pack_stats">%1$d GIF | %2$s</string>

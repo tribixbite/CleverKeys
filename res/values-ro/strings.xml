@@ -731,7 +731,7 @@
     <string name="gif_toast_no_browser">Nu s-a putut deschide browserul</string>
     <string name="gif_toast_no_file_picker">Nu s-a putut deschide selectorul de fișiere</string>
     <string name="gif_get_packs">Obține pachete GIF (deschide browserul)</string>
-    <string name="gif_importing">Se importă...</string>
+    <string name="gif_importing">Se importă…</string>
     <string name="gif_import_pack">Importă pachet din ZIP</string>
     <string name="gif_installed_packs">Pachete instalate</string>
     <string name="gif_pack_stats">%1$d GIF-uri | %2$s</string>

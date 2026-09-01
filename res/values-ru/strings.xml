@@ -708,7 +708,7 @@
     <string name="gif_toast_no_browser">Не удалось открыть браузер</string>
     <string name="gif_toast_no_file_picker">Не удалось открыть выбор файлов</string>
     <string name="gif_get_packs">Получить пакеты GIF (откроется браузер)</string>
-    <string name="gif_importing">Импорт...</string>
+    <string name="gif_importing">Импорт…</string>
     <string name="gif_import_pack">Импортировать пакет из ZIP</string>
     <string name="gif_installed_packs">Установленные пакеты</string>
     <string name="gif_pack_stats">GIF: %1$d | %2$s</string>
