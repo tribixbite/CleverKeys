@@ -23,6 +23,12 @@ class AutocapitalizationTest {
     @Before
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
+        // ARC-044: the Config tests below used to swallow the not-initialized
+        // NPE and pass silently. Initialize Config here so they always run.
+        assertTrue(
+            "Config must initialize for the Config-integration tests",
+            TestConfigHelper.ensureConfigInitialized(context)
+        )
     }
 
     // =========================================================================
@@ -35,7 +41,9 @@ class AutocapitalizationTest {
         val callback = Autocapitalisation.Callback { shouldEnable, shouldDisable ->
             callbackCalled = true
         }
-        assertNotNull("Callback should be created", callback)
+        // A SAM-converted callback must actually dispatch to the lambda
+        callback.update_shift_state(true, false)
+        assertTrue("Invoking the callback must run the lambda", callbackCalled)
     }
 
     // =========================================================================
@@ -94,46 +102,36 @@ class AutocapitalizationTest {
 
     @Test
     fun testConfigAutocapitalisationSetting() {
+        // Config is guaranteed initialized by setup() — no silent skip.
+        val config = Config.globalConfig()
+        val originalValue = config.autocapitalisation
+
         try {
-            val config = Config.globalConfig()
-            if (config != null) {
-                val originalValue = config.autocapitalisation
+            // Test toggling
+            config.autocapitalisation = true
+            assertTrue(config.autocapitalisation)
 
-                try {
-                    // Test toggling
-                    config.autocapitalisation = true
-                    assertTrue(config.autocapitalisation)
-
-                    config.autocapitalisation = false
-                    assertFalse(config.autocapitalisation)
-                } finally {
-                    config.autocapitalisation = originalValue
-                }
-            }
-        } catch (e: NullPointerException) {
-            // Config not available in test context without full keyboard init
+            config.autocapitalisation = false
+            assertFalse(config.autocapitalisation)
+        } finally {
+            config.autocapitalisation = originalValue
         }
     }
 
     @Test
     fun testConfigAutocapitalizeIWordsSetting() {
+        // Config is guaranteed initialized by setup() — no silent skip.
+        val config = Config.globalConfig()
+        val originalValue = config.autocapitalize_i_words
+
         try {
-            val config = Config.globalConfig()
-            if (config != null) {
-                val originalValue = config.autocapitalize_i_words
+            config.autocapitalize_i_words = true
+            assertTrue(config.autocapitalize_i_words)
 
-                try {
-                    config.autocapitalize_i_words = true
-                    assertTrue(config.autocapitalize_i_words)
-
-                    config.autocapitalize_i_words = false
-                    assertFalse(config.autocapitalize_i_words)
-                } finally {
-                    config.autocapitalize_i_words = originalValue
-                }
-            }
-        } catch (e: NullPointerException) {
-            // Config not available in test context without full keyboard init
+            config.autocapitalize_i_words = false
+            assertFalse(config.autocapitalize_i_words)
+        } finally {
+            config.autocapitalize_i_words = originalValue
         }
     }
 

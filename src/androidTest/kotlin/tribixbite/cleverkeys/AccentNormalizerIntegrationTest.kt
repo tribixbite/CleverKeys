@@ -147,10 +147,10 @@ class AccentNormalizerIntegrationTest {
 
     @Test
     fun testOnlyAccents() {
-        // String with just combining diacritical marks
+        // String with just combining diacritical marks — NFD + mark-stripping
+        // must reduce it to the empty string.
         val result = AccentNormalizer.normalize("́̀̂")
-        // Should handle without crashing
-        assertNotNull(result)
+        assertEquals("Combining marks alone must normalize to empty", "", result)
     }
 
     @Test
@@ -158,8 +158,11 @@ class AccentNormalizerIntegrationTest {
         val input = "Éléphant café résumé naïve straße über München"
         val result = AccentNormalizer.normalize(input)
 
-        assertNotNull(result)
-        assertTrue(result.length > 0)
+        // normalize() lowercases, expands ß→ss, then strips diacritics
+        assertEquals(
+            "Full sentence must normalize deterministically",
+            "elephant cafe resume naive strasse uber munchen", result
+        )
     }
 
     @Test

@@ -26,8 +26,17 @@ class ClipboardHistoryTest {
         // Initialize Config for testing
         TestConfigHelper.ensureConfigInitialized(context)
 
-        // Get clipboard service
+        // Get clipboard service. Fail ALL tests loudly if it is unavailable —
+        // every test body uses `clipboardService?.`, so a null service would
+        // otherwise turn the whole class into silent no-op passes (ARC-044).
         clipboardService = ClipboardHistoryService.get_service(context)
+        assertNotNull("ClipboardHistoryService must be available for this suite", clipboardService)
+        // addClip() silently no-ops when history is disabled — assert the gate
+        // is open so the add/remove tests below actually exercise storage.
+        assertTrue(
+            "clipboard_history_enabled must be on for this suite to be meaningful",
+            Config.globalConfig().clipboard_history_enabled
+        )
     }
 
     @After
@@ -43,6 +52,10 @@ class ClipboardHistoryTest {
     @Test
     fun testServiceInitialization() {
         assertNotNull("ClipboardHistoryService should be initialized", clipboardService)
+        assertSame(
+            "Setup's service must be the process-wide singleton",
+            clipboardService, ClipboardHistoryService.get_service(context)
+        )
     }
 
     @Test
@@ -119,23 +132,25 @@ class ClipboardHistoryTest {
 
     @Test
     fun testLargeClipboardDoesNotCrash() {
-        // Add many entries to test the limit
+        // Add many entries to test the limit. Unique content per entry so the
+        // consecutive-duplicate filter cannot swallow any of them.
+        val marker = System.currentTimeMillis()
         repeat(50) { i ->
-            clipboardService?.addClip("Test entry $i - ${System.currentTimeMillis()}")
+            clipboardService?.addClip("Test entry $i - $marker")
         }
 
-        // This should not throw TransactionTooLargeException
-        val history = try {
-            clipboardService?.clearExpiredAndGetHistory() ?: emptyList()
-        } catch (e: android.os.TransactionTooLargeException) {
-            fail("TransactionTooLargeException should not be thrown")
-            emptyList()
-        } catch (e: Exception) {
-            // Other exceptions are fine for this test
-            emptyList()
-        }
+        // Must not throw TransactionTooLargeException (Issue #71) — and other
+        // exceptions are failures too, not something to swallow.
+        val history = clipboardService?.clearExpiredAndGetHistory() ?: emptyList()
 
-        assertNotNull("History retrieval should succeed", history)
+        assertTrue(
+            "All 50 added entries must be retrievable (got ${history.size})",
+            history.count { it.content.endsWith("- $marker") } == 50
+        )
+        assertTrue(
+            "History must stay capped at 100 entries (Issue #71), got ${history.size}",
+            history.size <= 100
+        )
     }
 
     // =========================================================================
@@ -237,11 +252,14 @@ class ClipboardHistoryTest {
         }
 
         clipboardService?.setOnClipboardHistoryChange(listener)
+        // Unique content, so the consecutive-duplicate filter cannot apply —
+        // a successful insert MUST notify the registered listener.
         clipboardService?.addClip("Trigger listener ${System.currentTimeMillis()}")
 
-        // Listener may or may not be called depending on duplicate detection
-        // Just verify it doesn't crash
-        assertNotNull("Setting listener should work", listener)
+        assertTrue("Change listener must fire when a unique clip is added", listenerCalled)
+
+        // Clean up listener
+        clipboardService?.setOnClipboardHistoryChange(null)
     }
 
     @Test

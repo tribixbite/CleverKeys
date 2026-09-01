@@ -39,6 +39,13 @@ class BasicInstrumentedTest {
     @Test
     fun testContextNotNull() {
         assertNotNull(context)
+        // The instrumentation target must be the app under test, with real
+        // resources and a usable application context.
+        assertNotNull("Application context must be available", context.applicationContext)
+        assertTrue(
+            "App label resource must resolve",
+            context.getString(R.string.app_name).isNotBlank()
+        )
     }
 
     @Test
@@ -84,13 +91,17 @@ class BasicInstrumentedTest {
 
     @Test
     fun testConfigAccess() {
-        // Test that Config can be accessed
-        // Note: Config.globalConfig() may throw NPE in test context without full keyboard init
-        try {
-            val config = Config.globalConfig()
-            assertNotNull(config)
-        } catch (e: NullPointerException) {
-            // Expected in test context - Config requires full keyboard initialization
-        }
+        // ARC-044: the old form swallowed the NPE, so the test passed whether
+        // or not Config was reachable. Initialize it the way every other suite
+        // does and require the singleton to be live.
+        assertTrue(
+            "Config must be initializable in the instrumented context",
+            TestConfigHelper.ensureConfigInitialized(context)
+        )
+        val config = Config.globalConfig()
+        assertSame(
+            "globalConfig must be a stable singleton",
+            config, Config.globalConfig()
+        )
     }
 }

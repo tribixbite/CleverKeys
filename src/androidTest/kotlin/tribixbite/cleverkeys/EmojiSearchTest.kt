@@ -35,8 +35,16 @@ class EmojiSearchTest {
     @Test
     fun testSearchReturnsResults() {
         val results = Emoji.searchByName("smile")
-        assertNotNull("Search should return results", results)
         assertTrue("Search for 'smile' should return emojis", results.isNotEmpty())
+        // Every result must be a real, resolvable emoji entry — search must
+        // never fabricate entries outside the loaded emoji set.
+        results.forEach {
+            val payload = it.kv().getString()
+            assertNotNull(
+                "Search result '$payload' must resolve through getEmojiByString",
+                Emoji.getEmojiByString(payload)
+            )
+        }
     }
 
     @Test
@@ -178,24 +186,34 @@ class EmojiSearchTest {
 
     @Test
     fun testGetEmojiNameForGrinning() {
-        val name = Emoji.getEmojiName("😀")
-        assertNotNull("Grinning emoji should have a name", name)
+        // "grinning" is the FIRST nameMap entry mapping to 😀, and the reverse
+        // map stores only the first/canonical name.
+        assertEquals("Grinning emoji canonical name", "grinning", Emoji.getEmojiName("😀"))
     }
 
     @Test
     fun testGetEmojiNameForHeart() {
+        // The literal "heart" key is DUPLICATED in initNameMap (a later
+        // "heart" → "<3" emoticon entry overwrites its value, keeping its
+        // position — LinkedHashMap semantics), so ❤️'s canonical name resolves
+        // to a heart-family name rather than a Unicode fallback. Pin the family,
+        // not the exact winner of the duplicate-key collision.
         val name = Emoji.getEmojiName("❤️")
         assertNotNull("Heart emoji should have a name", name)
+        assertTrue(
+            "Heart emoji name must come from the heart nameMap family, got '$name'",
+            name == "heart" || name == "red heart"
+        )
     }
 
     @Test
     fun testGetEmojiNameForUnknownReturnsNonNull() {
-        // getEmojiName returns "emoticon" for any ASCII string > 2 chars
-        // (the isEmoticon heuristic detects ASCII-heavy strings as text emoticons)
-        // and Character.getName() returns a name for most valid codepoints,
-        // so effectively all non-empty strings return something
-        val name = Emoji.getEmojiName("xyz999notanemoji")
-        assertNotNull("Any non-empty string returns a name or 'emoticon'", name)
+        // The isEmoticon heuristic classifies any ASCII-heavy string longer
+        // than 2 chars as a text emoticon, so the tooltip label is "emoticon".
+        assertEquals(
+            "Unknown ASCII string must be labelled as an emoticon",
+            "emoticon", Emoji.getEmojiName("xyz999notanemoji")
+        )
     }
 
     // =========================================================================
@@ -283,22 +301,42 @@ class EmojiSearchTest {
     @Test
     fun testSearchWithSpecialCharacters() {
         val results = Emoji.searchByName("100")
-        // May or may not find 💯 depending on keyword mapping
-        assertNotNull("Search with numbers should not crash", results)
+        // The legacy nameMap maps "100" → 💯; whether it surfaces depends on how
+        // many index hits precede it, so pin the structural guarantees instead:
+        // bounded, valid, duplicate-free results.
+        assertTrue("Numeric search must respect the 100-result cap", results.size <= 100)
+        val payloads = results.map { it.kv().getString() }
+        assertEquals(
+            "Numeric search results must be duplicate-free",
+            payloads.size, payloads.toSet().size
+        )
     }
 
     @Test
     fun testSearchWithUnicodeInput() {
         val results = Emoji.searchByName("ö") // Swedish character
-        assertNotNull("Search with unicode should not crash", results)
+        // Non-ASCII queries may match nothing, but must never crash and must
+        // only ever return real entries.
+        results.forEach {
+            assertNotNull(
+                "Unicode-query result must resolve through getEmojiByString",
+                Emoji.getEmojiByString(it.kv().getString())
+            )
+        }
     }
 
     @Test
     fun testRepeatedSearchesDontLeak() {
-        // Perform many searches to check for memory issues
+        // Perform many searches to check for memory issues; each must respect
+        // the result cap and the no-duplicates guarantee.
         repeat(50) { i ->
             val results = Emoji.searchByName("test$i")
-            assertNotNull("Search $i should complete", results)
+            assertTrue("Search $i must respect the 100-result cap", results.size <= 100)
+            val payloads = results.map { it.kv().getString() }
+            assertEquals(
+                "Search $i results must be duplicate-free",
+                payloads.size, payloads.toSet().size
+            )
         }
     }
 }

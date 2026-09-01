@@ -23,10 +23,14 @@ class ConfigIntegrationTest {
     @Before
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
-        // Initialize Config for testing
-        if (TestConfigHelper.ensureConfigInitialized(context)) {
-            config = Config.globalConfig()
-        }
+        // Initialize Config for testing. Fail ALL tests loudly if unavailable —
+        // the `config ?: return` guards below would otherwise turn the whole
+        // class into silent no-op passes (ARC-044).
+        assertTrue(
+            "Config must initialize for this suite to be meaningful",
+            TestConfigHelper.ensureConfigInitialized(context)
+        )
+        config = Config.globalConfig()
     }
 
     // =========================================================================
@@ -37,6 +41,10 @@ class ConfigIntegrationTest {
     fun testConfigAvailable() {
         // Config should be initialized by TestConfigHelper
         assertNotNull("Config should be available", config)
+        assertSame(
+            "Setup's config must be the global singleton",
+            config, Config.globalConfig()
+        )
     }
 
     @Test
@@ -118,8 +126,15 @@ class ConfigIntegrationTest {
     @Test
     fun testHapticKeyPress() {
         val cfg = config ?: return
-        val haptic = cfg.haptic_key_press
-        // Can be true or false
+        val original = cfg.haptic_key_press
+        try {
+            cfg.haptic_key_press = true
+            assertTrue("haptic_key_press must accept true", cfg.haptic_key_press)
+            cfg.haptic_key_press = false
+            assertFalse("haptic_key_press must accept false", cfg.haptic_key_press)
+        } finally {
+            cfg.haptic_key_press = original
+        }
     }
 
     // =========================================================================
@@ -162,8 +177,15 @@ class ConfigIntegrationTest {
     @Test
     fun testAutoCorrectionEnabled() {
         val cfg = config ?: return
-        val enabled = cfg.autocorrect_enabled
-        // Value can be true or false
+        val original = cfg.autocorrect_enabled
+        try {
+            cfg.autocorrect_enabled = true
+            assertTrue("autocorrect_enabled must accept true", cfg.autocorrect_enabled)
+            cfg.autocorrect_enabled = false
+            assertFalse("autocorrect_enabled must accept false", cfg.autocorrect_enabled)
+        } finally {
+            cfg.autocorrect_enabled = original
+        }
     }
 
     // =========================================================================
@@ -174,14 +196,14 @@ class ConfigIntegrationTest {
     fun testThemeId() {
         val cfg = config ?: return
         val themeId = cfg.theme
-        // Theme ID is an integer
+        assertTrue("Theme resource id must be non-negative", themeId >= 0)
     }
 
     @Test
     fun testThemeName() {
         val cfg = config ?: return
         val themeName = cfg.themeName
-        assertNotNull("Theme name should not be null", themeName)
+        assertTrue("Theme name must be a non-blank identifier", themeName.isNotBlank())
     }
 
     // =========================================================================

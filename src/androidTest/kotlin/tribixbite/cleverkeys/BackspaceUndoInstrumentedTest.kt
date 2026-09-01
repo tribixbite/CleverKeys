@@ -47,7 +47,10 @@ class BackspaceUndoInstrumentedTest {
         contextTracker.setLastAutoInsertedWord("hello")
         contextTracker.setLastAutocorrectOriginalWord(null)
 
-        assertNotNull("lastAutoInsertedWord should be set", contextTracker.getLastAutoInsertedWord())
+        assertEquals(
+            "lastAutoInsertedWord should hold the inserted word",
+            "hello", contextTracker.getLastAutoInsertedWord()
+        )
         assertNull("lastAutocorrectOriginalWord should be null", contextTracker.getLastAutocorrectOriginalWord())
     }
 
@@ -57,8 +60,6 @@ class BackspaceUndoInstrumentedTest {
         contextTracker.setLastAutoInsertedWord("the")
         contextTracker.setLastAutocorrectOriginalWord("teh")
 
-        assertNotNull("lastAutoInsertedWord should be set", contextTracker.getLastAutoInsertedWord())
-        assertNotNull("lastAutocorrectOriginalWord should be set", contextTracker.getLastAutocorrectOriginalWord())
         assertEquals("the", contextTracker.getLastAutoInsertedWord())
         assertEquals("teh", contextTracker.getLastAutocorrectOriginalWord())
     }
@@ -95,8 +96,8 @@ class BackspaceUndoInstrumentedTest {
         //    instead of wasLastInputSwipe().
         assertFalse("wasLastInputSwipe should be false (cleared by onSuggestionSelected)",
             contextTracker.wasLastInputSwipe())
-        assertNotNull("lastAutoInsertedWord should still be set for undo",
-            contextTracker.getLastAutoInsertedWord())
+        assertEquals("lastAutoInsertedWord should still hold the word for undo",
+            "hello", contextTracker.getLastAutoInsertedWord())
         assertNull("lastAutocorrectOriginalWord should be null (not autocorrect)",
             contextTracker.getLastAutocorrectOriginalWord())
 
@@ -129,8 +130,8 @@ class BackspaceUndoInstrumentedTest {
 
         // The word is still tracked (set AFTER onSuggestionSelected returns)
         contextTracker.setLastAutoInsertedWord("hello")
-        assertNotNull("Word is still tracked despite flag being false",
-            contextTracker.getLastAutoInsertedWord())
+        assertEquals("Word is still tracked despite flag being false",
+            "hello", contextTracker.getLastAutoInsertedWord())
     }
 
     // =========================================================================
@@ -147,6 +148,10 @@ class BackspaceUndoInstrumentedTest {
             null
         }
         assertNotNull("Config should have backspace_undo_autocorrect field", field)
+        assertEquals(
+            "backspace_undo_autocorrect must be a boolean field",
+            java.lang.Boolean.TYPE, field!!.type
+        )
     }
 
     @Test
@@ -175,6 +180,10 @@ class BackspaceUndoInstrumentedTest {
             null
         }
         assertNotNull("IReceiver should have getLastAutocorrectOriginalWord()", method)
+        assertEquals(
+            "getLastAutocorrectOriginalWord must return the original word as a String",
+            String::class.java, method!!.returnType
+        )
     }
 
     @Test
