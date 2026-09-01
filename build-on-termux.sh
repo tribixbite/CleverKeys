@@ -144,6 +144,15 @@ fi
 if [ "$LOW_MEM" -eq 1 ]; then
     export GRADLE_GUARD_XMX="768m"
 fi
+# R8 exception (2026-09-02): minifyReleaseWithR8 dies with
+# "OutOfMemoryError: Metaspace" under the guard's 256m default — R8 loads the
+# whole program + library classpath as CF classes. No release build had run
+# under gradle-guard until Wave K exposed this. Release builds therefore get a
+# bigger box unless the caller already chose one.
+if [ "$GRADLE_TASK" = "assembleRelease" ]; then
+    export GRADLE_GUARD_XMX="${GRADLE_GUARD_XMX:-2048m}"
+    export GRADLE_GUARD_METASPACE="${GRADLE_GUARD_METASPACE:-1024m}"
+fi
 
 # --- Speed vs. reproducibility -----------------------------------------------
 # Distribution build (real keystore in env) → byte-deterministic output, slow.
