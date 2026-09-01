@@ -20,11 +20,11 @@ preset, and it is gated on the same golden fixture the Kotlin port is
 The two "accurate/fast" entries are the earlier from-scratch experimental
 encoders, kept for comparison.
 
-Every model, lexicon and runtime is served from the repo — no CDN takes part in
-decoding. onnxruntime-web 1.18.0 is vendored under `demo/vendor/ort/`. One CDN
-dependency does remain, and it is cosmetic: `demo/index.html` still pulls
-Tailwind from `cdn.tailwindcss.com` for styling. Vendoring it is a filed
-follow-up (`memory/todo.md`).
+Every model, lexicon, runtime and stylesheet is served from the repo — the
+demo has **no CDN dependency at all**. onnxruntime-web 1.18.0 is vendored under
+`demo/vendor/ort/`, and the Tailwind Play runtime (v3.4.17) under
+`demo/vendor/tailwind/` (vendored 2026-09-01, ARC-046 — it was the last
+external request).
 
 ## Run it
 

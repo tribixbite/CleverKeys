@@ -50,6 +50,7 @@ jobs:
           bun install --frozen-lockfile
           bun run ctc-app-parity
           bun run ctc-app-smoke
+          bun run f-regression
 
       - name: Verify demo model matches the Android asset
         working-directory: .

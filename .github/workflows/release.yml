@@ -120,6 +120,7 @@ jobs:
         bun install --frozen-lockfile
         bun run ctc-app-parity
         bun run ctc-app-smoke
+        bun run f-regression
 
     - name: Verify demo model matches Android asset
       run: cmp web_demo/ctc_swipe_encoder.onnx src/main/assets/models/ctc_swipe_encoder.onnx

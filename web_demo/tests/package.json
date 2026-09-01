@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node run_browser_tests.mjs",
     "ctc-app-parity": "node ctc_app_parity.mjs",
-    "ctc-app-smoke": "node ctc_app_smoke.mjs"
+    "ctc-app-smoke": "node ctc_app_smoke.mjs",
+    "f-regression": "node f_regression.mjs"
   },
   "devDependencies": {
     "onnxruntime-web": "1.18.0",
