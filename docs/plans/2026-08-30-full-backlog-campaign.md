@@ -68,7 +68,7 @@ are present too. Consequences:
 | E (docs/tooling) | ARC-073, ARC-089, ARC-076, ARC-098, doc claims, orphan data | partial: ARC-089 + ARC-076 complete; remainder open |
 | F (arch) | ARC-072 slice 3: 6 Initializers → `wiring/KeyboardComponentGraph` + Bridges move + ARC-098 gesture/ cluster (reorg <100 root) | pending |
 | G (geo) | ARC-027 OQ-9 overshoot clamp; ARC-028 OQ-10 ordering slack; ARC-029 OQ-11 reversal signal — each gated on local-corpus replay evidence (no blind accuracy changes); ARC-030 floors ride | pending |
-| H (web) | ARC-071 astro 5→6 (+drop .trivyignore lines); ARC-046 web-demo regression gate + Tailwind vendoring | pending |
+| H (web) | ARC-071 astro 5→6 (+drop .trivyignore lines); ARC-046 web-demo regression gate + Tailwind vendoring | complete (15814849, af9bfd8e; astro 6.4.8, 84 pages; 32-check gate green on HEAD, red on pre-fix sources; demo has zero network deps) |
 | I (probe) | ML-side feasibility check (056/060/061 — scripts/artifacts on this device?); verb-inversions feasibility (extract_apostrophe_words data deps); report BLOCKED items honestly | pending |
 | J | FULL ew-cli run: all owed instrumented items (T13, ARC-083 rider, userDictionarySource seam harness, guard e2e, ARC-064, ARC-077, ARC-058) | pending |
 | K (device) | adb verification on BOTH phones: release APK (LOCAL_BUILD=true) install; ARC-070 long-run MemoryProbe + dumpsys meminfo; ARC-068 #79 hwui dirty-regions discriminator (restore prop after); ARC-069 what's scriptable (#148 pane overlay screencaps, first-swipe warm-up timing from logcat, swipe decode via `input swipe` on a focused field, light+dark screens); IME enable/set with original IME restored — leave no trace | pending |

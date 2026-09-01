@@ -687,3 +687,27 @@ jargon, the `command_palette_ts_*` preset labels, the launcher tagline, aggressi
 = Wave J). Remaining open: ARC-067; ARC-027/028/029/030-floors-context; ARC-044-rest;
 ARC-046; ARC-071; ARC-072 slice 3 + ARC-098; ARC-073; ARC-056/060/061 (ML-side, on-device);
 verb inversions; user-gated ARC-053/054/063; Waves J (ew-cli) and K (device adb).
+
+## Wave H — 2026-09-01: ARC-071 and ARC-046 CLOSED (web lane)
+
+**ARC-071 CLOSED** (`15814849`) — astro 5.18.1 → **6.4.8** (past the 6.4.6 CVE-fix floor),
+@astrojs/svelte 7.2.5 → 8.1.2. All three `site/package.json` overrides dropped: without them
+the tree resolves vite **7.3.6** (≥ the 6.4.3 pin), js-yaml 4.3.1 and devalue 5.8.1 (== their
+pins); the vestigial direct js-yaml/vite deps that only carried the pins went too. Both
+`.trivyignore` CVE lines (CVE-2026-54299/50146) deleted per their unblocking condition — the
+suppression file is now empty. `astro.config.mjs` moved `remarkPlugins` onto the astro-6
+`unified()` processor (deprecation cleared). Build verified: **84 pages** (matches the
+pre-migration count), zero warnings/errors, wiki-link rewriting intact.
+
+**ARC-046 CLOSED** (`af9bfd8e`) — committed regression gate `web_demo/tests/f_regression.mjs`
+(Node-VM + DOM-stub over the shipped inline script; no ONNX): 32 checks across F1 (tier-0
+witnesses + 200-word sample at 94% vs pre-fix 0%, equal-confidence ranking by frequency),
+F2 (the previously-unexercised tap path via `handleKeyTap`/`generateTapPredictions`,
+completions beyond the 100/3000 tier sets, 20k/2k pool sizes, fuzzy no longer throwing) and
+F3 (UI-path personal word reaches the masking trie, pruned back out on removal; boosted
+dictionary words restored). Verified green on HEAD and **failing against the pre-fix
+35cbaee3~1 sources**. Wired as `bun run f-regression` beside the parity gates in
+`deploy-web-demo.yml` and `release.yml`. Tailwind vendored: Play runtime v3.4.17 committed at
+`demo/vendor/tailwind/` (sha256 in its PROVENANCE.md), CDN `<script>` removed — the demo now
+has **zero network dependencies**, matching the app's no-INTERNET posture (closes the F6
+README follow-up too).
