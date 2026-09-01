@@ -60,8 +60,8 @@ class ConfigSnapshotRatchetTest {
 
     /** Files a landed slice has migrated off the mutable global. Grows per slice. */
     private val migratedHotPathFiles = listOf(
-        "tribixbite/cleverkeys/Gesture.kt",           // slice 1
-        "tribixbite/cleverkeys/GestureClassifier.kt", // slice 1
+        "tribixbite/cleverkeys/gesture/Gesture.kt",           // slice 1 (moved to gesture/ in slice 3)
+        "tribixbite/cleverkeys/gesture/GestureClassifier.kt", // slice 1 (moved to gesture/ in slice 3)
         "tribixbite/cleverkeys/Pointers.kt"           // slice 2 — gesture-scoped capture
     )
 

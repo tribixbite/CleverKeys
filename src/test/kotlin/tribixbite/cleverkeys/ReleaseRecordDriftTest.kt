@@ -288,6 +288,10 @@ class ReleaseRecordDriftTest {
         // composition root; package unchanged.
         "src/main/kotlin/tribixbite/cleverkeys/SuggestionBridge.kt" to
             "src/main/kotlin/tribixbite/cleverkeys/wiring/SuggestionBridge.kt",
+        // ARC-098 (2026-09-01): the gesture-recognition cluster moved into gesture/;
+        // package unchanged.
+        "src/main/kotlin/tribixbite/cleverkeys/SwipeInput.kt" to
+            "src/main/kotlin/tribixbite/cleverkeys/gesture/SwipeInput.kt",
     )
 
     @Test
