@@ -653,6 +653,34 @@ reproduced: runPureTests 2087, runMockTests 343, lintVitalRelease green.
 codex-authored translations in all 21 locales** — samples read correct but they are
 unreviewed machine translations.
 
+## Wave D — 2026-09-01: ARC-067 CLOSED (21 locales, machine-verified)
+
+Seven parallel translator lanes filled the owed ~370-string set in every locale (per-locale
+commits `c87ed06d..4799723f` + follow-ups), each with a placeholder-multiset verifier vs EN
+(incl. `formatted="false"` carry-over, `%%` forms, Turkish `%%%2$d` prefix convention, CLDR
+plural shapes per locale). Orchestrator consolidation closed the systematic gap the lanes'
+`<string>`-only derivation missed (`layout_manager_hint` `<plurals>` in 11 locales, composed
+from each file's own terminology + quantity template) and then **removed all 373
+`MissingTranslation` suppressions from `res/values/strings.xml`** — `lintDebug` is green with
+NOTHING suppressed, so full coverage is now enforced by lint itself, not asserted by a doc.
+D6 also fixed a pre-existing ru mistranslation (`geo_settings_intro` said "non-Latin" for a
+setting that means "non-QWERTY").
+
+**Maintainer flags**: all ~7,800 new translations are machine translations pending native
+review (each lane's low-confidence roster is in its commit-lane report; recurring: beam-search
+jargon, the `command_palette_ts_*` preset labels, the launcher tagline, aggression-register).
+
+**New items surfaced by wave D**
+- **ARC-103 (P3)** — the `%1$d ... (s)`-style COUNT strings (e.g. `multilang_installed_count`)
+  cannot be rendered correctly under Slavic/Baltic plural rules from a single form; convert
+  them to `<plurals>` resources (the pl/uk lanes hit this independently).
+- **ARC-104 (decision, maintainer)** — five ADB manual UI test-driver scripts
+  (`test-theories.sh`, `test-keyboard-automated.sh`, `test-after-install.sh`,
+  `test-activities.sh`, `quick-test-guide.sh`) conflict with the standing "never test via
+  ADB" policy; identifiers fixed in the ARC-098 sweep but keep-vs-delete is a policy call.
+- **ARC-105 (LOW)** — `PipelineCharacterizationTest.kt` KDoc cites "IC:539";
+  `handlePredictionResults` is now `InputCoordinator.kt:428` (code-owned KDoc, one line).
+
 **Closed by R3 (Opus agents + codex + audit fixes)**: ARC-055, 059, 062, 065, 066(EN+21 MT),
 074, 075, 076, 086, 087(structure; translations = 067), 088, 089, 090, 091, 092, 093, 094,
 095, 096, 099, 100, 101, 102 — plus ARC-058/064/077 instrumented COVERAGE written (execution

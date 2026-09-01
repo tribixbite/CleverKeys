@@ -957,4 +957,5 @@
     <string name="custom_theme_preview">Podgląd</string>
     <string name="custom_theme_create">Utwórz</string>
     <string name="theme_select_attribute">Wybierz %1$s</string>
+    <plurals name="layout_manager_hint"><item quantity="one">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układ</item><item quantity="few">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układy</item><item quantity="many">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układów</item><item quantity="other">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układu</item></plurals>
 </resources>

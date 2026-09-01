@@ -78,11 +78,11 @@ consolidation follows it. Nothing was pushed, tagged, or released.
 - Nonzero `finger_occlusion_offset` default still needs maintainer device-trace A/B evidence.
 
 **Highest-value executable work:**
-- ARC-067: translate the common 384-entry missing default-resource set into all 21 locales.
-  The mode description is translated everywhere, but the 39 new provenance resources and the
-  earlier ARC-045/wave strings still fall back to English. Google/SimplyTranslate/Lingva public
-  endpoints were unavailable; MyMemory worked but cannot cover the volume under anonymous quota.
-  Preserve every `%N$` placeholder and plurals element shape; do not paste English copies.
+- ~~ARC-067~~ **CLOSED 2026-09-01** (ledger §"Wave D"): all 21 locales complete, all 373
+  `MissingTranslation` suppressions removed from the base file, lint green unsuppressed —
+  coverage is now lint-enforced. All new translations are MACHINE translations pending the
+  maintainer's native-review pass. New follow-ons: ARC-103 (`<plurals>` conversion for count
+  strings), ARC-104 (ADB test-script policy decision), ARC-105 (stale IC:539 KDoc line).
 - ~~Wave E remainder~~ — **DONE 2026-09-01**: ARC-073 doc/citation drift + micro-bucket
   (`d20ed3b5`), ARC-098 phantom-`keyboard2` tooling sweep (`f482faf4`), the four
   verified-doc-claim audits and the `contraction_pairings_cleaned.json` gate run (see §3).

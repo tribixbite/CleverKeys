@@ -959,4 +959,5 @@
     <string name="custom_theme_preview">Pratinjau</string>
     <string name="custom_theme_create">Buat</string>
     <string name="theme_select_attribute">Pilih %1$s</string>
+    <plurals name="layout_manager_hint"><item quantity="other">Seret untuk menyusun ulang • Ketuk untuk mengedit • %1$d tata letak</item></plurals>
 </resources>

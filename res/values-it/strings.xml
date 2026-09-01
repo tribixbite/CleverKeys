@@ -987,4 +987,5 @@
     <string name="custom_theme_preview">Anteprima</string>
     <string name="custom_theme_create">Crea</string>
     <string name="theme_select_attribute">Seleziona %1$s</string>
+    <plurals name="layout_manager_hint"><item quantity="one">Trascina per riordinare • Tocca per modificare • %1$d layout</item><item quantity="many">Trascina per riordinare • Tocca per modificare • %1$d layout</item><item quantity="other">Trascina per riordinare • Tocca per modificare • %1$d layout</item></plurals>
 </resources>

@@ -122,7 +122,7 @@
     <!-- Swipe copy added 2026-08-19. Every name in this group now has a real translation in
          all 21 res/values-*/ locales and is pinned by TranslationCoverageDriftTest, so dropping
          one (or adding a locale without it) fails the pure test suite instead of silently
-         falling back to English. The former tools:ignore="MissingTranslation" suppressions are
+         falling back to English. The former suppressions are
          gone; do not reintroduce them.
 
          swipe_engine_fallback_desc is shown when the selected engine cannot serve the user's
@@ -145,15 +145,15 @@
          memory/HANDOFF.md); the reason text is measured per device, never a fixed language list.
          %1$s is the language code, %2$d the percentage of the pack's words that can be spelled
          with the a-z keys. -->
-    <string name="swipe_engine_pack_not_typeable" tools:ignore="MissingTranslation">The %1$s language pack you imported cannot be decoded by CTC: only %2$d%% of its words can be spelled with the a–z keys. Letters such as ı, ł and đ have no a–z form, so those words could not be swiped at all. Geometric decodes them instead.</string>
-    <string name="swipe_engine_pack_head_not_typeable" tools:ignore="MissingTranslation">The %1$s language pack you imported cannot be decoded by CTC: too many of its most common words use letters with no a–z form, so they could not be swiped at all. Geometric decodes them instead.</string>
-    <string name="swipe_engine_pack_unusable" tools:ignore="MissingTranslation">The %1$s language pack you imported does not contain a readable word list, so CTC cannot use it. Try importing the pack again.</string>
+    <string name="swipe_engine_pack_not_typeable">The %1$s language pack you imported cannot be decoded by CTC: only %2$d%% of its words can be spelled with the a–z keys. Letters such as ı, ł and đ have no a–z form, so those words could not be swiped at all. Geometric decodes them instead.</string>
+    <string name="swipe_engine_pack_head_not_typeable">The %1$s language pack you imported cannot be decoded by CTC: too many of its most common words use letters with no a–z form, so they could not be swiped at all. Geometric decodes them instead.</string>
+    <string name="swipe_engine_pack_unusable">The %1$s language pack you imported does not contain a readable word list, so CTC cannot use it. Try importing the pack again.</string>
     <!-- ARC-086 (2026-08-31): layout-axis fallback reasons. CTC reads only primary
          (centre/key0) labels and only scripts with a routed model. English-only until the
          translation-debt wave closes these alongside the imported-pack reasons above. -->
-    <string name="swipe_engine_layout_script_fallback" tools:ignore="MissingTranslation">CTC cannot route the script used by %1$s, so swipes on that layout use the geometric engine.</string>
-    <string name="swipe_engine_layout_corner_fallback" tools:ignore="MissingTranslation">On %1$s, CTC cannot read %2$s because they are corner characters rather than primary key labels. Swipes on that layout use the geometric engine.</string>
-    <string name="swipe_engine_layout_incomplete_fallback" tools:ignore="MissingTranslation">On %1$s, CTC needs primary keys for %2$s. Swipes on that layout use the geometric engine.</string>
+    <string name="swipe_engine_layout_script_fallback">CTC cannot route the script used by %1$s, so swipes on that layout use the geometric engine.</string>
+    <string name="swipe_engine_layout_corner_fallback">On %1$s, CTC cannot read %2$s because they are corner characters rather than primary key labels. Swipes on that layout use the geometric engine.</string>
+    <string name="swipe_engine_layout_incomplete_fallback">On %1$s, CTC needs primary keys for %2$s. Swipes on that layout use the geometric engine.</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Appearance</string>
@@ -270,11 +270,11 @@
     <!-- #156 / ARC-011: provenance line in the expanded entry. %1$s is the source app's label
          (or its raw package name when that app is no longer installed). English-only for now;
          translation debt tracked in the commit that introduced it. -->
-    <string name="clipboard_provenance_via" tools:ignore="MissingTranslation">Private copy · via %1$s</string>
+    <string name="clipboard_provenance_via">Private copy · via %1$s</string>
     <!-- Label substituted into clipboard_provenance_via when the entry was created by an app that
          launched the PROCESS_TEXT activity directly instead of through the text-selection menu —
          a strong tell that the entry was injected programmatically (design §6.3). -->
-    <string name="clipboard_provenance_direct_launch" tools:ignore="MissingTranslation">direct launch (not a selection menu)</string>
+    <string name="clipboard_provenance_direct_launch">direct launch (not a selection menu)</string>
 
     <!-- ══════════════════════════════════════════════════════════════════
          Clipboard tag panel (ClipboardTagDialog / ClipboardManager)
@@ -456,44 +456,44 @@
 
     <!-- Long-press suggestion provenance sheet. All pipeline metadata remains structured;
          these Android-layer templates are the only user-facing wording. -->
-    <string tools:ignore="MissingTranslation" name="provenance_origin_geometric">Geometric swipe decoder</string>
-    <string tools:ignore="MissingTranslation" name="provenance_origin_ctc">CTC swipe (trie beam)</string>
-    <string tools:ignore="MissingTranslation" name="provenance_origin_dictionary_prefix">Dictionary prefix match</string>
-    <string tools:ignore="MissingTranslation" name="provenance_origin_contraction">Contraction injection</string>
-    <string tools:ignore="MissingTranslation" name="provenance_origin_possessive">Possessive form</string>
-    <string tools:ignore="MissingTranslation" name="provenance_origin_exact_add">Exact typed word (tap to add)</string>
-    <string tools:ignore="MissingTranslation" name="provenance_origin_next_word">Next-word prediction</string>
-    <string tools:ignore="MissingTranslation" name="provenance_origin_autocorrect">Autocorrect prompt</string>
-    <string tools:ignore="MissingTranslation" name="provenance_unknown">Unknown</string>
-    <string tools:ignore="MissingTranslation" name="provenance_source">Source: %1$s</string>
-    <string tools:ignore="MissingTranslation" name="provenance_score">Score: %1$d</string>
-    <string tools:ignore="MissingTranslation" name="provenance_score_components">Score components:</string>
-    <string tools:ignore="MissingTranslation" name="provenance_prefix_match">• Prefix match: %1$d</string>
-    <string tools:ignore="MissingTranslation" name="provenance_adaptation">• Adaptation: %1$.2f×</string>
-    <string tools:ignore="MissingTranslation" name="provenance_context_built_in">• Context (built-in): %1$.2f×</string>
-    <string tools:ignore="MissingTranslation" name="provenance_context_learned">• Context (learned): %1$.2f×</string>
-    <string tools:ignore="MissingTranslation" name="provenance_context_winner_learned">• Context winner: your learned patterns</string>
-    <string tools:ignore="MissingTranslation" name="provenance_context_winner_built_in">• Context winner: built-in model</string>
-    <string tools:ignore="MissingTranslation" name="provenance_context_no_boost">• Context: no boost</string>
-    <string tools:ignore="MissingTranslation" name="provenance_context_boost_setting">• Context boost setting: %1$.1f×</string>
-    <string tools:ignore="MissingTranslation" name="provenance_personalization">• Personalization: %1$.2f → %2$.2f×</string>
-    <string tools:ignore="MissingTranslation" name="provenance_frequency_factor">• Frequency factor: %1$.2f×</string>
-    <string tools:ignore="MissingTranslation" name="provenance_final_score">= Final score: %1$d</string>
-    <string tools:ignore="MissingTranslation" name="provenance_personal_usage">Personal usage:</string>
-    <string tools:ignore="MissingTranslation" name="provenance_usage_count">Used %1$d times</string>
-    <string tools:ignore="MissingTranslation" name="provenance_frequency_score">Frequency score: %1$.2f</string>
-    <string tools:ignore="MissingTranslation" name="provenance_recency_score">Recency score: %1$.2f</string>
-    <string tools:ignore="MissingTranslation" name="provenance_base_boost">Base boost: %1$.2f</string>
-    <string tools:ignore="MissingTranslation" name="provenance_aggression">Aggression: %1$s (%2$.2f×)</string>
-    <string tools:ignore="MissingTranslation" name="provenance_final_boost">Final boost: %1$.2f</string>
-    <string tools:ignore="MissingTranslation" name="provenance_aggression_conservative">Conservative</string>
-    <string tools:ignore="MissingTranslation" name="provenance_aggression_balanced">Balanced</string>
-    <string tools:ignore="MissingTranslation" name="provenance_aggression_aggressive">Aggressive</string>
-    <string tools:ignore="MissingTranslation" name="provenance_note_promoted_learned">Promoted by learned context</string>
-    <string tools:ignore="MissingTranslation" name="provenance_note_next_built_in">After “%1$s”: common continuation (built-in, not learned)</string>
-    <string tools:ignore="MissingTranslation" name="provenance_note_next_learned">After “%1$s”: seen %2$d×, %3$d%%</string>
-    <string tools:ignore="MissingTranslation" name="provenance_note_typed_undo">Your typed word (tap to undo)</string>
-    <string tools:ignore="MissingTranslation" name="provenance_note_autocorrected_from">Autocorrected from “%1$s”</string>
+    <string name="provenance_origin_geometric">Geometric swipe decoder</string>
+    <string name="provenance_origin_ctc">CTC swipe (trie beam)</string>
+    <string name="provenance_origin_dictionary_prefix">Dictionary prefix match</string>
+    <string name="provenance_origin_contraction">Contraction injection</string>
+    <string name="provenance_origin_possessive">Possessive form</string>
+    <string name="provenance_origin_exact_add">Exact typed word (tap to add)</string>
+    <string name="provenance_origin_next_word">Next-word prediction</string>
+    <string name="provenance_origin_autocorrect">Autocorrect prompt</string>
+    <string name="provenance_unknown">Unknown</string>
+    <string name="provenance_source">Source: %1$s</string>
+    <string name="provenance_score">Score: %1$d</string>
+    <string name="provenance_score_components">Score components:</string>
+    <string name="provenance_prefix_match">• Prefix match: %1$d</string>
+    <string name="provenance_adaptation">• Adaptation: %1$.2f×</string>
+    <string name="provenance_context_built_in">• Context (built-in): %1$.2f×</string>
+    <string name="provenance_context_learned">• Context (learned): %1$.2f×</string>
+    <string name="provenance_context_winner_learned">• Context winner: your learned patterns</string>
+    <string name="provenance_context_winner_built_in">• Context winner: built-in model</string>
+    <string name="provenance_context_no_boost">• Context: no boost</string>
+    <string name="provenance_context_boost_setting">• Context boost setting: %1$.1f×</string>
+    <string name="provenance_personalization">• Personalization: %1$.2f → %2$.2f×</string>
+    <string name="provenance_frequency_factor">• Frequency factor: %1$.2f×</string>
+    <string name="provenance_final_score">= Final score: %1$d</string>
+    <string name="provenance_personal_usage">Personal usage:</string>
+    <string name="provenance_usage_count">Used %1$d times</string>
+    <string name="provenance_frequency_score">Frequency score: %1$.2f</string>
+    <string name="provenance_recency_score">Recency score: %1$.2f</string>
+    <string name="provenance_base_boost">Base boost: %1$.2f</string>
+    <string name="provenance_aggression">Aggression: %1$s (%2$.2f×)</string>
+    <string name="provenance_final_boost">Final boost: %1$.2f</string>
+    <string name="provenance_aggression_conservative">Conservative</string>
+    <string name="provenance_aggression_balanced">Balanced</string>
+    <string name="provenance_aggression_aggressive">Aggressive</string>
+    <string name="provenance_note_promoted_learned">Promoted by learned context</string>
+    <string name="provenance_note_next_built_in">After “%1$s”: common continuation (built-in, not learned)</string>
+    <string name="provenance_note_next_learned">After “%1$s”: seen %2$d×, %3$d%%</string>
+    <string name="provenance_note_typed_undo">Your typed word (tap to undo)</string>
+    <string name="provenance_note_autocorrected_from">Autocorrected from “%1$s”</string>
 
     <!-- AppearanceSection -->
     <string name="appearance_height_portrait_title">Keyboard Height (Portrait)</string>
@@ -568,14 +568,14 @@
          Reachable only from `am start` automation (#70), never from the app's own UI.
          TRANSLATION DEBT: English-only for now (added 2026-08-28); not in
          TranslationCoverageDriftTest's required set. -->
-    <string name="backup_base64_too_large" tools:ignore="MissingTranslation">Import failed: the inline backup payload is too large</string>
+    <string name="backup_base64_too_large">Import failed: the inline backup payload is too large</string>
 
     <!-- ARC-037: sub-row under "Private copy in other apps". Gates only the SUCCESS toast on the
          PROCESS_TEXT path; failure messages are never suppressed.
          TRANSLATION DEBT: English-only for now (added 2026-08-28). Note the sibling string
          private_copy_toast IS translated in all 21 locales; these two are not yet. -->
-    <string name="clipboard_private_copy_toast_title" tools:ignore="MissingTranslation">Confirm private copies</string>
-    <string name="clipboard_private_copy_toast_desc" tools:ignore="MissingTranslation">Show a brief message after copying privately from another app\'s selection menu. Warnings are always shown.</string>
+    <string name="clipboard_private_copy_toast_title">Confirm private copies</string>
+    <string name="clipboard_private_copy_toast_desc">Show a brief message after copying privately from another app\'s selection menu. Warnings are always shown.</string>
 
     <!-- ClipboardSection -->
     <string name="clipboard_history_title">Clipboard History</string>
@@ -831,7 +831,7 @@
 
          Every string below was a raw `Text("…")` or named-argument literal
          (`title = "…"`, `label = "…"`, …) inside a Compose file. They are all
-         ENGLISH-ONLY and carry tools:ignore="MissingTranslation": the 21-locale
+         ENGLISH-ONLY and carry: the 21-locale
          translation pass is a deliberate follow-up, recorded as translation debt
          in memory/HANDOFF.md. Do NOT add these names to
          TranslationCoverageDriftTest's `required` set until they are actually
@@ -843,307 +843,307 @@
          that aapt2 would otherwise collapse.
          ══════════════════════════════════════════════════════════════════ -->
 
-    <string name="common_done" tools:ignore="MissingTranslation">Done</string>
+    <string name="common_done">Done</string>
 
     <!-- LearningDataSection.kt — on-device learning stats + browse/forget dialogs -->
-    <string name="learning_data_title" tools:ignore="MissingTranslation">Learning &amp; Data</string>
-    <string name="learning_data_privacy_note" tools:ignore="MissingTranslation">All learning stays on this device. Learned phrase patterns and word usage are included in dictionary exports (Backup &amp; Restore).</string>
-    <string name="learning_data_loading" tools:ignore="MissingTranslation">Loading…</string>
+    <string name="learning_data_title">Learning &amp; Data</string>
+    <string name="learning_data_privacy_note">All learning stays on this device. Learned phrase patterns and word usage are included in dictionary exports (Backup &amp; Restore).</string>
+    <string name="learning_data_loading">Loading…</string>
     <!-- %1$s = language code, %2$d = learned word-pair count -->
-    <string name="learning_data_pairs_for_language" tools:ignore="MissingTranslation,PluralsCandidate">%1$s: %2$d pairs</string>
+    <string name="learning_data_pairs_for_language" tools:ignore="PluralsCandidate">%1$s: %2$d pairs</string>
     <!-- %1$d = learned word-triple count; appended after learning_data_pairs_for_language -->
-    <string name="learning_data_triples_suffix" tools:ignore="MissingTranslation,PluralsCandidate">, %1$d triples</string>
-    <string name="learning_data_no_pairs" tools:ignore="MissingTranslation">No learned word pairs yet</string>
-    <string name="learning_data_no_words" tools:ignore="MissingTranslation">No learned words yet</string>
+    <string name="learning_data_triples_suffix" tools:ignore="PluralsCandidate">, %1$d triples</string>
+    <string name="learning_data_no_pairs">No learned word pairs yet</string>
+    <string name="learning_data_no_words">No learned words yet</string>
     <!-- %1$d = number of words. Also the personalization word-cap slider's display value. -->
-    <string name="learning_data_word_count" tools:ignore="MissingTranslation,PluralsCandidate">%1$d words</string>
+    <string name="learning_data_word_count" tools:ignore="PluralsCandidate">%1$d words</string>
     <!-- %1$s = the most-used learned word, %2$d = its usage count -->
-    <string name="learning_data_most_used" tools:ignore="MissingTranslation">most used: “%1$s” (%2$d×)</string>
+    <string name="learning_data_most_used">most used: “%1$s” (%2$d×)</string>
     <!-- %1$s = the per-language phrase-pattern summary -->
-    <string name="learning_data_phrase_patterns" tools:ignore="MissingTranslation">Phrase patterns — %1$s</string>
+    <string name="learning_data_phrase_patterns">Phrase patterns — %1$s</string>
     <!-- %1$s = the word-usage summary -->
-    <string name="learning_data_word_usage" tools:ignore="MissingTranslation">Word usage — %1$s</string>
-    <string name="learning_data_browse_phrases" tools:ignore="MissingTranslation">Browse phrases</string>
-    <string name="learning_data_browse_words" tools:ignore="MissingTranslation">Browse words</string>
-    <string name="learning_data_forget_phrases" tools:ignore="MissingTranslation">Forget phrases</string>
-    <string name="learning_data_forget_words" tools:ignore="MissingTranslation">Forget words</string>
-    <string name="learning_data_forget_phrases_title" tools:ignore="MissingTranslation">Forget phrase patterns?</string>
+    <string name="learning_data_word_usage">Word usage — %1$s</string>
+    <string name="learning_data_browse_phrases">Browse phrases</string>
+    <string name="learning_data_browse_words">Browse words</string>
+    <string name="learning_data_forget_phrases">Forget phrases</string>
+    <string name="learning_data_forget_words">Forget words</string>
+    <string name="learning_data_forget_phrases_title">Forget phrase patterns?</string>
     <!-- %1$d = number of learned pairs and triples that will be deleted -->
-    <string name="learning_data_forget_phrases_body" tools:ignore="MissingTranslation,PluralsCandidate">Delete %1$d learned word pairs and triples across all languages? Context-aware suggestions will relearn from your typing.</string>
-    <string name="learning_data_forget_words_title" tools:ignore="MissingTranslation">Forget word usage?</string>
+    <string name="learning_data_forget_phrases_body" tools:ignore="PluralsCandidate">Delete %1$d learned word pairs and triples across all languages? Context-aware suggestions will relearn from your typing.</string>
+    <string name="learning_data_forget_words_title">Forget word usage?</string>
     <!-- %1$d = number of learned words that will be deleted -->
-    <string name="learning_data_forget_words_body" tools:ignore="MissingTranslation,PluralsCandidate">Delete %1$d learned words? Personalized boosting will relearn from your typing.</string>
-    <string name="learning_data_phrases_dialog_title" tools:ignore="MissingTranslation">Learned phrases</string>
-    <string name="learning_data_phrases_dialog_empty" tools:ignore="MissingTranslation">No learned phrases.</string>
+    <string name="learning_data_forget_words_body" tools:ignore="PluralsCandidate">Delete %1$d learned words? Personalized boosting will relearn from your typing.</string>
+    <string name="learning_data_phrases_dialog_title">Learned phrases</string>
+    <string name="learning_data_phrases_dialog_empty">No learned phrases.</string>
     <!-- %1$s = first word, %2$s = learned continuation, %3$d = frequency, %4$s = language code -->
-    <string name="learning_data_phrase_row" tools:ignore="MissingTranslation">"%1$s → %2$s  (%3$d×, %4$s)"</string>
-    <string name="learning_data_words_dialog_title" tools:ignore="MissingTranslation">Learned words</string>
-    <string name="learning_data_words_dialog_empty" tools:ignore="MissingTranslation">No learned words.</string>
+    <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
+    <string name="learning_data_words_dialog_title">Learned words</string>
+    <string name="learning_data_words_dialog_empty">No learned words.</string>
     <!-- %1$s = learned word, %2$d = usage count -->
-    <string name="learning_data_word_row" tools:ignore="MissingTranslation">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
 
     <!-- BackupPasswordBlock.kt — backup-encryption passphrase block and its dialogs -->
-    <string name="backup_password_title" tools:ignore="MissingTranslation">Backup Password</string>
-    <string name="backup_password_not_set_desc" tools:ignore="MissingTranslation">Not set. Required for automation (am start) export/import; encrypts all backups.</string>
-    <string name="backup_password_set" tools:ignore="MissingTranslation">Set Password</string>
-    <string name="backup_password_change" tools:ignore="MissingTranslation">Change Password</string>
-    <string name="backup_password_remove" tools:ignore="MissingTranslation">Remove</string>
-    <string name="backup_password_allow_intent_title" tools:ignore="MissingTranslation">Allow password via automation intent</string>
-    <string name="backup_password_allow_intent_desc" tools:ignore="MissingTranslation">Off by default. When on, IMPORT via am start may pass --es passphrase. Leaks via shell history — use HISTIGNORE / a leading space.</string>
-    <string name="backup_password_set_dialog_title" tools:ignore="MissingTranslation">Set Backup Password</string>
-    <string name="backup_password_change_dialog_title" tools:ignore="MissingTranslation">Change Backup Password</string>
-    <string name="backup_password_remove_dialog_title" tools:ignore="MissingTranslation">Remove Backup Password</string>
-    <string name="backup_password_remove_dialog_body" tools:ignore="MissingTranslation">Automation backup/restore will stop working, and new exports will be unencrypted only via the manual opt-out. Enter the current password to confirm.</string>
-    <string name="backup_password_current_label" tools:ignore="MissingTranslation">Current password</string>
-    <string name="backup_password_new_label" tools:ignore="MissingTranslation">New password</string>
-    <string name="backup_password_confirm_label" tools:ignore="MissingTranslation">Confirm password</string>
-    <string name="backup_password_show" tools:ignore="MissingTranslation">Show password</string>
+    <string name="backup_password_title">Backup Password</string>
+    <string name="backup_password_not_set_desc">Not set. Required for automation (am start) export/import; encrypts all backups.</string>
+    <string name="backup_password_set">Set Password</string>
+    <string name="backup_password_change">Change Password</string>
+    <string name="backup_password_remove">Remove</string>
+    <string name="backup_password_allow_intent_title">Allow password via automation intent</string>
+    <string name="backup_password_allow_intent_desc">Off by default. When on, IMPORT via am start may pass --es passphrase. Leaks via shell history — use HISTIGNORE / a leading space.</string>
+    <string name="backup_password_set_dialog_title">Set Backup Password</string>
+    <string name="backup_password_change_dialog_title">Change Backup Password</string>
+    <string name="backup_password_remove_dialog_title">Remove Backup Password</string>
+    <string name="backup_password_remove_dialog_body">Automation backup/restore will stop working, and new exports will be unencrypted only via the manual opt-out. Enter the current password to confirm.</string>
+    <string name="backup_password_current_label">Current password</string>
+    <string name="backup_password_new_label">New password</string>
+    <string name="backup_password_confirm_label">Confirm password</string>
+    <string name="backup_password_show">Show password</string>
     <!-- %1$d = the weak-passphrase length threshold (WEAK_LEN) -->
-    <string name="backup_password_weak_warning" tools:ignore="MissingTranslation">Weak: under %1$d characters is easier to brute-force. Consider a longer passphrase.</string>
-    <string name="backup_password_error_incorrect" tools:ignore="MissingTranslation">Current password is incorrect.</string>
+    <string name="backup_password_weak_warning">Weak: under %1$d characters is easier to brute-force. Consider a longer passphrase.</string>
+    <string name="backup_password_error_incorrect">Current password is incorrect.</string>
     <!-- %1$d = the minimum passphrase length (MIN_LEN) -->
-    <string name="backup_password_error_too_short" tools:ignore="MissingTranslation">Password must be at least %1$d characters.</string>
-    <string name="backup_password_error_mismatch" tools:ignore="MissingTranslation">Passwords do not match.</string>
+    <string name="backup_password_error_too_short">Password must be at least %1$d characters.</string>
+    <string name="backup_password_error_mismatch">Passwords do not match.</string>
 
     <!-- BackupPassphrasePromptDialog.kt — passphrase prompt for an encrypted import -->
-    <string name="backup_passphrase_prompt_title" tools:ignore="MissingTranslation">Encrypted Backup</string>
-    <string name="backup_passphrase_prompt_body" tools:ignore="MissingTranslation">This backup is encrypted. Enter its backup password.</string>
-    <string name="backup_passphrase_prompt_label" tools:ignore="MissingTranslation">Backup password</string>
-    <string name="backup_passphrase_prompt_decrypt" tools:ignore="MissingTranslation">Decrypt</string>
+    <string name="backup_passphrase_prompt_title">Encrypted Backup</string>
+    <string name="backup_passphrase_prompt_body">This backup is encrypted. Enter its backup password.</string>
+    <string name="backup_passphrase_prompt_label">Backup password</string>
+    <string name="backup_passphrase_prompt_decrypt">Decrypt</string>
 
     <!-- BackupRestoreSection.kt — the Backup &amp; Restore settings section body -->
-    <string name="backup_section_intro" tools:ignore="MissingTranslation">Export and import keyboard settings, dictionary, and clipboard history.</string>
-    <string name="backup_section_configuration" tools:ignore="MissingTranslation">Configuration</string>
-    <string name="backup_section_export_config" tools:ignore="MissingTranslation">Export Config</string>
-    <string name="backup_section_import_config" tools:ignore="MissingTranslation">Import Config</string>
-    <string name="backup_section_custom_dictionary" tools:ignore="MissingTranslation">Custom Dictionary</string>
-    <string name="backup_section_export_dict" tools:ignore="MissingTranslation">Export Dict</string>
-    <string name="backup_section_import_dict" tools:ignore="MissingTranslation">Import Dict</string>
-    <string name="backup_section_clipboard_history" tools:ignore="MissingTranslation">Clipboard History</string>
-    <string name="backup_section_clipboard_text_only" tools:ignore="MissingTranslation">Text only (JSON)</string>
-    <string name="backup_section_export_clip" tools:ignore="MissingTranslation">Export Clip</string>
-    <string name="backup_section_import_clip" tools:ignore="MissingTranslation">Import Clip</string>
-    <string name="backup_section_clipboard_zip" tools:ignore="MissingTranslation">Full backup (ZIP with media)</string>
-    <string name="backup_section_export_zip" tools:ignore="MissingTranslation">Export ZIP</string>
-    <string name="backup_section_import_zip" tools:ignore="MissingTranslation">Import ZIP</string>
-    <string name="backup_section_full_backup" tools:ignore="MissingTranslation">Full Backup</string>
-    <string name="backup_section_full_backup_desc" tools:ignore="MissingTranslation">Export everything (settings, dictionary, clipboard, media) into one dated ZIP file.</string>
-    <string name="backup_section_export_full" tools:ignore="MissingTranslation">Export Full Backup</string>
-    <string name="backup_section_import_full" tools:ignore="MissingTranslation">Import Full Backup</string>
-    <string name="backup_section_plaintext_armed" tools:ignore="MissingTranslation">Next export will be UNENCRYPTED — tap an Export button</string>
-    <string name="backup_section_plaintext_offer" tools:ignore="MissingTranslation">Export unencrypted…</string>
-    <string name="backup_section_plaintext_dialog_title" tools:ignore="MissingTranslation">Export without encryption?</string>
-    <string name="backup_section_plaintext_dialog_body" tools:ignore="MissingTranslation">The next export you start will be written as PLAINTEXT — anyone who obtains the file can read your settings, dictionary, or clipboard contents. Only do this if you will post-process the file yourself. Continue?</string>
-    <string name="backup_section_plaintext_dialog_confirm" tools:ignore="MissingTranslation">I understand — arm plaintext export</string>
-    <string name="backup_section_preview_note" tools:ignore="MissingTranslation">Settings + dictionary imports show a preview so you can deselect entries before applying. Clipboard imports merge non-destructively (duplicates are skipped).</string>
+    <string name="backup_section_intro">Export and import keyboard settings, dictionary, and clipboard history.</string>
+    <string name="backup_section_configuration">Configuration</string>
+    <string name="backup_section_export_config">Export Config</string>
+    <string name="backup_section_import_config">Import Config</string>
+    <string name="backup_section_custom_dictionary">Custom Dictionary</string>
+    <string name="backup_section_export_dict">Export Dict</string>
+    <string name="backup_section_import_dict">Import Dict</string>
+    <string name="backup_section_clipboard_history">Clipboard History</string>
+    <string name="backup_section_clipboard_text_only">Text only (JSON)</string>
+    <string name="backup_section_export_clip">Export Clip</string>
+    <string name="backup_section_import_clip">Import Clip</string>
+    <string name="backup_section_clipboard_zip">Full backup (ZIP with media)</string>
+    <string name="backup_section_export_zip">Export ZIP</string>
+    <string name="backup_section_import_zip">Import ZIP</string>
+    <string name="backup_section_full_backup">Full Backup</string>
+    <string name="backup_section_full_backup_desc">Export everything (settings, dictionary, clipboard, media) into one dated ZIP file.</string>
+    <string name="backup_section_export_full">Export Full Backup</string>
+    <string name="backup_section_import_full">Import Full Backup</string>
+    <string name="backup_section_plaintext_armed">Next export will be UNENCRYPTED — tap an Export button</string>
+    <string name="backup_section_plaintext_offer">Export unencrypted…</string>
+    <string name="backup_section_plaintext_dialog_title">Export without encryption?</string>
+    <string name="backup_section_plaintext_dialog_body">The next export you start will be written as PLAINTEXT — anyone who obtains the file can read your settings, dictionary, or clipboard contents. Only do this if you will post-process the file yourself. Continue?</string>
+    <string name="backup_section_plaintext_dialog_confirm">I understand — arm plaintext export</string>
+    <string name="backup_section_preview_note">Settings + dictionary imports show a preview so you can deselect entries before applying. Clipboard imports merge non-destructively (duplicates are skipped).</string>
 
     <!-- More reusable button/label words. English-only for now (unlike the
          translated common_* block above) — folded into the 21-locale follow-up. -->
-    <string name="common_remove" tools:ignore="MissingTranslation">Remove</string>
-    <string name="common_view" tools:ignore="MissingTranslation">View</string>
-    <string name="common_export" tools:ignore="MissingTranslation">Export</string>
-    <string name="common_import" tools:ignore="MissingTranslation">Import</string>
-    <string name="common_off" tools:ignore="MissingTranslation">Off</string>
+    <string name="common_remove">Remove</string>
+    <string name="common_view">View</string>
+    <string name="common_export">Export</string>
+    <string name="common_import">Import</string>
+    <string name="common_off">Off</string>
 
     <!-- GifPanelSection.kt — GIF pack import/management block -->
-    <string name="gif_section_intro" tools:ignore="MissingTranslation">Offline GIF reactions. Import packs from ZIP files (download from GitHub Releases).</string>
-    <string name="gif_toast_no_browser" tools:ignore="MissingTranslation">Could not open browser</string>
-    <string name="gif_toast_no_file_picker" tools:ignore="MissingTranslation">Could not open file picker</string>
-    <string name="gif_get_packs" tools:ignore="MissingTranslation">Get GIF Packs (opens browser)</string>
-    <string name="gif_importing" tools:ignore="MissingTranslation">Importing...</string>
-    <string name="gif_import_pack" tools:ignore="MissingTranslation">Import Pack from ZIP</string>
-    <string name="gif_installed_packs" tools:ignore="MissingTranslation">Installed Packs</string>
+    <string name="gif_section_intro">Offline GIF reactions. Import packs from ZIP files (download from GitHub Releases).</string>
+    <string name="gif_toast_no_browser">Could not open browser</string>
+    <string name="gif_toast_no_file_picker">Could not open file picker</string>
+    <string name="gif_get_packs">Get GIF Packs (opens browser)</string>
+    <string name="gif_importing">Importing...</string>
+    <string name="gif_import_pack">Import Pack from ZIP</string>
+    <string name="gif_installed_packs">Installed Packs</string>
     <!-- %1$d = number of GIFs in the pack, %2$s = human-readable pack size -->
-    <string name="gif_pack_stats" tools:ignore="MissingTranslation,PluralsCandidate">%1$d GIFs | %2$s</string>
+    <string name="gif_pack_stats" tools:ignore="PluralsCandidate">%1$d GIFs | %2$s</string>
     <!-- %1$s = human-readable total storage used by all installed packs -->
-    <string name="gif_total_storage" tools:ignore="MissingTranslation">Total: %1$s</string>
+    <string name="gif_total_storage">Total: %1$s</string>
     <!-- %1$d = number of thumbnail grid columns -->
-    <string name="gif_grid_columns_display" tools:ignore="MissingTranslation,PluralsCandidate">%1$d columns</string>
-    <string name="gif_remove_all" tools:ignore="MissingTranslation">Remove All GIF Data</string>
-    <string name="gif_remove_all_title" tools:ignore="MissingTranslation">Remove All GIF Data?</string>
-    <string name="gif_remove_all_body" tools:ignore="MissingTranslation">This will delete all imported GIF packs, thumbnails, and database. This cannot be undone.</string>
-    <string name="gif_remove_all_confirm" tools:ignore="MissingTranslation">Remove All</string>
-    <string name="gif_remove_pack_body" tools:ignore="MissingTranslation">This will delete all GIFs from this pack and reclaim storage space.</string>
+    <string name="gif_grid_columns_display" tools:ignore="PluralsCandidate">%1$d columns</string>
+    <string name="gif_remove_all">Remove All GIF Data</string>
+    <string name="gif_remove_all_title">Remove All GIF Data?</string>
+    <string name="gif_remove_all_body">This will delete all imported GIF packs, thumbnails, and database. This cannot be undone.</string>
+    <string name="gif_remove_all_confirm">Remove All</string>
+    <string name="gif_remove_pack_body">This will delete all GIFs from this pack and reclaim storage space.</string>
 
     <!-- PrivacySection.kt — privacy/telemetry-free data controls -->
-    <string name="privacy_section_intro" tools:ignore="MissingTranslation">CleverKeys is fully offline — no data ever leaves your device. These optional settings store local data for potential future on-device model fine-tuning.</string>
-    <string name="privacy_on_device_learning_header" tools:ignore="MissingTranslation">On-Device Learning</string>
-    <string name="privacy_forget_learned_title" tools:ignore="MissingTranslation">Also forget learned data?</string>
-    <string name="privacy_forget_learned_body" tools:ignore="MissingTranslation">Learning is now off — nothing new will be recorded. Do you also want to delete everything already learned (phrase patterns, word usage, and selection history)? This cannot be undone.</string>
-    <string name="privacy_forget_learned_confirm" tools:ignore="MissingTranslation">Delete learned data</string>
-    <string name="privacy_forget_learned_keep" tools:ignore="MissingTranslation">Keep it</string>
-    <string name="privacy_local_collection_header" tools:ignore="MissingTranslation">Local Data Collection (Optional)</string>
-    <string name="privacy_collected_data_header" tools:ignore="MissingTranslation">Collected Data</string>
+    <string name="privacy_section_intro">CleverKeys is fully offline — no data ever leaves your device. These optional settings store local data for potential future on-device model fine-tuning.</string>
+    <string name="privacy_on_device_learning_header">On-Device Learning</string>
+    <string name="privacy_forget_learned_title">Also forget learned data?</string>
+    <string name="privacy_forget_learned_body">Learning is now off — nothing new will be recorded. Do you also want to delete everything already learned (phrase patterns, word usage, and selection history)? This cannot be undone.</string>
+    <string name="privacy_forget_learned_confirm">Delete learned data</string>
+    <string name="privacy_forget_learned_keep">Keep it</string>
+    <string name="privacy_local_collection_header">Local Data Collection (Optional)</string>
+    <string name="privacy_collected_data_header">Collected Data</string>
     <!-- %1$d = stored swipe traces, %2$d = distinct words among them -->
-    <string name="privacy_swipe_stats" tools:ignore="MissingTranslation">Total swipes: %1$d • Unique words: %2$d</string>
-    <string name="privacy_export_json" tools:ignore="MissingTranslation">Export JSON</string>
-    <string name="privacy_export_ndjson" tools:ignore="MissingTranslation">Export NDJSON</string>
-    <string name="privacy_no_swipe_data" tools:ignore="MissingTranslation">No swipe data collected yet. Enable collection above to start storing patterns for future on-device learning.</string>
-    <string name="privacy_performance_header" tools:ignore="MissingTranslation">Performance Metrics</string>
+    <string name="privacy_swipe_stats">Total swipes: %1$d • Unique words: %2$d</string>
+    <string name="privacy_export_json">Export JSON</string>
+    <string name="privacy_export_ndjson">Export NDJSON</string>
+    <string name="privacy_no_swipe_data">No swipe data collected yet. Enable collection above to start storing patterns for future on-device learning.</string>
+    <string name="privacy_performance_header">Performance Metrics</string>
     <!-- %1$d = predictions made, %2$d = mean inference time in ms, %3$d = top-1 accuracy percent -->
-    <string name="privacy_perf_stats" tools:ignore="MissingTranslation">Predictions: %1$d • Avg: %2$dms • Top-1: %3$d%%</string>
-    <string name="privacy_no_perf_data" tools:ignore="MissingTranslation">No performance data collected yet. Enable collection above and use swipe typing.</string>
+    <string name="privacy_perf_stats">Predictions: %1$d • Avg: %2$dms • Top-1: %3$d%%</string>
+    <string name="privacy_no_perf_data">No performance data collected yet. Enable collection above and use swipe typing.</string>
 
     <!-- MultiLanguageSection.kt — secondary language, quick toggle, language packs -->
-    <string name="multilang_secondary_note" tools:ignore="MissingTranslation">Secondary dictionary will be loaded on next keyboard open. Words from both languages will appear in predictions.</string>
-    <string name="multilang_quick_toggle_header" tools:ignore="MissingTranslation">Quick Language Toggle</string>
-    <string name="multilang_quick_toggle_desc" tools:ignore="MissingTranslation">Configure alternate languages for quick toggle commands. Assign PRIMARY_LANG_TOGGLE or SECONDARY_LANG_TOGGLE to any key\'s short swipe.</string>
-    <string name="multilang_packs_header" tools:ignore="MissingTranslation">Language Packs</string>
-    <string name="multilang_packs_desc" tools:ignore="MissingTranslation">Import additional language dictionaries from ZIP files. Download packs externally and import here (no internet permission needed).</string>
-    <string name="multilang_browse_packs" tools:ignore="MissingTranslation">Browse available packs ↗</string>
+    <string name="multilang_secondary_note">Secondary dictionary will be loaded on next keyboard open. Words from both languages will appear in predictions.</string>
+    <string name="multilang_quick_toggle_header">Quick Language Toggle</string>
+    <string name="multilang_quick_toggle_desc">Configure alternate languages for quick toggle commands. Assign PRIMARY_LANG_TOGGLE or SECONDARY_LANG_TOGGLE to any key\'s short swipe.</string>
+    <string name="multilang_packs_header">Language Packs</string>
+    <string name="multilang_packs_desc">Import additional language dictionaries from ZIP files. Download packs externally and import here (no internet permission needed).</string>
+    <string name="multilang_browse_packs">Browse available packs ↗</string>
     <!-- %1$d = number of installed language packs -->
-    <string name="multilang_installed_count" tools:ignore="MissingTranslation,PluralsCandidate">Installed: %1$d language pack(s)</string>
-    <string name="multilang_import_pack" tools:ignore="MissingTranslation">Import Pack</string>
-    <string name="multilang_manage" tools:ignore="MissingTranslation">Manage</string>
+    <string name="multilang_installed_count" tools:ignore="PluralsCandidate">Installed: %1$d language pack(s)</string>
+    <string name="multilang_import_pack">Import Pack</string>
+    <string name="multilang_manage">Manage</string>
     <!-- One contraction-collision example row. %1$s = the shortcut key, %2$s = what it
          would have rewritten to. Quoted to keep the leading indent aapt2 would collapse. -->
-    <string name="multilang_collision_example" tools:ignore="MissingTranslation">"  %1$s → %2$s"</string>
-    <string name="multilang_packs_dialog_title" tools:ignore="MissingTranslation">Installed Language Packs</string>
-    <string name="multilang_packs_dialog_empty" tools:ignore="MissingTranslation">No language packs installed.\n\nUse \'Browse available packs\' to download a ZIP, then \'Import Pack\' to add it.</string>
+    <string name="multilang_collision_example">"  %1$s → %2$s"</string>
+    <string name="multilang_packs_dialog_title">Installed Language Packs</string>
+    <string name="multilang_packs_dialog_empty">No language packs installed.\n\nUse \'Browse available packs\' to download a ZIP, then \'Import Pack\' to add it.</string>
     <!-- %1$s = ISO 639-1 language code, %2$d = words in the pack\'s dictionary -->
-    <string name="multilang_pack_stats" tools:ignore="MissingTranslation,PluralsCandidate">Code: %1$s • %2$d words</string>
+    <string name="multilang_pack_stats" tools:ignore="PluralsCandidate">Code: %1$s • %2$d words</string>
 
     <!-- InputBehaviorSection.kt -->
-    <string name="input_manage_layouts" tools:ignore="MissingTranslation">Manage Keyboard Layouts</string>
-    <string name="input_configure_extra_keys" tools:ignore="MissingTranslation">Configure Extra Keys</string>
-    <string name="input_advanced_prediction" tools:ignore="MissingTranslation">Advanced Prediction Settings</string>
+    <string name="input_manage_layouts">Manage Keyboard Layouts</string>
+    <string name="input_configure_extra_keys">Configure Extra Keys</string>
+    <string name="input_advanced_prediction">Advanced Prediction Settings</string>
 
     <!-- SwipeTypingSection.kt -->
-    <string name="swipe_full_geometric_settings" tools:ignore="MissingTranslation">Full Geometric Settings</string>
-    <string name="swipe_full_ctc_settings" tools:ignore="MissingTranslation">Full CTC Settings</string>
+    <string name="swipe_full_geometric_settings">Full Geometric Settings</string>
+    <string name="swipe_full_ctc_settings">Full CTC Settings</string>
 
     <!-- HelpSection.kt -->
-    <string name="help_open_wiki" tools:ignore="MissingTranslation">Open Full Wiki</string>
+    <string name="help_open_wiki">Open Full Wiki</string>
 
     <!-- GestureTuningSection.kt — subsection headers and guidance copy -->
-    <string name="gesture_section_intro" tools:ignore="MissingTranslation">Fine-tune tap, swipe, and slider behavior for your typing style.</string>
-    <string name="gesture_short_gestures_header" tools:ignore="MissingTranslation">Short Gestures</string>
-    <string name="gesture_open_calibration" tools:ignore="MissingTranslation">📐 Open Calibration Tool</string>
-    <string name="gesture_selection_delete_header" tools:ignore="MissingTranslation">Selection-Delete Mode</string>
-    <string name="gesture_selection_delete_desc" tools:ignore="MissingTranslation">Short swipe + hold on backspace to select text, then release to delete.</string>
-    <string name="gesture_tap_typing_header" tools:ignore="MissingTranslation">Tap and Typing</string>
-    <string name="gesture_swipe_recognition_header" tools:ignore="MissingTranslation">Swipe Recognition</string>
-    <string name="gesture_slider_key_header" tools:ignore="MissingTranslation">Slider Key Behavior</string>
-    <string name="gesture_tuning_tip" tools:ignore="MissingTranslation">If gestures feel laggy, reduce dwell time and noise threshold. If taps register as swipes, increase tap duration.</string>
+    <string name="gesture_section_intro">Fine-tune tap, swipe, and slider behavior for your typing style.</string>
+    <string name="gesture_short_gestures_header">Short Gestures</string>
+    <string name="gesture_open_calibration">📐 Open Calibration Tool</string>
+    <string name="gesture_selection_delete_header">Selection-Delete Mode</string>
+    <string name="gesture_selection_delete_desc">Short swipe + hold on backspace to select text, then release to delete.</string>
+    <string name="gesture_tap_typing_header">Tap and Typing</string>
+    <string name="gesture_swipe_recognition_header">Swipe Recognition</string>
+    <string name="gesture_slider_key_header">Slider Key Behavior</string>
+    <string name="gesture_tuning_tip">If gestures feel laggy, reduce dwell time and noise threshold. If taps register as swipes, increase tap duration.</string>
 
     <!-- IntentEditorDialog.kt — build a custom Android intent for a short-swipe action.
          The placeholder values (com.example.app, android.intent.action.VIEW, text/plain, …)
          stay Kotlin literals on purpose: they are Android identifiers, not copy. -->
-    <string name="intent_editor_title_create" tools:ignore="MissingTranslation">Create Intent Action</string>
-    <string name="intent_editor_title_edit" tools:ignore="MissingTranslation">Edit Intent Action</string>
-    <string name="intent_editor_quick_presets" tools:ignore="MissingTranslation">Quick Presets</string>
-    <string name="intent_editor_create_custom" tools:ignore="MissingTranslation">Create Custom</string>
-    <string name="intent_editor_name_label" tools:ignore="MissingTranslation">Macro Name (Required)</string>
-    <string name="intent_editor_target_type_label" tools:ignore="MissingTranslation">Target Type</string>
-    <string name="intent_editor_select_target_type_desc" tools:ignore="MissingTranslation">Select target type</string>
-    <string name="intent_editor_details_header" tools:ignore="MissingTranslation">Intent Details</string>
-    <string name="intent_editor_package_label" tools:ignore="MissingTranslation">Package Name</string>
-    <string name="intent_editor_class_label" tools:ignore="MissingTranslation">Class Name (Optional)</string>
-    <string name="intent_editor_action_label" tools:ignore="MissingTranslation">Action</string>
-    <string name="intent_editor_data_label" tools:ignore="MissingTranslation">Data URI (Optional)</string>
-    <string name="intent_editor_mime_label" tools:ignore="MissingTranslation">MIME Type (Optional)</string>
-    <string name="intent_editor_extras_header" tools:ignore="MissingTranslation">Extras (Key-Value Strings)</string>
-    <string name="intent_editor_extra_key_label" tools:ignore="MissingTranslation">Key</string>
-    <string name="intent_editor_extra_value_label" tools:ignore="MissingTranslation">Value</string>
-    <string name="intent_editor_add_extra_desc" tools:ignore="MissingTranslation">Add Extra</string>
+    <string name="intent_editor_title_create">Create Intent Action</string>
+    <string name="intent_editor_title_edit">Edit Intent Action</string>
+    <string name="intent_editor_quick_presets">Quick Presets</string>
+    <string name="intent_editor_create_custom">Create Custom</string>
+    <string name="intent_editor_name_label">Macro Name (Required)</string>
+    <string name="intent_editor_target_type_label">Target Type</string>
+    <string name="intent_editor_select_target_type_desc">Select target type</string>
+    <string name="intent_editor_details_header">Intent Details</string>
+    <string name="intent_editor_package_label">Package Name</string>
+    <string name="intent_editor_class_label">Class Name (Optional)</string>
+    <string name="intent_editor_action_label">Action</string>
+    <string name="intent_editor_data_label">Data URI (Optional)</string>
+    <string name="intent_editor_mime_label">MIME Type (Optional)</string>
+    <string name="intent_editor_extras_header">Extras (Key-Value Strings)</string>
+    <string name="intent_editor_extra_key_label">Key</string>
+    <string name="intent_editor_extra_value_label">Value</string>
+    <string name="intent_editor_add_extra_desc">Add Extra</string>
     <!-- One intent-extra row. %1$s = extra key, %2$s = extra value. -->
-    <string name="intent_editor_extra_row" tools:ignore="MissingTranslation">%1$s : %2$s</string>
+    <string name="intent_editor_extra_row">%1$s : %2$s</string>
 
     <!-- CommandPaletteDialog.kt — searchable command picker, label confirmation,
          custom-text entry and the timestamp-pattern builder -->
-    <string name="command_palette_title_select" tools:ignore="MissingTranslation">Select Command</string>
-    <string name="command_palette_title_custom_text" tools:ignore="MissingTranslation">Enter Custom Text</string>
-    <string name="command_palette_select_desc" tools:ignore="MissingTranslation">Select</string>
+    <string name="command_palette_title_select">Select Command</string>
+    <string name="command_palette_title_custom_text">Enter Custom Text</string>
+    <string name="command_palette_select_desc">Select</string>
     <!-- %1$s = the chosen command's display name -->
-    <string name="command_palette_action_command" tools:ignore="MissingTranslation">Command: %1$s</string>
+    <string name="command_palette_action_command">Command: %1$s</string>
     <!-- %1$s = the entered text, already truncated by the caller -->
-    <string name="command_palette_action_text" tools:ignore="MissingTranslation">Text: \"%1$s\"</string>
+    <string name="command_palette_action_text">Text: \"%1$s\"</string>
     <!-- %1$s = the intent definition's name -->
-    <string name="command_palette_action_intent" tools:ignore="MissingTranslation">Intent: %1$s</string>
+    <string name="command_palette_action_intent">Intent: %1$s</string>
     <!-- %1$s = the SimpleDateFormat pattern, %2$s = what it formats to right now -->
-    <string name="command_palette_action_timestamp" tools:ignore="MissingTranslation">Timestamp: %1$s (now → \"%2$s\")</string>
-    <string name="command_palette_customize_label" tools:ignore="MissingTranslation">Customize Label</string>
-    <string name="command_palette_display_label" tools:ignore="MissingTranslation">Display Label</string>
+    <string name="command_palette_action_timestamp">Timestamp: %1$s (now → \"%2$s\")</string>
+    <string name="command_palette_customize_label">Customize Label</string>
+    <string name="command_palette_display_label">Display Label</string>
     <!-- %1$s = a readable name for the icon that would be used by default -->
-    <string name="command_palette_icon_placeholder" tools:ignore="MissingTranslation">[Icon: %1$s]</string>
-    <string name="command_palette_icon_hint" tools:ignore="MissingTranslation">Leave blank to use default icon. Type text for a custom label.</string>
+    <string name="command_palette_icon_placeholder">[Icon: %1$s]</string>
+    <string name="command_palette_icon_hint">Leave blank to use default icon. Type text for a custom label.</string>
     <!-- %1$d = max key-label length, %2$s = the default label shown when left blank -->
-    <string name="command_palette_label_hint" tools:ignore="MissingTranslation">What shows on the key (max %1$d chars). Leave blank for default: %2$s</string>
+    <string name="command_palette_label_hint">What shows on the key (max %1$d chars). Leave blank for default: %2$s</string>
     <!-- Trailing space is significant (the preview value follows inline), hence the quotes. -->
-    <string name="command_palette_preview_prefix" tools:ignore="MissingTranslation">"Preview: "</string>
-    <string name="command_palette_confirm" tools:ignore="MissingTranslation">Confirm</string>
-    <string name="command_palette_search_hint" tools:ignore="MissingTranslation">Search commands (e.g., copy, paste, home, esc)</string>
-    <string name="command_palette_custom_text_title" tools:ignore="MissingTranslation">Custom Text</string>
-    <string name="command_palette_custom_text_desc" tools:ignore="MissingTranslation">Enter any text to insert (macros, snippets, etc.)</string>
-    <string name="command_palette_send_intent_title" tools:ignore="MissingTranslation">Send Intent</string>
-    <string name="command_palette_send_intent_desc" tools:ignore="MissingTranslation">Create advanced Android intent (activity, service, broadcast)</string>
-    <string name="command_palette_timestamp_title" tools:ignore="MissingTranslation">Timestamp</string>
-    <string name="command_palette_timestamp_desc" tools:ignore="MissingTranslation">Insert formatted date/time (e.g. yyyy-MM-dd HH:mm)</string>
+    <string name="command_palette_preview_prefix">"Preview: "</string>
+    <string name="command_palette_confirm">Confirm</string>
+    <string name="command_palette_search_hint">Search commands (e.g., copy, paste, home, esc)</string>
+    <string name="command_palette_custom_text_title">Custom Text</string>
+    <string name="command_palette_custom_text_desc">Enter any text to insert (macros, snippets, etc.)</string>
+    <string name="command_palette_send_intent_title">Send Intent</string>
+    <string name="command_palette_send_intent_desc">Create advanced Android intent (activity, service, broadcast)</string>
+    <string name="command_palette_timestamp_title">Timestamp</string>
+    <string name="command_palette_timestamp_desc">Insert formatted date/time (e.g. yyyy-MM-dd HH:mm)</string>
     <!-- %1$d = total commands in the registry -->
-    <string name="command_palette_count_available" tools:ignore="MissingTranslation,PluralsCandidate">%1$d commands available</string>
+    <string name="command_palette_count_available" tools:ignore="PluralsCandidate">%1$d commands available</string>
     <!-- %1$d = matching commands, %2$s = the search query -->
-    <string name="command_palette_count_results" tools:ignore="MissingTranslation,PluralsCandidate">%1$d results for \"%2$s\"</string>
+    <string name="command_palette_count_results" tools:ignore="PluralsCandidate">%1$d results for \"%2$s\"</string>
     <!-- %1$d = total commands in the registry -->
-    <string name="command_palette_browse_all" tools:ignore="MissingTranslation">Browse All %1$d Commands</string>
-    <string name="command_palette_quick_commands" tools:ignore="MissingTranslation">Quick Commands</string>
-    <string name="command_palette_custom_text_intro" tools:ignore="MissingTranslation">Enter the text that will be inserted when you swipe in this direction.</string>
-    <string name="command_palette_text_to_insert" tools:ignore="MissingTranslation">Text to insert</string>
-    <string name="command_palette_text_placeholder" tools:ignore="MissingTranslation">e.g., Hello, World!</string>
+    <string name="command_palette_browse_all">Browse All %1$d Commands</string>
+    <string name="command_palette_quick_commands">Quick Commands</string>
+    <string name="command_palette_custom_text_intro">Enter the text that will be inserted when you swipe in this direction.</string>
+    <string name="command_palette_text_to_insert">Text to insert</string>
+    <string name="command_palette_text_placeholder">e.g., Hello, World!</string>
     <!-- %1$d = characters typed so far -->
-    <string name="command_palette_char_count" tools:ignore="MissingTranslation,PluralsCandidate">%1$d characters</string>
-    <string name="command_palette_paste_desc" tools:ignore="MissingTranslation">Paste from clipboard</string>
-    <string name="command_palette_quick_suggestions" tools:ignore="MissingTranslation">Quick suggestions:</string>
-    <string name="command_palette_use_text" tools:ignore="MissingTranslation">Use This Text</string>
-    <string name="command_palette_timestamp_dialog_title" tools:ignore="MissingTranslation">Timestamp Pattern</string>
-    <string name="command_palette_timestamp_dialog_desc" tools:ignore="MissingTranslation">Uses java.text.SimpleDateFormat patterns. Letters: y M d H h m s a E. Quote literal text in single quotes.</string>
-    <string name="command_palette_pattern_label" tools:ignore="MissingTranslation">Pattern</string>
+    <string name="command_palette_char_count" tools:ignore="PluralsCandidate">%1$d characters</string>
+    <string name="command_palette_paste_desc">Paste from clipboard</string>
+    <string name="command_palette_quick_suggestions">Quick suggestions:</string>
+    <string name="command_palette_use_text">Use This Text</string>
+    <string name="command_palette_timestamp_dialog_title">Timestamp Pattern</string>
+    <string name="command_palette_timestamp_dialog_desc">Uses java.text.SimpleDateFormat patterns. Letters: y M d H h m s a E. Quote literal text in single quotes.</string>
+    <string name="command_palette_pattern_label">Pattern</string>
     <!-- %1$s = the pattern formatted against the current time -->
-    <string name="command_palette_pattern_preview" tools:ignore="MissingTranslation">Preview: %1$s</string>
-    <string name="command_palette_pattern_blank" tools:ignore="MissingTranslation">Pattern cannot be blank</string>
-    <string name="command_palette_pattern_invalid_format" tools:ignore="MissingTranslation">Invalid SimpleDateFormat pattern</string>
-    <string name="command_palette_pattern_format_failed" tools:ignore="MissingTranslation">Failed to format pattern</string>
-    <string name="command_palette_pattern_invalid" tools:ignore="MissingTranslation">Invalid pattern</string>
-    <string name="command_palette_presets" tools:ignore="MissingTranslation">Presets</string>
-    <string name="command_palette_use_pattern" tools:ignore="MissingTranslation">Use Pattern</string>
+    <string name="command_palette_pattern_preview">Preview: %1$s</string>
+    <string name="command_palette_pattern_blank">Pattern cannot be blank</string>
+    <string name="command_palette_pattern_invalid_format">Invalid SimpleDateFormat pattern</string>
+    <string name="command_palette_pattern_format_failed">Failed to format pattern</string>
+    <string name="command_palette_pattern_invalid">Invalid pattern</string>
+    <string name="command_palette_presets">Presets</string>
+    <string name="command_palette_use_pattern">Use Pattern</string>
     <!-- Timestamp preset chip labels. Only the LABEL is localized; the SimpleDateFormat
          pattern each chip applies stays a Kotlin literal. -->
-    <string name="command_palette_ts_date" tools:ignore="MissingTranslation">Date</string>
-    <string name="command_palette_ts_date_time" tools:ignore="MissingTranslation">Date + Time</string>
-    <string name="command_palette_ts_time" tools:ignore="MissingTranslation">Time</string>
-    <string name="command_palette_ts_time_sec" tools:ignore="MissingTranslation">Time + sec</string>
-    <string name="command_palette_ts_12h" tools:ignore="MissingTranslation">12h time</string>
-    <string name="command_palette_ts_day_mon_d" tools:ignore="MissingTranslation">Day Mon d</string>
-    <string name="command_palette_ts_long_date" tools:ignore="MissingTranslation">Long date</string>
-    <string name="command_palette_ts_iso" tools:ignore="MissingTranslation">ISO 8601</string>
-    <string name="command_palette_ts_slash_mdy" tools:ignore="MissingTranslation">Slash MDY</string>
+    <string name="command_palette_ts_date">Date</string>
+    <string name="command_palette_ts_date_time">Date + Time</string>
+    <string name="command_palette_ts_time">Time</string>
+    <string name="command_palette_ts_time_sec">Time + sec</string>
+    <string name="command_palette_ts_12h">12h time</string>
+    <string name="command_palette_ts_day_mon_d">Day Mon d</string>
+    <string name="command_palette_ts_long_date">Long date</string>
+    <string name="command_palette_ts_iso">ISO 8601</string>
+    <string name="command_palette_ts_slash_mdy">Slash MDY</string>
 
     <!-- LayoutManagerActivity.kt — reorderable keyboard-layout list, add-layout
          picker and the custom-XML editor -->
-    <string name="common_edit" tools:ignore="MissingTranslation">Edit</string>
-    <string name="layout_manager_title" tools:ignore="MissingTranslation">Keyboard Layouts</string>
-    <string name="layout_manager_add" tools:ignore="MissingTranslation">Add Layout</string>
+    <string name="common_edit">Edit</string>
+    <string name="layout_manager_title">Keyboard Layouts</string>
+    <string name="layout_manager_add">Add Layout</string>
     <!-- Info card above the list. %1$d = configured layouts. A real <plurals> rather than
          a "(s)" suffix so the English rendering is unchanged from the literal it replaced. -->
-    <plurals name="layout_manager_hint" tools:ignore="MissingTranslation">
+    <plurals name="layout_manager_hint">
         <item quantity="one">Drag to reorder • Tap to edit • %1$d layout</item>
         <item quantity="other">Drag to reorder • Tap to edit • %1$d layouts</item>
     </plurals>
-    <string name="layout_manager_remove_title" tools:ignore="MissingTranslation">Remove Layout?</string>
-    <string name="layout_manager_remove_body" tools:ignore="MissingTranslation">Are you sure you want to remove this layout?</string>
-    <string name="layout_manager_drag_desc" tools:ignore="MissingTranslation">Drag to reorder</string>
+    <string name="layout_manager_remove_title">Remove Layout?</string>
+    <string name="layout_manager_remove_body">Are you sure you want to remove this layout?</string>
+    <string name="layout_manager_drag_desc">Drag to reorder</string>
     <!-- %1$d = 1-based position of the layout in the list -->
-    <string name="layout_manager_item_index" tools:ignore="MissingTranslation">Layout %1$d</string>
-    <string name="layout_manager_tab_system" tools:ignore="MissingTranslation">System</string>
-    <string name="layout_manager_tab_predefined" tools:ignore="MissingTranslation">Predefined</string>
-    <string name="layout_manager_tab_custom" tools:ignore="MissingTranslation">Custom</string>
-    <string name="layout_manager_system_desc" tools:ignore="MissingTranslation">Use device\'s default keyboard layout</string>
-    <string name="layout_manager_add_system" tools:ignore="MissingTranslation">Add System Layout</string>
-    <string name="layout_manager_custom_desc" tools:ignore="MissingTranslation">Create a custom keyboard layout using XML format</string>
-    <string name="layout_manager_create_custom" tools:ignore="MissingTranslation">Create Custom Layout</string>
-    <string name="layout_manager_editor_title" tools:ignore="MissingTranslation">Custom Layout Editor</string>
-    <string name="layout_manager_xml_label" tools:ignore="MissingTranslation">Layout XML</string>
-    <string name="layout_manager_import_xml" tools:ignore="MissingTranslation">Import XML</string>
-    <string name="layout_manager_export_xml" tools:ignore="MissingTranslation">Export XML</string>
+    <string name="layout_manager_item_index">Layout %1$d</string>
+    <string name="layout_manager_tab_system">System</string>
+    <string name="layout_manager_tab_predefined">Predefined</string>
+    <string name="layout_manager_tab_custom">Custom</string>
+    <string name="layout_manager_system_desc">Use device\'s default keyboard layout</string>
+    <string name="layout_manager_add_system">Add System Layout</string>
+    <string name="layout_manager_custom_desc">Create a custom keyboard layout using XML format</string>
+    <string name="layout_manager_create_custom">Create Custom Layout</string>
+    <string name="layout_manager_editor_title">Custom Layout Editor</string>
+    <string name="layout_manager_xml_label">Layout XML</string>
+    <string name="layout_manager_import_xml">Import XML</string>
+    <string name="layout_manager_export_xml">Export XML</string>
 
     <!-- BackupRestorePreviewDialogs.kt — the settings/dictionary import preview sheets.
          Wave E left this copy hardcoded "by convention"; ARC-045 ends that convention.
@@ -1153,129 +1153,129 @@
          The pure-JVM summary renderers (renderJsonBlobSummary / renderArraySummary and the
          +/−/~ diff markers) stay Kotlin literals: they take no Context, which is exactly
          what lets BackupRestorePreviewRenderTest cover them in the pure suite. -->
-    <string name="import_preview_title" tools:ignore="MissingTranslation">Import preview</string>
-    <string name="import_preview_cancel_desc" tools:ignore="MissingTranslation">Cancel preview</string>
+    <string name="import_preview_title">Import preview</string>
+    <string name="import_preview_cancel_desc">Cancel preview</string>
     <!-- %1$d = entries that will be written if the user confirms -->
-    <string name="import_preview_apply" tools:ignore="MissingTranslation">Apply (%1$d)</string>
+    <string name="import_preview_apply">Apply (%1$d)</string>
     <!-- %1$s = app version the backup was written by -->
-    <string name="import_preview_source_version" tools:ignore="MissingTranslation">Source: %1$s</string>
+    <string name="import_preview_source_version">Source: %1$s</string>
     <!-- %1$d = width px, %2$d = height px, %3$s = density bucket -->
-    <string name="import_preview_source_screen" tools:ignore="MissingTranslation">Source screen: %1$d×%2$d@%3$s</string>
-    <string name="import_preview_current_screen" tools:ignore="MissingTranslation">Current screen: %1$d×%2$d@%3$s</string>
-    <string name="import_preview_screen_mismatch" tools:ignore="MissingTranslation">Screen-size mismatch — some visual settings may need adjustment.</string>
+    <string name="import_preview_source_screen">Source screen: %1$d×%2$d@%3$s</string>
+    <string name="import_preview_current_screen">Current screen: %1$d×%2$d@%3$s</string>
+    <string name="import_preview_screen_mismatch">Screen-size mismatch — some visual settings may need adjustment.</string>
     <!-- Short-swipe diff headline parts. %1$d is the count in each. -->
-    <string name="import_preview_diff_new" tools:ignore="MissingTranslation,PluralsCandidate">+%1$d new</string>
-    <string name="import_preview_diff_removed" tools:ignore="MissingTranslation,PluralsCandidate">−%1$d removed</string>
-    <string name="import_preview_diff_changed" tools:ignore="MissingTranslation,PluralsCandidate">~%1$d changed</string>
-    <string name="import_preview_diff_unchanged" tools:ignore="MissingTranslation,PluralsCandidate">(%1$d unchanged)</string>
+    <string name="import_preview_diff_new" tools:ignore="PluralsCandidate">+%1$d new</string>
+    <string name="import_preview_diff_removed" tools:ignore="PluralsCandidate">−%1$d removed</string>
+    <string name="import_preview_diff_changed" tools:ignore="PluralsCandidate">~%1$d changed</string>
+    <string name="import_preview_diff_unchanged" tools:ignore="PluralsCandidate">(%1$d unchanged)</string>
     <!-- %1$d = short-swipe mappings present in the backup file -->
-    <string name="import_preview_short_swipe_count" tools:ignore="MissingTranslation,PluralsCandidate">%1$d short-swipe mappings in this backup</string>
-    <string name="import_preview_short_swipe_skip" tools:ignore="MissingTranslation">Skip — don\'t import</string>
-    <string name="import_preview_short_swipe_merge" tools:ignore="MissingTranslation">Merge — fill gaps, preserve existing (recommended)</string>
-    <string name="import_preview_short_swipe_replace" tools:ignore="MissingTranslation">Replace — wipe existing, install file\'s set</string>
+    <string name="import_preview_short_swipe_count" tools:ignore="PluralsCandidate">%1$d short-swipe mappings in this backup</string>
+    <string name="import_preview_short_swipe_skip">Skip — don\'t import</string>
+    <string name="import_preview_short_swipe_merge">Merge — fill gaps, preserve existing (recommended)</string>
+    <string name="import_preview_short_swipe_replace">Replace — wipe existing, install file\'s set</string>
     <!-- %1$d = mappings in the file that would overwrite everything the user has -->
-    <string name="import_preview_short_swipe_warning" tools:ignore="MissingTranslation,PluralsCandidate">This will REPLACE all your existing short-swipe customizations with the file\'s %1$d mappings.</string>
+    <string name="import_preview_short_swipe_warning" tools:ignore="PluralsCandidate">This will REPLACE all your existing short-swipe customizations with the file\'s %1$d mappings.</string>
     <!-- %1$d = words kept selected, %2$d = words offered -->
-    <string name="import_preview_selected_count" tools:ignore="MissingTranslation">%1$d of %2$d selected</string>
-    <string name="import_preview_expand" tools:ignore="MissingTranslation">Expand</string>
-    <string name="import_preview_hide" tools:ignore="MissingTranslation">Hide</string>
+    <string name="import_preview_selected_count">%1$d of %2$d selected</string>
+    <string name="import_preview_expand">Expand</string>
+    <string name="import_preview_hide">Hide</string>
     <!-- %1$d = words in the group -->
-    <string name="import_preview_custom_words" tools:ignore="MissingTranslation,PluralsCandidate">Custom words (%1$d)</string>
-    <string name="import_preview_disabled_words" tools:ignore="MissingTranslation,PluralsCandidate">Disabled words (%1$d)</string>
+    <string name="import_preview_custom_words" tools:ignore="PluralsCandidate">Custom words (%1$d)</string>
+    <string name="import_preview_disabled_words" tools:ignore="PluralsCandidate">Disabled words (%1$d)</string>
     <!-- %1$d = the word's stored frequency -->
-    <string name="import_preview_word_freq" tools:ignore="MissingTranslation">freq %1$d</string>
-    <string name="import_preview_search_hint" tools:ignore="MissingTranslation">Search…</string>
-    <string name="import_preview_dict_title" tools:ignore="MissingTranslation">Dictionary import preview</string>
+    <string name="import_preview_word_freq">freq %1$d</string>
+    <string name="import_preview_search_hint">Search…</string>
+    <string name="import_preview_dict_title">Dictionary import preview</string>
     <!-- ARC-094: learned context is restored with dictionary imports but is not individually
          selectable. Phrase entries merge; the vocabulary section replaces the current list. -->
-    <string name="import_preview_learned_title" tools:ignore="MissingTranslation">Learned data</string>
-    <string name="import_preview_learned_desc" tools:ignore="MissingTranslation">Learned phrase counts are merged as a group. If this backup includes a personal vocabulary, it replaces the current learned-word list.</string>
-    <string name="import_preview_learned_bigrams" tools:ignore="MissingTranslation,PluralsCandidate">Word pairs to merge: %1$d</string>
-    <string name="import_preview_learned_trigrams" tools:ignore="MissingTranslation,PluralsCandidate">Word triples to merge: %1$d</string>
-    <string name="import_preview_learned_vocabulary" tools:ignore="MissingTranslation,PluralsCandidate">Personal vocabulary will be replaced with %1$d words</string>
+    <string name="import_preview_learned_title">Learned data</string>
+    <string name="import_preview_learned_desc">Learned phrase counts are merged as a group. If this backup includes a personal vocabulary, it replaces the current learned-word list.</string>
+    <string name="import_preview_learned_bigrams" tools:ignore="PluralsCandidate">Word pairs to merge: %1$d</string>
+    <string name="import_preview_learned_trigrams" tools:ignore="PluralsCandidate">Word triples to merge: %1$d</string>
+    <string name="import_preview_learned_vocabulary" tools:ignore="PluralsCandidate">Personal vocabulary will be replaced with %1$d words</string>
     <!-- Section headers in the settings preview. %1$d = rows in the section. -->
-    <string name="import_preview_modified" tools:ignore="MissingTranslation,PluralsCandidate">Modified (%1$d)</string>
-    <string name="import_preview_added" tools:ignore="MissingTranslation,PluralsCandidate">Added (%1$d)</string>
-    <string name="import_preview_short_swipe_header" tools:ignore="MissingTranslation">Short-swipe customizations</string>
+    <string name="import_preview_modified" tools:ignore="PluralsCandidate">Modified (%1$d)</string>
+    <string name="import_preview_added" tools:ignore="PluralsCandidate">Added (%1$d)</string>
+    <string name="import_preview_short_swipe_header">Short-swipe customizations</string>
     <!-- %1$d = entries the importer could not apply. The leading glyph is the disclosure state. -->
-    <string name="import_preview_skipped_collapse" tools:ignore="MissingTranslation,PluralsCandidate">▼ Invalid/skipped (%1$d) — tap to collapse</string>
-    <string name="import_preview_skipped_expand" tools:ignore="MissingTranslation,PluralsCandidate">▶ Invalid/skipped (%1$d) — tap to expand</string>
+    <string name="import_preview_skipped_collapse" tools:ignore="PluralsCandidate">▼ Invalid/skipped (%1$d) — tap to collapse</string>
+    <string name="import_preview_skipped_expand" tools:ignore="PluralsCandidate">▶ Invalid/skipped (%1$d) — tap to expand</string>
 
     <!-- CtcSettingsActivity.kt -->
-    <string name="ctc_settings_title" tools:ignore="MissingTranslation">CTC Engine Settings</string>
-    <string name="ctc_settings_intro" tools:ignore="MissingTranslation">Tuning for the CTC swipe engine (Latin layouts under the CTC prediction engine). Scoring constants are calibrated offline and not user-tunable.</string>
-    <string name="ctc_settings_beam_section" tools:ignore="MissingTranslation">Beam Search</string>
-    <string name="ctc_settings_beam_width_title" tools:ignore="MissingTranslation">Beam Width</string>
-    <string name="ctc_settings_beam_width_desc" tools:ignore="MissingTranslation">Hypotheses kept per frame in the trie beam. 100 is the validated default; higher costs CPU per swipe for marginal accuracy.</string>
-    <string name="ctc_settings_inference_section" tools:ignore="MissingTranslation">Inference</string>
-    <string name="ctc_settings_threads_title" tools:ignore="MissingTranslation">ONNX Threads</string>
-    <string name="ctc_settings_threads_desc" tools:ignore="MissingTranslation">CPU threads for XNNPACK inference in the ONNX Runtime session that runs the CTC encoder. Applies when the session is next built (restart the keyboard).</string>
-    <string name="ctc_settings_reset" tools:ignore="MissingTranslation">Reset to Validated Default</string>
+    <string name="ctc_settings_title">CTC Engine Settings</string>
+    <string name="ctc_settings_intro">Tuning for the CTC swipe engine (Latin layouts under the CTC prediction engine). Scoring constants are calibrated offline and not user-tunable.</string>
+    <string name="ctc_settings_beam_section">Beam Search</string>
+    <string name="ctc_settings_beam_width_title">Beam Width</string>
+    <string name="ctc_settings_beam_width_desc">Hypotheses kept per frame in the trie beam. 100 is the validated default; higher costs CPU per swipe for marginal accuracy.</string>
+    <string name="ctc_settings_inference_section">Inference</string>
+    <string name="ctc_settings_threads_title">ONNX Threads</string>
+    <string name="ctc_settings_threads_desc">CPU threads for XNNPACK inference in the ONNX Runtime session that runs the CTC encoder. Applies when the session is next built (restart the keyboard).</string>
+    <string name="ctc_settings_reset">Reset to Validated Default</string>
 
     <!-- GeometricSettingsActivity.kt -->
-    <string name="geo_settings_title" tools:ignore="MissingTranslation">Geometric Engine Settings</string>
-    <string name="geo_settings_intro" tools:ignore="MissingTranslation">Tune the geometric (shape-matching) swipe engine used on non-QWERTY layouts in Hybrid mode, or on all layouts in Geometric mode. Other engine parameters are calibrated against measured accuracy and are not adjustable.</string>
-    <string name="geo_settings_decoding_section" tools:ignore="MissingTranslation">Decoding</string>
-    <string name="geo_settings_max_suggestions_title" tools:ignore="MissingTranslation">Max Suggestions</string>
-    <string name="geo_settings_max_suggestions_desc" tools:ignore="MissingTranslation">Ranked candidates emitted per swipe (suggestion bar shows the top few).</string>
-    <string name="geo_settings_freq_weight_title" tools:ignore="MissingTranslation">Frequency Weight</string>
-    <string name="geo_settings_freq_weight_desc" tools:ignore="MissingTranslation">Bias toward common words vs. exact shape fidelity. Higher = common words win more often; 0 = pure shape matching.</string>
-    <string name="geo_settings_endpoint_title" tools:ignore="MissingTranslation">Endpoint Tolerance</string>
-    <string name="geo_settings_endpoint_desc" tools:ignore="MissingTranslation">Forgiveness for sloppy swipe start/end positions, in key widths. Higher = more forgiving; too high can surface wrong first/last letters.</string>
-    <string name="geo_settings_reset" tools:ignore="MissingTranslation">Reset to Calibrated Defaults</string>
+    <string name="geo_settings_title">Geometric Engine Settings</string>
+    <string name="geo_settings_intro">Tune the geometric (shape-matching) swipe engine used on non-QWERTY layouts in Hybrid mode, or on all layouts in Geometric mode. Other engine parameters are calibrated against measured accuracy and are not adjustable.</string>
+    <string name="geo_settings_decoding_section">Decoding</string>
+    <string name="geo_settings_max_suggestions_title">Max Suggestions</string>
+    <string name="geo_settings_max_suggestions_desc">Ranked candidates emitted per swipe (suggestion bar shows the top few).</string>
+    <string name="geo_settings_freq_weight_title">Frequency Weight</string>
+    <string name="geo_settings_freq_weight_desc">Bias toward common words vs. exact shape fidelity. Higher = common words win more often; 0 = pure shape matching.</string>
+    <string name="geo_settings_endpoint_title">Endpoint Tolerance</string>
+    <string name="geo_settings_endpoint_desc">Forgiveness for sloppy swipe start/end positions, in key widths. Higher = more forgiving; too high can surface wrong first/last letters.</string>
+    <string name="geo_settings_reset">Reset to Calibrated Defaults</string>
 
     <!-- AutoCorrectionSettingsActivity.kt -->
-    <string name="autocorrect_settings_title" tools:ignore="MissingTranslation">Auto-Correction Settings</string>
-    <string name="autocorrect_activity_enable_desc" tools:ignore="MissingTranslation">Automatically correct misspelled words while typing</string>
-    <string name="autocorrect_about_title" tools:ignore="MissingTranslation">About Auto-Correction</string>
-    <string name="autocorrect_about_body" tools:ignore="MissingTranslation">Auto-correction compares typed words against the dictionary using Levenshtein distance algorithm. Words are corrected if they match closely enough (character match threshold) and appear frequently in the dictionary (minimum frequency).</string>
-    <string name="autocorrect_params_title" tools:ignore="MissingTranslation">Correction Parameters</string>
-    <string name="autocorrect_activity_min_length_desc" tools:ignore="MissingTranslation">Only correct words with at least this many characters</string>
-    <string name="autocorrect_activity_match_threshold_desc" tools:ignore="MissingTranslation">Minimum similarity ratio for correction (higher = stricter)</string>
-    <string name="autocorrect_activity_min_freq_title" tools:ignore="MissingTranslation">Minimum Frequency</string>
-    <string name="autocorrect_activity_min_freq_desc" tools:ignore="MissingTranslation">Only suggest words that appear at least this often in the dictionary</string>
-    <string name="autocorrect_reset" tools:ignore="MissingTranslation">Reset to Defaults</string>
+    <string name="autocorrect_settings_title">Auto-Correction Settings</string>
+    <string name="autocorrect_activity_enable_desc">Automatically correct misspelled words while typing</string>
+    <string name="autocorrect_about_title">About Auto-Correction</string>
+    <string name="autocorrect_about_body">Auto-correction compares typed words against the dictionary using Levenshtein distance algorithm. Words are corrected if they match closely enough (character match threshold) and appear frequently in the dictionary (minimum frequency).</string>
+    <string name="autocorrect_params_title">Correction Parameters</string>
+    <string name="autocorrect_activity_min_length_desc">Only correct words with at least this many characters</string>
+    <string name="autocorrect_activity_match_threshold_desc">Minimum similarity ratio for correction (higher = stricter)</string>
+    <string name="autocorrect_activity_min_freq_title">Minimum Frequency</string>
+    <string name="autocorrect_activity_min_freq_desc">Only suggest words that appear at least this often in the dictionary</string>
+    <string name="autocorrect_reset">Reset to Defaults</string>
 
     <!-- ShortSwipeCalibrationActivity.kt -->
-    <string name="calibration_title" tools:ignore="MissingTranslation">Short Swipe Calibration</string>
-    <string name="calibration_how_title" tools:ignore="MissingTranslation">How Short Swipes Work</string>
-    <string name="calibration_how_body" tools:ignore="MissingTranslation">Short swipes trigger up to 8 subkey actions per key based on direction. Move your finger a small distance to activate.</string>
-    <string name="calibration_thresholds_title" tools:ignore="MissingTranslation">Distance Thresholds</string>
-    <string name="calibration_tap_swipe_title" tools:ignore="MissingTranslation">Tap / Swipe Threshold</string>
-    <string name="calibration_tap_swipe_desc" formatted="false" tools:ignore="MissingTranslation">Gestures shorter than this (% of key diagonal) are taps</string>
-    <string name="calibration_boundary_title" tools:ignore="MissingTranslation">Short / Long Swipe Boundary</string>
-    <string name="calibration_boundary_desc" formatted="false" tools:ignore="MissingTranslation">At or below = short swipe (subkey); beyond = swipe-typed word (% of key diagonal)</string>
-    <string name="calibration_customize_title" tools:ignore="MissingTranslation">Customize Per-Key Actions</string>
-    <string name="calibration_customize_desc" tools:ignore="MissingTranslation">Short swipes, custom commands per key direction</string>
-    <string name="calibration_practice_title" tools:ignore="MissingTranslation">Practice Area</string>
-    <string name="calibration_practice_desc" tools:ignore="MissingTranslation">Touch and drag to test your settings</string>
-    <string name="calibration_touch_here" tools:ignore="MissingTranslation">👆 Touch here</string>
+    <string name="calibration_title">Short Swipe Calibration</string>
+    <string name="calibration_how_title">How Short Swipes Work</string>
+    <string name="calibration_how_body">Short swipes trigger up to 8 subkey actions per key based on direction. Move your finger a small distance to activate.</string>
+    <string name="calibration_thresholds_title">Distance Thresholds</string>
+    <string name="calibration_tap_swipe_title">Tap / Swipe Threshold</string>
+    <string name="calibration_tap_swipe_desc" formatted="false">Gestures shorter than this (% of key diagonal) are taps</string>
+    <string name="calibration_boundary_title">Short / Long Swipe Boundary</string>
+    <string name="calibration_boundary_desc" formatted="false">At or below = short swipe (subkey); beyond = swipe-typed word (% of key diagonal)</string>
+    <string name="calibration_customize_title">Customize Per-Key Actions</string>
+    <string name="calibration_customize_desc">Short swipes, custom commands per key direction</string>
+    <string name="calibration_practice_title">Practice Area</string>
+    <string name="calibration_practice_desc">Touch and drag to test your settings</string>
+    <string name="calibration_touch_here">👆 Touch here</string>
     <!-- %1$d = threshold as a percentage of key diagonal -->
-    <string name="calibration_min_readout" tools:ignore="MissingTranslation">Min: %1$d%%</string>
-    <string name="calibration_max_readout" tools:ignore="MissingTranslation">Max: %1$d%%</string>
+    <string name="calibration_min_readout">Min: %1$d%%</string>
+    <string name="calibration_max_readout">Max: %1$d%%</string>
 
     <!-- LauncherActivity.kt — first-run setup screen -->
-    <string name="launcher_logo_desc" tools:ignore="MissingTranslation">CleverKeys Logo</string>
-    <string name="launcher_tagline" tools:ignore="MissingTranslation">Privacy, power, and control— with a brain.</string>
-    <string name="launcher_step_enable" tools:ignore="MissingTranslation">Enable Keyboard</string>
-    <string name="launcher_step_select" tools:ignore="MissingTranslation">Select Keyboard</string>
-    <string name="launcher_step_calibrate" tools:ignore="MissingTranslation">Calibrate Per-Key Gestures</string>
-    <string name="launcher_test_field_label" tools:ignore="MissingTranslation">Test your new keyboard here</string>
-    <string name="launcher_footer" tools:ignore="MissingTranslation">An uncompromising open source keyboard.</string>
-    <string name="launcher_step_completed_desc" tools:ignore="MissingTranslation">Completed</string>
+    <string name="launcher_logo_desc">CleverKeys Logo</string>
+    <string name="launcher_tagline">Privacy, power, and control— with a brain.</string>
+    <string name="launcher_step_enable">Enable Keyboard</string>
+    <string name="launcher_step_select">Select Keyboard</string>
+    <string name="launcher_step_calibrate">Calibrate Per-Key Gestures</string>
+    <string name="launcher_test_field_label">Test your new keyboard here</string>
+    <string name="launcher_footer">An uncompromising open source keyboard.</string>
+    <string name="launcher_step_completed_desc">Completed</string>
 
     <!-- ThemeSelector.kt / CustomThemeDialog.kt -->
-    <string name="theme_selector_title" tools:ignore="MissingTranslation">Keyboard Themes</string>
-    <string name="theme_selector_create_desc" tools:ignore="MissingTranslation">Create</string>
-    <string name="theme_selector_custom" tools:ignore="MissingTranslation">Custom</string>
-    <string name="theme_selector_more_options_desc" tools:ignore="MissingTranslation">More options</string>
-    <string name="theme_selector_selected_desc" tools:ignore="MissingTranslation">Selected</string>
-    <string name="custom_theme_title" tools:ignore="MissingTranslation">Create Custom Theme</string>
-    <string name="custom_theme_name_label" tools:ignore="MissingTranslation">Theme Name</string>
-    <string name="custom_theme_name_placeholder" tools:ignore="MissingTranslation">My Theme</string>
-    <string name="custom_theme_palette" tools:ignore="MissingTranslation">Color Palette</string>
-    <string name="custom_theme_preview" tools:ignore="MissingTranslation">Preview</string>
-    <string name="custom_theme_create" tools:ignore="MissingTranslation">Create</string>
+    <string name="theme_selector_title">Keyboard Themes</string>
+    <string name="theme_selector_create_desc">Create</string>
+    <string name="theme_selector_custom">Custom</string>
+    <string name="theme_selector_more_options_desc">More options</string>
+    <string name="theme_selector_selected_desc">Selected</string>
+    <string name="custom_theme_title">Create Custom Theme</string>
+    <string name="custom_theme_name_label">Theme Name</string>
+    <string name="custom_theme_name_placeholder">My Theme</string>
+    <string name="custom_theme_palette">Color Palette</string>
+    <string name="custom_theme_preview">Preview</string>
+    <string name="custom_theme_create">Create</string>
     <!-- %1$s = the theme attribute being edited (e.g. "Key background") -->
-    <string name="theme_select_attribute" tools:ignore="MissingTranslation">Select %1$s</string>
+    <string name="theme_select_attribute">Select %1$s</string>
 </resources>

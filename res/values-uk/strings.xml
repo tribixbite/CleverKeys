@@ -958,4 +958,5 @@
     <string name="theme_selector_more_options_desc">Більше опцій</string>
     <string name="theme_selector_selected_desc">Вибрано</string>
     <string name="theme_selector_title">Теми клавіатури</string>
+    <plurals name="layout_manager_hint"><item quantity="one">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макет</item><item quantity="few">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макети</item><item quantity="many">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макетів</item><item quantity="other">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макета</item></plurals>
 </resources>

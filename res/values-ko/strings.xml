@@ -947,4 +947,5 @@
     <string name="custom_theme_preview">미리보기</string>
     <string name="custom_theme_create">만들기</string>
     <string name="theme_select_attribute">%1$s 선택</string>
+    <plurals name="layout_manager_hint"><item quantity="other">드래그하여 순서 변경 • 탭하여 편집 • 레이아웃 %1$d개</item></plurals>
 </resources>

@@ -975,4 +975,5 @@
     <string name="theme_selector_more_options_desc">Tùy chọn khác</string>
     <string name="theme_selector_selected_desc">Đã chọn</string>
     <string name="theme_selector_title">Chủ đề bàn phím</string>
+    <plurals name="layout_manager_hint"><item quantity="other">Kéo để sắp xếp lại • Nhấn để chỉnh sửa • %1$d bố cục</item></plurals>
 </resources>

@@ -947,4 +947,5 @@
     <string name="custom_theme_preview">Voorbeeld</string>
     <string name="custom_theme_create">Maken</string>
     <string name="theme_select_attribute">%1$s selecteren</string>
+    <plurals name="layout_manager_hint"><item quantity="one">Sleep om te herschikken • Tik om te bewerken • %1$d lay-out</item><item quantity="other">Sleep om te herschikken • Tik om te bewerken • %1$d lay-outs</item></plurals>
 </resources>

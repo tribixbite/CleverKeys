@@ -958,4 +958,5 @@
     <string name="custom_theme_preview">Priekšskatījums</string>
     <string name="custom_theme_create">Izveidot</string>
     <string name="theme_select_attribute">Atlasīt %1$s</string>
+    <plurals name="layout_manager_hint"><item quantity="zero">Velciet, lai pārkārtotu • Pieskarieties, lai rediģētu • %1$d izkārtojumu</item><item quantity="one">Velciet, lai pārkārtotu • Pieskarieties, lai rediģētu • %1$d izkārtojums</item><item quantity="other">Velciet, lai pārkārtotu • Pieskarieties, lai rediģētu • %1$d izkārtojumi</item></plurals>
 </resources>

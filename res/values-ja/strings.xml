@@ -946,4 +946,5 @@
     <string name="custom_theme_preview">プレビュー</string>
     <string name="custom_theme_create">作成</string>
     <string name="theme_select_attribute">%1$s を選択</string>
+    <plurals name="layout_manager_hint"><item quantity="other">ドラッグして並べ替え • タップして編集 • %1$d 個のレイアウト</item></plurals>
 </resources>
