@@ -40,10 +40,16 @@ class CandidateRanker(private val config: GeometricEngineConfig) {
      * Rank [scored] into a [PredictionResult].
      *
      * @param scored the scored survivors (order-independent — this method sorts).
+     * @param reversalCount the gesture's direction-reversal count (OQ-11 / ARC-029):
+     *   scales the softmax temperature via [effectiveTemperature] so a messy trace
+     *   emits a FLATTER (less confident) posterior. Affects the 0–1000 confidence
+     *   integers ONLY — a temperature change is monotone on the scores, so the ranked
+     *   word ORDER is identical for any value (and bit-identical end to end at the
+     *   default `reversalConfidenceTempSlope = 0`).
      * @return words + 0–1000 scores, descending, deduped lowercase-keep-best, ≤
      *   `maxResults` entries. Empty input → empty result.
      */
-    fun rank(scored: List<Scored>): PredictionResult {
+    fun rank(scored: List<Scored>, reversalCount: Int = 0): PredictionResult {
         if (scored.isEmpty()) return EMPTY
 
         // 1) Deterministic sort: score desc, ordinal asc, word lexicographic.
@@ -69,11 +75,26 @@ class CandidateRanker(private val config: GeometricEngineConfig) {
         // 3) Take the top `maxResults` after dedupe (insertion order == ranked order).
         val top = byLower.values.take(config.maxResults)
 
-        // 4) Fixed-temperature softmax over the selected scores → 0–1000 integers.
-        val scores = softmaxTo1000(top.map { it.score })
+        // 4) Fixed-temperature softmax over the selected scores → 0–1000 integers
+        //    (temperature scaled by the OQ-11 reversal-count quality signal).
+        val scores = softmaxTo1000(top.map { it.score }, effectiveTemperature(reversalCount))
         val words = ArrayList<String>(top.size)
         for (c in top) words.add(c.word)
         return PredictionResult(words, scores)
+    }
+
+    /**
+     * Effective softmax temperature for a decode with [reversalCount] direction
+     * reversals (OQ-11 / ARC-029):
+     * `T_eff = softmaxTemperature · min(1 + slope · reversals, reversalConfidenceTempMax)`.
+     * At the default slope `0` the multiplier is exactly 1 (bit-identical no-op).
+     * Confidence-only by construction — see [rank]'s KDoc.
+     */
+    internal fun effectiveTemperature(reversalCount: Int): Float {
+        val slope = config.reversalConfidenceTempSlope
+        if (slope <= 0f || reversalCount <= 0) return config.softmaxTemperature
+        val multiplier = (1f + slope * reversalCount).coerceAtMost(config.reversalConfidenceTempMax)
+        return config.softmaxTemperature * multiplier
     }
 
     /**
@@ -82,9 +103,12 @@ class CandidateRanker(private val config: GeometricEngineConfig) {
      * 1000; an all-equal set maps to flat `round(1000/K)` (the anti-fake-confidence
      * property).
      */
-    internal fun softmaxTo1000(rawScores: List<Float>): List<Int> {
+    internal fun softmaxTo1000(
+        rawScores: List<Float>,
+        temperature: Float = config.softmaxTemperature,
+    ): List<Int> {
         if (rawScores.isEmpty()) return emptyList()
-        val t = config.softmaxTemperature
+        val t = temperature
         var maxS = Float.NEGATIVE_INFINITY
         for (s in rawScores) if (s > maxS) maxS = s
         // exp of (S - max)/T; max term becomes 1.0, others ≤ 1.0.

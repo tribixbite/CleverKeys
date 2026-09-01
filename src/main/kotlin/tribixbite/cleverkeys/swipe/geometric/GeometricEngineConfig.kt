@@ -233,6 +233,43 @@ data class GeometricEngineConfig(
     val deadLayoutCoverageThreshold: Float = 0.20f,
     /** Softmax temperature T for the S(w) → 0–1000 mapping (fixed, not min-max). */
     val softmaxTemperature: Float = 1.0f,
+    /**
+     * Interior turn angle (degrees) at/above which a resampled gesture point counts as
+     * a DIRECTION REVERSAL (OQ-11 / ARC-029, `urik` §2: Urik computes and discards its
+     * `directionReversals`; we surface the count as a decode-quality signal). Distinct
+     * from [cornerAngleThresholdDeg] (55° — ordinary letter-to-letter corners): 150°+
+     * is a near-hairpin, which legitimate inter-letter geometry produces only for
+     * genuine back-tracks — so the count correlates with corner-cut/overshoot noise
+     * and gesture messiness rather than word shape.
+     */
+    val reversalAngleThresholdDeg: Float = 150f,
+    /**
+     * REVERSAL-COUNT CONFIDENCE signal strength (OQ-11 / ARC-029): each detected
+     * direction reversal in the gesture MULTIPLIES the softmax temperature by
+     * `(1 + slope)` — i.e. effective T = `softmaxTemperature · min(1 + slope · reversals,
+     * reversalConfidenceTempMax)` — flattening the emitted 0–1000 posterior for messy
+     * traces. This touches CONFIDENCE ONLY, never ranking: a temperature change is
+     * monotone on the scores, so the ranked word order is bit-identical at any value
+     * (asserted in tests). `0` (default) is a bit-identical no-op.
+     *
+     * **Default `0` (OFF) — measured, DECLINED as a default (2026-09-01, ARC-029).**
+     * The real-corpus measurement (`GeoOqSweepTest.oq11`, 8,505 decodes) refutes BOTH
+     * premises of the research doc's OQ-11: (1) reversal count does NOT predict
+     * decode error on real traces — top-1 accuracy by bucket {0, 1, 2, 3+} is
+     * 55.7 / 54.0 / 57.1 / 56.0% (flat, non-monotone), because real reversals are
+     * mostly LEGITIMATE path geometry (back-tracks between same-row letters), not
+     * noise; (2) the emitted posterior is already strongly UNDER-confident (mean
+     * top-1 confidence 28.3% vs 55.3% actual accuracy), so flattening it further
+     * moves calibration the WRONG way — 10-bin ECE degrades monotonically with
+     * slope (0.272 → 0.296 → 0.311 → 0.324 → 0.338 for slopes 0/0.15/0.3/0.5/1.0).
+     * If anything the posterior needs SHARPENING, which this knob deliberately
+     * cannot do (slope ≥ 0). [ProcessedGesture.reversalCount] stays computed and
+     * plumbed so the measurement is re-runnable on future corpora; the knob stays a
+     * documented no-op (same policy as the rejected location tunnel).
+     */
+    val reversalConfidenceTempSlope: Float = 0f,
+    /** Cap on the reversal-driven temperature MULTIPLIER (bounds the flattening). */
+    val reversalConfidenceTempMax: Float = 2.5f,
     /** Maximum ranked candidates emitted in the PredictionResult. */
     val maxResults: Int = 10,
     /** Per-index lazy full-template memo capacity (Tier B LRU). */
@@ -251,6 +288,15 @@ data class GeometricEngineConfig(
         require(shortWordShapeFloorKw > 0f) { "shortWordShapeFloorKw must be > 0, was $shortWordShapeFloorKw" }
         require(lengthRatioSigma > 0f) { "lengthRatioSigma must be > 0, was $lengthRatioSigma" }
         require(softmaxTemperature > 0f) { "softmaxTemperature must be > 0, was $softmaxTemperature" }
+        require(reversalAngleThresholdDeg > 0f && reversalAngleThresholdDeg <= 180f) {
+            "reversalAngleThresholdDeg must be in (0, 180], was $reversalAngleThresholdDeg"
+        }
+        require(reversalConfidenceTempSlope >= 0f) {
+            "reversalConfidenceTempSlope must be >= 0 (0 = off), was $reversalConfidenceTempSlope"
+        }
+        require(reversalConfidenceTempMax >= 1f) {
+            "reversalConfidenceTempMax must be >= 1 (a multiplier), was $reversalConfidenceTempMax"
+        }
         require(maxResults >= 1) { "maxResults must be >= 1, was $maxResults" }
         require(maxCandidatesScored >= 1) { "maxCandidatesScored must be >= 1, was $maxCandidatesScored" }
         require(extremityNeighbors >= 1) { "extremityNeighbors must be >= 1, was $extremityNeighbors" }

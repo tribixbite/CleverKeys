@@ -1004,3 +1004,24 @@ gate (enable slack only for traces measured messy) is a recorded follow-up idea;
 knobs remain for that experiment. Disposition: OQ-10 closes as "tried, measured,
 declined"; unit tests pin the no-op identity, the strict endpoints, and the
 tunnel-mutual-exclusion fail-fast.
+
+**OQ-11 / ARC-029 — reversal-count confidence signal: MEASURED, DECLINED (premise
+refuted).** Mechanism: the preprocessor now COUNTS near-hairpin direction reversals
+(interior turn ≥ `reversalAngleThresholdDeg`, default 150° — the same turn-angle rule as
+corner detection at a far steeper threshold) into `ProcessedGesture.reversalCount`
+instead of discarding the turn angles, and the ranker can scale its softmax temperature
+by `min(1 + slope·reversals, cap)` (`reversalConfidenceTempSlope`, default 0 =
+bit-identical no-op). Confidence-only by construction: a temperature change is monotone
+on the scores, so ranking cannot move (unit-tested), and no accuracy floor can be
+affected. The real-corpus measurement (8,505 decodes) refuted both halves of the Urik
+premise: reversal count does NOT correlate with decode error (top-1 accuracy by bucket
+{0,1,2,3+} = 55.7/54.0/57.1/56.0% — flat; real reversals are legitimate same-row
+back-track geometry, not noise), and the emitted posterior is already UNDER-confident
+(mean top-1 confidence 28.3% vs 55.3% accuracy), so reversal-driven flattening degrades
+10-bin ECE monotonically (0.272 at slope 0 → 0.338 at slope 1.0). Disposition: OQ-11
+closes as "tried, measured, declined"; the count stays computed + plumbed (re-runnable
+measurement, trivial O(N) cost), the slope stays 0. Follow-up worth recording: the
+posterior's chronic UNDER-confidence (28% vs 55%) suggests the fixed
+`softmaxTemperature = 1.0` is too HIGH for calibration purposes — a global temperature
+DECREASE, not a per-decode increase, is the direction a future calibration pass should
+sweep (nothing currently consumes absolute confidence, so this is cosmetic today).

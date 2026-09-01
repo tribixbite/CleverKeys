@@ -615,6 +615,78 @@ class GeoDecoderCoreTest {
         assertWithMessage("setting both tunnel knobs must fail fast").that(threw).isTrue()
     }
 
+    // ── OQ-11 / ARC-029: reversal count as a confidence signal ────────────────────
+
+    @Test
+    fun preprocessor_countsReversals_onBacktrack_notOnCornersOrStraights() {
+        // Counting-rule semantics on EXPLICIT polylines (no resampling — a resampled
+        // vertex that falls between two sample points legitimately splits its turn,
+        // see the corner-test note; the rule itself is what is pinned here).
+        // 180° back-track at index 2 → exactly one reversal.
+        val backtrack = floatArrayOf(0.1f, 0.5f, 0.3f, 0.5f, 0.5f, 0.5f, 0.35f, 0.5f, 0.2f, 0.5f)
+        // 90° L-turn at index 1: a legitimate letter-to-letter corner, NOT a reversal.
+        val ell = floatArrayOf(0.1f, 0.2f, 0.5f, 0.2f, 0.5f, 0.6f)
+        val straight = floatArrayOf(0.1f, 0.1f, 0.3f, 0.2f, 0.5f, 0.3f, 0.7f, 0.4f)
+        assertWithMessage("a 180-degree back-track must count exactly one reversal")
+            .that(preprocessor.countReversals(backtrack)).isEqualTo(1)
+        assertWithMessage("a 90-degree corner is NOT a reversal (150-degree threshold)")
+            .that(preprocessor.countReversals(ell)).isEqualTo(0)
+        assertWithMessage("a straight polyline has no reversals")
+            .that(preprocessor.countReversals(straight)).isEqualTo(0)
+        // But the same 90° corner IS a corner (55° threshold) — the two detectors
+        // deliberately sit at different thresholds on the same turn-angle rule.
+        assertWithMessage("the 90-degree corner must still trip the 55-degree corner rule")
+            .that(preprocessor.detectCorners(ell).size).isAtLeast(1)
+
+        // End-to-end wiring: process() must populate reversalCount from the RESAMPLED
+        // polyline it emits (field == recount on gesture.points).
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val trace = listOf(
+            TracePoint(100f, 300f, 0), TracePoint(900f, 300f, 1), TracePoint(200f, 340f, 2),
+        )
+        val g = preprocessor.process(trace, keyAreaWidthPx, keyAreaHeightPx, layout)
+        assertWithMessage("process() must wire reversalCount from the resampled polyline")
+            .that(g.reversalCount).isEqualTo(preprocessor.countReversals(g.points))
+    }
+
+    @Test
+    fun ranker_reversalTemperature_flattensConfidence_neverReordersWords() {
+        val base = CandidateRanker(config) // slope = 0 (default)
+        val signal = CandidateRanker(config.copy(reversalConfidenceTempSlope = 0.5f))
+        val scored = listOf(
+            CandidateRanker.Scored(3, "best", -1.0f),
+            CandidateRanker.Scored(1, "mid", -1.8f),
+            CandidateRanker.Scored(7, "worst", -3.0f),
+        )
+        val r0 = base.rank(scored, reversalCount = 2)
+        val rSlope0Rev = signal.rank(scored, reversalCount = 0)
+        val rSlopeRev = signal.rank(scored, reversalCount = 2)
+
+        // Slope 0 (default) ignores the count entirely; slope>0 with 0 reversals is
+        // also the identity — bit-identical confidences both ways.
+        assertWithMessage("default slope must ignore the reversal count")
+            .that(r0.scores).isEqualTo(base.rank(scored, reversalCount = 0).scores)
+        assertWithMessage("zero reversals must be the identity at any slope")
+            .that(rSlope0Rev.scores).isEqualTo(r0.scores)
+
+        // With reversals + slope, the ORDER is untouched (confidence-only contract) …
+        assertWithMessage("reversal temperature must never reorder the words")
+            .that(rSlopeRev.words).isEqualTo(r0.words)
+        // … and the posterior is strictly flatter: top-1 confidence drops, the
+        // bottom candidate's confidence rises.
+        assertWithMessage("top-1 confidence must drop for a messy (2-reversal) trace")
+            .that(rSlopeRev.scores[0]).isLessThan(r0.scores[0])
+        assertWithMessage("tail confidence must rise as the posterior flattens")
+            .that(rSlopeRev.scores[2]).isGreaterThan(r0.scores[2])
+
+        // The multiplier cap bounds the flattening.
+        val capped = CandidateRanker(
+            config.copy(reversalConfidenceTempSlope = 0.5f, reversalConfidenceTempMax = 2f)
+        )
+        assertWithMessage("cap must bound the effective temperature")
+            .that(capped.effectiveTemperature(100)).isEqualTo(config.softmaxTemperature * 2f)
+    }
+
     // ── Engine-level concurrency stress (spec threading contract / NFR-4) ─────────
 
     @Test

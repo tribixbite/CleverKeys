@@ -119,7 +119,39 @@ class GesturePreprocessor(private val config: GeometricEngineConfig) {
             endNearest = endNearest,
             startNearestInset = startNearestInset,
             endNearestInset = endNearestInset,
+            reversalCount = countReversals(resampled),
         )
+    }
+
+    /**
+     * Number of interior resampled points whose turn angle is at least
+     * `reversalAngleThresholdDeg` — near-hairpin direction REVERSALS (OQ-11 /
+     * ARC-029). The same turn-angle rule as [detectCorners] at a much steeper
+     * threshold (150° default vs 55°): ordinary letter-to-letter corners do not
+     * count, genuine back-tracks (corner-cut overshoot, jitter spikes) do. A
+     * per-decode quality signal for the ranker's confidence temperature; NEVER a
+     * filter and never an input to scoring or pruning. Zero-length segments
+     * (coincident points) contribute no reversal.
+     */
+    internal fun countReversals(poly: FloatArray): Int {
+        val count = poly.size / 2
+        if (count < 3) return 0
+        val thresholdRad = Math.toRadians(config.reversalAngleThresholdDeg.toDouble())
+        var reversals = 0
+        for (i in 1 until count - 1) {
+            val ax = poly[2 * i] - poly[2 * (i - 1)]
+            val ay = poly[2 * i + 1] - poly[2 * (i - 1) + 1]
+            val bx = poly[2 * (i + 1)] - poly[2 * i]
+            val by = poly[2 * (i + 1) + 1] - poly[2 * i + 1]
+            val na = sqrt(ax * ax + ay * ay)
+            val nb = sqrt(bx * bx + by * by)
+            if (na <= 0f || nb <= 0f) continue // coincident neighbor → no turn
+            var cos = (ax * bx + ay * by) / (na * nb)
+            if (cos > 1f) cos = 1f
+            if (cos < -1f) cos = -1f
+            if (acos(cos.toDouble()) >= thresholdRad) reversals++
+        }
+        return reversals
     }
 
     /**

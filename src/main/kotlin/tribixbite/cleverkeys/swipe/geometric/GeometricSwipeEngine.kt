@@ -95,8 +95,9 @@ class GeometricSwipeEngine(
             topK.offer(ordinal, dictionary.word(ordinal), s)
         }
 
-        // ── Rank → PredictionResult (§7). ─────────────────────────────────────────
-        return ranker.rank(topK.toList())
+        // ── Rank → PredictionResult (§7). The reversal count feeds the OQ-11
+        //    confidence temperature only (never ranking — see CandidateRanker.rank). ─
+        return ranker.rank(topK.toList(), gesture.reversalCount)
     }
 
     override fun warmUp(layout: LayoutGeometry, dictionary: GeometricDictionary): WarmUpResult =

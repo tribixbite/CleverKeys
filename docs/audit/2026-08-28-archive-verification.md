@@ -739,3 +739,15 @@ tunnel's failure mode survives the length gate and strict endpoints. Real-corpus
 counterpoint recorded: +3.0 top-1 / +1.9 top-3 overall on the 8,521-trace local replay
 (len≥4 driven) — a per-decode ADAPTIVE slack gate is the recorded follow-up; a static
 default is barred by the any-tier non-regression rule. Knobs retained default-off.
+
+**ARC-029 CLOSED — tried, measured, DECLINED (premise refuted).** OQ-11 implemented end
+to end (turn angles → `ProcessedGesture.reversalCount` in the preprocessor; optional
+reversal-scaled confidence temperature in the ranker, default-off, provably
+ranking-neutral). Real-corpus measurement (8,505 decodes): reversal count does not
+predict error (bucket accuracies 55.7/54.0/57.1/56.0% — flat), and the posterior is
+already under-confident (mean top-1 conf 28.3% vs 55.3% acc), so flattening degrades ECE
+monotonically (0.272→0.338 across slopes 0→1.0). Slope stays 0; count stays computed for
+future corpora. Recorded follow-up: global temperature is too high for calibration —
+sharpening, not flattening, is the direction (cosmetic today; nothing consumes absolute
+confidence). Wave-G geo OQ backlog (ARC-027/028/029) is now fully closed: three
+mechanisms built, three measured declines, zero default/behavior changes shipped.

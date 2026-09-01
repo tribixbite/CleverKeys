@@ -29,6 +29,10 @@ package tribixbite.cleverkeys.swipe.geometric
  *   enrolls the true word's extremity bucket (research doc §2 Step 1a).
  * @param endNearestInset k nearest key ids to the inset END endpoint. Equal to
  *   [endNearest] when `endpointInsetKw == 0`.
+ * @param reversalCount number of interior resampled points whose turn angle is at
+ *   least `reversalAngleThresholdDeg` (near-hairpin back-tracks). A per-decode
+ *   QUALITY signal (OQ-11 / ARC-029): consumed by the ranker's confidence
+ *   temperature only — NEVER by pruning or scoring (it must not affect ranking).
  */
 class ProcessedGesture(
     val points: FloatArray,
@@ -39,6 +43,7 @@ class ProcessedGesture(
     val endNearest: IntArray,
     val startNearestInset: IntArray,
     val endNearestInset: IntArray,
+    val reversalCount: Int = 0,
 ) {
     /** Number of resampled points N (== points.size / 2). */
     val pointCount: Int get() = points.size / 2
