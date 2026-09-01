@@ -51,11 +51,27 @@ class ComposeKeyNavTest {
         assertNotNull("Up arrow key should be created", up)
         assertNotNull("Down arrow key should be created", down)
 
-        // Arrow keys are Keyevent kind
+        // Arrow keys are Keyevent kind, each carrying its DPAD key code
         assertEquals("Left should be Keyevent", KeyValue.Kind.Keyevent, left!!.getKind())
         assertEquals("Right should be Keyevent", KeyValue.Kind.Keyevent, right!!.getKind())
         assertEquals("Up should be Keyevent", KeyValue.Kind.Keyevent, up!!.getKind())
         assertEquals("Down should be Keyevent", KeyValue.Kind.Keyevent, down!!.getKind())
+        assertEquals(
+            "Left must emit KEYCODE_DPAD_LEFT",
+            android.view.KeyEvent.KEYCODE_DPAD_LEFT, left.getKeyevent()
+        )
+        assertEquals(
+            "Right must emit KEYCODE_DPAD_RIGHT",
+            android.view.KeyEvent.KEYCODE_DPAD_RIGHT, right.getKeyevent()
+        )
+        assertEquals(
+            "Up must emit KEYCODE_DPAD_UP",
+            android.view.KeyEvent.KEYCODE_DPAD_UP, up.getKeyevent()
+        )
+        assertEquals(
+            "Down must emit KEYCODE_DPAD_DOWN",
+            android.view.KeyEvent.KEYCODE_DPAD_DOWN, down.getKeyevent()
+        )
     }
 
     @Test
@@ -207,16 +223,15 @@ class ComposeKeyNavTest {
     fun testKeyValueGetKeyeventCode() {
         // Sanity check that getKeyevent() works for nav keys
         // (used by Pointers and KeyEventHandler to dispatch arrow events)
+        // getKeyByName returns non-null (string-key fallback), so assert
+        // unconditionally — the old `if (x != null)` guards could never skip
+        // but read as if they might.
         val home = KeyValue.getKeyByName("home")
         val end = KeyValue.getKeyByName("end")
 
-        if (home != null) {
-            assertEquals(KeyValue.Kind.Keyevent, home.getKind())
-            assertEquals(KeyEvent.KEYCODE_MOVE_HOME, home.getKeyevent())
-        }
-        if (end != null) {
-            assertEquals(KeyValue.Kind.Keyevent, end.getKind())
-            assertEquals(KeyEvent.KEYCODE_MOVE_END, end.getKeyevent())
-        }
+        assertEquals(KeyValue.Kind.Keyevent, home.getKind())
+        assertEquals(KeyEvent.KEYCODE_MOVE_HOME, home.getKeyevent())
+        assertEquals(KeyValue.Kind.Keyevent, end.getKind())
+        assertEquals(KeyEvent.KEYCODE_MOVE_END, end.getKeyevent())
     }
 }

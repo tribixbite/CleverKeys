@@ -224,8 +224,12 @@ class GestureClassifierTest {
     fun testGestureTypesExist() {
         val tap = GestureClassifier.GestureType.TAP
         val swipe = GestureClassifier.GestureType.SWIPE
-        assertNotNull("TAP type should exist", tap)
-        assertNotNull("SWIPE type should exist", swipe)
         assertNotEquals("TAP and SWIPE should be different", tap, swipe)
+        // The classifier is binary by design — a new gesture type must
+        // consciously update every exhaustive `when` over GestureType.
+        assertEquals(
+            "GestureType must stay exactly {TAP, SWIPE}",
+            setOf(tap, swipe), GestureClassifier.GestureType.entries.toSet()
+        )
     }
 }
