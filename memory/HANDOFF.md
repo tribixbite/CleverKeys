@@ -8,35 +8,40 @@ priority.
 **Completed work is DELETED from this file, not struck through.** Git history is the record of
 what was done; this file is only what is left. Anything below is open.
 
-## Active state after local implementation commit `5fb58037`
+## State after the 2026-08-30..09-02 full-backlog campaign (all pushed through `e87c5b97`+)
 
-Local `main` contains five campaign implementation commits beyond `origin/main`: `b16d9dd9`,
-`1e2cc2a0`, `395c8341`, `7c2628f1`, and `5fb58037`. This handoff consolidation is committed
-immediately after the implementation commit. Preserve these local commits: neither commit was
-pushed. The older remote snapshot `refs/wip/campaign-20260830-1` at `0f0bc835` predates them.
+**The executable backlog is CLEARED.** Every ARC item that did not require maintainer input is
+closed — see `docs/audit/2026-08-28-archive-verification.md` (waves R1/R2/R3, D, G, J, K
+sections; every closure cites its commit) and `docs/plans/2026-08-30-full-backlog-campaign.md`
+(final wave table). Highlights: ARC-001..102 resolved or dispositioned except the
+maintainer-gated set below; el wired (langpack-sourced, synthesis-holdout tier, unannounced);
+21-locale ARC-067 complete with lint-enforced coverage (zero MissingTranslation suppressions);
+ARC-072 slices 1-3 done (`wiring/KeyboardComponentGraph`, root 158→101); French verb
+inversions shipped PAIRED-only; geo OQs closed as measured declines with re-runnable sweeps;
+uk/bg/mk/he langpacks built (tap+geometric; CTC model-blocked per rule 4).
 
-**Implemented in `5fb58037`:** ARC-055 Greek wiring; ARC-062/090 release metadata;
-ARC-065/066; ARC-086/088; ARC-091/092/093/094/095; ARC-074; ARC-058/064/077 test coverage;
-ARC-087 structured/resource-backed provenance; ARC-089; ARC-100/101/102; and ARC-076 fixture
-relocation plus deletion of `tools/test_cli_predict.ts` and `scripts/swipedata_metrics.py`.
-ARC-030 was already closed in local history. The 21 locale files currently contain only the
-ARC-066 description reword from this wave; ARC-067 remains open.
+**Verification**: `runPureTests` **2104+**, `runMockTests` **343**, lintDebug/lintVitalRelease
+green (release lint enabled and exercised); Wave J full ew-cli run **1,466 tests** — only the
+2 permanent bench reds remain (3 first-run reds were all TEST bugs, fixed `86d77a16`, zero
+production bugs); Wave K Saga device pass complete
+(`docs/eval/2026-09-02-wave-k-device-verification.md`): ARC-070 closed no-leak, warm-up
+non-issue (61 ms), #79 non-reproducing, decode e2e verified, restore verified. Fresh verbose
+release v1.6.0 (sha `6894b2cc…`) is INSTALLED on the Saga awaiting the maintainer soak.
 
-**Verification evidence:** the final guarded suites pass on the exact implementation commit:
-`runPureTests` reports 2,087 tests and `runMockTests` reports 343 tests. Focused suites also
-passed: KeyModifierMemo 7, archive-limit mock 19, KeyboardGeometry 15, provenance 12,
-NextWordPredictor 28, and GeoLocalCorpusReplay 2 (heavy replay skipped honestly, fixture test
-ran). `processDebugResources` and the complete `compileDebugAndroidTestKotlin` source set passed
-after ARC-087. All new instrumented behavior still needs Wave J.
-
-**Termux editing/build notes:** `apply_patch` is unusable here because bwrap cannot read
-`/proc/sys/kernel/overflowuid`; changes were applied as reviewed unified diffs with `git apply`,
-leaving the index untouched. Continue to use `scripts/gradle-guard.sh` for every Gradle call.
-
-**Handoff boundary:** no implementation item is intentionally left half-applied. ARC-067 was
-investigated but no translation batch was written; the locale diffs are only the completed
-ARC-066 description change. Everything listed as open below is a clean next task, not a repair
-needed to make the present source tree coherent.
+**Still open — maintainer-gated or environment-blocked (the complete list):**
+- ARC-053 minified soak (APK installed on Saga, staged at `build/outputs/apk/release/`);
+  ARC-063 keep-narrowing AFTER it.
+- ARC-054 announcement decision for ru AND el (`SERVED_BUT_NOT_YET_ANNOUNCED = {ru, el}`).
+- **The Pixel 8 Pro Wave-K pass** — device was network-unreachable all session; incl. #148.
+- Translation NATIVE REVIEW: ~8,600 machine translations (wave D + plurals + ARC-066×21).
+- ARC-060 ru geometry swap (geometry+fixture+parity as ONE unit — measured deltas material).
+- `finger_occlusion_offset` default (needs maintainer device-trace A/B).
+- ARC-104 ADB-test-script keep/delete policy; ARC-107 "escape" alias; ARC-111 dark-keyboard-
+  in-light-mode call.
+- Small open code items for any next session: ARC-106 emoji dup-keys, ARC-108 adaptive slack
+  gate (real-corpus +3.0 lead), ARC-109 provenance_usage_count plurals plumbing, ARC-110
+  DictionaryManager tab counts on config change.
+- CTC for uk/bg/mk/he/el-beyond-holdout: GPU-side models + fixtures (ML repo).
 
 ---
 

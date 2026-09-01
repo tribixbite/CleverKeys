@@ -714,6 +714,41 @@ jargon, the `command_palette_ts_*` preset labels, the launcher tagline, aggressi
 - Process addendum: never use `git stash` on the shared tree (one agent did, recovered,
   rule now recorded in the shared-tree protocol memory).
 
+## Waves J + K — 2026-09-02: campaign verification closed
+
+**Wave J (ew-cli, Pixel7 API 34)**: full run **1,466 tests** — 2 permanent by-design bench
+reds + 3 real reds, ALL THREE test bugs in campaign-written tests, all fixed and
+rerun-verified green (`86d77a16`): T13 didn't model ConfigSnapshot's 0.8×`swipe_dist_px`
+minimum cap (production fired the subkey CORRECTLY); the el row broke "PROVISIONAL ⇒
+bundled" (el is langpack-sourced by design); the sanitizer test wrote a GUESSED pref store
+while `reloadSanitizationSettings` reads Config's init-time store (now `Config.globalPrefs()`).
+Zero production bugs from the first full exercise of all campaign-written instrumented
+coverage. Also exposed + fixed: `gradle-guard`'s 256m metaspace cannot run R8 — no release
+build had ever run under the guard; `build-on-termux.sh` release path now defaults to
+2048m/1024m (`f3eb3ad8`).
+
+**Wave K (device, evidence `docs/eval/2026-09-02-wave-k-device-verification.md`, `e87c5b97`)**:
+Saga completed the full protocol on the fresh verbose v1.6.0 (sha `6894b2cc…`), restore
+verified line-by-line, app left installed for the soak. Verdicts: **ARC-070 CLOSED — no leak
+signal** (Dalvik fully GC-recovers per burst; native plateaus +1.7 MB by burst 3; settled PSS
+~202 MB; full CKMemProbe cold-start table 22.8→135.9 MB); **first-swipe warm-up NON-ISSUE**
+(61 ms first vs 23 ms warm — load happens at IME init); **ARC-068 #79: neither failure
+signature reproduces** (idle Settings emits ZERO frames; no status-bar strip); swipe decode
+e2e PASS (t→o "To"; sendevent path "world" with full pipeline logs); light/dark activities
+correct. **Pixel 8 Pro UNREACHABLE all session** (ARP no-route; 33 reconnects; not on either
+/24) — the whole pixel pass incl. the #148 repro is still OWED when it comes back online.
+
+**New items from Wave K**
+- **ARC-110 (P3, real UI bug)** — `DictionaryManagerActivity` loses its tab COUNTS on
+  configuration change (uimode flip): tabs show "(0)" while the list stays populated.
+  Reproducible; likely counts computed in state lost on recreation.
+- **ARC-111 (decision)** — the keyboard renders dark-purple under system LIGHT mode: theme
+  default or bug — maintainer call (screenshots in the Wave-K scratchpad set).
+- Protocol facts recorded in the eval doc: `am force-stop` on the IME reverts the default
+  IME to Gboard (re-`ime set` after); `debug.hwui.show_dirty_regions` needs a process
+  restart to apply AND clear; residual learned words (~10 test words) noted — clearable via
+  Settings → learned-data forget if the maintainer wants a pristine store.
+
 **Closed by R3 (Opus agents + codex + audit fixes)**: ARC-055, 059, 062, 065, 066(EN+21 MT),
 074, 075, 076, 086, 087(structure; translations = 067), 088, 089, 090, 091, 092, 093, 094,
 095, 096, 099, 100, 101, 102 — plus ARC-058/064/077 instrumented COVERAGE written (execution
