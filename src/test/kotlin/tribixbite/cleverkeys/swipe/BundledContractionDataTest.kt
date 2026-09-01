@@ -274,13 +274,16 @@ class BundledContractionDataTest {
         // projection invariant above), and `rendezvous`, which landed last because it needed the
         // cross-language collision guard rather than a data change.
         assertThat(files.getValue("fr")).hasSize(17_976)
-        assertThat(pairFiles.getValue("fr")).hasSize(183)
+        // 183 elision pairs + 272 verb inversions (2026-09-01, `FRENCH_INVERSION_VERBS` in the
+        // generator — the closed subject-pronoun family, PAIRED-only; see the inversion test).
+        assertThat(pairFiles.getValue("fr")).hasSize(455)
         val fr = coverageOf("fr")
         assertWithMessage("dead French mappings: ${deadKeysOf("fr")}").that(fr.dead).isEqualTo(0)
-        // 17_975 replace + 183 pairs. The pairs file is deliberately untouched by BOTH
-        // curated phases — every curated verdict is REPLACE, verified by regenerating: the
-        // 2026-08-20 Phase B run was +28/-0 on the replace file and left pairs at 183.
-        assertThat(fr.entries).isEqualTo(18_159)
+        // 17_976 replace + 455 pairs. The elision half of the pairs file was untouched by BOTH
+        // curated hyphen phases (every curated verdict there is REPLACE; the 2026-08-20 Phase B
+        // run was +28/-0 on the replace file and left pairs at 183); the inversion family then
+        // added its 272 PAIRED entries and nothing to the replace file (+0/-0 on regeneration).
+        assertThat(fr.entries).isEqualTo(18_431)
 
         assertThat(files.getValue("it")).hasSize(21_214)
         assertThat(pairFiles.getValue("it")).hasSize(148)
@@ -508,7 +511,7 @@ class BundledContractionDataTest {
     fun `the French landmine keys are absent from both files`() {
         val landmines = listOf(
             "weekend", "email", "haha", "minuit", "parla", "nonne", "amies",
-            "entretemps", "estelle", "aton", "dodo", "tata",
+            "entretemps", "dodo", "tata",
         )
         val replace = files.getValue("fr")
         val pairs = pairFiles.getValue("fr")
@@ -519,6 +522,141 @@ class BundledContractionDataTest {
             ).that(replace).doesNotContainKey(key)
             assertWithMessage("'$key' must not appear in the pairs file either")
                 .that(pairs).doesNotContainKey(key)
+        }
+
+        // `estelle` and `aton` were on the list above until the verb-inversion family landed
+        // (2026-09-01). They are STILL landmines for REPLACE mode — `estelle` is a native
+        // French word (@~16343) and `aton` is ASK-attested (the deity Aton) — but they are now
+        // legitimate PAIRED keys: the word keeps its slot and the inversion (`est-elle`,
+        // `a-t-on`) is appended alongside. The inversion test below pins the PAIRED entries;
+        // this test keeps the REPLACE prohibition, which is the half that must never move.
+        for (key in listOf("estelle", "aton")) {
+            assertWithMessage(
+                "'$key' must NEVER be a REPLACE key — its bare form has a reading of its own, " +
+                    "and REPLACE would destroy it in-slot. PAIRED is the only legal bucket."
+            ).that(replace).doesNotContainKey(key)
+        }
+    }
+
+    /**
+     * The French subject-pronoun VERB INVERSIONS (`est-elle`, `a-t-on`, `va-t-il` …) —
+     * PAIRED-only, closed-family, generated from one table.
+     *
+     * ### Why PAIRED and never REPLACE
+     *
+     * An inversion's apostrophe-free key can collide with a native word in ways no classifier
+     * predicts: `estelle` is a French lexicon word (the given name, @~16343 — past the rank
+     * guard, so REPLACE would destroy it in-slot exactly like `lune` → `l'une`), and `aton` is
+     * ASK-attested (the deity Aton). The safe shape for the WHOLE family is therefore PAIRED:
+     * the decoded word keeps its slot, the inversion is appended, the user picks. This is the
+     * HANDOFF §1 deferral landing, with its named landmines pinned.
+     *
+     * ### Why the family is closed
+     *
+     * A bulk hyphen extraction is the rejected alternative (16,687 keys, 73 native-word
+     * landmines — see the curated-compounds KDoc above). The inversion family instead closes
+     * over the subject pronouns {je, tu, il, elle, on, nous, vous, ils, elles} with `-t-`
+     * epenthesis for vowel-final 3sg forms, applied to a curated verb-form table in
+     * `scripts/extract_apostrophe_words.py` (`FRENCH_INVERSION_VERBS`), each form attested in
+     * the bundled fr lexicon. The shape pin below makes any hyphenated PAIRED value that is
+     * NOT a pronoun inversion fail loudly instead of riding in on the family's coattails.
+     */
+    @Test
+    fun `the French verb inversions are PAIRED, never REPLACE, and stay inside the pronoun family`() {
+        val replace = files.getValue("fr")
+        val pairs = pairFiles.getValue("fr")
+
+        // Exact-value samples spanning every person slot, plus the two landmine keys.
+        val samples = mapOf(
+            "suisje" to "suis-je",
+            "puisje" to "puis-je",           // suppletive 1sg of pouvoir (never `peux-je`)
+            "estu" to "es-tu",
+            "estil" to "est-il",
+            "estelle" to "est-elle",         // landmine: native word — in-slot survival below
+            "eston" to "est-on",
+            "aton" to "a-t-on",              // landmine: ASK-attested — in-slot survival below
+            "atil" to "a-t-il",
+            "atelle" to "a-t-elle",
+            "vatil" to "va-t-il",
+            "sommesnous" to "sommes-nous",
+            "etesvous" to "êtes-vous",
+            "ontils" to "ont-ils",
+            "sontelles" to "sont-elles",
+            "fautil" to "faut-il",           // impersonal: il only (see the agreement pins)
+        )
+        for ((key, value) in samples) {
+            assertWithMessage("fr inversion '$key' must ship as a PAIRED entry")
+                .that(pairs[key]).containsExactly(value)
+            assertWithMessage(
+                "fr inversion '$key' must NEVER be a REPLACE key — the bare form can be a " +
+                    "native word (estelle, aton) and REPLACE would destroy it in-slot"
+            ).that(replace).doesNotContainKey(key)
+        }
+
+        // The landmine bases survive IN-SLOT. `estelle` is a real lexicon word, so the beam
+        // emits it on its own frequency; PAIRED keeps it first and appends the inversion.
+        assertWithMessage("'estelle' is a native French word and must stay emittable")
+            .that(emitted.getValue("fr")).contains("estelle")
+        for (base in listOf("estelle", "aton")) {
+            val (words, _) = ContractionOverlay.apply(
+                words = listOf(base),
+                scores = listOf(900),
+                pairedVariants = { pairs[it] },
+                nonPairedMapping = { replace[it] },
+                wordOrdinal = { ordinals.getValue("fr")[it] },
+            )
+            assertWithMessage("'$base' must keep the top slot — PAIRED never substitutes")
+                .that(words.first()).isEqualTo(base)
+            assertWithMessage("the inversion must be appended alongside '$base'")
+                .that(words).hasSize(2)
+        }
+
+        // Closed-family shape: every hyphen-carrying PAIRED value is a subject-pronoun
+        // inversion. Anything else (a hyphen compound, a misclassified extraction) must be
+        // curated on its own evidence, not slipped in with the family.
+        val inversion =
+            Regex("^[a-zàâæçéèêëîïôœùûü]+(?:-t)?-(?:je|tu|il|elle|on|nous|vous|ils|elles)$")
+        val hyphenated = pairs.mapValues { (_, vs) -> vs.filter { '-' in it } }
+            .filterValues { it.isNotEmpty() }
+        for ((key, values) in hyphenated) {
+            for (value in values) {
+                assertWithMessage(
+                    "fr pairs '$key' → '$value': a hyphenated PAIRED value must be a " +
+                        "subject-pronoun inversion; anything else needs its own curation"
+                ).that(inversion.matches(value)).isTrue()
+                // Epenthetic -t- exists only for vowel-final 3sg forms before il/elle/on.
+                if ("-t-" in value) {
+                    assertWithMessage("fr '$value': -t- epenthesis is a 3sg-only phenomenon")
+                        .that(value.substringAfterLast('-')).isAnyOf("il", "elle", "on")
+                }
+            }
+        }
+        // Guard the guard: the family must actually be populated.
+        assertWithMessage("the inversion family must have shipped").that(hyphenated.size)
+            .isAtLeast(250)
+
+        // The whole family is PAIRED by design: no REPLACE value may be an inversion. The one
+        // shape-identical exemption is `rendez-vous` — formally verb+pronoun, but shipped as
+        // the NOUN (the appointment), audited into the curated hyphen-compound table with its
+        // own cross-language protection (the collision sidecar names `de` and `en`, pinned by
+        // ContractionCollisionDataTest). It predates the family and must not ride its rule.
+        val replacedInversions = replace.values.filter { inversion.matches(it) && it != "rendez-vous" }
+        assertWithMessage(
+            "REPLACE values matching the inversion family (must be empty): $replacedInversions"
+        ).that(replacedInversions).isEmpty()
+
+        // Agreement pins: impersonal verbs (falloir, pleuvoir) invert with `il` only, and
+        // pouvoir's 1sg inversion is the suppletive `puis-je` — `peux-je` is ungrammatical.
+        for (absent in listOf("fauton", "fautelle", "pleutelle", "pleuton", "peuxje")) {
+            assertWithMessage("'$absent' is ungrammatical French and must not ship")
+                .that(pairs).doesNotContainKey(absent)
+            assertThat(replace).doesNotContainKey(absent)
+        }
+
+        // Every PAIRED key must fit the CTC frame budget, or the entry is inert for swipe.
+        for (key in pairs.keys) {
+            assertWithMessage("fr pairs key '$key' must fit the 32-frame CTC budget")
+                .that(CtcDecodableLength.isDecodable(key)).isTrue()
         }
     }
 

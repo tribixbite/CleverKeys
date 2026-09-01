@@ -277,6 +277,13 @@ FORCED_APPEND = {
     # it_IT attests it; the ASK frequency list simply does not carry it (it is a
     # truncated top-N list), and "all'ego" is a near-nonexistent sequence.
     "it": {"allego"},
+    # "entretemps" is the 1990-reform spelling of "entre-temps" and a real fr
+    # lexicon word (@~30334) — but hunspell fr_FR REJECTS reform spellings, so if
+    # any future extraction ever maps it, the classifier would misfire it into
+    # REPLACE and destroy the reform spelling in-slot.  No mapping ships today
+    # (BundledContractionDataTest pins it absent from both files); this row is
+    # defence in depth for the day one does, per the HANDOFF §1 landmine note.
+    "fr": {"entretemps"},
 }
 FORCED_REPLACE = {
     # German capitalises its nouns, so the attestation probe has to try the
@@ -285,6 +292,77 @@ FORCED_REPLACE = {
     # reading is the clitic elision "ich's" (Duden D 16), which is why the
     # curation above added it in the first place.
     "de": {"ichs"},
+}
+
+# ---------------------------------------------------------------------------
+# French subject-pronoun VERB INVERSIONS (2026-09-01, HANDOFF §1 deferral).
+#
+# `est-elle`, `a-t-on`, `va-t-il` are legitimate French interrogative surfaces a
+# swiper cannot type (hyphen is not a swipe key), so they need the same overlay
+# treatment as the elisions. But their apostrophe-free keys collide with native
+# words in ways no classifier predicts — `estelle` is a French lexicon word (the
+# given name, past the rank guard) and `aton` is ASK-attested (the deity Aton) —
+# so the WHOLE family is emitted PAIRED, never REPLACE: the decoded word keeps
+# its slot and the inversion is appended alongside (`classify_mappings` receives
+# the family as forced-append input).
+#
+# The family is CLOSED, not extracted: a bulk hyphen extraction is the rejected
+# alternative (16,687 keys, 73 native-word landmines — see CURATED_CONTRACTIONS'
+# comment). Closure = a curated verb-form table, person-keyed so ungrammatical
+# combinations (`fauton`, `est-je`) cannot be generated, crossed with the subject
+# pronouns and the Grevisse epenthesis rule (vowel-final 3sg forms take `-t-`:
+# `a-t-il`, `va-t-on`, `aime-t-elle`; t/d-final forms link directly: `est-il`,
+# `prend-elle`). Notes on the person rows:
+#   - 1sg inversion is formal register and only idiomatic for a handful of verbs;
+#     pouvoir's is the suppletive `puis-je` (`peux-je` is ungrammatical, so `peux`
+#     appears in the 2sg row only).
+#   - `3sg_il` holds the impersonal verbs (falloir, pleuvoir, importer), which
+#     invert with `il` alone.
+#   - The futur/conditionnel/imparfait rows exist only for the top auxiliaries
+#     and modals, where inversion is genuinely frequent (`sera-t-il`,
+#     `pourrait-on`, `fallait-il`).
+#
+# Every form is checked against the bundled fr lexicon at generation time
+# (french_inversions), so a typo in this table dies there instead of shipping.
+# Guarded by BundledContractionDataTest's inversion test: exact-value samples,
+# the closed-family shape pin over every hyphenated PAIRED value, the agreement
+# pins, and the REPLACE prohibition.
+FRENCH_INVERSION_VERBS = {
+    "1sg": ["suis", "ai", "puis", "vais", "dois", "sais", "fais", "dis", "vois",
+            "crois"],
+    "2sg": ["es", "as", "vas", "peux", "dois", "veux", "sais", "fais", "dis",
+            "vois", "crois", "viens", "prends", "comprends", "entends",
+            "attends", "connais", "penses", "aimes", "parles", "trouves"],
+    "3sg": ["est", "a", "va", "peut", "doit", "veut", "sait", "fait", "dit",
+            "vient", "voit", "croit", "prend", "comprend", "entend", "attend",
+            "connaît", "pense", "aime", "parle", "trouve", "semble", "existe",
+            "reste", "arrive", "suffit",
+            # futur / conditionnel / imparfait of the auxiliaries and modals
+            "sera", "serait", "était", "aura", "aurait", "avait",
+            "ira", "irait", "allait", "pourra", "pourrait", "pouvait",
+            "devra", "devrait", "devait", "voudra", "voudrait", "voulait",
+            "saura", "saurait", "savait", "fera", "ferait", "faisait",
+            "dira", "dirait", "disait", "viendra", "viendrait", "venait"],
+    "3sg_il": ["faut", "faudra", "faudrait", "fallait", "pleut", "importe"],
+    "1pl": ["sommes", "avons", "allons", "pouvons", "devons", "voulons",
+            "savons", "faisons", "disons", "voyons", "prenons", "venons"],
+    "2pl": ["êtes", "avez", "allez", "pouvez", "devez", "voulez", "savez",
+            "faites", "dites", "voyez", "croyez", "prenez", "comprenez",
+            "entendez", "attendez", "connaissez", "pensez", "aimez", "parlez",
+            "trouvez", "venez"],
+    "3pl": ["sont", "ont", "vont", "peuvent", "doivent", "veulent", "savent",
+            "font", "disent", "voient", "croient", "prennent", "viennent",
+            "pensent", "aiment", "parlent", "trouvent"],
+}
+
+INVERSION_PRONOUNS = {
+    "1sg": ["je"],
+    "2sg": ["tu"],
+    "3sg": ["il", "elle", "on"],
+    "3sg_il": ["il"],
+    "1pl": ["nous"],
+    "2pl": ["vous"],
+    "3pl": ["ils", "elles"],
 }
 
 
@@ -486,6 +564,63 @@ def frequency_ordinals(lexicon: dict) -> dict:
     return ordinals
 
 
+def french_inversions(lexicon: dict) -> dict:
+    """The closed verb-inversion family over forms attested in the bundled fr lexicon.
+
+    Returns {a-z key: hyphenated display value} — e.g. {"aton": "a-t-on"}.  Every entry
+    is destined for the PAIRED bucket (build_language passes the key set to
+    classify_mappings as forced-append), because an inversion key can be a native word
+    (`estelle`) and REPLACE would destroy it in-slot.
+
+    Attestation: each verb form must project onto a surface of the bundled CleverKeys
+    lexicon, so a typo in FRENCH_INVERSION_VERBS dies here instead of shipping.  The one
+    principled exception is single-letter forms (`a`, 3sg of avoir): the bundled lexicon
+    stores NO single-letter words at all (verified: its shortest entries are 2 chars), so
+    absence there is a storage artifact, not linguistic evidence — and `a-t-il`/`a-t-on`
+    are the most frequent members of the whole family.
+    """
+    surfaces = {project_az(word) for word in lexicon} - {None}
+    out = {}
+    dropped = []
+    for person, verbs in FRENCH_INVERSION_VERBS.items():
+        for verb in verbs:
+            surface = project_az(verb)
+            if len(verb) >= 2 and surface not in surfaces:
+                dropped.append(verb)
+                continue
+            # Grevisse: vowel-final 3sg forms take the epenthetic -t- before the
+            # vowel-initial pronouns (a-t-il, va-t-on, aime-t-elle).  French 3sg forms
+            # end in -t/-d (linking directly) or a vowel; -c finals (vainc) are omitted
+            # from the table outright.
+            epenthetic = person in ("3sg", "3sg_il") and verb[-1] in "ea"
+            for pronoun in INVERSION_PRONOUNS[person]:
+                value = f"{verb}-t-{pronoun}" if epenthetic else f"{verb}-{pronoun}"
+                key = project_az(value)
+                if key is None:
+                    raise SystemExit(f"inversion {value!r} has no a-z key - unshippable")
+                # CTC frame budget: length + one blank per adjacent duplicate pair must
+                # fit the 32-frame emission head (CtcDecodableLength).
+                frames = 1 + sum(1 + (key[i] == key[i - 1]) for i in range(1, len(key)))
+                if frames > 32:
+                    raise SystemExit(f"inversion {value!r} needs {frames} CTC frames > 32")
+                prior = out.get(key)
+                if prior is not None and prior != value:
+                    raise SystemExit(
+                        f"intra-family key collision: {key!r} <- {prior!r} and {value!r}"
+                    )
+                out[key] = value
+    if dropped:
+        print(f"  inversions: dropped unattested verb forms: {', '.join(sorted(set(dropped)))}")
+    return out
+
+
+#: Languages with a generated inversion family; the generator receives the bundled
+#: lexicon and returns {key: value} mappings that classify_mappings must force APPEND.
+INVERSION_GENERATORS = {
+    "fr": french_inversions,
+}
+
+
 # ContractionOverlay.REAL_WORD_ORDINAL_MAX - the runtime rank guard.
 REAL_WORD_ORDINAL_MAX = 1200
 
@@ -530,7 +665,8 @@ def hunspell_attested(dictionary: str, words) -> set:
     return {w for w in words if w not in rejected or w.capitalize() not in rejected}
 
 
-def classify_mappings(lang: str, mappings: dict, lexicon: dict, ask_lexicon: dict) -> tuple:
+def classify_mappings(lang: str, mappings: dict, lexicon: dict, ask_lexicon: dict,
+                      forced_append_extra: frozenset = frozenset()) -> tuple:
     """
     Split reachable `mappings` into (replace, pairs).
 
@@ -565,7 +701,9 @@ def classify_mappings(lang: str, mappings: dict, lexicon: dict, ask_lexicon: dic
 
     spec = LANGUAGE_PIPELINE[lang]
     ordinals = frequency_ordinals(lexicon)
-    forced_append = FORCED_APPEND.get(lang, set())
+    # forced_append_extra carries the generated inversion family (build_language), whose
+    # membership is computed against the lexicon rather than curated as a literal set.
+    forced_append = FORCED_APPEND.get(lang, set()) | set(forced_append_extra)
     forced_replace = FORCED_REPLACE.get(lang, set())
 
     guarded = {k for k in mappings if ordinals.get(k, REAL_WORD_ORDINAL_MAX) < REAL_WORD_ORDINAL_MAX}
@@ -632,8 +770,26 @@ def build_language(lang: str, dict_path: Path) -> dict:
 
     dead = 0
     injected = 0
+    inversions = {}
     if spec["lexicon"]:
         lexicon = load_lexicon(spec["lexicon"])
+
+        # Generated verb-inversion family (fr): computed against the loaded lexicon and
+        # merged at curated precedence.  A key colliding with the hand-curated table would
+        # mean two authorities disagree about one surface - that is an error to resolve,
+        # never a silent overwrite.
+        generator = INVERSION_GENERATORS.get(lang)
+        if generator is not None:
+            inversions = generator(lexicon)
+            clash = set(inversions) & set(curated)
+            if clash:
+                raise SystemExit(f"{lang}: inversion keys collide with curated table: {sorted(clash)}")
+            for key, value in inversions.items():
+                prior = contractions.get(key)
+                if prior is not None and prior != value:
+                    print(f"  inversions: {key!r} overrides {prior!r} with {value!r}")
+            contractions.update(inversions)
+
         emitted = emitted_forms(lexicon)
         # An entry is REACHABLE if either the bundled lexicon can already emit its key,
         # or the key is a pure a-z string that the CTC adapter injects into the lexicon
@@ -651,7 +807,10 @@ def build_language(lang: str, dict_path: Path) -> dict:
         lexicon = {}
 
     if spec["classify"]:
-        replace, append = classify_mappings(lang, contractions, lexicon, ask_lexicon)
+        replace, append = classify_mappings(
+            lang, contractions, lexicon, ask_lexicon,
+            forced_append_extra=frozenset(inversions),
+        )
     else:
         # No attestation oracle for this language: every mapping stays REPLACE and
         # any already-shipped APPEND file is carried through untouched.
