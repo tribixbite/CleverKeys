@@ -59,20 +59,20 @@ are present too. Consequences:
 
 | Wave | Items | Status |
 |---|---|---|
-| A1 | ARC-099 dead swipe-prediction chain; ARC-088 KeyModifier.modify memoize | dispatched |
-| A2 | ARC-062 dead META-INF excludes; ARC-096 release lint; ARC-090 NOTICE ru; ARC-059 gate repoint | dispatched |
-| A3 | ARC-093 fractional coercion; ARC-094 learned-data preview rows; ARC-100; ARC-101 notes | dispatched |
-| B | ARC-086 layout-axis fallback card + authoring doc; ARC-075 GifPanel status decouple; ARC-102 epoch cache; ARC-065 measure-on-boot | pending |
-| C (tests) | ARC-091 zip-slip importer; ARC-092 private-copy pins; ARC-095 SuggestionBar recycling; ARC-030 prune-recall floors; ARC-074 CrashGuard seam; ARC-064 pack edges (instrumented); ARC-077 a11y CK-150-027/029; ARC-058 rotation-memory instrumented | pending |
-| D (i18n) | ARC-066 mode-desc reword (EN first) → ARC-087 provenance-sheet extraction → ARC-067 full 21-locale pass (workflow over locale files; disjoint per locale) + §3 owed strings | pending |
-| E (docs/tooling) | ARC-073 + micro-bucket; ARC-089 geo-spec annotate; ARC-076 geometry-table relocate + deletions; ARC-098 phantom-keyboard2 tooling sweep; §3 doc-claims (core-keyboard-system, testing-strategy, ARCHITECTURE_MASTER, settings-system); contraction_pairings_cleaned.json deletion | pending |
+| A1 | ARC-099 dead swipe-prediction chain; ARC-088 KeyModifier.modify memoize | complete (both committed; focused tests green) |
+| A2 | ARC-062 dead META-INF excludes; ARC-096 release lint; ARC-090 NOTICE ru; ARC-059 gate repoint | implementation complete; ARC-053 minified soak still owed |
+| A3 | ARC-093 fractional coercion; ARC-094 learned-data preview rows; ARC-100; ARC-101 notes | complete and committed |
+| B | ARC-086 layout-axis fallback card + authoring doc; ARC-075 GifPanel status decouple; ARC-102 epoch cache; ARC-065 measure-on-boot | complete and committed |
+| C (tests) | ARC-091/092/095/074/064/077/058; ARC-030 floors | implementation/host checks complete; full Wave-J device execution pending |
+| D (i18n) | ARC-066 mode-desc; ARC-087 provenance extraction; ARC-067 full locale pass | ARC-066/087 complete; ARC-067 open (384 missing entries × 21 locales) |
+| E (docs/tooling) | ARC-073, ARC-089, ARC-076, ARC-098, doc claims, orphan data | partial: ARC-089 + ARC-076 complete; remainder open |
 | F (arch) | ARC-072 slice 3: 6 Initializers → `wiring/KeyboardComponentGraph` + Bridges move + ARC-098 gesture/ cluster (reorg <100 root) | pending |
 | G (geo) | ARC-027 OQ-9 overshoot clamp; ARC-028 OQ-10 ordering slack; ARC-029 OQ-11 reversal signal — each gated on local-corpus replay evidence (no blind accuracy changes); ARC-030 floors ride | pending |
 | H (web) | ARC-071 astro 5→6 (+drop .trivyignore lines); ARC-046 web-demo regression gate + Tailwind vendoring | pending |
 | I (probe) | ML-side feasibility check (056/060/061 — scripts/artifacts on this device?); verb-inversions feasibility (extract_apostrophe_words data deps); report BLOCKED items honestly | pending |
 | J | FULL ew-cli run: all owed instrumented items (T13, ARC-083 rider, userDictionarySource seam harness, guard e2e, ARC-064, ARC-077, ARC-058) | pending |
 | K (device) | adb verification on BOTH phones: release APK (LOCAL_BUILD=true) install; ARC-070 long-run MemoryProbe + dumpsys meminfo; ARC-068 #79 hwui dirty-regions discriminator (restore prop after); ARC-069 what's scriptable (#148 pane overlay screencaps, first-swipe warm-up timing from logcat, swipe decode via `input swipe` on a focused field, light+dark screens); IME enable/set with original IME restored — leave no trace | pending |
-| L | Final consolidation: ledger/HANDOFF/this file; needs-input report to maintainer | pending |
+| L | Final consolidation: ledger/HANDOFF/this file; needs-input report to maintainer | partial: HANDOFF, backlog, and campaign state consolidated; ledger/report remain |
 
 New items found mid-campaign: append to the ledger with the next free ARC id and add to a wave.
 

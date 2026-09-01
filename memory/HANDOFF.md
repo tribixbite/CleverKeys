@@ -1,4 +1,4 @@
-# HANDOFF — updated 2026-08-27
+# HANDOFF — updated 2026-09-01
 
 Read this first, then `docs/specs/ctc-architecture-and-multiscript-guide.md` (architecture,
 routing rule, multi-script recipe, full audit table). This file is the **task list**; the guide is
@@ -8,39 +8,35 @@ priority.
 **Completed work is DELETED from this file, not struck through.** Git history is the record of
 what was done; this file is only what is left. Anything below is open.
 
-## State at `aadb45d3`
+## Active state after local implementation commit `5fb58037`
 
-Swipe is **CTC (default) + geometric**; the neural engine was deleted 2026-08-18
-(`a7d03bc8`..`83220634`), −26.4 MB APK. `CtcLanguageSupport.SUPPORTED` is **eight** languages:
-en/fr/de/es test-validated, it/pt/sv `PROVISIONAL` (scale-transferred, no per-language bar), and
-**ru** `VAL_ONLY` since 2026-08-29 (`1561dbaf`, `da012ded` — the first non-Latin script; see the
-geometric-removal section below for what is and is not established about it). **The table is no
-longer the whole membership**: since `05c0c25d` an imported LATIN language pack that measures
-a–z-typeable is served too (`CtcImportedPackSupport`), so `SUPPORTED.keys` is a lower bound and
-`CtcLanguageSupport.sourceFor`/`isSupported` is the answer.
-Gates: `runPureTests` **2034**, `runMockTests` **342** as of waves R1+R2 2026-08-29 (was
-1954/325 at `aadb45d3`), `lintDebug` 0 errors, both compiles; ALL Gradle invocations now go
-through `scripts/gradle-guard.sh` (mandatory, see CLAUDE.md);
-`assembleRelease` builds minified (R8 on since `37ed9804`) and byte-deterministic.
-Last full instrumented run (ew-cli, Pixel7 API 34, 2026-08-29, run `30e9cd42` at `20ef0dae`):
-**1,449 tests, 6 red — all explained, none a code regression**: the 2 permanent by-design
-`CtcOnnxLatencyBenchmarkTest` reds (ctc_bench models unstaged, `3fcbf7b8` — expect them in every
-full run, do not chase) + 4 `TermuxDeletionInstrumentedTest` reds caused by the TEST harness
-(a directly-constructed `BaseInputConnection` edits its own empty fake editable, so seeded
-EditText text was invisible to every read; fixed in `aadb45d3` by overriding `getEditable()` —
-re-run `76bbbeb4` is **7/7 green**, every originally-pinned DEL count correct once reads saw
-real text). On-device confirmations from this run: **UT-7 fixed** (typed `id` →
-`[I'd, id, idea…]`, single `I'll`, `im` leads — ARC-013's device half DONE); the ru
-`CtcEmissionModelParityTest` row green (packaged Cyrillic ONNX reproduces its fixture);
-`CtcImportedPackInstrumentedTest` 4/4 (pack import → CTC serving + the collision-scanner branch
-finally reached on emulator); Wave K's 223 strengthened release-gate assertions all green.
-CI is green on `github/main` (blocking Trivy gate operational after the SARIF-severity split).
+Local `main` contains five campaign implementation commits beyond `origin/main`: `b16d9dd9`,
+`1e2cc2a0`, `395c8341`, `7c2628f1`, and `5fb58037`. This handoff consolidation is committed
+immediately after the implementation commit. Preserve these local commits: neither commit was
+pushed. The older remote snapshot `refs/wip/campaign-20260830-1` at `0f0bc835` predates them.
 
-**Contractions**: the whole system is now documented as-built in
-`.claude/skills/contraction-system.md` — data model, the four guards, the regressions each one
-prevents, regeneration commands, and the invariant→test table. Read it before touching anything
-named `contraction*`. The 2026-08-20/21 cross-language, user-word and paired-base fixes live
-there and in git history, not in this file.
+**Implemented in `5fb58037`:** ARC-055 Greek wiring; ARC-062/090 release metadata;
+ARC-065/066; ARC-086/088; ARC-091/092/093/094/095; ARC-074; ARC-058/064/077 test coverage;
+ARC-087 structured/resource-backed provenance; ARC-089; ARC-100/101/102; and ARC-076 fixture
+relocation plus deletion of `tools/test_cli_predict.ts` and `scripts/swipedata_metrics.py`.
+ARC-030 was already closed in local history. The 21 locale files currently contain only the
+ARC-066 description reword from this wave; ARC-067 remains open.
+
+**Verification evidence:** the final guarded suites pass on the exact implementation commit:
+`runPureTests` reports 2,087 tests and `runMockTests` reports 343 tests. Focused suites also
+passed: KeyModifierMemo 7, archive-limit mock 19, KeyboardGeometry 15, provenance 12,
+NextWordPredictor 28, and GeoLocalCorpusReplay 2 (heavy replay skipped honestly, fixture test
+ran). `processDebugResources` and the complete `compileDebugAndroidTestKotlin` source set passed
+after ARC-087. All new instrumented behavior still needs Wave J.
+
+**Termux editing/build notes:** `apply_patch` is unusable here because bwrap cannot read
+`/proc/sys/kernel/overflowuid`; changes were applied as reviewed unified diffs with `git apply`,
+leaving the index untouched. Continue to use `scripts/gradle-guard.sh` for every Gradle call.
+
+**Handoff boundary:** no implementation item is intentionally left half-applied. ARC-067 was
+investigated but no translation batch was written; the locale diffs are only the completed
+ARC-066 description change. Everything listed as open below is a clean next task, not a repair
+needed to make the present source tree coherent.
 
 ---
 
@@ -66,99 +62,50 @@ story. Two habits came out of it and are worth keeping:
 
 ## Open work, in priority order
 
-### 0. The ARC backlog — full index in `docs/audit/2026-08-28-archive-verification.md`
+### 0. Full-backlog campaign continuation (2026-09-01)
 
-The 2026-08-28 archive-verification pass recovered 52 findings (ARC-001..052); the 2026-08-28/29
-remediation waves (A–N, commits `31685cac..b12c4365`) fixed 45 of them plus the CI security-gate
-hardening, multiscript CTC (ru + imported Latin packs), R8, the reorg and the i18n extraction —
-every fix cites its ARC ID in its commit. A **second line-by-line pass over all 27 archived
-docs (2026-08-29, ~900 instances re-verified by symbol)** added **ARC-079..098** and corrected
-two earlier ledger entries (ARC-050's annotation was false — fixed in both live docs; ARC-043
-is closed). **The open set = the ledger's ARC-053..078 + ARC-079..098 sections PLUS the
-unstruck earlier items ARC-027/028/029 (geo OQ backlog) and ARC-046 (web-demo regression gate +
-Tailwind vendoring — both halves confirmed untouched)**; this is the priority order:
+The live execution plan is `docs/plans/2026-08-30-full-backlog-campaign.md`. Waves A–C are
+implementation-complete; device-only acceptance remains in Wave J/K. Wave D has ARC-066 and
+ARC-087 complete, with ARC-067 still open. Wave E has ARC-089 and ARC-076 complete; its other
+items remain open. Implementation is committed locally at `5fb58037`; this documentation
+consolidation follows it. Nothing was pushed, tagged, or released.
 
-**Release-gated — must close before any v1.6.0 tag**
-- **ARC-053** maintainer soak of the MINIFIED release APK (R8 on since `37ed9804`; ew-cli does
-  NOT discharge this — it builds unminified debug). SCHEDULE it, don't just intend it (the M-1
-  lesson). Pair with **ARC-062** (delete the dead coroutines `META-INF/services` excludes) and
-  **ARC-096** (lint has never seen the release variant — flip `checkReleaseBuilds` or add
-  `lintVitalRelease`) in the same soak-covered change. **ARC-090** (NOTICE must enumerate the
-  ru model) rides with the ARC-054 notes decision.
-- **ARC-054** release-notes decision: main serves 8+ languages (ru val-only + eligible packs),
-  the notes say seven. Pinned by `SERVED_BUT_NOT_YET_ANNOUNCED = {ru}`. Note: tagging v1.6.0
-  now also freezes its `docs/RELEASE_RECORD.md` section (`PENDING_RELEASES` in
-  `ReleaseRecordDriftTest`).
+**Release/maintainer gates:**
+- ARC-053: minified release soak. ARC-062 and ARC-096 are implemented, but the soak remains.
+- ARC-054: decide whether release notes announce ru and newly wired el. Both remain in
+  `SERVED_BUT_NOT_YET_ANNOUNCED`; do not advertise Greek synthesis-holdout evidence as accuracy.
+- ARC-063: narrow blanket R8 keeps only after the first minified soak.
+- Nonzero `finger_occlusion_offset` default still needs maintainer device-trace A/B evidence.
 
-**Decisions (cheap, one sitting each)**
-- **ARC-059** `CtcLatencyGateTest` measures `CtcSwipeDecoder`, which release R8 strips (zero
-  prod callers) — move it to `src/test` or repoint the gate at `CtcBeamDecoder`; pick ONE.
-- **ARC-055** route Greek: two file copies + one table row + a parity run; blocked only on
-  evidence-tier appetite (no Greek probe exists at any tier).
+**Highest-value executable work:**
+- ARC-067: translate the common 384-entry missing default-resource set into all 21 locales.
+  The mode description is translated everywhere, but the 39 new provenance resources and the
+  earlier ARC-045/wave strings still fall back to English. Google/SimplyTranslate/Lingva public
+  endpoints were unavailable; MyMemory worked but cannot cover the volume under anonymous quota.
+  Preserve every `%N$` placeholder and plurals element shape; do not paste English copies.
+- Wave E remainder: ARC-073 doc/citation drift and micro-bucket, ARC-098 phantom-`keyboard2`
+  tooling sweep, the four verified-doc-claim audits, and deletion of the zero-reference
+  `contraction_pairings_cleaned.json` after a gate run.
+- ARC-072 slice 3: Initializers → `wiring/KeyboardComponentGraph`, folded with the gesture/
+  reorg portion of ARC-098. Then continue later Config/SettingsActivity decomposition slices.
+- Evidence-gated geometric OQs ARC-027/028/029: do not change defaults unless local-corpus replay
+  shows a non-regressing improvement. ARC-030 floors are already present.
+- Web: ARC-071 Astro 6 migration and ARC-046 regression gate + Tailwind vendoring.
+- ML repo: ARC-056 lexicons/langpacks, ARC-060 ru layout regeneration, ARC-061 golden-path fix.
+- ARC-044 remainder: strengthen the non-curated instrumented tests without adding Truth to
+  androidTest dependency configurations.
 
-**Maintainer-device verification (consolidated)**
-- **ARC-068** #79 visual pass (fix landed `df396f86`, but the defect postdates the original
-  report; the v1.2.5-era inset-conflict candidate + hwui discriminator are in the ledger).
-- **ARC-069** the device checklist: #148 visual, `.ckenc` export, next-word cold-start bar,
-  nonzero occlusion on a geometric layout, the collision-warning DIALOG rendering, Italian
-  swipe, first-swipe warm-up, pre-v1.6.0 backup import, pre-v1.1.86 upgrade.
-- **ARC-070** long-run `MemoryProbe` + `dumpsys meminfo` (the unexplained 2026-08-17 OOM).
+**Verification still owed:**
+- Wave J full ew-cli run for the newly compiled ARC-058/064/074/077/091/092/095 coverage plus
+  prior owed instrumented items. The ARC-058 rotation test is the second-session memory gate.
+- Wave K on both authorized phones per the plan: preserve/restore current IME and properties;
+  never framework-restart Saga. Includes ARC-068/069/070 evidence.
+- Final Wave L ledger/HANDOFF consolidation and maintainer-input report.
 
-**Second-pass P3 batch — waves R1+R2 (2026-08-29, ledger §"Remediation wave R1"/"R2") closed
-079, 080, 081, 082, 083, 084, 085, 097, plus ARC-057 and the §1 user-word-guard deferral.**
-Still open: layout-axis fallback invisible + unwritten layout authoring requirements (086);
-provenance sheet English-only ×21 (087); `KeyModifier.modify` unmemoized per frame (088);
-geometric spec pre-regeneration tables (089 — annotate only); **ARC-099** the dead
-`updateSwipePredictions`/`completeSwipePredictions`/`clearSwipePredictions` chain + its 3
-`CleverKeysService` pass-throughs (~30 lines, ARC-084's exact shape).
-LOW tail: ARC-091..095 (zip-slip-through-importer test, private-copy pins, legacy occlusion
-import decision, learned-data preview row, SuggestionBar recycling test), ARC-098 (finish
-reorg + phantom-keyboard2 tooling sweep), **ARC-100** `NON_DEFAULTED_KEYS` stale rationale,
-**ARC-101** two sibling exact-match `isUserWord` UI sites (UX decision), **ARC-102**
-user-dictionary snapshot per-decode binder read (perf decision, safe-cache design in
-`TODO(perf)`). The `-Xmx` build-infra gap is RESOLVED by `scripts/gradle-guard.sh` (`0765473d`).
-
-**Backlog (agent-executable, roughly by value)**
-- **ARC-067** the 21-locale translation pass (317 ARC-045 strings + wave strings + the two
-  stale-content fixes; details in the ledger and §3 below).
-- **ARC-064** wave-J untested edges: pack dual-decode, pack-on-non-Latin board, pack
-  contractions→trie injection. (ARC-057 CLOSED — `eac7594f`, zero over-budget, 30-frame
-  early-warning band.) **ARC-058** trie-memo `size > 2` + second-ORT-session memory under
-  3-language rotation.
-- **ARC-044 (rest)** ~85 non-curated androidTest classes are still assertion-weak (curated six
-  done, 141→223; NOTE: do NOT add Truth to androidTest — dependency-locked configs feed the
-  Trivy gate; use JUnit+messages). **ARC-074** the unexercisable `catch (Throwable)` guard.
-- **ARC-071** astro 5→6. **ARC-073** doc-path drift (~25 citations) + the phantom
-  `verify-production-ready.sh` paths. **ARC-075** GifPanelSection English-anchored status
-  match. **ARC-076** relocate the QWERTY geometry table, then delete `test_cli_predict.ts` +
-  `swipedata_metrics.py`. **ARC-066** `swipe_engine_mode_desc` reword (invalidates 21 locales
-  deliberately).
-- **ARC-072** — live plan `docs/plans/2026-08-29-arc072-config-snapshot-and-composition-root.md`
-  (supersedes the archived R3/R5 where they disagree). Slices 1+2 DONE (`caee60dc`,
-  `b081ee5c`: read-model + per-pointer/per-frame capture + `Config.edit{}`; ratchet ceiling
-  33→30). NEXT: slice 3 = Initializer collapse into `wiring/KeyboardComponentGraph`
-  (+ ARC-098 fold-in). Owed from slice 2: instrumented T13 on the next ew-cli run.
-  Later: SettingsActivity's 123 `mutableStateOf`, `CleverKeysService` static escape hatches,
-  Keyboard2View pref-write extraction.
-- **ARC-063** narrow the blanket Compose/lifecycle/savedstate/coroutines keeps AFTER the first
-  minified soak. **ARC-065** out-of-band pack import first-swipe behavior (documented; optional).
-- ML-side: **ARC-056** uk/bg/mk/he lexicons (+ hebrew branch), **ARC-060** ru layout-JSON
-  provenance regeneration, **ARC-061** `make_golden.py` home-path leak (LOW-6 falsely closed).
-- Older residuals still open: **ARC-077** = CK-150-027 (a11y dense parity) + CK-150-029
-  (touch-exploration-ON smoke incl. `dispatchKeyEvent` non-swallow).
-
-**Process notes that must survive compaction**
-- **ARC-078**: the 2026-08-28 androidTest APKs carried ~10.3 MB of UNTRACKED filesystem payload
-  (signature = stored-uncompressed ONNX under names the bench doesn't probe); a worktree build
-  of the same SHA from tracked files is 3.5 MB, matching today. AGP packages the FILESYSTEM,
-  not the index — when an APK size jumps, `unzip -l` first. (Two in-session theories about this
-  were wrong before the worktree experiment settled it; both are retracted in the ledger.)
-- The Termux-deletion harness lesson (`aadb45d3`): a directly-constructed `BaseInputConnection`
-  edits its OWN empty fake editable — override `getEditable()` or seeded EditText text is
-  invisible to every read.
-- R8 traps recorded in the ledger + `proguard-rules.pro` comments: `usage.txt` bare names mean
-  inlined-not-deleted; Kotlin package ≠ directory (judge keep rules by the `package` line);
-  the ServiceLoader/`-assumenosideeffects` interaction (ARC-062).
+**Do not reopen as pending:** ARC-055 wiring, ARC-059, ARC-062, ARC-065, ARC-066, ARC-074,
+ARC-075, ARC-076, ARC-086–096 (except maintainer/device gates above), ARC-099–102 are implemented
+in local commits. ARC-087 extraction is implemented; its locale work is intentionally counted
+under ARC-067.
 
 ### 1. Contraction follow-ups, all deferred deliberately
 
@@ -212,19 +159,10 @@ Everything is in git history and these references — do not re-derive:
   ("5 Robolectric / 6 instrumented" vs its own later 987/176/887); a `SwipeDetector` box and a
   `DATABASE_VERSION = 1` claim in `ARCHITECTURE_MASTER.md` §9/§7.2 (clipboard schema is V4); and
   an unverified file tree + "~3000 lines" in `settings-system.md`.
-- Translations owed: `pref_secondary_prediction_weight` summary (English rescoped to tap-only
-  2026-08-28/ARC-018; 21 locales still carry the unscoped wording), plus
-  `swipe_context_rescoring_*`, `collision_warning_*`,
-  `swipe_engine_pack_not_typeable` / `swipe_engine_pack_head_not_typeable` /
-  `swipe_engine_pack_unusable` (added `05c0c25d`; the imported-pack refusal reasons on the
-  swipe-engine fallback card), `gesture_touch_smoothing_*`,
-  `gesture_finger_occlusion_*`, `dict_word_too_long_for_swipe_*` ship English-only behind
-  `tools:ignore="MissingTranslation"`. The 21 `swipe_engine_mode_desc` translations were
-  machine-extended and want a native reviewer — **and the English is now CONTENT-stale** as well
-  as unreviewed: it names seven languages, predating both `ru` (2026-08-29) and imported-pack
-  membership (`05c0c25d`), which is a per-device answer a fixed list cannot carry. Rewording it
-  invalidates all 21 locales, so it wants one deliberate pass (probably: drop the enumeration and
-  point at the fallback card, which is measured and always right).
+- Translation debt is consolidated under ARC-067: the same 384 default entries are missing
+  from every locale, including `pref_secondary_prediction_weight`, backup/private-copy copy,
+  pack refusal reasons, and the new provenance sheet. `swipe_engine_mode_desc` itself is now
+  deliberately dynamic and translated in all 21 locales; `processDebugResources` passes.
 - `finger_occlusion_offset` ships at default 0. A nonzero default needs a device-trace A/B at
   {0, 8, 12.5, 16}% — the old 12.5% was never measured anywhere in this repo's history.
 
