@@ -11,25 +11,18 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.2",
-    "@astrojs/svelte": "^7.1.0",
+    "@astrojs/svelte": "^8.1.2",
     "@tailwindcss/vite": "^4.1.13",
-    "astro": "^5.14.0",
-    "js-yaml": "5.4.1",
+    "astro": "^6.4.8",
     "postcss": "8.5.26",
     "svelte": "^5.39.4",
     "svgo": "4.1.0",
-    "tailwindcss": "^4.1.13",
-    "vite": "8.2.2"
+    "tailwindcss": "^4.1.13"
   },
   "devDependencies": {
     "@rollup/rollup-android-arm64": "4.60.1",
     "@types/node": "^22.18.1",
     "typescript": "^5.9.2",
     "unist-util-visit": "5.1.0"
-  },
-  "overrides": {
-    "js-yaml": "4.3.1",
-    "vite": "6.4.3",
-    "devalue": "5.8.1"
   }
 }

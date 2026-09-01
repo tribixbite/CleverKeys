@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config'
 import svelte from '@astrojs/svelte'
 import sitemap from '@astrojs/sitemap'
 import tailwind from '@tailwindcss/vite'
+import { unified } from '@astrojs/markdown-remark'
 import remarkWikiLinks from './src/lib/remark-wiki-links.mjs'
 
 // https://astro.build/config
@@ -13,7 +14,9 @@ export default defineConfig({
     plugins: [tailwind()],
   },
   markdown: {
-    remarkPlugins: [remarkWikiLinks],
+    // astro 6: plugins move onto a `processor` built by unified() —
+    // the top-level `remarkPlugins` field is deprecated.
+    processor: unified({ remarkPlugins: [remarkWikiLinks] }),
     shikiConfig: {
       theme: 'one-dark-pro',
       wrap: true,
