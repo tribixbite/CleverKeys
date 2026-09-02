@@ -38,10 +38,16 @@ release v1.6.0 (sha `6894b2cc…`) is INSTALLED on the Saga awaiting the maintai
 - `finger_occlusion_offset` default (needs maintainer device-trace A/B).
 - ARC-104 ADB-test-script keep/delete policy; ARC-107 "escape" alias; ARC-111 dark-keyboard-
   in-light-mode call.
-- Small open code items for any next session: ARC-106 emoji dup-keys, ARC-109
-  provenance_usage_count plurals plumbing, ARC-110 DictionaryManager tab counts on config
-  change. (ARC-108 adaptive slack gate: CLOSED 2026-09-02, measured-and-parked — no
-  threshold meets both ship bars; mechanism default-off; tables in the ledger + geo spec.)
+- ~~ARC-106/108/109/110~~ ALL CLOSED 2026-09-02 (`752e07da`/`e89bc451`/`5b498d3e`/`d4af4ca8`;
+  108 measured-and-parked). ~~Pixel Wave-K pass~~ DONE (`a5ee26bc`): #148 fix visually
+  confirmed, 50/50 on-device instrumented, both devices on the nibble-inclusive v1.6.0
+  build (Sep 1 23:16) awaiting the soak.
+- **Open code items from Wave K2 (next session): ARC-112 (P2)** silent drop of
+  dense-sampled two-key swipes (`registerKeyWithFiltering` per-sample-step basis + silent
+  empty decode); **ARC-113 (P2)** ONNX `.so` 16 KB page alignment (Android 17 warns; 16
+  KB-only devices will break); ARC-114 (LOW) #79 A17 inset-strip observable.
+- ARC-111 upgraded: dark keyboard under system light mode reproduced on BOTH devices —
+  maintainer call (default or bug).
 - CTC for uk/bg/mk/he/el-beyond-holdout: GPU-side models + fixtures (ML repo).
 
 ---

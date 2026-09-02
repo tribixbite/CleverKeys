@@ -749,6 +749,48 @@ correct. **Pixel 8 Pro UNREACHABLE all session** (ARP no-route; 33 reconnects; n
   restart to apply AND clear; residual learned words (~10 test words) noted — clearable via
   Settings → learned-data forget if the maintainer wants a pristine store.
 
+## Nibble batch + Wave K2 — 2026-09-02: full convergence, both devices
+
+**Nibbles closed** (`752e07da` ARC-106 emoji-name dedup with ownership policy; `d4af4ca8`
+ARC-110 tab counts derive from loaded data; `5b498d3e` ARC-109 quantity-aware usage count in
+all 22 locales; `e89bc451` **ARC-108 measured-and-PARKED** — six sloppiness signals swept, the
+TYPICAL↔real frontier is monotone with no jointly-satisfiable threshold (best gate: weird
+TYPICAL −0.3 vs the ±0.1 bar, or real retention +1.4 vs the +2.0 bar); mechanism + both sweep
+instruments in-tree default-off, decode bit-identical; reopening prerequisite = a
+device-captured sub-pixel corpus, the current corpus's ~0.03 kw quantization inflates the
+signals). Pure suite **2115**.
+
+**Wave K2** (`a5ee26bc`, appended to the Wave-K eval doc): PIXEL full protocol complete —
+**#148 fixed behavior visually confirmed** (pane overlays a visible keyboard, prefs restored);
+ARC-070 memory PASS (the 449 MB PSS peak is GL mtrack graphics buffers, not heap); warm-up
+76ms/32ms; decode e2e PASS; **50/50 on-device instrumented** (Recreation 1, EmojiSearch 30,
+PointersGestureRouting 14 incl. T13, PrivateCopy 5 — the 1 locked-screen failure was the
+keyguard suppressing clipboard READS, green unlocked). SAGA delta PASS incl. ARC-110 counts
+surviving the uimode flip on both devices. Both devices restored-and-verified; v1.6.0
+(nibble-inclusive build, Sep 1 23:16) installed on both for the maintainer soak. Protocol
+facts: the debug APK is package `.debug` and COEXISTS with release; the Pixel's
+wireless-debug port rotates (40307→40621); a secure keyguard blocks UI work AND clipboard
+reads but not installs or most instrumented tests.
+
+**New items from K2**
+- **ARC-112 (P2)** — dense-sampled two-key swipes are SILENTLY dropped:
+  `registerKeyWithFiltering` compares `MIN_KEY_DISTANCE` (40px) against the PER-SAMPLE step,
+  not distance since the last REGISTERED key, so a slow smooth swipe on a high-report-rate
+  digitizer registers 1 key, classifies SWIPE, reaches the decoder, and dies with no commit,
+  no log, no error. Not a regression (byte-identical since Aug 29); reproduced at two
+  durations. Fix the accumulation basis + a loud empty-decode log + a pure test with
+  dense-sampled traces.
+- **ARC-113 (P2, forward-compat)** — `libonnxruntime.so`/`libonnxruntime4j_jni.so` are not
+  16 KB-page aligned (Android 17 raises a system dialog; will hard-break on 16 KB-page-only
+  devices). Fix: bump/rebuild the ORT Android dependency with page-size alignment, or repack
+  with zipalign -P 16.
+- **ARC-114 (LOW)** — #79 addendum: an inset-strip dirty-region tint exists on Android 17
+  (absent on 13), control-verified — the v1.2.5-era inset-conflict candidate gains its first
+  observable; still not the reported whole-screen flicker.
+- **ARC-111 UPGRADED** — dark-keyboard-under-system-light-mode reproduced on BOTH devices
+  across OS 13/17: it is app behavior, not a device quirk. Maintainer call stands: intended
+  default or bug.
+
 **Closed by R3 (Opus agents + codex + audit fixes)**: ARC-055, 059, 062, 065, 066(EN+21 MT),
 074, 075, 076, 086, 087(structure; translations = 067), 088, 089, 090, 091, 092, 093, 094,
 095, 096, 099, 100, 101, 102 — plus ARC-058/064/077 instrumented COVERAGE written (execution
