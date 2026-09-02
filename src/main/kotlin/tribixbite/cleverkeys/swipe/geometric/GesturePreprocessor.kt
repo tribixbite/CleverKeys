@@ -120,7 +120,45 @@ class GesturePreprocessor(private val config: GeometricEngineConfig) {
             startNearestInset = startNearestInset,
             endNearestInset = endNearestInset,
             reversalCount = countReversals(resampled),
+            nonCornerWobbleDeg = nonCornerWobbleDeg(resampled, layout),
         )
+    }
+
+    /**
+     * The ARC-108 per-decode SLOPPINESS signal: mean turn angle (degrees) at interior
+     * resampled points whose turn is BELOW `cornerAngleThresholdDeg`, measured in the
+     * PHYSICAL frame (Δv divided by the layout aspect, matching [LayoutGeometry.dKw])
+     * so the number is layout-invariant. Legitimate letter corners (turns ≥ the corner
+     * threshold) are EXCLUDED — what remains is path jitter/wobble, which the Phase-A
+     * separation measurement (`GeoOqSweepTest.oq10a`, 2026-09-01) found to be the best
+     * of five candidate signals at separating real/SLOPPY traces from CLEAN ones
+     * (CLEAN pass ≤ 8.4% at the 7° threshold vs 74.2% on the 8,521-trace real corpus).
+     * Returns 0 when no sub-corner interior turn exists (straight or degenerate paths).
+     * Consumed ONLY by [PathScorer.locationDistance]'s ordering-slack gate — never a
+     * filter, never an input to pruning.
+     */
+    internal fun nonCornerWobbleDeg(poly: FloatArray, layout: LayoutGeometry): Float {
+        val count = poly.size / 2
+        if (count < 3) return 0f
+        val aspect = layout.aspect
+        val cornerRad = Math.toRadians(config.cornerAngleThresholdDeg.toDouble())
+        var sum = 0.0
+        var n = 0
+        for (i in 1 until count - 1) {
+            val ax = (poly[2 * i] - poly[2 * (i - 1)]).toDouble()
+            val ay = ((poly[2 * i + 1] - poly[2 * (i - 1) + 1]) / aspect).toDouble()
+            val bx = (poly[2 * (i + 1)] - poly[2 * i]).toDouble()
+            val by = ((poly[2 * (i + 1) + 1] - poly[2 * i + 1]) / aspect).toDouble()
+            val na = Math.sqrt(ax * ax + ay * ay)
+            val nb = Math.sqrt(bx * bx + by * by)
+            if (na <= 0.0 || nb <= 0.0) continue // coincident neighbor → no turn
+            var cos = (ax * bx + ay * by) / (na * nb)
+            if (cos > 1.0) cos = 1.0
+            if (cos < -1.0) cos = -1.0
+            val turn = Math.acos(cos)
+            if (turn < cornerRad) { sum += turn; n++ }
+        }
+        return if (n > 0) Math.toDegrees(sum / n).toFloat() else 0f
     }
 
     /**

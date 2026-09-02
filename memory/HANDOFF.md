@@ -38,9 +38,10 @@ release v1.6.0 (sha `6894b2cc…`) is INSTALLED on the Saga awaiting the maintai
 - `finger_occlusion_offset` default (needs maintainer device-trace A/B).
 - ARC-104 ADB-test-script keep/delete policy; ARC-107 "escape" alias; ARC-111 dark-keyboard-
   in-light-mode call.
-- Small open code items for any next session: ARC-106 emoji dup-keys, ARC-108 adaptive slack
-  gate (real-corpus +3.0 lead), ARC-109 provenance_usage_count plurals plumbing, ARC-110
-  DictionaryManager tab counts on config change.
+- Small open code items for any next session: ARC-106 emoji dup-keys, ARC-109
+  provenance_usage_count plurals plumbing, ARC-110 DictionaryManager tab counts on config
+  change. (ARC-108 adaptive slack gate: CLOSED 2026-09-02, measured-and-parked — no
+  threshold meets both ship bars; mechanism default-off; tables in the ledger + geo spec.)
 - CTC for uk/bg/mk/he/el-beyond-holdout: GPU-side models + fixtures (ML repo).
 
 ---

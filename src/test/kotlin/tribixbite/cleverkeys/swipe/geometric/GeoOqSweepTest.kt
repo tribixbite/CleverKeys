@@ -99,6 +99,249 @@ class GeoOqSweepTest {
         runLocalCorpusSweep("OQ-10 orderingSlack", configs)
     }
 
+    // ── ARC-108: per-decode adaptive gate for the OQ-10 ordering slack ──────────
+
+    /**
+     * PHASE-A instrument (`-PoqOnly=oq10a`): measures the SEPARATION of candidate
+     * per-trace SLOPPINESS signals between synthetic CLEAN/TYPICAL/SLOPPY traces and
+     * the real corpus — the evidence needed to design the ARC-108 per-decode gate
+     * (enable the OQ-10 slack only for traces that look sloppy). No decoding: pure
+     * preprocessing + signal statistics, so it runs in seconds.
+     *
+     * Candidate signals (all computable from data the decode already has; kw units /
+     * physical frame so they are layout-invariant):
+     *  - `wobAll` — mean interior turn angle (deg) of the resampled polyline.
+     *  - `wobNC`  — same, restricted to sub-corner turns (< cornerAngleThresholdDeg):
+     *    "non-corner wobble", jitter that is not legitimate letter geometry.
+     *  - `arcLoss` — 1 − resampledPathKw / rawPathKw: the path-length fraction the
+     *    N-point resample smooths away (high-frequency jitter shortens under chords).
+     *  - `resid`  — mean perpendicular distance (kw) of RAW points to the chord of
+     *    their bracketing resample nodes (sub-resample-scale deviation).
+     *  - `nkr`    — mean nearest-key distance (kw) over resampled points.
+     *  - `rev`    — ARC-029's reversal count (already plumbed).
+     */
+    @Test
+    fun oq10a_gateSignals_separation() {
+        if (!oqSelected("oq10a")) return
+        // ── Synthetic tiers per layout ──
+        println("")
+        println("========== ARC-108 gate-signal separation (sample=$sampleSize seeds=$seeds) ==========")
+        for (sl in layouts) {
+            val harness = GeoAccuracyHarness(sl.layout, en, "oq10a ${sl.label}")
+            val sample = harness.stratifiedSample(sampleSize)
+            val synth = GeoTraceSynthesizer(GeometricEngineConfig())
+            val prep = GesturePreprocessor(GeometricEngineConfig())
+            val wPx = 1000f
+            val hPx = wPx / sl.layout.aspect
+            for (tier in tiers) {
+                val stats = SignalStats()
+                for (sw in sample) {
+                    for (s in 0 until seeds) {
+                        // Same splitmix seed family as the harness (mode NONE).
+                        var z = (sw.ordinal.toLong() shl 20) xor (s.toLong() shl 8) xor
+                            (tier.ordinal.toLong() shl 4)
+                        z = z xor -0x61C8864680B583EBL
+                        z *= -0x61c8864680b583ebL
+                        z = z xor (z ushr 31)
+                        val trace = synth.synthesize(sw.word, sl.layout, wPx, hPx, tier, seed = z)
+                            ?: continue
+                        if (trace.size < 3) continue
+                        stats.add(computeSignals(trace, wPx, hPx, sl.layout, prep))
+                    }
+                }
+                stats.print("${sl.label} $tier")
+            }
+        }
+        // ── Real corpus ──
+        Assume.assumeTrue(
+            "local corpus cache not found at ${GeoLocalCorpus.cacheFile.absolutePath} (skipping corpus half)",
+            GeoLocalCorpus.cacheFile.exists(),
+        )
+        val rows = GeoLocalCorpus.load()
+        val dictWords = HashSet<String>(en.size * 2)
+        for (i in 0 until en.size) dictWords.add(en.word(i).lowercase())
+        val inDict = rows.filter { dictWords.contains(it.word) }
+        val aspect = if (inDict.isNotEmpty()) inDict[0].w / inDict[0].h else GeoLocalCorpus.CANVAS_ASPECT
+        val layout = GeoLocalCorpus.buildQwertyEnglishLayout(aspect)
+        val prep = GesturePreprocessor(GeometricEngineConfig())
+        val stats = SignalStats()
+        for (r in inDict) {
+            val trace = GeoLocalCorpus.toTrace(r)
+            if (trace.size < 3) continue
+            stats.add(computeSignals(trace, r.w, r.h, layout, prep))
+        }
+        stats.print("REAL corpus (n in-dict)")
+        println("=".repeat(78))
+    }
+
+    /**
+     * PHASE-B instrument (`-PoqOnly=oq10b`): threshold sweep of the ARC-108 adaptive
+     * gate. Ship bar (both required): (a) no synthetic tier on any layout regresses
+     * beyond ±0.1 pt vs off(base); (b) the real corpus retains ≥ +2.0 top-1 of the
+     * static W1 +3.0 win. `W1static` is the Wave-G reference (gate 0 = ungated).
+     */
+    @Test
+    fun oq10b_adaptiveGate_thresholdSweep() {
+        if (!oqSelected("oq10b")) return
+        fun gated(gate: Float, minLen: Float = 3f) = GeometricEngineConfig(
+            orderingSlackTunnelW = 1,
+            orderingSlackMinTemplateLenKw = minLen,
+            orderingSlackWobbleGateDeg = gate,
+        )
+        val configs = listOf(
+            "off(base)" to GeometricEngineConfig(),
+            "W1static" to gated(0f),
+            "gate6" to gated(6f),
+            "gate7" to gated(7f),
+            "gate9" to gated(9f),
+            "gate11" to gated(11f),
+            "gate7len4" to gated(7f, minLen = 4f),
+        )
+        runSyntheticSweep("ARC-108 adaptive slack gate", configs)
+        runLocalCorpusSweep("ARC-108 adaptive slack gate", configs)
+    }
+
+    /** One trace's candidate sloppiness signals. */
+    private class Signals(
+        val wobAll: Double, val wobNC: Double, val arcLoss: Double,
+        val resid: Double, val nkr: Double, val rev: Double,
+    )
+
+    /** Distribution accumulator: prints mean + p10/25/50/75/90 per signal. */
+    private class SignalStats {
+        val cols = linkedMapOf<String, ArrayList<Double>>(
+            "wobAll" to ArrayList(), "wobNC" to ArrayList(), "arcLoss" to ArrayList(),
+            "resid" to ArrayList(), "nkr" to ArrayList(), "rev" to ArrayList(),
+        )
+        fun add(s: Signals) {
+            cols.getValue("wobAll").add(s.wobAll); cols.getValue("wobNC").add(s.wobNC)
+            cols.getValue("arcLoss").add(s.arcLoss); cols.getValue("resid").add(s.resid)
+            cols.getValue("nkr").add(s.nkr); cols.getValue("rev").add(s.rev)
+        }
+        fun print(label: String) {
+            val n = cols.getValue("wobAll").size
+            println("--- $label (n=$n) ---")
+            println("signal    mean      p10      p25      p50      p75      p90")
+            for ((name, v) in cols) {
+                if (v.isEmpty()) { println("${name.padEnd(8)}  (empty)"); continue }
+                val sorted = v.toDoubleArray().also { it.sort() }
+                fun pQ(q: Double): Double = sorted[((sorted.size - 1) * q).toInt()]
+                val mean = sorted.sum() / sorted.size
+                println(
+                    "${name.padEnd(8)}" +
+                        listOf(mean, pQ(0.10), pQ(0.25), pQ(0.50), pQ(0.75), pQ(0.90))
+                            .joinToString("") { "%9.3f".format(it) }
+                )
+            }
+            // Gate pass rates (fraction of traces with signal >= t) at candidate
+            // thresholds — the quantity that scales gated regressions / retained wins.
+            for ((name, ts) in PASS_THRESHOLDS) {
+                val v = cols.getValue(name)
+                if (v.isEmpty()) continue
+                val line = ts.joinToString("  ") { t ->
+                    val pass = v.count { it >= t }.toDouble() / v.size
+                    "≥%s:%5.1f%%".format(fmtT(t), pass * 100)
+                }
+                println("pass ${name.padEnd(8)} $line")
+            }
+        }
+        private fun fmtT(t: Double): String =
+            if (t == t.toLong().toDouble()) t.toLong().toString() else "%.2f".format(t)
+        companion object {
+            val PASS_THRESHOLDS: Map<String, DoubleArray> = linkedMapOf(
+                "wobNC" to doubleArrayOf(5.0, 7.0, 9.0, 11.0, 13.0),
+                "resid" to doubleArrayOf(0.02, 0.03, 0.04, 0.05, 0.06),
+                "arcLoss" to doubleArrayOf(0.04, 0.06, 0.08, 0.10, 0.12),
+            )
+        }
+    }
+
+    /** Compute all candidate signals for one raw trace on [layout]. */
+    private fun computeSignals(
+        trace: List<TracePoint>, wPx: Float, hPx: Float, layout: LayoutGeometry,
+        prep: GesturePreprocessor,
+    ): Signals {
+        val gesture = prep.process(trace, wPx, hPx, layout)
+        val g = gesture.points
+        val n = gesture.pointCount
+        val aspect = layout.aspect
+        val kw = layout.meanKeyWidth
+
+        // Interior turn angles of the resampled polyline, PHYSICAL frame (v/aspect).
+        var sumAll = 0.0; var cntAll = 0
+        var sumNC = 0.0; var cntNC = 0
+        val cornerRad = Math.toRadians(GeometricEngineConfig().cornerAngleThresholdDeg.toDouble())
+        for (i in 1 until n - 1) {
+            val ax = (g[2 * i] - g[2 * (i - 1)]).toDouble()
+            val ay = ((g[2 * i + 1] - g[2 * (i - 1) + 1]) / aspect).toDouble()
+            val bx = (g[2 * (i + 1)] - g[2 * i]).toDouble()
+            val by = ((g[2 * (i + 1) + 1] - g[2 * i + 1]) / aspect).toDouble()
+            val na = Math.sqrt(ax * ax + ay * ay); val nb = Math.sqrt(bx * bx + by * by)
+            if (na <= 0 || nb <= 0) continue
+            var cos = (ax * bx + ay * by) / (na * nb)
+            if (cos > 1.0) cos = 1.0; if (cos < -1.0) cos = -1.0
+            val turn = Math.acos(cos)
+            sumAll += turn; cntAll++
+            if (turn < cornerRad) { sumNC += turn; cntNC++ }
+        }
+        val wobAll = if (cntAll > 0) Math.toDegrees(sumAll / cntAll) else 0.0
+        val wobNC = if (cntNC > 0) Math.toDegrees(sumNC / cntNC) else 0.0
+
+        // Raw normalized polyline + kw arc length; arcLoss vs the resampled length.
+        val p = trace.size
+        val raw = FloatArray(p * 2)
+        for (k in 0 until p) {
+            raw[2 * k] = trace[k].x / wPx
+            raw[2 * k + 1] = trace[k].y / hPx
+        }
+        var rawKw = 0f
+        for (k in 1 until p) {
+            rawKw += layout.dKw(raw[2 * (k - 1)], raw[2 * (k - 1) + 1], raw[2 * k], raw[2 * k + 1])
+        }
+        val arcLoss = if (rawKw > 0f) (1.0 - gesture.pathLengthKw.toDouble() / rawKw) else 0.0
+
+        // Raw-point residual to the bracketing resample chord (kw). Bracketing is by
+        // the PLAIN-euclidean normalized arc fraction (matching the resampler's metric).
+        var residSum = 0.0; var residCnt = 0
+        var totalPlain = 0f
+        val cum = FloatArray(p)
+        for (k in 1 until p) {
+            val dx = raw[2 * k] - raw[2 * (k - 1)]
+            val dy = raw[2 * k + 1] - raw[2 * (k - 1) + 1]
+            totalPlain += Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+            cum[k] = totalPlain
+        }
+        if (totalPlain > 0f) {
+            for (k in 0 until p) {
+                val f = cum[k] / totalPlain * (n - 1)
+                val i = f.toInt().coerceIn(0, n - 2)
+                // Distance raw[k] → segment (node i, node i+1), physical kw frame.
+                val px0 = raw[2 * k].toDouble(); val py0 = (raw[2 * k + 1] / aspect).toDouble()
+                val ax = g[2 * i].toDouble(); val ay = (g[2 * i + 1] / aspect).toDouble()
+                val bx = g[2 * (i + 1)].toDouble(); val by = (g[2 * (i + 1) + 1] / aspect).toDouble()
+                val vx = bx - ax; val vy = by - ay
+                val len2 = vx * vx + vy * vy
+                val t = if (len2 > 0) (((px0 - ax) * vx + (py0 - ay) * vy) / len2).coerceIn(0.0, 1.0) else 0.0
+                val qx = ax + vx * t; val qy = ay + vy * t
+                residSum += Math.sqrt((px0 - qx) * (px0 - qx) + (py0 - qy) * (py0 - qy)) / kw
+                residCnt++
+            }
+        }
+        val resid = if (residCnt > 0) residSum / residCnt else 0.0
+
+        // Mean nearest-key distance (kw) over resampled points.
+        var nkrSum = 0.0
+        for (i in 0 until n) {
+            val ids = layout.nearestKeys(g[2 * i], g[2 * i + 1], 1)
+            if (ids.isEmpty()) continue
+            val key = layout.keys[ids[0]]
+            nkrSum += layout.dKw(g[2 * i], g[2 * i + 1], key.cx, key.cy).toDouble()
+        }
+        val nkr = nkrSum / n
+
+        return Signals(wobAll, wobNC, arcLoss, resid, nkr, gesture.reversalCount.toDouble())
+    }
+
     // ── OQ-11 / ARC-029: reversal-count confidence signal ───────────────────────
 
     /**

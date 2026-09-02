@@ -1025,3 +1025,61 @@ posterior's chronic UNDER-confidence (28% vs 55%) suggests the fixed
 `softmaxTemperature = 1.0` is too HIGH for calibration purposes — a global temperature
 DECREASE, not a per-decode increase, is the direction a future calibration pass should
 sweep (nothing currently consumes absolute confidence, so this is cosmetic today).
+
+## As-Built Notes — ARC-108 per-decode adaptive slack gate (2026-09-02)
+
+The Wave-G OQ-10 closure recorded one follow-up: the ordering slack is +3.0 top-1 /
++1.9 top-3 on the 8,521-trace real corpus yet regresses CLEAN/TYPICAL synthetics, so a
+PER-DECODE gate — enable the slack only for traces that measure sloppy — might capture
+the real win without violating the any-tier rule. ARC-108 built and measured that gate.
+**Outcome: PARKED — no threshold satisfies both ship bars; the mechanism ships
+default-off.**
+
+**Mechanism (in-tree, default-off).** The preprocessor computes
+`ProcessedGesture.nonCornerWobbleDeg`: the mean PHYSICAL-frame turn angle (degrees) at
+interior resampled points whose turn is below `cornerAngleThresholdDeg` — path jitter
+that is not legitimate letter-corner geometry (O(N), computed always, like
+`reversalCount`). `PathScorer.locationDistance` consumes it through the new knob
+`orderingSlackWobbleGateDeg`: when `> 0` (and the slack itself is enabled), the ±W
+interior min applies only to decodes with wobble ≥ the threshold; `0` is the ungated
+static Wave-G behavior; overall default remains `orderingSlackTunnelW = 0`, so shipped
+decodes are bit-identical. Unit tests pin: gate closed below threshold (strict
+identity), open at/above (inclusive ≥, equals the static slack), gate-0 inertness, the
+length gate never bypassed, straight/corner/jitter signal semantics, `process()`
+plumbing, and negative-knob fail-fast.
+
+**Phase A — signal separation** (`GeoOqSweepTest.oq10a`, preprocessing-only, 750
+traces/tier × qwerty/dvorak/weird + the real corpus). Five candidates measured
+(mean interior turn; non-corner wobble; resample arc-loss `1 − resampledKw/rawKw`;
+mean raw-point-to-resample-chord residual kw; mean nearest-key residual kw; plus
+ARC-029's reversal count). Non-corner wobble wins: at ≥7° CLEAN passes 3.5/3.5/8.4%
+(qwerty/dvorak/weird), TYPICAL 34.4/27.3/47.1%, SLOPPY 63.1/60.7/68.1%, REAL **74.2%**.
+The raw-residual signal separates REAL from TYPICAL harder (≥0.04 kw: REAL 42.7% vs
+TYPICAL 5.6–11.5%) but with a worse CLEAN tail and too little real recall; nearest-key
+residual is dominated by word geometry and layout pitch (and the REAL gap is partly a
+corpus-grid artifact); reversal count does not separate (REAL median 1, tiers overlap).
+Caveat recorded: the corpus's quantized coordinates (~0.03 kw y-quantum) inflate
+wobble/residual slightly relative to live sub-pixel touch streams.
+
+**Phase B — threshold sweep** (`oq10b`, the Wave-G instrument: synthetic 250×3 × 3
+layouts × 3 tiers + full real-corpus replay; W=1/minLen=3, gates {6,7,9,11}°, plus a
+minLen=4 variant). Ship bars: (a) no synthetic tier on any layout beyond ±0.1 pt vs
+off; (b) real corpus retains ≥ +2.0 of the +3.0 static top-1 win. Results: the gate
+DOES kill the CLEAN regression everywhere (worst CLEAN cell −0.1 at gate6/7, 0.0 at
+gate9/11 — vs −5.9 static) and SLOPPY keeps +1.2…+2.3, but TYPICAL harm and real
+retention trade off monotonically with no feasible point: gate6 +2.7 real but TYPICAL
+−1.1; gate7 +2.5 / TYPICAL −0.7 (top-1 qw/dv) and weird top-3 −0.8; gate9 +2.0 /
+TYPICAL −0.7 (dvorak); gate11 is fully green on qwerty+dvorak and weird CLEAN, but
+weird TYPICAL top-3/top-5 sit at −0.3 and real retention drops to +1.4. minLen=4 does
+not change the picture (identical to gate7 to 0.1 pt). Root cause: real traces live in
+the TYPICAL↔SLOPPY band of every per-trace sloppiness signal (Phase A shows the same
+overlap), so a gate open for ≳2/3 of real traces necessarily admits 10–30% of TYPICAL
+synthetics — the same pinch Wave-G measured from the static side. Determinism: the full
+`oq10b` sweep re-run is bit-identical.
+
+**Disposition.** No default change; `orderingSlackWobbleGateDeg` stays 0 and the slack
+stays off; no accuracy floor moved. Both instruments are re-runnable
+(`scripts/gradle-guard.sh runPureTests -PtestClass=swipe.geometric.GeoOqSweepTest
+-PgeoSweep=true -PoqOnly=oq10a|oq10b`). If a future corpus of DEVICE-captured
+(sub-pixel) traces materializes, re-run Phase A first — the wobble threshold calibrated
+on this quantized corpus should not be reused as-is. ARC-108 closes measured-and-parked.

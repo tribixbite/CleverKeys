@@ -819,3 +819,56 @@ future corpora. Recorded follow-up: global temperature is too high for calibrati
 sharpening, not flattening, is the direction (cosmetic today; nothing consumes absolute
 confidence). Wave-G geo OQ backlog (ARC-027/028/029) is now fully closed: three
 mechanisms built, three measured declines, zero default/behavior changes shipped.
+
+## ARC-108 — 2026-09-02: per-decode adaptive gate for the OQ-10 ordering slack (measured, PARKED)
+
+**Verdict: tried, measured, PARKED — no default change ships.** The Wave-G follow-up
+(gate the +3.0-real-corpus ordering slack on a per-trace sloppiness signal so CLEAN
+traces keep exact ordering) was built end to end and swept; no threshold satisfies both
+ship bars simultaneously, and per the campaign rule the mechanism is committed
+default-off with the tables recorded.
+
+**Phase A — signal selection** (`GeoOqSweepTest.oq10a`, 750 traces/tier × qwerty/dvorak/
+weird + 8,521 real traces; five candidates: mean interior turn, non-corner wobble,
+resample arc-loss, raw-to-chord residual, nearest-key residual, plus ARC-029's reversal
+count). Winner: **non-corner wobble** — the mean physical-frame turn angle (deg) at
+interior resampled points below the 55° corner threshold, i.e. jitter that is not
+letter geometry. Separation at the ≥7° threshold: CLEAN passes 3.5–8.4% per layout,
+TYPICAL 27–47%, SLOPPY 61–68%, REAL corpus 74.2%. Runner-up (raw-to-chord residual)
+separates REAL from TYPICAL slightly better but has a worse CLEAN tail; reversal count
+does not separate at all (real median 1). Wired as
+`ProcessedGesture.nonCornerWobbleDeg` (preprocessor, O(N)) →
+`PathScorer.locationDistance` gate knob `orderingSlackWobbleGateDeg` (0 = ungated;
+default-off overall via `orderingSlackTunnelW = 0`); unit tests pin closed-below/
+open-at-threshold, gate-0 static equivalence, length-gate independence, straight/corner/
+jitter signal semantics, and negative-knob fail-fast.
+
+**Phase B — threshold sweep** (`oq10b`, same instrument as Wave-G: 250×3 stratified
+sample × 3 layouts × 3 tiers + full local real-corpus replay; W=1, minLen=3 kw, gate
+∈ {6,7,9,11}° plus minLen=4 variant). Synthetic top-1/3/5 deltas vs off, worst cell per
+config, and real-corpus overall top-1 delta:
+
+| config    | CLEAN worst | TYPICAL worst | SLOPPY range (top-1) | REAL top-1 |
+|-----------|------------|---------------|----------------------|-----------|
+| W1static  | −5.9 (dvorak) | −2.9 (dvorak) | +1.3…+3.2 | **+3.0** |
+| gate6     | −0.1 | −1.1 (qw/dv top-1) | +1.7…+2.3 | +2.7 |
+| gate7     | −0.1 | −0.8 (weird top-3) | +1.5…+2.1 | +2.5 |
+| gate7len4 | −0.1 | −0.8 (weird top-3) | +1.5…+2.1 | +2.5 |
+| gate9     | 0.0  | −0.7 (dvorak top-1) | +1.5…+2.1 | +2.0 |
+| gate11    | 0.0  | **−0.3 (weird top-3/5)** | +1.2…+1.9 | **+1.4** |
+
+Ship bars: (a) no synthetic tier beyond ±0.1 pt on any layout; (b) real corpus retains
+≥ +2.0 of the static +3.0. The frontier is monotone and the bars never overlap: every
+config retaining ≥ +2.0 (gate ≤ 9°) regresses TYPICAL by −0.3…−1.1 somewhere, and the
+only near-clean config (gate11: qwerty+dvorak fully green, weird TYPICAL top-3/5 −0.3)
+retains just +1.4. Root cause is the same pinch Wave-G measured from the other side:
+real traces occupy the TYPICAL-to-SLOPPY band of every sloppiness signal, so any gate
+open for most real traces admits a material fraction of TYPICAL synthetics. Determinism:
+the full `oq10b` sweep re-run produced bit-identical tables. Signal caveat recorded: the
+corpus's quantized coordinates (~0.03 kw y-quantum) inflate wobble/residual slightly vs
+live sub-pixel touch streams, so any future on-device gate calibration should re-measure
+thresholds on device-captured traces rather than reusing these.
+
+Disposition: gate mechanism + both instruments committed default-off and re-runnable
+(`-PgeoSweep=true -PoqOnly=oq10a|oq10b`); defaults bit-identical (slack W=0); no floor
+moved; ARC-108 CLOSED as measured-and-parked.

@@ -105,7 +105,7 @@ class PathScorer(private val config: GeometricEngineConfig) {
         val wShape = (templateLenKw / config.shortWordShapeFloorKw).coerceIn(0f, 1f)
 
         // ── Location channel (§4): α-end-weighted absolute kw distance, unnormalized.
-        val dLoc = locationDistance(g, t, layout, templateLenKw)
+        val dLoc = locationDistance(g, t, layout, templateLenKw, gesture.nonCornerWobbleDeg)
 
         // ── Combined score (§5) — log-domain Bayes; all channel terms ≤ 0.
         var s = -wShape * dShape * dShape / twoSigmaShapeSq
@@ -201,17 +201,28 @@ class PathScorer(private val config: GeometricEngineConfig) {
      * strictly, so end-weighted endpoint fidelity is never relaxed. Short templates
      * take the strict path bit-identically. The two tunnel knobs are mutually
      * exclusive (config init enforces it).
+     *
+     * The ARC-108 PER-DECODE ADAPTIVE GATE (`orderingSlackWobbleGateDeg > 0`)
+     * additionally requires the GESTURE to measure sloppy: [gestureWobbleDeg]
+     * (the preprocessor's [ProcessedGesture.nonCornerWobbleDeg]) must be at/above
+     * the threshold or the slack is skipped and the strict path taken — so clean
+     * traces keep exact interior ordering while messy ones get the tolerance the
+     * real corpus rewards. At the default `0` the gate is inert (static Wave-G
+     * behavior); [gestureWobbleDeg] defaults to +∞ so direct callers that predate
+     * the gate see gate-open (i.e. unchanged) semantics.
      */
     internal fun locationDistance(
         g: FloatArray,
         t: FloatArray,
         layout: LayoutGeometry,
         templateLenKw: Float = Float.POSITIVE_INFINITY,
+        gestureWobbleDeg: Float = Float.POSITIVE_INFINITY,
     ): Float {
         val legacyW = config.locationTunnelHalfWidth
         val slackW = if (
             config.orderingSlackTunnelW > 0 &&
-            templateLenKw >= config.orderingSlackMinTemplateLenKw
+            templateLenKw >= config.orderingSlackMinTemplateLenKw &&
+            (config.orderingSlackWobbleGateDeg <= 0f || gestureWobbleDeg >= config.orderingSlackWobbleGateDeg)
         ) config.orderingSlackTunnelW else 0
         var acc = 0f
         if (legacyW <= 0 && slackW <= 0) {

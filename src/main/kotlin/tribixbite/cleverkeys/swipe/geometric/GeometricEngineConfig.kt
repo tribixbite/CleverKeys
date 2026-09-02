@@ -100,6 +100,38 @@ data class GeometricEngineConfig(
      * `orderingSlackTunnelW == 0`.
      */
     val orderingSlackMinTemplateLenKw: Float = 3.0f,
+    /**
+     * PER-DECODE ADAPTIVE GATE for the OQ-10 ordering slack (ARC-108). When `> 0`
+     * (and `orderingSlackTunnelW > 0`), the slack applies ONLY to decodes whose
+     * gesture measures SLOPPY: [ProcessedGesture.nonCornerWobbleDeg] — the mean
+     * physical-frame turn angle (degrees) at interior resampled points below the
+     * corner threshold, i.e. path jitter that is not legitimate letter geometry —
+     * must be ≥ this threshold. Clean traces keep exact strict ordering, so the
+     * slack's collision cost cannot touch them. `0` (default) means UNGATED: the
+     * static Wave-G behavior whenever the slack itself is enabled.
+     *
+     * Signal choice (measured 2026-09-01, `GeoOqSweepTest.oq10a`, 750 traces/tier ×
+     * 3 layouts + 8,521 real traces): non-corner wobble separates real/SLOPPY from
+     * CLEAN best of 5 candidates (CLEAN pass at ≥7° is 3.5–8.4% across layouts vs
+     * REAL 74.2%; raw-residual and arc-loss have worse CLEAN tails or worse real
+     * recall; ARC-029's reversal count doesn't separate at all — real median 1).
+     *
+     * **Default `0` (OFF) — measured, PARKED (2026-09-02, ARC-108).** The `oq10b`
+     * threshold sweep (gates {6,7,9,11}° at W=1/minLen=3, plus minLen=4; synthetic
+     * 250×3 × 3 layouts × 3 tiers + the 8,521-trace real-corpus replay) shows the
+     * gate WORKS as designed — the static slack's CLEAN regressions (−5.9 worst)
+     * vanish (0.0/−0.1 at every gate) and SLOPPY keeps +1.2…+2.3 — but no threshold
+     * meets BOTH ship bars: every gate retaining ≥ +2.0 of the real corpus's +3.0
+     * top-1 win (gate ≤ 9°) still regresses TYPICAL −0.3…−1.1 somewhere, and the
+     * only near-clean gate (11°: qwerty+dvorak fully green; weird TYPICAL top-3/5
+     * −0.3) retains just +1.4. Root cause: real traces occupy the TYPICAL↔SLOPPY
+     * band of every per-trace sloppiness signal, so a gate open for most real
+     * traces admits a material TYPICAL fraction. Full tables + Phase-A separation
+     * data: spec As-Built ARC-108 note + the audit ledger. Re-measure Phase A
+     * before reusing this threshold on device-captured (sub-pixel) traces — the
+     * corpus's coordinate quantization inflates the wobble signal slightly.
+     */
+    val orderingSlackWobbleGateDeg: Float = 0f,
     /** λ_f, frequency-prior weight: prior term = −λ_f·ln(1 + ordinalRank). §5 derivation. */
     val frequencyWeight: Float = 0.12f,
     /**
@@ -312,6 +344,9 @@ data class GeometricEngineConfig(
         }
         require(orderingSlackMinTemplateLenKw >= 0f) {
             "orderingSlackMinTemplateLenKw must be >= 0, was $orderingSlackMinTemplateLenKw"
+        }
+        require(orderingSlackWobbleGateDeg >= 0f) {
+            "orderingSlackWobbleGateDeg must be >= 0 (0 = ungated), was $orderingSlackWobbleGateDeg"
         }
         require(locationTunnelHalfWidth == 0 || orderingSlackTunnelW == 0) {
             "the legacy global location tunnel and the OQ-10 ordering slack are mutually " +

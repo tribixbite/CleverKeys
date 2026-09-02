@@ -615,6 +615,109 @@ class GeoDecoderCoreTest {
         assertWithMessage("setting both tunnel knobs must fail fast").that(threw).isTrue()
     }
 
+    // ── ARC-108: per-decode adaptive gate for the ordering slack ──────────────────
+
+    @Test
+    fun pathScorer_orderingSlackWobbleGate_closedBelowThreshold_openAtThreshold() {
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val strict = PathScorer(config) // slack off entirely
+        val static = PathScorer(config.copy(orderingSlackTunnelW = 1, orderingSlackMinTemplateLenKw = 3f))
+        val gated = PathScorer(
+            config.copy(
+                orderingSlackTunnelW = 1,
+                orderingSlackMinTemplateLenKw = 3f,
+                orderingSlackWobbleGateDeg = 7f,
+            ),
+        )
+        val n = config.resamplePoints
+        val g = straightRightGesture(n)
+        // Interior index-shift wobble template — the case the slack strictly helps.
+        val tWobble = g.copyOf()
+        for (i in 1 until n - 1) tWobble[2 * i] = g[2 * (if (i < n - 1) i + 1 else i)]
+
+        val dStrict = strict.locationDistance(g, tWobble, layout)
+        val dSlack = static.locationDistance(g, tWobble, layout, templateLenKw = 5f)
+        assertWithMessage("precondition: the slack must move this constructed case")
+            .that(dSlack).isLessThan(dStrict)
+
+        // (a) CLEAN gesture (wobble below the gate) → gate CLOSED → bit-identical strict.
+        assertWithMessage("below-threshold wobble must keep strict interior ordering")
+            .that(gated.locationDistance(g, tWobble, layout, templateLenKw = 5f, gestureWobbleDeg = 3f))
+            .isEqualTo(dStrict)
+
+        // (b) SLOPPY gesture (wobble at/above the gate) → gate OPEN → the slack path.
+        assertWithMessage("at-threshold wobble must open the gate (inclusive >=)")
+            .that(gated.locationDistance(g, tWobble, layout, templateLenKw = 5f, gestureWobbleDeg = 7f))
+            .isEqualTo(dSlack)
+        assertWithMessage("above-threshold wobble must open the gate")
+            .that(gated.locationDistance(g, tWobble, layout, templateLenKw = 5f, gestureWobbleDeg = 12f))
+            .isEqualTo(dSlack)
+
+        // (c) Gate knob 0 (default) = UNGATED static Wave-G behavior at any wobble.
+        assertWithMessage("gate 0 must be inert (static slack) even for a clean gesture")
+            .that(static.locationDistance(g, tWobble, layout, templateLenKw = 5f, gestureWobbleDeg = 0f))
+            .isEqualTo(dSlack)
+
+        // (d) The gate never bypasses the LENGTH gate: short template stays strict
+        // even when the gesture is sloppy.
+        assertWithMessage("a below-minLen template must stay strict regardless of wobble")
+            .that(gated.locationDistance(g, tWobble, layout, templateLenKw = 1f, gestureWobbleDeg = 30f))
+            .isEqualTo(dStrict)
+    }
+
+    @Test
+    fun preprocessor_nonCornerWobble_zeroOnStraight_cornersExcluded_positiveOnJitter() {
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val prep = GesturePreprocessor(config)
+
+        // Straight line: every interior turn is 0° (< corner threshold) → mean 0.
+        val straight = straightRightGesture(config.resamplePoints)
+        assertWithMessage("a straight path has zero non-corner wobble")
+            .that(prep.nonCornerWobbleDeg(straight, layout)).isEqualTo(0f)
+
+        // L-path with one 90° PHYSICAL corner and otherwise straight legs: the corner
+        // turn (>= 55°) is EXCLUDED, the straight legs contribute 0 → wobble stays 0.
+        // (Explicit polyline — no resampling — like the reversal counting-rule test.)
+        val a = layout.aspect
+        val ell = floatArrayOf(
+            0.1f, 0.5f, 0.2f, 0.5f, 0.3f, 0.5f,          // rightward leg
+            0.3f, 0.5f + 0.1f * a, 0.3f, 0.5f + 0.2f * a, // downward leg (physical 90°)
+        )
+        assertWithMessage("legitimate corners must not count as wobble")
+            .that(prep.nonCornerWobbleDeg(ell, layout)).isEqualTo(0f)
+
+        // Small zig-zag jitter (sub-corner turns) → strictly positive wobble.
+        val n = 12
+        val zig = FloatArray(n * 2)
+        for (i in 0 until n) {
+            zig[2 * i] = 0.1f + 0.06f * i
+            zig[2 * i + 1] = 0.5f + (if (i % 2 == 0) 0.01f else -0.01f) * a
+        }
+        val wobble = prep.nonCornerWobbleDeg(zig, layout)
+        assertWithMessage("sub-corner zig-zag jitter must yield positive wobble")
+            .that(wobble).isGreaterThan(0f)
+        assertWithMessage("this jitter's turns must all be below the corner threshold")
+            .that(wobble).isLessThan(config.cornerAngleThresholdDeg)
+
+        // The full preprocess pipeline plumbs the signal through (real trace, real frame).
+        val trace = ArrayList<TracePoint>(n)
+        for (i in 0 until n) trace.add(TracePoint(zig[2 * i] * 1000f, zig[2 * i + 1] * 500f, i.toLong()))
+        val gesture = prep.process(trace, 1000f, 500f, layout)
+        assertWithMessage("process() must populate nonCornerWobbleDeg")
+            .that(gesture.nonCornerWobbleDeg).isGreaterThan(0f)
+    }
+
+    @Test
+    fun config_orderingSlackWobbleGate_negativeFailsFast() {
+        var threw = false
+        try {
+            GeometricEngineConfig(orderingSlackWobbleGateDeg = -1f)
+        } catch (e: IllegalArgumentException) {
+            threw = true
+        }
+        assertWithMessage("a negative wobble gate must fail fast").that(threw).isTrue()
+    }
+
     // ── OQ-11 / ARC-029: reversal count as a confidence signal ────────────────────
 
     @Test

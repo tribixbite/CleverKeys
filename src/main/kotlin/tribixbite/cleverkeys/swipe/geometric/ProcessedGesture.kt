@@ -33,6 +33,12 @@ package tribixbite.cleverkeys.swipe.geometric
  *   least `reversalAngleThresholdDeg` (near-hairpin back-tracks). A per-decode
  *   QUALITY signal (OQ-11 / ARC-029): consumed by the ranker's confidence
  *   temperature only — NEVER by pruning or scoring (it must not affect ranking).
+ * @param nonCornerWobbleDeg mean PHYSICAL-frame turn angle (degrees) at interior
+ *   resampled points whose turn is BELOW `cornerAngleThresholdDeg` — path jitter
+ *   that is not legitimate letter-corner geometry. The ARC-108 per-decode
+ *   SLOPPINESS signal: gates the OQ-10 ordering slack
+ *   (`orderingSlackWobbleGateDeg`) so clean traces keep strict interior ordering.
+ *   0 when no sub-corner interior turn exists (degenerate/straight traces).
  */
 class ProcessedGesture(
     val points: FloatArray,
@@ -44,6 +50,7 @@ class ProcessedGesture(
     val startNearestInset: IntArray,
     val endNearestInset: IntArray,
     val reversalCount: Int = 0,
+    val nonCornerWobbleDeg: Float = 0f,
 ) {
     /** Number of resampled points N (== points.size / 2). */
     val pointCount: Int get() = points.size / 2
