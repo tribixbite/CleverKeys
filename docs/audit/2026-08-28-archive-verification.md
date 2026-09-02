@@ -820,6 +820,15 @@ reads but not installs or most instrumented tests.
   across OS 13/17: it is app behavior, not a device quirk. Maintainer call stands: intended
   default or bug.
 
+**ARC-112/113 closure — 2026-09-02**: ARC-112 FIXED (`fc3f5197`, pure `SwipeKeyRegistrar`
+with the chatter property pinned; fail-first reproduced the device symptom `[t,o]` vs `[t]`)
+and **DEVICE-CONFIRMED on the Pixel** — the exact previously-silent dense 350 ms t→o swipe now
+commits "To" with a full slate (evidence: `arc112-after-swipe.png`, Sep 2 fresh build).
+ARC-113 closed DOCUMENTED-BLOCKED (`2a365208`): 1.21.1 is the first fully 16 KB-aligned ORT
+AAR (empirical ELF parse of five versions), but every release ≥1.21.0 declares minSdk 24 and
+the new libs import bionic API-23 symbols — the unblock is the maintainer's minSdk 21→24
+distribution decision, recipe documented at the dependency line.
+
 **Closed by R3 (Opus agents + codex + audit fixes)**: ARC-055, 059, 062, 065, 066(EN+21 MT),
 074, 075, 076, 086, 087(structure; translations = 067), 088, 089, 090, 091, 092, 093, 094,
 095, 096, 099, 100, 101, 102 — plus ARC-058/064/077 instrumented COVERAGE written (execution
