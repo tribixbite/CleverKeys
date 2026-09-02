@@ -70,6 +70,35 @@ dependencies {
   implementation "androidx.savedstate:savedstate-ktx:1.2.1"
 
   implementation "org.burnoutcrew.composereorderable:reorderable:0.9.6"
+  // ARC-113 (2026-09-02): BLOCKED on a minSdk decision — do not bump casually.
+  //
+  // 16 KB-page alignment: this 1.20.0 AAR's arm64 libonnxruntime.so is already
+  // 16 KB-aligned (PT_LOAD p_align 0x4000) but libonnxruntime4j_jni.so is NOT
+  // (0x1000) — that lib is what Android 17 names in its compatibility dialog,
+  // and it will fail to load on 16 KB-page-only devices. The FIRST release with
+  // both arm64 libs at p_align 0x4000 is 1.21.1 (verified by ELF program-header
+  // parse of the Maven Central AARs: 1.20.0 ❌, 1.21.0 ❌, 1.21.1 ✅, 1.22.0 ✅,
+  // 1.23.0 ✅; the fix came from the release build toolchain — no source commit
+  // in the v1.21.0...v1.21.1 range mentions it, github.com/microsoft/onnxruntime
+  // issues #24902/#25859 track the saga).
+  //
+  // WHY NOT BUMPED: every release ≥ 1.21.0 declares AAR minSdkVersion 24
+  // ("align with React Native 0.76", v1.21.0 release notes) and the manifest
+  // merger hard-fails against this project's minSdk 21. tools:overrideLibrary
+  // is NOT a safe out: the 1.21.1 .so imports `__register_atfork` and `stderr`
+  // (bionic symbols introduced at API 23), so dlopen fails on API 21/22 — and
+  // OrtEnvironment.getEnvironment() is a constructor-time field initializer
+  // (CtcEngineAdapter), where the resulting UnsatisfiedLinkError (an Error;
+  // the model-load latch catches only Exception) would crash the IME process.
+  // No packaging config fixes ELF alignment either: the loader mmaps segments
+  // per p_align whether libs are extracted or loaded in-place, so
+  // useLegacyPackaging / zipalign -P 16 only ever fix ZIP placement.
+  //
+  // UNBLOCK PATH (maintainer decision): raise minSdk 21 → 24, then bump BOTH
+  // onnxruntime coordinates (this one and the testImplementation JVM jar) to
+  // 1.21.1+, regenerate gradle.lockfile per the recipe above, and re-run the
+  // CTC parity suites — a parity fixture change means the runtime changed
+  // numerics and must be investigated, not regenerated.
   implementation "com.microsoft.onnxruntime:onnxruntime-android:1.20.0"
   implementation "com.google.code.gson:gson:2.10.1"
 
@@ -89,6 +118,9 @@ dependencies {
   // stub on the unit-test classpath.
   testImplementation "org.json:json:20231013"
   // ONNX Runtime for JVM unit tests (Android runtime doesn't work on host JVM)
+  // Keep in lockstep with onnxruntime-android above (ARC-113): the pure-JVM
+  // runner loads the AAR's bionic natives under this jar's Java layer, and a
+  // JNI/Java version mismatch is undefined.
   testImplementation "com.microsoft.onnxruntime:onnxruntime:1.20.0"
 
   androidTestImplementation "androidx.test:core:1.5.0"
