@@ -258,9 +258,10 @@ class DictionaryManagerActivity : AppCompatActivity() {
             override fun createFragment(position: Int) = fragments[position]
         }
 
-        // CRITICAL: Set offscreenPageLimit to keep all fragments in memory
-        // Without this, ViewPager2 only loads visible tab + 1 adjacent tab
-        // This causes counts to show 0 for unvisited tabs after rotation
+        // CRITICAL: Set offscreenPageLimit to keep all fragments in memory.
+        // Without this, ViewPager2 only loads visible tab + 1 adjacent tab, so
+        // unvisited tabs would have no loaded data to count. (This alone did NOT
+        // fix counts after recreation — that needed liveFragment(), see ARC-110.)
         viewPager.offscreenPageLimit = fragments.size - 1
 
         // Connect TabLayout with ViewPager2
@@ -361,9 +362,34 @@ class DictionaryManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Resolve the LIVE fragment for a tab position.
+     *
+     * ARC-110: after a configuration change, FragmentStateAdapter restores the
+     * previously-attached WordListFragment instances from the FragmentManager and never
+     * calls createFragment() for them — while onCreate's setupViewPager() rebuilds
+     * [fragments] with FRESH instances that are never attached. Reading counts (or
+     * dispatching filter/refresh) through those orphans made every tab show "(0)" after
+     * a recreation (uimode flip / rotation) even though the restored fragments rendered
+     * a fully-populated list. Counts and list content must derive from the SAME loaded
+     * data, so every read/dispatch resolves the fragment actually attached to the
+     * FragmentManager: FragmentStateAdapter adds it with tag "f" + itemId, and itemId
+     * defaults to the adapter position. The constructed instance is only a fallback for
+     * the first-creation window before the adapter attaches it (when it IS the object
+     * the adapter is about to attach).
+     */
+    private fun liveFragment(position: Int): WordListFragment? =
+        (supportFragmentManager.findFragmentByTag("f$position") as? WordListFragment)
+            ?: fragments.getOrNull(position)
+
+    /** Apply [action] to the live (attached) fragment of every tab. See [liveFragment]. */
+    private fun forEachLiveFragment(action: (WordListFragment) -> Unit) {
+        for (i in fragments.indices) liveFragment(i)?.let(action)
+    }
+
     private fun performSearch(query: String) {
         // v1.2.7: Apply search to all fragments with sort type
-        fragments.forEach { it.filter(query, currentSort) }
+        forEachLiveFragment { it.filter(query, currentSort) }
 
         // Update tab counts after search completes
         // Small delay to ensure fragments have updated their counts
@@ -379,7 +405,9 @@ class DictionaryManagerActivity : AppCompatActivity() {
     private fun updateTabCounts() {
         for (i in fragments.indices) {
             val tab = tabLayout.getTabAt(i) ?: continue
-            val count = fragments[i].getFilteredCount()
+            // ARC-110: count comes from the live fragment — the same object whose adapter
+            // renders the list — never from a detached instance in [fragments].
+            val count = liveFragment(i)?.getFilteredCount() ?: 0
             val title = tabTitles.getOrElse(i) { "Tab $i" }
             tab.text = "$title\n($count)"
         }
@@ -413,7 +441,7 @@ class DictionaryManagerActivity : AppCompatActivity() {
      * Called by fragments when words are modified to refresh other tabs
      */
     fun refreshAllTabs() {
-        fragments.forEach { it.refresh() }
+        forEachLiveFragment { it.refresh() }
 
         // Update tab counts to reflect changes
         searchHandler.postDelayed({
