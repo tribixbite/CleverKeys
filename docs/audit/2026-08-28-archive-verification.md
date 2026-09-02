@@ -780,10 +780,39 @@ reads but not installs or most instrumented tests.
   no log, no error. Not a regression (byte-identical since Aug 29); reproduced at two
   durations. Fix the accumulation basis + a loud empty-decode log + a pure test with
   dense-sampled traces.
+  **2026-09-02 FIXED.** Registration extracted to a pure android-free core
+  (`gesture/SwipeKeyRegistrar.kt`) that `ImprovedSwipeGestureRecognizer` delegates to; the
+  minimum-travel gate now measures straight-line displacement from the last REGISTRATION
+  POINT — invariant under sample density, while the property `MIN_KEY_DISTANCE` exists for
+  (boundary chatter on a key seam must not register the neighbour) is preserved and pinned
+  by test. One verbose-gated log at the recognizer's empty-decode return names the cause
+  (keys-touched count) — the CtcDecodeDelivery "no path answers silently" philosophy.
+  `SwipeKeyRegistrarTest` (6 tests, pure tier): fail-first red captured on the extracted
+  pre-fix basis — dense 417 px/10 px-step trace registered `[t]` only, exactly the device
+  symptom; the pass-through-then-dwell case failed for the same root cause; jitter +
+  coarse controls green throughout. Geo replay/accuracy suites unaffected (the replay
+  harness feeds decoders directly; no test references the recognizer). λ/γ/β/prune and all
+  scoring untouched — input-side only.
 - **ARC-113 (P2, forward-compat)** — `libonnxruntime.so`/`libonnxruntime4j_jni.so` are not
   16 KB-page aligned (Android 17 raises a system dialog; will hard-break on 16 KB-page-only
   devices). Fix: bump/rebuild the ORT Android dependency with page-size alignment, or repack
   with zipalign -P 16.
+  **2026-09-02 investigation — BLOCKED on a minSdk decision (documented at the dependency
+  line in build.gradle).** Facts established by ELF program-header parse of the Maven Central
+  AARs: only `libonnxruntime4j_jni.so` is the offender (`libonnxruntime.so` is already
+  p_align 0x4000 in 1.20.0; the jni lib is 0x1000); the FIRST fully-aligned release is
+  **1.21.1** (1.21.0 still 0x1000; 1.21.1/1.22.0/1.23.0 all 0x4000). The bump was attempted
+  and reverted: every release ≥ 1.21.0 declares AAR **minSdkVersion 24** and the manifest
+  merger hard-fails against our minSdk 21 (README-documented Android 5.0+ support).
+  `tools:overrideLibrary` is unsafe — the 1.21.1 libs import `__register_atfork`/`stderr`
+  (bionic API-23 symbols; dlopen fails on API 21/22) and `OrtEnvironment.getEnvironment()`
+  runs as a constructor-time initializer in `CtcEngineAdapter` where `UnsatisfiedLinkError`
+  is uncaught (the load latch catches `Exception` only) → IME crash-loop on 5.0/5.1.
+  zipalign -P 16 / `useLegacyPackaging` cannot fix ELF segment alignment (loader mmaps per
+  p_align whether extracted or in-place). **Unblock = maintainer raises minSdk 21 → 24**,
+  then: bump both ORT coordinates to 1.21.1+, lockfile regen per recipe, CTC parity suites
+  must hold (a fixture delta = runtime numerics changed → investigate, never regenerate),
+  and the real-graph check remains CtcEmissionModelParityTest on the next instrumented run.
 - **ARC-114 (LOW)** — #79 addendum: an inset-strip dirty-region tint exists on Android 17
   (absent on 13), control-verified — the v1.2.5-era inset-conflict candidate gains its first
   observable; still not the reported whole-screen flicker.

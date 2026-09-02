@@ -3,8 +3,6 @@ package tribixbite.cleverkeys
 import android.graphics.PointF
 import android.util.Log
 import java.util.ArrayList
-import java.util.LinkedList
-import java.util.Queue
 import kotlin.collections.List // Ensure kotlin.collections.List is used
 import kotlin.math.abs
 import kotlin.math.max
@@ -22,23 +20,32 @@ open class ImprovedSwipeGestureRecognizer {
 
     private val _rawPath: MutableList<PointF> = ArrayList()
     private val _smoothedPath: MutableList<PointF> = ArrayList()
-    private val _touchedKeys: MutableList<KeyboardData.Key> = ArrayList()
     private val _timestamps: MutableList<Long> = ArrayList()
-    private val _recentKeys: Queue<KeyboardData.Key> = LinkedList()
     private var _probabilisticDetector: ProbabilisticKeyDetector? = null
     private var _currentKeyboard: KeyboardData? = null
-    
+
+    /**
+     * The key-registration filter (extracted pure core, ARC-112). Owns the touched-key
+     * list, the recent-duplicate window, and the minimum-travel gate measured from the
+     * last REGISTRATION POINT (not the per-sample step — see SwipeKeyRegistrar's KDoc for
+     * why the old basis silently dropped dense-sampled swipes).
+     */
+    private val _registrar = SwipeKeyRegistrar<KeyboardData.Key>(
+        minKeyDistance = { MIN_KEY_DISTANCE },
+        minDwellTimeMs = { MIN_DWELL_TIME_MS },
+        highVelocityThreshold = { HIGH_VELOCITY_THRESHOLD },
+    )
+    private val _touchedKeys: MutableList<KeyboardData.Key>
+        get() = _registrar.touchedKeys
+
     private var _isSwipeTyping: Boolean = false
     private var _startTime: Long = 0
     private var _lastPointTime: Long = 0
     private var _totalDistance: Float = 0f
-    private var _lastKey: KeyboardData.Key? = null
-    private var _lastRegisteredKey: KeyboardData.Key? = null
-    
+
     // Thresholds for improved filtering
     private val SMOOTHING_WINDOW: Int
         get() = Config.globalConfig().swipe_smoothing_window.coerceIn(1, 7)
-    private val DUPLICATE_CHECK_WINDOW = 5 // Check last 5 keys for duplicates
     private val MAX_POINT_INTERVAL_MS = 500L
 
     // Configurable thresholds from settings
@@ -93,10 +100,7 @@ open class ImprovedSwipeGestureRecognizer {
         
         // Only register starting key if it's alphabetic
         if (key != null && isValidAlphabeticKey(key)) {
-            _touchedKeys.add(key)
-            _lastKey = key
-            _lastRegisteredKey = key
-            _recentKeys.offer(key)
+            _registrar.registerStartKey(key, x, y)
         }
         
         _totalDistance = 0f
@@ -162,7 +166,7 @@ open class ImprovedSwipeGestureRecognizer {
         
         // Process key registration with improved filtering
         if (key != null && isValidAlphabeticKey(key)) {
-            registerKeyWithFiltering(key, distance, timeSinceLastPoint)
+            registerKeyWithFiltering(key, x, y, timeSinceLastPoint)
         }
     }
     
@@ -192,54 +196,19 @@ open class ImprovedSwipeGestureRecognizer {
     }
     
     /**
-     * Register key with improved filtering logic
+     * Register key with improved filtering logic — delegates to [SwipeKeyRegistrar], the
+     * extracted pure core holding the four gates (same-key, dwell/velocity, recent
+     * duplicate, minimum travel). ARC-112: passes the sample POSITION, not the per-sample
+     * step distance, so the minimum-travel gate is measured from the last registration
+     * point and a high-report-rate digitizer (tiny steps) can no longer starve key
+     * registration. MIN_KEY_DISTANCE keeps its original purpose: boundary chatter — a
+     * finger oscillating a few px on a key seam — must not register the neighbour key.
      */
-    private fun registerKeyWithFiltering(key: KeyboardData.Key, distance: Float, timeDelta: Long) {
-        // Skip if same as last key
-        if (key == _lastKey) {
-            return
-        }
-        
-        // Check dwell time - must be on key for minimum time
-        if (timeDelta < MIN_DWELL_TIME_MS && _recentVelocity > HIGH_VELOCITY_THRESHOLD) {
-            // Moving too fast, likely just passing through
-            return
-        }
-        
-        // Check if key is in recent history (avoid duplicates)
-        if (isRecentDuplicate(key)) {
-            return
-        }
-        
-        // Check minimum distance from last registered key
-        if (_lastRegisteredKey != null && distance < MIN_KEY_DISTANCE) {
-            return
-        }
-        
-        // Register the key
-        _touchedKeys.add(key)
-        _lastKey = key
-        _lastRegisteredKey = key
-        
-        // Update recent keys queue
-        _recentKeys.offer(key)
-        if (_recentKeys.size > DUPLICATE_CHECK_WINDOW) {
-            _recentKeys.poll()
-        }
+    private fun registerKeyWithFiltering(key: KeyboardData.Key, x: Float, y: Float, timeDelta: Long) {
+        _registrar.offer(key, x, y, timeDelta, _recentVelocity)
     }
-    
-    /**
-     * Check if key is a recent duplicate
-     */
-    private fun isRecentDuplicate(key: KeyboardData.Key): Boolean {
-        for (recentKey in _recentKeys) {
-            if (recentKey == key) {
-                return true
-            }
-        }
-        return false
-    }
-    
+
+
     /**
      * End the swipe gesture and return the touched keys if it was swipe typing
      */
@@ -291,7 +260,16 @@ open class ImprovedSwipeGestureRecognizer {
                 _isSwipeTyping
             )
         }
-        
+
+        // ARC-112: a gesture the classifier already routed to the swipe decoder ("Sending
+        // to swipe decoder") can still die RIGHT HERE with no commit and no signal when
+        // key registration starved (the Wave-K2 dense-sampling finding logged exactly
+        // "Keys touched: 1" then went silent). Same philosophy as CtcDecodeDelivery: no
+        // path is allowed to answer silently — name the cause before returning nothing.
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d("SwipeRecognizer", "Empty swipe decode: keysTouched=${_touchedKeys.size} " +
+                "isSwipeTyping=$_isSwipeTyping totalDistance=$_totalDistance — no key path, nothing committed")
+        }
         return SwipeResult(null, null, null, 0f, false)
     }
     
@@ -491,12 +469,9 @@ open class ImprovedSwipeGestureRecognizer {
     fun reset() {
         _rawPath.clear()
         _smoothedPath.clear()
-        _touchedKeys.clear()
         _timestamps.clear()
-        _recentKeys.clear()
+        _registrar.reset()
         _isSwipeTyping = false
-        _lastKey = null
-        _lastRegisteredKey = null
         _totalDistance = 0f
         _recentVelocity = 0f
         // v1.2.8: Clear shift flags on reset

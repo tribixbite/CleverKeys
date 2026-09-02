@@ -474,6 +474,11 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ShortSwipeIntentTest',
     'tribixbite.cleverkeys.customization.ShortSwipeMappingTest',
     'tribixbite.cleverkeys.GestureTest',
+    // ARC-112 (2026-09-02): the swipe key-registration filter's pure core. Pins the
+    // travel-since-last-registration distance basis (dense-sampled two-key swipes were
+    // silently dropped when the gate compared the per-sample step) and the boundary-
+    // chatter property MIN_KEY_DISTANCE exists to provide.
+    'tribixbite.cleverkeys.SwipeKeyRegistrarTest',
     'tribixbite.cleverkeys.ModmapTest',
     'tribixbite.cleverkeys.ComposeKeyPureTest',
     'tribixbite.cleverkeys.KeyValueParserTest',
