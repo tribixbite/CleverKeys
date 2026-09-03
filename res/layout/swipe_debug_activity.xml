@@ -120,6 +120,107 @@
         android:layout_height="1dp"
         android:background="#4a4a4a" />
 
+    <!-- Swipe Playground result panel (2026-09-03): committed word, engine/latency meta,
+         and the live candidate ranking with scores for the LAST swipe. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#232323"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/result_word"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/debug_result_placeholder"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/result_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/debug_meta_placeholder"
+            android:textColor="#9e9e9e"
+            android:textSize="12sp"
+            android:fontFamily="monospace" />
+
+        <TextView
+            android:id="@+id/candidates_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="#8ec9ff"
+            android:textSize="13sp"
+            android:fontFamily="monospace"
+            android:lineSpacingExtra="2dp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Trace-recording controls: count, JSON export + share, playground clear. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="#2d2d2d"
+        android:paddingStart="12dp"
+        android:paddingEnd="8dp">
+
+        <TextView
+            android:id="@+id/trace_count"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/debug_trace_count_placeholder"
+            android:textColor="#c0c0c0"
+            android:textSize="12sp"
+            android:fontFamily="monospace" />
+
+        <Button
+            android:id="@+id/export_traces_button"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/debug_export_traces"
+            android:textColor="#80cbc4"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/clear_traces_button"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/debug_clear_traces"
+            android:textColor="#ef9a9a"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- Privacy disclosure: playground-local recording, contains typed content. -->
+    <TextView
+        android:id="@+id/privacy_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#2d2d2d"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="6dp"
+        android:text="@string/debug_privacy_note"
+        android:textColor="#ffcc80"
+        android:textSize="11sp" />
+
+    <!-- Divider line -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#4a4a4a" />
+
     <!-- Scrollable log output - takes remaining space -->
     <ScrollView
         android:id="@+id/log_scroll"

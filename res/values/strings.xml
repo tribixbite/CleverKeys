@@ -318,6 +318,14 @@
     <string name="debug_clear_logs" translatable="false">Clear logs</string>
     <string name="debug_input_hint" translatable="false">Type or swipe here…</string>
     <string name="debug_waiting_input" translatable="false">Waiting for swipe input…\n</string>
+    <!-- Swipe Playground additions (2026-09-03): live ranking panel + trace recording.
+         Same non-localized policy as the rest of this internal diagnostic screen. -->
+    <string name="debug_result_placeholder" translatable="false">Swipe in the field above</string>
+    <string name="debug_meta_placeholder" translatable="false">Candidates, scores and latency appear here per swipe</string>
+    <string name="debug_trace_count_placeholder" translatable="false">…</string>
+    <string name="debug_export_traces" translatable="false">Export</string>
+    <string name="debug_clear_traces" translatable="false">Clear traces</string>
+    <string name="debug_privacy_note" translatable="false">⚠ Recording while this screen is open — recorded traces contain the words you swipe.</string>
 
     <!-- ══════════════════════════════════════════════════════════════════
          WP8 — Compose Text-literal extraction (theme picker, short-swipe &

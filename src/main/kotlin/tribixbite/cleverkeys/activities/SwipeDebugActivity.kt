@@ -16,20 +16,40 @@ import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import android.widget.EditText
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import org.json.JSONObject
+import tribixbite.cleverkeys.ml.PlaygroundPayload
+import tribixbite.cleverkeys.ml.PlaygroundTraceRecorder
+import tribixbite.cleverkeys.ml.SwipeMLDataStore
 import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.Executors
 
 /**
- * Debug activity for swipe typing pipeline analysis.
- * Displays real-time logging of every step in the swipe prediction process.
+ * Swipe Playground — the swipe-testing surface for developers and data donation.
+ *
+ * While this screen is open the IME runs in debug mode and, for every swipe typed into
+ * the test field, the playground:
+ *  - shows the committed word, decoder engine, layout, decode latency and the full
+ *    candidate ranking with scores (live panel + scrolling log);
+ *  - records the trace — raw points (x, y, t), the active layout's per-key geometry,
+ *    the candidate ranking and the committed word — into [SwipeMLDataStore]
+ *    (source `"playground"`; see [PlaygroundTraceRecorder] for the explicit-session
+ *    privacy rationale and duplicate-avoidance vs the gated global collection);
+ *  - offers Export (JSON file + ACTION_SEND share sheet, absolute path shown for
+ *    `adb pull`) and Clear (playground-only or all trace rows).
+ *
+ * Recording is playground-local: it starts when this activity enables debug mode in
+ * [onCreate] and stops when [onDestroy] disables it. The UI discloses that recorded
+ * traces contain the words the user swipes.
  */
 class SwipeDebugActivity : Activity() {
 
@@ -41,8 +61,18 @@ class SwipeDebugActivity : Activity() {
     private lateinit var copyButton: ImageButton
     private lateinit var clearButton: ImageButton
     private lateinit var saveButton: ImageButton
+    private lateinit var resultWord: TextView
+    private lateinit var resultMeta: TextView
+    private lateinit var candidatesList: TextView
+    private lateinit var traceCount: TextView
+    private lateinit var exportTracesButton: Button
+    private lateinit var clearTracesButton: Button
 
     private val logBuffer = StringBuilder()
+
+    // DB work (counts, export, clear) off the main thread; single-threaded so the
+    // count shown after an export/clear reflects that operation's outcome.
+    private val dbExecutor = Executors.newSingleThreadExecutor()
 
     companion object {
         const val ACTION_DEBUG_LOG = "tribixbite.cleverkeys.DEBUG_LOG"
@@ -57,6 +87,22 @@ class SwipeDebugActivity : Activity() {
                 if (message != null) {
                     appendLog(message)
                 }
+            }
+        }
+    }
+
+    /** One decoded swipe: update the live panel, append the log block, refresh counts. */
+    private val swipeResultReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (PlaygroundTraceRecorder.ACTION_SWIPE_RESULT != intent.action) return
+            val raw = intent.getStringExtra(PlaygroundTraceRecorder.EXTRA_PAYLOAD) ?: return
+            try {
+                val payload = JSONObject(raw)
+                showSwipeResult(payload)
+                appendLog(PlaygroundPayload.formatLogBlock(payload))
+                refreshTraceCount()
+            } catch (e: Exception) {
+                appendLog("(malformed playground payload: ${e.message})\n")
             }
         }
     }
@@ -78,6 +124,12 @@ class SwipeDebugActivity : Activity() {
         copyButton = findViewById(R.id.copy_button)
         clearButton = findViewById(R.id.clear_button)
         saveButton = findViewById(R.id.save_button)
+        resultWord = findViewById(R.id.result_word)
+        resultMeta = findViewById(R.id.result_meta)
+        candidatesList = findViewById(R.id.candidates_list)
+        traceCount = findViewById(R.id.trace_count)
+        exportTracesButton = findViewById(R.id.export_traces_button)
+        clearTracesButton = findViewById(R.id.clear_traces_button)
 
         // Back button closes activity
         backButton.setOnClickListener {
@@ -94,6 +146,14 @@ class SwipeDebugActivity : Activity() {
 
         saveButton.setOnClickListener {
             saveLogsToFile()
+        }
+
+        exportTracesButton.setOnClickListener {
+            exportRecordedTraces()
+        }
+
+        clearTracesButton.setOnClickListener {
+            confirmClearRecordedTraces()
         }
 
         // Setup input field with auto-scroll behavior
@@ -129,36 +189,50 @@ class SwipeDebugActivity : Activity() {
         logScroll.descendantFocusability = ViewGroup.FOCUS_BEFORE_DESCENDANTS
         logOutput.isFocusable = false
 
-        // Register broadcast receiver for debug logs
-        val filter = IntentFilter(ACTION_DEBUG_LOG)
+        // Register broadcast receivers: raw pipeline log lines + per-swipe result payloads.
         // RECEIVER_NOT_EXPORTED (4-arg registerReceiver) requires API 26. On API 21-25 use
         // the 3-arg form; an app-internal broadcast is not reachable by other apps pre-26.
+        val filter = IntentFilter(ACTION_DEBUG_LOG)
+        val resultFilter = IntentFilter(PlaygroundTraceRecorder.ACTION_SWIPE_RESULT)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(logReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            registerReceiver(swipeResultReceiver, resultFilter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             @Suppress("UnspecifiedRegisterReceiverFlag")
             registerReceiver(logReceiver, filter)
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(swipeResultReceiver, resultFilter)
         }
 
-        // Enable debug mode
+        // Enable debug mode — this is ALSO the playground-recording switch: the IME only
+        // records/broadcasts playground traces while debug mode is on (see
+        // PlaygroundTraceRecorder), so recording is scoped to this screen's lifetime.
         setDebugMode(true)
 
-        appendLog("=== Swipe Debug Session Started ===\n")
-        appendLog("Start swiping in the text field above to see pipeline logs.\n\n")
+        appendLog("=== Swipe Playground Session Started ===\n")
+        appendLog("Swipe in the text field above. Each swipe shows its candidate ranking\n")
+        appendLog("and is recorded (points + key geometry + ranking + committed word).\n\n")
+        refreshTraceCount()
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
-        // Disable debug mode
+        // Disable debug mode (also stops playground trace recording)
         setDebugMode(false)
 
-        // Unregister broadcast receiver
+        // Unregister broadcast receivers
         try {
             unregisterReceiver(logReceiver)
         } catch (e: Exception) {
             // Already unregistered
         }
+        try {
+            unregisterReceiver(swipeResultReceiver)
+        } catch (e: Exception) {
+            // Already unregistered
+        }
+        dbExecutor.shutdown()
     }
 
     // SetTextI18n: this is the Swipe Debug Log viewer — raw diagnostic log text,
@@ -247,5 +321,119 @@ class SwipeDebugActivity : Activity() {
             putExtra("debug_enabled", enabled)
         }
         sendBroadcast(intent)
+    }
+
+    // ── Swipe Playground: live panel + trace recording controls ──────────────────────
+
+    /** Render one decoded swipe's payload into the panel above the log. */
+    // SetTextI18n: internal diagnostic tool, deliberately not localized (see class KDoc).
+    @SuppressLint("SetTextI18n")
+    private fun showSwipeResult(payload: JSONObject) {
+        runOnUiThread {
+            resultWord.text = "→ ${payload.optString("committed_word", "?")}"
+            resultMeta.text = PlaygroundPayload.formatMeta(payload)
+            val candidates = PlaygroundPayload.formatCandidates(payload)
+            candidatesList.text = candidates
+            candidatesList.visibility = View.VISIBLE
+        }
+    }
+
+    /** Refresh the "N playground / M total" recorded-trace counter (off-main query). */
+    @SuppressLint("SetTextI18n")
+    private fun refreshTraceCount() {
+        dbExecutor.execute {
+            try {
+                val store = SwipeMLDataStore.getInstance(applicationContext)
+                val playground = store.countBySource(PlaygroundTraceRecorder.SOURCE_PLAYGROUND)
+                val total = store.getStatistics().totalCount
+                runOnUiThread {
+                    traceCount.text = "$playground playground / $total total traces"
+                }
+            } catch (e: Exception) {
+                runOnUiThread { traceCount.text = "trace count unavailable" }
+            }
+        }
+    }
+
+    /**
+     * Write the full JSON export (ALL recorded traces — playground and global collection,
+     * each row tagged with its `collection_source`) to app-external storage, print the
+     * absolute path for `adb pull`, and offer the file through the ACTION_SEND share sheet.
+     */
+    private fun exportRecordedTraces() {
+        dbExecutor.execute {
+            try {
+                val file = SwipeMLDataStore.getInstance(applicationContext).exportToJSON()
+                runOnUiThread {
+                    appendLog("── EXPORT ──\n${file.absolutePath}\n(adb pull that path, or share below)\n\n")
+                    Toast.makeText(this, "Exported ${file.name}", Toast.LENGTH_SHORT).show()
+                    shareExportedFile(file)
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    /** Hand the export off via the system share sheet (FileProvider content URI). */
+    private fun shareExportedFile(file: java.io.File) {
+        try {
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                this, "$packageName.fileprovider", file
+            )
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "application/json"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(send, file.name))
+        } catch (e: Exception) {
+            // The file is still on disk at the logged path — sharing is best-effort.
+            Toast.makeText(this, "Share failed: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Clear recorded traces after confirmation. Two scopes: playground-only (rows this
+     * screen recorded) or ALL swipe-ML rows (incl. the gated global collection's).
+     */
+    private fun confirmClearRecordedTraces() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Clear recorded traces")
+            .setMessage(
+                "Delete recorded swipe traces from this device?\n\n" +
+                    "“Playground only” removes traces recorded on this screen; " +
+                    "“All swipe data” also removes traces from the global ML collection."
+            )
+            .setPositiveButton("Playground only") { _, _ -> clearRecordedTraces(allData = false) }
+            .setNegativeButton("All swipe data") { _, _ -> clearRecordedTraces(allData = true) }
+            .setNeutralButton("Cancel", null)
+            .show()
+    }
+
+    private fun clearRecordedTraces(allData: Boolean) {
+        dbExecutor.execute {
+            try {
+                val store = SwipeMLDataStore.getInstance(applicationContext)
+                val removed = if (allData) {
+                    val count = store.getStatistics().totalCount
+                    store.clearAllData()
+                    count
+                } else {
+                    store.deleteBySource(PlaygroundTraceRecorder.SOURCE_PLAYGROUND)
+                }
+                runOnUiThread {
+                    appendLog("── CLEARED $removed trace(s) (${if (allData) "all" else "playground"}) ──\n\n")
+                    Toast.makeText(this, "Cleared $removed trace(s)", Toast.LENGTH_SHORT).show()
+                }
+                refreshTraceCount()
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this, "Clear failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 }

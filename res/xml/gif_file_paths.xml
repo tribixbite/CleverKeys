@@ -10,4 +10,7 @@
     <cache-path name="gifs_cache" path="gifs/" />
     <!-- Clipboard media files in partitioned storage (clipboard_media/{partition}/{hash}.{ext}) -->
     <files-path name="clipboard_media" path="clipboard_media/" />
+    <!-- Swipe Playground trace exports (SwipeMLDataStore.exportToJSON →
+         getExternalFilesDir(null)/swipe_ml_export/), shared via ACTION_SEND. -->
+    <external-files-path name="swipe_ml_export" path="swipe_ml_export/" />
 </paths>
