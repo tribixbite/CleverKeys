@@ -106,6 +106,42 @@ class SwipeMLDataEnrichmentTest {
         assertThat(data.getCandidates()).hasSize(3)
     }
 
+    /**
+     * `keyboard_offset_y` misreport (device-confirmed 2026-09-03): every exported row carried
+     * `keyboard_offset_y: 0` because no capture site ever called `setKeyboardDimensions`. The
+     * keyboard is bottom-aligned, so its true screen-frame origin is
+     * `screen_height − keyboard_height` (1525 on the Pixel) — now derived at construction.
+     */
+    @Test
+    fun keyboardOffsetIsDerivedAndSurvivesJsonRoundTrip() {
+        val data = sample()
+        // 1920 screen − 480 keyboard = 1440 origin.
+        assertThat(data.getKeyboardOffsetY()).isEqualTo(1440)
+
+        val json = data.toJSON()
+        assertThat(json.getJSONObject("metadata").getInt("keyboard_offset_y")).isEqualTo(1440)
+
+        val restored = SwipeMLData(JSONObject(json.toString()))
+        assertThat(restored.getKeyboardOffsetY()).isEqualTo(1440)
+        // The reload preserves the RECORDED value; it does not re-derive.
+        assertThat(restored.toJSON().getJSONObject("metadata").getInt("keyboard_offset_y"))
+            .isEqualTo(1440)
+    }
+
+    /** Legacy rows: a missing key or a recorded 0 must read back as 0, never crash. */
+    @Test
+    fun legacyRowKeyboardOffsetReadsAsZero() {
+        val json = sample().toJSON()
+
+        // Missing key entirely (pre-offset exports).
+        json.getJSONObject("metadata").remove("keyboard_offset_y")
+        assertThat(SwipeMLData(JSONObject(json.toString())).getKeyboardOffsetY()).isEqualTo(0)
+
+        // Explicit 0 (every row captured while the bug shipped).
+        json.getJSONObject("metadata").put("keyboard_offset_y", 0)
+        assertThat(SwipeMLData(JSONObject(json.toString())).getKeyboardOffsetY()).isEqualTo(0)
+    }
+
     @Test
     fun copyWithCarriesEverythingUnderNewIdentity() {
         val original = sample()
@@ -119,6 +155,7 @@ class SwipeMLDataEnrichmentTest {
         assertThat(copy.engine).isEqualTo(SwipeMLData.ENGINE_CTC)
         assertThat(copy.screenWidthPx).isEqualTo(1080)
         assertThat(copy.keyboardHeightPx).isEqualTo(480)
+        assertThat(copy.getKeyboardOffsetY()).isEqualTo(1440)
         // Points copied VERBATIM (no denormalize/renormalize round-trip drift).
         assertThat(copy.getTracePoints()).isEqualTo(original.getTracePoints())
         assertThat(copy.getRegisteredKeys()).isEqualTo(original.getRegisteredKeys())

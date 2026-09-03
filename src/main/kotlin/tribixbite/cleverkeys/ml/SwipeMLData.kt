@@ -109,6 +109,12 @@ class SwipeMLData {
         this.collectionSource = collectionSource
         this.layoutName = normalizeProvenance(layoutName)
         this.engine = normalizeProvenance(engine)
+        // The keyboard view is bottom-aligned, so its screen-frame origin is
+        // screen_height − keyboard_height (device-confirmed 2026-09-03: 1525 on the Pixel).
+        // Derived here because NO capture site ever called setKeyboardDimensions — every
+        // exported row misreported keyboard_offset_y: 0. setKeyboardDimensions still
+        // overrides for a caller that has a directly measured origin.
+        this.keyboardOffsetY = (screenHeight - keyboardHeight).coerceAtLeast(0)
         this.lastAbsoluteTimestamp = timestampUtc // Initialize to start time
     }
 
@@ -222,6 +228,14 @@ class SwipeMLData {
         // Note: screenWidth and keyboardHeight are already set in constructor
         // This method mainly records the Y offset for position normalization
     }
+
+    /**
+     * Screen-frame Y origin of the keyboard view in px. Derived at construction as
+     * `screen_height − keyboard_height`; 0 on legacy rows recorded while the
+     * keyboard_offset_y misreport shipped (or on pre-offset imports) — readers must treat
+     * 0 as "not recorded", consistent with the other optional metadata.
+     */
+    fun getKeyboardOffsetY(): Int = keyboardOffsetY
 
     /**
      * Convert to JSON for storage and export
