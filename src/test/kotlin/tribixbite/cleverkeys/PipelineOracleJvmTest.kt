@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Locale
@@ -178,17 +179,38 @@ class PipelineOracleJvmTest {
     @Test
     fun oracle_jvm_possessiveAugment_skipsWhenPossessiveAlreadyPresent() {
         // Dedup is case-insensitive against the WHOLE prediction list: "book" does NOT
-        // re-add "book's" because "Book's" already exists (ignoreCase). BUT the already-
-        // possessive "Book's" itself gets augmented to "Book's's" — generatePossessive
-        // (ContractionManager:289-311) deliberately has no ends-with-'s guard (modern
-        // "James's" style), and the top-3 loop doesn't skip possessive-shaped inputs.
-        // TODO(pipeline-unification): "Book's's" is a real-behavior quirk worth fixing
-        // AFTER unification — pinned here as today's oracle, not endorsed as correct.
+        // re-add "book's" because "Book's" already exists (ignoreCase). And the already-
+        // possessive "Book's" is NEVER re-augmented: ContractionManager.possessiveForm
+        // returns null for any input containing an apostrophe. (FIXED 2026-09: the old
+        // rule had no apostrophe guard and produced the malformed "Book's's" here —
+        // pinned in this test's previous revision as a known quirk, now endorsed-correct.)
         val words = mutableListOf("book", "Book's")
         val scores = mutableListOf(100, 50)
-        augmentPredictionsWithPossessives(words, scores) { "$it's" }
-        assertEquals(listOf("book", "Book's", "Book's's"), words)
-        assertEquals(listOf(100, 50, 40), scores)
+        augmentPredictionsWithPossessives(words, scores) { ContractionManager.possessiveForm(it) }
+        assertEquals(listOf("book", "Book's"), words)
+        assertEquals(listOf(100, 50), scores)
+    }
+
+    @Test
+    fun oracle_jvm_possessiveForm_stringRule() {
+        // The production STRING rule (ContractionManager.possessiveForm — the shared root
+        // for the tap path and any swipe-side augmentation), pinned directly:
+        //  (a) an input already containing an apostrophe is NEVER augmented;
+        //  (b) a word ending in s/S takes the bare trailing apostrophe (correct for
+        //      plurals — "parents's" was the device-confirmed malformed output — and
+        //      accepted style for s-final singulars);
+        //  (c) everything else takes "'s".
+        assertEquals("parents'", ContractionManager.possessiveForm("parents"))
+        assertEquals("dogs'", ContractionManager.possessiveForm("dogs"))
+        assertEquals("James'", ContractionManager.possessiveForm("James"))
+        assertEquals("CHIPS'", ContractionManager.possessiveForm("CHIPS")) // capital S counts
+        assertEquals("bowie's", ContractionManager.possessiveForm("bowie"))
+        assertEquals("cat's", ContractionManager.possessiveForm("cat"))
+        assertNull(ContractionManager.possessiveForm("Book's"))
+        assertNull(ContractionManager.possessiveForm("parents'"))
+        assertNull(ContractionManager.possessiveForm("don't"))
+        // Typographic apostrophe (U+2019) is an apostrophe too.
+        assertNull(ContractionManager.possessiveForm("Book’s"))
     }
 
     // =========================================================================

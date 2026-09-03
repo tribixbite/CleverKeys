@@ -145,8 +145,17 @@ class ContractionManagerTest {
 
     @Test
     fun generatePossessiveWorksForSEndingWord() {
-        // Modern style: even words ending in 's' get 's
-        assertEquals("James's", manager.generatePossessive("James"))
+        // Fixed 2026-09: s-final words take the bare trailing apostrophe — "parents's"
+        // (the old modern-style "add 's always") was malformed for plurals.
+        assertEquals("James'", manager.generatePossessive("James"))
+        assertEquals("parents'", manager.generatePossessive("parents"))
+    }
+
+    @Test
+    fun generatePossessiveNullForAlreadyPossessiveInput() {
+        // Fixed 2026-09: an input already containing an apostrophe is never re-augmented
+        // (previously "Book's" -> "Book's's").
+        assertNull(manager.generatePossessive("Book's"))
     }
 
     @Test

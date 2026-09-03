@@ -588,18 +588,19 @@ class ContractionManager(private val context: Context) {
      * OPTIMIZATION v5 (perftodos5.md): Rule-based possessive generation.
      * Instead of storing 1700+ possessive entries, generate them dynamically.
      *
-     * Rules:
+     * Rules (string form lives in [possessiveForm]; fixed 2026-09):
      * - Most words: add 's (cat -> cat's, dog -> dog's)
-     * - Words ending in 's': add 's (Charles -> Charles's) [modern style]
+     * - Words ending in s/S: bare trailing apostrophe (parents -> parents', James -> James')
+     * - Words already containing an apostrophe: never augmented (no "Book's's")
      * - Never generate for pronouns/function words (handled by contractions)
      *
      * @param word Base word to make possessive
-     * @return Possessive form (word + 's)
+     * @return Possessive form, or null when not eligible
      *
      * Examples:
      * - generatePossessive("cat") -> "cat's"
-     * - generatePossessive("dog") -> "dog's"
-     * - generatePossessive("James") -> "James's"
+     * - generatePossessive("dogs") -> "dogs'"
+     * - generatePossessive("James") -> "James'"
      */
     fun generatePossessive(word: String?): String? {
         if (word.isNullOrEmpty()) {
@@ -620,9 +621,8 @@ class ContractionManager(private val context: Context) {
             return null
         }
 
-        // Generate possessive: word + 's
-        // Modern style: even words ending in 's' get 's (James's, not James')
-        return "$word's"
+        // Eligibility passed — the string form itself is a pure rule shared with tests.
+        return possessiveForm(word)
     }
 
     /**
@@ -726,6 +726,28 @@ class ContractionManager(private val context: Context) {
 
     companion object {
         private const val TAG = "ContractionManager"
+
+        /**
+         * The pure STRING rule for possessive augmentation. Companion (no Context) so the
+         * pure-JVM oracle can pin the production rule directly; [generatePossessive] applies
+         * the eligibility gates (contractions, function words) and then delegates here.
+         * Both the tap path (SuggestionHandler.augmentPredictionsWithPossessives) and any
+         * swipe-side possessive augmentation flow through [generatePossessive], so this is
+         * the single root for the form.
+         *
+         * Rules (fixed 2026-09 — swiping "parents" used to offer the malformed "parents's",
+         * and an already-possessive "Book's" was re-augmented to "Book's's"):
+         *  - An input already containing an apostrophe (ASCII `'` or typographic `’`) is
+         *    NEVER augmented — returns null.
+         *  - A word ending in s/S takes the bare trailing apostrophe: "parents" -> "parents'"
+         *    (correct for plurals; accepted style for s-final singulars like "James'").
+         *  - Everything else takes "'s": "cat" -> "cat's".
+         */
+        fun possessiveForm(word: String): String? = when {
+            word.any { it == '\'' || it == '’' } -> null
+            word.endsWith("s") || word.endsWith("S") -> "$word'"
+            else -> "$word's"
+        }
 
         // Function words/pronouns that have special contractions
         private val FUNCTION_WORDS = setOf(
