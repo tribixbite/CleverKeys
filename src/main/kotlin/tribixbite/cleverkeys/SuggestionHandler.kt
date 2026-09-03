@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
+import tribixbite.cleverkeys.ml.PlaygroundTraceRecorder
 import tribixbite.cleverkeys.ml.SwipeMLData
 import tribixbite.cleverkeys.autocorrect.AutocorrectContextGuard
 import tribixbite.cleverkeys.swipe.SwipeContextRescorer
@@ -762,11 +763,13 @@ class SuggestionHandler(
         val passwordField = isPasswordMode || SuggestionBar.isPasswordField(editorInfo)
         if (passwordField && !config.swipe_on_password_fields) {
             vlog { "SWIPE password field + swipe_on_password_fields=false — suppressing" }
+            sendDebugLog("SWIPE suppressed: password field (swipe_on_password_fields=false)\n")
             suggestionBar?.clearSuggestions()
             return
         }
 
         if (predictions.isNullOrEmpty()) {
+            sendDebugLog("SWIPE: engine returned no candidates — bar cleared\n")
             suggestionBar?.clearSuggestions()
             return
         }
@@ -863,6 +866,16 @@ class SuggestionHandler(
                 val wasSwipeAutoInsert = contextTracker.wasLastInputSwipe()
                 val swipeData = inputCoordinator.getCurrentSwipeData()
 
+                // Swipe Playground (2026-09-03): enrich the capture with the ranking the bar
+                // displays and the swipe-end→results latency BEFORE either store runs, so
+                // both the gated global row (MLDataCollector copies enrichment over) and the
+                // playground row carry them. timestampUtc is set at capture time (swipe end),
+                // so the delta here is decode + routing + presentation.
+                swipeData?.let {
+                    it.setCandidates(barWords, barScores)
+                    it.setDecodeLatencyMs(System.currentTimeMillis() - it.timestampUtc)
+                }
+
                 val committedWord = onSuggestionSelected(
                     topPrediction, ic, editorInfo, resources, isManualSelection = false
                 )
@@ -871,12 +884,30 @@ class SuggestionHandler(
                 // implementation the tap path (SuggestionBridge) already uses. Gating preserved
                 // from IC's inline block: detailed logging on AND swipe data present (the collector
                 // itself re-checks privacy consent before storing).
-                if (wasSwipeAutoInsert && swipeData != null && config.swipe_debug_detailed_logging) {
-                    mlDataCollector.collectAndStoreSwipeData(
-                        committedWord ?: topPrediction,
+                val storedGlobally =
+                    if (wasSwipeAutoInsert && swipeData != null && config.swipe_debug_detailed_logging) {
+                        mlDataCollector.collectAndStoreSwipeData(
+                            committedWord ?: topPrediction,
+                            swipeData,
+                            inputCoordinator.keyboardHeightPx(),
+                            predictionCoordinator.getMlDataStore()
+                        )
+                    } else {
+                        false
+                    }
+
+                // Swipe Playground: while the playground activity is open (debug mode on),
+                // persist the enriched trace (skipped when the global path above already
+                // stored this swipe — no duplicate rows) and push the live panel payload.
+                // Explicit-session recording — see PlaygroundTraceRecorder's KDoc for why
+                // this deliberately sits outside LearningGate.canCollectSwipeMl.
+                if (debugMode) {
+                    PlaygroundTraceRecorder.recordAndBroadcast(
+                        context,
                         swipeData,
-                        inputCoordinator.keyboardHeightPx(),
-                        predictionCoordinator.getMlDataStore()
+                        committedWord ?: topPrediction.removePrefix("raw:"),
+                        engineWordCount,
+                        storedGlobally
                     )
                 }
                 inputCoordinator.resetSwipeData()

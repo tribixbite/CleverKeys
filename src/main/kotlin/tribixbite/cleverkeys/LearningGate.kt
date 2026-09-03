@@ -34,14 +34,22 @@ package tribixbite.cleverkeys
  *   the master off; restoring one's own exported data is an explicit act.
  *
  * Corrected 2026-08-28: this list used to name `SwipeCalibrationActivity` traces as a
- * third exception. That activity was DELETED on 2026-08-18 with the neural engine, so
- * there is no user-started trace-collection session any more — every remaining write to
- * `SwipeMLDataStore` goes through `MLDataCollector`, which checks
- * `PrivacyManager.canCollectSwipeData` → [canCollectSwipeMl] and is therefore INSIDE the
- * master gate, not an exception to it. (`ShortSwipeCalibrationActivity` still exists but
- * is unrelated: short-swipe gesture tuning, zero `SwipeMLDataStore` references.)
- * `strings.xml`'s `privacy_on_device_learning_desc` carried the same stale exception and
- * was corrected with it — see the translation-debt note there.
+ * third exception. That activity was DELETED on 2026-08-18 with the neural engine.
+ * (`ShortSwipeCalibrationActivity` still exists but is unrelated: short-swipe gesture
+ * tuning, zero `SwipeMLDataStore` references.) `strings.xml`'s
+ * `privacy_on_device_learning_desc` carried the same stale exception and was corrected
+ * with it — see the translation-debt note there.
+ *
+ * Updated 2026-09-03 (Swipe Playground): a user-started trace-collection session exists
+ * AGAIN. `SwipeMLDataStore` now has exactly TWO write paths:
+ *  - `MLDataCollector` — AUTOMATIC collection during normal typing, INSIDE the master
+ *    gate (`PrivacyManager.canCollectSwipeData` → [canCollectSwipeMl]);
+ *  - `tribixbite.cleverkeys.ml.PlaygroundTraceRecorder` — records ONLY while the Swipe
+ *    Playground (`SwipeDebugActivity`) is open, i.e. during an explicit user session on
+ *    a screen whose stated purpose is recording swipes (the successor to the deleted
+ *    calibration activity). Like the other explicit-act exceptions above it sits
+ *    OUTSIDE the master gate; the playground UI discloses that traces contain typed
+ *    content, and it never writes a row the automatic path already stored.
  */
 object LearningGate {
 
