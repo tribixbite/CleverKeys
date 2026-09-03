@@ -226,7 +226,8 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    // Link to the prebuilt packs folder on GitHub (opens the browser; SAF import below).
+                    // Link to the GitHub `langpacks` release carrying the prebuilt zips
+                    // (opens the browser; SAF import below).
                     Text(
                         text = stringResource(R.string.multilang_browse_packs),
                         fontSize = 12.sp,

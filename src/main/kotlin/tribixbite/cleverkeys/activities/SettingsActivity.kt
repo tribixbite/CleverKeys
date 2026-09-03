@@ -83,13 +83,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             "tribixbite.cleverkeys.action.SANITIZATION_RULES_CHANGED"
 
         /**
-         * Public folder containing the prebuilt language-pack ZIPs (de, el, es, fr, it,
-         * nl, pt, ru, sv, tr, ...). Users download a ZIP here and import it via SAF — the
-         * app has no INTERNET permission, so this only opens the browser. Matches the
-         * canonical location referenced by docs/wiki/layouts/language-packs.md.
+         * The GitHub `langpacks` pre-release carrying every prebuilt language-pack ZIP
+         * (bg, de, el, he, mk, nl, ru, sv, tr, uk, ... — 23 assets). Users download a ZIP
+         * here and import it via SAF — the app has no INTERNET permission, so this only
+         * opens the browser. The same zips are committed under `scripts/dictionaries/`,
+         * but the release page is the download surface phones can actually use (raw
+         * per-file downloads, no repo browsing).
          */
         const val LANGUAGE_PACKS_URL =
-            "https://github.com/tribixbite/CleverKeys/tree/main/scripts/dictionaries"
+            "https://github.com/tribixbite/CleverKeys/releases/tag/langpacks"
 
         /**
          * Test-only override for the inline Backup & Restore flow's manager.

@@ -82,10 +82,14 @@ internal fun SettingsActivity.getLanguageDisplayName(code: String): String {
         "sk" -> "Slovak (Slovenčina)"
         "sl" -> "Slovenian (Slovenščina)"
         "bg" -> "Bulgarian (Български)"
+        "mk" -> "Macedonian (Македонски)"
+        "he" -> "Hebrew (עברית)"
         "ca" -> "Catalan (Català)"
         "eu" -> "Basque (Euskara)"
         "gl" -> "Galician (Galego)"
-        // Downloadable language packs
+        // Downloadable-only language packs (the full downloadable set also covers
+        // nl/ru/uk/el/bg/mk/he/tr above plus the bundled-language and en-variant zips —
+        // see the GitHub `langpacks` release / scripts/dictionaries/).
         "id" -> "Indonesian (Bahasa Indonesia)"
         "ms" -> "Malay (Bahasa Melayu)"
         "sw" -> "Swahili (Kiswahili)"
