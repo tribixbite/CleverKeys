@@ -1041,3 +1041,50 @@ label wording "Invalid" is the only critique, recorded); GIF panel default-OFF c
 by design (`gif_enabled` gate); playground "no candidates" branch not reproducible from
 on-key input (defensive only). Devices reinstalled with the post-fix build for a
 zero-delta soak.
+
+---
+
+## Round 3 (2026-09-03) — release-record burn-down + hidden-backlog sweep + remediation
+
+**Burn-down (waves UA-UD, Opus, `707c8d2e`)**: all 82 PRESENT-UNTESTED release-record rows
+dispositioned — 78 GUARDED with mutation-checked tests (28 new classes: 10 pure + 18 mock;
+suites now **2,229 pure / 511 mock**, from 2,131/343), 1 honestly UNTESTABLE (visual-only
+icon preview), 1 REMOVED (ADR-011 max-word-length), 1 found REGRESSED and FIXED same-day
+(v1.1.98 sublabel icon size, `c8de2126`). Three wrong original anchors corrected in the
+superseding rows. Two REGRESSED verdicts that were CLAIMS, not code: "100+ layouts" never
+held (83 at v1.0.0; catalogue ratchet-pinned) — recorded, not retconned.
+
+**Hidden-backlog sweep (8 modalities, deduped vs both trackers)**: headline finds — gh #179
+(P1, live user pain, in no tracker), 12 untriaged post-audit issues, wiki/FAQ still
+describing the pre-multiscript world, "Book's's" possessive re-augmentation, compose-key
+zero executing behavioral tests, 79 KB orphan .txt dictionaries in every APK, 6×
+printStackTrace in theme import. Zero pref/field dead-ends (126 keys + 147 fields scanned
+clean). Full table in the sweep report; actionables all remediated below or tracked in
+HANDOFF.
+
+**Remediation (waves R1-R4 + orchestrator, 15 commits `99f5b70d`..`70284a2c`)**:
+- #179 FIXED (`70284a2c`): the "async" dictionary loader never probed langpacks → pack-only
+  languages fell to a synchronous main-thread parse EVERY IME create. Pack-first probing +
+  async secondary loads; ARC-065 measure-on-boot exonerated (cached, off-main). The 4-10 s
+  bulk was v1.5.0's synchronous neural init — already deleted by ADR-011.
+- Possessive rule fixed at the single root (`ce1f3d18`): apostrophized input never
+  re-augments; s-final words take the bare apostrophe (parents', dogs', James'). Kills
+  device-confirmed `parents's` and pinned `Book's's`; delivers plural possessives.
+- v1.1.98 sublabel regression fixed (`c8de2126`, FLAG_SMALLER_FONT parity, whole-catalogue
+  sweep test, GUARDED record row). Palette: registry dedupe (`6f96bc37`) + 8 truncated
+  labels got real glyphs with a no-glyphless-command ratchet (`772c30d2`).
+- Trace `keyboard_offset_y` now derived (was never set; `af90c415`). Orphan
+  dictionaries/*.txt + dead loader branches + OnnxPredictionTest.kt.local deleted, APK
+  verified clean (`2fb638b4`). CustomThemeManager → Log.e (`bea2739a`). common_import
+  removed ×22 (`0fb5cd3a`). KeyValueParser catches documented (`9cab8152`).
+- Docs truth (`99f5b70d`,`0d1ce162`,`37da73a5`,`e02a2808`): wiki/README/FAQ onto the
+  19-swipe-language reality with the tr-not-CTC correction (projectability gate rejects tr —
+  18 of 19 CTC-served, tr geometric by design); neural-plan open items closed; TODO-#9
+  markers deleted; 2 UNATTRIBUTABLE record rows upgraded with evidence.
+- GitHub triage (read-only, nothing posted): table in HANDOFF "Still open" list.
+
+Device round (Opus, same day): custom-word inclusion+boost+fuzzy+live-invalidation PASS
+(correction: custom freq defaults to 100, not 255-pinned — the boost is ordering + user
+freq); bowie's swipeable (lowercase even at sentence start — proper-noun casing gap, tracked);
+plural-possessive absence confirmed on-device before the fix; next-word works but defaults
+OFF (maintainer call); 36-trace corpus delivered.

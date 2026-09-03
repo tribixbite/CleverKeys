@@ -54,6 +54,16 @@ section is authoritative for what closed):**
 - Evidence-beyond-holdout for el/uk/bg/mk/he: real-swipe probes are an ML-repo/device
   question; synthesis-holdout levels stay unquotable as accuracy. Per-script LATENCY is
   now measured and published (guide, `55da93fb`).
+- **GitHub issue triage (2026-09-03, read-only)** — post-audit issues now tracked here.
+  Fixed this round: #179 (pack loads off the IME-create main thread, `70284a2c`; the 4-10 s
+  bulk was v1.5.0's synchronous neural init, deleted by ADR-011 — reporter should retest on
+  v1.6.0). Actionable P2 bugs for a next round: #171 per-key custom mappings overlay defaults
+  (nondeterministic dispatch), #161 portrait height bleeds into landscape, #169 next/prev
+  layout keys unremovable, #160 language switching keeps first layout, #151 suggestion tap
+  leaves partial word in some editors, #162 "gorgeous" decode miss (word IS in the lexicon —
+  needs trace replay). Re-test on v1.6.0: #167 nav-bar meld (edge-to-edge fixes may cover
+  it). Perf: #152 GIF full pack slow. Features awaiting maintainer priority: #156 encrypted
+  clipboard, #163 background image, #165 Korean, #168 clear-clipboard key, #175, #177 Pinyin.
 - M2 FUTO-official-test final read; send `FUTO_PRESET_NOTE.md` or not; `EW_API_TOKEN`
   laptop-side (unchanged standing decisions).
 - CLOSED this round (see ledger): ARC-054 (announced), ARC-104 (policy replaced), ARC-107,

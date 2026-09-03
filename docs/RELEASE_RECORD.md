@@ -540,8 +540,8 @@ hash-pinned. Tagging v1.6.0 freezes it.
 ### Burn-down 2026-09-03 — superseding rows for pre-v1.6.0 PRESENT-UNTESTED claims
 
 Waves UA-UD wrote tests pinning 78 previously unguarded published claims (1 stays
-PRESENT-UNTESTED as visual-only, 1 is REMOVED, 1 — custom sublabel icon sizing — is a live
-regression queued for fix and will get its row when the fix lands). Original rows above are
+PRESENT-UNTESTED as visual-only, 1 is REMOVED, and the 82nd — custom sublabel icon
+sizing — was a live regression, FIXED the same day; its GUARDED row is below). Original rows above are
 immutable; these rows supersede them. Three original code anchors were found wrong and are
 corrected here (shift-capture, icon-preview, panel-gap ×2).
 
