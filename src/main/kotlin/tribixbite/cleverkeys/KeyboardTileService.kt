@@ -74,16 +74,37 @@ class KeyboardTileService : TileService() {
             contentResolver,
             Settings.Secure.DEFAULT_INPUT_METHOD
         )
-        val isCleverKeysActive = currentIme?.contains(packageName) == true
+        val state = tileStateFor(currentIme, packageName)
 
-        tile.state = if (isCleverKeysActive) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+        tile.state = state
         tile.label = getString(R.string.app_name)
-        tile.contentDescription = if (isCleverKeysActive) {
-            "CleverKeys is active. Tap to switch keyboard."
-        } else {
-            "Tap to switch to CleverKeys keyboard."
-        }
+        tile.contentDescription = tileContentDescriptionFor(state)
 
         tile.updateTile()
+    }
+
+    companion object {
+        /**
+         * Tile state for the system's currently selected IME id (`<package>/<service>`).
+         *
+         * Package-substring, deliberately: the tile only reports "this device is typing with
+         * CleverKeys", so any of our IME services (or the `.debug` variant on a developer's
+         * device) counts. That is a weaker test than [IMEStatusHelper.isDefaultIME], which
+         * must match the exact component before it decides whether to nag the user.
+         *
+         * Extracted from [updateTileState] so it can be pinned without a live TileService
+         * (its lifecycle callbacks all begin with a `super` call into an unimplementable
+         * android.jar stub). Behaviour is byte-for-byte the previous inline expression.
+         */
+        internal fun tileStateFor(currentIme: String?, packageName: String): Int =
+            if (currentIme?.contains(packageName) == true) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+
+        /** TalkBack description for a tile in [state]; see [tileStateFor]. */
+        internal fun tileContentDescriptionFor(state: Int): String =
+            if (state == Tile.STATE_ACTIVE) {
+                "CleverKeys is active. Tap to switch keyboard."
+            } else {
+                "Tap to switch to CleverKeys keyboard."
+            }
     }
 }
