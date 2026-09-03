@@ -24,7 +24,8 @@ import java.util.zip.ZipFile
  * [CtcImportedPackSupportTest] closed this for the IMPORTED Latin packs (nl/id/ms/sw/tl, zero over
  * budget). It was still open for the lexicons that ship in the APK — the set that matters most,
  * because those are the words every user has without importing anything. This class closes it for
- * all eight bundled languages and for the injected contraction alias keys.
+ * all thirteen served languages (en + the CKDT six + the six script langpacks) and for the
+ * injected contraction alias keys.
  *
  * ## The sweep is over the EMISSION SURFACE, not the dictionary form
  *
@@ -40,19 +41,24 @@ import java.util.zip.ZipFile
  *    `<lang>_enhanced.bin` through [CtcAzProjection.project]. `ß→ss` and `æ→ae` EXPAND, so the
  *    projection can make a word LONGER than its canonical form. That is the direction that could
  *    push a German compound over the line, and it is the reason the surface is what gets swept.
- *  * **ru** ([CtcLanguageSupport.LexiconSource.CKDT_LANGPACK]) — the `langpack-ru` pack through
- *    [CtcScriptProjection]'s per-script rules (ё→е, ъ→ь folds, NO NFD). The Cyrillic folds are
- *    one-to-one so they cannot lengthen a word, but the projection DROPS words with no
- *    Cyrillic-key spelling, and sweeping the unprojected list would measure words the trie never
- *    holds.
+ *  * **the script languages** ([CtcLanguageSupport.LexiconSource.CKDT_LANGPACK]) — every
+ *    language with a [CtcScriptSupport] row, swept from its `langpack-<code>` pack through
+ *    [CtcScriptProjection]'s per-script rules (ru ё→е/ъ→ь, bg ѝ→и, mk ѐ→е/ѝ→и — NO NFD for
+ *    Cyrillic; el/he NFD → drop Mn → NFC plus el's word-final σ→ς; uk rejects ї/ґ words as
+ *    untypeable). Folds are one-to-one and mark-stripping only ever SHORTENS, so a script
+ *    projection cannot lengthen a word — but it DROPS words with no key spelling, and sweeping
+ *    the unprojected list would measure words the trie never holds. The list is DERIVED from
+ *    [CtcScriptSupport.SCRIPTS], so a new script row joins the sweep automatically (and fails
+ *    loudly here if its langpack does not exist yet — a lexicon is one of rule 4's three legs).
  *
  * Alias keys are swept as their own group: [CtcContractionKeys.inject] inserts them into the same
  * trie as ordinary paths, so they are under the same budget, and the French/Italian productive
  * elisions (`d'abaissement` → `dabaissement`) are the longest pseudo-words the engine ever spells.
  *
- * ## Result (measured 2026-08-29, ARC-057)
+ * ## Result (measured 2026-08-29, ARC-057; script langpacks re-measured 2026-09-03, M-LANG)
  *
- * **Zero surfaces over budget, in every bundled lexicon and every alias table.** Frames of 32:
+ * **Zero surfaces over budget, in every bundled lexicon, every script langpack and every alias
+ * table.** Frames of 32:
  *
  * | source      | surfaces | max frames | worst surface               |
  * |-------------|---------:|-----------:|-----------------------------|
@@ -64,10 +70,20 @@ import java.util.zip.ZipFile
  * | pt          |   38,996 |         21 | `inconstitucionalidade`     |
  * | sv          |   39,183 |         25 | `decemberoverenskommelsen`  |
  * | ru          |   49,704 |         24 | `высококвалифицированных`   |
+ * | el          |   37,516 |         21 | `αυτοκινητοβιομηχανιας`     |
+ * | uk          |   47,877 |         22 | `сільськогосподарського`    |
+ * | bg          |   35,020 |         21 | `научноизследователски`     |
+ * | mk          |   49,996 |         24 | `националноослободително`   |
+ * | he          |   50,000 |     **14** | `האינקוויזיציה`             |
  * | en aliases  |    1,848 |         15 | `administrations`           |
  * | fr aliases  |   18,126 |         23 | `dinstitutionnalisation`    |
  * | de aliases  |       21 |          8 | `destaing`                  |
  * | it aliases  |   21,357 |     **28** | `dellelettroencefalogramma` |
+ *
+ * The feared case did NOT materialize: el's 39,860 inflected canonical forms project to 37,516
+ * surfaces whose longest needs only 21 frames — 11 of headroom. he's 14 is the OTHER outlier,
+ * low rather than high (an abjad writes no vowels), and is why [MIN_MAX_FRAMES_OVERRIDES]
+ * exists.
  *
  * es/pt/sv ship no contraction table at all, so they contribute no alias keys — see
  * `BundledContractionDataTest` for why that is correct and not a gap.
@@ -148,8 +164,15 @@ class CtcBundledLexiconEmitBudgetTest {
         /** [CtcLanguageSupport.LexiconSource.CKDT_BIN] languages, in table order. */
         val CKDT_LANGUAGES = listOf("fr", "de", "es", "it", "pt", "sv")
 
-        /** Every bundled language, in [CtcLanguageSupport.SUPPORTED]'s order. */
-        val BUNDLED_LANGUAGES = listOf("en") + CKDT_LANGUAGES + "ru"
+        /**
+         * Every language with a [CtcScriptSupport] row, in table order — DERIVED, not listed, so
+         * a new script row is swept automatically and a row whose langpack is missing fails the
+         * load `check` loudly instead of being silently unswept.
+         */
+        val SCRIPT_LANGUAGES = CtcScriptSupport.SCRIPTS.keys.toList()
+
+        /** Every swept language, en → CKDT six → the script table. */
+        val BUNDLED_LANGUAGES = listOf("en") + CKDT_LANGUAGES + SCRIPT_LANGUAGES
 
         /**
          * Languages that ship a contraction table. es/pt/sv deliberately ship none — Spanish
@@ -176,10 +199,24 @@ class CtcBundledLexiconEmitBudgetTest {
         /**
          * Lower bound on each lexicon's longest surface, in frames. A projection bug that
          * truncated every word would still report "zero over budget"; this is what makes the green
-         * mean something. 16 is comfortably under every measured max (20–26) and comfortably over
-         * anything a truncation would leave.
+         * mean something. 16 is comfortably under every measured max on an alphabetic
+         * orthography (20–26 Latin, 21–24 Cyrillic, 21 Greek) and comfortably over anything a
+         * truncation would leave.
          */
         const val MIN_MAX_FRAMES = 16
+
+        /**
+         * Per-language floors where [MIN_MAX_FRAMES] does not describe the orthography.
+         *
+         * **he: Hebrew is an ABJAD** — vowels are not written, so its surfaces are
+         * systematically shorter than any alphabetic language's, and its GENUINE longest
+         * surface is 14 frames (`האינקוויזיציה`, measured 2026-09-03 over the full
+         * langpack-he). 12 keeps the same shape of guarantee — comfortably under the real max,
+         * comfortably over a truncation's leavings — at the level Hebrew actually occupies.
+         * This is a floor on measurement credibility, NOT a budget change; the 32-frame budget
+         * itself applies to he unchanged.
+         */
+        val MIN_MAX_FRAMES_OVERRIDES = mapOf("he" to 12)
 
         /**
          * The EARLY-WARNING band, two frames below the hard budget.
@@ -201,7 +238,7 @@ class CtcBundledLexiconEmitBudgetTest {
             val lexicons = LinkedHashMap<String, Sweep>()
             lexicons["en"] = sweep("en", enSurfaces())
             for (lang in CKDT_LANGUAGES) lexicons[lang] = sweep(lang, ckdtAzSurfaces(lang))
-            lexicons["ru"] = sweep("ru", ruSurfaces())
+            for (lang in SCRIPT_LANGUAGES) lexicons[lang] = sweep(lang, scriptSurfaces(lang))
             sweeps = lexicons
             aliasSweeps = ALIAS_LANGUAGES.associateWith {
                 sweep("$it aliases", injectableAliasKeys(it))
@@ -251,15 +288,16 @@ class CtcBundledLexiconEmitBudgetTest {
         }
 
         /**
-         * ru's trie surfaces: the `langpack-ru` pack through the per-script projection.
+         * A script language's trie surfaces: its `langpack-<code>` pack through the per-script
+         * projection.
          *
-         * The pack is read rather than `scripts/dictionaries/ru/ru_enhanced.bin` because the pack
-         * is what the app installs and serves
+         * The pack is read rather than `scripts/dictionaries/<code>/<code>_enhanced.bin` because
+         * the pack is what the app installs and serves
          * ([CtcLanguageSupport.LexiconSource.CKDT_LANGPACK]). The two files are byte-identical
          * today; reading the served one keeps that an observation rather than an assumption.
          */
-        fun ruSurfaces(): List<String> {
-            val zip = File("$LANGPACK_DIR/langpack-ru.zip")
+        fun scriptSurfaces(language: String): List<String> {
+            val zip = File("$LANGPACK_DIR/langpack-$language.zip")
             check(zip.isFile) { "expected ${zip.path} (run from project root)" }
             val entries = ZipFile(zip).use { zf ->
                 val entry = zf.getEntry("dictionary.bin")
@@ -267,7 +305,7 @@ class CtcBundledLexiconEmitBudgetTest {
                 zf.getInputStream(entry).use { CkdtDictionaryReader.readEntries(it) }
             }
             val projector =
-                CtcScriptProjection.projectorFor("ru", CtcScriptSupport.alphabetFor("ru"))
+                CtcScriptProjection.projectorFor(language, CtcScriptSupport.alphabetFor(language))
             return CtcScriptProjection.projectLexicon(mergedLexicon(entries), projector)
                 .freqs.keys.toList()
         }
@@ -325,19 +363,22 @@ class CtcBundledLexiconEmitBudgetTest {
     }
 
     /**
-     * ru separately, because its surface comes from a DIFFERENT projection and is the one language
-     * whose swept form is not a–z. Folding it into the Latin loop would hide which of the two
-     * projections regressed.
+     * The script languages separately, because their surfaces come from a DIFFERENT projection
+     * and are the languages whose swept form is not a–z. Folding them into the Latin loop would
+     * hide which of the two projections regressed.
      */
     @Test
-    fun `the Russian lexicon fits the budget in its projected Cyrillic form`() {
-        val sweep = sweeps.getValue("ru")
-        assertWithMessage(sweep.failureMessage()).that(sweep.overBudget).isEmpty()
-        val cyrillic = CtcScriptSupport.alphabetFor("ru")
-        assertWithMessage(
-            "the ru sweep must measure Cyrillic surfaces — a Latin-alphabet fallback would mean " +
-                "the projection silently produced nothing and the sweep measured the wrong thing"
-        ).that(sweep.worst.all { it in cyrillic }).isTrue()
+    fun `every script langpack fits the budget in its projected script form`() {
+        for (lang in SCRIPT_LANGUAGES) {
+            val sweep = sweeps.getValue(lang)
+            assertWithMessage(sweep.failureMessage()).that(sweep.overBudget).isEmpty()
+            val alphabet = CtcScriptSupport.alphabetFor(lang)
+            assertWithMessage(
+                "the $lang sweep must measure surfaces in its own script — a Latin-alphabet " +
+                    "fallback would mean the projection silently produced nothing and the sweep " +
+                    "measured the wrong thing"
+            ).that(sweep.worst.all { it in alphabet }).isTrue()
+        }
     }
 
     /**
@@ -390,10 +431,11 @@ class CtcBundledLexiconEmitBudgetTest {
         for ((lang, sweep) in sweeps) {
             assertWithMessage("$lang swept only ${sweep.swept} surfaces — the lexicon did not load")
                 .that(sweep.swept).isAtLeast(MIN_SURFACES)
+            val minMaxFrames = MIN_MAX_FRAMES_OVERRIDES[lang] ?: MIN_MAX_FRAMES
             assertWithMessage(
                 "$lang's longest surface is only ${sweep.maxFrames} frames ('${sweep.worst}') — " +
                     "a projection that truncated every word would still report zero over budget"
-            ).that(sweep.maxFrames).isAtLeast(MIN_MAX_FRAMES)
+            ).that(sweep.maxFrames).isAtLeast(minMaxFrames)
         }
         // The constant the whole sweep is against, pinned where the sweep can see it: a re-export
         // with a different T' must break this class rather than silently widen its claim.
