@@ -865,9 +865,9 @@ layout-parameterized, study D2) has largely landed: the layout gate was widened 
 a–z-complete Latin layout (2026-08-15) and the language gate to en/fr/de/es (2026-08-16),
 then to seven with the provisional it/pt/sv (2026-08-18), and finally off Latin altogether on
 2026-08-29 — the layout gate is now per-language and the router consults a per-script table.
-A non-Latin script still needs its own alphabet, model, trie and fixture; `ru` has all four,
-the other five scripts have a table row and a stated gap. The recipe is in the architecture
-guide §3–§4.
+A non-Latin script still needs its own alphabet, model, trie and fixture; since 2026-09-03 all
+six table scripts have all four and are ROUTED (ru `da012ded`, el `5fb58037`, uk/bg/mk/he
+`1b17c318`). The recipe is in the architecture guide §3–§4.
 
 ### Implementation plan (historical)
 
@@ -941,9 +941,9 @@ earlier `ru_synth_ch80_fp16w.onnx` at 77.41 is two generations superseded), its 
 both copies, the 31-letter alphabet, and the langpack-sourced trie. Greek followed on 2026-09-01
 (`5fb58037`: `el_synth_v3_ch80_fp16w.onnx` sha `7083794c…` + fixture, `PROVISIONAL`,
 langpack-sourced — no real-swipe probe exists at any tier, so its synthesis-holdout level may
-never be quoted as accuracy). The remaining four scripts (uk/bg/mk/he) have their gaps stated in
-`CtcScriptSupport`; the four rules that must hold before any of them is routed are the
-architecture guide §3–§4 and §7.
+never be quoted as accuracy). uk/bg/mk/he followed on 2026-09-03 (`1b17c318`, unblocked by
+ARC-056's langpacks) — all six `CtcScriptSupport` rows are now `ROUTED`, each satisfying the
+four rules of the architecture guide §3–§4 and §7.
 
 ### "Max accuracy" pair mode — FUTURE-OPTIONAL, **not implemented**
 

@@ -75,6 +75,22 @@ languages, the neural engine deleted, and the 2026-08-20 remediation wave landed
 >   not enter the encoder geometry and the board falls back to geometric with an explanation.
 >
 > App-side wiring work is planned in `docs/plans/2026-08-25-ctc-multiscript-wiring-plan.md`.
+>
+> **Fourth app-state addendum — 2026-09-03 (M-LANG, `1b17c318`): all six scripts ROUTED.**
+>
+> - `CtcScriptSupport` rows for **uk, bg, mk, he** flipped to `ROUTED`, unblocked by ARC-056's
+>   lexicons (2026-09-01, `538a1633`/`86156ea3`). Per language: the generation-4
+>   `<code>_synth_v3_ch80_fp16w.onnx` in `assets/models/`, its golden fixture byte-identical in
+>   both test trees, and a `CKDT_LANGPACK` row in `SUPPORTED` (now 13 static languages). All
+>   eight sha256s verified against §4.2 on copy. The emit-budget sweep now derives its script
+>   list from `CtcScriptSupport.SCRIPTS`, so all six script langpacks are swept (`e99bccc1`).
+> - All four enter **`PROVISIONAL`** — none has a real-swipe probe at any tier; their
+>   synthesis-holdout levels are never quotable as accuracy. `VAL_ONLY` stays exactly `{ru}`.
+> - **Turkish is DECIDED (final): permanent TAP + geometric** — see the decision block at the
+>   end of §4.7. Recorded as prose in `CtcScriptSupport` rather than a table row, because a
+>   row's alphabet IS a model's emission slot order and no tr model exists.
+> - Body sections below that say five scripts are unwired, a script lexicon "must be built",
+>   or only ru+el ship are historical and superseded by this addendum.
 
 This document exists to kill four recurring confusions permanently:
 
@@ -682,20 +698,21 @@ step. Status is against the app at `d717bda7`; the ordered, actionable form of t
 The ru model is *half* the shipped English model's bytes, so the latency expectation is
 favourable — expectation is not measurement.
 
-### 4.7 The other five scripts — the per-script wiring table, refreshed
+### 4.7 The per-script wiring table, refreshed (all six ROUTED since 2026-09-03)
 
 Supersedes `PHASE_O.md` §3.2/§3.5 (generation 1) and this section's own Phase-P revision
-(generation 2/3). **Wire `*_synth_v3_ch80_fp16w*` — generation 4 — for all six scripts**; hashes
-in §4.2, derivation in `PHASE_Q.md` §7.7.
+(generation 2/3). **Generation 4 (`*_synth_v3_ch80_fp16w*`) is wired for all six scripts** —
+ru `da012ded` (2026-08-29), el `5fb58037` (2026-09-01), uk/bg/mk/he `1b17c318` (2026-09-03);
+hashes in §4.2, derivation in `PHASE_Q.md` §7.7.
 
 | script | layout XML (`src/main/layouts/`) | K | alphabet / slot order (codepoint-sorted — **this IS the app's array**) | ship bytes | lexicon | preset |
 |---|---|---|---|---|---|---|
 | **ru** | `cyrl_jcuken_ru.xml` | 31 | `абвгдежзийклмнопрстуфхцчшщыьэюя` | `ru_synth_v3_ch80_fp16w.onnx` | `langpack-ru.zip` — exists, importable today | `tunedRuCkdt` |
-| **el** | `grek_qwerty.xml` (now correctly `script="greek"`) | 25 | `αβγδεζηθικλμνξοπρςστυφχψω` | `el_synth_v3_ch80_fp16w.onnx` | `langpack-el.zip` — exists, **needs the full el projection**, not just the ς repair (§7 item 9) | same numbers as `tunedRuCkdt` |
-| **uk** | `cyrl_jcuken_uk.xml` | 31 | `абвгдежзийклмнопрстуфхцчшщьюяєі` | `uk_synth_v3_ch80_fp16w.onnx` | **must be built** (`build_wordlist.py --lang uk`) | same |
-| **bg** | `cyrl_ueishsht.xml` | 30 | `абвгдежзийклмнопрстуфхцчшщъьюя` | `bg_synth_v3_ch80_fp16w.onnx` | **must be built** | same |
-| **mk** | `cyrl_lynyertdz_mk.xml` | 31 | `абвгдежзиклмнопрстуфхцчшѓѕјљњќџ` | `mk_synth_v3_ch80_fp16w.onnx` | **must be built** | same |
-| **he** | `hebr_1_il.xml` | 27 | `אבגדהוזחטיךכלםמןנסעףפץצקרשת` | `he_synth_v3_ch80_fp16w.onnx` | **must be built**, and `build_wordlist._is_script_word` needs a new `hebrew` branch (0x0590–0x05FF) | same |
+| **el** | `grek_qwerty.xml` (now correctly `script="greek"`) | 25 | `αβγδεζηθικλμνξοπρςστυφχψω` | `el_synth_v3_ch80_fp16w.onnx` | `langpack-el.zip` — exists, importable today (full el projection incl. final-sigma shipped with the wiring) | same numbers as `tunedRuCkdt` |
+| **uk** | `cyrl_jcuken_uk.xml` | 31 | `абвгдежзийклмнопрстуфхцчшщьюяєі` | `uk_synth_v3_ch80_fp16w.onnx` | `langpack-uk.zip` — exists (ARC-056), importable today | same |
+| **bg** | `cyrl_ueishsht.xml` | 30 | `абвгдежзийклмнопрстуфхцчшщъьюя` | `bg_synth_v3_ch80_fp16w.onnx` | `langpack-bg.zip` — exists (ARC-056), importable today | same |
+| **mk** | `cyrl_lynyertdz_mk.xml` | 31 | `абвгдежзиклмнопрстуфхцчшѓѕјљњќџ` | `mk_synth_v3_ch80_fp16w.onnx` | `langpack-mk.zip` — exists (ARC-056), importable today | same |
+| **he** | `hebr_1_il.xml` | 27 | `אבגדהוזחטיךכלםמןנסעףפץצקרשת` | `he_synth_v3_ch80_fp16w.onnx` | `langpack-he.zip` — exists (ARC-056; the `hebrew` `_is_script_word` branch landed with it) | same |
 
 **Preset: there is no per-script preset.** All six use γ 1.05 / **λ 2.0** / β 0.2 / γp 0.3734 /
 βp 0.9882. λ = 2.0 is a **frequency-scale** constant (`LAMBDA_CKDT_SCALE`), not a Russian one —
@@ -750,17 +767,32 @@ the registry**. Generation 3 (`he_synth_v2full_ch80`) needed no relaxation at 4.
 historical envelope, no flag. The flag stays on the P4 bytes because that exceedance was real;
 it does **not** carry to the bytes you would wire.
 
+**Turkish — DECIDED 2026-09-03: permanent TAP + geometric, no CTC.** tr is not a script
+question (its layout is Latin) but it fails the imported-pack projectability gate on a
+character-identity fact: **dotless `ı` (U+0131) has no NFD decomposition**, so only 73.34 % of
+the vocabulary — and 81.7 % of the top-1,000 frequency head — is spellable on an a–z board,
+against the 0.98/0.99 thresholds. Serving tr on CTC today would delete a quarter of the
+vocabulary from swipe that geometric can already type — a regression, not a feature. The
+alternative (a tr-specific `ı→i` fold in a projection row plus an eligibility exception) is
+NOT taken: a fold changes what the trie holds and what the decoder can emit, so adopting it
+without evidence would ship an unmeasured lexicon transform. **Reopening condition**: ML-side
+holdout evidence for the tr-fold — a tr synthesis arm decoded through the folded lexicon,
+showing the fold does not cost the head — at which point the fold + exception become one
+wiring change. Until that evidence exists, the decision is closed, not drifting.
+
 ---
 
 ## 5. The model inventory — which ONNX is which
 
-**Exactly one CTC ONNX ships in the APK.**
+**Seven CTC ONNX files ship in the APK** (since `1b17c318`, 2026-09-03): the Latin encoder
+plus one 589,406-byte generation-4 model per routed script. (The original "exactly one" claim
+was true until ru's wiring on 2026-08-29.)
 
 | artifact | ships? | bytes | sha256 | serves | tier |
 |---|---|---|---|---|---|
-| `src/main/assets/models/ctc_swipe_encoder.onnx` = `ctc/artifacts/phaseM_kd_fresh_w1_s1234_fp16w.onnx` | **YES — the only one** | 3,052,318 | `84718e6ebc8020176f27b9668e50922a765c96838307b640a8db9ab0549e88e5` | en + fr/de/es/it/pt/sv on any a–z-complete Latin layout | **test-validated**, both footings, every seed |
-| `ctc/artifacts/ru_synth_v3_ch80_fp16w.onnx` | no — **the ru ship candidate**, not wired | 589,406 | `8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c` | Russian ЙЦУКЕН (31-letter default grid) | **val-only**, generator-**v3** synth-trained, Yandex-eval-only |
-| `ctc/artifacts/{el,uk,bg,mk,he}_synth_v3_ch80_fp16w.onnx` | no — **the five ship candidates**, not wired | 589,406 each | §4.2 / `PHASE_Q.md` §7.7 | Greek, Ukrainian, Bulgarian, Macedonian, Hebrew | **synthesis-holdout-only**, calibrated against ru rather than measured |
+| `src/main/assets/models/ctc_swipe_encoder.onnx` = `ctc/artifacts/phaseM_kd_fresh_w1_s1234_fp16w.onnx` | **YES — the Latin one** | 3,052,318 | `84718e6ebc8020176f27b9668e50922a765c96838307b640a8db9ab0549e88e5` | en + fr/de/es/it/pt/sv on any a–z-complete Latin layout, plus eligible imported Latin packs | **test-validated**, both footings, every seed |
+| `src/main/assets/models/ru_synth_v3_ch80_fp16w.onnx` (= `ctc/artifacts/` copy) | **YES** (`da012ded`, 2026-08-29) | 589,406 | `8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c` | Russian ЙЦУКЕН (31-letter default grid) | **val-only**, generator-**v3** synth-trained, Yandex-eval-only |
+| `src/main/assets/models/{el,uk,bg,mk,he}_synth_v3_ch80_fp16w.onnx` (= `ctc/artifacts/` copies) | **YES** — el `5fb58037` (2026-09-01), uk/bg/mk/he `1b17c318` (2026-09-03) | 589,406 each | §4.2 / `PHASE_Q.md` §7.7 | Greek, Ukrainian, Bulgarian, Macedonian, Hebrew | **synthesis-holdout-only**, calibrated against ru rather than measured — `PROVISIONAL`, never quotable as accuracy |
 | `ctc/artifacts/{ru,el,uk,bg,mk,he}_synth_ch80*` (generation 1) | no — **superseded** | — | `PHASE_O.md` §2.6 | — | kept because every pre-Phase-P number was measured on them |
 | `ctc/artifacts/{ru,el,uk,bg,mk,he}_synth_v2_ch80*` (generation 2) | no — **superseded** | — | `PHASE_P.md` §6.1 | — | kept because `PHASE_P.md` §5 was measured on them; `he_synth_v2_ch80` carries a parity flag no later generation revives |
 | `ctc/artifacts/{el,uk,bg,mk,he}_synth_v2full_ch80*` (generation 3) | no — **superseded** | — | `PHASE_P.md` §8.4 | — | kept because `PHASE_P.md` §8 was measured on them |

@@ -208,8 +208,10 @@ Everything is in git history and these references — do not re-derive:
 
 The **language** dimension is closed for Latin — including, since `05c0c25d`, the imported-pack
 cell that used to be the loudest counterexample: a user with `langpack-nl.zip` got geometric for a
-language CTC decodes fine. **Cyrillic is now half-open**: the wiring is generic and Russian is
-routed. What remains is the other five scripts' lexicons, and layout.
+language CTC decodes fine. **All six table scripts are ROUTED since 2026-09-03** (ru `da012ded`,
+el `5fb58037`, uk/bg/mk/he `1b17c318` after ARC-056's lexicons). What remains for geometric is
+the long tail with no model or lexicon (kk/sr/hy/ka), Turkish (DECIDED permanent tap+geometric —
+dotless ı, 73.34 % projectable), and layout.
 
 Layout census (`src/main/layouts/`, 86 XML — the tree `copyLayoutDefinitions` ships;
 `srcs/layouts/` is divergent and read by no build task):
