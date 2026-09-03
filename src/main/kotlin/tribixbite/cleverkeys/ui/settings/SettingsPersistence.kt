@@ -443,8 +443,16 @@ internal fun SettingsActivity.updateConfigFromSettings() {
         // vibrate_custom is intentionally NOT set here — it is only set to true when the
         // user explicitly drags the duration slider. Mapping vibrationEnabled → vibrate_custom
         // was the root cause of #154 (it forced every user into the slow createOneShot path).
+        // keyboardHeightPercent is deliberately NOT set here — it is orientation-resolved
+        // (keyboard_height / keyboard_height_landscape / *_unfolded) and Config.refresh(),
+        // fired by the ConfigurationManager SharedPreferences listener during the same
+        // apply(), is the only writer that knows which of the four keys applies right now.
+        // Mapping the portrait slider state into it made every saveSetting() call stomp the
+        // landscape height with the portrait value — root cause of #161 (portrait slider
+        // controlled both orientations, landscape slider appeared dead). Same bug shape as
+        // the #154 vibrate_custom stomp documented above; pinned by
+        // KeyboardHeightOrientationDriftTest.
         config.apply {
-            keyboardHeightPercent = keyboardHeight
             swipe_engine_mode = swipeEngineMode
             swipe_context_rescoring = swipeContextRescoring
             // Swipe corrections settings (these update the Config object)
