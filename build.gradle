@@ -979,6 +979,10 @@ tasks.register('runMockTests', JavaExec) {
     // Sentence-start autocap on swipe commits (2026-09-03): when no shift state was latched
     // at swipe start, the commit consults the same getCursorCapsMode decision tap typing uses.
     'tribixbite.cleverkeys.SwipeAutocapCommitTest',
+    // gh #151 (2026-09-03): suggestion tap replaces the typed partial in editors without
+    // composing/sync support (URL bars, #78 class). Pins the 736e4eee fix, which shipped
+    // without coverage; red re-captured against the pre-fix conditions.
+    'tribixbite.cleverkeys.SuggestionTapPartialReplaceTest',
     'tribixbite.cleverkeys.ClipboardMediaManagerZipSlipTest',
     'tribixbite.cleverkeys.BackupRestoreArchiveLimitsTest',
     // Audit remediation (2026-08-25) — CK-150-019/020/022 import rollback
