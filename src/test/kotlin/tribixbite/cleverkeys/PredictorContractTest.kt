@@ -112,8 +112,8 @@ class PredictorContractTest {
             language: String,
             callback: Runnable?
         ) = unsupported("loadDictionaryAsync")
-        override fun loadSecondaryDictionary(language: String): Boolean =
-            unsupported("loadSecondaryDictionary")
+        override fun loadSecondaryDictionaryAsync(language: String, callback: Runnable?) =
+            unsupported("loadSecondaryDictionaryAsync")
         override fun unloadSecondaryDictionary() = unsupported("unloadSecondaryDictionary")
         override fun isLoading(): Boolean = false
         override fun reloadCustomAndUserWords() = unsupported("reloadCustomAndUserWords")

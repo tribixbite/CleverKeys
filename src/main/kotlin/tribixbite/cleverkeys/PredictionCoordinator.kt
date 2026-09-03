@@ -141,14 +141,19 @@ class PredictionCoordinator(
                 Log.d(TAG, "Dictionary loaded successfully: $primaryLang")
             }
 
-            // v1.1.93: Load secondary dictionary for bilingual touch typing
+            // v1.1.93: Load secondary dictionary for bilingual touch typing.
+            // Issue #179: async — this method runs on the MAIN thread inside IME onCreate
+            // (KeyboardComponentGraph.wireSwipeTypingComponents → initialize()), and for a
+            // multilang user whose secondary language is an imported language pack the
+            // blocking form parsed the whole pack file right here, on every process create.
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
             val multiLangEnabled = prefs.getBoolean("pref_enable_multilang", false)
             val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
             if (multiLangEnabled && secondaryLang != "none" && secondaryLang.isNotEmpty()) {
                 Log.d(TAG, "Loading secondary dictionary for touch typing: $secondaryLang")
-                loadSecondaryDictionary(secondaryLang)
-                MemoryProbe.mark("wordPredictor.secondary", settle = true) { "lang=$secondaryLang" }
+                loadSecondaryDictionaryAsync(secondaryLang) {
+                    MemoryProbe.mark("wordPredictor.secondary", settle = true) { "lang=$secondaryLang" }
+                }
             }
 
             // OPTIMIZATION: Start observing dictionary changes for automatic updates
@@ -233,8 +238,10 @@ class PredictionCoordinator(
             Log.i(TAG, "Unloading secondary dictionary for touch typing")
             wordPredictor?.unloadSecondaryDictionary()
         } else {
+            // Issue #179: async — this fires from the main-thread preference listener, and a
+            // langpack secondary would otherwise be parsed on the UI thread mid-session.
             Log.i(TAG, "Loading secondary dictionary for touch typing: $language")
-            wordPredictor?.loadSecondaryDictionary(language)
+            wordPredictor?.loadSecondaryDictionaryAsync(language)
         }
     }
 

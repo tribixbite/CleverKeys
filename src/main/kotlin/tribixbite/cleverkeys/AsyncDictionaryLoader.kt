@@ -148,12 +148,34 @@ class AsyncDictionaryLoader {
             try {
                 val startTime = System.currentTimeMillis()
 
-                // Try binary format first (fast path)
-                val binaryFilename = "dictionaries/${language}_enhanced.bin"
                 val dictionary = mutableMapOf<String, Int>()
                 val prefixIndex = mutableMapOf<String, MutableSet<String>>()
 
-                val loadedBinary = BinaryDictionaryLoader.loadDictionaryWithPrefixIndex(
+                // Issue #179: probe the INSTALLED LANGUAGE PACK first, mirroring the
+                // synchronous WordPredictor.loadDictionary precedence (the issue #63 fix).
+                // Before this, a pack-only language failed BOTH asset probes below, and
+                // WordPredictor.onLoadFailed re-ran the whole load synchronously on the
+                // MAIN thread — so the "async" path guaranteed a full pack parse inside
+                // IME onCreate on every process create (a real per-create stall, and the
+                // surviving sliver of #179's 4–10 s v1.5.0 startup).
+                val packFile = try {
+                    tribixbite.cleverkeys.langpack.LanguagePackManager
+                        .getInstance(context).getDictionaryPath(language)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Language pack probe failed for '$language'", e)
+                    null
+                }
+                val loadedFromPack = packFile != null &&
+                    BinaryDictionaryLoader.loadDictionaryWithPrefixIndexFromFile(
+                        packFile, dictionary, prefixIndex
+                    )
+                if (loadedFromPack) {
+                    Log.i(TAG, "Loaded dictionary from language pack on background thread: $language")
+                }
+
+                // Bundled binary format (fast path for shipped languages)
+                val binaryFilename = "dictionaries/${language}_enhanced.bin"
+                val loadedBinary = loadedFromPack || BinaryDictionaryLoader.loadDictionaryWithPrefixIndex(
                     context, binaryFilename, dictionary, prefixIndex
                 )
 
@@ -216,6 +238,26 @@ class AsyncDictionaryLoader {
                 mainHandler.post { callback.onLoadFailed(language, e) }
             } finally {
                 android.os.Trace.endSection()
+            }
+        }
+    }
+
+    /**
+     * Run [task] on the shared dictionary-loader thread, then post [onComplete] (if any) to
+     * the main thread — completion fires whether or not [task] threw.
+     *
+     * Issue #179: this is how the SECONDARY dictionary's pack read leaves the IME-create
+     * path (`WordPredictor.loadSecondaryDictionaryAsync`). Deliberately NOT tracked by
+     * [currentTask]: a primary-dictionary reload must not cancel a secondary load — the two
+     * populate disjoint structures — and the single-threaded [EXECUTOR] already serializes
+     * them so the secondary load can never race the primary parse for CPU.
+     */
+    fun runOffMain(task: Runnable, onComplete: Runnable? = null) {
+        EXECUTOR.submit {
+            try {
+                task.run()
+            } finally {
+                onComplete?.let { mainHandler.post(it) }
             }
         }
     }

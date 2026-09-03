@@ -52,8 +52,17 @@ interface Predictor {
     /** Load [language]'s primary dictionary off the caller's thread; [callback] on completion. */
     fun loadDictionaryAsync(context: Context, language: String, callback: Runnable?)
 
-    /** @return true when a secondary dictionary for [language] was loaded. */
-    fun loadSecondaryDictionary(language: String): Boolean
+    /**
+     * Load [language]'s secondary dictionary off the caller's thread; [callback] on the main
+     * thread when the attempt finishes (whether or not a dictionary was loaded).
+     *
+     * Issue #179: this replaced the blocking `loadSecondaryDictionary(...): Boolean` on the
+     * interface — the only consumers were `PredictionCoordinator`'s IME-create and pref-change
+     * paths, both on the MAIN thread, and for a multilang user with an imported language pack
+     * the blocking form parsed the whole pack inside `onCreate`. `"none"`/empty unloads
+     * immediately (a pair of field writes), preserving the old call's toggle-off semantics.
+     */
+    fun loadSecondaryDictionaryAsync(language: String, callback: Runnable? = null)
 
     /** Drop the secondary dictionary and its index (memory reclaim on language switch). */
     fun unloadSecondaryDictionary()

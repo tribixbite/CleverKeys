@@ -596,6 +596,10 @@ tasks.register('runPureTests', JavaExec) {
     // graph exists, the service wires through graph reads not Initializer.create calls).
     'tribixbite.cleverkeys.WiringCompositionRootDriftTest',
     'tribixbite.cleverkeys.CoreImeHygieneDriftTest',
+    // Issue #179 (2026-09-03): imported-langpack dictionary loads stay off the main thread —
+    // the async loader probes the pack before bundled assets, and the coordinator never
+    // calls the blocking secondary load on the IME-create / pref-change path.
+    'tribixbite.cleverkeys.LangpackStartupOffMainDriftTest',
     'tribixbite.cleverkeys.ReleaseMetadataDriftTest',
     // Append-only release record book (docs/RELEASE_RECORD.md): anchors resolve, every
     // published fastlane changelog has a section, released sections are hash-pinned.
