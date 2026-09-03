@@ -18,7 +18,7 @@
     <!-- <string name="pref_number_entry_layout_normal">Use the main layout</string> -->
     <!-- <string name="pref_theme_e_rosepine">Rosé Pine</string> -->
     <string name="key_action_next">다음</string>
-    <string name="key_action_done">확인</string>
+    <string name="key_action_done">완료</string>
     <string name="key_action_go">이동</string>
     <string name="key_action_prev">이전</string>
     <string name="key_action_search">검색</string>
@@ -305,7 +305,7 @@
     <string name="accessibility_trackpoint_title">TrackPoint 모드</string>
     <string name="accessibility_trackpoint_desc">탐색 키에서 커서 모드로 전환 시 진동합니다</string>
     <string name="accessibility_long_press_title">길게 누르기</string>
-    <string name="accessibility_long_press_desc">수정 키 잠금 시 진동합니다</string>
+    <string name="accessibility_long_press_desc">수정자 키 잠금 시 진동합니다</string>
     <string name="accessibility_swipe_complete_title">스와이프 완료</string>
     <string name="accessibility_swipe_complete_desc">스와이프 제스처 완료 시 진동합니다</string>
     <string name="advanced_terminal_mode_title">터미널 모드</string>
@@ -529,7 +529,7 @@
     <string name="theme_color_key_default">기본 키 색상</string>
     <string name="theme_color_key_activated">누름 키 색상</string>
     <string name="theme_color_key_locked">잠금 키 색상</string>
-    <string name="theme_color_key_modifier">수정 키 색상</string>
+    <string name="theme_color_key_modifier">수정자 키 색상</string>
     <string name="theme_color_key_special">특수 키 색상</string>
     <string name="theme_color_key_label">키 라벨 색상</string>
     <string name="theme_color_sub_label">서브 라벨 색상</string>
