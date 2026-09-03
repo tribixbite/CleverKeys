@@ -959,3 +959,61 @@ thresholds on device-captured traces rather than reusing these.
 Disposition: gate mechanism + both instruments committed default-off and re-runnable
 (`-PgeoSweep=true -PoqOnly=oq10a|oq10b`); defaults bit-identical (slack W=0); no floor
 moved; ARC-108 CLOSED as measured-and-parked.
+
+---
+
+## Round 2 closure (2026-09-03) — language-support todo + maintainer decisions
+
+Executed in full per `docs/plans/2026-08-30-full-backlog-campaign.md` §Round 2 (wave table
+there carries per-wave commits). Item dispositions, authoritative:
+
+- **Langpacks distribution**: `langpacks` pre-release LIVE (23 assets, sha256 table;
+  prerelease + non-`v*` tag ⇒ provably invisible to F-Droid's `releases/latest` HTTP check
+  and to `release.yml`). README/wiki/in-app pointers repointed. Manifest-version normalize
+  DEFERRED (byte-identity rule).
+- **uk/bg/mk/he ROUTED** (`e99bccc1`,`1b17c318`): v3 fp16w models + goldens sha-verified
+  against checklist §2.2; PROVISIONAL tier; emit-budget sweep now covers all six script
+  langpacks — zero over-budget words; he's true max is 14 frames (abjad), handled as a
+  documented per-language truncation-floor override (he→12), budget constant untouched.
+- **Turkish DECIDED**: permanent TAP+geometric (no ı NFD decomposition, 73.34% projectable;
+  fold = unmeasured serving-semantics change). Reopen only with ML-side tr-fold holdout
+  evidence. Pinned in `CtcLanguagePresetTest`; prose in CtcScriptSupport + guide.
+- **ARC-054 CLOSED** (`f6cc401d`): ru (validation tier) + el (early, no accuracy figure —
+  92.12 ban now an assertion) announced in the pending v1.6.0 notes; 497 chars. Pin cleared,
+  then correctly re-seeded `SERVED_BUT_NOT_YET_ANNOUNCED = {uk, bg, mk, he}` by M-LANG.
+- **ARC-060 EXECUTED** (app `128c93f8`; ML `66c60ad`,`8778fef`): geometry+fixture+parity as
+  one unit; new fixture `8951d7a3…` (159,778 B, basename `source_onnx` ⇒ ru LOW-6 discharged).
+  Rider 1: en control reproduces 4.673e-4; ru replica agreement now **exact 0.0** (old
+  geometry was 3.354e-3 = 7× en tolerance — the actual root cause, now closed).
+  Rider 2 **BLOCKED on-device**: the 85.30±0.207 one-shot confirm needs `~/ctc-train`
+  (Yandex valid-10k + seed evals) — OWED on the training box. Every published ru number
+  predates the new geometry until that runs.
+- **ARC-104 CLOSED** (`2fa6d632`): no-ADB-testing policy rescinded; prefer Saga/Pixel,
+  never UI-test the Termux host; ew-cli/pure remain first choice.
+- **ARC-107 CLOSED** (`1040f60b`,`62d6371b`): "escape" aliases "esc"; pure + instrumented pins
+  (the old instrumented test pinned the MISS and would have gone red).
+- **ARC-111 CLOSED in code** (`2b39c764` launcher DayNight + light palette; `26f3bf36`
+  keyboard unset-theme pref now follows uiMode — the reproduced symptom's root). Visual
+  confirmation on both devices owed to N-DEV.
+- **ARC-113 CLOSED** (`48cd6bfb`): minSdk 21→24 (maintainer-approved) + ORT 1.21.1; p_align
+  0x4000 verified empirically on AAR AND packaged APK; goldens bit-stable (2,120 pure green);
+  lockfile stdlib-common trap fired and was hand-restored; `MinSdkApiUsageDriftTest` deleted
+  per its own contract. User-facing Android-7.0+ claims updated (`434d2b0d`).
+- **Swipe playground** (`5cb4a719`,`335fa9a3`,`0646fd53`,`0bdcfca2`): existing mechanism was
+  PARTIAL (traces+word behind global collection prefs; no geometry/ranking/latency/export).
+  Now: explicit-session recording while SwipeDebugActivity is open, per-key hit rects,
+  displayed-bar ranking+scores, decode latency, in-activity export/share/clear, dedupe vs
+  global store. Occlusion-A/B capture path complete; 8-step visual checklist → N-DEV.
+- **Translation QA** (12 commits `129d3537`..`cfb98e03`): full back-translation sweep, all 21
+  locales × 874 strings; 52 fixes (worst: tr backspace≡"undo" ×6, zh-rCN Tab/Tag collision,
+  fa clipboard "fever"); both maintainer-flagged items (vi "Do Thái", lv "kirilicas")
+  CONFIRMED CORRECT via CLDR. Placeholder mismatches: 0. Highest-value native review: tr, vi.
+- **Doc truth**: M-DOCS reconciled HANDOFF/todo/guide/skill/ledger; three todo claims were
+  themselves wrong (no stale `84ac284d` cites; en 98,140 correct — 98,122 is the CTC trie's
+  distinct a–z surfaces; ARC-058 measured memory, latency still open). ML repo fully pushed
+  (`4f01961`, then `8778fef`); "phantom" `7343355` was real-but-unpushed.
+
+Owed forward: N-DEV device drive (daily-typing suite both phones + ARC-111/playground visual
+checklists + per-script latency B2 via ew-cli); rider-2 ru probe (training box); native review
+tr/vi; announcement of uk/bg/mk/he at next notes edit; manifest-version normalize on next
+pack rebuild.
