@@ -1190,9 +1190,13 @@ class Config private constructor(
             theme_name == "cleverkeysdark" -> R.style.CleverKeysDark
             theme_name == "cleverkeyslight" -> R.style.CleverKeysLight
             else -> {
-                // Default to CleverKeys Dark theme
+                // ARC-111: an unset theme follows the system uiMode like every other
+                // fallback branch; users who explicitly chose a theme are unaffected.
                 if (theme_name.isEmpty()) {
-                    R.style.CleverKeysDark
+                    if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
+                        R.style.CleverKeysLight
+                    else
+                        R.style.CleverKeysDark
                 } else if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
                     R.style.Light
                 else
