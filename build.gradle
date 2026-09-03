@@ -70,36 +70,29 @@ dependencies {
   implementation "androidx.savedstate:savedstate-ktx:1.2.1"
 
   implementation "org.burnoutcrew.composereorderable:reorderable:0.9.6"
-  // ARC-113 (2026-09-02): BLOCKED on a minSdk decision — do not bump casually.
+  // ARC-113 RESOLVED (2026-09-03): maintainer approved minSdk 21 → 24, which
+  // unblocked the 16 KB-page-alignment upgrade.
   //
-  // 16 KB-page alignment: this 1.20.0 AAR's arm64 libonnxruntime.so is already
-  // 16 KB-aligned (PT_LOAD p_align 0x4000) but libonnxruntime4j_jni.so is NOT
-  // (0x1000) — that lib is what Android 17 names in its compatibility dialog,
-  // and it will fail to load on 16 KB-page-only devices. The FIRST release with
-  // both arm64 libs at p_align 0x4000 is 1.21.1 (verified by ELF program-header
-  // parse of the Maven Central AARs: 1.20.0 ❌, 1.21.0 ❌, 1.21.1 ✅, 1.22.0 ✅,
-  // 1.23.0 ✅; the fix came from the release build toolchain — no source commit
-  // in the v1.21.0...v1.21.1 range mentions it, github.com/microsoft/onnxruntime
-  // issues #24902/#25859 track the saga).
+  // Version choice: 1.21.1 is the FIRST release whose arm64 libs are BOTH
+  // 16 KB-aligned (PT_LOAD p_align 0x4000), verified by ELF program-header
+  // parse of the Maven Central AARs during the 2026-09-02 investigation
+  // (1.20.0 ❌ jni lib 0x1000, 1.21.0 ❌, 1.21.1 ✅, 1.22.0 ✅, 1.23.0 ✅; the
+  // fix came from the release build toolchain — no source commit in the
+  // v1.21.0...v1.21.1 range mentions it, github.com/microsoft/onnxruntime
+  // issues #24902/#25859 track the saga). We take the minimal analyzed bump
+  // (1.21.1), not the latest, to keep the CTC numerics delta as small as
+  // possible — the golden/parity fixtures pin bit-stability across this
+  // upgrade; a fixture delta means the runtime changed numerics and must be
+  // investigated, never regenerated.
   //
-  // WHY NOT BUMPED: every release ≥ 1.21.0 declares AAR minSdkVersion 24
-  // ("align with React Native 0.76", v1.21.0 release notes) and the manifest
-  // merger hard-fails against this project's minSdk 21. tools:overrideLibrary
-  // is NOT a safe out: the 1.21.1 .so imports `__register_atfork` and `stderr`
-  // (bionic symbols introduced at API 23), so dlopen fails on API 21/22 — and
-  // OrtEnvironment.getEnvironment() is a constructor-time field initializer
-  // (CtcEngineAdapter), where the resulting UnsatisfiedLinkError (an Error;
-  // the model-load latch catches only Exception) would crash the IME process.
-  // No packaging config fixes ELF alignment either: the loader mmaps segments
-  // per p_align whether libs are extracted or loaded in-place, so
-  // useLegacyPackaging / zipalign -P 16 only ever fix ZIP placement.
-  //
-  // UNBLOCK PATH (maintainer decision): raise minSdk 21 → 24, then bump BOTH
-  // onnxruntime coordinates (this one and the testImplementation JVM jar) to
-  // 1.21.1+, regenerate gradle.lockfile per the recipe above, and re-run the
-  // CTC parity suites — a parity fixture change means the runtime changed
-  // numerics and must be investigated, not regenerated.
-  implementation "com.microsoft.onnxruntime:onnxruntime-android:1.20.0"
+  // Why minSdk 24 was required: every release ≥ 1.21.0 declares AAR
+  // minSdkVersion 24 ("align with React Native 0.76", v1.21.0 release notes)
+  // and its .so imports `__register_atfork`/`stderr` (bionic API-23 symbols),
+  // so tools:overrideLibrary would have crash-looped the IME on API 21/22
+  // (OrtEnvironment.getEnvironment() is a constructor-time initializer in
+  // CtcEngineAdapter; the load latch catches Exception, not Error). Full
+  // history: docs/audit/2026-08-28-archive-verification.md ARC-113.
+  implementation "com.microsoft.onnxruntime:onnxruntime-android:1.21.1"
   implementation "com.google.code.gson:gson:2.10.1"
 
   // Coil: Kotlin-native image loader with animated WebP support
@@ -121,7 +114,7 @@ dependencies {
   // Keep in lockstep with onnxruntime-android above (ARC-113): the pure-JVM
   // runner loads the AAR's bionic natives under this jar's Java layer, and a
   // JNI/Java version mismatch is undefined.
-  testImplementation "com.microsoft.onnxruntime:onnxruntime:1.20.0"
+  testImplementation "com.microsoft.onnxruntime:onnxruntime:1.21.1"
 
   androidTestImplementation "androidx.test:core:1.5.0"
   androidTestImplementation "androidx.test.ext:junit:1.1.5"
@@ -183,7 +176,10 @@ android {
 
   defaultConfig {
     applicationId "tribixbite.cleverkeys"
-    minSdk 21
+    // ARC-113 (2026-09-03): maintainer approved 21 → 24 to unblock the 16 KB-page-
+    // aligned onnxruntime upgrade (see the dependency-line note above). README /
+    // fastlane "Android 5.0+" claims become "Android 7.0+" — tracked as follow-up.
+    minSdk 24
     targetSdkVersion 34
     
     // References ext values - see VERSION_MAJOR/MINOR/PATCH at top of file
@@ -778,10 +774,12 @@ tasks.register('runPureTests', JavaExec) {
     // WP9 implementation-audit remediation 2026-08-11 (docs/history/audits/remediation/3-core-ime.md):
     // n-2 ML-trace provenance (layout + decoder engine) incl. legacy-row compatibility
     'tribixbite.cleverkeys.ml.SwipeMLDataProvenanceTest',
-    // minSdk-21 guard: source scan for Java-8/API-24 Map & Set idioms
-    // (newKeySet/computeIfAbsent/merge/getOrDefault/putIfAbsent-on-HashMap), which
-    // are NoSuchMethodError crashes on Android 5.0–6.0. Backs up lint's NewApi.
-    'tribixbite.cleverkeys.MinSdkApiUsageDriftTest',
+    // MinSdkApiUsageDriftTest DELETED (ARC-113, 2026-09-03): it guarded the
+    // API-24 Map/Set idioms that crash on Android 5.0–6.0 and self-asserted
+    // minSdk < 24 with the instruction "If minSdk is ever raised to 24+, this
+    // whole test class can be deleted". minSdk is now 24, so those idioms are
+    // legal; keeping the class registered would red the suite on its own
+    // assertion, and unregistered it would red TestRunnerListDriftTest.
     // Cross-language contraction collision guard (2026-08-20): a REPLACE key of one active
     // language that is a real word of the OTHER active language must be demoted to PAIRED,
     // or the real word is destroyed in its own slot (fr+en `dont`, de+en `im`/`hats`).
