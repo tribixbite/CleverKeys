@@ -59,10 +59,13 @@ class GifDatabase private constructor(private val appContext: Context) {
             }
         }
 
-        // Load categories for each result
-        results.map { gif ->
-            gif.copy(categories = getCategoriesForGif(gif.id))
-        }
+        // Do NOT hydrate Gif.categories here. It cost one gif_category_map
+        // lookup per result row — with no usable gif_id index that was a full
+        // map-table scan × 100 per keystroke, the O(results × pack size) term
+        // behind issue #152 (130k pack "unusably slow"). No production code
+        // reads categories on list results; getGifById() hydrates the one row
+        // that actually needs it.
+        results
     }
 
     /**
@@ -190,8 +193,8 @@ class GifDatabase private constructor(private val appContext: Context) {
 
         cursor.use {
             while (it.moveToNext()) {
-                val gif = cursorToGif(it)
-                results.add(gif.copy(categories = getCategoriesForGif(gif.id)))
+                // No category hydration — see searchGifs (issue #152)
+                results.add(cursorToGif(it))
             }
         }
 
@@ -275,24 +278,32 @@ class GifDatabase private constructor(private val appContext: Context) {
     }
 
     /**
-     * Get count of GIFs in a category.
+     * Get count of GIFs in a category. Suspend + IO: previously this ran a
+     * blocking query on the caller's (main) thread at every panel open and
+     * category tap.
      */
-    fun getCategoryCount(category: GifCategory): Int {
+    suspend fun getCategoryCount(category: GifCategory): Int = withContext(Dispatchers.IO) {
         val db = dbHelper.readableDatabase
-        if (category == GifCategory.RECENTLY_USED) {
-            val cursor = db.rawQuery("SELECT COUNT(*) FROM gif_usage WHERE use_count > 0", null)
-            return cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+        when (category) {
+            GifCategory.RECENTLY_USED -> {
+                val cursor = db.rawQuery("SELECT COUNT(*) FROM gif_usage WHERE use_count > 0", null)
+                cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+            }
+            // ALL.id = -1 matches no gif_category_map rows — without this branch
+            // the "All" view reported 0 items and pagination never advanced past
+            // page one (found during #152 triage).
+            GifCategory.ALL -> getTotalGifCount()
+            else -> {
+                // COUNT over the map's (category_id, gif_id) PK alone — the old
+                // JOIN gifs added a per-row PK probe for nothing (FK integrity is
+                // guaranteed by import).
+                val cursor = db.rawQuery(
+                    "SELECT COUNT(*) FROM gif_category_map WHERE category_id = ?",
+                    arrayOf(category.id.toString())
+                )
+                cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+            }
         }
-
-        val cursor = db.rawQuery(
-            """
-            SELECT COUNT(*) FROM gif_category_map gcm
-            JOIN gifs g ON g.gif_id = gcm.gif_id
-            WHERE gcm.category_id = ?
-            """.trimIndent(),
-            arrayOf(category.id.toString())
-        )
-        return cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
     }
 
     // ==================== PACK IMPORT ====================
@@ -665,6 +676,15 @@ class GifDatabaseHelper(context: Context) : SQLiteOpenHelper(
                 )
             }
         }
+    }
+
+    override fun onOpen(db: SQLiteDatabase) {
+        super.onOpen(db)
+        // gif_category_map's PK is (category_id, gif_id) — unusable for gif_id
+        // probes (getGifById's category resolution). Created in onOpen instead
+        // of a version bump because onUpgrade drops every table, which would
+        // force users to re-import multi-GB packs (issue #152).
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_gcm_gif ON gif_category_map(gif_id)")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {

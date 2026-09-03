@@ -45,6 +45,7 @@ class GifGridManager(
     private val database = GifDatabase.getInstance(context)
     private val adapter = GifRecyclerAdapter()
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var searchJob: Job? = null
 
     /** Coil image loader with IME-friendly memory limits.
      * Default Coil cache is 25% of available RAM (~200-300MB on modern phones).
@@ -99,6 +100,7 @@ class GifGridManager(
         currentCategory = category
         currentSearchQuery = ""
         currentPage = 0
+        searchJob?.cancel() // a pending debounced search must not overwrite the category view
         scope.launch { loadCategory(category) }
     }
 
@@ -111,13 +113,22 @@ class GifGridManager(
     fun search(query: String) {
         currentSearchQuery = query
         currentPage = 0
-        scope.launch {
+        // The caller invokes this on every keystroke with no debounce. Cancel the
+        // in-flight search so fast typing doesn't queue N full FTS passes behind
+        // one SQLite connection (issue #152), and coalesce keystrokes briefly.
+        searchJob?.cancel()
+        searchJob = scope.launch {
             if (query.isBlank()) {
                 gifList = database.getRecentlyUsedGifs(50)
                 totalItems = gifList.size
             } else {
-                totalItems = database.countSearchResults(query)
-                gifList = database.searchGifs(query, ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                delay(SEARCH_DEBOUNCE_MS) // cancelled by the next keystroke
+                val page = database.searchGifs(query, ITEMS_PER_PAGE, 0)
+                // A partial first page IS the complete result set — skip the
+                // second FTS traversal that countSearchResults would run.
+                totalItems = if (page.size < ITEMS_PER_PAGE) page.size
+                    else database.countSearchResults(query)
+                gifList = page
             }
             adapter.notifyDataSetChanged()
             recyclerView.scrollToPosition(0)
@@ -268,6 +279,9 @@ class GifGridManager(
     companion object {
         /** Items per page — matches clipboard pagination (100 items). */
         const val ITEMS_PER_PAGE = 100
+
+        /** Keystroke coalescing window for search-as-you-type (issue #152). */
+        private const val SEARCH_DEBOUNCE_MS = 150L
 
         /** Thumbnail decode target size (px). Keeps Coil memory low. */
         private const val THUMB_SIZE_PX = 200
