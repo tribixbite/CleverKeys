@@ -161,11 +161,13 @@ class KeyEventTest {
 
     @Test
     fun testEscapeKey() {
-        // The special-key table names it "esc" — "escape" is NOT a registered
-        // name and would fall back to a String key typing the literal text.
+        // ARC-107: "escape" is a registered alias of "esc" (it used to fall back to
+        // a String key typing the literal text; the maintainer approved the alias).
         assertKeyeventKey("esc", KeyEvent.KEYCODE_ESCAPE)
-        assertNull(
-            "'escape' must not be in the special-key table (the name is 'esc')",
+        assertKeyeventKey("escape", KeyEvent.KEYCODE_ESCAPE)
+        assertEquals(
+            "'escape' must resolve to the identical KeyValue as 'esc'",
+            KeyValue.getSpecialKeyByName("esc"),
             KeyValue.getSpecialKeyByName("escape")
         )
     }
