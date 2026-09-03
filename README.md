@@ -269,15 +269,20 @@ oracles with typo/foreign-word negative filters (see the oracle-tier notes).
 | German | de | 40,000 words | A (aspell + pyspell + AOSP) |
 | Swedish | sv | 40,000 words | C (AOSP only) |
 
-### Downloadable Language Packs (14)
-Import via **Settings → 🌐 Multi-Language → Import Pack**; prebuilt zips live
-in [`scripts/dictionaries/`](./scripts/dictionaries/):
+### Downloadable Language Packs (23 packs, 18 languages)
+Import via **Settings → 🌐 Multi-Language → Import Pack**; download prebuilt
+zips from the [langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks)
+(the same files live in [`scripts/dictionaries/`](./scripts/dictionaries/)):
 
 | Language | Code | Dictionary Size | Oracle tier / source |
 |----------|:----:|---------------:|----------------------|
 | Dutch | nl | 40,000 words | A (hunspell + pyspell + AOSP) |
 | Russian | ru | 50,000 words | A (hunspell + pyspell + AOSP) |
+| Ukrainian | uk | 50,000 words | D (negatives-only) |
 | Greek | el | 39,860 words | C (AOSP only, curated down from 46,306) |
+| Bulgarian | bg | 35,027 words | D (negatives-only; wordfreq corpus ceiling) |
+| Macedonian | mk | 50,000 words | D (negatives-only) |
+| Hebrew | he | 50,000 words | C (AOSP oracle) |
 | Turkish | tr | 40,000 words | C (AOSP only) |
 | Indonesian | id | 28,637 words | D (negatives-only; corpus ceiling ~31k) |
 | Malay | ms | 25,861 words | D (negatives-only; corpus ceiling ~28k) |
@@ -285,8 +290,8 @@ in [`scripts/dictionaries/`](./scripts/dictionaries/):
 | Swahili | sw | 20,000 words | Wikipedia corpus (no wordfreq data) |
 
 Packs for the bundled languages (es fr de it pt sv) plus English corpus
-variants (norvig / opensubtitles / wordfreq) are also prebuilt in the same
-directory.
+variants (norvig / opensubtitles-full / opensubtitles-50k / wordfreq) are also
+prebuilt alongside them — 23 zips in total.
 
 ### Multi-Language Features
 
@@ -350,7 +355,7 @@ Language packs are simple .zip files containing:
 - `prefix_boost.bin` — Aho-Corasick prefix-boost trie (Latin-script languages)
 
 **Pre-built Language Packs:**
-Available in [`scripts/dictionaries/`](./scripts/dictionaries/) for testing, or download directly from the app.
+Download from the [langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks), or grab them from [`scripts/dictionaries/`](./scripts/dictionaries/) when working from a checkout.
 
 <div align="center">
 
