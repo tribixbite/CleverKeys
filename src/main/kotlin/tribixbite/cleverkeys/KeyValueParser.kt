@@ -299,6 +299,9 @@ object KeyValueParser {
             try {
                 m.region(m.end(), m.regionEnd())
             } catch (e: Exception) {
+                // Intentional: m.end() throws IllegalStateException before the first match
+                // attempt; leaving the region untouched (start of input) is the correct
+                // starting state, so the failure carries no information worth propagating.
             }
             m.usePattern(pat)
             return m.lookingAt()
@@ -319,6 +322,9 @@ object KeyValueParser {
         try {
             m.region(m.end(), m.regionEnd())
         } catch (e: Exception) {
+            // Intentional (same as the companion's match above): m.end() throws
+            // IllegalStateException before the first match attempt; the untouched region
+            // is exactly the desired "start of input" state.
         }
         m.usePattern(pat)
         return m.lookingAt()
@@ -329,6 +335,8 @@ object KeyValueParser {
         try {
             msg_.append(" at token '").append(m.group(0)).append("'")
         } catch (e: IllegalStateException) {
+            // Intentional: group(0) throws when no match preceded the error — the token
+            // fragment is merely decoration for the message, so it is simply omitted.
         }
         msg_.append(" at position ")
         msg_.append(i)
