@@ -1558,11 +1558,21 @@ class Keyboard2View @JvmOverloads constructor(
                 drawKeyFrame(canvas, x, y, keyW, keyH, tc_key)
                 if (k.keys[0] != null)
                     drawLabel(canvas, k.keys[0]!!, keyW / 2f + x, y, keyH, isKeyDown, tc_key)
+                // #171: a custom short-swipe mapping REPLACES the default sublabel in its
+                // slot — suppress the default glyph wherever a mapping covers the slot, or
+                // the two render overlaid. Mask is 0 (draw everything) for the common
+                // no-custom-mappings case and for non-candidate keys (empty-string cache
+                // sentinel -> empty mapping set).
+                val coveredSubLabels = if (hasCustomMappings)
+                    SwipeDirection.coveredSubLabelMask(
+                        _shortSwipeManager.getMappingsForKey(_keyCodeLowerCache[k] ?: "").keys
+                    )
+                else 0
                 for (i in 1..8) {
-                    if (k.keys[i] != null)
+                    if (k.keys[i] != null && (coveredSubLabels and (1 shl i)) == 0)
                         drawSubLabel(canvas, k.keys[i]!!, x, y, keyW, keyH, i, isKeyDown, tc_key, snap)
                 }
-                // Draw custom short swipe mappings (override existing sublabels with accent color).
+                // Draw custom short swipe mappings (they own their slots — see above).
                 // Skip the whole overlay when no custom mappings are configured (R2 early-out).
                 if (hasCustomMappings)
                     drawCustomMappings(canvas, k, x, y, keyW, keyH, tc, snap)
@@ -1848,20 +1858,12 @@ class Keyboard2View @JvmOverloads constructor(
 
     /**
      * Convert SwipeDirection to sublabel index (1-8).
-     * Layout: 1=NW, 2=NE, 3=SW, 4=SE, 5=W, 6=E, 7=N, 8=S
+     * Layout: 1=NW, 2=NE, 3=SW, 4=SE, 5=W, 6=E, 7=N, 8=S.
+     * Delegates to [SwipeDirection.subLabelIndex] — the same source the
+     * default-sublabel suppression in [onDraw] reads, so the overlay and the
+     * suppression can never disagree about which slot a mapping occupies (#171).
      */
-    private fun directionToSubIndex(direction: SwipeDirection): Int {
-        return when (direction) {
-            SwipeDirection.NW -> 1
-            SwipeDirection.NE -> 2
-            SwipeDirection.SW -> 3
-            SwipeDirection.SE -> 4
-            SwipeDirection.W -> 5
-            SwipeDirection.E -> 6
-            SwipeDirection.N -> 7
-            SwipeDirection.S -> 8
-        }
-    }
+    private fun directionToSubIndex(direction: SwipeDirection): Int = direction.subLabelIndex
 
     /**
      * Draw a custom sublabel with specific color (for custom short swipe mappings).

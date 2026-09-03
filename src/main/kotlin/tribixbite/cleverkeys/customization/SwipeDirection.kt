@@ -10,18 +10,39 @@ enum class SwipeDirection(
     /** Short label for compact display */
     val shortLabel: String,
     /** Angle in degrees (0 = East, counter-clockwise) */
-    val angleDegrees: Float
+    val angleDegrees: Float,
+    /**
+     * The `KeyboardData.Key.keys` sublabel slot this direction occupies
+     * (1=NW, 2=NE, 3=SW, 4=SE, 5=W, 6=E, 7=N, 8=S — index 0 is the main key).
+     * Single source of truth shared by the custom-mapping overlay drawing and the
+     * default-sublabel suppression in `Keyboard2View.onDraw` (#171): a custom mapping
+     * REPLACES the default glyph in its slot, so both sides must agree on the slot.
+     */
+    val subLabelIndex: Int
 ) {
-    N("North", "N", 90f),
-    NE("Northeast", "NE", 45f),
-    E("East", "E", 0f),
-    SE("Southeast", "SE", 315f),
-    S("South", "S", 270f),
-    SW("Southwest", "SW", 225f),
-    W("West", "W", 180f),
-    NW("Northwest", "NW", 135f);
+    N("North", "N", 90f, 7),
+    NE("Northeast", "NE", 45f, 2),
+    E("East", "E", 0f, 6),
+    SE("Southeast", "SE", 315f, 4),
+    S("South", "S", 270f, 8),
+    SW("Southwest", "SW", 225f, 3),
+    W("West", "W", 180f, 5),
+    NW("Northwest", "NW", 135f, 1);
 
     companion object {
+        /**
+         * Bitmask of [subLabelIndex] slots covered by [directions] — bit `i` set means
+         * sublabel slot `i` is occupied by a custom mapping and its DEFAULT glyph must
+         * not be drawn (#171). Cheap (one set iterator); the draw path only calls it
+         * for keys that actually have custom mappings.
+         */
+        @JvmStatic
+        fun coveredSubLabelMask(directions: Set<SwipeDirection>): Int {
+            var mask = 0
+            for (d in directions) mask = mask or (1 shl d.subLabelIndex)
+            return mask
+        }
+
         /**
          * Get direction from angle in degrees.
          * @param angle Angle in degrees (0 = East, counter-clockwise positive)
