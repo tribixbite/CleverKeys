@@ -601,7 +601,9 @@ class KeyValue private constructor(
             "switch_back_gif" -> eventKey("ABC", Event.SWITCH_BACK_GIF, 0)
 
             /* Key events */
-            "esc" -> keyeventKey("Esc", KeyEvent.KEYCODE_ESCAPE, FLAG_SMALLER_FONT)
+            // "escape" is an alias for "esc" (ARC-107): layouts using the long name
+            // used to silently type the literal text "escape".
+            "esc", "escape" -> keyeventKey("Esc", KeyEvent.KEYCODE_ESCAPE, FLAG_SMALLER_FONT)
             "enter" -> keyeventKey(0xE00E, KeyEvent.KEYCODE_ENTER, 0)
             "up" -> keyeventKey(0xE005, KeyEvent.KEYCODE_DPAD_UP, 0)
             "right" -> keyeventKey(0xE006, KeyEvent.KEYCODE_DPAD_RIGHT, FLAG_SMALLER_FONT)

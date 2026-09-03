@@ -24,9 +24,10 @@ import org.junit.Test
  * - Escape handling in strings
  * - ParseError for malformed input
  *
- * What is NOT testable (requires Android runtime):
- * - Named special keys that reference KeyEvent constants (esc, enter, tab, etc.)
- *   These call getSpecialKeyByName which uses android.view.KeyEvent.KEYCODE_* constants
+ * Named special keys (esc/escape, enter, tab, ...) ARE testable despite referencing
+ * android.view.KeyEvent: KEYCODE_* are Java `static final int` constants, inlined by the
+ * compiler, so getSpecialKeyByName never loads the KeyEvent class at runtime (see the
+ * ARC-107 alias tests in section J2).
  */
 class KeyValueParserTest {
 
@@ -515,6 +516,33 @@ class KeyValueParserTest {
 
         assertThat(result.getKind()).isEqualTo(KeyValue.Kind.Timestamp)
         assertThat(result.getString()).isEqualTo("📅")
+    }
+
+    // =========================================================================
+    // J2. Named Special-Key Aliases (ARC-107)
+    // =========================================================================
+
+    @Test
+    fun `escape resolves as an alias of esc`() {
+        // ARC-107: layouts written with "escape" used to fall through to a literal
+        // String key ("escape" typed as text). The maintainer approved an alias:
+        // "escape" must resolve to the exact same special key as "esc".
+        val esc = KeyValue.getKeyByName("esc")
+        val escape = KeyValue.getKeyByName("escape")
+
+        assertThat(esc.getKind()).isEqualTo(KeyValue.Kind.Keyevent)
+        assertThat(escape).isEqualTo(esc)
+    }
+
+    @Test
+    fun `escape parses as a named key after a symbol prefix`() {
+        // symbol:escape must resolve the alias through the parser path too,
+        // keeping the caller-supplied symbol.
+        val result = KeyValueParser.parse("sym:escape")
+
+        assertThat(result.getKind()).isEqualTo(KeyValue.Kind.Keyevent)
+        assertThat(result.getKeyevent()).isEqualTo(KeyValue.getKeyByName("esc").getKeyevent())
+        assertThat(result.getString()).isEqualTo("sym")
     }
 
     // =========================================================================
