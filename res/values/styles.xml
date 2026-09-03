@@ -38,14 +38,14 @@
        parent; day and night both resolve to this single declaration. -->
   <style name="appTheme" parent="Theme.AppCompat.DayNight.NoActionBar"/>
   <!-- Launcher activity theme with edge-to-edge support -->
-  <!-- Using Material3 Dark theme for proper edge-to-edge compatibility with Compose -->
-  <style name="launcherTheme" parent="Theme.Material3.Dark.NoActionBar">
+  <!-- ARC-111: DayNight so the launcher follows the system theme; the bar-icon
+       appearance (windowLightStatusBar) is set at runtime in LauncherActivity
+       from the current uiMode, so it is not pinned here. Material3 DayNight keeps
+       the same edge-to-edge compatibility with Compose as the old Dark parent. -->
+  <style name="launcherTheme" parent="Theme.Material3.DayNight.NoActionBar">
     <item name="android:windowBackground">@android:color/transparent</item>
     <item name="android:statusBarColor">@android:color/transparent</item>
     <item name="android:navigationBarColor">@android:color/transparent</item>
-    <!-- windowLightStatusBar is API 23; harmless no-op on API 21-22 (dark theme,
-         light-status-bar already false). v29 overlay redeclares for API 29+. -->
-    <item name="android:windowLightStatusBar" tools:targetApi="23">false</item>
     <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     <item name="android:windowTranslucentStatus">false</item>
     <item name="android:windowTranslucentNavigation">false</item>

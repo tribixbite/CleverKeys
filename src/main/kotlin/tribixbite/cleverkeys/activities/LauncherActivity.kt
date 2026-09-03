@@ -91,10 +91,14 @@ class LauncherActivity : ComponentActivity() {
                 w.isNavigationBarContrastEnforced = false
             }
 
-            // Force light icons (white) on dark background
+            // ARC-111: follow the system day/night setting. Dark background keeps light
+            // (white) bar icons; the light variant needs dark icons to stay visible.
+            val isNightMode = (resources.configuration.uiMode and
+                android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+                android.content.res.Configuration.UI_MODE_NIGHT_YES
             androidx.core.view.WindowCompat.getInsetsController(w, w.decorView)?.apply {
-                isAppearanceLightStatusBars = false
-                isAppearanceLightNavigationBars = false
+                isAppearanceLightStatusBars = !isNightMode
+                isAppearanceLightNavigationBars = !isNightMode
             }
 
             // CRITICAL: Clear backgrounds on all window views to prevent white bar
@@ -106,7 +110,10 @@ class LauncherActivity : ComponentActivity() {
 
         try {
             setContent {
-                KeyboardTheme(darkTheme = true) { // Force dark theme for the matrix look
+                // ARC-111: follow the system theme (was `darkTheme = true` for the matrix
+                // look). Dark mode keeps the original deep-space palette byte-identical;
+                // light mode uses the light-adapted LauncherColors variant below.
+                KeyboardTheme {
                     LauncherScreen(
                         onEnableKeyboard = { launchKeyboardSettings() },
                         onSelectKeyboard = { launchInputMethodPicker() },
@@ -198,6 +205,87 @@ class LauncherActivity : ComponentActivity() {
     }
 }
 
+/**
+ * ARC-111: launcher palette resolved from the system day/night setting.
+ *
+ * The dark values are byte-identical to the previously hardcoded "matrix look"
+ * colors, so system-dark rendering is unchanged. The light values keep the brand
+ * purple identity on light surfaces (deep purple-ink text, white cards, purple
+ * sparkles — white sparkles/beams would be invisible on a light background).
+ */
+@Immutable
+data class LauncherColors(
+    val background: Color,
+    /** Circular chip behind the GitHub / Settings top-bar icons. */
+    val topIconChipBackground: Color,
+    val topIconTint: Color,
+    /** "CleverKeys" display title. */
+    val title: Color,
+    /** Tagline under the title; the footer uses this at 50% alpha. */
+    val subtitle: Color,
+    val cardContainer: Color,
+    /** Base text/icon color inside setup cards (non-completed state). */
+    val cardText: Color,
+    /** Title/description color for a completed setup card. */
+    val completedText: Color,
+    val fieldBorderUnfocused: Color,
+    val fieldLabelUnfocused: Color,
+    val fieldText: Color,
+    /** Base colors for the sparkle/spell background animation. */
+    val sparkleColors: List<Color>,
+    /** Spell core-beam + random sparkle highlight color. */
+    val sparkleHighlight: Color,
+)
+
+/** Original forced-dark palette ("Stardust Silver & Ethereal Magic"). */
+val DarkLauncherColors = LauncherColors(
+    background = Color(0xFF050510),
+    topIconChipBackground = Color.White.copy(alpha = 0.1f),
+    topIconTint = Color.White.copy(alpha = 0.8f),
+    title = Color.White,
+    subtitle = Color(0xFFB0B0E0),
+    cardContainer = Color(0xFF151525).copy(alpha = 0.8f),
+    cardText = Color.White,
+    completedText = Color(0xFFBB8FCE),
+    fieldBorderUnfocused = Color.White.copy(alpha = 0.3f),
+    fieldLabelUnfocused = Color.White.copy(alpha = 0.5f),
+    fieldText = Color.White,
+    sparkleColors = listOf(
+        Color(0xFFFFFFFF), // Pure Light
+        Color(0xFFE0E0E0), // Silver
+        Color(0xFFF0F8FF), // Alice Blue
+        Color(0xFFB0C4DE)  // Light Steel Blue
+    ),
+    sparkleHighlight = Color.White,
+)
+
+/** Light-adapted variant: brand purple accents on a pale lavender surface. */
+val LightLauncherColors = LauncherColors(
+    background = Color(0xFFF4F1FA),
+    topIconChipBackground = Color(0xFF241A3E).copy(alpha = 0.06f),
+    topIconTint = Color(0xFF241A3E).copy(alpha = 0.8f),
+    title = Color(0xFF241A3E),
+    subtitle = Color(0xFF5C5480),
+    cardContainer = Color.White.copy(alpha = 0.9f),
+    cardText = Color(0xFF241A3E),
+    completedText = Color(0xFF7D3C98),
+    fieldBorderUnfocused = Color(0xFF241A3E).copy(alpha = 0.3f),
+    fieldLabelUnfocused = Color(0xFF241A3E).copy(alpha = 0.55f),
+    fieldText = Color(0xFF241A3E),
+    sparkleColors = listOf(
+        Color(0xFF9B59B6), // Brand purple
+        Color(0xFF7E57C2), // Deep lavender
+        Color(0xFF5C6BC0), // Indigo
+        Color(0xFF64B5F6)  // Brand blue
+    ),
+    sparkleHighlight = Color(0xFF7D3C98),
+)
+
+/** Resolve the launcher palette from the system day/night setting. */
+@Composable
+fun launcherColors(): LauncherColors =
+    if (androidx.compose.foundation.isSystemInDarkTheme()) DarkLauncherColors else LightLauncherColors
+
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun LauncherScreen(
@@ -208,6 +296,7 @@ fun LauncherScreen(
     onOpenGitHub: () -> Unit
 ) {
     val context = LocalContext.current
+    val colors = launcherColors() // ARC-111: system day/night palette
     var testText by remember { mutableStateOf("") }
 
     // Track keyboard visibility using WindowInsets IME bottom inset
@@ -257,11 +346,15 @@ fun LauncherScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF050510)) // Deep dark background extends under system bars
+            .background(colors.background) // Extends under system bars (dark: deep space, light: pale lavender)
     ) {
         // 1. Background Animation layer - extends edge-to-edge including under system bars
         // Pause animation when keyboard visible to reduce input lag
-        SparkleMagicBackground(isPaused = isKeyboardVisible)
+        SparkleMagicBackground(
+            isPaused = isKeyboardVisible,
+            baseColors = colors.sparkleColors,
+            highlight = colors.sparkleHighlight
+        )
 
         // 2. Top Bar with GitHub (left) and Settings (right)
         // Fixed position at top - not affected by keyboard or scroll
@@ -279,11 +372,11 @@ fun LauncherScreen(
                 onClick = onOpenGitHub,
                 modifier = Modifier
                     .size(40.dp)
-                    .background(Color.White.copy(alpha = 0.1f), CircleShape)
+                    .background(colors.topIconChipBackground, CircleShape)
             ) {
                 GitHubIcon(
                     modifier = Modifier.size(22.dp),
-                    tint = Color.White.copy(alpha = 0.8f)
+                    tint = colors.topIconTint
                 )
             }
 
@@ -292,12 +385,12 @@ fun LauncherScreen(
                 onClick = onOpenSettings,
                 modifier = Modifier
                     .size(40.dp)
-                    .background(Color.White.copy(alpha = 0.1f), CircleShape)
+                    .background(colors.topIconChipBackground, CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Settings",
-                    tint = Color.White.copy(alpha = 0.8f),
+                    tint = colors.topIconTint,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -357,12 +450,12 @@ fun LauncherScreen(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.sp
                         ),
-                        color = Color.White
+                        color = colors.title
                     )
                     Text(
                         text = stringResource(R.string.launcher_tagline),
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color(0xFFB0B0E0),
+                        color = colors.subtitle,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -419,12 +512,12 @@ fun LauncherScreen(
                 ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                    unfocusedBorderColor = colors.fieldBorderUnfocused,
                     focusedLabelColor = MaterialTheme.colorScheme.primary,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f),
+                    unfocusedLabelColor = colors.fieldLabelUnfocused,
                     cursorColor = MaterialTheme.colorScheme.primary,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
+                    focusedTextColor = colors.fieldText,
+                    unfocusedTextColor = colors.fieldText
                 ),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -436,7 +529,7 @@ fun LauncherScreen(
                 Text(
                     text = stringResource(R.string.launcher_footer),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFB0B0E0).copy(alpha = 0.5f),
+                    color = colors.subtitle.copy(alpha = 0.5f),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .navigationBarsPadding()
@@ -481,15 +574,16 @@ fun SetupCard(
     isCompleted: Boolean = false,
     onClick: () -> Unit
 ) {
-    // Brand purple for completed state
+    // ARC-111: card surface + text colors follow the system day/night palette;
+    // the brand purple accents stay identical in both modes.
+    val colors = launcherColors()
     val brandPurple = Color(0xFF9B59B6)
-    val brandPurpleLight = Color(0xFFBB8FCE)
 
     val borderColor = if (isCompleted) {
         Brush.horizontalGradient(
             colors = listOf(
                 brandPurple.copy(alpha = 0.8f),
-                brandPurpleLight.copy(alpha = 0.8f)
+                Color(0xFFBB8FCE).copy(alpha = 0.8f)
             )
         )
     } else {
@@ -505,7 +599,7 @@ fun SetupCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF151525).copy(alpha = 0.8f)
+            containerColor = colors.cardContainer
         ),
         border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
         shape = RoundedCornerShape(16.dp)
@@ -548,19 +642,19 @@ fun SetupCard(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (isCompleted) brandPurpleLight else Color.White
+                    color = if (isCompleted) colors.completedText else colors.cardText
                 )
                 Text(
                     text = if (isCompleted) "✓ Done" else description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (isCompleted) brandPurpleLight.copy(alpha = 0.8f) else Color.White.copy(alpha = 0.7f)
+                    color = if (isCompleted) colors.completedText.copy(alpha = 0.8f) else colors.cardText.copy(alpha = 0.7f)
                 )
             }
 
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (isCompleted) brandPurple else Color.White.copy(alpha = 0.8f)
+                tint = if (isCompleted) brandPurple else colors.cardText.copy(alpha = 0.8f)
             )
         }
     }
@@ -636,15 +730,13 @@ data class MagicSpell(
 )
 
 @Composable
-fun SparkleMagicBackground(isPaused: Boolean = false) {
-    // Stardust Silver & Ethereal Magic Palette
-    val baseColors = listOf(
-        Color(0xFFFFFFFF), // Pure Light
-        Color(0xFFE0E0E0), // Silver
-        Color(0xFFF0F8FF), // Alice Blue
-        Color(0xFFB0C4DE)  // Light Steel Blue
-    )
-
+fun SparkleMagicBackground(
+    isPaused: Boolean = false,
+    // ARC-111: palette is supplied by the caller so the animation stays visible on
+    // both the dark (stardust silver) and light (brand purple) backgrounds.
+    baseColors: List<Color> = DarkLauncherColors.sparkleColors,
+    highlight: Color = DarkLauncherColors.sparkleHighlight
+) {
     val density = LocalDensity.current
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val screenWidth = with(density) { configuration.screenWidthDp.dp.toPx() }
@@ -697,7 +789,7 @@ fun SparkleMagicBackground(isPaused: Boolean = false) {
                             if (progress < 0.9f) {
                                 // Multi-spawn for density
                                 repeat(Random.nextInt(1, 3)) {
-                                    sparkles.add(generateSparkle(currentPoint, spell.color, currentTime))
+                                    sparkles.add(generateSparkle(currentPoint, spell.color, currentTime, highlight))
                                 }
                             }
                         }
@@ -757,10 +849,10 @@ fun SparkleMagicBackground(isPaused: Boolean = false) {
                 )
             )
 
-            // 3. Core Beam (Focused, bright)
+            // 3. Core Beam (Focused, bright — highlight color so it reads on both themes)
             drawPath(
                 path = path,
-                color = Color.White.copy(alpha = alpha),
+                color = highlight.copy(alpha = alpha),
                 style = Stroke(
                     width = 4f * spell.scale, 
                     cap = StrokeCap.Round, 
@@ -797,18 +889,18 @@ fun SparkleMagicBackground(isPaused: Boolean = false) {
     }
 }
 
-fun generateSparkle(origin: Offset, baseColor: Color, currentTime: Long): Sparkle {
+fun generateSparkle(origin: Offset, baseColor: Color, currentTime: Long, highlight: Color = Color.White): Sparkle {
     // Explosion/diffusion velocity
     val angle = Random.nextFloat() * 6.28f
     val speed = Random.nextFloat() * 2f + 0.5f
-    
+
     return Sparkle(
         id = Random.nextLong(),
         x = origin.x,
         y = origin.y,
         vx = cos(angle) * speed,
         vy = sin(angle) * speed,
-        color = if (Random.nextBoolean()) Color.White else baseColor,
+        color = if (Random.nextBoolean()) highlight else baseColor,
         startTime = currentTime,
         duration = Random.nextLong(500, 2000), // 0.5 - 2s life
         maxRadius = Random.nextFloat() * 3f + 1f
