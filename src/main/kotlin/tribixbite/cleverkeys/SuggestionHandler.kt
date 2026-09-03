@@ -777,10 +777,21 @@ class SuggestionHandler(
         // Apply user word case preservation BEFORE shift transformation (proper nouns like "Boston"),
         // then the shift/caps-lock-at-swipe-start transform — IDENTICAL to the legacy IC path so
         // shift/caps casing (oracle 2/3) is unchanged.
+        //
+        // Sentence-start gap (device-confirmed): the swipe path's ONLY casing input was the
+        // shift latch snapshotted at gesture START, and that snapshot goes stale across
+        // autocap's 50ms delayed latch, suggestion commits Autocapitalisation's cursor
+        // tracker never saw, and selection-update races — so a swiped "bowie" committed
+        // lowercase where tap typing produced "Bowie". When no shift state was latched,
+        // consult the SAME decision the tap path's autocap uses (setting + field CAP flags +
+        // getCursorCapsMode), evaluated here at commit time. Explicit shift/caps-lock still
+        // wins; this is NOT proper-noun casing. Pinned by SwipeAutocapCommitTest.
         val casedPredictions = predictionCoordinator.getWordPredictor()
             ?.applyUserWordCaseToList(predictions) ?: predictions
+        val autocapAtCursor = !shiftActive && !shiftLocked &&
+            Autocapitalisation.shouldCapitalizeAtCursor(ic, editorInfo, config.autocapitalisation)
         val transformedPredictions = casedPredictions.map {
-            applyShiftTransformation(it, shiftActive, shiftLocked)
+            applyShiftTransformation(it, shiftActive || autocapAtCursor, shiftLocked)
         }
 
         // Step 4: context rescoring of the ENGINE slate, before the augment.

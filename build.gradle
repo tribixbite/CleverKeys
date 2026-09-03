@@ -976,6 +976,9 @@ tasks.register('runMockTests', JavaExec) {
     // layouts-pref shadowing fix in LayoutManager.setLocaleTextLayout, the identity-first
     // subtype match, and the changedTo threading from onCurrentInputMethodSubtypeChanged.
     'tribixbite.cleverkeys.SubtypeLayoutFollowTest',
+    // Sentence-start autocap on swipe commits (2026-09-03): when no shift state was latched
+    // at swipe start, the commit consults the same getCursorCapsMode decision tap typing uses.
+    'tribixbite.cleverkeys.SwipeAutocapCommitTest',
     'tribixbite.cleverkeys.ClipboardMediaManagerZipSlipTest',
     'tribixbite.cleverkeys.BackupRestoreArchiveLimitsTest',
     // Audit remediation (2026-08-25) — CK-150-019/020/022 import rollback

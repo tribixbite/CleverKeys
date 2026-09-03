@@ -202,5 +202,37 @@ class Autocapitalisation(
         val SUPPORTED_CAPS_MODES =
             InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
             InputType.TYPE_TEXT_FLAG_CAP_WORDS
+
+        /**
+         * THE auto-cap decision, evaluated at a single instant: would tap typing capitalize
+         * the next letter at the current cursor?
+         *
+         * Same inputs as [started]/[delayed_callback]: the user setting, the field's declared
+         * caps modes (a field with none disables the feature outright — a misbehaving
+         * editor's [InputConnection.getCursorCapsMode] is then never consulted), and the
+         * editor's live caps mode at the cursor.
+         *
+         * Added for the swipe commit path (SuggestionHandler): the tap path reaches this
+         * decision through the latched-shift fake pointer, but the swipe path's shift
+         * snapshot (taken at gesture start) goes stale across autocap's 50ms delayed latch,
+         * suggestion commits the cursor tracker never saw, and selection-update races —
+         * device-confirmed as a swiped "bowie" committing lowercase at a sentence start.
+         * Pinned by SwipeAutocapCommitTest.
+         */
+        @JvmStatic
+        fun shouldCapitalizeAtCursor(
+            ic: InputConnection?,
+            info: EditorInfo?,
+            autocapEnabled: Boolean
+        ): Boolean {
+            if (!autocapEnabled || ic == null || info == null) return false
+            val capsMode = info.inputType and SUPPORTED_CAPS_MODES
+            if (capsMode == 0) return false
+            return try {
+                ic.getCursorCapsMode(capsMode) != 0
+            } catch (e: Exception) {
+                false
+            }
+        }
     }
 }
