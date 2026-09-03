@@ -37,7 +37,8 @@ class TestRunnerListDriftTest {
     // JUnitCore runner (they require a real Android runtime / instrumentation
     // and only compile as reference material). Fully-qualified.
     private val knownUnrunnable = setOf(
-        "tribixbite.cleverkeys.ComposeKeyTest",
+        // ComposeKeyTest was deleted 2026-09-03: its cases run for real as
+        // androidTest ComposeKeySequenceInstrumentedTest (ew-cli green 0c570be1).
         "tribixbite.cleverkeys.IntegrationTest",
     )
 
