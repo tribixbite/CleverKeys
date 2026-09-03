@@ -4,6 +4,7 @@ import android.content.res.Resources
 import android.util.LruCache
 import android.view.KeyEvent
 import java.util.TreeMap
+import tribixbite.cleverkeys.prefs.ExtraKeysPreference
 
 object LayoutModifier {
     private lateinit var globalConfig: Config
@@ -37,6 +38,9 @@ object LayoutModifier {
         extra_keys[KeyValue.getKeyByName("config")] = KeyboardData.PreferredPos.ANYWHERE
         extra_keys.putAll(globalConfig.extra_keys_param)
         extra_keys.putAll(globalConfig.extra_keys_custom)
+        // #169: with one layout the switch keys are no-ops; keep them out of the extra-keys
+        // map so the default-ON checkboxes don't re-add what modify_key strips below.
+        ExtraKeysPreference.dropLayoutSwitchKeys(extra_keys, globalConfig.layouts.size)
 
         // Number row and numpads are added after the modification pass to allow
         // removing the number keys from the main layout.

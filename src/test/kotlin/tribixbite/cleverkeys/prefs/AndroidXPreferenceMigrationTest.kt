@@ -136,12 +136,17 @@ class AndroidXPreferenceMigrationTest {
             .filter { ExtraKeysPreference.defaultChecked(it) }
             .toSet()
 
-        assertWithMessage("a fresh install shows exactly these extra keys")
+        assertWithMessage(
+            "a fresh install enables exactly these extra keys (#169: switch_forward/" +
+            "switch_backward default ON because the bottom-row gestures are loc-gated by " +
+            "their checkboxes now; LayoutModifier still hides them with a single layout)"
+        )
             .that(onByDefault).containsExactly(
                 "voice_typing", "change_method", "switch_clipboard", "compose",
                 "tab", "esc", "f11_placeholder", "f12_placeholder",
                 "cut", "copy", "paste", "undo",
                 "home", "end", "page_up", "page_down", "menu",
+                "switch_forward", "switch_backward",
             )
         assertWithMessage("the accent and combining keys are opt-in, not on by default")
             .that(ExtraKeysPreference.defaultChecked("accent_aigu")).isFalse()

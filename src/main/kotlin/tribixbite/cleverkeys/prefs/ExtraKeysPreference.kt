@@ -180,6 +180,12 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "tab", "esc", "f11_placeholder", "f12_placeholder",
                 "cut", "copy", "paste", "undo",
                 "home", "end", "page_up", "page_down", "menu" -> true
+                // #169: the bottom row's space-bar switch gestures are now `loc`, i.e.
+                // governed by these checkboxes. Default ON so multi-layout installs with no
+                // stored pref keep their layout-switch gestures; dropLayoutSwitchKeys still
+                // hides them whenever only one layout is enabled, so single-layout defaults
+                // are unchanged.
+                "switch_forward", "switch_backward" -> true
                 else -> false
             }
         }
@@ -433,6 +439,20 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
         @JvmStatic
         fun prefKeyOfKeyName(keyName: String): String {
             return "extra_key_$keyName"
+        }
+
+        /**
+         * #169: with a single enabled layout, `switch_forward`/`switch_backward` are no-op
+         * keys — `LayoutModifier.modify_key` already strips their bottom-row instances in
+         * that case, and this removes them from the computed extra-keys map so
+         * `addExtraKeys` cannot re-add them just because their checkboxes default to ON.
+         * With 2+ layouts the map is left untouched and the checkboxes are authoritative.
+         */
+        @JvmStatic
+        fun <V> dropLayoutSwitchKeys(extraKeys: MutableMap<KeyValue, V>, layoutCount: Int) {
+            if (layoutCount > 1) return
+            extraKeys.remove(KeyValue.getKeyByName("switch_forward"))
+            extraKeys.remove(KeyValue.getKeyByName("switch_backward"))
         }
     }
 }
