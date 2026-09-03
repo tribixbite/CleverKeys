@@ -900,8 +900,8 @@
     <string name="import_preview_modified">Geändert (%1$d)</string>
     <string name="import_preview_added">Hinzugefügt (%1$d)</string>
     <string name="import_preview_short_swipe_header">Kurzwisch-Anpassungen</string>
-    <string name="import_preview_skipped_collapse">▼ Ungültig/übersprungen (%1$d) — zum Einklappen tippen</string>
-    <string name="import_preview_skipped_expand">▶ Ungültig/übersprungen (%1$d) — zum Ausklappen tippen</string>
+    <string name="import_preview_skipped_collapse">▼ Nicht importierbar — intern/abgeleitet (%1$d) — zum Einklappen tippen</string>
+    <string name="import_preview_skipped_expand">▶ Nicht importierbar — intern/abgeleitet (%1$d) — zum Ausklappen tippen</string>
     <string name="ctc_settings_title">CTC-Engine-Einstellungen</string>
     <string name="ctc_settings_intro">Feinabstimmung für die CTC-Wisch-Engine (lateinische, kyrillische, griechische und hebräische Layouts unter der CTC-Vorhersage-Engine). Bewertungskonstanten sind offline kalibriert und nicht einstellbar.</string>
     <string name="ctc_settings_beam_section">Beam-Suche</string>

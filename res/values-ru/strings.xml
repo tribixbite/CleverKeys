@@ -886,8 +886,8 @@
     <string name="import_preview_modified">Изменённые (%1$d)</string>
     <string name="import_preview_added">Добавленные (%1$d)</string>
     <string name="import_preview_short_swipe_header">Настройки коротких свайпов</string>
-    <string name="import_preview_skipped_collapse">▼ Недопустимые/пропущенные (%1$d) — нажмите, чтобы свернуть</string>
-    <string name="import_preview_skipped_expand">▶ Недопустимые/пропущенные (%1$d) — нажмите, чтобы развернуть</string>
+    <string name="import_preview_skipped_collapse">▼ Не импортируются — внутренние/производные (%1$d) — нажмите, чтобы свернуть</string>
+    <string name="import_preview_skipped_expand">▶ Не импортируются — внутренние/производные (%1$d) — нажмите, чтобы развернуть</string>
     <string name="ctc_settings_title">Настройки движка CTC</string>
     <string name="ctc_settings_intro">Настройка свайп-движка CTC (раскладки на латинице, кириллице, греческом и иврите при движке предсказаний CTC). Константы оценки откалиброваны офлайн и не настраиваются пользователем.</string>
     <string name="ctc_settings_beam_section">Лучевой поиск</string>

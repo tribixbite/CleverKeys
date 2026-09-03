@@ -800,8 +800,8 @@
     <string name="import_preview_short_swipe_replace">Замінити — стерти наявні, встановити набір із файлу</string>
     <string name="import_preview_short_swipe_skip">Пропустити — не імпортувати</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленням з файлу.</item><item quantity="few">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item><item quantity="many">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item><item quantity="other">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item></plurals>
-    <string name="import_preview_skipped_collapse">▼ Недійсні/пропущені (%1$d) — торкніться, щоб згорнути</string>
-    <string name="import_preview_skipped_expand">▶ Недійсні/пропущені (%1$d) — торкніться, щоб розгорнути</string>
+    <string name="import_preview_skipped_collapse">▼ Не імпортуються — внутрішні/похідні (%1$d) — торкніться, щоб згорнути</string>
+    <string name="import_preview_skipped_expand">▶ Не імпортуються — внутрішні/похідні (%1$d) — торкніться, щоб розгорнути</string>
     <string name="import_preview_source_screen">Екран джерела: %1$d×%2$d@%3$s</string>
     <string name="import_preview_source_version">Джерело: %1$s</string>
     <string name="import_preview_title">Попередній перегляд імпорту</string>

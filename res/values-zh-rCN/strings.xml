@@ -787,8 +787,8 @@
     <string name="import_preview_short_swipe_replace">替换 — 清除现有，安装文件中的集合</string>
     <string name="import_preview_short_swipe_skip">跳过 — 不导入</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="other">这将用文件中的 %1$d 条映射替换你现有的全部短滑动自定义。</item></plurals>
-    <string name="import_preview_skipped_collapse">▼ 无效/已跳过（%1$d）— 点按收起</string>
-    <string name="import_preview_skipped_expand">▶ 无效/已跳过（%1$d）— 点按展开</string>
+    <string name="import_preview_skipped_collapse">▼ 不可导入 — 内部/派生（%1$d）— 点按收起</string>
+    <string name="import_preview_skipped_expand">▶ 不可导入 — 内部/派生（%1$d）— 点按展开</string>
     <string name="import_preview_source_screen">来源屏幕：%1$d×%2$d@%3$s</string>
     <string name="import_preview_source_version">来源：%1$s</string>
     <string name="import_preview_title">导入预览</string>

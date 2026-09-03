@@ -892,8 +892,8 @@
     <string name="import_preview_modified">Diubah (%1$d)</string>
     <string name="import_preview_added">Ditambahkan (%1$d)</string>
     <string name="import_preview_short_swipe_header">Kustomisasi geser pendek</string>
-    <string name="import_preview_skipped_collapse">▼ Tidak valid/dilewati (%1$d) — ketuk untuk menciutkan</string>
-    <string name="import_preview_skipped_expand">▶ Tidak valid/dilewati (%1$d) — ketuk untuk membentangkan</string>
+    <string name="import_preview_skipped_collapse">▼ Tidak dapat diimpor — internal/turunan (%1$d) — ketuk untuk menciutkan</string>
+    <string name="import_preview_skipped_expand">▶ Tidak dapat diimpor — internal/turunan (%1$d) — ketuk untuk membentangkan</string>
     <string name="ctc_settings_title">Pengaturan Mesin CTC</string>
     <string name="ctc_settings_intro">Penyetelan untuk mesin geser CTC (tata letak Latin, Sirilik, Yunani, dan Ibrani di bawah mesin prediksi CTC). Konstanta skor dikalibrasi offline dan tidak dapat disetel pengguna.</string>
     <string name="ctc_settings_beam_section">Pencarian Beam</string>

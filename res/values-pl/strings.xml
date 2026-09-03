@@ -890,8 +890,8 @@
     <string name="import_preview_modified">Zmodyfikowane (%1$d)</string>
     <string name="import_preview_added">Dodane (%1$d)</string>
     <string name="import_preview_short_swipe_header">Dostosowania krótkich gestów</string>
-    <string name="import_preview_skipped_collapse">▼ Nieprawidłowe/pominięte (%1$d) — dotknij, aby zwinąć</string>
-    <string name="import_preview_skipped_expand">▶ Nieprawidłowe/pominięte (%1$d) — dotknij, aby rozwinąć</string>
+    <string name="import_preview_skipped_collapse">▼ Nie do zaimportowania — wewnętrzne/pochodne (%1$d) — dotknij, aby zwinąć</string>
+    <string name="import_preview_skipped_expand">▶ Nie do zaimportowania — wewnętrzne/pochodne (%1$d) — dotknij, aby rozwinąć</string>
     <string name="ctc_settings_title">Ustawienia silnika CTC</string>
     <string name="ctc_settings_intro">Dostrajanie silnika gestów CTC (układy łacińskie, cyrylickie, greckie i hebrajskie w silniku przewidywania CTC). Stałe punktacji są kalibrowane offline i nie podlegają regulacji.</string>
     <string name="ctc_settings_beam_section">Przeszukiwanie wiązkowe (beam search)</string>

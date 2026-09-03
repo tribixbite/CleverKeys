@@ -919,8 +919,8 @@
     <string name="import_preview_modified">تغییریافته (%1$d)</string>
     <string name="import_preview_added">افزوده‌شده (%1$d)</string>
     <string name="import_preview_short_swipe_header">سفارشی‌سازی‌های کشیدن کوتاه</string>
-    <string name="import_preview_skipped_collapse">▼ نامعتبر/ردشده (%1$d) — برای بستن ضربه بزنید</string>
-    <string name="import_preview_skipped_expand">▶ نامعتبر/ردشده (%1$d) — برای گشودن ضربه بزنید</string>
+    <string name="import_preview_skipped_collapse">▼ غیرقابل واردکردن — داخلی/مشتق‌شده (%1$d) — برای بستن ضربه بزنید</string>
+    <string name="import_preview_skipped_expand">▶ غیرقابل واردکردن — داخلی/مشتق‌شده (%1$d) — برای گشودن ضربه بزنید</string>
     <string name="ctc_settings_title">تنظیمات موتور CTC</string>
     <string name="ctc_settings_intro">تنظیم موتور کشیدن CTC (چیدمان‌های لاتین، سیریلیک، یونانی و عبری با موتور پیش‌بینی CTC). ثابت‌های امتیازدهی به‌صورت آفلاین واسنجی شده‌اند و توسط کاربر قابل تنظیم نیستند.</string>
     <string name="ctc_settings_beam_section">جستجوی پرتویی</string>

@@ -920,8 +920,8 @@
     <string name="import_preview_modified">Modificate (%1$d)</string>
     <string name="import_preview_added">Aggiunte (%1$d)</string>
     <string name="import_preview_short_swipe_header">Personalizzazioni scorrimenti brevi</string>
-    <string name="import_preview_skipped_collapse">▼ Non valide/saltate (%1$d) — tocca per comprimere</string>
-    <string name="import_preview_skipped_expand">▶ Non valide/saltate (%1$d) — tocca per espandere</string>
+    <string name="import_preview_skipped_collapse">▼ Non importabili — interne/derivate (%1$d) — tocca per comprimere</string>
+    <string name="import_preview_skipped_expand">▶ Non importabili — interne/derivate (%1$d) — tocca per espandere</string>
     <string name="ctc_settings_title">Impostazioni motore CTC</string>
     <string name="ctc_settings_intro">Regolazioni per il motore di scorrimento CTC (layout latini, cirillici, greci ed ebraici con il motore di previsione CTC). Le costanti di punteggio sono calibrate offline e non modificabili dall\'utente.</string>
     <string name="ctc_settings_beam_section">Ricerca beam</string>

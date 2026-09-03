@@ -893,8 +893,8 @@
     <string name="import_preview_modified">Binago (%1$d)</string>
     <string name="import_preview_added">Idinagdag (%1$d)</string>
     <string name="import_preview_short_swipe_header">Mga short-swipe customization</string>
-    <string name="import_preview_skipped_collapse">▼ Invalid/nilaktawan (%1$d) — i-tap para i-collapse</string>
-    <string name="import_preview_skipped_expand">▶ Invalid/nilaktawan (%1$d) — i-tap para i-expand</string>
+    <string name="import_preview_skipped_collapse">▼ Hindi maaaring i-import — internal/derived (%1$d) — i-tap para i-collapse</string>
+    <string name="import_preview_skipped_expand">▶ Hindi maaaring i-import — internal/derived (%1$d) — i-tap para i-expand</string>
     <string name="ctc_settings_title">Mga Setting ng CTC Engine</string>
     <string name="ctc_settings_intro">Pag-tune para sa CTC swipe engine (mga layout na Latin, Cyrillic, Griyego at Hebreo sa ilalim ng CTC prediction engine). Ang mga scoring constant ay na-calibrate offline at hindi maaaring i-tune ng user.</string>
     <string name="ctc_settings_beam_section">Beam Search</string>

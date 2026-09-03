@@ -817,8 +817,8 @@
     <string name="import_preview_short_swipe_replace">Thay thế — xóa cái hiện có, cài bộ trong tệp</string>
     <string name="import_preview_short_swipe_skip">Bỏ qua — không nhập</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="other">Thao tác này sẽ THAY THẾ toàn bộ tùy chỉnh vuốt ngắn hiện có của bạn bằng %1$d ánh xạ trong tệp.</item></plurals>
-    <string name="import_preview_skipped_collapse">▼ Không hợp lệ/bỏ qua (%1$d) — chạm để thu gọn</string>
-    <string name="import_preview_skipped_expand">▶ Không hợp lệ/bỏ qua (%1$d) — chạm để mở rộng</string>
+    <string name="import_preview_skipped_collapse">▼ Không thể nhập — nội bộ/phái sinh (%1$d) — chạm để thu gọn</string>
+    <string name="import_preview_skipped_expand">▶ Không thể nhập — nội bộ/phái sinh (%1$d) — chạm để mở rộng</string>
     <string name="import_preview_source_screen">Màn hình nguồn: %1$d×%2$d@%3$s</string>
     <string name="import_preview_source_version">Nguồn: %1$s</string>
     <string name="import_preview_title">Xem trước khi nhập</string>

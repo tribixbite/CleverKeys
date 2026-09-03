@@ -880,8 +880,8 @@
     <string name="import_preview_modified">수정됨(%1$d)</string>
     <string name="import_preview_added">추가됨(%1$d)</string>
     <string name="import_preview_short_swipe_header">짧은 스와이프 사용자 지정</string>
-    <string name="import_preview_skipped_collapse">▼ 잘못됨/건너뜀(%1$d) — 탭하여 접기</string>
-    <string name="import_preview_skipped_expand">▶ 잘못됨/건너뜀(%1$d) — 탭하여 펼치기</string>
+    <string name="import_preview_skipped_collapse">▼ 가져올 수 없음 — 내부/파생(%1$d) — 탭하여 접기</string>
+    <string name="import_preview_skipped_expand">▶ 가져올 수 없음 — 내부/파생(%1$d) — 탭하여 펼치기</string>
     <string name="ctc_settings_title">CTC 엔진 설정</string>
     <string name="ctc_settings_intro">CTC 스와이프 엔진(CTC 예측 엔진의 라틴·키릴·그리스·히브리 레이아웃) 조정. 점수 상수는 오프라인에서 보정되며 사용자가 조정할 수 없습니다.</string>
     <string name="ctc_settings_beam_section">빔 검색</string>

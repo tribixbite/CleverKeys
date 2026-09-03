@@ -1260,8 +1260,8 @@
     <string name="import_preview_added" tools:ignore="PluralsCandidate">Added (%1$d)</string>
     <string name="import_preview_short_swipe_header">Short-swipe customizations</string>
     <!-- %1$d = entries the importer could not apply. The leading glyph is the disclosure state. -->
-    <string name="import_preview_skipped_collapse" tools:ignore="PluralsCandidate">▼ Invalid/skipped (%1$d) — tap to collapse</string>
-    <string name="import_preview_skipped_expand" tools:ignore="PluralsCandidate">▶ Invalid/skipped (%1$d) — tap to expand</string>
+    <string name="import_preview_skipped_collapse" tools:ignore="PluralsCandidate">▼ Not importable — internal/derived (%1$d) — tap to collapse</string>
+    <string name="import_preview_skipped_expand" tools:ignore="PluralsCandidate">▶ Not importable — internal/derived (%1$d) — tap to expand</string>
 
     <!-- CtcSettingsActivity.kt -->
     <string name="ctc_settings_title">CTC Engine Settings</string>

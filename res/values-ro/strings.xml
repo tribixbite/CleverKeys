@@ -908,8 +908,8 @@
     <string name="import_preview_modified">Modificate (%1$d)</string>
     <string name="import_preview_added">Adăugate (%1$d)</string>
     <string name="import_preview_short_swipe_header">Personalizări de glisare scurtă</string>
-    <string name="import_preview_skipped_collapse">▼ Nevalide/omise (%1$d) — atinge pentru a restrânge</string>
-    <string name="import_preview_skipped_expand">▶ Nevalide/omise (%1$d) — atinge pentru a extinde</string>
+    <string name="import_preview_skipped_collapse">▼ Neimportabile — interne/derivate (%1$d) — atinge pentru a restrânge</string>
+    <string name="import_preview_skipped_expand">▶ Neimportabile — interne/derivate (%1$d) — atinge pentru a extinde</string>
     <string name="ctc_settings_title">Setările motorului CTC</string>
     <string name="ctc_settings_intro">Reglaje pentru motorul de glisare CTC (aranjamente latine, chirilice, grecești și ebraice sub motorul de predicție CTC). Constantele de scor sunt calibrate offline și nu pot fi reglate de utilizator.</string>
     <string name="ctc_settings_beam_section">Căutare beam</string>

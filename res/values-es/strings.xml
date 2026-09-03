@@ -898,8 +898,8 @@
     <string name="import_preview_modified">Modificadas (%1$d)</string>
     <string name="import_preview_added">Añadidas (%1$d)</string>
     <string name="import_preview_short_swipe_header">Personalizaciones de deslizamiento corto</string>
-    <string name="import_preview_skipped_collapse">▼ No válidas/omitidas (%1$d) — toca para plegar</string>
-    <string name="import_preview_skipped_expand">▶ No válidas/omitidas (%1$d) — toca para desplegar</string>
+    <string name="import_preview_skipped_collapse">▼ No importables — internas/derivadas (%1$d) — toca para plegar</string>
+    <string name="import_preview_skipped_expand">▶ No importables — internas/derivadas (%1$d) — toca para desplegar</string>
     <string name="ctc_settings_title">Ajustes del motor CTC</string>
     <string name="ctc_settings_intro">Ajuste fino del motor de deslizamiento CTC (diseños latinos, cirílicos, griegos y hebreos bajo el motor de predicción CTC). Las constantes de puntuación se calibran fuera de línea y no son ajustables.</string>
     <string name="ctc_settings_beam_section">Búsqueda por haz</string>

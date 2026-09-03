@@ -880,8 +880,8 @@
     <string name="import_preview_modified">Gewijzigd (%1$d)</string>
     <string name="import_preview_added">Toegevoegd (%1$d)</string>
     <string name="import_preview_short_swipe_header">Korte-veegaanpassingen</string>
-    <string name="import_preview_skipped_collapse">▼ Ongeldig/overgeslagen (%1$d) — tik om in te klappen</string>
-    <string name="import_preview_skipped_expand">▶ Ongeldig/overgeslagen (%1$d) — tik om uit te klappen</string>
+    <string name="import_preview_skipped_collapse">▼ Niet importeerbaar — intern/afgeleid (%1$d) — tik om in te klappen</string>
+    <string name="import_preview_skipped_expand">▶ Niet importeerbaar — intern/afgeleid (%1$d) — tik om uit te klappen</string>
     <string name="ctc_settings_title">CTC-engine-instellingen</string>
     <string name="ctc_settings_intro">Afstemming voor de CTC-veegengine (Latijnse, Cyrillische, Griekse en Hebreeuwse indelingen onder de CTC-voorspellingsengine). Scoreconstanten zijn offline gekalibreerd en niet door de gebruiker instelbaar.</string>
     <string name="ctc_settings_beam_section">Beam search</string>

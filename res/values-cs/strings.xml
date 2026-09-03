@@ -880,8 +880,8 @@
     <string name="import_preview_modified">Změněno (%1$d)</string>
     <string name="import_preview_added">Přidáno (%1$d)</string>
     <string name="import_preview_short_swipe_header">Přizpůsobení krátkých tahů</string>
-    <string name="import_preview_skipped_collapse">▼ Neplatné/přeskočené (%1$d) — klepnutím sbalíte</string>
-    <string name="import_preview_skipped_expand">▶ Neplatné/přeskočené (%1$d) — klepnutím rozbalíte</string>
+    <string name="import_preview_skipped_collapse">▼ Nelze importovat — interní/odvozené (%1$d) — klepnutím sbalíte</string>
+    <string name="import_preview_skipped_expand">▶ Nelze importovat — interní/odvozené (%1$d) — klepnutím rozbalíte</string>
     <string name="ctc_settings_title">Nastavení modulu CTC</string>
     <string name="ctc_settings_intro">Ladění modulu tahů CTC (latinková, cyrilská, řecká a hebrejská rozložení pod predikčním modulem CTC). Bodovací konstanty jsou kalibrovány offline a nelze je měnit.</string>
     <string name="ctc_settings_beam_section">Paprskové hledání</string>
