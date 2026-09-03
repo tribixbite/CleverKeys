@@ -92,10 +92,14 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 - **ALWAYS** implement features properly and completely.
 - **ALWAYS** do things the right way, not the expedient way.
 
-**TESTING POLICY:**
-- **NEVER** test locally via ADB (screencap, input, am start, etc.). ADB is for build-install only.
-- **ALWAYS** write instrumented tests (ew-cli) or pure JVM tests when testing is possible.
-- If a scenario cannot be tested via instrumented or pure tests, **ask the user to test manually**.
+**TESTING POLICY** (rewritten 2026-09-03; supersedes the old "never test via ADB" rule):
+- **ADB testing IS allowed.** PREFER the dedicated test phones: Saga (192.168.1.243:5555) and
+  Pixel 8 Pro (wireless-debugging port rotates — rediscover with nmap, see global CLAUDE.md).
+- **NEVER** run UI tests against the Termux HOST phone itself — this device is the dev box.
+- Instrumented tests (ew-cli) and pure JVM tests remain **first choice** where they fit;
+  use ADB for what they can't cover (visual verification, real-IME interaction, device state).
+- Saga hard rules stand: **never** framework restart (`stop`/`start` — bricks it), leave no
+  trace (return focus, reinstall nothing extra), restore any settings you change (e.g. `ime set`).
 
 ---
 

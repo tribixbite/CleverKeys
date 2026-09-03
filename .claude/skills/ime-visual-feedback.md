@@ -121,10 +121,10 @@ Edit-mode validation errors use Toast deliberately — they fire from activities
 
 ## Testing Feedback Patterns
 
-ADB testing is not allowed (see `CLAUDE.md` testing policy). For animation work:
+ADB testing is allowed on the dedicated test phones (Saga/Pixel — see `CLAUDE.md` testing policy; never UI-test the Termux host phone). For animation work:
 1. Build and install via `./build-on-termux.sh`
-2. Ask the user to verify the pulse count visually
-3. Fall back to pure JVM tests for Boolean return values (`pinEntry()` dedup logic) — the animation itself is visual-only and must be human-verified
+2. Verify the pulse count visually via ADB screencap on a test phone (or ask the user)
+3. Fall back to pure JVM tests for Boolean return values (`pinEntry()` dedup logic) — the animation itself is visual-only and needs eyes on it
 
 ## Related Skills
 - `clipboard-panel-architecture.md` — where tab icons live in the view hierarchy
