@@ -26,7 +26,7 @@ internal fun buildSettingsResultMessage(
         appendLine("• Excluded by you: ${result.excludedByUserCount}")
     }
     if (result.skippedCount > 0) {
-        appendLine("• Invalid/skipped: ${result.skippedCount}")
+        appendLine("• Not importable (internal/derived): ${result.skippedCount}")
     }
     if (result.shortSwipeCustomizationsImported > 0) {
         appendLine("• Short-swipe applied: ${result.shortSwipeCustomizationsImported}")

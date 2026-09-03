@@ -58,7 +58,7 @@ class BackupRestoreResultMessagesTest {
 
         val msg = buildSettingsResultMessage(result)
 
-        assertTrue(msg.contains("• Invalid/skipped: 4"))
+        assertTrue(msg.contains("• Not importable (internal/derived): 4"))
     }
 
     @Test
