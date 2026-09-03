@@ -57,9 +57,10 @@ class CtcScriptSupportTest {
     @Test
     fun `the recorded alphabets are the ones the campaign measured`() {
         // Copied character-for-character from APP_WIRING_CHECKLIST §2.2. Restated here as
-        // literals so that an edit to the table has to be made TWICE, deliberately — the pin
-        // against the shipped fixtures below only covers scripts whose fixture ships, and four
-        // of the six do not yet.
+        // literals so that an edit to the table has to be made TWICE, deliberately. All six
+        // fixtures ship as of 2026-09-03, so the fixture pin below now covers every row — this
+        // duplicate stays because it is the only copy that would survive a fixture regeneration
+        // (the fixture pin compares the table to the FIXTURE, which a bad regeneration moves).
         assertThat(CtcScriptSupport.SCRIPTS["ru"]!!.alphabet)
             .isEqualTo("абвгдежзийклмнопрстуфхцчшщыьэюя")
         assertThat(CtcScriptSupport.SCRIPTS["el"]!!.alphabet)

@@ -128,8 +128,8 @@ class CtcImportedPackSupportTest {
      * HANDOFF rule 4: a non-Latin script needs its own model, trie and golden fixture. This path
      * hands the Latin a–z encoder a lexicon, so admitting a scripted language here would decode it
      * against the wrong emission head — the silently-wrong-decode failure the rule exists for.
-     * `ru` and `el` reach CKDT_LANGPACK through the static table instead, which is why they are
-     * unaffected.
+     * Every script language reaches CKDT_LANGPACK through the static table instead, which is why
+     * none of them is affected by this refusal.
      */
     @Test
     fun `a scripted language is never served through the imported-Latin path`() {
@@ -137,20 +137,16 @@ class CtcImportedPackSupportTest {
             assertWithMessage("$scripted has a CtcScriptSupport row and must use the script path")
                 .that(CtcImportedPackSupport.mayServeImportedPack(scripted)).isFalse()
         }
+        // Until 2026-09-03 this test's second half asserted that the INFRASTRUCTURE scripts
+        // stayed unserved even against a lying resolver. That set is now EMPTY — all six script
+        // rows are ROUTED — so the half was deleted deliberately (as its own guard demanded)
+        // and replaced by the invariant that made it deletable: every script language is a
+        // STATIC row, so the resolver — lying or absent — can never be what serves it.
         CtcImportedPackSupport.installResolver { true }
-        // DERIVED from the script table rather than listed, so wiring a script (el, 2026-08-30)
-        // moves it out of this loop automatically instead of turning a correct table edit into a
-        // spurious red here.
-        val unrouted = CtcScriptSupport.SCRIPTS
-            .filterValues { it.status != CtcScriptSupport.Status.ROUTED }
-            .keys
-        assertWithMessage(
-            "no INFRASTRUCTURE script remains, so this half asserts nothing — delete it " +
-                "deliberately rather than leaving a vacuous green"
-        ).that(unrouted).isNotEmpty()
-        for (language in unrouted) {
-            assertWithMessage("$language is INFRASTRUCTURE-only and must stay unserved")
-                .that(CtcLanguageSupport.sourceFor(language)).isNull()
+        for (scripted in CtcScriptSupport.SCRIPTS.keys) {
+            assertWithMessage("$scripted must be served by the static table, not the resolver")
+                .that(CtcLanguageSupport.SUPPORTED[scripted])
+                .isEqualTo(CtcLanguageSupport.LexiconSource.CKDT_LANGPACK)
         }
     }
 
@@ -280,7 +276,7 @@ class CtcImportedPackSupportTest {
 
     @Test
     fun `evaluating a non-candidate language says so rather than measuring it`() {
-        for (code in listOf("en", "ru", "el")) {
+        for (code in listOf("en") + CtcScriptSupport.SCRIPTS.keys) {
             assertThat(CtcImportedPackSupport.evaluate(code, lexicon(5_000, 0)).verdict)
                 .isEqualTo(CtcImportedPackSupport.Verdict.NOT_AN_IMPORT_CANDIDATE)
         }
@@ -323,7 +319,7 @@ class CtcImportedPackSupportTest {
         // a Cyrillic word list has no a–z spelling for ANY of its words. (Both of these are
         // refused earlier by mayServeImportedPack too — this asserts the measurement would have
         // refused them on its own.)
-        for (code in listOf("ru", "el")) {
+        for (code in listOf("ru", "el", "uk", "bg", "mk", "he")) {
             val words = packWords(code)
             val projectable = words.count { CtcAzProjection.project(it) != null }
             assertWithMessage("$code is a non-Latin script and must not project onto a–z")

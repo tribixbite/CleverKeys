@@ -21,9 +21,26 @@ import java.util.Locale
  * > feature.**
  *
  * So a row exists for all six scripts — the alphabet, the layout and the artifact names are
- * knowledge worth recording — but only rows at [Status.ROUTED] widen the router. Everything
- * else is [Status.INFRASTRUCTURE]: wired far enough that landing the script is a table edit plus
- * assets, and no further.
+ * knowledge worth recording — but only rows at [Status.ROUTED] widen the router. As of
+ * 2026-09-03 all six rows are ROUTED (ru 2026-08-29, el 2026-08-30, uk/bg/mk/he 2026-09-03 once
+ * ARC-056 shipped their langpacks); [Status.INFRASTRUCTURE] remains the entry state any future
+ * script starts at — wired far enough that landing it is a table edit plus assets, and no
+ * further.
+ *
+ * ## Turkish is deliberately NOT a row here (decision recorded 2026-09-03, final)
+ *
+ * **tr stays on tap + geometric permanently.** It is a LATIN-script language, so it could only
+ * ever reach CTC through the imported-pack path, and that path measures it out: dotless ı
+ * (U+0131) has no NFD decomposition, so only **73.34 %** of the lexicon — and 81.7 % of the
+ * thousand most frequent words (`nasıl`, `artık`, `mı`, `aynı`) — is a–z-projectable, far below
+ * the 98 %/99 % eligibility thresholds ([CtcImportedPackSupport]'s measured table). A
+ * tr-specific ı→i fold would be a SERVING-SEMANTICS change with no measured holdout evidence
+ * behind it, so it is not an app-side option. No row exists because no tr model exists — a
+ * [ScriptWiring.alphabet] IS a model's emission slot order, and a row without a model would be
+ * fabricated data that also flipped [alphabetFor]/`presetFor`/the imported-pack refusal reason
+ * for a language the table does not serve. Reopening condition: an ML-side tr-fold experiment
+ * with holdout numbers, which would arrive as a per-script model + fixture and therefore as a
+ * normal row.
  *
  * ## The sharpest footgun in the whole plan
  *
@@ -164,55 +181,65 @@ object CtcScriptSupport {
             script = "cyrillic",
             layoutXml = "cyrl_jcuken_uk.xml",
             alphabet = "абвгдежзийклмнопрстуфхцчшщьюяєі",
-            modelAsset = null,
-            goldenFixture = null,
-            status = Status.INFRASTRUCTURE,
-            gap = "no lexicon exists. uk must be built ML-side (`build_wordlist.py --lang uk`; " +
-                "the `cyrillic` script gate already exists) and packaged as a CKDT v2 langpack " +
-                "on the app's 255−rank scale. uk_synth_v3_ch80_fp16w.onnx (sha af9959a8…) and " +
-                "its fixture (sha 93602db1…) are also unshipped. The projection is implemented " +
-                "(no folds; ї/ґ words rejected as untypeable — 4.03 % of the vocabulary; " +
-                "serving them needs the corner-alias path, a different input mode).",
+            // Generation 4, sha af9959a8954961eec117808371937cb26152c82a82cad0fc6a0ac06fd695db76,
+            // 589,406 B. Fixture sha 93602db1200a3b37ef11570d4f4ee3afdad2a45b0ca4f857a784728cdbb5cc98.
+            // Lexicon: `langpack-uk` (CKDT v2, 255−rank scale — shipped 2026-09-01, ARC-056).
+            // The projection applies no folds; ї/ґ words are rejected as untypeable (4.03 % of
+            // the vocabulary) — those live in corner slots, and serving them is a different
+            // input mode (flick), not a projection change. uk has NO real-swipe probe at any
+            // tier; never quote the synthesis-holdout fixture level as accuracy.
+            modelAsset = "models/uk_synth_v3_ch80_fp16w.onnx",
+            goldenFixture = "uk_synth_v3_ch80_fp16w_golden.json",
+            status = Status.ROUTED,
+            gap = null,
         ),
         "bg" to ScriptWiring(
             language = "bg",
             script = "cyrillic",
             layoutXml = "cyrl_ueishsht.xml",
             alphabet = "абвгдежзийклмнопрстуфхцчшщъьюя",
-            modelAsset = null,
-            goldenFixture = null,
-            status = Status.INFRASTRUCTURE,
-            gap = "no lexicon exists — must be built ML-side. " +
-                "bg_synth_v3_ch80_fp16w.onnx (sha 119d42f7…) and its fixture (sha f776ea03…) " +
-                "are unshipped. The projection is implemented (no NFD; ѝ→и).",
+            // Generation 4, sha 119d42f70cc763336f9a86efdc5ae4f562ba4a28179c2d386026bef674c039a7,
+            // 589,406 B. Fixture sha f776ea03ab675ff6b741a3297c4f88b11f7af2cb183ce7b2604f082ed8420b9d.
+            // Lexicon: `langpack-bg` (CKDT v2, 255−rank scale — shipped 2026-09-01, ARC-056).
+            // Projection: no NFD; ѝ→и. bg has NO real-swipe probe at any tier; never quote the
+            // synthesis-holdout fixture level as accuracy.
+            modelAsset = "models/bg_synth_v3_ch80_fp16w.onnx",
+            goldenFixture = "bg_synth_v3_ch80_fp16w_golden.json",
+            status = Status.ROUTED,
+            gap = null,
         ),
         "mk" to ScriptWiring(
             language = "mk",
             script = "cyrillic",
             layoutXml = "cyrl_lynyertdz_mk.xml",
             alphabet = "абвгдежзиклмнопрстуфхцчшѓѕјљњќџ",
-            modelAsset = null,
-            goldenFixture = null,
-            status = Status.INFRASTRUCTURE,
-            gap = "no lexicon exists — must be built ML-side. " +
-                "mk_synth_v3_ch80_fp16w.onnx (sha 4e371d96…) and its fixture (sha 015c9bae…) " +
-                "are unshipped. The projection is implemented (no NFD; ѐ→е, ѝ→и).",
+            // Generation 4, sha 4e371d967bf24f260eb539848ead7860f56dc904f6bfc74235879b76e81ae022,
+            // 589,406 B. Fixture sha 015c9bae7e25a97b0ac8bd6062bb58376caaa3aca99c138d0d531ff1887e0ccf.
+            // Lexicon: `langpack-mk` (CKDT v2, 255−rank scale — shipped 2026-09-01, ARC-056).
+            // Projection: no NFD; ѐ→е, ѝ→и. mk has NO real-swipe probe at any tier; never quote
+            // the synthesis-holdout fixture level as accuracy.
+            modelAsset = "models/mk_synth_v3_ch80_fp16w.onnx",
+            goldenFixture = "mk_synth_v3_ch80_fp16w_golden.json",
+            status = Status.ROUTED,
+            gap = null,
         ),
         "he" to ScriptWiring(
             language = "he",
             script = "hebrew",
             layoutXml = "hebr_1_il.xml",
             alphabet = "אבגדהוזחטיךכלםמןנסעףפץצקרשת",
-            modelAsset = null,
-            goldenFixture = null,
-            status = Status.INFRASTRUCTURE,
-            gap = "no lexicon exists, and `build_wordlist._is_script_word` needs a new " +
-                "`hebrew` branch (0x0590–0x05FF) — it currently raises on any script but " +
-                "latin/greek/cyrillic. he_synth_v3_ch80_fp16w.onnx (sha a3823713…) and its " +
-                "fixture (sha b29a99f4…) are unshipped. The projection is implemented (NFD → " +
-                "drop Mn → NFC; niqqud are not keys). he's old parity flag is a GENERATION-2 " +
-                "fact and is not a reason to hold he back: generation 4 exports clean at the " +
-                "default tolerance (3.57e-04, argmax 100/100).",
+            // Generation 4, sha a382371363653fbe7c806482035aa9e27968b9c098591910d24f9f1ba43212c7,
+            // 589,406 B. Fixture sha b29a99f4ac2c4f82547d040131ea48771f2791817287de6e3f9ec52fc9758ad9.
+            // Lexicon: `langpack-he` (CKDT v2, 255−rank scale — shipped 2026-09-01, ARC-056;
+            // `build_wordlist._is_script_word`'s `hebrew` branch landed with it). Projection:
+            // NFD → drop Mn → NFC; niqqud are not keys. he's old parity flag was a GENERATION-2
+            // fact: generation 4 exports clean at the default tolerance (3.57e-04, argmax
+            // 100/100). he has NO real-swipe probe at any tier; never quote the
+            // synthesis-holdout fixture level as accuracy.
+            modelAsset = "models/he_synth_v3_ch80_fp16w.onnx",
+            goldenFixture = "he_synth_v3_ch80_fp16w_golden.json",
+            status = Status.ROUTED,
+            gap = null,
         ),
     )
 

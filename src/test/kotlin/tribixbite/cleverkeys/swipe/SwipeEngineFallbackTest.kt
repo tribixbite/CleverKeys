@@ -68,13 +68,19 @@ class SwipeEngineFallbackTest {
             cornerOnlyLetters = "",
         )
 
-    /** A board whose script has no `ROUTED` row — gate 1 refuses it on metadata alone. */
-    private fun hebrewBoard(name: String = "Hebrew") =
+    /**
+     * A board whose script has no `ROUTED` row — gate 1 refuses it on metadata alone.
+     *
+     * This helper was a HEBREW board until 2026-09-03, when he was wired (wave M-LANG) and the
+     * premise stopped holding; with all six tabled scripts ROUTED, a ROW-LESS script is the
+     * only kind gate 1 still refuses, so the exemplar is now Arabic.
+     */
+    private fun unroutedScriptBoard(name: String = "Arabic") =
         SwipeEngineFallback.LayoutFacts(
             displayName = name,
-            script = "hebrew",
-            // The en alphabet is entirely absent from a Greek board, but the SCRIPT gate fires
-            // first and is the honest reason: no Greek model ships at all.
+            script = "arabic",
+            // The en alphabet is entirely absent from an Arabic board, but the SCRIPT gate
+            // fires first and is the honest reason: no Arabic model ships at all.
             missingCentreLetters = ('a'..'z').joinToString(""),
             cornerOnlyLetters = "",
         )
@@ -112,12 +118,12 @@ class SwipeEngineFallbackTest {
 
     @Test
     fun servedLanguageOnANonRoutedScriptBoardIsExplainedByTheScriptGate() {
-        val d = SwipeEngineFallback.diagnose(ctc, "en", listOf(hebrewBoard()))
+        val d = SwipeEngineFallback.diagnose(ctc, "en", listOf(unroutedScriptBoard()))
 
         val finding = d.layoutFindings.single()
         assertWithMessage(
-            "greek has a CtcScriptSupport row but it is INFRASTRUCTURE, not ROUTED — no model " +
-                "ships — so the script gate is the reason, not the (also true) missing alphabet"
+            "arabic has no CtcScriptSupport row at all — no model ships — so the script gate " +
+                "is the reason, not the (also true) missing alphabet"
         ).that(finding.reason).isEqualTo(SwipeEngineFallback.LayoutReason.SCRIPT_NOT_ROUTED)
         assertWithMessage("no letter list for a script-gate refusal — the whole board is wrong")
             .that(finding.lettersForDisplay).isEmpty()
@@ -155,7 +161,7 @@ class SwipeEngineFallbackTest {
         val d = SwipeEngineFallback.diagnose(
             SwipeEngineRouter.Mode.GEOMETRIC,
             "tr",
-            listOf(cornerOnlyLatin(), hebrewBoard())
+            listOf(cornerOnlyLatin(), unroutedScriptBoard())
         )
         assertWithMessage(
             "the user picked geometric; telling them geometric will run is noise, not information"
@@ -164,7 +170,7 @@ class SwipeEngineFallbackTest {
 
     @Test
     fun unservedLanguageKeepsTheLanguageAxisAndSuppressesLayoutNoise() {
-        val d = SwipeEngineFallback.diagnose(ctc, "tr", listOf(cornerOnlyLatin(), hebrewBoard()))
+        val d = SwipeEngineFallback.diagnose(ctc, "tr", listOf(cornerOnlyLatin(), unroutedScriptBoard()))
 
         assertThat(d.languageFallback).isTrue()
         assertWithMessage(
@@ -178,10 +184,10 @@ class SwipeEngineFallbackTest {
         val d = SwipeEngineFallback.diagnose(
             ctc,
             "en",
-            listOf(completeLatin(), cornerOnlyLatin(), completeLatin("Dvorak"), hebrewBoard())
+            listOf(completeLatin(), cornerOnlyLatin(), completeLatin("Dvorak"), unroutedScriptBoard())
         )
         assertThat(d.layoutFindings.map { it.layout.displayName })
-            .containsExactly("QWERTY (Azərbaycanca)", "Hebrew").inOrder()
+            .containsExactly("QWERTY (Azərbaycanca)", "Arabic").inOrder()
     }
 
     @Test

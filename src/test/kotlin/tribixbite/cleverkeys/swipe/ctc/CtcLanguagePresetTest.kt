@@ -82,7 +82,7 @@ class CtcLanguagePresetTest {
 
     @Test
     fun `script preset selection is case and region insensitive`() {
-        for (tag in listOf("RU", "ru-RU", "ru_RU", "EL", "el-GR", "el_GR")) {
+        for (tag in listOf("RU", "ru-RU", "ru_RU", "EL", "el-GR", "el_GR", "UK", "uk-UA", "HE_il")) {
             assertWithMessage(tag)
                 .that(CtcScoringParams.presetFor(tag))
                 .isEqualTo(CtcScoringParams.tunedRuCkdt())
@@ -152,13 +152,20 @@ class CtcLanguagePresetTest {
     // ── The language table ─────────────────────────────────────────────────────────
 
     @Test
-    fun `the served set is the seven latin languages plus ru and el`() {
-        // Seven bundled Latin dictionaries, plus the two script languages — ru (2026-08-29) and
-        // el (2026-08-30) — whose lexicons are NOT bundled: both ride an importable langpack,
-        // which for ru is the exact pack every published Russian number was measured on and for
-        // el is `langpack-el.zip` / `scripts/dictionaries/el/el_enhanced.bin`.
+    fun `the served set is the seven latin languages plus the six script languages`() {
+        // Seven bundled Latin dictionaries, plus the six script languages — ru (2026-08-29),
+        // el (2026-08-30), and uk/bg/mk/he (2026-09-03, unblocked by ARC-056's langpacks) —
+        // whose lexicons are NOT bundled: each rides its importable `langpack-<code>.zip`,
+        // which for ru is the exact pack every published Russian number was measured on.
         assertThat(CtcLanguageSupport.SUPPORTED.keys)
-            .containsExactly("en", "fr", "de", "es", "it", "pt", "sv", "ru", "el")
+            .containsExactly(
+                "en", "fr", "de", "es", "it", "pt", "sv", "ru", "el", "uk", "bg", "mk", "he"
+            )
+        // …and the static half of the membership now covers every script row, so the script
+        // table and the language table can only disagree by a deliberate edit to one of them
+        // (CtcScriptSupportTest pins the agreement row by row).
+        assertThat(CtcLanguageSupport.SUPPORTED.keys)
+            .containsAtLeastElementsIn(CtcScriptSupport.SCRIPTS.keys)
     }
 
     @Test
@@ -232,6 +239,30 @@ class CtcLanguagePresetTest {
     }
 
     @Test
+    fun `uk, bg, mk and he are provisional for the same reason el is`() {
+        // 2026-09-03, unblocked by ARC-056's langpacks. All four enter at the WEAKEST tier:
+        // none has a real-swipe probe at ANY tier — only ru does, and ru's is val-only by
+        // licence. Their synthesis-holdout fixture levels measure fit to the generator's own
+        // distribution and may never be quoted as accuracy. VAL_ONLY stays exactly {ru},
+        // because filing any of these beside ru would assert a measured number that does not
+        // exist.
+        for (lang in listOf("uk", "bg", "mk", "he")) {
+            assertWithMessage(lang).that(CtcLanguageSupport.isSupported(lang)).isTrue()
+            assertWithMessage(lang).that(CtcLanguageSupport.PROVISIONAL).contains(lang)
+            assertWithMessage(lang).that(CtcLanguageSupport.isProvisional(lang)).isTrue()
+            assertWithMessage(lang).that(CtcLanguageSupport.VAL_ONLY).doesNotContain(lang)
+            // Scale transfer holds identically: each langpack is CKDT v2 read at
+            // `freq = max(1, 255 − rank)`, the scale λ 2.0 was fitted on, and each decodes at
+            // the SCRIPT footing verbatim — the preset its artifacts were gated and
+            // fixture-generated at.
+            assertWithMessage(lang).that(CtcLanguageSupport.sourceFor(lang))
+                .isEqualTo(CtcLanguageSupport.LexiconSource.CKDT_LANGPACK)
+            assertWithMessage(lang).that(CtcScoringParams.presetFor(lang))
+                .isEqualTo(CtcScoringParams.tunedRuCkdt())
+        }
+    }
+
+    @Test
     fun `no bundled dictionary language is left unserved`() {
         // Every language with a bundled CTC lexicon is now routed to CTC; NEEDS_VALIDATION is
         // empty. It is retained as a concept for the NEXT language added, so this asserts the
@@ -249,10 +280,10 @@ class CtcLanguagePresetTest {
             assertThat(CtcLanguageSupport.sourceFor(lang))
                 .isEqualTo(CtcLanguageSupport.LexiconSource.CKDT_BIN)
         }
-        // ru and el read the SAME CKDT container and the SAME 255-rank scale, delivered by the
-        // language-pack import rather than bundled — which is why it is its own constant and
-        // not just "asset, else langpack" on CKDT_BIN. See the enum's KDoc.
-        for (script in listOf("ru", "el")) {
+        // The script languages read the SAME CKDT container and the SAME 255-rank scale,
+        // delivered by the language-pack import rather than bundled — which is why it is its
+        // own constant and not just "asset, else langpack" on CKDT_BIN. See the enum's KDoc.
+        for (script in listOf("ru", "el", "uk", "bg", "mk", "he")) {
             assertWithMessage(script).that(CtcLanguageSupport.sourceFor(script))
                 .isEqualTo(CtcLanguageSupport.LexiconSource.CKDT_LANGPACK)
         }
@@ -264,13 +295,13 @@ class CtcLanguagePresetTest {
         assertThat(CtcLanguageSupport.assetFor("fr")).isEqualTo("dictionaries/fr_enhanced.bin")
         assertThat(CtcLanguageSupport.assetFor("de")).isEqualTo("dictionaries/de_enhanced.bin")
         assertThat(CtcLanguageSupport.assetFor("es")).isEqualTo("dictionaries/es_enhanced.bin")
-        // ru and el have NO bundled asset: a null here means "not bundled", not "unsupported".
-        assertThat(CtcLanguageSupport.assetFor("ru")).isNull()
-        assertThat(CtcLanguageSupport.assetFor("el")).isNull()
-        assertThat(CtcLanguageSupport.langpackRelativePath("ru"))
-            .isEqualTo("langpacks/ru/dictionary.bin")
-        assertThat(CtcLanguageSupport.langpackRelativePath("el"))
-            .isEqualTo("langpacks/el/dictionary.bin")
+        // The script languages have NO bundled asset: a null here means "not bundled", not
+        // "unsupported".
+        for (script in listOf("ru", "el", "uk", "bg", "mk", "he")) {
+            assertWithMessage(script).that(CtcLanguageSupport.assetFor(script)).isNull()
+            assertWithMessage(script).that(CtcLanguageSupport.langpackRelativePath(script))
+                .isEqualTo("langpacks/$script/dictionary.bin")
+        }
         // …and the converse, so the two resolutions can never both answer for one language.
         for (lang in listOf("en", "fr", "de", "es", "it", "pt", "sv")) {
             assertThat(CtcLanguageSupport.langpackRelativePath(lang)).isNull()
@@ -289,7 +320,13 @@ class CtcLanguagePresetTest {
         assertThat(CtcLanguageSupport.isSupported("RU-ru")).isTrue()
         assertThat(CtcLanguageSupport.isSupported("el")).isTrue()
         assertThat(CtcLanguageSupport.isSupported("EL_gr")).isTrue()
-        assertThat(CtcLanguageSupport.isSupported("uk")).isFalse()
+        assertThat(CtcLanguageSupport.isSupported("uk")).isTrue()
+        assertThat(CtcLanguageSupport.isSupported("HE-il")).isTrue()
+        // tr stays tap + geometric permanently (decision 2026-09-03; see CtcScriptSupport's
+        // KDoc): dotless ı has no NFD decomposition, only 73.34 % of the lexicon is
+        // a–z-projectable, and a tr-specific ı→i fold is a serving-semantics change with no
+        // measured holdout evidence.
+        assertThat(CtcLanguageSupport.isSupported("tr")).isFalse()
     }
 
     @Test

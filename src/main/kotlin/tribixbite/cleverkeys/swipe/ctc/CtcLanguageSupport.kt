@@ -137,6 +137,15 @@ object CtcLanguageSupport {
         // PROVISIONAL means scale-transferred serving, not measured accuracy. Its lexicon is
         // the imported langpack-el on the same CKDT scale as ru and the bundled binaries.
         "el" to LexiconSource.CKDT_LANGPACK,
+        // 2026-09-03, the remaining four script languages, unblocked by ARC-056's langpacks
+        // (2026-09-01). Same shape as el in every respect: imported CKDT langpack on the
+        // 255−rank scale, PROVISIONAL because none of the four has a real-swipe probe at any
+        // tier — only ru does, and ru's is val-only. See [CtcScriptSupport] for each one's
+        // alphabet, layout, model and fixture.
+        "uk" to LexiconSource.CKDT_LANGPACK,
+        "bg" to LexiconSource.CKDT_LANGPACK,
+        "mk" to LexiconSource.CKDT_LANGPACK,
+        "he" to LexiconSource.CKDT_LANGPACK,
     )
 
     /**
@@ -173,7 +182,7 @@ object CtcLanguageSupport {
      * This set is the STATIC membership of the tier. Every imported-pack language is provisional
      * too and can never leave the tier — see [isProvisional] and [CtcImportedPackSupport].
      */
-    val PROVISIONAL: Set<String> = setOf("it", "pt", "sv", "el")
+    val PROVISIONAL: Set<String> = setOf("it", "pt", "sv", "el", "uk", "bg", "mk", "he")
 
     /**
      * True when [language] is served on SCALE-TRANSFERRED evidence rather than its own measured

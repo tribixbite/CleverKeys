@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.swipe
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import tribixbite.cleverkeys.swipe.SwipeEngineRouter.Engine
 import tribixbite.cleverkeys.swipe.SwipeEngineRouter.Mode
@@ -49,10 +50,12 @@ class SwipeEngineRouterTest {
      * script have a COMPLETE wiring" — a per-script model, a per-script trie at the app's own
      * frequency scale, and a golden fixture at the shipping preset (HANDOFF rule 4).
      *
-     * Cyrillic flipped when ru's artifacts landed (2026-08-29) and Greek when el's did
-     * (2026-08-30); `hebrew` has a table row and has NOT flipped, and asserting BOTH directions
-     * here is the point: the router is driven by a table, so a script cannot be widened by
-     * editing the router, and an unwired script cannot drift into CTC by accident.
+     * Cyrillic flipped when ru's artifacts landed (2026-08-29), Greek when el's did
+     * (2026-08-30), and `hebrew` — this test's live negative until then — when he's landed
+     * (2026-09-03, wave M-LANG). Asserting BOTH directions is still the point: the router is
+     * driven by a table, so a script cannot be widened by editing the router, and a script
+     * without a ROUTED row cannot drift into CTC by accident — the row-less scripts below are
+     * now the negative that guards that.
      */
     @Test
     fun `a wired script routes ctc and an unwired one stays geometric`() {
@@ -64,12 +67,14 @@ class SwipeEngineRouterTest {
         // encoder and the Greek trie, never the Latin ones.
         assertThat(SwipeEngineRouter.route("QWERTY (Ελληνικά)", "greek", Mode.CTC))
             .isEqualTo(Engine.CTC)
-        // `hebrew` is the live negative: a table row exists, its model, fixture and lexicon do
-        // not, so it must stay geometric. This is the assertion that would catch a router
-        // widened ahead of its artifacts.
+        // `hebrew` flipped 2026-09-03: model + fixture + langpack lexicon all ship (rule 4's
+        // three), so the board that was the canonical "row exists, artifacts don't" negative
+        // now routes CTC on the Hebrew encoder.
         assertThat(SwipeEngineRouter.route("עברית", "hebrew", Mode.CTC))
-            .isEqualTo(Engine.GEOMETRIC)
-        // Scripts with no table row at all can never reach CTC.
+            .isEqualTo(Engine.CTC)
+        // Scripts with no table row at all can never reach CTC — with every tabled script now
+        // ROUTED, these are what keeps the negative direction a live assertion rather than a
+        // memory.
         for (script in listOf("arabic", "devanagari", "hangul", "georgian")) {
             assertThat(SwipeEngineRouter.route("board", script, Mode.CTC))
                 .isEqualTo(Engine.GEOMETRIC)
@@ -78,7 +83,7 @@ class SwipeEngineRouterTest {
 
     /**
      * The router is layout-metadata-only, so a Cyrillic board routes CTC for EVERY language —
-     * including uk/bg/mk, whose lexicons do not exist. That is correct and is not a leak: the
+     * including sr/kk, whose lexicons do not exist. That is correct and is not a leak: the
      * language gate in `InputCoordinator.performCtcSwipeTyping` reads
      * `CtcLanguageSupport.SUPPORTED` before dispatch and hands those swipes to the geometric
      * engine. Pinned so the division of labour stays explicit — the router must NOT grow a
@@ -89,10 +94,14 @@ class SwipeEngineRouterTest {
         // All eleven bundled Cyrillic boards route CTC at gate 1 …
         assertThat(SwipeEngineRouter.route("ЙЦУКЕН (Українська)", "cyrillic", Mode.CTC))
             .isEqualTo(Engine.CTC)
-        // … but only ru is actually served.
-        assertThat(CtcLanguageSupport.isSupported("ru")).isTrue()
-        for (language in listOf("uk", "bg", "mk", "sr", "kk")) {
-            assertThat(CtcLanguageSupport.isSupported(language)).isFalse()
+        // … but only the SERVED Cyrillic languages get a decode. uk/bg/mk sat in the unserved
+        // list until 2026-09-03 (wave M-LANG wired them); sr/kk still exemplify the division
+        // of labour — routed at gate 1 by their script, unserved at the language gate.
+        for (language in listOf("ru", "uk", "bg", "mk")) {
+            assertWithMessage(language).that(CtcLanguageSupport.isSupported(language)).isTrue()
+        }
+        for (language in listOf("sr", "kk")) {
+            assertWithMessage(language).that(CtcLanguageSupport.isSupported(language)).isFalse()
         }
         // Greek is the clean case rather than the counter-example — `greek` is one layout and
         // one language — but the same division of labour applies, so it is asserted the same

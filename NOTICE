@@ -104,3 +104,35 @@ whenever a script model is added.
     gesture row appears in training or checkpoint selection. Greek has no
     real-swipe evaluation corpus at any evidence tier; synthesis-holdout levels
     are not reported as accuracy.
+
+  src/main/assets/models/uk_synth_v3_ch80_fp16w.onnx — Cyrillic (uk).
+    Trained on 100% SYNTHESIZED gesture data from the same learned trace
+    generator and MIT-only FUTO + How-We-Swipe source corpora described above,
+    using a Ukrainian word list and the shipped Ukrainian layout geometry. No
+    real Ukrainian gesture row appears in training or checkpoint selection.
+    Ukrainian has no real-swipe evaluation corpus at any evidence tier;
+    synthesis-holdout levels are not reported as accuracy.
+
+  src/main/assets/models/bg_synth_v3_ch80_fp16w.onnx — Cyrillic (bg).
+    Trained on 100% SYNTHESIZED gesture data from the same learned trace
+    generator and MIT-only FUTO + How-We-Swipe source corpora described above,
+    using a Bulgarian word list and the shipped Bulgarian layout geometry. No
+    real Bulgarian gesture row appears in training or checkpoint selection.
+    Bulgarian has no real-swipe evaluation corpus at any evidence tier;
+    synthesis-holdout levels are not reported as accuracy.
+
+  src/main/assets/models/mk_synth_v3_ch80_fp16w.onnx — Cyrillic (mk).
+    Trained on 100% SYNTHESIZED gesture data from the same learned trace
+    generator and MIT-only FUTO + How-We-Swipe source corpora described above,
+    using a Macedonian word list and the shipped Macedonian layout geometry. No
+    real Macedonian gesture row appears in training or checkpoint selection.
+    Macedonian has no real-swipe evaluation corpus at any evidence tier;
+    synthesis-holdout levels are not reported as accuracy.
+
+  src/main/assets/models/he_synth_v3_ch80_fp16w.onnx — Hebrew (he).
+    Trained on 100% SYNTHESIZED gesture data from the same learned trace
+    generator and MIT-only FUTO + How-We-Swipe source corpora described above,
+    using a Hebrew word list and the shipped Hebrew layout geometry. No real
+    Hebrew gesture row appears in training or checkpoint selection. Hebrew has
+    no real-swipe evaluation corpus at any evidence tier; synthesis-holdout
+    levels are not reported as accuracy.

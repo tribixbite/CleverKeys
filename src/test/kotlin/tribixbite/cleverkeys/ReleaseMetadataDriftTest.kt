@@ -113,7 +113,10 @@ class ReleaseMetadataDriftTest {
             announced + SERVED_BUT_NOT_YET_ANNOUNCED,
             CtcLanguageSupport.SUPPORTED.keys,
         )
-        assertEquals(setOf("it", "pt", "sv", "el"), CtcLanguageSupport.PROVISIONAL)
+        assertEquals(
+            setOf("it", "pt", "sv", "el", "uk", "bg", "mk", "he"),
+            CtcLanguageSupport.PROVISIONAL,
+        )
         assertEquals(setOf("ru"), CtcLanguageSupport.VAL_ONLY)
         // The two halves must not silently disagree: a language listed as unannounced must
         // genuinely be absent from the notes.
@@ -136,17 +139,19 @@ class ReleaseMetadataDriftTest {
          * Languages the CTC engine SERVES at HEAD but which these release notes deliberately do
          * not claim, because they landed after the notes' version was written.
          *
-         * Empty since 2026-09-03: the TODO(release) decision this set existed to force was made
-         * (maintainer-approved, ARC-054) — ru and el ARE announced in the pending v1.6.0 notes,
-         * each at its honest tier: ru "validation-tested" (val-only, eval-only corpus; see
-         * [CtcLanguageSupport.VAL_ONLY]), el "early support" with NO accuracy figure (Greek has
-         * no real-swipe probe at any tier; its synthesis-holdout level may never be quoted as
-         * accuracy), both explicitly pack-gated. The content assertions above pin that copy.
+         * Briefly empty on 2026-09-03: the TODO(release) decision this set existed to force was
+         * made (maintainer-approved, ARC-054) — ru and el ARE announced in the pending v1.6.0
+         * notes, each at its honest tier: ru "validation-tested" (val-only, eval-only corpus;
+         * see [CtcLanguageSupport.VAL_ONLY]), el "early support" with NO accuracy figure (Greek
+         * has no real-swipe probe at any tier; its synthesis-holdout level may never be quoted
+         * as accuracy), both explicitly pack-gated. The content assertions above pin that copy.
          *
-         * The mechanism stays: any language wired after these notes (uk/bg/mk/he are queued)
-         * must be added HERE until its announcement lands, so shipping unannounced languages —
-         * or announcing unshipped ones — keeps failing this test instead of being forgotten.
+         * uk/bg/mk/he entered later the same day, exactly as this KDoc queued them: wired
+         * 2026-09-03 (wave M-LANG, unblocked by ARC-056's langpacks), all four PROVISIONAL —
+         * no real-swipe probe at any tier, synthesis-holdout levels never quotable as accuracy
+         * — and NOT yet claimed by any release copy. Announcing them clears them from here and
+         * adds their honest-tier copy to the notes, in the same edit.
          */
-        val SERVED_BUT_NOT_YET_ANNOUNCED = emptySet<String>()
+        val SERVED_BUT_NOT_YET_ANNOUNCED = setOf("uk", "bg", "mk", "he")
     }
 }
