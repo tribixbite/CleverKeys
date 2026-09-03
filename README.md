@@ -60,7 +60,7 @@ CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe t
 |---------|:----------:|:---------:|:----:|:-----------:|:---------------:|:----:|
 | **Gesture Typing in Termux** | ✅ | ⚠️ Corrupted⁴ | ❌ Broken | ⚠️ Disabled | ⚠️ Experimental | ❓ |
 | **Gesture/Swipe Typing** | ✅ Stable | ✅ Stable | ⚠️ Alpha | ⚠️ Disabled⁵ | ⚠️ Experimental | ✅ Geometric¹⁰ |
-| **Multi-Language Swipe**⁹ | ✅ 15 languages | ⚠️ Single | ⚠️ English only | ❌ | ❌ | ✅ Simultaneous |
+| **Multi-Language Swipe**⁹ | ✅ 19 languages | ⚠️ Single | ⚠️ English only | ❌ | ❌ | ✅ Simultaneous |
 | **Gesture Engine Open Source** | ✅ | ❌¹ | ✅² | ✅ | ✅ | ✅ |
 | **ML Training Code Public** | ✅ | N/A | ✅⁶ | N/A³ | N/A³ | N/A¹⁰ |
 | **Model Size** | 2.9MB | Proprietary | 62MB | N/A | N/A | N/A |
@@ -93,7 +93,7 @@ CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe t
 
 ⁸ Short-swipe actions: 8 directions × 26 keys = 208 one-touch gestures for navigation (arrows, home/end), editing (select all, undo, cut/copy/paste), function keys (F1-F12), and more — no long-press menus needed
 
-⁹ Multi-language swipe typing: CleverKeys uses one layout-agnostic CTC model for the languages it serves — dictionaries provide word candidates, not language-specific models. 7 languages bundled (en, es, fr, pt, it, de, sv), 8 downloadable (nl, ru, el, tr, id, ms, tl, sw). Primary + secondary language support with automatic best-match selection.
+⁹ Multi-language swipe typing: CleverKeys uses one layout-agnostic CTC model for the languages it serves — dictionaries provide word candidates, not language-specific models. 7 languages bundled (en, es, fr, pt, it, de, sv), 12 downloadable (nl, ru, el, tr, id, ms, tl, sw, uk, bg, mk, he). Primary + secondary language support with automatic best-match selection.
 
 ¹⁰ Urik uses a geometric/template path matcher (no ML model, no training code applicable) — German-friendly QWERTZ-native with simultaneous multilingual spell-check. CleverKeys ships a complementary geometric decoder for the languages and scripts its CTC model does not serve, selectable via the Prediction Engine setting — see [ROADMAP.md](./ROADMAP.md#-swipe-prediction).
 
@@ -174,7 +174,7 @@ Build your own themes on-the-fly with full control over:
 - **100% on-device** — works in airplane mode, no cloud anything
 
 ### 🌍 Multi-Language with Hot-Swap
-- **15 swipe languages** — 7 bundled, 8 downloadable packs
+- **19 swipe languages** — 7 bundled, 12 downloadable packs
 - **Primary + secondary language** — both dictionaries are evaluated per swipe
 - **Instant language switch** — toggle between languages without reloading
 - **Per-language custom dictionaries** — add words, adjust frequency weights, disable entries
@@ -378,7 +378,7 @@ Download from the [langpacks release](https://github.com/tribixbite/CleverKeys/r
 
 </div>
 
-- Minimum SDK level 21 (Android 5.0+)
+- Minimum SDK level 24 (Android 7.0+)
 - [Kotlin](https://kotlinlang.org/) based — 100% Kotlin, zero Java
 - [ONNX Runtime](https://onnxruntime.ai/) — Microsoft's cross-platform inference engine
 - [Kotlin Coroutines](https://github.com/Kotlin/kotlinx.coroutines) — Asynchronous processing

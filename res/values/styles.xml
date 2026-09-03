@@ -33,7 +33,7 @@
   </style>
   <!-- appTheme uses NoActionBar. This value came from the former res/values-v21/
        and res/values-night-v21/ overrides, which shadowed this unqualified entry on
-       every device (minSdk 21, so the -v21 qualifier matched all APIs). Those
+       every device (minSdk has always been ≥21, so the -v21 qualifier matched all APIs). Those
        obsolete-SDK folders were merged here to preserve the effective NoActionBar
        parent; day and night both resolve to this single declaration. -->
   <style name="appTheme" parent="Theme.AppCompat.DayNight.NoActionBar"/>

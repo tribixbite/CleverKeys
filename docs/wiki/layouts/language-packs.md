@@ -44,28 +44,33 @@ Every other language is added by importing a language pack (below).
 ## Prebuilt Language Packs
 
 These packs are **already built** and ship in the repository under
-[`scripts/dictionaries/`](https://github.com/tribixbite/CleverKeys/tree/main/scripts/dictionaries) —
+[the langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks) —
 download the `.zip` and import it (no need to build anything):
 
 | Language | Pack file | Words |
 |----------|-----------|-------|
-| **Greek (Ελληνικά)** | `langpack-el.zip` | ~46,000 |
-| **Russian (Русский)** | `langpack-ru.zip` | ~50,000 |
-| German (Deutsch) | `langpack-de.zip` | |
-| Spanish (Español) | `langpack-es.zip` | |
-| French (Français) | `langpack-fr.zip` | |
-| Italian (Italiano) | `langpack-it.zip` | |
-| Portuguese (Português) | `langpack-pt.zip` | |
-| Dutch (Nederlands) | `langpack-nl.zip` | |
-| Swedish (Svenska) | `langpack-sv.zip` | |
-| Turkish (Türkçe) | `langpack-tr.zip` | |
-| Indonesian | `langpack-id.zip` | |
-| Malay | `langpack-ms.zip` | |
-| Tagalog/Filipino | `langpack-tl.zip` | |
-| Swahili | `langpack-sw.zip` | |
+| **Greek (Ελληνικά)** | `langpack-el.zip` | 39,860 |
+| **Russian (Русский)** | `langpack-ru.zip` | 50,000 |
+| German (Deutsch) | `langpack-de.zip` | 40,000 |
+| Spanish (Español) | `langpack-es.zip` | 50,000 |
+| French (Français) | `langpack-fr.zip` | 40,000 |
+| Italian (Italiano) | `langpack-it.zip` | 40,000 |
+| Portuguese (Português) | `langpack-pt.zip` | 40,000 |
+| Dutch (Nederlands) | `langpack-nl.zip` | 40,000 |
+| Swedish (Svenska) | `langpack-sv.zip` | 40,000 |
+| Turkish (Türkçe) | `langpack-tr.zip` | 40,000 |
+| Indonesian | `langpack-id.zip` | 28,637 |
+| Malay | `langpack-ms.zip` | 25,861 |
+| Tagalog/Filipino | `langpack-tl.zip` | 27,922 |
+| Swahili | `langpack-sw.zip` | 20,000 |
+| **Ukrainian (Українська)** | `langpack-uk.zip` | 50,000 |
+| **Bulgarian (Български)** | `langpack-bg.zip` | 35,027 |
+| **Macedonian (Македонски)** | `langpack-mk.zip` | 50,000 |
+| **Hebrew (עברית)** | `langpack-he.zip` | 50,000 |
 
-> All packs are generated from the [`wordfreq`](https://github.com/rspeer/wordfreq)
-> corpus (real word frequencies). See [Attribution](#attribution).
+> Most packs are generated from the [`wordfreq`](https://github.com/rspeer/wordfreq)
+> corpus (real word frequencies); Hebrew is additionally validated against the
+> AOSP dictionary. See [Attribution](#attribution).
 > The bundled *English* dictionary is different: it's built by a dedicated
 > evidence-classification pipeline (98,140 words validated against multiple
 > spelling oracles, with typo and junk filtering) rather than a raw
@@ -76,7 +81,7 @@ download the `.zip` and import it (no need to build anything):
 ### Step 1: Obtain the Language Pack
 
 - **Prebuilt** (recommended): download a `.zip` from
-  [`scripts/dictionaries/`](https://github.com/tribixbite/CleverKeys/tree/main/scripts/dictionaries)
+  [the langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks)
   (e.g. `langpack-el.zip` for Greek) to your device.
 - **Build your own** for a language not listed (see below).
 
@@ -202,14 +207,14 @@ language, build a pack with the Python scripts, then import the same way.
 ### Q: How do I add Greek?
 
 A: Download `langpack-el.zip` from
-[`scripts/dictionaries/`](https://github.com/tribixbite/CleverKeys/tree/main/scripts/dictionaries),
+[the langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks),
 then Settings > 🌐 Multi-Language > Import Pack, and set Primary/Secondary
 Language to **Greek (Ελληνικά)**. Greek word suggestions then work offline.
 
 ### Q: How do I add Russian?
 
 A: Same flow — download `langpack-ru.zip` from
-[`scripts/dictionaries/`](https://github.com/tribixbite/CleverKeys/tree/main/scripts/dictionaries),
+[the langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks),
 Import Pack, set language to **Russian (Русский)**, and pick the Cyrillic
 (ЙЦУКЕН) layout. ~50,000 words, works offline.
 

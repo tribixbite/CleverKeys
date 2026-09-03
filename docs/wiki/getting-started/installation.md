@@ -4,7 +4,7 @@ Getting CleverKeys on your Android device is quick and easy.
 
 ## Requirements
 
-- **Android 5.0 (Lollipop)** or higher (minSdk 21)
+- **Android 7.0 (Nougat)** or higher (minSdk 24)
 - Approximately **35 MB** of storage space (includes the on-device swipe model and dictionaries)
 - No internet connection required - works fully offline
 
@@ -90,7 +90,7 @@ CleverKeys requests minimal permissions:
 
 ### App crashes on first launch
 
-- Ensure you're running Android 5.0 or higher
+- Ensure you're running Android 7.0 or higher
 - Try clearing app data: Settings → Apps → CleverKeys → Clear Data
 
 ---

@@ -17,7 +17,7 @@ All facts in the [Installation wiki page](../../getting-started/installation.md)
 
 | Fact | Source File | Line(s) | Value |
 |------|------------|---------|-------|
-| minSdk 21 | `build.gradle` | 94 | `minSdk 21` |
+| minSdk 24 | `build.gradle` | 182 | `minSdk 24` |
 | targetSdk 34 | `build.gradle` | 95 | `targetSdkVersion 34` |
 | compileSdk 34 | `build.gradle` | 88 | `compileSdk 34` |
 | Version 1.2.9 | `build.gradle` | 60-62 | `VERSION_MAJOR=1, MINOR=2, PATCH=9` |
@@ -43,7 +43,7 @@ All facts in the [Installation wiki page](../../getting-started/installation.md)
 
 | Requirement | Value | Source |
 |-------------|-------|--------|
-| **Min SDK** | 21 (Android 5.0 Lollipop) | `build.gradle:94` |
+| **Min SDK** | 24 (Android 7.0 Nougat) | `build.gradle:182` |
 | **Target SDK** | 34 (Android 14) | `build.gradle:95` |
 | **APK Size** | ~8 MB per-ABI (arm64-v8a) | Build output |
 | **Architectures** | arm64-v8a, armeabi-v7a, x86_64 (split APKs) | `build.gradle:79` |
