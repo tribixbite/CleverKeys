@@ -47,7 +47,7 @@
     <string name="key_descr_doc_home">Belge başı</string>
     <string name="key_descr_doc_end">Belge sonu</string>
     <string name="key_descr_clipboard">Pano</string>
-    <string name="key_descr_combining">Aksanları birleştir</string>
+    <string name="key_descr_combining">Birleştirici aksan işareti</string>
     <string name="key_descr_dead_key">Boş tuş</string>
     <string name="key_descr_zwj">Sıfır genişlikli birleştirici</string>
     <string name="key_descr_zwnj">Sıfır genişlikte birleştirmeyen</string>
@@ -308,7 +308,7 @@
     <string name="accessibility_custom_duration_desc">Özel bir titreşim süresi ayarlayın. Sistem haptic düzenini kullanmak için (en düşük gecikme, üretici ayarlı) varsayılana bırakın.</string>
     <string name="accessibility_key_press_title">Tuşa Basma</string>
     <string name="accessibility_key_press_desc">Tuşa dokunulduğunda titreşim</string>
-    <string name="accessibility_suggestion_tap_title">Öneri Dokunma</string>
+    <string name="accessibility_suggestion_tap_title">Öneri Seçimi</string>
     <string name="accessibility_suggestion_tap_desc">Öneri seçildiğinde titreşim</string>
     <string name="accessibility_trackpoint_title">TrackPoint Modu</string>
     <string name="accessibility_trackpoint_desc">Gezinme tuşlarında imleç moduna girildiğinde titreşim</string>
@@ -363,8 +363,8 @@
     <string name="appearance_border_line_width_desc">Tuş kenarlıklarının genişliği (dp)</string>
     <string name="autocorrect_enable_title">Otomatik Düzeltmeyi Etkinleştir</string>
     <string name="autocorrect_enable_desc">Yanlış yazılmış sözcükleri otomatik olarak düzelt</string>
-    <string name="autocorrect_backspace_undo_title">Geri Al Otomatik Düzeltme</string>
-    <string name="autocorrect_backspace_undo_desc">Otomatik düzeltmeden hemen sonra geri al tuşuna basmak özgün sözcüğe geri döner</string>
+    <string name="autocorrect_backspace_undo_title">Geri Silme ile Düzeltmeyi Geri Al</string>
+    <string name="autocorrect_backspace_undo_desc">Otomatik düzeltmeden hemen sonra geri silme tuşuna basmak özgün sözcüğe geri döner</string>
     <string name="autocorrect_min_word_length_title">Minimum Sözcük Uzunluğu</string>
     <string name="autocorrect_min_word_length_desc">Bundan kısa sözcükleri düzeltme (2–5 harf)</string>
     <string name="autocorrect_char_match_threshold_title">Karakter Eşleşme Eşiği</string>
@@ -388,7 +388,7 @@
     <string name="clipboard_limit_type_desc">Pano geçmişini sınırlama yöntemi</string>
     <string name="clipboard_history_limit_title">Geçmiş Sınırı</string>
     <string name="clipboard_history_limit_desc">Maksimum pano girişi sayısı (0 = sınırsız)</string>
-    <string name="clipboard_entry_duration_title">Giriş Süresi</string>
+    <string name="clipboard_entry_duration_title">Kayıt Saklama Süresi</string>
     <string name="clipboard_size_limit_title">Boyut Sınırı</string>
     <string name="clipboard_size_limit_desc">Maksimum toplam pano depolama alanı</string>
     <string name="clipboard_pane_height_title">Bölme Yüksekliği</string>
@@ -460,8 +460,8 @@
     <string name="input_auto_space_after_desc">Öneri seçildiğinde sona boşluk ekle</string>
     <string name="input_auto_space_before_title">Öneriden Önce Otomatik Boşluk</string>
     <string name="input_auto_space_before_desc">Dokunulan öneriden önce baştaki boşluğu ekle (kaydırma her zaman boşluk ekler)</string>
-    <string name="input_backspace_undo_swipe_title">Geri Al Kaydırma</string>
-    <string name="input_backspace_undo_swipe_desc">Kaydırılan sözcüğün hemen ardından geri al tuşuna basmak sözcüğün tamamını siler</string>
+    <string name="input_backspace_undo_swipe_title">Geri Silme ile Kaydırmayı Geri Al</string>
+    <string name="input_backspace_undo_swipe_desc">Kaydırılan sözcüğün hemen ardından geri silme tuşuna basmak sözcüğün tamamını siler</string>
     <string name="input_context_aware_title">Bağlama Duyarlı Tahminler</string>
     <string name="input_context_aware_desc">Yazma düzenlerinden öğren (N-gram modeli)</string>
     <string name="input_personalized_learning_title">Kişiselleştirilmiş Öğrenme</string>
@@ -488,8 +488,8 @@
     <string name="input_long_press_interval_desc">Uzun basıldığında tuş tekrarlama aralığı (milisaniye)</string>
     <string name="input_key_repeat_title">Tuş Tekrarı Etkin</string>
     <string name="input_key_repeat_desc">Uzun basıldığında tuşların tekrarlamasına izin ver</string>
-    <string name="input_backspace_only_repeat_title">Yalnızca Geri Al Tekrarı</string>
-    <string name="input_backspace_only_repeat_desc">Yalnızca geri al/gezinme tuşlarını tekrarla, karakter tuşlarını değil</string>
+    <string name="input_backspace_only_repeat_title">Yalnızca Geri Silme Tekrarı</string>
+    <string name="input_backspace_only_repeat_desc">Yalnızca geri silme/gezinme tuşlarını tekrarla, karakter tuşlarını değil</string>
     <string name="input_double_tap_shift_title">Caps Lock için Shift\'e Çift Dokun</string>
     <string name="input_double_tap_shift_desc">Shift tuşunu hızlıca iki kez dokunarak kilitle</string>
     <string name="input_immediate_switching_title">Anında Klavye Geçişi</string>
@@ -566,7 +566,7 @@
     <string name="input_context_source_desc">Tahminleri hangi ifade modelinin güçlendireceği: yerleşik model, öğrenilen kalıplar veya her ikisi</string>
     <string name="input_personalization_weight_title">Kişiselleştirme gücü</string>
     <string name="input_personalization_weight_desc">Kelime kullanımınızın tahminleri ne kadar güçlendireceği (0 = kapalı, 2 = iki katı)</string>
-    <string name="input_personalization_max_words_title">En fazla öğrenilen kelime</string>
+    <string name="input_personalization_max_words_title">Öğrenilen Kelime Üst Sınırı</string>
     <string name="input_personalization_max_words_desc">Öğrenilen kelime dağarcığının üst sınırı; en az değerli kelimeler önce silinir (varsayılan 5000)</string>
     <string name="privacy_on_device_learning_title">Yazdıklarımdan öğren</string>
     <string name="privacy_on_device_learning_desc">Yazdıklarınızdan cihazda özel ifade ve kelime kullanım modelleri oluşturur. Kapatmak, yazma davranışının tüm otomatik kaydını durdurur — kapalıyken yeni hiçbir şey saklanmaz. Açıkça oluşturduğunuz veriler ayrıdır: başlattığınız kaydırma kalibrasyon oturumları, tahmin performansı istatistikleri ve bir yedekten geri yüklenen öğrenilmiş veriler.</string>
