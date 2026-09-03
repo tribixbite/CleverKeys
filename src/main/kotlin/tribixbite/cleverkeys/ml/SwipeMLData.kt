@@ -41,6 +41,28 @@ class SwipeMLData {
             value?.takeIf { it.isNotBlank() } ?: UNKNOWN
     }
 
+    /**
+     * One key's hit-test cell on the layout the trace was drawn on, in RAW px of the
+     * keyboard-view coordinate frame — the SAME frame the raw touch points were sampled in
+     * before [addRawPoint] normalized them by screen dimensions. A consumer recovers
+     * comparable px via `x_norm * screen_width_px` / `y_norm * screen_height_px`.
+     * Essential for occlusion analysis: without per-key boxes a trace cannot be related
+     * to the letters the finger covered.
+     */
+    data class KeyGeom(
+        @JvmField val label: String,
+        @JvmField val left: Float,
+        @JvmField val top: Float,
+        @JvmField val right: Float,
+        @JvmField val bottom: Float
+    )
+
+    /** One entry of the suggestion-bar ranking shown for this swipe (rank = list index). */
+    data class RankedCandidate(
+        @JvmField val word: String,
+        @JvmField val score: Int
+    )
+
     // Data fields matching ML requirements
     val traceId: String
     val targetWord: String
@@ -59,6 +81,13 @@ class SwipeMLData {
     private val registeredKeys: MutableList<String> = mutableListOf()
     private var keyboardOffsetY = 0 // Y offset of keyboard from top of screen
     private var lastAbsoluteTimestamp: Long // Track last point's absolute timestamp for delta calculation
+
+    // ── Enrichment (Swipe Playground, 2026-09-03) ────────────────────────────────────────
+    // Optional per-trace context needed for a useful decoder/occlusion dataset. All three
+    // are absent on legacy rows and older exports; readers must treat null as "not recorded".
+    private var keyGeometry: List<KeyGeom>? = null
+    private var candidates: List<RankedCandidate>? = null
+    private var decodeLatencyMs: Long? = null
 
     // Constructor for new swipe data
     @JvmOverloads
@@ -119,6 +148,37 @@ class SwipeMLData {
         for (i in 0 until keysArray.length()) {
             registeredKeys.add(keysArray.getString(i))
         }
+
+        // Enrichment fields (Swipe Playground): all optional — rows recorded before the
+        // playground existed simply have none, and load with null (never a crash).
+        json.optJSONArray("key_geometry")?.let { geomArray ->
+            val geoms = ArrayList<KeyGeom>(geomArray.length())
+            for (i in 0 until geomArray.length()) {
+                val g = geomArray.getJSONObject(i)
+                geoms.add(
+                    KeyGeom(
+                        g.getString("k"),
+                        g.getDouble("l").toFloat(),
+                        g.getDouble("t").toFloat(),
+                        g.getDouble("r").toFloat(),
+                        g.getDouble("b").toFloat()
+                    )
+                )
+            }
+            keyGeometry = geoms
+        }
+        json.optJSONArray("candidates")?.let { candArray ->
+            val cands = ArrayList<RankedCandidate>(candArray.length())
+            for (i in 0 until candArray.length()) {
+                val c = candArray.getJSONObject(i)
+                cands.add(RankedCandidate(c.getString("word"), c.getInt("score")))
+            }
+            candidates = cands
+        }
+        if (json.has("decode_latency_ms")) {
+            decodeLatencyMs = json.getLong("decode_latency_ms")
+        }
+        keyboardOffsetY = metadata.optInt("keyboard_offset_y", 0)
 
         // Reconstruct last absolute timestamp from deltas
         this.lastAbsoluteTimestamp = timestampUtc
@@ -207,6 +267,34 @@ class SwipeMLData {
         }
         json.put("registered_keys", keysArray)
 
+        // Enrichment (Swipe Playground): key hit-test boxes of the layout the trace was
+        // drawn on (raw px, keyboard-view frame — see [KeyGeom]), the suggestion-bar
+        // ranking with scores, and swipe-end→results latency. Omitted entirely when not
+        // recorded so legacy consumers see no shape change.
+        keyGeometry?.let { geoms ->
+            val geomArray = JSONArray()
+            for (g in geoms) {
+                geomArray.put(
+                    JSONObject().apply {
+                        put("k", g.label)
+                        put("l", g.left.toDouble())
+                        put("t", g.top.toDouble())
+                        put("r", g.right.toDouble())
+                        put("b", g.bottom.toDouble())
+                    }
+                )
+            }
+            json.put("key_geometry", geomArray)
+        }
+        candidates?.let { cands ->
+            val candArray = JSONArray()
+            for (c in cands) {
+                candArray.put(JSONObject().apply { put("word", c.word); put("score", c.score) })
+            }
+            json.put("candidates", candArray)
+        }
+        decodeLatencyMs?.let { json.put("decode_latency_ms", it) }
+
         return json
     }
 
@@ -268,6 +356,56 @@ class SwipeMLData {
     // Getters with defensive copies
     fun getTracePoints(): List<TracePoint> = tracePoints.toList()
     fun getRegisteredKeys(): List<String> = registeredKeys.toList()
+
+    // ── Enrichment accessors (Swipe Playground) ──────────────────────────────────────────
+
+    /** Attach the active layout's per-key hit-test boxes (captured at swipe time). */
+    fun setKeyGeometry(geometry: List<KeyGeom>) {
+        keyGeometry = geometry.toList()
+    }
+
+    fun getKeyGeometry(): List<KeyGeom>? = keyGeometry?.toList()
+
+    /**
+     * Attach the suggestion-bar ranking (parallel word/score lists, rank = index).
+     * Mismatched lengths are rejected rather than silently zipped short — a
+     * misaligned ranking is worse for analysis than none.
+     */
+    fun setCandidates(words: List<String>, scores: List<Int>) {
+        if (words.size != scores.size) return
+        candidates = words.indices.map { RankedCandidate(words[it], scores[it]) }
+    }
+
+    fun getCandidates(): List<RankedCandidate>? = candidates?.toList()
+
+    /** Attach the swipe-end → results-displayed latency (decode + routing), ms. */
+    fun setDecodeLatencyMs(latencyMs: Long) {
+        decodeLatencyMs = latencyMs
+    }
+
+    fun getDecodeLatencyMs(): Long? = decodeLatencyMs
+
+    /**
+     * Copy carrying EVERYTHING — points (normalized values verbatim, no re-normalization
+     * round-trip), registered keys, provenance, and the enrichment fields — under a new
+     * trace id, target word and collection source. Used when the word a trace belongs to
+     * is only known at selection/commit time (the capture-time object was created with an
+     * empty target word).
+     */
+    fun copyWith(targetWord: String, collectionSource: String): SwipeMLData {
+        val copy = SwipeMLData(
+            targetWord, collectionSource,
+            screenWidthPx, screenHeightPx, keyboardHeightPx,
+            layoutName, engine
+        )
+        copy.tracePoints.addAll(tracePoints)
+        copy.registeredKeys.addAll(registeredKeys)
+        copy.keyboardOffsetY = keyboardOffsetY
+        copy.keyGeometry = keyGeometry
+        copy.candidates = candidates
+        copy.decodeLatencyMs = decodeLatencyMs
+        return copy
+    }
 
     /**
      * Inner class for normalized trace points

@@ -595,6 +595,30 @@ class InputCoordinator(
                 }
             }
         }
+
+        // Swipe Playground (2026-09-03): snapshot the ACTIVE layout's per-key hit-test
+        // boxes into the trace. Captured here — at swipe time, from the same
+        // KeyboardGeometry rect math hit-testing uses — because a later layout switch
+        // would make a results-time snapshot describe the wrong keyboard. Char keys only:
+        // occlusion analysis relates the finger path to letters, and modifier/edge cells
+        // would double the payload for no analytical value. Raw px in the keyboard-view
+        // frame, the same frame the raw touch points were sampled in (see KeyGeom KDoc).
+        val kb = keyboardView.getKeyboard()
+        val geomParams = keyboardView.geometryParams()
+        if (kb != null && geomParams != null) {
+            currentSwipeData?.setKeyGeometry(
+                tribixbite.cleverkeys.a11y.KeyboardGeometry.computeKeyRects(kb, geomParams)
+                    .mapNotNull { kr ->
+                        kr.kv.takeIf { it.getKind() == KeyValue.Kind.Char }?.let {
+                            SwipeMLData.KeyGeom(
+                                it.getChar().toString(),
+                                kr.bounds.left, kr.bounds.top,
+                                kr.bounds.right, kr.bounds.bottom
+                            )
+                        }
+                    }
+            )
+        }
     }
 
     // ── WP9 R-1 steps 7-8: geometric engine path (non-QWERTY layouts) ──────────────────

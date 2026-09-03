@@ -543,6 +543,35 @@ class SwipeMLDataStore private constructor(context: Context) :
     }
 
     /**
+     * Count rows recorded under one collection source (e.g. the Swipe Playground's
+     * `"playground"`). Cheap COUNT(*) over the indexed source column.
+     */
+    fun countBySource(source: String): Int {
+        val db = readableDatabase
+        db.rawQuery(
+            "SELECT COUNT(*) FROM $TABLE_SWIPES WHERE $COL_SOURCE=?", arrayOf(source)
+        ).use { cursor ->
+            return if (cursor.moveToFirst()) cursor.getInt(0) else 0
+        }
+    }
+
+    /**
+     * Delete all rows recorded under one collection source. Used by the Swipe
+     * Playground's "clear recorded traces" action so a playground wipe cannot touch
+     * traces collected by the (separately gated) global ML collection.
+     *
+     * @return number of rows deleted
+     */
+    fun deleteBySource(source: String): Int {
+        val db = writableDatabase
+        val deleted = db.delete(TABLE_SWIPES, "$COL_SOURCE=?", arrayOf(source))
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(TAG, "Deleted $deleted entries with source=$source")
+        }
+        return deleted
+    }
+
+    /**
      * Clear all data (with confirmation)
      */
     fun clearAllData() {
@@ -690,6 +719,10 @@ class SwipeMLDataStore private constructor(context: Context) :
         private const val TAG = "SwipeMLDataStore"
 
         // Database configuration
+        // VERSION 1 deliberately unchanged by the 2026-09-03 playground enrichment
+        // (key_geometry / candidates / decode_latency_ms): the entire trace payload lives
+        // in COL_JSON_DATA, and SwipeMLData's JSON reader treats the new keys as optional,
+        // so old rows and new rows coexist in the same schema with no SQL migration.
         private const val DATABASE_NAME = "swipe_ml_data.db"
         private const val DATABASE_VERSION = 1
 

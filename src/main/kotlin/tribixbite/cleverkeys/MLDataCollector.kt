@@ -109,6 +109,16 @@ class MLDataCollector(private val context: Context) {
                 mlData.addRegisteredKey(key)
             }
 
+            // Carry the playground enrichment over too (same rationale as provenance:
+            // this is a selection-time COPY, so anything attached at capture/results
+            // time — key geometry, candidate ranking, decode latency — would silently
+            // vanish from stored rows without an explicit copy here).
+            currentSwipeData.getKeyGeometry()?.let { mlData.setKeyGeometry(it) }
+            currentSwipeData.getCandidates()?.let { cands ->
+                mlData.setCandidates(cands.map { it.word }, cands.map { it.score })
+            }
+            currentSwipeData.getDecodeLatencyMs()?.let { mlData.setDecodeLatencyMs(it) }
+
             // Store the ML data
             mlDataStore.storeSwipeData(mlData)
             true
