@@ -370,8 +370,10 @@ class Keyboard2View @JvmOverloads constructor(
             }
         }
 
-        // Disable navigation bar contrast enforcement on API 29+
-        if (appearance.disableContrastEnforcement) {
+        // Disable navigation bar contrast enforcement on API 29+. The decision field
+        // already encodes sdkInt >= 29; the explicit check restates it in the form
+        // lint's NewApi detector can see (it cannot trace through NavBarAppearance).
+        if (VERSION.SDK_INT >= 29 && appearance.disableContrastEnforcement) {
             w.isNavigationBarContrastEnforced = false
         }
 
