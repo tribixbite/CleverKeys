@@ -491,13 +491,8 @@ class Pointers(
                         val customMapping = _customSwipeManager.getMapping(keyCode, swipeDir)
 
                         if (customMapping != null) {
-                            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "CUSTOM_SHORT_SWIPE: Found custom mapping for $keyCode:$swipeDir -> ${customMapping.actionType}:${customMapping.actionValue}")
-                            // Delegate to handler for custom mapping execution
                             // Custom mappings work even with shift active - this is intentional
-                            _handler.onCustomShortSwipe(customMapping)
-                            clearLatched()
-                            _swipeRecognizer.reset()
-                            removePtr(ptr)
+                            executeCustomShortSwipe(ptr, customMapping)
                             return
                         }
 
@@ -518,7 +513,20 @@ class Pointers(
                         var gestureValue = if (isWordCandidate) {
                             _handler.modifyKey(getKeyAtDirection(ptr.key, direction), ptr.modifiers)
                         } else {
-                            getNearestKeyAtDirection(ptr, direction)
+                            // #171: the ±1 fuzz must consult the user's CUSTOM mapping at each
+                            // scanned bin BEFORE that bin's default subkey. The exact-bin custom
+                            // check above misses a flick whose angle noise lands one bin over
+                            // (e.g. a NW flick read as W/N), and the default-only fuzz then
+                            // resurrected the very default the user overrode — nondeterministic
+                            // "~ or !" decided by a few degrees. Nearest bin still wins overall.
+                            when (val resolved = resolveNearestShortSwipe(ptr, keyCode, direction)) {
+                                is ShortSwipeResolution.Custom -> {
+                                    executeCustomShortSwipe(ptr, resolved.mapping)
+                                    return
+                                }
+                                is ShortSwipeResolution.Default -> resolved.value
+                                null -> null
+                            }
                         }
 
                         vlog {
@@ -830,6 +838,75 @@ class Pointers(
             i = (i.inv() shr 31) - i
         }
         return null
+    }
+
+    /**
+     * Result of the fuzzed short-swipe resolution ([resolveNearestShortSwipe]): either a
+     * user-defined custom mapping or a layout default subkey, whichever is nearest.
+     */
+    private sealed interface ShortSwipeResolution {
+        class Custom(val mapping: ShortSwipeMapping) : ShortSwipeResolution
+        class Default(val value: KeyValue) : ShortSwipeResolution
+    }
+
+    /**
+     * Resolve a short swipe against BOTH sources with ONE scan (#171): at each of the
+     * fuzzed 16-bins — exact first, then ±1, the same forgiveness and order as
+     * [getNearestKeyAtDirection] — the user's custom mapping for that bin's
+     * [SwipeDirection] is consulted BEFORE the layout's default subkey. Consequences:
+     *  - a custom mapping always shadows the default occupying the same slot, even when
+     *    angle noise put the release vector one bin over (the #171 nondeterminism);
+     *  - an exact-bin default still beats a neighbor-bin custom mapping (nearest wins).
+     *
+     * Only used on the non-word-candidate path; word candidates keep their stricter
+     * exact-bin-only resolution (see the call site).
+     */
+    private fun resolveNearestShortSwipe(
+        ptr: Pointer,
+        keyCode: String,
+        direction: Int
+    ): ShortSwipeResolution? {
+        // Offset order 0, -1, +1 — identical to getNearestKeyAtDirection's scan.
+        var i = 0
+        while (i > -2) {
+            val d = (direction + i + 16) % 16
+            if (keyCode.isNotEmpty()) {
+                val m = _customSwipeManager.getMapping(keyCode, directionToSwipeDirection(d))
+                if (m != null) {
+                    return ShortSwipeResolution.Custom(m)
+                }
+            }
+            val k = _handler.modifyKey(getKeyAtDirection(ptr.key, d), ptr.modifiers)
+            if (k != null) {
+                // Slider distance guard kept in parity with getNearestKeyAtDirection —
+                // vacuous at ±1 (abs(i) <= 1) but preserved so the two scans cannot drift
+                // if the fuzz is ever widened.
+                if (!(k.getKind() == KeyValue.Kind.Slider && abs(i) >= 2)) {
+                    return ShortSwipeResolution.Default(k)
+                }
+            }
+            i = (i.inv() shr 31) - i
+        }
+        return null
+    }
+
+    /**
+     * Emit a matched custom short-swipe mapping and retire the gesture's pointer.
+     * Shared by the exact-bin custom check and [resolveNearestShortSwipe]'s fuzzed match.
+     */
+    private fun executeCustomShortSwipe(ptr: Pointer, mapping: ShortSwipeMapping) {
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(
+                "Pointers",
+                "CUSTOM_SHORT_SWIPE: Found custom mapping for " +
+                    "${mapping.keyCode}:${mapping.direction} -> ${mapping.actionType}:${mapping.actionValue}"
+            )
+        }
+        // Delegate to handler for custom mapping execution
+        _handler.onCustomShortSwipe(mapping)
+        clearLatched()
+        _swipeRecognizer.reset()
+        removePtr(ptr)
     }
 
     fun onTouchMove(x: Float, y: Float, pointerId: Int) {
