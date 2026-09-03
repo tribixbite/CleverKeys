@@ -570,7 +570,7 @@ same test, never a second mechanism.
 | corner | Latin (en/fr/de/es/it/pt/sv) | ru |
 |---|---|---|
 | model asset | `models/ctc_swipe_encoder.onnx` sha256 `84718e6ebc8020176f27b9668e50922a765c96838307b640a8db9ab0549e88e5` | `models/ru_synth_v3_ch80_fp16w.onnx` sha256 `8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c` (589,406 B) |
-| fixture (both copies) | `ctc/ctc_golden.json`, byte-identical, sha256 `2a449c4f2de19505131b396655ae01d3e3c325e40249446ff6e7a40c2b27559c` (= ML `artifacts/phaseM_kd_fresh_w1_fp16w_golden.json`, regenerated 2026-08-14 at the **ship** preset — the first cut was generated at E1 and is superseded, `PHASE_M.md` §11.1) | `ctc/ru_synth_v3_ch80_fp16w_golden.json`, byte-identical, sha256 `2e8de3c5a15e5874366f44f725aeec2eb72befd89b503d4b24b8b4a8d82fdde5` (160,384 B) |
+| fixture (both copies) | `ctc/ctc_golden.json`, byte-identical, sha256 `2a449c4f2de19505131b396655ae01d3e3c325e40249446ff6e7a40c2b27559c` (= ML `artifacts/phaseM_kd_fresh_w1_fp16w_golden.json`, regenerated 2026-08-14 at the **ship** preset — the first cut was generated at E1 and is superseded, `PHASE_M.md` §11.1) | `ctc/ru_synth_v3_ch80_fp16w_golden.json`, byte-identical, sha256 `8951d7a3f725e54df735804ae981ba96038f8f6a5609edf52a56f699914982d3` (159,778 B, ARC-060 geometry, ML `8778fef`) |
 | runtime preset | `CtcScoringParams.tunedV2()` = `0.9 / 4.0 / 0.25 / 0.25 / 0.9882`, beam 100, top-4 — the en-scale λ, which is what the fixture's `en_enhanced` trie is on | `CtcScoringParams.tunedRuCkdt()` = `1.05 / 2.0 / 0.2 / 0.3734 / 0.9882`, beam 100, top-4 — the CKDT-scale λ on the E1 footing |
 
 All corners of every row are pinned by

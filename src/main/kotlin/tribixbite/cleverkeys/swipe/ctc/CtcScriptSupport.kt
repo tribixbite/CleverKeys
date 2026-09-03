@@ -155,7 +155,7 @@ object CtcScriptSupport {
             // so they never become emission slots. The projection folds them away instead.
             alphabet = "абвгдежзийклмнопрстуфхцчшщыьэюя",
             // Generation 4, sha 8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c,
-            // 589,406 B. Fixture sha 2e8de3c5a15e5874366f44f725aeec2eb72befd89b503d4b24b8b4a8d82fdde5.
+            // 589,406 B. Fixture sha 8951d7a3f725e54df735804ae981ba96038f8f6a5609edf52a56f699914982d3 (ARC-060 geometry).
             modelAsset = "models/ru_synth_v3_ch80_fp16w.onnx",
             goldenFixture = "ru_synth_v3_ch80_fp16w_golden.json",
             status = Status.ROUTED,

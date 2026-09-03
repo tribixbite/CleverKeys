@@ -202,7 +202,7 @@ class CtcParityTest {
      *    §11.1): `phaseM_kd_fresh_w1_s1234_fp16w.onnx` sha `84718e6e…`, fixture
      *    `ctc_golden.json`, preset `0.9 / 4.0 / 0.25 / 0.25 / 0.9882` = [CtcScoringParams.tunedV2].
      *  - **ru** (generation 4, `PHASE_Q.md` §7.3): `ru_synth_v3_ch80_fp16w.onnx` sha
-     *    `8fffa75c…`, fixture `ru_synth_v3_ch80_fp16w_golden.json` sha `2e8de3c5…`, preset
+     *    `8fffa75c…`, fixture `ru_synth_v3_ch80_fp16w_golden.json` sha `8951d7a3…` (ARC-060 geometry), preset
      *    `1.05 / 2.0 / 0.2 / 0.3734 / 0.9882` = [CtcScoringParams.tunedRuCkdt].
      *
      * The preset is read through [CtcScoringParams.presetFor] rather than named per row, which

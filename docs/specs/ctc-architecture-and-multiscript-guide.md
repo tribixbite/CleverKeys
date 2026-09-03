@@ -532,7 +532,7 @@ Generation 4 — **what to wire**, all six scripts:
 |---|---|---|
 | **`ru_synth_v3_ch80.onnx`** (fp32) | 1,142,727 | `b4ad3aab1a7d15dc94c6e69a459991f76e95e2828a12abe1594a377c80e52ac0` |
 | **`ru_synth_v3_ch80_fp16w.onnx`** (**ship bytes**) | 589,406 | `8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c` |
-| **`ru_synth_v3_ch80_fp16w_golden.json`** (fixture) | 160,384 | `2e8de3c5a15e5874366f44f725aeec2eb72befd89b503d4b24b8b4a8d82fdde5` |
+| **`ru_synth_v3_ch80_fp16w_golden.json`** (fixture) | 159,778 | `8951d7a3f725e54df735804ae981ba96038f8f6a5609edf52a56f699914982d3` |
 | `el_synth_v3_ch80.onnx` / `_fp16w.onnx` / `_fp16w_golden.json` | 1,142,727 / 589,406 / 144,427 | `abc86626d34c287beee2ac1b1a67795763a01a15407d6a7e2dae3522ac4bb2c8` / `7083794c501566f411b1f81495ba1f7f3df273c3eb58f6ee635caf168a4f8c3d` / `d08d5501961e971db2ca120f6ee868b7b67ed37e34b6412dddbc7f7116de5753` |
 | `uk_synth_v3_ch80.onnx` / `_fp16w.onnx` / `_fp16w_golden.json` | 1,142,727 / 589,406 / 155,068 | `7fe52e7dd3f76c03fa92bfb575ad6fa3948ed58af22d21ca6c6823c106d7bb82` / `af9959a8954961eec117808371937cb26152c82a82cad0fc6a0ac06fd695db76` / `93602db1200a3b37ef11570d4f4ee3afdad2a45b0ca4f857a784728cdbb5cc98` |
 | `bg_synth_v3_ch80.onnx` / `_fp16w.onnx` / `_fp16w_golden.json` | 1,142,727 / 589,406 / 154,835 | `c41e9ed8e7a014e85f95705eff7ddef494b3cd4be5d5633e4dfc5078e0849bb3` / `119d42f70cc763336f9a86efdc5ae4f562ba4a28179c2d386026bef674c039a7` / `f776ea03ab675ff6b741a3297c4f88b11f7af2cb183ce7b2604f082ed8420b9d` |
@@ -822,7 +822,7 @@ Golden fixtures:
 | fixture | pairs with | preset |
 |---|---|---|
 | `src/test/resources/ctc/ctc_golden.json` = `src/androidTest/assets/ctc/ctc_golden.json`, sha `2a449c4f2de19505131b396655ae01d3e3c325e40249446ff6e7a40c2b27559c`, 140,462 B | the shipped ONNX (`84718e6e…`) — the **header sha** is asserted in CI, the **emission matrices are not**; see `APP_INTEGRATION_AUDIT.md` §6.2 | `tunedV2` = 0.9 / 4.0 / 0.25 / 0.25 / 0.9882 |
-| `ctc/artifacts/ru_synth_v3_ch80_fp16w_golden.json`, 160,384 B, sha `2e8de3c5a15e…` | `ru_synth_v3_ch80_fp16w.onnx` (`8fffa75c…`) | `tunedRuCkdt` = 1.05 / 2.0 / 0.2 / 0.3734 / 0.9882 |
+| `ctc/artifacts/ru_synth_v3_ch80_fp16w_golden.json`, 159,778 B, sha `8951d7a3f725…` (ARC-060 geometry, ML `8778fef`) | `ru_synth_v3_ch80_fp16w.onnx` (`8fffa75c…`) | `tunedRuCkdt` = 1.05 / 2.0 / 0.2 / 0.3734 / 0.9882 |
 | `ctc/artifacts/{el,uk,bg,mk,he}_synth_v3_ch80_fp16w_golden.json` | the matching v3 fp16w bytes (§4.2) | same `tunedRuCkdt` numbers |
 
 Every script fixture is 10 cases (5 pure-featurizer branch probes, 1 word-path featurizer case,
