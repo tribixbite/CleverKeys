@@ -50,7 +50,8 @@ confirmed in code). Companion: `docs/guides/adding-a-new-language.md`.
   sr/hy/ka are blocked on dictionaries (no usable wordfreq depth / no oracle). Each needs the
   §4 ML recipe (~1 GPU-day) once a lexicon path exists. uk apostrophe forms (м'ясо — wordfreq
   uses U+02BC, rejected by the Cyrillic gate) and uk ї/ґ serving need the corner-alias input
-  mode — a different feature, recorded, unscheduled.
+  mode — a different feature, unscheduled. Also listed in `memory/HANDOFF.md`'s "Still open
+  after round 2" so it is tracked outside this file.
 - [x] **DECIDED 2026-09-03** (permanent TAP+geometric; recorded in CtcScriptSupport KDoc + guide, pinned in CtcLanguagePresetTest; reopening condition = ML-side tr-fold holdout evidence) **Turkish CTC**: rejected by a–z measurement (dotless ı has no NFD decomposition; 73.34 %
   projectable). Either a tr-specific fold (ı→i) in a projection row + eligibility exception, or
   accept TAP+geometric permanently. Decide, don't drift.

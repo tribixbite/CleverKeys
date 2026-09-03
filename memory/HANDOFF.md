@@ -48,6 +48,9 @@ section is authoritative for what closed):**
 - ARC-114 (LOW): #79 A17 inset-strip observable. Import-preview "Invalid/skipped" label
   wording (the skips are intentional categories, "Invalid" oversells) — cosmetic.
 - Langpack manifest-version normalize on next pack rebuild (byte-identity rule defers it).
+- uk apostrophe forms (`м'ясо` — wordfreq uses U+02BC, rejected by the Cyrillic gate) and uk
+  ї/ґ serving both need the corner-alias input mode — a different feature, unscheduled. Was
+  recorded only in `memory/language-support-todo.md` §C; listed here so it lives in a tracker.
 - Evidence-beyond-holdout for el/uk/bg/mk/he: real-swipe probes are an ML-repo/device
   question; synthesis-holdout levels stay unquotable as accuracy. Per-script LATENCY is
   now measured and published (guide, `55da93fb`).
