@@ -796,6 +796,17 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ml.SwipeMLDataProvenanceTest',
     'tribixbite.cleverkeys.ml.SwipeMLDataEnrichmentTest',
     'tribixbite.cleverkeys.ml.PlaygroundPayloadTest',
+    // Release-record burn-down (2026-09-03): claims pinned by waves UA-UD
+    'tribixbite.cleverkeys.customization.ReleaseClaimCommandCatalogueTest',
+    'tribixbite.cleverkeys.ReleaseClaimTextActionsTest',
+    'tribixbite.cleverkeys.ReleaseClaimNavBarTest',
+    'tribixbite.cleverkeys.LayoutCatalogueTest',
+    'tribixbite.cleverkeys.NumpadKeySizeTest',
+    'tribixbite.cleverkeys.SecondaryPredictionWeightTest',
+    'tribixbite.cleverkeys.CustomSubLabelRenderingTest',
+    'tribixbite.cleverkeys.DictionarySortOrderTest',
+    'tribixbite.cleverkeys.ReleasePackagingDriftTest',
+    'tribixbite.cleverkeys.LauncherSetupFlowTest',
     // MinSdkApiUsageDriftTest DELETED (ARC-113, 2026-09-03): it guarded the
     // API-24 Map/Set idioms that crash on Android 5.0–6.0 and self-asserted
     // minSdk < 24 with the instruction "If minSdk is ever raised to 24+, this
@@ -895,6 +906,25 @@ tasks.register('runMockTests', JavaExec) {
   jvmArgs '-XX:+EnableDynamicAgentLoading'
 
   def mockTestClasses = [
+    // Release-record burn-down (2026-09-03): claims pinned by waves UA-UD
+    'tribixbite.cleverkeys.ReleaseClaimGestureModesTest',
+    'tribixbite.cleverkeys.ReleaseClaimKeyModifierTest',
+    'tribixbite.cleverkeys.WindowLayoutUtilsTest',
+    'tribixbite.cleverkeys.MarginPercentPolicyTest',
+    'tribixbite.cleverkeys.theme.MonetDynamicColorGateTest',
+    'tribixbite.cleverkeys.langpack.LanguagePackImportTest',
+    'tribixbite.cleverkeys.UserDictionaryLocaleFilterTest',
+    'tribixbite.cleverkeys.MLDataCollectionToggleTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardLockedStartupTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardCaptureExclusionTest',
+    'tribixbite.cleverkeys.SuggestionTapAddAndIWordTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardTabsAndPaneCloseTest',
+    'tribixbite.cleverkeys.prefs.AndroidXPreferenceMigrationTest',
+    'tribixbite.cleverkeys.ImeDefaultDetectionTest',
+    'tribixbite.cleverkeys.KeyboardTileServiceTest',
+    'tribixbite.cleverkeys.SwipeDataExportSafTest',
+    'tribixbite.cleverkeys.SwipeDebugActionsTest',
+    'tribixbite.cleverkeys.TestKeyboardSectionTest',
     'tribixbite.cleverkeys.SwipePrunerTest',
     'tribixbite.cleverkeys.PrivacyManagerTest',
     'tribixbite.cleverkeys.DebugLoggingManagerTest',
