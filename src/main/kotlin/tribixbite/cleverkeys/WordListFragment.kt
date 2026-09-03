@@ -193,40 +193,7 @@ class WordListFragment : Fragment() {
                 }
 
                 // v1.2.7: Apply sorting based on sort type
-                val sortedWords = when (sortType) {
-                    DictionaryManagerActivity.SortType.FREQ -> {
-                        // Sort by frequency (highest first) - default
-                        words.sortedByDescending { it.frequency }
-                    }
-                    DictionaryManagerActivity.SortType.MATCH -> {
-                        // Sort by match quality: exact match first, then prefix match, then by frequency
-                        if (normalizedQuery.isNotBlank()) {
-                            words.sortedWith(compareBy(
-                                // Exact match gets priority 0, prefix match gets 1, others get 2
-                                { word ->
-                                    when {
-                                        word.word.equals(normalizedQuery, ignoreCase = true) -> 0
-                                        word.word.startsWith(normalizedQuery, ignoreCase = true) -> 1
-                                        else -> 2
-                                    }
-                                },
-                                // Secondary sort by frequency (descending, so negate)
-                                { -it.frequency }
-                            ))
-                        } else {
-                            // No query, fall back to frequency sort
-                            words.sortedByDescending { it.frequency }
-                        }
-                    }
-                    DictionaryManagerActivity.SortType.A_Z -> {
-                        // Alphabetical ascending
-                        words.sortedBy { it.word.lowercase() }
-                    }
-                    DictionaryManagerActivity.SortType.Z_A -> {
-                        // Alphabetical descending
-                        words.sortedByDescending { it.word.lowercase() }
-                    }
-                }
+                val sortedWords = sortWordsForDisplay(words, sortType, normalizedQuery)
 
                 adapter.setWords(sortedWords)
                 updateEmptyState()
@@ -433,5 +400,57 @@ class WordListFragment : Fragment() {
         dataSource.onRefresh()
         // #96: Reapply current search/sort state instead of loading unfiltered
         filter(currentSearchQuery, currentSortType)
+    }
+}
+
+/**
+ * Order [words] for display under [sortType].
+ *
+ * [normalizedQuery] is the trimmed contents of the Dictionary Manager search box; only
+ * [DictionaryManagerActivity.SortType.MATCH] reads it, and with a blank query MATCH is defined
+ * to fall back to frequency order (there is no relevance to rank by).
+ *
+ * Extracted VERBATIM from [WordListFragment.filter] (2026-09-03) so the four orderings the
+ * v1.2.6 / v1.2.8 release notes promise — "Sort by Frequency/Match/A-Z/Z-A" — can be pinned
+ * without a Fragment, a lifecycle scope or a data source. Pure: no Android types, no state,
+ * no I/O. Behaviour is unchanged; `filter` now calls this and does nothing else differently.
+ * Pinned by `DictionarySortOrderTest`.
+ */
+internal fun sortWordsForDisplay(
+    words: List<DictionaryWord>,
+    sortType: DictionaryManagerActivity.SortType,
+    normalizedQuery: String,
+): List<DictionaryWord> = when (sortType) {
+    DictionaryManagerActivity.SortType.FREQ -> {
+        // Sort by frequency (highest first) - default
+        words.sortedByDescending { it.frequency }
+    }
+    DictionaryManagerActivity.SortType.MATCH -> {
+        // Sort by match quality: exact match first, then prefix match, then by frequency
+        if (normalizedQuery.isNotBlank()) {
+            words.sortedWith(compareBy(
+                // Exact match gets priority 0, prefix match gets 1, others get 2
+                { word ->
+                    when {
+                        word.word.equals(normalizedQuery, ignoreCase = true) -> 0
+                        word.word.startsWith(normalizedQuery, ignoreCase = true) -> 1
+                        else -> 2
+                    }
+                },
+                // Secondary sort by frequency (descending, so negate)
+                { -it.frequency }
+            ))
+        } else {
+            // No query, fall back to frequency sort
+            words.sortedByDescending { it.frequency }
+        }
+    }
+    DictionaryManagerActivity.SortType.A_Z -> {
+        // Alphabetical ascending
+        words.sortedBy { it.word.lowercase() }
+    }
+    DictionaryManagerActivity.SortType.Z_A -> {
+        // Alphabetical descending
+        words.sortedByDescending { it.word.lowercase() }
     }
 }
