@@ -42,8 +42,9 @@ import tribixbite.cleverkeys.ml.SwipeMLData
  * lifecycle methods (onCreate, onCreateInputView, onStartInputView, etc.) in this class.
  *
  * ## Prediction Strategy
- * All predictions wait for gesture completion to avoid premature suggestions. This matches
- * SwipeCalibrationActivity behavior and ensures consistent user experience.
+ * All predictions wait for gesture completion to avoid premature suggestions — a partial trace
+ * is not evidence about the intended word, and decoding one produces suggestions the user never
+ * asked for.
  *
  * ## Key Lifecycle Methods
  * - [onCreate]: Initialize managers and load configuration
@@ -59,8 +60,8 @@ class CleverKeysService : InputMethodService(),
     SuggestionBar.OnSuggestionSelectedListener,
     ConfigChangeListener {
 
-    // Unified prediction strategy: All predictions wait for gesture completion
-    // to match SwipeCalibrationActivity behavior and eliminate premature predictions
+    // Unified prediction strategy: all predictions wait for gesture completion, so a partial
+    // trace never produces a suggestion.
     private lateinit var _keyboardView: Keyboard2View
     private lateinit var _keyeventhandler: KeyEventHandler
 
@@ -144,10 +145,6 @@ class CleverKeysService : InputMethodService(),
 
     // Theme change broadcast receiver
     private var _themeChangeReceiver: BroadcastReceiver? = null
-
-    // #9: Track last layout name to avoid repeated swipe-unsupported toasts
-    // TODO #9: re-enable toast tracking when layout-switch toast is reliable
-    // private var _lastSwipeUnsupportedToastLayout: String? = null
 
     companion object {
         /** Broadcast action sent when theme changes in ThemeSettingsActivity */
@@ -300,24 +297,6 @@ class CleverKeysService : InputMethodService(),
     fun incrTextLayout(delta: Int) {
         _layoutBridge.incrTextLayout(delta)
     }
-
-    // TODO #9: Re-enable layout-switch toast when reliability issues are resolved.
-    //  The toast didn't fire consistently across devices/API levels — likely because
-    //  onStartInputView timing varies and getKeyboard() may return stale data.
-    //  The settings warning card still covers the case for users checking settings.
-    // private fun checkSwipeSupportForCurrentLayout() {
-    //     val config = _config ?: return
-    //     if (!config.swipe_typing_enabled) return
-    //     val layout = _keyboardView.getKeyboard() ?: return
-    //     if (Config.isSwipeTypingSupportedForLayout(layout)) {
-    //         _lastSwipeUnsupportedToastLayout = null
-    //         return
-    //     }
-    //     val layoutName = layout.name ?: return
-    //     if (_lastSwipeUnsupportedToastLayout == layoutName) return
-    //     _lastSwipeUnsupportedToastLayout = layoutName
-    //     Toast.makeText(this, "Swipe typing paused — $layoutName not supported yet", Toast.LENGTH_SHORT).show()
-    // }
 
     /**
      * Set special layout (numeric, emoji, etc.).
@@ -681,8 +660,6 @@ class CleverKeysService : InputMethodService(),
         }
 
         _keyboardView.setKeyboard(current_layout())
-        // TODO #9: toast on non-QWERTY layout switch — disabled (not showing reliably across devices)
-        // checkSwipeSupportForCurrentLayout()
         // WP9 R-1 step 8: background-warm the geometric engine when this layout routes to it,
         // so the first non-QWERTY swipe avoids the synchronous template-index build. No-op
         // unless swipe typing is on AND swipe_engine_mode is hybrid/geometric.
@@ -775,8 +752,6 @@ class CleverKeysService : InputMethodService(),
     override fun onCurrentInputMethodSubtypeChanged(subtype: InputMethodSubtype) {
         refreshSubtypeImm()
         _keyboardView.setKeyboard(current_layout())
-        // TODO #9: toast on non-QWERTY layout switch — disabled (not showing reliably across devices)
-        // checkSwipeSupportForCurrentLayout()
         // REMOVED: Redundant layout update - now handled exclusively by PredictionViewSetup's GlobalLayoutListener
         // This eliminates double initialization and input lag on app switches
     }
