@@ -708,7 +708,6 @@
     <string name="common_remove">Retirer</string>
     <string name="common_view">Voir</string>
     <string name="common_export">Exporter</string>
-    <string name="common_import">Importer</string>
     <string name="common_off">Désactivé</string>
     <string name="gif_section_intro">Réactions GIF hors ligne. Importez des packs depuis des fichiers ZIP (à télécharger depuis GitHub Releases).</string>
     <string name="gif_toast_no_browser">Impossible d\'ouvrir le navigateur</string>

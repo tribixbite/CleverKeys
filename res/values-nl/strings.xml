@@ -702,7 +702,6 @@
     <string name="common_remove">Verwijderen</string>
     <string name="common_view">Bekijken</string>
     <string name="common_export">Exporteren</string>
-    <string name="common_import">Importeren</string>
     <string name="common_off">Uit</string>
     <string name="gif_section_intro">Offline GIF-reacties. Importeer pakketten uit ZIP-bestanden (downloaden via GitHub Releases).</string>
     <string name="gif_toast_no_browser">Kon browser niet openen</string>

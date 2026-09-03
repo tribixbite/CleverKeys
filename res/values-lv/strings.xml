@@ -713,7 +713,6 @@
     <string name="common_remove">Noņemt</string>
     <string name="common_view">Skatīt</string>
     <string name="common_export">Eksportēt</string>
-    <string name="common_import">Importēt</string>
     <string name="common_off">Izslēgts</string>
     <string name="gif_section_intro">Bezsaistes GIF reakcijas. Importējiet pakotnes no ZIP failiem (lejupielādējiet no GitHub Releases).</string>
     <string name="gif_toast_no_browser">Neizdevās atvērt pārlūkprogrammu</string>

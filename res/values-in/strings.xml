@@ -714,7 +714,6 @@
     <string name="common_remove">Hapus</string>
     <string name="common_view">Lihat</string>
     <string name="common_export">Ekspor</string>
-    <string name="common_import">Impor</string>
     <string name="common_off">Mati</string>
     <string name="gif_section_intro">Reaksi GIF offline. Impor paket dari file ZIP (unduh dari GitHub Releases).</string>
     <string name="gif_toast_no_browser">Tidak dapat membuka browser</string>

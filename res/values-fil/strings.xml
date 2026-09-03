@@ -711,7 +711,6 @@
     <string name="common_remove">Alisin</string>
     <string name="common_view">Tingnan</string>
     <string name="common_export">I-export</string>
-    <string name="common_import">I-import</string>
     <string name="common_off">Naka-off</string>
     <string name="gif_section_intro">Offline na mga GIF reaction. Mag-import ng mga pack mula sa mga ZIP file (i-download mula sa GitHub Releases).</string>
     <string name="gif_toast_no_browser">Hindi mabuksan ang browser</string>

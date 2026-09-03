@@ -710,7 +710,6 @@
     <string name="common_remove">Kaldır</string>
     <string name="common_view">Görüntüle</string>
     <string name="common_export">Dışa Aktar</string>
-    <string name="common_import">İçe Aktar</string>
     <string name="common_off">Kapalı</string>
     <string name="gif_section_intro">Çevrimdışı GIF tepkileri. Paketleri ZIP dosyalarından içe aktarın (GitHub Releases\'ten indirin).</string>
     <string name="gif_toast_no_browser">Tarayıcı açılamadı</string>

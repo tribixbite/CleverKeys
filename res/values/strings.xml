@@ -976,7 +976,6 @@
     <string name="common_remove">Remove</string>
     <string name="common_view">View</string>
     <string name="common_export">Export</string>
-    <string name="common_import">Import</string>
     <string name="common_off">Off</string>
 
     <!-- GifPanelSection.kt — GIF pack import/management block -->

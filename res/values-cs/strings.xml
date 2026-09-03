@@ -702,7 +702,6 @@
     <string name="common_remove">Odebrat</string>
     <string name="common_view">Zobrazit</string>
     <string name="common_export">Exportovat</string>
-    <string name="common_import">Importovat</string>
     <string name="common_off">Vypnuto</string>
     <string name="gif_section_intro">Offline GIF reakce. Importujte balíčky ze souborů ZIP (ke stažení na GitHub Releases).</string>
     <string name="gif_toast_no_browser">Nepodařilo se otevřít prohlížeč</string>

@@ -725,7 +725,6 @@
     <string name="common_remove">Elimină</string>
     <string name="common_view">Vizualizează</string>
     <string name="common_export">Exportă</string>
-    <string name="common_import">Importă</string>
     <string name="common_off">Dezactivat</string>
     <string name="gif_section_intro">Reacții GIF offline. Importați pachete din fișiere ZIP (descărcate din GitHub Releases).</string>
     <string name="gif_toast_no_browser">Nu s-a putut deschide browserul</string>

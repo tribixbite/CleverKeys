@@ -742,7 +742,6 @@
     <string name="common_remove">Rimuovi</string>
     <string name="common_view">Visualizza</string>
     <string name="common_export">Esporta</string>
-    <string name="common_import">Importa</string>
     <string name="common_off">Disattivato</string>
     <string name="gif_section_intro">Reazioni GIF offline. Importa pacchetti da file ZIP (scaricali dalle GitHub Releases).</string>
     <string name="gif_toast_no_browser">Impossibile aprire il browser</string>

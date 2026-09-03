@@ -720,7 +720,6 @@
     <string name="common_remove">Quitar</string>
     <string name="common_view">Ver</string>
     <string name="common_export">Exportar</string>
-    <string name="common_import">Importar</string>
     <string name="common_off">Desactivado</string>
     <string name="gif_section_intro">Reacciones GIF sin conexión. Importa paquetes desde archivos ZIP (descárgalos de GitHub Releases).</string>
     <string name="gif_toast_no_browser">No se pudo abrir el navegador</string>

@@ -708,7 +708,6 @@
     <string name="common_remove">Eltávolítás</string>
     <string name="common_view">Megtekintés</string>
     <string name="common_export">Exportálás</string>
-    <string name="common_import">Importálás</string>
     <string name="common_off">Ki</string>
     <string name="gif_section_intro">Offline GIF-reakciók. Csomagok importálása ZIP-fájlokból (letöltés a GitHub Releases oldalról).</string>
     <string name="gif_toast_no_browser">Nem sikerült megnyitni a böngészőt</string>

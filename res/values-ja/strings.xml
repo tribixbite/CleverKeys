@@ -701,7 +701,6 @@
     <string name="common_remove">削除</string>
     <string name="common_view">表示</string>
     <string name="common_export">エクスポート</string>
-    <string name="common_import">インポート</string>
     <string name="common_off">オフ</string>
     <string name="gif_section_intro">オフラインの GIF リアクション。ZIP ファイルからパックをインポートします(GitHub Releases からダウンロード)。</string>
     <string name="gif_toast_no_browser">ブラウザーを開けませんでした</string>

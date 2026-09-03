@@ -702,7 +702,6 @@
     <string name="common_remove">Удалить</string>
     <string name="common_view">Просмотр</string>
     <string name="common_export">Экспорт</string>
-    <string name="common_import">Импорт</string>
     <string name="common_off">Выкл.</string>
     <string name="gif_section_intro">Офлайн-реакции GIF. Импортируйте пакеты из ZIP-файлов (скачиваются со страницы GitHub Releases).</string>
     <string name="gif_toast_no_browser">Не удалось открыть браузер</string>

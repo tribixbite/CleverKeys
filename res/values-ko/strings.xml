@@ -702,7 +702,6 @@
     <string name="common_remove">제거</string>
     <string name="common_view">보기</string>
     <string name="common_export">내보내기</string>
-    <string name="common_import">가져오기</string>
     <string name="common_off">끄기</string>
     <string name="gif_section_intro">오프라인 GIF 반응. ZIP 파일에서 팩을 가져옵니다(GitHub Releases에서 다운로드).</string>
     <string name="gif_toast_no_browser">브라우저를 열 수 없습니다</string>

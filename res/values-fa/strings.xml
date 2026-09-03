@@ -737,7 +737,6 @@
     <string name="common_remove">برداشتن</string>
     <string name="common_view">نمایش</string>
     <string name="common_export">برون‌بری</string>
-    <string name="common_import">وارد کردن</string>
     <string name="common_off">خاموش</string>
     <string name="gif_section_intro">واکنش‌های گیف آفلاین. بسته‌ها را از فایل‌های ZIP وارد کنید (از GitHub Releases دانلود کنید).</string>
     <string name="gif_toast_no_browser">باز کردن مرورگر ممکن نشد</string>
