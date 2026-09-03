@@ -83,9 +83,30 @@ class ReleaseMetadataDriftTest {
             assertTrue("${file.path} must list provisional languages", text.contains("it/pt/sv") && text.contains("provisional"))
             assertTrue("${file.path} must explain fallback", text.contains("geometric fallback"))
             assertFalse("${file.path} must not call CTC opt-in", text.contains("CTC engine (opt-in)"))
+            // ARC-054 (2026-09-03, maintainer-approved): ru and el are announced — each at its
+            // HONEST evidence tier, and only as pack-gated features.
+            assertTrue(
+                "${file.path} must announce Russian at its validation tier (val-only corpus)",
+                text.contains("Russian swipe (validation-tested)")
+            )
+            assertTrue(
+                "${file.path} must announce Greek as early support — it has NO measured accuracy",
+                text.contains("early Greek support")
+            )
+            assertTrue(
+                "${file.path} must say ru/el need their language pack imported",
+                text.contains("via language packs")
+            )
+            // Greek's 92.12 is a synthesis-holdout level, not accuracy; it may NEVER appear in
+            // release copy. Same for any percentage adjacent to the Greek claim.
+            assertFalse(
+                "${file.path} quotes the Greek synthesis-holdout number — forbidden, always",
+                text.contains("92.12")
+            )
         }
-        // The seven languages the notes above actually describe.
-        val announced = setOf("en", "fr", "de", "es", "it", "pt", "sv")
+        // The nine languages the notes above actually describe: the original seven plus
+        // ru + el, announced 2026-09-03 (ARC-054) at the tiers asserted above.
+        val announced = setOf("en", "fr", "de", "es", "it", "pt", "sv", "ru", "el")
         assertEquals(
             "the CTC language table must be exactly the announced set plus the languages " +
                 "deliberately held back from these notes",
@@ -115,24 +136,17 @@ class ReleaseMetadataDriftTest {
          * Languages the CTC engine SERVES at HEAD but which these release notes deliberately do
          * not claim, because they landed after the notes' version was written.
          *
-         * `ru` (2026-08-29) is the first non-Latin language and is post-v1.6 work by the
-         * multi-script plan's own sequencing ("this is **post-v1.6** work … do not start
-         * Milestone A on the release branch"). v1.6.0 is not tagged, so main now carries a
-         * language its pending notes do not mention.
+         * Empty since 2026-09-03: the TODO(release) decision this set existed to force was made
+         * (maintainer-approved, ARC-054) — ru and el ARE announced in the pending v1.6.0 notes,
+         * each at its honest tier: ru "validation-tested" (val-only, eval-only corpus; see
+         * [CtcLanguageSupport.VAL_ONLY]), el "early support" with NO accuracy figure (Greek has
+         * no real-swipe probe at any tier; its synthesis-holdout level may never be quoted as
+         * accuracy), both explicitly pack-gated. The content assertions above pin that copy.
          *
-         * `el` (2026-08-30) is the second, on the same footing and for the same reason — and its
-         * evidence tier is WEAKER than ru's, not merely different. Greek has NO real-swipe probe
-         * at ANY tier; its 92.12 is a synthesis-holdout level and may never be quoted as
-         * accuracy. So there is no Greek accuracy number that can lawfully appear in a release
-         * note at all.
-         *
-         * # TODO(release): before the v1.6.0 tag, DECIDE — either announce Russian and Greek in
-         * RELEASE_NOTES.md and all three ABI changelogs (each at its real evidence tier: ru
-         * val-only on an eval-only corpus; el with NO accuracy claim whatsoever; neither with an
-         * on-device latency or memory measurement; both served only when that language's pack is
-         * imported) and empty this set, or hold the script wiring back from that release. This
-         * set exists so the decision cannot be made by forgetting.
+         * The mechanism stays: any language wired after these notes (uk/bg/mk/he are queued)
+         * must be added HERE until its announcement lands, so shipping unannounced languages —
+         * or announcing unshipped ones — keeps failing this test instead of being forgotten.
          */
-        val SERVED_BUT_NOT_YET_ANNOUNCED = setOf("ru", "el")
+        val SERVED_BUT_NOT_YET_ANNOUNCED = emptySet<String>()
     }
 }
