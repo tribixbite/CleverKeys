@@ -388,10 +388,10 @@ object CommandRegistry {
             keywords = listOf("removed", "placeholder", "none", "empty")),
 
         // ========== TEXT EDITING (additional) ==========
-        Command("replaceText", "Replace Text", "Open replace dialog", Category.EDITING,
-            keywords = listOf("replace", "find", "substitute")),
-        Command("textAssist", "Text Assist", "AI text assistance", Category.EDITING,
-            keywords = listOf("assist", "ai", "help")),
+        // NOTE: replaceText / textAssist live ONLY under TEXT_ACTIONS below (the category
+        // v1.2.0 announced them in). They were briefly duplicated here as EDITING rows
+        // (v1.1.98) with identical by-name KeyValue resolution — deduped 2026-09; the
+        // catalogue must stay duplicate-free (see ReleaseClaimCommandCatalogueTest).
         Command("autofill", "Autofill", "Trigger autofill", Category.EDITING,
             keywords = listOf("autofill", "password", "form")),
 

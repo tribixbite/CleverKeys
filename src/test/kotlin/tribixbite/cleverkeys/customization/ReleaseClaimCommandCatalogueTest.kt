@@ -108,19 +108,21 @@ class ReleaseClaimCommandCatalogueTest {
     }
 
     @Test
-    fun `the only names listed twice are the two text actions`() {
-        // textAssist / replaceText are declared once under EDITING (v1.1.98) and again under
-        // TEXT_ACTIONS (v1.2.0). getByName resolves to the first (EDITING) copy. Pinned as a
-        // ratchet: the duplication is known and must not spread to other commands.
+    fun `no command name is listed twice`() {
+        // textAssist / replaceText were declared once under EDITING (v1.1.98) and again under
+        // TEXT_ACTIONS (v1.2.0) — identical KeyValue resolution (getKeyValue is by name), so
+        // the palette showed each twice and getByName silently answered with the EDITING row.
+        // Deduped 2026-09 keeping the TEXT_ACTIONS copy (the category v1.2.0 announced them
+        // under). Ratchet: the catalogue must stay duplicate-free.
         val duplicated = CommandRegistry.ALL_COMMANDS
             .groupingBy { it.name }.eachCount()
             .filterValues { it > 1 }.keys
-        assertThat(duplicated).containsExactly("replaceText", "textAssist")
+        assertThat(duplicated).isEmpty()
 
         assertThat(CommandRegistry.getByName("textAssist")!!.category)
-            .isEqualTo(CommandRegistry.Category.EDITING)
+            .isEqualTo(CommandRegistry.Category.TEXT_ACTIONS)
         assertThat(CommandRegistry.getByName("replaceText")!!.category)
-            .isEqualTo(CommandRegistry.Category.EDITING)
+            .isEqualTo(CommandRegistry.Category.TEXT_ACTIONS)
     }
 
     // ------------------------------------------------- v1.1.98 "Editing commands now work"
