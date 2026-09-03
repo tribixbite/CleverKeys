@@ -3,6 +3,8 @@ package tribixbite.cleverkeys.swipe
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import org.json.JSONObject
+import tribixbite.cleverkeys.swipe.ctc.CtcCandidate
+import tribixbite.cleverkeys.swipe.ctc.CtcEmissionModel
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
@@ -59,6 +61,13 @@ class CtcReplayEngine private constructor(
     private val fuzzyRescue: CtcFuzzyRescue,
     private val env: OrtEnvironment,
     private val session: OrtSession,
+    // ── diagnostic-only state (issue #162 replay instrument) ──────────────────
+    // Held so [forcedDecode]/[layoutGeometry]/[frequencyOf] can rebuild a CONSTRAINED
+    // decoder over the same model/layout/params without duplicating build() in a test.
+    private val layout: CtcLayout,
+    private val model: CtcEmissionModel,
+    private val params: CtcScoringParams,
+    private val frequencies: Map<String, Double>,
 ) : AutoCloseable {
 
     /** Decoded slate: display words plus the 0..1000 scores the rank-1 guard compares. */
@@ -99,6 +108,43 @@ class CtcReplayEngine private constructor(
         val (words, scores) = CtcFuzzyRescue.mergeIntoBeam(beamWords, beamScores, rescued, TOP_K)
         return Slate(words = words, scores = scores)
     }
+
+    // ── diagnostic hooks (issue #162 replay instrument; not used by the eval replays) ──
+
+    /**
+     * The raw beam decode with score components ([CtcCandidate.finalScore] /
+     * [CtcCandidate.ctcScore] / [CtcCandidate.logFreq]) plus the unconstrained greedy
+     * surface — everything [decode] collapses into the 0..1000 slate.
+     */
+    fun decodeDetailed(px: DoubleArray, py: DoubleArray, pt: DoubleArray): CtcSwipeDecoder.DecodeResult =
+        decoder.decodeDetailed(px, py, pt)
+
+    /** The golden layout geometry the engine decodes against — for trace synthesis in tests. */
+    val layoutGeometry: CtcLayout get() = layout
+
+    /** The shipped lexicon's frequency byte for [word] (en_enhanced.json scale), or null. */
+    fun frequencyOf(word: String): Double? = frequencies[word]
+
+    /**
+     * FORCED decode: the shipped beam over a trie containing ONLY [words], each at its
+     * SHIPPED frequency (missing words get 1.0). With a handful of words the per-frame
+     * hypothesis count (≤ 2·nodes+1) never reaches `beamWidth`, so pruning cannot fire and
+     * each returned [CtcCandidate.ctcScore] is the true Viterbi max-path log-score of that
+     * word over these emissions — i.e. what the word WOULD have scored had the full-lexicon
+     * beam kept its prefix alive. Comparing this against the open-vocabulary winners
+     * separates "the beam pruned it" (search artifact) from "the emissions never supported
+     * it" (model limitation).
+     */
+    fun forcedDecode(words: List<String>, px: DoubleArray, py: DoubleArray, pt: DoubleArray): List<CtcCandidate> {
+        val constrained = LinkedHashMap<String, Double>()
+        for (w in words) constrained[w] = frequencies[w] ?: 1.0
+        val trie = CtcLexiconTrie.loadStrippingNonAlphabet(layout.alphabet, constrained)
+        return CtcSwipeDecoder(model, layout, trie, params).decode(px, py, pt)
+    }
+
+    /** The shipped bounded rescue for a greedy surface — exposed for rescue-eligibility analysis. */
+    fun rescueFor(greedy: String, existing: Set<String>): List<String> =
+        fuzzyRescue.find(greedy, existing.toHashSet())
 
     override fun close() {
         runCatching { session.close() }
@@ -205,12 +251,14 @@ class CtcReplayEngine private constructor(
             )
 
             val params = CtcScoringParams.presetFor(language, topK = TOP_K)
+            val model = OnnxCtcEmissionModel(env, session)
             return CtcReplayEngine(
-                CtcSwipeDecoder(OnnxCtcEmissionModel(env, session), layout, trie, params),
+                CtcSwipeDecoder(model, layout, trie, params),
                 // Alphabet-scoped, mirroring CtcEngineAdapter: the replay harness must build the
                 // SAME rescue index the app does or its measurements describe a different engine.
                 CtcFuzzyRescue.fromFrequencies(canonical, CtcScriptSupport.alphabetFor(language).toHashSet()),
                 env, session,
+                layout, model, params, canonical,
             )
         }
     }

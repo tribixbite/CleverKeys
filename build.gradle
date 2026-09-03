@@ -581,6 +581,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.sanitize.UrlSanitizerTest',
     'tribixbite.cleverkeys.clipboard.sanitize.EmbedEnrichRulesTest',
     'tribixbite.cleverkeys.HapticsBehaviorDriftTest',
+    // #161 (2026-09-03): oriented keyboard height — the settings-side portrait stomp of
+    // Config.keyboardHeightPercent (same shape as the #154 vibrate_custom stomp above).
+    'tribixbite.cleverkeys.KeyboardHeightOrientationDriftTest',
     // Audit remediation (2026-07-17) — new pure JVM tests
     'tribixbite.cleverkeys.ClipboardSearchRegexTest',
     'tribixbite.cleverkeys.ConfigNullSafetyTest',
@@ -839,6 +842,10 @@ tasks.register('runPureTests', JavaExec) {
     // committed). Geometric engine only — ONNX cannot load in pure JVM on Termux.
     'tribixbite.cleverkeys.swipe.ContextRescoringReplayTest',
     'tribixbite.cleverkeys.swipe.CtcReplayEngineSmokeTest',
+    // Issue-#162 replay instrument (swiped "gorgeous" never surfaces): synthesized traces on
+    // the golden geometry through the shipped encoder + beam, with forced-decode diagnostics.
+    // Self-contained (no local corpus); skips only when the ORT natives are absent.
+    'tribixbite.cleverkeys.swipe.CtcDecodeReplayTest',
     'tribixbite.cleverkeys.swipe.ContractionCollisionDataTest',
     // ARC-010 (2026-08-28): the six shipped assets/bigrams/*.json tables were read by
     // NOTHING for nine months — the only loader referencing them had zero callers AND
@@ -924,6 +931,10 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.SuggestionTapAddAndIWordTest',
     'tribixbite.cleverkeys.clipboard.ClipboardTabsAndPaneCloseTest',
     'tribixbite.cleverkeys.prefs.AndroidXPreferenceMigrationTest',
+    // #169 (2026-09-03): the layout-switch keys were baked non-loc into the bottom row, so
+    // unticking their extra-key checkboxes removed nothing. Mock-tier: loads
+    // ExtraKeysPreference (androidx.preference supertype) and mocks SharedPreferences.
+    'tribixbite.cleverkeys.prefs.ExtraKeysSwitchRemovalTest',
     'tribixbite.cleverkeys.ImeDefaultDetectionTest',
     'tribixbite.cleverkeys.KeyboardTileServiceTest',
     'tribixbite.cleverkeys.SwipeDataExportSafTest',
