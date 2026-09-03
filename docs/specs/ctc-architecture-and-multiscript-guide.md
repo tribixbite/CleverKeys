@@ -528,7 +528,7 @@ Superseded ru generations, kept for the numbers measured on them:
 | file | bytes | sha256 |
 |---|---|---|
 | `ru_synth_v2_ch80.onnx` (fp32, generator v2) | 1,142,727 | `763190f9bc9854a3183f10d7dba7d8e1de1c101812b5958ee9bdbb403b93089b` |
-| `ru_synth_v3_ch80_fp16w.onnx` | 589,406 | `9004befb6ff07b744c65d3c13481539e758ebe10d4f47cbeffe68d39d12b0e52` |
+| `ru_synth_v2_ch80_fp16w.onnx` | 589,406 | `9004befb6ff07b744c65d3c13481539e758ebe10d4f47cbeffe68d39d12b0e52` |
 | `ru_synth_v2_ch80_fp16w_golden.json` | 160,282 | `a5ed2b9f62843d085779f5ab7457e6608f5c47e8994c224146ebdaf32fcdb82d` |
 | `ru_synth_ch80.onnx` (fp32, generator v1) | 1,142,727 | `d78a9fb9f8e170595a7714220cf5fd9dfc2324935900aec6cb6d7a2ec1a36666` |
 | `ru_synth_ch80_fp16w.onnx` | 589,406 | `84ac284d4f0d0cb86061df9c557507e1489ab93a75b40885a4431976cee32469` |
@@ -826,16 +826,17 @@ including all 22 locale strings), MEDIUM-9, NEW-1 (the spec rewritten around `ct
 NEW-2 (the `grek_qwerty` script tag, plus `LayoutScriptDeclarationTest`), NEW-4.
 
 **Still open, and the short list is now genuinely short** *(rows 1/2/3/5 verified CLOSED by the
-2026-08-28 archive-verification pass — struck below with closing evidence)*:
+2026-08-28 archive-verification pass; row 4 and row 6's MEDIUM-5/LOW-9 closed in the 2026-08-25
+wave — struck below with closing evidence)*:
 
 | # | item | why it is still here |
 |---|---|---|
 | 1 | ~~**MEDIUM-3** — execution brief has no superseded banner~~ | **CLOSED 2026-08-25** — HISTORICAL banner landed in `e882d7e7`; the brief itself is archived at `docs/history/audits/remediation-plans/` as of 2026-08-28. |
 | 2 | ~~**HIGH-4's residue** — curated class list omits `CtcEmissionModelParityTest`~~ | **CLOSED 2026-08-25** (`0bcce870`) — the class is in the curated gate (`.github/scripts/emulator-ci.sh:132`) and `CuratedInstrumentationListTest` pins the list. |
 | 3 | ~~**HIGH-2's residue** — two unmarked `sw2345` citations in `docs/`~~ | **CLOSED 2026-08-25** — finding 13 struck in the parity audit (now archived); superseded-figure notes at `docs/eval/2026-08-15-ctc-per-language-lambda.md:101,115`. |
-| 4 | **NEW-6** — the app's guide mirror and `memory/HANDOFF.md` still cite generation-1 ru artifacts (`ru_synth_ch80_fp16w.onnx`, `84ac284d…`, 77.41) | `APP_WIRING_CHECKLIST.md` §3 enumerates the sections to bring across. (HANDOFF's Russian paragraph was updated 2026-08-25 to the `_v3_` generation-4 bytes; verify the guide mirror before closing.) |
+| 4 | ~~**NEW-6** — the app's guide mirror and `memory/HANDOFF.md` still cite generation-1 ru artifacts (`ru_synth_ch80_fp16w.onnx`, `84ac284d…`, 77.41)~~ | **CLOSED 2026-08-25** (wiring plan §0 row 1.4) — `memory/HANDOFF.md` (both paragraphs) and `docs/specs/ctc-swipe-engine.md` updated to `ru_synth_v3_ch80_fp16w` / sha `8fffa75c…` / 85.07; guide mirror refreshed. The only remaining `84ac284d…` cites are correctly-framed superseded-generation records (§4.2 table, verified against `ctc/artifacts/` sha256 2026-09-03). |
 | 5 | ~~**MEDIUM-4** — 11 MB of superseded ONNX in `ctc_bench/`~~ | **CLOSED** (`3fcbf7b8`) — the dir holds only `README.md`; the latency benchmark now fails loudly when models are unstaged (expected reds, see HANDOFF). |
-| 6 | **MEDIUM-5, MEDIUM-6, LOW-9 (half), LOW-1..LOW-8, LOW-10** | Cleanup. LOW-9's remaining half — a `supportsLayout` negative for a Cyrillic `KeyboardData` — stops being cosmetic the moment per-script routing removes gate 1. |
+| 6 | **MEDIUM-6, LOW-1, LOW-3..LOW-7, LOW-10** (~~MEDIUM-5~~, ~~LOW-9 (half)~~, ~~LOW-2~~, ~~LOW-8~~ closed 2026-08-25) | Cleanup. MEDIUM-5's settings scope text is fixed — `ctc_settings_intro` now names Latin/Cyrillic/Greek/Hebrew, localized, and MEDIUM-7's card names the served set. LOW-9's remaining half landed as the gate-3 negative (`ff5c124b`), then evolved into `CtcMultiLanguageInstrumentedTest.theLayoutGateIsPerLanguage` when per-script routing flipped it (plan step A4). LOW-2/LOW-8 also closed in `ff5c124b`. LOW-6 is NOT closed — reopened as ARC-061 (fixtures embed dev-absolute `source_onnx`; fix belongs in ML-side `make_golden.py`). |
 
 ---
 

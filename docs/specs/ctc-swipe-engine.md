@@ -1,7 +1,7 @@
 # Feature Specification: CTC Swipe Engine (`ctc` mode — the DEFAULT swipe engine)
 
 **Status (2026-08-19):** the **DEFAULT** swipe engine. `Defaults.SWIPE_ENGINE_MODE = "ctc"`
-(`Config.kt:311`) since 2026-08-18, when the neural engine was deleted; the only other mode
+(`Config.kt:312`) since 2026-08-18, when the neural engine was deleted; the only other mode
 is `geometric`. The CleverKeys-trained CTC encoder ships as `models/ctc_swipe_encoder.onnx`
 (CleverKeys-ML `phaseM_kd_fresh_w1_s1234_fp16w`, 2.91 MB — TEST-VALIDATED on the shipping
 configuration: en_enhanced STRIP trie at preset 0.9/4.0/0.25/0.25/0.9882 → test-2400
@@ -406,7 +406,7 @@ this Latin" and "can this be decoded". Applying `CtcAzProjection.project` to eve
 | `tl` | 27,922 | **100.00 %** | 100.0 % | eligible |
 | `tr` | 40,000 | 73.34 % | 81.7 % | **rejected** |
 | `ru` | 50,000 | 0.00 % | 0.0 % | rejected here (served by the SCRIPT path instead) |
-| `el` | 39,860 | 0.00 % | 0.0 % | rejected (Greek, and unrouted anyway) |
+| `el` | 39,860 | 0.00 % | 0.0 % | rejected here (served by the SCRIPT path instead) |
 
 Turkish is why the check is load-bearing rather than ceremonial: **ı (U+0131) has no NFD
 decomposition**, so a quarter of the vocabulary — and a sixth of the thousand most frequent words
@@ -938,9 +938,12 @@ rule refused adoption. Changing it is an ML-side phase and would move ru's fixtu
 **What shipped**: `src/main/assets/models/ru_synth_v3_ch80_fp16w.onnx` (589,406 B, sha
 `8fffa75c…`, learned-generator synthesis, in-dict top-1 **85.07** on eval-only Yandex rows; the
 earlier `ru_synth_ch80_fp16w.onnx` at 77.41 is two generations superseded), its golden fixture in
-both copies, the 31-letter alphabet, and the langpack-sourced trie. The other five scripts remain
-unwired with their gaps stated in `CtcScriptSupport`; the four rules that must hold before any of
-them is routed are the architecture guide §3–§4 and §7.
+both copies, the 31-letter alphabet, and the langpack-sourced trie. Greek followed on 2026-09-01
+(`5fb58037`: `el_synth_v3_ch80_fp16w.onnx` sha `7083794c…` + fixture, `PROVISIONAL`,
+langpack-sourced — no real-swipe probe exists at any tier, so its synthesis-holdout level may
+never be quoted as accuracy). The remaining four scripts (uk/bg/mk/he) have their gaps stated in
+`CtcScriptSupport`; the four rules that must hold before any of them is routed are the
+architecture guide §3–§4 and §7.
 
 ### "Max accuracy" pair mode — FUTURE-OPTIONAL, **not implemented**
 
