@@ -173,8 +173,13 @@ the Italian-on-QWERTY device is L1+B, so swipe continues via geometric. Out-of-t
   The algorithm is portable and not model-dependent.
 - **Custom-word fuzzy autocorrect** — dropped; CTC decodes custom words directly from the merged
   trie, so only the sloppy-swipe rescue of a custom word is lost.
-- **Secondary-language swipe blending** — dropped; already silently absent in ctc mode today.
-  Tap-path blending is unaffected. Follow-up option: dual-trie CTC decode.
+- **Secondary-language swipe blending** — ~~dropped~~ **SHIPPED as the dual-trie option named
+  here.** `CtcEngineAdapter.kt:986-999` resolves a `secondaryLexicon` alongside the primary and
+  decodes both against the SAME emission matrix (the encoder runs once). The one restriction
+  discovered while building it: a secondary is only expressible when it shares the primary's
+  emission alphabet (`sharesEmissionAlphabet`), because a Latin secondary alongside a Cyrillic
+  primary would produce words with no keys on the board being swiped. A missing secondary lexicon
+  degrades to a single-language slate rather than failing.
 - **~11 `neural_*` beam prefs, the Neural Settings screen, `neural_strict_start_char`,
   `finger_occlusion_offset`** — dropped; swipe tuning becomes `ctc_beam_width` + geo knobs.
 - **Langpack prefix-boost tries** — dropped; the importer must keep *tolerating* the file so
@@ -199,10 +204,18 @@ comments in `scripts/build_local_corpus_replay.mjs`.
 
 ## Open items for the maintainer
 
-1. The fuzzy-rescue port to CTC is deferred and needs a ticket.
-2. `swipe_engine_mode_desc` retranslation across 21 locales is flagged, not done (English fallback
-   interim).
-3. The it/pt/sv accuracy delta on QWERTY is unmeasured.
+1. ~~The fuzzy-rescue port to CTC is deferred and needs a ticket.~~ **DONE** — shipped as
+   `swipe/ctc/CtcFuzzyRescue.kt`, an alphabet-scoped post-beam rescue inside the CTC adapter.
+2. ~~`swipe_engine_mode_desc` retranslation across 21 locales is flagged, not done (English
+   fallback interim).~~ **DONE (ARC-066, 2026-09-01)** — `swipe_engine_mode_desc` is present in
+   all 21 `res/values-*/strings.xml`; the wider locale pass also filled the plurals gap and
+   removed all 373 `MissingTranslation` suppressions. Machine translations still await maintainer
+   native review.
+3. The it/pt/sv accuracy delta on QWERTY is unmeasured. **Still open** — no swipe corpus exists
+   for those three, so this cannot be closed by effort alone.
 4. Deleting the `model/` training toolchain vs archiving it on a branch is a judgement call.
-5. Instrumented (ew-cli) verification and a manual device pass are required before release —
-   several guards (backspace-undo, oracle pins) only run instrumented.
+   **Still open.**
+5. ~~Instrumented (ew-cli) verification and a manual device pass are required before release.~~
+   **DONE (Waves J/K, 2026-09-02)** — Wave J ran the full ew-cli suite (1,466 tests, Pixel7 API
+   34); Wave K completed device passes on both authorized phones, and as of 2026-09-03 both run
+   the byte-identical release build.

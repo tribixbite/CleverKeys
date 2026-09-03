@@ -390,11 +390,15 @@ beam cannot reach its terminal node within 32 frames, so it never appears in a s
 nothing warns anyone. (The bundled `en_enhanced.json` vocabulary is safely inside the
 bound; the exposure is user custom words and future langpack lexicons.)
 
-**Recommendation (follow-up, not part of the Part 1 plan):** when a custom word is added
-for a CTC-served language (`CtcLanguageSupport`), warn above a conservative threshold —
-letters + doubled-letter count > ~28 — that the word will only be reachable by tap/prefix
-prediction and the geometric engine, not by CTC swipe. The check is pure arithmetic on
-the word; it belongs in the dictionary-manager add path, not the decoder.
+**Recommendation — IMPLEMENTED.** When a custom word is added for a CTC-served language,
+the dictionary manager now warns that the word will only be reachable by tap/prefix
+prediction and the geometric engine, not by CTC swipe. It landed where this section said
+it belonged — the dictionary-manager add path, not the decoder — at
+`WordListFragment.kt:315-324`, gated on `CtcDecodableLength.isDecodable(word)` and
+reporting `framesRequired(word)` against `EMISSION_FRAMES` through the
+`R.plurals.dict_word_too_long_for_swipe_msg` plural. Using the real frame arithmetic
+rather than the ~28-character approximation sketched above means the warning fires
+exactly when the word is genuinely unreachable.
 
 ---
 
