@@ -1095,7 +1095,8 @@ OFF (maintainer call); 36-trace corpus delivered.
 
 14 items dispositioned, 14 commits (`649696b8`..`98e038e0`); every fix landed with the red
 captured verbatim BEFORE the fix. Suites after: **2,235 pure / 545 mock**, full ew-cli run
-pending at push time (recorded below when complete).
+`d81479d6`: **1,510 tests, only the 2 permanent by-design benchmark reds** — all round-4
+instrumented additions green (suite grew 1,467→1,510).
 
 **FIXED (8):**
 - **#171** custom short-swipe mappings (`47969359` dispatch + `c29a0d87` render): the custom
