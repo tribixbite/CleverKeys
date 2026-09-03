@@ -49,12 +49,40 @@ class LayoutManager(
     }
 
     /**
-     * Sets the locale text layout (default layout for typing).
+     * Sets the locale text layout (default layout for typing) and makes the RESOLVED layout
+     * follow it.
      *
-     * @param layout Locale-specific text layout
+     * gh #160: this is the one call a subtype (language) switch drives
+     * ([KeyboardComponentGraph.refreshSubtypeAndLayout]). Before this fix it only assigned
+     * the field — but [current_layout_unmodified] resolves `config.layouts[index]` first and
+     * only reaches [localeTextLayout] through a SystemLayout (null) entry, so a user whose
+     * layouts pref pins NAMED layouts saw nothing happen on an OS-level language switch.
+     * Now the selection is re-pointed so the switch is visible:
+     *  1. no-op when the locale layout did not actually change (also shields the
+     *     latn_qwerty_us fallback the graph substitutes when subtype resolution fails —
+     *     a repeat delivery must never yank a user-selected layout);
+     *  2. no-op when the resolved layout already shows it (System entry, or matching name);
+     *  3. prefer the pref entry NAMING the new layout (keeps the user's tailored copy of
+     *     the set), else the SystemLayout entry (which resolves to [localeTextLayout]);
+     *  4. documented limitation: no matching entry AND no System entry → the explicit pref
+     *     selection wins, unchanged.
+     * Pinned by SubtypeLayoutFollowTest.
+     *
+     * @param layout Locale-specific text layout resolved from the current subtype
      */
     fun setLocaleTextLayout(layout: KeyboardData) {
+        val previous = localeTextLayout
         localeTextLayout = layout
+        if (layout.name != null && layout.name == previous.name) return // nothing changed
+        val layouts = config.layouts
+        // System entry selected — already resolves to localeTextLayout.
+        val current = layouts.getOrNull(config.get_current_layout()) ?: return
+        if (current.name != null && current.name == layout.name) return // already showing it
+        val target = layouts.indexOfFirst { it != null && it.name != null && it.name == layout.name }
+            .takeIf { it >= 0 }
+            ?: layouts.indexOfFirst { it == null }.takeIf { it >= 0 }
+            ?: return
+        config.set_current_layout(target)
     }
 
     /**

@@ -98,13 +98,7 @@ class SubtypeManager(private val context: Context) {
         // Android might return a random subtype, for example, the first in the
         // list alphabetically.
         val currentSubtype = imm.currentInputMethodSubtype ?: return null
-
-        for (s in enabled_subtypes) {
-            if (s.languageTag == currentSubtype.languageTag) {
-                return s
-            }
-        }
-        return null
+        return selectCurrentSubtype(enabled_subtypes, currentSubtype)
     }
 
     /**
@@ -113,16 +107,25 @@ class SubtypeManager(private val context: Context) {
      *
      * @param config Config to update with extra keys
      * @param resources Resources for loading layouts
+     * @param changedTo gh #160: the subtype `onCurrentInputMethodSubtypeChanged` delivered,
+     *   when this refresh is driven by that callback. It is AUTHORITATIVE — the IMM query can
+     *   still answer with the old subtype inside the callback window, and mapping the answer
+     *   back by languageTag aliases duplicate-tag subtypes (ar/ar_TN, en/en_NG) to the first
+     *   one. Null (lifecycle-driven refreshes) keeps the [defaultSubtypes] derivation.
      * @return Default layout for current subtype, or null to use fallback
      */
-    fun refreshSubtype(config: Config, resources: Resources): KeyboardData? {
+    fun refreshSubtype(
+        config: Config,
+        resources: Resources,
+        changedTo: InputMethodSubtype? = null
+    ): KeyboardData? {
         config.shouldOfferVoiceTyping = true
         var defaultLayout: KeyboardData? = null
         config.extra_keys_subtype = null
 
         // minSdk 21: InputMethodSubtype (API 11/12) is always available, no SDK gate needed.
         val enabledSubtypes = getEnabledSubtypes()
-        val subtype = defaultSubtypes(enabledSubtypes)
+        val subtype = changedTo ?: defaultSubtypes(enabledSubtypes)
 
         if (subtype != null) {
             val s = subtype.getExtraValueOf("default_layout")
@@ -141,5 +144,30 @@ class SubtypeManager(private val context: Context) {
 
     companion object {
         private const val TAG = "SubtypeManager"
+
+        /**
+         * Maps the system-reported current subtype back into OUR enabled list.
+         *
+         * gh #160: the old tag-only match aliased duplicate-languageTag subtypes — method.xml
+         * declares ar/ar_TN both as "ar" and en/en_NG both as "en", so switching between them
+         * always resolved the FIRST entry and its `default_layout`, making the switch
+         * invisible. An identity/equality match runs first; the languageTag match remains as
+         * the fallback for the "Android returns a random subtype" case the API-24 gate exists
+         * for. Pure and JVM-testable (the [Build.VERSION] gate in [defaultSubtypes] is not:
+         * SDK_INT is 0 under the mock-test harness). Pinned by SubtypeLayoutFollowTest.
+         */
+        @JvmStatic
+        fun selectCurrentSubtype(
+            enabledSubtypes: List<InputMethodSubtype>,
+            currentSubtype: InputMethodSubtype
+        ): InputMethodSubtype? {
+            for (s in enabledSubtypes) {
+                if (s == currentSubtype) return s
+            }
+            for (s in enabledSubtypes) {
+                if (s.languageTag == currentSubtype.languageTag) return s
+            }
+            return null
+        }
     }
 }

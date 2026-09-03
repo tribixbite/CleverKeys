@@ -304,12 +304,15 @@ class KeyboardComponentGraph(
         existingSubtypeManager: SubtypeManager?,
         existingLayoutManager: LayoutManager?,
         resources: Resources,
+        changedTo: android.view.inputmethod.InputMethodSubtype? = null,
     ): SubtypeLayoutResult {
         // Initialize SubtypeManager if needed (lazy initialization)
         val subtypeManager = existingSubtypeManager ?: SubtypeManager(service)
 
-        // Refresh subtype and get default layout
-        val defaultLayout = subtypeManager.refreshSubtype(config, resources)
+        // Refresh subtype and get default layout. gh #160: when this refresh is driven by
+        // onCurrentInputMethodSubtypeChanged the delivered subtype is passed through and wins
+        // over the IMM re-derivation (stale/aliased answers) — see SubtypeManager.refreshSubtype.
+        val defaultLayout = subtypeManager.refreshSubtype(config, resources, changedTo)
             ?: KeyboardData.load(resources, R.raw.latn_qwerty_us)
 
         // Update or create LayoutManager

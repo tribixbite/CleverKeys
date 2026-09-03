@@ -526,7 +526,7 @@ class CleverKeysService : InputMethodService(),
      * (v1.32.365: Simplified by delegating to SubtypeManager)
      * (v1.32.409: extracted to SubtypeLayoutInitializer; ARC-072: absorbed into the graph)
      */
-    private fun refreshSubtypeImm() {
+    private fun refreshSubtypeImm(changedTo: InputMethodSubtype? = null) {
         if (!::_graph.isInitialized) {
             // Degenerate pre-config path: onCreate early-returned before building the graph
             // (config was null). Preserves the retired SubtypeLayoutInitializer's null-config
@@ -534,7 +534,8 @@ class CleverKeysService : InputMethodService(),
             _subtypeManager = _subtypeManager ?: SubtypeManager(this)
             return
         }
-        val result = _graph.refreshSubtypeAndLayout(_subtypeManager, _layoutManager, resources)
+        val result =
+            _graph.refreshSubtypeAndLayout(_subtypeManager, _layoutManager, resources, changedTo)
 
         _subtypeManager = result.subtypeManager
         _layoutManager = result.layoutManager
@@ -750,7 +751,10 @@ class CleverKeysService : InputMethodService(),
     }
 
     override fun onCurrentInputMethodSubtypeChanged(subtype: InputMethodSubtype) {
-        refreshSubtypeImm()
+        // gh #160: pass the DELIVERED subtype through — re-deriving via the IMM inside this
+        // callback can return the old subtype, and tag-only matching aliases duplicate
+        // languageTags (ar/ar_TN); either way the switch was invisible.
+        refreshSubtypeImm(changedTo = subtype)
         _keyboardView.setKeyboard(current_layout())
         // REMOVED: Redundant layout update - now handled exclusively by PredictionViewSetup's GlobalLayoutListener
         // This eliminates double initialization and input lag on app switches

@@ -972,6 +972,10 @@ tasks.register('runMockTests', JavaExec) {
     // slider spins the IME main thread forever on an empty selection.
     'tribixbite.cleverkeys.KeyEventHandlerSliderTest',
     'tribixbite.cleverkeys.AutocapitalisationCallbackDedupeTest',
+    // gh #160 (2026-09-03): subtype/language switch → the resolved layout follows. Pins the
+    // layouts-pref shadowing fix in LayoutManager.setLocaleTextLayout, the identity-first
+    // subtype match, and the changedTo threading from onCurrentInputMethodSubtypeChanged.
+    'tribixbite.cleverkeys.SubtypeLayoutFollowTest',
     'tribixbite.cleverkeys.ClipboardMediaManagerZipSlipTest',
     'tribixbite.cleverkeys.BackupRestoreArchiveLimitsTest',
     // Audit remediation (2026-08-25) — CK-150-019/020/022 import rollback
