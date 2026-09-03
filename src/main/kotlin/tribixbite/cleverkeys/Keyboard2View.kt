@@ -350,35 +350,32 @@ class Keyboard2View @JvmOverloads constructor(
 
         // FIX #1116: On Android 8-9 (API 26-28), transparent nav bar with light theme
         // causes white-on-white icons. Use theme's nav bar color instead.
-        if (VERSION.SDK_INT < 29 && _theme.isLightNavBar) {
-            // Use the theme's nav bar color (usually light gray or white)
-            w.navigationBarColor = _theme.colorNavBar
-            // For API 26-28: explicitly set light navigation bar flag for dark icons
-            if (VERSION.SDK_INT >= 26) {
-                val decorView = w.decorView
-                var flags = decorView.systemUiVisibility
-                flags = flags or android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-                decorView.systemUiVisibility = flags
-            }
-        } else {
-            // Set transparent navigation bar color
-            w.navigationBarColor = android.graphics.Color.TRANSPARENT
-            // Clear light navigation bar flag for light icons on dark/transparent background
-            if (VERSION.SDK_INT >= 26 && VERSION.SDK_INT < 29) {
-                val decorView = w.decorView
-                var flags = decorView.systemUiVisibility
-                flags = flags and android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
-                decorView.systemUiVisibility = flags
+        // The whole decision table is pure — see [NavBarAppearance.decide].
+        val appearance = NavBarAppearance.decide(VERSION.SDK_INT, _theme.isLightNavBar)
+
+        w.navigationBarColor =
+            if (appearance.useThemeNavBarColor) _theme.colorNavBar else android.graphics.Color.TRANSPARENT
+
+        // Legacy (API 26-28) light-navigation-bar flag: set for dark icons on a light bar,
+        // cleared for light icons on a dark/transparent bar, untouched where the flag does
+        // not exist (< 26) or the insets controller owns it (>= 29).
+        appearance.legacyLightNavBarFlag?.let { wantLight ->
+            val decorView = w.decorView
+            val flags = decorView.systemUiVisibility
+            decorView.systemUiVisibility = if (wantLight) {
+                flags or android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            } else {
+                flags and android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
             }
         }
 
         // Disable navigation bar contrast enforcement on API 29+
-        if (VERSION.SDK_INT >= 29) {
+        if (appearance.disableContrastEnforcement) {
             w.isNavigationBarContrastEnforced = false
         }
 
         // Use modern WindowInsetsController for API 30+ (API 26-28 handled above with legacy flags)
-        if (VERSION.SDK_INT >= 30) {
+        if (appearance.useInsetsController) {
             val controller = androidx.core.view.ViewCompat.getWindowInsetsController(w.decorView)
             controller?.isAppearanceLightNavigationBars = _theme.isLightNavBar
         }
@@ -869,8 +866,8 @@ class Keyboard2View @JvmOverloads constructor(
      * Show a message indicating no text is selected for the given action.
      * Uses suggestion bar instead of Toast (suppressed on Android 13+ IME).
      */
-    private fun showNoTextSelectedMessage(actionName: String) {
-        _keyboard2?.showSuggestionBarMessage("No text selected for $actionName")
+    private fun showNoTextSelectedMessage(action: TextActionPolicy.TextAction) {
+        _keyboard2?.showSuggestionBarMessage(TextActionPolicy.noTextSelectedMessage(action))
     }
 
     /**
@@ -887,20 +884,23 @@ class Keyboard2View @JvmOverloads constructor(
         val selectedText = inputConnection.getSelectedText(0)?.toString()
         if (selectedText.isNullOrEmpty()) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "No text selected for text assist")
-            showNoTextSelectedMessage("Text Assist")
+            showNoTextSelectedMessage(TextActionPolicy.TextAction.ASSIST)
             return
         }
 
         try {
-            val intent = android.content.Intent(android.content.Intent.ACTION_PROCESS_TEXT).apply {
-                type = "text/plain"
-                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT, selectedText)
-                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT_READONLY, false)
+            val request = TextActionPolicy.processTextRequest(
+                selectedText, TextActionPolicy.TextAction.ASSIST
+            )
+            val intent = android.content.Intent(request.action).apply {
+                type = request.mimeType
+                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT, request.text)
+                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT_READONLY, request.readOnly)
                 addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             }
 
             // Create chooser to let user pick which app to use
-            val chooser = android.content.Intent.createChooser(intent, "Process text with...")
+            val chooser = android.content.Intent.createChooser(intent, request.chooserTitle)
             chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(chooser)
             // PII: don't log the user's selected text in release builds.
@@ -929,20 +929,24 @@ class Keyboard2View @JvmOverloads constructor(
         val selectedText = inputConnection.getSelectedText(0)?.toString()
         if (selectedText.isNullOrEmpty()) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "No text selected for replace")
-            showNoTextSelectedMessage("Replace Text")
+            showNoTextSelectedMessage(TextActionPolicy.TextAction.REPLACE)
             return
         }
 
         try {
             // Use ACTION_PROCESS_TEXT which is more widely supported than replaceText context menu
-            val intent = android.content.Intent(android.content.Intent.ACTION_PROCESS_TEXT).apply {
-                type = "text/plain"
-                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT, selectedText)
-                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT_READONLY, false) // Allow replacement
+            val request = TextActionPolicy.processTextRequest(
+                selectedText, TextActionPolicy.TextAction.REPLACE
+            )
+            val intent = android.content.Intent(request.action).apply {
+                type = request.mimeType
+                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT, request.text)
+                // readOnly = false — the chosen app is allowed to REPLACE the selection.
+                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT_READONLY, request.readOnly)
                 addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             }
 
-            val chooser = android.content.Intent.createChooser(intent, "Replace text with...")
+            val chooser = android.content.Intent.createChooser(intent, request.chooserTitle)
             chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(chooser)
             // PII: don't log the user's selected text in release builds.
@@ -988,31 +992,14 @@ class Keyboard2View @JvmOverloads constructor(
                 return
             }
 
-            // Find word boundaries
-            var startOffset = textBefore.length
-            var endOffset = 0
-
-            // Find start of word (go backwards from cursor)
-            for (i in textBefore.lastIndex downTo 0) {
-                if (!textBefore[i].isLetterOrDigit() && textBefore[i] != '\'') {
-                    break
-                }
-                startOffset = i
-            }
-
-            // Find end of word (go forwards from cursor)
-            for (i in textAfter.indices) {
-                if (!textAfter[i].isLetterOrDigit() && textAfter[i] != '\'') {
-                    break
-                }
-                endOffset = i + 1
-            }
+            // Find word boundaries (pure scan — see TextActionPolicy.wordAtCursor)
+            val span = TextActionPolicy.wordAtCursor(textBefore, textAfter)
 
             // Calculate selection offsets relative to cursor
-            val selectBackward = textBefore.length - startOffset
-            val selectForward = endOffset
+            val selectBackward = span.backward
+            val selectForward = span.forward
 
-            if (selectBackward == 0 && selectForward == 0) {
+            if (span.isEmpty) {
                 _keyboard2?.showSuggestionBarMessage("No word at cursor")
                 return
             }
@@ -1946,6 +1933,166 @@ class Keyboard2View @JvmOverloads constructor(
             Vertical.CENTER, Vertical.TOP, Vertical.TOP, Vertical.BOTTOM,
             Vertical.BOTTOM, Vertical.CENTER, Vertical.CENTER, Vertical.TOP,
             Vertical.BOTTOM
+        )
+    }
+}
+
+/**
+ * Pure policy behind the selection-driven text-action commands announced in v1.1.99
+ * ("textAssist and replaceText actions now work — uses ACTION_PROCESS_TEXT intent instead of
+ * unsupported context menu / shows app chooser / falls back gracefully if no text selected")
+ * and v1.2.0 ("Show Text Menu selects the word at the cursor and triggers the native toolbar";
+ * "Text Assist and Replace Text now show No text selected when no selection exists").
+ *
+ * Extracted from [Keyboard2View] verbatim so those shipped promises are pinnable off-device:
+ * the surrounding methods reach `Intent`, `InputConnection` and `Window`, none of which are
+ * constructible under the JVM test tiers (`android.jar` stubs throw `RuntimeException("Stub!")`),
+ * but every *decision* they make — which intent action, which chooser title, whether the target
+ * app may rewrite the selection, which message the user sees, and which characters form the word
+ * under the cursor — is ordinary string and index arithmetic.
+ */
+internal object TextActionPolicy {
+
+    /**
+     * `android.content.Intent.ACTION_PROCESS_TEXT`, spelled out so this object stays
+     * Android-free (same idiom as `clipboard.PrivateCopyIntentParser.ACTION_PROCESS_TEXT`).
+     * `ReleaseClaimTextActionsTest` asserts it still equals the framework constant.
+     */
+    const val ACTION_PROCESS_TEXT = "android.intent.action.PROCESS_TEXT"
+
+    /** MIME type advertised to the chooser; plain text is what an IME can offer. */
+    const val MIME_TEXT_PLAIN = "text/plain"
+
+    /** The two selection-driven actions a short swipe can dispatch. */
+    enum class TextAction(
+        /** Name used in the user-facing "no selection" message. */
+        val displayName: String,
+        /** Title of the app chooser (v1.1.99: "Shows app chooser"). */
+        val chooserTitle: String
+    ) {
+        ASSIST("Text Assist", "Process text with..."),
+        REPLACE("Replace Text", "Replace text with...")
+    }
+
+    /**
+     * The `ACTION_PROCESS_TEXT` dispatch for [selectedText], fully described as data.
+     *
+     * @property readOnly always `false`: the chosen app is allowed to hand back replacement
+     *   text, which is what makes `replaceText` a replacement rather than a lookup.
+     */
+    data class ProcessTextRequest(
+        val action: String,
+        val mimeType: String,
+        val text: String,
+        val readOnly: Boolean,
+        val chooserTitle: String
+    )
+
+    fun processTextRequest(selectedText: String, action: TextAction): ProcessTextRequest =
+        ProcessTextRequest(
+            action = ACTION_PROCESS_TEXT,
+            mimeType = MIME_TEXT_PLAIN,
+            text = selectedText,
+            readOnly = false,
+            chooserTitle = action.chooserTitle
+        )
+
+    /** v1.2.0: shown in the suggestion bar when the action fires with nothing selected. */
+    fun noTextSelectedMessage(action: TextAction): String =
+        "No text selected for ${action.displayName}"
+
+    /**
+     * How far either side of the cursor the word under it extends.
+     *
+     * @property backward characters BEFORE the cursor that belong to the word.
+     * @property forward characters AFTER the cursor that belong to the word.
+     */
+    data class WordSpan(val backward: Int, val forward: Int) {
+        /** No word touches the cursor — the caller reports "No word at cursor". */
+        val isEmpty: Boolean get() = backward == 0 && forward == 0
+    }
+
+    /**
+     * The word touching the cursor, given the text on either side of it.
+     *
+     * A word character is a letter, a digit, or an apostrophe — the apostrophe is included so
+     * `don't` and `qu'est` select whole rather than splitting at the elision mark.
+     */
+    fun wordAtCursor(textBefore: String, textAfter: String): WordSpan {
+        var startOffset = textBefore.length
+        for (i in textBefore.lastIndex downTo 0) {
+            if (!isWordChar(textBefore[i])) break
+            startOffset = i
+        }
+
+        var endOffset = 0
+        for (i in textAfter.indices) {
+            if (!isWordChar(textAfter[i])) break
+            endOffset = i + 1
+        }
+
+        return WordSpan(backward = textBefore.length - startOffset, forward = endOffset)
+    }
+
+    private fun isWordChar(c: Char): Boolean = c.isLetterOrDigit() || c == '\''
+}
+
+/**
+ * Pure decision table for the navigation-bar appearance, published as
+ * "Nav bar icons on Android 8-9 light themes (#1116)" in v1.2.6 and v1.2.8.
+ *
+ * The bug: an IME window that draws behind the system bars with a TRANSPARENT nav-bar colour
+ * leaves a light theme rendering white icons on a white background. API 29+ fixes itself
+ * (contrast enforcement off + `isAppearanceLightNavigationBars`), but API 26-28 has only the
+ * legacy `SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR` bit, and below API 26 not even that — so on
+ * 8.0-9.0 the window must fall back to the theme's own nav-bar colour AND ask for dark icons.
+ *
+ * Extracted from `Keyboard2View.refresh_navigation_bar`, which cannot run off-device
+ * (`Window`, `decorView`, `systemUiVisibility`).
+ */
+internal object NavBarAppearance {
+
+    /**
+     * @property useThemeNavBarColor paint the nav bar with the theme colour instead of
+     *   `Color.TRANSPARENT`.
+     * @property legacyLightNavBarFlag `true` set `SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR` (dark
+     *   icons), `false` clear it (light icons), `null` leave the legacy flags alone — either
+     *   the flag does not exist yet (< API 26) or the insets controller owns the decision
+     *   (>= API 29).
+     * @property disableContrastEnforcement turn off the framework's scrim (API 29+).
+     * @property useInsetsController drive the appearance through `WindowInsetsController`
+     *   (API 30+).
+     */
+    data class Decision(
+        val useThemeNavBarColor: Boolean,
+        val legacyLightNavBarFlag: Boolean?,
+        val disableContrastEnforcement: Boolean,
+        val useInsetsController: Boolean
+    )
+
+    /** First API level with `SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR` (Android 8.0 Oreo). */
+    const val FIRST_LEGACY_LIGHT_NAV_BAR_API = 26
+
+    /** First API level that handles nav-bar contrast itself (Android 10). */
+    const val FIRST_SELF_CONTRASTING_API = 29
+
+    /** First API level with `WindowInsetsController` (Android 11). */
+    const val FIRST_INSETS_CONTROLLER_API = 30
+
+    fun decide(sdkInt: Int, isLightNavBar: Boolean): Decision {
+        val legacyEra = sdkInt in FIRST_LEGACY_LIGHT_NAV_BAR_API until FIRST_SELF_CONTRASTING_API
+        val useThemeColor = sdkInt < FIRST_SELF_CONTRASTING_API && isLightNavBar
+        return Decision(
+            useThemeNavBarColor = useThemeColor,
+            legacyLightNavBarFlag = when {
+                // #1116: light theme on 8.0-9.0 — theme-coloured bar plus DARK icons.
+                useThemeColor && sdkInt >= FIRST_LEGACY_LIGHT_NAV_BAR_API -> true
+                // Transparent bar on 8.0-9.0 — make sure a stale light flag is cleared.
+                !useThemeColor && legacyEra -> false
+                else -> null
+            },
+            disableContrastEnforcement = sdkInt >= FIRST_SELF_CONTRASTING_API,
+            useInsetsController = sdkInt >= FIRST_INSETS_CONTROLLER_API
         )
     }
 }
