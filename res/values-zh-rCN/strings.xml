@@ -36,8 +36,8 @@
     <string name="key_descr_pasteAsPlainText">粘贴为纯文本</string>
     <string name="key_descr_undo">撤销</string>
     <string name="key_descr_redo">重做</string>
-    <string name="key_descr_ª">次序标志</string>
-    <string name="key_descr_º">次序标志</string>
+    <string name="key_descr_ª">序数指示符</string>
+    <string name="key_descr_º">序数指示符</string>
     <string name="key_descr_superscript">上标</string>
     <string name="key_descr_subscript">下标</string>
     <string name="key_descr_page_up">上一页</string>
@@ -391,17 +391,17 @@
     <string name="clipboard_respect_sensitive_desc">跳过密码管理器标记为敏感的剪贴板内容（Android 13+）。</string>
     <string name="clipboard_text_only_title">仅文本</string>
     <string name="clipboard_text_only_desc">隐藏媒体条目并禁用媒体捕获。</string>
-    <string name="clipboard_pinned_tab_title">固定标签</string>
-    <string name="clipboard_pinned_tab_desc">显示用于保存重要剪辑的固定标签。</string>
-    <string name="clipboard_todo_tab_title">待办标签</string>
-    <string name="clipboard_todo_tab_desc">显示用于将剪辑标记为任务的待办标签。</string>
+    <string name="clipboard_pinned_tab_title">固定标签页</string>
+    <string name="clipboard_pinned_tab_desc">显示用于保存重要剪辑的固定标签页。</string>
+    <string name="clipboard_todo_tab_title">待办标签页</string>
+    <string name="clipboard_todo_tab_desc">显示用于将剪辑标记为任务的待办标签页。</string>
     <string name="clipboard_private_copy_other_apps_title">在其他应用中私密复制</string>
     <string name="clipboard_private_copy_other_apps_desc">在其他应用的文本选择菜单中添加「私密复制」。将所选文本仅复制到 CleverKeys，而不存入系统剪贴板。启用后，其他应用可看到一个应用条目。</string>
     <string name="clipboard_sanitize_links_title">清除追踪参数</string>
     <string name="clipboard_sanitize_links_desc">从复制的链接中删除 utm_*、fbclid 等参数。由 ClearURLs 提供支持。</string>
     <string name="clipboard_sanitize_system_title">同时清理系统剪贴板</string>
     <string name="clipboard_sanitize_system_desc">复制的链接被清理后，同时覆盖系统剪贴板，使所有应用中的粘贴内容都经过净化，而不仅限于 CleverKeys 面板。</string>
-    <string name="clipboard_embed_enrich_title">丰富分享嵌入</string>
+    <string name="clipboard_embed_enrich_title">分享时优化嵌入内容</string>
     <string name="clipboard_embed_enrich_desc">将 x.com 改写为 fxtwitter.com，将 reddit.com 改写为 rxddit.com 等。</string>
     <string name="clipboard_custom_rules_title">使用自定义规则</string>
     <string name="clipboard_custom_rules_desc">应用您自己的 ClearURLs 格式 JSON。</string>
@@ -456,7 +456,7 @@
     <string name="input_context_aware_desc">从输入习惯中学习（N-gram 模型）。</string>
     <string name="input_personalized_learning_title">个性化学习</string>
     <string name="input_personalized_learning_desc">增强对常用词汇的预测。</string>
-    <string name="input_learning_aggression_title">学习积极性</string>
+    <string name="input_learning_aggression_title">学习强度</string>
     <string name="input_learning_aggression_desc">习惯对预测影响的强度。</string>
     <string name="input_context_boost_title">上下文提升倍率</string>
     <string name="input_context_boost_desc">上下文对预测影响的强度（0.5~5.0）。</string>
@@ -559,21 +559,21 @@
     <string name="input_personalization_max_words_title">学习词数上限</string>
     <string name="input_personalization_max_words_desc">已学习词汇量的上限；价值最低的词会被优先移除（默认 5000）。</string>
     <string name="privacy_on_device_learning_title">从我的输入中学习</string>
-    <string name="privacy_on_device_learning_desc">根据你输入的内容，在设备本地构建私密的短语和用词模型。关闭后将停止一切对输入行为的自动记录——关闭期间不会存储任何新数据。你主动创建的数据不在此列：你运行的滑行校准会话、预测性能统计，以及从备份恢复的学习数据。</string>
+    <string name="privacy_on_device_learning_desc">根据你输入的内容，在设备本地构建私密的短语和用词模型。关闭后将停止一切对输入行为的自动记录——关闭期间不会存储任何新数据。你主动创建的数据不在此列：你运行的滑动校准会话、预测性能统计，以及从备份恢复的学习数据。</string>
     <!-- v1.6 swipe diagnostics and controls -->
-    <string name="dict_word_too_long_for_swipe_title">已添加，但太长而无法滑行输入</string>
+    <string name="dict_word_too_long_for_swipe_title">已添加，但太长而无法滑动输入</string>
     <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">“%1$s”已添加，可用于点按输入；但 CTC 需要 %2$d 步，最多只能解码 %3$d 步。</item></plurals>
     <string name="gesture_finger_occlusion_title">触摸偏移校正</string>
-    <string name="gesture_finger_occlusion_desc">调整相对于指尖读取滑行轨迹的位置。轨迹高于目标按键时使用正值，低于按键时使用负值。默认关闭。</string>
+    <string name="gesture_finger_occlusion_desc">调整相对于指尖读取滑动轨迹的位置。轨迹高于目标按键时使用正值，低于按键时使用负值。默认关闭。</string>
     <string name="gesture_touch_smoothing_title">触摸平滑</string>
     <string name="gesture_touch_smoothing_desc">用于轨迹移动平均的点数。1 = 原始输入，3 = 推荐值。适用于两种引擎。</string>
     <string name="swipe_engine_fallback_title">将使用几何引擎</string>
-    <string name="swipe_engine_fallback_desc">CTC 没有 %1$s 的词典，因此将由几何引擎解码滑行轨迹。CTC 当前支持：%2$s。</string>
+    <string name="swipe_engine_fallback_desc">CTC 没有 %1$s 的词典，因此将由几何引擎解码滑动轨迹。CTC 当前支持：%2$s。</string>
     <string name="collision_warning_title">发现缩写冲突</string>
     <plurals name="collision_warning_body"><item quantity="other">导入语言包中的 %1$d 个快捷形式可能改写另一个启用语言（%2$s）中的真实单词。现已改为可选建议。</item></plurals>
     <string name="collision_warning_examples">受影响的快捷形式：</string>
-    <string name="swipe_context_rescoring_title">使用上下文排列滑行建议</string>
-    <string name="swipe_context_rescoring_desc">使用已在此设备上输入的词对重新排列建议。只处理接近的结果，不会覆盖明确识别的滑行。需要启用设备端学习。</string>
+    <string name="swipe_context_rescoring_title">使用上下文排列滑动建议</string>
+    <string name="swipe_context_rescoring_desc">使用已在此设备上输入的词对重新排列建议。只处理接近的结果，不会覆盖明确识别的滑动。需要启用设备端学习。</string>
     <!-- ARC-067 batch (2026-09-01): machine translations pending native review -->
     <string name="autocorrect_about_body">自动纠错使用莱文斯坦距离算法将输入的单词与词典进行比较。只有当单词足够相似（字符匹配阈值）且在词典中出现足够频繁（最低频率）时才会被纠正。</string>
     <string name="autocorrect_about_title">关于自动纠错</string>
