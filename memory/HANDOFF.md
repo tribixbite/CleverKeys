@@ -29,30 +29,33 @@ production bugs); Wave K Saga device pass complete
 non-issue (61 ms), #79 non-reproducing, decode e2e verified, restore verified. Fresh verbose
 release v1.6.0 (sha `6894b2cc…`) is INSTALLED on the Saga awaiting the maintainer soak.
 
-**Still open — maintainer-gated or environment-blocked (the complete list):**
-- ARC-053 minified soak (APK installed on Saga, staged at `build/outputs/apk/release/`);
-  ARC-063 keep-narrowing AFTER it.
-- ~~ARC-054 announcement decision for ru AND el~~ DECIDED 2026-09-03 (maintainer-approved):
-  ru + el announced in the v1.6.0 notes at honest tiers (ru "validation-tested", el "early
-  support", both pack-gated, no Greek number); `SERVED_BUT_NOT_YET_ANNOUNCED` cleared to {}.
-- **The Pixel 8 Pro Wave-K pass** — device was network-unreachable all session; incl. #148.
-- Translation NATIVE REVIEW: ~8,600 machine translations (wave D + plurals + ARC-066×21).
-- ARC-060 ru geometry swap (geometry+fixture+parity as ONE unit — measured deltas material).
-- `finger_occlusion_offset` default (needs maintainer device-trace A/B).
-- ARC-104 ADB-test-script keep/delete policy; ARC-107 "escape" alias; ARC-111 dark-keyboard-
-  in-light-mode call.
-- ~~ARC-106/108/109/110~~ ALL CLOSED 2026-09-02 (`752e07da`/`e89bc451`/`5b498d3e`/`d4af4ca8`;
-  108 measured-and-parked). ~~Pixel Wave-K pass~~ DONE (`a5ee26bc`): #148 fix visually
-  confirmed, 50/50 on-device instrumented, both devices on the nibble-inclusive v1.6.0
-  build (Sep 1 23:16) awaiting the soak.
-- **Open code items from Wave K2 (next session): ARC-112 (P2)** silent drop of
-  dense-sampled two-key swipes (`registerKeyWithFiltering` per-sample-step basis + silent
-  empty decode); **ARC-113 (P2)** ONNX `.so` 16 KB page alignment (Android 17 warns; 16
-  KB-only devices will break); ARC-114 (LOW) #79 A17 inset-strip observable.
-- ARC-111 upgraded: dark keyboard under system light mode reproduced on BOTH devices —
-  maintainer call (default or bug).
-- Evidence-beyond-holdout for el/uk/bg/mk/he (all ROUTED 2026-09-03): real-swipe probes are an
-  ML-repo/device question; their synthesis-holdout levels stay unquotable as accuracy.
+**Still open after round 2 (2026-09-03) — the complete list (ledger "Round 2 closure"
+section is authoritative for what closed):**
+- **ARC-053 minified soak (yours).** Both phones carry the Sep-3 release with ALL round-2
+  code (uk/bg/mk/he CTC, minSdk 24 + ORT 1.21.1, theme fixes, playground, preview-count
+  fix); N-DEV drove the full daily-typing suite green first. ARC-063 keep-narrowing AFTER.
+- **ARC-060 rider 2 (training box)**: one-shot ru real-probe with the new geometry —
+  |result − 85.30| must sit within ±0.207. Everything else about the swap is DONE
+  (rider 1: replica agreement now exact 0.0). Until it runs, every published ru accuracy
+  number predates the shipped geometry.
+- Translation NATIVE REVIEW: still machine-era after the multi-source QA pass (52 fixes,
+  21 locales fully swept 2026-09-03); highest-value locales first: **tr, vi**.
+- `finger_occlusion_offset` A/B: the capture mechanism now EXISTS (Swipe Debug Log
+  playground: per-key geometry + ranking + latency traces, export/share) — swipe in the
+  playground and export when ready; the A/B analysis follows your traces.
+- Announce uk/bg/mk/he at the next release-notes edit
+  (`SERVED_BUT_NOT_YET_ANNOUNCED = {uk, bg, mk, he}` is the pin).
+- ARC-114 (LOW): #79 A17 inset-strip observable. Import-preview "Invalid/skipped" label
+  wording (the skips are intentional categories, "Invalid" oversells) — cosmetic.
+- Langpack manifest-version normalize on next pack rebuild (byte-identity rule defers it).
+- Evidence-beyond-holdout for el/uk/bg/mk/he: real-swipe probes are an ML-repo/device
+  question; synthesis-holdout levels stay unquotable as accuracy. Per-script LATENCY is
+  now measured and published (guide, `55da93fb`).
+- M2 FUTO-official-test final read; send `FUTO_PRESET_NOTE.md` or not; `EW_API_TOKEN`
+  laptop-side (unchanged standing decisions).
+- CLOSED this round (see ledger): ARC-054 (announced), ARC-104 (policy replaced), ARC-107,
+  ARC-111 (code + device-verified), ARC-113 (minSdk 24 + ORT 1.21.1), ARC-112 rider items,
+  langpacks release, B2 latency, Pixel Wave-K residue.
 
 ---
 

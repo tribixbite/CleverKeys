@@ -1017,3 +1017,27 @@ Owed forward: N-DEV device drive (daily-typing suite both phones + ARC-111/playg
 checklists + per-script latency B2 via ew-cli); rider-2 ru probe (training box); native review
 tr/vi; announcement of uk/bg/mk/he at next notes edit; manifest-version normalize on next
 pack rebuild.
+
+### Round-2 N-DEV addendum (2026-09-03)
+
+Device drive COMPLETE, both phones, fresh Sep-3 release (md5-verified): every daily-typing
+item PASS (tap+suggestions, 3–4 swipes/device, clipboard pin/unpin, emoji search/insert,
+GIF pane no-crash, backup export→import idempotent "Applied: 0"); playground 8-step
+checklist verified with a pulled trace JSON (key_geometry 27 keys, scored candidates,
+decode_latency_ms 53–65 on Pixel hardware); ARC-111 follows system both directions on both
+devices (keyboard correctly stays dark — the maintainer's export pins an explicit
+`theme: cleverkeysdark`); ew-cli 1467 tests / 2 permanent by-design reds; ALL restorations
+byte-verified (IMEs, night mode, clipboard, drafts, config files).
+
+**B2 CLOSED** (`bf32370d`): `CtcScriptLatencyMeasurementTest` decodes each routed script's
+REAL pack on its own board — ru 42.0/59.4, el 21.5/24.2, uk 22.6/22.9, bg 21.8/23.7,
+mk 17.4/18.5, he 27.0/27.5 ms (median/p90, Pixel7 API34 warm, run `55da93fb`). Published in
+the guide; measurements, not budgets.
+
+N-DEV findings dispositioned: import preview short-swipe count FIXED (`bf32370d` — v2
+wrapper keys were counted; now key×direction mappings, red→green); "Invalid/skipped: 35"
+CLASSIFIED intentional (every skip path is a deliberate category with a per-key reason —
+label wording "Invalid" is the only critique, recorded); GIF panel default-OFF confirmed
+by design (`gif_enabled` gate); playground "no candidates" branch not reproducible from
+on-key input (defensive only). Devices reinstalled with the post-fix build for a
+zero-delta soak.

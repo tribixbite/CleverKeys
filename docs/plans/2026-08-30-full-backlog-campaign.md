@@ -104,9 +104,9 @@ Manifest-version normalization (A7) deferred per the byte-identity rule (no rebu
 | N-SDK24 | minSdk 24 + ORT 1.21.1 + 16 KB verify (ARC-113) | **COMPLETE** (`48cd6bfb`; p_align 0x4000 AAR+APK; goldens bit-stable 2120; CI green) |
 | N-RU60 | ru geometry atomic unit + riders | **COMPLETE app-side** (`128c93f8`, ML `66c60ad`+`8778fef`; rider 1 exact 0.0; rider 2 BLOCKED → training box owes the 85.30±0.21 one-shot) |
 | N-OCCL | Swipe playground: ranking + traces + export | **COMPLETE** (`5cb4a719`,`335fa9a3`,`0646fd53`,`0bdcfca2`; visual checks → N-DEV) |
-| N-TRQA | cfc multi-source translation QA | running (per-locale fix commits landing: uk/tr/hu/lv/ro…) |
+| N-TRQA | cfc multi-source translation QA | **COMPLETE** (12 commits `129d3537`..`cfb98e03`; 21 locales fully swept ~18,300 back-translations; 52 fixes; both maintainer flags CONFIRMED-correct via CLDR; native review priority tr+vi) |
 | N-REL | `langpacks` pre-release publish | **COMPLETE** (live, 23 assets, prerelease; latest still v1.5.0; stray build-apk run cancelled) |
-| N-DEV | Final build + Opus device drive both phones + per-script latency (B2) | pending (after N-TRQA) |
+| N-DEV | Final build + Opus device drive both phones + per-script latency (B2) | **COMPLETE 2026-09-03**: all daily-typing items PASS both devices (131 screenshots); playground checklist verified incl. pulled trace JSON; ARC-111 confirmed both directions; ew-cli 1467 w/ only the 2 by-design reds; restorations byte-verified. B2 delivered next-commit (`bf32370d`): ru 42.0/el 21.5/uk 22.6/bg 21.8/mk 17.4/he 27.0 ms median. 3 findings → 2 fixed/classified (preview mapping count `bf32370d`, skipped-35 intentional), GIF default-off by design |
 
 ## Wave-K device protocol notes
 
