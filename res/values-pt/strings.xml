@@ -47,7 +47,7 @@
     <string name="key_descr_doc_home">Início do documento</string>
     <string name="key_descr_doc_end">Fim do documento</string>
     <string name="key_descr_clipboard">Área de transferência</string>
-    <string name="key_descr_combining">Combinação de diacríticos</string>
+    <string name="key_descr_combining">Diacrítico combinante</string>
     <string name="key_descr_dead_key">Tecla morta</string>
     <string name="key_descr_zwj">Conector de largura zero</string>
     <string name="key_descr_zwnj">Separador de largura zero</string>
