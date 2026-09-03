@@ -428,10 +428,10 @@
     <string name="clipboard_respect_sensitive_desc">بریده‌دان علامت‌گذاری‌شده به‌عنوان حساس توسط مدیران گذرواژه را رد کنید (Android 13+)</string>
     <string name="clipboard_text_only_title">فقط متن</string>
     <string name="clipboard_text_only_desc">ورودی‌های رسانه را پنهان کنید و گرفتن رسانه را غیرفعال کنید</string>
-    <string name="clipboard_pinned_tab_title">تب سنجاق‌شده</string>
-    <string name="clipboard_pinned_tab_desc">تب سنجاق‌شده را برای ذخیره کلیپ‌های مهم نمایش دهید</string>
-    <string name="clipboard_todo_tab_title">تب کارها</string>
-    <string name="clipboard_todo_tab_desc">تب کارها را برای علامت‌گذاری کلیپ‌ها به‌عنوان وظایف نمایش دهید</string>
+    <string name="clipboard_pinned_tab_title">زبانهٔ سنجاق‌شده</string>
+    <string name="clipboard_pinned_tab_desc">زبانهٔ سنجاق‌شده را برای ذخیره کلیپ‌های مهم نمایش دهید</string>
+    <string name="clipboard_todo_tab_title">زبانهٔ کارها</string>
+    <string name="clipboard_todo_tab_desc">زبانهٔ کارها را برای علامت‌گذاری کلیپ‌ها به‌عنوان وظایف نمایش دهید</string>
     <string name="clipboard_private_copy_other_apps_title">کپی خصوصی در برنامه‌های دیگر</string>
     <string name="clipboard_private_copy_other_apps_desc">«کپی خصوصی» را به منوهای انتخاب متن برنامه‌های دیگر اضافه کنید. متن انتخاب‌شده را فقط در CleverKeys کپی می‌کند — هرگز در بریده‌دان سامانه. فعال‌سازی یک ورودی برنامه اضافه می‌کند که برنامه‌های دیگر می‌توانند ببینند.</string>
     <string name="clipboard_sanitize_links_title">پاک‌سازی پارامترهای ردگیری</string>
