@@ -714,7 +714,7 @@
     <string name="ctc_settings_beam_width_desc">trie 束搜索中每帧保留的假设数。100 是经验证的默认值；更高会让每次滑动消耗更多 CPU，而精度提升有限。</string>
     <string name="ctc_settings_beam_width_title">束宽</string>
     <string name="ctc_settings_inference_section">推理</string>
-    <string name="ctc_settings_intro">CTC 滑动引擎的调节项（CTC 预测引擎下的拉丁布局）。打分常量已离线校准，用户不可调整。</string>
+    <string name="ctc_settings_intro">CTC 滑动引擎的调节项（CTC 预测引擎下的拉丁、西里尔、希腊和希伯来布局）。打分常量已离线校准，用户不可调整。</string>
     <string name="ctc_settings_reset">恢复为经验证的默认值</string>
     <string name="ctc_settings_threads_desc">运行 CTC 编码器的 ONNX Runtime 会话中 XNNPACK 推理使用的 CPU 线程数。在下次构建会话时生效（请重启键盘）。</string>
     <string name="ctc_settings_threads_title">ONNX 线程数</string>

@@ -894,7 +894,7 @@
     <string name="import_preview_skipped_collapse">▼ Nieprawidłowe/pominięte (%1$d) — dotknij, aby zwinąć</string>
     <string name="import_preview_skipped_expand">▶ Nieprawidłowe/pominięte (%1$d) — dotknij, aby rozwinąć</string>
     <string name="ctc_settings_title">Ustawienia silnika CTC</string>
-    <string name="ctc_settings_intro">Dostrajanie silnika gestów CTC (układy łacińskie w silniku przewidywania CTC). Stałe punktacji są kalibrowane offline i nie podlegają regulacji.</string>
+    <string name="ctc_settings_intro">Dostrajanie silnika gestów CTC (układy łacińskie, cyrylickie, greckie i hebrajskie w silniku przewidywania CTC). Stałe punktacji są kalibrowane offline i nie podlegają regulacji.</string>
     <string name="ctc_settings_beam_section">Przeszukiwanie wiązkowe (beam search)</string>
     <string name="ctc_settings_beam_width_title">Szerokość wiązki</string>
     <string name="ctc_settings_beam_width_desc">Hipotezy zachowywane na klatkę w wiązce trie. 100 to zweryfikowana wartość domyślna; wyższa kosztuje CPU przy każdym geście przy marginalnym zysku dokładności.</string>

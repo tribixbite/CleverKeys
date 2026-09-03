@@ -896,7 +896,7 @@
     <string name="import_preview_skipped_collapse">▼ Tidak valid/dilewati (%1$d) — ketuk untuk menciutkan</string>
     <string name="import_preview_skipped_expand">▶ Tidak valid/dilewati (%1$d) — ketuk untuk membentangkan</string>
     <string name="ctc_settings_title">Pengaturan Mesin CTC</string>
-    <string name="ctc_settings_intro">Penyetelan untuk mesin geser CTC (tata letak Latin di bawah mesin prediksi CTC). Konstanta skor dikalibrasi offline dan tidak dapat disetel pengguna.</string>
+    <string name="ctc_settings_intro">Penyetelan untuk mesin geser CTC (tata letak Latin, Sirilik, Yunani, dan Ibrani di bawah mesin prediksi CTC). Konstanta skor dikalibrasi offline dan tidak dapat disetel pengguna.</string>
     <string name="ctc_settings_beam_section">Pencarian Beam</string>
     <string name="ctc_settings_beam_width_title">Lebar Beam</string>
     <string name="ctc_settings_beam_width_desc">Hipotesis yang dipertahankan per frame dalam trie beam. 100 adalah default tervalidasi; nilai lebih tinggi memakan CPU per geser demi akurasi marginal.</string>

@@ -884,7 +884,7 @@
     <string name="import_preview_skipped_collapse">▼ 잘못됨/건너뜀(%1$d) — 탭하여 접기</string>
     <string name="import_preview_skipped_expand">▶ 잘못됨/건너뜀(%1$d) — 탭하여 펼치기</string>
     <string name="ctc_settings_title">CTC 엔진 설정</string>
-    <string name="ctc_settings_intro">CTC 스와이프 엔진(CTC 예측 엔진의 라틴 레이아웃) 조정. 점수 상수는 오프라인에서 보정되며 사용자가 조정할 수 없습니다.</string>
+    <string name="ctc_settings_intro">CTC 스와이프 엔진(CTC 예측 엔진의 라틴·키릴·그리스·히브리 레이아웃) 조정. 점수 상수는 오프라인에서 보정되며 사용자가 조정할 수 없습니다.</string>
     <string name="ctc_settings_beam_section">빔 검색</string>
     <string name="ctc_settings_beam_width_title">빔 너비</string>
     <string name="ctc_settings_beam_width_desc">트라이 빔에서 프레임당 유지되는 가설 수. 100이 검증된 기본값입니다. 더 높이면 정확도 향상은 미미하지만 스와이프당 CPU 사용이 늘어납니다.</string>

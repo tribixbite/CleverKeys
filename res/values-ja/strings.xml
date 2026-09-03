@@ -883,7 +883,7 @@
     <string name="import_preview_skipped_collapse">▼ 無効/スキップ(%1$d) — タップで折りたたむ</string>
     <string name="import_preview_skipped_expand">▶ 無効/スキップ(%1$d) — タップで展開</string>
     <string name="ctc_settings_title">CTC エンジン設定</string>
-    <string name="ctc_settings_intro">CTC スワイプエンジン(CTC 予測エンジンでのラテン文字レイアウト)の調整。スコアリング定数はオフラインで較正されており、ユーザーは調整できません。</string>
+    <string name="ctc_settings_intro">CTC スワイプエンジン(CTC 予測エンジンでのラテン文字・キリル文字・ギリシャ文字・ヘブライ文字レイアウト)の調整。スコアリング定数はオフラインで較正されており、ユーザーは調整できません。</string>
     <string name="ctc_settings_beam_section">ビーム探索</string>
     <string name="ctc_settings_beam_width_title">ビーム幅</string>
     <string name="ctc_settings_beam_width_desc">トライビームでフレームごとに保持する仮説数。100 が検証済みの既定値です。大きくすると、わずかな精度向上のためにスワイプごとの CPU 消費が増えます。</string>

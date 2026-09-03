@@ -727,7 +727,7 @@
     <string name="ctc_settings_beam_width_desc">Кількість гіпотез на кадр у променевому пошуку по trie. 100 — перевірене типове значення; більше витрачає CPU на кожен свайп заради незначного приросту точності.</string>
     <string name="ctc_settings_beam_width_title">Ширина променя</string>
     <string name="ctc_settings_inference_section">Інференс</string>
-    <string name="ctc_settings_intro">Налаштування рушія свайпів CTC (латинські макети з рушієм передбачення CTC). Константи оцінювання відкалібровані офлайн і не налаштовуються користувачем.</string>
+    <string name="ctc_settings_intro">Налаштування рушія свайпів CTC (макети латиницею, кирилицею, грецькою та івритом з рушієм передбачення CTC). Константи оцінювання відкалібровані офлайн і не налаштовуються користувачем.</string>
     <string name="ctc_settings_reset">Скинути до перевіреного типового</string>
     <string name="ctc_settings_threads_desc">Потоки CPU для інференсу XNNPACK у сеансі ONNX Runtime, що виконує енкодер CTC. Застосовується під час наступної побудови сеансу (перезапустіть клавіатуру).</string>
     <string name="ctc_settings_threads_title">Потоки ONNX</string>

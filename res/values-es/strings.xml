@@ -902,7 +902,7 @@
     <string name="import_preview_skipped_collapse">▼ No válidas/omitidas (%1$d) — toca para plegar</string>
     <string name="import_preview_skipped_expand">▶ No válidas/omitidas (%1$d) — toca para desplegar</string>
     <string name="ctc_settings_title">Ajustes del motor CTC</string>
-    <string name="ctc_settings_intro">Ajuste fino del motor de deslizamiento CTC (diseños latinos bajo el motor de predicción CTC). Las constantes de puntuación se calibran fuera de línea y no son ajustables.</string>
+    <string name="ctc_settings_intro">Ajuste fino del motor de deslizamiento CTC (diseños latinos, cirílicos, griegos y hebreos bajo el motor de predicción CTC). Las constantes de puntuación se calibran fuera de línea y no son ajustables.</string>
     <string name="ctc_settings_beam_section">Búsqueda por haz</string>
     <string name="ctc_settings_beam_width_title">Anchura del haz</string>
     <string name="ctc_settings_beam_width_desc">Hipótesis mantenidas por fotograma en el haz sobre trie. 100 es el valor validado; más alto consume más CPU por gesto con una mejora marginal.</string>

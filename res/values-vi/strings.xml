@@ -744,7 +744,7 @@
     <string name="ctc_settings_beam_width_desc">Số giả thuyết giữ lại mỗi khung trong chùm trie. 100 là mặc định đã kiểm chứng; cao hơn tốn CPU mỗi lần vuốt mà độ chính xác tăng không đáng kể.</string>
     <string name="ctc_settings_beam_width_title">Độ rộng chùm</string>
     <string name="ctc_settings_inference_section">Suy luận</string>
-    <string name="ctc_settings_intro">Tinh chỉnh cho bộ máy vuốt CTC (bố cục Latinh dùng bộ máy dự đoán CTC). Các hằng số chấm điểm được hiệu chỉnh ngoại tuyến và người dùng không thể chỉnh.</string>
+    <string name="ctc_settings_intro">Tinh chỉnh cho bộ máy vuốt CTC (bố cục chữ Latinh, Kirin, Hy Lạp và Do Thái dùng bộ máy dự đoán CTC). Các hằng số chấm điểm được hiệu chỉnh ngoại tuyến và người dùng không thể chỉnh.</string>
     <string name="ctc_settings_reset">Đặt lại về mặc định đã kiểm chứng</string>
     <string name="ctc_settings_threads_desc">Số luồng CPU cho suy luận XNNPACK trong phiên ONNX Runtime chạy bộ mã hóa CTC. Áp dụng khi phiên được dựng lại (khởi động lại bàn phím).</string>
     <string name="ctc_settings_threads_title">Luồng ONNX</string>

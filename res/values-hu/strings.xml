@@ -890,7 +890,7 @@
     <string name="import_preview_skipped_collapse">▼ Érvénytelen/kihagyott (%1$d) — koppintson az összecsukáshoz</string>
     <string name="import_preview_skipped_expand">▶ Érvénytelen/kihagyott (%1$d) — koppintson a kibontáshoz</string>
     <string name="ctc_settings_title">CTC-motor beállításai</string>
-    <string name="ctc_settings_intro">A CTC csúsztatómotor hangolása (latin kiosztások a CTC előrejelző motor alatt). A pontozási állandók offline kalibráltak, és nem hangolhatók a felhasználó által.</string>
+    <string name="ctc_settings_intro">A CTC csúsztatómotor hangolása (latin, cirill, görög és héber kiosztások a CTC előrejelző motor alatt). A pontozási állandók offline kalibráltak, és nem hangolhatók a felhasználó által.</string>
     <string name="ctc_settings_beam_section">Nyalábkeresés (beam search)</string>
     <string name="ctc_settings_beam_width_title">Nyalábszélesség</string>
     <string name="ctc_settings_beam_width_desc">Képkockánként megtartott hipotézisek a trie-nyalábban. A validált alapértelmezés 100; a magasabb érték csúsztatásonként több CPU-t használ csekély pontosságnövekedésért.</string>

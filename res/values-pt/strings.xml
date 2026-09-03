@@ -884,7 +884,7 @@
     <string name="import_preview_skipped_collapse">▼ Inválidas/ignoradas (%1$d) — toque para recolher</string>
     <string name="import_preview_skipped_expand">▶ Inválidas/ignoradas (%1$d) — toque para expandir</string>
     <string name="ctc_settings_title">Configurações do motor CTC</string>
-    <string name="ctc_settings_intro">Ajustes do motor de deslize CTC (layouts latinos sob o motor de previsão CTC). As constantes de pontuação são calibradas offline e não são ajustáveis pelo usuário.</string>
+    <string name="ctc_settings_intro">Ajustes do motor de deslize CTC (layouts latinos, cirílicos, gregos e hebraicos sob o motor de previsão CTC). As constantes de pontuação são calibradas offline e não são ajustáveis pelo usuário.</string>
     <string name="ctc_settings_beam_section">Busca em feixe (beam search)</string>
     <string name="ctc_settings_beam_width_title">Largura do feixe</string>
     <string name="ctc_settings_beam_width_desc">Hipóteses mantidas por quadro no feixe trie. 100 é o padrão validado; valores maiores custam CPU por deslize com ganho marginal de precisão.</string>

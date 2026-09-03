@@ -1258,7 +1258,7 @@
 
     <!-- CtcSettingsActivity.kt -->
     <string name="ctc_settings_title">CTC Engine Settings</string>
-    <string name="ctc_settings_intro">Tuning for the CTC swipe engine (Latin layouts under the CTC prediction engine). Scoring constants are calibrated offline and not user-tunable.</string>
+    <string name="ctc_settings_intro">Tuning for the CTC swipe engine (Latin, Cyrillic, Greek and Hebrew layouts under the CTC prediction engine). Scoring constants are calibrated offline and not user-tunable.</string>
     <string name="ctc_settings_beam_section">Beam Search</string>
     <string name="ctc_settings_beam_width_title">Beam Width</string>
     <string name="ctc_settings_beam_width_desc">Hypotheses kept per frame in the trie beam. 100 is the validated default; higher costs CPU per swipe for marginal accuracy.</string>

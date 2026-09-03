@@ -895,7 +895,7 @@
     <string name="import_preview_skipped_collapse">▼ Invalides/ignorés (%1$d) — appuyer pour replier</string>
     <string name="import_preview_skipped_expand">▶ Invalides/ignorés (%1$d) — appuyer pour déplier</string>
     <string name="ctc_settings_title">Paramètres du moteur CTC</string>
-    <string name="ctc_settings_intro">Réglages du moteur de glissé CTC (dispositions latines sous le moteur de prédiction CTC). Les constantes de score sont calibrées hors ligne et non réglables.</string>
+    <string name="ctc_settings_intro">Réglages du moteur de glissé CTC (dispositions latines, cyrilliques, grecques et hébraïques sous le moteur de prédiction CTC). Les constantes de score sont calibrées hors ligne et non réglables.</string>
     <string name="ctc_settings_beam_section">Recherche en faisceau</string>
     <string name="ctc_settings_beam_width_title">Largeur de faisceau</string>
     <string name="ctc_settings_beam_width_desc">Hypothèses conservées par trame dans le faisceau du trie. 100 est la valeur par défaut validée ; plus haut coûte du CPU par glissé pour un gain marginal.</string>

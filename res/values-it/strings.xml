@@ -924,7 +924,7 @@
     <string name="import_preview_skipped_collapse">▼ Non valide/saltate (%1$d) — tocca per comprimere</string>
     <string name="import_preview_skipped_expand">▶ Non valide/saltate (%1$d) — tocca per espandere</string>
     <string name="ctc_settings_title">Impostazioni motore CTC</string>
-    <string name="ctc_settings_intro">Regolazioni per il motore di scorrimento CTC (layout latini con il motore di previsione CTC). Le costanti di punteggio sono calibrate offline e non modificabili dall\'utente.</string>
+    <string name="ctc_settings_intro">Regolazioni per il motore di scorrimento CTC (layout latini, cirillici, greci ed ebraici con il motore di previsione CTC). Le costanti di punteggio sono calibrate offline e non modificabili dall\'utente.</string>
     <string name="ctc_settings_beam_section">Ricerca beam</string>
     <string name="ctc_settings_beam_width_title">Ampiezza beam</string>
     <string name="ctc_settings_beam_width_desc">Ipotesi mantenute per frame nel trie beam. 100 è il valore predefinito convalidato; valori più alti costano CPU a ogni scorrimento per un guadagno di accuratezza marginale.</string>

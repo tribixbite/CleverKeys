@@ -890,7 +890,7 @@
     <string name="import_preview_skipped_collapse">▼ Недопустимые/пропущенные (%1$d) — нажмите, чтобы свернуть</string>
     <string name="import_preview_skipped_expand">▶ Недопустимые/пропущенные (%1$d) — нажмите, чтобы развернуть</string>
     <string name="ctc_settings_title">Настройки движка CTC</string>
-    <string name="ctc_settings_intro">Настройка свайп-движка CTC (латинские раскладки при движке предсказаний CTC). Константы оценки откалиброваны офлайн и не настраиваются пользователем.</string>
+    <string name="ctc_settings_intro">Настройка свайп-движка CTC (раскладки на латинице, кириллице, греческом и иврите при движке предсказаний CTC). Константы оценки откалиброваны офлайн и не настраиваются пользователем.</string>
     <string name="ctc_settings_beam_section">Лучевой поиск</string>
     <string name="ctc_settings_beam_width_title">Ширина луча</string>
     <string name="ctc_settings_beam_width_desc">Гипотез, сохраняемых на кадр в лучевом поиске по trie. 100 — проверенное значение по умолчанию; большее тратит CPU на каждый свайп ради незначительной точности.</string>

@@ -896,7 +896,7 @@
     <string name="import_preview_skipped_collapse">▼ Geçersiz/atlanan (%1$d) — daraltmak için dokunun</string>
     <string name="import_preview_skipped_expand">▶ Geçersiz/atlanan (%1$d) — genişletmek için dokunun</string>
     <string name="ctc_settings_title">CTC Motoru Ayarları</string>
-    <string name="ctc_settings_intro">CTC kaydırma motoru için ayarlar (CTC tahmin motoru altındaki Latin düzenler). Puanlama sabitleri çevrimdışı kalibre edilmiştir ve kullanıcı tarafından ayarlanamaz.</string>
+    <string name="ctc_settings_intro">CTC kaydırma motoru için ayarlar (CTC tahmin motoru altındaki Latin, Kiril, Yunan ve İbrani düzenler). Puanlama sabitleri çevrimdışı kalibre edilmiştir ve kullanıcı tarafından ayarlanamaz.</string>
     <string name="ctc_settings_beam_section">Beam Araması</string>
     <string name="ctc_settings_beam_width_title">Beam Genişliği</string>
     <string name="ctc_settings_beam_width_desc">Trie beam\'inde kare başına tutulan hipotez sayısı. 100 doğrulanmış varsayılandır; daha yükseği marjinal doğruluk için kaydırma başına CPU harcar.</string>

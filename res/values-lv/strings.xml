@@ -895,7 +895,7 @@
     <string name="import_preview_skipped_collapse">▼ Nederīgi/izlaisti (%1$d) — pieskarieties, lai sakļautu</string>
     <string name="import_preview_skipped_expand">▶ Nederīgi/izlaisti (%1$d) — pieskarieties, lai izvērstu</string>
     <string name="ctc_settings_title">CTC dzinēja iestatījumi</string>
-    <string name="ctc_settings_intro">CTC vilkumu dzinēja pielāgošana (latīņu izkārtojumi ar CTC prognozēšanas dzini). Vērtēšanas konstantes ir kalibrētas bezsaistē un nav lietotāja maināmas.</string>
+    <string name="ctc_settings_intro">CTC vilkumu dzinēja pielāgošana (latīņu, kirilicas, grieķu un ivrita izkārtojumi ar CTC prognozēšanas dzini). Vērtēšanas konstantes ir kalibrētas bezsaistē un nav lietotāja maināmas.</string>
     <string name="ctc_settings_beam_section">Staru meklēšana</string>
     <string name="ctc_settings_beam_width_title">Stara platums</string>
     <string name="ctc_settings_beam_width_desc">Hipotēžu skaits, ko trie staru meklēšana patur katrā kadrā. 100 ir pārbaudītais noklusējums; lielāka vērtība tērē vairāk CPU katram vilkumam ar niecīgu precizitātes ieguvumu.</string>

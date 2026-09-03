@@ -884,7 +884,7 @@
     <string name="import_preview_skipped_collapse">▼ Neplatné/přeskočené (%1$d) — klepnutím sbalíte</string>
     <string name="import_preview_skipped_expand">▶ Neplatné/přeskočené (%1$d) — klepnutím rozbalíte</string>
     <string name="ctc_settings_title">Nastavení modulu CTC</string>
-    <string name="ctc_settings_intro">Ladění modulu tahů CTC (latinková rozložení pod predikčním modulem CTC). Bodovací konstanty jsou kalibrovány offline a nelze je měnit.</string>
+    <string name="ctc_settings_intro">Ladění modulu tahů CTC (latinková, cyrilská, řecká a hebrejská rozložení pod predikčním modulem CTC). Bodovací konstanty jsou kalibrovány offline a nelze je měnit.</string>
     <string name="ctc_settings_beam_section">Paprskové hledání</string>
     <string name="ctc_settings_beam_width_title">Šířka paprsku</string>
     <string name="ctc_settings_beam_width_desc">Počet hypotéz držených na snímek v paprsku nad trie. 100 je ověřený výchozí stav; vyšší hodnoty stojí více CPU na tah za nepatrný zisk přesnosti.</string>

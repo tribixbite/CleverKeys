@@ -884,7 +884,7 @@
     <string name="import_preview_skipped_collapse">▼ Ongeldig/overgeslagen (%1$d) — tik om in te klappen</string>
     <string name="import_preview_skipped_expand">▶ Ongeldig/overgeslagen (%1$d) — tik om uit te klappen</string>
     <string name="ctc_settings_title">CTC-engine-instellingen</string>
-    <string name="ctc_settings_intro">Afstemming voor de CTC-veegengine (Latijnse indelingen onder de CTC-voorspellingsengine). Scoreconstanten zijn offline gekalibreerd en niet door de gebruiker instelbaar.</string>
+    <string name="ctc_settings_intro">Afstemming voor de CTC-veegengine (Latijnse, Cyrillische, Griekse en Hebreeuwse indelingen onder de CTC-voorspellingsengine). Scoreconstanten zijn offline gekalibreerd en niet door de gebruiker instelbaar.</string>
     <string name="ctc_settings_beam_section">Beam search</string>
     <string name="ctc_settings_beam_width_title">Beambreedte</string>
     <string name="ctc_settings_beam_width_desc">Hypothesen die per frame in de trie-beam worden bewaard. 100 is de gevalideerde standaard; hoger kost CPU per veeg voor marginale nauwkeurigheid.</string>
