@@ -393,7 +393,7 @@
     <string name="autocorrect_min_word_frequency_desc">Chỉ sửa sang các từ có tần suất &gt;= giá trị này</string>
     <string name="autocorrect_final_title">Tự động sửa cuối</string>
     <string name="autocorrect_final_desc">Áp dụng sửa lỗi dựa trên từ điển cho đầu ra cuối</string>
-    <string name="autocorrect_typo_forgiveness_title">Độ khoan nhượng lỗi đánh</string>
+    <string name="autocorrect_typo_forgiveness_title">Độ khoan dung lỗi gõ</string>
     <string name="autocorrect_typo_forgiveness_desc">Cho phép chênh lệch ký tự tối đa (0–5)</string>
     <string name="autocorrect_starting_letter_title">Độ chính xác chữ cái đầu</string>
     <string name="autocorrect_starting_letter_desc">Độ dài tiền tố khớp bắt buộc (0–4)</string>
@@ -431,7 +431,7 @@
     <string name="clipboard_sanitize_links_desc">Xóa utm_*, fbclid, v.v. khỏi URL bạn sao chép. Hỗ trợ bởi ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Cũng làm sạch bảng tạm hệ thống</string>
     <string name="clipboard_sanitize_system_desc">Khi URL đã được làm sạch, ghi đè bảng tạm hệ thống để các lần dán trong mọi ứng dụng đều được làm sạch — không chỉ bảng điều khiển CleverKeys.</string>
-    <string name="clipboard_embed_enrich_title">Làm giàu nhúng để chia sẻ</string>
+    <string name="clipboard_embed_enrich_title">Cải thiện nội dung nhúng khi chia sẻ</string>
     <string name="clipboard_embed_enrich_desc">Viết lại x.com → fxtwitter.com, reddit.com → rxddit.com, v.v.</string>
     <string name="clipboard_custom_rules_title">Dùng quy tắc tùy chỉnh</string>
     <string name="clipboard_custom_rules_desc">Áp dụng JSON định dạng ClearURLs của riêng bạn.</string>
@@ -476,9 +476,9 @@
     <string name="input_enable_predictions_desc">Hiển thị gợi ý từ trong khi gõ</string>
     <string name="input_suggestion_bar_opacity_title">Độ mờ thanh gợi ý</string>
     <string name="input_suggestion_bar_opacity_desc">Độ trong suốt của thanh gợi ý</string>
-    <string name="input_auto_space_after_title">Tự động cách sau gợi ý</string>
+    <string name="input_auto_space_after_title">Tự động thêm dấu cách sau gợi ý</string>
     <string name="input_auto_space_after_desc">Thêm khoảng trắng cuối khi chọn gợi ý</string>
-    <string name="input_auto_space_before_title">Tự động cách trước gợi ý</string>
+    <string name="input_auto_space_before_title">Tự động thêm dấu cách trước gợi ý</string>
     <string name="input_auto_space_before_desc">Chèn khoảng trắng đầu trước gợi ý được chạm (vuốt luôn thêm khoảng trắng)</string>
     <string name="input_backspace_undo_swipe_title">Xóa lùi hoàn tác vuốt</string>
     <string name="input_backspace_undo_swipe_desc">Nhấn xóa lùi ngay sau từ được vuốt sẽ xóa toàn bộ từ</string>
@@ -877,7 +877,7 @@
     <string name="learning_data_forget_phrases_title">Quên mẫu cụm từ?</string>
     <string name="learning_data_forget_words">Quên từ</string>
     <plurals name="learning_data_forget_words_body"><item quantity="other">Xóa %1$d từ đã học? Tăng cường cá nhân hóa sẽ học lại từ cách gõ của bạn.</item></plurals>
-    <string name="learning_data_forget_words_title">Quên mức dùng từ?</string>
+    <string name="learning_data_forget_words_title">Quên dữ liệu dùng từ?</string>
     <string name="learning_data_loading">Đang tải…</string>
     <string name="learning_data_most_used">dùng nhiều nhất: “%1$s” (%2$d×)</string>
     <string name="learning_data_no_pairs">Chưa có cặp từ nào được học</string>
