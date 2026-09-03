@@ -13,8 +13,11 @@ language:
        (the classifier verifies CKDT magic/version + bin==src word set)
   2. generate_unigrams.py       → scripts/dictionaries/X/unigrams.txt
   3. compute_prefix_boosts.py   → src/main/assets/prefix_boosts/X.{bin,json}
-       (Latin-script languages with prefix-boost assets only; reads the
-        assets dictionary, so non-bundled languages get a temporary copy)
+       (DISABLED for every language since 2026-09-03: the only consumer of
+        prefix-boost assets — the neural beam search — was removed with the
+        neural engine on 2026-08-18 (ADR-011), and src/main/assets/prefix_boosts/
+        no longer exists. The step is kept wired so a future consumer can
+        re-enable it per language by flipping `boost` back to True.)
   4. build_langpack.py          → scripts/dictionaries/langpack-X.zip
        (deterministic zip; manifest version from the table below)
 
@@ -60,31 +63,35 @@ REQUIRED_SCRIPTS = [
 
 # Language table. `words` is the NOMINAL shipped size (the classifier's
 # --limit where set; survivor-count languages are approximate, marked ~).
-# `boost` marks languages with prefix-boost assets (Latin-script only — the
-# trie boosts the 26 English NN logits; el/ru/tr ship hasPrefixBoost=false).
+# `boost` is False for EVERY language since 2026-09-03: prefix-boost assets
+# are dead — their only consumer (the neural beam search) was deleted with the
+# neural engine on 2026-08-18 (ADR-011), and a bulk rebuild with boost=True
+# would resurrect the removed src/main/assets/prefix_boosts/ tree. (It was
+# historically True for the Latin-script languages; the trie boosted the 26
+# English NN logits, which is also why el/ru/tr never had it.)
 # `version` is the langpack manifest version to stamp on the next build.
 SUPPORTED_LANGUAGES = {
     'en': {'name': 'English',    'words': 98140, 'bundle': True,  'boost': False, 'version': 2},
-    'es': {'name': 'Spanish',    'words': 50000, 'bundle': True,  'boost': True,  'version': 2},
-    'fr': {'name': 'French',     'words': 40000, 'bundle': True,  'boost': True,  'version': 2},
-    'pt': {'name': 'Portuguese', 'words': 40000, 'bundle': True,  'boost': True,  'version': 2},
-    'it': {'name': 'Italian',    'words': 40000, 'bundle': True,  'boost': True,  'version': 2},
-    'de': {'name': 'German',     'words': 40000, 'bundle': True,  'boost': True,  'version': 2},
-    'sv': {'name': 'Swedish',    'words': 40000, 'bundle': True,  'boost': True,  'version': 2},
-    'nl': {'name': 'Dutch',      'words': 40000, 'bundle': False, 'boost': True,  'version': 2},
+    'es': {'name': 'Spanish',    'words': 50000, 'bundle': True,  'boost': False, 'version': 2},
+    'fr': {'name': 'French',     'words': 40000, 'bundle': True,  'boost': False, 'version': 2},
+    'pt': {'name': 'Portuguese', 'words': 40000, 'bundle': True,  'boost': False, 'version': 2},
+    'it': {'name': 'Italian',    'words': 40000, 'bundle': True,  'boost': False, 'version': 2},
+    'de': {'name': 'German',     'words': 40000, 'bundle': True,  'boost': False, 'version': 2},
+    'sv': {'name': 'Swedish',    'words': 40000, 'bundle': True,  'boost': False, 'version': 2},
+    'nl': {'name': 'Dutch',      'words': 40000, 'bundle': False, 'boost': False, 'version': 2},
     'ru': {'name': 'Russian',    'words': 50000, 'bundle': False, 'boost': False, 'version': 2},
     'el': {'name': 'Greek',      'words': 0,     'bundle': False, 'boost': False, 'version': 2},  # ~ survivors of 46,306
     'tr': {'name': 'Turkish',    'words': 40000, 'bundle': False, 'boost': False, 'version': 2},
-    'id': {'name': 'Indonesian', 'words': 0,     'bundle': False, 'boost': True,  'version': 2},  # ~ survivors (ceiling 30,718)
-    'ms': {'name': 'Malay',      'words': 0,     'bundle': False, 'boost': True,  'version': 2},  # ~ survivors (ceiling 28,361)
-    'tl': {'name': 'Tagalog',    'words': 0,     'bundle': False, 'boost': True,  'version': 2},  # ~ survivors (ceiling 29,877)
+    'id': {'name': 'Indonesian', 'words': 0,     'bundle': False, 'boost': False, 'version': 2},  # ~ survivors (ceiling 30,718)
+    'ms': {'name': 'Malay',      'words': 0,     'bundle': False, 'boost': False, 'version': 2},  # ~ survivors (ceiling 28,361)
+    'tl': {'name': 'Tagalog',    'words': 0,     'bundle': False, 'boost': False, 'version': 2},  # ~ survivors (ceiling 29,877)
     # ARC-056 additions (2026-09-01): pack-only, non-Latin script → no boosts.
     'uk': {'name': 'Ukrainian',  'words': 50000, 'bundle': False, 'boost': False, 'version': 1},
     'bg': {'name': 'Bulgarian',  'words': 0,     'bundle': False, 'boost': False, 'version': 1},  # ~ survivors of 35,791
     'mk': {'name': 'Macedonian', 'words': 50000, 'bundle': False, 'boost': False, 'version': 1},
     'he': {'name': 'Hebrew',     'words': 50000, 'bundle': False, 'boost': False, 'version': 1},
     # Swahili uses the wiki-corpus word list (wordfreq has no sw data)
-    'sw': {'name': 'Swahili',    'words': 20000, 'bundle': False, 'boost': True,  'version': 2,
+    'sw': {'name': 'Swahili',    'words': 20000, 'bundle': False, 'boost': False, 'version': 2,
            'wordlist': 'sw_words.txt'},
 }
 
