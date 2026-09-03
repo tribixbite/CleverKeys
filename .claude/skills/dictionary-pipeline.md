@@ -18,10 +18,11 @@ Use this skill when building, modifying, or quality-checking dictionaries and co
 ## Dictionary Files
 
 ### What the App Loads at Runtime
+(`OptimizedVocabulary` was DELETED with the neural engine, 2026-08-18/ADR-011 — do not cite it.)
 | File | Loaded By | Purpose |
 |------|-----------|---------|
-| `{lang}_enhanced.bin` | `OptimizedVocabulary.loadPrimaryDictionary()` | Main vocabulary (V2 binary) |
-| `{lang}_enhanced.json` | `OptimizedVocabulary.loadFromJSON()` | Fallback if binary fails |
+| `{lang}_enhanced.bin` | `WordPredictor` + `DictionaryDataSource`, both via `BinaryDictionaryLoader` (langpack `files/langpacks/{code}/dictionary.bin` first, bundled asset second); the swipe engines parse CKDT via `swipe/geometric/CkdtDictionaryReader` (`CtcCkdtLexicon`, geometric adapter, installed-pack measurement) | Main vocabulary (CKDT V2 binary) |
+| `{lang}_enhanced.json` | `WordPredictor` / `DictionaryDataSource` JSON fallback (then `.txt` as last resort) | Fallback if binary fails; also the CTC en lexicon (`EN_JSON` source) |
 | `contractions.bin` | `ContractionManager.loadMappings()` | Fast contraction lookup |
 | `contractions_non_paired.json` | `ContractionManager` (JSON fallback) | `dont→don't` mappings |
 | `contraction_pairings.json` | `ContractionManager` (JSON fallback) | Possessive + contraction variants |
@@ -40,9 +41,10 @@ Use this skill when building, modifying, or quality-checking dictionaries and co
 `scripts/build_en_wordlist.py` was RENAMED + generalized to
 `scripts/build_wordlist.py` (`--lang <code>`, default en; `--lang en` is
 bit-identical to the old script). Per-language knobs live in its `LANG_CONFIG`
-table: script gate (latin/greek/cyrillic), ed1 alphabet, oracle set, case
-policy (`en` / `de_nouns` / `plain`), band boundaries, `--limit` size cap,
-carryover basis, MUST_INCLUDE guards.
+table: script gate (latin/greek/cyrillic/hebrew — hebrew added by ARC-056,
+`538a1633`), ed1 alphabet, oracle set, case policy (`en` / `de_nouns` /
+`plain`), band boundaries, `--limit` size cap, carryover basis, MUST_INCLUDE
+guards.
 ```bash
 # Report mode (no files touched): classification counts + review artifacts
 python3 scripts/build_wordlist.py --lang fr
@@ -50,7 +52,12 @@ python3 scripts/build_wordlist.py --lang fr
 python3 scripts/build_wordlist.py --lang fr --write
 # EN extras: --eval / --eval-blind (held-out user-export coverage; EN-only data)
 python3 scripts/build_wordlist.py --eval-blind
-# Full per-language pipeline (classifier → unigrams → prefix boosts → langpack):
+# First build of a NEVER-SHIPPED language: --bootstrap permits a missing
+# carryover basis (normally a hard failure — a lost basis is a regression,
+# not a bootstrap). Used for the ARC-056 uk/bg/mk/he first builds.
+python3 scripts/build_wordlist.py --lang uk --write --bootstrap
+# Full per-language pipeline (classifier → unigrams → langpack; the prefix-boost
+# step is disabled for every language — see Pitfalls):
 python3 scripts/build_all_languages.py --lang fr,de
 ```
 Oracle tiers (configured-but-missing oracle = hard build failure):
@@ -60,8 +67,12 @@ Oracle tiers (configured-but-missing oracle = hard build failure):
   spell-validity), es (aspell es + pyspell), nl (hunspell nl_NL + pyspell),
   ru (hunspell ru_RU + pyspell)
 - **Tier B** (pyspellchecker + AOSP): it, pt
-- **Tier C** (AOSP-only band-2 oracle): sv, el, tr
-- **Tier D** (no oracles, band == top, negatives-only): id, ms, tl
+- **Tier C** (AOSP-only band-2 oracle): sv, el, tr, he (sole oracle: AOSP
+  LatinIME `iw` snapshot; no hunspell/aspell/pyspell he data exists here)
+- **Tier D** (no oracles, band == top, negatives-only): id, ms, tl, plus
+  uk/bg/mk — Tier D by circumstance, not design (probed 2026-09-01: no AOSP
+  dict upstream, no packaged hunspell/aspell, no pyspellchecker data; the
+  cross-Cyrillic foreign-dominance filter is the load-bearing negative)
 - **sw**: NOT ported (no wordfreq data) — corpus-file pipeline via
   `scripts/sw_words.txt`, orchestrated by `build_all_languages.py`.
 EN-only elements (documented omissions elsewhere): BRITISH_RULES, NLTK,
@@ -172,20 +183,25 @@ See `docs/specs/english-dictionary-pipeline.md` "Misspelling Detection Pipeline"
 ## Supported Languages
 
 ### Bundled in App
-en (98,140), es (50k), fr/de/it/pt/sv (40k each) — dictionaries + prefix boosts
+en (98,140), es (50k), fr/de/it/pt/sv (40k each) — dictionaries only (prefix
+boosts are dead; see Pitfalls). Note: 98,140 is the dictionary record count
+(all distinct, verified); the CTC a–z trie holds 98,122 distinct SURFACES
+after the strip-policy dedupe (`CtcBundledLexiconEmitBudgetTest`) — different
+numbers measuring different things, both correct.
 
 ### Langpacks via `build_all_languages.py` (scripts/dictionaries/langpack-*.zip)
 es fr de it pt sv (40–50k) · nl tr (40k) · ru (50k) · el (~39.9k survivors)
 · id/ms/tl (~26–29k survivors) · sw (20k, corpus list)
+· ARC-056 (2026-09-01): uk (50k) · bg (~35.0k survivors) · mk (50k) · he (50k)
 
 ### Available via wordfreq (user-buildable, add a LANG_CONFIG entry)
-50+ languages including ar, bg, bn, cs, da, fi, he, hi, hu, ja, ko, pl, ro, uk, vi, zh
+50+ languages including ar, bn, cs, da, fi, hi, hu, ja, ko, pl, ro, vi, zh
+(bg/he/uk graduated to configured languages with ARC-056)
 
 ## Common Pitfalls
 
 1. **`en_enhanced.txt` is NOT the source of truth** — it's vestigial V1. The real source is `scripts/dictionaries/en/en_words.txt` and the `.bin` is what ships.
 2. **`build_langpack.py` requires `--input` or `--dict`** — it cannot generate words from nothing.
 3. **`contractions_en.json` must match `contractions_non_paired.json`** — they're currently identical and both get loaded (harmless duplication but must stay in sync).
-4. **`compute_prefix_boosts.py` looks for `{lang}_enhanced.bin` in `src/main/assets/dictionaries/`** — the dictionary must be in assets before prefix boosts can be generated.
+4. **Prefix boosts are DEAD — do not regenerate them.** Their only consumer (the neural beam search) was deleted with the neural engine on 2026-08-18 (ADR-011); `src/main/assets/prefix_boosts/` no longer exists, and every `boost` flag in `build_all_languages.py` is `False` (2026-09-03) so a bulk rebuild cannot resurrect the tree. `LanguagePackManager` still ACCEPTS a pack-side `prefix_boost.bin` and copies it on import (so old packs install cleanly) but nothing reads it back.
 5. **`build_all_languages.py` refuses to regenerate en in bulk runs** — the English dict is frozen at 98,140 words; rebuild it only deliberately via `build_wordlist.py --lang en --write`.
-6. **Regenerating a dictionary REQUIRES regenerating its prefix boosts** — the boost trie encodes zipf deltas against the dict's own words; `build_all_languages.py` never skips that step for boost-enabled languages.
