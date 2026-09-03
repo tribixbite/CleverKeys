@@ -222,6 +222,46 @@ class ReleaseClaimCommandCatalogueTest {
     }
 
     @Test
+    fun `name-dispatched commands show declared symbols, not name fragments`() {
+        // KeyValue.getKeyByName never returns null — an unknown name falls through to
+        // makeStringKey(name) — so getDisplayInfo used to render raw-name fragments in the
+        // palette for the eight commands that dispatch by NAME instead of by KeyValue
+        // ("past" for paste_pinned_1, "prim"/"seco"/"show" for the toggles/menu). Each of
+        // them now declares a symbol and getDisplayInfo must surface it.
+        val expected = mapOf(
+            "paste_pinned_1" to "📌1",
+            "paste_pinned_2" to "📌2",
+            "paste_pinned_3" to "📌3",
+            "paste_pinned_4" to "📌4",
+            "paste_pinned_5" to "📌5",
+            "primaryLangToggle" to "🌐1",
+            "secondaryLangToggle" to "🌐2",
+            "showTextMenu" to "☰"
+        )
+        for ((name, symbol) in expected) {
+            val info = CommandRegistry.getDisplayInfo(name)
+            assertWithMessage("'$name' palette label").that(info.displayText).isEqualTo(symbol)
+            assertWithMessage("'$name' is a plain symbol, not a key-font glyph")
+                .that(info.useKeyFont).isFalse()
+        }
+    }
+
+    @Test
+    fun `every catalogue entry has either a key glyph or a declared symbol`() {
+        // Ratchet against future truncated labels: a command whose name is NOT a special
+        // key (KeyValue falls back to a string key of the raw name) must declare a symbol,
+        // or the palette would show a 4-char name fragment.
+        for (command in CommandRegistry.ALL_COMMANDS) {
+            if (KeyValue.getSpecialKeyByName(command.name) == null) {
+                assertWithMessage(
+                    "'${command.name}' has no special KeyValue — it must declare a symbol " +
+                        "or its palette label degrades to '${command.name.take(4)}'"
+                ).that(command.symbol).isNotNull()
+            }
+        }
+    }
+
+    @Test
     fun `display text never exceeds the sub-label budget`() {
         // The label is drawn in a key corner; getDisplayInfo truncates to 4 chars, the same
         // ceiling ShortSwipeMapping.MAX_DISPLAY_LENGTH enforces on user-authored labels.

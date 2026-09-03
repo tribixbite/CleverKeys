@@ -87,16 +87,23 @@ object CommandRegistry {
             keywords = listOf("paste", "plain", "text", "no format")),
         Command("shareText", "Share", "Share selected text", Category.CLIPBOARD,
             keywords = listOf("share", "send")),
-        // Pinned clipboard entry insertion — dynamically pastes the Nth pinned entry
+        // Pinned clipboard entry insertion — dynamically pastes the Nth pinned entry.
+        // These dispatch by NAME (CustomShortSwipeExecutor), not by KeyValue, so each
+        // declares a symbol — without one the palette label degraded to "past" (name.take(4)).
         Command("paste_pinned_1", "Paste Pin #1", "Insert 1st pinned clipboard entry", Category.CLIPBOARD,
+            symbol = "📌1",
             keywords = listOf("pin", "pinned", "clipboard", "paste", "1", "first")),
         Command("paste_pinned_2", "Paste Pin #2", "Insert 2nd pinned clipboard entry", Category.CLIPBOARD,
+            symbol = "📌2",
             keywords = listOf("pin", "pinned", "clipboard", "paste", "2", "second")),
         Command("paste_pinned_3", "Paste Pin #3", "Insert 3rd pinned clipboard entry", Category.CLIPBOARD,
+            symbol = "📌3",
             keywords = listOf("pin", "pinned", "clipboard", "paste", "3", "third")),
         Command("paste_pinned_4", "Paste Pin #4", "Insert 4th pinned clipboard entry", Category.CLIPBOARD,
+            symbol = "📌4",
             keywords = listOf("pin", "pinned", "clipboard", "paste", "4", "fourth")),
         Command("paste_pinned_5", "Paste Pin #5", "Insert 5th pinned clipboard entry", Category.CLIPBOARD,
+            symbol = "📌5",
             keywords = listOf("pin", "pinned", "clipboard", "paste", "5", "fifth")),
 
         // ========== EDITING ==========
@@ -544,9 +551,12 @@ object CommandRegistry {
             keywords = listOf("hebrew", "sin", "dot", "niqqud")),
 
         // ========== LANGUAGE (v1.2.0) ==========
+        // Name-dispatched (Keyboard2View), no KeyValue — symbols required, as for paste_pinned_N.
         Command("primaryLangToggle", "Toggle Primary Language", "Swap between two primary languages", Category.LANGUAGE,
+            symbol = "🌐1",
             keywords = listOf("language", "toggle", "primary", "switch", "swap")),
         Command("secondaryLangToggle", "Toggle Secondary Language", "Swap between two secondary languages", Category.LANGUAGE,
+            symbol = "🌐2",
             keywords = listOf("language", "toggle", "secondary", "switch", "swap")),
 
         // ========== TEXT ACTIONS (v1.2.0) ==========
@@ -555,6 +565,7 @@ object CommandRegistry {
         Command("replaceText", "Replace Text", "Replace selected text with alternatives", Category.TEXT_ACTIONS,
             keywords = listOf("replace", "text", "substitute", "change")),
         Command("showTextMenu", "Show Text Menu", "Select word at cursor and show native toolbar", Category.TEXT_ACTIONS,
+            symbol = "☰", // name-dispatched (Keyboard2View), no KeyValue — see paste_pinned_N note
             keywords = listOf("text", "menu", "toolbar", "cut", "copy", "paste", "translate", "select")),
 
         // ========== TIMESTAMPS ==========
@@ -690,7 +701,12 @@ object CommandRegistry {
      * @return DisplayInfo with the symbol and font flag, or a fallback based on command name
      */
     fun getDisplayInfo(commandName: String): CommandDisplayInfo {
-        val keyValue = getKeyValue(commandName)
+        // Resolve only REAL special keys here — getKeyValue()/getKeyByName never returns
+        // null for a plain word: an unknown name falls through to makeStringKey(name),
+        // whose getString() is the raw command name, and take(4) then rendered truncated
+        // palette labels ("past" for paste_pinned_1). Name-dispatched commands must take
+        // the symbol fallback below instead.
+        val keyValue = KeyValue.getSpecialKeyByName(commandName)
         return if (keyValue != null) {
             CommandDisplayInfo(
                 displayText = keyValue.getString().take(4),
