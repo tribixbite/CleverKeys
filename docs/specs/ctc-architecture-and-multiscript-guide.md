@@ -922,3 +922,24 @@ wave — struck below with closing evidence)*:
 12. **Do not copy a `RESEARCH_ONLY` byte anywhere.** The sealed twin generator, its samples and
     its decoder are Yandex-derived and permanently unshippable. They exist to produce the upper
     bound U (§3.3) and nothing else. If a file is not in `ctc/artifacts/`, it is not wirable.
+
+### Per-script decode latency — first measurement (2026-09-03, B2)
+
+`CtcScriptLatencyMeasurementTest` (androidTest; real packs staged by
+`copyScriptLatencyPacks`), full production decode path (featurize → ONNX → trie beam →
+overlay) on emulator.wtf Pixel7/API 34, warm, n=15, run `55da93fb`:
+
+| lang | trace (folded) | trie words | median | p90 |
+|---|---|---|---|---|
+| ru | авангард | 49,704 | 42.0 ms | 59.4 ms |
+| el | αγνωστο | 37,516 | 21.5 ms | 24.2 ms |
+| uk | абонент | 47,877 | 22.6 ms | 22.9 ms |
+| bg | август | 35,020 | 21.8 ms | 23.7 ms |
+| mk | авантура | 49,996 | 17.4 ms | 18.5 ms |
+| he | אבודים | 50,000 | 27.0 ms | 27.5 ms |
+
+Same class as the tuned en gate (median 20.6 ms, budget 150 ms); ru's 42 ms tracks its
+31-slot alphabet + 8-letter trace. These are MEASUREMENTS, not budgets — the test's only
+timing assertion is a 1000 ms pathology ceiling; tune a per-script budget only after
+variance is established across runs. Real-hardware anchor: Pixel 8 Pro production-path en
+decodes measured 53–65 ms in the swipe playground the same day.

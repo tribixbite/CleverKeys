@@ -269,6 +269,32 @@ class SettingsImportPlanBuilderTest {
     }
 
     @Test
+    fun shortSwipeSize_countsMappingsNotWrapperKeys() {
+        // The v2 export shape wraps the mappings: {"mappings": {...}, "version": 2}. The
+        // count shown in the import preview ("N short-swipe mappings in this backup") must
+        // be the key×direction MAPPINGS — counting the wrapper's own keys reported "2
+        // mappings" for a backup with none (found on-device, N-DEV 2026-09-03).
+        val empty = """{"preferences":{}, "short_swipe_customizations":{"mappings":{},"version":2}}"""
+        assertThat(
+            SettingsImportPlanBuilder.fromJson(empty, emptyMap(), screen).shortSwipeImportSize
+        ).isEqualTo(0)
+
+        // Three mappings across two keys — the direction entries are the unit, not the keys.
+        val three = """{"preferences":{}, "short_swipe_customizations":
+            {"mappings":{"q":{"up":"DEL","down":"TAB"},"w":{"left":"ESC"}},"version":2}}"""
+        assertThat(
+            SettingsImportPlanBuilder.fromJson(three, emptyMap(), screen).shortSwipeImportSize
+        ).isEqualTo(3)
+
+        // Legacy flat shape (no wrapper): top-level keys are keyCodes; same unit applies.
+        val legacyTwo = """{"preferences":{}, "short_swipe_customizations":
+            {"q":{"up":"DEL","down":"TAB"}}}"""
+        assertThat(
+            SettingsImportPlanBuilder.fromJson(legacyTwo, emptyMap(), screen).shortSwipeImportSize
+        ).isEqualTo(2)
+    }
+
+    @Test
     fun perRuleCategoryCoverage_intRangeFloatRangeStringAllowlist() {
         // One key per category:
         //   - keyboard_height (Int range 10..100 — out at 99999)

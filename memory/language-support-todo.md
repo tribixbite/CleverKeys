@@ -32,7 +32,7 @@ confirmed in code). Companion: `docs/guides/adding-a-new-language.md`.
   sweeps en + CKDT six + ru; `langpack-el.zip` (39,860 words, long inflected forms) and
   uk/bg/mk/he are never checked against the 32-frame budget. An over-budget word is unemittable
   silently. The ru sweep block is reusable as-is.
-- [ ] OWED to wave N-DEV (ew-cli from this device). **Per-script latency never measured** (ru/el, emulator or hardware). ARC-058 measured
+- [x] **DONE 2026-09-03** — `CtcScriptLatencyMeasurementTest` (real packs staged into the test APK), run `55da93fb`: ru 42.0/59.4, el 21.5/24.2, uk 22.6/22.9, bg 21.8/23.7, mk 17.4/18.5, he 27.0/27.5 ms (median/p90, Pixel7 API34 warm); published in the guide. **Per-script latency never measured** (ru/el, emulator or hardware). ARC-058 measured
   memory bounds but no number is published in docs/. ew-cli run on real hardware is the honest
   home (needs EW_API_TOKEN on this side, or run from the Termux device).
 - [x] **RESOLVED 2026-09-03** (`1b17c318` — fixtures landed, slot-order gates active) uk/bg/mk/he fixture-less scripts rested on literal alphabet pins only — the slot-order

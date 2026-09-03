@@ -316,6 +316,10 @@ android {
     }
     androidTest {
       kotlin.srcDirs = ['src/androidTest/kotlin']
+      // B2 per-script latency: CtcScriptLatencyMeasurementTest decodes against the REAL
+      // shipped script packs. They are copied out of scripts/dictionaries at build time
+      // (copyScriptLatencyPacks) instead of duplicating ~2.9 MB of zips in the test tree.
+      assets.srcDirs = ['src/androidTest/assets', "${buildDir}/generated/scriptLatencyPacks"]
     }
   }
 
@@ -466,6 +470,22 @@ if (isArm64) {
   tasks.withType(Test).configureEach {
     enabled = false
   }
+}
+
+// The six routed script langpacks, staged into androidTest assets for the per-script
+// latency measurement (B2). Source of truth stays scripts/dictionaries — the zips are
+// deterministic, so this is a byte-identical copy, not a fork.
+tasks.register('copyScriptLatencyPacks', Copy) {
+  group = 'verification'
+  description = 'Stage the six script langpacks into androidTest assets for latency measurement'
+  from('scripts/dictionaries') {
+    include 'langpack-ru.zip', 'langpack-el.zip', 'langpack-uk.zip',
+            'langpack-bg.zip', 'langpack-mk.zip', 'langpack-he.zip'
+  }
+  into "${buildDir}/generated/scriptLatencyPacks/langpacks"
+}
+tasks.matching { it.name ==~ /merge\w+AndroidTestAssets/ }.configureEach {
+  dependsOn 'copyScriptLatencyPacks'
 }
 
 // Pure JVM test runner — works on ARM64 where standard Test tasks are disabled.

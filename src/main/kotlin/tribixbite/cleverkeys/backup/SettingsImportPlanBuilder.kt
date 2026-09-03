@@ -137,7 +137,17 @@ object SettingsImportPlanBuilder {
         // Short-swipe section is captured raw — applier hands it to ShortSwipeImporter.
         val shortSwipeJson = root.getAsJsonObject("short_swipe_customizations")
         val shortSwipeRaw = shortSwipeJson?.toString()
-        val shortSwipeSize = shortSwipeJson?.entrySet()?.size ?: 0
+        // The preview's unit is key×direction MAPPINGS. The v2 export wraps them —
+        // {"mappings": {...}, "version": N} — and counting the wrapper's own keys reported
+        // "2 short-swipe mappings" for an EMPTY backup (on-device finding, 2026-09-03).
+        // Legacy flat sections have keyCodes at the top level; either way the direction
+        // entries are what the user is deciding about. Non-object values contribute 0.
+        val shortSwipeMappings = shortSwipeJson?.get("mappings")
+            ?.takeIf { it.isJsonObject }?.asJsonObject
+            ?: shortSwipeJson
+        val shortSwipeSize = shortSwipeMappings?.entrySet()?.sumOf { (_, byDirection) ->
+            if (byDirection.isJsonObject) byDirection.asJsonObject.entrySet().size else 0
+        } ?: 0
 
         return SettingsImportPlan(
             sourceVersion = sourceVersion,
