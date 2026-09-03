@@ -30,7 +30,7 @@
     <string name="key_descr_ª">Ordinal</string>
     <string name="key_descr_º">Ordinal</string>
     <string name="key_descr_superscript">Exposant</string>
-    <string name="key_descr_subscript">Souscrit</string>
+    <string name="key_descr_subscript">Indice</string>
     <string name="key_descr_page_up">Page précédente</string>
     <string name="key_descr_page_down">Page suivante</string>
     <string name="key_descr_home">Début</string>
