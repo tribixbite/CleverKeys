@@ -76,6 +76,38 @@ are present too. Consequences:
 
 New items found mid-campaign: append to the ledger with the next free ARC id and add to a wave.
 
+## Round 2 (2026-09-03): language-support todo + maintainer decisions
+
+Mandate: implement ALL of `memory/language-support-todo.md`; maintainer decisions received:
+announce ru+el (ARC-054 → announce both at honest tiers), minSdk 21→24 APPROVED (unblocks
+ARC-113 ORT upgrade), ARC-060 ru geometry swap APPROVED as one atomic unit + two riders
+(ru frame-math verification like en; one ru real-probe decode, delta must sit inside the
+0.21 seed sd), ARC-104 → adb-testing policy replaced with "prefer saga/pixel, not host",
+ARC-107 escape alias YES, ARC-111 → settings follow system theme, occlusion → upgrade the
+swipe playground to show suggestion/prediction ranking + record traces, translations →
+cfc multi-source QA on questionable strings, device drive → Opus sub, full daily-typing
+suite on BOTH phones (type, swipe, clipboard/emoji/GIF panes, backup import).
+
+**Langpacks pre-release safety (verified 2026-09-03):** `release.yml` triggers only on `v*`
+tags; F-Droid `UpdateCheckMode: HTTP` polls `releases/latest`, which GitHub points only at
+non-prerelease releases. Therefore: tag `langpacks`, `--prerelease`, no version bump →
+F-Droid provably untriggered. Pack zips: `scripts/dictionaries/langpack-*.zip` (23).
+Manifest-version normalization (A7) deferred per the byte-identity rule (no rebuild now).
+
+| Wave | Items | Status |
+|---|---|---|
+| M-LANG | Wire uk/bg/mk/he CTC (v3 fp16w + goldens, sha-verified); emit-budget sweep +el+4; CtcScriptSupport stale gap strings; tr decision recorded | dispatched |
+| M-DIST | README pack table+link; in-app pack pointer; mk/he display names; "Latin layouts" string fix; ARC-054 announce ru+el (clear SERVED_BUT_NOT_YET_ANNOUNCED) | dispatched |
+| M-MISC | ARC-107 escape alias; ARC-111 settings follow system theme; ARC-104 policy rewrite | dispatched |
+| M-DOCS | HANDOFF 4 contradictions; guide defects; ledger stale SERVED line; dictionary-pipeline skill (7); build_all_languages boost→False | dispatched |
+| M-ML | Push ML main (incl. 7343355 — it EXISTS locally, unpushed); script_registry kind=ckdt; checklist §2.2/PHASE_O; guide-mirror reverse-sync | dispatched |
+| N-SDK24 | minSdk 21→24 + ORT ≥1.21.1 + 16 KB alignment verification (ARC-113) | queued (exclusive build.gradle fence) |
+| N-RU60 | ru geometry+fixture+parity atomic unit + 2 riders | queued |
+| N-OCCL | Swipe playground upgrade: ranking display + trace recording/export | queued |
+| N-TRQA | cfc multi-source translation QA (lingva.lunar.icu, translate.google.com, …) | queued |
+| N-REL | `langpacks` pre-release publish (orchestrator; after M-DIST) | queued |
+| N-DEV | Final build + Opus device drive on Saga+Pixel + per-script latency (B2) | last |
+
 ## Wave-K device protocol notes
 
 Record BEFORE state (current IME via `settings get secure default_input_method`, any prop
