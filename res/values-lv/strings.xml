@@ -899,7 +899,7 @@
     <string name="ctc_settings_beam_section">Staru meklēšana</string>
     <string name="ctc_settings_beam_width_title">Stara platums</string>
     <string name="ctc_settings_beam_width_desc">Hipotēžu skaits, ko trie staru meklēšana patur katrā kadrā. 100 ir pārbaudītais noklusējums; lielāka vērtība tērē vairāk CPU katram vilkumam ar niecīgu precizitātes ieguvumu.</string>
-    <string name="ctc_settings_inference_section">Inference</string>
+    <string name="ctc_settings_inference_section">Secināšana (inference)</string>
     <string name="ctc_settings_threads_title">ONNX pavedieni</string>
     <string name="ctc_settings_threads_desc">CPU pavedienu skaits XNNPACK inferencei ONNX Runtime sesijā, kas darbina CTC kodētāju. Stājas spēkā nākamajā sesijas izveidē (restartējiet tastatūru).</string>
     <string name="ctc_settings_reset">Atiestatīt uz pārbaudīto noklusējumu</string>
