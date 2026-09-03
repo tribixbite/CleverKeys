@@ -369,12 +369,12 @@
     <string name="appearance_key_vertical_margin_desc">Spațiere verticală între taste</string>
     <string name="appearance_key_horizontal_margin_title">Margine orizontală taste</string>
     <string name="appearance_key_horizontal_margin_desc">Spațiere orizontală între taste</string>
-    <string name="appearance_custom_border_title">Bordă personalizată</string>
-    <string name="appearance_custom_border_desc">Activează stilul de bordă personalizat pentru taste</string>
+    <string name="appearance_custom_border_title">Chenar personalizat</string>
+    <string name="appearance_custom_border_desc">Activează stilul de chenar personalizat pentru taste</string>
     <string name="appearance_border_radius_title">Raza bordei</string>
     <string name="appearance_border_radius_desc">Raza colțurilor pentru taste (dp)</string>
-    <string name="appearance_border_line_width_title">Grosime linie bordă</string>
-    <string name="appearance_border_line_width_desc">Lățimea bordurilor tastelor (dp)</string>
+    <string name="appearance_border_line_width_title">Grosime linie chenar</string>
+    <string name="appearance_border_line_width_desc">Lățimea chenarelor tastelor (dp)</string>
     <string name="autocorrect_enable_title">Activează corectarea automată</string>
     <string name="autocorrect_enable_desc">Corectează automat cuvintele greșite</string>
     <string name="autocorrect_backspace_undo_title">Anulează autocorectarea cu Backspace</string>
@@ -556,8 +556,8 @@
     <string name="theme_color_key_label">Etichetă tastă</string>
     <string name="theme_color_sub_label">Sub-etichetă</string>
     <string name="theme_color_secondary_label">Etichetă secundară</string>
-    <string name="theme_color_key_border">Bordă tastă</string>
-    <string name="theme_color_border_activated">Bordă activată</string>
+    <string name="theme_color_key_border">Chenar tastă</string>
+    <string name="theme_color_border_activated">Chenar activat</string>
     <string name="theme_color_swipe_trail">Culoare urmă glisare</string>
     <string name="theme_color_ripple">Efect ripple</string>
     <string name="theme_color_suggestion_text">Text sugestie</string>
