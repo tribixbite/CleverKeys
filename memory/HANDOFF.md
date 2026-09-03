@@ -18,7 +18,8 @@ maintainer-gated set below; el wired (langpack-sourced, synthesis-holdout tier, 
 21-locale ARC-067 complete with lint-enforced coverage (zero MissingTranslation suppressions);
 ARC-072 slices 1-3 done (`wiring/KeyboardComponentGraph`, root 158→101); French verb
 inversions shipped PAIRED-only; geo OQs closed as measured declines with re-runnable sweeps;
-uk/bg/mk/he langpacks built (tap+geometric; CTC model-blocked per rule 4).
+uk/bg/mk/he langpacks built (ARC-056) and their CTC wiring landed 2026-09-03 (`1b17c318` —
+all six table scripts ROUTED).
 
 **Verification**: `runPureTests` **2104+**, `runMockTests` **343**, lintDebug/lintVitalRelease
 green (release lint enabled and exercised); Wave J full ew-cli run **1,466 tests** — only the
@@ -50,7 +51,8 @@ release v1.6.0 (sha `6894b2cc…`) is INSTALLED on the Saga awaiting the maintai
   KB-only devices will break); ARC-114 (LOW) #79 A17 inset-strip observable.
 - ARC-111 upgraded: dark keyboard under system light mode reproduced on BOTH devices —
   maintainer call (default or bug).
-- CTC for uk/bg/mk/he/el-beyond-holdout: GPU-side models + fixtures (ML repo).
+- Evidence-beyond-holdout for el/uk/bg/mk/he (all ROUTED 2026-09-03): real-swipe probes are an
+  ML-repo/device question; their synthesis-holdout levels stay unquotable as accuracy.
 
 ---
 
@@ -316,23 +318,22 @@ in the Wave J full ew-cli run (2026-09-02, Pixel7 API 34).
 (sha `7083794c…`) + its fixture (sha `d08d5501…`) ship, the `CtcScriptSupport` row is `ROUTED`,
 `el` is in `SUPPORTED` (langpack-sourced, `PROVISIONAL` tier). Still true and permanent:
 **Greek has no real-swipe probe at any tier** — its 92.12 is a synthesis-holdout level and may
-never be quoted as accuracy; the device parity/latency run is its only runtime bar. Like ru it
-is served-but-unannounced pending ARC-054.
+never be quoted as accuracy; the device parity/latency run is its only runtime bar. ru + el
+were announced 2026-09-03 (ARC-054, honest tiers, pack-gated).
 
-`uk`, `bg`, `mk`, `he` lexicons are DONE (ARC-056, 2026-09-01: `538a1633` added the `hebrew`
-branch to `build_wordlist._is_script_word` plus the four `LANG_CONFIG` entries; `86156ea3`
-shipped the CKDT v2 langpacks — `scripts/dictionaries/langpack-{uk,bg,mk,he}.zip`). The
-remaining gap is app-side bytes: their `*_synth_v3_ch80_fp16w.onnx` models + golden fixtures
-exist in `CleverKeys-ML/ctc/artifacts/` but are unshipped. Each row in `CtcScriptSupport` is
-the live list, not this paragraph (note: the rows' "no lexicon exists" gap REASONS predate
-ARC-056; the status verdicts are what to trust).
+`uk`, `bg`, `mk`, `he` are ROUTED too (2026-09-03, `1b17c318`): lexicons from ARC-056
+(2026-09-01: `538a1633` hebrew `_is_script_word` branch + the four `LANG_CONFIG` entries,
+`86156ea3` the CKDT v2 langpacks `scripts/dictionaries/langpack-{uk,bg,mk,he}.zip`), and the
+generation-4 `*_synth_v3_ch80_fp16w.onnx` models + byte-identical golden fixtures copied in
+with all eight sha256s verified. All four are `PROVISIONAL`; none has a real-swipe probe at
+any tier. `CtcScriptSupport` is the live list, not this paragraph.
 
-**The 32-frame budget IS checked against real script lexicons for ru** —
+**The 32-frame budget IS checked against every script lexicon** —
 `CtcBundledLexiconEmitBudgetTest` (ARC-057, `eac7594f`, 2026-08-29) sweeps en + the CKDT six +
-ru through their exact production projections plus every alias table: zero surfaces over
-budget, ru worst `высококвалифицированных` at 24 of 32. Still unswept at HEAD: `langpack-el`
-and the four ARC-056 packs (open in `memory/language-support-todo.md` §B; the ru sweep block is
-reusable as-is). **The Latin imported-pack half is also closed**
+ru through their exact production projections plus every alias table (zero surfaces over
+budget, ru worst `высококвалифицированных` at 24 of 32), and since `e99bccc1` (2026-09-03) the
+script list is derived from `CtcScriptSupport.SCRIPTS`, so el/uk/bg/mk/he are swept
+automatically. **The Latin imported-pack half is also closed**
 (`CtcImportedPackSupportTest`, 2026-08-29): zero words over budget in nl/id/ms/sw/tl, worst case
 `gemeenteraadsverkiezingen` at 27 of 32 frames — which is why imported-pack eligibility gates on
 spelling and not on length.
