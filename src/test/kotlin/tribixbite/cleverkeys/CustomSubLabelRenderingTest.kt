@@ -37,14 +37,26 @@ import tribixbite.cleverkeys.customization.CommandRegistry
  * decides the outcome: the real `KeyValue` flags and the real `CommandRegistry`, which
  * determine — per command — whether the two paths agree.
  *
- * ## Finding recorded here (v1.1.98)
+ * ## v1.1.98 history — regression and the 2026-09-03 fix
  *
- * The v1.1.98 fix assumed every icon-font sublabel carries `FLAG_SMALLER_FONT`. Most do not:
- * `editingKey(Int, …)`, `keyeventKey(Int, …, 0)` and `eventKey(Int, …, 0)` set `FLAG_KEY_FONT`
- * alone. So for `paste`, `copy`, `undo`, `up`, `enter` … the custom sublabel is drawn at 0.75×
- * while the identical built-in glyph is drawn at 1.0× — the announced "match" holds only for
- * the `FLAG_SMALLER_FONT` subset (`tab`, `home`, `end`, the `switch_*` family).
- * [iconCommands_matchBuiltInSizeOnlyWhenTheyCarrySmallerFont] states that partition exactly.
+ * The original v1.1.98 change (`3a705775`) assumed every icon-font sublabel carries
+ * `FLAG_SMALLER_FONT` and scaled custom sublabels by 0.75× whenever `useKeyFont` was set. Most
+ * icon KeyValues do not carry the flag: `editingKey(Int, …)`, `keyeventKey(Int, …, 0)` and
+ * `eventKey(Int, …, 0)` set `FLAG_KEY_FONT` alone. So for `paste`, `copy`, `undo`, `up`,
+ * `enter` … the custom sublabel was drawn at 0.75× while the identical built-in glyph was
+ * drawn at 1.0× — the announced "match" held only for the `FLAG_SMALLER_FONT` subset (`tab`,
+ * `home`, `end`, the `switch_*` family).
+ *
+ * Fixed 2026-09-03: the custom path now applies the 0.75× factor by the SAME rule the
+ * built-in path uses — only when the KeyValue resolved from the mapping's command name
+ * carries `FLAG_SMALLER_FONT` (`Keyboard2View.commandCarriesSmallerFont`, consulted only for
+ * `useKeyFont` mappings, i.e. when the drawn glyph IS the built-in KeyValue's glyph).
+ * `useKeyFont` still selects the icon typeface; it no longer selects the size.
+ * [iconCommands_matchBuiltInSizeAcrossAllIconCommands] pins the parity.
+ *
+ * Residual, deliberate: a mapping with a user-typed text label (`useKeyFont == false`) always
+ * draws at 1.0× even when the command's KeyValue has `FLAG_SMALLER_FONT` — the drawn text is
+ * the user's label, not the built-in glyph, so there is nothing to match.
  */
 class CustomSubLabelRenderingTest {
 
@@ -61,10 +73,18 @@ class CustomSubLabelRenderingTest {
         return if (kv.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)) SMALLER_FONT_FACTOR else 1f
     }
 
-    /** Size multiplier the custom short-swipe path applies to `_subLabelSize` for [command]. */
+    /**
+     * Size multiplier the custom short-swipe path applies to `_subLabelSize` for [command].
+     *
+     * Mirrors `Keyboard2View.drawCustomMappings` + `commandCarriesSmallerFont`: the icon font
+     * (`useKeyFont`) gates WHETHER the built-in KeyValue's flag is consulted; the flag itself
+     * (`FLAG_SMALLER_FONT`) decides the size — identical to the built-in path.
+     */
     private fun customSubLabelScale(command: String): Float {
         val info = CommandRegistry.getDisplayInfo(command)
-        return if (info.useKeyFont) SMALLER_FONT_FACTOR else 1f
+        val smallerFont = info.useKeyFont &&
+            CommandRegistry.getKeyValue(command)?.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT) == true
+        return if (smallerFont) SMALLER_FONT_FACTOR else 1f
     }
 
     // =========================================================================
@@ -119,16 +139,25 @@ class CustomSubLabelRenderingTest {
                 "${SMALLER_FONT_FACTOR}f else 1f"
         )
         assertThat(src).contains("val label_size = if (main_label) _mainLabelSize else _subLabelSize")
-        // Custom — same 0.75 factor, same _subLabelSize base.
+        // Custom — same 0.75 factor, same _subLabelSize base, gated on the SAME flag the
+        // built-in path reads (FLAG_SMALLER_FONT of the resolved KeyValue), never on
+        // useKeyFont alone (the v1.1.98 regression).
         assertThat(src).contains(
-            "val textSize = if (useKeyFont) _subLabelSize * ${SMALLER_FONT_FACTOR}f " +
+            "val textSize = if (smallerFont) _subLabelSize * ${SMALLER_FONT_FACTOR}f " +
                 "else _subLabelSize"
+        )
+        assertThat(src).doesNotContain("if (useKeyFont) _subLabelSize * ${SMALLER_FONT_FACTOR}f")
+        // The flag is derived from the built-in KeyValue for the mapping's command…
+        assertThat(src).contains("?.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT) == true")
+        // …and only consulted when the drawn glyph IS that KeyValue's glyph (icon font).
+        assertThat(src).contains(
+            "mapping.useKeyFont && commandCarriesSmallerFont(mapping.actionValue)"
         )
     }
 
     @Test
-    fun iconCommands_matchBuiltInSizeOnlyWhenTheyCarrySmallerFont() {
-        // Matching subset: FLAG_KEY_FONT *and* FLAG_SMALLER_FONT → both paths give 0.75×.
+    fun iconCommands_matchBuiltInSizeAcrossAllIconCommands() {
+        // FLAG_KEY_FONT + FLAG_SMALLER_FONT → both paths give 0.75×.
         for (command in listOf("tab", "home", "end", "left", "right", "switch_emoji", "config")) {
             val kv = KeyValue.getKeyByName(command)
             assertThat(kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT)).isTrue()
@@ -137,8 +166,8 @@ class CustomSubLabelRenderingTest {
             assertThat(customSubLabelScale(command)).isEqualTo(SMALLER_FONT_FACTOR)
         }
 
-        // Non-matching subset: FLAG_KEY_FONT alone → built-in draws at 1.0×, custom at 0.75×.
-        // This is the v1.1.98 gap, stated rather than hidden.
+        // FLAG_KEY_FONT alone → both paths give 1.0×. Under the regressed v1.1.98 code the
+        // custom path drew these at 0.75× while the identical built-in glyph drew at 1.0×.
         for (command in listOf(
             "paste", "copy", "cut", "undo", "redo", "selectAll",
             "up", "down", "enter", "backspace", "delete", "capslock"
@@ -147,26 +176,26 @@ class CustomSubLabelRenderingTest {
             assertThat(kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT)).isTrue()
             assertThat(kv.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)).isFalse()
             assertThat(builtInSubLabelScale(command)).isEqualTo(1f)
-            assertThat(customSubLabelScale(command)).isEqualTo(SMALLER_FONT_FACTOR)
+            assertThat(customSubLabelScale(command)).isEqualTo(builtInSubLabelScale(command))
         }
     }
 
     @Test
-    fun theSizeRuleIsExactlyTheSmallerFontFlag_acrossEveryRegisteredCommand() {
-        // Sweep the whole short-swipe command catalogue so the partition above cannot be a
-        // cherry-picked pair: for every command that resolves to a KeyValue, the two paths
-        // agree if and only if FLAG_KEY_FONT and FLAG_SMALLER_FONT agree.
+    fun everyIconCommandRendersAtBuiltInSize_acrossTheWholeCatalogue() {
+        // Sweep the whole short-swipe command catalogue so the parity above cannot be a
+        // cherry-picked pair: every command that resolves to an icon-font KeyValue must scale
+        // identically on both draw paths — the size rule is exactly FLAG_SMALLER_FONT.
         val disagreeing = mutableListOf<String>()
-        var checked = 0
+        var checkedIcons = 0
         for (command in CommandRegistry.ALL_COMMANDS) {
             val kv = CommandRegistry.getKeyValue(command.name) ?: continue
-            checked++
-            val keyFont = kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT)
-            val smallerFont = kv.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)
-            val agree = customSubLabelScale(command.name) == builtInSubLabelScale(command.name)
-            if (agree != (keyFont == smallerFont)) disagreeing += command.name
+            if (!kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT)) continue
+            checkedIcons++
+            if (customSubLabelScale(command.name) != builtInSubLabelScale(command.name)) {
+                disagreeing += command.name
+            }
         }
-        assertThat(checked).isGreaterThan(50)
+        assertThat(checkedIcons).isGreaterThan(50)
         assertThat(disagreeing).isEmpty()
     }
 

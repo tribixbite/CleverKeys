@@ -28,6 +28,7 @@ import tribixbite.cleverkeys.a11y.KeyLabels
 import tribixbite.cleverkeys.a11y.KeyboardAccessibilityHelper
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.customization.AvailableCommand
+import tribixbite.cleverkeys.customization.CommandRegistry
 import tribixbite.cleverkeys.customization.CustomShortSwipeExecutor
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
@@ -1804,6 +1805,14 @@ class Keyboard2View @JvmOverloads constructor(
             val subIndex = directionToSubIndex(direction)
             if (subIndex < 1 || subIndex > 8) continue
 
+            // Size parity with built-ins (v1.1.98, re-fixed 2026-09-03): the persisted mapping
+            // only stores useKeyFont (typeface selection); the 0.75x smaller-font factor must
+            // follow the SAME flag the built-in path reads — FLAG_SMALLER_FONT on the KeyValue
+            // the mapping's command resolves to. Only consulted when the drawn glyph IS that
+            // KeyValue's glyph (useKeyFont), i.e. never for user-typed text labels.
+            val smallerFont =
+                mapping.useKeyFont && commandCarriesSmallerFont(mapping.actionValue)
+
             // Draw the custom mapping label (matches default sublabel font size and color)
             drawCustomSubLabel(
                 canvas,
@@ -1813,10 +1822,29 @@ class Keyboard2View @JvmOverloads constructor(
                 sublabelColor,
                 tc.key,
                 snap,
-                mapping.useKeyFont
+                mapping.useKeyFont,
+                smallerFont
             )
         }
     }
+
+    /**
+     * Per-command-name cache for [commandCarriesSmallerFont]. Command → flag is static for the
+     * process lifetime, so entries never need invalidation; keyed by the mapping's
+     * `actionValue` (the CommandRegistry command name whenever `useKeyFont` is set).
+     */
+    private val _smallerFontCache = HashMap<String, Boolean>()
+
+    /**
+     * Whether the built-in [KeyValue] behind custom-mapping command [commandName] carries
+     * [KeyValue.FLAG_SMALLER_FONT] — the flag [scaleTextSize] uses for built-in sublabels.
+     * Cached because this runs on the draw path ([drawCustomMappings], per frame).
+     */
+    private fun commandCarriesSmallerFont(commandName: String): Boolean =
+        _smallerFontCache.getOrPut(commandName) {
+            CommandRegistry.getKeyValue(commandName)
+                ?.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT) == true
+        }
 
     /**
      * Convert SwipeDirection to sublabel index (1-8).
@@ -1838,6 +1866,8 @@ class Keyboard2View @JvmOverloads constructor(
     /**
      * Draw a custom sublabel with specific color (for custom short swipe mappings).
      * @param useKeyFont Whether to use the special keyboard icon font
+     * @param smallerFont Whether the resolved built-in KeyValue carries FLAG_SMALLER_FONT —
+     *     the size rule shared with [scaleTextSize], independent of the typeface choice
      */
     private fun drawCustomSubLabel(
         canvas: Canvas,
@@ -1851,12 +1881,14 @@ class Keyboard2View @JvmOverloads constructor(
         tc_key: Theme.Computed.Key,
         /** The frame's captured configuration — see [onDraw]. */
         snap: ConfigSnapshot,
-        useKeyFont: Boolean = false
+        useKeyFont: Boolean = false,
+        smallerFont: Boolean = false
     ) {
         val a = LABEL_POSITION_H[sub_index]
         val v = LABEL_POSITION_V[sub_index]
-        // Apply smaller font scaling for icon-font labels (0.75f) to match built-in sublabels with FLAG_SMALLER_FONT
-        val textSize = if (useKeyFont) _subLabelSize * 0.75f else _subLabelSize
+        // Same 0.75f factor and same trigger (FLAG_SMALLER_FONT) as built-in sublabels in
+        // scaleTextSize(); useKeyFont only selects the typeface, never the size.
+        val textSize = if (smallerFont) _subLabelSize * 0.75f else _subLabelSize
 
         // Use the theme's sublabel_paint for consistent font selection
         val paint = tc_key.sublabel_paint(useKeyFont, color, textSize, a)
