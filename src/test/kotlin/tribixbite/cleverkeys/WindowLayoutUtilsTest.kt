@@ -247,6 +247,50 @@ class WindowLayoutUtilsTest {
         }
     }
 
+    // =========================================================================
+    // configureEdgeToEdge — re-application must PROPAGATE (issue #167)
+    // =========================================================================
+    //
+    // Window.getAttributes() hands back the window's live LayoutParams object;
+    // mutating it in place only reaches the WindowManager when the window is
+    // first added. On an already-showing IME window, propagation requires
+    // Window.setAttributes(), which dispatches onWindowAttributesChanged →
+    // ViewRootImpl relayout. Without the write-back, the per-onStartInputView
+    // "re-application" of cutout mode + fitInsetsTypes(0) is a silent no-op on
+    // a live window — a system-side reset (nav-mode change, window state churn
+    // on Android 15) is then never repaired until the window is recreated,
+    // matching #167's "back gesture fixes it until next time".
+
+    @Test
+    fun edgeToEdge_api35_writesTheMutatedAttributesBackToTheWindow() {
+        val probe = configureAt(35)
+        verify(exactly = 1) { probe.window.attributes = probe.attrs }
+    }
+
+    @Test
+    fun edgeToEdge_api30To34_writesTheMutatedAttributesBackToTheWindow() {
+        for (sdk in listOf(Build.VERSION_CODES.R, 31, 34)) {
+            val probe = configureAt(sdk)
+            verify(exactly = 1) { probe.window.attributes = probe.attrs }
+        }
+    }
+
+    @Test
+    fun edgeToEdge_api29_writesTheMutatedAttributesBackToTheWindow() {
+        val probe = configureAt(Build.VERSION_CODES.Q)
+        verify(exactly = 1) { probe.window.attributes = probe.attrs }
+    }
+
+    @Test
+    fun edgeToEdge_below29_neverWritesWindowAttributes() {
+        // The pre-29 branch touches no attributes, so it must not trigger a
+        // relayout either (companion to edgeToEdge_below29_touchesNoWindowAttributesAtAll).
+        for (sdk in listOf(24, 26, Build.VERSION_CODES.P)) {
+            val probe = configureAt(sdk)
+            verify(exactly = 0) { probe.window.attributes = any() }
+        }
+    }
+
     @Test
     fun edgeToEdge_clearsTheWindowBackgroundOnEveryApiLevel() {
         // v1.0.7 "Fixed keyboard navigation bar transparency": the white bar came from the

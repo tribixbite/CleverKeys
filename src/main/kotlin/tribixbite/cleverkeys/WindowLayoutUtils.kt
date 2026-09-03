@@ -107,6 +107,15 @@ object WindowLayoutUtils {
     @JvmStatic
     @Suppress("DEPRECATION")
     fun configureEdgeToEdge(window: Window) {
+        // Every branch that mutates the LayoutParams must write them back via
+        // Window.setAttributes: getAttributes() returns the live params object,
+        // and in-place mutation only reaches the WindowManager when the window
+        // is FIRST added. On an already-showing IME window the write-back is
+        // what dispatches onWindowAttributesChanged → ViewRootImpl relayout —
+        // without it, the per-onStartInputView re-application of cutout mode +
+        // fitInsetsTypes(0) silently no-ops, so a system-side reset was never
+        // repaired until window recreation (issue #167, Android 15 nav-bar meld).
+
         // API 35+: Full edge-to-edge support
         if (Build.VERSION.SDK_INT >= 35) {
             val wattrs = window.attributes
@@ -114,6 +123,7 @@ object WindowLayoutUtils {
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
             // Allow drawing behind system bars
             wattrs.setFitInsetsTypes(0)
+            window.attributes = wattrs
             window.setDecorFitsSystemWindows(false)
         }
         // API 30-34: Basic edge-to-edge support to avoid OEM scrim issues
@@ -121,6 +131,7 @@ object WindowLayoutUtils {
             val wattrs = window.attributes
             wattrs.layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            window.attributes = wattrs
             window.setDecorFitsSystemWindows(false)
         }
         // API 29: Limited edge-to-edge support
@@ -128,6 +139,7 @@ object WindowLayoutUtils {
             val wattrs = window.attributes
             wattrs.layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            window.attributes = wattrs
         }
 
         // Clear any background on the decor view and window that might cause white bar
