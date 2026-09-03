@@ -70,30 +70,56 @@ Tap any prediction to use it instead.
 
 The **Prediction Engine** dropdown (Settings > Swipe Typing) selects which decoder handles your swipes. The right engine is picked automatically per swipe, based on your layout and language:
 
-| Mode | Latin layout, supported language | Latin layout, other language | Non-Latin layout (Cyrillic, Greek, ...) |
-|------|----------------------------------|------------------------------|------------------------------------------|
-| **CTC** (default) | CTC | Geometric | Geometric |
+| Mode | Latin layout, CTC-served language | Non-Latin layout with a wired script (Cyrillic, Greek, Hebrew) | Anything else |
+|------|-----------------------------------|----------------------------------------------------------------|---------------|
+| **CTC** (default) | CTC | CTC (per-script encoder) | Geometric |
 | **Geometric** | Geometric | Geometric | Geometric |
 
 - **CTC** — the CleverKeys-trained decoder. In our benchmark on 2,400 held-out English
-  swipes it got the intended word right on the first try about 89% of the time. It covers
-  **English, French, German, Spanish, Italian, Portuguese and Swedish** on any Latin layout
-  that has all 26 letters
-  (QWERTY, AZERTY, QWERTZ, Dvorak, Colemak…). Every other language, and every non-Latin
-  layout, automatically uses the geometric engine — choosing CTC never leaves a layout
-  without swipe typing.
-- **Geometric** — a pure shape-matching decoder on all layouts. Useful for comparison and
-  battery-lean decoding.
+  swipes it got the intended word right on the first try about 89% of the time. It serves
+  three groups:
 
-  Italian, Portuguese and Swedish were added to the CTC list on 2026-08-18 and are marked
-  **provisional**. We have never been able to measure CTC's accuracy on them — no public
-  swipe corpus exists for those three — so what carries them is the decoder setting they
-  share with French, German and Spanish (it is calibrated against the dictionary's
-  frequency scale, not the language) plus the fact that the model reads key positions and
-  never sees a language at all. The alternative was the geometric engine, which has no
-  measurement on those languages either and lost by 15–22 points everywhere both were
-  measured. Treat any accuracy figure you see for English/French/German/Spanish as *not*
-  applying to these three.
+  1. The **7 bundled Latin languages** — English, French, German, Spanish, Italian,
+     Portuguese, Swedish — on any Latin layout that has all 26 letters (QWERTY, AZERTY,
+     QWERTZ, Dvorak, Colemak…).
+  2. **6 non-Latin languages via script routing** — Russian, Ukrainian, Bulgarian and
+     Macedonian (Cyrillic), Greek, and Hebrew. Each has its own layout, emission alphabet
+     and encoder, and becomes available once you import that language's pack.
+  3. Any **imported Latin language pack whose vocabulary is a–z-typeable**. CleverKeys
+     measures the pack itself rather than trusting a label: Dutch, Indonesian, Malay,
+     Tagalog and Swahili all measure 100% typeable and are served.
+
+  **Turkish is the deliberate exception.** Dotless `ı` has no a–z spelling at all, so a
+  quarter of the Turkish vocabulary — and a sixth of its thousand most common words
+  (`nasıl`, `artık`, `mı`, `aynı`) — could not be swiped under CTC. Turkish is routed to
+  the geometric engine, which decodes over the board's real keys and can therefore reach
+  those words. The same test rejects Polish `ł`, Vietnamese `đ` and Icelandic `þ`/`ð`
+  packs.
+- **Geometric** — a pure shape-matching decoder on all layouts. It is the automatic
+  fallback for every language and layout CTC does not serve, so choosing CTC never leaves
+  a layout without swipe typing. Also useful for comparison and battery-lean decoding.
+
+### How much we actually know per language
+
+Only **English, French, German and Spanish** have their own measured accuracy bar; the 89%
+figure above is English.
+
+**Italian, Portuguese and Swedish** were added on 2026-08-18 and are **provisional**. We
+have never been able to measure CTC's accuracy on them — no public swipe corpus exists —
+so what carries them is the decoder setting they share with French, German and Spanish (it
+is calibrated against the dictionary's frequency scale, not the language) plus the fact
+that the model reads key positions and never sees a language at all. The alternative was
+the geometric engine, which has no measurement on those languages either and lost by 15–22
+points everywhere both were measured.
+
+**Russian** is validation-tier: it has a real-swipe probe, but not a held-out test bar of
+the kind English has.
+
+**Greek, Ukrainian, Bulgarian, Macedonian and Hebrew, and every imported pack**, have no
+real-swipe probe at any tier. An imported pack is provisional permanently and by
+construction — the word list is a file you brought, so there is no corpus to measure it
+against. No accuracy number is published for any of these, and any figure you see quoted
+for English/French/German/Spanish does *not* apply to them.
 
   Accented words work normally: a swipe traces the unaccented letters (there is no separate
   "é" key on the path), and the engine inserts the dictionary's accented spelling — swipe

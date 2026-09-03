@@ -43,7 +43,7 @@ Your primary language is the main dictionary:
 
 1. **Primary Language** determines the swipe decoder's vocabulary base
 2. English is the default primary language
-3. The CTC decoder serves English, French, German, Spanish, Italian, Portuguese and Swedish — the first four measured on their own accuracy bar, the last three enabled on the shared lexicon-scale evidence; other languages use the geometric engine
+3. The CTC decoder serves the 7 bundled Latin languages (English, French, German, Spanish, Italian, Portuguese, Swedish), 6 non-Latin languages via script routing (Russian, Ukrainian, Bulgarian, Macedonian, Greek, Hebrew — each needs its language pack imported), and any imported Latin pack whose vocabulary is a–z-typeable (Dutch, Indonesian, Malay, Tagalog, Swahili). Turkish uses the geometric engine because dotless `ı` has no a–z spelling; geometric is the automatic fallback for everything else too. Evidence differs sharply by language: only English/French/German/Spanish are measured on their own accuracy bar, Italian/Portuguese/Swedish ride the shared lexicon-scale evidence, Russian is validation-tier, and the remaining script languages and every imported pack have no real-swipe probe at any tier — never quote an accuracy figure for those
 
 ### Step 3: Add Secondary Language
 

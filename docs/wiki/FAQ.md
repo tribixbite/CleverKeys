@@ -97,11 +97,15 @@ A: Copy an image in any app (Gallery, Chrome, etc.) — it appears in clipboard 
 
 A: Touch the first letter of your word, slide your finger through each letter without lifting, then release on the last letter. Faster may yield better results.
 
-**Tip:** Increase 'Length Penalty (Alpha)' for English (~1.5), decrease for other languages (and increase Vocab Frequency Weight).
+**Tip:** There is nothing to tune. The default **CTC** engine ships with a decoder preset chosen per lexicon, and swipe typing works out of the box on every supported language — no per-language settings to adjust.
 
 **Q: Can I swipe other languages?**
 
-A: Yes, but this currently requires using the qwerty latin layout and manually tuning several settings to achieve useable output - see FAQ entry above and Prefix Boost settings (these are very sensitive; try small changes).
+A: Yes, and it needs no tuning and no particular layout. The CTC engine serves the 7 bundled Latin languages (English, French, German, Spanish, Italian, Portuguese, Swedish) on any Latin layout with all 26 letters — QWERTY, AZERTY, QWERTZ, Dvorak, Colemak all work. It also serves 6 non-Latin languages on their own layouts and encoders — Russian, Ukrainian, Bulgarian, Macedonian (Cyrillic), Greek, and Hebrew — plus imported Latin packs whose words are typeable on an a–z board (Dutch, Indonesian, Malay, Tagalog, Swahili).
+
+To add a language beyond the bundled seven, go to **Settings > 🌐 Multi-Language > Import Pack** and import that language's pack; prebuilt zips are on the [langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks). Set it as your primary (or secondary) language and swipe normally.
+
+Turkish is the one language CleverKeys routes away from CTC on purpose: dotless `ı` has no a–z spelling, so a quarter of the vocabulary would be unswipeable. It uses the geometric engine instead, which decodes over the board's real keys. Geometric is likewise the automatic fallback for every other language and layout, so swipe typing is never disabled — see [Swipe Typing](./typing/swipe-typing.md) for the full engine-routing table and what accuracy evidence exists per language.
 
 **Q: Why did the space disappear when I typed a period after swiping a word?**
 

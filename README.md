@@ -165,7 +165,7 @@ Build your own themes on-the-fly with full control over:
 
 ### 🧠 Swipe Typing & Autocorrect
 - **CleverKeys-trained CTC model** (2.9MB) trained from scratch on MIT-licensed real swipe data
-- **Two selectable swipe engines** — CTC (default): a 2.9 MB CleverKeys-trained model covering English, French, German, Spanish, Italian, Portuguese and Swedish on any full a–z Latin layout, scoring 89.3% top-1 on a 2,400-swipe held-out English benchmark; and geometric (all layouts, all languages, no ML model), which also serves every language CTC does not
+- **Two selectable swipe engines** — CTC (default): the 7 bundled Latin languages on any full a–z Latin layout via a 2.9 MB CleverKeys-trained model scoring 89.3% top-1 on a 2,400-swipe held-out English benchmark, plus 6 non-Latin languages (ru, uk, bg, mk, el, he) on their own per-script encoders, plus any imported Latin pack that is a–z-typeable; and geometric (all layouts, all languages, no ML model), which serves every language CTC does not — including Turkish, whose dotless `ı` has no a–z spelling
 - **Sub-200ms predictions** with XNNPACK hardware acceleration
 - **Autocorrect with contraction support** — "dont" to "don't", "im" to "I'm"
 - **Full inference control** — beam width, length normalization, pruning, early stopping
@@ -237,17 +237,37 @@ Assign custom actions to any key's 8 swipe directions:
 
 </div>
 
-CleverKeys supports swipe typing in **15 languages** with intelligent multi-language features:
+CleverKeys supports swipe typing in **19 languages** with intelligent multi-language features:
 
-> ℹ️ **Current swipe-typing scope** — The default **CTC** engine covers
-> **English, French, German, Spanish, Italian, Portuguese and Swedish** on any
-> Latin layout that has all 26
-> letters (QWERTY, AZERTY, QWERTZ, Dvorak, Colemak, …). Every other language,
-> and every non-Latin layout, is served automatically by the layout-agnostic
-> **geometric** decoder, so swipe typing works everywhere — the
-> **Prediction Engine** setting only chooses whether CTC is used at all. Tap
-> typing + autocorrect works across every supported layout and language
-> regardless of mode.
+> ℹ️ **Current swipe-typing scope** — The default **CTC** engine covers three
+> groups:
+>
+> - the **7 bundled Latin languages** (English, French, German, Spanish,
+>   Italian, Portuguese, Swedish) on any Latin layout that has all 26 letters
+>   (QWERTY, AZERTY, QWERTZ, Dvorak, Colemak, …);
+> - **6 non-Latin languages via script routing** — Russian, Ukrainian,
+>   Bulgarian and Macedonian (Cyrillic), Greek, and Hebrew — each on its own
+>   layout, alphabet and encoder, after you import that language's pack;
+> - any **imported Latin pack whose vocabulary is a–z-typeable** (Dutch,
+>   Indonesian, Malay, Tagalog and Swahili all measure 100% projectable).
+>
+> **Turkish is the deliberate exception**: dotless `ı` has no a–z spelling, so a
+> quarter of the vocabulary — and a sixth of its thousand most frequent words —
+> would be unswipeable under CTC. Turkish is served by the **geometric** engine
+> instead, which decodes over the board's real keys. Geometric remains the
+> automatic fallback for every language and layout CTC does not serve, so swipe
+> typing works everywhere — the **Prediction Engine** setting only chooses
+> whether CTC is used at all. Tap typing + autocorrect works across every
+> supported layout and language regardless of mode.
+>
+> **Evidence tiers, stated honestly.** Only English, French, German and Spanish
+> have their own measured accuracy bar. Italian, Portuguese and Swedish are
+> *provisional* — enabled on the frequency-scale evidence they share with
+> French/German/Spanish, never measured on their own. Russian is
+> *validation-tier only*. Greek, Ukrainian, Bulgarian, Macedonian, Hebrew and
+> every imported pack have **no real-swipe probe at any tier** — no accuracy
+> number is quoted for them anywhere, and any figure you see for
+> English/French/German/Spanish does not apply to them.
 >
 > The QWERTY-only ONNX transformer that used to be the default was removed in
 > v1.6.0 (issue [#9](https://github.com/tribixbite/CleverKeys/issues/9) is
