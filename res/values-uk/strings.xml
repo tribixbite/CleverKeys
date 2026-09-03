@@ -711,7 +711,7 @@
     <string name="command_palette_ts_day_mon_d">День Міс число</string>
     <string name="command_palette_ts_iso">ISO 8601</string>
     <string name="command_palette_ts_long_date">Довга дата</string>
-    <string name="command_palette_ts_slash_mdy">М/Д/Р через похилу</string>
+    <string name="command_palette_ts_slash_mdy">М/Д/Р через скісну риску</string>
     <string name="command_palette_ts_time">Час</string>
     <string name="command_palette_ts_time_sec">Час + сек</string>
     <string name="command_palette_use_pattern">Використати шаблон</string>
