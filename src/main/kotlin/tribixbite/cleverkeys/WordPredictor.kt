@@ -241,9 +241,13 @@ class WordPredictor : Predictor {
     @Volatile
     private var contractionAliases: Map<String, String> = emptyMap()
 
-    // v1.1.93: Secondary language dictionary for bilingual touch typing
+    // v1.1.93: Secondary language dictionary for bilingual touch typing.
+    // Both fields are published by the async secondary load (issue #179: the load runs on the
+    // shared dictionary-loader thread, never the main thread) and read on the prediction path,
+    // so both stay @Volatile — pinned by LangpackStartupOffMainDriftTest.
     @Volatile
     private var secondaryIndex: NormalizedPrefixIndex? = null
+    @Volatile
     private var secondaryLanguageCode: String = "none"
 
     /**
@@ -986,24 +990,11 @@ class WordPredictor : Predictor {
                 }
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Loaded JSON dictionary: $jsonFilename with ${dictionary.get().size} words")
             } catch (e: Exception) {
-                Log.w(TAG, "JSON dictionary not found, trying text format: ${e.message}")
-
-                // Fall back to text format (word-per-line)
-                val textFilename = "dictionaries/${language}_enhanced.txt"
-                try {
-                    val reader = BufferedReader(InputStreamReader(context.assets.open(textFilename)))
-                    reader.useLines { lines ->
-                        lines.forEach { line ->
-                            val word = line.trim().lowercase()
-                            if (word.isNotEmpty()) {
-                                dictionary.get()[word] = 1000 // Default frequency
-                            }
-                        }
-                    }
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Loaded text dictionary: $textFilename with ${dictionary.get().size} words")
-                } catch (e2: Exception) {
-                    Log.e(TAG, "Failed to load dictionary: ${e2.message}")
-                }
+                // No JSON lexicon either — and there is no further fallback. The historical
+                // "${language}_enhanced.txt" branch was dead code: no *_enhanced.txt asset ever
+                // shipped, so it always threw straight into its own error log. Language-pack
+                // and _enhanced.bin sources were already tried above.
+                Log.e(TAG, "Failed to load dictionary for '$language': no bundled bin/json asset", e)
             }
 
             // Build prefix index for fast lookup (only needed if JSON/text was loaded)
@@ -1160,15 +1151,49 @@ class WordPredictor : Predictor {
     // ==================== v1.1.93: SECONDARY DICTIONARY SUPPORT ====================
 
     /**
+     * Issue #179: schedule [loadSecondaryDictionary] on the shared dictionary-loader thread.
+     *
+     * This is the ONLY form the [Predictor] interface exposes, because every consumer
+     * (`PredictionCoordinator`'s IME-create path and the multilang preference listeners) calls
+     * from the MAIN thread — and for a user whose secondary language is an imported language
+     * pack, the blocking load reads and indexes the whole pack, which used to happen inside
+     * `onCreate` on every IME process create.
+     *
+     * `"none"`/empty unloads IMMEDIATELY on the caller's thread (a pair of field writes), so
+     * toggling multilang off still takes effect for the very next keystroke. Until a real load
+     * completes, predictions simply lack secondary words — exactly the pre-existing async
+     * contract of the primary dictionary ([loadDictionaryAsync]).
+     */
+    override fun loadSecondaryDictionaryAsync(language: String, callback: Runnable?) {
+        if (language == "none" || language.isEmpty()) {
+            unloadSecondaryDictionary()
+            callback?.run()
+            return
+        }
+        asyncLoader.runOffMain({
+            try {
+                loadSecondaryDictionary(language)
+            } catch (e: Exception) {
+                // Same containment as the blocking form's internal catch: a failed secondary
+                // load degrades to primary-only predictions, never to a crash.
+                Log.e(TAG, "Async secondary dictionary load failed: $language", e)
+            }
+        }, callback)
+    }
+
+    /**
      * Load a secondary language dictionary for bilingual touch typing.
      *
      * Uses NormalizedPrefixIndex (V2 format) for accent-aware lookups.
      * Secondary dictionary words will be included in touch typing predictions.
      *
+     * **Blocking and I/O-bound — reads the langpack/asset and builds the index on the calling
+     * thread. Never call on the main thread; use [loadSecondaryDictionaryAsync]** (issue #179).
+     *
      * @param language Language code (e.g., "es", "fr", "de")
      * @return true if loaded successfully
      */
-    override fun loadSecondaryDictionary(language: String): Boolean {
+    fun loadSecondaryDictionary(language: String): Boolean {
         if (language == "none" || language.isEmpty()) {
             unloadSecondaryDictionary()
             return true

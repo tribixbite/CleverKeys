@@ -149,26 +149,12 @@ class MainDictionarySource(
                 }
                 Log.d(TAG, "Loaded ${words.size} words from JSON dictionary")
             } catch (e: Exception) {
-                Log.w(TAG, "JSON dictionary not found for $languageCode, falling back to text format")
-
-                // Fall back to text format
-                val filename = "dictionaries/${languageCode}_enhanced.txt"
-                context.assets.open(filename).bufferedReader().use { reader ->
-                    reader.lineSequence()
-                        .filter { it.isNotBlank() && !it.startsWith("#") }
-                        .forEach { line ->
-                            val word = line.trim().lowercase()
-                            words.add(
-                                DictionaryWord(
-                                    word = word,
-                                    frequency = 100,
-                                    source = WordSource.MAIN,
-                                    enabled = !disabled.contains(word)
-                                )
-                            )
-                        }
-                }
-                Log.d(TAG, "Loaded ${words.size} words from text dictionary")
+                // No JSON lexicon either — and there is no further fallback. The historical
+                // "${languageCode}_enhanced.txt" branch was dead code: no *_enhanced.txt asset
+                // ever shipped, so it always threw into the outer handler. Preserve that
+                // outcome (no cache, empty result) explicitly so a later retry can still load.
+                Log.w(TAG, "No bundled dictionary (bin/json) for $languageCode", e)
+                return@withContext emptyList()
             }
 
             cachedWords = words.sorted()
