@@ -18,7 +18,7 @@
     <string name="key_action_next">Lanjut</string>
     <string name="key_action_done">Selesai</string>
     <string name="key_action_go">Pergi</string>
-    <string name="key_action_prev">Sebelum</string>
+    <string name="key_action_prev">Sebelumnya</string>
     <string name="key_action_search">Cari</string>
     <string name="key_action_send">Kirim</string>
     <string name="key_descr_capslock">Kunci kapital</string>
@@ -508,7 +508,7 @@
     <string name="multilang_enable_title">Aktifkan Multi-Bahasa</string>
     <string name="multilang_enable_desc">Mendukung pengetikan dalam berbagai bahasa</string>
     <string name="multilang_primary_title">Bahasa Utama</string>
-    <string name="multilang_primary_desc">Bahasa utama untuk prediksi dan pengenalan gesekan</string>
+    <string name="multilang_primary_desc">Bahasa utama untuk prediksi dan pengenalan gerakan geser</string>
     <string name="multilang_secondary_title">Bahasa Sekunder</string>
     <string name="multilang_secondary_weight_title">Bobot Bahasa Sekunder</string>
     <string name="multilang_secondary_weight_desc">Bobot prediksi untuk kamus sekunder (0.5–1.5)</string>
