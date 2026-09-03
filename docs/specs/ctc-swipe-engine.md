@@ -712,8 +712,9 @@ The measured levers (study §5a, plan "Framing"):
   (plan Key open decision 3, O7). (Outcome: the trained encoder led every stratum, the
   router posture shipped anyway, and on 2026-08-18 the router's default moved to `ctc` when
   the neural engine was deleted. The router itself — and the geometric hedge behind it —
-  remains, because it is what serves every script that is not wired — which since 2026-08-29
-  is every non-Latin script except Cyrillic-for-Russian.)
+  remains, because it is what serves every script that is not wired — which since 2026-09-03
+  means everything beyond the six routed table scripts: the kk/sr/hy/ka long tail, Turkish
+  (decided permanent tap+geometric), and any user layout whose script has no model.)
 
 ---
 
