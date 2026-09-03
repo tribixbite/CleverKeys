@@ -1088,3 +1088,71 @@ Device round (Opus, same day): custom-word inclusion+boost+fuzzy+live-invalidati
 freq); bowie's swipeable (lowercase even at sentence start — proper-noun casing gap, tracked);
 plural-possessive absence confirmed on-device before the fix; next-word works but defaults
 OFF (maintainer call); 36-trace corpus delivered.
+
+---
+
+## Round 4 (2026-09-03) — issue-squash waves S1-S5 (fail-first TDD throughout)
+
+14 items dispositioned, 14 commits (`649696b8`..`98e038e0`); every fix landed with the red
+captured verbatim BEFORE the fix. Suites after: **2,235 pure / 545 mock**, full ew-cli run
+pending at push time (recorded below when complete).
+
+**FIXED (8):**
+- **#171** custom short-swipe mappings (`47969359` dispatch + `c29a0d87` render): the custom
+  lookup used the exact 16-bin direction while the default lookup forgave ±1 bin — the fuzz
+  resurrected overridden defaults nondeterministically. Custom now shadows its slot at every
+  fuzzed bin (nearest-wins pinned); the render overlay is suppressed via a shared
+  slot-identity mask (on-device red→green).
+- **#161** portrait height bleeding into landscape (`a9c22871`): `updateConfigFromSettings()`
+  stomped the orientation-resolved value after every save (same shape as the old #154 stomp
+  in the same function). Mirror assignment deleted; `Config.refresh()` is the sole writer.
+- **#169** unremovable switch keys (`e7dda022`): baked into bottom_row.xml WITHOUT the `loc`
+  prefix → kept unconditionally. Now `loc` + default-ON (value-preserving) + dropped when
+  only one layout is enabled. Deliberate delta: a single-layout explicit tick loses its no-op key.
+- **#160** language switch kept first layout (`925f0016`): two breaks — named-layout users
+  never reached `localeTextLayout`, and `defaultSubtypes()` re-mapped by languageTag alone
+  (duplicate ar/en tags always resolved the first entry). Identity-first subtype selection,
+  delivered subtype threaded through.
+- **#167** nav-bar meld (`0288419e`, half): `configureEdgeToEdge` mutated window.attributes
+  in place with no `setAttributes` — every re-application was a silent no-op on a live window
+  (the reporter's back-gesture "fix" was window recreation). Write-back added. Residual:
+  `Keyboard2View._insets_bottom` staleness — separate pass owed (ARC-114-adjacent).
+- **#152** GIF full pack unusably slow (`56c47fc6`): O(results × pack size) — one full
+  map-table scan per result row hydrating a WRITE-ONLY field, per keystroke; plus
+  main-thread count and a dead ALL-view page. Hydration removed from list paths, gif_id
+  index added in onOpen, count async, 150 ms debounce. Fail-first on ew-cli (red `093b6d54`
+  4 predicted failures → green `ea889ac5` 5/5, synthetic 500-gif pack through the real
+  importer). Wall-clock feel on a 130k pack → maintainer soak.
+- **Sentence-start swipe casing** (`40ad59cf`, device-round find): swipe commits consulted
+  only the gesture-start shift latch; now the slate transform consults the SAME
+  `getCursorCapsMode` decision tap typing uses when no shift/caps was latched. "bowie " →
+  "Bowie " at sentence start. Proper-noun dictionary casing deliberately NOT invented.
+- **"Invalid/skipped" labels** (`8eeb4270` preview ×22 locales + `642ab00f` post-import
+  summary): intentional skips are no longer called "Invalid".
+
+**ALREADY-FIXED, coverage/pins added (4):**
+- **#151** partial-word-left-behind: fixed by `736e4eee` (2026-07-13) with ZERO tests — now
+  pinned (`3f698714`, red re-captured against pre-fix conditions; the reporter's literal
+  "https://exa example" symptom). LIVE residual: trailing space dropped by some editors —
+  needs new pending-space state + device confirm, tracked in HANDOFF.
+- **#145** gestures dead after reboot with swipe typing off: fixed in v1.5.0 (`5e7fdcb7`,
+  un-gated swipe latch was eating gestures); the missing cold-init regression pin added.
+- **#35** overly dark darkmode: fixed across `90c929d1`/`cc6a0b6b`/ARC-111; verified zero
+  forced-dark surfaces at HEAD. Recommend closing (no comment posted).
+- **#71** clipboard freeze: open path async on IO (code self-documents as the #71 fix),
+  512 KB capture cap, pagination. Recommend reporter retest.
+
+**NOT-REPRODUCIBLE / BY-DESIGN (2):**
+- **#162** "gorgeous": filed against v1.5.0's NEURAL engine (deleted, ADR-011). The CTC
+  engine decodes it rank 1 on ALL 27 tested shapes (forced-decode margin +3.8..+7.3 over
+  every reported wrong word; the beam never pruned the prefix). Replay instrument +
+  healthy-state pins landed (`afdd68a4`) so a future regression of the self-crossing
+  gesture class goes red.
+- **#83** keys-per-direction beyond the short-gesture boundary: BY-DESIGN
+  (`short_gesture_max_distance` IS the boundary; beyond it + swipe-typing-off deliberately
+  taps the start key — T9 pin). Boundary now additionally pinned; remedy = the max-distance
+  setting.
+
+**Test-gap closures:** compose-key sequences now have 12 EXECUTING instrumented tests
+(ew-cli green `0c570be1`; the old @Ignore'd test deleted — its ௰ expectation was stale
+against the as-built generator, pinned with a TODO).
