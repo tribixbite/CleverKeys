@@ -218,15 +218,20 @@ the waves surfaced, deferred, or left gated — the complete open backlog for th
   −54% DEX, byte-deterministic). ew-cli does NOT discharge this (it builds unminified debug).
   Soak: install, type, swipe, clipboard/emoji/GIF panes, backup import, language toggle.
 - ARC-054 — **Release-notes decision**: main serves ru + eligible imported packs; the v1.6.0
-  notes say seven languages. `ReleaseMetadataDriftTest.SERVED_BUT_NOT_YET_ANNOUNCED = {ru}`
-  pins the mismatch. Announce at real evidence tier (ru = val-only) or hold the wiring back.
+  notes say seven languages. `ReleaseMetadataDriftTest.SERVED_BUT_NOT_YET_ANNOUNCED` pins the
+  mismatch — {ru} when written, {ru, el} after el's wiring, **cleared to {} on 2026-09-03 by
+  the maintainer-approved ARC-054 announcement** (ru "validation-tested" val-only tier, el
+  "early support" with no accuracy figure, both pack-gated; the pin mechanism stays for
+  uk/bg/mk/he).
 
 **Multiscript follow-ons**
 - ARC-055 — el routing: copy `el_synth_v3_ch80_fp16w.onnx` (`7083794c…`) + fixture
   (`d08d5501…`), flip the `CtcScriptSupport` row, add `el` to `SUPPORTED`, run the parity row.
   Blocked on evidence-tier appetite only (no Greek probe exists at any tier).
-- ARC-056 (ML-side) — uk/bg/mk/he lexicons via `build_wordlist.py --lang`; `he` additionally
-  needs a `hebrew` branch (0x0590–0x05FF) in `_is_script_word`.
+- ~~ARC-056 (ML-side) — uk/bg/mk/he lexicons via `build_wordlist.py --lang`; `he` additionally
+  needs a `hebrew` branch (0x0590–0x05FF) in `_is_script_word`.~~ **CLOSED 2026-09-01**:
+  `538a1633` (hebrew `_is_script_word` branch + the four `LANG_CONFIG` entries, bootstrap
+  builds) + `86156ea3` (CKDT v2 langpacks `langpack-{uk,bg,mk,he}.zip`).
 - ARC-057 — 32-frame emit-budget sweep for the BUNDLED lexicons (en/fr/de/es/it/pt/sv + ru);
   `7cb98645` closed it for imported packs only. An over-budget word is unemittable, silently.
 - ARC-058 — trie-memo capacity (`size > 2`) + second-ORT-session memory under a 3-language
@@ -833,8 +838,10 @@ distribution decision, recipe documented at the dependency line.
 074, 075, 076, 086, 087(structure; translations = 067), 088, 089, 090, 091, 092, 093, 094,
 095, 096, 099, 100, 101, 102 — plus ARC-058/064/077 instrumented COVERAGE written (execution
 = Wave J). Remaining open: ARC-067; ARC-027/028/029/030-floors-context; ARC-044-rest;
-ARC-046; ARC-071; ARC-072 slice 3 + ARC-098; ARC-073; ARC-056/060/061 (ML-side, on-device);
-verb inversions; user-gated ARC-053/054/063; Waves J (ew-cli) and K (device adb).
+ARC-046; ARC-071; ARC-072 slice 3 + ARC-098; ARC-073; ARC-060/061 (ML-side, on-device —
+ARC-056 closed 2026-09-01, `538a1633`/`86156ea3`); verb inversions; user-gated
+ARC-053/054/063 (ARC-054 decided 2026-09-03: ru + el announced, pin cleared); Waves J
+(ew-cli) and K (device adb).
 
 ## Wave H — 2026-09-01: ARC-071 and ARC-046 CLOSED (web lane)
 

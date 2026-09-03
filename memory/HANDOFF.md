@@ -31,7 +31,9 @@ release v1.6.0 (sha `6894b2cc…`) is INSTALLED on the Saga awaiting the maintai
 **Still open — maintainer-gated or environment-blocked (the complete list):**
 - ARC-053 minified soak (APK installed on Saga, staged at `build/outputs/apk/release/`);
   ARC-063 keep-narrowing AFTER it.
-- ARC-054 announcement decision for ru AND el (`SERVED_BUT_NOT_YET_ANNOUNCED = {ru, el}`).
+- ~~ARC-054 announcement decision for ru AND el~~ DECIDED 2026-09-03 (maintainer-approved):
+  ru + el announced in the v1.6.0 notes at honest tiers (ru "validation-tested", el "early
+  support", both pack-gated, no Greek number); `SERVED_BUT_NOT_YET_ANNOUNCED` cleared to {}.
 - **The Pixel 8 Pro Wave-K pass** — device was network-unreachable all session; incl. #148.
 - Translation NATIVE REVIEW: ~8,600 machine translations (wave D + plurals + ARC-066×21).
 - ARC-060 ru geometry swap (geometry+fixture+parity as ONE unit — measured deltas material).
@@ -105,7 +107,8 @@ consolidation follows it. Nothing was pushed, tagged, or released.
 - Evidence-gated geometric OQs ARC-027/028/029: do not change defaults unless local-corpus replay
   shows a non-regressing improvement. ARC-030 floors are already present.
 - Web: ARC-071 Astro 6 migration and ARC-046 regression gate + Tailwind vendoring.
-- ML repo: ARC-056 lexicons/langpacks, ARC-060 ru layout regeneration, ARC-061 golden-path fix.
+- ML repo: ARC-060 ru layout regeneration, ARC-061 golden-path fix. (ARC-056 uk/bg/mk/he
+  lexicons/langpacks CLOSED 2026-09-01 — `538a1633` toolchain + `86156ea3` artifacts.)
 - ARC-044 remainder: strengthen the non-curated instrumented tests without adding Truth to
   androidTest dependency configurations.
 
@@ -299,33 +302,38 @@ ever be called "test-validated". The model is license-clean synthesis (learned g
 data only) and saw zero real Cyrillic rows; a sealed twin puts the upper bound at 85.95 and
 produced one number and no bytes. The model arm is three seeds (85.30 ± 0.207) and the shipped
 s1234 bytes are the LOWEST of the three; the generator and the ceiling arms are single-seed.
-**Nothing on-device has ever been measured for any script model** — no latency, no memory.
+**Per-script LATENCY has never been measured** (ru/el; open in
+`memory/language-support-todo.md` §B). Memory is no longer unmeasured: the ARC-058 3-language
+rotation test bounds the trie memo and the second ORT session with ru primary, and it ran green
+in the Wave J full ew-cli run (2026-09-02, Pixel7 API 34).
 λ = 2.0 carries a measured, unconfirmed −0.63 t1 shortfall; γ, β and the prune terms are E1's.
 
 ### What is left, per script
 
-`el` is the cheapest by a distance and was deliberately NOT routed in this wave. Everything is
-ready except two files and a decision: `grek_qwerty.xml` exposes all 25 letters as centre keys,
-`langpack-el.zip` exists on the same CKDT scale (and `scripts/dictionaries/el/el_enhanced.bin`
-is already built), and **both halves** of the el projection are implemented and unit-tested. The
-gap is `el_synth_v3_ch80_fp16w.onnx` (sha `7083794c…`) + its fixture (sha `d08d5501…`), plus the
-fact that **Greek has no real-swipe probe at any tier** — its 92.12 is a synthesis-holdout level
-and may never be quoted as accuracy — so the ew-cli run would be the only evidence Greek swipe
-works at all. Wiring it is a table row, an asset copy and a `SUPPORTED` line.
+`el` **IS ROUTED** (ARC-055, wired in `5fb58037`, 2026-09-01): `el_synth_v3_ch80_fp16w.onnx`
+(sha `7083794c…`) + its fixture (sha `d08d5501…`) ship, the `CtcScriptSupport` row is `ROUTED`,
+`el` is in `SUPPORTED` (langpack-sourced, `PROVISIONAL` tier). Still true and permanent:
+**Greek has no real-swipe probe at any tier** — its 92.12 is a synthesis-holdout level and may
+never be quoted as accuracy; the device parity/latency run is its only runtime bar. Like ru it
+is served-but-unannounced pending ARC-054.
 
-`uk`, `bg`, `mk`, `he` are infrastructure-ready and blocked on LEXICONS, which must be built
-ML-side (`build_wordlist.py --lang <code>` and packaged as CKDT v2 langpacks); `he` additionally
-needs a new `hebrew` branch (0x0590–0x05FF) in `build_wordlist._is_script_word`, which currently
-raises on any script but latin/greek/cyrillic. Their models and fixtures are also unshipped. Each
-row in `CtcScriptSupport` states its own gap; that table is the live list, not this paragraph.
+`uk`, `bg`, `mk`, `he` lexicons are DONE (ARC-056, 2026-09-01: `538a1633` added the `hebrew`
+branch to `build_wordlist._is_script_word` plus the four `LANG_CONFIG` entries; `86156ea3`
+shipped the CKDT v2 langpacks — `scripts/dictionaries/langpack-{uk,bg,mk,he}.zip`). The
+remaining gap is app-side bytes: their `*_synth_v3_ch80_fp16w.onnx` models + golden fixtures
+exist in `CleverKeys-ML/ctc/artifacts/` but are unshipped. Each row in `CtcScriptSupport` is
+the live list, not this paragraph (note: the rows' "no lexicon exists" gap REASONS predate
+ARC-056; the status verdicts are what to trust).
 
-**Still true of every SCRIPT including ru**: the 32-frame budget has never been checked against a
-real script lexicon. `CtcDecodableLength` computes it and a test covers `en_enhanced.json`; no
-script pack has been swept, and Greek and Ukrainian carry long inflected forms. A word over
-budget is unemittable with no error. **The Latin half of that question is now closed**
+**The 32-frame budget IS checked against real script lexicons for ru** —
+`CtcBundledLexiconEmitBudgetTest` (ARC-057, `eac7594f`, 2026-08-29) sweeps en + the CKDT six +
+ru through their exact production projections plus every alias table: zero surfaces over
+budget, ru worst `высококвалифицированных` at 24 of 32. Still unswept at HEAD: `langpack-el`
+and the four ARC-056 packs (open in `memory/language-support-todo.md` §B; the ru sweep block is
+reusable as-is). **The Latin imported-pack half is also closed**
 (`CtcImportedPackSupportTest`, 2026-08-29): zero words over budget in nl/id/ms/sw/tl, worst case
 `gemeenteraadsverkiezingen` at 27 of 32 frames — which is why imported-pack eligibility gates on
-spelling and not on length. The sweep for the script packs is the same six lines of test.
+spelling and not on length.
 
 Geometric is removable **script by script**, ~an hour of GPU each plus a lexicon plus wiring. It
 cannot be removed first: deleting it today does not downgrade a Bulgarian user, it removes their
@@ -374,9 +382,13 @@ strong — but "Colemak ≥ geometric" is an inference, not a measurement. Say i
   through the injectable `userDictionarySource` seam (ARC-081 adapter wiring is source-scan
   pinned only today); an end-to-end typing test for the case-total user-word guard.
 
-- **The ru CTC path has never run on a device.** `da012ded` ships the Russian encoder and routes
-  Cyrillic, and every gate that could be checked without hardware is green — but no instrumented
-  run has happened since. The next ew-cli run must confirm, in this order: (1)
+- **The ru CTC path — UPDATE 2026-09-02**: the Wave J full ew-cli run (1,466 tests, Pixel7
+  API 34) executed the instrumented suite green, discharging the emulator-reachable steps
+  below ((1)–(3), and the ARC-058 rotation memory bound). Still owed: the langpack-import
+  device half (step 4, maintainer's device) and per-script LATENCY (step 5 — timed for no
+  script model yet; `memory/language-support-todo.md` §B). Original list, for the record:
+  `da012ded` ships the Russian encoder and routes
+  Cyrillic; the ew-cli run had to confirm, in this order: (1)
   `CtcEmissionModelParityTest` passes its NEW ru row, i.e. the packaged
   `ru_synth_v3_ch80_fp16w.onnx` actually loads through ORT and reproduces the fixture's emission
   matrices within 2e-3 and its top-k within 1e-3 — this is the only gate that executes the graph,
@@ -387,7 +399,8 @@ strong — but "Colemak ≥ geometric" is an inference, not a measurement. Say i
   packaged the new asset (589,406 B of ONNX is easy to lose to a packaging rule); (4) a ru decode
   end to end WITH `langpack-ru.zip` imported, which no emulator has today — the pack-installed
   path is unreachable on a clean emulator, so this half needs the maintainer's device; (5) the
-  latency gate on a ru swipe, because **no script model has ever been timed or memory-profiled**
+  latency gate on a ru swipe, because **no script model has ever been TIMED** (memory is now
+  bounded by ARC-058's rotation test, executed green in Wave J)
   — the graph is a fifth of the Latin encoder's bytes so the expectation is favourable, and
   expectation is not measurement. Also worth watching: the trie memo evicts at `size > 2`, and a
   ru primary now pulls a SECOND ORT session alongside the Latin one.

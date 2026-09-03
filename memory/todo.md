@@ -26,7 +26,8 @@ explicit authorization.
 - [ ] ARC-072 slice 3 composition-root/reorg work, folded with the gesture portion of ARC-098.
 - [ ] ARC-027/028/029 geometric experiments, evidence-gated on non-regressing corpus replay.
 - [ ] ARC-071 Astro 6 migration and ARC-046 web regression gate/Tailwind vendoring.
-- [ ] ML-side ARC-056/060/061 and the documented verb-inversion feasibility work.
+- [ ] ML-side ARC-060/061 and the documented verb-inversion feasibility work. (ARC-056
+  uk/bg/mk/he lexicons/langpacks CLOSED 2026-09-01 — `538a1633`/`86156ea3`.)
 - [ ] ARC-044 remaining assertion-strengthening batch (no Truth dependency in androidTest).
 
 ## Verification backlog
