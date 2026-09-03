@@ -96,17 +96,17 @@ Manifest-version normalization (A7) deferred per the byte-identity rule (no rebu
 
 | Wave | Items | Status |
 |---|---|---|
-| M-LANG | Wire uk/bg/mk/he CTC (v3 fp16w + goldens, sha-verified); emit-budget sweep +el+4; CtcScriptSupport stale gap strings; tr decision recorded | dispatched |
-| M-DIST | README pack table+link; in-app pack pointer; mk/he display names; "Latin layouts" string fix; ARC-054 announce ru+el (clear SERVED_BUT_NOT_YET_ANNOUNCED) | dispatched |
-| M-MISC | ARC-107 escape alias; ARC-111 settings follow system theme; ARC-104 policy rewrite | dispatched |
-| M-DOCS | HANDOFF 4 contradictions; guide defects; ledger stale SERVED line; dictionary-pipeline skill (7); build_all_languages boost→False | dispatched |
-| M-ML | Push ML main (incl. 7343355 — it EXISTS locally, unpushed); script_registry kind=ckdt; checklist §2.2/PHASE_O; guide-mirror reverse-sync | dispatched |
-| N-SDK24 | minSdk 21→24 + ORT ≥1.21.1 + 16 KB alignment verification (ARC-113) | queued (exclusive build.gradle fence) |
-| N-RU60 | ru geometry+fixture+parity atomic unit + 2 riders | queued |
-| N-OCCL | Swipe playground upgrade: ranking display + trace recording/export | queued |
-| N-TRQA | cfc multi-source translation QA (lingva.lunar.icu, translate.google.com, …) | queued |
-| N-REL | `langpacks` pre-release publish (orchestrator; after M-DIST) | queued |
-| N-DEV | Final build + Opus device drive on Saga+Pixel + per-script latency (B2) | last |
+| M-LANG | Wire uk/bg/mk/he CTC; emit-budget sweep +el+4; gap strings; tr decision | **COMPLETE** (`e99bccc1`,`1b17c318`; zero over-budget, he floor 12; 2120 pure green) |
+| M-DIST | README table; in-app pointer; display names; Latin-layouts fix; ARC-054 announce | **COMPLETE** (`6621168d`,`4a441925`,`f6cc401d`,`7e1034be`; notes 497 chars; pin now {uk,bg,mk,he}) |
+| M-MISC | ARC-107 escape alias; ARC-111 theme; ARC-104 policy | **COMPLETE** (`1040f60b`,`62d6371b`,`2b39c764`,`2fa6d632`; + orchestrator `26f3bf36` keyboard unset-theme root fix) |
+| M-DOCS | HANDOFF/guide/skill/ledger drift; boost→False | **COMPLETE** (7 commits `72d71ae6`..`776db37f`; 3 todo claims corrected against evidence) |
+| M-ML | ML push; registry kind=ckdt; checklist; mirror reverse-sync | **COMPLETE** (ML `dd8cab5`,`7cc0999`,`e805e5d`,`4f01961`; origin==HEAD) |
+| N-SDK24 | minSdk 24 + ORT 1.21.1 + 16 KB verify (ARC-113) | **COMPLETE** (`48cd6bfb`; p_align 0x4000 AAR+APK; goldens bit-stable 2120; CI green) |
+| N-RU60 | ru geometry atomic unit + riders | **COMPLETE app-side** (`128c93f8`, ML `66c60ad`+`8778fef`; rider 1 exact 0.0; rider 2 BLOCKED → training box owes the 85.30±0.21 one-shot) |
+| N-OCCL | Swipe playground: ranking + traces + export | **COMPLETE** (`5cb4a719`,`335fa9a3`,`0646fd53`,`0bdcfca2`; visual checks → N-DEV) |
+| N-TRQA | cfc multi-source translation QA | running (per-locale fix commits landing: uk/tr/hu/lv/ro…) |
+| N-REL | `langpacks` pre-release publish | **COMPLETE** (live, 23 assets, prerelease; latest still v1.5.0; stray build-apk run cancelled) |
+| N-DEV | Final build + Opus device drive both phones + per-script latency (B2) | pending (after N-TRQA) |
 
 ## Wave-K device protocol notes
 
