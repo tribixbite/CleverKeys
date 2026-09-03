@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.theme
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,6 +59,7 @@ class CustomThemeManager(private val context: Context) {
     val customThemes: StateFlow<List<CustomTheme>> = _customThemes.asStateFlow()
 
     companion object {
+        private const val TAG = "CustomThemeManager"
         private const val PREFS_NAME = "custom_keyboard_themes"
         private const val KEY_THEMES = "themes"
         private const val MAX_CUSTOM_THEMES = 50
@@ -147,7 +149,7 @@ class CustomThemeManager(private val context: Context) {
             file.writeText(json.toString(2))
             true
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Failed to export theme '${theme.name}' to ${file.name}", e)
             false
         }
     }
@@ -180,7 +182,7 @@ class CustomThemeManager(private val context: Context) {
                 null
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Failed to import theme from file ${file.name}", e)
             null
         }
     }
@@ -203,7 +205,7 @@ class CustomThemeManager(private val context: Context) {
                 null
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Failed to import theme from JSON string", e)
             null
         }
     }
@@ -258,12 +260,13 @@ class CustomThemeManager(private val context: Context) {
                 try {
                     CustomTheme.fromJson(jsonArray.getJSONObject(index))
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    // One corrupt entry must not discard the rest of the stored themes.
+                    Log.e(TAG, "Skipping unparseable stored theme at index $index", e)
                     null
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Failed to load custom themes from preferences", e)
             emptyList()
         }
     }
@@ -283,7 +286,7 @@ class CustomThemeManager(private val context: Context) {
                 .apply()
             true
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Failed to persist ${themes.size} custom themes to preferences", e)
             false
         }
     }
