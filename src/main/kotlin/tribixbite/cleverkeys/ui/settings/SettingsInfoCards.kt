@@ -54,12 +54,15 @@ internal fun SettingsActivity.VersionInfoCard() {
             .combinedClickable(
                 onClick = {},
                 onLongClick = {
-                    val payload = buildString {
-                        appendLine(title)
-                        append(buildText)
-                        versionInfo.getProperty("commit")?.let { append("\n").append(it) }
-                        versionInfo.getProperty("date")?.let { append("\n").append(it) }
-                    }
+                    val payload = buildVersionCopyPayload(
+                        title = title,
+                        buildText = buildText,
+                        commit = versionInfo.getProperty("commit"),
+                        date = versionInfo.getProperty("date"),
+                    )
+                    // #94: a deliberate NORMAL system copy (setPrimaryClip), not the private
+                    // no-history path — version info is not sensitive, and entering the
+                    // clipboard history is desirable for the bug-reporting flow it serves.
                     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     cm.setPrimaryClip(ClipData.newPlainText("CleverKeys version", payload))
                     Toast.makeText(context, toastCopied, Toast.LENGTH_SHORT).show()
@@ -220,6 +223,30 @@ internal fun SettingsActivity.FAQItemCard(item: FAQItem) {
             }
         }
     }
+}
+
+/**
+ * Assemble the text a long-press on the Version Information card puts on the clipboard (#94).
+ *
+ * [title] and [buildText] are the exact strings the card displays (already localized/resolved),
+ * so what the user copies is what the user sees. [commit] and [date] come from
+ * `version_info.txt`; the release build recipe deliberately omits them for reproducibility
+ * (see `generateVersionInfo` in build.gradle), so both are usually null and each contributes a
+ * line only when present.
+ *
+ * Pure — extracted from the composable so `VersionCopyPayloadTest` can pin the assembly
+ * without an instrumented host.
+ */
+internal fun buildVersionCopyPayload(
+    title: String,
+    buildText: String,
+    commit: String?,
+    date: String?,
+): String = buildString {
+    appendLine(title)
+    append(buildText)
+    commit?.let { append("\n").append(it) }
+    date?.let { append("\n").append(it) }
 }
 
 internal fun SettingsActivity.loadVersionInfo(): Properties {

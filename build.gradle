@@ -816,6 +816,10 @@ tasks.register('runPureTests', JavaExec) {
     // self-saves query/sort/scroll, and the initial load routes through the cancellable
     // filter() so an unfiltered load can never land last and clobber the filtered list.
     'tribixbite.cleverkeys.DictionarySearchStatePersistenceTest',
+    // #94 (2026-09-05): long-press copy on the Version Information card — payload assembly
+    // runs for real; the Compose gesture wiring is source-pinned (on-device half is
+    // androidTest Issue94VersionCopyComposeTest).
+    'tribixbite.cleverkeys.ui.settings.VersionCopyPayloadTest',
     'tribixbite.cleverkeys.ReleasePackagingDriftTest',
     'tribixbite.cleverkeys.LauncherSetupFlowTest',
     // MinSdkApiUsageDriftTest DELETED (ARC-113, 2026-09-03): it guarded the
