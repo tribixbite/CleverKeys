@@ -28,7 +28,7 @@ close) · **OPEN** (triaged, actionable) · **FEATURE** (awaiting maintainer pri
 | 145 | Gestures dead after reboot (swipe off) | **PINNED** | Fixed in v1.5.0 (`5e7fdcb7`, un-gated latch ate gestures); cold-init pin added in `47969359` | comment + close |
 | 134 | Short-key-customization keyboard disappears | **OPEN** | untriaged bug — wave T1 | — |
 | 130 | Clipboard ignores custom theme colors | **OPEN** | untriaged bug — wave T1 | — |
-| 96 | Dictionary search resets after adjusting activity | **OPEN** | untriaged bug — wave T2 | — |
+| 96 | Dictionary search resets after adjusting activity | **FIXED** | Toggle path was already fixed (`e46ed8c1`); wave T2 closed the RECREATION path (rotation/resize): fragment now self-saves query/sort/scroll and the initial load routes through the cancellable `filter()` so an unfiltered load can never land last and clobber the filtered list; dictionary cache kept across recreation (`if (isFinishing)`). Pinned fail-first by `DictionarySearchStatePersistenceTest` — `6c97756b` | comment + close on retest |
 | 83 | keys-per-direction ignored on medium swipes | **BY-DESIGN** | `short_gesture_max_distance` IS the boundary (T9 pin); boundary additionally pinned in `47969359`; remedy = raise the setting | comment + close |
 | 79 | UI/header flicker on scroll (A17 inset strip) | **OPEN-LOW** | T4 verdict: DISTINCT from the #167 residual, still unreproduced. The report is the settings *Activity* window (Compose `statusBarsPadding()` + transparent status bar, `SettingsActivity.kt:676-691`) — the `aafec4da` fix lives in the IME window's bottom/side insets and cannot reach it; staleness gives a static mis-position, not per-frame scroll flicker (ARC-114's A17 top-strip dirty-region tint remains the only observable). Reporter capture needed: screen recording of settings scroll + Android version + nav mode + whether the flickering band equals status-bar height + whether it survives "remove animations" | — |
 | 77 | Can't fully disable Greek/Math toggle (custom XML) | **OPEN-verify** | UA pinned "Fn leaves numeric switch alone when Greek-Math is not an extra key" — mechanism may already satisfy; wave T3 verifies | — |
@@ -47,6 +47,7 @@ close) · **OPEN** (triaged, actionable) · **FEATURE** (awaiting maintainer pri
 | 58 | Scaling number keyboard | Numpad/PIN keys +20% shipped v1.2.6 (GUARDED); verify it covers the ask |
 | 72 | Capitalize I + proper nouns | I-words pinned (GUARDED); sentence-start swipe caps fixed `40ad59cf`; proper-noun DICTIONARY casing deliberately not built (say so if closing) |
 | 70 | Programmatic launch via Intent | An automation-intent toggle exists (seen in device-round settings); verify scope matches |
+| 94 | Copy version info on long-press | Shipped `7558313b` (combinedClickable onLongClick → setPrimaryClip + toast; strings in all 22 locales; androidTest `Issue94VersionCopyComposeTest`). Wave T2 verified + hardened: payload assembly extracted pure and behaviourally pinned, wiring + 22-locale coverage pinned (`VersionCopyPayloadTest`, `1c27a10a`). Deliberate NORMAL copy — the version text enters clipboard history (not sensitive; that's the bug-reporting flow). Residual: the long-press itself needs one visual tap in the soak |
 
 ## Features awaiting maintainer priority (untouched)
 
@@ -55,8 +56,7 @@ close) · **OPEN** (triaged, actionable) · **FEATURE** (awaiting maintainer pri
 #143 trackpad mode · #140 spacebar-commits-highlight · #139 bottom row · #137 Whisper STT ·
 #135 clear action · #133 secondary key char size · #128 lazy services (partially served by
 the #179 work) · #121 custom fonts · #120 keypress sounds · #115 foldables · #111 comparison
-table · #101 training game · #97 disable English dictionary · #94 copy version info (tiny —
-wave T2 takes it) · #93 hex color input · #90 custom key size · #88 Arabic (blocked: needs
+table · #101 training game · #97 disable English dictionary · #93 hex color input · #90 custom key size · #88 Arabic (blocked: needs
 lexicon + model per guide §4) · #87 long→short swipe mapping · #84 smart-punct threshold ·
 #80 clipboard suggestion strip · #69 two-finger swipes · #61 many-language switching
 (partially served by #160 fix + multi-language) · #52 MessagEase layout contribution.
