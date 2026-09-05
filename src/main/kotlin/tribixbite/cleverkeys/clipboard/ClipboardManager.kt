@@ -58,6 +58,12 @@ class ClipboardManager(
     // active theme — we apply the real colors programmatically, like Keyboard2View.
     private var runtimeTheme: Theme? = null
 
+    // #130: Theme signature the cached pane was inflated + painted under. setConfig
+    // compares it against the current config's signature and drops the pane on change,
+    // so a theme switch (or an edit to the active custom theme's colors) while the IME
+    // service lives is picked up on the next clipboard open instead of after restart.
+    private var appliedThemeSignature: ClipboardPaneThemePolicy.ThemeSignature? = null
+
     // Clipboard views
     private var clipboardPane: ViewGroup? = null
     private var clipboardSearchBox: TextView? = null
@@ -857,9 +863,11 @@ class ClipboardManager(
      * keyboard.
      */
     private fun resolveThemeColor(ctx: Context, attr: Int, defaultColor: Int): Int {
-        runtimeThemeColor(attr)?.let { return it }
         val tv = TypedValue()
-        return if (ctx.theme.resolveAttribute(attr, tv, true)) tv.data else defaultColor
+        val xmlResolved = if (ctx.theme.resolveAttribute(attr, tv, true)) tv.data else null
+        return ClipboardPaneThemePolicy.effectiveColor(
+            config.isRuntimeTheme(), runtimeThemeColor(attr) ?: 0, xmlResolved, defaultColor
+        )
     }
 
     /**
@@ -893,6 +901,8 @@ class ClipboardManager(
     private fun applyRuntimeThemeColors() {
         if (!config.isRuntimeTheme()) {
             runtimeTheme = null
+            appliedThemeSignature =
+                ClipboardPaneThemePolicy.ThemeSignature(config.themeName, config.theme, null)
             return
         }
         val pane = clipboardPane ?: return
@@ -902,6 +912,15 @@ class ClipboardManager(
         val key = theme.colorKey
         val label = theme.labelColor
         val sub = theme.subLabelColor
+        val colors = ClipboardPaneThemePolicy.RuntimeColors(
+            bg, key, label, sub, theme.activatedColor
+        )
+        appliedThemeSignature =
+            ClipboardPaneThemePolicy.ThemeSignature(config.themeName, config.theme, colors)
+        // #130: the entry rows resolve their colors themselves (adapter-inflated under the
+        // base XML style) — hand them the runtime colors so rows match the pane chrome.
+        pane.findViewById<ClipboardHistoryView?>(R.id.clipboard_history_view)
+            ?.runtimeColors = colors
 
         if (bg != 0) {
             pane.setBackgroundColor(bg)
@@ -953,7 +972,62 @@ class ClipboardManager(
      */
     fun setConfig(newConfig: Config) {
         config = newConfig
+        // #130: a cached pane was inflated + painted under the previous theme signature.
+        // If the theme identity — or, for runtime themes, its color values — changed,
+        // drop the pane so the next open re-inflates under the new theme. Without this
+        // the pane keeps the old colors until the keyboard process restarts.
+        if (clipboardPane != null &&
+            ClipboardPaneThemePolicy.needsRebuild(appliedThemeSignature, currentThemeSignature())
+        ) {
+            invalidatePane()
+        }
         applyTabVisibility()
+    }
+
+    /**
+     * #130: The current config's theme signature. For runtime themes the colors are read
+     * fresh from [ThemeProvider] (not the [runtimeTheme] cache) so edits to the active
+     * custom theme's colors are detected even though the theme name is unchanged.
+     */
+    private fun currentThemeSignature(): ClipboardPaneThemePolicy.ThemeSignature {
+        val colors = if (config.isRuntimeTheme()) {
+            val t = ThemeProvider.getInstance(context).getTheme(config.themeName)
+            ClipboardPaneThemePolicy.RuntimeColors(
+                t.colorKeyboardBackground, t.colorKey, t.labelColor, t.subLabelColor, t.activatedColor
+            )
+        } else null
+        return ClipboardPaneThemePolicy.ThemeSignature(config.themeName, config.theme, colors)
+    }
+
+    /**
+     * #130: Drops the cached pane and everything that references its child views, so the
+     * next [getClipboardPane] re-inflates under the current theme. Unlike [cleanup] this
+     * preserves [onCloseCallback] (wired once by KeyboardReceiver at service init) and
+     * [currentTab] (the user's tab choice survives a theme change).
+     */
+    private fun invalidatePane() {
+        exitEditMode()
+        hideTagPanelSilent()
+        clipboardHistoryView?.onItemAddedToTab = null
+        clipboardPane = null
+        clipboardSearchBox = null
+        clipboardSearchClear = null
+        regexToggle = null
+        clipboardHistoryView = null
+        filterButton = null
+        tabHistory = null
+        tabPinned = null
+        tabTodos = null
+        paginationBar = null
+        pagePrev = null
+        pageInfo = null
+        pageNext = null
+        contentScroll = null
+        tagPanel = null
+        tagPanelContent = null
+        searchMode = false
+        runtimeTheme = null
+        appliedThemeSignature = null
     }
 
     /**
@@ -1002,6 +1076,8 @@ class ClipboardManager(
         tagMode = false
         tagEditText = null
         currentTab = ClipboardTab.HISTORY
+        runtimeTheme = null
+        appliedThemeSignature = null
     }
 
     /** Reset tag state without triggering data reload (used during cleanup) */

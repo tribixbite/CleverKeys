@@ -58,6 +58,13 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // Second param: pulse count (1 = success, 3 = duplicate/already exists)
     var onItemAddedToTab: ((ClipboardTab, Int) -> Unit)? = null
 
+    // #130: runtime theme colors (custom_/decorative_ themes), pushed by ClipboardManager
+    // when it paints the pane chrome. Entry rows are adapter-inflated under the base XML
+    // style, whose ?attr/color* values are wrong for runtime themes — getView overrides
+    // row colors from here. Null for XML-style themes (the rows' own ?attr resolution is
+    // already correct) and nulls again when the pane is re-inflated after a theme change.
+    var runtimeColors: ClipboardPaneThemePolicy.RuntimeColors? = null
+
     // Track expanded state: entry timestamp -> isExpanded (survives reorder/delete)
     // Uses timestamp (Long) as key instead of full content string to avoid duplicating
     // large clipboard entries in memory just for expand/collapse tracking.
@@ -207,6 +214,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     companion object {
         const val ITEMS_PER_PAGE = 100
+
+        /** #130: every clipboardEntryButton in clipboard_history_entry.xml (tinted via colorLabel). */
+        private val ENTRY_BUTTON_IDS = intArrayOf(
+            R.id.clipboard_entry_expand, R.id.clipboard_entry_edit, R.id.clipboard_entry_paste,
+            R.id.clipboard_entry_addpin, R.id.clipboard_entry_unpin, R.id.clipboard_entry_addtodo,
+            R.id.clipboard_entry_done, R.id.clipboard_entry_status, R.id.clipboard_entry_tags,
+            R.id.clipboard_entry_save, R.id.clipboard_entry_cancel, R.id.clipboard_entry_delete,
+        )
 
         /** Map MIME type to a fallback drawable icon when no thumbnail BLOB is available */
         fun getMimeTypeIcon(mimeType: String): Int = when {
@@ -1051,6 +1066,27 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         loadDataAsync()
     }
 
+    /**
+     * #130: paints one entry row with the active runtime theme's colors. Rows inflate
+     * under the base XML style (wrong ?attr values for runtime themes), so the label
+     * color is applied to the entry text and every action button's background tint
+     * (the buttons are plain Views styled with `?attr/colorLabel` backgroundTint), and
+     * the sub-label color to the provenance line. No-op when no runtime theme is active.
+     */
+    private fun applyRuntimeRowColors(row: View, textView: TextView, provenanceView: TextView) {
+        val rc = runtimeColors ?: return
+        if (rc.label != 0) {
+            textView.setTextColor(rc.label)
+            val tint = android.content.res.ColorStateList.valueOf(rc.label)
+            for (id in ENTRY_BUTTON_IDS) {
+                row.findViewById<View?>(id)?.backgroundTintList = tint
+            }
+        }
+        if (rc.subLabel != 0) {
+            provenanceView.setTextColor(rc.subLabel)
+        }
+    }
+
     inner class ClipboardEntriesAdapter : BaseAdapter() {
         override fun getCount(): Int = paginatedHistory.size
 
@@ -1088,6 +1124,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val tagsButton = view.findViewById<View>(R.id.clipboard_entry_tags)
             // Delete is in the edit_buttons row (only visible during edit mode)
             val deleteButton = view.findViewById<View>(R.id.clipboard_entry_delete)
+
+            // #130: under a runtime theme, override the row's base-style ?attr colors
+            // (entry text + button tints) with the active theme's — same colors the pane
+            // chrome and the keyboard itself use. Runs on every getView so recycled rows
+            // are correct too. No-op for XML-style themes (runtimeColors == null).
+            applyRuntimeRowColors(view, textView, provenanceView)
 
             // Bug #2 fix: match by content identity, not list position — survives list shifts
             val isEditingThis = editingOriginalContent != null && entry.content == editingOriginalContent
@@ -1229,12 +1271,20 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                             android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                         )
                     }
-                    // #130: Dim timestamp suffix using theme attr colorSubLabel
-                    // so custom themes propagate instead of a hardcoded system color.
+                    // #130: Dim timestamp suffix using the effective sub-label color: the
+                    // runtime theme's value when one is active (the ?attr below resolves
+                    // to the base style for runtime themes), else the theme attr, else a
+                    // system fallback.
                     val typed = android.util.TypedValue()
                     context.theme.resolveAttribute(R.attr.colorSubLabel, typed, true)
-                    val subLabelColor = if (typed.data != 0) typed.data
-                        else androidx.core.content.ContextCompat.getColor(context, android.R.color.secondary_text_dark)
+                    val subLabelColor = ClipboardPaneThemePolicy.effectiveColor(
+                        isRuntimeTheme = runtimeColors != null,
+                        runtimeColor = runtimeColors?.subLabel ?: 0,
+                        xmlResolved = typed.data.takeIf { it != 0 },
+                        fallback = androidx.core.content.ContextCompat.getColor(
+                            context, android.R.color.secondary_text_dark
+                        )
+                    )
                     spannable.setSpan(
                         android.text.style.ForegroundColorSpan(subLabelColor),
                         prefix.length + entry.content.length,
