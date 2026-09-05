@@ -577,6 +577,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.autocorrect.AutocorrectContextGuardTest',
     'tribixbite.cleverkeys.LanguagePreferenceKeysReverseLookupTest',
     'tribixbite.cleverkeys.BucketBSourceContractTest',
+    // #134 residual (2026-09-05): the customization screen's IME entry path must use
+    // showSoftInput like the reopen button — toggleSoftInput(SHOW_FORCED) hid an
+    // already-visible IME at entry and leaked a forced-shown keyboard past the activity.
+    'tribixbite.cleverkeys.Issue134ImeEntryContractTest',
     'tribixbite.cleverkeys.clipboard.sanitize.RulesetParserTest',
     'tribixbite.cleverkeys.clipboard.sanitize.UrlSanitizerTest',
     'tribixbite.cleverkeys.clipboard.sanitize.EmbedEnrichRulesTest',
@@ -627,6 +631,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.PrivateCopyRateLimiterTest',
     'tribixbite.cleverkeys.clipboard.PrivateClipMergeRuleTest',
     'tribixbite.cleverkeys.clipboard.ClipboardProvenanceTest',
+    // #130 residual (2026-09-05): the pure color-resolution + pane-rebuild decisions —
+    // runtime theme color beats the base-style ?attr, and a theme signature change
+    // (including a color EDIT with unchanged name) drops the cached pane.
+    'tribixbite.cleverkeys.clipboard.ClipboardPaneThemePolicyTest',
     'tribixbite.cleverkeys.customization.PrivateCopyCommandTest',
     // TalkBack accessibility (a11y) — pure geometry + labeller
     'tribixbite.cleverkeys.a11y.KeyboardGeometryTest',
@@ -947,6 +955,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.ClipboardCaptureExclusionTest',
     'tribixbite.cleverkeys.SuggestionTapAddAndIWordTest',
     'tribixbite.cleverkeys.clipboard.ClipboardTabsAndPaneCloseTest',
+    // #130 residual (2026-09-05): setConfig drops the cached pane when the theme
+    // signature changes (switch OR color edit), preserving close callback + tab choice.
+    'tribixbite.cleverkeys.clipboard.ClipboardPaneThemeInvalidationTest',
     'tribixbite.cleverkeys.prefs.AndroidXPreferenceMigrationTest',
     // #169 (2026-09-03): the layout-switch keys were baked non-loc into the bottom row, so
     // unticking their extra-key checkboxes removed nothing. Mock-tier: loads
