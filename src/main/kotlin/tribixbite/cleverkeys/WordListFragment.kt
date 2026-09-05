@@ -41,6 +41,14 @@ class WordListFragment : Fragment() {
         private const val ARG_TAB_TYPE = "tab_type"
         private const val ARG_LANGUAGE_CODE = "language_code"
 
+        // #96: per-tab search context persisted across recreation (rotation, resize,
+        // split-screen). The activity saves its own copy for the toolbar widgets, but the
+        // fragment must self-restore: FragmentStateAdapter recreates it with default fields,
+        // and the activity's delayed re-dispatch is a race the unfiltered initial load can win.
+        private const val STATE_SEARCH_QUERY = "state_search_query"
+        private const val STATE_SORT_TYPE = "state_sort_type"
+        private const val STATE_LAYOUT_MANAGER = "state_layout_manager"
+
         /**
          * Create a new WordListFragment instance.
          *
@@ -82,9 +90,37 @@ class WordListFragment : Fragment() {
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
+        // #96: restore the saved search context BEFORE the initial load so the first list a
+        // recreated fragment shows is already the filtered one. Restoring here (rather than
+        // relying on DictionaryManagerActivity's delayed performSearch re-dispatch) closes the
+        // race where an unfiltered initial load lands after the filtered re-dispatch and
+        // clobbers it — the list would show every word frequency-sorted while the search box
+        // still held the query.
+        if (savedInstanceState != null) {
+            currentSearchQuery = savedInstanceState.getString(STATE_SEARCH_QUERY, "") ?: ""
+            currentSortType = DictionaryManagerActivity.SortType.values()
+                .getOrElse(savedInstanceState.getInt(STATE_SORT_TYPE, 0)) {
+                    DictionaryManagerActivity.SortType.FREQ
+                }
+            pendingLayoutManagerState = savedInstanceState.getParcelable(STATE_LAYOUT_MANAGER)
+        }
+
         initializeDataSource()
         setupAdapter()
         loadWords()
+    }
+
+    // #96: the fragment owns its search context across recreation. The scroll position is
+    // captured as the layout manager's own saved state; it cannot auto-restore through the
+    // view hierarchy because the list content arrives asynchronously (the RecyclerView is
+    // empty at view-state-restore time), so filter() re-applies it once data lands.
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_SEARCH_QUERY, currentSearchQuery)
+        outState.putInt(STATE_SORT_TYPE, currentSortType.ordinal)
+        if (::recyclerView.isInitialized) {
+            outState.putParcelable(STATE_LAYOUT_MANAGER, recyclerView.layoutManager?.onSaveInstanceState())
+        }
     }
 
     /**
@@ -137,30 +173,20 @@ class WordListFragment : Fragment() {
         loadingProgress.visibility = View.VISIBLE
         emptyText.visibility = View.GONE
 
-        lifecycleScope.launch {
-            try {
-                val words = dataSource.getAllWords()
-                // ACTIVE tab should only show enabled words (disabled ones appear in DISABLED tab)
-                val displayWords = if (tabType == TabType.ACTIVE) {
-                    words.filter { it.enabled }
-                } else {
-                    words
-                }
-                adapter.setWords(displayWords)
-                updateEmptyState()
-                // Notify activity to update tab counts after load completes
-                (activity as? DictionaryManagerActivity)?.onFragmentDataLoaded()
-            } catch (e: Exception) {
-                emptyText.text = getString(R.string.dict_error_loading, e.message ?: "")
-                emptyText.visibility = View.VISIBLE
-            } finally {
-                loadingProgress.visibility = View.GONE
-            }
-        }
+        // #96: the load MUST go through filter() — never a private unfiltered coroutine.
+        // filter() (a) applies the current (possibly restored) search context instead of
+        // resetting to the full frequency-sorted list, and (b) tracks the load in searchJob,
+        // so a later dispatch (typing, the activity's post-recreation re-dispatch) cancels
+        // this one. Before this delegation the initial load raced those dispatches and,
+        // landing last after a cold 50k-word parse, clobbered the filtered result.
+        filter(currentSearchQuery, currentSortType)
     }
 
     private var currentSortType: DictionaryManagerActivity.SortType = DictionaryManagerActivity.SortType.FREQ
     private var currentSearchQuery: String = ""  // #96: Track search query for refresh()
+    // #96: scroll position captured in onSaveInstanceState, re-applied by filter() once the
+    // restored list content is actually set (see onSaveInstanceState doc).
+    private var pendingLayoutManagerState: android.os.Parcelable? = null
 
     fun filter(query: String, sortType: DictionaryManagerActivity.SortType = DictionaryManagerActivity.SortType.FREQ) {
         if (!::adapter.isInitialized) return
@@ -197,15 +223,31 @@ class WordListFragment : Fragment() {
 
                 adapter.setWords(sortedWords)
                 updateEmptyState()
+
+                // #96: re-apply the saved scroll position once the restored content is in the
+                // adapter. One-shot: consumed on the first successful population after
+                // recreation; later filters scroll naturally.
+                pendingLayoutManagerState?.let { state ->
+                    recyclerView.layoutManager?.onRestoreInstanceState(state)
+                    pendingLayoutManagerState = null
+                }
+                loadingProgress.visibility = View.GONE
+
                 // Notify activity to update tab counts after filter completes
                 (activity as? DictionaryManagerActivity)?.onFragmentDataLoaded()
             } catch (e: kotlinx.coroutines.CancellationException) {
-                // Search was cancelled - this is expected, don't log as error
+                // Search was cancelled - this is expected, don't log as error. The loading
+                // indicator (if shown by loadWords) is left up: the superseding filter job
+                // owns hiding it.
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     android.util.Log.d("WordListFragment", "Search cancelled")
                 }
             } catch (e: Exception) {
                 android.util.Log.e("WordListFragment", "Error filtering words", e)
+                // Preserve loadWords()' historical error surface now that it delegates here.
+                emptyText.text = getString(R.string.dict_error_loading, e.message ?: "")
+                emptyText.visibility = View.VISIBLE
+                loadingProgress.visibility = View.GONE
             }
         }
     }

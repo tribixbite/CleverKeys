@@ -812,6 +812,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.SecondaryPredictionWeightTest',
     'tribixbite.cleverkeys.CustomSubLabelRenderingTest',
     'tribixbite.cleverkeys.DictionarySortOrderTest',
+    // #96 (2026-09-05): Dictionary Manager search context survives recreation — the fragment
+    // self-saves query/sort/scroll, and the initial load routes through the cancellable
+    // filter() so an unfiltered load can never land last and clobber the filtered list.
+    'tribixbite.cleverkeys.DictionarySearchStatePersistenceTest',
     'tribixbite.cleverkeys.ReleasePackagingDriftTest',
     'tribixbite.cleverkeys.LauncherSetupFlowTest',
     // MinSdkApiUsageDriftTest DELETED (ARC-113, 2026-09-03): it guarded the
@@ -846,6 +850,11 @@ tasks.register('runPureTests', JavaExec) {
     // the golden geometry through the shipped encoder + beam, with forced-decode diagnostics.
     // Self-contained (no local corpus); skips only when the ORT natives are absent.
     'tribixbite.cleverkeys.swipe.CtcDecodeReplayTest',
+    // Issue-#75 replay instrument (Swiss French QWERTZ decoded as if QWERTY): the shipped
+    // decode stack re-bound to the Swiss board's real key centers (decoderFor) — pins that
+    // the engine follows the DISPLAYED geometry (y-e-s → "yes", not a z- word), plus the
+    // catalogue/gate pins that keep the board served and CTC-eligible.
+    'tribixbite.cleverkeys.swipe.CtcSwissFrenchLayoutReplayTest',
     'tribixbite.cleverkeys.swipe.ContractionCollisionDataTest',
     // ARC-010 (2026-08-28): the six shipped assets/bigrams/*.json tables were read by
     // NOTHING for nine months — the only loader referencing them had zero callers AND
@@ -939,6 +948,11 @@ tasks.register('runMockTests', JavaExec) {
     // unticking their extra-key checkboxes removed nothing. Mock-tier: loads
     // ExtraKeysPreference (androidx.preference supertype) and mocks SharedPreferences.
     'tribixbite.cleverkeys.prefs.ExtraKeysSwitchRemovalTest',
+    // #77 (2026-09-05): the numeric pane's Greek/Math toggle was baked non-loc into
+    // numeric.xml and modify_numpad never stripped loc keys, so the Extra Keys checkbox
+    // (and the v1.2.8 release claim) controlled only the Fn rewrite. Mock-tier: loads
+    // ExtraKeysPreference (androidx.preference supertype).
+    'tribixbite.cleverkeys.NumericPaneGreekmathRemovalTest',
     'tribixbite.cleverkeys.ImeDefaultDetectionTest',
     'tribixbite.cleverkeys.KeyboardTileServiceTest',
     'tribixbite.cleverkeys.SwipeDataExportSafTest',
@@ -983,6 +997,10 @@ tasks.register('runMockTests', JavaExec) {
     // composing/sync support (URL bars, #78 class). Pins the 736e4eee fix, which shipped
     // without coverage; red re-captured against the pre-fix conditions.
     'tribixbite.cleverkeys.SuggestionTapPartialReplaceTest',
+    // gh #151 residual (2026-09-05): composing-less editors drop the TRAILING space of the
+    // committed "word " app-side. Pins the trailing-space watch (arm at commit, resolve on
+    // the stamp−1 cursor signature, owed-space repair on the next alphanumeric keystroke).
+    'tribixbite.cleverkeys.SuggestionTrailingSpaceRepairTest',
     'tribixbite.cleverkeys.ClipboardMediaManagerZipSlipTest',
     'tribixbite.cleverkeys.BackupRestoreArchiveLimitsTest',
     // Audit remediation (2026-08-25) — CK-150-019/020/022 import rollback

@@ -162,7 +162,13 @@ class DictionaryManagerActivity : AppCompatActivity() {
         // MainDictionarySource.sharedCache. These are only needed while the
         // Dictionary Manager is open — keeping them in memory permanently
         // wastes RAM for a rarely-used activity.
-        MainDictionarySource.invalidateCache()
+        // #96: only on a real close. A configuration change (rotation, resize,
+        // split-screen) destroys and immediately recreates this activity; dropping the
+        // cache made every recreation re-parse the dictionary cold, which both delayed
+        // the restored (filtered) list and widened the load-vs-filter race window.
+        if (isFinishing) {
+            MainDictionarySource.invalidateCache()
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
