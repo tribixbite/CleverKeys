@@ -68,6 +68,9 @@ class CtcReplayEngine private constructor(
     private val model: CtcEmissionModel,
     private val params: CtcScoringParams,
     private val frequencies: Map<String, Double>,
+    // Held so [decoderFor] can re-bind the SAME trie/model/params to a different key
+    // geometry (issue #75 replay instrument) without rebuilding the lexicon.
+    private val trie: CtcLexiconTrie,
 ) : AutoCloseable {
 
     /** Decoded slate: display words plus the 0..1000 scores the rank-1 guard compares. */
@@ -140,6 +143,26 @@ class CtcReplayEngine private constructor(
         for (w in words) constrained[w] = frequencies[w] ?: 1.0
         val trie = CtcLexiconTrie.loadStrippingNonAlphabet(layout.alphabet, constrained)
         return CtcSwipeDecoder(model, layout, trie, params).decode(px, py, pt)
+    }
+
+    /**
+     * The SHIPPED decode stack re-bound to a DIFFERENT key geometry (issue #75 replay
+     * instrument). Same model, same trie (contraction alias keys included), same shipped
+     * params — only [altLayout]'s key centers differ. This is exactly what
+     * `CtcEngineAdapter.buildMappedLayout` does per board at runtime (key geometry is a
+     * model INPUT, the encoder is layout-agnostic), so decoding a trace synthesized over a
+     * non-QWERTY board's real centers through this decoder replays what a user of that
+     * board gets.
+     *
+     * The alphabet must match the engine's — the trie and the emission slots are built over
+     * it, and re-binding a different alphabet would silently permute every decode.
+     */
+    fun decoderFor(altLayout: CtcLayout): CtcSwipeDecoder {
+        require(altLayout.alphabet.contentEquals(layout.alphabet)) {
+            "decoderFor is same-alphabet only: trie/emission slots are built over " +
+                String(layout.alphabet)
+        }
+        return CtcSwipeDecoder(model, altLayout, trie, params)
     }
 
     /** The shipped bounded rescue for a greedy surface — exposed for rescue-eligibility analysis. */
@@ -258,7 +281,7 @@ class CtcReplayEngine private constructor(
                 // SAME rescue index the app does or its measurements describe a different engine.
                 CtcFuzzyRescue.fromFrequencies(canonical, CtcScriptSupport.alphabetFor(language).toHashSet()),
                 env, session,
-                layout, model, params, canonical,
+                layout, model, params, canonical, trie,
             )
         }
     }
