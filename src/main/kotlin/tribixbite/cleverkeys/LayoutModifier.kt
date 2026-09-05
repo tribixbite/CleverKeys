@@ -12,7 +12,9 @@ object LayoutModifier {
     private lateinit var number_row_no_symbols: KeyboardData.Row
     private lateinit var number_row_symbols: KeyboardData.Row
     private lateinit var num_pad: KeyboardData
-    private val layoutCache = LruCache<String, KeyboardData>(10)
+    // Lazy so loading the object off-device (mock-tier JVM tests exercising the pure
+    // predicates below) does not hit the android.jar LruCache stub constructor.
+    private val layoutCache by lazy { LruCache<String, KeyboardData>(10) }
 
     /**
      * Update the layout according to the configuration.
@@ -107,6 +109,45 @@ object LayoutModifier {
     }
 
     /**
+     * KeyValues that HAVE an Extra Keys checkbox — the population [paneLocKeyStripped]
+     * may strip on the numpad-family panes. Built once from the same registry the
+     * checkboxes render from, so the two can never disagree about which keys are governed.
+     */
+    private val extraKeysCheckboxKeys: Set<KeyValue> by lazy {
+        ExtraKeysPreference.EXTRA_KEYS.mapNotNullTo(HashSet()) { name ->
+            try { KeyValue.getKeyByName(name) } catch (_: Exception) { null }
+        }
+    }
+
+    /**
+     * #77: whether a `loc` key on a numpad-family pane (numeric, greekmath, side numpad)
+     * is stripped. The numeric pane baked `switch_greekmath` in non-`loc` and
+     * [modify_numpad] never honoured `loc` at all, so the Greek/Math toggle was
+     * unconditionally present — unremovable from a custom layout (the pane is a shipped
+     * layout), untouched by `locale_extra_keys="false"`, and deaf to the Extra Keys
+     * checkbox the v1.2.8 release note claimed governed it.
+     *
+     * Rule: a `loc` pane key is stripped iff it is CHECKBOX-GOVERNED (has an Extra Keys
+     * entry) and not present in the enabled extra-keys maps — the same predicate
+     * `modify_layout` applies to text layouts and `KeyModifier.applyFnEvent` applies to
+     * the Fn rewrite. Ungoverned `loc` pane keys (a hypothetical `loc ctrl`, say — no
+     * checkbox exists for ctrl; every `loc` key the shipped panes carry today IS
+     * governed) keep the legacy always-shown behaviour, because stripping one would
+     * leave the user no way to re-enable it.
+     *
+     * Deliberately takes the maps as parameters (not [globalConfig]) so the predicate is
+     * testable in pure JVM without standing up a Config.
+     */
+    internal fun paneLocKeyStripped(
+        key: KeyValue,
+        localized: Boolean,
+        extraKeysParam: Map<KeyValue, *>,
+        extraKeysCustom: Map<KeyValue, *>,
+    ): Boolean =
+        localized && extraKeysCheckboxKeys.contains(key) &&
+            !extraKeysParam.containsKey(key) && !extraKeysCustom.containsKey(key)
+
+    /**
      * Handle the numpad layout. The [main_kw] is used to adapt the numpad to
      * the main layout's script.
      */
@@ -115,6 +156,15 @@ object LayoutModifier {
         val map_digit = KeyModifier.modify_numpad_script(main_kw.numpad_script)
         return kw.mapKeys(object : KeyboardData.MapKeyValues() {
             override fun apply(key: KeyValue, localized: Boolean): KeyValue? {
+                // #77: before the kind dispatch — the Char branch returns early and must
+                // not shadow the strip for localized char keys.
+                if (paneLocKeyStripped(
+                        key, localized,
+                        globalConfig.extra_keys_param, globalConfig.extra_keys_custom,
+                    )
+                ) {
+                    return null
+                }
                 when (key.getKind()) {
                     KeyValue.Kind.Char -> {
                         val prev_c = key.getChar()
