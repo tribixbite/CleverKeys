@@ -6,6 +6,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -75,6 +76,7 @@ class WindowLayoutUtilsTest {
     fun teardown() {
         setSdkInt(originalSdkInt)
         unmockkStatic(WindowLayoutUtils::class)
+        unmockkStatic(WindowInsets.Type::class)
     }
 
     // =========================================================================
@@ -385,6 +387,152 @@ class WindowLayoutUtilsTest {
         WindowLayoutUtils.updateSoftInputWindowLayoutParams(window, inputArea, false)
         assertThat(windowAttrs.height).isEqualTo(ViewGroup.LayoutParams.WRAP_CONTENT)
         verify(exactly = 1) { inputArea.setBackgroundColor(Color.TRANSPARENT) }
+    }
+
+    // =========================================================================
+    // readSystemBarInsets — ONE shared API ladder for every inset read (#167 residual)
+    // =========================================================================
+    //
+    // Keyboard2View kept two hand-rolled copies of this ladder (onApplyWindowInsets and
+    // the onMeasure `== 0` recovery) that DISAGREED on API 30+: the recovery read
+    // systemBars() only, the primary path systemBars()|displayCutout(). A value recovered
+    // by one path could therefore differ from the value the real dispatch later served —
+    // a one-frame jump at best, a persistent mismatch at worst. These tests pin the single
+    // shared reader both sites now delegate to.
+
+    /** WindowInsets.Type's statics are android.jar stubs; give the masks known bits. */
+    private fun stubInsetTypeMasks() {
+        mockkStatic(WindowInsets.Type::class)
+        every { WindowInsets.Type.systemBars() } returns 0b001
+        every { WindowInsets.Type.displayCutout() } returns 0b100
+    }
+
+    @Test
+    fun readSystemBarInsets_api30Plus_readsSystemBarsUnionDisplayCutout() {
+        stubInsetTypeMasks()
+        for (sdk in listOf(Build.VERSION_CODES.R, 34, 35)) {
+            setSdkInt(sdk)
+            val wi = mockk<WindowInsets>(relaxed = true)
+            // Only the union mask is stubbed with real values: if the implementation asks
+            // for the wrong mask it gets a relaxed all-zero Insets and the assert fails.
+            every { wi.getInsets(0b101) } returns insetsOf(left = 11, top = 99, right = 22, bottom = 33)
+            assertThat(WindowLayoutUtils.readSystemBarInsets(wi))
+                .isEqualTo(SystemBarInsets(left = 11, right = 22, bottom = 33))
+        }
+    }
+
+    @Test
+    fun readSystemBarInsets_api29_usesSystemWindowInsets() {
+        setSdkInt(Build.VERSION_CODES.Q)
+        val wi = mockk<WindowInsets>(relaxed = true)
+        every { wi.systemWindowInsets } returns insetsOf(left = 5, top = 0, right = 7, bottom = 9)
+        assertThat(WindowLayoutUtils.readSystemBarInsets(wi))
+            .isEqualTo(SystemBarInsets(left = 5, right = 7, bottom = 9))
+        // getInsets(int) is API 30+ — calling it here would be a NewApi trap.
+        verify(exactly = 0) { wi.getInsets(any<Int>()) }
+    }
+
+    @Test
+    fun readSystemBarInsets_api21To28_usesThePerSideGetters() {
+        for (sdk in listOf(21, 24, Build.VERSION_CODES.P)) {
+            setSdkInt(sdk)
+            val wi = mockk<WindowInsets>(relaxed = true)
+            every { wi.systemWindowInsetLeft } returns 1
+            every { wi.systemWindowInsetRight } returns 2
+            every { wi.systemWindowInsetBottom } returns 3
+            assertThat(WindowLayoutUtils.readSystemBarInsets(wi))
+                .isEqualTo(SystemBarInsets(left = 1, right = 2, bottom = 3))
+            verify(exactly = 0) { wi.systemWindowInsets }
+            verify(exactly = 0) { wi.getInsets(any<Int>()) }
+        }
+    }
+
+    // =========================================================================
+    // refreshSystemBarInsets — configuration/nav-mode change re-derivation (#167 residual)
+    // =========================================================================
+    //
+    // The staleness half of #167: Keyboard2View cached _insets_bottom with only
+    // `== 0`-guarded recoveries and never re-requested on a configuration change, so a
+    // navigation-mode switch (3-button ~48dp bar → gesture pill) while the IME window
+    // survived could serve the stale bottom inset — last row melded into / floating above
+    // the nav bar — until full window recreation. Contract pinned here: a configuration
+    // change RE-DERIVES from the live root window (the helper takes no cached value at
+    // all, so a stale cache structurally cannot be served) and ALWAYS requests a fresh
+    // framework dispatch as the authoritative follow-up.
+
+    @Test
+    fun configChangeRefresh_reDerivesFromTheLiveRootWindow_andRequestsAFreshDispatch() {
+        stubInsetTypeMasks()
+        setSdkInt(35) // the reporter's device class: Android 15, gesture nav
+        val wi = mockk<WindowInsets>(relaxed = true)
+        // Post-switch gesture pill: far smaller than any stale 3-button value.
+        every { wi.getInsets(0b101) } returns insetsOf(left = 0, top = 0, right = 0, bottom = 24)
+        val view = mockk<View>(relaxed = true)
+        every { view.rootWindowInsets } returns wi
+
+        val fresh = WindowLayoutUtils.refreshSystemBarInsets(view)
+
+        assertThat(fresh).isEqualTo(SystemBarInsets(left = 0, right = 0, bottom = 24))
+        verify(exactly = 1) { view.requestApplyInsets() }
+    }
+
+    @Test
+    fun configChangeRefresh_withNoRootInsetsYet_reportsNothingButStillRequestsADispatch() {
+        setSdkInt(Build.VERSION_CODES.R)
+        val view = mockk<View>(relaxed = true)
+        every { view.rootWindowInsets } returns null
+
+        assertThat(WindowLayoutUtils.refreshSystemBarInsets(view)).isNull()
+        // The dispatch request is the whole point when nothing can be read synchronously:
+        // onApplyWindowInsets is the authoritative corrector.
+        verify(exactly = 1) { view.requestApplyInsets() }
+    }
+
+    @Test
+    fun configChangeRefresh_below23_skipsRootWindowInsetsButStillRequestsADispatch() {
+        // View.getRootWindowInsets is API 23+; requestApplyInsets (API 20) still works.
+        for (sdk in listOf(21, 22)) {
+            setSdkInt(sdk)
+            val view = mockk<View>(relaxed = true)
+            assertThat(WindowLayoutUtils.refreshSystemBarInsets(view)).isNull()
+            verify(exactly = 0) { view.rootWindowInsets }
+            verify(exactly = 1) { view.requestApplyInsets() }
+        }
+    }
+
+    // =========================================================================
+    // Helper: build android.graphics.Insets with real field values
+    // =========================================================================
+
+    /**
+     * `Insets.of()` is a stub (`throw new RuntimeException("Stub!")`) and its fields are
+     * public final ints — unstubable through MockK. Same route as [setSdkInt]:
+     * `Unsafe.allocateInstance` skips the stub constructor, `putInt` writes the finals,
+     * and the trailing assert proves the writes landed.
+     */
+    private fun insetsOf(left: Int, top: Int, right: Int, bottom: Int): android.graphics.Insets {
+        val unsafeField = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe")
+        unsafeField.isAccessible = true
+        val unsafe = unsafeField.get(null)
+        val unsafeClass = unsafe.javaClass
+        val insetsClass = android.graphics.Insets::class.java
+        val insets = unsafeClass.getMethod("allocateInstance", Class::class.java)
+            .invoke(unsafe, insetsClass) as android.graphics.Insets
+        val objectFieldOffset =
+            unsafeClass.getMethod("objectFieldOffset", java.lang.reflect.Field::class.java)
+        val putInt = unsafeClass.getMethod(
+            "putInt",
+            Object::class.java,
+            Long::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType
+        )
+        for ((name, value) in listOf("left" to left, "top" to top, "right" to right, "bottom" to bottom)) {
+            val offset = objectFieldOffset.invoke(unsafe, insetsClass.getField(name)) as Long
+            putInt.invoke(unsafe, insets, offset, value)
+        }
+        assertThat(insets.left).isEqualTo(left)
+        assertThat(insets.bottom).isEqualTo(bottom)
+        return insets
     }
 
     // =========================================================================

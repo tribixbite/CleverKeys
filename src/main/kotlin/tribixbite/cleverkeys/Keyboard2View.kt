@@ -234,6 +234,43 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
+     * #167 residual (the staleness half): a navigation-mode switch (3-button bar →
+     * gesture pill) or rotation changes the system-bar insets while this view stays
+     * attached — the IME window survives hide/show. The cached `_insets_bottom` had only
+     * `== 0`-guarded recoveries (onAttachedToWindow, onMeasure), so a stale NONZERO value
+     * was never corrected: the last key row stayed melded into, or floating above, the
+     * nav bar until full window recreation (the reporter's back-gesture "fix").
+     *
+     * View.onConfigurationChanged is the platform hook that fires on exactly those
+     * transitions (a nav-mode switch is an RRO overlay change → configuration change
+     * dispatched down the attached view tree). Re-derive synchronously from the live root
+     * window so the very next measure uses fresh values, and request a fresh dispatch —
+     * onApplyWindowInsets remains the authoritative corrector if rootWindowInsets lags.
+     */
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        WindowLayoutUtils.refreshSystemBarInsets(this)?.let { applySystemBarInsets(it) }
+    }
+
+    /**
+     * Applies freshly derived system-bar insets to the cached fields; requests a
+     * re-layout only when a value actually changed (Window.requestLayout on every
+     * dispatch would thrash — the framework re-dispatches identical insets often).
+     * CRITICAL: without the requestLayout on change, the keyboard may appear below
+     * the nav bar on first load.
+     */
+    private fun applySystemBarInsets(insets: SystemBarInsets) {
+        if (insets.left == _insets_left &&
+            insets.right == _insets_right &&
+            insets.bottom == _insets_bottom
+        ) return
+        _insets_left = insets.left
+        _insets_right = insets.right
+        _insets_bottom = insets.bottom
+        requestLayout()
+    }
+
+    /**
      * Get navigation bar height from system resources.
      * Fallback for when WindowInsets aren't available yet.
      */
@@ -1385,30 +1422,18 @@ class Keyboard2View @JvmOverloads constructor(
             width = (_keyWidth * keyboard.keysWidth + _marginLeft + _marginRight).toInt()
         }
 
-        // FIX: If insets haven't been applied yet, try to get them from root window
-        // This fixes keyboard appearing behind nav bar on very first load
+        // FIX: If insets haven't been applied yet, try to get them from root window.
+        // This fixes keyboard appearing behind nav bar on very first load. Same ladder
+        // as onApplyWindowInsets (WindowLayoutUtils.readSystemBarInsets) — the two used
+        // to disagree on API 30+ (systemBars-only here vs systemBars|displayCutout there),
+        // so the recovered value could jump when the real dispatch landed (#167 residual).
+        // No requestLayout here: we are inside onMeasure and consume the values below.
         if (_insets_bottom == 0 && android.os.Build.VERSION.SDK_INT >= 23) {
             rootWindowInsets?.let { wi ->
-                if (android.os.Build.VERSION.SDK_INT >= 30) {
-                    val insets = wi.getInsets(android.view.WindowInsets.Type.systemBars())
-                    _insets_bottom = insets.bottom
-                    _insets_left = insets.left
-                    _insets_right = insets.right
-                } else if (android.os.Build.VERSION.SDK_INT >= 29) {
-                    @Suppress("DEPRECATION")
-                    val insets = wi.systemWindowInsets
-                    _insets_bottom = insets.bottom
-                    _insets_left = insets.left
-                    _insets_right = insets.right
-                } else {
-                    // API 23-28: Use individual deprecated methods
-                    @Suppress("DEPRECATION")
-                    _insets_bottom = wi.systemWindowInsetBottom
-                    @Suppress("DEPRECATION")
-                    _insets_left = wi.systemWindowInsetLeft
-                    @Suppress("DEPRECATION")
-                    _insets_right = wi.systemWindowInsetRight
-                }
+                val insets = WindowLayoutUtils.readSystemBarInsets(wi)
+                _insets_bottom = insets.bottom
+                _insets_left = insets.left
+                _insets_right = insets.right
             }
         }
 
@@ -1480,42 +1505,10 @@ class Keyboard2View @JvmOverloads constructor(
     override fun onApplyWindowInsets(wi: WindowInsets?): WindowInsets? {
         if (wi == null) return wi
 
-        val prevBottom = _insets_bottom
-        val prevLeft = _insets_left
-        val prevRight = _insets_right
-
-        // API 30+: Use modern WindowInsets.Type API
-        if (VERSION.SDK_INT >= 30) {
-            val insets_types = WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
-            val insets = wi.getInsets(insets_types)
-            _insets_left = insets.left
-            _insets_right = insets.right
-            _insets_bottom = insets.bottom
-        }
-        // API 29: Use deprecated systemWindowInsets property (returns Insets)
-        else if (VERSION.SDK_INT >= 29) {
-            @Suppress("DEPRECATION")
-            val insets = wi.systemWindowInsets
-            _insets_left = insets.left
-            _insets_right = insets.right
-            _insets_bottom = insets.bottom
-        }
-        // API 21-28: Use individual deprecated methods (getSystemWindowInsets() not available).
-        // minSdk 21 guarantees we're at API 21-28 here, so no explicit lower guard is needed.
-        else {
-            @Suppress("DEPRECATION")
-            _insets_left = wi.systemWindowInsetLeft
-            @Suppress("DEPRECATION")
-            _insets_right = wi.systemWindowInsetRight
-            @Suppress("DEPRECATION")
-            _insets_bottom = wi.systemWindowInsetBottom
-        }
-
-        // CRITICAL: If insets changed, request re-layout to recalculate keyboard position
-        // Without this, keyboard may appear below nav bar on first load
-        if (_insets_bottom != prevBottom || _insets_left != prevLeft || _insets_right != prevRight) {
-            requestLayout()
-        }
+        // #167 residual: the API ladder lives in WindowLayoutUtils.readSystemBarInsets —
+        // ONE ladder shared with the onMeasure recovery and the onConfigurationChanged
+        // re-derivation, so every path derives the same value for the same WindowInsets.
+        applySystemBarInsets(WindowLayoutUtils.readSystemBarInsets(wi))
 
         // Consume the insets so child views don't re-apply them.
         // WindowInsets.CONSUMED is API 30; consumeSystemWindowInsets() is the API 21-29

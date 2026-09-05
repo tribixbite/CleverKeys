@@ -5,6 +5,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -37,6 +38,13 @@ import android.graphics.Color
  *
  * @since v1.32.375
  */
+
+/**
+ * One system-bar inset read. Left/right/bottom only — the IME window never fits the top
+ * (status-bar) inset, so it is deliberately absent rather than carried and ignored.
+ */
+data class SystemBarInsets(val left: Int, val right: Int, val bottom: Int)
+
 object WindowLayoutUtils {
 
     /**
@@ -145,6 +153,66 @@ object WindowLayoutUtils {
         // Clear any background on the decor view and window that might cause white bar
         window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         window.decorView.setBackgroundColor(Color.TRANSPARENT)
+    }
+
+    /**
+     * The ONE API ladder for reading system-bar insets out of a [WindowInsets] (#167
+     * residual). Keyboard2View previously kept two hand-rolled copies that disagreed on
+     * API 30+ — its onApplyWindowInsets read `systemBars() | displayCutout()` while its
+     * onMeasure recovery read `systemBars()` only, so a recovered value could differ from
+     * the value the real dispatch later served. Both sites now delegate here.
+     *
+     * - API 30+: `getInsets(systemBars | displayCutout)` — the cutout term matters because
+     *   the window opts into `LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS` on 35+ (see
+     *   [configureEdgeToEdge]) and must keep keys out of the notch in landscape.
+     * - API 29: `systemWindowInsets` (deprecated but the only aggregate on Q).
+     * - API 21-28: the per-side deprecated getters (`getSystemWindowInsets()` unavailable).
+     */
+    @JvmStatic
+    fun readSystemBarInsets(wi: WindowInsets): SystemBarInsets {
+        if (Build.VERSION.SDK_INT >= 30) {
+            val insets = wi.getInsets(
+                WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+            )
+            return SystemBarInsets(insets.left, insets.right, insets.bottom)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            @Suppress("DEPRECATION")
+            val insets = wi.systemWindowInsets
+            return SystemBarInsets(insets.left, insets.right, insets.bottom)
+        }
+        @Suppress("DEPRECATION")
+        return SystemBarInsets(
+            wi.systemWindowInsetLeft,
+            wi.systemWindowInsetRight,
+            wi.systemWindowInsetBottom
+        )
+    }
+
+    /**
+     * Configuration/navigation-mode change re-derivation (#167 residual — the staleness
+     * half). A nav-mode switch (3-button bar → gesture pill) or rotation can change the
+     * system-bar insets while the IME window survives; a cached inset with only
+     * `== 0`-guarded recoveries then serves the stale bottom value (last keyboard row
+     * melded into, or floating above, the nav bar) until full window recreation.
+     *
+     * This helper takes no cached value at all — it re-derives from the live root window
+     * so a stale cache structurally cannot be served — and ALWAYS follows up with
+     * [View.requestApplyInsets]: `rootWindowInsets` can itself lag mid-configuration-change,
+     * and the fresh dispatch through onApplyWindowInsets is the authoritative corrector.
+     *
+     * @return the synchronously re-derived insets, or null when none are readable yet
+     *         (detached root / pre-API-23) — the requested dispatch covers that case.
+     */
+    @JvmStatic
+    fun refreshSystemBarInsets(view: View): SystemBarInsets? {
+        val fresh = if (Build.VERSION.SDK_INT >= 23) {
+            view.rootWindowInsets?.let { readSystemBarInsets(it) }
+        } else {
+            null
+        }
+        view.requestApplyInsets()
+        return fresh
     }
 
     /**
