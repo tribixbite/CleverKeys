@@ -72,7 +72,11 @@ class ContractionUserWordGuardTest {
             savedPrefs[firstArg()] = secondArg()
             editor
         }
-        every { prefs.getString(any(), any()) } returns null
+        // Read-your-writes: C-4 made every membership mutation merge against a FRESH
+        // pref read, so the store must serve back what production wrote to it.
+        every { prefs.getString(any(), any()) } answers {
+            savedPrefs[firstArg()] ?: secondArg()
+        }
     }
 
     @After
@@ -219,8 +223,10 @@ class ContractionUserWordGuardTest {
      */
     @Test
     fun storedUserWordsStayCaseSensitive() {
+        // NOTE: the store is NOT cleared between the seed and the add — since C-4,
+        // membership is merged against the fresh pref read, so wiping the store here
+        // would (correctly) drop `foo` and turn this into a different test.
         val manager = dictionaryManager(stored = setOf("foo"))
-        savedPrefs.clear()
         manager.addUserWord("Foo")
 
         assertWithMessage("`foo` and `Foo` are TWO entries — adding one must not dedup the other")

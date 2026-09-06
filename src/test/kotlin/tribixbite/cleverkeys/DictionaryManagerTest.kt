@@ -59,7 +59,11 @@ class DictionaryManagerTest {
         mockkStatic(Locale::class)
         every { Locale.getDefault() } returns Locale.ENGLISH
 
-        // Create mock SharedPreferences + Editor (DirectBootAware prefs)
+        // Create mock SharedPreferences + Editor (DirectBootAware prefs).
+        // The store is READ-YOUR-WRITES: getString serves whatever putString last saved
+        // (via [savedStrings]). C-4 made membership merge against a FRESH pref read on
+        // every mutation, so a store whose reads ignore writes would misrepresent the
+        // production contract — and is exactly how the stale-membership stomp hid.
         mockPrefs = mockk(relaxed = true)
         mockEditor = mockk(relaxed = true)
         every { mockPrefs.edit() } returns mockEditor
@@ -68,6 +72,9 @@ class DictionaryManagerTest {
             mockEditor
         }
         every { mockEditor.remove(any()) } returns mockEditor
+        every { mockPrefs.getString(any(), any()) } answers {
+            savedStrings[firstArg()] ?: secondArg()
+        }
 
         // Create mock legacy prefs + editor
         mockLegacyPrefs = mockk(relaxed = true)
@@ -98,7 +105,9 @@ class DictionaryManagerTest {
         language: String = "en",
         existingWords: String? = null
     ): DictionaryManager {
-        every { mockPrefs.getString("custom_words_$language", null) } returns existingWords
+        // Seed the read-your-writes store rather than stubbing getString directly, so
+        // subsequent production writes to the same key stay visible to production reads.
+        if (existingWords != null) savedStrings["custom_words_$language"] = existingWords
 
         // Create instance via Objenesis (no constructor called)
         val objenesis = org.objenesis.ObjenesisStd()
@@ -133,13 +142,6 @@ class DictionaryManagerTest {
     /** Invoke private loadUserWords() via reflection */
     private fun invokeLoadUserWords(manager: DictionaryManager) {
         val method = DictionaryManager::class.java.getDeclaredMethod("loadUserWords")
-        method.isAccessible = true
-        method.invoke(manager)
-    }
-
-    /** Invoke private saveUserWords() via reflection */
-    private fun invokeSaveUserWords(manager: DictionaryManager) {
-        val method = DictionaryManager::class.java.getDeclaredMethod("saveUserWords")
         method.isAccessible = true
         method.invoke(manager)
     }
@@ -257,6 +259,77 @@ class DictionaryManagerTest {
 
         manager.removeUserWord("remove_me")
         assertThat(manager.isUserWord("remove_me")).isFalse()
+    }
+
+    // =========================================================================
+    // C-4 (2026-09-06 audit): cross-writer stomp. `custom_words_<lang>` has THREE
+    // writers — this class (IME add paths), CustomDictionarySource (the Dictionary
+    // Manager UI's Custom-Words tab), and backup import. Every whole-store rewrite
+    // here must merge membership against a FRESH pref read, or another writer's
+    // words are silently destroyed / resurrected by the next IME-side mutation.
+    // =========================================================================
+
+    /** The store as production reads it back — parsed from the last JSON write. */
+    private fun storedWords(key: String = "custom_words_en"): Map<String, Int> {
+        val json = savedStrings[key] ?: return emptyMap()
+        val type = object : com.google.gson.reflect.TypeToken<Map<String, Int>>() {}.type
+        return Gson().fromJson(json, type)
+    }
+
+    @Test
+    fun `addUserWord preserves a word another writer added since load`() {
+        // IME comes up with an empty custom dictionary...
+        val manager = buildManager()
+
+        // ...then the user adds a word in the Dictionary Manager UI, which writes through
+        // CustomDictionarySource — a DIFFERENT writer this instance never observes.
+        kotlinx.coroutines.runBlocking {
+            CustomDictionarySource(mockPrefs, "en").addWord("flurble", 255)
+        }
+        assertThat(storedWords()).containsEntry("flurble", 255)
+
+        // The next IME-side add ("Add to dictionary?" prompt) must not stomp it.
+        manager.addUserWord("zeb")
+
+        val stored = storedWords()
+        assertThat(stored).containsEntry("flurble", 255)
+        assertThat(stored).containsEntry("zeb", 255)
+        // And the in-RAM membership adopts the foreign add, so the contraction
+        // guard (isUserWordIgnoringCase) protects it without a language switch.
+        assertThat(manager.isUserWord("flurble")).isTrue()
+    }
+
+    @Test
+    fun `addUserWord does not resurrect a word another writer deleted`() {
+        val manager = buildManager(existingWords = """{"flurble":255}""")
+        assertThat(manager.isUserWord("flurble")).isTrue()
+
+        // Deleted in the Dictionary Manager UI while this instance still holds it in RAM.
+        kotlinx.coroutines.runBlocking {
+            CustomDictionarySource(mockPrefs, "en").deleteWord("flurble")
+        }
+        assertThat(storedWords()).doesNotContainKey("flurble")
+
+        manager.addUserWord("zeb")
+
+        val stored = storedWords()
+        assertThat(stored).containsEntry("zeb", 255)
+        assertThat(stored).doesNotContainKey("flurble")
+        assertThat(manager.isUserWord("flurble")).isFalse()
+    }
+
+    @Test
+    fun `removeUserWord removes only its word and preserves foreign adds`() {
+        val manager = buildManager(existingWords = """{"mine":40}""")
+        kotlinx.coroutines.runBlocking {
+            CustomDictionarySource(mockPrefs, "en").addWord("theirs", 200)
+        }
+
+        manager.removeUserWord("mine")
+
+        val stored = storedWords()
+        assertThat(stored).doesNotContainKey("mine")
+        assertThat(stored).containsEntry("theirs", 200)
     }
 
     // =========================================================================

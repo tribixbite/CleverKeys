@@ -172,8 +172,7 @@ class DictionaryManager(private val context: Context) {
     fun addUserWord(word: String?) {
         if (word.isNullOrEmpty()) return
 
-        mutateUserWords { add(word) }
-        saveUserWords()
+        persistUserWords(added = setOf(word))
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added '$word' to custom words for '$currentLanguage'")
     }
 
@@ -181,8 +180,7 @@ class DictionaryManager(private val context: Context) {
      * Remove a word from the user dictionary
      */
     fun removeUserWord(word: String) {
-        mutateUserWords { remove(word) }
-        saveUserWords()
+        persistUserWords(removed = setOf(word))
     }
 
     /**
@@ -221,11 +219,13 @@ class DictionaryManager(private val context: Context) {
         word.lowercase(Locale.ROOT) in foldedUserWords()
 
     /**
-     * Clear the user dictionary
+     * Clear the user dictionary — the whole store, including entries other writers
+     * added since our last load. "Clear" is the one mutation whose scope is
+     * legitimately everything, so it bypasses the fresh-read merge by declaring the
+     * stored map empty.
      */
     fun clearUserDictionary() {
-        mutateUserWords { clear() }
-        saveUserWords()
+        persistUserWords(clearStored = true)
     }
 
     /**
@@ -260,46 +260,68 @@ class DictionaryManager(private val context: Context) {
      * Load user words from preferences (JSON format matching CustomDictionarySource)
      */
     private fun loadUserWords() {
-        val key = getCustomWordsKey()
-        val jsonString = prefs.getString(key, null)
+        val stored = readStoredWordMap(getCustomWordsKey())
 
         // Clear + repopulate is ONE mutation as far as the folded view is concerned: it is
         // invalidated once, at the end, so a language switch cannot leave the previous
         // language's words visible to the contraction guard.
         mutateUserWords {
             clear()
-            if (jsonString != null) {
-                try {
-                    val type = object : TypeToken<MutableMap<String, Int>>() {}.type
-                    val wordsMap: MutableMap<String, Int>? = gson.fromJson(jsonString, type)
-                    wordsMap?.keys?.let { addAll(it) }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to parse custom words JSON", e)
-                }
-            }
+            addAll(stored.keys)
         }
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Loaded ${userWords.size} custom words for '$currentLanguage'")
     }
 
+    /** The stored word→frequency map for [key], freshly read; empty on absence or parse failure. */
+    private fun readStoredWordMap(key: String): Map<String, Int> {
+        val jsonString = prefs.getString(key, null) ?: return emptyMap()
+        return try {
+            val type = object : TypeToken<MutableMap<String, Int>>() {}.type
+            gson.fromJson<MutableMap<String, Int>>(jsonString, type) ?: emptyMap()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse custom words JSON", e)
+            emptyMap()
+        }
+    }
+
     /**
-     * Save user words to preferences (JSON format matching CustomDictionarySource).
+     * The ONE write path to `custom_words_<lang>`: apply this mutation's delta on top of a
+     * FRESH read of the store, adopt the result in RAM, persist it.
      *
-     * Wave U2: frequencies already stored for these words are PRESERVED — the old
-     * `associateWith { 100 }` rewrote every word's frequency to 100 on any add/remove
-     * through this class, silently destroying values the user set in the Dictionary
-     * Manager dialogs. Only words new to the map get [UserWordFrequency.DEFAULT].
+     * C-4 (2026-09-06 audit, P1): the store has other writers — `CustomDictionarySource`
+     * (Dictionary Manager UI) and backup import — and the old `saveUserWords` rewrote the
+     * whole pref from the in-RAM [userWords] set, which is loaded only at construction and
+     * on language change. Any word another writer added since then was silently DELETED by
+     * the next IME-side add, and any word they deleted was resurrected. Membership is
+     * therefore rebuilt as `freshStoredKeys + added − removed`: stale RAM never
+     * contributes, so both stomp directions are closed. [userWords] is then synced to the
+     * merged result (through [mutateUserWords], so the contraction guard's folded view
+     * follows), which also lets `isUserWordIgnoringCase` see foreign adds at the next
+     * mutation instead of the next language switch.
+     *
+     * Wave U2 (preserved here): frequencies already stored are KEPT — only words new to
+     * the store get [UserWordFrequency.DEFAULT]. Removal is exact-case, matching the
+     * set's case-sensitive membership contract (see [foldedUserWordsCache] KDoc).
+     *
+     * @param clearStored treat the store as empty regardless of its contents — the
+     *   "clear everything" semantics of [clearUserDictionary], the one whole-store scope.
      */
-    private fun saveUserWords() {
+    private fun persistUserWords(
+        added: Set<String> = emptySet(),
+        removed: Set<String> = emptySet(),
+        clearStored: Boolean = false,
+    ) {
         val key = getCustomWordsKey()
-        val stored: Map<String, Int> = prefs.getString(key, null)?.let { json ->
-            try {
-                val type = object : TypeToken<MutableMap<String, Int>>() {}.type
-                gson.fromJson<MutableMap<String, Int>>(json, type) ?: mutableMapOf()
-            } catch (e: Exception) {
-                mutableMapOf()
-            }
-        } ?: mutableMapOf()
-        val wordsMap = userWords.associateWith { stored[it] ?: UserWordFrequency.DEFAULT }
+        val stored: Map<String, Int> = if (clearStored) emptyMap() else readStoredWordMap(key)
+        val merged = LinkedHashSet(stored.keys).apply {
+            addAll(added)
+            removeAll(removed)
+        }
+        mutateUserWords {
+            clear()
+            addAll(merged)
+        }
+        val wordsMap = merged.associateWith { stored[it] ?: UserWordFrequency.DEFAULT }
         prefs.edit()
             .putString(key, gson.toJson(wordsMap))
             .apply()
