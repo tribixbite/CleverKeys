@@ -224,6 +224,11 @@ class KeyEventReceiverBridge(
         contextTracker?.markAutoSpacePending(expectedCursorPosition)
     }
 
+    // #151 TSR: owed-trailing-space consult-and-clear (dropped-space repair)
+    override fun takeOwedTrailingSpace(): String? {
+        return contextTracker?.takeOwedTrailingSpace()
+    }
+
     companion object {
         /**
          * Create a KeyEventReceiverBridge.

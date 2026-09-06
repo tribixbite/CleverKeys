@@ -48,11 +48,10 @@ import org.objenesis.ObjenesisStd
  * in the wave log; both green at HEAD.
  *
  * Residual (NOT covered here): the reporter's 2026-08-23 follow-up — some of these editors
- * drop the TRAILING space of the commit ("hello " lands as "hello"). That is app-side
- * mangling of the committed string; a keystroke-time repair needs new pending-space state
- * (PredictionContextTracker.onCursorPositionChanged invalidates the existing SAS-1 state at
- * exactly stamp-1, where a dropped space lands) plus on-device confirmation, and is left as
- * documented follow-up.
+ * drop the TRAILING space of the commit ("hello " lands as "hello"). Fixed 2026-09-05 by
+ * the trailing-space watch (new PredictionContextTracker state armed at commit time,
+ * resolved on the stamp−1 cursor signature, repaired on the next alphanumeric keystroke);
+ * covered by [SuggestionTrailingSpaceRepairTest].
  */
 class SuggestionTapPartialReplaceTest {
 

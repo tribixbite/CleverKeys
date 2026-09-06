@@ -1487,10 +1487,21 @@ class SuggestionHandler(
                     contextTracker.markAutoSpacePending(
                         if (preCommitCursorPos >= 0) preCommitCursorPos + textToInsert.length else -1
                     )
+                    // #151 TSR: some composing-less editors (URL bars, GPTAssist-class
+                    // fields) drop the trailing space of this commit app-side. Arm the
+                    // trailing-space watch: the next cursor callback landing at stamp−1
+                    // is the dropped-space signature, and the next alphanumeric
+                    // keystroke then owes a leading space (KeyEventHandler.sendText).
+                    contextTracker.markTrailingSpaceWatch(
+                        if (preCommitCursorPos >= 0) preCommitCursorPos + textToInsert.length else -1,
+                        textToInsert.dropLast(1)
+                    )
                 } else {
                     // SAS-1: a re-commit without a fresh trailing space makes any
                     // previously pending auto-space stale — invalidate it
                     contextTracker.invalidateAutoSpacePending()
+                    // #151 TSR: same staleness rule for the trailing-space watch
+                    contextTracker.clearTrailingSpaceWatch()
                 }
 
                 // Track that this commit was from candidate selection (manual tap)

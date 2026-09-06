@@ -350,6 +350,13 @@ class KeyEventHandler(
 
         val conn = recv.getCurrentInputConnection() ?: return
 
+        // #151 TSR: consult-and-clear the owed-trailing-space state on EVERY keystroke.
+        // Non-null means a composing-less editor dropped the trailing space of the last
+        // suggestion commit (dropped-space cursor signature, see
+        // PredictionContextTracker.markTrailingSpaceWatch) — only an alphanumeric
+        // single char earns the repair (below); any other keystroke just cleared it.
+        val owedTrailingSpaceWord = recv.takeOwedTrailingSpace()
+
         // Double-space-to-period: If typing space after space within threshold, replace with ". "
         // Skip if: feature disabled, key repeat (long press), or previous char wasn't alphanumeric
         val currentTime = System.currentTimeMillis()
@@ -436,7 +443,32 @@ class KeyEventHandler(
         val preCommitPos =
             if (reMarkAutoSpaceAfterCommit) PredictionContextTracker.currentCursorPosition(conn)
             else -1
-        conn.commitText(textToCommit, 1)
+
+        // #151 TSR: repair the editor-dropped trailing space. Verify at use — the text
+        // before the cursor must still read exactly the committed word (no space after
+        // it, cursor still there); then the owed space rides in the SAME commit as the
+        // char ("<space><char>") because a separate " " commit ends in a space and
+        // would be mangled by the very editors this repairs. The typed-word tracking
+        // below (autocap/handle_text_typed) still sees the bare char — the space is an
+        // editor-text repair, not a typed character (the word context was already
+        // committed at suggestion time).
+        val repairOwedSpace = owedTrailingSpaceWord != null &&
+            text.length == 1 && text[0].isLetterOrDigit() &&
+            conn.getTextBeforeCursor(owedTrailingSpaceWord.length, 0)?.toString() ==
+            owedTrailingSpaceWord
+        if (owedTrailingSpaceWord != null && BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(
+                TAG,
+                if (repairOwedSpace) {
+                    "TSR: inserting owed trailing space before keystroke (verified at use)"
+                } else {
+                    "TSR: owed space taken but NOT inserted (alnum=" +
+                        "${text.length == 1 && text[0].isLetterOrDigit()}, verify failed?)"
+                }
+            )
+        }
+
+        conn.commitText(if (repairOwedSpace) " $textToCommit" else textToCommit, 1)
         if (reMarkAutoSpaceAfterCommit) {
             // SAS-1: fixes the v1.2.7 clobber where the chain flag was set BEFORE the
             // unconditional clear above and thus never survived — mark AFTER commit.
@@ -1024,6 +1056,11 @@ class KeyEventHandler(
         // PredictionContextTracker.markAutoSpacePending / SmartAutoSpace)
         fun getAutoSpaceStampedPosition(): Int = -1
         fun markAutoSpacePending(expectedCursorPosition: Int) {}
+        // #151 TSR: consult-and-clear the owed-trailing-space state (see
+        // PredictionContextTracker.takeOwedTrailingSpace) — non-null means a
+        // composing-less editor dropped the trailing space of the last suggestion
+        // commit and the next alphanumeric keystroke owes a leading space.
+        fun takeOwedTrailingSpace(): String? = null
         // #110: Backspace undo swipe — check if last input was a swipe and get the word
         fun wasLastInputSwipe(): Boolean = false
         fun getLastAutoInsertedWord(): String? = null

@@ -35,6 +35,11 @@ class PredictionContextTracker {
         // Maximum chars to read from InputConnection for word detection
         private const val MAX_TEXT_READ = 50
 
+        // #151 TSR: how many unmatched cursor callbacks a trailing-space watch survives
+        // before it expires. 1 stale deletion callback was observed on-device (Chrome
+        // omnibox); 3 leaves headroom without letting a cursor jump keep it alive long.
+        private const val TRAILING_SPACE_WATCH_BUDGET = 3
+
         // CJK Unicode blocks that don't use space-based word boundaries.
         // Character.UnicodeScript (HAN/HIRAGANA/…) requires API 24; Character.UnicodeBlock
         // is available on all supported APIs (21+) and covers the same scripts, so we key
@@ -176,6 +181,140 @@ class PredictionContextTracker {
             newPosition != autoSpaceStampedPosition
         ) {
             invalidateAutoSpacePending()
+        }
+        // #151 TSR: independent of SAS-1 — the dropped-space callback (stamp−1) that
+        // invalidates the auto-space above is exactly the signature that ARMS the
+        // trailing-space repair.
+        resolveTrailingSpaceWatch(newPosition)
+    }
+
+    // ==================== #151 TSR: trailing-space repair state ====================
+    // Some composing-less editors (URL bars, GPTAssist-class fields) drop the TRAILING
+    // space of a committed "word " app-side. The SAS-1 state can't drive a repair:
+    // the post-commit selection callback reports exactly stamp−1 there, which
+    // onCursorPositionChanged (correctly) treats as invalidation. So the repair gets
+    // its own three-phase state: ARM at suggestion-commit time (watch stamp + the
+    // committed text minus its trailing space), RESOLVE on the next cursor callback
+    // (stamp → editor kept the space, clear; stamp−1 → dropped-space signature, a
+    // space is OWED; anything else → clear), CONSUME on the next keystroke
+    // (takeOwedTrailingSpace — KeyEventHandler inserts the owed space before an
+    // alphanumeric char after re-verifying the editor text; any keystroke clears).
+
+    /** #151 TSR: expected post-commit cursor position while awaiting resolution; -1 = not watching. */
+    private var trailingSpaceWatchStamp: Int = -1
+
+    /** #151 TSR: the committed text minus its trailing space (verify-at-use key). */
+    private var trailingSpaceWatchText: String = ""
+
+    /** #151 TSR: cursor position where the dropped space is owed (stamp−1); -1 = nothing owed. */
+    private var owedSpacePosition: Int = -1
+
+    /**
+     * #151 TSR: unmatched-callback budget while watching. Editors deliver STALE
+     * selection callbacks for edits issued before the commit (device-observed: Chrome's
+     * omnibox reports the partial-word deletion's pos AFTER the commit, before the
+     * dropped-space callback) — the watch must survive a few strangers, but a genuine
+     * cursor jump's stream of unrelated positions must still kill it.
+     */
+    private var trailingSpaceWatchBudget: Int = 0
+
+    /**
+     * #151 TSR phase 1 (ARM): a suggestion commit whose text ended in a space just
+     * happened. Watch the next cursor callback for the dropped-space signature.
+     *
+     * @param expectedCursorPosition pre-commit cursor position + committed length, or
+     *   -1 when the editor has no ExtractedText support — then the signature cannot be
+     *   discriminated from a cursor move and the watch is NOT armed (documented
+     *   degradation: no repair, but never a spurious space).
+     * @param committedTextWithoutSpace the committed text minus the trailing space
+     *   (may include a leading auto-space) — re-verified against the editor at use.
+     */
+    fun markTrailingSpaceWatch(expectedCursorPosition: Int, committedTextWithoutSpace: String) {
+        if (expectedCursorPosition < 1 || committedTextWithoutSpace.isEmpty()) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                android.util.Log.d(
+                    TAG,
+                    "TSR: watch NOT armed (stamp=$expectedCursorPosition, " +
+                        "wordLen=${committedTextWithoutSpace.length})"
+                )
+            }
+            clearTrailingSpaceWatch()
+            return
+        }
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            android.util.Log.d(
+                TAG,
+                "TSR: watch armed (stamp=$expectedCursorPosition, " +
+                    "wordLen=${committedTextWithoutSpace.length})"
+            )
+        }
+        trailingSpaceWatchStamp = expectedCursorPosition
+        trailingSpaceWatchText = committedTextWithoutSpace
+        owedSpacePosition = -1
+        trailingSpaceWatchBudget = TRAILING_SPACE_WATCH_BUDGET
+    }
+
+    /** #151 TSR: drop both the pending watch and any owed space. */
+    fun clearTrailingSpaceWatch() {
+        trailingSpaceWatchStamp = -1
+        trailingSpaceWatchText = ""
+        owedSpacePosition = -1
+        trailingSpaceWatchBudget = 0
+    }
+
+    /**
+     * #151 TSR phase 3 (CONSUME): called by KeyEventHandler on EVERY keystroke.
+     * Returns the committed text (minus its trailing space) when a dropped space is
+     * owed at the current position — the caller re-verifies it against the editor and
+     * prepends the owed space to an alphanumeric commit. ALWAYS clears the state:
+     * whatever the keystroke was, the repair window is one keystroke wide.
+     */
+    fun takeOwedTrailingSpace(): String? {
+        val owed = if (owedSpacePosition >= 0) trailingSpaceWatchText else null
+        clearTrailingSpaceWatch()
+        return owed
+    }
+
+    /**
+     * #151 TSR phase 2 (RESOLVE), fed by [onCursorPositionChanged]: discriminate the
+     * post-commit callback. Exactly the stamp → the editor kept the space; stamp−1 →
+     * the dropped-space signature (owed); anything else → a real cursor move, clear.
+     * Once owed, any callback away from the owed position clears (cursor jump /
+     * late-applied space — both must disarm so the repair can never double-space).
+     */
+    private fun resolveTrailingSpaceWatch(newPosition: Int) {
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING &&
+            (trailingSpaceWatchStamp >= 0 || owedSpacePosition >= 0)
+        ) {
+            android.util.Log.d(
+                TAG,
+                "TSR: resolve(pos=$newPosition) watchStamp=$trailingSpaceWatchStamp " +
+                    "owedPos=$owedSpacePosition"
+            )
+        }
+        if (trailingSpaceWatchStamp >= 0) {
+            when (newPosition) {
+                trailingSpaceWatchStamp -> clearTrailingSpaceWatch()
+                trailingSpaceWatchStamp - 1 -> {
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                        android.util.Log.d(
+                            TAG,
+                            "TSR: dropped-space signature (cursor $newPosition = stamp " +
+                                "${trailingSpaceWatchStamp}−1) — space owed at next keystroke"
+                        )
+                    }
+                    owedSpacePosition = newPosition
+                    trailingSpaceWatchStamp = -1
+                }
+                else -> {
+                    // Stale intermediate callback (pre-commit edits reported late) or a
+                    // genuine cursor jump — tolerate the former, expire on the latter.
+                    trailingSpaceWatchBudget--
+                    if (trailingSpaceWatchBudget <= 0) clearTrailingSpaceWatch()
+                }
+            }
+        } else if (owedSpacePosition >= 0 && newPosition != owedSpacePosition) {
+            clearTrailingSpaceWatch()
         }
     }
 
@@ -378,6 +517,8 @@ class PredictionContextTracker {
         expectingSelectionUpdate = false
         // SAS-1: field switch invalidates the pending auto-space swallow
         invalidateAutoSpacePending()
+        // #151 TSR: field switch also drops any trailing-space watch / owed space
+        clearTrailingSpaceWatch()
     }
 
     /**
