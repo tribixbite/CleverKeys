@@ -1310,8 +1310,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 textView.ellipsize = android.text.TextUtils.TruncateAt.END
             }
 
-            // Expand chevron shown for multi-line text — rotates as visual indicator
-            if (isMultiLine && !entry.isMedia) {
+            // Expand chevron shown for multi-line text AND media rows — rotates as visual
+            // indicator. Media rows keep delete/provenance/secondary actions behind
+            // expansion, so the chevron is the visible cue that the row expands at all.
+            if (isMultiLine || entry.isMedia) {
                 expandButton.visibility = VISIBLE
                 expandButton.rotation = if (isExpanded) 180f else 0f
             } else {
@@ -1326,6 +1328,21 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             // ── Secondary buttons: VISIBLE when expanded, GONE otherwise ──
             secondaryButtons.visibility = if (isExpanded && !isEditingThis) VISIBLE else GONE
+
+            // ── Media delete affordance (maintainer report 2026-09, no GH issue) ──
+            // Media rows cannot enter edit mode (edit_entry returns early for isMedia) —
+            // and edit mode was the ONLY surface exposing the delete row, leaving media
+            // entries undeletable from the UI. Deletion needs no edit precondition, so an
+            // expanded media row shows the delete row directly. delete_entry routes per-tab
+            // (history remove / unpin / un-todo) and the service deletes the on-disk media
+            // file iff no other tab's COPY still references it. Text rows keep the existing
+            // idiom: delete stays behind edit mode's deliberate friction.
+            if (entry.isMedia) {
+                deleteRow.visibility = if (isExpanded) VISIBLE else GONE
+                deleteButton.setOnClickListener {
+                    if (!isEditing()) delete_entry(pos)
+                }
+            }
 
             // ── #156 / ARC-011: provenance line, expanded rows only ──
             // The private-copy threat review (§6.2/§6.3/§6.6) accepted the content-injection
@@ -1390,6 +1407,13 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             // Expand chevron also toggles
             expandButton.setOnClickListener {
+                expandedStates[entry.timestamp] = !isExpanded
+                notifyDataSetChanged()
+            }
+
+            // The thumbnail is a media row's natural tap target — same toggle as the text.
+            // Harmless for text rows (the container is GONE and receives no taps).
+            thumbnailContainer.setOnClickListener {
                 expandedStates[entry.timestamp] = !isExpanded
                 notifyDataSetChanged()
             }

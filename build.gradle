@@ -955,6 +955,12 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.ClipboardCaptureExclusionTest',
     'tribixbite.cleverkeys.SuggestionTapAddAndIWordTest',
     'tribixbite.cleverkeys.clipboard.ClipboardTabsAndPaneCloseTest',
+    // Maintainer-reported (2026-09-06, no GH issue): media clipboard rows had no UI path to
+    // deletion (delete was edit-mode-only; media rows can't edit). Affordance test drives the
+    // real getView; cleanup test pins that the store deletes the on-disk media file iff no
+    // other tab's COPY still references it.
+    'tribixbite.cleverkeys.clipboard.ClipboardMediaDeleteAffordanceTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardMediaDeletionCleanupTest',
     // #130 residual (2026-09-05): setConfig drops the cached pane when the theme
     // signature changes (switch OR color edit), preserving close callback + tab choice.
     'tribixbite.cleverkeys.clipboard.ClipboardPaneThemeInvalidationTest',
