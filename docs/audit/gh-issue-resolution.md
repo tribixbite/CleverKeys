@@ -67,6 +67,94 @@ lexicon + model per guide §4) · #87 long→short swipe mapping · #84 smart-pu
 #80 clipboard suggestion strip · #69 two-finger swipes · #61 many-language switching
 (partially served by #160 fix + multi-language) · #52 MessagEase layout contribution.
 
+## Closed-issue audit (2026-09-06)
+
+Wave U1 swept the **90 closed issues** (full set — oldest is #2) for stale/auto-closures that
+buried real problems. Composition: 77 COMPLETED, 9 NOT_PLANNED (all stale-bot: 7-day
+auto-close after the 2026-08-23/07-26 stale sweeps, zero triage), 2 DUPLICATE, plus 2
+COMPLETED-with-stale-label. 27 closures were audited in depth: every NOT_PLANNED/DUPLICATE,
+plus every COMPLETED closure matching a defect class this campaign later proved real
+(theme #130, height #161, mapping #171/#145, commit #151, startup #179, IME toggle #134,
+GIF #152). Verdicts verified against HEAD `40b26dca`.
+
+Headline: **the stale bot closed two REAL, still-present bugs (#148, #149) and threw away
+the correct close reason on three issues that were actually FIXED (#141, #154, #146/#99)**
+— their fixes landed *before* the auto-close, but nobody linked the commit, so the bot
+recorded them as "not planned".
+
+| # | Title (short) | Closed as | Verdict | Evidence | Recommended action |
+|---|---|---|---|---|---|
+| 148 | Clipboard opens without keyboard body / stuck behind nav bar (predictions off) | NOT_PLANNED (stale) | **STILL PRESENT** | Maintainer acknowledged the bug on-thread 2026-06-10, then stale bot closed it. Root cause live at HEAD: `PredictionViewSetup.kt:75` gates ALL top-pane containers on `word_prediction_enabled \|\| swipe_typing_enabled`; with both off, `KeyboardReceiver.kt:295-298` falls back to `setInputView(clipboardPane)` — the whole keyboard is replaced by the bare pane (reporter's exact symptom), and the raw pane misses the `aafec4da` inset ladder (the behind-nav-buttons half). Same fallback for emoji (`:229-234`) and GIF (`:326-329`) | **REOPEN** (see reopen candidates) |
+| 149 | GIF zip pack inserts broken giphy link | NOT_PLANNED (stale) | **STILL PRESENT** | Reporter's dead URL has an all-lowercase ID — the smoking gun. Pipeline stores search_text fully lowercased incl. the trailing Giphy ID (`Gif.kt:82`); Giphy media IDs are case-sensitive, so `getGiphyUrl()` (`Gif.kt:85-97`) reconstructs a 404 URL, which the tap path commits as text (`KeyboardReceiver.kt:338-344`, long-press `:573`) | **REOPEN** (see reopen candidates) |
+| 141 | Timestamp keys unassignable via Short Swipe Customization | NOT_PLANNED (stale) | **FIXED before close** | `f3b02b3c` (2026-05-22, 3 days after filing): TIMESTAMP ActionType + pattern editor (`CommandPaletteDialog.kt:606` carries the `issue #141` marker; `XmlAttributeMapper.kt:52-56` maps to `timestamp:'pattern'`). Stale-closed 2026-08-09 because the commit was never linked | leave closed; comment citing `f3b02b3c` + correct the close reason on retest |
+| 154 | Vibration delay / no system-default haptics | NOT_PLANNED (stale) | **FIXED before close** | Diagnosed as a bug-forced `vibrate_custom=true` (master-toggle save wrote it); `ee7c4382` (2026-07-13) added the one-time migration clearing it (`Config.kt:395-411,1552-1580`); default path is low-latency `performHapticFeedback` (`VibratorCompat.kt:62-93`) = the "system default" the reporter asked for. Stale-closed 2026-08-30 | leave closed; comment citing `ee7c4382` + retest |
+| 146 | Can't install Dutch language pack / no download option | NOT_PLANNED (stale) | **RESOLVED at HEAD** | `langpack-nl.zip` is on the `langpacks` release; Languages screen links to that release (`MultiLanguageSection.kt:229`); docs rewritten in the round-3 pass (`99f5b70d`) | leave closed; courtesy comment pointing at langpack-nl.zip |
+| 99 | build_langpack.py docs unclear/outdated | NOT_PLANNED (stale) | **RESOLVED at HEAD** | README:353 now shows the full `--input` invocation; dedicated guide `docs/guides/adding-a-new-language.md` exists. (Hungarian itself still unshipped — that's a language ask, not this docs issue) | leave closed |
+| 158 | Arabizi (digits inside words) | NOT_PLANNED (stale) | genuinely not-planned feature | Needs lexicon+tokenizer work; adjacent to open #88 Arabic (blocked per CTC guide §4) | leave closed; fold reference into open #88 |
+| 89 | Google Play Store release | NOT_PLANNED (stale) | deliberate maintainer decision | Maintainer on-thread 2026-01-28: keeping CK low-profile until onboarding/docs mature | leave closed |
+| 67 | build_all_languages.py can't find get_wordlist.py | NOT_PLANNED (stale) | **FIXED at HEAD** | Was a cwd-relative invocation; now `SCRIPT_DIR = Path(__file__).parent.resolve()` anchors every helper (`scripts/build_all_languages.py:50,103-140`) with a clear missing-script error | leave closed |
+| 43 | Next word not predicted | DUPLICATE | correct dup of open #31 | Next-word shipped (`NextWordPredictor`, defaults OFF) — tracked in the open-features table | leave closed |
+| 32 | Cancel autocorrect on backspace | DUPLICATE | correct dup of #110 (COMPLETED) | — | leave closed |
+| 142 | One-click dated ZIP backup | COMPLETED (stale label) | fixed with evidence | Maintainer screenshot of the shipped feature; `backup/` subsystem at HEAD | leave closed |
+| 138 | "Customize per key action" unresponsive | COMPLETED (reporter self-closed) | fixed at HEAD — reporter's "workaround" WAS the #145 defect | Self-closed on "works once swipe typing is enabled" = the un-gated latch that ate gestures when swipe was off, proven + fixed v1.5.0 `5e7fdcb7`, cold-init pinned `47969359` | leave closed (covered by #145 row) |
+| 30 | Per-key keyboard-event actions do nothing | COMPLETED ("believe I addressed") | fixed at HEAD | Closed without commit evidence, but the mapping class was later re-proven and fixed: `47969359` (±1-bin fuzz resurrected defaults) + `c29a0d87` (#171 row) | leave closed |
+| 129 | Editing-key gestures don't work | COMPLETED | fixed at HEAD | Same #171/#145 mapping class; closure predates proof but HEAD carries the fixes | leave closed |
+| 78 | Suggestion doesn't replace typed text (flicker) | COMPLETED | premature close, since fixed | Closed 2026-05-04, but the real fix is the #151 work: `736e4eee` (2026-07-13) + T5 trailing-space repair `9c8f5827`, pinned `3f698714` | leave closed; ask reporter to retest with #151's build |
+| 118 | Emoji glyphs broken in search (high DPI / custom font) | COMPLETED | fixed at HEAD | Explicit fix `225eb725` (2026-04-27) "renders '…' instead of glyphs on high-DPI/custom-font devices"; live scaling in `emoji/EmojiGridView.kt:233-245`. Reporter's "still broken in 1.4.0" predates the fix; they said "I'll reopen if still broken" and never did | leave closed |
+| 114 | Custom theme background stays purple | COMPLETED | fixed, reporter-confirmed | "Solved with the last build" (reporter, 2026-03-14); residuals of the theme class later fixed in `a7940256` (#130 row) | leave closed |
+| 92 | Custom background color ignored | COMPLETED | fixed, maintainer-verified | "Works now in my testing" (2026-04-26); same theme class, residuals covered by #130 row | leave closed |
+| 51 | Background transparent (blur off) | COMPLETED | by-design, answered | 81% default opacity; opacity slider to 100% documented on-thread | leave closed |
+| 16 | Vertical height not applying | COMPLETED | fixed, reporter-confirmed | "Yes it is, thanks!" on v1.1.77; the LATER landscape-coupling stomp was a different defect, fixed `a9c22871` (#161 row) | leave closed |
+| 4 | Horizontal side margin not working | COMPLETED | fixed with evidence | Maintainer fixed the regression + added per-side control (screenshot on-thread) | leave closed |
+| 123 | Crash when launching keyboard | COMPLETED | obsolete (ADR-011) | Log shows `NeuralSwipeTypingEngine`/`PredictionCoordinator` init crash — that engine is deleted; startup class separately fixed `70284a2c` (#179 row) | leave closed |
+| 17 | Keyboard doesn't work (old devices) | COMPLETED | obsolete (ADR-011) | Neural-era init failure on 7-year-old hardware; reporter self-diagnosed "swipe typing doesn't work on my phone". CTC + geometric fallback replaced that stack | leave closed |
+| 18 | Slow inference drops queued swipes | COMPLETED | obsolete (ADR-011) | Neural inference latency on old hardware; the shipping CTC + pure-JVM beam is the replacement; latency gated in CI (ARC-059) | leave closed |
+| 136 | Swipe stops working (slider) | COMPLETED | obsolete (ADR-011) | Maintainer: the NN hot-swap slider broke inference; that surface is deleted | leave closed |
+| 166 | i always capitalized with autocorrect off | COMPLETED | resolved, reporter-confirmed | Setting existed; reporter: "Oh, I missed that. Thanks" | leave closed |
+
+### Reopen candidates (verified still-present at HEAD)
+
+**#148 — content panes break when both predictions and swipe typing are disabled.**
+Defect: `PredictionViewSetup.setupPredictionViews` (`PredictionViewSetup.kt:75`) only builds
+`inputViewContainer`/`topPane`/`contentPaneContainer` when
+`config.word_prediction_enabled || config.swipe_typing_enabled`. With both off, every
+content-pane open in `KeyboardReceiver.handle_event_key` hits the null-container fallback
+and **replaces the entire input view with the bare pane**: clipboard `KeyboardReceiver.kt:295-298`
+(`keyboard2.setInputView(clipboardPane)`), emoji `:229-234`, GIF `:326-329`. Two user-visible
+failures: (1) the keyboard body vanishes under the pane (reporter's video, maintainer-confirmed
+2026-06-10); (2) the bare pane is not wrapped in the container that carries the
+`_insets_bottom` handling (`aafec4da` ladder), so on gesture-nav devices it sits behind the
+nav bar — the reporter's "cannot tap the only entry" complaint, same inset family as #167.
+Repro: Settings → disable swipe typing AND word predictions → open clipboard from the keyboard.
+Fix shape: build the topPane/contentPaneContainer hierarchy unconditionally (suggestion bar
+itself can stay gated), or give the fallback path a proper container with inset padding; either
+way delete the three `setInputView(pane)` fallbacks. Test shape: pure/robolectric pin that
+`setupPredictionViews` returns non-null containers with both flags false, or an ew-cli pane-open
+test under that config.
+
+**#149 — GIF pack taps insert dead giphy.gif URLs (case-smashed IDs).**
+Defect: the GIF pipeline stores `search_text` as `"keyword… giphyId"` fully **lowercased**
+(`gif/Gif.kt:82` documents it; DB search normalizes to `[a-z0-9]`, `gif/GifDatabase.kt:52`).
+Giphy media IDs are case-sensitive mixed-case tokens, so `getGiphyId()` → `getGiphyUrl()`
+(`Gif.kt:85-97`) rebuilds `https://media.giphy.com/media/<lowercased-id>/giphy.gif` = 404.
+Both commit paths use it: tap-to-insert `KeyboardReceiver.kt:338-344`, long-press `:573`.
+The reporter's pasted example (`…/media/cutecdmyfhpeane9ckv6ys/giphy.gif`, all lowercase) is
+this signature exactly. Fix shape: carry the ID case-preserved (own column or case-preserved
+final token in the pack pipeline — pipeline lives in `tools/gif_pipeline/`, worktree
+`../cleverkeys-gif-module`), or stop inserting remote URLs and commit the locally-stored GIF
+via the existing `commitContent` machinery (`KeyEventHandler.kt:160-213`) — the pack ships the
+media offline anyway and the app has no INTERNET permission to verify links. Repacked packs
+required either way; existing imports keep dead IDs. Test shape: pure test pinning that a
+mixed-case ID survives import → `getGiphyUrl()` round-trip (fails today).
+
+### Process finding
+
+The stale bot (7-day close after inactivity mark) is the only thing that ever set
+NOT_PLANNED — all 9 such closures were unreviewed. Two buried acknowledged/real bugs and
+three buried already-landed fixes under the wrong close reason. Recommendation: exempt
+`bug`-labeled issues with maintainer comments from auto-close, and link fix commits
+(`Fixes #N`) so completion closes carry evidence.
+
 ## Maintenance rule
 
 Update the Status/Evidence columns when a fix lands (cite the commit); flip to CLOSED with
