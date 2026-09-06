@@ -126,9 +126,12 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
     LaunchedEffect(Unit) {
         delay(300) // Small delay to let the UI settle
         focusRequester.requestFocus()
-        // Show the soft keyboard
+        // #134: showSoftInput, not toggleSoftInput — toggle HIDES an already-visible IME
+        // (the reported vanish, at entry) and SHOW_FORCED leaks a forced-shown keyboard
+        // past this activity (both deprecated since API 31). Same mechanism as the
+        // TopAppBar reopen button below, which is on-device verified.
         val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+        imm.showSoftInput(rootView, 0)
     }
 
     // Monitor text changes to detect key presses
