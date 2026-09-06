@@ -132,6 +132,33 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
+     * #148 (2026-09-06, wave U3) — the other half of [predictionsDisabledStillBuildsTheContentPaneContainer]:
+     * KeyboardReceiver's pane openers kept their `keyboard2.setInputView(<bare pane>)`
+     * fallbacks after ARC-002 made the container unconditional. Dead in the normal
+     * lifecycle, but they are exactly the #148 symptom (keyboard replaced by the pane,
+     * pane behind the nav bar — the bare pane bypasses the aafec4da inset ladder) should
+     * a propagation regression ever hand the receiver a null container again. A missing
+     * container must REFUSE the pane open, never replace the input view.
+     * Behavioral twin: KeyboardReceiverPaneHostTest (mock tier).
+     */
+    @Test
+    fun keyboardReceiverNeverReplacesTheInputViewWithAPane() {
+        // Strip comments first: the guards legitimately NAME the banned call while
+        // explaining why it is banned (same idiom as the CTC 0.88 pin).
+        val receiverCode = source("tribixbite/cleverkeys/KeyboardReceiver.kt")
+            .lineSequence()
+            .filterNot { val t = it.trim(); t.startsWith("//") || t.startsWith("*") || t.startsWith("/*") }
+            .joinToString("\n")
+
+        assertWithMessage(
+            "KeyboardReceiver must not call setInputView at all — a pane open with no " +
+                "container must refuse (log + return), and pane close must restore via " +
+                "SuggestionBarPane, not by re-setting the input view. Any setInputView " +
+                "here re-opens #148."
+        ).that(receiverCode).doesNotContain("setInputView(")
+    }
+
+    /**
      * #156 §5.6 / ARC-001: a PRIVATE media entry must never reach the system-clipboard
      * fallback. commitContent is the only permitted delivery; when it fails (or on
      * API < 25) the paste must FAIL for private entries — `setPrimaryClip` would hand the

@@ -25,6 +25,7 @@ import android.widget.Toast
 import androidx.core.view.ViewCompat
 import tribixbite.cleverkeys.gif.Gif
 import tribixbite.cleverkeys.gif.GifAssetManager
+import tribixbite.cleverkeys.gif.GifInsertPolicy
 import tribixbite.cleverkeys.gif.GifGridManager
 import tribixbite.cleverkeys.gif.GifGroupButtonsBar
 
@@ -208,6 +209,15 @@ class KeyboardReceiver(
                     return
                 }
 
+                // #148: refuse without a host container — NEVER setInputView(pane), which
+                // replaced the whole keyboard and bypassed the inset-aware wrapper. The
+                // container is built unconditionally since ARC-002 (cb7cebd4), so this only
+                // fires on a propagation regression.
+                val container = contentPaneContainer ?: run {
+                    android.util.Log.e(TAG, "SWITCH_EMOJI with no contentPaneContainer — refusing (gh #148)")
+                    return
+                }
+
                 // Always inflate fresh to avoid stale view issues after app switch
                 emojiPane = keyboard2.inflate_view(R.layout.emoji_pane) as ViewGroup
 
@@ -215,23 +225,13 @@ class KeyboardReceiver(
                 val pane = emojiPane
 
                 // Show emoji pane in content container (keyboard stays visible below)
-                contentPaneContainer?.let { container ->
-                    container.removeAllViews()
-                    // Detach pane from any existing parent first
-                    (pane?.parent as? ViewGroup)?.removeView(pane)
-                    // Set pane with explicit height
-                    pane?.layoutParams = android.widget.FrameLayout.LayoutParams(
-                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                        contentPaneHeight
-                    )
-                    container.addView(pane)
-                    showContentPane()
-                } ?: run {
-                    // Fallback for when predictions disabled (no container)
-                    if (pane != null) {
-                        keyboard2.setInputView(pane)
-                    }
-                }
+                container.removeAllViews()
+                // Detach pane from any existing parent first
+                (pane?.parent as? ViewGroup)?.removeView(pane)
+                // Set pane with explicit height
+                pane?.layoutParams = paneLayoutParams(contentPaneHeight)
+                container.addView(pane)
+                showContentPane()
 
                 currentPaneType = PaneType.EMOJI
 
@@ -274,6 +274,12 @@ class KeyboardReceiver(
                     return
                 }
 
+                // #148: refuse without a host container — see the SWITCH_EMOJI guard.
+                val container = contentPaneContainer ?: run {
+                    android.util.Log.e(TAG, "SWITCH_CLIPBOARD with no contentPaneContainer — refusing (gh #148)")
+                    return
+                }
+
                 // Get clipboard pane from manager (lazy initialization)
                 val clipboardPane = clipboardManager.getClipboardPane(keyboard2.layoutInflater)
 
@@ -281,21 +287,13 @@ class KeyboardReceiver(
                 clipboardManager.resetSearchOnShow()
 
                 // Show clipboard pane in content container (keyboard stays visible below)
-                contentPaneContainer?.let { container ->
-                    container.removeAllViews()
-                    // Detach pane from any existing parent first
-                    (clipboardPane.parent as? ViewGroup)?.removeView(clipboardPane)
-                    // Set pane with explicit height
-                    clipboardPane.layoutParams = android.widget.FrameLayout.LayoutParams(
-                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                        contentPaneHeight
-                    )
-                    container.addView(clipboardPane)
-                    showContentPane()
-                } ?: run {
-                    // Fallback for when predictions disabled (no container)
-                    keyboard2.setInputView(clipboardPane)
-                }
+                container.removeAllViews()
+                // Detach pane from any existing parent first
+                (clipboardPane.parent as? ViewGroup)?.removeView(clipboardPane)
+                // Set pane with explicit height
+                clipboardPane.layoutParams = paneLayoutParams(contentPaneHeight)
+                container.addView(clipboardPane)
+                showContentPane()
 
                 currentPaneType = PaneType.CLIPBOARD
             }
@@ -310,23 +308,21 @@ class KeyboardReceiver(
                     return
                 }
 
+                // #148: refuse without a host container — see the SWITCH_EMOJI guard.
+                val container = contentPaneContainer ?: run {
+                    android.util.Log.e(TAG, "SWITCH_GIF with no contentPaneContainer — refusing (gh #148)")
+                    return
+                }
+
                 // Inflate fresh GIF pane layout
                 val gifPaneView = keyboard2.inflate_view(R.layout.gif_pane) as ViewGroup
 
                 // Show GIF pane in content container (keyboard stays visible below)
-                contentPaneContainer?.let { container ->
-                    container.removeAllViews()
-                    (gifPaneView.parent as? ViewGroup)?.removeView(gifPaneView)
-                    gifPaneView.layoutParams = android.widget.FrameLayout.LayoutParams(
-                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                        contentPaneHeight
-                    )
-                    container.addView(gifPaneView)
-                    showContentPane()
-                } ?: run {
-                    // Fallback for when predictions disabled (no container)
-                    keyboard2.setInputView(gifPaneView)
-                }
+                container.removeAllViews()
+                (gifPaneView.parent as? ViewGroup)?.removeView(gifPaneView)
+                gifPaneView.layoutParams = paneLayoutParams(contentPaneHeight)
+                container.addView(gifPaneView)
+                showContentPane()
 
                 currentPaneType = PaneType.GIF
 
@@ -335,24 +331,9 @@ class KeyboardReceiver(
                 val gifColumns = Config.globalConfig().gif_thumbnail_columns
                 val gifGrid = recyclerView?.let { GifGridManager(context, it, gifColumns) }
                 gifGrid?.onGifSelected = { gif ->
-                    // Tap inserts the Giphy URL as text into the input field
-                    val url = gif.getGiphyUrl()
-                    val ic = keyboard2.currentInputConnection
-                    android.util.Log.d("GifPanel", "onGifSelected: url=$url ic=${ic != null} searchText='${gif.searchText}'")
-                    if (url != null && ic != null) {
-                        val ok = ic.commitText(url, 1)
-                        android.util.Log.d("GifPanel", "commitText result=$ok")
-                    } else {
-                        // Fallback: if commitText can't work, copy URL to clipboard
-                        if (url != null) {
-                            val clip = android.content.ClipData.newPlainText("GIF URL", url)
-                            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                            cm.setPrimaryClip(clip)
-                            Toast.makeText(context, "URL copied", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(context, "No URL for this GIF", Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    // #149: primary delivery is the locally-shipped media via commitContent;
+                    // a (case-preserved) Giphy URL is only the text fallback. See insertGif.
+                    insertGif(gif)
                     // Record usage and close GIF pane
                     handle_event_key(KeyValue.Event.SWITCH_BACK_GIF)
                 }
@@ -436,13 +417,11 @@ class KeyboardReceiver(
                 // Reset pane tracking
                 currentPaneType = PaneType.NONE
 
-                // Swap back: hide content pane, show suggestion bar, resize wrapper
+                // Swap back: hide content pane, show suggestion bar, resize wrapper.
+                // #148: no setInputView restore here — a pane can no longer BE the input
+                // view (the openers refuse without a container), so there is nothing to
+                // restore; hideContentPane() is a safe no-op when the views are null.
                 hideContentPane()
-
-                // Fallback for when predictions disabled
-                if (contentPaneContainer == null) {
-                    keyboard2.setInputView(keyboardView)
-                }
             }
 
             KeyValue.Event.CHANGE_METHOD_PICKER -> {
@@ -506,6 +485,120 @@ class KeyboardReceiver(
             }
 
             else -> {} // Unhandled events
+        }
+    }
+
+    /**
+     * #149: insert a tapped GIF.
+     *
+     * Delivery ladder (decided by the pure [GifInsertPolicy] so the matrix is unit-tested):
+     *  1. COMMIT_MEDIA — the locally-shipped animated WebP via InputConnection.commitContent
+     *     (API 25+, editor accepts image/webp). Works for EVERY pack, old and new, and is
+     *     the only path that inserts the actual GIF; the pack ships the media offline and
+     *     the app has no INTERNET permission.
+     *  2. COMMIT_URL_TEXT — the case-preserved Giphy URL as text. Only available when the
+     *     pack carries a marked ID ([Gif.getGiphyId]); legacy packs return null there,
+     *     because their reconstructed URLs were dead 404s (case-smashed/compound tokens —
+     *     the original #149 defect).
+     *  3. COPY_MEDIA_TO_CLIPBOARD / COPY_URL_TO_CLIPBOARD — clipboard fallbacks when no
+     *     InputConnection (or no URL) is available.
+     *
+     * Internal (not private) so the mock tier can drive it directly
+     * (KeyboardReceiverPaneHostTest) — the grid-manager wiring needs a real RecyclerView.
+     */
+    internal fun insertGif(gif: Gif) {
+        val ic = keyboard2.currentInputConnection
+        val url = gif.getGiphyUrl()
+        val fullFile = java.io.File(context.filesDir, gif.getFullPath())
+        val hasLocalMedia = fullFile.exists() && fullFile.length() > 0
+        val editorMimes: Array<String> = try {
+            keyboard2.currentInputEditorInfo?.let {
+                androidx.core.view.inputmethod.EditorInfoCompat.getContentMimeTypes(it)
+            } ?: emptyArray()
+        } catch (e: Exception) {
+            emptyArray()
+        }
+        val editorAcceptsWebp =
+            GifInsertPolicy.editorAcceptsMime(editorMimes, GifInsertPolicy.MIME_WEBP)
+
+        val action = GifInsertPolicy.decide(
+            Build.VERSION.SDK_INT, ic != null, hasLocalMedia, editorAcceptsWebp, url != null
+        )
+        android.util.Log.d(
+            "GifPanel",
+            "onGifSelected: action=$action media=$hasLocalMedia editorWebp=$editorAcceptsWebp url=${url != null}"
+        )
+        when (action) {
+            GifInsertPolicy.Action.COMMIT_MEDIA -> {
+                if (!commitGifMedia(fullFile, gif, ic!!)) {
+                    // Editor advertised support but refused at runtime — same ladder minus media.
+                    when (GifInsertPolicy.afterFailedMediaCommit(true, url != null)) {
+                        GifInsertPolicy.Action.COMMIT_URL_TEXT -> ic.commitText(url, 1)
+                        else -> copyGifMediaToClipboard(fullFile, gif)
+                    }
+                }
+            }
+            GifInsertPolicy.Action.COMMIT_URL_TEXT -> ic!!.commitText(url, 1)
+            GifInsertPolicy.Action.COPY_MEDIA_TO_CLIPBOARD -> copyGifMediaToClipboard(fullFile, gif)
+            GifInsertPolicy.Action.COPY_URL_TO_CLIPBOARD -> {
+                val clip = android.content.ClipData.newPlainText("GIF URL", url)
+                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                cm.setPrimaryClip(clip)
+                keyboard2.showSuggestionBarMessage("URL copied")
+            }
+            GifInsertPolicy.Action.NONE ->
+                // Legacy pack without full media in a URL-less world: nothing honest to
+                // insert (the old behavior committed a dead link). Toasts are IME-suppressed
+                // on Android 13+; the suggestion bar is the feedback surface (#156 pattern).
+                keyboard2.showSuggestionBarMessage("GIF media unavailable")
+        }
+    }
+
+    /**
+     * Commit the local animated WebP via commitContent — the same machinery as
+     * KeyEventHandler.paste_media_from_clipboard_pane, re-implemented here because that
+     * helper resolves paths through ClipboardMediaManager (clipboard_media/), not the
+     * GIF store. Returns false when the editor refuses.
+     */
+    private fun commitGifMedia(file: java.io.File, gif: Gif, ic: InputConnection): Boolean {
+        return try {
+            val editorInfo = keyboard2.currentInputEditorInfo ?: return false
+            val contentUri = androidx.core.content.FileProvider.getUriForFile(
+                context, "${context.packageName}.fileprovider", file
+            )
+            val description = android.content.ClipDescription(
+                gif.getDisplayName(), arrayOf(GifInsertPolicy.MIME_WEBP)
+            )
+            val inputContentInfo = androidx.core.view.inputmethod.InputContentInfoCompat(
+                contentUri, description, null
+            )
+            val flags = androidx.core.view.inputmethod.InputConnectionCompat
+                .INPUT_CONTENT_GRANT_READ_URI_PERMISSION
+            val committed = androidx.core.view.inputmethod.InputConnectionCompat.commitContent(
+                ic, editorInfo, inputContentInfo, flags, null
+            )
+            android.util.Log.d("GifPanel", "commitContent result=$committed")
+            committed
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "GIF commitContent failed: ${e.message}")
+            false
+        }
+    }
+
+    /** Put the local GIF media on the system clipboard (same shape as long-press "Copy GIF"). */
+    private fun copyGifMediaToClipboard(file: java.io.File, gif: Gif) {
+        try {
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context, "${context.packageName}.fileprovider", file
+            )
+            val clip = android.content.ClipData.newUri(
+                context.contentResolver, gif.getDisplayName(), uri
+            )
+            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            cm.setPrimaryClip(clip)
+            keyboard2.showSuggestionBarMessage("GIF copied")
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "Copy GIF failed: ${e.message}")
         }
     }
 
@@ -792,5 +885,22 @@ class KeyboardReceiver(
         contextTracker.clearAutocorrectTracking()
         contextTracker.clearLastAutoInsertedWord()
         inputCoordinator.resetSwipeData()
+    }
+
+    companion object {
+        private const val TAG = "KeyboardReceiver"
+
+        /**
+         * Seam for the pane-sizing LayoutParams the three openers assign. Constructed here
+         * rather than inline so the mock tier can intercept it (android.jar stub
+         * constructors throw "Stub!"); behavior is identical to the previous inline
+         * FrameLayout.LayoutParams(MATCH_PARENT, height).
+         */
+        @JvmStatic
+        internal fun paneLayoutParams(height: Int): android.widget.FrameLayout.LayoutParams =
+            android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                height
+            )
     }
 }
