@@ -755,6 +755,15 @@ def build_pack_db(
         categories = classify_gif(keywords, combined)
         search_text = " ".join(keywords)
 
+        # gh #149: carry the Giphy ID CASE-PRESERVED as an explicit marked token
+        # ("gid:CdMYfhPEanE9CkV6Ys"). Giphy media IDs are case-sensitive; the old
+        # convention (lowercased slug keywords, "last token is the ID") produced
+        # dead 404 URLs. The app's Gif.getGiphyId() reads ONLY this marker —
+        # keep the "gid:" prefix in sync with Gif.GIPHY_ID_MARKER.
+        giphy_id = str(meta.get("giphy_id", "") or "").strip()
+        if giphy_id:
+            search_text = (search_text + " gid:" + giphy_id).strip()
+
         try:
             cursor.execute(
                 """INSERT INTO gifs

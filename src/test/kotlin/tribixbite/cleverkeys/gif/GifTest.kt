@@ -195,20 +195,62 @@ class GifTest {
         assertThat(keywords).containsExactly("word1", "word2").inOrder()
     }
 
-    // =========================================================================
-    // getGiphyId
-    // =========================================================================
-
     @Test
-    fun `getGiphyId returns last token of search text`() {
-        val gif = Gif(id = 1, width = 1, height = 1, searchText = "laughing happy abc123")
-        assertThat(gif.getGiphyId()).isEqualTo("abc123")
+    fun `getKeywords excludes the marked ID token and keeps every keyword`() {
+        // #149: with an explicit marked ID there is no ambiguity — no keyword
+        // needs to be sacrificed to hide the ID from display.
+        val gif = Gif(id = 1, width = 1, height = 1, searchText = "cute cat gid:AbC9x")
+        assertThat(gif.getKeywords()).containsExactly("cute", "cat").inOrder()
     }
 
     @Test
-    fun `getGiphyId with single token returns that token`() {
+    fun `getDisplayName excludes the marked ID token`() {
+        val gif = Gif(id = 1, width = 1, height = 1, searchText = "cute cat gid:AbC9x")
+        assertThat(gif.getDisplayName()).isEqualTo("Cute Cat")
+    }
+
+    // =========================================================================
+    // getGiphyId — #149 contract (marked, case-preserved token only)
+    //
+    // Giphy media IDs are case-sensitive. The old "last token of search_text"
+    // convention was doubly broken: the pipeline lowercases the whole slug
+    // (case-smashed ID → 404), and keyword extraction appends compound tokens
+    // AFTER the ID (the reporter's dead URL ".../cutecdmyfhpeane9ckv6ys/" is
+    // the compound "cute"+ID, not even the ID). The ID is now carried only as
+    // an explicit case-preserved "gid:"-marked token; anything unmarked yields
+    // null so a dead URL can never be constructed from ordinary keywords.
+    // =========================================================================
+
+    @Test
+    fun `getGiphyId returns case-preserved ID from the marked token`() {
+        val gif = Gif(
+            id = 1, width = 1, height = 1,
+            searchText = "cute cat cutecat gid:CdMYfhPEanE9CkV6Ys"
+        )
+        assertThat(gif.getGiphyId()).isEqualTo("CdMYfhPEanE9CkV6Ys")
+    }
+
+    @Test
+    fun `getGiphyId is null for legacy unmarked search text`() {
+        // Legacy imported packs: last token is a lowercased compound keyword,
+        // NOT a usable Giphy ID (the #149 dead-link signature). Must be null.
+        val gif = Gif(
+            id = 1, width = 1, height = 1,
+            searchText = "cute cat cutecdmyfhpeane9ckv6ys"
+        )
+        assertThat(gif.getGiphyId()).isNull()
+    }
+
+    @Test
+    fun `getGiphyId is null for a single unmarked token`() {
         val gif = Gif(id = 1, width = 1, height = 1, searchText = "abc123")
-        assertThat(gif.getGiphyId()).isEqualTo("abc123")
+        assertThat(gif.getGiphyId()).isNull()
+    }
+
+    @Test
+    fun `getGiphyId finds the marked token regardless of position`() {
+        val gif = Gif(id = 1, width = 1, height = 1, searchText = "gid:AbC9x funny cat")
+        assertThat(gif.getGiphyId()).isEqualTo("AbC9x")
     }
 
     @Test
@@ -223,14 +265,34 @@ class GifTest {
         assertThat(gif.getGiphyId()).isNull()
     }
 
+    @Test
+    fun `getGiphyId with empty marker payload returns null`() {
+        val gif = Gif(id = 1, width = 1, height = 1, searchText = "funny gid:")
+        assertThat(gif.getGiphyId()).isNull()
+    }
+
     // =========================================================================
-    // getGiphyUrl
+    // getGiphyUrl — #149: URL only from a case-preserved marked ID
     // =========================================================================
 
     @Test
-    fun `getGiphyUrl constructs media URL from Giphy ID`() {
-        val gif = Gif(id = 1, width = 1, height = 1, searchText = "funny cat xYz789AbC")
+    fun `getGiphyUrl preserves the marked ID case`() {
+        val gif = Gif(
+            id = 1, width = 1, height = 1,
+            searchText = "funny cat gid:xYz789AbC"
+        )
         assertThat(gif.getGiphyUrl()).isEqualTo("https://media.giphy.com/media/xYz789AbC/giphy.gif")
+    }
+
+    @Test
+    fun `getGiphyUrl is null for legacy case-smashed search text`() {
+        // Pre-fix this produced https://media.giphy.com/media/cutecdmyfhpeane9ckv6ys/giphy.gif
+        // — the reporter's exact dead link. No URL is strictly better than a 404.
+        val gif = Gif(
+            id = 1, width = 1, height = 1,
+            searchText = "cute cat cutecdmyfhpeane9ckv6ys"
+        )
+        assertThat(gif.getGiphyUrl()).isNull()
     }
 
     @Test

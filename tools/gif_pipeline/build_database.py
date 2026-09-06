@@ -337,6 +337,7 @@ def build_pack_database(
         meta_file = metadata_path / f"{gif_id_padded}.json"
         description = ""
         slug_words = ""
+        giphy_id = ""
         if meta_file.exists():
             try:
                 with open(meta_file) as f:
@@ -346,6 +347,7 @@ def build_pack_database(
                 slug = meta.get("slug", "")
                 if slug:
                     slug_words = slug.replace("-", " ").lower()
+                giphy_id = str(meta.get("giphy_id", "") or "").strip()
             except (json.JSONDecodeError, OSError):
                 pass
 
@@ -361,6 +363,12 @@ def build_pack_database(
         keywords = extract_keywords(combined_text)
         categories = classify_gif(keywords, combined_text)
         search_text = " ".join(keywords)
+
+        # gh #149: append the CASE-PRESERVED Giphy ID as an explicit marked token
+        # ("gid:<Id>") — the app's Gif.getGiphyId() reads only this marker.
+        # Keep "gid:" in sync with Gif.GIPHY_ID_MARKER.
+        if giphy_id:
+            search_text = (search_text + " gid:" + giphy_id).strip()
 
         gif_id_int = int(gif_id_str.lstrip("0") or "0")
 
@@ -600,6 +608,7 @@ def build_database(
         description = ""
         pack_name = "default"
         slug_words = ""
+        giphy_id = ""
         if meta_file.exists():
             try:
                 with open(meta_file) as f:
@@ -613,6 +622,7 @@ def build_database(
                 slug = meta.get("slug", "")
                 if slug:
                     slug_words = slug.replace("-", " ").lower()
+                giphy_id = str(meta.get("giphy_id", "") or "").strip()
             except (json.JSONDecodeError, OSError):
                 pass
 
@@ -635,6 +645,11 @@ def build_database(
         keywords = extract_keywords(combined_text)
         categories = classify_gif(keywords, combined_text)
         search_text = " ".join(keywords)
+
+        # gh #149: append the CASE-PRESERVED Giphy ID as an explicit marked token
+        # ("gid:<Id>") — the app's Gif.getGiphyId() reads only this marker.
+        if giphy_id:
+            search_text = (search_text + " gid:" + giphy_id).strip()
 
         # Use numeric gif_id (strip leading zeros)
         gif_id_int = int(gif_id_str)

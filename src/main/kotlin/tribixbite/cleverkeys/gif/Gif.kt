@@ -69,27 +69,50 @@ data class Gif(
     }
 
     /**
-     * Get keywords as a list for display (excludes trailing Giphy ID).
+     * Get keywords as a list for display.
+     *
+     * Marked Giphy-ID tokens ([GIPHY_ID_MARKER]) are always excluded. When no marked
+     * token exists (legacy packs), the trailing token is dropped instead — legacy packs
+     * were built under the "last token is the ID" convention, so the trailing token is
+     * either a (lowercased) ID or a machine-built compound keyword; neither belongs in
+     * the display name. When a marked token exists the ID is unambiguous, so every
+     * remaining keyword is kept.
      */
     fun getKeywords(): List<String> {
         val tokens = searchText.split(" ").filter { it.isNotBlank() }
-        // Last token is the Giphy ID — exclude it from display keywords
-        return if (tokens.size > 1) tokens.dropLast(1) else tokens
+        val unmarked = tokens.filterNot { it.startsWith(GIPHY_ID_MARKER) }
+        return when {
+            unmarked.size != tokens.size -> unmarked
+            unmarked.size > 1 -> unmarked.dropLast(1)
+            else -> unmarked
+        }
     }
 
     /**
-     * Extract the Giphy ID embedded as the last token of search_text.
-     * Pipeline stores: "keyword1 keyword2 ... giphyId" (lowercase alphanumeric).
-     * Returns null if search_text is empty or has no tokens.
+     * Extract the case-preserved Giphy ID from the marked search_text token.
+     *
+     * #149: Giphy media IDs are case-sensitive. The old convention ("last token of
+     * search_text is the ID") was doubly broken — the pipeline lowercased the whole
+     * slug (case-smashed ID → guaranteed 404), and keyword extraction appended
+     * compound tokens after it (the reporter's dead URL carried the compound
+     * "cute"+ID, not even the ID). The pipeline now appends the ID case-preserved as
+     * a "gid:"-marked token; anything unmarked yields null so a dead URL can never
+     * be built from ordinary keywords. Legacy imported packs have no marked token —
+     * their original-case IDs are unrecoverable (the DB stores only lowercased
+     * keywords and media files are named by local numeric id), so they intentionally
+     * return null here; taps still work via the locally-stored media.
      */
     fun getGiphyId(): String? {
-        val tokens = searchText.split(" ").filter { it.isNotBlank() }
-        return tokens.lastOrNull()?.takeIf { it.isNotEmpty() }
+        return searchText.split(" ")
+            .lastOrNull { it.startsWith(GIPHY_ID_MARKER) && it.length > GIPHY_ID_MARKER.length }
+            ?.removePrefix(GIPHY_ID_MARKER)
     }
 
     /**
-     * Construct the Giphy media URL from the embedded Giphy ID.
-     * Returns null if no Giphy ID is available.
+     * Construct the Giphy media URL from the embedded case-preserved Giphy ID.
+     * Returns null if no marked Giphy ID is available (legacy packs — see [getGiphyId]).
+     * NOTE: this URL is a share/paste artifact for the RECEIVING app; CleverKeys has
+     * no INTERNET permission and never fetches it.
      */
     fun getGiphyUrl(): String? {
         val giphyId = getGiphyId() ?: return null
@@ -114,6 +137,16 @@ data class Gif(
         // Storage directory paths (relative to context.filesDir)
         const val THUMBS_DIR = "gifs/thumbs"
         const val FULL_DIR = "gifs/full"
+
+        /**
+         * Prefix marking the case-preserved Giphy ID token inside search_text
+         * ("gid:CdMYfhPEanE9CkV6Ys"). Written by the pack pipeline
+         * (tools/gif_pipeline — make_pack.py / build_database.py / pack_builder.py);
+         * keep both sides in sync. FTS4's simple tokenizer splits it into "gid" +
+         * the lowercased ID, so search matching stays case-insensitive without a
+         * schema change.
+         */
+        const val GIPHY_ID_MARKER = "gid:"
 
         /**
          * Build a partitioned file path: "{baseDir}/{id÷1000}/{id}.webp"

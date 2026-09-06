@@ -269,7 +269,16 @@ def extract_search_keywords(entry: Dict) -> str:
             seen.add(w)
             keywords.append(w)
 
-    return " ".join(keywords[:20])
+    search_text = " ".join(keywords[:20])
+
+    # gh #149: append the CASE-PRESERVED Giphy ID as an explicit marked token
+    # ("gid:<Id>") — the app's Gif.getGiphyId() reads only this marker; keep
+    # the "gid:" prefix in sync with Gif.GIPHY_ID_MARKER.
+    giphy_id = str(entry.get("giphy_id", "") or "").strip()
+    if giphy_id:
+        search_text = (search_text + " gid:" + giphy_id).strip()
+
+    return search_text
 
 
 def classify_emotions(entry: Dict) -> List[str]:
