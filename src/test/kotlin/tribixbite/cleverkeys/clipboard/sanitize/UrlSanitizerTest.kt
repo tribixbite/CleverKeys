@@ -213,6 +213,54 @@ class UrlSanitizerTest {
             .isEqualTo("https://www.aliexpress.us/item/3256807058505746.html")
     }
 
+    // ─── Redirection percent-decoding (upstream ClearURLs decodeURL parity). The bundled
+    //     rules capture percent-ENCODED groups (e.g. facebook `u=(https?%3A%2F%2F[^&]*)`),
+    //     so the captured redirect target MUST be percent-decoded or the "cleaned" clip is
+    //     a broken `https%3A%2F%2F...` string. ───────────────────────────────────────────
+
+    @Test
+    fun clearUrls_facebookRedirector_yieldsDecodedTargetUrl() {
+        // Real-world l.facebook.com share wrapper. Upstream ClearURLs decodes the capture;
+        // the result must be a *valid* URL for the wrapped target.
+        val out = bundledClearUrls.process(
+            "https://l.facebook.com/l.php?u=https%3A%2F%2Fexample.com%2Fpage%3Fid%3D7&h=AT1x"
+        )
+        assertThat(out).startsWith("https://example.com/")
+        assertThat(out).doesNotContain("%3A%2F%2F")
+    }
+
+    @Test
+    fun clearUrls_googleRedirector_yieldsDecodedTargetUrl() {
+        val out = bundledClearUrls.process(
+            "https://www.google.com/url?q=https%3A%2F%2Fexample.com%2Fdoc&sa=D"
+        )
+        assertThat(out).startsWith("https://example.com/doc")
+    }
+
+    @Test
+    fun redirection_doubleEncodedCapture_decodesUntilStable() {
+        // decodeURL upstream loops until fixpoint — a doubly-encoded target must fully decode.
+        val rs = RulesetParser.fromJson("""{
+            "providers":{"wrap":{"urlPattern":"^https?://wrap\\.example",
+                "redirections":["wrap\\.example/\\?u=(.*)"]}}
+        }""")
+        val out = RulesetUrlSanitizer(rs).process(
+            "https://wrap.example/?u=https%253A%252F%252Fexample.com%252Fx"
+        )
+        assertThat(out).isEqualTo("https://example.com/x")
+    }
+
+    @Test
+    fun redirection_malformedPercentSequence_fallsBackToRawCapture() {
+        // An invalid escape (%zz) must not throw — keep the raw capture verbatim.
+        val rs = RulesetParser.fromJson("""{
+            "providers":{"wrap":{"urlPattern":"^https?://wrap\\.example",
+                "redirections":["wrap\\.example/\\?u=(.*)"]}}
+        }""")
+        val out = RulesetUrlSanitizer(rs).process("https://wrap.example/?u=https://e.com/%zz")
+        assertThat(out).isEqualTo("https://e.com/%zz")
+    }
+
     // ─── systemClipboardRewrite: decide whether to push the cleaned text back to the
     //     Android system clipboard (so pastes from ANY app, not just CleverKeys' panel,
     //     deliver the sanitized URL). Returns the string to write, or null to leave the

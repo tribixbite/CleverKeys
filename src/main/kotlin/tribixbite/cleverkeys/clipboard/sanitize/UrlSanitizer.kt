@@ -87,8 +87,11 @@ internal class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer 
                     // Our extension: explicit replacement template
                     redir.pattern.replaceFirst(current, redir.replacement)
                 } else {
-                    // Upstream: group(1) is the new URL
-                    match.groupValues.getOrNull(1)?.takeIf { it.isNotEmpty() } ?: current
+                    // Upstream: group(1) is the new URL. The bundled rules capture
+                    // percent-ENCODED targets (e.g. facebook `u=(https?%3A%2F%2F[^&]*)`),
+                    // so mirror upstream ClearURLs' decodeURL: percent-decode until stable.
+                    match.groupValues.getOrNull(1)?.takeIf { it.isNotEmpty() }
+                        ?.let { percentDecodeUntilStable(it) } ?: current
                 }
             }
 
@@ -103,6 +106,33 @@ internal class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer 
         }
 
         return current
+    }
+
+    /**
+     * Percent-decode a captured redirect target until it stops changing, mirroring
+     * upstream ClearURLs' decodeURL loop (which handles doubly-encoded wrappers).
+     *
+     * Differences from a bare URLDecoder.decode call, both deliberate:
+     *  - `+` is pre-escaped to `%2B` each pass so literal plus signs survive
+     *    (URLDecoder implements form-decoding, `+`→space; upstream uses
+     *    decodeURIComponent, which leaves `+` alone).
+     *  - Any malformed escape (e.g. `%zz`) aborts decoding and returns the raw
+     *    capture verbatim — never throw on hostile clipboard content.
+     */
+    private fun percentDecodeUntilStable(captured: String): String {
+        var current = captured
+        return try {
+            // Bounded: each decode strictly shrinks or reaches a fixpoint; the cap
+            // guards pathological inputs where shrinkage could loop many times.
+            repeat(5) {
+                val decoded = java.net.URLDecoder.decode(current.replace("+", "%2B"), "UTF-8")
+                if (decoded == current) return current
+                current = decoded
+            }
+            current
+        } catch (_: Exception) {
+            captured
+        }
     }
 
     private fun stripQueryParams(url: String, rulePatterns: List<Regex>): String {
