@@ -948,7 +948,9 @@ filterPredictions with shipped defaults, but NOT: personalization/UserVocabulary
 custom-words autocorrect (empty on first-install and in eval), context-aware/next-word
 reranking (no sentence context in the corpus), language-detection & secondary-dictionary
 paths (en-only corpus), contraction display mapping (corpus targets are apostrophe-free),
-or `PersonalizationManager` frequency adaptation — these are user-state-dependent and
+or `PersonalizationEngine` frequency adaptation (the never-wired `PersonalizationManager`
+this caveat used to name was deleted 2026-09-06 — audit C-7: dead, and LearningGate-free,
+so wiring it as named would have bypassed the privacy gates) — these are user-state-dependent and
 inert on first-install defaults, so the PRODUCTION column models a fresh install.
 (2) Production defaults `neural_batch_beams=false` (sequential decode); the runner uses
 the batched decoder call, which returns numerically identical per-position log-probs

@@ -12,7 +12,7 @@ Multi-language typing system that allows users to type in two languages simultan
 | `src/main/kotlin/tribixbite/cleverkeys/NormalizedPrefixIndex.kt` | `NormalizedPrefixIndex` | Accent-aware prefix lookup |
 | `src/main/kotlin/tribixbite/cleverkeys/BinaryDictionaryLoader.kt` | V1/V2 loading | Dictionary loading |
 | `src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt` | `loadSecondaryDictionary()`, `secondaryIndex` | Primary + secondary dictionary management for tap typing (`OptimizedVocabulary`, the neural-era owner of this role, was deleted 2026-08-18 — ADR-011) |
-| `src/main/kotlin/tribixbite/cleverkeys/SuggestionRanker.kt` | Merging | Combines results with scoring |
+| `src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt` | `predictInternal` secondary block | Merges secondary candidates inline (dedup against primary, `secondary_prediction_weight` penalty). The standalone `SuggestionRanker.kt` this row used to name had zero production callers post-ADR-011 and was deleted 2026-09-06 (audit C-6) |
 | `src/main/kotlin/tribixbite/cleverkeys/LanguageDetector.kt` | `detectLanguageFromWordsWithConfidence()` | Word/char-pattern language detection behind `MultiLanguageManager.detectAndSwitch` (`UnigramLanguageDetector`, the unigram-profile detector this row used to name, was deleted 2026-08-28 — ARC-006, write-only) |
 | `src/main/kotlin/tribixbite/cleverkeys/langpack/LanguagePackManager.kt` | Pack import | Language pack storage |
 
@@ -26,8 +26,10 @@ Multi-language typing system that allows users to type in two languages simultan
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    SuggestionRanker                          │
-│  Merges candidates from primary + secondary dictionaries     │
+│        WordPredictor.predictInternal (inline merge)          │
+│  Secondary candidates skip words already in the primary      │
+│  slate and score at calculateUnifiedScore ×                  │
+│  secondary_prediction_weight (default 0.9)                   │
 └─────────────────────────────────────────────────────────────┘
         │                                    │
         ▼                                    ▼

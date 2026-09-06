@@ -239,10 +239,6 @@
 -keep class tribixbite.cleverkeys.BackupRestoreManager { *; }
 -keep class tribixbite.cleverkeys.BackupRestoreManager$** { *; }
 
-# Keep personalization data classes
--keep class tribixbite.cleverkeys.PersonalizationManager { *; }
--keep class tribixbite.cleverkeys.PersonalizationManager$** { *; }
-
 # CRITICAL: UserVocabulary Gson-deserializes List<UserWordUsage> (typed TypeToken);
 # without this keep, R8 field renaming silently corrupts vocabulary load/import.
 -keep class tribixbite.cleverkeys.personalization.** { *; }

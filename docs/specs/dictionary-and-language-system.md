@@ -32,8 +32,10 @@ Language Pack ({lang})
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     SuggestionRanker                         │
-│  Merges candidates from all layers with unified scoring      │
+│        WordPredictor.predictInternal (inline merge)          │
+│  All layers load into ONE dictionary map; candidates are     │
+│  scored by calculateUnifiedScore (custom/user words are      │
+│  calibrated onto the base scale — UserWordFrequency)         │
 └─────────────────────────────────────────────────────────────┘
                             │
        ┌────────────────────┼────────────────────┐
@@ -209,7 +211,7 @@ data class LanguageState(
 |-------|---------|
 | `DictionaryManager` | Singleton holding active WordPredictor instances, handles language lifecycle |
 | `MultiLanguageManager` | Manages ONNX sessions, handles auto-detection logic |
-| `SuggestionRanker` | Merges candidates from multiple dictionaries with unified scoring |
+| `WordPredictor` (inline) | Merges primary + secondary candidates in `predictInternal` via `calculateUnifiedScore` × `secondary_prediction_weight` (the standalone `SuggestionRanker` had zero production callers post-ADR-011 and was deleted 2026-09-06 — audit C-6) |
 | `LanguageDetector` | Word/character-pattern language detection (the unigram-frequency `UnigramLanguageDetector` was deleted 2026-08-28 — ARC-006, write-only after `OptimizedVocabulary` went) |
 | `AccentNormalizer` | Unicode normalization (NFD) + accent stripping |
 
