@@ -501,11 +501,11 @@ If you want a lightweight keyboard without gesture typing, we recommend the orig
 
 # ⭐ Star History
 
-<a href="https://star-history.com/#tribixbite/CleverKeys&Date">
+<a href="https://star-history.dera.page/#tribixbite/CleverKeys&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=tribixbite/CleverKeys&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=tribixbite/CleverKeys&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=tribixbite/CleverKeys&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=tribixbite/CleverKeys&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=tribixbite/CleverKeys&type=Date" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=tribixbite/CleverKeys&type=Date" />
  </picture>
 </a>
 
