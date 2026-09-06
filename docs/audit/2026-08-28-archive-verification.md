@@ -1157,3 +1157,54 @@ instrumented additions green (suite grew 1,467→1,510).
 **Test-gap closures:** compose-key sequences now have 12 EXECUTING instrumented tests
 (ew-cli green `0c570be1`; the old @Ignore'd test deleted — its ௰ expectation was stale
 against the as-built generator, pinned with a TODO).
+
+---
+
+## Round 5 (2026-09-05/06) — continuation waves T1-T6 (fail-first throughout)
+
+Tracker: `docs/audit/gh-issue-resolution.md` (created this round, `5843260c`) now carries
+per-issue status/evidence for all 56 open GH issues. Suites after: **2,261 pure / 589 mock**.
+
+- **#130 FIXED** (`a7940256`): beyond the v1.5.0 chrome fix, two live residuals — the lazily
+  painted pane was NEVER invalidated on theme change (stale until IME restart), and entry
+  rows never received runtime theme colors at all. New pure `ClipboardPaneThemePolicy` seam
+  (signature = name + style + color VALUES, so editing a theme in place invalidates too).
+- **#134 FIXED** (`a9b000cf`, device-verified): entry used `toggleSoftInput(SHOW_FORCED)` —
+  toggle semantics HID an already-visible IME at entry (the vanish), and SHOW_FORCED leaks.
+  Now the same requestFocus+showSoftInput path as the verified reopen button.
+- **#96 FIXED** (`6c97756b`): three holes — no state save on recreation, an untracked
+  UNFILTERED load racing the filtered re-dispatch (last-writer-wins clobber = the reported
+  symptom), scroll never restored.
+- **#94 already shipped** (`7558313b`) — verified, payload extracted pure + pinned, 22/22
+  locales confirmed (`1c27a10a`).
+- **#75 FIXED-BY-ARCHITECTURE, proven** (`7747fea5`): rank-1 on Swiss QWERTZ geometry for
+  all six probes; the SAME y-e-s trace through old hard-QWERTY geometry reproduces the
+  reporter's exact "Zeal…" symptom. Catalogue/gate/geometry pins added.
+- **#77 FIXED** (`e2b64d32`): the pane key was non-`loc` AND `modify_numpad` never stripped
+  loc keys — custom XML, the locale flag, and the checkbox all controlled nothing (the
+  v1.2.8 removability claim was never true of the pane). loc-pattern fix; default installs
+  no longer see the numeric-pane toggle (the published semantics); checkbox restores it.
+- **#167 second half FIXED** (`aafec4da`): `_insets_bottom` had NO invalidation path — a
+  stale nonzero inset was served until window recreation. onConfigurationChanged re-derives
+  via one shared `readSystemBarInsets` ladder (also killed an API-30+ ladder disagreement).
+  NEW residual discovered in the report itself: the pwd-manager-button complaint (part 2)
+  remains untriaged. **#79 verdict DISTINCT** — it is the settings Activity window
+  (statusBarsPadding), unreachable by IME-window inset fixes; capture checklist in tracker.
+- **#151 residual FIXED, device-confirmed** (`9c8f5827`): three-phase trailing-space watch
+  (arm at commit / resolve by cursor-stamp signature with an unmatched-callback budget of 3
+  — the budget exists because the DEVICE LEG DISPROVED the first design (Chrome's stale
+  post-commit callback) and the agent iterated before committing / consume rides the owed
+  space inside the next keystroke's commit, verify-at-use). Pre-fix `examplew` reproduced
+  on hardware; post-fix `example w` with full log chain; no-double-space control green.
+  Restorations byte-exact; debug IMEs uninstalled.
+- **Media clipboard delete gap FIXED** (maintainer-reported, `d3cd8dc6`): expanded media
+  rows show the delete row directly (all three tabs); chevron + thumbnail tap-to-toggle for
+  discoverability. Orphaned-media worry disproven and PINNED (deletion already
+  reference-counts media_path across all 3 tables). `ClipboardPinView` found to be DEAD
+  legacy — removal candidate, tracked.
+
+Ops notes: one agent's assembleRelease died in R8 on the guard's default 256m metaspace
+(the documented trap — the enlarged defaults live in build-on-termux.sh, NOT the guard) and
+was relaunched with explicit GRADLE_GUARD_XMX/METASPACE; one orphaned duplicate guard
+(PPID 1) killed; three agents crashed on transient API 500s and were resumed from
+transcripts with tree-state briefs — zero work lost.

@@ -64,6 +64,11 @@ section is authoritative for what closed):**
   #152 wall-clock feel on a real 130k pack (your soak). Features awaiting your priority:
   #156 encrypted clipboard, #163 background image, #165 Korean, #168 clear-clipboard key,
   #175, #177 Pinyin. Closing/commenting on GitHub is YOURS — nothing was posted.
+- Round-5 residuals (2026-09-06): #167 part-2 (pwd-manager button unresponsive —
+  untriaged); #130 visual residue (edit-field white text, search-highlight colors — soak);
+  media-delete one-tap soak check (copy image → expand → delete); `ClipboardPinView` is
+  DEAD legacy — deletion candidate next cleanup pass; Chrome test-history traces on both
+  phones (test queries in omnibox history — harmless, noted for transparency).
 - M2 FUTO-official-test final read; send `FUTO_PRESET_NOTE.md` or not; `EW_API_TOKEN`
   laptop-side (unchanged standing decisions).
 - CLOSED this round (see ledger): ARC-054 (announced), ARC-104 (policy replaced), ARC-107,
