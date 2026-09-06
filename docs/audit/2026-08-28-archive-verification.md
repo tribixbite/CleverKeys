@@ -1208,3 +1208,36 @@ Ops notes: one agent's assembleRelease died in R8 on the guard's default 256m me
 was relaunched with explicit GRADLE_GUARD_XMX/METASPACE; one orphaned duplicate guard
 (PPID 1) killed; three agents crashed on transient API 500s and were resumed from
 transcripts with tree-state briefs — zero work lost.
+
+---
+
+## Round 6 (2026-09-06) — closed-issue audit + custom-word calibration + stale-buried fixes
+
+- **Closed-issue audit** (`fab3866e`): all 90 closed issues examined, 27 in depth. The stale
+  bot was the ONLY actor ever recording NOT_PLANNED (9, zero human triage). Findings: 2
+  verified-live bugs buried by the bot (fixed below); 3 stale-closures that were actually
+  fixed pre-close but never linked (#141/#154/#146); process recommendation recorded
+  (exempt maintainer-acknowledged bugs from auto-close).
+- **Custom/unusual-word swipeability FIXED** (`4525eb9c`, maintainer-reported): stored
+  custom freqs (1..255, dialog default 100) fed consumers whose scales they never matched —
+  en CTC floor is 134 (default-added words ranked below the ENTIRE dictionary), tap scales
+  5.5K..1M, and the secondary index sent every custom word to worst-rank. Plus a
+  destructive bonus bug: saveUserWords rewrote EVERY stored frequency to 100 on any
+  add/remove. One shared order-preserving `UserWordFrequency.scaleOnto` (floor derived
+  per-lexicon, identity on full-range CKDT), dialog default 255 + honest hint, legacy
+  values lifted at read (100→181.2 en). MEASURED: "bowien" rank 3 (−0.14, losing to
+  bowen/bowie) → rank 1 (+2.2 legacy / +3.6 new default). Unusual BASE words verified
+  behaving as the tuned prior intends — λ/γ/β and goldens untouched.
+- **#148-closed (both-toggles-off panes) FIXED** (`56597c1b`): the container gate was
+  already fixed by ARC-002 (audit claim half stale — corrected), but the forbidden
+  `setInputView(bare pane)` fallbacks were live in KeyboardReceiver; all deleted, openers
+  refuse without a container, hosted-path behavior pinned (10 new mock tests).
+- **#149-closed (dead Giphy URLs) FIXED** (`ecd1abc8`+`56597c1b`): pipeline lowercased the
+  case-sensitive ID AND compound keywords corrupted the last-token convention —
+  `getGiphyId` was garbage for every shipped pack. New `gid:<Id>` case-preserved marker
+  (no schema bump; FTS folds it so search stays case-insensitive); taps now route
+  commitContent-first (local WebP, offline, works for ALREADY-IMPORTED packs) → cased-URL
+  text → clipboard → never a dead link. Legacy imported packs: URL honestly unrecoverable
+  (null beats 404); media-path taps work; repack restores URLs.
+- Suites after: **2,289 pure / 600 mock**. Maintainer actions recorded in the tracker:
+  reopen-then-close-as-completed guidance for #148/#149 (bot recorded NOT_PLANNED).
