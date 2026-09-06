@@ -24,10 +24,11 @@ import java.util.Locale
  * [entries] carry the provider's OBSERVED `FREQUENCY` value, unmodified. Scaling is
  * deliberately NOT done here: each engine already has a policy for user-word frequencies and
  * the provider rows must get exactly that same treatment, no more and no less —
- * `CtcLexiconMerge.merge` clamps onto the 1..255 AOSP-like scale the tuned λ expects (so a
- * row observed at 40 stays 40 and only an out-of-range row saturates), and the geometric
- * adapter uses the value for prepend ORDER only. Blanket-clamping every provider row to 255
- * here would have thrown away the one signal the provider actually offers.
+ * `CtcLexiconMerge.merge` calibrates the stored 1..255 value onto the base lexicon's own
+ * scale (wave U2, `UserWordFrequency.scaleOnto` — order-preserving, so a row observed at 40
+ * still ranks below one at 200 while never falling below the whole base dictionary), and the
+ * geometric adapter uses the value for prepend ORDER only. Blanket-clamping every provider
+ * row to 255 here would have thrown away the one signal the provider actually offers.
  *
  * @param entries `(word as stored, observed provider frequency)` in provider order, blanks
  *   dropped and case-folded-deduped first-wins. Original case is preserved: the CTC trie

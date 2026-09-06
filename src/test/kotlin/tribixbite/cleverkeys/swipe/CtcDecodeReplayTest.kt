@@ -8,7 +8,6 @@ import tribixbite.cleverkeys.swipe.ctc.CtcLayout
 import tribixbite.cleverkeys.swipe.geometric.GeoLayoutFixtures
 import tribixbite.cleverkeys.swipe.geometric.GeoTraceSynthesizer
 import tribixbite.cleverkeys.swipe.geometric.GeometricEngineConfig
-import kotlin.math.sin
 
 /**
  * Issue-#162 replay instrument + characterization pins: swiped "gorgeous" (reported never
@@ -53,68 +52,26 @@ class CtcDecodeReplayTest {
     }
 
     // ── trace synthesis on the golden geometry ─────────────────────────────────
+    //
+    // The generators live in [CtcTraceShapes] (extracted verbatim, wave U2) so the
+    // custom-word calibration replay measures the exact same gesture shapes these
+    // #162 pins do. These wrappers keep the pin bodies unchanged.
 
-    /**
-     * Straight-line trace through [word]'s letter centers: [stepsPerSegment] steps/segment
-     * at [stepMs] ms/step — the golden-fixture generator shape
-     * (`CtcMultiLanguageInstrumentedTest.traceFor`: 12 steps, 16 ms).
-     */
     private fun straightTrace(
         word: String,
         layout: CtcLayout,
         stepsPerSegment: Int = 12,
         stepMs: Double = 16.0,
-    ): Triple<DoubleArray, DoubleArray, DoubleArray> {
-        val cx = DoubleArray(word.length)
-        val cy = DoubleArray(word.length)
-        for (i in word.indices) {
-            val k = layout.alphabet.indexOf(word[i])
-            require(k >= 0) { "'${word[i]}' not on layout" }
-            cx[i] = layout.keyCentersX[k].toDouble()
-            cy[i] = layout.keyCentersY[k].toDouble()
-        }
-        val xs = ArrayList<Double>()
-        val ys = ArrayList<Double>()
-        val ts = ArrayList<Double>()
-        var t = 0.0
-        for (i in 0 until word.length - 1) {
-            for (s in 0 until stepsPerSegment) {
-                val f = s / stepsPerSegment.toDouble()
-                xs.add(cx[i] + (cx[i + 1] - cx[i]) * f)
-                ys.add(cy[i] + (cy[i + 1] - cy[i]) * f)
-                ts.add(t)
-                t += stepMs
-            }
-        }
-        xs.add(cx.last()); ys.add(cy.last()); ts.add(t)
-        return Triple(xs.toDoubleArray(), ys.toDoubleArray(), ts.toDoubleArray())
-    }
+    ): Triple<DoubleArray, DoubleArray, DoubleArray> =
+        CtcTraceShapes.straight(word, layout, stepsPerSegment, stepMs)
 
-    /**
-     * [straightTrace] plus a deterministic perpendicular sinusoidal wobble of amplitude
-     * [amp] (normalized units), envelope-pinned to zero at both endpoints so the first
-     * and last keys are still hit. Deterministic — no RNG — so the pins cannot flake.
-     */
     private fun wobbledTrace(
         word: String,
         layout: CtcLayout,
         amp: Double,
         cycles: Double,
-    ): Triple<DoubleArray, DoubleArray, DoubleArray> {
-        val (x, y, t) = straightTrace(word, layout)
-        val n = x.size
-        for (i in 0 until n) {
-            val j = if (i < n - 1) i else i - 1
-            val dx = x[j + 1] - x[j]
-            val dy = y[j + 1] - y[j]
-            val len = Math.hypot(dx, dy).coerceAtLeast(1e-9)
-            val w = amp * sin(2.0 * Math.PI * cycles * i / (n - 1)) *
-                sin(Math.PI * i / (n - 1)) // envelope: zero at both ends
-            x[i] = (x[i] + w * (-dy / len)).coerceIn(0.0, 1.0)
-            y[i] = (y[i] + w * (dx / len)).coerceIn(0.0, 1.0)
-        }
-        return Triple(x, y, t)
-    }
+    ): Triple<DoubleArray, DoubleArray, DoubleArray> =
+        CtcTraceShapes.wobbled(word, layout, amp, cycles)
 
     /** The named trace shapes the pins iterate — one place so diagnostic and pin agree. */
     private fun shapesFor(layout: CtcLayout): List<Pair<String, Triple<DoubleArray, DoubleArray, DoubleArray>>> =

@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.swipe.ctc
 
+import tribixbite.cleverkeys.UserWordFrequency
 import java.util.Locale
 
 /**
@@ -10,8 +11,9 @@ import java.util.Locale
  * JSON parse and SharedPreferences reads — and delegates here).
  *
  * Merge policy (mirrors `GeometricEngineAdapter.mergeUserWords` semantics):
- *  - custom words FIRST, frequency clamped onto the 1..255 AOSP-like scale;
- *    custom overrides disabled (matching WordPredictor's customAndUserWords);
+ *  - custom words FIRST, with the stored 1..255 user frequency CALIBRATED onto the
+ *    base lexicon's own scale (wave U2, below); custom overrides disabled
+ *    (matching WordPredictor's customAndUserWords);
  *  - base words minus the disabled set;
  *  - dedupe on `lowercase(Locale.ROOT)` on BOTH steps (audit L3: a custom
  *    "Hello" must shadow the base "hello" — the trie lowercases at insert, so
@@ -19,6 +21,21 @@ import java.util.Locale
  *    trie's max-retention rule);
  *  - insertion order is (custom in caller order, then base in caller order) —
  *    deterministic, and only affects beam tie-breaks.
+ *
+ * ## Custom-frequency calibration (wave U2)
+ *
+ * The stored user frequency is a 1..255 value ([UserWordFrequency]), but the en
+ * base lexicon's byte scale spans **134..255** — a compressed floor, not 1 — and
+ * the en preset's λ = 4.0 multiplies `ln(freq)` on exactly that scale. The old
+ * raw 1..255 clamp therefore put the historical dialog default of 100 BELOW the
+ * entire English dictionary (`ln 100 < ln 134`): a default-added custom word
+ * carried λ·Δ ≈ 1.17 final-score points less prior than the rarest base word and
+ * ≈ 3.74 less than a common one (measured, `CtcCustomWordCalibrationReplayTest`).
+ * The merge now maps stored `[1..255]` linearly onto `[base_floor..255]` via
+ * [UserWordFrequency.scaleOnto], with the floor derived from THIS merge's own
+ * base iterable — order-preserving, stored 1 ties the rarest base word, stored
+ * 255 hits the cap, and CKDT bases (floor 1, already full-range) degenerate to
+ * the identity so the λ = 2.0 CKDT preset sees byte-identical inputs.
  */
 object CtcLexiconMerge {
 
@@ -27,23 +44,37 @@ object CtcLexiconMerge {
     const val MAX_FREQ = 255.0
 
     /**
-     * Merge [base] `{word: freq}` entries with user [custom] words (freq clamped to
-     * [MIN_FREQ]..[MAX_FREQ]; blank words skipped) minus [disabled] words.
-     * Case-insensitive dedupe: the first occurrence (custom before base, then
-     * caller iteration order) wins.
+     * Merge [base] `{word: freq}` entries with user [custom] words (stored 1..255
+     * frequency calibrated onto the base scale — see the class KDoc; blank words
+     * skipped) minus [disabled] words. Case-insensitive dedupe: the first
+     * occurrence (custom before base, then caller iteration order) wins.
+     *
+     * [base] is iterated twice (floor derivation, then insertion) — both call
+     * sites pass materialized lists. The floor is derived from the RAW base,
+     * before disabled-filtering, so disabling words can never shift how custom
+     * frequencies map.
      */
     fun merge(
         base: Iterable<Pair<String, Double>>,
         custom: Iterable<Pair<String, Int>>,
         disabled: Set<String>,
     ): LinkedHashMap<String, Double> {
+        var baseFloor = MAX_FREQ
+        var hasBase = false
+        for ((_, freq) in base) {
+            hasBase = true
+            val f = freq.coerceAtLeast(MIN_FREQ)
+            if (f < baseFloor) baseFloor = f
+        }
+        if (!hasBase) baseFloor = MIN_FREQ // no base scale to calibrate against — identity
+
         val disabledLower = disabled.mapTo(HashSet()) { it.lowercase(Locale.ROOT) }
         val seenLower = HashSet<String>()
         val merged = LinkedHashMap<String, Double>()
         for ((word, freq) in custom) {
             if (word.isBlank()) continue
             if (!seenLower.add(word.lowercase(Locale.ROOT))) continue
-            merged[word] = freq.toDouble().coerceIn(MIN_FREQ, MAX_FREQ)
+            merged[word] = UserWordFrequency.scaleOnto(freq, baseFloor, MAX_FREQ)
         }
         for ((word, freq) in base) {
             val lower = word.lowercase(Locale.ROOT)

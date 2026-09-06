@@ -325,10 +325,16 @@ class WordListFragment : Fragment() {
         wordInput.hint = "Enter word"
         layout.addView(wordInput)
 
+        // Wave U2: the stored scale is 1..255 (UserWordFrequency; AOSP user-dictionary
+        // convention), and every ranking consumer calibrates it onto its own base scale.
+        // The old "1-10000" hint was fiction — no consumer read that scale — and the old
+        // default of 100 ranked a fresh custom word BELOW the entire base dictionary in
+        // the swipe lexicon prior. Default 255: a user adding a word wants it to WIN;
+        // they can lower it here to demote it.
         val freqInput = EditText(requireContext())
         freqInput.inputType = InputType.TYPE_CLASS_NUMBER
-        freqInput.hint = "Frequency (1-10000)"
-        freqInput.setText("100")
+        freqInput.hint = "Frequency (1-255, higher wins)"
+        freqInput.setText(UserWordFrequency.DEFAULT.toString())
         freqInput.selectAll()
         layout.addView(freqInput)
 
@@ -338,12 +344,15 @@ class WordListFragment : Fragment() {
             .setPositiveButton("Add") { _, _ ->
                 val word = wordInput.text.toString().trim()
                 val freqText = freqInput.text.toString().trim()
-                val frequency = freqText.toIntOrNull() ?: 100
+                val frequency = freqText.toIntOrNull() ?: UserWordFrequency.DEFAULT
 
                 if (word.isNotBlank()) {
                     lifecycleScope.launch {
                         try {
-                            dataSource.addWord(word, frequency.coerceIn(1, 10000))
+                            dataSource.addWord(
+                                word,
+                                frequency.coerceIn(UserWordFrequency.MIN, UserWordFrequency.MAX)
+                            )
                             loadWords()
                             // Notify parent activity to refresh predictions
                             (activity as? DictionaryManagerActivity)?.refreshAllTabs()
@@ -399,10 +408,13 @@ class WordListFragment : Fragment() {
         wordInput.selectAll()
         layout.addView(wordInput)
 
+        // Wave U2: same 1..255 stored scale as the Add dialog. Legacy stored values
+        // above 255 (old 1-10000 dialog era) prefill coerced — saving writes the
+        // calibrated-scale equivalent without touching words the user doesn't edit.
         val freqInput = EditText(requireContext())
         freqInput.inputType = InputType.TYPE_CLASS_NUMBER
-        freqInput.hint = "Frequency (1-10000)"
-        freqInput.setText(word.frequency.toString())
+        freqInput.hint = "Frequency (1-255, higher wins)"
+        freqInput.setText(word.frequency.coerceIn(UserWordFrequency.MIN, UserWordFrequency.MAX).toString())
         layout.addView(freqInput)
 
         AlertDialog.Builder(requireContext())
@@ -416,7 +428,10 @@ class WordListFragment : Fragment() {
                 if (newWord.isNotBlank()) {
                     lifecycleScope.launch {
                         try {
-                            dataSource.updateWord(word.word, newWord, newFrequency.coerceIn(1, 10000))
+                            dataSource.updateWord(
+                                word.word, newWord,
+                                newFrequency.coerceIn(UserWordFrequency.MIN, UserWordFrequency.MAX)
+                            )
                             loadWords()
                             // Notify parent activity to refresh predictions
                             (activity as? DictionaryManagerActivity)?.refreshAllTabs()

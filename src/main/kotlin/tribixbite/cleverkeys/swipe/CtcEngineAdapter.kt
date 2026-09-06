@@ -611,8 +611,9 @@ class CtcEngineAdapter(
         val start = System.currentTimeMillis()
 
         // Parse the Android-side inputs into pure pair lists, then delegate the merge
-        // policy (custom-first, 1..255 clamp, custom-overrides-disabled, case-folded
-        // dedupe — audit L3) to the unit-tested [CtcLexiconMerge]. Insertion order only
+        // policy (custom-first, stored-1..255 frequency calibrated onto the base scale
+        // — wave U2, custom-overrides-disabled, case-folded dedupe — audit L3) to the
+        // unit-tested [CtcLexiconMerge]. Insertion order only
         // affects beam tie-breaks; LinkedHashMap keeps it deterministic (en: asset JSON
         // order on Android's org.json; CKDT: rank ascending, file order as tie-break).
         val basePairs = try {
@@ -662,7 +663,8 @@ class CtcEngineAdapter(
         }
         // ARC-081: the preference and the platform provider are ONE user-word list from here
         // on, so the provider's rows get exactly the treatment custom words already got —
-        // 1..255 clamp on the observed frequency, and override-disabled semantics.
+        // the wave-U2 base-scale calibration of the observed 1..255 frequency, and
+        // override-disabled semantics.
         val userWordPairs = UserDictionarySnapshot.mergeWithCustom(customPairs, userDictionary)
         // These three marks are deliberately UNSETTLED, unlike the startup ones. They run on
         // the CTC decode thread, and a settled mark costs 2 forced GCs plus 2x120 ms — roughly

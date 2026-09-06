@@ -117,7 +117,10 @@ class DictionaryManager(private val context: Context) {
             var migratedCount = 0
             for (word in legacyWords) {
                 if (!existingWords.containsKey(word)) {
-                    existingWords[word] = 100 // Default frequency
+                    // Wave U2: user-added words default to the top of the 1..255
+                    // stored scale — the legacy set had no frequencies, and these
+                    // are words the user explicitly claimed.
+                    existingWords[word] = UserWordFrequency.DEFAULT
                     migratedCount++
                 }
             }
@@ -279,12 +282,24 @@ class DictionaryManager(private val context: Context) {
     }
 
     /**
-     * Save user words to preferences (JSON format matching CustomDictionarySource)
+     * Save user words to preferences (JSON format matching CustomDictionarySource).
+     *
+     * Wave U2: frequencies already stored for these words are PRESERVED — the old
+     * `associateWith { 100 }` rewrote every word's frequency to 100 on any add/remove
+     * through this class, silently destroying values the user set in the Dictionary
+     * Manager dialogs. Only words new to the map get [UserWordFrequency.DEFAULT].
      */
     private fun saveUserWords() {
         val key = getCustomWordsKey()
-        // Convert to map with default frequency of 100
-        val wordsMap = userWords.associateWith { 100 }
+        val stored: Map<String, Int> = prefs.getString(key, null)?.let { json ->
+            try {
+                val type = object : TypeToken<MutableMap<String, Int>>() {}.type
+                gson.fromJson<MutableMap<String, Int>>(json, type) ?: mutableMapOf()
+            } catch (e: Exception) {
+                mutableMapOf()
+            }
+        } ?: mutableMapOf()
+        val wordsMap = userWords.associateWith { stored[it] ?: UserWordFrequency.DEFAULT }
         prefs.edit()
             .putString(key, gson.toJson(wordsMap))
             .apply()

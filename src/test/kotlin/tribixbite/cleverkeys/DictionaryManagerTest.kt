@@ -180,13 +180,14 @@ class DictionaryManagerTest {
         verify { mockLegacyEditor.remove("user_words") }
         verify { mockLegacyEditor.apply() }
 
-        // Verify migrated JSON contains all words with frequency 100
+        // Verify migrated JSON contains all words at the wave-U2 default (255 — top of
+        // the 1..255 stored user scale; the legacy set carried no frequencies)
         val savedJson = savedStrings["custom_words_en"]
         assertThat(savedJson).isNotNull()
         assertThat(savedJson).contains("\"hello\"")
         assertThat(savedJson).contains("\"world\"")
         assertThat(savedJson).contains("\"test\"")
-        assertThat(savedJson).contains("100")
+        assertThat(savedJson).contains("255")
     }
 
     @Test
@@ -354,7 +355,7 @@ class DictionaryManagerTest {
     // =========================================================================
 
     @Test
-    fun `user words saved as JSON map with frequency 100`() {
+    fun `user words saved as JSON map with the default frequency 255`() {
         val manager = buildManager()
         savedStrings.clear()
 
@@ -362,8 +363,26 @@ class DictionaryManagerTest {
 
         val json = savedStrings["custom_words_en"]
         assertThat(json).isNotNull()
-        // Gson serializes Map<String, Int> — expect {"testword":100}
+        // Gson serializes Map<String, Int> — expect {"testword":255} (wave U2:
+        // a user-added word defaults to the top of the 1..255 stored scale)
         assertThat(json).contains("\"testword\"")
-        assertThat(json).contains("100")
+        assertThat(json).contains("255")
+    }
+
+    @Test
+    fun `saveUserWords preserves a stored frequency the user set`() {
+        // Wave U2 regression guard: the old saveUserWords rewrote EVERY word to 100 on
+        // any add/remove, destroying dialog-set frequencies. Adding a second word must
+        // keep the first word's stored value.
+        val manager = buildManager(existingWords = """{"boosted":40}""")
+        every { mockPrefs.getString("custom_words_en", null) } returns """{"boosted":40}"""
+        savedStrings.clear()
+
+        manager.addUserWord("testword")
+
+        val json = savedStrings["custom_words_en"]
+        assertThat(json).isNotNull()
+        assertThat(json).contains("\"boosted\":40")
+        assertThat(json).contains("\"testword\":255")
     }
 }

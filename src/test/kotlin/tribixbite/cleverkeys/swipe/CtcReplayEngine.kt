@@ -165,6 +165,27 @@ class CtcReplayEngine private constructor(
         return CtcSwipeDecoder(model, altLayout, trie, params)
     }
 
+    /**
+     * The shipped base lexicon as `(word, frequency)` pairs in load order — the `basePairs`
+     * input a `CtcLexiconMerge.merge` call gets in `CtcEngineAdapter.lexiconFor`, for
+     * replaying user-dictionary merges (wave U2 custom-word calibration instrument).
+     */
+    fun baseLexiconPairs(): List<Pair<String, Double>> = frequencies.map { it.key to it.value }
+
+    /**
+     * The SHIPPED decode stack over a DIFFERENT (e.g. user-merged) lexicon — same model,
+     * same golden layout, same shipped params; only the trie is rebuilt from [merged]
+     * via the shipped EN_JSON STRIP loader (wave U2 custom-word calibration instrument).
+     * This is exactly the trie build `CtcEngineAdapter.lexiconFor` performs after
+     * `CtcLexiconMerge.merge`, minus the contraction alias-key injection — fine for
+     * measuring custom words that collide with no contraction alias, which is what the
+     * calibration replay decodes.
+     */
+    fun decoderWithLexicon(merged: LinkedHashMap<String, Double>): CtcSwipeDecoder {
+        val customTrie = CtcLexiconTrie.loadStrippingNonAlphabet(layout.alphabet, merged)
+        return CtcSwipeDecoder(model, layout, customTrie, params)
+    }
+
     /** The shipped bounded rescue for a greedy surface — exposed for rescue-eligibility analysis. */
     fun rescueFor(greedy: String, existing: Set<String>): List<String> =
         fuzzyRescue.find(greedy, existing.toHashSet())

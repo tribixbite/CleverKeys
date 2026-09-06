@@ -163,7 +163,12 @@ class UserDictionaryReachesSwipeTest {
 
     @Test
     fun aProviderOnlyWordReachesTheCtcMergedLexiconAtItsObservedFrequency() {
-        val base = listOf("the" to 255.0, "keyboard" to 200.0)
+        // "floorfill" pins the base floor at 1 so the wave-U2 calibration
+        // (stored 1..255 → [base_floor..255]) is the identity here and the
+        // observed-frequency assertions below stay exact. On a compressed base
+        // (en's 134..255) the value would be scale-MAPPED instead — still
+        // order-preserving, which is the signal this test protects.
+        val base = listOf("the" to 255.0, "keyboard" to 200.0, "floorfill" to 1.0)
         val custom = listOf("tribixbite" to 1000)
 
         val withoutProvider = CtcLexiconMerge.merge(base, custom, emptySet())

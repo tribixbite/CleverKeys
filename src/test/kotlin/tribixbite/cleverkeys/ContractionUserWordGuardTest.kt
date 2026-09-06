@@ -225,10 +225,12 @@ class ContractionUserWordGuardTest {
 
         assertWithMessage("`foo` and `Foo` are TWO entries — adding one must not dedup the other")
             .that(userWordsOf(manager)).containsExactly("foo", "Foo")
+        // Wave U2: new/unknown words save at UserWordFrequency.DEFAULT (255) — the
+        // frequency value is incidental here; the pin is case-sensitive MEMBERSHIP.
         assertWithMessage("both casings persist verbatim")
-            .that(savedPrefs["custom_words_en"]).contains(""""foo":100""")
+            .that(savedPrefs["custom_words_en"]).contains(""""foo":255""")
         assertWithMessage("both casings persist verbatim")
-            .that(savedPrefs["custom_words_en"]).contains(""""Foo":100""")
+            .that(savedPrefs["custom_words_en"]).contains(""""Foo":255""")
 
         manager.removeUserWord("foo")
 

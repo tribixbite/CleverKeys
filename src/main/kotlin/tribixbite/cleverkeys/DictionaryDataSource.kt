@@ -17,7 +17,9 @@ interface DictionaryDataSource {
     suspend fun getAllWords(): List<DictionaryWord>
     suspend fun searchWords(query: String): List<DictionaryWord>
     suspend fun toggleWord(word: String, enabled: Boolean)
-    suspend fun addWord(word: String, frequency: Int = 100)
+    // Wave U2: default is the top of the 1..255 stored user scale — an added word
+    // should win its own gesture (see UserWordFrequency).
+    suspend fun addWord(word: String, frequency: Int = UserWordFrequency.DEFAULT)
     suspend fun deleteWord(word: String)
     suspend fun updateWord(oldWord: String, newWord: String, frequency: Int)
 

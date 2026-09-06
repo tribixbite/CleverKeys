@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.ln1p
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * Word prediction engine that matches swipe patterns to dictionary words
@@ -1276,8 +1277,12 @@ class WordPredictor : Predictor {
                 while (keys.hasNext()) {
                     val word = keys.next()
                     val frequency = jsonObj.optInt(word, 1000)
-                    // Convert frequency to rank (0-255): higher frequency = lower rank
-                    val rank = max(0, min(255, 255 - (frequency / 4000)))
+                    // Wave U2: the stored value is on the 1..255 user scale
+                    // (UserWordFrequency), and the secondary index wants a RANK
+                    // (0 = most common). 255 − stored maps the add-word default
+                    // (255) to rank 0; the old `255 − freq/4000` assumed a ~1M
+                    // scale and sent every stored value to rank ~255 (worst).
+                    val rank = max(0, min(255, 255 - frequency.coerceIn(1, 255)))
                     index.addWord(word, rank)
                     count++
                 }
@@ -1597,6 +1602,9 @@ class WordPredictor : Predictor {
      */
     private fun loadCustomAndUserWordsIntoMap(context: Context, targetMap: MutableMap<String, Int>, language: String = "en"): Set<String> {
         val loadedWords = mutableSetOf<String>()
+        // Wave U2: calibrate stored 1..255 user frequencies onto the base scale
+        // already loaded into [targetMap] (see baseFrequencySpanOf).
+        val (scaleFloor, scaleCeil) = baseFrequencySpanOf(targetMap)
 
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
@@ -1615,7 +1623,9 @@ class WordPredictor : Predictor {
                         val originalWord = keys.next()
                         val lowerWord = originalWord.lowercase()
                         val frequency = jsonObj.optInt(originalWord, 1000)
-                        targetMap[lowerWord] = frequency  // Write to target map, not dictionary
+                        // Write the CALIBRATED value to the target map, not dictionary
+                        targetMap[lowerWord] =
+                            UserWordFrequency.scaleOnto(frequency, scaleFloor, scaleCeil).roundToInt()
                         loadedWords.add(lowerWord)
                         // v1.2.7: Preserve original case for proper nouns (Issue #72)
                         if (originalWord != lowerWord) {
@@ -1638,7 +1648,9 @@ class WordPredictor : Predictor {
             val userRows = UserDictionaryWords.read(context, language)
             for ((originalWord, frequency) in userRows) {
                 val lowerWord = originalWord.lowercase()
-                targetMap[lowerWord] = frequency  // Write to target map, not dictionary
+                // Provider rows are 1..255 too — same calibration as the preference words.
+                targetMap[lowerWord] =
+                    UserWordFrequency.scaleOnto(frequency, scaleFloor, scaleCeil).roundToInt()
                 loadedWords.add(lowerWord)
                 // v1.2.7: Preserve original case for proper nouns (Issue #72)
                 if (originalWord != lowerWord) {
@@ -1690,6 +1702,9 @@ class WordPredictor : Predictor {
      */
     private fun loadCustomAndUserWords(context: Context, language: String = "en"): Set<String> {
         val loadedWords = mutableSetOf<String>()
+        // Wave U2: calibrate stored 1..255 user frequencies onto the serving map's base
+        // scale (stable across reloads — see baseFrequencySpanOf).
+        val (scaleFloor, scaleCeil) = baseFrequencySpanOf(dictionary.get())
 
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
@@ -1708,7 +1723,8 @@ class WordPredictor : Predictor {
                         val originalWord = keys.next()
                         val lowerWord = originalWord.lowercase()
                         val frequency = jsonObj.optInt(originalWord, 1000)
-                        dictionary.get()[lowerWord] = frequency
+                        dictionary.get()[lowerWord] =
+                            UserWordFrequency.scaleOnto(frequency, scaleFloor, scaleCeil).roundToInt()
                         loadedWords.add(lowerWord)  // Track loaded word
                         // Issue #72: Preserve original case for proper nouns
                         // Only store if word has uppercase (potential proper noun)
@@ -1732,7 +1748,9 @@ class WordPredictor : Predictor {
             val userRows = UserDictionaryWords.read(context, language)
             for ((originalWord, frequency) in userRows) {
                 val lowerWord = originalWord.lowercase()
-                dictionary.get()[lowerWord] = frequency
+                // Provider rows are 1..255 too — same calibration as the preference words.
+                dictionary.get()[lowerWord] =
+                    UserWordFrequency.scaleOnto(frequency, scaleFloor, scaleCeil).roundToInt()
                 loadedWords.add(lowerWord)  // Track loaded word
                 // v1.2.7: Preserve original case for proper nouns (Issue #72)
                 if (originalWord != lowerWord) {
@@ -2133,6 +2151,37 @@ class WordPredictor : Predictor {
             cachedMaxFreqForSize = dict.size
         }
         return cachedMaxFreq
+    }
+
+    /**
+     * Wave U2 — the `[floor..ceil]` frequency span of the CURRENT dictionary map, for
+     * calibrating stored 1..255 user-word frequencies onto whatever scale the base
+     * dictionary was loaded on via [UserWordFrequency.scaleOnto].
+     *
+     * The tap dictionary's scale varies by source — binary CKDT converts ranks to
+     * `1000000 − rank·3900` (~5.5K..1M) while the JSON fallback scales bytes to
+     * 100..10000 — and a RAW stored value (old default 100) sat at or below the floor
+     * of BOTH, ranking a user's own word behind the entire base dictionary in
+     * `UnifiedScore`'s `1 + ln1p(freq/scale)` factor. Mapping through the span keeps
+     * the user's ordering, puts stored 255 (the add-word default) at the top of the
+     * scale, and never buries a custom word below the rarest base word.
+     *
+     * Called BEFORE user words are inserted on a fresh map; on a reload the previously
+     * calibrated user values already lie within the span, so the answer is stable.
+     * An empty map (no base dictionary) yields the identity span 1..255.
+     */
+    private fun baseFrequencySpanOf(dict: Map<String, Int>): Pair<Double, Double> {
+        var mn = Int.MAX_VALUE
+        var mx = Int.MIN_VALUE
+        for (v in dict.values) {
+            if (v < mn) mn = v
+            if (v > mx) mx = v
+        }
+        return if (mx < mn) {
+            UserWordFrequency.MIN.toDouble() to UserWordFrequency.MAX.toDouble()
+        } else {
+            mn.toDouble() to mx.toDouble()
+        }
     }
 
     override fun autoCorrect(typedWord: String): String {

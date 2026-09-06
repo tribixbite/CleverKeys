@@ -862,6 +862,10 @@ tasks.register('runPureTests', JavaExec) {
     // the golden geometry through the shipped encoder + beam, with forced-decode diagnostics.
     // Self-contained (no local corpus); skips only when the ORT natives are absent.
     'tribixbite.cleverkeys.swipe.CtcDecodeReplayTest',
+    // Wave U2 custom-word calibration replay: measures + pins the merge-time mapping of
+    // stored custom frequencies onto the base lexicon's byte scale (the "custom words are
+    // harder to swipe than they should be" fix). Skips only when the ORT natives are absent.
+    'tribixbite.cleverkeys.swipe.CtcCustomWordCalibrationReplayTest',
     // Issue-#75 replay instrument (Swiss French QWERTZ decoded as if QWERTY): the shipped
     // decode stack re-bound to the Swiss board's real key centers (decoderFor) — pins that
     // the engine follows the DISPLAYED geometry (y-e-s → "yes", not a z- word), plus the
