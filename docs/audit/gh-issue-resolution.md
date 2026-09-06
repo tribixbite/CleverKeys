@@ -36,6 +36,12 @@ close) · **OPEN** (triaged, actionable) · **FEATURE** (awaiting maintainer pri
 | 71 | Clipboard open stalls device | **PINNED-era** | Open path async on IO (self-documented #71 fix), 512 KB cap, pagination — verified first-hand | comment + close |
 | 35 | Overly dark darkmode | **PINNED-era** | Fixed across `90c929d1`/`cc6a0b6b`/ARC-111; zero forced-dark surfaces verified at HEAD | comment + close |
 
+## Maintainer-reported (no GH issue)
+
+| Report | Status | Evidence | GH action |
+|---|---|---|---|
+| Media clipboard entries have no UI path to deletion (delete only appears in edit mode; media rows can't edit) | **FIXED** | `d3cd8dc6` — expanded media rows now show the delete row (per-tab routing: history remove / unpin / un-todo), gain the expand chevron, and the thumbnail toggles expansion; text rows keep delete behind edit mode. Store side verified + pinned: row deletion already removed the on-disk media file iff no other tab's COPY references it (no orphaning bug found). Fail-first `ClipboardMediaDeleteAffordanceTest` (red 5/8 → OK 8, drives the real `getView`); `ClipboardMediaDeletionCleanupTest` OK 7; mock suite OK 589. Note: `ClipboardPinView.kt` is dead legacy (referenced nowhere — the live pinned tab is `ClipboardHistoryView`'s and is covered). Soak: one visual tap — copy an image (browser long-press → Copy image), expand its clipboard row, delete it | — (no issue to comment on); visual tap in next maintainer soak |
+
 ## Features that appear ALREADY SHIPPED (verify, then close)
 
 | # | Title (short) | Why it looks done |
