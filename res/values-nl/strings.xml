@@ -195,6 +195,14 @@
     <string name="clipboard_media_thumbnail">Mediaminiatuur</string>
     <string name="clipboard_animated">Geanimeerd</string>
     <string name="clipboard_private_entry">Privé-item</string>
+    <string name="clipboard_entry_expand_descr">Item uit- of samenvouwen</string>
+    <string name="clipboard_entry_edit_descr">Item bewerken</string>
+    <string name="clipboard_entry_pin_descr">Item vastzetten</string>
+    <string name="clipboard_entry_unpin_descr">Item losmaken</string>
+    <string name="clipboard_entry_todo_descr">Toevoegen aan taken</string>
+    <string name="clipboard_entry_done_descr">Voltooid wisselen</string>
+    <string name="clipboard_entry_status_descr">Taakstatus wisselen</string>
+    <string name="clipboard_entry_tags_descr">Tags bewerken</string>
 
     <!-- Clipboard tag panel -->
     <string name="clipboard_tags_header">Tags: %1$s</string>
@@ -204,6 +212,8 @@
     <string name="clipboard_no_tags">Geen tags</string>
     <string name="clipboard_new_tag_hint">Nieuwe tag…</string>
     <string name="clipboard_close_tag_panel">Tagpaneel sluiten</string>
+    <string name="clipboard_tag_error_empty">Voer een tagnaam in</string>
+    <string name="clipboard_tag_error_duplicate">Tag bestaat al</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Emoji zoeken…</string>

@@ -223,6 +223,14 @@
     <string name="clipboard_media_thumbnail">Hình thu nhỏ phương tiện</string>
     <string name="clipboard_animated">Động</string>
     <string name="clipboard_private_entry">Mục riêng tư</string>
+    <string name="clipboard_entry_expand_descr">Mở rộng hoặc thu gọn mục</string>
+    <string name="clipboard_entry_edit_descr">Chỉnh sửa mục</string>
+    <string name="clipboard_entry_pin_descr">Ghim mục</string>
+    <string name="clipboard_entry_unpin_descr">Bỏ ghim mục</string>
+    <string name="clipboard_entry_todo_descr">Thêm vào việc cần làm</string>
+    <string name="clipboard_entry_done_descr">Chuyển đổi hoàn thành</string>
+    <string name="clipboard_entry_status_descr">Đổi trạng thái việc cần làm</string>
+    <string name="clipboard_entry_tags_descr">Chỉnh sửa thẻ</string>
 
     <!-- Clipboard tags -->
     <string name="clipboard_tags_header">Thẻ: %1$s</string>
@@ -232,6 +240,8 @@
     <string name="clipboard_no_tags">Không có thẻ</string>
     <string name="clipboard_new_tag_hint">Thẻ mới…</string>
     <string name="clipboard_close_tag_panel">Đóng bảng thẻ</string>
+    <string name="clipboard_tag_error_empty">Nhập tên thẻ</string>
+    <string name="clipboard_tag_error_duplicate">Thẻ đã tồn tại</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Tìm emoji…</string>

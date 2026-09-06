@@ -219,6 +219,14 @@
     <string name="clipboard_media_thumbnail">Miniatură media</string>
     <string name="clipboard_animated">Animat</string>
     <string name="clipboard_private_entry">Intrare privată</string>
+    <string name="clipboard_entry_expand_descr">Extinde sau restrânge intrarea</string>
+    <string name="clipboard_entry_edit_descr">Editează intrarea</string>
+    <string name="clipboard_entry_pin_descr">Fixează intrarea</string>
+    <string name="clipboard_entry_unpin_descr">Anulează fixarea intrării</string>
+    <string name="clipboard_entry_todo_descr">Adaugă la sarcini</string>
+    <string name="clipboard_entry_done_descr">Comută finalizat</string>
+    <string name="clipboard_entry_status_descr">Schimbă starea sarcinii</string>
+    <string name="clipboard_entry_tags_descr">Editează etichetele</string>
     <string name="clipboard_tags_header">Etichete: %1$s</string>
     <string name="clipboard_current_tags">Etichete curente</string>
     <string name="clipboard_add_from_existing">Adaugă din cele existente</string>
@@ -226,6 +234,8 @@
     <string name="clipboard_no_tags">Nicio etichetă</string>
     <string name="clipboard_new_tag_hint">Etichetă nouă…</string>
     <string name="clipboard_close_tag_panel">Închide panoul de etichete</string>
+    <string name="clipboard_tag_error_empty">Introduceți un nume de etichetă</string>
+    <string name="clipboard_tag_error_duplicate">Eticheta există deja</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Caută emoji…</string>

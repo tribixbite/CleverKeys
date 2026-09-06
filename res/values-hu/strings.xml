@@ -188,6 +188,14 @@
     <string name="clipboard_media_thumbnail">Médiabélyegkép</string>
     <string name="clipboard_animated">Animált</string>
     <string name="clipboard_private_entry">Privát bejegyzés</string>
+    <string name="clipboard_entry_expand_descr">Bejegyzés kibontása vagy összecsukása</string>
+    <string name="clipboard_entry_edit_descr">Bejegyzés szerkesztése</string>
+    <string name="clipboard_entry_pin_descr">Bejegyzés rögzítése</string>
+    <string name="clipboard_entry_unpin_descr">Rögzítés feloldása</string>
+    <string name="clipboard_entry_todo_descr">Hozzáadás a teendőkhöz</string>
+    <string name="clipboard_entry_done_descr">Kész állapot váltása</string>
+    <string name="clipboard_entry_status_descr">Teendő állapotának váltása</string>
+    <string name="clipboard_entry_tags_descr">Címkék szerkesztése</string>
 
     <!-- Clipboard tag panel -->
     <string name="clipboard_tags_header">Címkék: %1$s</string>
@@ -197,6 +205,8 @@
     <string name="clipboard_no_tags">Nincsenek címkék</string>
     <string name="clipboard_new_tag_hint">Új címke…</string>
     <string name="clipboard_close_tag_panel">Címkepanel bezárása</string>
+    <string name="clipboard_tag_error_empty">Adjon meg egy címkenevet</string>
+    <string name="clipboard_tag_error_duplicate">A címke már létezik</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Emoji keresése…</string>

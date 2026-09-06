@@ -195,6 +195,14 @@
     <string name="clipboard_media_thumbnail">미디어 썸네일</string>
     <string name="clipboard_animated">움직이는 이미지</string>
     <string name="clipboard_private_entry">비공개 항목</string>
+    <string name="clipboard_entry_expand_descr">항목 펼치기 또는 접기</string>
+    <string name="clipboard_entry_edit_descr">항목 편집</string>
+    <string name="clipboard_entry_pin_descr">항목 고정</string>
+    <string name="clipboard_entry_unpin_descr">항목 고정 해제</string>
+    <string name="clipboard_entry_todo_descr">할 일에 추가</string>
+    <string name="clipboard_entry_done_descr">완료 전환</string>
+    <string name="clipboard_entry_status_descr">할 일 상태 전환</string>
+    <string name="clipboard_entry_tags_descr">태그 편집</string>
 
     <!-- Clipboard Tags -->
     <string name="clipboard_tags_header">태그: %1$s</string>
@@ -204,6 +212,8 @@
     <string name="clipboard_no_tags">태그 없음</string>
     <string name="clipboard_new_tag_hint">새 태그…</string>
     <string name="clipboard_close_tag_panel">태그 패널 닫기</string>
+    <string name="clipboard_tag_error_empty">태그 이름을 입력하세요</string>
+    <string name="clipboard_tag_error_duplicate">태그가 이미 존재합니다</string>
 
     <!-- Emoji Picker -->
     <string name="emoji_search_hint">이모지 검색…</string>

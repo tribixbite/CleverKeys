@@ -184,6 +184,14 @@
     <string name="clipboard_media_thumbnail">Миниатюра медиа</string>
     <string name="clipboard_animated">Анимированное</string>
     <string name="clipboard_private_entry">Приватная запись</string>
+    <string name="clipboard_entry_expand_descr">Развернуть или свернуть запись</string>
+    <string name="clipboard_entry_edit_descr">Редактировать запись</string>
+    <string name="clipboard_entry_pin_descr">Закрепить запись</string>
+    <string name="clipboard_entry_unpin_descr">Открепить запись</string>
+    <string name="clipboard_entry_todo_descr">Добавить в задачи</string>
+    <string name="clipboard_entry_done_descr">Переключить выполнено</string>
+    <string name="clipboard_entry_status_descr">Сменить статус задачи</string>
+    <string name="clipboard_entry_tags_descr">Редактировать теги</string>
     <string name="clipboard_tags_header">Теги: %1$s</string>
     <string name="clipboard_current_tags">Текущие теги</string>
     <string name="clipboard_add_from_existing">Добавить из существующих</string>
@@ -191,6 +199,8 @@
     <string name="clipboard_no_tags">Нет тегов</string>
     <string name="clipboard_new_tag_hint">Новый тег…</string>
     <string name="clipboard_close_tag_panel">Закрыть панель тегов</string>
+    <string name="clipboard_tag_error_empty">Введите имя тега</string>
+    <string name="clipboard_tag_error_duplicate">Тег уже существует</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Поиск эмодзи…</string>

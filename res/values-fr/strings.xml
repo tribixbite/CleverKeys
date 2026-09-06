@@ -186,6 +186,14 @@
     <string name="clipboard_media_thumbnail">Miniature du média</string>
     <string name="clipboard_animated">Animé</string>
     <string name="clipboard_private_entry">Entrée privée</string>
+    <string name="clipboard_entry_expand_descr">Développer ou réduire l\'entrée</string>
+    <string name="clipboard_entry_edit_descr">Modifier l\'entrée</string>
+    <string name="clipboard_entry_pin_descr">Épingler l\'entrée</string>
+    <string name="clipboard_entry_unpin_descr">Désépingler l\'entrée</string>
+    <string name="clipboard_entry_todo_descr">Ajouter aux tâches</string>
+    <string name="clipboard_entry_done_descr">Basculer l\'état terminé</string>
+    <string name="clipboard_entry_status_descr">Changer l\'état de la tâche</string>
+    <string name="clipboard_entry_tags_descr">Modifier les étiquettes</string>
     <string name="clipboard_tags_header">Étiquettes : %1$s</string>
     <string name="clipboard_current_tags">Étiquettes actuelles</string>
     <string name="clipboard_add_from_existing">Ajouter à partir des existantes</string>
@@ -193,6 +201,8 @@
     <string name="clipboard_no_tags">Aucune étiquette</string>
     <string name="clipboard_new_tag_hint">Nouvelle étiquette…</string>
     <string name="clipboard_close_tag_panel">Fermer le panneau des étiquettes</string>
+    <string name="clipboard_tag_error_empty">Saisissez un nom d\'étiquette</string>
+    <string name="clipboard_tag_error_duplicate">L\'étiquette existe déjà</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Rechercher un emoji…</string>

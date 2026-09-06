@@ -193,6 +193,14 @@
     <string name="clipboard_media_thumbnail">Medya küçük resmi</string>
     <string name="clipboard_animated">Animasyonlu</string>
     <string name="clipboard_private_entry">Gizli kayıt</string>
+    <string name="clipboard_entry_expand_descr">Girdiyi genişlet veya daralt</string>
+    <string name="clipboard_entry_edit_descr">Girdiyi düzenle</string>
+    <string name="clipboard_entry_pin_descr">Girdiyi sabitle</string>
+    <string name="clipboard_entry_unpin_descr">Girdinin sabitlemesini kaldır</string>
+    <string name="clipboard_entry_todo_descr">Yapılacaklara ekle</string>
+    <string name="clipboard_entry_done_descr">Tamamlandı durumunu değiştir</string>
+    <string name="clipboard_entry_status_descr">Yapılacak durumunu değiştir</string>
+    <string name="clipboard_entry_tags_descr">Etiketleri düzenle</string>
     <string name="clipboard_tags_header">Etiketler: %1$s</string>
     <string name="clipboard_current_tags">Mevcut etiketler</string>
     <string name="clipboard_add_from_existing">Mevcutlardan ekle</string>
@@ -200,6 +208,8 @@
     <string name="clipboard_no_tags">Etiket yok</string>
     <string name="clipboard_new_tag_hint">Yeni etiket…</string>
     <string name="clipboard_close_tag_panel">Etiket panelini kapat</string>
+    <string name="clipboard_tag_error_empty">Bir etiket adı girin</string>
+    <string name="clipboard_tag_error_duplicate">Etiket zaten var</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Emoji ara…</string>

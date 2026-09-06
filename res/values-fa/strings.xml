@@ -219,6 +219,14 @@
     <string name="clipboard_media_thumbnail">بندانگشتی رسانه</string>
     <string name="clipboard_animated">پویانمایی</string>
     <string name="clipboard_private_entry">مورد خصوصی</string>
+    <string name="clipboard_entry_expand_descr">باز یا بسته کردن مورد</string>
+    <string name="clipboard_entry_edit_descr">ویرایش مورد</string>
+    <string name="clipboard_entry_pin_descr">سنجاق کردن مورد</string>
+    <string name="clipboard_entry_unpin_descr">برداشتن سنجاق مورد</string>
+    <string name="clipboard_entry_todo_descr">افزودن به کارها</string>
+    <string name="clipboard_entry_done_descr">تغییر وضعیت انجام‌شده</string>
+    <string name="clipboard_entry_status_descr">چرخش وضعیت کار</string>
+    <string name="clipboard_entry_tags_descr">ویرایش برچسب‌ها</string>
     <string name="clipboard_tags_header">برچسب‌ها: %1$s</string>
     <string name="clipboard_current_tags">برچسب‌های کنونی</string>
     <string name="clipboard_add_from_existing">افزودن از موارد موجود</string>
@@ -226,6 +234,8 @@
     <string name="clipboard_no_tags">بدون برچسب</string>
     <string name="clipboard_new_tag_hint">برچسب جدید…</string>
     <string name="clipboard_close_tag_panel">بستن پنل برچسب</string>
+    <string name="clipboard_tag_error_empty">نام برچسب را وارد کنید</string>
+    <string name="clipboard_tag_error_duplicate">برچسب از قبل وجود دارد</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">جستجوی ایموجی…</string>

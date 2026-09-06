@@ -195,6 +195,14 @@
     <string name="clipboard_media_thumbnail">Náhled média</string>
     <string name="clipboard_animated">Animované</string>
     <string name="clipboard_private_entry">Soukromá položka</string>
+    <string name="clipboard_entry_expand_descr">Rozbalit nebo sbalit položku</string>
+    <string name="clipboard_entry_edit_descr">Upravit položku</string>
+    <string name="clipboard_entry_pin_descr">Připnout položku</string>
+    <string name="clipboard_entry_unpin_descr">Odepnout položku</string>
+    <string name="clipboard_entry_todo_descr">Přidat do úkolů</string>
+    <string name="clipboard_entry_done_descr">Přepnout dokončení</string>
+    <string name="clipboard_entry_status_descr">Změnit stav úkolu</string>
+    <string name="clipboard_entry_tags_descr">Upravit štítky</string>
 
     <!-- Clipboard tag panel -->
     <string name="clipboard_tags_header">Štítky: %1$s</string>
@@ -204,6 +212,8 @@
     <string name="clipboard_no_tags">Žádné štítky</string>
     <string name="clipboard_new_tag_hint">Nový štítek…</string>
     <string name="clipboard_close_tag_panel">Zavřít panel štítků</string>
+    <string name="clipboard_tag_error_empty">Zadejte název štítku</string>
+    <string name="clipboard_tag_error_duplicate">Štítek již existuje</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Hledat emoji…</string>

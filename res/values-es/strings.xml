@@ -196,6 +196,14 @@
     <string name="clipboard_media_thumbnail">Miniatura del medio</string>
     <string name="clipboard_animated">Animado</string>
     <string name="clipboard_private_entry">Entrada privada</string>
+    <string name="clipboard_entry_expand_descr">Expandir o contraer entrada</string>
+    <string name="clipboard_entry_edit_descr">Editar entrada</string>
+    <string name="clipboard_entry_pin_descr">Fijar entrada</string>
+    <string name="clipboard_entry_unpin_descr">Desfijar entrada</string>
+    <string name="clipboard_entry_todo_descr">Añadir a tareas</string>
+    <string name="clipboard_entry_done_descr">Alternar completada</string>
+    <string name="clipboard_entry_status_descr">Cambiar estado de la tarea</string>
+    <string name="clipboard_entry_tags_descr">Editar etiquetas</string>
 
     <!-- Clipboard tag panel -->
     <string name="clipboard_tags_header">Etiquetas: %1$s</string>
@@ -205,6 +213,8 @@
     <string name="clipboard_no_tags">Sin etiquetas</string>
     <string name="clipboard_new_tag_hint">Etiqueta nueva…</string>
     <string name="clipboard_close_tag_panel">Cerrar panel de etiquetas</string>
+    <string name="clipboard_tag_error_empty">Introduce un nombre de etiqueta</string>
+    <string name="clipboard_tag_error_duplicate">La etiqueta ya existe</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Buscar emojis…</string>

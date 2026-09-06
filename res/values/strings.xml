@@ -267,6 +267,14 @@
     <string name="clipboard_media_thumbnail">Media thumbnail</string>
     <string name="clipboard_animated">Animated</string>
     <string name="clipboard_private_entry">Private entry</string>
+    <string name="clipboard_entry_expand_descr">Expand or collapse entry</string>
+    <string name="clipboard_entry_edit_descr">Edit entry</string>
+    <string name="clipboard_entry_pin_descr">Pin entry</string>
+    <string name="clipboard_entry_unpin_descr">Unpin entry</string>
+    <string name="clipboard_entry_todo_descr">Add to todos</string>
+    <string name="clipboard_entry_done_descr">Toggle completed</string>
+    <string name="clipboard_entry_status_descr">Cycle todo status</string>
+    <string name="clipboard_entry_tags_descr">Edit tags</string>
     <!-- #156 / ARC-011: provenance line in the expanded entry. %1$s is the source app's label
          (or its raw package name when that app is no longer installed). English-only for now;
          translation debt tracked in the commit that introduced it. -->
@@ -287,6 +295,8 @@
     <string name="clipboard_no_tags">No tags</string>
     <string name="clipboard_new_tag_hint">New tag…</string>
     <string name="clipboard_close_tag_panel">Close tag panel</string>
+    <string name="clipboard_tag_error_empty">Enter a tag name</string>
+    <string name="clipboard_tag_error_duplicate">Tag already exists</string>
 
     <!-- ══════════════════════════════════════════════════════════════════
          Emoji & GIF panels (emoji_pane / gif_pane / EmojiSearchManager)

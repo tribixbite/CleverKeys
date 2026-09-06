@@ -193,6 +193,14 @@
     <string name="clipboard_media_thumbnail">媒体缩略图</string>
     <string name="clipboard_animated">动态</string>
     <string name="clipboard_private_entry">私密条目</string>
+    <string name="clipboard_entry_expand_descr">展开或收起条目</string>
+    <string name="clipboard_entry_edit_descr">编辑条目</string>
+    <string name="clipboard_entry_pin_descr">固定条目</string>
+    <string name="clipboard_entry_unpin_descr">取消固定条目</string>
+    <string name="clipboard_entry_todo_descr">添加到待办</string>
+    <string name="clipboard_entry_done_descr">切换完成状态</string>
+    <string name="clipboard_entry_status_descr">切换待办状态</string>
+    <string name="clipboard_entry_tags_descr">编辑标签</string>
 
     <!-- Clipboard tags -->
     <string name="clipboard_tags_header">标签：%1$s</string>
@@ -202,6 +210,8 @@
     <string name="clipboard_no_tags">无标签</string>
     <string name="clipboard_new_tag_hint">新标签…</string>
     <string name="clipboard_close_tag_panel">关闭标签面板</string>
+    <string name="clipboard_tag_error_empty">请输入标签名称</string>
+    <string name="clipboard_tag_error_duplicate">标签已存在</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">搜索表情…</string>

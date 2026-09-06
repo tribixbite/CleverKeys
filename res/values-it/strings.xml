@@ -218,6 +218,14 @@
     <string name="clipboard_media_thumbnail">Miniatura del media</string>
     <string name="clipboard_animated">Animato</string>
     <string name="clipboard_private_entry">Voce privata</string>
+    <string name="clipboard_entry_expand_descr">Espandi o comprimi la voce</string>
+    <string name="clipboard_entry_edit_descr">Modifica voce</string>
+    <string name="clipboard_entry_pin_descr">Fissa voce</string>
+    <string name="clipboard_entry_unpin_descr">Sblocca voce</string>
+    <string name="clipboard_entry_todo_descr">Aggiungi alle attività</string>
+    <string name="clipboard_entry_done_descr">Attiva/disattiva completata</string>
+    <string name="clipboard_entry_status_descr">Cambia stato attività</string>
+    <string name="clipboard_entry_tags_descr">Modifica tag</string>
 
     <!-- Clipboard tag panel -->
     <string name="clipboard_tags_header">Tag: %1$s</string>
@@ -227,6 +235,8 @@
     <string name="clipboard_no_tags">Nessun tag</string>
     <string name="clipboard_new_tag_hint">Nuovo tag…</string>
     <string name="clipboard_close_tag_panel">Chiudi pannello tag</string>
+    <string name="clipboard_tag_error_empty">Inserisci un nome di tag</string>
+    <string name="clipboard_tag_error_duplicate">Il tag esiste già</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Cerca emoji…</string>

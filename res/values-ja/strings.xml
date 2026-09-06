@@ -194,6 +194,14 @@
     <string name="clipboard_media_thumbnail">メディアのサムネイル</string>
     <string name="clipboard_animated">アニメーション</string>
     <string name="clipboard_private_entry">プライベート項目</string>
+    <string name="clipboard_entry_expand_descr">項目を展開または折りたたむ</string>
+    <string name="clipboard_entry_edit_descr">項目を編集</string>
+    <string name="clipboard_entry_pin_descr">項目をピン留め</string>
+    <string name="clipboard_entry_unpin_descr">項目のピン留めを解除</string>
+    <string name="clipboard_entry_todo_descr">Todoに追加</string>
+    <string name="clipboard_entry_done_descr">完了を切り替え</string>
+    <string name="clipboard_entry_status_descr">Todoの状態を切り替え</string>
+    <string name="clipboard_entry_tags_descr">タグを編集</string>
 
     <!-- Clipboard Tags -->
     <string name="clipboard_tags_header">タグ: %1$s</string>
@@ -203,6 +211,8 @@
     <string name="clipboard_no_tags">タグなし</string>
     <string name="clipboard_new_tag_hint">新しいタグ…</string>
     <string name="clipboard_close_tag_panel">タグパネルを閉じる</string>
+    <string name="clipboard_tag_error_empty">タグ名を入力してください</string>
+    <string name="clipboard_tag_error_duplicate">タグは既に存在します</string>
 
     <!-- Emoji Picker -->
     <string name="emoji_search_hint">絵文字を検索…</string>

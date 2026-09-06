@@ -193,6 +193,14 @@
     <string name="clipboard_media_thumbnail">Thumbnail ng media</string>
     <string name="clipboard_animated">Animated</string>
     <string name="clipboard_private_entry">Private na entry</string>
+    <string name="clipboard_entry_expand_descr">Palawakin o itiklop ang entry</string>
+    <string name="clipboard_entry_edit_descr">I-edit ang entry</string>
+    <string name="clipboard_entry_pin_descr">I-pin ang entry</string>
+    <string name="clipboard_entry_unpin_descr">I-unpin ang entry</string>
+    <string name="clipboard_entry_todo_descr">Idagdag sa mga todo</string>
+    <string name="clipboard_entry_done_descr">I-toggle ang pagkakumpleto</string>
+    <string name="clipboard_entry_status_descr">Palitan ang status ng todo</string>
+    <string name="clipboard_entry_tags_descr">I-edit ang mga tag</string>
     <string name="clipboard_tags_header">Mga Tag: %1$s</string>
     <string name="clipboard_current_tags">Kasalukuyang mga tag</string>
     <string name="clipboard_add_from_existing">Magdagdag mula sa mga umiiral na</string>
@@ -200,6 +208,8 @@
     <string name="clipboard_no_tags">Walang tag</string>
     <string name="clipboard_new_tag_hint">Bagong tag…</string>
     <string name="clipboard_close_tag_panel">Isara ang tag panel</string>
+    <string name="clipboard_tag_error_empty">Maglagay ng pangalan ng tag</string>
+    <string name="clipboard_tag_error_duplicate">Mayroon nang ganitong tag</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Maghanap ng emoji…</string>

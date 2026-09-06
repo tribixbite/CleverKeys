@@ -193,6 +193,14 @@
     <string name="clipboard_media_thumbnail">Gambar mini media</string>
     <string name="clipboard_animated">Animasi</string>
     <string name="clipboard_private_entry">Entri pribadi</string>
+    <string name="clipboard_entry_expand_descr">Perluas atau ciutkan entri</string>
+    <string name="clipboard_entry_edit_descr">Edit entri</string>
+    <string name="clipboard_entry_pin_descr">Sematkan entri</string>
+    <string name="clipboard_entry_unpin_descr">Lepas sematan entri</string>
+    <string name="clipboard_entry_todo_descr">Tambahkan ke todo</string>
+    <string name="clipboard_entry_done_descr">Alihkan status selesai</string>
+    <string name="clipboard_entry_status_descr">Ganti status todo</string>
+    <string name="clipboard_entry_tags_descr">Edit tag</string>
 
     <!-- Clipboard tag panel -->
     <string name="clipboard_tags_header">Tag: %1$s</string>
@@ -202,6 +210,8 @@
     <string name="clipboard_no_tags">Tidak ada tag</string>
     <string name="clipboard_new_tag_hint">Tag baru…</string>
     <string name="clipboard_close_tag_panel">Tutup panel tag</string>
+    <string name="clipboard_tag_error_empty">Masukkan nama tag</string>
+    <string name="clipboard_tag_error_duplicate">Tag sudah ada</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Cari emoji…</string>

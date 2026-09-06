@@ -193,6 +193,14 @@
     <string name="clipboard_media_thumbnail">Multivides sīktēls</string>
     <string name="clipboard_animated">Animēts</string>
     <string name="clipboard_private_entry">Privāts ieraksts</string>
+    <string name="clipboard_entry_expand_descr">Izvērst vai sakļaut ierakstu</string>
+    <string name="clipboard_entry_edit_descr">Rediģēt ierakstu</string>
+    <string name="clipboard_entry_pin_descr">Piespraust ierakstu</string>
+    <string name="clipboard_entry_unpin_descr">Atspraust ierakstu</string>
+    <string name="clipboard_entry_todo_descr">Pievienot darāmajiem darbiem</string>
+    <string name="clipboard_entry_done_descr">Pārslēgt pabeigtu</string>
+    <string name="clipboard_entry_status_descr">Mainīt darba statusu</string>
+    <string name="clipboard_entry_tags_descr">Rediģēt birkas</string>
 
     <!-- Clipboard Tags -->
     <string name="clipboard_tags_header">Atzīmes: %1$s</string>
@@ -202,6 +210,8 @@
     <string name="clipboard_no_tags">Nav atzīmju</string>
     <string name="clipboard_new_tag_hint">Jauna atzīme…</string>
     <string name="clipboard_close_tag_panel">Aizvērt atzīmju paneli</string>
+    <string name="clipboard_tag_error_empty">Ievadiet birkas nosaukumu</string>
+    <string name="clipboard_tag_error_duplicate">Birka jau pastāv</string>
 
     <!-- Emoji Picker -->
     <string name="emoji_search_hint">Meklēt emocijzīmes…</string>

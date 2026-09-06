@@ -193,6 +193,14 @@
     <string name="clipboard_media_thumbnail">Мініатюра медіа</string>
     <string name="clipboard_animated">Анімоване</string>
     <string name="clipboard_private_entry">Приватний запис</string>
+    <string name="clipboard_entry_expand_descr">Розгорнути або згорнути запис</string>
+    <string name="clipboard_entry_edit_descr">Редагувати запис</string>
+    <string name="clipboard_entry_pin_descr">Закріпити запис</string>
+    <string name="clipboard_entry_unpin_descr">Відкріпити запис</string>
+    <string name="clipboard_entry_todo_descr">Додати до завдань</string>
+    <string name="clipboard_entry_done_descr">Перемкнути виконано</string>
+    <string name="clipboard_entry_status_descr">Змінити статус завдання</string>
+    <string name="clipboard_entry_tags_descr">Редагувати теги</string>
 
     <!-- Clipboard tags -->
     <string name="clipboard_tags_header">Теги: %1$s</string>
@@ -202,6 +210,8 @@
     <string name="clipboard_no_tags">Тегів немає</string>
     <string name="clipboard_new_tag_hint">Новий тег…</string>
     <string name="clipboard_close_tag_panel">Закрити панель тегів</string>
+    <string name="clipboard_tag_error_empty">Введіть назву тегу</string>
+    <string name="clipboard_tag_error_duplicate">Тег уже існує</string>
 
     <!-- Emoji picker -->
     <string name="emoji_search_hint">Пошук емодзі…</string>
