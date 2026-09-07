@@ -191,24 +191,7 @@ class SwipeDebugActivity : Activity() {
         logScroll.descendantFocusability = ViewGroup.FOCUS_BEFORE_DESCENDANTS
         logOutput.isFocusable = false
 
-        // Register broadcast receivers: raw pipeline log lines + per-swipe result payloads.
-        // RECEIVER_NOT_EXPORTED (4-arg registerReceiver) requires API 26. On API 24-25 a
-        // dynamic receiver without it is reachable by ANY app (I-8), so the pre-26 branch
-        // registers behind the app's signature-protected permission — the IME (this app)
-        // holds it via <uses-permission>, third parties cannot inject log/panel content.
-        val filter = IntentFilter(ACTION_DEBUG_LOG)
-        val resultFilter = IntentFilter(PlaygroundTraceRecorder.ACTION_SWIPE_RESULT)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            registerReceiver(logReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-            registerReceiver(swipeResultReceiver, resultFilter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(
-                logReceiver, filter, DebugLoggingManager.PERMISSION_SET_DEBUG_MODE, null
-            )
-            registerReceiver(
-                swipeResultReceiver, resultFilter, DebugLoggingManager.PERMISSION_SET_DEBUG_MODE, null
-            )
-        }
+        registerPlaygroundReceivers()
 
         appendLog("=== Swipe Playground Session Started ===\n")
         appendLog("Swipe in the text field above. Each swipe shows its candidate ranking\n")
@@ -249,6 +232,34 @@ class SwipeDebugActivity : Activity() {
             // Already unregistered
         }
         dbExecutor.shutdown()
+    }
+
+    /**
+     * Register broadcast receivers: raw pipeline log lines + per-swipe result payloads.
+     * RECEIVER_NOT_EXPORTED (4-arg registerReceiver) requires API 26. On API 24-25 a
+     * dynamic receiver without it is reachable by ANY app (I-8), so the pre-26 branch
+     * registers behind the app's signature-protected permission — the IME (this app)
+     * holds it via `<uses-permission>`, third parties cannot inject log/panel content.
+     *
+     * UnspecifiedRegisterReceiverFlag: lint flags the pre-26 permission-form calls, but
+     * no flag-accepting overload exists below API 26 and that branch can never execute
+     * on the API 33+ devices the check protects; the permission IS the protection.
+     */
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    private fun registerPlaygroundReceivers() {
+        val filter = IntentFilter(ACTION_DEBUG_LOG)
+        val resultFilter = IntentFilter(PlaygroundTraceRecorder.ACTION_SWIPE_RESULT)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(logReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            registerReceiver(swipeResultReceiver, resultFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(
+                logReceiver, filter, DebugLoggingManager.PERMISSION_SET_DEBUG_MODE, null
+            )
+            registerReceiver(
+                swipeResultReceiver, resultFilter, DebugLoggingManager.PERMISSION_SET_DEBUG_MODE, null
+            )
+        }
     }
 
     // SetTextI18n: this is the Swipe Debug Log viewer — raw diagnostic log text,

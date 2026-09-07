@@ -13,7 +13,7 @@ package android.graphics
  * code under test touches are modelled; do not add behaviour the on-device class does
  * not have.
  */
-class Paint {
+open class Paint {
 
     @JvmField var flags: Int = 0
 

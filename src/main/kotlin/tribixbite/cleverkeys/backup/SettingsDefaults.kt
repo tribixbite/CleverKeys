@@ -189,7 +189,8 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "clipboard_max_item_size_kb" to PrefValue.Str(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB),
     "clipboard_limit_type" to PrefValue.Str(Defaults.CLIPBOARD_LIMIT_TYPE),
     "clipboard_size_limit_mb" to PrefValue.Str(Defaults.CLIPBOARD_SIZE_LIMIT_MB),
-    "clipboard_pinned_rows" to PrefValue.Str("100"),
+    // clipboard_pinned_rows retired 2026-09-07: its only reader was ClipboardPinView,
+    // deleted as dead legacy (D-9). Old backups carrying it hit DEPRECATED_KEYS.
     "clipboard_exclude_password_managers" to PrefValue.Bool(Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS),
     "clipboard_respect_sensitive_flag" to PrefValue.Bool(Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG),
     // URL-sanitization (Chunk 4) — defaults are literal `false` at the read sites in SettingsActivity.

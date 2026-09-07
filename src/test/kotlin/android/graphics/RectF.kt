@@ -12,7 +12,7 @@ package android.graphics
  * four public mutable float fields plus the trivial accessors. Do not add behaviour
  * the on-device class does not have.
  */
-class RectF {
+open class RectF {
     @JvmField var left: Float = 0f
     @JvmField var top: Float = 0f
     @JvmField var right: Float = 0f

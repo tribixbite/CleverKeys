@@ -136,9 +136,8 @@ class SettingsSurfaceDriftTest {
             // Same class, recorded by this scan (2026-09-06, W5):
             "privacy_collect_errors",       // read by PrivacyManager.isErrorCollectionEnabled
             "scale_numpad_height",          // read by Config.refresh → Theme numpad height
-            // Dead legacy — read only by ClipboardPinView, which HANDOFF already
-            // tracks for deletion; drop this line when that cleanup lands:
-            "clipboard_pinned_rows",
+            // clipboard_pinned_rows left this set 2026-09-07: ClipboardPinView (its
+            // only reader) was deleted by D-9, so the key moved to DEPRECATED_KEYS.
         )
 
         val texts = allMainFiles().map { it.readText() }.toList()

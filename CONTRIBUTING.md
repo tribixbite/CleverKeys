@@ -113,7 +113,7 @@ git checkout -b fix/bug-description
 ### Swipe engine code guidelines
 ```kotlin
 // Good: Proper resource management
-suspend fun predict(input: SwipeInput): PredictionResult {
+suspend fun predict(input: SwipeResult): PredictionResult {
     return onnxPredictor.use { predictor ->
         predictor.predict(input)
     }
@@ -188,7 +188,7 @@ fun testSwipeDecodeLatency() = runBlocking {
  * @param swipeInput Raw swipe trajectory data
  * @return Prediction results with confidence scores
  */
-suspend fun processSwipeGesture(swipeInput: SwipeInput): PredictionResult {
+suspend fun processSwipeGesture(swipeInput: SwipeResult): PredictionResult {
     return withContext(Dispatchers.Default) {
         swipeDecoder.predict(swipeInput)
     }
@@ -198,7 +198,7 @@ suspend fun processSwipeGesture(swipeInput: SwipeInput): PredictionResult {
 class SwipePredictionService {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    fun startPrediction(swipe: SwipeInput) {
+    fun startPrediction(swipe: SwipeResult) {
         scope.launch {
             try {
                 val result = processSwipeGesture(swipe)
@@ -331,7 +331,7 @@ to package). Address them by repo path, not by a `.activities.` FQCN.
 class OptimizedPredictor {
     private val tensorPool = TensorPool()
 
-    suspend fun predict(input: SwipeInput): PredictionResult {
+    suspend fun predict(input: SwipeResult): PredictionResult {
         val tensor = tensorPool.acquire()
         try {
             return runInference(tensor, input)

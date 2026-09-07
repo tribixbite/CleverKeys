@@ -15,7 +15,7 @@ package android.graphics
  * as the gesture layer consumes it: two public mutable float fields. Do not add behavior the
  * on-device class does not have.
  */
-class PointF(@JvmField var x: Float, @JvmField var y: Float) {
+open class PointF(@JvmField var x: Float, @JvmField var y: Float) {
     constructor() : this(0f, 0f)
 
     override fun toString(): String = "PointF($x, $y)"

@@ -36,10 +36,11 @@ class TestRunnerListDriftTest {
     // Classes that exist under src/test but cannot be executed by either
     // JUnitCore runner (they require a real Android runtime / instrumentation
     // and only compile as reference material). Fully-qualified.
-    private val knownUnrunnable = setOf(
+    private val knownUnrunnable = setOf<String>(
         // ComposeKeyTest was deleted 2026-09-03: its cases run for real as
         // androidTest ComposeKeySequenceInstrumentedTest (ew-cli green 0c570be1).
-        "tribixbite.cleverkeys.IntegrationTest",
+        // IntegrationTest was deleted with SwipeInput (B-2, 2026-09-07): it was
+        // Robolectric-only reference material whose sole production subject is gone.
     )
 
     // Matches an array literal element: a single-quoted FQCN in build.gradle.

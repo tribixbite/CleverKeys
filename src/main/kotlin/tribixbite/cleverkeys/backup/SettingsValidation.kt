@@ -83,6 +83,7 @@ object SettingsValidation {
         "autocorrect_min_frequency",      // Config reads `autocorrect_confidence_min_frequency`
         "keyboard_height_percent",        // Superseded by `keyboard_height`
         "extra_key_switch_greekmath",     // Never read; legacy
+        "clipboard_pinned_rows",          // Reader (ClipboardPinView) deleted, D-9 2026-09-07
         // Removed with first-class TalkBack support (dead accessibility toggles):
         // sticky-keys duplicated shipped modifier latching; voice-guidance was
         // superseded by the ExploreByTouchHelper virtual-view tree. No runtime

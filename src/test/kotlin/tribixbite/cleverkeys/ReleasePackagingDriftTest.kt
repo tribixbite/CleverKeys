@@ -155,6 +155,10 @@ class ReleasePackagingDriftTest {
             .containsExactly(
                 "android.permission.VIBRATE",
                 "android.permission.READ_USER_DICTIONARY",
+                // Self-defined signature permission (I-8): gates the pre-26 debug
+                // receivers against third-party broadcast injection. Grantable only
+                // to same-signature apps; grants no capability to this app itself.
+                "tribixbite.cleverkeys.permission.SET_DEBUG_MODE",
             )
         // The debug overlay merges into the debug APK; assert it adds none either, so an
         // instrumented-test convenience cannot become a shipped permission.
@@ -180,8 +184,8 @@ class ReleasePackagingDriftTest {
         sourceRoot.walkTopDown().filter { it.isFile && it.extension == "kt" }.forEach { file ->
             file.readLines().forEachIndexed { index, line ->
                 val code = line.substringBefore("//")
-                for (api in NETWORK_APIS) {
-                    if (code.contains(api)) offenders += "${file.path}:${index + 1}: $api"
+                for (api in NETWORK_API_PATTERNS) {
+                    if (api.containsMatchIn(code)) offenders += "${file.path}:${index + 1}: ${api.pattern}"
                 }
             }
         }
@@ -318,5 +322,14 @@ class ReleasePackagingDriftTest {
             "java.net.DatagramSocket",
             "javax.net.ssl",
         )
+
+        /**
+         * Word-boundary-anchored when the pattern ends in a word character, so
+         * `java.net.URL` cannot substring-match `java.net.URLDecoder` — a pure
+         * string transform with no network capability (bit the D-2 percent-decode).
+         */
+        val NETWORK_API_PATTERNS = NETWORK_APIS.map { api ->
+            Regex(Regex.escape(api) + if (api.last().isLetterOrDigit()) """\b""" else "")
+        }
     }
 }
