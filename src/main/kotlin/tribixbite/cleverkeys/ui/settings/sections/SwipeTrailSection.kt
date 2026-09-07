@@ -29,26 +29,34 @@ internal fun SettingsActivity.SwipeTrailSection() {
 
                 if (swipeTrailEnabled) {
                     // Trail effect dropdown
+                    // F-5 (2026-09-06): "Sparkle" is the SHIPPED DEFAULT effect and is
+                    // fully implemented by the renderer, but was missing from this list —
+                    // fresh installs displayed "Glow" while sparkle rendered, and one
+                    // touch of the dropdown made the default unreachable from the UI.
+                    // SettingsSurfaceDriftTest pins dropdown coverage of every renderer
+                    // effect literal.
                     SettingsDropdown(
                         title = stringResource(R.string.swipe_trail_effect_title),
                         description = stringResource(R.string.swipe_trail_effect_desc),
-                        options = listOf("Glow", "Solid", "Fade", "Rainbow", "None"),
+                        options = listOf("Sparkle", "Glow", "Solid", "Fade", "Rainbow", "None"),
                         selectedIndex = when (swipeTrailEffect) {
-                            "glow" -> 0
-                            "solid" -> 1
-                            "fade" -> 2
-                            "rainbow" -> 3
-                            "none" -> 4
+                            "sparkle" -> 0
+                            "glow" -> 1
+                            "solid" -> 2
+                            "fade" -> 3
+                            "rainbow" -> 4
+                            "none" -> 5
                             else -> 0
                         },
                         onSelectionChange = { index ->
                             swipeTrailEffect = when (index) {
-                                0 -> "glow"
-                                1 -> "solid"
-                                2 -> "fade"
-                                3 -> "rainbow"
-                                4 -> "none"
-                                else -> "glow"
+                                0 -> "sparkle"
+                                1 -> "glow"
+                                2 -> "solid"
+                                3 -> "fade"
+                                4 -> "rainbow"
+                                5 -> "none"
+                                else -> "sparkle"
                             }
                             saveSetting("swipe_trail_effect", swipeTrailEffect)
                         }
@@ -68,8 +76,9 @@ internal fun SettingsActivity.SwipeTrailSection() {
                         displayValue = "%.0fdp".format(swipeTrailWidth)
                     )
 
-                    // Glow radius (only for glow effect)
-                    if (swipeTrailEffect == "glow") {
+                    // Glow radius — sparkle renders on the glow base (Keyboard2View),
+                    // so the radius applies to both effects (F-5).
+                    if (swipeTrailEffect == "glow" || swipeTrailEffect == "sparkle") {
                         SettingsSlider(
                             title = stringResource(R.string.swipe_trail_glow_radius_title),
                             description = stringResource(R.string.swipe_trail_glow_radius_desc),
