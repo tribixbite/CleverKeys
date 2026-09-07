@@ -27,8 +27,17 @@ object LayoutModifier {
      */
     @JvmStatic
     fun modify_layout(kw: KeyboardData): KeyboardData {
-        // Include layout count in cache key so switch keys update when layouts added/removed
-        val cacheKey = "${kw.name ?: ""}_${globalConfig.version}_${globalConfig.layouts.size}"
+        // Include layout count in cache key so switch keys update when layouts added/removed.
+        //
+        // Audit H-5: the key MUST include the layout's IDENTITY, not just its nullable
+        // `name` — two enabled layouts can share a name (two unnamed custom layouts both
+        // keyed "", and the new-custom-layout dialog is seeded with latn_qwerty_us.xml,
+        // which ships name="QWERTY (US)" — duplicating the stock layout's name). A
+        // name-only key served the OTHER layout's modified board on switch, and the
+        // asynchronous version bump only re-laid-out the same stale keyboard. Identity is
+        // stable per config epoch (Config.layouts holds the instances), so caching still
+        // hits for repeated modifications of the same board.
+        val cacheKey = "${System.identityHashCode(kw)}_${kw.name ?: ""}_${globalConfig.version}_${globalConfig.layouts.size}"
         layoutCache.get(cacheKey)?.let { return it }
 
         // Extra keys are removed from the set as they are encountered during the
