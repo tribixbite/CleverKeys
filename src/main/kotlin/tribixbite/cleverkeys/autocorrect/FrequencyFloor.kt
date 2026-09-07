@@ -36,7 +36,7 @@ package tribixbite.cleverkeys.autocorrect
  * comparison created on the JSON path).
  */
 object FrequencyFloor {
-    /** Slider domain — mirrors `AutoCorrectionSettingsActivity` (valueRange 100f..2000f). */
+    /** Slider domain — mirrors `AutoCorrectionSection` (valueRange 100f..2000f). */
     const val SLIDER_MIN = 100
     const val SLIDER_MAX = 2000
 
