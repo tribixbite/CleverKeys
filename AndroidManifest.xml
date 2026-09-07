@@ -102,8 +102,6 @@
 
     <activity android:name="tribixbite.cleverkeys.ShortSwipeCustomizationActivity" android:label="Short Swipe Customization" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
-    <activity android:name="tribixbite.cleverkeys.AutoCorrectionSettingsActivity" android:label="Auto-Correction Settings" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
-
     <!-- FileProvider for sharing GIF files via content:// URIs (commitContent) -->
     <provider
         android:name="androidx.core.content.FileProvider"
