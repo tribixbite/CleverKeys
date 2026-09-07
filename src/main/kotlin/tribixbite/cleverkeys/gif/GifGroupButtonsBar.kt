@@ -99,6 +99,15 @@ class GifGroupButtonsBar(context: Context, attrs: AttributeSet) : HorizontalScro
     ) : AppCompatButton(ContextThemeWrapper(context, R.style.emojiTypeButton), null, 0),
         View.OnTouchListener {
 
+        // Audit E-6: selection commits on UP-within-slop, never on DOWN — the bar always
+        // overflows its HorizontalScrollView, and firing on DOWN made every scroll gesture
+        // switch category and wipe the in-progress search (the HSV can only intercept from
+        // MOVE onward, so the button sees every gesture's DOWN). The parent's interception
+        // delivers ACTION_CANCEL, which the detector treats as "not a tap".
+        private val tapDetector = GifCategoryTapDetector(
+            android.view.ViewConfiguration.get(context).scaledTouchSlop.toFloat()
+        )
+
         init {
             text = category.icon
             contentDescription = category.displayName
@@ -106,13 +115,12 @@ class GifGroupButtonsBar(context: Context, attrs: AttributeSet) : HorizontalScro
         }
 
         override fun onTouch(view: View, event: MotionEvent): Boolean {
-            if (event.action != MotionEvent.ACTION_DOWN) {
-                return false
+            if (tapDetector.feed(event.action, event.x, event.y)) {
+                // Notify search clear callback
+                onCategorySelected?.invoke()
+                // Notify category change callback
+                onCategoryChanged?.invoke(category)
             }
-            // Notify search clear callback
-            onCategorySelected?.invoke()
-            // Notify category change callback
-            onCategoryChanged?.invoke(category)
             return true
         }
     }
