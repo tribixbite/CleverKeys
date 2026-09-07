@@ -376,3 +376,82 @@ Merged from the nine auditors' Coverage sections; these are the honest holes.
   honored, prose stale); stale "minSdk is 21" comments post-ARC-113.
 
 — Fable 5
+
+---
+
+## Resolution (2026-09-07 remediation, waves W1–W7)
+
+All 69 findings were remediated or explicitly deferred by seven parallel fix waves under
+the fail-first contract (red captured verbatim before every fix; DISPUTED/BY-DESIGN
+verdicts allowed but none were needed). The account spend-limit outage that killed the
+first launch mid-red-capture cost no work: every wave was resumed from its transcript
+with a tree-state brief and its uncommitted state intact.
+
+### Outcome summary
+
+| verdict | count | ids |
+|---|---|---|
+| FIXED | 62 | everything not listed below |
+| FIXED (mechanical half) + fork deferred | 3 | F-8 (writerless-key surface), H-4 (nine dead editor fields), I-7 (session-flag semantics) |
+| SKIPPED-DEFERRED (maintainer fork, no mechanical half) | 2 | D-1 (PACKAGE_USAGE_STATS posture), G-3 (short-swipe merge-collision semantics) |
+| Deferred-list items resolved anyway | 2 | E-9 (honest import count — un-deferred, FIXED), F-6 (PIN-entry switch wired — "no-op is not deferrable") |
+
+All 8 P1s are FIXED: B-1 `9ae7005c`, A-2 `d236efaf`+`7144e2c7`, E-1 `d3fc3d5b`,
+C-4 `87406cb1`, F-1 `ba1488b9`, G-1 `c6f3ee3d`, I-1 `295f7300`, H-2 `32a43584`.
+
+### Commit map (id → commit)
+
+- **W1** B-1 `9ae7005c`; B-2 `43806812`
+- **W2** A-1 `f37d2740`; A-2 `d236efaf`+`7144e2c7`; A-3/E-2 `7144e2c7`; A-4, A-5 `226ceeb5`;
+  E-1, E-3, E-7, E-8(db), E-9 `d3fc3d5b`; E-4, E-5 `f6c802d4`; E-6 `acc69741`;
+  E-8(ui) `2b9beee2`; E-10, H-3 `7144e2c7`; E-11 `7fcb5dc0`; device-tier pins `6934e03b`
+- **W3** C-1, C-2, C-3, C-5, C-8, C-9 `85960c8e`; C-4 `87406cb1`; C-6, C-7 `0f6a8bbd`
+- **W4** D-2 `95c536ea`; D-3, D-6(view), D-7(view), D-10 `22dfc948`; D-4, D-5, D-6(svc) `ac382bf0`;
+  D-7(strings), H-9 `d834f21c`+`ceb0c814`; D-8 `45e121ca`; D-9 `eb04c4dc`
+- **W5** F-1, F-2 `ba1488b9`; F-3, F-4, F-6, F-7, F-10, G-5 `c7ab6eb7`; F-5 `a3678e83`;
+  F-8(ratchet), F-9 `134b82bb`+`33d8fef8`
+- **W6** G-1, G-6 `c6f3ee3d`; G-2 `413b25dc`; G-4 `b401a3ed`; I-1 `295f7300`;
+  I-2, I-6 `d6954ad9`; I-2(store), I-3, I-5 `6832f073`; I-4 `1800ca8c`;
+  I-7 `22a79c5c`; I-8 `7bba0744`+`9c799506`
+- **W7** H-1, H-7, H-8 `9bb88bfe`; H-2, H-4 `32a43584`; H-5 `1e522aec`; H-6 `4dcb58f8`;
+  test shadows `a428c8f0`
+
+Registration commits: `43a013fb`, `687f13c3`, `0d1e9bcd`, `12483ea1`, `b6c3c449`.
+
+### Remaining maintainer forks (all pinned by ratchets where mechanical)
+
+1. **D-1** — declare `PACKAGE_USAGE_STATS` or reword/drop the setting.
+2. **G-3** — short-swipe import merge-collision semantics (import-wins vs local-wins).
+3. **F-8** — surface or delete the writerless settings keys (exact set pinned in
+   `SettingsSurfaceDriftTest.writerlessSettingsKeys_arePinnedExactly`, now including
+   `privacy_collect_errors` and `scale_numpad_height` found during remediation).
+4. **H-4** — wire or remove the nine dead custom-theme editor fields.
+5. **I-7** — default-IME prompt session-flag semantics (per-boot vs per-session).
+
+### New small findings during remediation (not in the original 69)
+
+- `MaxHeightListView.kt` newly unreferenced after D-9 — DELETED `1e3dc8ad` (drift-pinned).
+- `KeyboardGrid.kt` zero-caller neural-era orphan (B-2's sibling) — DELETED `1e3dc8ad`
+  with its stale keep rule (fail-first red in DeadPlumbingDriftTest).
+- `CONTRIBUTING.md` stale `SwipeInput` examples — now name `SwipeResult` (`0bc74595`).
+- `UserDictionaryObserver.checkCustomWordsChanges` lowercases the JSON key before
+  `optInt`, so case-carrying custom words read the 1000 default on the incremental
+  path (W3 note, out of its fence) — **OPEN, maintainer-visible**.
+
+### Final gates
+
+- Registration↔file consistency: all 271 registered test classes exist at HEAD — PASS.
+- First full-suite run caught four cross-wave interactions (each wave had verified only
+  its own classes): final `android.graphics` shadow classes broke `TextPaint` loading
+  and poisoned mockk's transform of TextUtils/TextView (28 mock reds), the D-9 deletion
+  orphaned `clipboard_pinned_rows` against W5's new reader drift test, the network-API
+  source scan substring-matched D-2's `java.net.URLDecoder`, and W6's new signature
+  permission tripped the exact manifest pin. All fixed in `0bc74595`.
+- Final: `runPureTests` **OK (2329)**, `runMockTests` **OK (703)**, `lintDebug` clean
+  (0 errors) — BUILD SUCCESSFUL across all three.
+- Suite growth across the remediation: 2,289 → 2,329 pure; 600 → 703 mock.
+- Device-tier instrumented pins (GifDatabaseScaleInstrumentedTest E-1/E-3/E-4/E-8/E-9,
+  the media-path backup test, E-5/E-6/H-3 visibility halves) are compile-verified;
+  next ew-cli run is their venue.
+
+— Fable 5
