@@ -198,7 +198,7 @@ class ClipboardDatabaseTest {
         db.addTodoEntry("Todo item")
 
         // 6 entries in clipboard_entries; limit to 2 → remove 4 oldest
-        val removed = db.applySizeLimit(2)
+        val (removed, _) = db.applySizeLimit(2)
         assertEquals("Should remove 4 oldest history entries", 4, removed)
         assertEquals("Should have 2 newest history entries", 2, db.getTotalEntryCount())
         // Todo copy in independent table is unaffected
@@ -213,13 +213,13 @@ class ClipboardDatabaseTest {
         db.addClipboardEntry("Todo survives", futureExpiry)
         db.addTodoEntry("Todo survives")
 
-        val removed = db.applySizeLimit(0) // 0 is a no-op per the code
+        val (removed, _) = db.applySizeLimit(0) // 0 is a no-op per the code
         assertEquals("Size limit 0 should be no-op", 0, removed)
 
         // Add a 3rd entry; clipboard_entries now has 3 rows
         db.addClipboardEntry("Regular 2", futureExpiry)
         // Limit to 1 → remove 2 oldest (largeContent + "Todo survives")
-        val removed2 = db.applySizeLimit(1)
+        val (removed2, _) = db.applySizeLimit(1)
         assertEquals("Should remove 2 oldest history entries", 2, removed2)
         // Todo copy in independent table is unaffected
         assertEquals("Todo should survive in todo_entries", 1, db.getTodoEntries().size)
@@ -483,7 +483,7 @@ class ClipboardDatabaseTest {
             db.addClipboardEntry("Entry $i", futureExpiry)
             Thread.sleep(10) // Ensure different timestamps
         }
-        val removed = db.applySizeLimit(3)
+        val (removed, _) = db.applySizeLimit(3)
         assertEquals("Should remove 2 oldest entries", 2, removed)
     }
 
@@ -491,14 +491,36 @@ class ClipboardDatabaseTest {
     fun testApplySizeLimitNoOpWhenUnderLimit() {
         db.addClipboardEntry("Entry 1", futureExpiry)
         db.addClipboardEntry("Entry 2", futureExpiry)
-        val removed = db.applySizeLimit(10)
+        val (removed, _) = db.applySizeLimit(10)
         assertEquals("Should remove nothing when under limit", 0, removed)
     }
 
     @Test
     fun testApplySizeLimitZero() {
-        val removed = db.applySizeLimit(0)
+        val (removed, mediaPaths) = db.applySizeLimit(0)
         assertEquals(0, removed)
+        assertEquals(emptyList<String>(), mediaPaths)
+    }
+
+    @Test
+    fun testApplySizeLimitSurfacesPrunedMediaPaths() {
+        // D-5 (2026-09-06 audit): count-based pruning must surface the doomed rows'
+        // media_path values (like applySizeLimitBytes) so the service can delete the
+        // on-disk files — previously the rows were DELETEd blind and media orphaned
+        // until the next process start's cleanupOrphans.
+        db.addMediaClipboardEntry(
+            content = "old.png", expiryTimestamp = futureExpiry, mimeType = "image/png",
+            thumbnailBlob = null, mediaPath = "clipboard_media/007/old.png", contentHash = "h1"
+        )
+        Thread.sleep(10)
+        db.addClipboardEntry("newer 1", futureExpiry)
+        Thread.sleep(10)
+        db.addClipboardEntry("newer 2", futureExpiry)
+
+        val (removed, mediaPaths) = db.applySizeLimit(2)
+
+        assertEquals("Should prune the single oldest entry", 1, removed)
+        assertEquals(listOf("clipboard_media/007/old.png"), mediaPaths)
     }
 
     // =========================================================================

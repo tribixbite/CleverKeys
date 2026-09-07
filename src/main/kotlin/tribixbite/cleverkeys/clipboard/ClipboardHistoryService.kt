@@ -240,11 +240,24 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     /** This will call [on_clipboard_history_change]. */
     fun removeHistoryEntry(clip: String) {
-        // Check if this is the most recent clipboard entry
-        val currentHistory = _database.getActiveClipboardEntries()
-        val isCurrentClip = currentHistory.isNotEmpty() && currentHistory[0].content == clip
+        // D-4: decide "is this the current OS clip" from the ACTUAL primary clip, not from
+        // history[0] — the newest history row may be a #156 private entry (whose text never
+        // touched the OS clipboard by design) or superseded by a skipped capture (e.g. a
+        // password manager's IS_SENSITIVE clip). Comparing against history[0] wiped the
+        // user's real clipboard in both cases. Private rows never clear the OS clipboard.
+        val entryIsPrivate = try {
+            _database.getActiveClipboardEntries().firstOrNull { it.content == clip }?.isPrivate == true
+        } catch (e: Exception) {
+            false
+        }
+        val osClipText = try {
+            _cm.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()
+        } catch (e: Exception) {
+            null // Android 10+ denies primaryClip when unfocused — best-effort: don't clear
+        }
+        val isCurrentClip = !entryIsPrivate && osClipText != null && osClipText == clip
 
-        // If removing the current clipboard, clear the system clipboard
+        // If removing the entry that is actually on the OS clipboard, clear it too
         if (isCurrentClip) {
             try {
                 if (VERSION.SDK_INT >= 28)
@@ -266,6 +279,35 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             _mediaManager.deleteMedia(mediaPath)
         }
         _listener?.on_clipboard_history_change()
+    }
+
+    /**
+     * D-5: count-mode pruning with media-file cleanup, shared by both store paths.
+     * Mirrors the size-mode branch: [ClipboardDatabase.applySizeLimit] surfaces the pruned
+     * rows' media paths, and each file is deleted iff no other table's COPY still references
+     * it. Previously count mode (the DEFAULT limit type) dropped the rows without cleanup,
+     * orphaning on-disk media until the next process start's cleanupOrphans — an IME process
+     * routinely lives for days. Internal for direct JVM-test access.
+     */
+    internal fun pruneByCountAndCleanMedia(maxHistorySize: Int) {
+        if (maxHistorySize <= 0) return
+        val (_, mediaPaths) = _database.applySizeLimit(maxHistorySize)
+        for (path in mediaPaths) {
+            if (!_database.isMediaPathReferenced(path)) _mediaManager.deleteMedia(path)
+        }
+    }
+
+    /**
+     * D-6: whether the stored media file is actually animated (GIF NETSCAPE/ANIMEXTS loop
+     * marker, WebP VP8X ANIM flag) — header parse only, no decode. Best-effort false on any
+     * failure (missing file, traversal-confined path). Used by the pane's play badge, which
+     * previously badged EVERY WebP via a `mediaPath != null` heuristic that is vacuously true
+     * for saved media.
+     */
+    fun isMediaAnimated(mediaPath: String, mimeType: String): Boolean = try {
+        _mediaManager.isAnimated(_mediaManager.getMediaFile(mediaPath).absolutePath, mimeType)
+    } catch (e: Exception) {
+        false
     }
 
     /** Add clipboard entries to the history, skipping consecutive duplicates and
@@ -378,9 +420,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             } else {
                 // Apply count-based limit (default)
                 val maxHistorySize = config?.clipboard_history_limit ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
-                if (maxHistorySize > 0) {
-                    _database.applySizeLimit(maxHistorySize)
-                }
+                pruneByCountAndCleanMedia(maxHistorySize)
             }
 
             _listener?.on_clipboard_history_change()
@@ -823,10 +863,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                     }
                 }
             } else {
-                val maxHistorySize = Config.globalConfig().clipboard_history_limit
-                if (maxHistorySize > 0) {
-                    _database.applySizeLimit(maxHistorySize)
-                }
+                pruneByCountAndCleanMedia(Config.globalConfig().clipboard_history_limit)
             }
 
             _listener?.on_clipboard_history_change()

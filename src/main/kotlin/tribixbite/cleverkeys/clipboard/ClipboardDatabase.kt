@@ -1177,9 +1177,18 @@ class ClipboardDatabase private constructor(context: Context) :
     // Size limits (applied to history only — pinned/todo are user-curated)
     // ═══════════════════════════════════════════════════════════════════
 
-    /** Enforce count-based limit on history entries (pinned/todo exempt) */
-    fun applySizeLimit(maxSize: Int): Int {
-        if (maxSize <= 0) return 0
+    /**
+     * Enforce count-based limit on history entries (pinned/todo exempt).
+     *
+     * D-5: like [applySizeLimitBytes], the doomed rows are SELECTed first so their
+     * media_path values are surfaced for reference-checked file cleanup — the previous
+     * DELETE-by-subquery dropped rows without reporting them, so count-mode pruning (the
+     * DEFAULT limit type) orphaned on-disk media until the next process start.
+     *
+     * @return Pair of (entries deleted, media paths of deleted entries for file cleanup)
+     */
+    fun applySizeLimit(maxSize: Int): Pair<Int, List<String>> {
+        if (maxSize <= 0) return Pair(0, emptyList())
         return try {
             val db = writableDatabase
             val currentTime = System.currentTimeMillis()
@@ -1187,20 +1196,28 @@ class ClipboardDatabase private constructor(context: Context) :
                 "SELECT COUNT(*) FROM $TABLE_CLIPBOARD WHERE $COLUMN_EXPIRY_TIMESTAMP > ?",
                 arrayOf(currentTime.toString())
             ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
-            if (currentCount <= maxSize) return 0
+            if (currentCount <= maxSize) return Pair(0, emptyList())
             val entriesToDelete = currentCount - maxSize
-            db.execSQL("""
-                DELETE FROM $TABLE_CLIPBOARD WHERE $COLUMN_ID IN (
-                    SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD
-                    WHERE $COLUMN_EXPIRY_TIMESTAMP > ?
-                    ORDER BY $COLUMN_TIMESTAMP ASC LIMIT ?
-                )
-            """.trimIndent(), arrayOf(currentTime, entriesToDelete))
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Applied size limit: removed $entriesToDelete oldest history entries (limit=$maxSize)")
-            entriesToDelete
+            val idsToDelete = mutableListOf<Long>()
+            val mediaPaths = mutableListOf<String>()
+            db.rawQuery("""
+                SELECT $COLUMN_ID, $COLUMN_MEDIA_PATH FROM $TABLE_CLIPBOARD
+                WHERE $COLUMN_EXPIRY_TIMESTAMP > ?
+                ORDER BY $COLUMN_TIMESTAMP ASC LIMIT ?
+            """.trimIndent(), arrayOf(currentTime.toString(), entriesToDelete.toString())).use { cursor ->
+                while (cursor.moveToNext()) {
+                    idsToDelete.add(cursor.getLong(0))
+                    if (!cursor.isNull(1)) mediaPaths.add(cursor.getString(1))
+                }
+            }
+            for (chunk in idsToDelete.chunked(500)) {
+                db.execSQL("DELETE FROM $TABLE_CLIPBOARD WHERE $COLUMN_ID IN (${chunk.joinToString(",")})")
+            }
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Applied size limit: removed ${idsToDelete.size} oldest history entries (limit=$maxSize, ${mediaPaths.size} with media)")
+            Pair(idsToDelete.size, mediaPaths)
         } catch (e: Exception) {
             Log.e(TAG, "Error applying size limit: ${e.message}")
-            0
+            Pair(0, emptyList())
         }
     }
 
