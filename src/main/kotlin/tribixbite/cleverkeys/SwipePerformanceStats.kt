@@ -80,6 +80,13 @@ class SwipePerformanceStats(context: Context) {
 
         synchronized(this) {
             prefs.edit().apply {
+                // I-4 (comprehensive audit 2026-09-06): seed the "Days tracked" anchor on
+                // the first recorded stat — no other writer exists (the inference/model-load
+                // writers died with the neural engine), so without this the viewer and every
+                // JSON export carried days_tracked: 0 forever.
+                if (getFirstStatTimestamp() == 0L) {
+                    putLong(KEY_FIRST_STAT_TIME, System.currentTimeMillis())
+                }
                 putLong(KEY_TOTAL_SELECTIONS, getTotalSelections() + 1)
                 if (selectedIndex == 0) {
                     putLong(KEY_TOP1_SELECTIONS, getTop1Selections() + 1)
