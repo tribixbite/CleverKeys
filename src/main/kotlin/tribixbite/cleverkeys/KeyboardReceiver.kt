@@ -21,7 +21,6 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
-import android.widget.Toast
 import androidx.core.view.ViewCompat
 import tribixbite.cleverkeys.gif.Gif
 import tribixbite.cleverkeys.gif.GifAssetManager
@@ -56,7 +55,7 @@ import tribixbite.cleverkeys.gif.GifGroupButtonsBar
 class KeyboardReceiver(
     private val context: Context,
     private val keyboard2: CleverKeysService,
-    private val keyboardView: Keyboard2View,
+    private val keyboardViewProvider: () -> Keyboard2View,
     private val layoutManager: LayoutManager,
     private val clipboardManager: ClipboardManager,
     private val contextTracker: PredictionContextTracker,
@@ -64,6 +63,16 @@ class KeyboardReceiver(
     private val subtypeManager: SubtypeManager,
     private val handler: Handler
 ) : KeyEventHandler.IReceiver {
+
+    /**
+     * Audit A-2: the view is LATE-BOUND. `onThemeChanged` (and the stale-theme branch of
+     * `onStartInputView`) replace the service's `_keyboardView` with a freshly inflated view;
+     * a constructor-captured `Keyboard2View` val would keep dispatching layout switches and
+     * shift-state updates to the detached OLD view for the rest of the process lifetime.
+     * Resolving through the provider on every access guarantees calls land on the live view.
+     * Pinned by [KeyboardViewLateBindingDriftTest].
+     */
+    private val keyboardView: Keyboard2View get() = keyboardViewProvider()
 
     // View references
     private var emojiPane: ViewGroup? = null
@@ -166,11 +175,7 @@ class KeyboardReceiver(
 
         // Always reset pane type to prevent toggle issues
         currentPaneType = PaneType.NONE
-        emojiSearchManager?.onPaneClosed()
-        clipboardManager.resetSearchOnHide()
-        // Clear GIF search state so isGifPaneOpen() returns false
-        gifSearchActive = false
-        gifSearchInput = null
+        closeCurrentPaneRoutingState()
     }
 
     /**
@@ -179,6 +184,93 @@ class KeyboardReceiver(
      */
     fun setEmojiSearchManager(manager: EmojiSearchManager) {
         this.emojiSearchManager = manager
+    }
+
+    /**
+     * Audit A-3/E-2: clears EVERY pane's key-routing state — the SWITCH_BACK_* prologue,
+     * extracted so the three openers run it too. The openers physically evict the showing
+     * pane (`removeAllViews()`) but used to leave its routing flag set; since
+     * KeyEventHandler.sendText routes strictly by flag priority (tag → edit → search →
+     * emoji → gif), a direct pane-to-pane switch left a stale higher-priority flag
+     * shadowing the live pane: typing (and the DEL ladder) went into a DETACHED search
+     * EditText, and the GIF key toggle-inverted (a stale `gifSearchActive` made it close
+     * everything instead of opening GIF). Callers: the three SWITCH_* openers (after their
+     * toggle/guard checks, before hosting the new pane) and SWITCH_BACK_*.
+     */
+    private fun closeCurrentPaneRoutingState() {
+        // Exit clipboard search mode
+        clipboardManager.resetSearchOnHide()
+        // #41 v4: notify emoji search manager its pane is going away (clears searchActive)
+        emojiSearchManager?.onPaneClosed()
+        // Clear GIF search state so isGifPaneOpen() returns false
+        gifSearchActive = false
+        gifSearchInput = null
+    }
+
+    /**
+     * Audit H-3 (the #130 class on the two remaining surfaces): paint a freshly inflated
+     * emoji/GIF pane with the ACTIVE runtime theme's colors. Every color in those layouts
+     * is a theme-attr (`?attr`) reference, but `Config.getThemeId` maps all `custom_*`/`decorative_*`
+     * names to the hardcoded CleverKeysDark base style — so under any runtime theme the
+     * panes rendered base-purple until this repaint (the clipboard pane got the same
+     * treatment in a7940256). No-op for built-in XML themes, whose attrs resolve correctly.
+     *
+     * @param searchBarId/groupBarId/paginationBarId chrome bars painted colorKey
+     * @param labelViewIds  ImageButtons tinted / TextViews colored with labelColor
+     * @param subLabelViewIds TextViews colored with subLabelColor (hints handled inline)
+     */
+    private fun applyRuntimeThemeToPane(
+        pane: ViewGroup,
+        searchBarId: Int,
+        groupBarId: Int,
+        searchInputId: Int,
+        gridId: Int,
+        noResultsId: Int,
+        labelViewIds: IntArray,
+        paginationBarId: Int? = null,
+        subLabelViewIds: IntArray = intArrayOf(),
+    ) {
+        val config = Config.globalConfig()
+        if (!config.isRuntimeTheme()) return
+        val theme = try {
+            tribixbite.cleverkeys.theme.ThemeProvider.getInstance(context).getTheme(config.themeName)
+        } catch (e: Exception) {
+            // Dangling custom theme id (H-2 territory) — leave the XML base colors up.
+            android.util.Log.w(TAG, "Runtime theme unavailable for pane repaint: ${e.message}")
+            return
+        }
+        val bg = theme.colorKeyboardBackground
+        val key = theme.colorKey
+        val label = theme.labelColor
+        val sub = theme.subLabelColor
+
+        if (bg != 0) {
+            pane.setBackgroundColor(bg)
+            pane.findViewById<View?>(gridId)?.setBackgroundColor(bg)
+            pane.findViewById<View?>(noResultsId)?.setBackgroundColor(bg)
+        }
+        if (key != 0) {
+            pane.findViewById<View?>(searchBarId)?.setBackgroundColor(key)
+            pane.findViewById<View?>(groupBarId)?.setBackgroundColor(key)
+            paginationBarId?.let { pane.findViewById<View?>(it)?.setBackgroundColor(key) }
+        }
+        if (label != 0) {
+            for (id in labelViewIds) {
+                when (val v = pane.findViewById<View?>(id)) {
+                    is ImageButton -> v.setColorFilter(label, android.graphics.PorterDuff.Mode.SRC_IN)
+                    is TextView -> v.setTextColor(label)
+                    else -> {}
+                }
+            }
+            (pane.findViewById<View?>(searchInputId) as? TextView)?.setTextColor(label)
+        }
+        if (sub != 0) {
+            (pane.findViewById<View?>(searchInputId) as? TextView)?.setHintTextColor(sub)
+            (pane.findViewById<View?>(noResultsId) as? TextView)?.setTextColor(sub)
+            for (id in subLabelViewIds) {
+                (pane.findViewById<View?>(id) as? TextView)?.setTextColor(sub)
+            }
+        }
     }
 
     override fun handle_event_key(ev: KeyValue.Event) {
@@ -218,6 +310,9 @@ class KeyboardReceiver(
                     return
                 }
 
+                // A-3/E-2: evicting another pane must also clear its routing flags
+                closeCurrentPaneRoutingState()
+
                 // Always inflate fresh to avoid stale view issues after app switch
                 emojiPane = keyboard2.inflate_view(R.layout.emoji_pane) as ViewGroup
 
@@ -232,6 +327,19 @@ class KeyboardReceiver(
                 pane?.layoutParams = paneLayoutParams(contentPaneHeight)
                 container.addView(pane)
                 showContentPane()
+
+                // H-3: runtime (custom/decorative) themes need a programmatic repaint
+                pane?.let {
+                    applyRuntimeThemeToPane(
+                        it,
+                        searchBarId = R.id.emoji_search_bar,
+                        groupBarId = R.id.emoji_group_buttons,
+                        searchInputId = R.id.emoji_search_input,
+                        gridId = R.id.emoji_grid,
+                        noResultsId = R.id.emoji_no_results,
+                        labelViewIds = intArrayOf(R.id.emoji_search_clear, R.id.emoji_close_button),
+                    )
+                }
 
                 currentPaneType = PaneType.EMOJI
 
@@ -280,6 +388,9 @@ class KeyboardReceiver(
                     return
                 }
 
+                // A-3/E-2: evicting another pane must also clear its routing flags
+                closeCurrentPaneRoutingState()
+
                 // Get clipboard pane from manager (lazy initialization)
                 val clipboardPane = clipboardManager.getClipboardPane(keyboard2.layoutInflater)
 
@@ -314,6 +425,9 @@ class KeyboardReceiver(
                     return
                 }
 
+                // A-3/E-2: evicting another pane must also clear its routing flags
+                closeCurrentPaneRoutingState()
+
                 // Inflate fresh GIF pane layout
                 val gifPaneView = keyboard2.inflate_view(R.layout.gif_pane) as ViewGroup
 
@@ -323,6 +437,22 @@ class KeyboardReceiver(
                 gifPaneView.layoutParams = paneLayoutParams(contentPaneHeight)
                 container.addView(gifPaneView)
                 showContentPane()
+
+                // H-3: runtime (custom/decorative) themes need a programmatic repaint
+                applyRuntimeThemeToPane(
+                    gifPaneView,
+                    searchBarId = R.id.gif_search_bar,
+                    groupBarId = R.id.gif_group_buttons,
+                    searchInputId = R.id.gif_search_input,
+                    gridId = R.id.gif_grid,
+                    noResultsId = R.id.gif_no_results,
+                    labelViewIds = intArrayOf(
+                        R.id.gif_search_clear, R.id.gif_close_button,
+                        R.id.gif_page_prev, R.id.gif_page_next
+                    ),
+                    paginationBarId = R.id.gif_pagination_bar,
+                    subLabelViewIds = intArrayOf(R.id.gif_page_info),
+                )
 
                 currentPaneType = PaneType.GIF
 
@@ -353,6 +483,15 @@ class KeyboardReceiver(
                 val searchClear = gifPaneView.findViewById<ImageButton>(R.id.gif_search_clear)
                 val noResults = gifPaneView.findViewById<TextView>(R.id.gif_no_results)
 
+                // Audit E-5: "No results" keys off the async results callback — reading
+                // getResultCount() right after search() returns the PREVIOUS query's count
+                // (search debounces 150 ms + queries on IO), so the indicator never showed
+                // for the query actually typed.
+                gifGrid?.onResultsChanged = { query, count ->
+                    noResults?.visibility =
+                        if (query.isNotEmpty() && count == 0) View.VISIBLE else View.GONE
+                }
+
                 searchInput?.addTextChangedListener(object : TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -360,9 +499,6 @@ class KeyboardReceiver(
                         val query = s?.toString()?.trim() ?: ""
                         searchClear?.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
                         gifGrid?.search(query)
-                        // Show/hide no results message
-                        val count = gifGrid?.getResultCount() ?: 0
-                        noResults?.visibility = if (query.isNotEmpty() && count == 0) View.VISIBLE else View.GONE
                     }
                 })
 
@@ -404,15 +540,8 @@ class KeyboardReceiver(
             KeyValue.Event.SWITCH_BACK_EMOJI,
             KeyValue.Event.SWITCH_BACK_CLIPBOARD,
             KeyValue.Event.SWITCH_BACK_GIF -> {
-                // Exit clipboard search mode when switching back
-                clipboardManager.resetSearchOnHide()
-
-                // #41 v4: Notify emoji search manager pane is closing
-                emojiSearchManager?.onPaneClosed()
-
-                // Clear GIF search state when pane closes
-                gifSearchActive = false
-                gifSearchInput = null
+                // A-3/E-2: shared routing-state clear (clipboard search, emoji, GIF)
+                closeCurrentPaneRoutingState()
 
                 // Reset pane tracking
                 currentPaneType = PaneType.NONE
@@ -669,7 +798,8 @@ class KeyboardReceiver(
                 val clip = android.content.ClipData.newPlainText("GIF URL", url)
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 cm.setPrimaryClip(clip)
-                Toast.makeText(context, "URL copied", Toast.LENGTH_SHORT).show()
+                // E-10: suggestion-bar feedback — Toasts are IME-suppressed on Android 13+ (#156)
+                keyboard2.showSuggestionBarMessage("URL copied")
             }
         }
 
@@ -690,7 +820,8 @@ class KeyboardReceiver(
                     )
                     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                     cm.setPrimaryClip(clip)
-                    Toast.makeText(context, "GIF copied", Toast.LENGTH_SHORT).show()
+                    // E-10: suggestion-bar feedback — Toasts are IME-suppressed on Android 13+ (#156)
+                    keyboard2.showSuggestionBarMessage("GIF copied")
                 } catch (e: Exception) {
                     android.util.Log.w("KeyboardReceiver", "Copy GIF failed: ${e.message}")
                 }
@@ -704,7 +835,8 @@ class KeyboardReceiver(
                 val clip = android.content.ClipData.newPlainText("GIF keywords", keywords.joinToString(", "))
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 cm.setPrimaryClip(clip)
-                Toast.makeText(context, "Keywords copied", Toast.LENGTH_SHORT).show()
+                // E-10: suggestion-bar feedback — Toasts are IME-suppressed on Android 13+ (#156)
+                keyboard2.showSuggestionBarMessage("Keywords copied")
             }
         }
 

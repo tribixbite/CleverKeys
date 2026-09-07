@@ -266,6 +266,81 @@ class KeyboardReceiverPaneHostTest {
         verify(exactly = 1) { keyboard2.showSuggestionBarMessage("GIF media unavailable", any()) }
     }
 
+    // ── Audit A-3/E-2: pane-to-pane switches must clear the evicted pane's routing ──
+    //
+    // KeyEventHandler.sendText routes by flag priority (tag → edit → clipboard-search →
+    // emoji → gif). The openers evict the previous pane with removeAllViews() but used to
+    // leave its routing flag set, so a stale higher-priority flag shadowed the live pane:
+    // typing (and the DEL ladder) landed in a DETACHED search EditText, and the GIF key
+    // toggle-inverted (stale gifSearchActive made it close everything instead of opening).
+    //
+    // RED (2026-09-06, pre-fix): openingClipboardOverEmojiClearsEmojiRouting failed
+    // (isEmojiPaneOpen stayed true); gifKeyOpensGifAfterEmojiEvictedTheGifPane failed
+    // (second SWITCH_GIF emitted SWITCH_BACK_GIF — isGifPaneOpen false).
+
+    /** EmojiSearchManager double whose searchActive flag behaves like the real one. */
+    private fun statefulEmojiManager(): EmojiSearchManager {
+        val esm = mockk<EmojiSearchManager>(relaxed = true)
+        var open = false
+        every { esm.onPaneOpened(any()) } answers { open = true }
+        every { esm.onPaneClosed() } answers { open = false }
+        every { esm.isEmojiPaneOpen() } answers { open }
+        every { esm.extractWordBeforeCursor(any()) } returns null
+        return esm
+    }
+
+    @Test
+    fun openingClipboardOverEmojiClearsEmojiRouting() {
+        wireContainer()
+        receiver.setEmojiSearchManager(statefulEmojiManager())
+
+        receiver.handle_event_key(KeyValue.Event.SWITCH_EMOJI)
+        org.junit.Assert.assertTrue(
+            "precondition: emoji open sets the routing flag", receiver.isEmojiPaneOpen()
+        )
+
+        receiver.handle_event_key(KeyValue.Event.SWITCH_CLIPBOARD)
+        org.junit.Assert.assertFalse(
+            "evicting the emoji pane must clear its routing flag — otherwise every keystroke " +
+                "routes into the detached emoji search EditText (A-3 failure 1)",
+            receiver.isEmojiPaneOpen()
+        )
+    }
+
+    @Test
+    fun gifKeyOpensGifAfterEmojiEvictedTheGifPane() {
+        wireContainer()
+        receiver.setEmojiSearchManager(statefulEmojiManager())
+
+        receiver.handle_event_key(KeyValue.Event.SWITCH_GIF)
+        org.junit.Assert.assertTrue("precondition: gif open", receiver.isGifPaneOpen())
+
+        receiver.handle_event_key(KeyValue.Event.SWITCH_EMOJI)
+        org.junit.Assert.assertFalse(
+            "emoji eviction must clear the GIF routing flag (A-3 failure 1, gif variant)",
+            receiver.isGifPaneOpen()
+        )
+
+        receiver.handle_event_key(KeyValue.Event.SWITCH_GIF)
+        org.junit.Assert.assertTrue(
+            "GIF key while emoji shows must OPEN the GIF pane — a stale gifSearchActive made " +
+                "it toggle-invert into SWITCH_BACK_GIF and close everything (A-3 failure 3)",
+            receiver.isGifPaneOpen()
+        )
+    }
+
+    @Test
+    fun openingGifOverClipboardExitsClipboardSearchRouting() {
+        wireContainer()
+        receiver.setEmojiSearchManager(statefulEmojiManager())
+
+        receiver.handle_event_key(KeyValue.Event.SWITCH_CLIPBOARD)
+        io.mockk.clearMocks(clipboardManager, answers = false)
+
+        receiver.handle_event_key(KeyValue.Event.SWITCH_GIF)
+        verify(exactly = 1) { clipboardManager.resetSearchOnHide() }
+    }
+
     // ── 4. Pane close in the hosted path restores suggestion-bar mode ────────────
 
     @Test
