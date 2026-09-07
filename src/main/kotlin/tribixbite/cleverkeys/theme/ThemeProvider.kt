@@ -245,15 +245,37 @@ class ThemeProvider(
 
     private fun loadDecorativeTheme(themeId: String): Theme {
         val colorScheme = getDecorativeColorScheme(themeId)
-            ?: throw IllegalArgumentException("Unknown decorative theme: $themeId")
+        if (colorScheme == null) {
+            // Audit H-2: a stale decorative id (e.g. a backup restored from a build with
+            // different decorative IDs) must never throw into Keyboard2View's constructor —
+            // that is an IME crash loop. Fall back to the default palette instead.
+            android.util.Log.w(TAG, "Unknown decorative theme '$themeId' — falling back to $FALLBACK_THEME_ID")
+            return fallbackTheme()
+        }
         return Theme(context, colorScheme)
     }
 
     private fun loadCustomTheme(themeId: String): Theme {
         val customTheme = customThemeManager.getCustomTheme(themeId)
-            ?: throw IllegalStateException("Custom theme not found: $themeId")
+        if (customTheme == null) {
+            // Audit H-2: the `theme` pref can dangle (active custom theme deleted; the pref
+            // and the theme store live in different prefs files). Throwing here propagated
+            // out of Keyboard2View's constructor and crash-looped the IME on every
+            // inflation until the pref changed — with no working keyboard to change it.
+            android.util.Log.w(TAG, "Custom theme not found '$themeId' — falling back to $FALLBACK_THEME_ID")
+            return fallbackTheme()
+        }
         return Theme(context, customTheme.colors)
     }
+
+    /**
+     * Crash-loop escape hatch for dangling theme ids ([getTheme] must be TOTAL — it is
+     * called from Keyboard2View's constructor). Built from the in-code approximation of
+     * the default theme's palette rather than XML style resolution so the fallback has no
+     * failure modes of its own; the user can reselect a theme normally afterwards.
+     */
+    private fun fallbackTheme(): Theme =
+        Theme(context, getBuiltInColorScheme(FALLBACK_THEME_ID))
 
     private fun getDecorativeColorScheme(themeId: String): KeyboardColorScheme? {
         // Strip "decorative_" prefix to get the actual theme name
@@ -296,6 +318,12 @@ class ThemeProvider(
     }
 
     companion object {
+        private const val TAG = "ThemeProvider"
+
+        /** The theme every dangling-id fallback resolves to (audit H-2). Also the id the
+         *  delete-active-theme guard resets the `theme` pref to (CustomThemePrefPolicy). */
+        const val FALLBACK_THEME_ID = "cleverkeysdark"
+
         // Process-lifetime singleton holding only the applicationContext (see getInstance),
         // so it never leaks an Activity/Service. The reference lives as long as the process.
         @SuppressLint("StaticFieldLeak")

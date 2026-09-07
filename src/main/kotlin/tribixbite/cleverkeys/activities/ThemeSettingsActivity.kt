@@ -417,7 +417,14 @@ fun ThemeSettingsScreen(
             defaultColors = currentColors,
             onDismiss = { showCreateDialog = false },
             onSave = { theme ->
-                themeManager.saveCustomTheme(theme)
+                // Audit H-4: route through the policy so saving the ACTIVE theme re-syncs
+                // swipe_trail_color (a fresh creation is never active — the sync no-ops).
+                CustomThemePrefPolicy.saveCustomTheme(
+                    prefs,
+                    PreferenceManager.getDefaultSharedPreferences(context),
+                    themeManager,
+                    theme
+                )
                 showCreateDialog = false
             }
         )
@@ -429,7 +436,14 @@ fun ThemeSettingsScreen(
             initialTheme = theme,
             onDismiss = { editingTheme = null },
             onSave = { updatedTheme ->
-                themeManager.saveCustomTheme(updatedTheme)
+                // Audit H-4: editing the ACTIVE theme's swipe trail previously went stale
+                // until re-selection (the pref sync ran only in onThemeSelected).
+                CustomThemePrefPolicy.saveCustomTheme(
+                    prefs,
+                    PreferenceManager.getDefaultSharedPreferences(context),
+                    themeManager,
+                    updatedTheme
+                )
                 editingTheme = null
             }
         )
@@ -444,7 +458,20 @@ fun ThemeSettingsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        themeManager.deleteCustomTheme(themeId)
+                        // Audit H-2: deleting the ACTIVE custom theme used to leave
+                        // `theme=custom_<uuid>` dangling → IME crash loop on the next
+                        // keyboard inflation. The policy resets the pref to the fallback
+                        // BEFORE deleting; deletion itself always proceeds (kinder than
+                        // blocking — the keyboard just falls back to the default theme).
+                        val wasActive = CustomThemePrefPolicy.deleteCustomTheme(
+                            prefs,
+                            PreferenceManager.getDefaultSharedPreferences(context),
+                            themeManager,
+                            themeId
+                        )
+                        if (wasActive) {
+                            currentThemeId = ThemeProvider.FALLBACK_THEME_ID
+                        }
                         showDeleteConfirm = null
                     }
                 ) {
