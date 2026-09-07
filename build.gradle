@@ -1106,6 +1106,30 @@ tasks.register('runMockTests', JavaExec) {
     // via a read-side fold. Mock-tier because both SuggestionHandler and DictionaryManager
     // reach android.jar (Handler / SharedPreferences) even when allocated without constructors.
     'tribixbite.cleverkeys.ContractionUserWordGuardTest',
+    // Audit 2026-09-06 W7 (H-2): ThemeProvider.getTheme is TOTAL — dangling custom_/
+    // decorative_ theme ids fall back to the default palette instead of throwing into
+    // Keyboard2View's constructor (the IME crash-loop after deleting the active theme).
+    'tribixbite.cleverkeys.theme.ThemeProviderFallbackTest',
+    // Audit 2026-09-06 W7 (H-2 activity layer + H-4 mechanical half): deleting the ACTIVE
+    // custom theme resets the theme pref BEFORE the store delete; saving the ACTIVE theme
+    // re-syncs swipe_trail_color (previously synced only at select time).
+    'tribixbite.cleverkeys.theme.CustomThemePrefPolicyTest',
+    // Audit 2026-09-06 W7 (H-1 + H-7): onCustomShortSwipe dispatch is exclusive —
+    // switch_forward/backward execute exactly once (Event branch no longer falls through
+    // into the legacy AvailableCommand block) — and the five custom text-action commands
+    // reach the success haptic instead of returning past it.
+    'tribixbite.cleverkeys.Keyboard2ViewCustomSwipeDispatchTest',
+    // Audit 2026-09-06 W7 (H-5): modify_layout's cache is keyed on layout IDENTITY, not
+    // the nullable name — two same-named/unnamed custom layouts can no longer be served
+    // each other's modified boards. Runs on the android.util.LruCache test-source shadow.
+    'tribixbite.cleverkeys.LayoutModifierCacheKeyTest',
+    // Audit 2026-09-06 W7 (H-6): the key border paint honours keyOpacity — setColor runs
+    // BEFORE the alpha assignment (setColor writes the full ARGB). Runs on the functional
+    // android.graphics.Paint test-source shadow, which models real colour semantics.
+    'tribixbite.cleverkeys.ThemeBorderPaintOpacityTest',
+    // Audit 2026-09-06 W7 (H-8, #77 residual): all-null loc-stripped pane cells render as
+    // empty space — onDraw consults Keyboard2View.keyCellIsEmpty before drawKeyFrame.
+    'tribixbite.cleverkeys.EmptyPaneCellRenderTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'
