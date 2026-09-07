@@ -125,8 +125,11 @@
 -keep class tribixbite.cleverkeys.KeyValue$Macro { *; }
 -keep class tribixbite.cleverkeys.KeyValue$Companion { *; }
 
-# Keep SwipeInput class for prediction input handling
--keep class tribixbite.cleverkeys.SwipeInput { *; }
+# B-2 (2026-09-06 audit): the SwipeInput keep that stood here ("prediction input
+# handling") described the ADR-011-deleted neural pipeline; the class had zero production
+# call sites and was deleted with SwipePruner. Same class of stale rule as the five
+# ARC-008 removed (SwipeResampler, SwipeDetector, onnx.SessionConfigurator, root
+# SwipeDirection/ActionType). DeadPlumbingDriftTest pins that it stays gone.
 
 # Keep KeyboardData and Key class for swipe detection
 -keep class tribixbite.cleverkeys.KeyboardData { *; }

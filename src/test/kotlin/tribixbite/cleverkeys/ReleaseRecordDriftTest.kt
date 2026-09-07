@@ -288,10 +288,8 @@ class ReleaseRecordDriftTest {
         // composition root; package unchanged.
         "src/main/kotlin/tribixbite/cleverkeys/SuggestionBridge.kt" to
             "src/main/kotlin/tribixbite/cleverkeys/wiring/SuggestionBridge.kt",
-        // ARC-098 (2026-09-01): the gesture-recognition cluster moved into gesture/;
-        // package unchanged.
-        "src/main/kotlin/tribixbite/cleverkeys/SwipeInput.kt" to
-            "src/main/kotlin/tribixbite/cleverkeys/gesture/SwipeInput.kt",
+        // (The ARC-098 SwipeInput redirect that stood here retired to
+        // [supersededAnchorPaths] when B-2 deleted the file outright.)
     )
 
     @Test
@@ -309,6 +307,59 @@ class ReleaseRecordDriftTest {
         }
     }
 
+    /**
+     * Anchors in HASH-PINNED sections whose file was legitimately DELETED after a LATER
+     * section's row superseded the claim.
+     *
+     * [assertAnchorResolves]'s own failure message has always named this exit ("either
+     * restore it, or add a superseding row in the CURRENT release's section") but nothing
+     * implemented it, so a pinned anchor kept a dead file alive forever. This map is the
+     * implementation: key = the path exactly as it appears in the pinned prose, value = the
+     * `item` cell of the superseding row. Resolution for such an anchor is satisfied by the
+     * superseding row instead of the file, and THAT row's anchors are checked like any
+     * other. [supersededAnchorPathsAreHonest] keeps the map honest: the file must really be
+     * gone and the superseding row must really exist as a GUARDED row.
+     */
+    private val supersededAnchorPaths = mapOf(
+        // B-2 (2026-09-06 audit): gesture/SwipeInput was an ADR-011 orphan — zero
+        // production call sites, force-kept only by a stale ProGuard rule — and was
+        // deleted. The v1.2.8 claim that anchored it was already re-attributed by the
+        // v1.6.0 row below, whose description records that the ORIGINAL anchor was wrong
+        // (SwipeInput never carried shift state; the capture site is Pointers.onTouchDown).
+        "src/main/kotlin/tribixbite/cleverkeys/SwipeInput.kt" to
+            "swipe capitalization at gesture start (v1.2.8)",
+    )
+
+    @Test
+    fun supersededAnchorPathsAreHonest() {
+        for ((old, supersedingItem) in supersededAnchorPaths) {
+            assertTrue(
+                "supersededAnchorPaths: '$old' still exists — a live file must resolve " +
+                    "normally; this map is only for deleted files whose claim a later row " +
+                    "supersedes. Remove the entry.",
+                !File(old).exists(),
+            )
+            assertTrue(
+                "supersededAnchorPaths: '$old' must not ALSO have a move redirect — a path " +
+                    "is moved or deleted, never both.",
+                old !in movedAnchorPaths,
+            )
+            val superseding = sections.flatMap { it.rows }.filter { it.item == supersedingItem }
+            assertTrue(
+                "supersededAnchorPaths: no row with item '$supersedingItem' exists in " +
+                    "$RECORD_PATH — the deletion of '$old' is only sanctioned while a " +
+                    "superseding row carries the claim.",
+                superseding.isNotEmpty(),
+            )
+            assertTrue(
+                "supersededAnchorPaths: the superseding row '$supersedingItem' must be " +
+                    "GUARDED — a deleted anchor may only be retired in favour of a claim a " +
+                    "test actually pins.",
+                superseding.all { it.status.substringBefore(" (") == "GUARDED" },
+            )
+        }
+    }
+
     private fun assertAnchorResolves(row: Row, column: String, anchor: String) {
         val at = anchor.lastIndexOf('#')
         assertTrue(
@@ -317,6 +368,9 @@ class ReleaseRecordDriftTest {
             at > 0 && at < anchor.length - 1,
         )
         val rawPath = anchor.substring(0, at)
+        // A pinned anchor whose file was deleted under a superseding row resolves through
+        // that row instead of the file — see [supersededAnchorPaths].
+        if (rawPath in supersededAnchorPaths) return
         val path = movedAnchorPaths[rawPath] ?: rawPath
         val symbol = anchor.substring(at + 1)
         assertTrue(

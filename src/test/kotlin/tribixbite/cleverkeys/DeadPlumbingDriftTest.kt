@@ -176,6 +176,52 @@ class DeadPlumbingDriftTest {
         ).that(hits).isEmpty()
     }
 
+    // ------------------------------------------------------------------- B-2
+
+    @Test
+    fun `B-2 - the dead SwipeInput and SwipePruner classes are gone`() {
+        // 2026-09-06 comprehensive audit, B-2: both classes were consumers of the
+        // ADR-011-deleted neural pipeline and kept zero production call sites after it went.
+        // SwipeInput was additionally force-kept in every minified release by a stale
+        // ProGuard rule whose comment ("prediction input handling") described a pipeline
+        // that no longer exists. Same blanket-keep blind spot as ARC-084/099: R8 never
+        // flags a kept class as unused.
+        for (relative in listOf(
+            "tribixbite/cleverkeys/gesture/SwipeInput.kt",
+            "tribixbite/cleverkeys/gesture/SwipePruner.kt",
+        )) {
+            assertWithMessage(
+                "B-2: $relative is an ADR-011 orphan with zero production call sites — " +
+                    "deleted 2026-09-06; do not resurrect it. Swipe input reaches the engines " +
+                    "as SwipeResult/SwipeDetectorInput via InputCoordinator.handleSwipeTyping, " +
+                    "and candidate pruning lives inside each engine (CtcLexiconTrie / " +
+                    "geometric CandidatePruner)."
+            ).that(File(mainKotlin, relative).exists()).isFalse()
+        }
+
+        // No executable line anywhere in main sources may name either class again
+        // (comment-only tombstones stay legal, as everywhere else in this file).
+        val hits = occurrences(Regex("\\b(SwipeInput|SwipePruner)\\b"))
+        assertWithMessage(
+            "B-2: SwipeInput/SwipePruner must not be referenced by production code.\nFound:\n" +
+                hits.joinToString("\n")
+        ).that(hits).isEmpty()
+
+        // The stale keep rule is the half of the finding that shipped bytes: without it R8
+        // would at least have stripped the dead class from the release APK. Comment lines
+        // stay legal (the deletion's tombstone comment names the class on purpose).
+        val keepHits = File("proguard-rules.pro").readLines().mapIndexedNotNull { index, line ->
+            if (!line.trim().startsWith("#") && line.contains("SwipeInput")) {
+                "proguard-rules.pro:${index + 1}: ${line.trim()}"
+            } else null
+        }
+        assertWithMessage(
+            "B-2: proguard-rules.pro must not keep the deleted SwipeInput (the old rule's " +
+                "\"prediction input handling\" comment described the ADR-011 neural pipeline)." +
+                "\nFound:\n" + keepHits.joinToString("\n")
+        ).that(keepHits).isEmpty()
+    }
+
     // ---------------------------------------------------------------- ARC-097
 
     @Test
