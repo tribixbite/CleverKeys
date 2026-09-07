@@ -47,8 +47,10 @@ import java.util.concurrent.Executors
  *  - offers Export (JSON file + ACTION_SEND share sheet, absolute path shown for
  *    `adb pull`) and Clear (playground-only or all trace rows).
  *
- * Recording is playground-local: it starts when this activity enables debug mode in
- * [onCreate] and stops when [onDestroy] disables it. The UI discloses that recorded
+ * Recording is playground-local AND visibility-scoped: debug mode is enabled in
+ * [onStart] and disabled in [onStop] (I-1, comprehensive audit 2026-09-06 — the old
+ * onCreate/onDestroy binding kept recording alive while the activity was merely
+ * backgrounded, persisting swipes typed in OTHER apps). The UI discloses that recorded
  * traces contain the words the user swipes.
  */
 class SwipeDebugActivity : Activity() {
@@ -190,24 +192,23 @@ class SwipeDebugActivity : Activity() {
         logOutput.isFocusable = false
 
         // Register broadcast receivers: raw pipeline log lines + per-swipe result payloads.
-        // RECEIVER_NOT_EXPORTED (4-arg registerReceiver) requires API 26. On API 21-25 use
-        // the 3-arg form; an app-internal broadcast is not reachable by other apps pre-26.
+        // RECEIVER_NOT_EXPORTED (4-arg registerReceiver) requires API 26. On API 24-25 a
+        // dynamic receiver without it is reachable by ANY app (I-8), so the pre-26 branch
+        // registers behind the app's signature-protected permission — the IME (this app)
+        // holds it via <uses-permission>, third parties cannot inject log/panel content.
         val filter = IntentFilter(ACTION_DEBUG_LOG)
         val resultFilter = IntentFilter(PlaygroundTraceRecorder.ACTION_SWIPE_RESULT)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(logReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
             registerReceiver(swipeResultReceiver, resultFilter, Context.RECEIVER_NOT_EXPORTED)
         } else {
-            @Suppress("UnspecifiedRegisterReceiverFlag")
-            registerReceiver(logReceiver, filter)
-            @Suppress("UnspecifiedRegisterReceiverFlag")
-            registerReceiver(swipeResultReceiver, resultFilter)
+            registerReceiver(
+                logReceiver, filter, DebugLoggingManager.PERMISSION_SET_DEBUG_MODE, null
+            )
+            registerReceiver(
+                swipeResultReceiver, resultFilter, DebugLoggingManager.PERMISSION_SET_DEBUG_MODE, null
+            )
         }
-
-        // Enable debug mode — this is ALSO the playground-recording switch: the IME only
-        // records/broadcasts playground traces while debug mode is on (see
-        // PlaygroundTraceRecorder), so recording is scoped to this screen's lifetime.
-        setDebugMode(true)
 
         appendLog("=== Swipe Playground Session Started ===\n")
         appendLog("Swipe in the text field above. Each swipe shows its candidate ranking\n")
@@ -215,11 +216,26 @@ class SwipeDebugActivity : Activity() {
         refreshTraceCount()
     }
 
+    override fun onStart() {
+        super.onStart()
+        // Enable debug mode — this is ALSO the playground-recording switch: the IME only
+        // records/broadcasts playground traces while debug mode is on (see
+        // PlaygroundTraceRecorder). Bound to onStart/onStop rather than
+        // onCreate/onDestroy (I-1): Home-backgrounding STOPS the activity without
+        // destroying it, and recording must stop the moment this screen leaves the
+        // foreground — a stale flag would otherwise persist swipes typed in other apps.
+        setDebugMode(true)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Disable debug mode (also stops playground trace recording) as soon as the
+        // screen is no longer visible — see onStart.
+        setDebugMode(false)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-
-        // Disable debug mode (also stops playground trace recording)
-        setDebugMode(false)
 
         // Unregister broadcast receivers
         try {
