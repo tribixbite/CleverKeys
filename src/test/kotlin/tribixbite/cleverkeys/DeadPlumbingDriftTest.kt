@@ -263,4 +263,40 @@ class DeadPlumbingDriftTest {
                 "has exactly one implementation.\nFound:\n" + literalHits.joinToString("\n")
         ).that(literalHits).isEmpty()
     }
+
+    // ------------------------------------------------- 2026-09-07 remediation sweep
+
+    @Test
+    fun `remediation sweep - the dead KeyboardGrid and MaxHeightListView classes are gone`() {
+        // Found while closing the 2026-09-06 audit: KeyboardGrid is a zero-caller a-z
+        // neural-era orphan (B-2's sibling — its stale keep rule claimed "nearest key
+        // detection during swipe", which lives in ProbabilisticKeyDetector); MaxHeight-
+        // ListView's only consumer was ClipboardPinView, deleted as dead legacy (D-9).
+        for (relative in listOf(
+            "tribixbite/cleverkeys/KeyboardGrid.kt",
+            "tribixbite/cleverkeys/MaxHeightListView.kt",
+        )) {
+            assertWithMessage(
+                "$relative is a zero-caller orphan — deleted 2026-09-07; do not resurrect it."
+            ).that(File(mainKotlin, relative).exists()).isFalse()
+        }
+
+        val hits = occurrences(Regex("\\b(KeyboardGrid|MaxHeightListView)\\b"))
+        assertWithMessage(
+            "KeyboardGrid/MaxHeightListView must not be referenced by production code.\nFound:\n" +
+                hits.joinToString("\n")
+        ).that(hits).isEmpty()
+
+        // Same blanket-keep blind spot as B-2: a kept class is invisible to R8's
+        // unused-code analysis, so the keep rule must die with the class.
+        val keepHits = File("proguard-rules.pro").readLines().mapIndexedNotNull { index, line ->
+            if (!line.trim().startsWith("#") && line.contains("KeyboardGrid")) {
+                "proguard-rules.pro:${index + 1}: ${line.trim()}"
+            } else null
+        }
+        assertWithMessage(
+            "proguard-rules.pro must not keep the deleted KeyboardGrid.\nFound:\n" +
+                keepHits.joinToString("\n")
+        ).that(keepHits).isEmpty()
+    }
 }
