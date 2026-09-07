@@ -97,6 +97,11 @@ class KeyEventHandler(
             KeyValue.Kind.String -> sendText(key.getString(), isKeyRepeat)
             KeyValue.Kind.Event -> recv.handle_event_key(key.getEvent())
             KeyValue.Kind.Keyevent -> {
+                // Audit A-5: backspace invalidates the double-space-to-period memory — the
+                // char that was "last typed" is no longer the char before the cursor.
+                if (key.getKeyevent() == KeyEvent.KEYCODE_DEL) {
+                    lastTypedChar = '\u0000'
+                }
                 // Tag dialog mode — highest priority modal overlay
                 if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardTagMode()) {
                     recv.backspaceClipboardTag()
@@ -369,10 +374,16 @@ class KeyEventHandler(
             text.length == 1 && text[0] == ' ' && lastTypedChar == ' ' &&
             (currentTime - lastTypedTimestamp) < doubleSpaceThresholdMs) {
             // Only trigger if the character before the first space was alphanumeric
-            // This prevents ". ." or ", ." sequences
+            // This prevents ". ." or ", ." sequences.
+            // Audit A-5: verify at use that a space ACTUALLY precedes the cursor.
+            // `lastTypedChar` is handler-local memory — backspace, cursor moves, and
+            // swipe/suggestion commits never reset it, so trusting it alone made
+            // space→backspace→space delete a LETTER ("hix"→"hi. ") and turned the
+            // auto-space after a swipe commit into an unrequested period.
             val textBefore = conn.getTextBeforeCursor(2, 0)
+            val spacePrecedesCursor = textBefore?.length == 2 && textBefore[1] == ' '
             val charBeforeSpace = textBefore?.getOrNull(0)
-            if (charBeforeSpace != null && charBeforeSpace.isLetterOrDigit()) {
+            if (spacePrecedesCursor && charBeforeSpace != null && charBeforeSpace.isLetterOrDigit()) {
                 // Delete the previous space and insert ". "
                 conn.deleteSurroundingText(1, 0)
                 textToCommit = ". "
@@ -810,8 +821,15 @@ class KeyEventHandler(
                 repeat(kotlin.math.abs(r).coerceAtLeast(1)) {
                     recv.dispatchKeyToClipboardEdit(keyCode)
                 }
-                return
             }
+            // Audit A-4: edit mode is MODAL — nothing may fall through to the app's
+            // InputConnection. Selection_cursor_* used to slip past the `when` above and
+            // reach moveCursorSel(), silently moving the hidden target field's selection.
+            // The dispatchKeyToClipboardEdit seam carries no meta state, so shift+DPAD
+            // selection inside the edit field isn't expressible there; swallow instead.
+            // TODO: extend the edit-dispatch seam with meta state to support selection
+            // sliders inside the clipboard edit field.
+            return
         }
         when (s) {
             KeyValue.Slider.Cursor_left -> moveCursor(-r)

@@ -138,6 +138,53 @@ class KeyEventHandlerSliderTest {
         verify(exactly = 1) { conn.setSelection(5, 6) }
     }
 
+    // ── Audit A-4: clipboard edit mode is MODAL for sliders ─────────────────────
+    //
+    // The edit-mode branch mapped only plain Cursor_* to dispatchKeyToClipboardEdit;
+    // Selection_cursor_* produced keyCode == null, did NOT return, and fell through to
+    // moveCursorSel on the APP's InputConnection — silently moving the hidden target
+    // field's selection behind the pane during a modal edit.
+    //
+    // RED (2026-09-06, pre-fix): selectionSliderInEditModeNeverReachesTheAppConnection
+    // failed — recv.getCurrentInputConnection() was fetched (moveCursorSel path taken).
+
+    @Test
+    fun selectionSliderInEditModeNeverReachesTheAppConnection() {
+        every { recv.isClipboardEditMode() } returns true
+        seedCursorPos(selectionStart = 5, selectionEnd = 5)
+        every { conn.setSelection(any(), any()) } returns true
+
+        handler.key_up(
+            KeyValue.sliderKey(KeyValue.Slider.Selection_cursor_right, 2),
+            Pointers.Modifiers.EMPTY, false
+        )
+        handler.key_up(
+            KeyValue.sliderKey(KeyValue.Slider.Selection_cursor_left, 2),
+            Pointers.Modifiers.EMPTY, false
+        )
+
+        // Swallowed: neither the app connection nor the edit-dispatch seam (which cannot
+        // carry the shift meta state a selection needs) may see these.
+        verify(exactly = 0) { recv.getCurrentInputConnection() }
+        verify(exactly = 0) { conn.setSelection(any(), any()) }
+        verify(exactly = 0) { recv.dispatchKeyToClipboardEdit(any()) }
+    }
+
+    @Test
+    fun plainCursorSliderInEditModeStillDispatchesToTheEditField() {
+        every { recv.isClipboardEditMode() } returns true
+
+        handler.key_up(
+            KeyValue.sliderKey(KeyValue.Slider.Cursor_right, 3),
+            Pointers.Modifiers.EMPTY, false
+        )
+
+        verify(exactly = 3) {
+            recv.dispatchKeyToClipboardEdit(android.view.KeyEvent.KEYCODE_DPAD_RIGHT)
+        }
+        verify(exactly = 0) { recv.getCurrentInputConnection() }
+    }
+
     // ------------------------------------------------------------------ helpers
 
     /**
