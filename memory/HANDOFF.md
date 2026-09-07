@@ -29,6 +29,16 @@ production bugs); Wave K Saga device pass complete
 non-issue (61 ms), #79 non-reproducing, decode e2e verified, restore verified. Fresh verbose
 release v1.6.0 (sha `6894b2cc…`) is INSTALLED on the Saga awaiting the maintainer soak.
 
+**Round 7 (2026-09-07) — comprehensive-audit remediation COMPLETE.** All 69 findings of
+`docs/audit/2026-09-06-comprehensive-audit.md` fixed or explicitly deferred (its
+Resolution section holds the commit map). All 8 P1s fixed. Gates: 2,329 pure / 703 mock /
+lint clean. Five maintainer forks remain (D-1 usage-stats permission posture, G-3
+short-swipe merge collision, F-8 writerless keys, H-4 dead theme-editor fields, I-7
+default-IME-prompt session semantics) — all ratchet-pinned where mechanical. One open
+code note: `UserDictionaryObserver.checkCustomWordsChanges` lowercases the JSON key
+before `optInt` (case-carrying custom words read 1000 on the incremental path). Device-
+tier pins (GIF scale suite additions, media-path backup test) await the next ew-cli run.
+
 **Still open after round 2 (2026-09-03) — the complete list (ledger "Round 2 closure"
 section is authoritative for what closed):**
 - **ARC-053 minified soak (yours).** Both phones carry the Sep-3 release with ALL round-2
