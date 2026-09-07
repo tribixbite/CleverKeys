@@ -48,13 +48,21 @@ class GifDatabase private constructor(private val appContext: Context) {
 
         // Compound word fallback: if single word > 4 chars with no FTS results,
         // try splitting into two subwords. Handles "eyeroll" → "eye* roll*".
-        if (results.isEmpty() && offset == 0) {
+        //
+        // Audit E-3: the fallback must run at EVERY offset with the SAME split-selection
+        // rule countSearchResults uses (first split whose COUNT > 0), or pagination lies:
+        // the count advertises N pages while pages past the first re-run only the raw
+        // query (empty) and render blank. Count-based selection is offset-independent, so
+        // page k fetches the same effective query the pagination math was computed from.
+        if (results.isEmpty()) {
             val word = query.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
             if (word.length > 4 && !query.trim().contains(" ")) {
                 for (i in 3..(word.length - 3)) {
                     val splitQuery = "${word.substring(0, i)}* ${word.substring(i)}*"
-                    results = executeFtsSearch(db, splitQuery, limit, offset)
-                    if (results.isNotEmpty()) break
+                    if (countFtsResults(db, splitQuery) > 0) {
+                        results = executeFtsSearch(db, splitQuery, limit, offset)
+                        break
+                    }
                 }
             }
         }
@@ -141,7 +149,9 @@ class GifDatabase private constructor(private val appContext: Context) {
     suspend fun getGifsByCategory(category: GifCategory, limit: Int = 200, offset: Int = 0): List<Gif> =
         withContext(Dispatchers.IO) {
             if (category == GifCategory.RECENTLY_USED) {
-                return@withContext getRecentlyUsedGifs(limit)
+                // Audit E-4: thread the offset through — dropping it made Recent's page 2
+                // repeat page 1 whenever usage rows exceeded a page.
+                return@withContext getRecentlyUsedGifs(limit, offset)
             }
             if (category == GifCategory.ALL) {
                 return@withContext getAllGifs(limit, offset)
@@ -174,7 +184,7 @@ class GifDatabase private constructor(private val appContext: Context) {
     /**
      * Get recently used GIFs sorted by last use time.
      */
-    suspend fun getRecentlyUsedGifs(limit: Int = 50): List<Gif> = withContext(Dispatchers.IO) {
+    suspend fun getRecentlyUsedGifs(limit: Int = 50, offset: Int = 0): List<Gif> = withContext(Dispatchers.IO) {
         val results = mutableListOf<Gif>()
         val db = dbHelper.readableDatabase
 
@@ -186,9 +196,9 @@ class GifDatabase private constructor(private val appContext: Context) {
             JOIN gif_usage u ON g.gif_id = u.gif_id
             WHERE u.use_count > 0
             ORDER BY u.last_used DESC
-            LIMIT ?
+            LIMIT ? OFFSET ?
             """.trimIndent(),
-            arrayOf(limit.toString())
+            arrayOf(limit.toString(), offset.toString())
         )
 
         cursor.use {
@@ -203,19 +213,38 @@ class GifDatabase private constructor(private val appContext: Context) {
 
     /**
      * Record that a GIF was used (for recently used tracking).
+     *
+     * Audit E-1: written as a portable two-statement upsert. `INSERT ... ON CONFLICT DO
+     * UPDATE` needs SQLite >= 3.24, which Android only ships from API 29 — on API 24-28
+     * (SQLite 3.9.2-3.22) the old single-statement form was a parse-time SQLiteException
+     * on EVERY GIF tap, escaping an unhandled `scope.launch` and killing the IME process.
+     * Never reintroduce upsert syntax here (pinned by [GifSqlCompatDriftTest]).
+     *
+     * Defensive try/catch: this bookkeeping runs fire-and-forget from the tap handler; a
+     * storage-layer failure must degrade to "recently used not recorded", never crash.
      */
     suspend fun recordGifUsage(gifId: Long) = withContext(Dispatchers.IO) {
         val now = System.currentTimeMillis()
-        dbHelper.writableDatabase.execSQL(
-            """
-            INSERT INTO gif_usage (gif_id, use_count, last_used)
-            VALUES (?, 1, ?)
-            ON CONFLICT(gif_id) DO UPDATE SET
-                use_count = use_count + 1,
-                last_used = ?
-            """.trimIndent(),
-            arrayOf(gifId, now, now)
-        )
+        try {
+            val db = dbHelper.writableDatabase
+            db.beginTransaction()
+            try {
+                // UPDATE first; if the row doesn't exist yet, the OR IGNORE insert seeds it.
+                db.execSQL(
+                    "UPDATE gif_usage SET use_count = use_count + 1, last_used = ? WHERE gif_id = ?",
+                    arrayOf(now, gifId)
+                )
+                db.execSQL(
+                    "INSERT OR IGNORE INTO gif_usage (gif_id, use_count, last_used) VALUES (?, 1, ?)",
+                    arrayOf(gifId, now)
+                )
+                db.setTransactionSuccessful()
+            } finally {
+                db.endTransaction()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "recordGifUsage failed for $gifId: ${e.message}")
+        }
     }
 
     /**
@@ -363,6 +392,30 @@ class GifDatabase private constructor(private val appContext: Context) {
                     FROM pack_db.gifs
                 """, arrayOf(intPackId))
 
+                // Audit E-9: the honest import count is what the OR IGNORE actually
+                // inserted — overlapping rows owned by an earlier pack are skipped and
+                // must not be reported as imported. changes() must be read IMMEDIATELY
+                // after the gifs insert, before any other row-changing statement.
+                val changesCursor = db.rawQuery("SELECT changes()", null)
+                imported = changesCursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+
+                // Audit E-8: cross-pack gid backfill. OR IGNORE means the first pack to
+                // provide a gif_id owns the row — so a rebuilt pack imported under a NEW
+                // pack_id could never deliver the #149 `gid:` marker over a legacy row,
+                // and those rows stayed URL-less forever. When the incoming row carries a
+                // gid: marker and the owned row doesn't, adopt the incoming search_text
+                // (keywords are the same corpus; the marker is strictly additive).
+                db.execSQL("""
+                    UPDATE gifs SET search_text = (
+                        SELECT p.search_text FROM pack_db.gifs p WHERE p.gif_id = gifs.gif_id
+                    )
+                    WHERE search_text NOT LIKE '%gid:%'
+                      AND gif_id IN (
+                          SELECT p2.gif_id FROM pack_db.gifs p2
+                          WHERE p2.search_text LIKE '%gid:%'
+                      )
+                """)
+
                 // Import category mappings (ignore duplicates)
                 db.execSQL("""
                     INSERT OR IGNORE INTO gif_category_map (category_id, gif_id)
@@ -386,9 +439,8 @@ class GifDatabase private constructor(private val appContext: Context) {
                     VALUES (?, ?, ?, ?, ?)
                 """, arrayOf(packId, packName, gifCount, now, sizeBytes))
 
-                // Count actual imports
-                val cursor = db.rawQuery("SELECT COUNT(*) FROM pack_db.gifs", null)
-                imported = cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+                // E-9: `imported` was captured via SELECT changes() right after the gifs
+                // insert above — counting pack_db.gifs here overcounted OR IGNOREd rows.
 
                 db.setTransactionSuccessful()
                 Log.i(TAG, "Imported pack '$packId': $imported GIFs (hasFullGifs=$hasFullGifs)")
@@ -590,18 +642,6 @@ class GifDatabase private constructor(private val appContext: Context) {
         )
     }
 
-    private fun sanitizeFtsQuery(query: String): String {
-        val sanitized = query
-            .replace("\"", "")
-            .replace("'", "")
-            .replace("*", "")
-            .replace("-", " ")
-            .trim()
-        return sanitized.split(" ")
-            .filter { it.isNotBlank() }
-            .joinToString(" ") { "$it*" }
-    }
-
     fun close() {
         dbHelper.close()
     }
@@ -610,6 +650,28 @@ class GifDatabase private constructor(private val appContext: Context) {
         private const val TAG = "GifDatabase"
         const val DATABASE_NAME = "gifs_v5.db"
         const val DATABASE_VERSION = 5
+
+        /**
+         * Audit E-7: normalize to the SAME alphabet the compound fallback uses (lowercase
+         * a-z0-9 + spaces) BEFORE starring tokens. The old char-blacklist (`"'*-`) let FTS4
+         * syntax through — a colon compiles to a column filter (`re:* hello*` → "no such
+         * column: re"), the MATCH throws, the catch swallows it, and the search silently
+         * reported zero results. Also drops a bare `gid` token: the #149 marker indexes the
+         * constant `gid` on every new-pack row, so prefix-starring it matched the whole pack.
+         *
+         * Stateless, in the companion (and internal) so it is pin-testable in runPureTests
+         * ([GifFtsSanitizerTest]) without an Android SQLite instance.
+         */
+        @androidx.annotation.VisibleForTesting
+        internal fun sanitizeFtsQuery(query: String): String {
+            val sanitized = query
+                .lowercase()
+                .replace(Regex("[^a-z0-9 ]"), " ")
+                .trim()
+            return sanitized.split(" ")
+                .filter { it.isNotBlank() && it != "gid" }
+                .joinToString(" ") { "$it*" }
+        }
 
         @Volatile
         private var instance: GifDatabase? = null
