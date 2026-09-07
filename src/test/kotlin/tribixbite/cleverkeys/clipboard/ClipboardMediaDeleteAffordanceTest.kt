@@ -114,8 +114,9 @@ class ClipboardMediaDeleteAffordanceTest {
         content: String = "IMG_1234.png",
         timestamp: Long = 1700000000123L,
         mime: String = "image/png",
+        mediaPath: String? = null,
     ): ClipboardEntry = spyk(
-        ClipboardEntry(content = content, timestamp = timestamp, mimeType = mime)
+        ClipboardEntry(content = content, timestamp = timestamp, mimeType = mime, mediaPath = mediaPath)
     ) { every { getFormattedText(any()) } returns mockk<Spannable>(relaxed = true) }
 
     private fun textEntry(
@@ -142,6 +143,8 @@ class ClipboardMediaDeleteAffordanceTest {
         view.setField("expandedStates", expandedStates)
         view.setField("currentTab", tab)
         view.setField("editingOriginalContent", editingContent)
+        // D-6: play-badge animation memo (Objenesis skips the field initializer)
+        view.setField("animatedCache", mutableMapOf<Long, Boolean>())
 
         val adapterClass = Class.forName(
             "tribixbite.cleverkeys.ClipboardHistoryView\$ClipboardEntriesAdapter"
@@ -189,6 +192,8 @@ class ClipboardMediaDeleteAffordanceTest {
         every { rowView.findViewById<TextView>(R.id.clipboard_entry_private_badge) } returns privateBadge
         every { rowView.findViewById<TextView>(R.id.clipboard_entry_provenance) } returns provenanceView
         every { rowView.findViewById<View>(R.id.clipboard_entry_delete) } returns deleteButton
+        // D-7: the inline save_edit error line (typed lookup, so a plain relaxed View won't do)
+        every { rowView.findViewById<TextView>(R.id.clipboard_entry_edit_error) } returns mockk<TextView>(relaxed = true)
         // Remaining action buttons: plain relaxed mocks, no capture needed
         for (id in intArrayOf(
             R.id.clipboard_entry_paste, R.id.clipboard_entry_addpin, R.id.clipboard_entry_unpin,
@@ -321,6 +326,60 @@ class ClipboardMediaDeleteAffordanceTest {
         verify { deleteRow.visibility = View.VISIBLE }
         deleteClick.captured.onClick(deleteButton)
         verify(exactly = 1) { service.removeHistoryEntry(entry.content) }
+    }
+
+    // ----------------------------------- D-6 (2026-09-06 audit): play badge accuracy
+
+    @Test
+    fun staticWebpGetsNoPlayBadge() {
+        // The old heuristic — `gif || (webp && mediaPath != null)` — badged EVERY WebP,
+        // because mediaPath is set for all saved media. The badge must consult the real
+        // header-parsing detector instead.
+        val entry = mediaEntry(mime = "image/webp", mediaPath = "clipboard_media/007/static.webp")
+        every { service.isMediaAnimated(any(), any()) } returns false
+        buildView(listOf(entry), ClipboardTab.HISTORY)
+
+        render()
+
+        verify { playBadge.visibility = View.GONE }
+        verify(exactly = 0) { playBadge.visibility = View.VISIBLE }
+    }
+
+    @Test
+    fun animatedWebpKeepsThePlayBadge() {
+        val entry = mediaEntry(mime = "image/webp", mediaPath = "clipboard_media/007/anim.webp")
+        every { service.isMediaAnimated("clipboard_media/007/anim.webp", "image/webp") } returns true
+        buildView(listOf(entry), ClipboardTab.HISTORY)
+
+        render()
+
+        verify { playBadge.visibility = View.VISIBLE }
+    }
+
+    @Test
+    fun staticGifGetsNoPlayBadge() {
+        // GIFs go through the same detector — a static GIF (no NETSCAPE/ANIMEXTS loop
+        // marker) must not pretend to play.
+        val entry = mediaEntry(mime = "image/gif", mediaPath = "clipboard_media/007/still.gif")
+        every { service.isMediaAnimated(any(), any()) } returns false
+        buildView(listOf(entry), ClipboardTab.HISTORY)
+
+        render()
+
+        verify { playBadge.visibility = View.GONE }
+        verify(exactly = 0) { playBadge.visibility = View.VISIBLE }
+    }
+
+    @Test
+    fun animationCheckIsMemoizedPerRow() {
+        val entry = mediaEntry(mime = "image/gif", mediaPath = "clipboard_media/007/anim.gif")
+        every { service.isMediaAnimated(any(), any()) } returns true
+        buildView(listOf(entry), ClipboardTab.HISTORY)
+
+        render()
+        render()
+
+        verify(exactly = 1) { service.isMediaAnimated("clipboard_media/007/anim.gif", "image/gif") }
     }
 
     // ------------------------------------------------------------------ helpers

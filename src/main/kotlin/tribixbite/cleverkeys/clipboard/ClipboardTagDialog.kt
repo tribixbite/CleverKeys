@@ -14,7 +14,6 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 
 /**
  * Inline tag management panel for clipboard entries.
@@ -194,6 +193,18 @@ object ClipboardTagPanel {
         inputRow.addView(addButton)
         container.addView(inputRow)
 
+        // D-7: inline error line for the Add button — Toasts are invisible in IME context
+        // (they render behind the keyboard window, see ime-visual-feedback.md), so the two
+        // validation failures surface here instead. Hidden until the first failure; cleared
+        // on the next successful add.
+        val errorLabel = TextView(context).apply {
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            setTextColor(0xFFEF5350.toInt())
+            setPadding(0, dp(4), 0, 0)
+            visibility = View.GONE
+        }
+        container.addView(errorLabel)
+
         // ── Helper to refresh chip displays ──
         fun refreshChips() {
             val allTags = when (tab) {
@@ -252,13 +263,16 @@ object ClipboardTagPanel {
         addButton.setOnClickListener {
             val newTag = newTagInput.text.toString().trim().lowercase()
             if (newTag.isEmpty()) {
-                Toast.makeText(context, "Enter a tag name", Toast.LENGTH_SHORT).show()
+                errorLabel.text = context.getString(R.string.clipboard_tag_error_empty)
+                errorLabel.visibility = View.VISIBLE
                 return@setOnClickListener
             }
             if (currentTags.contains(newTag)) {
-                Toast.makeText(context, "Tag already exists", Toast.LENGTH_SHORT).show()
+                errorLabel.text = context.getString(R.string.clipboard_tag_error_duplicate)
+                errorLabel.visibility = View.VISIBLE
                 return@setOnClickListener
             }
+            errorLabel.visibility = View.GONE
             currentTags.add(newTag)
             newTagInput.text.clear()
             saveTags(service, tab, entry.content, currentTags)

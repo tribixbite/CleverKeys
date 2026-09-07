@@ -110,6 +110,20 @@
       android:textColorHint="#99FFFFFF"
       tools:ignore="LabelFor"/>
 
+  <!-- D-7: inline save_edit failure (duplicate/invalid/db error). Toasts render behind the
+       IME window (ime-visual-feedback.md), so edit-save errors surface here and the edit
+       session stays open instead of silently discarding the user's changes. -->
+  <TextView
+      android:id="@+id/clipboard_entry_edit_error"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="14dp"
+      android:layout_marginEnd="14dp"
+      android:layout_marginBottom="4dp"
+      android:textSize="12sp"
+      android:textColor="#FFEF5350"
+      android:visibility="gone"/>
+
   </LinearLayout>
 
   <!-- ─── Button column: stacked vertically on the right side ─── -->
@@ -132,6 +146,7 @@
 
       <View
           android:id="@+id/clipboard_entry_expand"
+          android:contentDescription="@string/clipboard_entry_expand_descr"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_expand_more"
           android:visibility="gone"
@@ -139,6 +154,7 @@
 
       <View
           android:id="@+id/clipboard_entry_edit"
+          android:contentDescription="@string/clipboard_entry_edit_descr"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_clipboard_edit"
           android:visibility="gone"
@@ -146,6 +162,7 @@
 
       <View
           android:id="@+id/clipboard_entry_paste"
+          android:contentDescription="@string/key_descr_paste"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_clipboard_paste"/>
 
@@ -163,12 +180,14 @@
       <!-- Pin / Save to pinned (history tab) -->
       <View
           android:id="@+id/clipboard_entry_addpin"
+          android:contentDescription="@string/clipboard_entry_pin_descr"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_clipboard_save"/>
 
       <!-- Unpin (pinned tab only) -->
       <View
           android:id="@+id/clipboard_entry_unpin"
+          android:contentDescription="@string/clipboard_entry_unpin_descr"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_unpin"
           android:visibility="gone"/>
@@ -176,12 +195,14 @@
       <!-- Add to Todo (history + pinned tabs) -->
       <View
           android:id="@+id/clipboard_entry_addtodo"
+          android:contentDescription="@string/clipboard_entry_todo_descr"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_clipboard_todo"/>
 
       <!-- Done/check button — marks todo as completed (todos tab only) -->
       <View
           android:id="@+id/clipboard_entry_done"
+          android:contentDescription="@string/clipboard_entry_done_descr"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_clipboard_save_edit"
           android:visibility="gone"/>
@@ -189,6 +210,7 @@
       <!-- Status cycle (todos tab only) -->
       <View
           android:id="@+id/clipboard_entry_status"
+          android:contentDescription="@string/clipboard_entry_status_descr"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_status_cycle"
           android:visibility="gone"/>
@@ -196,6 +218,7 @@
       <!-- Tags (pinned + todos tabs) -->
       <View
           android:id="@+id/clipboard_entry_tags"
+          android:contentDescription="@string/clipboard_entry_tags_descr"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_tag"
           android:visibility="gone"/>
@@ -212,12 +235,14 @@
 
       <View
           android:id="@+id/clipboard_entry_save"
+          android:contentDescription="@string/common_save"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_clipboard_save_edit"
           android:layout_marginEnd="4dp"/>
 
       <View
           android:id="@+id/clipboard_entry_cancel"
+          android:contentDescription="@string/common_cancel"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_clipboard_cancel"/>
 
@@ -234,6 +259,7 @@
 
       <View
           android:id="@+id/clipboard_entry_delete"
+          android:contentDescription="@string/common_delete"
           style="@style/clipboardEntryButton"
           android:background="@drawable/ic_delete"/>
 

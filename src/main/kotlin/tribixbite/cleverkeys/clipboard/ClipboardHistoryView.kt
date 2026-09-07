@@ -77,6 +77,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         override fun sizeOf(key: Long, value: Bitmap): Int = 1  // count-based, not byte-based
     }
 
+    // D-6: memo for the play badge's animation check, keyed by entry timestamp. The real
+    // detector (ClipboardMediaManager.isAnimated) reads ~30 header bytes per file — cheap,
+    // but getView runs per scroll frame, so resolve once per row. Cleared with the
+    // thumbnail cache on tab switch.
+    private val animatedCache = mutableMapOf<Long, Boolean>()
+
     // #156 / ARC-011: memo for PackageManager label lookups behind the provenance line.
     // getView() runs per scroll frame, and getApplicationInfo() is a binder round-trip; the
     // distinct source-package set is tiny (apps the user privately copies from), so an
@@ -157,6 +163,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // silently leak its plaintext to the OS clipboard — it routes through the same
     // confirm-before-expose dialog copyEntryToSystemClipboard uses.
     private var editingIsPrivate: Boolean = false
+    // D-7: string resource of the current save_edit failure, rendered inline in the edit row
+    // (Toasts are invisible in IME context — ime-visual-feedback.md). Non-null only while an
+    // edit session is showing an error; cleared on text change, cancel, and successful save.
+    private var editingErrorRes: Int? = null
     // Cursor position preserved across view recycling — updated after every text op
     private var editingCursorPosition: Int? = null
     // Reference to the active EditText widget for key routing (insertEditText/backspaceEditText)
@@ -273,6 +283,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         currentTab = tab
         expandedStates.clear()
         thumbnailCache.evictAll()
+        animatedCache.clear()  // D-6: same lifecycle as the thumbnail cache
         // Reset tag/status filters on tab switch — tags are tab-specific
         // NOTE: searchFilter, regexMode, dateFilter* are NOT reset — they persist across tabs
         tagFilterSelected = emptySet()
@@ -434,6 +445,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         val visibleTimestamps = paginatedHistory.map { it.timestamp }.toSet()
         expandedStates.keys.retainAll(visibleTimestamps)
         thumbnailCache.evictAll()
+        animatedCache.keys.retainAll(visibleTimestamps)  // D-6: drop rows that left the page
 
         // Notify listener about pagination state
         onPaginationChangeListener?.invoke(
@@ -484,7 +496,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      * Carries media fields (mimeType, thumbnailBlob, mediaPath) through COPY semantics.
      */
     fun pin_entry(pos: Int) {
-        val entry = paginatedHistory[pos]
+        // D-10: an async reload can shrink the paginated list between a row's render and
+        // its click dispatch — a stale position must be a no-op, not an IME crash.
+        val entry = paginatedHistory.getOrNull(pos) ?: return
 
         when (currentTab) {
             ClipboardTab.HISTORY -> {
@@ -514,7 +528,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      * Carries media fields through COPY semantics.
      */
     fun todo_entry(pos: Int) {
-        val entry = paginatedHistory[pos]
+        // D-10: bounds-guard stale click positions (see pin_entry).
+        val entry = paginatedHistory.getOrNull(pos) ?: return
 
         when (currentTab) {
             ClipboardTab.HISTORY, ClipboardTab.PINNED -> {
@@ -535,7 +550,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     /** Delete the specified entry from the current tab's backing store (position in current page). */
     fun delete_entry(pos: Int) {
-        val entry = paginatedHistory[pos]
+        // D-10: bounds-guard stale click positions (see pin_entry).
+        val entry = paginatedHistory.getOrNull(pos) ?: return
         // Always exit edit mode when deleting — the entry being edited is removed,
         // and list positions shift. Without this, isEditing() stays true and blocks all UI.
         if (isEditing()) {
@@ -581,21 +597,25 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         // updated by TextWatcher + direct sync in text manipulation methods).
         val newContent = editingInProgressText ?: return
 
-        val result = service?.editEntryContent(oldContent, newContent, currentTab)
-        when (result) {
+        when (service?.editEntryContent(oldContent, newContent, currentTab)) {
             is EditEntryResult.Success -> {
                 // Timestamp key doesn't change when content is edited — no migration needed
+                cancelEdit()
             }
-            is EditEntryResult.DuplicateConflict ->
-                Toast.makeText(context, R.string.clipboard_edit_duplicate, Toast.LENGTH_SHORT).show()
-            is EditEntryResult.InvalidContent ->
-                Toast.makeText(context, R.string.clipboard_edit_invalid, Toast.LENGTH_SHORT).show()
-            is EditEntryResult.Error ->
-                Toast.makeText(context, R.string.clipboard_edit_error, Toast.LENGTH_SHORT).show()
-            null ->
-                Toast.makeText(context, R.string.clipboard_edit_error, Toast.LENGTH_SHORT).show()
+            // D-7: every failure keeps the edit session ALIVE. The old path Toasted (invisible
+            // inside the IME window — ime-visual-feedback.md) and then unconditionally
+            // cancelEdit()ed, silently discarding the user's in-progress edit. Instead the
+            // error renders inline in the edit row and the user can fix or deliberately cancel.
+            is EditEntryResult.DuplicateConflict -> showEditError(R.string.clipboard_edit_duplicate)
+            is EditEntryResult.InvalidContent -> showEditError(R.string.clipboard_edit_invalid)
+            is EditEntryResult.Error, null -> showEditError(R.string.clipboard_edit_error)
         }
-        cancelEdit()
+    }
+
+    /** D-7: surface a save_edit failure inline (clipboard_entry_edit_error) without leaving edit mode. */
+    private fun showEditError(messageRes: Int) {
+        editingErrorRes = messageRes
+        clipboardAdapter.notifyDataSetChanged()
     }
 
     /** Discard edits and exit edit mode */
@@ -605,6 +625,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingInProgressText = null
         editingCursorPosition = null
         editingIsPrivate = false
+        editingErrorRes = null
         // Remove TextWatcher via tag-based cleanup (matches getView tag management).
         // Also try field-based removal as belt-and-suspenders.
         editingEditText?.let { et ->
@@ -842,7 +863,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     /** Send the specified entry to the editor (position in current page). */
     fun paste_entry(pos: Int) {
-        val entry = paginatedHistory[pos]
+        // D-10: bounds-guard stale click positions (see pin_entry).
+        val entry = paginatedHistory.getOrNull(pos) ?: return
         if (entry.isMedia && entry.mediaPath != null) {
             // Media entry — use commitContent to send to target app. The private marker
             // rides along so the handler can refuse the system-clipboard fallback (ARC-001).
@@ -1044,9 +1066,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         if (dateFilterEnabled) return true
         if (privateOnlyFilter) return true
         if (tagFilterSelected.isNotEmpty()) return true
-        // Status filter is "active" when not at defaults (only Active checked)
+        // D-3: the status filter is "active" whenever any status is hidden — INCLUDING the
+        // default active-only state. applyFilter's hasStatusFilter uses the same predicate
+        // ("the default state IS a filter": it drops planned/completed rows), and the icon
+        // tint must agree or a status-cycled todo vanishes with no indicator.
         if (currentTab == ClipboardTab.TODOS) {
-            if (!statusFilterActive || statusFilterPlanned || statusFilterCompleted) return true
+            if (!(statusFilterActive && statusFilterPlanned && statusFilterCompleted)) return true
         }
         return false
     }
@@ -1101,6 +1126,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val text = entry.content
             val textView = view.findViewById<TextView>(R.id.clipboard_entry_text)
             val editField = view.findViewById<EditText>(R.id.clipboard_entry_edit_field)
+            // D-7: inline save_edit failure line (Toasts are invisible in IME context)
+            val editErrorView = view.findViewById<TextView>(R.id.clipboard_entry_edit_error)
             val expandButton = view.findViewById<View>(R.id.clipboard_entry_expand)
             val editButton = view.findViewById<View>(R.id.clipboard_entry_edit)
             val primaryButtons = view.findViewById<LinearLayout>(R.id.clipboard_entry_primary_buttons)
@@ -1147,6 +1174,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 privateBadge.visibility = GONE  // #156: hidden during edit
                 provenanceView.visibility = GONE  // ARC-011: hidden during edit
 
+                // D-7: render any pending save failure inline; cleared when the user types.
+                val errRes = editingErrorRes
+                if (errRes != null) {
+                    editErrorView.setText(errRes)
+                    editErrorView.visibility = VISIBLE
+                } else {
+                    editErrorView.visibility = GONE
+                }
+
                 // Bug #3 fix: use in-progress text (not DB content) to survive view recreation.
                 // Always set text+visibility — needed for correct height during measurement.
                 val displayText = editingInProgressText ?: text
@@ -1181,6 +1217,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
                     override fun afterTextChanged(s: android.text.Editable?) {
                         editingInProgressText = s?.toString()
+                        // D-7: the user is addressing the failed save — retire the error line.
+                        if (editingErrorRes != null) {
+                            editingErrorRes = null
+                            editErrorView.visibility = GONE
+                        }
                         // NOTE: Do NOT update editingCursorPosition here.
                         // setText() resets cursor to 0 before our setSelection() corrects it.
                         // The TextWatcher fires between those two calls, capturing the wrong
@@ -1209,6 +1250,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             // ── Normal mode: standard rendering ──
             textView.visibility = VISIBLE
             editField.visibility = GONE
+            editErrorView.visibility = GONE  // D-7: recycled edit rows must not leak the error line
             primaryButtons.visibility = VISIBLE
             editButtons.visibility = GONE
             deleteRow.visibility = GONE
@@ -1240,9 +1282,19 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                     thumbnailView.setImageResource(getMimeTypeIcon(entry.mimeType))
                     thumbnailView.scaleType = ImageView.ScaleType.CENTER_INSIDE
                 }
-                // Show play badge for animated media (GIF, animated WebP)
-                val isAnimated = entry.mimeType == "image/gif" ||
-                    (entry.mimeType == "image/webp" && entry.mediaPath != null)
+                // D-6: play badge for media that is ACTUALLY animated, per the header-parsing
+                // detector (memoized per row). The old heuristic — `gif || (webp && mediaPath
+                // != null)` — badged every WebP, because mediaPath is set for all saved media.
+                val mime = entry.mimeType
+                val isAnimated = if (mime == "image/gif" || mime == "image/webp") {
+                    entry.mediaPath?.let { path ->
+                        animatedCache.getOrPut(entry.timestamp) {
+                            service?.isMediaAnimated(path, mime) ?: false
+                        }
+                    } ?: false
+                } else {
+                    false
+                }
                 playBadge.visibility = if (isAnimated) VISIBLE else GONE
 
                 // For media entries, show MIME label + filename instead of content body
