@@ -45,7 +45,19 @@ object SettingsImportApplier {
                 result.excludedByUserCount++
                 continue
             }
-            if (!planCurrentMatchesNow(change.current, nowBeforeCommit[change.key])) {
+            // G-4 (comprehensive audit 2026-09-06): for an ADDED change the builder's
+            // `current` is the EFFECTIVE default (e.g. Bool(false)) while the key is
+            // still ABSENT from prefs — comparing that default against `null` counted
+            // every fresh-install ADDED row as drifted ("30 keys drifted" on a clean
+            // install). For ADDED, a still-absent key means nothing moved since the
+            // preview; only a key that got WRITTEN in between is a real race.
+            val now = nowBeforeCommit[change.key]
+            val drifted = if (change.type == ChangeType.ADDED) {
+                now != null && !planCurrentMatchesNow(change.current, now)
+            } else {
+                !planCurrentMatchesNow(change.current, now)
+            }
+            if (drifted) {
                 driftCount++
             }
             dispatchPut(editor, change.key, change.proposed)

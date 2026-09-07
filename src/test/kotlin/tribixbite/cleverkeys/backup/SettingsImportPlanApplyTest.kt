@@ -143,6 +143,42 @@ class SettingsImportPlanApplyTest {
         assertThat(result.driftCount).isEqualTo(1)
     }
 
+    @Test
+    fun apply_addedChangeOnFreshInstall_reportsNoDrift() {
+        // G-4 (comprehensive audit 2026-09-06): for an ADDED change the builder stores the
+        // EFFECTIVE default as `current` (e.g. Bool(false)), while the key is still ABSENT
+        // from prefs. Comparing that default against the absent key counted every
+        // fresh-install ADDED row as "drifted" — a 30-row import onto a clean install
+        // logged "30 keys drifted" with zero concurrent activity.
+        every { prefs.all } returns emptyMap()
+        val plan = planWith(
+            SettingsChange("k", PrefValue.Bool(false), PrefValue.Bool(true), ChangeType.ADDED)
+        )
+
+        val result = runBlocking {
+            SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter)
+        }
+
+        verify(exactly = 1) { editor.putBoolean("k", true) }
+        assertThat(result.driftCount).isEqualTo(0)
+    }
+
+    @Test
+    fun apply_addedChangeWhoseKeyAppearedSinceBuild_stillCountsAsDrift() {
+        // The ADDED exemption is only for the still-absent key; a key that got WRITTEN
+        // between preview and apply (a real race) must keep tripping the diagnostic.
+        every { prefs.all } returns mapOf("k" to true)
+        val plan = planWith(
+            SettingsChange("k", PrefValue.Bool(false), PrefValue.Bool(true), ChangeType.ADDED)
+        )
+
+        val result = runBlocking {
+            SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter)
+        }
+
+        assertThat(result.driftCount).isEqualTo(1)
+    }
+
     private fun planWithShortSwipe(rawJson: String, size: Int = 1) = SettingsImportPlan(
         sourceVersion = "1.4.0",
         sourceScreen = screen,
