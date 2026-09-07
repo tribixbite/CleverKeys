@@ -538,6 +538,12 @@ tasks.register('runPureTests', JavaExec) {
     // local-media commitContent first, case-preserved URL text second, never a dead link.
     'tribixbite.cleverkeys.gif.GifInsertPolicyTest',
     'tribixbite.cleverkeys.gif.GifCategoryTest',
+    // Audit W2 (2026-09-07): E-6 — GIF category bar commits on UP-within-slop (pure detector);
+    // E-1 — repo-wide ban on SQLite upsert syntax (parse error on API 24-28);
+    // E-10 — Toast is banned from IME-context files (suggestion bar is the surface, #156).
+    'tribixbite.cleverkeys.gif.GifCategoryTapDetectorTest',
+    'tribixbite.cleverkeys.gif.GifSqlCompatDriftTest',
+    'tribixbite.cleverkeys.ImeToastBanDriftTest',
     // ARC-075 (2026-08-30): the GIF import status is a typed value, so the settings section
     // never classifies a failure by matching English message text.
     'tribixbite.cleverkeys.ui.settings.io.GifImportStatusTest',
@@ -945,6 +951,12 @@ tasks.register('runMockTests', JavaExec) {
   jvmArgs '-XX:+EnableDynamicAgentLoading'
 
   def mockTestClasses = [
+    // B-1 (2026-09-06 audit, P1): the recognizer/detector letter gate was hard-coded a-z,
+    // so swipe typing could never trigger on any non-Latin board. Drives the REAL
+    // ImprovedSwipeGestureRecognizer touch-stream path (startSwipe/addPoint/endSwipe) with
+    // Cyrillic/Greek/Hebrew KeyValue keys — possible off-device because the test classpath
+    // shadows the android.jar PointF stub (src/test/kotlin/android/graphics/PointF.kt).
+    'tribixbite.cleverkeys.SwipeNonLatinSwipeTypingTest',
     // Release-record burn-down (2026-09-03): claims pinned by waves UA-UD
     'tribixbite.cleverkeys.ReleaseClaimGestureModesTest',
     // #171/#145/#83 (2026-09-03): custom short-swipe dispatch — a custom mapping shadows
@@ -1045,6 +1057,17 @@ tasks.register('runMockTests', JavaExec) {
     // never replace the input view (the setInputView fallbacks are gone); the GIF tap path
     // commits the case-preserved URL / local media, never the legacy dead link.
     'tribixbite.cleverkeys.KeyboardReceiverPaneHostTest',
+    // Audit W2 (2026-09-07): A-2 — the keyboard view is late-bound behind a provider on
+    // every wiring/coordinator seam (structural + provider-consultation pins); A-1 — the
+    // bridge overrides EVERY IReceiver method (delegation-gap ratchet, 3rd instance);
+    // A-5 — double-space-to-period verifies a space precedes the cursor at use;
+    // E-7 — the FTS sanitizer neutralizes FTS4 syntax; E-11 — partial thumbnail imports
+    // surface their failures and roll back.
+    'tribixbite.cleverkeys.KeyboardViewLateBindingDriftTest',
+    'tribixbite.cleverkeys.KeyEventReceiverBridgeDelegationTest',
+    'tribixbite.cleverkeys.DoubleSpacePeriodTest',
+    'tribixbite.cleverkeys.gif.GifFtsSanitizerTest',
+    'tribixbite.cleverkeys.gif.GifAssetManagerPartialImportTest',
     // ARC-079 (2026-08-29): with DictionaryManager's duplicate predictor cache deleted, the
     // coordinator's flush/shutdown are the ONLY learned-data checkpoints left in the process.
     'tribixbite.cleverkeys.PredictionCoordinatorLifecycleTest',
