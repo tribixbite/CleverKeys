@@ -157,6 +157,54 @@ class DebugLoggingManagerTest {
     }
 
     // =========================================================================
+    // I-8 (comprehensive audit 2026-09-06): the SET_DEBUG_MODE receiver must not be
+    // spoofable by third-party apps on API 24-25.
+    //
+    // A DYNAMICALLY registered receiver without RECEIVER_NOT_EXPORTED receives matching
+    // implicit broadcasts from ANY installed app — the old comment's "app-internal
+    // broadcast ... not reachable by other apps pre-26" claim is true only for manifest
+    // components. A hostile `am broadcast -a tribixbite.cleverkeys.SET_DEBUG_MODE` from
+    // another app silently switched on the I-1 recording path with every consent toggle
+    // off. The fix registers the pre-26 receiver behind a SIGNATURE-protected permission,
+    // so only apps signed with our certificate can deliver the broadcast.
+    //
+    // These are source/manifest pins: `object : BroadcastReceiver()` calls the
+    // android.jar stub constructor (throws "Stub!"), so registerDebugModeReceiver cannot
+    // execute in this tier, and framework permission ENFORCEMENT is untestable off-device
+    // regardless — what is pinnable is that the permission is declared, signature-level,
+    // requested, and actually passed to the pre-26 registration.
+    // =========================================================================
+
+    private val managerSource: String by lazy {
+        val f = java.io.File("src/main/kotlin/tribixbite/cleverkeys/DebugLoggingManager.kt")
+        check(f.isFile) { "${f.path} not found — run with the project root as CWD." }
+        f.readText()
+    }
+
+    @Test
+    fun `pre-26 debug mode receiver is registered behind the signature permission`() {
+        val body = managerSource.substringAfter("fun registerDebugModeReceiver(")
+            .substringBefore("fun unregisterDebugModeReceiver(")
+        assertThat(body).isNotEmpty()
+        // The 4-arg (receiver, filter, broadcastPermission, scheduler) form on the else
+        // branch — the sender must hold the permission for delivery.
+        assertThat(body).contains("registerReceiver(debugModeReceiver, filter, PERMISSION_SET_DEBUG_MODE, null)")
+        // And the unguarded 3-arg form must be gone entirely.
+        assertThat(body).doesNotContain("registerReceiver(debugModeReceiver, filter)")
+    }
+
+    @Test
+    fun `the debug mode permission is declared signature-level and requested in the manifest`() {
+        val manifest = java.io.File("AndroidManifest.xml").readText()
+        // Literal (not the constant) so this test compiles — and stays red — before the fix
+        // lands; the source pin above ties the constant name to the registration call.
+        val permission = "tribixbite.cleverkeys.permission.SET_DEBUG_MODE"
+        assertThat(managerSource).contains("\"$permission\"")
+        assertThat(manifest).contains("<permission android:name=\"$permission\" android:protectionLevel=\"signature\"/>")
+        assertThat(manifest).contains("<uses-permission android:name=\"$permission\"/>")
+    }
+
+    // =========================================================================
     // Helper: trigger debug mode via reflection on private setDebugMode
     // =========================================================================
 

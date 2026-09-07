@@ -51,6 +51,17 @@ class DebugLoggingManager(
         private const val EXTRA_DEBUG_ENABLED = "debug_enabled"
         private const val LOG_FILE_NAME = "swipe_log.txt"
         private const val TAG = "DebugLoggingManager"
+
+        /**
+         * I-8 (comprehensive audit 2026-09-06): signature-protected permission gating the
+         * SET_DEBUG_MODE receiver on API 24-25, where RECEIVER_NOT_EXPORTED is unavailable.
+         * Declared in AndroidManifest.xml with `protectionLevel="signature"` and requested
+         * via `<uses-permission>`, so only apps signed with this app's certificate (i.e.
+         * this app itself) can deliver the broadcast. Without it, ANY installed app could
+         * flip debug mode on those API levels — silently enabling the playground
+         * recording path (I-1) with every consent toggle off.
+         */
+        const val PERMISSION_SET_DEBUG_MODE = "tribixbite.cleverkeys.permission.SET_DEBUG_MODE"
     }
 
     /**
@@ -120,14 +131,18 @@ class DebugLoggingManager(
         }
 
         val filter = IntentFilter(DEBUG_MODE_ACTION)
-        // RECEIVER_NOT_EXPORTED (and the 4-arg registerReceiver) require API 26. On API
-        // 21-25 use the 3-arg form: an app-internal broadcast with no exported components
-        // is not reachable by other apps pre-26, so the security posture is unchanged.
+        // RECEIVER_NOT_EXPORTED (and the flagged registerReceiver) require API 26. On API
+        // 24-25, a DYNAMIC receiver registered without it receives matching implicit
+        // broadcasts from ANY installed app ("exported=false protects only manifest
+        // components" — I-8), so the pre-26 branch registers behind the app's own
+        // signature-protected permission instead: delivery then requires the SENDER to
+        // hold [PERMISSION_SET_DEBUG_MODE], which only same-signature apps can. Note
+        // this means the documented `adb shell am broadcast` toggle works pre-26 only
+        // via the in-app playground, mirroring the NOT_EXPORTED posture on 26+.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.registerReceiver(debugModeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
-            @Suppress("UnspecifiedRegisterReceiverFlag")
-            context.registerReceiver(debugModeReceiver, filter)
+            context.registerReceiver(debugModeReceiver, filter, PERMISSION_SET_DEBUG_MODE, null)
         }
     }
 
