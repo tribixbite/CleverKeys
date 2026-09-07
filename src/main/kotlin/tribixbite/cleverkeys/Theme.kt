@@ -287,10 +287,14 @@ class Theme {
         companion object {
             private fun init_border_paint(config: Config, border_width: Float, color: Int): Paint {
                 return Paint().apply {
-                    alpha = config.keyOpacity
                     style = Paint.Style.STROKE
                     strokeWidth = border_width
+                    // Audit H-6: colour FIRST, then alpha — setColor writes the full ARGB
+                    // (the colour's own alpha included), so the reverse order discarded
+                    // keyOpacity and borders stayed opaque on a translucent keyboard.
+                    // Same contract as bg_paint in Key.init (color = …, then alpha = …).
                     setColor(color)
+                    alpha = config.keyOpacity
                 }
             }
 
