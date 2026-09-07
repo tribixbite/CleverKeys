@@ -36,8 +36,6 @@ object IMEStatusHelper {
     private const val TAG = "IMEStatusHelper"
     private const val PREF_KEY_PROMPT_SHOWN = "ime_prompt_shown_this_session"
     private const val TOAST_DELAY_MS = 2000L
-    private const val TOAST_MESSAGE =
-        "Set Unexpected Keyboard as default in Settings → System → Languages & input → On-screen keyboard"
 
     /**
      * Check if the keyboard is the default IME and show a prompt if not.
@@ -88,11 +86,17 @@ object IMEStatusHelper {
 
             // Check if we're the default
             if (ourIme != defaultIme) {
+                // I-7 (undeferred half, comprehensive audit 2026-09-06): the message names
+                // THIS app via its app_name resource — the old hardcoded constant said
+                // "Unexpected Keyboard" in an app named CleverKeys. (The once-per-session
+                // vs once-per-install flag semantics are a separate, deferred decision.)
+                val message = "Set ${context.getString(R.string.app_name)} as default in " +
+                    "Settings → System → Languages & input → On-screen keyboard"
                 // We're not the default - show helpful toast after delay
                 handler.postDelayed({
                     Toast.makeText(
                         context,
-                        TOAST_MESSAGE,
+                        message,
                         Toast.LENGTH_LONG
                     ).show()
                 }, TOAST_DELAY_MS)

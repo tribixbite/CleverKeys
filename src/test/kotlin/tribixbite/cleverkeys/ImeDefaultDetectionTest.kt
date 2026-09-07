@@ -169,6 +169,40 @@ class ImeDefaultDetectionTest {
         verify(exactly = 0) { Settings.Secure.getString(any(), any()) }
     }
 
+    /**
+     * I-7 (comprehensive audit 2026-09-06), the undeferred half: the prompt named the
+     * WRONG PRODUCT — a hardcoded "Set Unexpected Keyboard as default …" in an app named
+     * CleverKeys. The message must be built from the app-name resource. (The
+     * once-per-session vs once-per-install semantics are a separate, deferred
+     * maintainer decision and are deliberately not changed or pinned here.)
+     */
+    @Test
+    fun `the prompt names this app via the app_name resource, not Unexpected Keyboard`() {
+        systemDefaultIme("com.example.other/com.example.other.OtherService")
+        every { prefs.getBoolean(PROMPT_SHOWN_KEY, false) } returns false
+        every { context.getString(R.string.app_name) } returns "CleverKeys"
+
+        val toastRunnable = slot<Runnable>()
+        every { handler.postDelayed(capture(toastRunnable), any()) } returns true
+
+        mockkStatic(android.widget.Toast::class)
+        val toastText = slot<CharSequence>()
+        every {
+            android.widget.Toast.makeText(any(), capture(toastText), any())
+        } returns mockk(relaxed = true)
+        try {
+            IMEStatusHelper.checkAndPromptDefaultIME(context, handler, prefs, PACKAGE, SERVICE)
+            toastRunnable.captured.run()
+
+            assertWithMessage("the prompt must name the app it belongs to")
+                .that(toastText.captured.toString()).contains("CleverKeys")
+            assertWithMessage("the old product name must be gone")
+                .that(toastText.captured.toString()).doesNotContain("Unexpected Keyboard")
+        } finally {
+            unmockkStatic(android.widget.Toast::class)
+        }
+    }
+
     @Test
     fun `resetSessionPrompt clears the flag so the next session can prompt again`() {
         IMEStatusHelper.resetSessionPrompt(prefs)
