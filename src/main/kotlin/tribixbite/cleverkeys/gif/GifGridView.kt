@@ -44,7 +44,14 @@ class GifGridManager(
     private val assetManager = GifAssetManager.getInstance(context)
     private val database = GifDatabase.getInstance(context)
     private val adapter = GifRecyclerAdapter()
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+    // Audit E-1: an uncaught exception in a root coroutine of this scope reaches the default
+    // handler and KILLS THE IME PROCESS (the recordGifUsage upsert crash rode exactly this
+    // path on API 24-28). Grid work is best-effort UI plumbing — log and survive.
+    private val crashGuard = CoroutineExceptionHandler { _, t ->
+        android.util.Log.e("GifGridManager", "GIF grid coroutine failed", t)
+    }
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob() + crashGuard)
     private var searchJob: Job? = null
 
     /** Coil image loader with IME-friendly memory limits.
@@ -77,6 +84,15 @@ class GifGridManager(
      */
     var onPaginationChanged: ((needsPagination: Boolean, currentPage: Int, totalPages: Int) -> Unit)? = null
 
+    /**
+     * Audit E-5: fired on the MAIN thread every time an async search/load actually lands,
+     * with the query it belongs to and the result count. The "No results" indicator must
+     * key off this — reading [getResultCount] synchronously after [search] returns the
+     * PREVIOUS list's size (search debounces 150 ms and queries on IO), so the indicator
+     * was always one query stale and effectively never showed.
+     */
+    var onResultsChanged: ((query: String, count: Int) -> Unit)? = null
+
     init {
         recyclerView.layoutManager = GridLayoutManager(context, columns)
         recyclerView.adapter = adapter
@@ -84,12 +100,23 @@ class GifGridManager(
         recyclerView.itemAnimator = null // No animations for perf
 
         // Load recently used on init, fall back to "All" if empty
-        scope.launch {
-            loadCategory(GifCategory.RECENTLY_USED)
-            if (gifList.isEmpty()) {
-                // No usage history yet — show all available GIFs
-                loadCategory(GifCategory.ALL)
-            }
+        scope.launch { loadDefaultView() }
+    }
+
+    /**
+     * Recently-used view, falling back to "All" when there is no usage history yet.
+     *
+     * Audit E-4: the fallback must also MOVE [currentCategory] to ALL — the old init left
+     * it at RECENTLY_USED while displaying the All list, so the next-page reload fetched
+     * recently-used (empty on a fresh install) and blanked the grid.
+     */
+    private suspend fun loadDefaultView() {
+        currentCategory = GifCategory.RECENTLY_USED
+        loadCategory(GifCategory.RECENTLY_USED)
+        if (gifList.isEmpty()) {
+            // No usage history yet — show all available GIFs
+            currentCategory = GifCategory.ALL
+            loadCategory(GifCategory.ALL)
         }
     }
 
@@ -119,8 +146,12 @@ class GifGridManager(
         searchJob?.cancel()
         searchJob = scope.launch {
             if (query.isBlank()) {
-                gifList = database.getRecentlyUsedGifs(50)
-                totalItems = gifList.size
+                // Audit E-4: a cleared search restores the DEFAULT view (recent, falling
+                // back to All + category tracking) — the old bare recently-used load
+                // emptied the grid on any install without usage history. loadDefaultView
+                // notifies adapter/pagination itself.
+                currentPage = 0
+                loadDefaultView()
             } else {
                 delay(SEARCH_DEBOUNCE_MS) // cancelled by the next keystroke
                 val page = database.searchGifs(query, ITEMS_PER_PAGE, 0)
@@ -129,10 +160,12 @@ class GifGridManager(
                 totalItems = if (page.size < ITEMS_PER_PAGE) page.size
                     else database.countSearchResults(query)
                 gifList = page
+                adapter.notifyDataSetChanged()
+                recyclerView.scrollToPosition(0)
+                notifyPagination()
             }
-            adapter.notifyDataSetChanged()
-            recyclerView.scrollToPosition(0)
-            notifyPagination()
+            // Audit E-5: report the landed result count for THIS query (main thread here).
+            onResultsChanged?.invoke(query, gifList.size)
         }
     }
 
