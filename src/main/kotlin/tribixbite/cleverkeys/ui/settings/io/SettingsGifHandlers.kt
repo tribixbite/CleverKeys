@@ -70,14 +70,14 @@ internal fun SettingsActivity.handleGifPackShareIntent(intent: Intent?) {
 
 // GIF pack management methods
 
-internal fun SettingsActivity.performGifPackImport(uri: Uri) {
+internal fun SettingsActivity.performGifPackImport(uri: Uri, replaceExisting: Boolean = false) {
     val _self = this
     gifImportInProgress = true
     gifImportStatus = GifImportStatus.Ok("Importing...")
     lifecycleScope.launch {
         try {
             val manager = tribixbite.cleverkeys.gif.GifPackManager.getInstance(_self)
-            val result = manager.importPackFromUri(uri, replaceExisting = false)
+            val result = manager.importPackFromUri(uri, replaceExisting = replaceExisting)
             // ARC-075: ONE classification of the result, by variant, shared with the section.
             gifImportStatus = GifImportStatus.forImportResult(result)
             when (result) {
@@ -90,11 +90,21 @@ internal fun SettingsActivity.performGifPackImport(uri: Uri) {
                     ).show()
                 }
                 is GifPackImportResult.AlreadyInstalled -> {
-                    Toast.makeText(
-                        _self,
-                        "Pack already installed: ${result.name}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    // Audit E-8: offer replace — previously AlreadyInstalled dead-ended in a
+                    // toast and the sole call site hardcoded replaceExisting=false, so the
+                    // replace path (the only way a rebuilt pack's rows — e.g. the #149 gid:
+                    // markers — can supersede the installed ones) was unreachable.
+                    android.app.AlertDialog.Builder(_self)
+                        .setTitle("Pack already installed")
+                        .setMessage(
+                            "'${result.name}' is already installed. Replace it with the " +
+                                "selected file? (Re-importing a rebuilt pack updates its GIFs.)"
+                        )
+                        .setPositiveButton("Replace") { _, _ ->
+                            performGifPackImport(uri, replaceExisting = true)
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
                 }
                 is GifPackImportResult.Error -> {
                     Toast.makeText(
