@@ -81,6 +81,8 @@ class MLDataCollectionToggleTest {
         every { context.resources } returns resources
 
         privacy = mockk()
+        // Retention default for tests that aren't about it: cleanup not due (I-2).
+        every { privacy.shouldPerformCleanup() } returns false
         store = mockk(relaxed = true)
     }
 
@@ -210,10 +212,10 @@ class MLDataCollectionToggleTest {
 
         collector().collectAndStoreSwipeData("hello", capturedSwipe(), keyboardHeight, store)
 
-        // The source's deltas are (1000 - startTs) for the first point and 50 ms for the
-        // second. Only the second is a real inter-sample interval, and it is the one a
-        // trainer reads; losing it (the pre-fix bug: deltas treated as absolute offsets)
-        // would flatten every trace's timing.
+        // The second point's 50 ms is the real inter-sample interval a trainer reads;
+        // losing it (the historical bug: deltas treated as absolute offsets) would
+        // flatten every trace's timing. Since the I-6 copyWith fix, ALL deltas are
+        // carried verbatim (first-point parity is pinned separately below).
         assertWithMessage("the 50 ms gap between the two samples must survive the copy")
             .that(captured.captured.getTracePoints()[1].tDeltaMs).isEqualTo(50L)
     }
@@ -229,6 +231,71 @@ class MLDataCollectionToggleTest {
             .isFalse()
 
         verify(exactly = 0) { store.storeSwipeData(any()) }
+    }
+
+    // -------------------------------------------- I-6: first-delta parity with playground rows
+
+    /**
+     * I-6 (comprehensive audit 2026-09-06): the collector used to rebuild the trace with
+     * `runningTimestamp = now − 1000` against a fresh object whose anchor was `now`, so the
+     * stored FIRST delta came out `d1 − 1000` — a systematic 1-second skew versus the
+     * playground rows of the very same swipe (whose `copyWith` path copies deltas
+     * verbatim). Both persisted row types of one trace format must carry identical
+     * point timing.
+     */
+    @Test
+    fun theFirstPointsDeltaMatchesTheCaptureVerbatim() {
+        every { privacy.canCollectSwipeData() } returns true
+        val captured = slot<SwipeMLData>()
+        every { store.storeSwipeData(capture(captured)) } just Runs
+
+        val source = capturedSwipe()
+        val sourceDeltas = source.getTracePoints().map { it.tDeltaMs }
+
+        collector().collectAndStoreSwipeData("hello", source, keyboardHeight, store)
+
+        assertWithMessage(
+            "the stored row's point deltas must equal the capture's verbatim — a −1000 ms " +
+                "first-point skew makes user_selection rows inconsistent with playground " +
+                "rows of the same swipe in any exported corpus"
+        ).that(captured.captured.getTracePoints().map { it.tDeltaMs })
+            .isEqualTo(sourceDeltas)
+    }
+
+    // ------------------------------------------------ I-2: retention cleanup is wired
+
+    /**
+     * I-2 (comprehensive audit 2026-09-06): PrivacyManager's retention layer
+     * (`shouldPerformCleanup` / `getDataRetentionCutoff`, default auto-delete ON at 90
+     * days) had ZERO call sites — once collection was enabled the DB grew unboundedly
+     * forever. The collector is the gated write path, so it is where retention is
+     * enforced: after a successful store, a DUE cleanup deletes expired rows (and
+     * enforces the row cap) off-main via the store.
+     */
+    @Test
+    fun aDueRetentionCleanupRunsAfterAStore() {
+        every { privacy.canCollectSwipeData() } returns true
+        every { privacy.shouldPerformCleanup() } returns true
+        every { privacy.getDataRetentionCutoff() } returns 12345L
+        every { privacy.recordCleanupPerformed() } just Runs
+
+        collector().collectAndStoreSwipeData("hello", capturedSwipe(), keyboardHeight, store)
+
+        verify(exactly = 1) { privacy.shouldPerformCleanup() }
+        verify(exactly = 1) { privacy.recordCleanupPerformed() }
+        verify(exactly = 1) { store.performRetentionCleanup(12345L, MLDataCollector.MAX_STORED_ROWS) }
+    }
+
+    @Test
+    fun noCleanupRunsWhenNotDue() {
+        every { privacy.canCollectSwipeData() } returns true
+        every { privacy.shouldPerformCleanup() } returns false
+
+        collector().collectAndStoreSwipeData("hello", capturedSwipe(), keyboardHeight, store)
+
+        verify(exactly = 1) { store.storeSwipeData(any()) }
+        verify(exactly = 0) { store.performRetentionCleanup(any(), any()) }
+        verify(exactly = 0) { privacy.recordCleanupPerformed() }
     }
 
     // ------------------------------------------------------------------ reflection

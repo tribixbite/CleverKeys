@@ -11,19 +11,16 @@ import tribixbite.cleverkeys.ml.SwipeMLDataStore
  *
  * This class centralizes logic for:
  * - Collecting ML data when user selects swipe predictions
- * - Copying trace points from temporary swipe data
- * - Copying registered keys from swipe data
+ * - Copying the captured trace (points, keys, provenance, enrichment) verbatim
  * - Storing ML data in the data store
- * - Handling normalization/denormalization of coordinates
  * - Enforcing privacy controls and user consent (v1.32.902 - Phase 6.5)
+ * - Enforcing the data-retention policy (I-2, comprehensive audit 2026-09-06):
+ *   after a successful store, a daily-throttled cleanup deletes rows older than
+ *   `PrivacyManager.getDataRetentionCutoff()` (when auto-delete is enabled, its
+ *   default) and enforces a hard row cap — the swipe-ML DB is bounded.
  *
- * Responsibilities:
- * - Check if ML data collection should occur (was last input swipe?)
- * - Verify user consent before collecting data
- * - Create SwipeMLData objects with correct dimensions
- * - Copy trace points and registered keys from current swipe
- * - Store collected data in ML data store
- * - Apply privacy settings (anonymization, retention)
+ * NOT provided (the old KDoc over-promised): anonymization. PrivacyManager's
+ * anonymization surface has no engine behind it and nothing here consults it.
  *
  * NOT included (remains in CleverKeysService):
  * - Retrieving current swipe data from InputCoordinator
@@ -36,6 +33,16 @@ import tribixbite.cleverkeys.ml.SwipeMLDataStore
  * @since v1.32.902 - Phase 6.5: Privacy considerations integrated
  */
 class MLDataCollector(private val context: Context) {
+
+    companion object {
+        /**
+         * Hard backstop on stored rows (I-2). Enriched rows carry the full trace,
+         * 27-key geometry and candidate JSON (tens of KB each), so the cap bounds the
+         * DB to a few hundred MB even if the user sets an extreme retention period.
+         * Oldest rows beyond the cap are deleted by the same daily cleanup.
+         */
+        const val MAX_STORED_ROWS = 10_000
+    }
 
     private val privacyManager = PrivacyManager.getInstance(context)
 
@@ -76,55 +83,49 @@ class MLDataCollector(private val context: Context) {
             // Strip "raw:" prefix before storing ML data
             val cleanWord = word.replace(Regex("^raw:"), "")
 
-            // Create a new ML data object with the selected word. Provenance (layout + decoder
-            // engine) is CARRIED OVER from the captured swipe — this object is a copy made at
-            // selection time, so re-deriving it here would lose the geometry the trace was
-            // actually drawn on (audit n-2).
-            val metrics = context.resources.displayMetrics
-            val mlData = SwipeMLData(
-                cleanWord, "user_selection",
-                metrics.widthPixels, metrics.heightPixels,
-                keyboardHeight,
-                currentSwipeData.layoutName,
-                currentSwipeData.engine
-            )
-
-            // Copy trace points from the temporary data
-            // FIX: tDeltaMs values are deltas from PREVIOUS point, not offsets from start
-            // Must accumulate them to reconstruct absolute timestamps
-            var runningTimestamp = System.currentTimeMillis() - 1000
-            for (point in currentSwipeData.getTracePoints()) {
-                // Add points with their original normalized values and timestamps
-                // Since they're already normalized, we need to denormalize then renormalize
-                // to ensure proper storage
-                val rawX = point.x * metrics.widthPixels
-                val rawY = point.y * metrics.heightPixels
-                // Accumulate delta to get correct absolute timestamp
-                runningTimestamp += point.tDeltaMs
-                mlData.addRawPoint(rawX, rawY, runningTimestamp)
-            }
-
-            // Copy registered keys
-            for (key in currentSwipeData.getRegisteredKeys()) {
-                mlData.addRegisteredKey(key)
-            }
-
-            // Carry the playground enrichment over too (same rationale as provenance:
-            // this is a selection-time COPY, so anything attached at capture/results
-            // time — key geometry, candidate ranking, decode latency — would silently
-            // vanish from stored rows without an explicit copy here).
-            currentSwipeData.getKeyGeometry()?.let { mlData.setKeyGeometry(it) }
-            currentSwipeData.getCandidates()?.let { cands ->
-                mlData.setCandidates(cands.map { it.word }, cands.map { it.score })
-            }
-            currentSwipeData.getDecodeLatencyMs()?.let { mlData.setDecodeLatencyMs(it) }
+            // I-6 (comprehensive audit 2026-09-06): copy via SwipeMLData.copyWith — the
+            // method that exists for exactly this selection-time-copy case. It carries
+            // points (normalized values AND deltas verbatim), registered keys, screen/
+            // keyboard dimensions, provenance (layout + engine, audit n-2) and the
+            // playground enrichment (key geometry, candidates, decode latency) under the
+            // new word and source. The previous manual denormalize/renormalize loop
+            // anchored `runningTimestamp = now − 1000` against a fresh object whose
+            // last-timestamp anchor was `now`, skewing the stored FIRST delta by exactly
+            // −1000 ms versus the playground row of the very same swipe.
+            // (keyboardHeight param retained for call-site stability; the capture already
+            // carries the height the trace was normalized against.)
+            val mlData = currentSwipeData.copyWith(cleanWord, "user_selection")
 
             // Store the ML data
             mlDataStore.storeSwipeData(mlData)
+
+            // I-2: retention enforcement — the only write path into the store is the
+            // right place to keep the DB bounded. Daily-throttled via PrivacyManager.
+            maybePerformRetentionCleanup(mlDataStore)
             true
         } catch (e: Exception) {
             Log.e("MLDataCollector", "Error collecting ML data", e)
             false
+        }
+    }
+
+    /**
+     * I-2: delete expired rows and enforce the row cap when a cleanup is due.
+     *
+     * `shouldPerformCleanup()` is true at most once per day and only while auto-delete
+     * is enabled (its default). The timestamp is recorded BEFORE the store call so a
+     * failing cleanup cannot re-trigger on every subsequent swipe; the store runs the
+     * actual deletes on its own single-threaded executor, off this thread.
+     */
+    private fun maybePerformRetentionCleanup(mlDataStore: SwipeMLDataStore) {
+        try {
+            if (!privacyManager.shouldPerformCleanup()) return
+            privacyManager.recordCleanupPerformed()
+            mlDataStore.performRetentionCleanup(
+                privacyManager.getDataRetentionCutoff(), MAX_STORED_ROWS
+            )
+        } catch (e: Exception) {
+            Log.e("MLDataCollector", "Retention cleanup scheduling failed", e)
         }
     }
 }
