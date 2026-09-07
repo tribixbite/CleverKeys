@@ -770,23 +770,34 @@ class Keyboard2View @JvmOverloads constructor(
                 else -> false
             }
 
-            if (customCommandHandled) {
-                return@onCustomShortSwipe
-            }
-
-            if (keyValue != null) {
+            // Audit H-7: no early return here — the success haptic at the bottom of this
+            // function must fire for the five custom text-action commands too (they used
+            // to `return` past it and succeed silently while every other successful
+            // custom swipe vibrated).
+            //
+            // Audit H-1: the KeyValue branch and the legacy AvailableCommand block are
+            // EXCLUSIVE. `switch_forward`/`switch_backward` are both a KeyValue name and
+            // an AvailableCommand name; dispatching via Kind.Event and then falling into
+            // the legacy `getCommand()` block executed the layout switch TWICE per swipe
+            // (with two layouts enabled the switch wrapped back and looked dead).
+            // (getKeyByName is total — unknown names come back as String keys, which is
+            // what the Kind.String fall-through below exists for.)
+            var keyValueHandled = false
+            if (!customCommandHandled) {
                 when (keyValue.getKind()) {
                     KeyValue.Kind.Event -> {
                         // Event-type commands require keyboard service handling
                         val event = keyValue.getEvent()
                         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing Event command via service: $actionValue -> $event")
                         service.triggerKeyboardEvent(event)
+                        keyValueHandled = true
                     }
                     KeyValue.Kind.Editing -> {
                         // Editing-type commands use context menu actions
                         val editing = keyValue.getEditing()
                         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing Editing command: $actionValue -> $editing")
                         executeEditingCommand(editing, inputConnection)
+                        keyValueHandled = true
                     }
                     KeyValue.Kind.String -> {
                         // String keys that aren't our custom commands - fall through to legacy handling
@@ -798,8 +809,10 @@ class Keyboard2View @JvmOverloads constructor(
                 }
             }
 
-            // Fallback to legacy AvailableCommand handling for backward compatibility
-            val command = mapping.getCommand()
+            // Fallback to legacy AvailableCommand handling for backward compatibility.
+            // Only reached when neither the custom-command nor the KeyValue branch
+            // handled the action (H-1: never after a successful Event/Editing dispatch).
+            val command = if (customCommandHandled || keyValueHandled) null else mapping.getCommand()
             when (command) {
                 AvailableCommand.SWITCH_IME -> {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing SWITCH_IME via InputMethodManager")
@@ -1546,6 +1559,16 @@ class Keyboard2View @JvmOverloads constructor(
 
             for (k in row.keys) {
                 x += k.shift * _keyWidth
+                // Audit H-8 (#77 residual): the pane loc-strip can null EVERY slot of a
+                // key (numeric's `loc switch_greekmath` cell with the checkbox off).
+                // Such a cell must render as empty space, not a blank dead key frame —
+                // no shipped layout has an intentionally key0-less cell, so this is
+                // exactly the strip artefact. Geometry is preserved (x advances by the
+                // cell's width), keeping every other key in place.
+                if (keyCellIsEmpty(k)) {
+                    x += _keyWidth * k.width
+                    continue
+                }
                 val keyW = _keyWidth * k.width - tc.horizontal_margin
                 val isKeyDown = _pointers.isKeyDown(k)
                 val tc_key = if (isKeyDown) tc.key_activated else tc.key
@@ -1942,6 +1965,16 @@ class Keyboard2View @JvmOverloads constructor(
     companion object {
         private var _currentWhat = 0
         private val _tmpRect = RectF()
+
+        /**
+         * Audit H-8: whether a key cell has nothing to render — all nine slots null and
+         * no indication string. Only the #77 pane loc-strip produces such cells (no
+         * shipped layout has a key0-less cell); onDraw skips the key frame for them so
+         * the stripped cell reads as empty space instead of a blank dead key.
+         */
+        @JvmStatic
+        internal fun keyCellIsEmpty(key: KeyboardData.Key): Boolean =
+            key.indication == null && key.keys.all { it == null }
 
         /**
          * Pointer id for accessibility ACTION_CLICK taps. `-2` is deliberately
