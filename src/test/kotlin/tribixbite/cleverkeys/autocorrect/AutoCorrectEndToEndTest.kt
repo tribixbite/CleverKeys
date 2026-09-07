@@ -326,6 +326,64 @@ class AutoCorrectEndToEndTest {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    // C-5 (2026-09-06 audit): contraction guard #4 on the AUTOCORRECT path.
+    // `.claude/skills/contraction-system.md` §5 — a REPLACE-mode mapping takes
+    // the typed word's slot, so it must never fire on a word the user added by
+    // hand. SuggestionHandler.replaceModeContractionFor enforces this for the
+    // suggestion bar; autoCorrect's step 0 (and the two alias reroutes) run the
+    // SAME rewrite on commit and must honor the same guard. The user-word set
+    // here is `customAndUserWords` — the lowercase custom + platform-provider
+    // words, the predictor's own view of the personal dictionary.
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun userWordThatIsAnAliasKey_isNotRewrittenOnCommit() {
+        // en shape of the skill's fr example (`dangle` → `d'angle`): the user
+        // added "dont" as a personal word; committing it must keep THEIR word,
+        // not destroy it in its own slot with `don't`.
+        setField("customAndUserWords", setOf("dont"))
+        try {
+            assertEquals("dont", predictor.autoCorrect("dont"))
+            assertEquals(
+                "guard #4 is case-total: any typed casing of a claimed word is protected",
+                "Dont", predictor.autoCorrect("Dont")
+            )
+        } finally {
+            setField("customAndUserWords", emptySet<String>())
+        }
+    }
+
+    @Test
+    fun elongationCollapse_toAUserWord_doesNotRerouteThroughTheAlias() {
+        // "doont" collapses to the user's own "dont" — the collapse target is
+        // the user's word, so the alias reroute must not rewrite it.
+        setField("customAndUserWords", setOf("dont"))
+        try {
+            assertEquals("dont", predictor.autoCorrect("doont"))
+        } finally {
+            setField("customAndUserWords", emptySet<String>())
+        }
+    }
+
+    @Test
+    fun sweepWinner_thatIsAUserWord_doesNotRerouteThroughTheAlias() {
+        // "donr" sweeps to the alias key "dont" (r→t adjacent, alias privilege)
+        // — but "dont" is the user's word here, so the winner is offered as-is.
+        setField("customAndUserWords", setOf("dont"))
+        try {
+            assertEquals("dont", predictor.autoCorrect("donr"))
+        } finally {
+            setField("customAndUserWords", emptySet<String>())
+        }
+    }
+
+    @Test
+    fun aliasRewrite_stillFires_whenNobodyClaimedTheKey_regression() {
+        // The guard must not suppress contractions for everyone else.
+        assertEquals("don't", predictor.autoCorrect("dont"))
+    }
+
     @Test
     fun disabledPossessiveBase_notFrozenByPossessiveGuard() {
         // Possessive guard accepts "X's" when base X is a known word — but a

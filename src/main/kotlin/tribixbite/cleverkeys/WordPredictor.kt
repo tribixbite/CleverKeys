@@ -11,7 +11,6 @@ import tribixbite.cleverkeys.swipe.SwipeContextRescorer
 import tribixbite.cleverkeys.contextaware.ContextModel
 import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.personalization.PersonalizationEngine
-import tribixbite.cleverkeys.personalization.PersonalizedScorer
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -209,7 +208,9 @@ class WordPredictor : Predictor {
     private var bigramModel: BigramModel? = BigramModel.getInstance(null)
     private var contextModel: ContextModel? = null // Phase 7.1: Dynamic N-gram model
     private var personalizationEngine: PersonalizationEngine? = null // Phase 7.2: Personalized learning
-    private var personalizedScorer: PersonalizedScorer? = null // Phase 7.2: Adaptive scoring
+    // C-8 (2026-09-06 audit): the PersonalizedScorer field that used to sit here was
+    // assigned in setContext and never read — the real scoring path queries
+    // personalizationEngine directly in resolveScoreBreakdown. Class deleted.
     private var languageDetector: LanguageDetector? = LanguageDetector()
     private var multiLanguageManager: MultiLanguageManager? = null // Phase 8.3: Multi-language models
     private var currentLanguage: String = "en" // Default to English
@@ -227,6 +228,16 @@ class WordPredictor : Predictor {
     // Maps lowercase word to original case: "boston" -> "Boston"
     // v1.2.7: Use ConcurrentHashMap for thread-safety (accessed from async loader thread)
     private val userWordOriginalCase: MutableMap<String, String> = java.util.concurrent.ConcurrentHashMap()
+
+    // C-3 (2026-09-06 audit): base-dictionary frequencies SHADOWED by a custom/user word.
+    // Custom words overwrite the base entry in the ONE shared dictionary map, so deleting
+    // a custom word that spells a bundled word ("hello" added to boost it) used to remove
+    // the BASE word from predictions until a full reload. Every insert path that overwrites
+    // a non-user entry records the base value here; the observer's removal path restores it
+    // instead of removing. Cleared alongside [userWordOriginalCase] on full loads (C-9) but
+    // NOT in reloadCustomAndUserWords — a reload runs over the serving map, where the
+    // existing entry for an already-custom word is the CUSTOM value, not the base one.
+    private val shadowedBaseFrequencies: MutableMap<String, Int> = java.util.concurrent.ConcurrentHashMap()
 
     // OPTIMIZATION: Async loading state
     @Volatile
@@ -274,8 +285,7 @@ class WordPredictor : Predictor {
         // Phase 7.2: Initialize PersonalizationEngine for personalized learning
         if (personalizationEngine == null) {
             personalizationEngine = PersonalizationEngine(context)
-            personalizedScorer = PersonalizedScorer(personalizationEngine!!)
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "PersonalizationEngine and PersonalizedScorer initialized for adaptive predictions")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "PersonalizationEngine initialized for adaptive predictions")
         }
 
         // Phase 8.3: Initialize Multi-Language support if enabled.
@@ -358,18 +368,51 @@ class WordPredictor : Predictor {
      */
     private fun handleIncrementalUpdate(addedOrModified: Map<String, Int>, removed: Set<String>) {
         var hasChanges = false
+        val dict = dictionary.get()
 
-        // Remove words
+        // Remove words. C-3: a custom word that shadowed a base entry restores the base
+        // value instead of deleting it — the bundled word must survive the custom word.
         if (removed.isNotEmpty()) {
-            removed.forEach { dictionary.get().remove(it) }
-            removeFromPrefixIndex(removed)
+            val droppedOutright = mutableSetOf<String>()
+            for (word in removed) {
+                val lower = word.lowercase()
+                val shadowedBase = shadowedBaseFrequencies.remove(lower)
+                if (shadowedBase != null) {
+                    dict[lower] = shadowedBase // stays prefix-reachable
+                } else {
+                    dict.remove(lower)
+                    droppedOutright.add(lower)
+                }
+                userWordOriginalCase.remove(lower)
+            }
+            if (droppedOutright.isNotEmpty()) {
+                removeFromPrefixIndex(droppedOutright)
+            }
+            customAndUserWords = customAndUserWords - removed.map { it.lowercase() }.toSet()
             hasChanges = true
         }
 
-        // Add or modify words
+        // Add or modify words. C-2: the observer delivers STORED 1..255 values verbatim
+        // (provider FREQUENCY column / the pref value), so they must go through the same
+        // wave-U2 calibration as the three full-load paths — raw, they rank below the
+        // entire base dictionary. C-3: record a base entry we are about to overwrite.
+        // The words also join [customAndUserWords] so the disabled-word override and the
+        // autocorrect floor exemption see them without waiting for a full reload.
         if (addedOrModified.isNotEmpty()) {
-            dictionary.get().putAll(addedOrModified)
-            addToPrefixIndex(addedOrModified.keys)
+            val (scaleFloor, scaleCeil) = baseFrequencySpanOf(dict)
+            val calibrated = HashMap<String, Int>(addedOrModified.size * 2)
+            for ((word, storedFreq) in addedOrModified) {
+                val lower = word.lowercase()
+                val existing = dict[lower]
+                if (existing != null && lower !in customAndUserWords) {
+                    shadowedBaseFrequencies.putIfAbsent(lower, existing)
+                }
+                calibrated[lower] =
+                    UserWordFrequency.scaleOnto(storedFreq, scaleFloor, scaleCeil).roundToInt()
+            }
+            dict.putAll(calibrated)
+            addToPrefixIndex(calibrated.keys)
+            customAndUserWords = customAndUserWords + calibrated.keys
             hasChanges = true
         }
 
@@ -452,9 +495,16 @@ class WordPredictor : Predictor {
      */
     private fun checkAndReload() {
         if (needsReload && context != null) {
+            // C-1 (2026-09-06 audit): consume the signal BEFORE reloading — one Dictionary
+            // Manager edit costs exactly ONE reload, not a full prefix-index rebuild plus a
+            // provider query on EVERY prediction for the rest of the process lifetime. The
+            // old "don't clear, let all instances reload" rationale died with ARC-079:
+            // exactly one WordPredictor exists per process. Clearing first (not after)
+            // means a signal raised DURING the reload is kept for the next prediction
+            // instead of being swallowed.
+            needsReload = false
             reloadDisabledWords()
             reloadCustomAndUserWords()
-            // Don't clear flag - let all instances reload
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Auto-reloaded dictionaries due to signal")
         }
     }
@@ -931,6 +981,13 @@ class WordPredictor : Predictor {
     fun loadDictionary(context: Context, language: String) {
         dictionary.get().clear()
         prefixIndex.get().clear()
+        // C-9 (2026-09-06 audit): the per-word user state describes the OUTGOING
+        // dictionary. Without these clears, language A's proper-noun casing kept
+        // rewriting language B's predictions (en "LaTeX" restyling fr "latex"), and
+        // stale shadow entries could restore a wrong-language base value.
+        userWordOriginalCase.clear()
+        shadowedBaseFrequencies.clear()
+        customAndUserWords = emptySet()
 
         var loadedBinary = false
 
@@ -1602,6 +1659,10 @@ class WordPredictor : Predictor {
      */
     private fun loadCustomAndUserWordsIntoMap(context: Context, targetMap: MutableMap<String, Int>, language: String = "en"): Set<String> {
         val loadedWords = mutableSetOf<String>()
+        // C-9: this is a FULL load into a fresh map (the async language-switch path) —
+        // the previous language's case + shadowed-base state must not survive it.
+        userWordOriginalCase.clear()
+        shadowedBaseFrequencies.clear()
         // Wave U2: calibrate stored 1..255 user frequencies onto the base scale
         // already loaded into [targetMap] (see baseFrequencySpanOf).
         val (scaleFloor, scaleCeil) = baseFrequencySpanOf(targetMap)
@@ -1623,6 +1684,11 @@ class WordPredictor : Predictor {
                         val originalWord = keys.next()
                         val lowerWord = originalWord.lowercase()
                         val frequency = jsonObj.optInt(originalWord, 1000)
+                        // C-3: a custom word about to overwrite a BASE entry records the
+                        // base value so deleting the custom word can restore it.
+                        if (lowerWord !in loadedWords) {
+                            targetMap[lowerWord]?.let { shadowedBaseFrequencies.putIfAbsent(lowerWord, it) }
+                        }
                         // Write the CALIBRATED value to the target map, not dictionary
                         targetMap[lowerWord] =
                             UserWordFrequency.scaleOnto(frequency, scaleFloor, scaleCeil).roundToInt()
@@ -1648,6 +1714,10 @@ class WordPredictor : Predictor {
             val userRows = UserDictionaryWords.read(context, language)
             for ((originalWord, frequency) in userRows) {
                 val lowerWord = originalWord.lowercase()
+                // C-3: same shadowed-base recording as the custom-words loop above.
+                if (lowerWord !in loadedWords) {
+                    targetMap[lowerWord]?.let { shadowedBaseFrequencies.putIfAbsent(lowerWord, it) }
+                }
                 // Provider rows are 1..255 too — same calibration as the preference words.
                 targetMap[lowerWord] =
                     UserWordFrequency.scaleOnto(frequency, scaleFloor, scaleCeil).roundToInt()
@@ -1702,6 +1772,11 @@ class WordPredictor : Predictor {
      */
     private fun loadCustomAndUserWords(context: Context, language: String = "en"): Set<String> {
         val loadedWords = mutableSetOf<String>()
+        // C-3: on a RELOAD over the serving map, an entry for an already-custom word holds
+        // the CUSTOM value — never record that as a "base" frequency. Only a word that was
+        // not custom before this call can be shadowing a genuine base entry. On the
+        // loadDictionary path this set was reset to empty, so everything qualifies.
+        val previousUserWords = customAndUserWords
         // Wave U2: calibrate stored 1..255 user frequencies onto the serving map's base
         // scale (stable across reloads — see baseFrequencySpanOf).
         val (scaleFloor, scaleCeil) = baseFrequencySpanOf(dictionary.get())
@@ -1723,6 +1798,12 @@ class WordPredictor : Predictor {
                         val originalWord = keys.next()
                         val lowerWord = originalWord.lowercase()
                         val frequency = jsonObj.optInt(originalWord, 1000)
+                        // C-3: record a genuine base entry we are about to overwrite.
+                        if (lowerWord !in loadedWords && lowerWord !in previousUserWords) {
+                            dictionary.get()[lowerWord]?.let {
+                                shadowedBaseFrequencies.putIfAbsent(lowerWord, it)
+                            }
+                        }
                         dictionary.get()[lowerWord] =
                             UserWordFrequency.scaleOnto(frequency, scaleFloor, scaleCeil).roundToInt()
                         loadedWords.add(lowerWord)  // Track loaded word
@@ -1748,6 +1829,12 @@ class WordPredictor : Predictor {
             val userRows = UserDictionaryWords.read(context, language)
             for ((originalWord, frequency) in userRows) {
                 val lowerWord = originalWord.lowercase()
+                // C-3: same shadowed-base recording as the custom-words loop above.
+                if (lowerWord !in loadedWords && lowerWord !in previousUserWords) {
+                    dictionary.get()[lowerWord]?.let {
+                        shadowedBaseFrequencies.putIfAbsent(lowerWord, it)
+                    }
+                }
                 // Provider rows are 1..255 too — same calibration as the preference words.
                 dictionary.get()[lowerWord] =
                     UserWordFrequency.scaleOnto(frequency, scaleFloor, scaleCeil).roundToInt()
@@ -2196,9 +2283,15 @@ class WordPredictor : Predictor {
         val lowerTypedWord = typedWord.lowercase()
 
         // 0. Check for contraction aliases FIRST (e.g., "im" → "I'm", "dont" → "don't")
-        // These are in the dictionary for prediction purposes but should still be autocorrected
+        // These are in the dictionary for prediction purposes but should still be autocorrected.
+        // C-5 (2026-09-06 audit): contraction guard #4 (skill §5) applies HERE too — a
+        // REPLACE-mode rewrite takes the typed word's slot, so it must never fire on a word
+        // the user added by hand (fr "dangle" as a name → must not commit "d'angle").
+        // customAndUserWords is the predictor's lowercase view of the personal dictionary
+        // (custom prefs + platform provider), so the containment check is case-total. A
+        // guarded word falls through to step 1's in-dictionary short-circuit and survives.
         val contractionTarget = contractionAliases[lowerTypedWord]
-        if (contractionTarget != null) {
+        if (contractionTarget != null && lowerTypedWord !in customAndUserWords) {
             // Capitalize I-contractions (im → I'm, ill → I'll, id → I'd)
             val corrected = if (contractionTarget.startsWith("i'")) {
                 contractionTarget.replaceFirstChar { it.uppercase() }
@@ -2264,7 +2357,10 @@ class WordPredictor : Predictor {
             if (collapseBest != null) {
                 // Re-route alias-keyed hits ("doont" → collapse "dont" →
                 // "don't"), mirroring the sweep-winner re-route in step 5.
-                val aliasTarget = contractionAliases[collapseBest]
+                // C-5: guard #4 symmetry — when the collapse target is the
+                // user's own word, offer THEIR word, never the alias rewrite.
+                val aliasTarget =
+                    if (collapseBest in customAndUserWords) null else contractionAliases[collapseBest]
                 val outputWord = aliasTarget ?: collapseBest
                 val corrected = if (aliasTarget != null && aliasTarget.startsWith("i'")) {
                     aliasTarget.replaceFirstChar { it.uppercase() }
@@ -2564,7 +2660,9 @@ class WordPredictor : Predictor {
             // user-visible result must be `don't`. The same I-capitalization
             // rule from step 0 applies.
             val winnerWord = bestCandidate.word
-            val aliasTarget = contractionAliases[winnerWord]
+            // C-5: guard #4 symmetry — a sweep winner that IS the user's word
+            // is offered as-is, never rewritten through the alias table.
+            val aliasTarget = if (winnerIsCustom) null else contractionAliases[winnerWord]
             val outputWord = aliasTarget ?: winnerWord
             val corrected = if (aliasTarget != null && aliasTarget.startsWith("i'")) {
                 aliasTarget.replaceFirstChar { it.uppercase() }
