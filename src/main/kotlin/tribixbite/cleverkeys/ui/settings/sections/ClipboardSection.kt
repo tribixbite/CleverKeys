@@ -16,6 +16,7 @@ import tribixbite.cleverkeys.ClipboardHistoryService
 import tribixbite.cleverkeys.PrivateCopyProcessTextActivity
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
@@ -62,7 +63,9 @@ internal fun SettingsActivity.ClipboardSection() {
                         title = stringResource(R.string.clipboard_history_limit_title),
                         description = stringResource(R.string.clipboard_history_limit_desc),
                         value = clipboardHistoryLimit.toFloat(),
-                        valueRange = 0f..500f,
+                        // G-5: shared with the import validator + Config clamp (SettingsRanges).
+                        valueRange = SettingsRanges.CLIPBOARD_HISTORY_LIMIT.first.toFloat()..
+                            SettingsRanges.CLIPBOARD_HISTORY_LIMIT.last.toFloat(),
                         steps = 50,  // 50 steps = increments of 10
                         onValueChange = {
                             clipboardHistoryLimit = it.toInt()
@@ -156,7 +159,9 @@ internal fun SettingsActivity.ClipboardSection() {
                     title = stringResource(R.string.clipboard_max_item_size_title),
                     description = stringResource(R.string.clipboard_max_item_size_desc),
                     value = clipboardMaxItemSizeKb.toFloat(),
-                    valueRange = 64f..1024f,
+                    // F-10: shared floor/ceiling with SettingsPersistence + Config (SettingsRanges).
+                    valueRange = SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.first.toFloat()..
+                        SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.last.toFloat(),
                     steps = 14,  // 64, 128, 192, 256, ... 1024
                     onValueChange = {
                         clipboardMaxItemSizeKb = it.toInt()

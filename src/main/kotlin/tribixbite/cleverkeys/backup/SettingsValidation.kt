@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.backup
 
+import tribixbite.cleverkeys.SettingsRanges
+
 /**
  * Single source of truth for SharedPreferences-backup validation rules.
  *
@@ -145,6 +147,21 @@ object SettingsValidation {
         "swipe_beam_autocorrect_enabled",
         "swipe_debug_show_raw_output",
         "swipe_show_raw_beam_predictions",
+        // F-7 (2026-09-06): CGR calibration knobs. Their SwipeCalibrationActivity died with
+        // the neural engine (2026-08-18) leaving NO reader or writer, but they stayed in
+        // SETTINGS_DEFAULTS under a comment claiming live read sites — so every export
+        // seeded them and every import wrote them back (the ARC-051/085 class).
+        "cgr_beta",
+        "cgr_e_sigma",
+        "cgr_kappa",
+        "cgr_lambda",
+        "cgr_length_filter",
+        // F-6 (2026-09-06): the Pin Entry Layout switch wrote this while its only runtime
+        // reader was Config.migrate's ONE-TIME seeding of number_entry_layout (which runs
+        // before Settings can ever open) — a no-op control on every install. The switch
+        // now reads/writes number_entry_layout directly; migrate still consults this key
+        // for legacy first-launch seeding, but it must not round-trip through backups.
+        "pin_entry_enabled",
     )
 
     /**
@@ -311,7 +328,9 @@ object SettingsValidation {
         // Timing values (milliseconds)
         put("vibrate_duration", 0..100)
         put("longpress_timeout", 50..2000)
-        put("longpress_interval", 5..100)
+        // F-4: shared with the slider + Config clamp (was 5..100 while the UI
+        // offered 25..200 — a user's own exported 150 came back "out of range").
+        put("longpress_interval", SettingsRanges.LONGPRESS_INTERVAL)
 
         // Short gesture distance (10-95% min, 50-200% max)
         put("short_gesture_min_distance", 10..95)
@@ -324,8 +343,9 @@ object SettingsValidation {
         put("autocorrect_min_word_length", 2..5)
         put("autocorrect_confidence_min_frequency", 100..2000)
 
-        // Clipboard history limit (0 = unlimited)
-        put("clipboard_history_limit", 0..500)
+        // Clipboard history limit (0 = unlimited). Shared with the slider,
+        // validateString's canonical string form (G-5) and the Config clamp.
+        put("clipboard_history_limit", SettingsRanges.CLIPBOARD_HISTORY_LIMIT)
 
         // Circle sensitivity
         put("circle_sensitivity", 1..5)
@@ -354,8 +374,8 @@ object SettingsValidation {
      */
     private fun validateFloat(key: String, value: Float): String? {
         val ok = when (key) {
-            // Character size (0.75-1.5)
-            "character_size" -> value in 0.75f..1.5f
+            // Character size — F-4: shared with the slider (0.5-2.0; was 0.75-1.5)
+            "character_size" -> value in SettingsRanges.CHARACTER_SIZE
 
             // #133: Secondary (flick) label size multiplier (0.5-2.0)
             "secondary_label_size_scale" -> value in 0.5f..2.0f
@@ -363,8 +383,8 @@ object SettingsValidation {
             // Margins (0-5%)
             "key_vertical_margin", "key_horizontal_margin" -> value in 0f..5f
 
-            // Border line width (0-5 dp)
-            "custom_border_line_width" -> value in 0f..5f
+            // Border line width — F-4: shared with the slider (0-10 dp; was 0-5)
+            "custom_border_line_width" -> value in SettingsRanges.CUSTOM_BORDER_LINE_WIDTH
 
             // Prediction weights
             "prediction_context_boost" -> value in 0.5f..5.0f
@@ -416,6 +436,14 @@ object SettingsValidation {
 
             // Slider sensitivity (string representation)
             "slider_sensitivity" -> value.matches(Regex("[0-9]+"))
+
+            // G-5: clipboard_history_limit is STORED as a String (see the isIntKey
+            // note below), so real exports carry the string form — which used to
+            // fall through to `else -> true`, bypassing the deliberate 0..500
+            // bound entirely ("9999"/"abc"/"-5" imported cleanly and applied).
+            // Parse and enforce the same shared range the IntV form checks.
+            "clipboard_history_limit" ->
+                value.toIntOrNull()?.let { it in SettingsRanges.CLIPBOARD_HISTORY_LIMIT } == true
 
             // Swipe distance (string representation)
             "swipe_dist" -> value.matches(Regex("[0-9]+(\\.[0-9]+)?"))
@@ -470,7 +498,7 @@ object SettingsValidation {
     private fun isStringValidatedKey(key: String): Boolean = when (key) {
         "theme", "number_row", "show_numpad", "numpad_layout",
         "number_entry_layout", "circle_sensitivity", "slider_sensitivity",
-        "swipe_dist" -> true
+        "swipe_dist", "clipboard_history_limit" -> true
         else -> false
     }
 }

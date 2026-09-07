@@ -12,6 +12,7 @@ import tribixbite.cleverkeys.Logs
 import tribixbite.cleverkeys.PrivateCopyProcessTextActivity
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.ui.settings.sections.setPrivateCopyToolbarComponentEnabled
 import tribixbite.cleverkeys.ui.settings.io.detectAvailableV2Dictionaries
 import tribixbite.cleverkeys.ui.settings.io.recomputeCustomRulesStatus
@@ -148,8 +149,11 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "numpad_layout" -> {
                 numpadLayout = prefs.getSafeString(key, Defaults.NUMPAD_LAYOUT)
             }
-            "pin_entry_enabled" -> {
-                pinEntryEnabled = prefs.getBoolean(key, false)
+            // F-6: the Pin Entry switch is backed by number_entry_layout now —
+            // pin_entry_enabled is DEPRECATED (its only reader was Config.migrate's
+            // one-time seeding, so the old switch changed nothing post-install).
+            "number_entry_layout" -> {
+                pinEntryEnabled = prefs.getSafeString(key, Defaults.NUMBER_ENTRY_LAYOUT) == "pin"
             }
             // Phase 1: Exposed Config.kt settings listeners
             "word_prediction_enabled" -> {
@@ -244,9 +248,15 @@ internal fun SettingsActivity.loadCurrentSettings() {
         clipboardHistoryLimit = prefs.getSafeString("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
         clipboardHistoryDuration = prefs.getSafeString("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
         clipboardPaneHeightPercent = Config.safeGetInt(prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT).coerceIn(10, 50)
-        clipboardMaxItemSizeKb = (prefs.getSafeString("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK).coerceIn(64, 1024)
-        // Migrate stale values exceeding Binder limit (was 5000KB max, now 1024KB)
-        if (clipboardMaxItemSizeKb < (prefs.getSafeString("clipboard_max_item_size_kb", "0").toIntOrNull() ?: 0)) {
+        clipboardMaxItemSizeKb = (prefs.getSafeString("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
+            .coerceIn(SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.first, SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.last)
+        // F-10: BIDIRECTIONAL write-back of any out-of-range stored value. The old
+        // `<` guard migrated only OVERSIZE legacy values (5000KB-era), so an
+        // imported sub-64 value displayed as "64KB" here while the clipboard
+        // service enforced the raw value indefinitely. Only fires when the key
+        // actually holds a numeric value that disagrees with the clamp.
+        val storedMaxItemSizeKb = prefs.getSafeString("clipboard_max_item_size_kb", "").toIntOrNull()
+        if (storedMaxItemSizeKb != null && storedMaxItemSizeKb != clipboardMaxItemSizeKb) {
             saveSetting("clipboard_max_item_size_kb", clipboardMaxItemSizeKb)
         }
         clipboardLimitType = prefs.getSafeString("clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
@@ -313,7 +323,8 @@ internal fun SettingsActivity.loadCurrentSettings() {
         numberRowMode = prefs.getSafeString("number_row", Defaults.NUMBER_ROW)
         showNumpadMode = prefs.getSafeString("show_numpad", Defaults.SHOW_NUMPAD)
         numpadLayout = prefs.getSafeString("numpad_layout", Defaults.NUMPAD_LAYOUT)
-        pinEntryEnabled = prefs.getSafeBoolean("pin_entry_enabled", false)
+        // F-6: derive from the key the runtime reads (see handlePreferenceChanged).
+        pinEntryEnabled = prefs.getSafeString("number_entry_layout", Defaults.NUMBER_ENTRY_LAYOUT) == "pin"
 
         // Advanced settings
         debugEnabled = prefs.getSafeBoolean("debug_enabled", Defaults.DEBUG_ENABLED)

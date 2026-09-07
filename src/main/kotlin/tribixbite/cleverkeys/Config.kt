@@ -392,6 +392,56 @@ object GeoKnobRanges {
 }
 
 /**
+ * Shared per-key setting ranges (audit F-3/F-4/F-10/G-5, 2026-09-06 —
+ * the [GeoKnobRanges] pattern applied to the keys whose ranges drifted).
+ *
+ * Each key's accepted range used to be restated in up to three places — the
+ * settings slider, the import validator ([tribixbite.cleverkeys.backup.SettingsValidation])
+ * and the Config read-site clamp — and they drifted independently: the
+ * validator rejected values the UI legitimately produced (longpress_interval
+ * 25..200 vs 5..100; character_size 0.5..2.0 vs 0.75..1.5;
+ * custom_border_line_width 0..10 vs 0..5), the two clipboard_max_item_size_kb
+ * floors disagreed (UI/state 64 vs Config 1), the slider allowed a 0%
+ * space-slider sensitivity that divides by zero in Pointers.Sliding, and
+ * clipboard_history_limit's 0..500 bound never ran for its canonical string
+ * form. This object is the single source of truth; `SettingsRangeDriftTest`
+ * pins every consumer site.
+ */
+object SettingsRanges {
+    /** Key-repeat interval in ms (`longpress_interval`). Matches the slider. */
+    val LONGPRESS_INTERVAL: IntRange = 25..200
+
+    /** Primary label scale (`character_size`, stored 0.5–2.0; UI shows percent ×100). */
+    val CHARACTER_SIZE: ClosedFloatingPointRange<Float> = 0.5f..2.0f
+
+    /**
+     * Custom border line width in dp (`custom_border_line_width`). No Config
+     * clamp: the read site converts dp→px via `get_dip_pref`, so the raw dp
+     * bound applies at slider + validator only.
+     */
+    val CUSTOM_BORDER_LINE_WIDTH: ClosedFloatingPointRange<Float> = 0f..10f
+
+    /**
+     * Space-slider sensitivity percent (`slider_sensitivity`). The floor is 1,
+     * NOT 0: 0 becomes `slide_step_px = 0f` and Pointers.Sliding divides a
+     * touch delta by it — ±Infinity, which after Int saturation and the
+     * sliderKey short-truncation emits repeat −1 (rightward slide moves the
+     * cursor LEFT) or 0 (leftward slide does nothing). F-3.
+     */
+    val SLIDER_SENSITIVITY_PERCENT: IntRange = 1..100
+
+    /** Clipboard history entry cap (`clipboard_history_limit`; 0 = unlimited). */
+    val CLIPBOARD_HISTORY_LIMIT: IntRange = 0..500
+
+    /**
+     * Clipboard max item size in KB (`clipboard_max_item_size_kb`). Floor 64
+     * matches the slider; Config used to floor at 1, so an imported sub-64
+     * value displayed as "64KB" while the service enforced the raw value. F-10.
+     */
+    val CLIPBOARD_MAX_ITEM_SIZE_KB: IntRange = 64..1024
+}
+
+/**
  * One-time cleanup for the stale `vibrate_custom=true` written by the #154 bug.
  *
  * Before the fix (fa00cb0ae / 538122f1d-era), the settings layer force-set
@@ -708,7 +758,13 @@ class Config private constructor(
         val swipe_dist_value = safeGetString(_prefs, "swipe_dist", Defaults.SWIPE_DIST).toFloatOrNull() ?: Defaults.SWIPE_DIST_FALLBACK
         swipe_dist_px = swipe_dist_value / 25f * swipe_scaling
 
-        val slider_sensitivity = (safeGetString(_prefs, "slider_sensitivity", Defaults.SLIDER_SENSITIVITY).toFloatOrNull() ?: 30f) / 100f
+        // F-3: floor at 1% (SettingsRanges) — 0 makes slide_step_px 0 and
+        // Pointers.Sliding divides by it (right-swipe emits repeat −1).
+        val slider_sensitivity = (safeGetString(_prefs, "slider_sensitivity", Defaults.SLIDER_SENSITIVITY).toFloatOrNull() ?: 30f)
+            .coerceIn(
+                SettingsRanges.SLIDER_SENSITIVITY_PERCENT.first.toFloat(),
+                SettingsRanges.SLIDER_SENSITIVITY_PERCENT.last.toFloat()
+            ) / 100f
         slide_step_px = slider_sensitivity * swipe_scaling
 
         vibrate_custom = _prefs.getBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)
@@ -722,7 +778,8 @@ class Config private constructor(
         haptic_long_press = _prefs.getBoolean("haptic_long_press", Defaults.HAPTIC_LONG_PRESS)
         haptic_swipe_complete = _prefs.getBoolean("haptic_swipe_complete", Defaults.HAPTIC_SWIPE_COMPLETE)
         longPressTimeout = safeGetInt(_prefs, "longpress_timeout", Defaults.LONGPRESS_TIMEOUT).toLong()
-        longPressInterval = safeGetInt(_prefs, "longpress_interval", Defaults.LONGPRESS_INTERVAL).toLong()
+        longPressInterval = safeGetInt(_prefs, "longpress_interval", Defaults.LONGPRESS_INTERVAL)
+            .coerceIn(SettingsRanges.LONGPRESS_INTERVAL.first, SettingsRanges.LONGPRESS_INTERVAL.last).toLong()
         keyrepeat_enabled = _prefs.getBoolean("keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED)
         keyrepeat_backspace_only = _prefs.getBoolean("keyrepeat_backspace_only", Defaults.KEYREPEAT_BACKSPACE_ONLY)
 
@@ -762,7 +819,8 @@ class Config private constructor(
         customBorderRadius = _prefs.getInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS) / 100f
         customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat())
         double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
-        characterSize = safeGetFloat(_prefs, "character_size", Defaults.CHARACTER_SIZE) * characterSizeScale
+        characterSize = safeGetFloat(_prefs, "character_size", Defaults.CHARACTER_SIZE)
+            .coerceIn(SettingsRanges.CHARACTER_SIZE.start, SettingsRanges.CHARACTER_SIZE.endInclusive) * characterSizeScale
         secondary_label_size_scale = safeGetFloat(_prefs, "secondary_label_size_scale", Defaults.SECONDARY_LABEL_SIZE_SCALE)
         themeName = safeGetString(_prefs, "theme", Defaults.THEME)
         theme = getThemeId(res, themeName)
@@ -776,11 +834,18 @@ class Config private constructor(
         circle_sensitivity = safeGetString(_prefs, "circle_sensitivity", Defaults.CIRCLE_SENSITIVITY).toIntOrNull() ?: Defaults.CIRCLE_SENSITIVITY_FALLBACK
         clipboard_history_enabled = _prefs.getBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
 
-        clipboard_history_limit = safeGetString(_prefs, "clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
+        // G-5: read-site clamp — pre-fix imports could have written out-of-range
+        // (or negative) values that the string-form validator used to accept.
+        clipboard_history_limit = (safeGetString(_prefs, "clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
+            .coerceIn(SettingsRanges.CLIPBOARD_HISTORY_LIMIT.first, SettingsRanges.CLIPBOARD_HISTORY_LIMIT.last)
 
         clipboard_pane_height_percent = safeGetInt(_prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT).coerceIn(10, 50)
 
-        clipboard_max_item_size_kb = (safeGetString(_prefs, "clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK).coerceIn(1, 1024)
+        // F-10: same 64..1024 clamp as the Settings UI/state side (SettingsRanges) —
+        // the old floor of 1 let an imported sub-64 value display as "64KB" while
+        // the service enforced the raw value.
+        clipboard_max_item_size_kb = (safeGetString(_prefs, "clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
+            .coerceIn(SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.first, SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.last)
 
         clipboard_limit_type = safeGetString(_prefs, "clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
 

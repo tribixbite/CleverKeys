@@ -170,19 +170,16 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "pref_language_detection_sensitivity" to PrefValue.FloatV(Defaults.LANGUAGE_DETECTION_SENSITIVITY),
     "pref_secondary_prediction_weight" to PrefValue.FloatV(Defaults.SECONDARY_PREDICTION_WEIGHT),
 
-    // ── CGR calibration (touch-input model parameters, literal defaults) ─
-    // Reads in SettingsActivity use literal int defaults; values are user-
-    // tunable via the swipe-calibration UI. Importing across devices is
-    // valid (user prefers their tuned settings).
-    "cgr_beta" to PrefValue.IntV(400),
-    "cgr_e_sigma" to PrefValue.IntV(120),
-    "cgr_kappa" to PrefValue.IntV(25),
-    "cgr_lambda" to PrefValue.IntV(65),
-    "cgr_length_filter" to PrefValue.IntV(70),
+    // NOTE (F-7, 2026-09-06): the five cgr_* keys that sat here are now in
+    // SettingsValidation.DEPRECATED_KEYS — their SwipeCalibrationActivity died
+    // with the neural engine (2026-08-18) and NO reader or writer remained, yet
+    // they were being seeded into every settings export. Only
+    // has_visited_calibration in that block is still live (LauncherActivity).
     "has_visited_calibration" to PrefValue.Bool(false),
 
-    // ── Pin / number-entry layout ────────────────────────────────────
-    "pin_entry_enabled" to PrefValue.Bool(true),
+    // NOTE (F-6, 2026-09-06): pin_entry_enabled moved to DEPRECATED_KEYS. The
+    // Pin Entry Layout switch now writes `number_entry_layout` (above) directly;
+    // the old key's only reader is Config.migrate's one-time seeding.
 
     // ── Clipboard ────────────────────────────────────────────────────
     "clipboard_history_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_HISTORY_ENABLED),

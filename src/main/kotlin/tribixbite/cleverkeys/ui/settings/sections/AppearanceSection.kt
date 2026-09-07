@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
@@ -184,7 +185,10 @@ internal fun SettingsActivity.AppearanceSection() {
                     title = stringResource(R.string.appearance_character_size_title),
                     description = stringResource(R.string.appearance_character_size_desc),
                     value = characterSize.toFloat(),
-                    valueRange = 50f..200f,
+                    // F-4: UI shows percent; the stored float range is SettingsRanges.CHARACTER_SIZE
+                    // (shared with the import validator + Config clamp).
+                    valueRange = SettingsRanges.CHARACTER_SIZE.start * 100f..
+                        SettingsRanges.CHARACTER_SIZE.endInclusive * 100f,
                     steps = 150,
                     onValueChange = {
                         characterSize = it.toInt()
@@ -262,7 +266,9 @@ internal fun SettingsActivity.AppearanceSection() {
                         title = stringResource(R.string.appearance_border_line_width_title),
                         description = stringResource(R.string.appearance_border_line_width_desc),
                         value = customBorderLineWidth.toFloat(),
-                        valueRange = 0f..10f,
+                        // F-4: shared with the import validator (SettingsRanges).
+                        valueRange = SettingsRanges.CUSTOM_BORDER_LINE_WIDTH.start..
+                            SettingsRanges.CUSTOM_BORDER_LINE_WIDTH.endInclusive,
                         steps = 10,
                         onValueChange = {
                             customBorderLineWidth = it.toInt()

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
@@ -341,8 +342,11 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     title = stringResource(R.string.input_space_slider_title),
                     description = stringResource(R.string.input_space_slider_desc),
                     value = sliderSensitivity.toFloat(),
-                    valueRange = 0f..100f,
-                    steps = 100,
+                    // F-3: floor 1 (SettingsRanges) — 0% made slide_step_px 0 and the
+                    // space slider divided by it (rightward slide moved the cursor left).
+                    valueRange = SettingsRanges.SLIDER_SENSITIVITY_PERCENT.first.toFloat()..
+                        SettingsRanges.SLIDER_SENSITIVITY_PERCENT.last.toFloat(),
+                    steps = 98,
                     onValueChange = {
                         sliderSensitivity = it.toInt()
                         saveSetting("slider_sensitivity", sliderSensitivity.toString())
@@ -367,7 +371,9 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     title = stringResource(R.string.input_long_press_interval_title),
                     description = stringResource(R.string.input_long_press_interval_desc),
                     value = longPressInterval.toFloat(),
-                    valueRange = 25f..200f,
+                    // F-4: shared with the import validator + Config clamp (SettingsRanges).
+                    valueRange = SettingsRanges.LONGPRESS_INTERVAL.first.toFloat()..
+                        SettingsRanges.LONGPRESS_INTERVAL.last.toFloat(),
                     steps = 35,
                     onValueChange = {
                         longPressInterval = it.toInt()
@@ -486,7 +492,14 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     checked = pinEntryEnabled,
                     onCheckedChange = {
                         pinEntryEnabled = it
-                        saveSetting("pin_entry_enabled", it)
+                        // F-6 (2026-09-06): write the key the runtime actually reads.
+                        // The old `pin_entry_enabled` write drove nothing — its only
+                        // reader is Config.migrate's ONE-TIME seeding of
+                        // number_entry_layout, which runs at first launch before
+                        // Settings can ever be opened, so the switch was a no-op on
+                        // every install. `number_entry_layout` feeds
+                        // Config.selected_number_layout live via the pref listener.
+                        saveSetting("number_entry_layout", if (it) "pin" else "number")
                     }
                 )
             }
