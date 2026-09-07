@@ -1241,3 +1241,32 @@ transcripts with tree-state briefs — zero work lost.
   (null beats 404); media-path taps work; repack restores URLs.
 - Suites after: **2,289 pure / 600 mock**. Maintainer actions recorded in the tracker:
   reopen-then-close-as-completed guidance for #148/#149 (bot recorded NOT_PLANNED).
+
+## Round 7 closure (2026-09-07) — comprehensive-audit remediation, waves W1–W7
+
+Scope: the 69 verified findings of `docs/audit/2026-09-06-comprehensive-audit.md`
+(9 auditors over every major subsystem). Seven parallel fix waves under the fail-first
+contract; the full commit map, per-item verdicts, and gate evidence live in that doc's
+**Resolution** section (committed `5ab40d1c`).
+
+- **All 8 P1s FIXED**: non-Latin swipe gate (B-1), stale keyboard-view capture (A-2),
+  API 24-28 upsert crash (E-1), custom-word membership stomp (C-4 — the third and last
+  mechanism of the "custom words hard to swipe" complaint), reset wiping the custom
+  dictionary (F-1), langpack path traversal (G-1), playground foreign-app recording
+  (I-1), delete-active-theme IME crash loop (H-2).
+- 62 FIXED outright; 3 mechanical halves FIXED with the behavior fork deferred
+  (F-8, H-4, I-7); 2 wholly deferred maintainer forks (D-1, G-3); 2 deferred-list
+  items resolved anyway (E-9, F-6).
+- Cross-wave integration fallout caught by the orchestrator's full-suite gate and
+  fixed in `0bc74595` (final shadow classes vs TextPaint, orphaned pref key, scan
+  substring match, manifest pin). Dead-code sweep `1e3dc8ad` (KeyboardGrid,
+  MaxHeightListView + stale keep).
+- **Gates: runPureTests OK (2,329) / runMockTests OK (703) / lintDebug 0 errors.**
+  Suites grew 2,289→2,329 pure, 600→703 mock. Device-tier pins await the next
+  ew-cli run.
+- Orchestration note for posterity: the first wave launch died wholesale on an
+  account spend limit mid-red-capture; every wave resumed from transcript with zero
+  work lost. The gradle flock queue starved at ~21 deep under per-class runs; batched
+  init-script runs (`-PtestClasses=A,B,C`) resolved it.
+
+— Fable 5
