@@ -558,6 +558,16 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.EmojiNameMapDriftTest',
     'tribixbite.cleverkeys.backup.SettingsImportPlanBuilderTest',
     'tribixbite.cleverkeys.backup.SettingsDefaultsDriftTest',
+    // Audit W5 (2026-09-06), F-1..F-10 + G-5:
+    // F-1/F-2 — the reset policy (remove only settings keys; markers/dictionary
+    // survive) + the repo-wide ban on whole-file prefs clears (ratchet #7).
+    'tribixbite.cleverkeys.ui.settings.SettingsResetPolicyTest',
+    // F-3/F-4/F-10/G-5 — SettingsRanges is the one source of truth per drifted
+    // key; validator behavior at the previously-lost values + consumer-site pins.
+    'tribixbite.cleverkeys.SettingsRangeDriftTest',
+    // F-5..F-9 — settings-surface drift: trail-effect dropdown coverage,
+    // pin-entry wiring, SETTINGS_DEFAULTS reader/writer scans, nav-helper callers.
+    'tribixbite.cleverkeys.SettingsSurfaceDriftTest',
     'tribixbite.cleverkeys.SettingsSearchCoverageTest',
     'tribixbite.cleverkeys.GesturePrefAccessDriftTest',
     // ARC-084/085/097 (2026-08-29): pins the deletions of the dead CGR chain and the dead
@@ -593,6 +603,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.sanitize.RulesetParserTest',
     'tribixbite.cleverkeys.clipboard.sanitize.UrlSanitizerTest',
     'tribixbite.cleverkeys.clipboard.sanitize.EmbedEnrichRulesTest',
+    // Audit W4 (2026-09-07): H-9 — every clipboardEntryButton in the entry row carries a
+    // contentDescription resolving to a string present in all 22 locale files.
+    'tribixbite.cleverkeys.clipboard.ClipboardEntryButtonA11yDriftTest',
     'tribixbite.cleverkeys.HapticsBehaviorDriftTest',
     // #161 (2026-09-03): oriented keyboard height — the settings-side portrait stomp of
     // Config.keyboardHeightPercent (same shape as the #154 vibrate_custom stomp above).
@@ -886,7 +899,6 @@ tasks.register('runPureTests', JavaExec) {
     // parsed a different format. Pins their schema against the real files plus the
     // asset-wins/hardcoded-fills-gaps merge that makes them the seed's source of truth.
     'tribixbite.cleverkeys.StaticBigramSeedTest',
-    // SwipePrunerTest excluded: requires android.util.Log (MockK + Robolectric)
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'
@@ -943,7 +955,7 @@ tasks.register('runPureTests', JavaExec) {
 // Allows MockK to mock Android framework classes (Log, PointF, Context, etc.)
 // without Robolectric. The android.jar stubs provide class definitions; MockK
 // intercepts all calls before the stubs' "Stub!" exceptions are hit.
-// Usage: ./gradlew runMockTests [-PtestClass=SwipePrunerTest]
+// Usage: ./gradlew runMockTests [-PtestClass=AutocapitalisationTest]
 tasks.register('runMockTests', JavaExec) {
   dependsOn 'compileDebugUnitTestKotlin'
   group = 'verification'
@@ -980,6 +992,11 @@ tasks.register('runMockTests', JavaExec) {
     // other tab's COPY still references it.
     'tribixbite.cleverkeys.clipboard.ClipboardMediaDeleteAffordanceTest',
     'tribixbite.cleverkeys.clipboard.ClipboardMediaDeletionCleanupTest',
+    // Audit W4 (2026-09-07): D-3/D-7/D-10 — ClipboardHistoryView state guards (status-filter
+    // tint truth, failed save keeps the edit session, bounds-guarded row handlers); D-4/D-5 —
+    // service hygiene (primary-clip-keyed OS-clipboard clearing, count-prune media cleanup).
+    'tribixbite.cleverkeys.clipboard.ClipboardHistoryViewStateGuardsTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardServiceHygieneTest',
     // #130 residual (2026-09-05): setConfig drops the cached pane when the theme
     // signature changes (switch OR color edit), preserving close callback + tab choice.
     'tribixbite.cleverkeys.clipboard.ClipboardPaneThemeInvalidationTest',
@@ -998,7 +1015,7 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.SwipeDataExportSafTest',
     'tribixbite.cleverkeys.SwipeDebugActionsTest',
     'tribixbite.cleverkeys.TestKeyboardSectionTest',
-    'tribixbite.cleverkeys.SwipePrunerTest',
+    // B-2 (2026-09-06 audit): SwipePrunerTest deleted with the ADR-011-orphan SwipePruner.
     'tribixbite.cleverkeys.PrivacyManagerTest',
     'tribixbite.cleverkeys.DebugLoggingManagerTest',
     'tribixbite.cleverkeys.AutocapitalisationTest',
