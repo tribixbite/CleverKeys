@@ -275,7 +275,17 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
             // Parse outside the lock; mutate + persist inside it so the import can't
             // interleave with loadMappings' clear+repopulate or other mutators.
             val customizations = gson.fromJson(json, ShortSwipeCustomizations::class.java)
-            val mappingList = customizations.toMappingList()
+            val mappingList = customizations?.toMappingList().orEmpty()
+
+            // G-2 (comprehensive audit 2026-09-06): an import that parses to ZERO mappings
+            // must not touch the existing set. REPLACE used to clear FIRST and only then
+            // discover the payload was empty/unparseable — destroying the user's
+            // customizations for an import that delivered nothing. Clearing everything is
+            // an explicit resetAll() action, never an import side effect.
+            if (mappingList.isEmpty()) {
+                Log.w(TAG, "Import parsed 0 mappings — existing customizations left untouched")
+                return 0
+            }
 
             fileMutex.withLock {
                 if (!merge) {

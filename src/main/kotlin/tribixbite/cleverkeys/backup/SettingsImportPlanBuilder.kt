@@ -135,16 +135,29 @@ object SettingsImportPlanBuilder {
         }
 
         // Short-swipe section is captured raw — applier hands it to ShortSwipeImporter.
+        // G-2 (comprehensive audit 2026-09-06): the importer's Gson model parses ONLY the
+        // wrapped v2 shape {version, mappings}. A legacy flat section (keyCodes at the top
+        // level) passed through verbatim previewed N mappings but imported 0 — and REPLACE
+        // mode had already cleared the user's set. Normalize flat → wrapped HERE so the
+        // shape the preview counts is byte-for-byte the shape the importer parses.
         val shortSwipeJson = root.getAsJsonObject("short_swipe_customizations")
-        val shortSwipeRaw = shortSwipeJson?.toString()
+        val normalizedShortSwipe = shortSwipeJson?.let { section ->
+            if (section.get("mappings")?.isJsonObject == true) {
+                section
+            } else {
+                JsonObject().apply {
+                    addProperty("version", 2)
+                    add("mappings", section)
+                }
+            }
+        }
+        val shortSwipeRaw = normalizedShortSwipe?.toString()
         // The preview's unit is key×direction MAPPINGS. The v2 export wraps them —
         // {"mappings": {...}, "version": N} — and counting the wrapper's own keys reported
         // "2 short-swipe mappings" for an EMPTY backup (on-device finding, 2026-09-03).
-        // Legacy flat sections have keyCodes at the top level; either way the direction
-        // entries are what the user is deciding about. Non-object values contribute 0.
-        val shortSwipeMappings = shortSwipeJson?.get("mappings")
-            ?.takeIf { it.isJsonObject }?.asJsonObject
-            ?: shortSwipeJson
+        // Post-normalization both source shapes count the same way. Non-object direction
+        // values contribute 0.
+        val shortSwipeMappings = normalizedShortSwipe?.getAsJsonObject("mappings")
         val shortSwipeSize = shortSwipeMappings?.entrySet()?.sumOf { (_, byDirection) ->
             if (byDirection.isJsonObject) byDirection.asJsonObject.entrySet().size else 0
         } ?: 0

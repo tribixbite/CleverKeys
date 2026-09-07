@@ -264,7 +264,23 @@ class SettingsImportPlanBuilderTest {
         val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
 
         assertThat(plan.shortSwipeImportSize).isEqualTo(1)
-        // Canonicalized — caller hands `shortSwipeImportRawJson` to ShortSwipeManager.importFromJson.
+        // G-2 (comprehensive audit 2026-09-06): the raw JSON handed to
+        // ShortSwipeCustomizationManager.importFromJson must be the WRAPPED v2 shape its
+        // Gson model parses. A flat section passed through verbatim previewed N mappings
+        // but imported 0 (and REPLACE mode had already cleared the user's set) — so the
+        // builder normalizes flat → {"version":2,"mappings":{…}}.
+        val expected = JsonParser.parseString("""{"version":2,"mappings":$ssJson}""").toString()
+        assertThat(plan.shortSwipeImportRawJson).isEqualTo(expected)
+    }
+
+    @Test
+    fun shortSwipeSection_wrappedShapePassesThroughUntouched() {
+        val ssJson = """{"mappings":{"q":{"up":"DEL"}},"version":2}"""
+        val json = """{"preferences":{}, "short_swipe_customizations":$ssJson}"""
+
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        assertThat(plan.shortSwipeImportSize).isEqualTo(1)
         assertThat(plan.shortSwipeImportRawJson).isEqualTo(JsonParser.parseString(ssJson).toString())
     }
 
