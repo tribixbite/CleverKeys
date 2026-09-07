@@ -10,6 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.unmockkStatic
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -377,6 +378,100 @@ class LanguagePackImportTest {
         assertThat(File(scratch, "pwned.txt").exists()).isFalse()
     }
 
+    // -------------------------------------------------- manifest.code traversal (G-1)
+
+    /**
+     * G-1 (comprehensive audit 2026-09-06): zip ENTRY names are sanitized, but the
+     * manifest's `code` was used verbatim as a path component of the install directory.
+     * A hostile pack with `"code":"../evil"` must be rejected, not installed to
+     * `files/evil/`.
+     */
+    @Test
+    fun aTraversalManifestCodeIsRejectedAndInstallsNothing() {
+        val zip = packZip(
+            "evil-code.zip",
+            listOf(
+                "manifest.json" to manifestJson("../evil", "Evil").toByteArray(),
+                "dictionary.bin" to dictionaryBytes(),
+            )
+        )
+
+        assertWithMessage("a traversal code must be rejected, not installed outside langpacks/")
+            .that(import(zip)).isInstanceOf(ImportResult.Error::class.java)
+        assertWithMessage("nothing may be installed at files/evil/")
+            .that(File(filesDir, "evil").exists()).isFalse()
+        assertThat(manager.getInstalledPacks()).isEmpty()
+    }
+
+    /**
+     * G-1, the destructive half: `code=".."` resolves the install dir to filesDir itself,
+     * and the reimport branch then `deleteRecursively()`s it — wiping ALL app data
+     * (langpacks, customizations, learned stores). The import must fail and every
+     * pre-existing file must survive.
+     */
+    @Test
+    fun aDotDotManifestCodeCannotWipeTheAppFilesDirectory() {
+        // A sentinel standing in for the rest of the app's files (customizations, stores…).
+        val sentinel = File(filesDir, "short_swipe_customizations.json").apply {
+            writeText("""{"version":2,"mappings":{}}""")
+        }
+        // And an installed pack that must survive too.
+        import(validPack("nl", "Dutch"))
+        assertThat(manager.isInstalled("nl")).isTrue()
+
+        val zip = packZip(
+            "wipe.zip",
+            listOf(
+                "manifest.json" to manifestJson("..", "Wipe").toByteArray(),
+                "dictionary.bin" to dictionaryBytes(),
+            )
+        )
+
+        assertWithMessage("code \"..\" must be rejected before any filesystem mutation")
+            .that(import(zip)).isInstanceOf(ImportResult.Error::class.java)
+        assertWithMessage("the app's files must survive a hostile pack import")
+            .that(sentinel.exists()).isTrue()
+        assertWithMessage("previously installed packs must survive a hostile pack import")
+            .that(manager.isInstalled("nl")).isTrue()
+    }
+
+    /**
+     * G-1 companion: an EMPTY code resolves to the langpacks dir itself — the reimport
+     * branch would wipe every installed pack at once.
+     */
+    @Test
+    fun anEmptyManifestCodeCannotWipeTheLangpacksDirectory() {
+        import(validPack("nl", "Dutch"))
+
+        val zip = packZip(
+            "empty-code.zip",
+            listOf(
+                "manifest.json" to manifestJson("", "Empty").toByteArray(),
+                "dictionary.bin" to dictionaryBytes(),
+            )
+        )
+
+        assertThat(import(zip)).isInstanceOf(ImportResult.Error::class.java)
+        assertWithMessage("installed packs must survive an empty-code pack")
+            .that(manager.isInstalled("nl")).isTrue()
+    }
+
+    /**
+     * The validation guard must not over-reject: every shipped pack-code shape keeps
+     * importing. `scripts/dictionaries/langpack-*.zip` all carry plain ISO codes today
+     * ("en", "ru", …) but the build tooling names variant packs like `en-norvig-50k`,
+     * so hyphenated/underscored variant codes stay legal.
+     */
+    @Test
+    fun realWorldPackCodeShapesAreStillAccepted() {
+        for (code in listOf("en", "sv", "pt", "en-norvig-50k", "en-opensubtitles", "pt_br")) {
+            assertWithMessage("code \"$code\" is a legitimate pack code and must import")
+                .that(import(validPack(code, "Pack $code")))
+                .isInstanceOf(ImportResult.Success::class.java)
+            assertThat(manager.isInstalled(code)).isTrue()
+        }
+    }
+
     // ------------------------------------------------------- re-import and enumeration
 
     @Test
@@ -398,6 +493,56 @@ class LanguagePackImportTest {
             .containsExactly(LanguagePackManifest("nl", "Dutch", 2, "", 20, false))
         assertWithMessage("the previous version's unigrams must be gone, not merged")
             .that(manager.getUnigramsPath("nl")).isNull()
+    }
+
+    /**
+     * G-6 (comprehensive audit 2026-09-06): reimport used to `deleteRecursively()` the
+     * installed pack BEFORE copying the replacement. A mid-copy IO failure (disk full)
+     * then lost the working pack AND left a manifest-only ghost that `getInstalledPacks()`
+     * lists while `isInstalled()` says absent. Invariant: after a failed reimport the
+     * previous pack still works, or at minimum the pack is FULLY absent — never limbo.
+     *
+     * The failure is injected by making every `copyTo` whose destination is a
+     * `dictionary.bin` under the langpacks tree throw (the extraction copy into cacheDir
+     * is untouched, so validation succeeds and the install phase is reached).
+     */
+    @Test
+    fun aFailedReimportNeverDestroysTheInstalledPack() {
+        import(packZip("v1.zip", listOf(
+            "manifest.json" to manifestJson("nl", "Dutch", version = 1, wordCount = 10).toByteArray(),
+            "dictionary.bin" to dictionaryBytes(),
+        )))
+        assertThat(manager.isInstalled("nl")).isTrue()
+
+        // copyTo lives in the multifile-class PART (FilesKt__UtilsKt); the FilesKt facade
+        // only bridges to it, and mocking the facade does not intercept the delegated call.
+        mockkStatic("kotlin.io.FilesKt__UtilsKt")
+        every {
+            any<File>().copyTo(
+                match { it.name == "dictionary.bin" && it.parentFile?.parentFile?.name == "langpacks" },
+                any(),
+                any()
+            )
+        } throws java.io.IOException("simulated disk full")
+
+        val result = import(packZip("v2.zip", listOf(
+            "manifest.json" to manifestJson("nl", "Dutch", version = 2, wordCount = 20).toByteArray(),
+            "dictionary.bin" to dictionaryBytes(),
+        )))
+
+        unmockkStatic("kotlin.io.FilesKt__UtilsKt")
+
+        assertWithMessage("the failed import must be reported as an error")
+            .that(result).isInstanceOf(ImportResult.Error::class.java)
+        assertWithMessage(
+            "after a failed reimport the previously working v1 pack must still be installed " +
+                "— losing it to a disk-full mid-copy is the G-6 bug"
+        ).that(manager.isInstalled("nl")).isTrue()
+        assertWithMessage("the surviving pack must be v1, not a half-copied v2")
+            .that(manager.getInstalledPacks())
+            .containsExactly(LanguagePackManifest("nl", "Dutch", 1, "", 10, false))
+        assertWithMessage("no manifest-only ghost: every listed pack must also be installed")
+            .that(manager.getInstalledPacks().all { manager.isInstalled(it.code) }).isTrue()
     }
 
     @Test

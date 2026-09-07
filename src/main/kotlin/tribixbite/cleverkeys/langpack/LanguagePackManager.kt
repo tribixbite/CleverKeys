@@ -39,6 +39,17 @@ class LanguagePackManager(private val context: Context) {
         // V2 dictionary magic number: "CKDT"
         private const val DICT_MAGIC = 0x54444B43
 
+        /**
+         * G-1 (comprehensive audit 2026-09-06): `manifest.code` becomes a path component
+         * of the install directory, so it MUST be a plain code — a hostile pack carrying
+         * `"code":".."` used to make the importer `deleteRecursively()` the app's entire
+         * files dir and install there. Accepted shapes cover every shipped pack
+         * (`en`, `ru`, `pt` …) and the build tooling's variant names (`en-norvig-50k`,
+         * `en-opensubtitles`, `pt_br`): a 2-3 letter base plus up to 4 alphanumeric
+         * segments separated by `-`/`_`. No `/`, `\`, `.` or empty codes, ever.
+         */
+        private val VALID_PACK_CODE = Regex("^[a-z]{2,3}(?:[_-][a-z0-9]{1,16}){0,4}$")
+
         // Process-lifetime singleton holding only the applicationContext (see getInstance),
         // so it never leaks an Activity/Service. The reference lives as long as the process.
         @SuppressLint("StaticFieldLeak")
@@ -120,35 +131,68 @@ class LanguagePackManager(private val context: Context) {
                 return ImportResult.Error("Invalid dictionary.bin format")
             }
 
+            // G-1: validate the code BEFORE it is used as a path component. Regex first,
+            // then a canonical-path containment check as belt-and-braces — the install
+            // dir must be a direct child of langpacksDir, nothing else.
+            if (!VALID_PACK_CODE.matches(manifest.code)) {
+                return ImportResult.Error("Invalid language code in manifest: \"${manifest.code}\"")
+            }
+
             // Move to final location
             val packDir = File(langpacksDir, manifest.code)
-            if (packDir.exists()) {
-                packDir.deleteRecursively()
-            }
-            packDir.mkdirs()
-
-            // Copy files
-            manifestFile.copyTo(File(packDir, MANIFEST_FILE), overwrite = true)
-            dictFile.copyTo(File(packDir, DICTIONARY_FILE), overwrite = true)
-
-            // Copy unigrams if present
-            val unigramsFile = File(tempDir, UNIGRAMS_FILE)
-            if (unigramsFile.exists()) {
-                unigramsFile.copyTo(File(packDir, UNIGRAMS_FILE), overwrite = true)
+            if (packDir.canonicalFile.parentFile != langpacksDir.canonicalFile) {
+                return ImportResult.Error("Invalid language code in manifest: \"${manifest.code}\"")
             }
 
-            // Copy contractions if present
-            val contractionsFile = File(tempDir, CONTRACTIONS_FILE)
-            if (contractionsFile.exists()) {
-                contractionsFile.copyTo(File(packDir, CONTRACTIONS_FILE), overwrite = true)
-                Log.d(TAG, "Copied contractions.json for ${manifest.code}")
-            }
+            // G-6 (comprehensive audit 2026-09-06): stage into a sibling dir and swap.
+            // The old order (deleteRecursively the installed pack, THEN copy) meant a
+            // mid-copy IO failure (disk full) destroyed the working pack and left a
+            // manifest-only ghost that getInstalledPacks() listed while every dictionary
+            // consumer treated it as absent. Staging first means a failure anywhere in
+            // the copy phase leaves the installed pack untouched. The dot-prefixed name
+            // keeps a half-built staging dir invisible to getInstalledPacks(). Within
+            // the staging dir the manifest is copied LAST, so even a crash between
+            // steps can never produce a manifest-without-dictionary directory.
+            val stagingDir = File(langpacksDir, ".staging-${manifest.code}-${System.currentTimeMillis()}")
+            stagingDir.mkdirs()
+            try {
+                dictFile.copyTo(File(stagingDir, DICTIONARY_FILE), overwrite = true)
 
-            // Copy prefix boost trie if present
-            val prefixBoostFile = File(tempDir, PREFIX_BOOST_FILE)
-            if (prefixBoostFile.exists()) {
-                prefixBoostFile.copyTo(File(packDir, PREFIX_BOOST_FILE), overwrite = true)
-                Log.d(TAG, "Copied prefix_boost.bin for ${manifest.code} (${prefixBoostFile.length() / 1024}KB)")
+                // Copy unigrams if present
+                val unigramsFile = File(tempDir, UNIGRAMS_FILE)
+                if (unigramsFile.exists()) {
+                    unigramsFile.copyTo(File(stagingDir, UNIGRAMS_FILE), overwrite = true)
+                }
+
+                // Copy contractions if present
+                val contractionsFile = File(tempDir, CONTRACTIONS_FILE)
+                if (contractionsFile.exists()) {
+                    contractionsFile.copyTo(File(stagingDir, CONTRACTIONS_FILE), overwrite = true)
+                    Log.d(TAG, "Copied contractions.json for ${manifest.code}")
+                }
+
+                // Copy prefix boost trie if present
+                val prefixBoostFile = File(tempDir, PREFIX_BOOST_FILE)
+                if (prefixBoostFile.exists()) {
+                    prefixBoostFile.copyTo(File(stagingDir, PREFIX_BOOST_FILE), overwrite = true)
+                    Log.d(TAG, "Copied prefix_boost.bin for ${manifest.code} (${prefixBoostFile.length() / 1024}KB)")
+                }
+
+                // Manifest last — a staged dir only becomes "complete" at this point.
+                manifestFile.copyTo(File(stagingDir, MANIFEST_FILE), overwrite = true)
+
+                // Swap: the old pack is deleted only once the replacement is fully staged
+                // on the same filesystem, so the unprotected window is a single rename.
+                if (packDir.exists()) {
+                    packDir.deleteRecursively()
+                }
+                if (!stagingDir.renameTo(packDir)) {
+                    return ImportResult.Error("Failed to install language pack (rename failed)")
+                }
+            } finally {
+                if (stagingDir.exists()) {
+                    stagingDir.deleteRecursively()
+                }
             }
 
             Log.i(TAG, "Successfully imported language pack: ${manifest.name} (${manifest.code})")
@@ -220,7 +264,8 @@ class LanguagePackManager(private val context: Context) {
         val packs = mutableListOf<LanguagePackManifest>()
 
         langpacksDir.listFiles()?.forEach { dir ->
-            if (dir.isDirectory) {
+            // Dot-prefixed dirs are in-flight import staging (G-6) — never installed packs.
+            if (dir.isDirectory && !dir.name.startsWith(".")) {
                 val manifestFile = File(dir, MANIFEST_FILE)
                 if (manifestFile.exists()) {
                     parseManifest(manifestFile.readText())?.let { packs.add(it) }
