@@ -7,7 +7,9 @@ Use this skill when touching todo entries: status cycle, done-button behavior, v
 A **todo** is a *copy* of a clipboard entry (text or media) with added workflow state:
 - `status`: one of `active` / `planned` / `completed` (default `active`)
 - `tags`: JSON array (shared system with pinned — see `clipboard-tag-system.md`)
-- `completedAt`: timestamp when status last entered `completed` (nullable)
+
+No completion timestamp is stored — `status` is the only workflow state. (A `completed_at`
+column was documented here for a while but never existed in any schema version; audit D-8.)
 
 **COPY semantics:** When a user taps "add to todo" on a history or pinned entry, the content is duplicated into `todo_entries`. Mutations on the original history/pinned entry do NOT propagate. Deleting the history entry does NOT remove the todo.
 
@@ -125,13 +127,13 @@ if (statusFilterActive || statusFilterPlanned || statusFilterCompleted) {
         TodoEntry.STATUS_ACTIVE    -> statusFilterActive
         TodoEntry.STATUS_PLANNED   -> statusFilterPlanned
         TodoEntry.STATUS_COMPLETED -> statusFilterCompleted
-        else                       -> true  // unknown statuses pass
+        else                       -> statusFilterActive  // unknown status treated as active
     }
     if (!show) return@filter false
 }
 ```
 
-**Default filter state:** on first open, all three are checked (show everything). User must explicitly narrow. The filter icon in the search bar is tinted `colorLabelActivated` when any status is unchecked (i.e., active filtering).
+**Default filter state:** on first open only **Active** is checked — planned and completed todos are hidden until the user widens the filter in the dialog (active-first UX; the state also resets to active-only on every tab switch via `setTab`). Because that default HIDES data, `hasActiveFilters()` reports the status filter as active whenever any of the three statuses is unchecked — including the default — so the filter icon in the search bar is tinted on the TODOS tab by default (audit D-3: the icon must never claim "no filters" while rows are being hidden).
 
 ## Common Operations
 
@@ -156,7 +158,6 @@ if (statusFilterActive || statusFilterPlanned || statusFilterCompleted) {
 - **`setTodoStatus()` uses content as key:** Like tags, status mutations key on content. If two todos have identical content (shouldn't happen post-dedup in `addToTodo`), both rows change. Dedup at add-time prevents this.
 - **`loadDataAsync()` after status change:** Required to pick up the new status and re-filter. The callback chain (`applyFilter(resetView=false)`) preserves page + expand state so the user's place is kept.
 - **Strikethrough is view-only:** Clipboard search / FTS match content without `[done] ` prefix. Don't add the prefix to indexed content — it'd break text searches.
-- **`completedAt` is set by the DB layer:** When status transitions TO `completed`, `ClipboardDatabase.setTodoStatus()` sets `completed_at = now()`. When transitioning away, it clears to NULL. Don't set this from the service/view.
 - **Expand state survives status change:** Expand map is keyed by timestamp, so toggling status on an expanded entry keeps it expanded after reload.
 
 ## Related Skills
