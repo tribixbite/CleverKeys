@@ -115,23 +115,35 @@ class GifPackManager private constructor(private val context: Context) {
             )
 
             // Step 8: Copy thumbnails to app storage
-            val thumbCount = if (thumbsDir.exists()) {
+            val thumbResult = if (thumbsDir.exists()) {
                 assetManager.importThumbnails(thumbsDir)
             } else {
-                0
+                ThumbnailImportResult(0, 0)
             }
+            val thumbCount = thumbResult.imported
 
             // Step 8b (ARC-038 safety net): Step 3b can only act on what the manifest DECLARES,
             // and `gif_count` is optional (`optInt(…, 0)`) — a hand-built or truncated manifest
             // that omits it reads as an empty pack and slips through. Here the real numbers are
             // known, so catch the same defect from the other side and UNDO the DB write rather
             // than leave rows the grid cannot render.
-            if (imported > 0 && thumbCount == 0) {
-                Log.w(TAG, "Pack '${manifest.packId}' imported $imported rows with 0 thumbnails — rolling back")
+            //
+            // Audit E-11: a PARTIAL copy (disk full mid-pack) is the same defect at k% — the
+            // per-file failures used to be swallowed and only thumbCount == 0 rolled back, so
+            // a 10%-complete import returned Success with ~90% blank tiles. Any failed copy
+            // now rolls the import back too.
+            if (imported > 0 && (thumbCount == 0 || thumbResult.failed > 0)) {
+                Log.w(
+                    TAG,
+                    "Pack '${manifest.packId}' imported $imported rows with $thumbCount thumbnails " +
+                        "(${thumbResult.failed} failed copies) — rolling back"
+                )
                 val removal = database.removePack(manifest.packId)
                 assetManager.removeThumbnails(removal.orphanedThumbIds)
                 assetManager.removeFullGifs(removal.orphanedFullIds)
-                return@withContext GifPackImportResult.Error(ERROR_MISSING_THUMBNAILS)
+                return@withContext GifPackImportResult.Error(
+                    if (thumbResult.failed > 0) ERROR_PARTIAL_THUMBNAILS else ERROR_MISSING_THUMBNAILS
+                )
             }
 
             // Step 9: Copy full animated GIFs if present
@@ -329,6 +341,14 @@ class GifPackManager private constructor(private val context: Context) {
         const val ERROR_MISSING_THUMBNAILS =
             "Legacy pack format — this pack has no thumbnails, so its GIFs cannot be shown. " +
                 "Download a current pack."
+
+        /**
+         * Audit E-11: rejection message when thumbnail copies FAILED partway (disk full).
+         * The import is rolled back so the grid never shows a partially-blank pack.
+         */
+        const val ERROR_PARTIAL_THUMBNAILS =
+            "Import failed partway through copying thumbnails (storage full?). " +
+                "The pack was not installed — free up space and try again."
 
         const val GITHUB_RELEASES_URL =
             "https://github.com/tribixbite/CleverKeys/releases/tag/CleverKeys-GIF"

@@ -149,12 +149,21 @@ class GifAssetManager private constructor(private val context: Context) {
      * Import thumbnails from an extracted pack directory.
      * Handles both flat layout (thumbs/000001.webp) and partitioned layout (thumbs/000/000001.webp).
      *
-     * @return number of thumbnails imported
+     * Audit E-11: per-file copy failures are COUNTED, not just logged. A disk-full ENOSPC
+     * partway through a large pack used to be invisible (the old Int return was just the
+     * success count), so a 10%-copied import sailed past the ARC-038 zero-thumbnail gate
+     * and installed a wall of mostly-blank tiles. [GifPackManager] now rolls the import
+     * back when [ThumbnailImportResult.failed] > 0.
+     *
+     * @return imported/failed counts
      */
-    suspend fun importThumbnails(sourceThumbsDir: File): Int = withContext(Dispatchers.IO) {
-        if (!sourceThumbsDir.exists() || !sourceThumbsDir.isDirectory) return@withContext 0
+    suspend fun importThumbnails(sourceThumbsDir: File): ThumbnailImportResult = withContext(Dispatchers.IO) {
+        if (!sourceThumbsDir.exists() || !sourceThumbsDir.isDirectory) {
+            return@withContext ThumbnailImportResult(0, 0)
+        }
 
         var count = 0
+        var failed = 0
         sourceThumbsDir.walkTopDown()
             .filter { it.isFile && it.extension == "webp" }
             .forEach { srcFile ->
@@ -166,11 +175,12 @@ class GifAssetManager private constructor(private val context: Context) {
                     srcFile.copyTo(destFile, overwrite = true)
                     count++
                 } catch (e: Exception) {
+                    failed++
                     Log.w(TAG, "Failed to import thumbnail $idStr: ${e.message}")
                 }
             }
-        Log.i(TAG, "Imported $count thumbnails from ${sourceThumbsDir.absolutePath}")
-        count
+        Log.i(TAG, "Imported $count thumbnails ($failed failed) from ${sourceThumbsDir.absolutePath}")
+        ThumbnailImportResult(count, failed)
     }
 
     /**
@@ -302,3 +312,9 @@ class GifAssetManager private constructor(private val context: Context) {
         }
     }
 }
+
+/**
+ * Audit E-11: outcome of a thumbnail import — successes AND per-file failures, so a
+ * partial copy (disk full mid-pack) is detectable instead of masquerading as success.
+ */
+data class ThumbnailImportResult(val imported: Int, val failed: Int)
