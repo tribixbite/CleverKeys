@@ -6,12 +6,10 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
-import org.json.JSONArray
 import tribixbite.cleverkeys.BuildConfig
 import org.json.JSONObject
-import java.io.BufferedReader
 import java.io.File
-import java.io.FileReader
+import java.io.FileOutputStream
 import java.io.FileWriter
 import java.io.OutputStream
 import java.io.OutputStreamWriter
@@ -340,11 +338,15 @@ class SwipeMLDataStore private constructor(context: Context) :
     }
 
     /**
-     * Export all data to JSON file
+     * Export all data to a JSON file (the Swipe Playground's Export button).
+     *
+     * I-5 (comprehensive audit 2026-09-06): delegates to the streaming
+     * [exportToJSON] OutputStream overload — the previous body materialized the whole
+     * table three times over (`loadAllData()` object list → JSONArray → `toString(2)`
+     * string), which is exactly the OOM the streaming path was written to avoid on
+     * 256 MB-heap devices. Same JSON schema (export_version/data/statistics), streamed.
      */
     fun exportToJSON(): File {
-        val allData = loadAllData()
-
         // Create export directory
         val exportDir = File(_context.getExternalFilesDir(null), "swipe_ml_export")
         if (!exportDir.exists()) {
@@ -356,40 +358,10 @@ class SwipeMLDataStore private constructor(context: Context) :
         val filename = "swipe_data_${sdf.format(Date())}.json"
         val exportFile = File(exportDir, filename)
 
-        // Build JSON array
-        val jsonArray = JSONArray()
-        for (data in allData) {
-            jsonArray.put(data.toJSON())
-        }
-
-        // Add metadata
-        val root = JSONObject().apply {
-            put("export_version", "1.0")
-            put("export_timestamp", System.currentTimeMillis())
-            put("total_samples", allData.size)
-            put("database_version", DATABASE_VERSION)
-            put("data", jsonArray)
-        }
-
-        // Add statistics
-        val prefs = _context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        val stats = JSONObject().apply {
-            put("total_swipes", prefs.getInt(PREF_TOTAL_COUNT, 0))
-            put("calibration_swipes", prefs.getInt(PREF_CALIBRATION_COUNT, 0))
-            put("user_swipes", prefs.getInt(PREF_USER_COUNT, 0))
-        }
-        root.put("statistics", stats)
-
-        // Write to file
-        FileWriter(exportFile).use { writer ->
-            writer.write(root.toString(2)) // Pretty print with 2-space indent
-        }
-
-        // Mark all as exported
-        markAllAsExported()
+        val count = FileOutputStream(exportFile).use { fos -> exportToJSON(fos) }
 
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            Log.i(TAG, "Exported ${allData.size} entries to ${exportFile.absolutePath}")
+            Log.i(TAG, "Exported $count entries to ${exportFile.absolutePath}")
         }
         return exportFile
     }
@@ -572,6 +544,39 @@ class SwipeMLDataStore private constructor(context: Context) :
     }
 
     /**
+     * Retention cleanup (I-2, comprehensive audit 2026-09-06): delete rows older than
+     * [cutoffUtcMs] and enforce a hard row cap of [maxRows] newest-kept rows. Runs on the
+     * store's single-threaded executor (off the caller's thread, serialized with writes).
+     *
+     * Called by `MLDataCollector` after a successful store when
+     * `PrivacyManager.shouldPerformCleanup()` says a daily-throttled cleanup is due —
+     * the wiring that makes the privacy layer's `auto_delete_enabled` (default ON,
+     * 90-day retention) an enforced promise instead of dead code.
+     */
+    fun performRetentionCleanup(cutoffUtcMs: Long, maxRows: Int) {
+        _executor.execute {
+            try {
+                val db = writableDatabase
+                val expired = db.delete(
+                    TABLE_SWIPES, "$COL_TIMESTAMP < ?", arrayOf(cutoffUtcMs.toString())
+                )
+                // Row cap as a backstop against pathological growth inside the retention
+                // window: keep only the newest maxRows rows.
+                db.execSQL(
+                    "DELETE FROM $TABLE_SWIPES WHERE $COL_ID NOT IN " +
+                        "(SELECT $COL_ID FROM $TABLE_SWIPES ORDER BY $COL_TIMESTAMP DESC LIMIT ?)",
+                    arrayOf(maxRows.toString())
+                )
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    Log.i(TAG, "Retention cleanup: deleted $expired expired rows (cutoff=$cutoffUtcMs, cap=$maxRows)")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Retention cleanup failed", e)
+            }
+        }
+    }
+
+    /**
      * Clear all data (with confirmation)
      */
     fun clearAllData() {
@@ -587,77 +592,12 @@ class SwipeMLDataStore private constructor(context: Context) :
         }
     }
 
-    /**
-     * Import swipe data from JSON file
-     * @param jsonFile File containing exported JSON data
-     * @return Number of records imported
-     */
-    fun importFromJSON(jsonFile: File): Int {
-        if (!jsonFile.exists()) {
-            throw java.io.IOException("Import file does not exist: ${jsonFile.path}")
-        }
-
-        // Read file content
-        val jsonContent = StringBuilder()
-        BufferedReader(FileReader(jsonFile)).use { reader ->
-            var line: String?
-            while (reader.readLine().also { line = it } != null) {
-                jsonContent.append(line)
-            }
-        }
-
-        // Parse JSON
-        val root = JSONObject(jsonContent.toString())
-        val swipes = root.getJSONArray("swipes")
-
-        var importedCount = 0
-        val db = writableDatabase
-        db.beginTransaction()
-
-        try {
-            for (i in 0 until swipes.length()) {
-                val swipe = swipes.getJSONObject(i)
-
-                // Check if trace already exists
-                val traceId = swipe.getString("trace_id")
-                val cursor = db.query(
-                    TABLE_SWIPES, arrayOf(COL_ID),
-                    "$COL_TRACE_ID=?", arrayOf(traceId),
-                    null, null, null
-                )
-
-                if (!cursor.moveToFirst()) {
-                    // Insert new record
-                    val values = ContentValues().apply {
-                        put(COL_TRACE_ID, traceId)
-                        put(COL_TARGET_WORD, swipe.getString("target_word"))
-                        put(COL_TIMESTAMP, swipe.getLong("timestamp_utc"))
-                        put(COL_SOURCE, swipe.getString("source"))
-                        put(COL_JSON_DATA, swipe.toString())
-                        put(COL_IS_EXPORTED, 1) // Mark as already exported
-                    }
-
-                    db.insert(TABLE_SWIPES, null, values)
-                    importedCount++
-                }
-                cursor.close()
-            }
-
-            db.setTransactionSuccessful()
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                Log.d(TAG, "Imported $importedCount swipe records from ${jsonFile.name}")
-            }
-        } finally {
-            db.endTransaction()
-        }
-
-        // Update statistics
-        val prefs = _context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        val total = prefs.getInt(PREF_TOTAL_COUNT, 0)
-        prefs.edit().putInt(PREF_TOTAL_COUNT, total + importedCount).apply()
-
-        return importedCount
-    }
+    // importFromJSON(File) DELETED (I-3, comprehensive audit 2026-09-06): it required a
+    // top-level "swipes" array with flat timestamp_utc/source fields — a schema NO exporter
+    // in this class ever wrote (exports carry a "data" array with those fields nested under
+    // "metadata"), so it threw JSONException on this app's own exports. It also had zero
+    // callers. If an import path is ever wanted, write it against the real export schema
+    // (SwipeMLData.toJSON) and wire an SAF handler next to the export ones.
 
     /**
      * Mark all entries as exported
