@@ -229,6 +229,14 @@ class KeyEventReceiverBridge(
         return contextTracker?.takeOwedTrailingSpace()
     }
 
+    // #156 / audit A-1: private-copy feedback via the suggestion bar. This was the THIRD
+    // bridge-gap instance — the interface default is a no-op, so without this override every
+    // copy_private feedback message (success, "no selection", dispatch failures) silently
+    // vanished. Delegation completeness is now pinned by KeyEventReceiverBridgeDelegationTest.
+    override fun showPrivateCopyFeedback(message: String) {
+        receiver?.showPrivateCopyFeedback(message)
+    }
+
     companion object {
         /**
          * Create a KeyEventReceiverBridge.
