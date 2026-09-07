@@ -1014,6 +1014,15 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.KeyboardTileServiceTest',
     'tribixbite.cleverkeys.SwipeDataExportSafTest',
     'tribixbite.cleverkeys.SwipeDebugActionsTest',
+    // W6 (2026-09-06 audit): I-1/I-5 playground recording scope — the recorder's
+    // foreign-editor fence, the activity's onStart/onStop visibility binding, and the
+    // streaming File export pin.
+    'tribixbite.cleverkeys.ml.PlaygroundRecordingScopeTest',
+    // W6 I-4: first_stat_timestamp is seeded by the one live stat writer.
+    'tribixbite.cleverkeys.SwipePerformanceStatsTest',
+    // W6 G-2: short-swipe preview/apply agreement through the REAL manager — flat-section
+    // normalization end-to-end + the 0-mapping-REPLACE-must-not-clear guard.
+    'tribixbite.cleverkeys.customization.ShortSwipeImportSemanticsTest',
     'tribixbite.cleverkeys.TestKeyboardSectionTest',
     // B-2 (2026-09-06 audit): SwipePrunerTest deleted with the ADR-011-orphan SwipePruner.
     'tribixbite.cleverkeys.PrivacyManagerTest',
