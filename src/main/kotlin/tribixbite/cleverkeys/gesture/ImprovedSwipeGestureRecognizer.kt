@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.graphics.PointF
 import android.util.Log
+import tribixbite.cleverkeys.swipe.KeyLetter
 import java.util.ArrayList
 import kotlin.collections.List // Ensure kotlin.collections.List is used
 import kotlin.math.abs
@@ -397,17 +398,22 @@ open class ImprovedSwipeGestureRecognizer {
     }
     
     /**
-     * Check if a key is a valid alphabetic key
+     * Check if a key is a valid alphabetic key — i.e. its CENTRE value is a single letter
+     * in ANY script.
+     *
+     * B-1 fix (2026-09-06 audit): this gate was hard-coded `'a'..'z' || 'A'..'Z'`, so on a
+     * Cyrillic/Greek/Hebrew board NO letter key could ever join the touched-key path,
+     * `isSwipeTyping()` stayed false for the whole gesture, and a word swipe reached
+     * NEITHER engine — the routed script languages (ru/el/uk/bg/mk/he) and geometric's
+     * non-Latin coverage were unreachable from a real touch stream. The predicate is now
+     * [KeyLetter.centreLetterOf], the SAME single implementation the CTC routing gate
+     * (`CtcEngineAdapter.buildMappedLayout`) and the fallback card use, so "which keys
+     * count as letters" cannot drift between the gesture layer and engine routing.
+     * Behavior-identical for Latin boards; digits, action keys and combining marks are
+     * still rejected. Pinned by SwipeNonLatinSwipeTypingTest.
      */
-    private fun isValidAlphabeticKey(key: KeyboardData.Key): Boolean {
-        val kv = key.keys.getOrNull(0) ?: return false
-        
-        if (kv.getKind() != KeyValue.Kind.Char)
-            return false
-        
-        val c = kv.getChar()
-        return (c in 'a'..'z') || (c in 'A'..'Z')
-    }
+    private fun isValidAlphabeticKey(key: KeyboardData.Key): Boolean =
+        KeyLetter.centreLetterOf(key.keys.getOrNull(0)) != null
     
     /**
      * Get the current swipe path

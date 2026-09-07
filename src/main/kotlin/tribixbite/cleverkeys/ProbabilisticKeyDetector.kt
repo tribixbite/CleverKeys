@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import android.graphics.PointF
+import tribixbite.cleverkeys.swipe.KeyLetter
 import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
@@ -216,21 +217,16 @@ class ProbabilisticKeyDetector(
     }
 
     /**
-     * Check if key is alphabetic
+     * Check if key is alphabetic — the twin of ImprovedSwipeGestureRecognizer's gate.
+     *
+     * B-1 fix (2026-09-06 audit): was hard-coded a–z, which silently emptied every
+     * probabilistic detection on non-Latin boards. Now delegates to the single
+     * centre-letter definition ([KeyLetter.centreLetterOf]) shared with the recognizer
+     * and the CTC routing gate, so the two gesture-layer gates cannot drift apart again.
+     * Pinned by SwipeNonLatinSwipeTypingTest.
      */
-    private fun isAlphabeticKey(key: KeyboardData.Key?): Boolean {
-        val kv = key?.keys?.getOrNull(0)
-        if (kv == null) {
-            return false
-        }
-
-        if (kv.getKind() != KeyValue.Kind.Char) {
-            return false
-        }
-
-        val c = kv.getChar()
-        return c in 'a'..'z' || c in 'A'..'Z'
-    }
+    private fun isAlphabeticKey(key: KeyboardData.Key?): Boolean =
+        KeyLetter.centreLetterOf(key?.keys?.getOrNull(0)) != null
 
     /**
      * Helper class for key with distance
