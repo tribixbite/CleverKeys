@@ -13,6 +13,13 @@
   <!-- User dictionary access for word suggestions (system dictionary only) -->
   <uses-permission android:name="android.permission.READ_USER_DICTIONARY"/>
 
+  <!-- I-8: signature-protected permission gating the dynamically-registered debug-mode
+       (and playground log/result) receivers on API 24-25, where RECEIVER_NOT_EXPORTED
+       is unavailable. Only apps signed with this app's certificate can hold it, so a
+       third-party broadcast can no longer switch on playground swipe recording. -->
+  <permission android:name="tribixbite.cleverkeys.permission.SET_DEBUG_MODE" android:protectionLevel="signature"/>
+  <uses-permission android:name="tribixbite.cleverkeys.permission.SET_DEBUG_MODE"/>
+
   <!-- For Android 11+ (API 30+), use scoped storage via MediaStore or SAF (Storage Access Framework) -->
   <!-- No explicit permission needed for app-specific directories (getExternalFilesDir()) -->
 
