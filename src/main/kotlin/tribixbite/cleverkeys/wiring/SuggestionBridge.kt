@@ -29,8 +29,15 @@ class SuggestionBridge(
     private val inputCoordinator: InputCoordinator,
     private val contextTracker: PredictionContextTracker,
     private val predictionCoordinator: PredictionCoordinator?,
-    private val keyboardView: Keyboard2View
+    private val keyboardViewProvider: () -> Keyboard2View
 ) {
+    /**
+     * Audit A-2: late-bound view — theme changes replace the service's view instance, so a
+     * constructor-captured val would fire haptics on (and read the height of) the detached
+     * old view. Pinned by [KeyboardViewLateBindingDriftTest].
+     */
+    private val keyboardView: Keyboard2View get() = keyboardViewProvider()
+
     /**
      * Handle regular typing predictions (non-swipe).
      *
@@ -118,7 +125,7 @@ class SuggestionBridge(
          * @param inputCoordinator The input coordinator
          * @param contextTracker The prediction context tracker
          * @param predictionCoordinator The prediction coordinator
-         * @param keyboardView The keyboard view
+         * @param keyboardViewProvider Late-bound accessor for the service's CURRENT view (A-2)
          * @return A new SuggestionBridge instance
          */
         @JvmStatic
@@ -129,7 +136,7 @@ class SuggestionBridge(
             inputCoordinator: InputCoordinator,
             contextTracker: PredictionContextTracker,
             predictionCoordinator: PredictionCoordinator?,
-            keyboardView: Keyboard2View
+            keyboardViewProvider: () -> Keyboard2View
         ): SuggestionBridge {
             return SuggestionBridge(
                 keyboard2,
@@ -138,7 +145,7 @@ class SuggestionBridge(
                 inputCoordinator,
                 contextTracker,
                 predictionCoordinator,
-                keyboardView
+                keyboardViewProvider
             )
         }
     }

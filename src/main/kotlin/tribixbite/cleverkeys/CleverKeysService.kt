@@ -416,7 +416,10 @@ class CleverKeysService : InputMethodService(),
         // The read order below is the construction order — the graph's `by lazy` members
         // fire on first read, preserving the retired Initializers' exact sequence.
         val config = _config ?: return  // Early return if config not initialized
-        _graph = KeyboardComponentGraph(this, config, _keyboardView, _keyeventhandler, _handler, _receiverBridge)
+        // A-2: hand the graph a PROVIDER, not the view instance — onThemeChanged (and the
+        // stale-theme branch of onStartInputView) replace _keyboardView, and everything the
+        // graph wires (receiver, bridges, coordinators, propagator) must follow to the live view.
+        _graph = KeyboardComponentGraph(this, config, { _keyboardView }, _keyeventhandler, _handler, _receiverBridge)
 
         // Managers (first read constructs the whole cluster in dependency order)
         _contractionManager = _graph.contractionManager

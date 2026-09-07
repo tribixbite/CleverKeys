@@ -163,8 +163,16 @@ class InputCoordinator(
     private val contextTracker: PredictionContextTracker,
     private val predictionCoordinator: PredictionCoordinator,
     private var suggestionBar: SuggestionBar?,
-    private val keyboardView: Keyboard2View
+    private val keyboardViewProvider: () -> Keyboard2View
 ) {
+
+    /**
+     * Audit A-2: late-bound view — theme changes replace the service's view instance, so a
+     * constructor-captured val would read geometry from (and post haptics to) the detached
+     * old view after any theme change. Pinned by [KeyboardViewLateBindingDriftTest].
+     */
+    private val keyboardView: Keyboard2View get() = keyboardViewProvider()
+
     companion object {
         private const val TAG = "InputCoordinator"
 

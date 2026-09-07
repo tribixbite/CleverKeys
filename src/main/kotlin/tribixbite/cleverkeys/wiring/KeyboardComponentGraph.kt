@@ -39,11 +39,19 @@ import android.widget.LinearLayout
 class KeyboardComponentGraph(
     private val service: CleverKeysService,
     private val config: Config,
-    private val keyboardView: Keyboard2View,
+    private val keyboardViewProvider: () -> Keyboard2View,
     private val keyEventHandler: KeyEventHandler,
     private val handler: Handler,
     private val receiverBridge: KeyEventReceiverBridge,
 ) {
+
+    /**
+     * Audit A-2: the graph never captures the view instance. `onThemeChanged` and the
+     * stale-theme branch of `onStartInputView` replace the service's `_keyboardView`;
+     * everything the graph builds that needs the view gets the PROVIDER, so calls always
+     * resolve to the live view. Pinned by [KeyboardViewLateBindingDriftTest].
+     */
+    private val keyboardView: Keyboard2View get() = keyboardViewProvider()
 
     /**
      * The manager cluster (formerly `ManagerInitializer.InitializationResult`).
@@ -117,7 +125,7 @@ class KeyboardComponentGraph(
             contextTracker,
             predictionCoordinator,
             null, // suggestionBar created later
-            keyboardView
+            keyboardViewProvider
         )
 
         // Suggestion handler (v1.32.361)
@@ -180,7 +188,7 @@ class KeyboardComponentGraph(
             inputCoordinator,
             contextTracker,
             predictionCoordinator,
-            keyboardView
+            keyboardViewProvider
         )
     }
 
@@ -276,7 +284,7 @@ class KeyboardComponentGraph(
             .setSuggestionHandler(suggestionHandler)
             .setKeyboardDimensionsHelper(keyboardDimensionsHelper)
             .setLayoutManager(layoutManager)
-            .setKeyboardView(keyboardView)
+            .setKeyboardViewProvider(keyboardViewProvider)
             .setSubtypeManager(subtypeManager)
             .build()
     }
@@ -327,7 +335,7 @@ class KeyboardComponentGraph(
         } else if (defaultLayout != null) {
             // First call - initialize LayoutManager with default layout, plus its bridge
             layoutManager = LayoutManager(service, config, defaultLayout)
-            layoutBridge = LayoutBridge.create(layoutManager, keyboardView)
+            layoutBridge = LayoutBridge.create(layoutManager, keyboardViewProvider)
         } else {
             // defaultLayout is null - return null result
             layoutManager = null
@@ -364,7 +372,7 @@ class KeyboardComponentGraph(
         val newReceiver = KeyboardReceiver(
             service,
             service,
-            keyboardView,
+            keyboardViewProvider,
             layoutManager,
             clipboardManager,
             contextTracker,

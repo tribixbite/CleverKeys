@@ -19,8 +19,14 @@ package tribixbite.cleverkeys
  */
 class LayoutBridge(
     private val layoutManager: LayoutManager,
-    private val keyboardView: Keyboard2View
+    private val keyboardViewProvider: () -> Keyboard2View
 ) {
+    /**
+     * Audit A-2: late-bound view — theme changes replace the service's view instance, so a
+     * constructor-captured val would apply layouts to the detached old view forever after.
+     * Pinned by [KeyboardViewLateBindingDriftTest].
+     */
+    private val keyboardView: Keyboard2View get() = keyboardViewProvider()
     /**
      * Get the layout currently visible before it has been modified.
      *
@@ -110,15 +116,15 @@ class LayoutBridge(
          * Create a LayoutBridge.
          *
          * @param layoutManager The layout manager
-         * @param keyboardView The keyboard view
+         * @param keyboardViewProvider Late-bound accessor for the service's CURRENT view (A-2)
          * @return A new LayoutBridge instance
          */
         @JvmStatic
         fun create(
             layoutManager: LayoutManager,
-            keyboardView: Keyboard2View
+            keyboardViewProvider: () -> Keyboard2View
         ): LayoutBridge {
-            return LayoutBridge(layoutManager, keyboardView)
+            return LayoutBridge(layoutManager, keyboardViewProvider)
         }
     }
 }

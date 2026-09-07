@@ -49,10 +49,18 @@ class ConfigPropagator(
     private val suggestionHandler: SuggestionHandler?,
     private val keyboardDimensionsHelper: KeyboardDimensionsHelper?,
     private val layoutManager: LayoutManager?,
-    private val keyboardView: Keyboard2View?,
+    private val keyboardViewProvider: (() -> Keyboard2View)?,
     private val subtypeManager: SubtypeManager?
 ) {
     private var propagationProbe: ConfigPropagationProbe? = null
+
+    /**
+     * Audit A-2: late-bound view — theme changes replace the service's view instance, so a
+     * constructor-captured val would reset the detached OLD view on every subsequent config
+     * propagation while the live view kept its stale config. Pinned by
+     * [KeyboardViewLateBindingDriftTest].
+     */
+    private val keyboardView: Keyboard2View? get() = keyboardViewProvider?.invoke()
 
     internal constructor(
         clipboardManager: ClipboardManager?,
@@ -61,12 +69,12 @@ class ConfigPropagator(
         suggestionHandler: SuggestionHandler?,
         keyboardDimensionsHelper: KeyboardDimensionsHelper?,
         layoutManager: LayoutManager?,
-        keyboardView: Keyboard2View?,
+        keyboardViewProvider: (() -> Keyboard2View)?,
         subtypeManager: SubtypeManager?,
         propagationProbe: ConfigPropagationProbe
     ) : this(
         clipboardManager, predictionCoordinator, inputCoordinator, suggestionHandler,
-        keyboardDimensionsHelper, layoutManager, keyboardView, subtypeManager
+        keyboardDimensionsHelper, layoutManager, keyboardViewProvider, subtypeManager
     ) {
         this.propagationProbe = propagationProbe
     }
@@ -143,7 +151,7 @@ class ConfigPropagator(
         private var suggestionHandler: SuggestionHandler? = null
         private var keyboardDimensionsHelper: KeyboardDimensionsHelper? = null
         private var layoutManager: LayoutManager? = null
-        private var keyboardView: Keyboard2View? = null
+        private var keyboardViewProvider: (() -> Keyboard2View)? = null
         private var subtypeManager: SubtypeManager? = null
 
         fun setClipboardManager(manager: ClipboardManager?): Builder {
@@ -176,8 +184,9 @@ class ConfigPropagator(
             return this
         }
 
-        fun setKeyboardView(view: Keyboard2View?): Builder {
-            this.keyboardView = view
+        /** A-2: takes a late-bound provider, never a captured view instance. */
+        fun setKeyboardViewProvider(provider: (() -> Keyboard2View)?): Builder {
+            this.keyboardViewProvider = provider
             return this
         }
 
@@ -194,7 +203,7 @@ class ConfigPropagator(
                 suggestionHandler,
                 keyboardDimensionsHelper,
                 layoutManager,
-                keyboardView,
+                keyboardViewProvider,
                 subtypeManager
             )
         }

@@ -247,7 +247,7 @@ class GeometricSwipeOracleTest {
             context, config, contextTracker, predCoord, contractionManager, keyEventHandler
         ).apply { setSuggestionBar(bar) }
         val inputCoordinator = InputCoordinator(
-            context, config, contextTracker, predCoord, bar, kbView
+            context, config, contextTracker, predCoord, bar, { kbView }
         )
         inputCoordinator.setSwipeResultDelegate(suggestionHandler)
         inputCoordinator.setCursorSyncDelegate(suggestionHandler)

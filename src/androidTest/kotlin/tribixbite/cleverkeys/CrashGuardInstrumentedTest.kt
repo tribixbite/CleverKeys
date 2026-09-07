@@ -172,7 +172,7 @@ class CrashGuardInstrumentedTest {
         assertSame("setSuggestionHandler must return this", builder, builder.setSuggestionHandler(null))
         assertSame("setKeyboardDimensionsHelper must return this", builder, builder.setKeyboardDimensionsHelper(null))
         assertSame("setLayoutManager must return this", builder, builder.setLayoutManager(null))
-        assertSame("setKeyboardView must return this", builder, builder.setKeyboardView(null))
+        assertSame("setKeyboardViewProvider must return this", builder, builder.setKeyboardViewProvider(null))
         assertSame("setSubtypeManager must return this", builder, builder.setSubtypeManager(null))
 
         // `builder()` is a factory, not a shared singleton — two callers configuring

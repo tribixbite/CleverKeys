@@ -219,7 +219,7 @@ class PipelineCharacterizationTest {
         ).apply { setSuggestionBar(bar) }
 
         val inputCoordinator = InputCoordinator(
-            context, config, contextTracker, predCoord, bar, keyboardView
+            context, config, contextTracker, predCoord, bar, { keyboardView }
         )
         // WP9 R-1 steps 4-6: wire the unified delegates exactly as KeyboardComponentGraph does in
         // production. MANDATORY since step 6 — IC has no fallback pipelines.
