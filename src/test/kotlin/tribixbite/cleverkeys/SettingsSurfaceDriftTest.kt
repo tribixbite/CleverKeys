@@ -122,20 +122,27 @@ class SettingsSurfaceDriftTest {
     /**
      * SETTINGS_DEFAULTS keys that NOTHING in src/main writes. These gate real
      * behavior but are permanently at defaults for anyone who doesn't
-     * hand-edit a backup file. Whether to surface controls for them or
-     * reclassify them as internal is a deferred product decision
-     * (audit F-8, §Deferred) — this pin only stops the class from GROWING.
+     * hand-edit a backup file.
+     *
+     * Maintainer decision 2026-09-08 (F-8 fork resolved): "surface all except
+     * error collection". The four surfaceable keys got real controls —
+     * `clipboard_media_enabled` + `clipboard_max_media_size_mb` (Clipboard
+     * section), `show_exact_typed_word` (Input Behavior), `scale_numpad_height`
+     * (Appearance) — so every SETTINGS_DEFAULTS key except the one pinned
+     * below now has a writer. This pin is the ratchet in both directions: a
+     * NEW writerless key is the F-8 class growing back, and a key listed here
+     * gaining a writer means the pin (and the decision record) must move.
      */
     @Test
     fun writerlessSettingsKeys_arePinnedExactly() {
         val knownWriterless = setOf(
-            // The three F-8 keys the audit recorded (surface choice deferred):
-            "clipboard_media_enabled",      // gates media capture (ClipboardHistoryService)
-            "clipboard_max_media_size_mb",  // media size cap (Config coerceIn(1, 50))
-            "show_exact_typed_word",        // #42 exact-typed-word suggestion (SuggestionHandler)
-            // Same class, recorded by this scan (2026-09-06, W5):
-            "privacy_collect_errors",       // read by PrivacyManager.isErrorCollectionEnabled
-            "scale_numpad_height",          // read by Config.refresh → Theme numpad height
+            // DELIBERATELY writerless (maintainer decision 2026-09-08): error
+            // collection stays unsurfaced — no Settings control is wanted. The
+            // key stays live (not deprecated) so today's runtime behavior is
+            // exactly preserved: PrivacyManager.canCollectErrorLogs keeps
+            // reading it (default false), and a backup that carries `true`
+            // still enables collection on import, exactly as before.
+            "privacy_collect_errors",
             // clipboard_pinned_rows left this set 2026-09-07: ClipboardPinView (its
             // only reader) was deleted by D-9, so the key moved to DEPRECATED_KEYS.
         )
@@ -168,6 +175,53 @@ class SettingsSurfaceDriftTest {
             "Writerless SETTINGS_DEFAULTS keys drifted from the documented set — a new key with " +
                 "a runtime reader but no control is the F-8 class; surface it or reclassify it"
         ).that(writerless).containsExactlyElementsIn(knownWriterless.toSortedSet())
+    }
+
+    // ── D-1: the password-manager exclusion may not promise what it cannot do ──
+
+    /**
+     * D-1 (comprehensive audit 2026-09-06; maintainer decision 2026-09-08:
+     * "reword", PACKAGE_USAGE_STATS stays undeclared). The old description —
+     * "Don't store clipboard from Bitwarden, 1Password, LastPass, KeePass,
+     * etc." — promised an unconditional exclusion, but the mechanism is
+     * foreground-app detection via UsageStats, which needs the
+     * PACKAGE_USAGE_STATS app-op the manifest deliberately never declares:
+     * detection returns null on effectively every device and the exclusion
+     * fails open. The wording must describe the mechanism that actually
+     * exists (best-effort detection, reliable protection = the IS_SENSITIVE
+     * setting below it) and must never regress to the promise.
+     */
+    @Test
+    fun passwordManagerExclusion_wordingDoesNotOverpromise() {
+        val descRegex = Regex(
+            """<string name="clipboard_exclude_password_managers_desc">([^<]*)</string>"""
+        )
+        val en = descRegex.find(File("res/values/strings.xml").readText())?.groupValues?.get(1)
+        checkNotNull(en) {
+            "clipboard_exclude_password_managers_desc missing from res/values/strings.xml — " +
+                "re-point this pin, don't delete it."
+        }
+        assertWithMessage(
+            "the reworded description must say the exclusion is best-effort (audit D-1)"
+        ).that(en.lowercase()).contains("best effort")
+        assertWithMessage(
+            "the description must not promise unconditional exclusion again"
+        ).that(en).doesNotContain("Don\\'t store clipboard from")
+
+        // Cross-locale: the old string named the same app list verbatim in every
+        // translation, so the app names are a reliable marker of the pre-reword
+        // promise surviving in any locale.
+        val localeFiles = File("res").listFiles { f ->
+            f.isDirectory && f.name.startsWith("values")
+        }!!.mapNotNull { dir -> File(dir, "strings.xml").takeIf { it.isFile } }
+        check(localeFiles.size >= 22) { "Locale scan found ${localeFiles.size} strings.xml — expected 22." }
+        for (file in localeFiles) {
+            val desc = descRegex.find(file.readText())?.groupValues?.get(1) ?: continue
+            assertWithMessage(
+                "${file.parentFile.name}: the old wording promised per-app exclusion " +
+                    "(named app list) — the reword must land in every locale"
+            ).that(desc).doesNotContain("Bitwarden")
+        }
     }
 
     // ── F-9: every navigation helper needs a caller ──

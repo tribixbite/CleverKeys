@@ -165,4 +165,31 @@ class SettingsRangeDriftTest {
     fun sliderSensitivityFloor_isAboveZero() {
         assertThat(SettingsRanges.SLIDER_SENSITIVITY_PERCENT.first).isAtLeast(1)
     }
+
+    // ── F-8 (maintainer decision 2026-09-08): clipboard_max_media_size_mb is
+    //    surfaced, so it joins the shared-range ratchet — the new slider, the
+    //    import validator and the Config read-site clamp must all consume ONE
+    //    constant instead of restating 1..50 three times ──
+
+    @Test
+    fun clipboardMaxMediaSize_allSites_consumeSharedRange() {
+        assertSiteReferences("ui/settings/sections/ClipboardSection.kt", "CLIPBOARD_MAX_MEDIA_SIZE_MB")
+        assertWithMessage("SettingsValidation must consume SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB")
+            .that(read("backup/SettingsValidation.kt"))
+            .contains("SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB")
+        assertWithMessage("Config.refresh must clamp through SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB")
+            .that(read("Config.kt")).contains("SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB")
+    }
+
+    @Test
+    fun clipboardMaxMediaSize_validatorRange_matchesTheHistoricConfigClamp() {
+        // Config.refresh has always enforced coerceIn(1, 50) at the read site;
+        // the shared constant (and therefore the validator table and the new
+        // slider) must carry exactly that value so no stored value changes
+        // meaning. Written against the literal deliberately: it pins the
+        // VALUE, not merely that the three sites agree with each other.
+        assertWithMessage("clipboard_max_media_size_mb must validate over the historic 1..50 clamp")
+            .that(SettingsValidation.intRangeFor("clipboard_max_media_size_mb"))
+            .isEqualTo(1..50)
+    }
 }

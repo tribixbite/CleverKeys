@@ -45,6 +45,19 @@ internal fun SettingsActivity.AppearanceSection() {
                     displayValue = "$keyboardHeightLandscape%"
                 )
 
+                // F-8 / #58 (maintainer decision 2026-09-08): scale_numpad_height had a
+                // live reader (Config.refresh → Theme row height for numeric layouts)
+                // but no control — permanently at its default for everyone.
+                SettingsSwitch(
+                    title = stringResource(R.string.appearance_scale_numpad_title),
+                    description = stringResource(R.string.appearance_scale_numpad_desc),
+                    checked = scaleNumpadHeight,
+                    onCheckedChange = {
+                        scaleNumpadHeight = it
+                        saveSetting("scale_numpad_height", it)
+                    }
+                )
+
                 SettingsSlider(
                     title = stringResource(R.string.appearance_bottom_margin_portrait_title),
                     description = stringResource(R.string.appearance_bottom_margin_portrait_desc),

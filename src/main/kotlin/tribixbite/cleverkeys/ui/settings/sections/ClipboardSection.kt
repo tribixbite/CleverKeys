@@ -207,6 +207,39 @@ internal fun SettingsActivity.ClipboardSection() {
                     }
                 )
 
+                // F-8 (maintainer decision 2026-09-08: "surface all except error
+                // collection"): media capture had live readers
+                // (ClipboardHistoryService + Config) but no control — permanently
+                // at defaults unless a backup file was hand-edited. DISABLED (not
+                // hidden) while text-only display is on, which wins at the capture
+                // site (audit 2026-08-26 convention).
+                SettingsSwitch(
+                    title = stringResource(R.string.clipboard_media_enabled_title),
+                    description = stringResource(R.string.clipboard_media_enabled_desc),
+                    checked = clipboardMediaEnabled,
+                    enabled = !clipboardTextOnly,
+                    onCheckedChange = {
+                        clipboardMediaEnabled = it
+                        saveSetting("clipboard_media_enabled", it)
+                    }
+                )
+
+                SettingsSlider(
+                    title = stringResource(R.string.clipboard_max_media_size_title),
+                    description = stringResource(R.string.clipboard_max_media_size_desc),
+                    value = clipboardMaxMediaSizeMb.toFloat(),
+                    // F-8: shared with the import validator + Config clamp (SettingsRanges).
+                    valueRange = SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.first.toFloat()..
+                        SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.last.toFloat(),
+                    steps = 48,  // 1..50 in 1 MB increments
+                    enabled = clipboardMediaEnabled && !clipboardTextOnly,
+                    onValueChange = {
+                        clipboardMaxMediaSizeMb = it.toInt()
+                        saveSetting("clipboard_max_media_size_mb", clipboardMaxMediaSizeMb)
+                    },
+                    displayValue = "$clipboardMaxMediaSizeMb MB"
+                )
+
                 SettingsSwitch(
                     title = stringResource(R.string.clipboard_pinned_tab_title),
                     description = stringResource(R.string.clipboard_pinned_tab_desc),

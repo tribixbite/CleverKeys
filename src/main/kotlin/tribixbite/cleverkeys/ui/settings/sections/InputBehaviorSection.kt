@@ -103,6 +103,19 @@ internal fun SettingsActivity.InputBehaviorSection() {
                         }
                     )
 
+                    // F-8 / #42 (maintainer decision 2026-09-08): the exact-typed-word
+                    // suggestion had a live reader (SuggestionHandler) but no control.
+                    SettingsSwitch(
+                        title = stringResource(R.string.input_show_exact_typed_title),
+                        description = stringResource(R.string.input_show_exact_typed_desc),
+                        checked = showExactTypedWord,
+                        onCheckedChange = {
+                            showExactTypedWord = it
+                            saveSetting("show_exact_typed_word", it)
+                            Config.globalConfig()?.show_exact_typed_word = it
+                        }
+                    )
+
                     // #110: Backspace undo swipe — delete entire swiped word on immediate backspace
                     if (swipeTypingEnabled) {
                         SettingsSwitch(
