@@ -871,7 +871,7 @@
     <string name="import_preview_diff_unchanged">(%1$d beze změny)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">Mapování krátkých tahů v této záloze: %1$d</item><item quantity="few">Mapování krátkých tahů v této záloze: %1$d</item><item quantity="many">Mapování krátkých tahů v této záloze: %1$d</item><item quantity="other">Mapování krátkých tahů v této záloze: %1$d</item></plurals>
     <string name="import_preview_short_swipe_skip">Přeskočit — neimportovat</string>
-    <string name="import_preview_short_swipe_merge">Sloučit — doplní mezery, zachová stávající (doporučeno)</string>
+    <string name="import_preview_short_swipe_merge">Sloučit — při konfliktu vyhrává soubor, ostatní zůstávají (doporučeno)</string>
     <string name="import_preview_short_swipe_replace">Nahradit — smaže stávající, nainstaluje sadu ze souboru</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováním ze souboru.</item><item quantity="few">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováními ze souboru.</item><item quantity="many">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováními ze souboru.</item><item quantity="other">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováními ze souboru.</item></plurals>
     <string name="import_preview_selected_count">Vybráno %1$d z %2$d</string>

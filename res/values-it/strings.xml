@@ -911,7 +911,7 @@
     <string name="import_preview_diff_unchanged">(%1$d invariate)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d mappatura di scorrimento breve in questo backup</item><item quantity="many">%1$d mappature di scorrimento breve in questo backup</item><item quantity="other">%1$d mappature di scorrimento breve in questo backup</item></plurals>
     <string name="import_preview_short_swipe_skip">Salta — non importare</string>
-    <string name="import_preview_short_swipe_merge">Unisci — riempi i vuoti, conserva l\'esistente (consigliato)</string>
+    <string name="import_preview_short_swipe_merge">Unisci — in caso di conflitto vince il file, il resto è conservato (consigliato)</string>
     <string name="import_preview_short_swipe_replace">Sostituisci — cancella l\'esistente, installa il set del file</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Questo SOSTITUIRÀ tutte le tue personalizzazioni di scorrimento breve esistenti con %1$d mappatura del file.</item><item quantity="many">Questo SOSTITUIRÀ tutte le tue personalizzazioni di scorrimento breve esistenti con le %1$d mappature del file.</item><item quantity="other">Questo SOSTITUIRÀ tutte le tue personalizzazioni di scorrimento breve esistenti con le %1$d mappature del file.</item></plurals>
     <string name="import_preview_selected_count">%1$d di %2$d selezionate</string>

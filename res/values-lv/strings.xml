@@ -882,7 +882,7 @@
     <string name="import_preview_diff_unchanged">(%1$d nemainīti)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="zero">Šajā dublējumā ir %1$d īso vilkumu piešķīrumu</item><item quantity="one">Šajā dublējumā ir %1$d īsā vilkuma piešķīrums</item><item quantity="other">Šajā dublējumā ir %1$d īso vilkumu piešķīrumi</item></plurals>
     <string name="import_preview_short_swipe_skip">Izlaist — neimportēt</string>
-    <string name="import_preview_short_swipe_merge">Apvienot — aizpildīt tukšumus, saglabāt esošos (ieteicams)</string>
+    <string name="import_preview_short_swipe_merge">Apvienot — konfliktā uzvar fails, pārējie saglabājas (ieteicams)</string>
     <string name="import_preview_short_swipe_replace">Aizstāt — dzēst esošos, instalēt faila kopu</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="zero">Tas AIZSTĀS visus jūsu esošos īso vilkumu pielāgojumus ar faila %1$d piešķīrumiem.</item><item quantity="one">Tas AIZSTĀS visus jūsu esošos īso vilkumu pielāgojumus ar faila %1$d piešķīrumu.</item><item quantity="other">Tas AIZSTĀS visus jūsu esošos īso vilkumu pielāgojumus ar faila %1$d piešķīrumiem.</item></plurals>
     <string name="import_preview_selected_count">Atlasīti %1$d no %2$d</string>

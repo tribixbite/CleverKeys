@@ -910,7 +910,7 @@
     <string name="import_preview_diff_unchanged">(%1$d بدون تغییر)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d نگاشت کشیدن کوتاه در این پشتیبان</item><item quantity="other">%1$d نگاشت کشیدن کوتاه در این پشتیبان</item></plurals>
     <string name="import_preview_short_swipe_skip">رد شدن — وارد نکن</string>
-    <string name="import_preview_short_swipe_merge">ادغام — پر کردن جاهای خالی، حفظ موجود (توصیه‌شده)</string>
+    <string name="import_preview_short_swipe_merge">ادغام — در تعارض فایل برنده است، بقیه حفظ می‌شود (توصیه‌شده)</string>
     <string name="import_preview_short_swipe_replace">جایگزینی — پاک کردن موجود، نصب مجموعهٔ فایل</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">این کار همهٔ سفارشی‌سازی‌های کشیدن کوتاه موجود شما را با %1$d نگاشت فایل جایگزین می‌کند.</item><item quantity="other">این کار همهٔ سفارشی‌سازی‌های کشیدن کوتاه موجود شما را با %1$d نگاشت فایل جایگزین می‌کند.</item></plurals>
     <string name="import_preview_selected_count">%1$d از %2$d انتخاب شده</string>

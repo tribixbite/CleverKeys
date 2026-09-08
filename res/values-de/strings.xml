@@ -891,7 +891,7 @@
     <string name="import_preview_diff_unchanged">(%1$d unverändert)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d Kurzwisch-Zuordnung in dieser Sicherung</item><item quantity="other">%1$d Kurzwisch-Zuordnungen in dieser Sicherung</item></plurals>
     <string name="import_preview_short_swipe_skip">Überspringen — nicht importieren</string>
-    <string name="import_preview_short_swipe_merge">Zusammenführen — Lücken füllen, Vorhandenes bewahren (empfohlen)</string>
+    <string name="import_preview_short_swipe_merge">Zusammenführen — bei Konflikt gewinnt die Datei, Übriges bleibt (empfohlen)</string>
     <string name="import_preview_short_swipe_replace">Ersetzen — Vorhandenes löschen, Satz aus der Datei installieren</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Dies ERSETZT alle Ihre vorhandenen Kurzwisch-Anpassungen durch die %1$d Zuordnung der Datei.</item><item quantity="other">Dies ERSETZT alle Ihre vorhandenen Kurzwisch-Anpassungen durch die %1$d Zuordnungen der Datei.</item></plurals>
     <string name="import_preview_selected_count">%1$d von %2$d ausgewählt</string>

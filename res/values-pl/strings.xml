@@ -881,7 +881,7 @@
     <string name="import_preview_diff_unchanged">(%1$d bez zmian)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d mapowanie krótkich gestów w tej kopii zapasowej</item><item quantity="few">%1$d mapowania krótkich gestów w tej kopii zapasowej</item><item quantity="many">%1$d mapowań krótkich gestów w tej kopii zapasowej</item><item quantity="other">%1$d mapowań krótkich gestów w tej kopii zapasowej</item></plurals>
     <string name="import_preview_short_swipe_skip">Pomiń — nie importuj</string>
-    <string name="import_preview_short_swipe_merge">Scal — uzupełnij braki, zachowaj istniejące (zalecane)</string>
+    <string name="import_preview_short_swipe_merge">Scal — przy konflikcie wygrywa plik, reszta zostaje (zalecane)</string>
     <string name="import_preview_short_swipe_replace">Zastąp — usuń istniejące, zainstaluj zestaw z pliku</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniem z pliku.</item><item quantity="few">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniami z pliku.</item><item quantity="many">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniami z pliku.</item><item quantity="other">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniami z pliku.</item></plurals>
     <string name="import_preview_selected_count">Wybrano %1$d z %2$d</string>

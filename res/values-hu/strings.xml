@@ -877,7 +877,7 @@
     <string name="import_preview_diff_unchanged">(%1$d változatlan)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d rövidcsúsztatás-leképezés ebben a mentésben</item><item quantity="other">%1$d rövidcsúsztatás-leképezés ebben a mentésben</item></plurals>
     <string name="import_preview_short_swipe_skip">Kihagyás — ne importálja</string>
-    <string name="import_preview_short_swipe_merge">Egyesítés — hiányok pótlása, meglévők megőrzése (ajánlott)</string>
+    <string name="import_preview_short_swipe_merge">Egyesítés — ütközésnél a fájl nyer, a többi megmarad (ajánlott)</string>
     <string name="import_preview_short_swipe_replace">Csere — meglévők törlése, a fájl készletének telepítése</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Ez LECSERÉLI az összes meglévő rövid csúsztatási testreszabását a fájl %1$d leképezésére.</item><item quantity="other">Ez LECSERÉLI az összes meglévő rövid csúsztatási testreszabását a fájl %1$d leképezésére.</item></plurals>
     <string name="import_preview_selected_count">%1$d/%2$d kiválasztva</string>

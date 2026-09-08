@@ -883,7 +883,7 @@
     <string name="import_preview_diff_unchanged">(%1$d değişmedi)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">Bu yedekte %1$d kısa kaydırma eşlemesi var</item><item quantity="other">Bu yedekte %1$d kısa kaydırma eşlemesi var</item></plurals>
     <string name="import_preview_short_swipe_skip">Atla — içe aktarma</string>
-    <string name="import_preview_short_swipe_merge">Birleştir — boşlukları doldur, mevcut olanları koru (önerilen)</string>
+    <string name="import_preview_short_swipe_merge">Birleştir — çakışmada dosya kazanır, diğerleri korunur (önerilen)</string>
     <string name="import_preview_short_swipe_replace">Değiştir — mevcut olanları sil, dosyadaki kümeyi yükle</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Bu, mevcut tüm kısa kaydırma özelleştirmelerinizi dosyadaki %1$d eşlemeyle DEĞİŞTİRİR.</item><item quantity="other">Bu, mevcut tüm kısa kaydırma özelleştirmelerinizi dosyadaki %1$d eşlemeyle DEĞİŞTİRİR.</item></plurals>
     <string name="import_preview_selected_count">%2$d öğeden %1$d tanesi seçili</string>

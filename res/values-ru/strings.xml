@@ -877,7 +877,7 @@
     <string name="import_preview_diff_unchanged">(%1$d без изменений)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">Назначений коротких свайпов в этой резервной копии: %1$d</item><item quantity="few">Назначений коротких свайпов в этой резервной копии: %1$d</item><item quantity="many">Назначений коротких свайпов в этой резервной копии: %1$d</item><item quantity="other">Назначений коротких свайпов в этой резервной копии: %1$d</item></plurals>
     <string name="import_preview_short_swipe_skip">Пропустить — не импортировать</string>
-    <string name="import_preview_short_swipe_merge">Объединить — заполнить пробелы, сохранить существующие (рекомендуется)</string>
+    <string name="import_preview_short_swipe_merge">Объединить — при конфликте побеждает файл, остальное сохраняется (рекомендуется)</string>
     <string name="import_preview_short_swipe_replace">Заменить — стереть существующие, установить набор из файла</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item><item quantity="few">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item><item quantity="many">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item><item quantity="other">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item></plurals>
     <string name="import_preview_selected_count">Выбрано %1$d из %2$d</string>

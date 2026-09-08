@@ -889,7 +889,7 @@
     <string name="import_preview_diff_unchanged">(%1$d sin cambios)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d asignación de deslizamiento corto en esta copia</item><item quantity="many">%1$d asignaciones de deslizamiento corto en esta copia</item><item quantity="other">%1$d asignaciones de deslizamiento corto en esta copia</item></plurals>
     <string name="import_preview_short_swipe_skip">Omitir — no importar</string>
-    <string name="import_preview_short_swipe_merge">Combinar — rellena huecos, conserva lo existente (recomendado)</string>
+    <string name="import_preview_short_swipe_merge">Combinar — en conflicto gana el archivo, el resto se conserva (recomendado)</string>
     <string name="import_preview_short_swipe_replace">Reemplazar — borra lo existente, instala el conjunto del archivo</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Esto REEMPLAZARÁ todas tus personalizaciones de deslizamiento corto por la %1$d asignación del archivo.</item><item quantity="many">Esto REEMPLAZARÁ todas tus personalizaciones de deslizamiento corto por las %1$d asignaciones del archivo.</item><item quantity="other">Esto REEMPLAZARÁ todas tus personalizaciones de deslizamiento corto por las %1$d asignaciones del archivo.</item></plurals>
     <string name="import_preview_selected_count">%1$d de %2$d seleccionadas</string>

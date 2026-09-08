@@ -884,7 +884,7 @@
     <string name="import_preview_diff_unchanged">(%1$d hindi binago)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d short-swipe mapping sa backup na ito</item><item quantity="other">%1$d short-swipe mapping sa backup na ito</item></plurals>
     <string name="import_preview_short_swipe_skip">Laktawan — huwag i-import</string>
-    <string name="import_preview_short_swipe_merge">I-merge — punan ang mga puwang, panatilihin ang umiiral (inirerekomenda)</string>
+    <string name="import_preview_short_swipe_merge">I-merge — mananaig ang file sa salungatan, mananatili ang iba (inirerekomenda)</string>
     <string name="import_preview_short_swipe_replace">Palitan — burahin ang umiiral, i-install ang set ng file</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">PAPALITAN nito ang lahat ng iyong umiiral na short-swipe customization ng %1$d mapping ng file.</item><item quantity="other">PAPALITAN nito ang lahat ng iyong umiiral na short-swipe customization ng %1$d mapping ng file.</item></plurals>
     <string name="import_preview_selected_count">%1$d sa %2$d ang napili</string>

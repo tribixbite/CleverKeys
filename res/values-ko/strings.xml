@@ -871,7 +871,7 @@
     <string name="import_preview_diff_unchanged">(%1$d 변경 없음)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="other">이 백업에 짧은 스와이프 매핑 %1$d개가 있습니다</item></plurals>
     <string name="import_preview_short_swipe_skip">건너뛰기 — 가져오지 않음</string>
-    <string name="import_preview_short_swipe_merge">병합 — 빈 곳만 채우고 기존 유지(권장)</string>
+    <string name="import_preview_short_swipe_merge">병합 — 충돌 시 파일 우선, 나머지는 유지(권장)</string>
     <string name="import_preview_short_swipe_replace">교체 — 기존을 지우고 파일의 세트 설치</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="other">기존의 모든 짧은 스와이프 사용자 지정이 파일의 매핑 %1$d개로 교체됩니다.</item></plurals>
     <string name="import_preview_selected_count">%2$d개 중 %1$d개 선택됨</string>

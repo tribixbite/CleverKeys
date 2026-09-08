@@ -823,7 +823,7 @@
     <string name="import_preview_selected_count">Đã chọn %1$d trong %2$d</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="other">%1$d ánh xạ vuốt ngắn trong bản sao lưu này</item></plurals>
     <string name="import_preview_short_swipe_header">Tùy chỉnh vuốt ngắn</string>
-    <string name="import_preview_short_swipe_merge">Gộp — bổ sung chỗ thiếu, giữ cái hiện có (khuyên dùng)</string>
+    <string name="import_preview_short_swipe_merge">Gộp — khi xung đột tệp thắng, phần còn lại được giữ (khuyên dùng)</string>
     <string name="import_preview_short_swipe_replace">Thay thế — xóa cái hiện có, cài bộ trong tệp</string>
     <string name="import_preview_short_swipe_skip">Bỏ qua — không nhập</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="other">Thao tác này sẽ THAY THẾ toàn bộ tùy chỉnh vuốt ngắn hiện có của bạn bằng %1$d ánh xạ trong tệp.</item></plurals>

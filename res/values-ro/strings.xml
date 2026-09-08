@@ -899,7 +899,7 @@
     <string name="import_preview_diff_unchanged">(%1$d neschimbate)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d mapare de glisare scurtă în acest backup</item><item quantity="few">%1$d mapări de glisare scurtă în acest backup</item><item quantity="other">%1$d de mapări de glisare scurtă în acest backup</item></plurals>
     <string name="import_preview_short_swipe_skip">Omite — nu importa</string>
-    <string name="import_preview_short_swipe_merge">Îmbină — completează golurile, păstrează existentul (recomandat)</string>
+    <string name="import_preview_short_swipe_merge">Îmbină — la conflict câștigă fișierul, restul se păstrează (recomandat)</string>
     <string name="import_preview_short_swipe_replace">Înlocuiește — șterge existentul, instalează setul din fișier</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Aceasta va ÎNLOCUI toate personalizările dvs. de glisare scurtă cu %1$d mapare din fișier.</item><item quantity="few">Aceasta va ÎNLOCUI toate personalizările dvs. de glisare scurtă cu cele %1$d mapări din fișier.</item><item quantity="other">Aceasta va ÎNLOCUI toate personalizările dvs. de glisare scurtă cu cele %1$d de mapări din fișier.</item></plurals>
     <string name="import_preview_selected_count">%1$d din %2$d selectate</string>

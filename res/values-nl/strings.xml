@@ -871,7 +871,7 @@
     <string name="import_preview_diff_unchanged">(%1$d ongewijzigd)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d korte-veegtoewijzing in deze back-up</item><item quantity="other">%1$d korte-veegtoewijzingen in deze back-up</item></plurals>
     <string name="import_preview_short_swipe_skip">Overslaan — niet importeren</string>
-    <string name="import_preview_short_swipe_merge">Samenvoegen — hiaten vullen, bestaande behouden (aanbevolen)</string>
+    <string name="import_preview_short_swipe_merge">Samenvoegen — bij conflict wint het bestand, de rest blijft (aanbevolen)</string>
     <string name="import_preview_short_swipe_replace">Vervangen — bestaande wissen, set uit het bestand installeren</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Dit VERVANGT al je bestaande korte-veegaanpassingen door de %1$d toewijzing uit het bestand.</item><item quantity="other">Dit VERVANGT al je bestaande korte-veegaanpassingen door de %1$d toewijzingen uit het bestand.</item></plurals>
     <string name="import_preview_selected_count">%1$d van %2$d geselecteerd</string>

@@ -806,7 +806,7 @@
     <string name="import_preview_selected_count">Вибрано %1$d з %2$d</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">Зіставлень коротких свайпів у цій копії: %1$d</item><item quantity="few">Зіставлень коротких свайпів у цій копії: %1$d</item><item quantity="many">Зіставлень коротких свайпів у цій копії: %1$d</item><item quantity="other">Зіставлень коротких свайпів у цій копії: %1$d</item></plurals>
     <string name="import_preview_short_swipe_header">Налаштування коротких свайпів</string>
-    <string name="import_preview_short_swipe_merge">Злити — заповнити прогалини, зберегти наявні (рекомендовано)</string>
+    <string name="import_preview_short_swipe_merge">Злити — у разі конфлікту перемагає файл, решта зберігається (рекомендовано)</string>
     <string name="import_preview_short_swipe_replace">Замінити — стерти наявні, встановити набір із файлу</string>
     <string name="import_preview_short_swipe_skip">Пропустити — не імпортувати</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленням з файлу.</item><item quantity="few">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item><item quantity="many">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item><item quantity="other">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item></plurals>

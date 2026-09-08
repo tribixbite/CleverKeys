@@ -871,7 +871,7 @@
     <string name="import_preview_diff_unchanged">(%1$d inalteradas)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d mapeamento de deslize curto neste backup</item><item quantity="many">%1$d mapeamentos de deslize curto neste backup</item><item quantity="other">%1$d mapeamentos de deslize curto neste backup</item></plurals>
     <string name="import_preview_short_swipe_skip">Ignorar — não importar</string>
-    <string name="import_preview_short_swipe_merge">Mesclar — preencher lacunas, preservar existentes (recomendado)</string>
+    <string name="import_preview_short_swipe_merge">Mesclar — em conflito o arquivo vence, o resto é mantido (recomendado)</string>
     <string name="import_preview_short_swipe_replace">Substituir — apagar existentes, instalar o conjunto do arquivo</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Isso SUBSTITUIRÁ todas as suas personalizações de deslize curto pelo %1$d mapeamento do arquivo.</item><item quantity="many">Isso SUBSTITUIRÁ todas as suas personalizações de deslize curto pelos %1$d mapeamentos do arquivo.</item><item quantity="other">Isso SUBSTITUIRÁ todas as suas personalizações de deslize curto pelos %1$d mapeamentos do arquivo.</item></plurals>
     <string name="import_preview_selected_count">%1$d de %2$d selecionados</string>

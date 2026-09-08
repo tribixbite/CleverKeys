@@ -1237,7 +1237,7 @@
         <item quantity="other">%1$d short-swipe mappings in this backup</item>
     </plurals>
     <string name="import_preview_short_swipe_skip">Skip — don\'t import</string>
-    <string name="import_preview_short_swipe_merge">Merge — fill gaps, preserve existing (recommended)</string>
+    <string name="import_preview_short_swipe_merge">Merge — file wins on conflicts, other mappings kept (recommended)</string>
     <string name="import_preview_short_swipe_replace">Replace — wipe existing, install file\'s set</string>
     <!-- %1$d = mappings in the file that would overwrite everything the user has -->
     <plurals name="import_preview_short_swipe_warning">

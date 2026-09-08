@@ -883,7 +883,7 @@
     <string name="import_preview_diff_unchanged">(%1$d tidak berubah)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="other">%1$d pemetaan geser pendek dalam cadangan ini</item></plurals>
     <string name="import_preview_short_swipe_skip">Lewati — jangan impor</string>
-    <string name="import_preview_short_swipe_merge">Gabung — isi kekosongan, pertahankan yang ada (disarankan)</string>
+    <string name="import_preview_short_swipe_merge">Gabung — saat konflik file menang, lainnya dipertahankan (disarankan)</string>
     <string name="import_preview_short_swipe_replace">Ganti — hapus yang ada, pasang set dari file</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="other">Ini akan MENGGANTI semua kustomisasi geser pendek Anda dengan %1$d pemetaan dari file.</item></plurals>
     <string name="import_preview_selected_count">%1$d dari %2$d dipilih</string>
