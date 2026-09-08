@@ -267,7 +267,10 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
      * Import mappings from JSON string.
      *
      * @param json The JSON string to import
-     * @param merge If true, merge with existing mappings; if false, replace all
+     * @param merge If true, merge with existing mappings — on a key+direction collision
+     *   the IMPORTED mapping wins, non-colliding existing mappings survive (G-3,
+     *   maintainer decision 2026-09-08; collisions are surfaced beforehand as `changed`
+     *   rows in the import-preview diff). If false, replace all.
      * @return Number of mappings imported
      */
     suspend fun importFromJson(json: String, merge: Boolean = false): Int {
@@ -292,6 +295,8 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
                     mappingCache.clear()
                 }
                 mappingList.forEach { mapping ->
+                    // G-3 (decided 2026-09-08): unconditional put — in merge mode an
+                    // imported mapping WINS a key+direction collision with a local one.
                     mappingCache[mapping.toStorageKey()] = mapping
                 }
                 saveMappingsLocked()
@@ -308,7 +313,9 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
      * Import mappings from a list of ShortSwipeMapping objects.
      *
      * @param mappings The list of mappings to import
-     * @param merge If true, merge with existing mappings; if false, replace all
+     * @param merge If true, merge with existing mappings — imported mappings win
+     *   key+direction collisions, non-colliding existing mappings survive (G-3, same
+     *   semantics as [importFromJson]). If false, replace all.
      * @return Number of mappings imported
      */
     suspend fun importFromMappings(mappings: List<ShortSwipeMapping>, merge: Boolean = false): Int {

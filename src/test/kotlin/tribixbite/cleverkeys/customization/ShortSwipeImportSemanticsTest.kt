@@ -36,8 +36,13 @@ import tribixbite.cleverkeys.backup.SettingsImportPlanBuilder
  *     touching the existing set — destroying data for an import that delivers nothing
  *     is never right.
  *
- * (G-3, the merge-collision semantics — file-wins vs existing-wins — is a deferred
- * maintainer decision and deliberately NOT pinned here.)
+ *  3. **G-3 (maintainer decision 2026-09-08): merge collisions are IMPORT-WINS.** When a
+ *     merge-imported mapping collides with an existing local mapping for the same
+ *     key+direction, the imported one replaces the local one; non-colliding local
+ *     mappings survive (it is a merge, not a wholesale replace). The overwrite is not
+ *     silent — collisions surface in the Backup & Restore preview as `changed` rows of
+ *     the [tribixbite.cleverkeys.backup.ShortSwipeDiff] (pinned in
+ *     `backup.SettingsImportPlanBuilderTest`).
  *
  * Mock tier: the manager needs a `Context` for its storage file and logs through
  * `android.util.Log`; Gson/coroutines are real. Run with
@@ -138,6 +143,46 @@ class ShortSwipeImportSemanticsTest {
 
         assertThat(imported).isEqualTo(0)
         assertThat(manager.getMapping("a", SwipeDirection.NE)?.actionValue).isEqualTo("@")
+    }
+
+    // ------------------- half 3: G-3 merge-collision semantics (decided: import wins)
+
+    @Test
+    fun aMergeImportCollisionIsWonByTheImportedMapping() {
+        seedExistingMapping()   // local a:NE → "@"
+
+        val imported = runBlocking {
+            manager.importFromJson(
+                """{"version":2,"mappings":
+                    {"a":{"NE":{"displayText":"%","actionType":"TEXT","actionValue":"%"}}}}""",
+                merge = true
+            )
+        }
+
+        assertThat(imported).isEqualTo(1)
+        assertWithMessage(
+            "G-3 (decided 2026-09-08): on a key+direction collision the IMPORTED mapping " +
+                "wins — the local a:NE→@ must be replaced by the file's a:NE→%"
+        ).that(manager.getMapping("a", SwipeDirection.NE)?.actionValue).isEqualTo("%")
+    }
+
+    @Test
+    fun aMergeImportPreservesNonCollidingLocalMappings() {
+        seedExistingMapping()   // local a:NE → "@"
+
+        val imported = runBlocking {
+            manager.importFromJson(
+                """{"version":2,"mappings":
+                    {"b":{"SW":{"displayText":"y","actionType":"TEXT","actionValue":"y"}}}}""",
+                merge = true
+            )
+        }
+
+        assertThat(imported).isEqualTo(1)
+        assertWithMessage(
+            "merge is a MERGE, not a replace — a non-colliding local mapping survives"
+        ).that(manager.getMapping("a", SwipeDirection.NE)?.actionValue).isEqualTo("@")
+        assertThat(manager.getMapping("b", SwipeDirection.SW)?.actionValue).isEqualTo("y")
     }
 
     // ------------------------------------------------ sanity: real replace still works

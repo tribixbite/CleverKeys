@@ -311,6 +311,50 @@ class SettingsImportPlanBuilderTest {
     }
 
     @Test
+    fun collidingShortSwipeImport_surfacesAsAChangedRowInThePreviewDiff() {
+        // G-3 (maintainer decision 2026-09-08): MERGE collisions are import-wins, so the
+        // preview MUST show which local mappings the import will overwrite BEFORE apply.
+        // The preview dialog renders computeShortSwipeDiff(plan.currentShortSwipeRawJson,
+        // plan.shortSwipeImportRawJson) — a colliding key+direction id must classify as a
+        // CHANGED row, never pass silently.
+        val current = """{"version":2,"mappings":
+            {"a":{"NE":{"displayText":"@","actionType":"TEXT","actionValue":"@"}}}}"""
+        val backup = """{"preferences":{}, "short_swipe_customizations":
+            {"version":2,"mappings":{
+                "a":{"NE":{"displayText":"%","actionType":"TEXT","actionValue":"%"}},
+                "b":{"SW":{"displayText":"y","actionType":"TEXT","actionValue":"y"}}}}}"""
+
+        val plan = SettingsImportPlanBuilder.fromJson(
+            backup, emptyMap(), screen, currentShortSwipeRawJson = current)
+
+        val diff = computeShortSwipeDiff(plan.currentShortSwipeRawJson, plan.shortSwipeImportRawJson)!!
+        assertThat(diff.changed).containsExactly("a:NE")   // the collision the import wins
+        assertThat(diff.added).containsExactly("b:SW")     // non-colliding file entry
+        assertThat(diff.removed).containsExactly()          // nothing local disappears in MERGE
+        // The dialog's visibility gate is `!diff.isEmpty` — a collision alone must keep
+        // the diff summary rendered.
+        assertThat(diff.isEmpty).isFalse()
+    }
+
+    @Test
+    fun collidingFlatLegacyShortSwipeSection_stillClassifiesInThePreviewDiff() {
+        // G-2 x G-3 interplay: a legacy FLAT section is normalized to the wrapped shape
+        // before it lands in the plan, so the preview diff can classify its collisions
+        // too — a flat backup must not dodge the collision surfacing.
+        val current = """{"version":2,"mappings":
+            {"q":{"N":{"displayText":"old","actionType":"TEXT","actionValue":"old"}}}}"""
+        val backup = """{"preferences":{}, "short_swipe_customizations":
+            {"q":{"N":{"displayText":"new","actionType":"TEXT","actionValue":"new"}}}}"""
+
+        val plan = SettingsImportPlanBuilder.fromJson(
+            backup, emptyMap(), screen, currentShortSwipeRawJson = current)
+
+        val diff = computeShortSwipeDiff(plan.currentShortSwipeRawJson, plan.shortSwipeImportRawJson)!!
+        assertThat(diff.changed).containsExactly("q:N")
+        assertThat(diff.unchanged).isEqualTo(0)
+    }
+
+    @Test
     fun perRuleCategoryCoverage_intRangeFloatRangeStringAllowlist() {
         // One key per category:
         //   - keyboard_height (Int range 10..100 — out at 99999)
