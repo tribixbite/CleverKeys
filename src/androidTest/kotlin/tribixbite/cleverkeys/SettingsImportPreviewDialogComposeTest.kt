@@ -115,7 +115,8 @@ class SettingsImportPreviewDialogComposeTest {
                 }
             }
         }
-        composeRule.onNodeWithText("Merge — fill gaps, preserve existing (recommended)")
+        // Label updated with G-3's decided semantics (9f56e80d): merge is import-wins.
+        composeRule.onNodeWithText("Merge — file wins on conflicts, other mappings kept (recommended)")
             .assertIsDisplayed()
         // Default is Merge -> red warning is NOT shown
         composeRule.onNodeWithText("This will REPLACE", substring = true)
