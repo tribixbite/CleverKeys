@@ -320,6 +320,8 @@
     <string name="accessibility_swipe_complete_desc">Vibrovat po dokončení tahového gesta</string>
     <string name="advanced_terminal_mode_title">Terminálový režim</string>
     <string name="advanced_terminal_mode_desc">Zobrazit klávesy Ctrl, Meta, PageUp/Down pro terminálové aplikace jako Termux</string>
+    <string name="advanced_ime_prompt_title">Připomenutí výchozí klávesnice</string>
+    <string name="advanced_ime_prompt_desc">Jednou za spuštění zařízení připomenout nastavení CleverKeys jako výchozí klávesnice. Vypnutím se už nikdy neptat.</string>
     <string name="advanced_swipe_debug_log_title">Protokol ladění tahů</string>
     <string name="advanced_swipe_debug_log_desc">Analýza pipeline v reálném čase pro tahová gesta (vyžaduje logcat)</string>
     <string name="advanced_detailed_logging_title">Podrobné protokolování</string>
@@ -329,6 +331,8 @@
     <string name="appearance_height_portrait_desc">Upravte výšku klávesnice v režimu na výšku</string>
     <string name="appearance_height_landscape_title">Výška klávesnice (na šířku)</string>
     <string name="appearance_height_landscape_desc">Upravte výšku klávesnice v režimu na šířku</string>
+    <string name="appearance_scale_numpad_title">Škálovat výšku numerické klávesnice</string>
+    <string name="appearance_scale_numpad_desc">Roztáhnout řádky PIN a numerické klávesnice na plnou výšku klávesnice</string>
     <string name="appearance_bottom_margin_portrait_title">Spodní okraj (na výšku)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Svislý okraj v % výšky obrazovky</string>
     <string name="appearance_bottom_margin_landscape_title">Spodní okraj (na šířku)</string>
@@ -398,11 +402,15 @@
     <string name="clipboard_max_item_size_title">Maximální velikost položky</string>
     <string name="clipboard_max_item_size_desc">Maximální velikost položky schránky (limit Android Binder: ~1 MB)</string>
     <string name="clipboard_exclude_password_managers_title">Vyloučit správce hesel</string>
-    <string name="clipboard_exclude_password_managers_desc">Neukládat obsah schránky z Bitwarden, 1Password, LastPass, KeePass atd.</string>
+    <string name="clipboard_exclude_password_managers_desc">Nejlepší možný pokus: kopie se přeskočí, jen když Android odhalí, že je v popředí známý správce hesel — bez přístupu k údajům o používání (nikdy nevyžádán) to je zřídka možné. Spolehlivou ochranu zajišťuje nastavení citlivého obsahu níže.</string>
     <string name="clipboard_respect_sensitive_title">Respektovat příznak citlivosti</string>
     <string name="clipboard_respect_sensitive_desc">Přeskočit obsah schránky označený jako citlivý správci hesel (Android 13+)</string>
     <string name="clipboard_text_only_title">Pouze text</string>
     <string name="clipboard_text_only_desc">Skrýt mediální položky a zakázat zachytávání médií</string>
+    <string name="clipboard_media_enabled_title">Ukládat mediální položky</string>
+    <string name="clipboard_media_enabled_desc">Uchovávat zkopírované obrázky a další média v historii schránky (když není zapnuto pouze textové zobrazení)</string>
+    <string name="clipboard_max_media_size_title">Max. velikost médií</string>
+    <string name="clipboard_max_media_size_desc">Přeskočit zkopírovaná média větší než tato velikost</string>
     <string name="clipboard_pinned_tab_title">Záložka Připnuté</string>
     <string name="clipboard_pinned_tab_desc">Zobrazit záložku Připnuté pro ukládání důležitých klipů</string>
     <string name="clipboard_todo_tab_title">Záložka Úkoly</string>
@@ -464,6 +472,8 @@
     <string name="input_auto_space_before_desc">Vložit mezeru před klepnutý návrh (tah vždy přidá mezeru)</string>
     <string name="input_backspace_undo_swipe_title">Backspace vrátí tažené slovo</string>
     <string name="input_backspace_undo_swipe_desc">Stisk Backspace ihned po taženém slově smaže celé slovo</string>
+    <string name="input_show_exact_typed_title">Zobrazit přesně napsané slovo</string>
+    <string name="input_show_exact_typed_desc">Nabídnout skutečně napsaná písmena jako návrh; klepnutím je přidáte do slovníku</string>
     <string name="input_context_aware_title">Předpovědi se znalostí kontextu</string>
     <string name="input_context_aware_desc">Učit se z vzorů psaní (N-gramový model)</string>
     <string name="input_personalized_learning_title">Personalizované učení</string>

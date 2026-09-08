@@ -331,6 +331,8 @@
     <string name="accessibility_swipe_complete_desc">Vibrēt, kad vilkuma žests beidzies</string>
     <string name="advanced_terminal_mode_title">Termināļa režīms</string>
     <string name="advanced_terminal_mode_desc">Rādīt Ctrl, Meta, PageUp/Down taustiņus termināļa lietotnēm, piemēram, Termux</string>
+    <string name="advanced_ime_prompt_title">Noklusējuma tastatūras atgādinājums</string>
+    <string name="advanced_ime_prompt_desc">Vienreiz katrā palaišanas reizē atgādināt iestatīt CleverKeys kā noklusējuma tastatūru. Izslēdziet, lai vairs nejautātu.</string>
     <string name="advanced_swipe_debug_log_title">Vilkumu atkļūdošanas žurnāls</string>
     <string name="advanced_swipe_debug_log_desc">Reāllaikā analizē vilkuma žestu konveijeru (nepieciešams logcat)</string>
     <string name="advanced_detailed_logging_title">Detalizēta žurnālošana</string>
@@ -340,6 +342,8 @@
     <string name="appearance_height_portrait_desc">Pielāgot tastatūras augstumu portreta režīmā</string>
     <string name="appearance_height_landscape_title">Tastatūras augstums (ainava)</string>
     <string name="appearance_height_landscape_desc">Pielāgot tastatūras augstumu ainavas režīmā</string>
+    <string name="appearance_scale_numpad_title">Mērogot ciparu tastatūras augstumu</string>
+    <string name="appearance_scale_numpad_desc">Izstiept PIN un ciparu tastatūras rindas visā tastatūras augstumā</string>
     <string name="appearance_bottom_margin_portrait_title">Apakšējā mala (portrets)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Vertikālā mala kā % no ekrāna augstuma</string>
     <string name="appearance_bottom_margin_landscape_title">Apakšējā mala (ainava)</string>
@@ -409,11 +413,15 @@
     <string name="clipboard_max_item_size_title">Maks. vienuma izmērs</string>
     <string name="clipboard_max_item_size_desc">Maksimālais viena starpliktuves ieraksta izmērs (Android Binder ierobežojums: ~1 MB)</string>
     <string name="clipboard_exclude_password_managers_title">Izslēgt paroļu pārvaldniekus</string>
-    <string name="clipboard_exclude_password_managers_desc">Neglabāt starpliktuvē no Bitwarden, 1Password, LastPass, KeePass u.c.</string>
+    <string name="clipboard_exclude_password_managers_desc">Labākais mēģinājums: kopija tiek izlaista tikai tad, ja Android atklāj, ka priekšplānā ir zināms paroļu pārvaldnieks — bez lietojuma piekļuves (nekad netiek pieprasīta) tas reti ir iespējams. Uzticamai aizsardzībai izmantojiet sensitīvā satura iestatījumu zemāk.</string>
     <string name="clipboard_respect_sensitive_title">Ievērot sensitīvo karodziņu</string>
     <string name="clipboard_respect_sensitive_desc">Izlaist starpliktuvē ierakstus, ko paroļu pārvaldnieki atzīmējuši kā sensitīvus (Android 13+)</string>
     <string name="clipboard_text_only_title">Tikai teksts</string>
     <string name="clipboard_text_only_desc">Slēpt multivides ierakstus un atspējot multivides tveršanu</string>
+    <string name="clipboard_media_enabled_title">Saglabāt multivides ierakstus</string>
+    <string name="clipboard_media_enabled_desc">Paturēt nokopētos attēlus un citu multividi starpliktuves vēsturē (kad tikai-teksta skats ir izslēgts)</string>
+    <string name="clipboard_max_media_size_title">Maks. multivides izmērs</string>
+    <string name="clipboard_max_media_size_desc">Izlaist nokopēto multividi, kas lielāka par šo izmēru</string>
     <string name="clipboard_pinned_tab_title">Piesprausto cilne</string>
     <string name="clipboard_pinned_tab_desc">Rādīt cilni svarīgu starpliktuvju saglabāšanai</string>
     <string name="clipboard_todo_tab_title">Uzdevumu cilne</string>
@@ -475,6 +483,8 @@
     <string name="input_auto_space_before_desc">Ievietot priekšējo atstarpi pirms piesista ieteikuma (vilkums vienmēr pievieno atstarpi)</string>
     <string name="input_backspace_undo_swipe_title">Backspace atsauc vilkumu</string>
     <string name="input_backspace_undo_swipe_desc">Nospiežot Backspace uzreiz pēc vilkuma vārda, tiek dzēsts viss vārds</string>
+    <string name="input_show_exact_typed_title">Rādīt tieši ievadīto vārdu</string>
+    <string name="input_show_exact_typed_desc">Piedāvāt tieši ievadītos burtus kā ieteikumu; pieskarieties, lai pievienotu vārdnīcai</string>
     <string name="input_context_aware_title">Kontekstuālas prognozes</string>
     <string name="input_context_aware_desc">Mācīties no rakstīšanas modeļiem (N-gramu modelis)</string>
     <string name="input_personalized_learning_title">Personalizēta mācīšanās</string>

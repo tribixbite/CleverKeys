@@ -342,6 +342,8 @@
     <string name="accessibility_swipe_complete_desc">Vibrează când gestul de glisare se termină</string>
     <string name="advanced_terminal_mode_title">Mod terminal</string>
     <string name="advanced_terminal_mode_desc">Afișează taste Ctrl, Meta, PageUp/Down pentru aplicații de terminal precum Termux</string>
+    <string name="advanced_ime_prompt_title">Memento tastatură implicită</string>
+    <string name="advanced_ime_prompt_desc">Amintește o dată la fiecare pornire să setezi CleverKeys ca tastatură implicită. Dezactivează pentru a nu mai întreba niciodată.</string>
     <string name="advanced_swipe_debug_log_title">Jurnal depanare glisare</string>
     <string name="advanced_swipe_debug_log_desc">Analiză în timp real a pipeline-ului pentru gesturile de glisare (necesită logcat)</string>
     <string name="advanced_detailed_logging_title">Jurnalizare detaliată</string>
@@ -351,6 +353,8 @@
     <string name="appearance_height_portrait_desc">Reglează înălțimea tastaturii în modul portret</string>
     <string name="appearance_height_landscape_title">Înălțimea tastaturii (peisaj)</string>
     <string name="appearance_height_landscape_desc">Reglează înălțimea tastaturii în modul peisaj</string>
+    <string name="appearance_scale_numpad_title">Scalează înălțimea tastaturii numerice</string>
+    <string name="appearance_scale_numpad_desc">Întinde rândurile PIN și ale tastaturii numerice pe toată înălțimea tastaturii</string>
     <string name="appearance_bottom_margin_portrait_title">Margine inferioară (portret)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Margine verticală ca % din înălțimea ecranului</string>
     <string name="appearance_bottom_margin_landscape_title">Margine inferioară (peisaj)</string>
@@ -420,11 +424,15 @@
     <string name="clipboard_max_item_size_title">Dimensiune maximă element</string>
     <string name="clipboard_max_item_size_desc">Dimensiunea maximă per intrare în clipboard (limita Binder Android: ~1 MB)</string>
     <string name="clipboard_exclude_password_managers_title">Excludere managere de parole</string>
-    <string name="clipboard_exclude_password_managers_desc">Nu stoca clipboard-ul din Bitwarden, 1Password, LastPass, KeePass, etc.</string>
+    <string name="clipboard_exclude_password_managers_desc">Cel mai bun efort: o copie este omisă doar când Android dezvăluie că un manager de parole cunoscut este în prim-plan — rar posibil fără acces la utilizare (niciodată solicitat). Pentru protecție fiabilă folosiți setarea de conținut sensibil de mai jos.</string>
     <string name="clipboard_respect_sensitive_title">Respectă indicatorul sensibil</string>
     <string name="clipboard_respect_sensitive_desc">Sare peste clipboard-ul marcat ca sensibil de managerii de parole (Android 13+)</string>
     <string name="clipboard_text_only_title">Doar text</string>
     <string name="clipboard_text_only_desc">Ascunde intrările media și dezactivează capturarea media</string>
+    <string name="clipboard_media_enabled_title">Salvează intrările media</string>
+    <string name="clipboard_media_enabled_desc">Păstrează imaginile și alte fișiere media copiate în istoricul clipboardului (când afișarea doar-text este oprită)</string>
+    <string name="clipboard_max_media_size_title">Dimensiune media max.</string>
+    <string name="clipboard_max_media_size_desc">Omite fișierele media copiate mai mari decât această dimensiune</string>
     <string name="clipboard_pinned_tab_title">Filă fixată</string>
     <string name="clipboard_pinned_tab_desc">Afișează fila fixată pentru salvarea clipurilor importante</string>
     <string name="clipboard_todo_tab_title">Filă To-do</string>
@@ -486,6 +494,8 @@
     <string name="input_auto_space_before_desc">Inserează spațiu înaintea unei sugestii atinse (glisarea adaugă întotdeauna spațiu)</string>
     <string name="input_backspace_undo_swipe_title">Backspace anulează glisarea</string>
     <string name="input_backspace_undo_swipe_desc">Apăsarea Backspace imediat după un cuvânt scris prin glisare șterge întregul cuvânt</string>
+    <string name="input_show_exact_typed_title">Afișează cuvântul tastat exact</string>
+    <string name="input_show_exact_typed_desc">Oferă literele tastate efectiv ca sugestie; atinge pentru a le adăuga în dicționar</string>
     <string name="input_context_aware_title">Predicții contextuale</string>
     <string name="input_context_aware_desc">Învață din tipare de scriere (model N-gram)</string>
     <string name="input_personalized_learning_title">Învățare personalizată</string>

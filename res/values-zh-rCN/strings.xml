@@ -318,6 +318,8 @@
     <string name="accessibility_swipe_complete_desc">滑动手势完成时振动</string>
     <string name="advanced_terminal_mode_title">终端模式</string>
     <string name="advanced_terminal_mode_desc">为 Termux 等终端应用显示 Ctrl、Meta、PageUp/Down 键。</string>
+    <string name="advanced_ime_prompt_title">默认键盘提醒</string>
+    <string name="advanced_ime_prompt_desc">每次开机提醒一次将 CleverKeys 设为默认键盘。关闭后不再询问。</string>
     <string name="advanced_swipe_debug_log_title">滑动调试日志</string>
     <string name="advanced_swipe_debug_log_desc">滑动手势的实时管道分析（需要 logcat）。</string>
     <string name="advanced_detailed_logging_title">详细日志</string>
@@ -327,6 +329,8 @@
     <string name="appearance_height_portrait_desc">调整竖屏模式下的键盘高度。</string>
     <string name="appearance_height_landscape_title">键盘高度（横屏）</string>
     <string name="appearance_height_landscape_desc">调整横屏模式下的键盘高度。</string>
+    <string name="appearance_scale_numpad_title">缩放数字键盘高度</string>
+    <string name="appearance_scale_numpad_desc">将 PIN 和数字键盘的行拉伸至键盘全高</string>
     <string name="appearance_bottom_margin_portrait_title">底部边距（竖屏）</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">占屏幕高度百分比的纵向边距。</string>
     <string name="appearance_bottom_margin_landscape_title">底部边距（横屏）</string>
@@ -396,11 +400,15 @@
     <string name="clipboard_max_item_size_title">条目最大大小</string>
     <string name="clipboard_max_item_size_desc">每条剪贴板条目的最大大小（Android Binder 限制：约 1MB）。</string>
     <string name="clipboard_exclude_password_managers_title">排除密码管理器</string>
-    <string name="clipboard_exclude_password_managers_desc">不保存来自 Bitwarden、1Password、LastPass、KeePass 等应用的剪贴板内容。</string>
+    <string name="clipboard_exclude_password_managers_desc">尽力而为:仅当 Android 显示已知密码管理器位于前台时才跳过复制——在没有使用情况访问权限(从不申请)的情况下很少可行。可靠的保护请使用下方的敏感内容设置。</string>
     <string name="clipboard_respect_sensitive_title">遵守敏感标记</string>
     <string name="clipboard_respect_sensitive_desc">跳过密码管理器标记为敏感的剪贴板内容（Android 13+）。</string>
     <string name="clipboard_text_only_title">仅文本</string>
     <string name="clipboard_text_only_desc">隐藏媒体条目并禁用媒体捕获。</string>
+    <string name="clipboard_media_enabled_title">保存媒体条目</string>
+    <string name="clipboard_media_enabled_desc">将复制的图片等媒体保留在剪贴板历史中(仅文本视图关闭时)</string>
+    <string name="clipboard_max_media_size_title">媒体最大大小</string>
+    <string name="clipboard_max_media_size_desc">跳过大于此大小的复制媒体</string>
     <string name="clipboard_pinned_tab_title">固定标签页</string>
     <string name="clipboard_pinned_tab_desc">显示用于保存重要剪辑的固定标签页。</string>
     <string name="clipboard_todo_tab_title">待办标签页</string>
@@ -462,6 +470,8 @@
     <string name="input_auto_space_before_desc">点击候选词前插入前置空格（滑动始终添加空格）。</string>
     <string name="input_backspace_undo_swipe_title">退格撤销滑动</string>
     <string name="input_backspace_undo_swipe_desc">滑动输入后立即点击退格键，删除整个单词。</string>
+    <string name="input_show_exact_typed_title">显示精确输入的单词</string>
+    <string name="input_show_exact_typed_desc">将你实际输入的字母作为候选显示,点按即可加入词典</string>
     <string name="input_context_aware_title">上下文感知预测</string>
     <string name="input_context_aware_desc">从输入习惯中学习（N-gram 模型）。</string>
     <string name="input_personalized_learning_title">个性化学习</string>

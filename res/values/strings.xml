@@ -464,6 +464,8 @@
          settings_debug_* siblings already in this file) -->
     <string name="advanced_terminal_mode_title">Terminal Mode</string>
     <string name="advanced_terminal_mode_desc">Show Ctrl, Meta, PageUp/Down keys for terminal apps like Termux</string>
+    <string name="advanced_ime_prompt_title">Default keyboard reminder</string>
+    <string name="advanced_ime_prompt_desc">Remind once per boot to set CleverKeys as the default keyboard. Turn off to never ask again.</string>
     <string name="advanced_swipe_debug_log_title">Swipe Debug Log</string>
     <string name="advanced_swipe_debug_log_desc">Real-time pipeline analysis for swipe gestures (requires logcat)</string>
     <string name="advanced_detailed_logging_title">Detailed Logging</string>
@@ -524,6 +526,8 @@
     <string name="appearance_height_portrait_desc">Adjust keyboard height in portrait mode</string>
     <string name="appearance_height_landscape_title">Keyboard Height (Landscape)</string>
     <string name="appearance_height_landscape_desc">Adjust keyboard height in landscape mode</string>
+    <string name="appearance_scale_numpad_title">Scale numpad height</string>
+    <string name="appearance_scale_numpad_desc">Stretch PIN and numpad rows to fill the full keyboard height</string>
     <string name="appearance_bottom_margin_portrait_title">Bottom Margin (Portrait)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Vertical margin as % of screen height</string>
     <string name="appearance_bottom_margin_landscape_title">Bottom Margin (Landscape)</string>
@@ -616,11 +620,15 @@
     <string name="clipboard_max_item_size_title">Max Item Size</string>
     <string name="clipboard_max_item_size_desc">Maximum size per clipboard entry (Android Binder limit: ~1MB)</string>
     <string name="clipboard_exclude_password_managers_title">Exclude Password Managers</string>
-    <string name="clipboard_exclude_password_managers_desc">Don\'t store clipboard from Bitwarden, 1Password, LastPass, KeePass, etc.</string>
+    <string name="clipboard_exclude_password_managers_desc">Best effort: only skips a copy when Android reveals that a known password manager is in the foreground, which is rarely possible without usage access (never requested). Rely on the sensitive-content setting below.</string>
     <string name="clipboard_respect_sensitive_title">Respect Sensitive Flag</string>
     <string name="clipboard_respect_sensitive_desc">Skip clipboard marked as sensitive by password managers (Android 13+)</string>
     <string name="clipboard_text_only_title">Text Only</string>
     <string name="clipboard_text_only_desc">Hide media entries and disable media capture</string>
+    <string name="clipboard_media_enabled_title">Save media entries</string>
+    <string name="clipboard_media_enabled_desc">Keep copied images and other media in clipboard history (when text-only display is off)</string>
+    <string name="clipboard_max_media_size_title">Max media size</string>
+    <string name="clipboard_max_media_size_desc">Skip copied media larger than this size</string>
     <string name="clipboard_pinned_tab_title">Pinned Tab</string>
     <string name="clipboard_pinned_tab_desc">Show pinned tab for saving important clips</string>
     <string name="clipboard_todo_tab_title">Todo Tab</string>
@@ -689,6 +697,8 @@
     <string name="input_auto_space_before_desc">Insert leading space before a tapped suggestion (swipe always adds space)</string>
     <string name="input_backspace_undo_swipe_title">Backspace Undo Swipe</string>
     <string name="input_backspace_undo_swipe_desc">Tapping backspace immediately after a swiped word deletes the entire word</string>
+    <string name="input_show_exact_typed_title">Show exact typed word</string>
+    <string name="input_show_exact_typed_desc">Offer the letters you actually typed as a suggestion you can tap to add to the dictionary</string>
     <string name="input_context_aware_title">Context-Aware Predictions</string>
     <string name="input_context_aware_desc">Learn from typing patterns (N-gram model)</string>
     <string name="input_next_word_title">Next-Word Prediction</string>

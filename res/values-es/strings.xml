@@ -337,6 +337,8 @@
     <string name="accessibility_swipe_complete_desc">Vibrar cuando finaliza un gesto de deslizamiento</string>
     <string name="advanced_terminal_mode_title">Modo terminal</string>
     <string name="advanced_terminal_mode_desc">Muestra teclas Ctrl, Meta, AvPág/RePág para apps de terminal como Termux</string>
+    <string name="advanced_ime_prompt_title">Recordatorio de teclado predeterminado</string>
+    <string name="advanced_ime_prompt_desc">Recordar una vez por arranque establecer CleverKeys como teclado predeterminado. Desactívalo para no volver a preguntar.</string>
     <string name="advanced_swipe_debug_log_title">Registro de depuración de deslizamiento</string>
     <string name="advanced_swipe_debug_log_desc">Análisis de canalización en tiempo real para gestos de deslizamiento (requiere logcat)</string>
     <string name="advanced_detailed_logging_title">Registro detallado</string>
@@ -346,6 +348,8 @@
     <string name="appearance_height_portrait_desc">Ajusta la altura del teclado en modo vertical</string>
     <string name="appearance_height_landscape_title">Altura del teclado (horizontal)</string>
     <string name="appearance_height_landscape_desc">Ajusta la altura del teclado en modo horizontal</string>
+    <string name="appearance_scale_numpad_title">Escalar altura del teclado numérico</string>
+    <string name="appearance_scale_numpad_desc">Estirar las filas de PIN y teclado numérico hasta la altura completa del teclado</string>
     <string name="appearance_bottom_margin_portrait_title">Margen inferior (vertical)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Margen vertical como % de la altura de pantalla</string>
     <string name="appearance_bottom_margin_landscape_title">Margen inferior (horizontal)</string>
@@ -415,11 +419,15 @@
     <string name="clipboard_max_item_size_title">Tamaño máximo de elemento</string>
     <string name="clipboard_max_item_size_desc">Tamaño máximo por entrada del portapapeles (límite Android Binder: ~1 MB)</string>
     <string name="clipboard_exclude_password_managers_title">Excluir gestores de contraseñas</string>
-    <string name="clipboard_exclude_password_managers_desc">No guardar el portapapeles de Bitwarden, 1Password, LastPass, KeePass, etc.</string>
+    <string name="clipboard_exclude_password_managers_desc">Mejor esfuerzo: solo omite una copia cuando Android revela que un gestor de contraseñas conocido está en primer plano, algo raramente posible sin acceso de uso (nunca solicitado). Para una protección fiable usa el ajuste de contenido sensible de abajo.</string>
     <string name="clipboard_respect_sensitive_title">Respetar marca de sensible</string>
     <string name="clipboard_respect_sensitive_desc">Omitir el portapapeles marcado como sensible por los gestores de contraseñas (Android 13+)</string>
     <string name="clipboard_text_only_title">Solo texto</string>
     <string name="clipboard_text_only_desc">Ocultar entradas multimedia y desactivar captura multimedia</string>
+    <string name="clipboard_media_enabled_title">Guardar entradas multimedia</string>
+    <string name="clipboard_media_enabled_desc">Conservar imágenes y otros archivos multimedia copiados en el historial del portapapeles (cuando la vista solo-texto está desactivada)</string>
+    <string name="clipboard_max_media_size_title">Tamaño máx. de multimedia</string>
+    <string name="clipboard_max_media_size_desc">Omitir multimedia copiado que supere este tamaño</string>
     <string name="clipboard_pinned_tab_title">Pestaña anclada</string>
     <string name="clipboard_pinned_tab_desc">Muestra la pestaña anclada para guardar clips importantes</string>
     <string name="clipboard_todo_tab_title">Pestaña de tareas</string>
@@ -481,6 +489,8 @@
     <string name="input_auto_space_before_desc">Inserta un espacio inicial antes de una sugerencia tocada (el deslizamiento siempre añade espacio)</string>
     <string name="input_backspace_undo_swipe_title">Retroceso deshace el deslizamiento</string>
     <string name="input_backspace_undo_swipe_desc">Tocar retroceso inmediatamente después de una palabra escrita por deslizamiento elimina la palabra completa</string>
+    <string name="input_show_exact_typed_title">Mostrar palabra exacta escrita</string>
+    <string name="input_show_exact_typed_desc">Ofrecer las letras que realmente escribiste como sugerencia; tócala para añadirla al diccionario</string>
     <string name="input_context_aware_title">Predicciones contextuales</string>
     <string name="input_context_aware_desc">Aprende de los patrones de escritura (modelo N-grama)</string>
     <string name="input_personalized_learning_title">Aprendizaje personalizado</string>

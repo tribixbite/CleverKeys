@@ -325,6 +325,8 @@
     <string name="accessibility_swipe_complete_desc">Vibrer lorsqu\'un geste de glissé se termine</string>
     <string name="advanced_terminal_mode_title">Mode terminal</string>
     <string name="advanced_terminal_mode_desc">Afficher les touches Ctrl, Meta, Page précédente/suivante pour les applications terminales comme Termux</string>
+    <string name="advanced_ime_prompt_title">Rappel du clavier par défaut</string>
+    <string name="advanced_ime_prompt_desc">Rappeler une fois par démarrage de définir CleverKeys comme clavier par défaut. Désactivez pour ne plus jamais demander.</string>
     <string name="advanced_swipe_debug_log_title">Journal de débogage de glissé</string>
     <string name="advanced_swipe_debug_log_desc">Analyse de pipeline en temps réel pour les gestes de glissé (nécessite logcat)</string>
     <string name="advanced_detailed_logging_title">Journalisation détaillée</string>
@@ -334,6 +336,8 @@
     <string name="appearance_height_portrait_desc">Ajuster la hauteur du clavier en mode portrait</string>
     <string name="appearance_height_landscape_title">Hauteur du clavier (paysage)</string>
     <string name="appearance_height_landscape_desc">Ajuster la hauteur du clavier en mode paysage</string>
+    <string name="appearance_scale_numpad_title">Adapter la hauteur du pavé numérique</string>
+    <string name="appearance_scale_numpad_desc">Étirer les rangées PIN et pavé numérique sur toute la hauteur du clavier</string>
     <string name="appearance_bottom_margin_portrait_title">Marge inférieure (portrait)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Marge verticale en % de la hauteur de l\'écran</string>
     <string name="appearance_bottom_margin_landscape_title">Marge inférieure (paysage)</string>
@@ -403,11 +407,15 @@
     <string name="clipboard_max_item_size_title">Taille maximale d\'élément</string>
     <string name="clipboard_max_item_size_desc">Taille maximale par entrée de presse-papiers (limite Android Binder : ~1 Mo)</string>
     <string name="clipboard_exclude_password_managers_title">Exclure les gestionnaires de mots de passe</string>
-    <string name="clipboard_exclude_password_managers_desc">Ne pas stocker le presse-papiers de Bitwarden, 1Password, LastPass, KeePass, etc.</string>
+    <string name="clipboard_exclude_password_managers_desc">Au mieux : une copie n\'est ignorée que si Android révèle qu\'un gestionnaire de mots de passe connu est au premier plan — rarement possible sans l\'accès aux données d\'utilisation (jamais demandé). Pour une protection fiable, utilisez le réglage de contenu sensible ci-dessous.</string>
     <string name="clipboard_respect_sensitive_title">Respecter le drapeau sensible</string>
     <string name="clipboard_respect_sensitive_desc">Ignorer le presse-papiers marqué comme sensible par les gestionnaires de mots de passe (Android 13+)</string>
     <string name="clipboard_text_only_title">Texte uniquement</string>
     <string name="clipboard_text_only_desc">Masquer les entrées multimédias et désactiver la capture multimédia</string>
+    <string name="clipboard_media_enabled_title">Enregistrer les éléments multimédias</string>
+    <string name="clipboard_media_enabled_desc">Conserver les images et autres médias copiés dans l\'historique du presse-papiers (quand l\'affichage texte seul est désactivé)</string>
+    <string name="clipboard_max_media_size_title">Taille max. des médias</string>
+    <string name="clipboard_max_media_size_desc">Ignorer les médias copiés dépassant cette taille</string>
     <string name="clipboard_pinned_tab_title">Onglet épinglé</string>
     <string name="clipboard_pinned_tab_desc">Afficher l\'onglet épinglé pour sauvegarder les extraits importants</string>
     <string name="clipboard_todo_tab_title">Onglet À faire</string>
@@ -469,6 +477,8 @@
     <string name="input_auto_space_before_desc">Insérer un espace avant une suggestion sélectionnée (le glissé ajoute toujours un espace)</string>
     <string name="input_backspace_undo_swipe_title">Retour arrière annule le glissé</string>
     <string name="input_backspace_undo_swipe_desc">Appuyer sur Retour arrière immédiatement après un mot saisi par glissé supprime l\'intégralité du mot</string>
+    <string name="input_show_exact_typed_title">Afficher le mot exact saisi</string>
+    <string name="input_show_exact_typed_desc">Proposer les lettres réellement saisies comme suggestion ; touchez-la pour l\'ajouter au dictionnaire</string>
     <string name="input_context_aware_title">Prédictions contextuelles</string>
     <string name="input_context_aware_desc">Apprendre des habitudes de frappe (modèle N-gramme)</string>
     <string name="input_personalized_learning_title">Apprentissage personnalisé</string>

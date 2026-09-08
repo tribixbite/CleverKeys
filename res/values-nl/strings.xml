@@ -320,6 +320,8 @@
     <string name="accessibility_swipe_complete_desc">Trillen als het veeggebaar klaar is</string>
     <string name="advanced_terminal_mode_title">Terminalmodus</string>
     <string name="advanced_terminal_mode_desc">Toon Ctrl, Meta, PageUp/Down-toetsen voor terminalapps zoals Termux</string>
+    <string name="advanced_ime_prompt_title">Herinnering standaardtoetsenbord</string>
+    <string name="advanced_ime_prompt_desc">Eén keer per opstart herinneren om CleverKeys als standaardtoetsenbord in te stellen. Zet uit om nooit meer te vragen.</string>
     <string name="advanced_swipe_debug_log_title">Veeg-debuglogboek</string>
     <string name="advanced_swipe_debug_log_desc">Realtime pijplijnanalyse voor veeggebaren (vereist logcat)</string>
     <string name="advanced_detailed_logging_title">Gedetailleerde logging</string>
@@ -329,6 +331,8 @@
     <string name="appearance_height_portrait_desc">Pas de toetsenbordhoogte aan in de staande modus</string>
     <string name="appearance_height_landscape_title">Toetsenbordhoogte (liggend)</string>
     <string name="appearance_height_landscape_desc">Pas de toetsenbordhoogte aan in de liggende modus</string>
+    <string name="appearance_scale_numpad_title">Numpad-hoogte schalen</string>
+    <string name="appearance_scale_numpad_desc">PIN- en numpad-rijen uitrekken tot de volledige toetsenbordhoogte</string>
     <string name="appearance_bottom_margin_portrait_title">Onderste marge (staand)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Verticale marge als % van de schermhoogte</string>
     <string name="appearance_bottom_margin_landscape_title">Onderste marge (liggend)</string>
@@ -398,11 +402,15 @@
     <string name="clipboard_max_item_size_title">Maximale itemgrootte</string>
     <string name="clipboard_max_item_size_desc">Maximale grootte per klembordinvoer (Android Binder-limiet: ~1 MB)</string>
     <string name="clipboard_exclude_password_managers_title">Wachtwoordbeheerders uitsluiten</string>
-    <string name="clipboard_exclude_password_managers_desc">Klembord van Bitwarden, 1Password, LastPass, KeePass enz. niet opslaan</string>
+    <string name="clipboard_exclude_password_managers_desc">Best effort: een kopie wordt alleen overgeslagen wanneer Android onthult dat een bekende wachtwoordmanager op de voorgrond staat — zelden mogelijk zonder gebruikstoegang (nooit gevraagd). Gebruik voor betrouwbare bescherming de instelling voor gevoelige inhoud hieronder.</string>
     <string name="clipboard_respect_sensitive_title">Gevoelige markering respecteren</string>
     <string name="clipboard_respect_sensitive_desc">Klembord dat als gevoelig is gemarkeerd door wachtwoordbeheerders overslaan (Android 13+)</string>
     <string name="clipboard_text_only_title">Alleen tekst</string>
     <string name="clipboard_text_only_desc">Media-invoeren verbergen en mediaopname uitschakelen</string>
+    <string name="clipboard_media_enabled_title">Media-items opslaan</string>
+    <string name="clipboard_media_enabled_desc">Gekopieerde afbeeldingen en andere media in de klembordgeschiedenis bewaren (wanneer alleen-tekstweergave uit staat)</string>
+    <string name="clipboard_max_media_size_title">Max. mediagrootte</string>
+    <string name="clipboard_max_media_size_desc">Gekopieerde media groter dan deze grootte overslaan</string>
     <string name="clipboard_pinned_tab_title">Vastgezet tabblad</string>
     <string name="clipboard_pinned_tab_desc">Vastgezet tabblad tonen voor het opslaan van belangrijke clips</string>
     <string name="clipboard_todo_tab_title">Takenlijst-tabblad</string>
@@ -464,6 +472,8 @@
     <string name="input_auto_space_before_desc">Spatie invoegen vóór een getikt voorstel (vegen voegt altijd een spatie toe)</string>
     <string name="input_backspace_undo_swipe_title">Backspace maakt veegwoord ongedaan</string>
     <string name="input_backspace_undo_swipe_desc">Backspace direct na een veegwoord verwijdert het volledige woord</string>
+    <string name="input_show_exact_typed_title">Exact getypt woord tonen</string>
+    <string name="input_show_exact_typed_desc">De letters die je daadwerkelijk typte als suggestie aanbieden; tik om ze aan het woordenboek toe te voegen</string>
     <string name="input_context_aware_title">Contextbewuste voorspellingen</string>
     <string name="input_context_aware_desc">Leren van typpatronen (N-gram model)</string>
     <string name="input_personalized_learning_title">Gepersonaliseerd leren</string>

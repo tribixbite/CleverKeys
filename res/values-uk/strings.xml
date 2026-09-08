@@ -331,6 +331,8 @@
     <string name="accessibility_swipe_complete_desc">Вібрувати після завершення жесту свайпу</string>
     <string name="advanced_terminal_mode_title">Режим терміналу</string>
     <string name="advanced_terminal_mode_desc">Показувати Ctrl, Meta, PageUp/Down для термінальних застосунків, наприклад Termux</string>
+    <string name="advanced_ime_prompt_title">Нагадування про типову клавіатуру</string>
+    <string name="advanced_ime_prompt_desc">Нагадувати раз за завантаження зробити CleverKeys типовою клавіатурою. Вимкніть, щоб більше не запитувати.</string>
     <string name="advanced_swipe_debug_log_title">Журнал налагодження свайпів</string>
     <string name="advanced_swipe_debug_log_desc">Аналіз конвеєра свайп-жестів у реальному часі (потребує logcat)</string>
     <string name="advanced_detailed_logging_title">Докладне журналювання</string>
@@ -340,6 +342,8 @@
     <string name="appearance_height_portrait_desc">Налаштування висоти клавіатури в портретному режимі</string>
     <string name="appearance_height_landscape_title">Висота клавіатури (пейзаж)</string>
     <string name="appearance_height_landscape_desc">Налаштування висоти клавіатури в альбомному режимі</string>
+    <string name="appearance_scale_numpad_title">Масштабувати висоту цифрової клавіатури</string>
+    <string name="appearance_scale_numpad_desc">Розтягувати ряди PIN та цифрової клавіатури на всю висоту клавіатури</string>
     <string name="appearance_bottom_margin_portrait_title">Нижній відступ (портрет)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Вертикальний відступ у % від висоти екрана</string>
     <string name="appearance_bottom_margin_landscape_title">Нижній відступ (пейзаж)</string>
@@ -409,11 +413,15 @@
     <string name="clipboard_max_item_size_title">Макс. розмір елемента</string>
     <string name="clipboard_max_item_size_desc">Максимальний розмір одного запису буфера обміну (обмеження Android Binder: ~1 МБ)</string>
     <string name="clipboard_exclude_password_managers_title">Виключити менеджери паролів</string>
-    <string name="clipboard_exclude_password_managers_desc">Не зберігати дані з Bitwarden, 1Password, LastPass, KeePass тощо.</string>
+    <string name="clipboard_exclude_password_managers_desc">У міру можливості: копію пропущено, лише якщо Android повідомляє, що на передньому плані відомий менеджер паролів — без доступу до статистики використання (ніколи не запитується) це рідко можливо. Для надійного захисту використовуйте налаштування конфіденційного вмісту нижче.</string>
     <string name="clipboard_respect_sensitive_title">Враховувати прапор конфіденційності</string>
     <string name="clipboard_respect_sensitive_desc">Пропускати записи, позначені менеджерами паролів як конфіденційні (Android 13+)</string>
     <string name="clipboard_text_only_title">Лише текст</string>
     <string name="clipboard_text_only_desc">Приховувати медіазаписи та вимкнути захоплення медіа</string>
+    <string name="clipboard_media_enabled_title">Зберігати медіазаписи</string>
+    <string name="clipboard_media_enabled_desc">Зберігати скопійовані зображення та інші медіафайли в історії буфера обміну (коли режим лише-текст вимкнено)</string>
+    <string name="clipboard_max_media_size_title">Макс. розмір медіа</string>
+    <string name="clipboard_max_media_size_desc">Пропускати скопійовані медіафайли, більші за цей розмір</string>
     <string name="clipboard_pinned_tab_title">Вкладка «Закріплені»</string>
     <string name="clipboard_pinned_tab_desc">Показувати вкладку для збереження важливих записів</string>
     <string name="clipboard_todo_tab_title">Вкладка «Завдання»</string>
@@ -475,6 +483,8 @@
     <string name="input_auto_space_before_desc">Вставляти пробіл перед натиснутою підказкою (свайп завжди додає пробіл)</string>
     <string name="input_backspace_undo_swipe_title">Backspace скасовує свайп</string>
     <string name="input_backspace_undo_swipe_desc">Натискання Backspace одразу після свайп-слова видаляє все слово</string>
+    <string name="input_show_exact_typed_title">Показувати точно введене слово</string>
+    <string name="input_show_exact_typed_desc">Пропонувати фактично введені літери як підказку; торкніться, щоб додати до словника</string>
     <string name="input_context_aware_title">Контекстні передбачення</string>
     <string name="input_context_aware_desc">Навчатися на основі паттернів набору (N-грам модель)</string>
     <string name="input_personalized_learning_title">Персоналізоване навчання</string>

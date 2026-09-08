@@ -319,6 +319,8 @@
     <string name="accessibility_swipe_complete_desc">Vibrar quando o gesto de deslize termina</string>
     <string name="advanced_terminal_mode_title">Modo terminal</string>
     <string name="advanced_terminal_mode_desc">Mostrar teclas Ctrl, Meta, PageUp/Down para apps de terminal como Termux</string>
+    <string name="advanced_ime_prompt_title">Lembrete de teclado predefinido</string>
+    <string name="advanced_ime_prompt_desc">Lembrar uma vez por arranque de definir o CleverKeys como teclado predefinido. Desligue para nunca mais perguntar.</string>
     <string name="advanced_swipe_debug_log_title">Log de depuração de deslize</string>
     <string name="advanced_swipe_debug_log_desc">Análise da pipeline em tempo real para gestos de deslize (requer logcat)</string>
     <string name="advanced_detailed_logging_title">Registro detalhado</string>
@@ -328,6 +330,8 @@
     <string name="appearance_height_portrait_desc">Ajustar a altura do teclado no modo retrato</string>
     <string name="appearance_height_landscape_title">Altura do teclado (paisagem)</string>
     <string name="appearance_height_landscape_desc">Ajustar a altura do teclado no modo paisagem</string>
+    <string name="appearance_scale_numpad_title">Ajustar altura do teclado numérico</string>
+    <string name="appearance_scale_numpad_desc">Esticar as linhas de PIN e teclado numérico até à altura total do teclado</string>
     <string name="appearance_bottom_margin_portrait_title">Margem inferior (retrato)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Margem vertical como % da altura da tela</string>
     <string name="appearance_bottom_margin_landscape_title">Margem inferior (paisagem)</string>
@@ -397,11 +401,15 @@
     <string name="clipboard_max_item_size_title">Tamanho máximo do item</string>
     <string name="clipboard_max_item_size_desc">Tamanho máximo por entrada na área de transferência (limite do Binder Android: ~1 MB)</string>
     <string name="clipboard_exclude_password_managers_title">Excluir gerenciadores de senhas</string>
-    <string name="clipboard_exclude_password_managers_desc">Não armazenar área de transferência do Bitwarden, 1Password, LastPass, KeePass, etc.</string>
+    <string name="clipboard_exclude_password_managers_desc">Melhor esforço: uma cópia só é ignorada quando o Android revela que um gestor de palavras-passe conhecido está em primeiro plano — raramente possível sem acesso de utilização (nunca pedido). Para proteção fiável, use a definição de conteúdo sensível abaixo.</string>
     <string name="clipboard_respect_sensitive_title">Respeitar flag sensível</string>
     <string name="clipboard_respect_sensitive_desc">Ignorar área de transferência marcada como sensível por gerenciadores de senhas (Android 13+)</string>
     <string name="clipboard_text_only_title">Somente texto</string>
     <string name="clipboard_text_only_desc">Ocultar entradas de mídia e desativar a captura de mídia</string>
+    <string name="clipboard_media_enabled_title">Guardar entradas multimédia</string>
+    <string name="clipboard_media_enabled_desc">Manter imagens e outros conteúdos multimédia copiados no histórico da área de transferência (quando a vista só-texto está desligada)</string>
+    <string name="clipboard_max_media_size_title">Tamanho máx. de multimédia</string>
+    <string name="clipboard_max_media_size_desc">Ignorar multimédia copiado maior do que este tamanho</string>
     <string name="clipboard_pinned_tab_title">Aba fixada</string>
     <string name="clipboard_pinned_tab_desc">Mostrar aba fixada para salvar clipes importantes</string>
     <string name="clipboard_todo_tab_title">Aba To-do</string>
@@ -463,6 +471,8 @@
     <string name="input_auto_space_before_desc">Inserir espaço antes de uma sugestão tocada (o deslize sempre adiciona espaço)</string>
     <string name="input_backspace_undo_swipe_title">Backspace desfaz deslize</string>
     <string name="input_backspace_undo_swipe_desc">Pressionar Backspace imediatamente após uma palavra deslizada apaga a palavra inteira</string>
+    <string name="input_show_exact_typed_title">Mostrar palavra exata digitada</string>
+    <string name="input_show_exact_typed_desc">Oferece as letras que realmente digitou como sugestão; toque para a adicionar ao dicionário</string>
     <string name="input_context_aware_title">Previsões contextuais</string>
     <string name="input_context_aware_desc">Aprender com padrões de digitação (modelo N-gram)</string>
     <string name="input_personalized_learning_title">Aprendizado personalizado</string>

@@ -328,6 +328,8 @@
     <string name="accessibility_swipe_complete_desc">Kaydırma hareketi bittiğinde titreşim</string>
     <string name="advanced_terminal_mode_title">Terminal Modu</string>
     <string name="advanced_terminal_mode_desc">Termux gibi terminal uygulamaları için Ctrl, Meta, PageUp/Down tuşlarını göster</string>
+    <string name="advanced_ime_prompt_title">Varsayılan klavye hatırlatıcısı</string>
+    <string name="advanced_ime_prompt_desc">Her açılışta bir kez CleverKeys\'i varsayılan klavye yapmayı hatırlat. Bir daha sorulmaması için kapatın.</string>
     <string name="advanced_swipe_debug_log_title">Kaydırma Hata Ayıklama Günlüğü</string>
     <string name="advanced_swipe_debug_log_desc">Kaydırma hareketleri için gerçek zamanlı ardışık düzen analizi (logcat gerektirir)</string>
     <string name="advanced_detailed_logging_title">Ayrıntılı Günlük Kaydı</string>
@@ -337,6 +339,8 @@
     <string name="appearance_height_portrait_desc">Dikey modda klavye yüksekliğini ayarla</string>
     <string name="appearance_height_landscape_title">Klavye Yüksekliği (Yatay)</string>
     <string name="appearance_height_landscape_desc">Yatay modda klavye yüksekliğini ayarla</string>
+    <string name="appearance_scale_numpad_title">Sayısal tuş takımı yüksekliğini ölçekle</string>
+    <string name="appearance_scale_numpad_desc">PIN ve sayısal tuş takımı satırlarını klavyenin tam yüksekliğine uzat</string>
     <string name="appearance_bottom_margin_portrait_title">Alt Kenar Boşluğu (Dikey)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Ekran yüksekliğinin % oranı olarak dikey kenar boşluğu</string>
     <string name="appearance_bottom_margin_landscape_title">Alt Kenar Boşluğu (Yatay)</string>
@@ -406,11 +410,15 @@
     <string name="clipboard_max_item_size_title">Maksimum Öğe Boyutu</string>
     <string name="clipboard_max_item_size_desc">Pano girişi başına maksimum boyut (Android Binder sınırı: ~1MB)</string>
     <string name="clipboard_exclude_password_managers_title">Parola Yöneticilerini Hariç Tut</string>
-    <string name="clipboard_exclude_password_managers_desc">Bitwarden, 1Password, LastPass, KeePass vb.\'den pano içeriğini kaydetme</string>
+    <string name="clipboard_exclude_password_managers_desc">Elden gelen çaba: yalnızca Android bilinen bir parola yöneticisinin ön planda olduğunu gösterirse kopya atlanır — kullanım erişimi olmadan (hiç istenmez) bu nadiren mümkündür. Güvenilir koruma için aşağıdaki hassas içerik ayarını kullanın.</string>
     <string name="clipboard_respect_sensitive_title">Hassas Bayrağa Saygı Göster</string>
     <string name="clipboard_respect_sensitive_desc">Parola yöneticileri tarafından hassas olarak işaretlenmiş panoyu atla (Android 13+)</string>
     <string name="clipboard_text_only_title">Yalnızca Metin</string>
     <string name="clipboard_text_only_desc">Medya girişlerini gizle ve medya yakalamayı devre dışı bırak</string>
+    <string name="clipboard_media_enabled_title">Medya girişlerini kaydet</string>
+    <string name="clipboard_media_enabled_desc">Kopyalanan görselleri ve diğer medyayı pano geçmişinde tut (yalnızca-metin görünümü kapalıyken)</string>
+    <string name="clipboard_max_media_size_title">Maks. medya boyutu</string>
+    <string name="clipboard_max_media_size_desc">Bu boyuttan büyük kopyalanan medyayı atla</string>
     <string name="clipboard_pinned_tab_title">Sabitlenmiş Sekme</string>
     <string name="clipboard_pinned_tab_desc">Önemli klipleri kaydetmek için sabitlenmiş sekmeyi göster</string>
     <string name="clipboard_todo_tab_title">Yapılacaklar Sekmesi</string>
@@ -472,6 +480,8 @@
     <string name="input_auto_space_before_desc">Dokunulan öneriden önce baştaki boşluğu ekle (kaydırma her zaman boşluk ekler)</string>
     <string name="input_backspace_undo_swipe_title">Geri Silme ile Kaydırmayı Geri Al</string>
     <string name="input_backspace_undo_swipe_desc">Kaydırılan sözcüğün hemen ardından geri silme tuşuna basmak sözcüğün tamamını siler</string>
+    <string name="input_show_exact_typed_title">Tam yazılan sözcüğü göster</string>
+    <string name="input_show_exact_typed_desc">Gerçekten yazdığınız harfleri öneri olarak sunar; sözlüğe eklemek için dokunun</string>
     <string name="input_context_aware_title">Bağlama Duyarlı Tahminler</string>
     <string name="input_context_aware_desc">Yazma düzenlerinden öğren (N-gram modeli)</string>
     <string name="input_personalized_learning_title">Kişiselleştirilmiş Öğrenme</string>

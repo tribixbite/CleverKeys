@@ -355,6 +355,8 @@
     <string name="accessibility_swipe_complete_desc">هنگام پایان اشاره کشیدن لرزش ایجاد شود</string>
     <string name="advanced_terminal_mode_title">حالت ترمینال</string>
     <string name="advanced_terminal_mode_desc">کلیدهای Ctrl، Meta و PageUp/Down را برای برنامه‌های ترمینال مانند Termux نمایش دهید</string>
+    <string name="advanced_ime_prompt_title">یادآور صفحه‌کلید پیش‌فرض</string>
+    <string name="advanced_ime_prompt_desc">در هر بار روشن‌شدن دستگاه یک بار یادآوری می‌کند CleverKeys را صفحه‌کلید پیش‌فرض کنید. برای اینکه دیگر پرسیده نشود خاموش کنید.</string>
     <string name="advanced_swipe_debug_log_title">گزارش اشکال‌زدایی کشیدن</string>
     <string name="advanced_swipe_debug_log_desc">تجزیه‌وتحلیل خط لوله بلادرنگ برای اشاره‌های کشیدن (نیاز به logcat دارد)</string>
     <string name="advanced_detailed_logging_title">گزارش‌گیری دقیق</string>
@@ -364,6 +366,8 @@
     <string name="appearance_height_portrait_desc">ارتفاع صفحه‌کلید در حالت عمودی را تنظیم کنید</string>
     <string name="appearance_height_landscape_title">ارتفاع صفحه‌کلید (افقی)</string>
     <string name="appearance_height_landscape_desc">ارتفاع صفحه‌کلید در حالت افقی را تنظیم کنید</string>
+    <string name="appearance_scale_numpad_title">مقیاس ارتفاع صفحهٔ عددی</string>
+    <string name="appearance_scale_numpad_desc">کشیدن ردیف‌های PIN و صفحهٔ عددی تا ارتفاع کامل صفحه‌کلید</string>
     <string name="appearance_bottom_margin_portrait_title">حاشیه پایین (عمودی)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">حاشیه عمودی به‌عنوان درصدی از ارتفاع صفحه</string>
     <string name="appearance_bottom_margin_landscape_title">حاشیه پایین (افقی)</string>
@@ -433,11 +437,15 @@
     <string name="clipboard_max_item_size_title">حداکثر اندازه آیتم</string>
     <string name="clipboard_max_item_size_desc">حداکثر اندازه هر ورودی بریده‌دان (محدودیت Android Binder: ~۱ مگابایت)</string>
     <string name="clipboard_exclude_password_managers_title">استثنای مدیران گذرواژه</string>
-    <string name="clipboard_exclude_password_managers_desc">بریده‌دان از Bitwarden، 1Password، LastPass، KeePass و غیره ذخیره نشود</string>
+    <string name="clipboard_exclude_password_managers_desc">تلاش حداکثری: فقط زمانی از ذخیرهٔ کپی صرف‌نظر می‌شود که اندروید نشان دهد یک مدیر رمز عبور شناخته‌شده در پیش‌زمینه است — بدون دسترسی به آمار استفاده (هرگز درخواست نمی‌شود) به‌ندرت ممکن است. برای محافظت مطمئن از تنظیم محتوای حساس در پایین استفاده کنید.</string>
     <string name="clipboard_respect_sensitive_title">رعایت پرچم حساس</string>
     <string name="clipboard_respect_sensitive_desc">بریده‌دان علامت‌گذاری‌شده به‌عنوان حساس توسط مدیران گذرواژه را رد کنید (Android 13+)</string>
     <string name="clipboard_text_only_title">فقط متن</string>
     <string name="clipboard_text_only_desc">ورودی‌های رسانه را پنهان کنید و گرفتن رسانه را غیرفعال کنید</string>
+    <string name="clipboard_media_enabled_title">ذخیرهٔ موارد رسانه‌ای</string>
+    <string name="clipboard_media_enabled_desc">نگه‌داشتن تصاویر و سایر رسانه‌های کپی‌شده در تاریخچهٔ کلیپ‌بورد (وقتی نمایش فقط-متن خاموش است)</string>
+    <string name="clipboard_max_media_size_title">حداکثر اندازهٔ رسانه</string>
+    <string name="clipboard_max_media_size_desc">رسانه‌های کپی‌شدهٔ بزرگ‌تر از این اندازه ذخیره نمی‌شوند</string>
     <string name="clipboard_pinned_tab_title">زبانهٔ سنجاق‌شده</string>
     <string name="clipboard_pinned_tab_desc">زبانهٔ سنجاق‌شده را برای ذخیره کلیپ‌های مهم نمایش دهید</string>
     <string name="clipboard_todo_tab_title">زبانهٔ کارها</string>
@@ -499,6 +507,8 @@
     <string name="input_auto_space_before_desc">قبل از پیشنهاد انتخاب‌شده فاصله پیشرو اضافه کنید (کشیدن همیشه فاصله اضافه می‌کند)</string>
     <string name="input_backspace_undo_swipe_title">واگرد کشیدن با Backspace</string>
     <string name="input_backspace_undo_swipe_desc">فشردن Backspace بلافاصله پس از واژه کشیده‌شده، کل واژه را حذف می‌کند</string>
+    <string name="input_show_exact_typed_title">نمایش واژهٔ دقیقاً تایپ‌شده</string>
+    <string name="input_show_exact_typed_desc">حروفی که واقعاً تایپ کرده‌اید به‌عنوان پیشنهاد نمایش داده می‌شود؛ با لمس به واژه‌نامه افزوده می‌شود</string>
     <string name="input_context_aware_title">پیش‌بینی‌های آگاه به زمینه</string>
     <string name="input_context_aware_desc">از الگوهای تایپ یاد بگیرید (مدل N-gram)</string>
     <string name="input_personalized_learning_title">یادگیری شخصی‌سازی‌شده</string>

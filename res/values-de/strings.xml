@@ -339,6 +339,8 @@
     <string name="accessibility_swipe_complete_desc">Vibrieren, wenn eine Wischgeste beendet wird</string>
     <string name="advanced_terminal_mode_title">Terminal-Modus</string>
     <string name="advanced_terminal_mode_desc">Strg-, Meta-, Bild-auf/ab-Tasten für Terminal-Apps wie Termux anzeigen</string>
+    <string name="advanced_ime_prompt_title">Erinnerung an Standardtastatur</string>
+    <string name="advanced_ime_prompt_desc">Einmal pro Gerätestart erinnern, CleverKeys als Standardtastatur festzulegen. Ausschalten, um nie wieder gefragt zu werden.</string>
     <string name="advanced_swipe_debug_log_title">Wisch-Debug-Protokoll</string>
     <string name="advanced_swipe_debug_log_desc">Echtzeit-Pipeline-Analyse für Wischgesten (erfordert logcat)</string>
     <string name="advanced_detailed_logging_title">Detaillierte Protokollierung</string>
@@ -348,6 +350,8 @@
     <string name="appearance_height_portrait_desc">Tastaturhöhe im Hochformat anpassen</string>
     <string name="appearance_height_landscape_title">Tastaturhöhe (Querformat)</string>
     <string name="appearance_height_landscape_desc">Tastaturhöhe im Querformat anpassen</string>
+    <string name="appearance_scale_numpad_title">Numpad-Höhe skalieren</string>
+    <string name="appearance_scale_numpad_desc">PIN- und Numpad-Zeilen auf die volle Tastaturhöhe strecken</string>
     <string name="appearance_bottom_margin_portrait_title">Unterer Rand (Hochformat)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Vertikaler Rand als % der Bildschirmhöhe</string>
     <string name="appearance_bottom_margin_landscape_title">Unterer Rand (Querformat)</string>
@@ -417,11 +421,15 @@
     <string name="clipboard_max_item_size_title">Maximale Elementgröße</string>
     <string name="clipboard_max_item_size_desc">Maximale Größe pro Zwischenablageeintrag (Android Binder-Limit: ~1 MB)</string>
     <string name="clipboard_exclude_password_managers_title">Passwort-Manager ausschließen</string>
-    <string name="clipboard_exclude_password_managers_desc">Zwischenablageinhalte von Bitwarden, 1Password, LastPass, KeePass usw. nicht speichern</string>
+    <string name="clipboard_exclude_password_managers_desc">Best-Effort: Eine Kopie wird nur übersprungen, wenn Android einen bekannten Passwort-Manager als Vordergrund-App erkennt — ohne Nutzungszugriff (wird nie angefordert) selten möglich. Verlässlichen Schutz bietet die Einstellung für sensible Inhalte darunter.</string>
     <string name="clipboard_respect_sensitive_title">Vertraulich-Flag beachten</string>
     <string name="clipboard_respect_sensitive_desc">Als vertraulich markierte Zwischenablage von Passwort-Managern überspringen (Android 13+)</string>
     <string name="clipboard_text_only_title">Nur Text</string>
     <string name="clipboard_text_only_desc">Medieneinträge ausblenden und Medienaufnahme deaktivieren</string>
+    <string name="clipboard_media_enabled_title">Medieneinträge speichern</string>
+    <string name="clipboard_media_enabled_desc">Kopierte Bilder und andere Medien im Zwischenablage-Verlauf behalten (wenn die Nur-Text-Anzeige aus ist)</string>
+    <string name="clipboard_max_media_size_title">Max. Mediengröße</string>
+    <string name="clipboard_max_media_size_desc">Kopierte Medien überspringen, die größer als diese Größe sind</string>
     <string name="clipboard_pinned_tab_title">Angehefteter Tab</string>
     <string name="clipboard_pinned_tab_desc">Angehefteten Tab zum Speichern wichtiger Clips anzeigen</string>
     <string name="clipboard_todo_tab_title">Aufgaben-Tab</string>
@@ -483,6 +491,8 @@
     <string name="input_auto_space_before_desc">Führendes Leerzeichen vor einem getippten Vorschlag einfügen (Wischeingabe fügt immer Leerzeichen hinzu)</string>
     <string name="input_backspace_undo_swipe_title">Rücktaste macht Wischgeste rückgängig</string>
     <string name="input_backspace_undo_swipe_desc">Durch Tippen auf Rücktaste unmittelbar nach einem Wischtatwort wird das gesamte Wort gelöscht</string>
+    <string name="input_show_exact_typed_title">Exakt getipptes Wort anzeigen</string>
+    <string name="input_show_exact_typed_desc">Die tatsächlich getippten Buchstaben als Vorschlag anbieten — Antippen fügt sie dem Wörterbuch hinzu</string>
     <string name="input_context_aware_title">Kontextbewusste Vorhersagen</string>
     <string name="input_context_aware_desc">Aus Tippmustern lernen (N-Gramm-Modell)</string>
     <string name="input_personalized_learning_title">Personalisiertes Lernen</string>

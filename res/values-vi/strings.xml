@@ -348,6 +348,8 @@
     <string name="accessibility_swipe_complete_desc">Rung khi cử chỉ vuốt kết thúc</string>
     <string name="advanced_terminal_mode_title">Chế độ Terminal</string>
     <string name="advanced_terminal_mode_desc">Hiển thị phím Ctrl, Meta, PageUp/Down cho các ứng dụng terminal như Termux</string>
+    <string name="advanced_ime_prompt_title">Nhắc bàn phím mặc định</string>
+    <string name="advanced_ime_prompt_desc">Nhắc một lần mỗi lần khởi động để đặt CleverKeys làm bàn phím mặc định. Tắt để không bao giờ hỏi lại.</string>
     <string name="advanced_swipe_debug_log_title">Nhật ký gỡ lỗi vuốt</string>
     <string name="advanced_swipe_debug_log_desc">Phân tích quy trình xử lý vuốt theo thời gian thực (yêu cầu logcat)</string>
     <string name="advanced_detailed_logging_title">Ghi nhật ký chi tiết</string>
@@ -357,6 +359,8 @@
     <string name="appearance_height_portrait_desc">Điều chỉnh chiều cao bàn phím ở chế độ dọc</string>
     <string name="appearance_height_landscape_title">Chiều cao bàn phím (Ngang)</string>
     <string name="appearance_height_landscape_desc">Điều chỉnh chiều cao bàn phím ở chế độ ngang</string>
+    <string name="appearance_scale_numpad_title">Co giãn chiều cao bàn phím số</string>
+    <string name="appearance_scale_numpad_desc">Kéo giãn các hàng PIN và bàn phím số theo toàn bộ chiều cao bàn phím</string>
     <string name="appearance_bottom_margin_portrait_title">Lề dưới (Dọc)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Lề dọc tính theo % chiều cao màn hình</string>
     <string name="appearance_bottom_margin_landscape_title">Lề dưới (Ngang)</string>
@@ -426,11 +430,15 @@
     <string name="clipboard_max_item_size_title">Kích thước mục tối đa</string>
     <string name="clipboard_max_item_size_desc">Kích thước tối đa cho mỗi mục bảng tạm (giới hạn Android Binder: ~1MB)</string>
     <string name="clipboard_exclude_password_managers_title">Loại trừ trình quản lý mật khẩu</string>
-    <string name="clipboard_exclude_password_managers_desc">Không lưu nội dung từ Bitwarden, 1Password, LastPass, KeePass, v.v.</string>
+    <string name="clipboard_exclude_password_managers_desc">Nỗ lực tối đa: chỉ bỏ qua bản sao khi Android cho biết một trình quản lý mật khẩu đã biết đang ở nền trước — hiếm khi khả thi nếu không có quyền truy cập sử dụng (không bao giờ yêu cầu). Để bảo vệ đáng tin cậy, hãy dùng cài đặt nội dung nhạy cảm bên dưới.</string>
     <string name="clipboard_respect_sensitive_title">Tôn trọng cờ nhạy cảm</string>
     <string name="clipboard_respect_sensitive_desc">Bỏ qua bảng tạm được đánh dấu nhạy cảm bởi trình quản lý mật khẩu (Android 13+)</string>
     <string name="clipboard_text_only_title">Chỉ văn bản</string>
     <string name="clipboard_text_only_desc">Ẩn mục đa phương tiện và tắt chụp đa phương tiện</string>
+    <string name="clipboard_media_enabled_title">Lưu mục phương tiện</string>
+    <string name="clipboard_media_enabled_desc">Giữ hình ảnh và phương tiện khác đã sao chép trong lịch sử bộ nhớ tạm (khi chế độ chỉ-văn-bản tắt)</string>
+    <string name="clipboard_max_media_size_title">Kích thước phương tiện tối đa</string>
+    <string name="clipboard_max_media_size_desc">Bỏ qua phương tiện đã sao chép lớn hơn kích thước này</string>
     <string name="clipboard_pinned_tab_title">Tab đã ghim</string>
     <string name="clipboard_pinned_tab_desc">Hiển thị tab ghim để lưu các đoạn clip quan trọng</string>
     <string name="clipboard_todo_tab_title">Tab việc cần làm</string>
@@ -492,6 +500,8 @@
     <string name="input_auto_space_before_desc">Chèn khoảng trắng đầu trước gợi ý được chạm (vuốt luôn thêm khoảng trắng)</string>
     <string name="input_backspace_undo_swipe_title">Xóa lùi hoàn tác vuốt</string>
     <string name="input_backspace_undo_swipe_desc">Nhấn xóa lùi ngay sau từ được vuốt sẽ xóa toàn bộ từ</string>
+    <string name="input_show_exact_typed_title">Hiện từ đã gõ chính xác</string>
+    <string name="input_show_exact_typed_desc">Đề xuất đúng các chữ cái bạn đã gõ; chạm để thêm vào từ điển</string>
     <string name="input_context_aware_title">Dự đoán theo ngữ cảnh</string>
     <string name="input_context_aware_desc">Học từ mẫu gõ phím (mô hình N-gram)</string>
     <string name="input_personalized_learning_title">Học cá nhân hóa</string>

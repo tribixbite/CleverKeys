@@ -319,6 +319,8 @@
     <string name="accessibility_swipe_complete_desc">スワイプジェスチャー完了時に振動します</string>
     <string name="advanced_terminal_mode_title">ターミナルモード</string>
     <string name="advanced_terminal_mode_desc">Termuxなどのターミナルアプリ向けにCtrl、Meta、PageUp/Downキーを表示します</string>
+    <string name="advanced_ime_prompt_title">既定のキーボードのリマインダー</string>
+    <string name="advanced_ime_prompt_desc">起動ごとに一度、CleverKeys を既定のキーボードに設定するよう通知します。オフにすると今後表示されません。</string>
     <string name="advanced_swipe_debug_log_title">スワイプデバッグログ</string>
     <string name="advanced_swipe_debug_log_desc">スワイプジェスチャーのリアルタイムパイプライン解析（logcat必須）</string>
     <string name="advanced_detailed_logging_title">詳細ログ</string>
@@ -328,6 +330,8 @@
     <string name="appearance_height_portrait_desc">縦向きモードのキーボード高さを調整します</string>
     <string name="appearance_height_landscape_title">キーボードの高さ（横向き）</string>
     <string name="appearance_height_landscape_desc">横向きモードのキーボード高さを調整します</string>
+    <string name="appearance_scale_numpad_title">テンキーの高さを調整</string>
+    <string name="appearance_scale_numpad_desc">PIN・テンキーの行をキーボードの高さいっぱいに広げます</string>
     <string name="appearance_bottom_margin_portrait_title">下余白（縦向き）</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">画面高さに対する縦余白の割合</string>
     <string name="appearance_bottom_margin_landscape_title">下余白（横向き）</string>
@@ -397,11 +401,15 @@
     <string name="clipboard_max_item_size_title">アイテム最大サイズ</string>
     <string name="clipboard_max_item_size_desc">クリップボードエントリーの最大サイズ（Android Binderの制限：約1MB）</string>
     <string name="clipboard_exclude_password_managers_title">パスワードマネージャーを除外</string>
-    <string name="clipboard_exclude_password_managers_desc">Bitwarden、1Password、LastPass、KeePassなどからのクリップボードを保存しません</string>
+    <string name="clipboard_exclude_password_managers_desc">ベストエフォート:既知のパスワードマネージャーが前面にあるとAndroidが判別できた場合のみコピーを保存しません。使用状況へのアクセス(要求しません)がないため、ほとんど機能しません。確実な保護には下の機密コンテンツ設定を使用してください。</string>
     <string name="clipboard_respect_sensitive_title">機密フラグを尊重</string>
     <string name="clipboard_respect_sensitive_desc">パスワードマネージャーが機密とマークしたクリップボードをスキップします（Android 13以降）</string>
     <string name="clipboard_text_only_title">テキストのみ</string>
     <string name="clipboard_text_only_desc">メディアエントリーを非表示にし、メディアキャプチャを無効にします</string>
+    <string name="clipboard_media_enabled_title">メディア項目を保存</string>
+    <string name="clipboard_media_enabled_desc">コピーした画像などのメディアをクリップボード履歴に保存します(テキストのみ表示がオフのとき)</string>
+    <string name="clipboard_max_media_size_title">メディアの最大サイズ</string>
+    <string name="clipboard_max_media_size_desc">このサイズを超えるコピーされたメディアは保存しません</string>
     <string name="clipboard_pinned_tab_title">固定タブ</string>
     <string name="clipboard_pinned_tab_desc">重要なクリップを保存するための固定タブを表示します</string>
     <string name="clipboard_todo_tab_title">Todoタブ</string>
@@ -463,6 +471,8 @@
     <string name="input_auto_space_before_desc">タップした候補の前にスペースを挿入します（スワイプは常にスペースを追加）</string>
     <string name="input_backspace_undo_swipe_title">バックスペースでスワイプを元に戻す</string>
     <string name="input_backspace_undo_swipe_desc">スワイプ入力直後にバックスペースをタップすると、単語全体が削除されます</string>
+    <string name="input_show_exact_typed_title">入力した文字列をそのまま表示</string>
+    <string name="input_show_exact_typed_desc">実際に入力した文字を候補として表示します。タップすると辞書に追加されます</string>
     <string name="input_context_aware_title">コンテキスト対応予測</string>
     <string name="input_context_aware_desc">入力パターンから学習します（N-gramモデル）</string>
     <string name="input_personalized_learning_title">パーソナライズド学習</string>

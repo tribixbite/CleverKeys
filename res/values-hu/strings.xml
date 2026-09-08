@@ -325,6 +325,8 @@
     <string name="accessibility_swipe_complete_desc">Rezgés a csúsztatási gesztus befejezésekor</string>
     <string name="advanced_terminal_mode_title">Terminál mód</string>
     <string name="advanced_terminal_mode_desc">Ctrl, Meta, PageUp/Down billentyűk megjelenítése terminál alkalmazásokhoz, például Termux</string>
+    <string name="advanced_ime_prompt_title">Alapértelmezett billentyűzet emlékeztető</string>
+    <string name="advanced_ime_prompt_desc">Rendszerindításonként egyszer emlékeztet, hogy a CleverKeys legyen az alapértelmezett billentyűzet. Kikapcsolva soha többé nem kérdez.</string>
     <string name="advanced_swipe_debug_log_title">Csúsztatás hibakeresési napló</string>
     <string name="advanced_swipe_debug_log_desc">Valós idejű folyamat elemzés csúsztatási gesztusokhoz (logcat szükséges)</string>
     <string name="advanced_detailed_logging_title">Részletes naplózás</string>
@@ -334,6 +336,8 @@
     <string name="appearance_height_portrait_desc">Billentyűzet magasságának beállítása álló módban</string>
     <string name="appearance_height_landscape_title">Billentyűzet magassága (Fekvő)</string>
     <string name="appearance_height_landscape_desc">Billentyűzet magasságának beállítása fekvő módban</string>
+    <string name="appearance_scale_numpad_title">Numerikus billentyűzet magasságának igazítása</string>
+    <string name="appearance_scale_numpad_desc">A PIN- és numerikus sorok nyújtása a billentyűzet teljes magasságára</string>
     <string name="appearance_bottom_margin_portrait_title">Alsó margó (Álló)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Függőleges margó a képernyő magasságának %-ában</string>
     <string name="appearance_bottom_margin_landscape_title">Alsó margó (Fekvő)</string>
@@ -403,11 +407,15 @@
     <string name="clipboard_max_item_size_title">Maximális elem mérete</string>
     <string name="clipboard_max_item_size_desc">Maximális méret vágólapbejegyzésenként (Android Binder korlát: ~1MB)</string>
     <string name="clipboard_exclude_password_managers_title">Jelszókezelők kizárása</string>
-    <string name="clipboard_exclude_password_managers_desc">Ne tárolja a Bitwarden, 1Password, LastPass, KeePass stb. vágólapját</string>
+    <string name="clipboard_exclude_password_managers_desc">Legjobb szándék szerint: a másolat csak akkor marad ki, ha az Android felfedi, hogy ismert jelszókezelő van az előtérben — használati hozzáférés nélkül (sosem kérjük) ez ritkán lehetséges. Megbízható védelmet az alábbi érzékeny-tartalom beállítás nyújt.</string>
     <string name="clipboard_respect_sensitive_title">Érzékeny jelző tisztelete</string>
     <string name="clipboard_respect_sensitive_desc">A jelszókezelők által érzékenynek jelölt vágólap kihagyása (Android 13+)</string>
     <string name="clipboard_text_only_title">Csak szöveg</string>
     <string name="clipboard_text_only_desc">Média bejegyzések elrejtése és média rögzítés letiltása</string>
+    <string name="clipboard_media_enabled_title">Médiaelemek mentése</string>
+    <string name="clipboard_media_enabled_desc">A másolt képek és más médiafájlok megőrzése a vágólap-előzményekben (ha a csak-szöveg nézet ki van kapcsolva)</string>
+    <string name="clipboard_max_media_size_title">Max. médiaméret</string>
+    <string name="clipboard_max_media_size_desc">Az ennél nagyobb másolt média kihagyása</string>
     <string name="clipboard_pinned_tab_title">Rögzített lap</string>
     <string name="clipboard_pinned_tab_desc">Rögzített lap megjelenítése fontos kivágások mentéséhez</string>
     <string name="clipboard_todo_tab_title">Teendők lap</string>
@@ -469,6 +477,8 @@
     <string name="input_auto_space_before_desc">Vezető szóköz beillesztése érintett javaslat elé (csúsztatás mindig szóközt ad)</string>
     <string name="input_backspace_undo_swipe_title">Csúsztatás visszavonása törlőbillentyűvel</string>
     <string name="input_backspace_undo_swipe_desc">A törlőbillentyű megnyomása egy csúsztatott szó után azonnal törli az egész szót</string>
+    <string name="input_show_exact_typed_title">Pontosan begépelt szó mutatása</string>
+    <string name="input_show_exact_typed_desc">A ténylegesen begépelt betűk felajánlása javaslatként; koppintással a szótárba kerül</string>
     <string name="input_context_aware_title">Kontextusérzékeny előrejelzések</string>
     <string name="input_context_aware_desc">Tanulás gépelési mintákból (N-gram modell)</string>
     <string name="input_personalized_learning_title">Személyre szabott tanulás</string>

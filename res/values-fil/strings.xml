@@ -329,6 +329,8 @@
     <string name="accessibility_swipe_complete_desc">Mag-vibrate kapag natapos ang swipe gesture</string>
     <string name="advanced_terminal_mode_title">Terminal Mode</string>
     <string name="advanced_terminal_mode_desc">Ipakita ang mga key na Ctrl, Meta, PageUp/Down para sa mga terminal app tulad ng Termux</string>
+    <string name="advanced_ime_prompt_title">Paalala sa default na keyboard</string>
+    <string name="advanced_ime_prompt_desc">Magpaalala isang beses kada boot na gawing default na keyboard ang CleverKeys. I-off para hindi na muling magtanong.</string>
     <string name="advanced_swipe_debug_log_title">Swipe Debug Log</string>
     <string name="advanced_swipe_debug_log_desc">Real-time na pagsusuri ng pipeline para sa mga swipe gesture (kailangan ang logcat)</string>
     <string name="advanced_detailed_logging_title">Detalyadong Logging</string>
@@ -338,6 +340,8 @@
     <string name="appearance_height_portrait_desc">Ayusin ang taas ng keyboard sa portrait mode</string>
     <string name="appearance_height_landscape_title">Taas ng Keyboard (Landscape)</string>
     <string name="appearance_height_landscape_desc">Ayusin ang taas ng keyboard sa landscape mode</string>
+    <string name="appearance_scale_numpad_title">I-scale ang taas ng numpad</string>
+    <string name="appearance_scale_numpad_desc">Ibanat ang mga hilera ng PIN at numpad sa buong taas ng keyboard</string>
     <string name="appearance_bottom_margin_portrait_title">Bottom Margin (Portrait)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Vertical na margin bilang % ng taas ng screen</string>
     <string name="appearance_bottom_margin_landscape_title">Bottom Margin (Landscape)</string>
@@ -407,11 +411,15 @@
     <string name="clipboard_max_item_size_title">Maximum na Sukat ng Item</string>
     <string name="clipboard_max_item_size_desc">Maximum na sukat bawat entry ng clipboard (limitasyon ng Android Binder: ~1MB)</string>
     <string name="clipboard_exclude_password_managers_title">Ibukod ang mga Password Manager</string>
-    <string name="clipboard_exclude_password_managers_desc">Huwag itago ang clipboard mula sa Bitwarden, 1Password, LastPass, KeePass, atbp.</string>
+    <string name="clipboard_exclude_password_managers_desc">Best effort: nilalaktawan lang ang kopya kapag isiniwalat ng Android na nasa unahan ang isang kilalang password manager — bihirang posible nang walang usage access (hindi kailanman hinihiling). Para sa maaasahang proteksyon, gamitin ang setting ng sensitibong nilalaman sa ibaba.</string>
     <string name="clipboard_respect_sensitive_title">Igalang ang Sensitive Flag</string>
     <string name="clipboard_respect_sensitive_desc">Laktawan ang clipboard na minarkahan bilang sensitibo ng mga password manager (Android 13+)</string>
     <string name="clipboard_text_only_title">Teksto Lang</string>
     <string name="clipboard_text_only_desc">Itago ang mga media entry at i-disable ang media capture</string>
+    <string name="clipboard_media_enabled_title">I-save ang mga media entry</string>
+    <string name="clipboard_media_enabled_desc">Panatilihin sa clipboard history ang mga kinopyang larawan at iba pang media (kapag naka-off ang text-only na view)</string>
+    <string name="clipboard_max_media_size_title">Max na laki ng media</string>
+    <string name="clipboard_max_media_size_desc">Laktawan ang kinopyang media na mas malaki sa sukat na ito</string>
     <string name="clipboard_pinned_tab_title">Tab ng Mga Naka-pin</string>
     <string name="clipboard_pinned_tab_desc">Ipakita ang pinned tab para i-save ang mga mahalagang clip</string>
     <string name="clipboard_todo_tab_title">Tab ng To-do</string>
@@ -473,6 +481,8 @@
     <string name="input_auto_space_before_desc">Mag-insert ng leading space bago ang isang na-tap na suhestiyon (ang swipe ay palaging nagdadagdag ng space)</string>
     <string name="input_backspace_undo_swipe_title">Backspace Undo ng Swipe</string>
     <string name="input_backspace_undo_swipe_desc">Ang pagpindot ng backspace kaagad pagkatapos ng isang swiped na salita ay nagtatanggal ng buong salita</string>
+    <string name="input_show_exact_typed_title">Ipakita ang eksaktong na-type na salita</string>
+    <string name="input_show_exact_typed_desc">Iminumungkahi ang mga titik na aktwal mong na-type; i-tap para idagdag sa diksyunaryo</string>
     <string name="input_context_aware_title">Context-Aware na Prediction</string>
     <string name="input_context_aware_desc">Matuto mula sa mga pattern ng pagtatype (N-gram model)</string>
     <string name="input_personalized_learning_title">Personalized na Pagkatuto</string>

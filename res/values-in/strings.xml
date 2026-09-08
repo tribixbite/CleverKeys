@@ -331,6 +331,8 @@
     <string name="accessibility_swipe_complete_desc">Bergetar saat gesture geser selesai</string>
     <string name="advanced_terminal_mode_title">Mode Terminal</string>
     <string name="advanced_terminal_mode_desc">Tampilkan tombol Ctrl, Meta, PageUp/Down untuk aplikasi terminal seperti Termux</string>
+    <string name="advanced_ime_prompt_title">Pengingat keyboard default</string>
+    <string name="advanced_ime_prompt_desc">Ingatkan sekali per boot untuk menjadikan CleverKeys keyboard default. Matikan agar tidak pernah bertanya lagi.</string>
     <string name="advanced_swipe_debug_log_title">Log Debug Geser</string>
     <string name="advanced_swipe_debug_log_desc">Analisis jalur real-time untuk gestur geser (membutuhkan logcat)</string>
     <string name="advanced_detailed_logging_title">Pencatatan Terperinci</string>
@@ -340,6 +342,8 @@
     <string name="appearance_height_portrait_desc">Sesuaikan tinggi keyboard dalam mode potret</string>
     <string name="appearance_height_landscape_title">Tinggi Keyboard (Lanskap)</string>
     <string name="appearance_height_landscape_desc">Sesuaikan tinggi keyboard dalam mode lanskap</string>
+    <string name="appearance_scale_numpad_title">Skalakan tinggi numpad</string>
+    <string name="appearance_scale_numpad_desc">Regangkan baris PIN dan numpad hingga tinggi keyboard penuh</string>
     <string name="appearance_bottom_margin_portrait_title">Margin Bawah (Potret)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Margin vertikal sebagai % tinggi layar</string>
     <string name="appearance_bottom_margin_landscape_title">Margin Bawah (Lanskap)</string>
@@ -409,11 +413,15 @@
     <string name="clipboard_max_item_size_title">Ukuran Item Maksimum</string>
     <string name="clipboard_max_item_size_desc">Ukuran maksimum per entri clipboard (batas Android Binder: ~1MB)</string>
     <string name="clipboard_exclude_password_managers_title">Kecualikan Pengelola Kata Sandi</string>
-    <string name="clipboard_exclude_password_managers_desc">Jangan simpan clipboard dari Bitwarden, 1Password, LastPass, KeePass, dll.</string>
+    <string name="clipboard_exclude_password_managers_desc">Upaya terbaik: salinan hanya dilewati jika Android mengungkap bahwa pengelola kata sandi yang dikenal sedang di latar depan — jarang memungkinkan tanpa akses penggunaan (tidak pernah diminta). Untuk perlindungan andal, gunakan setelan konten sensitif di bawah.</string>
     <string name="clipboard_respect_sensitive_title">Hormati Tanda Sensitif</string>
     <string name="clipboard_respect_sensitive_desc">Lewati clipboard yang ditandai sensitif oleh pengelola kata sandi (Android 13+)</string>
     <string name="clipboard_text_only_title">Hanya Teks</string>
     <string name="clipboard_text_only_desc">Sembunyikan entri media dan nonaktifkan pengambilan media</string>
+    <string name="clipboard_media_enabled_title">Simpan entri media</string>
+    <string name="clipboard_media_enabled_desc">Simpan gambar dan media lain yang disalin dalam riwayat papan klip (saat tampilan hanya-teks mati)</string>
+    <string name="clipboard_max_media_size_title">Ukuran media maks</string>
+    <string name="clipboard_max_media_size_desc">Lewati media tersalin yang lebih besar dari ukuran ini</string>
     <string name="clipboard_pinned_tab_title">Tab Tersematkan</string>
     <string name="clipboard_pinned_tab_desc">Tampilkan tab tersematkan untuk menyimpan klip penting</string>
     <string name="clipboard_todo_tab_title">Tab To-do</string>
@@ -475,6 +483,8 @@
     <string name="input_auto_space_before_desc">Sisipkan spasi di depan sebelum saran yang diketuk (geser selalu menambah spasi)</string>
     <string name="input_backspace_undo_swipe_title">Batalkan Geser dengan Backspace</string>
     <string name="input_backspace_undo_swipe_desc">Mengetuk backspace segera setelah kata geser menghapus seluruh kata</string>
+    <string name="input_show_exact_typed_title">Tampilkan kata persis yang diketik</string>
+    <string name="input_show_exact_typed_desc">Tawarkan huruf yang benar-benar Anda ketik sebagai saran; ketuk untuk menambahkannya ke kamus</string>
     <string name="input_context_aware_title">Prediksi Kontekstual</string>
     <string name="input_context_aware_desc">Belajar dari pola mengetik (model N-gram)</string>
     <string name="input_personalized_learning_title">Pembelajaran Personal</string>
