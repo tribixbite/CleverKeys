@@ -418,15 +418,34 @@ C-4 `87406cb1`, F-1 `ba1488b9`, G-1 `c6f3ee3d`, I-1 `295f7300`, H-2 `32a43584`.
 
 Registration commits: `43a013fb`, `687f13c3`, `0d1e9bcd`, `12483ea1`, `b6c3c449`.
 
-### Remaining maintainer forks (all pinned by ratchets where mechanical)
+### Maintainer forks — ALL RESOLVED 2026-09-08 (round 8, waves R8-A..D)
 
-1. **D-1** — declare `PACKAGE_USAGE_STATS` or reword/drop the setting.
-2. **G-3** — short-swipe import merge-collision semantics (import-wins vs local-wins).
-3. **F-8** — surface or delete the writerless settings keys (exact set pinned in
-   `SettingsSurfaceDriftTest.writerlessSettingsKeys_arePinnedExactly`, now including
-   `privacy_collect_errors` and `scale_numpad_height` found during remediation).
-4. **H-4** — wire or remove the nine dead custom-theme editor fields.
-5. **I-7** — default-IME prompt session-flag semantics (per-boot vs per-session).
+The maintainer decided every fork; all five are implemented, fail-first-tested, green:
+
+1. **D-1 — "reword"**: password-manager exclusion described honestly (best-effort
+   mechanism, sensitive-flag setting named as the reliable protection) in all 22
+   locales, overpromise-regression pin added — `870cf499`.
+2. **G-3 — "import-wins, collisions surfaced in preview"**: merge semantics pinned
+   (the code already conformed — proven by mutation red), preview collision rows
+   pinned through the bucket model, every lying KDoc/label corrected in 22 locales —
+   `b6ae503e` + `9f56e80d`.
+3. **F-8 — "surface all except error collection"**: four keys got real controls
+   (clipboard media switch + MB slider on the shared 1..50 range, exact-typed-word,
+   numpad height scaling); `privacy_collect_errors` pinned deliberately-writerless —
+   `68bafddc` + `4538da68`.
+4. **H-4 — "WIRE THEM UP"**: all nine Theme-Creator fields persist, round-trip and
+   render (locked/modifier/special key backgrounds, activated border, ripple,
+   suggestion text/background/high-confidence, keyboard surface); built-ins render
+   pixel-identically; live re-theme without restart; latent stale-twin
+   CustomThemeManager bug found and fixed — `c9939571`.
+5. **I-7 — "once per boot + stop-prompting option"**: boot-instant persisted
+   (survives process death), new-boot re-prompt, permanent opt-out switch
+   (`ime_default_prompt_enabled`, backup-portable) — `4538da68`.
+
+Also closed in round 8: the **UserDictionaryObserver case bug** ("fix comprehensively")
+— stored-case frequency reads on both JSON parse paths (`0edc7002`) plus original-case
+delivery for incremental adds (`d94affc1`); accepted corner (case-only respelling with
+unchanged frequency waits for full load) is pinned in-test.
 
 ### New small findings during remediation (not in the original 69)
 

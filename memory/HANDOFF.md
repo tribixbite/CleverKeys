@@ -29,6 +29,14 @@ production bugs); Wave K Saga device pass complete
 non-issue (61 ms), #79 non-reproducing, decode e2e verified, restore verified. Fresh verbose
 release v1.6.0 (sha `6894b2cc…`) is INSTALLED on the Saga awaiting the maintainer soak.
 
+**Round 8 (2026-09-08) — ALL five maintainer forks implemented per decisions** (D-1
+reword / G-3 import-wins+preview / F-8 surface-except-error-collection / H-4 all nine
+theme fields wired / I-7 once-per-boot+opt-out) **plus the UserDictionaryObserver case
+bug fixed comprehensively** (both parse paths + incremental original-case delivery).
+Commit map in the audit doc's "Maintainer forks — ALL RESOLVED" section. Remaining from
+round 8: device-visual pass on a custom theme (adb/ew-cli, pure-tier only so far); the
+one accepted corner (case-only respelling, unchanged freq → next full load) is pinned.
+
 **Round 7 (2026-09-07) — comprehensive-audit remediation COMPLETE.** All 69 findings of
 `docs/audit/2026-09-06-comprehensive-audit.md` fixed or explicitly deferred (its
 Resolution section holds the commit map). All 8 P1s fixed. Gates: 2,329 pure / 703 mock /
