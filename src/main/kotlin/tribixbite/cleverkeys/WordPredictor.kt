@@ -409,6 +409,15 @@ class WordPredictor : Predictor {
                 }
                 calibrated[lower] =
                     UserWordFrequency.scaleOnto(storedFreq, scaleFloor, scaleCeil).roundToInt()
+                // Issue #72 mirror of the full-load paths: the observer delivers the spelling
+                // AS STORED, so a cased word serves its casing immediately instead of
+                // lowercase-until-the-next-full-load; a lowercase (re-)add clears any stale
+                // mapping, exactly as a full load's cleared map would leave it absent.
+                if (word != lower) {
+                    userWordOriginalCase[lower] = word
+                } else {
+                    userWordOriginalCase.remove(lower)
+                }
             }
             dict.putAll(calibrated)
             addToPrefixIndex(calibrated.keys)

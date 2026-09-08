@@ -317,6 +317,35 @@ class UserDictionaryLocaleFilterTest {
     }
 
     @Test
+    fun aCasedProviderWordIsDeliveredWithItsStoredSpellingButCachedFolded() {
+        providerRows = emptyList()
+        val obs = observer(language = "en")
+        obs.loadCache()
+
+        val added = mutableListOf<Map<String, Int>>()
+        obs.setChangeListener(object : UserDictionaryObserver.ChangeListener {
+            override fun onUserDictionaryChanged(addedWords: Map<String, Int>, removedWords: Set<String>) {
+                added += addedWords
+            }
+
+            override fun onCustomWordsChanged(addedOrModified: Map<String, Int>, removed: Set<String>) = Unit
+        })
+
+        // The user adds a proper noun to the SYSTEM dictionary while the keyboard is up.
+        providerRows = listOf(Triple("Boston", 300, "en"))
+        obs.checkChanges()
+
+        assertThat(added).hasSize(1)
+        assertWithMessage(
+            "the provider row's spelling must survive to the delivery (Issue #72: the " +
+                "predictor records userWordOriginalCase from it) — folding here would make " +
+                "an incrementally added proper noun serve lowercase until the next full load"
+        ).that(added.single()).containsExactly("Boston", 300)
+        assertWithMessage("the diff cache itself stays lowercase-folded")
+            .that(obs.getCachedUserWords()).containsExactly("boston", 300)
+    }
+
+    @Test
     fun anUnchangedProviderDoesNotNotifyAtAll() {
         providerRows = listOf(Triple("alpha", 100, "fr"))
         val obs = observer(language = "fr")
@@ -347,6 +376,10 @@ class UserDictionaryLocaleFilterTest {
     // key AS STORED and only then fold the map key: lowercasing the key BEFORE the JSON lookup
     // misses every cased entry ({"LaTeX":200} probed as "latex") and silently substitutes the
     // 1000 default for any word containing an uppercase letter.
+    //
+    // Delivery contract (mirrors the full-load reference semantics): the added/modified maps
+    // carry the spelling AS STORED so the predictor can record userWordOriginalCase
+    // incrementally; the caches and the removal sets use the lowercase-folded serving keys.
 
     @Test
     fun aCaseCarryingCustomWordKeepsItsStoredFrequencyOnInitialLoad() {
@@ -373,10 +406,13 @@ class UserDictionaryLocaleFilterTest {
 
         assertThat(listener.delivered).hasSize(1)
         assertWithMessage(
-            "the incremental delivery feeds WordPredictor's calibration (C-2): the STORED " +
-                "1..255 pref value must arrive, folded to lowercase like every serving map"
-        ).that(listener.delivered.single()).containsExactly("latex", 200, "hello", 150)
-        assertThat(obs.getCachedCustomWords()).containsExactly("latex", 200, "hello", 150)
+            "the incremental delivery feeds WordPredictor's calibration (C-2) and its case " +
+                "recording (Issue #72): the STORED 1..255 pref value must arrive under the " +
+                "spelling AS STORED — the consumer folds for its serving maps and keeps the " +
+                "casing for userWordOriginalCase"
+        ).that(listener.delivered.single()).containsExactly("LaTeX", 200, "hello", 150)
+        assertWithMessage("the diff cache itself stays lowercase-folded")
+            .that(obs.getCachedCustomWords()).containsExactly("latex", 200, "hello", 150)
     }
 
     @Test
@@ -396,7 +432,7 @@ class UserDictionaryLocaleFilterTest {
                 "both the cached and the current read collapse to the 1000 default and the " +
                 "edit is swallowed without any notification"
         ).that(listener.delivered).hasSize(1)
-        assertThat(listener.delivered.single()).containsExactly("latex", 90)
+        assertThat(listener.delivered.single()).containsExactly("LaTeX", 90)
     }
 
     @Test

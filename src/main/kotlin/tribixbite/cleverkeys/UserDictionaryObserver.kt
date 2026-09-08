@@ -70,22 +70,34 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
     private var changeListener: ChangeListener? = null
 
     /**
+     * A tracked word: the spelling exactly as stored (provider row / pref JSON key) and its
+     * stored frequency. Diff identity is the lowercase-folded key the maps below use; the
+     * spelling rides along so deliveries can carry it (Issue #72 case recording).
+     */
+    private data class StoredWord(val spelling: String, val frequency: Int)
+
+    /**
      * Listener interface for dictionary change events.
+     *
+     * Delivery contract (mirrors WordPredictor's full-load semantics): the added/modified
+     * maps are keyed by the spelling AS STORED, so the consumer can fold it for its
+     * lowercase serving maps AND record original case (`userWordOriginalCase`) from it.
+     * The removed sets carry lowercase-folded serving keys.
      */
     interface ChangeListener {
         /**
          * Called when UserDictionary words are added or removed.
          *
-         * @param addedWords Words added to UserDictionary (word -> frequency)
-         * @param removedWords Words removed from UserDictionary
+         * @param addedWords Words added to UserDictionary (stored spelling -> frequency)
+         * @param removedWords Words removed from UserDictionary (lowercase-folded)
          */
         fun onUserDictionaryChanged(addedWords: Map<String, Int>, removedWords: Set<String>)
 
         /**
          * Called when custom words are added, removed, or modified.
          *
-         * @param addedOrModified Words added or with frequency changed (word -> frequency)
-         * @param removed Words removed from custom dictionary
+         * @param addedOrModified Words added or with frequency changed (stored spelling -> frequency)
+         * @param removed Words removed from custom dictionary (lowercase-folded)
          */
         fun onCustomWordsChanged(addedOrModified: Map<String, Int>, removed: Set<String>)
     }
@@ -232,9 +244,11 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
      * document order — the same semantics as WordPredictor's full-load parser.
      *
      * v1.1.92: Uses language-specific key (custom_words_${lang}) instead of legacy global key.
+     *
+     * @return folded key -> stored spelling + frequency
      */
-    private fun readCustomWords(): MutableMap<String, Int> {
-        val words = mutableMapOf<String, Int>()
+    private fun readCustomWords(): MutableMap<String, StoredWord> {
+        val words = mutableMapOf<String, StoredWord>()
 
         val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
         val customWordsKey = LanguagePreferenceKeys.customWordsKey(currentLanguage)
@@ -247,7 +261,7 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
             while (keys.hasNext()) {
                 val storedWord = keys.next()
                 val frequency = jsonObj.optInt(storedWord, 1000)
-                words[storedWord.lowercase()] = frequency
+                words[storedWord.lowercase()] = StoredWord(storedWord, frequency)
             }
         }
 
@@ -261,7 +275,9 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
         cachedCustomWords.clear()
 
         try {
-            cachedCustomWords.putAll(readCustomWords())
+            for ((folded, stored) in readCustomWords()) {
+                cachedCustomWords[folded] = stored.frequency
+            }
             if (cachedCustomWords.isNotEmpty()) {
                 Log.d(TAG, "Loaded ${cachedCustomWords.size} custom words for '$currentLanguage' into cache")
             }
@@ -277,7 +293,10 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
      */
     private fun checkUserDictionaryChanges() {
         try {
-            val currentWords = mutableMapOf<String, Int>()
+            // Folded key -> stored spelling + frequency: the diff runs on the folded keys
+            // (matching the lowercase cache) while additions are DELIVERED under the row's
+            // spelling as stored (Issue #72 — see the ChangeListener contract).
+            val currentWords = mutableMapOf<String, StoredWord>()
 
             // v1.1.91: Filter by locale to prevent English contamination
             // Match: exact language code, locale starting with language (e.g., fr_FR), or null (global)
@@ -300,9 +319,9 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
                 val freqIndex = it.getColumnIndex(UserDictionary.Words.FREQUENCY)
 
                 while (it.moveToNext()) {
-                    val word = it.getString(wordIndex).lowercase()
+                    val storedWord = it.getString(wordIndex)
                     val frequency = if (freqIndex >= 0) it.getInt(freqIndex) else 1000
-                    currentWords[word] = frequency
+                    currentWords[storedWord.lowercase()] = StoredWord(storedWord, frequency)
                 }
             }
 
@@ -311,9 +330,9 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
             val removedWords = mutableSetOf<String>()
 
             // Find added words
-            for ((word, freq) in currentWords) {
-                if (!cachedUserWords.containsKey(word)) {
-                    addedWords[word] = freq
+            for ((folded, stored) in currentWords) {
+                if (!cachedUserWords.containsKey(folded)) {
+                    addedWords[stored.spelling] = stored.frequency
                 }
             }
 
@@ -324,9 +343,11 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
                 }
             }
 
-            // Update cache
+            // Update cache (folded keys, like loadUserDictionaryCache)
             cachedUserWords.clear()
-            cachedUserWords.putAll(currentWords)
+            for ((folded, stored) in currentWords) {
+                cachedUserWords[folded] = stored.frequency
+            }
 
             // Notify listener if there are changes
             if (addedWords.isNotEmpty() || removedWords.isNotEmpty()) {
@@ -354,11 +375,12 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
             val addedOrModified = mutableMapOf<String, Int>()
             val removed = mutableSetOf<String>()
 
-            // Find added or modified words
-            for ((word, freq) in currentWords) {
-                val cachedFreq = cachedCustomWords[word]
-                if (cachedFreq == null || cachedFreq != freq) {
-                    addedOrModified[word] = freq
+            // Find added or modified words — diffed on the folded key + frequency, delivered
+            // under the spelling as stored (see the ChangeListener contract).
+            for ((folded, stored) in currentWords) {
+                val cachedFreq = cachedCustomWords[folded]
+                if (cachedFreq == null || cachedFreq != stored.frequency) {
+                    addedOrModified[stored.spelling] = stored.frequency
                 }
             }
 
@@ -369,9 +391,11 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
                 }
             }
 
-            // Update cache
+            // Update cache (folded keys, like loadCustomWordsCache)
             cachedCustomWords.clear()
-            cachedCustomWords.putAll(currentWords)
+            for ((folded, stored) in currentWords) {
+                cachedCustomWords[folded] = stored.frequency
+            }
 
             // Notify listener if there are changes
             if (addedOrModified.isNotEmpty() || removed.isNotEmpty()) {

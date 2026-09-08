@@ -286,6 +286,53 @@ class WordPredictorDictionaryUpdateTest {
         ).that(predictor.applyUserWordCase("latex")).isEqualTo("latex")
     }
 
+    // --------------------------------- C-9 mirror: case tracking on the INCREMENTAL path
+    //
+    // The full-load paths record userWordOriginalCase from the spelling as stored (Issue #72)
+    // and the removal branch of handleIncrementalUpdate clears it — but the ADD branch never
+    // populated it, so a cased custom word added while the keyboard was up served lowercase
+    // until the next full load. The observer now delivers the STORED spelling; the predictor
+    // folds it for every serving map and mirrors the full-load case recording.
+
+    @Test
+    fun observerDeliveredCasedWordServesItsOriginalCaseImmediately() {
+        seedBaseDictionary()
+
+        incrementalUpdate(mapOf("LaTeX" to 255), emptySet())
+
+        assertWithMessage("serving maps stay folded: the dict key is the lowercase word")
+            .that(dict()["latex"]).isEqualTo(1_000_000)
+        assertWithMessage(
+            "a cased custom word added incrementally must serve its original case " +
+                "immediately — not display as lowercase until the next full dictionary load"
+        ).that(predictor.applyUserWordCase("latex")).isEqualTo("LaTeX")
+    }
+
+    @Test
+    fun reAddingAWordLowercaseClearsItsStaleCaseMapping() {
+        seedBaseDictionary()
+        incrementalUpdate(mapOf("LaTeX" to 255), emptySet())
+
+        // The user deletes the proper noun and stores the word again, lowercase.
+        incrementalUpdate(mapOf("latex" to 200), emptySet())
+
+        assertWithMessage(
+            "mirror of the full-load semantics: a lowercase stored spelling has NO case " +
+                "mapping, so the earlier cased delivery must stop restyling the word"
+        ).that(predictor.applyUserWordCase("latex")).isEqualTo("latex")
+    }
+
+    @Test
+    fun removingACasedWordDropsItsCaseMapping() {
+        // Pin (passes since C-9's removal branch): retraction clears the mapping outright.
+        seedBaseDictionary()
+        incrementalUpdate(mapOf("LaTeX" to 255), emptySet())
+
+        incrementalUpdate(emptyMap(), setOf("latex"))
+
+        assertThat(predictor.applyUserWordCase("latex")).isEqualTo("latex")
+    }
+
     // ------------------------------------------------------------------ reflection
 
     private fun setField(name: String, value: Any?) {
