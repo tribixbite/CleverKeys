@@ -1571,7 +1571,18 @@ class Keyboard2View @JvmOverloads constructor(
                 }
                 val keyW = _keyWidth * k.width - tc.horizontal_margin
                 val isKeyDown = _pointers.isKeyDown(k)
-                val tc_key = if (isKeyDown) tc.key_activated else tc.key
+                // Audit H-4: role-aware frame selection so the Theme-Creator's
+                // Key Locked / Key Modifier / Key Special colours render. For XML
+                // themes every role colour equals the old default, so this draws
+                // pixel-identically to the previous activated/normal split.
+                val kv0 = k.keys[0]
+                val isLocked = isKeyDown && kv0 != null &&
+                    _pointers.getKeyFlags(kv0).let {
+                        it != -1 && (it and Pointers.FLAG_P_LOCKED) != 0
+                    }
+                val tc_key = tc.keyForRole(
+                    Theme.Computed.roleOf(kv0?.getKind(), isKeyDown, isLocked)
+                )
 
                 drawKeyFrame(canvas, x, y, keyW, keyH, tc_key)
                 if (k.keys[0] != null)

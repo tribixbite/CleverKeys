@@ -1130,6 +1130,11 @@ tasks.register('runMockTests', JavaExec) {
     // Audit 2026-09-06 W7 (H-8, #77 residual): all-null loc-stripped pane cells render as
     // empty space — onDraw consults Keyboard2View.keyCellIsEmpty before drawKeyFrame.
     'tribixbite.cleverkeys.EmptyPaneCellRenderTest',
+    // Audit 2026-09-06 R8-C (H-4, maintainer fork: WIRE): the nine Theme-Creator fields
+    // (keyLocked/Modifier/Special, keyBorderActivated, ripple, suggestionText/Background/
+    // HighConfidence, keyboardSurface) persist, round-trip, and surface in Theme /
+    // Theme.Computed paints and the SuggestionBar/Keyboard2View consumers.
+    'tribixbite.cleverkeys.theme.ThemeCreatorFieldWiringTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

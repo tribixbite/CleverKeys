@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.ContextThemeWrapper
+import androidx.compose.ui.graphics.compositeOver
 import tribixbite.cleverkeys.theme.KeyboardColorScheme
 import kotlin.math.min
 
@@ -57,6 +58,56 @@ class Theme {
     @JvmField
     val colorKeyboardBackground: Int
 
+    // ---------------------------------------------------------------------------------
+    // Audit 2026-09-06 H-4 (maintainer fork resolved: WIRE): the nine Theme-Creator
+    // fields below used to be collected and persisted but consumed by nothing. Each now
+    // has a Theme representation with a consumer:
+    //  - colorKeyLocked/Modifier/Special → per-role key backgrounds (Computed.keyForRole,
+    //    selected in Keyboard2View.onDraw via Computed.roleOf)
+    //  - keyBorderColorActivated → the ACTIVATED key frame's border paint (Computed.Key)
+    //  - rippleColor → press feedback on SuggestionBar chips / icon buttons
+    //  - suggestionTextColor/BackgroundColor/HighConfidenceColor → SuggestionBar text,
+    //    bar background and first-suggestion highlight
+    //  - colorKeyboardSurface → elevated surfaces (SuggestionBar provenance popup)
+    // XML themes have no attrs for these; their values default to the exact colours the
+    // consumers used before the wiring, so built-in themes render pixel-identically.
+    // ---------------------------------------------------------------------------------
+
+    /** Background of a LOCKED modifier key (caps lock etc.). */
+    @JvmField
+    val colorKeyLocked: Int
+
+    /** Background of modifier keys (shift/ctrl/alt) at rest. */
+    @JvmField
+    val colorKeyModifier: Int
+
+    /** Background of special action keys (enter, backspace, switchers) at rest. */
+    @JvmField
+    val colorKeySpecial: Int
+
+    /** Border colour of the ACTIVATED (pressed/locked) key frame. */
+    val keyBorderColorActivated: Int
+
+    /** Press-ripple colour; 0 = keep the platform default ripple (XML themes). */
+    @JvmField
+    val rippleColor: Int
+
+    /** Suggestion-bar text colour. */
+    @JvmField
+    val suggestionTextColor: Int
+
+    /** Suggestion-bar background colour. */
+    @JvmField
+    val suggestionBackgroundColor: Int
+
+    /** Highlight colour for the top / high-confidence suggestion. */
+    @JvmField
+    val suggestionHighConfidenceColor: Int
+
+    /** Surface colour for elevated elements (popups) hosted by keyboard views. */
+    @JvmField
+    val colorKeyboardSurface: Int
+
     /**
      * Primary constructor for XML-based themes.
      * Reads colors from styled attributes defined in res/values/themes.xml
@@ -89,6 +140,18 @@ class Theme {
         keyBorderColorBottom = s.getColor(R.styleable.keyboard_keyBorderColorBottom, colorKey)
         colorKeyboardBackground = s.getColor(R.styleable.keyboard_colorKeyboard, 0)
         s.recycle()
+
+        // H-4: no XML attrs exist for the Theme-Creator fields — default each to the
+        // colour its consumer used before the wiring (behaviour-preserving for XML themes).
+        colorKeyLocked = colorKeyActivated
+        colorKeyModifier = colorKey
+        colorKeySpecial = colorKey
+        keyBorderColorActivated = keyBorderColorTop
+        rippleColor = 0 // platform-default ripple
+        suggestionTextColor = labelColor
+        suggestionBackgroundColor = colorKey
+        suggestionHighConfidenceColor = activatedColor
+        colorKeyboardSurface = colorKey
     }
 
     /**
@@ -131,6 +194,24 @@ class Theme {
         // Keyboard container background — applied programmatically by Keyboard2View
         // for runtime themes (custom/decorative), overriding the XML ?attr/colorKeyboard
         colorKeyboardBackground = colorScheme.keyboardBackground.toArgb()
+
+        // H-4: the nine Theme-Creator fields, straight from the scheme. The per-role key
+        // backgrounds are pre-composited over keyDefault because the shipped schemes
+        // express them as translucent TINTS (e.g. primary at 20% alpha) while the key
+        // paint's alpha channel is owned by the user's keyOpacity setting — compositing
+        // at colour level preserves the intended appearance under any opacity.
+        colorKeyLocked = colorScheme.keyLocked
+            .compositeOver(colorScheme.keyDefault).toArgb()
+        colorKeyModifier = colorScheme.keyModifier
+            .compositeOver(colorScheme.keyDefault).toArgb()
+        colorKeySpecial = colorScheme.keySpecial
+            .compositeOver(colorScheme.keyDefault).toArgb()
+        keyBorderColorActivated = colorScheme.keyBorderActivated.toArgb()
+        rippleColor = colorScheme.ripple.toArgb()
+        suggestionTextColor = colorScheme.suggestionText.toArgb()
+        suggestionBackgroundColor = colorScheme.suggestionBackground.toArgb()
+        suggestionHighConfidenceColor = colorScheme.suggestionHighConfidence.toArgb()
+        colorKeyboardSurface = colorScheme.keyboardSurface.toArgb()
     }
 
     /** Interpolate the 'value' component toward its opposite by 'alpha'. */
@@ -190,6 +271,15 @@ class Theme {
         val key: Key
         @JvmField
         val key_activated: Key
+        // H-4: per-role key frames so the Theme-Creator's Key Locked / Key Modifier /
+        // Key Special colours render. For XML themes their colours equal the defaults
+        // (see Theme's XML constructor), so these draw identically to key/key_activated.
+        @JvmField
+        val key_locked: Key
+        @JvmField
+        val key_modifier: Key
+        @JvmField
+        val key_special: Key
 
         init {
             // Rows height is proportional to the keyboard height, meaning it doesn't
@@ -218,16 +308,42 @@ class Theme {
             margin_left = horizontal_margin / 2
             key = Key(theme, config, keyWidth, false)
             key_activated = Key(theme, config, keyWidth, true)
+            // Locked keys keep the activated border/width treatment (they ARE held down),
+            // only the fill colour differs; modifier/special are at-rest variants.
+            key_locked = Key(theme, config, keyWidth, true, theme.colorKeyLocked)
+            key_modifier = Key(theme, config, keyWidth, false, theme.colorKeyModifier)
+            key_special = Key(theme, config, keyWidth, false, theme.colorKeySpecial)
             indication_paint = init_label_paint(config, null).apply {
                 color = theme.subLabelColor
             }
+        }
+
+        /**
+         * H-4: which computed key frame a key renders with — pure so the mapping is
+         * pinnable off-device (the draw loop feeds it kind + pointer state).
+         */
+        enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL }
+
+        /** The computed frame for [role] (see [roleOf]). */
+        fun keyForRole(role: KeyRole): Key = when (role) {
+            KeyRole.NORMAL -> key
+            KeyRole.ACTIVATED -> key_activated
+            KeyRole.LOCKED -> key_locked
+            KeyRole.MODIFIER -> key_modifier
+            KeyRole.SPECIAL -> key_special
         }
 
         class Key(
             theme: Theme,
             config: Config,
             keyWidth: Float,
-            activated: Boolean
+            activated: Boolean,
+            /**
+             * H-4: per-role background override (0 = none — same "unset colour"
+             * convention the rest of the theme plumbing uses). Border treatment still
+             * follows [activated].
+             */
+            bgColorOverride: Int = 0
         ) {
             @JvmField
             val bg_paint = Paint()
@@ -244,7 +360,11 @@ class Theme {
             private val _label_alpha_bits: Int
 
             init {
-                bg_paint.color = if (activated) theme.colorKeyActivated else theme.colorKey
+                bg_paint.color = when {
+                    bgColorOverride != 0 -> bgColorOverride
+                    activated -> theme.colorKeyActivated
+                    else -> theme.colorKey
+                }
 
                 if (config.borderConfig) {
                     border_radius = config.customBorderRadius * keyWidth
@@ -255,7 +375,13 @@ class Theme {
                 }
 
                 bg_paint.alpha = if (activated) config.keyActivatedOpacity else config.keyOpacity
-                border_paint = init_border_paint(config, border_width, theme.keyBorderColorTop)
+                // H-4: the activated frame's border uses the Theme-Creator's "Border
+                // Activated" colour (XML themes default it to keyBorderColorTop).
+                border_paint = init_border_paint(
+                    config,
+                    border_width,
+                    if (activated) theme.keyBorderColorActivated else theme.keyBorderColorTop
+                )
                 _label_paint = init_label_paint(config, null)
                 _special_label_paint = init_label_paint(config, _key_font)
                 _sublabel_paint = init_label_paint(config, null)
@@ -285,6 +411,23 @@ class Theme {
         }
 
         companion object {
+            /**
+             * H-4: map a key's [KeyValue.Kind] + pointer state to its frame role.
+             * Pressed state wins (locked > activated); at rest, modifiers get the
+             * Key Modifier fill and action keys (key events, IME events, editing
+             * actions — enter, backspace, switchers, copy/paste) the Key Special fill.
+             */
+            @JvmStatic
+            fun roleOf(kind: KeyValue.Kind?, isKeyDown: Boolean, isLocked: Boolean): KeyRole = when {
+                isKeyDown && isLocked -> KeyRole.LOCKED
+                isKeyDown -> KeyRole.ACTIVATED
+                kind == KeyValue.Kind.Modifier -> KeyRole.MODIFIER
+                kind == KeyValue.Kind.Keyevent ||
+                    kind == KeyValue.Kind.Event ||
+                    kind == KeyValue.Kind.Editing -> KeyRole.SPECIAL
+                else -> KeyRole.NORMAL
+            }
+
             private fun init_border_paint(config: Config, border_width: Float, color: Int): Paint {
                 return Paint().apply {
                     style = Paint.Style.STROKE

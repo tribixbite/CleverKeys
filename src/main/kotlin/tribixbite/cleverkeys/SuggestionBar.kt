@@ -154,13 +154,17 @@ class SuggestionBar : LinearLayout {
             gravity = Gravity.CENTER
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
 
-            // Use theme label color for text with fallback
-            setTextColor(if (theme?.labelColor != 0) {
-                theme?.labelColor ?: Color.WHITE
-            } else {
-                // Fallback to white text if theme not initialized
-                Color.WHITE
-            })
+            // Audit H-4: use the theme's dedicated suggestion-text colour (falls back
+            // to white if the theme is not initialized / carries no colour).
+            setTextColor(theme?.suggestionTextColor?.takeIf { it != 0 } ?: Color.WHITE)
+
+            // Audit H-4: themed press feedback — the Theme-Creator's Ripple colour.
+            // 0 = unset (XML themes): keep the default (no chip ripple), as before.
+            theme?.rippleColor?.takeIf { it != 0 }?.let { ripple ->
+                background = android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(ripple), null, null
+                )
+            }
 
             setPadding(dpToPx(context, 12), 0, dpToPx(context, 12), 0)
             maxLines = 2
@@ -320,7 +324,8 @@ class SuggestionBar : LinearLayout {
                 )
                 view.gravity = Gravity.CENTER
                 view.typeface = Typeface.DEFAULT_BOLD
-                view.setTextColor(theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN)
+                // Audit H-4: highlight prompt with the high-confidence colour.
+                view.setTextColor(theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN)
             }
             // #42: Exact typed word (italic, sublabel color for "tap to add").
             suggestion is Suggestion.ExactAdd -> {
@@ -329,18 +334,21 @@ class SuggestionBar : LinearLayout {
                 view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC)
                 view.setTextColor(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.LTGRAY)
             }
-            // Highlight first suggestion with activated color.
+            // Highlight first suggestion with the high-confidence colour (audit H-4:
+            // the Theme-Creator's "High Confidence"; XML themes default it to the old
+            // activated colour).
             index == 0 -> {
                 view.layoutParams = defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.NORMAL)
-                view.setTextColor(theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN)
+                view.setTextColor(theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN)
             }
             else -> {
                 view.layoutParams = defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
-                view.setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
+                // Audit H-4: the Theme-Creator's "Suggestion Text" colour.
+                view.setTextColor(theme?.suggestionTextColor?.takeIf { it != 0 } ?: Color.WHITE)
             }
         }
         view.visibility = VISIBLE
@@ -430,12 +438,15 @@ class SuggestionBar : LinearLayout {
         val content = TextView(context).apply {
             this.text = text
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-            setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
+            // Audit H-4: the provenance sheet is an ELEVATED surface — it renders the
+            // Theme-Creator's "Keyboard Surface" colour and suggestion text colour
+            // (XML themes default both to the old key/label colours).
+            setTextColor(theme?.suggestionTextColor?.takeIf { it != 0 } ?: Color.WHITE)
             val pad = dpToPx(context, 14)
             setPadding(pad, pad, pad, pad)
             background = android.graphics.drawable.GradientDrawable().apply {
                 cornerRadius = dpToPx(context, 10).toFloat()
-                val bg = theme?.colorKey?.takeIf { it != 0 } ?: Color.DKGRAY
+                val bg = theme?.colorKeyboardSurface?.takeIf { it != 0 } ?: Color.DKGRAY
                 setColor(
                     Color.argb(242, Color.red(bg), Color.green(bg), Color.blue(bg))
                 )
@@ -508,9 +519,10 @@ class SuggestionBar : LinearLayout {
         // Calculate alpha value from opacity percentage (0-100 -> 0-255)
         val alpha = (opacity * 255) / 100
 
-        // Use theme colors with user-defined opacity
-        if (theme?.colorKey != 0) {
-            val bgColor = theme?.colorKey ?: Color.DKGRAY
+        // Use theme colors with user-defined opacity (audit H-4: the Theme-Creator's
+        // "Suggestion Background"; XML themes default it to the old key colour).
+        if (theme?.suggestionBackgroundColor != 0) {
+            val bgColor = theme?.suggestionBackgroundColor ?: Color.DKGRAY
             setBackgroundColor(
                 Color.argb(
                     alpha,
@@ -1074,10 +1086,18 @@ class SuggestionBar : LinearLayout {
                 togglePasswordVisibility()
             }
 
-            // Add ripple effect
-            val outValue = TypedValue()
-            context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true)
-            setBackgroundResource(outValue.resourceId)
+            // Add ripple effect — themed when the Theme-Creator's Ripple colour is set
+            // (audit H-4), otherwise the platform's borderless default as before.
+            val themedRipple = theme?.rippleColor?.takeIf { it != 0 }
+            if (themedRipple != null) {
+                background = android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(themedRipple), null, null
+                )
+            } else {
+                val outValue = TypedValue()
+                context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true)
+                setBackgroundResource(outValue.resourceId)
+            }
         }
 
         // Create HorizontalScrollView constrained to START_OF the icon

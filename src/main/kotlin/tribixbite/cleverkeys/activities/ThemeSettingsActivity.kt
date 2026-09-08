@@ -239,6 +239,18 @@ class ThemeSettingsActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Audit H-4: after an ACTIVE custom theme is edited, tell the live IME to rebuild its
+ * keyboard view (same broadcast the theme-select path uses) so every edited colour —
+ * key backgrounds, borders, suggestion bar, ripple, surface — applies immediately
+ * without a process restart.
+ */
+private fun notifyKeyboardThemeChanged(context: android.content.Context) {
+    val intent = Intent(CleverKeysService.ACTION_THEME_CHANGED)
+    intent.setPackage(context.packageName) // Restrict to our own package
+    context.sendBroadcast(intent)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeSettingsScreen(
@@ -250,7 +262,11 @@ fun ThemeSettingsScreen(
     val prefs = remember { DirectBootAwarePreferences.get_shared_preferences(context) }
     // Use mutableStringStateOf instead of mutableStateOf to avoid type inference issues
     var currentThemeId by remember { mutableStateOf(prefs.getString("theme", "cleverkeysdark") ?: "cleverkeysdark") }
-    val themeManager = remember { CustomThemeManager(context) }
+    // Audit H-4: mutate the SAME store instance ThemeProvider renders from — a private
+    // CustomThemeManager here wrote the same prefs file but left the provider's
+    // in-memory theme list stale, so active-theme edits didn't reach the keyboard
+    // until the process died.
+    val themeManager = remember { ThemeProvider.getInstance(context).customThemeManager }
     val customThemes by themeManager.customThemes.collectAsState()
 
     var showCreateDialog by remember { mutableStateOf(false) }
@@ -419,12 +435,13 @@ fun ThemeSettingsScreen(
             onSave = { theme ->
                 // Audit H-4: route through the policy so saving the ACTIVE theme re-syncs
                 // swipe_trail_color (a fresh creation is never active — the sync no-ops).
-                CustomThemePrefPolicy.saveCustomTheme(
+                val savedActive = CustomThemePrefPolicy.saveCustomTheme(
                     prefs,
                     PreferenceManager.getDefaultSharedPreferences(context),
                     themeManager,
                     theme
                 )
+                if (savedActive) notifyKeyboardThemeChanged(context)
                 showCreateDialog = false
             }
         )
@@ -437,13 +454,17 @@ fun ThemeSettingsScreen(
             onDismiss = { editingTheme = null },
             onSave = { updatedTheme ->
                 // Audit H-4: editing the ACTIVE theme's swipe trail previously went stale
-                // until re-selection (the pref sync ran only in onThemeSelected).
-                CustomThemePrefPolicy.saveCustomTheme(
+                // until re-selection (the pref sync ran only in onThemeSelected). The
+                // policy reports an active-theme save; the broadcast then makes the live
+                // keyboard rebuild its view so ALL edited colours apply immediately —
+                // no process restart needed.
+                val savedActive = CustomThemePrefPolicy.saveCustomTheme(
                     prefs,
                     PreferenceManager.getDefaultSharedPreferences(context),
                     themeManager,
                     updatedTheme
                 )
+                if (savedActive) notifyKeyboardThemeChanged(context)
                 editingTheme = null
             }
         )

@@ -20,7 +20,13 @@ import tribixbite.cleverkeys.Theme
  */
 class ThemeProvider(
     private val context: Context,
-    private val customThemeManager: CustomThemeManager
+    /**
+     * Audit H-4: exposed so editor surfaces (ThemeSettingsActivity) mutate the SAME
+     * store instance this provider reads. A separate CustomThemeManager writes the same
+     * prefs file but leaves this one's in-memory StateFlow stale — active-theme edits
+     * then keep rendering the old colours until the process dies.
+     */
+    val customThemeManager: CustomThemeManager
 ) {
 
     /**
