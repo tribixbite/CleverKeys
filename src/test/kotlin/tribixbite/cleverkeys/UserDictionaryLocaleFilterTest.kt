@@ -139,6 +139,32 @@ class UserDictionaryLocaleFilterTest {
             .apply { isAccessible = true }
             .invoke(this)
 
+    private fun UserDictionaryObserver.loadCustomWords() =
+        UserDictionaryObserver::class.java.getDeclaredMethod("loadCustomWordsCache")
+            .apply { isAccessible = true }
+            .invoke(this)
+
+    private fun UserDictionaryObserver.checkCustomChanges() =
+        UserDictionaryObserver::class.java.getDeclaredMethod("checkCustomWordsChanges")
+            .apply { isAccessible = true }
+            .invoke(this)
+
+    /** What the language-specific custom-words pref hands back on the next read. */
+    private fun customWordsJson(language: String, json: String) {
+        every { prefs.getString("custom_words_$language", any()) } returns json
+    }
+
+    /** A listener that records only the custom-words callbacks. */
+    private class CustomWordsRecorder : UserDictionaryObserver.ChangeListener {
+        val delivered = mutableListOf<Map<String, Int>>()
+        val retracted = mutableListOf<Set<String>>()
+        override fun onUserDictionaryChanged(addedWords: Map<String, Int>, removedWords: Set<String>) = Unit
+        override fun onCustomWordsChanged(addedOrModified: Map<String, Int>, removed: Set<String>) {
+            delivered += addedOrModified
+            retracted += removed
+        }
+    }
+
     // ------------------------------------------------------- (1) the locale predicate
 
     @Test
@@ -311,6 +337,106 @@ class UserDictionaryLocaleFilterTest {
             "an unchanged dictionary must not trigger a predictor rebuild — the observer exists " +
                 "precisely to avoid periodic reload work"
         ).that(notifications).isEqualTo(0)
+    }
+
+    // ------------------------ (5) custom words: cased keys keep their STORED frequency
+    //
+    // The custom_words_<lang> pref stores keys AS TYPED — exact-case membership is a pinned
+    // invariant (ContractionUserWordGuardTest.storedUserWordsStayCaseSensitive) — while every
+    // serving map is lowercase-keyed. The observer must therefore read the frequency with the
+    // key AS STORED and only then fold the map key: lowercasing the key BEFORE the JSON lookup
+    // misses every cased entry ({"LaTeX":200} probed as "latex") and silently substitutes the
+    // 1000 default for any word containing an uppercase letter.
+
+    @Test
+    fun aCaseCarryingCustomWordKeepsItsStoredFrequencyOnInitialLoad() {
+        customWordsJson("en", """{"LaTeX":200,"hello":150}""")
+
+        val obs = observer(language = "en")
+        obs.loadCustomWords()
+
+        assertWithMessage(
+            "the frequency must be read with the key exactly as stored — folding the key " +
+                "before the optInt lookup turns a cased word's stored frequency into the 1000 " +
+                "default. The lowercase word pins the already-working path unchanged."
+        ).that(obs.getCachedCustomWords()).containsExactly("latex", 200, "hello", 150)
+    }
+
+    @Test
+    fun aCaseCarryingCustomWordAddedIncrementallyDeliversItsStoredFrequency() {
+        val obs = observer(language = "en")
+        val listener = CustomWordsRecorder()
+        obs.setChangeListener(listener)
+
+        customWordsJson("en", """{"LaTeX":200,"hello":150}""")
+        obs.checkCustomChanges()
+
+        assertThat(listener.delivered).hasSize(1)
+        assertWithMessage(
+            "the incremental delivery feeds WordPredictor's calibration (C-2): the STORED " +
+                "1..255 pref value must arrive, folded to lowercase like every serving map"
+        ).that(listener.delivered.single()).containsExactly("latex", 200, "hello", 150)
+        assertThat(obs.getCachedCustomWords()).containsExactly("latex", 200, "hello", 150)
+    }
+
+    @Test
+    fun changingACasedWordsStoredFrequencyIsDeliveredAsAModification() {
+        customWordsJson("en", """{"LaTeX":200}""")
+        val obs = observer(language = "en")
+        obs.loadCustomWords()
+
+        val listener = CustomWordsRecorder()
+        obs.setChangeListener(listener)
+
+        customWordsJson("en", """{"LaTeX":90}""")
+        obs.checkCustomChanges()
+
+        assertWithMessage(
+            "a frequency edit to a cased word must be delivered — with the folded-key lookup " +
+                "both the cached and the current read collapse to the 1000 default and the " +
+                "edit is swallowed without any notification"
+        ).that(listener.delivered).hasSize(1)
+        assertThat(listener.delivered.single()).containsExactly("latex", 90)
+    }
+
+    @Test
+    fun aCaseOnlyRespellingWithTheSameFrequencyDoesNotNotify() {
+        customWordsJson("en", """{"latex":200}""")
+        val obs = observer(language = "en")
+        obs.loadCustomWords()
+
+        val listener = CustomWordsRecorder()
+        obs.setChangeListener(listener)
+
+        // The user re-added the word cased; the folded serving key and the frequency are
+        // unchanged, so the predictor has nothing to do.
+        customWordsJson("en", """{"LaTeX":200}""")
+        obs.checkCustomChanges()
+
+        assertWithMessage(
+            "a case-only respelling must be a no-op for the lowercase serving maps — the " +
+                "folded-key lookup instead reads the respelt entry as the 1000 default and " +
+                "pushes a spurious, WRONG modification"
+        ).that(listener.delivered).isEmpty()
+        assertThat(listener.retracted).isEmpty()
+    }
+
+    @Test
+    fun removingACasedCustomWordIsRetractedUnderItsFoldedKey() {
+        customWordsJson("en", """{"LaTeX":200}""")
+        val obs = observer(language = "en")
+        obs.loadCustomWords()
+
+        val listener = CustomWordsRecorder()
+        obs.setChangeListener(listener)
+
+        customWordsJson("en", "{}")
+        obs.checkCustomChanges()
+
+        assertThat(listener.retracted).hasSize(1)
+        assertWithMessage("retraction reaches the predictor under the lowercase serving key")
+            .that(listener.retracted.single()).containsExactly("latex")
+        assertThat(obs.getCachedCustomWords()).isEmpty()
     }
 
     // ------------------------------------------------------------------ reflection

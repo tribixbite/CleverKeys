@@ -219,29 +219,50 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
     }
 
     /**
-     * Load custom words from SharedPreferences into cache.
+     * Read and parse the custom words pref for [currentLanguage].
+     *
+     * The `custom_words_<lang>` JSON stores its keys AS TYPED — exact-case membership is a
+     * pinned invariant of the user's word set (see ContractionUserWordGuardTest) — while every
+     * serving map downstream is lowercase-keyed. So the frequency MUST be read with the key
+     * exactly as stored, and only the resulting map key is folded. Lowercasing before the
+     * `optInt` lookup misses every cased entry ({"LaTeX":200} probed as "latex") and silently
+     * substitutes the 1000 default for any word containing an uppercase letter.
+     *
+     * Two stored spellings folding to the same word ("LaTeX" + "latex") collapse last-wins in
+     * document order — the same semantics as WordPredictor's full-load parser.
      *
      * v1.1.92: Uses language-specific key (custom_words_${lang}) instead of legacy global key.
+     */
+    private fun readCustomWords(): MutableMap<String, Int> {
+        val words = mutableMapOf<String, Int>()
+
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val customWordsKey = LanguagePreferenceKeys.customWordsKey(currentLanguage)
+        val customWordsJson = prefs.getString(customWordsKey, "{}") ?: "{}"
+
+        if (customWordsJson != "{}") {
+            val jsonObj = JSONObject(customWordsJson)
+            val keys = jsonObj.keys()
+
+            while (keys.hasNext()) {
+                val storedWord = keys.next()
+                val frequency = jsonObj.optInt(storedWord, 1000)
+                words[storedWord.lowercase()] = frequency
+            }
+        }
+
+        return words
+    }
+
+    /**
+     * Load custom words from SharedPreferences into cache.
      */
     private fun loadCustomWordsCache() {
         cachedCustomWords.clear()
 
         try {
-            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            // v1.1.92: Use language-specific custom words key
-            val customWordsKey = LanguagePreferenceKeys.customWordsKey(currentLanguage)
-            val customWordsJson = prefs.getString(customWordsKey, "{}") ?: "{}"
-
-            if (customWordsJson != "{}") {
-                val jsonObj = JSONObject(customWordsJson)
-                val keys = jsonObj.keys()
-
-                while (keys.hasNext()) {
-                    val word = keys.next().lowercase()
-                    val frequency = jsonObj.optInt(word, 1000)
-                    cachedCustomWords[word] = frequency
-                }
-
+            cachedCustomWords.putAll(readCustomWords())
+            if (cachedCustomWords.isNotEmpty()) {
                 Log.d(TAG, "Loaded ${cachedCustomWords.size} custom words for '$currentLanguage' into cache")
             }
         } catch (e: Exception) {
@@ -321,27 +342,13 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
     /**
      * Check for custom words changes and notify listener.
      *
-     * v1.1.92: Uses language-specific key (custom_words_${lang}) instead of legacy global key.
+     * The diff is computed over lowercase-folded keys with the STORED frequencies (see
+     * [readCustomWords]) — so a cased word's frequency edit is delivered, and a case-only
+     * respelling with an unchanged frequency is a no-op for the lowercase serving maps.
      */
     private fun checkCustomWordsChanges() {
         try {
-            val currentWords = mutableMapOf<String, Int>()
-
-            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            // v1.1.92: Use language-specific custom words key
-            val customWordsKey = LanguagePreferenceKeys.customWordsKey(currentLanguage)
-            val customWordsJson = prefs.getString(customWordsKey, "{}") ?: "{}"
-
-            if (customWordsJson != "{}") {
-                val jsonObj = JSONObject(customWordsJson)
-                val keys = jsonObj.keys()
-
-                while (keys.hasNext()) {
-                    val word = keys.next().lowercase()
-                    val frequency = jsonObj.optInt(word, 1000)
-                    currentWords[word] = frequency
-                }
-            }
+            val currentWords = readCustomWords()
 
             // Compute differences
             val addedOrModified = mutableMapOf<String, Int>()
