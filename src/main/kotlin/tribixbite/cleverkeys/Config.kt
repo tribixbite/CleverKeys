@@ -227,6 +227,13 @@ object Defaults {
     const val CLIPBOARD_HISTORY_DURATION = "-1"
     const val CLIPBOARD_HISTORY_DURATION_FALLBACK = -1
     const val CLIPBOARD_RESPECT_SENSITIVE_FLAG = true  // #86: Respect Android 13+ IS_SENSITIVE flag
+    // F-8 (surfaced 2026-09-08): media capture toggle + size cap, historic v4 defaults
+    const val CLIPBOARD_MEDIA_ENABLED = true
+    const val CLIPBOARD_MAX_MEDIA_SIZE_MB = 10
+
+    // I-7 (2026-09-08): the default-IME reminder is on by default (honest default —
+    // prompting enabled); the Settings "reminder" switch is the don't-ask-again affordance.
+    const val IME_DEFAULT_PROMPT_ENABLED = true
 
     // GIF Panel — opt-in, off by default, zero data shipped in APK
     const val GIF_ENABLED = false           // Master toggle — enables GIF key + pane
@@ -439,6 +446,14 @@ object SettingsRanges {
      * value displayed as "64KB" while the service enforced the raw value. F-10.
      */
     val CLIPBOARD_MAX_ITEM_SIZE_KB: IntRange = 64..1024
+
+    /**
+     * Clipboard media size cap in MB (`clipboard_max_media_size_mb`). F-8:
+     * surfaced 2026-09-08 — the value is the historic Config read-site clamp
+     * (coerceIn 1..50), now shared by the slider, the import validator and
+     * the read site so they cannot drift apart.
+     */
+    val CLIPBOARD_MAX_MEDIA_SIZE_MB: IntRange = 1..50
 }
 
 /**
@@ -550,8 +565,8 @@ class Config private constructor(
     @JvmField var clipboard_text_only = false  // v4: Hide media entries from all tabs (text-only display)
     @JvmField var clipboard_pinned_enabled = true  // v4: Show/hide pinned tab
     @JvmField var clipboard_todo_enabled = true  // v4: Show/hide todo tab
-    @JvmField var clipboard_media_enabled = true  // v4: Enable media clipboard (images, videos, PDFs)
-    @JvmField var clipboard_max_media_size_mb = 10  // v4: Max media file size in MB (default 10)
+    @JvmField var clipboard_media_enabled = Defaults.CLIPBOARD_MEDIA_ENABLED  // v4: Enable media clipboard (images, videos, PDFs)
+    @JvmField var clipboard_max_media_size_mb = Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB  // v4: Max media file size in MB
 
     // URL sanitization toggles (Chunk 3 — applies to clipboard text inserts only)
     @JvmField var clipboard_sanitize_links_enabled = false
@@ -861,8 +876,10 @@ class Config private constructor(
         clipboard_text_only = _prefs.getBoolean("clipboard_text_only", false)
         clipboard_pinned_enabled = _prefs.getBoolean("clipboard_pinned_enabled", true)
         clipboard_todo_enabled = _prefs.getBoolean("clipboard_todo_enabled", true)
-        clipboard_media_enabled = _prefs.getBoolean("clipboard_media_enabled", true)
-        clipboard_max_media_size_mb = safeGetInt(_prefs, "clipboard_max_media_size_mb", 10).coerceIn(1, 50)
+        clipboard_media_enabled = _prefs.getBoolean("clipboard_media_enabled", Defaults.CLIPBOARD_MEDIA_ENABLED)
+        // F-8: clamp through the shared range (slider + validator + this read site agree)
+        clipboard_max_media_size_mb = safeGetInt(_prefs, "clipboard_max_media_size_mb", Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB)
+            .coerceIn(SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.first, SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.last)
 
         // URL sanitization toggles (Chunk 3)
         clipboard_sanitize_links_enabled = _prefs.getBoolean("clipboard_sanitize_links_enabled", false)

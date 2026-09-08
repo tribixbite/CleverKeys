@@ -35,6 +35,20 @@ internal fun SettingsActivity.AdvancedSection() {
                     }
                 )
 
+                // I-7 (maintainer decision 2026-09-08): the "don't ask again"
+                // affordance for the default-IME reminder. The prompt itself is a
+                // toast (no buttons), so this switch is the permanent opt-out it
+                // points at; IMEStatusHelper reads the pref before every check.
+                SettingsSwitch(
+                    title = stringResource(R.string.advanced_ime_prompt_title),
+                    description = stringResource(R.string.advanced_ime_prompt_desc),
+                    checked = imeDefaultPromptEnabled,
+                    onCheckedChange = {
+                        imeDefaultPromptEnabled = it
+                        saveSetting("ime_default_prompt_enabled", it)
+                    }
+                )
+
                 SettingsSwitch(
                     title = stringResource(R.string.settings_debug_title),
                     description = stringResource(R.string.settings_debug_desc),

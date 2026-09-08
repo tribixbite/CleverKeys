@@ -216,6 +216,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Appearance settings
         keyboardHeight = prefs.getSafeInt("keyboard_height", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
         keyboardHeightLandscape = prefs.getSafeInt("keyboard_height_landscape", Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
+        scaleNumpadHeight = prefs.getSafeBoolean("scale_numpad_height", Defaults.SCALE_NUMPAD_HEIGHT)
 
         // Adaptive layout settings (percentages)
         marginBottomPortrait = prefs.getSafeInt("margin_bottom_portrait", Defaults.MARGIN_BOTTOM_PORTRAIT)
@@ -264,6 +265,11 @@ internal fun SettingsActivity.loadCurrentSettings() {
         clipboardExcludePasswordManagers = prefs.getSafeBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
         clipboardRespectSensitiveFlag = prefs.getSafeBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
         clipboardTextOnly = prefs.getSafeBoolean("clipboard_text_only", false)
+        // F-8: media capture toggle + size cap (clamped through the shared range,
+        // same value Config.refresh enforces at the read site).
+        clipboardMediaEnabled = prefs.getSafeBoolean("clipboard_media_enabled", Defaults.CLIPBOARD_MEDIA_ENABLED)
+        clipboardMaxMediaSizeMb = prefs.getSafeInt("clipboard_max_media_size_mb", Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB)
+            .coerceIn(SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.first, SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.last)
         clipboardPinnedEnabled = prefs.getSafeBoolean("clipboard_pinned_enabled", true)
         clipboardTodoEnabled = prefs.getSafeBoolean("clipboard_todo_enabled", true)
         // #156: PROCESS_TEXT selection-toolbar entry point — opt-in, default false (design §6.6).
@@ -333,11 +339,13 @@ internal fun SettingsActivity.loadCurrentSettings() {
         wordPredictionEnabled = prefs.getSafeBoolean("word_prediction_enabled", Defaults.WORD_PREDICTION_ENABLED)
         autoSpaceAfterSuggestion = prefs.getSafeBoolean("auto_space_after_suggestion", Defaults.AUTO_SPACE_AFTER_SUGGESTION)
         autoSpaceBeforeSuggestion = prefs.getSafeBoolean("auto_space_before_suggestion", Defaults.AUTO_SPACE_BEFORE_SUGGESTION)
+        showExactTypedWord = prefs.getSafeBoolean("show_exact_typed_word", Defaults.SHOW_EXACT_TYPED_WORD)
         backspaceUndoSwipe = prefs.getSafeBoolean("backspace_undo_swipe", Defaults.BACKSPACE_UNDO_SWIPE)
         backspaceUndoAutocorrect = prefs.getSafeBoolean("backspace_undo_autocorrect", Defaults.BACKSPACE_UNDO_AUTOCORRECT)
         suggestionBarOpacity = Config.safeGetInt(prefs, "suggestion_bar_opacity", Defaults.SUGGESTION_BAR_OPACITY)
         autoCorrectEnabled = prefs.getSafeBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
         termuxModeEnabled = prefs.getSafeBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)
+        imeDefaultPromptEnabled = prefs.getSafeBoolean("ime_default_prompt_enabled", Defaults.IME_DEFAULT_PROMPT_ENABLED)
         vibrationDuration = prefs.getSafeInt("vibrate_duration", Defaults.VIBRATE_DURATION)
         // Per-event haptic feedback
         hapticKeyPress = prefs.getSafeBoolean("haptic_key_press", Defaults.HAPTIC_KEY_PRESS)

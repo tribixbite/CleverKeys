@@ -204,8 +204,8 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "clipboard_text_only" to PrefValue.Bool(false),
     "clipboard_pinned_enabled" to PrefValue.Bool(true),
     "clipboard_todo_enabled" to PrefValue.Bool(true),
-    "clipboard_media_enabled" to PrefValue.Bool(true),
-    "clipboard_max_media_size_mb" to PrefValue.IntV(10),
+    "clipboard_media_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_MEDIA_ENABLED),
+    "clipboard_max_media_size_mb" to PrefValue.IntV(Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB),
     // #156: PROCESS_TEXT selection-toolbar entry point — opt-in, default false (design §6.6).
     // A normal exportable UI toggle. The component-enabled state is derived from this pref
     // (single source of truth); re-applied on load via setPrivateCopyToolbarComponentEnabled.
@@ -238,6 +238,10 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
 
     // ── Misc / runtime ───────────────────────────────────────────────
     "termux_mode_enabled" to PrefValue.Bool(Defaults.TERMUX_MODE_ENABLED),
+    // I-7 (2026-09-08): the default-IME reminder switch — the "don't ask again"
+    // pref. Portable (a user choice, not device state); default ON = prompting
+    // enabled. The once-per-boot record (ime_prompt_last_boot_ms) is INTERNAL.
+    "ime_default_prompt_enabled" to PrefValue.Bool(Defaults.IME_DEFAULT_PROMPT_ENABLED),
     // NOTE: unified_swipe_pipeline (WP9 step-4 QA escape hatch) was removed in step 6 —
     // now in SettingsValidation.DEPRECATED_KEYS (no reader).
     // WP9 R-1 step 7 (v1.2): swipe engine mode selector ("ctc" | "geometric").

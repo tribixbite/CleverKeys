@@ -39,7 +39,8 @@ object SettingsValidation {
         "vibrate_custom_migration_v1",      // One-time #154 vibrate_custom cleanup marker
         "voice_ime_known",                  // Runtime voice-IME state (per device)
         "voice_ime_last_used",              // Runtime voice-IME state (per device)
-        "ime_prompt_shown_this_session",    // Per-session UI flag (not portable)
+        "ime_prompt_shown_this_session",    // Legacy pre-I-7 prompt flag (retired 2026-09-08; never portable)
+        "ime_prompt_last_boot_ms",          // I-7: boot instant of the last default-IME prompt (device-bound)
         // Backup-encryption state (Stage B). NEVER exported: exporting the
         // wrapped passphrase inside the settings backup it protects would be
         // circular, and the intent-passphrase toggle / rate-limit timestamp are
@@ -348,6 +349,10 @@ object SettingsValidation {
         // validateString's canonical string form (G-5) and the Config clamp.
         put("clipboard_history_limit", SettingsRanges.CLIPBOARD_HISTORY_LIMIT)
 
+        // Clipboard media size cap in MB — F-8: shared with the new slider and
+        // the Config read-site clamp (historic coerceIn 1..50).
+        put("clipboard_max_media_size_mb", SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB)
+
         // Circle sensitivity
         put("circle_sensitivity", 1..5)
     }
@@ -483,7 +488,8 @@ object SettingsValidation {
         "vibrate_duration", "longpress_timeout", "longpress_interval",
         "short_gesture_min_distance", "short_gesture_max_distance",
         "swipe_smoothing_window",
-        "autocorrect_min_word_length", "autocorrect_confidence_min_frequency" -> true
+        "autocorrect_min_word_length", "autocorrect_confidence_min_frequency",
+        "clipboard_max_media_size_mb" -> true  // F-8: stored as Int (safeGetInt read site)
         // `clipboard_history_limit` and `circle_sensitivity` were here, but
         // both are stored as String (`Defaults.CIRCLE_SENSITIVITY = "2"`,
         // `Defaults.CLIPBOARD_HISTORY_LIMIT = "50"`) — the read sites use

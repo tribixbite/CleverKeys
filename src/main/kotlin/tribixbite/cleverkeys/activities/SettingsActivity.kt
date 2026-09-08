@@ -268,6 +268,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var fingerOcclusionOffset by mutableIntStateOf(Defaults.FINGER_OCCLUSION_OFFSET)
     internal var keyboardHeight by mutableIntStateOf(28)
     internal var keyboardHeightLandscape by mutableIntStateOf(50)
+    internal var scaleNumpadHeight by mutableStateOf(Defaults.SCALE_NUMPAD_HEIGHT)  // F-8 / #58: numpad row scaling
     internal var vibrationEnabled by mutableStateOf(false)
     internal var debugEnabled by mutableStateOf(false)
     internal var clipboardHistoryEnabled by mutableStateOf(true)
@@ -280,6 +281,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var clipboardExcludePasswordManagers by mutableStateOf(true)  // Privacy: skip password managers
     internal var clipboardRespectSensitiveFlag by mutableStateOf(true)  // #86: Respect IS_SENSITIVE flag
     internal var clipboardTextOnly by mutableStateOf(false)  // v4: Hide media entries
+    internal var clipboardMediaEnabled by mutableStateOf(Defaults.CLIPBOARD_MEDIA_ENABLED)  // F-8: media capture toggle
+    internal var clipboardMaxMediaSizeMb by mutableIntStateOf(Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB)  // F-8: media size cap
     internal var clipboardPinnedEnabled by mutableStateOf(true)  // v4: Show/hide pinned tab
     internal var clipboardTodoEnabled by mutableStateOf(true)  // v4: Show/hide todo tab
     internal var clipboardPrivateCopyToolbarEnabled by mutableStateOf(false)  // #156: PROCESS_TEXT opt-in
@@ -324,11 +327,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var wordPredictionEnabled by mutableStateOf(true)  // Match Config.kt default
     internal var autoSpaceAfterSuggestion by mutableStateOf(true)  // #82: Add trailing space after selecting suggestion
     internal var autoSpaceBeforeSuggestion by mutableStateOf(true)  // Add leading space before tapped suggestion
+    internal var showExactTypedWord by mutableStateOf(Defaults.SHOW_EXACT_TYPED_WORD)  // F-8 / #42: exact-typed-word suggestion
     internal var backspaceUndoSwipe by mutableStateOf(true)  // #110: Backspace after swipe deletes entire swiped word
     internal var backspaceUndoAutocorrect by mutableStateOf(true)  // #110: Backspace after autocorrect reverts to original word
     internal var suggestionBarOpacity by mutableIntStateOf(90)
     internal var autoCorrectEnabled by mutableStateOf(true)
     internal var termuxModeEnabled by mutableStateOf(false)
+    internal var imeDefaultPromptEnabled by mutableStateOf(Defaults.IME_DEFAULT_PROMPT_ENABLED)  // I-7: default-IME reminder
     internal var vibrationDuration by mutableIntStateOf(20)
     // Per-event haptic feedback toggles
     internal var hapticKeyPress by mutableStateOf(Defaults.HAPTIC_KEY_PRESS)

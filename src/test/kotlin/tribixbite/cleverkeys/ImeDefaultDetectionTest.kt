@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Handler
+import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
@@ -28,9 +29,14 @@ import org.junit.Test
  *     `Settings.Secure.DEFAULT_INPUT_METHOD`. Substring matching would report the debug
  *     build (`tribixbite.cleverkeys.debug/…`) as "we are the default", and would also
  *     mis-detect any other keyboard whose id happens to embed ours.
- *  2. **The prompt fires at most once per session, and never when we ARE the default.**
- *     That is the whole point of the session flag — the toast is a 5-second, unmissable
- *     interruption over whatever the user is typing into.
+ *  2. **The prompt fires at most once per BOOT, never when we ARE the default, and never
+ *     once the user says "don't ask again"** (I-7, maintainer decision 2026-09-08). The
+ *     toast is a 5-second, unmissable interruption over whatever the user is typing into,
+ *     so the guard must survive process death within a boot: the helper persists the BOOT
+ *     INSTANT (currentTimeMillis − elapsedRealtime) it last prompted in, and treats two
+ *     instants within a small tolerance as the same boot. A new boot yields a new instant
+ *     and prompts again; `ime_default_prompt_enabled=false` (written by the Settings
+ *     reminder switch) suppresses the prompt permanently.
  *
  * Mock tier (android.jar stubs + MockK): `Settings.Secure.getString` is a static framework
  * call and `Toast`/`Handler` are framework types, so this cannot run in `runPureTests`.
@@ -49,6 +55,12 @@ class ImeDefaultDetectionTest {
         every { Log.w(any(), any<String>()) } returns 0
         every { Log.e(any(), any(), any()) } returns 0
         mockkStatic(Settings.Secure::class)
+        // The boot-instant computation needs a stable elapsed-realtime. The SDK
+        // stub's method is NATIVE (UnsatisfiedLinkError on the JVM, and MockK
+        // cannot instrument natives), so the functional shadow in
+        // src/test/kotlin/android/os/SystemClock.kt pins the uptime; the boot
+        // instant itself still tracks the real wall clock (see bootInstantNow).
+        SystemClock.elapsed = ELAPSED_MS
 
         context = mockk(relaxed = true)
         every { context.contentResolver } returns mockk(relaxed = true)
@@ -57,17 +69,30 @@ class ImeDefaultDetectionTest {
 
         editor = mockk(relaxed = true)
         every { editor.putBoolean(any(), any()) } returns editor
+        every { editor.putLong(any(), any()) } returns editor
         prefs = mockk(relaxed = true)
         every { prefs.edit() } returns editor
+        // Baseline: prompting enabled (the honest default) and never prompted.
+        every { prefs.getBoolean(PROMPT_ENABLED_KEY, any()) } returns true
+        every { prefs.getLong(LAST_BOOT_KEY, any()) } returns 0L
 
         handler = mockk(relaxed = true)
     }
 
     @After
     fun tearDown() {
+        SystemClock.elapsed = 0L
         unmockkStatic(Settings.Secure::class)
         unmockkStatic(Log::class)
     }
+
+    /**
+     * The boot instant the production code derives: wall clock minus uptime.
+     * elapsedRealtime is pinned to [ELAPSED_MS], so this is deterministic up
+     * to the few milliseconds a test takes — far inside the helper's same-boot
+     * tolerance.
+     */
+    private fun bootInstantNow(): Long = System.currentTimeMillis() - ELAPSED_MS
 
     private fun systemDefaultIme(value: String?) {
         every {
@@ -126,13 +151,12 @@ class ImeDefaultDetectionTest {
     }
 
     // =========================================================================
-    // checkAndPromptDefaultIME — the once-per-session nag
+    // checkAndPromptDefaultIME — the once-per-BOOT nag (I-7, decided 2026-09-08)
     // =========================================================================
 
     @Test
-    fun `prompt is scheduled and the session flag is set when we are not the default`() {
+    fun `prompt is scheduled and this boot's instant is recorded when we are not the default`() {
         systemDefaultIme("com.example.other/com.example.other.OtherService")
-        every { prefs.getBoolean(PROMPT_SHOWN_KEY, false) } returns false
 
         val delay = slot<Long>()
         every { handler.postDelayed(any(), capture(delay)) } returns true
@@ -142,31 +166,73 @@ class ImeDefaultDetectionTest {
         verify(exactly = 1) { handler.postDelayed(any(), any()) }
         assertWithMessage("the toast is delayed so it lands after the IME window settles")
             .that(delay.captured).isEqualTo(2000L)
-        verify(exactly = 1) { editor.putBoolean(PROMPT_SHOWN_KEY, true) }
+        // The once-per-boot guard must survive process death within the boot,
+        // so what is persisted is the BOOT INSTANT, not a boolean.
+        val recorded = slot<Long>()
+        verify(exactly = 1) { editor.putLong(LAST_BOOT_KEY, capture(recorded)) }
+        assertWithMessage("the recorded value must be this boot's instant (now − elapsedRealtime)")
+            .that(recorded.captured - bootInstantNow() in -5_000L..5_000L).isTrue()
         verify(exactly = 1) { editor.apply() }
     }
 
     @Test
     fun `no prompt when we already are the default`() {
         systemDefaultIme("$PACKAGE/$SERVICE")
-        every { prefs.getBoolean(PROMPT_SHOWN_KEY, false) } returns false
 
         IMEStatusHelper.checkAndPromptDefaultIME(context, handler, prefs, PACKAGE, SERVICE)
 
         verify(exactly = 0) { handler.postDelayed(any(), any()) }
         verify(exactly = 0) { editor.putBoolean(any(), any()) }
+        // Being the default is not "prompted": nothing may burn this boot's slot.
+        verify(exactly = 0) { editor.putLong(any(), any()) }
     }
 
+    /** I-7 red (a): a second check within the SAME boot must be silent. */
     @Test
-    fun `no second prompt once the session flag is set`() {
+    fun `no second prompt within the same boot`() {
         systemDefaultIme("com.example.other/com.example.other.OtherService")
-        every { prefs.getBoolean(PROMPT_SHOWN_KEY, false) } returns true
+        // A prompt already fired this boot — possibly in an earlier PROCESS
+        // (IME killed and restarted), which is why the instant is persisted.
+        every { prefs.getLong(LAST_BOOT_KEY, any()) } returns bootInstantNow()
 
         IMEStatusHelper.checkAndPromptDefaultIME(context, handler, prefs, PACKAGE, SERVICE)
 
         verify(exactly = 0) { handler.postDelayed(any(), any()) }
-        // It must also short-circuit BEFORE reading settings — the flag is the cheap guard.
+        // It must also short-circuit BEFORE reading settings — the pref is the cheap guard.
         verify(exactly = 0) { Settings.Secure.getString(any(), any()) }
+    }
+
+    /**
+     * I-7 red (b): a NEW boot prompts again. The audit's original finding was the
+     * inverse bug — the "session" flag was a persistent pref with no reset path, so
+     * the prompt fired once per INSTALL; the legacy flag being set must not matter.
+     */
+    @Test
+    fun `a new boot prompts again even though a previous boot already did`() {
+        systemDefaultIme("com.example.other/com.example.other.OtherService")
+        // Last prompt happened in a boot whose instant is a day older…
+        every { prefs.getLong(LAST_BOOT_KEY, any()) } returns bootInstantNow() - 86_400_000L
+        // …and the legacy once-per-install flag is even set (real upgraded devices).
+        every { prefs.getBoolean(LEGACY_PROMPT_SHOWN_KEY, any()) } returns true
+
+        IMEStatusHelper.checkAndPromptDefaultIME(context, handler, prefs, PACKAGE, SERVICE)
+
+        verify(exactly = 1) { handler.postDelayed(any(), any()) }
+        verify(exactly = 1) { editor.putLong(LAST_BOOT_KEY, any()) }
+    }
+
+    /** I-7 red (c): "don't ask again" (the Settings reminder switch) suppresses forever. */
+    @Test
+    fun `don't-ask-again suppresses the prompt even on a new boot`() {
+        systemDefaultIme("com.example.other/com.example.other.OtherService")
+        every { prefs.getBoolean(PROMPT_ENABLED_KEY, any()) } returns false
+        every { prefs.getLong(LAST_BOOT_KEY, any()) } returns 0L  // never prompted
+
+        IMEStatusHelper.checkAndPromptDefaultIME(context, handler, prefs, PACKAGE, SERVICE)
+
+        verify(exactly = 0) { handler.postDelayed(any(), any()) }
+        verify(exactly = 0) { Settings.Secure.getString(any(), any()) }
+        verify(exactly = 0) { editor.putLong(any(), any()) }
     }
 
     /**
@@ -179,7 +245,6 @@ class ImeDefaultDetectionTest {
     @Test
     fun `the prompt names this app via the app_name resource, not Unexpected Keyboard`() {
         systemDefaultIme("com.example.other/com.example.other.OtherService")
-        every { prefs.getBoolean(PROMPT_SHOWN_KEY, false) } returns false
         every { context.getString(R.string.app_name) } returns "CleverKeys"
 
         val toastRunnable = slot<Runnable>()
@@ -203,17 +268,16 @@ class ImeDefaultDetectionTest {
         }
     }
 
-    @Test
-    fun `resetSessionPrompt clears the flag so the next session can prompt again`() {
-        IMEStatusHelper.resetSessionPrompt(prefs)
-        verify(exactly = 1) { editor.putBoolean(PROMPT_SHOWN_KEY, false) }
-        verify(exactly = 1) { editor.apply() }
-    }
-
     private companion object {
         const val PACKAGE = "tribixbite.cleverkeys"
         const val SERVICE = "tribixbite.cleverkeys.CleverKeysService"
-        /** Mirrors IMEStatusHelper.PREF_KEY_PROMPT_SHOWN (private there). */
-        const val PROMPT_SHOWN_KEY = "ime_prompt_shown_this_session"
+        /** The retired once-per-install flag (I-7): written by pre-2026-09-08 builds. */
+        const val LEGACY_PROMPT_SHOWN_KEY = "ime_prompt_shown_this_session"
+        /** Mirrors IMEStatusHelper.PREF_KEY_PROMPT_ENABLED (the "don't ask again" pref). */
+        const val PROMPT_ENABLED_KEY = "ime_default_prompt_enabled"
+        /** Mirrors IMEStatusHelper.PREF_KEY_LAST_PROMPT_BOOT_MS (the once-per-boot record). */
+        const val LAST_BOOT_KEY = "ime_prompt_last_boot_ms"
+        /** Pinned SystemClock.elapsedRealtime for a deterministic boot instant. */
+        const val ELAPSED_MS = 100_000L
     }
 }
