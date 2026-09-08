@@ -90,10 +90,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Focus on key API levels: min supported, common, latest
-        api-level: [21, 29, 34]
+        # Focus on key API levels: min supported (24 since ARC-113), common, latest
+        api-level: [24, 29, 34]
         include:
-          - api-level: 21
+          - api-level: 24
             target: default
             arch: x86_64
           - api-level: 29
