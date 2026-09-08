@@ -222,7 +222,8 @@ class SettingsImportPlanBuilderTest {
             "vibrate_custom_migration_v1",     // one-time #154 vibrate_custom cleanup
             "voice_ime_known",                 // runtime IME state
             "voice_ime_last_used",             // runtime IME state
-            "ime_prompt_shown_this_session",   // per-session UI flag
+            "ime_prompt_shown_this_session",   // legacy pre-I-7 per-session flag (retired)
+            "ime_prompt_last_boot_ms",         // I-7 (2026-09-08): boot instant of the last prompt, device-bound
             // Backup-encryption state (Stage B) — never exported (§8.2).
             "backup_passphrase_ciphertext",    // Keystore-wrapped passphrase
             "backup_passphrase_iv",            // GCM IV for the wrapped passphrase
