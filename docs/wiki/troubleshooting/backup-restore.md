@@ -84,7 +84,11 @@ dialog before applying any changes:
     `~ qwerty: 50→52 keys`).
   - **Short-swipe diff** — short-swipe customizations show a per-mapping
     diff above the Skip/Merge/Replace radio so you can see exactly
-    which `key+direction` mappings will change.
+    which `key+direction` mappings will change. In **Merge** mode the
+    file wins on conflicts: an imported mapping replaces your local
+    mapping for the same key and direction (shown as a *changed* row in
+    the diff), while local mappings the file doesn't touch are kept.
+    **Replace** wipes all existing mappings and installs the file's set.
   - **Invalid/skipped section** — keys that can't be imported
     (deprecated, internal, dictionary words routed elsewhere,
     type-mismatched) are listed with a clear reason.
@@ -149,7 +153,9 @@ Exports clipboard history in two formats:
 3. Browse to your backup JSON file
 4. **Import preview** opens — review the changes, deselect any rows
    you don't want, choose a Short-swipe import mode (Skip / Merge /
-   Replace), tap **Apply (N)** to commit. Settings apply immediately.
+   Replace — Merge keeps your other mappings but the file wins where
+   both define the same key+direction), tap **Apply (N)** to commit.
+   Settings apply immediately.
 
 ### Import Dictionary
 
