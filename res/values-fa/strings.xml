@@ -773,7 +773,7 @@
     <string name="gif_remove_all_body">این کار همهٔ بسته‌های گیف واردشده، بندانگشتی‌ها و پایگاه داده را حذف می‌کند. قابل بازگشت نیست.</string>
     <string name="gif_remove_all_confirm">حذف همه</string>
     <string name="gif_remove_pack_body">این کار همهٔ گیف‌های این بسته را حذف و فضای ذخیره‌سازی را آزاد می‌کند.</string>
-    <string name="privacy_section_intro">CleverKeys کاملاً آفلاین است — هیچ داده‌ای هرگز از دستگاه شما خارج نمی‌شود. این تنظیمات اختیاری، داده‌های محلی را برای تنظیم دقیق احتمالی مدل روی دستگاه در آینده ذخیره می‌کنند.</string>
+    <string name="privacy_section_intro">CleverKeys کاملاً آفلاین است — هیچ داده‌ای هرگز از دستگاه شما بیرون نمی‌رود. این تنظیمات اختیاری داده‌ها را به‌صورت محلی نگه می‌دارند تا بتوانید آن‌ها را ببینید، برون‌بری یا حذف کنید؛ داده‌های کشیدنِ برون‌بری‌شده را می‌توان برای آموزش مدل‌ها در جای دیگر به کار برد.</string>
     <string name="privacy_on_device_learning_header">یادگیری روی دستگاه</string>
     <string name="privacy_forget_learned_title">داده‌های آموخته‌شده هم فراموش شوند؟</string>
     <string name="privacy_forget_learned_body">یادگیری اکنون خاموش است — چیز جدیدی ضبط نمی‌شود. آیا می‌خواهید هر آنچه تاکنون آموخته شده (الگوهای عبارت، کاربرد واژه‌ها و تاریخچهٔ انتخاب) نیز حذف شود؟ قابل بازگشت نیست.</string>
@@ -1005,4 +1005,19 @@
     <string name="custom_theme_preview">پیش‌نمایش</string>
     <string name="custom_theme_create">ایجاد</string>
     <string name="theme_select_attribute">انتخاب %1$s</string>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">داده‌های زبانی آموخته‌شده</string>
+    <string name="privacy_learned_data_desc">مدل‌های عبارت و کاربرد واژه که روی همین دستگاه از نوشته‌های شما ساخته می‌شوند.</string>
+    <string name="privacy_learned_counts">جفت‌واژه‌ها: %1$d • سه‌واژه‌ها: %2$d • واژه‌ها: %3$d</string>
+    <string name="privacy_learned_none">هنوز چیزی آموخته نشده است.</string>
+    <string name="privacy_learned_sources">در حال ثبت: %1$s</string>
+    <string name="privacy_learned_sources_none">هم‌اکنون چیزی ثبت نمی‌شود.</string>
+    <string name="privacy_learned_manage">منابع یادگیری</string>
+    <string name="privacy_learned_forget">فراموش کردن آموخته‌ها</string>
+    <string name="privacy_learned_forget_body">همهٔ جفت‌واژه‌ها و سه‌واژه‌های آموخته‌شده، شمار کاربرد واژه‌ها و تاریخچهٔ انتخاب پیشنهادها حذف می‌شود. واژه‌نامه‌ها و تنظیمات دست‌نخورده می‌مانند.</string>
+    <string name="privacy_delete_data_title">حذف داده‌های گردآوری‌شده</string>
+    <string name="privacy_delete_data_body">همهٔ داده‌های کشیدن گردآوری‌شده برای همیشه حذف می‌شود.\n\nاین کار برگشت‌پذیر نیست.</string>
+    <string name="privacy_delete_data_done">همهٔ داده‌های کشیدن حذف شد</string>
+    <string name="privacy_delete_data_error">خطا در حذف داده‌ها: %1$s</string>
 </resources>

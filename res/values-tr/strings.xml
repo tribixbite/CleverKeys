@@ -746,7 +746,7 @@
     <string name="gif_remove_all_body">Bu, içe aktarılan tüm GIF paketlerini, küçük resimleri ve veritabanını siler. Bu işlem geri alınamaz.</string>
     <string name="gif_remove_all_confirm">Tümünü Kaldır</string>
     <string name="gif_remove_pack_body">Bu, bu paketteki tüm GIF\'leri siler ve depolama alanını geri kazanır.</string>
-    <string name="privacy_section_intro">CleverKeys tamamen çevrimdışıdır — hiçbir veri cihazınızdan asla çıkmaz. Bu isteğe bağlı ayarlar, gelecekte cihaz üzerinde olası model ince ayarı için yerel veri depolar.</string>
+    <string name="privacy_section_intro">CleverKeys tamamen çevrimdışıdır — hiçbir veri cihazınızdan çıkmaz. Bu isteğe bağlı ayarlar verileri yerel olarak saklar; böylece inceleyebilir, dışa aktarabilir veya silebilirsiniz. Dışa aktarılan kaydırma verileri başka bir yerde model eğitmek için kullanılabilir.</string>
     <string name="privacy_on_device_learning_header">Cihaz Üzerinde Öğrenme</string>
     <string name="privacy_forget_learned_title">Öğrenilen veriler de unutulsun mu?</string>
     <string name="privacy_forget_learned_body">Öğrenme artık kapalı — yeni hiçbir şey kaydedilmeyecek. Zaten öğrenilmiş her şeyi de (ifade kalıpları, kelime kullanımı ve seçim geçmişi) silmek ister misiniz? Bu işlem geri alınamaz.</string>
@@ -978,4 +978,19 @@
     <string name="custom_theme_preview">Önizleme</string>
     <string name="custom_theme_create">Oluştur</string>
     <string name="theme_select_attribute">%1$s Seç</string>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Öğrenilen Dil Verileri</string>
+    <string name="privacy_learned_data_desc">Yazdıklarınızdan bu cihazda oluşturulan ifade ve sözcük kullanımı modelleri.</string>
+    <string name="privacy_learned_counts">Sözcük çiftleri: %1$d • Sözcük üçlüleri: %2$d • Sözcükler: %3$d</string>
+    <string name="privacy_learned_none">Henüz hiçbir şey öğrenilmedi.</string>
+    <string name="privacy_learned_sources">Şu anda kaydediliyor: %1$s</string>
+    <string name="privacy_learned_sources_none">Şu anda hiçbir şey kaydedilmiyor.</string>
+    <string name="privacy_learned_manage">Öğrenme Kaynakları</string>
+    <string name="privacy_learned_forget">Öğrenilenleri Sil</string>
+    <string name="privacy_learned_forget_body">Öğrenilen tüm sözcük çiftlerini ve üçlülerini, sözcük kullanım sayaçlarını ve öneri seçim geçmişini siler. Sözlükler ve ayarlar etkilenmez.</string>
+    <string name="privacy_delete_data_title">Toplanan Verileri Sil</string>
+    <string name="privacy_delete_data_body">Toplanan tüm kaydırma verileri kalıcı olarak silinecek.\n\nBu işlem geri alınamaz.</string>
+    <string name="privacy_delete_data_done">Tüm kaydırma verileri silindi</string>
+    <string name="privacy_delete_data_error">Veriler silinirken hata: %1$s</string>
 </resources>

@@ -738,7 +738,7 @@
     <string name="gif_remove_all_body">Smaže všechny importované balíčky GIF, miniatury i databázi. Nelze vrátit zpět.</string>
     <string name="gif_remove_all_confirm">Odstranit vše</string>
     <string name="gif_remove_pack_body">Smaže všechny GIFy z tohoto balíčku a uvolní úložiště.</string>
-    <string name="privacy_section_intro">CleverKeys je zcela offline — žádná data nikdy neopustí vaše zařízení. Tato volitelná nastavení ukládají místní data pro případné budoucí doladění modelů přímo v zařízení.</string>
+    <string name="privacy_section_intro">CleverKeys funguje plně offline — žádná data nikdy neopustí vaše zařízení. Tato volitelná nastavení ukládají data místně, abyste si je mohli prohlédnout, exportovat nebo smazat; exportovaná data o tazích lze použít k trénování modelů jinde.</string>
     <string name="privacy_on_device_learning_header">Učení v zařízení</string>
     <string name="privacy_forget_learned_title">Zapomenout i naučená data?</string>
     <string name="privacy_forget_learned_body">Učení je nyní vypnuté — nic nového se nezaznamenává. Chcete smazat i vše, co už je naučené (vzory frází, používání slov a historii výběrů)? Nelze vrátit zpět.</string>
@@ -967,4 +967,19 @@
     <string name="custom_theme_create">Vytvořit</string>
     <string name="theme_select_attribute">Vybrat %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="one">Přetažením změníte pořadí • Klepnutím upravíte • %1$d rozložení</item><item quantity="few">Přetažením změníte pořadí • Klepnutím upravíte • %1$d rozložení</item><item quantity="many">Přetažením změníte pořadí • Klepnutím upravíte • %1$d rozložení</item><item quantity="other">Přetažením změníte pořadí • Klepnutím upravíte • %1$d rozložení</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Naučená jazyková data</string>
+    <string name="privacy_learned_data_desc">Modely frází a používání slov vytvořené v tomto zařízení z toho, co píšete.</string>
+    <string name="privacy_learned_counts">Dvojice slov: %1$d • Trojice slov: %2$d • Slova: %3$d</string>
+    <string name="privacy_learned_none">Zatím nic naučeno.</string>
+    <string name="privacy_learned_sources">Právě se zaznamenává: %1$s</string>
+    <string name="privacy_learned_sources_none">Právě se nic nezaznamenává.</string>
+    <string name="privacy_learned_manage">Zdroje učení</string>
+    <string name="privacy_learned_forget">Zapomenout naučené</string>
+    <string name="privacy_learned_forget_body">Smaže všechny naučené dvojice a trojice slov, počty použití slov i historii výběru návrhů. Slovníky a nastavení zůstanou nedotčeny.</string>
+    <string name="privacy_delete_data_title">Smazat shromážděná data</string>
+    <string name="privacy_delete_data_body">Tímto trvale smažete všechna shromážděná data o tazích.\n\nTuto akci nelze vrátit zpět.</string>
+    <string name="privacy_delete_data_done">Všechna data o tazích byla smazána</string>
+    <string name="privacy_delete_data_error">Chyba při mazání dat: %1$s</string>
 </resources>

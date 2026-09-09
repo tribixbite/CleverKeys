@@ -737,7 +737,7 @@
     <string name="gif_remove_all_body">インポートしたすべての GIF パック、サムネイル、データベースを削除します。この操作は元に戻せません。</string>
     <string name="gif_remove_all_confirm">すべて削除</string>
     <string name="gif_remove_pack_body">このパックのすべての GIF を削除し、ストレージ容量を解放します。</string>
-    <string name="privacy_section_intro">CleverKeys は完全オフラインです — データが端末の外に出ることはありません。これらの任意設定は、将来の端末内モデル微調整に備えてローカルデータを保存します。</string>
+    <string name="privacy_section_intro">CleverKeys は完全にオフラインで動作し、データが端末外に出ることはありません。これらの任意の設定はデータを端末内に保存し、確認・エクスポート・削除できるようにします。エクスポートしたスワイプデータは、別の場所でモデルの学習に利用できます。</string>
     <string name="privacy_on_device_learning_header">端末内学習</string>
     <string name="privacy_forget_learned_title">学習データも消去しますか?</string>
     <string name="privacy_forget_learned_body">学習はオフになりました — 新しい記録は行われません。すでに学習した内容(フレーズパターン、単語の使用状況、選択履歴)もすべて削除しますか?この操作は元に戻せません。</string>
@@ -966,4 +966,19 @@
     <string name="custom_theme_create">作成</string>
     <string name="theme_select_attribute">%1$s を選択</string>
     <plurals name="layout_manager_hint"><item quantity="other">ドラッグして並べ替え • タップして編集 • %1$d 個のレイアウト</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">学習済み言語データ</string>
+    <string name="privacy_learned_data_desc">入力内容からこの端末上で作られる、フレーズと単語使用のモデルです。</string>
+    <string name="privacy_learned_counts">単語ペア: %1$d 件 • 単語トリプル: %2$d 件 • 単語: %3$d 件</string>
+    <string name="privacy_learned_none">まだ何も学習していません。</string>
+    <string name="privacy_learned_sources">記録中: %1$s</string>
+    <string name="privacy_learned_sources_none">現在、何も記録していません。</string>
+    <string name="privacy_learned_manage">学習ソース</string>
+    <string name="privacy_learned_forget">学習内容を削除</string>
+    <string name="privacy_learned_forget_body">学習した単語ペアと単語トリプル、単語の使用回数、候補選択の履歴をすべて削除します。辞書と設定は影響を受けません。</string>
+    <string name="privacy_delete_data_title">収集データを削除</string>
+    <string name="privacy_delete_data_body">収集したスワイプデータをすべて完全に削除します。\n\nこの操作は取り消せません。</string>
+    <string name="privacy_delete_data_done">すべてのスワイプデータを削除しました</string>
+    <string name="privacy_delete_data_error">データの削除エラー: %1$s</string>
 </resources>

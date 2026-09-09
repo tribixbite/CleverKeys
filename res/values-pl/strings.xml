@@ -748,7 +748,7 @@
     <string name="gif_remove_all_body">Spowoduje to usunięcie wszystkich zaimportowanych pakietów GIF, miniatur i bazy danych. Nie można tego cofnąć.</string>
     <string name="gif_remove_all_confirm">Usuń wszystko</string>
     <string name="gif_remove_pack_body">Spowoduje to usunięcie wszystkich GIF-ów z tego pakietu i odzyskanie miejsca.</string>
-    <string name="privacy_section_intro">CleverKeys działa całkowicie offline — żadne dane nigdy nie opuszczają urządzenia. Te opcjonalne ustawienia przechowują lokalne dane na potrzeby ewentualnego przyszłego dostrajania modelu na urządzeniu.</string>
+    <string name="privacy_section_intro">CleverKeys działa całkowicie offline — żadne dane nigdy nie opuszczają Twojego urządzenia. Te opcjonalne ustawienia przechowują dane lokalnie, abyś mógł je przejrzeć, wyeksportować lub usunąć; wyeksportowane dane o gestach mogą posłużyć do trenowania modeli gdzie indziej.</string>
     <string name="privacy_on_device_learning_header">Uczenie na urządzeniu</string>
     <string name="privacy_forget_learned_title">Zapomnieć też wyuczone dane?</string>
     <string name="privacy_forget_learned_body">Uczenie jest teraz wyłączone — nic nowego nie będzie rejestrowane. Czy chcesz też usunąć wszystko, co już wyuczone (wzorce zwrotów, użycie słów i historię wyboru)? Nie można tego cofnąć.</string>
@@ -977,4 +977,19 @@
     <string name="custom_theme_create">Utwórz</string>
     <string name="theme_select_attribute">Wybierz %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="one">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układ</item><item quantity="few">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układy</item><item quantity="many">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układów</item><item quantity="other">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układu</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Wyuczone dane językowe</string>
+    <string name="privacy_learned_data_desc">Modele fraz i użycia słów budowane na tym urządzeniu na podstawie tego, co piszesz.</string>
+    <string name="privacy_learned_counts">Pary słów: %1$d • Trójki słów: %2$d • Słowa: %3$d</string>
+    <string name="privacy_learned_none">Nic jeszcze nie zostało wyuczone.</string>
+    <string name="privacy_learned_sources">Obecnie zapisywane: %1$s</string>
+    <string name="privacy_learned_sources_none">Obecnie nic nie jest zapisywane.</string>
+    <string name="privacy_learned_manage">Źródła uczenia</string>
+    <string name="privacy_learned_forget">Zapomnij wyuczone</string>
+    <string name="privacy_learned_forget_body">Usuwa wszystkie wyuczone pary i trójki słów, liczniki użycia słów oraz historię wyboru podpowiedzi. Słowniki i ustawienia pozostaną bez zmian.</string>
+    <string name="privacy_delete_data_title">Usuń zebrane dane</string>
+    <string name="privacy_delete_data_body">Spowoduje to trwałe usunięcie wszystkich zebranych danych o gestach.\n\nTej operacji nie można cofnąć.</string>
+    <string name="privacy_delete_data_done">Usunięto wszystkie dane o gestach</string>
+    <string name="privacy_delete_data_error">Błąd podczas usuwania danych: %1$s</string>
 </resources>

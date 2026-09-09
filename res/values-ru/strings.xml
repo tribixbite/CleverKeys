@@ -738,7 +738,7 @@
     <string name="gif_remove_all_body">Будут удалены все импортированные пакеты GIF, миниатюры и база данных. Это нельзя отменить.</string>
     <string name="gif_remove_all_confirm">Удалить всё</string>
     <string name="gif_remove_pack_body">Все GIF из этого пакета будут удалены, а место в хранилище освобождено.</string>
-    <string name="privacy_section_intro">CleverKeys полностью офлайн — никакие данные никогда не покидают устройство. Эти необязательные настройки сохраняют локальные данные для возможной будущей донастройки модели на устройстве.</string>
+    <string name="privacy_section_intro">CleverKeys работает полностью офлайн — никакие данные никогда не покидают ваше устройство. Эти необязательные настройки хранят данные локально, чтобы вы могли их просмотреть, экспортировать или удалить; экспортированные данные свайпов можно использовать для обучения моделей в другом месте.</string>
     <string name="privacy_on_device_learning_header">Обучение на устройстве</string>
     <string name="privacy_forget_learned_title">Также забыть выученные данные?</string>
     <string name="privacy_forget_learned_body">Обучение теперь выключено — ничего нового записываться не будет. Удалить также всё уже выученное (сочетания слов, словоупотребление и историю выбора)? Это нельзя отменить.</string>
@@ -972,4 +972,19 @@
     <string name="custom_theme_preview">Предпросмотр</string>
     <string name="custom_theme_create">Создать</string>
     <string name="theme_select_attribute">Выберите: %1$s</string>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Выученные языковые данные</string>
+    <string name="privacy_learned_data_desc">Модели словосочетаний и частоты слов, создаваемые на этом устройстве из того, что вы печатаете.</string>
+    <string name="privacy_learned_counts">Пары слов: %1$d • Тройки слов: %2$d • Слова: %3$d</string>
+    <string name="privacy_learned_none">Пока ничего не выучено.</string>
+    <string name="privacy_learned_sources">Сейчас записывается: %1$s</string>
+    <string name="privacy_learned_sources_none">Сейчас ничего не записывается.</string>
+    <string name="privacy_learned_manage">Источники обучения</string>
+    <string name="privacy_learned_forget">Забыть выученное</string>
+    <string name="privacy_learned_forget_body">Удаляет все выученные пары и тройки слов, счётчики использования слов и историю выбора подсказок. Словари и настройки не затрагиваются.</string>
+    <string name="privacy_delete_data_title">Удалить собранные данные</string>
+    <string name="privacy_delete_data_body">Все собранные данные свайпов будут удалены навсегда.\n\nЭто действие нельзя отменить.</string>
+    <string name="privacy_delete_data_done">Все данные свайпов удалены</string>
+    <string name="privacy_delete_data_error">Ошибка удаления данных: %1$s</string>
 </resources>

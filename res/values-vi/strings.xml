@@ -940,7 +940,7 @@
     <string name="privacy_on_device_learning_header">Học trên thiết bị</string>
     <string name="privacy_perf_stats">Dự đoán: %1$d • TB: %2$dms • Top-1: %3$d%%</string>
     <string name="privacy_performance_header">Chỉ số hiệu năng</string>
-    <string name="privacy_section_intro">CleverKeys hoàn toàn ngoại tuyến — không dữ liệu nào rời khỏi thiết bị của bạn. Các cài đặt tùy chọn này lưu dữ liệu cục bộ cho việc tinh chỉnh mô hình trên thiết bị trong tương lai.</string>
+    <string name="privacy_section_intro">CleverKeys hoạt động hoàn toàn ngoại tuyến — không dữ liệu nào rời khỏi thiết bị của bạn. Các cài đặt tuỳ chọn này lưu dữ liệu cục bộ để bạn xem lại, xuất ra hoặc xoá; dữ liệu vuốt đã xuất có thể dùng để huấn luyện mô hình ở nơi khác.</string>
     <string name="privacy_swipe_stats">Tổng lượt vuốt: %1$d • Từ khác nhau: %2$d</string>
     <string name="provenance_adaptation">• Thích ứng: %1$.2f×</string>
     <string name="provenance_aggression">Mức mạnh tay: %1$s (%2$.2f×)</string>
@@ -995,4 +995,19 @@
     <string name="theme_selector_selected_desc">Đã chọn</string>
     <string name="theme_selector_title">Chủ đề bàn phím</string>
     <plurals name="layout_manager_hint"><item quantity="other">Kéo để sắp xếp lại • Nhấn để chỉnh sửa • %1$d bố cục</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Dữ liệu ngôn ngữ đã học</string>
+    <string name="privacy_learned_data_desc">Các mô hình cụm từ và tần suất dùng từ được xây dựng trên thiết bị này từ những gì bạn gõ.</string>
+    <string name="privacy_learned_counts">Cặp từ: %1$d • Bộ ba từ: %2$d • Từ: %3$d</string>
+    <string name="privacy_learned_none">Chưa học được gì.</string>
+    <string name="privacy_learned_sources">Đang ghi: %1$s</string>
+    <string name="privacy_learned_sources_none">Hiện không ghi lại gì.</string>
+    <string name="privacy_learned_manage">Nguồn học</string>
+    <string name="privacy_learned_forget">Quên dữ liệu đã học</string>
+    <string name="privacy_learned_forget_body">Xoá toàn bộ cặp từ và bộ ba từ đã học, số lần dùng từ và lịch sử chọn gợi ý. Từ điển và cài đặt không bị ảnh hưởng.</string>
+    <string name="privacy_delete_data_title">Xoá dữ liệu đã thu thập</string>
+    <string name="privacy_delete_data_body">Thao tác này sẽ xoá vĩnh viễn toàn bộ dữ liệu vuốt đã thu thập.\n\nKhông thể hoàn tác.</string>
+    <string name="privacy_delete_data_done">Đã xoá toàn bộ dữ liệu vuốt</string>
+    <string name="privacy_delete_data_error">Lỗi khi xoá dữ liệu: %1$s</string>
 </resources>

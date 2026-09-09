@@ -738,7 +738,7 @@
     <string name="gif_remove_all_body">Hiermee worden alle geïmporteerde GIF-pakketten, miniaturen en de database verwijderd. Dit kan niet ongedaan worden gemaakt.</string>
     <string name="gif_remove_all_confirm">Alles verwijderen</string>
     <string name="gif_remove_pack_body">Hiermee worden alle GIF\'s uit dit pakket verwijderd en komt opslagruimte vrij.</string>
-    <string name="privacy_section_intro">CleverKeys is volledig offline — er verlaten nooit gegevens je apparaat. Deze optionele instellingen slaan lokale gegevens op voor mogelijke toekomstige modelverfijning op het apparaat.</string>
+    <string name="privacy_section_intro">CleverKeys werkt volledig offline — er verlaten nooit gegevens je apparaat. Deze optionele instellingen bewaren gegevens lokaal zodat je ze kunt bekijken, exporteren of verwijderen; geëxporteerde veeggegevens kun je elders gebruiken om modellen te trainen.</string>
     <string name="privacy_on_device_learning_header">Leren op het apparaat</string>
     <string name="privacy_forget_learned_title">Ook geleerde gegevens vergeten?</string>
     <string name="privacy_forget_learned_body">Leren staat nu uit — er wordt niets nieuws opgenomen. Wil je ook alles verwijderen wat al is geleerd (uitdrukkingspatronen, woordgebruik en selectiegeschiedenis)? Dit kan niet ongedaan worden gemaakt.</string>
@@ -967,4 +967,19 @@
     <string name="custom_theme_create">Maken</string>
     <string name="theme_select_attribute">%1$s selecteren</string>
     <plurals name="layout_manager_hint"><item quantity="one">Sleep om te herschikken • Tik om te bewerken • %1$d lay-out</item><item quantity="other">Sleep om te herschikken • Tik om te bewerken • %1$d lay-outs</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Geleerde taalgegevens</string>
+    <string name="privacy_learned_data_desc">Modellen voor woordcombinaties en woordgebruik, op dit apparaat opgebouwd uit wat je typt.</string>
+    <string name="privacy_learned_counts">Woordparen: %1$d • Woordtripletten: %2$d • Woorden: %3$d</string>
+    <string name="privacy_learned_none">Nog niets geleerd.</string>
+    <string name="privacy_learned_sources">Wordt nu vastgelegd: %1$s</string>
+    <string name="privacy_learned_sources_none">Er wordt op dit moment niets vastgelegd.</string>
+    <string name="privacy_learned_manage">Leerbronnen</string>
+    <string name="privacy_learned_forget">Geleerde wissen</string>
+    <string name="privacy_learned_forget_body">Verwijdert alle geleerde woordparen en -tripletten, de tellers voor woordgebruik en de geschiedenis van gekozen suggesties. Woordenboeken en instellingen blijven ongemoeid.</string>
+    <string name="privacy_delete_data_title">Verzamelde gegevens verwijderen</string>
+    <string name="privacy_delete_data_body">Hiermee worden alle verzamelde veeggegevens definitief verwijderd.\n\nDeze actie kan niet ongedaan worden gemaakt.</string>
+    <string name="privacy_delete_data_done">Alle veeggegevens verwijderd</string>
+    <string name="privacy_delete_data_error">Fout bij verwijderen van gegevens: %1$s</string>
 </resources>

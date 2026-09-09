@@ -13,7 +13,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -22,6 +24,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Context
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.SwipePerformanceStats
 import tribixbite.cleverkeys.R
@@ -39,6 +44,30 @@ import tribixbite.cleverkeys.ui.settings.io.exportSwipeDataNDJSON
 import tribixbite.cleverkeys.ui.settings.io.viewCollectedData
 import tribixbite.cleverkeys.ui.settings.io.viewPerfStats
 import tribixbite.cleverkeys.ui.settings.saveSetting
+import tribixbite.cleverkeys.ui.settings.scrollToSetting
+
+/**
+ * Live totals for the three stores the master learning gate can erase. Summed
+ * across every language the stores know about — the per-language breakdown lives
+ * in the Learning Data manager (Input Behaviour → Advanced Prediction), which
+ * also owns browse and per-entry delete.
+ */
+private data class LearnedCounts(val pairs: Int, val triples: Int, val words: Int) {
+    val isEmpty: Boolean get() = pairs == 0 && triples == 0 && words == 0
+}
+
+/**
+ * Erase every store fed by the on-device learning gate. Shared by the master
+ * switch's "forget what's already learned" prompt and the explicit
+ * "Forget learned data" button so the two can never diverge on what "forget"
+ * covers. Blocking — call from a background thread.
+ */
+private fun clearLearnedLanguageData(context: Context) {
+    BigramStore.getInstance(context).clearAll()
+    TrigramStore.getInstance(context).clearAll()
+    UserVocabulary.getInstance(context).clearAll()
+    UserAdaptationManager.getInstance(context).resetAdaptation()
+}
 
 @Composable
 internal fun SettingsActivity.PrivacySection() {
@@ -60,6 +89,9 @@ internal fun SettingsActivity.PrivacySection() {
                 // the write layer: context LM (bigrams/trigrams), personalization
                 // vocabulary, selection adaptation, and swipe-ML collection.
                 var showForgetLearnedDialog by remember { mutableStateOf(false) }
+                // Bumped whenever anything below erases a learned store, so the
+                // counts re-read instead of reporting pre-delete totals.
+                var learnedRefreshKey by remember { mutableIntStateOf(0) }
                 Text(
                     text = stringResource(R.string.privacy_on_device_learning_header),
                     fontWeight = FontWeight.Bold,
@@ -91,11 +123,8 @@ internal fun SettingsActivity.PrivacySection() {
                                 showForgetLearnedDialog = false
                                 val appContext = applicationContext
                                 Thread {
-                                    // Reuse the learned-data manager's forget APIs
-                                    BigramStore.getInstance(appContext).clearAll()
-                                    TrigramStore.getInstance(appContext).clearAll()
-                                    UserVocabulary.getInstance(appContext).clearAll()
-                                    UserAdaptationManager.getInstance(appContext).resetAdaptation()
+                                    clearLearnedLanguageData(appContext)
+                                    runOnUiThread { learnedRefreshKey++ }
                                 }.start()
                             }) { Text(stringResource(R.string.privacy_forget_learned_confirm)) }
                         },
@@ -107,10 +136,142 @@ internal fun SettingsActivity.PrivacySection() {
                     )
                 }
 
+                // ── Learned language data (context LM + personalization) ────
+                // The master gate above can already ERASE these stores, but until
+                // 2026-09-09 the section never SHOWED them: the largest body of
+                // learned text on the device — bigrams, trigrams and the
+                // personalization vocabulary — had no counts here, so "forget"
+                // was unverifiable and the user could not tell what was held.
+                // Counts only; browse and per-entry delete stay in the Learning
+                // Data manager rather than being duplicated.
+                var learnedCounts by remember { mutableStateOf<LearnedCounts?>(null) }
+                var showForgetLearnedDataDialog by remember { mutableStateOf(false) }
+
+                LaunchedEffect(learnedRefreshKey) {
+                    val appContext = applicationContext
+                    learnedCounts = withContext(Dispatchers.IO) {
+                        val bigrams = BigramStore.getInstance(appContext)
+                        val trigrams = TrigramStore.getInstance(appContext)
+                        LearnedCounts(
+                            pairs = bigrams.getKnownLanguages()
+                                .sumOf { bigrams.getTotalBigramCount(it) },
+                            triples = trigrams.getKnownLanguages()
+                                .sumOf { trigrams.getTotalTrigramCount(it) },
+                            words = UserVocabulary.getInstance(appContext).getStats().totalWords
+                        )
+                    }
+                }
+
+                Text(
+                    text = stringResource(R.string.privacy_learned_data_header),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                )
+                Text(
+                    text = stringResource(R.string.privacy_learned_data_desc),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                val counts = learnedCounts
+                Text(
+                    text = when {
+                        counts == null -> stringResource(R.string.learning_data_loading)
+                        counts.isEmpty -> stringResource(R.string.privacy_learned_none)
+                        else -> stringResource(
+                            R.string.privacy_learned_counts,
+                            counts.pairs, counts.triples, counts.words
+                        )
+                    },
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                // Which learn paths are live right now. The three source toggles are
+                // configured in Input Behaviour → Advanced Prediction; naming their
+                // state here (and offering a jump) keeps this section a truthful
+                // account of what is being recorded without duplicating controls
+                // that would then need two-way sync and a second search entry.
+                val sourceLabels = listOfNotNull(
+                    stringResource(R.string.input_context_aware_title)
+                        .takeIf { contextAwarePredictionsEnabled },
+                    stringResource(R.string.input_next_word_title)
+                        .takeIf { nextWordPredictionEnabled },
+                    stringResource(R.string.input_personalized_learning_title)
+                        .takeIf { personalizedLearningEnabled }
+                )
+                // The master gate outranks every source toggle, so with it off
+                // nothing is recording regardless of the three below it.
+                val recordingNow = if (onDeviceLearningEnabled) sourceLabels else emptyList()
+                Text(
+                    text = if (recordingNow.isEmpty()) {
+                        stringResource(R.string.privacy_learned_sources_none)
+                    } else {
+                        stringResource(
+                            R.string.privacy_learned_sources,
+                            recordingNow.joinToString(", ")
+                        )
+                    },
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            // Open the panel that owns the three source toggles. The
+                            // scroll only lands once the target has been composed (it
+                            // registers its position then); expanding is the part that
+                            // always works, so the control is reachable either way.
+                            inputSectionExpanded = true
+                            wordPredictionAdvancedExpanded = true
+                            scrollToSetting("context_aware_predictions")
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) { Text(stringResource(R.string.privacy_learned_manage)) }
+                    OutlinedButton(
+                        onClick = { showForgetLearnedDataDialog = true },
+                        enabled = counts != null && !counts.isEmpty,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) { Text(stringResource(R.string.privacy_learned_forget)) }
+                }
+
+                if (showForgetLearnedDataDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showForgetLearnedDataDialog = false },
+                        title = { Text(stringResource(R.string.privacy_forget_learned_title)) },
+                        text = { Text(stringResource(R.string.privacy_learned_forget_body)) },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                showForgetLearnedDataDialog = false
+                                val appContext = applicationContext
+                                Thread {
+                                    clearLearnedLanguageData(appContext)
+                                    runOnUiThread { learnedRefreshKey++ }
+                                }.start()
+                            }) { Text(stringResource(R.string.common_delete)) }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showForgetLearnedDataDialog = false }) {
+                                Text(stringResource(R.string.common_cancel))
+                            }
+                        }
+                    )
+                }
+
                 Text(
                     text = stringResource(R.string.privacy_local_collection_header),
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                 )
 
                 SettingsSwitch(
@@ -148,8 +309,14 @@ internal fun SettingsActivity.PrivacySection() {
                     modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                 )
 
-                // Show stats
-                val stats = remember {
+                // Show stats. Keyed on a refresh counter: a keyless remember{} froze
+                // the totals for the whole composition, so after Delete emptied the
+                // store the old count and the export buttons stayed on screen. The
+                // handler used to paper over that by recreate()-ing the activity,
+                // which collapsed every section and threw away the user's scroll
+                // position — bumping the key re-reads just this block instead.
+                var collectedRefreshKey by remember { mutableIntStateOf(0) }
+                val stats = remember(collectedRefreshKey) {
                     try {
                         tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@PrivacySection).getStatistics()
                     } catch (e: Exception) {
@@ -202,7 +369,7 @@ internal fun SettingsActivity.PrivacySection() {
                             Text(stringResource(R.string.common_view))
                         }
                         OutlinedButton(
-                            onClick = { deleteCollectedData() },
+                            onClick = { deleteCollectedData { collectedRefreshKey++ } },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = MaterialTheme.colorScheme.error

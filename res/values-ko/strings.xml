@@ -738,7 +738,7 @@
     <string name="gif_remove_all_body">가져온 모든 GIF 팩, 썸네일, 데이터베이스가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</string>
     <string name="gif_remove_all_confirm">모두 제거</string>
     <string name="gif_remove_pack_body">이 팩의 모든 GIF를 삭제하고 저장 공간을 회수합니다.</string>
-    <string name="privacy_section_intro">CleverKeys는 완전히 오프라인입니다 — 데이터가 기기를 떠나지 않습니다. 이 선택적 설정은 향후 기기 내 모델 미세 조정을 위한 로컬 데이터를 저장합니다.</string>
+    <string name="privacy_section_intro">CleverKeys는 완전히 오프라인으로 작동하며 데이터가 기기를 벗어나지 않습니다. 이 선택 설정은 데이터를 기기에 저장해 확인·내보내기·삭제할 수 있게 합니다. 내보낸 스와이프 데이터는 다른 곳에서 모델 학습에 사용할 수 있습니다.</string>
     <string name="privacy_on_device_learning_header">기기 내 학습</string>
     <string name="privacy_forget_learned_title">학습된 데이터도 삭제할까요?</string>
     <string name="privacy_forget_learned_body">학습이 꺼졌습니다 — 새로운 기록은 없습니다. 이미 학습된 모든 것(표현 패턴, 단어 사용, 선택 기록)도 삭제할까요? 이 작업은 되돌릴 수 없습니다.</string>
@@ -967,4 +967,19 @@
     <string name="custom_theme_create">만들기</string>
     <string name="theme_select_attribute">%1$s 선택</string>
     <plurals name="layout_manager_hint"><item quantity="other">드래그하여 순서 변경 • 탭하여 편집 • 레이아웃 %1$d개</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">학습된 언어 데이터</string>
+    <string name="privacy_learned_data_desc">입력한 내용을 바탕으로 이 기기에서 만들어지는 구문 및 단어 사용 모델입니다.</string>
+    <string name="privacy_learned_counts">단어 쌍: %1$d개 • 단어 3연쇄: %2$d개 • 단어: %3$d개</string>
+    <string name="privacy_learned_none">아직 학습된 내용이 없습니다.</string>
+    <string name="privacy_learned_sources">현재 기록 중: %1$s</string>
+    <string name="privacy_learned_sources_none">현재 기록 중인 항목이 없습니다.</string>
+    <string name="privacy_learned_manage">학습 소스</string>
+    <string name="privacy_learned_forget">학습 내용 삭제</string>
+    <string name="privacy_learned_forget_body">학습된 모든 단어 쌍과 3연쇄, 단어 사용 횟수, 추천 선택 기록을 삭제합니다. 사전과 설정에는 영향이 없습니다.</string>
+    <string name="privacy_delete_data_title">수집된 데이터 삭제</string>
+    <string name="privacy_delete_data_body">수집된 스와이프 데이터를 모두 영구히 삭제합니다.\n\n이 작업은 되돌릴 수 없습니다.</string>
+    <string name="privacy_delete_data_done">모든 스와이프 데이터를 삭제했습니다</string>
+    <string name="privacy_delete_data_error">데이터 삭제 오류: %1$s</string>
 </resources>

@@ -744,7 +744,7 @@
     <string name="gif_remove_all_body">Ez törli az összes importált GIF-csomagot, bélyegképet és az adatbázist. Ez nem vonható vissza.</string>
     <string name="gif_remove_all_confirm">Összes eltávolítása</string>
     <string name="gif_remove_pack_body">Ez törli a csomag összes GIF-jét, és felszabadítja a tárhelyet.</string>
-    <string name="privacy_section_intro">A CleverKeys teljesen offline — adat soha nem hagyja el az eszközét. Ezek az opcionális beállítások helyi adatokat tárolnak egy esetleges jövőbeli, eszközön történő modellfinomhangoláshoz.</string>
+    <string name="privacy_section_intro">A CleverKeys teljesen offline működik — soha semmilyen adat nem hagyja el az eszközödet. Ezek a választható beállítások helyben tárolnak adatokat, hogy megnézhesd, exportálhasd vagy törölhesd őket; az exportált csúsztatási adatok máshol modellek betanítására használhatók.</string>
     <string name="privacy_on_device_learning_header">Tanulás az eszközön</string>
     <string name="privacy_forget_learned_title">A tanult adatokat is elfelejti?</string>
     <string name="privacy_forget_learned_body">A tanulás mostantól ki van kapcsolva — semmi új nem kerül rögzítésre. Törli a már megtanultakat is (kifejezésminták, szóhasználat és kijelölési előzmények)? Ez nem vonható vissza.</string>
@@ -973,4 +973,19 @@
     <string name="custom_theme_create">Létrehozás</string>
     <string name="theme_select_attribute">%1$s kiválasztása</string>
     <plurals name="layout_manager_hint"><item quantity="one">Húzza az átrendezéshez • Koppintson a szerkesztéshez • %1$d kiosztás</item><item quantity="other">Húzza az átrendezéshez • Koppintson a szerkesztéshez • %1$d kiosztás</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Megtanult nyelvi adatok</string>
+    <string name="privacy_learned_data_desc">A gépeléseidből ezen az eszközön felépített kifejezés- és szóhasználati modellek.</string>
+    <string name="privacy_learned_counts">Szópárok: %1$d • Szóhármasok: %2$d • Szavak: %3$d</string>
+    <string name="privacy_learned_none">Még nincs megtanult adat.</string>
+    <string name="privacy_learned_sources">Jelenleg rögzítve: %1$s</string>
+    <string name="privacy_learned_sources_none">Jelenleg semmi sem kerül rögzítésre.</string>
+    <string name="privacy_learned_manage">Tanulási források</string>
+    <string name="privacy_learned_forget">Tanultak törlése</string>
+    <string name="privacy_learned_forget_body">Törli az összes megtanult szópárt és szóhármast, a szóhasználati számlálókat és a javaslatválasztási előzményeket. A szótárak és a beállítások érintetlenek maradnak.</string>
+    <string name="privacy_delete_data_title">Gyűjtött adatok törlése</string>
+    <string name="privacy_delete_data_body">Ezzel véglegesen törlöd az összes gyűjtött csúsztatási adatot.\n\nA művelet nem vonható vissza.</string>
+    <string name="privacy_delete_data_done">Minden csúsztatási adat törölve</string>
+    <string name="privacy_delete_data_error">Hiba az adatok törlésekor: %1$s</string>
 </resources>

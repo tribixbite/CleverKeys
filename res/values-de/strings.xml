@@ -758,7 +758,7 @@
     <string name="gif_remove_all_body">Dies löscht alle importierten GIF-Pakete, Miniaturansichten und die Datenbank. Dies kann nicht rückgängig gemacht werden.</string>
     <string name="gif_remove_all_confirm">Alle entfernen</string>
     <string name="gif_remove_pack_body">Dies löscht alle GIFs dieses Pakets und gibt Speicherplatz frei.</string>
-    <string name="privacy_section_intro">CleverKeys ist vollständig offline — keine Daten verlassen jemals Ihr Gerät. Diese optionalen Einstellungen speichern lokale Daten für ein mögliches künftiges Feintuning von Modellen auf dem Gerät.</string>
+    <string name="privacy_section_intro">CleverKeys arbeitet vollständig offline — es verlassen niemals Daten Ihr Gerät. Diese optionalen Einstellungen speichern Daten lokal, damit Sie sie ansehen, exportieren oder löschen können; exportierte Wischdaten lassen sich anderswo zum Trainieren von Modellen nutzen.</string>
     <string name="privacy_on_device_learning_header">Lernen auf dem Gerät</string>
     <string name="privacy_forget_learned_title">Auch gelernte Daten vergessen?</string>
     <string name="privacy_forget_learned_body">Das Lernen ist jetzt aus — es wird nichts Neues aufgezeichnet. Möchten Sie auch alles bereits Gelernte löschen (Wendungsmuster, Wortnutzung und Auswahlverlauf)? Dies kann nicht rückgängig gemacht werden.</string>
@@ -987,4 +987,19 @@
     <string name="custom_theme_create">Erstellen</string>
     <string name="theme_select_attribute">%1$s auswählen</string>
     <plurals name="layout_manager_hint"><item quantity="one">Ziehen zum Umordnen • Tippen zum Bearbeiten • %1$d Layout</item><item quantity="other">Ziehen zum Umordnen • Tippen zum Bearbeiten • %1$d Layouts</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Gelernte Sprachdaten</string>
+    <string name="privacy_learned_data_desc">Modelle für Wendungen und Wortnutzung, die auf diesem Gerät aus Ihren Eingaben entstehen.</string>
+    <string name="privacy_learned_counts">Wortpaare: %1$d • Wort-Tripel: %2$d • Wörter: %3$d</string>
+    <string name="privacy_learned_none">Noch nichts gelernt.</string>
+    <string name="privacy_learned_sources">Wird gerade aufgezeichnet: %1$s</string>
+    <string name="privacy_learned_sources_none">Derzeit wird nichts aufgezeichnet.</string>
+    <string name="privacy_learned_manage">Lernquellen</string>
+    <string name="privacy_learned_forget">Gelerntes löschen</string>
+    <string name="privacy_learned_forget_body">Löscht alle gelernten Wortpaare und Wort-Tripel, die Wortnutzungszähler und den Verlauf der Vorschlagsauswahl. Wörterbücher und Einstellungen bleiben unberührt.</string>
+    <string name="privacy_delete_data_title">Gesammelte Daten löschen</string>
+    <string name="privacy_delete_data_body">Dadurch werden alle gesammelten Wischdaten dauerhaft gelöscht.\n\nDiese Aktion kann nicht rückgängig gemacht werden.</string>
+    <string name="privacy_delete_data_done">Alle Wischdaten gelöscht</string>
+    <string name="privacy_delete_data_error">Fehler beim Löschen der Daten: %1$s</string>
 </resources>

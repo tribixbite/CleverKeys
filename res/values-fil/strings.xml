@@ -747,7 +747,7 @@
     <string name="gif_remove_all_body">Tatanggalin nito ang lahat ng na-import na GIF pack, thumbnail, at database. Hindi ito maibabalik.</string>
     <string name="gif_remove_all_confirm">Tanggalin Lahat</string>
     <string name="gif_remove_pack_body">Tatanggalin nito ang lahat ng GIF mula sa pack na ito at mababawi ang storage space.</string>
-    <string name="privacy_section_intro">Ganap na offline ang CleverKeys — walang data na umaalis sa iyong device kailanman. Ang mga opsyonal na setting na ito ay nag-iimbak ng lokal na data para sa posibleng on-device model fine-tuning sa hinaharap.</string>
+    <string name="privacy_section_intro">Ganap na offline ang CleverKeys — walang datos na umaalis sa iyong device. Ang mga opsyonal na setting na ito ay nag-iimbak ng datos nang lokal upang matingnan, ma-export, o mabura mo ito; magagamit ang na-export na datos ng swipe sa pagsasanay ng mga modelo sa ibang lugar.</string>
     <string name="privacy_on_device_learning_header">On-Device na Pagkatuto</string>
     <string name="privacy_forget_learned_title">Kalimutan din ang natutunang data?</string>
     <string name="privacy_forget_learned_body">Naka-off na ngayon ang pagkatuto — walang bagong itatala. Gusto mo rin bang tanggalin ang lahat ng natutunan na (mga pattern ng parirala, paggamit ng salita, at history ng seleksyon)? Hindi ito maibabalik.</string>
@@ -979,4 +979,19 @@
     <string name="custom_theme_preview">Preview</string>
     <string name="custom_theme_create">Gumawa</string>
     <string name="theme_select_attribute">Pumili ng %1$s</string>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Natutunang Datos ng Wika</string>
+    <string name="privacy_learned_data_desc">Mga modelo ng parirala at paggamit ng salita na binuo sa device na ito mula sa iyong tinitipa.</string>
+    <string name="privacy_learned_counts">Pares ng salita: %1$d • Tatluhang salita: %2$d • Mga salita: %3$d</string>
+    <string name="privacy_learned_none">Wala pang natutunan.</string>
+    <string name="privacy_learned_sources">Kasalukuyang itinatala: %1$s</string>
+    <string name="privacy_learned_sources_none">Walang itinatala sa ngayon.</string>
+    <string name="privacy_learned_manage">Pinagmumulan ng Pagkatuto</string>
+    <string name="privacy_learned_forget">Kalimutan ang Natutunan</string>
+    <string name="privacy_learned_forget_body">Buburahin ang lahat ng natutunang pares at tatluhang salita, bilang ng paggamit ng salita, at kasaysayan ng pagpili ng mungkahi. Hindi maaapektuhan ang mga diksyunaryo at setting.</string>
+    <string name="privacy_delete_data_title">Burahin ang Nakolektang Datos</string>
+    <string name="privacy_delete_data_body">Permanenteng buburahin nito ang lahat ng nakolektang datos ng swipe.\n\nHindi na ito maibabalik.</string>
+    <string name="privacy_delete_data_done">Nabura ang lahat ng datos ng swipe</string>
+    <string name="privacy_delete_data_error">Error sa pagbura ng datos: %1$s</string>
 </resources>

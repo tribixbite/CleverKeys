@@ -756,7 +756,7 @@
     <string name="gif_remove_all_body">Esto eliminará todos los paquetes de GIF importados, las miniaturas y la base de datos. No se puede deshacer.</string>
     <string name="gif_remove_all_confirm">Eliminar todo</string>
     <string name="gif_remove_pack_body">Esto eliminará todos los GIF de este paquete y recuperará espacio de almacenamiento.</string>
-    <string name="privacy_section_intro">CleverKeys funciona totalmente sin conexión: ningún dato sale nunca de tu dispositivo. Estos ajustes opcionales guardan datos locales para un posible ajuste fino futuro de modelos en el dispositivo.</string>
+    <string name="privacy_section_intro">CleverKeys funciona totalmente sin conexión: ningún dato sale nunca de tu dispositivo. Estos ajustes opcionales guardan datos localmente para que puedas revisarlos, exportarlos o eliminarlos; los datos de deslizamiento exportados pueden servir para entrenar modelos en otro lugar.</string>
     <string name="privacy_on_device_learning_header">Aprendizaje en el dispositivo</string>
     <string name="privacy_forget_learned_title">¿Olvidar también los datos aprendidos?</string>
     <string name="privacy_forget_learned_body">El aprendizaje está ahora desactivado — no se registrará nada nuevo. ¿Quieres eliminar también todo lo ya aprendido (patrones de frases, uso de palabras e historial de selecciones)? No se puede deshacer.</string>
@@ -985,4 +985,19 @@
     <string name="custom_theme_create">Crear</string>
     <string name="theme_select_attribute">Seleccionar %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="one">Arrastra para reordenar • Toca para editar • %1$d diseño</item><item quantity="many">Arrastra para reordenar • Toca para editar • %1$d diseños</item><item quantity="other">Arrastra para reordenar • Toca para editar • %1$d diseños</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Datos de idioma aprendidos</string>
+    <string name="privacy_learned_data_desc">Modelos de frases y de uso de palabras creados en este dispositivo a partir de lo que escribes.</string>
+    <string name="privacy_learned_counts">Pares de palabras: %1$d • Tríos de palabras: %2$d • Palabras: %3$d</string>
+    <string name="privacy_learned_none">Todavía no se ha aprendido nada.</string>
+    <string name="privacy_learned_sources">Registrando ahora: %1$s</string>
+    <string name="privacy_learned_sources_none">Ahora mismo no se registra nada.</string>
+    <string name="privacy_learned_manage">Fuentes de aprendizaje</string>
+    <string name="privacy_learned_forget">Olvidar lo aprendido</string>
+    <string name="privacy_learned_forget_body">Elimina todos los pares y tríos de palabras aprendidos, los recuentos de uso de palabras y el historial de selección de sugerencias. Los diccionarios y los ajustes no se ven afectados.</string>
+    <string name="privacy_delete_data_title">Eliminar datos recopilados</string>
+    <string name="privacy_delete_data_body">Se eliminarán de forma permanente todos los datos de deslizamiento recopilados.\n\nEsta acción no se puede deshacer.</string>
+    <string name="privacy_delete_data_done">Se eliminaron todos los datos de deslizamiento</string>
+    <string name="privacy_delete_data_error">Error al eliminar los datos: %1$s</string>
 </resources>

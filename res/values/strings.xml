@@ -1025,7 +1025,7 @@
     <string name="gif_remove_pack_body">This will delete all GIFs from this pack and reclaim storage space.</string>
 
     <!-- PrivacySection.kt — privacy/telemetry-free data controls -->
-    <string name="privacy_section_intro">CleverKeys is fully offline — no data ever leaves your device. These optional settings store local data for potential future on-device model fine-tuning.</string>
+    <string name="privacy_section_intro">CleverKeys is fully offline — no data ever leaves your device. These optional settings keep data locally so you can review, export or delete it; exported swipe data can be used to train models elsewhere.</string>
     <string name="privacy_on_device_learning_header">On-Device Learning</string>
     <string name="privacy_forget_learned_title">Also forget learned data?</string>
     <string name="privacy_forget_learned_body">Learning is now off — nothing new will be recorded. Do you also want to delete everything already learned (phrase patterns, word usage, and selection history)? This cannot be undone.</string>
@@ -1360,4 +1360,19 @@
     <string name="custom_theme_create">Create</string>
     <!-- %1$s = the theme attribute being edited (e.g. "Key background") -->
     <string name="theme_select_attribute">Select %1$s</string>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Learned Language Data</string>
+    <string name="privacy_learned_data_desc">Phrase and word-usage models built on this device from what you type.</string>
+    <string name="privacy_learned_counts">Phrase pairs: %1$d • Phrase triples: %2$d • Words: %3$d</string>
+    <string name="privacy_learned_none">Nothing learned yet.</string>
+    <string name="privacy_learned_sources">Currently recording: %1$s</string>
+    <string name="privacy_learned_sources_none">Nothing is being recorded right now.</string>
+    <string name="privacy_learned_manage">Learning Sources</string>
+    <string name="privacy_learned_forget">Forget Learned</string>
+    <string name="privacy_learned_forget_body">Delete every learned phrase pair, phrase triple, word usage count and suggestion-selection history. Dictionaries and settings are not affected.</string>
+    <string name="privacy_delete_data_title">Delete Collected Data</string>
+    <string name="privacy_delete_data_body">This will permanently delete all collected swipe data.\n\nThis action cannot be undone.</string>
+    <string name="privacy_delete_data_done">All swipe data deleted</string>
+    <string name="privacy_delete_data_error">Error deleting data: %1$s</string>
 </resources>

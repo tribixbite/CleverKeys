@@ -4,6 +4,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SwipePerformanceStats
 import tribixbite.cleverkeys.SettingsActivity
 
@@ -76,22 +77,35 @@ internal fun SettingsActivity.exportPerfStats() {
 /**
  * Delete all collected swipe data with confirmation
  */
-internal fun SettingsActivity.deleteCollectedData() {
+/**
+ * Erase every stored swipe trace, behind a confirmation.
+ *
+ * @param onDeleted invoked on the main thread after the store is emptied, so the
+ *   caller can re-read its own counts. Replaces the old `recreate()` call, which
+ *   refreshed the stale stats by rebuilding the whole activity — collapsing every
+ *   section and discarding the user's scroll position for a delete performed
+ *   inside one collapsible block.
+ */
+internal fun SettingsActivity.deleteCollectedData(onDeleted: () -> Unit = {}) {
     android.app.AlertDialog.Builder(this)
-        .setTitle("Delete Collected Data")
-        .setMessage("This will permanently delete all collected swipe data.\n\n" +
-            "This action cannot be undone.")
-        .setPositiveButton("Delete") { _, _ ->
+        .setTitle(getString(R.string.privacy_delete_data_title))
+        .setMessage(getString(R.string.privacy_delete_data_body))
+        .setPositiveButton(getString(R.string.common_delete)) { _, _ ->
             val _self = this
             lifecycleScope.launch {
                 try {
                     val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(_self)
                     dataStore.clearAllData()
-                    Toast.makeText(_self, "All swipe data deleted", Toast.LENGTH_SHORT).show()
-                    // Force UI refresh by recreating activity
-                    _self.recreate()
+                    Toast.makeText(
+                        _self, R.string.privacy_delete_data_done, Toast.LENGTH_SHORT
+                    ).show()
+                    onDeleted()
                 } catch (e: Exception) {
-                    Toast.makeText(_self, "Error deleting data: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        _self,
+                        _self.getString(R.string.privacy_delete_data_error, e.message ?: ""),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }

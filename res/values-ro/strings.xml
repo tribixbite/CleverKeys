@@ -761,7 +761,7 @@
     <string name="gif_remove_all_body">Aceasta va șterge toate pachetele GIF importate, miniaturile și baza de date. Nu se poate anula.</string>
     <string name="gif_remove_all_confirm">Elimină tot</string>
     <string name="gif_remove_pack_body">Aceasta va șterge toate GIF-urile din acest pachet și va elibera spațiul de stocare.</string>
-    <string name="privacy_section_intro">CleverKeys este complet offline — nicio dată nu părăsește vreodată dispozitivul. Aceste setări opționale stochează date locale pentru o posibilă ajustare fină viitoare a modelului pe dispozitiv.</string>
+    <string name="privacy_section_intro">CleverKeys funcționează complet offline — niciun fel de date nu părăsesc dispozitivul dvs. Aceste setări opționale păstrează datele local, ca să le puteți consulta, exporta sau șterge; datele de glisare exportate pot fi folosite pentru antrenarea modelelor în altă parte.</string>
     <string name="privacy_on_device_learning_header">Învățare pe dispozitiv</string>
     <string name="privacy_forget_learned_title">Uitați și datele învățate?</string>
     <string name="privacy_forget_learned_body">Învățarea este acum dezactivată — nu se va mai înregistra nimic nou. Doriți să ștergeți și tot ce a fost deja învățat (tipare de expresii, utilizarea cuvintelor și istoricul selecțiilor)? Nu se poate anula.</string>
@@ -994,4 +994,19 @@
     <string name="custom_theme_preview">Previzualizare</string>
     <string name="custom_theme_create">Creează</string>
     <string name="theme_select_attribute">Selectează %1$s</string>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Date lingvistice învățate</string>
+    <string name="privacy_learned_data_desc">Modele de expresii și de utilizare a cuvintelor construite pe acest dispozitiv din ceea ce tastați.</string>
+    <string name="privacy_learned_counts">Perechi de cuvinte: %1$d • Triplete de cuvinte: %2$d • Cuvinte: %3$d</string>
+    <string name="privacy_learned_none">Nu s-a învățat nimic încă.</string>
+    <string name="privacy_learned_sources">Se înregistrează acum: %1$s</string>
+    <string name="privacy_learned_sources_none">În acest moment nu se înregistrează nimic.</string>
+    <string name="privacy_learned_manage">Surse de învățare</string>
+    <string name="privacy_learned_forget">Uită cele învățate</string>
+    <string name="privacy_learned_forget_body">Șterge toate perechile și tripletele de cuvinte învățate, contoarele de utilizare a cuvintelor și istoricul selectării sugestiilor. Dicționarele și setările nu sunt afectate.</string>
+    <string name="privacy_delete_data_title">Șterge datele colectate</string>
+    <string name="privacy_delete_data_body">Toate datele de glisare colectate vor fi șterse definitiv.\n\nAcțiunea nu poate fi anulată.</string>
+    <string name="privacy_delete_data_done">Toate datele de glisare au fost șterse</string>
+    <string name="privacy_delete_data_error">Eroare la ștergerea datelor: %1$s</string>
 </resources>

@@ -750,7 +750,7 @@
     <string name="gif_remove_all_body">Ini akan menghapus semua paket GIF yang diimpor, gambar mini, dan basis data. Tindakan ini tidak dapat dibatalkan.</string>
     <string name="gif_remove_all_confirm">Hapus Semua</string>
     <string name="gif_remove_pack_body">Ini akan menghapus semua GIF dari paket ini dan mengosongkan ruang penyimpanan.</string>
-    <string name="privacy_section_intro">CleverKeys sepenuhnya offline — tidak ada data yang pernah meninggalkan perangkat Anda. Pengaturan opsional ini menyimpan data lokal untuk kemungkinan penyetelan halus model di perangkat pada masa mendatang.</string>
+    <string name="privacy_section_intro">CleverKeys sepenuhnya luring — tidak ada data yang pernah meninggalkan perangkat Anda. Pengaturan opsional ini menyimpan data secara lokal agar Anda dapat meninjau, mengekspor, atau menghapusnya; data gesekan yang diekspor dapat dipakai untuk melatih model di tempat lain.</string>
     <string name="privacy_on_device_learning_header">Pembelajaran di Perangkat</string>
     <string name="privacy_forget_learned_title">Lupakan juga data yang dipelajari?</string>
     <string name="privacy_forget_learned_body">Pembelajaran kini mati — tidak ada yang baru akan direkam. Apakah Anda juga ingin menghapus semua yang sudah dipelajari (pola frasa, penggunaan kata, dan riwayat seleksi)? Tindakan ini tidak dapat dibatalkan.</string>
@@ -979,4 +979,19 @@
     <string name="custom_theme_create">Buat</string>
     <string name="theme_select_attribute">Pilih %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="other">Seret untuk menyusun ulang • Ketuk untuk mengedit • %1$d tata letak</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Data Bahasa yang Dipelajari</string>
+    <string name="privacy_learned_data_desc">Model frasa dan penggunaan kata yang dibangun di perangkat ini dari apa yang Anda ketik.</string>
+    <string name="privacy_learned_counts">Pasangan kata: %1$d • Tripel kata: %2$d • Kata: %3$d</string>
+    <string name="privacy_learned_none">Belum ada yang dipelajari.</string>
+    <string name="privacy_learned_sources">Sedang direkam: %1$s</string>
+    <string name="privacy_learned_sources_none">Saat ini tidak ada yang direkam.</string>
+    <string name="privacy_learned_manage">Sumber Pembelajaran</string>
+    <string name="privacy_learned_forget">Lupakan yang Dipelajari</string>
+    <string name="privacy_learned_forget_body">Menghapus semua pasangan dan tripel kata yang dipelajari, hitungan penggunaan kata, serta riwayat pemilihan saran. Kamus dan pengaturan tidak terpengaruh.</string>
+    <string name="privacy_delete_data_title">Hapus Data yang Dikumpulkan</string>
+    <string name="privacy_delete_data_body">Ini akan menghapus permanen semua data gesekan yang dikumpulkan.\n\nTindakan ini tidak dapat dibatalkan.</string>
+    <string name="privacy_delete_data_done">Semua data gesekan dihapus</string>
+    <string name="privacy_delete_data_error">Gagal menghapus data: %1$s</string>
 </resources>

@@ -778,7 +778,7 @@
     <string name="gif_remove_all_body">Questo eliminerà tutti i pacchetti GIF importati, le miniature e il database. L\'operazione non può essere annullata.</string>
     <string name="gif_remove_all_confirm">Rimuovi tutto</string>
     <string name="gif_remove_pack_body">Questo eliminerà tutte le GIF di questo pacchetto e libererà spazio di archiviazione.</string>
-    <string name="privacy_section_intro">CleverKeys è completamente offline — nessun dato lascia mai il tuo dispositivo. Queste impostazioni facoltative memorizzano dati locali per un\'eventuale futura ottimizzazione del modello sul dispositivo.</string>
+    <string name="privacy_section_intro">CleverKeys è completamente offline: nessun dato lascia mai il tuo dispositivo. Queste impostazioni facoltative conservano i dati in locale per consentirti di consultarli, esportarli o eliminarli; i dati di scorrimento esportati possono servire ad addestrare modelli altrove.</string>
     <string name="privacy_on_device_learning_header">Apprendimento sul dispositivo</string>
     <string name="privacy_forget_learned_title">Dimenticare anche i dati appresi?</string>
     <string name="privacy_forget_learned_body">L\'apprendimento è ora disattivato — non verrà registrato nulla di nuovo. Vuoi eliminare anche tutto ciò che è già stato appreso (pattern di frasi, utilizzo delle parole e cronologia delle selezioni)? L\'operazione non può essere annullata.</string>
@@ -1007,4 +1007,19 @@
     <string name="custom_theme_create">Crea</string>
     <string name="theme_select_attribute">Seleziona %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="one">Trascina per riordinare • Tocca per modificare • %1$d layout</item><item quantity="many">Trascina per riordinare • Tocca per modificare • %1$d layout</item><item quantity="other">Trascina per riordinare • Tocca per modificare • %1$d layout</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Dati linguistici appresi</string>
+    <string name="privacy_learned_data_desc">Modelli di espressioni e di uso delle parole costruiti su questo dispositivo da ciò che digiti.</string>
+    <string name="privacy_learned_counts">Coppie di parole: %1$d • Terne di parole: %2$d • Parole: %3$d</string>
+    <string name="privacy_learned_none">Non è ancora stato appreso nulla.</string>
+    <string name="privacy_learned_sources">Registrazione in corso: %1$s</string>
+    <string name="privacy_learned_sources_none">Al momento non viene registrato nulla.</string>
+    <string name="privacy_learned_manage">Fonti di apprendimento</string>
+    <string name="privacy_learned_forget">Dimentica appreso</string>
+    <string name="privacy_learned_forget_body">Elimina tutte le coppie e le terne di parole apprese, i conteggi d\'uso delle parole e la cronologia di selezione dei suggerimenti. Dizionari e impostazioni non vengono toccati.</string>
+    <string name="privacy_delete_data_title">Elimina dati raccolti</string>
+    <string name="privacy_delete_data_body">Tutti i dati di scorrimento raccolti verranno eliminati definitivamente.\n\nL\'azione non può essere annullata.</string>
+    <string name="privacy_delete_data_done">Tutti i dati di scorrimento eliminati</string>
+    <string name="privacy_delete_data_error">Errore durante l\'eliminazione dei dati: %1$s</string>
 </resources>

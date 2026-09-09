@@ -744,7 +744,7 @@
     <string name="gif_remove_all_body">Cela supprimera tous les packs GIF importés, les miniatures et la base de données. Cette action est irréversible.</string>
     <string name="gif_remove_all_confirm">Tout supprimer</string>
     <string name="gif_remove_pack_body">Cela supprimera tous les GIF de ce pack et libérera de l\'espace de stockage.</string>
-    <string name="privacy_section_intro">CleverKeys est entièrement hors ligne — aucune donnée ne quitte jamais votre appareil. Ces réglages facultatifs stockent des données locales pour un éventuel futur affinage de modèle sur l\'appareil.</string>
+    <string name="privacy_section_intro">CleverKeys fonctionne entièrement hors ligne — aucune donnée ne quitte jamais votre appareil. Ces réglages facultatifs conservent des données en local pour que vous puissiez les consulter, les exporter ou les supprimer ; les données de glissé exportées peuvent servir à entraîner des modèles ailleurs.</string>
     <string name="privacy_on_device_learning_header">Apprentissage sur l\'appareil</string>
     <string name="privacy_forget_learned_title">Oublier aussi les données apprises ?</string>
     <string name="privacy_forget_learned_body">L\'apprentissage est maintenant désactivé — rien de nouveau ne sera enregistré. Voulez-vous aussi supprimer tout ce qui a déjà été appris (habitudes d\'expressions, usage des mots et historique de sélection) ? Cette action est irréversible.</string>
@@ -977,4 +977,19 @@
     <string name="custom_theme_preview">Aperçu</string>
     <string name="custom_theme_create">Créer</string>
     <string name="theme_select_attribute">Sélectionner %1$s</string>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Données linguistiques apprises</string>
+    <string name="privacy_learned_data_desc">Modèles d\'expressions et d\'usage des mots construits sur cet appareil à partir de ce que vous saisissez.</string>
+    <string name="privacy_learned_counts">Paires de mots : %1$d • Triplets de mots : %2$d • Mots : %3$d</string>
+    <string name="privacy_learned_none">Rien n\'a encore été appris.</string>
+    <string name="privacy_learned_sources">Enregistrement en cours : %1$s</string>
+    <string name="privacy_learned_sources_none">Rien n\'est enregistré actuellement.</string>
+    <string name="privacy_learned_manage">Sources d\'apprentissage</string>
+    <string name="privacy_learned_forget">Oublier l\'appris</string>
+    <string name="privacy_learned_forget_body">Supprime toutes les paires et tous les triplets de mots appris, les compteurs d\'usage des mots et l\'historique de sélection des suggestions. Les dictionnaires et les réglages ne sont pas touchés.</string>
+    <string name="privacy_delete_data_title">Supprimer les données collectées</string>
+    <string name="privacy_delete_data_body">Toutes les données de glissé collectées seront définitivement supprimées.\n\nCette action est irréversible.</string>
+    <string name="privacy_delete_data_done">Toutes les données de glissé ont été supprimées</string>
+    <string name="privacy_delete_data_error">Erreur lors de la suppression des données : %1$s</string>
 </resources>

@@ -749,7 +749,7 @@
     <string name="gif_remove_all_body">Tiks dzēstas visas importētās GIF pakotnes, sīktēli un datubāze. To nevar atsaukt.</string>
     <string name="gif_remove_all_confirm">Noņemt visu</string>
     <string name="gif_remove_pack_body">Tiks dzēsti visi šīs pakotnes GIF un atbrīvota krātuves vieta.</string>
-    <string name="privacy_section_intro">CleverKeys darbojas pilnībā bezsaistē — dati nekad neatstāj jūsu ierīci. Šie neobligātie iestatījumi glabā lokālus datus iespējamai turpmākai modeļa pielāgošanai ierīcē.</string>
+    <string name="privacy_section_intro">CleverKeys darbojas pilnībā bezsaistē — nekādi dati nekad neatstāj jūsu ierīci. Šie neobligātie iestatījumi glabā datus lokāli, lai jūs varētu tos apskatīt, eksportēt vai dzēst; eksportētos vilkšanas datus var izmantot modeļu apmācībai citur.</string>
     <string name="privacy_on_device_learning_header">Mācīšanās ierīcē</string>
     <string name="privacy_forget_learned_title">Aizmirst arī apgūtos datus?</string>
     <string name="privacy_forget_learned_body">Mācīšanās tagad ir izslēgta — nekas jauns netiks ierakstīts. Vai vēlaties dzēst arī visu jau apgūto (frāžu paradumus, vārdu lietojumu un atlases vēsturi)? To nevar atsaukt.</string>
@@ -978,4 +978,19 @@
     <string name="custom_theme_create">Izveidot</string>
     <string name="theme_select_attribute">Atlasīt %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="zero">Velciet, lai pārkārtotu • Pieskarieties, lai rediģētu • %1$d izkārtojumu</item><item quantity="one">Velciet, lai pārkārtotu • Pieskarieties, lai rediģētu • %1$d izkārtojums</item><item quantity="other">Velciet, lai pārkārtotu • Pieskarieties, lai rediģētu • %1$d izkārtojumi</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Apgūtie valodas dati</string>
+    <string name="privacy_learned_data_desc">Frāžu un vārdu lietojuma modeļi, kas šajā ierīcē veidoti no jūsu rakstītā.</string>
+    <string name="privacy_learned_counts">Vārdu pāri: %1$d • Vārdu trijnieki: %2$d • Vārdi: %3$d</string>
+    <string name="privacy_learned_none">Pagaidām nekas nav apgūts.</string>
+    <string name="privacy_learned_sources">Pašlaik tiek reģistrēts: %1$s</string>
+    <string name="privacy_learned_sources_none">Pašlaik nekas netiek reģistrēts.</string>
+    <string name="privacy_learned_manage">Mācīšanās avoti</string>
+    <string name="privacy_learned_forget">Aizmirst apgūto</string>
+    <string name="privacy_learned_forget_body">Dzēš visus apgūtos vārdu pārus un trijniekus, vārdu lietojuma skaitītājus un ieteikumu izvēles vēsturi. Vārdnīcas un iestatījumi netiek skarti.</string>
+    <string name="privacy_delete_data_title">Dzēst savāktos datus</string>
+    <string name="privacy_delete_data_body">Tiks neatgriezeniski dzēsti visi savāktie vilkšanas dati.\n\nŠo darbību nevar atsaukt.</string>
+    <string name="privacy_delete_data_done">Visi vilkšanas dati dzēsti</string>
+    <string name="privacy_delete_data_error">Kļūda, dzēšot datus: %1$s</string>
 </resources>

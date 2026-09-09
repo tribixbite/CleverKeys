@@ -923,7 +923,7 @@
     <string name="privacy_on_device_learning_header">Навчання на пристрої</string>
     <string name="privacy_perf_stats">Передбачень: %1$d • Сер.: %2$d мс • Top-1: %3$d%%</string>
     <string name="privacy_performance_header">Метрики продуктивності</string>
-    <string name="privacy_section_intro">CleverKeys працює повністю офлайн — жодні дані не залишають ваш пристрій. Ці необов’язкові налаштування зберігають локальні дані для можливого майбутнього донавчання моделі на пристрої.</string>
+    <string name="privacy_section_intro">CleverKeys працює повністю офлайн — жодні дані ніколи не залишають ваш пристрій. Ці необов\'язкові налаштування зберігають дані локально, щоб ви могли переглянути, експортувати або видалити їх; експортовані дані свайпів можна використати для навчання моделей деінде.</string>
     <string name="privacy_swipe_stats">Усього свайпів: %1$d • Унікальних слів: %2$d</string>
     <string name="provenance_adaptation">• Адаптація: %1$.2f×</string>
     <string name="provenance_aggression">Агресивність: %1$s (%2$.2f×)</string>
@@ -978,4 +978,19 @@
     <string name="theme_selector_selected_desc">Вибрано</string>
     <string name="theme_selector_title">Теми клавіатури</string>
     <plurals name="layout_manager_hint"><item quantity="one">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макет</item><item quantity="few">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макети</item><item quantity="many">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макетів</item><item quantity="other">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макета</item></plurals>
+    <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
+         and the localized collected-data delete dialog. Added 2026-09-09. -->
+    <string name="privacy_learned_data_header">Вивчені мовні дані</string>
+    <string name="privacy_learned_data_desc">Моделі словосполучень і вживання слів, що будуються на цьому пристрої з того, що ви пишете.</string>
+    <string name="privacy_learned_counts">Пари слів: %1$d • Трійки слів: %2$d • Слова: %3$d</string>
+    <string name="privacy_learned_none">Поки нічого не вивчено.</string>
+    <string name="privacy_learned_sources">Зараз записується: %1$s</string>
+    <string name="privacy_learned_sources_none">Зараз нічого не записується.</string>
+    <string name="privacy_learned_manage">Джерела навчання</string>
+    <string name="privacy_learned_forget">Забути вивчене</string>
+    <string name="privacy_learned_forget_body">Видаляє всі вивчені пари й трійки слів, лічильники вживання слів та історію вибору підказок. Словники та налаштування не змінюються.</string>
+    <string name="privacy_delete_data_title">Видалити зібрані дані</string>
+    <string name="privacy_delete_data_body">Усі зібрані дані свайпів буде видалено назавжди.\n\nЦю дію неможливо скасувати.</string>
+    <string name="privacy_delete_data_done">Усі дані свайпів видалено</string>
+    <string name="privacy_delete_data_error">Помилка видалення даних: %1$s</string>
 </resources>
