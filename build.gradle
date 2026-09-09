@@ -568,6 +568,10 @@ tasks.register('runPureTests', JavaExec) {
     // F-5..F-9 — settings-surface drift: trail-effect dropdown coverage,
     // pin-entry wiring, SETTINGS_DEFAULTS reader/writer scans, nav-helper callers.
     'tribixbite.cleverkeys.SettingsSurfaceDriftTest',
+    // Privacy & Data surface (maintainer report 2026-09-09): the swipe-collection
+    // toggle voided by a developer debug flag at the capture site, and the absent
+    // context/bigram/trigram surface in the section that can already erase them.
+    'tribixbite.cleverkeys.PrivacyDataSurfaceDriftTest',
     'tribixbite.cleverkeys.SettingsSearchCoverageTest',
     'tribixbite.cleverkeys.GesturePrefAccessDriftTest',
     // ARC-084/085/097 (2026-08-29): pins the deletions of the dead CGR chain and the dead

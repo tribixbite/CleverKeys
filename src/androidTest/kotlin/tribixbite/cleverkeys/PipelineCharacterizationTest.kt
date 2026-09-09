@@ -1029,8 +1029,8 @@ class PipelineCharacterizationTest {
      *
      * Scenario 10's "ML capture fires (D5)" sub-assertion remains SKIPPED after step 6 LANDED
      * D5 (capture now routes through MLDataCollector inside SH.handleSwipePredictionResults):
-     * it is still gated on config.swipe_debug_detailed_logging AND
-     * PrivacyManager.canCollectSwipeData() AND a non-null currentSwipeData populated by
+     * it is still gated on PrivacyManager.canCollectSwipeData() AND a non-null
+     * currentSwipeData populated by
      * the swipe dispatch (which we bypass to stay off the decoders). Verifying the store
      * write would require driving handleSwipeTyping end-to-end (a real decoder) or a
      * PrivacyManager/SwipeMLDataStore test double — out of scope for a post-prediction-seam

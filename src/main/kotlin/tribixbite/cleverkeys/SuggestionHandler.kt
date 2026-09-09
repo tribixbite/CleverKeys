@@ -728,8 +728,10 @@ class SuggestionHandler(
      *     with the deleted IC engine, oracle scenario 11).
      *   - auto_space_after_suggestion=false suppresses the swipe trailing space exactly as the
      *     production IC engine did (SmartAutoSpace branch 1 updated in the same commit).
-     *   - D5 LANDED: swipe ML capture routes through [MLDataCollector] (single implementation,
-     *     same `swipe_debug_detailed_logging` + privacy-consent gating as IC's inline block).
+     *   - D5 LANDED: swipe ML capture routes through [MLDataCollector] (single implementation).
+     *     Gated on privacy consent ALONE since 2026-09-09 — the inherited
+     *     `swipe_debug_detailed_logging` conjunct voided the user-facing collection toggle on
+     *     this path; see the call site for the full rationale.
      *
      * @param inputCoordinator the delegating swipe front-end — supplies haptics, the latched-shift
      *   clear, keyboard height, and the captured swipe ML trace (IC remains the gesture/ML owner).
@@ -892,11 +894,26 @@ class SuggestionHandler(
                 )
 
                 // D5 LANDED (step 6): swipe ML capture through MLDataCollector — the single
-                // implementation the tap path (SuggestionBridge) already uses. Gating preserved
-                // from IC's inline block: detailed logging on AND swipe data present (the collector
-                // itself re-checks privacy consent before storing).
+                // implementation the tap path (SuggestionBridge) already uses.
+                //
+                // 2026-09-09: the `&& config.swipe_debug_detailed_logging` conjunct was REMOVED
+                // (maintainer report: "broken collection toggle"). It was inherited verbatim from
+                // IC's old inline debug block, but it is a DEVELOPER flag: default-off, and only
+                // rendered at all after Swipe Debug mode is switched on in the Advanced section.
+                // Its presence here meant the documented privacy control governed nothing on the
+                // auto-insert path — the dominant path for swipe input — so a user who enabled
+                // "Swipe Pattern Data" and swiped normally stored zero rows while the section's
+                // own empty state told them to "Enable collection above to start storing
+                // patterns". The tap-a-suggestion path (SuggestionBridge) never carried the
+                // conjunct, which is why collection looked half-alive rather than dead.
+                //
+                // Gating is now data availability only. Consent is NOT weakened: the collector
+                // re-checks PrivacyManager.canCollectSwipeData() (the master on-device-learning
+                // gate ANDed with privacy_collect_swipe, both default-safe) before touching the
+                // store, and it owns the daily retention sweep + MAX_STORED_ROWS cap that keep
+                // the database bounded now that the path is actually reachable.
                 val storedGlobally =
-                    if (wasSwipeAutoInsert && swipeData != null && config.swipe_debug_detailed_logging) {
+                    if (wasSwipeAutoInsert && swipeData != null) {
                         mlDataCollector.collectAndStoreSwipeData(
                             committedWord ?: topPrediction,
                             swipeData,
