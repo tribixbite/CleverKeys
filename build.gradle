@@ -134,8 +134,8 @@ dependencies {
 // VERSIONING - F-Droid compatible (checkupdates does not parse ext values)
 // =============================================================================
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
-ext.VERSION_MAJOR = 1
-ext.VERSION_MINOR = 6
+ext.VERSION_MAJOR = 2
+ext.VERSION_MINOR = 0
 ext.VERSION_PATCH = 0
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
@@ -367,7 +367,7 @@ android {
       // clean-build DEX hash comparison that confirmed R8 output is byte-identical,
       // so F-Droid reproducibility is preserved.
       //
-      // GATE: no v1.6.0 tag until a maintainer sideloads a MINIFIED release APK
+      // GATE: no v2.0.0 tag until a maintainer sideloads a MINIFIED release APK
       // and soaks it by hand. The ew-cli instrumented suite does NOT cover this
       // — it runs against the debug variant, which stays unminified below.
       minifyEnabled true

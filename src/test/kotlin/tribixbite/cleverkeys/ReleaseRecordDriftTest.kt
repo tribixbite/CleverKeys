@@ -552,7 +552,7 @@ class ReleaseRecordDriftTest {
          * publish date, move it out of this set, and add its block hash to [versionBlockSha256].
          * From that moment its section is history and stops being editable.
          */
-        val PENDING_RELEASES = setOf("v1.6.0")
+        val PENDING_RELEASES = setOf("v2.0.0")
 
         /**
          * SHA-256 of every released version's markdown block (see the class KDoc for the exact

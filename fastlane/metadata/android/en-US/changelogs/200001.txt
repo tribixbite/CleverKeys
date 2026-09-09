@@ -1,4 +1,4 @@
-v1.6.0 - New Swipe Engines & Privacy
+v2.0.0 - New Swipe Engines & Privacy
 
 NEW:
 • CTC is the default: en/fr/de/es validated; it/pt/sv provisional; rest use geometric fallback

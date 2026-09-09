@@ -512,15 +512,24 @@ Smarter autocorrect and the 98k dictionary.
 | swipe overshoot | fix | Swipe overshoot fixed | GUARDED | `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt#Pointers` | `src/androidTest/kotlin/tribixbite/cleverkeys/PointersGestureRoutingTest.kt#overshoot_towardAssignedSubkey_emitsSubkey_notWord` |
 | settings search completeness | fix | Settings search finds everything | GUARDED | `src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsSearch.kt#getFilteredSettings` | `src/test/kotlin/tribixbite/cleverkeys/SettingsSearchCoverageTest.kt#everyLiteralControlHasAGeneratedEntry` |
 
-## v1.6.0 (versionCode 10600, unreleased)
+## v2.0.0 (versionCode 20000, unreleased)
 
 Swipe and privacy. The fastlane changelogs are written but the tag does not exist yet, so this
 section is still editable — it is listed in `ReleaseRecordDriftTest.PENDING_RELEASES` and is not
-hash-pinned. Tagging v1.6.0 freezes it.
+hash-pinned. Tagging v2.0.0 freezes it.
+
+> Re-versioned 2026-09-09: this release was drafted as v1.6.0 and promoted to **2.0.0**
+> pre-tag (maintainer decision — the entire swipe stack was replaced since v1.5.0 and the
+> Android floor moved to 7.0). Frozen rows in older sections that say "superseded in
+> v1.6.0" refer to THIS release; no v1.6.0 was ever tagged.
 
 | item | kind | note | status | code anchor | test anchor |
 |---|---|---|---|---|---|
 | CTC is the default engine | feature | CTC is the default: en/fr/de/es validated, it/pt/sv provisional | GUARDED | `src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcLanguageSupport.kt#CtcLanguageSupport` | `src/test/kotlin/tribixbite/cleverkeys/ReleaseMetadataDriftTest.kt#releaseChannelsAgreeWithRuntimeCtcPolicy` |
+| ru/el/uk/bg/mk/he swipe | feature | Russian (validation-tested), early Greek, uk/bg/mk/he provisional — via language packs | GUARDED | `src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcLanguageSupport.kt#PROVISIONAL` | `src/test/kotlin/tribixbite/cleverkeys/ReleaseMetadataDriftTest.kt#releaseChannelsAgreeWithRuntimeCtcPolicy` |
+| custom words swipe reliably | fix | Stored frequencies calibrate onto each engine's scale; membership merges against fresh prefs; case survives both load paths | GUARDED | `src/main/kotlin/tribixbite/cleverkeys/UserWordFrequency.kt#scaleOnto` | `src/test/kotlin/tribixbite/cleverkeys/WordPredictorDictionaryUpdateTest.kt#observerDeliveredWordIsCalibratedOntoTheBaseScale` |
+| 69-finding audit sweep | fix | 2026-09-06 comprehensive audit: 69 findings fixed incl. all 8 P1s (GIF, themes, clipboard, settings) | GUARDED | `docs/audit/2026-09-06-comprehensive-audit.md#Resolution` | `src/test/kotlin/tribixbite/cleverkeys/gif/GifSqlCompatDriftTest.kt#noSqliteUpsertSyntaxUnderSrcMain` |
+| Requires Android 7+ | chore | minSdk 24 (ONNX Runtime 1.21.1, 16 KB page alignment); Android 5-6 stays on v1.5.0 | GUARDED | `build.gradle#minSdk` | `src/test/kotlin/tribixbite/cleverkeys/ReleasePackagingDriftTest.kt#minSdkIsTheAnnouncedAndroidSevenFloor` |
 | geometric fallback | feature | Other languages and layouts use the geometric fallback | GUARDED | `src/main/kotlin/tribixbite/cleverkeys/swipe/SwipeEngineRouter.kt#SwipeEngineRouter` | `src/test/kotlin/tribixbite/cleverkeys/swipe/SwipeEngineRouterTest.kt#qwerty routes ctc in ctc mode` |
 | English top-1 accuracy | feature | English top-1: 89.3% vs 74.6% on 2,400 swipes | GUARDED | `src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt#CtcEngineAdapter` | `src/test/kotlin/tribixbite/cleverkeys/swipe/geometric/CtcVsGeoLocalCorpusTest.kt#headToHead_localCombinedCorpus` |
 | learn from my typing | feature | On-device learning from what you type | GUARDED | `src/main/kotlin/tribixbite/cleverkeys/LearningGate.kt#LearningGate` | `src/test/kotlin/tribixbite/cleverkeys/LearningGateTest.kt#context learning requires master AND feature gate` |

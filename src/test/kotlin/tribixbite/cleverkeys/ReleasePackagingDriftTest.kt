@@ -84,6 +84,18 @@ class ReleasePackagingDriftTest {
             .that(included).isEqualTo(abiCodes.keys)
     }
 
+    /**
+     * v2.0.0 release-record anchor: the notes announce "Requires Android 7+", and the floor
+     * is load-bearing twice over — ONNX Runtime 1.21.1 declares AAR minSdk 24 (ARC-113),
+     * and GifSqlCompatDriftTest's upsert ban is calibrated to API 24's SQLite. Raising it
+     * without editing the announcement (and vice versa) is exactly the drift this catches.
+     */
+    @Test
+    fun minSdkIsTheAnnouncedAndroidSevenFloor() {
+        assertWithMessage("build.gradle minSdk must be the announced Android 7.0 (API 24) floor")
+            .that(Regex("""\bminSdk\s+24\b""").containsMatchIn(buildGradle)).isTrue()
+    }
+
     @Test
     fun perAbiVersionCodePackingIsUnchanged() {
         assertWithMessage(
