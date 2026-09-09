@@ -52,8 +52,10 @@ You can assign clipboard access to any key's short swipe:
 
 ### Delete Item
 
-1. Open clipboard history
-2. Tap the **🗑 delete button** on the item
+- **Text entries**: tap the **✏️ edit button** on the item — the delete row appears with the edit controls. Tap **🗑 delete** there.
+- **Media entries**: media can't be edited inline, so tap the **expand chevron** instead — the delete row shows directly on the expanded entry.
+
+Deleting from the Pinned or Todos tab removes the item from that tab only (the copies are independent).
 
 ### Long-Press to Copy
 
@@ -73,13 +75,14 @@ Keep important items from being removed:
 ### Pin an Item
 
 1. Open clipboard history (History tab)
-2. Tap the **📌 pin button** on the item
-3. Item is added to the Pinned tab
+2. Tap the item to expand it
+3. Tap the **📌 pin button**
+4. Item is added to the Pinned tab
 
 ### Unpin Item
 
 1. Switch to the **Pinned tab** (📌)
-2. Tap the **📌 pin button** on the item to unpin
+2. Expand the item and tap the **📌 pin button** to unpin
 3. Item is removed from Pinned tab
 
 Pinned items:
@@ -104,13 +107,13 @@ Mark clipboard items as to-do reminders:
 ### Add to Todos
 
 1. Open clipboard (History or Pinned tab)
-2. Tap the **✓ todo button** on the item
+2. Expand the item and tap the **✓ todo button**
 3. Item is added to the Todos tab
 
 ### Mark as Done
 
 1. Switch to the **Todos tab** (✓)
-2. Tap the **✓ todo button** to remove from todos
+2. Expand the item and tap the **✓ todo button** to remove it from todos
 3. Item is removed from Todos tab (still in history)
 
 Todo items:
@@ -145,6 +148,7 @@ CleverKeys automatically captures images, videos, PDFs, and other files you copy
 - Most messaging apps (Signal, Telegram, WhatsApp) and text editors support image paste
 - If the app doesn't support media paste, a "Cannot paste media here" message appears
 - **Long-press** a media entry to copy the media URI to the system clipboard
+- **Expand** a media entry (chevron) for the extra actions — pin, todo, tags, and **🗑 delete**. The stored media file is removed from disk once no tab still references it
 
 ### Media Settings
 
@@ -181,9 +185,11 @@ The clipboard pane organizes items into three tabs:
 |--------|-------------|------------|-----------|
 | **Pin button** | Pins item | Unpins item | Pins item |
 | **Todo button** | Adds to todos | Adds to todos | Removes from todos |
-| **Delete** | Deletes item | Deletes item | Deletes item |
+| **Delete** | Removes from history | Removes from Pinned | Removes from Todos |
 | **Paste** | Pastes to editor | Pastes to editor | Pastes to editor |
 | **Long-press** | Copies to system clipboard | Copies to system clipboard | Copies to system clipboard |
+
+Pin, todo, and tag buttons appear when an entry is expanded (tap the entry or its chevron). Delete lives behind the ✏️ edit button for text entries and behind expansion for media entries (see [Delete Item](#delete-item)).
 
 ## Pagination
 
@@ -207,10 +213,11 @@ For large clipboard histories (>100 items), pagination improves performance:
 ┌─────────────────────────────────────┐
 │ 📋 📌 ✓  [Search...]  🔽  [▼]      │ ← Tabs + Search + Filter + Close
 ├─────────────────────────────────────┤
-│ Recently copied text here... [📌✓🗑]│ ← Text entry
-│ [thumb] photo.jpg · 2h ago   [📌✓🗑]│ ← Image entry with thumbnail
-│ [▶vid] clip.mp4 · Yesterday  [📌✓🗑]│ ← Video entry with play badge
-│ Another clipboard item...    [📌✓🗑]│ ← Text entry
+│ Recently copied text here...  [✏️ ▼]│ ← Text entry (edit + expand)
+│ [thumb] photo.jpg · 2h ago      [▼]│ ← Image entry with thumbnail
+│   └ expanded: [📌] [✓] [🏷] [🗑]    │ ← Actions shown on expansion
+│ [▶vid] clip.mp4 · Yesterday     [▼]│ ← Video entry with play badge
+│ Another clipboard item...     [✏️ ▼]│ ← Text entry
 ├─────────────────────────────────────┤
 │ [◀]         1 / 3              [▶]  │ ← Pagination (if >100 items)
 └─────────────────────────────────────┘
@@ -269,7 +276,7 @@ CleverKeys automatically detects password fields:
 
 ## Clear History
 
-To clear clipboard history, use the export/import features in Settings > Backup & Restore, or delete items individually using the delete button on each item.
+To clear clipboard history, use the export/import features in Settings > Backup & Restore, or delete items individually (see [Delete Item](#delete-item)).
 
 ## Common Questions
 
