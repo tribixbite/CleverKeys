@@ -236,3 +236,6 @@ archive/
 model/export_log.txt
 assets/models/*_character_quant.onnx
 src/androidTest/assets/ctc_bench/*.onnx
+
+# Decoded at deploy/dev time from ctc_vocab.bin.b64 (F-Droid scanner cleanliness)
+web_demo/demo/models/ctc_vocab.bin

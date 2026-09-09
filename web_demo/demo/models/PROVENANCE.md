@@ -12,6 +12,13 @@ assets one directory up.
 | `en_qwerty.json` | `CleverKeys-ML/ctc/en_qwerty.json` | `1965ecd59c9e4bff89446bb56ff3a2d0070b16eeae4ce424ce08b06ed6864632` |
 | `ctc_vocab.bin` | built by `web_demo/tools/build_ctc_vocab.py` from `~/ctc-train/data/futo_en_wordlist.combined` | `daf49b9463a7533f1b410f2550cb3cebe18dabcf11b2350043366ae59dc69321` |
 
+> `ctc_vocab.bin` is committed **base64-encoded** as `ctc_vocab.bin.b64`
+> (2026-09-09: F-Droid's source scanner flags raw `.bin` blobs; the encoding keeps
+> the repo scanner-clean without an fdroiddata scanignore MR). The deploy workflow
+> decodes it in place; for local dev run
+> `base64 -d web_demo/demo/models/ctc_vocab.bin.b64 > web_demo/demo/models/ctc_vocab.bin`
+> (the decoded file is gitignored). The sha256 above is of the DECODED bytes.
+
 ## Models
 
 Both encoders were trained from scratch in `CleverKeys-ML/ctc` (train.py →

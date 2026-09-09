@@ -12,6 +12,16 @@ shortcut-routing targets and are EXCLUDED from the oracle by the builder.
 The upstream `dictionary=` header (per-language build date + format version)
 is recorded in the Source column.
 
+> **Snapshots removed from the tree 2026-09-09** (all rows except `aosp_en`,
+> which the F-Droid metadata already scanignores): F-Droid's source scanner
+> flags `.gz` files, and keeping the tree scanner-clean avoids an fdroiddata
+> scanignore MR per release. The table below is now the RECORD, not an index of
+> present files — each row's sha256 + upstream header pin the exact bytes, and
+> the Refresh procedure at the bottom re-fetches byte-identical snapshots
+> (googlesource `?format=TEXT`, `gzip.compress(body, 9, mtime=0)`) whenever a
+> dictionary rebuild needs them. Rebuilds are dev-time only; nothing in the APK
+> or CI consumes these files.
+
 | Asset | Source (upstream header) | License | Fetched | Rows | sha256 (first 12) |
 |---|---|---|---|---|---|
 | `aosp_en_wordlist.txt.gz` | `en`, version 54, date=1414726273 | Apache-2.0 | 2026-07-02 | 165,544 | e3c3a539ec05 |

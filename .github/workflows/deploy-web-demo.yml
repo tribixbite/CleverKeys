@@ -44,6 +44,13 @@ jobs:
       - name: Install site dependencies
         run: bun install --frozen-lockfile
 
+      # ctc_vocab.bin is stored base64-encoded (F-Droid's source scanner flags raw
+      # .bin blobs and the repo stays scanner-clean without an fdroiddata MR); the
+      # decoded file is gitignored and recreated here for the tests and the site.
+      - name: Decode the demo vocab blob
+        working-directory: .
+        run: base64 -d web_demo/demo/models/ctc_vocab.bin.b64 > web_demo/demo/models/ctc_vocab.bin
+
       - name: Install and run web-demo parity gates
         working-directory: web_demo/tests
         run: |
