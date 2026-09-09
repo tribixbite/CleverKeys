@@ -196,7 +196,7 @@ if (ptr.key != null && !ptr.hasLeftStartingKey) {
 
 `short_gestures_enabled`, `short_gesture_min_distance` (default 28%, slider 10-60) and
 `short_gesture_max_distance` (default 141%, slider 50-200) are configured in the **Gesture
-Tuning** section. See [Gesture System](../../../specs/gesture-system.md).
+Tuning** section. See [Short Swipes](../gestures/short-swipes-spec.md).
 
 ## Delete Behavior
 
