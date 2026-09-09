@@ -81,16 +81,19 @@ The theme applies immediately. No restart required.
 
 ## DIY Theme Creator
 
-CleverKeys includes a powerful theme creator for custom colors:
+CleverKeys includes a powerful theme creator for custom colors. Every field in the editor is rendered by the keyboard:
 
 ### Accessible Colors
 
 | Element | Description |
 |---------|-------------|
-| **Key Colors** | Default, Activated, Locked, Modifier, Special |
-| **Label Colors** | Primary, Sub-label, Secondary labels |
-| **Border Colors** | Full border customization |
-| **Trail Effects** | Swipe trail color and style |
+| **Key Colors** | Key Default, Key Activated, Key Locked, Key Modifier, Key Special backgrounds |
+| **Label Colors** | Key Label, Sub Label, Secondary Label |
+| **Border Colors** | Key Border, Border Activated (the pressed key's outline) |
+| **Swipe Trail** | Swipe trail color and style |
+| **Ripple Effect** | Press feedback color on suggestion-bar chips and buttons |
+| **Suggestion Bar** | Suggestion Text, Suggestion Background, High Confidence accent |
+| **Background** | Keyboard Background, Keyboard Surface (elevated panels) |
 
 ### Creating Custom Theme
 
@@ -99,6 +102,9 @@ CleverKeys includes a powerful theme creator for custom colors:
 3. Tap each color element to customize
 4. Use the color picker or enter hex codes
 5. Changes apply in real-time
+
+> [!NOTE]
+> Editing the theme you're currently using updates the live keyboard immediately — no restart needed. Saved edits to a non-active custom theme take effect when you select it.
 
 ## Theme Elements
 

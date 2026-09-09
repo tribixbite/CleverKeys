@@ -1,250 +1,103 @@
 ---
 title: Themes - Technical Specification
+description: Built-in theme catalog, the custom-theme (DIY) pipeline, and how every Theme Creator field reaches the renderer.
 user_guide: ../../customization/themes.md
 status: implemented
-version: v1.2.7
+version: v1.6.0
 ---
 
 # Themes Technical Specification
 
 ## Overview
 
-The theme system provides customizable color schemes for the keyboard, including built-in themes, custom color options, and system theme integration.
+The theme system resolves a theme id (preference key `theme`) into a runtime `Theme` object consumed by the keyboard view and suggestion bar. Built-in themes are XML styles; decorative and custom (DIY) themes are runtime `KeyboardColorScheme` values. Since the H-4 wiring (2026-09-08, commit `c9939571`), **all** Theme Creator fields — including per-role key backgrounds, the activated border, ripple, the three suggestion-bar colors, and the keyboard surface — persist, round-trip through JSON, and render; edits to the active theme apply live via broadcast, without a process restart.
 
 ## Key Components
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| ThemeManager | `ThemeManager.kt` | Theme loading and application |
-| ColorScheme | `ColorScheme.kt` | Color definitions |
-| KeyboardView | `KeyboardView.kt` | Theme rendering |
-| Config | `Config.kt` | Theme preferences |
+| Theme | `src/main/kotlin/tribixbite/cleverkeys/Theme.kt` | Runtime theme model + precomputed paints (`Theme.Computed`) |
+| ThemeProvider | `src/main/kotlin/tribixbite/cleverkeys/theme/ThemeProvider.kt` | Resolves theme id → `Theme`; fallback on unknown/dangling ids |
+| KeyboardColorScheme | `src/main/kotlin/tribixbite/cleverkeys/theme/KeyboardColorScheme.kt` | Immutable semantic color tokens (20 fields) for runtime themes |
+| PredefinedThemes | `src/main/kotlin/tribixbite/cleverkeys/theme/PredefinedThemes.kt` | Decorative built-in scheme catalog (`ThemeInfo` entries) |
+| CustomThemeManager | `src/main/kotlin/tribixbite/cleverkeys/theme/CustomThemeManager.kt` | Custom-theme CRUD, JSON persistence, reactive `StateFlow` list |
+| CustomThemePrefPolicy | `src/main/kotlin/tribixbite/cleverkeys/theme/CustomThemePrefPolicy.kt` | Pref coherence on save/delete of custom themes (H-2/H-4) |
+| ThemeSettingsActivity | `src/main/kotlin/tribixbite/cleverkeys/activities/ThemeSettingsActivity.kt` | Theme Manager UI + the DIY Theme Creator (Compose) |
+| Keyboard2View | `src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt` | Draw loop; selects per-role key frames |
+| SuggestionBar | `src/main/kotlin/tribixbite/cleverkeys/SuggestionBar.kt` | Consumes suggestion text/background/high-confidence, ripple, surface |
 
 ## Data Model
 
-### Color Scheme
+### KeyboardColorScheme (runtime themes)
+
+`KeyboardColorScheme` (`theme/KeyboardColorScheme.kt:21`) is an `@Immutable data class` of semantic color tokens:
+
+- Key backgrounds: `keyDefault`, `keyActivated`, `keyLocked`, `keyModifier`, `keySpecial`
+- Labels: `keyLabel`, `keySubLabel`, `keySecondaryLabel`
+- Borders: `keyBorder`, `keyBorderActivated`
+- Interactive: `swipeTrail`, `ripple`
+- Suggestion bar: `suggestionText`, `suggestionBackground`, `suggestionHighConfidence`
+- Container: `keyboardBackground`, `keyboardSurface`
+
+`lightKeyboardColorScheme()` / `darkKeyboardColorScheme()` build the base palettes; Material You (Monet) themes feed dynamic primary/secondary colors into them.
+
+### Theme (runtime model)
+
+`Theme` (`Theme.kt:23`) has two constructors:
+
+- **XML attrs** — built-in styles. The Theme-Creator fields default to the exact colors their consumers used before the wiring, so built-ins render pixel-identically (`Theme.kt:146-154`: `colorKeyLocked = colorKeyActivated`, `colorKeyModifier = colorKey`, `rippleColor = 0` meaning platform-default, etc.).
+- **KeyboardColorScheme** — decorative and custom themes. Per-role key backgrounds are pre-composited over `keyDefault` (`Theme.kt:203-208`, `compositeOver`) because the shipped schemes express roles as translucent tints while the paint's alpha channel is owned by the user's key-opacity setting.
+
+### Theme.Computed — per-role key frames
+
+`Theme.Computed` (`Theme.kt:251`) precomputes a key frame (background + border paints) per `KeyRole`:
 
 ```kotlin
-// ColorScheme.kt
-data class ColorScheme(
-    val name: String,
-    val isDark: Boolean,
-
-    // Background colors
-    val keyboardBackground: Int,
-    val keyBackground: Int,
-    val keyBackgroundPressed: Int,
-
-    // Text colors
-    val keyText: Int,
-    val keyTextSecondary: Int,
-    val subkeyText: Int,
-
-    // Accent colors
-    val accent: Int,
-    val accentSecondary: Int,
-
-    // Prediction bar
-    val predictionBarBackground: Int,
-    val predictionText: Int,
-    val predictionTextActive: Int,
-
-    // Special keys
-    val modifierKeyBackground: Int,
-    val enterKeyBackground: Int,
-
-    // Borders and shadows
-    val keyBorder: Int?,
-    val keyShadow: Int?
-)
+// Theme.kt:325
+enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL }
 ```
 
-### Built-in Themes
+- `keyForRole(role)` (`Theme.kt:328`) returns the frame; the ACTIVATED frame's border paint takes `keyBorderColorActivated`.
+- `roleOf(kind, isKeyDown, isLocked)` (`Theme.kt:421`) is a pure mapping used by the draw loop (`Keyboard2View.kt:1583-1584`).
 
-```kotlin
-// ThemeManager.kt
-object BuiltInThemes {
-    val CLEVERKEYS_DARK = ColorScheme(
-        name = "CleverKeys Dark",
-        isDark = true,
-        keyboardBackground = 0xFF1a1a2e.toInt(),
-        keyBackground = 0xFF16213e.toInt(),
-        keyText = 0xFFe8e8e8.toInt(),
-        accent = 0xFF7c3aed.toInt(),  // Purple accent
-        // ...
-    )
+### SuggestionBar consumers
 
-    val MIDNIGHT = ColorScheme(
-        name = "Midnight",
-        isDark = true,
-        keyboardBackground = 0xFF000000.toInt(),
-        keyBackground = 0xFF1a1a1a.toInt(),
-        keyText = 0xFFffffff.toInt(),
-        accent = 0xFF3b82f6.toInt(),  // Blue accent
-        // ...
-    )
+`SuggestionBar` reads `suggestionTextColor` (`SuggestionBar.kt:159`), `suggestionBackgroundColor`, `suggestionHighConfidenceColor`, renders the provenance sheet on `colorKeyboardSurface` (`SuggestionBar.kt:449`), and applies a themed `RippleDrawable` from `rippleColor` to chips and icon buttons (`SuggestionBar.kt:163`, `:1091`). A `0` value keeps the platform/default behavior in every consumer.
 
-    val OCEAN = ColorScheme(...)
-    val FOREST = ColorScheme(...)
-    val SUNSET = ColorScheme(...)
-    val SNOW = ColorScheme(...)
-}
-```
+## Custom Theme Storage
 
-## Theme Application
+`CustomThemeManager` persists custom themes as a JSON array under key `themes` in the `custom_keyboard_themes` SharedPreferences file (`CustomThemeManager.kt:63-64`), using Device Encrypted storage on API 24+ for Direct Boot compatibility. Theme ids are `custom_<uuid>`; `getCustomTheme` accepts the id with or without the prefix (`CustomThemeManager.kt:126-127`). All editor fields serialize through the JSON round-trip (pinned by `ThemeCreatorFieldWiringTest`).
 
-### Rendering Pipeline
+### Pref coherence (CustomThemePrefPolicy)
 
-```kotlin
-// KeyboardView.kt:~200
-private fun applyTheme(theme: ColorScheme) {
-    // Background
-    backgroundPaint.color = theme.keyboardBackground
+The `theme` / `swipe_trail_color` prefs and the custom-theme store live in different pref files, so mutations route through `CustomThemePrefPolicy`:
 
-    // Key paints
-    keyPaint.color = theme.keyBackground
-    keyTextPaint.color = theme.keyText
+- **Delete the active custom theme** → the `theme` pref is reset to `ThemeProvider.FALLBACK_THEME_ID` (`"cleverkeysdark"`, `ThemeProvider.kt:331`) *before* the delete, so no dangling-id window exists (H-2; a dangling id previously crash-looped the IME).
+- **Save the active custom theme** → `swipe_trail_color` is re-synced (H-4 mechanical half; previously edits to the active theme's trail were a silent no-op until re-selection).
+- Writes use `commit()` because the caller surface kills its process right after theme-selection writes.
 
-    // Accent elements
-    accentPaint.color = theme.accent
+## Live Apply
 
-    // Optional effects
-    if (theme.keyBorder != null) {
-        borderPaint.color = theme.keyBorder
-        borderPaint.strokeWidth = 1.dp
-    }
-
-    if (theme.keyShadow != null) {
-        keyPaint.setShadowLayer(2.dp, 0f, 1.dp, theme.keyShadow)
-    }
-
-    invalidate()
-}
-```
-
-### Key Drawing
-
-```kotlin
-// KeyboardView.kt:~300
-private fun drawKey(canvas: Canvas, key: Key, bounds: RectF) {
-    // Background
-    val bgColor = when {
-        key.isPressed -> theme.keyBackgroundPressed
-        key.isModifier -> theme.modifierKeyBackground
-        key.isEnter -> theme.enterKeyBackground
-        else -> theme.keyBackground
-    }
-    keyPaint.color = bgColor
-
-    // Draw rounded rectangle
-    canvas.drawRoundRect(bounds, cornerRadius, cornerRadius, keyPaint)
-
-    // Border (optional)
-    if (theme.keyBorder != null) {
-        canvas.drawRoundRect(bounds, cornerRadius, cornerRadius, borderPaint)
-    }
-
-    // Key label
-    keyTextPaint.color = theme.keyText
-    canvas.drawText(key.label, centerX, centerY, keyTextPaint)
-
-    // Subkey hints
-    subkeyTextPaint.color = theme.subkeyText
-    drawSubkeyHints(canvas, key, bounds)
-}
-```
-
-## System Theme Integration
-
-```kotlin
-// ThemeManager.kt
-fun getSystemTheme(context: Context): ColorScheme {
-    val isDarkMode = when (context.resources.configuration.uiMode and
-                          Configuration.UI_MODE_NIGHT_MASK) {
-        Configuration.UI_MODE_NIGHT_YES -> true
-        Configuration.UI_MODE_NIGHT_NO -> false
-        else -> false
-    }
-
-    return if (isDarkMode) {
-        BuiltInThemes.CLEVERKEYS_DARK
-    } else {
-        BuiltInThemes.SNOW
-    }
-}
-
-// Listen for system theme changes
-private val themeChangeReceiver = object : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        if (config.theme == "system") {
-            applyTheme(getSystemTheme(context))
-        }
-    }
-}
-```
-
-## Custom Colors
-
-### Color Customization
-
-```kotlin
-// ThemeManager.kt
-fun createCustomTheme(customColors: Map<String, Int>): ColorScheme {
-    val baseTheme = getBaseTheme()
-
-    return baseTheme.copy(
-        keyboardBackground = customColors["keyboard_background"]
-            ?: baseTheme.keyboardBackground,
-        keyBackground = customColors["key_background"]
-            ?: baseTheme.keyBackground,
-        keyText = customColors["key_text"]
-            ?: baseTheme.keyText,
-        accent = customColors["accent"]
-            ?: baseTheme.accent,
-        // ... other customizable colors
-    )
-}
-```
-
-### Storage Format
-
-```kotlin
-// Config.kt
-// Stored as JSON in SharedPreferences
-{
-    "theme": "custom",
-    "custom_colors": {
-        "keyboard_background": "#1a1a2e",
-        "key_background": "#16213e",
-        "key_text": "#ffffff",
-        "accent": "#7c3aed"
-    }
-}
-```
-
-## Opacity Settings
-
-```kotlin
-// ThemeManager.kt
-fun applyOpacity(color: Int, opacity: Float): Int {
-    val alpha = (opacity * 255).toInt()
-    return (color and 0x00FFFFFF) or (alpha shl 24)
-}
-
-// Applied to key backgrounds
-val adjustedKeyBg = applyOpacity(theme.keyBackground, config.key_opacity / 100f)
-```
+`ThemeSettingsActivity` mutates the `ThemeProvider`'s **own** `CustomThemeManager` instance (a private twin previously left the provider's in-memory store stale) and, when the save/delete touches the active theme, fires `CleverKeysService.ACTION_THEME_CHANGED` (package-restricted broadcast, `ThemeSettingsActivity.kt:249-252`). The IME rebuilds its keyboard view on receipt, so every edited color applies immediately. Theme *selection* additionally restarts the settings process for clean Compose re-theming.
 
 ## Configuration
 
-| Setting | Key | Default | Range |
-|---------|-----|---------|-------|
-| **Theme** | `pref_theme` | "cleverkeys_dark" | Theme name |
-| **Key Opacity** | `key_opacity` | 100 | 0-100 |
-| **Background Opacity** | `background_opacity` | 100 | 0-100 |
-| **Border Style** | `key_border_style` | "none" | none/subtle/visible |
+| Setting | Key | Default | Source |
+|---------|-----|---------|--------|
+| **Theme** | `theme` | `"cleverkeysdark"` | `ThemeProvider.kt:331` (`FALLBACK_THEME_ID`) |
+| **Swipe trail color** | `swipe_trail_color` | per-theme | synced by `CustomThemePrefPolicy` |
+
+Opacity (keyboard/key/suggestion-bar) lives in the Appearance section, not the theme — see [Appearance](../settings/appearance-spec.md).
+
+## Test Coverage
+
+| Suite | File | Cases |
+|-------|------|-------|
+| Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/theme/ThemeCreatorFieldWiringTest.kt` | 9 (field surfacing, composite blend, computed frames, role mapping, consumer wiring, JSON round-trip) |
+| Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/theme/CustomThemePrefPolicyTest.kt` | delete/save pref coherence |
+| Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/theme/ThemeProviderFallbackTest.kt` | dangling-id fallback |
+| Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/theme/MonetDynamicColorGateTest.kt` | Monet API gating |
 
 ## Related Specifications
 
-- [Profile System](../../../specs/profile_system_restoration.md) - Theme export/import
-- [Settings System](../../../specs/settings-system.md) - Preferences
+- [Appearance](../settings/appearance-spec.md) - Opacity, borders, sizing
