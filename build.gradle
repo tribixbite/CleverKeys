@@ -196,7 +196,6 @@ android {
   }
 
   aaptOptions {
-    noCompress 'onnx', 'tflite'
     // REPRODUCIBILITY: Disable PNG crunching for deterministic output
     cruncherEnabled = false
     // REPRODUCIBILITY: Force consistent platformBuildVersionCode/Name across environments

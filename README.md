@@ -4,7 +4,7 @@
 
 # CleverKeys
 
-<img src="./assets/banner/social_preview.jpg" width="100%" />
+<img src="./art/banner/social_preview.jpg" width="100%" />
 
 </div>
 

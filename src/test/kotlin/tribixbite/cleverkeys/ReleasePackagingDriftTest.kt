@@ -248,6 +248,34 @@ class ReleasePackagingDriftTest {
     // v1.0.7 / v1.1.70 — F-Droid build & verification reproducibility
     // =========================================================================
 
+    /**
+     * 2026-09-09 APK-diet audit: the repo-root `assets/` directory is a PACKAGED asset
+     * root (build.gradle assets.srcDirs), and it silently shipped 6.4 MB of README
+     * marketing art (raccoon logos, banners) in every APK. Only the theme font belongs
+     * there; artwork lives in `art/`, outside the packaged roots.
+     */
+    @Test
+    fun packagedRepoRootAssetsCarryOnlyTheThemeFont() {
+        val packaged = File("assets").walkTopDown().filter { it.isFile }.map { it.name }.toList()
+        assertWithMessage(
+            "repo-root assets/ is a packaged asset root — every file here ships in the APK. " +
+                "Marketing art belongs in art/ (not packaged)."
+        ).that(packaged).containsExactly("special_font.ttf")
+    }
+
+    /**
+     * Same audit: the ONNX models are read into the heap (ModelLoader.readModelBytes →
+     * stream.readBytes()) and never mmap'd, so STORED packaging buys nothing and costs
+     * ~625 KB of download per APK. Nothing may re-add a noCompress for them.
+     */
+    @Test
+    fun onnxModelsAreDeflatedInTheApk() {
+        assertWithMessage(
+            "build.gradle must not exempt onnx assets from compression — they are heap-read, " +
+                "never mmap'd, and deflate is deterministic (no reproducibility cost)"
+        ).that(Regex("""noCompress[^\n]*onnx""").containsMatchIn(buildGradle)).isFalse()
+    }
+
     @Test
     fun reproducibilityGuardsAreEffective() {
         assertWithMessage("the baseline-profile installer varies per build environment")
