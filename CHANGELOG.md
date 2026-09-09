@@ -19,13 +19,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.6.0] - UNRELEASED
+## [1.6.0] - 2026-09-09
 
 > Note: this file has gaps — v1.2.1, v1.2.2, v1.2.5 and v1.2.6 were tagged and shipped
 > but never given entries here. They are not backfilled by this release.
 
 ### Added
 
+- **Russian swipe** (validation-tested) — the first non-Latin CTC script — plus early Greek and
+  provisional Ukrainian, Bulgarian, Macedonian and Hebrew support, each via its language pack.
+  Imported Latin-script language packs are served by CTC when the pack is typeable.
+- Theme Creator: all nine previously-inert fields (locked/modifier/special key backgrounds,
+  activated border, ripple, suggestion text/background/high-confidence, keyboard surface) now
+  persist, round-trip and render live, with built-ins rendering pixel-identically.
+- Four new settings: clipboard media capture toggle + size cap (MB), exact-typed-word suggestion,
+  numpad height scaling.
+- Default-keyboard reminder fires once per boot with a permanent opt-out switch.
+- Learned trigrams are included in Backup & Restore export/import.
+- Swipe playground (Settings → Advanced → Swipe Debug Log): per-swipe candidate ranking, latency,
+  key geometry, and explicit-session trace recording with export/share and clear.
+- French hyphen compounds (qu'est-ce and friends) and verb inversions now swipe.
 - **CTC swipe engine, now the default**: a new swipe model trained from scratch for
   CleverKeys. On a held-out 2,400-swipe English benchmark it gets the intended word first
   try **89.3%** of the time versus **74.6%** for the old transformer engine on the same set
@@ -77,6 +90,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Android 7.0+ (API 24) is now required** (was 5.0): ONNX Runtime 1.21.1 for 16 KB memory-page
+  alignment declares minSdk 24. Devices on Android 5.0–6.0 remain on v1.5.0.
+- Release builds are R8-minified with resource shrinking — a smaller APK on top of the neural
+  asset removal.
+- Backup merge imports are import-wins, with collisions surfaced in the preview.
 - **Non-English dictionaries rebuilt** with the evidence classifier used for the English
   rebuild: bundled Spanish re-curated at 50k, French/German/Italian/Portuguese 25k → 40k,
   Swedish 40k; language packs Dutch 20k → 40k, Russian 50k (Ukrainian/Bulgarian
@@ -117,6 +135,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The 2026-09-06 comprehensive audit: 69 findings fixed across IME routing, dictionary updates,
+  clipboard, GIF, settings validation, backup/langpack, ML data handling and theming — including
+  all 8 critical ones (script-blind letter gate, late-bound keyboard view, GIF database crash on
+  Android 7–9, custom-word membership loss, settings reset wiping user data, langpack path
+  traversal, playground recording scope, delete-active-theme crash loop).
+- Custom words were hard to swipe: stored frequencies now calibrate onto each engine's scale,
+  membership merges against fresh prefs, and original case survives both load paths.
+- GIF panel: search pagination, tap inserts media instead of a dead link, partial thumbnail
+  imports roll back, "Replace pack?" offered on reinstall, category-bar touch handling.
+- Settings sliders share one range with their validator and clamp; the shipped Sparkle trail is
+  selectable; landscape keyboard height no longer stomped by the portrait slider (#161).
+- A language switch changes the visible layout (#160); next/previous-layout extra keys honor
+  their checkboxes (#169); custom short-swipe glyphs replace the default sublabel (#171).
+- Imported-pack dictionary loads leave the IME main thread (#179); settings scroll no longer
+  triggers a recomposition storm (#79).
 - **Selection history was recorded even with personalized learning turned off** (present
   in v1.0.0–v1.5.0). All learning paths are now gated behind the master switch, and
   fields that ask for no personalized learning (password and incognito fields) are

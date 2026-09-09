@@ -61,8 +61,8 @@ section is authoritative for what closed):**
 - `finger_occlusion_offset` A/B: the capture mechanism now EXISTS (Swipe Debug Log
   playground: per-key geometry + ranking + latency traces, export/share) — swipe in the
   playground and export when ready; the A/B analysis follows your traces.
-- Announce uk/bg/mk/he at the next release-notes edit
-  (`SERVED_BUT_NOT_YET_ANNOUNCED = {uk, bg, mk, he}` is the pin).
+- ~~Announce uk/bg/mk/he at the next release-notes edit~~ DONE 2026-09-09: the v1.6.0
+  notes announce all four as provisional-via-language-packs; the pin is now emptySet.
 - ARC-114 (LOW): #79 A17 inset-strip observable. Import-preview "Invalid/skipped" label
   wording (the skips are intentional categories, "Invalid" oversells) — cosmetic.
 - Langpack manifest-version normalize on next pack rebuild (byte-identity rule defers it).

@@ -104,9 +104,12 @@ class ReleaseMetadataDriftTest {
                 text.contains("92.12")
             )
         }
-        // The nine languages the notes above actually describe: the original seven plus
-        // ru + el, announced 2026-09-03 (ARC-054) at the tiers asserted above.
-        val announced = setOf("en", "fr", "de", "es", "it", "pt", "sv", "ru", "el")
+        // The thirteen languages the notes above actually describe: the original seven,
+        // ru + el (announced 2026-09-03, ARC-054), and uk/bg/mk/he — announced in the
+        // v1.6.0 notes (2026-09-09) as provisional-via-language-packs, their honest tier.
+        val announced = setOf(
+            "en", "fr", "de", "es", "it", "pt", "sv", "ru", "el", "uk", "bg", "mk", "he",
+        )
         assertEquals(
             "the CTC language table must be exactly the announced set plus the languages " +
                 "deliberately held back from these notes",
@@ -148,10 +151,10 @@ class ReleaseMetadataDriftTest {
          *
          * uk/bg/mk/he entered later the same day, exactly as this KDoc queued them: wired
          * 2026-09-03 (wave M-LANG, unblocked by ARC-056's langpacks), all four PROVISIONAL —
-         * no real-swipe probe at any tier, synthesis-holdout levels never quotable as accuracy
-         * — and NOT yet claimed by any release copy. Announcing them clears them from here and
-         * adds their honest-tier copy to the notes, in the same edit.
+         * no real-swipe probe at any tier, synthesis-holdout levels never quotable as accuracy.
+         * Announced 2026-09-09 in the v1.6.0 notes ("uk/bg/mk/he provisional — via language
+         * packs"), which emptied this set; it stays as the mechanism for future languages.
          */
-        val SERVED_BUT_NOT_YET_ANNOUNCED = setOf("uk", "bg", "mk", "he")
+        val SERVED_BUT_NOT_YET_ANNOUNCED = emptySet<String>()
     }
 }
