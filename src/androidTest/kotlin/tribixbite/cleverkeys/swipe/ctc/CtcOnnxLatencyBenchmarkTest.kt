@@ -14,7 +14,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.Closeable
-import java.io.File
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 
@@ -34,7 +33,7 @@ import java.nio.FloatBuffer
  *     session configurations:
  *      - **production** — a mirror of
  *        `tribixbite.cleverkeys.onnx.ModelLoader.createOptimizedSessionOptions` +
- *        `tryXnnpack`: `ALL_OPT`, memory-pattern on, optimized-graph disk cache,
+ *        `tryXnnpack`: `ALL_OPT`, memory-pattern on, no optimized-model disk write,
  *        `setIntraOpNumThreads(0)` auto-detect, then XNNPACK with
  *        `intra_op_num_threads = Defaults.ONNX_XNNPACK_THREADS (2)` and the same
  *        `setIntraOpNumThreads` follow-up — falling back to plain CPU if XNNPACK is
@@ -211,12 +210,22 @@ class CtcOnnxLatencyBenchmarkTest {
     /**
      * Build session options for [config].
      *
-     * @param cacheKey unique per (model, config) so the optimized-graph caches never collide.
+     * NO optimized-model disk write. Until 2026-09-09 the PRODUCTION branch called
+     * `SessionOptions.setOptimizedModelFilePath(cacheDir/ctc_bench_<key>.ort)`, mirroring the
+     * write `ModelLoader` used to do. It was removed for the same reason production's was
+     * (commit 732fec4b): nothing ever reads the file back — `createSession` below always gets
+     * the original `modelBytes`, and the per-(model, config) key existed precisely so no two
+     * sessions could ever share one. Here it was worse than dead: the serialization happens
+     * inside `createSession`, which is exactly what the `load=` figure in the reported line
+     * times, so the write inflated a measured number. Removing it also keeps this branch a
+     * faithful mirror of what `ModelLoader` does today.
+     *
+     * @param label unique per (model, config), used only to attribute the fallback warnings.
      * @return the options plus the execution-provider label actually achieved.
      */
     private fun buildOptions(
         config: SessionConfig,
-        cacheKey: String,
+        label: String,
     ): Pair<OrtSession.SessionOptions, String> {
         val opts = OrtSession.SessionOptions()
         opts.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
@@ -224,20 +233,6 @@ class CtcOnnxLatencyBenchmarkTest {
         return when (config) {
             SessionConfig.PRODUCTION -> {
                 opts.setIntraOpNumThreads(0) // auto-detect first, exactly as ModelLoader does
-                try {
-                    // MUST be the TARGET app's cacheDir, not the test APK's: instrumentation runs
-                    // inside the app-under-test process (uid of `tribixbite.cleverkeys.debug`), so
-                    // `getInstrumentation().context.cacheDir` — which points at
-                    // `…/tribixbite.cleverkeys.debug.test/cache`, owned by a different uid — is
-                    // NOT writable and ORT dies with
-                    // "ORT_FAIL … SaveToOrtFormat Failed to save ORT format model to file".
-                    // Production's ModelLoader caches into the app's own cacheDir, which is what
-                    // targetContext gives us, so this is also the faithful mirror.
-                    val cacheDir = InstrumentationRegistry.getInstrumentation().targetContext.cacheDir
-                    opts.setOptimizedModelFilePath(File(cacheDir, "ctc_bench_$cacheKey.ort").absolutePath)
-                } catch (e: Exception) {
-                    Log.w(TAG, "optimized-model cache unavailable ($cacheKey): ${e.message}")
-                }
                 val ep = try {
                     val threads = PRODUCTION_XNNPACK_THREADS.coerceIn(1, 8)
                     opts.addXnnpack(mapOf("intra_op_num_threads" to threads.toString()))
@@ -247,7 +242,7 @@ class CtcOnnxLatencyBenchmarkTest {
                     // Production's chain continues to NNAPI, but this encoder is a CPU-class
                     // graph and NNAPI would add a partitioning cost the measurement should
                     // not silently absorb. Report the honest fallback instead.
-                    Log.w(TAG, "XNNPACK unavailable ($cacheKey): ${e.message}")
+                    Log.w(TAG, "XNNPACK unavailable ($label): ${e.message}")
                     "CPU"
                 }
                 opts to ep
