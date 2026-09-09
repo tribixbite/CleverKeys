@@ -22,7 +22,9 @@ Key press → KeyEventHandler.sendText(text)
     6. (none active)                → send to target app InputConnection
 ```
 
-Backspace follows the **same priority chain** in `key_down()` for `KEYCODE_DEL`.
+Backspace follows the **same priority chain** in `key_up()` for `KEYCODE_DEL` (the
+`KeyValue.Kind.Keyevent` branch, `KeyEventHandler.kt:89` — note it is NOT `key_down()`;
+`key_down()` only handles autocap stop and sliders).
 
 ## File Responsibilities
 
@@ -59,7 +61,7 @@ interface IReceiver {
 
 **Default implementations return false/no-op** so existing IReceiver implementors don't break.
 
-### Step 2: Add routing in sendText() and key_down() (KeyEventHandler.kt)
+### Step 2: Add routing in sendText() and key_up() (KeyEventHandler.kt)
 
 In `sendText()`, add the check **at the correct priority position**:
 
@@ -80,7 +82,7 @@ private fun sendText(text: CharSequence, isKeyRepeat: Boolean = false) {
 }
 ```
 
-In `key_down()`, add KEYCODE_DEL handling in the same priority chain:
+In `key_up()` (the `Kind.Keyevent` branch), add KEYCODE_DEL handling in the same priority chain:
 
 ```kotlin
 if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isMyCustomMode()) {

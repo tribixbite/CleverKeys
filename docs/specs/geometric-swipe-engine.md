@@ -564,7 +564,9 @@ lives in its commit message / phase report. Deltas vs the tables above:
    layouts) are gracefully excluded — surfaced via
    `TemplateIndex.overLengthExcludedCount`, never thrown.
 5. **Tier-3 script gate uses `Character.UnicodeBlock`, not `UnicodeScript`**
-   (UnicodeScript is Android API 24+; minSdk is 21 — commit `e92c948e`).
+   (UnicodeScript is Android API 24+; minSdk was 21 when this was built — commit
+   `e92c948e`. minSdk is 24 since ARC-113, so the gate choice is now historical, not
+   load-bearing).
 6. **dtwBand is a reserved knob enforced to 0** — the experimental DTW path was
    evaluated and not implemented (no measured win).
 

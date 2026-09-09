@@ -412,7 +412,7 @@ Download from the [langpacks release](https://github.com/tribixbite/CleverKeys/r
 </div>
 
 ### Requirements
-- Android SDK Platform 34 (compileSdk 34; minSdk 21)
+- Android SDK Platform 34 (compileSdk 34; minSdk 24)
 - Gradle 8.6+
 - Kotlin 1.9.20
 - JDK 17

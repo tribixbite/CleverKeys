@@ -36,7 +36,7 @@ Welcome to CleverKeys! We're excited that you want to contribute to the world's 
 
 #### Prerequisites
 - **Android Studio** or IntelliJ IDEA with Android plugin
-- **Android SDK** (API 21+ required, API 34 recommended)
+- **Android SDK** (API 24+ required, API 34 recommended)
 - **Java 17** or higher
 - **Git** for version control
 
