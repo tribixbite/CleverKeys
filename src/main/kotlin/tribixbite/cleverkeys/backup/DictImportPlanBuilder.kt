@@ -81,8 +81,9 @@ object DictImportPlanBuilder {
             if (wordsEl.isJsonObject) {
                 val map = merged.getOrPut(lang) { LinkedHashMap() }
                 wordsEl.asJsonObject.entrySet().forEach { (w, freqEl) ->
-                    // Map#putIfAbsent is API 24; `if (w !in map)` is the API 21-safe
-                    // first-writer-wins equivalent (values are non-null Int).
+                    // `if (w !in map)` is a first-writer-wins insert (values are non-null
+                    // Int). Map#putIfAbsent (API 24) is legal since minSdk 24 (ARC-113);
+                    // this pre-Java-8 spelling is retained — behavior-identical.
                     if (w !in map) map[w] = freqEl.asInt
                 }
             }

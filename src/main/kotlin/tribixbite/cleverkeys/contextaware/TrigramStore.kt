@@ -103,7 +103,7 @@ class TrigramStore internal constructor(
     private val languages: ConcurrentHashMap<String, LanguageTrigrams> = ConcurrentHashMap()
 
     /**
-     * Serializes [forLanguage]'s table CONSTRUCTION (see the API 21 note there).
+     * Serializes [forLanguage]'s table CONSTRUCTION (see the once-only note there).
      * Deliberately NOT `this`: the build path touches only local state and
      * `storage`, so it is never held while waiting on the data lock — no
      * lock-order cycle with [writeDirtyLanguages]/[clear], which hold `this`.
@@ -113,10 +113,11 @@ class TrigramStore internal constructor(
     /**
      * Languages with unflushed in-RAM changes (drained by writeDirtyLanguages()).
      *
-     * API 21 HAZARD: `ConcurrentHashMap.newKeySet()` is API 24 (Java 8) and throws
-     * `NoSuchMethodError` on Android 5.0–6.0 — `minSdk` here is 21.
+     * HISTORICAL API-21 NOTE: `ConcurrentHashMap.newKeySet()` is API 24 (Java 8) and
+     * was avoided while `minSdk` was 21; legal since ARC-113 raised `minSdk` to 24.
      * [Collections.newSetFromMap] over a [ConcurrentHashMap] is API 9 and returns
-     * the same concurrent, weakly consistent Set view `newKeySet()` would.
+     * the same concurrent, weakly consistent Set view `newKeySet()` would — retained
+     * as-is, behavior-identical.
      */
     private val dirtyLanguages: MutableSet<String> =
         Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
@@ -130,9 +131,10 @@ class TrigramStore internal constructor(
     /**
      * Get (lazily loading from storage) the table for a language.
      *
-     * API 21 HAZARD: this used to be `languages.computeIfAbsent(lang) { … }`, a
-     * Java 8 default method — API 24 — that throws `NoSuchMethodError` on Android
-     * 5.0–6.0 (`minSdk` is 21). The double-checked [loadLock] reproduces
+     * ONCE-ONLY CONSTRUCTION: this used to be `languages.computeIfAbsent(lang) { … }`,
+     * a Java 8 default method — API 24 — replaced while `minSdk` was 21 (it threw
+     * `NoSuchMethodError` on Android 5.0–6.0; legal again since ARC-113 raised the
+     * floor to 24). The double-checked [loadLock] reproduces
      * `computeIfAbsent`'s once-only CONSTRUCTION guarantee, which matters even
      * though this build path is side-effect free: Kotlin's `getOrPut` (the
      * tempting one-liner) is a get-then-`put`, so a second builder would REPLACE

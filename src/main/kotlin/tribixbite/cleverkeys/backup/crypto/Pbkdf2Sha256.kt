@@ -9,7 +9,7 @@ import javax.crypto.spec.SecretKeySpec
  * RFC 2898 (PKCS #5 v2.1) PBKDF2 with HMAC-SHA256, implemented directly over
  * [javax.crypto.Mac] because [javax.crypto.SecretKeyFactory]'s
  * `PBKDF2WithHmacSHA256` algorithm is only available from API 26 while the app's
- * `minSdk` is 21 (API 21 ships only `PBKDF2WithHmacSHA1`).
+ * `minSdk` is 24 (API 24/25 ship only `PBKDF2WithHmacSHA1`).
  *
  * `HmacSHA256` has been available since API 1, so this single code path is
  * deterministic across every supported device and the desktop JVM. It is pure

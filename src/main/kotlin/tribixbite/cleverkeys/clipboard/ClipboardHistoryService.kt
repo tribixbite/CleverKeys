@@ -625,7 +625,8 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     private fun getForegroundAppPackage(): String? {
         return try {
             if (VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                // Android 5.1+: Use UsageStatsManager (requires PACKAGE_USAGE_STATS permission)
+                // UsageStatsManager (requires PACKAGE_USAGE_STATS permission). The 5.1+ guard
+                // is vestigial — always true at minSdk 24 (ARC-113) — and retained as-is.
                 val usageStatsManager = _context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
                 if (usageStatsManager != null) {
                     val endTime = System.currentTimeMillis()
@@ -966,7 +967,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             feature is unsupported. Thread-safe via double-checked locking. */
         @JvmStatic
         fun get_service(ctx: Context): ClipboardHistoryService? {
-            // minSdk 21 always exceeds the old API<=11 unsupported floor, so no gate is needed.
+            // minSdk 24 always exceeds the old API<=11 unsupported floor, so no gate is needed.
             return _service ?: synchronized(this) {
                 _service ?: ClipboardHistoryService(ctx).also { _service = it }
             }

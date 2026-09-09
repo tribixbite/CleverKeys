@@ -108,11 +108,10 @@ object CtcLexiconMerge {
         )
         val ordinals = HashMap<String, Int>(entries.size * 2)
         for ((rank, idx) in order.withIndex()) {
-            // API 21 HAZARD: the *default* `Map#putIfAbsent` is API 24 (Java 8) and
-            // throws NoSuchMethodError on Android 5.0–6.0 — `minSdk` is 21. Only
-            // `ConcurrentMap#putIfAbsent` is API 1, and this receiver is a plain
-            // HashMap. `containsKey` + set is the API 21-safe first-wins insert
-            // (single-threaded build, so no atomicity is lost).
+            // `containsKey` + set is a first-wins insert (single-threaded build, so no
+            // atomicity is lost). The *default* `Map#putIfAbsent` (API 24) was avoided
+            // while `minSdk` was 21; legal since ARC-113 raised the floor to 24 —
+            // this spelling is retained as-is, behavior-identical.
             val key = entries[idx].key.lowercase(Locale.ROOT)
             if (!ordinals.containsKey(key)) ordinals[key] = rank
         }

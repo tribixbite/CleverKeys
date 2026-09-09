@@ -24,10 +24,11 @@ import javax.crypto.spec.GCMParameterSpec
  * read another app's private prefs. The Keystore wrap is defense-in-depth: it
  * keeps the passphrase off disk in cleartext even if the prefs file is exfiltrated
  * by a root/backup-extraction attacker who cannot use the (non-exportable)
- * Keystore key. API 21/22 cannot wrap with AES-GCM and therefore use an explicit,
- * user-visible app-private fallback. API 23+ fails closed on any Keystore/provider
- * error: modern devices must never silently downgrade a stored secret to reversible
- * base64.
+ * Keystore key. API 21/22 could not wrap with AES-GCM and therefore used an explicit,
+ * user-visible app-private fallback; since ARC-113 raised `minSdk` to 24 that legacy
+ * branch is unreachable on any supported device (kept as dead-safe belt-and-braces).
+ * API 23+ fails closed on any Keystore/provider error: modern devices must never
+ * silently downgrade a stored secret to reversible base64.
  *
  * The wrapping key uses `setUserAuthenticationRequired(false)` because the store
  * must be usable headlessly (Termux `am start` automation) and after reboot without
@@ -158,8 +159,9 @@ open class BackupPassphraseStore(
                     .putString(PREF_IV, Base64.encodeToString(wrapped.iv, Base64.NO_WRAP))
                     .putString(PREF_WRAPPED, "true")
             } else {
-                // API 21/22 cannot create the required Keystore AES-GCM key. This explicit
-                // legacy state is exposed by protectionState(); modern failures never enter it.
+                // API 21/22 could not create the required Keystore AES-GCM key. Unreachable
+                // since minSdk 24 (ARC-113); retained as the explicit legacy state exposed by
+                // protectionState() — modern failures never enter it.
                 Log.w(
                     TAG,
                     "API $sdkInt lacks Keystore AES-GCM; storing the backup " +

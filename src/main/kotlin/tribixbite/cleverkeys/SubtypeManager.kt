@@ -123,7 +123,7 @@ class SubtypeManager(private val context: Context) {
         var defaultLayout: KeyboardData? = null
         config.extra_keys_subtype = null
 
-        // minSdk 21: InputMethodSubtype (API 11/12) is always available, no SDK gate needed.
+        // minSdk 24: InputMethodSubtype (API 11/12) is always available, no SDK gate needed.
         val enabledSubtypes = getEnabledSubtypes()
         val subtype = changedTo ?: defaultSubtypes(enabledSubtypes)
 

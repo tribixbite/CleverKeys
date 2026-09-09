@@ -38,8 +38,9 @@ object DirectBootAwarePreferences {
     }
 
     // Scoped to this method (not the whole object): createDeviceProtectedStorageContext()
-    // is API 24+. Callers gate this behind a runtime SDK_INT check, so the annotation
-    // stays local and the runtime guards in the public methods remain valid for API 21-23.
+    // is API 24+ — always available since ARC-113 raised minSdk to 24. Callers still gate
+    // this behind a runtime SDK_INT check; those guards are vestigial (always true) and
+    // harmless, so annotation and guards are retained as-is.
     @TargetApi(24)
     private fun getProtectedPrefs(context: Context): SharedPreferences {
         // AndroidX PreferenceManager.getDefaultSharedPreferencesName is private

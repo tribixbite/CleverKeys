@@ -379,7 +379,7 @@ class Keyboard2View @JvmOverloads constructor(
 
     @Suppress("DEPRECATION")
     fun refresh_navigation_bar(context: Context) {
-        // minSdk 21: no lower SDK guard needed here.
+        // minSdk 24: no lower SDK guard needed here.
         val w = getParentWindow(context) ?: return
 
         // KEY FIX: Allow IME window to draw behind system bars
@@ -1524,7 +1524,7 @@ class Keyboard2View @JvmOverloads constructor(
         applySystemBarInsets(WindowLayoutUtils.readSystemBarInsets(wi))
 
         // Consume the insets so child views don't re-apply them.
-        // WindowInsets.CONSUMED is API 30; consumeSystemWindowInsets() is the API 21-29
+        // WindowInsets.CONSUMED is API 30; consumeSystemWindowInsets() is the API 24-29
         // equivalent (deprecated but functional — returns a fully-consumed WindowInsets).
         return if (VERSION.SDK_INT >= 30) {
             WindowInsets.CONSUMED

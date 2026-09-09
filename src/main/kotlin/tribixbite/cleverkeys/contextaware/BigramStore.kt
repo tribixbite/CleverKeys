@@ -115,7 +115,7 @@ class BigramStore internal constructor(
     private val languages: ConcurrentHashMap<String, LanguageBigrams> = ConcurrentHashMap()
 
     /**
-     * Serializes [forLanguage]'s table CONSTRUCTION (see the API 21 note there).
+     * Serializes [forLanguage]'s table CONSTRUCTION (see the once-only note there).
      * Deliberately NOT `this`: the build path touches only local state, `storage`
      * and the persister, so it can never be held while waiting on the data lock —
      * no lock-order cycle with [writeDirtyLanguages]/[clear], which hold `this`.
@@ -125,10 +125,11 @@ class BigramStore internal constructor(
     /**
      * Languages with unflushed in-RAM changes (drained by writeDirtyLanguages()).
      *
-     * API 21 HAZARD: `ConcurrentHashMap.newKeySet()` is API 24 (Java 8) and throws
-     * `NoSuchMethodError` on Android 5.0–6.0 — `minSdk` here is 21.
+     * HISTORICAL API-21 NOTE: `ConcurrentHashMap.newKeySet()` is API 24 (Java 8) and
+     * was avoided while `minSdk` was 21; legal since ARC-113 raised `minSdk` to 24.
      * [Collections.newSetFromMap] over a [ConcurrentHashMap] is API 9 and returns
-     * the same concurrent, weakly consistent Set view `newKeySet()` would.
+     * the same concurrent, weakly consistent Set view `newKeySet()` would — retained
+     * as-is, behavior-identical.
      */
     private val dirtyLanguages: MutableSet<String> =
         Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
@@ -144,11 +145,12 @@ class BigramStore internal constructor(
      * Get (lazily loading) the table for a language. First access migrates a legacy
      * un-keyed `bigrams_json` blob into this language, then deletes the legacy key.
      *
-     * API 21 HAZARD: this used to be `languages.computeIfAbsent(lang) { … }`, a
-     * Java 8 default method — API 24 — that throws `NoSuchMethodError` on Android
-     * 5.0–6.0 (`minSdk` is 21). Neither of the usual API 21 substitutes is safe
-     * here, so the double-checked [loadLock] reproduces `computeIfAbsent`'s
-     * once-only CONSTRUCTION guarantee instead:
+     * ONCE-ONLY CONSTRUCTION: this used to be `languages.computeIfAbsent(lang) { … }`,
+     * a Java 8 default method — API 24 — replaced while `minSdk` was 21 (it threw
+     * `NoSuchMethodError` on Android 5.0–6.0; legal again since ARC-113 raised the
+     * floor to 24). Neither of the usual drop-in substitutes is safe here, so the
+     * double-checked [loadLock] reproduces `computeIfAbsent`'s once-only CONSTRUCTION
+     * guarantee instead — reasoning that stands regardless of API level:
      * - `map[k] ?: (putIfAbsent(k, build()) ?: k)` would run [build] twice, and
      *   [build] has SIDE EFFECTS — it deletes the legacy blob after loading it,
      *   so the loser's discarded table takes the migrated data with it

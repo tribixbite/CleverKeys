@@ -142,7 +142,7 @@ object VibratorCompat {
 
             HapticEvent.TRACKPOINT_ACTIVATE -> {
                 // CLOCK_TICK is extremely subtle - perfect for mode activation.
-                // Available from API 21 (LOLLIPOP), so always present at minSdk 21.
+                // Available from API 21 (LOLLIPOP), so always present at minSdk 24.
                 HapticFeedbackConstants.CLOCK_TICK
             }
 

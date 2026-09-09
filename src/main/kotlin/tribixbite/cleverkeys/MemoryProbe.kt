@@ -95,10 +95,10 @@ object MemoryProbe {
         Class.forName("android.os.SystemProperties")
             .getMethod("get", String::class.java, String::class.java)
             .invoke(null, "debug.cleverkeys.memprobe.settle", "false") == "true"
-        // `getOrElse`, not `getOrDefault`: this is `kotlin.Result`, not a `Map`, so the API-24
-        // hazard does not apply — but `MinSdkApiUsageDriftTest` scans source text and cannot
-        // tell the two receivers apart. Keeping the scanner blunt is correct (it guards a class
-        // of bug that has shipped here before), so the call site yields instead.
+        // `getOrElse`, not `getOrDefault`: this is `kotlin.Result`, not a `Map`. The choice
+        // dates from the minSdk-21 era, when the (now-deleted, ARC-113) blunt source scanner
+        // `MinSdkApiUsageDriftTest` could not tell the two receivers apart; minSdk is 24 now,
+        // so either spelling is legal — this one is retained as-is.
     }.getOrElse { false }
 
     /** Used Java heap in bytes, without forcing a collection. */

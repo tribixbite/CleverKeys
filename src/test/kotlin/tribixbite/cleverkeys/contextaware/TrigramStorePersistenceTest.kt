@@ -385,8 +385,9 @@ class TrigramStorePersistenceTest {
      * The lazy per-language table must be built exactly ONCE even when several
      * threads touch a brand-new language simultaneously.
      *
-     * Guards the API-21 replacement for `ConcurrentHashMap#computeIfAbsent`
-     * (API 24, `NoSuchMethodError` on Android 5.0–6.0): a plain
+     * Guards the double-checked replacement for `ConcurrentHashMap#computeIfAbsent`
+     * (written while `minSdk` was 21, when the API-24 default method was illegal;
+     * retained since ARC-113 raised the floor to 24): a plain
      * get-then-`putIfAbsent` race would hand the losing threads a table that is
      * then discarded, silently dropping everything they recorded into it.
      */

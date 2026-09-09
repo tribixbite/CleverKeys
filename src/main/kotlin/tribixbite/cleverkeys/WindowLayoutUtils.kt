@@ -166,7 +166,7 @@ object WindowLayoutUtils {
      *   the window opts into `LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS` on 35+ (see
      *   [configureEdgeToEdge]) and must keep keys out of the notch in landscape.
      * - API 29: `systemWindowInsets` (deprecated but the only aggregate on Q).
-     * - API 21-28: the per-side deprecated getters (`getSystemWindowInsets()` unavailable).
+     * - API 24-28: the per-side deprecated getters (`getSystemWindowInsets()` unavailable).
      */
     @JvmStatic
     fun readSystemBarInsets(wi: WindowInsets): SystemBarInsets {

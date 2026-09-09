@@ -116,7 +116,7 @@ class DebugLoggingManager(
      */
     // Context.RECEIVER_NOT_EXPORTED is a compile-time-inlined int constant (public API 33).
     // The flag value (0x4) is honored by registerReceiver from API 26 onward, which is why
-    // it's used inside the SDK_INT >= O guard here; on API 21-25 the 3-arg form is used.
+    // it's used inside the SDK_INT >= O guard here; on API 24-25 the 3-arg form is used.
     // UnspecifiedRegisterReceiverFlag: lint flags the pre-26 permission-form call, but no
     // flag-accepting overload exists below API 26 and that branch can never execute on the
     // API 33+ devices the check protects; the signature permission IS the I-8 protection.

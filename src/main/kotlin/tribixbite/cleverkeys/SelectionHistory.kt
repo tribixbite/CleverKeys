@@ -22,9 +22,12 @@ import kotlin.math.min
  *   atomic compare-and-set loop ([incrementCount]) — selections are recorded on
  *   the main thread while the prediction executor reads multipliers concurrently.
  *   NOTE: `Map#merge`/`computeIfAbsent`/`ConcurrentHashMap.newKeySet()` are Java 8
- *   default methods that only exist in the Android runtime from **API 24**; this
- *   app's `minSdk` is 21, so they throw `NoSuchMethodError` on Android 5.0–6.0.
- *   Guarded by `MinSdkApiUsageDriftTest` + lint's `NewApi`.
+ *   default methods that only exist in the Android runtime from **API 24**. They were
+ *   avoided here while `minSdk` was 21 (they throw `NoSuchMethodError` on Android
+ *   5.0–6.0); since ARC-113 raised `minSdk` to 24 they are legal, and the guard
+ *   (`MinSdkApiUsageDriftTest`) was deleted with it. The pre-Java-8 idioms below are
+ *   retained as-is — behavior-identical, and the CAS loop's concurrency reasoning
+ *   stands on its own.
  * - **Read gating** (H3): [multiplierFor] is inert (1.0) while [enabled] is
  *   false, mirroring the write-side no-op — the production wrapper keeps
  *   [enabled] synced to the master `on_device_learning_enabled` gate.
@@ -55,8 +58,9 @@ class SelectionHistory(
     /**
      * Words pruned from RAM whose persisted keys still need deletion.
      *
-     * API 21 HAZARD: `ConcurrentHashMap.newKeySet()` is API 24 (Java 8) and
-     * throws `NoSuchMethodError` on Android 5.0–6.0 — `minSdk` here is 21.
+     * HISTORICAL API-21 NOTE: `ConcurrentHashMap.newKeySet()` is API 24 (Java 8) and
+     * was avoided while `minSdk` was 21; it is legal since ARC-113 raised `minSdk`
+     * to 24. The substitute is retained — behavior-identical.
      * [Collections.newSetFromMap] over a [ConcurrentHashMap] is available since
      * API 9 and is exactly what `newKeySet()` returns (a concurrent, weakly
      * consistent, non-blocking Set view backed by the map's keys).
@@ -102,9 +106,9 @@ class SelectionHistory(
     /**
      * Atomically `selectionCounts[key] += 1`, creating the entry at 1 when absent.
      *
-     * API 21 HAZARD: the obvious `selectionCounts.merge(key, 1, Int::plus)` is a
-     * Java 8 default method — API 24 — and throws `NoSuchMethodError` on Android
-     * 5.0–6.0 (`minSdk` is 21). This is the pre-Java-8 CAS idiom over
+     * HISTORICAL API-21 NOTE: the obvious `selectionCounts.merge(key, 1, Int::plus)`
+     * is a Java 8 default method — API 24 — and was avoided while `minSdk` was 21;
+     * legal since ARC-113 raised `minSdk` to 24. This is the pre-Java-8 CAS idiom over
      * [ConcurrentHashMap]'s own `putIfAbsent` / `replace(k, old, new)`, both
      * abstract `ConcurrentMap` methods present since API 1. It is lock-free and
      * loses no increment under concurrent recording (`SelectionHistoryTest`'s

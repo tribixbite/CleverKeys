@@ -11,7 +11,7 @@ import org.junit.Test
  * CRITICAL correctness tests for [Pbkdf2Sha256].
  *
  * The desktop java-21 test JVM ships `PBKDF2WithHmacSHA256` (an API 26+ JCE
- * algorithm the Android `minSdk 21` target lacks), so we can cross-check our
+ * algorithm the Android `minSdk 24` target lacks), so we can cross-check our
  * in-repo RFC 2898 implementation byte-for-byte against the authoritative JCE
  * reference. This proves the substitute is correct on-device (where the JCE
  * algorithm is unavailable).

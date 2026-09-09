@@ -227,9 +227,9 @@ class CustomShortSwipeExecutor(private val context: Context) {
     /**
      * Execute a command from the CommandRegistry.
      */
-    // android.R.id.undo/redo are int constants (added API 23) inlined at compile time.
-    // On API 21-22 performContextMenuAction() with an unknown id is a safe no-op, so
-    // undo/redo simply degrade gracefully rather than crash.
+    // android.R.id.undo/redo are int constants (added API 23, below minSdk 24) inlined at
+    // compile time; every supported device interprets them natively. The InlinedApi
+    // suppression dates from the minSdk-21 era, when API 21-22 fell back to a safe no-op.
     @SuppressLint("InlinedApi")
     private fun executeRegistryCommand(
         command: CommandRegistry.Command,
@@ -439,9 +439,9 @@ class CustomShortSwipeExecutor(private val context: Context) {
     /**
      * Execute a command action.
      */
-    // android.R.id.undo/redo are int constants (added API 23) inlined at compile time.
-    // On API 21-22 performContextMenuAction() with an unknown id is a safe no-op, so
-    // undo/redo simply degrade gracefully rather than crash.
+    // android.R.id.undo/redo are int constants (added API 23, below minSdk 24) inlined at
+    // compile time; every supported device interprets them natively. The InlinedApi
+    // suppression dates from the minSdk-21 era, when API 21-22 fell back to a safe no-op.
     @SuppressLint("InlinedApi")
     private fun executeCommand(
         command: AvailableCommand?,

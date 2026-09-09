@@ -55,7 +55,7 @@ class FoldStateTracker(context: Context) {
     companion object {
         // FEATURE_SENSOR_HINGE_ANGLE is a String constant (public API 30) that is inlined
         // at compile time. hasSystemFeature() with an unknown feature string simply returns
-        // false on API 21-29, so this safely reports "not foldable" on older devices.
+        // false on API 24-29, so this safely reports "not foldable" on older devices.
         @SuppressLint("InlinedApi")
         @JvmStatic
         fun isFoldableDevice(context: Context): Boolean {

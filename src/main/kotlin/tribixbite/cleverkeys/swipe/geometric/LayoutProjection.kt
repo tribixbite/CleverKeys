@@ -156,13 +156,14 @@ object LayoutProjection {
      * tier 3 and the containing words are dropped (FR-4-safe but coverage-narrowing).
      */
     private fun nfdStripAppliesTo(cp: Int): Boolean = when (Character.UnicodeBlock.of(cp)) {
-        // NOTE: implemented via UnicodeBlock, NOT Character.UnicodeScript — UnicodeScript
-        // requires Android API 24 (crashes API 21-23; minSdk is 21) and android.os.Build
-        // version-guards are barred here by GeoPurityDriftTest (this engine package must
-        // stay pure JVM). Blocks below cover the same gate: Latin/Greek/Cyrillic letter
+        // NOTE: implemented via UnicodeBlock, NOT Character.UnicodeScript — the choice
+        // dates from the minSdk-21 era (UnicodeScript is API 24 and android.os.Build
+        // version-guards are barred here by GeoPurityDriftTest: this engine package must
+        // stay pure JVM). minSdk is 24 now (ARC-113), so UnicodeScript would be legal;
+        // the UnicodeBlock table is retained as-is — behavior-identical. Blocks below cover the same gate: Latin/Greek/Cyrillic letter
         // blocks, combining-mark blocks (~script INHERITED), and Basic Latin/Latin-1 +
         // General Punctuation (~the COMMON codepoints reachable from keyboard layouts).
-        // API constraint: only UnicodeBlock CONSTANTS available at minSdk 21 may appear
+        // API constraint: only UnicodeBlock CONSTANTS available at minSdk 24 may appear
         // (a missing static field is a NoSuchFieldError at class-init on old devices) —
         // COMBINING_DIACRITICAL_MARKS_EXTENDED and CYRILLIC_EXTENDED_C are Android
         // API 26+ and are therefore deliberately absent; codepoints there fall to the

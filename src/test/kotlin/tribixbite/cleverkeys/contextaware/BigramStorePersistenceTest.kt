@@ -321,8 +321,9 @@ class BigramStorePersistenceTest {
      * The lazy per-language table must be built exactly ONCE even when several
      * threads touch a brand-new language simultaneously.
      *
-     * Guards the API-21 replacement for `ConcurrentHashMap#computeIfAbsent`
-     * (API 24, `NoSuchMethodError` on Android 5.0–6.0): Kotlin's `getOrPut` is
+     * Guards the double-checked replacement for `ConcurrentHashMap#computeIfAbsent`
+     * (written while `minSdk` was 21, when the API-24 default method was illegal;
+     * retained since ARC-113 raised the floor to 24): Kotlin's `getOrPut` is
      * the tempting one-liner and is a get-then-`put`, so a second builder
      * REPLACES the table a first thread is already recording into and those
      * records vanish from the store.
