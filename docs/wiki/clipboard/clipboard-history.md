@@ -218,16 +218,19 @@ For large clipboard histories (>100 items), pagination improves performance:
 
 ## Privacy Features
 
-### Password Manager Exclusion
+### Sensitive Flag (the reliable protection)
 
-CleverKeys can exclude clipboard entries from password managers:
+On Android 13+, password managers mark copied credentials with the system
+`IS_SENSITIVE` flag. With **Respect Sensitive Flag** enabled (the default),
+CleverKeys never stores those clips. This works regardless of which password
+manager you use.
 
-| Setting | Behavior |
-|---------|----------|
-| **Enabled** | Clips from 1Password, Bitwarden, etc. not saved |
-| **Disabled** | All clips saved normally |
+### Password Manager Exclusion (best effort)
 
-Supported apps include: 1Password, Bitwarden, LastPass, Dashlane, KeePass variants, and more.
+**Exclude Password Managers** is a best-effort extra layer: it skips a copy only
+when Android reveals that a known password manager is in the foreground. That is
+rarely possible without usage access — which CleverKeys never requests — so don't
+rely on it alone; the sensitive-content flag above is the dependable mechanism.
 
 ### Password Field Detection
 
@@ -261,8 +264,8 @@ CleverKeys automatically detects password fields:
 | **Max Media Size** | Clipboard section | Skip media larger than this (1-50 MB) |
 | **Pinned Tab** | Clipboard section | Show/hide the Pinned tab |
 | **Todo Tab** | Clipboard section | Show/hide the Todos tab |
-| **Exclude Password Managers** | Clipboard section | Don't save from password apps |
-| **Respect Sensitive Flag** | Clipboard section | Honor Android 13+ IS_SENSITIVE |
+| **Exclude Password Managers** | Clipboard section | Best-effort skip of copies from known password managers (rarely detectable) |
+| **Respect Sensitive Flag** | Clipboard section | Honor Android 13+ IS_SENSITIVE (the reliable protection) |
 
 ## Clear History
 
@@ -280,7 +283,7 @@ A: Swipe SW (southwest/down-left) on the Ctrl key, or add a clipboard key to you
 
 ### Q: Why wasn't my copied text saved?
 
-A: It may have been from a password field or a password manager app (if exclusion is enabled).
+A: It may have been from a password field, or marked sensitive by a password manager (Android 13+ `IS_SENSITIVE` flag, skipped by default).
 
 ### Q: Can I recover deleted items?
 

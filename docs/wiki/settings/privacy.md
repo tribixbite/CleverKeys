@@ -96,8 +96,8 @@ Found under the **Clipboard** section in Settings:
 | **Save Media Entries** | Enable/disable media capture (images, videos, PDFs) |
 | **Text Only** | Hide media entries and stop media capture |
 | **Max Media Size** | Skip copied media larger than this size (1-50 MB) |
-| **Exclude Password Managers** | Don't save clips from 1Password, Bitwarden, etc. |
-| **Respect Sensitive Flag** | Honor Android 13+ IS_SENSITIVE flag |
+| **Exclude Password Managers** | Best effort: only skips a copy when Android reveals that a known password manager is in the foreground, which is rarely possible without usage access (never requested) |
+| **Respect Sensitive Flag** | Honor the Android 13+ IS_SENSITIVE flag — the reliable password-manager protection |
 
 ### Sensitive Content Protection
 
@@ -106,8 +106,8 @@ CleverKeys automatically protects sensitive content:
 | Protection | How It Works |
 |------------|--------------|
 | **Password Fields** | Detected automatically, clipboard disabled |
-| **Password Managers** | Clips from password apps excluded (when enabled) |
-| **Sensitive Flag** | Android 13+ apps can mark content as sensitive |
+| **Sensitive Flag** | Android 13+ password managers mark copies as sensitive; CleverKeys skips them — this is the reliable protection |
+| **Password Managers** | Best-effort extra layer: skips a copy only when Android reveals a known password manager in the foreground (rarely possible without usage access, which CleverKeys never requests) |
 
 ## Incognito Mode
 

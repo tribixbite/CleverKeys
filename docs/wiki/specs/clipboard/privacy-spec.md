@@ -9,7 +9,7 @@ version: v1.4.0
 
 ## Overview
 
-CleverKeys includes privacy features for the clipboard history system, primarily automatic exclusion of clipboard entries from password managers. When enabled, CleverKeys detects when the foreground app is a password manager and skips storing clipboard content, preventing sensitive credentials from appearing in clipboard history. Android 13+ adds a second layer via the `IS_SENSITIVE` `ClipData` flag. Media capture is gated by two independent settings on top of these privacy checks.
+CleverKeys includes privacy features for the clipboard history system. The **reliable** mechanism is the Android 13+ `IS_SENSITIVE` `ClipData` flag (`clipboard_respect_sensitive_flag`, default on): password managers mark credential copies as sensitive and CleverKeys skips storing them, regardless of which app copied. The package-list **password-manager exclusion** (`clipboard_exclude_password_managers`) is a *best-effort* extra layer: it can only skip a copy when Android reveals that a known password manager is in the foreground, which requires the `PACKAGE_USAGE_STATS` app-op — an op the manifest deliberately never declares (D-1, maintainer decision 2026-09-08, reworded in all locales in `870cf499`). Without that grant, foreground detection returns `null` and the exclusion fails open. Media capture is gated by two independent settings and a size cap on top of these privacy checks.
 
 For the underlying database schema, pinned/todo tables, and overall clipboard data flow, see [Clipboard History](clipboard-history-spec.md).
 
@@ -17,11 +17,11 @@ For the underlying database schema, pinned/todo tables, and overall clipboard da
 
 | File | Class/Function | Purpose |
 |------|----------------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Defaults.PASSWORD_MANAGER_PACKAGES` | Set of excluded package names (Config.kt:236) |
-| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `getForegroundAppPackage()` | Detects current foreground app (`ClipboardHistoryService.kt:585`) |
-| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `isPasswordManagerApp()` | Checks if package is excluded (`ClipboardHistoryService.kt:630`) |
-| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `addCurrentClip()` | Skips storage if excluded app or sensitive flag set (`ClipboardHistoryService.kt:646`) |
-| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | Clipboard section | UI toggle for feature |
+| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Defaults.PASSWORD_MANAGER_PACKAGES` | Set of excluded package names (Config.kt:243) |
+| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `getForegroundAppPackage()` | Attempts foreground-app detection; returns `null` without usage access (`ClipboardHistoryService.kt:625`) |
+| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `isPasswordManagerApp()` | Checks if package is excluded (`ClipboardHistoryService.kt:670`) |
+| `src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt` | `addCurrentClip()` | Skips storage if excluded app detected or sensitive flag set (`ClipboardHistoryService.kt:687`) |
+| `src/main/kotlin/tribixbite/cleverkeys/ui/settings/sections/ClipboardSection.kt` | Clipboard section | UI toggles for both settings (`ClipboardSection.kt:177`, `:188`) |
 
 ## Architecture
 
@@ -87,17 +87,17 @@ Both toggles must allow media for it to be captured. Since 2026-09-08 (F-8, `68b
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `clipboard_exclude_password_managers` | Boolean | true | Skip clipboard from password managers |
-| `clipboard_respect_sensitive_flag` | Boolean | true | Honor Android 13+ IS_SENSITIVE flag |
+| `clipboard_exclude_password_managers` | Boolean | true | Best-effort skip of clips from known password managers (requires foreground detection to succeed) |
+| `clipboard_respect_sensitive_flag` | Boolean | true | Honor Android 13+ IS_SENSITIVE flag (the reliable protection) |
 | `clipboard_media_enabled` | Boolean | true | Enable media clipboard capture |
 | `clipboard_text_only` | Boolean | false | Hide media, block media capture |
 | `clipboard_max_media_size_mb` | Int | 10 | Skip media larger than this (1-50 MB) |
 
 ## Implementation Details
 
-### Supported Password Managers
+### Recognized Password Manager Packages
 
-Package names recognized (defined in `Config.kt` inside the `Defaults` object as `PASSWORD_MANAGER_PACKAGES`):
+Package names checked when foreground detection succeeds (defined in `Config.kt` inside the `Defaults` object as `PASSWORD_MANAGER_PACKAGES`, `Config.kt:243`):
 
 | App | Package Name |
 |-----|--------------|
@@ -117,9 +117,14 @@ Package names recognized (defined in `Config.kt` inside the `Defaults` object as
 | Zoho Vault | `com.zoho.vault` |
 | Sticky Password | `com.stickypassword.android` |
 
-### Foreground App Detection
+### Foreground App Detection (why the exclusion is best-effort)
 
-Primary method uses `UsageStatsManager` (Android 5.1+) with `ActivityManager` as a fallback. Both paths are wrapped in `try/catch` to silently handle the common case where `PACKAGE_USAGE_STATS` permission has not been granted (`ClipboardHistoryService.kt:480-520`):
+Primary method uses `UsageStatsManager` with `ActivityManager.getRunningTasks` as a fallback. Both paths are wrapped in `try/catch` and the method returns `null` on failure (`ClipboardHistoryService.kt:625`). In practice **both paths fail on effectively every device**:
+
+- `UsageStatsManager.queryUsageStats` returns an empty list unless the user has granted usage access, and the manifest **never declares** `PACKAGE_USAGE_STATS` — so the grant screen isn't even reachable for CleverKeys (maintainer decision D-1: the app-op stays undeclared).
+- `getRunningTasks` has returned only the caller's own tasks since API 21, so the fallback can never observe another app.
+
+A `null` result means no exclusion happens — the setting fails open. This is why the UI wording and this spec name the `IS_SENSITIVE` flag as the protection to rely on.
 
 ```kotlin
 @Suppress("DEPRECATION")
@@ -201,29 +206,36 @@ private fun addCurrentClip() {
 
 ### Settings UI
 
+`ClipboardSection.kt:175-183`:
+
 ```kotlin
+// Privacy: Exclude password managers
 SettingsSwitch(
-    title = "Exclude Password Managers",
-    description = "Don't store clipboard from Bitwarden, 1Password, LastPass, KeePass, etc.",
+    title = stringResource(R.string.clipboard_exclude_password_managers_title),
+    description = stringResource(R.string.clipboard_exclude_password_managers_desc),
     checked = clipboardExcludePasswordManagers,
     onCheckedChange = {
         clipboardExcludePasswordManagers = it
-        saveSetting("clipboard_exclude_password_managers", it)
+        saveSetting("clipboard_exclude_password_managers", clipboardExcludePasswordManagers)
     }
 )
 ```
 
+The description string is deliberately honest (reworded in all 22 locales, `870cf499`; pinned against overpromise regression by `SettingsSurfaceDriftTest`):
+
+> Best effort: only skips a copy when Android reveals that a known password manager is in the foreground, which is rarely possible without usage access (never requested). Rely on the sensitive-content setting below.
+
 ### Security Considerations
 
-- **Detection Timing**: Foreground app checked at moment clipboard changes
-- **False Positives**: Very low — package names are specific
-- **False Negatives**: Apps not in list won't be excluded (Android 13+ `IS_SENSITIVE` flag is the robust fallback)
+- **The `IS_SENSITIVE` flag is the load-bearing protection** (Android 13+): it needs no permissions, works for any password manager that sets it, and is on by default
+- **Package-list exclusion normally does nothing**: without the never-declared `PACKAGE_USAGE_STATS` grant, detection returns `null` and the clip is stored — treat any skip it produces as a bonus, not a guarantee
 - **Privacy**: Detection is purely local, no data leaves device
 - **No INTERNET permission**: All clipboard processing is on-device; media files live in app-private `filesDir`
 
 ### Limitations
 
-- Requires UsageStats permission on some devices (optional, falls back to ActivityManager)
+- Foreground detection requires the `PACKAGE_USAGE_STATS` app-op, which the manifest never declares — the user cannot grant it; the `getRunningTasks` fallback has been dead since API 21
+- Pre-Android-13 devices have no `IS_SENSITIVE` flag, so clips from password managers that don't clear the clipboard themselves ARE captured there
 - New password managers must be added to the package list manually
 - Does not analyze clipboard content — only checks source app and the `IS_SENSITIVE` `ClipData` flag
 

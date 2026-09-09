@@ -83,7 +83,7 @@ A: **Swipe SOUTHWEST on the Ctrl key** to open clipboard history:
 - Images, videos, and PDFs show thumbnails in the panel
 - Use the icon buttons to paste, move to pinned, or copy as todo
 - Re-copying text already in history moves the existing entry back to the top (no duplicate is created)
-- Password manager and 'sensitive' flagged clippings are excluded by default
+- Clips flagged 'sensitive' by password managers (Android 13+) are excluded by default; the separate per-app password-manager exclusion is best-effort only
 
 **Q: How do I paste images from clipboard?**
 

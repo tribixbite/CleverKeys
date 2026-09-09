@@ -164,7 +164,7 @@ All migrations are non-destructive. v2→v3 uses COPY semantics: pinned/todo ent
 // ClipboardHistoryService.kt
 private fun addCurrentClip() {
     // 1. Check clipboard_history_enabled
-    // 2. Check password manager exclusion (foreground app detection)
+    // 2. Check password manager exclusion (best-effort foreground app detection)
     // 3. Check Android 13+ IS_SENSITIVE flag
     // 4. For each ClipData item:
     //    - If item.text != null: addClip(text) on main thread
@@ -415,8 +415,8 @@ Clipboard data is also included in the new one-click **Full Backup** ZIP (`cleve
 Privacy controls — password-manager exclusion, the Android 13+ `IS_SENSITIVE` flag, and media gating — are documented in [Clipboard Privacy](privacy-spec.md). Summary:
 
 - Clipboard media excluded from Android Auto Backup (`backup_rules.xml`, `data_extraction_rules.xml`)
-- Password manager exclusion via foreground app detection
-- Android 13+ IS_SENSITIVE flag respected
+- Android 13+ IS_SENSITIVE flag respected — the reliable password-manager protection
+- Best-effort password-manager exclusion via foreground app detection (normally inert: usage access is never requested)
 - No INTERNET permission — all processing is local
 - Media files stored in app-private `filesDir` (not accessible to other apps)
 
