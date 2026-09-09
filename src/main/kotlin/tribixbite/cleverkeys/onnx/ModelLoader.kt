@@ -46,13 +46,41 @@ internal fun readModelBytes(stream: InputStream, sourceDescription: String): Byt
 }
 
 /**
+ * Filename shape of the optimized-model cache files that builds prior to 2026-09-09 wrote
+ * into the app cache dir via `SessionOptions.setOptimizedModelFilePath`. Nothing ever read
+ * those files back ([ModelLoader.loadModel] always hands `createSession` the original model
+ * bytes), so the write was pure wasted I/O and disk on every keyboard start. The constants
+ * survive only so [deleteStaleOptimizedModelCache] can reclaim what old builds left behind.
+ */
+internal const val ORT_CACHE_FILE_PREFIX = "onnx_optimized_"
+internal const val ORT_CACHE_FILE_SUFFIX = ".ort"
+
+/**
+ * Delete stale optimized-model (`.ort`) files that pre-2026-09-09 builds wrote into
+ * [cacheDir] and never consumed. Matches only regular files named
+ * `onnx_optimized_*.ort`; anything else in the cache dir is left untouched.
+ *
+ * Pure `java.io` (no `android.*`) so the contract is testable under `runPureTests`.
+ *
+ * @return Names of the files actually deleted (empty when the dir is missing/empty).
+ */
+internal fun deleteStaleOptimizedModelCache(cacheDir: File): List<String> =
+    (cacheDir.listFiles() ?: emptyArray())
+        .filter {
+            it.isFile &&
+                it.name.startsWith(ORT_CACHE_FILE_PREFIX) &&
+                it.name.endsWith(ORT_CACHE_FILE_SUFFIX)
+        }
+        .mapNotNull { file -> if (file.delete()) file.name else null }
+
+/**
  * Model loading and ONNX session initialization.
  *
  * Responsibilities:
  * - Load model files from assets or external URIs
  * - Create optimized ONNX sessions with hardware acceleration
  * - Configure execution providers (XNNPACK, NNAPI, CPU)
- * - Session options optimization (graph optimization, memory patterns, caching)
+ * - Session options optimization (graph optimization, memory patterns)
  * - Validation of loaded sessions
  *
  * Hardware Acceleration Fallback Chain (see [tryEnableHardwareAcceleration] for the
@@ -74,8 +102,15 @@ class ModelLoader(
 
     companion object {
         private const val TAG = "ModelLoader"
-        private const val CACHE_FILE_PREFIX = "onnx_optimized_"
-        private const val CACHE_FILE_SUFFIX = ".ort"
+    }
+
+    init {
+        // Reclaim the onnx_optimized_*.ort files that builds prior to 2026-09-09 wrote on
+        // every load and never read back (see deleteStaleOptimizedModelCache).
+        val purged = deleteStaleOptimizedModelCache(context.cacheDir)
+        if (purged.isNotEmpty()) {
+            Log.i(TAG, "Deleted stale optimized-model cache files: $purged")
+        }
     }
 
     /**
@@ -113,7 +148,7 @@ class ModelLoader(
             Log.d(TAG, "Loaded $sessionName model: ${modelData.size} bytes from $modelPath")
 
             // Create optimized session options
-            val sessionOptions = createOptimizedSessionOptions(sessionName)
+            val sessionOptions = createOptimizedSessionOptions()
 
             // Try hardware acceleration if enabled
             val executionProvider = if (enableHardwareAcceleration) {
@@ -193,13 +228,21 @@ class ModelLoader(
      * Optimizations:
      * - Graph optimization level: ALL_OPT (operator fusion, layout transforms)
      * - Memory pattern optimization for repeated inference
-     * - Optimized model caching to disk for faster subsequent loads
      * - Intra-op thread count: auto-detect optimal for device
      *
-     * @param sessionName Name for cache file generation
+     * NO optimized-model disk cache: until 2026-09-09 this also called
+     * `setOptimizedModelFilePath`, which made ORT serialize an optimized copy of the model
+     * into cacheDir on EVERY load while nothing ever read it back ([loadModel] always feeds
+     * `createSession` the original bytes) — wasted I/O and disk, not "faster subsequent
+     * loads" as the old comment claimed. A genuine read-back cache was rejected because the
+     * optimized graph bakes in whichever execution providers were attached when it was
+     * written (XNNPACK/NNAPI/CPU varies per device and per settings) and freshness cannot be
+     * keyed safely for asset (no mtime) or content-URI models. Guarded by
+     * `ModelLoaderOrtCacheTest`; the loader's `init` purges files old builds left behind.
+     *
      * @return Configured SessionOptions
      */
-    private fun createOptimizedSessionOptions(sessionName: String): OrtSession.SessionOptions {
+    private fun createOptimizedSessionOptions(): OrtSession.SessionOptions {
         val sessionOptions = OrtSession.SessionOptions()
 
         // OPTIMIZATION 1: Maximum graph optimization level
@@ -210,17 +253,6 @@ class ModelLoader(
 
         // OPTIMIZATION 3: Memory pattern optimization for repeated inference
         sessionOptions.setMemoryPatternOptimization(true)
-
-        // OPTIMIZATION 4: Cache optimized model graph to disk
-        try {
-            val cacheDir = context.cacheDir
-            val cacheFileName = "$CACHE_FILE_PREFIX${sessionName.lowercase()}$CACHE_FILE_SUFFIX"
-            val cacheFile = File(cacheDir, cacheFileName)
-            sessionOptions.setOptimizedModelFilePath(cacheFile.absolutePath)
-            Log.d(TAG, "📦 Optimized model cache: ${cacheFile.absolutePath}")
-        } catch (e: Exception) {
-            Log.w(TAG, "Could not set optimized model cache: ${e.message}")
-        }
 
         return sessionOptions
     }

@@ -851,6 +851,10 @@ tasks.register('runPureTests', JavaExec) {
     // androidTest Issue94VersionCopyComposeTest).
     'tribixbite.cleverkeys.ui.settings.VersionCopyPayloadTest',
     'tribixbite.cleverkeys.ReleasePackagingDriftTest',
+    // 2026-09-09 hygiene: ModelLoader's dead .ort optimized-model write (written on every
+    // load, read back by nothing) is gone; the loader now purges what old builds left in
+    // cacheDir. Source-scan pin + purge behaviour.
+    'tribixbite.cleverkeys.onnx.ModelLoaderOrtCacheTest',
     'tribixbite.cleverkeys.LauncherSetupFlowTest',
     // MinSdkApiUsageDriftTest DELETED (ARC-113, 2026-09-03): it guarded the
     // API-24 Map/Set idioms that crash on Android 5.0–6.0 and self-asserted
