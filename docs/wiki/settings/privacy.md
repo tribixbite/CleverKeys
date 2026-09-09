@@ -93,9 +93,9 @@ Found under the **Clipboard** section in Settings:
 | **Clipboard History Limit** | Maximum items to keep (default: 50) |
 | **Clipboard Size Limit** | Total size limit in MB |
 | **Clipboard Max Item Size** | Maximum size per text item in KB (64-1024) |
-| **Media Clipboard** | Enable/disable media capture (images, videos, PDFs) |
-| **Text-Only Mode** | Hide all media entries from clipboard panel |
-| **Max Media Size** | Maximum file size for media entries (1-50 MB) |
+| **Save Media Entries** | Enable/disable media capture (images, videos, PDFs) |
+| **Text Only** | Hide media entries and stop media capture |
+| **Max Media Size** | Skip copied media larger than this size (1-50 MB) |
 | **Exclude Password Managers** | Don't save clips from 1Password, Bitwarden, etc. |
 | **Respect Sensitive Flag** | Honor Android 13+ IS_SENSITIVE flag |
 
@@ -183,8 +183,8 @@ Use Settings > Backup & Restore to:
 | **Clipboard History** | Clipboard | On |
 | **History Limit** | Clipboard | 50 items |
 | **History Duration** | Clipboard | Never expire |
-| **Media Clipboard** | Clipboard | On |
-| **Text-Only Mode** | Clipboard | Off |
+| **Save Media Entries** | Clipboard | On |
+| **Text Only** | Clipboard | Off |
 | **Max Media Size** | Clipboard | 10 MB |
 | **Exclude Password Managers** | Clipboard | On |
 | **Respect Sensitive Flag** | Clipboard | On |

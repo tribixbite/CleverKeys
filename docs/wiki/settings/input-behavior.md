@@ -36,6 +36,16 @@ Automatically capitalize "I" and its contractions:
 |----------------|
 | I, I'm, I'll, I'd, I've |
 
+### Show Exact Typed Word
+
+Offer the letters you actually typed as an extra suggestion when they aren't already a
+dictionary word or a prediction. Tapping it adds the word to your dictionary. **Default: On.**
+
+| Setting | Result |
+|---------|--------|
+| **Enabled** | Typing an unknown word (2+ letters) shows it as a tap-to-add suggestion |
+| **Disabled** | Only dictionary predictions appear |
+
 ### Next-Word Prediction
 
 Suggest the next word from your learned phrases before you type a letter. **Default: Off.**

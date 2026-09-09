@@ -83,6 +83,7 @@ Control transparency levels:
 | **Number Row** | Show dedicated number row above letters |
 | **Show Numpad** | Show numeric keypad option |
 | **Numpad Layout** | Order of numpad keys (123 or 789 first) |
+| **Scale Numpad Height** | Stretch PIN and numpad rows to fill the full keyboard height (default: on) |
 
 ## Tips and Tricks
 

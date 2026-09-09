@@ -75,12 +75,13 @@ addClip(text)          Dispatchers.IO         |
 
 ### Media Privacy Gating
 
-Media capture is gated by two independent settings:
+Media capture is gated by two independent settings plus a size cap:
 
 - `clipboard_media_enabled` (default: true) — master toggle for media capture
 - `clipboard_text_only` (default: false) — hides media from display AND blocks capture
+- `clipboard_max_media_size_mb` (default: 10, range 1-50) — larger files are skipped at capture (`ClipboardHistoryService.kt:774`); the shared range constant is `SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB` (`Config.kt:456`), consumed by the slider, `SettingsValidation`, and the `Config` read site
 
-Both must allow media for it to be captured. Media files are stored in app-private `filesDir/clipboard_media/` and excluded from Android Auto Backup.
+Both toggles must allow media for it to be captured. Since 2026-09-08 (F-8, `68bafddc`) all three have controls in the Clipboard settings section — the media switch and MB slider are disabled-not-hidden while Text Only is on, which wins at the capture site. Media files are stored in app-private `filesDir/clipboard_media/` and excluded from Android Auto Backup.
 
 ## Configuration
 
@@ -90,6 +91,7 @@ Both must allow media for it to be captured. Media files are stored in app-priva
 | `clipboard_respect_sensitive_flag` | Boolean | true | Honor Android 13+ IS_SENSITIVE flag |
 | `clipboard_media_enabled` | Boolean | true | Enable media clipboard capture |
 | `clipboard_text_only` | Boolean | false | Hide media, block media capture |
+| `clipboard_max_media_size_mb` | Int | 10 | Skip media larger than this (1-50 MB) |
 
 ## Implementation Details
 

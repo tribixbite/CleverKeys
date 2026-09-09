@@ -280,6 +280,7 @@ hosts the context-learning controls and the Learning & Data manager
 
 | Setting | Key | Default | Values |
 |---------|-----|---------|--------|
+| **Show Exact Typed Word** | `show_exact_typed_word` | true | bool — appends the exact typed string (2+ chars, not already a prediction/dictionary/user word) as a tap-to-add `ExactAdd` suggestion (`SuggestionHandler.kt:2345`; switch added to the Word Prediction block 2026-09-08, F-8/#42) |
 | **Next-Word Prediction** | `next_word_prediction_enabled` | false | bool |
 | **Context Source** | `context_source` | "both" | both / learned_only / static_only |
 | **Personalization Strength** | `personalization_weight` | 1.0 | 0.0–2.0 |

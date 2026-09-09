@@ -150,14 +150,14 @@ CleverKeys automatically captures images, videos, PDFs, and other files you copy
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| **Media Clipboard** | Enable/disable media capture | On |
-| **Text-Only Mode** | Hide all media, show only text entries | Off |
-| **Max Media Size** | Maximum file size for media entries (1-50 MB) | 10 MB |
+| **Save Media Entries** | Enable/disable media capture | On |
+| **Text Only** | Hide all media, show only text entries | Off |
+| **Max Media Size** | Skip copied media larger than this size (1-50 MB) | 10 MB |
 
 To access: **Settings > Clipboard section** (expand it) or **Settings > Activities > Clipboard Settings**.
 
 > [!TIP]
-> If you only want text in your clipboard and find media entries distracting, enable **Text-Only Mode**. Media will still be captured (unless you also disable Media Clipboard) but won't appear in the panel.
+> If you only want text in your clipboard and find media entries distracting, enable **Text Only**. It hides existing media entries from the panel and stops new media from being captured.
 
 ## Tab System
 
@@ -256,9 +256,9 @@ CleverKeys automatically detects password fields:
 | **History Size** | Clipboard section | Maximum items to keep |
 | **History Duration** | Clipboard section | Auto-expiry (default: never) |
 | **Max Item Size** | Clipboard section | Per-item text size limit (64-1024 KB) |
-| **Media Clipboard** | Clipboard section | Enable/disable media capture |
-| **Text-Only Mode** | Clipboard section | Hide media, show only text |
-| **Max Media Size** | Clipboard section | Maximum media file size (1-50 MB) |
+| **Save Media Entries** | Clipboard section | Enable/disable media capture |
+| **Text Only** | Clipboard section | Hide media, show only text |
+| **Max Media Size** | Clipboard section | Skip media larger than this (1-50 MB) |
 | **Pinned Tab** | Clipboard section | Show/hide the Pinned tab |
 | **Todo Tab** | Clipboard section | Show/hide the Todos tab |
 | **Exclude Password Managers** | Clipboard section | Don't save from password apps |
@@ -288,7 +288,7 @@ A: No, deleted items cannot be recovered. Pin important items.
 
 ### Q: Why don't I see images in my clipboard?
 
-A: Check that **Media Clipboard** is enabled and **Text-Only Mode** is off in **Settings > Clipboard section**. The source app must also provide a content URI when copying (most apps do).
+A: Check that **Save Media Entries** is enabled and **Text Only** is off in **Settings > Clipboard section**, and that the file is under your **Max Media Size** limit. The source app must also provide a content URI when copying (most apps do).
 
 ### Q: Can I paste an image from clipboard into a messaging app?
 

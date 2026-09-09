@@ -245,6 +245,7 @@ class PredictionBarView : ViewGroup {
 | **Prediction Height** | `prediction_bar_height` | NORMAL | Hidden/Compact/Normal/Expanded |
 | **Prediction Count** | `prediction_count` | 5 | 3-7 |
 | **Secondary Label Size** | `secondary_label_size_scale` | 1.0 (100% = unchanged) | 0.5–2.0 (UI slider 50%–200%) |
+| **Scale Numpad Height** | `scale_numpad_height` | true | bool — for numeric layouts (`bottom_row=false`) the row-height divisor stretches PIN/numpad rows to the full keyboard height (`Config.kt:512`, consumer `Theme.kt:294`; switch added to the Appearance section 2026-09-08, F-8) |
 
 ### Secondary Label Size (#133, v1.5.0)
 
