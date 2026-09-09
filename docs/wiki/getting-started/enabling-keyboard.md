@@ -60,6 +60,15 @@ To verify CleverKeys is working:
 2. Tap the text field
 3. You should see the CleverKeys keyboard appear
 
+## Default Keyboard Reminder
+
+If CleverKeys is enabled but not set as the default keyboard, it shows a reminder toast
+pointing at the system setting — **at most once per device boot**. After a reboot the
+reminder can appear once again.
+
+To stop the reminder permanently, turn off **Settings > Advanced > Default keyboard
+reminder**. Turn it back on any time to be reminded again.
+
 ## Troubleshooting
 
 ### Keyboard doesn't appear
