@@ -579,7 +579,7 @@
     <string name="input_personalization_max_words_title">学习词数上限</string>
     <string name="input_personalization_max_words_desc">已学习词汇量的上限；价值最低的词会被优先移除（默认 5000）。</string>
     <string name="privacy_on_device_learning_title">从我的输入中学习</string>
-    <string name="privacy_on_device_learning_desc">根据你输入的内容，在设备本地构建私密的短语和用词模型。关闭后将停止一切对输入行为的自动记录——关闭期间不会存储任何新数据。你主动创建的数据不在此列：你运行的滑动校准会话、预测性能统计，以及从备份恢复的学习数据。</string>
+    <string name="privacy_on_device_learning_desc">根据你输入的内容，在设备本地构建私密的短语和用词模型。关闭后将停止一切对输入行为的自动记录——关闭期间不会存储任何新数据。你主动创建的数据不在此列：预测性能统计，以及从备份恢复的学习数据。</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">已添加，但太长而无法滑动输入</string>
     <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">“%1$s”已添加，可用于点按输入；但 CTC 需要 %2$d 步，最多只能解码 %3$d 步。</item></plurals>

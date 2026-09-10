@@ -592,7 +592,7 @@
     <string name="input_personalization_max_words_title">Maksimum kata yang dipelajari</string>
     <string name="input_personalization_max_words_desc">Batas kosakata yang dipelajari; kata yang paling tidak berharga dihapus lebih dulu (bawaan 5000)</string>
     <string name="privacy_on_device_learning_title">Belajar dari ketikan saya</string>
-    <string name="privacy_on_device_learning_desc">Membangun model frasa dan penggunaan kata yang privat di perangkat dari apa yang Anda ketik. Matikan untuk menghentikan semua perekaman otomatis perilaku mengetik — selama mati, tidak ada yang baru disimpan. Data yang Anda buat secara eksplisit terpisah: sesi kalibrasi gesek yang Anda jalankan, statistik performa prediksi, dan data pembelajaran yang dipulihkan dari cadangan.</string>
+    <string name="privacy_on_device_learning_desc">Membangun model frasa dan penggunaan kata yang privat di perangkat dari apa yang Anda ketik. Matikan untuk menghentikan semua perekaman otomatis perilaku mengetik — selama mati, tidak ada yang baru disimpan. Data yang Anda buat secara eksplisit terpisah: statistik performa prediksi dan data pembelajaran yang dipulihkan dari cadangan.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Ditambahkan, tetapi terlalu panjang untuk digeser</string>
     <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">“%1$s” ditambahkan untuk pengetikan ketuk, tetapi CTC memerlukan %2$d langkah dan hanya dapat mendekode %3$d langkah.</item></plurals>

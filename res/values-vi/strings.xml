@@ -609,7 +609,7 @@
     <string name="input_personalization_max_words_title">Số từ đã học tối đa</string>
     <string name="input_personalization_max_words_desc">Giới hạn của vốn từ đã học; những từ ít giá trị nhất bị loại bỏ trước (mặc định 5000)</string>
     <string name="privacy_on_device_learning_title">Học từ cách tôi gõ</string>
-    <string name="privacy_on_device_learning_desc">Xây dựng ngay trên thiết bị các mô hình riêng tư về cụm từ và cách dùng từ dựa trên những gì bạn gõ. Tắt để dừng mọi ghi nhận tự động về hành vi gõ phím — khi tắt, không có gì mới được lưu. Dữ liệu bạn tạo ra một cách rõ ràng thì tách biệt: các phiên hiệu chỉnh vuốt bạn chạy, thống kê hiệu năng dự đoán và dữ liệu đã học được khôi phục từ bản sao lưu.</string>
+    <string name="privacy_on_device_learning_desc">Xây dựng ngay trên thiết bị các mô hình riêng tư về cụm từ và cách dùng từ dựa trên những gì bạn gõ. Tắt để dừng mọi ghi nhận tự động về hành vi gõ phím — khi tắt, không có gì mới được lưu. Dữ liệu bạn tạo ra một cách rõ ràng thì tách biệt: thống kê hiệu năng dự đoán và dữ liệu đã học được khôi phục từ bản sao lưu.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Đã thêm nhưng quá dài để vuốt</string>
     <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">“%1$s” đã được thêm cho kiểu gõ chạm, nhưng CTC cần %2$d bước và chỉ giải mã được %3$d bước.</item></plurals>

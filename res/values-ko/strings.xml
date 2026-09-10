@@ -581,7 +581,7 @@
     <string name="input_personalization_max_words_title">최대 학습 단어 수</string>
     <string name="input_personalization_max_words_desc">학습된 어휘의 상한입니다. 가치가 가장 낮은 단어부터 삭제됩니다(기본값 5000)</string>
     <string name="privacy_on_device_learning_title">내 입력에서 학습</string>
-    <string name="privacy_on_device_learning_desc">입력한 내용을 바탕으로 표현과 단어 사용에 대한 비공개 모델을 기기 내에서 만듭니다. 끄면 입력 습관의 자동 기록이 모두 중지되며, 꺼져 있는 동안에는 새로운 데이터가 저장되지 않습니다. 직접 만든 데이터는 별개입니다: 사용자가 실행한 스와이프 보정 세션, 예측 성능 통계, 백업에서 복원한 학습 데이터.</string>
+    <string name="privacy_on_device_learning_desc">입력한 내용을 바탕으로 표현과 단어 사용에 대한 비공개 모델을 기기 내에서 만듭니다. 끄면 입력 습관의 자동 기록이 모두 중지되며, 꺼져 있는 동안에는 새로운 데이터가 저장되지 않습니다. 직접 만든 데이터는 별개입니다: 예측 성능 통계, 백업에서 복원한 학습 데이터.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">추가되었지만 스와이프하기에 너무 깁니다</string>
     <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">“%1$s”이(가) 탭 입력용으로 추가되었지만 CTC에는 %2$d단계가 필요하며 최대 %3$d단계만 디코딩할 수 있습니다.</item></plurals>

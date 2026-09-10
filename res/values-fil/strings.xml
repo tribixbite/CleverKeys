@@ -590,7 +590,7 @@
     <string name="input_personalization_max_words_title">Maximum na natutunang salita</string>
     <string name="input_personalization_max_words_desc">Hangganan ng natutunang bokabularyo; ang mga salitang pinakamababa ang halaga ang unang tinatanggal (default na 5000)</string>
     <string name="privacy_on_device_learning_title">Matuto mula sa aking pag-type</string>
-    <string name="privacy_on_device_learning_desc">Bumubuo sa mismong device ng pribadong modelo ng mga parirala at paggamit ng salita mula sa tino-type mo. I-off para itigil ang lahat ng awtomatikong pagtatala ng gawi sa pag-type — habang naka-off, walang bagong iniimbak. Hiwalay ang datos na sadya mong ginagawa: ang mga session ng swipe calibration na pinapatakbo mo, ang istatistika ng performance ng hula, at ang natutunang datos na ibinalik mula sa backup.</string>
+    <string name="privacy_on_device_learning_desc">Bumubuo sa mismong device ng pribadong modelo ng mga parirala at paggamit ng salita mula sa tino-type mo. I-off para itigil ang lahat ng awtomatikong pagtatala ng gawi sa pag-type — habang naka-off, walang bagong iniimbak. Hiwalay ang datos na sadya mong ginagawa: ang istatistika ng performance ng hula at ang natutunang datos na ibinalik mula sa backup.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Naidagdag, ngunit masyadong mahaba para i-swipe</string>
     <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">Naidagdag ang “%1$s” para sa pag-tap, ngunit kailangan ng CTC ng %2$d hakbang at %3$d hakbang lang ang kaya nito.</item><item quantity="other">Naidagdag ang “%1$s” para sa pag-tap, ngunit kailangan ng CTC ng %2$d hakbang at %3$d hakbang lang ang kaya nito.</item></plurals>

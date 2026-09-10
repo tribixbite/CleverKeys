@@ -580,7 +580,7 @@
     <string name="input_personalization_max_words_title">学習単語の上限</string>
     <string name="input_personalization_max_words_desc">学習した語彙の上限。価値の低い単語から先に削除されます（既定値 5000）</string>
     <string name="privacy_on_device_learning_title">入力内容から学習する</string>
-    <string name="privacy_on_device_learning_desc">入力した内容から、フレーズと単語使用のプライベートなモデルを端末内で構築します。オフにすると入力動作の自動記録がすべて停止し、オフの間は新しいデータは保存されません。明示的に作成したデータは別扱いです: 自分で実行したスワイプ較正セッション、予測性能の統計、バックアップから復元した学習データ。</string>
+    <string name="privacy_on_device_learning_desc">入力した内容から、フレーズと単語使用のプライベートなモデルを端末内で構築します。オフにすると入力動作の自動記録がすべて停止し、オフの間は新しいデータは保存されません。明示的に作成したデータは別扱いです: 予測性能の統計、バックアップから復元した学習データ。</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">追加済みですが、スワイプには長すぎます</string>
     <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">「%1$s」はタップ入力用に追加されましたが、CTC には %2$d ステップ必要で、上限は %3$d ステップです。</item></plurals>

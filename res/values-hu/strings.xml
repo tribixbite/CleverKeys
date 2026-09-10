@@ -586,7 +586,7 @@
     <string name="input_personalization_max_words_title">Megtanult szavak maximuma</string>
     <string name="input_personalization_max_words_desc">A megtanult szókincs felső korlátja; a legkevésbé értékes szavak törlődnek először (alapértelmezés 5000)</string>
     <string name="privacy_on_device_learning_title">Tanulás a gépelésemből</string>
-    <string name="privacy_on_device_learning_desc">Privát kifejezés- és szóhasználati modellek építése az eszközön a begépelt szövegből. Kikapcsolva minden automatikus gépelési rögzítés leáll — amíg ki van kapcsolva, semmi új nem tárolódik. A kifejezetten Ön által létrehozott adatok külön kezelendők: az elindított csúsztatás-kalibrálási munkamenetek, az előrejelzési teljesítmény statisztikái és a biztonsági mentésből visszaállított tanult adatok.</string>
+    <string name="privacy_on_device_learning_desc">Privát kifejezés- és szóhasználati modellek építése az eszközön a begépelt szövegből. Kikapcsolva minden automatikus gépelési rögzítés leáll — amíg ki van kapcsolva, semmi új nem tárolódik. A kifejezetten Ön által létrehozott adatok külön kezelendők: az előrejelzési teljesítmény statisztikái és a biztonsági mentésből visszaállított tanult adatok.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Hozzáadva, de csúsztatáshoz túl hosszú</string>
     <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">A(z) „%1$s” hozzáadva a koppintásos gépeléshez, de a CTC %2$d lépést igényel, és csak %3$d lépést tud dekódolni.</item><item quantity="other">A(z) „%1$s” hozzáadva a koppintásos gépeléshez, de a CTC %2$d lépést igényel, és csak %3$d lépést tud dekódolni.</item></plurals>

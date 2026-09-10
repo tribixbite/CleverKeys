@@ -601,7 +601,7 @@
     <string name="input_personalization_max_words_title">Maximal gelernte Wörter</string>
     <string name="input_personalization_max_words_desc">Obergrenze für den gelernten Wortschatz; die am wenigsten wertvollen Wörter werden zuerst entfernt (Standard 5000)</string>
     <string name="privacy_on_device_learning_title">Aus meinen Eingaben lernen</string>
-    <string name="privacy_on_device_learning_desc">Private Modelle für Wendungen und Wortnutzung direkt auf dem Gerät aus den eigenen Eingaben aufbauen. Ausschalten stoppt jede automatische Aufzeichnung des Tippverhaltens — im ausgeschalteten Zustand wird nichts Neues gespeichert. Ausdrücklich selbst erzeugte Daten sind davon getrennt: selbst gestartete Wisch-Kalibrierungen, Statistiken zur Vorhersageleistung und aus einer Sicherung wiederhergestellte Lerndaten.</string>
+    <string name="privacy_on_device_learning_desc">Private Modelle für Wendungen und Wortnutzung direkt auf dem Gerät aus den eigenen Eingaben aufbauen. Ausschalten stoppt jede automatische Aufzeichnung des Tippverhaltens — im ausgeschalteten Zustand wird nichts Neues gespeichert. Ausdrücklich selbst erzeugte Daten sind davon getrennt: Statistiken zur Vorhersageleistung und aus einer Sicherung wiederhergestellte Lerndaten.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Hinzugefügt — aber zu lang zum Wischen</string>
     <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">"%1$s" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritt dekodieren.</item><item quantity="other">"%1$s" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritte dekodieren.</item></plurals>

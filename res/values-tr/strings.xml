@@ -589,7 +589,7 @@
     <string name="input_personalization_max_words_title">Öğrenilen Kelime Üst Sınırı</string>
     <string name="input_personalization_max_words_desc">Öğrenilen kelime dağarcığının üst sınırı; en az değerli kelimeler önce silinir (varsayılan 5000)</string>
     <string name="privacy_on_device_learning_title">Yazdıklarımdan öğren</string>
-    <string name="privacy_on_device_learning_desc">Yazdıklarınızdan cihazda özel ifade ve kelime kullanım modelleri oluşturur. Kapatmak, yazma davranışının tüm otomatik kaydını durdurur — kapalıyken yeni hiçbir şey saklanmaz. Açıkça oluşturduğunuz veriler ayrıdır: başlattığınız kaydırma kalibrasyon oturumları, tahmin performansı istatistikleri ve bir yedekten geri yüklenen öğrenilmiş veriler.</string>
+    <string name="privacy_on_device_learning_desc">Yazdıklarınızdan cihazda özel ifade ve kelime kullanım modelleri oluşturur. Kapatmak, yazma davranışının tüm otomatik kaydını durdurur — kapalıyken yeni hiçbir şey saklanmaz. Açıkça oluşturduğunuz veriler ayrıdır: tahmin performansı istatistikleri ve bir yedekten geri yüklenen öğrenilmiş veriler.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Eklendi, ancak kaydırma için çok uzun</string>
     <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">“%1$s” dokunarak yazma için eklendi, ancak CTC %2$d adım gerektiriyor ve yalnızca %3$d adımı çözebiliyor.</item><item quantity="other">“%1$s” dokunarak yazma için eklendi, ancak CTC %2$d adım gerektiriyor ve yalnızca %3$d adımı çözebiliyor.</item></plurals>
