@@ -503,6 +503,53 @@ class CtcImportedPackInstrumentedTest {
         }
     }
 
+    /** Measures retained Java memory separately from native/GPU PSS using shipped dictionaries.
+     * One orchestrated method keeps every stage in the same process; decoding uses synthetic
+     * traces and never imports personal data from the maintainer's phone.
+     */
+    @Test
+    fun englishItalianRetainedHeapByStage() {
+        val runtime = Runtime.getRuntime()
+        fun measure(stage: String): Long {
+            val pss = settledPssKb()
+            val used = runtime.totalMemory() - runtime.freeMemory()
+            Log.i("CtcHeapStages", "$stage javaBytes=$used pssKb=$pss maxBytes=${runtime.maxMemory()}")
+            return used
+        }
+        measure("baseline")
+        val predictor = tribixbite.cleverkeys.WordPredictor()
+        predictor.setContext(context)
+        predictor.setConfig(tribixbite.cleverkeys.Config.globalConfig())
+        measure("predictorContext")
+        predictor.loadDictionary(context, "en")
+        measure("primaryEnglish")
+        assertTrue("Italian dictionary must load", predictor.loadSecondaryDictionary("it"))
+        measure("secondaryItalian")
+        val adapter = CtcEngineAdapter(context)
+        try {
+            assertNotNull(adapter.trieFor("en"))
+            measure("englishTrie")
+            assertNotNull(adapter.trieFor("it"))
+            measure("italianTrie")
+            val layout = loadLayout("latn_qwerty_us")
+            decodeBlocking(adapter, layout, "keyboard", "en", "it")
+            val warm = measure("firstDecode")
+            repeat(100) { index ->
+                decodeBlocking(adapter, layout, "keyboard", "en", "it")
+                if ((index + 1) % 25 == 0) measure("decode${index + 1}")
+            }
+            val final = measure("after100")
+            assertTrue("100 warm decodes retained more than 16 MiB: ${final - warm}",
+                final - warm < 16L * 1024L * 1024L)
+            // Keep the predictor reachable through the entire measurement sequence.
+            assertTrue(predictor.loadSecondaryDictionary("none"))
+            measure("secondaryUnloaded")
+        } finally {
+            adapter.shutdown()
+        }
+        measure("adapterShutdown")
+    }
+
     // ── ARC-058: multi-script model + trie rotation memory ───────────────────────────
 
     @Test

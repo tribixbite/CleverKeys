@@ -27,8 +27,26 @@ what was done; this file is only what is left. Anything below is open.
   `am dumpheap` is denied: process not debuggable; the failed request left an
   empty `/data/local/tmp/cleverkeys-20260910.hprof`.
 - Diagnostic-build installation/restart approval was requested and remains pending.
-  ADB reconnected at `172.16.10.2:36807`. No code or device settings changed;
+  ADB reconnected at `172.16.10.2:36807`. No production code or device settings changed;
   preserve the current process until that decision.
+- Confirmed flag wiring: `build-on-termux.sh` exports `LOCAL_BUILD=true`;
+  `build.gradle` enables `ENABLE_VERBOSE_LOGGING` for those releases and all debug builds.
+  `Logs` retains only a LogPrinter; DebugLoggingManager writes through a BufferedWriter.
+  Logging is enabled, but retained-heap causation has NOT been established.
+- TODO: run `CtcImportedPackInstrumentedTest#englishItalianRetainedHeapByStage` via ew-cli.
+  Added a single-process staged Java/PSS measurement for English + Italian predictor,
+  CTC tries, and 100 synthetic decodes, with a 16 MiB warm-decode retained-growth gate.
+  `scripts/gradle-guard.sh assembleDebug assembleDebugAndroidTest` passed (56s), including
+  Kotlin compilation; `git diff --check` passed. Runtime results are still pending.
+  Fresh APKs: `build/outputs/apk/debug/CleverKeys-v2.0.0-x86_64.apk` and
+  `build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk`.
+  Automatic approval review rejected the ew-cli upload despite the user's request to use
+  ew-cli: it requires explicit authorization to export these APKs to emulator.wtf.
+  Asked for that approval; no APK upload happened. Intended output: `build/ew-memory-stages`.
+- Additional code lead, NOT a diagnosis: MainDictionarySource has a process-static,
+  unbounded per-language browser cache of DictionaryWord lists and prefix indexes.
+  CTC model/trie caches are bounded at two. Measure browser-cache contributions if the
+  predictor + decode test cannot reproduce the phone's 204 MiB live Java heap.
 
 
 **The executable backlog is CLEARED.** Every ARC item that did not require maintainer input is
