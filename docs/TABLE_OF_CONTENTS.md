@@ -106,6 +106,7 @@ Only in-force audit records live here; everything superseded is under `docs/hist
 | `2026-08-23-v1.5-delta-remediation.md` | Finding-by-finding fixes, validation, and remaining release evidence | 🚧 Release evidence pending |
 | `2026-08-25-remediation-verification.md` | Verification of the remediation wave; residual findings CK-150-019..036 | 🚧 Residuals open |
 | `2026-08-28-archive-verification.md` | Pre-archive verification of the July–August audit corpus; leaked-item ledger ARC-001..050 | 🚧 ARC items open |
+| `2026-09-10-memory-oom-root-cause.md` | App switching, IME recreation, and heap exhaustion OOM root cause audit | ✅ Complete |
 
 ### `/docs/history/` History
 | File | Purpose | Status |

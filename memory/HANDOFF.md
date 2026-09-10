@@ -12,6 +12,7 @@ what was done; this file is only what is left. Anything below is open.
 
 ### 2026-09-10 Java-heap OOM: retention cause reproduced and mitigated
 
+- **Full audit & root-cause report:** `docs/audit/2026-09-10-memory-oom-root-cause.md`. Pure-Python HPROF analyzer: `tools/hprof_analyzer.py`.
 - **Proven emulator root:** native global → WindowOnBackInvokedDispatcher callback wrapper →
   CallbackRef.mStrongRef → InputMethodService callback → destroyed CleverKeysService.
   Two retired services retained **82,002,810 bytes** through that root. They still owned
