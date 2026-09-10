@@ -571,6 +571,26 @@ class CtcImportedPackInstrumentedTest {
                 }
                 val cycled = measure("after20Shows")
                 assertTrue("show/hide cycles retained more than 16 MiB", cycled - baseline < 16L * 1024 * 1024)
+                // Switching IMEs destroys the service, unlike hiding its input view.
+                // Keep only weak references so the diagnostic cannot itself retain old engines.
+                assertTrue("test requires a distinct original IME", originalIme != component)
+                val retired = mutableListOf<java.lang.ref.WeakReference<tribixbite.cleverkeys.CleverKeysService>>()
+                repeat(5) { index ->
+                    instrumentation.runOnMainSync {
+                        retired.add(java.lang.ref.WeakReference(requireNotNull(
+                            tribixbite.cleverkeys.CleverKeysService.getInstance())))
+                    }
+                    shell("ime set $originalIme")
+                    val deadline = android.os.SystemClock.uptimeMillis() + 10_000L
+                    while (tribixbite.cleverkeys.CleverKeysService.getInstance() != null &&
+                        android.os.SystemClock.uptimeMillis() < deadline) Thread.sleep(100L)
+                    assertNull("old service must be destroyed", tribixbite.cleverkeys.CleverKeysService.getInstance())
+                    shell("ime set $component")
+                    showKeyboard()
+                    Thread.sleep(3_000L)
+                    measure("serviceReplacement${index + 1}")
+                    Log.i("CtcHeapLifecycle", "retiredAlive=${retired.count { it.get() != null }} total=${retired.size}")
+                }
                 fun keyboardIn(view: android.view.View): tribixbite.cleverkeys.Keyboard2View? {
                     if (view is tribixbite.cleverkeys.Keyboard2View) return view
                     if (view is android.view.ViewGroup) {

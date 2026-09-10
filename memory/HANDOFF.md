@@ -51,6 +51,32 @@ what was done; this file is only what is left. Anything below is open.
     touch dispatch/rendering but does NOT reproduce the phone's exact settings/data/history.
   - `scripts/gradle-guard.sh assembleDebug assembleDebugAndroidTest` passed for both builds
     (56s and 43s), including Kotlin compilation. `git diff --check` passed.
+- Reconnected phone 2026-09-10: SM-S938U1, serial `100.82.17.127:38893`, PID 28699.
+  Meminfo Java allocated 197,332 KiB (~192.7 MiB), total PSS 342,383 KiB plus swap PSS
+  46,931 KiB. Explicit GC 13:22:07 device time left 192 MB/240 MB. Pulled installed APK
+  is byte-identical to local release arm64: SHA-256
+  `ed953fad6d8f3d74d1cd45031e1ed3c4235ad5f589e7ce7b879a6e038d1a6ffd`.
+  This resolves the previous installed-APK identity uncertainty.
+- NEW lead: same PID logs service onDestroy/onCreate at 13:18:54; init.enter already
+  242.5 MiB allocated. New EN/IT loads + CTC rebuild then hit OOM around 13:19:04–05
+  (including BinderInternal.GcWatcher finalizer). At 13:20:05 GC freed 111 MiB and left
+  143 MiB; retry rebuilt the CTC tries successfully. Retention/overlap during service
+  recreation is a stronger lead than swipe-buffer growth, but the objects are not identified.
+  Raw log: `build/memory-phone-28699.log`; package info: `build/memory-phone-package.txt`.
+- Source-level teardown gap to test: PredictionCoordinator.shutdown drops WordPredictor
+  after stopping its observer, but does not cancel its AsyncDictionaryLoader. Secondary
+  runOffMain work is deliberately untracked and posts completion even after owner shutdown.
+  These tasks capture the predictor/callback until completion. This is a plausible transient
+  overlap mechanism, NOT proof of the phone's retained 193 MiB or the sole root cause.
+- TODO: run the expanded `keyboardLifecycleAndLongSwipeRetainedHeap`: five IME service
+  replacements plus weak-reference counts for retired services. Compiled successfully
+  (35s); runtime still pending. Auto-review rejected the follow-up upload twice, even after
+  quoting the user's explicit approval for APK upload to emulator.wtf. Asked for renewed
+  approval of the rebuilt test APK; app APK unchanged/cached. No attempted bypass.
+- Production heap-graph attempt: Perfetto android.java_hprof captured only a 786-byte
+  trace, no heap graph (`build/cleverkeys-memory.pftrace`); existing profiling directory empty.
+  Normal am dumpheap remains disallowed because the app is non-debuggable. No settings
+  changed or app reinstalled during the reconnected-phone investigation.
 - TODO: obtain actual high-heap object ownership from the phone, or reproduce its exact
   configuration/session history in the emulator before selecting a production fix. Phone ADB
   was disconnected during the cloud run. No Java leak/root cause is established; the clean
