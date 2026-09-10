@@ -57,8 +57,9 @@ languages, the neural engine deleted, and the 2026-08-20 remediation wave landed
 > Greek (`el`) is now the second routed script language:
 >
 > - `CtcScriptSupport["el"]` is `ROUTED` with the 25-slot codepoint-sorted alphabet,
->   `models/el_synth_v3_ch80_fp16w.onnx` (589,406 B,
->   SHA-256 `7083794c501566f411b1f81495ba1f7f3df273c3eb58f6ee635caf168a4f8c3d`) and
+>   `el_synth_v3_ch80_fp16w.onnx` (589,406 B,
+>   SHA-256 `7083794c501566f411b1f81495ba1f7f3df273c3eb58f6ee635caf168a4f8c3d` — shipped as
+>   `langpack-el.zip!model.onnx` since 2026-09-10, `models/…` before that) and
 >   byte-identical JVM/device fixtures
 >   `el_synth_v3_ch80_fp16w_golden.json` (SHA-256
 >   `d08d5501961e971db2ca120f6ee868b7b67ed37e34b6412dddbc7f7116de5753`).
@@ -80,7 +81,8 @@ languages, the neural engine deleted, and the 2026-08-20 remediation wave landed
 >
 > - `CtcScriptSupport` rows for **uk, bg, mk, he** flipped to `ROUTED`, unblocked by ARC-056's
 >   lexicons (2026-09-01, `538a1633`/`86156ea3`). Per language: the generation-4
->   `<code>_synth_v3_ch80_fp16w.onnx` in `assets/models/`, its golden fixture byte-identical in
+>   `<code>_synth_v3_ch80_fp16w.onnx` as its langpack's `model.onnx` (pinned by sha256 in
+>   `CtcScriptSupport`; it was `assets/models/` until 2026-09-10), its golden fixture byte-identical in
 >   both test trees, and a `CKDT_LANGPACK` row in `SUPPORTED` (now 13 static languages). All
 >   eight sha256s verified against §4.2 on copy. The emit-budget sweep now derives its script
 >   list from `CtcScriptSupport.SCRIPTS`, so all six script langpacks are swept (`e99bccc1`).
@@ -631,10 +633,12 @@ published before 2026-08-11 is at that footing.
 
 **Trie / dictionary.** Russian is **not** a bundled asset. `src/main/assets/dictionaries/`
 ships `en_enhanced.json` plus `en/de/es/fr/it/pt/sv_enhanced.bin`, all Latin. Russian exists
-only as an **importable langpack**: `scripts/dictionaries/langpack-ru.zip` (533,916 B),
-`manifest.json` = `{"code":"ru","name":"Russian","version":2,"wordCount":50000,"hasPrefixBoost":false}`,
+only as an **importable langpack**: `scripts/dictionaries/langpack-ru.zip` (1,057,020 B since
+the 2026-09-10 model rebuild; 533,916 B before it),
+`manifest.json` = `{"code":"ru","name":"Russian","version":2,"wordCount":50000,"hasPrefixBoost":false,"model":{"file":"model.onnx","sha256":"8fffa75c…"}}`,
 `dictionary.bin` = 2,088,865 B, magic `CKDT` v2, lang `ru` — the same container as the bundled
-`*_enhanced.bin`. `eval_cyrillic.build_trie` reads exactly this zip, so the campaign's ru
+`*_enhanced.bin`, and byte-identical across that rebuild (the dictionaries were not
+regenerated; only `manifest.json` changed and `model.onnx` was added). `eval_cyrillic.build_trie` reads exactly this zip, so the campaign's ru
 numbers are on the app's own lexicon, not a research one. Projection policy for both targets
 and lexicon: lowercase, strip `-` and `'`, ё→е, ъ→ь, and **no Unicode NFD** — NFD decomposes
 й into и + breve and silently destroys the alphabet.
@@ -705,7 +709,11 @@ Supersedes `PHASE_O.md` §3.2/§3.5 (generation 1) and this section's own Phase-
 ru `da012ded` (2026-08-29), el `5fb58037` (2026-09-01), uk/bg/mk/he `1b17c318` (2026-09-03);
 hashes in §4.2, derivation in `PHASE_Q.md` §7.7.
 
-| script | layout XML (`src/main/layouts/`) | K | alphabet / slot order (codepoint-sorted — **this IS the app's array**) | ship bytes | lexicon | preset |
+**Delivery (2026-09-10):** the `ship bytes` column names the ARTIFACT; all six ship as the
+`model.onnx` member of the `lexicon` column's pack, hash-pinned in `CtcScriptSupport`.
+They were `src/main/assets/models/` until 2026-09-10.
+
+| script | layout XML (`src/main/layouts/`) | K | alphabet / slot order (codepoint-sorted — **this IS the app's array**) | ship bytes | lexicon (also carries the model) | preset |
 |---|---|---|---|---|---|---|
 | **ru** | `cyrl_jcuken_ru.xml` | 31 | `абвгдежзийклмнопрстуфхцчшщыьэюя` | `ru_synth_v3_ch80_fp16w.onnx` | `langpack-ru.zip` — exists, importable today | `tunedRuCkdt` |
 | **el** | `grek_qwerty.xml` (now correctly `script="greek"`) | 25 | `αβγδεζηθικλμνξοπρςστυφχψω` | `el_synth_v3_ch80_fp16w.onnx` | `langpack-el.zip` — exists, importable today (full el projection incl. final-sigma shipped with the wiring) | same numbers as `tunedRuCkdt` |
@@ -784,15 +792,39 @@ wiring change. Until that evidence exists, the decision is closed, not drifting.
 
 ## 5. The model inventory — which ONNX is which
 
-**Seven CTC ONNX files ship in the APK** (since `1b17c318`, 2026-09-03): the Latin encoder
-plus one 589,406-byte generation-4 model per routed script. (The original "exactly one" claim
-was true until ru's wiring on 2026-08-29.)
+**Seven CTC ONNX files ship, by two routes** (delivery changed 2026-09-10): the Latin encoder
+is an APK asset, and the six 589,406-byte generation-4 script models travel as the `model.onnx`
+member of their language packs. (The original "exactly one in the APK" claim was true until
+ru's wiring on 2026-08-29 — and is true again now.)
+
+**Why they moved.** Every one of the six languages is `CKDT_LANGPACK`-sourced: it cannot build
+a trie, and therefore cannot decode, without its pack. So the model in the APK was reachable
+only by users who had *also* imported the pack, and cost everyone else **3,139,138 B (2.99 MiB)
+deflated** per split. Putting it in the pack sends it to exactly the users who can use it.
+
+**Why that did not add an attack surface.** A pack is a file the user supplied, and an ONNX
+graph is parsed by a large native library. The load path therefore pins each artifact's sha256
+in the app (`CtcScriptSupport.ScriptWiring.modelSha256`) and `CtcPackModel.verifiedPackModel`
+hands ORT the pack's bytes **only** on byte-identity with that pin — so ORT parses exactly the
+bytes it parsed before the move, and nothing else. The hash is computed over the array that is
+then handed to ORT, never a re-read, so there is no time-of-check/time-of-use window. Every
+failure mode (no pin, no pack, no member, wrong hash, over the 8 MiB length cap) is reported as
+model-ABSENT, which the dispatch gates already answer with the geometric engine.
+
+The importer's own check — the pack must match the `"model": {"file", "sha256"}` block in its
+manifest — is an integrity check on the download, not a security boundary: the manifest is
+written by whoever wrote the pack. `LanguagePackImportTest` asserts exactly that, by importing
+an internally-consistent impostor and showing the loader still refuses it.
+
+Consequence, and it is deliberate: **a new script model is an app change as well as a pack
+change**, because it needs a new pin. This is byte-identity with a reviewed artifact, not a
+signature scheme; it cannot bless bytes the app has never seen.
 
 | artifact | ships? | bytes | sha256 | serves | tier |
 |---|---|---|---|---|---|
 | `src/main/assets/models/ctc_swipe_encoder.onnx` = `ctc/artifacts/phaseM_kd_fresh_w1_s1234_fp16w.onnx` | **YES — the Latin one** | 3,052,318 | `84718e6ebc8020176f27b9668e50922a765c96838307b640a8db9ab0549e88e5` | en + fr/de/es/it/pt/sv on any a–z-complete Latin layout, plus eligible imported Latin packs | **test-validated**, both footings, every seed |
-| `src/main/assets/models/ru_synth_v3_ch80_fp16w.onnx` (= `ctc/artifacts/` copy) | **YES** (`da012ded`, 2026-08-29) | 589,406 | `8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c` | Russian ЙЦУКЕН (31-letter default grid) | **val-only**, generator-**v3** synth-trained, Yandex-eval-only |
-| `src/main/assets/models/{el,uk,bg,mk,he}_synth_v3_ch80_fp16w.onnx` (= `ctc/artifacts/` copies) | **YES** — el `5fb58037` (2026-09-01), uk/bg/mk/he `1b17c318` (2026-09-03) | 589,406 each | §4.2 / `PHASE_Q.md` §7.7 | Greek, Ukrainian, Bulgarian, Macedonian, Hebrew | **synthesis-holdout-only**, calibrated against ru rather than measured — `PROVISIONAL`, never quotable as accuracy |
+| `langpack-ru.zip!model.onnx` = `ru_synth_v3_ch80_fp16w.onnx` (= `ctc/artifacts/` copy; APK asset `da012ded` 2026-08-29 → pack-delivered 2026-09-10) | **YES — in the pack** | 589,406 | `8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c` | Russian ЙЦУКЕН (31-letter default grid) | **val-only**, generator-**v3** synth-trained, Yandex-eval-only |
+| `langpack-{el,uk,bg,mk,he}.zip!model.onnx` = `{el,uk,bg,mk,he}_synth_v3_ch80_fp16w.onnx` (= `ctc/artifacts/` copies) | **YES — in the packs** — el `5fb58037` (2026-09-01), uk/bg/mk/he `1b17c318` (2026-09-03), pack-delivered 2026-09-10 | 589,406 each | §4.2 / `PHASE_Q.md` §7.7 | Greek, Ukrainian, Bulgarian, Macedonian, Hebrew | **synthesis-holdout-only**, calibrated against ru rather than measured — `PROVISIONAL`, never quotable as accuracy |
 | `ctc/artifacts/{ru,el,uk,bg,mk,he}_synth_ch80*` (generation 1) | no — **superseded** | — | `PHASE_O.md` §2.6 | — | kept because every pre-Phase-P number was measured on them |
 | `ctc/artifacts/{ru,el,uk,bg,mk,he}_synth_v2_ch80*` (generation 2) | no — **superseded** | — | `PHASE_P.md` §6.1 | — | kept because `PHASE_P.md` §5 was measured on them; `he_synth_v2_ch80` carries a parity flag no later generation revives |
 | `ctc/artifacts/{el,uk,bg,mk,he}_synth_v2full_ch80*` (generation 3) | no — **superseded** | — | `PHASE_P.md` §8.4 | — | kept because `PHASE_P.md` §8 was measured on them |

@@ -64,6 +64,8 @@ python3 scripts/generate_unigrams.py --lang xx \
         --output scripts/dictionaries/xx/unigrams.txt --top-n 5000
 
 # 4. Deterministic zip
+#    Non-Latin script? add --model <code>_synth_v3_ch80_fp16w.onnx (see 1.3), and pin
+#    its sha256 in CtcScriptSupport in the same change.
 python3 scripts/build_langpack.py --lang xx --name "Xxish" \
         --dict scripts/dictionaries/xx/xx_enhanced.bin \
         --unigrams scripts/dictionaries/xx/unigrams.txt \
@@ -123,9 +125,22 @@ Accent normalization at build time: NFD minus combining marks, plus a special fo
 (ß→ss, ø→o, æ→ae, œ→oe, …).
 
 The langpack zip is deterministic (fixed 1980 timestamps, sorted entries — a pure function of
-its contents) and contains `manifest.json` + `dictionary.bin` (required), `unigrams.txt` and
-`contractions.json` (optional). The manifest has **no script field**; script gating happens
-in-app at measurement time.
+its contents) and contains `manifest.json` + `dictionary.bin` (required), `unigrams.txt`,
+`contractions.json` and — for a non-Latin script — `model.onnx` (all optional). The manifest
+has **no script field**; script gating happens in-app at measurement time.
+
+**`model.onnx` (non-Latin scripts only, since 2026-09-10).** A script language's CTC encoder
+ships in its pack rather than in the APK: it can only decode with the pack installed anyway, so
+the APK copy cost every other user ~3 MB. Pass `--model <artifact>.onnx` to `build_langpack.py`
+(or put a `'model'` entry in `build_all_languages.py`'s table) and the manifest gains
+`"model": {"file": "model.onnx", "sha256": "…"}`.
+
+**This does not make a model shippable on its own.** The app loads a pack model only when its
+sha256 equals a value compiled into the app (`CtcScriptSupport.ScriptWiring.modelSha256`), so a
+NEW script model is an app change and a pack change — deliberately, because the alternative is
+handing ORT bytes from a user-supplied file. Add the pin in the same commit as the row; the
+pack side is pinned by `CtcPackModelTest.everyRoutedScriptPackCarriesItsPinnedModel` and the
+app side by the `ScriptWiring` constructor's own `require`.
 
 ### 1.4 What happens on import
 

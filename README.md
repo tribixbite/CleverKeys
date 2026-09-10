@@ -369,10 +369,17 @@ python build_all_languages.py
 
 Language packs are simple .zip files containing:
 - `dictionary.bin` — CKDT V2 binary dictionary (accent-normalization map + frequency ranks)
-- `manifest.json` — Metadata (language code, name, version, word count, prefix-boost flag)
+- `manifest.json` — Metadata (language code, name, version, word count, prefix-boost flag, and the model block below)
 - `unigrams.txt` — Top-5k word list for automatic language detection
 - `contractions.json` — Apostrophe/elision mappings (languages that use them)
 - `prefix_boost.bin` — Aho-Corasick prefix-boost trie (Latin-script languages)
+- `model.onnx` — CTC swipe encoder, for the non-Latin scripts only (ru, el, uk, bg, mk, he)
+
+The six script packs carry their own swipe model. Those languages can only swipe-decode with
+their pack installed anyway, so shipping the graph in the APK cost every other user ~3 MB they
+could never reach. The app pins each model's SHA-256 and refuses to load a pack model that is
+not byte-identical to what it pins, so nothing untrusted is ever handed to the ONNX runtime; a
+mismatch is treated as "no model" and swipe falls back to the geometric engine.
 
 **Pre-built Language Packs:**
 Download from the [langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks), or grab them from [`scripts/dictionaries/`](./scripts/dictionaries/) when working from a checkout.

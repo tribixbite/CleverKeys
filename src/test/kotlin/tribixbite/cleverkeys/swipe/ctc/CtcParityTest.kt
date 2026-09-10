@@ -43,16 +43,33 @@ class CtcParityTest {
      * @property language the language whose ship preset this fixture must equal.
      * @property goldenPath the pure-JVM copy (read as a file from the project root).
      * @property goldenAssetPath the instrumented copy, which must be byte-identical.
-     * @property modelAssetPath the ONNX the fixture's `source_onnx_sha256` must match, DERIVED
-     *   from the adapter's own resolution so a rename breaks this test rather than slipping past.
+     * @property modelSourcePath where the ONNX the fixture's `source_onnx_sha256` must match
+     *   actually ships — an `src/main/assets/` path for the Latin encoder, the language pack
+     *   zip for a script row (2026-09-10: the six script encoders left the APK). DERIVED from
+     *   the app's own tables so a rename breaks this test rather than slipping past.
+     * @property packDelivered true when [modelSourcePath] is a pack zip whose `model.onnx` is
+     *   the artifact under test, false when it is the ONNX file itself.
      */
     private class FixtureRow(
         val language: String,
         val goldenPath: String,
         val goldenAssetPath: String,
-        val modelAssetPath: String,
+        val modelSourcePath: String,
+        val packDelivered: Boolean,
     ) {
         override fun toString(): String = language
+
+        /** The encoder bytes as actually shipped, whichever container they ship in. */
+        fun modelBytes(): ByteArray {
+            val file = File(modelSourcePath)
+            if (!packDelivered) return file.readBytes()
+            return java.util.zip.ZipFile(file).use { zf ->
+                val entry = checkNotNull(zf.getEntry(CtcPackModel.PACK_MODEL_FILE)) {
+                    "$language: $modelSourcePath carries no ${CtcPackModel.PACK_MODEL_FILE}"
+                }
+                zf.getInputStream(entry).use { it.readBytes() }
+            }
+        }
     }
 
     private companion object {
@@ -74,7 +91,8 @@ class CtcParityTest {
                     language = "en",
                     goldenPath = "src/test/resources/ctc/ctc_golden.json",
                     goldenAssetPath = "src/androidTest/assets/ctc/ctc_golden.json",
-                    modelAssetPath = "src/main/assets/" + CtcEngineAdapter.MODEL_ASSET,
+                    modelSourcePath = "src/main/assets/" + CtcEngineAdapter.MODEL_ASSET,
+                    packDelivered = false,
                 )
             )
             for ((language, wiring) in CtcScriptSupport.SCRIPTS) {
@@ -84,8 +102,9 @@ class CtcParityTest {
                         language = language,
                         goldenPath = "src/test/resources/ctc/$fixture",
                         goldenAssetPath = "src/androidTest/assets/ctc/$fixture",
-                        modelAssetPath = "src/main/assets/" +
-                            CtcEngineAdapter.modelAssetFor(language),
+                        // A script encoder is delivered by its language pack, not the APK.
+                        modelSourcePath = "scripts/dictionaries/langpack-$language.zip",
+                        packDelivered = true,
                     )
                 )
             }
@@ -265,18 +284,30 @@ class CtcParityTest {
                 .isEqualTo(listOf(ship.gamma, ship.lambda, ship.beta, ship.gammaPrune, ship.betaPrune))
         }
 
-        // 3. The bundled ONNX asset IS the artifact the fixture was generated from. All six
+        // 3. The SHIPPED encoder IS the artifact the fixture was generated from. All six
         //    script graphs are 589,406 B and byte-size-identical to each other, so the sha is
-        //    the ONLY thing that can tell a Russian encoder from a Greek one.
-        val model = File(row.modelAssetPath)
-        assertWithMessage("${row.language}: shipped encoder must exist at ${row.modelAssetPath}")
+        //    the ONLY thing that can tell a Russian encoder from a Greek one. Since 2026-09-10
+        //    the script graphs ship inside their language packs rather than the APK, so this
+        //    reads whichever container the row declares — the assertion is unchanged, only its
+        //    source moved.
+        val model = File(row.modelSourcePath)
+        assertWithMessage("${row.language}: shipped encoder must exist at ${row.modelSourcePath}")
             .that(model.exists()).isTrue()
         val expectedSha = golden.getJSONArray("source_onnx_sha256").getString(0).lowercase()
+        val shippedBytes = row.modelBytes()
         assertWithMessage(
-            "${row.language}: sha256(${row.modelAssetPath}) must equal the fixture's " +
-                "source_onnx_sha256 — the shipped model and the golden fixture must be the " +
-                "same artifact"
-        ).that(sha256(model)).isEqualTo(expectedSha)
+            "${row.language}: sha256 of the encoder shipped in ${row.modelSourcePath} must " +
+                "equal the fixture's source_onnx_sha256 — the shipped model and the golden " +
+                "fixture must be the same artifact"
+        ).that(sha256(shippedBytes)).isEqualTo(expectedSha)
+        // …and the app's own pin must name those same bytes, or the loader would refuse the
+        // very model this fixture was generated from.
+        CtcScriptSupport.SCRIPTS[row.language]?.modelSha256?.let { pinned ->
+            assertWithMessage(
+                "${row.language}: CtcScriptSupport's pin must equal the shipped encoder's " +
+                    "sha256 — a pin naming other bytes makes the pack unloadable"
+            ).that(pinned).isEqualTo(sha256(shippedBytes))
+        }
 
         // 4. The instrumented copy is byte-identical, so the device gate asserts the
         //    same contract this one does.
@@ -310,10 +341,10 @@ class CtcParityTest {
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
 
-    private fun sha256(f: File): String {
-        val digest = MessageDigest.getInstance("SHA-256").digest(f.readBytes())
-        return digest.joinToString("") { "%02x".format(it) }
-    }
+    private fun sha256(f: File): String = sha256(f.readBytes())
+
+    private fun sha256(bytes: ByteArray): String =
+        MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
 
     private fun org.json.JSONArray.toDoubleArray(): DoubleArray =
         DoubleArray(length()) { getDouble(it) }

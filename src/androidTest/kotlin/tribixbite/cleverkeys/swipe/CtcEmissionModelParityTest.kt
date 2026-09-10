@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys.swipe
 
 import ai.onnxruntime.OrtEnvironment
+import android.content.Context
+import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.json.JSONObject
@@ -10,13 +12,18 @@ import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
+import tribixbite.cleverkeys.langpack.ImportResult
+import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.onnx.ModelLoader
 import tribixbite.cleverkeys.swipe.ctc.CtcBeamDecoder
 import tribixbite.cleverkeys.swipe.ctc.CtcFeaturizer
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
+import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
 import tribixbite.cleverkeys.swipe.ctc.CtcScriptSupport
+import java.io.File
+import java.io.FileOutputStream
 import java.security.MessageDigest
 import kotlin.math.abs
 
@@ -36,7 +43,18 @@ import kotlin.math.abs
  * [CtcScriptSupport], never a new mechanism — every fixture has the same shape and the beam
  * cases carry their own alphabet, lexicon and preset. All six script graphs are 589,406 B and
  * byte-size-identical to each other, so nothing but the sha can tell them apart, which is what
- * `packagedModelIsTheArtifactEachFixtureWasGeneratedFrom` asserts against the PACKAGED asset.
+ * `shippedModelIsTheArtifactEachFixtureWasGeneratedFrom` asserts.
+ *
+ * ## Where each row's bytes come from (changed 2026-09-10)
+ *
+ * The Latin encoder is still an APK asset. The six script encoders left the APK and travel in
+ * their language packs, so their rows stage the REAL shipped pack out of the test APK
+ * (`copyScriptLatencyPacks`, byte-identical to `scripts/dictionaries/langpack-<code>.zip`), run
+ * the SHIPPING importer over it, and then take the bytes back through
+ * [CtcPackModel.verifiedPackModel] — the same call the adapter makes. That makes this gate
+ * strictly stronger than reading an asset was: it now exercises the importer, the manifest hash
+ * check and the app's pinned-sha gate on the way to running the graph, so a pack rebuilt without
+ * its model, or with the wrong one, fails here as well as in `runPureTests`.
  *
  * Sessions are loaded with hardware acceleration DISABLED (plain ORT CPU EP) so
  * numerics are comparable to the desktop CPUExecutionProvider the fixtures were
@@ -48,11 +66,18 @@ import kotlin.math.abs
 @RunWith(AndroidJUnit4::class)
 class CtcEmissionModelParityTest {
 
-    /** One (fixture, model asset) pair — a wired script is a ROW, never a new mechanism. */
+    /**
+     * One (fixture, encoder) pair — a wired script is a ROW, never a new mechanism.
+     *
+     * @property modelAsset the encoder's LOGICAL name (`CtcEngineAdapter.modelAssetFor`), which
+     *   is an APK asset path only when [packDelivered] is false.
+     * @property packDelivered true when the bytes come from this language's imported pack.
+     */
     private class Row(
         val language: String,
         val fixtureAsset: String,
         val modelAsset: String,
+        val packDelivered: Boolean,
     ) {
         override fun toString(): String = language
     }
@@ -67,10 +92,17 @@ class CtcEmissionModelParityTest {
          * fails `CtcScriptSupportTest` in `runPureTests` first.
          */
         private val ROWS: List<Row> = buildList {
-            add(Row("en", "ctc/ctc_golden.json", CtcEngineAdapter.MODEL_ASSET))
+            add(Row("en", "ctc/ctc_golden.json", CtcEngineAdapter.MODEL_ASSET, false))
             for ((language, wiring) in CtcScriptSupport.SCRIPTS) {
                 val fixture = wiring.goldenFixture ?: continue
-                add(Row(language, "ctc/$fixture", CtcEngineAdapter.modelAssetFor(language)))
+                add(
+                    Row(
+                        language, "ctc/$fixture", CtcEngineAdapter.modelAssetFor(language),
+                        // A row with a pinned sha is pack-delivered by definition: the pin
+                        // exists precisely because the bytes arrive from a user-supplied file.
+                        packDelivered = wiring.modelSha256 != null,
+                    )
+                )
             }
         }
 
@@ -87,12 +119,21 @@ class CtcEmissionModelParityTest {
                 goldens[row.language] = JSONObject(
                     testCtx.assets.open(row.fixtureAsset).readBytes().decodeToString()
                 )
+                if (row.packDelivered) importRealPack(target, row.language)
                 // Hardware acceleration DISABLED (plain ORT CPU EP) so numerics are comparable
                 // to the desktop CPUExecutionProvider the fixtures were generated with.
-                val loaded = ModelLoader(target, env).loadModel(
-                    row.modelAsset, "CtcEncoderParity-${row.language}",
-                    enableHardwareAcceleration = false, xnnpackThreads = 1
-                )
+                val loader = ModelLoader(target, env)
+                val loaded = if (row.packDelivered) {
+                    loader.loadModel(
+                        shippedModelBytes(target, row), "CtcEncoderParity-${row.language}",
+                        enableHardwareAcceleration = false, xnnpackThreads = 1
+                    )
+                } else {
+                    loader.loadModel(
+                        row.modelAsset, "CtcEncoderParity-${row.language}",
+                        enableHardwareAcceleration = false, xnnpackThreads = 1
+                    )
+                }
                 models[row.language] = OnnxCtcEmissionModel(env, loaded.session)
             }
         }
@@ -103,7 +144,48 @@ class CtcEmissionModelParityTest {
             for (model in models.values) model.close()
             models.clear()
             goldens.clear()
+            // Leave the device as found: these packs are test fixtures here, not user installs.
+            val target = InstrumentationRegistry.getInstrumentation().targetContext
+            val manager = LanguagePackManager.getInstance(target)
+            for (row in ROWS) {
+                if (!row.packDelivered) continue
+                manager.deletePack(row.language)
+                CtcInstalledPacks.invalidate(target, row.language)
+                File(target.cacheDir, "langpack-${row.language}.zip").delete()
+            }
         }
+
+        /** Stage the real pack out of the TEST APK's assets and run the shipping importer. */
+        private fun importRealPack(target: Context, language: String) {
+            val testAssets = InstrumentationRegistry.getInstrumentation().context.assets
+            val zip = File(target.cacheDir, "langpack-$language.zip")
+            testAssets.open("langpacks/langpack-$language.zip").use { input ->
+                FileOutputStream(zip).use { input.copyTo(it) }
+            }
+            val result = LanguagePackManager.getInstance(target).importLanguagePack(Uri.fromFile(zip))
+            assertTrue(
+                "$language: importing the real langpack must succeed, got $result",
+                result is ImportResult.Success
+            )
+            CtcInstalledPacks.invalidate(target, language)
+        }
+
+        /**
+         * The bytes this row's encoder actually ships as, through the SAME resolution the
+         * adapter uses. For a pack row that is [CtcPackModel.verifiedPackModel], so a pack whose
+         * model fails the app's pinned-sha gate surfaces here as a missing model rather than as
+         * a mysterious numeric mismatch further down.
+         */
+        private fun shippedModelBytes(target: Context, row: Row): ByteArray =
+            if (row.packDelivered) {
+                requireNotNull(CtcPackModel.verifiedPackModel(target.filesDir, row.language)) {
+                    "${row.language}: the imported pack supplied no model that matches this " +
+                        "app's pinned sha256 — rebuild langpack-${row.language}.zip with " +
+                        "build_langpack.py --model"
+                }
+            } else {
+                target.assets.open(row.modelAsset).use { it.readBytes() }
+            }
 
         private fun fixtureLayout(language: String): CtcLayout {
             val lay = goldens.getValue(language).getJSONObject("layout")
@@ -217,26 +299,27 @@ class CtcEmissionModelParityTest {
     }
 
     /**
-     * Rule 4's first leg, checked against the artifact that actually ships: the packaged ONNX
-     * must be the same bytes the fixture was generated from.
+     * Rule 4's first leg, checked against the artifact that actually ships: the bytes the device
+     * ends up with must be the ones the fixture was generated from.
      *
      * All six script graphs are 589,406 B and byte-size-identical to each other, so size can
      * never discriminate them — only the sha256 can, and the pure `CtcParityTest` checks the
-     * REPO copy while this checks what aapt actually packaged.
+     * REPO copy while this checks what the device actually got: the packaged asset for en, and
+     * for a script the bytes that survived the importer AND the app's pinned-sha gate.
      */
     @Test
-    fun packagedModelIsTheArtifactEachFixtureWasGeneratedFrom() {
+    fun shippedModelIsTheArtifactEachFixtureWasGeneratedFrom() {
         val target = InstrumentationRegistry.getInstrumentation().targetContext
         val shaByLanguage = LinkedHashMap<String, String>()
         for (row in ROWS) {
-            val bytes = target.assets.open(row.modelAsset).use { it.readBytes() }
-            assertTrue("${row.language}: ${row.modelAsset} packaged empty", bytes.isNotEmpty())
+            val bytes = shippedModelBytes(target, row)
+            assertTrue("${row.language}: ${row.modelAsset} shipped empty", bytes.isNotEmpty())
             val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
             val sha = digest.joinToString("") { "%02x".format(it) }
             val expected = goldens.getValue(row.language)
                 .getJSONArray("source_onnx_sha256").getString(0).lowercase()
             assertEquals(
-                "${row.language}: sha256 of the PACKAGED ${row.modelAsset} must equal its " +
+                "${row.language}: sha256 of the SHIPPED ${row.modelAsset} must equal its " +
                     "fixture's source_onnx_sha256",
                 expected, sha
             )
@@ -247,7 +330,7 @@ class CtcEmissionModelParityTest {
         // fixtures regenerated from one artifact — would satisfy every per-row assertion
         // above and still route a script's swipes to the wrong graph.
         assertEquals(
-            "two languages resolved to the same packaged encoder: $shaByLanguage",
+            "two languages resolved to the same shipped encoder: $shaByLanguage",
             shaByLanguage.size, shaByLanguage.values.toSet().size
         )
     }

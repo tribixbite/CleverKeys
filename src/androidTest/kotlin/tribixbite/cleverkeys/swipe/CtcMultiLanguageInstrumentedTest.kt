@@ -29,11 +29,13 @@ import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
+import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
 import tribixbite.cleverkeys.swipe.ctc.CtcScriptSupport
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.zip.ZipInputStream
 
 /**
  * On-device coverage for the multilingual CTC swipe path. French, German and Spanish have
@@ -687,14 +689,23 @@ class CtcMultiLanguageInstrumentedTest {
     /**
      * Rule 4, on device: a script may only be routed when its model, its trie and its fixture
      * all exist. The pure `CtcScriptSupportTest` checks the table against the repo tree; this
-     * checks it against the PACKAGED APK, which is the artifact that actually ships.
+     * checks it against the artifacts that actually ship.
+     *
+     * Since 2026-09-10 those are TWO artifacts, not one. The Latin encoder is packaged under
+     * `assets/models`; the six script encoders travel as `model.onnx` inside their language
+     * packs, because every one of those languages needs its pack to decode at all and shipping
+     * the graph to everyone else was 3.1 MB nobody could use. So a ROUTED row is satisfied by
+     * either route — and for a pack row the check is against the REAL pack staged into this
+     * test APK (`copyScriptLatencyPacks`, byte-identical to `scripts/dictionaries/`), which is
+     * the same file the user imports.
      */
     @Test
-    fun everyRoutedScriptShipsItsModelAssetInTheApk() {
+    fun everyRoutedScriptShipsItsModel() {
         val target = InstrumentationRegistry.getInstrumentation().targetContext
+        val testAssets = InstrumentationRegistry.getInstrumentation().context.assets
         val models = target.assets.list("models")?.toSet().orEmpty()
         assertTrue(
-            "assets/models is empty in the packaged APK — the CTC encoders did not ship",
+            "assets/models is empty in the packaged APK — the Latin CTC encoder did not ship",
             models.isNotEmpty()
         )
         // Without this the loop below would exercise only its not-ROUTED branch and read
@@ -713,11 +724,32 @@ class CtcMultiLanguageInstrumentedTest {
                 continue
             }
             val asset = wiring.modelAsset!!.removePrefix("models/")
-            assertTrue(
-                "$language is ROUTED but $asset is not packaged under assets/models — the " +
-                    "router would send swipes to an encoder that cannot load. Packaged: $models",
-                asset in models
-            )
+            if (asset in models) {
+                assertNull(
+                    "$language is packaged as an APK asset AND pins a pack hash — pick one " +
+                        "delivery route; two would let the APK copy mask a broken pack",
+                    wiring.modelSha256
+                )
+            } else {
+                assertNotNull(
+                    "$language is ROUTED but $asset is not packaged under assets/models and " +
+                        "pins no pack hash — the router would send swipes to an encoder that " +
+                        "cannot load. Packaged: $models",
+                    wiring.modelSha256
+                )
+                val packBytes = testAssets.open("langpacks/langpack-$language.zip")
+                    .use { it.readBytes() }
+                val carriesModel = ZipInputStream(packBytes.inputStream()).use { zis ->
+                    generateSequence { zis.nextEntry }
+                        .any { it.name == CtcPackModel.PACK_MODEL_FILE }
+                }
+                assertTrue(
+                    "$language is ROUTED and pack-delivered, but langpack-$language.zip " +
+                        "carries no ${CtcPackModel.PACK_MODEL_FILE} — importing it would " +
+                        "install a language that silently never decodes",
+                    carriesModel
+                )
+            }
             assertTrue(
                 "$language is ROUTED so CtcLanguageSupport must serve it",
                 CtcLanguageSupport.isSupported(language)

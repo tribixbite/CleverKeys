@@ -500,7 +500,27 @@ engines display identically. The bundled ENGLISH base is loaded for English only
   Phases E→M, `phaseM_kd_fresh_w1_s1234_fp16w`) on MIT-licensed corpora (FUTO
   swipe.futo.org + How-We-Swipe; no FUTO weights or model outputs — see repo `NOTICE`).
   Run via `OnnxCtcEmissionModel` (emission slice per `CtcEmissions.sliceFromHead`).
-  **It is the only ONNX in the APK.**
+  **It is the only ONNX in the APK** — true again since 2026-09-10, see below.
+- **Script encoders ship in their language packs, not the APK** (2026-09-10). The six
+  589,406-byte generation-4 graphs left `src/main/assets/models/` and travel as the
+  `model.onnx` member of `langpack-{ru,el,uk,bg,mk,he}.zip`. Every one of those languages
+  is `CKDT_LANGPACK`-sourced, so it cannot build a trie — and therefore cannot decode —
+  without its pack; shipping the graph in the APK put **3,139,138 B (2.99 MiB) deflated**
+  into every split for users who could never reach it.
+
+  The bytes are user-supplied once they arrive in a pack, so the load path pins them:
+  `CtcScriptSupport.ScriptWiring.modelSha256` records each artifact's sha256, and
+  `CtcPackModel.verifiedPackModel` hands ORT the pack's bytes **only** on byte-identity
+  with that pin. ORT therefore parses exactly what it parsed before the move — the change
+  adds no attack surface. Anything else (no pin, no pack, wrong hash, over the 8 MiB cap)
+  reports model-ABSENT, which the existing dispatch gates answer by falling through to the
+  geometric engine. The importer separately checks the pack against its own manifest
+  (`"model": {"file", "sha256"}`), which is an integrity check on the download and nothing
+  more — a pack's manifest is written by whoever wrote the pack.
+
+  Consequence worth stating: a NEW script model is an app change (a new pin) as well as a
+  pack change. That is deliberate. This is byte-identity with a reviewed artifact, not a
+  signature scheme, and it cannot bless a model the app has never seen.
 - Ship preset `CtcScoringParams.tunedV2`: γ=0.9, λ=4.0, β=0.25, α=0.0, γ_prune=0.25,
   β_prune=0.9882; beam width default 100 (`Defaults.CTC_BEAM_WIDTH`), adapter topK=8.
   Fitted offline on the app-trie footing; the published-preset control measured −2.3 pt
@@ -569,7 +589,7 @@ same test, never a second mechanism.
 
 | corner | Latin (en/fr/de/es/it/pt/sv) | ru |
 |---|---|---|
-| model asset | `models/ctc_swipe_encoder.onnx` sha256 `84718e6ebc8020176f27b9668e50922a765c96838307b640a8db9ab0549e88e5` | `models/ru_synth_v3_ch80_fp16w.onnx` sha256 `8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c` (589,406 B) |
+| model | APK asset `models/ctc_swipe_encoder.onnx`, sha256 `84718e6ebc8020176f27b9668e50922a765c96838307b640a8db9ab0549e88e5` | `langpack-ru.zip!model.onnx` = `ru_synth_v3_ch80_fp16w.onnx`, sha256 `8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c` (589,406 B), pinned in `CtcScriptSupport` |
 | fixture (both copies) | `ctc/ctc_golden.json`, byte-identical, sha256 `2a449c4f2de19505131b396655ae01d3e3c325e40249446ff6e7a40c2b27559c` (= ML `artifacts/phaseM_kd_fresh_w1_fp16w_golden.json`, regenerated 2026-08-14 at the **ship** preset — the first cut was generated at E1 and is superseded, `PHASE_M.md` §11.1) | `ctc/ru_synth_v3_ch80_fp16w_golden.json`, byte-identical, sha256 `8951d7a3f725e54df735804ae981ba96038f8f6a5609edf52a56f699914982d3` (159,778 B, ARC-060 geometry, ML `8778fef`) |
 | runtime preset | `CtcScoringParams.tunedV2()` = `0.9 / 4.0 / 0.25 / 0.25 / 0.9882`, beam 100, top-4 — the en-scale λ, which is what the fixture's `en_enhanced` trie is on | `CtcScoringParams.tunedRuCkdt()` = `1.05 / 2.0 / 0.2 / 0.3734 / 0.9882`, beam 100, top-4 — the CKDT-scale λ on the E1 footing |
 
@@ -579,17 +599,24 @@ asset, compares each fixture's preset term-by-term against what **`presetFor` re
 language** — not against a named constant, so the check is "the fixture matches what the
 DISPATCHER will select" — asserts every beam case decodes at that preset, and pins each
 fixture's two copies byte-identical). `everyRoutedScriptHasAParityRow` ties the script table to
-this gate, so a script cannot reach `ROUTED` without appearing here. The device half — "the
-artifact actually *produces* those emissions through ORT" — is `CtcEmissionModelParityTest`,
-likewise row-driven, plus a sha check on the PACKAGED asset (all six script graphs are 589,406 B
-and byte-size-identical to each other, so nothing but a hash can tell a Russian encoder from a
-Greek one).
+this gate, so a script cannot reach `ROUTED` without appearing here. Since 2026-09-10 a script
+row hashes its encoder out of `scripts/dictionaries/langpack-<code>.zip` rather than out of
+`src/main/assets/` — the assertion is unchanged, only its source moved — and additionally
+checks that `CtcScriptSupport`'s pin names those same bytes, since a pin naming anything else
+would make the pack unloadable. The device half — "the artifact actually *produces* those
+emissions through ORT" — is `CtcEmissionModelParityTest`, likewise row-driven; it now stages the
+REAL pack into the test APK, runs the shipping importer over it, and takes the bytes back
+through `CtcPackModel.verifiedPackModel`, so the importer, the manifest check and the pinned-sha
+gate are all exercised on the way to running the graph. All six script graphs are 589,406 B and
+byte-size-identical to each other, so nothing but a hash can tell a Russian encoder from a Greek
+one.
 
 **Known gap (audit HIGH-4):** no workflow runs `connectedAndroidTest`/ew-cli, so the
 behavioural half of this rule **never runs in CI** — it is device-only, on demand.
-The asset-path half of that gap is closed — each row derives its path from
-`CtcEngineAdapter.modelAssetFor(language)`, so a rename breaks the test rather than slipping
-past it — and the ship `beamWidth` is pinned against `Defaults.CTC_BEAM_WIDTH`. The fixtures'
+The artifact-path half of that gap is closed — each row derives its source from the app's own
+tables (`CtcEngineAdapter.modelAssetFor` for the Latin asset, the language pack for a script
+row), so a rename breaks the test rather than slipping past it — and the ship `beamWidth` is
+pinned against `Defaults.CTC_BEAM_WIDTH`. The fixtures'
 own beam width (32 over a 7-word lexicon) is still not compared to the ship width, deliberately:
 the fixtures are narrow so they are cheap to generate.
 

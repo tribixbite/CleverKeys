@@ -271,6 +271,31 @@ class CtcPackModelTest {
     }
 
     /**
+     * The saving, pinned. `src/main/assets/models/` holds the Latin encoder and nothing else.
+     *
+     * A script model reappearing here would be silent: the load path prefers the pack and only
+     * falls back to the asset, so every test above would stay green while the APK quietly
+     * regained 3.1 MB. Re-adding one would also mean the same bytes shipped twice, and the APK
+     * copy would mask a pack that had been rebuilt without its model — the exact failure the
+     * pack-side pin exists to catch.
+     */
+    @Test
+    fun theApkPackagesOnlyTheLatinEncoder() {
+        val dir = File("src/main/assets/models")
+        assertWithMessage("expected ${dir.path} (run from project root)").that(dir.isDirectory)
+            .isTrue()
+        val packaged = dir.listFiles().orEmpty()
+            .filter { it.isFile && it.extension == "onnx" }
+            .map { it.name }
+            .sorted()
+        assertWithMessage(
+            "only the Latin encoder is an APK asset — the six script encoders are " +
+                "pack-delivered (APK diet, 2026-09-10). Re-adding one silently undoes the " +
+                "saving and lets the APK copy mask a pack rebuilt without its model."
+        ).that(packaged).containsExactly("ctc_swipe_encoder.onnx")
+    }
+
+    /**
      * The other direction, and the reason it matters: a Latin pack must NOT declare a model.
      * Latin languages decode against the APK's own encoder, so a pack-supplied one could only
      * ever be an attempt to displace it — which the load side already refuses, and which no

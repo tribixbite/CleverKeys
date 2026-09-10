@@ -146,15 +146,43 @@ python build_langpack.py --lang xx --name "MyLang" --dict custom.bin --output la
 
 ```
 langpack-{lang}.zip
-├── manifest.json          # Metadata: code, name, version, wordCount
+├── manifest.json          # Metadata: code, name, version, wordCount, model
 ├── dictionary.bin         # V2 binary dictionary (required)
 ├── unigrams.txt           # Word-frequency list for language detection
 ├── contractions.json      # Language contractions (optional)
-└── prefix_boost.bin       # Aho-Corasick prefix trie (optional, non-English)
+├── prefix_boost.bin       # Aho-Corasick prefix trie (optional, non-English)
+└── model.onnx             # CTC swipe encoder (optional; the six non-Latin scripts)
 ```
 
 `manifest.json` and `dictionary.bin` are required; the importer rejects a
 pack missing either, or a `dictionary.bin` without the V2 (`CKDT`) header.
+
+### The `model.onnx` member (ru, el, uk, bg, mk, he)
+
+The six non-Latin-script packs carry their own CTC swipe encoder. Those languages cannot
+swipe-decode without their pack in the first place, so from 2026-09-10 the model travels with
+the pack instead of sitting in the APK — ~3 MB every other user was carrying for nothing.
+
+A pack that ships a model declares it:
+
+```json
+"model": { "file": "model.onnx", "sha256": "8fffa75c…" }
+```
+
+Two separate checks apply, and they answer different questions:
+
+1. **On import** the bytes must hash to what the manifest says. This catches a corrupt or
+   truncated download and fails the import with that reason, rather than installing a language
+   whose swipe silently never works. A `model.onnx` with no manifest entry is skipped (nothing
+   can verify it), and anything over 8 MiB is rejected outright.
+2. **On load** the app compares the model against a SHA-256 **compiled into the app** and loads
+   it only on byte-identity. It trusts nothing the manifest says — a pack's manifest is written
+   by whoever built the pack. A mismatch is treated as "no model": swipe falls back to the
+   geometric engine and the reason is logged.
+
+So a hand-built pack can carry any `model.onnx` it likes and the app will still only ever run
+the encoder it shipped a hash for. The practical consequence: a **new** script model needs an
+app update as well as a pack, by design.
 
 ### Languages Supported by wordfreq
 

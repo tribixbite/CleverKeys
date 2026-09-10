@@ -114,11 +114,19 @@ class CtcScriptSupportTest {
             val fixture = wiring.goldenFixture
             assertWithMessage("$language: ROUTED requires a model asset").that(model).isNotNull()
             assertWithMessage("$language: ROUTED requires a golden fixture").that(fixture).isNotNull()
+            // Rule 4's first of three: the model must actually SHIP. Since 2026-09-10 a script
+            // encoder ships inside its language pack rather than as an APK asset (the Latin one
+            // is still an asset), so "ships" means one route or the other. A ROUTED row whose
+            // model is in neither routes swipes to an engine that cannot load.
+            val shippedAsAsset = File("$ASSET_DIR/$model").isFile
+            val pack = File("scripts/dictionaries/langpack-$language.zip")
+            val shippedInPack = pack.isFile && java.util.zip.ZipFile(pack).use {
+                it.getEntry(CtcPackModel.PACK_MODEL_FILE) != null
+            }
             assertWithMessage(
-                "$language: the model asset must actually be in the APK — rule 4's first of " +
-                    "three. A ROUTED row pointing at a missing file routes swipes to an engine " +
-                    "that cannot load."
-            ).that(File("$ASSET_DIR/$model").isFile).isTrue()
+                "$language: the model must ship — as an APK asset ($ASSET_DIR/$model) or as " +
+                    "${CtcPackModel.PACK_MODEL_FILE} inside ${pack.path}. Neither is present."
+            ).that(shippedAsAsset || shippedInPack).isTrue()
             assertWithMessage(
                 "$language: the golden fixture must ship in BOTH copies (runPureTests reads " +
                     "resources, the device gate reads test assets)"

@@ -77,14 +77,25 @@ Shipped CTC script models — per-model provenance
 ================================================================================
 CleverKeys ships one CTC swipe-emission encoder per script. Every one of them is
 original CleverKeys work, trained from scratch, distributed under GPL-3.0 with
-the app. This list is exhaustive for src/main/assets/models/; add a line here
-whenever a script model is added.
+the app. This list is exhaustive; add a line here whenever a script model is
+added.
+
+Two delivery routes, both of them "shipped":
+
+  * The Latin encoder is an APK asset (src/main/assets/models/).
+  * Since 2026-09-10 the six per-script encoders travel INSIDE their language
+    packs (scripts/dictionaries/langpack-<code>.zip, member model.onnx) rather
+    than in the APK. Every one of those six languages needs its pack to decode
+    at all, so the model reaches exactly the users who can use it — and nobody
+    else carries 3.1 MB they cannot. The licence position is unchanged: the
+    bytes are the same GPL-3.0 CleverKeys artifacts, distributed with the app's
+    own language packs from the app's own repository.
 
   src/main/assets/models/ctc_swipe_encoder.onnx — Latin (en/fr/de/es/…).
     Trained on gesture data derived from the FUTO swipe corpus (MIT) and the
     How-We-Swipe shape-writing dataset (MIT); see the two sections above.
 
-  src/main/assets/models/ru_synth_v3_ch80_fp16w.onnx — Cyrillic (ru).
+  langpack-ru.zip!model.onnx = ru_synth_v3_ch80_fp16w.onnx — Cyrillic (ru).
     Trained on 100% SYNTHESIZED gesture data: a learned trace generator fitted
     only to the same two MIT corpora above (FUTO + How-We-Swipe) emits Russian
     traces from a Russian word list and the on-screen layout geometry. No real
@@ -97,7 +108,7 @@ whenever a script model is added.
     docs/specs/ctc-architecture-and-multiscript-guide.md §3.3 and the licence
     seal note for the full record.
 
-  src/main/assets/models/el_synth_v3_ch80_fp16w.onnx — Greek (el).
+  langpack-el.zip!model.onnx = el_synth_v3_ch80_fp16w.onnx — Greek (el).
     Trained on 100% SYNTHESIZED gesture data from the same learned trace
     generator and MIT-only FUTO + How-We-Swipe source corpora described above,
     using a Greek word list and the shipped Greek layout geometry. No real Greek
@@ -105,7 +116,7 @@ whenever a script model is added.
     real-swipe evaluation corpus at any evidence tier; synthesis-holdout levels
     are not reported as accuracy.
 
-  src/main/assets/models/uk_synth_v3_ch80_fp16w.onnx — Cyrillic (uk).
+  langpack-uk.zip!model.onnx = uk_synth_v3_ch80_fp16w.onnx — Cyrillic (uk).
     Trained on 100% SYNTHESIZED gesture data from the same learned trace
     generator and MIT-only FUTO + How-We-Swipe source corpora described above,
     using a Ukrainian word list and the shipped Ukrainian layout geometry. No
@@ -113,7 +124,7 @@ whenever a script model is added.
     Ukrainian has no real-swipe evaluation corpus at any evidence tier;
     synthesis-holdout levels are not reported as accuracy.
 
-  src/main/assets/models/bg_synth_v3_ch80_fp16w.onnx — Cyrillic (bg).
+  langpack-bg.zip!model.onnx = bg_synth_v3_ch80_fp16w.onnx — Cyrillic (bg).
     Trained on 100% SYNTHESIZED gesture data from the same learned trace
     generator and MIT-only FUTO + How-We-Swipe source corpora described above,
     using a Bulgarian word list and the shipped Bulgarian layout geometry. No
@@ -121,7 +132,7 @@ whenever a script model is added.
     Bulgarian has no real-swipe evaluation corpus at any evidence tier;
     synthesis-holdout levels are not reported as accuracy.
 
-  src/main/assets/models/mk_synth_v3_ch80_fp16w.onnx — Cyrillic (mk).
+  langpack-mk.zip!model.onnx = mk_synth_v3_ch80_fp16w.onnx — Cyrillic (mk).
     Trained on 100% SYNTHESIZED gesture data from the same learned trace
     generator and MIT-only FUTO + How-We-Swipe source corpora described above,
     using a Macedonian word list and the shipped Macedonian layout geometry. No
@@ -129,7 +140,7 @@ whenever a script model is added.
     Macedonian has no real-swipe evaluation corpus at any evidence tier;
     synthesis-holdout levels are not reported as accuracy.
 
-  src/main/assets/models/he_synth_v3_ch80_fp16w.onnx — Hebrew (he).
+  langpack-he.zip!model.onnx = he_synth_v3_ch80_fp16w.onnx — Hebrew (he).
     Trained on 100% SYNTHESIZED gesture data from the same learned trace
     generator and MIT-only FUTO + How-We-Swipe source corpora described above,
     using a Hebrew word list and the shipped Hebrew layout geometry. No real
