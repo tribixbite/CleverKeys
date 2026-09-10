@@ -10,6 +10,27 @@ what was done; this file is only what is left. Anything below is open.
 
 ## State after the 2026-08-30..09-02 full-backlog campaign (all pushed through `e87c5b97`+)
 
+### Open: 2026-09-10 daily-use Java-heap OOM
+
+- TODO: attribute the live Java heap with a heap dump before choosing a fix. The
+  11:25:54 crash (PID 8348, v2.0.0/200002) exhausted the 256 MiB Java growth limit.
+  Local release mapping resolves `Keyboard2View$d.a:20` to `keyCellIsEmpty` and its
+  nine-slot iterator, not swipe-path rendering; installed APK/mapping identity has
+  not been independently verified. The failed 32-byte allocation is not an owner census.
+- Replacement PID 28493 remains alive: explicit GC at 12:03:04 device time freed
+  31 MB + 13 MB LOS and left 204 MB/252 MB. Meminfo: 208,922 KiB Java allocated,
+  519,796 KiB total PSS. gfxinfo attributes 114.91 MiB to Skia GPU caches (99.31
+  MiB render targets); GPU memory is separate from the Java growth limit.
+- Earlier chat claims blaming a 15-second swipe or asserting a successful
+  unreachable report were unsupported. Verbose runtime logs now confirm logging
+  is enabled, but not that it owns the heap. `meminfo --unreachable` failed.
+  `am dumpheap` is denied: process not debuggable; the failed request left an
+  empty `/data/local/tmp/cleverkeys-20260910.hprof`.
+- Diagnostic-build installation/restart approval was requested and remains pending.
+  ADB reconnected at `172.16.10.2:36807`. No code or device settings changed;
+  preserve the current process until that decision.
+
+
 **The executable backlog is CLEARED.** Every ARC item that did not require maintainer input is
 closed — see `docs/audit/2026-08-28-archive-verification.md` (waves R1/R2/R3, D, G, J, K
 sections; every closure cites its commit) and `docs/plans/2026-08-30-full-backlog-campaign.md`
