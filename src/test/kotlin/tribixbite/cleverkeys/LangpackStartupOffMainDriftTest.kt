@@ -115,8 +115,8 @@ class LangpackStartupOffMainDriftTest {
     }
 
     /**
-     * Pin #3: with the secondary load off the main thread, its published fields are written on
-     * the loader thread and read on the prediction path — both must stay `@Volatile` so a
+     * Pin #3: async secondary publication runs on main, but the blocking loader can publish
+     * off-main. Both fields are read on the prediction path and must stay `@Volatile` so a
      * finished load is visible to the next keystroke without synchronization.
      */
     @Test
@@ -126,7 +126,7 @@ class LangpackStartupOffMainDriftTest {
         for (field in listOf("secondaryIndex", "secondaryLanguageCode")) {
             val decl = Regex("""@Volatile\s*\n\s*private var $field""")
             assertWithMessage(
-                "WordPredictor.$field is written by the async secondary-dictionary load " +
+                "WordPredictor.$field can be written by the blocking secondary-dictionary load " +
                     "(background thread) and read by the prediction path — the declaration " +
                     "must keep its @Volatile annotation."
             ).that(decl.containsMatchIn(predictor)).isTrue()

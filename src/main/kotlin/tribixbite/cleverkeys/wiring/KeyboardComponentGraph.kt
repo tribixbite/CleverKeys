@@ -43,6 +43,7 @@ class KeyboardComponentGraph(
     private val keyEventHandler: KeyEventHandler,
     private val handler: Handler,
     private val receiverBridge: KeyEventReceiverBridge,
+    private val foldStateTracker: FoldStateTracker,
 ) {
 
     /**
@@ -147,7 +148,7 @@ class KeyboardComponentGraph(
         inputCoordinator.setCursorSyncDelegate(suggestionHandler)
 
         // Keyboard-dimensions helper (v1.32.362)
-        val keyboardDimensionsHelper = KeyboardDimensionsHelper(service, config)
+        val keyboardDimensionsHelper = KeyboardDimensionsHelper(service, config, foldStateTracker)
         keyboardDimensionsHelper.setKeyboardView(keyboardView)
 
         // ML data collector (v1.32.370)

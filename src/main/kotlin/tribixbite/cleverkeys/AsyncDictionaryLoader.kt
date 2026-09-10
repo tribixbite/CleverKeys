@@ -7,10 +7,83 @@ import android.util.Log
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
+import java.util.concurrent.CancellationException
+import java.util.concurrent.FutureTask
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import kotlin.math.min
+
+/**
+ * Two replaceable dictionary requests per owner. Cancellation removes queued work and posted
+ * results, and publication checks identity under the same lock as replacement/close. The shared
+ * worker survives individual IMEs; a retired owner cannot enqueue or publish more dictionaries.
+ */
+internal class DictionaryLoadRequests(
+    private val executor: ThreadPoolExecutor,
+    private val post: (Any, Runnable) -> Unit,
+    private val removePosted: (Any) -> Unit
+) {
+    enum class Slot { PRIMARY, SECONDARY }
+    internal class Request {
+        var future: FutureTask<Unit>? = null
+    }
+    private val lock = Any()
+    private val requests = mutableMapOf<Slot, Request>()
+    private var closed = false
+
+    fun submit(slot: Slot, work: (Request) -> Unit) = synchronized(lock) {
+        if (closed) return@synchronized
+        cancelLocked(slot)
+        val request = Request()
+        requests[slot] = request
+        val future = FutureTask<Unit> {
+            // Cancellation belongs to the old request, never the next task on this worker.
+            Thread.interrupted()
+            try {
+                checkCurrent(slot, request)
+                work(request)
+            } catch (_: CancellationException) {
+                // An obsolete request has no success or failure callback.
+            }
+        }
+        request.future = future
+        executor.execute(future)
+    }
+
+    fun checkCurrent(slot: Slot, request: Request) {
+        if (Thread.currentThread().isInterrupted || synchronized(lock) {
+                closed || requests[slot] !== request
+            }) throw CancellationException("Dictionary request retired")
+    }
+
+    fun publish(slot: Slot, request: Request, action: Runnable) = synchronized(lock) {
+        if (!closed && requests[slot] === request) {
+            post(request, Runnable {
+                synchronized(lock) {
+                    if (!closed && requests[slot] === request) action.run()
+                }
+            })
+        }
+    }
+
+    fun cancel(slot: Slot) = synchronized(lock) { cancelLocked(slot) }
+
+    fun close() = synchronized(lock) {
+        closed = true
+        Slot.entries.forEach(::cancelLocked)
+    }
+
+    private fun cancelLocked(slot: Slot) {
+        requests.remove(slot)?.let { request ->
+            request.future?.let { future ->
+                future.cancel(true)
+                executor.remove(future)
+            }
+            removePosted(request)
+        }
+    }
+}
 
 /**
  * Asynchronous dictionary loader with background thread execution.
@@ -48,28 +121,21 @@ class AsyncDictionaryLoader {
 
         // Single-threaded executor for sequential dictionary loading
         // (only one dictionary should load at a time)
-        private val EXECUTOR: ExecutorService = Executors.newSingleThreadExecutor { r ->
+        private val EXECUTOR = ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, LinkedBlockingQueue()) { r ->
             Thread(r, "DictionaryLoader").apply {
                 priority = Thread.NORM_PRIORITY - 1 // Slightly lower priority
             }
-        }
-
-        /**
-         * Shutdown the executor service.
-         * Should be called when the loader is no longer needed.
-         */
-        @JvmStatic
-        fun shutdown() {
-            EXECUTOR.shutdown()
-            Log.d(TAG, "Dictionary loader executor shutdown")
         }
     }
 
     // Handler for callbacks on main thread
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    // Current loading task (for cancellation)
-    private var currentTask: Future<*>? = null
+    private val requests = DictionaryLoadRequests(
+        EXECUTOR,
+        { token, callback -> mainHandler.postAtTime(callback, token, android.os.SystemClock.uptimeMillis()); Unit },
+        { token -> mainHandler.removeCallbacksAndMessages(token) }
+    )
 
     /**
      * Callback interface for asynchronous dictionary loading.
@@ -130,19 +196,9 @@ class AsyncDictionaryLoader {
         language: String,
         callback: LoadCallback
     ) {
-        // Cancel any previous loading task
-        currentTask?.let {
-            if (!it.isDone) {
-                it.cancel(true)
-                Log.d(TAG, "Cancelled previous dictionary load")
-            }
-        }
-
-        // Notify on main thread that loading started
-        mainHandler.post { callback.onLoadStarted(language) }
-
-        // Submit loading task to background thread
-        currentTask = EXECUTOR.submit {
+        requests.submit(DictionaryLoadRequests.Slot.PRIMARY) { request ->
+            val slot = DictionaryLoadRequests.Slot.PRIMARY
+            requests.publish(slot, request, Runnable { callback.onLoadStarted(language) })
             // OPTIMIZATION v3 (perftodos3.md): Use android.os.Trace for system-level profiling
             android.os.Trace.beginSection("AsyncDictionaryLoader.loadDictionaryAsync")
             try {
@@ -190,13 +246,17 @@ class AsyncDictionaryLoader {
                         )
                         val jsonBuilder = StringBuilder()
                         reader.useLines { lines ->
-                            lines.forEach { jsonBuilder.append(it) }
+                            lines.forEach {
+                                requests.checkCurrent(slot, request)
+                                jsonBuilder.append(it)
+                            }
                         }
 
                         // Parse JSON object
                         val jsonDict = JSONObject(jsonBuilder.toString())
                         val keys = jsonDict.keys()
                         while (keys.hasNext()) {
+                            requests.checkCurrent(slot, request)
                             val word = keys.next().lowercase()
                             val frequency = jsonDict.getInt(word)
                             // Scale frequency to 100-10000 range
@@ -206,6 +266,7 @@ class AsyncDictionaryLoader {
 
                         // Build prefix index
                         for (word in dictionary.keys) {
+                            requests.checkCurrent(slot, request)
                             val maxLen = min(3, word.length)
                             for (len in 1..maxLen) {
                                 val prefix = word.substring(0, len)
@@ -227,50 +288,41 @@ class AsyncDictionaryLoader {
 
                 // OPTIMIZATION v4 (perftodos4.md): Load custom words on BACKGROUND THREAD
                 // This prevents blocking the main thread with SharedPreferences and ContentProvider access
+                requests.checkCurrent(slot, request)
                 val customWords = callback.onLoadCustomWords(context, dictionary, prefixIndex)
                 Log.i(TAG, "Loaded ${customWords.size} custom/user words on background thread")
 
                 // Notify success on main thread (maps already include custom words)
-                mainHandler.post { callback.onLoadComplete(dictionary, prefixIndex) }
+                requests.checkCurrent(slot, request)
+                requests.publish(slot, request, Runnable { callback.onLoadComplete(dictionary, prefixIndex) })
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                requests.checkCurrent(slot, request)
                 Log.e(TAG, "Dictionary loading failed: $language", e)
                 // Notify failure on main thread
-                mainHandler.post { callback.onLoadFailed(language, e) }
+                requests.publish(slot, request, Runnable { callback.onLoadFailed(language, e) })
             } finally {
                 android.os.Trace.endSection()
             }
         }
     }
 
-    /**
-     * Run [task] on the shared dictionary-loader thread, then post [onComplete] (if any) to
-     * the main thread — completion fires whether or not [task] threw.
-     *
-     * Issue #179: this is how the SECONDARY dictionary's pack read leaves the IME-create
-     * path (`WordPredictor.loadSecondaryDictionaryAsync`). Deliberately NOT tracked by
-     * [currentTask]: a primary-dictionary reload must not cancel a secondary load — the two
-     * populate disjoint structures — and the single-threaded [EXECUTOR] already serializes
-     * them so the secondary load can never race the primary parse for CPU.
-     */
-    fun runOffMain(task: Runnable, onComplete: Runnable? = null) {
-        EXECUTOR.submit {
-            try {
-                task.run()
-            } finally {
-                onComplete?.let { mainHandler.post(it) }
-            }
+    /** Build a secondary index off-main and publish only the latest still-live result. */
+    fun runOffMain(task: () -> Runnable?) {
+        requests.submit(DictionaryLoadRequests.Slot.SECONDARY) { request ->
+            val result = task()
+            requests.checkCurrent(DictionaryLoadRequests.Slot.SECONDARY, request)
+            result?.let { requests.publish(DictionaryLoadRequests.Slot.SECONDARY, request, it) }
         }
     }
 
-    /**
-     * Cancel any ongoing dictionary load.
-     */
-    fun cancel() {
-        currentTask?.let {
-            if (!it.isDone) {
-                it.cancel(true)
-                Log.d(TAG, "Dictionary load cancelled")
-            }
-        }
-    }
+    /** Cancel the primary load without disturbing the independently configured secondary. */
+    fun cancel() = requests.cancel(DictionaryLoadRequests.Slot.PRIMARY)
+
+    /** Invalidate a pending secondary result before disabling or replacing the language. */
+    fun cancelSecondary() = requests.cancel(DictionaryLoadRequests.Slot.SECONDARY)
+
+    /** Retire this owner's work without shutting down the process-wide worker. */
+    fun close() = requests.close()
 }

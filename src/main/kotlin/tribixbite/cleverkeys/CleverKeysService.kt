@@ -419,7 +419,7 @@ class CleverKeysService : InputMethodService(),
         // A-2: hand the graph a PROVIDER, not the view instance — onThemeChanged (and the
         // stale-theme branch of onStartInputView) replace _keyboardView, and everything the
         // graph wires (receiver, bridges, coordinators, propagator) must follow to the live view.
-        _graph = KeyboardComponentGraph(this, config, { _keyboardView }, _keyeventhandler, _handler, _receiverBridge)
+        _graph = KeyboardComponentGraph(this, config, { _keyboardView }, _keyeventhandler, _handler, _receiverBridge, foldStateTracker)
 
         // Managers (first read constructs the whole cluster in dependency order)
         _contractionManager = _graph.contractionManager

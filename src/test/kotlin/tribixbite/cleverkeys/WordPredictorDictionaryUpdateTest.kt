@@ -333,6 +333,27 @@ class WordPredictorDictionaryUpdateTest {
         assertThat(predictor.applyUserWordCase("latex")).isEqualTo("latex")
     }
 
+    @Test
+    fun backgroundMetadataBuildDoesNotMutateServingLanguage() {
+        val context = mockLoadSeams(mapOf("custom_words_fr" to """{"LaTeX":255}"""))
+        seedBaseDictionary()
+        incrementalUpdate(mapOf("iPhone" to 255), emptySet())
+        val servingCase = predictor.applyUserWordCase("iphone")
+        val pendingCase = mutableMapOf<String, String>()
+        val pendingBase = mutableMapOf<String, Int>()
+        val pendingDictionary = hashMapOf("latex" to 700_000, "base" to 1_000_000)
+        val method = WordPredictor::class.java.getDeclaredMethod(
+            "loadCustomAndUserWordsIntoMap", Context::class.java, Map::class.java,
+            String::class.java, Map::class.java, Map::class.java
+        ).apply { isAccessible = true }
+        method.invoke(predictor, context, pendingDictionary, "fr", pendingCase, pendingBase)
+        assertThat(pendingCase).containsEntry("latex", "LaTeX")
+        assertThat(pendingBase).containsEntry("latex", 700_000)
+        assertThat(predictor.applyUserWordCase("iphone")).isEqualTo(servingCase)
+        assertThat(predictor.applyUserWordCase("latex")).isEqualTo("latex")
+        assertThat(dict()).doesNotContainKey("latex")
+    }
+
     // ------------------------------------------------------------------ reflection
 
     private fun setField(name: String, value: Any?) {

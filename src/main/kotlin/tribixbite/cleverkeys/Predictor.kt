@@ -79,6 +79,9 @@ interface Predictor {
     /** Detach the UserDictionary observer — call before dropping the instance. */
     fun stopObservingDictionaryChanges()
 
+    /** Terminal lifecycle release; implementations with background loads must cancel them. */
+    fun shutdown() = stopObservingDictionaryChanges()
+
     // ---- Query -----------------------------------------------------------------------
 
     /** Rank dictionary candidates for the typed [keySequence] under [context]. */

@@ -13,6 +13,23 @@ import org.junit.Test
  */
 class CkdtReaderTest {
 
+    @Test
+    fun interruptedReader_abortsBeforeAllocatingDictionary() {
+        val bytes = java.io.File("src/main/assets/dictionaries/en_enhanced.bin").readBytes()
+        try {
+            Thread.currentThread().interrupt()
+            try {
+                CkdtDictionaryReader.readEntries(bytes)
+                throw AssertionError("Cancelled reader returned a dictionary")
+            } catch (_: InterruptedException) {
+                assertThat(Thread.currentThread().isInterrupted).isTrue()
+            }
+        } finally {
+            Thread.interrupted()
+        }
+        assertThat(CkdtDictionaryReader.readEntries(bytes)).isNotEmpty()
+    }
+
     // ── English CKDT ──────────────────────────────────────────────────────────
 
     @Test

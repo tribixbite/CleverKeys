@@ -655,6 +655,73 @@ class CtcImportedPackInstrumentedTest {
         }
     }
 
+    @Test
+    fun contractionReaderPropagatesCancellationAndClosesStream() {
+        var closed = false
+        val stream = object : java.io.ByteArrayInputStream(
+            """{"dont":"don't","cant":"can't"}""".toByteArray()
+        ) {
+            override fun close() {
+                closed = true
+                super.close()
+            }
+        }
+        val cancelled = java.util.concurrent.CancellationException("retired owner")
+        try {
+            tribixbite.cleverkeys.ContractionJsonReader.forEachKey(stream) { throw cancelled }
+            throw AssertionError("Reader swallowed lifecycle cancellation")
+        } catch (actual: java.util.concurrent.CancellationException) {
+            assertTrue("original cancellation must propagate", actual === cancelled)
+        }
+        assertTrue("cancelled parse must close its stream", closed)
+    }
+
+    /** Retired owners remain strongly reachable: disposal must work independently of GC. */
+    @Test
+    fun cancelledDictionaryOwnersDoNotPublish() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val retired = mutableListOf<tribixbite.cleverkeys.WordPredictor>()
+        val callbacks = java.util.concurrent.atomic.AtomicInteger()
+        val live = tribixbite.cleverkeys.WordPredictor()
+        val ready = CountDownLatch(1)
+        try {
+            instrumentation.runOnMainSync {
+                repeat(10) {
+                    val predictor = tribixbite.cleverkeys.WordPredictor()
+                    predictor.setContext(context)
+                    predictor.setConfig(tribixbite.cleverkeys.Config.globalConfig())
+                    retired.add(predictor)
+                    predictor.loadDictionaryAsync(context, "en", Runnable { callbacks.incrementAndGet() })
+                    predictor.loadSecondaryDictionaryAsync("it", Runnable { callbacks.incrementAndGet() })
+                    predictor.shutdown()
+                }
+                live.setContext(context)
+                live.setConfig(tribixbite.cleverkeys.Config.globalConfig())
+                live.loadSecondaryDictionaryAsync("it", Runnable { callbacks.incrementAndGet() })
+                live.unloadSecondaryDictionary()
+                // Same shared worker: reaching this completion drains obsolete loads first.
+                live.loadDictionaryAsync(context, "en", Runnable { ready.countDown() })
+            }
+            assertTrue("live dictionary load timed out", ready.await(60, TimeUnit.SECONDS))
+            instrumentation.runOnMainSync {
+                assertTrue("replacement must load a real dictionary", live.getDictionarySize() > 90_000)
+                assertFalse("disabled secondary was republished", live.hasSecondaryDictionary())
+                assertEquals("obsolete callbacks fired", 0, callbacks.get())
+                retired.forEach {
+                    assertEquals("retired primary retained", 0, it.getDictionarySize())
+                    assertFalse("retired secondary retained", it.hasSecondaryDictionary())
+                    assertFalse("retired owner remains loading", it.isLoading())
+                }
+            }
+            Log.i("CtcHeapLifecycle", "cancelledOwners=10 staleCallbacks=${callbacks.get()} liveWords=${live.getDictionarySize()}")
+        } finally {
+            instrumentation.runOnMainSync {
+                retired.forEach { it.shutdown() }
+                live.shutdown()
+            }
+        }
+    }
+
     /** Measures retained Java memory separately from native/GPU PSS using shipped dictionaries.
      * One orchestrated method keeps every stage in the same process; decoding uses synthetic
      * traces and never imports personal data from the maintainer's phone.

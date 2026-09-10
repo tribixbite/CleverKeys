@@ -82,6 +82,7 @@ object CkdtDictionaryReader {
 
     /** [readEntries] over an in-memory byte array. */
     fun readEntries(bytes: ByteArray): List<Entry> {
+        checkInterrupted()
         require(bytes.size >= HEADER_SIZE_V2) {
             "CKDT file too short: ${bytes.size} bytes < header $HEADER_SIZE_V2"
         }
@@ -108,6 +109,7 @@ object CkdtDictionaryReader {
         val words = arrayOfNulls<String>(wordCount)
         val ranks = IntArray(wordCount)
         for (i in 0 until wordCount) {
+            checkInterrupted()
             val len = buffer.short.toInt() and 0xFFFF
             val wb = ByteArray(len)
             buffer.get(wb)
@@ -118,8 +120,19 @@ object CkdtDictionaryReader {
         // Stable ordinal order = (rank asc, file order asc). Sort an index array by
         // rank; ties keep file order because we sort the ascending 0..n index list
         // with a stable comparator keyed on rank only.
-        val order = (0 until wordCount).sortedBy { ranks[it] }  // sortedBy is stable
-        return List(wordCount) { Entry(words[order[it]]!!, ranks[order[it]]) }
+        val order = (0 until wordCount).sortedBy {
+            checkInterrupted()
+            ranks[it]
+        }  // sortedBy is stable
+        return List(wordCount) {
+            checkInterrupted()
+            Entry(words[order[it]]!!, ranks[order[it]])
+        }
+    }
+
+    /** Keep retired swipe workers from finishing a large parse or rank sort. */
+    private fun checkInterrupted() {
+        if (Thread.currentThread().isInterrupted) throw InterruptedException("CKDT load cancelled")
     }
 
     /**

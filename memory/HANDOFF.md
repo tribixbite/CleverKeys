@@ -25,7 +25,7 @@ what was done; this file is only what is left. Anything below is open.
   until they finish; no main-thread clearing of a worker's mutable trie. Native shutdown's
   existing 250 ms safety timeout is unchanged. Canonical lifecycle: `docs/specs/ctc-swipe-engine.md`.
 - **Post-fix proof:** the SAME native callback root still retains two retired services, but
-  their retained bytes drop to **1,107,881 total** (~552 kB each), from ~41 MB each.
+  their retained bytes drop to **1,107,881 total** (~554 kB each), from ~41 MB each.
   [Fixed run](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/4e41ac4a-1b68-4e2b-980d-c838189bfb60)
   passed the new 16 MiB recreation-growth gate. Java bytes first show 60,197,712 →
   replacements 1..5: 60,817,656 / 61,387,328 / 61,906,040 / 62,434,408 / 62,997,400;
@@ -59,15 +59,19 @@ what was done; this file is only what is left. Anything below is open.
   on the instrumentation thread. Service and weak-reference reads were moved onto main,
   returning primitives; the corrected dump then proved the distinct native callback root.
   Do not use the first report `build/memory-shark-analysis.txt` as app-leak proof.
-- **Parallel dictionary review follow-ups (not fixed in this patch):**
-  - TODO: make AsyncDictionaryLoader lifecycle-aware: stale primary work can still publish
-    after cancellation/shutdown; secondary runOffMain futures are untracked. Add latch-driven
-    cancellation/publication tests before changing its ownership model.
-  - TODO: prevent an in-flight secondary load from re-enabling the index after explicit unload.
-  - Main dictionary/prefix and secondary canonical maps are substantial but vocabulary-bounded;
-    old DictionaryManager/MultiLanguageManager duplicate-model caches were already removed.
-  - Framework still temporarily retains lightweight service/view objects (~0.5 MiB/service);
-    this mitigation releases their heavy dictionaries, not Android's native callback itself.
+- **2026-09-10 audit follow-up:** fixed primary/secondary task lifetime and guarded
+  publication, staged custom/casing/alias metadata, terminal predictor disposal,
+  cooperative binary/CTC parsing, and both height helpers' unclosed fold listeners.
+  The helpers reuse the service tracker already closed by CleanupHandler. Audit now
+  distinguishes proven emulator roots from phone inference and removes unsupported
+  bilingual budgets/census and the obsolete static OptimizedVocabulary proposal.
+  Guarded app/test compilation + 2,377 pure / 731 mock tests passed (4m55s).
+  Cloud run `e401aeb0-a5c7-44d9-8db6-e390b1abc031`: four tests passed; ten retired
+  owners had zero stale callbacks, live replacement loaded 98,140 words; five service
+  replacements added 2.67 MiB; bilingual decode heap stayed ~87 MiB. Logs under
+  `build/ew-memory-audit-fixes/`; full detail and limitations in the audit report.
+- Framework still temporarily retains lightweight service/view objects (~0.5 MiB/service);
+  the mitigation releases heavy dictionaries, not Android's native callback itself.
 - **Authorization:** maintainer grants permanent ongoing emulator.wtf APK upload approval
   (captured in CLAUDE.md); do not re-ask for routine rebuilt diagnostic/test runs.
   PAL external consultation was rejected by auto-review; independent local delegated review

@@ -247,6 +247,7 @@ class WordPredictor : Predictor {
     // OPTIMIZATION: UserDictionary and custom words observer
     private var dictionaryObserver: UserDictionaryObserver? = null
     private var observerActive: Boolean = false
+    @Volatile private var closed = false
 
     // Track contraction aliases added to dictionary (e.g., "im" → "i'm", "dont" → "don't")
     // These are in the dictionary for prediction purposes but should still be autocorrected
@@ -254,9 +255,9 @@ class WordPredictor : Predictor {
     private var contractionAliases: Map<String, String> = emptyMap()
 
     // v1.1.93: Secondary language dictionary for bilingual touch typing.
-    // Both fields are published by the async secondary load (issue #179: the load runs on the
-    // shared dictionary-loader thread, never the main thread) and read on the prediction path,
-    // so both stay @Volatile — pinned by LangpackStartupOffMainDriftTest.
+    // Async loads build on the shared worker and publish on main. The blocking loader can
+    // still publish off-main; predictions read these fields across threads, so both remain
+    // @Volatile — pinned by LangpackStartupOffMainDriftTest.
     @Volatile
     private var secondaryIndex: NormalizedPrefixIndex? = null
     @Volatile
@@ -331,6 +332,7 @@ class WordPredictor : Predictor {
      * Call this after dictionary is loaded to receive change notifications.
      */
     fun startObservingDictionaryChanges() {
+        if (closed) return
         dictionaryObserver?.let {
             if (!observerActive) {
                 it.start()
@@ -356,6 +358,23 @@ class WordPredictor : Predictor {
                 }
             }
         }
+    }
+
+    /** Stop owned work before releasing dictionaries; late loader results are discarded. */
+    override fun shutdown() {
+        if (closed) return
+        closed = true
+        asyncLoader.close()
+        stopObservingDictionaryChanges()
+        dictionary.set(mutableMapOf())
+        prefixIndex.set(mutableMapOf())
+        secondaryIndex = null
+        secondaryLanguageCode = "none"
+        isLoadingState = false
+        customAndUserWords = emptySet()
+        contractionAliases = emptyMap()
+        userWordOriginalCase.clear()
+        shadowedBaseFrequencies.clear()
     }
 
     /**
@@ -988,6 +1007,8 @@ class WordPredictor : Predictor {
      * v1.2.5 FIX: Also checks installed language packs (issue #63 root cause)
      */
     fun loadDictionary(context: Context, language: String) {
+        if (closed) return
+        asyncLoader.cancel()
         dictionary.get().clear()
         prefixIndex.get().clear()
         // C-9 (2026-09-06 audit): the per-word user state describes the OUTGOING
@@ -1114,14 +1135,22 @@ class WordPredictor : Predictor {
      * @param callback Callback for load completion (optional, can be null)
      */
     override fun loadDictionaryAsync(context: Context, language: String, callback: Runnable?) {
+        if (closed) return
         // v1.2.0: Don't ignore reload requests - AsyncDictionaryLoader will cancel previous task
         // This fixes language toggle not reloading dictionary when initial load is in progress
         if (isLoadingState) {
             Log.i(TAG, "Dictionary load in progress, will cancel and reload for '$language'")
-            isLoadingState = false  // Reset flag so new load can proceed
         }
 
+        isLoadingState = true
         asyncLoader.loadDictionaryAsync(context, language, object : AsyncDictionaryLoader.LoadCallback {
+            // Build metadata beside the private dictionary. Cancelled work must never mutate
+            // the serving language's case/alias/custom-word state before publication.
+            private val loadedCase = mutableMapOf<String, String>()
+            private val loadedBaseFrequencies = mutableMapOf<String, Int>()
+            private val loadedAliases = mutableMapOf<String, String>()
+            private var loadedCustomWords: Set<String> = emptySet()
+
             override fun onLoadStarted(lang: String) {
                 isLoadingState = true
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Started async dictionary load: $lang")
@@ -1135,8 +1164,10 @@ class WordPredictor : Predictor {
                 // OPTIMIZATION v4 (perftodos4.md): This runs on BACKGROUND THREAD!
                 // Load custom words into the maps before they're swapped on main thread
                 // v1.1.90: Pass language to filter UserDictionary by locale
-                val customWords = loadCustomAndUserWordsIntoMap(ctx, dictionary, language)
-                customAndUserWords = customWords  // Track for disabled-word override check
+                val customWords = loadCustomAndUserWordsIntoMap(
+                    ctx, dictionary, language, loadedCase, loadedBaseFrequencies
+                )
+                loadedCustomWords = customWords
 
                 // Add custom words to prefix index
                 if (customWords.isNotEmpty()) {
@@ -1145,7 +1176,7 @@ class WordPredictor : Predictor {
 
                 // v1.2.7: Load contraction keys (apostrophe-free forms) for primary language
                 // This allows typing "dont" or "cant" to find "don't" or "can't"
-                val contractionKeys = loadContractionKeysIntoMaps(ctx, dictionary, prefixIndex, language)
+                val contractionKeys = loadContractionKeysIntoMaps(ctx, dictionary, prefixIndex, language, loadedAliases)
                 if (contractionKeys > 0) {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added $contractionKeys contraction keys during async load for '$language'")
                 }
@@ -1158,14 +1189,21 @@ class WordPredictor : Predictor {
                 prefixIndex: Map<String, Set<String>>
             ) {
                 // OPTIMIZATION v4 (perftodos4.md): ATOMIC SWAP on main thread
-                // All expensive operations (loading, custom words, prefix indexing) happened on background thread
-                // This callback just swaps the maps atomically in O(1) time
+                // Dictionary parsing and indexing happened on the background thread. Swap
+                // the large maps, then publish their accompanying user-word metadata.
 
-                // ATOMIC SWAP: Replace entire maps in <1ms operation on main thread
+                // Replace the complete dictionary/index references without copying their entries.
                 @Suppress("UNCHECKED_CAST")
                 this@WordPredictor.dictionary.set(dictionary as MutableMap<String, Int>)
                 @Suppress("UNCHECKED_CAST")
                 this@WordPredictor.prefixIndex.set(prefixIndex as MutableMap<String, MutableSet<String>>)
+
+                customAndUserWords = loadedCustomWords
+                userWordOriginalCase.clear()
+                userWordOriginalCase.putAll(loadedCase)
+                shadowedBaseFrequencies.clear()
+                shadowedBaseFrequencies.putAll(loadedBaseFrequencies)
+                contractionAliases = loadedAliases
 
                 // Set the N-gram model language
                 setLanguage(language)
@@ -1232,20 +1270,22 @@ class WordPredictor : Predictor {
      * contract of the primary dictionary ([loadDictionaryAsync]).
      */
     override fun loadSecondaryDictionaryAsync(language: String, callback: Runnable?) {
+        if (closed) return
         if (language == "none" || language.isEmpty()) {
             unloadSecondaryDictionary()
             callback?.run()
             return
         }
-        asyncLoader.runOffMain({
-            try {
-                loadSecondaryDictionary(language)
-            } catch (e: Exception) {
-                // Same containment as the blocking form's internal catch: a failed secondary
-                // load degrades to primary-only predictions, never to a crash.
-                Log.e(TAG, "Async secondary dictionary load failed: $language", e)
+        asyncLoader.runOffMain {
+            val index = buildSecondaryDictionary(language)
+            Runnable {
+                if (index != null) {
+                    secondaryIndex = index
+                    secondaryLanguageCode = language
+                }
+                callback?.run()
             }
-        }, callback)
+        }
     }
 
     /**
@@ -1266,7 +1306,17 @@ class WordPredictor : Predictor {
             return true
         }
 
-        val ctx = context ?: return false
+        if (closed) return false
+        asyncLoader.cancelSecondary()
+        val index = buildSecondaryDictionary(language) ?: return false
+        secondaryIndex = index
+        secondaryLanguageCode = language
+        return true
+    }
+
+    /** Build privately; only the request's guarded completion publishes async results. */
+    private fun buildSecondaryDictionary(language: String): NormalizedPrefixIndex? {
+        val ctx = context ?: return null
 
         try {
             Log.i(TAG, "Loading secondary dictionary for touch typing: $language")
@@ -1298,17 +1348,17 @@ class WordPredictor : Predictor {
                     "lang=$language added=$contractionsAdded custom=$customWordsAdded"
                 }
 
-                secondaryIndex = index
-                secondaryLanguageCode = language
                 Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} words, +$customWordsAdded custom, +$contractionsAdded contractions)")
-                return true
+                return index
             } else {
                 Log.w(TAG, "Failed to load secondary dictionary: $language")
-                return false
+                return null
             }
+        } catch (e: java.util.concurrent.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error loading secondary dictionary: $language", e)
-            return false
+            return null
         }
     }
 
@@ -1316,6 +1366,7 @@ class WordPredictor : Predictor {
      * Unload the secondary dictionary to free memory.
      */
     override fun unloadSecondaryDictionary() {
+        asyncLoader.cancelSecondary()
         secondaryIndex = null
         secondaryLanguageCode = "none"
         Log.i(TAG, "Unloaded secondary dictionary for touch typing")
@@ -1341,6 +1392,7 @@ class WordPredictor : Predictor {
                 val keys = jsonObj.keys()
 
                 while (keys.hasNext()) {
+                    checkDictionaryLoadInterrupted()
                     val word = keys.next()
                     val frequency = jsonObj.optInt(word, 1000)
                     // Wave U2: the stored value is on the 1..255 user scale
@@ -1357,6 +1409,8 @@ class WordPredictor : Predictor {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added $count custom words to secondary index for '$language'")
                 }
             }
+        } catch (e: java.util.concurrent.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load secondary custom words for '$language'", e)
         }
@@ -1377,7 +1431,8 @@ class WordPredictor : Predictor {
         context: Context,
         targetDict: MutableMap<String, Int>,
         targetPrefixIndex: MutableMap<String, MutableSet<String>>,
-        language: String
+        language: String,
+        aliases: MutableMap<String, String>
     ): Int {
         var count = 0
         try {
@@ -1389,18 +1444,21 @@ class WordPredictor : Predictor {
             } else {
                 try {
                     context.assets.open("dictionaries/contractions_$language.json")
+                } catch (e: java.util.concurrent.CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     return 0
                 }
             }
 
             run {
-                val aliases = mutableMapOf<String, String>()
+                aliases.clear()
 
                 // Streaming parse — see [ContractionJsonReader]. The restored fr/it files hold
                 // ~18k/~21k mappings, so the old whole-file-into-String parse was a multi-MB
                 // transient spike on every dictionary load.
                 ContractionJsonReader.forEachEntry(inputStream) { withoutApostrophe, withApostrophe ->
+                    checkDictionaryLoadInterrupted()
                     // Skip real English words that are also contraction bases
                     if (withoutApostrophe in REAL_WORD_CONTRACTION_BASES) return@forEachEntry
 
@@ -1421,8 +1479,9 @@ class WordPredictor : Predictor {
                     count++
                 }
 
-                contractionAliases = aliases
             }
+        } catch (e: java.util.concurrent.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load contraction keys for '$language' (async)", e)
         }
@@ -1546,6 +1605,8 @@ class WordPredictor : Predictor {
                 // Try bundled assets
                 try {
                     context.assets.open("dictionaries/contractions_$language.json")
+                } catch (e: java.util.concurrent.CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     // No contractions file for this language - that's OK
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "No contractions file for secondary language '$language'")
@@ -1557,6 +1618,7 @@ class WordPredictor : Predictor {
             // apostrophe-free surface), and streaming avoids materializing the whole file —
             // this is the exact call that ran out of heap on a 256 MB device.
             count = ContractionJsonReader.forEachKey(inputStream) { withoutApostrophe ->
+                checkDictionaryLoadInterrupted()
                 // Add the apostrophe-free form as an alias so prefix search can reach the
                 // contraction. Two rules, both load-bearing since the 2026-08-17 restore took
                 // the French/Italian files from ~100 curated aliases to 18k/21k:
@@ -1579,6 +1641,8 @@ class WordPredictor : Predictor {
             if (count > 0) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added $count contraction keys to secondary index for '$language'")
             }
+        } catch (e: java.util.concurrent.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load secondary contraction keys for '$language'", e)
         }
@@ -1666,12 +1730,21 @@ class WordPredictor : Predictor {
      * @param language Language code to filter UserDictionary (e.g., "fr", "de")
      * @return Set of all words loaded (for incremental prefix index updates)
      */
-    private fun loadCustomAndUserWordsIntoMap(context: Context, targetMap: MutableMap<String, Int>, language: String = "en"): Set<String> {
+    private fun loadCustomAndUserWordsIntoMap(context: Context, targetMap: MutableMap<String, Int>, language: String = "en"): Set<String> =
+        loadCustomAndUserWordsIntoMap(context, targetMap, language, userWordOriginalCase, shadowedBaseFrequencies)
+
+    private fun loadCustomAndUserWordsIntoMap(
+        context: Context,
+        targetMap: MutableMap<String, Int>,
+        language: String,
+        originalCase: MutableMap<String, String>,
+        baseFrequencies: MutableMap<String, Int>
+    ): Set<String> {
         val loadedWords = mutableSetOf<String>()
         // C-9: this is a FULL load into a fresh map (the async language-switch path) —
         // the previous language's case + shadowed-base state must not survive it.
-        userWordOriginalCase.clear()
-        shadowedBaseFrequencies.clear()
+        originalCase.clear()
+        baseFrequencies.clear()
         // Wave U2: calibrate stored 1..255 user frequencies onto the base scale
         // already loaded into [targetMap] (see baseFrequencySpanOf).
         val (scaleFloor, scaleCeil) = baseFrequencySpanOf(targetMap)
@@ -1690,13 +1763,14 @@ class WordPredictor : Predictor {
                     val keys = jsonObj.keys()
                     var customCount = 0
                     while (keys.hasNext()) {
+                        checkDictionaryLoadInterrupted()
                         val originalWord = keys.next()
                         val lowerWord = originalWord.lowercase()
                         val frequency = jsonObj.optInt(originalWord, 1000)
                         // C-3: a custom word about to overwrite a BASE entry records the
                         // base value so deleting the custom word can restore it.
                         if (lowerWord !in loadedWords) {
-                            targetMap[lowerWord]?.let { shadowedBaseFrequencies.putIfAbsent(lowerWord, it) }
+                            targetMap[lowerWord]?.let { baseFrequencies.putIfAbsent(lowerWord, it) }
                         }
                         // Write the CALIBRATED value to the target map, not dictionary
                         targetMap[lowerWord] =
@@ -1704,7 +1778,7 @@ class WordPredictor : Predictor {
                         loadedWords.add(lowerWord)
                         // v1.2.7: Preserve original case for proper nouns (Issue #72)
                         if (originalWord != lowerWord) {
-                            userWordOriginalCase[lowerWord] = originalWord
+                            originalCase[lowerWord] = originalWord
                         }
                         customCount++
                     }
@@ -1722,10 +1796,11 @@ class WordPredictor : Predictor {
             // disagree about which personal words exist. Its KDoc owns the filter rationale.
             val userRows = UserDictionaryWords.read(context, language)
             for ((originalWord, frequency) in userRows) {
+                checkDictionaryLoadInterrupted()
                 val lowerWord = originalWord.lowercase()
                 // C-3: same shadowed-base recording as the custom-words loop above.
                 if (lowerWord !in loadedWords) {
-                    targetMap[lowerWord]?.let { shadowedBaseFrequencies.putIfAbsent(lowerWord, it) }
+                    targetMap[lowerWord]?.let { baseFrequencies.putIfAbsent(lowerWord, it) }
                 }
                 // Provider rows are 1..255 too — same calibration as the preference words.
                 targetMap[lowerWord] =
@@ -1733,12 +1808,14 @@ class WordPredictor : Predictor {
                 loadedWords.add(lowerWord)
                 // v1.2.7: Preserve original case for proper nouns (Issue #72)
                 if (originalWord != lowerWord) {
-                    userWordOriginalCase[lowerWord] = originalWord
+                    originalCase[lowerWord] = originalWord
                 }
             }
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 Log.d(TAG, "Loaded ${userRows.size} user dictionary words for locale '$language' into new map")
             }
+        } catch (e: java.util.concurrent.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error loading custom/user words into new map", e)
         }

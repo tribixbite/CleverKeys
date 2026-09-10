@@ -362,8 +362,8 @@ class PredictionCoordinator(
         // (2026-08-06 persistence fix)
         flushLearnedData()
 
-        // Stop observing dictionary changes
-        wordPredictor?.stopObservingDictionaryChanges()
+        // Cancel owned loads and detach observation before dropping the serving predictor.
+        wordPredictor?.shutdown()
 
         // ARC-079: the manager is not torn down here any more — it owns no predictor and no
         // dictionary observer, so it has nothing to release beyond ordinary GC.

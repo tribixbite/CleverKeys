@@ -677,6 +677,7 @@ class CtcEngineAdapter(
                     val pairs = ArrayList<Pair<String, Double>>(base.length())
                     val keys = base.keys()
                     while (keys.hasNext()) {
+                        if (Thread.currentThread().isInterrupted) throw InterruptedException("Lexicon load cancelled")
                         val word = keys.next()
                         pairs.add(word to base.optInt(word, 1).toDouble())
                     }
@@ -695,6 +696,8 @@ class CtcEngineAdapter(
                     CtcCkdtLexicon.frequencyPairs(entries)
                 }
             }
+        } catch (e: InterruptedException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "No CTC lexicon source ($sourceId)", e)
             trieMemos.remove(lang)
@@ -728,6 +731,7 @@ class CtcEngineAdapter(
         // not what it retains after collection.
         MemoryProbe.mark("ctc.baseParse") { "lang=$lang entries=${basePairs.size}" }
 
+        if (Thread.currentThread().isInterrupted) throw InterruptedException("Lexicon load cancelled")
         val merged = CtcLexiconMerge.merge(basePairs, userWordPairs, disabled)
         val ordinals = CtcLexiconMerge.ordinals(merged)
         MemoryProbe.mark("ctc.mergeAndOrdinals") { "merged=${merged.size}" }
@@ -813,6 +817,7 @@ class CtcEngineAdapter(
             CtcFuzzyRescue.fromFrequencies(rescueFrequencies, alphabet.toHashSet()),
             version,
         )
+        if (Thread.currentThread().isInterrupted) throw InterruptedException("Lexicon load cancelled")
         trieMemos[lang] = built
         return built
     }

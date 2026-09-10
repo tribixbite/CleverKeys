@@ -29,6 +29,8 @@ class FoldStateTracker(context: Context) {
     }
 
     fun close() {
+        changedCallback = null
+        foldingFeature = null
         windowInfoTracker.removeWindowLayoutInfoListener(innerListener)
     }
 

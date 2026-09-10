@@ -37,7 +37,8 @@ import android.view.WindowManager
  */
 class KeyboardDimensionsHelper(
     private val _context: Context,
-    private var _config: Config
+    private var _config: Config,
+    private val foldStateTracker: FoldStateTracker
 ) {
     private var _keyboardView: Keyboard2View? = null // Updated when view changes
     private var _suggestionBar: SuggestionBar? = null // Updated when suggestion bar changes
@@ -115,8 +116,8 @@ class KeyboardDimensionsHelper(
             wm.defaultDisplay.getMetrics(metrics)
 
             // Check foldable state
-            val foldTracker = FoldStateTracker(_context)
-            val foldableUnfolded = foldTracker.isUnfolded()
+            // Reuse the service-owned listener, which CleanupHandler closes on teardown.
+            val foldableUnfolded = foldStateTracker.isUnfolded()
 
             // Check orientation
             val isLandscape = _context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -146,8 +147,8 @@ class KeyboardDimensionsHelper(
      */
     fun getUserKeyboardHeightPercent(): Int {
         return try {
-            val foldTracker = FoldStateTracker(_context)
-            val foldableUnfolded = foldTracker.isUnfolded()
+            // Reuse the service-owned listener, which CleanupHandler closes on teardown.
+            val foldableUnfolded = foldStateTracker.isUnfolded()
             val isLandscape = _context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
             val prefs = DirectBootAwarePreferences.get_shared_preferences(_context)

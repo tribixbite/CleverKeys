@@ -170,7 +170,7 @@ class LearningWiringDriftTest {
         assertThat(flushIdx).isGreaterThan(-1)
         assertThat(releaseIdx).isGreaterThan(-1)
         assertThat(flushIdx).isLessThan(releaseIdx)
-        assertThat(shutdown).contains("wordPredictor?.stopObservingDictionaryChanges()")
+        assertThat(shutdown).contains("wordPredictor?.shutdown()")
     }
 
     // ---------------------------------------------------------------- M5

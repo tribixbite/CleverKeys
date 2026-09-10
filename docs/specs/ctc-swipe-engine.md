@@ -253,6 +253,8 @@ unreachable. Pure JVM, pinned by `CtcContractionKeysTest`.
    rather than rendering an empty bar. Shutdown cancels the worker and waits up to 250 ms;
    sessions close only after worker termination, never underneath `session.run`. The existing
    timeout path leaves native sessions open rather than risking concurrent native access.
+   Trie construction and CKDT parsing observe thread interruption and abort without
+   publishing partial dictionaries; repeated shows reuse the versioned two-language memo.
    The owning InputCoordinator detaches its adapters at shutdown and rejects late warm-up,
    fallback, result and cursor callbacks. A running worker retains its own adapter until it
    returns; an idle adapter and its Java trie caches can be collected even if Android's

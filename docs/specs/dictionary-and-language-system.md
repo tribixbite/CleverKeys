@@ -215,39 +215,37 @@ data class LanguageState(
 | `LanguageDetector` | Word/character-pattern language detection (the unigram-frequency `UnigramLanguageDetector` was deleted 2026-08-28 — ARC-006, write-only after `OptimizedVocabulary` went) |
 | `AccentNormalizer` | Unicode normalization (NFD) + accent stripping |
 
-### Performance Considerations
+### Dictionary lifecycle and memory
 
-| Aspect | Strategy |
-|--------|----------|
-| Trie lookups | O(L) where L = key length, <5ms |
-| Memory mapping | `MappedByteBuffer` for large dictionaries |
-| Async loading | Language switching on `Dispatchers.IO` |
-| Lazy init | Secondary dictionary loaded only when enabled |
-| Memory cleanup | Inactive ONNX sessions unloaded after 60s |
-| Unigram cache | ~100KB per language kept in memory |
-| Predictor eviction | `DictionaryManager.setLanguage()` evicts stale predictors (~5-10MB each) |
-| Predictor keep set | Retains up to 4 configured languages (primary, secondary, alternates) |
-| Coil image cache | Capped at 32MB in GifGridView (default was ~250MB) |
-| ONNX shutdown | `PredictionCoordinator.shutdown()` explicitly closes native OrtSessions |
+PredictionCoordinator owns the serving WordPredictor. DictionaryManager does not
+cache additional predictors. The predictor has a primary dictionary/prefix index
+and an optional secondary NormalizedPrefixIndex. A vocabulary bound limits each
+index, but each remains substantial; see the measured EN+IT stages in
+[`2026-09-10-memory-oom-root-cause.md`](../audit/2026-09-10-memory-oom-root-cause.md).
 
-### Predictor Lifecycle & Memory
+AsyncDictionaryLoader uses one process-wide worker and two replaceable request
+slots per owner, primary and secondary. Replacing or cancelling a request removes
+its queued task and main-handler callbacks. Token checks also reject callbacks
+already dequeued before cancellation. Secondary disable invalidates its slot
+without cancelling primary loading. A synchronous primary reload invalidates the
+pending asynchronous primary request before replacing its maps.
 
-`DictionaryManager.predictors` caches a `WordPredictor` per language code (~5-10MB each:
-dictionary map, prefix index, ContextModel, PersonalizationEngine, ContentObserver).
+Primary dictionary, prefix index, casing, custom-word, shadowed-frequency and
+contraction metadata build privately. The current request publishes them on main;
+obsolete work cannot modify the serving language's metadata. Secondary indexes
+also build privately and publish on main. Binary and overlay loops cooperate
+with interruption, and expected cancellation does not trigger fallback loading.
+Individual I/O/native calls are not guaranteed to stop immediately.
 
-**Eviction policy:** On `setLanguage()`, predictors not in the configured language set are
-evicted and their observers stopped. The configured set is read from preferences:
-- `pref_primary_language` (default: "en")
-- `pref_secondary_language` (default: "none")
-- `pref_primary_language_alt` (default: "es")
-- `pref_secondary_language_alt` (default: "none")
+PredictionCoordinator.shutdown checkpoints learning, then calls the predictor's
+terminal shutdown. This cancels both load slots, stops dictionary observation,
+and replaces large dictionary references with empty state. It never shuts down
+the shared executor or clears a worker's privately owned maps. Production lifecycle
+and publication calls run on the main thread. Later load/observation requests on
+the retired predictor are ignored.
 
-Up to 4 languages are retained simultaneously. Languages outside this set are evicted to
-free memory. See `DictionaryManager.getConfiguredLanguages()`.
-
-**Orphaned observer guard:** `loadDictionaryAsync` callbacks check `predictors[code] === this`
-before starting a ContentObserver, preventing leaked observers on evicted instances.
-
-> **Future expansion:** To support more simultaneous languages, add their pref keys to
-> `getConfiguredLanguages()` in `DictionaryManager.kt`. The eviction logic automatically
-> adapts — it only evicts what's NOT in the returned set.
+Swipe dictionaries are separately owned by their adapters, with bounded,
+content-versioned language memos. InputCoordinator detaches those adapters during
+teardown. CtcEngineAdapter closes its ONNX sessions only after the worker has
+terminated; its existing 250 ms timeout avoids closing a session beneath native
+inference. See [`ctc-swipe-engine.md`](ctc-swipe-engine.md) for that contract.

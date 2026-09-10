@@ -15,6 +15,29 @@ class CtcModuleTest {
 
     private val az = ('a'..'z').toList().toCharArray()
 
+    @Test
+    fun trieLoaders_abortInterruptedWorkWithoutConsumingCancellation() {
+        val loaders = listOf<(CharArray, Map<String, Double>) -> CtcLexiconTrie>(
+            CtcLexiconTrie::loadFromFrequencyMap,
+            CtcLexiconTrie::loadStrippingNonAlphabet,
+        )
+        for (load in loaders) {
+            try {
+                Thread.currentThread().interrupt()
+                try {
+                    load(az, linkedMapOf("cat" to 200.0, "dog" to 100.0))
+                    throw AssertionError("Interrupted load returned a partially built trie")
+                } catch (_: InterruptedException) {
+                    assertThat(Thread.currentThread().isInterrupted).isTrue()
+                }
+            } finally {
+                // JUnit shares this worker with unrelated tests.
+                Thread.interrupted()
+            }
+            assertThat(load(az, mapOf("cat" to 200.0)).contains("cat")).isTrue()
+        }
+    }
+
     // ── Emission slicing (engine.cpp predict_segment) ─────────────────────────────
 
     @Test

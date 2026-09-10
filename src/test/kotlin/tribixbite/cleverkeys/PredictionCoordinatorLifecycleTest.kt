@@ -203,3 +203,99 @@ class PredictionCoordinatorLifecycleTest {
         coordinator.flushLearnedData() // must not throw
     }
 }
+
+/** Deterministic executor tests for request lifetime, independent of Android's main looper. */
+class DictionaryLoadRequestsTest {
+    private class Harness : java.io.Closeable {
+        val executor = java.util.concurrent.ThreadPoolExecutor(
+            1, 1, 0L, java.util.concurrent.TimeUnit.MILLISECONDS,
+            java.util.concurrent.LinkedBlockingQueue<Runnable>()
+        )
+        val posted = java.util.Collections.synchronizedList(mutableListOf<Pair<Any, Runnable>>())
+        val requests = DictionaryLoadRequests(executor,
+            { token, action -> posted.add(token to action); Unit },
+            { token -> synchronized(posted) { posted.removeAll { it.first === token } }; Unit })
+        fun drainWorker() { executor.submit {}.get(5, java.util.concurrent.TimeUnit.SECONDS) }
+        fun drainMain() {
+            val callbacks = synchronized(posted) { posted.toList().also { posted.clear() } }
+            callbacks.forEach { it.second.run() }
+        }
+        override fun close() {
+            requests.close()
+            executor.shutdownNow()
+            check(executor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS))
+        }
+    }
+
+    @Test
+    fun replacedPrimaryCannotPublishEvenIfItsCallbackWasAlreadyDequeued(): Unit = Harness().use { h ->
+        val slot = DictionaryLoadRequests.Slot.PRIMARY
+        val results = mutableListOf<String>()
+        h.requests.submit(slot) { request -> h.requests.publish(slot, request, Runnable { results.add("old") }) }
+        h.drainWorker()
+        val dequeued = h.posted.single().second
+        h.requests.submit(slot) { request -> h.requests.publish(slot, request, Runnable { results.add("new") }) }
+        h.drainWorker()
+        dequeued.run()
+        h.drainMain()
+        assertThat(results).containsExactly("new")
+    }
+
+    @Test
+    fun secondaryDisableDiscardsPendingResultWithoutCancellingPrimary(): Unit = Harness().use { h ->
+        val results = mutableListOf<String>()
+        for (slot in DictionaryLoadRequests.Slot.entries) {
+            h.requests.submit(slot) { request ->
+                h.requests.publish(slot, request, Runnable { results.add(slot.name) })
+            }
+        }
+        h.drainWorker()
+        h.requests.cancel(DictionaryLoadRequests.Slot.SECONDARY)
+        h.drainMain()
+        assertThat(results).containsExactly("PRIMARY")
+    }
+
+    @Test
+    fun closeStopsRunningPublicationAndFutureRequests(): Unit = Harness().use { h ->
+        val entered = java.util.concurrent.CountDownLatch(1)
+        val release = java.util.concurrent.CountDownLatch(1)
+        val results = mutableListOf<String>()
+        val slot = DictionaryLoadRequests.Slot.PRIMARY
+        h.requests.submit(slot) { request ->
+            entered.countDown()
+            // Simulate I/O that does not stop immediately when interrupted.
+            while (release.count > 0) {
+                try { release.await() } catch (_: InterruptedException) { }
+            }
+            h.requests.publish(slot, request, Runnable { results.add("retired") })
+        }
+        try {
+            assertThat(entered.await(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue()
+            h.requests.close()
+            h.requests.submit(slot) { results.add("afterClose") }
+        } finally {
+            release.countDown()
+        }
+        h.drainWorker()
+        h.drainMain()
+        assertThat(results).isEmpty()
+    }
+
+    @Test
+    fun replacedRequestsDoNotAccumulateBehindBusySharedWorker(): Unit = Harness().use { h ->
+        val entered = java.util.concurrent.CountDownLatch(1)
+        val release = java.util.concurrent.CountDownLatch(1)
+        h.executor.execute { entered.countDown(); release.await() }
+        try {
+            assertThat(entered.await(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue()
+            repeat(100) {
+                for (slot in DictionaryLoadRequests.Slot.entries) h.requests.submit(slot) { }
+            }
+            assertThat(h.executor.queue.size).isEqualTo(2)
+            h.requests.close()
+            assertThat(h.executor.queue).isEmpty()
+        } finally {
+            release.countDown()
+        }
+    }
+}

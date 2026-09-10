@@ -100,6 +100,9 @@ object ContractionJsonReader {
                 }
                 reader.endObject()
             }
+        } catch (e: java.util.concurrent.CancellationException) {
+            // Lifecycle cancellation is not malformed input or a successful partial load.
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Malformed contraction asset after $count mappings", e)
         }

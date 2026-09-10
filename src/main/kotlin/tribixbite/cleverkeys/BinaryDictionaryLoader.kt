@@ -7,6 +7,13 @@ import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
+/** Cancellation is not a format/read failure: callers must not fall back and keep allocating. */
+internal fun checkDictionaryLoadInterrupted() {
+    if (Thread.currentThread().isInterrupted) {
+        throw java.util.concurrent.CancellationException("Dictionary load interrupted")
+    }
+}
+
 /**
  * Smallest byte count that can hold a complete binary-dictionary header.
  *
@@ -240,6 +247,7 @@ object BinaryDictionaryLoader {
         // Load dictionary words
         buffer.seekSection(dictOffset, "dictionary")
         val words = Array(wordCount) {
+            checkDictionaryLoadInterrupted()
             val wordLen = buffer.short.toInt() and 0xFFFF // Unsigned short
             val wordBytes = ByteArray(wordLen)
             buffer.get(wordBytes)
@@ -250,6 +258,7 @@ object BinaryDictionaryLoader {
         buffer.seekSection(freqOffset, "frequency")
         val dictionary = mutableMapOf<String, Int>()
         for (i in 0 until wordCount) {
+            checkDictionaryLoadInterrupted()
             val frequency = buffer.int
             dictionary[words[i]] = frequency
         }
@@ -284,6 +293,7 @@ object BinaryDictionaryLoader {
         val dictionary = mutableMapOf<String, Int>()
 
         for (i in 0 until wordCount) {
+            checkDictionaryLoadInterrupted()
             val wordLen = buffer.short.toInt() and 0xFFFF
             val wordBytes = ByteArray(wordLen)
             buffer.get(wordBytes)
@@ -466,6 +476,7 @@ object BinaryDictionaryLoader {
         // Load dictionary words
         buffer.seekSection(dictOffset, "dictionary")
         val words = Array(wordCount) {
+            checkDictionaryLoadInterrupted()
             val wordLen = buffer.short.toInt() and 0xFFFF // Unsigned short
             val wordBytes = ByteArray(wordLen)
             buffer.get(wordBytes)
@@ -475,6 +486,7 @@ object BinaryDictionaryLoader {
         // Load frequencies
         buffer.seekSection(freqOffset, "frequency")
         for (i in 0 until wordCount) {
+            checkDictionaryLoadInterrupted()
             val frequency = buffer.int
             outDictionary[words[i]] = frequency
         }
@@ -484,6 +496,7 @@ object BinaryDictionaryLoader {
         val prefixCount = buffer.int
 
         for (i in 0 until prefixCount) {
+            checkDictionaryLoadInterrupted()
             // Read prefix string
             val prefixLen = buffer.get().toInt() and 0xFF // Unsigned byte
             val prefixBytes = ByteArray(prefixLen)
@@ -496,6 +509,7 @@ object BinaryDictionaryLoader {
             // to save ~16 bytes/entry from linked-list overhead
             val matchingWords = HashSet<String>(matchCount)
             for (j in 0 until matchCount) {
+                checkDictionaryLoadInterrupted()
                 val wordIdx = buffer.int
                 matchingWords.add(words[wordIdx])
             }
@@ -528,6 +542,7 @@ object BinaryDictionaryLoader {
         buffer.seekSection(canonicalOffset, "canonical")
 
         for (i in 0 until wordCount) {
+            checkDictionaryLoadInterrupted()
             val wordLen = buffer.short.toInt() and 0xFFFF
             val wordBytes = ByteArray(wordLen)
             buffer.get(wordBytes)
@@ -707,6 +722,7 @@ object BinaryDictionaryLoader {
         // Load dictionary words
         buffer.seekSection(dictOffset, "dictionary")
         val words = Array(wordCount) {
+            checkDictionaryLoadInterrupted()
             val wordLen = buffer.short.toInt() and 0xFFFF
             val wordBytes = ByteArray(wordLen)
             buffer.get(wordBytes)
@@ -718,6 +734,7 @@ object BinaryDictionaryLoader {
         val frequencies = IntArray(wordCount)
         var maxFreq = 1
         for (i in 0 until wordCount) {
+            checkDictionaryLoadInterrupted()
             frequencies[i] = buffer.int
             if (frequencies[i] > maxFreq) maxFreq = frequencies[i]
         }
@@ -726,6 +743,7 @@ object BinaryDictionaryLoader {
         // Use log scale for better distribution
         val logMax = kotlin.math.ln(maxFreq.toDouble() + 1)
         for (i in 0 until wordCount) {
+            checkDictionaryLoadInterrupted()
             val logFreq = kotlin.math.ln(frequencies[i].toDouble() + 1)
             val rank = ((1.0 - logFreq / logMax) * 255).toInt().coerceIn(0, 255)
             outIndex.addWord(words[i], rank)
@@ -780,6 +798,7 @@ object BinaryDictionaryLoader {
         val ranks = IntArray(wordCount)
 
         for (i in 0 until wordCount) {
+            checkDictionaryLoadInterrupted()
             val wordLen = buffer.short.toInt() and 0xFFFF
             val wordBytes = ByteArray(wordLen)
             buffer.get(wordBytes)
@@ -793,6 +812,7 @@ object BinaryDictionaryLoader {
         val normalizeds = Array(normalizedCount) { "" }
 
         for (i in 0 until normalizedCount) {
+            checkDictionaryLoadInterrupted()
             val wordLen = buffer.short.toInt() and 0xFFFF
             val wordBytes = ByteArray(wordLen)
             buffer.get(wordBytes)
@@ -802,8 +822,10 @@ object BinaryDictionaryLoader {
         // Load accent map and populate index
         buffer.seekSection(accentMapOffset, "accent map")
         for (i in 0 until normalizedCount) {
+            checkDictionaryLoadInterrupted()
             val canonicalCount = buffer.get().toInt() and 0xFF
             for (j in 0 until canonicalCount) {
+                checkDictionaryLoadInterrupted()
                 val canonicalIdx = buffer.int
                 if (canonicalIdx < wordCount) {
                     outIndex.addWord(canonicals[canonicalIdx], ranks[canonicalIdx])

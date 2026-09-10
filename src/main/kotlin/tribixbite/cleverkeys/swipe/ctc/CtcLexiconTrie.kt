@@ -305,6 +305,9 @@ class CtcLexiconTrie(val alphabet: CharArray) {
             val trie = CtcLexiconTrie(alphabet)
             val alphabetSet = alphabet.toHashSet()
             for ((raw, freq) in words) {
+                // Abort obsolete warm-up before allocating the next branch. Never return a
+                // partial trie, and preserve the flag for the runner's cancellation handling.
+                if (Thread.currentThread().isInterrupted) throw InterruptedException("Trie load cancelled")
                 val w = raw.lowercase()
                 if (w.isEmpty() || w.any { it !in alphabetSet }) continue
                 trie.insert(w, if (freq > 0.0) freq else 1.0)
@@ -324,6 +327,9 @@ class CtcLexiconTrie(val alphabet: CharArray) {
             val trie = CtcLexiconTrie(alphabet)
             val alphabetSet = alphabet.toHashSet()
             for ((raw, freq) in words) {
+                // Abort obsolete warm-up before allocating the next branch. Never return a
+                // partial trie, and preserve the flag for the runner's cancellation handling.
+                if (Thread.currentThread().isInterrupted) throw InterruptedException("Trie load cancelled")
                 val stripped = buildString {
                     for (ch in raw.lowercase()) if (ch in alphabetSet) append(ch)
                 }
