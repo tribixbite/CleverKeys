@@ -29,6 +29,22 @@ production bugs); Wave K Saga device pass complete
 non-issue (61 ms), #79 non-reproducing, decode e2e verified, restore verified. Fresh verbose
 release v1.6.0 (sha `6894b2cc…`) is INSTALLED on the Saga awaiting the maintainer soak.
 
+**Rounds 9-10 (2026-09-09/10) — v2.0.0 prepped + APK diet 44.2 → 21.27 MB arm64.**
+Re-versioned 1.6.0→2.0.0 (maintainer call); release notes announce uk/bg/mk/he +
+Android 7+ (493B fastlane ×3); NO fdroiddata MR needed (tree made scanner-clean:
+11 wordlists deleted per PROVENANCE refetch procedure, web-demo vocab base64'd).
+Privacy & Data overhauled (collection toggle was gated on a hidden dev flag — fixed
++ drift-pinned; n-gram stores surfaced; intro reworded ×22 — on-device training is
+IMPOSSIBLE in shipped ORT, verdict recorded). APK diet: marketing art was PACKAGED
+(6.4MB), noCompress waste, legacy JNI packaging, resConfigs 85→21, logo 44dB-PSNR
+recompress (original in art/), SwipeMLTrainer deleted, six script encoders moved
+into their langpacks with in-app sha256 pins (CtcScriptSupport.ScriptWiring).
+**Blocks the tag: (1) maintainer soak per docs/plans/v2.0.0-manual-test-checklist.md;
+(2) RE-UPLOAD the six langpacks to the GitHub `langpacks` prerelease (old zips have
+no model → silent no-CTC; sizes+sha256s below in DIET-B note); (3) device pass on
+CtcEmissionModelParityTest + CtcMultiLanguageInstrumentedTest (changed, compile-only).**
+Final gates 2026-09-10: 2,371 pure / 730 mock / lint 0.
+
 **Round 8 (2026-09-08) — ALL five maintainer forks implemented per decisions** (D-1
 reword / G-3 import-wins+preview / F-8 surface-except-error-collection / H-4 all nine
 theme fields wired / I-7 once-per-boot+opt-out) **plus the UserDictionaryObserver case
