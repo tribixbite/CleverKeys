@@ -65,6 +65,24 @@ section is authoritative for what closed):**
   notes announce all four as provisional-via-language-packs; the pin is now emptySet.
 - ARC-114 (LOW): #79 A17 inset-strip observable. Import-preview "Invalid/skipped" label
   wording (the skips are intentional categories, "Invalid" oversells) — cosmetic.
+- **BLOCKS THE NEXT RELEASE — re-upload the six script packs to the `langpacks` prerelease.**
+  The 2026-09-10 APK diet moved the CTC encoders into `langpack-{ru,el,uk,bg,mk,he}.zip`, so
+  the assets on https://github.com/tribixbite/CleverKeys/releases/tag/langpacks are now the
+  OLD, model-less packs. Ship the new APK against those and a user who imports ru/el/uk/bg/mk/he
+  installs a pack that works for tap but silently never CTC-decodes — the model load fails, the
+  language falls through to geometric, and nothing on screen explains it. Re-upload the six
+  from `scripts/dictionaries/` (and refresh the release's sha256 table) BEFORE the APK that
+  drops the assets reaches users. The other 17 assets are unchanged. Not done here: publishing
+  is a maintainer action.
+
+  | pack | bytes | sha256 |
+  |---|---|---|
+  | `langpack-ru.zip` | 1,057,020 | `3e2a1f0efea8bec5dfd15eb0c2fbd74752d4e0e4cd417619f16d217f3437487f` |
+  | `langpack-el.zip` |   977,952 | `641fdbaba94a097cc87a76f5ab45d858eaad90cf0e78bb826934eaaaae78ce96` |
+  | `langpack-uk.zip` | 1,070,417 | `1f4da274802b538b2be809112012b1cb8c07f577759ade28e840b8321b83e270` |
+  | `langpack-bg.zip` |   909,020 | `701f78536b32f6c35f364d116bf2c038abc8389d3d925af2221105c1f6f7504f` |
+  | `langpack-mk.zip` | 1,063,375 | `e7ad273e647f9661427a93445ca0e20a210f28788aa21ad490fc1b949b07c543` |
+  | `langpack-he.zip` |   992,137 | `c7f8522d99c57a522f09df99fbdccb3cdd7eb8ca5a9b63eb149021d062bbdd02` |
 - ~~Langpack manifest-version normalize on next pack rebuild (byte-identity rule defers it).~~
   DONE 2026-09-10, on the rebuild that moved the CTC encoders into the packs: uk/bg/mk/he go
   `version: 1` → `2`, matching ru/el and every other pack. Pinned by
