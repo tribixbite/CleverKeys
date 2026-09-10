@@ -582,14 +582,32 @@ class CtcImportedPackInstrumentedTest {
                     }
                     shell("ime set $originalIme")
                     val deadline = android.os.SystemClock.uptimeMillis() + 10_000L
-                    while (tribixbite.cleverkeys.CleverKeysService.getInstance() != null &&
-                        android.os.SystemClock.uptimeMillis() < deadline) Thread.sleep(100L)
-                    assertNull("old service must be destroyed", tribixbite.cleverkeys.CleverKeysService.getInstance())
+                    // Reading service objects directly in this long-lived instrumentation
+                    // frame leaves ART Java-local roots alive across samples. Read on the
+                    // main thread and return only a Boolean, so the probe cannot retain them.
+                    fun serviceAbsent(): Boolean {
+                        var absent = false
+                        instrumentation.runOnMainSync {
+                            absent = tribixbite.cleverkeys.CleverKeysService.getInstance() == null
+                        }
+                        return absent
+                    }
+                    while (!serviceAbsent() && android.os.SystemClock.uptimeMillis() < deadline) Thread.sleep(100L)
+                    assertTrue("old service must be destroyed", serviceAbsent())
                     shell("ime set $component")
                     showKeyboard()
                     Thread.sleep(3_000L)
                     measure("serviceReplacement${index + 1}")
-                    Log.i("CtcHeapLifecycle", "retiredAlive=${retired.count { it.get() != null }} total=${retired.size}")
+                    var retiredAlive = 0
+                    instrumentation.runOnMainSync {
+                        retiredAlive = retired.count { it.get() != null }
+                    }
+                    Log.i("CtcHeapLifecycle", "retiredAlive=$retiredAlive total=${retired.size}")
+                    if (index == 1) {
+                        val dump = File(requireNotNull(context.getExternalFilesDir(null)), "retired-services.hprof")
+                        Debug.dumpHprofData(dump.absolutePath)
+                        Log.i("CtcHeapLifecycle", "heapDump=${dump.absolutePath} bytes=${dump.length()}")
+                    }
                 }
                 fun keyboardIn(view: android.view.View): tribixbite.cleverkeys.Keyboard2View? {
                     if (view is tribixbite.cleverkeys.Keyboard2View) return view

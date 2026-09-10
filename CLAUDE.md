@@ -221,3 +221,5 @@ and **incremental compilation keeps the stale constant** even after a later `LOC
 build regenerates the flag as `true` — so debug-gated code silently no-ops with no error.
 Fix: `rm -rf build/tmp/kotlin-classes/release`. Bit the `MemoryProbe` work; costs a whole
 measurement run if unnoticed, because the symptom is *absence of log output*, not a failure.
+### Heap-probe Java-local roots (2026-09-10)
+- Do not read service objects or WeakReference.get() in a long-lived instrumented memory-test frame: ART can retain those Java locals across GCs. Shark found a 41 MB destroyed IME rooted in the test thread. Read/count on runOnMainSync and return primitives; verify suspicious retention with a heap graph before attributing it to production.

@@ -68,11 +68,29 @@ what was done; this file is only what is left. Anything below is open.
   runOffMain work is deliberately untracked and posts completion even after owner shutdown.
   These tasks capture the predictor/callback until completion. This is a plausible transient
   overlap mechanism, NOT proof of the phone's retained 193 MiB or the sole root cause.
-- TODO: run the expanded `keyboardLifecycleAndLongSwipeRetainedHeap`: five IME service
-  replacements plus weak-reference counts for retired services. Compiled successfully
-  (35s); runtime still pending. Auto-review rejected the follow-up upload twice, even after
-  quoting the user's explicit approval for APK upload to emulator.wtf. Asked for renewed
-  approval of the rebuilt test APK; app APK unchanged/cached. No attempted bypass.
+- User reports the issue immediately after turning the screen on (2026-09-10); ADB was
+  disconnected when this round attempted to read that new event. No phone UI/settings changed.
+- Service-recreation test executed after renewed upload approval:
+  [run 718acc36](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/718acc36-b824-4548-ae31-ff4bd30bb5bb)
+  passed, but measurements are CONTAMINATED BY THE TEST (see heap evidence below).
+  Java 60,242,968 → 108,223,432 → 156,166,592 → 174,971,584 → 175,527,784 bytes
+  across replacements 1–4; weak refs reported 1–4 retired services alive, then memory fell.
+  Do NOT cite this as proven reproduction of a production leak.
+- [Heap-capture run 4fc5d1bc](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/4fc5d1bc-1fd8-49f3-94d0-20922112f3be)
+  passed and returned a 265,728,197-byte synthetic HPROF at replacement 2. Shark 2.14
+  found a destroyed service retaining 41,003,530 bytes through
+  `InstrumentationThread <Java Local> → CleverKeysService`, plus an unreachable retired
+  service. The probe itself reads getInstance()/WeakReference.get() in its long-lived
+  instrumentation frame; ART can keep those temporaries alive. Report:
+  `build/memory-shark-analysis.txt`; HPROF under `build/ew-memory-heap/sdcard/Android/data/tribixbite.cleverkeys.debug/files/`.
+- TODO: rerun corrected lifecycle probe. Service-presence reads and weak-reference counts
+  now execute on runOnMainSync and return only primitives to the instrumentation frame.
+  Corrected APK compiled successfully (34s); diff check passed. No production fix chosen.
+  Auto-review AGAIN rejected the corrected APK upload despite prior explicit approval;
+  requested approval for corrected `CleverKeys-debug-androidTest.apk` upload to emulator.wtf
+  and retrieval of its synthetic heap dump. Intended output `build/ew-memory-corrected`.
+  Earlier remarks calling the emulator surge a reproduced app defect are superseded by
+  the heap-root evidence. Phone OOM remains real; its exact owner remains unproven.
 - Production heap-graph attempt: Perfetto android.java_hprof captured only a 786-byte
   trace, no heap graph (`build/cleverkeys-memory.pftrace`); existing profiling directory empty.
   Normal am dumpheap remains disallowed because the app is non-debuggable. No settings
