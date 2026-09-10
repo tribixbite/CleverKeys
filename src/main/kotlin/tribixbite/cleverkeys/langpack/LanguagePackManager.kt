@@ -9,6 +9,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.util.zip.ZipInputStream
+import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
 
 /**
  * Language Pack Manager - handles import, validation, and storage of language packs.
@@ -21,9 +22,32 @@ import java.util.zip.ZipInputStream
  * - prefix_boost.bin: optional Aho-Corasick trie for prefix boosting. Its only consumer,
  *   the neural beam search, was removed on 2026-08-18. The file is still ACCEPTED and
  *   copied on import so existing packs keep installing cleanly; nothing reads it back.
+ * - model.onnx: optional CTC swipe encoder for a non-Latin script (added 2026-09-10). Accepted
+ *   only when the manifest DECLARES it — `"model": {"file": "model.onnx", "sha256": "…"}` —
+ *   and the bytes hash to what the manifest says. See "The model member" below.
  *
  * Packs are imported via Storage Access Framework (no internet permission needed).
  * Stored in app internal storage: files/langpacks/{code}/
+ *
+ * ## The model member, and the two checks that are NOT the same check
+ *
+ * The six per-script CTC encoders (ru/el/uk/bg/mk/he) left the APK on 2026-09-10 and travel in
+ * their packs instead: every one of those languages is langpack-sourced, so the model could
+ * only ever run for a user who had imported the pack anyway, and shipping it to everyone else
+ * was 3.1 MB of dead payload. Two independent gates stand between a pack file and ORT:
+ *
+ *  1. **Here, at import** — does the pack match its OWN manifest? That catches a corrupt or
+ *     truncated download and reports it as a failed import, rather than installing bytes that
+ *     will silently never load. It is an integrity check, and nothing more: the manifest is
+ *     written by whoever wrote the pack, so a hostile pack passes this trivially.
+ *  2. **At load** — [tribixbite.cleverkeys.swipe.ctc.CtcPackModel] refuses to hand ORT anything
+ *     that is not byte-identical to a sha256 compiled into this APK. That is the security
+ *     property, and it trusts nothing the pack says about itself.
+ *
+ * Hence the size cap enforced during EXTRACTION (a pack naming a multi-gigabyte `model.onnx`
+ * must not fill the cache dir before anything looks at its size), and hence an UNDECLARED
+ * `model.onnx` being dropped rather than rejected: nothing can verify it, gate 2 would refuse
+ * it anyway, and failing the whole import would punish the user for a stray file.
  */
 class LanguagePackManager(private val context: Context) {
 
@@ -35,6 +59,14 @@ class LanguagePackManager(private val context: Context) {
         private const val UNIGRAMS_FILE = "unigrams.txt"
         private const val CONTRACTIONS_FILE = "contractions.json"
         private const val PREFIX_BOOST_FILE = "prefix_boost.bin"
+
+        /**
+         * The pack's optional CTC encoder. Name and size cap come from [CtcPackModel] so the
+         * importer and the loader can never disagree about which file this is or how big it is
+         * allowed to be.
+         */
+        private val MODEL_FILE = CtcPackModel.PACK_MODEL_FILE
+        private val MAX_MODEL_BYTES = CtcPackModel.MAX_PACK_MODEL_BYTES
 
         // V2 dictionary magic number: "CKDT"
         private const val DICT_MAGIC = 0x54444B43
@@ -103,8 +135,24 @@ class LanguagePackManager(private val context: Context) {
                     if (!entry.isDirectory) {
                         val fileName = File(entry.name).name // Strip path for security
                         val outFile = File(tempDir, fileName)
-                        FileOutputStream(outFile).use { fos ->
-                            zis.copyTo(fos)
+                        if (fileName == MODEL_FILE) {
+                            // Bounded, because the cap has to abort the EXTRACTION: a hash check
+                            // can only reject bytes that already exist, so an unbounded copy
+                            // would let a pack naming a multi-gigabyte model.onnx fill the cache
+                            // dir on its way to being refused.
+                            val withinCap = FileOutputStream(outFile).use { fos ->
+                                copyBounded(zis, fos, MAX_MODEL_BYTES)
+                            }
+                            if (!withinCap) {
+                                Log.w(TAG, "Rejecting pack: $MODEL_FILE exceeds the size cap")
+                                return ImportResult.Error(
+                                    "$MODEL_FILE exceeds the ${MAX_MODEL_BYTES / (1024 * 1024)} MiB limit"
+                                )
+                            }
+                        } else {
+                            FileOutputStream(outFile).use { fos ->
+                                zis.copyTo(fos)
+                            }
                         }
                         extractedFiles.add(fileName)
                     }
@@ -144,6 +192,28 @@ class LanguagePackManager(private val context: Context) {
                 return ImportResult.Error("Invalid language code in manifest: \"${manifest.code}\"")
             }
 
+            // The model member: the pack must agree with itself. A DECLARED model that is
+            // missing, misnamed or hashes to something else means a corrupt download, and
+            // saying so beats installing a language whose swipe silently falls back forever.
+            // An UNDECLARED model.onnx is simply not installed (see the class KDoc).
+            val modelFile = File(tempDir, MODEL_FILE)
+            val installModel = manifest.modelSha256 != null
+            if (installModel) {
+                if (manifest.modelFile != MODEL_FILE) {
+                    return ImportResult.Error(
+                        "Unsupported model file in manifest: \"${manifest.modelFile}\""
+                    )
+                }
+                if (!modelFile.exists()) {
+                    return ImportResult.Error("Missing $MODEL_FILE declared by manifest")
+                }
+                if (!sha256OfFile(modelFile).equals(manifest.modelSha256, ignoreCase = true)) {
+                    return ImportResult.Error("$MODEL_FILE does not match its manifest sha256")
+                }
+            } else if (modelFile.exists()) {
+                Log.w(TAG, "Ignoring undeclared $MODEL_FILE in pack ${manifest.code}")
+            }
+
             // G-6 (comprehensive audit 2026-09-06): stage into a sibling dir and swap.
             // The old order (deleteRecursively the installed pack, THEN copy) meant a
             // mid-copy IO failure (disk full) destroyed the working pack and left a
@@ -178,6 +248,12 @@ class LanguagePackManager(private val context: Context) {
                     Log.d(TAG, "Copied prefix_boost.bin for ${manifest.code} (${prefixBoostFile.length() / 1024}KB)")
                 }
 
+                // Copy the CTC encoder if the manifest declared it and it verified above.
+                if (installModel) {
+                    modelFile.copyTo(File(stagingDir, MODEL_FILE), overwrite = true)
+                    Log.d(TAG, "Copied $MODEL_FILE for ${manifest.code} (${modelFile.length() / 1024}KB)")
+                }
+
                 // Manifest last — a staged dir only becomes "complete" at this point.
                 manifestFile.copyTo(File(stagingDir, MANIFEST_FILE), overwrite = true)
 
@@ -210,18 +286,64 @@ class LanguagePackManager(private val context: Context) {
     private fun parseManifest(json: String): LanguagePackManifest? {
         return try {
             val obj = JSONObject(json)
+            // `model` is absent from every pack built before 2026-09-10, and from every pack for
+            // a Latin language — optJSONObject keeps those parsing exactly as they did.
+            val model = obj.optJSONObject("model")
             LanguagePackManifest(
                 code = obj.getString("code"),
                 name = obj.getString("name"),
                 version = obj.optInt("version", 1),
                 author = obj.optString("author", ""),
                 wordCount = obj.optInt("wordCount", 0),
-                hasPrefixBoost = obj.optBoolean("hasPrefixBoost", false)
+                hasPrefixBoost = obj.optBoolean("hasPrefixBoost", false),
+                modelFile = model?.optString("file")?.takeIf { it.isNotEmpty() },
+                modelSha256 = model?.optString("sha256")?.takeIf { it.isNotEmpty() },
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to parse manifest", e)
             null
         }
+    }
+
+    /**
+     * Copy at most [limit] bytes from [input] to [output].
+     *
+     * @return true when the whole stream fit, false the moment it would exceed [limit] (the
+     *   output then holds a truncated prefix, which the caller discards with the temp dir).
+     *
+     * Streamed in fixed-size chunks for the same reason every other entry is: peak memory must
+     * not scale with what the pack claims to contain.
+     */
+    private fun copyBounded(input: InputStream, output: java.io.OutputStream, limit: Long): Boolean {
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        var written = 0L
+        while (true) {
+            val read = input.read(buffer)
+            if (read <= 0) return true
+            written += read
+            if (written > limit) return false
+            output.write(buffer, 0, read)
+        }
+    }
+
+    /**
+     * Lowercase hex sha256 of [file], read in fixed-size chunks.
+     *
+     * Streaming rather than `readBytes()` keeps the importer's one invariant intact — no pack
+     * entry is ever materialised whole, whatever its declared size (the v1.1.96/v1.1.97 OOM
+     * fix, pinned by `theImportPathNeverReadsAWholeEntryIntoMemory`).
+     */
+    private fun sha256OfFile(file: File): String {
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        file.inputStream().use { input ->
+            while (true) {
+                val read = input.read(buffer)
+                if (read <= 0) break
+                digest.update(buffer, 0, read)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
     /**
@@ -319,6 +441,20 @@ class LanguagePackManager(private val context: Context) {
     }
 
     /**
+     * Path to an installed pack's CTC encoder, or null when the pack carries none.
+     *
+     * Present only for the non-Latin scripts whose model is pack-delivered, and present at ALL
+     * only when the pack declared it and the bytes matched that declaration on import. This is
+     * the same path [CtcPackModel.packModelFile] resolves, and it is deliberately NOT the
+     * loading API: the loader re-hashes the file against the app's own pin, because this
+     * class's check only established that the pack agrees with itself.
+     */
+    fun getModelPath(code: String): File? {
+        val modelFile = File(langpacksDir, "$code/$MODEL_FILE")
+        return if (modelFile.exists()) modelFile else null
+    }
+
+    /**
      * Check if a language pack is installed.
      */
     fun isInstalled(code: String): Boolean {
@@ -368,7 +504,19 @@ data class LanguagePackManifest(
     val version: Int = 1,          // Pack version
     val author: String = "",       // Pack author
     val wordCount: Int = 0,        // Number of words in dictionary
-    val hasPrefixBoost: Boolean = false  // Whether pack includes prefix boost trie
+    val hasPrefixBoost: Boolean = false, // Whether pack includes prefix boost trie
+    /**
+     * `model.file` — the pack member holding the CTC encoder, when the pack declares one.
+     * Only `model.onnx` is supported; anything else is refused with its own message rather
+     * than silently ignored, so a pack cannot declare a hash for a file nothing reads.
+     */
+    val modelFile: String? = null,
+    /**
+     * `model.sha256` — the pack's own statement of its encoder's hash. Checked at import to
+     * catch a corrupt download. NOT a permission to load: that decision belongs to the app's
+     * pinned hash (`CtcPackModel`), which trusts nothing in this field.
+     */
+    val modelSha256: String? = null,
 )
 
 /**

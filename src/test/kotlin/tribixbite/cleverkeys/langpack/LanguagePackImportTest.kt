@@ -18,8 +18,10 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.RandomAccessFile
 import java.nio.file.Files
+import java.security.MessageDigest
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
 
 /**
  * The shipped promise behind every "downloadable language packs" release note, end to end
@@ -104,7 +106,12 @@ class LanguagePackImportTest {
 
     // ------------------------------------------------------------------ fixtures
 
-    /** A manifest JSON with the fields [LanguagePackManager.parseManifest] reads. */
+    /**
+     * A manifest JSON with the fields `LanguagePackManager.parseManifest` reads.
+     *
+     * @param model when non-null, the manifest declares a `model.onnx` member and carries the
+     *   sha256 of these bytes — the pack's own statement about what it contains.
+     */
     private fun manifestJson(
         code: String,
         name: String,
@@ -112,10 +119,22 @@ class LanguagePackImportTest {
         author: String = "",
         wordCount: Int = 0,
         hasPrefixBoost: Boolean = false,
-    ): String = """
-        {"code":"$code","name":"$name","version":$version,"author":"$author",
-         "wordCount":$wordCount,"hasPrefixBoost":$hasPrefixBoost}
-    """.trimIndent()
+        model: ByteArray? = null,
+    ): String {
+        val modelField = model?.let {
+            ""","model":{"file":"model.onnx","sha256":"${sha256(it)}"}"""
+        } ?: ""
+        return """
+            {"code":"$code","name":"$name","version":$version,"author":"$author",
+             "wordCount":$wordCount,"hasPrefixBoost":$hasPrefixBoost$modelField}
+        """.trimIndent()
+    }
+
+    /** Deterministic filler standing in for an ONNX graph; the importer never parses it. */
+    private fun modelBytes(size: Int): ByteArray = ByteArray(size) { (it % 241).toByte() }
+
+    private fun sha256(bytes: ByteArray): String =
+        MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
 
     /** A V2-valid dictionary body of [size] bytes: real header, deterministic filler. */
     private fun dictionaryBytes(size: Int = 64): ByteArray {
@@ -146,10 +165,11 @@ class LanguagePackImportTest {
         wordCount: Int = 0,
         dictionarySize: Int = 64,
         extras: List<Pair<String, ByteArray>> = emptyList(),
+        manifest: String = manifestJson(code, name, wordCount = wordCount),
     ): File = packZip(
         "$code.zip",
         listOf(
-            "manifest.json" to manifestJson(code, name, wordCount = wordCount).toByteArray(),
+            "manifest.json" to manifest.toByteArray(),
             "dictionary.bin" to dictionaryBytes(dictionarySize),
         ) + extras
     )
@@ -284,7 +304,123 @@ class LanguagePackImportTest {
         assertThat(manager.getUnigramsPath("ms")).isNull()
         assertThat(manager.getContractionsPath("ms")).isNull()
         assertThat(manager.getPrefixBoostPath("ms")).isNull()
+        assertThat(manager.getModelPath("ms")).isNull()
         assertThat(manager.isInstalled("ms")).isTrue()
+    }
+
+    // ------------------------------------------------------- the model member (APK diet)
+    //
+    // The six per-script CTC encoders left the APK on 2026-09-10 and travel in their packs
+    // instead. Two independent checks stand between a pack file and ORT, and they answer
+    // different questions:
+    //
+    //   1. HERE, at import: does the pack match its OWN manifest? Catches a corrupt download or
+    //      a truncated copy, and reports it as a failed import instead of a silently degraded
+    //      language.
+    //   2. At load (`CtcPackModel`): is it byte-identical to the artifact THIS APP pins? That
+    //      is the security property, and it deliberately does not trust anything the pack says
+    //      about itself — a pack's manifest is written by whoever wrote the pack.
+    //
+    // Check 1 alone would be security theatre (a hostile pack signs its own homework); check 2
+    // alone would turn a bad download into an unexplained fallback to geometric. Both.
+
+    @Test
+    fun aPackCarryingItsDeclaredModelInstallsItVerbatim() {
+        val model = modelBytes(2048)
+        val zip = validPack(
+            "ru", "Russian",
+            manifest = manifestJson("ru", "Russian", model = model),
+            extras = listOf("model.onnx" to model),
+        )
+        assertThat(import(zip)).isInstanceOf(ImportResult.Success::class.java)
+
+        val installed = manager.getModelPath("ru")
+        assertWithMessage("a declared, hash-matching model must land on disk beside the dictionary")
+            .that(installed).isNotNull()
+        assertThat(installed!!.readBytes()).isEqualTo(model)
+        assertThat(installed.path).isEqualTo(File(installedDir("ru"), "model.onnx").path)
+    }
+
+    @Test
+    fun aModelWhoseHashDisagreesWithTheManifestIsRejected() {
+        val declared = modelBytes(2048)
+        val actual = modelBytes(2048).also { it[100] = (it[100] + 1).toByte() }
+        val zip = validPack(
+            "ru", "Russian",
+            manifest = manifestJson("ru", "Russian", model = declared),
+            extras = listOf("model.onnx" to actual),
+        )
+        assertWithMessage(
+            "a pack whose model does not match its own manifest is corrupt — say so, rather " +
+                "than installing bytes that will silently never load"
+        ).that(import(zip)).isEqualTo(ImportResult.Error("model.onnx does not match its manifest sha256"))
+        assertWithMessage("a rejected pack must install nothing")
+            .that(File(filesDir, "langpacks").listFiles()?.toList().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun aManifestDeclaringAModelTheZipDoesNotCarryIsRejected() {
+        val zip = validPack(
+            "ru", "Russian",
+            manifest = manifestJson("ru", "Russian", model = modelBytes(2048)),
+        )
+        assertThat(import(zip)).isEqualTo(ImportResult.Error("Missing model.onnx declared by manifest"))
+    }
+
+    /**
+     * An undeclared model is DROPPED, not rejected. Nothing can verify it — the manifest is the
+     * pack's own statement of its contents — and the load side would refuse it anyway, so
+     * failing the whole import would punish a user for a stray file in someone else's zip.
+     */
+    @Test
+    fun anUndeclaredModelIsSkippedAndTheRestOfThePackStillInstalls() {
+        val zip = validPack("ru", "Russian", extras = listOf("model.onnx" to modelBytes(2048)))
+        assertThat(import(zip)).isInstanceOf(ImportResult.Success::class.java)
+        assertThat(manager.isInstalled("ru")).isTrue()
+        assertWithMessage("an unverifiable model must not be installed")
+            .that(manager.getModelPath("ru")).isNull()
+    }
+
+    @Test
+    fun aModelOverTheSizeCapIsRejectedWithoutBeingWrittenWhole() {
+        val oversize = modelBytes(CtcPackModel.MAX_PACK_MODEL_BYTES.toInt() + 1024)
+        val zip = validPack(
+            "ru", "Russian",
+            manifest = manifestJson("ru", "Russian", model = oversize),
+            extras = listOf("model.onnx" to oversize),
+        )
+        assertThat(import(zip)).isEqualTo(ImportResult.Error("model.onnx exceeds the 8 MiB limit"))
+        assertWithMessage(
+            "the cap must abort the EXTRACTION, not merely refuse afterwards — otherwise a pack " +
+                "naming a multi-gigabyte model fills the cache dir before anything rejects it"
+        ).that(
+            cacheDir.listFiles().orEmpty()
+                .flatMap { it.listFiles()?.toList().orEmpty() }
+                .filter { it.name == "model.onnx" }
+                .map { it.length() }
+        ).isEmpty()
+    }
+
+    /**
+     * The security property, stated where a reader of the importer will meet it: a pack can
+     * declare any model it likes and have the import accept it, and the app STILL will not run
+     * it. Only byte-identity with a hash compiled into this APK is loadable.
+     */
+    @Test
+    fun anInternallyConsistentPackModelIsStillNotLoadableUnlessItIsThePinnedArtifact() {
+        val impostor = modelBytes(4096)
+        val zip = validPack(
+            "ru", "Russian",
+            manifest = manifestJson("ru", "Russian", model = impostor),
+            extras = listOf("model.onnx" to impostor),
+        )
+        assertWithMessage("the pack agrees with itself, so the import succeeds")
+            .that(import(zip)).isInstanceOf(ImportResult.Success::class.java)
+        assertThat(manager.getModelPath("ru")).isNotNull()
+        assertWithMessage(
+            "…and the load side refuses it anyway. The importer's hash check is an integrity " +
+                "check on the download; the app's pin is what keeps ORT off user-supplied bytes"
+        ).that(CtcPackModel.verifiedPackModel(filesDir, "ru")).isNull()
     }
 
     // ------------------------------------------------------------- rejection surface
