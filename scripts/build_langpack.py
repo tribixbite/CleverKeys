@@ -8,10 +8,25 @@ Creates a language pack ZIP file containing:
 - unigrams.txt: word frequency list for language detection
 - contractions.json: apostrophe word mappings (optional, for languages that use them)
 - prefix_boost.bin: Aho-Corasick trie for prefix boosting (optional, for non-English)
+- model.onnx: CTC swipe encoder for a non-Latin script (optional, --model)
+
+The six per-script CTC encoders (ru/el/uk/bg/mk/he) ship IN their packs rather
+than in the APK: every one of those languages is langpack-sourced, so the model
+could only ever run for a user who had imported the pack anyway. When --model is
+given the manifest gains
+
+    "model": {"file": "model.onnx", "sha256": "<64 hex>"}
+
+which the importer checks the bytes against. That is an integrity check only --
+the app additionally refuses to load any pack model that is not byte-identical
+to a hash compiled into the APK (CtcScriptSupport.modelSha256), so a NEW model
+is an app change as well as a pack change, by design.
 
 Usage:
     python3 build_langpack.py --lang fr --name "French" --input french_words.txt --output langpack-fr.zip
     python3 build_langpack.py --lang de --name "German" --input german_words.txt --output langpack-de.zip --use-wordfreq
+    python3 build_langpack.py --lang ru --name "Russian" --dict dictionary.bin --unigrams unigrams.txt \
+        --model ru_synth_v3_ch80_fp16w.onnx --version 2 --output langpack-ru.zip
 
 Prerequisites:
     - Run build_dictionary.py first to generate dictionary.bin
@@ -25,6 +40,7 @@ License: Apache-2.0
 """
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -41,6 +57,10 @@ SCRIPT_DIR = Path(__file__).parent
 # (the earliest value the ZIP format can represent) so the archive is a pure
 # function of its file contents. (year, month, day, hour, minute, second)
 ZIP_EPOCH = (1980, 1, 1, 0, 0, 0)
+
+# Mirrors CtcPackModel.MAX_PACK_MODEL_BYTES. Enforced here too so a pack that the
+# app would refuse to import can never be built and published in the first place.
+MAX_MODEL_BYTES = 8 * 1024 * 1024
 
 
 def _add_deterministic(zf: zipfile.ZipFile, arcname: str, data: bytes) -> None:
@@ -98,7 +118,13 @@ def run_generate_unigrams(lang: str, output_file: Path, count: int = 5000) -> bo
 
 
 def run_compute_prefix_boosts(lang: str, output_dir: Path) -> bool:
-    """Run compute_prefix_boosts.py to generate prefix boost trie."""
+    """Run compute_prefix_boosts.py to generate prefix boost trie.
+
+    No longer called from build_langpack (see the comment at its prefix-boost step):
+    generating a dead asset as a side effect of building a pack recreated a tree that
+    ADR-011 deleted. Kept because compute_prefix_boosts.py still exists and this is the
+    documented way to drive it, should the boosts ever acquire a consumer again.
+    """
     if lang == "en":
         return False  # English doesn't need prefix boosts
 
@@ -132,8 +158,14 @@ def count_words_in_dictionary(dict_file: Path) -> int:
         return 0
 
 
-def create_manifest(lang: str, name: str, version: int, author: str, word_count: int, has_prefix_boost: bool = False) -> dict:
-    """Create manifest.json content."""
+def create_manifest(lang: str, name: str, version: int, author: str, word_count: int,
+                    has_prefix_boost: bool = False, model_sha256: str | None = None) -> dict:
+    """Create manifest.json content.
+
+    Key order is fixed (json.dump preserves insertion order) so the serialized
+    manifest -- and therefore the whole archive -- stays a pure function of its
+    inputs. "model" goes last, so adding it does not perturb any existing pack.
+    """
     manifest = {
         "code": lang,
         "name": name,
@@ -142,6 +174,8 @@ def create_manifest(lang: str, name: str, version: int, author: str, word_count:
         "wordCount": word_count,
         "hasPrefixBoost": has_prefix_boost
     }
+    if model_sha256:
+        manifest["model"] = {"file": "model.onnx", "sha256": model_sha256}
     return manifest
 
 
@@ -154,7 +188,8 @@ def build_langpack(
     unigrams_file: Path = None,
     use_wordfreq: bool = False,
     version: int = 1,
-    author: str = ""
+    author: str = "",
+    model_file: Path = None
 ):
     """Build a language pack ZIP file."""
 
@@ -189,18 +224,36 @@ def build_langpack(
         word_count = count_words_in_dictionary(final_dict)
         print(f"\nDictionary contains {word_count} words")
 
-        # Look for prefix boost file in assets (for non-English languages)
+        # Include the prefix-boost trie only if the asset is already there. This used to
+        # GENERATE one on the spot for any non-English pack, which is now actively harmful:
+        # prefix boosts have had no consumer since the neural beam search was deleted
+        # (ADR-011, 2026-08-18) and src/main/assets/prefix_boosts/ was removed with it, so
+        # the auto-generation step's only remaining effect was to recreate a deleted tree as
+        # a side effect of building an unrelated pack. Regenerating a trie is
+        # compute_prefix_boosts.py's own job, run deliberately.
         prefix_boost_file = SCRIPT_DIR.parent / f"src/main/assets/prefix_boosts/{lang}.bin"
         has_prefix_boost = prefix_boost_file.exists() and lang != "en"
 
-        # Generate prefix boosts if not present and not English
-        if not has_prefix_boost and lang != "en":
-            print(f"\n=== Generating prefix boosts for {lang} ===")
-            run_compute_prefix_boosts(lang, SCRIPT_DIR.parent / "src/main/assets/prefix_boosts")
-            has_prefix_boost = prefix_boost_file.exists()
+        # Read and hash the CTC encoder, if this pack carries one. The manifest records
+        # the hash so the importer can tell a corrupt download from a good one; the app
+        # separately pins its own copy of the same value, which is what actually decides
+        # whether the graph may be loaded.
+        model_bytes = None
+        model_sha256 = None
+        if model_file:
+            if not model_file.exists():
+                print(f"Error: --model {model_file} does not exist")
+                return False
+            model_bytes = model_file.read_bytes()
+            if len(model_bytes) > MAX_MODEL_BYTES:
+                print(f"Error: --model is {len(model_bytes)} B, over the "
+                      f"{MAX_MODEL_BYTES} B limit the importer enforces")
+                return False
+            model_sha256 = hashlib.sha256(model_bytes).hexdigest()
 
         # Create manifest
-        manifest = create_manifest(lang, name, version, author, word_count, has_prefix_boost)
+        manifest = create_manifest(lang, name, version, author, word_count, has_prefix_boost,
+                                   model_sha256)
         manifest_file = temp_path / "manifest.json"
         with open(manifest_file, 'w', encoding='utf-8') as f:
             json.dump(manifest, f, indent=2, ensure_ascii=False)
@@ -231,6 +284,9 @@ def build_langpack(
             entries["prefix_boost.bin"] = prefix_boost_file.read_bytes()
             boost_size = prefix_boost_file.stat().st_size / 1024
             print(f"  + prefix_boost.bin ({boost_size:.1f} KB)")
+        if model_bytes is not None:
+            entries["model.onnx"] = model_bytes
+            print(f"  + model.onnx ({len(model_bytes) / 1024:.1f} KB, sha256 {model_sha256})")
 
         # Create ZIP deterministically: fixed per-entry timestamp + sorted order.
         print(f"\n=== Creating {output} ===")
@@ -246,6 +302,7 @@ def build_langpack(
         print(f"  Language: {name} ({lang})")
         print(f"  Words: {word_count}")
         print(f"  Prefix boost: {'Yes' if has_prefix_boost else 'No'}")
+        print(f"  CTC model: {model_sha256 if model_sha256 else 'No'}")
         print(f"\nTo install: Copy to your device and import in CleverKeys Settings > Multi-Language")
 
         return True
@@ -267,6 +324,10 @@ def main():
                         help='Use wordfreq library for frequency enrichment')
     parser.add_argument('--version', type=int, default=1, help='Pack version number')
     parser.add_argument('--author', default='', help='Pack author name')
+    parser.add_argument('--model', type=Path,
+                        help='CTC swipe encoder (.onnx) to ship as model.onnx. Only meaningful '
+                             'for a script the app has a CtcScriptSupport row for -- the app '
+                             'refuses any pack model that is not byte-identical to its pin.')
 
     args = parser.parse_args()
 
@@ -283,7 +344,8 @@ def main():
         unigrams_file=args.unigrams,
         use_wordfreq=args.use_wordfreq,
         version=args.version,
-        author=args.author
+        author=args.author,
+        model_file=args.model
     )
 
     sys.exit(0 if success else 1)

@@ -70,6 +70,8 @@ REQUIRED_SCRIPTS = [
 # historically True for the Latin-script languages; the trie boosted the 26
 # English NN logits, which is also why el/ru/tr never had it.)
 # `version` is the langpack manifest version to stamp on the next build.
+# `model` names the per-script CTC encoder the pack must carry (2026-09-10: the
+# six script models left the APK and travel in their packs -- see MODELS_DIR).
 SUPPORTED_LANGUAGES = {
     'en': {'name': 'English',    'words': 98140, 'bundle': True,  'boost': False, 'version': 2},
     'es': {'name': 'Spanish',    'words': 50000, 'bundle': True,  'boost': False, 'version': 2},
@@ -79,17 +81,21 @@ SUPPORTED_LANGUAGES = {
     'de': {'name': 'German',     'words': 40000, 'bundle': True,  'boost': False, 'version': 2},
     'sv': {'name': 'Swedish',    'words': 40000, 'bundle': True,  'boost': False, 'version': 2},
     'nl': {'name': 'Dutch',      'words': 40000, 'bundle': False, 'boost': False, 'version': 2},
-    'ru': {'name': 'Russian',    'words': 50000, 'bundle': False, 'boost': False, 'version': 2},
-    'el': {'name': 'Greek',      'words': 0,     'bundle': False, 'boost': False, 'version': 2},  # ~ survivors of 46,306
+    'ru': {'name': 'Russian',    'words': 50000, 'bundle': False, 'boost': False, 'version': 2, 'model': 'ru_synth_v3_ch80_fp16w.onnx'},
+    'el': {'name': 'Greek',      'words': 0,     'bundle': False, 'boost': False, 'version': 2, 'model': 'el_synth_v3_ch80_fp16w.onnx'},  # ~ survivors of 46,306
     'tr': {'name': 'Turkish',    'words': 40000, 'bundle': False, 'boost': False, 'version': 2},
     'id': {'name': 'Indonesian', 'words': 0,     'bundle': False, 'boost': False, 'version': 2},  # ~ survivors (ceiling 30,718)
     'ms': {'name': 'Malay',      'words': 0,     'bundle': False, 'boost': False, 'version': 2},  # ~ survivors (ceiling 28,361)
     'tl': {'name': 'Tagalog',    'words': 0,     'bundle': False, 'boost': False, 'version': 2},  # ~ survivors (ceiling 29,877)
     # ARC-056 additions (2026-09-01): pack-only, non-Latin script → no boosts.
-    'uk': {'name': 'Ukrainian',  'words': 50000, 'bundle': False, 'boost': False, 'version': 1},
-    'bg': {'name': 'Bulgarian',  'words': 0,     'bundle': False, 'boost': False, 'version': 1},  # ~ survivors of 35,791
-    'mk': {'name': 'Macedonian', 'words': 50000, 'bundle': False, 'boost': False, 'version': 1},
-    'he': {'name': 'Hebrew',     'words': 50000, 'bundle': False, 'boost': False, 'version': 1},
+    # Normalized to version 2 on the 2026-09-10 model rebuild — the deferred item in
+    # memory/HANDOFF.md. They were stamped 1 only because they were built after the
+    # other packs had already moved to 2, and the byte-identity rule held the fix
+    # until a rebuild was happening anyway. This was that rebuild.
+    'uk': {'name': 'Ukrainian',  'words': 50000, 'bundle': False, 'boost': False, 'version': 2, 'model': 'uk_synth_v3_ch80_fp16w.onnx'},
+    'bg': {'name': 'Bulgarian',  'words': 0,     'bundle': False, 'boost': False, 'version': 2, 'model': 'bg_synth_v3_ch80_fp16w.onnx'},  # ~ survivors of 35,791
+    'mk': {'name': 'Macedonian', 'words': 50000, 'bundle': False, 'boost': False, 'version': 2, 'model': 'mk_synth_v3_ch80_fp16w.onnx'},
+    'he': {'name': 'Hebrew',     'words': 50000, 'bundle': False, 'boost': False, 'version': 2, 'model': 'he_synth_v3_ch80_fp16w.onnx'},
     # Swahili uses the wiki-corpus word list (wordfreq has no sw data)
     'sw': {'name': 'Swahili',    'words': 20000, 'bundle': False, 'boost': False, 'version': 2,
            'wordlist': 'sw_words.txt'},
@@ -97,6 +103,17 @@ SUPPORTED_LANGUAGES = {
 
 # Minimum word count for language detection unigrams
 UNIGRAM_COUNT = 5000
+
+# Where the per-script CTC encoders live. They are NOT in this repo: the artifact
+# source of truth is CleverKeys-ML `ctc/artifacts/` ("if a file is not in
+# ctc/artifacts/, it is not wirable"), and the app repo carries them only as
+# shipped payload -- which since 2026-09-10 means inside the pack zips rather than
+# under src/main/assets/models/. Override with --models-dir.
+#
+# A language with a 'model' whose file is missing ABORTS its build rather than
+# quietly producing a modelless pack: such a pack installs fine and then silently
+# never decodes, which is the worst of the available failure modes.
+DEFAULT_MODELS_DIR = SCRIPT_DIR.parent.parent / 'CleverKeys-ML' / 'ctc' / 'artifacts'
 
 
 def check_required_scripts() -> bool:
@@ -146,7 +163,7 @@ def build_prefix_boosts(lang: str, dict_file: Path, bundled: bool) -> bool:
 
 
 def build_langpack(lang: str, info: dict, dict_file: Path, unigrams_file: Path,
-                   output_file: Path) -> bool:
+                   output_file: Path, models_dir: Path = DEFAULT_MODELS_DIR) -> bool:
     cmd = [str(SCRIPT_DIR / 'build_langpack.py'),
            '--lang', lang, '--name', info['name'],
            '--dict', str(dict_file),
@@ -154,10 +171,20 @@ def build_langpack(lang: str, info: dict, dict_file: Path, unigrams_file: Path,
            '--version', str(info.get('version', 1))]
     if unigrams_file.exists():
         cmd.extend(['--unigrams', str(unigrams_file)])
+    model_name = info.get('model')
+    if model_name:
+        model_file = models_dir / model_name
+        if not model_file.exists():
+            print(f"  ERROR in build_langpack({lang}): {lang} ships a CTC encoder and "
+                  f"{model_file} is missing. Point --models-dir at a CleverKeys-ML "
+                  f"ctc/artifacts checkout; a pack without its model installs cleanly "
+                  f"and then never decodes.")
+            return False
+        cmd.extend(['--model', str(model_file)])
     return run(cmd, f"build_langpack({lang})")
 
 
-def build_language(lang: str, info: dict) -> dict:
+def build_language(lang: str, info: dict, models_dir: Path = DEFAULT_MODELS_DIR) -> dict:
     """Build all artifacts for a single language (classifier → boosts → pack)."""
     name = info['name']
     result = {'lang': lang, 'name': name, 'success': False,
@@ -217,7 +244,7 @@ def build_language(lang: str, info: dict) -> dict:
     # Step 4: language pack
     langpack_file = DICT_DIR / f'langpack-{lang}.zip'
     print(f"  [4/4] Building language pack (manifest v{info.get('version', 1)})...")
-    if build_langpack(lang, info, dict_file, unigrams_file, langpack_file):
+    if build_langpack(lang, info, dict_file, unigrams_file, langpack_file, models_dir):
         result['langpack'] = langpack_file
 
     result['success'] = result['langpack'] is not None
@@ -236,6 +263,9 @@ def main():
                         help='Comma-separated list of languages to build (default: all except en)')
     parser.add_argument('--list', action='store_true',
                         help='List supported languages and exit')
+    parser.add_argument('--models-dir', type=Path, default=DEFAULT_MODELS_DIR,
+                        help=f'Directory holding the per-script CTC encoders '
+                             f'(default: {DEFAULT_MODELS_DIR})')
     args = parser.parse_args()
 
     if args.list:
@@ -268,7 +298,8 @@ def main():
 
     print(f"Building {len(languages)} languages: {', '.join(languages)}")
 
-    results = [build_language(lang, SUPPORTED_LANGUAGES[lang]) for lang in languages]
+    results = [build_language(lang, SUPPORTED_LANGUAGES[lang], args.models_dir)
+               for lang in languages]
 
     print(f"\n{'='*60}\nBUILD SUMMARY\n{'='*60}")
     success_count = sum(1 for r in results if r['success'])

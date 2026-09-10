@@ -65,7 +65,13 @@ section is authoritative for what closed):**
   notes announce all four as provisional-via-language-packs; the pin is now emptySet.
 - ARC-114 (LOW): #79 A17 inset-strip observable. Import-preview "Invalid/skipped" label
   wording (the skips are intentional categories, "Invalid" oversells) — cosmetic.
-- Langpack manifest-version normalize on next pack rebuild (byte-identity rule defers it).
+- ~~Langpack manifest-version normalize on next pack rebuild (byte-identity rule defers it).~~
+  DONE 2026-09-10, on the rebuild that moved the CTC encoders into the packs: uk/bg/mk/he go
+  `version: 1` → `2`, matching ru/el and every other pack. Pinned by
+  `CtcPackModelTest.theSixScriptPacksAgreeOnTheirManifestVersion`. Still open in the same
+  family: the five `langpack-en*.zip` are pre-determinism builds (real mtimes, unsorted
+  entries, no `hasPrefixBoost` key). They cannot ride a bulk rebuild — `build_all_languages.py`
+  refuses to regenerate English — so they normalize only if `en` is rebuilt deliberately.
 - uk apostrophe forms (`м'ясо` — wordfreq uses U+02BC, rejected by the Cyrillic gate) and uk
   ї/ґ serving both need the corner-alias input mode — a different feature, unscheduled. Was
   recorded only in `memory/language-support-todo.md` §C; listed here so it lives in a tracker.

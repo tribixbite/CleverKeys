@@ -223,6 +223,96 @@ class CtcPackModelTest {
         assertThat(CtcPackModel.packModelFile(filesDir, "en")).isNull()
     }
 
+    // ── The shipped packs (scripts/dictionaries/langpack-*.zip) ─────────────────────
+
+    /**
+     * The delivery side of the pin: every ROUTED script's shipped pack must actually CARRY the
+     * artifact the app pins, and must declare it in its manifest.
+     *
+     * This is the assertion that makes the whole change safe to ship. The app has no fallback
+     * once the assets are gone: a pack rebuilt without its model installs perfectly cleanly and
+     * then silently never decodes — the language simply drops to geometric with nothing on
+     * screen to say why. Rebuilding a pack without passing `--model` is a one-flag mistake, so
+     * it needs a gate, and this is it.
+     */
+    @Test
+    fun everyRoutedScriptPackCarriesItsPinnedModel() {
+        for ((language, wiring) in CtcScriptSupport.SCRIPTS) {
+            if (wiring.status != CtcScriptSupport.Status.ROUTED) continue
+            val zip = File("scripts/dictionaries/langpack-$language.zip")
+            assertWithMessage("expected ${zip.path} (run from project root)")
+                .that(zip.isFile).isTrue()
+            java.util.zip.ZipFile(zip).use { zf ->
+                val entry = zf.getEntry(CtcPackModel.PACK_MODEL_FILE)
+                assertWithMessage(
+                    "$language: ${zip.name} carries no ${CtcPackModel.PACK_MODEL_FILE}. The " +
+                        "encoder is pack-delivered — a pack without it installs fine and then " +
+                        "never decodes. Rebuild with build_langpack.py --model."
+                ).that(entry).isNotNull()
+                val bytes = zf.getInputStream(entry).use { it.readBytes() }
+                assertWithMessage(
+                    "$language: sha256 of the pack's ${CtcPackModel.PACK_MODEL_FILE} must equal " +
+                        "CtcScriptSupport's pin, or the app will refuse to load it"
+                ).that(sha256(bytes)).isEqualTo(wiring.modelSha256)
+
+                val manifest = org.json.JSONObject(
+                    zf.getInputStream(zf.getEntry("manifest.json")).use { it.readBytes() }
+                        .toString(Charsets.UTF_8)
+                )
+                val declared = manifest.optJSONObject("model")
+                assertWithMessage(
+                    "$language: the pack must DECLARE its model — an undeclared model.onnx is " +
+                        "dropped on import, because nothing can verify it"
+                ).that(declared).isNotNull()
+                assertThat(declared.getString("file")).isEqualTo(CtcPackModel.PACK_MODEL_FILE)
+                assertThat(declared.getString("sha256").lowercase()).isEqualTo(wiring.modelSha256)
+            }
+        }
+    }
+
+    /**
+     * The other direction, and the reason it matters: a Latin pack must NOT declare a model.
+     * Latin languages decode against the APK's own encoder, so a pack-supplied one could only
+     * ever be an attempt to displace it — which the load side already refuses, and which no
+     * pack this project builds should be asking for in the first place.
+     */
+    @Test
+    fun aLatinPackDeclaresNoModel() {
+        for (code in listOf("en", "fr", "de", "es", "it", "pt", "sv", "nl", "tr")) {
+            val zip = File("scripts/dictionaries/langpack-$code.zip")
+            if (!zip.isFile) continue
+            java.util.zip.ZipFile(zip).use { zf ->
+                assertWithMessage("$code is Latin-script and must ship no pack model")
+                    .that(zf.getEntry(CtcPackModel.PACK_MODEL_FILE)).isNull()
+            }
+        }
+    }
+
+    /**
+     * `memory/HANDOFF.md`'s deferred "langpack manifest-version normalize on next pack
+     * rebuild". uk/bg/mk/he were stamped `version: 1` only because ARC-056 built them after
+     * the other packs had moved to 2, and the byte-identity rule held the fix until a rebuild
+     * was happening anyway. The 2026-09-10 model rebuild was that rebuild, so the six are now
+     * uniform and this pins them there.
+     */
+    @Test
+    fun theSixScriptPacksAgreeOnTheirManifestVersion() {
+        for (language in CtcScriptSupport.SCRIPTS.keys) {
+            val zip = File("scripts/dictionaries/langpack-$language.zip")
+            if (!zip.isFile) continue
+            val version = java.util.zip.ZipFile(zip).use { zf ->
+                org.json.JSONObject(
+                    zf.getInputStream(zf.getEntry("manifest.json")).use { it.readBytes() }
+                        .toString(Charsets.UTF_8)
+                ).optInt("version", -1)
+            }
+            assertWithMessage(
+                "$language: script packs are stamped manifest version 2 (the normalization " +
+                    "HANDOFF deferred to the next rebuild)"
+            ).that(version).isEqualTo(2)
+        }
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────────────────
 
     /**
