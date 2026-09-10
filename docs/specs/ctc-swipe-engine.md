@@ -250,9 +250,15 @@ unreachable. Pure JVM, pinned by `CtcContractionKeysTest`.
    (audit L5): up to 3 failed attempts (cold-boot transients must not permanently disable
    ctc), then the failure latches for the IME session (no per-swipe retry storm) and
    `isModelPermanentlyUnavailable()` reports it so the dispatcher falls through to geometric
-   rather than rendering an empty bar. On shutdown the ORT session is currently NOT closed
-   (closing mid-`session.run` is UB in ORT; reclaimed at process death) — audit MEDIUM-1
-   tracks the resulting per-lifecycle native leak.
+   rather than rendering an empty bar. Shutdown cancels the worker and waits up to 250 ms;
+   sessions close only after worker termination, never underneath `session.run`. The existing
+   timeout path leaves native sessions open rather than risking concurrent native access.
+   The owning InputCoordinator detaches its adapters at shutdown and rejects late warm-up,
+   fallback, result and cursor callbacks. A running worker retains its own adapter until it
+   returns; an idle adapter and its Java trie caches can be collected even if Android's
+   back-navigation callback retains the destroyed IME. Keyboard2View does not retain the
+   predictor. This bounds the heavy state held by retired services without clearing mutable
+   trie caches concurrently with decoding (2026-09-10 heap-verified retention investigation).
 5. **Decoder memo** keyed by (mapped layout, trie, beam width) — a beam-width change from
    settings swaps the memoized decoder on the next swipe, no engine rebuild or re-warm
    hook needed.

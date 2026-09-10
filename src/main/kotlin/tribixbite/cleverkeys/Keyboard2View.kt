@@ -117,9 +117,6 @@ class Keyboard2View @JvmOverloads constructor(
     // Reusable Path object for swipe trail rendering (to avoid allocation every frame)
     private val _swipeTrailPath = Path()
 
-    // Swipe typing integration
-    private var _wordPredictor: Predictor? = null
-
     private var _keyboard2: CleverKeysService? = null
 
     // Custom short swipe executor for user-defined gesture mappings
@@ -1179,8 +1176,9 @@ class Keyboard2View @JvmOverloads constructor(
         }
     }
 
-    fun setSwipeTypingComponents(predictor: Predictor?, keyboard2: CleverKeysService?) {
-        _wordPredictor = predictor
+    // This view routes actions through the service; it never queries the predictor. Keep
+    // the wiring signature, but do not retain dictionaries through retired keyboard views.
+    fun setSwipeTypingComponents(@Suppress("UNUSED_PARAMETER") predictor: Predictor?, keyboard2: CleverKeysService?) {
         _keyboard2 = keyboard2
     }
 

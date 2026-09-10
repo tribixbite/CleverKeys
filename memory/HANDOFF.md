@@ -10,101 +10,67 @@ what was done; this file is only what is left. Anything below is open.
 
 ## State after the 2026-08-30..09-02 full-backlog campaign (all pushed through `e87c5b97`+)
 
-### Open: 2026-09-10 daily-use Java-heap OOM
+### 2026-09-10 Java-heap OOM: retention cause reproduced and mitigated
 
-- TODO: attribute the live Java heap with a heap dump before choosing a fix. The
-  11:25:54 crash (PID 8348, v2.0.0/200002) exhausted the 256 MiB Java growth limit.
-  Local release mapping resolves `Keyboard2View$d.a:20` to `keyCellIsEmpty` and its
-  nine-slot iterator, not swipe-path rendering; installed APK/mapping identity has
-  not been independently verified. The failed 32-byte allocation is not an owner census.
-- Replacement PID 28493 remains alive: explicit GC at 12:03:04 device time freed
-  31 MB + 13 MB LOS and left 204 MB/252 MB. Meminfo: 208,922 KiB Java allocated,
-  519,796 KiB total PSS. gfxinfo attributes 114.91 MiB to Skia GPU caches (99.31
-  MiB render targets); GPU memory is separate from the Java growth limit.
-- Earlier chat claims blaming a 15-second swipe or asserting a successful
-  unreachable report were unsupported. Verbose runtime logs now confirm logging
-  is enabled, but not that it owns the heap. `meminfo --unreachable` failed.
-  `am dumpheap` is denied: process not debuggable; the failed request left an
-  empty `/data/local/tmp/cleverkeys-20260910.hprof`.
-- Diagnostic-build installation/restart approval was requested and remains pending.
-  ADB reconnected at `172.16.10.2:36807`. No production code or device settings changed;
-  preserve the current process until that decision.
-- Confirmed flag wiring: `build-on-termux.sh` exports `LOCAL_BUILD=true`;
-  `build.gradle` enables `ENABLE_VERBOSE_LOGGING` for those releases and all debug builds.
-  `Logs` retains only a LogPrinter; DebugLoggingManager writes through a BufferedWriter.
-  Logging is enabled, but retained-heap causation has NOT been established.
-- Cloud APK upload explicitly approved by the maintainer. Two ew-cli 1.3.4 Pixel7/API34
-  orchestrated runs PASSED (2 methods, 0 failures/skips). Both use verbose-enabled debug
-  v2.0.0, synthetic data; no phone install/settings changes. Raw outputs remain ignored under
-  `build/ew-memory-stages` and `build/ew-memory-lifecycle`.
-  - [Bilingual stages run](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/f0d26cdb-3418-439b-8b2a-0c5359cb226f):
-    settled Java bytes baseline 2,511,224 → predictor context 2,740,944 → English dictionary
-    21,012,728 → Italian secondary 39,080,040 → English CTC trie 68,152,264 → Italian trie
-    91,259,536 → first decode 91,296,288 → 100 additional decodes 91,298,712 (+2,424 bytes).
-    Secondary unload removes 18,066,584 bytes. Two-language fixed structures account for
-    ~87 MiB; repeated decoding did NOT reproduce the phone's ~204 MiB heap.
-  - [Full IME lifecycle run](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/22be416f-5483-4fec-bc45-d37137abd5d6):
-    default English settings, real service + editor/window, settled Java bytes before service
-    2,542,392 → first show 60,222,312 → 20 show/hide cycles 60,280,544 → held 15-second
-    swipe 60,328,056 → released 60,364,048 → editor closed 60,344,704. Recognizer logged
-    SWIPE DETECTED. PSS first show 228,809 KiB → held swipe 240,038 KiB. This exercises
-    touch dispatch/rendering but does NOT reproduce the phone's exact settings/data/history.
-  - `scripts/gradle-guard.sh assembleDebug assembleDebugAndroidTest` passed for both builds
-    (56s and 43s), including Kotlin compilation. `git diff --check` passed.
-- Reconnected phone 2026-09-10: SM-S938U1, serial `100.82.17.127:38893`, PID 28699.
-  Meminfo Java allocated 197,332 KiB (~192.7 MiB), total PSS 342,383 KiB plus swap PSS
-  46,931 KiB. Explicit GC 13:22:07 device time left 192 MB/240 MB. Pulled installed APK
-  is byte-identical to local release arm64: SHA-256
-  `ed953fad6d8f3d74d1cd45031e1ed3c4235ad5f589e7ce7b879a6e038d1a6ffd`.
-  This resolves the previous installed-APK identity uncertainty.
-- NEW lead: same PID logs service onDestroy/onCreate at 13:18:54; init.enter already
-  242.5 MiB allocated. New EN/IT loads + CTC rebuild then hit OOM around 13:19:04–05
-  (including BinderInternal.GcWatcher finalizer). At 13:20:05 GC freed 111 MiB and left
-  143 MiB; retry rebuilt the CTC tries successfully. Retention/overlap during service
-  recreation is a stronger lead than swipe-buffer growth, but the objects are not identified.
-  Raw log: `build/memory-phone-28699.log`; package info: `build/memory-phone-package.txt`.
-- Source-level teardown gap to test: PredictionCoordinator.shutdown drops WordPredictor
-  after stopping its observer, but does not cancel its AsyncDictionaryLoader. Secondary
-  runOffMain work is deliberately untracked and posts completion even after owner shutdown.
-  These tasks capture the predictor/callback until completion. This is a plausible transient
-  overlap mechanism, NOT proof of the phone's retained 193 MiB or the sole root cause.
-- User reports the issue immediately after turning the screen on (2026-09-10); ADB was
-  disconnected when this round attempted to read that new event. No phone UI/settings changed.
-- Service-recreation test executed after renewed upload approval:
-  [run 718acc36](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/718acc36-b824-4548-ae31-ff4bd30bb5bb)
-  passed, but measurements are CONTAMINATED BY THE TEST (see heap evidence below).
-  Java 60,242,968 → 108,223,432 → 156,166,592 → 174,971,584 → 175,527,784 bytes
-  across replacements 1–4; weak refs reported 1–4 retired services alive, then memory fell.
-  Do NOT cite this as proven reproduction of a production leak.
-- [Heap-capture run 4fc5d1bc](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/4fc5d1bc-1fd8-49f3-94d0-20922112f3be)
-  passed and returned a 265,728,197-byte synthetic HPROF at replacement 2. Shark 2.14
-  found a destroyed service retaining 41,003,530 bytes through
-  `InstrumentationThread <Java Local> → CleverKeysService`, plus an unreachable retired
-  service. The probe itself reads getInstance()/WeakReference.get() in its long-lived
-  instrumentation frame; ART can keep those temporaries alive. Report:
-  `build/memory-shark-analysis.txt`; HPROF under `build/ew-memory-heap/sdcard/Android/data/tribixbite.cleverkeys.debug/files/`.
-- TODO: rerun corrected lifecycle probe. Service-presence reads and weak-reference counts
-  now execute on runOnMainSync and return only primitives to the instrumentation frame.
-  Corrected APK compiled successfully (34s); diff check passed. No production fix chosen.
-  Auto-review AGAIN rejected the corrected APK upload despite prior explicit approval;
-  requested approval for corrected `CleverKeys-debug-androidTest.apk` upload to emulator.wtf
-  and retrieval of its synthetic heap dump. Intended output `build/ew-memory-corrected`.
-  Earlier remarks calling the emulator surge a reproduced app defect are superseded by
-  the heap-root evidence. Phone OOM remains real; its exact owner remains unproven.
-- Production heap-graph attempt: Perfetto android.java_hprof captured only a 786-byte
-  trace, no heap graph (`build/cleverkeys-memory.pftrace`); existing profiling directory empty.
-  Normal am dumpheap remains disallowed because the app is non-debuggable. No settings
-  changed or app reinstalled during the reconnected-phone investigation.
-- TODO: obtain actual high-heap object ownership from the phone, or reproduce its exact
-  configuration/session history in the emulator before selecting a production fix. Phone ADB
-  was disconnected during the cloud run. No Java leak/root cause is established; the clean
-  runs weaken the swipe-buffer/logging-alone hypothesis but do not exclude conditional bugs.
-  MainDictionarySource's per-language static browser cache is cleared by
-  DictionaryManagerActivity.onDestroy when isFinishing; its existence alone is not a leak.
-  CTC shutdown closes native sessions but does not clear trieMemos while the adapter remains
-  reachable: the test's adapterShutdown value must NOT be presented as freed Java tries.
-
-
+- **Proven emulator root:** native global → WindowOnBackInvokedDispatcher callback wrapper →
+  CallbackRef.mStrongRef → InputMethodService callback → destroyed CleverKeysService.
+  Two retired services retained **82,002,810 bytes** through that root. They still owned
+  their old CTC adapter/tries and the unused Keyboard2View predictor reference.
+  [Corrected pre-fix run](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/7d1a7a62-152d-4577-9ce9-0aaed3f9ef5d),
+  report `build/memory-shark-corrected.txt`, heap under `build/ew-memory-corrected/`.
+- **Fix:** Keyboard2View no longer stores its unused Predictor argument; InputCoordinator
+  shutdown is terminal, detaches both adapters, clears swipe capture, and guards delayed
+  warm-up, cursor, fallback and result callbacks. Running workers retain their own adapter
+  until they finish; no main-thread clearing of a worker's mutable trie. Native shutdown's
+  existing 250 ms safety timeout is unchanged. Canonical lifecycle: `docs/specs/ctc-swipe-engine.md`.
+- **Post-fix proof:** the SAME native callback root still retains two retired services, but
+  their retained bytes drop to **1,107,881 total** (~552 kB each), from ~41 MB each.
+  [Fixed run](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/4e41ac4a-1b68-4e2b-980d-c838189bfb60)
+  passed the new 16 MiB recreation-growth gate. Java bytes first show 60,197,712 →
+  replacements 1..5: 60,817,656 / 61,387,328 / 61,906,040 / 62,434,408 / 62,997,400;
+  all five retired services still alive, so this verifies disposal independently of GC.
+  15-second swipe held 63,038,520 → released 63,094,784. Report `build/memory-shark-fixed.txt`;
+  raw XML/logcat/heap under `build/ew-memory-fixed/` (ignored, synthetic emulator data only).
+- **Validation:** guarded debug app/test builds and Kotlin compilation passed;
+  runPureTests **2,371** and runMockTests **730** passed (7m total). MockK emitted four
+  backing-field warnings in existing SuggestionTapAddAndIWordTest stubs (String versus
+  StringBuilder); no assertion failures. The fixed cloud log confirms all six English
+  trie builds completed, so the recreation memory gate did not pass by skipping loading.
+  `git diff --check` passed. Independent delegated review found no blocking issue.
+- **Phone evidence / remaining verification:** Samsung SM-S938U1 v2.0.0/200002 OOM at
+  11:25:54 (PID 8348) exhausted its 256 MiB Java heap; allocation failed in keyCellIsEmpty,
+  not a swipe-path owner census. Later PID 28699 logs onDestroy/onCreate at 13:18:54 with
+  init.enter already 242.5 MiB, another OOM during dictionary/CTC rebuild at 13:19:04–05,
+  then GC freed 111 MiB at 13:20:05. Latest sampled Java alloc 197,332 KiB (~192.7 MiB),
+  PSS 342,383 KiB. User reports the issue on screen-on. This matches recreation retention,
+  but the exact native root has not been captured on the phone. No app installation,
+  settings changes, or restarts performed; ADB disconnected again during the latest round.
+  TODO: test a release build on the phone after explicit install/restart authorization.
+- Installed APK equals local arm64 release byte-for-byte, SHA-256
+  `ed953fad6d8f3d74d1cd45031e1ed3c4235ad5f589e7ce7b879a6e038d1a6ffd` (pre-fix).
+  Logs/package/APK retained under `build/memory-phone-*`. am dumpheap denied (non-debuggable);
+  Perfetto attempt returned a 786-byte trace without heap graph. Last ADB serial 100.82.17.127:38893.
+- **Logging/swipes:** LOCAL_BUILD=true enables verbose release logging; debug always enables
+  it. All cloud runs had logging enabled. Isolated EN+IT predictor/CTC retained ~87 MiB;
+  100 additional decodes added 2,424 bytes. Ordinary show/hide and a 15-second swipe were stable.
+  Logging alone / growing swipe paths are NOT supported explanations for the phone's heap.
+- **Probe correction:** first recreation results were contaminated by a Java-local root
+  on the instrumentation thread. Service and weak-reference reads were moved onto main,
+  returning primitives; the corrected dump then proved the distinct native callback root.
+  Do not use the first report `build/memory-shark-analysis.txt` as app-leak proof.
+- **Parallel dictionary review follow-ups (not fixed in this patch):**
+  - TODO: make AsyncDictionaryLoader lifecycle-aware: stale primary work can still publish
+    after cancellation/shutdown; secondary runOffMain futures are untracked. Add latch-driven
+    cancellation/publication tests before changing its ownership model.
+  - TODO: prevent an in-flight secondary load from re-enabling the index after explicit unload.
+  - Main dictionary/prefix and secondary canonical maps are substantial but vocabulary-bounded;
+    old DictionaryManager/MultiLanguageManager duplicate-model caches were already removed.
+  - Framework still temporarily retains lightweight service/view objects (~0.5 MiB/service);
+    this mitigation releases their heavy dictionaries, not Android's native callback itself.
+- **Authorization:** maintainer grants permanent ongoing emulator.wtf APK upload approval
+  (captured in CLAUDE.md); do not re-ask for routine rebuilt diagnostic/test runs.
+  PAL external consultation was rejected by auto-review; independent local delegated review
+  completed and approved the targeted teardown diff. No release/tag/push authorization granted.
 
 **The executable backlog is CLEARED.** Every ARC item that did not require maintainer input is
 closed — see `docs/audit/2026-08-28-archive-verification.md` (waves R1/R2/R3, D, G, J, K

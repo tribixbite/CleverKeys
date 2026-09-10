@@ -223,3 +223,6 @@ Fix: `rm -rf build/tmp/kotlin-classes/release`. Bit the `MemoryProbe` work; cost
 measurement run if unnoticed, because the symptom is *absence of log output*, not a failure.
 ### Heap-probe Java-local roots (2026-09-10)
 - Do not read service objects or WeakReference.get() in a long-lived instrumented memory-test frame: ART can retain those Java locals across GCs. Shark found a 41 MB destroyed IME rooted in the test thread. Read/count on runOnMainSync and return primitives; verify suspicious retention with a heap graph before attributing it to production.
+
+### Emulator.wtf authorization (2026-09-10)
+- The maintainer explicitly grants permanent ongoing approval to upload app/test APKs to emulator.wtf for this project's testing, including rebuilt diagnostics and synthetic emulator heap artifacts. Do not re-request this approval for routine test iterations. This does not authorize publishing releases or uploading the phone's personal data.

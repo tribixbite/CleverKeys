@@ -202,6 +202,11 @@ class InputCoordinator(
         }
     }
 
+    // Engine creation, callbacks and shutdown are serialized on the main thread. A retired
+    // service can remain reachable through framework back callbacks, so shutdown must drop
+    // its heavy engines and reject late callbacks rather than relying on service collection.
+    private var closed = false
+
     // v1.2.6: Handler for debouncing cursor sync
     private val syncHandler = Handler(Looper.getMainLooper())
     private var pendingSyncRunnable: Runnable? = null
@@ -316,6 +321,7 @@ class InputCoordinator(
         language: String = "en",
         editorInfo: EditorInfo? = null
     ) {
+        if (closed) return
         // SAS-1: cursor movement invalidates the pending auto-space swallow unless
         // it reports exactly the stamped position (the auto-space commit's own
         // onUpdateSelection callback). Synchronous — must run before any debounce.
@@ -326,6 +332,7 @@ class InputCoordinator(
 
         // Schedule new sync with debounce delay
         pendingSyncRunnable = Runnable {
+            if (closed) return@Runnable
             contextTracker.synchronizeWithCursor(ic, language, editorInfo)
 
             // Trigger predictions for the synced word
@@ -390,9 +397,18 @@ class InputCoordinator(
      * G5 the CTC decode thread, owned here.)
      */
     fun shutdown() {
+        if (closed) return
+        closed = true
         cancelPendingCursorSync()
-        geometricAdapter?.shutdown()
-        ctcAdapter?.shutdown()
+        val retiredGeometric = geometricAdapter
+        val retiredCtc = ctcAdapter
+        geometricAdapter = null
+        ctcAdapter = null
+        currentSwipeData = null
+        // A still-running worker keeps its own adapter alive until it returns. Detaching
+        // ownership here releases idle tries without clearing maps under an active decode.
+        retiredGeometric?.shutdown()
+        retiredCtc?.shutdown()
     }
 
     /**
@@ -444,6 +460,7 @@ class InputCoordinator(
         origin: SuggestionOrigin? = null,
         languages: List<String>? = null
     ) {
+        if (closed) return
         // Keep the fields in sync with the request-carried state (single source of truth for the
         // default-param seam used by tests and the oracle).
         wasShiftActiveAtSwipeStart = shiftActive
@@ -475,7 +492,9 @@ class InputCoordinator(
      * Posted to the view's thread (was IC.onSuggestionSelected's post-commit clearing).
      */
     internal fun clearLatchedShiftAfterSwipe() {
+        if (closed) return
         keyboardView.post {
+            if (closed) return@post
             keyboardView.clearLatchedModifiers()
         }
     }
@@ -496,6 +515,7 @@ class InputCoordinator(
         capturedIc: InputConnection?,
         capturedEditor: EditorInfo?
     ): Boolean {
+        if (closed) return false
         val provider = currentInputProvider
         val live = provider?.current()
         return isReplayInputStillCurrent(
@@ -522,6 +542,7 @@ class InputCoordinator(
         wasShiftActive: Boolean = false,  // v1.32.926: Track if shift was latched when swipe started
         wasShiftLocked: Boolean = false   // v1.33.8: Track if shift was LOCKED (caps lock) when swipe started
     ) {
+        if (closed) return
         // v1.32.926: Store shift state for capitalize first letter in onSuggestionSelected
         wasShiftActiveAtSwipeStart = wasShiftActive
         // v1.33.8: Store caps lock state for ALL CAPS transformation in onSuggestionSelected
@@ -859,9 +880,10 @@ class InputCoordinator(
      * a no-op unless the router would pick GEOMETRIC or CTC.
      */
     fun prewarmGeometricEngine() {
-        if (!config.swipe_typing_enabled) return
+        if (closed || !config.swipe_typing_enabled) return
         val mode = SwipeEngineRouter.Mode.fromPref(config.swipe_engine_mode)
         keyboardView.post {
+            if (closed) return@post
             val keyboard = keyboardView.getKeyboard() ?: return@post
             val params = keyboardView.geometryParams() ?: return@post
             val frameW = keyboardView.width.toFloat()

@@ -597,7 +597,9 @@ class CtcImportedPackInstrumentedTest {
                     shell("ime set $component")
                     showKeyboard()
                     Thread.sleep(3_000L)
-                    measure("serviceReplacement${index + 1}")
+                    val replacedHeap = measure("serviceReplacement${index + 1}")
+                    assertTrue("retired services retained dictionaries: ${replacedHeap - baseline} bytes",
+                        replacedHeap - baseline < 16L * 1024L * 1024L)
                     var retiredAlive = 0
                     instrumentation.runOnMainSync {
                         retiredAlive = retired.count { it.get() != null }
