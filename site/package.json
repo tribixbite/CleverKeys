@@ -13,8 +13,10 @@
     "@astrojs/sitemap": "3.7.2",
     "@astrojs/svelte": "^8.1.2",
     "@tailwindcss/vite": "^4.1.13",
-    "astro": "^6.4.8",
+    "astro": "^7.2.8",
+    "js-yaml": "5.4.1",
     "postcss": "8.5.26",
+    "smol-toml": "1.8.0",
     "svelte": "^5.39.4",
     "svgo": "4.1.0",
     "tailwindcss": "^4.1.13"
@@ -24,5 +26,9 @@
     "@types/node": "^22.18.1",
     "typescript": "^5.9.2",
     "unist-util-visit": "5.1.0"
+  },
+  "overrides": {
+    "js-yaml": "^4.3.2",
+    "smol-toml": "^1.7.1"
   }
 }
