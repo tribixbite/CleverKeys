@@ -53,6 +53,19 @@ import java.util.Locale
  * fixtures' own `layout.letters` field by `CtcScriptAlphabetTest` for every script whose fixture
  * ships.
  *
+ * ## Where the model BYTES come from (changed 2026-09-10)
+ *
+ * All six encoders left the APK. They are 589,406 B each and only ever ran for a user who had
+ * *also* imported that language's pack — every one of the six is
+ * [CtcLanguageSupport.LexiconSource.CKDT_LANGPACK], so without a pack there is no trie and no
+ * decode — which made 3.1 MB of compressed APK payload dead weight for everyone else. The model
+ * now travels IN the pack (`model.onnx`), and the app pins its [ScriptWiring.modelSha256]: a
+ * pack model is handed to ORT only on byte-identity with the pinned artifact, so this moved the
+ * bytes without adding an attack surface. [CtcPackModel] holds the gate and the reasoning.
+ *
+ * [ScriptWiring.modelAsset] keeps its asset-shaped name: it is the adapter's session-cache and
+ * dead-model KEY, and one logical name per encoder is exactly what that key needs.
+ *
  * ## Evidence tier — read before quoting any number for these scripts
  *
  * Only **ru** has a real-swipe probe, it is **val-only permanently** (Yandex valid-10k is
@@ -90,9 +103,14 @@ object CtcScriptSupport {
      * @property layoutXml the shipped layout under `src/main/layouts/` (NOT `srcs/layouts/`,
      *   which no build task reads — guide §7.8).
      * @property alphabet emission slot order, codepoint-sorted. See the class KDoc.
-     * @property modelAsset the per-language ONNX under `src/main/assets/`, or null when the
-     *   bytes are not shipped. All six graphs are 589,406 B fp16w and byte-size-identical, so
-     *   only the sha256 in the golden fixture can tell them apart.
+     * @property modelAsset the per-language ONNX's LOGICAL name — historically an
+     *   `src/main/assets/` path, and still the key the adapter's session cache and dead-asset
+     *   set are keyed by, but since 2026-09-10 the bytes arrive in the language pack rather than
+     *   the APK (see [modelSha256]). Null when no model exists for the row. All six graphs are
+     *   589,406 B fp16w and byte-size-identical, so only a sha256 can tell them apart.
+     * @property modelSha256 the sha256 this app PINS for [modelAsset] — the load-side half of
+     *   pack delivery. A pack model is handed to ORT only on byte-identity with this value; see
+     *   [CtcPackModel]. Non-null exactly when [modelAsset] is.
      * @property goldenFixture the golden fixture basename under `src/test/resources/ctc/` and
      *   `src/androidTest/assets/ctc/` (two byte-identical copies), or null when not shipped.
      * @property status see [Status].
@@ -105,6 +123,7 @@ object CtcScriptSupport {
         val layoutXml: String,
         val alphabet: String,
         val modelAsset: String?,
+        val modelSha256: String?,
         val goldenFixture: String?,
         val status: Status,
         val gap: String?,
@@ -123,6 +142,14 @@ object CtcScriptSupport {
             }
             require(status != Status.ROUTED || (modelAsset != null && goldenFixture != null)) {
                 "$language: rule 4 — a ROUTED script needs both its model and its fixture"
+            }
+            require((modelAsset == null) == (modelSha256 == null)) {
+                "$language: a model without a pinned sha256 (or a pin naming no model) — the " +
+                    "model is pack-delivered, so an unpinned row would hand ORT user-supplied " +
+                    "bytes"
+            }
+            require(modelSha256 == null || modelSha256.matches(Regex("[0-9a-f]{64}"))) {
+                "$language: modelSha256 must be 64 lowercase hex characters"
             }
         }
 
@@ -154,9 +181,10 @@ object CtcScriptSupport {
             // (`key1` on е and ь) and `KeyboardGeometry.computeKeyRects` only emits `keys[0]`,
             // so they never become emission slots. The projection folds them away instead.
             alphabet = "абвгдежзийклмнопрстуфхцчшщыьэюя",
-            // Generation 4, sha 8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c,
-            // 589,406 B. Fixture sha 8951d7a3f725e54df735804ae981ba96038f8f6a5609edf52a56f699914982d3 (ARC-060 geometry).
+            // Generation 4, 589,406 B (delivered in the langpack; sha pinned below).
+            // Fixture sha 8951d7a3f725e54df735804ae981ba96038f8f6a5609edf52a56f699914982d3 (ARC-060 geometry).
             modelAsset = "models/ru_synth_v3_ch80_fp16w.onnx",
+            modelSha256 = "8fffa75c722eb61e9e8c80d919fbca3e73eb698ebe3e3909cb766b3b8489962c",
             goldenFixture = "ru_synth_v3_ch80_fp16w_golden.json",
             status = Status.ROUTED,
             gap = null,
@@ -167,11 +195,12 @@ object CtcScriptSupport {
             layoutXml = "grek_qwerty.xml",
             // K = 25, and ς (U+03C2) is its OWN slot, in a different row from σ (U+03C3).
             alphabet = "αβγδεζηθικλμνξοπρςστυφχψω",
-            // Generation 4, sha 7083794c501566f411b1f81495ba1f7f3df273c3eb58f6ee635caf168a4f8c3d,
-            // 589,406 B. Fixture sha d08d5501961e971db2ca120f6ee868b7b67ed37e34b6412dddbc7f7116de5753.
+            // Generation 4, 589,406 B (delivered in the langpack; sha pinned below).
+            // Fixture sha d08d5501961e971db2ca120f6ee868b7b67ed37e34b6412dddbc7f7116de5753.
             // Greek has NO real-swipe probe at any tier; never quote the synthesis-holdout
             // fixture level as accuracy. The device parity/latency run is its only runtime bar.
             modelAsset = "models/el_synth_v3_ch80_fp16w.onnx",
+            modelSha256 = "7083794c501566f411b1f81495ba1f7f3df273c3eb58f6ee635caf168a4f8c3d",
             goldenFixture = "el_synth_v3_ch80_fp16w_golden.json",
             status = Status.ROUTED,
             gap = null,
@@ -181,14 +210,15 @@ object CtcScriptSupport {
             script = "cyrillic",
             layoutXml = "cyrl_jcuken_uk.xml",
             alphabet = "абвгдежзийклмнопрстуфхцчшщьюяєі",
-            // Generation 4, sha af9959a8954961eec117808371937cb26152c82a82cad0fc6a0ac06fd695db76,
-            // 589,406 B. Fixture sha 93602db1200a3b37ef11570d4f4ee3afdad2a45b0ca4f857a784728cdbb5cc98.
+            // Generation 4, 589,406 B (delivered in the langpack; sha pinned below).
+            // Fixture sha 93602db1200a3b37ef11570d4f4ee3afdad2a45b0ca4f857a784728cdbb5cc98.
             // Lexicon: `langpack-uk` (CKDT v2, 255−rank scale — shipped 2026-09-01, ARC-056).
             // The projection applies no folds; ї/ґ words are rejected as untypeable (4.03 % of
             // the vocabulary) — those live in corner slots, and serving them is a different
             // input mode (flick), not a projection change. uk has NO real-swipe probe at any
             // tier; never quote the synthesis-holdout fixture level as accuracy.
             modelAsset = "models/uk_synth_v3_ch80_fp16w.onnx",
+            modelSha256 = "af9959a8954961eec117808371937cb26152c82a82cad0fc6a0ac06fd695db76",
             goldenFixture = "uk_synth_v3_ch80_fp16w_golden.json",
             status = Status.ROUTED,
             gap = null,
@@ -198,12 +228,13 @@ object CtcScriptSupport {
             script = "cyrillic",
             layoutXml = "cyrl_ueishsht.xml",
             alphabet = "абвгдежзийклмнопрстуфхцчшщъьюя",
-            // Generation 4, sha 119d42f70cc763336f9a86efdc5ae4f562ba4a28179c2d386026bef674c039a7,
-            // 589,406 B. Fixture sha f776ea03ab675ff6b741a3297c4f88b11f7af2cb183ce7b2604f082ed8420b9d.
+            // Generation 4, 589,406 B (delivered in the langpack; sha pinned below).
+            // Fixture sha f776ea03ab675ff6b741a3297c4f88b11f7af2cb183ce7b2604f082ed8420b9d.
             // Lexicon: `langpack-bg` (CKDT v2, 255−rank scale — shipped 2026-09-01, ARC-056).
             // Projection: no NFD; ѝ→и. bg has NO real-swipe probe at any tier; never quote the
             // synthesis-holdout fixture level as accuracy.
             modelAsset = "models/bg_synth_v3_ch80_fp16w.onnx",
+            modelSha256 = "119d42f70cc763336f9a86efdc5ae4f562ba4a28179c2d386026bef674c039a7",
             goldenFixture = "bg_synth_v3_ch80_fp16w_golden.json",
             status = Status.ROUTED,
             gap = null,
@@ -213,12 +244,13 @@ object CtcScriptSupport {
             script = "cyrillic",
             layoutXml = "cyrl_lynyertdz_mk.xml",
             alphabet = "абвгдежзиклмнопрстуфхцчшѓѕјљњќџ",
-            // Generation 4, sha 4e371d967bf24f260eb539848ead7860f56dc904f6bfc74235879b76e81ae022,
-            // 589,406 B. Fixture sha 015c9bae7e25a97b0ac8bd6062bb58376caaa3aca99c138d0d531ff1887e0ccf.
+            // Generation 4, 589,406 B (delivered in the langpack; sha pinned below).
+            // Fixture sha 015c9bae7e25a97b0ac8bd6062bb58376caaa3aca99c138d0d531ff1887e0ccf.
             // Lexicon: `langpack-mk` (CKDT v2, 255−rank scale — shipped 2026-09-01, ARC-056).
             // Projection: no NFD; ѐ→е, ѝ→и. mk has NO real-swipe probe at any tier; never quote
             // the synthesis-holdout fixture level as accuracy.
             modelAsset = "models/mk_synth_v3_ch80_fp16w.onnx",
+            modelSha256 = "4e371d967bf24f260eb539848ead7860f56dc904f6bfc74235879b76e81ae022",
             goldenFixture = "mk_synth_v3_ch80_fp16w_golden.json",
             status = Status.ROUTED,
             gap = null,
@@ -228,8 +260,8 @@ object CtcScriptSupport {
             script = "hebrew",
             layoutXml = "hebr_1_il.xml",
             alphabet = "אבגדהוזחטיךכלםמןנסעףפץצקרשת",
-            // Generation 4, sha a382371363653fbe7c806482035aa9e27968b9c098591910d24f9f1ba43212c7,
-            // 589,406 B. Fixture sha b29a99f4ac2c4f82547d040131ea48771f2791817287de6e3f9ec52fc9758ad9.
+            // Generation 4, 589,406 B (delivered in the langpack; sha pinned below).
+            // Fixture sha b29a99f4ac2c4f82547d040131ea48771f2791817287de6e3f9ec52fc9758ad9.
             // Lexicon: `langpack-he` (CKDT v2, 255−rank scale — shipped 2026-09-01, ARC-056;
             // `build_wordlist._is_script_word`'s `hebrew` branch landed with it). Projection:
             // NFD → drop Mn → NFC; niqqud are not keys. he's old parity flag was a GENERATION-2
@@ -237,6 +269,7 @@ object CtcScriptSupport {
             // 100/100). he has NO real-swipe probe at any tier; never quote the
             // synthesis-holdout fixture level as accuracy.
             modelAsset = "models/he_synth_v3_ch80_fp16w.onnx",
+            modelSha256 = "a382371363653fbe7c806482035aa9e27968b9c098591910d24f9f1ba43212c7",
             goldenFixture = "he_synth_v3_ch80_fp16w_golden.json",
             status = Status.ROUTED,
             gap = null,
@@ -263,6 +296,17 @@ object CtcScriptSupport {
      */
     fun modelAssetFor(language: String?, defaultAsset: String): String =
         wiringFor(language)?.modelAsset ?: defaultAsset
+
+    /**
+     * The sha256 this app pins for [language]'s pack-delivered encoder, or null when the
+     * language has no script row.
+     *
+     * A null is the REFUSAL, not a permission: it means "no pack may supply this language a
+     * model". Every Latin language returns null, so an imported Latin pack can never displace
+     * the APK's own Latin encoder with bytes of its own. See [CtcPackModel] for what the pin
+     * buys and what it deliberately does not.
+     */
+    fun expectedModelSha256(language: String?): String? = wiringFor(language)?.modelSha256
 
     /** Layout `script` values the router may send to CTC: Latin plus every [Status.ROUTED] row. */
     val ROUTABLE_SCRIPTS: Set<String> =

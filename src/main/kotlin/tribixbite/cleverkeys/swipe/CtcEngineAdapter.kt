@@ -31,6 +31,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcFuzzyRescue
 import tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
+import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
 import tribixbite.cleverkeys.swipe.ctc.CtcRankMerger
@@ -77,7 +78,11 @@ import kotlin.math.roundToInt
  *  4. ONNX session via the existing [ModelLoader] (XNNPACK-first,
  *     `onnx_xnnpack_threads` pref), built lazily on the decode thread, ONE PER MODEL ASSET
  *     ([modelAssetFor] — the Latin encoder plus any wired per-script graph);
- *     [warmUpAsync] front-loads session + trie + layout on layout/language switch.
+ *     [warmUpAsync] front-loads session + trie + layout on layout/language switch. Since
+ *     2026-09-10 a SCRIPT language's encoder comes out of its language pack rather than the
+ *     APK — hash-pinned to the artifact the APK used to ship
+ *     ([tribixbite.cleverkeys.swipe.ctc.CtcPackModel]), so the pack moved the bytes without
+ *     giving ORT anything new to parse. The Latin encoder is still an asset.
  *  5. DISPLAY mapping of the a–z slate, before the shared pipeline: canonical accents
  *     ("cafe"→"café", CKDT languages) then contraction aliases ("dont"→"don't") via
  *     [ContractionOverlay] + the merged-lexicon frequency ordinals, mirroring
@@ -249,6 +254,32 @@ class CtcEngineAdapter(
     /** Failed load attempts so far, per asset (audit L5: bounded retry, then latch). */
     private val modelLoadAttempts = HashMap<String, Int>()
 
+    /**
+     * The model SOURCE the entries in [modelLoadAttempts]/[deadModelAssets] were counted
+     * against, per asset — `absent` when nothing is installed, `<length>:<mtime>` otherwise.
+     *
+     * Needed since the six script encoders became pack-delivered (2026-09-10). A pack is
+     * mutable on disk, so a user upgrading from a model-less pack fails three loads, latches,
+     * and then imports the pack that WOULD work. Without this the latch would hold for the rest
+     * of the IME process's life — swipe silently on geometric, nothing on screen to explain it,
+     * and no user action able to fix it short of a reboot. Keying the failure to the bytes that
+     * produced it means a re-import retries exactly once more, which is the same invalidation
+     * event the lexicon memo already keys on ([CtcImportedPackSupport.packFingerprint]).
+     *
+     * Written on the decode thread, read on the MAIN thread by [isModelPermanentlyUnavailable],
+     * hence concurrent.
+     */
+    private val modelSourceIds = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    /**
+     * Cheap identity (`stat`, no read) of the pack file that would supply [language]'s encoder —
+     * `absent` for a Latin language, which pins no model and therefore can never be served one
+     * by a pack. Same cost class as [hasLexiconSource], which the dispatcher already calls
+     * beside this.
+     */
+    private fun modelSourceId(language: String?): String =
+        CtcPackModel.sourceFingerprint(CtcPackModel.packModelFile(context.filesDir, language))
+
     /** Test census; call only after a decode callback, when the owned worker is idle. */
     internal fun liveModelAssetsForTest(): List<String> = emissionModels.keys.toList()
 
@@ -275,17 +306,29 @@ class CtcEngineAdapter(
 
     /**
      * See [deadModelAssets]. Safe to call from the main thread; cheap enough for the
-     * dispatch path (a set membership test on at most two entries).
+     * dispatch path (a set membership test plus one `stat`, on at most two entries).
      *
      * Per LANGUAGE, because per-language model assets mean a dead Cyrillic graph must not stop
      * an English swipe from decoding.
+     *
+     * A latch is only honoured while the model SOURCE is still the one that failed
+     * ([modelSourceIds]): importing a different language pack replaces the bytes, and a failure
+     * against bytes the device no longer has says nothing about the ones it now does.
      */
     fun isModelPermanentlyUnavailable(language: String?): Boolean =
-        modelAssetFor(language) in deadModelAssets
+        modelAssetFor(language) in deadModelAssets &&
+            modelSourceIds[modelAssetFor(language)] == modelSourceId(language)
 
     private fun modelOrNull(language: String?): OnnxCtcEmissionModel? {
         val asset = modelAssetFor(language)
         emissionModels[asset]?.let { return it }
+        // A pack import/re-import replaces the model bytes, so the previous failures were about
+        // a file this device no longer has. Retry from scratch rather than staying latched.
+        val sourceId = modelSourceId(language)
+        if (modelSourceIds.put(asset, sourceId) != sourceId) {
+            modelLoadAttempts.remove(asset)
+            deadModelAssets.remove(asset)
+        }
         // L5: bounded retry — each failed attempt is logged; after the budget is
         // exhausted the failure latches for the session (no per-swipe retry storm).
         val attempts = modelLoadAttempts[asset] ?: 0
@@ -296,11 +339,21 @@ class CtcEngineAdapter(
             } catch (e: Exception) {
                 Defaults.ONNX_XNNPACK_THREADS
             }.coerceIn(1, 8)
-            val loaded = ModelLoader(context, ortEnvironment)
-                .loadModel(asset, "CtcEncoder", true, threads)
+            // Resolution order: the language pack's own hash-verified encoder first, the APK
+            // asset second. The six script graphs are pack-delivered and have no asset to fall
+            // back to; the Latin encoder is an asset and pins nothing, so it never takes the
+            // first branch. Verified BYTES (not a path) go to ORT — see CtcPackModel.
+            val packModel = CtcPackModel.verifiedPackModel(context.filesDir, language)
+            val loader = ModelLoader(context, ortEnvironment)
+            val loaded = if (packModel != null) {
+                loader.loadModel(packModel, "CtcEncoder", true, threads)
+            } else {
+                loader.loadModel(asset, "CtcEncoder", true, threads)
+            }
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 Log.d(TAG, "CTC encoder loaded: $asset (${loaded.executionProvider}, " +
-                    "${loaded.modelSizeBytes} B)")
+                    "${loaded.modelSizeBytes} B, " +
+                    "${if (packModel != null) "langpack" else "apk asset"})")
             }
             OnnxCtcEmissionModel(ortEnvironment, loaded.session).also { emissionModels[asset] = it }
         } catch (e: Exception) {

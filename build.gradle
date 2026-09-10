@@ -785,6 +785,11 @@ tasks.register('runPureTests', JavaExec) {
     // decomposes й and destroys the alphabet), el mark-stripping + word-final sigma repair —
     // both halves or neither — uk's ї/ґ rejection, he niqqud stripping.
     'tribixbite.cleverkeys.swipe.ctc.CtcScriptProjectionTest',
+    // APK diet (2026-09-10): the six script encoders travel in their language packs instead of
+    // the APK, so the bytes reaching ORT come from a user-supplied file. The pinned-sha256 gate
+    // is what keeps that at ZERO new attack surface — only byte-identity with what the APK used
+    // to ship is loadable; anything else is model-absent and falls through to geometric.
+    'tribixbite.cleverkeys.swipe.ctc.CtcPackModelTest',
     // Imported Latin language packs (2026-08-29): the DYNAMIC half of CTC membership. Lookup
     // order (the static table always wins), the en/scripted-language refusals, the λ-by-scale
     // precedent made executable, the a-z-projectability thresholds on synthetic boundaries AND on

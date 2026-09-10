@@ -146,7 +146,36 @@ class ModelLoader(
             // Load model bytes
             val modelData = loadModelBytes(modelPath)
             Log.d(TAG, "Loaded $sessionName model: ${modelData.size} bytes from $modelPath")
+            return loadModel(modelData, sessionName, enableHardwareAcceleration, xnnpackThreads)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load $sessionName model from $modelPath", e)
+            throw RuntimeException("Model loading failed: ${e.message}", e)
+        }
+    }
 
+    /**
+     * Create an optimized session directly from model bytes the caller already holds.
+     *
+     * The path-based [loadModel] is this function plus a read. It exists separately because a
+     * model delivered by a language pack must be **hash-verified before ORT sees it**
+     * (`CtcPackModel`), and re-opening the file after the check would reintroduce exactly the
+     * time-of-check/time-of-use window the verification is there to close. Handing the verified
+     * array straight to ORT means the bytes hashed are the bytes parsed.
+     *
+     * @param modelData Model bytes, already read and (where applicable) verified.
+     * @param sessionName Human-readable name for logging.
+     * @param enableHardwareAcceleration Whether to attempt hardware acceleration.
+     * @param xnnpackThreads Number of threads for XNNPACK (1-8).
+     * @return LoadResult with session and metadata.
+     * @throws RuntimeException if session creation fails.
+     */
+    fun loadModel(
+        modelData: ByteArray,
+        sessionName: String,
+        enableHardwareAcceleration: Boolean = true,
+        xnnpackThreads: Int = 2
+    ): LoadResult {
+        try {
             // Create optimized session options
             val sessionOptions = createOptimizedSessionOptions()
 
@@ -169,7 +198,7 @@ class ModelLoader(
             )
 
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to load $sessionName model from $modelPath", e)
+            Log.e(TAG, "Failed to create $sessionName session from ${modelData.size} bytes", e)
             throw RuntimeException("Model loading failed: ${e.message}", e)
         }
     }
