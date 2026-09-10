@@ -143,6 +143,56 @@ class ReleasePackagingDriftTest {
         }
     }
 
+    /**
+     * The `prefix_boosts` scanignore may appear ONLY in the build entries whose own commit
+     * actually contained the `src/main/assets/prefix_boosts` binaries. (Do not write the
+     * glob form here: Kotlin block comments NEST, so a literal slash-star inside a KDoc
+     * opens a comment that never closes and the file fails to parse at EOF.)
+     *
+     * This started as an "delete the 9 stale neural-era lines" cleanup and the evidence
+     * refuted it — the recipe tracks the tree exactly, per entry:
+     *
+     *   v1.1.99 (2026-01-08)  0 prefix_boosts files  → entry has no scanignore  ✓
+     *   v1.2.1  (2026-01-09)  0 files                → entry has no scanignore  ✓
+     *   v1.2.2  (2026-01-11) 10 files                → entry HAS it             ✓
+     *   v1.2.5  (2026-01-14) 10 files                → entry HAS it             ✓
+     *   v1.2.8  (2026-01-22) 11 files                → entry HAS it             ✓
+     *
+     * The directory was created 2026-01-10 (between v1.2.1 and v1.2.2) and deleted at 1.5.0
+     * by the neural-engine removal (64f401d2). So the nine lines are accurate historical
+     * build metadata, not drift: stripping them would break an F-Droid rebuild or a
+     * reproducible-build re-verification of those three published versions, which is
+     * precisely what a scanignore exists to prevent.
+     *
+     * What IS a live hazard is the copy-paste: 1.2.8 is the newest entry in the file, and
+     * these recipes are written by duplicating the previous block. The next entry (2.0.0)
+     * must not inherit a scanignore for a path that no longer exists. That is the direction
+     * this test guards — history stays frozen, the future stays clean.
+     */
+    @Test
+    fun prefixBoostScanignoresStayFrozenToTheVersionsThatShippedThoseAssets() {
+        val builds = fdroidRecipe.substringAfter("\nBuilds:\n").substringBefore("\nAllowedAPKSigningKeys")
+        val entries = builds.split(Regex("""(?m)^  - (?=versionName:)""")).filter { it.isNotBlank() }
+        val carrying = entries.mapNotNull { entry ->
+            if ("prefix_boosts" in entry) {
+                Regex("""versionName:\s*([\d.]+)""").find(entry)!!.groupValues[1]
+            } else null
+        }.distinct().sorted()
+
+        assertWithMessage(
+            "src/main/assets/prefix_boosts/ existed only between 2026-01-10 and its deletion " +
+                "at 1.5.0 (neural-engine removal). Entries for versions in that window must " +
+                "KEEP the scanignore — removing it breaks a rebuild/reproducibility check of a " +
+                "published version. Entries for any other version must not have it: a 1.5.0+ " +
+                "recipe carrying this line is a copy-paste of the 1.2.8 block, ignoring a path " +
+                "that no longer exists."
+        ).that(carrying).isEqualTo(PREFIX_BOOST_ERA_VERSIONS)
+
+        // The asset root really is gone at HEAD — the other half of the same claim.
+        assertWithMessage("src/main/assets/prefix_boosts was deleted at 1.5.0; it must stay gone")
+            .that(File("src/main/assets/prefix_boosts").exists()).isFalse()
+    }
+
     // =========================================================================
     // v1.0.0 — "Complete privacy (no network access)"
     // =========================================================================
@@ -276,6 +326,152 @@ class ReleasePackagingDriftTest {
         ).that(Regex("""noCompress[^\n]*onnx""").containsMatchIn(buildGradle)).isFalse()
     }
 
+    /**
+     * 2026-09-10 APK-diet round 2: native libraries are DEFLATED in the APK
+     * (`useLegacyPackaging = true`) rather than STORED page-aligned.
+     *
+     * AGP has defaulted to `useLegacyPackaging = false` since 4.2, which stores the `.so`
+     * entries uncompressed so the loader can mmap them straight out of the APK. That trades
+     * ~11.5 MB of *download* for ~6.4 MB of saved *installed* footprint — a bad trade for an
+     * app whose native payload is one ONNX runtime loaded once at IME start. The maintainer
+     * accepted the inverse trade on 2026-09-10: smaller download, larger install.
+     *
+     * The floor matters: extraction-at-install is only legal below API 23 without this flag,
+     * and `useLegacyPackaging = true` makes AGP emit `android:extractNativeLibs="true"` into
+     * the merged manifest. minSdk 24 is safely above the API 23 boundary either way, and
+     * nothing in the app mmaps a `.so` itself.
+     */
+    @Test
+    fun nativeLibrariesAreDeflatedForASmallerDownload() {
+        val packaging = packagingBlock()
+        assertWithMessage(
+            "packaging { jniLibs { useLegacyPackaging = true } } is what deflates the native " +
+                "libraries; without it AGP STOREs them and the download grows ~11.5 MB"
+        ).that(
+            Regex("""jniLibs\s*\{[^}]*useLegacyPackaging\s*=\s*true""")
+                .containsMatchIn(packaging)
+        ).isTrue()
+
+        // AGP derives android:extractNativeLibs from the flag. A hand-written value in the
+        // source manifest would win the merge and silently undo it.
+        for (path in listOf("AndroidManifest.xml", "src/debug/AndroidManifest.xml")) {
+            val file = File(path)
+            if (!file.isFile) continue
+            assertWithMessage(
+                "$path must not hard-code android:extractNativeLibs — AGP writes it from " +
+                    "packaging.jniLibs.useLegacyPackaging and a manual value overrides it"
+            ).that(file.readText()).doesNotContain("extractNativeLibs")
+        }
+    }
+
+    /** The `android { packaging { … } }` body. */
+    private fun packagingBlock(): String {
+        val start = Regex("""(?m)^\s{2}packaging\s*\{""").find(buildGradle)
+            ?: throw AssertionError("build.gradle no longer declares a packaging { … } block")
+        val rest = buildGradle.substring(start.range.first)
+        // Balanced-brace scan: the block contains nested resources { } / jniLibs { } bodies.
+        var depth = 0
+        for ((offset, ch) in rest.withIndex()) {
+            if (ch == '{') depth++
+            if (ch == '}') {
+                depth--
+                if (depth == 0) return rest.substring(0, offset + 1)
+            }
+        }
+        throw AssertionError("build.gradle's packaging { … } block is unbalanced")
+    }
+
+    // =========================================================================
+    // 2026-09-10 APK diet — shipped-locale filtering
+    // =========================================================================
+
+    /**
+     * `ext.shippedLocales = ['cs', 'de', …]`, parsed — the same shape as [abiCodes], so the
+     * single declaration in build.gradle is the only place the list lives.
+     */
+    private val shippedLocales: List<String> by lazy {
+        val block = Regex("""ext\.shippedLocales\s*=\s*\[([^\]]+)]""").find(buildGradle)
+            ?: throw AssertionError("build.gradle no longer declares ext.shippedLocales")
+        Regex("""'([^']+)'""").findAll(block.groupValues[1]).map { it.groupValues[1] }.toList()
+    }
+
+    /**
+     * The locale qualifiers actually present as `res/values-<qualifier>` directories, and the
+     * two shapes that are NOT locales.
+     *
+     * A qualifier is locale-shaped iff it is a 2–3 letter ISO-639 code with an optional
+     * `-rXX` region, or a BCP-47 `b+…` form. Sweeping the full Android configuration-qualifier
+     * vocabulary, `car` (UI mode) is the *only* 2–3-lowercase-letter token that is not a
+     * language — every other non-locale qualifier is 4+ characters (`land`, `port`, `hdpi`,
+     * `night`, `ldrtl`, `small`, `nokeys`, …) or carries a digit (`v29`, `sw600dp`, `12key`).
+     * So the classifier below is exact rather than heuristic.
+     */
+    private fun localeQualifiersOnDisk(): Pair<List<String>, List<String>> {
+        val res = File("res")
+        check(res.isDirectory) { "res/ not found — this test must run with the project root as CWD." }
+        val qualifiers = res.listFiles().orEmpty()
+            .filter { it.isDirectory && it.name.startsWith("values-") }
+            .map { it.name.removePrefix("values-") }
+        val locales = qualifiers.filter { LOCALE_QUALIFIER.matches(it) && it !in LOCALE_SHAPED_NON_LOCALES }
+        return locales.sorted() to (qualifiers - locales.toSet()).sorted()
+    }
+
+    /**
+     * 2026-09-10 APK-diet round 2: `resConfigs` strips the ~64 locale resource tables that
+     * AndroidX / Material / Compose drag into `resources.arsc` for languages CleverKeys does
+     * not translate (the pre-filter APK carried 85 locale configs against 21 shipped ones).
+     *
+     * The failure mode this pins is **silent**: a locale listed in neither the filter nor a
+     * typo-free form simply loses its whole string table and the UI falls back to English,
+     * with no build error. Two legacy ISO-639 codes make that easy to trigger, and both were
+     * verified against the exact `aapt2` this build uses (2026-09-10):
+     *
+     *   `aapt2 link -c in`  → keeps `res/values-in`   (Indonesian survives)
+     *   `aapt2 link -c id`  → DROPS `res/values-in`   (Indonesian silently vanishes)
+     *
+     * Same trap for Hebrew (`iw`, not `he`) and Yiddish (`ji`, not `yi`). The rule that falls
+     * out is simple and is what this test enforces: **the filter token must be byte-identical
+     * to the resource directory's qualifier**, because that is the string aapt2 parsed when it
+     * assigned the config. A bogus token is a hard `error: invalid config '…' for -c option`,
+     * so typos fail the build — only a *plausible* wrong alias is dangerous.
+     *
+     * Also verified on the same aapt2: a locale-only filter constrains only the locale axis —
+     * `values-night`, `values-v29`, densities, `-land`, `-ldrtl` and `sw600dp` all survive,
+     * and the unqualified `res/values` table is always kept.
+     */
+    @Test
+    fun shippedLocaleFilterMatchesTheResourceDirectoriesExactly() {
+        val (locales, nonLocales) = localeQualifiersOnDisk()
+
+        assertWithMessage(
+            "unrecognised res/values-* qualifiers: these are neither locale-shaped nor in the " +
+                "audited non-locale set. Classify each one, then either add it to " +
+                "ext.shippedLocales (if it is a language) or to LOCALE_SHAPED_NON_LOCALES / " +
+                "the audited set below — do NOT loosen the classifier."
+        ).that(nonLocales).isEqualTo(AUDITED_NON_LOCALE_QUALIFIERS)
+
+        assertWithMessage(
+            "ext.shippedLocales must be EXACTLY the res/values-* locale directories. A locale " +
+                "present on disk but missing here loses its entire string table in the APK " +
+                "(silent English fallback); an entry here with no directory is dead weight. " +
+                "Use the directory qualifier verbatim — Indonesian is 'in' (NOT 'id'), Hebrew " +
+                "would be 'iw' (NOT 'he'): aapt2 matches the token it parsed, and the modern " +
+                "alias drops the table without a warning."
+        ).that(shippedLocales.sorted()).isEqualTo(locales)
+
+        assertWithMessage("the locale list must not carry duplicates")
+            .that(shippedLocales).hasSize(shippedLocales.toSet().size)
+
+        // A declaration nobody consumes filters nothing. AGP 8.8.2 exposes
+        // BaseFlavor.resourceConfigurations as a read-only Set (getter only, no setter), so
+        // resConfigs(...) — which is `resourceConfigurations.addAll(...)` inside AGP — is the
+        // Groovy entry point. `androidResources.localeFilters` does not exist until AGP 8.10.
+        assertWithMessage("defaultConfig must feed ext.shippedLocales to the resource filter")
+            .that(
+                Regex("""resConfigs\s+rootProject\.ext\.shippedLocales""").containsMatchIn(buildGradle)
+            ).isTrue()
+    }
+
     @Test
     fun reproducibilityGuardsAreEffective() {
         assertWithMessage("the baseline-profile installer varies per build environment")
@@ -340,6 +536,21 @@ class ReleasePackagingDriftTest {
     }
 
     private companion object {
+        /** ISO-639 (2–3 letters) + optional `-rXX` region, or a BCP-47 `b+lang+Script` form. */
+        val LOCALE_QUALIFIER = Regex("""^([a-z]{2,3}(-r[A-Z]{2})?|b\+[A-Za-z+]+)$""")
+
+        /** The only locale-shaped Android qualifier that is not a language (UI mode: car dock). */
+        val LOCALE_SHAPED_NON_LOCALES = setOf("car")
+
+        /** Audited 2026-09-10: the non-locale `res/values-*` qualifiers this app actually has. */
+        val AUDITED_NON_LOCALE_QUALIFIERS = listOf("night", "v29")
+
+        /**
+         * The published versions whose source tree contained `src/main/assets/prefix_boosts/`
+         * (verified against the v-tags on 2026-09-10: 10, 10 and 11 `.bin` files respectively).
+         */
+        val PREFIX_BOOST_ERA_VERSIONS = listOf("1.2.2", "1.2.5", "1.2.8")
+
         val FORBIDDEN_PERMISSIONS = listOf(
             "android.permission.INTERNET",
             "android.permission.ACCESS_NETWORK_STATE",

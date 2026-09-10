@@ -163,6 +163,41 @@ ext.versionNameStr = "${ext.VERSION_MAJOR}.${ext.VERSION_MINOR}.${ext.VERSION_PA
 // Per-ABI versionCode mapping for split APKs
 ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86_64': 3]
 
+// APK DIET (2026-09-10): the locales CleverKeys actually translates.
+//
+// Without this filter aapt2 keeps every locale table its dependencies carry — the v2.0.0
+// arm64 APK held 85 locale configurations against 21 shipped ones, i.e. ~64 dead string
+// tables dragged in by AndroidX / Material / Compose. `resConfigs` (below) prunes them.
+//
+// THIS LIST MUST BE EXACTLY THE `res/values-<qualifier>` DIRECTORY SET, verbatim. Two
+// traps, both verified against this build's own aapt2 (2.19, aarch64) on 2026-09-10:
+//
+//   1. LEGACY ISO-639 CODES ARE NOT NORMALISED, in either direction. aapt2's
+//      LocaleValue::set_language only lowercases; the filter is then a raw byte compare of
+//      the packed language. So `-c in` keeps res/values-in while `-c id` DROPS it — with
+//      no warning, no error, exit 0. Indonesian is 'in'; Hebrew would be 'iw' and Yiddish
+//      'ji'. Writing the "modern" alias silently ships an English fallback.
+//   2. A LANGUAGE-ONLY ENTRY DROPS ITS OWN REGION VARIANTS: `-c zh` deletes
+//      res/values-zh-rCN. The region form has to be spelled out, as it is here.
+//
+// A misspelling that is not a valid config is a hard `error: invalid config '…' for -c
+// option`, so typos fail the build; only a *plausible* wrong alias is dangerous. That is
+// what ReleasePackagingDriftTest.shippedLocaleFilterMatchesTheResourceDirectoriesExactly
+// pins — it re-derives this list from the res/ tree on every run.
+//
+// Non-locale qualifiers are untouched by a locale-only filter (values-night, values-v29,
+// densities, -land, -ldrtl, sw600dp all survive), and the unqualified res/values table is
+// always kept.
+//
+// TODO(targetSdk 35): Android 15 stopped mapping Indonesian to the obsolete 'in' at the
+// Locale API, so a targetSdk 35+ build may have the runtime request 'id' while the
+// resource framework does no id<->in fallback. Raising targetSdk past 34 means adding a
+// res/values-id directory (and its entry here), not renaming this one.
+ext.shippedLocales = [
+  'cs', 'de', 'es', 'fa', 'fil', 'fr', 'hu', 'in', 'it', 'ja', 'ko',
+  'lv', 'nl', 'pl', 'pt', 'ro', 'ru', 'tr', 'uk', 'vi', 'zh-rCN',
+]
+
 // Force reproducibility by excluding profile-guided optimization tools
 configurations.all {
     exclude group: 'androidx.profileinstaller', module: 'profileinstaller'
@@ -188,6 +223,18 @@ android {
     
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
+
+    // APK DIET (2026-09-10): keep only the locale tables this app actually translates.
+    // See the ext.shippedLocales declaration above for the list and its two footguns.
+    //
+    // AGP 8.8.2 exposes BaseFlavor.resourceConfigurations as a getter-only Set (no
+    // setter), so resConfigs(Collection) — which is `resourceConfigurations.addAll(...)`
+    // inside AGP — is the Groovy entry point. Both are annotated @Deprecated in 8.8.2 in
+    // favour of `androidResources.localeFilters`, but that property is likewise getter-only
+    // here and carries the identical id/in trap, so it buys nothing yet; migrate when the
+    // AGP bump makes resConfigs a hard error (it is a Kotlin annotation, so a Groovy build
+    // script gets no warning today).
+    resConfigs rootProject.ext.shippedLocales
   }
 
   kotlinOptions {
@@ -206,6 +253,30 @@ android {
   }
 
   packaging {
+    jniLibs {
+      // APK DIET (2026-09-10, maintainer-approved): DEFLATE the native libraries instead
+      // of STOREing them page-aligned.
+      //
+      // AGP has defaulted this to false since 4.2: with minSdk >= 23 it stores every .so
+      // uncompressed so the loader can mmap it straight out of the APK. That is the right
+      // default for an app whose natives are hot, and the wrong one here — CleverKeys'
+      // entire native payload is one ONNX runtime, opened once when the IME starts. The
+      // measured trade is ~11.5 MB smaller download against ~6.4 MB more installed
+      // footprint (the libs are extracted to /data at install) plus a one-off extraction
+      // cost. The maintainer took the download.
+      //
+      // Not a 16 KB-page-size regression: that requirement is about ELF segment alignment
+      // inside the .so (which ARC-113's onnxruntime upgrade delivered), not about how the
+      // APK stores the entry — an extracted library is mapped from /data with the same
+      // alignment. And the uncompressed-libs rule is a Google Play policy; CleverKeys
+      // ships through F-Droid and GitHub releases.
+      //
+      // Do NOT also write android:extractNativeLibs into AndroidManifest.xml: AGP derives
+      // that attribute from this flag and will not overwrite a hand-written value, so the
+      // two would silently disagree. Pinned by
+      // ReleasePackagingDriftTest.nativeLibrariesAreDeflatedForASmallerDownload.
+      useLegacyPackaging = true
+    }
     resources {
       // REPRODUCIBILITY: Exclude non-deterministic files
       // Baseline profiles vary between build environments
