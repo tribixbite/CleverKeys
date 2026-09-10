@@ -10,7 +10,6 @@ import tribixbite.cleverkeys.BuildConfig
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
-import java.io.FileWriter
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
@@ -367,34 +366,6 @@ class SwipeMLDataStore private constructor(context: Context) :
     }
 
     /**
-     * Export to newline-delimited JSON (NDJSON) for streaming processing
-     */
-    fun exportToNDJSON(): File {
-        val allData = loadAllData()
-
-        val exportDir = File(_context.getExternalFilesDir(null), "swipe_ml_export")
-        if (!exportDir.exists()) {
-            exportDir.mkdirs()
-        }
-
-        val sdf = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-        val filename = "swipe_data_${sdf.format(Date())}.ndjson"
-        val exportFile = File(exportDir, filename)
-
-        FileWriter(exportFile).use { writer ->
-            for (data in allData) {
-                writer.write(data.toJSON().toString())
-                writer.write("\n")
-            }
-        }
-
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            Log.i(TAG, "Exported ${allData.size} entries to NDJSON: ${exportFile.absolutePath}")
-        }
-        return exportFile
-    }
-
-    /**
      * Export all data to JSON via OutputStream (for SAF file picker)
      * Uses streaming to avoid OOM with large datasets
      */
@@ -448,6 +419,14 @@ class SwipeMLDataStore private constructor(context: Context) :
         }
         return count
     }
+
+    // A `exportToNDJSON(): File` sibling lived here until 2026-09-10. Its only caller in the
+    // tree was SwipeMLTrainer.exportForExternalTraining(), and SwipeMLTrainer was itself a
+    // zero-caller orphan whose "training" was Thread.sleep progress theatre — both deleted in
+    // the same sweep. That overload also carried the pre-I-5 whole-table materialisation the
+    // streaming overload below exists to avoid. Nothing needs a File-returning NDJSON path:
+    // the Settings export goes through the SAF picker's OutputStream. Pinned by
+    // DeadPlumbingDriftTest.
 
     /**
      * Export to NDJSON via OutputStream (for SAF file picker)

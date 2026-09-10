@@ -199,10 +199,19 @@ class PlaygroundRecordingScopeTest {
         check(file.isFile) { "${file.path} not found — run with the project root as CWD." }
         val source = file.readText()
 
+        // Re-pointed 2026-09-10: the old lower delimiter was `fun exportToNDJSON(): File`,
+        // deleted with SwipeMLTrainer (its only caller) in the APK-diet sweep. The streaming
+        // JSON overload is now the next declaration, which bounds the body more tightly than
+        // before — `substringBefore` returns the WHOLE remainder when its needle is absent, so
+        // a stale delimiter would have silently widened this scan to the rest of the file.
         val body = source.substringAfter("fun exportToJSON(): File")
-            .substringBefore("fun exportToNDJSON(): File")
+            .substringBefore("fun exportToJSON(outputStream: OutputStream): Int")
         assertWithMessage("exportToJSON(): File was renamed or moved — re-point this guard")
             .that(body).isNotEmpty()
+        assertWithMessage(
+            "the lower delimiter must still exist, or substringBefore silently returns the " +
+                "whole rest of the file and this guard stops bounding anything"
+        ).that(source).contains("fun exportToJSON(outputStream: OutputStream): Int")
 
         assertWithMessage(
             "the File export (the playground's Export button) must not load the whole " +

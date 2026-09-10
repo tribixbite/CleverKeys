@@ -299,4 +299,53 @@ class DeadPlumbingDriftTest {
                 keepHits.joinToString("\n")
         ).that(keepHits).isEmpty()
     }
+
+    // ------------------------------------------------- 2026-09-10 APK diet, round 2
+
+    /**
+     * `SwipeMLTrainer` was 332 lines of training *theatre*: `performBasicTraining` bucketed
+     * traces by word, ran an O(n²) nearest-neighbour pass over every sample, and paced the
+     * progress callbacks with `Thread.sleep(200/300/50)` so a UI would look busy. Nothing
+     * trained, nothing was persisted, and — decisively — nothing called it. It survived R8
+     * only because `proguard-rules.pro` blanket-keeps `tribixbite.cleverkeys.ml.**`, which is
+     * the same shrinker blind spot as ARC-084 and the KeyboardGrid sweep above.
+     *
+     * Its one downstream casualty is `SwipeMLDataStore.exportToNDJSON(): File`, whose only
+     * caller in the tree was `SwipeMLTrainer.exportForExternalTraining()`. That overload also
+     * carried the pre-I-5 whole-table materialisation (`loadAllData()` into a `FileWriter`
+     * loop) that the streaming `exportToNDJSON(OutputStream)` — still live, wired to the
+     * Settings export picker via `SettingsSwipeDataHandlers` — exists to avoid. The
+     * `exportToJSON(): File` sibling is NOT dead (SwipeDebugActivity's Export button) and
+     * must stay.
+     */
+    @Test
+    fun `APK diet - the fake SwipeMLTrainer and its unstreamed NDJSON export are gone`() {
+        assertWithMessage(
+            "tribixbite/cleverkeys/ml/SwipeMLTrainer.kt is a zero-caller orphan whose " +
+                "'training' was Thread.sleep progress theatre — deleted 2026-09-10; do not " +
+                "resurrect it."
+        ).that(File(mainKotlin, "tribixbite/cleverkeys/ml/SwipeMLTrainer.kt").exists()).isFalse()
+
+        val hits = occurrences(Regex("""\bSwipeMLTrainer\b"""))
+        assertWithMessage(
+            "SwipeMLTrainer must not be referenced by production code.\nFound:\n" +
+                hits.joinToString("\n")
+        ).that(hits).isEmpty()
+
+        // The blanket `-keep class tribixbite.cleverkeys.ml.** { *; }` is why a dead class in
+        // this package ships regardless of R8: nothing here may re-add a caller.
+        val dataStore = source("tribixbite/cleverkeys/ml/SwipeMLDataStore.kt")
+        assertWithMessage(
+            "SwipeMLDataStore.exportToNDJSON(): File was SwipeMLTrainer's only consumer, and " +
+                "it materialised the whole table (loadAllData() → FileWriter) — the exact OOM " +
+                "shape I-5 removed from the JSON path. The streaming " +
+                "exportToNDJSON(OutputStream) overload is the live one."
+        ).that(dataStore).doesNotContain("fun exportToNDJSON(): File")
+
+        assertWithMessage(
+            "the streaming NDJSON overload must survive — Settings' export picker calls it"
+        ).that(dataStore).contains("fun exportToNDJSON(outputStream: OutputStream): Int")
+        assertWithMessage("the playground's File-based JSON export is live and must survive")
+            .that(dataStore).contains("fun exportToJSON(): File")
+    }
 }
