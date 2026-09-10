@@ -33,20 +33,33 @@ what was done; this file is only what is left. Anything below is open.
   `build.gradle` enables `ENABLE_VERBOSE_LOGGING` for those releases and all debug builds.
   `Logs` retains only a LogPrinter; DebugLoggingManager writes through a BufferedWriter.
   Logging is enabled, but retained-heap causation has NOT been established.
-- TODO: run `CtcImportedPackInstrumentedTest#englishItalianRetainedHeapByStage` via ew-cli.
-  Added a single-process staged Java/PSS measurement for English + Italian predictor,
-  CTC tries, and 100 synthetic decodes, with a 16 MiB warm-decode retained-growth gate.
-  `scripts/gradle-guard.sh assembleDebug assembleDebugAndroidTest` passed (56s), including
-  Kotlin compilation; `git diff --check` passed. Runtime results are still pending.
-  Fresh APKs: `build/outputs/apk/debug/CleverKeys-v2.0.0-x86_64.apk` and
-  `build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk`.
-  Automatic approval review rejected the ew-cli upload despite the user's request to use
-  ew-cli: it requires explicit authorization to export these APKs to emulator.wtf.
-  Asked for that approval; no APK upload happened. Intended output: `build/ew-memory-stages`.
-- Additional code lead, NOT a diagnosis: MainDictionarySource has a process-static,
-  unbounded per-language browser cache of DictionaryWord lists and prefix indexes.
-  CTC model/trie caches are bounded at two. Measure browser-cache contributions if the
-  predictor + decode test cannot reproduce the phone's 204 MiB live Java heap.
+- Cloud APK upload explicitly approved by the maintainer. Two ew-cli 1.3.4 Pixel7/API34
+  orchestrated runs PASSED (2 methods, 0 failures/skips). Both use verbose-enabled debug
+  v2.0.0, synthetic data; no phone install/settings changes. Raw outputs remain ignored under
+  `build/ew-memory-stages` and `build/ew-memory-lifecycle`.
+  - [Bilingual stages run](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/f0d26cdb-3418-439b-8b2a-0c5359cb226f):
+    settled Java bytes baseline 2,511,224 → predictor context 2,740,944 → English dictionary
+    21,012,728 → Italian secondary 39,080,040 → English CTC trie 68,152,264 → Italian trie
+    91,259,536 → first decode 91,296,288 → 100 additional decodes 91,298,712 (+2,424 bytes).
+    Secondary unload removes 18,066,584 bytes. Two-language fixed structures account for
+    ~87 MiB; repeated decoding did NOT reproduce the phone's ~204 MiB heap.
+  - [Full IME lifecycle run](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/22be416f-5483-4fec-bc45-d37137abd5d6):
+    default English settings, real service + editor/window, settled Java bytes before service
+    2,542,392 → first show 60,222,312 → 20 show/hide cycles 60,280,544 → held 15-second
+    swipe 60,328,056 → released 60,364,048 → editor closed 60,344,704. Recognizer logged
+    SWIPE DETECTED. PSS first show 228,809 KiB → held swipe 240,038 KiB. This exercises
+    touch dispatch/rendering but does NOT reproduce the phone's exact settings/data/history.
+  - `scripts/gradle-guard.sh assembleDebug assembleDebugAndroidTest` passed for both builds
+    (56s and 43s), including Kotlin compilation. `git diff --check` passed.
+- TODO: obtain actual high-heap object ownership from the phone, or reproduce its exact
+  configuration/session history in the emulator before selecting a production fix. Phone ADB
+  was disconnected during the cloud run. No Java leak/root cause is established; the clean
+  runs weaken the swipe-buffer/logging-alone hypothesis but do not exclude conditional bugs.
+  MainDictionarySource's per-language static browser cache is cleared by
+  DictionaryManagerActivity.onDestroy when isFinishing; its existence alone is not a leak.
+  CTC shutdown closes native sessions but does not clear trieMemos while the adapter remains
+  reachable: the test's adapterShutdown value must NOT be presented as freed Java tries.
+
 
 
 **The executable backlog is CLEARED.** Every ARC item that did not require maintainer input is

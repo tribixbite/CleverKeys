@@ -503,6 +503,118 @@ class CtcImportedPackInstrumentedTest {
         }
     }
 
+    /** Exercises the actual IME, including rendering, in the disposable cloud emulator. */
+    @Test
+    fun keyboardLifecycleAndLongSwipeRetainedHeap() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        fun shell(command: String): String =
+            android.os.ParcelFileDescriptor.AutoCloseInputStream(
+                instrumentation.uiAutomation.executeShellCommand(command)
+            ).bufferedReader().use { it.readText().trim() }
+        fun measure(stage: String): Long {
+            val pss = settledPssKb()
+            val runtime = Runtime.getRuntime()
+            val used = runtime.totalMemory() - runtime.freeMemory()
+            Log.i("CtcHeapLifecycle", "$stage javaBytes=$used pssKb=$pss")
+            return used
+        }
+        fun waitForShown(shown: Boolean) {
+            val deadline = android.os.SystemClock.uptimeMillis() + 15_000L
+            while (android.os.SystemClock.uptimeMillis() < deadline) {
+                var matches = false
+                instrumentation.runOnMainSync {
+                    matches = tribixbite.cleverkeys.CleverKeysService.getInstance()
+                        ?.isInputViewShown == shown
+                }
+                if (matches) return
+                Thread.sleep(100L)
+            }
+            throw AssertionError("IME did not reach shown=$shown")
+        }
+        val originalIme = shell("settings get secure default_input_method")
+        val component = "${context.packageName}/tribixbite.cleverkeys.CleverKeysService"
+        val wasEnabled = component in shell("ime list -s").lines()
+        measure("beforeService")
+        shell("ime enable $component")
+        shell("ime set $component")
+        try {
+            androidx.test.core.app.ActivityScenario.launch(
+                tribixbite.cleverkeys.ClipboardEditTestActivity::class.java
+            ).use { scenario ->
+                lateinit var editor: android.widget.EditText
+                scenario.onActivity { activity ->
+                    editor = android.widget.EditText(activity)
+                    activity.setContentView(editor)
+                    editor.requestFocus()
+                    activity.window.setSoftInputMode(
+                        android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
+                    )
+                }
+                fun showKeyboard() {
+                    scenario.onActivity { activity ->
+                        editor.requestFocus()
+                        activity.getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+                            .showSoftInput(editor, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+                    }
+                    waitForShown(true)
+                }
+                showKeyboard()
+                Thread.sleep(3_000L)
+                val baseline = measure("firstShow")
+                repeat(20) {
+                    scenario.onActivity { activity ->
+                        activity.getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+                            .hideSoftInputFromWindow(editor.windowToken, 0)
+                    }
+                    waitForShown(false)
+                    showKeyboard()
+                }
+                val cycled = measure("after20Shows")
+                assertTrue("show/hide cycles retained more than 16 MiB", cycled - baseline < 16L * 1024 * 1024)
+                fun keyboardIn(view: android.view.View): tribixbite.cleverkeys.Keyboard2View? {
+                    if (view is tribixbite.cleverkeys.Keyboard2View) return view
+                    if (view is android.view.ViewGroup) {
+                        for (index in 0 until view.childCount) {
+                            keyboardIn(view.getChildAt(index))?.let { return it }
+                        }
+                    }
+                    return null
+                }
+                lateinit var keyboard: tribixbite.cleverkeys.Keyboard2View
+                instrumentation.runOnMainSync {
+                    keyboard = requireNotNull(keyboardIn(requireNotNull(
+                        tribixbite.cleverkeys.CleverKeysService.getInstance()?.window?.window?.decorView
+                    )))
+                }
+                val downTime = android.os.SystemClock.uptimeMillis()
+                fun touch(action: Int, fraction: Float) {
+                    instrumentation.runOnMainSync {
+                        val event = android.view.MotionEvent.obtain(downTime,
+                            android.os.SystemClock.uptimeMillis(), action,
+                            keyboard.width * fraction, keyboard.height * 0.35f, 0)
+                        try { keyboard.dispatchTouchEvent(event) } finally { event.recycle() }
+                    }
+                }
+                touch(android.view.MotionEvent.ACTION_DOWN, 0.15f)
+                var step = 0
+                while (android.os.SystemClock.uptimeMillis() - downTime < 15_000L) {
+                    val phase = step++ % 100
+                    val fraction = 0.15f + 0.7f * (if (phase < 50) phase else 100 - phase) / 50f
+                    touch(android.view.MotionEvent.ACTION_MOVE, fraction)
+                    Thread.sleep(16L)
+                }
+                measure("held15Seconds")
+                touch(android.view.MotionEvent.ACTION_UP, 0.5f)
+                Thread.sleep(2_000L)
+                measure("releasedSwipe")
+            }
+            measure("activityClosed")
+        } finally {
+            if (originalIme.isNotBlank() && originalIme != "null") shell("ime set $originalIme")
+            if (!wasEnabled) shell("ime disable $component")
+        }
+    }
+
     /** Measures retained Java memory separately from native/GPU PSS using shipped dictionaries.
      * One orchestrated method keeps every stage in the same process; decoding uses synthetic
      * traces and never imports personal data from the maintainer's phone.
