@@ -2,7 +2,8 @@
 
 **Feature Name**: Pinyin composing IME
 **Priority**: P3 (contribution-track; maintainer priority call)
-**Status**: Planning — pack schema and container format implemented (this document)
+**Status**: In progress — Phases 0–2 implemented (container format, tap engine, swipe feed);
+device validation and pack data outstanding
 **Target Version**: TBD
 **Issue**: [tribixbite/CleverKeys#177](https://github.com/tribixbite/CleverKeys/issues/177)
 **Owner**: Macho0x
@@ -219,98 +220,88 @@ python3 scripts/build_langpack.py --lang zh --name "中文（拼音）" \
 `phrases.bin`, a phrase table without the mode, a non-CKPY-v1 table, or a table over the
 64 MiB reader cap.
 
-### As-built test pins (this PR)
+### As-built test pins (Phases 0–2)
 
 | Behavior | Test |
 |---|---|
 | CKPY header bytes, record framing | `src/test/kotlin/tribixbite/cleverkeys/pinyin/CkpyPhraseTableTest.kt` (`headerFieldsPinTheCkpyV1Layout`, `recordFramingPinsLengthPrefixedUtf8AndRankBytes`) |
 | exact + prefix lookup, normalization | same file (`lookupIsExact`, `withPrefixReturnsTheContiguousRunInKeyOrder`, `lookupsRequireANormalizedQuery`) |
 | malformed tables refused | same file (magic/version/truncation/ordering/ranks/trailing/empty) |
-| manifest field, member carry, couplings | `src/test/kotlin/tribixbite/cleverkeys/langpack/LanguagePackImportTest.kt` (pinyin section: 5 tests) |
+| manifest field, member carry, couplings, per-code manifest read | `src/test/kotlin/tribixbite/cleverkeys/langpack/LanguagePackImportTest.kt` (6 tests) |
+| buffer normalization, candidate assembly, segmentation, edit rules | `src/test/kotlin/tribixbite/cleverkeys/pinyin/PinyinSessionTest.kt` (15 tests) |
+| activation, password bypass, missing-table fallback, composing region, committed fallback, candidate taps, swipe feed | `src/test/kotlin/tribixbite/cleverkeys/pinyin/PinyinControllerTest.kt` (10 tests) |
+| the new `IReceiver` hooks are delegated by the bridge | `KeyEventReceiverBridgeDelegationTest` (existing ratchet) |
 
-## Runtime Design (planned — not in this PR)
+## Runtime Design (implemented for Phases 1–2)
 
 ### Architecture
 
 ```
- tap a–z/' ─► KeyEventHandler.key_up ─► PinyinSession
-                                          │  buffer "nihao"
-                                          ├─► CkpyPhraseTable.withPrefix/lookup
-                                          │       → ranked 汉字 candidates
-                                          ▼
-                                     SuggestionBar (reused; already Unicode-capable)
-                                          │ tap / space
-                                          ▼
-                          InputConnection.commitText("你好", 1)
+ tap a–z/' ─► KeyEventHandler.key_up ─► IReceiver hook ─► PinyinController
+                                                              │  PinyinSession buffer "nihao"
+                                                              ├─► CkpyPhraseTable.withPrefix/lookup
+                                                              │       → ranked 汉字 candidates
+                                                              ▼
+                                                         SuggestionBar (reused; Unicode-capable)
+                                                              │ tap / space
+                                                              ▼
+                                            InputConnection.commitText("你好", 1)
 
- swipe ─► SwipeEngineRouter (geometric, or CTC once zh is served)
-              └─ decoded pinyin surface ─► same PinyinSession (preedit only, NO auto-commit)
+ swipe ─► SwipeEngineRouter (geometric today; CTC optional once zh is served)
+               └─ decoded pinyin surface ─► SuggestionHandler pinyin hook
+                                              └─► same session (preedit only, NO auto-commit)
 ```
 
 ### Components
 
-1. **`PinyinSession`** (`src/main/kotlin/tribixbite/cleverkeys/pinyin/`): owns the buffer,
-   the preedit state, and the candidate slate. Pure JVM except its commit calls, so the
-   state machine is unit-testable. API sketch:
+1. **`PinyinSession`** (`src/main/kotlin/tribixbite/cleverkeys/pinyin/PinyinSession.kt`,
+   implemented): pure state machine over a parsed table. Actual API:
+   `appendLetter(ch): Boolean`, `appendSurface(surface): String`, `backspace(): Boolean`,
+   `candidates(limit = 8): List<Candidate>`, `topCandidate()`, `clear()`. Normalizes case,
+   `ü`→`v`, curly apostrophes; caps the buffer at 48 chars.
 
-   ```kotlin
-   class PinyinSession(private val table: CkpyPhraseTable.Table) {
-       fun append(letter: Char)          // a-z, ' (and v for ü)
-       fun backspace(): Boolean          // true when it consumed the key
-       fun feedSwipe(pinyin: String)     // swipe surface; replaces/appends per policy
-       fun candidates(): List<String>    // ranked Hanzi, bounded
-       fun takeTop(): String?
-       fun reset()
-   }
-   ```
+2. **Phrase engine** (implemented in `PinyinSession.candidates`): exact key match first,
+   then completion keys the buffer prefixes, de-duplicated by text; when neither matches,
+   greedy longest-match segmentation joins known syllables (`woaini` → 我+爱+你) with bounded
+   second-candidate variants. The full lattice decoder remains deferred.
 
-2. **Phrase engine**: exact match on the buffer first; otherwise `withPrefix` results
-   flattened in (rank, key) order with text de-duplication. Multi-syllable keys in the
-   table give phrases (`nihao` → 你好); full segmentation is a follow-up.
+3. **Preedit / composing region — Q1 resolved by implementing both paths**:
+   `PinyinController` publishes the run with `InputConnection.setComposingText(preedit, 1)`
+   and commits with `commitText(hanzi, 1)`. If the editor refuses the FIRST
+   `setComposingText` of a field (returns false), the controller flips that field to the
+   committed-text fallback: the same buffer is mirrored as real text and updates use
+   `commitText`/`deleteSurroundingText` — the pattern the English replace path already uses.
+   Both paths are pinned by `PinyinControllerTest`; **device validation on real editors is
+   still required before release** and may flip the default.
 
-3. **Preedit / composing region**: the planned path uses
-   `InputConnection.setComposingText(preedit, 1)` while composing and `commitText(hanzi, 1)`
-   on selection (which implicitly finishes composing). This is net-new for this codebase —
-   production has **zero** composing calls today and
-   `SuggestionTapPartialReplaceTest` pins the English replace path to NOT use them. The
-   pinyin path is feature-gated, so those pins stay green. If device testing finds editors
-   that mishandle composing, the fallback is the existing commit-then-`deleteSurroundingText`
-   pattern behind the same `PinyinSession` API; the spec requires the fallback to be
-   validated on the maintainer's test phones before release.
+4. **Key interception** (implemented):
+   - `KeyEventHandler.key_up` `Kind.Char`/`Kind.String` calls `IReceiver.pinyinHandleText`
+     before `sendText`, so autocap/TSR/context tracking never see composing letters;
+   - `KEYCODE_DEL` calls `pinyinHandleBackspace` (buffer first, editor once empty);
+   - other key events call `pinyinHandleKeyevent` (Enter commits the top candidate and is
+     NOT consumed; Escape cancels);
+   - suggestion taps route through `SuggestionBridge.onSuggestionSelected` →
+     `PinyinController.onCandidateSelected` (only a word the session offered is consumed);
+   - `KeyEventReceiverBridge` gates the text hook on all modal panes (clipboard
+     tag/edit/search, emoji, GIF) so they keep owning the keyboard.
 
-4. **Key interception** (planned, exact sites):
-   - `KeyEventHandler.key_up` `Kind.Char`/`Kind.String` dispatch
-     (`src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt:96-97`) — branch to the
-     session before `sendText` (`:323`) and its `commitText` (`:482`);
-   - backspace `KEYCODE_DEL` branch (`KeyEventHandler.kt:99-135`) — session first;
-   - suggestion tap → `SuggestionHandler.onSuggestionSelected` (`SuggestionHandler.kt:1501`)
-     — unchanged commit site, fed by pinyin candidates;
-   - swipe → `SuggestionHandler.handleSwipePredictionResults`
-     (`SuggestionHandler.kt:748-978`) — suppress the auto-insert at `:857-966` for pinyin
-     and route the decoded surface into the session.
+5. **Suggestion bar**: reused as-is. Pinyin candidates carry
+   `SuggestionOrigin.PINYIN` (`SuggestionMeta`), a marker color, and the
+   `provenance_origin_pinyin` label, so the long-press provenance sheet names the source.
 
-5. **Suggestion bar**: reuse as-is. It renders arbitrary `String`s
-   (`SuggestionBar.createSuggestionView:145`, `setSuggestionsWithScores:552`), already
-   honours password mode (`isPasswordField:924`, `setPasswordMode`), and has a
-   provenance/long-press surface for later.
+6. **Swipe serving**: `SuggestionHandler.handleSwipePredictionResults` calls the
+   `PinyinComposingHook` BEFORE the password/empty guards and before every English step
+   (rescore, possessives, auto-insert), so a pinyin decode buffers the spelling and never
+   auto-commits. Geometric serves pinyin spellings today (QWERTY projection); the optional
+   CTC `zh` row remains deferred until a corpus evaluation exists.
 
-6. **Swipe serving**:
-   - geometric: works today — pinyin letters project onto QWERTY
-     (`GeometricEngineAdapter.dictionaryFor:585` reads the pack's CKDT);
-   - CTC: optional follow-up — add a `zh` row to `CtcLanguageSupport.SUPPORTED`
-     (`swipe/ctc/CtcLanguageSupport.kt:123`) sourced from the pack's pinyin-spelled CKDT;
-     the Latin encoder is layout-agnostic. Given there is **no pinyin swipe corpus**, the
-     row would be PROVISIONAL-tier by the table's own honesty conventions, and the
-     conversion stage hooks at `CtcEngineAdapter.decodeLexicon:1087` /
-     `applyDisplay:943` where accents and contractions already restore display forms.
+7. **Mode selection / language plumbing** (implemented): `PinyinController` evaluates the
+   active primary language per field via `LanguagePackManager.getInstalledPack(code)` +
+   `getPhrasesPath(code)`, re-checks on language change during typing, and stays inactive
+   when the table is missing/corrupt (keys commit Latin). `LanguageDetector` still has no
+   `zh` profile and `PredictionContextTracker` still bails on CJK cursor sync — explicit
+   selection only.
 
-7. **Mode selection / language plumbing**: pinyin mode is chosen by the active primary
-   language's installed pack declaring `inputMethod: "pinyin"`. `PreferenceUIUpdateHandler`
-   already reloads predictors on language change. Note two existing guards: `LanguageDetector`
-   has no `zh` profile (`LanguageDetector.kt:42-199`, `:373-382`) and
-   `PredictionContextTracker` intentionally bails on CJK cursor sync
-   (`PredictionContextTracker.kt:870-876`); auto-detection must never silently switch into
-   pinyin mode — explicit selection only in P1.
 
 ### Privacy and security
 
@@ -326,46 +317,72 @@ python3 scripts/build_langpack.py --lang zh --name "中文（拼音）" \
 
 ## Testing Strategy
 
-- **Pure JVM** (`runPureTests`): `CkpyPhraseTableTest` — layout bytes, lookup, prefix,
-  malformed inputs, bounds. Runs in CI.
-- **Mock tier** (`runMockTests`): the five pinyin import tests in `LanguagePackImportTest` —
-  mode parsing, member carry, the two couplings, unknown modes, rejection cleanup.
+- **Pure JVM** (`runPureTests`): `CkpyPhraseTableTest` (14) — layout bytes, lookup, prefix,
+  malformed inputs, bounds; `PinyinSessionTest` (15) — normalization, candidate assembly,
+  segmentation, edit rules. Run green on 2026-09-11.
+- **Mock tier** (`runMockTests`): `LanguagePackImportTest` (35) — mode parsing, member
+  carry, the two couplings, unknown modes, rejection cleanup, per-code manifest read;
+  `PinyinControllerTest` (10) — activation, password bypass, missing-table fallback,
+  composing region, committed-text fallback, candidate taps, swipe feed. Both green on
+  2026-09-11.
+- **Full pure suite**: 2,400 tests green except a pre-existing timing microbenchmark
+  (`GeoBenchmarkTest`, environment-sensitive), on 2026-09-11.
 - **Python**: `build_phrase_table.py` verifies its own output by re-parsing it before
   writing; `build_langpack.py` refuses the invalid combinations. A generated table is parsed
   by the Kotlin reader during development (cross-tool round-trip exercised 2026-09-11:
   Python writer → Kotlin reader, including `lü`→`lv` and `ni3`→`ni`).
-- **Engine phases** add: `PinyinSessionTest` (pure), commit-path tests alongside the
-  existing `SuggestionTapPartialReplaceTest` shapes, and instrumented pipeline tests for
-  the composing region on real editors.
+- **Still required**: on-device validation (composing-region behavior in real editors,
+  geometric swipe quality, multi-field switching), and instrumented pipeline coverage in
+  the style of `PipelineCharacterizationTest`.
 
 ## Implementation Plan
 
-### Phase 0 — schema + container format (THIS PR)
+### Phase 0 — schema + container format (DONE)
 
 - [x] `docs/specs/pinyin-ime.md` (this document)
 - [x] `inputMethod` manifest field, `phrases.bin` member, validation + storage accessor
 - [x] `CKPY` v1 reader + unit tests; Python writer; `build_langpack.py` integration
 - [x] Index rows in `docs/specs/README.md` / `docs/TABLE_OF_CONTENTS.md`
-- [ ] Maintainer decision on the composing-region approach (open question Q1)
+- [x] Composing-region decision (Q1): implemented BOTH — composing region primary, per-field
+  committed-text fallback when the editor refuses it (see Component 3). Maintainer may flip
+  the default after device validation.
 
-### Phase 1 — tap-first engine
+### Phase 1 — tap-first engine (CODE DONE; device validation + pack data outstanding)
 
-- [ ] `PinyinSession` + candidate assembly, wired to `KeyEventHandler.key_up`
-- [ ] Suggestion bar candidate display; tap/space/enter commit; backspace editing
-- [ ] Password bypass; fallback-to-Latin on missing table
+- [x] `PinyinSession` + candidate assembly, wired to `KeyEventHandler.key_up`
+- [x] Suggestion bar candidate display; tap/space/enter commit; backspace editing
+- [x] Password bypass; fallback-to-Latin on missing table
 - [ ] First real pack built (pinyin wordfreq spellings + open phrase source), device-tested
+  — blocked on Q4 (data source/licence) and on hardware access
 
-### Phase 2 — swipe
+### Phase 2 — swipe (CODE DONE; device validation outstanding)
 
-- [ ] Suppress auto-insert for pinyin; feed decoded surface into the session
+- [x] Suppress auto-insert for pinyin; feed decoded surface into the session
 - [ ] Validate geometric pinyin swipe quality on device
 - [ ] Optional: `zh` row in `CtcLanguageSupport` (PROVISIONAL) once a corpus evaluation exists
 
-### Phase 3 — polish
+### Phase 3 — polish (PARTIAL)
 
-- [ ] `zh-Hans` / `zh-Hant` pack variants (shared pinyin keys; separate phrase tables)
-- [ ] Candidate ranking with context; user-selection learning behind the privacy gates
-- [ ] Segmentation/lattice decoding for unbounded input; settings surface for space behavior
+- [ ] `zh-Hans` / `zh-Hant` pack variants (shared pinyin keys; separate phrase tables) —
+  pack-data work, no code change required
+- [ ] Candidate ranking with context; user-selection learning behind the privacy gates —
+  deliberately deferred: needs a Hanzi context signal that does not exist yet, and a
+  storage/privacy design of its own
+- [x] Greedy longest-match segmentation for unbounded input
+- [ ] Full lattice decoding; settings surface for space behavior — deferred to their own
+  change (a new Config key + settings UI + backup registry + drift-test updates)
+
+## Deferred (explicitly not in this change)
+
+| Item | Why |
+|---|---|
+| Device testing of the composing region / swipe quality | requires the maintainer's test phones |
+| Distributable `zh-Hans` / `zh-Hant` packs | data source/licence decision (Q4) |
+| Context-aware candidate ranking, selection learning | needs Hanzi context + privacy/storage design |
+| Space-behavior setting | fixed to Chinese convention (commit, no trailing space) for now |
+| CTC `zh` row | no pinyin swipe corpus to justify the PROVISIONAL tier |
+| Lattice segmentation | greedy longest-match ships first; lattice is an accuracy upgrade |
+
 
 ## Dependencies
 
@@ -389,23 +406,24 @@ python3 scripts/build_langpack.py --lang zh --name "中文（拼音）" \
 |---|---|
 | Missing/invalid `phrases.bin` on import | `ImportResult.Error` with a specific message; nothing installed |
 | Unknown `inputMethod` | refused at import with the value named |
-| Corrupt table at runtime | pinyin mode degrades to committing the raw Latin buffer; pack reported broken |
+| Corrupt/unreadable table at runtime | `PinyinController` stays inactive; keys commit raw Latin; no user-facing report yet (settings surface deferred) |
 | Table absent but pack selected | same degradation; English/normal behavior remains available |
 | Password/PIN field | session disabled before any buffer exists |
 
 ## Open Questions
 
-1. **Composing region vs commit-and-replace**: use `setComposingText` (standard, better
-   editor UX, net-new in this codebase) or the repo's existing replace pattern? Recommend
-   composing, with a device-validation gate and the replace path as fallback. Needs the
-   maintainer's call before Phase 1.
-2. **Space behavior**: commit top candidate only, or commit top + trailing space (English
-   auto-space)? Chinese input convention is commit-without-space.
+1. ~~**Composing region vs commit-and-replace**~~ — RESOLVED 2026-09-11 by implementing
+   both: composing region primary, per-field committed-text fallback when the editor
+   refuses `setComposingText`. The maintainer's device validation decides whether the
+   default changes.
+2. **Space behavior**: fixed to commit-top-without-trailing-space (Chinese convention,
+   Q2). A user-facing setting remains future work.
 3. **Pack code shape**: `zh` + name variants vs `zh-hans`/`zh-hant`; the import regex
    accepts both (`^[a-z]{2,3}(?:[_-][a-z0-9]{1,16}){0,4}$`), but settings/SubtypeManager
-   display has no `zh` row yet.
+   display has no `zh` row yet. Not decided by this change (pack naming is data-side).
 4. **Phrase data source/licence** for a distributable pack (e.g. Rime/librime dictionaries,
    CC-CEDICT-derived pinyin data) — pack publication is a separate decision from the format.
+   OPEN — blocks the first real pack.
 
 ## Future Enhancements
 
@@ -417,6 +435,10 @@ python3 scripts/build_langpack.py --lang zh --name "中文（拼音）" \
 
 - Issue: tribixbite/CleverKeys#177
 - `src/main/kotlin/tribixbite/cleverkeys/pinyin/CkpyPhraseTable.kt` — reader, layout KDoc
+- `src/main/kotlin/tribixbite/cleverkeys/pinyin/PinyinSession.kt` — pure composing state machine
+- `src/main/kotlin/tribixbite/cleverkeys/pinyin/PinyinController.kt` — IME glue (activation,
+  composing region + fallback, candidates, commit)
+- `src/main/kotlin/tribixbite/cleverkeys/pinyin/PinyinComposingHook.kt` — swipe seam
 - `src/main/kotlin/tribixbite/cleverkeys/langpack/LanguagePackManager.kt` — manifest + import
 - `scripts/build_phrase_table.py`, `scripts/build_langpack.py` — writers
 - `docs/specs/ctc-architecture-and-multiscript-guide.md`,

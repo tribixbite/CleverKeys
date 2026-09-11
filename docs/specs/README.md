@@ -33,7 +33,7 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 | [Dictionary System](./dictionary-and-language-system.md) | Word lookup, frequency ranking, user dictionary |
 | [Secondary Language](./secondary-language-integration.md) | Multi-language typing, language detection |
 | [Language-Specific Dictionary](./language-specific-dictionary-manager.md) | Per-language dictionary management |
-| [Pinyin IME](./pinyin-ime.md) | Composing pinyin pack schema (gh #177), `CKPY` phrase table, candidate/commit plan |
+| [Pinyin IME](./pinyin-ime.md) | Composing pinyin IME (gh #177): `inputMethod` + `CKPY` pack format, composing session, candidates, swipe feed |
 
 ### Customization
 
