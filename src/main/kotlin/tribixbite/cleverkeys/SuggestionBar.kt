@@ -419,6 +419,7 @@ class SuggestionBar : LinearLayout {
         SuggestionOrigin.EXACT_ADD -> 0xFFB0BEC5.toInt()         // gray
         SuggestionOrigin.NEXT_WORD -> 0xFFA5D6A7.toInt()         // green
         SuggestionOrigin.AUTOCORRECT -> 0xFFEF9A9A.toInt()       // red
+        SuggestionOrigin.PINYIN -> 0xFFFFAB91.toInt()            // deep orange (汉字 composing)
     }
 
     /** Task B: register the long-press provenance inspection listener. */

@@ -12,6 +12,7 @@ import android.view.inputmethod.InputConnection
 import tribixbite.cleverkeys.ml.PlaygroundTraceRecorder
 import tribixbite.cleverkeys.ml.SwipeMLData
 import tribixbite.cleverkeys.autocorrect.AutocorrectContextGuard
+import tribixbite.cleverkeys.pinyin.PinyinComposingHook
 import tribixbite.cleverkeys.swipe.SwipeContextRescorer
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 
@@ -434,6 +435,16 @@ class SuggestionHandler(
     @Volatile
     private var nextWordSuggestionsActive = false
 
+    // gh #177: pinyin composing seam, late-bound by CleverKeysService. Non-null only after
+    // the service creates the controller; a swipe that decodes to pinyin spelling routes
+    // into the session instead of the English auto-insert path.
+    private var pinyinHook: PinyinComposingHook? = null
+
+    /** gh #177: install the pinyin composing hook (cleared by passing null). */
+    fun setPinyinHook(hook: PinyinComposingHook?) {
+        pinyinHook = hook
+    }
+
     // M5 (review 2026-08-06): incognito-field contract. False while the active
     // editor sets IME_FLAG_NO_PERSONALIZED_LEARNING — suppresses the learn
     // funnel, selection-adaptation recording, and next-word surfacing for that
@@ -511,7 +522,8 @@ class SuggestionHandler(
                 SuggestionOrigin.POSSESSIVE to text(R.string.provenance_origin_possessive),
                 SuggestionOrigin.EXACT_ADD to text(R.string.provenance_origin_exact_add),
                 SuggestionOrigin.NEXT_WORD to text(R.string.provenance_origin_next_word),
-                SuggestionOrigin.AUTOCORRECT to text(R.string.provenance_origin_autocorrect)
+                SuggestionOrigin.AUTOCORRECT to text(R.string.provenance_origin_autocorrect),
+                SuggestionOrigin.PINYIN to text(R.string.provenance_origin_pinyin)
             ),
             unknown = text(R.string.provenance_unknown),
             source = text(R.string.provenance_source),
@@ -759,6 +771,15 @@ class SuggestionHandler(
     ) {
         // Swipe results replace whatever the bar shows — any next-word display state ends here.
         nextWordSuggestionsActive = false
+
+        // gh #177: in pinyin composing mode the decoded surface IS the pinyin spelling, not
+        // a word to commit. Buffer it, refresh the 汉字 candidates, and stop — the spec's
+        // "do not auto-commit" rule. No context rescore, no English bar, no ML capture.
+        // Checked before the password/empty guards: an empty decode must leave the
+        // composing preedit and its candidates alone, not clear the bar.
+        pinyinHook?.let { hook ->
+            if (hook.onSwipeDecoded(predictions ?: emptyList(), scores ?: emptyList())) return
+        }
 
         // D2: password-field guard. Detect from the tracked mode OR the live editor (the latter holds
         // in tests / before onStartInputView sets the mode). Suppress the swipe unless the user opted in.

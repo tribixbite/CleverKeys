@@ -49,7 +49,13 @@ enum class SuggestionOrigin {
     NEXT_WORD,
 
     /** Autocorrect undo prompt (original + corrected word after an autocorrect). */
-    AUTOCORRECT;
+    AUTOCORRECT,
+
+    /**
+     * Pinyin composing-session candidate (gh #177): a 汉字/漢字 form offered for the
+     * current pinyin buffer. Scored by the phrase table's rank, not the unified scorer.
+     */
+    PINYIN;
 
     companion object {
         /**

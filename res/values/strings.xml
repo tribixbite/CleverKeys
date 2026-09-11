@@ -484,6 +484,7 @@
     <string name="provenance_origin_exact_add">Exact typed word (tap to add)</string>
     <string name="provenance_origin_next_word">Next-word prediction</string>
     <string name="provenance_origin_autocorrect">Autocorrect prompt</string>
+    <string name="provenance_origin_pinyin">Pinyin candidate</string>
     <string name="provenance_unknown">Unknown</string>
     <string name="provenance_source">Source: %1$s</string>
     <string name="provenance_score">Score: %1$d</string>
