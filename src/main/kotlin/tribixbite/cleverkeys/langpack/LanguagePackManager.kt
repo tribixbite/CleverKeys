@@ -580,6 +580,18 @@ class LanguagePackManager(private val context: Context) {
     }
 
     /**
+     * The manifest of the installed pack [code], or null when no such pack is installed.
+     *
+     * Unlike [getInstalledPacks] this reads exactly one directory, so a per-language mode
+     * check (does this pack want the pinyin composing engine?) does not re-parse every
+     * installed manifest. The input method's `inputMethod` field is on the returned model.
+     */
+    fun getInstalledPack(code: String): LanguagePackManifest? {
+        val manifestFile = File(langpacksDir, "$code/$MANIFEST_FILE")
+        return if (manifestFile.exists()) parseManifest(manifestFile.readText()) else null
+    }
+
+    /**
      * Delete a language pack.
      */
     fun deletePack(code: String): Boolean {

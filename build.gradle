@@ -591,6 +591,9 @@ tasks.register('runPureTests', JavaExec) {
     // gh #177 (2026-09-11): the composing-IME container format — CKPY v1 byte layout,
     // prefix lookup, and the untrusted-input bounds, all pure JVM (no android.jar).
     'tribixbite.cleverkeys.pinyin.CkpyPhraseTableTest',
+    // gh #177 Phase 1: the composing state machine — normalization, deterministic candidate
+    // assembly (exact → completions → greedy segmentation), buffer edit rules.
+    'tribixbite.cleverkeys.pinyin.PinyinSessionTest',
     'tribixbite.cleverkeys.AutocorrectDefaultsDriftTest',
     'tribixbite.cleverkeys.ShortSwipeIntentTest',
     'tribixbite.cleverkeys.customization.ShortSwipeMappingTest',
@@ -1066,6 +1069,12 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.MarginPercentPolicyTest',
     'tribixbite.cleverkeys.theme.MonetDynamicColorGateTest',
     'tribixbite.cleverkeys.langpack.LanguagePackImportTest',
+    // gh #177 Phase 1: the pinyin IME glue — pack-driven activation, composing region,
+    // committed-text fallback, candidate taps, swipe feeding, password bypass (MockK).
+    'tribixbite.cleverkeys.pinyin.PinyinControllerTest',
+    // gh #177 Phase 2: the swipe pipeline's pinyin seam — a consuming hook suppresses the
+    // English pipeline (incl. the empty-decode guard), a non-consuming one is inert.
+    'tribixbite.cleverkeys.SuggestionPinyinHookTest',
     'tribixbite.cleverkeys.UserDictionaryLocaleFilterTest',
     'tribixbite.cleverkeys.MLDataCollectionToggleTest',
     'tribixbite.cleverkeys.clipboard.ClipboardLockedStartupTest',

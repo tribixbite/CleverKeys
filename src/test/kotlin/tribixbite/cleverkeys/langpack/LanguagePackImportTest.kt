@@ -543,6 +543,20 @@ class LanguagePackImportTest {
         assertThat(manager.getInstalledPacks()).isEmpty()
     }
 
+    @Test
+    fun anInstalledPacksInputMethodIsReadableByCode() {
+        import(validPack(
+            "zh", "中文（拼音）",
+            manifest = manifestJson("zh", "中文（拼音）", inputMethod = "pinyin"),
+            extras = listOf("phrases.bin" to phraseTableBytes()),
+        ))
+
+        assertWithMessage("the composing controller reads the mode through getInstalledPack")
+            .that(manager.getInstalledPack("zh")?.inputMethod).isEqualTo("pinyin")
+        assertWithMessage("a language with no installed pack reads back null, not a crash")
+            .that(manager.getInstalledPack("fr")).isNull()
+    }
+
     // ------------------------------------------------------------- rejection surface
 
     @Test

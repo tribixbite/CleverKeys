@@ -87,6 +87,10 @@ class SuggestionBridge(
         // Trigger haptic feedback for prediction tap
         keyboardView.triggerHaptic(HapticEvent.PREDICTION_TAP)
 
+        // gh #177: a pinyin composing candidate commits through the session (and only a
+        // word the session offered is consumed). No ML capture/autocorrect/replace path.
+        if (keyboard2.pinyinController()?.onCandidateSelected(word) == true) return
+
         // Store ML data if this was a swipe prediction selection
         val isSwipeAutoInsert = contextTracker.wasLastInputSwipe()
         val currentSwipeData = inputCoordinator.getCurrentSwipeData()
