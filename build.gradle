@@ -588,6 +588,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.BeamSearchModelsTest',
     'tribixbite.cleverkeys.ConfigDefaultsTest',
     'tribixbite.cleverkeys.DictionaryBinFormatTest',
+    // gh #177 (2026-09-11): the composing-IME container format — CKPY v1 byte layout,
+    // prefix lookup, and the untrusted-input bounds, all pure JVM (no android.jar).
+    'tribixbite.cleverkeys.pinyin.CkpyPhraseTableTest',
     'tribixbite.cleverkeys.AutocorrectDefaultsDriftTest',
     'tribixbite.cleverkeys.ShortSwipeIntentTest',
     'tribixbite.cleverkeys.customization.ShortSwipeMappingTest',

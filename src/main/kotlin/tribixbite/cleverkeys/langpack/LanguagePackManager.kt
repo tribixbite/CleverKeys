@@ -9,14 +9,17 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.util.zip.ZipInputStream
+import tribixbite.cleverkeys.pinyin.CkpyPhraseTable
 import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
 
 /**
  * Language Pack Manager - handles import, validation, and storage of language packs.
  *
  * Language packs are ZIP files containing:
- * - manifest.json: metadata (language code, name, version, hasPrefixBoost)
+ * - manifest.json: metadata (language code, name, version, inputMethod, hasPrefixBoost)
  * - dictionary.bin: V2 binary dictionary with accent normalization
+ * - phrases.bin: optional V1 `CKPY` pinyin phrase table (pinyin key -> ranked 汉字), required
+ *   exactly when the manifest declares `"inputMethod": "pinyin"` (see "Composing IME packs")
  * - unigrams.txt: word frequency list for language detection
  * - contractions.json: optional apostrophe word mappings (e.g., "cest" -> "c'est")
  * - prefix_boost.bin: optional Aho-Corasick trie for prefix boosting. Its only consumer,
@@ -48,6 +51,27 @@ import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
  * must not fill the cache dir before anything looks at its size), and hence an UNDECLARED
  * `model.onnx` being dropped rather than rejected: nothing can verify it, gate 2 would refuse
  * it anyway, and failing the whole import would punish the user for a stray file.
+ *
+ * ## Composing IME packs (`inputMethod`)
+ *
+ * A normal pack's dictionary entries ARE the text the keyboard commits. A composing IME
+ * (pinyin today) breaks that assumption: the user types keys and chooses 汉字, so the pack
+ * declares how its content is consumed. The manifest's optional `inputMethod` field carries
+ * that declaration:
+ *
+ *  - absent / `"wordfreq"` — the legacy contract. The bundled dictionaries and every pack
+ *    built before this field existed parse exactly as before.
+ *  - `"pinyin"` — a composing pack. It MUST carry `phrases.bin`, a V1 `CKPY` table mapping a
+ *    toneless pinyin key (`"nihao"`) to ranked candidate text (`你好` / 妳好). The reader is
+ *    [CkpyPhraseTable] and the format is specified in `docs/specs/pinyin-ime.md`. The pack's
+ *    `dictionary.bin` still ships (the swipe path decodes pinyin spellings over it), but the
+ *    keyboard's committed text comes from the phrase table, never from the key letters.
+ *
+ * Unknown `inputMethod` values are REFUSED rather than ignored: a pack built for a future
+ * mode must fail with a reason on an app that cannot honour the mode, not silently degrade
+ * into a wordfreq lexicon whose "words" are pinyin spellings. A `phrases.bin` present without
+ * `"inputMethod": "pinyin"` is refused for the same reason (nothing would read it, and a
+ * silent drop would turn a typo in the manifest into a broken keyboard).
  */
 class LanguagePackManager(private val context: Context) {
 
@@ -56,9 +80,25 @@ class LanguagePackManager(private val context: Context) {
         private const val LANGPACKS_DIR = "langpacks"
         private const val MANIFEST_FILE = "manifest.json"
         private const val DICTIONARY_FILE = "dictionary.bin"
+        private const val PHRASES_FILE = "phrases.bin"
         private const val UNIGRAMS_FILE = "unigrams.txt"
         private const val CONTRACTIONS_FILE = "contractions.json"
         private const val PREFIX_BOOST_FILE = "prefix_boost.bin"
+
+        /**
+         * `inputMethod` value for the legacy contract: dictionary entries are the committed
+         * words. Every pack without the field imports as this, so old packs are untouched.
+         */
+        const val INPUT_METHOD_WORDFREQ = "wordfreq"
+
+        /**
+         * `inputMethod` value for a composing pinyin pack. Requires a `phrases.bin` `CKPY`
+         * table; see the class KDoc ("Composing IME packs").
+         */
+        const val INPUT_METHOD_PINYIN = "pinyin"
+
+        /** Every `inputMethod` this app can honour; anything else is an import error. */
+        val SUPPORTED_INPUT_METHODS = setOf(INPUT_METHOD_WORDFREQ, INPUT_METHOD_PINYIN)
 
         /**
          * The pack's optional CTC encoder. Name and size cap come from [CtcPackModel] so the
@@ -173,6 +213,27 @@ class LanguagePackManager(private val context: Context) {
             val manifest = parseManifest(manifestFile.readText())
                 ?: return ImportResult.Error("Invalid manifest.json format")
 
+            // The pack's declared input method decides what else must be present. Unknown
+            // values are refused (see "Composing IME packs") rather than treated as wordfreq.
+            if (manifest.inputMethod !in SUPPORTED_INPUT_METHODS) {
+                return ImportResult.Error("Unsupported inputMethod \"${manifest.inputMethod}\"")
+            }
+            val phrasesFile = File(tempDir, PHRASES_FILE)
+            if (manifest.inputMethod == INPUT_METHOD_PINYIN) {
+                if (PHRASES_FILE !in extractedFiles) {
+                    return ImportResult.Error(
+                        "Missing $PHRASES_FILE for inputMethod \"$INPUT_METHOD_PINYIN\""
+                    )
+                }
+                if (!validatePhraseTable(phrasesFile)) {
+                    return ImportResult.Error("Invalid $PHRASES_FILE format")
+                }
+            } else if (phrasesFile.exists()) {
+                return ImportResult.Error(
+                    "$PHRASES_FILE requires inputMethod \"$INPUT_METHOD_PINYIN\""
+                )
+            }
+
             // Validate dictionary binary
             val dictFile = File(tempDir, DICTIONARY_FILE)
             if (!validateDictionary(dictFile)) {
@@ -227,6 +288,12 @@ class LanguagePackManager(private val context: Context) {
             stagingDir.mkdirs()
             try {
                 dictFile.copyTo(File(stagingDir, DICTIONARY_FILE), overwrite = true)
+
+                // Copy the pinyin phrase table for a composing pack (validated above).
+                if (manifest.inputMethod == INPUT_METHOD_PINYIN) {
+                    phrasesFile.copyTo(File(stagingDir, PHRASES_FILE), overwrite = true)
+                    Log.d(TAG, "Copied $PHRASES_FILE for ${manifest.code} (${phrasesFile.length() / 1024}KB)")
+                }
 
                 // Copy unigrams if present
                 val unigramsFile = File(tempDir, UNIGRAMS_FILE)
@@ -298,6 +365,9 @@ class LanguagePackManager(private val context: Context) {
                 hasPrefixBoost = obj.optBoolean("hasPrefixBoost", false),
                 modelFile = model?.optString("file")?.takeIf { it.isNotEmpty() },
                 modelSha256 = model?.optString("sha256")?.takeIf { it.isNotEmpty() },
+                // Absent in every pack built before the field existed — those must import
+                // exactly as they always did, i.e. as wordfreq packs.
+                inputMethod = obj.optString("inputMethod", INPUT_METHOD_WORDFREQ),
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to parse manifest", e)
@@ -380,6 +450,41 @@ class LanguagePackManager(private val context: Context) {
     }
 
     /**
+     * Validate a `phrases.bin` pinyin phrase table: V1 `CKPY` magic + version.
+     *
+     * The importer checks the fixed header only — exactly like [validateDictionary] — because
+     * the pack entry must never be materialised whole (the v1.1.96/v1.1.97 OOM fix). Full
+     * structural parsing belongs to [CkpyPhraseTable], which streams with its own bounds.
+     */
+    private fun validatePhraseTable(file: File): Boolean {
+        if (!file.exists() || file.length() < CkpyPhraseTable.HEADER_SIZE) {
+            return false
+        }
+
+        return try {
+            file.inputStream().use { fis ->
+                val header = ByteArray(8)
+                if (fis.read(header) != 8) return false
+
+                val magic = (header[0].toInt() and 0xFF) or
+                           ((header[1].toInt() and 0xFF) shl 8) or
+                           ((header[2].toInt() and 0xFF) shl 16) or
+                           ((header[3].toInt() and 0xFF) shl 24)
+
+                val version = (header[4].toInt() and 0xFF) or
+                             ((header[5].toInt() and 0xFF) shl 8) or
+                             ((header[6].toInt() and 0xFF) shl 16) or
+                             ((header[7].toInt() and 0xFF) shl 24)
+
+                magic == CkpyPhraseTable.MAGIC && version == CkpyPhraseTable.VERSION
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Phrase table validation failed", e)
+            false
+        }
+    }
+
+    /**
      * Get list of installed language packs.
      */
     fun getInstalledPacks(): List<LanguagePackManifest> {
@@ -405,6 +510,19 @@ class LanguagePackManager(private val context: Context) {
     fun getDictionaryPath(code: String): File? {
         val dictFile = File(langpacksDir, "$code/$DICTIONARY_FILE")
         return if (dictFile.exists()) dictFile else null
+    }
+
+    /**
+     * Path to an installed pinyin pack's `phrases.bin` phrase table, or null when the pack
+     * has none (every non-pinyin pack today). The reader is [CkpyPhraseTable.read].
+     *
+     * Like [getModelPath], this is a storage accessor, not a loader: it says the file is
+     * present, not that the app will use it (that decision belongs to the composing engine
+     * once one exists — see `docs/specs/pinyin-ime.md`).
+     */
+    fun getPhrasesPath(code: String): File? {
+        val phrasesFile = File(langpacksDir, "$code/$PHRASES_FILE")
+        return if (phrasesFile.exists()) phrasesFile else null
     }
 
     /**
@@ -517,6 +635,13 @@ data class LanguagePackManifest(
      * pinned hash (`CtcPackModel`), which trusts nothing in this field.
      */
     val modelSha256: String? = null,
+    /**
+     * How this pack's content is consumed. [LanguagePackManager.INPUT_METHOD_WORDFREQ]
+     * (the default, including every pack built before the field existed) means dictionary
+     * entries are the committed words; [LanguagePackManager.INPUT_METHOD_PINYIN] means a
+     * composing pack whose committed text comes from a `phrases.bin` `CKPY` table.
+     */
+    val inputMethod: String = LanguagePackManager.INPUT_METHOD_WORDFREQ,
 )
 
 /**

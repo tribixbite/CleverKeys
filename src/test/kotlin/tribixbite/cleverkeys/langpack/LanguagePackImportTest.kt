@@ -75,6 +75,12 @@ class LanguagePackImportTest {
         0x02, 0x00, 0x00, 0x00, // version 2
     )
 
+    /** V1 `CKPY` magic + version, little-endian, as `validatePhraseTable` decodes it. */
+    private val ckpyV1Header = byteArrayOf(
+        0x43, 0x4B, 0x50, 0x59, // "CKPY"
+        0x01, 0x00, 0x00, 0x00, // version 1
+    )
+
     @Before
     fun setup() {
         mockkStatic(Log::class)
@@ -120,13 +126,17 @@ class LanguagePackImportTest {
         wordCount: Int = 0,
         hasPrefixBoost: Boolean = false,
         model: ByteArray? = null,
+        inputMethod: String? = null,
     ): String {
         val modelField = model?.let {
             ""","model":{"file":"model.onnx","sha256":"${sha256(it)}"}"""
         } ?: ""
+        val inputMethodField = inputMethod?.let {
+            ""","inputMethod":"$it""""
+        } ?: ""
         return """
             {"code":"$code","name":"$name","version":$version,"author":"$author",
-             "wordCount":$wordCount,"hasPrefixBoost":$hasPrefixBoost$modelField}
+             "wordCount":$wordCount,"hasPrefixBoost":$hasPrefixBoost$modelField$inputMethodField}
         """.trimIndent()
     }
 
@@ -142,6 +152,19 @@ class LanguagePackImportTest {
         val out = ByteArray(size)
         ckdtV2Header.copyInto(out)
         for (i in ckdtV2Header.size until size) out[i] = (i % 251).toByte()
+        return out
+    }
+
+    /**
+     * A V1-valid `CKPY` phrase table body of [size] bytes: real header, deterministic filler.
+     * The importer validates the fixed 8-byte magic+version header, exactly like CKDT; the
+     * full structural parse belongs to `CkpyPhraseTable` (see `CkpyPhraseTableTest`).
+     */
+    private fun phraseTableBytes(size: Int = 64): ByteArray {
+        require(size >= ckpyV1Header.size)
+        val out = ByteArray(size)
+        ckpyV1Header.copyInto(out)
+        for (i in ckpyV1Header.size until size) out[i] = (i % 241).toByte()
         return out
     }
 
@@ -305,6 +328,8 @@ class LanguagePackImportTest {
         assertThat(manager.getContractionsPath("ms")).isNull()
         assertThat(manager.getPrefixBoostPath("ms")).isNull()
         assertThat(manager.getModelPath("ms")).isNull()
+        assertWithMessage("a legacy pack has no phrase table and no inputMethod")
+            .that(manager.getPhrasesPath("ms")).isNull()
         assertThat(manager.isInstalled("ms")).isTrue()
     }
 
@@ -421,6 +446,101 @@ class LanguagePackImportTest {
             "…and the load side refuses it anyway. The importer's hash check is an integrity " +
                 "check on the download; the app's pin is what keeps ORT off user-supplied bytes"
         ).that(CtcPackModel.verifiedPackModel(filesDir, "ru")).isNull()
+    }
+
+    // ------------------------------------------- composing IME packs (gh #177, pinyin)
+
+    /**
+     * A pinyin composing pack: `"inputMethod": "pinyin"` + a V1 `CKPY` `phrases.bin`. The
+     * import carries the phrase table to disk and the installed manifest reports the mode,
+     * while the CKDT dictionary still installs (the swipe path decodes pinyin spellings
+     * over it). Format spec: `docs/specs/pinyin-ime.md`.
+     */
+    @Test
+    fun aPinyinPackCarriesItsInputMethodAndPhraseTable() {
+        val phrases = phraseTableBytes()
+        val zip = validPack(
+            "zh", "中文（拼音）", wordCount = 1234,
+            manifest = manifestJson("zh", "中文（拼音）", wordCount = 1234, inputMethod = "pinyin"),
+            extras = listOf("phrases.bin" to phrases),
+        )
+
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Success(
+                LanguagePackManifest(
+                    "zh", "中文（拼音）", 1, "", 1234, false,
+                    inputMethod = "pinyin",
+                )
+            )
+        )
+
+        assertWithMessage("the phrase table must land beside the dictionary")
+            .that(manager.getPhrasesPath("zh")).isNotNull()
+        assertThat(manager.getPhrasesPath("zh")!!.readBytes()).isEqualTo(phrases)
+        assertThat(manager.getDictionaryPath("zh")).isNotNull()
+        assertWithMessage("the installed manifest must remember the mode for runtime selection")
+            .that(manager.getInstalledPacks().single().inputMethod).isEqualTo("pinyin")
+    }
+
+    @Test
+    fun aPinyinPackWithoutAPhraseTableIsRejected() {
+        val zip = validPack(
+            "zh", "Chinese",
+            manifest = manifestJson("zh", "Chinese", inputMethod = "pinyin"),
+        )
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Error("Missing phrases.bin for inputMethod \"pinyin\"")
+        )
+        assertWithMessage("a rejected pack must install nothing")
+            .that(File(filesDir, "langpacks").listFiles()?.toList().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun aPinyinPackWithAnInvalidPhraseTableIsRejected() {
+        val wrongMagic = phraseTableBytes().also { it[0] = 'X'.code.toByte() }
+        assertThat(
+            import(validPack(
+                "zh", "Chinese",
+                manifest = manifestJson("zh", "Chinese", inputMethod = "pinyin"),
+                extras = listOf("phrases.bin" to wrongMagic),
+            ))
+        ).isEqualTo(ImportResult.Error("Invalid phrases.bin format"))
+
+        val wrongVersion = phraseTableBytes().also { it[4] = 2 }
+        assertThat(
+            import(validPack(
+                "zh", "Chinese",
+                manifest = manifestJson("zh", "Chinese", inputMethod = "pinyin"),
+                extras = listOf("phrases.bin" to wrongVersion),
+            ))
+        ).isEqualTo(ImportResult.Error("Invalid phrases.bin format"))
+    }
+
+    /**
+     * Nothing reads a phrase table without the mode that consumes it, so silently dropping
+     * one would turn a manifest typo into a broken keyboard. Refused, with a reason.
+     */
+    @Test
+    fun aPhraseTableWithoutThePinyinInputMethodIsRejected() {
+        val zip = validPack(
+            "zh", "Chinese",
+            extras = listOf("phrases.bin" to phraseTableBytes()),
+        )
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Error("phrases.bin requires inputMethod \"pinyin\"")
+        )
+    }
+
+    @Test
+    fun anUnknownInputMethodIsRejectedRatherThanDegradingToWordfreq() {
+        val zip = validPack(
+            "zh", "Chinese",
+            manifest = manifestJson("zh", "Chinese", inputMethod = "bopomofo"),
+        )
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Error("Unsupported inputMethod \"bopomofo\"")
+        )
+        assertThat(manager.getInstalledPacks()).isEmpty()
     }
 
     // ------------------------------------------------------------- rejection surface
