@@ -135,6 +135,33 @@ ownership and invalidation design; treating all dictionaries as immutable would
 risk stale predictions. Existing bounds and lifecycle disposal address the proven
 retention without introducing that architecture.
 
+## Why v1.5 could behave differently
+
+Source comparison against the `v1.5.0` tag (2026-09-11) establishes an ownership
+change: NeuralSwipeTypingEngine used `SwipePredictorOrchestrator.getInstance(context)`.
+That static singleton owned its OptimizedVocabulary. Its cleanup closed encoder/decoder
+sessions and reset initialization flags, but did not clear the singleton or replace
+its vocabulary object. Retired service wrappers therefore did not each own a distinct
+copy of that swipe vocabulary. PredictionCoordinator.shutdown also nulled neuralEngine.
+
+The replacement CTC adapter owns its own language tries. Before `358cd54b`,
+InputCoordinator.shutdown stopped the adapter but retained its reference, allowing
+framework-rooted retired services to retain separate trie graphs. The corrected
+emulator dump demonstrates that failure mode in the new architecture. This is a
+concrete reason recreation can be more costly than in v1.5, not proof that CTC's
+single-instance total is larger than the old engine's total.
+
+The unused view predictor reference, unclosed height-helper fold trackers, and weak
+primary-load cancellation already existed in v1.5. Its secondary dictionary loader
+was synchronous; the later asynchronous version introduced the stale-secondary
+publication race fixed here. No matched v1.5/current phone heap comparison has been
+run, so the exact difference in steady-state or peak heap remains unmeasured.
+
+A bounded process-wide swipe cache could recover some old reuse behavior. It is a
+valid future optimization with content invalidation and owner-independent state,
+not a prerequisite for the now-tested teardown mitigation. A singleton alone is
+not evidence of safe context ownership or correct lifecycle cleanup.
+
 ## Validation and remaining work
 
 Current-round verification passed:

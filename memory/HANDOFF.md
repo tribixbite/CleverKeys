@@ -70,6 +70,12 @@ what was done; this file is only what is left. Anything below is open.
   owners had zero stale callbacks, live replacement loaded 98,140 words; five service
   replacements added 2.67 MiB; bilingual decode heap stayed ~87 MiB. Logs under
   `build/ew-memory-audit-fixes/`; full detail and limitations in the audit report.
+- **v1.5 comparison (2026-09-11):** tagged old neural engine used a static
+  SwipePredictorOrchestrator owning OptimizedVocabulary; cleanup preserved that
+  singleton/vocabulary. New CTC tries are per adapter/service, so the pre-fix retained
+  adapter reference duplicated swipe payload across retired services. Several smaller
+  lifecycle bugs already existed in v1.5. No matched old/new phone heap A/B exists;
+  bounded process-wide reuse remains an optional optimization, not a proven requirement.
 - Framework still temporarily retains lightweight service/view objects (~0.5 MiB/service);
   the mitigation releases heavy dictionaries, not Android's native callback itself.
 - **Authorization:** maintainer grants permanent ongoing emulator.wtf APK upload approval
