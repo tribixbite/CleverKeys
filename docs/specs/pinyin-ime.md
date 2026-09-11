@@ -55,6 +55,9 @@ composing region) lands against a fixed schema instead of inventing one mid-impl
   table may contain multi-syllable keys (`nihao`, `beijingdaxue`) so common phrases work;
   general lattice segmentation is a follow-up.
 - Learning Hanzi choices into the n-gram model in the first cut.
+- Zhuyin/Bopomofo (and any other non-pinyin input method): this spec is pinyin only —
+  Simplified (`zh-Hans`) and Traditional (`zh-Hant`) both use the QWERTY pinyin engine with
+  their own phrase tables; Zhuyin would need its own layout and key mapping.
 
 ## Requirements
 
