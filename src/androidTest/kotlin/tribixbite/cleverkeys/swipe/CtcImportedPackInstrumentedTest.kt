@@ -35,7 +35,9 @@ import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import org.json.JSONObject
+import java.security.MessageDigest
 import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -176,7 +178,11 @@ class CtcImportedPackInstrumentedTest {
         return LanguagePackManager.getInstance(context).importLanguagePack(Uri.fromFile(zip))
     }
 
-    private fun importNamedPack(language: String, words: List<String>): ImportResult {
+    private fun importNamedPack(
+        language: String,
+        words: List<String>,
+        modelBytes: ByteArray? = null,
+    ): ImportResult {
         val zip = File(context.cacheDir, "langpack-" + language + ".zip")
         ZipOutputStream(FileOutputStream(zip)).use { out ->
             val manifest = JSONObject().apply {
@@ -184,6 +190,14 @@ class CtcImportedPackInstrumentedTest {
                 put("name", "ARC-058 fixture")
                 put("version", 1)
                 put("wordCount", words.size)
+                if (modelBytes != null) {
+                    val sha = MessageDigest.getInstance("SHA-256").digest(modelBytes)
+                        .joinToString("") { "%02x".format(it) }
+                    put("model", JSONObject().apply {
+                        put("file", "model.onnx")
+                        put("sha256", sha)
+                    })
+                }
             }
             out.putNextEntry(ZipEntry("manifest.json"))
             out.write(manifest.toString().toByteArray(Charsets.UTF_8))
@@ -191,8 +205,35 @@ class CtcImportedPackInstrumentedTest {
             out.putNextEntry(ZipEntry("dictionary.bin"))
             out.write(ckdtBytes(language, words))
             out.closeEntry()
+            if (modelBytes != null) {
+                out.putNextEntry(ZipEntry("model.onnx"))
+                out.write(modelBytes)
+                out.closeEntry()
+            }
         }
         return LanguagePackManager.getInstance(context).importLanguagePack(Uri.fromFile(zip))
+    }
+
+    /**
+     * The REAL encoder bytes for a script language, pulled out of the real pack the
+     * copyScriptLatencyPacks task stages into the test APK's assets. Since 2026-09-10 the six
+     * script encoders are pack-delivered and hash-pinned in CtcScriptSupport, so a synthetic
+     * pack can only be CTC-served if it carries the exact published model — any other bytes
+     * fail the app's pinned-sha gate by design.
+     */
+    private fun realScriptModel(language: String): ByteArray {
+        val testAssets = InstrumentationRegistry.getInstrumentation().context.assets
+        ZipInputStream(testAssets.open("langpacks/langpack-$language.zip")).use { zin ->
+            var entry = zin.nextEntry
+            while (entry != null) {
+                if (entry.name == "model.onnx") return zin.readBytes()
+                entry = zin.nextEntry
+            }
+        }
+        throw AssertionError(
+            "langpack-$language.zip in test assets carries no model.onnx — rebuild the pack " +
+                "with build_langpack.py --model"
+        )
     }
 
     private fun russianWord(index: Int): String {
@@ -777,7 +818,10 @@ class CtcImportedPackInstrumentedTest {
         val manager = LanguagePackManager.getInstance(context)
         manager.deletePack("ru")
         try {
-            val imported = importNamedPack("ru", ruWords)
+            // The synthetic dictionary keeps this test's memory profile, but since the
+            // script encoders moved into the packs (2026-09-10) ru is only CTC-served when
+            // the pack carries the real, pinned-sha model — so graft it in.
+            val imported = importNamedPack("ru", ruWords, realScriptModel("ru"))
             assertTrue("synthetic Russian pack failed: " + imported, imported is ImportResult.Success)
             CtcInstalledPacks.invalidate(context, "ru")
 
