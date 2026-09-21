@@ -322,56 +322,10 @@ jobs:
           // Create a discussion post with the report
           // (This would require GitHub GraphQL API for discussions)
 
-  stale-issue-management:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
-
-    steps:
-    - name: Mark stale issues
-      uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        stale-issue-message: |
-          👋 This issue has been automatically marked as stale because it has not had recent activity.
-
-          ## 🔄 Next Steps
-          - **Still relevant?** Add a comment to keep this issue open
-          - **Need help?** Check our [Contributing Guide](CONTRIBUTING.md)
-          - **Duplicate?** Reference the original issue
-          - **Resolved?** Close the issue with a comment
-
-          ## 🧠 CleverKeys Development
-          We're actively developing CleverKeys with:
-          - 🧪 Automated testing on every commit
-          - 🚀 Regular releases with new features
-          - 💬 Active community discussions
-
-          **This issue will be closed in 7 days if no further activity occurs.**
-
-        stale-pr-message: |
-          👋 This pull request has been automatically marked as stale.
-
-          ## 🔄 Next Steps
-          - **Ready for review?** Request a review from maintainers
-          - **Need updates?** Address any requested changes
-          - **Blocked?** Add a comment explaining the blocker
-          - **Alternative approach?** Reference in a new PR
-
-          ## 🧪 Testing Requirements
-          Ensure your PR passes:
-          - ✅ Automated test suite
-          - ✅ Performance benchmarks
-          - ✅ Visual regression tests
-          - ✅ Swipe prediction validation
-
-          **This PR will be closed in 7 days if no further activity occurs.**
-
-        days-before-stale: 60
-        days-before-close: 7
-        stale-issue-label: 'stale'
-        stale-pr-label: 'stale'
-        exempt-issue-labels: 'pinned,security,swipe'
-        exempt-pr-labels: 'pinned,security,swipe'
+  # stale-issue-management removed 2026-09-21 (maintainer decision): the actions/stale
+  # bot auto-closed real, later-verified-fixed bugs as NOT_PLANNED (the 2026-09-05
+  # closed-issue audit found live bugs buried in its closures — #148/#149 among them).
+  # Issue lifecycle is manual now; docs/audit/gh-issue-resolution.md is the tracker.
 
   release-celebration:
     runs-on: ubuntu-latest

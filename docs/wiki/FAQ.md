@@ -101,7 +101,9 @@ A: Touch the first letter of your word, slide your finger through each letter wi
 
 **Q: Can I swipe other languages?**
 
-A: Yes, and it needs no tuning and no particular layout. The CTC engine serves the 7 bundled Latin languages (English, French, German, Spanish, Italian, Portuguese, Swedish) on any Latin layout with all 26 letters — QWERTY, AZERTY, QWERTZ, Dvorak, Colemak all work. It also serves 6 non-Latin languages on their own layouts and encoders — Russian, Ukrainian, Bulgarian, Macedonian (Cyrillic), Greek, and Hebrew — plus imported Latin packs whose words are typeable on an a–z board (Dutch, Indonesian, Malay, Tagalog, Swahili).
+A: Yes, and it needs no tuning and no particular layout. The CTC engine serves the 7 bundled Latin languages (English, French, German, Spanish, Italian, Portuguese, Swedish) on any Latin layout with all 26 letters — QWERTY, AZERTY, QWERTZ, Dvorak, Colemak all work — plus imported Latin packs whose words are typeable on an a–z board (Dutch, Indonesian, Malay, Tagalog, Swahili).
+
+Six non-Latin languages — Russian, Ukrainian, Bulgarian, Macedonian (Cyrillic), Greek, and Hebrew — are served **via their language packs**: one import brings both the dictionary and that script's swipe encoder (the encoder is verified against a hash pinned in the app, so only the exact published model loads). Until the pack is imported, these languages tap-type normally and swipe falls back to the geometric engine. **If you imported one of these packs before September 2026, re-import the updated zip** — older packs predate the bundled encoder and won't swipe-decode on current versions.
 
 To add a language beyond the bundled seven, go to **Settings > 🌐 Multi-Language > Import Pack** and import that language's pack; prebuilt zips are on the [langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks). Set it as your primary (or secondary) language and swipe normally.
 
