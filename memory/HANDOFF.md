@@ -112,9 +112,18 @@ IMPOSSIBLE in shipped ORT, verdict recorded). APK diet: marketing art was PACKAG
 (6.4MB), noCompress waste, legacy JNI packaging, resConfigs 85→21, logo 44dB-PSNR
 recompress (original in art/), SwipeMLTrainer deleted, six script encoders moved
 into their langpacks with in-app sha256 pins (CtcScriptSupport.ScriptWiring).
-**Blocks the tag: (1) maintainer soak per docs/plans/v2.0.0-manual-test-checklist.md;
-(2) device pass on CtcEmissionModelParityTest + CtcMultiLanguageInstrumentedTest
-(changed, compile-only).**
+**ALL tag blockers DISCHARGED (2026-09-21): (1) soak completed per the checklist
+(bb232465, 2026-09-13); (2) langpacks re-upload done 2026-09-10 and independently
+VERIFIED 2026-09-21 (all six release assets byte-size-identical to the committed zips;
+langpack-ru.zip sha256 hash-compared identical); (3) first-ever device pass of the three
+owed classes on Pixel7/API34 — CtcEmissionModelParityTest + CtcMultiLanguageInstrumentedTest
+green (ew run 17e7abc9), CtcImportedPackInstrumentedTest 12/12 (ew run 39a11493) after its
+rotation fixture learned to carry the real pinned encoder (32f3e554). Also 2026-09-21:
+the auto-close stale bot REMOVED from community-health.yml; nine bot-closed-but-resolved
+issues reopened for the maintainer's manual close-as-completed (#67 #99 #130 #134 #141
+#146 #148 #149 #154; #158/#89 deliberately closed, #128/#133/#137/#140/#143 are unbuilt
+feature asks and stay closed); FAQ corrected for pack-carried encoders + the re-import
+requirement. The v2.0.0 tag now waits ONLY on the maintainer's word.**
 Final gates 2026-09-10: 2,371 pure / 730 mock / lint 0.
 
 **Round 8 (2026-09-08) — ALL five maintainer forks implemented per decisions** (D-1
