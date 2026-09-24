@@ -5,8 +5,10 @@ package tribixbite.cleverkeys
  * Task A). Single source of truth for the question "may this typing-derived
  * signal be recorded/persisted right now?".
  *
- * The `on_device_learning_enabled` preference (default ON; this is the opt-OUT)
- * short-circuits EVERY learn path at the write layer:
+ * The `on_device_learning_enabled` preference (opt-IN on fresh installs since
+ * v2.0 — default OFF; upgrading installs are seeded an explicit `true` by the
+ * v4 migration so an update never silently changes behavior, see
+ * [LearningMigration]) short-circuits EVERY learn path at the write layer:
  *
  * | Path | Store | Gated via |
  * |---|---|---|

@@ -220,6 +220,7 @@ class SettingsImportPlanBuilderTest {
             "need_migration",                  // DirectBoot prefs migration
             "lang_pref_migration_version",     // language-prefs migration
             "vibrate_custom_migration_v1",     // one-time #154 vibrate_custom cleanup
+            "selection_history_reset_pending", // v4 learning-consent: one-time wipe request
             "voice_ime_known",                 // runtime IME state
             "voice_ime_last_used",             // runtime IME state
             "ime_prompt_shown_this_session",   // legacy pre-I-7 per-session flag (retired)

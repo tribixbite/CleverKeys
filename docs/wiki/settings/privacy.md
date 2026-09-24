@@ -32,7 +32,7 @@ Found at the top of the **Privacy & Data** section:
 
 ### Learn From My Typing
 
-One switch controls ALL automatic learning from your typing behavior. **Default: On.**
+One switch controls ALL automatic learning from your typing behavior. **Default: Off on new installs** (turn it on to enable learning); devices upgrading from earlier versions keep learning enabled, matching their previous behavior, until switched off.
 
 When ON, CleverKeys builds private, on-device models from what you type:
 

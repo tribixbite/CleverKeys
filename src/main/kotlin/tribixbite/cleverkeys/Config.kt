@@ -352,8 +352,12 @@ object Defaults {
     // MASTER on-device learning gate (Task A, 2026-08-06): opt-OUT switch that
     // short-circuits ALL typing-behavior learning (bigram/trigram context LM,
     // personalization vocabulary, selection adaptation, swipe-ML collection)
-    // at the write layer. Default ON — learning is on-device only and clearable.
-    const val ON_DEVICE_LEARNING_ENABLED = true
+    // at the write layer. Default OFF since v2.0: fresh installs learn nothing
+    // until the user opts in. UPGRADING installs are seeded an explicit `true`
+    // by the v4 migration (LearningMigration) — their pre-2.0 behavior was
+    // learning-on via the old defaults, and an upgrade must not silently change
+    // what the keyboard does. Learning remains on-device only and clearable.
+    const val ON_DEVICE_LEARNING_ENABLED = false
 
     // Accessibility
     const val STICKY_KEYS_ENABLED = false
@@ -468,6 +472,48 @@ object SettingsRanges {
  * Decision logic is a pure function (JVM-testable, no Android deps); the
  * pref wiring lives in [Config.Companion.migrateForcedVibrateCustom].
  */
+/**
+ * Pure decision logic for the v4 learning-consent migration (2026-09-24). Same
+ * extraction pattern as [HapticsMigration]: [Config.migrate] supplies the facts,
+ * this object owns the (unit-tested) rules.
+ *
+ * Background: pre-2.0 the individual learning features defaulted ON behind labeled
+ * switches ("Context-Aware Predictions", "Personalized Learning"), and 2.0 adds the
+ * `on_device_learning_enabled` master gate whose compile-time default is now OFF.
+ * Two consequences this migration owns:
+ *
+ *  - **Seeding**: an UPGRADING install with no explicit stored choice gets
+ *    `on_device_learning_enabled = true` written, so its behavior does not silently
+ *    change on update. Fresh installs get nothing — the new opt-in default applies.
+ *  - **Selection-history reset**: selection history is the one store whose pre-2.0
+ *    writes ignored the learning gate (recorded even with learning off, v1.0–v1.5;
+ *    fixed in 2.0), so consented and bug-recorded entries are indistinguishable in
+ *    it. Upgrades get [SELECTION_HISTORY_RESET_PENDING_KEY] stamped;
+ *    [UserAdaptationManager.consumePendingReset] wipes the store once and clears
+ *    the flag. Fresh installs have an empty store — no flag.
+ *
+ * Fresh-vs-upgrade discriminator: `prefs.contains("version")` at migrate entry —
+ * every install that ever ran wrote the config version marker.
+ */
+object LearningMigration {
+    /** Stamped by migrate for upgrades; consumed (and removed) by UserAdaptationManager. */
+    const val SELECTION_HISTORY_RESET_PENDING_KEY = "selection_history_reset_pending"
+
+    /** The migration step that introduced both halves. */
+    private const val INTRODUCED_IN_VERSION = 4
+
+    fun seedsMasterGateOn(
+        isFreshInstall: Boolean,
+        savedVersion: Int,
+        hasExplicitChoice: Boolean,
+    ): Boolean = !isFreshInstall && savedVersion < INTRODUCED_IN_VERSION && !hasExplicitChoice
+
+    fun requestsSelectionHistoryReset(
+        isFreshInstall: Boolean,
+        savedVersion: Int,
+    ): Boolean = !isFreshInstall && savedVersion < INTRODUCED_IN_VERSION
+}
+
 object HapticsMigration {
     /** Persisted on user devices once the migration has run — never rename. */
     const val MIGRATION_MARKER_KEY = "vibrate_custom_migration_v1"
@@ -596,7 +642,7 @@ class Config private constructor(
     @JvmField var prediction_frequency_scale = 0f
     @JvmField var context_aware_predictions_enabled = false // Phase 7.1: Dynamic N-gram learning
     @JvmField var personalized_learning_enabled = false // Phase 7.2: Personalized word frequency learning
-    @JvmField var on_device_learning_enabled = true // MASTER privacy gate over ALL typing-behavior learning (Task A 2026-08-06)
+    @JvmField var on_device_learning_enabled = Defaults.ON_DEVICE_LEARNING_ENABLED // MASTER privacy gate over ALL typing-behavior learning (Task A 2026-08-06; opt-in on fresh installs since v2.0, upgrades seeded ON by the v4 migration)
     @JvmField var next_word_prediction_enabled = false // Opt-in Gboard-style next-word from learned context (2026-08-06)
     @JvmField var context_source = "both" // which context LM feeds scoring: both | learned_only | static_only
     @JvmField var personalization_weight = 1.0f // continuous personalization strength (0=off … 2=double)
@@ -1301,7 +1347,10 @@ class Config private constructor(
 
     companion object {
         const val WIDE_DEVICE_THRESHOLD = 600
-        private const val CONFIG_VERSION = 3
+        // 3 → 4 (2026-09-24): the learning-consent step — upgrades re-enter migrate()
+        // so LearningMigration can seed the master gate and stamp the one-time
+        // selection-history reset. v1.5.0 devices sit exactly at version == 3.
+        private const val CONFIG_VERSION = 4
         private const val MARGIN_PREFS_VERSION = 1  // For dp→percentage migration
 
         // `isSwipeTypingSupportedForLayout` (the #9 "QWERTY-Latin only" allowlist) was
@@ -1587,12 +1636,27 @@ class Config private constructor(
 
         @JvmStatic
         fun migrate(prefs: SharedPreferences) {
+            // Read BEFORE the version stamp below: every install that ever ran wrote
+            // "version", so its absence is the fresh-install signal the v4 step needs.
+            val isFreshInstall = !prefs.contains("version")
             val saved_version = prefs.getInt("version", 0)
             Logs.debug_config_migration(saved_version, CONFIG_VERSION)
             if (saved_version == CONFIG_VERSION) return
 
             val e = prefs.edit()
             e.putInt("version", CONFIG_VERSION)
+
+            // v4 (2026-09-24): learning-consent step — rules in [LearningMigration].
+            if (LearningMigration.seedsMasterGateOn(
+                    isFreshInstall, saved_version,
+                    hasExplicitChoice = prefs.contains("on_device_learning_enabled")
+                )
+            ) {
+                e.putBoolean("on_device_learning_enabled", true)
+            }
+            if (LearningMigration.requestsSelectionHistoryReset(isFreshInstall, saved_version)) {
+                e.putBoolean(LearningMigration.SELECTION_HISTORY_RESET_PENDING_KEY, true)
+            }
 
             when (saved_version) {
                 0 -> {

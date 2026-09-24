@@ -37,6 +37,15 @@ class UserAdaptationManager private constructor(context: Context) {
 
     init {
         loadSelectionHistory()
+        // v4 learning-consent migration (2026-09-24): selection history is the one
+        // store whose pre-2.0 writes ignored the learning gate, so an upgrade wipes
+        // it once. Config.migrate stamps the flag (upgrades only); this consumes it.
+        if (consumePendingReset(DirectBootAwarePreferences.get_shared_preferences(context)) {
+                resetAdaptation()
+            }
+        ) {
+            Log.i(TAG, "Selection history reset once on upgrade (v4 learning-consent migration)")
+        }
         checkForPeriodicReset()
     }
 
@@ -187,6 +196,24 @@ class UserAdaptationManager private constructor(context: Context) {
         private const val MAX_TRACKED_WORDS = SelectionHistory.DEFAULT_MAX_TRACKED_WORDS
         private const val ADAPTATION_STRENGTH = SelectionHistory.DEFAULT_ADAPTATION_STRENGTH
         private const val RESET_PERIOD_MS = 30L * 24L * 60L * 60L * 1000L // 30 days
+
+        /**
+         * Consume [LearningMigration.SELECTION_HISTORY_RESET_PENDING_KEY] from the MAIN
+         * prefs file: when present, run [onReset] exactly once and remove the flag.
+         * Returns whether a reset ran. Separated from the constructor so the contract
+         * is testable without the singleton (see LearningMigrationTest).
+         */
+        @JvmStatic
+        fun consumePendingReset(mainPrefs: SharedPreferences, onReset: () -> Unit): Boolean {
+            if (!mainPrefs.getBoolean(LearningMigration.SELECTION_HISTORY_RESET_PENDING_KEY, false)) {
+                return false
+            }
+            onReset()
+            mainPrefs.edit()
+                .remove(LearningMigration.SELECTION_HISTORY_RESET_PENDING_KEY)
+                .apply()
+            return true
+        }
 
         @Volatile
         private var instance: UserAdaptationManager? = null

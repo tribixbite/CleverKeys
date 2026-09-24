@@ -1066,6 +1066,10 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.langpack.LanguagePackImportTest',
     'tribixbite.cleverkeys.UserDictionaryLocaleFilterTest',
     'tribixbite.cleverkeys.MLDataCollectionToggleTest',
+    // v2.0 learning-consent migration (2026-09-24): fresh installs default learning OFF,
+    // upgrades are seeded ON; selection history (the one store whose pre-2.0 writes
+    // ignored the gate) is reset once on upgrade via a pending flag.
+    'tribixbite.cleverkeys.LearningMigrationTest',
     'tribixbite.cleverkeys.clipboard.ClipboardLockedStartupTest',
     'tribixbite.cleverkeys.clipboard.ClipboardCaptureExclusionTest',
     'tribixbite.cleverkeys.SuggestionTapAddAndIWordTest',

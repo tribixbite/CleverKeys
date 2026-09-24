@@ -61,10 +61,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`dont` → `don't`, `cest` → `c'est`) and commit accented forms (`cafe` → `café`).
   The bundled English contraction set is gated on the language you are typing in, so a
   French or German swipe never offers English contractions or possessives.
-- **"Learn From My Typing" master switch** (Privacy & Data, on by default): a single
+- **"Learn From My Typing" master switch** (Privacy & Data): a single
   toggle that gates every on-device learning path — learned phrases, personalization
   vocabulary, selection adaptation and swipe-gesture capture — plus the read paths that
-  consume them. Turning it off offers a one-tap "forget everything learned".
+  consume them. Turning it off offers a one-tap "forget everything learned". Off by
+  default on new installs; upgrading devices keep learning enabled, matching their
+  previous behavior. Selection history — the one store a pre-2.0 bug kept writing
+  even with learning off — is reset once on upgrade.
 - **Learned data now persists** across restarts and is kept per language. Previously the
   phrase model lived only in RAM and was lost every time the keyboard process restarted.
 - **Learned-data manager** (Settings → 📝 Input Behavior → Learning & Data): per-language
