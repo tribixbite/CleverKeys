@@ -112,6 +112,24 @@ IMPOSSIBLE in shipped ORT, verdict recorded). APK diet: marketing art was PACKAG
 (6.4MB), noCompress waste, legacy JNI packaging, resConfigs 85→21, logo 44dB-PSNR
 recompress (original in art/), SwipeMLTrainer deleted, six script encoders moved
 into their langpacks with in-app sha256 pins (CtcScriptSupport.ScriptWiring).
+**Round 11 (2026-09-24) — learning-consent migration (maintainer chose "C + both riders").**
+Context: the maintainer feared pre-2.0 learned data (word freq, bigrams) was collected
+ungated. The v1.5.0 code audit showed otherwise — both stores sat behind LABELED,
+user-visible switches ("Context-Aware Predictions — learn from typing patterns",
+"Personalized Learning"), default ON, on-device only; the ONLY genuinely ungated store
+was selection history (recorded even with learning off, v1.0–v1.5; write+read gating
+fixed in the 2.0 tree). Decision: no dialog/banner (the Privacy section's counts under
+the toggles ARE the disclosure), no headline framing; plus two riders, shipped in
+`350f11b0`: (1) `Defaults.ON_DEVICE_LEARNING_ENABLED=false` — opt-in on FRESH installs;
+upgrades seeded explicit `true` via Config.migrate v4 (CONFIG_VERSION 3→4; fresh-vs-
+upgrade = `prefs.contains("version")`); (2) one-time selection-history wipe on upgrade
+(`selection_history_reset_pending` INTERNAL_KEYS flag, consumed by
+UserAdaptationManager.consumePendingReset). Settings-reset now lands learning-OFF by
+design. Decision rules in `LearningMigration` (Config.kt), matrix-tested in
+LearningMigrationTest; full pure suite 2,377 green. NOTE FOR TAGGING: commits landed
+after the 09-13 soak sign-off (GPT-6 memory fixes + this migration) — a short smoke
+pass on a fresh build before tagging is the maintainer's call.
+
 **ALL tag blockers DISCHARGED (2026-09-21): (1) soak completed per the checklist
 (bb232465, 2026-09-13); (2) langpacks re-upload done 2026-09-10 and independently
 VERIFIED 2026-09-21 (all six release assets byte-size-identical to the committed zips;
