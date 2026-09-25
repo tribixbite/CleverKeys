@@ -74,6 +74,7 @@
 | `context-learning-and-next-word.md` | **NEW 2026-08-06** Persistent context LM, master learning privacy gate, opt-in next-word prediction, suggestion provenance, learned-data manager | ✅ Implemented |
 | `ctc-swipe-engine.md` | **UPDATED 2026-08-15** CTC trie-beam swipe engine — WIRED opt-in `ctc` mode (2026-08-08): CleverKeys-trained ONNX encoder, router/adapter/settings/provenance As-Built | ✅ Implemented |
 | `cursor-aware-predictions.md` | Cursor sync + cursor-park next-word integration | ✅ Implemented |
+| `pinyin-ime.md` | **UPDATED 2026-09-11** Pinyin composing IME (gh #177): `inputMethod` pack field, `CKPY` phrase table, composing session + candidates, swipe feed | 🧩 Implemented, device validation pending |
 | `architectural-decisions.md` | Architectural Decision Records | ✅ Active |
 
 ### `/docs/eval/` Decoder Evaluations (2026-07/08)

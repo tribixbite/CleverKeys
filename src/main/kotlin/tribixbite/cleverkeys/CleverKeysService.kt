@@ -23,6 +23,7 @@ import android.view.inputmethod.InputMethodSubtype
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import tribixbite.cleverkeys.ml.SwipeMLData
+import tribixbite.cleverkeys.pinyin.PinyinController
 
 /**
  * Main InputMethodService implementation for Unexpected Keyboard.
@@ -135,6 +136,10 @@ class CleverKeysService : InputMethodService(),
 
     // Suggestion/prediction bridge (v1.32.406: extracted to SuggestionBridge)
     private lateinit var _suggestionBridge: SuggestionBridge
+
+    // gh #177: pinyin composing controller. Created in onCreate once the graph exists;
+    // consulted by the key-event bridge, the suggestion bridge, and the input lifecycle.
+    private var _pinyinController: PinyinController? = null
 
 
     // Layout bridge (v1.32.408: extracted to LayoutBridge)
@@ -435,6 +440,18 @@ class CleverKeysService : InputMethodService(),
         // Suggestion bridge (v1.32.406: extracted to SuggestionBridge; built by the graph)
         _suggestionBridge = _graph.suggestionBridge
 
+        // gh #177: pinyin composing mode. Created after the graph (needs config + the
+        // suggestion bar provider), then handed to the key-event bridge and the swipe
+        // pipeline. Inactive until a pinyin pack is the active primary language.
+        _pinyinController = PinyinController.create(
+            context = this,
+            languageProvider = { _config?.primary_language },
+            inputConnectionProvider = { currentInputConnection },
+            suggestionBarProvider = { _suggestionBar },
+        )
+        _receiverBridge.setPinyinController(_pinyinController)
+        _suggestionHandler.setPinyinHook(_pinyinController)
+
         // Wire the view's service handle (unconditional) and load prediction models if enabled
         _graph.wireSwipeTypingComponents()
 
@@ -706,6 +723,9 @@ class CleverKeysService : InputMethodService(),
             val isPasswordField = SuggestionBar.isPasswordField(info)
             _suggestionBar?.setPasswordMode(isPasswordField)
             _suggestionHandler?.setPasswordMode(isPasswordField)
+            // gh #177: pinyin composing is off in password/PIN fields; otherwise this is
+            // where the active language's pack decides whether the mode turns on.
+            _pinyinController?.onStartInputView(isPasswordField)
 
             // M5 (review 2026-08-06): honor IME_FLAG_NO_PERSONALIZED_LEARNING —
             // incognito fields (private browser tabs etc.) suppress the learn
@@ -801,6 +821,9 @@ class CleverKeysService : InputMethodService(),
     override fun onFinishInputView(finishingInput: Boolean) {
         super.onFinishInputView(finishingInput)
         _keyboardView.reset()
+
+        // gh #177: cancel any pinyin composing run before the field goes away.
+        _pinyinController?.onFinishInputView()
 
         // Clear suggestions to prevent stale state/crashes on app switch
         _suggestionBar?.clearSuggestions()
@@ -912,6 +935,12 @@ class CleverKeysService : InputMethodService(),
     fun getConfig(): Config? {
         return _config
     }
+
+    /**
+     * gh #177: the pinyin composing controller, or null before [onCreate] finishes wiring.
+     * Consumed by [SuggestionBridge] to route candidate taps into the composing session.
+     */
+    fun pinyinController(): PinyinController? = _pinyinController
 
     // v1.32.349: showDateFilterDialog() moved to ClipboardManager (now showFilterDialog())
 

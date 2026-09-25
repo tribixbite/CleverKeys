@@ -3,12 +3,19 @@
 Build Language Pack ZIP for CleverKeys.
 
 Creates a language pack ZIP file containing:
-- manifest.json: metadata (language code, name, version)
+- manifest.json: metadata (language code, name, version, inputMethod)
 - dictionary.bin: V2 binary dictionary with accent normalization
+- phrases.bin: V1 CKPY pinyin phrase table (required for --input-method pinyin)
 - unigrams.txt: word frequency list for language detection
 - contractions.json: apostrophe word mappings (optional, for languages that use them)
 - prefix_boost.bin: Aho-Corasick trie for prefix boosting (optional, for non-English)
 - model.onnx: CTC swipe encoder for a non-Latin script (optional, --model)
+
+A composing pinyin pack (gh #177) carries `"inputMethod": "pinyin"` and a `phrases.bin`
+built by `build_phrase_table.py`. The app refuses a pinyin pack without the table, and
+refuses a table without the mode, so this script enforces the same coupling at build
+time. The CKDT dictionary is still required (the swipe path decodes pinyin spellings
+over it); it is the phrase table that supplies the committed 汉字.
 
 The six per-script CTC encoders (ru/el/uk/bg/mk/he) ship IN their packs rather
 than in the APK: every one of those languages is langpack-sourced, so the model
@@ -27,6 +34,8 @@ Usage:
     python3 build_langpack.py --lang de --name "German" --input german_words.txt --output langpack-de.zip --use-wordfreq
     python3 build_langpack.py --lang ru --name "Russian" --dict dictionary.bin --unigrams unigrams.txt \
         --model ru_synth_v3_ch80_fp16w.onnx --version 2 --output langpack-ru.zip
+    python3 build_langpack.py --lang zh --name "中文（拼音）" --dict zh_pinyin.bin \
+        --input-method pinyin --phrases phrases.bin --output langpack-zh-Hans.zip
 
 Prerequisites:
     - Run build_dictionary.py first to generate dictionary.bin
@@ -61,6 +70,15 @@ ZIP_EPOCH = (1980, 1, 1, 0, 0, 0)
 # Mirrors CtcPackModel.MAX_PACK_MODEL_BYTES. Enforced here too so a pack that the
 # app would refuse to import can never be built and published in the first place.
 MAX_MODEL_BYTES = 8 * 1024 * 1024
+
+# Mirrors CkpyPhraseTable.MAX_FILE_BYTES (private there): the reader refuses a larger
+# table, so refuse to build one.
+MAX_PHRASES_BYTES = 64 * 1024 * 1024
+
+# Mirrors CkpyPhraseTable.MAGIC / VERSION — a phrases.bin the app cannot read must fail
+# here, not at import time on a user's phone.
+CKPY_MAGIC = b"CKPY"
+CKPY_VERSION = 1
 
 
 def _add_deterministic(zf: zipfile.ZipFile, arcname: str, data: bytes) -> None:
@@ -159,12 +177,14 @@ def count_words_in_dictionary(dict_file: Path) -> int:
 
 
 def create_manifest(lang: str, name: str, version: int, author: str, word_count: int,
-                    has_prefix_boost: bool = False, model_sha256: str | None = None) -> dict:
+                    has_prefix_boost: bool = False, model_sha256: str | None = None,
+                    input_method: str = "wordfreq") -> dict:
     """Create manifest.json content.
 
     Key order is fixed (json.dump preserves insertion order) so the serialized
     manifest -- and therefore the whole archive -- stays a pure function of its
-    inputs. "model" goes last, so adding it does not perturb any existing pack.
+    inputs. "inputMethod" is written only for non-wordfreq packs, so every legacy
+    pack keeps its exact manifest bytes; "model" goes last.
     """
     manifest = {
         "code": lang,
@@ -174,6 +194,8 @@ def create_manifest(lang: str, name: str, version: int, author: str, word_count:
         "wordCount": word_count,
         "hasPrefixBoost": has_prefix_boost
     }
+    if input_method != "wordfreq":
+        manifest["inputMethod"] = input_method
     if model_sha256:
         manifest["model"] = {"file": "model.onnx", "sha256": model_sha256}
     return manifest
@@ -189,7 +211,9 @@ def build_langpack(
     use_wordfreq: bool = False,
     version: int = 1,
     author: str = "",
-    model_file: Path = None
+    model_file: Path = None,
+    input_method: str = "wordfreq",
+    phrases_file: Path = None
 ):
     """Build a language pack ZIP file."""
 
@@ -218,6 +242,28 @@ def build_langpack(
         # Validate required files
         if not final_dict or not final_dict.exists():
             print("Error: No dictionary.bin available. Provide --dict or --input")
+            return False
+
+        # The phrase table and the mode must travel together, exactly as the importer
+        # enforces: a pinyin pack without phrases.bin is refused at import, and a stray
+        # phrases.bin without the mode is refused too. Fail at build time instead.
+        phrases_bytes = None
+        if input_method == "pinyin":
+            if not phrases_file or not phrases_file.exists():
+                print("Error: --input-method pinyin requires --phrases phrases.bin "
+                      "(build it with build_phrase_table.py)")
+                return False
+            phrases_bytes = phrases_file.read_bytes()
+            if (len(phrases_bytes) < 48 or phrases_bytes[:4] != CKPY_MAGIC
+                    or int.from_bytes(phrases_bytes[4:8], byteorder="little") != CKPY_VERSION):
+                print(f"Error: --phrases {phrases_file} is not a CKPY v{CKPY_VERSION} table")
+                return False
+            if len(phrases_bytes) > MAX_PHRASES_BYTES:
+                print(f"Error: --phrases is {len(phrases_bytes)} B, over the "
+                      f"{MAX_PHRASES_BYTES} B limit the reader enforces")
+                return False
+        elif phrases_file:
+            print("Error: --phrases requires --input-method pinyin")
             return False
 
         # Get word count
@@ -253,7 +299,7 @@ def build_langpack(
 
         # Create manifest
         manifest = create_manifest(lang, name, version, author, word_count, has_prefix_boost,
-                                   model_sha256)
+                                   model_sha256, input_method)
         manifest_file = temp_path / "manifest.json"
         with open(manifest_file, 'w', encoding='utf-8') as f:
             json.dump(manifest, f, indent=2, ensure_ascii=False)
@@ -267,6 +313,9 @@ def build_langpack(
             "manifest.json": manifest_file.read_bytes(),
             "dictionary.bin": final_dict.read_bytes(),
         }
+        if phrases_bytes is not None:
+            entries["phrases.bin"] = phrases_bytes
+            print(f"  + phrases.bin ({len(phrases_bytes) / 1024:.1f} KB)")
         if final_unigrams and final_unigrams.exists():
             entries["unigrams.txt"] = final_unigrams.read_bytes()
             print(f"  + unigrams.txt")
@@ -300,6 +349,7 @@ def build_langpack(
         print(f"  File: {output}")
         print(f"  Size: {zip_size / 1024:.1f} KB")
         print(f"  Language: {name} ({lang})")
+        print(f"  Input method: {input_method}")
         print(f"  Words: {word_count}")
         print(f"  Prefix boost: {'Yes' if has_prefix_boost else 'No'}")
         print(f"  CTC model: {model_sha256 if model_sha256 else 'No'}")
@@ -328,6 +378,13 @@ def main():
                         help='CTC swipe encoder (.onnx) to ship as model.onnx. Only meaningful '
                              'for a script the app has a CtcScriptSupport row for -- the app '
                              'refuses any pack model that is not byte-identical to its pin.')
+    parser.add_argument('--input-method', choices=['wordfreq', 'pinyin'], default='wordfreq',
+                        help='How the pack is consumed. "pinyin" writes "inputMethod":"pinyin" '
+                             'and requires --phrases; the default keeps legacy manifests '
+                             'byte-identical.')
+    parser.add_argument('--phrases', type=Path,
+                        help='Pre-built CKPY phrases.bin (build_phrase_table.py). Required when '
+                             '--input-method is pinyin; refused otherwise.')
 
     args = parser.parse_args()
 
@@ -345,7 +402,9 @@ def main():
         use_wordfreq=args.use_wordfreq,
         version=args.version,
         author=args.author,
-        model_file=args.model
+        model_file=args.model,
+        input_method=args.input_method,
+        phrases_file=args.phrases
     )
 
     sys.exit(0 if success else 1)

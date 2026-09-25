@@ -93,8 +93,12 @@ class KeyEventHandler(
         updateMetaState(mods)
 
         when (key.getKind()) {
-            KeyValue.Kind.Char -> sendText(key.getChar().toString(), isKeyRepeat)
-            KeyValue.Kind.String -> sendText(key.getString(), isKeyRepeat)
+            // gh #177: a pinyin composing session consumes letters/space before the normal
+            // commit path (and before autocap/TSR/context tracking — full isolation).
+            KeyValue.Kind.Char ->
+                if (!recv.pinyinHandleText(key.getChar().toString())) sendText(key.getChar().toString(), isKeyRepeat)
+            KeyValue.Kind.String ->
+                if (!recv.pinyinHandleText(key.getString())) sendText(key.getString(), isKeyRepeat)
             KeyValue.Kind.Event -> recv.handle_event_key(key.getEvent())
             KeyValue.Kind.Keyevent -> {
                 // Audit A-5: backspace invalidates the double-space-to-period memory — the
@@ -120,6 +124,14 @@ class KeyEventHandler(
                 // Arrow keys and Enter in clipboard edit mode — dispatch to inline EditText
                 } else if (recv.isClipboardEditMode() && key.getKeyevent() in EDIT_MODE_DISPATCH_KEYS) {
                     recv.dispatchKeyToClipboardEdit(key.getKeyevent())
+                // gh #177: pinyin composing owns backspace while its buffer is non-empty.
+                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.pinyinHandleBackspace()) {
+                    // Consumed by the composing session (buffer shortened).
+                // gh #177: Escape cancels composing; Enter commits the top candidate but is
+                // not consumed here, so the editor action still fires below.
+                } else if (key.getKeyevent() != KeyEvent.KEYCODE_DEL &&
+                        recv.pinyinHandleKeyevent(key.getKeyevent())) {
+                    // Consumed by the composing session.
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && handleBackspaceUndoSwipe()) {
                     // #110: Backspace after swipe deletes entire swiped word
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && handleBackspaceUndoAutocorrect()) {
@@ -1042,6 +1054,11 @@ class KeyEventHandler(
         fun handle_text_typed(text: String)
         fun handle_backspace() {} // Default implementation for backward compatibility
         fun handle_delete_last_word() {} // Delete last auto-inserted or typed word
+        // gh #177: pinyin composing hooks. Defaults keep every non-pinyin build/behaviour
+        // untouched; the receiver returns true only while a composing session owns input.
+        fun pinyinHandleText(text: String): Boolean = false
+        fun pinyinHandleBackspace(): Boolean = false
+        fun pinyinHandleKeyevent(keyCode: Int): Boolean = false
         // Clipboard search mode methods
         fun isClipboardSearchMode(): Boolean = false // Check if clipboard search mode is active
         fun appendToClipboardSearch(text: String) {} // Append text to clipboard search box

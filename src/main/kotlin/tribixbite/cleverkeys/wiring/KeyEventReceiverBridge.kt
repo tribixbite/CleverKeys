@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
+import tribixbite.cleverkeys.pinyin.PinyinController
 
 /**
  * Bridge between KeyEventHandler and KeyboardReceiver.
@@ -33,6 +34,12 @@ class KeyEventReceiverBridge(
     private var contextTracker: PredictionContextTracker? = null
 
     /**
+     * gh #177: pinyin composing session. Late-bound like the receiver — the service builds
+     * the controller after the graph, and every pinyin hook below is a no-op until then.
+     */
+    private var pinyinController: PinyinController? = null
+
+    /**
      * Set the KeyboardReceiver instance.
      * Must be called after KeyboardReceiver is created.
      *
@@ -40,6 +47,11 @@ class KeyEventReceiverBridge(
      */
     fun setReceiver(receiver: KeyboardReceiver) {
         this.receiver = receiver
+    }
+
+    /** gh #177: hand over the pinyin composing controller once it exists. */
+    fun setPinyinController(controller: PinyinController?) {
+        this.pinyinController = controller
     }
 
     /**
@@ -94,6 +106,24 @@ class KeyEventReceiverBridge(
     override fun handle_delete_last_word() {
         receiver?.handle_delete_last_word()
     }
+
+    // gh #177: pinyin composing hooks. Modal panes (clipboard tag/edit/search, emoji, GIF)
+    // own the keyboard while open, so typing there must never be buffered as pinyin; the
+    // text hook defers to them first. Backspace/keyevent are reached only after
+    // KeyEventHandler has already routed the modal branches, so they need no gate.
+    override fun pinyinHandleText(text: String): Boolean {
+        if (isClipboardTagMode() || isClipboardEditMode() || isClipboardSearchMode() ||
+            isEmojiPaneOpen() || isGifPaneOpen()) {
+            return false
+        }
+        return pinyinController?.handleTypedText(text) == true
+    }
+
+    override fun pinyinHandleBackspace(): Boolean =
+        pinyinController?.handleBackspace() == true
+
+    override fun pinyinHandleKeyevent(keyCode: Int): Boolean =
+        pinyinController?.handleKeyevent(keyCode) == true
 
     override fun isClipboardSearchMode(): Boolean {
         return receiver?.isClipboardSearchMode() ?: false
