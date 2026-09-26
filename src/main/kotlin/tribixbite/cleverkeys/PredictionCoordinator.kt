@@ -346,6 +346,9 @@ class PredictionCoordinator(
     fun flushLearnedData() {
         try {
             wordPredictor?.persistLearnedData()
+            // W6 (learning-system audit 2026-09-26): selection history is a learned store
+            // too — it used to be left out here, and its own cleanup() had no callers.
+            adaptationManager?.requestFlush()
             wordPredictor?.clearContext()
         } catch (e: Exception) {
             Log.e(TAG, "Error flushing learned data", e)

@@ -12,7 +12,7 @@ import org.junit.runner.RunWith
 /**
  * Instrumented tests for UserAdaptationManager.
  * Covers word selection tracking, adaptation multipliers, pruning,
- * persistence, and periodic reset logic.
+ * persistence, and periodic decay logic.
  */
 @RunWith(AndroidJUnit4::class)
 class UserAdaptationManagerTest {

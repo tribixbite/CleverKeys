@@ -3,6 +3,8 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import tribixbite.cleverkeys.persist.DebouncedPersister
+import java.util.concurrent.ScheduledExecutorService
 
 /**
  * Manages user adaptation by tracking word selection history and adjusting
@@ -12,7 +14,19 @@ import android.util.Log
  * [SelectionHistory] core, which owns the counting, multiplier math, bounded
  * pruning, and concurrency contracts (unit-tested in `SelectionHistoryTest`).
  * This class owns only the SharedPreferences persistence and the periodic
- * 30-day reset.
+ * decay schedule.
+ *
+ * Persistence (W6, learning-system audit 2026-09-26): debounced write-back via
+ * [DebouncedPersister], the same substrate as the n-gram and vocabulary stores —
+ * every selection marks the store dirty, a write lands ~5 s later (30 s cap under
+ * continuous use), and `PredictionCoordinator.flushLearnedData` checkpoints it at
+ * every input-session boundary. (It used to save on every 10th selection only.)
+ *
+ * Aging (W4): counts halve every [SelectionHistory.DECAY_HALF_LIFE_MS], anchored on
+ * the persisted `last_decay` instant. This REPLACES a 30-day wholesale wipe that armed
+ * itself the first time `last_reset` was written — which the v4 upgrade migration does
+ * for every upgrader. Explicit wipes remain: [resetAdaptation] (user reset) and the
+ * one-time v4 migration reset via [consumePendingReset].
  *
  * Retention contract: [SelectionHistory.snapshotForPersist] reports the words
  * pruned since the last save; [saveSelectionHistory] DELETES their
@@ -25,9 +39,25 @@ import android.util.Log
  * [setEnabled], which `WordPredictor.setConfig` keeps synced to the master
  * `on_device_learning_enabled` gate (H3).
  */
-class UserAdaptationManager private constructor(context: Context) {
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+class UserAdaptationManager internal constructor(
+    private val prefs: SharedPreferences,
+    mainPrefs: SharedPreferences,
+    private val clock: () -> Long = System::currentTimeMillis,
+    private val log: (String) -> Unit = {},
+    scheduler: ScheduledExecutorService = DebouncedPersister.sharedScheduler(),
+    debounceMs: Long = DebouncedPersister.DEFAULT_DEBOUNCE_MS,
+    maxDelayMs: Long = DebouncedPersister.DEFAULT_MAX_DELAY_MS
+) {
+    /**
+     * Production constructor. The pure-arguments constructor above exists so the
+     * persistence and reset contracts are testable over in-memory preferences
+     * (`UserAdaptationManagerPersistenceTest`) without a Context or android.util.Log.
+     */
+    private constructor(context: Context) : this(
+        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE),
+        mainPrefs = DirectBootAwarePreferences.get_shared_preferences(context),
+        log = { msg -> Log.d(TAG, msg) }
+    )
 
     private val history = SelectionHistory(
         maxTrackedWords = MAX_TRACKED_WORDS,
@@ -35,30 +65,46 @@ class UserAdaptationManager private constructor(context: Context) {
         adaptationStrength = ADAPTATION_STRENGTH
     )
 
+    /** W6: debounced write-back of [history] (see the class doc). */
+    private val persister = DebouncedPersister(debounceMs, maxDelayMs, scheduler) {
+        saveSelectionHistory()
+    }
+
+    /**
+     * Earliest instant at which another decay period can be due (cheap hot-path check).
+     * Declared before `init` so the value [applyDueDecay] sets there is not overwritten.
+     */
+    @Volatile
+    private var nextDecayAtMs: Long = Long.MIN_VALUE
+
     init {
         loadSelectionHistory()
         // v4 learning-consent migration (2026-09-24): selection history is the one
         // store whose pre-2.0 writes ignored the learning gate, so an upgrade wipes
         // it once. Config.migrate stamps the flag (upgrades only); this consumes it.
-        if (consumePendingReset(DirectBootAwarePreferences.get_shared_preferences(context)) {
-                resetAdaptation()
-            }
-        ) {
-            Log.i(TAG, "Selection history reset once on upgrade (v4 learning-consent migration)")
+        if (consumePendingReset(mainPrefs) { resetAdaptation() }) {
+            log("Selection history reset once on upgrade (v4 learning-consent migration)")
         }
-        checkForPeriodicReset()
+        applyDueDecay()
     }
 
     /**
-     * Record that a word was selected by the user. No-op while disabled.
-     * Persists every [SelectionHistory.SAVE_EVERY_N_SELECTIONS] selections and
-     * immediately after a capacity prune (so pruned keys are deleted promptly).
+     * Record that a word was selected by the user. No-op while disabled. Marks the
+     * debounced write-back dirty (W6); a decay period that elapsed while the process
+     * stayed alive is applied first.
      */
     fun recordSelection(word: String?) {
+        if (clock() >= nextDecayAtMs) applyDueDecay()
         if (history.recordSelection(word)) {
-            saveSelectionHistory()
+            persister.markDirty()
         }
     }
+
+    /** Synchronously persist unflushed selections (idempotent; no-op when clean). */
+    fun flush() = persister.flush()
+
+    /** Persist unflushed selections on the persistence thread (main-thread lifecycle sites). */
+    fun requestFlush() = persister.requestFlush()
 
     /**
      * Get the adaptation multiplier for a word based on selection history.
@@ -84,7 +130,7 @@ class UserAdaptationManager private constructor(context: Context) {
     fun setEnabled(enabled: Boolean) {
         if (history.enabled != enabled) {
             history.enabled = enabled
-            Log.d(TAG, "User adaptation ${if (enabled) "enabled" else "disabled"}")
+            log("User adaptation ${if (enabled) "enabled" else "disabled"}")
         }
     }
 
@@ -94,14 +140,20 @@ class UserAdaptationManager private constructor(context: Context) {
     /** Reset all adaptation data (in RAM and persisted). */
     fun resetAdaptation() {
         history.reset()
+        // Settle any pending write-back BEFORE clearing, so no in-flight flush can land
+        // after the clear (the history is already empty, so this writes only a zero total).
+        persister.flush()
 
+        val now = clock()
         prefs.edit().apply {
             clear()
-            putLong(KEY_LAST_RESET, System.currentTimeMillis())
+            putLong(KEY_LAST_RESET, now)
+            putLong(KEY_LAST_DECAY, now)
             apply()
         }
+        nextDecayAtMs = now + SelectionHistory.DECAY_HALF_LIFE_MS
 
-        Log.d(TAG, "User adaptation data reset")
+        log("User adaptation data reset")
     }
 
     /** Get adaptation statistics for debugging. */
@@ -140,7 +192,7 @@ class UserAdaptationManager private constructor(context: Context) {
         }
         history.load(counts, total)
 
-        Log.d(TAG, "Loaded adaptation data: $total total selections, ${counts.size} unique words")
+        log("Loaded adaptation data: $total total selections, ${counts.size} unique words")
     }
 
     /**
@@ -164,23 +216,42 @@ class UserAdaptationManager private constructor(context: Context) {
             apply()
         }
 
-        Log.d(TAG, "Saved adaptation data (${snapshot.counts.size} words, ${snapshot.removals.size} pruned keys removed)")
+        log("Saved adaptation data (${snapshot.counts.size} words, ${snapshot.removals.size} pruned keys removed)")
     }
 
-    /** Check if it's time for a periodic reset to prevent stale data. */
-    private fun checkForPeriodicReset() {
-        val lastReset = prefs.getLong(KEY_LAST_RESET, System.currentTimeMillis())
-        val timeSinceReset = System.currentTimeMillis() - lastReset
+    /**
+     * W4: apply every whole decay period elapsed since the `last_decay` anchor, then
+     * advance the anchor by exactly those periods and persist both at once.
+     *
+     * Anchor migration: stores written before this code have no `last_decay`. They fall
+     * back to `last_reset` (written by every reset, including the v4 upgrade reset), and a
+     * store with neither is anchored at "now" WITHOUT decaying — nothing says how old its
+     * counts are, and wiping or halving on first sight would repeat the W4 mistake.
+     */
+    @Synchronized
+    private fun applyDueDecay() {
+        val now = clock()
+        val anchor = when {
+            prefs.contains(KEY_LAST_DECAY) -> prefs.getLong(KEY_LAST_DECAY, now)
+            prefs.contains(KEY_LAST_RESET) -> prefs.getLong(KEY_LAST_RESET, now)
+            else -> now
+        }
+        val halvings = SelectionHistory.decayHalvingsDue(anchor, now)
+        val newAnchor = if (now < anchor) now else anchor + halvings * SelectionHistory.DECAY_HALF_LIFE_MS
+        nextDecayAtMs = newAnchor + SelectionHistory.DECAY_HALF_LIFE_MS
 
-        if (timeSinceReset > RESET_PERIOD_MS) {
-            Log.d(TAG, "Performing periodic reset of adaptation data (30 days elapsed)")
-            resetAdaptation()
+        if (history.decay(halvings)) {
+            log("Decayed selection history by $halvings half-life period(s)")
+            saveSelectionHistory() // decayed counts + pruned-to-zero key removals
+        }
+        if (!prefs.contains(KEY_LAST_DECAY) || prefs.getLong(KEY_LAST_DECAY, 0L) != newAnchor) {
+            prefs.edit().putLong(KEY_LAST_DECAY, newAnchor).apply()
         }
     }
 
-    /** Cleanup method to be called when the system is destroyed. */
+    /** Synchronous checkpoint for teardown paths (alias of [flush], kept for callers). */
     fun cleanup() {
-        saveSelectionHistory()
+        flush()
     }
 
     companion object {
@@ -189,13 +260,13 @@ class UserAdaptationManager private constructor(context: Context) {
         private const val KEY_WORD_SELECTIONS = "word_selections_"
         private const val KEY_TOTAL_SELECTIONS = "total_selections"
         private const val KEY_LAST_RESET = "last_reset"
+        private const val KEY_LAST_DECAY = "last_decay"
 
         // Configuration constants (thresholds live in SelectionHistory defaults)
         private const val MIN_SELECTIONS_FOR_ADAPTATION =
             SelectionHistory.DEFAULT_MIN_SELECTIONS_FOR_ADAPTATION
         private const val MAX_TRACKED_WORDS = SelectionHistory.DEFAULT_MAX_TRACKED_WORDS
         private const val ADAPTATION_STRENGTH = SelectionHistory.DEFAULT_ADAPTATION_STRENGTH
-        private const val RESET_PERIOD_MS = 30L * 24L * 60L * 60L * 1000L // 30 days
 
         /**
          * Consume [LearningMigration.SELECTION_HISTORY_RESET_PENDING_KEY] from the MAIN

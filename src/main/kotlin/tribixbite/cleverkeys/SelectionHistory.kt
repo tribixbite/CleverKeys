@@ -45,8 +45,29 @@ class SelectionHistory(
         /** Fraction of [maxTrackedWords] retained after a prune (bottom 20% dropped). */
         const val PRUNE_KEEP_FRACTION = 0.8
 
-        /** Persist cadence: save every N recorded selections. */
-        const val SAVE_EVERY_N_SELECTIONS = 10
+        /**
+         * W4 (learning-system audit 2026-09-26): selection counts HALVE once per elapsed
+         * period instead of the old 30-day wholesale wipe. 30 days keeps the old horizon's
+         * meaning — a month of disuse — but as a half-life: a word picked 20 times and then
+         * abandoned still carries 10 after a month, 5 after two, and falls out entirely once
+         * it rounds to zero. Uniform halving leaves the RELATIVE ranking of words intact
+         * (the multiplier is count/total), so its effect is to let new selections outweigh
+         * old ones, which is what "stale" should mean.
+         */
+        const val DECAY_HALF_LIFE_MS = 30L * 24L * 60L * 60L * 1000L
+
+        /** More halvings than this zero every Int count anyway. */
+        private const val MAX_HALVINGS = 31
+
+        /**
+         * Whole decay periods elapsed between [lastDecayMs] and [nowMs] (0 when the clock
+         * moved backwards). The caller advances its anchor by exactly this many periods, so
+         * restarts inside a period never decay twice and partial periods are not lost.
+         */
+        fun decayHalvingsDue(lastDecayMs: Long, nowMs: Long, periodMs: Long = DECAY_HALF_LIFE_MS): Int {
+            if (nowMs <= lastDecayMs) return 0
+            return ((nowMs - lastDecayMs) / periodMs).coerceAtMost(MAX_HALVINGS.toLong()).toInt()
+        }
 
         /** Maximum multiplier so no single word dominates ranking. */
         const val MAX_MULTIPLIER = 2.0f
@@ -88,19 +109,59 @@ class SelectionHistory(
     /**
      * Record one selection of [word].
      *
-     * @return true when the caller should persist NOW — every
-     *   [SAVE_EVERY_N_SELECTIONS] selections, or immediately after a prune so
-     *   the pruned preference keys don't linger unremoved.
+     * @return true when the selection was recorded (state changed) — the caller marks its
+     *   debounced write-back dirty. W6 (learning-system audit 2026-09-26): this used to
+     *   return true only on every 10th selection, so up to 9 selections died with the
+     *   process; persistence cadence now belongs to the wrapper's DebouncedPersister.
      */
     fun recordSelection(word: String?): Boolean {
         if (!enabled || word.isNullOrBlank()) return false
 
         val normalized = word.lowercase().trim()
         incrementCount(normalized)
-        val total = totalSelections.incrementAndGet()
+        totalSelections.incrementAndGet()
 
-        val pruned = pruneIfNeeded()
-        return pruned || total % SAVE_EVERY_N_SELECTIONS == 0
+        pruneIfNeeded()
+        return true
+    }
+
+    /**
+     * W4: halve every count [halvings] times (integer floor). Words that reach zero are
+     * dropped and queued for persisted-key deletion exactly like a prune. The total is
+     * halved the same way, which keeps it >= the sum of the surviving counts.
+     *
+     * Each word is updated with a compare-and-set, so a selection recorded concurrently is
+     * never lost (it either lands before the halving and is halved with the rest, or after).
+     *
+     * @return true when anything changed (caller persists)
+     */
+    fun decay(halvings: Int): Boolean {
+        if (halvings <= 0) return false
+        val shift = halvings.coerceAtMost(MAX_HALVINGS)
+        var changed = false
+        for (word in selectionCounts.keys.toList()) {
+            while (true) {
+                val current = selectionCounts[word] ?: break
+                val next = current ushr shift
+                val swapped = if (next == 0) {
+                    selectionCounts.remove(word, current).also { if (it) pendingRemovals.add(word) }
+                } else {
+                    selectionCounts.replace(word, current, next)
+                }
+                if (swapped) {
+                    changed = changed || next != current
+                    break
+                }
+            }
+        }
+        while (true) {
+            val total = totalSelections.get()
+            if (totalSelections.compareAndSet(total, total ushr shift)) {
+                changed = changed || total != 0
+                break
+            }
+        }
+        return changed
     }
 
     /**

@@ -89,22 +89,52 @@ class SelectionHistoryTest {
     }
 
     @Test
-    fun `M7 - recordSelection requests an immediate save when a prune ran`() {
+    fun `M7 - a prune's removals reach the next persist snapshot`() {
         val h = SelectionHistory(maxTrackedWords = 5)
-        var saveRequested = false
-        (0 until 6).forEach { i ->
-            if (h.recordSelection("w$i") && h.snapshotForPersist().removals.isNotEmpty()) {
-                saveRequested = true
-            }
-        }
-        assertTrue("prune must trigger a save so pruned keys get deleted promptly", saveRequested)
+        (0 until 6).forEach { i -> assertTrue(h.recordSelection("w$i")) }
+        assertTrue("pruned keys must be deleted at the next write-back",
+            h.snapshotForPersist().removals.isNotEmpty())
     }
 
     @Test
-    fun `M7 - save cadence still fires every 10 selections without a prune`() {
+    fun `W6 - every recorded selection asks the wrapper to persist`() {
+        // Was: only every 10th selection returned true, so up to 9 died with the process.
         val h = SelectionHistory()
-        val saves = (1..20).count { h.recordSelection("word") }
-        assertEquals(2, saves) // at totals 10 and 20
+        assertEquals(20, (1..20).count { h.recordSelection("word") })
+    }
+
+    // ------------------------------------------------------------ W4 decay
+
+    @Test
+    fun `W4 - decay halves counts and total, dropping words that reach zero`() {
+        val h = SelectionHistory()
+        h.load(mapOf("git" to 9, "got" to 1), 10)
+
+        assertTrue(h.decay(1))
+
+        assertEquals(4, h.selectionCount("git"))
+        assertEquals(0, h.selectionCount("got"))
+        assertEquals(5, h.totalSelections())
+        assertEquals(setOf("got"), h.snapshotForPersist().removals)
+    }
+
+    @Test
+    fun `W4 - decay compounds and zero halvings is a no-op`() {
+        val h = SelectionHistory()
+        h.load(mapOf("git" to 16), 16)
+        assertFalse(h.decay(0))
+        assertTrue(h.decay(3))
+        assertEquals(2, h.selectionCount("git"))
+        assertEquals(2, h.totalSelections())
+    }
+
+    @Test
+    fun `W4 - halvings due counts whole periods and ignores a backwards clock`() {
+        val p = SelectionHistory.DECAY_HALF_LIFE_MS
+        assertEquals(0, SelectionHistory.decayHalvingsDue(1_000L, 1_000L + p - 1))
+        assertEquals(1, SelectionHistory.decayHalvingsDue(1_000L, 1_000L + p))
+        assertEquals(2, SelectionHistory.decayHalvingsDue(1_000L, 1_000L + 2 * p + 5))
+        assertEquals(0, SelectionHistory.decayHalvingsDue(1_000L, 500L))
     }
 
     @Test
