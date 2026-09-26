@@ -201,6 +201,32 @@ class UserVocabulary internal constructor(
     }
 
     /**
+     * Inverse of [recordWordUsage] (learning rollback, learning-system audit 2026-09-26):
+     * remove ONE usage of [word] because the commit that recorded it was rejected by the
+     * user. At zero the entry is removed entirely, so a rejected never-before-seen word
+     * leaves no trace. `lastUsed`/`firstUsed` are left as they are — the rollback cannot
+     * know the previous timestamp, and recency only feeds the boost of a word that is still
+     * tracked; no other word is touched. No-op for an unknown word.
+     *
+     * @return true if a usage was removed
+     */
+    fun unrecordWordUsage(word: String): Boolean {
+        val normalized = UserWordUsage.normalizeWord(word)
+        if (normalized.isEmpty()) return false
+        val changed = synchronized(this) {
+            val existing = vocabulary[normalized] ?: return false
+            if (existing.usageCount <= 1) {
+                vocabulary.remove(normalized)
+            } else {
+                vocabulary[normalized] = existing.copy(usageCount = existing.usageCount - 1)
+            }
+            true
+        }
+        if (changed) persister.markDirty()
+        return changed
+    }
+
+    /**
      * Get personalization boost for a word.
      *
      * Returns:

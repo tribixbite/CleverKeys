@@ -1946,8 +1946,7 @@ class SuggestionHandler(
             // bogus "rejected → original" pair) and decrement the n-grams its
             // commit recorded — the final committed word is the ORIGINAL, and
             // the learned stores must reflect that.
-            predictionCoordinator.getWordPredictor()
-                ?.rollbackCommittedWord(correctedWord, fieldAllowsPersonalizedLearning)
+            rollbackRejectedWord(correctedWord)
 
             // Update context with the original word
             updateContext(tappedWord)
@@ -2013,16 +2012,17 @@ class SuggestionHandler(
      * word whose learn was suppressed (password, incognito, master off) or already flushed out
      * of the window is never decremented.
      *
-     * KNOWN GAP (reported, not fixable from this file): the predictor API does not roll back
-     * the personalization-vocabulary +1 the commit recorded (WordPredictor's KDoc calls that
-     * "benign" for autocorrect, which only produces dictionary words — a rejected SWIPE word is
-     * the case where it is not benign). Needs an inverse of `UserVocabulary.recordWordUsage`
-     * threaded through `PersonalizationEngine` and `WordPredictor.rollbackCommittedWord`.
+     * The predictor also rolls back the personalization-vocabulary +1 the commit recorded
+     * (`UserVocabulary.unrecordWordUsage`). The prediction-context tracker drops the rejected
+     * word too ([PredictionContextTracker.rollbackLastWord]) so next-word context after the
+     * replacement is conditioned on what the user kept — that part is prediction state, not
+     * learning, so it runs regardless of the learning gates.
      */
     private fun rollbackRejectedWord(word: String) {
         if (word.isBlank()) return
         predictionCoordinator.getWordPredictor()
             ?.rollbackCommittedWord(word, fieldAllowsPersonalizedLearning)
+        contextTracker.rollbackLastWord(word)
     }
 
     /**

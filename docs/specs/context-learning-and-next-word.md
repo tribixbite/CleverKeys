@@ -108,10 +108,10 @@ on service restart (and multiple instances clobbered each other's view). Now:
 
 | Store | Per-context cap | Overall cap | Eviction / floor |
 |-------|-----------------|-------------|------------------|
-| `BigramStore` | `MAX_BIGRAMS_PER_WORD = 20` (per previous word) | `MAX_TOTAL_BIGRAMS = 10000` per language | lowest-frequency trimmed; `DEFAULT_MIN_FREQUENCY = 2` to surface |
-| `TrigramStore` | `MAX_TRIGRAMS_PER_PREFIX = 10` (per two-word prefix) | `MAX_TOTAL_TRIGRAMS = 10000` per language | lowest-frequency trimmed; `DEFAULT_MIN_FREQUENCY = 2` to surface |
+| `BigramStore` | `MAX_BIGRAMS_PER_WORD = 20` established + 4 grace slots (`MAX_RETAINED_PER_WORD = 24`) | `MAX_TOTAL_BIGRAMS = 10000` per language, batch-pruned to 90% (sub-floor first, never the pair just recorded) | `ContinuationBudget` (W3, 2026-09-26): newcomers compete for grace slots by staleness; established entries by frequency aged with a 100-observation half-life; the entry recorded in the current call is never evicted. `DEFAULT_MIN_FREQUENCY = 2` to surface. Typo hygiene: only n-grams of `LearnableWordPolicy`-learnable words are recorded; low-frequency (≤2) n-grams with an unlearnable word are purged once after upgrade, then weekly |
+| `TrigramStore` | `MAX_TRIGRAMS_PER_PREFIX = 10` established + 3 grace slots (`MAX_RETAINED_PER_PREFIX = 13`) | `MAX_TOTAL_TRIGRAMS = 10000` per language, batch-pruned to 90% | same `ContinuationBudget` policy and typo hygiene as bigrams; `DEFAULT_MIN_FREQUENCY = 2` to surface |
 | `UserVocabulary` (personalization) | — | **user-configurable** via `personalization_max_words` (default `Defaults.PERSONALIZATION_MAX_WORDS = 5000`, slider 1000–20000, floor `MIN_VOCABULARY_CAP = 100`) | rolling least-value eviction (lowest `getPersonalizationBoost` first) on add; `enforceCap()` trims down on load and when the user lowers the cap; stale words (>90 days, or single-use >30 days) cleaned daily |
-| `UserAdaptationManager` / `SelectionHistory` | — | `MAX_TRACKED_WORDS = SelectionHistory.DEFAULT_MAX_TRACKED_WORDS = 1000` selection-count entries | over cap, least-selected words pruned down to 80% of capacity (`PRUNE_KEEP_FRACTION = 0.8`) |
+| `UserAdaptationManager` / `SelectionHistory` | — | `MAX_TRACKED_WORDS = SelectionHistory.DEFAULT_MAX_TRACKED_WORDS = 1000` selection-count entries | over cap, least-selected words pruned down to 80% of capacity (`PRUNE_KEEP_FRACTION = 0.8`); counts HALVE every 30 days (`DECAY_HALF_LIFE_MS`, W4 — replaced a 30-day wholesale wipe); debounced write-back flushed at `flushLearnedData` (W6) |
 
 The `UserVocabulary` cap is threaded in as a dynamic provider
 (`maxWords: () -> Int` reading `Config.personalization_max_words`), so the

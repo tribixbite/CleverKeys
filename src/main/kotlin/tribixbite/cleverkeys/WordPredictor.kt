@@ -10,11 +10,13 @@ import tribixbite.cleverkeys.autocorrect.Morphology
 import tribixbite.cleverkeys.swipe.SwipeContextRescorer
 import tribixbite.cleverkeys.contextaware.ContextModel
 import tribixbite.cleverkeys.langpack.LanguagePackManager
+import tribixbite.cleverkeys.persist.DebouncedPersister
 import tribixbite.cleverkeys.personalization.PersonalizationEngine
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.ln1p
 import kotlin.math.max
@@ -262,6 +264,33 @@ class WordPredictor : Predictor {
     private var secondaryIndex: NormalizedPrefixIndex? = null
     @Volatile
     private var secondaryLanguageCode: String = "none"
+
+    /**
+     * Typo hygiene (learning-system audit 2026-09-26): the ONE "may this word be learned?"
+     * predicate, over the LIVE lexicon — see [LearnableWordPolicy] for the rules and the
+     * table of consumers. The repeat tally is the personalization vocabulary's usage count.
+     */
+    private val learnableWordPolicy: LearnableWordPolicy
+        // Built on first use rather than in an initializer: test doubles that allocate a
+        // predictor without running its constructor (Objenesis-backed mocks/spies) would
+        // otherwise see a null field. The lambdas read live state, so one instance suffices.
+        get() = learnableWordPolicyCache ?: LearnableWordPolicy(
+            lexiconReady = { liveLexicon().isNotEmpty() },
+            isKnownWord = { w -> isInLexicon(w, liveLexicon(), liveUserWords(), secondaryIndex) },
+            observationCount = { w -> personalizationEngine?.getWordUsage(w)?.usageCount ?: 0 }
+        ).also { learnableWordPolicyCache = it }
+
+    @Volatile
+    private var learnableWordPolicyCache: LearnableWordPolicy? = null
+
+    // Null-tolerant reads for the policy: in an Objenesis-allocated test double the field
+    // initializers never ran, so these "non-null" fields are null at runtime. An empty
+    // lexicon makes the policy fail OPEN (learn as before), which is the safe default.
+    @Suppress("UNNECESSARY_SAFE_CALL", "USELESS_ELVIS")
+    private fun liveLexicon(): Map<String, Int> = dictionary?.get() ?: emptyMap()
+
+    @Suppress("UNNECESSARY_SAFE_CALL", "USELESS_ELVIS")
+    private fun liveUserWords(): Set<String> = customAndUserWords ?: emptySet()
 
     /**
      * Set context for accessing disabled words from SharedPreferences
@@ -737,7 +766,8 @@ class WordPredictor : Predictor {
             onDeviceLearningEnabled = config?.on_device_learning_enabled ?: false,
             contextAwareEnabled = config?.context_aware_predictions_enabled ?: false,
             personalizedLearningEnabled = config?.personalized_learning_enabled ?: false,
-            recordSequence = { sequence -> contextModel?.recordCommit(sequence) },
+            // Typo hygiene: only n-grams whose every word is learnable are recorded.
+            recordSequence = { sequence -> contextModel?.recordCommit(sequence, learnableWordPolicy::isLearnable) },
             recordWordUsage = { word -> personalizationEngine?.recordWordTyped(word) },
             fieldAllowsPersonalizedLearning = fieldAllowsPersonalizedLearning
         )
@@ -823,9 +853,16 @@ class WordPredictor : Predictor {
      * The store decrement runs only under the SAME gate conditions the learn
      * used ([LearningGate.canLearnContext] + the per-field incognito flag) —
      * if the original record was suppressed, nothing is decremented, so
-     * legitimately-accumulated frequencies are never reduced. The one-count
-     * personalization usage of the rejected word is deliberately left in place
-     * (benign: final autocorrect only ever produces dictionary words).
+     * legitimately-accumulated frequencies are never reduced.
+     *
+     * The personalization vocabulary's +1 for the rejected word is rolled back too,
+     * under [LearningGate.canLearnPersonalization] (the gate its record used). This was
+     * once left in place as "benign" because final autocorrect only produces dictionary
+     * words — but a rejected SWIPE auto-insert ("got" when the user meant "git") is
+     * exactly the case where the +1 is wrong, and the vocabulary count now also feeds
+     * [LearnableWordPolicy]'s repeat tally. ORDER: the n-grams are un-recorded FIRST,
+     * with the tally still including this commit, so the policy judges the rollback
+     * exactly as it judged the record.
      *
      * No-op when [word] is not the newest window entry (e.g. a sentence
      * boundary or session flush cleared the window in between).
@@ -842,7 +879,12 @@ class WordPredictor : Predictor {
         val contextAware = config?.context_aware_predictions_enabled ?: false
         if (LearningGate.canLearnContext(master, contextAware) && recentWords.size >= 2) {
             val sequenceLength = kotlin.math.min(LearningGate.CONTEXT_WINDOW, recentWords.size)
-            contextModel?.rollbackCommit(recentWords.takeLast(sequenceLength))
+            // Same predicate as the record, so a skipped (unlearnable) n-gram is not decremented.
+            contextModel?.rollbackCommit(recentWords.takeLast(sequenceLength), learnableWordPolicy::isLearnable)
+        }
+        val personalized = config?.personalized_learning_enabled ?: false
+        if (LearningGate.canLearnPersonalization(master, personalized)) {
+            personalizationEngine?.unrecordWordTyped(normalized)
         }
         recentWords.removeAt(recentWords.size - 1)
     }
@@ -982,9 +1024,70 @@ class WordPredictor : Predictor {
      * @return true if the word is in the user's learned personal vocabulary.
      * Next-word filter: membership here OR in the dictionary is required so
      * typo'd garbage absorbed by the bigram store never surfaces.
+     *
+     * Typo hygiene (2026-09-26): bare vocabulary membership is NOT enough — the vocabulary
+     * tallies every committed word, a once-typed typo included, which made this filter a
+     * no-op for exactly the words it exists to stop. A word counts as the user's once it
+     * has been committed [LearnableWordPolicy.REPEAT_OBSERVATIONS_TO_LEARN] times.
      */
     override fun isInUserVocabulary(word: String): Boolean {
-        return personalizationEngine?.hasWord(word) ?: false
+        return learnableWordPolicy.isRepeatedlyObserved(word)
+    }
+
+    /**
+     * Lexicon membership for [LearnableWordPolicy]: the primary dictionary map (which also
+     * carries custom/user-dictionary words and the contraction alias keys), the tracked
+     * user-word set, and the secondary bilingual lexicon (matched accent-insensitively, the
+     * way that index is keyed). Parameters rather than fields so the purge can judge
+     * against the snapshot it was scheduled with.
+     */
+    private fun isInLexicon(
+        word: String,
+        lexicon: Map<String, Int>,
+        userWords: Set<String>,
+        secondary: NormalizedPrefixIndex?
+    ): Boolean =
+        lexicon.containsKey(word) || word in userWords ||
+            (secondary?.contains(AccentNormalizer.normalize(word)) == true)
+
+    /**
+     * Typo-hygiene purge trigger (see [ContextModel.purgeUnlearnable]): called when a
+     * language's dictionary has just been published. Runs on the learned-data persistence
+     * thread — never the main thread — and only when the learned context LM is usable (master
+     * learning gate + context-aware feature on; M2: a missing config fails closed). The
+     * lexicon is SNAPSHOTTED here, at publication, so a later language switch cannot make the
+     * purge judge [language]'s store against another language's words. The purge itself is
+     * a no-op unless due (first run after upgrade, then weekly).
+     */
+    private fun scheduleLearnedTypoPurge(language: String) {
+        if (closed) return
+        val cfg = config ?: return
+        if (!LearningGate.canUseLearnedContext(cfg.on_device_learning_enabled, cfg.context_aware_predictions_enabled)) return
+        val model = contextModel ?: return
+        val lexicon = dictionary.get()
+        if (lexicon.isEmpty()) return // nothing to judge against — retried at the next load
+        val userWords = customAndUserWords
+        val secondary = secondaryIndex
+        val engine = personalizationEngine
+        val snapshotPolicy = LearnableWordPolicy(
+            lexiconReady = { true },
+            isKnownWord = { w -> isInLexicon(w, lexicon, userWords, secondary) },
+            observationCount = { w -> engine?.getWordUsage(w)?.usageCount ?: 0 }
+        )
+        try {
+            DebouncedPersister.sharedScheduler().execute {
+                try {
+                    val removed = model.purgeUnlearnable(language, snapshotPolicy::isLearnable)
+                    if (removed != null) {
+                        Log.i(TAG, "Typo purge for '$language': removed $removed learned n-gram(s)")
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Typo purge failed for '$language'", e)
+                }
+            }
+        } catch (e: RejectedExecutionException) {
+            // Shared scheduler already shut down (process teardown) — the next load retries.
+        }
     }
 
     /**
@@ -1122,6 +1225,9 @@ class WordPredictor : Predictor {
 
         // Set the N-gram model language to match the dictionary
         setLanguage(language)
+
+        // Typo hygiene: the lexicon is now complete — purge learned typos if due.
+        scheduleLearnedTypoPurge(language)
     }
 
     /**
@@ -1207,6 +1313,9 @@ class WordPredictor : Predictor {
 
                 // Set the N-gram model language
                 setLanguage(language)
+
+                // Typo hygiene: the lexicon is now published — purge learned typos if due.
+                scheduleLearnedTypoPurge(language)
 
                 isLoadingState = false
                 // v1.2.0: Enhanced logging for debugging language toggle issues

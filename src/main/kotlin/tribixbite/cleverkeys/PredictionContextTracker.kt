@@ -396,6 +396,21 @@ class PredictionContextTracker {
     }
 
     /**
+     * Undo [commitWord] for a word the user rejected (replaced from the suggestion bar,
+     * backspace-undone, autocorrect reverted): drop it from the context history so the
+     * replacement is not predicted as following the rejected word. Only the NEWEST entry
+     * is removed, and only when it is [word] (case-insensitive) — if anything was committed
+     * after it, the history is left alone rather than guessing.
+     *
+     * @return true when the rejected word was removed
+     */
+    fun rollbackLastWord(word: String): Boolean {
+        if (contextWords.isEmpty() || contextWords.last() != word.lowercase()) return false
+        contextWords.removeAt(contextWords.size - 1)
+        return true
+    }
+
+    /**
      * Gets the context words for prediction.
      * Returns a copy to prevent external modification.
      *

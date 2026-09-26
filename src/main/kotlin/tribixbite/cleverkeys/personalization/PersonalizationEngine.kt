@@ -132,6 +132,20 @@ class PersonalizationEngine(private val context: Context) {
     }
 
     /**
+     * Inverse of [recordWordTyped] for a commit the user rejected (swipe replaced from the
+     * bar, backspace undo, autocorrect undo — `WordPredictor.rollbackCommittedWord`).
+     * No-op while disabled, mirroring the record: a word whose record was suppressed is
+     * never decremented.
+     *
+     * @return true if one usage was removed
+     */
+    fun unrecordWordTyped(word: String): Boolean {
+        if (!enabled) return false
+        if (word.isEmpty() || word.length < 2) return false
+        return vocabulary.unrecordWordUsage(word)
+    }
+
+    /**
      * Record multiple words typed in sequence.
      *
      * Convenience method for batch recording.

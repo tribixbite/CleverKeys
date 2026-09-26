@@ -343,8 +343,11 @@ class LearningWiringDriftTest {
         // ContextModel.rollbackCommit, with the field's incognito flag riding
         // along so a gate-suppressed learn is never decremented.
         val handler = readSource("SuggestionHandler.kt")
+        // Every undo path funnels through the one helper (2026-09-26), which forwards the
+        // incognito flag and also pops the rejected word off the context tracker.
+        assertThat(handler).contains("rollbackRejectedWord(correctedWord)")
         assertThat(handler).contains(
-            "rollbackCommittedWord(correctedWord, fieldAllowsPersonalizedLearning)"
+            "rollbackCommittedWord(word, fieldAllowsPersonalizedLearning)"
         )
 
         val predictor = readSource("WordPredictor.kt")

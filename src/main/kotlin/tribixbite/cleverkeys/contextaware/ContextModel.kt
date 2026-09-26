@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.contextaware
 
 import android.content.Context
+import tribixbite.cleverkeys.LearnableWordPolicy
 
 /**
  * A learned next-word continuation with the raw statistics needed for
@@ -156,15 +157,26 @@ class ContextModel internal constructor(
      * [recordSequence] remains for bulk paths (import replay, tests) where the
      * whole sequence is genuinely new.
      *
+     * TYPO HYGIENE (learning-system audit 2026-09-26): an n-gram is recorded only when
+     * EVERY word in it passes [isLearnable] (production: `LearnableWordPolicy.isLearnable`
+     * — in the lexicon, in the user dictionary, or committed repeatedly). A typo therefore
+     * never enters either store, as the context word or as the continuation, while the
+     * n-grams around it that ARE clean still learn (a typo in trigram position 1 blocks
+     * only the trigram, not the bigram after it).
+     *
      * @param words rolling committed-word window, most recent last (only the
      *   trailing 3 words are consulted)
+     * @param isLearnable per-word write gate; the default admits everything (bulk/test paths)
      */
-    fun recordCommit(words: List<String>) {
+    fun recordCommit(words: List<String>, isLearnable: (String) -> Boolean = { true }) {
         val n = words.size
         if (n < 2) return
-        bigramStore.recordBigram(language, words[n - 2], words[n - 1])
-        if (trigramStore != null && n >= 3) {
-            trigramStore.recordTrigram(language, words[n - 3], words[n - 2], words[n - 1])
+        val last = words[n - 1]
+        val prev = words[n - 2]
+        if (!isLearnable(last) || !isLearnable(prev)) return
+        bigramStore.recordBigram(language, prev, last)
+        if (trigramStore != null && n >= 3 && isLearnable(words[n - 3])) {
+            trigramStore.recordTrigram(language, words[n - 3], prev, last)
         }
     }
 
@@ -175,16 +187,71 @@ class ContextModel internal constructor(
      * recorded are un-recorded. Unknown n-grams no-op (safe when the original
      * record was gate-suppressed).
      *
+     * Takes the SAME [isLearnable] predicate as [recordCommit] so that an n-gram the
+     * write gate skipped is not decremented here — otherwise undoing a typo would eat one
+     * legitimate observation of an identical pair learned earlier.
+     *
      * @param words rolling committed-word window, most recent (the rejected
      *   word) last — only the trailing 3 words are consulted
+     * @param isLearnable the per-word write gate [recordCommit] was given
      */
-    fun rollbackCommit(words: List<String>) {
+    fun rollbackCommit(words: List<String>, isLearnable: (String) -> Boolean = { true }) {
         val n = words.size
         if (n < 2) return
-        bigramStore.unrecordBigram(language, words[n - 2], words[n - 1])
-        if (trigramStore != null && n >= 3) {
-            trigramStore.unrecordTrigram(language, words[n - 3], words[n - 2], words[n - 1])
+        val last = words[n - 1]
+        val prev = words[n - 2]
+        if (!isLearnable(last) || !isLearnable(prev)) return
+        bigramStore.unrecordBigram(language, prev, last)
+        if (trigramStore != null && n >= 3 && isLearnable(words[n - 3])) {
+            trigramStore.unrecordTrigram(language, words[n - 3], prev, last)
         }
+    }
+
+    /**
+     * TYPO-HYGIENE PURGE (learning-system audit 2026-09-26): delete learned bigrams and
+     * trigrams of [language] that contain a word failing [isLearnable] AND were observed at
+     * most `LearnableWordPolicy.PURGE_MAX_FREQUENCY` times — typos learned before the write
+     * gate existed (or that slipped in while the lexicon was still loading) go, while a
+     * frequently typed phrase survives even if one of its words is not in any dictionary.
+     *
+     * Scheduling is migration-style: the store keeps a per-language stamp of the last run.
+     * No stamp (every install upgrading into this code) ⇒ the purge runs at the first
+     * opportunity — the one-time cleanup; afterwards it re-runs once
+     * `LearnableWordPolicy.PURGE_INTERVAL_MS` has elapsed. The caller runs this OFF the main
+     * thread (it may load the language's tables) and only when the master learning gate and
+     * the context-aware gate are on — with learning off the stores are inert, neither read
+     * nor rewritten.
+     *
+     * @param language the language whose lexicon [isLearnable] reflects — passed explicitly
+     *   rather than read from [language] so a concurrent language switch cannot pair one
+     *   language's lexicon with another language's store
+     * @param force run even if not due (tests / an explicit maintenance request)
+     * @return entries removed across both stores, or null when the purge was not due
+     */
+    fun purgeUnlearnable(
+        language: String,
+        isLearnable: (String) -> Boolean,
+        nowMs: Long = System.currentTimeMillis(),
+        force: Boolean = false
+    ): Int? {
+        val lang = BigramStore.normalizeLanguage(language)
+        if (!force && !LearnableWordPolicy.isPurgeDue(bigramStore.getTypoPurgeStamp(lang), nowMs)) {
+            return null
+        }
+        // Memoize: the same few thousand words recur across tens of thousands of entries.
+        val memo = HashMap<String, Boolean>()
+        val learnable: (String) -> Boolean = { w -> memo.getOrPut(w) { isLearnable(w) } }
+
+        var removed = bigramStore.purgeEntries(lang) {
+            LearnableWordPolicy.shouldPurge(it.frequency, listOf(it.word1, it.word2), learnable)
+        }
+        if (trigramStore != null) {
+            removed += trigramStore.purgeEntries(lang) {
+                LearnableWordPolicy.shouldPurge(it.frequency, listOf(it.word1, it.word2, it.word3), learnable)
+            }
+        }
+        bigramStore.setTypoPurgeStamp(lang, nowMs)
+        return removed
     }
 
     /**

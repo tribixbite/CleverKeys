@@ -127,6 +127,12 @@ object LearningGate {
      * previous full-window replay re-recorded earlier pairs on every commit,
      * so a single typing inflated frequencies past the "seen ≥2×" floor).
      *
+     * Typo hygiene (learning-system audit 2026-09-26): the production context sink applies
+     * [tribixbite.cleverkeys.LearnableWordPolicy] per n-gram, so an out-of-lexicon word
+     * reaches the context LM only once the user has committed it repeatedly (or added it to
+     * their dictionary). The personalization sink still receives every committed word: it IS
+     * the repeat tally the policy reads, and its read paths apply the same policy.
+     *
      * @param recentWords rolling committed-word window, most recent last,
      *   INCLUDING [committedWord]
      * @param committedWord the normalized word just committed
@@ -148,12 +154,15 @@ object LearningGate {
     ) {
         // M5: an incognito field's no-learning request outranks every user pref.
         val master = onDeviceLearningEnabled && fieldAllowsPersonalizedLearning
+        // ORDER MATTERS (typo hygiene, 2026-09-26): the vocabulary tally runs FIRST so the
+        // context sink's LearnableWordPolicy sees this commit in the word's observation
+        // count — "committed 3 times" then means the third commit learns, not the fourth.
+        if (canLearnPersonalization(master, personalizedLearningEnabled)) {
+            recordWordUsage(committedWord)
+        }
         if (canLearnContext(master, contextAwareEnabled) && recentWords.size >= 2) {
             val sequenceLength = kotlin.math.min(CONTEXT_WINDOW, recentWords.size)
             recordSequence(recentWords.takeLast(sequenceLength))
-        }
-        if (canLearnPersonalization(master, personalizedLearningEnabled)) {
-            recordWordUsage(committedWord)
         }
     }
 }
