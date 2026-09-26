@@ -966,11 +966,13 @@
     <string name="provenance_frequency_factor">• Hệ số tần suất: %1$.2f×</string>
     <string name="provenance_frequency_score">Điểm tần suất: %1$.2f</string>
     <string name="provenance_note_autocorrected_from">Đã tự sửa từ “%1$s”</string>
+    <string name="provenance_note_typo_correction_of">Sửa cho “%1$s” đã gõ</string>
     <string name="provenance_note_next_built_in">Sau “%1$s”: từ tiếp nối phổ biến (tích hợp, không phải đã học)</string>
     <string name="provenance_note_next_learned">Sau “%1$s”: đã thấy %2$d×, %3$d%%</string>
     <string name="provenance_note_promoted_learned">Được đề cao nhờ ngữ cảnh đã học</string>
     <string name="provenance_note_typed_undo">Từ bạn đã gõ (chạm để hoàn tác)</string>
     <string name="provenance_origin_autocorrect">Đề xuất tự sửa lỗi</string>
+    <string name="provenance_origin_typo_correction">Sửa lỗi gõ</string>
     <string name="provenance_origin_contraction">Chèn dạng rút gọn</string>
     <string name="provenance_origin_ctc">Vuốt CTC (chùm trie)</string>
     <string name="provenance_origin_dictionary_prefix">Khớp tiền tố từ điển</string>

@@ -37,7 +37,8 @@ import java.util.concurrent.atomic.AtomicReference
  * (pkay → play, and the space-bar autocorrect's own pick is listed), exact prefixes keep
  * priority (pla), no fuzzy noise on 2-letter prefixes, disabled words stay out, user words
  * are reachable, the secondary-language dictionary participates, provenance tags the new
- * entries as autocorrect, and a per-keystroke latency bound.
+ * entries with their own TYPO_CORRECTION origin (never AUTOCORRECT, which means a committed
+ * correction), and a per-keystroke latency bound.
  */
 class WordPredictorFuzzyTypingTest {
 
@@ -194,7 +195,7 @@ class WordPredictorFuzzyTypingTest {
         // "thw" has five exact (rare) completions — the fuzzy "the" would rank 6th on raw
         // score alone; the reservation puts it (and the next correction) in the bar.
         val result = bar("thw")
-        val fuzzy = result.metas!!.count { it.origin == SuggestionOrigin.AUTOCORRECT }
+        val fuzzy = result.metas!!.count { it.origin == SuggestionOrigin.TYPO_CORRECTION }
         assertEquals("reserved fuzzy slots (got ${result.words})", 2, fuzzy)
         assertEquals(SuggestionOrigin.DICTIONARY_PREFIX, result.metas!![0].origin)
         assertEquals("bar stays in score order", result.scores.sortedDescending(), result.scores)
@@ -216,19 +217,51 @@ class WordPredictorFuzzyTypingTest {
     // ── Provenance ────────────────────────────────────────────────────────
 
     @Test
-    fun fuzzyEntries_areTaggedAutocorrect_withTheTypedWordAndABreakdown() {
+    fun fuzzyEntries_areTaggedTypoCorrection_withTheTypedWordAndABreakdown() {
         val result = bar("pka")
         val i = result.words.indexOf("play")
         assertTrue(i >= 0)
         val meta = result.metas!![i]
-        assertEquals(SuggestionOrigin.AUTOCORRECT, meta.origin)
-        assertEquals(ProvenanceNote.AutocorrectedFrom("pka"), meta.note)
+        assertEquals(SuggestionOrigin.TYPO_CORRECTION, meta.origin)
+        assertEquals(ProvenanceNote.TypoCorrectionOf("pka"), meta.note)
         val breakdown = meta.breakdown!!
         assertEquals("displayed breakdown must match the ranking score", result.scores[i], breakdown.finalScore)
         assertTrue(
             "fuzzy prefix score must sit below the exact-prefix score for the same word (got ${breakdown.prefixScore})",
             breakdown.prefixScore < predictor.explainScore("play", "pla", emptyList())!!.prefixScore
         )
+    }
+
+    /**
+     * The whole-word correction ("pkay" → "play") is the same mechanism as the prefix one —
+     * FuzzyPrefixMatcher cost, penalised prefix score — so it carries the same origin. The
+     * breakdown distinguishes the shape: a whole-word correction starts from the direct-match
+     * score, a prefix correction from the completion score.
+     */
+    @Test
+    fun wholeWordCorrection_isAlsoTypoCorrection_withADirectMatchBasedBreakdown() {
+        val result = bar("pkay")
+        val i = result.words.indexOf("play")
+        assertEquals("precondition: 'play' leads for 'pkay' (got ${result.words})", 0, i)
+        val meta = result.metas!![i]
+        assertEquals(SuggestionOrigin.TYPO_CORRECTION, meta.origin)
+        assertEquals(ProvenanceNote.TypoCorrectionOf("pkay"), meta.note)
+        // k↔l is a QWERTY neighbour slip (cost 0.5): the direct-match score, penalised once.
+        assertEquals(
+            "whole-word correction scores from the direct match",
+            WordPredictor.fuzzyPrefixScore(WordPredictor.DIRECT_MATCH_PREFIX_SCORE, 0.5f),
+            meta.breakdown!!.prefixScore
+        )
+    }
+
+    /** No typed-path bar entry may claim an autocorrect that never happened. */
+    @Test
+    fun typingBar_neverTagsAnEntryAutocorrect() {
+        for (typed in listOf("pka", "pkay", "thw", "wuestion", "pla")) {
+            bar(typed).metas?.forEach {
+                assertFalse("'$typed' produced an AUTOCORRECT-tagged bar entry", it.origin == SuggestionOrigin.AUTOCORRECT)
+            }
+        }
     }
 
     // ── Vocabulary gates ──────────────────────────────────────────────────

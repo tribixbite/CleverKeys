@@ -629,6 +629,7 @@
     <string name="provenance_origin_exact_add">Dokładnie wpisane słowo (dotknij, aby dodać)</string>
     <string name="provenance_origin_next_word">Przewidywanie następnego słowa</string>
     <string name="provenance_origin_autocorrect">Monit autokorekty</string>
+    <string name="provenance_origin_typo_correction">Poprawka literówki</string>
     <string name="provenance_unknown">Nieznane</string>
     <string name="provenance_source">Źródło: %1$s</string>
     <string name="provenance_score">Wynik: %1$d</string>
@@ -659,6 +660,7 @@
     <string name="provenance_note_next_learned">Po „%1$s”: widziano %2$d×, %3$d%%</string>
     <string name="provenance_note_typed_undo">Twoje wpisane słowo (dotknij, aby cofnąć)</string>
     <string name="provenance_note_autocorrected_from">Autokorekta z „%1$s”</string>
+    <string name="provenance_note_typo_correction_of">Poprawka wpisanego „%1$s”</string>
     <string name="backup_base64_too_large">Import nie powiódł się: osadzone dane kopii zapasowej są za duże</string>
     <string name="clipboard_private_copy_toast_title">Potwierdzaj kopie prywatne</string>
     <string name="clipboard_private_copy_toast_desc">Pokazuj krótki komunikat po prywatnym skopiowaniu z menu zaznaczania innej aplikacji. Ostrzeżenia są zawsze pokazywane.</string>

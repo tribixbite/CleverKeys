@@ -631,6 +631,7 @@
     <string name="provenance_origin_exact_add">Kata persis yang diketik (ketuk untuk menambahkan)</string>
     <string name="provenance_origin_next_word">Prediksi kata berikutnya</string>
     <string name="provenance_origin_autocorrect">Tawaran koreksi otomatis</string>
+    <string name="provenance_origin_typo_correction">Koreksi salah ketik</string>
     <string name="provenance_unknown">Tidak diketahui</string>
     <string name="provenance_source">Sumber: %1$s</string>
     <string name="provenance_score">Skor: %1$d</string>
@@ -661,6 +662,7 @@
     <string name="provenance_note_next_learned">Setelah “%1$s”: terlihat %2$d×, %3$d%%</string>
     <string name="provenance_note_typed_undo">Kata yang Anda ketik (ketuk untuk membatalkan)</string>
     <string name="provenance_note_autocorrected_from">Dikoreksi otomatis dari “%1$s”</string>
+    <string name="provenance_note_typo_correction_of">Koreksi untuk ketikan “%1$s”</string>
     <string name="backup_base64_too_large">Impor gagal: muatan cadangan inline terlalu besar</string>
     <string name="clipboard_private_copy_toast_title">Konfirmasi salinan pribadi</string>
     <string name="clipboard_private_copy_toast_desc">Tampilkan pesan singkat setelah menyalin secara pribadi dari menu seleksi aplikasi lain. Peringatan selalu ditampilkan.</string>

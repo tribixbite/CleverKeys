@@ -654,6 +654,7 @@
     <string name="provenance_origin_exact_add">واژهٔ تایپ‌شدهٔ دقیق (برای افزودن ضربه بزنید)</string>
     <string name="provenance_origin_next_word">پیش‌بینی واژهٔ بعدی</string>
     <string name="provenance_origin_autocorrect">پیشنهاد تصحیح خودکار</string>
+    <string name="provenance_origin_typo_correction">تصحیح غلط تایپی</string>
     <string name="provenance_unknown">نامشخص</string>
     <string name="provenance_source">منبع: %1$s</string>
     <string name="provenance_score">امتیاز: %1$d</string>
@@ -684,6 +685,7 @@
     <string name="provenance_note_next_learned">پس از «%1$s»: %2$d× دیده شده، %3$d%%</string>
     <string name="provenance_note_typed_undo">واژهٔ تایپ‌شدهٔ شما (برای واگرد ضربه بزنید)</string>
     <string name="provenance_note_autocorrected_from">تصحیح خودکار از «%1$s»</string>
+    <string name="provenance_note_typo_correction_of">تصحیح نوشتهٔ «%1$s»</string>
     <string name="backup_base64_too_large">وارد کردن ناموفق بود: محتوای درون‌خطی پشتیبان بسیار بزرگ است</string>
     <string name="clipboard_private_copy_toast_title">تأیید کپی‌های خصوصی</string>
     <string name="clipboard_private_copy_toast_desc">پس از کپی خصوصی از منوی انتخاب برنامه‌ای دیگر، پیامی کوتاه نشان داده شود. هشدارها همیشه نشان داده می‌شوند.</string>

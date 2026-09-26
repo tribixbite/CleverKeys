@@ -270,9 +270,10 @@ reserved fuzzy slots — never slot 0); tappable "Added … to dictionary" with 
 (`4ca6c499`); deferred "Prefer" offers after re-swipe/Enter/field exit; shipped static English
 context LM `assets/lm/en.cklm` (Leipzig CC BY 4.0 + Tatoeba CC BY 2.0 FR, 439 KB, +333 KB APK,
 0.67 MB heap) — tap gate PASSED (+10.5 pt top-3 at prefix 1, OOD), swipe replay FAILED (no swipe
-wiring; `docs/eval/2026-09-26-static-lm-replay.md`).
-**Open:** static LMs for de/es/fr/it/pt/sv (S4, base vs langpack by size); dedicated FUZZY
-provenance origin (TODO in WordPredictor — currently tagged AUTOCORRECT); apostrophe/hyphen words
+wiring; `docs/eval/2026-09-26-static-lm-replay.md`). Typo-tolerant bar entries now carry their
+own `SuggestionOrigin.TYPO_CORRECTION` (purple marker, "Typo correction" label + "Correction of
+typed “x”" note in all 22 locales; whole-word corrections included) instead of AUTOCORRECT.
+**Open:** static LMs for de/es/fr/it/pt/sv (S4, base vs langpack by size); apostrophe/hyphen words
 in the swipe offer need decoder changes (audit doc); possessive pairs still at slate tail;
 **licensing:** repo side DONE 2026-09-26 — see `docs/audit/2026-09-26-data-licensing-audit.md`
 (Norvig pack removed: no redistribution grant; OpenSubtitles packs are FrequencyWords CC BY-SA 4.0

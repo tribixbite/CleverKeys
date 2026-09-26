@@ -437,17 +437,15 @@ class SuggestionBar : LinearLayout {
         return if (index >= 0) metaAt(index) else null
     }
 
-    /** Fixed marker palette per origin (readable on light and dark key themes). */
-    private fun originMarkerColor(origin: SuggestionOrigin): Int = when (origin) {
-        SuggestionOrigin.GEOMETRIC -> 0xFF80CBC4.toInt()         // teal
-        SuggestionOrigin.CTC -> 0xFF9FA8DA.toInt()               // indigo
-        SuggestionOrigin.DICTIONARY_PREFIX -> 0xFF90CAF9.toInt() // blue
-        SuggestionOrigin.CONTRACTION -> 0xFFFFCC80.toInt()       // orange
-        SuggestionOrigin.POSSESSIVE -> 0xFFFFE082.toInt()        // amber
-        SuggestionOrigin.EXACT_ADD -> 0xFFB0BEC5.toInt()         // gray
-        SuggestionOrigin.NEXT_WORD -> 0xFFA5D6A7.toInt()         // green
-        SuggestionOrigin.AUTOCORRECT -> 0xFFEF9A9A.toInt()       // red
-    }
+    /**
+     * Fixed marker palette per origin (readable on light and dark key themes). The palette
+     * lives in the pure [OriginMarkerPalette] so its one-hue-per-origin coverage is unit-tested.
+     *
+     * TODO(a11y-origin-marker): the marker is a bare "●" appended to the word, so TalkBack reads
+     * it as a symbol and the origin is conveyed by colour alone. A contentDescription carrying the
+     * localized origin label (the provenance sheet's `provenance_origin_*` strings) would fix both.
+     */
+    private fun originMarkerColor(origin: SuggestionOrigin): Int = OriginMarkerPalette.argb(origin)
 
     /** Task B: register the long-press provenance inspection listener. */
     fun setOnSuggestionInspectedListener(listener: OnSuggestionInspectedListener?) {

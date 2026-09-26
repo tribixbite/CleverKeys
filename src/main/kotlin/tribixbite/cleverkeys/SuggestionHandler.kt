@@ -612,16 +612,10 @@ class SuggestionHandler(
         fun text(id: Int): String = context.getString(id)
         return ProvenanceFormatter.Strings(
             locale = locale,
-            originLabels = mapOf(
-                SuggestionOrigin.GEOMETRIC to text(R.string.provenance_origin_geometric),
-                SuggestionOrigin.CTC to text(R.string.provenance_origin_ctc),
-                SuggestionOrigin.DICTIONARY_PREFIX to text(R.string.provenance_origin_dictionary_prefix),
-                SuggestionOrigin.CONTRACTION to text(R.string.provenance_origin_contraction),
-                SuggestionOrigin.POSSESSIVE to text(R.string.provenance_origin_possessive),
-                SuggestionOrigin.EXACT_ADD to text(R.string.provenance_origin_exact_add),
-                SuggestionOrigin.NEXT_WORD to text(R.string.provenance_origin_next_word),
-                SuggestionOrigin.AUTOCORRECT to text(R.string.provenance_origin_autocorrect)
-            ),
+            // Built over EVERY origin through the exhaustive originLabelRes, so a new origin
+            // cannot compile without a label (the old hand-written mapOf could miss one and
+            // the long-press sheet then threw on getValue).
+            originLabels = SuggestionOrigin.entries.associateWith { text(originLabelRes(it)) },
             unknown = text(R.string.provenance_unknown),
             source = text(R.string.provenance_source),
             score = text(R.string.provenance_score),
@@ -652,8 +646,25 @@ class SuggestionHandler(
             nextWordBuiltIn = text(R.string.provenance_note_next_built_in),
             nextWordLearned = text(R.string.provenance_note_next_learned),
             typedWordUndo = text(R.string.provenance_note_typed_undo),
-            autocorrectedFrom = text(R.string.provenance_note_autocorrected_from)
+            autocorrectedFrom = text(R.string.provenance_note_autocorrected_from),
+            typoCorrectionOf = text(R.string.provenance_note_typo_correction_of)
         )
+    }
+
+    /**
+     * Label resource for each [SuggestionOrigin] (`provenance_origin_<name>`, pinned against
+     * every locale by SuggestionProvenanceTest). Exhaustive `when`: no `else`, on purpose.
+     */
+    private fun originLabelRes(origin: SuggestionOrigin): Int = when (origin) {
+        SuggestionOrigin.GEOMETRIC -> R.string.provenance_origin_geometric
+        SuggestionOrigin.CTC -> R.string.provenance_origin_ctc
+        SuggestionOrigin.DICTIONARY_PREFIX -> R.string.provenance_origin_dictionary_prefix
+        SuggestionOrigin.CONTRACTION -> R.string.provenance_origin_contraction
+        SuggestionOrigin.POSSESSIVE -> R.string.provenance_origin_possessive
+        SuggestionOrigin.EXACT_ADD -> R.string.provenance_origin_exact_add
+        SuggestionOrigin.NEXT_WORD -> R.string.provenance_origin_next_word
+        SuggestionOrigin.AUTOCORRECT -> R.string.provenance_origin_autocorrect
+        SuggestionOrigin.TYPO_CORRECTION -> R.string.provenance_origin_typo_correction
     }
 
     private fun localizedPersonalizationDetails(

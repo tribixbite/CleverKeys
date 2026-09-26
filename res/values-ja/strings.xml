@@ -618,6 +618,7 @@
     <string name="provenance_origin_exact_add">入力したとおりの単語(タップで追加)</string>
     <string name="provenance_origin_next_word">次単語予測</string>
     <string name="provenance_origin_autocorrect">自動修正の提案</string>
+    <string name="provenance_origin_typo_correction">入力ミスの修正</string>
     <string name="provenance_unknown">不明</string>
     <string name="provenance_source">生成元: %1$s</string>
     <string name="provenance_score">スコア: %1$d</string>
@@ -648,6 +649,7 @@
     <string name="provenance_note_next_learned">「%1$s」の後: %2$d 回出現、%3$d%%</string>
     <string name="provenance_note_typed_undo">入力した単語(タップで元に戻す)</string>
     <string name="provenance_note_autocorrected_from">「%1$s」から自動修正</string>
+    <string name="provenance_note_typo_correction_of">入力「%1$s」の修正候補</string>
     <string name="backup_base64_too_large">インポートに失敗しました: インラインのバックアップデータが大きすぎます</string>
     <string name="clipboard_private_copy_toast_title">プライベートコピーの確認表示</string>
     <string name="clipboard_private_copy_toast_desc">他のアプリの選択メニューからプライベートにコピーした後に短いメッセージを表示します。警告は常に表示されます。</string>

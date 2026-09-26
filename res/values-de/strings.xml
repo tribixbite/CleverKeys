@@ -639,6 +639,7 @@
     <string name="provenance_origin_exact_add">Exakt getipptes Wort (zum Hinzufügen tippen)</string>
     <string name="provenance_origin_next_word">Nächstes-Wort-Vorhersage</string>
     <string name="provenance_origin_autocorrect">Autokorrektur-Vorschlag</string>
+    <string name="provenance_origin_typo_correction">Tippfehlerkorrektur</string>
     <string name="provenance_unknown">Unbekannt</string>
     <string name="provenance_source">Quelle: %1$s</string>
     <string name="provenance_score">Punktzahl: %1$d</string>
@@ -669,6 +670,7 @@
     <string name="provenance_note_next_learned">Nach „%1$s“: %2$d× gesehen, %3$d%%</string>
     <string name="provenance_note_typed_undo">Ihr getipptes Wort (zum Rückgängigmachen tippen)</string>
     <string name="provenance_note_autocorrected_from">Autokorrigiert von „%1$s“</string>
+    <string name="provenance_note_typo_correction_of">Korrektur der Eingabe „%1$s“</string>
     <string name="backup_base64_too_large">Import fehlgeschlagen: die eingebettete Sicherungsnutzlast ist zu groß</string>
     <string name="clipboard_private_copy_toast_title">Private Kopien bestätigen</string>
     <string name="clipboard_private_copy_toast_desc">Nach dem privaten Kopieren aus dem Auswahlmenü einer anderen App kurz eine Meldung anzeigen. Warnungen werden immer angezeigt.</string>

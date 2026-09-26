@@ -625,6 +625,7 @@
     <string name="provenance_origin_exact_add">Pontosan begépelt szó (koppintson a hozzáadáshoz)</string>
     <string name="provenance_origin_next_word">Következő szó előrejelzése</string>
     <string name="provenance_origin_autocorrect">Automatikus javítási ajánlat</string>
+    <string name="provenance_origin_typo_correction">Elírásjavítás</string>
     <string name="provenance_unknown">Ismeretlen</string>
     <string name="provenance_source">Forrás: %1$s</string>
     <string name="provenance_score">Pontszám: %1$d</string>
@@ -655,6 +656,7 @@
     <string name="provenance_note_next_learned">A(z) „%1$s” után: %2$d× látva, %3$d%%</string>
     <string name="provenance_note_typed_undo">Az Ön által begépelt szó (koppintson a visszavonáshoz)</string>
     <string name="provenance_note_autocorrected_from">Automatikusan javítva ebből: „%1$s”</string>
+    <string name="provenance_note_typo_correction_of">A begépelt szöveg javítása: „%1$s”</string>
     <string name="backup_base64_too_large">Az importálás sikertelen: a beágyazott mentési adat túl nagy</string>
     <string name="clipboard_private_copy_toast_title">Privát másolások megerősítése</string>
     <string name="clipboard_private_copy_toast_desc">Rövid üzenet megjelenítése, miután privát módon másolt egy másik alkalmazás kijelölési menüjéből. A figyelmeztetések mindig megjelennek.</string>

@@ -619,6 +619,7 @@
     <string name="provenance_origin_exact_add">Точно набранное слово (нажмите, чтобы добавить)</string>
     <string name="provenance_origin_next_word">Предсказание следующего слова</string>
     <string name="provenance_origin_autocorrect">Предложение автокоррекции</string>
+    <string name="provenance_origin_typo_correction">Исправление опечатки</string>
     <string name="provenance_unknown">Неизвестно</string>
     <string name="provenance_source">Источник: %1$s</string>
     <string name="provenance_score">Оценка: %1$d</string>
@@ -649,6 +650,7 @@
     <string name="provenance_note_next_learned">После «%1$s»: встречалось %2$d×, %3$d%%</string>
     <string name="provenance_note_typed_undo">Набранное вами слово (нажмите, чтобы отменить)</string>
     <string name="provenance_note_autocorrected_from">Автоисправлено из «%1$s»</string>
+    <string name="provenance_note_typo_correction_of">Исправление набранного «%1$s»</string>
     <string name="backup_base64_too_large">Импорт не удался: встроенные данные резервной копии слишком велики</string>
     <string name="clipboard_private_copy_toast_title">Подтверждать приватные копирования</string>
     <string name="clipboard_private_copy_toast_desc">Показывать короткое сообщение после приватного копирования из меню выделения другого приложения. Предупреждения показываются всегда.</string>

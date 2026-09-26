@@ -625,6 +625,7 @@
     <string name="provenance_origin_exact_add">Mot tapé exact (appuyer pour ajouter)</string>
     <string name="provenance_origin_next_word">Prédiction du mot suivant</string>
     <string name="provenance_origin_autocorrect">Invite de correction automatique</string>
+    <string name="provenance_origin_typo_correction">Correction de faute de frappe</string>
     <string name="provenance_unknown">Inconnu</string>
     <string name="provenance_source">Source : %1$s</string>
     <string name="provenance_score">Score : %1$d</string>
@@ -655,6 +656,7 @@
     <string name="provenance_note_next_learned">Après « %1$s » : vu %2$d×, %3$d %%</string>
     <string name="provenance_note_typed_undo">Votre mot tapé (appuyer pour annuler)</string>
     <string name="provenance_note_autocorrected_from">Corrigé automatiquement depuis « %1$s »</string>
+    <string name="provenance_note_typo_correction_of">Correction de la saisie « %1$s »</string>
     <string name="backup_base64_too_large">Échec de l\'import : la charge utile intégrée de la sauvegarde est trop volumineuse</string>
     <string name="clipboard_private_copy_toast_title">Confirmer les copies privées</string>
     <string name="clipboard_private_copy_toast_desc">Afficher un bref message après une copie privée depuis le menu de sélection d\'une autre appli. Les avertissements sont toujours affichés.</string>

@@ -619,6 +619,7 @@
     <string name="provenance_origin_exact_add">Přesně napsané slovo (klepnutím přidáte)</string>
     <string name="provenance_origin_next_word">Předpověď dalšího slova</string>
     <string name="provenance_origin_autocorrect">Nabídka autokorekce</string>
+    <string name="provenance_origin_typo_correction">Oprava překlepu</string>
     <string name="provenance_unknown">Neznámé</string>
     <string name="provenance_source">Zdroj: %1$s</string>
     <string name="provenance_score">Skóre: %1$d</string>
@@ -649,6 +650,7 @@
     <string name="provenance_note_next_learned">Po „%1$s“: viděno %2$d×, %3$d%%</string>
     <string name="provenance_note_typed_undo">Vámi napsané slovo (klepnutím vrátíte zpět)</string>
     <string name="provenance_note_autocorrected_from">Automaticky opraveno z „%1$s“</string>
+    <string name="provenance_note_typo_correction_of">Oprava napsaného „%1$s“</string>
     <string name="backup_base64_too_large">Import se nezdařil: vložená data zálohy jsou příliš velká</string>
     <string name="clipboard_private_copy_toast_title">Potvrzovat soukromé kopie</string>
     <string name="clipboard_private_copy_toast_desc">Po soukromém zkopírování z nabídky výběru jiné aplikace krátce zobrazit zprávu. Varování se zobrazují vždy.</string>

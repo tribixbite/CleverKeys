@@ -949,11 +949,13 @@
     <string name="provenance_frequency_factor">• Коефіцієнт частоти: %1$.2f×</string>
     <string name="provenance_frequency_score">Бал частоти: %1$.2f</string>
     <string name="provenance_note_autocorrected_from">Автовиправлено з «%1$s»</string>
+    <string name="provenance_note_typo_correction_of">Виправлення набраного «%1$s»</string>
     <string name="provenance_note_next_built_in">Після «%1$s»: поширене продовження (вбудоване, не вивчене)</string>
     <string name="provenance_note_next_learned">Після «%1$s»: бачено %2$d×, %3$d%%</string>
     <string name="provenance_note_promoted_learned">Підвищено вивченим контекстом</string>
     <string name="provenance_note_typed_undo">Ваше введене слово (торкніться, щоб скасувати)</string>
     <string name="provenance_origin_autocorrect">Запит автовиправлення</string>
+    <string name="provenance_origin_typo_correction">Виправлення друкарської помилки</string>
     <string name="provenance_origin_contraction">Вставлення скорочення</string>
     <string name="provenance_origin_ctc">Свайп CTC (променевий пошук по trie)</string>
     <string name="provenance_origin_dictionary_prefix">Збіг префікса зі словника</string>

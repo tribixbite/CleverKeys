@@ -659,6 +659,7 @@
     <string name="provenance_origin_exact_add">Parola digitata esatta (tocca per aggiungere)</string>
     <string name="provenance_origin_next_word">Previsione della parola successiva</string>
     <string name="provenance_origin_autocorrect">Proposta di autocorrezione</string>
+    <string name="provenance_origin_typo_correction">Correzione di refuso</string>
     <string name="provenance_unknown">Sconosciuta</string>
     <string name="provenance_source">Origine: %1$s</string>
     <string name="provenance_score">Punteggio: %1$d</string>
@@ -689,6 +690,7 @@
     <string name="provenance_note_next_learned">Dopo “%1$s”: vista %2$d×, %3$d%%</string>
     <string name="provenance_note_typed_undo">La parola che hai digitato (tocca per annullare)</string>
     <string name="provenance_note_autocorrected_from">Corretta automaticamente da “%1$s”</string>
+    <string name="provenance_note_typo_correction_of">Correzione del testo digitato “%1$s”</string>
     <string name="backup_base64_too_large">Importazione non riuscita: il payload di backup inline è troppo grande</string>
     <string name="clipboard_private_copy_toast_title">Conferma copie private</string>
     <string name="clipboard_private_copy_toast_desc">Mostra un breve messaggio dopo una copia privata dal menu di selezione di un\'altra app. Gli avvisi vengono sempre mostrati.</string>

@@ -630,6 +630,7 @@
     <string name="provenance_origin_exact_add">Precīzi ierakstītais vārds (pieskarieties, lai pievienotu)</string>
     <string name="provenance_origin_next_word">Nākamā vārda prognoze</string>
     <string name="provenance_origin_autocorrect">Autokorektūras piedāvājums</string>
+    <string name="provenance_origin_typo_correction">Drukas kļūdas labojums</string>
     <string name="provenance_unknown">Nezināms</string>
     <string name="provenance_source">Avots: %1$s</string>
     <string name="provenance_score">Vērtējums: %1$d</string>
@@ -660,6 +661,7 @@
     <string name="provenance_note_next_learned">Pēc “%1$s”: redzēts %2$d×, %3$d%%</string>
     <string name="provenance_note_typed_undo">Jūsu ierakstītais vārds (pieskarieties, lai atsauktu)</string>
     <string name="provenance_note_autocorrected_from">Automātiski izlabots no “%1$s”</string>
+    <string name="provenance_note_typo_correction_of">Ievadītā “%1$s” labojums</string>
     <string name="backup_base64_too_large">Importēšana neizdevās: iekļautie dublējuma dati ir pārāk lieli</string>
     <string name="clipboard_private_copy_toast_title">Apstiprināt privātās kopijas</string>
     <string name="clipboard_private_copy_toast_desc">Rādīt īsu paziņojumu pēc privātas kopēšanas no citas lietotnes atlases izvēlnes. Brīdinājumi vienmēr tiek rādīti.</string>

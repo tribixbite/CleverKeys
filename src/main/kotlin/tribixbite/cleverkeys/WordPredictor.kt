@@ -2416,20 +2416,18 @@ class WordPredictor : Predictor {
                 val lower = candidate.word.lowercase()
                 val fuzzyPrefix = candidate.fuzzyPrefixScore
                 if (fuzzyPrefix != null) {
-                    // Typo-tolerant entry: the SuggestionOrigin/label set lives in the bar
-                    // and handler layers, so it rides the existing autocorrect origin with
-                    // the typed text it corrects. Breakdown only for primary-dictionary
-                    // words — the secondary score is weighted outside the unified scorer,
-                    // exactly like secondary prefix entries.
-                    // TODO(fuzzy-origin): a dedicated SuggestionOrigin (own marker colour
-                    // + label) needs SuggestionBar.originMarkerColor and the handler's
-                    // originLabels map extended in the same change.
+                    // Typo-tolerant entry — prefix ("pka" → "play") and whole-word ("pkay"
+                    // → "play") corrections alike: one FuzzyPrefixMatcher mechanism, and the
+                    // breakdown's prefix score shows which shape it was. Its own origin, not
+                    // AUTOCORRECT: nothing has been corrected yet, it is only offered.
+                    // Breakdown only for primary-dictionary words — the secondary score is
+                    // weighted outside the unified scorer, exactly like secondary prefix entries.
                     SuggestionMeta(
-                        origin = SuggestionOrigin.AUTOCORRECT,
+                        origin = SuggestionOrigin.TYPO_CORRECTION,
                         breakdown = if (candidate.fromSecondary) null else dictionary.get()[lower]?.let { freq ->
                             resolveScoreBreakdown(lower, lowerSequence, freq, context, fuzzyPrefix)
                         },
-                        note = ProvenanceNote.AutocorrectedFrom(keySequence)
+                        note = ProvenanceNote.TypoCorrectionOf(keySequence)
                     )
                 } else {
                     SuggestionMeta(

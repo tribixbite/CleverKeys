@@ -494,6 +494,7 @@
     <string name="provenance_origin_exact_add">Exact typed word (tap to add)</string>
     <string name="provenance_origin_next_word">Next-word prediction</string>
     <string name="provenance_origin_autocorrect">Autocorrect prompt</string>
+    <string name="provenance_origin_typo_correction">Typo correction</string>
     <string name="provenance_unknown">Unknown</string>
     <string name="provenance_source">Source: %1$s</string>
     <string name="provenance_score">Score: %1$d</string>
@@ -530,6 +531,7 @@
     <string name="provenance_note_next_learned">After “%1$s”: seen %2$d×, %3$d%%</string>
     <string name="provenance_note_typed_undo">Your typed word (tap to undo)</string>
     <string name="provenance_note_autocorrected_from">Autocorrected from “%1$s”</string>
+    <string name="provenance_note_typo_correction_of">Correction of typed “%1$s”</string>
 
     <!-- AppearanceSection -->
     <string name="appearance_height_portrait_title">Keyboard Height (Portrait)</string>

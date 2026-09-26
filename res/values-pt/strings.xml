@@ -619,6 +619,7 @@
     <string name="provenance_origin_exact_add">Palavra digitada exata (toque para adicionar)</string>
     <string name="provenance_origin_next_word">Previsão da próxima palavra</string>
     <string name="provenance_origin_autocorrect">Aviso de autocorreção</string>
+    <string name="provenance_origin_typo_correction">Correção de erro de digitação</string>
     <string name="provenance_unknown">Desconhecido</string>
     <string name="provenance_source">Fonte: %1$s</string>
     <string name="provenance_score">Pontuação: %1$d</string>
@@ -649,6 +650,7 @@
     <string name="provenance_note_next_learned">Depois de “%1$s”: vista %2$d×, %3$d%%</string>
     <string name="provenance_note_typed_undo">Sua palavra digitada (toque para desfazer)</string>
     <string name="provenance_note_autocorrected_from">Autocorrigida de “%1$s”</string>
+    <string name="provenance_note_typo_correction_of">Correção do digitado “%1$s”</string>
     <string name="backup_base64_too_large">Falha na importação: o conteúdo embutido do backup é grande demais</string>
     <string name="clipboard_private_copy_toast_title">Confirmar cópias privadas</string>
     <string name="clipboard_private_copy_toast_desc">Mostrar uma breve mensagem após copiar de forma privada pelo menu de seleção de outro aplicativo. Avisos são sempre mostrados.</string>

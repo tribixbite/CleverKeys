@@ -628,6 +628,7 @@
     <string name="provenance_origin_exact_add">Eksaktong na-type na salita (i-tap para idagdag)</string>
     <string name="provenance_origin_next_word">Hula sa susunod na salita</string>
     <string name="provenance_origin_autocorrect">Prompt ng autocorrect</string>
+    <string name="provenance_origin_typo_correction">Pagwawasto ng typo</string>
     <string name="provenance_unknown">Hindi alam</string>
     <string name="provenance_source">Pinagmulan: %1$s</string>
     <string name="provenance_score">Score: %1$d</string>
@@ -658,6 +659,7 @@
     <string name="provenance_note_next_learned">Pagkatapos ng “%1$s”: nakita nang %2$d×, %3$d%%</string>
     <string name="provenance_note_typed_undo">Ang na-type mong salita (i-tap para i-undo)</string>
     <string name="provenance_note_autocorrected_from">Na-autocorrect mula sa “%1$s”</string>
+    <string name="provenance_note_typo_correction_of">Pagwawasto sa tinype na “%1$s”</string>
     <string name="backup_base64_too_large">Nabigo ang import: masyadong malaki ang inline na payload ng backup</string>
     <string name="clipboard_private_copy_toast_title">Kumpirmahin ang mga private na copy</string>
     <string name="clipboard_private_copy_toast_desc">Magpakita ng maikling mensahe pagkatapos mag-copy nang pribado mula sa selection menu ng ibang app. Palaging ipinapakita ang mga babala.</string>

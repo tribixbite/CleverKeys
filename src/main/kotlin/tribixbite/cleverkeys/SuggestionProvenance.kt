@@ -49,7 +49,20 @@ enum class SuggestionOrigin {
     NEXT_WORD,
 
     /** Autocorrect undo prompt (original + corrected word after an autocorrect). */
-    AUTOCORRECT;
+    AUTOCORRECT,
+
+    /**
+     * Typo-tolerant tap-typing candidate (2026-09-26, "pka" → "play"): a dictionary word
+     * reached from the typed text by `FuzzyPrefixMatcher` (neighbour-key slips, swaps,
+     * accent variants, other edits), offered in the bar but NOT applied. Covers both a
+     * corrected prefix ("pka" → "play" as a completion of "pla") and a whole-word
+     * correction ("pkay" → "play"): one mechanism, one cost-penalised score, and the
+     * breakdown's prefix score already shows which shape it was. Distinct from
+     * [AUTOCORRECT], which marks a correction the keyboard already COMMITTED (the undo
+     * prompt after space) — conflating the two told users a bar entry "was autocorrected"
+     * when nothing had been changed.
+     */
+    TYPO_CORRECTION;
 
     companion object {
         /**
@@ -132,6 +145,8 @@ sealed class ProvenanceNote {
     ) : ProvenanceNote()
     data object TypedWordUndo : ProvenanceNote()
     data class AutocorrectedFrom(val originalWord: String) : ProvenanceNote()
+    /** A [SuggestionOrigin.TYPO_CORRECTION] candidate: the typed text it would correct. */
+    data class TypoCorrectionOf(val typed: String) : ProvenanceNote()
 }
 
 /** Structured personalization values used by the localized provenance formatter. */
@@ -274,12 +289,17 @@ object ProvenanceFormatter {
         val nextWordBuiltIn: String,
         val nextWordLearned: String,
         val typedWordUndo: String,
-        val autocorrectedFrom: String
+        val autocorrectedFrom: String,
+        val typoCorrectionOf: String
     )
 
-    /** Short localized human label for an origin. */
+    /**
+     * Short localized human label for an origin. Falls back to [Strings.unknown] rather than
+     * throwing: the Android layer builds [Strings.originLabels] over every origin, but a
+     * long-press must never crash the IME if a caller ever passes a partial map.
+     */
     fun originLabel(origin: SuggestionOrigin, strings: Strings): String =
-        strings.originLabels.getValue(origin)
+        strings.originLabels[origin] ?: strings.unknown
 
     private fun Strings.render(template: String, vararg args: Any): String =
         String.format(locale, template, *args)
@@ -294,6 +314,8 @@ object ProvenanceFormatter {
         ProvenanceNote.TypedWordUndo -> strings.typedWordUndo
         is ProvenanceNote.AutocorrectedFrom ->
             strings.render(strings.autocorrectedFrom, note.originalWord)
+        is ProvenanceNote.TypoCorrectionOf ->
+            strings.render(strings.typoCorrectionOf, note.typed)
     }
 
     /**
@@ -348,4 +370,29 @@ object ProvenanceFormatter {
             append(strings.render(strings.finalBoost, p.finalBoost)).append('\n')
         }
     }.trimEnd()
+}
+
+/**
+ * Opt-in suggestion-bar origin markers (audit §2.3 Tier 2): one fixed ARGB colour per
+ * [SuggestionOrigin], drawn by `SuggestionBar` as a small dot after the word. The tones
+ * are the Material 200 palette — light enough to read on the dark key themes and
+ * saturated enough to stay visible on the light ones — and every origin gets its OWN hue
+ * (pinned in SuggestionProvenanceTest), since a shared colour would make the marker
+ * meaningless. Pure, so the palette's coverage is unit-tested without a View.
+ */
+object OriginMarkerPalette {
+    /** Marker colour for [origin]; exhaustive, so a new origin cannot ship without one. */
+    fun argb(origin: SuggestionOrigin): Int = when (origin) {
+        SuggestionOrigin.GEOMETRIC -> 0xFF80CBC4.toInt()         // teal
+        SuggestionOrigin.CTC -> 0xFF9FA8DA.toInt()               // indigo
+        SuggestionOrigin.DICTIONARY_PREFIX -> 0xFF90CAF9.toInt() // blue
+        SuggestionOrigin.CONTRACTION -> 0xFFFFCC80.toInt()       // orange
+        SuggestionOrigin.POSSESSIVE -> 0xFFFFE082.toInt()        // amber
+        SuggestionOrigin.EXACT_ADD -> 0xFFB0BEC5.toInt()         // gray
+        SuggestionOrigin.NEXT_WORD -> 0xFFA5D6A7.toInt()         // green
+        SuggestionOrigin.AUTOCORRECT -> 0xFFEF9A9A.toInt()       // red
+        // Purple: related to autocorrect's warm red but clear of indigo (CTC) and of
+        // the red/orange/amber group, so a proposed fix never reads as an applied one.
+        SuggestionOrigin.TYPO_CORRECTION -> 0xFFCE93D8.toInt()   // purple
+    }
 }

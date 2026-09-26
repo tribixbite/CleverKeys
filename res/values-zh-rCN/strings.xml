@@ -936,11 +936,13 @@
     <string name="provenance_frequency_factor">• 频率系数：%1$.2f×</string>
     <string name="provenance_frequency_score">频率得分：%1$.2f</string>
     <string name="provenance_note_autocorrected_from">已从“%1$s”自动纠正</string>
+    <string name="provenance_note_typo_correction_of">对输入的“%1$s”的纠正</string>
     <string name="provenance_note_next_built_in">在“%1$s”之后：常见接续（内置，非已学）</string>
     <string name="provenance_note_next_learned">在“%1$s”之后：出现 %2$d×，%3$d%%</string>
     <string name="provenance_note_promoted_learned">因已学上下文而提升</string>
     <string name="provenance_note_typed_undo">你输入的单词（点按可撤销）</string>
     <string name="provenance_origin_autocorrect">自动纠错提示</string>
+    <string name="provenance_origin_typo_correction">错字纠正</string>
     <string name="provenance_origin_contraction">缩写注入</string>
     <string name="provenance_origin_ctc">CTC 滑动（trie 束搜索）</string>
     <string name="provenance_origin_dictionary_prefix">词典前缀匹配</string>

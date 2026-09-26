@@ -642,6 +642,7 @@
     <string name="provenance_origin_exact_add">Cuvântul tastat exact (atinge pentru a adăuga)</string>
     <string name="provenance_origin_next_word">Predicția cuvântului următor</string>
     <string name="provenance_origin_autocorrect">Solicitare de autocorectare</string>
+    <string name="provenance_origin_typo_correction">Corectare greșeală de tastare</string>
     <string name="provenance_unknown">Necunoscut</string>
     <string name="provenance_source">Sursă: %1$s</string>
     <string name="provenance_score">Scor: %1$d</string>
@@ -672,6 +673,7 @@
     <string name="provenance_note_next_learned">După „%1$s”: văzut de %2$d×, %3$d%%</string>
     <string name="provenance_note_typed_undo">Cuvântul tastat de dvs. (atinge pentru a anula)</string>
     <string name="provenance_note_autocorrected_from">Autocorectat din „%1$s”</string>
+    <string name="provenance_note_typo_correction_of">Corectare pentru textul tastat „%1$s”</string>
     <string name="backup_base64_too_large">Importul a eșuat: conținutul inline al backupului este prea mare</string>
     <string name="clipboard_private_copy_toast_title">Confirmă copiile private</string>
     <string name="clipboard_private_copy_toast_desc">Afișează un mesaj scurt după copierea privată din meniul de selecție al altei aplicații. Avertismentele sunt afișate întotdeauna.</string>

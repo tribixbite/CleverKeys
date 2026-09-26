@@ -627,6 +627,7 @@
     <string name="provenance_origin_exact_add">Tam yazılan sözcük (eklemek için dokunun)</string>
     <string name="provenance_origin_next_word">Sonraki kelime tahmini</string>
     <string name="provenance_origin_autocorrect">Otomatik düzeltme önerisi</string>
+    <string name="provenance_origin_typo_correction">Yazım hatası düzeltmesi</string>
     <string name="provenance_unknown">Bilinmiyor</string>
     <string name="provenance_source">Kaynak: %1$s</string>
     <string name="provenance_score">Puan: %1$d</string>
@@ -657,6 +658,7 @@
     <string name="provenance_note_next_learned">\"%1$s\" sonrası: %2$d× görüldü, %%%3$d</string>
     <string name="provenance_note_typed_undo">Yazdığınız sözcük (geri almak için dokunun)</string>
     <string name="provenance_note_autocorrected_from">\"%1$s\" sözcüğünden otomatik düzeltildi</string>
+    <string name="provenance_note_typo_correction_of">Yazılan \"%1$s\" için düzeltme</string>
     <string name="backup_base64_too_large">İçe aktarma başarısız: satır içi yedek verisi çok büyük</string>
     <string name="clipboard_private_copy_toast_title">Özel kopyaları onayla</string>
     <string name="clipboard_private_copy_toast_desc">Başka bir uygulamanın seçim menüsünden özel kopyalama yapıldıktan sonra kısa bir mesaj göster. Uyarılar her zaman gösterilir.</string>

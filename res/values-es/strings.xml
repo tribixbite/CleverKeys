@@ -637,6 +637,7 @@
     <string name="provenance_origin_exact_add">Palabra escrita exacta (toca para añadir)</string>
     <string name="provenance_origin_next_word">Predicción de palabra siguiente</string>
     <string name="provenance_origin_autocorrect">Propuesta de autocorrección</string>
+    <string name="provenance_origin_typo_correction">Corrección de errata</string>
     <string name="provenance_unknown">Desconocido</string>
     <string name="provenance_source">Origen: %1$s</string>
     <string name="provenance_score">Puntuación: %1$d</string>
@@ -667,6 +668,7 @@
     <string name="provenance_note_next_learned">Tras «%1$s»: vista %2$d×, %3$d%%</string>
     <string name="provenance_note_typed_undo">Tu palabra escrita (toca para deshacer)</string>
     <string name="provenance_note_autocorrected_from">Autocorregida desde «%1$s»</string>
+    <string name="provenance_note_typo_correction_of">Corrección de lo escrito «%1$s»</string>
     <string name="backup_base64_too_large">Importación fallida: la carga de la copia de seguridad incrustada es demasiado grande</string>
     <string name="clipboard_private_copy_toast_title">Confirmar copias privadas</string>
     <string name="clipboard_private_copy_toast_desc">Mostrar un breve mensaje tras copiar en privado desde el menú de selección de otra aplicación. Las advertencias se muestran siempre.</string>

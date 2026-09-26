@@ -5,7 +5,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tribixbite.cleverkeys.swipe.SwipeEngineRouter
+import java.io.File
 import java.util.Locale
+import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.math.ln1p
 
 /**
@@ -62,7 +64,8 @@ class SuggestionProvenanceTest {
         nextWordBuiltIn = "After “%1\$s”: common continuation (built-in, not learned)",
         nextWordLearned = "After “%1\$s”: seen %2\$d×, %3\$d%%",
         typedWordUndo = "Your typed word (tap to undo)",
-        autocorrectedFrom = "Autocorrected from “%1\$s”"
+        autocorrectedFrom = "Autocorrected from “%1\$s”",
+        typoCorrectionOf = "Correction of typed “%1\$s”"
     )
 
     // ------------------------------------------------------------- formula
@@ -274,5 +277,102 @@ class SuggestionProvenanceTest {
 
         val unknown = ProvenanceFormatter.format("x", null, null, null, strings())
         assertTrue(unknown.contains("Unknown"))
+    }
+
+    // ------------------------------------------- origin coverage (TYPO_CORRECTION)
+
+    /**
+     * Every origin has its own marker hue. A shared colour makes the opt-in marker ambiguous;
+     * TYPO_CORRECTION in particular must not reuse AUTOCORRECT's red (a proposed fix would then
+     * read as an applied one).
+     */
+    @Test
+    fun `every origin has a distinct opaque marker colour`() {
+        val colours = SuggestionOrigin.entries.associateWith { OriginMarkerPalette.argb(it) }
+        assertEquals(
+            "duplicate marker colours: $colours",
+            colours.size, colours.values.toSet().size
+        )
+        colours.forEach { (origin, argb) ->
+            assertEquals("$origin marker must be opaque", 0xFF, argb ushr 24)
+        }
+        assertTrue(
+            OriginMarkerPalette.argb(SuggestionOrigin.TYPO_CORRECTION) !=
+                OriginMarkerPalette.argb(SuggestionOrigin.AUTOCORRECT)
+        )
+    }
+
+    /**
+     * The long-press sheet must never crash on an origin whose label is missing from the map
+     * (the round-2 reviewer's concern: `getValue` threw NoSuchElementException). A missing
+     * label renders as the "Unknown" source instead.
+     */
+    @Test
+    fun `a missing origin label renders as unknown instead of throwing`() {
+        val partial = strings().copy(
+            originLabels = strings().originLabels - SuggestionOrigin.TYPO_CORRECTION
+        )
+        assertEquals("Unknown", ProvenanceFormatter.originLabel(SuggestionOrigin.TYPO_CORRECTION, partial))
+        val text = ProvenanceFormatter.format(
+            word = "play",
+            meta = SuggestionMeta(SuggestionOrigin.TYPO_CORRECTION, note = ProvenanceNote.TypoCorrectionOf("pka")),
+            barScore = 900,
+            personalization = null,
+            strings = partial
+        )
+        assertTrue(text, text.contains("Source: Unknown"))
+    }
+
+    @Test
+    fun `typo correction note names the typed text, not an autocorrection`() {
+        val text = ProvenanceFormatter.format(
+            word = "play",
+            meta = SuggestionMeta(SuggestionOrigin.TYPO_CORRECTION, note = ProvenanceNote.TypoCorrectionOf("pka")),
+            barScore = 900,
+            personalization = null,
+            strings = strings()
+        )
+        assertTrue(text, text.contains("Origin TYPO_CORRECTION"))
+        assertTrue(text, text.contains("Correction of typed “pka”"))
+        assertFalse(text, text.contains("Autocorrected"))
+    }
+
+    /**
+     * Resource side of the label map: every origin's `provenance_origin_<name>` label, and the
+     * typo-correction note, exist in the default strings AND all 21 shipped locales (a missing
+     * locale entry silently falls back to English), and SuggestionHandler resolves each origin
+     * to ITS OWN label resource (an exhaustive `when`, so the map cannot miss an origin).
+     */
+    @Test
+    fun `every origin label exists in every locale and the handler maps each origin to it`() {
+        val names = SuggestionOrigin.entries.map { "provenance_origin_${it.name.lowercase()}" } +
+            "provenance_note_typo_correction_of"
+        val files = listOf(File("res/values/strings.xml")) +
+            File("res").listFiles().orEmpty()
+                .filter { it.isDirectory && it.name.startsWith("values-") && File(it, "strings.xml").exists() }
+                .map { File(it, "strings.xml") }
+        assertEquals("default + 21 locales", 22, files.size)
+        for (file in files) {
+            val declared = stringNames(file)
+            for (name in names) assertTrue("${file.parent} is missing $name", name in declared)
+        }
+
+        val handler = File("src/main/kotlin/tribixbite/cleverkeys/SuggestionHandler.kt").readText()
+        for (origin in SuggestionOrigin.entries) {
+            val mapping = "SuggestionOrigin.${origin.name} -> R.string.provenance_origin_${origin.name.lowercase()}"
+            assertTrue("SuggestionHandler must map $mapping", handler.contains(mapping))
+        }
+        assertTrue(
+            "the handler must build the label map over EVERY origin, not a hand-written subset",
+            handler.contains("SuggestionOrigin.entries.associateWith")
+        )
+    }
+
+    private fun stringNames(file: File): Set<String> {
+        val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
+        val nodes = doc.getElementsByTagName("string")
+        return (0 until nodes.length).mapTo(HashSet()) {
+            (nodes.item(it) as org.w3c.dom.Element).getAttribute("name")
+        }
     }
 }
