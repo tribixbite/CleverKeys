@@ -168,12 +168,18 @@ class DictionaryManager(private val context: Context) {
     /**
      * Add a word to the user dictionary for current language.
      * Uses same storage as CustomDictionarySource so words appear in Dictionary Manager.
+     *
+     * @return true when [word] was NEW to the store (exact case, against a fresh read — so a word
+     *   another writer stored since load counts as already present). The IME's undoable
+     *   "Added … to dictionary" confirmation offers its undo only for a true add, so an undo can
+     *   never remove a word the user already had.
      */
-    fun addUserWord(word: String?) {
-        if (word.isNullOrEmpty()) return
+    fun addUserWord(word: String?): Boolean {
+        if (word.isNullOrEmpty()) return false
 
-        persistUserWords(added = setOf(word))
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added '$word' to custom words for '$currentLanguage'")
+        val inserted = word in persistUserWords(added = setOf(word))
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added '$word' to custom words for '$currentLanguage' (new=$inserted)")
+        return inserted
     }
 
     /**
@@ -305,12 +311,13 @@ class DictionaryManager(private val context: Context) {
      *
      * @param clearStored treat the store as empty regardless of its contents — the
      *   "clear everything" semantics of [clearUserDictionary], the one whole-store scope.
+     * @return the words of [added] that were NOT in the freshly read store (the true inserts)
      */
     private fun persistUserWords(
         added: Set<String> = emptySet(),
         removed: Set<String> = emptySet(),
         clearStored: Boolean = false,
-    ) {
+    ): Set<String> {
         val key = getCustomWordsKey()
         val stored: Map<String, Int> = if (clearStored) emptyMap() else readStoredWordMap(key)
         val merged = LinkedHashSet(stored.keys).apply {
@@ -325,6 +332,7 @@ class DictionaryManager(private val context: Context) {
         prefs.edit()
             .putString(key, gson.toJson(wordsMap))
             .apply()
+        return added.filterTo(HashSet()) { it !in stored && it !in removed }
     }
 
     /**

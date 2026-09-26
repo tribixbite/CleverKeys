@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import com.google.gson.Gson
 import io.mockk.every
 import io.mockk.mockk
@@ -236,6 +237,40 @@ class DictionaryManagerTest {
 
         // No additional save should occur
         assertThat(savedStrings).isEmpty()
+    }
+
+    /**
+     * The undoable "Added … to dictionary" confirmation (2026-09-26) may only undo an add that
+     * actually INSERTED: a word the user already had must never be removed by an undo of a
+     * no-op add. [DictionaryManager.addUserWord] reports which it was.
+     */
+    @Test
+    fun `addUserWord reports true only when the word was new to the store`() {
+        val manager = buildManager(existingWords = """{"kept":200}""")
+
+        assertThat(manager.addUserWord("kotlin")).isTrue()
+        assertWithMessage("a second add of the same word inserts nothing")
+            .that(manager.addUserWord("kotlin")).isFalse()
+        assertWithMessage("a word already stored before the add inserts nothing")
+            .that(manager.addUserWord("kept")).isFalse()
+        assertWithMessage("membership is exact-case, so another casing IS a new entry")
+            .that(manager.addUserWord("Kept")).isTrue()
+    }
+
+    @Test
+    fun `addUserWord reports false for a word another writer stored since load`() {
+        val manager = buildManager()
+        // The Dictionary Manager UI (CustomDictionarySource) wrote it after this manager loaded.
+        savedStrings["custom_words_en"] = """{"zeb":150}"""
+
+        assertThat(manager.addUserWord("zeb")).isFalse()
+    }
+
+    @Test
+    fun `addUserWord with null or empty reports false`() {
+        val manager = buildManager()
+        assertThat(manager.addUserWord(null)).isFalse()
+        assertThat(manager.addUserWord("")).isFalse()
     }
 
     @Test
