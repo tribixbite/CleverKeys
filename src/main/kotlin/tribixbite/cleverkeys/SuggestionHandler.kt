@@ -612,10 +612,11 @@ class SuggestionHandler(
         fun text(id: Int): String = context.getString(id)
         return ProvenanceFormatter.Strings(
             locale = locale,
-            // Built over EVERY origin through the exhaustive originLabelRes, so a new origin
-            // cannot compile without a label (the old hand-written mapOf could miss one and
-            // the long-press sheet then threw on getValue).
-            originLabels = SuggestionOrigin.entries.associateWith { text(originLabelRes(it)) },
+            // Built over EVERY origin through the exhaustive SuggestionOrigin.labelRes (shared
+            // with the bar's origin-marker description), so a new origin cannot compile without
+            // a label (the old hand-written mapOf could miss one and the long-press sheet then
+            // threw on getValue).
+            originLabels = SuggestionOrigin.entries.associateWith { text(it.labelRes()) },
             unknown = text(R.string.provenance_unknown),
             source = text(R.string.provenance_source),
             score = text(R.string.provenance_score),
@@ -649,22 +650,6 @@ class SuggestionHandler(
             autocorrectedFrom = text(R.string.provenance_note_autocorrected_from),
             typoCorrectionOf = text(R.string.provenance_note_typo_correction_of)
         )
-    }
-
-    /**
-     * Label resource for each [SuggestionOrigin] (`provenance_origin_<name>`, pinned against
-     * every locale by SuggestionProvenanceTest). Exhaustive `when`: no `else`, on purpose.
-     */
-    private fun originLabelRes(origin: SuggestionOrigin): Int = when (origin) {
-        SuggestionOrigin.GEOMETRIC -> R.string.provenance_origin_geometric
-        SuggestionOrigin.CTC -> R.string.provenance_origin_ctc
-        SuggestionOrigin.DICTIONARY_PREFIX -> R.string.provenance_origin_dictionary_prefix
-        SuggestionOrigin.CONTRACTION -> R.string.provenance_origin_contraction
-        SuggestionOrigin.POSSESSIVE -> R.string.provenance_origin_possessive
-        SuggestionOrigin.EXACT_ADD -> R.string.provenance_origin_exact_add
-        SuggestionOrigin.NEXT_WORD -> R.string.provenance_origin_next_word
-        SuggestionOrigin.AUTOCORRECT -> R.string.provenance_origin_autocorrect
-        SuggestionOrigin.TYPO_CORRECTION -> R.string.provenance_origin_typo_correction
     }
 
     private fun localizedPersonalizationDetails(

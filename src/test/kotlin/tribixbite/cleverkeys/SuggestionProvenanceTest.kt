@@ -357,14 +357,17 @@ class SuggestionProvenanceTest {
             for (name in names) assertTrue("${file.parent} is missing $name", name in declared)
         }
 
-        val handler = File("src/main/kotlin/tribixbite/cleverkeys/SuggestionHandler.kt").readText()
+        // The exhaustive mapping moved to the shared SuggestionOrigin.labelRes (2026-09-26) so the
+        // suggestion bar's spoken origin label and the long-press sheet use the same one.
+        val labels = File("src/main/kotlin/tribixbite/cleverkeys/SuggestionOriginLabels.kt").readText()
         for (origin in SuggestionOrigin.entries) {
             val mapping = "SuggestionOrigin.${origin.name} -> R.string.provenance_origin_${origin.name.lowercase()}"
-            assertTrue("SuggestionHandler must map $mapping", handler.contains(mapping))
+            assertTrue("SuggestionOrigin.labelRes must map $mapping", labels.contains(mapping))
         }
+        val handler = File("src/main/kotlin/tribixbite/cleverkeys/SuggestionHandler.kt").readText()
         assertTrue(
             "the handler must build the label map over EVERY origin, not a hand-written subset",
-            handler.contains("SuggestionOrigin.entries.associateWith")
+            handler.contains("SuggestionOrigin.entries.associateWith { text(it.labelRes()) }")
         )
     }
 

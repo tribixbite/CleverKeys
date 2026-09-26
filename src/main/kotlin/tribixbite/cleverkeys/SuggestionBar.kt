@@ -310,12 +310,21 @@ class SuggestionBar : LinearLayout {
         // Task B Tier 2 (opt-in `suggestion_provenance_markers`): small colored
         // dot per suggestion showing which pipeline stage produced it.
         val meta = metaAt(index)
-        view.text = if (showOriginMarkers && meta != null && suggestion is Suggestion.Word) {
+        val markerOrigin = meta?.origin?.takeIf { showOriginMarkers && suggestion is Suggestion.Word }
+        // The marker is colour-only and its glyph reads as "black circle", so a marked entry
+        // is announced as its text plus the origin's localized label, glyph excluded. Every
+        // other entry gets null (views are pooled, so a stale description must be cleared)
+        // and is read from its visible text as before.
+        view.contentDescription = SuggestionOriginA11y.contentDescription(
+            spokenText = baseText,
+            originLabel = markerOrigin?.let { context.getString(it.labelRes()) }
+        )
+        view.text = if (markerOrigin != null) {
             android.text.SpannableStringBuilder(baseText).apply {
                 val start = length
                 append(" ●")
                 setSpan(
-                    android.text.style.ForegroundColorSpan(originMarkerColor(meta.origin)),
+                    android.text.style.ForegroundColorSpan(originMarkerColor(markerOrigin)),
                     start + 1, length,
                     android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
@@ -440,10 +449,8 @@ class SuggestionBar : LinearLayout {
     /**
      * Fixed marker palette per origin (readable on light and dark key themes). The palette
      * lives in the pure [OriginMarkerPalette] so its one-hue-per-origin coverage is unit-tested.
-     *
-     * TODO(a11y-origin-marker): the marker is a bare "●" appended to the word, so TalkBack reads
-     * it as a symbol and the origin is conveyed by colour alone. A contentDescription carrying the
-     * localized origin label (the provenance sheet's `provenance_origin_*` strings) would fix both.
+     * The colour is never the only signal: [bindSuggestionView] gives a marked entry a content
+     * description naming the origin ([SuggestionOriginA11y]).
      */
     private fun originMarkerColor(origin: SuggestionOrigin): Int = OriginMarkerPalette.argb(origin)
 

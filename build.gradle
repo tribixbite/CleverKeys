@@ -907,6 +907,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.ContractionPromotionUserWordTest',
     // Task B (2026-08-06): pipeline transparency — UnifiedScore combiner + provenance model
     'tribixbite.cleverkeys.SuggestionProvenanceTest',
+    // 2026-09-26: origin markers are announced by TalkBack (word + localized origin label).
+    'tribixbite.cleverkeys.SuggestionOriginA11yTest',
     // Task C (2026-08-06): TrigramStore activation — same persistence discipline as BigramStore
     'tribixbite.cleverkeys.contextaware.TrigramStorePersistenceTest',
     'tribixbite.cleverkeys.contextaware.ContextModelTrigramTest',
