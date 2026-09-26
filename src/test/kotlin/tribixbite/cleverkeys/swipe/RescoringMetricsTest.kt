@@ -146,4 +146,127 @@ class RescoringMetricsTest {
         assertThat(t.broken).isEqualTo(1)
         assertThat(t.toString()).contains("n=5")
     }
+
+    // ── top-K membership (alternates-only mode, 2026-09-26) ──────────────────────────
+
+    private val engine = listOf("was", "war", "wat", "wet", "wit", "way")
+
+    @Test
+    fun `a target moved from slot 4 into slot 2 ENTERED the top 3`() {
+        val rescored = listOf("was", "wet", "war", "wat", "wit", "way")
+        assertThat(RescoringMetrics.classifyTopK("wet", engine, rescored, k = 3))
+            .isEqualTo(RescoringMetrics.TopKOutcome.ENTERED)
+    }
+
+    @Test
+    fun `a target pushed from slot 3 to slot 4 LEFT the top 3`() {
+        // The alternates-mode cost: a user who would have tapped slot 3 no longer sees it.
+        val rescored = listOf("was", "war", "wit", "wat", "wet", "way")
+        assertThat(RescoringMetrics.classifyTopK("wat", engine, rescored, k = 3))
+            .isEqualTo(RescoringMetrics.TopKOutcome.LEFT)
+    }
+
+    @Test
+    fun `movement inside the top K or outside it is not a membership change`() {
+        val rescored = listOf("was", "wat", "war", "way", "wit", "wet")
+        assertThat(RescoringMetrics.classifyTopK("war", engine, rescored, k = 3))
+            .isEqualTo(RescoringMetrics.TopKOutcome.STAYED_IN)
+        assertThat(RescoringMetrics.classifyTopK("wit", engine, rescored, k = 3))
+            .isEqualTo(RescoringMetrics.TopKOutcome.STAYED_OUT)
+        assertWithMessage("a target absent from the slate can never enter it by reordering")
+            .that(RescoringMetrics.classifyTopK("wot", engine, rescored, k = 3))
+            .isEqualTo(RescoringMetrics.TopKOutcome.STAYED_OUT)
+    }
+
+    @Test
+    fun `top-K membership is case-insensitive, like classify`() {
+        val rescored = listOf("Was", "Wet", "war", "wat", "wit", "way")
+        assertThat(RescoringMetrics.classifyTopK("WET", engine, rescored, k = 3))
+            .isEqualTo(RescoringMetrics.TopKOutcome.ENTERED)
+    }
+
+    @Test
+    fun `k larger than the slate treats every slate word as in`() {
+        assertThat(RescoringMetrics.classifyTopK("way", engine, engine.reversed(), k = 20))
+            .isEqualTo(RescoringMetrics.TopKOutcome.STAYED_IN)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `k below one is a caller bug, not an empty window`() {
+        RescoringMetrics.classifyTopK("was", engine, engine, k = 0)
+    }
+
+    @Test
+    fun `TopKTally delta is net entries over all cases`() {
+        val t = RescoringMetrics.TopKTally()
+        repeat(3) { t.record(RescoringMetrics.TopKOutcome.ENTERED) }
+        t.record(RescoringMetrics.TopKOutcome.LEFT)
+        repeat(96) { t.record(RescoringMetrics.TopKOutcome.STAYED_IN) }
+        assertThat(t.total).isEqualTo(100)
+        assertThat(t.deltaInTopK).isWithin(1e-9).of(0.02)
+        assertWithMessage("baseline membership counts the engine order: in-before = stayed + left")
+            .that(t.baselineInTopK).isEqualTo(97)
+        assertThat(t.rescoredInTopK).isEqualTo(99)
+        assertThat(RescoringMetrics.TopKTally().deltaInTopK).isEqualTo(0.0)
+    }
+
+    @Test
+    fun `the alternates bar needs a one-point gain AND a rank 1 that never moved`() {
+        fun topK(entered: Int, left: Int, total: Int) = RescoringMetrics.TopKTally(
+            entered = entered, left = left, stayedIn = 0, stayedOut = total - entered - left,
+        )
+        val still = tally(fixed = 0, broken = 0, unchanged = 100)
+        assertWithMessage("exactly +1 point with rank 1 untouched clears the bar")
+            .that(RescoringMetrics.meetsAlternatesBar(topK(1, 0, 100), still)).isTrue()
+        assertWithMessage("+0.5 point is under the bar")
+            .that(RescoringMetrics.meetsAlternatesBar(topK(1, 0, 200), tally(0, 0, unchanged = 200)))
+            .isFalse()
+        assertWithMessage(
+            "ANY rank-1 change fails the bar, even a fix and even a wash — alternates mode's whole " +
+                "claim is zero auto-commit exposure by construction"
+        ).that(RescoringMetrics.meetsAlternatesBar(topK(50, 0, 100), tally(1, 0, unchanged = 99)))
+            .isFalse()
+        assertThat(
+            RescoringMetrics.meetsAlternatesBar(topK(50, 0, 100), tally(0, 0, unchanged = 99, wash = 1))
+        ).isFalse()
+    }
+
+    // ── the oracle context model ─────────────────────────────────────────────────────
+
+    @Test
+    fun `oracle evidence boosts the target alone, at the ceiling, past the strict floors`() {
+        val ev = RescoringMetrics.oracleEvidence(listOf("was", "War", "wat"), target = "war")
+        assertThat(ev[0]).isEqualTo(SwipeContextRescorer.Evidence.NONE)
+        assertThat(ev[1].boost).isEqualTo(SwipeContextRescorer.MAX_BOOST)
+        assertThat(SwipeContextRescorer.promotableToRankOne(ev[1])).isTrue()
+        assertThat(ev[2]).isEqualTo(SwipeContextRescorer.Evidence.NONE)
+    }
+
+    @Test
+    fun `under the shipped guards the oracle promotes exactly the targets within R_MIN`() {
+        // At WEIGHT=0.5 the ceiling is 0.5*ln(5)=0.80 nats > ln(2)=0.69 nats, so R_MIN — not the
+        // weight — is what binds a perfect context model. That is what makes this an UPPER bound.
+        val words = listOf("was", "war", "wat")
+        val within = SwipeContextRescorer.rescoreOrder(
+            listOf(600, 300, 100), RescoringMetrics.oracleEvidence(words, "war"),
+        )
+        assertThat(words[within.first()]).isEqualTo("war")
+        val below = SwipeContextRescorer.rescoreOrder(
+            listOf(600, 299, 101), RescoringMetrics.oracleEvidence(words, "war"),
+        )
+        assertThat(words[below.first()]).isEqualTo("was")
+    }
+
+    @Test
+    fun `rMin of infinity pins rank 1 however strong the evidence — alternates-only mode`() {
+        val words = listOf("was", "war", "wat", "wet")
+        val scores = listOf(400, 380, 360, 350)
+        val ev = RescoringMetrics.oracleEvidence(words, "wet")
+        assertWithMessage("precondition: under the shipped R_MIN this evidence DOES take rank 1")
+            .that(words[SwipeContextRescorer.rescoreOrder(scores, ev).first()]).isEqualTo("wet")
+        val order = SwipeContextRescorer.rescoreOrder(scores, ev, rMin = Double.POSITIVE_INFINITY)
+        assertThat(order.first()).isEqualTo(0)
+        assertWithMessage("rank 1 is pinned, but the alternates beneath it are still rescored")
+            .that(words[order[1]]).isEqualTo("wet")
+    }
 }
