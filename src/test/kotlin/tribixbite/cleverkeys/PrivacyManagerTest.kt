@@ -163,8 +163,17 @@ class PrivacyManagerTest {
 
     @Test
     fun `canCollectSwipeData returns true when enabled in mainPrefs`() {
+        // Swipe collection sits behind the master on-device-learning gate, which is
+        // opt-in (default OFF) since the v4 learning-consent change — opt in explicitly.
+        mainPrefs.putBoolean("on_device_learning_enabled", true)
         mainPrefs.putBoolean("privacy_collect_swipe", true)
         assertThat(manager.canCollectSwipeData()).isTrue()
+    }
+
+    @Test
+    fun `canCollectSwipeData stays false when the master learning gate is at its default`() {
+        mainPrefs.putBoolean("privacy_collect_swipe", true)
+        assertThat(manager.canCollectSwipeData()).isFalse()
     }
 
     @Test
