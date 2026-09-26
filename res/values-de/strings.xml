@@ -158,6 +158,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">„%1$s“ zum Wörterbuch hinzufügen?</string>
+    <string name="suggestion_prefer_when_swiping">„%1$s“ beim Wischen bevorzugen?</string>
+    <string name="suggestion_prefer_when_swiping_decline">Nicht fragen</string>
+    <string name="suggestion_prefer_when_swiping_added">Wischen bevorzugt jetzt „%1$s“</string>
 
     <!-- Dictionary management -->
     <string name="dict_search_hint">Wörter suchen…</string>

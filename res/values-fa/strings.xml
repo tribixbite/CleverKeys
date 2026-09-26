@@ -179,6 +179,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">«%1$s» به واژه‌نامه افزوده شود؟</string>
+    <string name="suggestion_prefer_when_swiping">هنگام کشیدن، «%1$s» ترجیح داده شود؟</string>
+    <string name="suggestion_prefer_when_swiping_decline">نپرس</string>
+    <string name="suggestion_prefer_when_swiping_added">اکنون هنگام کشیدن «%1$s» ترجیح داده می‌شود</string>
 
     <!-- Dictionary editor -->
     <string name="dict_search_hint">جستجوی واژه‌ها…</string>

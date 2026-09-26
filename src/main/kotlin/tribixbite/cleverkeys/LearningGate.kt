@@ -16,6 +16,7 @@ package tribixbite.cleverkeys
  * | Personalization vocabulary | `UserVocabulary` | [learnCommittedWord] → [canLearnPersonalization] (plus `PersonalizationEngine.setEnabled` sync in `WordPredictor.setConfig`) |
  * | Selection adaptation | `UserAdaptationManager` prefs | [canLearnAdaptation] (call site: `SuggestionHandler.onSuggestionSelected`) |
  * | Swipe-ML traces | `SwipeMLDataStore` | [canCollectSwipeMl] (call site: `PrivacyManager.canCollectSwipeData`, checked by `MLDataCollector` before storing) |
+ * | Swipe corrections (the "Prefer “Y” when swiping?" offer + ML-row relabel) | `SwipeCorrectionStore` | [canLearnSwipeCorrections] + incognito + password (call site: `SuggestionHandler.swipeCorrectionsAllowed`) |
  *
  * READ paths that surface previously learned data are gated too, so turning the
  * master off makes the learned stores fully inert (neither written nor read):
@@ -101,6 +102,16 @@ object LearningGate {
      * [canUseLearnedContext] for the context LM).
      */
     fun canUseAdaptation(onDeviceLearningEnabled: Boolean): Boolean = onDeviceLearningEnabled
+
+    /**
+     * May swipe corrections (a swipe auto-insert the user replaced or undid, and the word they
+     * wanted) be recorded, and may the recorded counts drive the "Prefer “Y” when swiping?"
+     * offer (learning-system audit 2026-09-26, Resolution)? Master gate only: the store feeds an
+     * OFFER the user must accept, not a ranking signal, so no per-feature pref sits beside it.
+     * The caller additionally requires a field that allows personalized learning and is not a
+     * password field.
+     */
+    fun canLearnSwipeCorrections(onDeviceLearningEnabled: Boolean): Boolean = onDeviceLearningEnabled
 
     /** May swipe-ML trajectory data be collected/stored? */
     fun canCollectSwipeMl(onDeviceLearningEnabled: Boolean, collectSwipeEnabled: Boolean): Boolean =

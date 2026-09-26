@@ -107,4 +107,16 @@ class SwipeCorrectionStoreTest {
         assertThat(fresh.correctionCount("en", "git")).isEqualTo(0)
         assertThat(fresh.recordCorrection("en", "git", listOf("got"))).isEqualTo(1)
     }
+
+    /** Privacy's "forget learned data" (and the master-off prompt) must erase this store too. */
+    @Test
+    fun privacyForgetLearnedDataClearsTheStore() {
+        val section = java.io.File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/sections/PrivacySection.kt")
+        check(section.exists()) { "run with the project root as CWD" }
+        val text = section.readText()
+        val start = text.indexOf("private fun clearLearnedLanguageData(")
+        check(start >= 0) { "clearLearnedLanguageData moved — re-point this pin, do not delete it" }
+        val body = text.substring(start, text.indexOf("\n}", start))
+        assertThat(body).contains("SwipeCorrectionStore.getInstance(context).clearAll()")
+    }
 }

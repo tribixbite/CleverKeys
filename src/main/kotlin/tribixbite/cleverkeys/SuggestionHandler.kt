@@ -482,6 +482,18 @@ class SuggestionHandler(
     // (plus the bigram don→t). Held here instead, and joined at completion.
     private var pendingJoinerStem: String? = null
 
+    // Swipe-correction offer (learning-system audit 2026-09-26, Resolution). All three are
+    // nullable and resolved lazily so an Objenesis-built test instance starts in its correct
+    // empty state (same convention as the W5 fields above).
+    /** Which word the user settled on after rejecting a swipe auto-insert. See [swipeCorrections]. */
+    private var swipeCorrectionTracker: SwipeCorrectionTracker? = null
+
+    /** Per-language correction counts + declines; null until first use. See [correctionStore]. */
+    private var swipeCorrectionStore: SwipeCorrectionStore? = null
+
+    /** The word the bar is currently offering to prefer, or null when no offer is showing. */
+    private var swipePreferenceOffer: String? = null
+
     /**
      * Per-field incognito flag (M5): called from `onStartInputView` with
      * [LearningGate.fieldAllowsPersonalizedLearning] of the field's
@@ -629,6 +641,8 @@ class SuggestionHandler(
         val displayWord = when (val route = routeSuggestionSelection(word)) {
             is SelectionRoute.AddToDictionary -> route.word
             is SelectionRoute.ExactAdd -> route.word
+            is SelectionRoute.PreferSwipeWord -> route.word
+            is SelectionRoute.DeclineSwipePreference -> route.word
             is SelectionRoute.CommitWord -> route.wire.removePrefix("raw:")
         }
 
@@ -695,6 +709,8 @@ class SuggestionHandler(
             // W5/W7: nothing typed before the password field may be flushed into it later.
             pendingTypedWord = null
             pendingJoinerStem = null
+            // Swipe corrections: nothing observed before the password field may resolve in it.
+            swipeCorrectionTracker?.clear()
         }
         vlog { "Password mode ${if (enabled) "enabled" else "disabled"}" }
     }
@@ -927,6 +943,12 @@ class SuggestionHandler(
                     contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
                 }
 
+                // A new swipe supersedes a swipe-correction offer the bar was showing.
+                if (swipePreferenceOffer != null) {
+                    swipePreferenceOffer = null
+                    specialPromptActive = false
+                }
+
                 // Clear tracking BEFORE the commit so consecutive swipes APPEND (the replace branch
                 // in onSuggestionSelected must not fire on an auto-insert).
                 contextTracker.clearLastAutoInsertedWord()
@@ -971,13 +993,17 @@ class SuggestionHandler(
                 // the database bounded now that the path is actually reachable.
                 // W8 (audit 2026-09-26): a swipe trace in a password field IS the password — it is
                 // never captured, whatever the collection consent says.
+                // Feature B (swipe-correction resolution): keep the stored row's trace id so a
+                // later correction of this swipe relabels exactly that row.
+                var storedTraceId: String? = null
                 val storedGlobally =
                     if (wasSwipeAutoInsert && swipeData != null && !passwordField) {
                         mlDataCollector.collectAndStoreSwipeData(
                             committedWord ?: topPrediction,
                             swipeData,
                             inputCoordinator.keyboardHeightPx(),
-                            predictionCoordinator.getMlDataStore()
+                            predictionCoordinator.getMlDataStore(),
+                            onStored = { storedTraceId = it }
                         )
                     } else {
                         false
@@ -1019,6 +1045,14 @@ class SuggestionHandler(
                     committedWord ?: topPrediction.removePrefix("raw:")
                 )
                 contextTracker.setLastCommitSource(PredictionSource.SWIPE)
+
+                // Swipe-correction tracking: remember this auto-insert (the word in the editor,
+                // the engine slate it came from, its ML row) so a bar tap or backspace undo that
+                // rejects it can be recorded as a correction.
+                noteSwipeAutoInsert(
+                    committedWord ?: topPrediction.removePrefix("raw:"),
+                    rescoredPredictions, storedTraceId, ic, editorInfo
+                )
 
                 // Re-display the augmented+transformed correction list (D1: possessives persist in
                 // the final swipe bar).
@@ -1188,6 +1222,16 @@ class SuggestionHandler(
                 handleExactWordAdd(route.word, ic, editorInfo)
                 return null
             }
+            // Swipe-correction offer (audit 2026-09-26): accept → personal dictionary.
+            is SelectionRoute.PreferSwipeWord -> {
+                handlePreferSwipeWord(route.word)
+                return null
+            }
+            // Swipe-correction offer: "Don't ask" → never offer this word again.
+            is SelectionRoute.DeclineSwipePreference -> {
+                handleDeclineSwipePreference(route.word)
+                return null
+            }
             // Ordinary word: fall through to autocorrect/commit handling below.
             is SelectionRoute.CommitWord -> Unit
         }
@@ -1293,6 +1337,9 @@ class SuggestionHandler(
 
         // Reset swipe tracking
         contextTracker.setWasLastInputSwipe(false)
+
+        // Swipe-correction tracking: the auto-inserted swipe word this tap REPLACED, if any.
+        var replacedSwipeWord: String? = null
 
         ic?.let { inputConnection ->
             try {
@@ -1400,6 +1447,7 @@ class SuggestionHandler(
                     // ends with prev→chosen and never rejected→chosen. Same API and gate contract
                     // as the bar-tap autocorrect undo ([handleAutocorrectUndo]).
                     rollbackRejectedWord(rejectedWord)
+                    replacedSwipeWord = rejectedWord
 
                     // Clear the tracking variables
                     contextTracker.clearLastAutoInsertedWord()
@@ -1635,6 +1683,23 @@ class SuggestionHandler(
             // NOTE: Don't clear suggestions here - they're re-displayed after auto-insertion
             contextTracker.clearCurrentWord()
 
+            // Swipe corrections: a bar tap over the auto-inserted swipe word IS a correction; any
+            // other manual selection is the next committed word (it may resolve a backspace undo).
+            // The swipe auto-insert itself (isManualSelection=false) is noted by the caller.
+            // When this records the offer-triggering correction, the offer claims the bar and
+            // the next-word call below stands down (it honours specialPromptActive).
+            if (isManualSelection) {
+                val replaced = replacedSwipeWord
+                val correction = if (replaced != null) {
+                    swipeCorrectionsOrClear(editorInfo)?.onSwipeReplacedFromBar(replaced, processedWord)
+                } else {
+                    swipeCorrectionsOrClear(editorInfo)?.onWordCommitted(
+                        processedWord, editorBeforeCursorFor(inputConnection, processedWord)
+                    )
+                }
+                recordSwipeCorrection(correction, editorInfo)?.let { showSwipePreferenceOffer(it) }
+            }
+
             // Next-word prediction call-site 2 (audit §4.4): after a MANUAL tap
             // commit the context just grew — chain another round of context-only
             // candidates (this is what makes "want" → tap "to" → suggest
@@ -1778,6 +1843,10 @@ class SuggestionHandler(
         // stem against the editor before learning it.)
         pendingTypedWord = null
         if (isPasswordMode) return
+        // The cursor callback that follows the commit which raised a swipe-correction offer lands
+        // here (no word at the cursor) — the offer must survive it, as the add-to-dictionary
+        // prompt survives via InputCoordinator's preserve branch.
+        if (swipePreferenceOffer != null && specialPromptActive) return
         suggestionBar?.clearSuggestions()
         maybeShowNextWordPredictions(editorInfo, readEditorParkContext(ic))
     }
@@ -1843,6 +1912,209 @@ class SuggestionHandler(
         // Show confirmation message (clearAfter=true so bar clears instead of restoring prompt)
         suggestionBar?.showTemporaryMessage("Added '$wordToAdd' to dictionary", 2000L, clearAfter = true)
     }
+
+    // ---------------------------------------------------------- swipe corrections (audit 2026-09-26)
+
+    /**
+     * May swipe corrections be observed and recorded right now? The master learning gate
+     * ([LearningGate.canLearnSwipeCorrections]), a field that allows personalized learning (M5),
+     * and never a password field (tracked mode or the live editor, as W8 does elsewhere).
+     */
+    private fun swipeCorrectionsAllowed(editorInfo: EditorInfo?): Boolean =
+        LearningGate.canLearnSwipeCorrections(config.on_device_learning_enabled) &&
+            fieldAllowsPersonalizedLearning &&
+            !isPasswordMode &&
+            !SuggestionBar.isPasswordField(editorInfo)
+
+    /**
+     * The tracker when [swipeCorrectionsAllowed], else null — and the tracker's state is dropped,
+     * so nothing observed while a gate was closed can resolve later.
+     */
+    private fun swipeCorrectionsOrClear(editorInfo: EditorInfo?): SwipeCorrectionTracker? {
+        if (swipeCorrectionsAllowed(editorInfo)) return swipeCorrections()
+        swipeCorrectionTracker?.clear()
+        return null
+    }
+
+    /** Text before the cursor, or null when the editor cannot be read. */
+    private fun editorTextBeforeCursor(ic: InputConnection?, chars: Int): String? = try {
+        ic?.getTextBeforeCursor(chars, 0)?.toString()
+    } catch (e: Exception) {
+        null
+    }
+
+    /** The window [SwipeCorrectionTracker] needs to judge whether [word] sits where an undo left off. */
+    private fun editorBeforeCursorFor(ic: InputConnection?, word: String): String? =
+        editorTextBeforeCursor(
+            ic, SwipeCorrectionTracker.ANCHOR_WINDOW + word.length + SwipeCorrectionTracker.RESOLUTION_SLACK
+        )
+
+    /** A swipe auto-inserted [word] (after the commit; the bar shows its alternates). */
+    private fun noteSwipeAutoInsert(
+        word: String,
+        slate: List<String>,
+        traceId: String?,
+        ic: InputConnection?,
+        editorInfo: EditorInfo?
+    ) {
+        val tracker = swipeCorrectionsOrClear(editorInfo) ?: return
+        val settled = tracker.onSwipeAutoInserted(
+            SwipeCorrectionTracker.SwipeRecord(word, slate.toList(), traceId),
+            editorBeforeCursorFor(ic, word)
+        )
+        // A re-swipe the user kept is recorded now. Its offer, if due, is NOT shown: the bar holds
+        // this swipe's alternates, which the user may still need to correct it — the offer comes
+        // back at the next correction of the same word (the count stays at or above the threshold).
+        recordSwipeCorrection(settled, editorInfo)
+    }
+
+    /**
+     * A swipe auto-insert was removed by backspace (#110 undo) or delete-last-word. [ic] is the
+     * editor after the deletion: its text before the cursor is where the replacement must appear.
+     */
+    private fun noteSwipeUndone(word: String, ic: InputConnection?) {
+        val tracker = swipeCorrectionsOrClear(null) ?: return
+        tracker.onSwipeUndone(word, editorTextBeforeCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW))
+    }
+
+    /**
+     * A TYPED word was committed ([word] as completed; [ic] already shows its separator).
+     * @return the offer word when this commit recorded the offer-triggering correction
+     */
+    private fun noteTypedWordCommitted(word: String, ic: InputConnection?, editorInfo: EditorInfo?): String? {
+        val tracker = swipeCorrectionsOrClear(editorInfo) ?: return null
+        return recordSwipeCorrection(tracker.onWordCommitted(word, editorBeforeCursorFor(ic, word)), editorInfo)
+    }
+
+    /**
+     * A sentence boundary, Enter, leaving the field, or a commit that is not what the user typed
+     * (autocorrect): an unanswered undo is dropped, a kept re-swipe settles.
+     * @return the offer word when the settled re-swipe recorded the offer-triggering correction
+     */
+    private fun noteSwipeCorrectionBoundary(editorInfo: EditorInfo?): String? {
+        val tracker = swipeCorrectionsOrClear(editorInfo) ?: return null
+        return recordSwipeCorrection(tracker.settleOrClear(), editorInfo)
+    }
+
+    /**
+     * Apply [SwipeCorrectionPolicy] to a reported correction and record what survives:
+     * c(Y) and c(X → Y) in the per-language store (Feature A) and the relabel of each rejected
+     * swipe's ML row (Feature B — only rows that exist, i.e. were stored under the swipe-data
+     * consent; the store ignores unknown trace ids).
+     *
+     * @return the chosen word when [SwipeCorrectionPolicy.shouldOffer] says to offer it now
+     */
+    private fun recordSwipeCorrection(correction: SwipeCorrectionTracker.Correction?, editorInfo: EditorInfo?): String? {
+        if (correction == null || !swipeCorrectionsAllowed(editorInfo)) return null
+        val predictor = predictionCoordinator.getWordPredictor() ?: return null
+        val rejected = SwipeCorrectionPolicy.plausibleRejections(correction) { w ->
+            !predictor.isWordDisabled(w) && (predictor.isInDictionary(w) || predictor.isInUserVocabulary(w))
+        }
+        if (rejected.isEmpty()) {
+            vlog { "SWIPE CORRECTION: dropped as implausible (${correction.rejected.size} rejected)" }
+            return null
+        }
+        val chosen = correction.chosen.lowercase(java.util.Locale.ROOT)
+        val store = correctionStore() ?: return null
+        val language = activeLanguageCode()
+        val count = try {
+            store.recordCorrection(language, chosen, rejected.map { it.word })
+        } catch (e: Exception) {
+            Log.w(TAG, "Swipe-correction store write failed", e)
+            return null
+        }
+        vlog { "SWIPE CORRECTION: recorded (${rejected.size} rejected → chosen), c=$count" }
+
+        // Feature B: the rows were labelled with the auto-inserted word; the user meant `chosen`.
+        predictionCoordinator.getMlDataStore()?.let { mlStore ->
+            for (swipe in rejected) swipe.traceId?.let { mlStore.relabelSwipe(it, chosen) }
+        }
+
+        val isUserWord = predictionCoordinator.getDictionaryManager()?.isUserWordIgnoringCase(chosen) ?: false
+        return chosen.takeIf {
+            SwipeCorrectionPolicy.shouldOffer(count, isUserWord, store.isDeclined(language, chosen))
+        }
+    }
+
+    /**
+     * Show "Prefer “[word]” when swiping?" + "Don't ask" in the bar — the same prompt surface as
+     * the add-to-dictionary prompt, with the same [specialPromptActive] protection so an in-flight
+     * prediction or next-word pass cannot overwrite it. It stays until the user taps it, types, or
+     * swipes.
+     */
+    private fun showSwipePreferenceOffer(word: String) {
+        predictionTasks.cancelCurrent()
+        specialPromptActive = true
+        nextWordSuggestionsActive = false
+        swipePreferenceOffer = word
+        vlog { "SWIPE CORRECTION: offering to prefer the corrected word" }
+        suggestionBar?.setSuggestionsWithScores(
+            listOf(Suggestion.PreferSwipeWord(word).wire, Suggestion.DeclineSwipePreference(word).wire),
+            listOf(0, 0)
+        )
+    }
+
+    /**
+     * The user accepted "Prefer “[word]” when swiping?": add [word] to the personal dictionary
+     * through the same API the add-to-dictionary prompt and the Dictionary Manager use. A new
+     * entry gets [UserWordFrequency.DEFAULT] (255); the CTC lexicon memo keys on the
+     * `custom_words_<lang>` content ([tribixbite.cleverkeys.swipe.LexiconContentVersion]), so
+     * the next swipe decodes against a lexicon where the word carries the calibrated user
+     * frequency (the scale ceiling — ahead of `got`/`for` for the reported `git`), and
+     * [SwipeRewarmScheduler] rebuilds it in the background first. The word's correction counts
+     * are then dropped: the dictionary entry is the durable record.
+     *
+     * Accepting is an explicit act on a prompt that only appears while the learning gates pass,
+     * so it is not re-gated here (same as the add-to-dictionary prompt).
+     */
+    private fun handlePreferSwipeWord(word: String) {
+        swipePreferenceOffer = null
+        specialPromptActive = false
+        if (word.isBlank()) return
+        vlog { "SWIPE PREFER: adding '$word' to the personal dictionary" }
+        predictionCoordinator.getDictionaryManager()?.addUserWord(word)
+        predictionCoordinator.refreshCustomWords()
+        try {
+            correctionStore()?.forgetWord(activeLanguageCode(), word)
+        } catch (e: Exception) {
+            Log.w(TAG, "Swipe-correction store update failed", e)
+        }
+        suggestionBar?.showTemporaryMessage(
+            context.getString(R.string.suggestion_prefer_when_swiping_added, word), 2000L, clearAfter = true
+        )
+    }
+
+    /** The user declined the offer for [word]: remember it so it is never offered again. */
+    private fun handleDeclineSwipePreference(word: String) {
+        swipePreferenceOffer = null
+        specialPromptActive = false
+        try {
+            correctionStore()?.decline(activeLanguageCode(), word)
+        } catch (e: Exception) {
+            Log.w(TAG, "Swipe-correction store update failed", e)
+        }
+        suggestionBar?.clearSuggestions()
+    }
+
+    /** The active dictionary language — the scope of the personal dictionary and the correction store. */
+    private fun activeLanguageCode(): String =
+        predictionCoordinator.getDictionaryManager()?.getCurrentLanguage() ?: "en"
+
+    /**
+     * The correction store, resolved on first use. Null when it cannot be opened (e.g. the
+     * credential-encrypted preferences before the first unlock) — the offer then simply does
+     * not run; typing is never affected.
+     */
+    private fun correctionStore(): SwipeCorrectionStore? = swipeCorrectionStore ?: try {
+        SwipeCorrectionStore.getInstance(context).also { swipeCorrectionStore = it }
+    } catch (e: Exception) {
+        Log.w(TAG, "Swipe-correction store unavailable", e)
+        null
+    }
+
+    /** The correction tracker, created on first use. */
+    private fun swipeCorrections(): SwipeCorrectionTracker =
+        swipeCorrectionTracker ?: SwipeCorrectionTracker().also { swipeCorrectionTracker = it }
 
     /**
      * #42: Handle exact typed word tap: commit the word, add to dictionary, and insert trailing space.
@@ -2086,6 +2358,9 @@ class SuggestionHandler(
         vlog { "LEARN FLUSH: typed word completed without a space (len=${word.length})" }
         updateContext(capitalizeIWord(word))
         contextTracker.clearCurrentWord()
+        // The flushed word may answer a swipe undo. Recorded only — Enter / leaving the field /
+        // a swipe is not a moment to put an offer in the bar.
+        noteTypedWordCommitted(word, ic, null)
         return true
     }
 
@@ -2096,6 +2371,10 @@ class SuggestionHandler(
      */
     fun flushTypedWordOnFinishInput(ic: InputConnection?) {
         flushPendingTypedWord(ic)
+        // Leaving the field ends every pending swipe correction (a kept re-swipe is recorded).
+        noteSwipeCorrectionBoundary(null)
+        swipeCorrectionTracker?.clear()
+        swipePreferenceOffer = null
     }
 
     // ---------------------------------------------------- KeyEventHandler.LearningHooks (W2/W5)
@@ -2109,11 +2388,15 @@ class SuggestionHandler(
     override fun onEditorWordBoundary(ic: InputConnection?) {
         flushPendingTypedWord(ic)
         predictionCoordinator.getWordPredictor()?.onSentenceBoundary()
+        // Swipe corrections resolved here are recorded; the offer is not shown (the editor is
+        // about to take a newline / an action, and the bar is not the user's focus).
+        noteSwipeCorrectionBoundary(null)
     }
 
     /** W2: backspace deleted the just-swiped [word] (#110 swipe undo) — the user rejected it. */
-    override fun onSwipeWordUndone(word: String) {
+    override fun onSwipeWordUndone(word: String, ic: InputConnection?) {
         rollbackRejectedWord(word)
+        noteSwipeUndone(word, ic)
     }
 
     /**
@@ -2166,6 +2449,7 @@ class SuggestionHandler(
                     contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
                     // v1.2.6: Clear special prompt flag - user is typing a new word
                     specialPromptActive = false
+                    swipePreferenceOffer = null
                 }
                 // W5: this word is now typed-but-unlearned until something completes it.
                 pendingTypedWord = contextTracker.getCurrentWord()
@@ -2186,6 +2470,9 @@ class SuggestionHandler(
             }
             text.length == 1 && !text[0].isLetter() -> {
                 // Any non-letter character - update context and reset current word
+
+                // Swipe-correction offer earned by this completion (shown at the end of the branch).
+                var swipeOffer: String? = null
 
                 // W7: a joiner stem followed directly by a non-letter ("kids'" + space, "word--")
                 // is a finished word — learn the stem without its trailing joiner.
@@ -2240,6 +2527,7 @@ class SuggestionHandler(
                             // Insert the capitalized word with trailing space
                             inputConnection.commitText("$capitalizedWord ", 1)
                             if (typedThisSession) updateContext(capitalizedWord)
+                            noteTypedWordCommitted(capitalizedWord, inputConnection, editorInfo)
                             contextTracker.clearCurrentWord()
                             contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
                             vlog { "I-WORD CAPITALIZE: '$completedWord' → '$capitalizedWord'" }
@@ -2285,6 +2573,9 @@ class SuggestionHandler(
 
                                 // Update context with corrected word (learn-once: typed words only)
                                 if (typedThisSession) updateContext(correctedWord)
+                                // Swipe corrections: the committed word is autocorrect's, not the
+                                // user's — it cannot answer a swipe undo.
+                                noteSwipeCorrectionBoundary(editorInfo)
 
                                 // Clear current word
                                 contextTracker.clearCurrentWord()
@@ -2334,6 +2625,14 @@ class SuggestionHandler(
                         updateContext(learnWord)
                     }
 
+                    // Swipe corrections: a word typed this session may answer a swipe undo; one
+                    // cursor-sync merely re-read cannot (it was not typed in reply to anything).
+                    swipeOffer = if (typedThisSession && learnWord.isNotEmpty()) {
+                        noteTypedWordCommitted(learnWord, ic, editorInfo)
+                    } else {
+                        noteSwipeCorrectionBoundary(editorInfo)
+                    }
+
                     // Check if this word is NOT in dictionary - offer to add it
                     // Only prompt if:
                     // 1. Word was just completed with space (text == " ")
@@ -2343,7 +2642,7 @@ class SuggestionHandler(
                     //    URL/email/path fragment (UT-3) — see
                     //    AutocorrectContextGuard.shouldOfferAddToDictionary.
                     // W7: never offer a post-joiner fragment ("roll" of "rock-n-roll") to the dictionary.
-                    if (text == " " && !stemUnmerged) {
+                    if (text == " " && !stemUnmerged && swipeOffer == null) {
                         val wordPredictor = predictionCoordinator.getWordPredictor()
                         val dictionaryManager = predictionCoordinator.getDictionaryManager()
                         val shouldPrompt = AutocorrectContextGuard.shouldOfferAddToDictionary(
@@ -2396,6 +2695,8 @@ class SuggestionHandler(
                 // boosting and next-word generation).
                 if (text[0] == '.' || text[0] == '?' || text[0] == '!') {
                     predictionCoordinator.getWordPredictor()?.onSentenceBoundary()
+                    // No word can answer a swipe undo across a sentence end; a kept re-swipe settles.
+                    swipeOffer = swipeOffer ?: noteSwipeCorrectionBoundary(editorInfo)
                 }
 
                 // Reset current word
@@ -2408,7 +2709,10 @@ class SuggestionHandler(
                 // completes with a space, offer context-only candidates instead of
                 // leaving the bar empty. Space only — after sentence-final punct the
                 // context was just cleared, and other punctuation keeps the bar empty.
-                if (text == " ") {
+                // A swipe-correction offer earned by this word takes the bar instead.
+                if (swipeOffer != null) {
+                    showSwipePreferenceOffer(swipeOffer)
+                } else if (text == " ") {
                     maybeShowNextWordPredictions(editorInfo)
                 }
             }
@@ -2792,6 +3096,7 @@ class SuggestionHandler(
                     // W2: deleting the just-inserted word rejects it, exactly like the
                     // backspace swipe-undo — roll its learn back.
                     rollbackRejectedWord(lastAutoInserted)
+                    noteSwipeUndone(lastAutoInserted, ic)
 
                     // Clear tracking
                     contextTracker.clearLastAutoInsertedWord()

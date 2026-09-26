@@ -178,6 +178,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Aggiungere «%1$s» al dizionario?</string>
+    <string name="suggestion_prefer_when_swiping">Preferire «%1$s» quando scorri?</string>
+    <string name="suggestion_prefer_when_swiping_decline">Non chiedere</string>
+    <string name="suggestion_prefer_when_swiping_added">Lo scorrimento ora preferisce «%1$s»</string>
 
     <!-- Dictionary editor -->
     <string name="dict_search_hint">Cerca parole…</string>

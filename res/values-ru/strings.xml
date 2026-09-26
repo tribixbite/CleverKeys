@@ -144,6 +144,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Добавить «%1$s» в словарь?</string>
+    <string name="suggestion_prefer_when_swiping">Предпочитать «%1$s» при свайпе?</string>
+    <string name="suggestion_prefer_when_swiping_decline">Не спрашивать</string>
+    <string name="suggestion_prefer_when_swiping_added">Теперь при свайпе предпочитается «%1$s»</string>
 
     <!-- Dictionary manager -->
     <string name="dict_search_hint">Поиск слов…</string>

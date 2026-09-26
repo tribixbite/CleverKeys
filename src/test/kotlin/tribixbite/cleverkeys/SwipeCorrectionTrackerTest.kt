@@ -117,6 +117,17 @@ class SwipeCorrectionTrackerTest {
     }
 
     @Test
+    fun aSwipeCanStillBeUndoneAfterASentenceBoundary() {
+        // swipe "got", type ".", backspace twice: the #110 undo still removes the swiped word.
+        val got = swipe("got")
+        tracker.onSwipeAutoInserted(got, "fix got ")
+        tracker.settleOrClear()
+        tracker.onSwipeUndone("got", "fix ")
+
+        assertThat(tracker.onWordCommitted("git", "fix git ")?.rejected).containsExactly(got)
+    }
+
+    @Test
     fun anUndoWithoutAnAnchorCannotBeResolved() {
         tracker.onSwipeAutoInserted(swipe("got"), "fix got ")
         tracker.onSwipeUndone("got", null)

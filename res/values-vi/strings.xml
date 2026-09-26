@@ -183,6 +183,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Thêm \'%1$s\' vào từ điển?</string>
+    <string name="suggestion_prefer_when_swiping">Ưu tiên \'%1$s\' khi vuốt?</string>
+    <string name="suggestion_prefer_when_swiping_decline">Không hỏi lại</string>
+    <string name="suggestion_prefer_when_swiping_added">Giờ khi vuốt sẽ ưu tiên \'%1$s\'</string>
 
     <!-- Dictionary management -->
     <string name="dict_search_hint">Tìm từ…</string>

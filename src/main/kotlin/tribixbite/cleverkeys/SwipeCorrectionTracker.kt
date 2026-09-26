@@ -160,12 +160,16 @@ class SwipeCorrectionTracker(private val clock: () -> Long = System::currentTime
      * Enter / the IME action, leaving the field, or a commit whose text is not what the user
      * typed (autocorrect rewrote it). A waiting candidate settles (the user kept it); an
      * unanswered undo is dropped.
+     *
+     * The last swipe itself is NOT forgotten: the #110 undo still works across a boundary
+     * (swipe `got`, type `.`, backspace twice), and that undo is still a rejection. Commits and
+     * [clear] are what end it.
      */
     fun settleOrClear(): Correction? {
-        lastSwipe = null
         val slot = pending ?: return null
         pending = null
         val kept = slot.candidate ?: return null
+        lastSwipe = null
         return Correction(kept.word, slot.rejected.toList())
     }
 

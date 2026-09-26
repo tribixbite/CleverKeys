@@ -1118,6 +1118,11 @@ tasks.register('runMockTests', JavaExec) {
     // Swipe-correction resolution, Feature B: the collector reports the stored row's trace id
     // and SwipeMLDataStore.relabelRow rewrites that row (mocked SQLite).
     'tribixbite.cleverkeys.ml.SwipeMLRelabelStoreTest',
+    // Swipe-correction resolution, Feature A+B end to end through the real SuggestionHandler:
+    // bar-replace / undo+retype recording, changed-mind + cursor-moved filtering, the three
+    // gates, the offer at 2 corrections, accept -> personal dictionary, decline remembered,
+    // the contraction case, and the ML-row relabel.
+    'tribixbite.cleverkeys.SwipeCorrectionOfferTest',
     'tribixbite.cleverkeys.clipboard.ClipboardTabsAndPaneCloseTest',
     // Maintainer-reported (2026-09-06, no GH issue): media clipboard rows had no UI path to
     // deletion (delete was edit-mode-only; media rows can't edit). Affordance test drives the

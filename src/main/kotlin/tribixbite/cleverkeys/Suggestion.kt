@@ -67,12 +67,35 @@ sealed interface Suggestion {
         val label: String get() = "+$word"
     }
 
+    /**
+     * The swipe-correction offer "Prefer “<word>” when swiping?" (learning-system audit
+     * 2026-09-26, Resolution): shown after the user corrected the same swiped word to [word]
+     * `SwipeCorrectionPolicy.OFFER_MIN_CORRECTIONS` times. Tapping adds [word] to the personal
+     * dictionary (default user frequency — the shipped mechanism the swipe lexicon ranks by).
+     * Rendered like [AddToDictionary] (bold, high-confidence colour); always paired with
+     * [DeclineSwipePreference].
+     */
+    data class PreferSwipeWord(val word: String) : Suggestion {
+        override val wire: String get() = SWIPE_PREFER_PREFIX + word
+    }
+
+    /** The "Don't ask" chip beside [PreferSwipeWord]: never offer [word] again. */
+    data class DeclineSwipePreference(val word: String) : Suggestion {
+        override val wire: String get() = SWIPE_PREFER_DECLINE_PREFIX + word
+    }
+
     companion object {
         /** In-band prefix for [AddToDictionary] entries. */
         const val DICT_ADD_PREFIX = "dict_add:"
 
         /** In-band prefix for [ExactAdd] entries. */
         const val EXACT_ADD_PREFIX = "exact_add:"
+
+        /** In-band prefix for [PreferSwipeWord] entries. */
+        const val SWIPE_PREFER_PREFIX = "swipe_prefer:"
+
+        /** In-band prefix for [DeclineSwipePreference] entries. */
+        const val SWIPE_PREFER_DECLINE_PREFIX = "swipe_prefer_no:"
 
         /**
          * Classify a wire-format suggestion string into a typed [Suggestion].
@@ -86,6 +109,10 @@ sealed interface Suggestion {
                 AddToDictionary(wire.removePrefix(DICT_ADD_PREFIX))
             wire.startsWith(EXACT_ADD_PREFIX) ->
                 ExactAdd(wire.removePrefix(EXACT_ADD_PREFIX))
+            wire.startsWith(SWIPE_PREFER_PREFIX) ->
+                PreferSwipeWord(wire.removePrefix(SWIPE_PREFER_PREFIX))
+            wire.startsWith(SWIPE_PREFER_DECLINE_PREFIX) ->
+                DeclineSwipePreference(wire.removePrefix(SWIPE_PREFER_DECLINE_PREFIX))
             else -> Word(wire)
         }
     }
@@ -103,6 +130,10 @@ sealed interface SelectionRoute {
     data class AddToDictionary(val word: String) : SelectionRoute
     /** Tap commits [word] and adds it to the user dictionary (the "+word" chip). */
     data class ExactAdd(val word: String) : SelectionRoute
+    /** Tap accepts the swipe-correction offer: add [word] to the user dictionary. */
+    data class PreferSwipeWord(val word: String) : SelectionRoute
+    /** Tap declines the swipe-correction offer for [word] for good. */
+    data class DeclineSwipePreference(val word: String) : SelectionRoute
     /** Tap commits the ordinary word via the normal autocorrect/commit path. */
     data class CommitWord(val wire: String) : SelectionRoute
 }
@@ -120,5 +151,7 @@ fun routeSuggestionSelection(wire: String): SelectionRoute =
     when (val parsed = Suggestion.parse(wire)) {
         is Suggestion.AddToDictionary -> SelectionRoute.AddToDictionary(parsed.word)
         is Suggestion.ExactAdd -> SelectionRoute.ExactAdd(parsed.word)
+        is Suggestion.PreferSwipeWord -> SelectionRoute.PreferSwipeWord(parsed.word)
+        is Suggestion.DeclineSwipePreference -> SelectionRoute.DeclineSwipePreference(parsed.word)
         is Suggestion.Word -> SelectionRoute.CommitWord(parsed.text)
     }

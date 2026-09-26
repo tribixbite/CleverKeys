@@ -155,6 +155,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Adicionar \'%1$s\' ao dicionário?</string>
+    <string name="suggestion_prefer_when_swiping">Preferir \'%1$s\' ao deslizar?</string>
+    <string name="suggestion_prefer_when_swiping_decline">Não perguntar</string>
+    <string name="suggestion_prefer_when_swiping_added">Deslizar agora prefere \'%1$s\'</string>
 
     <!-- Dictionary editor -->
     <string name="dict_search_hint">Buscar palavras…</string>

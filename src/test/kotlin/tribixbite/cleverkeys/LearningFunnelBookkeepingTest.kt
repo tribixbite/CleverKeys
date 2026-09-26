@@ -376,7 +376,7 @@ class LearningFunnelBookkeepingTest {
 
         // KeyEventHandler.handleBackspaceUndoSwipe deletes "got " and reports it.
         editor.setLength(editor.length - "got ".length)
-        handler.onSwipeWordUndone("got")
+        handler.onSwipeWordUndone("got", ic)
 
         assertWithMessage("fix→got rolled back").that(bigram("fix", "got")).isEqualTo(0)
         assertWithMessage("learn window").that(learnWindow()).containsExactly("fix")
@@ -404,13 +404,13 @@ class LearningFunnelBookkeepingTest {
         editor.setLength(editor.length - 1)
         handler.handleBackspace()
         editor.setLength(editor.length - "got ".length)
-        handler.onSwipeWordUndone("got")
+        handler.onSwipeWordUndone("got", ic)
 
         assertWithMessage("fix→got rolled back").that(bigram("fix", "got")).isEqualTo(0)
         verify(exactly = 1) { personalization.unrecordWordTyped("got") }
 
         // A second report of the same word (nothing left to undo) must not decrement again.
-        handler.onSwipeWordUndone("got")
+        handler.onSwipeWordUndone("got", ic)
         verify(exactly = 1) { personalization.unrecordWordTyped("got") }
     }
 

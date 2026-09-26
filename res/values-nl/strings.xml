@@ -155,6 +155,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">\'%1$s\' aan woordenboek toevoegen?</string>
+    <string name="suggestion_prefer_when_swiping">\'%1$s\' voorrang geven bij vegen?</string>
+    <string name="suggestion_prefer_when_swiping_decline">Niet vragen</string>
+    <string name="suggestion_prefer_when_swiping_added">Vegen geeft nu voorrang aan \'%1$s\'</string>
 
     <!-- Dictionary editor -->
     <string name="dict_search_hint">Woorden zoeken…</string>

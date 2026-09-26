@@ -155,6 +155,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Přidat „%1$s“ do slovníku?</string>
+    <string name="suggestion_prefer_when_swiping">Při swipování upřednostnit „%1$s“?</string>
+    <string name="suggestion_prefer_when_swiping_decline">Neptat se</string>
+    <string name="suggestion_prefer_when_swiping_added">Swipování nyní upřednostňuje „%1$s“</string>
 
     <!-- Dictionary management -->
     <string name="dict_search_hint">Hledat slova…</string>

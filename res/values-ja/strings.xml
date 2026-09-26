@@ -154,6 +154,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">「%1$s」を辞書に追加しますか？</string>
+    <string name="suggestion_prefer_when_swiping">スワイプ時に「%1$s」を優先しますか？</string>
+    <string name="suggestion_prefer_when_swiping_decline">今後表示しない</string>
+    <string name="suggestion_prefer_when_swiping_added">スワイプで「%1$s」を優先します</string>
 
     <!-- Dictionary Manager -->
     <string name="dict_search_hint">単語を検索…</string>

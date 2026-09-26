@@ -28,6 +28,7 @@ import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.SwipeCorrectionStore
 import tribixbite.cleverkeys.SwipePerformanceStats
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
@@ -61,12 +62,17 @@ private data class LearnedCounts(val pairs: Int, val triples: Int, val words: In
  * switch's "forget what's already learned" prompt and the explicit
  * "Forget learned data" button so the two can never diverge on what "forget"
  * covers. Blocking — call from a background thread.
+ *
+ * Includes the swipe-correction counts and declined words behind the "Prefer “Y”
+ * when swiping?" offer (learning-system audit 2026-09-26, Resolution): they are
+ * typing-derived and written only under the same master gate.
  */
 private fun clearLearnedLanguageData(context: Context) {
     BigramStore.getInstance(context).clearAll()
     TrigramStore.getInstance(context).clearAll()
     UserVocabulary.getInstance(context).clearAll()
     UserAdaptationManager.getInstance(context).resetAdaptation()
+    SwipeCorrectionStore.getInstance(context).clearAll()
 }
 
 @Composable

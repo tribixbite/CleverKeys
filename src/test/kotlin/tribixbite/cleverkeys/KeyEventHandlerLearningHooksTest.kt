@@ -116,7 +116,7 @@ class KeyEventHandlerLearningHooksTest {
         release("backspace")
 
         verify { conn.deleteSurroundingText(4, 0) }
-        verify(exactly = 1) { hooks.onSwipeWordUndone("got") }
+        verify(exactly = 1) { hooks.onSwipeWordUndone("got", conn) }
         verify(exactly = 0) { hooks.onAutocorrectUndone(any(), any(), any()) }
     }
 
@@ -130,7 +130,7 @@ class KeyEventHandlerLearningHooksTest {
 
         verify { conn.commitText("teh ", 1) }
         verify(exactly = 1) { hooks.onAutocorrectUndone("the", "teh", true) }
-        verify(exactly = 0) { hooks.onSwipeWordUndone(any()) }
+        verify(exactly = 0) { hooks.onSwipeWordUndone(any(), any()) }
     }
 
     @Test
@@ -150,7 +150,7 @@ class KeyEventHandlerLearningHooksTest {
 
         release("backspace")
 
-        verify(exactly = 0) { hooks.onSwipeWordUndone(any()) }
+        verify(exactly = 0) { hooks.onSwipeWordUndone(any(), any()) }
         verify(exactly = 0) { hooks.onAutocorrectUndone(any(), any(), any()) }
         verify(exactly = 0) { hooks.onEditorWordBoundary(any()) }
     }

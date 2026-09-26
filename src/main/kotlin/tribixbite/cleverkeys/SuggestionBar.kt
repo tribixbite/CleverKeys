@@ -285,6 +285,10 @@ class SuggestionBar : LinearLayout {
             is Suggestion.AddToDictionary ->
                 context.getString(R.string.suggestion_add_to_dictionary, suggestion.word)
             is Suggestion.ExactAdd -> suggestion.label
+            is Suggestion.PreferSwipeWord ->
+                context.getString(R.string.suggestion_prefer_when_swiping, suggestion.word)
+            is Suggestion.DeclineSwipePreference ->
+                context.getString(R.string.suggestion_prefer_when_swiping_decline)
             is Suggestion.Word ->
                 if (showDebugScores && index < currentScores.size && currentScores.isNotEmpty()) {
                     "${suggestion.text}\n${currentScores[index]}"
@@ -326,6 +330,20 @@ class SuggestionBar : LinearLayout {
                 view.typeface = Typeface.DEFAULT_BOLD
                 // Audit H-4: highlight prompt with the high-confidence colour.
                 view.setTextColor(theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN)
+            }
+            // Swipe-correction offer (audit 2026-09-26): styled like the add-to-dictionary prompt,
+            // the accept chip highlighted and its "Don't ask" partner in the sublabel colour.
+            suggestion is Suggestion.PreferSwipeWord -> {
+                view.layoutParams = defaultSuggestionLayoutParams()
+                view.gravity = Gravity.CENTER
+                view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD)
+                view.setTextColor(theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN)
+            }
+            suggestion is Suggestion.DeclineSwipePreference -> {
+                view.layoutParams = defaultSuggestionLayoutParams()
+                view.gravity = Gravity.CENTER
+                view.setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
+                view.setTextColor(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.LTGRAY)
             }
             // #42: Exact typed word (italic, sublabel color for "tap to add").
             suggestion is Suggestion.ExactAdd -> {

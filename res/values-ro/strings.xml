@@ -179,6 +179,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Adăugați „%1$s” în dicționar?</string>
+    <string name="suggestion_prefer_when_swiping">Preferați „%1$s” la glisare?</string>
+    <string name="suggestion_prefer_when_swiping_decline">Nu mai întreba</string>
+    <string name="suggestion_prefer_when_swiping_added">Glisarea preferă acum „%1$s”</string>
 
     <!-- Dictionary manager -->
     <string name="dict_search_hint">Caută cuvinte…</string>

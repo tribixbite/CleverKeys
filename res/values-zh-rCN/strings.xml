@@ -153,6 +153,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">将“%1$s”添加到词典？</string>
+    <string name="suggestion_prefer_when_swiping">滑动输入时优先“%1$s”？</string>
+    <string name="suggestion_prefer_when_swiping_decline">不再询问</string>
+    <string name="suggestion_prefer_when_swiping_added">滑动输入现在优先“%1$s”</string>
 
     <!-- Dictionary management -->
     <string name="dict_search_hint">搜索单词…</string>

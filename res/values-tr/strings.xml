@@ -153,6 +153,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">\'%1$s\' sözlüğe eklensin mi?</string>
+    <string name="suggestion_prefer_when_swiping">Kaydırırken \'%1$s\' tercih edilsin mi?</string>
+    <string name="suggestion_prefer_when_swiping_decline">Sorma</string>
+    <string name="suggestion_prefer_when_swiping_added">Kaydırma artık \'%1$s\' kelimesini tercih ediyor</string>
 
     <!-- Dictionary manager -->
     <string name="dict_search_hint">Kelime ara…</string>

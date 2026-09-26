@@ -618,8 +618,9 @@ class KeyEventHandler(
         // SAS-1: the undone commit's auto-space is gone — invalidate the swallow
         recv.setLastSpaceAutoInserted(false)
         recv.clearSwipeUndoState()
-        // W2: the swiped word was rejected — roll its learn back.
-        learningHooks?.onSwipeWordUndone(swipedWord)
+        // W2: the swiped word was rejected — roll its learn back. The connection rides along so
+        // the swipe-correction tracker can note where the replacement word must appear.
+        learningHooks?.onSwipeWordUndone(swipedWord, conn)
         recv.handle_backspace()
 
         return true
@@ -1070,8 +1071,12 @@ class KeyEventHandler(
         /** Enter or the IME action is about to be sent; [ic] still ends with the typed word. */
         fun onEditorWordBoundary(ic: InputConnection?)
 
-        /** Backspace deleted the just-swiped [word] (#110 swipe undo). */
-        fun onSwipeWordUndone(word: String)
+        /**
+         * Backspace deleted the just-swiped [word] (#110 swipe undo). [ic] is the editor AFTER the
+         * deletion — the swipe-correction tracker reads the text before the cursor from it to know
+         * where the replacement word must appear (null when there is none).
+         */
+        fun onSwipeWordUndone(word: String, ic: InputConnection?)
 
         /**
          * Backspace reverted [correctedWord] to [originalWord] (#110 autocorrect undo).

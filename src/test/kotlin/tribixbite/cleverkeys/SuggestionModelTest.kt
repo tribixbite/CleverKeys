@@ -163,4 +163,19 @@ class SuggestionModelTest {
         assertThat(routeSuggestionSelection(exactWire))
             .isEqualTo(SelectionRoute.ExactAdd("neologism"))
     }
+
+    @Test
+    fun `the swipe-correction offer wires parse, round-trip and route`() {
+        val accept = Suggestion.PreferSwipeWord("git")
+        val decline = Suggestion.DeclineSwipePreference("git")
+        assertThat(accept.wire).isEqualTo("swipe_prefer:git")
+        assertThat(decline.wire).isEqualTo("swipe_prefer_no:git")
+        assertThat(Suggestion.parse(accept.wire)).isEqualTo(accept)
+        assertThat(Suggestion.parse(decline.wire)).isEqualTo(decline)
+        assertThat(routeSuggestionSelection(accept.wire)).isEqualTo(SelectionRoute.PreferSwipeWord("git"))
+        assertThat(routeSuggestionSelection(decline.wire))
+            .isEqualTo(SelectionRoute.DeclineSwipePreference("git"))
+        // An ordinary word that merely starts with the letters is still a word.
+        assertThat(Suggestion.parse("swipe")).isEqualTo(Suggestion.Word("swipe"))
+    }
 }

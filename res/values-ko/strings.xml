@@ -155,6 +155,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">\'%1$s\'을(를) 사전에 추가할까요?</string>
+    <string name="suggestion_prefer_when_swiping">스와이프할 때 \'%1$s\'을(를) 우선할까요?</string>
+    <string name="suggestion_prefer_when_swiping_decline">다시 묻지 않기</string>
+    <string name="suggestion_prefer_when_swiping_added">이제 스와이프할 때 \'%1$s\'을(를) 우선합니다</string>
 
     <!-- Dictionary Manager -->
     <string name="dict_search_hint">단어 검색…</string>
