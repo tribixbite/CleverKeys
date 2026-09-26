@@ -14,13 +14,17 @@ package tribixbite.cleverkeys.contextaware
  * @property word3 The third word in the sequence (predicted word)
  * @property frequency How many times this sequence has been observed
  * @property probability P(word3 | word1, word2) = frequency(word1,word2,word3) / frequency(word1,word2)
+ * @property lastSeen retention recency: the context's observation total at the moment this
+ *   entry was last observed (W3, learning-system audit 2026-09-26 — see [ContinuationBudget]).
+ *   Persisted in the store's own blob only (not the backup export format).
  */
 data class TrigramEntry(
     val word1: String,
     val word2: String,
     val word3: String,
     val frequency: Int,
-    val probability: Float
+    val probability: Float,
+    val lastSeen: Int = 0
 ) {
     companion object {
         /**

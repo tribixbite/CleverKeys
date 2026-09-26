@@ -903,6 +903,10 @@ tasks.register('runPureTests', JavaExec) {
     // + language-slot eviction coverage drift guard (formerly a DictionaryManager TODO)
     'tribixbite.cleverkeys.contextaware.NgramRollbackTest',
     'tribixbite.cleverkeys.LanguageSlotCoverageDriftTest',
+    // W3 (learning-system audit 2026-09-26): a full context must still learn new
+    // continuations — grace slots + recency-aged eviction instead of truncating the newcomer
+    'tribixbite.cleverkeys.contextaware.NgramContinuationLearnabilityTest',
+    'tribixbite.cleverkeys.contextaware.ContinuationBudgetTest',
     // ARC-080 (2026-08-29): the persisted n-gram DENOMINATOR. The per-context caps
     // drop continuations that the observed total still counts, so reconstructing the
     // denominator as the sum of survivors inflated every survivor after a restart.

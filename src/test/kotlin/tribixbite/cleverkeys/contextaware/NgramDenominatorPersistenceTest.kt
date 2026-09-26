@@ -29,16 +29,22 @@ import java.util.concurrent.TimeUnit
  *   target        5 observations
  *   fillers      24 continuations x 4 observations = 96
  *   TRUE TOTAL  101  ->  P(target) = 5/101 = 0.049505  (suppressed)
- * Only the number of SURVIVORS differs, because the caps differ:
- *   bigram  cap 20 -> target + 19 fillers survive, sum-of-survivors = 81
- *   trigram cap 10 -> target +  9 fillers survive, sum-of-survivors = 41
+ * Only the number of SURVIVORS differs, because the per-context bounds differ
+ * (W3, 2026-09-26: established cap + grace slots — bigram 20+4, trigram 10+3):
+ *   bigram  -> target + 23 fillers survive
+ *   trigram -> target + 12 fillers survive
+ * Either way the survivors under-count the true total, which is the regression.
+ *
+ * The target is recorded LAST: since W3 the per-context bound evicts by frequency AGED by
+ * recency, so a target recorded first and then left untouched while 96 filler observations
+ * pass could legitimately age out. Order does not affect any total in this fixture.
  */
 class NgramDenominatorPersistenceTest {
 
     private companion object {
         /**
-         * Chosen so the target is the single most probable continuation and can
-         * therefore never be evicted by the probability-ranked per-context cap.
+         * Chosen so the target is the single most probable continuation (and, recorded
+         * last, the freshest) — it can never be the per-context bound's victim.
          */
         const val TARGET_FREQUENCY = 5
         const val FILLER_FREQUENCY = 4
@@ -69,18 +75,18 @@ class NgramDenominatorPersistenceTest {
 
     /** Saturate `the -> *` past the 20-entry cap; see the class doc for the arithmetic. */
     private fun saturateBigrams(store: BigramStore) {
-        repeat(TARGET_FREQUENCY) { store.recordBigram("en", "the", "target") }
         for (i in 1..FILLER_COUNT) {
             repeat(FILLER_FREQUENCY) { store.recordBigram("en", "the", "f$i") }
         }
+        repeat(TARGET_FREQUENCY) { store.recordBigram("en", "the", "target") }
     }
 
     /** Saturate `i want -> *` past the 10-entry cap; same arithmetic as the bigram fixture. */
     private fun saturateTrigrams(store: TrigramStore) {
-        repeat(TARGET_FREQUENCY) { store.recordTrigram("en", "i", "want", "target") }
         for (i in 1..FILLER_COUNT) {
             repeat(FILLER_FREQUENCY) { store.recordTrigram("en", "i", "want", "f$i") }
         }
+        repeat(TARGET_FREQUENCY) { store.recordTrigram("en", "i", "want", "target") }
     }
 
     // ------------------------------------------------------------------ bigrams
@@ -92,7 +98,7 @@ class NgramDenominatorPersistenceTest {
 
         // The cap really did drop entries — otherwise the regression cannot occur.
         val kept = store.getAllBigrams("en", "the")
-        assertEquals(20, kept.size)
+        assertEquals(BigramStore.MAX_RETAINED_PER_WORD, kept.size)
         assertEquals("target", kept.first().word2)
         assertTrue("fixture must overflow the cap", FILLER_COUNT + 1 > kept.size)
 
@@ -187,7 +193,7 @@ class NgramDenominatorPersistenceTest {
         saturateTrigrams(store)
 
         val kept = store.getPredictions("en", "i", "want", maxResults = 50, minProbability = 0f)
-        assertEquals(10, kept.size)
+        assertEquals(TrigramStore.MAX_RETAINED_PER_PREFIX, kept.size)
         assertEquals("target", kept.first().word3)
         assertEquals(TARGET_PROBABILITY, store.getProbability("en", "i", "want", "target"), EXACT)
     }
@@ -278,7 +284,7 @@ class NgramDenominatorPersistenceTest {
 
         val root = JSONObject(storage.getString(BigramStore.storageKey("en"))!!)
         assertEquals(2, root.getInt("version"))
-        assertEquals(20, root.getJSONArray("entries").length())
+        assertEquals(BigramStore.MAX_RETAINED_PER_WORD, root.getJSONArray("entries").length())
         assertEquals(TRUE_TOTAL, root.getJSONObject("totals").getInt("the"))
     }
 
@@ -289,7 +295,7 @@ class NgramDenominatorPersistenceTest {
 
         val root = JSONObject(storage.getString(TrigramStore.storageKey("en"))!!)
         assertEquals(2, root.getInt("version"))
-        assertEquals(10, root.getJSONArray("entries").length())
+        assertEquals(TrigramStore.MAX_RETAINED_PER_PREFIX, root.getJSONArray("entries").length())
         assertEquals(TRUE_TOTAL, root.getJSONObject("totals").getInt("i want"))
     }
 

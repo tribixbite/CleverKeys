@@ -213,16 +213,17 @@ class TrigramStorePersistenceTest {
 
     @Test
     fun `per-prefix cap keeps the most probable continuations`() {
-        // A dominant continuation first, then 15 fillers — the cap (10 per
-        // prefix, sorted by probability) must hold and the dominant entry must
-        // survive. (Like BigramStore, capping is probability-ranked, so a brand
-        // new continuation entering a saturated prefix starts at the bottom.)
+        // A dominant continuation first, then 15 fillers — the per-prefix bound
+        // (10 established + 3 grace slots, W3 2026-09-26) must hold and the dominant
+        // entry must survive. Eviction is frequency aged by recency (ContinuationBudget);
+        // a brand-new continuation is never evicted in the call that records it —
+        // see NgramContinuationLearnabilityTest.
         repeat(20) { store.recordTrigram("en", "fixed", "prefix", "top") }
         for (i in 1..15) {
             repeat(3) { store.recordTrigram("en", "fixed", "prefix", "word$i") }
         }
         val entries = store.getPredictions("en", "fixed", "prefix", maxResults = 50, minProbability = 0f)
-        assertTrue("cap enforced, got ${entries.size}", entries.size <= 10)
+        assertTrue("cap enforced, got ${entries.size}", entries.size <= TrigramStore.MAX_RETAINED_PER_PREFIX)
         assertEquals("top", entries.first().word3)
         assertEquals(20, entries.first().frequency)
     }
@@ -347,8 +348,8 @@ class TrigramStorePersistenceTest {
         store.importFromJson("en", "[$entries]")
 
         val kept = store.getPredictions("en", "fixed", "prefix", maxResults = 50, minProbability = 0f)
-        assertEquals(10, kept.size)
-        // Probability-ranked cap → the most frequent continuations survive.
+        assertEquals(TrigramStore.MAX_RETAINED_PER_PREFIX, kept.size)
+        // Bulk import: every entry competes on frequency → the most frequent survive.
         assertEquals("w25", kept.first().word3)
     }
 

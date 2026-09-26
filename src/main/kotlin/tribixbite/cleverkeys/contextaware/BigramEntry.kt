@@ -12,12 +12,16 @@ package tribixbite.cleverkeys.contextaware
  * @property word2 The second word in the pair (predicted word)
  * @property frequency How many times this pair has been observed
  * @property probability P(word2 | word1) = frequency(word1,word2) / frequency(word1)
+ * @property lastSeen retention recency: the context's observation total at the moment this
+ *   entry was last observed (W3, learning-system audit 2026-09-26 — see [ContinuationBudget]).
+ *   Persisted in the store's own blob only (not the backup export format).
  */
 data class BigramEntry(
     val word1: String,
     val word2: String,
     val frequency: Int,
-    val probability: Float
+    val probability: Float,
+    val lastSeen: Int = 0
 ) {
     companion object {
         /**

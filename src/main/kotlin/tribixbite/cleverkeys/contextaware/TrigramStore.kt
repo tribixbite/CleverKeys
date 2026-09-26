@@ -43,8 +43,28 @@ class TrigramStore internal constructor(
         private const val PREFS_NAME = "trigram_store"
         internal const val KEY_PREFIX = "trigrams_json_"
         const val DEFAULT_MIN_FREQUENCY = 2 // Ignore single occurrences (same floor as bigrams)
-        private const val MAX_TRIGRAMS_PER_PREFIX = 10 // Trigram contexts are sharper than bigram ones
+        private const val MAX_TRIGRAMS_PER_PREFIX = 10 // Established continuations guaranteed per prefix
         private const val MAX_TOTAL_TRIGRAMS = 10000 // Overall storage limit (per language)
+
+        /** W3 grace slots per prefix — see [BigramStore] / [ContinuationBudget]. */
+        private const val GRACE_SLOTS_PER_PREFIX = 3
+
+        /** Hard per-prefix bound: established cap + grace slots. */
+        internal const val MAX_RETAINED_PER_PREFIX = MAX_TRIGRAMS_PER_PREFIX + GRACE_SLOTS_PER_PREFIX
+
+        internal val CONTINUATION_LIMITS = ContinuationBudget.Limits(
+            establishedCap = MAX_TRIGRAMS_PER_PREFIX,
+            graceSlots = GRACE_SLOTS_PER_PREFIX,
+            promotionFrequency = DEFAULT_MIN_FREQUENCY,
+            halfLifeObservations = ContinuationBudget.DEFAULT_HALF_LIFE_OBSERVATIONS
+        )
+
+        /** Batch prune target — same rationale as BigramStore's PRUNE_TARGET_FRACTION. */
+        private const val PRUNE_TARGET_FRACTION = 0.9
+
+        /** Sentinel for an entry loaded without persisted recency. */
+        private const val UNKNOWN_LAST_SEEN = -1
+        private const val KEY_LAST_SEEN = "seen"
 
         /**
          * Persisted-blob format version (ARC-080) — the mirror of
@@ -176,37 +196,35 @@ class TrigramStore internal constructor(
 
             val entries = data.trigramMap.getOrPut(key) { mutableListOf() }
             val existing = entries.find { it.word3 == w3 }
-            if (existing != null) {
-                val newFreq = existing.frequency + 1
+            // lastSeen = prefixFreq: this observation's position in the prefix's history.
+            val touched = if (existing != null) {
                 entries.remove(existing)
-                entries.add(
-                    existing.copy(
-                        frequency = newFreq,
-                        probability = TrigramEntry.calculateProbability(newFreq, prefixFreq)
-                    )
-                )
+                existing.copy(frequency = existing.frequency + 1, lastSeen = prefixFreq)
             } else {
-                entries.add(
-                    TrigramEntry(
-                        word1 = w1, word2 = w2, word3 = w3,
-                        frequency = 1,
-                        probability = TrigramEntry.calculateProbability(1, prefixFreq)
-                    )
+                TrigramEntry(
+                    word1 = w1, word2 = w2, word3 = w3,
+                    frequency = 1,
+                    probability = 0f, // Recomputed below with every sibling
+                    lastSeen = prefixFreq
                 )
             }
+            entries.add(touched)
 
-            // Re-normalize siblings against the updated prefix total, sort, cap.
+            // W3: bound the prefix without ever evicting the entry just recorded.
+            ContinuationBudget.enforce(
+                entries, touched, prefixFreq, CONTINUATION_LIMITS,
+                frequencyOf = { it.frequency }, lastSeenOf = { it.lastSeen }
+            )
+
+            // Re-normalize siblings against the updated prefix total, then sort.
             val renormalized = entries.map {
                 it.copy(probability = TrigramEntry.calculateProbability(it.frequency, prefixFreq))
             }
             entries.clear()
             entries.addAll(renormalized)
             entries.sortByDescending { it.probability }
-            if (entries.size > MAX_TRIGRAMS_PER_PREFIX) {
-                entries.subList(MAX_TRIGRAMS_PER_PREFIX, entries.size).clear()
-            }
 
-            pruneIfNeeded(data)
+            pruneIfNeeded(data, key, w3)
         }
 
         dirtyLanguages.add(lang)
@@ -413,6 +431,52 @@ class TrigramStore internal constructor(
         return removed
     }
 
+    /**
+     * Typo-hygiene purge — mirror of [BigramStore.purgeEntries] (scheduling and policy in
+     * [ContextModel.purgeUnlearnable]). Removed observations leave their prefix's total the
+     * same way [removeContinuationsOf] does, then the store is flushed promptly.
+     *
+     * @return number of entries removed
+     */
+    fun purgeEntries(language: String, shouldPurge: (TrigramEntry) -> Boolean): Int {
+        val lang = BigramStore.normalizeLanguage(language)
+        val data = forLanguage(lang)
+        var removed = 0
+        synchronized(this) {
+            for (key in data.trigramMap.keys.toList()) {
+                val entries = data.trigramMap[key] ?: continue
+                val doomed = entries.filter(shouldPurge)
+                if (doomed.isEmpty()) continue
+                entries.removeAll(doomed.toSet())
+                removed += doomed.size
+
+                val newTotal = maxOf(0, (data.prefixFrequencies[key] ?: 0) - doomed.sumOf { it.frequency })
+                if (newTotal <= 0 || entries.isEmpty()) {
+                    if (entries.isEmpty()) data.trigramMap.remove(key)
+                    if (newTotal <= 0) {
+                        data.prefixFrequencies.remove(key)
+                    } else {
+                        data.prefixFrequencies[key] = newTotal
+                    }
+                } else {
+                    data.prefixFrequencies[key] = newTotal
+                    val renormalized = entries.map {
+                        it.copy(probability = TrigramEntry.calculateProbability(it.frequency, newTotal))
+                    }
+                    entries.clear()
+                    entries.addAll(renormalized)
+                    entries.sortByDescending { it.probability }
+                }
+            }
+        }
+        if (removed > 0) {
+            dirtyLanguages.add(lang)
+            persister.markDirty()
+            persister.requestFlush()
+        }
+        return removed
+    }
+
     /** Total number of unique trigrams stored for a language. */
     fun getTotalTrigramCount(language: String): Int {
         synchronized(this) {
@@ -472,21 +536,31 @@ class TrigramStore internal constructor(
     /** Asynchronously flush on the persistence thread. No-op when clean. */
     fun requestFlush() = persister.requestFlush()
 
-    /** Prune lowest-probability trigrams when a language exceeds the total cap. Caller holds the lock. */
-    private fun pruneIfNeeded(data: LanguageTrigrams) {
+    /**
+     * Language-wide cap — mirror of [BigramStore]'s: batch-prune to
+     * [PRUNE_TARGET_FRACTION] of [MAX_TOTAL_TRIGRAMS], sub-floor entries first, then the
+     * least probable, never the trigram recorded in the current call ([keepPrefix] →
+     * [keepWord3]). Caller holds the lock.
+     */
+    private fun pruneIfNeeded(data: LanguageTrigrams, keepPrefix: String? = null, keepWord3: String? = null) {
         val totalCount = data.trigramMap.values.sumOf { it.size }
         if (totalCount <= MAX_TOTAL_TRIGRAMS) return
 
-        val toKeep = data.trigramMap.values.flatten()
-            .sortedByDescending { it.probability }
-            .take(MAX_TOTAL_TRIGRAMS)
-            .toSet()
+        val target = (MAX_TOTAL_TRIGRAMS * PRUNE_TARGET_FRACTION).toInt()
+        val victims = data.trigramMap.values.asSequence()
+            .flatten()
+            .filterNot { it.word3 == keepWord3 && prefixKey(it.word1, it.word2) == keepPrefix }
+            .sortedWith(
+                compareBy<TrigramEntry>({ it.frequency >= DEFAULT_MIN_FREQUENCY }, { it.probability }, { it.lastSeen })
+            )
+            .take(totalCount - target)
+            .groupBy { prefixKey(it.word1, it.word2) }
 
-        data.trigramMap.clear()
-        toKeep.forEach { entry ->
-            data.trigramMap.getOrPut(prefixKey(entry.word1, entry.word2)) { mutableListOf() }.add(entry)
+        for ((key, doomed) in victims) {
+            val entries = data.trigramMap[key] ?: continue
+            entries.removeAll(doomed.toSet())
+            if (entries.isEmpty()) data.trigramMap.remove(key)
         }
-        data.trigramMap.values.forEach { it.sortByDescending { e -> e.probability } }
     }
 
     /** Serialize and write every dirty language's table to storage. */
@@ -531,6 +605,7 @@ class TrigramStore internal constructor(
                     put("word3", entry.word3)
                     put("frequency", entry.frequency)
                     put("probability", entry.probability.toDouble())
+                    put(KEY_LAST_SEEN, entry.lastSeen) // W3 recency (additive field)
                 }
             )
         }
@@ -587,7 +662,8 @@ class TrigramStore internal constructor(
                     word2 = obj.getString("word2"),
                     word3 = obj.getString("word3"),
                     frequency = obj.getInt("frequency"),
-                    probability = obj.getDouble("probability").toFloat()
+                    probability = obj.getDouble("probability").toFloat(),
+                    lastSeen = obj.optInt(KEY_LAST_SEEN, UNKNOWN_LAST_SEEN)
                 )
                 val key = prefixKey(entry.word1, entry.word2)
                 data.trigramMap.getOrPut(key) { mutableListOf() }.add(entry)
@@ -597,6 +673,12 @@ class TrigramStore internal constructor(
 
             if (persistedTotals != null) {
                 restoreTotals(data, persistedTotals)
+            }
+
+            // Pre-W3 blobs carry no recency: treat every entry as just seen.
+            for ((key, list) in data.trigramMap) {
+                val total = data.prefixFrequencies[key] ?: 0
+                list.replaceAll { if (it.lastSeen == UNKNOWN_LAST_SEEN) it.copy(lastSeen = total) else it }
             }
 
             data.trigramMap.values.forEach { it.sortByDescending { e -> e.probability } }
@@ -689,26 +771,30 @@ class TrigramStore internal constructor(
 
                     val entries = data.trigramMap.getOrPut(key) { mutableListOf() }
                     val existing = entries.find { it.word3 == w3 }
+                    // Imported entries count as seen NOW (backup payload has no recency).
+                    val seen = data.prefixFrequencies[key] ?: 0
                     if (existing != null) {
                         entries.remove(existing)
-                        entries.add(existing.copy(frequency = existing.frequency + frequency))
+                        entries.add(existing.copy(frequency = existing.frequency + frequency, lastSeen = seen))
                     } else {
-                        entries.add(TrigramEntry(w1, w2, w3, frequency, 0f))
+                        entries.add(TrigramEntry(w1, w2, w3, frequency, 0f, lastSeen = seen))
                     }
                 }
 
-                // Recompute probabilities against the merged prefix totals + enforce caps.
+                // Enforce the per-prefix budget, then recompute probabilities against the
+                // merged prefix totals.
                 for ((key, entries) in data.trigramMap) {
                     val total = data.prefixFrequencies[key] ?: continue
+                    ContinuationBudget.enforce(
+                        entries, null, total, CONTINUATION_LIMITS,
+                        frequencyOf = { it.frequency }, lastSeenOf = { it.lastSeen }
+                    )
                     val recomputed = entries.map {
                         it.copy(probability = TrigramEntry.calculateProbability(it.frequency, total))
                     }
                     entries.clear()
                     entries.addAll(recomputed)
                     entries.sortByDescending { it.probability }
-                    if (entries.size > MAX_TRIGRAMS_PER_PREFIX) {
-                        entries.subList(MAX_TRIGRAMS_PER_PREFIX, entries.size).clear()
-                    }
                 }
                 pruneIfNeeded(data)
             }

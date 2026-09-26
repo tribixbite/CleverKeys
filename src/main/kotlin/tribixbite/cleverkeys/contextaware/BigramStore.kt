@@ -51,9 +51,42 @@ class BigramStore internal constructor(
         private const val PREFS_NAME = "bigram_store"
         internal const val LEGACY_KEY_BIGRAMS = "bigrams_json"
         internal const val KEY_PREFIX = "bigrams_json_"
+
+        /**
+         * Per-language typo-purge stamp (see [ContextModel.purgeUnlearnable]). Deliberately
+         * NOT under [KEY_PREFIX], so language discovery and [clearAll] ignore it.
+         */
+        internal const val KEY_TYPO_PURGE_PREFIX = "typo_purge_ms_"
         const val DEFAULT_MIN_FREQUENCY = 2  // Ignore hapax legomena (single occurrences)
-        private const val MAX_BIGRAMS_PER_WORD = 20  // Top 20 predictions per previous word
+        private const val MAX_BIGRAMS_PER_WORD = 20  // Established continuations guaranteed per previous word
         private const val MAX_TOTAL_BIGRAMS = 10000  // Overall storage limit (per language)
+
+        /**
+         * W3 (learning-system audit 2026-09-26): extra per-word slots in which NEW
+         * continuations prove themselves (reach [DEFAULT_MIN_FREQUENCY]) without being
+         * truncated in the call that recorded them. See [ContinuationBudget].
+         */
+        private const val GRACE_SLOTS_PER_WORD = 4
+
+        /** Hard per-context bound: established cap + grace slots. */
+        internal const val MAX_RETAINED_PER_WORD = MAX_BIGRAMS_PER_WORD + GRACE_SLOTS_PER_WORD
+
+        internal val CONTINUATION_LIMITS = ContinuationBudget.Limits(
+            establishedCap = MAX_BIGRAMS_PER_WORD,
+            graceSlots = GRACE_SLOTS_PER_WORD,
+            // The COMPILE-TIME floor, not the runtime-configurable minFrequency: what counts
+            // as "proven" for retention must not shift when a caller tweaks the query floor.
+            promotionFrequency = DEFAULT_MIN_FREQUENCY,
+            halfLifeObservations = ContinuationBudget.DEFAULT_HALF_LIFE_OBSERVATIONS
+        )
+
+        /**
+         * When the language-wide cap is exceeded, prune DOWN to this fraction of it rather
+         * than to exactly the cap: pruning one entry per record meant a full O(n log n) sort
+         * on every commit once a store was full, AND the entry evicted was usually the
+         * freq-1 newcomer just recorded — W3 again, one level up.
+         */
+        private const val PRUNE_TARGET_FRACTION = 0.9
 
         /**
          * Persisted-blob format version (ARC-080).
@@ -77,6 +110,7 @@ class BigramStore internal constructor(
         private const val KEY_VERSION = "version"
         private const val KEY_ENTRIES = "entries"
         private const val KEY_TOTALS = "totals"
+        private const val KEY_LAST_SEEN = "seen"
 
         @Volatile
         private var instance: BigramStore? = null
@@ -101,6 +135,9 @@ class BigramStore internal constructor(
         }
 
         internal fun storageKey(language: String): String = KEY_PREFIX + normalizeLanguage(language)
+
+        /** Sentinel for an entry loaded without persisted recency. */
+        private const val UNKNOWN_LAST_SEEN = -1
     }
 
     /** Per-language in-RAM bigram tables. */
@@ -225,22 +262,29 @@ class BigramStore internal constructor(
             val entries = data.bigramMap.getOrPut(normalizedWord1) { mutableListOf() }
             val existingEntry = entries.find { it.word2 == normalizedWord2 }
 
-            if (existingEntry != null) {
-                // Update existing entry
-                val newFreq = existingEntry.frequency + 1
+            // `lastSeen = word1Freq` stamps this observation's position in the context's
+            // history — the recency ContinuationBudget ages eviction candidates by.
+            val touched = if (existingEntry != null) {
                 entries.remove(existingEntry)
-                entries.add(existingEntry.copy(frequency = newFreq))
+                existingEntry.copy(frequency = existingEntry.frequency + 1, lastSeen = word1Freq)
             } else {
-                // Add new entry
-                entries.add(
-                    BigramEntry(
-                        word1 = normalizedWord1,
-                        word2 = normalizedWord2,
-                        frequency = 1,
-                        probability = 0f // Recomputed below with every sibling
-                    )
+                BigramEntry(
+                    word1 = normalizedWord1,
+                    word2 = normalizedWord2,
+                    frequency = 1,
+                    probability = 0f, // Recomputed below with every sibling
+                    lastSeen = word1Freq
                 )
             }
+            entries.add(touched)
+
+            // W3: bound the context BEFORE renormalizing (eviction ignores probability),
+            // never evicting the entry this call recorded — a new continuation used to be
+            // truncated right here and could never reach the query floor.
+            ContinuationBudget.enforce(
+                entries, touched, word1Freq, CONTINUATION_LIMITS,
+                frequencyOf = { it.frequency }, lastSeenOf = { it.lastSeen }
+            )
 
             // M4 (review 2026-08-06): the denominator (word1's total) changed, so
             // EVERY sibling's conditional probability is stale — renormalize the
@@ -254,14 +298,11 @@ class BigramStore internal constructor(
             entries.clear()
             entries.addAll(renormalized)
 
-            // Sort by probability (descending) and limit size
+            // Serving order: conditional probability, descending.
             entries.sortByDescending { it.probability }
-            if (entries.size > MAX_BIGRAMS_PER_WORD) {
-                entries.subList(MAX_BIGRAMS_PER_WORD, entries.size).clear()
-            }
 
-            // Check total bigram count
-            pruneIfNeeded(data)
+            // Check total bigram count (never evicting the pair just recorded)
+            pruneIfNeeded(data, normalizedWord1, normalizedWord2)
         }
 
         dirtyLanguages.add(lang)
@@ -465,19 +506,7 @@ class BigramStore internal constructor(
             removed = true
 
             // Rescale: removed occurrences no longer count toward word1's total.
-            val newTotal = maxOf(0, (data.word1Frequencies[normalized1] ?: 0) - entry.frequency)
-            if (newTotal <= 0 || entries.isEmpty()) {
-                if (entries.isEmpty()) data.bigramMap.remove(normalized1)
-                if (newTotal <= 0) data.word1Frequencies.remove(normalized1) else data.word1Frequencies[normalized1] = newTotal
-            } else {
-                data.word1Frequencies[normalized1] = newTotal
-                val rescaled = entries.map {
-                    it.copy(probability = BigramEntry.calculateProbability(it.frequency, newTotal))
-                }
-                entries.clear()
-                entries.addAll(rescaled)
-                entries.sortByDescending { it.probability }
-            }
+            rescaleAfterRemoval(data, normalized1, entries, entry.frequency)
         }
 
         if (removed) {
@@ -489,6 +518,77 @@ class BigramStore internal constructor(
             persister.requestFlush()
         }
         return removed
+    }
+
+    /**
+     * Typo-hygiene purge (learning-system audit 2026-09-26; policy and scheduling live in
+     * [ContextModel.purgeUnlearnable]): remove every entry of [language] matching
+     * [shouldPurge]. Removed observations leave their context's total exactly as
+     * [removeBigram] does — the learned data ends up as if the purged pair had never been
+     * recorded, which is what the write gate would have produced. Flushed promptly, like a
+     * user delete, so process death cannot resurrect the purged typos.
+     *
+     * @return number of entries removed
+     */
+    fun purgeEntries(language: String, shouldPurge: (BigramEntry) -> Boolean): Int {
+        val lang = normalizeLanguage(language)
+        val data = forLanguage(lang)
+        var removed = 0
+        synchronized(this) {
+            // Snapshot keys: contexts emptied by the purge are removed from the map.
+            for (word1 in data.bigramMap.keys.toList()) {
+                val entries = data.bigramMap[word1] ?: continue
+                val doomed = entries.filter(shouldPurge)
+                if (doomed.isEmpty()) continue
+                entries.removeAll(doomed.toSet())
+                removed += doomed.size
+                rescaleAfterRemoval(data, word1, entries, doomed.sumOf { it.frequency })
+            }
+        }
+        if (removed > 0) {
+            dirtyLanguages.add(lang)
+            persister.markDirty()
+            persister.requestFlush()
+        }
+        return removed
+    }
+
+    /**
+     * Shared tail of [removeBigram] / [purgeEntries]: [removedObservations] no longer count
+     * toward [word1]'s total; surviving siblings are renormalized against the reduced total,
+     * and an emptied context (or a zeroed total) is dropped. Caller holds the lock.
+     */
+    private fun rescaleAfterRemoval(
+        data: LanguageBigrams,
+        word1: String,
+        entries: MutableList<BigramEntry>,
+        removedObservations: Int
+    ) {
+        val newTotal = maxOf(0, (data.word1Frequencies[word1] ?: 0) - removedObservations)
+        if (newTotal <= 0 || entries.isEmpty()) {
+            if (entries.isEmpty()) data.bigramMap.remove(word1)
+            if (newTotal <= 0) data.word1Frequencies.remove(word1) else data.word1Frequencies[word1] = newTotal
+        } else {
+            data.word1Frequencies[word1] = newTotal
+            val rescaled = entries.map {
+                it.copy(probability = BigramEntry.calculateProbability(it.frequency, newTotal))
+            }
+            entries.clear()
+            entries.addAll(rescaled)
+            entries.sortByDescending { it.probability }
+        }
+    }
+
+    /** Last typo-purge time for [language] (ms), or null if it has never run. */
+    fun getTypoPurgeStamp(language: String): Long? =
+        storage.getString(KEY_TYPO_PURGE_PREFIX + normalizeLanguage(language))?.toLongOrNull()
+
+    /**
+     * Record a completed typo purge. Stored beside the data it describes (this store's own
+     * prefs file, never the settings backup) — a device-local maintenance marker.
+     */
+    fun setTypoPurgeStamp(language: String, nowMs: Long) {
+        storage.putString(KEY_TYPO_PURGE_PREFIX + normalizeLanguage(language), nowMs.toString())
     }
 
     /**
@@ -561,29 +661,31 @@ class BigramStore internal constructor(
     fun requestFlush() = persister.requestFlush()
 
     /**
-     * Prune low-frequency bigrams if total count exceeds limit.
-     * Keeps most probable bigrams and removes rare ones. Caller holds the lock.
+     * Language-wide cap. When exceeded, prune down to [PRUNE_TARGET_FRACTION] of
+     * [MAX_TOTAL_BIGRAMS] (batch — see the constant), evicting sub-floor entries first
+     * (they cannot be served yet), then the least probable. The pair recorded in the
+     * current call ([keepWord1] → [keepWord2]) is never evicted. As before, evicted
+     * observations still count in their context's total (ARC-080 denominators).
+     * Caller holds the lock.
      */
-    private fun pruneIfNeeded(data: LanguageBigrams) {
+    private fun pruneIfNeeded(data: LanguageBigrams, keepWord1: String? = null, keepWord2: String? = null) {
         val totalCount = data.bigramMap.values.sumOf { it.size }
         if (totalCount <= MAX_TOTAL_BIGRAMS) return
 
-        // Collect all bigrams with their probabilities
-        val allBigrams = data.bigramMap.values.flatten()
-        val sortedBigrams = allBigrams.sortedByDescending { it.probability }
+        val target = (MAX_TOTAL_BIGRAMS * PRUNE_TARGET_FRACTION).toInt()
+        val victims = data.bigramMap.values.asSequence()
+            .flatten()
+            .filterNot { it.word1 == keepWord1 && it.word2 == keepWord2 }
+            .sortedWith(
+                compareBy<BigramEntry>({ it.frequency >= DEFAULT_MIN_FREQUENCY }, { it.probability }, { it.lastSeen })
+            )
+            .take(totalCount - target)
+            .groupBy { it.word1 }
 
-        // Keep top MAX_TOTAL_BIGRAMS
-        val toKeep = sortedBigrams.take(MAX_TOTAL_BIGRAMS).toSet()
-
-        // Rebuild bigramMap with only kept bigrams
-        data.bigramMap.clear()
-        toKeep.forEach { entry ->
-            data.bigramMap.getOrPut(entry.word1) { mutableListOf() }.add(entry)
-        }
-
-        // Re-sort each list
-        data.bigramMap.values.forEach { list ->
-            list.sortByDescending { it.probability }
+        for ((word1, doomed) in victims) {
+            val entries = data.bigramMap[word1] ?: continue
+            entries.removeAll(doomed.toSet())
+            if (entries.isEmpty()) data.bigramMap.remove(word1)
         }
     }
 
@@ -639,6 +741,9 @@ class BigramStore internal constructor(
                 put("word2", entry.word2)
                 put("frequency", entry.frequency)
                 put("probability", entry.probability.toDouble())
+                // W3 retention recency. Additive field: older builds ignore it, and blobs
+                // written before it existed load with "fresh" recency (see loadInto).
+                put(KEY_LAST_SEEN, entry.lastSeen)
             }
             entries.put(obj)
         }
@@ -698,7 +803,9 @@ class BigramStore internal constructor(
                     word1 = obj.getString("word1"),
                     word2 = obj.getString("word2"),
                     frequency = obj.getInt("frequency"),
-                    probability = obj.getDouble("probability").toFloat()
+                    probability = obj.getDouble("probability").toFloat(),
+                    // -1 = no recency recorded (pre-W3 blob); resolved to "fresh" below.
+                    lastSeen = obj.optInt(KEY_LAST_SEEN, UNKNOWN_LAST_SEEN)
                 )
 
                 data.bigramMap.getOrPut(entry.word1) { mutableListOf() }.add(entry)
@@ -711,6 +818,13 @@ class BigramStore internal constructor(
 
             if (persistedTotals != null) {
                 restoreTotals(data, persistedTotals)
+            }
+
+            // Pre-W3 blobs carry no recency: treat every entry as just seen (its context's
+            // total) — no information beats inventing an order.
+            for ((word1, list) in data.bigramMap) {
+                val total = data.word1Frequencies[word1] ?: 0
+                list.replaceAll { if (it.lastSeen == UNKNOWN_LAST_SEEN) it.copy(lastSeen = total) else it }
             }
 
             // Sort all lists by probability
@@ -796,26 +910,31 @@ class BigramStore internal constructor(
 
                     val entries = data.bigramMap.getOrPut(word1) { mutableListOf() }
                     val existing = entries.find { it.word2 == word2 }
+                    // Imported entries count as seen NOW (the merged context total) — the
+                    // backup payload carries no recency.
+                    val seen = data.word1Frequencies[word1] ?: 0
                     if (existing != null) {
                         entries.remove(existing)
-                        entries.add(existing.copy(frequency = existing.frequency + frequency))
+                        entries.add(existing.copy(frequency = existing.frequency + frequency, lastSeen = seen))
                     } else {
-                        entries.add(BigramEntry(word1, word2, frequency, 0f))
+                        entries.add(BigramEntry(word1, word2, frequency, 0f, lastSeen = seen))
                     }
                 }
 
-                // Recompute probabilities against the merged word1 totals + enforce caps.
+                // Enforce the per-context budget, then recompute probabilities against the
+                // merged word1 totals.
                 for ((word1, entries) in data.bigramMap) {
                     val total = data.word1Frequencies[word1] ?: continue
+                    ContinuationBudget.enforce(
+                        entries, null, total, CONTINUATION_LIMITS,
+                        frequencyOf = { it.frequency }, lastSeenOf = { it.lastSeen }
+                    )
                     val recomputed = entries.map {
                         it.copy(probability = BigramEntry.calculateProbability(it.frequency, total))
                     }
                     entries.clear()
                     entries.addAll(recomputed)
                     entries.sortByDescending { it.probability }
-                    if (entries.size > MAX_BIGRAMS_PER_WORD) {
-                        entries.subList(MAX_BIGRAMS_PER_WORD, entries.size).clear()
-                    }
                 }
                 pruneIfNeeded(data)
             }
