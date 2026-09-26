@@ -187,6 +187,25 @@ learning gate, context-LM pref, incognito field, password/prompt/Termux). `next_
 is still default-OFF, so nothing appears for a user who has not opted in.
 `LearningWiringDriftTest` pins the placement.
 
+### Static context LM (en, 2026-09-26)
+
+For English the shipped static context is no longer the hand-authored tables: `assets/lm/en.cklm`
+(`StaticContextLm`, CKLM v1, built by `scripts/build_static_lm.py` from the Leipzig Corpora
+Collection web-2018 300K sample + Tatoeba at weight 0.1; 74,797 pairs, 439 KB, ~0.67 MB heap)
+loads on `BigramModel`'s seed thread and then serves BOTH static products:
+
+- **tap multiplier** — `getContextMultiplier = clamp(P(w|prev) / P(w), 0.1, 10)`, same clamp as
+  before; a word not among the previous word's top-20 continuations gets that word's backoff
+  ratio (slightly below 1). `context_source` semantics are unchanged: in the default `both`, the
+  applied multiplier is still `max(static, learned)`, so the backoff penalty never bites there.
+- **next-word cold-start seed** — `getPredictions` returns the LM's continuations ranked by
+  conditional probability; the curated `en_bigrams.json` pairs only fill slots the LM leaves
+  empty (14 of its 319 pairs, e.g. "good morning", are outside the corpus top-20).
+
+Other languages keep the hardcoded tables and JSON seeds until they get an LM. Evaluation:
+`docs/eval/2026-09-26-static-lm-replay.md` (tap S1 and swipe S3); provenance:
+`scripts/data/PROVENANCE.md`; attribution: `NOTICE`, Settings → Help & FAQ.
+
 ### The four call-sites (audit §4.4)
 
 | # | Trigger | Behavior |
@@ -346,6 +365,7 @@ Existing related prefs (unchanged keys, now composed with the master gate):
 | `OnDeviceLearningPrivacyTest` | Funnel wired to real stores over in-memory storage — asserts nothing recorded/persisted with master off |
 | `NextWordPredictorTest` | Gating matrix, floors, self-repetition, dedup, personalization reorder, static cold-start tier (fill-only, sub-floor scores, no faked stats) |
 | `StaticBigramSeedTest` | Shipped `assets/bigrams/*` schema against the real files, asset-wins merge, hardcoded fallback index |
+| `StaticContextLmTest`, `BigramModelStaticLmTest`, `StaticLmAssetDriftTest` | CKLM v1 loader contract, the BigramModel adapter (multiplier + seed + gap fill), drift pins for the shipped `lm/en.cklm` (sidecar sha256, vocab, caps, heap, attribution) |
 | `SuggestionProvenanceTest` | UnifiedScore combine + breakdown + formatter |
 | `BigramStorePersistenceTest`, `TrigramStorePersistenceTest`, `UserVocabularyPersistenceTest` | Language keying, legacy migration, debounced write-back |
 | `UserVocabularyCapTest` | Configurable `personalization_max_words` cap: default, live provider changes, least-value eviction at capacity, lower-cap trim (enforceCap/on-load/import), floor clamp |

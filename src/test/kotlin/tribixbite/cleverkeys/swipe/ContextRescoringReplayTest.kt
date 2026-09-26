@@ -14,6 +14,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 
+/** Evidence for one slate word (store key) after one context word; null = nothing confident. */
+private typealias EvidenceSource = (word: String, context: String) -> SwipeContextRescorer.Evidence?
+
 /**
  * Stages B-D of the step-5 evidence harness — the actual A/B.
  *
@@ -516,6 +519,12 @@ class ContextRescoringReplayTest {
                 "are set. The CTC arm is the primary measurement; refusing to report without it.",
             CtcReplayEngine.ortAvailable(),
         )
+        // `-PreplayCorpus=static` replays the SHIPPED static context LM instead of a learned
+        // store, with synthetic context drawn from real held-out sentences (2026-09-26, S3).
+        if (corpusPreference == "static") {
+            replayStaticLm()
+            return
+        }
         // `-PreplayCorpus=device` selects the maintainer's own export. That arm matters because it
         // is the only one whose ACTIVATION RATE is meaningful: 6,589 pairs sits under
         // BigramStore's 10,000 cap and no word1 exceeds the 20-continuation per-word cap, so
@@ -539,6 +548,13 @@ class ContextRescoringReplayTest {
         val pairs = LearnedBigramCorpus.parse(corpusFile!!, "en")
         val loaded = LearnedBigramCorpus.seed(pairs, "en", scheduler)
         println("[replay] corpus ${corpusFile.name}: $loaded")
+        // The learned stores' evidence, adapted to the rescorer's shape (identical to the pre-2026-09-26
+        // inline lookup; factored out so the static-LM arm can supply its own source).
+        val learnedEvidence: EvidenceSource = { word, context ->
+            loaded.model.getContextEvidence(word, listOf(context))?.let { cont ->
+                SwipeContextRescorer.Evidence(loaded.model.boostFor(cont).toDouble(), cont.frequency, cont.probability)
+            }
+        }
 
         val traces = loadTraces(limitPerWord = tracesPerWord)
         println("[replay] trace pool: ${traces.size} distinct words " +
@@ -681,7 +697,7 @@ class ContextRescoringReplayTest {
                         favourableArm = favourableArm,
                         contextWord = pair.word1,
                         row = row,
-                        loaded = loaded,
+                        evidenceOf = learnedEvidence,
                         apostropheKeys = apostropheKeys,
                     ) {
                         val slate = ctc.decode(row.nx, row.ny, row.nt)
@@ -692,7 +708,7 @@ class ContextRescoringReplayTest {
                         favourableArm = favourableArm,
                         contextWord = pair.word1,
                         row = row,
-                        loaded = loaded,
+                        evidenceOf = learnedEvidence,
                         apostropheKeys = apostropheKeys,
                     ) {
                         val r = geo.decode(
@@ -809,6 +825,153 @@ class ContextRescoringReplayTest {
         ).that(ctcResults.decoded).isGreaterThan(0)
     }
 
+    // ── 2026-09-26 S3: the SHIPPED static context LM as the evidence source ─────────────────
+    //
+    // See docs/eval/2026-09-26-static-lm-replay.md. The question: does a general-English bigram
+    // prior (assets/lm/en.cklm) reach the CTC misses the learned pairs could not, and at what
+    // break cost? The traces are isolated words, so the context is SYNTHETIC: for each trace word,
+    // the preceding word of up to N held-out sentences (never counted into the LM) that contain it.
+
+    /** How a listed static pair becomes a rescorer boost (the LM has no native boost scale). */
+    private enum class StaticBoost {
+        /** `(1 + P(w|prev))²` clamped to [1, 5] — the learned stores' own boost curve. */
+        PROB,
+        /** `P(w|prev) / P(w)` clamped to [1, 5] — the association ratio the tap multiplier uses. */
+        RATIO,
+    }
+
+    private fun staticEvidence(lm: tribixbite.cleverkeys.StaticContextLm, mapping: StaticBoost): EvidenceSource =
+        { word, context ->
+            val p = lm.listedProbability(context, word)
+            if (p <= 0f) null else {
+                val boost = when (mapping) {
+                    StaticBoost.PROB -> (1.0 + p) * (1.0 + p)
+                    StaticBoost.RATIO -> lm.contextRatio(context, word).toDouble()
+                }.coerceIn(SwipeContextRescorer.NO_BOOST, SwipeContextRescorer.MAX_BOOST)
+                // A listed pair survived the builder's weighted count >= 3, so it clears the
+                // frequency floor; the rank-1 PROBABILITY floor (0.05) still applies to p itself.
+                SwipeContextRescorer.Evidence(boost, tribixbite.cleverkeys.NextWordPredictor.MIN_LEARNED_FREQUENCY, p)
+            }
+        }
+
+    private fun replayStaticLm() {
+        val lmFile = File("src/main/assets/lm/en.cklm")
+        val heldFile = File(corporaDir, "static-lm-eval/heldout_en.txt")
+        Assume.assumeTrue("no shipped LM at ${lmFile.path}", lmFile.exists())
+        Assume.assumeTrue("no held-out sentences at ${heldFile.path} — run scripts/build_static_lm.py", heldFile.exists())
+        val lm = tribixbite.cleverkeys.StaticContextLm.parse(lmFile.readBytes())
+        val traces = loadTraces(limitPerWord = tracesPerWord)
+        val allWords = traces.keys.toList().sorted()
+        val pool = traces.keys
+        val perWord = staticContextsPerWord
+        println("[static] LM vocab=${lm.vocabSize} pairs=${lm.pairCount}; trace pool ${pool.size} words; " +
+            "up to $perWord held-out contexts per word; decoys=$decoysPerPair; seed=$SEED")
+
+        // Reservoir-sample up to N preceding words per pool word, deterministic per word.
+        val seen = HashMap<String, Int>()
+        val contexts = HashMap<String, MutableList<String>>()
+        val rngs = HashMap<String, java.util.Random>()
+        heldFile.forEachLine { line ->
+            val toks = tribixbite.cleverkeys.NextWordPredictor.contextFromEditorText(line, Int.MAX_VALUE)
+            for (i in 1 until toks.size) {
+                val w = toks[i]
+                if (w !in pool) continue
+                val n = seen.merge(w, 1, Int::plus)!!
+                val list = contexts.getOrPut(w) { ArrayList(perWord) }
+                if (list.size < perWord) list.add(toks[i - 1]) else {
+                    val j = rngs.getOrPut(w) { java.util.Random(SEED + w.hashCode()) }.nextInt(n)
+                    if (j < perWord) list[j] = toks[i - 1]
+                }
+            }
+        }
+        println("[static] ${contexts.size} of ${pool.size} pool words occur (position >= 1) in the held-out text")
+
+        // Decode every trace ONCE — the slate does not depend on the context.
+        val slates = LinkedHashMap<String, TraceSlate>()
+        val rowsById = HashMap<String, Row>()
+        var decodeErrors = 0
+        val started = System.nanoTime()
+        CtcReplayEngine.build("en").use { ctc ->
+            for (word in allWords) for (row in traces.getValue(word)) {
+                val id = traceIdOf(row)
+                if (slates.containsKey(id)) continue
+                val slate = runCatching { ctc.decode(row.nx, row.ny, row.nt) }.getOrNull()
+                if (slate == null || slate.scores.size != slate.words.size) { decodeErrors++; continue }
+                slates[id] = TraceSlate(row.word, slate.words, slate.scores, isTuneHalf(id))
+                rowsById[id] = row
+            }
+        }
+        println("[static] decoded ${slates.size} traces in %.1f s (%d errors)".format(
+            (System.nanoTime() - started) / 1e9, decodeErrors))
+
+        // The 135-style oracle-fixable set, recomputed on THIS pool so the capture is like-for-like.
+        val oracleFixable = slates.filter { (_, sl) ->
+            val probe = OracleStats(); oracleRecord(probe, sl); probe.guarded > 0
+        }.keys
+        val (poolAll, poolConfirm) = reportOracle("CTC, FULL TRACE POOL (for the capture count)", slates.values)
+        check(poolAll.broken == 0 && poolConfirm.n > 0)
+
+        val hubs = listOf("the", "to", "a", "of", "and", "in", "i", "you")
+        for (mapping in StaticBoost.entries) {
+            val evidence = staticEvidence(lm, mapping)
+            val real = EngineResults("CTC + static LM, boost=${mapping.name} — REAL held-out context (+ decoys)")
+            val hub = EngineResults("CTC + static LM, boost=${mapping.name} — HUB contexts ${hubs}")
+            // Capture: per oracle-fixable trace, did the shipped W/R_MIN fix it under a real context?
+            val captureContexts = HashMap<String, Int>()
+            val captureFixed = HashMap<String, Int>()
+            fun decodeOf(row: Row): () -> Pair<List<String>, List<Int>> = {
+                val sl = slates[traceIdOf(row)] ?: error("trace not decoded")
+                sl.words to sl.scores
+            }
+            for (word in allWords) {
+                val ctxs = contexts[word].orEmpty()
+                val decoys = neighboursOf(word, allWords, decoysPerPair)
+                for (ctx in ctxs) {
+                    for (row in traces.getValue(word)) {
+                        if (!slates.containsKey(traceIdOf(row))) continue
+                        score(real, true, ctx, row, evidence, emptyMap(), decodeOf(row))
+                        val id = traceIdOf(row)
+                        if (id in oracleFixable) {
+                            captureContexts.merge(id, 1, Int::plus)
+                            val sl = slates.getValue(id)
+                            val ev = sl.words.map { evidence(SwipeContextRescorer.storeKey(it), ctx) ?: SwipeContextRescorer.Evidence.NONE }
+                            val order = SwipeContextRescorer.rescoreOrder(sl.scores, ev)
+                            if (sl.words[order.first()].equals(sl.target, ignoreCase = true)) captureFixed.merge(id, 1, Int::plus)
+                        }
+                    }
+                    // Decoys: context drawn for WORD, but a confusable neighbour was swiped.
+                    for (d in decoys) for (row in traces.getValue(d)) {
+                        if (!slates.containsKey(traceIdOf(row))) continue
+                        score(real, false, ctx, row, evidence, emptyMap(), decodeOf(row))
+                    }
+                }
+            }
+            // Hub arm: every trace after every hub word — the/to/a evidence is everywhere.
+            for (word in allWords) for (row in traces.getValue(word)) {
+                if (!slates.containsKey(traceIdOf(row))) continue
+                for (h in hubs) score(hub, false, h, row, evidence, emptyMap(), decodeOf(row))
+            }
+            println("═══════════════════════════════════════════════════════════════")
+            println("  STATIC-LM REPLAY — boost mapping ${mapping.name}")
+            report("REAL-CONTEXT", real)
+            println("     ship bar (combined, shipped W/R_MIN): meets=${real.combined.meetsShipBar()}")
+            report("HUB-CONFUSABLE", hub)
+            println("     ship bar (hub arm, shipped W/R_MIN): meets=${hub.combined.meetsShipBar()}")
+            val withCtx = oracleFixable.count { (captureContexts[it] ?: 0) > 0 }
+            val fixedAny = oracleFixable.count { (captureFixed[it] ?: 0) > 0 }
+            val fixedMajority = oracleFixable.count {
+                val c = captureContexts[it] ?: 0
+                c > 0 && 2 * (captureFixed[it] ?: 0) > c
+            }
+            println("     CAPTURE of the ${oracleFixable.size} oracle-fixable traces: $withCtx have a held-out " +
+                "context; fixed under >= 1 context: $fixedAny; under a majority of their contexts: $fixedMajority " +
+                "(shipped W=${SwipeContextRescorer.WEIGHT}, R_MIN=${SwipeContextRescorer.R_MIN})")
+            val caseTotal = captureContexts.values.sum()
+            println("        in cases: ${captureFixed.values.sum()} fixed of $caseTotal (context, trace) cases")
+        }
+        println("═══════════════════════════════════════════════════════════════")
+    }
+
     /**
      * Decode one case with [decode], classify it, and fold it into [results].
      *
@@ -822,7 +985,7 @@ class ContextRescoringReplayTest {
         favourableArm: Boolean,
         contextWord: String,
         row: Row,
-        loaded: LearnedBigramCorpus.Loaded,
+        evidenceOf: EvidenceSource,
         apostropheKeys: Map<String, List<String>>,
         decode: () -> Pair<List<String>, List<Int>>,
     ) {
@@ -854,13 +1017,7 @@ class ContextRescoringReplayTest {
         results.decoded++
 
         val evidence = words.map { w ->
-            val cont = loaded.model.getContextEvidence(
-                SwipeContextRescorer.storeKey(w), listOf(contextWord)
-            )
-            if (cont == null) SwipeContextRescorer.Evidence.NONE
-            else SwipeContextRescorer.Evidence(
-                loaded.model.boostFor(cont).toDouble(), cont.frequency, cont.probability
-            )
+            evidenceOf(SwipeContextRescorer.storeKey(w), contextWord) ?: SwipeContextRescorer.Evidence.NONE
         }
         val exposed = evidence.any { it.boost > SwipeContextRescorer.NO_BOOST }
         (if (favourableArm) results.favourableTraces else results.adversarialTraces).add(traceId)
@@ -886,9 +1043,7 @@ class ContextRescoringReplayTest {
             // break rate. It is fixed anyway — a denominator that happens to err in the safe
             // direction is still the wrong denominator.
             if (!favourableArm &&
-                loaded.model.getContextEvidence(
-                    SwipeContextRescorer.storeKey(row.word), listOf(contextWord)
-                ) != null
+                evidenceOf(SwipeContextRescorer.storeKey(row.word), contextWord) != null
             ) {
                 results.adversarialEvidenceOnTarget++
             }
@@ -908,7 +1063,7 @@ class ContextRescoringReplayTest {
             }
         } else if (words.any { w ->
                 apostropheKeys[w.lowercase()]?.any { key ->
-                    loaded.model.getContextEvidence(key, listOf(contextWord)) != null
+                    evidenceOf(key, contextWord) != null
                 } == true
             }
         ) {
@@ -1167,7 +1322,10 @@ class ContextRescoringReplayTest {
     private val maxContextsPerTrace: Int
         get() = System.getProperty("replayMaxCtx")?.toIntOrNull()?.coerceAtLeast(0) ?: 0
 
-    /** `device` selects the device export; anything else prefers the Ubuntu corpus. */
+    /** Held-out contexts sampled per trace word in the static-LM arm (`-PreplayStaticCtx=N`). */
+    private val staticContextsPerWord: Int get() = intProperty("replayStaticCtx", STATIC_CONTEXTS_PER_WORD)
+
+    /** `device` selects the device export; `static` the shipped LM; anything else prefers Ubuntu. */
     private val corpusPreference: String get() = System.getProperty("replayCorpus") ?: "ubuntu"
 
     private fun intProperty(name: String, fallback: Int): Int =
@@ -1182,6 +1340,9 @@ class ContextRescoringReplayTest {
          * [TRACES_PER_WORD] decodes per engine against the full dictionary.
          */
         const val MAX_PAIRS = 1500
+
+        /** Static-LM arm: held-out contexts sampled per trace word. */
+        const val STATIC_CONTEXTS_PER_WORD = 5
 
         /** Adversarial decoys per pair — traces the learned context does NOT predict. */
         const val DECOYS_PER_PAIR = 2

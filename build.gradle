@@ -1055,7 +1055,7 @@ tasks.register('runPureTests', JavaExec) {
   // when supplied, so the defaults stay in the Kotlin where they are documented. Lets a
   // measurement run be scaled (`-PreplayPairs=800 -PreplayDecoys=6`) without editing the test,
   // and the replay prints whichever values it ran with.
-  ['replayPairs', 'replayDecoys', 'replayTraces', 'replayMaxCtx', 'replayCorpus'].each { knob ->
+  ['replayPairs', 'replayDecoys', 'replayTraces', 'replayMaxCtx', 'replayCorpus', 'replayStaticCtx'].each { knob ->
     if (project.hasProperty(knob)) systemProperty knob, project.property(knob)
   }
   // ONNX in PURE JVM tests on Termux.
