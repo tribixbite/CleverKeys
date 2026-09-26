@@ -228,6 +228,13 @@ class ContextModel internal constructor(
      * @param force run even if not due (tests / an explicit maintenance request)
      * @return entries removed across both stores, or null when the purge was not due
      */
+    /**
+     * Is [purgeUnlearnable] due for [language]? A cheap stamp read, so a caller can skip
+     * building the purge's lexicon snapshot on the (weekly-idle) common path.
+     */
+    fun isTypoPurgeDue(language: String, nowMs: Long = System.currentTimeMillis()): Boolean =
+        LearnableWordPolicy.isPurgeDue(bigramStore.getTypoPurgeStamp(BigramStore.normalizeLanguage(language)), nowMs)
+
     fun purgeUnlearnable(
         language: String,
         isLearnable: (String) -> Boolean,

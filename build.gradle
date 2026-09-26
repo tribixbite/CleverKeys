@@ -911,6 +911,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.LearnedTypoHygieneTest',
     // Rejected-word rollback reaches the vocabulary tally and the context tracker too
     'tribixbite.cleverkeys.RejectedWordRollbackTest',
+    // Review of 59bd4159: the typo purge waits for every configured lexicon source (bilingual
+    // secondary) and judges a frozen copy of the lexicon, not the live map
+    'tribixbite.cleverkeys.LearnedTypoPurgeSchedulerTest',
     // ARC-080 (2026-08-29): the persisted n-gram DENOMINATOR. The per-context caps
     // drop continuations that the observed total still counts, so reconstructing the
     // denominator as the sum of survivors inflated every survivor after a restart.

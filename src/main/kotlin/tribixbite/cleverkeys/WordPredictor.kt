@@ -1052,43 +1052,107 @@ class WordPredictor : Predictor {
 
     /**
      * Typo-hygiene purge trigger (see [ContextModel.purgeUnlearnable]): called when a
-     * language's dictionary has just been published. Runs on the learned-data persistence
-     * thread — never the main thread — and only when the learned context LM is usable (master
-     * learning gate + context-aware feature on; M2: a missing config fails closed). The
-     * lexicon is SNAPSHOTTED here, at publication, so a later language switch cannot make the
-     * purge judge [language]'s store against another language's words. The purge itself is
-     * a no-op unless due (first run after upgrade, then weekly).
+     * language's PRIMARY dictionary has just been published. Only when the learned context
+     * LM is usable (master learning gate + context-aware feature on; M2: a missing config
+     * fails closed). WHEN it may actually run — every configured lexicon source published —
+     * and the frozen lexicon copy it judges against are [LearnedTypoPurgeScheduler]'s job;
+     * the purge body runs on the learned-data persistence thread, never the main thread, and
+     * is a no-op unless due (first run after upgrade, then weekly).
      */
     private fun scheduleLearnedTypoPurge(language: String) {
-        if (closed) return
-        val cfg = config ?: return
-        if (!LearningGate.canUseLearnedContext(cfg.on_device_learning_enabled, cfg.context_aware_predictions_enabled)) return
-        val model = contextModel ?: return
-        val lexicon = dictionary.get()
-        if (lexicon.isEmpty()) return // nothing to judge against — retried at the next load
-        val userWords = customAndUserWords
+        publishedLexiconLanguage = language
+        if (!canPurgeLearnedTypos()) return
+        typoPurgeScheduler().onPrimaryPublished(lexiconState(language))
+    }
+
+    /**
+     * The secondary (bilingual) lexicon was published, replaced or unloaded. A purge the
+     * primary publication deferred because this source was still pending runs now (review of
+     * 59bd4159: the purge used to judge a bilingual user's store before the secondary
+     * lexicon existed, deleting their second language's n-grams).
+     */
+    private fun notifySecondaryLexiconChanged() {
+        val language = publishedLexiconLanguage ?: return
+        if (!canPurgeLearnedTypos()) return
+        typoPurgeScheduler().onSecondaryChanged(lexiconState(language))
+    }
+
+    private fun canPurgeLearnedTypos(): Boolean {
+        if (closed) return false
+        val cfg = config ?: return false
+        if (!LearningGate.canUseLearnedContext(cfg.on_device_learning_enabled, cfg.context_aware_predictions_enabled)) return false
+        return contextModel != null
+    }
+
+    /**
+     * Every lexicon source the purge's "known" test needs, as published right now. The
+     * scheduler copies the mutable parts (the primary map, the user-word set) when — and only
+     * when — it actually queues a purge. The secondary index is kept by reference: it is built
+     * privately and never mutated after publication (a switch publishes a NEW index).
+     */
+    private fun lexiconState(language: String): LearnedTypoPurgeScheduler.LexiconState {
         val secondary = secondaryIndex
         val engine = personalizationEngine
-        val snapshotPolicy = LearnableWordPolicy(
-            lexiconReady = { true },
-            isKnownWord = { w -> isInLexicon(w, lexicon, userWords, secondary) },
+        return LearnedTypoPurgeScheduler.LexiconState(
+            language = language,
+            lexicon = dictionary.get(),
+            userWords = customAndUserWords,
+            configuredSecondary = configuredSecondaryLanguage(),
+            publishedSecondary = if (secondary != null) secondaryLanguageCode else null,
+            secondaryContains = secondary?.let { idx -> { w: String -> idx.contains(AccentNormalizer.normalize(w)) } },
             observationCount = { w -> engine?.getWordUsage(w)?.usageCount ?: 0 }
         )
-        try {
-            DebouncedPersister.sharedScheduler().execute {
-                try {
-                    val removed = model.purgeUnlearnable(language, snapshotPolicy::isLearnable)
-                    if (removed != null) {
-                        Log.i(TAG, "Typo purge for '$language': removed $removed learned n-gram(s)")
-                    }
-                } catch (e: Exception) {
-                    Log.w(TAG, "Typo purge failed for '$language'", e)
-                }
-            }
-        } catch (e: RejectedExecutionException) {
-            // Shared scheduler already shut down (process teardown) — the next load retries.
+    }
+
+    /**
+     * The secondary language the user has CONFIGURED (multilang on + a language chosen), read
+     * from the same prefs `PredictionCoordinator` loads it from — or null when monolingual.
+     * Compared against the published index to tell "not bilingual" from "bilingual, secondary
+     * lexicon still loading (or failed to load)"; the latter defers the purge.
+     */
+    private fun configuredSecondaryLanguage(): String? {
+        val ctx = context ?: return null
+        return try {
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(ctx)
+            if (!prefs.getBoolean("pref_enable_multilang", false)) return null
+            prefs.getString("pref_secondary_language", "none")?.takeIf { it.isNotEmpty() && it != "none" }
+        } catch (e: Exception) {
+            // Unreadable prefs: cannot rule out a secondary language — report one so the
+            // scheduler defers rather than judging a possibly-bilingual store monolingually.
+            "unknown"
         }
     }
+
+    /** Built on first use (Objenesis-allocated test doubles never run field initializers). */
+    private fun typoPurgeScheduler(): LearnedTypoPurgeScheduler =
+        typoPurgeSchedulerCache ?: synchronized(this) {
+            typoPurgeSchedulerCache ?: LearnedTypoPurgeScheduler(
+                executor = { task ->
+                    try {
+                        DebouncedPersister.sharedScheduler().execute(task)
+                    } catch (e: RejectedExecutionException) {
+                        // Shared scheduler already shut down (process teardown) — the next load retries.
+                    }
+                },
+                isDue = { lang -> contextModel?.isTypoPurgeDue(lang) ?: false },
+                runPurge = { lang, learnable ->
+                    try {
+                        contextModel?.purgeUnlearnable(lang, learnable)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Typo purge failed for '$lang'", e)
+                        null
+                    }
+                },
+                log = { msg -> Log.i(TAG, msg) }
+            ).also { typoPurgeSchedulerCache = it }
+        }
+
+    @Volatile
+    private var typoPurgeSchedulerCache: LearnedTypoPurgeScheduler? = null
+
+    /** Language of the primary lexicon currently published in [dictionary] (null before the first). */
+    @Volatile
+    private var publishedLexiconLanguage: String? = null
 
     /**
      * Checkpoint all learned data (context LM bigrams + personalization vocabulary)
@@ -1391,6 +1455,7 @@ class WordPredictor : Predictor {
                 if (index != null) {
                     secondaryIndex = index
                     secondaryLanguageCode = language
+                    notifySecondaryLexiconChanged()
                 }
                 callback?.run()
             }
@@ -1420,6 +1485,7 @@ class WordPredictor : Predictor {
         val index = buildSecondaryDictionary(language) ?: return false
         secondaryIndex = index
         secondaryLanguageCode = language
+        notifySecondaryLexiconChanged()
         return true
     }
 
@@ -1479,6 +1545,7 @@ class WordPredictor : Predictor {
         secondaryIndex = null
         secondaryLanguageCode = "none"
         Log.i(TAG, "Unloaded secondary dictionary for touch typing")
+        notifySecondaryLexiconChanged()
     }
 
     /**
