@@ -238,6 +238,15 @@ story. Two habits came out of it and are worth keeping:
 
 ## Open work, in priority order
 
+### -1. Learning system audit (2026-09-26) — OPEN, user-reported
+
+`docs/audit/2026-09-26-learning-system-audit.md`. Two device reports: (1) swipe `she'd`/`I'd`/
+`they'll` rank badly — PAIRED variants are deferred to the slate tail (`ContractionOverlay.kt:111`)
+and the pairing frequency is discarded; (2) swiped `git` never learned — the swipe ranker (CTC +
+geometric) consumes NO learned store, and the write side learns the auto-inserted wrong word with
+no rollback on correction. Also: bigram cap makes new continuations unlearnable; 30-day selection
+wipe armed for every v4 upgrader. Fix order is at the end of the audit doc. Nothing implemented yet.
+
 ### 0. Full-backlog campaign continuation (2026-09-01)
 
 The live execution plan is `docs/plans/2026-08-30-full-backlog-campaign.md`. Waves A–C are
