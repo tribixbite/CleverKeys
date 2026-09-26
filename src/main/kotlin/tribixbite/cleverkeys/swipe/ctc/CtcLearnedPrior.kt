@@ -109,9 +109,12 @@ class CtcLearnedPrior(
     }
 
     /**
-     * The tunable constants. The default is the CORRECTION-driven policy at the constants the
-     * correction replay selected on its tune direction (see the eval doc for the verdict);
-     * [usage] builds the first attempt's USAGE-mode policy at its least-damaging grid point.
+     * The tunable constants. The default is the CORRECTION-driven policy at the best
+     * tune-direction point of the correction replay (measured at `e41f9463`). **No point
+     * cleared the ship bar** — best confirm: 9 fixed / 4 broken, errRatio 0.44 vs < 0.20 — so
+     * these are the least-bad measured values, NOT a shippable tuning; see
+     * `docs/eval/2026-09-26-correction-driven-swipe-prior-replay.md`. [usage] builds the first
+     * attempt's USAGE-mode policy at its least-damaging grid point.
      *
      * @property nSat evidence count at which the lift saturates at the ceiling.
      * @property bCap cap on the unigram (frequency-lift) part of the bonus, in final-score nats.
@@ -208,15 +211,22 @@ class CtcLearnedPrior(
     }
 
     companion object {
-        // ── CORRECTIONS mode (the default) — tuned by CorrectionPriorReplayTest ──────────
+        // ── CORRECTIONS mode (the default) — CorrectionPriorReplayTest, best tune net ─────
+        // Grid cMin {1,2,3} × N_SAT {2,3,5} × B_CAP {1.0,1.5,2.5}; nothing cleared the bar.
 
-        /** Correction count at which the lift reaches the ceiling. */
+        /** Correction count at which the lift reaches the ceiling (git pin: flips at 1–2). */
         const val CORRECTION_N_SAT = 3.0
 
-        /** Cap on the correction lift, final-score nats. */
+        /**
+         * Cap on the correction lift, final-score nats. 1.0/1.5/2.5 tie on the tune replay;
+         * 1.0 halves the adversarial single-word blast (108 vs 186 words over 1 %).
+         */
         const val CORRECTION_B_CAP = 1.0
 
-        /** No bonus below this many (decayed) corrections. */
+        /**
+         * No bonus below this many (decayed) corrections. cMin ≥ 2 leaves the trace pool with
+         * ≤ 4 fixable traces per direction — unmeasurable, not measured-safe.
+         */
         const val CORRECTION_MIN_COUNT = 1.0
 
         // ── USAGE mode (failed first attempt; Policy.usage) ──────────────────────────────
