@@ -217,6 +217,20 @@ class WordPredictor : Predictor {
     private var multiLanguageManager: MultiLanguageManager? = null // Phase 8.3: Multi-language models
     private var currentLanguage: String = "en" // Default to English
     private val recentWords: MutableList<String> = mutableListOf() // For language detection
+
+    /**
+     * One-slot record of the newest commit fed through the learn funnel: the word, the learn
+     * window it was recorded with, and the language store it went to. [rollbackCommittedWord]
+     * falls back to it when the window no longer ends with the rejected word — a sentence
+     * boundary (`.`, Enter) clears the window, yet the #110 backspace undo still fires for the
+     * word before it (review of 59bd4159: swipe "got", ".", backspace ×2 left fix→got and the
+     * vocabulary +1 in place). Replaced by every commit, consumed by a rollback, dropped when
+     * the window is cleared for a non-sentence reason (field/session/password boundary).
+     * Nullable so an Objenesis-allocated test double starts in the correct empty state.
+     */
+    private var lastRecordedCommit: RecordedCommit? = null
+
+    private class RecordedCommit(val word: String, val window: List<String>, val language: String)
     private var config: Config? = null
     private var adaptationManager: UserAdaptationManager? = null
     private var context: Context? = null // For accessing SharedPreferences for disabled words
@@ -744,6 +758,11 @@ class WordPredictor : Predictor {
         while (recentWords.size > MAX_RECENT_WORDS) {
             recentWords.removeAt(0)
         }
+        lastRecordedCommit = RecordedCommit(
+            normalizedWord,
+            recentWords.takeLast(LearningGate.CONTEXT_WINDOW),
+            currentLanguage
+        )
 
         // THE learn funnel (Task A master privacy gate, 2026-08-06): every
         // typing-derived learn path — context LM (bigrams + trigrams, Phase 7.1)
@@ -838,6 +857,7 @@ class WordPredictor : Predictor {
      */
     override fun clearContext() {
         recentWords.clear()
+        lastRecordedCommit = null
     }
 
     /**
@@ -864,8 +884,11 @@ class WordPredictor : Predictor {
      * with the tally still including this commit, so the policy judges the rollback
      * exactly as it judged the record.
      *
-     * No-op when [word] is not the newest window entry (e.g. a sentence
-     * boundary or session flush cleared the window in between).
+     * Target: the newest window entry when it is [word]; otherwise the one-slot
+     * [lastRecordedCommit] when it recorded [word] in the current language (a
+     * sentence boundary cleared the window in between). No-op otherwise — e.g. a
+     * session flush / password boundary ([clearContext]) or a newer commit, and
+     * a second rollback of the same commit (the slot is consumed).
      *
      * @param word the autocorrected word being undone (as committed)
      * @param fieldAllowsPersonalizedLearning the active field's incognito flag,
@@ -873,20 +896,28 @@ class WordPredictor : Predictor {
      */
     override fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean) {
         val normalized = word.lowercase().trim()
-        if (recentWords.isEmpty() || recentWords.last() != normalized) return
+        val inWindow = recentWords.isNotEmpty() && recentWords.last() == normalized
+        // Window cleared by a sentence boundary since the commit: undo from the one-slot
+        // record, but only for the same language store (a switch drops the pairing).
+        val recorded = lastRecordedCommit?.takeIf { it.word == normalized && it.language == currentLanguage }
+        val window: List<String> = when {
+            inWindow -> recentWords.takeLast(LearningGate.CONTEXT_WINDOW)
+            recorded != null -> recorded.window
+            else -> return
+        }
+        lastRecordedCommit = null
 
         val master = (config?.on_device_learning_enabled ?: false) && fieldAllowsPersonalizedLearning
         val contextAware = config?.context_aware_predictions_enabled ?: false
-        if (LearningGate.canLearnContext(master, contextAware) && recentWords.size >= 2) {
-            val sequenceLength = kotlin.math.min(LearningGate.CONTEXT_WINDOW, recentWords.size)
+        if (LearningGate.canLearnContext(master, contextAware) && window.size >= 2) {
             // Same predicate as the record, so a skipped (unlearnable) n-gram is not decremented.
-            contextModel?.rollbackCommit(recentWords.takeLast(sequenceLength), learnableWordPolicy::isLearnable)
+            contextModel?.rollbackCommit(window, learnableWordPolicy::isLearnable)
         }
         val personalized = config?.personalized_learning_enabled ?: false
         if (LearningGate.canLearnPersonalization(master, personalized)) {
             personalizationEngine?.unrecordWordTyped(normalized)
         }
-        recentWords.removeAt(recentWords.size - 1)
+        if (inWindow) recentWords.removeAt(recentWords.size - 1)
     }
 
     /**

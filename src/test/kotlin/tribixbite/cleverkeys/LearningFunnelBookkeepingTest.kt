@@ -382,6 +382,38 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("learn window").that(learnWindow()).containsExactly("fix")
     }
 
+    /**
+     * Review of 59bd4159 (LOW): swipe "got", type "." (a sentence boundary clears the learn
+     * window), backspace twice — the #110 swipe undo still fires (the editor again ends with
+     * the swiped word), but the rollback found an empty window and did nothing, so fix→got
+     * and the vocabulary +1 stayed while the tracker dropped the word. The undo keeps working
+     * and now rolls the learning back from a one-slot record of the last commit.
+     */
+    @Test
+    fun backspaceUndoOfASwipeAfterASentenceBoundaryStillRollsTheWordBack() {
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        assertWithMessage("fix→got learned by the auto-insert").that(bigram("fix", "got")).isEqualTo(1)
+
+        type(".")
+        assertWithMessage("the period closed the learn window").that(learnWindow()).isEmpty()
+
+        // Backspace 1 deletes "."; backspace 2 is KeyEventHandler's swipe undo, which deletes
+        // "got " and reports the rejected word.
+        editor.setLength(editor.length - 1)
+        handler.handleBackspace()
+        editor.setLength(editor.length - "got ".length)
+        handler.onSwipeWordUndone("got")
+
+        assertWithMessage("fix→got rolled back").that(bigram("fix", "got")).isEqualTo(0)
+        verify(exactly = 1) { personalization.unrecordWordTyped("got") }
+
+        // A second report of the same word (nothing left to undo) must not decrement again.
+        handler.onSwipeWordUndone("got")
+        verify(exactly = 1) { personalization.unrecordWordTyped("got") }
+    }
+
     @Test
     fun backspaceUndoOfAnAutocorrectLearnsTheOriginalInstead() {
         config.autocorrect_enabled = true
