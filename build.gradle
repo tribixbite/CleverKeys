@@ -985,6 +985,10 @@ tasks.register('runPureTests', JavaExec) {
     // policy pins for CtcLearnedPrior. Eval: docs/eval/2026-09-26-learned-unigram-swipe-replay.md
     'tribixbite.cleverkeys.swipe.LearnedUnigramReplayTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcLearnedPriorTest',
+    // Correction-driven swipe prior (second attempt at the `git` → `got` report): phase-A
+    // corrections on one half lift phase-B decodes on the other; pin: git flips within ≤ 3
+    // corrections. Eval: docs/eval/2026-09-26-correction-driven-swipe-prior-replay.md
+    'tribixbite.cleverkeys.swipe.CorrectionPriorReplayTest',
     // Issue-#75 replay instrument (Swiss French QWERTZ decoded as if QWERTY): the shipped
     // decode stack re-bound to the Swiss board's real key centers (decoderFor) — pins that
     // the engine follows the DISPLAYED geometry (y-e-s → "yes", not a z- word), plus the

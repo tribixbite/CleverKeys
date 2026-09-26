@@ -5,8 +5,8 @@ import org.junit.Assume
 import org.junit.Test
 import tribixbite.cleverkeys.swipe.ctc.CtcCandidate
 import tribixbite.cleverkeys.swipe.ctc.CtcLearnedPrior
+import tribixbite.cleverkeys.swipe.LearnedPriorTracePool.Row
 import java.io.File
-import java.util.zip.GZIPInputStream
 
 /**
  * Replay evaluation of the LEARNED-UNIGRAM swipe prior (learning-system audit 2026-09-26,
@@ -32,45 +32,10 @@ import java.util.zip.GZIPInputStream
  */
 class LearnedUnigramReplayTest {
 
-    private val cacheDir: File = run {
-        val override = System.getenv("CLEVERKEYS_TEST_CACHE")
-        if (!override.isNullOrEmpty()) File(override)
-        else File(System.getProperty("user.home"), ".cache/cleverkeys-test")
-    }
-    private val traceFile = File(cacheDir, "combined_english_swipes.jsonl.gz")
+    private val traceFile = LearnedPriorTracePool.traceFile
     private val corporaDir = File(System.getProperty("user.home"), ".cache/cleverkeys-corpora")
 
-    /** One usable real trace in the CTC engine's normalized frame. */
-    private class Row(val word: String, val x: DoubleArray, val y: DoubleArray, val t: DoubleArray) {
-        /** Trace identity without context — the unit of the tune/confirm split. */
-        val id: String = "$word|${x.size}|${x.firstOrNull()}"
-        val tuneHalf: Boolean get() = ((id.hashCode() % 2) + 2) % 2 == 0
-    }
-
-    /** EVERY usable trace (no per-word cap): Stage 0 asks about the whole pool. */
-    private fun loadAllTraces(): List<Row> {
-        val rows = ArrayList<Row>()
-        GZIPInputStream(traceFile.inputStream()).bufferedReader().useLines { lines ->
-            for (line in lines) {
-                val o = runCatching { org.json.JSONObject(line) }.getOrNull() ?: continue
-                val word = o.optString("word").lowercase()
-                if (word.isEmpty()) continue
-                val pts = o.optJSONArray("pts") ?: continue
-                val n = pts.length()
-                if (n < 3) continue
-                val x = DoubleArray(n); val y = DoubleArray(n); val t = DoubleArray(n)
-                var malformed = false
-                for (i in 0 until n) {
-                    val p = pts.optJSONArray(i)
-                    if (p == null) { malformed = true; break }
-                    x[i] = p.optDouble(0); y[i] = p.optDouble(1); t[i] = p.optDouble(2)
-                }
-                if (malformed || !TraceCorpusQuality.hasUsableTimestamps(t)) continue
-                rows.add(Row(word, x, y, t))
-            }
-        }
-        return rows
-    }
+    private fun loadAllTraces(): List<Row> = LearnedPriorTracePool.loadAll(traceFile)
 
     private fun gate(): Boolean {
         if (System.getProperty("geoFull") != "true") {
@@ -90,7 +55,7 @@ class LearnedUnigramReplayTest {
      * with the design cap and the given selection margin.
      */
     private fun maxLift(c: CtcCandidate, lambda: Double, selMargin: Double): Double =
-        CtcLearnedPrior.Policy(bCap = B_CAP, selMargin = selMargin).maxLift(c.logFreq, lambda)
+        CtcLearnedPrior.Policy.usage(bCap = B_CAP, selMargin = selMargin).maxLift(c.logFreq, lambda)
 
     private fun baseFreq(c: CtcCandidate): Double = Math.exp(c.logFreq)
 
@@ -265,7 +230,7 @@ class LearnedUnigramReplayTest {
         Assume.assumeTrue("no device export at ${exportFile.path} (local-only)", exportFile.isFile)
         val profile = LearnedProfileCorpus.parse(exportFile)
         println("[LU1] P_real: ${profile.total} vocabulary entries, ${profile.eligible} at " +
-            "n_eff ≥ ${CtcLearnedPrior.MIN_EFFECTIVE_USES} (recency at export instant); " +
+            "n_eff ≥ ${CtcLearnedPrior.USAGE_MIN_EFFECTIVE_USES} (recency at export instant); " +
             "manual selections are NOT in the export -> sel=0 throughout")
 
         val rows = loadAllTraces().filter { r -> r.word.all { it in 'a'..'z' } }
@@ -289,6 +254,7 @@ class LearnedUnigramReplayTest {
             val realPrior = CtcLearnedPrior(
                 evidence = { w -> profile.lookup(w) },
                 isLexiconWord = engine::isLexiconWord,
+                policy = CtcLearnedPrior.Policy.usage(),
             )
             val priorDecoder = engine.fullBeamDecoder(realPrior)
             for (d in decoded.take(FIDELITY_SAMPLE)) {
@@ -302,7 +268,7 @@ class LearnedUnigramReplayTest {
 
             val grid = LinkedHashMap<String, Pair<Point, Point>>() // key -> (tune, confirm)
             for (nSat in N_SAT_GRID) for (sm in SEL_MARGIN_GRID) {
-                val policy = CtcLearnedPrior.Policy(nSat = nSat, selMargin = sm)
+                val policy = CtcLearnedPrior.Policy.usage(nSat = nSat, selMargin = sm)
                 val tune = Point(); val confirm = Point()
                 grid[key(nSat, sm)] = tune to confirm
                 for (d in decoded) {
@@ -440,7 +406,7 @@ class LearnedUnigramReplayTest {
                 "git" to CtcLearnedPrior.WordEvidence(0, 1.0, 6),
                 "got" to CtcLearnedPrior.WordEvidence(98, 1.0, 0),
             )
-            val prior = CtcLearnedPrior({ profile[it] }, engine::isLexiconWord)
+            val prior = CtcLearnedPrior({ profile[it] }, engine::isLexiconWord, CtcLearnedPrior.Policy.usage())
             val base = engine.fullBeamDecoder()
             val lifted = engine.fullBeamDecoder(prior)
             val shapes = listOf(
@@ -465,7 +431,7 @@ class LearnedUnigramReplayTest {
             // failure is an AMBIGUOUS middle key: aim the middle point between `i` and `o`
             // (fraction toward `o`) and report both decodes. Measurement only.
             for (towardO in AMBIGUOUS_FRACTIONS) {
-                val (x, y, t) = ambiguousGit(layout, towardO)
+                val (x, y, t) = LearnedPriorTracePool.ambiguousGit(layout, towardO)
                 val before = base.decode(x, y, t)
                 val after = lifted.decode(x, y, t)
                 println("[LU-pin] i/o=%.2f git rank NONE=%d prior=%d top3 NONE=%s prior=%s".format(
@@ -474,29 +440,6 @@ class LearnedUnigramReplayTest {
                     before.take(3).map { it.word }, after.take(3).map { it.word }))
             }
         }
-    }
-
-    /** A straight g→(i..o)→t trace whose middle point sits [towardO] of the way from i to o. */
-    private fun ambiguousGit(
-        layout: tribixbite.cleverkeys.swipe.ctc.CtcLayout,
-        towardO: Double,
-    ): Triple<DoubleArray, DoubleArray, DoubleArray> {
-        fun center(ch: Char): Pair<Double, Double> {
-            val k = layout.alphabet.indexOf(ch)
-            return layout.keyCentersX[k].toDouble() to layout.keyCentersY[k].toDouble()
-        }
-        val (ix, iy) = center('i'); val (ox, oy) = center('o')
-        val pts = listOf(center('g'), (ix + (ox - ix) * towardO) to (iy + (oy - iy) * towardO), center('t'))
-        val xs = ArrayList<Double>(); val ys = ArrayList<Double>(); val ts = ArrayList<Double>()
-        var time = 0.0
-        for (i in 0 until pts.size - 1) for (s in 0 until 12) {
-            val f = s / 12.0
-            xs.add(pts[i].first + (pts[i + 1].first - pts[i].first) * f)
-            ys.add(pts[i].second + (pts[i + 1].second - pts[i].second) * f)
-            ts.add(time); time += 16.0
-        }
-        xs.add(pts.last().first); ys.add(pts.last().second); ts.add(time)
-        return Triple(xs.toDoubleArray(), ys.toDoubleArray(), ts.toDoubleArray())
     }
 
     private companion object {
@@ -543,6 +486,6 @@ class LearnedUnigramReplayTest {
         const val SEED = 20260926L
 
         /** Middle-point positions between `i` (0) and `o` (1) for the ambiguous git trace. */
-        val AMBIGUOUS_FRACTIONS = doubleArrayOf(0.3, 0.4, 0.5, 0.6)
+        val AMBIGUOUS_FRACTIONS = LearnedPriorTracePool.AMBIGUOUS_FRACTIONS
     }
 }
