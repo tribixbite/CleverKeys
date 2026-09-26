@@ -888,6 +888,14 @@ tasks.register('runPureTests', JavaExec) {
     // + write-layer enforcement over the real stores (nothing recorded/persisted when off)
     'tribixbite.cleverkeys.LearningGateTest',
     'tribixbite.cleverkeys.OnDeviceLearningPrivacyTest',
+    // Learning-system audit 2026-09-26 (Resolution): swipe-correction offer — the correction
+    // state machine (bar replace / backspace-undo + next word), the plausibility rule that
+    // filters changed-mind retypes, the bounded per-language store, and the contraction case
+    // (a personal-dictionary base kills a paired-variant promotion).
+    'tribixbite.cleverkeys.SwipeCorrectionTrackerTest',
+    'tribixbite.cleverkeys.SwipeCorrectionPolicyTest',
+    'tribixbite.cleverkeys.SwipeCorrectionStoreTest',
+    'tribixbite.cleverkeys.swipe.ContractionPromotionUserWordTest',
     // Task B (2026-08-06): pipeline transparency — UnifiedScore combiner + provenance model
     'tribixbite.cleverkeys.SuggestionProvenanceTest',
     // Task C (2026-08-06): TrigramStore activation — same persistence discipline as BigramStore
