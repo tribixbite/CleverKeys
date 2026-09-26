@@ -194,6 +194,9 @@ site/~/
 # without this exception a newly generated one is silently never committed and the
 # feature dies on CI while working locally.
 !src/main/assets/dictionaries/*.json
+# The static context LM's sidecar (counts, sha256, sources) ships beside en.cklm and is
+# what StaticLmAssetDriftTest checks the model against.
+!src/main/assets/lm/*.json
 # Test fixtures are SOURCE, not scratch output. Golden files (ctc_golden.json,
 # the futo_*.json layout captures, and the per-script goldens the multiscript
 # plan adds) live under these two roots and must be tracked without `git add -f`;

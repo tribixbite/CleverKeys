@@ -50,4 +50,6 @@ As an Input Method Editor, CleverKeys has legitimate clipboard access that other
 • Backup & Restore all settings and custom data
 • Layout profile import/export with gestures included
 
+English word suggestions use a built-in context model derived from the Leipzig Corpora Collection (CC BY 4.0) and Tatoeba (CC BY 2.0 FR); see NOTICE for attribution.
+
 CleverKeys is a complete Kotlin rewrite of Unexpected Keyboard with on-device gesture typing, clipboard history, and per-key gesture customization added. The ML model architecture, training code, and datasets are all publicly available.

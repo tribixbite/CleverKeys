@@ -147,3 +147,39 @@ Two delivery routes, both of them "shipped":
     Hebrew gesture row appears in training or checkpoint selection. Hebrew has
     no real-swipe evaluation corpus at any evidence tier; synthesis-holdout
     levels are not reported as accuracy.
+
+================================================================================
+Static context language model — Leipzig Corpora Collection
+================================================================================
+The bundled English context model (src/main/assets/lm/en.cklm, built by
+scripts/build_static_lm.py) is derived from word-pair counts over the Leipzig
+Corpora Collection download "eng-com_web-public_2018_300K" (English web text,
+2018). Only pruned, quantised word-pair statistics are distributed; no sentence
+text is shipped.
+
+  Leipzig Corpora Collection — Universität Leipzig
+  https://wortschatz.uni-leipzig.de/en/download
+  Terms: https://wortschatz.uni-leipzig.de/en/usage
+  License: Creative Commons Attribution 4.0 (CC BY 4.0)
+
+  D. Goldhahn, T. Eckart & U. Quasthoff: Building Large Monolingual
+  Dictionaries at the Leipzig Corpora Collection: From 100 to 200 Languages.
+  In: Proceedings of the 8th International Language Resources and Evaluation
+  Conference (LREC'12), 2012.
+
+CC BY 4.0 is compatible with GPLv3 redistribution; attribution is preserved
+here. Source hashes are pinned in scripts/data/PROVENANCE.md.
+
+================================================================================
+Static context language model — Tatoeba
+================================================================================
+The same model additionally counts English sentences from the Tatoeba
+collaborative sentence database (weighted 0.1 against the Leipzig counts; the
+per-snapshot weight and hash are recorded in src/main/assets/lm/en.json).
+
+  Tatoeba — https://tatoeba.org
+  License: Creative Commons Attribution 2.0 France (CC BY 2.0 FR)
+  https://creativecommons.org/licenses/by/2.0/fr/
+
+The contributors whose sentences were counted are listed in
+scripts/data/tatoeba-contributors-en.txt, generated with the model.
