@@ -77,6 +77,14 @@ class UserAdaptationManager internal constructor(
     @Volatile
     private var nextDecayAtMs: Long = Long.MIN_VALUE
 
+    /**
+     * The decay anchor the in-RAM counts correspond to, written by [saveSelectionHistory] in
+     * the SAME edit as the counts so storage never pairs halved counts with the old anchor
+     * (which would halve them again at the next start). Null until the first decay check.
+     */
+    @Volatile
+    private var decayAnchorMs: Long? = null
+
     init {
         loadSelectionHistory()
         // v4 learning-consent migration (2026-09-24): selection history is the one
@@ -139,12 +147,14 @@ class UserAdaptationManager internal constructor(
 
     /** Reset all adaptation data (in RAM and persisted). */
     fun resetAdaptation() {
+        val now = clock()
+        // Before the flush below: any save from here on carries the reset's anchor.
+        decayAnchorMs = now
         history.reset()
         // Settle any pending write-back BEFORE clearing, so no in-flight flush can land
         // after the clear (the history is already empty, so this writes only a zero total).
         persister.flush()
 
-        val now = clock()
         prefs.edit().apply {
             clear()
             putLong(KEY_LAST_RESET, now)
@@ -212,6 +222,10 @@ class UserAdaptationManager internal constructor(
             for ((word, count) in snapshot.counts) {
                 putInt(KEY_WORD_SELECTIONS + word, count)
             }
+            // Read AFTER the snapshot: a decay landing in between leaves a pre-decay snapshot
+            // with the new anchor (one halving skipped — benign), never halved counts with the
+            // old anchor (a double halving). The decay's own flush follows immediately anyway.
+            decayAnchorMs?.let { putLong(KEY_LAST_DECAY, it) }
 
             apply()
         }
@@ -221,7 +235,8 @@ class UserAdaptationManager internal constructor(
 
     /**
      * W4: apply every whole decay period elapsed since the `last_decay` anchor, then
-     * advance the anchor by exactly those periods and persist both at once.
+     * advance the anchor by exactly those periods and persist both at once — in one edit,
+     * serialized with the debounced write-back (see [decayAnchorMs]).
      *
      * Anchor migration: stores written before this code have no `last_decay`. They fall
      * back to `last_reset` (written by every reset, including the v4 upgrade reset), and a
@@ -239,12 +254,18 @@ class UserAdaptationManager internal constructor(
         val halvings = SelectionHistory.decayHalvingsDue(anchor, now)
         val newAnchor = if (now < anchor) now else anchor + halvings * SelectionHistory.DECAY_HALF_LIFE_MS
         nextDecayAtMs = newAnchor + SelectionHistory.DECAY_HALF_LIFE_MS
+        decayAnchorMs = newAnchor
 
         if (history.decay(halvings)) {
             log("Decayed selection history by $halvings half-life period(s)")
-            saveSelectionHistory() // decayed counts + pruned-to-zero key removals
-        }
-        if (!prefs.contains(KEY_LAST_DECAY) || prefs.getLong(KEY_LAST_DECAY, 0L) != newAnchor) {
+            // Decayed counts + pruned-to-zero key removals + the new anchor, in one edit, through
+            // the persister (review of d8846a98): a direct save here raced a write-back already in
+            // flight, whose pre-decay snapshot could land last and resurrect the dropped words.
+            // flush() waits for that write-back to finish, then writes the decayed state.
+            persister.markDirty()
+            persister.flush()
+        } else if (!prefs.contains(KEY_LAST_DECAY) || prefs.getLong(KEY_LAST_DECAY, 0L) != newAnchor) {
+            // Counts unchanged: only the anchor moves (first sight of a store, or clock set back).
             prefs.edit().putLong(KEY_LAST_DECAY, newAnchor).apply()
         }
     }

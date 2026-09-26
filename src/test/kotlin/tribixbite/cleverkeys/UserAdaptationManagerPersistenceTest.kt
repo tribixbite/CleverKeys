@@ -5,6 +5,10 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Persistence + retention contract of [UserAdaptationManager] (learning-system audit
@@ -34,6 +38,10 @@ class UserAdaptationManagerPersistenceTest {
     private class FakePrefs : SharedPreferences {
         val data = ConcurrentHashMap<String, Any>()
 
+        /** Test hook run at the start of every commit, on the committing thread. */
+        @Volatile
+        var beforeCommit: (() -> Unit)? = null
+
         override fun getAll(): Map<String, *> = HashMap(data)
         override fun getString(key: String, defValue: String?): String? = data[key] as? String ?: defValue
         @Suppress("UNCHECKED_CAST")
@@ -60,6 +68,7 @@ class UserAdaptationManagerPersistenceTest {
             override fun remove(key: String) = apply { removes += key }
             override fun clear() = apply { clear = true }
             override fun commit(): Boolean {
+                beforeCommit?.invoke()
                 synchronized(data) {
                     // Android semantics: clear() first, then removals, then puts.
                     if (clear) data.clear()
@@ -163,6 +172,66 @@ class UserAdaptationManagerPersistenceTest {
         }
         val manager = UserAdaptationManager(prefs, FakePrefs(), clock = { T0 + 400 * DAY_MS })
         assertThat(manager.getSelectionCount("git")).isEqualTo(8)
+    }
+
+    /**
+     * Review of d8846a98 (LOW): the decay wrote its result with a DIRECT save, outside the
+     * debounced persister's serialization. A write-back already in flight — its snapshot taken
+     * before the decay — could then land AFTER the decay's save. Words the decay dropped to zero
+     * are deleted only once (the pending-removal set is drained by the decay's snapshot), so the
+     * late write-back resurrected them in storage for good.
+     */
+    @Test
+    fun `W4-W6 - an in-flight write-back cannot resurrect words the decay dropped`() {
+        val prefs = seededPrefs(mapOf("old" to 1))
+        var now = T0
+        val scheduler = ScheduledThreadPoolExecutor(1)
+        try {
+            val persistThread = scheduler.submit<Thread> { Thread.currentThread() }.get()
+            val manager = UserAdaptationManager(
+                prefs, FakePrefs(), clock = { now },
+                scheduler = scheduler, debounceMs = 1, maxDelayMs = 1
+            )
+
+            // Hold the persistence thread INSIDE its write — its snapshot (old=1, new=1) is taken.
+            val armed = AtomicBoolean(true)
+            val entered = CountDownLatch(1)
+            val release = CountDownLatch(1)
+            prefs.beforeCommit = {
+                if (Thread.currentThread() === persistThread && armed.compareAndSet(true, false)) {
+                    entered.countDown()
+                    release.await(10, TimeUnit.SECONDS)
+                }
+            }
+            manager.recordSelection("new")
+            assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue()
+
+            // 31 days later the next selection applies the decay: old and new halve to zero.
+            now = T0 + 31 * DAY_MS
+            val decayer = Thread { manager.recordSelection("other") }
+            decayer.start()
+            decayer.join(300) // the old direct save finishes here; the fixed one queues behind
+            release.countDown()
+            decayer.join(10_000)
+            manager.flush()
+            assertThat(waitUntil { prefs.contains("word_selections_other") }).isTrue()
+
+            val revived = UserAdaptationManager(prefs, FakePrefs(), clock = { now })
+            assertThat(revived.getSelectionCount("old")).isEqualTo(0)
+            assertThat(revived.getSelectionCount("new")).isEqualTo(0)
+            assertThat(revived.getSelectionCount("other")).isEqualTo(1)
+        } finally {
+            scheduler.shutdownNow()
+        }
+    }
+
+    @Test
+    fun `W4 - the decay reaches storage through the persister together with its anchor`() {
+        val src = File("src/main/kotlin/tribixbite/cleverkeys/UserAdaptationManager.kt").readText()
+        val decay = src.substringAfter("private fun applyDueDecay()").substringBefore("\n    }\n")
+        assertThat(decay).contains("persister.markDirty()")
+        assertThat(decay).contains("persister.flush()")
+        assertThat(decay).doesNotContain("saveSelectionHistory()")
     }
 
     // --------------------------------------------- resets that must still wipe
