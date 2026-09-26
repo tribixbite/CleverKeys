@@ -790,7 +790,7 @@
     <string name="swipe_full_geometric_settings">Pengaturan Geometris Lengkap</string>
     <string name="swipe_full_ctc_settings">Pengaturan CTC Lengkap</string>
     <string name="help_open_wiki">Buka Wiki Lengkap</string>
-    <string name="help_third_party_data">Data pihak ketiga: konteks kata bahasa Inggris berasal dari Leipzig Corpora Collection (CC BY 4.0) dan Tatoeba (CC BY 2.0 FR). Atribusi lengkap ada di file NOTICE pada kode sumber.</string>
+    <string name="help_third_party_data">Data pihak ketiga: daftar kata berasal dari wordfreq (CC BY-SA 4.0), OpenSubtitles melalui FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0), dan Swwiki (CC BY-SA 3.0); konteks kata bahasa Inggris berasal dari Leipzig Corpora Collection (CC BY 4.0) dan Tatoeba (CC BY 2.0 FR). Atribusi lengkap ada di file NOTICE pada kode sumber.</string>
     <string name="gesture_section_intro">Sesuaikan perilaku ketuk, geser, dan slider untuk gaya mengetik Anda.</string>
     <string name="gesture_short_gestures_header">Gestur Pendek</string>
     <string name="gesture_open_calibration">📐 Buka Alat Kalibrasi</string>

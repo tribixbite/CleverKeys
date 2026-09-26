@@ -1089,7 +1089,7 @@
 
     <!-- HelpSection.kt -->
     <string name="help_open_wiki">Open Full Wiki</string>
-    <string name="help_third_party_data">Third-party data: English word context comes from the Leipzig Corpora Collection (CC BY 4.0) and Tatoeba (CC BY 2.0 FR). Full attribution is in the NOTICE file of the source code.</string>
+    <string name="help_third_party_data">Third-party data: word lists come from wordfreq (CC BY-SA 4.0), OpenSubtitles via FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) and Swwiki (CC BY-SA 3.0); English word context comes from the Leipzig Corpora Collection (CC BY 4.0) and Tatoeba (CC BY 2.0 FR). Full attribution is in the NOTICE file of the source code.</string>
 
     <!-- GestureTuningSection.kt — subsection headers and guidance copy -->
     <string name="gesture_section_intro">Fine-tune tap, swipe, and slider behavior for your typing style.</string>

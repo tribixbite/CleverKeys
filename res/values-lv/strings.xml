@@ -789,7 +789,7 @@
     <string name="swipe_full_geometric_settings">Visi ģeometriskā dzinēja iestatījumi</string>
     <string name="swipe_full_ctc_settings">Visi CTC iestatījumi</string>
     <string name="help_open_wiki">Atvērt pilno wiki</string>
-    <string name="help_third_party_data">Trešo pušu dati: angļu vārdu konteksts iegūts no Leipzig Corpora Collection (CC BY 4.0) un Tatoeba (CC BY 2.0 FR). Pilna atsauce ir pirmkoda failā NOTICE.</string>
+    <string name="help_third_party_data">Trešo pušu dati: vārdu saraksti iegūti no wordfreq (CC BY-SA 4.0), OpenSubtitles ar FrequencyWords starpniecību (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) un Swwiki (CC BY-SA 3.0); angļu vārdu konteksts iegūts no Leipzig Corpora Collection (CC BY 4.0) un Tatoeba (CC BY 2.0 FR). Pilna atsauce ir pirmkoda failā NOTICE.</string>
     <string name="gesture_section_intro">Precīzi pielāgojiet pieskārienu, vilkumu un slīdņu uzvedību savam rakstīšanas stilam.</string>
     <string name="gesture_short_gestures_header">Īsie žesti</string>
     <string name="gesture_open_calibration">📐 Atvērt kalibrēšanas rīku</string>

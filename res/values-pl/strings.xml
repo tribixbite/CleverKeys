@@ -788,7 +788,7 @@
     <string name="swipe_full_geometric_settings">Pełne ustawienia geometryczne</string>
     <string name="swipe_full_ctc_settings">Pełne ustawienia CTC</string>
     <string name="help_open_wiki">Otwórz pełną wiki</string>
-    <string name="help_third_party_data">Dane zewnętrzne: kontekst słów angielskich pochodzi z Leipzig Corpora Collection (CC BY 4.0) i Tatoeba (CC BY 2.0 FR). Pełne przypisanie autorstwa znajduje się w pliku NOTICE kodu źródłowego.</string>
+    <string name="help_third_party_data">Dane zewnętrzne: listy słów pochodzą z wordfreq (CC BY-SA 4.0), OpenSubtitles za pośrednictwem FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) i Swwiki (CC BY-SA 3.0); kontekst słów angielskich pochodzi z Leipzig Corpora Collection (CC BY 4.0) i Tatoeba (CC BY 2.0 FR). Pełne przypisanie autorstwa znajduje się w pliku NOTICE kodu źródłowego.</string>
     <string name="gesture_section_intro">Dostrój zachowanie dotknięć, gestów i suwaków do swojego stylu pisania.</string>
     <string name="gesture_short_gestures_header">Krótkie gesty</string>
     <string name="gesture_open_calibration">📐 Otwórz narzędzie kalibracji</string>
