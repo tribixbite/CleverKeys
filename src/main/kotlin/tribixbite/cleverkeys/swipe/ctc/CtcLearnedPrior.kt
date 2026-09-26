@@ -75,8 +75,11 @@ class CtcLearnedPrior(
     }
 
     /**
-     * The tunable constants. Defaults are the values chosen by the replay evaluation
-     * (`docs/eval/2026-09-26-learned-unigram-swipe-replay.md`).
+     * The tunable constants. **No grid point cleared the ship bar** in the replay evaluation
+     * (`docs/eval/2026-09-26-learned-unigram-swipe-replay.md`, measured at `d0ae3a13`), so
+     * there is no tuned value: the defaults are the LEAST-DAMAGING grid point
+     * (N_SAT 40, SEL_MARGIN 0), recorded so a future wiring starts from the safest measured
+     * setting — not a recommendation to wire it as-is.
      *
      * @property nSat effective-use count at which the lift saturates at the ceiling.
      * @property bCap cap on the unigram (frequency-lift) part of the bonus, in final-score nats.
@@ -145,14 +148,21 @@ class CtcLearnedPrior(
     }
 
     companion object {
-        /** Saturation count — the tuned value (grid {10, 20, 40}). */
-        const val N_SAT = 20.0
+        /**
+         * Saturation count. Grid {10, 20, 40}; 40 broke the fewest decodes on every arm
+         * (design proposed 20). See the eval doc — nothing in the grid is shippable.
+         */
+        const val N_SAT = 40.0
 
         /** Cap on the unigram lift, final-score nats. */
         const val B_CAP = 2.5
 
-        /** Cap on the manual-selection margin — the tuned value (grid {0, 0.25, 0.5}). */
-        const val SEL_MARGIN = 0.25
+        /**
+         * Cap on the manual-selection margin. Grid {0, 0.25, 0.5}; every non-zero value
+         * raised the adversarial break rate (1.3 % -> 2.6-4.0 % of exposed traces on tune)
+         * while P_real carries no selections to benefit from it, so 0.
+         */
+        const val SEL_MARGIN = 0.0
 
         /** Per-selection step of the selection margin. */
         const val SEL_STEP = 0.1

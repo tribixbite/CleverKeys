@@ -460,7 +460,43 @@ class LearnedUnigramReplayTest {
                     "slate ${after.take(4).map { it.word }})")
                     .that(rankAfter).isIn(1..maxRank)
             }
+            // The synthetic shapes above are CLEAN — NONE already ranks git first on them, so
+            // they pin "the prior does no harm here", not the reported failure. The reported
+            // failure is an AMBIGUOUS middle key: aim the middle point between `i` and `o`
+            // (fraction toward `o`) and report both decodes. Measurement only.
+            for (towardO in AMBIGUOUS_FRACTIONS) {
+                val (x, y, t) = ambiguousGit(layout, towardO)
+                val before = base.decode(x, y, t)
+                val after = lifted.decode(x, y, t)
+                println("[LU-pin] i/o=%.2f git rank NONE=%d prior=%d top3 NONE=%s prior=%s".format(
+                    towardO, before.indexOfFirst { it.word == "git" } + 1,
+                    after.indexOfFirst { it.word == "git" } + 1,
+                    before.take(3).map { it.word }, after.take(3).map { it.word }))
+            }
         }
+    }
+
+    /** A straight g→(i..o)→t trace whose middle point sits [towardO] of the way from i to o. */
+    private fun ambiguousGit(
+        layout: tribixbite.cleverkeys.swipe.ctc.CtcLayout,
+        towardO: Double,
+    ): Triple<DoubleArray, DoubleArray, DoubleArray> {
+        fun center(ch: Char): Pair<Double, Double> {
+            val k = layout.alphabet.indexOf(ch)
+            return layout.keyCentersX[k].toDouble() to layout.keyCentersY[k].toDouble()
+        }
+        val (ix, iy) = center('i'); val (ox, oy) = center('o')
+        val pts = listOf(center('g'), (ix + (ox - ix) * towardO) to (iy + (oy - iy) * towardO), center('t'))
+        val xs = ArrayList<Double>(); val ys = ArrayList<Double>(); val ts = ArrayList<Double>()
+        var time = 0.0
+        for (i in 0 until pts.size - 1) for (s in 0 until 12) {
+            val f = s / 12.0
+            xs.add(pts[i].first + (pts[i + 1].first - pts[i].first) * f)
+            ys.add(pts[i].second + (pts[i + 1].second - pts[i].second) * f)
+            ts.add(time); time += 16.0
+        }
+        xs.add(pts.last().first); ys.add(pts.last().second); ts.add(time)
+        return Triple(xs.toDoubleArray(), ys.toDoubleArray(), ts.toDoubleArray())
     }
 
     private companion object {
@@ -505,5 +541,8 @@ class LearnedUnigramReplayTest {
 
         /** Same seed family as ContextRescoringReplayTest. */
         const val SEED = 20260926L
+
+        /** Middle-point positions between `i` (0) and `o` (1) for the ambiguous git trace. */
+        val AMBIGUOUS_FRACTIONS = doubleArrayOf(0.3, 0.4, 0.5, 0.6)
     }
 }
