@@ -429,6 +429,9 @@ class CleverKeysService : InputMethodService(),
         _predictionCoordinator = _graph.predictionCoordinator
         _inputCoordinator = _graph.inputCoordinator
         _suggestionHandler = _graph.suggestionHandler
+        // Learning-system audit 2026-09-26 (W2/W5): the #110 backspace undos and Enter / the IME
+        // action are only visible to KeyEventHandler; route them to the learn-funnel owner.
+        _keyeventhandler.learningHooks = _suggestionHandler
         _keyboardDimensionsHelper = _graph.keyboardDimensionsHelper
         _mlDataCollector = _graph.mlDataCollector
 
@@ -807,6 +810,14 @@ class CleverKeysService : InputMethodService(),
 
         // v1.2.6: Cancel any pending cursor sync
         _inputCoordinator.cancelPendingCursorSync()
+
+        // W5 (audit 2026-09-26): the word typed right before leaving the field ("…see you" +
+        // tap elsewhere) never passed through a space/punctuation completion. Learn it through
+        // the normal gated funnel (password/incognito/master all apply) BEFORE the tracker is
+        // cleared and the learned stores are checkpointed below.
+        if (::_suggestionHandler.isInitialized) {
+            _suggestionHandler.flushTypedWordOnFinishInput(currentInputConnection)
+        }
 
         // Clear prediction context to prevent cross-app text leaking
         // (e.g., typing "t" in app A then "h" in app B showing "th" predictions)

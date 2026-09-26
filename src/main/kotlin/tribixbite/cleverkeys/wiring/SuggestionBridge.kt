@@ -91,7 +91,12 @@ class SuggestionBridge(
         val isSwipeAutoInsert = contextTracker.wasLastInputSwipe()
         val currentSwipeData = inputCoordinator.getCurrentSwipeData()
 
-        if (isSwipeAutoInsert && currentSwipeData != null &&
+        // W8 (learning-system audit 2026-09-26): with swipe_on_password_fields on, the bar can
+        // show swipe alternates in a password field; the trace + chosen word there ARE the
+        // password and are never captured, regardless of collection consent.
+        val inPasswordField = suggestionHandler?.isInPasswordMode() == true ||
+            SuggestionBar.isPasswordField(keyboard2.currentInputEditorInfo)
+        if (isSwipeAutoInsert && currentSwipeData != null && !inPasswordField &&
             predictionCoordinator?.getMlDataStore() != null) {
             mlDataCollector.collectAndStoreSwipeData(
                 word,

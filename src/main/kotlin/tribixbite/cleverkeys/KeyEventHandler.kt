@@ -39,6 +39,13 @@ class KeyEventHandler(
      * [setSelection] could be used instead. */
     private var moveCursorForceFallback = false
 
+    /**
+     * Learning-bookkeeping sink (learning-system audit 2026-09-26, W2/W5), wired by
+     * `CleverKeysService.onCreate` to the SuggestionHandler. Null (tests, early startup) means
+     * the key paths behave exactly as before and nothing is reported.
+     */
+    var learningHooks: LearningHooks? = null
+
     /** Track last typed character and timestamp for double-space-to-period feature */
     private var lastTypedChar: Char = '\u0000'
     private var lastTypedTimestamp: Long = 0L
@@ -95,7 +102,14 @@ class KeyEventHandler(
         when (key.getKind()) {
             KeyValue.Kind.Char -> sendText(key.getChar().toString(), isKeyRepeat)
             KeyValue.Kind.String -> sendText(key.getString(), isKeyRepeat)
-            KeyValue.Kind.Event -> recv.handle_event_key(key.getEvent())
+            KeyValue.Kind.Event -> {
+                // W5: the IME action (send/go/search/done) ends the typed word without ever
+                // passing through handle_text_typed — let the learn funnel see it first.
+                if (key.getEvent() == KeyValue.Event.ACTION) {
+                    learningHooks?.onEditorWordBoundary(recv.getCurrentInputConnection())
+                }
+                recv.handle_event_key(key.getEvent())
+            }
             KeyValue.Kind.Keyevent -> {
                 // Audit A-5: backspace invalidates the double-space-to-period memory — the
                 // char that was "last typed" is no longer the char before the cursor.
@@ -125,6 +139,12 @@ class KeyEventHandler(
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && handleBackspaceUndoAutocorrect()) {
                     // #110: Backspace after autocorrect reverts to original word
                 } else {
+                    // W5: Enter is a key event, not typed text, so the word it ends never reached
+                    // the learn funnel. Report the boundary BEFORE the newline/send goes out, while
+                    // the editor still ends with the word.
+                    if (key.getKeyevent() == KeyEvent.KEYCODE_ENTER) {
+                        learningHooks?.onEditorWordBoundary(recv.getCurrentInputConnection())
+                    }
                     send_key_down_up(key.getKeyevent())
                     // Handle backspace for word prediction
                     if (key.getKeyevent() == KeyEvent.KEYCODE_DEL) {
@@ -598,6 +618,8 @@ class KeyEventHandler(
         // SAS-1: the undone commit's auto-space is gone — invalidate the swallow
         recv.setLastSpaceAutoInserted(false)
         recv.clearSwipeUndoState()
+        // W2: the swiped word was rejected — roll its learn back.
+        learningHooks?.onSwipeWordUndone(swipedWord)
         recv.handle_backspace()
 
         return true
@@ -640,6 +662,11 @@ class KeyEventHandler(
         // SAS-1: text was rewritten by the undo — invalidate the pending auto-space
         recv.setLastSpaceAutoInserted(false)
         recv.clearAutocorrectUndoState()
+        // W2: the correction was rejected. Roll it back and — when the restored word is complete
+        // (trailing space kept) — learn the original instead, as the bar-tap undo does.
+        learningHooks?.onAutocorrectUndone(
+            correctedWord, originalWord, originalCompleted = charsToDelete > correctedWord.length
+        )
         recv.handle_backspace()
         return true
     }
@@ -1028,6 +1055,29 @@ class KeyEventHandler(
      */
     fun notifyTextTyped(text: CharSequence) {
         autocap.typed(text)
+    }
+
+    /**
+     * Learning-bookkeeping events only this class can observe (learning-system audit
+     * 2026-09-26, W2/W5): the #110 backspace undos, and Enter / the IME action, none of which
+     * travel through the typed-text path the learn funnel listens to.
+     *
+     * Deliberately NOT part of [IReceiver]: IReceiver is the KeyEventHandler → KeyboardReceiver
+     * input-routing seam (proxied member-by-member by KeyEventReceiverBridge), and these are
+     * notifications to the prediction layer. The service wires the SuggestionHandler in directly.
+     */
+    interface LearningHooks {
+        /** Enter or the IME action is about to be sent; [ic] still ends with the typed word. */
+        fun onEditorWordBoundary(ic: InputConnection?)
+
+        /** Backspace deleted the just-swiped [word] (#110 swipe undo). */
+        fun onSwipeWordUndone(word: String)
+
+        /**
+         * Backspace reverted [correctedWord] to [originalWord] (#110 autocorrect undo).
+         * [originalCompleted] is true when the restored word kept its trailing space.
+         */
+        fun onAutocorrectUndone(correctedWord: String, originalWord: String, originalCompleted: Boolean)
     }
 
     interface IReceiver {
