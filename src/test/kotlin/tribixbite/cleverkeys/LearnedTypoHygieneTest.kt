@@ -35,7 +35,10 @@ class LearnedTypoHygieneTest {
     private val contextModel = ContextModel(bigramStore, trigramStore, "en")
     private val vocabulary = UserVocabulary(InMemoryLearnedStorage(), 60_000, 120_000, scheduler)
 
-    private val lexicon = setOf("the", "cat", "sat", "on", "mat", "i", "use", "git", "every", "day", "dont")
+    private val lexicon = setOf(
+        "the", "cat", "sat", "on", "mat", "i", "use", "git", "every", "day", "dont",
+        "well", "known", "co", "op", "rock", "n", "roll", "a"
+    )
     private var lexiconLoaded = true
     private val policy = LearnableWordPolicy(
         lexiconReady = { lexiconLoaded },
@@ -84,6 +87,31 @@ class LearnedTypoHygieneTest {
         assertTrue("typographic apostrophe", policy.isLearnable("don’t"))
         assertTrue("possessive of a known word", policy.isLearnable("git's"))
         assertFalse("possessive of a typo", policy.isLearnable("gti's"))
+    }
+
+    /**
+     * Review of 59bd4159 (MEDIUM): W7 learns a hyphenated token whole ("well-known"), and the
+     * shipped lexicon has no hyphenated entries — so without this every compound was judged a
+     * typo until typed three times, while its parts were no longer learned either.
+     */
+    @Test
+    fun `a hyphenated compound is known when every part is known`() {
+        assertTrue(policy.isLearnable("well-known"))
+        assertTrue("case-insensitive", policy.isLearnable("Well-Known"))
+        assertTrue("three parts", policy.isLearnable("a-well-known"))
+        assertTrue("apostrophe handling applies per part", policy.isLearnable("rock-'n'-roll"))
+        assertTrue("possessive of a known compound", policy.isLearnable("well-known's"))
+        assertTrue("empty parts are ignored", policy.isLearnable("well--known"))
+        assertFalse("one misspelled part", policy.isLearnable("well-knwon"))
+        assertFalse("no known part at all", policy.isLearnable("-"))
+        assertFalse(policy.isLearnable("--"))
+    }
+
+    @Test
+    fun `a hyphenated compound of known parts enters the store on its first commit`() {
+        type("a", "well-known", "cat")
+        assertEquals(1, bigramStore.getAllBigrams("en", "a").single { it.word2 == "well-known" }.frequency)
+        assertEquals(1, bigramStore.getAllBigrams("en", "well-known").single { it.word2 == "cat" }.frequency)
     }
 
     @Test

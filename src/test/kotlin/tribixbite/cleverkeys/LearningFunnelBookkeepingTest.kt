@@ -119,7 +119,6 @@ class LearningFunnelBookkeepingTest {
         real.setField("userWordOriginalCase", ConcurrentHashMap<String, String>())
         real.setField("languageDetector", null)
         real.setField("multiLanguageManager", null)
-        seedPermissiveLearnablePolicyIfPresent(real)
         predictor = spyk(real)
         every { predictor.isInDictionary(any()) } returns true
         every { predictor.isWordDisabled(any()) } returns false
@@ -321,8 +320,14 @@ class LearningFunnelBookkeepingTest {
         verify(exactly = 1) { personalization.recordWordTyped("don't", any()) }
     }
 
+    /**
+     * Against a real, non-empty lexicon that — like the shipped `en_enhanced.json` — has no
+     * hyphenated entries (review of 59bd4159: the previous version passed only because the
+     * predictor had no lexicon, so the typo policy failed open and accepted everything).
+     */
     @Test
     fun aHyphenatedWordIsLearnedWhole() {
+        seedLexicon("a", "co", "op")
         editor.append("a ")
         handler.updateContext("a")
         type("co-op ")
@@ -331,6 +336,10 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("no fragment co→op").that(bigram("co", "op")).isEqualTo(0)
         verify(exactly = 0) { personalization.recordWordTyped("co", any()) }
         verify(exactly = 0) { personalization.recordWordTyped("op", any()) }
+
+        // The lexicon is live: a compound with a misspelled part is still held back.
+        type("co-pq ")
+        assertWithMessage("co-op→co-pq (typo part)").that(bigram("co-op", "co-pq")).isEqualTo(0)
     }
 
     @Test
@@ -523,21 +532,22 @@ class LearningFunnelBookkeepingTest {
     // ------------------------------------------------------------------ reflection
 
     /**
-     * Cross-talk shim: a concurrent change (typo hygiene, same audit) adds a
-     * `learnableWordPolicy` field whose declaration initializer Objenesis skips. When the field
-     * exists, seed it with an all-learnable policy — this class tests WHICH commits reach the
-     * funnel, not which words the funnel accepts. Reflective so the test compiles either way.
+     * Give the predictor a real, NON-EMPTY lexicon so its [LearnableWordPolicy] judges words.
+     * Without this the Objenesis-allocated predictor has no dictionary, and the production
+     * policy fails OPEN (learns everything) — right for the tests that pin WHICH commits reach
+     * the funnel, but vacuous for a test about which words the funnel accepts. Seeds the
+     * spy's own fields (spyk copies the delegate's state at creation) and drops the lazily
+     * built policy so it is rebuilt over this lexicon.
      */
-    private fun seedPermissiveLearnablePolicyIfPresent(target: WordPredictor) {
-        val field = WordPredictor::class.java.declaredFields
-            .firstOrNull { it.name == "learnableWordPolicy" } ?: return
-        val ctor = field.type.constructors.firstOrNull { it.parameterCount == 3 }
-            ?: throw AssertionError("learnableWordPolicy's type changed shape: ${field.type}")
-        val ready: () -> Boolean = { true }
-        val known: (String) -> Boolean = { true }
-        val observed: (String) -> Int = { Int.MAX_VALUE }
-        field.isAccessible = true
-        field.set(target, ctor.newInstance(ready, known, observed))
+    private fun seedLexicon(vararg words: String) {
+        predictor.setField(
+            "dictionary",
+            java.util.concurrent.atomic.AtomicReference<MutableMap<String, Int>>(
+                words.associateWith { 200 }.toMutableMap()
+            )
+        )
+        predictor.setField("customAndUserWords", emptySet<String>())
+        predictor.setField("learnableWordPolicyCache", null)
     }
 
     private fun Any.setField(name: String, value: Any?) {

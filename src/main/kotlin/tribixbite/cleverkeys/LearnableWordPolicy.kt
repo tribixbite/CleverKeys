@@ -25,7 +25,8 @@ package tribixbite.cleverkeys
  *    according to the personalization vocabulary's usage counter.
  *
  * Apostrophe forms are resolved against their base: `don't` is known when `dont` (the alias
- * key) or `don't` is, and a possessive `git's` is known when `git` is.
+ * key) or `don't` is, and a possessive `git's` is known when `git` is. A hyphenated compound
+ * is known when every non-empty part is (`well-known` from `well` + `known`).
  *
  * ## Why N = 3 repeated commits
  *
@@ -112,7 +113,23 @@ class LearnableWordPolicy(
         return w.isNotEmpty() && observationCount(w) >= REPEAT_OBSERVATIONS_TO_LEARN
     }
 
+    /**
+     * Hyphenated compounds ("well-known", "co-op", "rock-'n'-roll") are known when the whole
+     * token is, or when EVERY non-empty part is (each part with the apostrophe rules below).
+     * W7 learns a hyphenated token whole, and the shipped lexicons carry no hyphenated
+     * entries, so without this a compound of ordinary words was judged a typo until typed
+     * [REPEAT_OBSERVATIONS_TO_LEARN] times (review of 59bd4159). A misspelled part still
+     * makes the compound unknown.
+     */
     private fun isKnown(w: String): Boolean {
+        if (isKnownToken(w)) return true
+        if ('-' !in w) return false
+        val parts = w.split('-').filter { it.isNotEmpty() }
+        return parts.isNotEmpty() && parts.all { isKnownToken(it) }
+    }
+
+    /** One hyphen-free token: lexicon membership plus the apostrophe forms. */
+    private fun isKnownToken(w: String): Boolean {
         if (isKnownWord(w)) return true
         if ('\'' !in w) return false
         // Contraction alias key ("don't" -> "dont") — the lexicon stores the apostrophe-free form.
