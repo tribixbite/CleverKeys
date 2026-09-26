@@ -931,6 +931,9 @@ tasks.register('runPureTests', JavaExec) {
     // n-2 ML-trace provenance (layout + decoder engine) incl. legacy-row compatibility
     'tribixbite.cleverkeys.ml.SwipeMLDataProvenanceTest',
     'tribixbite.cleverkeys.ml.SwipeMLDataEnrichmentTest',
+    // Swipe-correction resolution, Feature B (2026-09-26): a corrected swipe's ML row is
+    // relabelled with the word the user chose; the original label is kept as corrected_from.
+    'tribixbite.cleverkeys.ml.SwipeMLDataRelabelTest',
     'tribixbite.cleverkeys.ml.PlaygroundPayloadTest',
     // Release-record burn-down (2026-09-03): claims pinned by waves UA-UD
     'tribixbite.cleverkeys.customization.ReleaseClaimCommandCatalogueTest',
@@ -1112,6 +1115,9 @@ tasks.register('runMockTests', JavaExec) {
     // Same audit, KeyEventHandler side: Enter / IME action report a word boundary, the #110
     // backspace undos report the rejected word (KeyEventHandler.LearningHooks).
     'tribixbite.cleverkeys.KeyEventHandlerLearningHooksTest',
+    // Swipe-correction resolution, Feature B: the collector reports the stored row's trace id
+    // and SwipeMLDataStore.relabelRow rewrites that row (mocked SQLite).
+    'tribixbite.cleverkeys.ml.SwipeMLRelabelStoreTest',
     'tribixbite.cleverkeys.clipboard.ClipboardTabsAndPaneCloseTest',
     // Maintainer-reported (2026-09-06, no GH issue): media clipboard rows had no UI path to
     // deletion (delete was edit-mode-only; media rows can't edit). Affordance test drives the

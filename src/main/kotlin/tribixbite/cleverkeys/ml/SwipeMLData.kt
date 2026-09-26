@@ -39,6 +39,36 @@ class SwipeMLData {
         /** Blank/missing provenance normalizes to [UNKNOWN] so exports never carry "". */
         private fun normalizeProvenance(value: String?): String =
             value?.takeIf { it.isNotBlank() } ?: UNKNOWN
+
+        /** Metadata key naming the auto-inserted word a relabelled row was stored under. */
+        const val KEY_CORRECTED_FROM = "corrected_from"
+
+        /**
+         * Relabel a stored row's JSON after a swipe correction (learning-system audit 2026-09-26,
+         * Resolution, Feature B): the row was stored with the word the swipe AUTO-INSERTED, and
+         * the user then replaced that word with [newWord]. Sets `target_word` to [newWord]
+         * (lowercased like every stored label) and records the ORIGINAL auto-inserted label under
+         * `metadata.corrected_from` — kept from an earlier relabel if there was one, so the field
+         * always names what the decoder produced, never an intermediate label.
+         *
+         * The schema change is additive inside the JSON blob — no SQLite column, so no migration:
+         * rows without the key read back with a null [getCorrectedFrom], and older readers ignore
+         * the unknown metadata key.
+         *
+         * Mutates and returns [json]. A no-op (returns [json] unchanged) when [newWord] is blank
+         * or already the label.
+         */
+        @Throws(JSONException::class)
+        fun relabelJson(json: JSONObject, newWord: String): JSONObject {
+            val label = newWord.trim().lowercase()
+            val current = json.getString("target_word")
+            if (label.isEmpty() || label == current) return json
+            val metadata = json.optJSONObject("metadata") ?: JSONObject().also { json.put("metadata", it) }
+            val original = metadata.optString(KEY_CORRECTED_FROM, "").ifEmpty { current }
+            metadata.put(KEY_CORRECTED_FROM, original)
+            json.put("target_word", label)
+            return json
+        }
     }
 
     /**
@@ -89,6 +119,10 @@ class SwipeMLData {
     private var candidates: List<RankedCandidate>? = null
     private var decodeLatencyMs: Long? = null
 
+    // Swipe-correction relabel (Feature B): the auto-inserted word this row was first stored
+    // under, when the user later replaced it. Null for a row whose label was never corrected.
+    private var correctedFrom: String? = null
+
     // Constructor for new swipe data
     @JvmOverloads
     constructor(
@@ -135,6 +169,7 @@ class SwipeMLData {
         // empty strings too — an untagged row must read UNKNOWN, never "" (audit n-2).
         this.layoutName = normalizeProvenance(metadata.optString("layout_name", UNKNOWN))
         this.engine = normalizeProvenance(metadata.optString("engine", UNKNOWN))
+        this.correctedFrom = metadata.optString(KEY_CORRECTED_FROM, "").ifEmpty { null }
 
         // Load trace points
         val pointsArray = json.getJSONArray("trace_points")
@@ -259,6 +294,7 @@ class SwipeMLData {
             // training — a geometric/non-QWERTY trace is not QWERTY-transformer training data.
             put("layout_name", layoutName)
             put("engine", engine)
+            correctedFrom?.let { put(KEY_CORRECTED_FROM, it) }
         }
         json.put("metadata", metadata)
 
@@ -398,6 +434,12 @@ class SwipeMLData {
     }
 
     fun getDecodeLatencyMs(): Long? = decodeLatencyMs
+
+    /**
+     * The auto-inserted word this row was stored under before a swipe correction relabelled it
+     * to [targetWord] ([relabelJson]); null when the label was never corrected.
+     */
+    fun getCorrectedFrom(): String? = correctedFrom
 
     /**
      * Copy carrying EVERYTHING — points (normalized values verbatim, no re-normalization

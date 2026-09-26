@@ -310,6 +310,26 @@ class SwipeMLDataStore private constructor(context: Context) :
     }
 
     /**
+     * Relabel the row stored for [traceId] with [newWord] after the user corrected the word the
+     * swipe auto-inserted (learning-system audit 2026-09-26, Resolution, Feature B). Without this
+     * a corrected swipe stayed labelled with the WRONG word, so an on-device export could not be
+     * used as a per-user replay pool.
+     *
+     * Runs on the store's single-threaded executor, i.e. strictly after the insert queued for the
+     * same swipe. A trace id with no row (collection off, invalid trace, already deleted) is a
+     * no-op. See [relabelRow] for what changes.
+     */
+    fun relabelSwipe(traceId: String, newWord: String) {
+        _executor.execute {
+            try {
+                relabelRow(writableDatabase, traceId, newWord)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error relabelling swipe data", e)
+            }
+        }
+    }
+
+    /**
      * Delete a specific swipe entry from the database
      */
     fun deleteEntry(data: SwipeMLData?) {
@@ -642,6 +662,41 @@ class SwipeMLDataStore private constructor(context: Context) :
         // (key_geometry / candidates / decode_latency_ms): the entire trace payload lives
         // in COL_JSON_DATA, and SwipeMLData's JSON reader treats the new keys as optional,
         // so old rows and new rows coexist in the same schema with no SQL migration.
+        /**
+         * Relabel one row in [db] (the body of [relabelSwipe]; a separate function so the SQL is
+         * testable against a mocked database).
+         *
+         * Updates BOTH the `target_word` column (search, per-word counts, deleteEntry's match)
+         * and the JSON blob via [SwipeMLData.relabelJson], which records the original label under
+         * `metadata.corrected_from`. The row's `is_exported` flag is cleared so the next export
+         * carries the corrected label. `collection_source` is unchanged — the trace was still
+         * collected by the user-selection path, and the per-source statistics must not move.
+         *
+         * @param newValues ContentValues factory — a seam for the mock-tier test, where the
+         *   android.jar stub constructor throws
+         * @return true when a row was rewritten
+         */
+        internal fun relabelRow(
+            db: SQLiteDatabase,
+            traceId: String,
+            newWord: String,
+            newValues: () -> ContentValues = { ContentValues() },
+        ): Boolean {
+            val json = db.query(
+                TABLE_SWIPES, arrayOf(COL_JSON_DATA),
+                "$COL_TRACE_ID=?", arrayOf(traceId),
+                null, null, null
+            ).use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null } ?: return false
+            val relabelled = SwipeMLData.relabelJson(JSONObject(json), newWord)
+            val label = relabelled.getString("target_word")
+            val values = newValues().apply {
+                put(COL_TARGET_WORD, label)
+                put(COL_JSON_DATA, relabelled.toString())
+                put(COL_IS_EXPORTED, 0)
+            }
+            return db.update(TABLE_SWIPES, values, "$COL_TRACE_ID=?", arrayOf(traceId)) > 0
+        }
+
         private const val DATABASE_NAME = "swipe_ml_data.db"
         private const val DATABASE_VERSION = 1
 

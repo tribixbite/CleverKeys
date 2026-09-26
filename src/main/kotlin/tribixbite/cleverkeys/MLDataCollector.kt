@@ -59,13 +59,17 @@ class MLDataCollector(private val context: Context) {
      * @param currentSwipeData Current swipe data containing trace points and registered keys
      * @param keyboardHeight Height of keyboard view for ML data
      * @param mlDataStore ML data store to save the data
+     * @param onStored receives the trace id of the row handed to the store (only when this call
+     *   returns true). The swipe auto-insert path keeps it so a later swipe correction can
+     *   relabel exactly that row ([SwipeMLDataStore.relabelSwipe]).
      * @return true if data was collected and stored, false otherwise
      */
     fun collectAndStoreSwipeData(
         word: String,
         currentSwipeData: SwipeMLData?,
         keyboardHeight: Int,
-        mlDataStore: SwipeMLDataStore?
+        mlDataStore: SwipeMLDataStore?,
+        onStored: ((traceId: String) -> Unit)? = null
     ): Boolean {
         // Privacy check: Verify consent before collecting
         if (!privacyManager.canCollectSwipeData()) {
@@ -98,6 +102,7 @@ class MLDataCollector(private val context: Context) {
 
             // Store the ML data
             mlDataStore.storeSwipeData(mlData)
+            onStored?.invoke(mlData.traceId)
 
             // I-2: retention enforcement — the only write path into the store is the
             // right place to keep the DB bounded. Daily-throttled via PrivacyManager.
