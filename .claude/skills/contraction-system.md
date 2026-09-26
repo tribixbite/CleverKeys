@@ -256,6 +256,24 @@ is why the possessive rule stays). `EXTRA_EN_PAIRINGS` adds `its → it's`, whic
 only in `contractions.bin` (no frequency → tail, off-screen). `contractions.bin` does not carry
 frequencies and regenerates byte-identical; collision sidecars are unaffected.
 
+**The bin-only gap, swept (2026-09-26).** `loadBinaryContractions` DERIVES a paired base for every
+paired display form in the binary (`base = form minus apostrophes`), so a pair can exist at
+runtime with no frequency whenever the pairing file lists the variant only under a *different*
+base. Sweep of every derived pair: 513 lack a frequency — 510 possessives (out of scope: never
+promoted; splicing them beside their bases is its own ranking decision) and three non-possessive
+projections, now pinned by `BundledContractionDataTest`:
+
+| pair | listed only under | measured (variant vs base byte) | outcome |
+|---|---|---|---|
+| `whys → why's` | `why` | 166 vs 157 (zipf 3.01 vs 2.52, lead 9) | **added**; `why's` rank 0 over `whys` |
+| `natl → nat'l` | `nat` | 159 vs 158 (near tie) | **added**; `natl` keeps rank 0, `nat'l` at #1 |
+| `etoo → eto'o` | `eto` | base not in the lexicon | **not added** — see below |
+
+`etoo` is not an `en_enhanced.json` word, only an injected pseudo-word, so it has no base frequency
+and a frequency could only splice `eto'o` BEHIND the raw `etoo`. The right fix is REPLACE
+(`contractions_non_paired.json`, then rebuild `contractions.bin` + sidecars) — left as a TODO in
+`EXTRA_EN_PAIRINGS`. The pairing file is now 1,790 entries.
+
 ## 7. Empty files are CORRECT, not unfinished
 
 `es`, `pt`, `sv` ship zero contractions, and the tests assert the positive linguistic evidence:
@@ -351,9 +369,10 @@ guard.
 | `i'd` reaches the bar for typed `id`, `id` survives beside it, no duplicate surface for `ill` | `ContractionSentenceStartMeasureTest` (instrumented) |
 | injected key surfaces but never outranks a real word | `CtcContractionRankingTest` |
 | paired placement: splice ≤1 projection variant, ahead only on higher known freq, possessives never ahead, tail otherwise, monotone scores | `ContractionOverlayTest` (pure) |
-| shipped pronoun set over MEASURED data: I'd/I'll/we'd/he's/she's rank 0; shed/shell/whore/well/hell/were/its keep rank 0 with the variant at #1; its/it's inside PROMOTION_MARGIN; would/world keeps world at #2; REPLACE six keep their slot | `CtcContractionDisplayTest` (pure) |
+| shipped pronoun set over MEASURED data: I'd/I'll/we'd/he's/she's rank 0; shed/shell/whore/well/hell/were/its/natl keep rank 0 with the variant at #1; why's rank 0 over whys; its/it's inside PROMOTION_MARGIN; would/world keeps world at #2; REPLACE six keep their slot | `CtcContractionDisplayTest` (pure) |
 | promotion needs lead ≥ PROMOTION_MARGIN (boundary), possessive never ahead even above the margin | `ContractionOverlayTest` (pure) |
-| pairing `frequency` survives parsing, base-scoped; the 17 projection values pinned; one value per non-possessive variant; no flat 200 on a promotable pair | `BundledContractionDataTest` (pure) |
+| pairing `frequency` survives parsing, base-scoped; the 19 projection values pinned; one value per non-possessive variant; no flat 200 on a promotable pair | `BundledContractionDataTest` (pure) |
+| every non-possessive pair DERIVED from `contractions.bin` has a pairing frequency, except exactly `etoo → eto'o` | `BundledContractionDataTest` (pure) |
 | language isolation (no code-switched output) | `SwipeContractionLanguageIsolationTest` |
 
 ---

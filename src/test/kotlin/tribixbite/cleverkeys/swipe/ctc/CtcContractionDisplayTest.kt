@@ -24,7 +24,8 @@ import java.io.File
  *  - the pronoun set over the SHIPPED, MEASURED pairing + lexicon frequencies:
  *    I'd / I'll / we'd / he's / she's become rank 0 over id / ill / wed / hes / shes,
  *    while shed / shell / whore / well / hell / were / its keep rank 0 with the
- *    contraction at rank 1 (learning-system audit RC1 + RC3);
+ *    contraction at rank 1 (learning-system audit RC1 + RC3); the formerly bin-only
+ *    pairs follow the same rule: why's is rank 0 over whys, natl keeps rank 0 over nat'l;
  *  - the frequency-descending ordinal ranking of the shipped asset actually
  *    exhibits the separation `ContractionOverlay.REAL_WORD_ORDINAL_MAX` = 1200
  *    assumes (junk aliases deep, real-word bases shallow) — the threshold
@@ -158,11 +159,15 @@ class CtcContractionDisplayTest {
             "hell" to "hell", // 195 vs 206
             "were" to "were", // 211 vs 229
             "its" to "its", // 229 vs 225 — it's IS more frequent, but inside the margin
+            // Formerly bin-only pairs (no frequency -> tail, off-screen), measured 2026-09-26:
+            "whys" to "why's", // 166 vs 157 (zipf 3.01 vs 2.52) — "why's that?" beats "the whys"
+            "natl" to "natl", // 159 vs 158 — near tie, the traced abbreviation keeps rank 0
         )
         val variantOf = mapOf(
             "id" to "i'd", "ill" to "i'll", "wed" to "we'd", "hes" to "he's", "shes" to "she's",
             "shed" to "she'd", "shell" to "she'll", "whore" to "who're", "well" to "we'll",
             "hell" to "he'll", "were" to "we're", "its" to "it's",
+            "whys" to "why's", "natl" to "nat'l",
         )
         for ((key, top) in expectedTop) {
             val (words, _) = applyShipped(listOf(key, "zzfill", "zzfiller"), listOf(900, 800, 700))

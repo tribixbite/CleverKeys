@@ -10640,5 +10640,17 @@
       "contraction": "it's",
       "frequency": 229
     }
+  ],
+  "whys": [
+    {
+      "contraction": "why's",
+      "frequency": 166
+    }
+  ],
+  "natl": [
+    {
+      "contraction": "nat'l",
+      "frequency": 159
+    }
   ]
 }

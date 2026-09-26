@@ -994,6 +994,8 @@ class BundledContractionDataTest {
             ("hes" to "he's") to 215, // 5.60 / hes 184
             ("shes" to "she's") to 209, // 5.26 / shes 177
             ("its" to "it's") to 229, // 6.33 / its 225
+            ("whys" to "why's") to 166, // 3.01 / whys 157 — lead 9, promotes
+            ("natl" to "nat'l") to 159, // 2.61 / natl 158 — near tie, stays behind
             ("cmon" to "c'mon") to 180, // 3.75 / cmon 167
             ("govt" to "gov't") to 166, // 3.01 / govt 180
             ("ima" to "i'ma") to 163, // 2.82 / ima 168
@@ -1031,13 +1033,62 @@ class BundledContractionDataTest {
         }
 
         // Every entry carries a frequency, all within the 0..255 byte scale en_enhanced.json uses
-        // (lexicon 134..255) — the overlay compares the two. 1,788 = 1,787 + the its -> it's
-        // entry added so it's has a frequency (it lived only in contractions.bin before).
+        // (lexicon 134..255) — the overlay compares the two. 1,790 = 1,787 + the its -> it's,
+        // whys -> why's and natl -> nat'l entries added so those variants have a frequency
+        // (they lived only in contractions.bin before; see the bin-only sweep test below).
         val all = pairings.values.flatten()
-        assertThat(all.size).isEqualTo(1788)
+        assertThat(all.size).isEqualTo(1790)
         for (v in all) {
             assertWithMessage("${v.contraction} frequency").that(v.frequency).isNotNull()
             assertWithMessage("${v.contraction} frequency").that(v.frequency!!).isIn(1..255)
         }
+    }
+
+    /**
+     * The bin-only sweep (2026-09-26). `ContractionManager.loadBinaryContractions` DERIVES a
+     * paired base for every paired display form in `contractions.bin` (base = the form minus
+     * its apostrophes), but the binary carries no frequency — so any derived pair the pairing
+     * file does not list under that exact base has no frequency, and `ContractionOverlay`
+     * sends its variant to the slate TAIL (off-screen) when that base is swiped. `its/it's`,
+     * `whys/why's` and `natl/nat'l` were such pairs; the pairing file listed why's only under
+     * `why` and nat'l only under `nat` (non-projections, never spliced).
+     *
+     * Pins the set of NON-POSSESSIVE derived pairs still without a frequency to exactly the one
+     * known, deliberately unfixed entry: `etoo -> eto'o`. `etoo` is not a lexicon word (no base
+     * frequency), so a frequency could only splice eto'o BEHIND the injected pseudo-word; its
+     * fix is a REPLACE mapping (TODO in `scripts/extract_apostrophe_words.py`). Possessives
+     * without a frequency (hundreds, e.g. derived `johns -> john's`) are out of scope — they
+     * never promote, and splicing them all would be a separate ranking decision.
+     */
+    @Test
+    fun `every non-possessive pair derived from contractions bin carries a pairing frequency`() {
+        val buf = java.nio.ByteBuffer.wrap(File("$DICT_DIR/contractions.bin").readBytes())
+            .order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        fun readString(): String {
+            val bytes = ByteArray(buf.short.toInt() and 0xFFFF)
+            buf.get(bytes)
+            return String(bytes, Charsets.UTF_8)
+        }
+        buf.position(8) // magic + version
+        val nonPairedCount = buf.int
+        val pairedCount = buf.int
+        val nonPairedValues = HashSet<String>()
+        repeat(nonPairedCount) { readString(); nonPairedValues += readString() }
+        val known = HashSet<String>(nonPairedValues)
+        repeat(pairedCount) { known += readString() }
+
+        val pairings = ContractionManager.parsePairings(
+            File("$DICT_DIR/contraction_pairings.json").readText()
+        )
+        // Mirrors loadBinaryContractions' derivation exactly.
+        val withoutFrequency = known.asSequence()
+            .filter { it !in nonPairedValues }
+            .map { it.replace("'", "") to it }
+            .filter { (base, variant) ->
+                pairings[base]?.firstOrNull { it.contraction == variant }?.frequency == null
+            }
+            .filterNot { (_, variant) -> ContractionOverlay.isPossessive(variant) }
+            .toSet()
+        assertThat(withoutFrequency).containsExactly("etoo" to "eto'o")
     }
 }

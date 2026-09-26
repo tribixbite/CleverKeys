@@ -917,8 +917,26 @@ CLITIC_S_HOSTS = frozenset({
 #: beside `its`; whether it goes ahead is ContractionOverlay's promotion-margin rule
 #: (it's 229 vs its 225 is a near tie and stays behind).  Appended after the existing
 #: hand-added tail, preserving the file's current key order.
+#:
+#: The same gap, swept 2026-09-26 over every pair ContractionManager DERIVES from the
+#: binary (base = variant minus apostrophes, for each paired display form): three
+#: non-possessive projection pairs had no frequency.  Two are fixed here:
+#:   whys -> why's  the file lists why's only under `why` (a non-projection, never
+#:                  spliced); measured why's zipf 3.01 vs whys 2.52 (~3x), so the
+#:                  margin rule puts why's AHEAD of the real word whys ("the whys and
+#:                  wherefores") — swiping w-h-y-s is far more often "why's that".
+#:   natl -> nat'l  listed only under `nat`; nat'l 2.61 vs natl 2.55 is a near tie, so
+#:                  nat'l is spliced BEHIND natl (the traced abbreviation keeps rank 0).
+#: The third, etoo -> eto'o, is NOT added: `etoo` is not a lexicon word, so it has no
+#: base frequency and a splice could never move eto'o ahead of the injected pseudo-word
+#: `etoo`.  Its right fix is a REPLACE (non-paired) mapping — a classification change
+#: for contractions_non_paired.json, not a frequency.
+#: TODO(contractions): move etoo -> eto'o to contractions_non_paired.json (REPLACE) and
+#: rebuild contractions.bin + the collision sidecars.
 EXTRA_EN_PAIRINGS: dict[str, list[str]] = {
     "its": ["it's"],
+    "whys": ["why's"],
+    "natl": ["nat'l"],
 }
 
 
