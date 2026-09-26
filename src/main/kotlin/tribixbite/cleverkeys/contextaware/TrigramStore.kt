@@ -540,7 +540,9 @@ class TrigramStore internal constructor(
      * Language-wide cap — mirror of [BigramStore]'s: batch-prune to
      * [PRUNE_TARGET_FRACTION] of [MAX_TOTAL_TRIGRAMS], sub-floor entries first, then the
      * least probable, never the trigram recorded in the current call ([keepPrefix] →
-     * [keepWord3]). Caller holds the lock.
+     * [keepWord3]). Caller holds the lock. Shares BigramStore's documented trade-off: at the
+     * cap, sub-floor newcomers are evicted by probability without per-context grace slots
+     * (see [BigramStore] `pruneIfNeeded` and its TODO).
      */
     private fun pruneIfNeeded(data: LanguageTrigrams, keepPrefix: String? = null, keepWord3: String? = null) {
         val totalCount = data.trigramMap.values.sumOf { it.size }

@@ -667,6 +667,23 @@ class BigramStore internal constructor(
      * current call ([keepWord1] → [keepWord2]) is never evicted. As before, evicted
      * observations still count in their context's total (ARC-080 denominators).
      * Caller holds the lock.
+     *
+     * **Known trade-off vs. [ContinuationBudget] (review of 6026217d).** This prune does NOT
+     * give newcomers the per-context grace slots: at the cap it fires every ~1,000 newly
+     * created pairs (the 10% batch), removes sub-floor entries first, and orders them by
+     * conditional probability — so a freq-1 continuation of a BUSY context (the lowest
+     * probabilities in the store; exactly W3's "the → git" case) is among the first to go.
+     * A newcomer therefore survives the cap only if it is typed a second time within roughly
+     * the next thousand new pairs, whereas below the cap it is evicted only when its own
+     * context is full and fresher newcomers there overflow the grace slots. Applying the budget's recency rule
+     * here is not cheap: `lastSeen` is relative to its OWN context's observation total, so
+     * staleness is not comparable across contexts (a dead context's lone entry would look
+     * perpetually fresh). Doing it properly needs a language-wide observation clock
+     * persisted per entry. Accepted for now because the cap is reached only after ~10k
+     * distinct pairs, and every established (servable) entry is still ranked above every
+     * newcomer, as before.
+     * TODO(learning): language-wide recency clock per entry, then evict sub-floor entries by
+     *  global staleness instead of probability (same for [TrigramStore.pruneIfNeeded]).
      */
     private fun pruneIfNeeded(data: LanguageBigrams, keepWord1: String? = null, keepWord2: String? = null) {
         val totalCount = data.bigramMap.values.sumOf { it.size }
