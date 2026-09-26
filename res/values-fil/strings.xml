@@ -1000,7 +1000,7 @@
     <string name="privacy_learned_source_selections">Mga napiling mungkahi</string>
     <string name="privacy_learned_manage">Pinagmumulan ng Pagkatuto</string>
     <string name="privacy_learned_forget">Kalimutan ang Natutunan</string>
-    <string name="privacy_learned_forget_body">Buburahin ang lahat ng natutunang pares at tatluhang salita, bilang ng paggamit ng salita, at kasaysayan ng pagpili ng mungkahi. Hindi maaapektuhan ang mga diksyunaryo at setting.</string>
+    <string name="privacy_learned_forget_body">Buburahin ang lahat ng natutunang pares at tatluhang salita, bilang ng paggamit ng salita, kasaysayan ng pagpili ng mungkahi, at talaan ng mga pagwawasto sa swipe. Hindi maaapektuhan ang mga diksyunaryo at setting.</string>
     <string name="privacy_delete_data_title">Burahin ang Nakolektang Datos</string>
     <string name="privacy_delete_data_body">Permanenteng buburahin nito ang lahat ng nakolektang datos ng swipe.\n\nHindi na ito maibabalik.</string>
     <string name="privacy_delete_data_done">Nabura ang lahat ng datos ng swipe</string>

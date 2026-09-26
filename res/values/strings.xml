@@ -1385,7 +1385,7 @@
     <string name="privacy_learned_source_selections">Suggestion selections</string>
     <string name="privacy_learned_manage">Learning Sources</string>
     <string name="privacy_learned_forget">Forget Learned</string>
-    <string name="privacy_learned_forget_body">Delete every learned phrase pair, phrase triple, word usage count and suggestion-selection history. Dictionaries and settings are not affected.</string>
+    <string name="privacy_learned_forget_body">Delete every learned phrase pair, phrase triple, word usage count, suggestion-selection history and swipe-correction record. Dictionaries and settings are not affected.</string>
     <string name="privacy_delete_data_title">Delete Collected Data</string>
     <string name="privacy_delete_data_body">This will permanently delete all collected swipe data.\n\nThis action cannot be undone.</string>
     <string name="privacy_delete_data_done">All swipe data deleted</string>

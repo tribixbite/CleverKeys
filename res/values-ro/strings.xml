@@ -1015,7 +1015,7 @@
     <string name="privacy_learned_source_selections">Sugestii alese</string>
     <string name="privacy_learned_manage">Surse de învățare</string>
     <string name="privacy_learned_forget">Uită cele învățate</string>
-    <string name="privacy_learned_forget_body">Șterge toate perechile și tripletele de cuvinte învățate, contoarele de utilizare a cuvintelor și istoricul selectării sugestiilor. Dicționarele și setările nu sunt afectate.</string>
+    <string name="privacy_learned_forget_body">Șterge toate perechile și tripletele de cuvinte învățate, contoarele de utilizare a cuvintelor, istoricul selectării sugestiilor și corecturile de glisare. Dicționarele și setările nu sunt afectate.</string>
     <string name="privacy_delete_data_title">Șterge datele colectate</string>
     <string name="privacy_delete_data_body">Toate datele de glisare colectate vor fi șterse definitiv.\n\nAcțiunea nu poate fi anulată.</string>
     <string name="privacy_delete_data_done">Toate datele de glisare au fost șterse</string>

@@ -1000,7 +1000,7 @@
     <string name="privacy_learned_source_selections">Pilihan saran</string>
     <string name="privacy_learned_manage">Sumber Pembelajaran</string>
     <string name="privacy_learned_forget">Lupakan yang Dipelajari</string>
-    <string name="privacy_learned_forget_body">Menghapus semua pasangan dan tripel kata yang dipelajari, hitungan penggunaan kata, serta riwayat pemilihan saran. Kamus dan pengaturan tidak terpengaruh.</string>
+    <string name="privacy_learned_forget_body">Menghapus semua pasangan dan tripel kata yang dipelajari, hitungan penggunaan kata, riwayat pemilihan saran, serta catatan koreksi usap. Kamus dan pengaturan tidak terpengaruh.</string>
     <string name="privacy_delete_data_title">Hapus Data yang Dikumpulkan</string>
     <string name="privacy_delete_data_body">Ini akan menghapus permanen semua data gesekan yang dikumpulkan.\n\nTindakan ini tidak dapat dibatalkan.</string>
     <string name="privacy_delete_data_done">Semua data gesekan dihapus</string>

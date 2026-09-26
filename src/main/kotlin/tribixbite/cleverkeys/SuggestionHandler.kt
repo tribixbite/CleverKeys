@@ -2795,8 +2795,10 @@ class SuggestionHandler(
                              */
                             isKnownWord = { w ->
                                 // Predictor not ready → treat as known (never prompt),
-                                // preserving the original `?: true` behavior.
-                                (wordPredictor?.isInDictionary(w) ?: true) ||
+                                // preserving the original `?: true` behavior. The field flag
+                                // keeps learned selection history (which can also admit a
+                                // word) out of this decision in an incognito field (M5).
+                                (wordPredictor?.isInDictionary(w, fieldAllowsPersonalizedLearning) ?: true) ||
                                     (dictionaryManager?.isUserWord(w) ?: false)
                             },
                             isDisabledWord = { w -> wordPredictor?.isWordDisabled(w) ?: false }

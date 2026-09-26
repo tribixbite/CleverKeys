@@ -1016,7 +1016,7 @@
     <string name="privacy_learned_source_selections">Lựa chọn gợi ý</string>
     <string name="privacy_learned_manage">Nguồn học</string>
     <string name="privacy_learned_forget">Quên dữ liệu đã học</string>
-    <string name="privacy_learned_forget_body">Xoá toàn bộ cặp từ và bộ ba từ đã học, số lần dùng từ và lịch sử chọn gợi ý. Từ điển và cài đặt không bị ảnh hưởng.</string>
+    <string name="privacy_learned_forget_body">Xoá toàn bộ cặp từ và bộ ba từ đã học, số lần dùng từ, lịch sử chọn gợi ý và bản ghi sửa từ vuốt. Từ điển và cài đặt không bị ảnh hưởng.</string>
     <string name="privacy_delete_data_title">Xoá dữ liệu đã thu thập</string>
     <string name="privacy_delete_data_body">Thao tác này sẽ xoá vĩnh viễn toàn bộ dữ liệu vuốt đã thu thập.\n\nKhông thể hoàn tác.</string>
     <string name="privacy_delete_data_done">Đã xoá toàn bộ dữ liệu vuốt</string>

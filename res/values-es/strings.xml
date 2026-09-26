@@ -1006,7 +1006,7 @@
     <string name="privacy_learned_source_selections">Selecciones de sugerencias</string>
     <string name="privacy_learned_manage">Fuentes de aprendizaje</string>
     <string name="privacy_learned_forget">Olvidar lo aprendido</string>
-    <string name="privacy_learned_forget_body">Elimina todos los pares y tríos de palabras aprendidos, los recuentos de uso de palabras y el historial de selección de sugerencias. Los diccionarios y los ajustes no se ven afectados.</string>
+    <string name="privacy_learned_forget_body">Elimina todos los pares y tríos de palabras aprendidos, los recuentos de uso de palabras, el historial de selección de sugerencias y el registro de correcciones de deslizamiento. Los diccionarios y los ajustes no se ven afectados.</string>
     <string name="privacy_delete_data_title">Eliminar datos recopilados</string>
     <string name="privacy_delete_data_body">Se eliminarán de forma permanente todos los datos de deslizamiento recopilados.\n\nEsta acción no se puede deshacer.</string>
     <string name="privacy_delete_data_done">Se eliminaron todos los datos de deslizamiento</string>

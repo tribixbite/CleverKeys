@@ -998,7 +998,7 @@
     <string name="privacy_learned_source_selections">Wybory podpowiedzi</string>
     <string name="privacy_learned_manage">Źródła uczenia</string>
     <string name="privacy_learned_forget">Zapomnij wyuczone</string>
-    <string name="privacy_learned_forget_body">Usuwa wszystkie wyuczone pary i trójki słów, liczniki użycia słów oraz historię wyboru podpowiedzi. Słowniki i ustawienia pozostaną bez zmian.</string>
+    <string name="privacy_learned_forget_body">Usuwa wszystkie wyuczone pary i trójki słów, liczniki użycia słów, historię wyboru podpowiedzi oraz zapis poprawek przesunięć. Słowniki i ustawienia pozostaną bez zmian.</string>
     <string name="privacy_delete_data_title">Usuń zebrane dane</string>
     <string name="privacy_delete_data_body">Spowoduje to trwałe usunięcie wszystkich zebranych danych o gestach.\n\nTej operacji nie można cofnąć.</string>
     <string name="privacy_delete_data_done">Usunięto wszystkie dane o gestach</string>

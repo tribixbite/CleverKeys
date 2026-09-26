@@ -1026,7 +1026,7 @@
     <string name="privacy_learned_source_selections">انتخاب‌های پیشنهاد</string>
     <string name="privacy_learned_manage">منابع یادگیری</string>
     <string name="privacy_learned_forget">فراموش کردن آموخته‌ها</string>
-    <string name="privacy_learned_forget_body">همهٔ جفت‌واژه‌ها و سه‌واژه‌های آموخته‌شده، شمار کاربرد واژه‌ها و تاریخچهٔ انتخاب پیشنهادها حذف می‌شود. واژه‌نامه‌ها و تنظیمات دست‌نخورده می‌مانند.</string>
+    <string name="privacy_learned_forget_body">همهٔ جفت‌واژه‌ها و سه‌واژه‌های آموخته‌شده، شمار کاربرد واژه‌ها، تاریخچهٔ انتخاب پیشنهادها و سابقهٔ اصلاح‌های کشیدن حذف می‌شود. واژه‌نامه‌ها و تنظیمات دست‌نخورده می‌مانند.</string>
     <string name="privacy_delete_data_title">حذف داده‌های گردآوری‌شده</string>
     <string name="privacy_delete_data_body">همهٔ داده‌های کشیدن گردآوری‌شده برای همیشه حذف می‌شود.\n\nاین کار برگشت‌پذیر نیست.</string>
     <string name="privacy_delete_data_done">همهٔ داده‌های کشیدن حذف شد</string>

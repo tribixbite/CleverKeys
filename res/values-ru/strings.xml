@@ -993,7 +993,7 @@
     <string name="privacy_learned_source_selections">Выбор подсказок</string>
     <string name="privacy_learned_manage">Источники обучения</string>
     <string name="privacy_learned_forget">Забыть выученное</string>
-    <string name="privacy_learned_forget_body">Удаляет все выученные пары и тройки слов, счётчики использования слов и историю выбора подсказок. Словари и настройки не затрагиваются.</string>
+    <string name="privacy_learned_forget_body">Удаляет все выученные пары и тройки слов, счётчики использования слов, историю выбора подсказок и записи исправлений свайпа. Словари и настройки не затрагиваются.</string>
     <string name="privacy_delete_data_title">Удалить собранные данные</string>
     <string name="privacy_delete_data_body">Все собранные данные свайпов будут удалены навсегда.\n\nЭто действие нельзя отменить.</string>
     <string name="privacy_delete_data_done">Все данные свайпов удалены</string>

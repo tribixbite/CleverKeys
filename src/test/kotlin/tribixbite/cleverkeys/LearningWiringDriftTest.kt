@@ -201,6 +201,19 @@ class LearningWiringDriftTest {
     }
 
     @Test
+    fun `M5 - the add-to-dictionary prompt's known-word check honours the incognito flag`() {
+        // WordPredictor.isInDictionary(word) also admits a word through LEARNED selection
+        // history; in an IME_FLAG_NO_PERSONALIZED_LEARNING field that read must not decide
+        // whether the "Add to dictionary?" prompt appears (2026-09-26 cleanup follow-up).
+        val handler = readSource("SuggestionHandler.kt")
+        val promptCheck = handler.substringAfter("AutocorrectContextGuard.shouldOfferAddToDictionary(")
+            .substringBefore("isDisabledWord =")
+        assertThat(promptCheck).contains(
+            "isInDictionary(w, fieldAllowsPersonalizedLearning)"
+        )
+    }
+
+    @Test
     fun `learning prefs reach the next-word tier decision but no longer guard the static tier`() {
         // Maintainer decision 2026-09-26: the master gate and the context-aware pref decide the
         // LEARNED tier only. They must still be wired into the one tier decision (dropping

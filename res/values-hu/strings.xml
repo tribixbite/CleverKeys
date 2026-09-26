@@ -994,7 +994,7 @@
     <string name="privacy_learned_source_selections">Javaslatválasztások</string>
     <string name="privacy_learned_manage">Tanulási források</string>
     <string name="privacy_learned_forget">Tanultak törlése</string>
-    <string name="privacy_learned_forget_body">Törli az összes megtanult szópárt és szóhármast, a szóhasználati számlálókat és a javaslatválasztási előzményeket. A szótárak és a beállítások érintetlenek maradnak.</string>
+    <string name="privacy_learned_forget_body">Törli az összes megtanult szópárt és szóhármast, a szóhasználati számlálókat, a javaslatválasztási előzményeket és a húzásjavítások nyilvántartását. A szótárak és a beállítások érintetlenek maradnak.</string>
     <string name="privacy_delete_data_title">Gyűjtött adatok törlése</string>
     <string name="privacy_delete_data_body">Ezzel véglegesen törlöd az összes gyűjtött csúsztatási adatot.\n\nA művelet nem vonható vissza.</string>
     <string name="privacy_delete_data_done">Minden csúsztatási adat törölve</string>

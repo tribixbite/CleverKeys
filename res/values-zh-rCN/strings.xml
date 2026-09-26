@@ -986,7 +986,7 @@
     <string name="privacy_learned_source_selections">候选词选择</string>
     <string name="privacy_learned_manage">学习来源</string>
     <string name="privacy_learned_forget">清除已学习</string>
-    <string name="privacy_learned_forget_body">删除所有已学习的词对和三词组、词语使用次数以及候选选择记录。词典和设置不受影响。</string>
+    <string name="privacy_learned_forget_body">删除所有已学习的词对和三词组、词语使用次数、候选选择记录以及滑行纠正记录。词典和设置不受影响。</string>
     <string name="privacy_delete_data_title">删除已收集的数据</string>
     <string name="privacy_delete_data_body">将永久删除所有已收集的滑动数据。\n\n此操作无法撤销。</string>
     <string name="privacy_delete_data_done">已删除所有滑动数据</string>

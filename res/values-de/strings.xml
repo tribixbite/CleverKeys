@@ -1008,7 +1008,7 @@
     <string name="privacy_learned_source_selections">Vorschlagsauswahl</string>
     <string name="privacy_learned_manage">Lernquellen</string>
     <string name="privacy_learned_forget">Gelerntes löschen</string>
-    <string name="privacy_learned_forget_body">Löscht alle gelernten Wortpaare und Wort-Tripel, die Wortnutzungszähler und den Verlauf der Vorschlagsauswahl. Wörterbücher und Einstellungen bleiben unberührt.</string>
+    <string name="privacy_learned_forget_body">Löscht alle gelernten Wortpaare und Wort-Tripel, die Wortnutzungszähler, den Verlauf der Vorschlagsauswahl und die Wisch-Korrekturen. Wörterbücher und Einstellungen bleiben unberührt.</string>
     <string name="privacy_delete_data_title">Gesammelte Daten löschen</string>
     <string name="privacy_delete_data_body">Dadurch werden alle gesammelten Wischdaten dauerhaft gelöscht.\n\nDiese Aktion kann nicht rückgängig gemacht werden.</string>
     <string name="privacy_delete_data_done">Alle Wischdaten gelöscht</string>

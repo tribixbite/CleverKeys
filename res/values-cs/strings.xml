@@ -988,7 +988,7 @@
     <string name="privacy_learned_source_selections">Výběry návrhů</string>
     <string name="privacy_learned_manage">Zdroje učení</string>
     <string name="privacy_learned_forget">Zapomenout naučené</string>
-    <string name="privacy_learned_forget_body">Smaže všechny naučené dvojice a trojice slov, počty použití slov i historii výběru návrhů. Slovníky a nastavení zůstanou nedotčeny.</string>
+    <string name="privacy_learned_forget_body">Smaže všechny naučené dvojice a trojice slov, počty použití slov, historii výběru návrhů i záznam oprav tažení. Slovníky a nastavení zůstanou nedotčeny.</string>
     <string name="privacy_delete_data_title">Smazat shromážděná data</string>
     <string name="privacy_delete_data_body">Tímto trvale smažete všechna shromážděná data o tazích.\n\nTuto akci nelze vrátit zpět.</string>
     <string name="privacy_delete_data_done">Všechna data o tazích byla smazána</string>

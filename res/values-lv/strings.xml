@@ -999,7 +999,7 @@
     <string name="privacy_learned_source_selections">Ieteikumu izvēles</string>
     <string name="privacy_learned_manage">Mācīšanās avoti</string>
     <string name="privacy_learned_forget">Aizmirst apgūto</string>
-    <string name="privacy_learned_forget_body">Dzēš visus apgūtos vārdu pārus un trijniekus, vārdu lietojuma skaitītājus un ieteikumu izvēles vēsturi. Vārdnīcas un iestatījumi netiek skarti.</string>
+    <string name="privacy_learned_forget_body">Dzēš visus apgūtos vārdu pārus un trijniekus, vārdu lietojuma skaitītājus, ieteikumu izvēles vēsturi un vilkšanas labojumu ierakstus. Vārdnīcas un iestatījumi netiek skarti.</string>
     <string name="privacy_delete_data_title">Dzēst savāktos datus</string>
     <string name="privacy_delete_data_body">Tiks neatgriezeniski dzēsti visi savāktie vilkšanas dati.\n\nŠo darbību nevar atsaukt.</string>
     <string name="privacy_delete_data_done">Visi vilkšanas dati dzēsti</string>

@@ -988,7 +988,7 @@
     <string name="privacy_learned_source_selections">Gekozen suggesties</string>
     <string name="privacy_learned_manage">Leerbronnen</string>
     <string name="privacy_learned_forget">Geleerde wissen</string>
-    <string name="privacy_learned_forget_body">Verwijdert alle geleerde woordparen en -tripletten, de tellers voor woordgebruik en de geschiedenis van gekozen suggesties. Woordenboeken en instellingen blijven ongemoeid.</string>
+    <string name="privacy_learned_forget_body">Verwijdert alle geleerde woordparen en -tripletten, de tellers voor woordgebruik, de geschiedenis van gekozen suggesties en de geregistreerde veegcorrecties. Woordenboeken en instellingen blijven ongemoeid.</string>
     <string name="privacy_delete_data_title">Verzamelde gegevens verwijderen</string>
     <string name="privacy_delete_data_body">Hiermee worden alle verzamelde veeggegevens definitief verwijderd.\n\nDeze actie kan niet ongedaan worden gemaakt.</string>
     <string name="privacy_delete_data_done">Alle veeggegevens verwijderd</string>

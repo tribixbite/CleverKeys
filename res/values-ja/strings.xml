@@ -987,7 +987,7 @@
     <string name="privacy_learned_source_selections">候補の選択</string>
     <string name="privacy_learned_manage">学習ソース</string>
     <string name="privacy_learned_forget">学習内容を削除</string>
-    <string name="privacy_learned_forget_body">学習した単語ペアと単語トリプル、単語の使用回数、候補選択の履歴をすべて削除します。辞書と設定は影響を受けません。</string>
+    <string name="privacy_learned_forget_body">学習した単語ペアと単語トリプル、単語の使用回数、候補選択の履歴、スワイプ修正の記録をすべて削除します。辞書と設定は影響を受けません。</string>
     <string name="privacy_delete_data_title">収集データを削除</string>
     <string name="privacy_delete_data_body">収集したスワイプデータをすべて完全に削除します。\n\nこの操作は取り消せません。</string>
     <string name="privacy_delete_data_done">すべてのスワイプデータを削除しました</string>

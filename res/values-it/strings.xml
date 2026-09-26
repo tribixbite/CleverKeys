@@ -1028,7 +1028,7 @@
     <string name="privacy_learned_source_selections">Suggerimenti scelti</string>
     <string name="privacy_learned_manage">Fonti di apprendimento</string>
     <string name="privacy_learned_forget">Dimentica appreso</string>
-    <string name="privacy_learned_forget_body">Elimina tutte le coppie e le terne di parole apprese, i conteggi d\'uso delle parole e la cronologia di selezione dei suggerimenti. Dizionari e impostazioni non vengono toccati.</string>
+    <string name="privacy_learned_forget_body">Elimina tutte le coppie e le terne di parole apprese, i conteggi d\'uso delle parole, la cronologia di selezione dei suggerimenti e le correzioni dello scorrimento. Dizionari e impostazioni non vengono toccati.</string>
     <string name="privacy_delete_data_title">Elimina dati raccolti</string>
     <string name="privacy_delete_data_body">Tutti i dati di scorrimento raccolti verranno eliminati definitivamente.\n\nL\'azione non può essere annullata.</string>
     <string name="privacy_delete_data_done">Tutti i dati di scorrimento eliminati</string>

@@ -988,7 +988,7 @@
     <string name="privacy_learned_source_selections">Sugestões escolhidas</string>
     <string name="privacy_learned_manage">Fontes de aprendizado</string>
     <string name="privacy_learned_forget">Esquecer aprendido</string>
-    <string name="privacy_learned_forget_body">Exclui todos os pares e trios de palavras aprendidos, as contagens de uso de palavras e o histórico de seleção de sugestões. Dicionários e configurações não são afetados.</string>
+    <string name="privacy_learned_forget_body">Exclui todos os pares e trios de palavras aprendidos, as contagens de uso de palavras, o histórico de seleção de sugestões e o registro de correções de deslize. Dicionários e configurações não são afetados.</string>
     <string name="privacy_delete_data_title">Excluir dados coletados</string>
     <string name="privacy_delete_data_body">Isso excluirá permanentemente todos os dados de deslize coletados.\n\nEsta ação não pode ser desfeita.</string>
     <string name="privacy_delete_data_done">Todos os dados de deslize foram excluídos</string>
