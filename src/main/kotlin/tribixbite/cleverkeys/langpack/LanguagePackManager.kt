@@ -76,7 +76,7 @@ class LanguagePackManager(private val context: Context) {
          * of the install directory, so it MUST be a plain code — a hostile pack carrying
          * `"code":".."` used to make the importer `deleteRecursively()` the app's entire
          * files dir and install there. Accepted shapes cover every shipped pack
-         * (`en`, `ru`, `pt` …) and the build tooling's variant names (`en-norvig-50k`,
+         * (`en`, `ru`, `pt` …) and the build tooling's variant names (`en-web-50k`,
          * `en-opensubtitles`, `pt_br`): a 2-3 letter base plus up to 4 alphanumeric
          * segments separated by `-`/`_`. No `/`, `\`, `.` or empty codes, ever.
          */

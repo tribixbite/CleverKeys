@@ -595,16 +595,67 @@ class LanguagePackImportTest {
     /**
      * The validation guard must not over-reject: every shipped pack-code shape keeps
      * importing. `scripts/dictionaries/langpack-*.zip` all carry plain ISO codes today
-     * ("en", "ru", …) but the build tooling names variant packs like `en-norvig-50k`,
+     * ("en", "ru", …) but the build tooling names variant packs like `en-web-50k`,
      * so hyphenated/underscored variant codes stay legal.
      */
     @Test
     fun realWorldPackCodeShapesAreStillAccepted() {
-        for (code in listOf("en", "sv", "pt", "en-norvig-50k", "en-opensubtitles", "pt_br")) {
+        for (code in listOf("en", "sv", "pt", "en-web-50k", "en-opensubtitles", "pt_br")) {
             assertWithMessage("code \"$code\" is a legitimate pack code and must import")
                 .that(import(validPack(code, "Pack $code")))
                 .isInstanceOf(ImportResult.Success::class.java)
             assertThat(manager.isInstalled(code)).isTrue()
+        }
+    }
+
+    /**
+     * Every pack published from `scripts/dictionaries/` imports through the real importer AND
+     * carries its data attribution (2026-09-26 data-licensing audit,
+     * `docs/audit/2026-09-26-data-licensing-audit.md`). The word data is CC BY-SA, whose terms
+     * travel with the copy: a pack downloaded on its own must hold the credit, the licence and
+     * the change note, so both the manifest keys and the `NOTICE.txt` member are pinned here,
+     * as is the fact that the installed manifest keeps them on the device. A pack rebuilt
+     * without them (or a new pack added without a `PACK_SOURCES` row) fails this test.
+     */
+    @Test
+    fun everyShippedPackImportsAndCarriesItsAttribution() {
+        val packs = File("scripts/dictionaries").listFiles { f ->
+            f.name.startsWith("langpack-") && f.name.endsWith(".zip")
+        }?.sortedBy { it.name }.orEmpty()
+        assertWithMessage("expected shipped packs under scripts/dictionaries (run from project root)")
+            .that(packs).isNotEmpty()
+        assertWithMessage("langpack-en-norvig-50k.zip has no redistribution grant and was removed")
+            .that(packs.map { it.name }).doesNotContain("langpack-en-norvig-50k.zip")
+
+        for (pack in packs) {
+            val (manifest, notice) = java.util.zip.ZipFile(pack).use { zf ->
+                val m = zf.getEntry("manifest.json")
+                    ?.let { e -> zf.getInputStream(e).use { it.readBytes().toString(Charsets.UTF_8) } }
+                val n = zf.getEntry("NOTICE.txt")
+                    ?.let { e -> zf.getInputStream(e).use { it.readBytes().toString(Charsets.UTF_8) } }
+                m to n
+            }
+            assertWithMessage("${pack.name}: manifest.json").that(manifest).isNotNull()
+            val json = org.json.JSONObject(manifest!!)
+            assertWithMessage("${pack.name}: manifest license")
+                .that(json.optString("license")).isEqualTo("GPL-3.0-only")
+            val attribution = json.optString("attribution")
+            assertWithMessage("${pack.name}: manifest attribution names an upstream licence")
+                .that(attribution).containsMatch("CC BY-SA [34]\\.0|Apache-2\\.0")
+            assertWithMessage("${pack.name}: manifest attribution carries the change note")
+                .that(attribution).contains("Modified: converted to a CleverKeys frequency list.")
+            assertWithMessage("${pack.name}: manifest source is a URL")
+                .that(json.optString("source")).startsWith("https://")
+            assertWithMessage("${pack.name}: NOTICE.txt member").that(notice).isNotNull()
+            assertWithMessage("${pack.name}: NOTICE.txt carries the change note")
+                .that(notice).contains("Modified: converted to a CleverKeys frequency list.")
+
+            val code = json.getString("code")
+            assertWithMessage("${pack.name} must import through the real importer")
+                .that(import(pack)).isInstanceOf(ImportResult.Success::class.java)
+            val installed = org.json.JSONObject(File(installedDir(code), "manifest.json").readText())
+            assertWithMessage("${pack.name}: the installed manifest keeps the attribution on the device")
+                .that(installed.optString("attribution")).isEqualTo(attribution)
         }
     }
 
