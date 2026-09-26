@@ -68,14 +68,14 @@ only via trie injection; `estelle` rides its own lexicon frequency.
 
 English does not use `contractions_en.json` as its source of truth. `loadEnglishBase()`:
 
-1. loads `contractions.bin` (fast binary path) or `contractions_non_paired.json` (120 keys),
+1. loads `contractions.bin` (fast binary path) or `contractions_non_paired.json` (121 keys),
 2. loads `contraction_pairings.json` (1,744 paired bases),
 3. **reclassifies**: removes every pairing base from the non-paired map.
 
 Step 3 is the 2026-07-23 fix. Without it, typing `well` produced `we'll` and the word "well" was
 destroyed in its own slot.
 
-**The effective English REPLACE set is `(base ∪ contractions_en) − pairings` = 106 keys.**
+**The effective English REPLACE set is `(base ∪ contractions_en) − pairings` = 107 keys** (106 + `etoo`, 2026-09-26).
 
 Anything that models English — the sidecar generator, the runtime scanner, a data test — must
 subtract the pairings. Two of the three once disagreed, and that disagreement is exactly how a
@@ -281,19 +281,32 @@ frequencies and regenerates byte-identical; collision sidecars are unaffected.
 paired display form in the binary (`base = form minus apostrophes`), so a pair can exist at
 runtime with no frequency whenever the pairing file lists the variant only under a *different*
 base. Sweep of every derived pair: 513 lack a frequency — 510 possessives (out of scope: never
-promoted; splicing them beside their bases is its own ranking decision) and three non-possessive
+promoted; since 2026-09-26 spliced beside a CONFIDENT rank-0 base without needing a frequency, §6c
+rule 2) and three non-possessive
 projections, now pinned by `BundledContractionDataTest`:
 
 | pair | listed only under | measured (variant vs base byte) | outcome |
 |---|---|---|---|
 | `whys → why's` | `why` | 166 vs 157 (zipf 3.01 vs 2.52, lead 9) | **added**; `why's` rank 0 over `whys` |
 | `natl → nat'l` | `nat` | 159 vs 158 (near tie) | **added**; `natl` keeps rank 0, `nat'l` at #1 |
-| `etoo → eto'o` | `eto` | base not in the lexicon | **not added** — see below |
+| `etoo → eto'o` | `eto` | base not in the lexicon | **moved to REPLACE** — see below |
 
 `etoo` is not an `en_enhanced.json` word, only an injected pseudo-word, so it has no base frequency
-and a frequency could only splice `eto'o` BEHIND the raw `etoo`. The right fix is REPLACE
-(`contractions_non_paired.json`, then rebuild `contractions.bin` + sidecars) — left as a TODO in
-`EXTRA_EN_PAIRINGS`. The pairing file is now 1,790 entries.
+and a frequency could only splice `eto'o` BEHIND the raw `etoo` (which would auto-insert). It is now
+a REPLACE mapping (2026-09-26): hand-curated `"etoo": "eto'o"` in `contractions_non_paired.json` (no
+script generates that file), `contractions.bin` rebuilt with
+
+```sh
+D=src/main/assets/dictionaries
+python3 scripts/generate_binary_contractions.py $D/contractions_non_paired.json \
+    $D/contraction_pairings.json $D/contractions.bin
+```
+
+(byte-identical on unchanged inputs — verify with `cmp` before trusting a diff), and the sidecars
+re-run (`build_contraction_collisions.py`: unchanged, `etoo` is in no other lexicon; en now counts
+107 REPLACE keys). Since `eto'o` is a non-paired VALUE, `loadBinaryContractions` no longer derives an
+`etoo` paired base at all; `eto → eto'o` stays a non-projection completion. Swiping `etoo` now shows
+`eto'o` in the slot. The pairing file is 1,790 entries.
 
 ## 7. Empty files are CORRECT, not unfinished
 
@@ -396,7 +409,8 @@ guard.
 | shipped pronoun set over MEASURED data: I'd/I'll/we'd/he's/she's rank 0; shed/shell/whore/well/hell/were/its/natl keep rank 0 with the variant at #1; why's rank 0 over whys; its/it's inside PROMOTION_MARGIN; would/world keeps world at #2; REPLACE six keep their slot | `CtcContractionDisplayTest` (pure) |
 | promotion needs lead ≥ PROMOTION_MARGIN (boundary), possessive never ahead even above the margin | `ContractionOverlayTest` (pure) |
 | pairing `frequency` survives parsing, base-scoped; the 19 projection values pinned; one value per non-possessive variant; no flat 200 on a promotable pair | `BundledContractionDataTest` (pure) |
-| every non-possessive pair DERIVED from `contractions.bin` has a pairing frequency, except exactly `etoo → eto'o` | `BundledContractionDataTest` (pure) |
+| every non-possessive pair DERIVED from `contractions.bin` has a pairing frequency (none excepted since `etoo` went REPLACE) | `BundledContractionDataTest` (pure) |
+| `etoo → eto'o` is REPLACE in the JSON and the binary, not a pairing base, and `etoo` is no lexicon word | `BundledContractionDataTest` (pure) |
 | language isolation (no code-switched output) | `SwipeContractionLanguageIsolationTest` |
 
 ---

@@ -927,12 +927,14 @@ CLITIC_S_HOSTS = frozenset({
 #:                  wherefores") — swiping w-h-y-s is far more often "why's that".
 #:   natl -> nat'l  listed only under `nat`; nat'l 2.61 vs natl 2.55 is a near tie, so
 #:                  nat'l is spliced BEHIND natl (the traced abbreviation keeps rank 0).
-#: The third, etoo -> eto'o, is NOT added: `etoo` is not a lexicon word, so it has no
-#: base frequency and a splice could never move eto'o ahead of the injected pseudo-word
-#: `etoo`.  Its right fix is a REPLACE (non-paired) mapping — a classification change
-#: for contractions_non_paired.json, not a frequency.
-#: TODO(contractions): move etoo -> eto'o to contractions_non_paired.json (REPLACE) and
-#: rebuild contractions.bin + the collision sidecars.
+#: The third, etoo -> eto'o, is NOT added here: `etoo` is not a lexicon word, so it has
+#: no base frequency and a splice could never move eto'o ahead of the injected
+#: pseudo-word `etoo`.  It is a REPLACE mapping instead (2026-09-26): the hand-curated
+#: `"etoo": "eto'o"` entry in contractions_non_paired.json (which no script generates),
+#: with contractions.bin rebuilt by scripts/generate_binary_contractions.py and the
+#: collision sidecars by scripts/build_contraction_collisions.py.  Because eto'o is now a
+#: non-paired VALUE, ContractionManager no longer derives an `etoo` paired base at all;
+#: `eto -> eto'o` below stays a (non-projection) completion of the `eto` trace.
 EXTRA_EN_PAIRINGS: dict[str, list[str]] = {
     "its": ["it's"],
     "whys": ["why's"],

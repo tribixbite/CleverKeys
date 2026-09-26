@@ -1074,12 +1074,14 @@ class BundledContractionDataTest {
      * `whys/why's` and `natl/nat'l` were such pairs; the pairing file listed why's only under
      * `why` and nat'l only under `nat` (non-projections, never spliced).
      *
-     * Pins the set of NON-POSSESSIVE derived pairs still without a frequency to exactly the one
-     * known, deliberately unfixed entry: `etoo -> eto'o`. `etoo` is not a lexicon word (no base
-     * frequency), so a frequency could only splice eto'o BEHIND the injected pseudo-word; its
-     * fix is a REPLACE mapping (TODO in `scripts/extract_apostrophe_words.py`). Possessives
-     * without a frequency (hundreds, e.g. derived `johns -> john's`) are out of scope — they
-     * never promote, and splicing them all would be a separate ranking decision.
+     * Pins the set of NON-POSSESSIVE derived pairs without a frequency as EMPTY. The last one,
+     * `etoo -> eto'o`, was moved to REPLACE (2026-09-26): `etoo` is not a lexicon word (no base
+     * frequency), so a frequency could only have spliced eto'o BEHIND the injected pseudo-word
+     * `etoo`, which would then auto-insert. As a `contractions_non_paired.json` entry the key
+     * is rewritten in its own slot, and because `eto'o` is now a non-paired VALUE the derivation
+     * no longer produces the pair at all. Possessives without a frequency (510, e.g. derived
+     * `alzheimers -> alzheimer's`) are out of scope here — they never promote, and
+     * `ContractionOverlay.splicedPossessive` needs no frequency to place them.
      */
     @Test
     fun `every non-possessive pair derived from contractions bin carries a pairing frequency`() {
@@ -1110,6 +1112,39 @@ class BundledContractionDataTest {
             }
             .filterNot { (_, variant) -> ContractionOverlay.isPossessive(variant) }
             .toSet()
-        assertThat(withoutFrequency).containsExactly("etoo" to "eto'o")
+        assertThat(withoutFrequency).isEmpty()
+    }
+
+    /**
+     * `etoo -> eto'o` is a REPLACE mapping (2026-09-26): in the JSON source, in the binary built
+     * from it, and not a pairing base — so `loadEnglishBase`'s reclassification keeps it
+     * non-paired — and the key is no English word (no reading of its own to protect).
+     */
+    @Test
+    fun `etoo is a REPLACE mapping to eto'o in the json and the binary`() {
+        assertThat(jsonObject("contractions_non_paired.json")["etoo"]).isEqualTo("eto'o")
+
+        val buf = java.nio.ByteBuffer.wrap(File("$DICT_DIR/contractions.bin").readBytes())
+            .order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        fun readString(): String {
+            val bytes = ByteArray(buf.short.toInt() and 0xFFFF)
+            buf.get(bytes)
+            return String(bytes, Charsets.UTF_8)
+        }
+        buf.position(8) // magic + version
+        val nonPairedCount = buf.int
+        buf.int // paired count
+        val binNonPaired = HashMap<String, String>()
+        repeat(nonPairedCount) { binNonPaired[readString()] = readString() }
+        assertThat(binNonPaired["etoo"]).isEqualTo("eto'o")
+
+        val pairings = ContractionManager.parsePairings(
+            File("$DICT_DIR/contraction_pairings.json").readText()
+        )
+        assertThat(pairings).doesNotContainKey("etoo")
+        // The completion under `eto` (a different trace) is untouched.
+        assertThat(pairings.getValue("eto").map { it.contraction }).contains("eto'o")
+        val lexicon = JsonParser.parseString(File("$DICT_DIR/en_enhanced.json").readText()).asJsonObject
+        assertThat(lexicon.has("etoo")).isFalse()
     }
 }
