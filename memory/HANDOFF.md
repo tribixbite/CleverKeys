@@ -258,14 +258,25 @@ per-user case (`docs/eval/2026-09-26-correction-driven-swipe-prior-replay.md`). 
 `CtcLearnedPrior` is committed UNWIRED. Context: guarded oracle headroom +4.67 pt exists but
 coverage is the limit; alternates-only mode inert on CTC
 (`docs/eval/2026-09-26-context-oracle-and-alternates-replay.md`).
-**In flight:** explicit "Prefer 'X' when swiping?" offer after 2 swipe corrections (adds to the
-personal dictionary) + relabel of swipe-ML rows on correction, so on-device exports become a real
-per-user replay pool — the prerequisite for ever re-evaluating the prior.
+**Landed:** explicit "Prefer 'X' when swiping?" offer after 2 swipe corrections (adds to the
+personal dictionary; `7176eec4`..`8086f8d0`) + relabel of swipe-ML rows on correction, so on-device
+exports become a real per-user replay pool — the prerequisite for ever re-evaluating the prior.
 **Closed 2026-09-26:** whys/why's + natl/nat'l measured into `contraction_pairings.json`
 (bin-only sweep pinned in `BundledContractionDataTest`; `etoo -> eto'o` left as a REPLACE TODO);
 the global n-gram cap now prunes by frequency discounted by age on a persisted language-wide commit
-clock (`ContinuationBudget.globalVictims`). **Open:** a broader static LM for context needs a
-licensed text corpus + sentence-context traces.
+clock (`ContinuationBudget.globalVictims`). 
+**Round 2 (same day):** typo-tolerant tap bar (`f8fa86f6`, layout-aware adjacency, up to 2
+reserved fuzzy slots — never slot 0); tappable "Added … to dictionary" with tap-again undo
+(`4ca6c499`); deferred "Prefer" offers after re-swipe/Enter/field exit; shipped static English
+context LM `assets/lm/en.cklm` (Leipzig CC BY 4.0 + Tatoeba CC BY 2.0 FR, 439 KB, +333 KB APK,
+0.67 MB heap) — tap gate PASSED (+10.5 pt top-3 at prefix 1, OOD), swipe replay FAILED (no swipe
+wiring; `docs/eval/2026-09-26-static-lm-replay.md`).
+**Open:** static LMs for de/es/fr/it/pt/sv (S4, base vs langpack by size); dedicated FUZZY
+provenance origin (TODO in WordPredictor — currently tagged AUTOCORRECT); apostrophe/hyphen words
+in the swipe offer need decoder changes (audit doc); possessive pairs still at slate tail;
+**licensing:** `scripts/dictionaries/langpack-en-opensubtitles*.zip` and `langpack-en-norvig-50k.zip`
+derive from sources without a clear redistribution grant (OpenSubtitles; Norvig = LDC Web1T) —
+maintainer decision needed.
 
 ### 0. Full-backlog campaign continuation (2026-09-01)
 
