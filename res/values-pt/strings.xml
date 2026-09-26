@@ -984,6 +984,8 @@
     <string name="privacy_learned_none">Nada aprendido ainda.</string>
     <string name="privacy_learned_sources">Registrando agora: %1$s</string>
     <string name="privacy_learned_sources_none">Nada está sendo registrado no momento.</string>
+    <string name="privacy_learned_source_swipe_corrections">Correções de deslize</string>
+    <string name="privacy_learned_source_selections">Sugestões escolhidas</string>
     <string name="privacy_learned_manage">Fontes de aprendizado</string>
     <string name="privacy_learned_forget">Esquecer aprendido</string>
     <string name="privacy_learned_forget_body">Exclui todos os pares e trios de palavras aprendidos, as contagens de uso de palavras e o histórico de seleção de sugestões. Dicionários e configurações não são afetados.</string>

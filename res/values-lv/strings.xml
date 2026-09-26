@@ -995,6 +995,8 @@
     <string name="privacy_learned_none">Pagaidām nekas nav apgūts.</string>
     <string name="privacy_learned_sources">Pašlaik tiek reģistrēts: %1$s</string>
     <string name="privacy_learned_sources_none">Pašlaik nekas netiek reģistrēts.</string>
+    <string name="privacy_learned_source_swipe_corrections">Vilkšanas labojumi</string>
+    <string name="privacy_learned_source_selections">Ieteikumu izvēles</string>
     <string name="privacy_learned_manage">Mācīšanās avoti</string>
     <string name="privacy_learned_forget">Aizmirst apgūto</string>
     <string name="privacy_learned_forget_body">Dzēš visus apgūtos vārdu pārus un trijniekus, vārdu lietojuma skaitītājus un ieteikumu izvēles vēsturi. Vārdnīcas un iestatījumi netiek skarti.</string>

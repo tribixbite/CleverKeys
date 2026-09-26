@@ -137,24 +137,45 @@ class PrivacyDataSurfaceDriftTest {
     }
 
     /**
-     * The three preferences that decide what ENTERS the learned stores are pure
-     * privacy controls, but they live only in Input Behaviour → Advanced Prediction.
-     * Privacy & Data must at minimum name their current state, so the section is a
-     * truthful account of what is being learned.
+     * The preferences that decide what ENTERS the learned stores are pure privacy
+     * controls, but they live only in Input Behaviour → Advanced Prediction. Privacy &
+     * Data must at minimum name their current state, so the section is a truthful
+     * account of what is being learned — and it must also name the master-gated stores
+     * that have no toggle of their own (selection history, swipe corrections).
      */
     @Test
     fun thePrivacySectionRepresentsTheLearningSourceToggles() {
         val section = read("ui/settings/sections/PrivacySection.kt")
+        val list = section.substringAfter("val sourceLabels = listOfNotNull(")
+            .substringBefore("val recordingNow")
+        check(list != section) { "sourceLabels list not found in PrivacySection.kt — re-point this test." }
         val sources = setOf(
             "contextAwarePredictionsEnabled",
-            "nextWordPredictionEnabled",
             "personalizedLearningEnabled",
+            "R.string.privacy_learned_source_selections",
+            "R.string.privacy_learned_source_swipe_corrections",
         )
-        val absent = sources.filterNot { it in section }.toSortedSet()
+        val absent = sources.filterNot { it in list }.toSortedSet()
         assertWithMessage(
-            "Privacy & Data does not represent the learning-source toggles, so the section " +
+            "Privacy & Data does not represent every learning source, so the section " +
                 "cannot tell the user what is currently being recorded"
         ).that(absent).isEmpty()
+    }
+
+    /**
+     * Next-word prediction records nothing: it reads the shipped model and the phrases the
+     * context-aware source recorded (2026-09-26 two-tier split). Listing it under "Currently
+     * recording" told users a read-only feature was a learning source.
+     */
+    @Test
+    fun nextWordIsNotListedAsARecordingSource() {
+        val section = read("ui/settings/sections/PrivacySection.kt")
+        val list = section.substringAfter("val sourceLabels = listOfNotNull(")
+            .substringBefore("val recordingNow")
+        assertWithMessage("next-word listed as a recording source")
+            .that(list).doesNotContain("input_next_word_title")
+        assertWithMessage("next-word listed as a recording source")
+            .that(list).doesNotContain("nextWordPredictionEnabled")
     }
 
     /**

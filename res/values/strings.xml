@@ -1381,6 +1381,8 @@
     <string name="privacy_learned_none">Nothing learned yet.</string>
     <string name="privacy_learned_sources">Currently recording: %1$s</string>
     <string name="privacy_learned_sources_none">Nothing is being recorded right now.</string>
+    <string name="privacy_learned_source_swipe_corrections">Swipe corrections</string>
+    <string name="privacy_learned_source_selections">Suggestion selections</string>
     <string name="privacy_learned_manage">Learning Sources</string>
     <string name="privacy_learned_forget">Forget Learned</string>
     <string name="privacy_learned_forget_body">Delete every learned phrase pair, phrase triple, word usage count and suggestion-selection history. Dictionaries and settings are not affected.</string>

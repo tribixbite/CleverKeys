@@ -984,6 +984,8 @@
     <string name="privacy_learned_none">Nog niets geleerd.</string>
     <string name="privacy_learned_sources">Wordt nu vastgelegd: %1$s</string>
     <string name="privacy_learned_sources_none">Er wordt op dit moment niets vastgelegd.</string>
+    <string name="privacy_learned_source_swipe_corrections">Veegcorrecties</string>
+    <string name="privacy_learned_source_selections">Gekozen suggesties</string>
     <string name="privacy_learned_manage">Leerbronnen</string>
     <string name="privacy_learned_forget">Geleerde wissen</string>
     <string name="privacy_learned_forget_body">Verwijdert alle geleerde woordparen en -tripletten, de tellers voor woordgebruik en de geschiedenis van gekozen suggesties. Woordenboeken en instellingen blijven ongemoeid.</string>

@@ -994,6 +994,8 @@
     <string name="privacy_learned_none">Nic jeszcze nie zostało wyuczone.</string>
     <string name="privacy_learned_sources">Obecnie zapisywane: %1$s</string>
     <string name="privacy_learned_sources_none">Obecnie nic nie jest zapisywane.</string>
+    <string name="privacy_learned_source_swipe_corrections">Poprawki przesuwania</string>
+    <string name="privacy_learned_source_selections">Wybory podpowiedzi</string>
     <string name="privacy_learned_manage">Źródła uczenia</string>
     <string name="privacy_learned_forget">Zapomnij wyuczone</string>
     <string name="privacy_learned_forget_body">Usuwa wszystkie wyuczone pary i trójki słów, liczniki użycia słów oraz historię wyboru podpowiedzi. Słowniki i ustawienia pozostaną bez zmian.</string>

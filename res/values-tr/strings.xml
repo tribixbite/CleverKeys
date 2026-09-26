@@ -995,6 +995,8 @@
     <string name="privacy_learned_none">Henüz hiçbir şey öğrenilmedi.</string>
     <string name="privacy_learned_sources">Şu anda kaydediliyor: %1$s</string>
     <string name="privacy_learned_sources_none">Şu anda hiçbir şey kaydedilmiyor.</string>
+    <string name="privacy_learned_source_swipe_corrections">Kaydırma düzeltmeleri</string>
+    <string name="privacy_learned_source_selections">Öneri seçimleri</string>
     <string name="privacy_learned_manage">Öğrenme Kaynakları</string>
     <string name="privacy_learned_forget">Öğrenilenleri Sil</string>
     <string name="privacy_learned_forget_body">Öğrenilen tüm sözcük çiftlerini ve üçlülerini, sözcük kullanım sayaçlarını ve öneri seçim geçmişini siler. Sözlükler ve ayarlar etkilenmez.</string>

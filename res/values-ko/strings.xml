@@ -984,6 +984,8 @@
     <string name="privacy_learned_none">아직 학습된 내용이 없습니다.</string>
     <string name="privacy_learned_sources">현재 기록 중: %1$s</string>
     <string name="privacy_learned_sources_none">현재 기록 중인 항목이 없습니다.</string>
+    <string name="privacy_learned_source_swipe_corrections">스와이프 수정</string>
+    <string name="privacy_learned_source_selections">추천 단어 선택</string>
     <string name="privacy_learned_manage">학습 소스</string>
     <string name="privacy_learned_forget">학습 내용 삭제</string>
     <string name="privacy_learned_forget_body">학습된 모든 단어 쌍과 3연쇄, 단어 사용 횟수, 추천 선택 기록을 삭제합니다. 사전과 설정에는 영향이 없습니다.</string>

@@ -996,6 +996,8 @@
     <string name="privacy_learned_none">Wala pang natutunan.</string>
     <string name="privacy_learned_sources">Kasalukuyang itinatala: %1$s</string>
     <string name="privacy_learned_sources_none">Walang itinatala sa ngayon.</string>
+    <string name="privacy_learned_source_swipe_corrections">Mga pagtatama sa swipe</string>
+    <string name="privacy_learned_source_selections">Mga napiling mungkahi</string>
     <string name="privacy_learned_manage">Pinagmumulan ng Pagkatuto</string>
     <string name="privacy_learned_forget">Kalimutan ang Natutunan</string>
     <string name="privacy_learned_forget_body">Buburahin ang lahat ng natutunang pares at tatluhang salita, bilang ng paggamit ng salita, at kasaysayan ng pagpili ng mungkahi. Hindi maaapektuhan ang mga diksyunaryo at setting.</string>

@@ -1012,6 +1012,8 @@
     <string name="privacy_learned_none">Chưa học được gì.</string>
     <string name="privacy_learned_sources">Đang ghi: %1$s</string>
     <string name="privacy_learned_sources_none">Hiện không ghi lại gì.</string>
+    <string name="privacy_learned_source_swipe_corrections">Sửa lỗi vuốt</string>
+    <string name="privacy_learned_source_selections">Lựa chọn gợi ý</string>
     <string name="privacy_learned_manage">Nguồn học</string>
     <string name="privacy_learned_forget">Quên dữ liệu đã học</string>
     <string name="privacy_learned_forget_body">Xoá toàn bộ cặp từ và bộ ba từ đã học, số lần dùng từ và lịch sử chọn gợi ý. Từ điển và cài đặt không bị ảnh hưởng.</string>

@@ -1011,6 +1011,8 @@
     <string name="privacy_learned_none">Nu s-a învățat nimic încă.</string>
     <string name="privacy_learned_sources">Se înregistrează acum: %1$s</string>
     <string name="privacy_learned_sources_none">În acest moment nu se înregistrează nimic.</string>
+    <string name="privacy_learned_source_swipe_corrections">Corecturi de glisare</string>
+    <string name="privacy_learned_source_selections">Sugestii alese</string>
     <string name="privacy_learned_manage">Surse de învățare</string>
     <string name="privacy_learned_forget">Uită cele învățate</string>
     <string name="privacy_learned_forget_body">Șterge toate perechile și tripletele de cuvinte învățate, contoarele de utilizare a cuvintelor și istoricul selectării sugestiilor. Dicționarele și setările nu sunt afectate.</string>

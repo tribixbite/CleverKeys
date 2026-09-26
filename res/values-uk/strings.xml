@@ -995,6 +995,8 @@
     <string name="privacy_learned_none">Поки нічого не вивчено.</string>
     <string name="privacy_learned_sources">Зараз записується: %1$s</string>
     <string name="privacy_learned_sources_none">Зараз нічого не записується.</string>
+    <string name="privacy_learned_source_swipe_corrections">Виправлення свайпу</string>
+    <string name="privacy_learned_source_selections">Вибір підказок</string>
     <string name="privacy_learned_manage">Джерела навчання</string>
     <string name="privacy_learned_forget">Забути вивчене</string>
     <string name="privacy_learned_forget_body">Видаляє всі вивчені пари й трійки слів, лічильники вживання слів та історію вибору підказок. Словники та налаштування не змінюються.</string>

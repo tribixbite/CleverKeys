@@ -996,6 +996,8 @@
     <string name="privacy_learned_none">Belum ada yang dipelajari.</string>
     <string name="privacy_learned_sources">Sedang direkam: %1$s</string>
     <string name="privacy_learned_sources_none">Saat ini tidak ada yang direkam.</string>
+    <string name="privacy_learned_source_swipe_corrections">Koreksi geser</string>
+    <string name="privacy_learned_source_selections">Pilihan saran</string>
     <string name="privacy_learned_manage">Sumber Pembelajaran</string>
     <string name="privacy_learned_forget">Lupakan yang Dipelajari</string>
     <string name="privacy_learned_forget_body">Menghapus semua pasangan dan tripel kata yang dipelajari, hitungan penggunaan kata, serta riwayat pemilihan saran. Kamus dan pengaturan tidak terpengaruh.</string>

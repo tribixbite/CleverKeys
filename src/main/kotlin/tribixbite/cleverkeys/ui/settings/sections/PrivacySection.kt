@@ -195,21 +195,28 @@ internal fun SettingsActivity.PrivacySection() {
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
 
-                // Which learn paths are live right now. The three source toggles are
+                // Which learn paths are live right now. The two source toggles are
                 // configured in Input Behaviour → Advanced Prediction; naming their
                 // state here (and offering a jump) keeps this section a truthful
                 // account of what is being recorded without duplicating controls
                 // that would then need two-way sync and a second search entry.
+                // Next-Word Prediction is NOT listed: it only READS (the shipped model,
+                // and the learned phrases the context-aware source records) and writes
+                // nothing of its own. Selection history (UserAdaptationManager) and swipe
+                // corrections (SwipeCorrectionStore, the "Prefer X when swiping?" counts)
+                // have no toggle of their own — they record whenever the master gate is on
+                // (swipe corrections skip incognito and password fields) — so they are
+                // always listed under it.
                 val sourceLabels = listOfNotNull(
                     stringResource(R.string.input_context_aware_title)
                         .takeIf { contextAwarePredictionsEnabled },
-                    stringResource(R.string.input_next_word_title)
-                        .takeIf { nextWordPredictionEnabled },
                     stringResource(R.string.input_personalized_learning_title)
-                        .takeIf { personalizedLearningEnabled }
+                        .takeIf { personalizedLearningEnabled },
+                    stringResource(R.string.privacy_learned_source_selections),
+                    stringResource(R.string.privacy_learned_source_swipe_corrections)
                 )
-                // The master gate outranks every source toggle, so with it off
-                // nothing is recording regardless of the three below it.
+                // The master gate outranks every source, so with it off nothing is
+                // recording regardless of the toggles.
                 val recordingNow = if (onDeviceLearningEnabled) sourceLabels else emptyList()
                 Text(
                     text = if (recordingNow.isEmpty()) {

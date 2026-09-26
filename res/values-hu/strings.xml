@@ -990,6 +990,8 @@
     <string name="privacy_learned_none">Még nincs megtanult adat.</string>
     <string name="privacy_learned_sources">Jelenleg rögzítve: %1$s</string>
     <string name="privacy_learned_sources_none">Jelenleg semmi sem kerül rögzítésre.</string>
+    <string name="privacy_learned_source_swipe_corrections">Csúsztatási javítások</string>
+    <string name="privacy_learned_source_selections">Javaslatválasztások</string>
     <string name="privacy_learned_manage">Tanulási források</string>
     <string name="privacy_learned_forget">Tanultak törlése</string>
     <string name="privacy_learned_forget_body">Törli az összes megtanult szópárt és szóhármast, a szóhasználati számlálókat és a javaslatválasztási előzményeket. A szótárak és a beállítások érintetlenek maradnak.</string>

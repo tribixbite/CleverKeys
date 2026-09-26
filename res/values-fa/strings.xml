@@ -1022,6 +1022,8 @@
     <string name="privacy_learned_none">هنوز چیزی آموخته نشده است.</string>
     <string name="privacy_learned_sources">در حال ثبت: %1$s</string>
     <string name="privacy_learned_sources_none">هم‌اکنون چیزی ثبت نمی‌شود.</string>
+    <string name="privacy_learned_source_swipe_corrections">اصلاحات کشیدن</string>
+    <string name="privacy_learned_source_selections">انتخاب‌های پیشنهاد</string>
     <string name="privacy_learned_manage">منابع یادگیری</string>
     <string name="privacy_learned_forget">فراموش کردن آموخته‌ها</string>
     <string name="privacy_learned_forget_body">همهٔ جفت‌واژه‌ها و سه‌واژه‌های آموخته‌شده، شمار کاربرد واژه‌ها و تاریخچهٔ انتخاب پیشنهادها حذف می‌شود. واژه‌نامه‌ها و تنظیمات دست‌نخورده می‌مانند.</string>

@@ -1004,6 +1004,8 @@
     <string name="privacy_learned_none">Noch nichts gelernt.</string>
     <string name="privacy_learned_sources">Wird gerade aufgezeichnet: %1$s</string>
     <string name="privacy_learned_sources_none">Derzeit wird nichts aufgezeichnet.</string>
+    <string name="privacy_learned_source_swipe_corrections">Wisch-Korrekturen</string>
+    <string name="privacy_learned_source_selections">Vorschlagsauswahl</string>
     <string name="privacy_learned_manage">Lernquellen</string>
     <string name="privacy_learned_forget">Gelerntes löschen</string>
     <string name="privacy_learned_forget_body">Löscht alle gelernten Wortpaare und Wort-Tripel, die Wortnutzungszähler und den Verlauf der Vorschlagsauswahl. Wörterbücher und Einstellungen bleiben unberührt.</string>

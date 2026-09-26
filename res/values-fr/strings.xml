@@ -994,6 +994,8 @@
     <string name="privacy_learned_none">Rien n\'a encore été appris.</string>
     <string name="privacy_learned_sources">Enregistrement en cours : %1$s</string>
     <string name="privacy_learned_sources_none">Rien n\'est enregistré actuellement.</string>
+    <string name="privacy_learned_source_swipe_corrections">Corrections de glissement</string>
+    <string name="privacy_learned_source_selections">Suggestions choisies</string>
     <string name="privacy_learned_manage">Sources d\'apprentissage</string>
     <string name="privacy_learned_forget">Oublier l\'appris</string>
     <string name="privacy_learned_forget_body">Supprime toutes les paires et tous les triplets de mots appris, les compteurs d\'usage des mots et l\'historique de sélection des suggestions. Les dictionnaires et les réglages ne sont pas touchés.</string>

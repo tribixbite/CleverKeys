@@ -984,6 +984,8 @@
     <string name="privacy_learned_none">Zatím nic naučeno.</string>
     <string name="privacy_learned_sources">Právě se zaznamenává: %1$s</string>
     <string name="privacy_learned_sources_none">Právě se nic nezaznamenává.</string>
+    <string name="privacy_learned_source_swipe_corrections">Opravy swipování</string>
+    <string name="privacy_learned_source_selections">Výběry návrhů</string>
     <string name="privacy_learned_manage">Zdroje učení</string>
     <string name="privacy_learned_forget">Zapomenout naučené</string>
     <string name="privacy_learned_forget_body">Smaže všechny naučené dvojice a trojice slov, počty použití slov i historii výběru návrhů. Slovníky a nastavení zůstanou nedotčeny.</string>

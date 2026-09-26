@@ -1024,6 +1024,8 @@
     <string name="privacy_learned_none">Non è ancora stato appreso nulla.</string>
     <string name="privacy_learned_sources">Registrazione in corso: %1$s</string>
     <string name="privacy_learned_sources_none">Al momento non viene registrato nulla.</string>
+    <string name="privacy_learned_source_swipe_corrections">Correzioni dello scorrimento</string>
+    <string name="privacy_learned_source_selections">Suggerimenti scelti</string>
     <string name="privacy_learned_manage">Fonti di apprendimento</string>
     <string name="privacy_learned_forget">Dimentica appreso</string>
     <string name="privacy_learned_forget_body">Elimina tutte le coppie e le terne di parole apprese, i conteggi d\'uso delle parole e la cronologia di selezione dei suggerimenti. Dizionari e impostazioni non vengono toccati.</string>

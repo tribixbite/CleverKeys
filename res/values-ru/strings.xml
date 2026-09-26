@@ -989,6 +989,8 @@
     <string name="privacy_learned_none">Пока ничего не выучено.</string>
     <string name="privacy_learned_sources">Сейчас записывается: %1$s</string>
     <string name="privacy_learned_sources_none">Сейчас ничего не записывается.</string>
+    <string name="privacy_learned_source_swipe_corrections">Исправления свайпа</string>
+    <string name="privacy_learned_source_selections">Выбор подсказок</string>
     <string name="privacy_learned_manage">Источники обучения</string>
     <string name="privacy_learned_forget">Забыть выученное</string>
     <string name="privacy_learned_forget_body">Удаляет все выученные пары и тройки слов, счётчики использования слов и историю выбора подсказок. Словари и настройки не затрагиваются.</string>
