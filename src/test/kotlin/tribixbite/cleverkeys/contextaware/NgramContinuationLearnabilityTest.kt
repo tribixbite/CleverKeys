@@ -140,4 +140,131 @@ class NgramContinuationLearnabilityTest {
         val kept = revived.getAllBigrams("en", "the").map { it.word2 }
         assertFalse("recency was lost across the restart: $kept", "old" in kept)
     }
+
+    // ── Language-wide cap vs recency (TODO from a36412d3, resolved 2026-09-26) ──────────
+    //
+    // The per-context grace slots protect a newcomer while its OWN context overflows, but
+    // the language-wide 10k cap used to prune by conditional probability — and a
+    // continuation of a BUSY context has the lowest probability in the store (2 / 1002
+    // here). So a pair typed twice, i.e. servable, was the first thing evicted when
+    // unrelated typing pushed the store over the cap, ahead of thousands of pairs nobody
+    // had typed for ~20k commits. Scenario, identical for both stores:
+    //   stale   900 quiet contexts x 10 continuations x 2 obs  = 9,000 entries (oldest)
+    //   busy    one context, established fills, heavily used    (fresh, high frequency)
+    //   git     a newcomer typed TWICE in the busy context      (lowest probability)
+    //   fresh   100 new contexts x 10 x 2                       -> crosses the cap, prunes
+
+    /** Stale filler: [contexts] quiet contexts, 10 continuations each, 2 observations. */
+    private fun BigramStore.staleQuietContexts(contexts: Int) {
+        for (c in 0 until contexts) for (w in 0 until 10) repeat(2) { recordBigram("en", "s$c", "w$w") }
+    }
+
+    private fun TrigramStore.staleQuietPrefixes(prefixes: Int) {
+        for (c in 0 until prefixes) for (w in 0 until 10) repeat(2) { recordTrigram("en", "s$c", "x", "w$w") }
+    }
+
+    private fun BigramStore.freshTraffic() {
+        for (c in 0 until 100) for (w in 0 until 10) repeat(2) { recordBigram("en", "f$c", "w$w") }
+    }
+
+    private fun TrigramStore.freshTraffic() {
+        for (c in 0 until 100) for (w in 0 until 10) repeat(2) { recordTrigram("en", "f$c", "x", "w$w") }
+    }
+
+    @Test
+    fun `at the bigram cap a newcomer typed twice in a busy context outlives stale pairs`() {
+        val store = bigrams()
+        store.staleQuietContexts(900)
+        store.saturate(count = 20, each = 50)
+        repeat(2) { store.recordBigram("en", "the", "git") }
+        store.freshTraffic()
+
+        assertTrue(store.getTotalBigramCount("en") <= 10_000)
+        assertTrue("the -> git (typed twice, recent) was pruned: ${store.served("the")}",
+            "git" in store.served("the"))
+        // The prune took the pairs nobody has typed for longest: the first stale contexts.
+        assertTrue("oldest stale pairs survived the prune", store.getAllBigrams("en", "s0").isEmpty())
+        for (i in 1..20) assertTrue("busy fill$i lost", "fill$i" in store.served("the"))
+    }
+
+    @Test
+    fun `at the trigram cap a newcomer typed twice in a busy prefix outlives stale trigrams`() {
+        val store = trigrams()
+        store.staleQuietPrefixes(900)
+        store.saturate(count = 10, each = 100)
+        repeat(2) { store.recordTrigram("en", "i", "want", "git") }
+        store.freshTraffic()
+
+        assertTrue(store.getTotalTrigramCount("en") <= 10_000)
+        assertTrue("i want -> git (typed twice, recent) was pruned: ${store.served("i", "want")}",
+            "git" in store.served("i", "want"))
+        assertTrue("oldest stale trigrams survived the prune", store.served("s0", "x").isEmpty())
+        for (i in 1..10) assertTrue("busy fill$i lost", "fill$i" in store.served("i", "want"))
+    }
+
+    @Test
+    fun `the language-wide recency clock survives a restart`() {
+        val storage = InMemoryLearnedStorage()
+        val live = BigramStore(storage, 60_000, 120_000, scheduler)
+        live.staleQuietContexts(900)
+        live.saturate(count = 20, each = 50)
+        repeat(2) { live.recordBigram("en", "the", "git") }
+        live.flush()
+
+        // Without persisted per-entry ticks every reloaded pair would look equally fresh and
+        // the prune would fall back to probability — evicting git first again.
+        val revived = BigramStore(storage, 60_000, 120_000, scheduler)
+        revived.freshTraffic()
+        assertTrue("recency was lost across the restart: ${revived.served("the")}",
+            "git" in revived.served("the"))
+        assertTrue(revived.getAllBigrams("en", "s0").isEmpty())
+    }
+
+    @Test
+    fun `a blob without the language clock loads every pair as fresh at the resumed clock`() {
+        // Pre-clock v2 blob (as written before 2026-09-26): no root "clock", no entry "tick".
+        // One entry of a newer blob carries a tick, so the clock resumes at max(tick) = 700.
+        val storage = InMemoryLearnedStorage()
+        storage.putString(
+            BigramStore.storageKey("en"),
+            """{"version":2,"entries":[
+              {"word1":"a","word2":"b","frequency":3,"probability":0.75,"seen":4},
+              {"word1":"a","word2":"c","frequency":1,"probability":0.25,"seen":4,"tick":700}
+            ],"totals":{"a":4}}"""
+        )
+        val store = BigramStore(storage, 60_000, 120_000, scheduler)
+        val byWord = store.getAllBigrams("en", "a").associateBy { it.word2 }
+        assertEquals(700L, byWord.getValue("b").globalSeen) // missing tick -> fresh
+        assertEquals(700L, byWord.getValue("c").globalSeen) // persisted tick kept
+
+        // The clock continues past the resumed value and survives a flush + restart.
+        store.recordBigram("en", "a", "d")
+        assertEquals(701L, store.getAllBigrams("en", "a").first { it.word2 == "d" }.globalSeen)
+        store.flush()
+        val revived = BigramStore(storage, 60_000, 120_000, scheduler)
+        revived.recordBigram("en", "x", "y")
+        assertEquals(702L, revived.getAllBigrams("en", "x").single().globalSeen)
+    }
+
+    @Test
+    fun `a trigram blob without the language clock loads fresh and the clock persists`() {
+        val storage = InMemoryLearnedStorage()
+        // v1 bare array: no totals, no recency of any kind.
+        storage.putString(
+            TrigramStore.storageKey("en"),
+            """[{"word1":"i","word2":"want","word3":"to","frequency":2,"probability":1.0}]"""
+        )
+        val store = TrigramStore(storage, 60_000, 120_000, scheduler)
+        assertEquals(0L, store.getPredictions("en", "i", "want", 10, 0f).single().globalSeen)
+
+        store.recordTrigram("en", "i", "want", "it")
+        store.recordTrigram("en", "i", "want", "it")
+        store.flush()
+        val revived = TrigramStore(storage, 60_000, 120_000, scheduler)
+        val it = revived.getPredictions("en", "i", "want", 10, 0f).first { e -> e.word3 == "it" }
+        assertEquals(2L, it.globalSeen)
+        revived.recordTrigram("en", "a", "b", "c")
+        revived.recordTrigram("en", "a", "b", "c")
+        assertEquals(4L, revived.getPredictions("en", "a", "b", 10, 0f).single().globalSeen)
+    }
 }

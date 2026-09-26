@@ -67,6 +67,15 @@ class TrigramStore internal constructor(
         private const val KEY_LAST_SEEN = "seen"
 
         /**
+         * Language-wide recency — mirror of [BigramStore]'s: the per-language commit clock at
+         * the blob root and each entry's tick of last observation. Additive fields; blobs
+         * without them load as "fresh" ([restoreClock]).
+         */
+        private const val KEY_CLOCK = "clock"
+        private const val KEY_GLOBAL_SEEN = "tick"
+        private const val UNKNOWN_GLOBAL_SEEN = -1L
+
+        /**
          * Persisted-blob format version (ARC-080) — the mirror of
          * [BigramStore]'s, with the totals keyed by the composite `"word1 word2"`
          * prefix instead of a single context word.
@@ -118,6 +127,13 @@ class TrigramStore internal constructor(
 
         // "word1 word2" → total observed continuations (denominator for probability)
         val prefixFrequencies: ConcurrentHashMap<String, Int> = ConcurrentHashMap()
+
+        /**
+         * Language-wide commit clock: +1 per [recordTrigram] in this language, persisted with
+         * the blob; stamped as [TrigramEntry.globalSeen] and aged by the language-wide cap
+         * ([pruneIfNeeded]). Guarded by the store lock (`synchronized(this)`).
+         */
+        var clock: Long = 0L
     }
 
     private val languages: ConcurrentHashMap<String, LanguageTrigrams> = ConcurrentHashMap()
@@ -191,6 +207,8 @@ class TrigramStore internal constructor(
         val key = prefixKey(w1, w2)
 
         synchronized(this) {
+            // Language-wide position of this observation (cross-prefix recency, global cap).
+            val tick = ++data.clock
             val prefixFreq = (data.prefixFrequencies[key] ?: 0) + 1
             data.prefixFrequencies[key] = prefixFreq
 
@@ -199,13 +217,14 @@ class TrigramStore internal constructor(
             // lastSeen = prefixFreq: this observation's position in the prefix's history.
             val touched = if (existing != null) {
                 entries.remove(existing)
-                existing.copy(frequency = existing.frequency + 1, lastSeen = prefixFreq)
+                existing.copy(frequency = existing.frequency + 1, lastSeen = prefixFreq, globalSeen = tick)
             } else {
                 TrigramEntry(
                     word1 = w1, word2 = w2, word3 = w3,
                     frequency = 1,
                     probability = 0f, // Recomputed below with every sibling
-                    lastSeen = prefixFreq
+                    lastSeen = prefixFreq,
+                    globalSeen = tick
                 )
             }
             entries.add(touched)
@@ -537,26 +556,28 @@ class TrigramStore internal constructor(
     fun requestFlush() = persister.requestFlush()
 
     /**
-     * Language-wide cap — mirror of [BigramStore]'s: batch-prune to
-     * [PRUNE_TARGET_FRACTION] of [MAX_TOTAL_TRIGRAMS], sub-floor entries first, then the
-     * least probable, never the trigram recorded in the current call ([keepPrefix] →
-     * [keepWord3]). Caller holds the lock. Shares BigramStore's documented trade-off: at the
-     * cap, sub-floor newcomers are evicted by probability without per-context grace slots
-     * (see [BigramStore] `pruneIfNeeded` and its TODO).
+     * Language-wide cap — mirror of [BigramStore]'s: batch-prune to [PRUNE_TARGET_FRACTION]
+     * of [MAX_TOTAL_TRIGRAMS], evicting the lowest frequency-discounted-by-age score on the
+     * language-wide clock ([ContinuationBudget.globalVictims]), never the trigram recorded in
+     * the current call ([keepPrefix] → [keepWord3]). Caller holds the lock. Replaced the
+     * probability ordering on 2026-09-26, for the reason in BigramStore's `pruneIfNeeded`
+     * (a busy prefix's continuations were evicted first, whatever their recency).
      */
     private fun pruneIfNeeded(data: LanguageTrigrams, keepPrefix: String? = null, keepWord3: String? = null) {
         val totalCount = data.trigramMap.values.sumOf { it.size }
         if (totalCount <= MAX_TOTAL_TRIGRAMS) return
 
         val target = (MAX_TOTAL_TRIGRAMS * PRUNE_TARGET_FRACTION).toInt()
-        val victims = data.trigramMap.values.asSequence()
-            .flatten()
-            .filterNot { it.word3 == keepWord3 && prefixKey(it.word1, it.word2) == keepPrefix }
-            .sortedWith(
-                compareBy<TrigramEntry>({ it.frequency >= DEFAULT_MIN_FREQUENCY }, { it.probability }, { it.lastSeen })
-            )
-            .take(totalCount - target)
-            .groupBy { prefixKey(it.word1, it.word2) }
+        val victims = ContinuationBudget.globalVictims(
+            entries = data.trigramMap.values.asSequence().flatten(),
+            count = totalCount - target,
+            clock = data.clock,
+            halfLifeCommits = ContinuationBudget.DEFAULT_GLOBAL_HALF_LIFE_COMMITS,
+            isKept = { it.word3 == keepWord3 && prefixKey(it.word1, it.word2) == keepPrefix },
+            frequencyOf = { it.frequency },
+            globalSeenOf = { it.globalSeen },
+            tieBreak = { it.probability }
+        ).groupBy { prefixKey(it.word1, it.word2) }
 
         for ((key, doomed) in victims) {
             val entries = data.trigramMap[key] ?: continue
@@ -608,6 +629,7 @@ class TrigramStore internal constructor(
                     put("frequency", entry.frequency)
                     put("probability", entry.probability.toDouble())
                     put(KEY_LAST_SEEN, entry.lastSeen) // W3 recency (additive field)
+                    put(KEY_GLOBAL_SEEN, entry.globalSeen) // language-wide recency (additive)
                 }
             )
         }
@@ -625,6 +647,7 @@ class TrigramStore internal constructor(
             put(KEY_VERSION, FORMAT_VERSION)
             put(KEY_ENTRIES, entries)
             put(KEY_TOTALS, totals)
+            put(KEY_CLOCK, data.clock)
         }.toString()
     }
 
@@ -640,22 +663,26 @@ class TrigramStore internal constructor(
         try {
             val entriesArray: JSONArray
             val persistedTotals: JSONObject?
+            val persistedClock: Long
             when (val root = JSONTokener(jsonString).nextValue()) {
                 is JSONArray -> {
                     entriesArray = root
                     persistedTotals = null
+                    persistedClock = 0L
                 }
                 is JSONObject -> {
                     // Lenient rather than an exact version match, so a blob written by
                     // a future version still yields its entries.
                     entriesArray = root.optJSONArray(KEY_ENTRIES) ?: JSONArray()
                     persistedTotals = root.optJSONObject(KEY_TOTALS)
+                    persistedClock = root.optLong(KEY_CLOCK, 0L)
                 }
                 else -> throw JSONException("unrecognized trigram blob root: ${root?.javaClass}")
             }
 
             data.trigramMap.clear()
             data.prefixFrequencies.clear()
+            data.clock = 0L
 
             for (i in 0 until entriesArray.length()) {
                 val obj = entriesArray.getJSONObject(i)
@@ -665,7 +692,8 @@ class TrigramStore internal constructor(
                     word3 = obj.getString("word3"),
                     frequency = obj.getInt("frequency"),
                     probability = obj.getDouble("probability").toFloat(),
-                    lastSeen = obj.optInt(KEY_LAST_SEEN, UNKNOWN_LAST_SEEN)
+                    lastSeen = obj.optInt(KEY_LAST_SEEN, UNKNOWN_LAST_SEEN),
+                    globalSeen = obj.optLong(KEY_GLOBAL_SEEN, UNKNOWN_GLOBAL_SEEN)
                 )
                 val key = prefixKey(entry.word1, entry.word2)
                 data.trigramMap.getOrPut(key) { mutableListOf() }.add(entry)
@@ -682,11 +710,28 @@ class TrigramStore internal constructor(
                 val total = data.prefixFrequencies[key] ?: 0
                 list.replaceAll { if (it.lastSeen == UNKNOWN_LAST_SEEN) it.copy(lastSeen = total) else it }
             }
+            restoreClock(data, persistedClock)
 
             data.trigramMap.values.forEach { it.sortByDescending { e -> e.probability } }
         } catch (e: Exception) {
             data.trigramMap.clear()
             data.prefixFrequencies.clear()
+            data.clock = 0L
+        }
+    }
+
+    /**
+     * Restore the language-wide clock (max of the persisted value and the newest entry tick,
+     * so it stays monotonic) and stamp tick-less entries — every blob written before the clock
+     * existed — as FRESH at that clock. Mirror of [BigramStore]'s `restoreClock`, which
+     * documents why "fresh" is the right default. Loading-only; no lock needed.
+     */
+    private fun restoreClock(data: LanguageTrigrams, persistedClock: Long) {
+        val newestTick = data.trigramMap.values.asSequence().flatten().maxOfOrNull { it.globalSeen } ?: 0L
+        data.clock = maxOf(persistedClock, newestTick, 0L)
+        val now = data.clock
+        for (list in data.trigramMap.values) {
+            list.replaceAll { if (it.globalSeen == UNKNOWN_GLOBAL_SEEN) it.copy(globalSeen = now) else it }
         }
     }
 
@@ -773,13 +818,18 @@ class TrigramStore internal constructor(
 
                     val entries = data.trigramMap.getOrPut(key) { mutableListOf() }
                     val existing = entries.find { it.word3 == w3 }
-                    // Imported entries count as seen NOW (backup payload has no recency).
+                    // Imported entries count as seen NOW (backup payload has no recency):
+                    // the merged prefix total, and the language clock's current tick.
                     val seen = data.prefixFrequencies[key] ?: 0
                     if (existing != null) {
                         entries.remove(existing)
-                        entries.add(existing.copy(frequency = existing.frequency + frequency, lastSeen = seen))
+                        entries.add(
+                            existing.copy(
+                                frequency = existing.frequency + frequency, lastSeen = seen, globalSeen = data.clock
+                            )
+                        )
                     } else {
-                        entries.add(TrigramEntry(w1, w2, w3, frequency, 0f, lastSeen = seen))
+                        entries.add(TrigramEntry(w1, w2, w3, frequency, 0f, lastSeen = seen, globalSeen = data.clock))
                     }
                 }
 

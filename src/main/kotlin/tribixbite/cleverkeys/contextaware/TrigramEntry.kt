@@ -17,6 +17,9 @@ package tribixbite.cleverkeys.contextaware
  * @property lastSeen retention recency: the context's observation total at the moment this
  *   entry was last observed (W3, learning-system audit 2026-09-26 — see [ContinuationBudget]).
  *   Persisted in the store's own blob only (not the backup export format).
+ * @property globalSeen the LANGUAGE-WIDE commit tick (the store's clock) at which this entry was
+ *   last observed — the recency the language-wide cap prunes by, comparable across contexts
+ *   (see [ContinuationBudget.globalVictims]). Store blob only, like [lastSeen].
  */
 data class TrigramEntry(
     val word1: String,
@@ -24,7 +27,8 @@ data class TrigramEntry(
     val word3: String,
     val frequency: Int,
     val probability: Float,
-    val lastSeen: Int = 0
+    val lastSeen: Int = 0,
+    val globalSeen: Long = 0L
 ) {
     companion object {
         /**

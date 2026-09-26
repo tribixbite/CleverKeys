@@ -261,9 +261,11 @@ coverage is the limit; alternates-only mode inert on CTC
 **In flight:** explicit "Prefer 'X' when swiping?" offer after 2 swipe corrections (adds to the
 personal dictionary) + relabel of swipe-ML rows on correction, so on-device exports become a real
 per-user replay pool — the prerequisite for ever re-evaluating the prior.
-**Open:** contraction pairing data for natl/whys (bin-only, no frequency); global n-gram cap
-prune ignores recency (TODO in `BigramStore.pruneIfNeeded`); a broader static LM for context needs
-a licensed text corpus + sentence-context traces.
+**Closed 2026-09-26:** whys/why's + natl/nat'l measured into `contraction_pairings.json`
+(bin-only sweep pinned in `BundledContractionDataTest`; `etoo -> eto'o` left as a REPLACE TODO);
+the global n-gram cap now prunes by frequency discounted by age on a persisted language-wide commit
+clock (`ContinuationBudget.globalVictims`). **Open:** a broader static LM for context needs a
+licensed text corpus + sentence-context traces.
 
 ### 0. Full-backlog campaign continuation (2026-09-01)
 

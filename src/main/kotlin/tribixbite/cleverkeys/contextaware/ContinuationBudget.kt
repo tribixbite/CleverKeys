@@ -44,6 +44,21 @@ import kotlin.math.pow
  * was frequent once but is no longer used eventually yields its slot to a fresh one, while a
  * frequent AND recent continuation keeps it. (Serving order is unaffected — it stays by
  * conditional probability; aging only decides who is evicted.)
+ *
+ * ## The language-wide cap: the same score on a global clock ([globalVictims])
+ *
+ * Each store also caps a LANGUAGE at a fixed number of entries. Per-context `lastSeen` cannot
+ * rank that prune: it counts observations of the entry's OWN context, so staleness is not
+ * comparable across contexts (a dead context's lone entry looks perpetually fresh). Each store
+ * therefore also keeps a language-wide commit clock — incremented on every recorded n-gram,
+ * persisted with the store — and stamps each entry with the tick at which it was last
+ * observed (`globalSeen`). The global prune then evicts by [agedScore] with staleness
+ * measured on that clock and a half-life of [DEFAULT_GLOBAL_HALF_LIFE_COMMITS] commits: the
+ * same frequency-discounted-by-age rule as the per-context BULK path (no newcomer tiering —
+ * there is no per-language grace reservation), so a recent pair beats an equally frequent
+ * stale one wherever it lives. Before this (TODO from a36412d3) the global prune ordered by
+ * conditional probability, and a busy context's continuations — the lowest probabilities in
+ * the store — were evicted first, undoing the per-context grace slots one level up.
  */
 internal object ContinuationBudget {
 
@@ -55,6 +70,16 @@ internal object ContinuationBudget {
      * further uses of the context.
      */
     const val DEFAULT_HALF_LIFE_OBSERVATIONS = 100
+
+    /**
+     * Aging half-life for the LANGUAGE-WIDE prune, in commits of that language (ticks of the
+     * store's clock). Scaled to the store rather than to one context: 10,000 equals each
+     * store's per-language entry cap, i.e. a pair that has not been typed for as many commits
+     * as the store can hold entries counts half as much as a fresh one of the same frequency.
+     * Long enough that a regular pair used every few days never loses to a one-off, short
+     * enough that a pair typed twice this week outranks one typed twice months ago.
+     */
+    const val DEFAULT_GLOBAL_HALF_LIFE_COMMITS = 10_000
 
     /**
      * @property establishedCap entries guaranteed to survive among established ones
@@ -87,7 +112,47 @@ internal object ContinuationBudget {
      * treated as fresh.
      */
     fun agedScore(frequency: Int, staleness: Int, halfLifeObservations: Int): Double =
-        frequency * 0.5.pow(staleness.coerceAtLeast(0).toDouble() / halfLifeObservations)
+        agedScore(frequency, staleness.toLong(), halfLifeObservations)
+
+    /** [agedScore] over a [Long] staleness — the language-wide clock's unit. */
+    fun agedScore(frequency: Int, staleness: Long, halfLife: Int): Double =
+        frequency * 0.5.pow(staleness.coerceAtLeast(0L).toDouble() / halfLife)
+
+    /**
+     * Pick the [count] entries a language-wide prune should evict (see the class doc): lowest
+     * [agedScore] first, staleness measured as `clock - globalSeenOf(entry)` in commits with
+     * half-life [halfLifeCommits]. Ties go to the entry seen longest ago, then to the lower
+     * [tieBreak] (the stores pass conditional probability, the previous ordering).
+     *
+     * @param entries every entry of the language
+     * @param isKept entries that must never be evicted (the n-gram recorded in this call)
+     * @param clock the language's current tick
+     * @return at most [count] victims, weakest first
+     */
+    fun <T> globalVictims(
+        entries: Sequence<T>,
+        count: Int,
+        clock: Long,
+        halfLifeCommits: Int,
+        isKept: (T) -> Boolean,
+        frequencyOf: (T) -> Int,
+        globalSeenOf: (T) -> Long,
+        tieBreak: (T) -> Float
+    ): List<T> {
+        require(halfLifeCommits >= 1) { "halfLifeCommits must be >= 1" }
+        if (count <= 0) return emptyList()
+        // Score once per entry rather than inside the comparator.
+        return entries
+            .filterNot(isKept)
+            .map {
+                val seen = globalSeenOf(it)
+                Scored(it, agedScore(frequencyOf(it), clock - seen, halfLifeCommits), seen, tieBreak(it))
+            }
+            .sortedWith(compareBy<Scored<T>>({ it.score }, { it.seen }, { it.tie }))
+            .take(count)
+            .map { it.entry }
+            .toList()
+    }
 
     /**
      * Shrink [entries] in place to [Limits.maxEntries] using the policy in the class doc.
@@ -114,6 +179,9 @@ internal object ContinuationBudget {
         }
         return evicted
     }
+
+    /** An entry with its precomputed global eviction key ([globalVictims]). */
+    private class Scored<T>(val entry: T, val score: Double, val seen: Long, val tie: Float)
 
     private fun <T> pickVictim(
         entries: List<T>,

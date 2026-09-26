@@ -77,4 +77,32 @@ class ContinuationBudgetTest {
         assertEquals(4.0, ContinuationBudget.agedScore(8, 10, 10), 1e-9)
         assertEquals(8.0, ContinuationBudget.agedScore(8, -5, 10), 1e-9)
     }
+
+    // ── Language-wide prune ([ContinuationBudget.globalVictims]) ─────────────────────────
+
+    private data class G(val name: String, val frequency: Int, val tick: Long, val p: Float = 0.5f)
+
+    private fun victims(entries: List<G>, count: Int, clock: Long, kept: String? = null) =
+        ContinuationBudget.globalVictims(
+            entries.asSequence(), count, clock, halfLifeCommits = 100,
+            isKept = { it.name == kept }, frequencyOf = { it.frequency },
+            globalSeenOf = { it.tick }, tieBreak = { it.p }
+        ).map { it.name }
+
+    @Test
+    fun `global victims are the lowest frequency discounted by global age`() {
+        // stale: 4 * 0.5^(300/100) = 0.5; newcomer: 1 * 0.5^0 = 1.0; busy: 9 * 0.5^0.1 ≈ 8.4.
+        val entries = listOf(G("busy", 9, 990), G("newcomer", 1, 1000), G("stale", 4, 700))
+        assertEquals(listOf("stale"), victims(entries, 1, clock = 1000))
+        assertEquals(listOf("stale", "newcomer"), victims(entries, 2, clock = 1000))
+    }
+
+    @Test
+    fun `global victims never include the kept entry and tie-break on age then probability`() {
+        val entries = listOf(G("a", 2, 50, 0.9f), G("b", 2, 50, 0.1f), G("older", 2, 40, 0.9f), G("keep", 1, 10))
+        // "keep" is the weakest by far but is sheltered. Scores: older 2*0.5^0.6 ≈ 1.32 < a = b = 2*0.5^0.5 ≈ 1.41, so older goes first; a/b
+        // tie on score and tick, so the lower probability (b) goes next.
+        assertEquals(listOf("older", "b"), victims(entries, 2, clock = 100, kept = "keep"))
+        assertTrue(victims(entries, 0, clock = 100).isEmpty())
+    }
 }

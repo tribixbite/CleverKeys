@@ -112,6 +112,14 @@ class BigramStore internal constructor(
         private const val KEY_TOTALS = "totals"
         private const val KEY_LAST_SEEN = "seen"
 
+        /**
+         * Language-wide recency (TODO from a36412d3, resolved 2026-09-26): the per-language
+         * commit clock at the blob root, and each entry's tick of last observation. Additive
+         * fields — older builds ignore them; blobs without them load as "fresh" ([loadInto]).
+         */
+        private const val KEY_CLOCK = "clock"
+        private const val KEY_GLOBAL_SEEN = "tick"
+
         @Volatile
         private var instance: BigramStore? = null
 
@@ -138,6 +146,9 @@ class BigramStore internal constructor(
 
         /** Sentinel for an entry loaded without persisted recency. */
         private const val UNKNOWN_LAST_SEEN = -1
+
+        /** Sentinel for an entry loaded without a persisted language-wide tick. */
+        private const val UNKNOWN_GLOBAL_SEEN = -1L
     }
 
     /** Per-language in-RAM bigram tables. */
@@ -147,6 +158,13 @@ class BigramStore internal constructor(
 
         // Word1 frequency tracking for probability calculation
         val word1Frequencies: ConcurrentHashMap<String, Int> = ConcurrentHashMap()
+
+        /**
+         * Language-wide commit clock: +1 per [recordBigram] in this language, persisted with
+         * the blob. Entries stamp it as [BigramEntry.globalSeen]; the language-wide cap ages
+         * them by it ([pruneIfNeeded]). Guarded by the store lock (`synchronized(this)`).
+         */
+        var clock: Long = 0L
     }
 
     private val languages: ConcurrentHashMap<String, LanguageBigrams> = ConcurrentHashMap()
@@ -254,6 +272,10 @@ class BigramStore internal constructor(
         val data = forLanguage(lang)
 
         synchronized(this) {
+            // Advance the language-wide clock: this observation's position in the language's
+            // whole history (cross-context recency for the global cap).
+            val tick = ++data.clock
+
             // Increment word1 total frequency (non-null Int values → `?: 0` == getOrDefault).
             val word1Freq = (data.word1Frequencies[normalizedWord1] ?: 0) + 1
             data.word1Frequencies[normalizedWord1] = word1Freq
@@ -266,14 +288,17 @@ class BigramStore internal constructor(
             // history — the recency ContinuationBudget ages eviction candidates by.
             val touched = if (existingEntry != null) {
                 entries.remove(existingEntry)
-                existingEntry.copy(frequency = existingEntry.frequency + 1, lastSeen = word1Freq)
+                existingEntry.copy(
+                    frequency = existingEntry.frequency + 1, lastSeen = word1Freq, globalSeen = tick
+                )
             } else {
                 BigramEntry(
                     word1 = normalizedWord1,
                     word2 = normalizedWord2,
                     frequency = 1,
                     probability = 0f, // Recomputed below with every sibling
-                    lastSeen = word1Freq
+                    lastSeen = word1Freq,
+                    globalSeen = tick
                 )
             }
             entries.add(touched)
@@ -662,42 +687,38 @@ class BigramStore internal constructor(
 
     /**
      * Language-wide cap. When exceeded, prune down to [PRUNE_TARGET_FRACTION] of
-     * [MAX_TOTAL_BIGRAMS] (batch — see the constant), evicting sub-floor entries first
-     * (they cannot be served yet), then the least probable. The pair recorded in the
-     * current call ([keepWord1] → [keepWord2]) is never evicted. As before, evicted
-     * observations still count in their context's total (ARC-080 denominators).
-     * Caller holds the lock.
+     * [MAX_TOTAL_BIGRAMS] (batch — see the constant), evicting the entries with the lowest
+     * frequency-discounted-by-age score on the LANGUAGE-WIDE clock
+     * ([ContinuationBudget.globalVictims]: staleness = [LanguageBigrams.clock] − the entry's
+     * [BigramEntry.globalSeen], half-life [ContinuationBudget.DEFAULT_GLOBAL_HALF_LIFE_COMMITS]).
+     * The pair recorded in the current call ([keepWord1] → [keepWord2]) is never evicted. As
+     * before, evicted observations still count in their context's total (ARC-080
+     * denominators). Caller holds the lock.
      *
-     * **Known trade-off vs. [ContinuationBudget] (review of 6026217d).** This prune does NOT
-     * give newcomers the per-context grace slots: at the cap it fires every ~1,000 newly
-     * created pairs (the 10% batch), removes sub-floor entries first, and orders them by
-     * conditional probability — so a freq-1 continuation of a BUSY context (the lowest
-     * probabilities in the store; exactly W3's "the → git" case) is among the first to go.
-     * A newcomer therefore survives the cap only if it is typed a second time within roughly
-     * the next thousand new pairs, whereas below the cap it is evicted only when its own
-     * context is full and fresher newcomers there overflow the grace slots. Applying the budget's recency rule
-     * here is not cheap: `lastSeen` is relative to its OWN context's observation total, so
-     * staleness is not comparable across contexts (a dead context's lone entry would look
-     * perpetually fresh). Doing it properly needs a language-wide observation clock
-     * persisted per entry. Accepted for now because the cap is reached only after ~10k
-     * distinct pairs, and every established (servable) entry is still ranked above every
-     * newcomer, as before.
-     * TODO(learning): language-wide recency clock per entry, then evict sub-floor entries by
-     *  global staleness instead of probability (same for [TrigramStore.pruneIfNeeded]).
+     * **Why not probability (the rule until 2026-09-26, trade-off recorded in a36412d3).**
+     * Ordering the prune by conditional probability evicted a BUSY context's continuations
+     * first — they have the lowest probabilities in the store — so a pair typed twice in
+     * "the" (servable, and recent) went before thousands of pairs idle for ~20k commits,
+     * undoing the per-context grace slots one level up. The per-context `lastSeen` could not
+     * fix it (it is not comparable across contexts); the language-wide clock can. Per-context
+     * budget semantics are unchanged: [ContinuationBudget.enforce] still runs first, per
+     * context, on its own clock.
      */
     private fun pruneIfNeeded(data: LanguageBigrams, keepWord1: String? = null, keepWord2: String? = null) {
         val totalCount = data.bigramMap.values.sumOf { it.size }
         if (totalCount <= MAX_TOTAL_BIGRAMS) return
 
         val target = (MAX_TOTAL_BIGRAMS * PRUNE_TARGET_FRACTION).toInt()
-        val victims = data.bigramMap.values.asSequence()
-            .flatten()
-            .filterNot { it.word1 == keepWord1 && it.word2 == keepWord2 }
-            .sortedWith(
-                compareBy<BigramEntry>({ it.frequency >= DEFAULT_MIN_FREQUENCY }, { it.probability }, { it.lastSeen })
-            )
-            .take(totalCount - target)
-            .groupBy { it.word1 }
+        val victims = ContinuationBudget.globalVictims(
+            entries = data.bigramMap.values.asSequence().flatten(),
+            count = totalCount - target,
+            clock = data.clock,
+            halfLifeCommits = ContinuationBudget.DEFAULT_GLOBAL_HALF_LIFE_COMMITS,
+            isKept = { it.word1 == keepWord1 && it.word2 == keepWord2 },
+            frequencyOf = { it.frequency },
+            globalSeenOf = { it.globalSeen },
+            tieBreak = { it.probability }
+        ).groupBy { it.word1 }
 
         for ((word1, doomed) in victims) {
             val entries = data.bigramMap[word1] ?: continue
@@ -761,6 +782,8 @@ class BigramStore internal constructor(
                 // W3 retention recency. Additive field: older builds ignore it, and blobs
                 // written before it existed load with "fresh" recency (see loadInto).
                 put(KEY_LAST_SEEN, entry.lastSeen)
+                // Language-wide recency (additive, same compatibility story as "seen").
+                put(KEY_GLOBAL_SEEN, entry.globalSeen)
             }
             entries.put(obj)
         }
@@ -779,6 +802,7 @@ class BigramStore internal constructor(
             put(KEY_VERSION, FORMAT_VERSION)
             put(KEY_ENTRIES, entries)
             put(KEY_TOTALS, totals)
+            put(KEY_CLOCK, data.clock)
         }.toString()
     }
 
@@ -797,22 +821,26 @@ class BigramStore internal constructor(
         try {
             val entriesArray: JSONArray
             val persistedTotals: JSONObject?
+            val persistedClock: Long
             when (val root = JSONTokener(jsonString).nextValue()) {
                 is JSONArray -> {
                     entriesArray = root
                     persistedTotals = null
+                    persistedClock = 0L
                 }
                 is JSONObject -> {
                     // Read leniently rather than on an exact version match so a blob
                     // written by a future version still yields its entries.
                     entriesArray = root.optJSONArray(KEY_ENTRIES) ?: JSONArray()
                     persistedTotals = root.optJSONObject(KEY_TOTALS)
+                    persistedClock = root.optLong(KEY_CLOCK, 0L)
                 }
                 else -> throw JSONException("unrecognized bigram blob root: ${root?.javaClass}")
             }
 
             data.bigramMap.clear()
             data.word1Frequencies.clear()
+            data.clock = 0L
 
             for (i in 0 until entriesArray.length()) {
                 val obj = entriesArray.getJSONObject(i)
@@ -822,7 +850,9 @@ class BigramStore internal constructor(
                     frequency = obj.getInt("frequency"),
                     probability = obj.getDouble("probability").toFloat(),
                     // -1 = no recency recorded (pre-W3 blob); resolved to "fresh" below.
-                    lastSeen = obj.optInt(KEY_LAST_SEEN, UNKNOWN_LAST_SEEN)
+                    lastSeen = obj.optInt(KEY_LAST_SEEN, UNKNOWN_LAST_SEEN),
+                    // -1 = no language-wide tick (pre-clock blob); resolved to "fresh" below.
+                    globalSeen = obj.optLong(KEY_GLOBAL_SEEN, UNKNOWN_GLOBAL_SEEN)
                 )
 
                 data.bigramMap.getOrPut(entry.word1) { mutableListOf() }.add(entry)
@@ -843,6 +873,7 @@ class BigramStore internal constructor(
                 val total = data.word1Frequencies[word1] ?: 0
                 list.replaceAll { if (it.lastSeen == UNKNOWN_LAST_SEEN) it.copy(lastSeen = total) else it }
             }
+            restoreClock(data, persistedClock)
 
             // Sort all lists by probability
             data.bigramMap.values.forEach { list ->
@@ -852,6 +883,7 @@ class BigramStore internal constructor(
             // Invalid JSON, start fresh
             data.bigramMap.clear()
             data.word1Frequencies.clear()
+            data.clock = 0L
         }
     }
 
@@ -883,6 +915,25 @@ class BigramStore internal constructor(
             }
             entries.clear()
             entries.addAll(renormalized)
+        }
+    }
+
+    /**
+     * Restore the language-wide clock and resolve entries without a tick (ARC-080-style
+     * compatibility, 2026-09-26). The clock resumes at the larger of the persisted value and
+     * the newest entry tick, so it stays monotonic even if the root field was lost. An entry
+     * without a tick (every blob written before the clock existed) is stamped with that
+     * resumed clock, i.e. treated as FRESH — the same rule [loadInto] applies to a missing
+     * `lastSeen`: with no evidence of age, inventing an order would evict arbitrary pairs at
+     * the first post-upgrade prune, whereas "all fresh" leaves that prune ordered by
+     * frequency (then probability) until real ticks accumulate. Loading-only; no lock needed.
+     */
+    private fun restoreClock(data: LanguageBigrams, persistedClock: Long) {
+        val newestTick = data.bigramMap.values.asSequence().flatten().maxOfOrNull { it.globalSeen } ?: 0L
+        data.clock = maxOf(persistedClock, newestTick, 0L)
+        val now = data.clock
+        for (list in data.bigramMap.values) {
+            list.replaceAll { if (it.globalSeen == UNKNOWN_GLOBAL_SEEN) it.copy(globalSeen = now) else it }
         }
     }
 
@@ -927,14 +978,18 @@ class BigramStore internal constructor(
 
                     val entries = data.bigramMap.getOrPut(word1) { mutableListOf() }
                     val existing = entries.find { it.word2 == word2 }
-                    // Imported entries count as seen NOW (the merged context total) — the
-                    // backup payload carries no recency.
+                    // Imported entries count as seen NOW (the merged context total, and the
+                    // language clock's current tick) — the backup payload carries no recency.
                     val seen = data.word1Frequencies[word1] ?: 0
                     if (existing != null) {
                         entries.remove(existing)
-                        entries.add(existing.copy(frequency = existing.frequency + frequency, lastSeen = seen))
+                        entries.add(
+                            existing.copy(
+                                frequency = existing.frequency + frequency, lastSeen = seen, globalSeen = data.clock
+                            )
+                        )
                     } else {
-                        entries.add(BigramEntry(word1, word2, frequency, 0f, lastSeen = seen))
+                        entries.add(BigramEntry(word1, word2, frequency, 0f, lastSeen = seen, globalSeen = data.clock))
                     }
                 }
 
