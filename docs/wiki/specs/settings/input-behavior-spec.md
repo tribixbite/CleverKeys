@@ -267,8 +267,8 @@ controls and the Learning & Data manager (`LearningDataSection.kt`):
 
 | Setting | Key | Default | Values |
 |---------|-----|---------|--------|
-| **Context-Aware Predictions** | `context_aware_predictions_enabled` | true | bool — prerequisite for next-word |
-| **Next-Word Prediction** | `next_word_prediction_enabled` | false | bool — disabled (not hidden) while context-aware is off |
+| **Context-Aware Predictions** | `context_aware_predictions_enabled` | true | bool — learns the phrase model; prerequisite for next-word's LEARNED tier only |
+| **Next-Word Prediction** | `next_word_prediction_enabled` | true (since 2026-09-26; explicit stored false kept) | bool — always enabled in Settings; the shipped static tier works with learning / context-aware off and in incognito fields |
 | **Context Source** | `context_source` | `both` | `both` / `learned_only` / `static_only` |
 | **Personalized Learning** | `personalized_learning_enabled` | true | bool |
 | **Personalization Strength** | `personalization_weight` | 1.0 | 0.0-2.0 |
@@ -277,12 +277,15 @@ controls and the Learning & Data manager (`LearningDataSection.kt`):
 | **Frequency Scale** | `prediction_frequency_scale` | 100.0 | 100-5000 |
 | **Max Learned Words** | `personalization_max_words` | 5000 | 1000-20000 (500 steps; least-value eviction) |
 
-The master learning gate `on_device_learning_enabled` (default true) lives in the
-Privacy & Data section and overrides all of the above at the write AND read layers.
+The master learning gate `on_device_learning_enabled` (default false on fresh v2.0 installs;
+upgrades seeded true) lives in the Privacy & Data section and overrides all of the above at
+the write AND read layers — except the next-word STATIC tier (shipped model, nothing
+personal), which is deliberately outside every learning gate. See the
+[Next-Word Prediction spec](../typing/next-word-prediction-spec.md) for the two-tier contract.
 
 ## Related Specifications
 
 - [Gesture System](../../../specs/gesture-system.md) - Gesture recognition
 - [Settings System](../../../specs/settings-system.md) - Preferences
 - [Autocorrect](../typing/autocorrect-spec.md) - Text correction
-- [Next-Word Prediction](../typing/next-word-prediction-spec.md) - Learned-phrase suggestions
+- [Next-Word Prediction](../typing/next-word-prediction-spec.md) - Built-in and learned next-word suggestions

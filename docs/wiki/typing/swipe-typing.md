@@ -169,6 +169,24 @@ This behavior is controlled by the **Backspace Undo Swipe** toggle in Settings >
 
 Check the prediction bar — alternative words are shown left-to-right by confidence. Tap any alternative to replace the auto-inserted word.
 
+### Prefer a Word When Swiping
+
+If the keyboard keeps reading one of your swipes as the wrong word — you swipe "git" and
+get "got" — correct it the usual way (tap the intended word in the bar, or backspace the
+swiped word and type or swipe the one you meant). After you have made the **same
+correction twice**, the bar asks **"Prefer “git” when swiping?"** with a **Don't ask**
+option next to it:
+
+- **Accept** adds the word to your personal dictionary, which makes the swipe decoder favour
+  it from then on ("Swiping now prefers “git”"). Tap that confirmation twice to undo it.
+- **Don't ask** remembers your answer for that word.
+
+Only plausible corrections count (the chosen word must resemble the swiped one, so changing
+your mind about what to write is not recorded). The counts are part of on-device learning:
+they are kept only while **Learn From My Typing** is on, never in private/incognito or
+password fields, and are erased by Privacy & Data > Forget Learned. If the bar is busy when
+the second correction happens, the offer waits for the next idle moment.
+
 ## When Swipe Typing Doesn't Work
 
 Swipe typing may not activate when:

@@ -31,7 +31,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 |------|-------------|
 | [Swipe Typing](./typing/swipe-typing.md) | Swipe prediction engines (CTC, geometric) and how to use them |
 | [Autocorrect & Predictions](./typing/autocorrect.md) | Smart text correction settings |
-| [Next-Word Prediction](./typing/next-word-prediction.md) | Learned-phrase suggestions before you type a letter (opt-in) |
+| [Next-Word Prediction](./typing/next-word-prediction.md) | Next-word suggestions before you type a letter (built-in model, plus your phrases with learning on) |
 | [Smart Punctuation](./typing/smart-punctuation.md) | Automatic punctuation attachment and smart auto-space (v1.5.0) |
 | [User Dictionary](./typing/user-dictionary.md) | Custom words and case preservation |
 | [Special Characters](./typing/special-characters.md) | Symbols, accents, and compose key |

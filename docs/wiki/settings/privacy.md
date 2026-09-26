@@ -38,16 +38,19 @@ When ON, CleverKeys builds private, on-device models from what you type:
 
 | What is learned | Used for |
 |-----------------|----------|
-| **Phrase patterns** (word pairs and triples) | Context-aware suggestion boosting, next-word prediction |
+| **Phrase patterns** (word pairs and triples) | Context-aware suggestion boosting, learned next-word suggestions |
 | **Word usage** (personal vocabulary) | Personalized suggestion ranking |
 | **Suggestion selections** | Adapting which suggestions rank higher |
+| **Swipe corrections** (a swiped word you replaced, and what you chose instead) | Offering "Prefer “word” when swiping?" after the same correction twice (not recorded in private/incognito or password fields) |
 | **Swipe traces** (only if Swipe Data Collection is also on) | Potential future model tuning |
 
 When OFF:
 
 - **Nothing new is recorded** — every learning path is stopped at the write layer.
 - **Already-learned data goes inert** — it is neither updated nor used for suggestions
-  (next-word prediction and learned-context boosting turn off entirely).
+  (learned-context boosting and learned next-word suggestions turn off; next-word prediction
+  keeps offering its built-in continuations, which contain nothing about you and record
+  nothing).
 - Turning the switch off offers a one-tap **"Also forget learned data?"** dialog that
   deletes everything already learned (phrase patterns, word usage, and selection
   history). Choose "Keep it" to retain the data in case you re-enable learning later.
@@ -67,7 +70,8 @@ When OFF:
 Apps can mark a text field as "no personalized learning" (for example, a browser's
 private tab). CleverKeys honors this automatically: nothing typed in such a field is
 learned, and no personalized next-word suggestions appear there — regardless of your
-settings.
+settings. (Built-in next-word continuations still appear, like ordinary word completions:
+they are the same for everyone.)
 
 ### Reviewing and deleting learned data
 
@@ -80,6 +84,14 @@ phrase counts, word usage) and lets you:
 
 Learned phrases and words are included in dictionary exports (Backup & Restore), so your
 learning survives reinstalls if you back up.
+
+Privacy & Data itself shows a **Learned Language Data** summary: phrase-pair, phrase-triple
+and word counts, a **Forget Learned** button, and a **Currently recording** line naming what
+is being learned right now — Context-Aware Predictions and Personalized Learning (when their
+toggles are on), plus suggestion selections and swipe corrections, which have no toggle of
+their own and record whenever Learn From My Typing is on. Next-word prediction is not on that
+list: it only reads. With the master switch off the line reads "Nothing is being recorded
+right now."
 
 ## Clipboard Privacy
 
@@ -231,5 +243,5 @@ everything already learned.
 
 - [Clipboard History](../clipboard/clipboard-history.md) - Manage clipboard
 - [Backup & Restore](../troubleshooting/backup-restore.md) - Data management
-- [Next-Word Prediction](../typing/next-word-prediction.md) - Uses learned phrases (opt-in)
+- [Next-Word Prediction](../typing/next-word-prediction.md) - Built-in continuations; adds learned phrases when learning is on
 - [Input Behavior Settings](./input-behavior.md) - Learning & Data manager

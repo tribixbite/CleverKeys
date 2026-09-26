@@ -505,11 +505,18 @@ fun handleAutocorrectUndo(ic: InputConnection, originalWord: String) {
     ic.commitText("$originalWord ", 1)
     dictionaryManager.addCustomWord(originalWord, config.primary_language)
     contextTracker.clearAutocorrectTracking()
-    showTemporaryMessage("Added '$originalWord' to dictionary")
+    confirmDictionaryAdd(originalWord, inserted, R.string.suggestion_added_to_dictionary)
 }
 ```
 
-Adding to the user dictionary on undo ensures the same correction won't fire again.
+Adding to the user dictionary on undo ensures the same correction won't fire again. The
+confirmation (`confirmDictionaryAdd` → `SuggestionBar.showUndoableMessage`, commit 4ca6c499)
+is a tappable bar message: the first tap arms "Tap again to undo", the second removes the
+word from the personal dictionary again (only when this add actually inserted it) and shows
+"Removed “x” from dictionary". The text in the field is not touched. It times out after 3 s
+and any typing, swipe or other bar tap dismisses it. The same confirmation is used by every
+IME add path (add-to-dictionary prompt, "+word" chip, autocorrect undo, accepting the
+"Prefer … when swiping?" offer). State machine: `UndoableBarMessage`.
 
 ## Test Coverage
 

@@ -99,7 +99,9 @@ If autocorrect changes a word you didn't want changed:
 1. Look at the prediction bar immediately after correction.
 2. Your original word appears as a suggestion.
 3. Tap it to restore the original spelling.
-4. The word is automatically added to your dictionary so it won't be corrected again.
+4. The word is automatically added to your dictionary so it won't be corrected again. The
+   bar confirms with "Added “word” to dictionary" — tap that message twice to undo the add
+   (see below).
 
 ### Method 2: Backspace and Retype
 1. Press backspace to delete the corrected word.
@@ -113,6 +115,10 @@ When you type an unknown word and autocorrect doesn't fire:
 1. Type the word and press space.
 2. A prompt appears in the suggestion bar: "Add 'word' to dictionary?"
 3. Tap to add. The word will be suggested in future and protected from autocorrect.
+4. The bar confirms "Added “word” to dictionary". Changed your mind? **Tap that message
+   twice**: the first tap shows "Tap again to undo", the second removes the word from your
+   dictionary again ("Removed “word” from dictionary"). What you typed stays as it is. The
+   confirmation disappears after about 3 seconds, or as soon as you keep typing.
 
 > [!TIP]
 > Added words appear in your predictions when you start typing them.
@@ -158,16 +164,33 @@ All in Settings → **Word Prediction**. Most users only ever touch the top thre
 > [!NOTE]
 > Autocorrect's tap-typing path uses the absolute dictionary frequency directly via `autocorrect_confidence_min_frequency`. The swipe engines score candidates with their own per-language constants, which are calibrated offline and not user-tunable.
 
+## Typo-Tolerant Suggestions
+
+While you tap-type, the suggestion bar also offers likely *intended* words when what you
+typed looks like a slip — for example `pka` or `pkay` offers `play` (the `k` sits next to
+the `l`). Neighbouring-key slips, swapped letters and accent variants count as small
+mistakes; other edits as larger ones, and the allowance grows with word length (nothing
+below 3 letters). The search uses your active layout, so AZERTY, Dvorak and custom boards
+get their own neighbour keys.
+
+These are **suggestions only** — nothing is changed until you tap one (or autocorrect
+applies its own correction when you press space). They run only when the exact matches are
+missing, few, or rare, rank below an exact match of the same shape and frequency, and take
+at most 2 bar slots. Long-press one to see "Correction of typed “pka”"; with Suggestion
+Origin Markers on it carries its own purple dot, distinct from autocorrect's red.
+
 ## Suggestion Transparency
 
 Every suggestion in the bar knows where it came from. To inspect one:
 
 - **Long-press any suggestion** — a sheet shows its source (CTC swipe, geometric swipe,
-  geometric decoder, dictionary prefix match, contraction, next-word, etc.), its score, and — for
+  geometric decoder, dictionary prefix match, contraction, next-word, typo correction, etc.), its score, and — for
   dictionary predictions — the full score breakdown: prefix match, adaptation, built-in
   vs. learned context boost (and which one won), personalization, and frequency factor.
 - **Suggestion Origin Markers** (Settings > Advanced, off by default) — adds a small
-  colored dot to each suggestion indicating which engine produced it.
+  colored dot to each suggestion indicating which engine produced it. With a screen reader
+  (TalkBack), a marked suggestion is announced as the word followed by its origin — e.g.
+  "play, Typo correction" — rather than the dot symbol, so the marker is never colour-only.
 
 This makes it possible to answer "why is the keyboard suggesting THAT?" — for example, a
 learned next-word candidate will show the statistics behind it, like
@@ -206,7 +229,7 @@ A: They're separate paths. Swipe typing produces candidates with the CTC or geom
 ## Related Features
 
 - [Swipe Typing](swipe-typing.md) - Word prediction for gesture input
-- [Next-Word Prediction](next-word-prediction.md) - Learned-phrase suggestions after each word
+- [Next-Word Prediction](next-word-prediction.md) - Next-word suggestions after each word (built-in + learned)
 - [User Dictionary](user-dictionary.md) - Add custom words
 - [Special Characters](special-characters.md) - Symbols and accents
 - [Smart Punctuation](smart-punctuation.md) - Punctuation attachment and smart auto-space around punctuation

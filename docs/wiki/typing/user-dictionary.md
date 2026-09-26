@@ -50,6 +50,13 @@ This works for:
 2. If not autocorrected, a prompt appears
 3. Tap "Add to dictionary" to save it
 4. The word is saved with your capitalization
+5. The bar confirms "Added “word” to dictionary". Tap that message **twice** to undo: the
+   first tap shows "Tap again to undo", the second removes the word again. The text you
+   typed is left as it is. The confirmation times out after about 3 seconds.
+
+The same tap-twice undo follows every add made from the keyboard: the prompt, the tap-to-add
+chip for the exact letters you typed, undoing an autocorrection, and accepting a
+"Prefer “word” when swiping?" offer ([Swipe Typing](swipe-typing.md#prefer-a-word-when-swiping)).
 
 ### Method 2: Dictionary Manager
 

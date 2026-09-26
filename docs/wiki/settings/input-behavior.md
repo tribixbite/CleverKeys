@@ -48,8 +48,10 @@ dictionary word or a prediction. Tapping it adds the word to your dictionary. **
 
 ### Next-Word Prediction
 
-Suggest the next word from your learned phrases before you type a letter. **Default: Off.**
-Requires the Privacy & Data > Learn From My Typing master switch to be on.
+Suggest the next word before you type a letter. **Default: On.** Uses a built-in phrase model
+(for English, built from public text corpora), so it works even with Privacy & Data > Learn
+From My Typing off; with learning and Context-Aware Predictions on, your own learned phrases
+are added and ranked first.
 See [Next-Word Prediction](../typing/next-word-prediction.md) for a full walkthrough.
 
 ### Context Source
@@ -169,5 +171,5 @@ A: Settings > Gesture Tuning > Double-Space to Period > Off.
 
 - [Short Swipes](../gestures/short-swipes.md) - Gesture configuration
 - [Accessibility](accessibility.md) - Haptic feedback settings
-- [Next-Word Prediction](../typing/next-word-prediction.md) - Learned-phrase suggestions
+- [Next-Word Prediction](../typing/next-word-prediction.md) - Next-word suggestions (built-in + learned)
 - [Privacy Settings](privacy.md) - The Learn From My Typing master switch
