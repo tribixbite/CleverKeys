@@ -815,6 +815,7 @@
     <string name="gif_toast_no_file_picker">Không mở được trình chọn tệp</string>
     <string name="gif_total_storage">Tổng: %1$s</string>
     <string name="help_open_wiki">Mở wiki đầy đủ</string>
+    <string name="help_third_party_data">Dữ liệu bên thứ ba: ngữ cảnh từ tiếng Anh lấy từ Leipzig Corpora Collection (CC BY 4.0) và Tatoeba (CC BY 2.0 FR). Ghi công đầy đủ nằm trong tệp NOTICE của mã nguồn.</string>
     <string name="import_preview_added">Đã thêm (%1$d)</string>
     <string name="import_preview_apply">Áp dụng (%1$d)</string>
     <string name="import_preview_cancel_desc">Hủy xem trước</string>

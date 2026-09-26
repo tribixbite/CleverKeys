@@ -813,6 +813,7 @@
     <string name="swipe_full_geometric_settings">همهٔ تنظیمات هندسی</string>
     <string name="swipe_full_ctc_settings">همهٔ تنظیمات CTC</string>
     <string name="help_open_wiki">باز کردن ویکی کامل</string>
+    <string name="help_third_party_data">داده‌های شخص ثالث: بافت واژه‌های انگلیسی از Leipzig Corpora Collection (CC BY 4.0) و Tatoeba (CC BY 2.0 FR) گرفته شده است. انتساب کامل در فایل NOTICE کد منبع آمده است.</string>
     <string name="gesture_section_intro">رفتار ضربه، کشیدن و اسلایدر را برای سبک تایپ خود به‌دقت تنظیم کنید.</string>
     <string name="gesture_short_gestures_header">اشاره‌های کوتاه</string>
     <string name="gesture_open_calibration">📐 باز کردن ابزار واسنجی</string>

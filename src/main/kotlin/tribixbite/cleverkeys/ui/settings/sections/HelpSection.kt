@@ -40,5 +40,15 @@ internal fun SettingsActivity.HelpSection() {
                 ) {
                     Text(stringResource(R.string.help_open_wiki))
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Third-party data attribution (CC BY 4.0 / CC BY 2.0 FR require it to be
+                // reachable from the app, not only from the repository's NOTICE file).
+                Text(
+                    text = stringResource(R.string.help_third_party_data),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 }

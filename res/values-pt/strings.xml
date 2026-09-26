@@ -778,6 +778,7 @@
     <string name="swipe_full_geometric_settings">Configurações geométricas completas</string>
     <string name="swipe_full_ctc_settings">Configurações CTC completas</string>
     <string name="help_open_wiki">Abrir wiki completa</string>
+    <string name="help_third_party_data">Dados de terceiros: o contexto de palavras em inglês vem da Leipzig Corpora Collection (CC BY 4.0) e do Tatoeba (CC BY 2.0 FR). A atribuição completa está no arquivo NOTICE do código-fonte.</string>
     <string name="gesture_section_intro">Ajuste fino do comportamento de toque, deslize e controle deslizante para o seu estilo de digitação.</string>
     <string name="gesture_short_gestures_header">Gestos curtos</string>
     <string name="gesture_open_calibration">📐 Abrir ferramenta de calibração</string>

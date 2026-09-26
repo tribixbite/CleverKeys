@@ -798,6 +798,7 @@
     <string name="gif_toast_no_file_picker">Не вдалося відкрити засіб вибору файлів</string>
     <string name="gif_total_storage">Разом: %1$s</string>
     <string name="help_open_wiki">Відкрити повну вікі</string>
+    <string name="help_third_party_data">Сторонні дані: контекст англійських слів отримано з Leipzig Corpora Collection (CC BY 4.0) і Tatoeba (CC BY 2.0 FR). Повна атрибуція — у файлі NOTICE вихідного коду.</string>
     <string name="import_preview_added">Додано (%1$d)</string>
     <string name="import_preview_apply">Застосувати (%1$d)</string>
     <string name="import_preview_cancel_desc">Скасувати перегляд</string>
