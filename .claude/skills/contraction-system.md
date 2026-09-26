@@ -205,12 +205,33 @@ set (`shed/id/ill/wed/shell/well/hell`). Reported 2026-09-26 (learning-system au
 The rule now:
 
 1. **Projection variant** = its apostrophe-free form IS the decoded surface (`shed`→`she'd`).
-   At most **one** per base — the highest known pairing frequency — is **spliced** beside it.
-2. Everything else stays at the **tail**: non-projection variants (`would`→`wouldn't`,
-   `she`→`she'd` — a different trace) and any variant with **no known frequency**. That is why
-   would/world cannot regress, and why **fr/it are unchanged** — their pairs files carry no
-   frequency, so no elision (`l'une`) can climb over a real word (`lune`, §2).
-3. Spliced variant goes **ahead** of its base only when its pairing frequency beats the base's
+   At most **one** per base is **spliced** beside it: the NON-possessive projection with the
+   highest known pairing frequency, at whatever rank the base sits.
+2. **Possessive projection** (`teams`→`team's`, 593 shipped bases) — spliced beside its base
+   **only when the base is the decoder's confident pick** (2026-09-26, maintainer: "bump team's
+   when the decoder is confident in teams"): input **rank 0** AND runner-up score **< top / 2**
+   (`ContractionOverlay.isConfidentTop`, `POSSESSIVE_SPLICE_RUNNER_UP_DIVISOR = 2`). Why the
+   margin, not rank 0 alone: both engines score a within-slate softmax × 1000, so the ratio IS
+   confidence; with the runner-up within 2x (`teams` 900 / `trams` 600) the trace is unsettled
+   and the possessive would push a live competitor down — the would/world displacement. Half is
+   the pipeline's existing "contestable rank 0" line (`SwipeContextRescorer.R_MIN = 0.5`;
+   `CtcFuzzyRescue` caps rescued words strictly below it), kept as a separate constant so a
+   rescorer retune cannot move placement. Measured CTC runner-up/top median 0.254 (CK-150-025),
+   so splicing is the common case. The possessive's frequency may be **unknown** (the 510
+   bin-derived ones, `alzheimers`→`alzheimer's`) — it only picks among the base's own
+   possessives (known beats unknown, then higher, then list order). The swipe shape of `team's`
+   IS `teams`, so confidence says nothing about the reading: **never ahead** (rule 4).
+   Engine-agnostic (no base frequency involved), so CTC and geometric behave identically.
+3. Everything else stays at the **tail**: non-projection variants (`would`→`wouldn't`,
+   `she`→`she'd` — a different trace), a non-possessive variant with **no known frequency**,
+   and the possessive of a **lower-ranked or contested** base. That is why would/world cannot
+   regress, and why **fr/it are unchanged** — their pairs files carry no frequency and no
+   possessive-shaped value, so no elision (`l'une`) can climb over a real word (`lune`, §2).
+   **D1 interplay**: `SuggestionHandler`'s possessive augment (`possessiveAdditions`: top-3
+   window, English-gated by `shouldAugmentPossessives`) runs on the overlaid slate and only
+   APPENDS forms absent from it (case-insensitive) — `[teams, team's, team]` gains `teams'`
+   but never a second `team's`, and the spliced copy cannot be moved back to the tail.
+4. Spliced variant goes **ahead** of its base only when its pairing frequency beats the base's
    lexicon frequency by at least `ContractionOverlay.PROMOTION_MARGIN` = **6 bytes** (≈0.3 zipf,
    ≈2x): `i'd` 211 vs `id` 196, `i'll` 212 vs `ill` 198, `we'd` 193 vs `wed` 178, `he's`/`she's`
    over `hes`/`shes`, `c'mon` over `cmon`. Base stays first for `well` (223 vs 202), `hell`,
@@ -221,12 +242,12 @@ The rule now:
    exactly one pair today; `ContractionOverlayTest` pins its boundary.
    - **Possessives never go ahead** (`isPossessive`; pronoun `'s` clitics `she's`/`he's` are
      not possessives). Measured: 24 of the 69 raw-frequency promotions disagree with wordfreq,
-     e.g. `teams`→`team's`, `ones`→`one's`, `sons`→`son's` — they are spliced after instead.
+     e.g. `teams`→`team's`, `ones`→`one's`, `sons`→`son's` — spliced after (confident base, rule 2) or tailed.
    - **Only CTC en compares.** `ContractionManager.getPairedVariantFrequency` is on the
      `en_enhanced.json` 0..255 byte scale (pairings 128..255, lexicon 134..255). The CTC adapter
      passes base frequencies only for the EN_JSON source; CKDT (`255 − rank`) and the geometric
      engine pass none, so they splice but never promote (TODO in `GeometricEngineAdapter`).
-4. Scores stay non-increasing: a spliced pair shares the base's score; tail variants are clamped
+5. Scores stay non-increasing: a spliced pair shares the base's score; tail variants are clamped
    to the last emitted score.
 
 **The frequency is BASE-scoped in storage** (`base → variant → freq`) — that is the runtime
@@ -369,6 +390,9 @@ guard.
 | `i'd` reaches the bar for typed `id`, `id` survives beside it, no duplicate surface for `ill` | `ContractionSentenceStartMeasureTest` (instrumented) |
 | injected key surfaces but never outranks a real word | `CtcContractionRankingTest` |
 | paired placement: splice ≤1 projection variant, ahead only on higher known freq, possessives never ahead, tail otherwise, monotone scores | `ContractionOverlayTest` (pure) |
+| possessive splice only beside a CONFIDENT rank-0 base (runner-up < top/2, boundary pinned), one per base, unknown frequency allowed, lower-ranked/contested → tail, would/world holds | `ContractionOverlayTest` (pure) |
+| shipped possessives: `teams`→[teams, team's, …] when confident; contested/lower-ranked → tail; all 593 possessive-projection bases keep rank 0 with the possessive at slot 1 | `CtcContractionDisplayTest` (pure) |
+| D1 augment (`SuggestionHandler.possessiveAdditions`) adds no second copy of a spliced possessive (case-insensitive) and only appends | `ContractionOverlayTest` (pure) |
 | shipped pronoun set over MEASURED data: I'd/I'll/we'd/he's/she's rank 0; shed/shell/whore/well/hell/were/its/natl keep rank 0 with the variant at #1; why's rank 0 over whys; its/it's inside PROMOTION_MARGIN; would/world keeps world at #2; REPLACE six keep their slot | `CtcContractionDisplayTest` (pure) |
 | promotion needs lead ≥ PROMOTION_MARGIN (boundary), possessive never ahead even above the margin | `ContractionOverlayTest` (pure) |
 | pairing `frequency` survives parsing, base-scoped; the 19 projection values pinned; one value per non-possessive variant; no flat 200 on a promotable pair | `BundledContractionDataTest` (pure) |

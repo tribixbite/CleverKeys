@@ -215,6 +215,53 @@ class CtcContractionDisplayTest {
     }
 
     @Test
+    fun `shipped would-world slate keeps world at rank 1 on a confident slate too`() {
+        // The 2026-09-26 possessive splice keys on decoder confidence; "would" has no
+        // possessive projection (world's projects to "worlds"), so nothing moves.
+        val (words, _) = applyShipped(listOf("would", "world", "wood"), listOf(900, 300, 200))
+        assertThat(words.take(3)).containsExactly("would", "world", "wood").inOrder()
+    }
+
+    @Test
+    fun `shipped possessives — beside a confident rank-0 base, tail otherwise, never ahead`() {
+        // Maintainer request 2026-09-26: "bump team's when the decoder is confident in teams".
+        val (confident, _) = applyShipped(listOf("teams", "zzfill", "zzfiller"), listOf(900, 100, 50))
+        assertThat(confident).containsExactly("teams", "team's", "zzfill", "zzfiller").inOrder()
+
+        // Contested (runner-up within 2x): the competitor keeps slot 1, team's trails.
+        val (contested, _) = applyShipped(listOf("teams", "zzfill"), listOf(900, 600))
+        assertThat(contested).containsExactly("teams", "zzfill", "team's").inOrder()
+
+        // Lower-ranked base: its possessive stays at the tail even on a confident slate.
+        val (lower, _) = applyShipped(listOf("zzfill", "teams", "zzfiller"), listOf(900, 100, 50))
+        assertThat(lower).containsExactly("zzfill", "teams", "zzfiller", "team's").inOrder()
+
+        // ones/one's: the upstream possessive value leads the lexicon by 12 (>= the promotion
+        // margin) while wordfreq says the opposite — still only BESIDE, never ahead.
+        val (ones, _) = applyShipped(listOf("ones", "zzfill"), listOf(900, 100))
+        assertThat(ones).containsExactly("ones", "one's", "zzfill").inOrder()
+
+        // Sweep: EVERY shipped base with a possessive projection, decoded as a confident top-1,
+        // keeps rank 0 and shows exactly its possessive at slot 1.
+        var swept = 0
+        for ((base, variants) in pairings) {
+            val possessives = variants.map { it.contraction }.filter {
+                ContractionOverlay.isProjectionOf(base, it) && ContractionOverlay.isPossessive(it)
+            }
+            if (possessives.isEmpty()) continue
+            val (words, _) = applyShipped(listOf(base, "zzfill"), listOf(900, 100))
+            assertWithMessage("swiped '$base' slate $words").that(words[0]).isEqualTo(base)
+            assertWithMessage("swiped '$base' slate $words").that(words[1]).isIn(possessives)
+            swept++
+        }
+        // 593 of the file's bases list a possessive whose apostrophe-free form is the base
+        // itself (`teams` → `team's`); the other possessive entries are non-projections
+        // (`world` → `world's`, a different trace) and are unaffected. Exact, so a data
+        // regeneration that silently drops the family fails here.
+        assertThat(swept).isEqualTo(593)
+    }
+
+    @Test
     fun `its stays its with the variant appended`() {
         val (words, _) = applyCtc(listOf("its"), listOf(900))
         assertThat(words).containsExactly("its", "it's").inOrder()

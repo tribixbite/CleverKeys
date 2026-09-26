@@ -182,15 +182,16 @@ class ContractionOverlayTest {
         // team's 206 > teams 203 in the shipped files, but wordfreq ranks "teams" far
         // above "team's" (4.97 vs 4.09 zipf) — 24 of the 69 possessive/clitic promotions the
         // raw frequencies would make are wrong this way, so possessives never go ahead.
-        val (words, _) = applyRanked(listOf("teams", "trams"), listOf(900, 800))
+        // Confident slate (runner-up 60 < 900 / 2), so team's IS spliced — right after.
+        val (words, _) = applyRanked(listOf("teams", "trams"), listOf(900, 60))
         assertThat(words).containsExactly("teams", "team's", "trams").inOrder()
 
         // team's leads by only 3, inside PROMOTION_MARGIN, so the case above would hold even
         // without the possessive rule. ones/one's leads by 12 (217 vs 205, shipped upstream
         // values) while wordfreq says the opposite (5.07 vs 4.39) — only the possessive rule
-        // keeps "ones" first here.
+        // keeps "ones" first here, even on a confident slate.
         val ones = ContractionOverlay.apply(
-            listOf("ones", "once"), listOf(900, 800),
+            listOf("ones", "once"), listOf(900, 60),
             pairedVariants = { if (it == "ones") listOf("one's") else null },
             nonPairedMapping = { null },
             wordOrdinal = { null },
@@ -199,6 +200,108 @@ class ContractionOverlayTest {
         ).first
         assertThat(217 - 205).isAtLeast(ContractionOverlay.PROMOTION_MARGIN)
         assertThat(ones).containsExactly("ones", "one's", "once").inOrder()
+    }
+
+    // ── Possessive beside a CONFIDENT base (2026-09-26, maintainer request) ─────────
+    //
+    // The swipe shape of team's IS teams, so decoder confidence says nothing about WHICH
+    // reading is meant — grammar decides — and a possessive never goes ahead. But when the
+    // base is the decoder's confident pick, its possessive is spliced right after it instead
+    // of trailing the slate off-screen. Confident = input rank 0 AND the runner-up scores
+    // strictly below half the top (the rescorer's R_MIN notion of "contestable").
+
+    @Test
+    fun `confident rank-0 base splices its possessive immediately after it`() {
+        val (words, scores) = applyRanked(listOf("teams", "trams", "terms"), listOf(900, 120, 80))
+        assertThat(words).containsExactly("teams", "team's", "trams", "terms").inOrder()
+        assertThat(scores).containsExactly(900, 900, 120, 80).inOrder()
+    }
+
+    @Test
+    fun `contested rank-0 base keeps its possessive at the tail`() {
+        // trams at 600 is within a factor of two of teams: the decoder has not settled the
+        // trace, so the live competitor keeps slot 1 and team's stays a tail completion.
+        val (words, scores) = applyRanked(listOf("teams", "trams"), listOf(900, 600))
+        assertThat(words).containsExactly("teams", "trams", "team's").inOrder()
+        assertThat(scores).containsExactly(900, 600, 600).inOrder()
+    }
+
+    @Test
+    fun `confidence boundary — runner-up at exactly half is contested, one below is confident`() {
+        fun slate(runnerUp: Int) = applyRanked(listOf("teams", "trams"), listOf(900, runnerUp)).first
+        assertThat(slate(450)).containsExactly("teams", "trams", "team's").inOrder()
+        assertThat(slate(449)).containsExactly("teams", "team's", "trams").inOrder()
+        assertThat(ContractionOverlay.isConfidentTop(listOf(900, 450))).isFalse()
+        assertThat(ContractionOverlay.isConfidentTop(listOf(900, 449))).isTrue()
+    }
+
+    @Test
+    fun `a single-candidate slate is confident`() {
+        assertThat(ContractionOverlay.isConfidentTop(listOf(700))).isTrue()
+        val (words, _) = applyRanked(listOf("teams"), listOf(700))
+        assertThat(words).containsExactly("teams", "team's").inOrder()
+    }
+
+    @Test
+    fun `a lower-ranked base's possessive stays at the tail even on a confident slate`() {
+        // teams at rank 1 is not the decoder's pick; splicing team's there would push the
+        // distinct candidate "terms" down — the would/world pattern b2d7b908 reverted.
+        val (words, _) = applyRanked(listOf("trams", "teams", "terms"), listOf(900, 100, 80))
+        assertThat(words).containsExactly("trams", "teams", "terms", "team's").inOrder()
+    }
+
+    @Test
+    fun `a possessive with no known frequency is spliced beside a confident base`() {
+        // 510 bin-derived possessives carry no pairing frequency (alzheimers -> alzheimer's).
+        // The frequency never decides a possessive's order against its base (never ahead),
+        // so its absence does not bar the splice; among several, a known frequency wins, then
+        // list order.
+        fun apply(variants: List<String>, freq: Map<String, Int>) = ContractionOverlay.apply(
+            listOf("alzheimers", "alzheimer"), listOf(900, 100),
+            pairedVariants = { if (it == "alzheimers") variants else null },
+            nonPairedMapping = { null },
+            wordOrdinal = { null },
+            pairedVariantFrequency = { _, v -> freq[v] },
+            baseFrequency = { if (it == "alzheimers") 170 else null },
+        ).first
+        assertThat(apply(listOf("alzheimer's"), emptyMap()))
+            .containsExactly("alzheimers", "alzheimer's", "alzheimer").inOrder()
+        assertThat(apply(listOf("alzheimer's", "alzheimers'"), emptyMap()))
+            .containsExactly("alzheimers", "alzheimer's", "alzheimer", "alzheimers'").inOrder()
+        assertThat(apply(listOf("alzheimer's", "alzheimers'"), mapOf("alzheimers'" to 140)))
+            .containsExactly("alzheimers", "alzheimers'", "alzheimer", "alzheimer's").inOrder()
+    }
+
+    @Test
+    fun `D1 possessive augment neither duplicates nor re-tails the spliced possessive`() {
+        // The shared pipeline's D1 augment (SuggestionHandler) runs on the overlaid slate and
+        // generates a possessive for each of the top 3 words. "team" at slot 2 generates
+        // "team's" — already spliced at slot 1 — so it must add NOTHING for it: no second copy
+        // at the tail, and (append-only by construction) no move of the spliced one.
+        val (words, scores) = applyRanked(listOf("teams", "team", "trams"), listOf(900, 120, 80))
+        assertThat(words).containsExactly("teams", "team's", "team", "trams").inOrder()
+
+        val additions = tribixbite.cleverkeys.SuggestionHandler.possessiveAdditions(
+            words, scores, languages = null,
+        ) { tribixbite.cleverkeys.ContractionManager.possessiveForm(it) }
+        assertThat(additions.map { it.first }).containsExactly("teams'")
+        val bar = words + additions.map { it.first }
+        assertThat(bar).containsExactly("teams", "team's", "team", "trams", "teams'").inOrder()
+        assertThat(bar.count { it.equals("team's", ignoreCase = true) }).isEqualTo(1)
+
+        // Same after the pipeline's caps-lock shift transform (dedupe is case-insensitive).
+        val caps = tribixbite.cleverkeys.SuggestionHandler.possessiveAdditions(
+            words.map { it.uppercase() }, scores, languages = null,
+        ) { tribixbite.cleverkeys.ContractionManager.possessiveForm(it) }
+        assertThat(caps.map { it.first }).containsExactly("TEAMS'")
+    }
+
+    @Test
+    fun `would-world guard holds on a confident slate`() {
+        // would's variants are non-projections and world's is a projection of "worlds", not of
+        // "world" — confidence changes nothing for this slate.
+        val (words, _) = applyRanked(listOf("would", "world", "wood"), listOf(900, 300, 200))
+        assertThat(words.take(3)).containsExactly("would", "world", "wood").inOrder()
     }
 
     @Test
@@ -215,7 +318,8 @@ class ContractionOverlayTest {
 
     @Test
     fun `at most one variant is spliced per base — the rest go to the tail`() {
-        val (words, _) = applyRanked(listOf("girls", "gills"), listOf(900, 800))
+        // Confident slate so the possessive splice applies (see the confidence tests above).
+        val (words, _) = applyRanked(listOf("girls", "gills"), listOf(900, 80))
         assertThat(words).containsExactly("girls", "girl's", "gills", "girls'").inOrder()
     }
 

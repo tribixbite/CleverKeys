@@ -175,6 +175,54 @@ class SuggestionHandler(
             if (languages == null) return true
             return CtcLanguageSupport.normalize(languages.getOrNull(index)) == "en"
         }
+
+        /** How many leading bar words the D1 possessive augment considers (clutter bound). */
+        internal const val POSSESSIVE_AUGMENT_WINDOW = 3
+
+        /** Score gap below its base at which a D1-generated possessive is appended. */
+        internal const val POSSESSIVE_AUGMENT_SCORE_GAP = 10
+
+        /**
+         * The D1 possessive forms to APPEND to [predictions] — the pure core of
+         * [augmentPredictionsWithPossessives], extracted so the swipe overlay's interaction
+         * with it is pinned in `runPureTests` (`ContractionOverlayTest`).
+         *
+         * For each of the first [POSSESSIVE_AUGMENT_WINDOW] words eligible under
+         * [shouldAugmentPossessiveAt], [generate] proposes a possessive; it is returned (score =
+         * base − [POSSESSIVE_AUGMENT_SCORE_GAP]) only when no word ALREADY in [predictions]
+         * equals it case-insensitively. That dedupe is what keeps a possessive the swipe
+         * overlay spliced beside a confident base (`teams` → `team's` at slot 1, see
+         * `ContractionOverlay`) from gaining a second copy when a later slot (`team`) generates
+         * the same form — and because the result is only ever appended, the augment can never
+         * move that spliced copy back to the tail either.
+         *
+         * @param generate the possessive rule, `ContractionManager.generatePossessive` in
+         *   production (null = no possessive for this word).
+         * @return (possessive, score) pairs in window order; empty when nothing is added.
+         */
+        internal fun possessiveAdditions(
+            predictions: List<String>,
+            scores: List<Int>,
+            languages: List<String>?,
+            generate: (String) -> String?,
+        ): List<Pair<String, Int>> {
+            if (predictions.isEmpty()) return emptyList()
+            val additions = ArrayList<Pair<String, Int>>(POSSESSIVE_AUGMENT_WINDOW)
+            for (i in 0 until minOf(POSSESSIVE_AUGMENT_WINDOW, predictions.size)) {
+                // A non-English word in a merged slate must not grow an English `'s`
+                // (CK-150-024). The loop CONTINUES rather than breaking: the window is about
+                // clutter, and a French rank-1 must not cost the English rank-2 its possessive.
+                if (!shouldAugmentPossessiveAt(languages, i)) continue
+                val possessive = generate(predictions[i]) ?: continue
+                // Checked against the ORIGINAL slate only — behavior-identical to the loop this
+                // was extracted from. The slate is already case-insensitively unique (the swipe
+                // overlay dedups on emit), so two window words cannot generate the same form.
+                if (predictions.any { it.equals(possessive, ignoreCase = true) }) continue
+                // Slightly lower score than the base word (the base word is more common).
+                additions.add(possessive to scores.getOrElse(i) { 128 } - POSSESSIVE_AUGMENT_SCORE_GAP)
+            }
+            return additions
+        }
     }
 
     /**
@@ -3327,41 +3375,21 @@ class SuggestionHandler(
         scores: MutableList<Int>,
         languages: List<String>?
     ) {
-        if (predictions.isEmpty()) return
-
-        // Generate possessives for top 3 predictions only (avoid clutter)
-        val limit = minOf(3, predictions.size)
-        val possessivesToAdd = mutableListOf<String>()
-        val possessiveScores = mutableListOf<Int>()
-
-        for (i in 0 until limit) {
-            // A non-English word in a merged slate must not grow an English `'s` (CK-150-024).
-            // The loop CONTINUES rather than breaking: the top-3 window is about clutter, and a
-            // French rank-1 must not cost the English rank-2 its possessive.
-            if (!shouldAugmentPossessiveAt(languages, i)) continue
-            val word = predictions[i]
-            val possessive = contractionManager.generatePossessive(word)
-
-            if (possessive != null) {
-                // Don't add if possessive already exists in predictions
-                val alreadyExists = predictions.any { it.equals(possessive, ignoreCase = true) }
-
-                if (!alreadyExists) {
-                    possessivesToAdd.add(possessive)
-                    // Slightly lower score than base word (base word is more common)
-                    val baseScore = scores.getOrElse(i) { 128 }
-                    possessiveScores.add(baseScore - 10) // 10 points lower than base
-                }
-            }
+        // Top-3 window, dedupe and scoring live in the pure companion core (pinned by
+        // ContractionOverlayTest together with the swipe overlay's possessive splice).
+        val additions = possessiveAdditions(predictions, scores, languages) {
+            contractionManager.generatePossessive(it)
         }
 
         // Add possessives to the end of predictions list
-        if (possessivesToAdd.isNotEmpty()) {
-            predictions.addAll(possessivesToAdd)
-            scores.addAll(possessiveScores)
+        if (additions.isNotEmpty()) {
+            for ((possessive, score) in additions) {
+                predictions.add(possessive)
+                scores.add(score)
+            }
 
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                Log.d(TAG, "Added ${possessivesToAdd.size} possessive forms to predictions")
+                Log.d(TAG, "Added ${additions.size} possessive forms to predictions")
             }
         }
     }

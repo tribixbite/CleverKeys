@@ -872,6 +872,27 @@ class BundledContractionDataTest {
     }
 
     /**
+     * The confident-rank-0 possessive splice (`ContractionOverlay.splicedPossessive`, 2026-09-26)
+     * is English morphology. It cannot reach another language only because no bundled pairs
+     * file holds a value [ContractionOverlay.isPossessive] accepts — the swipe loader gives a
+     * non-English decode ONLY its own files (`SwipeContractionPolicy`). Pinned so a future
+     * pairs file with an `'s`/`s'`-final value (e.g. a Dutch `'s` clitic) fails here first.
+     */
+    @Test
+    fun `no bundled non-English pairs file carries a possessive-shaped value`() {
+        val offenders = ArrayList<String>()
+        for (language in LEXICON_LANGUAGES) {
+            for ((base, variants) in pairsObject(language)) {
+                for (v in variants) if (ContractionOverlay.isPossessive(v)) offenders += "$language:$base->$v"
+            }
+        }
+        assertThat(offenders).isEmpty()
+        // The two files that exist, so the loop above is not vacuous.
+        assertThat(pairsObject("fr")).isNotEmpty()
+        assertThat(pairsObject("it")).isNotEmpty()
+    }
+
+    /**
      * The 16 hand-curated French hyphen compounds, pinned by exact content.
      *
      * ### Why these are curated rather than extracted

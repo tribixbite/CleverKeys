@@ -37,12 +37,24 @@ import java.util.Locale
  *
  *  - A **projection variant** is one whose apostrophe-free form IS the decoded surface
  *    (`shed` → `she'd`, `well` → `we'll`). The trace spelled it exactly as much as it
- *    spelled the base; only the prior can tell them apart. At most ONE per base — the one
- *    with the highest known pairing frequency — is SPLICED next to its base.
+ *    spelled the base; only the prior can tell them apart. At most ONE per base is SPLICED
+ *    next to its base: the non-possessive projection with the highest known pairing
+ *    frequency, at whatever rank the base sits.
+ *  - A **possessive projection** (`teams` → `team's`) takes that slot only when its base is
+ *    the decoder's CONFIDENT pick — input rank 0 with the runner-up under half its score
+ *    ([isConfidentTop], [POSSESSIVE_SPLICE_RUNNER_UP_DIVISOR]) — and never goes ahead
+ *    (below). The swipe shape of `team's` IS `teams`, so confidence in the trace says nothing
+ *    about which reading is meant (grammar decides); it only says the base's slot is not
+ *    contested, so the possessive can sit one tap away instead of off-screen at the tail
+ *    (maintainer request 2026-09-26, "bump team's when the decoder is confident in teams").
+ *    Its frequency may be unknown (bin-derived pairs): it only picks among the base's own
+ *    possessives ([splicedPossessive]).
  *  - Everything else stays at the TAIL, as before: non-projection variants (`would` →
- *    `wouldn't`/`would've`, `she` → `she'd`) are completions of a DIFFERENT trace, and a
- *    projection variant with no known frequency has no evidence for a top slot. That is
- *    exactly why "would"/"world" cannot regress: would's variants are non-projections.
+ *    `wouldn't`/`would've`, `she` → `she'd`) are completions of a DIFFERENT trace; a
+ *    non-possessive projection with no known frequency has no evidence for a top slot; and
+ *    the possessive of a lower-ranked or contested base would displace a distinct
+ *    candidate. That is exactly why "would"/"world" cannot regress: would's variants are
+ *    non-projections, and a possessive never splices below rank 0.
  *    Every fr/it pairs-file entry (`lune` → `l'une`) has no frequency, so French and
  *    Italian placement is byte-for-byte unchanged — no elision can climb over a real word
  *    (the contraction-system skill's §2 casualties).
@@ -95,6 +107,30 @@ object ContractionOverlay {
     const val PROMOTION_MARGIN = 6
 
     /**
+     * A possessive is spliced beside its base only when the base is rank 0 AND the runner-up
+     * scores below `top / POSSESSIVE_SPLICE_RUNNER_UP_DIVISOR` ([isConfidentTop]).
+     *
+     * **Why rank 0 alone is not enough.** Both engines' scores are a within-slate softmax
+     * posterior × 1000, so the top/runner-up ratio is a real confidence signal. When the
+     * runner-up is within a factor of two the decoder has not settled the TRACE (`teams` 900 vs
+     * `trams` 600), and splicing `team's` at slot 1 would push a live competitor for the traced
+     * word down a slot — the displacement b2d7b908 reverted for "would"/"world". The possessive
+     * adds no evidence about the trace (its shape IS the base's), so it only earns slot 1 when
+     * the trace question is already answered.
+     *
+     * **Why a factor of two.** It is the swipe pipeline's existing definition of "contestable
+     * rank 0": `SwipeContextRescorer.R_MIN` = 0.5 lets learned context overturn rank 0 only
+     * for a candidate scoring at least half the top, and `CtcFuzzyRescue.mergeIntoBeam` caps
+     * rescued words strictly below that line so they can never make a slate look contested.
+     * Using the same line keeps one notion of confidence across the pipeline. It is a
+     * separate constant (not a reference to `R_MIN`) because retuning the rescorer must not
+     * silently move possessive placement. Measured CTC runner-up/top-1 median is 0.254
+     * (CK-150-025), so most swipes clear it: the splice is the common case, the tail the
+     * contested exception.
+     */
+    const val POSSESSIVE_SPLICE_RUNNER_UP_DIVISOR = 2L
+
+    /**
      * @param words decoded candidates, descending score order.
      * @param scores parallel scores (engine-relative).
      * @param pairedVariants alias → contraction variants when the alias is a PAIRED base.
@@ -139,6 +175,10 @@ object ContractionOverlay {
             variantScores.add(score)
         }
 
+        // Computed once over the INPUT slate: "confident" is a property of the decoder's own
+        // top-1 vs runner-up, before any variant is spliced in.
+        val confidentTop = isConfidentTop(scores)
+
         for (i in words.indices) {
             val word = words[i]
             val lower = word.lowercase(Locale.ROOT)
@@ -147,14 +187,22 @@ object ContractionOverlay {
             val paired = pairedVariants(lower)
             if (!paired.isNullOrEmpty()) {
                 // Rule 1: real word with contraction sibling(s) — keep it; splice at most one
-                // projection variant beside it and defer the rest (see class KDoc).
-                val spliced = splicedVariant(lower, paired, pairedVariantFrequency)
+                // projection variant beside it and defer the rest (see class KDoc). A
+                // non-possessive projection with a known frequency takes the slot at any rank;
+                // failing that, a possessive takes it only beside a CONFIDENT rank-0 base.
+                val spliced: Pair<String, Int?>? =
+                    splicedVariant(lower, paired, pairedVariantFrequency)
+                        ?: if (i == 0 && confidentTop) {
+                            splicedPossessive(lower, paired, pairedVariantFrequency)
+                        } else {
+                            null
+                        }
                 if (spliced == null) {
                     emit(word, score)
                 } else {
                     val (variant, variantFreq) = spliced
                     val baseFreq = baseFrequency(lower)
-                    val ahead = baseFreq != null &&
+                    val ahead = baseFreq != null && variantFreq != null &&
                         variantFreq - baseFreq >= PROMOTION_MARGIN &&
                         !isPossessive(variant)
                     if (ahead) {
@@ -199,9 +247,12 @@ object ContractionOverlay {
     }
 
     /**
-     * The single variant of [base] to splice beside it: among [variants] whose
-     * apostrophe-free form equals [base] AND whose pairing frequency is known, the most
-     * frequent (earliest on a tie). Null when none qualifies — everything goes to the tail.
+     * The single NON-POSSESSIVE variant of [base] to splice beside it: among [variants] whose
+     * apostrophe-free form equals [base], that are not [isPossessive], AND whose pairing
+     * frequency is known, the most frequent (earliest on a tie). Null when none qualifies.
+     *
+     * Possessives are excluded here because their slot is decided by decoder confidence,
+     * not by frequency — see [splicedPossessive].
      */
     internal fun splicedVariant(
         base: String,
@@ -210,11 +261,53 @@ object ContractionOverlay {
     ): Pair<String, Int>? {
         var best: Pair<String, Int>? = null
         for (variant in variants) {
-            if (!isProjectionOf(base, variant)) continue
+            if (!isProjectionOf(base, variant) || isPossessive(variant)) continue
             val freq = pairedVariantFrequency(base, variant) ?: continue
             if (best == null || freq > best.second) best = variant to freq
         }
         return best
+    }
+
+    /**
+     * The single POSSESSIVE projection of [base] to splice beside it when [base] is the
+     * decoder's confident rank-0 pick: the most frequent among those with a known pairing
+     * frequency, else the first listed. The frequency may be null — it never decides a
+     * possessive's order against its base (possessives never go ahead), only which of the
+     * base's possessives (`girl's` vs `girls'`) gets the slot — so the 510 possessives that
+     * `ContractionManager` derives from `contractions.bin` without a frequency
+     * (`alzheimers` → `alzheimer's`) are eligible too. Null when [base] has none.
+     */
+    internal fun splicedPossessive(
+        base: String,
+        variants: List<String>,
+        pairedVariantFrequency: (base: String, variant: String) -> Int?,
+    ): Pair<String, Int?>? {
+        var best: Pair<String, Int?>? = null
+        for (variant in variants) {
+            if (!isProjectionOf(base, variant) || !isPossessive(variant)) continue
+            val freq = pairedVariantFrequency(base, variant)
+            val bestFreq = best?.second
+            // Known beats unknown; a higher known frequency beats a lower one; otherwise the
+            // earlier-listed variant keeps the slot.
+            if (best == null || (freq != null && (bestFreq == null || freq > bestFreq))) {
+                best = variant to freq
+            }
+        }
+        return best
+    }
+
+    /**
+     * True when the slate's rank-0 candidate is the decoder's CONFIDENT pick: there is no
+     * runner-up, or the runner-up scores strictly below half the top
+     * (`scores[1] < scores[0] / 2`, evaluated as `2·scores[1] < scores[0]` in integers).
+     *
+     * See [POSSESSIVE_SPLICE_RUNNER_UP_DIVISOR] for why half. A non-positive top score is never
+     * confident when a runner-up exists (no posterior mass to be confident with).
+     */
+    internal fun isConfidentTop(scores: List<Int>): Boolean {
+        if (scores.size < 2) return true
+        val top = scores[0].toLong()
+        return top > 0 && POSSESSIVE_SPLICE_RUNNER_UP_DIVISOR * scores[1].toLong() < top
     }
 
     /** True when [variant] minus its apostrophes (ASCII or typographic) spells [base]. */
