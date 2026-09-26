@@ -2211,6 +2211,15 @@ class SuggestionHandler(
                     val stemUnmerged = joinerStem != null && !completedWord.startsWith(joinerStem)
                     val rawLearnToken = joinedLearnToken(joinerStem, completedWord)
                     pendingJoinerStem = null
+                    // Learn-once (review of 59bd4159): only a word the user TYPED in this
+                    // session is learned here. A word cursor-sync merely re-read from the editor
+                    // (the user parked on it — e.g. came back to "hello|" after leaving the field,
+                    // where the flush already learned it — and pressed space) was learned when it
+                    // was typed; learning it again double-counts it. Typing onto a parked word
+                    // makes it pending again (handleCursorSyncPrediction adopts the synced form),
+                    // so "cat" + "s" still learns "cats". Text edits below (I-capitalization,
+                    // autocorrect) still apply to a parked word; only the learning is skipped.
+                    val typedThisSession = pendingTypedWord != null
                     // W5: this word is completed here — never flush it again.
                     pendingTypedWord = null
 
@@ -2230,7 +2239,7 @@ class SuggestionHandler(
                             inputConnection.deleteSurroundingText(completedWord.length + 1, 0)
                             // Insert the capitalized word with trailing space
                             inputConnection.commitText("$capitalizedWord ", 1)
-                            updateContext(capitalizedWord)
+                            if (typedThisSession) updateContext(capitalizedWord)
                             contextTracker.clearCurrentWord()
                             contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
                             vlog { "I-WORD CAPITALIZE: '$completedWord' → '$capitalizedWord'" }
@@ -2274,8 +2283,8 @@ class SuggestionHandler(
                                 // Insert the corrected word WITH trailing space (normal apps only)
                                 inputConnection.commitText("$correctedWord ", 1)
 
-                                // Update context with corrected word
-                                updateContext(correctedWord)
+                                // Update context with corrected word (learn-once: typed words only)
+                                if (typedThisSession) updateContext(correctedWord)
 
                                 // Clear current word
                                 contextTracker.clearCurrentWord()
@@ -2319,7 +2328,7 @@ class SuggestionHandler(
                     // W7: learn the whole token ("don't", "co-op"), never the post-joiner tail.
                     // An unmerged join the editor contradicts is dropped rather than learned.
                     val learnWord = trimJoiners(rawLearnToken)
-                    if (learnWord.isNotEmpty() &&
+                    if (typedThisSession && learnWord.isNotEmpty() &&
                         (!stemUnmerged || editorEndsWithWholeToken(ic, rawLearnToken, text))
                     ) {
                         updateContext(learnWord)

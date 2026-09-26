@@ -483,6 +483,40 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("no bigram learned").that(bigramStore.getTotalBigramCount("en")).isEqualTo(0)
     }
 
+    /**
+     * Review of 59bd4159 (LOW): the space-completion branch learned whatever the tracker held,
+     * including a word cursor-sync merely re-read from the editor. Type "hello", leave the
+     * field (flushed and learned), come back with the cursor at "hello|", press space: the
+     * word was learned a second time.
+     */
+    @Test
+    fun aFlushedWordReSyncedByTheCursorIsNotLearnedAgainBySpace() {
+        editor.append("see ")
+        handler.updateContext("see")
+        type("hello")
+        handler.flushTypedWordOnFinishInput(ic)
+        verify(exactly = 1) { personalization.recordWordTyped("hello", any()) }
+
+        // Back in the field: cursor-sync re-reads "hello" at the cursor; the user presses space.
+        tracker.synchronizeWithCursor(ic, "en", textField())
+        handler.handleCursorSyncPrediction()
+        type(" ")
+
+        verify(exactly = 1) { personalization.recordWordTyped("hello", any()) }
+        assertWithMessage("see→hello").that(bigram("see", "hello")).isEqualTo(1)
+    }
+
+    @Test
+    fun aParkedOnWordTheUserExtendsIsLearnedAsTheExtendedWord() {
+        editor.append("the cat")
+        tracker.synchronizeWithCursor(ic, "en", textField())
+        handler.handleCursorSyncPrediction()
+        type("s ")
+
+        verify(exactly = 1) { personalization.recordWordTyped("cats", any()) }
+        verify(exactly = 0) { personalization.recordWordTyped("cat", any()) }
+    }
+
     @Test
     fun aWordTheCursorMovedAwayFromIsNotFlushed() {
         editor.append("hello world")
