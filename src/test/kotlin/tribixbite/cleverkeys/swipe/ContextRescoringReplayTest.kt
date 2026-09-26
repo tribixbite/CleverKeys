@@ -89,6 +89,209 @@ class ContextRescoringReplayTest {
         val nt: DoubleArray,
     )
 
+    /**
+     * One engine's decode of one distinct trace — the oracle arm's unit.
+     *
+     * @property target the word the trace actually is.
+     * @property tuneHalf which half of the trace-hash split this trace belongs to — the SAME rule
+     *   the (WEIGHT, R_MIN) sweep uses, so a trace sits in the same half in every experiment.
+     */
+    private class TraceSlate(
+        val target: String,
+        val words: List<String>,
+        val scores: List<Int>,
+        val tuneHalf: Boolean,
+    )
+
+    /**
+     * Alternates-only outcomes for one population: top-3 membership, the rank-1 invariant, and
+     * the distinct traces behind each membership change (concentration, audit H8).
+     */
+    private class AltCell {
+        val topK = RescoringMetrics.TopKTally()
+        val top1 = RescoringMetrics.Tally()
+        val enteredTraces = HashSet<String>()
+        val leftTraces = HashSet<String>()
+        val traces = HashSet<String>()
+        val examples = ArrayList<String>()
+
+        fun record(
+            target: String,
+            engine: List<String>,
+            rescored: List<String>,
+            traceId: String,
+            context: String,
+        ) {
+            traces.add(traceId)
+            top1.record(RescoringMetrics.classify(target, engine.firstOrNull(), rescored.firstOrNull()))
+            val outcome = RescoringMetrics.classifyTopK(target, engine, rescored, BAR_SLOTS)
+            topK.record(outcome)
+            when (outcome) {
+                RescoringMetrics.TopKOutcome.ENTERED -> enteredTraces.add(traceId)
+                RescoringMetrics.TopKOutcome.LEFT -> leftTraces.add(traceId)
+                else -> return
+            }
+            if (examples.size < MAX_EXAMPLES) {
+                examples.add("${outcome.name.lowercase()} '$context'+swipe('$target'): " +
+                    "${engine.take(BAR_SLOTS + 1)} -> ${rescored.take(BAR_SLOTS + 1)}")
+            }
+        }
+
+        /** Rank-1 words that differ from the engine's — must be exactly 0 in alternates mode. */
+        val rankOneChanges: Int get() = top1.fixed + top1.broken + top1.wash
+
+        override fun toString(): String =
+            "$topK\n            [${traces.size} distinct traces; entered from " +
+                "${enteredTraces.size}, left from ${leftTraces.size}; rank-1 changes=$rankOneChanges]"
+    }
+
+    /**
+     * The oracle context model's reach over a set of distinct traces.
+     *
+     * Every count is in DISTINCT TRACES (the oracle is context-free). A perfect context model can
+     * only fix, never break — `broken` exists to prove that rather than assume it.
+     */
+    private class OracleStats {
+        var n = 0
+        /** Engine top-1 already the target — no headroom. */
+        var baseRight = 0
+        /** Target somewhere in ranks 2..K — the UNGUARDED ceiling (anything → rank 1). */
+        var unguarded = 0
+        /** Promoted by the shipped rescorer + guards (WEIGHT, R_MIN, strict floors). */
+        var guarded = 0
+        /** Same, with WEIGHT effectively unbounded — isolates whether R_MIN or WEIGHT binds. */
+        var guardedWideWeight = 0
+        /** Target not in the slate at all — no reranker of any kind can reach it. */
+        var absent = 0
+        var broken = 0
+
+        fun points(count: Int): Double = if (n == 0) 0.0 else 100.0 * count / n
+
+        override fun toString(): String =
+            "n=%d  baseline top-1=%d (%.2f%%)  target absent=%d  target in 2..K=%d\n".format(
+                n, baseRight, points(baseRight), absent, unguarded) +
+                ("            UNGUARDED oracle Δtop1=%+.2f pt   GUARDED (shipped W,R_MIN) Δtop1=%+.2f pt" +
+                    "   guarded, W unbounded Δtop1=%+.2f pt   broken=%d").format(
+                    points(unguarded), points(guarded), points(guardedWideWeight), broken)
+    }
+
+    /** Oracle outcome of one distinct trace, folded into [stats]. Returns the target's slate rank or -1. */
+    private fun oracleRecord(stats: OracleStats, s: TraceSlate): Int {
+        stats.n++
+        val idx = s.words.indexOfFirst { it.equals(s.target, ignoreCase = true) }
+        when {
+            idx == 0 -> stats.baseRight++
+            idx < 0 -> stats.absent++
+            else -> stats.unguarded++
+        }
+        if (s.words.isEmpty()) return idx
+        val ev = RescoringMetrics.oracleEvidence(s.words, s.target)
+        for ((weight, wide) in listOf(SwipeContextRescorer.WEIGHT to false, ORACLE_WIDE_WEIGHT to true)) {
+            val order = SwipeContextRescorer.rescoreOrder(s.scores, ev, weight = weight)
+            when (RescoringMetrics.classify(s.target, s.words.first(), s.words[order.first()])) {
+                RescoringMetrics.Outcome.FIXED -> if (wide) stats.guardedWideWeight++ else stats.guarded++
+                RescoringMetrics.Outcome.BROKEN, RescoringMetrics.Outcome.WASH ->
+                    if (!wide) stats.broken++
+                else -> Unit
+            }
+        }
+        return idx
+    }
+
+    /**
+     * Report the oracle over [slates], split by the trace-hash tune/confirm halves.
+     *
+     * @return (all, CONFIRM) — the confirm half is the one the rank-1 decision rule is read on.
+     */
+    private fun reportOracle(label: String, slates: Collection<TraceSlate>): Pair<OracleStats, OracleStats> {
+        val all = OracleStats(); val tune = OracleStats(); val confirm = OracleStats()
+        for (s in slates) {
+            oracleRecord(all, s)
+            oracleRecord(if (s.tuneHalf) tune else confirm, s)
+        }
+        println("     ORACLE — $label")
+        println("        all     : $all")
+        println("        tune    : $tune")
+        println("        CONFIRM : $confirm")
+        return all to confirm
+    }
+
+    /**
+     * Where the full pool's CTC errors live, by the shipped lexicon's frequency byte — the
+     * design review's claim was that errors concentrate on rare words, where an n-gram model is
+     * thin. `null` frequency means the target is not in the CTC lexicon at all (unreachable).
+     */
+    private fun reportErrorFrequencies(slates: Collection<TraceSlate>, freq: Map<String, Double?>) {
+        val buckets = linkedMapOf<String, MutableList<Double?>>(
+            "engine right            " to ArrayList(),
+            "wrong, oracle-fixable   " to ArrayList(),
+            "wrong, below R_MIN      " to ArrayList(),
+            "wrong, target absent    " to ArrayList(),
+        )
+        val keys = buckets.keys.toList()
+        for (s in slates) {
+            val probe = OracleStats()
+            val idx = oracleRecord(probe, s)
+            val key = when {
+                idx == 0 -> keys[0]
+                probe.guarded > 0 -> keys[1]
+                idx > 0 -> keys[2]
+                else -> keys[3]
+            }
+            buckets.getValue(key).add(freq[s.target])
+        }
+        println("     where the errors live (full pool, shipped lexicon frequency byte):")
+        for ((k, v) in buckets) {
+            val known = v.filterNotNull().sorted()
+            val median = if (known.isEmpty()) Double.NaN else known[known.size / 2]
+            val p25 = if (known.isEmpty()) Double.NaN else known[known.size / 4]
+            println("        %s n=%-5d median freq=%6.1f p25=%6.1f  not-in-lexicon=%d".format(
+                k, v.size, median, p25, v.count { it == null }))
+        }
+    }
+
+    /**
+     * Report ALTERNATES-ONLY mode for one engine and return the confirm cell at the shipped
+     * WEIGHT — the pre-registered operating point the bar is read on.
+     */
+    private fun reportAlternates(role: String, r: EngineResults): AltCell? {
+        val w0 = SwipeContextRescorer.WEIGHT
+        val tune0 = r.altTune[w0] ?: return null
+        val confirm0 = r.altConfirm[w0] ?: return null
+        println("  ─────────────────────────────────────────────────────────────")
+        println("  $role — ${r.label} — ALTERNATES-ONLY (rMin=+∞; rank 1 pinned; slots 1-$BAR_SLOTS)")
+        println("     favourable  (W=$w0): ${r.altFavourable}")
+        println("     adversarial (W=$w0): ${r.altAdversarial}")
+        println("     tune        (W=$w0): $tune0")
+        println("     CONFIRM     (W=$w0): $confirm0")
+        println("        target in slots 1-$BAR_SLOTS: engine %.2f%% -> alternates %.2f%% (confirm)".format(
+            100.0 * confirm0.topK.baselineInTopK / confirm0.topK.total.coerceAtLeast(1),
+            100.0 * confirm0.topK.rescoredInTopK / confirm0.topK.total.coerceAtLeast(1)))
+        println("        BAR (Δ in-top-$BAR_SLOTS >= +%.1f pt AND rank-1 changes == 0) on CONFIRM: %s".format(
+            100 * RescoringMetrics.ALTERNATES_BAR_DELTA,
+            RescoringMetrics.meetsAlternatesBar(confirm0.topK, confirm0.top1)))
+        // A WEIGHT sweep, selected on tune only (ties to the lower weight), then read on confirm.
+        println("     WEIGHT sweep (select on tune by Δ in-top-$BAR_SLOTS, confirm held out):")
+        for (w in ALT_WEIGHTS) {
+            val t = r.altTune[w] ?: continue
+            println("        W=%.2f tune Δ=%+.4f (in %d / out %d)".format(
+                w, t.topK.deltaInTopK, t.topK.entered, t.topK.left))
+        }
+        val best = ALT_WEIGHTS.filter { r.altTune.containsKey(it) }
+            .maxWithOrNull(compareBy<Double> { r.altTune.getValue(it).topK.deltaInTopK }.thenByDescending { it })
+        if (best != null) {
+            val c = r.altConfirm[best] ?: AltCell()
+            println("        SELECTED W=%.2f -> CONFIRM Δ=%+.4f (in %d / out %d) meetsBar=%s".format(
+                best, c.topK.deltaInTopK, c.topK.entered, c.topK.left,
+                RescoringMetrics.meetsAlternatesBar(c.topK, c.top1)))
+        }
+        val examples = r.altFavourable.examples + r.altAdversarial.examples
+        if (examples.isNotEmpty()) {
+            println("     examples: " + examples.take(MAX_EXAMPLES).joinToString("\n               "))
+        }
+        return confirm0
+    }
+
     private fun loadTraces(limitPerWord: Int): Map<String, List<Row>> {
         val byWord = HashMap<String, MutableList<Row>>()
         GZIPInputStream(traceFile.inputStream()).bufferedReader().useLines { lines ->
@@ -249,6 +452,28 @@ class ContextRescoringReplayTest {
 
         var firstError: String? = null
 
+        // ── 2026-09-26 experiments: the ORACLE arm and ALTERNATES-ONLY mode ─────────────
+        //
+        // See `docs/eval/2026-09-26-context-oracle-and-alternates-replay.md`.
+
+        /**
+         * The engine's slate for every DISTINCT trace, recorded on its first decode.
+         *
+         * The oracle arm is context-FREE (it boosts the target whatever the context word was),
+         * so the same trace under N contexts is one experiment repeated N times, not N
+         * experiments. Keying by trace makes the oracle's unit the distinct trace by construction
+         * rather than by a correction applied afterwards.
+         */
+        val slatesByTrace = LinkedHashMap<String, TraceSlate>()
+
+        /** Alternates-only cells per (half, WEIGHT) — rank 1 pinned by `rMin = +∞`. */
+        val altTune = HashMap<Double, AltCell>()
+        val altConfirm = HashMap<Double, AltCell>()
+
+        /** Alternates-only at the SHIPPED weight over the whole sample, split by arm. */
+        val altFavourable = AltCell()
+        val altAdversarial = AltCell()
+
         val combined: RescoringMetrics.Tally
             get() = RescoringMetrics.Tally(
                 fixed = favourable.fixed + adversarial.fixed,
@@ -387,6 +612,10 @@ class ContextRescoringReplayTest {
         val seenCases = HashSet<String>()
         val adversarialUses = HashMap<String, Int>()
         val started = System.nanoTime()
+        val poolSlates = LinkedHashMap<String, TraceSlate>()
+        val poolFrequency = HashMap<String, Double?>()
+        var poolDecodeErrors = 0
+        var poolSeconds = 0.0
 
         CtcReplayEngine.build("en").use { ctc ->
             for (pair in sampled) {
@@ -439,7 +668,7 @@ class ContextRescoringReplayTest {
                     // Default 0 = unlimited, so the published 2026-08-23 baseline stays exactly
                     // reproducible; set -PreplayMaxCtx=N for a power-oriented run.
                     if (!favourableArm && maxContextsPerTrace > 0) {
-                        val traceId = "${row.word}|${row.pts.size}|${row.pts.firstOrNull()?.x}"
+                        val traceId = traceIdOf(row)
                         val used = adversarialUses.getOrDefault(traceId, 0)
                         if (used >= maxContextsPerTrace) continue
                         adversarialUses[traceId] = used + 1
@@ -475,6 +704,35 @@ class ContextRescoringReplayTest {
                     }
                 }
             }
+
+            // ORACLE, FULL POOL (CTC only). The oracle is context-free, so it does not need the
+            // bigram pairing at all — and the replay's own population is SELECTED (favourable
+            // targets are learned continuations, i.e. common words; decoys are chosen for
+            // confusability). Every usable trace in the pool is the least-selected population
+            // available, so the rank-1 decision is read here. Traces the replay already decoded
+            // are reused (the decode is deterministic), so only the remainder costs anything.
+            val poolStarted = System.nanoTime()
+            for (word in allWords) {
+                for (row in traces.getValue(word)) {
+                    val traceId = traceIdOf(row)
+                    if (poolSlates.containsKey(traceId)) continue
+                    val cached = ctcResults.slatesByTrace[traceId]
+                    if (cached != null) { poolSlates[traceId] = cached; continue }
+                    val slate = runCatching { ctc.decode(row.nx, row.ny, row.nt) }.getOrElse {
+                        poolDecodeErrors++
+                        null
+                    } ?: continue
+                    if (slate.scores.size != slate.words.size) { poolDecodeErrors++; continue }
+                    poolSlates[traceId] =
+                        TraceSlate(row.word, slate.words, slate.scores, isTuneHalf(traceId))
+                }
+            }
+            poolSeconds = (System.nanoTime() - poolStarted) / 1_000_000_000.0
+            // Frequencies for the "errors live on rare words" check — the shipped lexicon's own
+            // frequency byte, read while the engine is open.
+            for (s in poolSlates.values) {
+                poolFrequency.getOrPut(s.target) { ctc.frequencyOf(s.target) }
+            }
         }
         val elapsedSec = (System.nanoTime() - started) / 1_000_000_000.0
 
@@ -502,7 +760,47 @@ class ContextRescoringReplayTest {
         println("  WARNING: the arm ratio is a SAMPLING choice, not a fact about real usage.")
         println("        These counts are only comparable to reality if favourable and")
         println("        adversarial cases occur in roughly the ratio replayed here.")
+
+        // ── 2026-09-26: ORACLE arm ─────────────────────────────────────────────────────
         println("═══════════════════════════════════════════════════════════════")
+        println("  EXPERIMENT 1 — ORACLE CONTEXT MODEL (boost=MAX on the target, nothing else)")
+        println("  unit: DISTINCT TRACES (the oracle is context-free); halves = trace-hash split")
+        println("  full pool: ${poolSlates.size} traces decoded-or-reused in %.1f s, %d decode errors"
+            .format(poolSeconds, poolDecodeErrors))
+        val (poolAll, poolConfirm) =
+            reportOracle("CTC, FULL TRACE POOL (decision population)", poolSlates.values)
+        reportOracle("CTC, replay population", ctcResults.slatesByTrace.values)
+        reportOracle("geometric, replay population (secondary)", geoResults.slatesByTrace.values)
+        reportErrorFrequencies(poolSlates.values, poolFrequency)
+        val guardedConfirmPoints = poolConfirm.points(poolConfirm.guarded)
+        println("  DECISION (pre-registered): guarded-oracle CONFIRM Δtop1 on the full pool =" +
+            " %+.2f pt; rank-1 context is %s".format(
+                guardedConfirmPoints,
+                if (guardedConfirmPoints < ORACLE_DECISION_POINTS) "CLOSED (< +1.0 pt)"
+                else "NOT closed by this rule (>= +1.0 pt)"))
+
+        // ── 2026-09-26: ALTERNATES-ONLY mode ───────────────────────────────────────────
+        println("═══════════════════════════════════════════════════════════════")
+        println("  EXPERIMENT 2 — ALTERNATES-ONLY MODE (real learned evidence, rank 1 pinned)")
+        println("  unit: (context, trace, arm) CASES — context is the independent variable here;")
+        println("  distinct-trace counts beside every membership change")
+        val altCtc = reportAlternates("PRIMARY", ctcResults)
+        reportAlternates("SECONDARY", geoResults)
+        println("  PRIMARY alternates bar on confirm: " +
+            (altCtc?.let { RescoringMetrics.meetsAlternatesBar(it.topK, it.top1) } ?: "n/a"))
+        println("═══════════════════════════════════════════════════════════════")
+
+        // A structural invariant of the mode, not a verdict: if this ever fails, the rescorer's
+        // guard changed shape and "zero auto-commit risk by construction" is no longer true.
+        for (r in listOf(ctcResults, geoResults)) {
+            val cells = r.altTune.values + r.altConfirm.values + listOf(r.altFavourable, r.altAdversarial)
+            assertWithMessage("alternates-only mode moved rank 1 on ${r.label}")
+                .that(cells.sumOf { it.rankOneChanges }).isEqualTo(0)
+        }
+        // The same kind of invariant for the oracle: a context model that only ever boosts the
+        // TARGET cannot make a right top-1 wrong.
+        assertWithMessage("the oracle broke a decode — impossible unless the rescorer changed")
+            .that(poolAll.broken).isEqualTo(0)
 
         assertWithMessage(
             "the replay must actually decode something, or it measured nothing. First CTC error: " +
@@ -538,6 +836,15 @@ class ContextRescoringReplayTest {
             }
             return
         }
+        // Trace identity WITHOUT context, so the same trace under many contexts counts once.
+        val traceId = traceIdOf(row)
+        val tuneHalf = isTuneHalf(traceId)
+        // The oracle arm's record, taken BEFORE the reorderability filter below: a trace whose
+        // slate is empty or a single wrong word is a real engine miss that no context model can
+        // repair, and dropping it would shrink the oracle's denominator in its own favour.
+        if (scores.size == words.size && !results.slatesByTrace.containsKey(traceId)) {
+            results.slatesByTrace[traceId] = TraceSlate(row.word, words, scores, tuneHalf)
+        }
         // Fewer than two candidates cannot be reordered, so the case carries no information about
         // rescoring either way. Counted separately rather than dropped silently.
         if (words.size < 2 || scores.size != words.size) {
@@ -556,8 +863,6 @@ class ContextRescoringReplayTest {
             )
         }
         val exposed = evidence.any { it.boost > SwipeContextRescorer.NO_BOOST }
-        // Trace identity WITHOUT context, so the same trace under many contexts counts once.
-        val traceId = "${row.word}|${row.pts.size}|${row.pts.firstOrNull()?.x}"
         (if (favourableArm) results.favourableTraces else results.adversarialTraces).add(traceId)
         if (exposed) {
             (if (favourableArm) results.favourableExposedTraces
@@ -635,7 +940,6 @@ class ContextRescoringReplayTest {
         }
         // The (WEIGHT, R_MIN) sweep, on the decode that already happened. Split by TRACE so a
         // physical swipe never appears in both halves.
-        val tuneHalf = ((traceId.hashCode() % 2) + 2) % 2 == 0
         val sweep = if (tuneHalf) results.sweepTune else results.sweepConfirm
         for (w in SWEEP_WEIGHTS) {
             for (r in SWEEP_RMINS) {
@@ -647,6 +951,25 @@ class ContextRescoringReplayTest {
                         rescoredTop1 = words.getOrNull(swept.first()),
                     )
                 )
+            }
+        }
+
+        // ALTERNATES-ONLY mode: the shipped rescorer with `rMin = +∞`. `applyRankOneGuard`'s
+        // ratio test `scores[i] >= rMin * top` is then false for every finite score, so the
+        // engine's top-1 is restored on every call and context reorders ranks 2..K only —
+        // expressed through the rescorer's EXISTING parameter, no production change. The rank-1
+        // invariant is not assumed: each cell also tallies top-1, and the report asserts it.
+        for (w in ALT_WEIGHTS) {
+            val altOrder = SwipeContextRescorer.rescoreOrder(
+                scores, evidence, w, Double.POSITIVE_INFINITY,
+            )
+            val rescoredWords = altOrder.map { words[it] }
+            val halfMap = if (tuneHalf) results.altTune else results.altConfirm
+            halfMap.getOrPut(w) { AltCell() }
+                .record(row.word, words, rescoredWords, traceId, contextWord)
+            if (w == SwipeContextRescorer.WEIGHT) {
+                (if (favourableArm) results.altFavourable else results.altAdversarial)
+                    .record(row.word, words, rescoredWords, traceId, contextWord)
             }
         }
 
@@ -794,6 +1117,12 @@ class ContextRescoringReplayTest {
             "meetsBar=${best.third.meetsShipBar()}")
     }
 
+    /** Trace identity WITHOUT context — the unit of every concentration count. */
+    private fun traceIdOf(row: Row): String = "${row.word}|${row.pts.size}|${row.pts.firstOrNull()?.x}"
+
+    /** The trace-hash tune/confirm split shared by the sweep, the oracle and alternates mode. */
+    private fun isTuneHalf(traceId: String): Boolean = ((traceId.hashCode() % 2) + 2) % 2 == 0
+
     private fun ratioText(t: RescoringMetrics.Tally): String =
         if (t.broken == 0) "0.000" else if (t.fixed == 0) "INF" else "%.3f".format(t.promotionErrorRatio)
 
@@ -874,5 +1203,20 @@ class ContextRescoringReplayTest {
         val SWEEP_RMINS = doubleArrayOf(0.5, 0.6, 0.7, 0.8, 0.9)
 
         fun sweepKey(weight: Double, rMin: Double): String = "W=%.2f R=%.2f".format(weight, rMin)
+
+        /** Suggestion-bar slots the alternates-only experiment scores membership over. */
+        const val BAR_SLOTS = 3
+
+        /** Alternates-only WEIGHT grid; the shipped 0.5 is the pre-registered operating point. */
+        val ALT_WEIGHTS = listOf(0.25, SwipeContextRescorer.WEIGHT, 1.0)
+
+        /**
+         * A weight large enough that the boost term can never be what stops a promotion
+         * (0.5·ln 5 already exceeds ln 2, so this is a check, not a different answer).
+         */
+        const val ORACLE_WIDE_WEIGHT = 100.0
+
+        /** The maintainer's rule: guarded-oracle confirm Δtop-1 below this many points closes rank-1 context. */
+        const val ORACLE_DECISION_POINTS = 1.0
     }
 }
