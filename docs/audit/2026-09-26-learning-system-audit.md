@@ -117,3 +117,94 @@ effect. Stores are per-language and thread-safe, and `DebouncedPersister` retrie
 5. W3: frequency-aware cap with a grace slot for new entries.
 6. W5, W6, W8, W7.
 7. RC4: measure with replay traces before touching λ or the lexicon frequencies.
+
+## Resolution: report 2 (`git`) — the swipe-correction offer (2026-09-26)
+
+Automatic re-ranking from learned data failed two offline ship bars: usage priors
+(`docs/eval/2026-09-26-learned-unigram-swipe-replay.md`) and correction priors
+(`docs/eval/2026-09-26-correction-driven-swipe-prior-replay.md`). In both, a lifted word takes
+swipes meant for its neighbours. What shipped instead: repeated swipe corrections produce an
+OFFER. Accepting it creates the personal-dictionary entry that already works (default frequency
+255, which is the CTC calibrated ceiling and beats `got`/`for`). Nothing is re-ranked unless the
+user accepts, and each word needs its own consent.
+
+**Recording** (`SwipeCorrectionTracker`, pure). A correction is X → Y, where X is a word a swipe
+auto-inserted and Y is the word the user wanted. It is recorded in two cases:
+- **Bar tap.** The user taps an alternate over X. This is the REPLACE branch of
+  `onSuggestionSelected`.
+- **Undo, then the next word.** The #110 backspace undo or delete-last-word removes X. That
+  opens a pending-rejection slot, which the next committed word resolves:
+  - **Typed word.** It resolves the slot only when the editor shows it exactly where X was. The
+    check compares the text before the cursor at the undo, the new word, and at most one
+    separator. This anchor check also handles "cursor moved away".
+  - **Re-swiped word.** It becomes a candidate. The next event that does not reject it settles
+    it. Undoing it or replacing it from the bar extends the chain: `[got, for] → git`.
+  - **The slot is dropped** at a sentence end, Enter, leaving the field, an autocorrected
+    commit, or after 30 s.
+
+**Plausibility rule** (`SwipeCorrectionPolicy.isPlausible`). This filters changed-mind taps,
+which §5a of the eval showed poison correction evidence. A pair counts only when all of these
+hold:
+1. Y ≠ X.
+2. Y is letters-only and at least 2 characters long.
+3. Y is a real word: lexicon, user dictionary, or learnable by repetition, and not disabled.
+4. Y is one of these:
+   - one of the engine candidates for X's swipe, or
+   - a word with the same first and last letter as X (X's letters only, so `I'd` compares as
+     `id`) and a length within ±1.
+
+A bar tap always passes rule 4, so for taps the consent step is the remaining guard. Residue
+the rule cannot catch: a change of mind between gesture neighbours (`soon`/`son`).
+
+**Storage** (`SwipeCorrectionStore`). The store holds, per language:
+- c(Y) (+1 per correction however long the chain),
+- c(X→Y),
+- declined words.
+
+It is its own prefs file (`swipe_corrections`) and writes through. Limits:
+- 200 target words, evicting the least recently corrected;
+- 8 sources per target;
+- 500 declined words.
+
+It is written only when all of these hold: `LearningGate.canLearnSwipeCorrections` (master),
+the field allows personalized learning, and the field is not a password field. The same gates
+apply to reading, so the offer disappears when the master switch is off. Privacy's "forget
+learned data" and the master-off prompt clear it. It is **not backed up**. That matches
+`user_adaptation`: the Auto Backup allowlist does not include the file and manual Backup &
+Restore does not export it. The durable result is the dictionary word, which is exported.
+
+**Offer.** It appears when c(Y) ≥ 2 (`OFFER_MIN_CORRECTIONS`), Y is not already a user word,
+and Y was never declined. It uses the add-to-dictionary prompt surface: bar chips with
+`specialPromptActive` protection.
+- **Chips.** "Prefer “git” when swiping?" and "Don't ask". The three strings are in all 22
+  locales.
+- **Accept.** Calls `DictionaryManager.addUserWord` → `refreshCustomWords`. The CTC memo keys on
+  `custom_words_<lang>` (`LexiconContentVersion`), so the next swipe uses the new frequency, and
+  `SwipeRewarmScheduler` rebuilds the lexicon in the background.
+- **Decline.** Remembered permanently.
+- **When it is shown.** After a bar-tap correction or a typed resolution. A correction that
+  resolves at a re-swipe, Enter, or leaving the field is recorded but the offer is not shown
+  then. It appears at the next correction of that word.
+
+**Contraction case.** Suppose `I'd` is promoted over `id` and the user corrects it to `id`.
+That records `i'd → id` and offers `id`. Adding `id` to the user dictionary stops the
+promotion, because `CtcEngineAdapter` looks up base frequencies in the merged lexicon
+(`ContractionPromotionUserWordTest`).
+
+**Feature B: ML-row relabel.** `MLDataCollector` reports the trace id of the row it stored. When
+a correction is recorded, each rejected swipe's row gets `target_word = Y` and
+`metadata.corrected_from = X` (`SwipeMLDataStore.relabelSwipe`), and `is_exported` is cleared.
+The change is additive inside the JSON blob, so no SQLite migration is needed. This makes
+on-device exports usable as a per-user replay pool, which §6 of the eval asked for.
+
+**Tests.**
+- `SwipeCorrectionTrackerTest`, `SwipeCorrectionPolicyTest`, `SwipeCorrectionStoreTest`,
+  `ContractionPromotionUserWordTest`, `SwipeMLDataRelabelTest` (pure).
+- `SwipeCorrectionOfferTest`, `SwipeMLRelabelStoreTest` (mock).
+
+**Not done.**
+- Counter-evidence (X kept while Y was in the beam) is not recorded.
+- The offer for a correction that resolves at a re-swipe or Enter is deferred to the next
+  correction.
+- Y is added in lowercase.
+- Apostrophe and hyphen targets are never offered.
