@@ -111,22 +111,25 @@ class OnDeviceLearningPrivacyTest {
     }
 
     @Test
-    fun `master off - next-word surfacing is dark even with data preloaded`() {
+    fun `master off - learned next-word tier is dark even with data preloaded`() {
         // Learn with the gate ON first (data exists) …
         simulateTyping(corpus, master = true)
         assertTrue(bigramStore.getTotalBigramCount("en") > 0)
 
-        // … then the surfacing gate must still block with the master off
+        // … then the LEARNED tier must stay closed with the master off (2026-09-26: the
+        // shipped static tier may still show — it is not learned data — but nothing from
+        // these stores may surface). Both layers say no: the tier gate, and the store read
         // (WordPredictor.getNextWordCandidates checks canUseLearnedContext).
         assertFalse(LearningGate.canUseLearnedContext(false, true))
-        assertFalse(
-            NextWordPredictor.shouldShow(
-                featureEnabled = true, onDeviceLearningEnabled = false,
-                contextAwareEnabled = true,
-                wordPredictionEnabled = true, isPasswordMode = false,
-                specialPromptActive = false, inTermuxApp = false, hasContext = true
-            )
+        assertFalse(LearningGate.canUseLearnedNextWord(false, true, true))
+        val gate = NextWordPredictor.decideTiers(
+            featureEnabled = true, wordPredictionEnabled = true, isPasswordMode = false,
+            specialPromptActive = false, inTermuxApp = false, hasContext = true,
+            onDeviceLearningEnabled = false, contextAwareEnabled = true,
+            fieldAllowsPersonalizedLearning = true
         )
+        assertTrue("static tier still allowed", gate.showStatic)
+        assertFalse("learned tier closed", gate.useLearned)
     }
 
     // -------------------------------------------------------- MASTER GATE ON

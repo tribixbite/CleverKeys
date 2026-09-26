@@ -579,7 +579,7 @@
     <string name="advanced_provenance_markers_title">Značky původu návrhů</string>
     <string name="advanced_provenance_markers_desc">U každého návrhu zobrazí barevnou tečku označující modul, který jej vytvořil (úplné podrobnosti zobrazíte dlouhým stiskem návrhu)</string>
     <string name="input_next_word_title">Předpověď dalšího slova</string>
-    <string name="input_next_word_desc">Navrhne další slovo z naučených spojení ještě před napsáním písmene</string>
+    <string name="input_next_word_desc">Navrhne další slovo ještě před napsáním písmene. Používá běžná spojení; při zapnutém učení v zařízení i naučená spojení</string>
     <string name="input_context_source_title">Zdroj kontextu</string>
     <string name="input_context_source_desc">Který model spojení posiluje předpovědi: vestavěný, naučené vzorce, nebo oba</string>
     <string name="input_personalization_weight_title">Síla personalizace</string>

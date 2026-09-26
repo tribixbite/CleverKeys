@@ -1129,6 +1129,11 @@ tasks.register('runMockTests', JavaExec) {
     // before Enter/field-switch is flushed, contractions learn whole, password fields never
     // learn. Real SuggestionHandler + WordPredictor learn funnel over in-memory n-gram stores.
     'tribixbite.cleverkeys.LearningFunnelBookkeepingTest',
+    // Next-word tiers (maintainer decision 2026-09-26): the shipped static tier shows with
+    // on-device learning OFF (and in incognito fields); the learned tier is never read unless
+    // master + context-aware + field allow it; accepting a next-word learns nothing with the
+    // gate off. Real SuggestionHandler + WordPredictor over the shipped en.cklm.
+    'tribixbite.cleverkeys.NextWordStaticTierTest',
     // Same audit, KeyEventHandler side: Enter / IME action report a word boundary, the #110
     // backspace undos report the rejected word (KeyEventHandler.LearningHooks).
     'tribixbite.cleverkeys.KeyEventHandlerLearningHooksTest',

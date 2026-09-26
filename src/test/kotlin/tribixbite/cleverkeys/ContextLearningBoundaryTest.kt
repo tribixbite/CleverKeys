@@ -181,16 +181,18 @@ class ContextLearningBoundaryTest {
     }
 
     @Test
-    fun `M5 - incognito field suppresses next-word surfacing too`() {
-        assertFalse(
-            NextWordPredictor.shouldShow(
-                featureEnabled = true, onDeviceLearningEnabled = true,
-                contextAwareEnabled = true,
-                wordPredictionEnabled = true, isPasswordMode = false,
-                specialPromptActive = false, inTermuxApp = false, hasContext = true,
-                fieldAllowsPersonalizedLearning = false
-            )
+    fun `M5 - incognito field suppresses the LEARNED next-word tier, not the shipped one`() {
+        // Refined 2026-09-26 (maintainer decision): the flag forbids learning/personalization.
+        // Learned continuations are personalization → closed. The shipped static LM is the
+        // same for everyone → still shown, exactly like prefix predictions in that field.
+        val gate = NextWordPredictor.decideTiers(
+            featureEnabled = true, wordPredictionEnabled = true, isPasswordMode = false,
+            specialPromptActive = false, inTermuxApp = false, hasContext = true,
+            onDeviceLearningEnabled = true, contextAwareEnabled = true,
+            fieldAllowsPersonalizedLearning = false
         )
+        assertTrue(gate.showStatic)
+        assertFalse(gate.useLearned)
     }
 
     @Test

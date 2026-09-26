@@ -1135,7 +1135,7 @@ class SuggestionHandler(
                 // entries. Generation runs on the predictionTasks executor (L3 —
                 // the first lookup of a language lazily loads its persisted
                 // n-gram blobs, which janked the UI thread when this ran inline).
-                // W8: no learned next-word candidates in a password field (shouldShow only sees
+                // W8: no next-word candidates in a password field (the tier gate only sees
                 // the tracked mode, which lags the live EditorInfo before onStartInputView).
                 if (!passwordField) {
                     appendNextWordToSwipeAlternates(bar, barWords, barScores, barMetas, editorInfo)
@@ -1146,8 +1146,8 @@ class SuggestionHandler(
 
     /**
      * Next-word call-site 3 (audit §4.4 recommended composition): after a swipe
-     * auto-insert, append up to [NextWordPredictor.MAX_SWIPE_APPEND] learned
-     * next-word candidates AFTER the swipe alternates. The alternates are kept
+     * auto-insert, append up to [NextWordPredictor.MAX_SWIPE_APPEND] next-word
+     * candidates (learned tier when open, shipped tier always) AFTER the swipe alternates. The alternates are kept
      * so swipe correction still works; the appended entries carry NEXT_WORD
      * metas, which [onSuggestionSelected] uses to APPEND the tapped word
      * instead of replacing the auto-inserted swipe word.
@@ -1203,46 +1203,36 @@ class SuggestionHandler(
     }
 
     /**
-     * Shared gated next-word generation (call-sites 1–4). Returns null when any
-     * guard fails (feature off, master learning gate off, password/prompt/
-     * Termux, empty context) or nothing clears the confidence floor.
+     * The next-word tier decision for the live editor state (maintainer decision 2026-09-26):
+     * the STATIC tier needs only the feature pref and the ordinary suggestion-bar guards; the
+     * LEARNED tier additionally needs the master learning gate, the context-aware pref and a
+     * field that allows personalized learning. See [NextWordPredictor.decideTiers].
+     */
+    private fun nextWordTiers(editorInfo: EditorInfo?, hasContext: Boolean): NextWordPredictor.TierGate =
+        NextWordPredictor.decideTiers(
+            featureEnabled = config.next_word_prediction_enabled,
+            wordPredictionEnabled = config.word_prediction_enabled,
+            isPasswordMode = isPasswordMode,
+            specialPromptActive = specialPromptActive,
+            inTermuxApp = isTermuxEditor(editorInfo),
+            hasContext = hasContext,
+            onDeviceLearningEnabled = config.on_device_learning_enabled,
+            contextAwareEnabled = config.context_aware_predictions_enabled,
+            fieldAllowsPersonalizedLearning = fieldAllowsPersonalizedLearning // M5
+        )
+
+    /**
+     * Shared gated next-word generation for the swipe append (call-site 3). Returns null when
+     * the static-tier guards fail (feature off, password/prompt/Termux, empty context) or
+     * nothing survives the filters. The learned stores are read only when the learned tier is
+     * open ([NextWordPredictor.candidatesFor]).
      */
     private fun generateNextWordCandidates(editorInfo: EditorInfo?): List<NextWordPredictor.Candidate>? {
-        val inTermuxApp = isTermuxEditor(editorInfo)
         val contextWords = contextTracker.getContextWords().toList()
-        if (!NextWordPredictor.shouldShow(
-                featureEnabled = config.next_word_prediction_enabled,
-                onDeviceLearningEnabled = config.on_device_learning_enabled,
-                contextAwareEnabled = config.context_aware_predictions_enabled,
-                wordPredictionEnabled = config.word_prediction_enabled,
-                isPasswordMode = isPasswordMode,
-                specialPromptActive = specialPromptActive,
-                inTermuxApp = inTermuxApp,
-                hasContext = contextWords.isNotEmpty(),
-                fieldAllowsPersonalizedLearning = fieldAllowsPersonalizedLearning // M5
-            )
-        ) {
-            return null
-        }
+        val tiers = nextWordTiers(editorInfo, hasContext = contextWords.isNotEmpty())
+        if (!tiers.showStatic) return null
         val predictor = predictionCoordinator.getWordPredictor() ?: return null
-
-        val learned = predictor.getNextWordCandidates(contextWords, maxResults = 10)
-        val candidates = NextWordPredictor.generate(
-            learned = learned,
-            lastCommittedWord = contextWords.lastOrNull(),
-            personalizationBoost = { predictor.getPersonalizationBoostFor(it) },
-            isWordAllowed = { w ->
-                !predictor.isWordDisabled(w) &&
-                    (predictor.isInDictionary(w) || predictor.isInUserVocabulary(w))
-            },
-            // ARC-020 cold start: shipped continuations fill only the slots the
-            // learned store could not. Read here, INSIDE the gate above.
-            staticSeed = predictor.getStaticNextWordSeed(
-                contextWords,
-                NextWordPredictor.MAX_SUGGESTIONS
-            )
-        )
-        return candidates.ifEmpty { null }
+        return NextWordPredictor.candidatesFor(tiers, contextWords, predictor).ifEmpty { null }
     }
 
     /**
@@ -1793,9 +1783,10 @@ class SuggestionHandler(
     }
 
     /**
-     * Next-word prediction (audit 2026-08-06 §4, opt-in `next_word_prediction_enabled`,
-     * default OFF): generate context-only candidates from the learned bigram LM and
-     * show them in the (otherwise empty) suggestion bar.
+     * Next-word prediction (audit 2026-08-06 §4; `next_word_prediction_enabled`, default ON
+     * since 2026-09-26): generate context-only candidates — the learned n-gram LM when the
+     * learned tier is open, the shipped static LM always — and show them in the (otherwise
+     * empty) suggestion bar.
      *
      * Pure gating + generation live in [NextWordPredictor] (unit-tested); this method
      * owns only the impure wiring — config/tracker reads, the shared
@@ -1818,22 +1809,9 @@ class SuggestionHandler(
         editorInfo: EditorInfo?,
         contextOverride: List<String>? = null
     ) {
-        val inTermuxApp = isTermuxEditor(editorInfo)
         val contextWords = contextOverride ?: contextTracker.getContextWords().toList()
-        if (!NextWordPredictor.shouldShow(
-                featureEnabled = config.next_word_prediction_enabled,
-                onDeviceLearningEnabled = config.on_device_learning_enabled,
-                contextAwareEnabled = config.context_aware_predictions_enabled,
-                wordPredictionEnabled = config.word_prediction_enabled,
-                isPasswordMode = isPasswordMode,
-                specialPromptActive = specialPromptActive,
-                inTermuxApp = inTermuxApp,
-                hasContext = contextWords.isNotEmpty(),
-                fieldAllowsPersonalizedLearning = fieldAllowsPersonalizedLearning // M5
-            )
-        ) {
-            return
-        }
+        val tiers = nextWordTiers(editorInfo, hasContext = contextWords.isNotEmpty())
+        if (!tiers.showStatic) return
         val predictor = predictionCoordinator.getWordPredictor() ?: return
 
         // M6 (review 2026-08-06): snapshot the bar generation at submit time —
@@ -1845,22 +1823,8 @@ class SuggestionHandler(
         predictionTasks.cancelAndSubmit {
             if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
 
-            val learned = predictor.getNextWordCandidates(contextWords, maxResults = 10)
-            val candidates = NextWordPredictor.generate(
-                learned = learned,
-                lastCommittedWord = contextWords.lastOrNull(),
-                personalizationBoost = { predictor.getPersonalizationBoostFor(it) },
-                isWordAllowed = { w ->
-                    !predictor.isWordDisabled(w) &&
-                        (predictor.isInDictionary(w) || predictor.isInUserVocabulary(w))
-                },
-                // ARC-020 cold start: shipped continuations fill only the slots the
-                // learned store could not. Read here, INSIDE the gate above.
-                staticSeed = predictor.getStaticNextWordSeed(
-                    contextWords,
-                    NextWordPredictor.MAX_SUGGESTIONS
-                )
-            )
+            // Learned tier only when `tiers.useLearned`; the shipped tier always (2026-09-26).
+            val candidates = NextWordPredictor.candidatesFor(tiers, contextWords, predictor)
             if (candidates.isEmpty()) return@cancelAndSubmit
 
             // Presentation (§4.4): stored lowercase → restore "I" forms and
@@ -1929,33 +1893,28 @@ class SuggestionHandler(
             showSwipePreferenceOffer(it)
             return
         }
-        maybeShowNextWordPredictions(editorInfo, readEditorParkContext(ic))
+        maybeShowNextWordPredictions(editorInfo, readEditorParkContext(ic, editorInfo))
     }
 
     /**
      * L5: read + tokenize the words before the parked cursor.
      *
-     * Guarded on the CHEAP next-word prerequisites (feature pref, master
-     * learning gate, per-field incognito flag) so fields that can never
-     * surface candidates are never read — the editor text of an incognito
-     * field must not even be inspected for personalization. Returns null on
-     * any read failure so the caller falls back to session context; an empty
-     * list is a REAL result ("parked at a sentence start — show nothing").
+     * Guarded on the CHEAP static-tier prerequisites (feature pref, word prediction,
+     * password / special prompt / Termux) so a field that can never surface a next-word
+     * candidate is never read. Returns null on any read failure so the caller falls back to
+     * session context; an empty list is a REAL result ("parked at a sentence start — show
+     * nothing").
+     *
+     * 2026-09-26: the learning gates (master, context-aware, incognito flag) no longer guard
+     * this read. The static tier needs the previous word with learning off, and reading the
+     * words before the cursor is what every ordinary prediction does in any field, incognito
+     * included. The words are used for this one lookup and never recorded: nothing here
+     * reaches the learn funnel, and the learned stores are consulted only when
+     * [NextWordPredictor.TierGate.useLearned] is true.
      */
-    private fun readEditorParkContext(ic: InputConnection?): List<String>? {
+    private fun readEditorParkContext(ic: InputConnection?, editorInfo: EditorInfo?): List<String>? {
         if (ic == null) return null
-        // Audit 2026-08-26: `context_aware_predictions_enabled` belongs in this cheap-gate set.
-        // Without it, a stale-on feature pref (its toggle is HIDDEN in Settings when the context
-        // LM is off) meant the editor text was still read here even though downstream
-        // `getNextWordCandidates` fails closed and no candidate could ever surface — violating
-        // this method's own contract that fields which can never show candidates are never read.
-        if (!config.next_word_prediction_enabled ||
-            !config.on_device_learning_enabled ||
-            !config.context_aware_predictions_enabled ||
-            !fieldAllowsPersonalizedLearning
-        ) {
-            return null
-        }
+        if (!nextWordTiers(editorInfo, hasContext = true).showStatic) return null
         return try {
             ic.getTextBeforeCursor(EDITOR_PARK_CONTEXT_CHARS, 0)
                 ?.let { NextWordPredictor.contextFromEditorText(it) }

@@ -579,7 +579,7 @@
     <string name="advanced_provenance_markers_title">추천 출처 표시</string>
     <string name="advanced_provenance_markers_desc">각 추천 단어에 이를 생성한 엔진을 나타내는 색상 점을 표시합니다(추천을 길게 누르면 전체 정보가 표시됩니다)</string>
     <string name="input_next_word_title">다음 단어 예측</string>
-    <string name="input_next_word_desc">글자를 입력하기 전에 학습한 표현에서 다음 단어를 제안합니다</string>
+    <string name="input_next_word_desc">글자를 입력하기 전에 다음 단어를 제안합니다. 일반적인 표현을 사용하며, 기기 내 학습이 켜져 있으면 학습한 표현도 추가합니다</string>
     <string name="input_context_source_title">문맥 소스</string>
     <string name="input_context_source_desc">예측을 강화할 표현 모델: 기본 제공, 학습된 패턴 또는 둘 다</string>
     <string name="input_personalization_weight_title">개인화 강도</string>

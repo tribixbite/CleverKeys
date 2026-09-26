@@ -602,7 +602,7 @@
     <string name="advanced_provenance_markers_title">Marcaje de origine a sugestiilor</string>
     <string name="advanced_provenance_markers_desc">Afișează pe fiecare sugestie un punct colorat care indică motorul care a generat-o (apăsare lungă pe o sugestie pentru toate detaliile)</string>
     <string name="input_next_word_title">Predicția cuvântului următor</string>
-    <string name="input_next_word_desc">Sugerează cuvântul următor din expresiile învățate înainte de a tasta o literă</string>
+    <string name="input_next_word_desc">Sugerează cuvântul următor înainte de a tasta o literă. Folosește expresii uzuale; adaugă expresiile învățate când învățarea pe dispozitiv este activată</string>
     <string name="input_context_source_title">Sursa contextului</string>
     <string name="input_context_source_desc">Ce model de expresii întărește predicțiile: cel integrat, tiparele învățate sau ambele</string>
     <string name="input_personalization_weight_title">Intensitatea personalizării</string>

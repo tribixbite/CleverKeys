@@ -618,7 +618,7 @@
     <string name="advanced_provenance_markers_title">Indicatori di origine dei suggerimenti</string>
     <string name="advanced_provenance_markers_desc">Mostra su ogni suggerimento un punto colorato che indica il motore che lo ha prodotto (tieni premuto un suggerimento per tutti i dettagli)</string>
     <string name="input_next_word_title">Previsione della parola successiva</string>
-    <string name="input_next_word_desc">Suggerisce la parola successiva dalle frasi apprese prima di digitare una lettera</string>
+    <string name="input_next_word_desc">Suggerisce la parola successiva prima di digitare una lettera. Usa frasi comuni; aggiunge le frasi apprese quando l\'apprendimento sul dispositivo è attivo</string>
     <string name="input_context_source_title">Origine del contesto</string>
     <string name="input_context_source_desc">Quale modello di frasi potenzia le previsioni: quello integrato, i pattern appresi o entrambi</string>
     <string name="input_personalization_weight_title">Intensità della personalizzazione</string>

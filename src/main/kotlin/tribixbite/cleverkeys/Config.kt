@@ -161,7 +161,10 @@ object Defaults {
     const val SHOW_EXACT_TYPED_WORD = true  // #42: Show exact typed string as tap-to-add-to-dictionary option
     const val CONTEXT_AWARE_PREDICTIONS_ENABLED = true
     const val PERSONALIZED_LEARNING_ENABLED = true
-    const val NEXT_WORD_PREDICTION_ENABLED = false // Opt-in (audit 2026-08-06 §4.3)
+    // Default ON since 2026-09-26 (maintainer decision): the shipped static tier works with
+    // on-device learning off, so next-word no longer depends on an opt-in the user may never
+    // make. Installs with an explicit stored `false` keep it; unset installs get ON.
+    const val NEXT_WORD_PREDICTION_ENABLED = true
     const val CONTEXT_SOURCE = "both" // both | learned_only | static_only (audit §3.2-2)
     const val PERSONALIZATION_WEIGHT = 1.0f // 0=off … 2=double (audit §3.2-1)
     const val PERSONALIZATION_MAX_WORDS = 5000 // learned-vocabulary size cap (least-value rolling eviction)
@@ -643,7 +646,7 @@ class Config private constructor(
     @JvmField var context_aware_predictions_enabled = false // Phase 7.1: Dynamic N-gram learning
     @JvmField var personalized_learning_enabled = false // Phase 7.2: Personalized word frequency learning
     @JvmField var on_device_learning_enabled = Defaults.ON_DEVICE_LEARNING_ENABLED // MASTER privacy gate over ALL typing-behavior learning (Task A 2026-08-06; opt-in on fresh installs since v2.0, upgrades seeded ON by the v4 migration)
-    @JvmField var next_word_prediction_enabled = false // Opt-in Gboard-style next-word from learned context (2026-08-06)
+    @JvmField var next_word_prediction_enabled = Defaults.NEXT_WORD_PREDICTION_ENABLED // Gboard-style next-word: shipped LM, plus learned context when learning is on
     @JvmField var context_source = "both" // which context LM feeds scoring: both | learned_only | static_only
     @JvmField var personalization_weight = 1.0f // continuous personalization strength (0=off … 2=double)
     @JvmField var personalization_max_words = Defaults.PERSONALIZATION_MAX_WORDS // learned-vocabulary size cap

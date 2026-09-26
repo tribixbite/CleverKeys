@@ -589,7 +589,7 @@
     <string name="advanced_provenance_markers_title">Znaczniki pochodzenia podpowiedzi</string>
     <string name="advanced_provenance_markers_desc">Pokazuje przy każdej podpowiedzi kolorową kropkę wskazującą silnik, który ją utworzył (przytrzymaj podpowiedź, aby zobaczyć pełne szczegóły)</string>
     <string name="input_next_word_title">Przewidywanie następnego słowa</string>
-    <string name="input_next_word_desc">Podpowiada następne słowo z wyuczonych zwrotów, zanim wpiszesz literę</string>
+    <string name="input_next_word_desc">Podpowiada następne słowo, zanim wpiszesz literę. Korzysta z popularnych zwrotów; przy włączonym uczeniu na urządzeniu także z wyuczonych</string>
     <string name="input_context_source_title">Źródło kontekstu</string>
     <string name="input_context_source_desc">Który model zwrotów wzmacnia przewidywania: wbudowany, wyuczone wzorce lub oba</string>
     <string name="input_personalization_weight_title">Siła personalizacji</string>

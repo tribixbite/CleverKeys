@@ -590,7 +590,7 @@
     <string name="advanced_provenance_markers_title">Penanda asal saran</string>
     <string name="advanced_provenance_markers_desc">Menampilkan titik berwarna pada setiap saran yang menunjukkan mesin pembuatnya (tekan lama sebuah saran untuk detail lengkap)</string>
     <string name="input_next_word_title">Prediksi kata berikutnya</string>
-    <string name="input_next_word_desc">Menyarankan kata berikutnya dari frasa yang telah dipelajari sebelum Anda mengetik satu huruf</string>
+    <string name="input_next_word_desc">Menyarankan kata berikutnya sebelum Anda mengetik satu huruf. Menggunakan frasa umum; menambahkan frasa yang telah dipelajari saat pembelajaran di perangkat aktif</string>
     <string name="input_context_source_title">Sumber konteks</string>
     <string name="input_context_source_desc">Model frasa mana yang memperkuat prediksi: bawaan, pola yang dipelajari, atau keduanya</string>
     <string name="input_personalization_weight_title">Kekuatan personalisasi</string>

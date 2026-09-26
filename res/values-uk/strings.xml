@@ -590,7 +590,7 @@
     <string name="advanced_provenance_markers_title">Позначки джерела підказок</string>
     <string name="advanced_provenance_markers_desc">Показувати біля кожної підказки кольорову точку, яка вказує рушій, що її створив (довге натискання на підказку — усі подробиці)</string>
     <string name="input_next_word_title">Передбачення наступного слова</string>
-    <string name="input_next_word_desc">Пропонувати наступне слово з вивчених сполучень ще до введення першої літери</string>
+    <string name="input_next_word_desc">Пропонувати наступне слово ще до введення першої літери. Використовує поширені сполучення; за увімкненого навчання на пристрої — і вивчені</string>
     <string name="input_context_source_title">Джерело контексту</string>
     <string name="input_context_source_desc">Яка модель сполучень підсилює передбачення: вбудована, вивчені закономірності чи обидві</string>
     <string name="input_personalization_weight_title">Сила персоналізації</string>

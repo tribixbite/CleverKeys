@@ -579,7 +579,7 @@
     <string name="advanced_provenance_markers_title">Herkomstmarkeringen voor suggesties</string>
     <string name="advanced_provenance_markers_desc">Toont bij elke suggestie een gekleurde stip die aangeeft welke engine haar heeft gemaakt (houd een suggestie ingedrukt voor alle details)</string>
     <string name="input_next_word_title">Voorspelling van volgend woord</string>
-    <string name="input_next_word_desc">Stelt het volgende woord voor uit de geleerde uitdrukkingen voordat er een letter wordt getypt</string>
+    <string name="input_next_word_desc">Stelt het volgende woord voor voordat er een letter wordt getypt. Gebruikt veelvoorkomende uitdrukkingen; voegt geleerde uitdrukkingen toe als leren op het apparaat aan staat</string>
     <string name="input_context_source_title">Contextbron</string>
     <string name="input_context_source_desc">Welk uitdrukkingsmodel de voorspellingen versterkt: ingebouwd, de geleerde patronen of beide</string>
     <string name="input_personalization_weight_title">Sterkte van personalisatie</string>

@@ -72,6 +72,19 @@ class LearningGateTest {
         assertFalse(LearningGate.canUseLearnedContext(true, false))
     }
 
+    @Test
+    fun `learned next-word tier needs master AND context-aware AND a field that allows learning`() {
+        // Maintainer decision 2026-09-26: the next-word STATIC tier is outside this gate; the
+        // LEARNED tier is canUseLearnedContext plus the per-field incognito flag.
+        for (master in listOf(true, false)) for (ctx in listOf(true, false)) for (field in listOf(true, false)) {
+            assertEquals(
+                "master=$master ctx=$ctx field=$field",
+                master && ctx && field,
+                LearningGate.canUseLearnedNextWord(master, ctx, field)
+            )
+        }
+    }
+
     // --------------------------------------------------------------- funnel
 
     private class Recorder {

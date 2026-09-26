@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Next-word prediction is on by default and works without on-device learning.** The
+  suggestions shown before you type a letter now come from the built-in phrase data (the
+  English context model; curated phrase lists for German, Spanish, French, Italian and
+  Portuguese) even when "Learn from my typing" is off (the v2.0 default), when Context-Aware Predictions
+  is off, and in incognito fields. Your own learned phrases are still added only when
+  on-device learning and Context-Aware Predictions are on and the field allows learning;
+  with learning off they are neither read nor updated, and accepting a next-word suggestion
+  records nothing. The Settings switch is no longer greyed out when Context-Aware
+  Predictions is off. If you had turned next-word off, it stays off.
+- Language packs now carry their data attribution (NOTICE.txt + manifest licence keys); the
+  English Norvig variant was withdrawn (no redistribution licence).
+
 ### Planned for v2.1
 
 - Custom emoji picker with categories and search

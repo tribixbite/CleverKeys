@@ -9,7 +9,8 @@
 ### Summary
 One coordinated feature wave that (1) makes the learned context language model persistent
 across restarts, (2) puts ALL typing-behavior learning behind a single master privacy gate,
-(3) adds opt-in Gboard-style next-word prediction from the learned n-gram store, (4) makes
+(3) adds Gboard-style next-word prediction (learned n-gram store + shipped static model;
+default ON and independent of the learning gate for the shipped tier since 2026-09-26), (4) makes
 every suggestion's origin and score inspectable (provenance), and (5) gives users a
 browse/delete manager over everything the keyboard has learned.
 
@@ -27,7 +28,8 @@ in `f6824477`).
 **File**: `src/main/kotlin/tribixbite/cleverkeys/LearningGate.kt` (pure JVM object)
 
 ### Contract
-The `on_device_learning_enabled` preference (**default ON — this is an opt-OUT**) is the
+The `on_device_learning_enabled` preference (**default OFF on fresh installs since v2.0 —
+opt-IN**; upgrades are seeded `true` by `LearningMigration`) is the
 single source of truth for "may this typing-derived signal be recorded right now?". When
 OFF, every learn path is short-circuited **at the write layer**, and the read paths that
 surface previously learned data go dark too — the learned stores become fully inert
@@ -40,10 +42,13 @@ surface previously learned data go dark too — the learned stores become fully 
 | Selection adaptation | `UserAdaptationManager` prefs | `canLearnAdaptation(master)` — call site `SuggestionHandler.onSuggestionSelected`. *Pre-existing privacy gap: this store previously had no preference gate at all.* |
 | Swipe-ML traces | `SwipeMLDataStore` | `canCollectSwipeMl(master, collectSwipeEnabled)` — via `PrivacyManager.canCollectSwipeData`, checked by `MLDataCollector` |
 
-READ gates: `canUseLearnedContext(master, contextAwareEnabled)` (dynamic context boost +
-next-word candidate source) and `canUseAdaptation(master)` (adaptation re-rank multiplier +
+READ gates: `canUseLearnedContext(master, contextAwareEnabled)` (dynamic context boost,
+swipe rescoring), `canUseLearnedNextWord(master, contextAwareEnabled, fieldAllows)` (the
+next-word LEARNED tier — continuations, personalization re-rank, learned-vocabulary
+allow-list; §3) and `canUseAdaptation(master)` (adaptation re-rank multiplier +
 add-to-dictionary prompt suppression; review H3). Personalization boost returns 0 once the
-engine is disabled.
+engine is disabled. The next-word STATIC tier (shipped model) is deliberately outside every
+learning gate — it is not learned data (maintainer decision 2026-09-26, §3).
 
 ### The learn funnel
 `LearningGate.learnCommittedWord(...)` is THE funnel for a committed word (production
@@ -60,7 +65,8 @@ mutates and nothing can be persisted.
 `LearningGate.IME_FLAG_NO_PERSONALIZED_LEARNING = 0x1000000` mirrors the platform constant
 (pinned by `LearningGateTest` against `EditorInfo`). An editor that sets this flag (e.g. a
 browser private tab) suppresses BOTH learn paths regardless of user preferences, and also
-suppresses next-word display (`fieldAllowsPersonalizedLearning` parameter throughout).
+closes the next-word LEARNED tier (`fieldAllowsPersonalizedLearning` parameter throughout).
+The shipped static next-word tier still shows there, like prefix predictions do (§3).
 
 ### Deliberate out-of-scope (review L7)
 The master gate covers AUTOMATIC recording of typing behavior. Data the user explicitly
@@ -132,29 +138,65 @@ After `.` `?` `!`, `SuggestionHandler` calls `WordPredictor.onSentenceBoundary()
 
 ---
 
-## 3. Next-Word Prediction (opt-in, default OFF)
+## 3. Next-Word Prediction (default ON since 2026-09-26)
 
-**Files**: `NextWordPredictor.kt` (pure JVM gating + generation),
-`SuggestionHandler.kt` (impure wiring: `maybeShowNextWordPredictions`,
+**Files**: `NextWordPredictor.kt` (pure JVM gating + generation + the gated read path),
+`SuggestionHandler.kt` (impure wiring: `nextWordTiers`, `maybeShowNextWordPredictions`,
 `appendNextWordToSwipeAlternates`, `generateNextWordCandidates`, `handleCursorParkPrediction`)
 
-### Gating (`NextWordPredictor.shouldShow`)
-ALL of: `next_word_prediction_enabled` (feature pref, default OFF) ∧
-`on_device_learning_enabled` (master — next-word reads the learned store, so it goes dark
-with the master off) ∧ field allows personalized learning (M5 incognito) ∧
-`word_prediction_enabled` ∧ not password mode ∧ no special prompt active
-(autocorrect-undo / add-to-dictionary) ∧ not a Termux field ∧ non-empty committed context.
+### Gating — two tiers (`NextWordPredictor.decideTiers`, maintainer decision 2026-09-26)
+
+Next-word has two sources with very different privacy weight, so it has two decisions
+(`NextWordPredictor.TierGate`):
+
+| Tier | Source | Requires |
+|---|---|---|
+| **Static** (`showStatic`) | shipped context LM / curated bigram seed — identical on every install, nothing personal | `next_word_prediction_enabled` ∧ `word_prediction_enabled` ∧ ¬password ∧ ¬special prompt (autocorrect-undo / add-to-dictionary / swipe-preference offer) ∧ ¬Termux field ∧ non-empty context |
+| **Learned** (`useLearned`) | the user's bigram/trigram stores, plus the personalization boost and learned-vocabulary allow-list that rank/filter them | static-tier conditions ∧ `LearningGate.canUseLearnedNextWord` = `on_device_learning_enabled` ∧ `context_aware_predictions_enabled` ∧ field allows personalized learning |
+
+`useLearned ⇒ showStatic` is enforced by `TierGate`'s constructor. Until 2026-09-26 one
+boolean (`shouldShow`) required the learning gates for both tiers, so next-word was dead
+for every fresh v2.0 install (learning is opt-in) even though the shipped tier holds no
+personal data.
+
+**Why the static tier ignores each learning control:**
+- *Master learning gate* — its contract is that nothing typing-derived is recorded or read.
+  The static tier records nothing and reads only the previous word, which every ordinary
+  prediction already reads.
+- *`context_aware_predictions_enabled`* — its Settings copy is "Learn from typing patterns
+  (N-gram model)": it controls the LEARNED LM (`canLearnContext` / `canUseLearnedContext`).
+  The shipped model's other consumer, the prefix-scoring static multiplier
+  (`WordPredictor.resolveScoreBreakdown` step 3a), is not gated by it either.
+- *Incognito flag* (`IME_FLAG_NO_PERSONALIZED_LEARNING`) — it forbids learning from, and
+  personalizing on, the field's text. A continuation shipped to everyone is neither; it is
+  the same class of generic suggestion as the prefix completions the field already gets.
+  The learned tier stays closed there.
+
+**The read path is one function**: `NextWordPredictor.candidatesFor(gate, context, predictor)`
+serves all call sites. With `useLearned` false it does not call
+`getNextWordCandidates`, `getPersonalizationBoostFor` or `isInUserVocabulary` at all (the
+last is ungated inside `WordPredictor` and reads the personalization tally), and filters
+the static seed by dictionary membership + Dictionary Manager disables only. Residual,
+accepted: `isInDictionary` also consults selection-adaptation history under the master gate
+alone, so in an incognito field with learning ON it can admit a shipped word the dictionary
+lacks; it can never surface a non-shipped word, and nothing is written.
+
+**Nothing is written by next-word.** Accepting a candidate is an ordinary bar selection: the
+committed word goes through `LearningGate.learnCommittedWord` and the gated adaptation
+recorder like any other commit, so with the master off (or in an incognito field) nothing
+is learned. Pinned end to end by `NextWordStaticTierTest`.
 
 ### Candidate generation (`NextWordPredictor.generate`)
-Input: probability-ranked `ContextModel.getNextWordCandidates` (trigram-preferred with
-bigram backoff), max 10. Filters:
+Input (learned tier only): probability-ranked `ContextModel.getNextWordCandidates`
+(trigram-preferred with bigram backoff), max `LEARNED_LOOKUP_LIMIT = 10`. Filters:
 
 1. **Confidence floor**: learned frequency ≥ `MIN_LEARNED_FREQUENCY = 2` AND conditional
    probability ≥ `MIN_LEARNED_PROBABILITY = 0.05` — an EMPTY next-word bar is the designed
    common case; show nothing rather than noise.
 2. **Self-repetition**: drop the just-committed word.
-3. **`isWordAllowed`**: must be in dictionary or user vocabulary AND not disabled in
-   Dictionary Manager (blocks typo'd garbage the n-gram stores may have absorbed).
+3. **`isWordAllowed`**: must be in dictionary or (learned tier open only) user vocabulary
+   AND not disabled in Dictionary Manager (blocks typo'd garbage the n-gram stores may have
+   absorbed).
 4. Dedup (first occurrence wins).
 
 Ranking score = `probability × (1 + personalizationBoost/4) × 1000` (same personalization
@@ -180,12 +222,12 @@ below `STATIC_SEED_SCORE_CEILING = 49` — one below the lowest score a learned 
 reach — so the debug-score column stays monotonic with the displayed order. An established
 user whose learned store fills all three slots never consults the seed at all.
 
-Gating is unchanged and unweakened: the seed is not personal data, so
-`getStaticNextWordSeed` adds no gate read of its own; instead both call sites invoke it only
-after `NextWordPredictor.shouldShow`, so it inherits the full gate (feature pref, master
-learning gate, context-LM pref, incognito field, password/prompt/Termux). `next_word_prediction_enabled`
-is still default-OFF, so nothing appears for a user who has not opted in.
-`LearningWiringDriftTest` pins the placement.
+Gating (revised 2026-09-26): the seed is not personal data, so `getStaticNextWordSeed`
+adds no gate read of its own, and it is now read under the STATIC-tier gate only (feature
+pref + suggestion-bar guards) — with learning off, context-aware off, or in an incognito
+field it is the whole bar. It is read solely inside `NextWordPredictor.candidatesFor`,
+after `decideTiers`; `LearningWiringDriftTest` pins that no call site reads it (or any
+learned next-word source) directly.
 
 ### Static context LM (en, 2026-09-26)
 
@@ -213,7 +255,7 @@ Other languages keep the hardcoded tables and JSON seeds until they get an LM. E
 | 1 | Typed word completed with a **space** (`SuggestionHandler` single-char commit path, `text == " "` only) | Bar would otherwise clear → show up to 3 context-only candidates. After sentence-final punctuation the context was just cleared, so nothing shows. |
 | 2 | **Manual tap** on a suggestion (`onSuggestionSelected`, `isManualSelection` only — review H2) | Context just grew → chain another round ("want" → tap "to" → suggests "go/see/be"). The swipe AUTO-insert must NOT route here (it would replace the alternates bar and break swipe correction) — it composes via call-site 3 instead. |
 | 3 | **Swipe auto-insert** results displayed (`appendNextWordToSwipeAlternates`) | KEEP the swipe alternates (user may still correct the swipe) and APPEND ≤2 next-word candidates after them, tagged with per-suggestion `NEXT_WORD` metas so a tap APPENDS the word instead of replacing the auto-inserted swipe word. Runs on the shared `predictionTasks` executor (review L3 — first lookup lazily loads persisted n-gram blobs; inline it caused first-swipe jank). |
-| 4 | **Cursor parked** after existing text with no partial word under it (`handleCursorParkPrediction`, routed from InputCoordinator's empty-prefix cursor-sync branch) | Gboard-style tap-into-text predictions. **L5 RESOLVED — the editor scan SHIPPED**: `SuggestionHandler.readEditorParkContext` (`:1508-1529`) does a guarded `getTextBeforeCursor(EDITOR_PARK_CONTEXT_CHARS, 0)` and tokenizes it with the pure `NextWordPredictor.contextFromEditorText` (`:182-219`, sentence-boundary aware, last `LearningGate.CONTEXT_WINDOW` tokens), so parking into an unrelated paragraph predicts from THAT paragraph — including text typed in an earlier session. The read is gated on the CHEAP prerequisites first (`next_word_prediction_enabled`, `on_device_learning_enabled`, `context_aware_predictions_enabled`, per-field incognito) so a field that could never surface a candidate is never even read; `null` on read failure falls back to session context, while an empty list is a real "parked at a sentence start → show nothing". Pinned by `LearningWiringDriftTest` (`:189-204`, `:255`, `:260`). |
+| 4 | **Cursor parked** after existing text with no partial word under it (`handleCursorParkPrediction`, routed from InputCoordinator's empty-prefix cursor-sync branch) | Gboard-style tap-into-text predictions. **L5 RESOLVED — the editor scan SHIPPED**: `SuggestionHandler.readEditorParkContext` (`:1508-1529`) does a guarded `getTextBeforeCursor(EDITOR_PARK_CONTEXT_CHARS, 0)` and tokenizes it with the pure `NextWordPredictor.contextFromEditorText` (`:182-219`, sentence-boundary aware, last `LearningGate.CONTEXT_WINDOW` tokens), so parking into an unrelated paragraph predicts from THAT paragraph — including text typed in an earlier session. The read is gated on the CHEAP static-tier prerequisites first (`nextWordTiers(editorInfo, hasContext = true).showStatic`: feature pref, word prediction, password / prompt / Termux) so a field that could never surface a candidate is never even read — since 2026-09-26 the learning prefs and incognito flag no longer block it, because the static tier needs the previous word with learning off; the words are used for that lookup and never recorded; `null` on read failure falls back to session context, while an empty list is a real "parked at a sentence start → show nothing". Pinned by `LearningWiringDriftTest` (`:189-204`, `:255`, `:260`). |
 
 ### Staleness + dismissal
 - Bar-generation guard (review M6): the async post aborts if `SuggestionBar.contentGeneration()`
@@ -226,9 +268,11 @@ Other languages keep the hardcoded tables and JSON seeds until they get an LM. E
 
 ### Next-word UX walkthrough (what the user actually sees)
 
-Preconditions: Settings → ⌨️ Input Behavior → Word Prediction → **Next-Word Prediction ON**;
-🔒 Privacy & Data → **Learn From My Typing ON** (default); the phrases involved have been
-typed at least twice before (floor: seen ≥2×, ≥5% conditional probability).
+Preconditions: Settings → ⌨️ Input Behavior → Word Prediction → **Next-Word Prediction ON**
+(default since 2026-09-26). With 🔒 Privacy & Data → **Learn From My Typing OFF** (the v2.0
+fresh-install default) only the shipped continuations appear (e.g. after "want": `to  you  a`
+from `en.cklm`). The learned entries in the walkthrough below additionally need learning ON
+and the phrases typed at least twice before (floor: seen ≥2×, ≥5% conditional probability).
 
 **Tap-typing "I want to go home":**
 1. Type `I` + space → commit. If the LM has learned continuations of "i" (e.g. "want" seen
@@ -267,10 +311,10 @@ label dropped its `(learned)` suffix for the same reason: the tier is a per-sugg
 not a per-origin one. With **Suggestion Origin Markers** enabled (Advanced), next-word
 entries carry a distinct colored dot distinguishing them from swipe alternates in mixed bars.
 
-**When next-word will NOT appear:** feature pref off (default); master learning gate off;
-password fields; incognito fields (`IME_FLAG_NO_PERSONALIZED_LEARNING`); Termux; while an
+**When next-word will NOT appear:** feature pref explicitly off; password fields; Termux; while an
 autocorrect-undo or add-to-dictionary prompt is showing; empty session context; word
-prediction disabled; or nothing learned above the floor AND no shipped continuation for the
+prediction disabled; or nothing learned above the floor (or the learned tier closed —
+learning off, context-aware off, incognito field) AND no shipped continuation for the
 last word (the static seed covers de/en/es/fr/it/pt only, and only the ~100–320 previous
 words each asset lists).
 
@@ -343,7 +387,7 @@ Prediction block of `InputBehaviorSection` ("Learning & Data").
 | Setting | Key | Default | Range/Values | UI location |
 |---------|-----|---------|--------------|-------------|
 | Learn From My Typing (master gate) | `on_device_learning_enabled` | `true` | bool | 🔒 Privacy & Data → On-Device Learning |
-| Next-Word Prediction | `next_word_prediction_enabled` | `false` | bool | ⌨️ Input Behavior → Word Prediction |
+| Next-Word Prediction | `next_word_prediction_enabled` | `true` (was `false` until 2026-09-26; an explicit stored `false` is kept) | bool — always enabled in Settings (no longer disabled while Context-Aware is off) | ⌨️ Input Behavior → Word Prediction |
 | Context Source | `context_source` | `"both"` | `both` \| `learned_only` \| `static_only` | ⌨️ Input Behavior → Word Prediction |
 | Personalization Strength | `personalization_weight` | `1.0` | 0.0–2.0 (0 = off, 2 = double) | ⌨️ Input Behavior → Word Prediction |
 | Max Learned Words | `personalization_max_words` | `5000` | 1000–20000 (500-word steps) | ⌨️ Input Behavior → Learning & Data |
@@ -363,7 +407,8 @@ Existing related prefs (unchanged keys, now composed with the master gate):
 |-------|-------|
 | `LearningGateTest` | Gate matrix, IME flag value pinned against platform |
 | `OnDeviceLearningPrivacyTest` | Funnel wired to real stores over in-memory storage — asserts nothing recorded/persisted with master off |
-| `NextWordPredictorTest` | Gating matrix, floors, self-repetition, dedup, personalization reorder, static cold-start tier (fill-only, sub-floor scores, no faked stats) |
+| `NextWordPredictorTest` | Two-tier gating matrix (exhaustive over all 2^9 inputs: static = bar guards, learned = static ∧ master ∧ context-aware ∧ field), floors, self-repetition, dedup, personalization reorder, static cold-start tier (fill-only, sub-floor scores, no faked stats) |
+| `NextWordStaticTierTest` (mock tier) | Real `SuggestionHandler` + `WordPredictor` over the shipped `lm/en.cklm`: static next-word shows with learning OFF, context-aware OFF and in an incognito field; learned tier never read (no `getNextWordCandidates` / boost / user-vocabulary call) in those states; learned entry leads when learning is on; password / Termux / explicit-off show nothing; cursor park reads the editor for the static tier; accepting a next-word with the gate off learns nothing; default ON pinned |
 | `StaticBigramSeedTest` | Shipped `assets/bigrams/*` schema against the real files, asset-wins merge, hardcoded fallback index |
 | `StaticContextLmTest`, `BigramModelStaticLmTest`, `StaticLmAssetDriftTest` | CKLM v1 loader contract, the BigramModel adapter (multiplier + seed + gap fill), drift pins for the shipped `lm/en.cklm` (sidecar sha256, vocab, caps, heap, attribution) |
 | `SuggestionProvenanceTest` | UnifiedScore combine + breakdown + formatter |

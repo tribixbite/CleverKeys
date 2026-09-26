@@ -20,8 +20,17 @@ package tribixbite.cleverkeys
  *
  * READ paths that surface previously learned data are gated too, so turning the
  * master off makes the learned stores fully inert (neither written nor read):
- * [canUseLearnedContext] (dynamic context boost + next-word candidate source)
- * and the personalization boost (returns 0 once the engine is disabled).
+ *
+ * | Read path | Source | Gated via |
+ * |---|---|---|
+ * | Dynamic context boost (prefix scoring), swipe rescoring evidence | `ContextModel` | [canUseLearnedContext] |
+ * | Next-word LEARNED tier (n-gram continuations, personalization re-rank, learned-vocabulary allow-list) | `ContextModel`, `UserVocabulary` | [canUseLearnedNextWord] (call site: `NextWordPredictor.decideTiers` → `candidatesFor`) |
+ * | Next-word STATIC tier (shipped context LM / curated bigram seed) | `BigramModel` asset — NOT learned | none of the learning gates, by design (maintainer decision 2026-09-26): feature pref + ordinary suggestion-bar guards only, see `NextWordPredictor.decideTiers` |
+ * | Personalization boost | `PersonalizationEngine` | returns 0 once the engine is disabled |
+ *
+ * Accepting a next-word candidate is an ordinary bar selection: the committed word reaches
+ * [learnCommittedWord] and `UserAdaptationManager` through the same gates as any other
+ * commit, so with the master off it is not recorded anywhere.
  *
  * Everything here is pure JVM so the privacy contract is unit-testable
  * ([tribixbite.cleverkeys.OnDeviceLearningPrivacyTest] wires this funnel to the
@@ -118,12 +127,29 @@ object LearningGate {
         onDeviceLearningEnabled && collectSwipeEnabled
 
     /**
-     * May previously learned context data be READ (dynamic context boost,
-     * next-word candidate generation)? Master off ⇒ the learned store is fully
+     * May previously learned context data be READ (dynamic context boost, swipe
+     * rescoring, next-word LEARNED-tier candidates — the latter via [canUseLearnedNextWord])? Master off ⇒ the learned store is fully
      * inert, not just frozen.
      */
     fun canUseLearnedContext(onDeviceLearningEnabled: Boolean, contextAwareEnabled: Boolean): Boolean =
         onDeviceLearningEnabled && contextAwareEnabled
+
+    /**
+     * May next-word read its LEARNED tier (the user's n-gram continuations, the personalization
+     * boost that re-ranks them, and the learned-vocabulary allow-list)? [canUseLearnedContext]
+     * plus the per-field incognito flag: an `IME_FLAG_NO_PERSONALIZED_LEARNING` field must not
+     * be shown suggestions derived from what the user typed elsewhere.
+     *
+     * The static (shipped) tier is deliberately NOT behind this gate — see
+     * `NextWordPredictor.decideTiers` for why neither the master gate, the context-aware pref
+     * nor the incognito flag applies to it.
+     */
+    fun canUseLearnedNextWord(
+        onDeviceLearningEnabled: Boolean,
+        contextAwareEnabled: Boolean,
+        fieldAllowsPersonalizedLearning: Boolean
+    ): Boolean =
+        canUseLearnedContext(onDeviceLearningEnabled, contextAwareEnabled) && fieldAllowsPersonalizedLearning
 
     /**
      * THE learn funnel for a committed word (production caller:

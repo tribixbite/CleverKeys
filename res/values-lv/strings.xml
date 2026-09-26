@@ -590,7 +590,7 @@
     <string name="advanced_provenance_markers_title">Ieteikumu izcelsmes atzīmes</string>
     <string name="advanced_provenance_markers_desc">Rāda pie katra ieteikuma krāsainu punktu, kas norāda, kurš dzinis to izveidoja (ilgi nospiediet ieteikumu, lai redzētu visas detaļas)</string>
     <string name="input_next_word_title">Nākamā vārda prognoze</string>
-    <string name="input_next_word_desc">Iesaka nākamo vārdu no apgūtajām frāzēm, pirms tiek ierakstīts kāds burts</string>
+    <string name="input_next_word_desc">Iesaka nākamo vārdu, pirms tiek ierakstīts kāds burts. Izmanto izplatītas frāzes; ja ieslēgta mācīšanās ierīcē, arī apgūtās frāzes</string>
     <string name="input_context_source_title">Konteksta avots</string>
     <string name="input_context_source_desc">Kurš frāžu modelis pastiprina prognozes: iebūvētais, apgūtie paradumi vai abi</string>
     <string name="input_personalization_weight_title">Personalizācijas stiprums</string>

@@ -578,7 +578,7 @@
     <string name="advanced_provenance_markers_title">候補の生成元マーカー</string>
     <string name="advanced_provenance_markers_desc">各候補に、それを生成したエンジンを示す色付きの点を表示します（候補を長押しすると詳細が表示されます）</string>
     <string name="input_next_word_title">次単語予測</string>
-    <string name="input_next_word_desc">文字を入力する前に、学習したフレーズから次の単語を提案します</string>
+    <string name="input_next_word_desc">文字を入力する前に次の単語を提案します。一般的なフレーズを使用し、端末上の学習がオンのときは学習したフレーズも加えます</string>
     <string name="input_context_source_title">コンテキストの取得元</string>
     <string name="input_context_source_desc">予測を強化するフレーズモデル: 内蔵、学習したパターン、またはその両方</string>
     <string name="input_personalization_weight_title">パーソナライズの強さ</string>

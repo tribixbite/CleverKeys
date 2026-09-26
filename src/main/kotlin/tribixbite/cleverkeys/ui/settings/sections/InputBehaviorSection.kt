@@ -159,19 +159,17 @@ internal fun SettingsActivity.InputBehaviorSection() {
                                 }
                             )
 
-                            // Opt-in next-word prediction (audit 2026-08-06 §4.3) — meaningless
-                            // without the context LM, so DISABLED (not hidden) when it is off.
-                            // Audit 2026-08-26: hiding left a stale-on pref with no visible owner
-                            // and made the search entry a dead end; visible-but-inert keeps the
-                            // stored state honest, and the prerequisite toggle directly above
-                            // explains the dependency. Runtime is independently hard-gated
-                            // (NextWordPredictor.shouldShow + LearningGate.canUseLearnedContext),
-                            // so a stale-on pref can never surface a candidate either way.
+                            // Next-word prediction (audit 2026-08-06 §4.3; default ON since
+                            // 2026-09-26). ALWAYS enabled: the shipped static tier works with
+                            // on-device learning and the context LM both off, so neither is a
+                            // prerequisite any more (it used to be DISABLED while Context-Aware
+                            // was off). The learned tier stays behind the learning gates at
+                            // runtime — NextWordPredictor.decideTiers +
+                            // LearningGate.canUseLearnedNextWord — and the description says so.
                             SettingsSwitch(
                                 title = stringResource(R.string.input_next_word_title),
                                 description = stringResource(R.string.input_next_word_desc),
                                 checked = nextWordPredictionEnabled,
-                                enabled = contextAwarePredictionsEnabled,
                                 onCheckedChange = {
                                     nextWordPredictionEnabled = it
                                     saveSetting("next_word_prediction_enabled", it)

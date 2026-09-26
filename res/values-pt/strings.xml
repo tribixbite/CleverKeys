@@ -579,7 +579,7 @@
     <string name="advanced_provenance_markers_title">Marcadores de origem das sugestões</string>
     <string name="advanced_provenance_markers_desc">Mostrar em cada sugestão um ponto colorido indicando qual motor a produziu (toque longo numa sugestão para ver todos os detalhes)</string>
     <string name="input_next_word_title">Previsão da próxima palavra</string>
-    <string name="input_next_word_desc">Sugerir a próxima palavra a partir das frases aprendidas antes de digitar uma letra</string>
+    <string name="input_next_word_desc">Sugerir a próxima palavra antes de digitar uma letra. Usa frases comuns; acrescenta as frases aprendidas quando o aprendizado no dispositivo está ativado</string>
     <string name="input_context_source_title">Fonte de contexto</string>
     <string name="input_context_source_desc">Qual modelo de frases reforça as previsões: o integrado, os padrões aprendidos ou ambos</string>
     <string name="input_personalization_weight_title">Intensidade da personalização</string>

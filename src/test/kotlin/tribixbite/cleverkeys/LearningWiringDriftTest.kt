@@ -190,32 +190,42 @@ class LearningWiringDriftTest {
             "LearningGate.canLearnAdaptation(config.on_device_learning_enabled) &&\n" +
                 "            fieldAllowsPersonalizedLearning"
         )
-        // … and both next-word shouldShow call sites.
-        val shouldShowWired = Regex(
-            """fieldAllowsPersonalizedLearning = fieldAllowsPersonalizedLearning"""
-        ).findAll(handler).count()
-        assertThat(shouldShowWired).isEqualTo(2)
+        // … and the single next-word tier decision (2026-09-26: `nextWordTiers` is the only
+        // place SuggestionHandler builds a next-word gate, so wiring the flag there covers the
+        // post-tap chain, the swipe append and the cursor park at once). The flag closes the
+        // LEARNED tier only — NextWordPredictorTest / NextWordStaticTierTest pin the behaviour.
+        val tiersFn = handler.substringAfter("private fun nextWordTiers(")
+            .substringBefore("\n    /**")
+        assertThat(tiersFn).contains("fieldAllowsPersonalizedLearning = fieldAllowsPersonalizedLearning")
+        assertThat(Regex("""NextWordPredictor\.decideTiers\(""").findAll(handler).count()).isEqualTo(1)
     }
 
     @Test
-    fun `context-LM pref reaches both shouldShow call sites and the cursor-park editor read`() {
-        // Audit 2026-08-26: `context_aware_predictions_enabled` is a required
-        // shouldShow parameter because the Settings UI hides the next-word
-        // toggle when the context LM is off — a stale-on feature pref must not
-        // pass the gate, and the cursor-park path must not READ the editor text
-        // in a state where no candidate can ever surface. Downstream
-        // `getNextWordCandidates` fails closed too (LearningGate), but the gate
-        // itself must be the honest answer, not rescued by a lower layer.
+    fun `learning prefs reach the next-word tier decision but no longer guard the static tier`() {
+        // Maintainer decision 2026-09-26: the master gate and the context-aware pref decide the
+        // LEARNED tier only. They must still be wired into the one tier decision (dropping
+        // either would open the learned stores) …
         val handler = readSource("SuggestionHandler.kt")
-        val gateWired = Regex(
-            """contextAwareEnabled = config\.context_aware_predictions_enabled"""
-        ).findAll(handler).count()
-        assertThat(gateWired).isEqualTo(2)
+        val tiersFn = handler.substringAfter("private fun nextWordTiers(")
+            .substringBefore("\n    /**")
+        assertThat(tiersFn).contains("onDeviceLearningEnabled = config.on_device_learning_enabled")
+        assertThat(tiersFn).contains("contextAwareEnabled = config.context_aware_predictions_enabled")
+        assertThat(tiersFn).contains("featureEnabled = config.next_word_prediction_enabled")
 
-        // The cheap-gate set guarding the getTextBeforeCursor read includes it.
+        // … and the tier decision itself routes the learned tier through LearningGate's
+        // single helper rather than re-deriving it.
+        val predictor = readSource("NextWordPredictor.kt")
+        val decide = predictor.substringAfter("fun decideTiers(").substringBefore("\n    }")
+        assertThat(decide).contains("LearningGate.canUseLearnedNextWord(")
+        assertThat(decide).doesNotContain("onDeviceLearningEnabled &&")
+
+        // The cursor-park editor read is guarded by the STATIC-tier prerequisites (feature,
+        // word prediction, password/prompt/Termux) — not by the learning prefs, which would
+        // make the shipped tier dead on park with learning off.
         val parkRead = handler.substringAfter("private fun readEditorParkContext")
             .substringBefore("getTextBeforeCursor")
-        assertThat(parkRead).contains("config.context_aware_predictions_enabled")
+        assertThat(parkRead).contains("nextWordTiers(editorInfo, hasContext = true).showStatic")
+        assertThat(parkRead).doesNotContain("config.on_device_learning_enabled")
     }
 
     // ---------------------------------------------------------------- M6
@@ -275,34 +285,54 @@ class LearningWiringDriftTest {
         val handler = readSource("SuggestionHandler.kt")
         // The park path tokenizes real editor text via the pure helper …
         assertThat(handler).contains("NextWordPredictor.contextFromEditorText")
-        // … and the editor read stays behind the cheap next-word prerequisites
-        // (feature pref, master gate, per-field incognito flag) so fields that
-        // can never surface candidates are never even read.
+        // … and the editor read stays behind the cheap next-word prerequisites (the
+        // static-tier guards, 2026-09-26) so fields that can never surface a candidate —
+        // feature off, password, Termux — are never even read.
         assertThat(handler).containsMatch(
-            """(?s)fun readEditorParkContext.{0,600}next_word_prediction_enabled.{0,200}on_device_learning_enabled.{0,200}fieldAllowsPersonalizedLearning"""
+            """(?s)fun readEditorParkContext\(ic: InputConnection\?, editorInfo: EditorInfo\?\).{0,1200}nextWordTiers\(editorInfo, hasContext = true\)\.showStatic.{0,300}getTextBeforeCursor"""
         )
+        assertThat(handler).contains("readEditorParkContext(ic, editorInfo)")
     }
 
     // ------------------------------------------- ARC-020 (2026-08-28)
 
     @Test
-    fun `the static next-word seed is read only inside the already-gated path`() {
-        // ARC-020's cold-start tier reads SHIPPED data, so `getStaticNextWordSeed`
-        // deliberately carries no LearningGate check of its own. What keeps that
-        // honest is placement: it may only be called from the two helpers that
-        // already ran `NextWordPredictor.shouldShow`. A third call site — or a
-        // call moved above the gate — would surface next-word content in a state
-        // the user's prefs say must show nothing.
+    fun `next-word stores are read only through the tier-gated candidatesFor path`() {
+        // Maintainer decision 2026-09-26: the shipped seed carries no LearningGate check (it is
+        // not learned data) and now runs with learning OFF; the learned reads — n-gram
+        // continuations, personalization boost, learned-vocabulary allow-list — run only when
+        // the tier gate says `useLearned`. Both properties live in ONE function,
+        // NextWordPredictor.candidatesFor; SuggestionHandler must not read any of these
+        // directly, or a call site could bypass the tier split.
         val handler = readSource("SuggestionHandler.kt")
-        val seedReads = Regex("""predictor\.getStaticNextWordSeed\(""").findAll(handler).count()
-        assertThat(seedReads).isEqualTo(2)
+        for (read in listOf(
+            "predictor.getStaticNextWordSeed(",
+            "predictor.getNextWordCandidates(",
+            "predictor.getPersonalizationBoostFor(",
+        )) {
+            assertWithMessage("SuggestionHandler reads $read directly")
+                .that(handler).doesNotContain(read)
+        }
 
         for (fn in listOf("generateNextWordCandidates", "maybeShowNextWordPredictions")) {
             val body = handler.substringAfter("private fun $fn")
-                .substringBefore("getStaticNextWordSeed")
-            assertWithMessage("$fn must run shouldShow before reading the static seed")
-                .that(body).contains("NextWordPredictor.shouldShow(")
+                .substringBefore("NextWordPredictor.candidatesFor(")
+            assertWithMessage("$fn must decide the tiers before generating")
+                .that(body).contains("nextWordTiers(")
+            assertWithMessage("$fn must stop when even the static tier is closed")
+                .that(body).contains("if (!tiers.showStatic) return")
         }
+
+        val predictorSrc = readSource("NextWordPredictor.kt")
+        val gated = predictorSrc.substringAfter("fun candidatesFor(").substringBefore("\n    }")
+        assertThat(gated).contains("if (!gate.showStatic")
+        assertThat(gated).containsMatch(
+            """(?s)if \(useLearned\) \{\s*predictor\.getNextWordCandidates\("""
+        )
+        assertThat(gated).containsMatch(
+            """(?s)if \(useLearned\) \{\s*\{ w -> predictor\.getPersonalizationBoostFor\(w\) \}"""
+        )
+        assertThat(gated).contains("(useLearned && predictor.isInUserVocabulary(w))")
 
         // WordPredictor's accessor exists and does NOT re-derive a gate.
         val predictor = readSource("WordPredictor.kt")

@@ -714,7 +714,7 @@
     <string name="input_context_aware_title">Context-Aware Predictions</string>
     <string name="input_context_aware_desc">Learn from typing patterns (N-gram model)</string>
     <string name="input_next_word_title">Next-Word Prediction</string>
-    <string name="input_next_word_desc">Suggest the next word from your learned phrases before you type a letter</string>
+    <string name="input_next_word_desc">Suggest the next word before you type a letter. Uses common phrases; adds your learned phrases when on-device learning is on</string>
     <string name="input_context_source_title">Context Source</string>
     <string name="input_context_source_desc">Which phrase model boosts predictions: built-in, your learned patterns, or both</string>
     <string name="input_personalization_weight_title">Personalization Strength</string>

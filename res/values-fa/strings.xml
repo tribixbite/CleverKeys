@@ -614,7 +614,7 @@
     <string name="advanced_provenance_markers_title">نشانگرهای منشأ پیشنهاد</string>
     <string name="advanced_provenance_markers_desc">روی هر پیشنهاد یک نقطهٔ رنگی نشان می‌دهد که مشخص می‌کند کدام موتور آن را ساخته است (برای جزئیات کامل، پیشنهاد را لمس طولانی کنید)</string>
     <string name="input_next_word_title">پیش‌بینی واژهٔ بعدی</string>
-    <string name="input_next_word_desc">پیش از تایپ کردن حرف، واژهٔ بعدی را از عبارت‌های آموخته‌شده پیشنهاد می‌دهد</string>
+    <string name="input_next_word_desc">پیش از تایپ کردن حرف، واژهٔ بعدی را پیشنهاد می‌دهد. از عبارت‌های رایج استفاده می‌کند؛ وقتی یادگیری روی دستگاه روشن است، عبارت‌های آموخته‌شده را هم اضافه می‌کند</string>
     <string name="input_context_source_title">منبع بافتار</string>
     <string name="input_context_source_desc">کدام مدل عبارت‌ها پیش‌بینی‌ها را تقویت کند: مدل داخلی، الگوهای آموخته‌شده، یا هر دو</string>
     <string name="input_personalization_weight_title">شدت شخصی‌سازی</string>

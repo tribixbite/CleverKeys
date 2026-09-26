@@ -296,7 +296,7 @@ class ContextLearningInstrumentedTest {
             )
 
             // The bar itself refuses content in password mode — belt-and-braces
-            // beneath NextWordPredictor.shouldShow's isPasswordMode gate.
+            // beneath NextWordPredictor.decideTiers' isPasswordMode gate.
             assertFalse(bar.hasSuggestions())
         }
     }

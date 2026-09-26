@@ -599,7 +599,7 @@
     <string name="advanced_provenance_markers_title">Herkunftsmarkierungen für Vorschläge</string>
     <string name="advanced_provenance_markers_desc">Einen farbigen Punkt an jedem Vorschlag anzeigen, der die erzeugende Engine angibt (für alle Details lange auf einen Vorschlag drücken)</string>
     <string name="input_next_word_title">Nächstes-Wort-Vorhersage</string>
-    <string name="input_next_word_desc">Das nächste Wort aus den gelernten Wendungen vorschlagen, bevor ein Buchstabe getippt wird</string>
+    <string name="input_next_word_desc">Das nächste Wort vorschlagen, bevor ein Buchstabe getippt wird. Nutzt gängige Wendungen; bei aktiviertem Lernen auf dem Gerät auch Ihre gelernten Wendungen</string>
     <string name="input_context_source_title">Kontextquelle</string>
     <string name="input_context_source_desc">Welches Wendungsmodell die Vorhersagen verstärkt: integriert, die gelernten Muster oder beides</string>
     <string name="input_personalization_weight_title">Stärke der Personalisierung</string>

@@ -584,7 +584,7 @@
     <string name="advanced_provenance_markers_title">Javaslatok eredetjelölői</string>
     <string name="advanced_provenance_markers_desc">Színes pont megjelenítése minden javaslatnál, amely jelzi az azt előállító motort (a teljes részletekhez tartsa nyomva a javaslatot)</string>
     <string name="input_next_word_title">Következő szó előrejelzése</string>
-    <string name="input_next_word_desc">A következő szó javaslata a megtanult kifejezésekből, még mielőtt betűt gépelne</string>
+    <string name="input_next_word_desc">A következő szó javaslata, még mielőtt betűt gépelne. Gyakori kifejezéseket használ; bekapcsolt eszközön belüli tanulásnál a megtanult kifejezéseket is</string>
     <string name="input_context_source_title">Kontextusforrás</string>
     <string name="input_context_source_desc">Melyik kifejezésmodell erősíti az előrejelzéseket: a beépített, a megtanult minták, vagy mindkettő</string>
     <string name="input_personalization_weight_title">Személyre szabás erőssége</string>

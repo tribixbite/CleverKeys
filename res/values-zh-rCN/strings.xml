@@ -577,7 +577,7 @@
     <string name="advanced_provenance_markers_title">候选来源标记</string>
     <string name="advanced_provenance_markers_desc">在每个候选词上显示彩色圆点，指示生成它的引擎（长按候选词可查看完整详情）。</string>
     <string name="input_next_word_title">下一个词预测</string>
-    <string name="input_next_word_desc">在你输入字母之前，根据已学习的短语建议下一个词。</string>
+    <string name="input_next_word_desc">在你输入字母之前建议下一个词。使用常用短语；开启设备端学习时，还会加入已学习的短语。</string>
     <string name="input_context_source_title">上下文来源</string>
     <string name="input_context_source_desc">用于增强预测的短语模型：内置模型、你学习到的规律，或两者。</string>
     <string name="input_personalization_weight_title">个性化强度</string>

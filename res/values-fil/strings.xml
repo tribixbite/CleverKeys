@@ -588,7 +588,7 @@
     <string name="advanced_provenance_markers_title">Mga marka ng pinagmulan ng mungkahi</string>
     <string name="advanced_provenance_markers_desc">Nagpapakita sa bawat mungkahi ng may kulay na tuldok na nagsasaad kung aling makina ang gumawa nito (pindutin nang matagal ang isang mungkahi para sa buong detalye)</string>
     <string name="input_next_word_title">Hula sa susunod na salita</string>
-    <string name="input_next_word_desc">Nagmumungkahi ng susunod na salita mula sa mga natutunang parirala bago ka mag-type ng letra</string>
+    <string name="input_next_word_desc">Nagmumungkahi ng susunod na salita bago ka mag-type ng letra. Gumagamit ng mga karaniwang parirala; idinaragdag ang mga natutunang parirala kapag naka-on ang pag-aaral sa device</string>
     <string name="input_context_source_title">Pinagmulan ng konteksto</string>
     <string name="input_context_source_desc">Aling modelo ng parirala ang nagpapalakas sa mga hula: ang built-in, ang mga natutunang pattern, o pareho</string>
     <string name="input_personalization_weight_title">Lakas ng personalisasyon</string>

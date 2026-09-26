@@ -607,7 +607,7 @@
     <string name="advanced_provenance_markers_title">Dấu nguồn gốc gợi ý</string>
     <string name="advanced_provenance_markers_desc">Hiển thị trên mỗi gợi ý một chấm màu cho biết công cụ nào đã tạo ra nó (nhấn giữ một gợi ý để xem đầy đủ chi tiết)</string>
     <string name="input_next_word_title">Dự đoán từ tiếp theo</string>
-    <string name="input_next_word_desc">Gợi ý từ tiếp theo từ các cụm từ đã học trước khi bạn gõ một chữ cái</string>
+    <string name="input_next_word_desc">Gợi ý từ tiếp theo trước khi bạn gõ một chữ cái. Dùng các cụm từ phổ biến; thêm các cụm từ đã học khi bật học trên thiết bị</string>
     <string name="input_context_source_title">Nguồn ngữ cảnh</string>
     <string name="input_context_source_desc">Mô hình cụm từ nào tăng cường dự đoán: tích hợp sẵn, các mẫu đã học của bạn, hoặc cả hai</string>
     <string name="input_personalization_weight_title">Mức độ cá nhân hóa</string>

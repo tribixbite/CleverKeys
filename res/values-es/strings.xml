@@ -597,7 +597,7 @@
     <string name="advanced_provenance_markers_title">Marcadores de origen de las sugerencias</string>
     <string name="advanced_provenance_markers_desc">Muestra en cada sugerencia un punto de color que indica qué motor la generó (mantén pulsada una sugerencia para ver todos los detalles)</string>
     <string name="input_next_word_title">Predicción de la siguiente palabra</string>
-    <string name="input_next_word_desc">Sugiere la siguiente palabra a partir de las frases aprendidas antes de escribir una letra</string>
+    <string name="input_next_word_desc">Sugiere la siguiente palabra antes de escribir una letra. Usa frases comunes; añade tus frases aprendidas cuando el aprendizaje en el dispositivo está activado</string>
     <string name="input_context_source_title">Fuente de contexto</string>
     <string name="input_context_source_desc">Qué modelo de frases refuerza las predicciones: el integrado, los patrones aprendidos o ambos</string>
     <string name="input_personalization_weight_title">Intensidad de la personalización</string>

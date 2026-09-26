@@ -579,7 +579,7 @@
     <string name="advanced_provenance_markers_title">Метки источника подсказок</string>
     <string name="advanced_provenance_markers_desc">Показывать у каждой подсказки цветную точку, обозначающую создавший её движок (долгое нажатие на подсказку — все подробности)</string>
     <string name="input_next_word_title">Предсказание следующего слова</string>
-    <string name="input_next_word_desc">Предлагать следующее слово из выученных сочетаний ещё до ввода первой буквы</string>
+    <string name="input_next_word_desc">Предлагать следующее слово ещё до ввода первой буквы. Использует распространённые сочетания; при включённом обучении на устройстве — и выученные</string>
     <string name="input_context_source_title">Источник контекста</string>
     <string name="input_context_source_desc">Какая модель сочетаний усиливает предсказания: встроенная, выученные закономерности или обе</string>
     <string name="input_personalization_weight_title">Сила персонализации</string>

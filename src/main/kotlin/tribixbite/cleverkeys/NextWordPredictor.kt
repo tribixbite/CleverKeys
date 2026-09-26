@@ -5,16 +5,18 @@ import tribixbite.cleverkeys.contextaware.ContextContinuation
 /**
  * Pure next-word candidate generation + gating (audit 2026-08-06 §4).
  *
- * Turns the learned context LM's ranked continuations
+ * Two tiers (see [TierGate]): the learned context LM's ranked continuations
  * ([tribixbite.cleverkeys.contextaware.ContextModel.getNextWordCandidates] —
- * trigram-preferred with bigram backoff since the §1.3-D activation)
- * into suggestion-bar candidates. Deliberately the same signal family as
- * `WordPredictor.calculateUnifiedScore` minus the prefix term: learned
- * conditional probability × personalization multiplier.
+ * trigram-preferred with bigram backoff since the §1.3-D activation), then the
+ * shipped static model's continuations to fill what is left. The learned tier
+ * is the same signal family as `WordPredictor.calculateUnifiedScore` minus the
+ * prefix term: learned conditional probability × personalization multiplier.
+ * Since 2026-09-26 the static tier runs with on-device learning OFF; only the
+ * learned tier needs the learning gates.
  *
- * Everything here is pure JVM (no Android deps) so the filters, floors, and
- * gating rules are unit-testable; `SuggestionHandler.maybeShowNextWordPredictions`
- * owns the impure wiring (threads, bar posting, config reads).
+ * Gating, ranking and the gated read path ([candidatesFor]) are pure JVM so they
+ * are unit-testable; `SuggestionHandler` owns the impure wiring (threads, bar
+ * posting, config reads).
  */
 object NextWordPredictor {
     /**
@@ -69,60 +71,152 @@ object NextWordPredictor {
     )
 
     /**
-     * Gate: should next-word prediction run at all right now?
+     * The two independent next-word decisions (maintainer decision 2026-09-26).
      *
-     * Inherits every existing suggestion-bar guard (§4.4): the feature pref,
-     * the MASTER on-device-learning gate (Task A — next-word reads the learned
-     * store, so it must go dark with the master off), the **context-LM pref**
-     * (audit 2026-08-26 — see below), the per-field incognito flag (M5 —
-     * `IME_FLAG_NO_PERSONALIZED_LEARNING` fields must not surface personalized
-     * predictions either), password mode, special prompts (autocorrect-undo /
-     * add-to-dictionary), Termux/terminal fields, and requires non-empty
-     * committed context.
+     * Next-word draws from two sources that carry very different privacy weight:
+     * - the **static tier** — the shipped English context LM / curated bigram seed
+     *   ([Predictor.getStaticNextWordSeed]). Read-only asset, identical on every install,
+     *   contains nothing about the user;
+     * - the **learned tier** — the user's own bigram/trigram stores
+     *   ([Predictor.getNextWordCandidates]) plus the personalization boost and the
+     *   learned-vocabulary allow-list that rank and filter them.
      *
-     * ## Why the context-LM pref is checked HERE and not only downstream
+     * Until 2026-09-26 one boolean gated both, so the static tier inherited the learning
+     * gates and next-word was dead for everyone with on-device learning off — which since
+     * v2.0 is every fresh install. The decision is now split: [showStatic] is the
+     * suggestion-bar guard set every prediction obeys, [useLearned] additionally requires
+     * the learning gates. `useLearned` implies `showStatic` — there is no state where
+     * learned candidates may show but shipped ones may not.
      *
-     * Next-word candidates come exclusively from the learned n-gram stores, and
-     * `WordPredictor.getNextWordCandidates` already fails closed via
-     * `LearningGate.canUseLearnedContext` when `context_aware_predictions_enabled`
-     * is off. So omitting it here could not surface a candidate — but it left
-     * the settings model incoherent: the Settings UI hides this feature's
-     * toggle when the context LM is off, so a user could carry a stale
-     * `next_word_prediction_enabled = true` with NO visible control for it, and
-     * this gate — the one place that documents itself as "every guard" — would
-     * still say yes. Worse, the cursor-park path uses the CHEAP gates to decide
-     * whether it may READ the editor text at all; without this parameter it
-     * read text in a state where no candidate could ever be shown. The gate
-     * must be the single honest answer, not "true, but a downstream layer will
-     * save you".
-     *
-     * @param contextAwareEnabled the `context_aware_predictions_enabled` pref —
-     *   the learned context LM this feature draws from. Required, no default:
-     *   every caller must state it.
-     * @param fieldAllowsPersonalizedLearning false when the active editor set
-     *   `IME_FLAG_NO_PERSONALIZED_LEARNING` (see
-     *   [LearningGate.fieldAllowsPersonalizedLearning])
+     * @property showStatic next-word may run at all (and the shipped tier may be read)
+     * @property useLearned the learned stores, personalization boost and learned-vocabulary
+     *   allow-list may be READ for this display
      */
-    fun shouldShow(
+    data class TierGate(val showStatic: Boolean, val useLearned: Boolean) {
+        init {
+            require(!useLearned || showStatic) { "learned tier without the static-tier guards" }
+        }
+
+        companion object {
+            /** Nothing may run. */
+            val CLOSED = TierGate(showStatic = false, useLearned = false)
+        }
+    }
+
+    /**
+     * Decide which next-word tiers may run right now.
+     *
+     * ## Static tier = the ordinary suggestion-bar guards (§4.4)
+     * feature pref ∧ word prediction ∧ ¬password ∧ ¬special prompt (autocorrect-undo /
+     * add-to-dictionary) ∧ ¬Termux/terminal ∧ non-empty context.
+     *
+     * Deliberately NOT gated by:
+     * - **on-device learning (master)** — the shipped model is not learned data; the master
+     *   gate's contract is "nothing typing-derived is recorded or read", and the static
+     *   tier neither records nor reads anything typing-derived beyond the previous word in
+     *   the editor, which every ordinary prediction already reads.
+     * - **`context_aware_predictions_enabled`** — its settings copy is "Learn from typing
+     *   patterns (N-gram model)": it controls the LEARNED n-gram LM (recording via
+     *   [LearningGate.canLearnContext], reading via [LearningGate.canUseLearnedContext]).
+     *   The shipped model's other consumer, the prefix-scoring context multiplier
+     *   (`WordPredictor.resolveScoreBreakdown` step 3a), is not gated by it either, so
+     *   gating only next-word's use of the same asset would be inconsistent.
+     * - **the incognito flag** (`IME_FLAG_NO_PERSONALIZED_LEARNING`) — the flag asks the
+     *   IME not to learn from, or personalize on, the field's text. A continuation of
+     *   "want" taken from a model shipped to everyone is neither; it is the same kind of
+     *   generic suggestion as a prefix completion, which incognito fields already get
+     *   (with the same static context multiplier). The previous word is read from the
+     *   session/editor exactly as for those predictions and is not retained.
+     *
+     * ## Learned tier = static tier ∧ [LearningGate.canUseLearnedNextWord]
+     * master learning gate ∧ context-aware pref ∧ the field allows personalized learning.
+     * When false, the learned stores are not consulted at all (not "consulted and empty").
+     *
+     * @param fieldAllowsPersonalizedLearning false when the active editor set
+     *   `IME_FLAG_NO_PERSONALIZED_LEARNING` (see [LearningGate.fieldAllowsPersonalizedLearning]).
+     *   Required, no default: every caller must state it.
+     */
+    fun decideTiers(
         featureEnabled: Boolean,
-        onDeviceLearningEnabled: Boolean,
-        contextAwareEnabled: Boolean,
         wordPredictionEnabled: Boolean,
         isPasswordMode: Boolean,
         specialPromptActive: Boolean,
         inTermuxApp: Boolean,
         hasContext: Boolean,
-        fieldAllowsPersonalizedLearning: Boolean = true
-    ): Boolean {
-        return featureEnabled &&
-            onDeviceLearningEnabled &&
-            contextAwareEnabled &&
-            fieldAllowsPersonalizedLearning &&
+        onDeviceLearningEnabled: Boolean,
+        contextAwareEnabled: Boolean,
+        fieldAllowsPersonalizedLearning: Boolean
+    ): TierGate {
+        val showStatic = featureEnabled &&
             wordPredictionEnabled &&
             !isPasswordMode &&
             !specialPromptActive &&
             !inTermuxApp &&
             hasContext
+        if (!showStatic) return TierGate.CLOSED
+        return TierGate(
+            showStatic = true,
+            useLearned = LearningGate.canUseLearnedNextWord(
+                onDeviceLearningEnabled,
+                contextAwareEnabled,
+                fieldAllowsPersonalizedLearning
+            )
+        )
+    }
+
+    /** Learned continuations requested before the confidence floors thin them out. */
+    const val LEARNED_LOOKUP_LIMIT = 10
+
+    /**
+     * THE next-word read path shared by every call site (post-tap chain, swipe append,
+     * cursor park): reads each source only when [gate] allows it, then ranks via [generate].
+     *
+     * With [TierGate.useLearned] false, NONE of the learned read paths is touched — not
+     * [Predictor.getNextWordCandidates] (learned n-grams), not
+     * [Predictor.getPersonalizationBoostFor] (boost), not [Predictor.isInUserVocabulary]
+     * (learned-vocabulary allow-list; ungated inside WordPredictor, it reads the
+     * personalization tally directly). The static seed is then filtered by the dictionary
+     * and the user's explicit Dictionary Manager disables only. Keeping these reads here,
+     * behind one decision, is what lets a test assert "learning off ⇒ zero learned reads"
+     * for all three call sites at once.
+     *
+     * Residual, accepted: [Predictor.isInDictionary] also consults the selection-adaptation
+     * history, gated by the MASTER learning pref only (H3). In an incognito field with
+     * learning ON it can therefore widen the static tier's allow-list to a shipped word the
+     * dictionary lacks but the user selects often. It can never surface a word that is not
+     * in the shipped model, and nothing is written.
+     *
+     * @return ranked candidates; empty when [gate] is closed or nothing survives the filters
+     */
+    fun candidatesFor(
+        gate: TierGate,
+        contextWords: List<String>,
+        predictor: Predictor,
+        maxSuggestions: Int = MAX_SUGGESTIONS
+    ): List<Candidate> {
+        if (!gate.showStatic || contextWords.isEmpty()) return emptyList()
+        val useLearned = gate.useLearned
+        return generate(
+            learned = if (useLearned) {
+                predictor.getNextWordCandidates(contextWords, LEARNED_LOOKUP_LIMIT)
+            } else {
+                emptyList()
+            },
+            lastCommittedWord = contextWords.lastOrNull(),
+            personalizationBoost = if (useLearned) {
+                { w -> predictor.getPersonalizationBoostFor(w) }
+            } else {
+                { _ -> 0f }
+            },
+            isWordAllowed = { w ->
+                !predictor.isWordDisabled(w) &&
+                    (predictor.isInDictionary(w) || (useLearned && predictor.isInUserVocabulary(w)))
+            },
+            // Shipped continuations fill only the slots the learned tier could not (ARC-020);
+            // with the learned tier closed they are the whole bar.
+            staticSeed = predictor.getStaticNextWordSeed(contextWords, maxSuggestions),
+            maxSuggestions = maxSuggestions
+        )
     }
 
     /**

@@ -8,9 +8,10 @@ import tribixbite.cleverkeys.contextaware.ContextContinuation
 
 /**
  * Pure-JVM tests for [NextWordPredictor] (audit 2026-08-06 §4): candidate
- * generation, filters/floors, dedup, and the show-gate that inherits the
- * existing suggestion-bar guards — including the MASTER on-device-learning
- * gate (Task A) and trigram-sourced continuations (Task C).
+ * generation, filters/floors, dedup, the two-tier gate (static tier = the
+ * suggestion-bar guards; learned tier additionally = the MASTER on-device-learning
+ * gate, context-aware pref and incognito flag — maintainer decision 2026-09-26),
+ * and trigram-sourced continuations (Task C).
  */
 class NextWordPredictorTest {
 
@@ -21,84 +22,100 @@ class NextWordPredictorTest {
     private val noBoost: (String) -> Float = { 0f }
 
     // ------------------------------------------------------------------ gating
+    //
+    // Maintainer decision 2026-09-26: two decisions, not one. STATIC tier = feature pref ∧
+    // word prediction ∧ ¬password ∧ ¬special prompt ∧ ¬Termux ∧ context. LEARNED tier =
+    // static tier ∧ master learning ∧ context-aware ∧ field allows personalized learning.
+
+    private fun tiers(
+        feature: Boolean = true,
+        wordPrediction: Boolean = true,
+        password: Boolean = false,
+        prompt: Boolean = false,
+        termux: Boolean = false,
+        context: Boolean = true,
+        master: Boolean = true,
+        contextAware: Boolean = true,
+        fieldAllows: Boolean = true
+    ) = NextWordPredictor.decideTiers(
+        featureEnabled = feature,
+        wordPredictionEnabled = wordPrediction,
+        isPasswordMode = password,
+        specialPromptActive = prompt,
+        inTermuxApp = termux,
+        hasContext = context,
+        onDeviceLearningEnabled = master,
+        contextAwareEnabled = contextAware,
+        fieldAllowsPersonalizedLearning = fieldAllows
+    )
 
     @Test
-    fun `disabled feature never shows - the opt-in default`() {
-        assertFalse(
-            NextWordPredictor.shouldShow(
-                featureEnabled = false, onDeviceLearningEnabled = true,
-                contextAwareEnabled = true,
-                wordPredictionEnabled = true,
-                isPasswordMode = false, specialPromptActive = false,
-                inTermuxApp = false, hasContext = true
-            )
+    fun `all guards open - both tiers run`() {
+        assertEquals(NextWordPredictor.TierGate(showStatic = true, useLearned = true), tiers())
+    }
+
+    @Test
+    fun `disabled feature closes both tiers`() {
+        assertEquals(NextWordPredictor.TierGate.CLOSED, tiers(feature = false))
+    }
+
+    @Test
+    fun `master learning gate off closes ONLY the learned tier`() {
+        // The shipped model is not learned data: with learning off (the v2.0 fresh-install
+        // default) next-word still works from it, and the learned stores stay unread.
+        assertEquals(
+            NextWordPredictor.TierGate(showStatic = true, useLearned = false),
+            tiers(master = false)
         )
     }
 
     @Test
-    fun `master on-device-learning gate blocks next-word surfacing`() {
-        // Task A: next-word reads the learned store, so the master privacy gate
-        // must make it go dark even when the feature itself is enabled.
-        assertFalse(
-            NextWordPredictor.shouldShow(
-                featureEnabled = true, onDeviceLearningEnabled = false,
-                contextAwareEnabled = true,
-                wordPredictionEnabled = true,
-                isPasswordMode = false, specialPromptActive = false,
-                inTermuxApp = false, hasContext = true
-            )
+    fun `context-aware pref off closes ONLY the learned tier`() {
+        // `context_aware_predictions_enabled` is "Learn from typing patterns (N-gram model)" —
+        // the learned LM. The shipped model's prefix-scoring use is not gated by it either.
+        assertEquals(
+            NextWordPredictor.TierGate(showStatic = true, useLearned = false),
+            tiers(contextAware = false)
         )
     }
 
     @Test
-    fun `context-LM pref off blocks next-word even when its own toggle is stale-on`() {
-        // Audit 2026-08-26: the Settings UI HIDES the next-word toggle when
-        // `context_aware_predictions_enabled` is off, so the feature pref can sit
-        // true with no visible control. The gate — not just a downstream store
-        // check — must say no in that state, because the cursor-park path uses
-        // the gate's cheap prerequisites to decide whether it may READ the
-        // editor text at all.
-        assertFalse(
-            NextWordPredictor.shouldShow(
-                featureEnabled = true, onDeviceLearningEnabled = true,
-                contextAwareEnabled = false,
-                wordPredictionEnabled = true,
-                isPasswordMode = false, specialPromptActive = false,
-                inTermuxApp = false, hasContext = true
-            )
+    fun `incognito field closes ONLY the learned tier`() {
+        // M5 as refined 2026-09-26: IME_FLAG_NO_PERSONALIZED_LEARNING forbids learning and
+        // personalization; a generic shipped continuation is neither.
+        assertEquals(
+            NextWordPredictor.TierGate(showStatic = true, useLearned = false),
+            tiers(fieldAllows = false)
         )
     }
 
     @Test
-    fun `guards block password, special prompt, termux, and empty context`() {
-        fun show(
-            password: Boolean = false,
-            prompt: Boolean = false,
-            termux: Boolean = false,
-            context: Boolean = true,
-            wordPrediction: Boolean = true,
-            master: Boolean = true,
-            contextAware: Boolean = true,
-            fieldAllows: Boolean = true
-        ) = NextWordPredictor.shouldShow(
-            featureEnabled = true, onDeviceLearningEnabled = master,
-            contextAwareEnabled = contextAware,
-            wordPredictionEnabled = wordPrediction,
-            isPasswordMode = password, specialPromptActive = prompt,
-            inTermuxApp = termux, hasContext = context,
-            fieldAllowsPersonalizedLearning = fieldAllows
-        )
+    fun `suggestion-bar guards close both tiers regardless of learning`() {
+        for (master in listOf(true, false)) {
+            assertEquals(NextWordPredictor.TierGate.CLOSED, tiers(password = true, master = master))
+            assertEquals(NextWordPredictor.TierGate.CLOSED, tiers(prompt = true, master = master))
+            assertEquals(NextWordPredictor.TierGate.CLOSED, tiers(termux = true, master = master))
+            assertEquals(NextWordPredictor.TierGate.CLOSED, tiers(context = false, master = master))
+            assertEquals(NextWordPredictor.TierGate.CLOSED, tiers(wordPrediction = false, master = master))
+        }
+    }
 
-        assertTrue(show())
-        assertFalse(show(password = true))
-        assertFalse(show(prompt = true))
-        assertFalse(show(termux = true))
-        assertFalse(show(context = false))
-        assertFalse(show(wordPrediction = false))
-        assertFalse(show(master = false))
-        assertFalse(show(contextAware = false))
-        // M5 (review 2026-08-06): incognito fields suppress next-word surfacing.
-        assertFalse(show(fieldAllows = false))
+    @Test
+    fun `the learned tier never opens without the static-tier guards`() {
+        // Exhaustive over all 2^9 inputs: useLearned ⇒ showStatic, and useLearned is exactly
+        // showStatic ∧ master ∧ contextAware ∧ fieldAllows.
+        for (bits in 0 until (1 shl 9)) {
+            fun b(i: Int) = (bits shr i) and 1 == 1
+            val g = tiers(b(0), b(1), b(2), b(3), b(4), b(5), b(6), b(7), b(8))
+            val expectStatic = b(0) && b(1) && !b(2) && !b(3) && !b(4) && b(5)
+            assertEquals("static bits=$bits", expectStatic, g.showStatic)
+            assertEquals("learned bits=$bits", expectStatic && b(6) && b(7) && b(8), g.useLearned)
+        }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `a learned-without-static gate cannot be constructed`() {
+        NextWordPredictor.TierGate(showStatic = false, useLearned = true)
     }
 
     // ------------------------------------------------------------- generation

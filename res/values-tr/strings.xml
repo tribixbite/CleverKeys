@@ -587,7 +587,7 @@
     <string name="advanced_provenance_markers_title">Öneri kaynağı işaretleri</string>
     <string name="advanced_provenance_markers_desc">Her öneride, onu üreten motoru gösteren renkli bir nokta gösterir (tüm ayrıntılar için bir öneriye uzun basın)</string>
     <string name="input_next_word_title">Sonraki kelime tahmini</string>
-    <string name="input_next_word_desc">Bir harf yazmadan önce öğrenilen ifadelerden sonraki kelimeyi önerir</string>
+    <string name="input_next_word_desc">Bir harf yazmadan önce sonraki kelimeyi önerir. Yaygın ifadeleri kullanır; cihaz üzerinde öğrenme açıkken öğrenilen ifadeleri de ekler</string>
     <string name="input_context_source_title">Bağlam kaynağı</string>
     <string name="input_context_source_desc">Tahminleri hangi ifade modelinin güçlendireceği: yerleşik model, öğrenilen kalıplar veya her ikisi</string>
     <string name="input_personalization_weight_title">Kişiselleştirme gücü</string>
