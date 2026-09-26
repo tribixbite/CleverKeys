@@ -341,14 +341,14 @@ class StaticLmTapEvalTest {
     }
 
     /**
-     * `WordPredictor.calculatePrefixScore`, restated: it is private at this commit (a direct match
-     * scores 1000; a completion 800 + 50 per typed letter − 10 per letter beyond six).
-     * TODO(static-lm-eval): call `WordPredictor.completionPrefixScore` once that internal
-     * accessor is committed, so this copy cannot drift.
+     * The tap predictor's prefix score for [word] as a completion of [prefix] — the same two
+     * branches as `WordPredictor.calculatePrefixScore` (every caller here passes a word that
+     * starts with [prefix]), through the predictor's own internal constant and formula so the
+     * eval cannot drift from the shipped scorer.
      */
     private fun prefixScore(word: String, prefix: String): Int =
-        if (word == prefix) 1000
-        else 800 + prefix.length * 50 - maxOf(0, (word.length - 6) * 10)
+        if (word == prefix) WordPredictor.DIRECT_MATCH_PREFIX_SCORE
+        else WordPredictor.completionPrefixScore(word.length, prefix.length)
 
     // ── data ────────────────────────────────────────────────────────────────────────────────
 
