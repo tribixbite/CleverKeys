@@ -238,14 +238,32 @@ story. Two habits came out of it and are worth keeping:
 
 ## Open work, in priority order
 
-### -1. Learning system audit (2026-09-26) — OPEN, user-reported
+### -1. Learning system audit (2026-09-26) — mostly RESOLVED same day
 
-`docs/audit/2026-09-26-learning-system-audit.md`. Two device reports: (1) swipe `she'd`/`I'd`/
-`they'll` rank badly — PAIRED variants are deferred to the slate tail (`ContractionOverlay.kt:111`)
-and the pairing frequency is discarded; (2) swiped `git` never learned — the swipe ranker (CTC +
-geometric) consumes NO learned store, and the write side learns the auto-inserted wrong word with
-no rollback on correction. Also: bigram cap makes new continuations unlearnable; 30-day selection
-wipe armed for every v4 upgrader. Fix order is at the end of the audit doc. Nothing implemented yet.
+`docs/audit/2026-09-26-learning-system-audit.md`. Two device reports: swipe `she'd`/`I'd`/`they'll`
+rank badly; swiped `git` never learned.
+
+**Landed (not pushed):** contraction variants spliced beside/ahead of base with measured
+wordfreq pairing frequencies + 6-byte promotion margin (`4f83fde5`, `c528ce24`); learn-funnel
+bookkeeping — manual-only selection recording, rollback of rejected/undone words, last word on
+Enter/field exit, apostrophe/hyphen tokens, password never learns (`69ce8c21`); selection decay
+instead of 30-day wipe + debounced persistence (`d8846a98`); n-gram continuation budget
+(`6026217d`); typo hygiene `LearnableWordPolicy` + purge (`59bd4159`); review fixes (`c1a7c46b`
+bilingual purge deferral, `d7b06da1`, `c5d8d662`, `ee51fdff`, `608e797c`, `a36412d3`).
+
+**Swipe ranking from learned data — NOT shipped, measured:** usage-based prior failed the replay
+ship bar (errRatio ≥2.06; `docs/eval/2026-09-26-learned-unigram-swipe-replay.md`); correction-
+driven prior better but still fails and the corpus (~2 traces/word, many users) cannot measure the
+per-user case (`docs/eval/2026-09-26-correction-driven-swipe-prior-replay.md`). Primitive
+`CtcLearnedPrior` is committed UNWIRED. Context: guarded oracle headroom +4.67 pt exists but
+coverage is the limit; alternates-only mode inert on CTC
+(`docs/eval/2026-09-26-context-oracle-and-alternates-replay.md`).
+**In flight:** explicit "Prefer 'X' when swiping?" offer after 2 swipe corrections (adds to the
+personal dictionary) + relabel of swipe-ML rows on correction, so on-device exports become a real
+per-user replay pool — the prerequisite for ever re-evaluating the prior.
+**Open:** contraction pairing data for natl/whys (bin-only, no frequency); global n-gram cap
+prune ignores recency (TODO in `BigramStore.pruneIfNeeded`); a broader static LM for context needs
+a licensed text corpus + sentence-context traces.
 
 ### 0. Full-backlog campaign continuation (2026-09-01)
 
