@@ -770,6 +770,8 @@ tasks.register('runPureTests', JavaExec) {
     // task reads (PHASE_O §3.3 makes this a prerequisite for multi-script work).
     'tribixbite.cleverkeys.swipe.LayoutScriptDeclarationTest',
     'tribixbite.cleverkeys.swipe.ContractionOverlayTest',
+    // 2026-09-26: geometric <-> CTC promotion parity (same en_enhanced.json base frequencies).
+    'tribixbite.cleverkeys.swipe.PairingBaseFrequenciesTest',
     // ARC-005: the finger-occlusion shift both swipe adapters apply at ingest — one
     // slider position must be one correction whichever engine serves the swipe.
     'tribixbite.cleverkeys.swipe.FingerOcclusionTest',

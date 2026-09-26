@@ -72,9 +72,10 @@ import java.util.Locale
  *    trace is identical for both spellings, so a small prior lead is a coin flip and the
  *    literal the user traced keeps the auto-insert; the variant is still one slot away.
  *
- *  - [baseFrequency] returns null. The caller supplies it only when the lexicon is on the
- *    pairing file's 0..255 byte scale (the CTC en_enhanced.json source); the geometric
- *    engine's CKDT ranks are not, so it never promotes.
+ *  - [baseFrequency] returns null. It must be on the pairing file's 0..255 byte scale, i.e.
+ *    read from `en_enhanced.json` ([PairingBaseFrequencies]) — both English engines supply it
+ *    from there (CTC from its lexicon, geometric from the same asset, so they promote alike);
+ *    CKDT ranks and language packs are not on that scale, so those slates never promote.
  *  - The variant is a POSSESSIVE ([isPossessive]). The shipped possessive frequencies are
  *    unreliable against the lexicon: of the 69 pairs whose raw values would promote, 24
  *    disagree with wordfreq, among them `teams`→`team's`, `ones`→`one's`, `sons`→`son's`
@@ -141,8 +142,8 @@ object ContractionOverlay {
      *   for that pair ([tribixbite.cleverkeys.ContractionManager.getPairedVariantFrequency]),
      *   or null when unknown. Default: none known — every paired variant goes to the tail.
      * @param baseFrequency lowercase word → its lexicon frequency ON THE PAIRING FILE'S 0..255
-     *   BYTE SCALE, or null. Supply it only for a lexicon on that scale (CTC en); null means
-     *   "not comparable", and a spliced variant then never goes ahead of its base.
+     *   BYTE SCALE, or null ([PairingBaseFrequencies] — `en_enhanced.json` for both English
+     *   engines); null means "not comparable", and a spliced variant then never goes ahead.
      * @return overlaid (words, scores) — same lists when nothing applies.
      */
     fun apply(

@@ -243,10 +243,21 @@ The rule now:
    - **Possessives never go ahead** (`isPossessive`; pronoun `'s` clitics `she's`/`he's` are
      not possessives). Measured: 24 of the 69 raw-frequency promotions disagree with wordfreq,
      e.g. `teams`→`team's`, `ones`→`one's`, `sons`→`son's` — spliced after (confident base, rule 2) or tailed.
-   - **Only CTC en compares.** `ContractionManager.getPairedVariantFrequency` is on the
-     `en_enhanced.json` 0..255 byte scale (pairings 128..255, lexicon 134..255). The CTC adapter
-     passes base frequencies only for the EN_JSON source; CKDT (`255 − rank`) and the geometric
-     engine pass none, so they splice but never promote (TODO in `GeometricEngineAdapter`).
+   - **Both English engines compare, on one scale** (geometric parity 2026-09-26).
+     `ContractionManager.getPairedVariantFrequency` is on the `en_enhanced.json` 0..255 byte
+     scale (pairings 128..255, lexicon 134..255), so a base frequency is only comparable when read
+     FROM `en_enhanced.json` and merged with user words by `CtcLexiconMerge.merge` (custom-word
+     calibration). `PairingBaseFrequencies` is the one derivation: CTC calls `select(merged,
+     bases)` on its own lexicon; the geometric adapter, which decodes against the CKDT, reads the
+     SAME asset (`CtcLanguageSupport.assetFor("en")`) and calls `fromEnLexiconJson(json,
+     userWords, disabled, bases)` once per dictionary-memo version (bundled `en` only, not an en
+     language pack). The CKDT rank could NOT serve: it is a monotone but data-dependent step
+     function of the JSON byte (98,140 words in both; 219 ranks over 115 bytes; `id` 196 ↔ rank
+     118, `its` 225 ↔ rank 60) — inverting it means shipping a second copy of the JSON's data.
+     Measured: the geometric derivation equals CTC's for every base (with and without user words)
+     and the overlay places every shipped projection pair identically — so geometric now shows
+     `i'd`/`i'll`/`we'd`/`he's`/`she's` at rank 0 like CTC. CKDT sources (fr/it/…) and packs
+     still pass none: splice, never promote. Any read failure degrades to that too.
 5. Scores stay non-increasing: a spliced pair shares the base's score; tail variants are clamped
    to the last emitted score.
 
@@ -408,6 +419,7 @@ guard.
 | D1 augment (`SuggestionHandler.possessiveAdditions`) adds no second copy of a spliced possessive (case-insensitive) and only appends | `ContractionOverlayTest` (pure) |
 | shipped pronoun set over MEASURED data: I'd/I'll/we'd/he's/she's rank 0; shed/shell/whore/well/hell/were/its/natl keep rank 0 with the variant at #1; why's rank 0 over whys; its/it's inside PROMOTION_MARGIN; would/world keeps world at #2; REPLACE six keep their slot | `CtcContractionDisplayTest` (pure) |
 | promotion needs lead ≥ PROMOTION_MARGIN (boundary), possessive never ahead even above the margin | `ContractionOverlayTest` (pure) |
+| geometric ↔ CTC promotion parity: identical base frequencies for every base (user words incl.), identical placement for every shipped pair, both adapters wired through `PairingBaseFrequencies` (source pin) | `PairingBaseFrequenciesTest` (pure) |
 | pairing `frequency` survives parsing, base-scoped; the 19 projection values pinned; one value per non-possessive variant; no flat 200 on a promotable pair | `BundledContractionDataTest` (pure) |
 | every non-possessive pair DERIVED from `contractions.bin` has a pairing frequency (none excepted since `etoo` went REPLACE) | `BundledContractionDataTest` (pure) |
 | `etoo → eto'o` is REPLACE in the JSON and the binary, not a pairing base, and `etoo` is no lexicon word | `BundledContractionDataTest` (pure) |

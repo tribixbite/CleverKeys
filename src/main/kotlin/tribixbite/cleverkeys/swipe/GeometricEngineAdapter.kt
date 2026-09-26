@@ -18,6 +18,7 @@ import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.GeoKnobRanges
 import tribixbite.cleverkeys.UserDictionaryWords
+import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import tribixbite.cleverkeys.swipe.geometric.GeometricDictionary
 import tribixbite.cleverkeys.swipe.geometric.GeometricEngineConfig
@@ -182,13 +183,21 @@ class GeometricEngineAdapter(
 
     // ── Dictionary memo (per language + content-hash version) ───────────────────────
     /**
-     * The merged dictionary plus its lowercase word → ordinal-rank map. The ordinal map
-     * feeds [ContractionOverlay]'s real-word guard (see its KDoc for the audit numbers):
-     * an alias that ranks among the language's common words must never be replaced.
+     * The merged dictionary plus the two overlay tables its decode results are rewritten
+     * through:
+     *
+     *  - [ordinals] — lowercase word → ordinal rank, feeding [ContractionOverlay]'s real-word
+     *    guard (see its KDoc for the audit numbers): an alias that ranks among the language's
+     *    common words must never be replaced;
+     *  - [pairingBaseFrequencies] — paired-contraction base → its `en_enhanced.json` byte
+     *    frequency, feeding the overlay's "variant ahead of base" promotion rule. Populated
+     *    ONLY for the bundled English dictionary (see [enPairingBaseFrequencies]); EMPTY
+     *    otherwise, which the overlay reads as "never promote".
      */
     private class DictMemo(
         val dictionary: GeometricDictionary,
         val ordinals: HashMap<String, Int>,
+        val pairingBaseFrequencies: Map<String, Int>,
     )
 
     /**
@@ -259,21 +268,22 @@ class GeometricEngineAdapter(
     }
 
     /**
-     * Applies [ContractionOverlay] with this language's mappings + dictionary ranks.
+     * Applies [ContractionOverlay] with this language's mappings + dictionary ranks, and the
+     * pairing/base frequencies its paired-variant placement compares — the SAME inputs the CTC
+     * adapter passes, so both engines place `shed`/`she'd`, `id`/`i'd`, `its`/`it's` alike.
      *
-     * The pairing frequency is supplied, so a paired projection variant (`shed` → `she'd`) is
-     * spliced right after its base instead of trailing the slate. The BASE frequency is not:
-     * the CKDT dictionary exposes only a rank (`255 − rank` on the CTC side), which is not the
-     * pairing file's byte scale, so this engine never puts a variant AHEAD of its base.
-     *
-     * TODO: geometric parity for the promotion (i'd over id as rank 0) needs a base
-     * frequency on the pairing scale — e.g. the en_enhanced.json values for the ~1.7k
-     * [ContractionManager.getPairedFrequencyBases] only, loaded once per en dictionary memo.
+     * The base frequency ([pairingBaseFrequencies]) is NOT this engine's CKDT rank — a rank is
+     * not on the pairing file's byte scale — but `en_enhanced.json`'s byte for the base, merged
+     * with the user's words exactly as CTC merges them ([PairingBaseFrequencies]). So an `id`
+     * decoded at rank 0 yields `i'd` first here too (promotion parity, 2026-09-26). Empty for
+     * every non-English dictionary and for an English language pack, which then splice but
+     * never promote — the same outcome CTC gives its CKDT sources.
      */
     private fun applyContractionDisplay(
         result: PredictionResult,
         language: String,
         ordinals: HashMap<String, Int>,
+        pairingBaseFrequencies: Map<String, Int>,
     ): PredictionResult {
         if (result.words.isEmpty()) return result
         val cm = contractionsFor(language)
@@ -284,7 +294,7 @@ class GeometricEngineAdapter(
             nonPairedMapping = { cm.getNonPairedMapping(it) },
             wordOrdinal = { ordinals[it] },
             pairedVariantFrequency = { base, variant -> cm.getPairedVariantFrequency(base, variant) },
-            baseFrequency = { null },
+            baseFrequency = { pairingBaseFrequencies[it] },
         )
         return PredictionResult(words, scores)
     }
@@ -360,7 +370,8 @@ class GeometricEngineAdapter(
                             )
                         ),
                         language,
-                        memo.ordinals
+                        memo.ordinals,
+                        memo.pairingBaseFrequencies,
                     )
                 }
                 postIfNewest(generation, result, onResult)
@@ -651,7 +662,8 @@ class GeometricEngineAdapter(
             return null
         }
 
-        val merged = mergeUserWords(base, customJson, disabled, lang, version, userDictionary)
+        val userWords = userWordsOf(customJson, lang, userDictionary)
+        val merged = GeometricUserWordMerge.merge(base, userWords, disabled, lang, version)
         // Lowercase word → ordinal rank, for ContractionOverlay's real-word guard. First
         // occurrence wins (ties can only come from case-variant duplicates).
         val ordinals = HashMap<String, Int>(merged.size * 2)
@@ -663,25 +675,62 @@ class GeometricEngineAdapter(
             val key = merged.word(i).lowercase(Locale.ROOT)
             if (!ordinals.containsKey(key)) ordinals[key] = i
         }
-        val built = DictMemo(merged, ordinals)
+        // Promotion parity with CTC — the bundled English dictionary only. An English language
+        // pack is a different lexicon, so the JSON's bytes would not describe it; CTC likewise
+        // compares only against its EN_JSON source.
+        val pairingBaseFrequencies =
+            if (lang == SwipeContractionPolicy.ENGLISH && !langpackFile.isFile) {
+                enPairingBaseFrequencies(language, userWords, disabled)
+            } else {
+                emptyMap()
+            }
+        val built = DictMemo(merged, ordinals, pairingBaseFrequencies)
         dictionaryMemos[lang] = built
         return built
     }
 
     /**
-     * Overlay user state on the CKDT base. The Android half only: parse the custom-words JSON
-     * and combine it with the platform provider snapshot (ARC-081); the ordering and filtering
-     * policy lives in the pure [GeometricUserWordMerge], which is where its rationale and its
-     * unit tests are.
+     * `en_enhanced.json`'s byte frequency for every paired-contraction base with a known
+     * pairing frequency, merged with [userWords] minus [disabled] exactly as the CTC lexicon
+     * does — see [PairingBaseFrequencies] for why the CKDT rank this engine decodes with cannot
+     * serve. Reads the same asset the CTC en lexicon is built from
+     * ([CtcLanguageSupport.assetFor]), once per dictionary-memo version; retains only the
+     * ~1.8k-entry result.
+     *
+     * Any failure degrades to an empty map — the overlay then splices without promoting, the
+     * pre-parity behaviour — rather than failing the dictionary build the decode depends on.
      */
-    private fun mergeUserWords(
-        base: GeometricDictionary,
-        customJson: String,
-        disabled: Set<String>,
+    private fun enPairingBaseFrequencies(
         language: String,
-        version: Long,
+        userWords: List<Pair<String, Int>>,
+        disabled: Set<String>,
+    ): Map<String, Int> {
+        val asset = CtcLanguageSupport.assetFor(SwipeContractionPolicy.ENGLISH) ?: return emptyMap()
+        return try {
+            val json = context.assets.open(asset).use { it.readBytes().decodeToString() }
+            if (Thread.currentThread().isInterrupted) throw InterruptedException("Dictionary load cancelled")
+            PairingBaseFrequencies.fromEnLexiconJson(
+                json, userWords, disabled, contractionsFor(language).getPairedFrequencyBases()
+            )
+        } catch (e: InterruptedException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "No pairing base frequencies for '$language' — promotion disabled", e)
+            emptyMap()
+        }
+    }
+
+    /**
+     * The user-word list overlaid on the CKDT base. The Android half only: parse the
+     * custom-words JSON and combine it with the platform provider snapshot (ARC-081); the
+     * ordering and filtering policy lives in the pure [GeometricUserWordMerge], which is where
+     * its rationale and its unit tests are. The same list feeds [enPairingBaseFrequencies].
+     */
+    private fun userWordsOf(
+        customJson: String,
+        language: String,
         userDictionary: UserDictionarySnapshot,
-    ): GeometricDictionary {
+    ): List<Pair<String, Int>> {
         val custom = ArrayList<Pair<String, Int>>()
         if (customJson != "{}") {
             try {
@@ -695,7 +744,6 @@ class GeometricEngineAdapter(
                 Log.w(TAG, "Malformed custom-words JSON for '$language' — ignoring", e)
             }
         }
-        val userWords = UserDictionarySnapshot.mergeWithCustom(custom, userDictionary)
-        return GeometricUserWordMerge.merge(base, userWords, disabled, language, version)
+        return UserDictionarySnapshot.mergeWithCustom(custom, userDictionary)
     }
 }

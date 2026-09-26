@@ -73,9 +73,11 @@ private fun loadDisabledWords() {
 
 The swipe engines consume the same keys through their lexicon merges: `CtcEngineAdapter`
 builds `(bundled lexicon + custom words) − disabled words` per active language via
-`swipe/ctc/CtcLexiconMerge.kt`; `GeometricEngineAdapter.mergeUserWords` prepends custom
-words (custom overrides disabled, matching `WordPredictor` semantics) and filters disabled
-words. Both rebuild on a content-hash change of (custom-words JSON, disabled set).
+`swipe/ctc/CtcLexiconMerge.kt`; `GeometricEngineAdapter` (`userWordsOf` +
+`swipe/geometric/GeometricUserWordMerge.kt`) prepends custom words (custom overrides
+disabled, matching `WordPredictor` semantics) and filters disabled words; for bundled `en`
+it also runs the CTC merge over `en_enhanced.json` for contraction base frequencies
+(`swipe/PairingBaseFrequencies.kt`). Both rebuild on a content-hash change of (custom-words JSON, disabled set).
 
 ### DisabledDictionarySource
 

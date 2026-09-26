@@ -1194,9 +1194,13 @@ class CoreImeHygieneDriftTest {
                 "caching retains a merged word array plus an ordinal map per language."
         ).that(adapter).contains("size > 2")
 
+        assertWithMessage("dictionaryFor's section boundary must exist")
+            .that(adapter).contains("private fun enPairingBaseFrequencies(")
         val dictBody = adapter
             .substringAfter("private fun dictionaryFor(")
-            .substringBefore("private fun mergeUserWords(")
+            // The function that follows dictionaryFor (2026-09-26: was mergeUserWords, whose
+            // absence would silently widen this body to the rest of the file).
+            .substringBefore("private fun enPairingBaseFrequencies(")
         assertWithMessage(
             "the memo hit must require the LANGUAGE to match, not just the content-hash " +
                 "version — a language switch may never reuse the previous language's words."

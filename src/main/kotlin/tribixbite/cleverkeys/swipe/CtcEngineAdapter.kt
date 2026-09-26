@@ -815,14 +815,12 @@ class CtcEngineAdapter(
         )
         // Base frequencies for the overlay's promotion rule — see [TrieMemo]. Looked up in the
         // MERGED map, so a user word's calibrated frequency (wave U2) is what the variant is
-        // compared against. Keys are matched as stored (lowercase for every base-asset word);
-        // a custom word stored with capitals simply has no entry, which means "never promote".
+        // compared against. [PairingBaseFrequencies] is the ONE derivation both engines use
+        // (the geometric adapter reaches the same numbers via fromEnLexiconJson), so the
+        // promotion rule cannot drift between them.
         val pairingBaseFrequencies: Map<String, Int> =
             if (source == CtcLanguageSupport.LexiconSource.EN_JSON) {
-                val bases = contractions.getPairedFrequencyBases()
-                HashMap<String, Int>(bases.size * 2).apply {
-                    for (base in bases) merged[base]?.let { put(base, it.toInt()) }
-                }
+                PairingBaseFrequencies.select(merged, contractions.getPairedFrequencyBases())
             } else {
                 emptyMap()
             }

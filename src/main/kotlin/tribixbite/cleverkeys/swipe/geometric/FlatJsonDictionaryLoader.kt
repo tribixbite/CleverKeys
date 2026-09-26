@@ -27,18 +27,27 @@ object FlatJsonDictionaryLoader {
     /** Load from an already-decoded JSON string. */
     fun read(json: String, language: String, version: Long = 1L): GeometricDictionary {
         // Parse to (word, score) pairs in file order.
-        val words = ArrayList<String>()
-        val scores = ArrayList<Int>()
-        parseFlatObject(json) { key, score ->
-            words.add(key)
-            scores.add(score)
-        }
+        val entries = readEntries(json)
+        val words = entries.map { it.first }
+        val scores = entries.map { it.second }
 
         // Ordinal order = (score DESC, file order ASC). We sort an index list stably by
         // negated score; `sortedBy` is stable so equal scores keep file order.
         val order = words.indices.sortedBy { -scores[it] }
         val ordered = Array(words.size) { words[order[it]] }
         return ArrayBackedDictionary(language, version, ordered)
+    }
+
+    /**
+     * The raw `(word, byteScore)` pairs in FILE order — no ordinal sort. For consumers that need
+     * the byte-score itself rather than the ordinal, e.g. the geometric adapter's
+     * `PairingBaseFrequencies` lookup, which compares a lexicon byte-score against
+     * `contraction_pairings.json`'s frequency on the same 0..255 scale.
+     */
+    fun readEntries(json: String): List<Pair<String, Int>> {
+        val entries = ArrayList<Pair<String, Int>>()
+        parseFlatObject(json) { key, score -> entries.add(key to score) }
+        return entries
     }
 
     /**
