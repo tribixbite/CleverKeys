@@ -864,6 +864,286 @@ def print_sample(lang: str, report: dict, sample_size: int = 12) -> None:
             print(f"    {key} -> {shown}")
 
 
+# ---------------------------------------------------------------------------
+# English pairing FREQUENCIES (contraction_pairings.json `frequency` field).
+#
+# contraction_pairings.json came over from Unexpected-Keyboard in f7f77d85 with no
+# generator in this repo: the upstream script (migration2/process_contractions.py)
+# copied each apostrophe word's frequency out of the ORIGINAL UK English dictionary,
+# and nine pronoun bases (well/wed/id/hell/ill/shed/shell/whore + `it`) were later
+# appended BY HAND with a flat 200.  Neither source is on today's en_enhanced.json
+# scale: `we'll` carried 252 under `we` (zipf-equivalent ~7.5, i.e. as frequent as
+# "the") while `well` is 223, and the flat 200 made `she'll` beat `shell` and
+# `who're` beat `whore` although wordfreq says the opposite.
+#
+# The value matters because ContractionOverlay promotes a PROJECTION variant (its
+# apostrophe-free form IS the decoded surface: shed -> she'd) AHEAD of its base only
+# when the pairing frequency exceeds the base's en_enhanced.json frequency — two
+# numbers that must therefore live on ONE scale.  en_enhanced.json is itself a
+# monotone function of wordfreq (Spearman 0.9997 over 98k words), so the scale is
+# recovered by fitting that function on the lexicon and pushing each contraction's
+# own wordfreq zipf through it.
+#
+# What is re-measured: every NON-POSSESSIVE variant (contractions and pronoun 's
+# clitics), and it is written under EVERY base that lists it.  A variant's corpus
+# frequency is a property of the variant, not of the trace that reached it, so one
+# value file-wide is the honest encoding; the storage stays base-scoped because
+# that is the runtime contract (ContractionManager.pairedFrequencies) and a future
+# per-base value must remain expressible.  Only the value under a projection base is
+# READ today (the she -> she'd entry is a completion of a different trace and never
+# splices), so rewriting the non-projection copies changes no placement — it removes
+# the wrong-scale numbers that invited the variant-keyed lookup bug 4f83fde5 avoided.
+#
+# What is NOT re-measured: possessives (`team's`, `girls'`).  ContractionOverlay never
+# promotes a possessive, so their value only orders several projection variants of
+# one base against each other, and 1,178 bases of churn would buy nothing.
+# ---------------------------------------------------------------------------
+
+EN_PAIRINGS_PATH = OUTPUT_DIR / "contraction_pairings.json"
+#: The lexicon whose byte scale the overlay compares pairing frequencies against
+#: (LANGUAGE_PIPELINE["en"]["lexicon"]; CtcEngineAdapter passes base frequencies only for it).
+EN_LEXICON_NAME = "en_enhanced.json"
+
+#: Mirrors ContractionOverlay.CLITIC_S_HOSTS: hosts whose `'s` is "is"/"has".
+CLITIC_S_HOSTS = frozenset({
+    "he", "she", "it", "that", "this", "what", "who", "where", "when", "why", "how",
+    "there", "here", "let",
+})
+
+#: Pairings the upstream file never carried but the swipe overlay needs a frequency
+#: for.  `its -> it's` exists only in contractions.bin (which stores no frequency),
+#: so the overlay deferred it's to the slate TAIL — off-screen — for every swiped
+#: its/it's shape.  An entry here gives it a measured frequency so it is SPLICED
+#: beside `its`; whether it goes ahead is ContractionOverlay's promotion-margin rule
+#: (it's 229 vs its 225 is a near tie and stays behind).  Appended after the existing
+#: hand-added tail, preserving the file's current key order.
+EXTRA_EN_PAIRINGS: dict[str, list[str]] = {
+    "its": ["it's"],
+}
+
+
+def is_possessive(variant: str) -> bool:
+    """ContractionOverlay.isPossessive: `'s`/`s'` forms whose host is not a clitic host."""
+    v = variant.lower().replace("’", "'")
+    if v.endswith("'s"):
+        return v[:-2] not in CLITIC_S_HOSTS
+    return v.endswith("s'")
+
+
+class ZipfByteFit:
+    """
+    Isotonic (monotone non-decreasing) least-squares map wordfreq zipf -> lexicon byte.
+
+    Fitted by pool-adjacent-violators over the lexicon's (zipf, byte) points,
+    aggregated per distinct zipf value (wordfreq reports zipf to 2 decimals, so the
+    98k words collapse to a few hundred weighted points).  Queries between fitted
+    points interpolate linearly; queries outside the fitted range clamp to its ends.
+    Isotonic rather than linear because the byte scale is visibly non-linear at the
+    tails (zipf 1.0-1.5 is compressed onto 134-141) and monotonicity is the only
+    property the overlay's comparison actually relies on.
+    """
+
+    def __init__(self, lexicon: dict[str, float], lang: str = "en") -> None:
+        from wordfreq import zipf_frequency
+
+        self.lang = lang
+        points: list[tuple[float, float]] = []
+        for word, byte in lexicon.items():
+            zipf = zipf_frequency(word, lang)
+            if zipf > 0.0:  # 0.0 = wordfreq has no data; no evidence either way
+                points.append((zipf, float(byte)))
+        if len(points) < 2:
+            raise SystemExit("zipf->byte fit: fewer than two lexicon words carry a zipf")
+        self.points = points
+        self.byte_min = min(lexicon.values())
+        self.byte_max = max(lexicon.values())
+
+        # Aggregate per distinct zipf: (x, weighted mean y, weight).
+        sums: dict[float, list[float]] = {}
+        for zipf, byte in points:
+            acc = sums.setdefault(zipf, [0.0, 0.0])
+            acc[0] += byte
+            acc[1] += 1.0
+        xs = sorted(sums)
+        # PAVA: blocks of [sum_y, weight, first_index, last_index], merged while decreasing.
+        blocks: list[list[float]] = []
+        for i, x in enumerate(xs):
+            total, weight = sums[x]
+            blocks.append([total, weight, i, i])
+            while len(blocks) > 1 and blocks[-2][0] / blocks[-2][1] > blocks[-1][0] / blocks[-1][1]:
+                top = blocks.pop()
+                blocks[-1][0] += top[0]
+                blocks[-1][1] += top[1]
+                blocks[-1][3] = top[3]
+        fitted = [0.0] * len(xs)
+        for total, weight, first, last in blocks:
+            for j in range(int(first), int(last) + 1):
+                fitted[j] = total / weight
+        self.xs = xs
+        self.ys = fitted
+
+    def predict(self, zipf: float) -> float:
+        """Fitted byte for `zipf`, linearly interpolated, clamped to the fitted range."""
+        from bisect import bisect_left
+
+        xs, ys = self.xs, self.ys
+        if zipf <= xs[0]:
+            return ys[0]
+        if zipf >= xs[-1]:
+            return ys[-1]
+        hi = bisect_left(xs, zipf)
+        if xs[hi] == zipf:
+            return ys[hi]
+        lo = hi - 1
+        t = (zipf - xs[lo]) / (xs[hi] - xs[lo])
+        return ys[lo] + t * (ys[hi] - ys[lo])
+
+    def to_byte(self, zipf: float) -> int:
+        """`predict` rounded half-up and clamped to the lexicon's own byte range."""
+        value = int(self.predict(zipf) + 0.5)
+        return max(int(self.byte_min), min(int(self.byte_max), value))
+
+    def quality(self) -> dict[str, float]:
+        """Fit diagnostics over every lexicon point: n, Spearman rho, MAE, RMSE, max |res|."""
+        residuals = [byte - self.predict(zipf) for zipf, byte in self.points]
+        n = len(residuals)
+        mae = sum(abs(r) for r in residuals) / n
+        rmse = (sum(r * r for r in residuals) / n) ** 0.5
+        within2 = sum(1 for r in residuals if abs(r) <= 2.0) / n
+        return {
+            "n": float(n),
+            "spearman": _spearman([p[0] for p in self.points], [p[1] for p in self.points]),
+            "mae": mae,
+            "rmse": rmse,
+            "max_abs": max(abs(r) for r in residuals),
+            "within_2": within2,
+        }
+
+
+def _average_ranks(values: list[float]) -> list[float]:
+    """Ranks with ties sharing their average rank (Spearman's convention)."""
+    order = sorted(range(len(values)), key=values.__getitem__)
+    ranks = [0.0] * len(values)
+    i = 0
+    while i < len(order):
+        j = i
+        while j + 1 < len(order) and values[order[j + 1]] == values[order[i]]:
+            j += 1
+        for k in range(i, j + 1):
+            ranks[order[k]] = (i + j) / 2.0
+        i = j + 1
+    return ranks
+
+
+def _spearman(xs: list[float], ys: list[float]) -> float:
+    """Spearman rank correlation (Pearson over average ranks)."""
+    rx, ry = _average_ranks(xs), _average_ranks(ys)
+    n = len(rx)
+    mx, my = sum(rx) / n, sum(ry) / n
+    cov = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    vx = sum((a - mx) ** 2 for a in rx)
+    vy = sum((b - my) ** 2 for b in ry)
+    return cov / (vx * vy) ** 0.5
+
+
+def measure_en_pairing_frequencies(
+    pairings: dict[str, list[dict]], fit: ZipfByteFit,
+) -> tuple[dict[str, list[dict]], list[tuple[str, str, int, int, float]]]:
+    """
+    Return (updated pairings, changes) with every non-possessive variant re-measured.
+
+    `pairings` keeps its key order and per-base variant order; EXTRA_EN_PAIRINGS bases
+    are appended (or their variant appended to an existing base) when absent.  Each
+    change row is (base, variant, old frequency or -1 when newly added, new frequency,
+    variant zipf).  A variant wordfreq has no data for (zipf 0) keeps its value — there
+    is nothing to measure it against — and is reported by the caller.
+    """
+    from wordfreq import zipf_frequency
+
+    updated: dict[str, list[dict]] = {
+        base: [dict(entry) for entry in variants] for base, variants in pairings.items()
+    }
+    added: set[tuple[str, str]] = set()
+    for base, variants in EXTRA_EN_PAIRINGS.items():
+        entries = updated.setdefault(base, [])
+        for variant in variants:
+            if all(e["contraction"] != variant for e in entries):
+                entries.append({"contraction": variant, "frequency": None})
+                added.add((base, variant))
+
+    changes: list[tuple[str, str, int, int, float]] = []
+    for base, entries in updated.items():
+        for entry in entries:
+            variant = entry["contraction"]
+            if is_possessive(variant):
+                continue
+            zipf = zipf_frequency(variant, fit.lang)
+            if zipf <= 0.0:
+                if (base, variant) in added:
+                    raise SystemExit(f"{base} -> {variant}: added pairing has no wordfreq data")
+                continue
+            new = fit.to_byte(zipf)
+            old = entry["frequency"]
+            if old != new:
+                changes.append((base, variant, -1 if old is None else int(old), new, zipf))
+            entry["frequency"] = new
+    return updated, changes
+
+
+def rebuild_en_pairing_frequencies(dry_run: bool, check: bool) -> int:
+    """Refit, re-measure and (unless dry-run/check) rewrite contraction_pairings.json.
+
+    Returns the process exit code: 1 when `check` finds drift, else 0.
+    """
+    from wordfreq import zipf_frequency
+
+    lexicon = load_lexicon(EN_LEXICON_NAME)
+    fit = ZipfByteFit(lexicon, "en")
+    q = fit.quality()
+    print(
+        f"zipf->byte isotonic fit over {int(q['n']):,} en_enhanced.json words:"
+        f" Spearman {q['spearman']:.5f}, MAE {q['mae']:.2f}, RMSE {q['rmse']:.2f},"
+        f" max |res| {q['max_abs']:.1f}, {q['within_2'] * 100:.1f}% within ±2 bytes"
+    )
+
+    shipped_text = EN_PAIRINGS_PATH.read_text(encoding="utf-8")
+    pairings = json.loads(shipped_text)
+    updated, changes = measure_en_pairing_frequencies(pairings, fit)
+
+    # Projection pairs are the only ones whose value decides placement; show them with
+    # the base's lexicon byte so the promotion outcome is visible in the log.
+    print("projection pairs (base lexicon byte vs variant measured byte):")
+    for base, entries in updated.items():
+        for entry in entries:
+            variant = entry["contraction"]
+            if variant.replace("'", "") != base or is_possessive(variant):
+                continue
+            base_byte = lexicon.get(base)
+            print(
+                f"  {base:>8} {base_byte!s:>6} (z {zipf_frequency(base, 'en'):.2f})"
+                f"  {variant:<8} {entry['frequency']:>4} (z {zipf_frequency(variant, 'en'):.2f})"
+            )
+    print(f"{len(changes)} frequency value(s) differ from the shipped file")
+    for base, variant, old, new, zipf in changes:
+        shown_old = "new" if old < 0 else str(old)
+        print(f"  {base:>8} -> {variant:<10} {shown_old:>4} -> {new:<4} (zipf {zipf:.2f})")
+
+    # No trailing newline: byte-identical to the shipped file's existing format.
+    rendered = json.dumps(updated, indent=2, ensure_ascii=False)
+    if check:
+        if rendered != shipped_text:
+            print(f"DRIFT: {EN_PAIRINGS_PATH.name} does not match a fresh measurement")
+            return 1
+        print(f"{EN_PAIRINGS_PATH.name}: up to date")
+        return 0
+    if dry_run:
+        print(f"[dry-run] {EN_PAIRINGS_PATH.name} not written")
+        return 0
+    EN_PAIRINGS_PATH.write_text(rendered, encoding="utf-8")
+    print(f"wrote {EN_PAIRINGS_PATH}")
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[1])
     parser.add_argument(
@@ -874,7 +1154,23 @@ def main():
         "--dry-run", action="store_true",
         help="report what would be written without touching the assets",
     )
+    parser.add_argument(
+        "--en-pairing-frequencies", action="store_true",
+        help="re-measure contraction_pairings.json frequencies on the en_enhanced.json "
+             "byte scale (wordfreq zipf through an isotonic fit) instead of rebuilding "
+             "the per-language display files",
+    )
+    parser.add_argument(
+        "--check", action="store_true",
+        help="with --en-pairing-frequencies: exit 1 if the shipped file drifts from a "
+             "fresh measurement, write nothing",
+    )
     args = parser.parse_args()
+
+    if args.en_pairing_frequencies:
+        sys.exit(rebuild_en_pairing_frequencies(args.dry_run, args.check))
+    if args.check:
+        parser.error("--check is only meaningful with --en-pairing-frequencies")
 
     languages = list(LANG_DICT_PATHS)
     if args.lang:

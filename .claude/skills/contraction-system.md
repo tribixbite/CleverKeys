@@ -210,9 +210,15 @@ The rule now:
    `she`→`she'd` — a different trace) and any variant with **no known frequency**. That is why
    would/world cannot regress, and why **fr/it are unchanged** — their pairs files carry no
    frequency, so no elision (`l'une`) can climb over a real word (`lune`, §2).
-3. Spliced variant goes **ahead** of its base only when its pairing frequency strictly exceeds
-   the base's lexicon frequency: `she'd` 200 > `shed` 189, `i'd` 200 > `id` 196, `i'll` > `ill`,
-   `we'd` > `wed`, `she'll` > `shell`. `well` 223 and `hell` 206 stay first.
+3. Spliced variant goes **ahead** of its base only when its pairing frequency beats the base's
+   lexicon frequency by at least `ContractionOverlay.PROMOTION_MARGIN` = **6 bytes** (≈0.3 zipf,
+   ≈2x): `i'd` 211 vs `id` 196, `i'll` 212 vs `ill` 198, `we'd` 193 vs `wed` 178, `he's`/`she's`
+   over `hes`/`shes`, `c'mon` over `cmon`. Base stays first for `well` (223 vs 202), `hell`,
+   `were`, `shell` (192 vs 188), `whore` (182 vs 163), `shed` (189 vs 188 — near tie) and
+   **`its` (225 vs `it's` 229)**: a real lead of 1.55x, but inside the margin — the classic
+   grammatical confusable only syntax resolves, so the traced literal keeps the auto-insert and
+   `it's` sits at slot 1. Smallest real promotion gap is 13 (`c'mon`), so the margin decides
+   exactly one pair today; `ContractionOverlayTest` pins its boundary.
    - **Possessives never go ahead** (`isPossessive`; pronoun `'s` clitics `she's`/`he's` are
      not possessives). Measured: 24 of the 69 raw-frequency promotions disagree with wordfreq,
      e.g. `teams`→`team's`, `ones`→`one's`, `sons`→`son's` — they are spliced after instead.
@@ -223,15 +229,32 @@ The rule now:
 4. Scores stay non-increasing: a spliced pair shares the base's score; tail variants are clamped
    to the last emitted score.
 
-**The frequency is BASE-scoped** (`base → variant → freq`), never variant-scoped: the file gives
-`she'd` 200 under `shed` but 211 under `she`, and `we'll` 200 under `well` but **252** under `we`
-— a variant-keyed lookup would put `we'll` ahead of `well`.
+**The frequency is BASE-scoped in storage** (`base → variant → freq`) — that is the runtime
+contract — but since 2026-09-26 every non-possessive variant carries **one value file-wide**,
+because a variant's corpus frequency does not depend on which trace reached it. Only the copy
+under a *projection* base is read; the `she → she'd` copy is a completion of a different trace.
 
-**Known data caveat:** all seven pronoun pairs carry the same flat `200`, a curated value, not a
-measurement. By wordfreq `shell` (4.39) beats `she'll` (4.18), `whore` beats `who're`, and
-`shed`/`she'd` is a near tie — so `she'll` over `shell` and `who're` over `whore` are data
-artefacts of that constant. Fix it in the DATA (regenerate the pronoun pair frequencies), not by
-special-casing the overlay.
+**Where the numbers come from (2026-09-26).** `contraction_pairings.json` was imported from
+Unexpected-Keyboard in `f7f77d85` with no generator here: upstream (`migration2/
+process_contractions.py`) copied each apostrophe word's frequency from the ORIGINAL UK English
+dictionary, and nine pronoun bases (`well wed id hell ill shed shell whore` + `it`) were appended
+by hand with a flat `200`. Neither was on today's lexicon scale (`we → we'll` was **252**, a zipf
+~7.5 word; the flat 200 promoted `she'll` over `shell` and `who're` over `whore`). Now:
+
+```sh
+python3 scripts/extract_apostrophe_words.py --en-pairing-frequencies           # rewrite
+python3 scripts/extract_apostrophe_words.py --en-pairing-frequencies --check   # exit 1 on drift
+```
+
+fits an **isotonic zipf→byte map on `en_enhanced.json` itself** (98,069 words with a wordfreq
+zipf; Spearman 0.9997, **residual 0 on every word** — the lexicon IS a monotone function of
+wordfreq 3.1 zipf, ~19 bytes per zipf unit over 4–6.5) and writes each non-possessive variant's
+own zipf (apostrophe form, `en`) through it — 80 variants / 93 entries. **Possessives keep the
+upstream values** (never promoted, so the value only orders several projections of one base;
+10 of their 42 above-margin leads disagree with wordfreq — `ones/one's`, `kings/king's` — which
+is why the possessive rule stays). `EXTRA_EN_PAIRINGS` adds `its → it's`, which previously lived
+only in `contractions.bin` (no frequency → tail, off-screen). `contractions.bin` does not carry
+frequencies and regenerates byte-identical; collision sidecars are unaffected.
 
 ## 7. Empty files are CORRECT, not unfinished
 
@@ -328,8 +351,9 @@ guard.
 | `i'd` reaches the bar for typed `id`, `id` survives beside it, no duplicate surface for `ill` | `ContractionSentenceStartMeasureTest` (instrumented) |
 | injected key surfaces but never outranks a real word | `CtcContractionRankingTest` |
 | paired placement: splice ≤1 projection variant, ahead only on higher known freq, possessives never ahead, tail otherwise, monotone scores | `ContractionOverlayTest` (pure) |
-| shipped pronoun set: she'd/I'd/I'll/we'd/she'll rank 0, well/hell stay rank 0, would/world keeps world at #2, REPLACE six keep their slot | `CtcContractionDisplayTest` (pure) |
-| pairing `frequency` survives parsing, base-scoped | `BundledContractionDataTest` (pure) |
+| shipped pronoun set over MEASURED data: I'd/I'll/we'd/he's/she's rank 0; shed/shell/whore/well/hell/were/its keep rank 0 with the variant at #1; its/it's inside PROMOTION_MARGIN; would/world keeps world at #2; REPLACE six keep their slot | `CtcContractionDisplayTest` (pure) |
+| promotion needs lead ≥ PROMOTION_MARGIN (boundary), possessive never ahead even above the margin | `ContractionOverlayTest` (pure) |
+| pairing `frequency` survives parsing, base-scoped; the 17 projection values pinned; one value per non-possessive variant; no flat 200 on a promotable pair | `BundledContractionDataTest` (pure) |
 | language isolation (no code-switched output) | `SwipeContractionLanguageIsolationTest` |
 
 ---

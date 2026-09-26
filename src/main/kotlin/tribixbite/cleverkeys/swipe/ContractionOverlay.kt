@@ -48,10 +48,17 @@ import java.util.Locale
  *    (the contraction-system skill's §2 casualties).
  *
  * Order within the splice: the variant goes AHEAD of its base only when its pairing
- * frequency ([pairedVariantFrequency]) strictly EXCEEDS the base's own lexicon frequency
- * ([baseFrequency]) — she'd 200 > shed 189, i'd 200 > id 196 — so it becomes rank 0 and
- * the auto-insert target when the base was rank 0. well (223) and hell (206) out-rank their
- * variant (200) and stay first. Two exceptions keep the variant BEHIND the base:
+ * frequency ([pairedVariantFrequency]) beats the base's own lexicon frequency
+ * ([baseFrequency]) by at least [PROMOTION_MARGIN] — i'd 211 vs id 196, i'll 212 vs ill 198,
+ * we'd 193 vs wed 178 — so it becomes rank 0 and the auto-insert target when the base was
+ * rank 0. well (223 vs we'll 202), hell, shell and shed (189 vs she'd 188) stay first. The
+ * pairing values are measured (wordfreq zipf mapped through the isotonic fit of
+ * en_enhanced.json — `scripts/extract_apostrophe_words.py --en-pairing-frequencies`).
+ * Three exceptions keep the variant BEHIND the base:
+ *
+ *  - The lead is under [PROMOTION_MARGIN] (a near tie such as it's 229 vs its 225). The
+ *    trace is identical for both spellings, so a small prior lead is a coin flip and the
+ *    literal the user traced keeps the auto-insert; the variant is still one slot away.
  *
  *  - [baseFrequency] returns null. The caller supplies it only when the lexicon is on the
  *    pairing file's 0..255 byte scale (the CTC en_enhanced.json source); the geometric
@@ -71,6 +78,21 @@ object ContractionOverlay {
 
     /** See class KDoc — the measured-gap threshold for "alias is a real common word". */
     const val REAL_WORD_ORDINAL_MAX = 1200
+
+    /**
+     * Minimum lead, in en_enhanced.json byte units, a spliced projection variant needs over its
+     * base's lexicon frequency to go AHEAD of it (become rank 0 / the auto-insert target).
+     *
+     * 6 bytes ≈ 0.3 zipf ≈ the variant being at least 2x as frequent in wordfreq: the fitted
+     * zipf→byte map runs at 18–19 bytes per zipf unit over zipf 4–6.5, where every pronoun pair
+     * lives. Chosen from the measured gaps, not tuned to them: every promotion the data makes
+     * clears it with room (smallest: c'mon 13, i'll 14, i'd/we'd 15; he's/she's 31–32), and the
+     * one pair under it is its/it's (4 bytes, 1.55x) — the classic grammatical confusable that
+     * only syntax can resolve, where silently auto-inserting the apostrophe form over the traced
+     * literal is the error users notice. Changing it moves auto-insert behaviour for the whole
+     * pronoun set: re-read the table in `CtcContractionDisplayTest` first.
+     */
+    const val PROMOTION_MARGIN = 6
 
     /**
      * @param words decoded candidates, descending score order.
@@ -132,7 +154,9 @@ object ContractionOverlay {
                 } else {
                     val (variant, variantFreq) = spliced
                     val baseFreq = baseFrequency(lower)
-                    val ahead = baseFreq != null && variantFreq > baseFreq && !isPossessive(variant)
+                    val ahead = baseFreq != null &&
+                        variantFreq - baseFreq >= PROMOTION_MARGIN &&
+                        !isPossessive(variant)
                     if (ahead) {
                         emit(variant, score)
                         emit(word, score)

@@ -266,7 +266,7 @@ class GeometricEngineAdapter(
      * the CKDT dictionary exposes only a rank (`255 − rank` on the CTC side), which is not the
      * pairing file's byte scale, so this engine never puts a variant AHEAD of its base.
      *
-     * TODO: geometric parity for the promotion (she'd over shed as rank 0) needs a base
+     * TODO: geometric parity for the promotion (i'd over id as rank 0) needs a base
      * frequency on the pairing scale — e.g. the en_enhanced.json values for the ~1.7k
      * [ContractionManager.getPairedFrequencyBases] only, loaded once per en dictionary memo.
      */

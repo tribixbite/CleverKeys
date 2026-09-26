@@ -19,11 +19,12 @@ import java.io.File
  *
  *  - junk aliases are REPLACED: dont → don't, im → I'm, cant → can't;
  *  - paired real-word bases are KEPT, never replaced: "well" stays "well" with
- *    "we'll" spliced right after it (2026-09-26 placement rule — the pairing
- *    frequency 200 is below well's lexicon frequency 223);
- *  - the reported pronoun set over the SHIPPED pairing + lexicon frequencies:
- *    she'd / I'd / I'll / we'd / she'll become rank 0 over shed / id / ill / wed /
- *    shell, while well / hell keep rank 0 (learning-system audit RC1 + RC3);
+ *    "we'll" spliced right after it (2026-09-26 placement rule — we'll's measured
+ *    frequency 202 is below well's lexicon frequency 223);
+ *  - the pronoun set over the SHIPPED, MEASURED pairing + lexicon frequencies:
+ *    I'd / I'll / we'd / he's / she's become rank 0 over id / ill / wed / hes / shes,
+ *    while shed / shell / whore / well / hell / were / its keep rank 0 with the
+ *    contraction at rank 1 (learning-system audit RC1 + RC3);
  *  - the frequency-descending ordinal ranking of the shipped asset actually
  *    exhibits the separation `ContractionOverlay.REAL_WORD_ORDINAL_MAX` = 1200
  *    assumes (junk aliases deep, real-word bases shallow) — the threshold
@@ -137,23 +138,31 @@ class CtcContractionDisplayTest {
     // ── Reported pronoun set over the SHIPPED data (learning-system audit RC1 + RC3) ──
 
     @Test
-    fun `paired pronoun contractions rank by shipped pairing vs lexicon frequency`() {
+    fun `paired pronoun contractions rank by measured pairing vs lexicon frequency`() {
         // Each key is decoded as the TOP beam candidate with two distinct words behind it.
-        // Expected: the contraction is rank 0 exactly when its pairing frequency beats the
-        // key's own lexicon frequency, and is ALWAYS within the first two slots — never
-        // behind the distinct candidates (the pre-fix tail placement put it at slot 3+).
+        // Expected: the contraction is rank 0 exactly when its MEASURED pairing frequency beats
+        // the key's own lexicon frequency by at least ContractionOverlay.PROMOTION_MARGIN, and
+        // is ALWAYS within the first two slots — never behind the distinct candidates (the
+        // pre-fix tail placement put it at slot 3+). Values: variant byte vs base byte, both
+        // on en_enhanced.json's scale (see BundledContractionDataTest for provenance).
         val expectedTop = mapOf(
-            "shed" to "she'd", // 200 > 189
-            "id" to "i'd", // 200 > 196
-            "ill" to "i'll", // 200 > 198
-            "wed" to "we'd", // 200 > 178
-            "shell" to "she'll", // 200 > 192
-            "well" to "well", // 223 > 200
-            "hell" to "hell", // 206 > 200
+            "id" to "i'd", // 211 vs 196
+            "ill" to "i'll", // 212 vs 198
+            "wed" to "we'd", // 193 vs 178
+            "hes" to "he's", // 215 vs 184
+            "shes" to "she's", // 209 vs 177
+            "shed" to "shed", // 188 vs 189 — near tie (zipf 4.18 vs 4.23), base keeps rank 0
+            "shell" to "shell", // 188 vs 192 — was a flat-200 artefact that promoted she'll
+            "whore" to "whore", // 163 vs 182 — was a flat-200 artefact that promoted who're
+            "well" to "well", // 202 vs 223
+            "hell" to "hell", // 195 vs 206
+            "were" to "were", // 211 vs 229
+            "its" to "its", // 229 vs 225 — it's IS more frequent, but inside the margin
         )
         val variantOf = mapOf(
-            "shed" to "she'd", "id" to "i'd", "ill" to "i'll", "wed" to "we'd",
-            "shell" to "she'll", "well" to "we'll", "hell" to "he'll",
+            "id" to "i'd", "ill" to "i'll", "wed" to "we'd", "hes" to "he's", "shes" to "she's",
+            "shed" to "she'd", "shell" to "she'll", "whore" to "who're", "well" to "we'll",
+            "hell" to "he'll", "were" to "we're", "its" to "it's",
         )
         for ((key, top) in expectedTop) {
             val (words, _) = applyShipped(listOf(key, "zzfill", "zzfiller"), listOf(900, 800, 700))
@@ -161,6 +170,23 @@ class CtcContractionDisplayTest {
             assertWithMessage("swiped '$key' slate $words")
                 .that(words.take(2)).containsExactly(key, variantOf.getValue(key))
         }
+    }
+
+    @Test
+    fun `its and it's — spliced beside, never auto-inserted over its`() {
+        // its/it's is the canonical grammatical confusable: the trace is identical, only
+        // syntax decides, and the overlay has no syntax. The measured prior (it's 229 vs its
+        // 225, zipf 6.33 vs 6.14 = 1.55x) is a near tie, so it's is spliced at slot 1 — one
+        // tap away instead of the pre-2026-09-26 tail (it lived only in contractions.bin, with
+        // no frequency) — but the literal "its" keeps rank 0 and the auto-insert.
+        val its = pairings.getValue("its").single { it.contraction == "it's" }.frequency!!
+        val base = lexicon.getValue("its").toInt()
+        assertThat(its).isGreaterThan(base) // the data does NOT fake the tie
+        assertThat(its - base).isLessThan(ContractionOverlay.PROMOTION_MARGIN)
+
+        val (words, scores) = applyShipped(listOf("its", "ots"), listOf(900, 800))
+        assertThat(words).containsExactly("its", "it's", "ots").inOrder()
+        assertThat(scores).containsExactly(900, 900, 800).inOrder()
     }
 
     @Test

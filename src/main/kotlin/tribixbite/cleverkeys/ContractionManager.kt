@@ -35,10 +35,13 @@ class ContractionManager(private val context: Context) {
 
     // Pairing frequency, BASE-scoped: base → (variant → frequency), from the `frequency` field of
     // contraction_pairings.json (English only — the fr/it pairs files carry no frequency, and the
-    // binary store carries none). Base-scoped rather than variant-scoped because the file gives
-    // the same contraction different values under different bases ("she'd" is 200 under "shed"
-    // but 211 under "she"; "we'll" 200 under "well" but 252 under "we"), and the value that
-    // matters to the swipe overlay is the one for the surface the engine actually decoded.
+    // binary store carries none). Base-scoped storage: the value that matters to the swipe
+    // overlay is the one listed for the surface the engine actually decoded. Since 2026-09-26
+    // every non-possessive variant carries ONE measured value file-wide (wordfreq zipf mapped
+    // onto en_enhanced.json's byte scale by `scripts/extract_apostrophe_words.py
+    // --en-pairing-frequencies`); before, the same contraction disagreed across bases ("she'd"
+    // 200 under "shed" but 211 under "she"; "we'll" 252 under "we"), which is why a
+    // variant-keyed lookup was never safe. Possessive values are still the upstream ones.
     // Read by [tribixbite.cleverkeys.swipe.ContractionOverlay] (learning-system audit RC3).
     private val pairedFrequencies: MutableMap<String, MutableMap<String, Int>> = mutableMapOf()
 
@@ -761,7 +764,7 @@ class ContractionManager(private val context: Context) {
 
         /**
          * Parses `contraction_pairings.json` — `{"shed": [{"contraction": "she'd",
-         * "frequency": 200}], …}` — into lowercase base → variants in file order, KEEPING the
+         * "frequency": 188}], …}` — into lowercase base → variants in file order, KEEPING the
          * `frequency` field (dropped until 2026-09-26, learning-system audit RC3). Pure (no
          * Context) so the shipped file is pinned in `runPureTests` through this exact parser.
          */

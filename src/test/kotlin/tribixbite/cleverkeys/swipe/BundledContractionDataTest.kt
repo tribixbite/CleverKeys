@@ -959,8 +959,16 @@ class BundledContractionDataTest {
     /**
      * The English pairing file's per-variant `frequency` must survive loading (learning-system
      * audit RC3, 2026-09-26): until then `loadPairedContractions` read only `"contraction"`, so
-     * the swipe overlay could not see that `she'd` (200) outranks `shed` (189). Runs the
-     * PRODUCTION parser ([ContractionManager.parsePairings]) over the shipped file.
+     * the swipe overlay could not see the prior at all. Runs the PRODUCTION parser
+     * ([ContractionManager.parsePairings]) over the shipped file.
+     *
+     * The values are MEASURED (2026-09-26): each non-possessive variant's wordfreq zipf pushed
+     * through the isotonic zipf→byte map fitted on `en_enhanced.json` itself
+     * (`scripts/extract_apostrophe_words.py --en-pairing-frequencies`; the fit reproduces all
+     * 98,069 lexicon bytes with zero residual, i.e. the lexicon IS that function of wordfreq).
+     * Before, nine pronoun bases carried a hand-set flat 200 and the pronoun-base copies carried
+     * upstream UK-dictionary values on a different scale (we -> we'll 252, "as frequent as
+     * the"), which made she'll beat shell and who're beat whore.
      */
     @Test
     fun `english pairing frequencies are parsed, base-scoped, on the lexicon byte scale`() {
@@ -970,23 +978,63 @@ class BundledContractionDataTest {
         fun freq(base: String, variant: String): Int? =
             pairings[base]?.firstOrNull { it.contraction == variant }?.frequency
 
-        // The seven PAIRED pronoun contractions the user reported, at their shipped values.
-        for ((base, variant) in listOf(
-            "shed" to "she'd", "id" to "i'd", "well" to "we'll", "shell" to "she'll",
-            "wed" to "we'd", "ill" to "i'll", "hell" to "he'll",
-        )) {
-            assertWithMessage("$base -> $variant").that(freq(base, variant)).isEqualTo(200)
+        // Every non-possessive PROJECTION pair (apostrophe-free variant == base) — the only
+        // values the swipe overlay compares against a lexicon frequency — at its measured value.
+        // Comment: variant zipf (wordfreq 3.1) / base lexicon byte (en_enhanced.json).
+        val measured = mapOf(
+            ("shed" to "she'd") to 188, // 4.18 / shed 189
+            ("shell" to "she'll") to 188, // 4.18 / shell 192
+            ("id" to "i'd") to 211, // 5.36 / id 196
+            ("ill" to "i'll") to 212, // 5.43 / ill 198
+            ("wed" to "we'd") to 193, // 4.44 / wed 178
+            ("well" to "we'll") to 202, // 4.89 / well 223
+            ("hell" to "he'll") to 195, // 4.54 / hell 206
+            ("whore" to "who're") to 163, // 2.86 / whore 182
+            ("were" to "we're") to 211, // 5.40 / were 229
+            ("hes" to "he's") to 215, // 5.60 / hes 184
+            ("shes" to "she's") to 209, // 5.26 / shes 177
+            ("its" to "it's") to 229, // 6.33 / its 225
+            ("cmon" to "c'mon") to 180, // 3.75 / cmon 167
+            ("govt" to "gov't") to 166, // 3.01 / govt 180
+            ("ima" to "i'ma") to 163, // 2.82 / ima 168
+            ("intl" to "int'l") to 162, // 2.79 / intl 165
+            ("quran" to "qur'an") to 171, // 3.25 / quran 176
+        )
+        for ((pair, expected) in measured) {
+            assertWithMessage("${pair.first} -> ${pair.second}")
+                .that(freq(pair.first, pair.second)).isEqualTo(expected)
         }
-        // BASE-scoped, not variant-scoped: the same contraction carries a different value under
-        // its pronoun base (she -> she'd 211; we -> we'll 252). A variant-keyed lookup would pick
-        // one arbitrarily — and 252 would wrongly put we'll ahead of well (223).
-        assertThat(freq("she", "she'd")).isEqualTo(211)
-        assertThat(freq("we", "we'll")).isEqualTo(252)
+        // No hand-set flat 200 survives on a promotable (non-possessive projection) pair.
+        val projections = pairings.flatMap { (base, variants) ->
+            variants.filter {
+                ContractionOverlay.isProjectionOf(base, it.contraction) &&
+                    !ContractionOverlay.isPossessive(it.contraction)
+            }.map { base to it.contraction }
+        }.toSet()
+        assertThat(projections).isEqualTo(measured.keys)
+
+        // One value per non-possessive variant FILE-WIDE: a variant's corpus frequency does not
+        // depend on which trace reached it. Storage stays base-scoped (the runtime contract) but
+        // the old per-base disagreement (she'd 200 under shed, 211 under she; we'll 252 under
+        // we vs 200 under well) is gone — 252 would have put we'll ahead of well (223).
+        assertThat(freq("she", "she'd")).isEqualTo(freq("shed", "she'd"))
+        assertThat(freq("we", "we'll")).isEqualTo(202)
+        assertThat(freq("it", "it's")).isEqualTo(freq("its", "it's"))
+        val byVariant = HashMap<String, MutableSet<Int>>()
+        for (v in pairings.values.flatten()) {
+            if (!ContractionOverlay.isPossessive(v.contraction)) {
+                byVariant.getOrPut(v.contraction) { HashSet() }.add(v.frequency!!)
+            }
+        }
+        for ((variant, values) in byVariant) {
+            assertWithMessage("$variant carries one value across bases").that(values).hasSize(1)
+        }
 
         // Every entry carries a frequency, all within the 0..255 byte scale en_enhanced.json uses
-        // (shipped ranges: pairings 128..255, lexicon 134..255) — the overlay compares the two.
+        // (lexicon 134..255) — the overlay compares the two. 1,788 = 1,787 + the its -> it's
+        // entry added so it's has a frequency (it lived only in contractions.bin before).
         val all = pairings.values.flatten()
-        assertThat(all.size).isEqualTo(1787)
+        assertThat(all.size).isEqualTo(1788)
         for (v in all) {
             assertWithMessage("${v.contraction} frequency").that(v.frequency).isNotNull()
             assertWithMessage("${v.contraction} frequency").that(v.frequency!!).isIn(1..255)

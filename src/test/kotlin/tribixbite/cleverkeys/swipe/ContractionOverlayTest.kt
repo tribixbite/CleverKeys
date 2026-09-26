@@ -71,16 +71,20 @@ class ContractionOverlayTest {
     // ── Paired placement (2026-09-26, learning-system audit RC1 + RC3) ──────────────
     //
     // Frequencies below are the SHIPPED values: pairing frequency from
-    // contraction_pairings.json (base-scoped), base frequency from en_enhanced.json.
+    // contraction_pairings.json (base-scoped; non-possessive values MEASURED 2026-09-26 —
+    // wordfreq zipf through the isotonic fit of en_enhanced.json), base frequency from
+    // en_enhanced.json.
 
     private val pairFreq = mapOf(
-        "well" to mapOf("we'll" to 200),
-        "shed" to mapOf("she'd" to 200),
-        "id" to mapOf("i'd" to 200),
-        "hell" to mapOf("he'll" to 200),
-        "shes" to mapOf("she's" to 241),
+        "well" to mapOf("we'll" to 202),
+        "shed" to mapOf("she'd" to 188),
+        "id" to mapOf("i'd" to 211),
+        "ill" to mapOf("i'll" to 212),
+        "its" to mapOf("it's" to 229),
+        "hell" to mapOf("he'll" to 195),
+        "shes" to mapOf("she's" to 209),
         "teams" to mapOf("team's" to 206),
-        "would" to mapOf("wouldn't" to 179, "would've" to 170),
+        "would" to mapOf("wouldn't" to 207, "would've" to 192),
         "world" to mapOf("world's" to 224),
         "girls" to mapOf("girl's" to 150, "girls'" to 140),
     )
@@ -88,7 +92,7 @@ class ContractionOverlayTest {
     private val lexFreq = mapOf(
         "well" to 223, "wall" to 213, "shed" to 189, "id" to 196, "is" to 250,
         "hell" to 206, "shes" to 177, "teams" to 203, "would" to 228, "world" to 221,
-        "wood" to 210, "girls" to 200,
+        "wood" to 210, "girls" to 200, "ill" to 198, "its" to 225, "ots" to 150,
     )
 
     private fun applyRanked(
@@ -106,7 +110,7 @@ class ContractionOverlayTest {
 
     @Test
     fun `variant less frequent than its base is spliced directly after the base`() {
-        // well 223 > we'll 200: the word keeps rank 0 (auto-insert target), the variant is
+        // well 223 > we'll 202: the word keeps rank 0 (auto-insert target), the variant is
         // the very next slot instead of being pushed off-screen behind "wall".
         val (words, scores) = applyRanked(listOf("well", "wall"), listOf(900, 800))
         assertThat(words).containsExactly("well", "we'll", "wall").inOrder()
@@ -115,10 +119,43 @@ class ContractionOverlayTest {
 
     @Test
     fun `variant more frequent than its base goes AHEAD of it and becomes rank 0`() {
-        // she'd 200 > shed 189 — the reported bug: swiping she'd auto-inserted "shed".
-        val (words, scores) = applyRanked(listOf("shed", "shes"), listOf(900, 700))
-        assertThat(words.take(2)).containsExactly("she'd", "shed").inOrder()
+        // i'll 212 vs ill 198 (zipf 5.43 vs 4.72, 5x) — swiping I'll used to auto-insert "ill".
+        val (words, scores) = applyRanked(listOf("ill", "all"), listOf(900, 700))
+        assertThat(words.take(2)).containsExactly("i'll", "ill").inOrder()
         assertThat(scores.take(2)).containsExactly(900, 900).inOrder()
+    }
+
+    @Test
+    fun `near tie keeps the traced base at rank 0 — shed over she'd`() {
+        // she'd 188 vs shed 189 (zipf 4.18 vs 4.23): the flat curated 200 used to promote
+        // she'd; the measured value does not, and she'd is still the very next slot.
+        val (words, _) = applyRanked(listOf("shed", "shes"), listOf(900, 700))
+        assertThat(words.take(2)).containsExactly("shed", "she'd").inOrder()
+    }
+
+    @Test
+    fun `a lead under PROMOTION_MARGIN does not promote — its keeps rank 0 over it's`() {
+        // it's 229 vs its 225: it's IS more frequent (1.55x) but the lead is inside the margin,
+        // so the traced literal keeps the auto-insert and it's is spliced right after it.
+        val (words, scores) = applyRanked(listOf("its", "ots"), listOf(900, 800))
+        assertThat(words).containsExactly("its", "it's", "ots").inOrder()
+        assertThat(scores).containsExactly(900, 900, 800).inOrder()
+    }
+
+    @Test
+    fun `PROMOTION_MARGIN boundary — a lead of exactly the margin promotes, one less does not`() {
+        val margin = ContractionOverlay.PROMOTION_MARGIN
+        fun top(lead: Int): String = ContractionOverlay.apply(
+            listOf("shed"), listOf(900),
+            pairedVariants = { if (it == "shed") listOf("she'd") else null },
+            nonPairedMapping = { null },
+            wordOrdinal = { null },
+            pairedVariantFrequency = { _, _ -> 189 + lead },
+            baseFrequency = { if (it == "shed") 189 else null },
+        ).first.first()
+        assertThat(top(margin)).isEqualTo("she'd")
+        assertThat(top(margin - 1)).isEqualTo("shed")
+        assertThat(top(0)).isEqualTo("shed")
     }
 
     @Test
@@ -135,7 +172,7 @@ class ContractionOverlayTest {
 
     @Test
     fun `a pronoun 's clitic is promoted like any other contraction`() {
-        // she's 241 vs shes 177 — "'s" after a pronoun is "is/has", not a possessive.
+        // she's 209 vs shes 177 — "'s" after a pronoun is "is/has", not a possessive.
         val (words, _) = applyRanked(listOf("shes"), listOf(900))
         assertThat(words).containsExactly("she's", "shes").inOrder()
     }
@@ -147,6 +184,21 @@ class ContractionOverlayTest {
         // raw frequencies would make are wrong this way, so possessives never go ahead.
         val (words, _) = applyRanked(listOf("teams", "trams"), listOf(900, 800))
         assertThat(words).containsExactly("teams", "team's", "trams").inOrder()
+
+        // team's leads by only 3, inside PROMOTION_MARGIN, so the case above would hold even
+        // without the possessive rule. ones/one's leads by 12 (217 vs 205, shipped upstream
+        // values) while wordfreq says the opposite (5.07 vs 4.39) — only the possessive rule
+        // keeps "ones" first here.
+        val ones = ContractionOverlay.apply(
+            listOf("ones", "once"), listOf(900, 800),
+            pairedVariants = { if (it == "ones") listOf("one's") else null },
+            nonPairedMapping = { null },
+            wordOrdinal = { null },
+            pairedVariantFrequency = { _, _ -> 217 },
+            baseFrequency = { if (it == "ones") 205 else null },
+        ).first
+        assertThat(217 - 205).isAtLeast(ContractionOverlay.PROMOTION_MARGIN)
+        assertThat(ones).containsExactly("ones", "one's", "once").inOrder()
     }
 
     @Test
@@ -171,8 +223,8 @@ class ContractionOverlayTest {
     fun `unknown base frequency never promotes — splice after only`() {
         // The geometric engine's CKDT ranks are not on the pairing file's byte scale, so it
         // passes no base frequency; the variant is still spliced but never goes ahead.
-        val (words, _) = applyRanked(listOf("shed", "shes"), listOf(900, 700)) { null }
-        assertThat(words.take(2)).containsExactly("shed", "she'd").inOrder()
+        val (words, _) = applyRanked(listOf("id", "is"), listOf(900, 700)) { null }
+        assertThat(words.take(2)).containsExactly("id", "i'd").inOrder()
     }
 
     @Test
