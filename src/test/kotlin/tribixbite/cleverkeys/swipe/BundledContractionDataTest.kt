@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertWithMessage
 import com.google.gson.JsonParser
 import org.junit.BeforeClass
 import org.junit.Test
+import tribixbite.cleverkeys.ContractionManager
 import tribixbite.cleverkeys.swipe.ctc.CtcDecodableLength
 import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
@@ -952,6 +953,43 @@ class BundledContractionDataTest {
                 "'$landmine' must NOT be a REPLACE key — it is either a real word of the " +
                     "language or a known classifier misfire. See the KDoc."
             ).that(fr).doesNotContainKey(landmine)
+        }
+    }
+
+    /**
+     * The English pairing file's per-variant `frequency` must survive loading (learning-system
+     * audit RC3, 2026-09-26): until then `loadPairedContractions` read only `"contraction"`, so
+     * the swipe overlay could not see that `she'd` (200) outranks `shed` (189). Runs the
+     * PRODUCTION parser ([ContractionManager.parsePairings]) over the shipped file.
+     */
+    @Test
+    fun `english pairing frequencies are parsed, base-scoped, on the lexicon byte scale`() {
+        val pairings = ContractionManager.parsePairings(
+            File("$DICT_DIR/contraction_pairings.json").readText()
+        )
+        fun freq(base: String, variant: String): Int? =
+            pairings[base]?.firstOrNull { it.contraction == variant }?.frequency
+
+        // The seven PAIRED pronoun contractions the user reported, at their shipped values.
+        for ((base, variant) in listOf(
+            "shed" to "she'd", "id" to "i'd", "well" to "we'll", "shell" to "she'll",
+            "wed" to "we'd", "ill" to "i'll", "hell" to "he'll",
+        )) {
+            assertWithMessage("$base -> $variant").that(freq(base, variant)).isEqualTo(200)
+        }
+        // BASE-scoped, not variant-scoped: the same contraction carries a different value under
+        // its pronoun base (she -> she'd 211; we -> we'll 252). A variant-keyed lookup would pick
+        // one arbitrarily — and 252 would wrongly put we'll ahead of well (223).
+        assertThat(freq("she", "she'd")).isEqualTo(211)
+        assertThat(freq("we", "we'll")).isEqualTo(252)
+
+        // Every entry carries a frequency, all within the 0..255 byte scale en_enhanced.json uses
+        // (shipped ranges: pairings 128..255, lexicon 134..255) — the overlay compares the two.
+        val all = pairings.values.flatten()
+        assertThat(all.size).isEqualTo(1787)
+        for (v in all) {
+            assertWithMessage("${v.contraction} frequency").that(v.frequency).isNotNull()
+            assertWithMessage("${v.contraction} frequency").that(v.frequency!!).isIn(1..255)
         }
     }
 }

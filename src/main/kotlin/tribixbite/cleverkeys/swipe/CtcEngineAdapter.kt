@@ -545,7 +545,13 @@ class CtcEngineAdapter(
      *    `DictMemo.ordinals` (see [CtcLexiconMerge.ordinals] for the threshold-separation
      *    numbers on the shipped en asset);
      *  - [display] — a–z surface → canonical accented form, EMPTY for the en JSON source
-     *    and populated for CKDT sources ([CtcAzProjection.projectLexicon]).
+     *    and populated for CKDT sources ([CtcAzProjection.projectLexicon]);
+     *  - [pairingBaseFrequencies] — paired-contraction base → its lexicon frequency, feeding
+     *    [ContractionOverlay]'s "variant ahead of base" comparison. Populated ONLY for the
+     *    en JSON source, whose 134..255 scale is the one `contraction_pairings.json`'s
+     *    `frequency` field is on; EMPTY for CKDT (`255 − rank`, not comparable — and those
+     *    languages' pairs files carry no frequency anyway). Restricted to the ~1.7k bases
+     *    with a known pairing frequency, so it costs nothing next to [ordinals].
      *
      * [language] is part of the memo IDENTITY, not just the content hash: a language
      * switch must never reuse the previous language's trie (the content hash alone would
@@ -559,6 +565,7 @@ class CtcEngineAdapter(
         val display: Map<String, String>,
         val fuzzyRescue: CtcFuzzyRescue,
         val version: Long,
+        val pairingBaseFrequencies: Map<String, Int>,
     )
 
     /** Keep only the active primary/secondary tries; wider caching would retain ~19 MB each. */
@@ -802,9 +809,23 @@ class CtcEngineAdapter(
         // word is 69 in fr but 12 in de, so any constant above 11 would break the invariant for
         // German. See [CtcContractionKeys.derivedFloor].
         val injectionFloor = CtcContractionKeys.derivedFloor(lexiconFrequencies)
+        val contractions = contractionsFor(lang)
         val injected = CtcContractionKeys.inject(
-            trie, contractionsFor(lang).getAliasKeys(), injectionFloor
+            trie, contractions.getAliasKeys(), injectionFloor
         )
+        // Base frequencies for the overlay's promotion rule — see [TrieMemo]. Looked up in the
+        // MERGED map, so a user word's calibrated frequency (wave U2) is what the variant is
+        // compared against. Keys are matched as stored (lowercase for every base-asset word);
+        // a custom word stored with capitals simply has no entry, which means "never promote".
+        val pairingBaseFrequencies: Map<String, Int> =
+            if (source == CtcLanguageSupport.LexiconSource.EN_JSON) {
+                val bases = contractions.getPairedFrequencyBases()
+                HashMap<String, Int>(bases.size * 2).apply {
+                    for (base in bases) merged[base]?.let { put(base, it.toInt()) }
+                }
+            } else {
+                emptyMap()
+            }
 
         MemoryProbe.mark("ctc.trie") {
             "lang=$lang words=${trie.wordCount} nodes=${trie.nodeCount} " +
@@ -816,6 +837,7 @@ class CtcEngineAdapter(
             // and rescue would be silently inert. See [CtcFuzzyRescue]'s class KDoc.
             CtcFuzzyRescue.fromFrequencies(rescueFrequencies, alphabet.toHashSet()),
             version,
+            pairingBaseFrequencies,
         )
         if (Thread.currentThread().isInterrupted) throw InterruptedException("Lexicon load cancelled")
         trieMemos[lang] = built
@@ -926,11 +948,15 @@ class CtcEngineAdapter(
         return PredictionResult(result.words.map { display[it] ?: it }, result.scores)
     }
 
-    /** Applies [ContractionOverlay] with [language]'s mappings + merged-lexicon ordinals. */
+    /**
+     * Applies [ContractionOverlay] with [language]'s mappings + merged-lexicon ordinals, and
+     * the pairing/base frequencies its paired-variant placement compares (see its KDoc).
+     */
     private fun applyContractionDisplay(
         result: PredictionResult,
         language: String,
         ordinals: HashMap<String, Int>,
+        pairingBaseFrequencies: Map<String, Int>,
     ): PredictionResult {
         if (result.words.isEmpty()) return result
         val cm = contractionsFor(language)
@@ -940,6 +966,8 @@ class CtcEngineAdapter(
             pairedVariants = { cm.getPairedContractions(it) },
             nonPairedMapping = { cm.getNonPairedMapping(it) },
             wordOrdinal = { ordinals[it] },
+            pairedVariantFrequency = { base, variant -> cm.getPairedVariantFrequency(base, variant) },
+            baseFrequency = { pairingBaseFrequencies[it] },
         )
         return PredictionResult(words, scores)
     }
@@ -950,6 +978,7 @@ class CtcEngineAdapter(
             applyCanonicalDisplay(result, lexicon.display),
             lexicon.language,
             lexicon.ordinals,
+            lexicon.pairingBaseFrequencies,
         )
 
     /**

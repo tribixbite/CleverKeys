@@ -192,6 +192,47 @@ returned `["i'll", "i'll"]` and the bar showed `I'll` at ranks 0 AND 1. Both loa
 earlier-wins with a membership check. The swipe path never showed it: `ContractionOverlay.apply`
 dedups on emit.
 
+## 6c. Swipe placement of PAIRED variants (2026-09-26) — where a variant lands on the slate
+
+`ContractionOverlay` decides WHERE a paired variant goes; getting it wrong hides a correct
+mapping exactly like §6b, because slots 5+ are off-screen and auto-insert commits rank 0.
+
+History: `b2d7b908` (2026-07-22) spliced **every** variant after its base, and "would"'s two
+variants pushed "world" from #2 to #4. It then moved **all** variants to the slate tail — which
+made swiping `she'd` auto-insert `shed`, with `she'd` at slot 5–9, for the whole paired pronoun
+set (`shed/id/ill/wed/shell/well/hell`). Reported 2026-09-26 (learning-system audit RC1 + RC3).
+
+The rule now:
+
+1. **Projection variant** = its apostrophe-free form IS the decoded surface (`shed`→`she'd`).
+   At most **one** per base — the highest known pairing frequency — is **spliced** beside it.
+2. Everything else stays at the **tail**: non-projection variants (`would`→`wouldn't`,
+   `she`→`she'd` — a different trace) and any variant with **no known frequency**. That is why
+   would/world cannot regress, and why **fr/it are unchanged** — their pairs files carry no
+   frequency, so no elision (`l'une`) can climb over a real word (`lune`, §2).
+3. Spliced variant goes **ahead** of its base only when its pairing frequency strictly exceeds
+   the base's lexicon frequency: `she'd` 200 > `shed` 189, `i'd` 200 > `id` 196, `i'll` > `ill`,
+   `we'd` > `wed`, `she'll` > `shell`. `well` 223 and `hell` 206 stay first.
+   - **Possessives never go ahead** (`isPossessive`; pronoun `'s` clitics `she's`/`he's` are
+     not possessives). Measured: 24 of the 69 raw-frequency promotions disagree with wordfreq,
+     e.g. `teams`→`team's`, `ones`→`one's`, `sons`→`son's` — they are spliced after instead.
+   - **Only CTC en compares.** `ContractionManager.getPairedVariantFrequency` is on the
+     `en_enhanced.json` 0..255 byte scale (pairings 128..255, lexicon 134..255). The CTC adapter
+     passes base frequencies only for the EN_JSON source; CKDT (`255 − rank`) and the geometric
+     engine pass none, so they splice but never promote (TODO in `GeometricEngineAdapter`).
+4. Scores stay non-increasing: a spliced pair shares the base's score; tail variants are clamped
+   to the last emitted score.
+
+**The frequency is BASE-scoped** (`base → variant → freq`), never variant-scoped: the file gives
+`she'd` 200 under `shed` but 211 under `she`, and `we'll` 200 under `well` but **252** under `we`
+— a variant-keyed lookup would put `we'll` ahead of `well`.
+
+**Known data caveat:** all seven pronoun pairs carry the same flat `200`, a curated value, not a
+measurement. By wordfreq `shell` (4.39) beats `she'll` (4.18), `whore` beats `who're`, and
+`shed`/`she'd` is a near tie — so `she'll` over `shell` and `who're` over `whore` are data
+artefacts of that constant. Fix it in the DATA (regenerate the pronoun pair frequencies), not by
+special-casing the overlay.
+
 ## 7. Empty files are CORRECT, not unfinished
 
 `es`, `pt`, `sv` ship zero contractions, and the tests assert the positive linguistic evidence:
@@ -286,6 +327,9 @@ guard.
 | tap-path paired injection: floor + the one first-person exception, and the merged variant list holds no repeat | `ContractionInjectionPolicyTest` (pure) + `ContractionFlickerTest` (instrumented) |
 | `i'd` reaches the bar for typed `id`, `id` survives beside it, no duplicate surface for `ill` | `ContractionSentenceStartMeasureTest` (instrumented) |
 | injected key surfaces but never outranks a real word | `CtcContractionRankingTest` |
+| paired placement: splice ≤1 projection variant, ahead only on higher known freq, possessives never ahead, tail otherwise, monotone scores | `ContractionOverlayTest` (pure) |
+| shipped pronoun set: she'd/I'd/I'll/we'd/she'll rank 0, well/hell stay rank 0, would/world keeps world at #2, REPLACE six keep their slot | `CtcContractionDisplayTest` (pure) |
+| pairing `frequency` survives parsing, base-scoped | `BundledContractionDataTest` (pure) |
 | language isolation (no code-switched output) | `SwipeContractionLanguageIsolationTest` |
 
 ---

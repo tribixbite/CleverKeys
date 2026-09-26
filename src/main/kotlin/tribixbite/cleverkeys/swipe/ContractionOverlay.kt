@@ -8,11 +8,11 @@ import java.util.Locale
  * Every swipe dictionary stores contractions as apostrophe-free ALIASES ("theyd", "cest",
  * "dont") because the apostrophe is not a swipe key — the display forms ("they'd", "c'est",
  * "don't") exist only as runtime mappings. This overlay mirrors the (deleted) vocabulary layer's
- * emission logic (OptimizedVocabulary ~:793-850) exactly:
+ * emission logic (OptimizedVocabulary ~:793-850), except for variant placement:
  *
  *  1. PAIRED base (the alias IS a real word with a contraction sibling — "well"/"we'll",
- *     "its"/"it's", "girls"/"girl's"): keep the word and INJECT the variant(s) right after
- *     it. Checked FIRST because the binary contraction store misclassifies paired entries
+ *     "its"/"it's", "girls"/"girl's"): keep the word and INJECT the variant(s) — placed
+ *     per "Variant placement" below (spliced beside the base, or at the tail). Checked FIRST because the binary contraction store misclassifies paired entries
  *     into the non-paired map (OptimizedVocabulary:463 carries the same guard).
  *  2. NON-PAIRED mapping with a REAL-WORD guard: replace the alias with the display form
  *     ONLY when the alias is not a common real word of the ACTIVE language. The old guards
@@ -25,11 +25,45 @@ import java.util.Locale
  *     injected variant (the old vocabulary's "quest" + "qu'est" behavior).
  *  3. Case-insensitive dedupe keeps the first (highest-scored) occurrence.
  *
- * Variant placement: injected variants are APPENDED after all engine candidates (in base
- * order, scored just below their base) rather than spliced in next to the base — splicing
- * displaced genuinely distinct candidates out of the top ranks (observed on-device:
- * "would"'s variants pushed "world" from #2 to #4). This matches SuggestionHandler's
- * possessive-augment placement; replacements (rule 2b) DO keep the base's slot.
+ * ## Variant placement (rewritten 2026-09-26 — learning-system audit RC1 + RC3)
+ *
+ * History: b2d7b908 (2026-07-22) spliced EVERY variant right after its base; on-device,
+ * "would"'s two variants pushed the distinct candidate "world" from #2 to #4. The fix
+ * appended all variants after every engine candidate — which over-corrected: swiping
+ * "she'd" auto-inserted "shed" and left "she'd" at slot 5-9, usually off-screen, for the
+ * whole paired pronoun set (shed/id/ill/wed/shell/well/hell).
+ *
+ * The placement now separates the two things b2d7b908 lumped together:
+ *
+ *  - A **projection variant** is one whose apostrophe-free form IS the decoded surface
+ *    (`shed` → `she'd`, `well` → `we'll`). The trace spelled it exactly as much as it
+ *    spelled the base; only the prior can tell them apart. At most ONE per base — the one
+ *    with the highest known pairing frequency — is SPLICED next to its base.
+ *  - Everything else stays at the TAIL, as before: non-projection variants (`would` →
+ *    `wouldn't`/`would've`, `she` → `she'd`) are completions of a DIFFERENT trace, and a
+ *    projection variant with no known frequency has no evidence for a top slot. That is
+ *    exactly why "would"/"world" cannot regress: would's variants are non-projections.
+ *    Every fr/it pairs-file entry (`lune` → `l'une`) has no frequency, so French and
+ *    Italian placement is byte-for-byte unchanged — no elision can climb over a real word
+ *    (the contraction-system skill's §2 casualties).
+ *
+ * Order within the splice: the variant goes AHEAD of its base only when its pairing
+ * frequency ([pairedVariantFrequency]) strictly EXCEEDS the base's own lexicon frequency
+ * ([baseFrequency]) — she'd 200 > shed 189, i'd 200 > id 196 — so it becomes rank 0 and
+ * the auto-insert target when the base was rank 0. well (223) and hell (206) out-rank their
+ * variant (200) and stay first. Two exceptions keep the variant BEHIND the base:
+ *
+ *  - [baseFrequency] returns null. The caller supplies it only when the lexicon is on the
+ *    pairing file's 0..255 byte scale (the CTC en_enhanced.json source); the geometric
+ *    engine's CKDT ranks are not, so it never promotes.
+ *  - The variant is a POSSESSIVE ([isPossessive]). The shipped possessive frequencies are
+ *    unreliable against the lexicon: of the 69 pairs whose raw values would promote, 24
+ *    disagree with wordfreq, among them `teams`→`team's`, `ones`→`one's`, `sons`→`son's`
+ *    (measured 2026-09-26). A pronoun `'s` clitic (`she's`, `he's`) is not a possessive.
+ *
+ * Scores stay non-increasing in list order (the context rescorer re-sorts by score with an
+ * index tie-break): a spliced pair shares the base's score, and a tail variant is clamped
+ * to the last score already emitted.
  *
  * Pure JVM (no Android imports) so the guard matrix is unit-testable in `runPureTests`.
  */
@@ -45,6 +79,12 @@ object ContractionOverlay {
      * @param nonPairedMapping alias → display form for non-paired contractions.
      * @param wordOrdinal lowercase word → ordinal frequency rank in the ACTIVE dictionary
      *   (0 = most frequent), or null when absent.
+     * @param pairedVariantFrequency (lowercase base, variant) → the pairing frequency listed
+     *   for that pair ([tribixbite.cleverkeys.ContractionManager.getPairedVariantFrequency]),
+     *   or null when unknown. Default: none known — every paired variant goes to the tail.
+     * @param baseFrequency lowercase word → its lexicon frequency ON THE PAIRING FILE'S 0..255
+     *   BYTE SCALE, or null. Supply it only for a lexicon on that scale (CTC en); null means
+     *   "not comparable", and a spliced variant then never goes ahead of its base.
      * @return overlaid (words, scores) — same lists when nothing applies.
      */
     fun apply(
@@ -54,6 +94,8 @@ object ContractionOverlay {
         nonPairedMapping: (String) -> String?,
         wordOrdinal: (String) -> Int?,
         realWordOrdinalMax: Int = REAL_WORD_ORDINAL_MAX,
+        pairedVariantFrequency: (base: String, variant: String) -> Int? = { _, _ -> null },
+        baseFrequency: (String) -> Int? = { null },
     ): Pair<List<String>, List<Int>> {
         if (words.isEmpty()) return words to scores
 
@@ -82,9 +124,26 @@ object ContractionOverlay {
 
             val paired = pairedVariants(lower)
             if (!paired.isNullOrEmpty()) {
-                // Rule 1: real word with contraction sibling(s) — keep + append variants.
-                emit(word, score)
-                for (variant in paired) deferVariant(variant, score - 1)
+                // Rule 1: real word with contraction sibling(s) — keep it; splice at most one
+                // projection variant beside it and defer the rest (see class KDoc).
+                val spliced = splicedVariant(lower, paired, pairedVariantFrequency)
+                if (spliced == null) {
+                    emit(word, score)
+                } else {
+                    val (variant, variantFreq) = spliced
+                    val baseFreq = baseFrequency(lower)
+                    val ahead = baseFreq != null && variantFreq > baseFreq && !isPossessive(variant)
+                    if (ahead) {
+                        emit(variant, score)
+                        emit(word, score)
+                    } else {
+                        emit(word, score)
+                        emit(variant, score)
+                    }
+                }
+                for (variant in paired) {
+                    if (variant != spliced?.first) deferVariant(variant, score - 1)
+                }
                 continue
             }
 
@@ -106,9 +165,57 @@ object ContractionOverlay {
 
             emit(word, score)
         }
-        // Appended AFTER all engine candidates so injections never displace distinct
-        // words from the top ranks (see class KDoc).
-        for (i in variantWords.indices) emit(variantWords[i], variantScores[i])
+        // Appended AFTER all engine candidates so they never displace distinct words from
+        // the top ranks (see class KDoc); clamped so scores stay non-increasing.
+        for (i in variantWords.indices) {
+            val floor = outScores.lastOrNull() ?: variantScores[i]
+            emit(variantWords[i], minOf(variantScores[i], floor))
+        }
         return outWords to outScores
+    }
+
+    /**
+     * The single variant of [base] to splice beside it: among [variants] whose
+     * apostrophe-free form equals [base] AND whose pairing frequency is known, the most
+     * frequent (earliest on a tie). Null when none qualifies — everything goes to the tail.
+     */
+    internal fun splicedVariant(
+        base: String,
+        variants: List<String>,
+        pairedVariantFrequency: (base: String, variant: String) -> Int?,
+    ): Pair<String, Int>? {
+        var best: Pair<String, Int>? = null
+        for (variant in variants) {
+            if (!isProjectionOf(base, variant)) continue
+            val freq = pairedVariantFrequency(base, variant) ?: continue
+            if (best == null || freq > best.second) best = variant to freq
+        }
+        return best
+    }
+
+    /** True when [variant] minus its apostrophes (ASCII or typographic) spells [base]. */
+    internal fun isProjectionOf(base: String, variant: String): Boolean =
+        variant.filterNot { it == '\'' || it == '’' }.lowercase(Locale.ROOT) == base
+
+    /**
+     * Hosts whose `'s` is the clitic "is"/"has", not a possessive — a closed class of
+     * pronouns and wh/deictic words (`she's`, `that's`, `where's`, `let's`).
+     */
+    private val CLITIC_S_HOSTS = setOf(
+        "he", "she", "it", "that", "this", "what", "who", "where", "when", "why", "how",
+        "there", "here", "let",
+    )
+
+    /**
+     * True for an English possessive display form: ends in `'s` or `s'` and its host is not a
+     * [CLITIC_S_HOSTS] pronoun. `team's`, `girls'`, `one's` → true; `she's`, `she'd` → false.
+     */
+    internal fun isPossessive(variant: String): Boolean {
+        val v = variant.lowercase(Locale.ROOT).replace('’', '\'')
+        return when {
+            v.endsWith("'s") -> v.dropLast(2) !in CLITIC_S_HOSTS
+            v.endsWith("s'") -> true
+            else -> false
+        }
     }
 }

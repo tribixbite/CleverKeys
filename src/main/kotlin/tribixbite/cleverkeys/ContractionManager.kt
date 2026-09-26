@@ -33,6 +33,15 @@ class ContractionManager(private val context: Context) {
     // These are words where the base form IS a valid word, so both forms should appear
     private val pairedContractions: MutableMap<String, MutableList<String>> = mutableMapOf()
 
+    // Pairing frequency, BASE-scoped: base → (variant → frequency), from the `frequency` field of
+    // contraction_pairings.json (English only — the fr/it pairs files carry no frequency, and the
+    // binary store carries none). Base-scoped rather than variant-scoped because the file gives
+    // the same contraction different values under different bases ("she'd" is 200 under "shed"
+    // but 211 under "she"; "we'll" 200 under "well" but 252 under "we"), and the value that
+    // matters to the swipe overlay is the one for the surface the engine actually decoded.
+    // Read by [tribixbite.cleverkeys.swipe.ContractionOverlay] (learning-system audit RC3).
+    private val pairedFrequencies: MutableMap<String, MutableMap<String, Int>> = mutableMapOf()
+
     // Set of all known contractions (both non-paired and paired) for quick lookup
     // Used to identify contractions in predictions and prevent unwanted autocorrect
     private val knownContractions: MutableSet<String> = mutableSetOf()
@@ -57,6 +66,7 @@ class ContractionManager(private val context: Context) {
         // Without this, language toggle could leave old contractions mixed with new
         nonPairedContractions.clear()
         pairedContractions.clear()
+        pairedFrequencies.clear()
         knownContractions.clear()
         loadEnglishBase()
     }
@@ -192,6 +202,7 @@ class ContractionManager(private val context: Context) {
         val dropped = nonPairedContractions.size + pairedContractions.size
         nonPairedContractions.clear()
         pairedContractions.clear()
+        pairedFrequencies.clear()
         knownContractions.clear()
 
         // Precedence order — see the KDoc. Primary first, always.
@@ -291,6 +302,7 @@ class ContractionManager(private val context: Context) {
         // so anything still resident here would shadow — and outlive — the active language.
         nonPairedContractions.clear()
         pairedContractions.clear()
+        pairedFrequencies.clear()
         knownContractions.clear()
         loadLanguageContractions(langCode)
         Log.d(
@@ -554,6 +566,20 @@ class ContractionManager(private val context: Context) {
     }
 
     /**
+     * The pairing frequency of [variant] as listed under [baseWord] in
+     * `contraction_pairings.json`, or null when no frequency is known for that pair (every
+     * non-English pairs file, and pairs derived only from `contractions.bin`).
+     *
+     * Same 0..255 byte scale as the en lexicon (`en_enhanced.json`, 134..255) — the swipe
+     * overlay compares the two directly. See [pairedFrequencies] for why it is base-scoped.
+     */
+    fun getPairedVariantFrequency(baseWord: String, variant: String): Int? =
+        pairedFrequencies[baseWord.lowercase()]?.get(variant.lowercase())
+
+    /** Every base that has at least one variant with a known pairing frequency. */
+    fun getPairedFrequencyBases(): Set<String> = pairedFrequencies.keys
+
+    /**
      * Every alias KEY currently loaded — the apostrophe-free surfaces the overlay can
      * rewrite, from BOTH the REPLACE file ([nonPairedContractions]) and the APPEND file
      * ([pairedContractions]).
@@ -689,24 +715,24 @@ class ContractionManager(private val context: Context) {
         val inputStream = assetManager.open("dictionaries/contraction_pairings.json")
         val jsonString = readStream(inputStream)
 
-        val jsonObj = JSONObject(jsonString)
-        val keys = jsonObj.keys()
         var pairedCount = 0
 
-        while (keys.hasNext()) {
-            val baseWord = keys.next()
-            val contractions = jsonObj.getJSONArray(baseWord)
-            val lowerBase = baseWord.lowercase()
-
-            for (i in 0 until contractions.length()) {
-                val contractionObj = contractions.getJSONObject(i)
-                val contraction = contractionObj.getString("contraction").lowercase()
+        for ((lowerBase, variants) in parsePairings(jsonString)) {
+            for (variant in variants) {
+                val contraction = variant.contraction
 
                 knownContractions.add(contraction)
                 val existing = pairedContractions.getOrPut(lowerBase) { mutableListOf() }
                 if (contraction !in existing) {
                     existing.add(contraction)
                     pairedCount++
+                }
+                // Recorded even when the variant was already present from contractions.bin:
+                // the binary store carries no frequency, so this file is the only source.
+                // Earlier-wins, like the variant list itself.
+                variant.frequency?.let { freq ->
+                    pairedFrequencies.getOrPut(lowerBase) { mutableMapOf() }
+                        .putIfAbsent(contraction, freq)
                 }
             }
         }
@@ -724,8 +750,37 @@ class ContractionManager(private val context: Context) {
         }
     }
 
+    /**
+     * One entry of `contraction_pairings.json`: a contraction [contraction] (lowercased) and its
+     * pairing [frequency] on the 0..255 byte scale, or null when the entry carries none.
+     */
+    data class PairedVariant(val contraction: String, val frequency: Int?)
+
     companion object {
         private const val TAG = "ContractionManager"
+
+        /**
+         * Parses `contraction_pairings.json` — `{"shed": [{"contraction": "she'd",
+         * "frequency": 200}], …}` — into lowercase base → variants in file order, KEEPING the
+         * `frequency` field (dropped until 2026-09-26, learning-system audit RC3). Pure (no
+         * Context) so the shipped file is pinned in `runPureTests` through this exact parser.
+         */
+        fun parsePairings(json: String): Map<String, List<PairedVariant>> {
+            val root = JSONObject(json)
+            val out = LinkedHashMap<String, MutableList<PairedVariant>>(root.length() * 2)
+            val keys = root.keys()
+            while (keys.hasNext()) {
+                val baseWord = keys.next()
+                val array = root.getJSONArray(baseWord)
+                val list = out.getOrPut(baseWord.lowercase()) { mutableListOf() }
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    val frequency = if (obj.has("frequency")) obj.getInt("frequency") else null
+                    list.add(PairedVariant(obj.getString("contraction").lowercase(), frequency))
+                }
+            }
+            return out
+        }
 
         /**
          * The pure STRING rule for possessive augmentation. Companion (no Context) so the

@@ -40,9 +40,12 @@ import java.io.File
  *
  * **Known boundary** (audited 2026-08-23; adapter changes must update this list):
  *
- *  1. **Display overlays** — contraction rewriting and canonical accents. The rescorer acts on
- *     slate ORDER and `ContractionOverlay` appends variants at the end without reordering engine
- *     candidates, so this cannot change order — only membership. Its cost is MEASURED by the
+ *  1. **Display overlays** — contraction rewriting and canonical accents. Since 2026-09-26
+ *     `ContractionOverlay` CAN change order: a paired projection variant is spliced beside its
+ *     base, and goes AHEAD of it when its pairing frequency beats the base's (`shed` → `she'd`
+ *     first). It still never reorders two distinct ENGINE candidates relative to each other, so
+ *     for a target that is a plain word the replay's order is unaffected; for a paired-pronoun
+ *     target the device's rank can be better than the replay's. Its cost is MEASURED by the
  *     replay's `apostropheMissed` counter (0 on the 2026-08-23 run).
  * Alias-key injection is mirrored here; the bounded fuzzy rescue is not a mirror at all — this
  * calls the shipped [CtcFuzzyRescue.find] and [CtcFuzzyRescue.Companion.mergeIntoBeam] directly,
