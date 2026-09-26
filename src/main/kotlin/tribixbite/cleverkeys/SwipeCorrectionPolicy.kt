@@ -18,10 +18,24 @@ import kotlin.math.abs
  * ## The plausibility rule ([isPlausible]) — all of:
  *
  * 1. **Y ≠ X** (case-insensitively). Re-typing the word you undid is not a correction.
- * 2. **Y is a letters-only word of at least 2 characters.** An apostrophe/hyphen form cannot be
- *    offered: the swipe lexicon stores those as apostrophe-free aliases whose display is decided
- *    by the contraction overlay, so a personal-dictionary entry for `she'd` does not control
- *    what a swipe produces the way an entry for `git` does. Single letters are never swiped.
+ * 2. **Y is a letters-only word of at least 2 characters.** Single letters are never swiped.
+ *    An apostrophe/hyphen form is excluded because accepting the offer would not make swipes
+ *    produce it — on the default EN CTC path it would make the REJECTED word likelier
+ *    (investigated 2026-09-26; pinned by `swipe.SwipePreferJoinerWordTest`):
+ *    - the EN trie is built by `CtcLexiconTrie.loadStrippingNonAlphabet`, which files the user
+ *      word `she'd` under the a–z surface `shed` and keeps the max frequency per surface — so
+ *      the entry lifts `shed`, the word being corrected away from, to the user ceiling;
+ *    - the displayed form of a decoded `shed` is `ContractionOverlay`'s call: `she'd` goes
+ *      ahead only when its PAIRING frequency beats `shed`'s merged-lexicon frequency by
+ *      `PROMOTION_MARGIN`, and neither number is touched by a user word `she'd` — `shed` stays
+ *      the auto-insert;
+ *    - a hyphen word has no overlay entry and the EN branch keeps no display map, so `co-op`
+ *      only ever surfaces as `coop`.
+ *    (The CKDT languages do keep a display map and a user word would win its surface's display
+ *    slot, but it would also make the apostrophe-free homograph — fr `lune` for `l'une` —
+ *    unswipeable, and the geometric engine skips joiner forms. One rule for all engines: out.)
+ *    Making "prefer" work for these needs decoder changes — a user-word term in the overlay's
+ *    promotion rule and an EN display map for joiner user words — not an offer change.
  * 3. **Y is a real word**: in the lexicon / user dictionary, or learnable by repetition
  *    (`WordPredictor.isInDictionary` ∨ `isInUserVocabulary`), and not disabled. A typo typed
  *    after an undo is not evidence about the decoder.

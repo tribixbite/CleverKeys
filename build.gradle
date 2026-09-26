@@ -897,6 +897,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.SwipeCorrectionStoreTest',
     // 2026-09-26: the two-tap undo state behind the tappable "Added “x” to dictionary".
     'tribixbite.cleverkeys.UndoableBarMessageTest',
+    // 2026-09-26: why the swipe "Prefer" offer excludes apostrophe/hyphen words (EN CTC files
+    // them under the a-z surface and the overlay keeps the base first).
+    'tribixbite.cleverkeys.swipe.SwipePreferJoinerWordTest',
     'tribixbite.cleverkeys.swipe.ContractionPromotionUserWordTest',
     // Task B (2026-08-06): pipeline transparency — UnifiedScore combiner + provenance model
     'tribixbite.cleverkeys.SuggestionProvenanceTest',

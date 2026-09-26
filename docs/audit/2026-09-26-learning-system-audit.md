@@ -182,9 +182,29 @@ and Y was never declined. It uses the add-to-dictionary prompt surface: bar chip
   `custom_words_<lang>` (`LexiconContentVersion`), so the next swipe uses the new frequency, and
   `SwipeRewarmScheduler` rebuilds the lexicon in the background.
 - **Decline.** Remembered permanently.
-- **When it is shown.** After a bar-tap correction or a typed resolution. A correction that
-  resolves at a re-swipe, Enter, or leaving the field is recorded but the offer is not shown
-  then. It appears at the next correction of that word.
+- **Undo.** The accept confirmation ("Swiping now prefers “git”") is tappable like every other
+  dictionary-add confirmation (see "Undoable dictionary adds" below). Undo removes the word; the
+  correction counts stay at 0 (accept already cleared them) and the word is NOT marked declined.
+  It can be offered again, but only after two new corrections. Re-offering on the next slip would
+  nag.
+- **When it is shown.** Right after a bar-tap correction, a typed resolution, or a sentence end,
+  when the bar is free. A correction that settles where the bar is busy or gone is **deferred**
+  (2026-09-26):
+  - a re-swipe settled by the next swipe (the bar holds that swipe's alternates);
+  - Enter / the IME action;
+  - leaving the field;
+  - an autocorrected commit (the bar shows the autocorrect undo).
+
+  The deferred offer appears at the bar's next idle moment in the **same language**:
+  - the next space or `.?!` after a typed word;
+  - the next bar tap;
+  - the next cursor park. This is the idle bar right after Enter, or in the next focused field.
+
+  It is shown once, in any field that passes the learning gates. It is re-checked against the
+  store when shown, and dropped if the word was added or declined meanwhile, or the counts were
+  erased. It stays in memory only. If the process dies first, the persisted count (still ≥ 2)
+  offers the word at its next correction, which was the old behaviour. When a bar message
+  (e.g. "Added …") is showing, the offer waits so it is not lost behind it.
 
 **Contraction case.** Suppose `I'd` is promoted over `id` and the user corrects it to `id`.
 That records `i'd → id` and offers `id`. Adding `id` to the user dictionary stops the
@@ -197,14 +217,65 @@ a correction is recorded, each rejected swipe's row gets `target_word = Y` and
 The change is additive inside the JSON blob, so no SQLite migration is needed. This makes
 on-device exports usable as a per-user replay pool, which §6 of the eval asked for.
 
+**Apostrophe and hyphen targets are never offered — investigated 2026-09-26, kept out.**
+The offer works only if a personal-dictionary entry makes swipes produce the word. For a joiner
+word on the default EN CTC path it does the opposite (`swipe.SwipePreferJoinerWordTest` composes
+the real pieces as `CtcEngineAdapter` wires them):
+1. `CtcLexiconTrie.loadStrippingNonAlphabet` files the user word `she'd` under the a–z surface
+   `shed`. The trie keeps the maximum frequency per surface, so the entry raises `shed` to the
+   user ceiling. That is the word the user was correcting away from.
+2. `ContractionOverlay` decides how a decoded `shed` is shown. `she'd` goes ahead only if its
+   pairing frequency beats `shed`'s merged-lexicon frequency by `PROMOTION_MARGIN`. A user word
+   `she'd` changes neither number, so `shed` stays the auto-insert.
+3. A hyphen word has no overlay entry, and the EN branch keeps no display map. `co-op` can only
+   surface as `coop`.
+
+The CKDT languages do keep a display map, and a user word would win its surface's display slot.
+But it would also make the apostrophe-free homograph unswipeable (fr `lune` for `l'une`). The
+geometric engine skips joiner forms altogether. So one rule applies to every engine: joiner
+words are excluded (`SwipeCorrectionPolicy` rule 2, KDoc updated). To make "prefer" work for
+them, the decoder needs two changes (follow-ups, outside this offer):
+- a user-word term in `ContractionOverlay`'s promotion rule, for example the variant's
+  merged-lexicon frequency when it is a user word;
+- an EN display map for joiner user words in `CtcEngineAdapter`/`CtcLexiconTrie`.
+
+### Undoable dictionary adds (2026-09-26, user request)
+
+Every IME path that adds a word to the personal dictionary now shows a **tappable**
+confirmation. The paths are the "Add to dictionary?" prompt, the "+word" chip, the autocorrect
+undo, and accepting the swipe offer. The confirmation was already a suggestion-bar message, not
+a Toast (Toasts are invisible under the IME; see `ime-visual-feedback` skill). It used hardcoded
+English "Added 'x' to dictionary"; it is now `suggestion_added_to_dictionary`, in all 22 locales.
+- **First tap** changes it to "Tap again to undo" and restarts the timer.
+- **Second tap** removes the word (`DictionaryManager.removeUserWord`) and runs
+  `refreshCustomWords`. The swipe lexicon memo keys on the `custom_words_<lang>` content, so it
+  follows. Then "Removed “x” from dictionary" shows. The text in the field is never touched.
+- **Two taps, not one,** because the message sits where the next suggestion tap lands.
+- **It disappears** after 3 s, or 3 s after the first tap. It is also dismissed without undoing
+  by typing, backspace, a swipe, delete-last-word, another suggestion tap, or leaving the field.
+- **Only a real insert is undoable.** `addUserWord` now returns whether the word was new to the
+  store, checked exactly against a fresh read. An add that inserted nothing shows the plain
+  message, so an undo can never delete a word the user already had.
+- **An undo after the dictionary language changed does nothing,** because the store is per
+  language.
+
+The state machine is `UndoableBarMessage` (pure). The bar owns the timers
+(`SuggestionBar.showUndoableMessage` / `dismissUndoableMessage`).
+
 **Tests.**
 - `SwipeCorrectionTrackerTest`, `SwipeCorrectionPolicyTest`, `SwipeCorrectionStoreTest`,
-  `ContractionPromotionUserWordTest`, `SwipeMLDataRelabelTest` (pure).
-- `SwipeCorrectionOfferTest`, `SwipeMLRelabelStoreTest` (mock).
+  `ContractionPromotionUserWordTest`, `SwipeMLDataRelabelTest`, `UndoableBarMessageTest`,
+  `SwipePreferJoinerWordTest` (pure).
+- `SwipeCorrectionOfferTest` (+ accept-undo, deferred offers), `DictionaryAddUndoTest`,
+  `DictionaryManagerTest` (`addUserWord` return), `SwipeMLRelabelStoreTest` (mock).
 
 **Not done.**
 - Counter-evidence (X kept while Y was in the beam) is not recorded.
-- The offer for a correction that resolves at a re-swipe or Enter is deferred to the next
-  correction.
 - Y is added in lowercase.
-- Apostrophe and hyphen targets are never offered.
+- A deferred offer is lost if the process dies. The persisted count re-offers at the word's next
+  correction.
+- After Enter that follows a SWIPED word, InputCoordinator keeps the swipe alternates instead of
+  running the cursor park, so the deferred offer waits for the next typed completion or tap.
+- The bar's view wiring (click listener, timers) has no JVM test; the state machine and the
+  handler side do. Device check pending.
+- Apostrophe and hyphen targets are never offered (see above).
