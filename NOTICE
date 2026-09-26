@@ -5,38 +5,108 @@ Licensed under the GNU General Public License v3.0 (see LICENSE).
 This product includes third-party data and components:
 
 ================================================================================
-Language-pack word frequencies — wordfreq
+Word frequencies — overview
 ================================================================================
-The bundled and prebuilt language dictionaries (src/main/assets/dictionaries/
-and scripts/dictionaries/langpack-*.zip) are generated from the wordfreq
-library:
+CleverKeys' word lists come from three CC BY-SA sources, selected per list:
 
+  List                                              Source
+  ------------------------------------------------  -----------------------------
+  bundled dictionaries (src/main/assets/            wordfreq (+ AOSP LatinIME
+    dictionaries/) and langpack-<lang>.zip for        inclusion oracle where noted
+    en, es, fr, de, it, nl, pt, sv, ru, el, tr, he,   below)
+    uk, bg, mk, id, ms, tl; langpack-en-wordfreq.zip
+  langpack-en-opensubtitles.zip,                    FrequencyWords (OpenSubtitles)
+    langpack-en-opensubtitles-50k.zip
+  langpack-sw.zip                                   Swwiki (Swahili Wikipedia)
+
+Every list is modified: words were selected, filtered and ranked, and their
+frequencies quantised into CleverKeys' binary dictionary format ("converted to
+a CleverKeys frequency list"). Each langpack-*.zip carries its own NOTICE.txt
+and "license" / "attribution" / "source" manifest keys, so the attribution
+travels with a pack downloaded on its own (scripts/build_langpack.py;
+docs/audit/2026-09-26-data-licensing-audit.md).
+
+CC BY-SA 4.0 adaptations may be licensed under GPLv3
+(https://creativecommons.org/compatible-licenses/; conditions at
+https://wiki.creativecommons.org/wiki/ShareAlike_compatibility:_GPLv3 — keep
+the attribution, licence notice and link, indicate changes). CleverKeys
+distributes these adapted lists under GPL-3.0-only, with the attribution below.
+
+================================================================================
+Word frequencies — wordfreq
+================================================================================
   wordfreq — Robyn Speer et al.
   https://github.com/rspeer/wordfreq
-  Code: Apache License 2.0
-  Data: Creative Commons Attribution-ShareAlike 4.0 (CC-BY-SA-4.0)
+  Code: Apache License 2.0 (no wordfreq code is distributed with CleverKeys)
+  Data: Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0)
+  https://creativecommons.org/licenses/by-sa/4.0/
 
-wordfreq's frequency data incorporates OpenSubtitles 2018, SUBTLEX,
-Wikipedia, and the Google Books Ngram Viewer datasets. SUBTLEX word
-frequencies are freely available for research and application use.
+wordfreq's frequency data combines, among others:
 
-CC-BY-SA-4.0 is one-way compatible with GPLv3
-(https://creativecommons.org/2015/10/08/cc-by-sa-4-0-now-one-way-compatible-with-gplv3/),
-so the derived wordlists distributed with CleverKeys are redistributed under
-GPL-3.0, with attribution preserved here.
+  * SUBTLEX word lists (SUBTLEX-US, SUBTLEX-UK, SUBTLEX-CH, SUBTLEX-DE,
+    SUBTLEX-NL), created by Marc Brysbaert et al. and freely available at
+    http://crr.ugent.be/programs-data/subtitle-frequencies. SUBTLEX is freely
+    available data; its authors are credited here as its terms require.
+  * OPUS OpenSubtitles 2018 (http://opus.nlpl.eu/OpenSubtitles.php), whose data
+    originates from OpenSubtitles.org (http://www.opensubtitles.org/) — see the
+    OpenSubtitles section below.
+  * Google Books Ngram Viewer data. Acknowledgement requested by Google:
+    source Google Books Ngram Viewer, http://books.google.com/ngrams
+  * Wikipedia (http://www.wikipedia.org), the Leeds Internet Corpus
+    (University of Leeds Centre for Translation Studies) and ParaCrawl
+    (https://paracrawl.eu), under Creative Commons licences.
+
+================================================================================
+Word frequencies — FrequencyWords / OpenSubtitles
+================================================================================
+langpack-en-opensubtitles.zip (25k) and langpack-en-opensubtitles-50k.zip are
+built from the English lists of FrequencyWords (2018 release):
+
+  FrequencyWords — Hermit Dave
+  https://github.com/hermitdave/FrequencyWords
+  License: "MIT License for code. CC-by-sa-4.0 for content." The word lists
+  are content: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+
+FrequencyWords is computed from the OPUS OpenSubtitles corpus, whose data
+originates from OpenSubtitles.org (http://www.opensubtitles.org/):
+
+  P. Lison and J. Tiedemann (2016). OpenSubtitles2016: Extracting Large
+  Parallel Corpora from Movie and TV Subtitles. In Proceedings of the 10th
+  International Conference on Language Resources and Evaluation (LREC 2016).
+  OPUS: http://opus.nlpl.eu/OpenSubtitles.php
+
+================================================================================
+Word frequencies — Swwiki (Swahili)
+================================================================================
+langpack-sw.zip is built from Swwiki, a word-frequency list made from the text
+of Swahili Wikipedia (https://sw.wikipedia.org/, Wikipedia contributors):
+
+  Swwiki — Kevin Donnelly
+  https://kevindonnelly.org.uk/swahili/swwiki/
+  License: Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+  https://creativecommons.org/licenses/by-sa/3.0/
+
+Licence chain: CC BY-SA 3.0 is not itself GPL-compatible, but its §4(b) lets an
+adaptation be distributed under a later version of the licence with the same
+licence elements — CC BY-SA 4.0 — and CC BY-SA 4.0 adaptations may be licensed
+under GPLv3 (https://creativecommons.org/compatible-licenses/). The Swahili
+list is therefore adapted under CC BY-SA 4.0 and distributed under
+GPL-3.0-only, with this attribution preserved.
 
 ================================================================================
 AOSP LatinIME word lists
 ================================================================================
 The dictionary build pipeline (scripts/build_wordlist.py) uses the Android
 Open Source Project LatinIME word lists as build-time inclusion oracles for
-en, es, fr, de, it, nl, pt (pt_BR + pt_PT), sv, ru, el and tr; headword
-snapshots are committed at scripts/data/aosp_<lang>_wordlist.txt.gz (see
-scripts/data/PROVENANCE.md for per-snapshot provenance).
+en, es, fr, de, it, nl, pt (pt_BR + pt_PT), sv, ru, el, tr and he (published
+upstream as "iw"); per-snapshot provenance is recorded in
+scripts/data/PROVENANCE.md. The oracle only decides which words are kept; no
+AOSP frequencies are distributed. (The prebuilt langpack-en.zip and
+langpack-en-wordfreq.zip predate the oracle and do not use it.)
 
   AOSP LatinIME dictionaries — The Android Open Source Project
   https://android.googlesource.com/platform/packages/inputmethods/LatinIME/
-  License: Apache License 2.0
+  License: Apache License 2.0, https://www.apache.org/licenses/LICENSE-2.0
 
 Apache-2.0 is one-way compatible with GPLv3; the derived word selections
 distributed with CleverKeys are redistributed under GPL-3.0, with attribution
