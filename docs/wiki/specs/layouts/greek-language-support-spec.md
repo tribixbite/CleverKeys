@@ -45,8 +45,13 @@ The dictionary is generated from the **`wordfreq`** library via
 - **Already wired** into `scripts/build_dictionary.py` (`--use-wordfreq`).
 - **Generalizes** to Russian (`ru`) and dozens more — same one-command flow.
 
-Rejected sources: **FrequencyWords** (data is CC-BY-SA-**3.0**, *not*
-GPL-compatible — only 4.0 gained one-way compatibility); **HeliBoard
+Rejected sources: **FrequencyWords** (not chosen: wordfreq already covers
+Greek. *Correction 2026-09-26:* this line used to say FrequencyWords data is
+CC-BY-SA-3.0 and therefore GPL-incompatible. Its 2018 content is **CC-BY-SA-4.0**
+— "MIT License for code. CC-by-sa-4.0 for content." — so it is GPLv3-compatible
+under the same terms as wordfreq; CleverKeys ships it in the
+`en-opensubtitles*` packs. See `docs/audit/2026-09-26-data-licensing-audit.md`);
+**HeliBoard
 `main_el`** (184k, license unspecified). Acceptable alternates if ever
 needed: **Hunspell el_GR** (tri-license; take the `GPL-2.0-or-later` arm,
 no frequencies) and **dim-geo/greekdictionary** (GPL-3.0, but synthetic

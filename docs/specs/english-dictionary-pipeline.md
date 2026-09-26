@@ -3,7 +3,7 @@
 ## Overview
 **Feature Name**: Dictionary Generation & Quality Pipeline
 **Status**: Complete (V4, 2026-07-03 — one-pass evidence classifier)
-**Last Updated**: 2026-02-17
+**Last Updated**: 2026-09-26 (source-diagram correction)
 
 ### Summary
 The English dictionary pipeline generates `en_enhanced.bin` (V2 binary format, **98,140 words**, V4) via `scripts/build_wordlist.py` (né `build_en_wordlist.py` — renamed via `git mv` on 2026-07-20 when the classifier went multi-language; all mentions below use the current name) — a one-pass evidence classifier over wordfreq's top-150k candidates (hunspell/aspell/NLTK/pyspellchecker/AOSP-LatinIME positive oracles; ed1-typo, foreign-dominance and blocklist negatives; curated allowlist), with accent normalization and contraction support. See the V4 section below and `.claude/skills/dictionary-pipeline.md`.
@@ -16,19 +16,28 @@ A keyboard dictionary must contain only legitimate words. Misspellings in the di
 ### Build Pipeline Flow
 
 ```
-Source Corpora                    Merge & Curate              Binary Build
-─────────────                    ──────────────              ────────────
-en_norvig_50k.txt ──┐
-  (Google web crawl) │
-                     ├──→ scripts/dictionaries/en/    ──→ build_dictionary.py
-en_opensubtitles_50k │      en_words.txt (98,140)          --use-wordfreq
-  (movie subtitles)  │                                         │
-                     │                                         ▼
-en_wordfreq_words.txt┘                              en_enhanced.bin (V2 binary)
-  (wordfreq lib 25k)                                  │
-                                                      ├─→ src/main/assets/dictionaries/
-                                                      └─→ scripts/dictionaries/en/
+Candidates                  Evidence (build_wordlist.py)          Binary Build
+──────────                  ────────────────────────────          ────────────
+wordfreq top-150k ──→  positive oracles: hunspell, aspell,  ──→  scripts/dictionaries/en/
+  (CC BY-SA 4.0)         NLTK, pyspellchecker, AOSP LatinIME       en_words.txt (98,140)
+                         (Apache-2.0; only AOSP data is                 │
+                          redistributed — as a keep/drop decision)      ▼
+                       negatives: ed1-typo, foreign dominance,   build_dictionary.py
+                         blocklist; curated allowlist                   │
+                                                                        ▼
+                                                        en_enhanced.bin / .json (V2)
+                                                          ├─→ src/main/assets/dictionaries/
+                                                          └─→ scripts/dictionaries/en/
 ```
+
+> **Corrected 2026-09-26** (data-licensing audit,
+> `docs/audit/2026-09-26-data-licensing-audit.md`). An earlier version of this diagram showed
+> `en_norvig_50k.txt` and `en_opensubtitles_50k.txt` merging into `en_words.txt`. They never
+> did: `build_wordlist.py` reads only wordfreq candidates plus the oracles above. Norvig and
+> OpenSubtitles were separate experiments that produced standalone *comparison* packs
+> (`langpack-en-norvig-50k.zip`, since withdrawn, and `langpack-en-opensubtitles*.zip`).
+> Shipped English data sources: wordfreq (CC BY-SA 4.0) + AOSP LatinIME oracle (Apache-2.0);
+> hunspell/aspell/NLTK/pyspellchecker are evidence-only and none of their data ships.
 
 ### Contraction Pipeline
 
@@ -75,7 +84,7 @@ Suggestion bar: ["can't", "can", "cat"]
 |--------|---------|-------|--------|
 | `scripts/get_wordlist.py` | Extract words from wordfreq | `--lang en --count 50000` | `en_words.txt` |
 | `scripts/build_dictionary.py` | Build V2 binary dict | Word list + `--use-wordfreq` | `{lang}_enhanced.bin` |
-| `scripts/build_langpack.py` | Bundle dict + unigrams + prefix boosts + contractions | `--input` or `--dict` | `langpack-{lang}.zip` |
+| `scripts/build_langpack.py` | Bundle dict + unigrams + contractions + licence metadata/`NOTICE.txt` (`--repack` for existing packs) | `--input`, `--dict` or `--repack` | `langpack-{lang}.zip` |
 | `scripts/build_all_languages.py` | Batch build all bundled languages | (auto) | Multiple `.bin` files |
 | `scripts/compute_prefix_boosts.py` | Aho-Corasick prefix trie | `--langs en` | `prefix_boosts/{lang}.bin` |
 
@@ -87,13 +96,16 @@ Suggestion bar: ["can't", "can", "cat"]
 | `scripts/generate_apostrophe_words.py` | Multi-language contraction lists | Language rules | `contractions_{lang}.json` |
 | `scripts/extract_apostrophe_words.py` | Extract apostrophe words from corpus | Corpus text | Apostrophe word list |
 
-### Source Word Lists (in `scripts/`)
+### Comparison Word Lists (untracked, in `scripts/`) — NOT inputs to the bundled dictionary
 
-| File | Words | Format | Source |
-|------|-------|--------|--------|
-| `en_norvig_50k.txt` | 50,000 | `word<TAB>frequency` | Peter Norvig's Google Web Corpus |
-| `en_opensubtitles_50k.txt` | 50,000 | `word<SPACE>frequency` | OpenSubtitles movie subtitles |
-| `en_wordfreq_words.txt` | 25,000 | `word` (one per line) | wordfreq Python library |
+These local, git-ignored files fed the January 2026 English *comparison* packs only; none of
+them is read by `build_wordlist.py`.
+
+| File | Words | Format | Source | Status |
+|------|-------|--------|--------|--------|
+| ~~`en_norvig_50k.txt`~~ | 50,000 | `word<TAB>frequency` | Peter Norvig's `count_1w.txt` (Google Web 1T, LDC2006T13) | **Pack withdrawn 2026-09-26** — norvig.com's MIT grant covers code only; Web 1T forbids redistribution |
+| `en_opensubtitles_50k.txt` | 50,000 | `word<SPACE>frequency` | hermitdave/FrequencyWords 2018 (OpenSubtitles; CC BY-SA 4.0) | → `langpack-en-opensubtitles-50k.zip` |
+| `en_wordfreq_words.txt` | 25,000 | `word` (one per line) | wordfreq Python library (CC BY-SA 4.0) | → `langpack-en-wordfreq.zip` |
 
 ### Curated Dictionary
 
@@ -140,7 +152,7 @@ Suggestion bar: ["can't", "can", "cat"]
 | Version | Commit | Words | Changes |
 |---------|--------|-------|---------|
 | V1 | `bda21299` | 49,297 | Upstream Unexpected-Keyboard word list |
-| V2 | `e9fcc7da` | 50,000 | Norvig Web Corpus langpack |
+| V2 | `e9fcc7da` | 50,000 | Norvig Web Corpus langpack *(historical; the Norvig pack was withdrawn 2026-09-26 — no redistribution grant)* |
 | V3 | `674fc32a` | 52,042 | Merged V1 + 2,763 from wordfreq, removed 15 typos + 3 offensive |
 | **V4** | `5ca6c4025` | **98,140** | One-pass evidence classifier (`build_wordlist.py`; still named `build_en_wordlist.py` at that commit): wordfreq top-150k, band <65k conservative / 65k+ oracle-gated; oracles = hunspell ×3 case-forms, aspell en_GB, NLTK, pyspellchecker, AOSP LatinIME; negatives = ed1-typo (len-tiered zipf gap), foreign dominance (+1.0 margin), blocklist; curated allow/block lists in `scripts/dictionaries/en/`; held-out eval on the user's 483 export words: 2% (V3) → 50% coverage |
 

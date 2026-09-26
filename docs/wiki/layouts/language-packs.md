@@ -69,8 +69,9 @@ download the `.zip` and import it (no need to build anything):
 | **Hebrew (עברית)** | `langpack-he.zip` | 50,000 |
 
 > Most packs are generated from the [`wordfreq`](https://github.com/rspeer/wordfreq)
-> corpus (real word frequencies); Hebrew is additionally validated against the
-> AOSP dictionary. See [Attribution](#attribution).
+> corpus (real word frequencies), most of them validated against the AOSP
+> LatinIME word list; Swahili comes from the Swwiki Swahili-Wikipedia list.
+> See [Attribution](#attribution).
 > The bundled *English* dictionary is different: it's built by a dedicated
 > evidence-classification pipeline (98,140 words validated against multiple
 > spelling oracles, with typo and junk filtering) rather than a raw
@@ -137,7 +138,7 @@ python build_langpack.py --lang xx --name "MyLang" --dict custom.bin --output la
 
 | Script | Purpose |
 |--------|---------|
-| `build_langpack.py` | Create .zip language pack from wordfreq |
+| `build_langpack.py` | Create .zip language pack (with licence metadata + `NOTICE.txt`) |
 | `build_dictionary.py` | Build binary dictionary from CSV |
 | `build_all_languages.py` | Batch build all supported languages |
 | `get_wordlist.py` | Extract top N words from wordfreq |
@@ -151,8 +152,14 @@ langpack-{lang}.zip
 ├── unigrams.txt           # Word-frequency list for language detection
 ├── contractions.json      # Language contractions (optional)
 ├── prefix_boost.bin       # Aho-Corasick prefix trie (optional, non-English)
-└── model.onnx             # CTC swipe encoder (optional; the six non-Latin scripts)
+├── model.onnx             # CTC swipe encoder (optional; the six non-Latin scripts)
+└── NOTICE.txt             # Attribution, licence and change note for the word data
 ```
+
+Since 2026-09-26 every prebuilt pack also records its licence in `manifest.json` —
+`"license"` (`GPL-3.0-only`), `"attribution"` (credit line + upstream licence + change note)
+and `"source"` (upstream URL) — so the credits travel with a pack downloaded on its own. The
+importer ignores both additions; the installed manifest keeps the three keys.
 
 `manifest.json` and `dictionary.bin` are required; the importer rejects a
 pack missing either, or a `dictionary.bin` without the V2 (`CKDT`) header.
@@ -260,11 +267,21 @@ A: No, English is included by default.
 
 ## Attribution
 
-Prebuilt packs are generated from the [`wordfreq`](https://github.com/rspeer/wordfreq)
-library (Robyn Speer et al.). Word-frequency data is CC-BY-SA-4.0,
-incorporating OpenSubtitles 2018, SUBTLEX, Wikipedia, and Google Books
-Ngrams; derived wordlists are redistributed under GPL-3.0 (CC-BY-SA-4.0 is
-one-way compatible with GPLv3). See the repository `NOTICE` file.
+Each pack's word list is an adaptation ("converted to a CleverKeys frequency list") of
+third-party data, and each zip carries a `NOTICE.txt` with the full credit:
+
+| Packs | Source | Licence |
+|-------|--------|---------|
+| en, en-wordfreq, de, es, fr, it, nl, pt, sv, ru, el, tr, he, uk, bg, mk, id, ms, tl | [wordfreq](https://github.com/rspeer/wordfreq) (Robyn Speer et al.) — incorporating SUBTLEX (Brysbaert et al.), OpenSubtitles, Wikipedia and [Google Books Ngram](http://books.google.com/ngrams) data | CC BY-SA 4.0 |
+| de, es, fr, it, nl, pt, sv, ru, el, tr, he | [AOSP LatinIME](https://android.googlesource.com/platform/packages/inputmethods/LatinIME/) word lists, used as an inclusion oracle | Apache-2.0 |
+| en-opensubtitles, en-opensubtitles-50k | [FrequencyWords](https://github.com/hermitdave/FrequencyWords) 2018 (Hermit Dave), from [OpenSubtitles.org](http://www.opensubtitles.org/) via the OPUS corpus (Lison & Tiedemann, 2016) | CC BY-SA 4.0 |
+| sw | [Swwiki](https://kevindonnelly.org.uk/swahili/swwiki/) (Kevin Donnelly), from Swahili Wikipedia | CC BY-SA 3.0, adapted under 4.0 |
+
+The packs are distributed under **GPL-3.0-only**. CC BY-SA 4.0 adaptations may be licensed
+under GPLv3 ([CC compatible licenses](https://creativecommons.org/compatible-licenses/));
+Swwiki's CC BY-SA 3.0 reaches 4.0 through its §4(b) later-version clause; Apache-2.0 is
+one-way compatible with GPLv3. The former `en-norvig-50k` pack was withdrawn on 2026-09-26
+(Google Web 1T data, no redistribution grant). See the repository `NOTICE` file.
 
 ## Related Features
 

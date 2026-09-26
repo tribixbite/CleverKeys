@@ -289,7 +289,7 @@ oracles with typo/foreign-word negative filters (see the oracle-tier notes).
 | German | de | 40,000 words | A (aspell + pyspell + AOSP) |
 | Swedish | sv | 40,000 words | C (AOSP only) |
 
-### Downloadable Language Packs (23 packs, 18 languages)
+### Downloadable Language Packs (22 packs, 18 languages)
 Import via **Settings → 🌐 Multi-Language → Import Pack**; download prebuilt
 zips from the [langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks)
 (the same files live in [`scripts/dictionaries/`](./scripts/dictionaries/)):
@@ -307,11 +307,23 @@ zips from the [langpacks release](https://github.com/tribixbite/CleverKeys/relea
 | Indonesian | id | 28,637 words | D (negatives-only; corpus ceiling ~31k) |
 | Malay | ms | 25,861 words | D (negatives-only; corpus ceiling ~28k) |
 | Tagalog | tl | 27,922 words | D (negatives-only; corpus ceiling ~30k) |
-| Swahili | sw | 20,000 words | Wikipedia corpus (no wordfreq data) |
+| Swahili | sw | 20,000 words | Swwiki — Swahili Wikipedia word list (no wordfreq data) |
 
 Packs for the bundled languages (es fr de it pt sv) plus English corpus
-variants (norvig / opensubtitles-full / opensubtitles-50k / wordfreq) are also
-prebuilt alongside them — 23 zips in total.
+variants (opensubtitles-full / opensubtitles-50k / wordfreq) are also
+prebuilt alongside them — 22 zips in total. (The former `en-norvig-50k` variant
+was withdrawn on 2026-09-26: its counts derive from Google Web 1T, which carries
+no redistribution grant.)
+
+**Data sources & licences.** Word lists are adapted from
+[wordfreq](https://github.com/rspeer/wordfreq) (CC BY-SA 4.0; most packs),
+[FrequencyWords](https://github.com/hermitdave/FrequencyWords) / OpenSubtitles
+(CC BY-SA 4.0; the `en-opensubtitles*` variants) and
+[Swwiki](https://kevindonnelly.org.uk/swahili/swwiki/) (CC BY-SA 3.0 → 4.0;
+Swahili), with the AOSP LatinIME word lists (Apache-2.0) as an inclusion
+oracle; the packs are distributed under GPL-3.0-only. Every zip carries a
+`NOTICE.txt` and `license` / `attribution` / `source` manifest keys; full text
+in [`NOTICE`](./NOTICE).
 
 ### Multi-Language Features
 
@@ -354,7 +366,10 @@ python build_langpack.py --lang xx --name "MyLang" --input xx_words.txt --use-wo
 
 # Option 3: Build from custom word frequency CSV (format: word,frequency per line)
 python build_dictionary.py --lang xx --input my_words.csv --output my_lang.bin
-python build_langpack.py --lang xx --name "MyLang" --dict my_lang.bin --output langpack-xx.zip
+python build_langpack.py --lang xx --name "MyLang" --dict my_lang.bin --output langpack-xx.zip \
+    --license CC-BY-4.0 --attribution "My corpus, (c) Me, CC BY 4.0" --source https://example.org
+# (build_langpack.py refuses to build a pack whose data source it cannot name —
+#  pass --data-source for a known upstream, or --attribution/--license/--source for your own)
 
 # Option 4: Batch build every configured language (all except frozen en)
 python build_all_languages.py
@@ -363,13 +378,14 @@ python build_all_languages.py
 **Script Details:**
 - `build_wordlist.py` — One-pass evidence classifier (all configured languages; per-language oracles/bands in its `LANG_CONFIG`)
 - `build_all_languages.py` — Orchestrates classifier → unigrams → prefix boosts → langpack per language
-- `build_langpack.py` — Creates deterministic .zip language packs
+- `build_langpack.py` — Creates deterministic .zip language packs, with licence metadata + `NOTICE.txt` (`--repack` adds them to an existing pack without touching its payload)
 - `build_dictionary.py` — Builds the CKDT V2 binary dictionary from word lists
 - `get_wordlist.py` — Extracts top N words from wordfreq for a language
 
 Language packs are simple .zip files containing:
 - `dictionary.bin` — CKDT V2 binary dictionary (accent-normalization map + frequency ranks)
-- `manifest.json` — Metadata (language code, name, version, word count, prefix-boost flag, and the model block below)
+- `manifest.json` — Metadata (language code, name, version, word count, prefix-boost flag, the model block below, and `license` / `attribution` / `source`)
+- `NOTICE.txt` — Attribution, licence and change note for the pack's third-party word data
 - `unigrams.txt` — Top-5k word list for automatic language detection
 - `contractions.json` — Apostrophe/elision mappings (languages that use them)
 - `prefix_boost.bin` — Aho-Corasick prefix-boost trie (Latin-script languages)

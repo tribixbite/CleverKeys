@@ -274,9 +274,12 @@ wiring; `docs/eval/2026-09-26-static-lm-replay.md`).
 **Open:** static LMs for de/es/fr/it/pt/sv (S4, base vs langpack by size); dedicated FUZZY
 provenance origin (TODO in WordPredictor — currently tagged AUTOCORRECT); apostrophe/hyphen words
 in the swipe offer need decoder changes (audit doc); possessive pairs still at slate tail;
-**licensing:** `scripts/dictionaries/langpack-en-opensubtitles*.zip` and `langpack-en-norvig-50k.zip`
-derive from sources without a clear redistribution grant (OpenSubtitles; Norvig = LDC Web1T) —
-maintainer decision needed.
+**licensing:** repo side DONE 2026-09-26 — see `docs/audit/2026-09-26-data-licensing-audit.md`
+(Norvig pack removed: no redistribution grant; OpenSubtitles packs are FrequencyWords CC BY-SA 4.0
+and stay; every pack now carries `NOTICE.txt` + manifest `license`/`attribution`/`source`).
+**Still open, needs maintainer approval:** delete `langpack-en-norvig-50k.zip` from the `langpacks`
+release, re-upload the 22 repacked zips, replace the release-body SHA-256 table (audit doc §"New
+pack hashes"). Follow-up: show pack attribution in the language-pack manager UI.
 
 ### 0. Full-backlog campaign continuation (2026-09-01)
 
