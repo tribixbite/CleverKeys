@@ -91,15 +91,25 @@ object NextWordPredictor {
      * @property showStatic next-word may run at all (and the shipped tier may be read)
      * @property useLearned the learned stores, personalization boost and learned-vocabulary
      *   allow-list may be READ for this display
+     * @property fieldAllowsPersonalizedLearning the active field did not set
+     *   `IME_FLAG_NO_PERSONALIZED_LEARNING`. Carried so the static tier's dictionary filter
+     *   ([Predictor.isInDictionary]) can keep learned selection history out of incognito
+     *   fields too — that filter is otherwise gated by the master pref alone. `useLearned`
+     *   implies it.
      */
-    data class TierGate(val showStatic: Boolean, val useLearned: Boolean) {
+    data class TierGate(
+        val showStatic: Boolean,
+        val useLearned: Boolean,
+        val fieldAllowsPersonalizedLearning: Boolean
+    ) {
         init {
             require(!useLearned || showStatic) { "learned tier without the static-tier guards" }
+            require(!useLearned || fieldAllowsPersonalizedLearning) { "learned tier in an incognito field" }
         }
 
         companion object {
-            /** Nothing may run. */
-            val CLOSED = TierGate(showStatic = false, useLearned = false)
+            /** Nothing may run (and, failing closed, the field is treated as incognito). */
+            val CLOSED = TierGate(showStatic = false, useLearned = false, fieldAllowsPersonalizedLearning = false)
         }
     }
 
@@ -160,7 +170,8 @@ object NextWordPredictor {
                 onDeviceLearningEnabled,
                 contextAwareEnabled,
                 fieldAllowsPersonalizedLearning
-            )
+            ),
+            fieldAllowsPersonalizedLearning = fieldAllowsPersonalizedLearning
         )
     }
 
@@ -180,11 +191,13 @@ object NextWordPredictor {
      * behind one decision, is what lets a test assert "learning off ⇒ zero learned reads"
      * for all three call sites at once.
      *
-     * Residual, accepted: [Predictor.isInDictionary] also consults the selection-adaptation
-     * history, gated by the MASTER learning pref only (H3). In an incognito field with
-     * learning ON it can therefore widen the static tier's allow-list to a shipped word the
-     * dictionary lacks but the user selects often. It can never surface a word that is not
-     * in the shipped model, and nothing is written.
+     * Dictionary membership goes through [Predictor.isInDictionary] with the field's
+     * incognito flag ([TierGate.fieldAllowsPersonalizedLearning]): that check can also admit
+     * a word through the selection-adaptation history (master-gated, H3), which must not
+     * happen in an `IME_FLAG_NO_PERSONALIZED_LEARNING` field. Until 2026-09-26 it could, in
+     * an incognito field with learning ON. Outside incognito, with the learned tier closed
+     * only by the context-aware pref, the adaptation widening still applies: it is
+     * selection-adaptation data, governed by the master gate, not n-gram learning.
      *
      * @return ranked candidates; empty when [gate] is closed or nothing survives the filters
      */
@@ -210,7 +223,8 @@ object NextWordPredictor {
             },
             isWordAllowed = { w ->
                 !predictor.isWordDisabled(w) &&
-                    (predictor.isInDictionary(w) || (useLearned && predictor.isInUserVocabulary(w)))
+                    (predictor.isInDictionary(w, gate.fieldAllowsPersonalizedLearning) ||
+                        (useLearned && predictor.isInUserVocabulary(w)))
             },
             // Shipped continuations fill only the slots the learned tier could not (ARC-020);
             // with the learned tier closed they are the whole bar.

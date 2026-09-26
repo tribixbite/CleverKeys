@@ -176,10 +176,15 @@ personal data.
 serves all call sites. With `useLearned` false it does not call
 `getNextWordCandidates`, `getPersonalizationBoostFor` or `isInUserVocabulary` at all (the
 last is ungated inside `WordPredictor` and reads the personalization tally), and filters
-the static seed by dictionary membership + Dictionary Manager disables only. Residual,
-accepted: `isInDictionary` also consults selection-adaptation history under the master gate
-alone, so in an incognito field with learning ON it can admit a shipped word the dictionary
-lacks; it can never surface a non-shipped word, and nothing is written.
+the static seed by dictionary membership + Dictionary Manager disables only. Dictionary
+membership is `isInDictionary(word, TierGate.fieldAllowsPersonalizedLearning)`: that check
+can also admit a word through selection-adaptation history (master-gated, H3), and the field
+flag keeps that learned read out of incognito fields. (Until 2026-09-26 it ran under the
+master gate alone, so an incognito field with learning ON could have its static bar widened
+by selection history; pinned now by `NextWordStaticTierTest.incognitoFieldKeepsSelectionHistoryOutOfTheStaticTierFilter`.)
+Outside incognito, with the learned tier closed only by the context-aware pref, the
+master-gated adaptation widening still applies — it is selection-adaptation data, not n-gram
+learning.
 
 **Nothing is written by next-word.** Accepting a candidate is an ordinary bar selection: the
 committed word goes through `LearningGate.learnCommittedWord` and the gated adaptation

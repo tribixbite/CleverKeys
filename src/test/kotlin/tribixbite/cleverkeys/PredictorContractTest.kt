@@ -71,6 +71,8 @@ class PredictorContractTest {
         // ---- Query ----------------------------------------------------------------------
 
         override fun isInDictionary(word: String) = word in dictionary
+        override fun isInDictionary(word: String, fieldAllowsPersonalizedLearning: Boolean) =
+            word in dictionary
         override fun isInUserVocabulary(word: String) = word in userVocabulary
         override fun isWordDisabled(word: String) = word in disabled
         override fun applyUserWordCaseToList(words: List<String>) = words

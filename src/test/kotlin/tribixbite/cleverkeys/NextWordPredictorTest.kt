@@ -51,7 +51,7 @@ class NextWordPredictorTest {
 
     @Test
     fun `all guards open - both tiers run`() {
-        assertEquals(NextWordPredictor.TierGate(showStatic = true, useLearned = true), tiers())
+        assertEquals(NextWordPredictor.TierGate(showStatic = true, useLearned = true, fieldAllowsPersonalizedLearning = true), tiers())
     }
 
     @Test
@@ -64,7 +64,7 @@ class NextWordPredictorTest {
         // The shipped model is not learned data: with learning off (the v2.0 fresh-install
         // default) next-word still works from it, and the learned stores stay unread.
         assertEquals(
-            NextWordPredictor.TierGate(showStatic = true, useLearned = false),
+            NextWordPredictor.TierGate(showStatic = true, useLearned = false, fieldAllowsPersonalizedLearning = true),
             tiers(master = false)
         )
     }
@@ -74,7 +74,7 @@ class NextWordPredictorTest {
         // `context_aware_predictions_enabled` is "Learn from typing patterns (N-gram model)" —
         // the learned LM. The shipped model's prefix-scoring use is not gated by it either.
         assertEquals(
-            NextWordPredictor.TierGate(showStatic = true, useLearned = false),
+            NextWordPredictor.TierGate(showStatic = true, useLearned = false, fieldAllowsPersonalizedLearning = true),
             tiers(contextAware = false)
         )
     }
@@ -84,7 +84,7 @@ class NextWordPredictorTest {
         // M5 as refined 2026-09-26: IME_FLAG_NO_PERSONALIZED_LEARNING forbids learning and
         // personalization; a generic shipped continuation is neither.
         assertEquals(
-            NextWordPredictor.TierGate(showStatic = true, useLearned = false),
+            NextWordPredictor.TierGate(showStatic = true, useLearned = false, fieldAllowsPersonalizedLearning = false),
             tiers(fieldAllows = false)
         )
     }
@@ -110,12 +110,20 @@ class NextWordPredictorTest {
             val expectStatic = b(0) && b(1) && !b(2) && !b(3) && !b(4) && b(5)
             assertEquals("static bits=$bits", expectStatic, g.showStatic)
             assertEquals("learned bits=$bits", expectStatic && b(6) && b(7) && b(8), g.useLearned)
+            // The field flag rides along whenever next-word may run, so the static tier's
+            // dictionary filter can keep learned selection history out of incognito fields.
+            assertEquals("field bits=$bits", expectStatic && b(8), g.fieldAllowsPersonalizedLearning)
         }
     }
 
     @Test(expected = IllegalArgumentException::class)
+    fun `a learned gate in an incognito field cannot be constructed`() {
+        NextWordPredictor.TierGate(showStatic = true, useLearned = true, fieldAllowsPersonalizedLearning = false)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
     fun `a learned-without-static gate cannot be constructed`() {
-        NextWordPredictor.TierGate(showStatic = false, useLearned = true)
+        NextWordPredictor.TierGate(showStatic = false, useLearned = true, fieldAllowsPersonalizedLearning = true)
     }
 
     // ------------------------------------------------------------- generation

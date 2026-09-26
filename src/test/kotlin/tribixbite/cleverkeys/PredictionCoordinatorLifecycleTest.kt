@@ -81,6 +81,8 @@ class PredictionCoordinatorLifecycleTest {
 
         override fun autoCorrect(typedWord: String): String = unsupported("autoCorrect")
         override fun isInDictionary(word: String): Boolean = unsupported("isInDictionary")
+        override fun isInDictionary(word: String, fieldAllowsPersonalizedLearning: Boolean): Boolean =
+            unsupported("isInDictionary")
         override fun isInUserVocabulary(word: String): Boolean = unsupported("isInUserVocabulary")
         override fun isWordDisabled(word: String): Boolean = unsupported("isWordDisabled")
         override fun applyUserWordCaseToList(words: List<String>): List<String> =

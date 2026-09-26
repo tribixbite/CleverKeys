@@ -123,6 +123,7 @@ class NextWordStaticTierTest {
         real.setField("multiLanguageManager", null)
         predictor = spyk(real)
         every { predictor.isInDictionary(any()) } returns true
+        every { predictor.isInDictionary(any(), any()) } returns true
         every { predictor.isWordDisabled(any()) } returns false
         every { predictor.isInUserVocabulary(any()) } returns true
         every { predictor.reset() } just runs
@@ -313,6 +314,65 @@ class NextWordStaticTierTest {
             .that(barWords).containsExactlyElementsIn(shippedContinuations("want")).inOrder()
         assertWithMessage("incognito: learned continuation absent").that(barWords).doesNotContain("pizza")
         learnedReadsNeverRan()
+    }
+
+    /**
+     * Arrange the real [WordPredictor.isInDictionary] so the ONLY thing admitting the first
+     * shipped continuation of "want" is learned selection-adaptation history: the dictionary
+     * holds every other continuation, and the adaptation store reports that word as often
+     * selected. Returns (that word, the adaptation store).
+     */
+    private fun admitFirstContinuationOnlyThroughSelectionHistory(): Pair<String, UserAdaptationManager> {
+        val shipped = shippedContinuations("want")
+        assertWithMessage("need ≥2 shipped continuations of 'want'").that(shipped.size).isAtLeast(2)
+        val learnedOnly = shipped.first()
+        predictor.setField(
+            "dictionary",
+            java.util.concurrent.atomic.AtomicReference(
+                shipped.drop(1).associateWith { 1000 }.toMutableMap()
+            )
+        )
+        val selections = mockk<UserAdaptationManager>(relaxed = true)
+        every { selections.getAdaptationMultiplier(any()) } returns 1.0f
+        every { selections.getAdaptationMultiplier(learnedOnly) } returns 2.0f
+        predictor.setField("adaptationManager", selections)
+        // The real membership check (dictionary + master-gated adaptation), not the stub.
+        every { predictor.isInDictionary(any(), any()) } answers { callOriginal() }
+        return learnedOnly to selections
+    }
+
+    @Test
+    fun incognitoFieldKeepsSelectionHistoryOutOfTheStaticTierFilter() {
+        // The residual documented on 2026-09-26: isInDictionary consulted selection history
+        // under the master gate alone, so with learning ON an incognito field's next-word bar
+        // was widened by learned data. The field flag must close that read too.
+        config.on_device_learning_enabled = true
+        handler.setField("fieldAllowsPersonalizedLearning", false)
+        val (learnedOnly, selections) = admitFirstContinuationOnlyThroughSelectionHistory()
+
+        tap("want")
+
+        assertWithMessage("incognito: a word admitted only by selection history must not show")
+            .that(barWords).doesNotContain(learnedOnly)
+        assertWithMessage("incognito: the dictionary-backed shipped continuations still show")
+            .that(barWords).isNotEmpty()
+        verify(exactly = 0) { selections.getAdaptationMultiplier(any()) }
+        learnedReadsNeverRan()
+    }
+
+    @Test
+    fun outsideIncognitoSelectionHistoryStillWidensTheStaticTierFilter() {
+        // Control: the fix is scoped to the field flag. With learning ON in an ordinary field
+        // (learned n-gram tier closed only by the context-aware pref), the master-gated
+        // selection history keeps admitting the word, as before.
+        config.on_device_learning_enabled = true
+        config.context_aware_predictions_enabled = false
+        val (learnedOnly, _) = admitFirstContinuationOnlyThroughSelectionHistory()
+
+        tap("want")
+
+        assertWithMessage("ordinary field: selection history admits the shipped word")
+            .that(barWords).contains(learnedOnly)
     }
 
     // ============================================================ exclusions

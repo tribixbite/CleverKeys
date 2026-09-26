@@ -775,7 +775,20 @@ class WordPredictor : Predictor {
      * @param word The word to check (case-insensitive)
      * @return true if word is in dictionary, false otherwise
      */
-    override fun isInDictionary(word: String): Boolean {
+    override fun isInDictionary(word: String): Boolean =
+        isInDictionary(word, fieldAllowsPersonalizedLearning = true)
+
+    /**
+     * [isInDictionary] for a caller that knows the active field's incognito flag. The
+     * dictionary itself is always consulted; the learned selection-adaptation history (which
+     * can also admit a word) is read only when the master learning gate is on AND the field
+     * allows personalized learning — an `IME_FLAG_NO_PERSONALIZED_LEARNING` field must not be
+     * personalized by learned data, reads included (next-word static tier, 2026-09-26).
+     *
+     * @param fieldAllowsPersonalizedLearning false when the active editor set
+     *   `IME_FLAG_NO_PERSONALIZED_LEARNING` (see [LearningGate.fieldAllowsPersonalizedLearning])
+     */
+    override fun isInDictionary(word: String, fieldAllowsPersonalizedLearning: Boolean): Boolean {
         if (word.isEmpty()) return false
         val lowerWord = word.lowercase()
         // Check main dictionary
@@ -784,8 +797,9 @@ class WordPredictor : Predictor {
         }
         // Check if user has typed it frequently (adaptation manager) — gated
         // (H3): with the master off, learned selection history must not
-        // suppress add-to-dictionary prompts.
-        if (!canUseAdaptation()) return false
+        // suppress add-to-dictionary prompts; nor may it widen anything in an
+        // incognito field.
+        if (!canUseAdaptation() || !fieldAllowsPersonalizedLearning) return false
         val adaptationMultiplier = adaptationManager?.getAdaptationMultiplier(lowerWord) ?: 0f
         return adaptationMultiplier > 1.0f
     }
@@ -1089,14 +1103,17 @@ class WordPredictor : Predictor {
      *
      * Deliberately carries NO LearningGate check, unlike every read above it.
      * This is not learned or personal data — it is the same read-only asset for
-     * every install, so gating it on the learning prefs would be theatre. What
-     * keeps it honest is the CALLER: both call sites
-     * (`SuggestionHandler.generateNextWordCandidates` and
-     * `maybeShowNextWordPredictions`) invoke it only after
-     * `NextWordPredictor.shouldShow`, so the seed inherits the full next-word
-     * gate — feature pref, master learning gate, context-LM pref, incognito
-     * field, password/prompt/Termux — without adding a gate read of its own.
-     * Pinned by `LearningWiringDriftTest`.
+     * every install, so gating it on the learning prefs would be theatre.
+     *
+     * Two-tier contract (2026-09-26): the seed is the next-word STATIC tier. Its
+     * only reader is `NextWordPredictor.candidatesFor`, which calls it once
+     * `NextWordPredictor.decideTiers` has opened `TierGate.showStatic` — the
+     * feature pref, word prediction, and the suggestion-bar guards (not a
+     * password field, no special prompt showing, not Termux, non-empty context).
+     * It is deliberately read with on-device learning OFF, with context-aware
+     * predictions OFF and in an incognito field, where it is the whole bar; only
+     * the LEARNED tier (`TierGate.useLearned`) needs those. No call site reads it
+     * directly — pinned by `LearningWiringDriftTest`.
      *
      * @return continuations ranked best-first; empty when the context is empty,
      *   the language has no static data, or the previous word is unknown

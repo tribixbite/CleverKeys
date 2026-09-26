@@ -96,6 +96,13 @@ interface Predictor {
     /** @return true if [word] is in the loaded (primary or secondary) dictionary. */
     fun isInDictionary(word: String): Boolean
 
+    /**
+     * [isInDictionary] that also honours the active field's incognito flag: with
+     * [fieldAllowsPersonalizedLearning] false, no learned signal (selection-adaptation history)
+     * may admit a word — only the loaded dictionaries. Used by the next-word read path.
+     */
+    fun isInDictionary(word: String, fieldAllowsPersonalizedLearning: Boolean): Boolean
+
     /** @return true if [word] is in the user's learned personal vocabulary. */
     fun isInUserVocabulary(word: String): Boolean
 
