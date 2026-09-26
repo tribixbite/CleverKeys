@@ -27,8 +27,9 @@ class ContractionPromotionUserWordTest {
     private fun decode(custom: List<Pair<String, Int>>): List<String> {
         val merged = CtcLexiconMerge.merge(base, custom, emptySet())
         val ordinals = CtcLexiconMerge.ordinals(merged)
-        // CtcEngineAdapter: `for (base in bases) merged[base]?.let { put(base, it.toInt()) }`
-        val pairingBaseFrequencies = mapOf("id" to merged.getValue("id").toInt())
+        // CtcEngineAdapter: `PairingBaseFrequencies.select(merged, bases)` — the geometric
+        // adapter reaches the same map via `fromEnLexiconJson` (PairingBaseFrequenciesTest).
+        val pairingBaseFrequencies = PairingBaseFrequencies.select(merged, setOf("id"))
         return ContractionOverlay.apply(
             words = listOf("id", "the"),
             scores = listOf(100, 50),
@@ -53,11 +54,16 @@ class ContractionPromotionUserWordTest {
         assertWithMessage("the variant is still one slot away").that(slate).contains("i'd")
     }
 
-    /** The adapter must keep reading base frequencies from the MERGED map (user words included). */
+    /**
+     * The adapter must keep reading base frequencies from the MERGED map (user words included).
+     * Since 2026-09-26 the lookup lives in [PairingBaseFrequencies.select], shared with the
+     * geometric adapter; the adapter must hand it `merged`, not the raw base pairs.
+     */
     @Test
     fun theAdapterLooksBaseFrequenciesUpInTheMergedLexicon() {
         val adapter = File("src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
         check(adapter.exists()) { "run with the project root as CWD" }
-        assertThat(adapter.readText()).contains("for (base in bases) merged[base]?.let { put(base, it.toInt()) }")
+        assertThat(adapter.readText())
+            .contains("PairingBaseFrequencies.select(merged, contractions.getPairedFrequencyBases())")
     }
 }
