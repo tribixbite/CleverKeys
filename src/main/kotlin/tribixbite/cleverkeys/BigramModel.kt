@@ -28,14 +28,37 @@ import kotlin.math.min
  * Feeding (2)'s rank scores into (1)'s interpolation would pin
  * [getContextMultiplier] at its 10× clamp for every listed pair and rewrite the
  * live tap ranking, so the assets deliberately do NOT reach the multiplier.
+ *
+ * ## The static context LM supersedes both, per language (2026-09-26)
+ *
+ * When `assets/lm/<lang>.cklm` exists ([StaticContextLm], built by
+ * `scripts/build_static_lm.py` from the Leipzig + Tatoeba corpora), it replaces
+ * BOTH products for that language once loaded, and this class becomes an adapter:
+ *
+ *  - [getContextMultiplier] = `clamp(P(w|prev) / P(w), 0.1, 10)` — the same ratio
+ *    and clamp the hardcoded tables produced, now from real corpus statistics
+ *    (an unlisted word gets the previous word's backoff ratio, slightly below 1);
+ *  - [getPredictions] serves [StaticContextLm.top], with the continuation's
+ *    conditional probability as its rank.
+ *
+ * Languages without an LM asset keep the hardcoded tables and the JSON seed
+ * unchanged. The LM is keyed by the REQUESTED language ([seedLanguage]), never the
+ * English-fallback [currentLanguage], so Italian typing never reads the English LM.
  */
-class BigramModel private constructor() {
+class BigramModel internal constructor() { // internal: a fresh instance per pure-JVM test
     companion object {
         private const val TAG = "BigramModel"
 
         // Smoothing parameters
         private const val LAMBDA = 0.95f // Interpolation weight for bigram
         private const val MIN_PROB = 0.0001f // Minimum probability for unseen words
+
+        /** Clamp on [getContextMultiplier] — shared by the LM and the hardcoded tables. */
+        const val MIN_CONTEXT_MULTIPLIER = 0.1f
+        const val MAX_CONTEXT_MULTIPLIER = 10.0f
+
+        /** Gap-filler rank as a fraction of the lowest LM rank (see [getPredictions]). */
+        private const val GAP_FILL_DECAY = 0.5f
 
         /** Default seed size when a caller does not state one. */
         const val DEFAULT_SEED_RESULTS = 5
@@ -102,6 +125,13 @@ class BigramModel private constructor() {
      * the permanent fallback.
      */
     private val seedIndexes = ConcurrentHashMap<String, StaticBigramSeed.Index>()
+
+    /**
+     * language → loaded static context LM. Absent until [loadStaticContinuations]
+     * installs it; a language without an asset never gets one and keeps the
+     * hardcoded/JSON path forever. Primitive-array backed, ~1 MB for en.
+     */
+    private val staticLms = ConcurrentHashMap<String, StaticContextLm>()
 
     /** Languages whose asset load has been attempted (success or failure). */
     private val seedLoadAttempted: MutableSet<String> =
@@ -436,26 +466,32 @@ class BigramModel private constructor() {
     fun loadStaticContinuations(context: Context, language: String): Boolean {
         if (!seedLoadAttempted.add(language)) {
             // Already attempted; a successful load left its index in place.
-            return seedIndexes.containsKey(language)
+            return staticLms.containsKey(language) || seedIndexes.containsKey(language)
         }
+
+        // The static context LM supersedes the hardcoded multiplier table and
+        // LEADS the next-word seed for its language (class doc). The curated JSON
+        // seed below still loads: it fills the seed only where the LM lists fewer
+        // continuations than asked for (see getPredictions).
+        val lmLoaded = loadStaticLm(context, language)
 
         val asset = assetNameFor(language)
         val json = try {
             context.assets.open(asset).use { it.readBytes().decodeToString() }
         } catch (e: IOException) {
             Log.d(TAG, "No static bigram asset for $language ($asset); keeping hardcoded pairs")
-            return false
+            return lmLoaded
         }
 
         val parsed = try {
             StaticBigramSeed.parseAsset(json)
         } catch (e: RuntimeException) {
             Log.e(TAG, "Malformed static bigram asset $asset; keeping hardcoded pairs", e)
-            return false
+            return lmLoaded
         }
         if (parsed.isEmpty()) {
             Log.w(TAG, "Static bigram asset $asset held no usable pairs; keeping hardcoded pairs")
-            return false
+            return lmLoaded
         }
 
         // Asset wins on conflict, hardcoded pairs fill the gaps (ARC-010 merge policy).
@@ -472,6 +508,51 @@ class BigramModel private constructor() {
     }
 
     /**
+     * Read and parse `assets/lm/<language>.cklm` ([StaticContextLm.assetNameFor]).
+     * Blocking — runs on [SEED_LOADER] via [loadStaticContinuations], attempt-once
+     * like the seed. A missing asset is the normal case for most languages; a
+     * malformed one is logged and ignored (the hardcoded path stays in charge).
+     *
+     * @return true when an LM was installed for [language]
+     */
+    private fun loadStaticLm(context: Context, language: String): Boolean {
+        val asset = StaticContextLm.assetNameFor(language)
+        val bytes = try {
+            context.assets.open(asset).use { it.readBytes() }
+        } catch (e: IOException) {
+            return false
+        }
+        val started = System.nanoTime()
+        val lm = try {
+            StaticContextLm.parse(bytes)
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Malformed static context LM $asset; keeping the built-in tables", e)
+            return false
+        }
+        installStaticLm(language, lm)
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(
+                TAG,
+                "Static context LM for $language: ${lm.pairCount} pairs over ${lm.prevCount} " +
+                    "previous words, ${lm.retainedBytes() / 1024} KiB, parsed in " +
+                    "${(System.nanoTime() - started) / 1_000_000} ms"
+            )
+        }
+        return true
+    }
+
+    /**
+     * Install a parsed LM for [language] (the asset loader's last step; also the
+     * pure-JVM test seam, since asset I/O needs an Android `Context`).
+     */
+    internal fun installStaticLm(language: String, lm: StaticContextLm) {
+        staticLms[language] = lm
+    }
+
+    /** The installed static context LM for [language], or null. */
+    internal fun staticLmFor(language: String): StaticContextLm? = staticLms[language]
+
+    /**
      * Queue [loadStaticContinuations] on the shared background loader.
      *
      * Returns immediately. Until the load lands, [getPredictions] serves the
@@ -485,7 +566,8 @@ class BigramModel private constructor() {
 
     /** True once [language]'s shipped asset has been parsed and installed. */
     fun isStaticSeedLoaded(language: String): Boolean =
-        seedLoadAttempted.contains(language) && seedIndexes.containsKey(language)
+        staticLms.containsKey(language) ||
+            (seedLoadAttempted.contains(language) && seedIndexes.containsKey(language))
 
     /**
      * Static next-word seed (ARC-020): the most common continuations of the last
@@ -508,7 +590,24 @@ class BigramModel private constructor() {
         if (maxResults <= 0) return emptyList()
         val prevWord = context.trim().substringAfterLast(' ').trim().lowercase()
         if (prevWord.isEmpty()) return emptyList()
-        val index = seedIndexes[seedLanguage] ?: return emptyList()
+        val index = seedIndexes[seedLanguage]
+        staticLms[seedLanguage]?.let { lm ->
+            // The conditional probability is the rank: comparable within one
+            // previous word, which is all the seed's consumer compares.
+            val fromLm = lm.top(prevWord, maxResults).map {
+                StaticBigramSeed.Continuation(it.word, it.probability)
+            }
+            if (fromLm.size >= maxResults || index == null) return fromLm
+            // Curated gap fillers (e.g. "good morning", which the corpus ranks
+            // below its top 20) — only into slots the LM left empty, ranked
+            // strictly below every LM entry so the order stays data-first.
+            val floor = fromLm.lastOrNull()?.rank ?: 1f
+            val fill = index.top(prevWord, maxResults)
+                .filter { c -> fromLm.none { it.word == c.word } }
+                .mapIndexed { i, c -> StaticBigramSeed.Continuation(c.word, floor * GAP_FILL_DECAY / (i + 1)) }
+            return (fromLm + fill).take(maxResults)
+        }
+        if (index == null) return emptyList()
         return index.top(prevWord, maxResults)
     }
 
@@ -572,6 +671,12 @@ class BigramModel private constructor() {
             return 1.0f
         }
 
+        // Static context LM for the requested language: P(w|prev)/P(w), same clamp.
+        staticLms[seedLanguage]?.let { lm ->
+            return lm.contextRatio(context.last(), word)
+                .coerceIn(MIN_CONTEXT_MULTIPLIER, MAX_CONTEXT_MULTIPLIER)
+        }
+
         // Get language-specific unigram probabilities
         var unigramProbs = languageUnigramProbs[currentLanguage]
         if (unigramProbs == null) {
@@ -586,7 +691,7 @@ class BigramModel private constructor() {
         val multiplier = contextProb / baseProb
 
         // Cap the multiplier to avoid extreme values
-        return min(max(multiplier, 0.1f), 10.0f)
+        return min(max(multiplier, MIN_CONTEXT_MULTIPLIER), MAX_CONTEXT_MULTIPLIER)
     }
 
     /**

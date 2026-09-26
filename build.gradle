@@ -1019,6 +1019,14 @@ tasks.register('runPureTests', JavaExec) {
     // parsed a different format. Pins their schema against the real files plus the
     // asset-wins/hardcoded-fills-gaps merge that makes them the seed's source of truth.
     'tribixbite.cleverkeys.StaticBigramSeedTest',
+    // Static context LM (2026-09-26): the CKLM v1 loader contract on hand-built models, the
+    // BigramModel adapter over it, drift pins for the shipped assets/lm/en.cklm (sidecar sha256,
+    // vocab ⊆ lexicon, caps, heap budget, NOTICE/contributors), and the S1 tap eval
+    // (geoFull + local corpora gated; prints only aggregates).
+    'tribixbite.cleverkeys.StaticContextLmTest',
+    'tribixbite.cleverkeys.BigramModelStaticLmTest',
+    'tribixbite.cleverkeys.StaticLmAssetDriftTest',
+    'tribixbite.cleverkeys.StaticLmTapEvalTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'
