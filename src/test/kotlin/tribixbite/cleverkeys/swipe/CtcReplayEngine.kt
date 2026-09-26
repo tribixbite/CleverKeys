@@ -6,6 +6,7 @@ import org.json.JSONObject
 import tribixbite.cleverkeys.swipe.ctc.CtcCandidate
 import tribixbite.cleverkeys.swipe.ctc.CtcEmissionModel
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
+import tribixbite.cleverkeys.swipe.ctc.CtcLearnedPrior
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
 import tribixbite.cleverkeys.swipe.ctc.CtcSwipeDecoder
@@ -187,6 +188,31 @@ class CtcReplayEngine private constructor(
     fun decoderWithLexicon(merged: LinkedHashMap<String, Double>): CtcSwipeDecoder {
         val customTrie = CtcLexiconTrie.loadStrippingNonAlphabet(layout.alphabet, merged)
         return CtcSwipeDecoder(model, layout, customTrie, params)
+    }
+
+    // ── learned-unigram replay instrument (2026-09-26; additive) ───────────────────────
+
+    /** The shipped scoring params this engine decodes at (en preset, topK = [TOP_K]). */
+    val scoringParams: CtcScoringParams get() = params
+
+    /**
+     * The SHIPPED decode stack with `topK = beamWidth`: every complete-word hypothesis the
+     * final beam holds, not just the displayed slate. Same model, layout, trie (alias keys
+     * included) and params — only the truncation is lifted, so a final-score re-rank of this
+     * list is exactly what the decoder would return under an additive final-score term.
+     */
+    fun fullBeamDecoder(prior: CtcLearnedPrior = CtcLearnedPrior.NONE): CtcSwipeDecoder =
+        CtcSwipeDecoder(model, layout, trie, params.copy(topK = params.beamWidth), prior)
+
+    /**
+     * Membership in the merged base lexicon — the `CtcLexiconMerge.ordinals` key set the
+     * adapter builds. Injected contraction alias keys are NOT members (they live only in the
+     * trie), which is the eligibility rule for a learned prior.
+     */
+    fun isLexiconWord(word: String): Boolean = word in lexiconWords
+
+    private val lexiconWords: Set<String> by lazy {
+        frequencies.keys.mapTo(HashSet(frequencies.size * 2)) { it.lowercase(java.util.Locale.ROOT) }
     }
 
     /** The shipped bounded rescue for a greedy surface — exposed for rescue-eligibility analysis. */

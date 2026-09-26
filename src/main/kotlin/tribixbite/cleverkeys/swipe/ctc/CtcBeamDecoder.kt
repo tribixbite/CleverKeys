@@ -9,6 +9,8 @@ package tribixbite.cleverkeys.swipe.ctc
  * @property ctcScore the raw accumulated CTC path log-score before length norm.
  * @property length the word length (== trie depth).
  * @property logFreq the AOSP-scale log-frequency contributed to the score.
+ * @property learnedBonus the [CtcLearnedPrior] bonus already INCLUDED in [finalScore]
+ *   (0.0 under [CtcLearnedPrior.NONE]).
  */
 data class CtcCandidate(
     val word: String,
@@ -16,6 +18,7 @@ data class CtcCandidate(
     val ctcScore: Double,
     val length: Int,
     val logFreq: Double,
+    val learnedBonus: Double = 0.0,
 )
 
 /**
@@ -85,8 +88,17 @@ object CtcBeamDecoder {
      *
      * The [trie]'s alphabet MUST match the emission-column ordering (class column `c` ↔
      * `trie.alphabet[c]`), which also aligns each trie node's `charIdx` to the emissions.
+     *
+     * [prior] adds a learned-usage bonus to the FINAL score of each complete word (never to
+     * the per-frame prune key). [CtcLearnedPrior.NONE] — the default — skips the lookup
+     * entirely, so the result is byte-identical to a decode without a prior.
      */
-    fun decode(emissions: CtcEmissions, trie: CtcLexiconTrie, params: CtcScoringParams): List<CtcCandidate> {
+    fun decode(
+        emissions: CtcEmissions,
+        trie: CtcLexiconTrie,
+        params: CtcScoringParams,
+        prior: CtcLearnedPrior = CtcLearnedPrior.NONE,
+    ): List<CtcCandidate> {
         require(emissions.alphabetSize == trie.alphabet.size) {
             "emissions alphabet size ${emissions.alphabetSize} != trie alphabet size ${trie.alphabet.size}"
         }
@@ -159,12 +171,18 @@ object CtcBeamDecoder {
             val len = node.depth
             val l = if (len > 1) len else 1 // max(len, 1)
             val ctc = h.score
-            val finalScore = ctc / Math.pow(l.toDouble(), params.gamma) +
+            val baseScore = ctc / Math.pow(l.toDouble(), params.gamma) +
                 params.beta * len + params.lambda * node.logFreq
             val word = node.word()
+            // Learned prior: final score only (the prune key has no frequency term, so this
+            // reaches exactly what a trie-frequency change would). NONE skips the lookup and
+            // the addition, keeping the decode byte-identical to the pre-prior decoder.
+            val bonus = if (prior === CtcLearnedPrior.NONE) 0.0
+                else prior.bonusFor(word, node.logFreq, params.lambda)
+            val finalScore = if (bonus == 0.0) baseScore else baseScore + bonus
             val prev = best[word]
             if (prev == null || prev.finalScore < finalScore) {
-                best[word] = CtcCandidate(word, finalScore, ctc, len, node.logFreq)
+                best[word] = CtcCandidate(word, finalScore, ctc, len, node.logFreq, bonus)
             }
         }
         return best.values.sortedByDescending { it.finalScore }.take(params.topK)
