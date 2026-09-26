@@ -17,6 +17,7 @@ uncommitted edits at run time (checked with `git status`), so the CTC decode is 
 | | no regression at prefix ≥ 3 | **+2.38 pt** (62.79 → 65.17 %) | PASS |
 | | no regression at empty context | **0 cases differ** in any arm, prefixes 1–3 | PASS |
 | **S2** loader + wiring | heap ≤ +1.5 MB | **670,002 B** (array accounting); GC delta 670,064 B | PASS |
+| | APK Δ (arm64 release) | **+333,230 B** (LM deflated 306,804 B) | reported |
 | | load ≤ 30 ms off-main | read+parse median **4.6 ms**, first-in-class 11.9 ms, ~200 ms for the first parse in a cold JVM (load avg ≈ 13 on 4 cores) | PASS warm; cold-JVM first parse over budget (see §2) |
 | **S3** swipe, CTC | errRatio < 0.20 ∧ Δtop-1 > 0 | best confirm cell: **1 fixed / 3 broken** (RATIO, W=0.5, R=0.6) | **FAIL** |
 | | capture of oracle-fixable traces | **2 (PROB) / 6 (RATIO) of 135**, fixed under ≥ 1 context; 0 under a majority | — |
@@ -94,7 +95,13 @@ lm_both vs legacy_both:    prefix-3 +2.52
   service recreation. It is not duplicated per `WordPredictor`. It is not released with the
   predictor either (deviation from the design note). The ≈0.67 MB lives for the process
   lifetime.
-- APK size delta: see the release build note in the commit that records it.
+- APK size (release arm64, `./build-on-termux.sh release --no-install`, lintVital passed):
+  **21,625,015 B vs the 21,291,785 B reference, +333,230 B.** `assets/lm/en.cklm` is stored
+  deflated at 306,804 B and the sidecar at 2,244 B. The remaining ~24 KB is code and strings,
+  including other agents' uncommitted work in the shared tree at build time, so it is an upper
+  bound for this change.
+- Full suites on the shared tree after the wiring: `runPureTests` OK (2,575 tests),
+  `runMockTests` OK (843 tests).
 
 ## 3. S3 — swipe synthetic-context replay (CTC)
 
