@@ -117,6 +117,7 @@ object KeyAdjacency {
             positions = DEFAULT_POSITIONS
             maxDistance = computeMaxDistance(DEFAULT_POSITIONS)
             azDist = buildAzDist(DEFAULT_POSITIONS, maxDistance)
+            neighborRadius = computeNeighborRadius(DEFAULT_POSITIONS, maxDistance)
             return
         }
         // Lower-case keys for case-insensitive lookup.
@@ -124,6 +125,7 @@ object KeyAdjacency {
         positions = normalized
         maxDistance = computeMaxDistance(normalized).coerceAtLeast(1e-6f)
         azDist = buildAzDist(normalized, maxDistance)
+        neighborRadius = computeNeighborRadius(normalized, maxDistance)
     }
 
     /** Revert to the default US-QWERTY position table (plus accents). */
@@ -132,6 +134,7 @@ object KeyAdjacency {
         positions = DEFAULT_POSITIONS
         maxDistance = computeMaxDistance(DEFAULT_POSITIONS)
         azDist = buildAzDist(DEFAULT_POSITIONS, maxDistance)
+        neighborRadius = computeNeighborRadius(DEFAULT_POSITIONS, maxDistance)
     }
 
     /**
@@ -206,6 +209,62 @@ object KeyAdjacency {
                 }
             }
         }
+
+    /**
+     * How far, in KEY PITCHES, a key may sit from another and still count as its
+     * neighbour for [areNeighbors]. 1.5 pitches admits the whole first ring of a
+     * staggered (QWERTY-style) board — same-row neighbours at 1.0 and the four
+     * diagonal row-neighbours at ≈1.12 — and the diagonals of an unstaggered grid
+     * (√2 ≈ 1.41), while excluding the second ring (≥ 1.8 on QWERTY: `k`↔`u`).
+     */
+    private const val NEIGHBOR_RADIUS_PITCHES = 1.5f
+
+    /**
+     * The layout's key pitch in [keyDistance] units: the MEDIAN over distinct key
+     * positions of each key's nearest-other-key distance. Median (not min) so a
+     * single oddly-packed key (a narrow punctuation key squeezed between letters)
+     * cannot shrink the neighbourhood for the whole board. Works for any unit the
+     * layout was injected in, since both the pitch and [maxDistance] come from the
+     * same table.
+     */
+    private fun computeNeighborRadius(p: Map<Char, Pair<Float, Float>>, maxD: Float): Float {
+        val points = p.values.distinct()
+        if (points.size < 2 || maxD <= 0f) return 0f
+        val nearest = FloatArray(points.size) { i ->
+            var best = Float.MAX_VALUE
+            for (j in points.indices) {
+                if (i == j) continue
+                val d = hypot(points[i].first - points[j].first, points[i].second - points[j].second)
+                if (d < best) best = d
+            }
+            best
+        }
+        nearest.sort()
+        val pitch = nearest[nearest.size / 2]
+        return NEIGHBOR_RADIUS_PITCHES * pitch / maxD
+    }
+
+    /**
+     * [keyDistance] radius within which two keys are neighbours on the ACTIVE layout
+     * (derived from the injected geometry — see [computeNeighborRadius]). Rebuilt on
+     * every [setLayout]/[resetLayout] together with the distance tables.
+     */
+    @Volatile
+    private var neighborRadius: Float =
+        computeNeighborRadius(DEFAULT_POSITIONS, computeMaxDistance(DEFAULT_POSITIONS))
+
+    /**
+     * True iff [a] and [b] are DIFFERENT keys that sit next to each other on the
+     * active layout — the fat-finger substitution class. Case-insensitive; a char
+     * that is not on the layout is nobody's neighbour. Two chars that share one
+     * key position (an accent folded onto its base letter in the default table)
+     * are distance 0 and therefore also report true; callers that want to price
+     * accent variants separately must check for that first.
+     */
+    fun areNeighbors(a: Char, b: Char): Boolean {
+        if (a.lowercaseChar() == b.lowercaseChar()) return false
+        return keyDistance(a, b) <= neighborRadius
+    }
 
     /**
      * Substitution score = 1 - keyDistance. Returned value:

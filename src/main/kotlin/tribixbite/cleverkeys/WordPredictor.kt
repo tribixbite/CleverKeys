@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import tribixbite.cleverkeys.autocorrect.FrequencyFloor
+import tribixbite.cleverkeys.autocorrect.FuzzyPrefixMatcher
 import tribixbite.cleverkeys.autocorrect.KeyAdjacency
 import tribixbite.cleverkeys.autocorrect.Morphology
 import tribixbite.cleverkeys.swipe.SwipeContextRescorer
@@ -170,6 +171,78 @@ class WordPredictor : Predictor {
         private const val MAX_EDIT_DISTANCE = 2
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
+
+        // ── Prefix-score constants (calculatePrefixScore) ──────────────
+        /** Prefix score of a word typed in full. */
+        internal const val DIRECT_MATCH_PREFIX_SCORE = 1000
+        /** Base prefix score of a completion of the typed prefix. */
+        private const val COMPLETION_BASE_PREFIX_SCORE = 800
+        /** Per typed letter bonus for a completion (a longer prefix is more specific). */
+        private const val COMPLETION_PREFIX_BONUS_PER_CHAR = 50
+        /** Completions longer than this many letters pay [COMPLETION_LENGTH_PENALTY_PER_CHAR]. */
+        private const val COMPLETION_FREE_LENGTH = 6
+        private const val COMPLETION_LENGTH_PENALTY_PER_CHAR = 10
+
+        /**
+         * Prefix score of a completion of [wordLength] letters for a typed prefix of
+         * [typedLength] letters — the shared completion formula of [calculatePrefixScore]
+         * and the fuzzy candidates (which score as the completion of the prefix they were
+         * corrected to, then pay [fuzzyPrefixScore]'s penalty).
+         */
+        internal fun completionPrefixScore(wordLength: Int, typedLength: Int): Int =
+            COMPLETION_BASE_PREFIX_SCORE + typedLength * COMPLETION_PREFIX_BONUS_PER_CHAR -
+                max(0, (wordLength - COMPLETION_FREE_LENGTH) * COMPLETION_LENGTH_PENALTY_PER_CHAR)
+
+        // ── Typo-tolerant bar candidates (2026-09-26 user report: "pka" → "play") ──
+
+        /**
+         * Fraction of the prefix score a fuzzy candidate loses per unit of
+         * [FuzzyPrefixMatcher] cost: 25% per full edit, so a neighbouring-key slip
+         * (cost 0.5) costs 12.5% and a swap (0.6) 15%. Because the penalty multiplies the
+         * SAME prefix score an exact match of that shape would get, a fuzzy candidate always
+         * ranks below an exact candidate of equal length and equal frequency/learning signals —
+         * it can only overtake an exact completion that is materially rarer, shorter-scored,
+         * or less boosted by context/personalization.
+         */
+        internal const val FUZZY_PENALTY_PER_EDIT = 0.25f
+
+        /**
+         * Fuzzy prefix score for a candidate reached at [cost]: [basePrefixScore] (what the
+         * word would score if the user had typed the corrected prefix/word) reduced by
+         * [FUZZY_PENALTY_PER_EDIT] per unit of cost, never below 1.
+         */
+        internal fun fuzzyPrefixScore(basePrefixScore: Int, cost: Float): Int =
+            (basePrefixScore * (1f - FUZZY_PENALTY_PER_EDIT * cost)).roundToInt().coerceAtLeast(1)
+
+        /**
+         * Exact results are "strong" — and the fuzzy search is skipped — when the bar is
+         * already full of exact completions AND the best of them is at least as frequent as
+         * the word at this fraction of the dictionary's frequency ranking (top 5%: ≈4.9k of
+         * the 98k English words, e.g. `play`, `question`; `thwart` is not). Rank-based, not
+         * value-based, because the frequency SCALE differs by loader (binary ≈528k–1M, JSON
+         * 100–10k) and contraction aliases sit at a 5,000 floor that would skew a min/max span.
+         */
+        private const val FUZZY_STRONG_EXACT_TOP_FRACTION = 0.05f
+
+        /**
+         * Most fuzzy matches that go through full unified scoring. The matcher can return
+         * thousands (a bucket like `pa*` at one deletion); they are pre-ranked by the
+         * context-free part of the score (penalized prefix score × frequency factor) and only
+         * this many are fully scored with context/adaptation/personalization — 10× the bar,
+         * so the learned signals still reorder a deep pool.
+         */
+        private const val FUZZY_SCORING_POOL = 48
+
+        /**
+         * Bar slots guaranteed to the best typo-tolerant candidates whenever the fuzzy search
+         * ran (i.e. the exact results were missing, too few, or all rare). Needed because the
+         * unified score's frequency factor is log-compressed (`1 + ln1p(f/100)` is 9.5–10.2
+         * across the whole binary-dictionary range), so a bar full of rare exact completions —
+         * `thw` → thwart, thwack, thwarted, thwarts, thwaite — would otherwise ALWAYS hide the
+         * obvious correction `the`. Reserved entries keep their score order: they take the
+         * places of the lowest-scoring exact entries, never the lead.
+         */
+        internal const val FUZZY_RESERVED_SLOTS = 2
 
         // Real English words that also appear as contraction bases in contractions_en.json.
         // These must NOT be autocorrected (e.g., "well" should stay "well", not become "we'll").
@@ -2253,6 +2326,10 @@ class WordPredictor : Predictor {
                 Log.d(TAG, "Prefix index lookup: ${candidateWords.size} candidates for prefix '$lowerSequence'")
             }
 
+            // Frequency of the most frequent exact candidate — the fuzzy trigger's
+            // "are the exact results strong?" input (see shouldSearchFuzzy).
+            var bestExactFrequency = Int.MIN_VALUE
+
             for (word in candidateWords) {
                 // SKIP DISABLED WORDS - Filter out words disabled via Dictionary Manager
                 if (isWordDisabled(word)) {
@@ -2270,6 +2347,7 @@ class WordPredictor : Predictor {
 
                 if (score > 0) {
                     candidates.add(WordCandidate(word, score))
+                    if (frequency > bestExactFrequency) bestExactFrequency = frequency
                 }
             }
 
@@ -2292,7 +2370,7 @@ class WordPredictor : Predictor {
 
                     // Convert frequency rank (0-255) to frequency score
                     // Rank 0 = most common → high frequency; Rank 255 = rare → low frequency
-                    val frequency = ((255 - result.bestFrequencyRank) * 4000) + 1000
+                    val frequency = secondaryRankToFrequency(result.bestFrequencyRank)
 
                     // Calculate score with secondary penalty (configurable, default 0.9x)
                     val baseScore = calculateUnifiedScore(result.bestCanonical, lowerSequence, frequency, context)
@@ -2309,18 +2387,23 @@ class WordPredictor : Predictor {
                 }
             }
 
-            // Sort all candidates by score (descending)
+            // 2026-09-26 (user report "pka" → "play"): typo-tolerant candidates when the
+            // exact prefix results are empty, too few to fill the bar, or all rare. Scored
+            // by the same unified scorer with an explicit penalty, so they fill in BELOW
+            // exact completions of similar frequency (see FUZZY_PENALTY_PER_EDIT).
+            val fuzzySearched = shouldSearchFuzzy(lowerSequence, candidates.size, bestExactFrequency)
+            if (fuzzySearched) {
+                addFuzzyCandidates(lowerSequence, context, candidates)
+            }
+
+            // Sort all candidates by score (descending). Stable: on a score tie the exact
+            // candidates, added first, stay ahead of fuzzy ones.
             candidates.sortByDescending { it.score }
 
-            // Extract top N predictions
-            val predictions = mutableListOf<String>()
-            val scores = mutableListOf<Int>()
-
-            for (candidate in candidates) {
-                predictions.add(candidate.word)
-                scores.add(candidate.score)
-                if (predictions.size >= maxPredictions) break
-            }
+            // Extract top N predictions (with the fuzzy slot reservation when it ran)
+            val top = selectTopCandidates(candidates, maxPredictions, if (fuzzySearched) FUZZY_RESERVED_SLOTS else 0)
+            val predictions = top.map { it.word }
+            val scores = top.map { it.score }
 
             // Issue #72: Apply proper noun case from user dictionary
             val casedPredictions = applyUserWordCaseToList(predictions)
@@ -2329,14 +2412,33 @@ class WordPredictor : Predictor {
             // (N ≤ MAX_PREDICTIONS_TYPING — a handful of cheap map lookups per
             // keystroke, NOT the per-candidate hot loop). Breakdown re-resolves
             // through the same UnifiedScore path that produced the score.
-            val metas = predictions.map { predicted ->
-                val lower = predicted.lowercase()
-                SuggestionMeta(
-                    origin = SuggestionOrigin.DICTIONARY_PREFIX,
-                    breakdown = dictionary.get()[lower]?.let { freq ->
-                        resolveScoreBreakdown(lower, lowerSequence, freq, context)
-                    }
-                )
+            val metas = top.map { candidate ->
+                val lower = candidate.word.lowercase()
+                val fuzzyPrefix = candidate.fuzzyPrefixScore
+                if (fuzzyPrefix != null) {
+                    // Typo-tolerant entry: the SuggestionOrigin/label set lives in the bar
+                    // and handler layers, so it rides the existing autocorrect origin with
+                    // the typed text it corrects. Breakdown only for primary-dictionary
+                    // words — the secondary score is weighted outside the unified scorer,
+                    // exactly like secondary prefix entries.
+                    // TODO(fuzzy-origin): a dedicated SuggestionOrigin (own marker colour
+                    // + label) needs SuggestionBar.originMarkerColor and the handler's
+                    // originLabels map extended in the same change.
+                    SuggestionMeta(
+                        origin = SuggestionOrigin.AUTOCORRECT,
+                        breakdown = if (candidate.fromSecondary) null else dictionary.get()[lower]?.let { freq ->
+                            resolveScoreBreakdown(lower, lowerSequence, freq, context, fuzzyPrefix)
+                        },
+                        note = ProvenanceNote.AutocorrectedFrom(keySequence)
+                    )
+                } else {
+                    SuggestionMeta(
+                        origin = SuggestionOrigin.DICTIONARY_PREFIX,
+                        breakdown = dictionary.get()[lower]?.let { freq ->
+                            resolveScoreBreakdown(lower, lowerSequence, freq, context)
+                        }
+                    )
+                }
             }
 
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -2387,15 +2489,19 @@ class WordPredictor : Predictor {
      * personalization weight (§3.2-1), the log frequency damping, and the final
      * formula all live in [UnifiedScore.combine].
      *
+     * @param prefixScoreOverride the prefix-match quality to use instead of
+     *   [calculatePrefixScore] — the typo-tolerant path passes its penalized
+     *   [fuzzyPrefixScore] (a fuzzy candidate does not prefix-match the sequence)
      * @return null when the word does not prefix-match the sequence (score 0)
      */
     private fun resolveScoreBreakdown(
         word: String,
         keySequence: String,
         frequency: Int,
-        context: List<String>
+        context: List<String>,
+        prefixScoreOverride: Int? = null
     ): ScoreBreakdown? {
-        val prefixScore = calculatePrefixScore(word, keySequence)
+        val prefixScore = prefixScoreOverride ?: calculatePrefixScore(word, keySequence)
         if (prefixScore == 0) return null // Should not happen if caller does prefix check
 
         // H3: the selection-adaptation multiplier is a READ of learned data —
@@ -2467,25 +2573,213 @@ class WordPredictor : Predictor {
         return personalizationEngine?.explainBoost(word.lowercase())
     }
 
+    // ── Typo-tolerant candidates ────────────────────────────────────────────
+
+    /** Frequency at the [FUZZY_STRONG_EXACT_TOP_FRACTION] rank, cached per dictionary size. */
+    @Volatile private var cachedStrongExactFrequency: Int = 0
+    @Volatile private var cachedStrongExactForSize: Int = -1
+
+    /** Primary index alphabet (every letter of its keys), cached per index identity + size. */
+    @Volatile private var fuzzyAlphabetCache: CharArray? = null
+    @Volatile private var fuzzyAlphabetIndexRef: Any? = null
+    @Volatile private var fuzzyAlphabetIndexSize: Int = -1
+
+    /**
+     * Should the typo-tolerant search run for [seq]? Only for all-letter input whose length
+     * [FuzzyPrefixMatcher.budgetFor] allows (3..24 letters), and only when the exact results
+     * cannot fill the bar ([exactCount] < [MAX_PREDICTIONS_TYPING]) or even the most frequent
+     * of them ([bestExactFrequency]) is outside the dictionary's top
+     * [FUZZY_STRONG_EXACT_TOP_FRACTION]. Common prefixes ("pla", "the", "que") therefore pay
+     * nothing for this feature. Apostrophes/digits skip it: the handler already retries an
+     * apostrophe-free search, and digits have no typo neighbourhood worth guessing.
+     */
+    private fun shouldSearchFuzzy(seq: String, exactCount: Int, bestExactFrequency: Int): Boolean {
+        if (FuzzyPrefixMatcher.budgetFor(seq.length) <= 0f) return false
+        if (!seq.all { it.isLetter() }) return false
+        if (exactCount < MAX_PREDICTIONS_TYPING) return true
+        return bestExactFrequency < strongExactFrequency(dictionary.get())
+    }
+
+    /**
+     * The frequency of the word at the [FUZZY_STRONG_EXACT_TOP_FRACTION] rank of [dict].
+     * One O(n log n) pass per dictionary-size change (load, language switch, word add),
+     * computed lazily the first time a full, possibly-weak exact result set needs judging.
+     */
+    private fun strongExactFrequency(dict: Map<String, Int>): Int {
+        if (dict.size != cachedStrongExactForSize) {
+            val values = dict.values.toIntArray()
+            values.sort()
+            val k = max(1, (values.size * FUZZY_STRONG_EXACT_TOP_FRACTION).toInt())
+            cachedStrongExactFrequency = if (values.isEmpty()) 0 else values[max(0, values.size - k)]
+            cachedStrongExactForSize = dict.size
+        }
+        return cachedStrongExactFrequency
+    }
+
+    /** [FuzzyPrefixMatcher.PrefixSource] over the primary prefix index (raw lowercase words). */
+    private class PrimaryFuzzySource(
+        private val index: Map<String, Set<String>>,
+        private val chars: CharArray
+    ) : FuzzyPrefixMatcher.PrefixSource {
+        override val indexedDepth: Int get() = PREFIX_INDEX_MAX_LENGTH
+        override fun wordsWithPrefix(prefix: String): Collection<String>? = index[prefix]
+        override fun alphabet(): CharArray = chars
+    }
+
+    /** [FuzzyPrefixMatcher.PrefixSource] over the secondary index (accent-normalized words). */
+    private class SecondaryFuzzySource(private val index: NormalizedPrefixIndex) : FuzzyPrefixMatcher.PrefixSource {
+        override val indexedDepth: Int get() = index.indexedPrefixLength
+        override fun wordsWithPrefix(prefix: String): Collection<String>? = index.wordsWithIndexedPrefix(prefix)
+        override fun alphabet(): CharArray = index.indexedAlphabet()
+    }
+
+    private fun primaryFuzzyAlphabet(index: Map<String, Set<String>>): CharArray {
+        val cached = fuzzyAlphabetCache
+        if (cached != null && fuzzyAlphabetIndexRef === index && fuzzyAlphabetIndexSize == index.size) {
+            return cached
+        }
+        val chars = FuzzyPrefixMatcher.alphabetOfKeys(index.keys)
+        fuzzyAlphabetCache = chars
+        fuzzyAlphabetIndexRef = index
+        fuzzyAlphabetIndexSize = index.size
+        return chars
+    }
+
+    /**
+     * Prefix score for a fuzzy candidate reached at [cost]: scored as a WHOLE-WORD match when
+     * the entire word is within [cost] of what was typed ("pkay" → "play"), otherwise as a
+     * completion of the corrected prefix ("pka" → "place"), then penalized.
+     */
+    private fun fuzzyPrefixScoreFor(typed: String, word: String, cost: Float, budget: Float): Int {
+        val wholeWord = kotlin.math.abs(word.length - typed.length) <= budget &&
+            FuzzyPrefixMatcher.distance(typed, word, cost) <= cost + 1e-4f
+        val base = if (wholeWord) DIRECT_MATCH_PREFIX_SCORE else completionPrefixScore(word.length, typed.length)
+        return fuzzyPrefixScore(base, cost)
+    }
+
+    /**
+     * Pre-rank fuzzy [matches] by the context-free part of the unified score and keep the
+     * best [FUZZY_SCORING_POOL] that are not already candidates and not disabled.
+     */
+    private fun poolFuzzyMatches(
+        typedLength: Int,
+        matches: Map<String, Float>,
+        present: Set<String>,
+        frequencyScale: Float,
+        frequencyOf: (String) -> Int?
+    ): List<Pair<String, Float>> {
+        val ranked = ArrayList<Triple<String, Float, Double>>(matches.size)
+        val checkDisabled = disabledWords.isNotEmpty()
+        for ((word, cost) in matches) {
+            if (word in present) continue
+            if (checkDisabled && isWordDisabled(word)) continue
+            val freq = frequencyOf(word) ?: continue
+            val approx = fuzzyPrefixScore(completionPrefixScore(word.length, typedLength), cost) *
+                (1.0 + ln1p(freq / frequencyScale.toDouble().coerceAtLeast(1e-6)))
+            ranked.add(Triple(word, cost, approx))
+        }
+        ranked.sortByDescending { it.third }
+        return ranked.asSequence().take(FUZZY_SCORING_POOL).map { it.first to it.second }.toList()
+    }
+
+    /**
+     * Add typo-tolerant candidates for [seq] (lowercase) from the primary dictionary and, when
+     * loaded, the secondary one — through the same unified scorer as exact candidates (so
+     * frequency, adaptation, context and personalization all apply), with the penalized
+     * prefix score in place of the exact prefix score. Words already among [candidates] are
+     * skipped; disabled words are never offered.
+     */
+    private fun addFuzzyCandidates(seq: String, context: List<String>, candidates: MutableList<WordCandidate>) {
+        val budget = FuzzyPrefixMatcher.budgetFor(seq.length)
+        val present = HashSet<String>(candidates.size * 2 + 8)
+        for (c in candidates) present.add(c.word.lowercase())
+        val frequencyScale = config?.prediction_frequency_scale ?: Defaults.PREDICTION_FREQUENCY_SCALE
+
+        // Primary dictionary.
+        val dict = dictionary.get()
+        val index = prefixIndex.get()
+        val primaryMatches = FuzzyPrefixMatcher.findMatches(
+            seq, PrimaryFuzzySource(index, primaryFuzzyAlphabet(index)), budget
+        )
+        for ((word, cost) in poolFuzzyMatches(seq.length, primaryMatches, present, frequencyScale) { dict[it] }) {
+            val frequency = dict[word] ?: continue
+            val prefixScore = fuzzyPrefixScoreFor(seq, word, cost, budget)
+            val score = resolveScoreBreakdown(word, seq, frequency, context, prefixScore)?.finalScore ?: 0
+            if (score > 0) {
+                candidates.add(WordCandidate(word, score, fuzzyPrefixScore = prefixScore))
+                present.add(word)
+            }
+        }
+
+        // Secondary dictionary (bilingual typing) — matched on the accent-normalized forms,
+        // scored exactly like secondary prefix hits (rank → frequency, × secondary weight).
+        val secIndex = secondaryIndex ?: return
+        val normalizedSeq = AccentNormalizer.normalize(seq)
+        val secondaryBudget = FuzzyPrefixMatcher.budgetFor(normalizedSeq.length)
+        if (secondaryBudget <= 0f) return
+        val secondaryMatches = FuzzyPrefixMatcher.findMatches(normalizedSeq, SecondaryFuzzySource(secIndex), secondaryBudget)
+        val secondaryWeight = config?.secondary_prediction_weight ?: Defaults.SECONDARY_PREDICTION_WEIGHT
+        val pooled = poolFuzzyMatches(normalizedSeq.length, secondaryMatches, present, frequencyScale) { normalized ->
+            secIndex.lookup(normalized)?.let { secondaryRankToFrequency(it.bestFrequencyRank) }
+        }
+        for ((normalized, cost) in pooled) {
+            val hit = secIndex.lookup(normalized) ?: continue
+            val canonical = hit.bestCanonical
+            if (canonical.lowercase() in present) continue
+            if (disabledWords.isNotEmpty() && isWordDisabled(canonical)) continue
+            val frequency = secondaryRankToFrequency(hit.bestFrequencyRank)
+            val prefixScore = fuzzyPrefixScoreFor(normalizedSeq, normalized, cost, secondaryBudget)
+            val base = resolveScoreBreakdown(canonical, seq, frequency, context, prefixScore)?.finalScore ?: 0
+            val score = (base * secondaryWeight).toInt()
+            if (score > 0) {
+                candidates.add(WordCandidate(canonical, score, fuzzyPrefixScore = prefixScore, fromSecondary = true))
+                present.add(canonical.lowercase())
+            }
+        }
+    }
+
+    /**
+     * The top [limit] of score-sorted [sorted], guaranteeing up to [reservedFuzzy] places to
+     * the best fuzzy candidates (see [FUZZY_RESERVED_SLOTS]): if fewer are already in the top,
+     * the next-best fuzzy ones replace the lowest-scoring exact entries. The result stays in
+     * score order.
+     */
+    private fun selectTopCandidates(sorted: List<WordCandidate>, limit: Int, reservedFuzzy: Int): List<WordCandidate> {
+        val top = sorted.take(limit).toMutableList()
+        if (reservedFuzzy <= 0 || top.size < limit) return top
+        var missing = reservedFuzzy - top.count { it.fuzzyPrefixScore != null }
+        if (missing <= 0) return top
+        val extras = sorted.asSequence().drop(limit).filter { it.fuzzyPrefixScore != null }.take(missing).toList()
+        for (extra in extras) {
+            val victim = top.indexOfLast { it.fuzzyPrefixScore == null }
+            if (victim < 0) break
+            top.removeAt(victim)
+            top.add(extra)
+            missing--
+        }
+        // Stable: equal scores keep their current relative order.
+        top.sortByDescending { it.score }
+        return top
+    }
+
+    /**
+     * Secondary-index rank (0 = most common … 255) → the frequency scale the secondary
+     * prefix path scores with. Same formula as the exact secondary lookup in [predictInternal].
+     */
+    private fun secondaryRankToFrequency(rank: Int): Int = ((255 - rank) * 4000) + 1000
+
     /**
      * Calculate base score for prefix-based matching (used by unified scoring)
      */
     private fun calculatePrefixScore(word: String, keySequence: String): Int {
         // Direct match is highest score
-        if (word == keySequence) return 1000
+        if (word == keySequence) return DIRECT_MATCH_PREFIX_SCORE
 
-        // Word starts with sequence (this is guaranteed by caller, but score based on completion ratio)
+        // Word starts with sequence (guaranteed by caller): base + per-typed-letter bonus
+        // (longer prefix = more specific) − a slight penalty for very long words so common
+        // shorter completions lead. See [completionPrefixScore].
         if (word.startsWith(keySequence)) {
-            // Higher score for more completion, but prefer shorter completions
-            val baseScore = 800
-
-            // Bonus for more typed characters (longer prefix = more specific)
-            val prefixBonus = keySequence.length * 50
-
-            // Slight penalty for very long words to prefer common shorter words
-            val lengthPenalty = max(0, (word.length - 6) * 10)
-
-            return baseScore + prefixBonus - lengthPenalty
+            return completionPrefixScore(word.length, keySequence.length)
         }
 
         return 0 // Should not reach here due to prefix check in caller
@@ -3025,7 +3319,14 @@ class WordPredictor : Predictor {
      * `predictWords` — score is the unified ranking integer from
      * `calculateUnifiedScore`, NOT a [0,1] match score).
      */
-    private data class WordCandidate(val word: String, val score: Int)
+    private data class WordCandidate(
+        val word: String,
+        val score: Int,
+        /** Penalized prefix score when this is a typo-tolerant candidate; null for exact matches. */
+        val fuzzyPrefixScore: Int? = null,
+        /** Came from the secondary-language dictionary (scored outside the unified breakdown). */
+        val fromSecondary: Boolean = false
+    )
 
     /**
      * Helper class to store autocorrect candidates.

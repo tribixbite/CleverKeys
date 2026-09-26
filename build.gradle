@@ -666,6 +666,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.backup.HeadlessPayloadLimitsTest',
     'tribixbite.cleverkeys.backup.ShortSwipeDiffTest',
     'tribixbite.cleverkeys.autocorrect.KeyAdjacencyTest',
+    // 2026-09-26: keyboard-weighted fuzzy PREFIX matcher behind the typo-tolerant bar.
+    'tribixbite.cleverkeys.autocorrect.FuzzyPrefixMatcherTest',
     'tribixbite.cleverkeys.autocorrect.MorphologyTest',
     'tribixbite.cleverkeys.autocorrect.FrequencyFloorTest',
     'tribixbite.cleverkeys.autocorrect.AutocorrectContextGuardTest',
@@ -1194,6 +1196,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfigBuildTest',
     'tribixbite.cleverkeys.customization.CustomShortSwipeExecutorTest',
     'tribixbite.cleverkeys.autocorrect.AutoCorrectEndToEndTest',
+    // 2026-09-26 user report: typo-tolerant tap-typing bar (pka/pkay → play) over the
+    // real 98k dictionary — ranking guards, provenance, secondary language, latency bound.
+    'tribixbite.cleverkeys.WordPredictorFuzzyTypingTest',
     // Audit remediation (2026-07-17) — new MockK tests
     'tribixbite.cleverkeys.InputCoordinatorReplayGuardTest',
     'tribixbite.cleverkeys.CleanupHandlerTeardownTest',

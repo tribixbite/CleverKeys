@@ -151,6 +151,35 @@ class NormalizedPrefixIndex {
         }.sortedBy { it.bestFrequencyRank }  // Sort by frequency
     }
 
+    /** Longest prefix length the index answers directly (the implicit trie's depth). */
+    val indexedPrefixLength: Int get() = PREFIX_MAX_LENGTH
+
+    /**
+     * The normalized words indexed under [prefix] (a normalized prefix of length
+     * 1..[indexedPrefixLength]), or null when no word starts with it. A read-only view of
+     * the live bucket — the typo-tolerant typing search (`FuzzyPrefixMatcher`) walks these
+     * buckets as an implicit trie instead of scanning the dictionary.
+     */
+    fun wordsWithIndexedPrefix(prefix: String): Set<String>? = prefixIndex[prefix]
+
+    @Volatile private var alphabetCache: CharArray? = null
+    @Volatile private var alphabetForPrefixCount: Int = -1
+
+    /**
+     * Every letter occurring in an indexed prefix — the branching alphabet for the
+     * implicit-trie walk (not just first letters: a letter that never starts a word, like
+     * German `ß` or Greek final `ς`, still has to be a branch at depths 2–3). Cached per prefix-map size (it only
+     * changes when words are added or removed, which also changes the map size in practice).
+     */
+    fun indexedAlphabet(): CharArray {
+        val cached = alphabetCache
+        if (cached != null && alphabetForPrefixCount == prefixIndex.size) return cached
+        val chars = tribixbite.cleverkeys.autocorrect.FuzzyPrefixMatcher.alphabetOfKeys(prefixIndex.keys)
+        alphabetCache = chars
+        alphabetForPrefixCount = prefixIndex.size
+        return chars
+    }
+
     /**
      * Look up a specific normalized word.
      *
