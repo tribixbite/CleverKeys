@@ -364,8 +364,16 @@ class LearningWiringDriftTest {
         assertThat(bar).containsMatch(
             """(?s)fun clearSuggestions\(\) \{.{0,400}dismissProvenancePopup\(\).{0,600}isShowingTemporaryMessage"""
         )
+        // Both message entry points (plain and the 2026-09-26 undoable confirmation) render
+        // through the one private showMessage, which dismisses the sheet.
         assertThat(bar).containsMatch(
-            """(?s)fun showTemporaryMessage\(.{0,500}dismissProvenancePopup\(\)"""
+            """(?s)fun showTemporaryMessage\(.{0,200}showMessage\("""
+        )
+        assertThat(bar).containsMatch(
+            """(?s)fun showUndoableMessage\(.{0,200}showMessage\("""
+        )
+        assertThat(bar).containsMatch(
+            """(?s)private fun showMessage\(.{0,700}dismissProvenancePopup\(\)"""
         )
     }
 

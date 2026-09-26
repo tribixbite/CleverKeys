@@ -156,6 +156,9 @@
     <string name="suggestion_prefer_when_swiping">Unahin ang \'%1$s\' kapag nag-swipe?</string>
     <string name="suggestion_prefer_when_swiping_decline">Huwag nang itanong</string>
     <string name="suggestion_prefer_when_swiping_added">Inuuna na ang \'%1$s\' kapag nag-swipe</string>
+    <string name="suggestion_added_to_dictionary">Naidagdag ang \'%1$s\' sa diksyunaryo</string>
+    <string name="suggestion_tap_again_to_undo">I-tap ulit para i-undo</string>
+    <string name="suggestion_removed_from_dictionary">Inalis ang \'%1$s\' sa diksyunaryo</string>
 
     <!-- Dictionary editor -->
     <string name="dict_search_hint">Maghanap ng mga salita…</string>

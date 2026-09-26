@@ -151,6 +151,9 @@
     <string name="suggestion_prefer_when_swiping">Előnyben részesíti a(z) „%1$s” szót csúsztatáskor?</string>
     <string name="suggestion_prefer_when_swiping_decline">Ne kérdezze</string>
     <string name="suggestion_prefer_when_swiping_added">Csúsztatáskor mostantól a(z) „%1$s” az elsődleges</string>
+    <string name="suggestion_added_to_dictionary">„%1$s” hozzáadva a szótárhoz</string>
+    <string name="suggestion_tap_again_to_undo">Koppintson újra a visszavonáshoz</string>
+    <string name="suggestion_removed_from_dictionary">„%1$s” eltávolítva a szótárból</string>
 
     <!-- Dictionary editor -->
     <string name="dict_search_hint">Szavak keresése…</string>

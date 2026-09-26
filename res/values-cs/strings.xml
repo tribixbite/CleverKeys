@@ -158,6 +158,9 @@
     <string name="suggestion_prefer_when_swiping">Při swipování upřednostnit „%1$s“?</string>
     <string name="suggestion_prefer_when_swiping_decline">Neptat se</string>
     <string name="suggestion_prefer_when_swiping_added">Swipování nyní upřednostňuje „%1$s“</string>
+    <string name="suggestion_added_to_dictionary">„%1$s“ přidáno do slovníku</string>
+    <string name="suggestion_tap_again_to_undo">Klepnutím znovu vrátíte zpět</string>
+    <string name="suggestion_removed_from_dictionary">„%1$s“ odebráno ze slovníku</string>
 
     <!-- Dictionary management -->
     <string name="dict_search_hint">Hledat slova…</string>

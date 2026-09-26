@@ -182,6 +182,9 @@
     <string name="suggestion_prefer_when_swiping">هنگام کشیدن، «%1$s» ترجیح داده شود؟</string>
     <string name="suggestion_prefer_when_swiping_decline">نپرس</string>
     <string name="suggestion_prefer_when_swiping_added">اکنون هنگام کشیدن «%1$s» ترجیح داده می‌شود</string>
+    <string name="suggestion_added_to_dictionary">«%1$s» به واژه‌نامه افزوده شد</string>
+    <string name="suggestion_tap_again_to_undo">برای واگرد دوباره ضربه بزنید</string>
+    <string name="suggestion_removed_from_dictionary">«%1$s» از واژه‌نامه حذف شد</string>
 
     <!-- Dictionary editor -->
     <string name="dict_search_hint">جستجوی واژه‌ها…</string>

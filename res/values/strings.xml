@@ -199,6 +199,11 @@
     <string name="suggestion_prefer_when_swiping">Prefer “%1$s” when swiping?</string>
     <string name="suggestion_prefer_when_swiping_decline">Don\'t ask</string>
     <string name="suggestion_prefer_when_swiping_added">Swiping now prefers “%1$s”</string>
+    <!-- Suggestion bar: tappable confirmation after a word is added to the personal dictionary
+         (add prompt, "+word", autocorrect undo, swipe offer). First tap arms, second tap undoes. -->
+    <string name="suggestion_added_to_dictionary">Added “%1$s” to dictionary</string>
+    <string name="suggestion_tap_again_to_undo">Tap again to undo</string>
+    <string name="suggestion_removed_from_dictionary">Removed “%1$s” from dictionary</string>
 
     <!-- Legacy UI (fallback) -->
 

@@ -156,6 +156,9 @@
     <string name="suggestion_prefer_when_swiping">Utamakan \'%1$s\' saat menggeser?</string>
     <string name="suggestion_prefer_when_swiping_decline">Jangan tanya</string>
     <string name="suggestion_prefer_when_swiping_added">Menggeser kini mengutamakan \'%1$s\'</string>
+    <string name="suggestion_added_to_dictionary">\'%1$s\' ditambahkan ke kamus</string>
+    <string name="suggestion_tap_again_to_undo">Ketuk lagi untuk mengurungkan</string>
+    <string name="suggestion_removed_from_dictionary">\'%1$s\' dihapus dari kamus</string>
 
     <!-- Dictionary editor -->
     <string name="dict_search_hint">Cari kata…</string>

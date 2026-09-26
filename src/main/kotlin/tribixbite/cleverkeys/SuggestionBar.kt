@@ -80,7 +80,17 @@ class SuggestionBar : LinearLayout {
     private var savedScores: List<Int> = emptyList()
     private var savedMetas: List<SuggestionMeta> = emptyList()
     private var isShowingTemporaryMessage = false
+
+    /**
+     * The tappable confirmation currently on screen ([showUndoableMessage]), or null. Any other
+     * way the message leaves — timeout, [dismissUndoableMessage], a newer message — finishes it,
+     * so its undo can only run from the two taps.
+     */
+    private var activeUndoable: UndoableBarMessage? = null
+
     private val restoreRunnable = Runnable {
+        activeUndoable?.finish()
+        activeUndoable = null
         isShowingTemporaryMessage = false
         setSuggestionsWithScores(savedSuggestions, savedScores, savedMetas)
     }
@@ -676,7 +686,71 @@ class SuggestionBar : LinearLayout {
      * @since v1.2.0
      */
     fun showTemporaryMessage(message: String, durationMs: Long = 1500L, clearAfter: Boolean = false) {
+        showMessage(message, durationMs, clearAfter, undoable = null)
+    }
+
+    /**
+     * Show a confirmation the user can take back (2026-09-26 — "Added “git” to dictionary"):
+     * the message is tappable; the first tap re-labels it [confirmMessage] and restarts the
+     * timeout, the second tap removes the message and runs [onUndo]. It disappears on its own
+     * after [UndoableBarMessage.MESSAGE_DURATION_MS] (bar cleared, like `clearAfter = true`),
+     * and [dismissUndoableMessage] — called by the handler on any typing — drops it without
+     * undoing anything. See [UndoableBarMessage] for why two taps.
+     */
+    fun showUndoableMessage(message: String, confirmMessage: String, onUndo: () -> Unit) {
+        showMessage(
+            message, UndoableBarMessage.MESSAGE_DURATION_MS, clearAfter = true,
+            undoable = UndoableBarMessage(message, confirmMessage, onUndo)
+        )
+    }
+
+    /**
+     * Drop a live [showUndoableMessage] confirmation without undoing (the user typed, swiped or
+     * picked a suggestion — the bar belongs to that now). No-op for any other bar state,
+     * including a plain [showTemporaryMessage].
+     *
+     * @return true when a confirmation was dismissed
+     */
+    fun dismissUndoableMessage(): Boolean {
+        if (activeUndoable == null) return false
+        mainHandler.removeCallbacks(restoreRunnable)
+        restoreRunnable.run()
+        return true
+    }
+
+    /** A tap on the undoable message's view: arm, or undo. */
+    private fun onUndoableMessageTapped(view: TextView) {
+        val undoable = activeUndoable ?: return
+        when (val result = undoable.onTap()) {
+            is UndoableBarMessage.TapResult.Confirm -> {
+                view.text = result.text
+                mainHandler.removeCallbacks(restoreRunnable)
+                mainHandler.postDelayed(restoreRunnable, result.durationMs)
+            }
+            UndoableBarMessage.TapResult.Undo -> {
+                // Tear the message down FIRST: the undo typically shows its own feedback message,
+                // which must not be mistaken for (or swallowed by) this one.
+                mainHandler.removeCallbacks(restoreRunnable)
+                activeUndoable = null
+                isShowingTemporaryMessage = false
+                setSuggestionsWithScores(emptyList(), emptyList())
+                undoable.undo()
+            }
+            UndoableBarMessage.TapResult.Ignored -> Unit
+        }
+    }
+
+    private fun showMessage(
+        message: String,
+        durationMs: Long,
+        clearAfter: Boolean,
+        undoable: UndoableBarMessage?,
+    ) {
         if (isPasswordMode) return  // Don't interrupt password mode
+
+        // A newer message replaces a live undoable confirmation — its undo is no longer offered.
+        activeUndoable?.finish()
+        activeUndoable = undoable
 
         // L1: temporary messages replace the bar content the sheet described.
         dismissProvenancePopup()
@@ -719,9 +793,13 @@ class SuggestionBar : LinearLayout {
             typeface = Typeface.DEFAULT_BOLD
             text = message
         }
+        if (undoable != null) {
+            messageView.isClickable = true
+            messageView.setOnClickListener { onUndoableMessageTapped(messageView) }
+        }
         addView(messageView)
 
-        Log.d(TAG, "showTemporaryMessage: '$message' for ${durationMs}ms, clearAfter=$clearAfter")
+        Log.d(TAG, "showTemporaryMessage: '$message' for ${durationMs}ms, clearAfter=$clearAfter, undoable=${undoable != null}")
 
         // Schedule restore
         mainHandler.postDelayed(restoreRunnable, durationMs)
@@ -752,6 +830,8 @@ class SuggestionBar : LinearLayout {
         // Cancel any pending temporary message restore
         mainHandler.removeCallbacks(restoreRunnable)
         isShowingTemporaryMessage = false
+        activeUndoable?.finish()
+        activeUndoable = null
 
         // Enter emoji search display mode
         isInEmojiSearchMode = true

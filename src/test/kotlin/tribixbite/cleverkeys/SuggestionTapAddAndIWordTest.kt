@@ -109,6 +109,9 @@ class SuggestionTapAddAndIWordTest {
 
     private fun handler(): SuggestionHandler {
         val handler = objenesis.newInstance(SuggestionHandler::class.java)
+        // The add routes' confirmation text is a string resource (2026-09-26, undoable
+        // "Added … to dictionary"), so the handler needs a Context; relaxed returns "".
+        handler.setField("context", mockk<android.content.Context>(relaxed = true))
         handler.setField("contextTracker", contextTracker)
         handler.setField("predictionCoordinator", coordinator)
         handler.setField("suggestionBar", bar)

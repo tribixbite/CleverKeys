@@ -156,6 +156,9 @@
     <string name="suggestion_prefer_when_swiping">滑动输入时优先“%1$s”？</string>
     <string name="suggestion_prefer_when_swiping_decline">不再询问</string>
     <string name="suggestion_prefer_when_swiping_added">滑动输入现在优先“%1$s”</string>
+    <string name="suggestion_added_to_dictionary">已将“%1$s”添加到词典</string>
+    <string name="suggestion_tap_again_to_undo">再次点按即可撤消</string>
+    <string name="suggestion_removed_from_dictionary">已将“%1$s”从词典中移除</string>
 
     <!-- Dictionary management -->
     <string name="dict_search_hint">搜索单词…</string>

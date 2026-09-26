@@ -895,6 +895,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.SwipeCorrectionTrackerTest',
     'tribixbite.cleverkeys.SwipeCorrectionPolicyTest',
     'tribixbite.cleverkeys.SwipeCorrectionStoreTest',
+    // 2026-09-26: the two-tap undo state behind the tappable "Added “x” to dictionary".
+    'tribixbite.cleverkeys.UndoableBarMessageTest',
     'tribixbite.cleverkeys.swipe.ContractionPromotionUserWordTest',
     // Task B (2026-08-06): pipeline transparency — UnifiedScore combiner + provenance model
     'tribixbite.cleverkeys.SuggestionProvenanceTest',
@@ -1123,6 +1125,8 @@ tasks.register('runMockTests', JavaExec) {
     // gates, the offer at 2 corrections, accept -> personal dictionary, decline remembered,
     // the contraction case, and the ML-row relabel.
     'tribixbite.cleverkeys.SwipeCorrectionOfferTest',
+    // 2026-09-26: every dictionary add's bar confirmation is undoable (only a true insert).
+    'tribixbite.cleverkeys.DictionaryAddUndoTest',
     'tribixbite.cleverkeys.clipboard.ClipboardTabsAndPaneCloseTest',
     // Maintainer-reported (2026-09-06, no GH issue): media clipboard rows had no UI path to
     // deletion (delete was edit-mode-only; media rows can't edit). Affordance test drives the

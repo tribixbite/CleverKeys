@@ -158,6 +158,9 @@
     <string name="suggestion_prefer_when_swiping">\'%1$s\' voorrang geven bij vegen?</string>
     <string name="suggestion_prefer_when_swiping_decline">Niet vragen</string>
     <string name="suggestion_prefer_when_swiping_added">Vegen geeft nu voorrang aan \'%1$s\'</string>
+    <string name="suggestion_added_to_dictionary">\'%1$s\' toegevoegd aan woordenboek</string>
+    <string name="suggestion_tap_again_to_undo">Tik nogmaals om ongedaan te maken</string>
+    <string name="suggestion_removed_from_dictionary">\'%1$s\' verwijderd uit woordenboek</string>
 
     <!-- Dictionary editor -->
     <string name="dict_search_hint">Woorden zoeken…</string>

@@ -158,6 +158,9 @@
     <string name="suggestion_prefer_when_swiping">Preferir \'%1$s\' ao deslizar?</string>
     <string name="suggestion_prefer_when_swiping_decline">Não perguntar</string>
     <string name="suggestion_prefer_when_swiping_added">Deslizar agora prefere \'%1$s\'</string>
+    <string name="suggestion_added_to_dictionary">\'%1$s\' adicionada ao dicionário</string>
+    <string name="suggestion_tap_again_to_undo">Toque novamente para desfazer</string>
+    <string name="suggestion_removed_from_dictionary">\'%1$s\' removida do dicionário</string>
 
     <!-- Dictionary editor -->
     <string name="dict_search_hint">Buscar palavras…</string>

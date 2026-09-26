@@ -147,6 +147,9 @@
     <string name="suggestion_prefer_when_swiping">Предпочитать «%1$s» при свайпе?</string>
     <string name="suggestion_prefer_when_swiping_decline">Не спрашивать</string>
     <string name="suggestion_prefer_when_swiping_added">Теперь при свайпе предпочитается «%1$s»</string>
+    <string name="suggestion_added_to_dictionary">«%1$s» добавлено в словарь</string>
+    <string name="suggestion_tap_again_to_undo">Нажмите ещё раз, чтобы отменить</string>
+    <string name="suggestion_removed_from_dictionary">«%1$s» удалено из словаря</string>
 
     <!-- Dictionary manager -->
     <string name="dict_search_hint">Поиск слов…</string>

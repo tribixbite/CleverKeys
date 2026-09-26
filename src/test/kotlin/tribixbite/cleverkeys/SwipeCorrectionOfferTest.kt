@@ -14,6 +14,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
@@ -64,6 +65,9 @@ class SwipeCorrectionOfferTest {
     private lateinit var handler: SuggestionHandler
     private lateinit var store: SwipeCorrectionStore
     private lateinit var mlStore: SwipeMLDataStore
+
+    /** The undo of the last undoable "Added …" confirmation the bar was asked to show. */
+    private val undoConfirmation = slot<() -> Unit>()
 
     private val editor = StringBuilder()
     private lateinit var ic: InputConnection
@@ -140,6 +144,8 @@ class SwipeCorrectionOfferTest {
         }
         every { bar.clearSuggestions() } answers { barWords = emptyList() }
         every { bar.getTopSuggestion() } answers { barWords.firstOrNull() }
+        undoConfirmation.clear()
+        every { bar.showUndoableMessage(any(), any(), capture(undoConfirmation)) } just runs
 
         inputCoordinator = mockk(relaxed = true)
         every { inputCoordinator.getCurrentSwipeData() } returns null
@@ -437,6 +443,149 @@ class SwipeCorrectionOfferTest {
         backspaceUndo("got")
         type("git ")
 
+        assertThat(barWords).containsExactly(offer, decline).inOrder()
+    }
+
+    // ================================================================ undoing an accepted offer
+
+    @Test
+    fun theAcceptConfirmationUndoesTheAddAndTheWordCanBeOfferedAgain() {
+        every { dictionary.addUserWord("git") } returns true
+        correctGotToGitFromTheBar()
+        type("and ")
+        correctGotToGitFromTheBar()
+        tap(offer)
+        verify(exactly = 0) { bar.showTemporaryMessage(any(), any(), any()) }
+
+        undoConfirmation.captured.invoke()
+
+        verify(exactly = 1) { dictionary.removeUserWord("git") }
+        verify(exactly = 2) { coordinator.refreshCustomWords() }
+        assertWithMessage("undo is not a decline — the word stays offerable")
+            .that(store.isDeclined("en", "git")).isFalse()
+        assertWithMessage("the counts restart: the offer needs a fresh pattern, not one more slip")
+            .that(store.correctionCount("en", "git")).isEqualTo(0)
+
+        type("so ")
+        correctGotToGitFromTheBar()
+        assertThat(barWords).doesNotContain(offer)
+        type("and ")
+        correctGotToGitFromTheBar()
+        assertThat(barWords).containsExactly(offer, decline).inOrder()
+    }
+
+    @Test
+    fun anAcceptThatInsertedNothingIsNotUndoable() {
+        // Relaxed mock default: addUserWord → false (the word was already stored).
+        correctGotToGitFromTheBar()
+        type("and ")
+        correctGotToGitFromTheBar()
+        tap(offer)
+
+        verify(exactly = 0) { bar.showUndoableMessage(any(), any(), any()) }
+        verify(exactly = 0) { dictionary.removeUserWord(any()) }
+    }
+
+    // ================================================================ deferred offers (task 2)
+
+    /** One correction toward `git` already on record, so the next one reaches the threshold. */
+    private fun oneCorrectionOnRecord() {
+        store.recordCorrection("en", "git", listOf("got"))
+    }
+
+    /** swipe `got` → backspace undo → re-swipe `git` (a candidate, not yet settled). */
+    private fun undoThenReSwipeGit() {
+        editor.append("fix ")
+        swipe("got", "for")
+        backspaceUndo("got")
+        swipe("git", "got")
+    }
+
+    @Test
+    fun aReSwipeSettledByTheNextSwipeOffersAtTheNextWordCompletion() {
+        oneCorrectionOnRecord()
+        undoThenReSwipeGit()
+        swipe("now", "how")
+
+        assertThat(store.correctionCount("en", "git")).isEqualTo(2)
+        assertWithMessage("the bar holds the new swipe's alternates — not the moment to offer")
+            .that(barWords).doesNotContain(offer)
+
+        type("so ")
+        assertThat(barWords).containsExactly(offer, decline).inOrder()
+    }
+
+    @Test
+    fun anEnterSettledCorrectionOffersWhenTheBarNextIdles() {
+        oneCorrectionOnRecord()
+        undoThenReSwipeGit()
+        handler.onEditorWordBoundary(ic)
+        assertThat(store.correctionCount("en", "git")).isEqualTo(2)
+        assertThat(barWords).doesNotContain(offer)
+
+        // After Enter the cursor parks on the new line (or the sent field's empty start).
+        handler.handleCursorParkPrediction(textField(), ic)
+        assertThat(barWords).containsExactly(offer, decline).inOrder()
+    }
+
+    @Test
+    fun aFieldExitSettledCorrectionOffersInTheNextField() {
+        oneCorrectionOnRecord()
+        undoThenReSwipeGit()
+        handler.flushTypedWordOnFinishInput(ic)
+        assertThat(store.correctionCount("en", "git")).isEqualTo(2)
+
+        editor.setLength(0)
+        type("ok ")
+        assertThat(barWords).containsExactly(offer, decline).inOrder()
+    }
+
+    @Test
+    fun aDeferredOfferIsShownOnlyOnce() {
+        oneCorrectionOnRecord()
+        undoThenReSwipeGit()
+        handler.onEditorWordBoundary(ic)
+        type("so ")
+        assertThat(barWords).contains(offer)
+
+        type("then ")
+        assertThat(barWords).doesNotContain(offer)
+    }
+
+    @Test
+    fun aDeferredOfferIsDroppedWhenTheWordWasAddedMeanwhile() {
+        oneCorrectionOnRecord()
+        undoThenReSwipeGit()
+        handler.onEditorWordBoundary(ic)
+        every { dictionary.isUserWordIgnoringCase("git") } returns true
+
+        type("so ")
+        assertThat(barWords).doesNotContain(offer)
+    }
+
+    @Test
+    fun aDeferredOfferIsDroppedWhenTheCountsWereErased() {
+        oneCorrectionOnRecord()
+        undoThenReSwipeGit()
+        handler.onEditorWordBoundary(ic)
+        store.clearAll() // Privacy → forget learned data
+
+        type("so ")
+        assertThat(barWords).doesNotContain(offer)
+    }
+
+    @Test
+    fun aDeferredOfferWaitsForItsOwnLanguage() {
+        oneCorrectionOnRecord()
+        undoThenReSwipeGit()
+        handler.onEditorWordBoundary(ic)
+
+        every { dictionary.getCurrentLanguage() } returns "de"
+        type("so ")
+        assertThat(barWords).doesNotContain(offer)
+
+        every { dictionary.getCurrentLanguage() } returns "en"
+        type("and ")
         assertThat(barWords).containsExactly(offer, decline).inOrder()
     }
 

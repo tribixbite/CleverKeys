@@ -158,6 +158,9 @@
     <string name="suggestion_prefer_when_swiping">스와이프할 때 \'%1$s\'을(를) 우선할까요?</string>
     <string name="suggestion_prefer_when_swiping_decline">다시 묻지 않기</string>
     <string name="suggestion_prefer_when_swiping_added">이제 스와이프할 때 \'%1$s\'을(를) 우선합니다</string>
+    <string name="suggestion_added_to_dictionary">\'%1$s\'을(를) 사전에 추가했습니다</string>
+    <string name="suggestion_tap_again_to_undo">다시 탭하여 실행 취소</string>
+    <string name="suggestion_removed_from_dictionary">\'%1$s\'을(를) 사전에서 삭제했습니다</string>
 
     <!-- Dictionary Manager -->
     <string name="dict_search_hint">단어 검색…</string>

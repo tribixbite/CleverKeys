@@ -495,6 +495,15 @@ class SuggestionHandler(
     private var swipePreferenceOffer: String? = null
 
     /**
+     * An offer earned where the bar could not show it (a re-swipe settled by the next swipe,
+     * Enter, leaving the field), waiting for the bar's next idle moment in the same language —
+     * see [deferSwipeOffer] / [takeDeferredSwipeOffer]. In memory only: if the process dies
+     * first, the persisted count (still at or above the threshold) re-offers at the word's next
+     * correction, the pre-deferral behaviour.
+     */
+    private var deferredSwipeOffer: DeferredSwipeOffer? = null
+
+    /**
      * Per-field incognito flag (M5): called from `onStartInputView` with
      * [LearningGate.fieldAllowsPersonalizedLearning] of the field's
      * `EditorInfo.imeOptions`. While false, nothing typed in this field is
@@ -816,8 +825,10 @@ class SuggestionHandler(
         origin: SuggestionOrigin? = null,
         languages: List<String>? = null
     ) {
-        // Swipe results replace whatever the bar shows — any next-word display state ends here.
+        // Swipe results replace whatever the bar shows — any next-word display state ends here,
+        // and so does an undoable "Added …" confirmation (the user moved on).
         nextWordSuggestionsActive = false
+        suggestionBar?.dismissUndoableMessage()
 
         // D2: password-field guard. Detect from the tracked mode OR the live editor (the latter holds
         // in tests / before onStartInputView sets the mode). Suppress the swipe unless the user opted in.
@@ -1198,6 +1209,10 @@ class SuggestionHandler(
     ): String? {
         // Null/empty check
         if (word.isNullOrBlank()) return null
+
+        // A suggestion tap supersedes an undoable "Added …" confirmation (none can be on screen
+        // while a chip is tappable, but a programmatic selection must not leave one armed).
+        suggestionBar?.dismissUndoableMessage()
 
         // Next-word tap (audit §4.4): a whole-bar next-word display OR (call-site
         // 3) a per-suggestion NEXT_WORD meta on a mixed swipe-alternates bar —
@@ -1697,7 +1712,8 @@ class SuggestionHandler(
                         processedWord, editorBeforeCursorFor(inputConnection, processedWord)
                     )
                 }
-                recordSwipeCorrection(correction, editorInfo)?.let { showSwipePreferenceOffer(it) }
+                (recordSwipeCorrection(correction, editorInfo) ?: takeDeferredSwipeOffer(editorInfo))
+                    ?.let { showSwipePreferenceOffer(it) }
             }
 
             // Next-word prediction call-site 2 (audit §4.4): after a MANUAL tap
@@ -1848,6 +1864,12 @@ class SuggestionHandler(
         // prompt survives via InputCoordinator's preserve branch.
         if (swipePreferenceOffer != null && specialPromptActive) return
         suggestionBar?.clearSuggestions()
+        // The bar is idle with nothing at the cursor — the moment for an offer deferred from
+        // Enter / a field exit / a settled re-swipe (it replaces the next-word candidates).
+        takeDeferredSwipeOffer(editorInfo)?.let {
+            showSwipePreferenceOffer(it)
+            return
+        }
         maybeShowNextWordPredictions(editorInfo, readEditorParkContext(ic))
     }
 
@@ -1899,7 +1921,7 @@ class SuggestionHandler(
         vlog { "ADD TO DICTIONARY: Adding '$wordToAdd'" }
 
         // Add to user dictionary
-        predictionCoordinator.getDictionaryManager()?.addUserWord(wordToAdd)
+        val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(wordToAdd) ?: false
 
         // Refresh dictionary so word appears in predictions immediately
         predictionCoordinator.refreshCustomWords()
@@ -1909,8 +1931,62 @@ class SuggestionHandler(
         // v1.2.6: Clear special prompt flag
         specialPromptActive = false
 
-        // Show confirmation message (clearAfter=true so bar clears instead of restoring prompt)
-        suggestionBar?.showTemporaryMessage("Added '$wordToAdd' to dictionary", 2000L, clearAfter = true)
+        // Tappable confirmation (bar clears after it instead of restoring the prompt)
+        confirmDictionaryAdd(wordToAdd, inserted, R.string.suggestion_added_to_dictionary)
+    }
+
+    /**
+     * The "Added “[word]” to dictionary" confirmation every IME add path shows (2026-09-26, user
+     * request). When the add actually INSERTED ([DictionaryManager.addUserWord] = true) it is
+     * the undoable bar message ([SuggestionBar.showUndoableMessage]): first tap arms "Tap again
+     * to undo", second tap runs [undoDictionaryAdd]. A no-op add (the word was already stored)
+     * gets the plain message — an undo there would delete a word the user already had.
+     *
+     * Not a Toast: Toasts render beneath the IME window (`ime-visual-feedback` skill) and cannot
+     * be tapped; the bar is the one feedback surface the user can act on.
+     *
+     * @param messageRes the confirmation text, one `%1$s` for [word]
+     */
+    private fun confirmDictionaryAdd(
+        word: String,
+        inserted: Boolean,
+        messageRes: Int,
+    ) {
+        val message = context.getString(messageRes, word)
+        if (!inserted) {
+            suggestionBar?.showTemporaryMessage(message, UndoableBarMessage.MESSAGE_DURATION_MS, clearAfter = true)
+            return
+        }
+        val language = activeLanguageCode()
+        suggestionBar?.showUndoableMessage(message, context.getString(R.string.suggestion_tap_again_to_undo)) {
+            undoDictionaryAdd(word, language)
+        }
+    }
+
+    /**
+     * Second tap on an undoable "Added …" confirmation: take [word] back out of the personal
+     * dictionary for [language] and refresh the predictors, which is everything the add changed
+     * there — the tap predictor reloads its custom words, and the swipe engines key their
+     * lexicon memo on the `custom_words_<lang>` content ([tribixbite.cleverkeys.swipe.LexiconContentVersion]),
+     * so the next swipe no longer carries the user frequency. No text is touched: a word the
+     * add path committed ("+word", autocorrect undo) stays in the field.
+     *
+     * Skipped when the active dictionary language changed since the add: the store is per
+     * language, and removing [word] from another language's list could delete the user's own
+     * entry there.
+     */
+    private fun undoDictionaryAdd(word: String, language: String) {
+        val dictionary = predictionCoordinator.getDictionaryManager() ?: return
+        if (activeLanguageCode() != language) {
+            Log.w(TAG, "Dictionary-add undo skipped: language changed since the add")
+            return
+        }
+        vlog { "DICTIONARY UNDO: removing the word just added" }
+        dictionary.removeUserWord(word)
+        predictionCoordinator.refreshCustomWords()
+        suggestionBar?.showTemporaryMessage(
+            context.getString(R.string.suggestion_removed_from_dictionary, word), 1500L, clearAfter = true
+        )
     }
 
     // ---------------------------------------------------------- swipe corrections (audit 2026-09-26)
@@ -1962,10 +2038,10 @@ class SuggestionHandler(
             SwipeCorrectionTracker.SwipeRecord(word, slate.toList(), traceId),
             editorBeforeCursorFor(ic, word)
         )
-        // A re-swipe the user kept is recorded now. Its offer, if due, is NOT shown: the bar holds
-        // this swipe's alternates, which the user may still need to correct it — the offer comes
-        // back at the next correction of the same word (the count stays at or above the threshold).
-        recordSwipeCorrection(settled, editorInfo)
+        // A re-swipe the user kept is recorded now. Its offer, if due, is NOT shown here: the bar
+        // holds this swipe's alternates, which the user may still need to correct it. It is
+        // deferred to the bar's next idle moment ([takeDeferredSwipeOffer]).
+        recordSwipeCorrection(settled, editorInfo)?.let { deferSwipeOffer(it) }
     }
 
     /**
@@ -2055,6 +2131,54 @@ class SuggestionHandler(
     }
 
     /**
+     * Hold [word]'s offer for the bar's next idle moment ([takeDeferredSwipeOffer]) — earned at a
+     * point where the bar is gone or busy: a re-swipe settled by the next swipe (the bar holds
+     * that swipe's alternates), Enter / the IME action, leaving the field, an autocorrected
+     * commit. Scoped to the active language; the newest earned offer wins.
+     */
+    private fun deferSwipeOffer(word: String) {
+        deferredSwipeOffer = DeferredSwipeOffer(word, activeLanguageCode())
+        vlog { "SWIPE CORRECTION: offer deferred to the next idle bar" }
+    }
+
+    /**
+     * The deferred offer, if one is waiting and still due — consumed. Shown where offers already
+     * appear (a typed word completed by space / sentence end, a bar tap) and at the cursor park
+     * (the idle bar after Enter or in a newly focused field), in any field and session of the
+     * SAME language while the learning gates pass.
+     *
+     * Re-validated against the store at show time, because much can happen in between: the word
+     * may have been added to the dictionary or declined, "forget learned data" may have erased
+     * the counts (count below the threshold ⇒ dropped). Kept, not consumed, while the language
+     * differs or a gate is closed (an incognito/password field is not the user saying no).
+     */
+    private fun takeDeferredSwipeOffer(editorInfo: EditorInfo?): String? {
+        val pending = deferredSwipeOffer ?: return null
+        // A bar message (e.g. "Added … to dictionary") swallows bar writes; the offer would be
+        // consumed without being seen. Wait for the next idle moment instead.
+        if (suggestionBar?.isShowingMessage() == true) return null
+        if (!swipeCorrectionsAllowed(editorInfo)) return null
+        if (pending.language != activeLanguageCode()) return null
+        deferredSwipeOffer = null
+        val store = correctionStore() ?: return null
+        val isUserWord = predictionCoordinator.getDictionaryManager()?.isUserWordIgnoringCase(pending.word) ?: false
+        val due = try {
+            SwipeCorrectionPolicy.shouldOffer(
+                store.correctionCount(pending.language, pending.word),
+                isUserWord,
+                store.isDeclined(pending.language, pending.word)
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Swipe-correction store read failed", e)
+            false
+        }
+        return pending.word.takeIf { due }
+    }
+
+    /** An offer waiting for the bar ([deferredSwipeOffer]): the word and the language it was earned in. */
+    private data class DeferredSwipeOffer(val word: String, val language: String)
+
+    /**
      * The user accepted "Prefer “[word]” when swiping?": add [word] to the personal dictionary
      * through the same API the add-to-dictionary prompt and the Dictionary Manager use. A new
      * entry gets [UserWordFrequency.DEFAULT] (255); the CTC lexicon memo keys on the
@@ -2072,16 +2196,18 @@ class SuggestionHandler(
         specialPromptActive = false
         if (word.isBlank()) return
         vlog { "SWIPE PREFER: adding '$word' to the personal dictionary" }
-        predictionCoordinator.getDictionaryManager()?.addUserWord(word)
+        val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(word) ?: false
         predictionCoordinator.refreshCustomWords()
         try {
             correctionStore()?.forgetWord(activeLanguageCode(), word)
         } catch (e: Exception) {
             Log.w(TAG, "Swipe-correction store update failed", e)
         }
-        suggestionBar?.showTemporaryMessage(
-            context.getString(R.string.suggestion_prefer_when_swiping_added, word), 2000L, clearAfter = true
-        )
+        // Undo = the add never happened: the word leaves the dictionary, and its correction state
+        // stays as accept left it — counts at 0 (forgotten above) and NOT declined. So it can be
+        // offered again, but only after a fresh [SwipeCorrectionPolicy.OFFER_MIN_CORRECTIONS]
+        // corrections: an undo says "not now", and re-offering on the very next slip would nag.
+        confirmDictionaryAdd(word, inserted, R.string.suggestion_prefer_when_swiping_added)
     }
 
     /** The user declined the offer for [word]: remember it so it is never offered again. */
@@ -2152,7 +2278,7 @@ class SuggestionHandler(
         ic?.commitText("$exactWord ", 1)
 
         // Add to user dictionary
-        predictionCoordinator.getDictionaryManager()?.addUserWord(exactWord)
+        val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(exactWord) ?: false
         predictionCoordinator.refreshCustomWords()
 
         // Update context with the committed word (it replaces the typed partial, so the
@@ -2166,8 +2292,8 @@ class SuggestionHandler(
         predictionCoordinator.getWordPredictor()?.reset()
         suggestionBar?.clearSuggestions()
 
-        // Show confirmation
-        suggestionBar?.showTemporaryMessage("Added '$exactWord' to dictionary", 1500L, clearAfter = true)
+        // Tappable confirmation; its undo takes the word out of the dictionary, not the field.
+        confirmDictionaryAdd(exactWord, inserted, R.string.suggestion_added_to_dictionary)
     }
 
     /**
@@ -2224,7 +2350,7 @@ class SuggestionHandler(
             updateContext(tappedWord)
 
             // Add to user dictionary so it won't be autocorrected again
-            predictionCoordinator.getDictionaryManager()?.addUserWord(tappedWord)
+            val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(tappedWord) ?: false
             vlog { "AUTOCORRECT UNDO: Added '$tappedWord' to user dictionary" }
 
             // Refresh dictionary so word appears in predictions immediately
@@ -2237,8 +2363,10 @@ class SuggestionHandler(
             // v1.2.6: Clear special prompt flag
             specialPromptActive = false
 
-            // Show confirmation message (clearAfter=true so bar clears instead of restoring prompt)
-            suggestionBar?.showTemporaryMessage("Added '$tappedWord' to dictionary", 2000L, clearAfter = true)
+            // Tappable confirmation (bar clears after it instead of restoring the prompt). Its undo
+            // only takes the word back out of the dictionary: the field keeps the original the
+            // user tapped — the text revert was the point of the tap.
+            confirmDictionaryAdd(tappedWord, inserted, R.string.suggestion_added_to_dictionary)
 
             // Clear suggestions after brief delay (message will auto-clear)
         }
@@ -2358,9 +2486,9 @@ class SuggestionHandler(
         vlog { "LEARN FLUSH: typed word completed without a space (len=${word.length})" }
         updateContext(capitalizeIWord(word))
         contextTracker.clearCurrentWord()
-        // The flushed word may answer a swipe undo. Recorded only — Enter / leaving the field /
-        // a swipe is not a moment to put an offer in the bar.
-        noteTypedWordCommitted(word, ic, null)
+        // The flushed word may answer a swipe undo. Enter / leaving the field / a swipe is not a
+        // moment to put an offer in the bar — an earned offer waits for the next idle bar.
+        noteTypedWordCommitted(word, ic, null)?.let { deferSwipeOffer(it) }
         return true
     }
 
@@ -2371,10 +2499,12 @@ class SuggestionHandler(
      */
     fun flushTypedWordOnFinishInput(ic: InputConnection?) {
         flushPendingTypedWord(ic)
-        // Leaving the field ends every pending swipe correction (a kept re-swipe is recorded).
-        noteSwipeCorrectionBoundary(null)
+        // Leaving the field ends every pending swipe correction (a kept re-swipe is recorded; its
+        // offer, if earned, waits for the next field's idle bar).
+        noteSwipeCorrectionBoundary(null)?.let { deferSwipeOffer(it) }
         swipeCorrectionTracker?.clear()
         swipePreferenceOffer = null
+        suggestionBar?.dismissUndoableMessage()
     }
 
     // ---------------------------------------------------- KeyEventHandler.LearningHooks (W2/W5)
@@ -2388,9 +2518,10 @@ class SuggestionHandler(
     override fun onEditorWordBoundary(ic: InputConnection?) {
         flushPendingTypedWord(ic)
         predictionCoordinator.getWordPredictor()?.onSentenceBoundary()
-        // Swipe corrections resolved here are recorded; the offer is not shown (the editor is
-        // about to take a newline / an action, and the bar is not the user's focus).
-        noteSwipeCorrectionBoundary(null)
+        // Swipe corrections resolved here are recorded; the offer is not shown now (the editor is
+        // about to take a newline / an action, and the bar is not the user's focus) but deferred
+        // to the bar's next idle moment — typically the cursor park right after the Enter.
+        noteSwipeCorrectionBoundary(null)?.let { deferSwipeOffer(it) }
     }
 
     /** W2: backspace deleted the just-swiped [word] (#110 swipe undo) — the user rejected it. */
@@ -2423,6 +2554,10 @@ class SuggestionHandler(
      * @param editorInfo Editor info for app detection
      */
     fun handleRegularTyping(text: String, ic: InputConnection?, editorInfo: EditorInfo?) {
+        // Any typing dismisses an undoable "Added …" confirmation — BEFORE the prediction update
+        // below, which a showing bar message would otherwise swallow.
+        suggestionBar?.dismissUndoableMessage()
+
         // Handle password mode: update password display, skip predictions
         if (isPasswordMode) {
             handlePasswordText(text)
@@ -2528,6 +2663,7 @@ class SuggestionHandler(
                             inputConnection.commitText("$capitalizedWord ", 1)
                             if (typedThisSession) updateContext(capitalizedWord)
                             noteTypedWordCommitted(capitalizedWord, inputConnection, editorInfo)
+                                ?.let { deferSwipeOffer(it) }
                             contextTracker.clearCurrentWord()
                             contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
                             vlog { "I-WORD CAPITALIZE: '$completedWord' → '$capitalizedWord'" }
@@ -2574,8 +2710,9 @@ class SuggestionHandler(
                                 // Update context with corrected word (learn-once: typed words only)
                                 if (typedThisSession) updateContext(correctedWord)
                                 // Swipe corrections: the committed word is autocorrect's, not the
-                                // user's — it cannot answer a swipe undo.
-                                noteSwipeCorrectionBoundary(editorInfo)
+                                // user's — it cannot answer a swipe undo. (A kept re-swipe settles;
+                                // the bar is about to show the autocorrect undo, so its offer waits.)
+                                noteSwipeCorrectionBoundary(editorInfo)?.let { deferSwipeOffer(it) }
 
                                 // Clear current word
                                 contextTracker.clearCurrentWord()
@@ -2709,9 +2846,17 @@ class SuggestionHandler(
                 // completes with a space, offer context-only candidates instead of
                 // leaving the bar empty. Space only — after sentence-final punct the
                 // context was just cleared, and other punctuation keeps the bar empty.
-                // A swipe-correction offer earned by this word takes the bar instead.
-                if (swipeOffer != null) {
-                    showSwipePreferenceOffer(swipeOffer)
+                // A swipe-correction offer earned by this word takes the bar instead — or, after a
+                // space or sentence end, one deferred from a moment the bar could not show it.
+                // (Not after other characters: a digit or a comma mid-token is no idle moment.)
+                val offerNow = swipeOffer
+                    ?: if (text == " " || text[0] == '.' || text[0] == '?' || text[0] == '!') {
+                        takeDeferredSwipeOffer(editorInfo)
+                    } else {
+                        null
+                    }
+                if (offerNow != null) {
+                    showSwipePreferenceOffer(offerNow)
                 } else if (text == " ") {
                     maybeShowNextWordPredictions(editorInfo)
                 }
@@ -2734,6 +2879,8 @@ class SuggestionHandler(
      * Updates predictions as user deletes characters.
      */
     fun handleBackspace() {
+        suggestionBar?.dismissUndoableMessage()
+
         // Handle password mode: update password display
         if (isPasswordMode) {
             handlePasswordBackspace()
@@ -3035,6 +3182,7 @@ class SuggestionHandler(
      * @param editorInfo Editor info for app detection
      */
     fun handleDeleteLastWord(ic: InputConnection?, editorInfo: EditorInfo?) {
+        suggestionBar?.dismissUndoableMessage()
         if (ic == null) return
 
         // Check if we're in Termux - if so, use Ctrl+Backspace fallback

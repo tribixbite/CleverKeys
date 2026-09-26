@@ -182,6 +182,9 @@
     <string name="suggestion_prefer_when_swiping">Preferați „%1$s” la glisare?</string>
     <string name="suggestion_prefer_when_swiping_decline">Nu mai întreba</string>
     <string name="suggestion_prefer_when_swiping_added">Glisarea preferă acum „%1$s”</string>
+    <string name="suggestion_added_to_dictionary">„%1$s” a fost adăugat în dicționar</string>
+    <string name="suggestion_tap_again_to_undo">Atingeți din nou pentru a anula</string>
+    <string name="suggestion_removed_from_dictionary">„%1$s” a fost eliminat din dicționar</string>
 
     <!-- Dictionary manager -->
     <string name="dict_search_hint">Caută cuvinte…</string>
