@@ -33,6 +33,10 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   Live F-Droid metadata (2026-09-27) watches `/releases/latest`, still v1.5.0.
   Actionlint 1.7.7, YAML/shell syntax and semantic comparison of unchanged push/debug
   behavior pass. Existing main workflows and the maintainer's checklist are untouched.
+  First run `36357331914` failed before compilation because setup-android defaults to
+  removed SDK package `tools`; tester job now requests `platform-tools` explicitly.
+- [ ] TODO: before an official release, correct the same pre-existing setup-android
+  default in `release.yml`; no release workflow was changed or dispatched here.
 - [ ] TODO: reconcile the disable-learning delete prompt (`privacy_forget_learned_body`)
   with swipe-correction deletion; the separate Forget dialog already names it.
 - [ ] TODO: native-speaker translation review and device visual verification remain distinct

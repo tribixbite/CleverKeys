@@ -225,8 +225,14 @@ git push origin v1.1.0
 
 ## Tester APKs without a release
 
-Use **Build CleverKeys APK → Run workflow → variant: tester-release** on the reviewed
-source branch. The isolated job builds the existing release variant, runs pure JVM tests
+The tester job currently lives on `testing/non-dev-apk`, keeping main CI unchanged.
+Dispatch the reviewed branch explicitly (the main-branch UI does not yet define this input):
+
+```bash
+gh workflow run build-apk.yml -R tribixbite/CleverKeys --ref testing/non-dev-apk -f variant=tester-release
+```
+
+The isolated job builds the existing release variant, runs pure JVM tests
 and release lint, signs with the production key, and uploads three ABI APKs plus SHA-256
 checksums as a 90-day Actions artifact. GitHub sign-in is required to download it.
 It does not bump versions, create a tag/release, or update `/releases/latest`; the job has
