@@ -35,8 +35,11 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   behavior pass. Existing main workflows and the maintainer's checklist are untouched.
   First run `36357331914` failed before compilation because setup-android defaults to
   removed SDK package `tools`; tester job now requests `platform-tools` explicitly.
-- [ ] TODO: before an official release, correct the same pre-existing setup-android
-  default in `release.yml`; no release workflow was changed or dispatched here.
+  The maintainer explicitly requires preserving the established `release.yml`; it is
+  byte-identical to main and was not dispatched. Its current behavior was not retested.
+  Second run `36357429771` passed compilation/minification/tests/release lint, then rejected
+  SDK 34 zipalign's unsupported `-P 16`; corrected the tester-only alignment tool to SDK 35,
+  retaining the SDK 34 signer.
 - [ ] TODO: reconcile the disable-learning delete prompt (`privacy_forget_learned_body`)
   with swipe-correction deletion; the separate Forget dialog already names it.
 - [ ] TODO: native-speaker translation review and device visual verification remain distinct

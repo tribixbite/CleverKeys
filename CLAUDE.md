@@ -229,7 +229,9 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 
 ### Tag-free tester builds (2026-09-27)
 - Dispatch `build-apk.yml` on `testing/non-dev-apk` with `variant=tester-release`: production-signed release APKs go to Actions artifacts only; no tag/latest-release change. Branch-only workflow inputs work via `gh workflow run --ref … -f variant=tester-release` even before merging to main.
-- Pinned `android-actions/setup-android` defaults to removed SDK package `tools` and fails before build. Set `packages: platform-tools` explicitly. Fixed in tester job; # TODO: apply the same correction to `release.yml` during release preparation (currently untouched).
+- Pinned `android-actions/setup-android` defaults to removed SDK package `tools` and fails before build. Set `packages: platform-tools` explicitly. Applied only in the tester job. The established `release.yml` has not been changed or rerun; do not infer its current status from the tester failure.
+
+- SDK 34 `zipalign` does not support `-P 16` (tester run `36357429771`). The tester job uses SDK 35 zipalign before signing, and retains SDK 34 apksigner; do not transplant this tester packaging choice into the established release workflow.
 
 ### Local wiki build (2026-09-27)
 - `cd site && bun run build:termux` keeps Astro 7 and its native bindings under Bun; the entry is `astro/bin/astro.mjs`, not the removed `astro/astro.js`. Verified 84 pages. Legacy wiki HTML paths are generated redirects in deployment, not copies of their old bodies.

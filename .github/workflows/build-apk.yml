@@ -185,7 +185,7 @@ jobs:
 
     - name: Prepare build tools and icons
       run: |
-        sdkmanager "platforms;android-34" "build-tools;34.0.0"
+        sdkmanager "platforms;android-34" "build-tools;34.0.0" "build-tools;35.0.0"
         sudo apt-get update && sudo apt-get install -y imagemagick
         ./scripts/generate_icons.sh
 
@@ -210,6 +210,8 @@ jobs:
         umask 077
         printf '%s' "$SIGNING_KEY" | base64 --decode > "$keystore"
         tools="$ANDROID_HOME/build-tools/34.0.0"
+        # SDK 34's zipalign lacks -P; keep its signer but use SDK 35 for alignment.
+        aligner="$ANDROID_HOME/build-tools/35.0.0/zipalign"
         short_sha=$(git rev-parse --short=12 HEAD)
         mkdir -p tester-apks
         shopt -s nullglob
@@ -218,18 +220,25 @@ jobs:
         for apk in "${apks[@]}"; do
           name=$(basename "$apk" .apk)
           output="tester-apks/${name}-tester-${short_sha}.apk"
-          "$tools/zipalign" -f -P 16 4 "$apk" "$output"
+          "$aligner" -f -P 16 4 "$apk" "$output"
           "$tools/apksigner" sign --ks "$keystore" \
             --ks-pass env:STORE_PASSWORD --ks-key-alias "$SIGNING_ALIAS" \
             --key-pass env:KEY_PASSWORD "$output"
           certificate=$("$tools/apksigner" verify --print-certs "$output")
           # The production certificate is also pinned in the F-Droid recipe.
           expected='3c70de8852fca5bb279c9998d558ea7606131f1f937af35cc943eee1aedfb97e'
-          [[ "$certificate" == *"Signer #1 certificate SHA-256 digest: $expected"* ]]
+          [[ "$certificate" == *"Signer #1 certificate SHA-256 digest: $expected"* ]] || {
+            echo "::error::Production certificate mismatch for $output"; exit 1;
+          }
           badging=$("$tools/aapt" dump badging "$output")
-          [[ "$badging" == "package: name='tribixbite.cleverkeys' "* ]]
-          [[ "$badging" != *"application-debuggable"* ]]
-          "$tools/zipalign" -c -P 16 4 "$output"
+          [[ "$badging" == "package: name='tribixbite.cleverkeys' "* ]] || {
+            echo "::error::Unexpected application ID for $output"; exit 1;
+          }
+          [[ "$badging" != *"application-debuggable"* ]] || {
+            echo "::error::Debuggable APK rejected: $output"; exit 1;
+          }
+          echo "Verified production signature and non-debuggable package: $output"
+          "$aligner" -c -P 16 4 "$output"
         done
         # Hashes use relative names so testers can verify after extracting the artifact.
         (cd tester-apks && sha256sum ./*.apk > SHA256SUMS)
