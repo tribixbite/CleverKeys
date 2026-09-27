@@ -1,11 +1,25 @@
 # Current work queue
 
-Updated: 2026-09-01. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
+Updated: 2026-09-27. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
 Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/2026-08-30-full-backlog-campaign.md).
 
-The completed implementation is committed locally at `5fb58037`, followed by the handoff
-consolidation. Preserve these unpushed commits. Do not reset, push, tag, or publish without
-explicit authorization.
+The September 1 campaign baseline was `5fb58037`; subsequent work through `79f0b464`
+was pushed with maintainer authorization on September 27. Preserve shared-tree work.
+
+## September 27 follow-through
+
+- [x] Prior 54 commits through `79f0b464` pushed; commit-specific CI, site deployment,
+  APK build and UI/performance workflows succeeded.
+- [x] Existing `langpacks` release updated: Norvig asset removed; 22 replacements and
+  description published; all 22 downloaded SHA-256 hashes verified.
+- [x] Local Astro build: 84 pages pass under Bun using the current `bin/astro.mjs` entry.
+  Legacy wiki HTML URLs are deployment-generated redirects, not stale published bodies.
+- [x] Site TypeScript check and `build:termux` pass; Android Rollup is optional and the
+  lockfile is synchronized. No dependency versions changed.
+- [ ] TODO: translation resource audit, multilingual LM pilot/evaluation, and pack-attribution
+  UI review.
+- [ ] TODO: native-speaker translation review and device visual verification remain distinct
+  from automated structural checks; preserve the maintainer's manual-checklist edits.
 
 ## Maintainer/release gates
 
@@ -25,7 +39,8 @@ explicit authorization.
   Bridges/Initializers→`wiring/`) remains under ARC-072 slice 3 below.
 - [ ] ARC-072 slice 3 composition-root/reorg work, folded with the gesture portion of ARC-098.
 - [ ] ARC-027/028/029 geometric experiments, evidence-gated on non-regressing corpus replay.
-- [ ] ARC-071 Astro 6 migration and ARC-046 web regression gate/Tailwind vendoring.
+- [ ] ARC-071 migration is superseded by the installed Astro 7 site; reconcile the remaining
+  ARC-046 web regression gate/Tailwind vendoring evidence.
 - [ ] ML-side ARC-060/061 and the documented verb-inversion feasibility work. (ARC-056
   uk/bg/mk/he lexicons/langpacks CLOSED 2026-09-01 — `538a1633`/`86156ea3`.)
 - [ ] ARC-044 remaining assertion-strengthening batch (no Truth dependency in androidTest).

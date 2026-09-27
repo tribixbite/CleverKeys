@@ -226,3 +226,6 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 
 ### Emulator.wtf authorization (2026-09-10)
 - The maintainer explicitly grants permanent ongoing approval to upload app/test APKs to emulator.wtf for this project's testing, including rebuilt diagnostics and synthetic emulator heap artifacts. Do not re-request this approval for routine test iterations. This does not authorize publishing releases or uploading the phone's personal data.
+
+### Local wiki build (2026-09-27)
+- `cd site && bun run build:termux` keeps Astro 7 and its native bindings under Bun; the entry is `astro/bin/astro.mjs`, not the removed `astro/astro.js`. Verified 84 pages. Legacy wiki HTML paths are generated redirects in deployment, not copies of their old bodies.

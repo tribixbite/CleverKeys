@@ -18,10 +18,12 @@
         "tailwindcss": "^4.1.13",
       },
       "devDependencies": {
-        "@rollup/rollup-android-arm64": "4.60.1",
         "@types/node": "^22.18.1",
         "typescript": "^5.9.2",
         "unist-util-visit": "5.1.0",
+      },
+      "optionalDependencies": {
+        "@rollup/rollup-android-arm64": "4.60.1",
       },
     },
   },

@@ -243,7 +243,7 @@ story. Two habits came out of it and are worth keeping:
 `docs/audit/2026-09-26-learning-system-audit.md`. Two device reports: swipe `she'd`/`I'd`/`they'll`
 rank badly; swiped `git` never learned.
 
-**Landed (not pushed):** contraction variants spliced beside/ahead of base with measured
+**Landed (pushed through `79f0b464`, 2026-09-27):** contraction variants spliced beside/ahead of base with measured
 wordfreq pairing frequencies + 6-byte promotion margin (`4f83fde5`, `c528ce24`); learn-funnel
 bookkeeping — manual-only selection recording, rollback of rejected/undone words, last word on
 Enter/field exit, apostrophe/hyphen tokens, password never learns (`69ce8c21`); selection decay
@@ -262,7 +262,7 @@ coverage is the limit; alternates-only mode inert on CTC
 personal dictionary; `7176eec4`..`8086f8d0`) + relabel of swipe-ML rows on correction, so on-device
 exports become a real per-user replay pool — the prerequisite for ever re-evaluating the prior.
 **Closed 2026-09-26:** whys/why's + natl/nat'l measured into `contraction_pairings.json`
-(bin-only sweep pinned in `BundledContractionDataTest`; `etoo -> eto'o` left as a REPLACE TODO);
+(bin-only sweep pinned in `BundledContractionDataTest`; `etoo -> eto'o` subsequently fixed by `b82dd386`);
 the global n-gram cap now prunes by frequency discounted by age on a persisted language-wide commit
 clock (`ContinuationBudget.globalVictims`). 
 **Round 2 (same day):** typo-tolerant tap bar (`f8fa86f6`, layout-aware adjacency, up to 2
@@ -274,13 +274,16 @@ wiring; `docs/eval/2026-09-26-static-lm-replay.md`). Typo-tolerant bar entries n
 own `SuggestionOrigin.TYPO_CORRECTION` (purple marker, "Typo correction" label + "Correction of
 typed “x”" note in all 22 locales; whole-word corrections included) instead of AUTOCORRECT.
 **Open:** static LMs for de/es/fr/it/pt/sv (S4, base vs langpack by size); apostrophe/hyphen words
-in the swipe offer need decoder changes (audit doc); possessive pairs still at slate tail;
+in the swipe offer need decoder changes (audit doc). Possessive placement is resolved by
+`341b4847`: splice after a confident top base, otherwise retain at the tail.
 **licensing:** repo side DONE 2026-09-26 — see `docs/audit/2026-09-26-data-licensing-audit.md`
 (Norvig pack removed: no redistribution grant; OpenSubtitles packs are FrequencyWords CC BY-SA 4.0
 and stay; every pack now carries `NOTICE.txt` + manifest `license`/`attribution`/`source`).
-**Still open, needs maintainer approval:** delete `langpack-en-norvig-50k.zip` from the `langpacks`
-release, re-upload the 22 repacked zips, replace the release-body SHA-256 table (audit doc §"New
-pack hashes"). Follow-up: show pack attribution in the language-pack manager UI.
+**Completed with maintainer authorization, 2026-09-27:** removed the Norvig release asset,
+replaced all 22 packs and the release description, and verified SHA-256 of every downloaded
+asset. Follow-up: show pack attribution in the language-pack manager UI.
+Local wiki build and TypeScript check pass; use `cd site && bun run build:termux`.
+Legacy wiki HTML paths redirect to canonical Astro pages during deployment.
 
 ### 0. Full-backlog campaign continuation (2026-09-01)
 
@@ -631,8 +634,8 @@ strong — but "Colemak ≥ geometric" is an inference, not a measurement. Say i
   rendering after a language re-selection with a real pack (nl is the bundled-adjacent one)
   alongside a bundled language.
 - **Manual, on the maintainer's device**: the 2026-08-26 disabled-not-hidden settings rendering
-  (Settings → Input → Advanced Prediction Settings: toggle Context-Aware off → Next-Word switch
-  should DIM, not vanish; toggle Personalized Learning off → strength slider + aggression dropdown
+  (Settings → Input → Advanced Prediction Settings: Next-Word remains enabled when
+  Context-Aware is off, per the September 26 static/learned tier split; toggle Personalized Learning off → strength slider + aggression dropdown
   should dim, and the dropdown must not open). Pure-JVM cannot see Compose rendering. Also still
   owed: Italian swipe (moved neural→geometric→CTC in one day);
   first-swipe warm-up now that neural preload is gone; a pre-v1.6.0 backup import (no `neural_*`

@@ -255,7 +255,7 @@ Termux build invocation (avoids the `#!/usr/bin/env` shebang issue):
 
 ```bash
 cd site
-bun --bun node_modules/astro/astro.js build
+bun run build:termux
 ```
 
 Should produce N+2 pages (N existing + new wiki + new spec). Check `site/dist/wiki/<cat>/<name>/index.html` and `site/dist/specs/<cat>/<name>-spec/index.html` both exist.
@@ -334,8 +334,8 @@ docs(specs): fix factual contradictions in selection-delete-spec
 ## Hard-won Lessons (v1.4.0 doc rearchitecture)
 
 - **Astro content collection schemas catch real bugs.** A typo in `status: planned` vs `status: planning` becomes a build error, not a silently-broken badge. Keep the `status` enum tight.
-- **The `docs/wiki/specs/` ↔ `web_demo/specs/` dual rendering is intentional but messy.** Astro generates `/specs/<cat>/<name>-spec/index.html`; static fallbacks live at `/specs/<name>.html`. `cp -rn` (no-clobber) in the deploy workflow ensures Astro wins where they collide. Don't try to "unify" the two — the legacy HTML pages cover topics that haven't been migrated yet.
+- **Legacy wiki URLs redirect; legacy specs still render separately.** `deploy-web-demo.yml` generates redirects from every `web_demo/wiki/**/*.html` path to the canonical Astro route; it does not publish those old wiki bodies. The `docs/wiki/specs/` ↔ `web_demo/specs/` dual rendering is intentional but messy. Astro generates `/specs/<cat>/<name>-spec/index.html`; static fallbacks live at `/specs/<name>.html`. `cp -rn` (no-clobber) in the deploy workflow ensures Astro wins where they collide. Don't try to "unify" the two — the legacy HTML pages cover topics that haven't been migrated yet.
 - **Three doc trees coexist deliberately.** `docs/wiki/specs/` is the canonical source for everything live; `docs/specs/` retains engineering-only specs (perf optimizations, ADRs, testing strategy) that don't need a public URL; `web_demo/specs/` is purely legacy fallbacks. Don't delete `docs/specs/*.md` outright — it's referenced by README.md, CLAUDE.md, TABLE_OF_CONTENTS, and specs-config.json.
 - **Spec content rots faster than wiki content.** Wiki guides describe stable user-facing behavior; specs cite specific class names + line numbers that drift on every commit. When auditing, prioritize spec verification over wiki refresh.
-- **The remark plugin's `.md` → URL rewriting is path-sensitive.** Links inside `docs/wiki/<cat>/foo.md` rewrite differently than links inside `docs/wiki/specs/<cat>/foo-spec.md`. Test cross-references via `bun --bun node_modules/astro/astro.js build` + grep the dist output before considering a link "working".
-- **Termux can't run `bun run build` directly.** The `astro` shebang points to `/usr/bin/env` which doesn't exist on Android. Use `cd site && bun --bun node_modules/astro/astro.js build` instead.
+- **The remark plugin's `.md` → URL rewriting is path-sensitive.** Links inside `docs/wiki/<cat>/foo.md` rewrite differently than links inside `docs/wiki/specs/<cat>/foo-spec.md`. Test cross-references via `bun run build:termux` + grep the dist output before considering a link "working".
+- **Termux build (verified 2026-09-27, Astro 7.3.2):** `cd site && bun run build:termux` runs `node_modules/astro/bin/astro.mjs` under Bun throughout. The old `astro/astro.js` entry no longer exists. Mixing Bun-installed glibc bindings with bionic Node can fail on Sätteri; keeping the build under Bun passed all 84 pages without native-package patches.

@@ -8,8 +8,8 @@ The context-LM corpora (Leipzig, Tatoeba) and the CTC models were already covere
 and `scripts/data/PROVENANCE.md` and are out of scope here.
 
 **Verdict source:** Fable audit, verified against the primary sources on 2026-09-26. The
-repository-side remediation below is done; the release-side actions at the end are **not** and
-require maintainer approval.
+repository-side remediation below is done; the release-side actions at the end
+were authorized on 2026-09-27 and completed the same day.
 
 ## Verdicts
 
@@ -63,11 +63,9 @@ would need the three fields; `parseManifest` already tolerates them.
 
 ### Not regenerated
 
-`web_demo/wiki/layouts/language-packs.html` is a legacy static fallback with no documented
-generator (the Astro site renders `docs/wiki/` directly — see
-`.claude/skills/wiki-documentation.md`; the deploy workflow copies `web_demo/wiki/` as-is). It
-was already stale before this audit ("All packs are generated from wordfreq") and was left
-untouched; delete or hand-update it separately.
+`web_demo/wiki/layouts/language-packs.html` retains historical content locally, but the deploy
+workflow generates a redirect to `/wiki/layouts/language-packs/`; it does not publish the old
+body. The canonical Markdown page builds successfully with Astro (verified 2026-09-27).
 
 ## New pack hashes (for the `langpacks` release body)
 
@@ -99,9 +97,12 @@ untouched; delete or hand-update it separately.
 The six script packs' `model.onnx` members are unchanged, so their `manifest.model.sha256`
 values and the app's `CtcScriptSupport` pins still match.
 
-## Outstanding release-side actions — **requires maintainer approval**
+## Release-side actions — completed 2026-09-27
 
-None of these has been done. Each touches the public `langpacks` GitHub release.
+The maintainer authorized updating the existing release in the 2026-09-27 transcript.
+Actions 1–3 below are complete. All 22 published ZIPs were downloaded again and their full
+SHA-256 hashes match the table above. No new release or tag was created.
+The reviewed body and before-state snapshot are in ignored `build/release-reconciliation/`.
 
 1. **Delete** the `langpack-en-norvig-50k.zip` asset from the `langpacks` release (the data has
    no redistribution grant; removing it from the repo does not remove the published copy).
