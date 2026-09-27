@@ -24,8 +24,15 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   TypeScript and Python mypy pass. Saga connected read-only; no app/settings changes.
 - [x] Translation structural audit: 936/936 resources in all 21 locales; indexed arguments
   and plural items match. Expanded translation guard passes 6/6 focused tests.
-- [ ] TODO: multilingual LM pilot/evaluation and pack-attribution UI. PAL design review
-  was blocked by automatic approval review; the specific external payload approval is pending.
+- [x] Authorized multilingual design review completed with PAL `gemini-3.8-flash` only;
+  accepted requirements and unmeasured reviewer claims recorded in the context-model spec.
+- [ ] TODO: multilingual LM pilot/evaluation and pack-attribution UI. Spanish generation
+  remains gated on corpus licences/pins, shipped-vocabulary extraction and measured evaluation.
+- [ ] TODO: run isolated manual `tester-release` APK workflow on
+  `testing/non-dev-apk`; production signing, artifact-only upload, no tag/release/version change.
+  Live F-Droid metadata (2026-09-27) watches `/releases/latest`, still v1.5.0.
+  Actionlint 1.7.7, YAML/shell syntax and semantic comparison of unchanged push/debug
+  behavior pass. Existing main workflows and the maintainer's checklist are untouched.
 - [ ] TODO: reconcile the disable-learning delete prompt (`privacy_forget_learned_body`)
   with swipe-correction deletion; the separate Forget dialog already names it.
 - [ ] TODO: native-speaker translation review and device visual verification remain distinct

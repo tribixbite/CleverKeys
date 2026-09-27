@@ -275,8 +275,26 @@ measure cold and warm off-main loading separately, and account for all resident 
 Start with bundled assets; imported-pack LM support would require a separate importer contract.
 The existing failed S3 swipe gate remains in force: this pilot must not enable swipe rescoring.
 
-# TODO: Spanish model generation and evaluation are not done; PAL/Gemini design-payload
-# approval is pending after automatic review blocked the external consultation.
+**External design review (2026-09-27):** with explicit maintainer approval, PAL used
+`gemini-3.8-flash` (Google provider; continuation `bf8e25aa-de4b-40bb-8470-74f29e6601db`).
+No fallback model or PAL update was used. Verdict: proceed with language-configured tooling
+and evaluation groundwork; hold Spanish asset generation until corpus licences/pins and the
+shipped vocabulary extraction are verified.
+
+Accepted review requirements: preserve English byte reproducibility; derive the Spanish
+vocabulary from its actual shipped dictionary format rather than assuming English JSON;
+verify Python/Kotlin tokenization on accents, ñ, inverted punctuation, apostrophes and numbers;
+keep evaluation text out of training/assets; retain contributor attribution; test language
+switching, dictionary filtering, privacy gates and combined resident-model memory. Validate
+asset header language against the requested language. Locale normalization must follow the
+existing supported-language contract rather than blindly stripping region/script subtags.
+
+The review's Spanish heap estimate and claim that English S1 lifts are achievable are
+**unmeasured hypotheses**, not acceptance evidence. Keep the existing thresholds as provisional
+quality gates and report actual Spanish coverage and independent-unit counts before any
+reconsideration. Do not infer that two loaded models fit the budget without measurement.
+
+# TODO: implement and evaluate the Spanish pilot; no Spanish asset has been generated.
 Evaluation:
 `docs/eval/2026-09-26-static-lm-replay.md` (tap S1 and swipe S3); provenance:
 `scripts/data/PROVENANCE.md`; attribution: `NOTICE`, Settings → Help & FAQ.

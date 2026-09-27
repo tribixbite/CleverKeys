@@ -24,6 +24,14 @@ name: Build CleverKeys APK
 
 on:
   workflow_dispatch:
+    inputs:
+      variant:
+        description: APK variant (tester-release uploads artifacts only; creates no tag/release)
+        type: choice
+        default: debug
+        options:
+          - debug
+          - tester-release
   push:
     branches:
       - main
@@ -35,6 +43,7 @@ permissions:
 
 jobs:
   Build-APK:
+    if: github.event_name != 'workflow_dispatch' || inputs.variant != 'tester-release'
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
@@ -143,3 +152,97 @@ jobs:
 
     # Tag releases are handled by release.yml workflow (not this one)
     # This workflow only creates dev releases for main branch pushes
+
+  Tester-Release:
+    # This job has no contents write token and never calls the releases API.
+    if: github.event_name == 'workflow_dispatch' && inputs.variant == 'tester-release'
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      LOCAL_BUILD: 'false'
+    steps:
+    - name: Checkout tester source
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      with:
+        persist-credentials: false
+
+    - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+
+    - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+      with:
+        cache-read-only: true
+
+    - name: Prepare build tools and icons
+      run: |
+        sdkmanager "platforms;android-34" "build-tools;34.0.0"
+        sudo apt-get update && sudo apt-get install -y imagemagick
+        ./scripts/generate_icons.sh
+
+    - name: Compile, minify, lint and test
+      # No RELEASE_KEYSTORE: normalize first, then sign with the production key below.
+      run: ./gradlew assembleRelease runPureTests lintVitalRelease --stacktrace
+
+    - name: Sign and verify production-variant APKs
+      env:
+        SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+        SIGNING_ALIAS: ${{ secrets.ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: |
+        set -euo pipefail
+        : "${SIGNING_KEY:?Missing production signing key}"
+        : "${STORE_PASSWORD:?Missing keystore password}"
+        : "${SIGNING_ALIAS:?Missing key alias}"
+        : "${KEY_PASSWORD:?Missing key password}"
+        keystore="$RUNNER_TEMP/tester-release.keystore"
+        trap 'rm -f "$keystore"' EXIT
+        umask 077
+        printf '%s' "$SIGNING_KEY" | base64 --decode > "$keystore"
+        tools="$ANDROID_HOME/build-tools/34.0.0"
+        short_sha=$(git rev-parse --short=12 HEAD)
+        mkdir -p tester-apks
+        shopt -s nullglob
+        apks=(build/outputs/apk/release/*.apk)
+        [[ ${#apks[@]} -eq 3 ]] || { echo 'Expected exactly three ABI APKs'; exit 1; }
+        for apk in "${apks[@]}"; do
+          name=$(basename "$apk" .apk)
+          output="tester-apks/${name}-tester-${short_sha}.apk"
+          "$tools/zipalign" -f -P 16 4 "$apk" "$output"
+          "$tools/apksigner" sign --ks "$keystore" \
+            --ks-pass env:STORE_PASSWORD --ks-key-alias "$SIGNING_ALIAS" \
+            --key-pass env:KEY_PASSWORD "$output"
+          certificate=$("$tools/apksigner" verify --print-certs "$output")
+          # The production certificate is also pinned in the F-Droid recipe.
+          expected='3c70de8852fca5bb279c9998d558ea7606131f1f937af35cc943eee1aedfb97e'
+          [[ "$certificate" == *"Signer #1 certificate SHA-256 digest: $expected"* ]]
+          badging=$("$tools/aapt" dump badging "$output")
+          [[ "$badging" == "package: name='tribixbite.cleverkeys' "* ]]
+          [[ "$badging" != *"application-debuggable"* ]]
+          "$tools/zipalign" -c -P 16 4 "$output"
+        done
+        # Hashes use relative names so testers can verify after extracting the artifact.
+        (cd tester-apks && sha256sum ./*.apk > SHA256SUMS)
+        printf 'Commit: %s\nVariant: release (minified, non-debuggable)\nVerbose logging: disabled\nSigning: production certificate\n' \
+          "$GITHUB_SHA" > tester-apks/BUILD.txt
+        {
+          echo '### Tester APKs — no tag or release created'
+          echo "Source commit: $GITHUB_SHA"
+          echo 'Production application ID and signing key; installs over compatible CleverKeys releases.'
+          echo 'Version is unchanged. Manual release soak is still required before an official release.'
+          echo 'Download the artifact below (GitHub sign-in required; retained for 90 days).'
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Upload tester APKs
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: cleverkeys-tester-release-${{ github.sha }}
+        path: tester-apks/
+        if-no-files-found: error
+        retention-days: 90

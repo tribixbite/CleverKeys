@@ -51,9 +51,10 @@ abiCode = baseCode * 10 + offset
 
 ### 1. Development Builds
 
-Untagged commits produce development builds:
-- **versionName**: `dev-{shortSha}` (e.g., `dev-a1b2c3d`)
-- **versionCode**: `1`
+Main-branch pushes produce debug builds in a `dev-{shortSha}` prerelease. The APK
+retains the version name and ABI-specific codes derived from `build.gradle`; the commit
+SHA labels the download, not the Android version. Its application ID has a `.debug`
+suffix so it coexists with the production app.
 
 ### 2. Creating a Release
 
@@ -221,3 +222,23 @@ git push origin v1.0.1
 git tag -a v1.1.0 -m "v1.1.0 - New features"
 git push origin v1.1.0
 ```
+
+## Tester APKs without a release
+
+Use **Build CleverKeys APK → Run workflow → variant: tester-release** on the reviewed
+source branch. The isolated job builds the existing release variant, runs pure JVM tests
+and release lint, signs with the production key, and uploads three ABI APKs plus SHA-256
+checksums as a 90-day Actions artifact. GitHub sign-in is required to download it.
+It does not bump versions, create a tag/release, or update `/releases/latest`; the job has
+only `contents: read`. Debug dispatch and existing main-push behavior remain unchanged.
+
+The APK uses `tribixbite.cleverkeys`, production signing, R8 shrinking, non-debuggable mode
+and disabled verbose logging. It installs over compatible production-signed CleverKeys;
+it does not coexist as `.debug`. Manual minified-build soak is still required before an
+official release. Do not distribute local `build-on-termux.sh` output as equivalent:
+that script enables verbose logging and can fall back to a local testing key.
+
+As verified against live fdroiddata on 2026-09-27, F-Droid checks the latest GitHub release
+body using `UpdateCheckMode: HTTP`, with `AutoUpdateMode: Version v%v`. Artifact-only runs
+do not change that input. Keep `release.yml`, version fields and F-Droid metadata untouched
+when preparing tester artifacts.
