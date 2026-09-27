@@ -232,6 +232,10 @@ Dispatch the reviewed branch explicitly (the main-branch UI does not yet define 
 gh workflow run build-apk.yml -R tribixbite/CleverKeys --ref testing/non-dev-apk -f variant=tester-release
 ```
 
+Verified tester run (2026-09-27): [download APKs and checksums](https://github.com/tribixbite/CleverKeys/actions/runs/36357920986/artifacts/10944757108)
+from source `937603513c286db0d6b94020fd9f4520f70fa498` (v2.0.0, expires 2026-12-26).
+All three downloaded APK signatures, SHA-256 hashes and non-debuggable manifests were checked.
+
 The isolated job builds the existing release variant, runs pure JVM tests
 and release lint, signs with the production key, and uploads three ABI APKs plus SHA-256
 checksums as a 90-day Actions artifact. GitHub sign-in is required to download it.

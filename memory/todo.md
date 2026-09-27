@@ -28,7 +28,7 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   accepted requirements and unmeasured reviewer claims recorded in the context-model spec.
 - [ ] TODO: multilingual LM pilot/evaluation and pack-attribution UI. Spanish generation
   remains gated on corpus licences/pins, shipped-vocabulary extraction and measured evaluation.
-- [ ] TODO: run isolated manual `tester-release` APK workflow on
+- [x] Ran isolated manual `tester-release` APK workflow on
   `testing/non-dev-apk`; production signing, artifact-only upload, no tag/release/version change.
   Live F-Droid metadata (2026-09-27) watches `/releases/latest`, still v1.5.0.
   Actionlint 1.7.7, YAML/shell syntax and semantic comparison of unchanged push/debug
@@ -39,7 +39,16 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   byte-identical to main and was not dispatched. Its current behavior was not retested.
   Second run `36357429771` passed compilation/minification/tests/release lint, then rejected
   SDK 34 zipalign's unsupported `-P 16`; corrected the tester-only alignment tool to SDK 35,
-  retaining the SDK 34 signer.
+  retaining the SDK 34 signer. Final run
+  [36357920986](https://github.com/tribixbite/CleverKeys/actions/runs/36357920986) passed:
+  release build/minification, pure JVM tests and release lint (6m48s), then signing/upload.
+  [Tester download](https://github.com/tribixbite/CleverKeys/actions/runs/36357920986/artifacts/10944757108)
+  contains all three v2.0.0 ABI APKs from `93760351`, checksums and build provenance;
+  expires 2026-12-26 and requires GitHub sign-in. Re-downloaded every APK and independently
+  verified SHA-256, production certificate, `tribixbite.cleverkeys` and non-debuggable flag.
+  No device install/soak was performed. Official latest remains v1.5.0 (release ID 354389682),
+  release workflow last run remains 29411344852; remote main remains `8aba4a8f`.
+  All work is committed on `testing/non-dev-apk`; no main merge/push or tag was performed.
 - [ ] TODO: reconcile the disable-learning delete prompt (`privacy_forget_learned_body`)
   with swipe-correction deletion; the separate Forget dialog already names it.
 - [ ] TODO: native-speaker translation review and device visual verification remain distinct
