@@ -68,6 +68,14 @@ class TranslationCoverageDriftTest {
         "backup_protection_state_keystore", "backup_protection_state_legacy",
         "backup_protection_state_not_set", "backup_protection_status",
         "backup_passphrase_storage_unavailable",
+        // September 26: privacy disclosures and reversible suggestion-bar actions.
+        "privacy_learned_source_swipe_corrections", "privacy_learned_source_selections",
+        "privacy_learned_forget_body", "privacy_learned_sources", "privacy_learned_sources_none",
+        "help_third_party_data", "provenance_origin_typo_correction",
+        "provenance_note_typo_correction_of", "suggestion_tap_again_to_undo",
+        "suggestion_prefer_when_swiping", "suggestion_prefer_when_swiping_decline",
+        "suggestion_prefer_when_swiping_added",
+
     ) + convertedCountPlurals
 
     /**
@@ -96,6 +104,7 @@ class TranslationCoverageDriftTest {
             if (name.isNullOrEmpty()) continue
             // textContent flattens <item> children of a <plurals> and any inline markup,
             // which is exactly the granularity the copy-paste guard needs.
+            assertTrue("${file.path}: duplicate resource $name", name !in out)
             out[name] = Entry(node.tagName, node.textContent.orEmpty().trim())
         }
         return out
@@ -212,6 +221,25 @@ class TranslationCoverageDriftTest {
                         expected.getValue(name), found
                     )
                 }
+            }
+        }
+    }
+
+    /**
+     * Preserve argument positions/types in the recent disclosure and action strings.
+     * Indexed tokens avoid mistaking literal percentages (including Hungarian %-a) for
+     * formatter arguments; the Android lint gate separately checks formatting syntax.
+     */
+    @Test fun pinnedStringsPreserveIndexedArguments() {
+        val spec = Regex("%[0-9]+\\$[-#+ 0,(]*[0-9]*(?:\\.[0-9]+)?[a-zA-Z]")
+        val perLocale = localeDirs.associateWith { parse(File(it, "strings.xml")) }
+        for (name in required - requiredPlurals) {
+            val expected = spec.findAll(defaultEntries.getValue(name).value)
+                .map { it.value }.sorted().toList()
+            for ((dir, entries) in perLocale) {
+                val actual = spec.findAll(entries.getValue(name).value)
+                    .map { it.value }.sorted().toList()
+                assertEquals("${dir.name}: $name argument mismatch", expected, actual)
             }
         }
     }

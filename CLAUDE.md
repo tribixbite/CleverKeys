@@ -229,3 +229,6 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 
 ### Local wiki build (2026-09-27)
 - `cd site && bun run build:termux` keeps Astro 7 and its native bindings under Bun; the entry is `astro/bin/astro.mjs`, not the removed `astro/astro.js`. Verified 84 pages. Legacy wiki HTML paths are generated redirects in deployment, not copies of their old bodies.
+
+### Static LM language guard (2026-09-27)
+- `build_static_lm.py --lang` is intentionally restricted to `en`: the old free-form flag changed only output naming/header while retaining English corpus/vocabulary/evaluation. Add a language configuration and measured gates before widening it.

@@ -81,7 +81,7 @@ import struct
 import sys
 import tarfile
 import urllib.request
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterable, Iterator
@@ -399,10 +399,13 @@ class Model:
     total_tokens: float
 
 
-def combine(corpora: list[tuple[CorpusCounts, float]]) -> tuple[Counter, Counter, Counter, float]:
-    uni: Counter = Counter()
-    succ: Counter = Counter()
-    bi: Counter = Counter()
+def combine(corpora: list[tuple[CorpusCounts, float]]) -> tuple[
+    dict[str, float], dict[str, float], dict[tuple[str, str], float], float
+]:
+    """Combine integer observations into fractional weighted counts without rounding."""
+    uni: defaultdict[str, float] = defaultdict(float)
+    succ: defaultdict[str, float] = defaultdict(float)
+    bi: defaultdict[tuple[str, str], float] = defaultdict(float)
     n = 0.0
     for c, w in corpora:
         if w == 0.0:
@@ -417,7 +420,10 @@ def combine(corpora: list[tuple[CorpusCounts, float]]) -> tuple[Counter, Counter
     return uni, succ, bi, n
 
 
-def prune(uni: Counter, succ: Counter, bi: Counter, n: float) -> Model:
+def prune(
+    uni: dict[str, float], succ: dict[str, float],
+    bi: dict[tuple[str, str], float], n: float,
+) -> Model:
     by_prev: dict[str, list[tuple[str, float]]] = {}
     for (a, b), cnt in bi.items():
         if cnt >= MIN_COUNT - 1e-9:
@@ -561,7 +567,11 @@ def corpus_reference(other: CorpusCounts) -> Callable[[str], float]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--lang", default="en")
+    # Until sources, vocabulary and evaluation are configured per language, accepting another
+    # header code would silently relabel the English model and overwrite that language's asset.
+    # TODO: expand these choices only with a pinned, evaluated language-specific configuration.
+    ap.add_argument("--lang", choices=("en",), default="en",
+                    help="model language (only English has configured corpora and evaluation)")
     ap.add_argument("--cache", type=Path, default=CACHE)
     ap.add_argument("--out-dir", type=Path, default=REPO / "src/main/assets/lm")
     ap.add_argument("--contributors", type=Path, default=REPO / "scripts/data/tatoeba-contributors-en.txt")
@@ -588,7 +598,8 @@ def main() -> int:
     heldout_path = args.eval_dir / f"heldout_{args.lang}.txt"
     seen: set[str] = set()
     with open(heldout_path, "w", encoding="utf-8") as held:
-        sink = lambda s: held.write(s + "\n")  # noqa: E731
+        def sink(sentence: str) -> None:
+            held.write(sentence + "\n")
         leipzig, leipzig_train = count_corpus("leipzig", leipzig_lines(paths["leipzig"]), vocab, seen, sink)
         tatoeba, tatoeba_train = count_corpus("tatoeba", tatoeba_lines(paths["tatoeba"]), vocab, seen, sink)
     del seen

@@ -4,14 +4,14 @@
 
 Comprehensive testing strategy for CleverKeys Android keyboard, designed to enable testing without ADB/emulator dependencies.
 
-## Current State (2026-09-01)
+## Current State (2026-09-27)
 
 **Measured, not estimated** — the two on-device suites were re-run for this line:
 
 | Suite | Count | How it was obtained |
 |---|---|---|
-| Pure JVM | **2093** green | `scripts/gradle-guard.sh runPureTests`, 2026-09-01, 81 s |
-| MockK | **343** green | `scripts/gradle-guard.sh runMockTests`, 2026-09-01, 56 s |
+| Pure JVM | **2610** green | `scripts/gradle-guard.sh lintDebug runPureTests runMockTests`, 2026-09-27, pure suite 125 s |
+| MockK | **859** green | same guarded run, 2026-09-27, mock suite 156 s |
 | Instrumented | 1395 / 0 failures | last full ew-cli sweep, 2026-08-18 — NOT re-run for this update (needs the device + `EW_API_TOKEN`), so treat it as a floor, not a current count |
 
 Every other count in this document is a DATED SNAPSHOT and is labelled as such. Where a
@@ -30,6 +30,38 @@ snapshot and this section disagree, this section wins.
 - `OnnxPredictionTest.kt.local` - ONNX prediction basics (renamed `.kt.local` to exclude
   it from CI compilation — commit `afbd2bed`; not part of any suite)
 - `MockClasses.kt` - Mock implementations
+
+## Translation verification (2026-09-27)
+
+Structural audit: all 21 locale files parse, preserve resource kinds and indexed arguments,
+and provide `other` plus matching arguments in every plural item. Each contains all 936
+translatable default resources; the 19 default-only resources explicitly use
+`translatable="false"`. Literal percentages in `formatted="false"` strings and Hungarian
+`%-a` are not formatter arguments. Android lint remains the formatting-syntax gate.
+`TranslationCoverageDriftTest` now includes the September privacy disclosures, typo provenance,
+swipe-preference offer and tap-again undo strings; 6/6 focused cases pass. It rejects duplicate
+resource names and checks indexed argument identity in pinned strings.
+
+For semantic review, provide the English source, feature behavior, screenshot/context, and a
+shared terminology list. Review privacy and irreversible actions first: recording vs reading,
+what gets deleted, what remains, and whether an action is reversible. Independent review and
+blind back-translation can identify disagreements, but agreement does not certify fluency.
+Record reviewer language competence and unresolved wording rather than calling machine output
+native-reviewed. The existing review found vocabulary inconsistencies worth native review
+(e.g. Czech swipování/tažení and Indonesian geser/usap across the source label and delete dialog).
+An English-copy scan also flagged Filipino `import_preview_source_screen` and
+`provenance_aggression` (the related `input_learning_aggression_title` is English too).
+# TODO: native review should distinguish intended technical borrowing from untranslated copy.
+The shared `learning_data_phrase_row` is a placeholder/arrow/count format, not English prose.
+
+# TODO: Native-speaker review of new strings; verify long text, enlarged fonts, TalkBack,
+# and Persian RTL on a dedicated test phone/emulator. Resize screenshots below 2000 pixels
+# in both dimensions and below 4 MB before processing. No host-phone UI tests.
+
+A second destructive-action prompt, `privacy_forget_learned_body` (shown when disabling
+learning), still enumerates phrase patterns, usage and selections without naming swipe
+corrections. The shared clearing function does clear them; the explicit Forget dialog already
+names them. # TODO: reconcile that second prompt in all locales with a semantic review.
 
 ## Architecture: Humble Object Pattern
 

@@ -249,7 +249,35 @@ loads on `BigramModel`'s seed thread and then serves BOTH static products:
   conditional probability; the curated `en_bigrams.json` pairs only fill slots the LM leaves
   empty (14 of its 319 pairs, e.g. "good morning", are outside the corpus top-20).
 
-Other languages keep the hardcoded tables and JSON seeds until they get an LM. Evaluation:
+Other languages keep the hardcoded tables and JSON seeds until they get an LM.
+
+**Multilingual follow-through (2026-09-27):** runtime asset lookup already uses
+`lm/<language>.cklm`, but the builder's corpus pins, vocabulary, contraction forms, wordfreq
+reference and evaluation inputs are English-only. Merely passing `--lang es` formerly wrote
+English counts with a Spanish header; the CLI now rejects unsupported language codes before
+any corpus reads or output writes. # TODO: implement a language configuration only after the
+required design review and language-specific evaluation.
+
+Proposed first pilot: Spanish, using a pinned Spanish corpus and the shipped Spanish
+vocabulary, with Spanish surface forms preserved (including accents, ñ and contractions).
+Keep source sentences/evaluation data out of assets. Check corpus licences at the actual
+snapshot, retain required attribution, and deduplicate across training/development/test before
+selection. UD Spanish-GSD is a possible out-of-domain evaluation source, not a training source:
+its [upstream README](https://github.com/UniversalDependencies/UD_Spanish-GSD) distinguishes
+annotation licensing from underlying text. Leipzig's download/usage pages returned a bot
+challenge during this investigation; a new Spanish source/licence snapshot is not yet verified.
+
+Preserve English byte reproducibility. Use the existing S1 gates (+5 pt prefix-1 top-3,
++2 pt prefix-2, no prefix-3 or empty-context regression), compare next-word against Spanish
+seeds, and report distinct sentences/contexts alongside token-position counts. Test production
+Kotlin tokenization and scoring, not only the Python model. Bound each model to 512 KiB,
+measure cold and warm off-main loading separately, and account for all resident languages.
+Start with bundled assets; imported-pack LM support would require a separate importer contract.
+The existing failed S3 swipe gate remains in force: this pilot must not enable swipe rescoring.
+
+# TODO: Spanish model generation and evaluation are not done; PAL/Gemini design-payload
+# approval is pending after automatic review blocked the external consultation.
+Evaluation:
 `docs/eval/2026-09-26-static-lm-replay.md` (tap S1 and swipe S3); provenance:
 `scripts/data/PROVENANCE.md`; attribution: `NOTICE`, Settings → Help & FAQ.
 
