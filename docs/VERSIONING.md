@@ -232,6 +232,14 @@ Dispatch the reviewed branch explicitly (the main-branch UI does not yet define 
 gh workflow run build-apk.yml -R tribixbite/CleverKeys --ref testing/non-dev-apk -f variant=tester-release
 ```
 
+Public direct APK downloads (added 2026-09-28):
+[CleverKeys v2.0.0 tester preview](https://github.com/tribixbite/CleverKeys/releases/tag/dev-8aba4a8).
+GitHub requires a release tag, so this reuses the existing `dev-8aba4a8` prerelease without
+creating or moving a tag. Choose the `*-tester-937603513c28.apk` asset for the production
+variant; the original `CleverKeys-8aba4a8-*.apk` assets remain debug builds. These are the
+same verified Actions APKs below, individually hosted without the Actions ZIP/login gate.
+The prerelease stays non-latest; F-Droid's latest-release input remains v1.5.0.
+
 Verified tester run (2026-09-27): [download APKs and checksums](https://github.com/tribixbite/CleverKeys/actions/runs/36357920986/artifacts/10944757108)
 from source `937603513c286db0d6b94020fd9f4520f70fa498` (v2.0.0, expires 2026-12-26).
 All three downloaded APK signatures, SHA-256 hashes and non-debuggable manifests were checked.

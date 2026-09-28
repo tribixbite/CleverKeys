@@ -1,6 +1,6 @@
 # Current work queue
 
-Updated: 2026-09-27. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
+Updated: 2026-09-28. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
 Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/2026-08-30-full-backlog-campaign.md).
 
 The September 1 campaign baseline was `5fb58037`; subsequent work through `79f0b464`
@@ -53,6 +53,20 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   with swipe-correction deletion; the separate Forget dialog already names it.
 - [ ] TODO: native-speaker translation review and device visual verification remain distinct
   from automated structural checks; preserve the maintainer's manual-checklist edits.
+
+## September 28 tester distribution
+
+- [x] Per maintainer request, attached the three GitHub-built production-signed tester APKs
+  from run `36357920986` to the existing `dev-8aba4a8` prerelease and titled it
+  [CleverKeys v2.0.0 tester preview](https://github.com/tribixbite/CleverKeys/releases/tag/dev-8aba4a8).
+  Added direct APK links, SHA256SUMS and BUILD.txt; preserved all original debug assets and
+  clearly labeled the two variants. Application source/build configuration at `93760351`
+  equals the existing tag's `8aba4a8f`; differences are tester workflow/docs only.
+- [x] GitHub asset digests and all three re-downloaded release-hosted APK hashes match the
+  verified Actions output. Same prerelease ID/tag; no new/moved tag. Official latest release
+  ID/body remains v1.5.0, and release.yml's last run remains `29411344852`.
+  Live F-Droid recipe still reads `/releases/latest`; no update input changed.
+- [ ] TODO: minified device soak and Spanish corpus/vocabulary/evaluation gates remain open.
 
 ## Maintainer/release gates
 
