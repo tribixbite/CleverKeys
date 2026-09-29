@@ -1,13 +1,29 @@
 package tribixbite.cleverkeys.ui.settings
 
 import android.widget.Toast
+import androidx.annotation.StringRes
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 
 /**
+ * Swipe sensitivity presets offered in Gesture Tuning.
+ *
+ * The preset is never persisted — it is derived from the three stored thresholds — so the
+ * enum is the only identifier; [labelRes] is what the dropdown shows (localized). Keeping the
+ * identifier separate from the label means switching the app language cannot break the
+ * "which preset is active" match (it previously compared English label text).
+ */
+internal enum class SwipeSensitivityPreset(@StringRes val labelRes: Int) {
+    LOW(R.string.settings_sensitivity_preset_low),
+    MEDIUM(R.string.settings_sensitivity_preset_medium),
+    HIGH(R.string.settings_sensitivity_preset_high),
+    CUSTOM(R.string.settings_sensitivity_preset_custom),
+}
+
+/**
  * Get current swipe sensitivity preset based on current values
  */
-internal fun SettingsActivity.getSwipeSensitivityPreset(): String {
+internal fun SettingsActivity.getSwipeSensitivityPreset(): SwipeSensitivityPreset {
         // Low: Higher thresholds = less sensitive
         val lowPreset = swipeMinDistance == 80f && swipeMinKeyDistance == 60f && swipeMinDwellTime == 30
         // Medium: Default values
@@ -16,34 +32,34 @@ internal fun SettingsActivity.getSwipeSensitivityPreset(): String {
         val highPreset = swipeMinDistance == 30f && swipeMinKeyDistance == 25f && swipeMinDwellTime == 5
 
         return when {
-            lowPreset -> "Low"
-            mediumPreset -> "Medium"
-            highPreset -> "High"
-            else -> "Custom"
+            lowPreset -> SwipeSensitivityPreset.LOW
+            mediumPreset -> SwipeSensitivityPreset.MEDIUM
+            highPreset -> SwipeSensitivityPreset.HIGH
+            else -> SwipeSensitivityPreset.CUSTOM
         }
 }
 
 /**
  * Apply swipe sensitivity preset values
  */
-internal fun SettingsActivity.applySwipeSensitivityPreset(preset: String) {
+internal fun SettingsActivity.applySwipeSensitivityPreset(preset: SwipeSensitivityPreset) {
         when (preset) {
-            "Low" -> {
+            SwipeSensitivityPreset.LOW -> {
                 swipeMinDistance = 80f
                 swipeMinKeyDistance = 60f
                 swipeMinDwellTime = 30
             }
-            "Medium" -> {
+            SwipeSensitivityPreset.MEDIUM -> {
                 swipeMinDistance = 50f
                 swipeMinKeyDistance = 40f
                 swipeMinDwellTime = 15
             }
-            "High" -> {
+            SwipeSensitivityPreset.HIGH -> {
                 swipeMinDistance = 30f
                 swipeMinKeyDistance = 25f
                 swipeMinDwellTime = 5
             }
-            "Custom" -> return // Don't change values
+            SwipeSensitivityPreset.CUSTOM -> return // Don't change values
         }
         // Save the new values
         saveSetting("swipe_min_distance", swipeMinDistance)

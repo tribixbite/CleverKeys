@@ -199,7 +199,7 @@ fun CategoryChip(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = category.displayName,
+                text = stringResource(category.labelRes),
                 style = MaterialTheme.typography.labelLarge,
                 color = textColor,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
@@ -227,6 +227,7 @@ fun ThemePreviewCard(
     }
 
     var showMenu by remember { mutableStateOf(false) }
+    val resources = LocalContext.current.resources
 
     Card(
         modifier = modifier
@@ -249,13 +250,13 @@ fun ThemePreviewCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = theme.name,
+                        text = theme.displayName(resources),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1
                     )
                     Text(
-                        text = theme.description,
+                        text = theme.displayDescription(resources),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1

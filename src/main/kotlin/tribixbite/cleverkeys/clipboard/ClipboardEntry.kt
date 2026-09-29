@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
+import android.content.res.Resources
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
@@ -42,27 +43,11 @@ class ClipboardEntry(
 
     /** Whether this entry has a renderable thumbnail */
     val hasThumbnail: Boolean get() = thumbnailBlob != null
-    /**
-     * Format timestamp as relative time (e.g., "2h ago", "Yesterday")
-     */
-    fun getRelativeTime(): String {
-        val now = System.currentTimeMillis()
-        val diff = now - timestamp
+    /** Age of this entry as a locale-free value; resolve with [RelativeTime.format]. */
+    fun relativeTime(): RelativeTime = RelativeTime.of(timestamp)
 
-        val seconds = diff / 1000
-        val minutes = seconds / 60
-        val hours = minutes / 60
-        val days = hours / 24
-
-        return when {
-            seconds < 60 -> "Just now"
-            minutes < 60 -> "${minutes}m ago"
-            hours < 24 -> "${hours}h ago"
-            days == 1L -> "Yesterday"
-            days < 7 -> "${days}d ago"
-            else -> dateFormat().format(Date(timestamp))
-        }
-    }
+    /** Localized relative age (e.g. "2h ago", "Yesterday"), shown after the entry text. */
+    fun getRelativeTime(resources: Resources): String = relativeTime().format(resources)
 
     /**
      * Format timestamp as date string (e.g., "Nov 12")
@@ -79,7 +64,7 @@ class ClipboardEntry(
      */
     fun getFormattedText(context: Context): Spannable {
         // Use non-breaking spaces (\u00A0) so the time suffix never wraps mid-unit
-        val timeStr = "\u00A0\u00B7\u00A0${getRelativeTime().replace(' ', '\u00A0')}"
+        val timeStr = "\u00A0\u00B7\u00A0${getRelativeTime(context.resources).replace(' ', '\u00A0')}"
         val contentLen = content.length
 
         // Append directly to builder — avoids content + timeStr intermediate String
@@ -101,7 +86,7 @@ class ClipboardEntry(
         // Built per call so the user's current default locale is honored even
         // after a runtime locale change (SimpleDateFormat is not thread-safe, so
         // a fresh instance also avoids sharing mutable state across threads).
-        private fun dateFormat() = SimpleDateFormat("MMM d", Locale.getDefault())
+        internal fun dateFormat() = SimpleDateFormat("MMM d", Locale.getDefault())
 
         // Cache the secondary text color to avoid per-call resource lookups
         private var cachedSecondaryColor: Int? = null
@@ -110,6 +95,54 @@ class ClipboardEntry(
             return cachedSecondaryColor ?: ContextCompat.getColor(
                 context, android.R.color.secondary_text_dark
             ).also { cachedSecondaryColor = it }
+        }
+    }
+}
+
+/**
+ * Relative age of a clipboard / pinned / todo entry, shared by [ClipboardEntry], [PinnedEntry]
+ * and [TodoEntry] (which previously each carried a copy of the same English-only formatter).
+ *
+ * The bucketing is pure and locale-free so it can be asserted without resources; [format]
+ * resolves the user-facing text from string/plural resources in the app locale. Buckets:
+ * under 60 s → [JustNow]; under 60 min → [MinutesAgo]; under 24 h → [HoursAgo];
+ * exactly one whole day → [Yesterday]; under 7 days → [DaysAgo]; otherwise [OnDate].
+ */
+sealed class RelativeTime {
+    object JustNow : RelativeTime()
+    data class MinutesAgo(val minutes: Int) : RelativeTime()
+    data class HoursAgo(val hours: Int) : RelativeTime()
+    object Yesterday : RelativeTime()
+    data class DaysAgo(val days: Int) : RelativeTime()
+
+    /** Seven days or older: shown as a short date ("MMM d" in the default locale). */
+    data class OnDate(val timestamp: Long) : RelativeTime()
+
+    /** Localized display text for this age. */
+    fun format(resources: Resources): String = when (this) {
+        JustNow -> resources.getString(R.string.clipboard_time_just_now)
+        is MinutesAgo -> resources.getQuantityString(R.plurals.clipboard_time_minutes_ago, minutes, minutes)
+        is HoursAgo -> resources.getQuantityString(R.plurals.clipboard_time_hours_ago, hours, hours)
+        Yesterday -> resources.getString(R.string.clipboard_time_yesterday)
+        is DaysAgo -> resources.getQuantityString(R.plurals.clipboard_time_days_ago, days, days)
+        is OnDate -> ClipboardEntry.dateFormat().format(Date(timestamp))
+    }
+
+    companion object {
+        /** Bucket the age of [timestamp] (epoch millis) relative to [now]. */
+        fun of(timestamp: Long, now: Long = System.currentTimeMillis()): RelativeTime {
+            val seconds = (now - timestamp) / 1000
+            val minutes = seconds / 60
+            val hours = minutes / 60
+            val days = hours / 24
+            return when {
+                seconds < 60 -> JustNow
+                minutes < 60 -> MinutesAgo(minutes.toInt())
+                hours < 24 -> HoursAgo(hours.toInt())
+                days == 1L -> Yesterday
+                days < 7 -> DaysAgo(days.toInt())
+                else -> OnDate(timestamp)
+            }
         }
     }
 }

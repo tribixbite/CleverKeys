@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -22,6 +23,29 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import tribixbite.cleverkeys.backup.*
+
+/**
+ * Production [ResultText]: resolves through the given [android.content.res.Resources], i.e. the
+ * current locale. Lives here (an Android file) so `BackupRestoreResultMessages.kt` stays pure.
+ */
+internal class ResourcesResultText(private val resources: android.content.res.Resources) : ResultText {
+    override fun string(id: Int, vararg args: Any): String =
+        if (args.isEmpty()) resources.getString(id) else resources.getString(id, *args)
+
+    override fun plural(id: Int, count: Int, vararg args: Any): String =
+        resources.getQuantityString(id, count, *args)
+}
+
+/**
+ * [ResultText] for the pure render helpers called from composables. Keyed on the configuration
+ * so a locale change recomposes with freshly resolved text.
+ */
+@Composable
+internal fun rememberResultText(): ResultText {
+    val configuration = LocalConfiguration.current
+    val resources = LocalContext.current.resources
+    return remember(configuration, resources) { ResourcesResultText(resources) }
+}
 
 /**
  * Top-level entry point for the settings import preview.
@@ -153,19 +177,21 @@ private fun SettingsPreviewTopBar(
  * header's export timestamp — a replayed old backup is then visibly stale before the user taps
  * Apply — and §9 owes a plaintext import the "re-export encrypted" advisory. Both were absent.
  *
- * [formatTimestamp] is injectable purely so tests are timezone-independent.
+ * [formatTimestamp] is injectable purely so tests are timezone-independent; [text] resolves the
+ * copy (string resources) so the helper needs no Context.
  */
 internal fun renderBackupSourceNotice(
     source: BackupSourceInfo,
+    text: ResultText,
     formatTimestamp: (Long) -> String = ::formatBackupTimestamp,
 ): String = if (source.encrypted) {
     val ts = source.exportTimestampMs
     // A CKENC1 header always carries a timestamp; the null branch is defensive, not reachable
     // through readJsonWithSource, and degrades to the badge alone rather than printing "null".
-    if (ts == null) "🔒 Encrypted backup"
-    else "🔒 Encrypted backup — exported ${formatTimestamp(ts)}"
+    if (ts == null) text.string(R.string.import_preview_source_encrypted)
+    else text.string(R.string.import_preview_source_encrypted_at, formatTimestamp(ts))
 } else {
-    "Unencrypted backup — consider re-exporting encrypted."
+    text.string(R.string.import_preview_source_plaintext)
 }
 
 /** Default rendering of a container's export timestamp: device timezone, minute precision. */
@@ -181,7 +207,7 @@ internal fun formatBackupTimestamp(timestampMs: Long): String =
 @Composable
 internal fun BackupSourceNotice(source: BackupSourceInfo, modifier: Modifier = Modifier) {
     Text(
-        text = renderBackupSourceNotice(source),
+        text = renderBackupSourceNotice(source, rememberResultText()),
         modifier = modifier,
         fontSize = 12.sp,
         fontWeight = if (source.encrypted) FontWeight.SemiBold else FontWeight.Normal,
@@ -268,7 +294,7 @@ private fun SettingsChangeRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(change.key, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             Text(
-                text = renderDelta(change),
+                text = renderDelta(change, rememberResultText()),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -277,7 +303,12 @@ private fun SettingsChangeRow(
     }
 }
 
-internal fun renderDelta(change: SettingsChange): String {
+/*
+ * Diff rendering (below): every word is a string resource resolved through [ResultText]. The
+ * `+` / `−` / `~` bucket markers are language-neutral symbols and stay in code; every `→`
+ * (value/count change) lives inside a resource so RTL translations can reverse it.
+ */
+internal fun renderDelta(change: SettingsChange, text: ResultText): String {
     // Specialized JSON-blob diff path: when BOTH sides are JsonBlob, compute
     // a structured diff (added/removed/changed names) instead of rendering
     // each side independently as a count. The combined-string output is more
@@ -285,25 +316,26 @@ internal fun renderDelta(change: SettingsChange): String {
     val cur = change.current
     val prop = change.proposed
     if (cur is PrefValue.JsonBlob && prop is PrefValue.JsonBlob) {
-        return renderJsonBlobDelta(cur.raw, prop.raw)
+        return renderJsonBlobDelta(cur.raw, prop.raw, text)
     }
     // Asymmetric case (ADDED with Unset → JsonBlob, or vice versa): fall
     // through to per-side rendering so the dialog shows "(none) → [3 layouts]".
-    val current = renderPrefValue(cur)
-    val proposed = renderPrefValue(prop)
-    return "$current  \u2192  $proposed"
+    val current = renderPrefValue(cur, text)
+    val proposed = renderPrefValue(prop, text)
+    // A resource, not "$current → $proposed": RTL locales point the change arrow the other way.
+    return text.string(R.string.import_preview_value_change, current, proposed)
 }
 
-internal fun renderPrefValue(v: PrefValue): String = when (v) {
+internal fun renderPrefValue(v: PrefValue, text: ResultText): String = when (v) {
     // "(none)" reads more naturally than "(unset)" for multi-language slots
     // (`pref_secondary_language` → "de" → "(none) → 'de'") and for any
     // unknown key that falls through to the Unset sentinel.
-    PrefValue.Unset -> "(none)"
+    PrefValue.Unset -> text.string(R.string.import_preview_value_none)
     is PrefValue.Bool -> v.v.toString()
     is PrefValue.IntV -> v.v.toString()
     is PrefValue.FloatV -> v.v.toString()
     is PrefValue.Str -> "\"${v.v}\""
-    is PrefValue.JsonBlob -> renderJsonBlobSummary(v.raw)
+    is PrefValue.JsonBlob -> renderJsonBlobSummary(v.raw, text)
 }
 
 /**
@@ -314,27 +346,29 @@ internal fun renderPrefValue(v: PrefValue): String = when (v) {
  *   - `[N items]` for other array shapes
  *   - `(JSON change)` for malformed input
  */
-internal fun renderJsonBlobSummary(raw: String): String = try {
+internal fun renderJsonBlobSummary(raw: String, text: ResultText): String = try {
     val el = com.google.gson.JsonParser.parseString(raw)
     when {
-        el.isJsonArray -> renderArraySummary(el.asJsonArray)
-        el.isJsonObject -> "{${el.asJsonObject.size()} keys}"
-        else -> "(JSON change)"
+        el.isJsonArray -> renderArraySummary(el.asJsonArray, text)
+        el.isJsonObject -> el.asJsonObject.size().let { n ->
+            text.plural(R.plurals.import_preview_json_object_keys, n, n)
+        }
+        else -> text.string(R.string.import_preview_json_change)
     }
 } catch (_: Exception) {
-    "(JSON change)"
+    text.string(R.string.import_preview_json_change)
 }
 
-private fun renderArraySummary(arr: com.google.gson.JsonArray): String {
-    if (arr.size() == 0) return "[empty]"
+private fun renderArraySummary(arr: com.google.gson.JsonArray, text: ResultText): String {
+    val size = arr.size()
+    if (size == 0) return text.string(R.string.import_preview_json_empty)
     val isLayouts = arr.all { it.isJsonObject && it.asJsonObject.has("name") }
-    if (!isLayouts) return "[${arr.size()} item${if (arr.size() == 1) "" else "s"}]"
+    if (!isLayouts) return text.plural(R.plurals.import_preview_json_items, size, size)
     val names = arr.map { it.asJsonObject.get("name").asString }
-    val label = "${arr.size()} layout${if (arr.size() == 1) "" else "s"}"
     // Truncate the names list at ~50 chars so the row stays readable on
     // narrow phone widths. Excess names land in a "+N more" suffix.
-    val joined = truncateNameList(names, maxLen = 50)
-    return "[$label: $joined]"
+    val joined = truncateNameList(names, maxLen = 50, text = text)
+    return text.plural(R.plurals.import_preview_json_layouts, size, size, joined)
 }
 
 /**
@@ -348,31 +382,32 @@ private fun renderArraySummary(arr: com.google.gson.JsonArray): String {
  *   - `[3 keys → 4 keys]`                     for other JSON objects
  *   - `(JSON change)`                         for malformed / mixed shapes
  */
-internal fun renderJsonBlobDelta(curRaw: String, propRaw: String): String = try {
+internal fun renderJsonBlobDelta(curRaw: String, propRaw: String, text: ResultText): String = try {
     val cur = com.google.gson.JsonParser.parseString(curRaw)
     val prop = com.google.gson.JsonParser.parseString(propRaw)
     when {
-        cur.isJsonArray && prop.isJsonArray -> renderArrayDelta(cur.asJsonArray, prop.asJsonArray)
-        cur.isJsonObject && prop.isJsonObject -> renderObjectDelta(cur.asJsonObject, prop.asJsonObject)
-        else -> "(JSON change)"
+        cur.isJsonArray && prop.isJsonArray -> renderArrayDelta(cur.asJsonArray, prop.asJsonArray, text)
+        cur.isJsonObject && prop.isJsonObject -> renderObjectDelta(cur.asJsonObject, prop.asJsonObject, text)
+        else -> text.string(R.string.import_preview_json_change)
     }
 } catch (_: Exception) {
-    "(JSON change)"
+    text.string(R.string.import_preview_json_change)
 }
 
 private fun renderArrayDelta(
     cur: com.google.gson.JsonArray,
     prop: com.google.gson.JsonArray,
+    text: ResultText,
 ): String {
     // Layouts: array of objects with `name` field — diff by name + per-layout
     // deep-diff (key-count delta) for shared names.
     val curIsLayouts = cur.size() > 0 && cur.all { it.isJsonObject && it.asJsonObject.has("name") }
     val propIsLayouts = prop.size() > 0 && prop.all { it.isJsonObject && it.asJsonObject.has("name") }
     if (curIsLayouts && propIsLayouts) {
-        return renderLayoutsDelta(cur, prop)
+        return renderLayoutsDelta(cur, prop, text)
     }
-    // Generic array — count delta.
-    return "[${cur.size()} → ${prop.size()} item${if (prop.size() == 1 && cur.size() == 1) "" else "s"}]"
+    // Generic array — count delta; the noun agrees with the proposed count.
+    return text.plural(R.plurals.import_preview_json_items_delta, prop.size(), cur.size(), prop.size())
 }
 
 /**
@@ -387,6 +422,7 @@ private fun renderArrayDelta(
 private fun renderLayoutsDelta(
     cur: com.google.gson.JsonArray,
     prop: com.google.gson.JsonArray,
+    text: ResultText,
 ): String {
     val curByName = cur.associate { it.asJsonObject.get("name").asString to it.asJsonObject }
     val propByName = prop.associate { it.asJsonObject.get("name").asString to it.asJsonObject }
@@ -398,7 +434,11 @@ private fun renderLayoutsDelta(
     val keyCountChanges = shared.mapNotNull { name ->
         val curKeys = safeKeyCount(curByName[name])
         val propKeys = safeKeyCount(propByName[name])
-        if (curKeys != propKeys) "$name: $curKeys→$propKeys keys" else null
+        if (curKeys != propKeys) {
+            text.plural(R.plurals.import_preview_layout_key_delta, propKeys, name, curKeys, propKeys)
+        } else {
+            null
+        }
     }
     // Shared layouts whose objects differ but key count is the same.
     val internalChanges = shared.count { name ->
@@ -409,21 +449,22 @@ private fun renderLayoutsDelta(
     val pureUnchanged = shared.size - keyCountChanges.size - internalChanges
 
     val parts = mutableListOf<String>()
-    if (added.isNotEmpty()) parts += "+ ${truncateNameList(added.toList(), maxLen = 30)}"
-    if (removed.isNotEmpty()) parts += "− ${truncateNameList(removed.toList(), maxLen = 30)}"
+    if (added.isNotEmpty()) parts += "+ ${truncateNameList(added.toList(), maxLen = 30, text = text)}"
+    if (removed.isNotEmpty()) parts += "− ${truncateNameList(removed.toList(), maxLen = 30, text = text)}"
     if (keyCountChanges.isNotEmpty()) {
-        parts += "~ ${truncateNameList(keyCountChanges, maxLen = 40)}"
+        parts += "~ ${truncateNameList(keyCountChanges, maxLen = 40, text = text)}"
     }
     if (internalChanges > 0) {
-        parts += "$internalChanges layout${if (internalChanges == 1) "" else "s"} with internal changes"
+        parts += text.plural(R.plurals.import_preview_layouts_internal_changes, internalChanges, internalChanges)
     }
-    if (pureUnchanged > 0) parts += "($pureUnchanged unchanged)"
-    return if (parts.isEmpty()) "[no differences]" else parts.joinToString("  ")
+    if (pureUnchanged > 0) parts += text.string(R.string.import_preview_diff_unchanged, pureUnchanged)
+    return if (parts.isEmpty()) text.string(R.string.import_preview_json_no_differences) else parts.joinToString("  ")
 }
 
 private fun renderObjectDelta(
     cur: com.google.gson.JsonObject,
     prop: com.google.gson.JsonObject,
+    text: ResultText,
 ): String {
     // extra_keys / custom_extra_keys / any object — diff by key membership.
     // Detects value-only changes too (same key, different value).
@@ -433,7 +474,7 @@ private fun renderObjectDelta(
     val removed = curKeys - propKeys
     val both = curKeys intersect propKeys
     val changed = both.filter { cur.get(it) != prop.get(it) }.toSet()
-    return formatObjectDelta(both.size - changed.size, added, removed, changed)
+    return formatObjectDelta(both.size - changed.size, added, removed, changed, text)
 }
 
 /** Safe `keys` field length — returns 0 for missing / non-array shapes. */
@@ -448,46 +489,50 @@ private fun formatObjectDelta(
     added: Set<String>,
     removed: Set<String>,
     changed: Set<String>,
+    text: ResultText,
 ): String {
     if (added.isEmpty() && removed.isEmpty() && changed.isEmpty()) {
-        return "[$unchangedCount unchanged]"
+        return text.plural(R.plurals.import_preview_json_all_unchanged, unchangedCount, unchangedCount)
     }
     val parts = mutableListOf<String>()
-    if (added.isNotEmpty()) parts += "+ ${truncateNameList(added.toList(), maxLen = 30)}"
-    if (removed.isNotEmpty()) parts += "− ${truncateNameList(removed.toList(), maxLen = 30)}"
-    if (changed.isNotEmpty()) parts += "~ ${truncateNameList(changed.toList(), maxLen = 30)}"
-    if (unchangedCount > 0) parts += "($unchangedCount unchanged)"
+    if (added.isNotEmpty()) parts += "+ ${truncateNameList(added.toList(), maxLen = 30, text = text)}"
+    if (removed.isNotEmpty()) parts += "− ${truncateNameList(removed.toList(), maxLen = 30, text = text)}"
+    if (changed.isNotEmpty()) parts += "~ ${truncateNameList(changed.toList(), maxLen = 30, text = text)}"
+    if (unchangedCount > 0) parts += text.string(R.string.import_preview_diff_unchanged, unchangedCount)
     return parts.joinToString("  ")
 }
 
 /**
- * Comma-join `names`, ellipsizing at the first name that would push the
- * total over `maxLen` characters. Output suffix is "+N more" when truncated.
+ * Join `names` with the locale's list separator, ellipsizing at the first name that would push
+ * the total over `maxLen` characters. Output suffix is "+N more" when truncated.
  */
-private fun truncateNameList(names: List<String>, maxLen: Int): String {
+private fun truncateNameList(names: List<String>, maxLen: Int, text: ResultText): String {
     if (names.isEmpty()) return ""
+    val separator = text.string(R.string.import_preview_name_separator)
     val sb = StringBuilder()
     var shown = 0
     for (name in names) {
-        val sep = if (sb.isEmpty()) "" else ", "
+        val sep = if (sb.isEmpty()) "" else separator
         val tentative = sep + name
         if (sb.length + tentative.length > maxLen && shown > 0) break
         sb.append(tentative)
         shown++
     }
     if (shown < names.size) {
-        sb.append(", +${names.size - shown} more")
+        val hidden = names.size - shown
+        sb.append(separator).append(text.plural(R.plurals.import_preview_names_more, hidden, hidden))
     }
     return sb.toString()
 }
 
 @Composable
 private fun TypeChip(value: PrefValue) {
+    // Data-type chip. "JSON" is a format name and "—" a dash, so neither is a resource.
     val label = when (value) {
-        is PrefValue.Bool -> "Bool"
-        is PrefValue.IntV -> "Int"
-        is PrefValue.FloatV -> "Float"
-        is PrefValue.Str -> "Str"
+        is PrefValue.Bool -> stringResource(R.string.import_preview_type_bool)
+        is PrefValue.IntV -> stringResource(R.string.import_preview_type_int)
+        is PrefValue.FloatV -> stringResource(R.string.import_preview_type_float)
+        is PrefValue.Str -> stringResource(R.string.import_preview_type_str)
         is PrefValue.JsonBlob -> "JSON"
         PrefValue.Unset -> "\u2014"
     }
@@ -505,6 +550,7 @@ private fun TypeChip(value: PrefValue) {
  */
 @Composable
 private fun ShortSwipeDiffSummary(diff: ShortSwipeDiff) {
+    val text = rememberResultText()
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
         // Headline counts on one line for at-a-glance reading.
         val countParts = buildList {
@@ -530,21 +576,21 @@ private fun ShortSwipeDiffSummary(diff: ShortSwipeDiff) {
         // Detail lines (truncated). Each non-empty bucket gets one line.
         if (diff.added.isNotEmpty()) {
             Text(
-                "  + ${truncateNameList(diff.added, maxLen = 60)}",
+                "  + ${truncateNameList(diff.added, maxLen = 60, text = text)}",
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         if (diff.removed.isNotEmpty()) {
             Text(
-                "  \u2212 ${truncateNameList(diff.removed, maxLen = 60)}",
+                "  \u2212 ${truncateNameList(diff.removed, maxLen = 60, text = text)}",
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         if (diff.changed.isNotEmpty()) {
             Text(
-                "  ~ ${truncateNameList(diff.changed, maxLen = 60)}",
+                "  ~ ${truncateNameList(diff.changed, maxLen = 60, text = text)}",
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -615,6 +661,8 @@ private fun SkippedSection(skipped: List<SkippedKey>) {
             skipped.forEach { sk ->
                 Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
                     Text(sk.key, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    // TODO(i18n): SkippedKey.reason is produced in English by the domain layer
+                    //  (backup/SettingsImportPlanBuilder); it needs a typed reason to localize.
                     Text(
                         sk.reason,
                         fontSize = 11.sp,
@@ -840,7 +888,10 @@ fun DictionaryImportPreviewDialog(
                     title = { Text(stringResource(R.string.import_preview_dict_title)) },
                     navigationIcon = {
                         IconButton(onClick = onCancel) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Cancel preview")
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.import_preview_cancel_desc),
+                            )
                         }
                     },
                     actions = {

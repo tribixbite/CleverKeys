@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,7 +45,11 @@ internal fun SettingsActivity.ClipboardSection() {
                 )
 
                 // Clipboard limit type dropdown
-                val limitTypeOptions = listOf("By Count", "By Size")
+                // Display labels only; the stored pref value stays "count"/"size" (index 0/1).
+                val limitTypeOptions = listOf(
+                    stringResource(R.string.clipboard_limit_type_by_count),
+                    stringResource(R.string.clipboard_limit_type_by_size)
+                )
                 val limitTypeIndex = if (clipboardLimitType == "count") 0 else 1
                 SettingsDropdown(
                     title = stringResource(R.string.clipboard_limit_type_title),
@@ -71,7 +76,11 @@ internal fun SettingsActivity.ClipboardSection() {
                             clipboardHistoryLimit = it.toInt()
                             saveSetting("clipboard_history_limit", clipboardHistoryLimit)
                         },
-                        displayValue = if (clipboardHistoryLimit == 0) "Unlimited" else "$clipboardHistoryLimit items"
+                        displayValue = if (clipboardHistoryLimit == 0) {
+                            stringResource(R.string.clipboard_history_limit_unlimited)
+                        } else {
+                            pluralStringResource(R.plurals.settings_value_items, clipboardHistoryLimit, clipboardHistoryLimit)
+                        }
                     )
                 }
 
@@ -86,10 +95,14 @@ internal fun SettingsActivity.ClipboardSection() {
                     // Contextual description based on limit+duration combination
                     val durationDesc = when {
                         clipboardHistoryDuration != -1 && clipboardHistoryLimit == 0 ->
-                            "Warning: count is unlimited but entries expire after this duration"
+                            stringResource(R.string.clipboard_entry_duration_desc_unlimited_count)
                         clipboardHistoryDuration == -1 && clipboardHistoryLimit > 0 ->
-                            "Entries never expire but capped at $clipboardHistoryLimit (count limit still applies)"
-                        else -> "How long entries persist before auto-deletion (-1 = never)"
+                            pluralStringResource(
+                                R.plurals.clipboard_entry_duration_desc_never_capped,
+                                clipboardHistoryLimit,
+                                clipboardHistoryLimit
+                            )
+                        else -> stringResource(R.string.clipboard_entry_duration_desc_default)
                     }
                     SettingsSlider(
                         title = stringResource(R.string.clipboard_entry_duration_title),
@@ -109,17 +122,19 @@ internal fun SettingsActivity.ClipboardSection() {
                             // Trigger mid-session rescue for entries with stale expiry timestamps
                             ClipboardHistoryService.onDurationSettingChanged()
                         },
-                        displayValue = when (clipboardHistoryDuration) {
-                            -1 -> "Never expire"
-                            60 -> "1 hour"
-                            360 -> "6 hours"
-                            720 -> "12 hours"
-                            1440 -> "1 day"
-                            4320 -> "3 days"
-                            10080 -> "7 days"
-                            20160 -> "14 days"
-                            43200 -> "30 days"
-                            else -> "${clipboardHistoryDuration / 60} hours"
+                        // Duration is stored in minutes; whole days (all presets >= 1 day) read
+                        // as days, everything else as hours.
+                        displayValue = when {
+                            clipboardHistoryDuration == -1 ->
+                                stringResource(R.string.clipboard_entry_duration_never)
+                            clipboardHistoryDuration % MINUTES_PER_DAY == 0 -> {
+                                val days = clipboardHistoryDuration / MINUTES_PER_DAY
+                                pluralStringResource(R.plurals.settings_value_days, days, days)
+                            }
+                            else -> {
+                                val hours = clipboardHistoryDuration / MINUTES_PER_HOUR
+                                pluralStringResource(R.plurals.settings_value_hours, hours, hours)
+                            }
                         }
                     )
                 }
@@ -263,7 +278,7 @@ internal fun SettingsActivity.ClipboardSection() {
                 // ── #156 Private copy subsection ─────────────────────────────
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "🔒 Private copy",
+                    text = stringResource(R.string.clipboard_private_copy_header),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -300,7 +315,7 @@ internal fun SettingsActivity.ClipboardSection() {
                 )
 
                 Text(
-                    text = "In-app: the \"Private copy\" editing action can be bound to a short swipe or extra key (Short Swipe Customization). It stores the current selection into CleverKeys' private clipboard without touching the system clipboard. Private entries show a 🔒 badge; exporting one to the system clipboard always asks first, and plaintext backups exclude them (encrypted backups include them).",
+                    text = stringResource(R.string.clipboard_private_copy_in_app_note),
                     modifier = Modifier.padding(16.dp),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -309,7 +324,7 @@ internal fun SettingsActivity.ClipboardSection() {
                 // ── URL handling subsection (Chunk 4) ───────────────────────
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "URL handling",
+                    text = stringResource(R.string.clipboard_url_handling_header),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -368,9 +383,9 @@ internal fun SettingsActivity.ClipboardSection() {
                     ) {
                         Text(
                             text = if (clipboardCustomRulesUri == null)
-                                "Browse for custom.substitutions.json"
+                                stringResource(R.string.clipboard_custom_rules_browse)
                             else
-                                "Replace custom rules"
+                                stringResource(R.string.clipboard_custom_rules_replace)
                         )
                     }
                     if (clipboardCustomRulesStatus.isNotEmpty()) {
@@ -384,7 +399,7 @@ internal fun SettingsActivity.ClipboardSection() {
                 }
 
                 Text(
-                    text = "Note: cleaning runs when CleverKeys saves a clip to its history, so pastes from CleverKeys' panel are always sanitized. With \"Also clean system clipboard\" on, the Android system clipboard is overwritten with the cleaned URL too, so pastes in other apps are sanitized as well (best-effort — only while the keyboard has clipboard access). With it off, other apps still see the original URL.",
+                    text = stringResource(R.string.clipboard_url_handling_note),
                     modifier = Modifier.padding(16.dp),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -406,3 +421,7 @@ internal fun SettingsActivity.setPrivateCopyToolbarComponentEnabled(enabled: Boo
     // toggle path and the backup/restore import path flip the component identically. #156 F5.
     tribixbite.cleverkeys.reconcilePrivateCopyToolbarComponent(this, enabled)
 }
+
+/** Clipboard entry duration is persisted in minutes (`clipboard_history_duration`). */
+private const val MINUTES_PER_HOUR = 60
+private const val MINUTES_PER_DAY = 24 * MINUTES_PER_HOUR

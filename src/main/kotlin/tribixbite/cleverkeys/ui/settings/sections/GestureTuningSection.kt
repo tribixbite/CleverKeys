@@ -19,6 +19,7 @@ import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
+import tribixbite.cleverkeys.ui.settings.SwipeSensitivityPreset
 import tribixbite.cleverkeys.ui.settings.applySwipeSensitivityPreset
 import tribixbite.cleverkeys.ui.settings.getSwipeSensitivityPreset
 import tribixbite.cleverkeys.ui.settings.saveSetting
@@ -189,13 +190,13 @@ internal fun SettingsActivity.GestureTuningSection() {
                 )
 
                 // Swipe Sensitivity Preset
-                val sensitivityPresets = listOf("Low", "Medium", "High", "Custom")
-                val currentPresetIndex = sensitivityPresets.indexOf(getSwipeSensitivityPreset())
+                // Enum identifies the preset; only the displayed label is localized.
+                val sensitivityPresets = SwipeSensitivityPreset.entries
                 SettingsDropdown(
                     title = stringResource(R.string.gesture_sensitivity_preset_title),
                     description = stringResource(R.string.gesture_sensitivity_preset_desc),
-                    options = sensitivityPresets,
-                    selectedIndex = if (currentPresetIndex >= 0) currentPresetIndex else 3,
+                    options = sensitivityPresets.map { stringResource(it.labelRes) },
+                    selectedIndex = sensitivityPresets.indexOf(getSwipeSensitivityPreset()),
                     onSelectionChange = { index ->
                         applySwipeSensitivityPreset(sensitivityPresets[index])
                     }

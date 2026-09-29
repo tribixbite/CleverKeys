@@ -1,15 +1,14 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
+import android.content.res.Resources
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import android.text.style.StrikethroughSpan
 import androidx.core.content.ContextCompat
 import org.json.JSONArray
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 /**
  * Data class representing an entry in the independent todo_entries table.
@@ -46,28 +45,14 @@ data class TodoEntry(
     /** Whether this todo is active */
     val isActive: Boolean get() = status == STATUS_ACTIVE
 
-    /** Format added time as relative time (e.g., "2h ago", "Yesterday") */
-    fun getRelativeTime(): String {
-        val now = System.currentTimeMillis()
-        val diff = now - addedTimestamp
+    /** Age of this entry (added time) as a locale-free value; resolve with [RelativeTime.format]. */
+    fun relativeTime(): RelativeTime = RelativeTime.of(addedTimestamp)
 
-        val seconds = diff / 1000
-        val minutes = seconds / 60
-        val hours = minutes / 60
-        val days = hours / 24
-
-        return when {
-            seconds < 60 -> "Just now"
-            minutes < 60 -> "${minutes}m ago"
-            hours < 24 -> "${hours}h ago"
-            days == 1L -> "Yesterday"
-            days < 7 -> "${days}d ago"
-            else -> dateFormat().format(Date(addedTimestamp))
-        }
-    }
+    /** Localized relative added time (e.g. "2h ago", "Yesterday"), shown after the entry text. */
+    fun getRelativeTime(resources: Resources): String = relativeTime().format(resources)
 
     /** Format added timestamp as date string (e.g., "Nov 12") */
-    fun formatDate(): String = dateFormat().format(Date(addedTimestamp))
+    fun formatDate(): String = ClipboardEntry.dateFormat().format(Date(addedTimestamp))
 
     /**
      * Get formatted text with status indicator and time appended.
@@ -75,12 +60,8 @@ data class TodoEntry(
      * Status prefix: [active] none, [planned] clock, [completed] check.
      */
     fun getFormattedText(context: Context): Spannable {
-        val statusPrefix = when (status) {
-            STATUS_COMPLETED -> "[done] "
-            STATUS_PLANNED -> "[plan] "
-            else -> ""
-        }
-        val timeStr = " · ${getRelativeTime()}"
+        val statusPrefix = statusPrefix(status, context.resources)
+        val timeStr = " · ${getRelativeTime(context.resources)}"
         val fullContent = "$statusPrefix$content"
         val contentLen = fullContent.length
 
@@ -126,10 +107,16 @@ data class TodoEntry(
         /** All valid status values */
         val VALID_STATUSES = setOf(STATUS_ACTIVE, STATUS_PLANNED, STATUS_COMPLETED)
 
-        // Built per call so the user's current default locale is honored even
-        // after a runtime locale change (SimpleDateFormat is not thread-safe, so
-        // a fresh instance also avoids sharing mutable state across threads).
-        private fun dateFormat() = SimpleDateFormat("MMM d", Locale.getDefault())
+        /**
+         * Localized status marker shown before a todo's text, including its trailing
+         * separator space ("[done] ", "[plan] "), or "" for an active (or unknown) status.
+         * Shared by [getFormattedText] and the clipboard pane's todo rows so both agree.
+         */
+        fun statusPrefix(status: String?, resources: Resources): String = when (status) {
+            STATUS_COMPLETED -> resources.getString(R.string.clipboard_todo_prefix_done) + " "
+            STATUS_PLANNED -> resources.getString(R.string.clipboard_todo_prefix_planned) + " "
+            else -> ""
+        }
 
         private var cachedSecondaryColor: Int? = null
 

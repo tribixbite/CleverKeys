@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.Resources
 import android.os.Build
 import kotlin.math.roundToInt
 
@@ -42,6 +43,9 @@ class SwipePerformanceStats(context: Context) {
     }
 
     private val privacyManager = PrivacyManager.getInstance(context)
+
+    /** Kept to resolve [formatSummary]'s display strings (always the application context). */
+    private val appContext: Context = context
 
     companion object {
         /** Legacy pref-file name — see the constructor comment; do NOT rename. */
@@ -183,23 +187,28 @@ class SwipePerformanceStats(context: Context) {
     }
 
     /**
-     * Format statistics as human-readable string for display.
+     * Format statistics as a human-readable, localized summary for the Settings
+     * "Performance Statistics" viewer. Each line is its own string resource; the
+     * two-space indentation and the 📊 marker are layout, added here.
+     *
+     * @param resources resources to resolve against; defaults to the application's,
+     *   which follow the app locale. Pass an Activity's to match its configuration.
      */
-    fun formatSummary(): String {
+    fun formatSummary(resources: Resources = appContext.resources): String {
         if (!hasStats()) {
-            return "No statistics available yet.\nStart using swipe typing to collect data!"
+            return resources.getString(R.string.perf_stats_empty)
         }
 
         return buildString {
-            appendLine("📊 Swipe Prediction Statistics")
+            appendLine("📊 " + resources.getString(R.string.perf_stats_header))
             appendLine()
-            appendLine("Usage:")
-            appendLine("  Total selections: ${getTotalSelections()}")
-            appendLine("  Days tracked: ${getDaysSinceStart()}")
+            appendLine(resources.getString(R.string.perf_stats_usage_heading))
+            appendLine("  " + resources.getString(R.string.perf_stats_total_selections, getTotalSelections()))
+            appendLine("  " + resources.getString(R.string.perf_stats_days_tracked, getDaysSinceStart()))
             appendLine()
-            appendLine("Accuracy:")
-            appendLine("  Top-1: ${getTop1Accuracy()}%")
-            appendLine("  Top-3: ${getTop3Accuracy()}%")
+            appendLine(resources.getString(R.string.perf_stats_accuracy_heading))
+            appendLine("  " + resources.getString(R.string.perf_stats_top1_accuracy, getTop1Accuracy()))
+            appendLine("  " + resources.getString(R.string.perf_stats_top3_accuracy, getTop3Accuracy()))
         }
     }
 }

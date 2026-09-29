@@ -136,7 +136,9 @@ class BackupRestoreActivity : ComponentActivity() {
             backupRestoreManager = testManagerOverride ?: BackupRestoreManager(this)
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Error initializing", e)
-            Toast.makeText(this, "Error initializing: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this, getString(R.string.backup_headless_init_failed, e.message.orEmpty()), Toast.LENGTH_SHORT
+            ).show()
             finish()
             return
         }
@@ -153,11 +155,7 @@ class BackupRestoreActivity : ComponentActivity() {
             // No stored passphrase → fail closed (nothing written, nothing applied).
             if (!passphraseStore.hasPassphrase()) {
                 android.util.Log.w(TAG, "Headless $action rejected: no backup password set [$caller]")
-                Toast.makeText(
-                    this,
-                    "Set a backup password in Settings → Backup & Restore first",
-                    Toast.LENGTH_LONG,
-                ).show()
+                Toast.makeText(this, R.string.backup_headless_no_password, Toast.LENGTH_LONG).show()
                 finish()
                 return
             }
@@ -166,7 +164,7 @@ class BackupRestoreActivity : ComponentActivity() {
             val sinceLast = now - lastHeadlessActionMs
             if (lastHeadlessActionMs != 0L && sinceLast < MIN_HEADLESS_ACTION_SPACING_MS) {
                 android.util.Log.w(TAG, "Headless $action throttled (${sinceLast}ms since last) [$caller]")
-                Toast.makeText(this, "Backup action throttled — try again in a moment", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.backup_headless_throttled, Toast.LENGTH_SHORT).show()
                 finish()
                 return
             }
@@ -196,11 +194,7 @@ class BackupRestoreActivity : ComponentActivity() {
         // Headless IMPORT of a plaintext (legacy) payload → reject (closes injection).
         if (isImport && importUri != null && payloadIsPlaintext(importUri)) {
             android.util.Log.w(TAG, "Headless $action rejected: plaintext payload not accepted [$caller]")
-            Toast.makeText(
-                this,
-                "Import failed: plaintext backups are not accepted via automation — use the app's Import button",
-                Toast.LENGTH_LONG,
-            ).show()
+            Toast.makeText(this, R.string.backup_headless_plaintext_rejected, Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -280,25 +274,30 @@ class BackupRestoreActivity : ComponentActivity() {
      * So the toast gets the exception CLASS plus a short static reason. The full message
      * and stack trace still go to logcat at every call site — developer-visible, not
      * shoulder-visible. Counts and output paths are unaffected: they are our own data.
+     * The reason is a localized string resource; the class name is a technical token and
+     * stays as-is in every locale.
      */
     private fun sanitizedFailureLabel(e: Throwable): String {
         val kind = e::class.java.simpleName.ifEmpty { "Exception" }
         // Ordered: FileNotFoundException before its IOException supertype.
         val reason = when (e) {
-            is org.json.JSONException -> "malformed backup data"
-            is java.io.FileNotFoundException -> "file not readable"
-            is SecurityException -> "access denied"
-            is java.io.IOException -> "I/O error"
-            is IllegalArgumentException -> "invalid input"
-            else -> "see logcat"
+            is org.json.JSONException -> R.string.backup_headless_reason_malformed
+            is java.io.FileNotFoundException -> R.string.backup_headless_reason_unreadable
+            is SecurityException -> R.string.backup_headless_reason_access_denied
+            is java.io.IOException -> R.string.backup_headless_reason_io
+            is IllegalArgumentException -> R.string.backup_headless_reason_invalid_input
+            else -> R.string.backup_headless_reason_see_logcat
         }
-        return "$kind ($reason)"
+        return getString(R.string.backup_headless_failure_label, kind, getString(reason))
     }
 
-    /** Toast the actual output path so headless callers see a real file location. */
+    /**
+     * Toast the actual output path so headless callers see a real file location.
+     * [label] is already localized by the caller.
+     */
     private fun headlessToast(label: String) {
         val path = backupRestoreManager.lastOutputPath
-        val result = if (path != null) "$label: $path" else label
+        val result = if (path != null) getString(R.string.backup_headless_result_with_path, label, path) else label
         val protection = getString(protectionStateLabelRes(passphraseStore.protectionState()))
         val msg = "$result\n" + getString(R.string.backup_protection_status, protection)
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
@@ -350,7 +349,9 @@ class BackupRestoreActivity : ComponentActivity() {
             Uri.fromFile(tempFile)
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Failed to decode json_base64 extra", e)
-            Toast.makeText(this, "Invalid base64 data: ${sanitizedFailureLabel(e)}", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this, getString(R.string.backup_headless_invalid_base64, sanitizedFailureLabel(e)), Toast.LENGTH_LONG
+            ).show()
             null
         }
     }
@@ -424,11 +425,11 @@ class BackupRestoreActivity : ComponentActivity() {
                 val count = withContext(Dispatchers.IO) {
                     backupRestoreManager.exportConfig(uri, prefs)
                 }
-                headlessToast("Settings exported: $count")
+                headlessToast(getString(R.string.backup_result_settings_exported, count))
                 android.util.Log.i(TAG, "Export successful: $count preferences -> $uri")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Export failed", e)
-                headlessToast("Export failed: ${sanitizedFailureLabel(e)}")
+                headlessToast(getString(R.string.common_export_failed_detail, sanitizedFailureLabel(e)))
             } finally {
                 finish()
             }
@@ -448,14 +449,18 @@ class BackupRestoreActivity : ComponentActivity() {
                     backupRestoreManager.importConfig(uri, prefs)
                 }
                 DirectBootAwarePreferences.copy_preferences_to_protected_storage(this@BackupRestoreActivity, prefs)
-                headlessToast("Imported ${result.importedCount} settings")
+                headlessToast(
+                    resources.getQuantityString(
+                        R.plurals.backup_headless_settings_imported, result.importedCount, result.importedCount
+                    )
+                )
                 android.util.Log.i(
                     TAG,
                     "Import successful: imported=${result.importedCount}, skipped=${result.skippedCount}"
                 )
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Import failed", e)
-                headlessToast("Import failed: ${sanitizedFailureLabel(e)}")
+                headlessToast(getString(R.string.common_import_failed_detail, sanitizedFailureLabel(e)))
             } finally {
                 finish()
             }
@@ -469,7 +474,10 @@ class BackupRestoreActivity : ComponentActivity() {
                     backupRestoreManager.exportDictionaries(uri)
                 }
                 headlessToast(
-                    "Dictionaries exported: ${summary.customWordsCount} custom + ${summary.disabledWordsCount} disabled"
+                    getString(
+                        R.string.backup_headless_dict_exported,
+                        summary.customWordsCount, summary.disabledWordsCount,
+                    )
                 )
                 android.util.Log.i(
                     TAG,
@@ -477,7 +485,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 )
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Dictionary export failed", e)
-                headlessToast("Dict export failed: ${sanitizedFailureLabel(e)}")
+                headlessToast(getString(R.string.backup_headless_dict_export_failed, sanitizedFailureLabel(e)))
             } finally {
                 finish()
             }
@@ -498,14 +506,19 @@ class BackupRestoreActivity : ComponentActivity() {
                 }
                 LocalBroadcastManager.getInstance(this@BackupRestoreActivity)
                     .sendBroadcast(Intent(ACTION_DICTIONARY_IMPORTED))
-                headlessToast("Imported ${result.userWordsImported} user + ${result.disabledWordsImported} disabled words")
+                headlessToast(
+                    resources.getQuantityString(
+                        R.plurals.backup_headless_dict_imported,
+                        result.disabledWordsImported, result.userWordsImported, result.disabledWordsImported,
+                    )
+                )
                 android.util.Log.i(
                     TAG,
                     "Dict import: userWords=${result.userWordsImported}, disabledWords=${result.disabledWordsImported}"
                 )
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Dictionary import failed", e)
-                headlessToast("Dict import failed: ${sanitizedFailureLabel(e)}")
+                headlessToast(getString(R.string.backup_headless_dict_import_failed, sanitizedFailureLabel(e)))
             } finally {
                 finish()
             }
@@ -518,11 +531,11 @@ class BackupRestoreActivity : ComponentActivity() {
                 withContext(Dispatchers.IO) {
                     backupRestoreManager.exportClipboardHistory(uri)
                 }
-                headlessToast("Clipboard exported")
+                headlessToast(getString(R.string.backup_headless_clipboard_exported))
                 android.util.Log.i(TAG, "Clipboard export successful: $uri")
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Clipboard export failed", e)
-                headlessToast("Clipboard export failed: ${sanitizedFailureLabel(e)}")
+                headlessToast(getString(R.string.backup_headless_clipboard_export_failed, sanitizedFailureLabel(e)))
             } finally {
                 finish()
             }
@@ -535,14 +548,18 @@ class BackupRestoreActivity : ComponentActivity() {
                 val result = withContext(Dispatchers.IO) {
                     backupRestoreManager.importClipboardHistory(uri)
                 }
-                headlessToast("Imported ${result.importedCount} clipboard entries")
+                headlessToast(
+                    resources.getQuantityString(
+                        R.plurals.backup_headless_clipboard_imported, result.importedCount, result.importedCount
+                    )
+                )
                 android.util.Log.i(
                     TAG,
                     "Clipboard import: imported=${result.importedCount}, skipped=${result.skippedCount}"
                 )
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Clipboard import failed", e)
-                headlessToast("Clipboard import failed: ${sanitizedFailureLabel(e)}")
+                headlessToast(getString(R.string.backup_headless_clipboard_import_failed, sanitizedFailureLabel(e)))
             } finally {
                 finish()
             }

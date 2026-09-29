@@ -150,7 +150,7 @@ internal fun SettingsActivity.SettingsScreen() {
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Clear,
-                                contentDescription = "Clear"
+                                contentDescription = stringResource(R.string.common_clear)
                             )
                         }
                     }

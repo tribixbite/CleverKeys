@@ -82,19 +82,20 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
         }
     }
 
-    // Categorize keys
-    val categorizedKeys = remember(filteredKeys) {
+    // Categorize keys: group header string resource -> keys in that group (headers are
+    // display-only, resolved at render time so they follow the app locale)
+    val categorizedKeys: Map<Int, List<String>> = remember(filteredKeys) {
         mapOf(
-            "Layout Switching" to filteredKeys.filter { it in listOf("switch_forward", "switch_backward", "switch_greekmath") },
-            "System" to filteredKeys.filter { it in listOf("alt", "meta", "compose", "voice_typing", "switch_clipboard", "change_method", "capslock") },
-            "Navigation" to filteredKeys.filter { it in listOf("tab", "esc", "page_up", "page_down", "home", "end") },
-            "Editing" to filteredKeys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" },
-            "Formatting" to filteredKeys.filter { it in listOf("superscript", "subscript") },
-            "Accents" to filteredKeys.filter { it.startsWith("accent_") },
-            "Symbols" to filteredKeys.filter { it in listOf("€", "ß", "£", "§", "†", "ª", "º") },
-            "Special Characters" to filteredKeys.filter { it in listOf("zwj", "zwnj", "nbsp", "nnbsp") },
-            "Combining Characters" to filteredKeys.filter { it.startsWith("combining_") },
-            "Functions" to filteredKeys.filter { it in listOf("f11_placeholder", "f12_placeholder", "menu", "scroll_lock") }
+            R.string.extra_keys_group_layout_switching to filteredKeys.filter { it in listOf("switch_forward", "switch_backward", "switch_greekmath") },
+            R.string.extra_keys_group_system to filteredKeys.filter { it in listOf("alt", "meta", "compose", "voice_typing", "switch_clipboard", "change_method", "capslock") },
+            R.string.extra_keys_group_navigation to filteredKeys.filter { it in listOf("tab", "esc", "page_up", "page_down", "home", "end") },
+            R.string.extra_keys_group_editing to filteredKeys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" },
+            R.string.extra_keys_group_formatting to filteredKeys.filter { it in listOf("superscript", "subscript") },
+            R.string.extra_keys_group_accents to filteredKeys.filter { it.startsWith("accent_") },
+            R.string.extra_keys_group_symbols to filteredKeys.filter { it in listOf("€", "ß", "£", "§", "†", "ª", "º") },
+            R.string.extra_keys_group_special_characters to filteredKeys.filter { it in listOf("zwj", "zwnj", "nbsp", "nnbsp") },
+            R.string.extra_keys_group_combining_characters to filteredKeys.filter { it.startsWith("combining_") },
+            R.string.extra_keys_group_functions to filteredKeys.filter { it in listOf("f11_placeholder", "f12_placeholder", "menu", "scroll_lock") }
         ).filterValues { it.isNotEmpty() }
     }
 
@@ -192,10 +193,10 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                categorizedKeys.forEach { (category, keys) ->
+                categorizedKeys.forEach { (categoryRes, keys) ->
                     item {
                         Text(
-                            text = category,
+                            text = stringResource(categoryRes),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -227,8 +228,7 @@ fun ExtraKeyItem(
     onToggle: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
-    val keyValue = remember { KeyValue.getKeyByName(keyName) }
-    val title = remember { ExtraKeysPreference.keyTitle(keyName, keyValue) }
+    val title = remember { ExtraKeysPreference.keyTitle(context.resources, keyName) }
     val description = remember { ExtraKeysPreference.keyDescription(context.resources, keyName) }
 
     Card(

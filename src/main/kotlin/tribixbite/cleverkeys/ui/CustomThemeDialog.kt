@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.annotation.StringRes
 import tribixbite.cleverkeys.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
@@ -178,7 +179,7 @@ fun PaletteOption(
     ) {
         PalettePreviewRow(palette = palette)
         Text(
-            text = palette.displayName,
+            text = stringResource(palette.labelRes),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
@@ -213,11 +214,12 @@ fun PalettePreviewRow(
  * Predefined color palettes for easy custom theme creation.
  */
 enum class PredefinedPalette(
-    val displayName: String,
+    /** Localized palette name shown under the swatch (string resource). */
+    @StringRes val labelRes: Int,
     val colors: List<Color>
 ) {
     DARK_BLUE(
-        "Dark Blue",
+        R.string.theme_palette_dark_blue,
         listOf(
             Color(0xFF1A2332),
             Color(0xFF2B3A52),
@@ -227,7 +229,7 @@ enum class PredefinedPalette(
         )
     ),
     PURPLE(
-        "Purple",
+        R.string.theme_palette_purple,
         listOf(
             Color(0xFF2A1A3E),
             Color(0xFF4A2B6B),
@@ -237,7 +239,7 @@ enum class PredefinedPalette(
         )
     ),
     TEAL(
-        "Teal",
+        R.string.theme_palette_teal,
         listOf(
             Color(0xFF1A3E3E),
             Color(0xFF2B6B6B),
@@ -247,7 +249,7 @@ enum class PredefinedPalette(
         )
     ),
     BURGUNDY(
-        "Burgundy",
+        R.string.theme_palette_burgundy,
             listOf(
             Color(0xFF3E1A1A),
             Color(0xFF6B2B2B),
@@ -257,7 +259,7 @@ enum class PredefinedPalette(
         )
     ),
     OLIVE(
-        "Olive",
+        R.string.theme_palette_olive,
         listOf(
             Color(0xFF3E3E1A),
             Color(0xFF6B6B2B),
@@ -267,7 +269,7 @@ enum class PredefinedPalette(
         )
     ),
     NAVY(
-        "Navy",
+        R.string.theme_palette_navy,
         listOf(
             Color(0xFF1A1A3E),
             Color(0xFF2B2B6B),
@@ -277,7 +279,7 @@ enum class PredefinedPalette(
         )
     ),
     EMERALD(
-        "Emerald",
+        R.string.theme_predefined_gemstone_emerald,
         listOf(
             Color(0xFF1A3E1A),
             Color(0xFF2B6B2B),
@@ -287,7 +289,7 @@ enum class PredefinedPalette(
         )
     ),
     CHARCOAL(
-        "Charcoal",
+        R.string.theme_predefined_utilitarian_charcoal,
         listOf(
             Color(0xFF2A2A2A),
             Color(0xFF3A3A3A),
@@ -297,7 +299,7 @@ enum class PredefinedPalette(
         )
     ),
     SLATE(
-        "Slate",
+        R.string.theme_predefined_utilitarian_slate,
         listOf(
             Color(0xFF2A333A),
             Color(0xFF3A4A52),

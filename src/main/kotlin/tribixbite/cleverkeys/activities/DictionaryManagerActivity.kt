@@ -193,7 +193,7 @@ class DictionaryManagerActivity : AppCompatActivity() {
     private fun setupToolbar() {
         setSupportActionBar(toolbar)
         supportActionBar?.apply {
-            title = "Dictionary Manager"
+            title = getString(R.string.activities_dictionary_title)
             setDisplayHomeAsUpEnabled(true)
         }
     }
@@ -230,7 +230,7 @@ class DictionaryManagerActivity : AppCompatActivity() {
 
             // User Dict (global - Android system dictionary is not language-specific)
             fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.USER))
-            tabTitles.add("User Dict")
+            tabTitles.add(getString(R.string.dict_tab_user))
 
             // Secondary language tabs
             addLanguageTabs(fragmentList, secondaryLanguage!!, secondaryLangLabel)
@@ -239,16 +239,16 @@ class DictionaryManagerActivity : AppCompatActivity() {
         } else {
             // Single language mode: Standard tabs with primary language
             fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.ACTIVE, primaryLanguage))
-            tabTitles.add(if (primaryLanguage != "en") "Active [$primaryLangLabel]" else "Active")
+            tabTitles.add(tabTitle(R.string.dict_tab_active, R.string.dict_tab_active_lang, primaryLangLabel))
 
             fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.DISABLED, primaryLanguage))
-            tabTitles.add(if (primaryLanguage != "en") "Disabled [$primaryLangLabel]" else "Disabled")
+            tabTitles.add(tabTitle(R.string.dict_tab_disabled, R.string.dict_tab_disabled_lang, primaryLangLabel))
 
             fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.USER))
-            tabTitles.add("User Dict")
+            tabTitles.add(getString(R.string.dict_tab_user))
 
             fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.CUSTOM, primaryLanguage))
-            tabTitles.add(if (primaryLanguage != "en") "Custom [$primaryLangLabel]" else "Custom")
+            tabTitles.add(tabTitle(R.string.dict_tab_custom, R.string.dict_tab_custom_lang, primaryLangLabel))
 
             languagesWithTabs.add(primaryLanguage)
         }
@@ -280,18 +280,27 @@ class DictionaryManagerActivity : AppCompatActivity() {
     }
 
     /**
+     * Single-language tab title: the bare label for English (the historical default, where
+     * the language suffix adds nothing), otherwise the label tagged with [langLabel].
+     */
+    private fun tabTitle(@androidx.annotation.StringRes plainRes: Int,
+                         @androidx.annotation.StringRes withLangRes: Int,
+                         langLabel: String): String =
+        if (primaryLanguage != "en") getString(withLangRes, langLabel) else getString(plainRes)
+
+    /**
      * Add standard tabs (Active, Disabled, Custom) for a language.
      * Helper for setupViewPager to reduce code duplication.
      */
     private fun addLanguageTabs(fragmentList: MutableList<WordListFragment>, langCode: String, langLabel: String) {
         fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.ACTIVE, langCode))
-        tabTitles.add("Active [$langLabel]")
+        tabTitles.add(getString(R.string.dict_tab_active_lang, langLabel))
 
         fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.DISABLED, langCode))
-        tabTitles.add("Disabled [$langLabel]")
+        tabTitles.add(getString(R.string.dict_tab_disabled_lang, langLabel))
 
         fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.CUSTOM, langCode))
-        tabTitles.add("Custom [$langLabel]")
+        tabTitles.add(getString(R.string.dict_tab_custom_lang, langLabel))
     }
 
     /**
@@ -315,7 +324,7 @@ class DictionaryManagerActivity : AppCompatActivity() {
 
                 // Add Custom tab for this imported language
                 fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.CUSTOM, pack.code))
-                tabTitles.add("Custom [$langLabel]")
+                tabTitles.add(getString(R.string.dict_tab_custom_lang, langLabel))
 
                 android.util.Log.d(TAG, "Added tab for imported language pack: ${pack.name} (${pack.code})")
             }
@@ -348,7 +357,12 @@ class DictionaryManagerActivity : AppCompatActivity() {
 
     private fun setupFilter() {
         // v1.2.7: Changed to sort options instead of filter options
-        val sortOptions = listOf("Freq", "Match", "A-Z", "Z-A")
+        // Display labels only: the selection is resolved by POSITION against the enum
+        // (SortType.values()[position]) and saved as the ordinal, so this list must stay in
+        // the enum's declaration order (pinned by DictionarySortOrderTest).
+        val sortOptions = listOf(
+            R.string.dict_sort_freq, R.string.dict_sort_match, R.string.dict_sort_a_z, R.string.dict_sort_z_a
+        ).map { getString(it) }
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, sortOptions)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         filterSpinner.adapter = adapter
@@ -414,8 +428,8 @@ class DictionaryManagerActivity : AppCompatActivity() {
             // ARC-110: count comes from the live fragment — the same object whose adapter
             // renders the list — never from a detached instance in [fragments].
             val count = liveFragment(i)?.getFilteredCount() ?: 0
-            val title = tabTitles.getOrElse(i) { "Tab $i" }
-            tab.text = "$title\n($count)"
+            val title = tabTitles.getOrElse(i) { getString(R.string.dict_tab_fallback, i + 1) }
+            tab.text = getString(R.string.dict_tab_with_count, title, count)
         }
     }
 

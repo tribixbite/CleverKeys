@@ -2,6 +2,7 @@ package tribixbite.cleverkeys.customization
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import tribixbite.cleverkeys.EnglishResourceText
 
 /**
  * Pure JVM unit tests for [ShortSwipeMapping] TIMESTAMP support (issue #141).
@@ -29,8 +30,9 @@ class ShortSwipeMappingTest {
 
     @Test
     fun `ActionType TIMESTAMP has non-empty display fields`() {
-        assertThat(ActionType.TIMESTAMP.displayName).isNotEmpty()
-        assertThat(ActionType.TIMESTAMP.description).isNotEmpty()
+        // Labels are string resources since the 2026-09-29 i18n sweep; resolve the English text.
+        assertThat(EnglishResourceText.string(ActionType.TIMESTAMP.displayNameRes)).isNotEmpty()
+        assertThat(EnglishResourceText.string(ActionType.TIMESTAMP.descriptionRes)).isNotEmpty()
     }
 
     @Test

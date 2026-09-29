@@ -66,6 +66,22 @@ fluency.
   to it. A justified exception goes in its `accepted` map with a reason. On 2026-09-29 it
   found 8 offenders, all shortened: hu ×4 (2 titles, 2 bar offers), ru and es titles, uk and tr bar offers.
 
+- **`TranslationGlossaryTest` also checks the address register.** It became an address-register
+  gate on 2026-09-29. Each locale's `register` entry in `glossary.json` lists Java regexes for
+  forms of the register that locale does not use. No `<string>` and no `<plurals>` item may match
+  one of them. hu is pinned to formal Ön; the on-device finding mixed te and Ön forms in the
+  Privacy section. The decisions, counts and AOSP comparison are in
+  `docs/i18n/2026-09-29-register.md`.
+- **`HardcodedUiStringTest`** (2026-09-29) finds user-visible text that was never a resource.
+  It is a pure source scan for prose literals in rendering positions: Compose `Text`, named
+  display parameters, toasts, dialogs, status and suggestion-bar messages, dropdown option
+  lists, and `when` branches that return labels. Hardcoded manifest `android:label` values also
+  fail it. Fail-first: 439 literals in 44 files, and 0 after the sweep. Exceptions live in its
+  `allowed` map, each with a reason. The inventory and deferred items are in
+  `docs/i18n/2026-09-29-hardcoded-ui-sweep.md`.
+- **`RtlMirroringDriftTest`** requires `Icons.AutoMirrored.*` for back/forward/next arrows,
+  because the fa device run showed them pointing the wrong way.
+
 ### Model-assisted (repeatable, not automated)
 
 - **Blind back-translation.** Give a separate model only the target-language strings,

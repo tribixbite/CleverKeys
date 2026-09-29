@@ -616,25 +616,28 @@ class ClipboardDatabaseTest {
     @Test
     fun testClipboardEntryRelativeTime() {
         val recentEntry = ClipboardEntry("Recent", System.currentTimeMillis())
-        val relativeTime = recentEntry.getRelativeTime()
+        val relativeTime = recentEntry.relativeTime()
         assertNotNull(relativeTime)
-        assertEquals("Just now", relativeTime)
+        assertEquals(RelativeTime.JustNow, relativeTime)
+        // Resolves through the app-locale resource, never an empty label.
+        assertEquals(
+            context.getString(R.string.clipboard_time_just_now),
+            recentEntry.getRelativeTime(context.resources)
+        )
     }
 
     @Test
     fun testClipboardEntryRelativeTimeMinutes() {
         val fiveMinAgo = System.currentTimeMillis() - (5 * 60 * 1000)
         val entry = ClipboardEntry("Old", fiveMinAgo)
-        val relativeTime = entry.getRelativeTime()
-        assertTrue("Should show minutes", relativeTime.contains("m ago"))
+        assertEquals("Should show minutes", RelativeTime.MinutesAgo(5), entry.relativeTime())
     }
 
     @Test
     fun testClipboardEntryRelativeTimeHours() {
         val twoHoursAgo = System.currentTimeMillis() - (2 * 60 * 60 * 1000)
         val entry = ClipboardEntry("Older", twoHoursAgo)
-        val relativeTime = entry.getRelativeTime()
-        assertTrue("Should show hours", relativeTime.contains("h ago"))
+        assertEquals("Should show hours", RelativeTime.HoursAgo(2), entry.relativeTime())
     }
 
     @Test

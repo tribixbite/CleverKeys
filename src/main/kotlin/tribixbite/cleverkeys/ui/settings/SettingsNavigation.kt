@@ -8,6 +8,7 @@ import tribixbite.cleverkeys.CtcSettingsActivity
 import tribixbite.cleverkeys.DictionaryManagerActivity
 import tribixbite.cleverkeys.ExtraKeysConfigActivity
 import tribixbite.cleverkeys.LayoutManagerActivity
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.GeometricSettingsActivity
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SwipeDebugActivity
@@ -68,6 +69,6 @@ internal fun SettingsActivity.openGitHubReleases() {
             }
             startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(this, "Could not open browser", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.gif_toast_no_browser), Toast.LENGTH_SHORT).show()
         }
 }

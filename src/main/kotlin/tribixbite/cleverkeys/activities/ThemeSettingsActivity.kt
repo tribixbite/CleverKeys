@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import android.annotation.SuppressLint
+import androidx.annotation.StringRes
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
@@ -62,34 +63,37 @@ class ThemeSettingsActivity : ComponentActivity() {
          * These are the theme IDs that Config.kt's getThemeId() recognizes
          */
         val BUILTIN_THEMES = listOf(
-            BuiltinTheme("cleverkeysdark", "CleverKeys Dark", "Deep purple with silver accents (default)", 0xFF1E1030, 0xFF2A1845, 0xFFC0C0C0),
-            BuiltinTheme("cleverkeyslight", "CleverKeys Light", "Silver keys with purple accents", 0xFFC0C0C0, 0xFFD8D8D8, 0xFF2C3E50),
-            BuiltinTheme("dark", "Dark", "Classic dark theme with blue accents", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
-            BuiltinTheme("light", "Light", "Classic light theme", 0xFFE3E3E3, 0xFFCCCCCC, 0xFF000000),
-            BuiltinTheme("black", "Black", "Pure black AMOLED theme", 0xFF000000, 0xFF000000, 0xFFEEEEEE),
-            BuiltinTheme("altblack", "Alt Black", "Black with visible borders", 0xFF000000, 0xFF000000, 0xFFEEEEEE),
-            BuiltinTheme("white", "White", "Pure white theme", 0xFFFFFFFF, 0xFFFFFFFF, 0xFF000000),
-            BuiltinTheme("rosepine", "Rosé Pine", "Elegant dark rose theme", 0xFF191724, 0xFF26233A, 0xFFE0DEF4),
-            BuiltinTheme("cobalt", "Cobalt", "Deep blue theme", 0xFF000000, 0xFF000000, 0xFF95C9FF),
-            BuiltinTheme("pine", "Pine", "Forest green theme", 0xFF000000, 0xFF000000, 0xFF91D7A6),
-            BuiltinTheme("desert", "Desert", "Warm sand colors", 0xFFFFE0B2, 0xFFFFF3E0, 0xFF000000),
-            BuiltinTheme("jungle", "Jungle", "Tropical teal theme", 0xFF4DB6AC, 0xFFE0F2F1, 0xFF000000),
-            BuiltinTheme("epaper", "ePaper", "High contrast e-ink style", 0xFFFFFFFF, 0xFFFFFFFF, 0xFF000000),
-            BuiltinTheme("epaperblack", "ePaper Black", "Inverted e-ink style", 0xFF000000, 0xFF000000, 0xFFFFFFFF),
-            BuiltinTheme("everforestlight", "Everforest Light", "Soft green theme", 0xFFF8F5E4, 0xFFE5E2D1, 0xFF5C6A72),
-            BuiltinTheme("monet", "Monet (Auto)", "Material You colors (follows system)", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
-            BuiltinTheme("monetlight", "Monet Light", "Material You light variant", 0xFFE3E3E3, 0xFFCCCCCC, 0xFF000000),
-            BuiltinTheme("monetdark", "Monet Dark", "Material You dark variant", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
+            BuiltinTheme("cleverkeysdark", R.string.theme_builtin_cleverkeysdark_name, R.string.theme_builtin_cleverkeysdark_desc, 0xFF1E1030, 0xFF2A1845, 0xFFC0C0C0),
+            BuiltinTheme("cleverkeyslight", R.string.theme_builtin_cleverkeyslight_name, R.string.theme_builtin_cleverkeyslight_desc, 0xFFC0C0C0, 0xFFD8D8D8, 0xFF2C3E50),
+            BuiltinTheme("dark", R.string.theme_builtin_dark_name, R.string.theme_builtin_dark_desc, 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
+            BuiltinTheme("light", R.string.theme_builtin_light_name, R.string.theme_builtin_light_desc, 0xFFE3E3E3, 0xFFCCCCCC, 0xFF000000),
+            BuiltinTheme("black", R.string.theme_builtin_black_name, R.string.theme_builtin_black_desc, 0xFF000000, 0xFF000000, 0xFFEEEEEE),
+            BuiltinTheme("altblack", R.string.theme_builtin_altblack_name, R.string.theme_builtin_altblack_desc, 0xFF000000, 0xFF000000, 0xFFEEEEEE),
+            BuiltinTheme("white", R.string.theme_builtin_white_name, R.string.theme_builtin_white_desc, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF000000),
+            BuiltinTheme("rosepine", R.string.theme_builtin_rosepine_name, R.string.theme_builtin_rosepine_desc, 0xFF191724, 0xFF26233A, 0xFFE0DEF4),
+            BuiltinTheme("cobalt", R.string.theme_builtin_cobalt_name, R.string.theme_builtin_cobalt_desc, 0xFF000000, 0xFF000000, 0xFF95C9FF),
+            BuiltinTheme("pine", R.string.theme_builtin_pine_name, R.string.theme_builtin_pine_desc, 0xFF000000, 0xFF000000, 0xFF91D7A6),
+            BuiltinTheme("desert", R.string.theme_builtin_desert_name, R.string.theme_builtin_desert_desc, 0xFFFFE0B2, 0xFFFFF3E0, 0xFF000000),
+            BuiltinTheme("jungle", R.string.theme_builtin_jungle_name, R.string.theme_builtin_jungle_desc, 0xFF4DB6AC, 0xFFE0F2F1, 0xFF000000),
+            BuiltinTheme("epaper", R.string.theme_builtin_epaper_name, R.string.theme_builtin_epaper_desc, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF000000),
+            BuiltinTheme("epaperblack", R.string.theme_builtin_epaperblack_name, R.string.theme_builtin_epaperblack_desc, 0xFF000000, 0xFF000000, 0xFFFFFFFF),
+            BuiltinTheme("everforestlight", R.string.theme_builtin_everforestlight_name, R.string.theme_builtin_everforestlight_desc, 0xFFF8F5E4, 0xFFE5E2D1, 0xFF5C6A72),
+            BuiltinTheme("monet", R.string.theme_builtin_monet_name, R.string.theme_builtin_monet_desc, 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
+            BuiltinTheme("monetlight", R.string.theme_builtin_monetlight_name, R.string.theme_builtin_monetlight_desc, 0xFFE3E3E3, 0xFFCCCCCC, 0xFF000000),
+            BuiltinTheme("monetdark", R.string.theme_builtin_monetdark_name, R.string.theme_builtin_monetdark_desc, 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
         )
     }
 
     /**
-     * Represents a built-in XML theme with preview colors
+     * Represents a built-in XML theme with preview colors.
+     *
+     * [id] is the stored `theme` pref value and must never change; the display name and
+     * description are string resources so the list follows the app locale.
      */
     data class BuiltinTheme(
         val id: String,
-        val name: String,
-        val description: String,
+        @StringRes val nameRes: Int,
+        @StringRes val descriptionRes: Int,
         val backgroundColor: Long,  // For preview
         val keyColor: Long,         // For preview
         val labelColor: Long        // For preview
@@ -178,7 +182,7 @@ class ThemeSettingsActivity : ComponentActivity() {
                 ) {
                     ThemeSettingsScreen(
                         onBack = { finish() },
-                        onThemeSelected = { themeId ->
+                        onThemeSelected = { themeId, themeDisplayName ->
                             // Find swipe trail color
                             var swipeTrailColor = 0xFF9B59B6.toInt() // Default purple
                             
@@ -223,7 +227,7 @@ class ThemeSettingsActivity : ComponentActivity() {
                             intent.setPackage(packageName) // Restrict to our own package
                             sendBroadcast(intent)
                             
-                            Toast.makeText(this, "Applying theme: $themeId", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, getString(R.string.theme_toast_applying, themeDisplayName), Toast.LENGTH_SHORT).show()
                             
                             // Restart the app to the LauncherActivity to ensure clean theme application
                             // Delay slightly to allow toast to show and preference to commit
@@ -256,7 +260,8 @@ private fun notifyKeyboardThemeChanged(context: android.content.Context) {
 @Composable
 fun ThemeSettingsScreen(
     onBack: () -> Unit,
-    onThemeSelected: (String) -> Unit
+    /** Called with the theme's stored id and its (localized) display name for feedback. */
+    onThemeSelected: (themeId: String, displayName: String) -> Unit
 ) {
     val context = LocalContext.current
     // Use DirectBootAwarePreferences to ensure we read the same prefs as the service
@@ -332,12 +337,13 @@ fun ThemeSettingsScreen(
                 }
             }
             items(availableThemes) { builtinTheme ->
+                val builtinName = stringResource(builtinTheme.nameRes)
                 BuiltinThemeCard(
                     theme = builtinTheme,
                     isSelected = currentThemeId == builtinTheme.id,
                     onSelect = {
                         currentThemeId = builtinTheme.id
-                        onThemeSelected(builtinTheme.id)
+                        onThemeSelected(builtinTheme.id, builtinName)
                     }
                 )
             }
@@ -362,7 +368,7 @@ fun ThemeSettingsScreen(
                         isSelected = currentThemeId == customId,
                         onSelect = {
                             currentThemeId = customId
-                            onThemeSelected(customId)
+                            onThemeSelected(customId, theme.name)
                         },
                         onEdit = { editingTheme = theme },
                         onDelete = { showDeleteConfirm = theme.id }
@@ -394,7 +400,7 @@ fun ThemeSettingsScreen(
                 if (themesInCategory.isNotEmpty()) {
                     item {
                         Text(
-                            category.displayName,
+                            stringResource(category.labelRes),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(vertical = 4.dp)
@@ -403,14 +409,14 @@ fun ThemeSettingsScreen(
                     items(themesInCategory) { themeInfo ->
                         val decorativeId = "decorative_${themeInfo.id}"
                         ThemeCard(
-                            name = themeInfo.name,
+                            name = themeInfo.displayName(context.resources),
                             colorScheme = themeInfo.colorScheme,
-                            description = themeInfo.description,
+                            description = themeInfo.displayDescription(context.resources),
                             isCustom = false,
                             isSelected = currentThemeId == decorativeId,
                             onSelect = {
                                 currentThemeId = decorativeId
-                                onThemeSelected(decorativeId)
+                                onThemeSelected(decorativeId, themeInfo.name)
                             }
                         )
                     }
@@ -693,7 +699,7 @@ fun BuiltinThemeCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            theme.name,
+                            stringResource(theme.nameRes),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color(theme.labelColor)
@@ -709,7 +715,7 @@ fun BuiltinThemeCard(
                         }
                     }
                     Text(
-                        theme.description,
+                        stringResource(theme.descriptionRes),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(theme.labelColor).copy(alpha = 0.7f)
                     )
@@ -767,7 +773,9 @@ fun ThemeCreatorDialog(
     onDismiss: () -> Unit,
     onSave: (CustomTheme) -> Unit
 ) {
-    var themeName by remember { mutableStateOf(initialTheme?.name ?: "My Theme") }
+    // Default name for a NEW theme only; it is the user's to edit and is stored as typed.
+    val defaultThemeName = stringResource(R.string.theme_default_custom_name)
+    var themeName by remember { mutableStateOf(initialTheme?.name ?: defaultThemeName) }
     // Use priority: initialTheme colors > defaultColors > darkKeyboardColorScheme
     var colors by remember { mutableStateOf(initialTheme?.colors ?: defaultColors ?: darkKeyboardColorScheme()) }
     var selectedColorAttribute by remember { mutableStateOf<ColorAttribute?>(null) }
@@ -919,7 +927,7 @@ fun ThemeCreatorDialog(
     selectedColorAttribute?.let { attr ->
         ColorPickerDialog(
             initialColor = getColorForAttribute(colors, attr),
-            attributeName = attr.displayName,
+            attributeName = stringResource(attr.labelRes),
             onDismiss = { selectedColorAttribute = null },
             onColorSelected = { newColor ->
                 colors = setColorForAttribute(colors, attr, newColor)
@@ -1174,25 +1182,26 @@ fun ColorPickerDialog(
     }
 }
 
-// Color attribute enumeration
-enum class ColorAttribute(val displayName: String) {
-    KEY_DEFAULT("Key Default"),
-    KEY_ACTIVATED("Key Activated"),
-    KEY_LOCKED("Key Locked"),
-    KEY_MODIFIER("Key Modifier"),
-    KEY_SPECIAL("Key Special"),
-    KEY_LABEL("Key Label"),
-    KEY_SUB_LABEL("Sub Label"),
-    KEY_SECONDARY_LABEL("Secondary Label"),
-    KEY_BORDER("Key Border"),
-    KEY_BORDER_ACTIVATED("Border Activated"),
-    SWIPE_TRAIL("Swipe Trail"),
-    RIPPLE("Ripple"),
-    SUGGESTION_TEXT("Suggestion Text"),
-    SUGGESTION_BACKGROUND("Suggestion Background"),
-    SUGGESTION_HIGH_CONFIDENCE("High Confidence"),
-    KEYBOARD_BACKGROUND("Keyboard Background"),
-    KEYBOARD_SURFACE("Keyboard Surface")
+// Color attribute enumeration. [labelRes] is the same string the editor row shows, so the
+// color-picker dialog title matches the row the user tapped.
+enum class ColorAttribute(@StringRes val labelRes: Int) {
+    KEY_DEFAULT(R.string.theme_color_key_default),
+    KEY_ACTIVATED(R.string.theme_color_key_activated),
+    KEY_LOCKED(R.string.theme_color_key_locked),
+    KEY_MODIFIER(R.string.theme_color_key_modifier),
+    KEY_SPECIAL(R.string.theme_color_key_special),
+    KEY_LABEL(R.string.theme_color_key_label),
+    KEY_SUB_LABEL(R.string.theme_color_sub_label),
+    KEY_SECONDARY_LABEL(R.string.theme_color_secondary_label),
+    KEY_BORDER(R.string.theme_color_key_border),
+    KEY_BORDER_ACTIVATED(R.string.theme_color_border_activated),
+    SWIPE_TRAIL(R.string.theme_color_swipe_trail),
+    RIPPLE(R.string.theme_color_ripple),
+    SUGGESTION_TEXT(R.string.theme_color_suggestion_text),
+    SUGGESTION_BACKGROUND(R.string.theme_color_suggestion_background),
+    SUGGESTION_HIGH_CONFIDENCE(R.string.theme_color_high_confidence),
+    KEYBOARD_BACKGROUND(R.string.theme_color_keyboard_background),
+    KEYBOARD_SURFACE(R.string.theme_color_keyboard_surface)
 }
 
 // Helper functions

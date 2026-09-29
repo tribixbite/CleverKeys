@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import java.io.File
+import tribixbite.cleverkeys.EnglishResourceText
 
 /**
  * ARC-075 — the GIF import status is a TYPE, not a message that happens to be English.
@@ -51,7 +52,7 @@ class GifImportStatusTest {
         )
         for (message in messages) {
             val status = GifImportStatus.forImportResult(
-                tribixbite.cleverkeys.gif.GifPackImportResult.Error(message)
+                tribixbite.cleverkeys.gif.GifPackImportResult.Error(message), EnglishResourceText
             )
             assertWithMessage(
                 "ARC-075: '$message' is a failed import and must render as one; the pre-fix " +
@@ -68,16 +69,36 @@ class GifImportStatusTest {
     @Test
     fun `a successful import is never a failure, whatever the pack is called`() {
         val ok = GifImportStatus.forImportResult(
-            tribixbite.cleverkeys.gif.GifPackImportResult.Success("err.pack", "Error Handling", 3)
+            tribixbite.cleverkeys.gif.GifPackImportResult.Success("err.pack", "Error Handling", 3),
+            EnglishResourceText,
         )
         assertThat(ok).isInstanceOf(GifImportStatus.Ok::class.java)
         assertWithMessage("a pack NAME must not be able to steer the render branch")
             .that(ok.message).contains("Error Handling")
 
         val installed = GifImportStatus.forImportResult(
-            tribixbite.cleverkeys.gif.GifPackImportResult.AlreadyInstalled("err.pack", "Error")
+            tribixbite.cleverkeys.gif.GifPackImportResult.AlreadyInstalled("err.pack", "Error"),
+            EnglishResourceText,
         )
         assertThat(installed).isInstanceOf(GifImportStatus.Ok::class.java)
+    }
+
+    @Test
+    fun `success copy comes from resources with the GIF count pluralized`() {
+        // 2026-09-29 i18n sweep: the Ok messages are string resources, so a translated locale
+        // shows translated copy. Resolved here against the English res/values text.
+        fun success(count: Int) = GifImportStatus.forImportResult(
+            tribixbite.cleverkeys.gif.GifPackImportResult.Success("p.id", "Cats", count),
+            EnglishResourceText,
+        ).message
+        assertThat(success(1)).isEqualTo("Imported: Cats (1 GIF)")
+        assertThat(success(12)).isEqualTo("Imported: Cats (12 GIFs)")
+
+        val installed = GifImportStatus.forImportResult(
+            tribixbite.cleverkeys.gif.GifPackImportResult.AlreadyInstalled("p.id", "Cats"),
+            EnglishResourceText,
+        )
+        assertThat(installed.message).isEqualTo("Pack 'Cats' already installed")
     }
 
     @Test

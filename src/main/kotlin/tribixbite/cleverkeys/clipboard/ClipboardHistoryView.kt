@@ -873,9 +873,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             )
             if (!success) {
                 val msg = if (entry.isPrivate) {
-                    "This app doesn't accept direct media — private entries are never placed on the system clipboard"
+                    R.string.clipboard_paste_media_private_refused
                 } else {
-                    "Cannot paste media here"
+                    R.string.clipboard_paste_media_unsupported
                 }
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             }
@@ -914,7 +914,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private fun writeToSystemClipboard(text: String) {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as SystemClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("CleverKeys", text))
-        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, R.string.common_copied_to_clipboard, Toast.LENGTH_SHORT).show()
     }
 
     override fun on_clipboard_history_change() {
@@ -1305,13 +1305,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
                 // ── Todo status visual indicator (prefix + strikethrough) ──
                 if (currentTab == ClipboardTab.TODOS && entry.todoStatus != null) {
-                    val prefix = when (entry.todoStatus) {
-                        TodoEntry.STATUS_COMPLETED -> "[done] "
-                        TodoEntry.STATUS_PLANNED -> "[plan] "
-                        else -> ""
-                    }
+                    val prefix = TodoEntry.statusPrefix(entry.todoStatus, context.resources)
                     // Non-breaking spaces so time suffix never wraps mid-unit
-                    val timeStr = "\u00A0\u00B7\u00A0${entry.getRelativeTime().replace(' ', '\u00A0')}"
+                    val timeStr = "\u00A0\u00B7\u00A0${entry.getRelativeTime(context.resources).replace(' ', '\u00A0')}"
                     val spannable = android.text.SpannableStringBuilder(prefix + entry.content).append(timeStr)
 
                     // Strikethrough the content portion (not prefix or timestamp) for completed

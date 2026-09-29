@@ -110,7 +110,15 @@ class LauncherSetupFlowTest {
         assertWithMessage("the third step is the per-key calibration step")
             .that(third).contains("R.string.launcher_step_calibrate")
         assertWithMessage("the third step must describe what calibration does")
-            .that(third).contains("description = \"Configure up to 8 subkey actions per key\"")
+            .that(third).contains("description = stringResource(R.string.launcher_step_calibrate_desc)")
+        // The description is a localized resource; pin its English wording (the product claim).
+        // Scans every res/values XML so this holds before and after the sweep shim is merged.
+        val calibrateDesc = Regex("""<string name="launcher_step_calibrate_desc"[^>]*>([^<]*)</string>""")
+        assertWithMessage("the English calibration description")
+            .that(
+                File("res/values").listFiles().orEmpty().filter { it.name.endsWith(".xml") }
+                    .firstNotNullOfOrNull { calibrateDesc.find(it.readText())?.groupValues?.get(1) }
+            ).isEqualTo("Configure up to 8 subkey actions per key")
         assertWithMessage("tapping the third step must open calibration")
             .that(third).contains("onCalibrateGestures()")
 

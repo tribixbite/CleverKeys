@@ -75,6 +75,9 @@ class ShortSwipeCalibrationActivity : ComponentActivity() {
     }
 }
 
+/** How a practice-pad gesture was classified against the configured thresholds. */
+private enum class CalibrationGesture { TAP, SHORT, LONG }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ShortSwipeCalibrationScreen(
@@ -85,7 +88,17 @@ private fun ShortSwipeCalibrationScreen(
 ) {
     var minDistance by remember { mutableFloatStateOf(initialMinDistance.toFloat()) }
     var maxDistance by remember { mutableFloatStateOf(initialMaxDistance.toFloat()) }
-    var feedbackText by remember { mutableStateOf("Touch and drag to test") }
+    // Last classified practice gesture (null until the first one) and its length in % of the
+    // key diagonal. The feedback line is resolved from these at composition time so it is
+    // localized and follows a locale change, instead of caching an English sentence in state.
+    var feedbackGesture by remember { mutableStateOf<CalibrationGesture?>(null) }
+    var feedbackPct by remember { mutableIntStateOf(0) }
+    val feedbackText = when (feedbackGesture) {
+        null -> stringResource(R.string.calibration_feedback_idle)
+        CalibrationGesture.TAP -> stringResource(R.string.calibration_feedback_tap, feedbackPct)
+        CalibrationGesture.SHORT -> stringResource(R.string.calibration_feedback_short, feedbackPct)
+        CalibrationGesture.LONG -> stringResource(R.string.calibration_feedback_long, feedbackPct)
+    }
     var feedbackColor by remember { mutableStateOf(Color.Gray) }
     var lastDistance by remember { mutableFloatStateOf(0f) }
 
@@ -114,7 +127,7 @@ private fun ShortSwipeCalibrationScreen(
                 title = { Text(stringResource(R.string.calibration_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back))
                     }
                 },
                 actions = {
@@ -123,7 +136,7 @@ private fun ShortSwipeCalibrationScreen(
                         maxDistance = Defaults.SHORT_GESTURE_MAX_DISTANCE.toFloat()
                         onSave(minDistance.toInt(), maxDistance.toInt())
                     }) {
-                        Icon(Icons.Default.Refresh, "Reset to defaults")
+                        Icon(Icons.Default.Refresh, stringResource(R.string.calibration_reset_defaults_desc))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -177,17 +190,18 @@ private fun ShortSwipeCalibrationScreen(
                     // Convert measured px displacement to % of the reference key diagonal
                     // so feedback matches how the engine interprets the thresholds.
                     val pct = if (refKeyDiagonalPx > 0f) distance / refKeyDiagonalPx * 100f else 0f
+                    feedbackPct = pct.toInt()
                     when {
                         pct < minDistance -> {
-                            feedbackText = "TAP (${pct.toInt()}% of key)"
+                            feedbackGesture = CalibrationGesture.TAP
                             feedbackColor = Color.White
                         }
                         pct <= maxDistance -> {
-                            feedbackText = "SHORT SWIPE ✓ (${pct.toInt()}% of key)"
+                            feedbackGesture = CalibrationGesture.SHORT
                             feedbackColor = Color(0xFF4CAF50) // Green
                         }
                         else -> {
-                            feedbackText = "LONG SWIPE → word (${pct.toInt()}% of key)"
+                            feedbackGesture = CalibrationGesture.LONG
                             feedbackColor = Color(0xFF2196F3) // Blue
                         }
                     }
@@ -247,9 +261,18 @@ private fun TutorialSection() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                GestureLegendItem("TAP", Color.White, "< Min")
-                GestureLegendItem("SHORT", Color(0xFF4CAF50), "Min - Max")
-                GestureLegendItem("LONG", Color(0xFF2196F3), "> Max")
+                GestureLegendItem(
+                    stringResource(R.string.calibration_legend_tap), Color.White,
+                    stringResource(R.string.calibration_legend_tap_range)
+                )
+                GestureLegendItem(
+                    stringResource(R.string.calibration_legend_short), Color(0xFF4CAF50),
+                    stringResource(R.string.calibration_legend_short_range)
+                )
+                GestureLegendItem(
+                    stringResource(R.string.calibration_legend_long), Color(0xFF2196F3),
+                    stringResource(R.string.calibration_legend_long_range)
+                )
             }
         }
     }
@@ -408,7 +431,7 @@ private fun ConfigurationSection(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = "${minDistance.toInt()}%",
+                    text = stringResource(R.string.calibration_percent_value, minDistance.toInt()),
                     modifier = Modifier.width(60.dp),
                     textAlign = TextAlign.End,
                     fontWeight = FontWeight.Medium
@@ -441,7 +464,7 @@ private fun ConfigurationSection(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = "${maxDistance.toInt()}%",
+                    text = stringResource(R.string.calibration_percent_value, maxDistance.toInt()),
                     modifier = Modifier.width(60.dp),
                     textAlign = TextAlign.End,
                     fontWeight = FontWeight.Medium

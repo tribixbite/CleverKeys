@@ -142,7 +142,16 @@ class DictionarySortOrderTest {
             "the sort spinner's labels are the user-visible half of this contract; the code " +
                 "maps position → SortType.values()[position], so the list must be in the enum's " +
                 "declaration order"
-        ).that(text).contains("""listOf("Freq", "Match", "A-Z", "Z-A")""")
+        ).that(text.replace(Regex("\\s+"), " ")).contains(
+            "listOf( R.string.dict_sort_freq, R.string.dict_sort_match, R.string.dict_sort_a_z, R.string.dict_sort_z_a )"
+        )
+        // The labels are string resources now (localized); pin the English wording, which is
+        // the release-note claim ("Sort by Frequency/Match/A-Z/Z-A"). Scans every
+        // res/values/*.xml so the check holds whether the key lives in strings.xml or a
+        // not-yet-merged sweep file.
+        val englishLabels = listOf("dict_sort_freq", "dict_sort_match", "dict_sort_a_z", "dict_sort_z_a")
+            .map { englishString(it) }
+        assertThat(englishLabels).containsExactly("Freq", "Match", "A-Z", "Z-A").inOrder()
         assertWithMessage("position is resolved positionally against the enum")
             .that(text.replace(Regex("\\s+"), " ")).contains("SortType.values()[position]")
 
@@ -151,5 +160,13 @@ class DictionarySortOrderTest {
         val declared = Regex("""^\s*(\w+),?""", RegexOption.MULTILINE)
             .findAll(enumBlock).map { it.groupValues[1] }.toList()
         assertThat(declared).containsExactly("FREQ", "MATCH", "A_Z", "Z_A").inOrder()
+    }
+
+    /** English value of string resource [name], searched across every res/values XML file. */
+    private fun englishString(name: String): String? {
+        val pattern = Regex("""<string name="${Regex.escape(name)}"[^>]*>([^<]*)</string>""")
+        return File("res/values").listFiles().orEmpty()
+            .filter { it.name.endsWith(".xml") }
+            .firstNotNullOfOrNull { pattern.find(it.readText())?.groupValues?.get(1) }
     }
 }

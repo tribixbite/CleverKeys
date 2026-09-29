@@ -14,7 +14,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,7 +61,13 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
                         loadCollectedDataPage()
                     }
                 ) {
-                    Text("↺", fontSize = 18.sp)
+                    // Glyph kept as-is; TalkBack reads the localized action instead of the symbol name.
+                    val refreshDescription = stringResource(R.string.settings_swipe_data_refresh)
+                    Text(
+                        "↺",
+                        fontSize = 18.sp,
+                        modifier = Modifier.semantics { contentDescription = refreshDescription }
+                    )
                 }
             }
         },
@@ -87,7 +96,13 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
                 // Stats summary
                 if (stats != null) {
                     Text(
-                        text = "Showing ${dataList.size} of $collectedDataTotalCount • ${stats.uniqueWords} unique words",
+                        text = pluralStringResource(
+                            R.plurals.settings_swipe_data_summary,
+                            stats.uniqueWords,
+                            stats.uniqueWords,
+                            dataList.size,
+                            collectedDataTotalCount
+                        ),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 4.dp)
@@ -142,7 +157,11 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
 
                 if (dataList.isEmpty()) {
                     Text(
-                        text = if (collectedDataSearchQuery.isNotEmpty()) "No results for \"$collectedDataSearchQuery\"" else "No data collected yet.",
+                        text = if (collectedDataSearchQuery.isNotEmpty()) {
+                            stringResource(R.string.settings_swipe_data_no_results, collectedDataSearchQuery)
+                        } else {
+                            stringResource(R.string.settings_swipe_data_empty)
+                        },
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -172,7 +191,11 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
                                         val traceJson = data.toJSON().toString(2)
                                         val clip = android.content.ClipData.newPlainText("Swipe Trace", traceJson)
                                         clipboardManager.setPrimaryClip(clip)
-                                        Toast.makeText(_self, "Trace copied to clipboard", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            _self,
+                                            _self.getString(R.string.settings_swipe_data_trace_copied),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     },
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -186,7 +209,7 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "\"${data.targetWord}\"",
+                                            text = stringResource(R.string.settings_swipe_data_target_word, data.targetWord),
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 14.sp,
                                             color = MaterialTheme.colorScheme.onSurface
@@ -202,13 +225,13 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "Keys: $keys",
+                                            text = stringResource(R.string.settings_swipe_data_keys, keys),
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             maxLines = 1
                                         )
                                         Text(
-                                            text = "$points pts",
+                                            text = pluralStringResource(R.plurals.settings_swipe_data_points, points, points),
                                             fontSize = 10.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                         )

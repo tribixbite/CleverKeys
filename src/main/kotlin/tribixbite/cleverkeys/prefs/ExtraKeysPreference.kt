@@ -35,11 +35,11 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
         defaultChecked: Boolean
     ) : CheckBoxPreference(ctx) {
         init {
-            val kv = KeyValue.getKeyByName(keyName)
-            var title = keyTitle(keyName, kv)
-            keyDescription(ctx.resources, keyName)?.let {
-                title += " ($it)"
-            }
+            val res = ctx.resources
+            val name = keyTitle(res, keyName)
+            val title = keyDescription(res, keyName)
+                ?.let { res.getString(R.string.extra_key_title_with_description, name, it) }
+                ?: name
             key = prefKeyOfKeyName(keyName)
             setDefaultValue(defaultChecked)
             setTitle(title)
@@ -205,28 +205,28 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "cut" -> id = R.string.key_descr_cut
                 "end" -> {
                     id = R.string.key_descr_end
-                    additionalInfo = formatKeyCombination(arrayOf("fn", "right"))
+                    additionalInfo = formatKeyCombination(res, arrayOf("fn", "right"))
                 }
                 "home" -> {
                     id = R.string.key_descr_home
-                    additionalInfo = formatKeyCombination(arrayOf("fn", "left"))
+                    additionalInfo = formatKeyCombination(res, arrayOf("fn", "left"))
                 }
                 "page_down" -> {
                     id = R.string.key_descr_page_down
-                    additionalInfo = formatKeyCombination(arrayOf("fn", "down"))
+                    additionalInfo = formatKeyCombination(res, arrayOf("fn", "down"))
                 }
                 "page_up" -> {
                     id = R.string.key_descr_page_up
-                    additionalInfo = formatKeyCombination(arrayOf("fn", "up"))
+                    additionalInfo = formatKeyCombination(res, arrayOf("fn", "up"))
                 }
                 "paste" -> id = R.string.key_descr_paste
                 "pasteAsPlainText" -> {
                     id = R.string.key_descr_pasteAsPlainText
-                    additionalInfo = formatKeyCombination(arrayOf("fn", "paste"))
+                    additionalInfo = formatKeyCombination(res, arrayOf("fn", "paste"))
                 }
                 "redo" -> {
                     id = R.string.key_descr_redo
-                    additionalInfo = formatKeyCombination(arrayOf("fn", "undo"))
+                    additionalInfo = formatKeyCombination(res, arrayOf("fn", "undo"))
                 }
                 "delete_word" -> {
                     id = R.string.key_descr_delete_word
@@ -277,101 +277,129 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
 
             if (id == 0) return additionalInfo
 
-            var descr = res.getString(id)
-            if (additionalInfo != null) {
-                descr += "  —  $additionalInfo"
-            }
-            return descr
+            val descr = res.getString(id)
+            return additionalInfo
+                ?.let { res.getString(R.string.extra_key_description_with_shortcut, descr, it) }
+                ?: descr
         }
 
+        /**
+         * Human-readable, localized title of an extra key for the settings UI. Glyph labels
+         * use private-use-area code points that only render with special_font.ttf, so the
+         * settings list shows names instead. Key-cap abbreviations that read the same on every
+         * keyboard (F11, F12, Esc, Fn) and literal symbol keys stay untranslated.
+         */
         @JvmStatic
-        fun keyTitle(keyName: String, kv: KeyValue): String {
-            // Return human-readable names for settings UI instead of glyph characters
-            // Glyphs use private use area Unicode that only renders with special_font.ttf
+        fun keyTitle(res: Resources, keyName: String): String {
+            KEY_TITLE_RES[keyName]?.let { return res.getString(it) }
+            ACCENT_TITLES[keyName]?.let { (glyph, nameRes) ->
+                val accentName = res.getString(nameRes)
+                return if (glyph == null) accentName
+                else res.getString(R.string.extra_key_title_accent, glyph, accentName)
+            }
             return when (keyName) {
                 "f11_placeholder" -> "F11"
                 "f12_placeholder" -> "F12"
-                "alt" -> "Alt"
-                "meta" -> "Meta"
-                "compose" -> "Compose"
-                "voice_typing" -> "Voice"
-                "switch_clipboard" -> "Clipboard"
-                "change_method" -> "Switch IME"
-                "capslock" -> "Caps Lock"
-                "tab" -> "Tab"
+                // Key-cap abbreviations, identical on keyboards in every locale.
                 "esc" -> "Esc"
-                "page_up" -> "Page Up"
-                "page_down" -> "Page Down"
-                "home" -> "Home"
-                "end" -> "End"
-                "copy" -> "Copy"
-                "paste" -> "Paste"
-                "cut" -> "Cut"
-                "copy_private" -> "Private Copy"
-                "selectAll" -> "Select All"
-                "shareText" -> "Share"
-                "pasteAsPlainText" -> "Paste Plain"
-                "undo" -> "Undo"
-                "redo" -> "Redo"
-                "delete_word" -> "Delete Word"
-                "forward_delete_word" -> "Fwd Delete Word"
-                "superscript" -> "Superscript"
-                "subscript" -> "Subscript"
-                "switch_greekmath" -> "Greek/Math"
-                "switch_forward" -> "Next Layout"
-                "switch_backward" -> "Previous Layout"
-                "menu" -> "Menu"
-                "scroll_lock" -> "Scroll Lock"
-                "zwj" -> "ZWJ (Joiner)"
-                "zwnj" -> "ZWNJ (Non-Joiner)"
-                "nbsp" -> "NBSP (Space)"
-                "nnbsp" -> "NNBSP (Narrow Space)"
-                // Accents - show the accent name
-                "accent_aigu" -> "´ Acute"
-                "accent_grave" -> "` Grave"
-                "accent_double_aigu" -> "˝ Double Acute"
-                "accent_dot_above" -> "˙ Dot Above"
-                "accent_circonflexe" -> "ˆ Circumflex"
-                "accent_tilde" -> "˜ Tilde"
-                "accent_cedille" -> "¸ Cedilla"
-                "accent_trema" -> "¨ Umlaut"
-                "accent_ring" -> "˚ Ring"
-                "accent_caron" -> "ˇ Caron"
-                "accent_macron" -> "¯ Macron"
-                "accent_ogonek" -> "˛ Ogonek"
-                "accent_breve" -> "˘ Breve"
-                "accent_slash" -> "/ Slash"
-                "accent_bar" -> "— Bar"
-                "accent_dot_below" -> ". Dot Below"
-                "accent_hook_above" -> "Hook Above"
-                "accent_horn" -> "Horn"
-                "accent_double_grave" -> "Double Grave"
+                "fn" -> "Fn"
                 // Symbols - show the actual symbol
                 "€", "ß", "£", "§", "†", "ª", "º" -> keyName
-                // Combining characters - show name
-                else -> if (keyName.startsWith("combining_")) {
-                    keyName.removePrefix("combining_").replace("_", " ").replaceFirstChar { it.uppercase() }
-                } else {
-                    // Fallback: use key name as-is (human readable)
-                    keyName.replace("_", " ").replaceFirstChar { it.uppercase() }
-                }
+                // Combining diacritics and anything unlisted: derive a readable name from the
+                // key identifier (e.g. "combining_sukun" -> "Sukun").
+                // TODO(i18n): the combining-diacritic names are transliterations derived from
+                // key ids, not string resources.
+                else -> keyName.removePrefix("combining_").replace("_", " ")
+                    .replaceFirstChar { it.uppercase() }
             }
         }
 
-        /** Format a key combination using readable names */
-        @JvmStatic
-        fun formatKeyCombination(keys: Array<String>): String {
-            return keys.joinToString(" + ") { keyName ->
-                keyTitle(keyName, KeyValue.getKeyByName(keyName))
-            }
-        }
+        /** Extra keys whose settings title is a plain string resource. */
+        private val KEY_TITLE_RES: Map<String, Int> = mapOf(
+            "alt" to R.string.key_descr_alt,
+            "meta" to R.string.key_descr_meta,
+            "compose" to R.string.key_descr_compose,
+            "voice_typing" to R.string.extra_key_title_voice,
+            "switch_clipboard" to R.string.extra_key_title_clipboard,
+            "change_method" to R.string.extra_key_title_switch_ime,
+            "capslock" to R.string.extra_key_title_caps_lock,
+            "tab" to R.string.key_descr_tab,
+            "page_up" to R.string.key_descr_page_up,
+            "page_down" to R.string.key_descr_page_down,
+            "home" to R.string.key_descr_home,
+            "end" to R.string.key_descr_end,
+            "copy" to R.string.key_descr_copy,
+            "paste" to R.string.key_descr_paste,
+            "cut" to R.string.key_descr_cut,
+            "copy_private" to R.string.extra_key_title_private_copy,
+            "selectAll" to R.string.extra_key_title_select_all,
+            "shareText" to R.string.extra_key_title_share,
+            "pasteAsPlainText" to R.string.extra_key_title_paste_plain,
+            "undo" to R.string.key_descr_undo,
+            "redo" to R.string.key_descr_redo,
+            "autofill" to R.string.extra_key_title_autofill,
+            "delete_word" to R.string.extra_key_title_delete_word,
+            "forward_delete_word" to R.string.extra_key_title_forward_delete_word,
+            "superscript" to R.string.key_descr_superscript,
+            "subscript" to R.string.key_descr_subscript,
+            "switch_greekmath" to R.string.extra_key_title_greek_math,
+            "switch_forward" to R.string.extra_key_title_next_layout,
+            "switch_backward" to R.string.extra_key_title_previous_layout,
+            "menu" to R.string.extra_key_title_menu,
+            "scroll_lock" to R.string.extra_key_title_scroll_lock,
+            "zwj" to R.string.extra_key_title_zwj,
+            "zwnj" to R.string.extra_key_title_zwnj,
+            "nbsp" to R.string.extra_key_title_nbsp,
+            "nnbsp" to R.string.extra_key_title_nnbsp,
+            // Keys that only appear inside shortcut descriptions ("Fn + Right arrow").
+            "left" to R.string.key_descr_arrow_left,
+            "right" to R.string.key_descr_arrow_right,
+            "up" to R.string.key_descr_arrow_up,
+            "down" to R.string.key_descr_arrow_down,
+            "backspace" to R.string.key_descr_backspace,
+            "forward_delete" to R.string.key_descr_delete
+        )
 
-        /** Explain a gesture on a key using readable names */
+        /**
+         * Dead-key accents: the accent glyph shown before the name (null when the accent has
+         * no standalone spacing glyph) and the localized accent name.
+         */
+        private val ACCENT_TITLES: Map<String, Pair<String?, Int>> = mapOf(
+            "accent_aigu" to ("\u00B4" to R.string.extra_key_accent_acute),
+            "accent_grave" to ("`" to R.string.extra_key_accent_grave),
+            "accent_double_aigu" to ("\u02DD" to R.string.extra_key_accent_double_acute),
+            "accent_dot_above" to ("\u02D9" to R.string.extra_key_accent_dot_above),
+            "accent_circonflexe" to ("\u02C6" to R.string.extra_key_accent_circumflex),
+            "accent_tilde" to ("\u02DC" to R.string.extra_key_accent_tilde),
+            "accent_cedille" to ("\u00B8" to R.string.extra_key_accent_cedilla),
+            "accent_trema" to ("\u00A8" to R.string.extra_key_accent_umlaut),
+            "accent_ring" to ("\u02DA" to R.string.extra_key_accent_ring),
+            "accent_caron" to ("\u02C7" to R.string.extra_key_accent_caron),
+            "accent_macron" to ("\u00AF" to R.string.extra_key_accent_macron),
+            "accent_ogonek" to ("\u02DB" to R.string.extra_key_accent_ogonek),
+            "accent_breve" to ("\u02D8" to R.string.extra_key_accent_breve),
+            "accent_slash" to ("/" to R.string.extra_key_accent_slash),
+            "accent_bar" to ("\u2014" to R.string.extra_key_accent_bar),
+            "accent_dot_below" to ("." to R.string.extra_key_accent_dot_below),
+            "accent_hook_above" to (null to R.string.extra_key_accent_hook_above),
+            "accent_horn" to (null to R.string.extra_key_accent_horn),
+            "accent_double_grave" to (null to R.string.extra_key_accent_double_grave)
+        )
+
+        /** Format a key combination ("Fn + Right arrow") using localized key names. */
         @JvmStatic
-        fun formatKeyCombinationGesture(res: Resources, keyName: String): String {
-            return res.getString(R.string.key_descr_gesture) + " + " +
-                    keyTitle(keyName, KeyValue.getKeyByName(keyName))
-        }
+        fun formatKeyCombination(res: Resources, keys: Array<String>): String =
+            keys.map { keyTitle(res, it) }
+                .reduce { acc, next -> res.getString(R.string.extra_key_combination, acc, next) }
+
+        /** Explain a gesture on a key ("Gesture + Backspace") using localized names. */
+        @JvmStatic
+        fun formatKeyCombinationGesture(res: Resources, keyName: String): String =
+            res.getString(
+                R.string.extra_key_combination,
+                res.getString(R.string.key_descr_gesture),
+                keyTitle(res, keyName)
+            )
 
         /** Place an extra key next to the key specified by the first argument, on
             bottom-right preferably or on the bottom-left. If the specified key is not

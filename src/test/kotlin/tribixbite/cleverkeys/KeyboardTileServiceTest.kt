@@ -63,8 +63,18 @@ class KeyboardTileServiceTest {
 
     @Test
     fun tileContentDescriptionMatchesTheState() {
-        val active = KeyboardTileService.tileContentDescriptionFor(Tile.STATE_ACTIVE)
-        val inactive = KeyboardTileService.tileContentDescriptionFor(Tile.STATE_INACTIVE)
+        val activeRes = KeyboardTileService.tileContentDescriptionFor(Tile.STATE_ACTIVE)
+        val inactiveRes = KeyboardTileService.tileContentDescriptionFor(Tile.STATE_INACTIVE)
+        assertWithMessage("each state must map to its own description resource")
+            .that(activeRes).isEqualTo(R.string.tile_descr_active)
+        assertWithMessage("each state must map to its own description resource")
+            .that(inactiveRes).isEqualTo(R.string.tile_descr_inactive)
+
+        // The descriptions are resources taking the app name as %1$s (resolved by the service);
+        // pin the English wording the release notes promised, as TalkBack would announce it.
+        val english = TranslationResources.strings(TranslationResources.defaultDir)
+        val active = english.getValue("tile_descr_active").replace("%1\$s", "CleverKeys")
+        val inactive = english.getValue("tile_descr_inactive").replace("%1\$s", "CleverKeys")
 
         assertWithMessage("the active description must say CleverKeys is the current keyboard")
             .that(active).isEqualTo("CleverKeys is active. Tap to switch keyboard.")

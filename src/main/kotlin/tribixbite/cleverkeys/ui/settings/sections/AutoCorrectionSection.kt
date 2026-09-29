@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,7 +50,7 @@ internal fun SettingsActivity.AutoCorrectionSection() {
 
                     // Basic Settings
                     Text(
-                        text = "Basic Settings",
+                        text = stringResource(R.string.autocorrect_basic_header),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                     )
@@ -64,7 +65,7 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                             autocorrectMinWordLength = it.toInt()
                             saveSetting("autocorrect_min_word_length", autocorrectMinWordLength)
                         },
-                        displayValue = "$autocorrectMinWordLength letters"
+                        displayValue = pluralStringResource(R.plurals.settings_value_letters, autocorrectMinWordLength, autocorrectMinWordLength)
                     )
 
                     SettingsSlider(
@@ -95,7 +96,7 @@ internal fun SettingsActivity.AutoCorrectionSection() {
 
                     // Swipe-Specific Settings
                     Text(
-                        text = "Swipe Correction",
+                        text = stringResource(R.string.autocorrect_swipe_correction_header),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                     )
@@ -112,7 +113,7 @@ internal fun SettingsActivity.AutoCorrectionSection() {
 
                     // Advanced Correction Settings
                     Text(
-                        text = "Advanced",
+                        text = stringResource(R.string.autocorrect_advanced_header),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                     )
@@ -141,7 +142,7 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                             autocorrectMaxLengthDiff = it.toInt()
                             saveSetting("autocorrect_max_length_diff", autocorrectMaxLengthDiff)
                         },
-                        displayValue = "$autocorrectMaxLengthDiff chars"
+                        displayValue = pluralStringResource(R.plurals.settings_value_chars, autocorrectMaxLengthDiff, autocorrectMaxLengthDiff)
                     )
 
                     SettingsSlider(
@@ -154,7 +155,7 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                             autocorrectPrefixLength = it.toInt()
                             saveSetting("autocorrect_prefix_length", autocorrectPrefixLength)
                         },
-                        displayValue = "$autocorrectPrefixLength letters"
+                        displayValue = pluralStringResource(R.plurals.settings_value_letters, autocorrectPrefixLength, autocorrectPrefixLength)
                     )
 
                     // "Correction Search Depth" (autocorrect_max_beam_candidates) lived here.

@@ -181,7 +181,12 @@ internal fun SettingsActivity.InputBehaviorSection() {
                             SettingsDropdown(
                                 title = stringResource(R.string.input_context_source_title),
                                 description = stringResource(R.string.input_context_source_desc),
-                                options = listOf("Built-in + Learned", "Learned Only", "Built-in Only"),
+                                // Display labels only, index-aligned with the `when` below; the stored pref value is the id string.
+                                options = listOf(
+                                    stringResource(R.string.input_context_source_both),
+                                    stringResource(R.string.input_context_source_learned_only),
+                                    stringResource(R.string.input_context_source_static_only)
+                                ),
                                 selectedIndex = when (contextSource) {
                                     "learned_only" -> 1
                                     "static_only" -> 2
@@ -232,7 +237,13 @@ internal fun SettingsActivity.InputBehaviorSection() {
                             SettingsDropdown(
                                 title = stringResource(R.string.input_learning_aggression_title),
                                 description = stringResource(R.string.input_learning_aggression_desc),
-                                options = listOf("Conservative", "Balanced", "Aggressive"),
+                                // Display labels only, index-aligned with the `when` below; the stored pref value is the id string.
+                                // Same labels as the suggestion-provenance card's aggression line.
+                                options = listOf(
+                                    stringResource(R.string.provenance_aggression_conservative),
+                                    stringResource(R.string.provenance_aggression_balanced),
+                                    stringResource(R.string.provenance_aggression_aggressive)
+                                ),
                                 selectedIndex = when (learningAggression) {
                                     "CONSERVATIVE" -> 0
                                     "BALANCED" -> 1
@@ -447,7 +458,12 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 SettingsDropdown(
                     title = stringResource(R.string.input_number_row_title),
                     description = stringResource(R.string.input_number_row_desc),
-                    options = listOf("Hidden", "Numbers Only", "Numbers + Symbols"),
+                    // Display labels only, index-aligned with the `when` below; the stored pref value is the id string.
+                    options = listOf(
+                        stringResource(R.string.input_number_row_hidden),
+                        stringResource(R.string.input_number_row_numbers_only),
+                        stringResource(R.string.input_number_row_numbers_symbols)
+                    ),
                     selectedIndex = when (numberRowMode) {
                         "no_number_row" -> 0
                         "no_symbols" -> 1
@@ -468,7 +484,12 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 SettingsDropdown(
                     title = stringResource(R.string.input_show_numpad_title),
                     description = stringResource(R.string.input_show_numpad_desc),
-                    options = listOf("Never", "Landscape Only", "Always"),
+                    // Display labels only, index-aligned with the `when` below; the stored pref value is the id string.
+                    options = listOf(
+                        stringResource(R.string.input_show_numpad_never),
+                        stringResource(R.string.input_show_numpad_landscape_only),
+                        stringResource(R.string.input_show_numpad_always)
+                    ),
                     selectedIndex = when (showNumpadMode) {
                         "never" -> 0
                         "landscape" -> 1
@@ -489,7 +510,11 @@ internal fun SettingsActivity.InputBehaviorSection() {
                 SettingsDropdown(
                     title = stringResource(R.string.input_numpad_layout_title),
                     description = stringResource(R.string.input_numpad_layout_desc),
-                    options = listOf("High First (7-8-9 on top)", "Low First (1-2-3 on top)"),
+                    // Display labels only; the stored pref value stays "default"/"low_first".
+                    options = listOf(
+                        stringResource(R.string.input_numpad_layout_high_first),
+                        stringResource(R.string.input_numpad_layout_low_first)
+                    ),
                     selectedIndex = if (numpadLayout == "low_first") 1 else 0,
                     onSelectionChange = { index ->
                         numpadLayout = if (index == 1) "low_first" else "default"

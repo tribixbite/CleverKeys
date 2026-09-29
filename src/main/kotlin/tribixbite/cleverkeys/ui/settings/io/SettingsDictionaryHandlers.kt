@@ -2,13 +2,14 @@ package tribixbite.cleverkeys.ui.settings.io
 
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import tribixbite.cleverkeys.BackupRestoreActivity
+import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.ResourcesResultText
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.backup.DictImportPlan
 import tribixbite.cleverkeys.backup.LangWord
@@ -20,7 +21,7 @@ internal fun SettingsActivity.exportCustomDictionary() {
             exportName("cleverkeys-dictionary.json", "application/json")
         )
     } catch (e: Exception) {
-        Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        toastFilePickerFailed(e)
     }
 }
 
@@ -28,7 +29,7 @@ internal fun SettingsActivity.importCustomDictionary() {
     try {
         dictionaryImportLauncher.launch(arrayOf("application/json", "*/*"))
     } catch (e: Exception) {
-        Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        toastFilePickerFailed(e)
     }
 }
 
@@ -40,17 +41,19 @@ internal fun SettingsActivity.performDictionaryExport(uri: Uri, plaintextOptOut:
             val summary = withContext(Dispatchers.IO) {
                 backupRestoreManager.exportDictionaries(uri)
             }
-            backupRestoreViewModel.resultTitle = "Dictionary Export Successful"
-            backupRestoreViewModel.resultMessage = "Custom words: ${summary.customWordsCount} " +
-                    "(across ${summary.languageCount} languages)\n" +
-                    "Disabled words: ${summary.disabledWordsCount}\n\n" +
-                    "File: ${uri.lastPathSegment}"
-            backupRestoreViewModel.showResultDialog = true
+            val counts = resources.getQuantityString(
+                R.plurals.dictionary_backup_export_custom_words,
+                summary.languageCount, summary.customWordsCount, summary.languageCount,
+            ) + "\n" + getString(R.string.dictionary_backup_export_disabled_words, summary.disabledWordsCount)
+            showIoResult(
+                getString(R.string.dictionary_backup_export_success_title),
+                paragraphs(counts, getString(R.string.common_file_name, uri.lastPathSegment.orEmpty())),
+            )
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Dictionary export failed", e)
-            backupRestoreViewModel.resultTitle = "Dictionary Export Failed"
-            backupRestoreViewModel.resultMessage = "Failed to export dictionaries:\n\n${e.message}"
-            backupRestoreViewModel.showResultDialog = true
+            showIoFailure(
+                R.string.dictionary_backup_export_failed_title, R.string.dictionary_backup_export_failed, e.message
+            )
         } finally {
             backupRestoreViewModel.isProcessing = false
         }
@@ -74,9 +77,10 @@ internal fun SettingsActivity.performDictionaryImport(uri: Uri, retryPassphrase:
                 it.newCustomWords.isEmpty() && it.newDisabledWords.isEmpty()
             }
             if (nothingToImport) {
-                backupRestoreViewModel.resultTitle = "No changes"
-                backupRestoreViewModel.resultMessage = "Dictionary file has no new words to import."
-                backupRestoreViewModel.showResultDialog = true
+                showIoResult(
+                    getString(R.string.backup_result_no_changes_title),
+                    getString(R.string.dictionary_backup_no_new_words),
+                )
             } else {
                 backupRestoreViewModel.dictPreviewPlan = plan
             }
@@ -87,9 +91,9 @@ internal fun SettingsActivity.performDictionaryImport(uri: Uri, retryPassphrase:
             }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Build dictionary plan failed", e)
-            backupRestoreViewModel.resultTitle = "Import Failed"
-            backupRestoreViewModel.resultMessage = "Failed to read dictionary file:\n\n${e.message}"
-            backupRestoreViewModel.showResultDialog = true
+            showIoFailure(
+                R.string.backup_result_import_failed_title, R.string.dictionary_backup_read_failed, e.message
+            )
         } finally {
             backupRestoreViewModel.isProcessing = false
         }
@@ -113,16 +117,17 @@ internal fun SettingsActivity.applyPlannedDictionaries(
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.applyDictImportPlan(plan, excludedCustom, excludedDisabled, prefs)
             }
-            backupRestoreViewModel.resultTitle = "Dictionary Import Successful"
-            backupRestoreViewModel.resultMessage = buildDictResultMessage(result)
-            backupRestoreViewModel.showResultDialog = true
+            showIoResult(
+                getString(R.string.dictionary_backup_import_success_title),
+                buildDictResultMessage(result, ResourcesResultText(resources)),
+            )
             LocalBroadcastManager.getInstance(_self)
                 .sendBroadcast(Intent(BackupRestoreActivity.ACTION_DICTIONARY_IMPORTED))
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Apply dictionary plan failed", e)
-            backupRestoreViewModel.resultTitle = "Import Failed"
-            backupRestoreViewModel.resultMessage = "Failed to apply dictionary import:\n\n${e.message}"
-            backupRestoreViewModel.showResultDialog = true
+            showIoFailure(
+                R.string.backup_result_import_failed_title, R.string.dictionary_backup_apply_failed, e.message
+            )
         } finally {
             backupRestoreViewModel.isProcessing = false
         }

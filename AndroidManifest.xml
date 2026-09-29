@@ -27,7 +27,7 @@
     <!-- CleverKeys Keyboard Service -->
     <!-- FIX: Removed applicationIdSuffix ".debug" from build.gradle to fix keyboard crash -->
     <service android:name="tribixbite.cleverkeys.CleverKeysService"
-             android:label="CleverKeys Keyboard"
+             android:label="@string/manifest_ime_service_label"
              android:permission="android.permission.BIND_INPUT_METHOD"
              android:exported="true"
              android:theme="@style/CleverKeysIMETheme"
@@ -89,18 +89,18 @@
          point. exported=false + no MAIN/DEFAULT filter closes the exported-activity
          attack surface (explicit Intents ignore intent-filters). -->
 
-    <activity android:name="tribixbite.cleverkeys.GeometricSettingsActivity" android:label="Geometric Settings" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
-    <activity android:name="tribixbite.cleverkeys.CtcSettingsActivity" android:label="CTC Settings" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
+    <activity android:name="tribixbite.cleverkeys.GeometricSettingsActivity" android:label="@string/geo_settings_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
+    <activity android:name="tribixbite.cleverkeys.CtcSettingsActivity" android:label="@string/ctc_settings_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
-    <activity android:name="tribixbite.cleverkeys.DictionaryManagerActivity" android:label="Dictionary Manager" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
+    <activity android:name="tribixbite.cleverkeys.DictionaryManagerActivity" android:label="@string/activities_dictionary_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
-    <activity android:name="tribixbite.cleverkeys.LayoutManagerActivity" android:label="Keyboard Layouts" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
+    <activity android:name="tribixbite.cleverkeys.LayoutManagerActivity" android:label="@string/layout_manager_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
-    <activity android:name="tribixbite.cleverkeys.ThemeSettingsActivity" android:label="Keyboard Themes" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
+    <activity android:name="tribixbite.cleverkeys.ThemeSettingsActivity" android:label="@string/theme_settings_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
-    <activity android:name="tribixbite.cleverkeys.ExtraKeysConfigActivity" android:label="Extra Keys Configuration" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
+    <activity android:name="tribixbite.cleverkeys.ExtraKeysConfigActivity" android:label="@string/extra_keys_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
-    <activity android:name="tribixbite.cleverkeys.ShortSwipeCustomizationActivity" android:label="Short Swipe Customization" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
+    <activity android:name="tribixbite.cleverkeys.ShortSwipeCustomizationActivity" android:label="@string/short_swipe_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
     <!-- FileProvider for sharing GIF files via content:// URIs (commitContent) -->
     <provider
@@ -123,7 +123,7 @@
          redirect code path stays — an action-less explicit start (the in-app
          SettingsNavigation.openBackupRestore, or a stale launcher shortcut) still degrades
          gracefully — it just is no longer implicitly resolvable from outside the app. -->
-    <activity android:name="tribixbite.cleverkeys.BackupRestoreActivity" android:label="Backup &amp; Restore" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true" tools:targetApi="24">
+    <activity android:name="tribixbite.cleverkeys.BackupRestoreActivity" android:label="@string/manifest_backup_restore_label" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true" tools:targetApi="24">
       <!-- #70: Intent filters for programmatic backup/restore automation (Termux, scripts) -->
       <intent-filter>
         <action android:name="tribixbite.cleverkeys.action.EXPORT_SETTINGS"/>
@@ -138,9 +138,9 @@
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.cleverkeys.ShortSwipeCalibrationActivity" android:label="Short Swipe Calibration" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
+    <activity android:name="tribixbite.cleverkeys.ShortSwipeCalibrationActivity" android:label="@string/calibration_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
-    <activity android:name="tribixbite.cleverkeys.SwipeDebugActivity" android:label="Swipe Debug Log" android:theme="@style/swipeDebugTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
+    <activity android:name="tribixbite.cleverkeys.SwipeDebugActivity" android:label="@string/advanced_swipe_debug_log_title" android:theme="@style/swipeDebugTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
     <!-- #156 Private copy: selection-toolbar receiver. Exported BY DESIGN (threat review:
          docs/history/audits/remediation-plans/156-private-copy-paste.md §6) but android:enabled="false"

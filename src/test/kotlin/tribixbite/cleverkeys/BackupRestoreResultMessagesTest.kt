@@ -11,6 +11,10 @@ import org.junit.Test
  * Each test pins one user-visible state of the result dialog body so
  * future copy edits can't silently drop a conditional line, and so the
  * `driftCount` field stays logcat-only (NEVER user-visible).
+ *
+ * Since the 2026-09-29 i18n sweep the builders take a [ResultText]; these tests resolve
+ * through [EnglishResourceText] (the English `res/values` text), so they still pin the
+ * rendered English copy AND prove every line is a real resource with matching arguments.
  */
 class BackupRestoreResultMessagesTest {
 
@@ -24,7 +28,7 @@ class BackupRestoreResultMessagesTest {
             importedCount = 5
         }
 
-        val msg = buildSettingsResultMessage(result)
+        val msg = buildSettingsResultMessage(result, EnglishResourceText)
 
         assertTrue("opening line", msg.contains("Import completed."))
         assertTrue("applied line", msg.contains("• Applied: 5"))
@@ -44,7 +48,7 @@ class BackupRestoreResultMessagesTest {
             excludedByUserCount = 2
         }
 
-        val msg = buildSettingsResultMessage(result)
+        val msg = buildSettingsResultMessage(result, EnglishResourceText)
 
         assertTrue(msg.contains("• Excluded by you: 2"))
     }
@@ -56,7 +60,7 @@ class BackupRestoreResultMessagesTest {
             skippedCount = 4
         }
 
-        val msg = buildSettingsResultMessage(result)
+        val msg = buildSettingsResultMessage(result, EnglishResourceText)
 
         assertTrue(msg.contains("• Not importable (internal/derived): 4"))
     }
@@ -68,7 +72,7 @@ class BackupRestoreResultMessagesTest {
             shortSwipeCustomizationsImported = 7
         }
 
-        val msg = buildSettingsResultMessage(result)
+        val msg = buildSettingsResultMessage(result, EnglishResourceText)
 
         assertTrue(msg.contains("• Short-swipe applied: 7"))
     }
@@ -80,7 +84,7 @@ class BackupRestoreResultMessagesTest {
             sourceVersion = "1.4.0"
         }
 
-        val msg = buildSettingsResultMessage(result)
+        val msg = buildSettingsResultMessage(result, EnglishResourceText)
 
         assertTrue(msg.contains("• Source version: 1.4.0"))
     }
@@ -92,7 +96,7 @@ class BackupRestoreResultMessagesTest {
             sourceVersion = "unknown"
         }
 
-        val msg = buildSettingsResultMessage(result)
+        val msg = buildSettingsResultMessage(result, EnglishResourceText)
 
         assertFalse(msg.contains("Source version"))
     }
@@ -107,7 +111,7 @@ class BackupRestoreResultMessagesTest {
             currentScreenHeight = 2400
         }
 
-        val msg = buildSettingsResultMessage(result)
+        val msg = buildSettingsResultMessage(result, EnglishResourceText)
 
         assertTrue(msg.contains("Screen-size mismatch"))
         assertTrue(msg.contains("source 720x1280"))
@@ -123,7 +127,7 @@ class BackupRestoreResultMessagesTest {
             currentScreenWidth = 1080
         }
 
-        val msg = buildSettingsResultMessage(result)
+        val msg = buildSettingsResultMessage(result, EnglishResourceText)
 
         assertFalse(msg.contains("Screen-size mismatch"))
     }
@@ -137,7 +141,7 @@ class BackupRestoreResultMessagesTest {
             driftCount = 7
         }
 
-        val msg = buildSettingsResultMessage(result)
+        val msg = buildSettingsResultMessage(result, EnglishResourceText)
 
         assertFalse(
             "drift count must not leak to user-visible message",
@@ -157,7 +161,7 @@ class BackupRestoreResultMessagesTest {
             disabledWordsImported = 1
         }
 
-        val msg = buildDictResultMessage(result)
+        val msg = buildDictResultMessage(result, EnglishResourceText)
 
         assertTrue(msg.contains("Dictionary import completed."))
         assertTrue(msg.contains("• Custom words applied: 3"))
@@ -173,7 +177,7 @@ class BackupRestoreResultMessagesTest {
             excludedByUserCount = 2
         }
 
-        val msg = buildDictResultMessage(result)
+        val msg = buildDictResultMessage(result, EnglishResourceText)
 
         assertTrue(msg.contains("• Excluded by you: 2"))
     }
@@ -185,7 +189,7 @@ class BackupRestoreResultMessagesTest {
             sourceVersion = "1.3.5"
         }
 
-        val msg = buildDictResultMessage(result)
+        val msg = buildDictResultMessage(result, EnglishResourceText)
 
         assertTrue(msg.contains("• Source version: 1.3.5"))
     }
@@ -197,7 +201,7 @@ class BackupRestoreResultMessagesTest {
             sourceVersion = "unknown"
         }
 
-        val msg = buildDictResultMessage(result)
+        val msg = buildDictResultMessage(result, EnglishResourceText)
 
         assertFalse(msg.contains("Source version"))
     }

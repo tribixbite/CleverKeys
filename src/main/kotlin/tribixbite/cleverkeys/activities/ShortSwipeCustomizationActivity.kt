@@ -188,7 +188,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                         onClick = {
                             scope.launch {
                                 manager.resetAll()
-                                Toast.makeText(context, "All customizations reset", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.short_swipe_toast_all_reset, Toast.LENGTH_SHORT).show()
                             }
                         }
                     ) {
@@ -356,23 +356,15 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                         showCommandPalette = false
                         editingDirection = null
 
-                        val actionDesc = when (selection.actionType) {
-                            ActionType.COMMAND -> "command: ${selection.actionValue}"
-                            ActionType.TEXT -> "text: \"${selection.actionValue.take(20)}${if (selection.actionValue.length > 20) "..." else ""}\""
-                            ActionType.KEY_EVENT -> "key event: ${selection.actionValue}"
-                            ActionType.INTENT -> {
-                                try {
-                                    val def = com.google.gson.Gson().fromJson(selection.actionValue, IntentDefinition::class.java)
-                                    "intent: ${def.name}"
-                                } catch (e: Exception) {
-                                    "intent"
-                                }
-                            }
-                            ActionType.TIMESTAMP -> "timestamp: ${selection.actionValue}"
-                        }
+                        val actionDesc = shortSwipeActionDescription(context, selection.actionType, selection.actionValue)
                         Toast.makeText(
                             context,
-                            "Mapped ${direction.displayName} → \"${selection.displayLabel}\" ($actionDesc)",
+                            context.getString(
+                                R.string.short_swipe_toast_mapped,
+                                context.getString(direction.displayNameRes),
+                                selection.displayLabel,
+                                actionDesc
+                            ),
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -431,9 +423,9 @@ fun KeyCustomizationDialog(
 
                 Text(
                     text = if (key != null) {
-                        "Shows existing layout mappings + custom mappings"
+                        stringResource(R.string.short_swipe_dialog_hint_with_layout)
                     } else {
-                        "Tap a direction to add or edit a short swipe gesture"
+                        stringResource(R.string.short_swipe_dialog_hint_no_layout)
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -572,7 +564,7 @@ private fun MappingListItem(
                     .padding(horizontal = 8.dp, vertical = 2.dp)
             ) {
                 Text(
-                    text = direction.shortLabel,
+                    text = stringResource(swipeDirectionShortRes(direction)),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary
@@ -617,19 +609,8 @@ private fun MappingListItem(
                         fontSize = 13.sp
                     )
                 }
-                val actionDesc = when (mapping.actionType) {
-                    ActionType.COMMAND -> "Command: ${mapping.actionValue}"
-                    ActionType.TEXT -> "Text: \"${mapping.actionValue.take(20)}${if (mapping.actionValue.length > 20) "..." else ""}\""
-                    ActionType.KEY_EVENT -> "Key Event: ${mapping.actionValue}"
-                    ActionType.INTENT -> {
-                        try {
-                            val def = com.google.gson.Gson().fromJson(mapping.actionValue, IntentDefinition::class.java)
-                            "Intent: ${def.name}"
-                        } catch (e: Exception) {
-                            "Intent (invalid)"
-                        }
-                    }
-                    ActionType.TIMESTAMP -> "Timestamp: ${mapping.actionValue}"
+                val actionDesc = remember(mapping.actionType, mapping.actionValue, context) {
+                    shortSwipeActionDescription(context, mapping.actionType, mapping.actionValue)
                 }
                 Text(
                     text = actionDesc,
@@ -727,10 +708,50 @@ private fun DirectionZone(
     ) {
         // Show direction label in each zone
         Text(
-            text = direction.shortLabel,
+            text = stringResource(swipeDirectionShortRes(direction)),
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White.copy(alpha = 0.8f)
         )
     }
+}
+
+/** Longest text-action value quoted in a mapping summary before it is truncated with "…". */
+private const val ACTION_TEXT_PREVIEW_CHARS = 20
+
+/**
+ * Localized one-line summary of a short-swipe action ("Command: copy", "Text: "hi"", …),
+ * shared by the mapping card and the "Mapped …" confirmation toast.
+ *
+ * An INTENT value is the JSON of an [IntentDefinition]; when it does not parse, the summary
+ * says so instead of showing raw JSON.
+ */
+internal fun shortSwipeActionDescription(context: Context, type: ActionType, value: String): String =
+    when (type) {
+        ActionType.COMMAND -> context.getString(R.string.short_swipe_action_desc_command, value)
+        ActionType.TEXT -> context.getString(
+            R.string.short_swipe_action_desc_text,
+            if (value.length > ACTION_TEXT_PREVIEW_CHARS) value.take(ACTION_TEXT_PREVIEW_CHARS) + "…" else value
+        )
+        ActionType.KEY_EVENT -> context.getString(R.string.short_swipe_action_desc_key_event, value)
+        ActionType.INTENT -> try {
+            val def = com.google.gson.Gson().fromJson(value, IntentDefinition::class.java)
+            context.getString(R.string.short_swipe_action_desc_intent, def.name)
+        } catch (e: Exception) {
+            context.getString(R.string.short_swipe_action_desc_intent_invalid)
+        }
+        ActionType.TIMESTAMP -> context.getString(R.string.short_swipe_action_desc_timestamp, value)
+    }
+
+/** Localized compass abbreviation ("N", "NE", …) for the compact direction badges and zones. */
+@androidx.annotation.StringRes
+internal fun swipeDirectionShortRes(direction: SwipeDirection): Int = when (direction) {
+    SwipeDirection.N -> R.string.short_swipe_direction_short_n
+    SwipeDirection.NE -> R.string.short_swipe_direction_short_ne
+    SwipeDirection.E -> R.string.short_swipe_direction_short_e
+    SwipeDirection.SE -> R.string.short_swipe_direction_short_se
+    SwipeDirection.S -> R.string.short_swipe_direction_short_s
+    SwipeDirection.SW -> R.string.short_swipe_direction_short_sw
+    SwipeDirection.W -> R.string.short_swipe_direction_short_w
+    SwipeDirection.NW -> R.string.short_swipe_direction_short_nw
 }

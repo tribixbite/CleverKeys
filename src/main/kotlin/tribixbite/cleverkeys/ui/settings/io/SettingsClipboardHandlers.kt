@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.clipboard.sanitize.RulesetParser
 import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
@@ -20,12 +21,15 @@ internal fun SettingsActivity.recomputeCustomRulesStatus() {
         customFile.exists() -> {
             try {
                 val rs = RulesetParser.fromJson(customFile.readText())
-                "${rs.providers.size} providers loaded."
+                resources.getQuantityString(
+                    R.plurals.clipboard_rules_providers_loaded, rs.providers.size, rs.providers.size
+                )
             } catch (e: Exception) {
-                "Saved file is malformed: ${e.message}"
+                // TODO(i18n): the parser's detail message is English.
+                getString(R.string.clipboard_rules_saved_malformed, e.message.orEmpty())
             }
         }
-        clipboardCustomRulesUri != null -> "URI persisted but no copy on disk yet."
+        clipboardCustomRulesUri != null -> getString(R.string.clipboard_rules_uri_no_copy)
         else -> ""
     }
 }
@@ -49,7 +53,7 @@ internal fun SettingsActivity.notifySanitizationRulesChanged() {
  * Failure modes:
  *   - Stream open fails → status text + Toast, on-disk copy untouched
  *   - JSON malformed    → status text + Toast, on-disk copy untouched
- *   - 0 providers       → status text only ("File parsed but contained 0 providers."),
+ *   - 0 providers       → status text only (R.string.clipboard_rules_zero_providers),
  *                         on-disk copy untouched (parser accepted but content useless)
  *
  * In every failure case the previous valid file (if any) is retained.
@@ -60,7 +64,12 @@ internal fun SettingsActivity.handleCustomRulesPicked(uri: Uri) {
         try {
             val json = withContext(Dispatchers.IO) {
                 contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-                    ?: throw IOException("Could not open URI: $uri")
+                    ?: run {
+                        // The URI goes to logcat only; the exception message is shown in the
+                        // status line (clipboard_rules_invalid_detail), so it is localized.
+                        android.util.Log.w(SettingsActivity.TAG, "Could not open custom rules URI: $uri")
+                        throw IOException(getString(R.string.clipboard_rules_open_failed))
+                    }
             }
 
             // Validate by parsing — rejects malformed JSON / unsupported schema.
@@ -70,7 +79,7 @@ internal fun SettingsActivity.handleCustomRulesPicked(uri: Uri) {
                 // state, but we deliberately did NOT writeText for this branch
                 // (parser accepted but content is useless), so the helper has
                 // nothing to summarise. This is the one allowed deviation.
-                clipboardCustomRulesStatus = "File parsed but contained 0 providers."
+                clipboardCustomRulesStatus = getString(R.string.clipboard_rules_zero_providers)
                 return@launch
             }
 
@@ -95,17 +104,24 @@ internal fun SettingsActivity.handleCustomRulesPicked(uri: Uri) {
             notifySanitizationRulesChanged()
         } catch (e: Exception) {
             android.util.Log.w(SettingsActivity.TAG, "Custom rules import failed", e)
-            clipboardCustomRulesStatus = "Invalid rules file: ${e.message}"
-            Toast.makeText(_self, "Invalid rules file", Toast.LENGTH_LONG).show()
+            // TODO(i18n): the parser/IO detail message is English.
+            clipboardCustomRulesStatus = getString(R.string.clipboard_rules_invalid_detail, e.message.orEmpty())
+            Toast.makeText(_self, R.string.clipboard_rules_invalid, Toast.LENGTH_LONG).show()
         }
     }
 }
+
+/** The "• Imported: N entries" / "• Skipped: N duplicates" lines shared by both clipboard imports. */
+private fun SettingsActivity.clipboardImportCountLines(imported: Int, skipped: Int): List<String> = listOf(
+    resources.getQuantityString(R.plurals.clipboard_backup_imported_entries, imported, imported),
+    resources.getQuantityString(R.plurals.clipboard_backup_skipped_duplicates, skipped, skipped),
+)
 
 internal fun SettingsActivity.exportClipboardHistory() {
     try {
         clipboardExportLauncher.launch(exportName("cleverkeys-clipboard.json", "application/json"))
     } catch (e: Exception) {
-        Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        toastFilePickerFailed(e)
     }
 }
 
@@ -113,7 +129,7 @@ internal fun SettingsActivity.importClipboardHistory() {
     try {
         clipboardImportLauncher.launch(arrayOf("application/json", "*/*"))
     } catch (e: Exception) {
-        Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        toastFilePickerFailed(e)
     }
 }
 
@@ -123,7 +139,7 @@ internal fun SettingsActivity.exportClipboardZip() {
             exportName("cleverkeys-clipboard-full.zip", "application/zip")
         )
     } catch (e: Exception) {
-        Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        toastFilePickerFailed(e)
     }
 }
 
@@ -131,7 +147,7 @@ internal fun SettingsActivity.importClipboardZip() {
     try {
         clipboardZipImportLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "*/*"))
     } catch (e: Exception) {
-        Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        toastFilePickerFailed(e)
     }
 }
 
@@ -143,22 +159,33 @@ internal fun SettingsActivity.performClipboardExport(uri: Uri, plaintextOptOut: 
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.exportClipboardHistory(uri)
             }
-            backupRestoreViewModel.resultTitle = "Clipboard Export Successful"
-            // #156: a plaintext export omits private entries; tell the user how to include them.
-            val privateNote = if (result.privateSkipped > 0)
-                "\n\n🔒 ${result.privateSkipped} private ${if (result.privateSkipped == 1) "entry was" else "entries were"} excluded. Set a backup password (Settings → Backup & Restore) to include them in an encrypted export."
-            else ""
-            backupRestoreViewModel.resultMessage = "Exported ${result.exportedCount} clipboard entries.\n\n" +
-                    "File: ${uri.lastPathSegment}\n\n" +
-                    "Includes timestamps, expiry, and pinned/todo status. " +
-                    "Media files are NOT included — use Export ZIP for a full backup." +
-                    privateNote
-            backupRestoreViewModel.showResultDialog = true
+            val parts = buildList {
+                add(
+                    resources.getQuantityString(
+                        R.plurals.clipboard_backup_exported_entries, result.exportedCount, result.exportedCount
+                    )
+                )
+                add(getString(R.string.common_file_name, uri.lastPathSegment.orEmpty()))
+                add(getString(R.string.clipboard_backup_json_scope))
+                // #156: a plaintext export omits private entries; tell the user how to include them.
+                if (result.privateSkipped > 0) {
+                    add(
+                        resources.getQuantityString(
+                            R.plurals.clipboard_backup_private_excluded_export,
+                            result.privateSkipped, result.privateSkipped,
+                        )
+                    )
+                }
+            }
+            showIoResult(
+                getString(R.string.clipboard_backup_export_success_title),
+                paragraphs(*parts.toTypedArray()),
+            )
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard export failed", e)
-            backupRestoreViewModel.resultTitle = "Clipboard Export Failed"
-            backupRestoreViewModel.resultMessage = "Failed to export clipboard history:\n\n${e.message}"
-            backupRestoreViewModel.showResultDialog = true
+            showIoFailure(
+                R.string.clipboard_backup_export_failed_title, R.string.clipboard_backup_export_failed, e.message
+            )
         } finally {
             backupRestoreViewModel.isProcessing = false
         }
@@ -173,18 +200,17 @@ internal fun SettingsActivity.performClipboardImport(uri: Uri, retryPassphrase: 
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.importClipboardHistory(uri)
             }
-            backupRestoreViewModel.resultTitle = "Clipboard Import Successful"
-            backupRestoreViewModel.resultMessage = buildString {
-                appendLine("Clipboard import completed.\n")
-                appendLine("• Imported: ${result.importedCount} entries")
-                appendLine("• Skipped: ${result.skippedCount} duplicates")
+            val message = buildString {
+                appendLine(getString(R.string.clipboard_backup_import_completed))
+                appendLine()
+                clipboardImportCountLines(result.importedCount, result.skippedCount).forEach { appendLine(it) }
                 if (result.sourceVersion != "unknown") {
-                    appendLine("• Source version: ${result.sourceVersion}")
+                    appendLine(getString(R.string.backup_result_source_version, result.sourceVersion))
                 }
                 appendLine()
-                append("Imports merge with existing history without overwriting.")
+                append(getString(R.string.clipboard_backup_import_merge_note))
             }
-            backupRestoreViewModel.showResultDialog = true
+            showIoResult(getString(R.string.clipboard_backup_import_success_title), message)
         } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
             promptForPassphrase(e, retryPassphrase) { entered ->
                 backupRestoreManager.setImportPassphraseOverride(entered)
@@ -192,10 +218,9 @@ internal fun SettingsActivity.performClipboardImport(uri: Uri, retryPassphrase: 
             }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard import failed", e)
-            backupRestoreViewModel.resultTitle = "Clipboard Import Failed"
-            backupRestoreViewModel.resultMessage = "Failed to import clipboard history:\n\n${e.message}\n\n" +
-                    "Make sure the file is a valid CleverKeys clipboard backup."
-            backupRestoreViewModel.showResultDialog = true
+            showIoFailure(
+                R.string.clipboard_backup_import_failed_title, R.string.clipboard_backup_import_failed, e.message
+            )
         } finally {
             backupRestoreViewModel.isProcessing = false
         }
@@ -210,23 +235,43 @@ internal fun SettingsActivity.performClipboardZipExport(uri: Uri, plaintextOptOu
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.exportClipboardHistoryZip(uri)
             }
-            backupRestoreViewModel.resultTitle = "Full Clipboard Export Successful"
-            // #156: a plaintext ZIP omits private entries; tell the user how to include them.
-            val privateNote = if (result.privateSkipped > 0)
-                "\n🔒 ${result.privateSkipped} private excluded (set a backup password to include)\n"
-            else ""
-            backupRestoreViewModel.resultMessage = "Clipboard backup with media saved.\n\n" +
-                    "File: ${uri.lastPathSegment}\n\n" +
-                    "• ${result.exportedCount} clipboard entries\n" +
-                    "• ${result.mediaFilesIncluded} media files\n" +
-                    privateNote +
-                    "\nRestore via Import ZIP to recover all entries including images, videos, and other media."
-            backupRestoreViewModel.showResultDialog = true
+            val message = buildString {
+                appendLine(getString(R.string.clipboard_backup_zip_saved))
+                appendLine()
+                appendLine(getString(R.string.common_file_name, uri.lastPathSegment.orEmpty()))
+                appendLine()
+                appendLine(
+                    resources.getQuantityString(
+                        R.plurals.clipboard_backup_zip_entries, result.exportedCount, result.exportedCount
+                    )
+                )
+                appendLine(
+                    resources.getQuantityString(
+                        R.plurals.clipboard_backup_zip_media_files,
+                        result.mediaFilesIncluded, result.mediaFilesIncluded,
+                    )
+                )
+                // #156: a plaintext ZIP omits private entries; tell the user how to include them.
+                if (result.privateSkipped > 0) {
+                    appendLine()
+                    appendLine(
+                        resources.getQuantityString(
+                            R.plurals.clipboard_backup_zip_private_excluded,
+                            result.privateSkipped, result.privateSkipped,
+                        )
+                    )
+                }
+                appendLine()
+                append(getString(R.string.clipboard_backup_zip_restore_hint))
+            }
+            showIoResult(getString(R.string.clipboard_backup_zip_export_success_title), message)
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard ZIP export failed", e)
-            backupRestoreViewModel.resultTitle = "Clipboard ZIP Export Failed"
-            backupRestoreViewModel.resultMessage = "Failed to export clipboard history with media:\n\n${e.message}"
-            backupRestoreViewModel.showResultDialog = true
+            showIoFailure(
+                R.string.clipboard_backup_zip_export_failed_title,
+                R.string.clipboard_backup_zip_export_failed,
+                e.message,
+            )
         } finally {
             backupRestoreViewModel.isProcessing = false
         }
@@ -241,19 +286,18 @@ internal fun SettingsActivity.performClipboardZipImport(uri: Uri, retryPassphras
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.importClipboardHistoryZip(uri)
             }
-            backupRestoreViewModel.resultTitle = "Full Clipboard Import Successful"
-            backupRestoreViewModel.resultMessage = buildString {
-                appendLine("Full clipboard import completed.\n")
-                appendLine("• Imported: ${result.importedCount} entries")
-                appendLine("• Skipped: ${result.skippedCount} duplicates")
-                appendLine("• Media files restored: ${result.mediaFilesRestored}")
+            val message = buildString {
+                appendLine(getString(R.string.clipboard_backup_zip_import_completed))
+                appendLine()
+                clipboardImportCountLines(result.importedCount, result.skippedCount).forEach { appendLine(it) }
+                appendLine(getString(R.string.backup_result_media_restored, result.mediaFilesRestored))
                 if (result.sourceVersion != "unknown") {
-                    appendLine("• Source version: ${result.sourceVersion}")
+                    appendLine(getString(R.string.backup_result_source_version, result.sourceVersion))
                 }
                 appendLine()
-                append("All media files and thumbnails have been restored.")
+                append(getString(R.string.clipboard_backup_zip_media_restored_note))
             }
-            backupRestoreViewModel.showResultDialog = true
+            showIoResult(getString(R.string.clipboard_backup_zip_import_success_title), message)
         } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
             promptForPassphrase(e, retryPassphrase) { entered ->
                 backupRestoreManager.setImportPassphraseOverride(entered)
@@ -261,10 +305,11 @@ internal fun SettingsActivity.performClipboardZipImport(uri: Uri, retryPassphras
             }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard ZIP import failed", e)
-            backupRestoreViewModel.resultTitle = "Clipboard ZIP Import Failed"
-            backupRestoreViewModel.resultMessage = "Failed to import clipboard ZIP:\n\n${e.message}\n\n" +
-                    "Make sure the file is a valid CleverKeys clipboard ZIP backup."
-            backupRestoreViewModel.showResultDialog = true
+            showIoFailure(
+                R.string.clipboard_backup_zip_import_failed_title,
+                R.string.clipboard_backup_zip_import_failed,
+                e.message,
+            )
         } finally {
             backupRestoreViewModel.isProcessing = false
         }

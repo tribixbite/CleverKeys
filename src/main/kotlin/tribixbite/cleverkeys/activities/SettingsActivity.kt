@@ -453,7 +453,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var showLanguagePackDialog: Boolean
         get() = settingsViewModel.showLanguagePackDialog
         set(value) { settingsViewModel.showLanguagePackDialog = value }
-    internal var languagePackImportStatus: String?
+    internal var languagePackImportStatus: tribixbite.cleverkeys.ui.settings.io.LanguagePackImportStatus?
         get() = settingsViewModel.languagePackImportStatus
         set(value) { settingsViewModel.languagePackImportStatus = value }
 
@@ -810,7 +810,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Error setting up Compose UI", e)
-            Toast.makeText(this, "Settings UI failed to load: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this,
+                getString(
+                    R.string.settings_ui_load_failed,
+                    e.message ?: getString(R.string.common_unknown_error)
+                ),
+                Toast.LENGTH_LONG
+            ).show()
             finish()
         }
     }

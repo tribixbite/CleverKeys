@@ -9,6 +9,8 @@ import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.DirectBootAwarePreferences
+import tribixbite.cleverkeys.LanguageDisplayNames
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.langpack.ImportResult
 import tribixbite.cleverkeys.langpack.LanguagePackManager
@@ -54,48 +56,30 @@ internal fun SettingsActivity.refreshAvailableSecondaryLanguages() {
 }
 
 /**
- * Get display name for language code.
+ * Display name for a dictionary language code in the app's UI language, e.g. "Spanish (Español)"
+ * under English and "Spanyol (Español)" under Hungarian; the "none" sentinel is the translated
+ * "None". Replaces a hand-written English table (device finding 2026-09-29, fa/hu) — see
+ * [LanguageDisplayNames].
  */
-internal fun SettingsActivity.getLanguageDisplayName(code: String): String {
-    return when (code) {
-        "none" -> "None"
-        "en" -> "English"
-        "es" -> "Spanish (Español)"
-        "fr" -> "French (Français)"
-        "de" -> "German (Deutsch)"
-        "pt" -> "Portuguese (Português)"
-        "it" -> "Italian (Italiano)"
-        "ru" -> "Russian (Русский)"
-        "nl" -> "Dutch (Nederlands)"
-        "pl" -> "Polish (Polski)"
-        "sv" -> "Swedish (Svenska)"
-        "da" -> "Danish (Dansk)"
-        "no" -> "Norwegian (Norsk)"
-        "fi" -> "Finnish (Suomi)"
-        "cs" -> "Czech (Čeština)"
-        "hu" -> "Hungarian (Magyar)"
-        "tr" -> "Turkish (Türkçe)"
-        "el" -> "Greek (Ελληνικά)"
-        "ro" -> "Romanian (Română)"
-        "uk" -> "Ukrainian (Українська)"
-        "hr" -> "Croatian (Hrvatski)"
-        "sk" -> "Slovak (Slovenčina)"
-        "sl" -> "Slovenian (Slovenščina)"
-        "bg" -> "Bulgarian (Български)"
-        "mk" -> "Macedonian (Македонски)"
-        "he" -> "Hebrew (עברית)"
-        "ca" -> "Catalan (Català)"
-        "eu" -> "Basque (Euskara)"
-        "gl" -> "Galician (Galego)"
-        // Downloadable-only language packs (the full downloadable set also covers
-        // nl/ru/uk/el/bg/mk/he/tr above plus the bundled-language and en-variant zips —
-        // see the GitHub `langpacks` release / scripts/dictionaries/).
-        "id" -> "Indonesian (Bahasa Indonesia)"
-        "ms" -> "Malay (Bahasa Melayu)"
-        "sw" -> "Swahili (Kiswahili)"
-        "tl" -> "Tagalog (Filipino)"
-        else -> code.uppercase()
-    }
+internal fun SettingsActivity.getLanguageDisplayName(code: String): String =
+    if (code == LanguageDisplayNames.NONE) getString(R.string.common_none)
+    else LanguageDisplayNames.displayName(code, resources.configuration.locales[0])
+
+/**
+ * Outcome of the last language-pack import, as shown under the Import button.
+ *
+ * Typed for the same reason as [GifImportStatus]: the section used to colour the line with
+ * `status.startsWith("Error")`, which silently breaks the moment the message is translated.
+ * The variant decides the colour; [message] is pure, translatable copy.
+ */
+sealed interface LanguagePackImportStatus {
+    val message: String
+
+    /** A successful import. Rendered in the primary colour. */
+    data class Imported(override val message: String) : LanguagePackImportStatus
+
+    /** A failed import; [message] is the reason. Rendered in the error colour. */
+    data class Failed(override val message: String) : LanguagePackImportStatus
 }
 
 internal fun SettingsActivity.importLanguagePack() {
@@ -103,7 +87,7 @@ internal fun SettingsActivity.importLanguagePack() {
     try {
         languagePackImportLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "*/*"))
     } catch (e: Exception) {
-        Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.common_file_picker_failed, e.message.orEmpty()), Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -114,12 +98,17 @@ internal fun SettingsActivity.performLanguagePackImport(uri: Uri) {
             val manager = LanguagePackManager.getInstance(_self)
             when (val result = manager.importLanguagePack(uri)) {
                 is ImportResult.Success -> {
-                    languagePackImportStatus = "Imported: ${result.manifest.name} (${result.manifest.wordCount} words)"
+                    val words = result.manifest.wordCount
+                    languagePackImportStatus = LanguagePackImportStatus.Imported(
+                        resources.getQuantityString(
+                            R.plurals.multilang_pack_imported_status, words, result.manifest.name, words
+                        )
+                    )
                     refreshInstalledLanguagePacks()
                     refreshAvailableSecondaryLanguages()
                     Toast.makeText(
                         _self,
-                        "Language pack imported: ${result.manifest.name}",
+                        getString(R.string.multilang_pack_imported_toast, result.manifest.name),
                         Toast.LENGTH_SHORT
                     ).show()
                     // Measure the new pack for CTC eligibility now, off the main thread, rather
@@ -131,17 +120,20 @@ internal fun SettingsActivity.performLanguagePackImport(uri: Uri) {
                     withContext(Dispatchers.IO) { CtcInstalledPacks.evaluateNow(_self, code) }
                 }
                 is ImportResult.Error -> {
-                    languagePackImportStatus = "Error: ${result.message}"
+                    // The manager's reason text is not localized yet (domain layer).
+                    // TODO(i18n): typed ImportResult.Error reasons → string resources.
+                    languagePackImportStatus = LanguagePackImportStatus.Failed(result.message)
                     Toast.makeText(
                         _self,
-                        "Import failed: ${result.message}",
+                        getString(R.string.common_import_failed_detail, result.message),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         } catch (e: Exception) {
-            languagePackImportStatus = "Error: ${e.message}"
-            Toast.makeText(_self, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            val detail = e.message ?: getString(R.string.common_unknown_error)
+            languagePackImportStatus = LanguagePackImportStatus.Failed(detail)
+            Toast.makeText(_self, getString(R.string.common_import_failed_detail, detail), Toast.LENGTH_SHORT).show()
         }
     }
 }
@@ -158,10 +150,14 @@ internal fun SettingsActivity.deleteLanguagePack(code: String) {
                 CtcInstalledPacks.invalidate(_self, code)
                 refreshInstalledLanguagePacks()
                 refreshAvailableSecondaryLanguages()
-                Toast.makeText(_self, "Language pack deleted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(_self, getString(R.string.multilang_pack_deleted), Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
-            Toast.makeText(_self, "Delete failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                _self,
+                getString(R.string.common_delete_failed_detail, e.message ?: getString(R.string.common_unknown_error)),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }

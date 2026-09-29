@@ -70,8 +70,18 @@ object SwipeEngineFallback {
         return Diagnosis(false, findings)
     }
 
-    /** Measure [KeyboardData] using the same centre-value definition as CtcEngineAdapter. */
-    fun factsFor(layout: KeyboardData, language: String?): LayoutFacts {
+    /**
+     * Measure [KeyboardData] using the same centre-value definition as CtcEngineAdapter.
+     *
+     * @param unnamedName display name used when the layout has no (or a blank) `name`; callers
+     *   with a Context pass the localized `R.string.swipe_engine_fallback_unnamed_layout`, which
+     *   keeps this object free of Android resources and pure-JVM testable.
+     */
+    fun factsFor(
+        layout: KeyboardData,
+        language: String?,
+        unnamedName: String,
+    ): LayoutFacts {
         val alphabet = CtcScriptSupport.alphabetFor(language).toSet()
         val centres = HashSet<Char>()
         val corners = HashSet<Char>()
@@ -85,7 +95,7 @@ object SwipeEngineFallback {
         }
         val missing = alphabet.filterNot { it in centres }.sorted()
         return LayoutFacts(
-            displayName = layout.name?.takeIf { it.isNotBlank() } ?: "Unnamed layout",
+            displayName = layout.name?.takeIf { it.isNotBlank() } ?: unnamedName,
             script = layout.script,
             missingCentreLetters = missing.joinToString(""),
             cornerOnlyLetters = missing.filter { it in corners }.joinToString(""),

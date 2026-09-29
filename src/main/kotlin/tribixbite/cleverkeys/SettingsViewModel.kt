@@ -100,5 +100,7 @@ class SettingsViewModel : ViewModel() {
     // English message text (`startsWith("Error")`).
     var gifImportStatus by
         mutableStateOf<tribixbite.cleverkeys.ui.settings.io.GifImportStatus?>(null)
-    var languagePackImportStatus by mutableStateOf<String?>(null)
+    // Typed like gifImportStatus: the variant, not the message text, picks the colour.
+    var languagePackImportStatus by
+        mutableStateOf<tribixbite.cleverkeys.ui.settings.io.LanguagePackImportStatus?>(null)
 }

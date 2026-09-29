@@ -19,8 +19,9 @@ import org.objenesis.ObjenesisStd
  *
  * What is pinned **behaviourally** ([saveRefusesToOpenAPickerWithNothingToSave],
  * [saveProceedsOnceThereIsSomethingToSave]): the Save action is guarded on log content, so
- * an empty session tells the user "No logs to save" instead of opening an empty document
- * picker, and a non-empty session does not take that branch.
+ * an empty session tells the user "No logs to save" (`R.string.swipe_debug_toast_no_logs`)
+ * instead of opening an empty document picker, and a non-empty session does not take that
+ * branch.
  *
  * What is pinned at **source/resource level** ([toolbarOffersCopyClearAndSave],
  * [copyPutsTheWholeBufferOnTheClipboard], [saveUsesTheStorageAccessFramework]): the button
@@ -43,6 +44,9 @@ class SwipeDebugActionsTest {
     fun setUp() {
         mockkStatic(Toast::class)
         every { Toast.makeText(any(), any<CharSequence>(), any()) } returns mockk(relaxed = true)
+        // The activity's toasts are string resources (localized), shown via the @StringRes
+        // overload — which resolves the text on the device, so no Resources are touched here.
+        every { Toast.makeText(any(), any<Int>(), any()) } returns mockk(relaxed = true)
         // No constructor: Activity's android.jar stub ctor throws. Objenesis leaves every
         // field null, so the one field the tested path reads is set explicitly below.
         activity = ObjenesisStd().newInstance(activityClass)
@@ -78,7 +82,7 @@ class SwipeDebugActionsTest {
         assertWithMessage("an empty session must return before touching the framework")
             .that(thrown).isNull()
         verify(exactly = 1) {
-            Toast.makeText(any(), "No logs to save", Toast.LENGTH_SHORT)
+            Toast.makeText(any(), R.string.swipe_debug_toast_no_logs, Toast.LENGTH_SHORT)
         }
     }
 
@@ -93,7 +97,7 @@ class SwipeDebugActionsTest {
 
         // A non-empty buffer must NOT take the "nothing to save" branch.
         verify(exactly = 0) {
-            Toast.makeText(any(), "No logs to save", Toast.LENGTH_SHORT)
+            Toast.makeText(any(), R.string.swipe_debug_toast_no_logs, Toast.LENGTH_SHORT)
         }
     }
 

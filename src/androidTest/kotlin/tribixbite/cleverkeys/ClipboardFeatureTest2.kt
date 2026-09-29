@@ -198,58 +198,59 @@ class ClipboardFeatureTest2 {
     fun relativeTime_justNow_under60Seconds() {
         val now = System.currentTimeMillis()
         // 0 seconds ago
-        assertEquals("Just now", ClipboardEntry("t", now).getRelativeTime())
+        assertEquals(RelativeTime.JustNow, ClipboardEntry("t", now).relativeTime())
         // 30 seconds ago
-        assertEquals("Just now", ClipboardEntry("t", now - 30_000).getRelativeTime())
+        assertEquals(RelativeTime.JustNow, ClipboardEntry("t", now - 30_000).relativeTime())
         // 59 seconds ago
-        assertEquals("Just now", ClipboardEntry("t", now - 59_000).getRelativeTime())
+        assertEquals(RelativeTime.JustNow, ClipboardEntry("t", now - 59_000).relativeTime())
     }
 
     @Test
     fun relativeTime_minutesBoundary() {
         val now = System.currentTimeMillis()
         // Exactly 60 seconds → "1m ago"
-        assertEquals("1m ago", ClipboardEntry("t", now - 60_000).getRelativeTime())
+        assertEquals(RelativeTime.MinutesAgo(1), ClipboardEntry("t", now - 60_000).relativeTime())
         // 90 seconds → "1m ago" (integer division: 90/60=1)
-        assertEquals("1m ago", ClipboardEntry("t", now - 90_000).getRelativeTime())
+        assertEquals(RelativeTime.MinutesAgo(1), ClipboardEntry("t", now - 90_000).relativeTime())
         // 59 minutes ago
-        assertEquals("59m ago", ClipboardEntry("t", now - 59 * 60_000).getRelativeTime())
+        assertEquals(RelativeTime.MinutesAgo(59), ClipboardEntry("t", now - 59 * 60_000).relativeTime())
     }
 
     @Test
     fun relativeTime_hoursBoundary() {
         val now = System.currentTimeMillis()
         // Exactly 60 minutes → "1h ago"
-        assertEquals("1h ago", ClipboardEntry("t", now - 60 * 60_000).getRelativeTime())
+        assertEquals(RelativeTime.HoursAgo(1), ClipboardEntry("t", now - 60 * 60_000).relativeTime())
         // 23 hours ago
-        assertEquals("23h ago", ClipboardEntry("t", now - 23 * 3600_000L).getRelativeTime())
+        assertEquals(RelativeTime.HoursAgo(23), ClipboardEntry("t", now - 23 * 3600_000L).relativeTime())
     }
 
     @Test
     fun relativeTime_yesterdayBoundary() {
         val now = System.currentTimeMillis()
         // Exactly 24 hours → "Yesterday"
-        assertEquals("Yesterday", ClipboardEntry("t", now - 24 * 3600_000L).getRelativeTime())
+        assertEquals(RelativeTime.Yesterday, ClipboardEntry("t", now - 24 * 3600_000L).relativeTime())
         // 47 hours → still "Yesterday" (days=1)
-        assertEquals("Yesterday", ClipboardEntry("t", now - 47 * 3600_000L).getRelativeTime())
+        assertEquals(RelativeTime.Yesterday, ClipboardEntry("t", now - 47 * 3600_000L).relativeTime())
     }
 
     @Test
     fun relativeTime_daysBoundary() {
         val now = System.currentTimeMillis()
         // 2 days → "2d ago"
-        assertEquals("2d ago", ClipboardEntry("t", now - 2 * 86400_000L).getRelativeTime())
+        assertEquals(RelativeTime.DaysAgo(2), ClipboardEntry("t", now - 2 * 86400_000L).relativeTime())
         // 6 days → "6d ago"
-        assertEquals("6d ago", ClipboardEntry("t", now - 6 * 86400_000L).getRelativeTime())
+        assertEquals(RelativeTime.DaysAgo(6), ClipboardEntry("t", now - 6 * 86400_000L).relativeTime())
     }
 
     @Test
     fun relativeTime_weekOrOlderUsesDate() {
         val now = System.currentTimeMillis()
         // 7 days → falls through to date format
-        val result = ClipboardEntry("t", now - 7 * 86400_000L).getRelativeTime()
-        // Should NOT be "7d ago" — should be formatted date like "Mar 20"
-        assertFalse("7+ days should not use 'd ago' format", result.endsWith("d ago"))
+        val age = ClipboardEntry("t", now - 7 * 86400_000L).relativeTime()
+        // Should NOT be DaysAgo(7) ("7d ago") — should be a formatted date like "Mar 20"
+        assertTrue("7+ days should fall through to the date form", age is RelativeTime.OnDate)
+        val result = age.format(context.resources)
         // Should contain a month abbreviation
         assertTrue("Should be date format", result.matches(Regex("\\w{3} \\d{1,2}")))
     }
@@ -263,7 +264,7 @@ class ClipboardFeatureTest2 {
             addedTimestamp = now - 120_000L,      // added 2 minutes ago (this one matters)
             position = 1.0
         )
-        assertEquals("2m ago", entry.getRelativeTime())
+        assertEquals(RelativeTime.MinutesAgo(2), entry.relativeTime())
     }
 
     @Test
@@ -275,7 +276,7 @@ class ClipboardFeatureTest2 {
             pinnedTimestamp = now - 3600_000L,     // pinned 1 hour ago (this one matters)
             position = 1.0
         )
-        assertEquals("1h ago", entry.getRelativeTime())
+        assertEquals(RelativeTime.HoursAgo(1), entry.relativeTime())
     }
 
     // =========================================================================

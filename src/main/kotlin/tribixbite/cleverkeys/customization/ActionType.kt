@@ -1,21 +1,28 @@
 package tribixbite.cleverkeys.customization
 
+import androidx.annotation.StringRes
+import tribixbite.cleverkeys.R
+
 /**
  * Types of actions that can be executed by a short swipe gesture.
+ *
+ * The enum constant NAME is what gets persisted (mapping JSON / layout XML), so it must never
+ * change. The user-facing label and description are string resources, resolved at the display
+ * point with `getString` / `stringResource`.
  */
 enum class ActionType(
-    /** Display name for UI */
-    val displayName: String,
-    /** Description for settings UI */
-    val description: String
+    /** Display name for UI (string resource). */
+    @StringRes val displayNameRes: Int,
+    /** Description for settings UI (string resource). */
+    @StringRes val descriptionRes: Int
 ) {
     /**
      * Insert text string directly into the text field.
      * The actionValue contains the text to insert.
      */
     TEXT(
-        displayName = "Text Input",
-        description = "Insert text directly"
+        displayNameRes = R.string.action_type_text,
+        descriptionRes = R.string.action_type_text_desc
     ),
 
     /**
@@ -23,8 +30,8 @@ enum class ActionType(
      * The actionValue contains the command name from AvailableCommand enum.
      */
     COMMAND(
-        displayName = "Command",
-        description = "Execute keyboard command (copy, paste, cursor, etc.)"
+        displayNameRes = R.string.action_type_command,
+        descriptionRes = R.string.action_type_command_desc
     ),
 
     /**
@@ -32,8 +39,8 @@ enum class ActionType(
      * The actionValue contains the key event code.
      */
     KEY_EVENT(
-        displayName = "Key Event",
-        description = "Send raw key event (advanced)"
+        displayNameRes = R.string.action_type_key_event,
+        descriptionRes = R.string.action_type_key_event_desc
     ),
 
     /**
@@ -41,8 +48,8 @@ enum class ActionType(
      * The actionValue contains the JSON-serialized IntentDefinition.
      */
     INTENT(
-        displayName = "Send Intent",
-        description = "Send Android Intent (advanced)"
+        displayNameRes = R.string.command_palette_send_intent_title,
+        descriptionRes = R.string.action_type_intent_desc
     ),
 
     /**
@@ -52,8 +59,8 @@ enum class ActionType(
      * locale and the resulting string is committed via InputConnection.
      */
     TIMESTAMP(
-        displayName = "Timestamp",
-        description = "Insert formatted date/time using SimpleDateFormat pattern"
+        displayNameRes = R.string.command_palette_timestamp_title,
+        descriptionRes = R.string.action_type_timestamp_desc
     );
 
     companion object {
@@ -70,6 +77,11 @@ enum class ActionType(
 /**
  * Available commands that can be executed via COMMAND action type.
  * These map to editing operations in KeyEventHandler.
+ *
+ * [displayName] / [description] (and the [groupedByCategory] keys) are developer-facing
+ * metadata: no screen renders them — the Short Swipe UI lists commands from
+ * `CommandRegistry` instead — so they are intentionally not string resources.
+ * TODO(i18n): if any UI starts rendering these, move them to string resources first.
  */
 enum class AvailableCommand(
     /** Display name for UI */

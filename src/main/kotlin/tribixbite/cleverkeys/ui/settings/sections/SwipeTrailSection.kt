@@ -38,7 +38,16 @@ internal fun SettingsActivity.SwipeTrailSection() {
                     SettingsDropdown(
                         title = stringResource(R.string.swipe_trail_effect_title),
                         description = stringResource(R.string.swipe_trail_effect_desc),
-                        options = listOf("Sparkle", "Glow", "Solid", "Fade", "Rainbow", "None"),
+                        // Display labels, index-aligned with the `when` blocks below; the stored
+                        // pref value is the lowercase effect id ("sparkle", "glow", …), never the label.
+                        options = listOf(
+                            stringResource(R.string.swipe_trail_effect_sparkle),
+                            stringResource(R.string.swipe_trail_effect_glow),
+                            stringResource(R.string.swipe_trail_effect_solid),
+                            stringResource(R.string.swipe_trail_effect_fade),
+                            stringResource(R.string.swipe_trail_effect_rainbow),
+                            stringResource(R.string.common_none)
+                        ),
                         selectedIndex = when (swipeTrailEffect) {
                             "sparkle" -> 0
                             "glow" -> 1
@@ -97,14 +106,16 @@ internal fun SettingsActivity.SwipeTrailSection() {
                     SettingsDropdown(
                         title = stringResource(R.string.swipe_trail_color_title),
                         description = stringResource(R.string.swipe_trail_color_desc),
+                        // Display labels, index-aligned with the ARGB `when` blocks below; the
+                        // stored pref value is the colour int, never the label.
                         options = listOf(
-                            "Jewel Purple",
-                            "Electric Blue",
-                            "Emerald Green",
-                            "Sunset Orange",
-                            "Ruby Red",
-                            "Silver",
-                            "Gold"
+                            stringResource(R.string.swipe_trail_color_jewel_purple),
+                            stringResource(R.string.swipe_trail_color_electric_blue),
+                            stringResource(R.string.swipe_trail_color_emerald_green),
+                            stringResource(R.string.swipe_trail_color_sunset_orange),
+                            stringResource(R.string.swipe_trail_color_ruby_red),
+                            stringResource(R.string.swipe_trail_color_silver),
+                            stringResource(R.string.swipe_trail_color_gold)
                         ),
                         selectedIndex = when (swipeTrailColor) {
                             0xFF9B59B6.toInt() -> 0  // Jewel Purple

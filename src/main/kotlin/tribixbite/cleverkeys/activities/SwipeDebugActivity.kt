@@ -193,9 +193,7 @@ class SwipeDebugActivity : Activity() {
 
         registerPlaygroundReceivers()
 
-        appendLog("=== Swipe Playground Session Started ===\n")
-        appendLog("Swipe in the text field above. Each swipe shows its candidate ranking\n")
-        appendLog("and is recorded (points + key geometry + ranking + committed word).\n\n")
+        appendLog(getString(R.string.swipe_debug_session_intro) + "\n\n")
         refreshTraceCount()
     }
 
@@ -277,24 +275,22 @@ class SwipeDebugActivity : Activity() {
         }
     }
 
-    // Debug-only tool: raw diagnostic text is intentionally not localized.
-    @android.annotation.SuppressLint("SetTextI18n")
     private fun clearLogs() {
         logBuffer.setLength(0)
-        logOutput.text = "Logs cleared. Waiting for swipe input...\n"
-        Toast.makeText(this, "Logs cleared", Toast.LENGTH_SHORT).show()
+        logOutput.text = getString(R.string.swipe_debug_log_cleared_banner) + "\n"
+        Toast.makeText(this, R.string.swipe_debug_toast_logs_cleared, Toast.LENGTH_SHORT).show()
     }
 
     private fun copyLogsToClipboard() {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("Swipe Debug Logs", logBuffer.toString())
         clipboard.setPrimaryClip(clip)
-        Toast.makeText(this, "Logs copied to clipboard", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, R.string.common_copied_to_clipboard, Toast.LENGTH_SHORT).show()
     }
 
     private fun saveLogsToFile() {
         if (logBuffer.isEmpty()) {
-            Toast.makeText(this, "No logs to save", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.swipe_debug_toast_no_logs, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -313,7 +309,7 @@ class SwipeDebugActivity : Activity() {
         try {
             startActivityForResult(intent, REQUEST_CREATE_FILE)
         } catch (e: Exception) {
-            Toast.makeText(this, "Could not open file picker", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.gif_toast_no_file_picker, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -335,9 +331,9 @@ class SwipeDebugActivity : Activity() {
                     writer.write(logBuffer.toString())
                 }
             }
-            Toast.makeText(this, "Logs saved successfully", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.swipe_debug_toast_logs_saved, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Toast.makeText(this, "Failed to save logs: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.swipe_debug_toast_save_failed, errorDetail(e)), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -366,7 +362,6 @@ class SwipeDebugActivity : Activity() {
     }
 
     /** Refresh the "N playground / M total" recorded-trace counter (off-main query). */
-    @SuppressLint("SetTextI18n")
     private fun refreshTraceCount() {
         dbExecutor.execute {
             try {
@@ -374,10 +369,12 @@ class SwipeDebugActivity : Activity() {
                 val playground = store.countBySource(PlaygroundTraceRecorder.SOURCE_PLAYGROUND)
                 val total = store.getStatistics().totalCount
                 runOnUiThread {
-                    traceCount.text = "$playground playground / $total total traces"
+                    traceCount.text = resources.getQuantityString(
+                        R.plurals.swipe_debug_trace_count, total, playground, total
+                    )
                 }
             } catch (e: Exception) {
-                runOnUiThread { traceCount.text = "trace count unavailable" }
+                runOnUiThread { traceCount.setText(R.string.swipe_debug_trace_count_unavailable) }
             }
         }
     }
@@ -393,12 +390,12 @@ class SwipeDebugActivity : Activity() {
                 val file = SwipeMLDataStore.getInstance(applicationContext).exportToJSON()
                 runOnUiThread {
                     appendLog("── EXPORT ──\n${file.absolutePath}\n(adb pull that path, or share below)\n\n")
-                    Toast.makeText(this, "Exported ${file.name}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.swipe_debug_toast_exported, file.name), Toast.LENGTH_SHORT).show()
                     shareExportedFile(file)
                 }
             } catch (e: Exception) {
                 runOnUiThread {
-                    Toast.makeText(this, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, getString(R.string.common_export_failed_detail, errorDetail(e)), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -418,7 +415,7 @@ class SwipeDebugActivity : Activity() {
             startActivity(Intent.createChooser(send, file.name))
         } catch (e: Exception) {
             // The file is still on disk at the logged path — sharing is best-effort.
-            Toast.makeText(this, "Share failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.swipe_debug_toast_share_failed, errorDetail(e)), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -428,15 +425,17 @@ class SwipeDebugActivity : Activity() {
      */
     private fun confirmClearRecordedTraces() {
         android.app.AlertDialog.Builder(this)
-            .setTitle("Clear recorded traces")
+            .setTitle(R.string.swipe_debug_clear_traces_title)
             .setMessage(
-                "Delete recorded swipe traces from this device?\n\n" +
-                    "“Playground only” removes traces recorded on this screen; " +
-                    "“All swipe data” also removes traces from the global ML collection."
+                getString(
+                    R.string.swipe_debug_clear_traces_message,
+                    getString(R.string.swipe_debug_clear_traces_playground),
+                    getString(R.string.swipe_debug_clear_traces_all)
+                )
             )
-            .setPositiveButton("Playground only") { _, _ -> clearRecordedTraces(allData = false) }
-            .setNegativeButton("All swipe data") { _, _ -> clearRecordedTraces(allData = true) }
-            .setNeutralButton("Cancel", null)
+            .setPositiveButton(R.string.swipe_debug_clear_traces_playground) { _, _ -> clearRecordedTraces(allData = false) }
+            .setNegativeButton(R.string.swipe_debug_clear_traces_all) { _, _ -> clearRecordedTraces(allData = true) }
+            .setNeutralButton(R.string.common_cancel, null)
             .show()
     }
 
@@ -453,14 +452,21 @@ class SwipeDebugActivity : Activity() {
                 }
                 runOnUiThread {
                     appendLog("── CLEARED $removed trace(s) (${if (allData) "all" else "playground"}) ──\n\n")
-                    Toast.makeText(this, "Cleared $removed trace(s)", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        resources.getQuantityString(R.plurals.swipe_debug_toast_cleared_traces, removed, removed),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 refreshTraceCount()
             } catch (e: Exception) {
                 runOnUiThread {
-                    Toast.makeText(this, "Clear failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, getString(R.string.swipe_debug_toast_clear_failed, errorDetail(e)), Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
+
+    /** A failure's message for a toast, or the localized "Unknown error" when it has none. */
+    private fun errorDetail(e: Exception): String = e.message ?: getString(R.string.common_unknown_error)
 }

@@ -5,6 +5,9 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.ResourcesResultText
+import tribixbite.cleverkeys.ResultText
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.gif.GifPackImportResult
 
@@ -21,7 +24,8 @@ import tribixbite.cleverkeys.gif.GifPackImportResult
  *
  * Pure Kotlin on purpose: it is unit-tested in `runPureTests`
  * (`ui.settings.io.GifImportStatusTest`) even though every other declaration in this file needs
- * Android.
+ * Android. The success copy is a string resource resolved through [ResultText] (2026-09-29 i18n
+ * sweep), so the test drives it with the English `res/values` text and production per locale.
  */
 sealed interface GifImportStatus {
 
@@ -42,12 +46,14 @@ sealed interface GifImportStatus {
          * The failure message is the manager's verbatim reason: the error COLOUR already says
          * "this failed", so re-stating it in the copy would just reintroduce an English marker
          * in a string that is meant to be translatable.
+         *
+         * TODO(i18n): that verbatim reason comes from GifPackManager and is English today.
          */
-        fun forImportResult(result: GifPackImportResult): GifImportStatus = when (result) {
+        internal fun forImportResult(result: GifPackImportResult, text: ResultText): GifImportStatus = when (result) {
             is GifPackImportResult.Success ->
-                Ok("Imported: ${result.name} (${result.gifCount} GIFs)")
+                Ok(text.plural(R.plurals.gif_import_status_imported, result.gifCount, result.name, result.gifCount))
             is GifPackImportResult.AlreadyInstalled ->
-                Ok("Pack '${result.name}' already installed")
+                Ok(text.string(R.string.gif_import_status_already_installed, result.name))
             is GifPackImportResult.Error -> Failed(result.message)
         }
     }
@@ -73,19 +79,19 @@ internal fun SettingsActivity.handleGifPackShareIntent(intent: Intent?) {
 internal fun SettingsActivity.performGifPackImport(uri: Uri, replaceExisting: Boolean = false) {
     val _self = this
     gifImportInProgress = true
-    gifImportStatus = GifImportStatus.Ok("Importing...")
+    gifImportStatus = GifImportStatus.Ok(getString(R.string.gif_importing))
     lifecycleScope.launch {
         try {
             val manager = tribixbite.cleverkeys.gif.GifPackManager.getInstance(_self)
             val result = manager.importPackFromUri(uri, replaceExisting = replaceExisting)
             // ARC-075: ONE classification of the result, by variant, shared with the section.
-            gifImportStatus = GifImportStatus.forImportResult(result)
+            gifImportStatus = GifImportStatus.forImportResult(result, ResourcesResultText(resources))
             when (result) {
                 is GifPackImportResult.Success -> {
                     refreshInstalledGifPacks()
                     Toast.makeText(
                         _self,
-                        "GIF pack imported: ${result.name}",
+                        getString(R.string.gif_toast_pack_imported, result.name),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -95,28 +101,27 @@ internal fun SettingsActivity.performGifPackImport(uri: Uri, replaceExisting: Bo
                     // replace path (the only way a rebuilt pack's rows — e.g. the #149 gid:
                     // markers — can supersede the installed ones) was unreachable.
                     android.app.AlertDialog.Builder(_self)
-                        .setTitle("Pack already installed")
-                        .setMessage(
-                            "'${result.name}' is already installed. Replace it with the " +
-                                "selected file? (Re-importing a rebuilt pack updates its GIFs.)"
-                        )
-                        .setPositiveButton("Replace") { _, _ ->
+                        .setTitle(R.string.gif_replace_dialog_title)
+                        .setMessage(getString(R.string.gif_replace_dialog_body, result.name))
+                        .setPositiveButton(R.string.gif_replace_dialog_confirm) { _, _ ->
                             performGifPackImport(uri, replaceExisting = true)
                         }
-                        .setNegativeButton("Cancel", null)
+                        .setNegativeButton(R.string.common_cancel, null)
                         .show()
                 }
                 is GifPackImportResult.Error -> {
                     Toast.makeText(
                         _self,
-                        "Import failed: ${result.message}",
+                        getString(R.string.common_import_failed_detail, result.message),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         } catch (e: Exception) {
             gifImportStatus = GifImportStatus.Failed(e.message ?: e.javaClass.simpleName)
-            Toast.makeText(_self, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                _self, getString(R.string.common_import_failed_detail, e.message.orEmpty()), Toast.LENGTH_SHORT
+            ).show()
         } finally {
             gifImportInProgress = false
         }
@@ -130,9 +135,11 @@ internal fun SettingsActivity.performGifRemovePack(packId: String) {
             val manager = tribixbite.cleverkeys.gif.GifPackManager.getInstance(_self)
             manager.removePack(packId)
             refreshInstalledGifPacks()
-            Toast.makeText(_self, "GIF pack removed", Toast.LENGTH_SHORT).show()
+            Toast.makeText(_self, R.string.gif_toast_pack_removed, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Toast.makeText(_self, "Remove failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                _self, getString(R.string.common_remove_failed_detail, e.message.orEmpty()), Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }
@@ -147,9 +154,11 @@ internal fun SettingsActivity.performGifRemoveAll() {
             prefs.edit().putBoolean("gif_enabled", false).apply()
             refreshInstalledGifPacks()
             gifImportStatus = null
-            Toast.makeText(_self, "All GIF data removed", Toast.LENGTH_SHORT).show()
+            Toast.makeText(_self, R.string.gif_toast_all_removed, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Toast.makeText(_self, "Remove failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                _self, getString(R.string.common_remove_failed_detail, e.message.orEmpty()), Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }

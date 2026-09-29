@@ -115,9 +115,10 @@ object IMEStatusHelper {
                 // its app_name resource — the old hardcoded constant said "Unexpected
                 // Keyboard" in an app named CleverKeys. It also points at the permanent
                 // opt-out, since a toast cannot host a "don't ask again" button.
-                val message = "Set ${context.getString(R.string.app_name)} as default in " +
-                    "Settings → System → Languages & input → On-screen keyboard " +
-                    "(reminder can be turned off in ${context.getString(R.string.app_name)} settings)"
+                val message = context.getString(
+                    R.string.ime_default_prompt_toast,
+                    context.getString(R.string.app_name)
+                )
                 // We're not the default - show helpful toast after delay
                 handler.postDelayed({
                     Toast.makeText(

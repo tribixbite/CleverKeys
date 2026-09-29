@@ -1,14 +1,13 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
+import android.content.res.Resources
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import androidx.core.content.ContextCompat
 import org.json.JSONArray
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 /**
  * Data class representing an entry in the independent pinned_entries table.
@@ -35,35 +34,21 @@ data class PinnedEntry(
 ) {
     /** Whether this entry contains non-text media */
     val isMedia: Boolean get() = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
-    /** Format pinned time as relative time (e.g., "2h ago", "Yesterday") */
-    fun getRelativeTime(): String {
-        val now = System.currentTimeMillis()
-        val diff = now - pinnedTimestamp
+    /** Age of this entry (pinned time) as a locale-free value; resolve with [RelativeTime.format]. */
+    fun relativeTime(): RelativeTime = RelativeTime.of(pinnedTimestamp)
 
-        val seconds = diff / 1000
-        val minutes = seconds / 60
-        val hours = minutes / 60
-        val days = hours / 24
-
-        return when {
-            seconds < 60 -> "Just now"
-            minutes < 60 -> "${minutes}m ago"
-            hours < 24 -> "${hours}h ago"
-            days == 1L -> "Yesterday"
-            days < 7 -> "${days}d ago"
-            else -> dateFormat().format(Date(pinnedTimestamp))
-        }
-    }
+    /** Localized relative pinned time (e.g. "2h ago", "Yesterday"), shown after the entry text. */
+    fun getRelativeTime(resources: Resources): String = relativeTime().format(resources)
 
     /** Format pinned timestamp as date string (e.g., "Nov 12") */
-    fun formatDate(): String = dateFormat().format(Date(pinnedTimestamp))
+    fun formatDate(): String = ClipboardEntry.dateFormat().format(Date(pinnedTimestamp))
 
     /**
      * Get formatted text with pinned time appended.
      * Matches ClipboardEntry.getFormattedText() pattern for consistent UI.
      */
     fun getFormattedText(context: Context): Spannable {
-        val timeStr = " · ${getRelativeTime()}"
+        val timeStr = " · ${getRelativeTime(context.resources)}"
         val contentLen = content.length
 
         val spannable = SpannableStringBuilder(content).append(timeStr)
@@ -89,11 +74,6 @@ data class PinnedEntry(
     }
 
     companion object {
-        // Built per call so the user's current default locale is honored even
-        // after a runtime locale change (SimpleDateFormat is not thread-safe, so
-        // a fresh instance also avoids sharing mutable state across threads).
-        private fun dateFormat() = SimpleDateFormat("MMM d", Locale.getDefault())
-
         private var cachedSecondaryColor: Int? = null
 
         private fun getSecondaryColor(context: Context): Int {

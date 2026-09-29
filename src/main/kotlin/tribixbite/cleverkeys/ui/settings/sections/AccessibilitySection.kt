@@ -40,7 +40,7 @@ internal fun SettingsActivity.AccessibilitySection() {
 
                 // v1.2.8: Vibration settings moved to Accessibility section
                 Text(
-                    text = "Haptic Feedback",
+                    text = stringResource(R.string.accessibility_haptic_feedback_header),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
@@ -85,7 +85,7 @@ internal fun SettingsActivity.AccessibilitySection() {
                     // Per-event haptic feedback controls
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Haptic Events",
+                        text = stringResource(R.string.accessibility_haptic_events_header),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)

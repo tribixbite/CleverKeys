@@ -2,6 +2,7 @@ package tribixbite.cleverkeys.theme
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.Resources
 import android.os.Build
 import android.util.Log
 import androidx.compose.ui.graphics.Color
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
+import tribixbite.cleverkeys.R
 import java.io.File
 import java.util.UUID
 
@@ -310,7 +312,7 @@ data class CustomTheme(
         name = name,
         category = ThemeCategory.CUSTOM,
         colorScheme = colors,
-        description = "Custom theme created ${formatTimestamp(createdAt)}",
+        createdAt = createdAt,
         isDeletable = true,
         isExportable = true
     )
@@ -342,17 +344,27 @@ data class CustomTheme(
             )
         }
 
-        private fun formatTimestamp(timestamp: Long): String {
-            val now = System.currentTimeMillis()
-            val diff = now - timestamp
-            val days = diff / (24 * 60 * 60 * 1000)
+        private const val DAY_MS = 24L * 60 * 60 * 1000
 
+        /**
+         * Localized "Custom theme created <age>" description for a custom theme card.
+         * Each age bucket is a whole sentence (plurals for counts) so translators never
+         * assemble fragments. A creation time in the future (clock change) reads as "today".
+         */
+        fun createdDescription(res: Resources, createdAt: Long, now: Long): String {
+            val days = ((now - createdAt) / DAY_MS).coerceAtLeast(0L)
             return when {
-                days == 0L -> "today"
-                days == 1L -> "yesterday"
-                days < 7 -> "$days days ago"
-                days < 30 -> "${days / 7} weeks ago"
-                else -> "${days / 30} months ago"
+                days == 0L -> res.getString(R.string.theme_custom_created_today)
+                days == 1L -> res.getString(R.string.theme_custom_created_yesterday)
+                days < 7 -> days.toInt().let {
+                    res.getQuantityString(R.plurals.theme_custom_created_days_ago, it, it)
+                }
+                days < 30 -> (days / 7).toInt().let {
+                    res.getQuantityString(R.plurals.theme_custom_created_weeks_ago, it, it)
+                }
+                else -> (days / 30).toInt().let {
+                    res.getQuantityString(R.plurals.theme_custom_created_months_ago, it, it)
+                }
             }
         }
     }

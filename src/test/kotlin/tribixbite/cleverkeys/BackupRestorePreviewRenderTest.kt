@@ -25,6 +25,9 @@ import tribixbite.cleverkeys.backup.SettingsChange
  *   - `renderDelta` integration when both sides are JsonBlob.
  *   - Truncation of long name lists.
  *   - ARC-036 `renderBackupSourceNotice` for encrypted vs plaintext sources.
+ *
+ * Since the 2026-09-29 i18n sweep the helpers take a [ResultText]; tests resolve through
+ * [EnglishResourceText], so the English copy in res/values is what they pin.
  */
 class BackupRestorePreviewRenderTest {
 
@@ -33,14 +36,14 @@ class BackupRestorePreviewRenderTest {
     @Test
     fun layoutsSummary_listsLayoutNames() {
         val raw = """[{"name":"qwerty"},{"name":"dvorak"}]"""
-        assertThat(renderJsonBlobSummary(raw))
+        assertThat(renderJsonBlobSummary(raw, EnglishResourceText))
             .isEqualTo("[2 layouts: qwerty, dvorak]")
     }
 
     @Test
     fun layoutsSummary_singularGrammar() {
         val raw = """[{"name":"qwerty"}]"""
-        assertThat(renderJsonBlobSummary(raw))
+        assertThat(renderJsonBlobSummary(raw, EnglishResourceText))
             .isEqualTo("[1 layout: qwerty]")
     }
 
@@ -49,7 +52,7 @@ class BackupRestorePreviewRenderTest {
         val raw = (1..20).joinToString(",", "[", "]") {
             """{"name":"layout_with_long_name_$it"}"""
         }
-        val out = renderJsonBlobSummary(raw)
+        val out = renderJsonBlobSummary(raw, EnglishResourceText)
         // Should mention the count and have a "+N more" suffix when truncated.
         assertThat(out).startsWith("[20 layouts:")
         assertThat(out).contains("+")
@@ -60,23 +63,23 @@ class BackupRestorePreviewRenderTest {
     fun genericArraySummary_falsBackToItemCount() {
         // Array of strings — no `name` field — falls to generic count.
         val raw = """["a","b","c"]"""
-        assertThat(renderJsonBlobSummary(raw)).isEqualTo("[3 items]")
+        assertThat(renderJsonBlobSummary(raw, EnglishResourceText)).isEqualTo("[3 items]")
     }
 
     @Test
     fun emptyArraySummary() {
-        assertThat(renderJsonBlobSummary("[]")).isEqualTo("[empty]")
+        assertThat(renderJsonBlobSummary("[]", EnglishResourceText)).isEqualTo("[empty]")
     }
 
     @Test
     fun jsonObjectSummary_showsKeyCount() {
         val raw = """{"key_dollar":[5,2],"key_euro":[5,1]}"""
-        assertThat(renderJsonBlobSummary(raw)).isEqualTo("{2 keys}")
+        assertThat(renderJsonBlobSummary(raw, EnglishResourceText)).isEqualTo("{2 keys}")
     }
 
     @Test
     fun malformedJsonSummary_fallsBackToGenericLabel() {
-        assertThat(renderJsonBlobSummary("not json at all"))
+        assertThat(renderJsonBlobSummary("not json at all", EnglishResourceText))
             .isEqualTo("(JSON change)")
     }
 
@@ -86,7 +89,7 @@ class BackupRestorePreviewRenderTest {
     fun layoutsDelta_addedAndRemoved() {
         val cur = """[{"name":"qwerty"},{"name":"dvorak"}]"""
         val prop = """[{"name":"qwerty"},{"name":"azerty"}]"""
-        val out = renderJsonBlobDelta(cur, prop)
+        val out = renderJsonBlobDelta(cur, prop, EnglishResourceText)
         assertThat(out).contains("+ azerty")
         assertThat(out).contains("\u2212 dvorak")     // minus sign
         assertThat(out).contains("(1 unchanged)")
@@ -96,7 +99,7 @@ class BackupRestorePreviewRenderTest {
     fun layoutsDelta_onlyAdditions() {
         val cur = """[{"name":"qwerty"}]"""
         val prop = """[{"name":"qwerty"},{"name":"dvorak"},{"name":"azerty"}]"""
-        val out = renderJsonBlobDelta(cur, prop)
+        val out = renderJsonBlobDelta(cur, prop, EnglishResourceText)
         assertThat(out).contains("+ ")
         assertThat(out).doesNotContain("\u2212")     // no removed
         assertThat(out).contains("(1 unchanged)")
@@ -106,7 +109,7 @@ class BackupRestorePreviewRenderTest {
     fun layoutsDelta_onlyRemovals() {
         val cur = """[{"name":"qwerty"},{"name":"dvorak"},{"name":"azerty"}]"""
         val prop = """[{"name":"qwerty"}]"""
-        val out = renderJsonBlobDelta(cur, prop)
+        val out = renderJsonBlobDelta(cur, prop, EnglishResourceText)
         assertThat(out).contains("\u2212")            // removed marker
         assertThat(out).doesNotContain("+ ")          // no added
     }
@@ -124,7 +127,7 @@ class BackupRestorePreviewRenderTest {
             {"name":"qwerty","keys":[1,2,3],"script":"en-US"},
             {"name":"dvorak","keys":[1,2],"script":"en"}
         ]""".trimIndent()
-        val out = renderJsonBlobDelta(cur, prop)
+        val out = renderJsonBlobDelta(cur, prop, EnglishResourceText)
         assertThat(out).contains("internal changes")
         assertThat(out).contains("1 unchanged")  // dvorak unchanged
     }
@@ -134,7 +137,7 @@ class BackupRestorePreviewRenderTest {
         // When a shared layout's key count changes, report the delta inline.
         val cur = """[{"name":"qwerty","keys":[1,2,3]}]"""
         val prop = """[{"name":"qwerty","keys":[1,2,3,4,5]}]"""
-        val out = renderJsonBlobDelta(cur, prop)
+        val out = renderJsonBlobDelta(cur, prop, EnglishResourceText)
         assertThat(out).contains("qwerty: 3\u21925 keys")  // 3→5 keys
     }
 
@@ -142,7 +145,7 @@ class BackupRestorePreviewRenderTest {
     fun objectDelta_addedAndRemovedKeys() {
         val cur = """{"key_dollar":[5,2],"key_euro":[5,1]}"""
         val prop = """{"key_dollar":[5,2],"key_pound":[5,3]}"""
-        val out = renderJsonBlobDelta(cur, prop)
+        val out = renderJsonBlobDelta(cur, prop, EnglishResourceText)
         assertThat(out).contains("+ key_pound")
         assertThat(out).contains("\u2212 key_euro")
         assertThat(out).contains("(1 unchanged)")
@@ -152,20 +155,20 @@ class BackupRestorePreviewRenderTest {
     fun objectDelta_valueOnlyChange_reportedAsChanged() {
         val cur = """{"key_dollar":[5,2]}"""
         val prop = """{"key_dollar":[5,3]}"""
-        val out = renderJsonBlobDelta(cur, prop)
+        val out = renderJsonBlobDelta(cur, prop, EnglishResourceText)
         assertThat(out).contains("~ key_dollar")
     }
 
     @Test
     fun mixedShapeDelta_fallsBackToGenericLabel() {
         // current is array, proposed is object → no clean diff path.
-        val out = renderJsonBlobDelta("""[1,2,3]""", """{"a":1}""")
+        val out = renderJsonBlobDelta("""[1,2,3]""", """{"a":1}""", EnglishResourceText)
         assertThat(out).isEqualTo("(JSON change)")
     }
 
     @Test
     fun malformedJsonDelta_fallsBackToGenericLabel() {
-        val out = renderJsonBlobDelta("not json", """{"a":1}""")
+        val out = renderJsonBlobDelta("not json", """{"a":1}""", EnglishResourceText)
         assertThat(out).isEqualTo("(JSON change)")
     }
 
@@ -179,7 +182,7 @@ class BackupRestorePreviewRenderTest {
             proposed = PrefValue.JsonBlob("""[{"name":"qwerty"},{"name":"dvorak"}]"""),
             type = ChangeType.MODIFIED,
         )
-        val out = renderDelta(change)
+        val out = renderDelta(change, EnglishResourceText)
         // Should NOT contain the "→" separator since the diff is presented
         // as a single combined string for JsonBlob pairs.
         assertThat(out).doesNotContain("\u2192")
@@ -196,7 +199,7 @@ class BackupRestorePreviewRenderTest {
             proposed = PrefValue.JsonBlob("""[{"name":"qwerty"}]"""),
             type = ChangeType.ADDED,
         )
-        val out = renderDelta(change)
+        val out = renderDelta(change, EnglishResourceText)
         assertThat(out).contains("(none)")
         assertThat(out).contains("\u2192")
         assertThat(out).contains("[1 layout: qwerty]")
@@ -216,7 +219,7 @@ class BackupRestorePreviewRenderTest {
         // The replay-risk acceptance (backup-encryption design §7 residual #2) rests on the
         // user SEEING how old the backup is before applying it. 2026-07-17 12:34:00 UTC.
         val notice = renderBackupSourceNotice(
-            BackupSourceInfo.encrypted(1_784_291_640_000L), utcFormat
+            BackupSourceInfo.encrypted(1_784_291_640_000L), EnglishResourceText, utcFormat
         )
         assertThat(notice).contains("\uD83D\uDD12")
         assertThat(notice).contains("Encrypted backup")
@@ -226,13 +229,13 @@ class BackupRestorePreviewRenderTest {
     @Test
     fun sourceNotice_plaintext_showsTheReExportAdvisory() {
         // Design §9: "Plaintext legacy file via UI → today's flow, plus a one-line notice."
-        val notice = renderBackupSourceNotice(BackupSourceInfo.PLAINTEXT, utcFormat)
+        val notice = renderBackupSourceNotice(BackupSourceInfo.PLAINTEXT, EnglishResourceText, utcFormat)
         assertThat(notice).isEqualTo("Unencrypted backup — consider re-exporting encrypted.")
     }
 
     @Test
     fun sourceNotice_plaintext_neverClaimsEncryption() {
-        val notice = renderBackupSourceNotice(BackupSourceInfo.PLAINTEXT, utcFormat)
+        val notice = renderBackupSourceNotice(BackupSourceInfo.PLAINTEXT, EnglishResourceText, utcFormat)
         assertThat(notice).doesNotContain("\uD83D\uDD12")
         assertThat(notice).doesNotContain("Encrypted")
     }
@@ -241,7 +244,7 @@ class BackupRestorePreviewRenderTest {
     fun sourceNotice_encryptedWithoutTimestamp_degradesToTheBadgeAlone() {
         // Defensive branch: never render the literal "null" where a date belongs.
         val notice = renderBackupSourceNotice(
-            BackupSourceInfo(encrypted = true, exportTimestampMs = null), utcFormat
+            BackupSourceInfo(encrypted = true, exportTimestampMs = null), EnglishResourceText, utcFormat
         )
         assertThat(notice).isEqualTo("\uD83D\uDD12 Encrypted backup")
         assertThat(notice).doesNotContain("null")
@@ -251,7 +254,7 @@ class BackupRestorePreviewRenderTest {
     fun sourceNotice_defaultFormatter_rendersAMinutePrecisionDate() {
         // The production call site uses the default (device-timezone) formatter; assert its
         // SHAPE without pinning a timezone, so this can't pass vacuously either.
-        val notice = renderBackupSourceNotice(BackupSourceInfo.encrypted(1_784_291_640_000L))
+        val notice = renderBackupSourceNotice(BackupSourceInfo.encrypted(1_784_291_640_000L), EnglishResourceText)
         assertThat(notice).containsMatch("""exported \d{4}-\d{2}-\d{2} \d{2}:\d{2}$""")
     }
 
@@ -268,15 +271,16 @@ class BackupRestorePreviewRenderTest {
 
     @Test
     fun renderDelta_nonJsonBlob_preservesOldBehavior() {
-        // Regular int change → "current → proposed" verbatim.
+        // Regular int change → "current → proposed" (import_preview_value_change; single spaces
+        // since the 2026-09-29 i18n sweep — aapt collapses the old double spaces in a resource).
         val change = SettingsChange(
             key = "keyboard_height",
             current = PrefValue.IntV(30),
             proposed = PrefValue.IntV(27),
             type = ChangeType.MODIFIED,
         )
-        val out = renderDelta(change)
-        assertThat(out).isEqualTo("30  \u2192  27")
+        val out = renderDelta(change, EnglishResourceText)
+        assertThat(out).isEqualTo("30 \u2192 27")
     }
 
     @Test

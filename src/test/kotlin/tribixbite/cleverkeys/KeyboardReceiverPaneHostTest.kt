@@ -251,6 +251,10 @@ class KeyboardReceiverPaneHostTest {
         every { keyboard2.currentInputConnection } returns ic
         every { keyboard2.currentInputEditorInfo } returns null
         every { context.filesDir } returns java.io.File("/nonexistent-cleverkeys-test")
+        // The message is a string resource since the 2026-09-29 i18n sweep; resolve it to its
+        // shipped English text so the assertion still pins what the user reads.
+        every { context.getString(R.string.gif_msg_media_unavailable) } returns
+            EnglishResourceText.string(R.string.gif_msg_media_unavailable)
 
         // The reporter's pack shape: lowercased keywords, trailing compound token —
         // pre-fix this committed https://media.giphy.com/media/cutecdmyfhpeane9ckv6ys/giphy.gif.

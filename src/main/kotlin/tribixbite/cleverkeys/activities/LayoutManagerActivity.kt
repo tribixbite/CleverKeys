@@ -337,11 +337,11 @@ fun LayoutItem(
             if (layout.parsed?.name?.isNotEmpty() == true) {
                 layout.parsed.name
             } else {
-                "Custom Layout"
+                stringResource(R.string.layout_manager_custom_layout_name)
             }
         }
-        is LayoutsPreference.SystemLayout -> "System Settings"
-        else -> "Unknown Layout"
+        is LayoutsPreference.SystemLayout -> stringResource(R.string.layout_manager_system_layout_name)
+        else -> stringResource(R.string.layout_manager_unknown_layout_name)
     }
 
     Card(
@@ -390,9 +390,9 @@ fun LayoutItem(
                 // Layout type badge
                 Text(
                     text = when (layout) {
-                        is LayoutsPreference.SystemLayout -> "System"
-                        is LayoutsPreference.NamedLayout -> "Predefined"
-                        is LayoutsPreference.CustomLayout -> "Custom XML"
+                        is LayoutsPreference.SystemLayout -> stringResource(R.string.layout_manager_tab_system)
+                        is LayoutsPreference.NamedLayout -> stringResource(R.string.layout_manager_tab_predefined)
+                        is LayoutsPreference.CustomLayout -> stringResource(R.string.layout_manager_badge_custom_xml)
                         else -> ""
                     },
                     style = MaterialTheme.typography.labelSmall,
@@ -601,14 +601,15 @@ fun CustomLayoutEditorDialog(
         }
     }
 
-    // Validate XML
+    // Validate XML (the empty-input message is resolved here: LaunchedEffect is not composable)
+    val emptyXmlError = stringResource(R.string.layout_manager_xml_empty_error)
     LaunchedEffect(xmlText) {
         validationError = try {
             if (xmlText.isNotBlank()) {
                 KeyboardData.load_string_exn(xmlText)
                 null
             } else {
-                "Layout XML cannot be empty"
+                emptyXmlError
             }
         } catch (e: Exception) {
             e.message

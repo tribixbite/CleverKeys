@@ -1178,7 +1178,7 @@ class SuggestionBar : LinearLayout {
             scaleType = ImageView.ScaleType.FIT_CENTER
             isClickable = true
             isFocusable = true
-            contentDescription = "Toggle password visibility"
+            contentDescription = context.getString(R.string.suggestion_bar_toggle_password_visibility)
 
             // Set initial icon (visibility off = hidden)
             setImageDrawable(getVisibilityDrawable(false))

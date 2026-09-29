@@ -30,6 +30,22 @@ import org.junit.Test
  */
 class ReleaseClaimTextActionsTest {
 
+    /**
+     * The shipped English text of a string resource, read from `res/values/strings.xml` by the
+     * resource's `R.string` field name — the policy carries resource ids (the copy is translated
+     * into 21 locales since 2026-09-29), so the English release claims are pinned here.
+     */
+    private fun en(id: Int): String {
+        val name = R.string::class.java.fields.first { it.getInt(null) == id }.name
+        val raw = TranslationResources.strings(TranslationResources.defaultDir)[name]
+            ?: throw AssertionError("res/values/strings.xml has no string $name")
+        return TranslationResources.unescape(raw)
+    }
+
+    /** `Context::getString(id, *args)` stand-in over the English resources. */
+    private val getEnglish: (Int, Array<out Any>) -> String =
+        { id, args -> String.format(java.util.Locale.ROOT, en(id), *args) }
+
     // ------------------------------------------------- v1.1.99 ACTION_PROCESS_TEXT + chooser
 
     @Test
@@ -54,7 +70,7 @@ class ReleaseClaimTextActionsTest {
         assertThat(request.mimeType).isEqualTo("text/plain")
         assertThat(request.text).isEqualTo("hello world")
         assertWithMessage("v1.1.99 'Shows app chooser (Google Assistant, translators, etc.)'")
-            .that(request.chooserTitle).isEqualTo("Process text with...")
+            .that(en(request.chooserTitleRes)).isEqualTo("Process text with…")
     }
 
     @Test
@@ -65,7 +81,7 @@ class ReleaseClaimTextActionsTest {
 
         assertThat(request.action).isEqualTo(TextActionPolicy.ACTION_PROCESS_TEXT)
         assertThat(request.mimeType).isEqualTo("text/plain")
-        assertThat(request.chooserTitle).isEqualTo("Replace text with...")
+        assertThat(en(request.chooserTitleRes)).isEqualTo("Replace text with…")
     }
 
     @Test
@@ -99,7 +115,7 @@ class ReleaseClaimTextActionsTest {
 
     @Test
     fun `the two chooser titles are distinct`() {
-        val titles = TextActionPolicy.TextAction.entries.map { it.chooserTitle }
+        val titles = TextActionPolicy.TextAction.entries.map { en(it.chooserTitleRes) }
         assertThat(titles).containsNoDuplicates()
     }
 
@@ -107,16 +123,16 @@ class ReleaseClaimTextActionsTest {
 
     @Test
     fun `no-selection messages name the action that was invoked`() {
-        assertThat(TextActionPolicy.noTextSelectedMessage(TextActionPolicy.TextAction.ASSIST))
+        assertThat(TextActionPolicy.noTextSelectedMessage(TextActionPolicy.TextAction.ASSIST, getEnglish))
             .isEqualTo("No text selected for Text Assist")
-        assertThat(TextActionPolicy.noTextSelectedMessage(TextActionPolicy.TextAction.REPLACE))
+        assertThat(TextActionPolicy.noTextSelectedMessage(TextActionPolicy.TextAction.REPLACE, getEnglish))
             .isEqualTo("No text selected for Replace Text")
     }
 
     @Test
     fun `every text action has a distinct user-facing no-selection message`() {
         val messages = TextActionPolicy.TextAction.entries
-            .map { TextActionPolicy.noTextSelectedMessage(it) }
+            .map { TextActionPolicy.noTextSelectedMessage(it, getEnglish) }
         assertThat(messages).containsNoDuplicates()
         for (message in messages) {
             assertThat(message).startsWith("No text selected for ")

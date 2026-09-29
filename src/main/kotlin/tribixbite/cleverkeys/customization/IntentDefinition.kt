@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys.customization
 
 import android.annotation.SuppressLint
+import androidx.annotation.StringRes
+import tribixbite.cleverkeys.R
 
 /**
  * Definition of an intent to be executed.
@@ -53,103 +55,153 @@ data class IntentDefinition(
         }
 
         /**
-         * Common intent presets for quick selection.
+         * Common intent presets for quick selection, each with its localized chip label.
+         *
+         * The preset's [IntentDefinition.name] stays the stable English identifier (tests and
+         * logs refer to it); the editor shows [Preset.labelRes] and pre-fills the user-editable
+         * name field with that localized label. Names already saved in a user's mappings are
+         * never rewritten.
          */
         // The "/data/data/com.termux/files/usr/bin/echo" paths below are Termux's OWN
         // binary path (a foreign package), passed as the RUN_COMMAND_PATH extra to Termux's
         // RunCommandService. They are intentionally absolute Termux paths — NOT this app's
         // storage — so Context.getFilesDir() is inapplicable here.
         @SuppressLint("SdCardPath")
-        val PRESETS: List<IntentDefinition> = listOf(
+        val PRESET_ENTRIES: List<Preset> = listOf(
             // Browser
-            IntentDefinition(
-                name = "Open Browser",
-                action = "android.intent.action.VIEW",
-                data = "https://google.com"
+            Preset(
+                R.string.intent_preset_open_browser,
+                IntentDefinition(
+                    name = "Open Browser",
+                    action = "android.intent.action.VIEW",
+                    data = "https://google.com"
+                )
             ),
             // Share text
-            IntentDefinition(
-                name = "Share Text",
-                action = "android.intent.action.SEND",
-                type = "text/plain",
-                extras = mapOf("android.intent.extra.TEXT" to "")
+            Preset(
+                R.string.intent_preset_share_text,
+                IntentDefinition(
+                    name = "Share Text",
+                    action = "android.intent.action.SEND",
+                    type = "text/plain",
+                    extras = mapOf("android.intent.extra.TEXT" to "")
+                )
             ),
             // Dial phone
-            IntentDefinition(
-                name = "Dial Phone",
-                action = "android.intent.action.DIAL",
-                data = "tel:"
+            Preset(
+                R.string.intent_preset_dial_phone,
+                IntentDefinition(
+                    name = "Dial Phone",
+                    action = "android.intent.action.DIAL",
+                    data = "tel:"
+                )
             ),
             // Send email
-            IntentDefinition(
-                name = "Send Email",
-                action = "android.intent.action.SENDTO",
-                data = "mailto:"
+            Preset(
+                R.string.intent_preset_send_email,
+                IntentDefinition(
+                    name = "Send Email",
+                    action = "android.intent.action.SENDTO",
+                    data = "mailto:"
+                )
             ),
             // Open settings
-            IntentDefinition(
-                name = "Open Settings",
-                action = "android.settings.SETTINGS"
+            Preset(
+                R.string.intent_preset_open_settings,
+                IntentDefinition(
+                    name = "Open Settings",
+                    action = "android.settings.SETTINGS"
+                )
             ),
             // Open Wi-Fi settings
-            IntentDefinition(
-                name = "Wi-Fi Settings",
-                action = "android.settings.WIFI_SETTINGS"
+            Preset(
+                R.string.intent_preset_wifi_settings,
+                IntentDefinition(
+                    name = "Wi-Fi Settings",
+                    action = "android.settings.WIFI_SETTINGS"
+                )
             ),
             // Open Bluetooth settings
-            IntentDefinition(
-                name = "Bluetooth Settings",
-                action = "android.settings.BLUETOOTH_SETTINGS"
+            Preset(
+                R.string.intent_preset_bluetooth_settings,
+                IntentDefinition(
+                    name = "Bluetooth Settings",
+                    action = "android.settings.BLUETOOTH_SETTINGS"
+                )
             ),
             // Open camera
-            IntentDefinition(
-                name = "Open Camera",
-                action = "android.media.action.IMAGE_CAPTURE"
+            Preset(
+                R.string.intent_preset_open_camera,
+                IntentDefinition(
+                    name = "Open Camera",
+                    action = "android.media.action.IMAGE_CAPTURE"
+                )
             ),
             // Open maps location
-            IntentDefinition(
-                name = "Open Maps",
-                action = "android.intent.action.VIEW",
-                data = "geo:0,0?q="
+            Preset(
+                R.string.intent_preset_open_maps,
+                IntentDefinition(
+                    name = "Open Maps",
+                    action = "android.intent.action.VIEW",
+                    data = "geo:0,0?q="
+                )
             ),
             // Search web
-            IntentDefinition(
-                name = "Web Search",
-                action = "android.intent.action.WEB_SEARCH"
+            Preset(
+                R.string.intent_preset_web_search,
+                IntentDefinition(
+                    name = "Web Search",
+                    action = "android.intent.action.WEB_SEARCH"
+                )
             ),
             // Termux background command (runs silently, no visible tab)
-            IntentDefinition(
-                name = "Termux Command (Background)",
-                targetType = IntentTargetType.SERVICE,
-                action = "com.termux.RUN_COMMAND",
-                packageName = "com.termux",
-                className = "com.termux.app.RunCommandService",
-                extras = mapOf(
-                    "com.termux.RUN_COMMAND_PATH" to "/data/data/com.termux/files/usr/bin/echo",
-                    "com.termux.RUN_COMMAND_ARGUMENTS" to "Hello from CleverKeys",
-                    "com.termux.RUN_COMMAND_BACKGROUND" to "true",
-                    // SESSION_ACTION=0 shows the terminal session tab (required when BACKGROUND=false)
-                    // For background commands it's ignored, but included for documentation
-                    "com.termux.RUN_COMMAND_SESSION_ACTION" to "0"
+            Preset(
+                R.string.intent_preset_termux_background,
+                IntentDefinition(
+                    name = "Termux Command (Background)",
+                    targetType = IntentTargetType.SERVICE,
+                    action = "com.termux.RUN_COMMAND",
+                    packageName = "com.termux",
+                    className = "com.termux.app.RunCommandService",
+                    extras = mapOf(
+                        "com.termux.RUN_COMMAND_PATH" to "/data/data/com.termux/files/usr/bin/echo",
+                        "com.termux.RUN_COMMAND_ARGUMENTS" to "Hello from CleverKeys",
+                        "com.termux.RUN_COMMAND_BACKGROUND" to "true",
+                        // SESSION_ACTION=0 shows the terminal session tab (required when BACKGROUND=false)
+                        // For background commands it's ignored, but included for documentation
+                        "com.termux.RUN_COMMAND_SESSION_ACTION" to "0"
+                    )
                 )
             ),
             // Termux visible tab (opens terminal showing command output)
-            IntentDefinition(
-                name = "Termux Tab (Visible)",
-                targetType = IntentTargetType.SERVICE,
-                action = "com.termux.RUN_COMMAND",
-                packageName = "com.termux",
-                className = "com.termux.app.RunCommandService",
-                extras = mapOf(
-                    "com.termux.RUN_COMMAND_PATH" to "/data/data/com.termux/files/usr/bin/echo",
-                    "com.termux.RUN_COMMAND_ARGUMENTS" to "Hello from CleverKeys",
-                    "com.termux.RUN_COMMAND_BACKGROUND" to "false",
-                    // SESSION_ACTION: 0=new tab, 1=new tab (switch), 2=attach to existing
-                    "com.termux.RUN_COMMAND_SESSION_ACTION" to "0"
+            Preset(
+                R.string.intent_preset_termux_visible,
+                IntentDefinition(
+                    name = "Termux Tab (Visible)",
+                    targetType = IntentTargetType.SERVICE,
+                    action = "com.termux.RUN_COMMAND",
+                    packageName = "com.termux",
+                    className = "com.termux.app.RunCommandService",
+                    extras = mapOf(
+                        "com.termux.RUN_COMMAND_PATH" to "/data/data/com.termux/files/usr/bin/echo",
+                        "com.termux.RUN_COMMAND_ARGUMENTS" to "Hello from CleverKeys",
+                        "com.termux.RUN_COMMAND_BACKGROUND" to "false",
+                        // SESSION_ACTION: 0=new tab, 1=new tab (switch), 2=attach to existing
+                        "com.termux.RUN_COMMAND_SESSION_ACTION" to "0"
+                    )
                 )
             )
         )
+
+        /** The preset intent definitions, in chip order. */
+        val PRESETS: List<IntentDefinition> = PRESET_ENTRIES.map { it.definition }
     }
+
+    /** One quick-selection preset: its localized chip label and the intent it fills in. */
+    data class Preset(
+        @StringRes val labelRes: Int,
+        val definition: IntentDefinition
+    )
 }
 
 /**

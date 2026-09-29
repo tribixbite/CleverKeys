@@ -917,7 +917,9 @@ class Keyboard2View @JvmOverloads constructor(
      * Uses suggestion bar instead of Toast (suppressed on Android 13+ IME).
      */
     private fun showNoTextSelectedMessage(action: TextActionPolicy.TextAction) {
-        _keyboard2?.showSuggestionBarMessage(TextActionPolicy.noTextSelectedMessage(action))
+        _keyboard2?.showSuggestionBarMessage(
+            TextActionPolicy.noTextSelectedMessage(action) { id, args -> context.getString(id, *args) }
+        )
     }
 
     /**
@@ -950,7 +952,7 @@ class Keyboard2View @JvmOverloads constructor(
             }
 
             // Create chooser to let user pick which app to use
-            val chooser = android.content.Intent.createChooser(intent, request.chooserTitle)
+            val chooser = android.content.Intent.createChooser(intent, context.getString(request.chooserTitleRes))
             chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(chooser)
             // PII: don't log the user's selected text in release builds.
@@ -996,7 +998,7 @@ class Keyboard2View @JvmOverloads constructor(
                 addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             }
 
-            val chooser = android.content.Intent.createChooser(intent, request.chooserTitle)
+            val chooser = android.content.Intent.createChooser(intent, context.getString(request.chooserTitleRes))
             chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(chooser)
             // PII: don't log the user's selected text in release builds.
@@ -1028,7 +1030,7 @@ class Keyboard2View @JvmOverloads constructor(
             if (!existingSelection.isNullOrEmpty()) {
                 // Already have selection, show message indicating menu should appear
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Text already selected, toolbar should be visible")
-                _keyboard2?.showSuggestionBarMessage("Selection menu available")
+                _keyboard2?.showSuggestionBarMessage(context.getString(R.string.keyboard_text_menu_available))
                 return
             }
 
@@ -1038,7 +1040,7 @@ class Keyboard2View @JvmOverloads constructor(
             val textAfter = inputConnection.getTextAfterCursor(50, 0)?.toString() ?: ""
 
             if (textBefore.isEmpty() && textAfter.isEmpty()) {
-                _keyboard2?.showSuggestionBarMessage("No text to select")
+                _keyboard2?.showSuggestionBarMessage(context.getString(R.string.keyboard_text_menu_no_text))
                 return
             }
 
@@ -1050,7 +1052,7 @@ class Keyboard2View @JvmOverloads constructor(
             val selectForward = span.forward
 
             if (span.isEmpty) {
-                _keyboard2?.showSuggestionBarMessage("No word at cursor")
+                _keyboard2?.showSuggestionBarMessage(context.getString(R.string.keyboard_text_menu_no_word))
                 return
             }
 
@@ -1064,7 +1066,7 @@ class Keyboard2View @JvmOverloads constructor(
                 // Select the word using absolute positions
                 inputConnection.setSelection(wordStart, wordEnd)
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Selected word at positions: $wordStart to $wordEnd")
-                _keyboard2?.showSuggestionBarMessage("Word selected")
+                _keyboard2?.showSuggestionBarMessage(context.getString(R.string.keyboard_text_menu_word_selected))
             } else {
                 // Fallback: try double-tap simulation via ctrl+shift+left then shift+right
                 // Send Ctrl+Shift+Left to select word left
@@ -1084,11 +1086,11 @@ class Keyboard2View @JvmOverloads constructor(
                     0,
                     android.view.KeyEvent.META_CTRL_ON or android.view.KeyEvent.META_SHIFT_ON
                 ))
-                _keyboard2?.showSuggestionBarMessage("Word selection attempted")
+                _keyboard2?.showSuggestionBarMessage(context.getString(R.string.keyboard_text_menu_selection_attempted))
             }
         } catch (e: Exception) {
             Log.e("Keyboard2View", "Failed to show text menu", e)
-            _keyboard2?.showSuggestionBarMessage("Could not select text")
+            _keyboard2?.showSuggestionBarMessage(context.getString(R.string.keyboard_text_menu_failed))
         }
     }
 
@@ -1116,12 +1118,12 @@ class Keyboard2View @JvmOverloads constructor(
 
             // Show feedback in suggestion bar (Toast suppressed on Android 13+ IME)
             val langName = getLanguageDisplayName(alternatePrimary)
-            _keyboard2?.showSuggestionBarMessage("Primary: $langName")
+            _keyboard2?.showSuggestionBarMessage(context.getString(R.string.keyboard_lang_primary_toggled, langName))
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Primary language toggled to: $langName")
         } catch (t: Throwable) {
             // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME
             Log.e("Keyboard2View", "Failed to toggle primary language", t)
-            _keyboard2?.showSuggestionBarMessage("Language toggle failed")
+            _keyboard2?.showSuggestionBarMessage(context.getString(R.string.keyboard_lang_toggle_failed))
         }
     }
 
@@ -1144,37 +1146,24 @@ class Keyboard2View @JvmOverloads constructor(
                 .apply()
 
             // Show feedback in suggestion bar (Toast suppressed on Android 13+ IME)
-            val langName = if (alternateSecondary == "none") "None" else getLanguageDisplayName(alternateSecondary)
-            _keyboard2?.showSuggestionBarMessage("Secondary: $langName")
+            val langName = getLanguageDisplayName(alternateSecondary)
+            _keyboard2?.showSuggestionBarMessage(context.getString(R.string.keyboard_lang_secondary_toggled, langName))
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Secondary language toggled to: $langName")
             // PreferenceUIUpdateHandler will automatically reload dictionaries on preference change
         } catch (t: Throwable) {
             // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME
             Log.e("Keyboard2View", "Failed to toggle secondary language", t)
-            _keyboard2?.showSuggestionBarMessage("Language toggle failed")
+            _keyboard2?.showSuggestionBarMessage(context.getString(R.string.keyboard_lang_toggle_failed))
         }
     }
 
     /**
-     * Get display name for a language code.
+     * Display name for a language code in the keyboard's UI language (the "none" sentinel is
+     * the translated "None"); see [LanguageDisplayNames].
      */
-    private fun getLanguageDisplayName(langCode: String): String {
-        return when (langCode) {
-            "en" -> "English"
-            "es" -> "Spanish"
-            "fr" -> "French"
-            "de" -> "German"
-            "it" -> "Italian"
-            "pt" -> "Portuguese"
-            "nl" -> "Dutch"
-            "id" -> "Indonesian"
-            "ms" -> "Malay"
-            "tl" -> "Tagalog"
-            "sw" -> "Swahili"
-            "none" -> "None"
-            else -> langCode.uppercase()
-        }
-    }
+    private fun getLanguageDisplayName(langCode: String): String =
+        if (langCode == LanguageDisplayNames.NONE) context.getString(R.string.common_none)
+        else LanguageDisplayNames.displayName(langCode, context.resources.configuration.locales[0])
 
     // This view routes actions through the service; it never queries the predictor. Keep
     // the wiring signature, but do not retain dictionaries through retired keyboard views.
@@ -2034,15 +2023,19 @@ internal object TextActionPolicy {
     /** MIME type advertised to the chooser; plain text is what an IME can offer. */
     const val MIME_TEXT_PLAIN = "text/plain"
 
-    /** The two selection-driven actions a short swipe can dispatch. */
+    /**
+     * The two selection-driven actions a short swipe can dispatch. User-visible text is carried
+     * as string-resource ids (translated in all 21 locales) and resolved by the caller, so this
+     * object stays Android-free.
+     */
     enum class TextAction(
         /** Name used in the user-facing "no selection" message. */
-        val displayName: String,
+        @androidx.annotation.StringRes val nameRes: Int,
         /** Title of the app chooser (v1.1.99: "Shows app chooser"). */
-        val chooserTitle: String
+        @androidx.annotation.StringRes val chooserTitleRes: Int
     ) {
-        ASSIST("Text Assist", "Process text with..."),
-        REPLACE("Replace Text", "Replace text with...")
+        ASSIST(R.string.text_action_assist_name, R.string.text_action_assist_chooser),
+        REPLACE(R.string.text_action_replace_name, R.string.text_action_replace_chooser)
     }
 
     /**
@@ -2056,7 +2049,7 @@ internal object TextActionPolicy {
         val mimeType: String,
         val text: String,
         val readOnly: Boolean,
-        val chooserTitle: String
+        @androidx.annotation.StringRes val chooserTitleRes: Int
     )
 
     fun processTextRequest(selectedText: String, action: TextAction): ProcessTextRequest =
@@ -2065,12 +2058,18 @@ internal object TextActionPolicy {
             mimeType = MIME_TEXT_PLAIN,
             text = selectedText,
             readOnly = false,
-            chooserTitle = action.chooserTitle
+            chooserTitleRes = action.chooserTitleRes
         )
 
-    /** v1.2.0: shown in the suggestion bar when the action fires with nothing selected. */
-    fun noTextSelectedMessage(action: TextAction): String =
-        "No text selected for ${action.displayName}"
+    /**
+     * v1.2.0: shown in the suggestion bar when the action fires with nothing selected.
+     * [getString] resolves a string resource with format args (`Context::getString` on device,
+     * a map in tests): the message is [R.string.text_action_no_selection] naming the action.
+     */
+    fun noTextSelectedMessage(
+        action: TextAction,
+        getString: (id: Int, args: Array<out Any>) -> String
+    ): String = getString(R.string.text_action_no_selection, arrayOf(getString(action.nameRes, emptyArray())))
 
     /**
      * How far either side of the cursor the word under it extends.

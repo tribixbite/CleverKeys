@@ -15,6 +15,7 @@ import java.util.Locale
 import tribixbite.cleverkeys.BuildConfig
 import tribixbite.cleverkeys.ClipboardDatabase
 import tribixbite.cleverkeys.KeyValue
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.TerminalUtils
 
 /**
@@ -119,7 +120,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
             val validationError = validateIntent(intentDef)
             if (validationError != null) {
                 Log.w(TAG, "Intent validation failed: $validationError")
-                showToast("Intent failed: $validationError")
+                showToast(context.getString(R.string.short_swipe_intent_failed, validationError))
                 return false
             }
 
@@ -158,7 +159,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
                     // Check if activity can be resolved before starting
                     if (intent.resolveActivity(context.packageManager) == null && intentDef.className.isNullOrBlank()) {
                         Log.w(TAG, "No activity found to handle intent: ${intentDef.name}")
-                        showToast("No app found for: ${intentDef.name}")
+                        showToast(context.getString(R.string.short_swipe_intent_no_app, intentDef.name))
                         return false
                     }
                     context.startActivity(intent)
@@ -171,27 +172,32 @@ class CustomShortSwipeExecutor(private val context: Context) {
             true
         } catch (e: android.content.ActivityNotFoundException) {
             Log.e(TAG, "Activity not found for intent", e)
-            showToast("App not found for intent")
+            showToast(context.getString(R.string.short_swipe_intent_app_not_found))
             false
         } catch (e: SecurityException) {
             Log.e(TAG, "Permission denied for intent", e)
-            showToast("Permission denied for intent")
+            showToast(context.getString(R.string.short_swipe_intent_permission_denied))
             false
         } catch (e: Exception) {
             Log.e(TAG, "Failed to execute INTENT action", e)
-            showToast("Intent failed: ${e.message?.take(40)}")
+            showToast(
+                context.getString(
+                    R.string.short_swipe_intent_failed,
+                    e.message?.take(40) ?: context.getString(R.string.common_unknown_error)
+                )
+            )
             false
         }
     }
 
     /**
      * Validate an IntentDefinition before execution.
-     * @return Error message if invalid, null if valid.
+     * @return Localized, user-visible error message if invalid (shown in a toast), null if valid.
      */
     private fun validateIntent(intentDef: IntentDefinition): String? {
         // Must have either action or package+class
         if (intentDef.action.isNullOrBlank() && intentDef.packageName.isNullOrBlank()) {
-            return "Intent must have either an action or a package name"
+            return context.getString(R.string.short_swipe_intent_missing_target)
         }
 
         // If package specified, check it exists (for all target types)
@@ -199,7 +205,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
             try {
                 context.packageManager.getPackageInfo(intentDef.packageName, 0)
             } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-                return "Package not installed: ${intentDef.packageName}"
+                return context.getString(R.string.short_swipe_intent_package_missing, intentDef.packageName)
             }
         }
 
@@ -208,7 +214,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
         if (!intentDef.data.isNullOrBlank()) {
             val uri = android.net.Uri.parse(intentDef.data)
             if (uri.scheme.isNullOrBlank()) {
-                return "Invalid URI (missing scheme): ${intentDef.data}"
+                return context.getString(R.string.short_swipe_intent_uri_no_scheme, intentDef.data)
             }
         }
 
@@ -727,7 +733,14 @@ class CustomShortSwipeExecutor(private val context: Context) {
             val pinnedEntries = db.getPinnedEntries()
 
             if (index > pinnedEntries.size) {
-                showToast("Pinned entry #$index not found (${pinnedEntries.size} pinned)")
+                showToast(
+                    context.resources.getQuantityString(
+                        R.plurals.short_swipe_pinned_entry_missing,
+                        pinnedEntries.size,
+                        index,
+                        pinnedEntries.size
+                    )
+                )
                 Log.w(TAG, "paste_pinned_$index: only ${pinnedEntries.size} pinned entries exist")
                 return false
             }
@@ -738,7 +751,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
             true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to paste pinned entry #$index", e)
-            showToast("Failed to read pinned entry")
+            showToast(context.getString(R.string.short_swipe_pinned_read_failed))
             false
         }
     }

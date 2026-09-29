@@ -6,6 +6,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -34,7 +35,8 @@ import java.util.Properties
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 
-internal data class FAQItem(val question: String, val answer: String)
+/** One FAQ entry; both texts are string resources resolved when the card composes. */
+internal data class FAQItem(@StringRes val question: Int, @StringRes val answer: Int)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -42,7 +44,11 @@ internal fun SettingsActivity.VersionInfoCard() {
     val context = LocalContext.current
     val versionInfo = loadVersionInfo()
     val title = stringResource(R.string.settings_version_title)
-    val buildText = stringResource(R.string.settings_version_build, versionInfo.getProperty("version", "unknown"))
+    // A missing/unreadable version_info.txt shows a localized "unknown" (never an English literal).
+    val buildText = stringResource(
+        R.string.settings_version_build,
+        versionInfo.getProperty("version") ?: stringResource(R.string.settings_version_unknown)
+    )
     val toastCopied = stringResource(R.string.settings_version_copied)
     // Hoisted out of the semantics {} lambda (not a composable scope).
     val copyVersionDesc = stringResource(R.string.settings_copy_version_desc)
@@ -106,7 +112,7 @@ internal fun SettingsActivity.GitHubInfoCard() {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "GitHub Repository",
+                text = stringResource(R.string.settings_github_repo_title),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 14.sp
@@ -118,7 +124,7 @@ internal fun SettingsActivity.GitHubInfoCard() {
                 fontSize = 12.sp
             )
             Text(
-                text = "Tap to view releases and download updates",
+                text = stringResource(R.string.settings_github_repo_desc),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp,
                 modifier = Modifier.padding(top = 4.dp)
@@ -133,40 +139,17 @@ internal fun SettingsActivity.GitHubInfoCard() {
  */
 @Composable
 internal fun SettingsActivity.FAQSection() {
-    // FAQ data - each item is a question/answer pair (verified against source code)
+    // FAQ data - each item is a question/answer pair (verified against source code).
+    // Text lives in string resources so the FAQ follows the app language.
     val faqItems = listOf(
-        FAQItem(
-            question = "How do I type numbers and symbols?",
-            answer = "Use short swipes (subkeys) on letter keys. Each key has up to 8 subkeys mapped to the cardinal directions N, NE, E, SE, S, SW, W, NW. For example, swipe NORTHEAST on Q for '1' (hint: start in the SW corner). Use Settings → Activities → Per-Key Customization to add your own subkey assignments."
-        ),
-        FAQItem(
-            question = "How do I move the cursor?",
-            answer = "Swipe on the spacebar - cursor movement speed is proportional to how far you swipe. For precision navigation, long-press the nav key (between spacebar and enter) to enter TrackPoint mode, then move your finger like a joystick."
-        ),
-        FAQItem(
-            question = "How do I select and delete text?",
-            answer = "For Selection-Delete mode: short swipe on backspace then HOLD - move your finger like a joystick to select text (left/right for characters, up/down for lines). Release to delete selected text. Swipe left on backspace deletes the word before cursor."
-        ),
-        FAQItem(
-            question = "How do I quickly switch between languages?",
-            answer = "Add the primary and/or secondary language toggle subkeys. Set your languages in Settings → Multi-Language (Primary and Secondary). The toggle subkeys cycle between them, and both languages contribute to swipe predictions when Multi-Language mode is enabled."
-        ),
-        FAQItem(
-            question = "How do I access emojis?",
-            answer = "Swipe SOUTHWEST on the Fn key to open the emoji picker. Search will auto-populate with nearby text. The picker includes categories, recents, search, and 119 text emoticons (kaomoji). You can search by keyword or emoji name."
-        ),
-        FAQItem(
-            question = "How do I use the clipboard?",
-            answer = "Swipe SOUTHWEST on the Ctrl key to open clipboard history. The panel has tabs for History, Pinned, and Todos. Tap an item's content to expand it; use the icon buttons to paste, move to pinned, or copy as todo. Note: re-copying text already in history won't duplicate or reorder it (tip: use search instead). Password manager and 'sensitive' flagged clippings are excluded by default."
-        ),
-        FAQItem(
-            question = "How does swipe typing work?",
-            answer = "Touch the first letter of your word, slide your finger through each letter without lifting, then release on the last letter. Faster may yield better results. Tip: increase 'Length Penalty (Alpha)' for English (~1.5), decrease for other languages (and increase Vocab Frequency Weight)."
-        ),
-        FAQItem(
-            question = "Can I swipe other languages?",
-            answer = "Yes, but this currently requires using the qwerty latin layout and manually tuning several settings to achieve useable output- see FAQ entry above and Prefix Boost settings (these are very sensitive; try small changes)."
-        )
+        FAQItem(R.string.settings_faq_numbers_q, R.string.settings_faq_numbers_a),
+        FAQItem(R.string.settings_faq_cursor_q, R.string.settings_faq_cursor_a),
+        FAQItem(R.string.settings_faq_select_delete_q, R.string.settings_faq_select_delete_a),
+        FAQItem(R.string.settings_faq_switch_language_q, R.string.settings_faq_switch_language_a),
+        FAQItem(R.string.settings_faq_emoji_q, R.string.settings_faq_emoji_a),
+        FAQItem(R.string.settings_faq_clipboard_q, R.string.settings_faq_clipboard_a),
+        FAQItem(R.string.settings_faq_swipe_typing_q, R.string.settings_faq_swipe_typing_a),
+        FAQItem(R.string.settings_faq_other_languages_q, R.string.settings_faq_other_languages_a)
     )
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -196,7 +179,7 @@ internal fun SettingsActivity.FAQItemCard(item: FAQItem) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = item.question,
+                    text = stringResource(item.question),
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 14.sp,
@@ -216,7 +199,7 @@ internal fun SettingsActivity.FAQItemCard(item: FAQItem) {
                 exit = shrinkVertically()
             ) {
                 Text(
-                    text = item.answer,
+                    text = stringResource(item.answer),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
@@ -264,8 +247,8 @@ internal fun SettingsActivity.loadVersionInfo(): Properties {
         reader.close()
     } catch (e: Exception) {
         android.util.Log.e(SettingsActivity.TAG, "Failed to load version info", e)
-        // Set default version
-        props.setProperty("version", "unknown")
+        // No default "version" property: the card substitutes the localized
+        // R.string.settings_version_unknown when the property is absent.
     }
     return props
 }

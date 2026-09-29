@@ -1,12 +1,20 @@
 package tribixbite.cleverkeys.customization
 
+import androidx.annotation.StringRes
+import tribixbite.cleverkeys.R
+
 /**
  * Represents the 8 cardinal and inter-cardinal directions for short swipe gestures.
  * These directions correspond to the physical swipe direction from a key's center.
  */
 enum class SwipeDirection(
-    /** Display name for UI */
+    /**
+     * English direction name, kept for logs and debug text only. UI must show the localized
+     * [displayNameRes] instead (2026-09-29 i18n sweep).
+     */
     val displayName: String,
+    /** Localized direction name for UI (e.g. "North"), resolved with getString/stringResource. */
+    @StringRes val displayNameRes: Int,
     /** Short label for compact display */
     val shortLabel: String,
     /** Angle in degrees (0 = East, counter-clockwise) */
@@ -20,14 +28,14 @@ enum class SwipeDirection(
      */
     val subLabelIndex: Int
 ) {
-    N("North", "N", 90f, 7),
-    NE("Northeast", "NE", 45f, 2),
-    E("East", "E", 0f, 6),
-    SE("Southeast", "SE", 315f, 4),
-    S("South", "S", 270f, 8),
-    SW("Southwest", "SW", 225f, 3),
-    W("West", "W", 180f, 5),
-    NW("Northwest", "NW", 135f, 1);
+    N("North", R.string.swipe_direction_north, "N", 90f, 7),
+    NE("Northeast", R.string.swipe_direction_northeast, "NE", 45f, 2),
+    E("East", R.string.swipe_direction_east, "E", 0f, 6),
+    SE("Southeast", R.string.swipe_direction_southeast, "SE", 315f, 4),
+    S("South", R.string.swipe_direction_south, "S", 270f, 8),
+    SW("Southwest", R.string.swipe_direction_southwest, "SW", 225f, 3),
+    W("West", R.string.swipe_direction_west, "W", 180f, 5),
+    NW("Northwest", R.string.swipe_direction_northwest, "NW", 135f, 1);
 
     companion object {
         /**

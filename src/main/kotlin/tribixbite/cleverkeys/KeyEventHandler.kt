@@ -779,12 +779,13 @@ class KeyEventHandler(
      * with the editing-pane surface so the two cannot drift.
      */
     private fun handlePrivateCopy() {
+        // Without a Context there is no service to store into and no resources to word the
+        // feedback in; only receivers with no UI (tests) return null, so stay silent.
+        val ctx = recv.getContext() ?: return
         val ic = recv.getCurrentInputConnection() ?: run {
-            recv.showPrivateCopyFeedback(PrivateCopyDispatch.MSG_NO_SELECTION)
-            return
-        }
-        val ctx = recv.getContext() ?: run {
-            recv.showPrivateCopyFeedback(PrivateCopyDispatch.MSG_UNAVAILABLE)
+            recv.showPrivateCopyFeedback(
+                ctx.getString(PrivateCopyDispatch.Outcome.NO_SELECTION.messageRes)
+            )
             return
         }
         PrivateCopyDispatch.execute(ctx, ic, recv.getCurrentEditorInfo()) { message ->

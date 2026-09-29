@@ -79,7 +79,9 @@ internal fun SettingsActivity.SwipeTypingSection() {
                     SettingsDropdown(
                         title = stringResource(R.string.swipe_engine_mode_title),
                         description = stringResource(R.string.swipe_engine_mode_desc),
-                        options = listOf("CTC", "Geometric"),
+                        // Display labels only; the stored pref value stays "ctc"/"geometric".
+                        // "CTC" is the technical engine name and stays untranslated.
+                        options = listOf("CTC", stringResource(R.string.swipe_engine_mode_geometric)),
                         selectedIndex = when (swipeEngineMode) {
                             "geometric" -> 1
                             else -> 0 // "ctc" (default) + any legacy value
@@ -124,12 +126,13 @@ internal fun SettingsActivity.SwipeTypingSection() {
                             )
                         }
                     }
+                    val unnamedLayout = stringResource(R.string.swipe_engine_fallback_unnamed_layout)
                     val fallback = SwipeEngineFallback.diagnose(
                         mode = SwipeEngineRouter.Mode.fromPref(swipeEngineMode),
                         language = primaryLanguage,
                         layouts = config.layouts
                             .filterNotNull()
-                            .map { SwipeEngineFallback.factsFor(it, primaryLanguage) },
+                            .map { SwipeEngineFallback.factsFor(it, primaryLanguage, unnamedLayout) },
                     )
                     if (fallback.hasAny) {
                         Card(

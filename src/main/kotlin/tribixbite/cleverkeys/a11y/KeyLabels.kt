@@ -30,9 +30,9 @@ object KeyLabels {
         val symbol = kv.getString()
         if (kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT) || isPrivateUse(symbol)) {
             // PUA glyph or font-key with no mapping — echoing would read as garbage.
-            return kindFallback(kv)
+            return kindFallback(kv, getString)
         }
-        return symbol.ifEmpty { kindFallback(kv) }
+        return symbol.ifEmpty { kindFallback(kv, getString) }
     }
 
     /**
@@ -175,13 +175,15 @@ object KeyLabels {
     /**
      * Last-resort label when nothing else matched and the symbol is unsafe to
      * echo (font/PUA). Uses the Kind + value name so the reader says something
-     * meaningful ("Shift", "Key 131") instead of a garbage glyph.
+     * meaningful ("Shift", "Key 131") instead of a garbage glyph. The keycode
+     * form is localized (`key_descr_keycode`, "Key %1$d"); the enum-name forms are
+     * internal identifiers reached only for keys no explicit mapping covers.
      */
-    private fun kindFallback(kv: KeyValue): String = when (kv.getKind()) {
+    private fun kindFallback(kv: KeyValue, getString: (Int) -> String): String = when (kv.getKind()) {
         KeyValue.Kind.Modifier -> kv.getModifier().name.lowercase().replaceFirstChar { it.uppercase() }
         KeyValue.Kind.Event -> kv.getEvent().name.lowercase().replace('_', ' ')
         KeyValue.Kind.Editing -> kv.getEditing().name.lowercase().replace('_', ' ')
-        KeyValue.Kind.Keyevent -> "Key ${kv.getKeyevent()}"
+        KeyValue.Kind.Keyevent -> getString(R.string.key_descr_keycode).format(kv.getKeyevent())
         KeyValue.Kind.Placeholder -> kv.getPlaceholder().name.lowercase().replace('_', ' ')
         else -> kv.getKind().name
     }

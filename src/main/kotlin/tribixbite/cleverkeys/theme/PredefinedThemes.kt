@@ -1,6 +1,9 @@
 package tribixbite.cleverkeys.theme
 
+import android.content.res.Resources
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
+import tribixbite.cleverkeys.R
 
 /**
  * Predefined keyboard themes for CleverKeys.
@@ -18,29 +21,63 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * Theme category enumeration.
+ *
+ * [displayName] is the English category name, kept for logs/debug only; UI shows the
+ * localized [labelRes] (2026-09-29 i18n sweep).
  */
-enum class ThemeCategory(val displayName: String) {
-    GEMSTONE("Gemstone"),
-    NEON("Neon"),
-    PASTEL("Pastel"),
-    NATURE("Nature"),
-    UTILITARIAN("Utilitarian"),
-    MODERN("Modern"),
-    CUSTOM("Custom")
+enum class ThemeCategory(val displayName: String, @StringRes val labelRes: Int) {
+    GEMSTONE("Gemstone", R.string.theme_category_gemstone),
+    NEON("Neon", R.string.theme_category_neon),
+    PASTEL("Pastel", R.string.theme_category_pastel),
+    NATURE("Nature", R.string.theme_category_nature),
+    UTILITARIAN("Utilitarian", R.string.theme_category_utilitarian),
+    MODERN("Modern", R.string.theme_category_modern),
+    CUSTOM("Custom", R.string.theme_selector_custom)
 }
 
 /**
  * Complete theme information including metadata and colors.
+ *
+ * Display text is resolved at the display point with [displayName] / [displayDescription]:
+ * predefined themes carry string resources ([nameRes], [descriptionRes]); custom themes carry
+ * the user-entered [name] and their [createdAt] time (their description is "created <age>").
  */
 data class ThemeInfo(
     val id: String,
+    /**
+     * Predefined themes: the English theme name (stable identifier for logs; UI shows
+     * [nameRes]). Custom themes: the name the user typed — shown as-is, never translated.
+     */
     val name: String,
     val category: ThemeCategory,
     val colorScheme: KeyboardColorScheme,
-    val description: String,
+    /** Localized name of a predefined theme; 0 for custom themes (use [name]). */
+    @StringRes val nameRes: Int = 0,
+    /** Localized one-line description of a predefined theme; 0 for custom themes. */
+    @StringRes val descriptionRes: Int = 0,
+    /** Creation time (epoch ms) of a custom theme; null for predefined themes. */
+    val createdAt: Long? = null,
+    /**
+     * Legacy raw description. Predefined and custom themes leave it empty — call
+     * [displayDescription] for the localized text.
+     */
+    val description: String = "",
     val isDeletable: Boolean = false,
     val isExportable: Boolean = true
-)
+) {
+    /** Localized name: the string resource for predefined themes, the user's name otherwise. */
+    fun displayName(res: Resources): String = if (nameRes != 0) res.getString(nameRes) else name
+
+    /**
+     * Localized description: the predefined theme's resource, or "Custom theme created <age>"
+     * for a custom theme, or the legacy raw [description].
+     */
+    fun displayDescription(res: Resources, now: Long = System.currentTimeMillis()): String = when {
+        descriptionRes != 0 -> res.getString(descriptionRes)
+        createdAt != null -> CustomTheme.createdDescription(res, createdAt, now)
+        else -> description
+    }
+}
 
 // =============================================================================
 // GEMSTONE THEMES - Precious stone inspired colors
@@ -52,8 +89,9 @@ data class ThemeInfo(
 fun themeGemstoneRuby(): ThemeInfo = ThemeInfo(
     id = "gemstone_ruby",
     name = "Ruby",
+    nameRes = R.string.theme_predefined_gemstone_ruby,
     category = ThemeCategory.GEMSTONE,
-    description = "Deep crimson inspired by rubies",
+    descriptionRes = R.string.theme_predefined_gemstone_ruby_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF4A0E0E),              // Deep burgundy
         keyActivated = Color(0xFF6B1515),            // Brighter burgundy
@@ -86,8 +124,9 @@ fun themeGemstoneRuby(): ThemeInfo = ThemeInfo(
 fun themeGemstoneSapphire(): ThemeInfo = ThemeInfo(
     id = "gemstone_sapphire",
     name = "Sapphire",
+    nameRes = R.string.theme_predefined_gemstone_sapphire,
     category = ThemeCategory.GEMSTONE,
-    description = "Rich blue inspired by sapphires",
+    descriptionRes = R.string.theme_predefined_gemstone_sapphire_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF0A1E4A),              // Deep navy
         keyActivated = Color(0xFF15306B),            // Brighter navy
@@ -120,8 +159,9 @@ fun themeGemstoneSapphire(): ThemeInfo = ThemeInfo(
 fun themeGemstoneEmerald(): ThemeInfo = ThemeInfo(
     id = "gemstone_emerald",
     name = "Emerald",
+    nameRes = R.string.theme_predefined_gemstone_emerald,
     category = ThemeCategory.GEMSTONE,
-    description = "Lush green inspired by emeralds",
+    descriptionRes = R.string.theme_predefined_gemstone_emerald_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF0E4A1E),              // Deep green
         keyActivated = Color(0xFF156B30),            // Brighter green
@@ -158,8 +198,9 @@ fun themeGemstoneEmerald(): ThemeInfo = ThemeInfo(
 fun themeNeonElectricBlue(): ThemeInfo = ThemeInfo(
     id = "neon_electric_blue",
     name = "Electric Blue",
+    nameRes = R.string.theme_predefined_neon_electric_blue,
     category = ThemeCategory.NEON,
-    description = "Vibrant electric blue with neon glow",
+    descriptionRes = R.string.theme_predefined_neon_electric_blue_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF001A33),              // Very dark blue
         keyActivated = Color(0xFF002B52),            // Dark blue
@@ -192,8 +233,9 @@ fun themeNeonElectricBlue(): ThemeInfo = ThemeInfo(
 fun themeNeonHotPink(): ThemeInfo = ThemeInfo(
     id = "neon_hot_pink",
     name = "Hot Pink",
+    nameRes = R.string.theme_predefined_neon_hot_pink,
     category = ThemeCategory.NEON,
-    description = "Vibrant hot pink with neon glow",
+    descriptionRes = R.string.theme_predefined_neon_hot_pink_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF33001A),              // Very dark pink
         keyActivated = Color(0xFF52002B),            // Dark pink
@@ -226,8 +268,9 @@ fun themeNeonHotPink(): ThemeInfo = ThemeInfo(
 fun themeNeonCyberpunk(): ThemeInfo = ThemeInfo(
     id = "neon_cyberpunk",
     name = "Cyberpunk",
+    nameRes = R.string.theme_predefined_neon_cyberpunk,
     category = ThemeCategory.NEON,
-    description = "Futuristic neon pink and blue aesthetics",
+    descriptionRes = R.string.theme_predefined_neon_cyberpunk_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF121225),              // Dark blue-black
         keyActivated = Color(0xFF2A2A40),            // Slightly lighter blue-black
@@ -264,8 +307,9 @@ fun themeNeonCyberpunk(): ThemeInfo = ThemeInfo(
 fun themePastelSoftPink(): ThemeInfo = ThemeInfo(
     id = "pastel_soft_pink",
     name = "Soft Pink",
+    nameRes = R.string.theme_predefined_pastel_soft_pink,
     category = ThemeCategory.PASTEL,
-    description = "Gentle pink with soft, calming tones",
+    descriptionRes = R.string.theme_predefined_pastel_soft_pink_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFFFFE6F0),              // Very soft pink
         keyActivated = Color(0xFFFFCCE0),            // Soft pink
@@ -298,8 +342,9 @@ fun themePastelSoftPink(): ThemeInfo = ThemeInfo(
 fun themePastelSkyBlue(): ThemeInfo = ThemeInfo(
     id = "pastel_sky_blue",
     name = "Sky Blue",
+    nameRes = R.string.theme_predefined_pastel_sky_blue,
     category = ThemeCategory.PASTEL,
-    description = "Gentle blue with soft, airy tones",
+    descriptionRes = R.string.theme_predefined_pastel_sky_blue_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFFE6F0FF),              // Very soft blue
         keyActivated = Color(0xFFCCE0FF),            // Soft blue
@@ -332,8 +377,9 @@ fun themePastelSkyBlue(): ThemeInfo = ThemeInfo(
 fun themePastelMintGreen(): ThemeInfo = ThemeInfo(
     id = "pastel_mint_green",
     name = "Mint Green",
+    nameRes = R.string.theme_predefined_pastel_mint_green,
     category = ThemeCategory.PASTEL,
-    description = "Gentle mint with soft, fresh tones",
+    descriptionRes = R.string.theme_predefined_pastel_mint_green_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFFE6FFF0),              // Very soft mint
         keyActivated = Color(0xFFCCFFE0),            // Soft mint
@@ -370,8 +416,9 @@ fun themePastelMintGreen(): ThemeInfo = ThemeInfo(
 fun themeNatureForest(): ThemeInfo = ThemeInfo(
     id = "nature_forest",
     name = "Forest",
+    nameRes = R.string.theme_predefined_nature_forest,
     category = ThemeCategory.NATURE,
-    description = "Deep forest greens inspired by woodlands",
+    descriptionRes = R.string.theme_predefined_nature_forest_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF1A2E1A),              // Deep forest green
         keyActivated = Color(0xFF2B4A2B),            // Moss green
@@ -404,8 +451,9 @@ fun themeNatureForest(): ThemeInfo = ThemeInfo(
 fun themeNatureOcean(): ThemeInfo = ThemeInfo(
     id = "nature_ocean",
     name = "Ocean",
+    nameRes = R.string.theme_predefined_nature_ocean,
     category = ThemeCategory.NATURE,
-    description = "Deep ocean blues inspired by the sea",
+    descriptionRes = R.string.theme_predefined_nature_ocean_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF1A2E3E),              // Deep ocean blue
         keyActivated = Color(0xFF2B4A5E),            // Ocean blue
@@ -438,8 +486,9 @@ fun themeNatureOcean(): ThemeInfo = ThemeInfo(
 fun themeNatureDesert(): ThemeInfo = ThemeInfo(
     id = "nature_desert",
     name = "Desert",
+    nameRes = R.string.theme_predefined_nature_desert,
     category = ThemeCategory.NATURE,
-    description = "Warm sandy tones inspired by deserts",
+    descriptionRes = R.string.theme_predefined_nature_desert_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF3E2E1A),              // Sandy brown
         keyActivated = Color(0xFF5E4A2B),            // Tan
@@ -476,8 +525,9 @@ fun themeNatureDesert(): ThemeInfo = ThemeInfo(
 fun themeUtilitarianCharcoal(): ThemeInfo = ThemeInfo(
     id = "utilitarian_charcoal",
     name = "Charcoal",
+    nameRes = R.string.theme_predefined_utilitarian_charcoal,
     category = ThemeCategory.UTILITARIAN,
-    description = "Professional charcoal with high contrast",
+    descriptionRes = R.string.theme_predefined_utilitarian_charcoal_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF2A2A2A),              // Charcoal
         keyActivated = Color(0xFF3A3A3A),            // Light charcoal
@@ -510,8 +560,9 @@ fun themeUtilitarianCharcoal(): ThemeInfo = ThemeInfo(
 fun themeUtilitarianSlate(): ThemeInfo = ThemeInfo(
     id = "utilitarian_slate",
     name = "Slate",
+    nameRes = R.string.theme_predefined_utilitarian_slate,
     category = ThemeCategory.UTILITARIAN,
-    description = "Cool slate grey for professional use",
+    descriptionRes = R.string.theme_predefined_utilitarian_slate_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF2A333A),              // Slate grey
         keyActivated = Color(0xFF3A4A52),            // Light slate
@@ -544,8 +595,9 @@ fun themeUtilitarianSlate(): ThemeInfo = ThemeInfo(
 fun themeUtilitarianConcrete(): ThemeInfo = ThemeInfo(
     id = "utilitarian_concrete",
     name = "Concrete",
+    nameRes = R.string.theme_predefined_utilitarian_concrete,
     category = ThemeCategory.UTILITARIAN,
-    description = "Neutral concrete grey for minimal distraction",
+    descriptionRes = R.string.theme_predefined_utilitarian_concrete_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF3A3A3A),              // Concrete grey
         keyActivated = Color(0xFF4A4A4A),            // Light concrete
@@ -582,8 +634,9 @@ fun themeUtilitarianConcrete(): ThemeInfo = ThemeInfo(
 fun themeModernMidnight(): ThemeInfo = ThemeInfo(
     id = "modern_midnight",
     name = "Midnight",
+    nameRes = R.string.theme_predefined_modern_midnight,
     category = ThemeCategory.MODERN,
-    description = "Deep purple-blue inspired by midnight sky",
+    descriptionRes = R.string.theme_predefined_modern_midnight_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF1A1A2E),              // Midnight blue
         keyActivated = Color(0xFF2B2B4A),            // Deep purple-blue
@@ -616,8 +669,9 @@ fun themeModernMidnight(): ThemeInfo = ThemeInfo(
 fun themeModernSunrise(): ThemeInfo = ThemeInfo(
     id = "modern_sunrise",
     name = "Sunrise",
+    nameRes = R.string.theme_predefined_modern_sunrise,
     category = ThemeCategory.MODERN,
-    description = "Warm oranges and pinks inspired by sunrise",
+    descriptionRes = R.string.theme_predefined_modern_sunrise_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF2E1A1A),              // Dark warm red
         keyActivated = Color(0xFF4A2B2B),            // Warm red-brown
@@ -650,8 +704,9 @@ fun themeModernSunrise(): ThemeInfo = ThemeInfo(
 fun themeModernAurora(): ThemeInfo = ThemeInfo(
     id = "modern_aurora",
     name = "Aurora",
+    nameRes = R.string.theme_predefined_modern_aurora,
     category = ThemeCategory.MODERN,
-    description = "Cool blues and greens inspired by aurora borealis",
+    descriptionRes = R.string.theme_predefined_modern_aurora_desc,
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF1A2E2E),              // Dark teal
         keyActivated = Color(0xFF2B4A4A),            // Teal

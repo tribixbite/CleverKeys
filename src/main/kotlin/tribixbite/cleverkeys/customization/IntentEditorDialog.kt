@@ -124,11 +124,15 @@ fun IntentEditorDialog(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            IntentDefinition.PRESETS.forEach { preset ->
+                            IntentDefinition.PRESET_ENTRIES.forEach { entry ->
+                                val preset = entry.definition
+                                // Localized chip label; it also pre-fills the user-editable
+                                // name field (the preset's English name is only an identifier).
+                                val presetLabel = stringResource(entry.labelRes)
                                 FilterChip(
                                     onClick = {
                                         // Apply preset values
-                                        name = preset.name
+                                        name = presetLabel
                                         targetType = preset.targetType
                                         action = preset.action ?: ""
                                         data = preset.data ?: ""
@@ -138,7 +142,7 @@ fun IntentEditorDialog(
                                         extrasList = preset.extras?.toList() ?: emptyList()
                                         showPresets = false
                                     },
-                                    label = { Text(preset.name, fontSize = 12.sp) },
+                                    label = { Text(presetLabel, fontSize = 12.sp) },
                                     selected = false
                                 )
                             }

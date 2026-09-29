@@ -9,6 +9,7 @@ import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.RequiresApi
+import androidx.annotation.StringRes
 
 /**
  * Quick Settings tile for CleverKeys keyboard.
@@ -78,7 +79,10 @@ class KeyboardTileService : TileService() {
 
         tile.state = state
         tile.label = getString(R.string.app_name)
-        tile.contentDescription = tileContentDescriptionFor(state)
+        tile.contentDescription = getString(
+            tileContentDescriptionFor(state),
+            getString(R.string.app_name)
+        )
 
         tile.updateTile()
     }
@@ -99,12 +103,17 @@ class KeyboardTileService : TileService() {
         internal fun tileStateFor(currentIme: String?, packageName: String): Int =
             if (currentIme?.contains(packageName) == true) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
 
-        /** TalkBack description for a tile in [state]; see [tileStateFor]. */
-        internal fun tileContentDescriptionFor(state: Int): String =
+        /**
+         * TalkBack description resource for a tile in [state]; see [tileStateFor]. Both strings
+         * take the app name (`R.string.app_name`) as `%1$s`; the caller resolves them so this
+         * stays free of a Context and pinnable in a pure-JVM test.
+         */
+        @StringRes
+        internal fun tileContentDescriptionFor(state: Int): Int =
             if (state == Tile.STATE_ACTIVE) {
-                "CleverKeys is active. Tap to switch keyboard."
+                R.string.tile_descr_active
             } else {
-                "Tap to switch to CleverKeys keyboard."
+                R.string.tile_descr_inactive
             }
     }
 }

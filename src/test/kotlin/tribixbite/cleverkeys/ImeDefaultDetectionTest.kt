@@ -246,6 +246,15 @@ class ImeDefaultDetectionTest {
     fun `the prompt names this app via the app_name resource, not Unexpected Keyboard`() {
         systemDefaultIme("com.example.other/com.example.other.OtherService")
         every { context.getString(R.string.app_name) } returns "CleverKeys"
+        // The prompt is a resource taking the app name as %1$s; resolve it from the real
+        // English template so the assertion below still checks the text the user sees.
+        val template = TranslationResources.strings(TranslationResources.defaultDir)
+            .getValue("ime_default_prompt_toast")
+        every { context.getString(R.string.ime_default_prompt_toast, any()) } answers {
+            // MockK may deliver the Java varargs either flattened or as one array.
+            val appName = it.invocation.args.last().let { a -> if (a is Array<*>) a[0] else a }
+            template.replace("%1\$s", appName.toString())
+        }
 
         val toastRunnable = slot<Runnable>()
         every { handler.postDelayed(capture(toastRunnable), any()) } returns true

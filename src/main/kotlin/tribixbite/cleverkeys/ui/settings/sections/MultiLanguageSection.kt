@@ -55,6 +55,7 @@ import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
+import tribixbite.cleverkeys.ui.settings.io.LanguagePackImportStatus
 import tribixbite.cleverkeys.ui.settings.io.deleteLanguagePack
 import tribixbite.cleverkeys.langpack.NoticeTextLayout
 import tribixbite.cleverkeys.ui.settings.io.getLanguageDisplayName
@@ -123,10 +124,10 @@ internal fun SettingsActivity.MultiLanguageSection() {
 
                     SettingsDropdown(
                         title = stringResource(R.string.multilang_secondary_title),
-                        description = if (availableSecondaryLanguages.isEmpty())
-                            "No additional dictionaries available"
-                        else
-                            "Enable bilingual predictions (e.g., English + Spanish)",
+                        description = stringResource(
+                            if (availableSecondaryLanguages.isEmpty()) R.string.multilang_secondary_none_available
+                            else R.string.multilang_secondary_desc
+                        ),
                         options = secondaryDisplayOptions,
                         selectedIndex = secondarySelectedIndex,
                         onSelectionChange = { index ->
@@ -310,9 +311,9 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     // Import status message
                     languagePackImportStatus?.let { status ->
                         Text(
-                            text = status,
+                            text = status.message,
                             fontSize = 11.sp,
-                            color = if (status.startsWith("Error"))
+                            color = if (status is LanguagePackImportStatus.Failed)
                                 MaterialTheme.colorScheme.error
                             else
                                 MaterialTheme.colorScheme.primary,

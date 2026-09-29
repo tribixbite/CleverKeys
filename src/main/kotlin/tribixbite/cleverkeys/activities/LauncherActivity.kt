@@ -389,7 +389,7 @@ fun LauncherScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
+                    contentDescription = stringResource(R.string.key_descr_config),
                     tint = colors.topIconTint,
                     modifier = Modifier.size(24.dp)
                 )
@@ -469,7 +469,7 @@ fun LauncherScreen(
                 SetupCard(
                     number = "1",
                     title = stringResource(R.string.launcher_step_enable),
-                    description = "Turn on CleverKeys in system settings",
+                    description = stringResource(R.string.launcher_step_enable_desc),
                     icon = Icons.Default.Settings,
                     isCompleted = isKeyboardEnabled,
                     onClick = onEnableKeyboard
@@ -478,7 +478,7 @@ fun LauncherScreen(
                 SetupCard(
                     number = "2",
                     title = stringResource(R.string.launcher_step_select),
-                    description = "Switch your default input method",
+                    description = stringResource(R.string.launcher_step_select_desc),
                     icon = Icons.Default.CheckCircle,
                     isCompleted = isKeyboardSelected,
                     onClick = onSelectKeyboard
@@ -487,7 +487,7 @@ fun LauncherScreen(
                 SetupCard(
                     number = "3",
                     title = stringResource(R.string.launcher_step_calibrate),
-                    description = "Configure up to 8 subkey actions per key",
+                    description = stringResource(R.string.launcher_step_calibrate_desc),
                     icon = Icons.Default.Edit,
                     isCompleted = hasVisitedCalibration,
                     onClick = {
@@ -645,7 +645,8 @@ fun SetupCard(
                     color = if (isCompleted) colors.completedText else colors.cardText
                 )
                 Text(
-                    text = if (isCompleted) "✓ Done" else description,
+                    // The ✓ is decoration, kept out of the translatable text; the status word is common_done.
+                    text = if (isCompleted) "✓ " + stringResource(R.string.common_done) else description,
                     style = MaterialTheme.typography.bodySmall,
                     color = if (isCompleted) colors.completedText.copy(alpha = 0.8f) else colors.cardText.copy(alpha = 0.7f)
                 )

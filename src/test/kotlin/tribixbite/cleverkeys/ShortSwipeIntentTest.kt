@@ -309,22 +309,23 @@ class ShortSwipeIntentTest {
 
     @Test
     fun `ActionType displayName is set for all types`() {
+        // Labels are string resources since the 2026-09-29 i18n sweep; resolve the English text.
         for (type in ActionType.values()) {
-            assertThat(type.displayName).isNotEmpty()
+            assertThat(EnglishResourceText.string(type.displayNameRes)).isNotEmpty()
         }
     }
 
     @Test
     fun `ActionType description is set for all types`() {
         for (type in ActionType.values()) {
-            assertThat(type.description).isNotEmpty()
+            assertThat(EnglishResourceText.string(type.descriptionRes)).isNotEmpty()
         }
     }
 
     @Test
     fun `ActionType INTENT has correct display info`() {
-        assertThat(ActionType.INTENT.displayName).isEqualTo("Send Intent")
-        assertThat(ActionType.INTENT.description).contains("Android Intent")
+        assertThat(EnglishResourceText.string(ActionType.INTENT.displayNameRes)).isEqualTo("Send Intent")
+        assertThat(EnglishResourceText.string(ActionType.INTENT.descriptionRes)).contains("Android Intent")
     }
 
     // =========================================================================

@@ -276,21 +276,16 @@ class WordListFragment : Fragment() {
                 // Notify parent activity to refresh other tabs
                 (activity as? DictionaryManagerActivity)?.refreshAllTabs()
             } catch (e: Exception) {
-                // Show error
-                AlertDialog.Builder(requireContext())
-                    .setTitle("Error")
-                    .setMessage("Failed to toggle word: ${e.message}")
-                    .setPositiveButton("OK", null)
-                    .show()
+                showErrorDialog(R.string.dict_error_toggle_word, e)
             }
         }
     }
 
     private fun deleteWord(word: DictionaryWord) {
         AlertDialog.Builder(requireContext())
-            .setTitle("Delete Word")
-            .setMessage("Delete '${word.word}'?")
-            .setPositiveButton("Delete") { _, _ ->
+            .setTitle(R.string.dict_delete_word_title)
+            .setMessage(getString(R.string.dict_delete_word_message, word.word))
+            .setPositiveButton(R.string.common_delete) { _, _ ->
                 lifecycleScope.launch {
                     try {
                         dataSource.deleteWord(word.word)
@@ -298,15 +293,11 @@ class WordListFragment : Fragment() {
                         // Notify parent activity to refresh predictions
                         (activity as? DictionaryManagerActivity)?.refreshAllTabs()
                     } catch (e: Exception) {
-                        AlertDialog.Builder(requireContext())
-                            .setTitle("Error")
-                            .setMessage("Failed to delete word: ${e.message}")
-                            .setPositiveButton("OK", null)
-                            .show()
+                        showErrorDialog(R.string.dict_error_delete_word, e)
                     }
                 }
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.common_cancel, null)
             .show()
     }
 
@@ -322,7 +313,7 @@ class WordListFragment : Fragment() {
 
         val wordInput = EditText(requireContext())
         wordInput.inputType = InputType.TYPE_CLASS_TEXT
-        wordInput.hint = "Enter word"
+        wordInput.hint = getString(R.string.dict_word_input_hint)
         layout.addView(wordInput)
 
         // Wave U2: the stored scale is 1..255 (UserWordFrequency; AOSP user-dictionary
@@ -333,15 +324,15 @@ class WordListFragment : Fragment() {
         // they can lower it here to demote it.
         val freqInput = EditText(requireContext())
         freqInput.inputType = InputType.TYPE_CLASS_NUMBER
-        freqInput.hint = "Frequency (1-255, higher wins)"
+        freqInput.hint = getString(R.string.dict_frequency_input_hint)
         freqInput.setText(UserWordFrequency.DEFAULT.toString())
         freqInput.selectAll()
         layout.addView(freqInput)
 
         AlertDialog.Builder(requireContext())
-            .setTitle("Add Custom Word")
+            .setTitle(R.string.dict_add_word_title)
             .setView(layout)
-            .setPositiveButton("Add") { _, _ ->
+            .setPositiveButton(R.string.dict_add_word_confirm) { _, _ ->
                 val word = wordInput.text.toString().trim()
                 val freqText = freqInput.text.toString().trim()
                 val frequency = freqText.toIntOrNull() ?: UserWordFrequency.DEFAULT
@@ -379,16 +370,12 @@ class WordListFragment : Fragment() {
                                     .show()
                             }
                         } catch (e: Exception) {
-                            AlertDialog.Builder(requireContext())
-                                .setTitle("Error")
-                                .setMessage("Failed to add word: ${e.message}")
-                                .setPositiveButton("OK", null)
-                                .show()
+                            showErrorDialog(R.string.dict_error_add_word, e)
                         }
                     }
                 }
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.common_cancel, null)
             .show()
     }
 
@@ -403,7 +390,7 @@ class WordListFragment : Fragment() {
 
         val wordInput = EditText(requireContext())
         wordInput.inputType = InputType.TYPE_CLASS_TEXT
-        wordInput.hint = "Word"
+        wordInput.hint = getString(R.string.dict_word_edit_hint)
         wordInput.setText(word.word)
         wordInput.selectAll()
         layout.addView(wordInput)
@@ -413,14 +400,14 @@ class WordListFragment : Fragment() {
         // calibrated-scale equivalent without touching words the user doesn't edit.
         val freqInput = EditText(requireContext())
         freqInput.inputType = InputType.TYPE_CLASS_NUMBER
-        freqInput.hint = "Frequency (1-255, higher wins)"
+        freqInput.hint = getString(R.string.dict_frequency_input_hint)
         freqInput.setText(word.frequency.coerceIn(UserWordFrequency.MIN, UserWordFrequency.MAX).toString())
         layout.addView(freqInput)
 
         AlertDialog.Builder(requireContext())
-            .setTitle("Edit Word")
+            .setTitle(R.string.dict_edit_word_title)
             .setView(layout)
-            .setPositiveButton("Save") { _, _ ->
+            .setPositiveButton(R.string.common_save) { _, _ ->
                 val newWord = wordInput.text.toString().trim()
                 val freqText = freqInput.text.toString().trim()
                 val newFrequency = freqText.toIntOrNull() ?: word.frequency
@@ -436,16 +423,29 @@ class WordListFragment : Fragment() {
                             // Notify parent activity to refresh predictions
                             (activity as? DictionaryManagerActivity)?.refreshAllTabs()
                         } catch (e: Exception) {
-                            AlertDialog.Builder(requireContext())
-                                .setTitle("Error")
-                                .setMessage("Failed to update word: ${e.message}")
-                                .setPositiveButton("OK", null)
-                                .show()
+                            showErrorDialog(R.string.dict_error_update_word, e)
                         }
                     }
                 }
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.common_cancel, null)
+            .show()
+    }
+
+    /**
+     * Show the shared "operation failed" dialog for a word action.
+     *
+     * @param messageRes a string taking the failure detail as `%1$s`
+     * @param e the failure; its message is the detail, or the localized "Unknown error"
+     *   when the exception carries none (so the dialog never reads "…: null")
+     */
+    private fun showErrorDialog(@androidx.annotation.StringRes messageRes: Int, e: Exception) {
+        val ctx = context ?: return  // fragment detached while the coroutine ran
+        val detail = e.message ?: ctx.getString(R.string.common_unknown_error)
+        AlertDialog.Builder(ctx)
+            .setTitle(R.string.dict_error_title)
+            .setMessage(ctx.getString(messageRes, detail))
+            .setPositiveButton(R.string.common_ok, null)
             .show()
     }
 

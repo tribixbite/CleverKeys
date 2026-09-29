@@ -9,6 +9,18 @@ import tribixbite.cleverkeys.SwipePerformanceStats
 import tribixbite.cleverkeys.SettingsActivity
 
 /**
+ * "Export failed: <detail>" toast shared by the privacy-data exporters (perf stats, swipe data).
+ *
+ * TODO(i18n): the detail is the exception message — ours is localized
+ *  (privacy_export_open_failed), but I/O and JSON exceptions carry English platform text.
+ */
+internal fun SettingsActivity.toastExportFailed(e: Exception) {
+    Toast.makeText(
+        this, getString(R.string.common_export_failed_detail, e.message.orEmpty()), Toast.LENGTH_SHORT
+    ).show()
+}
+
+/**
  * View collected swipe data in a dialog with pagination
  */
 internal fun SettingsActivity.viewCollectedData() {
@@ -43,7 +55,9 @@ internal fun SettingsActivity.loadCollectedDataPage() {
                 collectedDataStats = dataStore.getStatistics()
             }
         } catch (e: Exception) {
-            Toast.makeText(_self, "Error loading data: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                _self, getString(R.string.privacy_error_loading_data, e.message.orEmpty()), Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }
@@ -57,7 +71,9 @@ internal fun SettingsActivity.viewPerfStats() {
         perfStatsSummary = stats.formatSummary()
         showPerfStatsViewer = true
     } catch (e: Exception) {
-        Toast.makeText(this, "Error loading stats: ${e.message}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            this, getString(R.string.privacy_error_loading_stats, e.message.orEmpty()), Toast.LENGTH_SHORT
+        ).show()
     }
 }
 
@@ -70,7 +86,7 @@ internal fun SettingsActivity.exportPerfStats() {
         val filename = "perf_stats_${sdf.format(java.util.Date())}.json"
         perfStatsExportLauncher.launch(filename)
     } catch (e: Exception) {
-        Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        toastFilePickerFailed(e)
     }
 }
 
@@ -136,18 +152,10 @@ internal fun SettingsActivity.performPerfStatsExport(uri: Uri) {
                 java.io.OutputStreamWriter(outputStream, Charsets.UTF_8).use { writer ->
                     writer.write(json.toString(2))
                 }
-                Toast.makeText(
-                    _self,
-                    "Performance stats exported",
-                    Toast.LENGTH_SHORT
-                ).show()
-            } ?: throw Exception("Could not open file for writing")
+                Toast.makeText(_self, R.string.privacy_perf_stats_exported, Toast.LENGTH_SHORT).show()
+            } ?: throw java.io.IOException(getString(R.string.privacy_export_open_failed))
         } catch (e: Exception) {
-            Toast.makeText(
-                _self,
-                "Export failed: ${e.message}",
-                Toast.LENGTH_SHORT
-            ).show()
+            toastExportFailed(e)
         }
     }
 }

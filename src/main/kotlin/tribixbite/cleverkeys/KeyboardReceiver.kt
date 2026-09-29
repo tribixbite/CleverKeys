@@ -673,13 +673,13 @@ class KeyboardReceiver(
                 val clip = android.content.ClipData.newPlainText("GIF URL", url)
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 cm.setPrimaryClip(clip)
-                keyboard2.showSuggestionBarMessage("URL copied")
+                keyboard2.showSuggestionBarMessage(context.getString(R.string.gif_msg_url_copied))
             }
             GifInsertPolicy.Action.NONE ->
                 // Legacy pack without full media in a URL-less world: nothing honest to
                 // insert (the old behavior committed a dead link). Toasts are IME-suppressed
                 // on Android 13+; the suggestion bar is the feedback surface (#156 pattern).
-                keyboard2.showSuggestionBarMessage("GIF media unavailable")
+                keyboard2.showSuggestionBarMessage(context.getString(R.string.gif_msg_media_unavailable))
         }
     }
 
@@ -725,7 +725,7 @@ class KeyboardReceiver(
             )
             val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
             cm.setPrimaryClip(clip)
-            keyboard2.showSuggestionBarMessage("GIF copied")
+            keyboard2.showSuggestionBarMessage(context.getString(R.string.gif_msg_gif_copied))
         } catch (e: Exception) {
             android.util.Log.w(TAG, "Copy GIF failed: ${e.message}")
         }
@@ -794,19 +794,19 @@ class KeyboardReceiver(
         // "Copy URL" — copies the Giphy animated GIF URL
         val url = gif.getGiphyUrl()
         if (url != null) {
-            addAction("Copy URL") {
+            addAction(context.getString(R.string.gif_action_copy_url)) {
                 val clip = android.content.ClipData.newPlainText("GIF URL", url)
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 cm.setPrimaryClip(clip)
                 // E-10: suggestion-bar feedback — Toasts are IME-suppressed on Android 13+ (#156)
-                keyboard2.showSuggestionBarMessage("URL copied")
+                keyboard2.showSuggestionBarMessage(context.getString(R.string.gif_msg_url_copied))
             }
         }
 
         // "Copy GIF" — only shown when full animated file exists on device
         val fullGifFile = java.io.File(context.filesDir, gif.getFullPath())
         if (fullGifFile.exists()) {
-            addAction("Copy GIF") {
+            addAction(context.getString(R.string.gif_action_copy_gif)) {
                 try {
                     val uri = androidx.core.content.FileProvider.getUriForFile(
                         context,
@@ -821,7 +821,7 @@ class KeyboardReceiver(
                     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                     cm.setPrimaryClip(clip)
                     // E-10: suggestion-bar feedback — Toasts are IME-suppressed on Android 13+ (#156)
-                    keyboard2.showSuggestionBarMessage("GIF copied")
+                    keyboard2.showSuggestionBarMessage(context.getString(R.string.gif_msg_gif_copied))
                 } catch (e: Exception) {
                     android.util.Log.w("KeyboardReceiver", "Copy GIF failed: ${e.message}")
                 }
@@ -831,12 +831,12 @@ class KeyboardReceiver(
         // "Copy keywords"
         val keywords = gif.getKeywords()
         if (keywords.isNotEmpty()) {
-            addAction("Copy keywords") {
+            addAction(context.getString(R.string.gif_action_copy_keywords)) {
                 val clip = android.content.ClipData.newPlainText("GIF keywords", keywords.joinToString(", "))
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 cm.setPrimaryClip(clip)
                 // E-10: suggestion-bar feedback — Toasts are IME-suppressed on Android 13+ (#156)
-                keyboard2.showSuggestionBarMessage("Keywords copied")
+                keyboard2.showSuggestionBarMessage(context.getString(R.string.gif_msg_keywords_copied))
             }
         }
 

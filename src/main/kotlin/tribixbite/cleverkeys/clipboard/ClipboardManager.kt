@@ -137,7 +137,7 @@ class ClipboardManager(
                 // Block search activation during edit mode — edit takes priority
                 if (isInEditMode()) return@setOnClickListener
                 searchMode = true
-                clipboardSearchBox?.hint = "Type on keyboard below..."
+                clipboardSearchBox?.hint = context.getString(R.string.clipboard_search_hint_typing)
                 clipboardSearchBox?.requestFocus()
             }
 
@@ -388,7 +388,7 @@ class ClipboardManager(
         searchMode = false
         clipboardSearchBox?.apply {
             text = ""
-            hint = "Tap to search..."
+            hint = context.getString(R.string.clipboard_search_hint_tap)
         }
         clipboardHistoryView?.setSearchFilter("")
         clipboardHistoryView?.setRegexMode(false)
@@ -415,7 +415,7 @@ class ClipboardManager(
         searchMode = false
         clipboardSearchBox?.apply {
             text = ""
-            hint = "Tap to search..."
+            hint = context.getString(R.string.clipboard_search_hint_tap)
         }
         clipboardHistoryView?.setSearchFilter("")
         clipboardHistoryView?.setRegexMode(false)
@@ -438,7 +438,7 @@ class ClipboardManager(
         searchMode = false
         clipboardSearchBox?.apply {
             text = ""
-            hint = "Tap to search..."
+            hint = context.getString(R.string.clipboard_search_hint_tap)
         }
         updateSearchClearVisibility("")
         // Also exit edit mode and tag panel when hiding clipboard pane
@@ -560,7 +560,7 @@ class ClipboardManager(
         // Restore search bar to default state (pane is still open, so use the "tap to search" hint)
         clipboardSearchBox?.apply {
             text = ""
-            hint = "Tap to search..."
+            hint = context.getString(R.string.clipboard_search_hint_tap)
         }
         updateSearchClearVisibility("")
         // Swap visibility: show entry list, hide tag panel
@@ -755,9 +755,9 @@ class ClipboardManager(
             matchAllToggle.isChecked = historyView.isTagFilterMatchAll()
 
             // Update label to reflect current match mode
-            matchLabel.text = if (matchAllToggle.isChecked) "Match: All" else "Match: Any"
+            matchLabel.text = tagMatchLabel(matchAllToggle.isChecked)
             matchAllToggle.setOnCheckedChangeListener { _, isChecked ->
-                matchLabel.text = if (isChecked) "Match: All" else "Match: Any"
+                matchLabel.text = tagMatchLabel(isChecked)
             }
 
             if (allTags.isEmpty()) {
@@ -782,7 +782,7 @@ class ClipboardManager(
 
         // ─── Build dialog ───
         val dialog = android.app.AlertDialog.Builder(themedContext)
-            .setTitle("Filters")
+            .setTitle(R.string.clipboard_filter_dialog_title)
             .setView(dialogView)
             .create()
 
@@ -949,6 +949,11 @@ class ClipboardManager(
             (pane.findViewById<TextView?>(R.id.clipboard_page_info))?.setTextColor(sub)
         }
     }
+
+    /** Label beside the filter dialog's tag match-mode switch ("Match: All" / "Match: Any"). */
+    private fun tagMatchLabel(matchAll: Boolean): String = context.getString(
+        if (matchAll) R.string.clipboard_filter_match_all else R.string.clipboard_filter_match_any
+    )
 
     /**
      * Updates the filter button icon tint based on active filter state.

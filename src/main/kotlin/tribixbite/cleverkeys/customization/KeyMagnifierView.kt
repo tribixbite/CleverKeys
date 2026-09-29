@@ -9,6 +9,7 @@ import android.view.View
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.Theme
 import tribixbite.cleverkeys.theme.ThemeProvider
 import android.graphics.Typeface
@@ -563,7 +564,7 @@ class KeyMagnifierView @JvmOverloads constructor(
             textAlign = Paint.Align.CENTER
         }
         canvas.drawText(
-            "Tap a key to customize",
+            context.getString(R.string.key_magnifier_empty_hint),
             width / 2f,
             height / 2f,
             paint
