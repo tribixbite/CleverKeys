@@ -511,3 +511,58 @@ array accounting to < 100 B). Release APK (`./build-on-termux.sh release --no-in
 sidecars are 552,198 B of that as stored, the rest is other commits since. Load average 13–18
 from other agents during these runs; the load times are indicative only. en and de rebuild
 byte-identically from the refactored builder (model, sidecar, contributor list).
+
+## LM ratio shape — PRE-REGISTRATION (2026-09-29, written and committed before any shape is measured)
+
+Follow-up to "Why `both` was ≈ 0" above. Nothing in this section has been measured yet.
+
+### Question
+
+`BigramModel.getContextMultiplier` feeds `clamp(StaticContextLm.contextRatio(prev, w), 0.1, 10)`
+into `UnifiedScore.combine`. For a word outside `prev`'s listed top 20 that ratio is the backoff
+`alpha(prev)` < 1, and a listed word can also sit below 1. In the default `both`,
+`max(static, learned)` with a learned boost that is ALWAYS ≥ 1 (`ContextModel.calculateBoost`
+clamps to [1, 5], and "no evidence" is exactly 1.0) discards every static value below 1 — with
+an empty store AND with a populated one. `static_only` applies them. The test tables above show
+`lm_both` > `lm_static` at prefix-1 on es/pt/sv, i.e. the sub-1 part may cost accuracy.
+
+### Candidate shapes (closed set; every shape is then clamped to [0.1, 10] as today)
+
+| id | shape of r = `contextRatio` | note |
+|---|---|---|
+| `RAW` | r | status quo |
+| `FLOOR_ONE` | max(r, 1) | = what `both` applies when the learned boost is 1 |
+| `FLOOR_HALF` | max(r, 0.5) | softer floor |
+| `SQRT_BELOW_ONE` | r ≥ 1 ? r : √r | tempered penalty, boosts untouched |
+
+All four agree for r ≥ 1, so they differ only in the penalty side; `both` is therefore
+invariant to the choice (checked, not assumed: the eval prints `lm_both`, and with no learned
+rows `FLOOR_ONE` must equal it exactly).
+
+### Metric, populations, rule
+
+- **Dev metric** = the gate metric: `StaticLmTapEvalTest` with `STATIC_LM_EVAL_SPLIT=dev`, OOD
+  **dev** split, top-3 Δ vs `none` at prefix 1/2/3 through the real `UnifiedScore.combine`
+  (`static_only`), one extra arm per shape. Models: the six shipped assets (en, de, fr, it, pt,
+  sv) and, eval only, the unshipped es candidate (`lmretry/final/es.cklm`, the retry's chosen
+  model). es is reported and does NOT enter the rule (it ships no LM, so no user gets the shape).
+- **Eligibility:** a shape is eligible iff, on every shipped language and every prefix 1–3,
+  Δ(shape) ≥ Δ(`RAW`) − 0.05 pt (no gate cell regresses beyond a rounding-level tolerance), and
+  empty-context deviation stays 0.
+- **Choice:** the eligible shape with the highest MEAN dev prefix-1 Δ over the six shipped
+  languages (unweighted). Ties within 0.01 pt → the earlier in the order `RAW`, `FLOOR_ONE`,
+  `FLOOR_HALF`, `SQRT_BELOW_ONE` (status quo, then the simplest change). If no non-`RAW` shape is
+  eligible, `RAW` stays and nothing changes in production.
+- The choice is committed to this document before the test split is read. The **test** split is
+  then read ONCE (all shapes printed, the choice already fixed) to report.
+- **Production rule:** the chosen shape replaces `RAW` in `BigramModel` only if, on test, every
+  shipped language has Δ(chosen) ≥ Δ(`RAW`) − 0.05 pt at prefix 1, 2 and 3, and every shipped
+  language still passes its S1 gate under the chosen shape. Otherwise it is reported and not
+  shipped. No second test read either way.
+
+### Risks stated in advance
+
+- A floor removes the only penalty the static LM has; if a language's dev gain comes from
+  demoting frequent-but-unlikely words, `FLOOR_ONE` will lose there and be ineligible.
+- Dev and test disagree by up to ~1 pt on the smaller treebanks (sv prefix-2, es prefix-1), so
+  a dev win smaller than that is weak evidence; the test rule is the check.
