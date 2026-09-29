@@ -42,6 +42,17 @@ import java.io.File
  *    (context boost 0.5, frequency scale 100, no adaptation/personalization), the frequency the
  *    tap predictor derives from `<lang>_enhanced.bin`, and the tap predictor's prefix score.
  *
+ * ## Contraction keys (2026-09-29)
+ *
+ * The model is loaded exactly as `BigramModel` loads it on the device: parsed, then
+ * [StaticContextLm.withReplaceAliases] with the language's REPLACE bucket
+ * ([StaticLmLanguageData.replaceAliases]), so a lexicon candidate `dont`/`cest` scores as the
+ * `don't`/`c'est` the bar shows. The GATE population is unchanged (targets that are lexicon
+ * words). A SUPPLEMENTARY cell ("REPLACE-contraction targets", not gated) scores the positions
+ * whose target is a REPLACE display form — unscorable before — as the key the user types, over
+ * the lexicon plus the alias keys the tap predictor injects (`WordPredictor`
+ * `loadPrimaryContractionKeys`: the key's own frequency, else the 5,000 floor).
+ *
  * Counts: every cell reports token POSITIONS; the header also reports distinct sentences,
  * distinct previous words (contexts) and distinct (previous, target) pairs, so a rate built on
  * a few repeated contexts is visible as such.
@@ -133,27 +144,41 @@ class StaticLmTapEvalTest {
         }
 
         val loadStart = System.nanoTime()
-        val lm = StaticContextLm.parse(lmFile.readBytes())
+        val replace = StaticLmLanguageData.replaceAliases(lang)
+        val lm = StaticContextLm.parse(lmFile.readBytes()).withReplaceAliases(replace)
         val loadMs = (System.nanoTime() - loadStart) / 1e6
         val lexicon = loadLexicon(lexFile)
         buildPrefixIndex(lexicon)
+        // display form → the REPLACE keys that show as it (only forms the model names).
+        val keysOf = HashMap<String, MutableList<String>>()
+        for ((k, d) in replace) if (k != d && lm.contains(d)) keysOf.getOrPut(d) { ArrayList() }.add(k)
+        val contraction = if (keysOf.isEmpty()) null else ContractionEval(keysOf, lazy {
+            augmentedLexicon(lexicon, keysOf.values.flatten()).also(::buildPrefixIndex)
+        })
         val allowed = lexicon.index.keys + StaticLmLanguageData.contractionForms(lang, StaticLmLanguageData.EVAL_LM_DIR)
         val learned = loadLearned(File(corpora, "device_bigrams.json"), lang)
         val legacy = Legacy(lang)
 
         println("═══════════════════════════════════════════════════════════════")
         println("  STATIC LM — TAP EVAL (S1)  lm=${lm.language} vocab=${lm.vocabSize} prevs=${lm.prevCount} " +
-            "pairs=${lm.pairCount} bytes=${lmFile.length()} parse=%.1f ms".format(loadMs))
+            "pairs=${lm.pairCount} bytes=${lmFile.length()} parse=%.1f ms".format(loadMs) +
+            " contraction aliases=${lm.aliasCount} (REPLACE bucket ${replace.size})")
         println("  learned arm: " + if (learned == null) "ABSENT (no '$lang' rows in the device export — learned arms = none)"
             else "device export, ${learned.values.sumOf { it.size }} confident pairs over ${learned.size} prev words")
 
         val ood = readSentences(oodFile, sampleEvery = 1)
         val held = readSentences(heldFile, sampleEvery = HELD_SAMPLE)
-        report("[$lang] OOD (${oodFile.name}) — GATE POPULATION", ood, lm, lexicon, allowed, learned, legacy)
-        report("[$lang] IN-DOMAIN held-out (1/$HELD_SAMPLE sample)", held, lm, lexicon, allowed, learned, legacy)
+        report("[$lang] OOD (${oodFile.name}) — GATE POPULATION", ood, lm, lexicon, allowed, learned, legacy, contraction)
+        report("[$lang] IN-DOMAIN held-out (1/$HELD_SAMPLE sample)", held, lm, lexicon, allowed, learned, legacy, contraction)
         println("═══════════════════════════════════════════════════════════════")
         return ood.size
     }
+
+    /**
+     * Supplementary contraction-target scoring: [keysOf] maps a REPLACE display form to its keys;
+     * [lexicon] is the eval lexicon plus the injected alias keys (built on first use).
+     */
+    private class ContractionEval(val keysOf: Map<String, List<String>>, val lexicon: Lazy<Lexicon>)
 
     /** The pre-LM path for one language, from the REAL BigramModel tables (no LM installed). */
     private class Legacy(val language: String) {
@@ -179,9 +204,11 @@ class StaticLmTapEvalTest {
         allowed: Set<String>,
         learned: Map<String, List<ContextContinuation>>?,
         legacy: Legacy,
+        contraction: ContractionEval?,
     ) {
         val nextWord = Cell()
         val prefix = Array(3) { Cell() }
+        val contractionPrefix = Array(3) { Cell() }
         val emptyCtx = Array(3) { Cell() }
         var positions = 0
         var targetOov = 0
@@ -213,7 +240,16 @@ class StaticLmTapEvalTest {
                         if (target in list.take(3)) nextWord.top3[arm.ordinal]++
                     }
                 }
-                for (p in 1..3) rankPrefix(target, p, prev, lm, lexicon, learned, legacy)?.let { tally(prefix[p - 1], it) }
+                val aliasKeys = contraction?.keysOf ?: emptyMap()
+                for (p in 1..3) rankPrefix(target, p, prev, lm, lexicon, learned, legacy, aliasKeys)?.let { tally(prefix[p - 1], it) }
+                // Supplementary: a REPLACE display-form target, scored as the key the user types
+                // (first key when several show as the same form).
+                val key = if (target in lexicon.index) null else contraction?.keysOf?.get(target)?.first()
+                if (key != null && contraction != null) {
+                    val aug = contraction.lexicon.value
+                    for (p in 1..3) rankPrefix(key, p, prev, lm, aug, learned, legacy, contraction.keysOf)
+                        ?.let { tally(contractionPrefix[p - 1], it) }
+                }
             }
         }
 
@@ -226,6 +262,13 @@ class StaticLmTapEvalTest {
         for (p in 1..3) {
             println("     PREFIX RE-RANK, prefix=$p (n=${prefix[p - 1].n}) — target in top-3 of UnifiedScore.combine")
             printCell(prefix[p - 1])
+        }
+        if (contraction != null) {
+            for (p in 1..3) {
+                println("     SUPPLEMENTARY (not gated) — REPLACE-contraction targets as their key, prefix=$p " +
+                    "(n=${contractionPrefix[p - 1].n})")
+                printCell(contractionPrefix[p - 1])
+            }
         }
         for (p in 1..3) {
             val c = emptyCtx[p - 1]
@@ -315,6 +358,7 @@ class StaticLmTapEvalTest {
         lexicon: Lexicon,
         learned: Map<String, List<ContextContinuation>>?,
         legacy: Legacy,
+        keysOf: Map<String, List<String>> = emptyMap(),
     ): IntArray? {
         if (target.length <= plen) return null
         val targetIdx = lexicon.index[target] ?: return null
@@ -324,7 +368,9 @@ class StaticLmTapEvalTest {
         val ranks = IntArray(Arm.entries.size)
 
         // The words whose multiplier can differ from the arm's uniform default at this position.
-        val lmSpecial = if (prev == null) emptyList() else lm.top(prev, StaticContextLm.MAX_CONTINUATIONS).map { it.word }
+        // A listed display form's REPLACE keys share its ratio through the alias, so they are special too.
+        val lmSpecial = if (prev == null) emptyList() else lm.top(prev, StaticContextLm.MAX_CONTINUATIONS)
+            .flatMap { listOf(it.word) + keysOf[it.word].orEmpty() }
         val learnedFor: Map<String, Float> = if (prev == null) emptyMap()
             else learned?.get(prev).orEmpty().associate { it.word to boostOf(it) }
 
@@ -407,6 +453,19 @@ class StaticLmTapEvalTest {
 
     // ── data ────────────────────────────────────────────────────────────────────────────────
 
+    /**
+     * [base] plus every alias key it lacks at the tap predictor's injection floor (5,000 — below
+     * every lexicon word's `1_000_000 − 255 × 3900`), as `WordPredictor.loadPrimaryContractionKeys`
+     * adds them to the primary dictionary. Keys already in the lexicon keep their frequency.
+     */
+    private fun augmentedLexicon(base: Lexicon, keys: Collection<String>): Lexicon {
+        val extra = keys.filter { it !in base.index }.distinct().sorted()
+        return Lexicon(
+            (base.words.asList() + extra).toTypedArray(),
+            base.freq + IntArray(extra.size) { CONTRACTION_ALIAS_FREQUENCY },
+        )
+    }
+
     /** `<lang>_enhanced.bin` (CKDT v2): rank byte → the tap predictor's `1_000_000 − rank × 3900`. */
     private fun loadLexicon(file: File): Lexicon {
         val ckdt = StaticLmLanguageData.readCkdt(file)
@@ -476,5 +535,7 @@ class StaticLmTapEvalTest {
         const val LEARNED_MIN_FREQUENCY = 2
         /** `ContextModel.MIN_BIGRAM_PROB` — the store's confident-probability floor for a boost. */
         const val LEARNED_MIN_PROB = 0.01f
+        /** `WordPredictor.loadPrimaryContractionKeys`' frequency for an alias key the dictionary lacks. */
+        const val CONTRACTION_ALIAS_FREQUENCY = 5000
     }
 }

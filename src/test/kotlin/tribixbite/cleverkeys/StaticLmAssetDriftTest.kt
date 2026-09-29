@@ -75,6 +75,32 @@ class StaticLmAssetDriftTest {
         }
     }
 
+    /**
+     * The 2026-09-29 lookup fix on the REAL English model: the tap candidate `dont` (a dictionary
+     * key) scores as the `don't` the bar displays; the PAIRED bases `well`/`hell`/`shell`/`were`
+     * are never aliased and keep their own statistics.
+     */
+    @Test
+    fun `english REPLACE keys score as their display form, PAIRED bases keep their own`() {
+        val replace = StaticLmLanguageData.replaceAliases("en")
+        assertThat(replace).hasSize(107) // contraction-system skill §3
+        assertThat(replace.keys).containsNoneOf("well", "hell", "shell", "were", "shed", "wed")
+        val raw = lmOf("en")
+        val fixed = raw.withReplaceAliases(replace)
+        for (prev in listOf("i", "you", "we")) {
+            assertWithMessage("$prev → dont").that(fixed.contextRatio(prev, "dont")).isEqualTo(fixed.contextRatio(prev, "don't"))
+        }
+        assertThat(fixed.contextRatio("i", "dont")).isGreaterThan(1f)
+        // The raw model knows `dont` only as the corpus' typo token — no listed boost after "i".
+        assertThat(raw.listedProbability("i", "dont")).isEqualTo(0f)
+        assertThat(fixed.top("dont", 5)).isEqualTo(fixed.top("don't", 5))
+        for (w in listOf("well", "hell", "shell", "were")) {
+            assertWithMessage(w).that(fixed.unigram(w)).isEqualTo(raw.unigram(w))
+            assertWithMessage(w).that(fixed.contextRatio("very", w)).isEqualTo(raw.contextRatio("very", w))
+            assertWithMessage(w).that(fixed.top(w, 5)).isEqualTo(raw.top(w, 5))
+        }
+    }
+
     @Test
     fun `continuations respect the cap and form a sub-distribution`() {
         for (lang in languages) {

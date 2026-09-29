@@ -33,6 +33,32 @@ import kotlin.math.exp
  *
  * Immutable after [parse] and therefore safe to share across threads. The only mutable state is
  * a single-entry decode cache, published through a volatile field of an immutable holder.
+ *
+ * ## Contraction keys (REPLACE aliases, 2026-09-29)
+ *
+ * The model names contractions by their DISPLAY form (`don't`, `c'est`, `l'acqua`) — that is
+ * what the corpus contains and what the bar shows. Every dictionary, however, stores them
+ * apostrophe-free (`dont`, `cest`; `.claude/skills/contraction-system.md` §1), so the tap
+ * predictor's candidate — and a previous word committed as the key — is `dont`. Without help the
+ * lookup missed: as the candidate it got only the backoff ratio (en `i → dont` 0.51 against
+ * `i → don't` 27.5), as the previous word its continuations were never read.
+ *
+ * [withReplaceAliases] fixes that at THIS layer, once, for every caller (tap multiplier,
+ * next-word seed, eval): it takes the language's REPLACE bucket (key → display form) and resolves
+ * a key to its display form's id in every query. Why here and not in `WordPredictor`: the model
+ * is the only place that knows which display forms it names, both the candidate AND the previous
+ * word go through the same [wordId], and the S1 eval exercises this exact code instead of a
+ * copy of a call-site mapping. Semantics follow the contraction skill's buckets:
+ *
+ * - only REPLACE keys alias — the key has no reading of its own and the bar shows the display
+ *   form IN ITS SLOT, so the model scores what the user sees. PAIRED keys (`well`/`we'll`,
+ *   `hell`/`he'll`, fr `lune`/`l'une`) are words and are never passed in, so they keep their own
+ *   statistics;
+ * - a REPLACE key the model ALSO names as a word (en `dont`/`im`/`ive`/`cant`/`lets`/`thats`,
+ *   fr `quest`/`ya`/`my`, it `nè`/`sè` — the corpus' own apostrophe-less typos and loans) still
+ *   resolves to the display form, for the same reason: the bar never shows that key;
+ * - an alias whose display form the model does not name is dropped (nothing to resolve to);
+ * - [top] and [forEachWord] are unaffected: next-word output stays in display forms.
  */
 class StaticContextLm private constructor(
     /** ISO language code from the header, e.g. `en`. */
@@ -55,7 +81,18 @@ class StaticContextLm private constructor(
     private val graph: ByteArray,
     /** Offset of the continuation stream inside [graph] (= prevCount × PREV_ENTRY_BYTES). */
     private val continuationsBase: Int,
+    /** REPLACE aliases ([withReplaceAliases]): concatenated UTF-8 of every alias key, sorted. */
+    private val aliasBytes: ByteArray = EMPTY_BYTES,
+    /** Start of alias i in [aliasBytes]; `aliasStart[aliasCount]` is the end sentinel. */
+    private val aliasStart: IntArray = ZERO_START,
+    /** Word id each alias resolves to. */
+    private val aliasTarget: IntArray = EMPTY_INTS,
+    /** Open-addressing table of `alias index + 1` (0 = empty), power-of-two size (or empty). */
+    private val aliasTable: IntArray = EMPTY_INTS,
 ) {
+
+    /** Number of REPLACE aliases installed by [withReplaceAliases] (0 for a parsed model). */
+    val aliasCount: Int get() = aliasTarget.size
 
     /** One listed continuation of a previous word. */
     data class Continuation(val word: String, val probability: Float)
@@ -75,21 +112,73 @@ class StaticContextLm private constructor(
 
     // ── lookups ─────────────────────────────────────────────────────────────────────────────
 
-    /** Word id of [word] (lowercased), or −1 when the model does not name it. */
+    /**
+     * Word id of [word] (lowercased), or −1 when the model does not name it. A REPLACE alias
+     * ([withReplaceAliases]) resolves to its display form's id — so every query below treats
+     * `dont` as `don't`.
+     */
     fun wordId(word: String): Int {
         if (word.isEmpty()) return -1
         val lower = word.lowercase()
         val ascii = lower.all { it.code < 0x80 }
         val bytes = if (ascii) null else lower.toByteArray(Charsets.UTF_8)
         val hash = if (bytes == null) hashAscii(lower) else hashBytes(bytes, 0, bytes.size)
-        val mask = hashTable.size - 1
-        var slot = hash and mask
-        while (true) {
-            val entry = hashTable[slot]
-            if (entry == 0) return -1
-            val id = entry - 1
-            if (if (bytes == null) equalsAscii(id, lower) else equalsBytes(id, bytes)) return id
-            slot = (slot + 1) and mask
+        if (aliasTable.isNotEmpty()) {
+            val alias = probe(aliasTable, hash) { i ->
+                if (bytes == null) regionEqualsAscii(aliasBytes, aliasStart, i, lower)
+                else regionEqualsBytes(aliasBytes, aliasStart, i, bytes)
+            }
+            if (alias >= 0) return aliasTarget[alias]
+        }
+        return probe(hashTable, hash) { id ->
+            if (bytes == null) regionEqualsAscii(wordBytes, wordStart, id, lower)
+            else regionEqualsBytes(wordBytes, wordStart, id, bytes)
+        }
+    }
+
+    /**
+     * This model with [replace]'s keys resolving to their display forms — see the class doc
+     * ("Contraction keys"). [replace] must be the language's REPLACE bucket ONLY (for English the
+     * pairing-reclassified set `ContractionManager` holds); a PAIRED key passed here would lose
+     * its own reading. Keys and values are lowercased; an entry whose display form the model
+     * does not name, or whose key equals its display form, is skipped. The base arrays are
+     * shared, not copied; the alias index is primitive arrays like the rest of the model.
+     */
+    fun withReplaceAliases(replace: Map<String, String>): StaticContextLm {
+        val resolved = java.util.TreeMap<String, Int>() // sorted → deterministic layout
+        for ((key, display) in replace) {
+            val k = key.lowercase()
+            val d = display.lowercase()
+            if (k.isEmpty() || k == d) continue
+            val target = baseWordId(d)
+            if (target >= 0) resolved[k] = target
+        }
+        if (resolved.isEmpty()) {
+            return StaticContextLm(language, vocabSize, prevCount, pairCount, wordBytes, wordStart,
+                unigramQ, hashTable, graph, continuationsBase)
+        }
+        val encoded = resolved.keys.map { it.toByteArray(Charsets.UTF_8) }
+        val bytes = ByteArray(encoded.sumOf { it.size })
+        val starts = IntArray(encoded.size + 1)
+        var out = 0
+        for ((i, e) in encoded.withIndex()) {
+            starts[i] = out
+            System.arraycopy(e, 0, bytes, out, e.size)
+            out += e.size
+        }
+        starts[encoded.size] = out
+        val targets = resolved.values.toIntArray()
+        val table = buildTable(encoded.size) { i -> hashBytes(bytes, starts[i], starts[i + 1]) }
+        return StaticContextLm(language, vocabSize, prevCount, pairCount, wordBytes, wordStart,
+            unigramQ, hashTable, graph, continuationsBase, bytes, starts, targets, table)
+    }
+
+    /** [wordId] over the model's own vocabulary only — ignores aliases. */
+    private fun baseWordId(lower: String): Int {
+        if (lower.isEmpty()) return -1
+        val bytes = lower.toByteArray(Charsets.UTF_8)
+        return probe(hashTable, hashBytes(bytes, 0, bytes.size)) { id ->
+            regionEqualsBytes(wordBytes, wordStart, id, bytes)
         }
     }
 
@@ -167,7 +256,9 @@ class StaticContextLm private constructor(
     /** Heap held by this model's arrays, in bytes (array headers included; object fields not). */
     fun retainedBytes(): Long =
         arrayBytes(wordBytes.size, 1) + arrayBytes(wordStart.size, 4) + arrayBytes(unigramQ.size, 1) +
-            arrayBytes(hashTable.size, 4) + arrayBytes(graph.size, 1)
+            arrayBytes(hashTable.size, 4) + arrayBytes(graph.size, 1) +
+            if (aliasTarget.isEmpty()) 0L else arrayBytes(aliasBytes.size, 1) +
+                arrayBytes(aliasStart.size, 4) + arrayBytes(aliasTarget.size, 4) + arrayBytes(aliasTable.size, 4)
 
     // ── internals ───────────────────────────────────────────────────────────────────────────
 
@@ -232,19 +323,6 @@ class StaticContextLm private constructor(
     private fun wordAt(id: Int): String =
         String(wordBytes, wordStart[id], wordStart[id + 1] - wordStart[id], Charsets.UTF_8)
 
-    private fun equalsAscii(id: Int, s: String): Boolean {
-        val start = wordStart[id]
-        if (wordStart[id + 1] - start != s.length) return false
-        for (i in s.indices) if (wordBytes[start + i].toInt() != s[i].code) return false
-        return true
-    }
-
-    private fun equalsBytes(id: Int, b: ByteArray): Boolean {
-        val start = wordStart[id]
-        if (wordStart[id + 1] - start != b.size) return false
-        for (i in b.indices) if (wordBytes[start + i] != b[i]) return false
-        return true
-    }
 
     companion object {
         const val MAGIC = "CKLM"
@@ -270,6 +348,55 @@ class StaticContextLm private constructor(
         private val DEQUANT = FloatArray(256) { exp(-it.toDouble() / QUANT_STEPS_PER_NAT).toFloat() }
 
         private fun dequantise(q: Int): Float = DEQUANT[q]
+
+        private val EMPTY_BYTES = ByteArray(0)
+        private val EMPTY_INTS = IntArray(0)
+        private val ZERO_START = IntArray(1)
+
+        /**
+         * Linear probe of an open-addressing [table] of `index + 1` entries for the entry whose
+         * key [matches]; −1 when an empty slot is reached first.
+         */
+        private inline fun probe(table: IntArray, hash: Int, matches: (Int) -> Boolean): Int {
+            val mask = table.size - 1
+            var slot = hash and mask
+            while (true) {
+                val entry = table[slot]
+                if (entry == 0) return -1
+                if (matches(entry - 1)) return entry - 1
+                slot = (slot + 1) and mask
+            }
+        }
+
+        /** Open-addressing table (load factor ≤ 0.5) over [n] keys whose hashes [hashOf] gives. */
+        private inline fun buildTable(n: Int, hashOf: (Int) -> Int): IntArray {
+            var capacity = 1
+            while (capacity < n * 2) capacity = capacity shl 1
+            val table = IntArray(capacity)
+            val mask = capacity - 1
+            for (i in 0 until n) {
+                var slot = hashOf(i) and mask
+                while (table[slot] != 0) slot = (slot + 1) and mask
+                table[slot] = i + 1
+            }
+            return table
+        }
+
+        /** Is entry [i] of a flat UTF-8 string table ([bytes], [starts]) equal to ASCII [s]? */
+        private fun regionEqualsAscii(bytes: ByteArray, starts: IntArray, i: Int, s: String): Boolean {
+            val start = starts[i]
+            if (starts[i + 1] - start != s.length) return false
+            for (j in s.indices) if (bytes[start + j].toInt() != s[j].code) return false
+            return true
+        }
+
+        /** Is entry [i] of a flat UTF-8 string table ([bytes], [starts]) equal to [b]? */
+        private fun regionEqualsBytes(bytes: ByteArray, starts: IntArray, i: Int, b: ByteArray): Boolean {
+            val start = starts[i]
+            if (starts[i + 1] - start != b.size) return false
+            for (j in b.indices) if (bytes[start + j] != b[j]) return false
+            return true
+        }
 
         private fun arrayBytes(length: Int, width: Int): Long = ARRAY_HEADER_BYTES + length.toLong() * width
 
@@ -388,15 +515,7 @@ class StaticContextLm private constructor(
             require(base + expectedOffset == graph.size) { "CKLM: trailing bytes after the continuation stream" }
 
             // Open-addressing hash over ids (load factor ≤ 0.5).
-            var capacity = 1
-            while (capacity < vocabSize * 2) capacity = capacity shl 1
-            val table = IntArray(capacity)
-            val mask = capacity - 1
-            for (id in 0 until vocabSize) {
-                var slot = hashBytes(wordBytes, wordStart[id], wordStart[id + 1]) and mask
-                while (table[slot] != 0) slot = (slot + 1) and mask
-                table[slot] = id + 1
-            }
+            val table = buildTable(vocabSize) { id -> hashBytes(wordBytes, wordStart[id], wordStart[id + 1]) }
 
             return StaticContextLm(
                 language, vocabSize, prevCount, pairCount,

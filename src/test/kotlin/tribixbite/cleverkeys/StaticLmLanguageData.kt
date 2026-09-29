@@ -98,5 +98,36 @@ object StaticLmLanguageData {
         return out
     }
 
+    /**
+     * [language]'s REPLACE bucket (apostrophe-free key → display form) as
+     * `ContractionManager.loadSwipeDisplayMappings(language)` leaves it for a single language —
+     * the map `BigramModel` hands to [StaticContextLm.withReplaceAliases] on the device. A
+     * file-based mirror because `ContractionManager` needs an Android `Context`:
+     *
+     *  - English: `contractions_non_paired.json` (the JSON twin of `contractions.bin`) minus every
+     *    `contraction_pairings.json` base (the 2026-07-23 reclassification), then
+     *    `contractions_en.json` EARLIER-WINS, again skipping pairing bases (the re-add guard in
+     *    `loadContractionsFromStream`). `.claude/skills/contraction-system.md` §3: 107 keys.
+     *  - Every other language: `contractions_<lang>.json`. Its PAIRED file
+     *    (`contraction_pairs_<lang>.json`) never aliases — those keys are words (`lune`).
+     */
+    fun replaceAliases(language: String): Map<String, String> {
+        fun replaceFile(name: String): Map<String, String> {
+            val file = File(DICT_DIR, name)
+            if (!file.isFile) return emptyMap()
+            val o = JSONObject(file.readText())
+            val out = LinkedHashMap<String, String>()
+            for (k in o.keys()) out[k.lowercase()] = o.getString(k).lowercase()
+            return out
+        }
+        if (language != "en") return replaceFile("contractions_$language.json")
+        val pairingBases = JSONObject(File(DICT_DIR, "contraction_pairings.json").readText()).keys()
+            .asSequence().map { it.lowercase() }.toHashSet()
+        val out = LinkedHashMap<String, String>()
+        for ((k, v) in replaceFile("contractions_non_paired.json")) if (k !in pairingBases) out[k] = v
+        for ((k, v) in replaceFile("contractions_en.json")) if (k !in pairingBases) out.putIfAbsent(k, v)
+        return out
+    }
+
     private const val CKDT_MAGIC = 0x54444B43
 }

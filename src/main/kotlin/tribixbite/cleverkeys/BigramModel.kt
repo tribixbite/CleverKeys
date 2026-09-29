@@ -41,6 +41,10 @@ import kotlin.math.min
  *  - [getPredictions] serves [StaticContextLm.top], with the continuation's
  *    conditional probability as its rank.
  *
+ * Both lookups resolve a REPLACE contraction key to its display form
+ * ([StaticContextLm.withReplaceAliases], installed at load from the language's
+ * REPLACE bucket): the tap candidate `dont` scores as the `don't` the bar shows.
+ *
  * Languages without an LM asset keep the hardcoded tables and the JSON seed
  * unchanged. The LM is keyed by the REQUESTED language ([seedLanguage]), never the
  * English-fallback [currentLanguage], so Italian typing never reads the English LM.
@@ -523,22 +527,53 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
             return false
         }
         val started = System.nanoTime()
-        val lm = try {
+        val parsed = try {
             StaticContextLm.parse(bytes)
         } catch (e: IllegalArgumentException) {
             Log.e(TAG, "Malformed static context LM $asset; keeping the built-in tables", e)
             return false
         }
+        val lm = parsed.withReplaceAliases(replaceAliasesFor(context, language))
         installStaticLm(language, lm)
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
             Log.d(
                 TAG,
                 "Static context LM for $language: ${lm.pairCount} pairs over ${lm.prevCount} " +
-                    "previous words, ${lm.retainedBytes() / 1024} KiB, parsed in " +
+                    "previous words, ${lm.aliasCount} contraction aliases, " +
+                    "${lm.retainedBytes() / 1024} KiB, loaded in " +
                     "${(System.nanoTime() - started) / 1_000_000} ms"
             )
         }
         return true
+    }
+
+    /**
+     * [language]'s REPLACE contraction bucket (apostrophe-free key → display form) for
+     * [StaticContextLm.withReplaceAliases] — the 2026-09-29 lookup fix: the LM names `don't`, the
+     * tap candidates are the dictionary key `dont`.
+     *
+     * Read through `ContractionManager.loadSwipeDisplayMappings`, the ONE-language load (English:
+     * the pairing-reclassified base + `contractions_en.json`; others: the language's REPLACE file,
+     * or an installed pack's file, which wins outright). That keeps a single model of "which keys
+     * the bar shows as their display form" instead of a third copy of the English rules
+     * (contraction-system skill §3). REPLACE only: `getNonPairedMapping` is null for a PAIRED
+     * base, so `well`/`lune` never alias. Deliberately NOT the merged typing map, whose
+     * cross-language demotions depend on the secondary language — the LM is per-language.
+     *
+     * Runs on [SEED_LOADER] with the LM load (attempt-once); the manager is discarded afterwards.
+     * A failure only costs the aliases, never the LM.
+     */
+    private fun replaceAliasesFor(context: Context, language: String): Map<String, String> = try {
+        val contractions = ContractionManager(context)
+        contractions.loadSwipeDisplayMappings(language)
+        val out = HashMap<String, String>()
+        for (key in contractions.getAliasKeys()) {
+            contractions.getNonPairedMapping(key)?.let { out[key] = it }
+        }
+        out
+    } catch (e: RuntimeException) {
+        Log.w(TAG, "Contraction aliases for the $language LM unavailable; keys score by backoff", e)
+        emptyMap()
     }
 
     /**

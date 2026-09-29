@@ -71,6 +71,26 @@ class BigramModelStaticLmTest {
     }
 
     @Test
+    fun `tap multiplier and seed resolve REPLACE contraction keys to their display form`() {
+        val withContraction = StaticContextLm.parse(
+            StaticContextLmFixtures.encode(
+                unigrams = mapOf("i" to 0.02, "don't" to 0.002, "know" to 0.001, "think" to 0.001),
+                table = mapOf("i" to mapOf("don't" to 0.05), "don't" to mapOf("know" to 0.3, "think" to 0.05)),
+            )
+        ).withReplaceAliases(mapOf("dont" to "don't"))
+        val m = model()
+        m.installStaticLm("en", withContraction)
+        // The tap candidate is the dictionary key `dont`; it must score as the don't the bar shows.
+        val boost = m.getContextMultiplier("dont", listOf("i"))
+        assertThat(boost).isGreaterThan(1f)
+        assertThat(boost).isEqualTo(m.getContextMultiplier("don't", listOf("i")))
+        // Context committed as the key reads the display form's continuations; output is display forms.
+        assertThat(m.getContextMultiplier("know", listOf("dont")))
+            .isEqualTo(m.getContextMultiplier("know", listOf("don't")))
+        assertThat(m.getPredictions("dont", 2).map { it.word }).containsExactly("know", "think").inOrder()
+    }
+
+    @Test
     fun `without an LM the hardcoded tables are unchanged`() {
         val m = model()
         // Legacy table: the|end is listed → 10x clamp; see LegacyEnglishContext.
