@@ -79,6 +79,11 @@ import java.io.File
  * | learned_only | 1 | device export | learned_only |
  * | legacy_both | hardcoded table | device export | both (today's default) |
  * | lm_both | this LM | device export | both (the new default) |
+ * | lm_static_<shape> | this LM, `contextRatio` through [StaticContextLm.RatioShape] `<shape>` | 1 | static_only |
+ *
+ * `lm_static`/`lm_both` apply [StaticContextLm.SHIPPED_RATIO_SHAPE], as `BigramModel` does. The
+ * four `lm_static_<shape>` arms are the 2026-09-29 ratio-shape comparison; each population also
+ * prints one machine-readable `SHAPE` line per shape (top-3 Δ vs none at prefix 1/2/3).
  *
  * The learned arms read `~/.cache/cleverkeys-corpora/device_bigrams.json` (that language's rows) —
  * the maintainer's own export, PRIVATE: only aggregate rates are printed, never a pair. Legacy
@@ -117,14 +122,31 @@ class StaticLmTapEvalTest {
     }
 
     /** One arm's static/learned sources. */
-    private enum class Arm(val static: StaticSource, val learned: Boolean, val source: String) {
+    /**
+     * One arm's static/learned sources. LM arms apply [shape] to `contextRatio` before the clamp;
+     * `lm_static`/`lm_both` use the SHIPPED shape (what `BigramModel` does), and the
+     * `lm_static_<shape>` arms are the ratio-shape comparison (static_only, one per candidate).
+     */
+    private enum class Arm(
+        val static: StaticSource,
+        val learned: Boolean,
+        val source: String,
+        val shape: StaticContextLm.RatioShape = StaticContextLm.SHIPPED_RATIO_SHAPE,
+    ) {
         NONE(StaticSource.NONE, false, UnifiedScore.SOURCE_BOTH),
         LEGACY_STATIC(StaticSource.LEGACY, false, UnifiedScore.SOURCE_STATIC_ONLY),
         LM_STATIC(StaticSource.LM, false, UnifiedScore.SOURCE_STATIC_ONLY),
         LEARNED_ONLY(StaticSource.NONE, true, UnifiedScore.SOURCE_LEARNED_ONLY),
         LEGACY_BOTH(StaticSource.LEGACY, true, UnifiedScore.SOURCE_BOTH),
         LM_BOTH(StaticSource.LM, true, UnifiedScore.SOURCE_BOTH),
+        LM_STATIC_RAW(StaticSource.LM, false, UnifiedScore.SOURCE_STATIC_ONLY, StaticContextLm.RatioShape.RAW),
+        LM_STATIC_FLOOR_ONE(StaticSource.LM, false, UnifiedScore.SOURCE_STATIC_ONLY, StaticContextLm.RatioShape.FLOOR_ONE),
+        LM_STATIC_FLOOR_HALF(StaticSource.LM, false, UnifiedScore.SOURCE_STATIC_ONLY, StaticContextLm.RatioShape.FLOOR_HALF),
+        LM_STATIC_SQRT_BELOW_ONE(StaticSource.LM, false, UnifiedScore.SOURCE_STATIC_ONLY, StaticContextLm.RatioShape.SQRT_BELOW_ONE),
     }
+
+    /** The ratio-shape comparison arms, in the pre-registered tie-break order. */
+    private val shapeArms = listOf(Arm.LM_STATIC_RAW, Arm.LM_STATIC_FLOOR_ONE, Arm.LM_STATIC_FLOOR_HALF, Arm.LM_STATIC_SQRT_BELOW_ONE)
 
     private enum class StaticSource { NONE, LEGACY, LM }
 
@@ -371,6 +393,12 @@ class StaticLmTapEvalTest {
         }
         println("     LEGACY (no LM) vs none, top-3: static_only %+.2f / %+.2f / %+.2f pt; both %+.2f / %+.2f / %+.2f pt (prefix 1/2/3)"
             .format(legacyDeltas[0], legacyDeltas[1], legacyDeltas[2], legacyBoth[0], legacyBoth[1], legacyBoth[2]))
+        // Ratio-shape comparison (pre-registered 2026-09-29): static_only, each shape vs none.
+        for (arm in shapeArms) {
+            val d = (0 until 3).map { p -> prefix[p].pct(prefix[p].top3[arm.ordinal]) - prefix[p].pct(prefix[p].top3[Arm.NONE.ordinal]) }
+            println("SHAPE label=\"$label\" shape=${arm.shape} n1=${prefix[0].n} p1=%.2f p2=%.2f p3=%.2f"
+                .format(d[0], d[1], d[2]))
+        }
         return gates
     }
 
@@ -423,7 +451,7 @@ class StaticLmTapEvalTest {
             Arm.LEARNED_ONLY to gen(learnedList, emptyList()),
             Arm.LEGACY_BOTH to gen(learnedList, oldSeed),
             Arm.LM_BOTH to gen(learnedList, lmSeed),
-        )
+        ).let { m -> m + shapeArms.associateWith { m.getValue(Arm.LM_STATIC) } } // the shape never touches next-word
     }
 
     // ── prefix re-rank ──────────────────────────────────────────────────────────────────────
@@ -456,7 +484,7 @@ class StaticLmTapEvalTest {
         for (arm in Arm.entries) {
             val staticOf: (String) -> Float = when (arm.static) {
                 StaticSource.NONE -> { _ -> 1f }
-                StaticSource.LM -> { w -> if (prev == null) 1f else clampMult(lm.contextRatio(prev, w)) }
+                StaticSource.LM -> { w -> if (prev == null) 1f else clampMult(arm.shape.apply(lm.contextRatio(prev, w))) }
                 StaticSource.LEGACY -> { w -> legacy.multiplier(w, prev) }
             }
             val learnedOf: (String) -> Float = if (arm.learned) { w -> learnedFor[w] ?: 1f } else { _ -> 1f }

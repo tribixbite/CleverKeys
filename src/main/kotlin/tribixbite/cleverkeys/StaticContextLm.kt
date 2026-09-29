@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys
 
 import kotlin.math.exp
+import kotlin.math.max
+import kotlin.math.sqrt
 
 /**
  * The shipped static context language model — a pruned word-bigram table in the `CKLM` v1
@@ -324,7 +326,40 @@ class StaticContextLm private constructor(
         String(wordBytes, wordStart[id], wordStart[id + 1] - wordStart[id], Charsets.UTF_8)
 
 
+    /**
+     * How [contextRatio] is shaped before `BigramModel` clamps it into its 0.1–10 multiplier —
+     * the penalty side only: every shape returns r unchanged for r ≥ 1.
+     *
+     * Why this exists: in the default `context_source = both`, `UnifiedScore.combine` takes
+     * `max(static, learned)` and the learned boost is always ≥ 1, so a static ratio below 1 is
+     * never applied there; only `static_only` applies it. The closed candidate set was measured
+     * on the OOD dev splits (docs/eval/2026-09-29-static-lm-multilingual.md, "LM ratio shape");
+     * [SHIPPED_RATIO_SHAPE] names the one the tap multiplier uses.
+     */
+    enum class RatioShape {
+        /** r — the backoff alpha(prev) and sub-1 listed ratios demote as computed. */
+        RAW,
+        /** max(r, 1) — no penalty; what `both` applies when the learned boost is neutral. */
+        FLOOR_ONE,
+        /** max(r, 0.5) — penalty capped at halving the odds. */
+        FLOOR_HALF,
+        /** r ≥ 1 ? r : √r — penalty tempered, boosts untouched. */
+        SQRT_BELOW_ONE;
+
+        /** The shaped ratio (unclamped — the caller applies its multiplier clamp). */
+        fun apply(ratio: Float): Float = when {
+            ratio >= 1f -> ratio
+            this == RAW -> ratio
+            this == FLOOR_ONE -> 1f
+            this == FLOOR_HALF -> max(ratio, 0.5f)
+            else -> sqrt(ratio)
+        }
+    }
+
     companion object {
+        /** The shape `BigramModel.getContextMultiplier` applies to [contextRatio]. */
+        val SHIPPED_RATIO_SHAPE = RatioShape.RAW
+
         const val MAGIC = "CKLM"
         const val FORMAT_VERSION = 1
         const val HEADER_BYTES = 32

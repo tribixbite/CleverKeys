@@ -218,4 +218,45 @@ class StaticContextLmTest {
         assertThat(fixed.hasContext("lune")).isFalse()
         assertThat(fr.contextRatio("et", "cest")).isLessThan(1f) // the bug
     }
+
+    // ── RatioShape (2026-09-29 ratio-shape measurement) ─────────────────────────────────────
+
+    @Test
+    fun `every ratio shape leaves boosts and the neutral ratio unchanged`() {
+        for (shape in StaticContextLm.RatioShape.entries) {
+            for (r in floatArrayOf(1f, 1.5f, 4f, 27.5f)) {
+                assertThat(shape.apply(r)).isEqualTo(r)
+            }
+        }
+    }
+
+    @Test
+    fun `FLOOR_ONE removes every penalty`() {
+        val s = StaticContextLm.RatioShape.FLOOR_ONE
+        assertThat(s.apply(0.51f)).isEqualTo(1f)
+        assertThat(s.apply(0.05f)).isEqualTo(1f)
+        assertThat(s.apply(lm.contextRatio("want", "go"))).isEqualTo(1f) // an unlisted word's backoff
+    }
+
+    @Test
+    fun `FLOOR_HALF caps the penalty at one half`() {
+        val s = StaticContextLm.RatioShape.FLOOR_HALF
+        assertThat(s.apply(0.8f)).isEqualTo(0.8f)
+        assertThat(s.apply(0.5f)).isEqualTo(0.5f)
+        assertThat(s.apply(0.2f)).isEqualTo(0.5f)
+    }
+
+    @Test
+    fun `SQRT_BELOW_ONE tempers the penalty to its square root`() {
+        val s = StaticContextLm.RatioShape.SQRT_BELOW_ONE
+        assertThat(s.apply(0.25f)).isWithin(1e-6f).of(0.5f)
+        assertThat(s.apply(0.81f)).isWithin(1e-6f).of(0.9f)
+    }
+
+    @Test
+    fun `RAW is the identity`() {
+        for (r in floatArrayOf(0.05f, 0.5f, 0.99f, 1f, 3f)) {
+            assertThat(StaticContextLm.RatioShape.RAW.apply(r)).isEqualTo(r)
+        }
+    }
 }
