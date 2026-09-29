@@ -56,6 +56,7 @@ import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.io.deleteLanguagePack
+import tribixbite.cleverkeys.langpack.NoticeTextLayout
 import tribixbite.cleverkeys.ui.settings.io.getLanguageDisplayName
 import tribixbite.cleverkeys.ui.settings.io.importLanguagePack
 import tribixbite.cleverkeys.ui.settings.io.loadLanguagePackNotice
@@ -491,16 +492,32 @@ internal fun SettingsActivity.MultiLanguageSection() {
                                     text = stringResource(R.string.multilang_pack_notice_missing),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                // Monospace: NOTICE.txt is laid out with ===== rules and indents.
-                                // Selectable, so a URL or a credit can be copied out.
+                                // NOTICE.txt is laid out for 80 columns; rendered verbatim its
+                                // ===== rules and hard-wrapped prose wrapped raggedly in a phone
+                                // dialog (device finding 2026-09-29). NoticeTextLayout re-flows
+                                // the prose, draws rules as dividers and keeps indented lines
+                                // verbatim. Selectable, so a URL or a credit can be copied out.
                                 else -> SelectionContainer {
-                                    Text(
-                                        text = viewer.text,
-                                        fontFamily = FontFamily.Monospace,
-                                        fontSize = 11.sp,
-                                        lineHeight = 15.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        NoticeTextLayout.parse(viewer.text).forEach { block ->
+                                            when (block) {
+                                                NoticeTextLayout.Block.Rule -> HorizontalDivider()
+                                                is NoticeTextLayout.Block.Paragraph -> Text(
+                                                    text = block.text,
+                                                    fontSize = 12.sp,
+                                                    lineHeight = 16.sp,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                                is NoticeTextLayout.Block.Preformatted -> Text(
+                                                    text = block.text,
+                                                    fontFamily = FontFamily.Monospace,
+                                                    fontSize = 11.sp,
+                                                    lineHeight = 15.sp,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
