@@ -52,6 +52,8 @@ import java.io.File
  * whose target is a REPLACE display form — unscorable before — as the key the user types, over
  * the lexicon plus the alias keys the tap predictor injects (`WordPredictor`
  * `loadPrimaryContractionKeys`: the key's own frequency, else the 5,000 floor).
+ * `STATIC_LM_EVAL_ALIASES=off` loads the model without aliases (the pre-fix lookup), for a
+ * same-harness before/after.
  *
  * Counts: every cell reports token POSITIONS; the header also reports distinct sentences,
  * distinct previous words (contexts) and distinct (previous, target) pairs, so a rate built on
@@ -144,7 +146,10 @@ class StaticLmTapEvalTest {
         }
 
         val loadStart = System.nanoTime()
-        val replace = StaticLmLanguageData.replaceAliases(lang)
+        // STATIC_LM_EVAL_ALIASES=off measures the pre-2026-09-29 lookup (no aliases) in the same
+        // harness — the "before" column of the lookup-fix re-evaluation.
+        val replace = if (System.getenv("STATIC_LM_EVAL_ALIASES") == "off") emptyMap()
+            else StaticLmLanguageData.replaceAliases(lang)
         val lm = StaticContextLm.parse(lmFile.readBytes()).withReplaceAliases(replace)
         val loadMs = (System.nanoTime() - loadStart) / 1e6
         val lexicon = loadLexicon(lexFile)

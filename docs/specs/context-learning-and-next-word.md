@@ -249,7 +249,15 @@ loads on `BigramModel`'s seed thread and then serves BOTH static products:
   conditional probability; the curated `en_bigrams.json` pairs only fill slots the LM leaves
   empty (14 of its 319 pairs, e.g. "good morning", are outside the corpus top-20).
 
-Other languages keep the hardcoded tables and JSON seeds until they get an LM.
+Other languages keep the hardcoded tables and JSON seeds until they get an LM. Since
+2026-09-29 German, French and Italian have one (below).
+
+**Contraction keys (2026-09-29 lookup fix).** The model names contractions by display form
+(`don't`, `c'est`); the dictionaries — and so the tap candidates — hold the apostrophe-free key
+(`dont`, `cest`). `StaticContextLm.withReplaceAliases` resolves every REPLACE key to its display
+form in all lookups (multiplier, seed, previous word); `BigramModel` builds the map at load from
+`ContractionManager.loadSwipeDisplayMappings(language)`. PAIRED bases (`well`, `lune`) never
+alias. Before the fix `i → dont` scored 0.51 (backoff) against `i → don't` 27.5.
 
 **Multilingual follow-through (2026-09-27 → 2026-09-29):** runtime asset lookup already uses
 `lm/<language>.cklm`. The builder is now configured per language (`LangConfig` in
@@ -260,20 +268,25 @@ wordfreq artefact reference, NFC composition and train/eval-overlap exclusion). 
 exactly the configured codes (en es de fr it pt sv); en rebuilds byte-identically. Weight
 selection is restricted to weights whose model fits the 512 KiB cap.
 
-**Spanish pilot: FAILED S1 (2026-09-29) — nothing beyond `en` ships.** On UD Spanish-GSD test
-(339 sentences, 5,026 positions) prefix-1 top-3 was +4.69 pt (gate +5); prefix-2 +4.74, prefix-3
-+3.26, empty context unchanged. The rollout was conditional on Spanish, so de/fr/it/pt/sv were
-measured but not shipped (de +5.16 marginal, fr +7.33, it +7.49 pass; pt +4.19 and sv +4.59 /
-prefix-2 +1.92 fail). Full tables, inputs and the separate finding that the legacy hardcoded
-tables HURT `static_only` tap ranking for every non-English language:
+**Shipped per language (2026-09-29): en, de, fr, it.** The maintainer's rule is that each
+language ships on its OWN pre-registered S1 gate. After the contraction-lookup fix, one
+re-evaluation on the unchanged gates (OOD prefix-1 top-3 Δ): de +5.16, fr +6.75, it +7.48 pass
+and ship; es +4.69, pt +4.19, sv +4.59 (prefix-2 +1.92) fail and stay unshipped (es/pt/sv have no
+REPLACE contractions, so the fix could not move them). For de/fr/it the LM's continuations are
+the whole next-word seed wherever it covers the previous word; the legacy seed (hardcoded pairs
++ `bigrams/<lang>_bigrams.json`) is the fallback before load and for unknown previous words.
+English keeps its curated gap-fill. Budgets: ≤ 475 KB asset, ≤ 0.91 MB heap per language,
+3.15 MB with all four resident. Tables, before/after and S2:
 `docs/eval/2026-09-29-static-lm-multilingual.md`. The pre-registered gates stay as they are; a
-retry must change an input for a stated reason and select on dev, never on the test set.
-The failed S3 swipe gate remains in force for every language: no swipe rescoring.
+retry of es/pt/sv must change an input for a stated reason and select on dev, never on the test
+set. The failed S3 swipe gate remains in force for every language: no swipe rescoring.
 
-# TODO: decide the next multilingual step from the 2026-09-29 evidence (Spanish retry with a
-# different corpus/treebank; whether to ship the three passing languages without Spanish is a
-# maintainer decision, since the pilot condition was not met). Imported-pack LM support would
-# need a separate importer contract.
+# TODO: next-word display forms are dropped on the device — `NextWordPredictor.candidatesFor`'s
+# allow check (`WordPredictor.isInDictionary`) knows no apostrophe word, so LM continuations such
+# as `c'est`/`don't` never reach the bar. Accept a display form of the active language's
+# REPLACE/PAIRED contractions there. Also open: es/pt/sv retry with a changed input; the legacy
+# hardcoded tables still hurt `static_only` tap ranking for languages without an LM;
+# imported-pack LM support would need a separate importer contract.
 Evaluation:
 `docs/eval/2026-09-26-static-lm-replay.md` (tap S1 and swipe S3); provenance:
 `scripts/data/PROVENANCE.md`; attribution: `NOTICE`, Settings → Help & FAQ.
@@ -440,7 +453,7 @@ Existing related prefs (unchanged keys, now composed with the master gate):
 | `NextWordPredictorTest` | Two-tier gating matrix (exhaustive over all 2^9 inputs: static = bar guards, learned = static ∧ master ∧ context-aware ∧ field), floors, self-repetition, dedup, personalization reorder, static cold-start tier (fill-only, sub-floor scores, no faked stats) |
 | `NextWordStaticTierTest` (mock tier) | Real `SuggestionHandler` + `WordPredictor` over the shipped `lm/en.cklm`: static next-word shows with learning OFF, context-aware OFF and in an incognito field; learned tier never read (no `getNextWordCandidates` / boost / user-vocabulary call) in those states; learned entry leads when learning is on; password / Termux / explicit-off show nothing; cursor park reads the editor for the static tier; accepting a next-word with the gate off learns nothing; default ON pinned |
 | `StaticBigramSeedTest` | Shipped `assets/bigrams/*` schema against the real files, asset-wins merge, hardcoded fallback index |
-| `StaticContextLmTest`, `BigramModelStaticLmTest`, `StaticLmAssetDriftTest` | CKLM v1 loader contract, the BigramModel adapter (multiplier + seed + gap fill), drift pins for the shipped `lm/en.cklm` (sidecar sha256, vocab, caps, heap, attribution) |
+| `StaticContextLmTest`, `BigramModelStaticLmTest`, `StaticLmAssetDriftTest` | CKLM v1 loader contract, the BigramModel adapter (multiplier + seed + gap fill), drift pins for every shipped `lm/<lang>.cklm` — en/de/fr/it (sidecar sha256, vocab, caps, heap incl. the alias index, attribution, REPLACE-only aliases) |
 | `SuggestionProvenanceTest` | UnifiedScore combine + breakdown + formatter |
 | `BigramStorePersistenceTest`, `TrigramStorePersistenceTest`, `UserVocabularyPersistenceTest` | Language keying, legacy migration, debounced write-back |
 | `UserVocabularyCapTest` | Configurable `personalization_max_words` cap: default, live provider changes, least-value eviction at capacity, lower-cap trim (enforceCap/on-load/import), floor clamp |

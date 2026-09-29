@@ -1,5 +1,11 @@
 # Static context LM — multilingual pilot (es) and follow-through measurements (2026-09-29)
 
+> **Superseded outcome (later on 2026-09-29):** after the contraction-lookup fix, the six
+> candidates and English were re-evaluated ONCE on the unchanged gates, and under the
+> maintainer's per-language rule **de, fr and it now ship**; es, pt and sv stay unshipped. See
+> [Contraction-lookup fix and per-language shipping](#contraction-lookup-fix-and-per-language-shipping-2026-09-29-later).
+> The sections below are the original pilot record and are left as measured.
+
 **Outcome: NOTHING SHIPPED.** The Spanish pilot failed the pre-registered S1 gate on its
 out-of-domain population (prefix-1 top-3 +4.69 pt; the gate is +5). The plan made every further
 language conditional on Spanish passing, so no `lm/<lang>.cklm` beyond `en` was added. The other
@@ -149,3 +155,145 @@ STATIC_LM_MODEL_DIR=<stage> STATIC_LM_EVAL_LANGS=es,de,fr,it,pt,sv \
 
 Candidate sha256 (deterministic from the pins): es `a304a06c10e95dc953f25e439008724665dfbd85ae9a79e2717f72ba8d6f1653`.
 The Tatoeba exports rotate weekly; a later download needs `--allow-unpinned` and is a different model.
+
+## Contraction-lookup fix and per-language shipping (2026-09-29, later)
+
+### The bug (affected English as shipped)
+
+The CKLM vocabulary names contractions by their DISPLAY form (en `don't`, fr `c'est`, it
+`l'acqua`), but every dictionary stores them apostrophe-free (`dont`, `cest`;
+`.claude/skills/contraction-system.md` §1), so the tap predictor's candidate — and a previous
+word committed as the key — is `dont`. `StaticContextLm` looked the key up literally. As the
+candidate it received only the previous word's backoff ratio (shipped en model: `i → dont`
+0.51 against `i → don't` 27.5, which the multiplier clamps to 10); as the previous word it had
+no continuations. English was hit hardest where it matters: `dont`, `im`, `ive`, `cant`,
+`lets`, `thats` are ALSO vocabulary words of the model (the web corpus' own apostrophe-less
+tokens), so they silently read the typo statistics instead of the contraction's.
+
+### The fix — one layer, and why that layer
+
+`StaticContextLm.withReplaceAliases(replace)` adds a primitive alias index (key → display-form
+id) that `wordId` consults, so every query — tap multiplier (`contextRatio`), `probability`,
+`hasContext`, the next-word seed — resolves `dont` as `don't`; `top()` still returns display
+forms, which is what the bar shows. `BigramModel` builds the map at LM load from
+`ContractionManager.loadSwipeDisplayMappings(language)` (the single-language load: English =
+pairing-reclassified base + `contractions_en.json`, 107 keys; other languages = their REPLACE
+file, or an installed pack's file) and discards the manager.
+
+- **Why the model layer, not `WordPredictor`:** the model is the only place that knows which
+  display forms it names; the candidate and the previous word both pass through the same
+  `wordId`; and the S1 eval exercises the identical code instead of a copy of a call-site
+  mapping. No `WordPredictor` change was needed.
+- **REPLACE vs PAIRED:** only the REPLACE bucket aliases. PAIRED keys (`well`/`we'll`,
+  `hell`/`he'll`, fr `lune`/`l'une`) are words and keep their own statistics — pinned on every
+  shipped model by `StaticLmAssetDriftTest`.
+- **A REPLACE key that is ALSO a model word** (en `dont`/`im`/`ive`/`cant`/`lets`/`thats`; fr
+  `den`/`doc`/`my`/`quest`/`tai`/`ya`; it `nè`/`sè`) still resolves to the display form: the bar
+  never shows that key — REPLACE puts the display form in its slot — so the model scores what
+  the user sees. This deliberately departs from a "only when the alias is not itself a
+  vocabulary word" rule; that rule would have left exactly the six commonest English
+  contractions broken.
+- **Runtime only.** `en.cklm` bytes are unchanged (sha256 `8efe036a…`).
+- Fail-first: 6 new tests failed against a no-op stub (4 fixture, 1 BigramModel adapter, 1 on the
+  real en model) and pass with the fix (commit `c957d31a`).
+
+### Re-evaluation — once, same gates, no tuning
+
+Only change: the lookup fix (no corpus, weight, threshold, population or model change). The
+harness gained `STATIC_LM_EVAL_ALIASES=off`; the aliases-off run reproduces the earlier table
+exactly, so "before" and "after" are the same harness on the same models. Pre-registered before
+the run: the GATE population stays the positions whose target is a lexicon word (as before);
+contraction targets — the positions the fix helps most — are reported in a separate
+**supplementary, ungated** cell (target scored as its REPLACE key over the lexicon plus the
+alias keys `WordPredictor` injects at the 5,000 floor). Nothing was selected on the test split.
+
+OOD test, `lm_static` vs `none`, top-3 Δ in points (before → after):
+
+| Lang | prefix-1 (≥ +5) | prefix-2 (≥ +2) | prefix-3 (≥ 0) | empty ctx dev. | aliases | S1 |
+|---|---|---|---|---|---|---|
+| en | +10.51 → **+10.43** | +4.06 → +4.04 | +2.38 → +2.39 | 0 → 0 | 56 | PASS (ships already) |
+| es | +4.69 → **+4.69** | +4.74 → +4.74 | +3.26 → +3.26 | 0 → 0 | 0 | **FAIL** |
+| de | +5.16 → **+5.16** | +4.36 → +4.36 | +3.71 → +3.71 | 0 → 0 | 3 | **PASS** |
+| fr | +7.33 → **+6.75** | +5.89 → +5.89 | +3.93 → +3.93 | 0 → 0 | 1,357 | **PASS** |
+| it | +7.49 → **+7.48** | +7.38 → +7.38 | +4.29 → +4.29 | 0 → 0 | 1,261 | **PASS** |
+| pt | +4.19 → **+4.19** | +5.29 → +5.29 | +3.09 → +3.09 | 0 → 0 | 0 | **FAIL** |
+| sv | +4.59 → **+4.59** | +1.92 → +1.92 | +1.04 → +1.04 | 0 → 0 | 0 | **FAIL** |
+
+es, pt and sv ship no REPLACE contractions (their files are empty on purpose), so the fix
+cannot move them; German has 3 aliased forms and did not move. The small drops (fr −0.58, en
+−0.08, it −0.01 at prefix-1) are expected: the gate population excludes contraction targets, so
+in it a correctly boosted key like `cest` after `et` is only ever a competitor. In-domain
+held-out still passes for all seven (after: en +15.04, es +8.63, de +9.96, fr +8.39, it +9.35,
+pt +9.06, sv +8.46 at prefix-1). Next-word top-3 is unchanged to ±0.03 pt (editor-text
+context already carries the display form, e.g. `don't`).
+
+Supplementary cell (ungated; OOD; target = a REPLACE display form, scored as its key;
+`lm_static` top-3 vs `none`):
+
+| Lang | n (prefix-1/2/3) | prefix-1 | prefix-2 | prefix-3 |
+|---|---|---|---|---|
+| en | 113 / 97 / 87 | 0.00 → 32.74 % | 10.31 → 43.30 % | 51.72 → 59.77 % |
+| fr | 199 / 195 / 170 | 0.00 → 15.58 % | 1.03 → 17.95 % | 13.53 → 27.06 % |
+| it | 233 / 229 / 224 | 0.00 → 5.15 % | 0.87 → 6.11 % | 3.13 → 8.48 % |
+| de | 0 (no such OOD target) | — | — | — |
+
+Concentration (so the raw n is not over-read): the English positions come from ≈22 distinct
+forms (`don't` 25, `i'm` 16, `i've` 10, `wouldn't` 8 …); French ≈150 (`c'est` 14, `d'un` 13,
+`qu'il` 9 …); Italian ≈290, mostly one-off elisions (`l'aumento`, `c'è`, `all'interno` 4 each) —
+counted over the raw OOD tokens before the model-vocabulary filter, so upper bounds. Before the
+fix these positions could not reach the top-3 at prefix-1 at all.
+
+### Shipping decision (maintainer rule: each language on its own gates)
+
+- **Ship: de, fr, it** (commit `4775300e`). The staged candidates were rebuilt from the
+  committed builder and are byte-identical (sha256 de `63892b2ce8a5c4c1…`, fr
+  `5ced1c6f1bddf41e…`, it `3d6cfb2c31298e4f…`). German passes by 0.16 pt, inside the ±0.7 pt
+  sampling error noted above; the rule is the pre-registered threshold, so it ships, and it is
+  the first candidate to revisit if a larger German test set becomes available.
+- **Not shipped: es, pt, sv** — unchanged failures, recorded above.
+- Swipe stays unwired for every language (S3).
+- `BigramModel`: for every LM language except English, the LM's continuations are the whole
+  next-word seed wherever the LM covers the previous word; the legacy seed (hardcoded pairs +
+  `bigrams/<lang>_bigrams.json`) stays the fallback before the LM loads and for previous words
+  the LM does not know (commit `cc1426fa`). English keeps its reviewed curated gap-fill. The
+  hardcoded multiplier tables were already bypassed once an LM loads.
+
+### S2 for the shipped languages
+
+| Lang | asset B (cap 524,288) | retained heap B (cap 1.5 MB) | of which alias index | load ms, pure JVM (cold / warm median) |
+|---|---|---|---|---|
+| en | 439,017 | 671,319 | 1,317 | 2.4 / 1.9 |
+| de | 438,403 | 683,227 | 138 | 2.3 / 1.9 |
+| fr | 458,180 | 885,367 | 38,865 | 7.6 / 5.5 |
+| it | 475,337 | 905,871 | 39,116 | 9.2 / 5.3 |
+
+All four resident at once (BigramModel keeps each language it loaded): 3,145,784 B. GC-measured
+heap deltas agree with the array accounting to < 100 B. Load = read + parse + alias index in the
+`StaticLmAssetDriftTest` JVM (JIT warm by then — the cold eval parse times were 10.6 ms de,
+116.8 ms fr, 70.2 ms it on a box at load average ~14, and the device additionally reads the
+REPLACE map through `ContractionManager`, ~18–21k JSON entries for fr/it, on the background seed
+thread). Device cold-load timing was not measured.
+
+Release APK (`./build-on-termux.sh release --no-install`, 2026-09-29): arm64-v8a
+22,607,709 B, **+968,882 B** against the 21,638,827 B reference; the three new models and their
+sidecars are 947,427 B of that as stored (deflated ~67–70 % of raw: de 308,053, fr 307,946,
+it 323,017 B for the `.cklm`), the rest is other commits since the reference build.
+
+### Known gap found while fixing (not changed here)
+
+**Next-word display forms are filtered out on the device.** `NextWordPredictor.candidatesFor`
+admits a continuation only if `WordPredictor.isInDictionary` (or the user vocabulary) knows it,
+and no shipped lexicon holds an apostrophe word (0 in en/fr/it). So an LM continuation such as
+`c'est` after `et`, or `don't` after `i`, is dropped before the bar — the eval's next-word arm
+admits contraction display forms and therefore overstates the device by those positions. The fix
+belongs in the next-word allow check (accept a display form of the active language's REPLACE or
+PAIRED contractions), which is `NextWordPredictor`/`WordPredictor` territory outside this change.
+
+### Reproduce
+
+```sh
+STATIC_LM_MODEL_DIR=<stage> STATIC_LM_EVAL_LANGS=es,de,fr,it,pt,sv \
+  scripts/gradle-guard.sh runPureTests -PtestClass=StaticLmTapEvalTest -PgeoFull=true
+STATIC_LM_EVAL_LANGS=en scripts/gradle-guard.sh runPureTests -PtestClass=StaticLmTapEvalTest -PgeoFull=true
+# add STATIC_LM_EVAL_ALIASES=off to either for the pre-fix lookup
+```

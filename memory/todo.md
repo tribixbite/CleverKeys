@@ -28,9 +28,16 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   language-parameterised S1 eval + drift test. Spanish FAILED S1 (prefix-1 +4.69 < +5), so
   nothing beyond `en` ships; de/fr/it measured passing, pt/sv failing —
   `docs/eval/2026-09-29-static-lm-multilingual.md`.
-- [ ] TODO: maintainer decision on the next LM step (Spanish retry with a changed input vs
-  shipping the passing de/fr/it without the pilot); fix legacy hardcoded tables hurting
-  `static_only` tap ranking for non-English languages (outside the LM files).
+- [x] Static LM contraction-lookup fix + per-language shipping (2026-09-29): REPLACE keys
+  (`dont`, `cest`) now resolve to the display form the model names (was backoff only — en
+  `i → dont` 0.51 vs `i → don't` 27.5). One re-evaluation, unchanged gates: de +5.16, fr +6.75,
+  it +7.48 pt prefix-1 → SHIPPED (with Tatoeba contributor lists, NOTICE, PROVENANCE);
+  es/pt/sv still fail, unshipped. `docs/eval/2026-09-29-static-lm-multilingual.md`.
+- [ ] TODO: next-word allow check drops LM display forms on the device (`isInDictionary` knows no
+  apostrophe word, so `c'est`/`don't` continuations never reach the bar) — accept the active
+  language's contraction display forms in `NextWordPredictor.candidatesFor`.
+- [ ] TODO: es/pt/sv LM retry needs a changed input selected on dev; the legacy hardcoded tables
+  still hurt `static_only` tap ranking for languages without an LM (outside the LM files).
 - [ ] TODO: pack-attribution UI. PAL design review was blocked by automatic approval review;
   the specific external payload approval is pending.
 - [ ] TODO: reconcile the disable-learning delete prompt (`privacy_forget_learned_body`)
