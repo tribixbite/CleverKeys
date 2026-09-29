@@ -224,6 +224,16 @@ def _ud(repo: str, commit: str, stem: str, split: str, sha256: str, license: str
     )
 
 
+# Second-corpus candidates of the es/pt/sv retry (pre-registered 2026-09-29; pinned). The chosen
+# one per language is also that config's `leipzig2`.
+_ES_NEWS = _leipzig("spa_news_2023_300K", "668ee9fbb6ee70aaff0164b2fa2f6acff54950cf7b444f8f2021997684b06d6f", "Spanish news 2023, 300K sentences", key="leipzig2")
+_ES_WIKI = _leipzig("spa_wikipedia_2021_300K", "8f6d62de098a7615c5b8d40d4e449e883888252fa599102747c5eec91b10fa46", "Spanish Wikipedia 2021, 300K sentences", key="leipzig2")
+_PT_BR_NEWS = _leipzig("por-br_newscrawl_2011_300K", "20b8dad08d98ef1d9a4aa17b959532ba0c7b0e6f8fee7da6324cfd1e818452ce", "Brazilian Portuguese news crawl 2011, 300K sentences", key="leipzig2")
+_PT_NEWS = _leipzig("por_news_2023_300K", "ffd654ebb29e8afdd802fbd6a1cdc3258f927f15339f368e55529ed058bb5a70", "Portuguese news 2023, 300K sentences", key="leipzig2")
+_SV_NEWS = _leipzig("swe_news_2023_300K", "e7c777651a432df0e9f108c9b7f452e22c6cfe9d6572ba00d1891a9baa69db85", "Swedish news 2023, 300K sentences", key="leipzig2")
+_SV_WIKI = _leipzig("swe_wikipedia_2021_300K", "e4a0725749bef237b530493d2119d863d264a8de295f945ffb2c8185abd84f98", "Swedish Wikipedia 2021, 300K sentences", key="leipzig2")
+
+
 CONFIGS: dict[str, LangConfig] = {
     c.code: c
     for c in (
@@ -264,15 +274,15 @@ CONFIGS: dict[str, LangConfig] = {
             lexicon="es_enhanced.bin",
             contraction_files=("contractions_es.json",),
             wordfreq_lang="es",
+            # Chosen on the OOD dev split by the gate metric (eval doc, "Dev choices").
+            leipzig2=_ES_WIKI,
+            mix=0.75,
+            tatoeba_weight=0.1,
             # es/pt/sv retry (pre-registered 2026-09-29): register candidates for GSD's
             # encyclopedic/news-style prose, mixed into the web corpus by a dev-chosen weight.
             candidates=(
-                _leipzig("spa_news_2023_300K",
-                         "668ee9fbb6ee70aaff0164b2fa2f6acff54950cf7b444f8f2021997684b06d6f",
-                         "Spanish news 2023, 300K sentences", key="leipzig2"),
-                _leipzig("spa_wikipedia_2021_300K",
-                         "8f6d62de098a7615c5b8d40d4e449e883888252fa599102747c5eec91b10fa46",
-                         "Spanish Wikipedia 2021, 300K sentences", key="leipzig2"),
+                _ES_NEWS,
+                _ES_WIKI,
             ),
         ),
         LangConfig(
@@ -348,15 +358,15 @@ CONFIGS: dict[str, LangConfig] = {
             lexicon="pt_enhanced.bin",
             contraction_files=("contractions_pt.json",),
             wordfreq_lang="pt",
+            # Chosen on the OOD dev split by the gate metric (eval doc, "Dev choices").
+            leipzig2=_PT_BR_NEWS,
+            mix=0.5,
+            tatoeba_weight=0.0,
             # Retry candidates: Bosque dev is 45% Brazilian news (CETENFolha) + 55% European news
             # (CETEMPúblico); the web corpus is Portugal-only. (a) supplies variety AND register.
             candidates=(
-                _leipzig("por-br_newscrawl_2011_300K",
-                         "20b8dad08d98ef1d9a4aa17b959532ba0c7b0e6f8fee7da6324cfd1e818452ce",
-                         "Brazilian Portuguese news crawl 2011, 300K sentences", key="leipzig2"),
-                _leipzig("por_news_2023_300K",
-                         "ffd654ebb29e8afdd802fbd6a1cdc3258f927f15339f368e55529ed058bb5a70",
-                         "Portuguese news 2023, 300K sentences", key="leipzig2"),
+                _PT_BR_NEWS,
+                _PT_NEWS,
             ),
         ),
         LangConfig(
@@ -376,14 +386,14 @@ CONFIGS: dict[str, LangConfig] = {
             lexicon="sv_enhanced.bin",
             contraction_files=("contractions_sv.json",),
             wordfreq_lang="sv",
+            # Chosen on the OOD dev split by the gate metric (eval doc, "Dev choices").
+            leipzig2=_SV_NEWS,
+            mix=1.0,
+            tatoeba_weight=2.0,
             # Retry candidates: Talbanken is professional prose (register mismatch with web text).
             candidates=(
-                _leipzig("swe_news_2023_300K",
-                         "e7c777651a432df0e9f108c9b7f452e22c6cfe9d6572ba00d1891a9baa69db85",
-                         "Swedish news 2023, 300K sentences", key="leipzig2"),
-                _leipzig("swe_wikipedia_2021_300K",
-                         "e4a0725749bef237b530493d2119d863d264a8de295f945ffb2c8185abd84f98",
-                         "Swedish Wikipedia 2021, 300K sentences", key="leipzig2"),
+                _SV_NEWS,
+                _SV_WIKI,
             ),
         ),
     )
