@@ -297,9 +297,13 @@ retain at the tail.
    retry without a new stated reason (e.g. larger test population). APK/S2 in the eval doc.
 2. ~~Legacy tables hurt `static_only`~~ FIXED 2026-09-29 (`baff9bf1`): only a listed pair of the
    language's own table moves the multiplier, never below 1; no English fallback (es −22.65 →
-   +0.04 pt). Open follow-up: `both` = max(static, 1) with an empty learned store, so an LM's
-   backoff penalty never bites there and lm_both beats lm_static at prefix-1 by 0.6–1.1 pt —
-   measure `contextRatio` floored at 1 on dev before changing anything.
+   +0.04 pt). Ratio-shape follow-up MEASURED 2026-09-29 (pre-registered `f596faef`, dev choice
+   `14d403f2`, one test read): production stays `RAW` — `FLOOR_ONE` lost English 0.15 pt on dev
+   (rule: no cell may regress > 0.05). On test `FLOOR_ONE` was ahead everywhere (+0.46 mean
+   prefix-1; es +6.08) — recorded, NOT acted on (would be choosing on test). Confirmed: learned
+   boost ≥ 1 always, so `both` never applies a static penalty, empty store or not; only
+   `static_only` users see `RAW`. Adopting `FLOOR_ONE` needs a new pre-registration + fresh dev
+   evidence (second English dev set, or a per-language rule registered up front).
 3. Device-only: native-speaker review of the new strings; RTL (fa, ar-XB), en-XA long text, large
    font and TalkBack on a TEST phone (Saga was in use 2026-09-29 — never the host phone).
 4. Apostrophe/hyphen words in the swipe "Prefer" offer need decoder changes (audit doc).

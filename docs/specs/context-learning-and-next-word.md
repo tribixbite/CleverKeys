@@ -244,7 +244,8 @@ loads on `BigramModel`'s seed thread and then serves BOTH static products:
 - **tap multiplier** — `getContextMultiplier = clamp(P(w|prev) / P(w), 0.1, 10)`, same clamp as
   before; a word not among the previous word's top-20 continuations gets that word's backoff
   ratio (slightly below 1). `context_source` semantics are unchanged: in the default `both`, the
-  applied multiplier is still `max(static, learned)`, so the backoff penalty never bites there.
+  applied multiplier is still `max(static, learned)`, so the backoff penalty never bites there
+  (with or without learned data — see "Ratio shape" below).
 - **next-word cold-start seed** — `getPredictions` returns the LM's continuations ranked by
   conditional probability; the curated `en_bigrams.json` pairs only fill slots the LM leaves
   empty (14 of its 319 pairs, e.g. "good morning", are outside the corpus top-20).
@@ -304,10 +305,21 @@ apostrophe form (`don't`, `c'est`, straight or typographic apostrophe) by its ap
 dictionary key, because every bundled dictionary stores contractions that way; a Dictionary
 Manager disable of the key blocks the display form too (`NextWordContractionAllowTest`).
 
+**Ratio shape (measured 2026-09-29, unchanged).** `BigramModel` applies
+`StaticContextLm.SHIPPED_RATIO_SHAPE` (`RAW`) to `contextRatio` before the clamp. A pre-registered
+comparison of `RAW`, `FLOOR_ONE` (max(r, 1)), `FLOOR_HALF` (max(r, 0.5)) and `SQRT_BELOW_ONE`
+on the OOD dev splits kept `RAW`: `FLOOR_ONE` gained +0.48 pt mean prefix-1 top-3 but cost
+English 0.15 pt (the rule allowed no regression beyond 0.05). The single test read later showed
+`FLOOR_ONE` ahead everywhere (+0.46 mean, en +0.03, es +1.12); that is recorded, not acted on.
+**`context_source` semantics, confirmed:** the learned boost is always ≥ 1 (1.0 without evidence,
+else [1, 5]), so `both` = `max(static, learned)` never applies a static value below 1 — empty
+store or not. The backoff penalty exists only in `static_only`; `both` with nothing learned
+behaves exactly like `FLOOR_ONE`.
+
 # TODO: es needs a new stated reason before any further attempt (e.g. a larger Spanish test
-# population; GSD test is 339 sentences, ±0.7 pt); measure an LM contextRatio floored at 1 on dev
-# (lm_both beats lm_static at prefix-1 by 0.6–1.1 pt); imported-pack LM support would need a
-# separate importer contract.
+# population; GSD test is 339 sentences, ±0.7 pt); FLOOR_ONE for static_only needs a fresh
+# pre-registration (second English dev population or a per-language rule registered up front —
+# its test read already happened); imported-pack LM support would need a separate importer contract.
 Evaluation:
 `docs/eval/2026-09-26-static-lm-replay.md` (tap S1 and swipe S3); provenance:
 `scripts/data/PROVENANCE.md`; attribution: `NOTICE`, Settings → Help & FAQ.

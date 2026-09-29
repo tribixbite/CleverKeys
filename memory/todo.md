@@ -39,8 +39,11 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   weight, one test look): pt +5.41 and sv +5.98 prefix-1 → SHIPPED; es +4.96 → FAILED, unshipped.
 - [x] Legacy hardcoded tables no longer penalise unlisted pairs or apply English's tables to other
   languages (es `static_only` prefix-1 −22.65 → +0.04 pt). `docs/eval/2026-09-29-static-lm-multilingual.md`.
-- [ ] TODO: es LM needs a NEW stated reason before another attempt (e.g. a larger test population);
-  measure LM `contextRatio` floored at 1 on dev (lm_both > lm_static at prefix-1 by 0.6–1.1 pt).
+- [ ] TODO: es LM needs a NEW stated reason before another attempt (e.g. a larger test population).
+- [x] LM ratio shape measured (2026-09-29, pre-registered): dev rule kept `RAW` (FLOOR_ONE −0.15
+  en prefix-1 on dev); test read once, FLOOR_ONE ahead there (+0.46 mean) — recorded only.
+  `both` never applies a static penalty (learned boost ≥ 1). `docs/eval/2026-09-29-static-lm-multilingual.md`.
+- [ ] TODO: FLOOR_ONE for `static_only` — needs a fresh pre-registration with new dev evidence.
 - [x] Pack-attribution UI: Settings → Multi-Language → Language Packs → Manage shows each pack's
   licence, credit, source links and full NOTICE.txt (`269d8bb1`/`6fed1b12`, 2026-09-29).
 - [x] `privacy_forget_learned_body` names swipe corrections in all 22 locales (`535a2a28`);

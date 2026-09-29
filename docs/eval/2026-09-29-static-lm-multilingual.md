@@ -602,3 +602,54 @@ Reading (not a selection input): the English loss under `FLOOR_ONE` says the bac
 does useful work where the model is strongest (en: the largest corpus, the curated contraction
 aliases); the other languages' gains say it over-demotes where the model is weaker. A per-language
 shape was not a registered candidate and is not chosen here.
+
+### Test evaluation — read once, after the choice (2026-09-29)
+
+One guarded run (`StaticLmTapEvalTest -PgeoFull=true`, shipped assets for the six; es from
+`lmretry/final` with its own `eval/` dir, as in the retry's test run), code at `b10391cf`,
+choice already committed in `14d403f2`. Load average 14.6–19.4; counts are deterministic.
+`RAW` reproduces the published gate numbers exactly (en +10.43, de +5.16, fr +6.75, it +7.48,
+pt +5.41, sv +5.98, es +4.96 at prefix-1), so the harness change is inert for the shipped arm.
+OOD **test**, `static_only`, top-3 Δ vs `none` (prefix 1 / 2 / 3):
+
+| Lang | n (p1) | `RAW` (shipped) | `FLOOR_ONE` | `FLOOR_HALF` | `SQRT_BELOW_ONE` |
+|---|---|---|---|---|---|
+| en | 14,796 | +10.43 / +4.04 / +2.39 | +10.46 / +4.37 / +2.42 | +10.43 / +4.09 / +2.38 | +10.35 / +4.11 / +2.38 |
+| de | 9,733 | +5.16 / +4.36 / +3.71 | +5.55 / +4.98 / +3.73 | +5.20 / +4.39 / +3.71 | +5.17 / +4.39 / +3.73 |
+| fr | 4,664 | +6.75 / +5.89 / +3.93 | +7.29 / +6.23 / +4.00 | +6.75 / +5.95 / +3.93 | +6.80 / +5.89 / +3.93 |
+| it | 12,883 | +7.48 / +7.38 / +4.29 | +7.85 / +7.53 / +4.27 | +7.52 / +7.39 / +4.29 | +7.51 / +7.38 / +4.27 |
+| pt | 11,376 | +5.41 / +5.97 / +3.56 | +6.05 / +6.23 / +3.63 | +5.42 / +5.95 / +3.56 | +5.44 / +5.92 / +3.56 |
+| sv | 12,839 | +5.98 / +2.95 / +1.94 | +6.78 / +3.69 / +1.96 | +5.98 / +3.02 / +1.94 | +6.09 / +2.99 / +1.94 |
+| es (eval only) | 4,539 | +4.96 / +5.13 / +3.66 | +6.08 / +5.65 / +3.66 | +5.11 / +5.16 / +3.66 | +4.98 / +5.10 / +3.66 |
+| **mean p1, shipped six** | | +6.868 | +7.330 | +6.883 | +6.893 |
+
+In-domain held-out (1/20 sample; for pt/sv this is the default eval dir's held-out, indicative
+only) at prefix-1, `RAW` → `FLOOR_ONE`: en +15.04 → **+14.88**, de +9.96 → +10.27, fr +8.39 →
++8.88, it +9.35 → +9.81, pt +7.16 → +7.68, sv +5.29 → +6.15, es +6.32 → +7.37.
+
+**Production: unchanged (`SHIPPED_RATIO_SHAPE = RAW`).** The dev rule chose `RAW`, and the
+test read is a report, not a second selection. Stated plainly, since it cuts the other way:
+**on test, `FLOOR_ONE` would have been eligible and best** (+0.46 pt mean prefix-1; no shipped
+cell below `RAW` − 0.05; every language passes S1), and it lifts es to +6.08 (above the +5 gate
+es failed). The English prefix-1 loss that disqualified it on dev (−0.15) is +0.03 on test and
+−0.16 on the in-domain sample — i.e. for English the backoff penalty is worth about 0–0.16 pt,
+and for every other language it costs 0.3–1.1 pt. Adopting `FLOOR_ONE` (globally, or for
+non-English only) now would be choosing on the test split; it needs a NEW pre-registration with
+fresh evidence (e.g. a second English dev population, or a per-language rule registered before
+looking), and is recorded as a follow-up.
+
+What users get today is unaffected by this choice in the default mode: `context_source = both`
+already applies `max(static, learned) ≥ max(static, 1)`, which is `FLOOR_ONE` or better. The
+choice matters only to users who select `static_only`.
+
+### (c) `both` with a non-empty learned store — confirmed
+
+`ContextModel.getContextBoost` returns `MIN_BOOST = 1.0` when it has no confident evidence and
+`calculateBoost` clamps to [1, 5] otherwise, so the learned value is ALWAYS ≥ 1. With
+`max(static, learned)`, a static value below 1 therefore never reaches the score in `both` —
+with an empty store and with a populated one alike; a populated store only raises words it has
+evidence for, and replaces (does not stack on) a static boost smaller than its own. Measured:
+`lm_both` = `lm_static_floor_one` exactly for every language without learned rows (dev and test),
+and for en (642 learned pairs) `lm_both` sits +0.11 pt (dev) above it at prefix-1 — the learned
+boosts, never a static penalty. Consequence: the static LM's backoff penalty exists only in
+`static_only`. Documented in `UnifiedScore.combine` and the context spec.
