@@ -452,7 +452,7 @@
     <string name="gesture_tap_duration_title">Dokunma Süresi Eşiği</string>
     <string name="gesture_tap_duration_desc">Dokunma hareketi için maksimum süre (ms). Yüksek değer = daha kolay dokunma ama kaydırmayı etkileyebilir.</string>
     <string name="gesture_double_space_period_title">Çift Boşluk Nokta Ekle</string>
-    <string name="gesture_double_space_period_desc">Nokta eklemek için boşluğa iki kez hızlıca dokun. Yalnızca harf/sayıdan sonra tetiklenir.</string>
+    <string name="gesture_double_space_period_desc">Nokta eklemek için boşluğa iki kez hızlıca dokunun. Yalnızca harf/sayıdan sonra tetiklenir.</string>
     <string name="gesture_double_space_timing_title">Çift Boşluk Zamanlaması</string>
     <string name="gesture_double_space_timing_desc">Nokta tetiklemek için boşluklar arasındaki maksimum süre (ms)</string>
     <string name="gesture_sensitivity_preset_title">Duyarlılık Ön Ayarı</string>

@@ -29,7 +29,12 @@ import org.junit.Test
 class TranslationGlossaryTest {
 
     private data class Terms(val allowed: List<String>, val forbidden: List<String>)
-    private data class LocaleGlossary(val matchAnywhere: Boolean, val terms: Map<String, Terms>)
+    private data class LocaleGlossary(
+        val matchAnywhere: Boolean,
+        val terms: Map<String, Terms>,
+        /** Forms of the address register this locale does NOT use (see [register]). */
+        val forbiddenRegister: List<Regex>,
+    )
 
     private val glossaryFile = File("docs/i18n/glossary.json")
 
@@ -55,7 +60,11 @@ class TranslationGlossaryTest {
                     forbidden = o.getAsJsonArray("forbidden")?.map { it.asString }.orEmpty(),
                 )
             }
-            locale to LocaleGlossary(obj.get("matchAnywhere")?.asBoolean ?: false, terms)
+            val forbidden = obj.getAsJsonObject("register")?.getAsJsonArray("forbidden")
+                // (?U): Unicode-aware \b/\w and case folding, so "\beszközöd" works on
+                // accented letters exactly as the Python audit that produced the rules did.
+                ?.map { Regex("(?U)" + it.asString, setOf(RegexOption.IGNORE_CASE)) }.orEmpty()
+            locale to LocaleGlossary(obj.get("matchAnywhere")?.asBoolean ?: false, terms, forbidden)
         }
     }
 
@@ -109,6 +118,48 @@ class TranslationGlossaryTest {
                 violations.joinToString("\n"),
             violations.isEmpty()
         )
+    }
+
+    /**
+     * One address register per locale (device finding 2026-09-29: Hungarian mixed informal
+     * "te" forms — "eszközödet", "megnézhesd" — with formal "Ön" forms inside one Privacy
+     * section). For each locale whose glossary entry declares `register.forbidden`, no string
+     * or plural item may contain a form of the other register. Patterns are Java regexes,
+     * case-insensitive and Unicode-aware (`(?U)` is prepended, so `\b`/`\w` see accented
+     * letters). The decisions and their evidence are in docs/i18n/2026-09-29-register.md.
+     */
+    @Test fun everyStringUsesTheLocalesAddressRegister() {
+        val violations = mutableListOf<String>()
+        for (dir in TranslationResources.localeDirs) {
+            val locale = TranslationResources.localeOf(dir)
+            val rules = locales[locale]?.forbiddenRegister.orEmpty()
+            if (rules.isEmpty()) continue
+            for ((name, raw) in TranslationResources.allTexts(dir)) {
+                val text = TranslationResources.unescape(raw)
+                for (rule in rules) {
+                    rule.find(text)?.let {
+                        violations += "$locale $name: \"${it.value}\" (rule ${rule.pattern}) in \"$text\""
+                    }
+                }
+            }
+        }
+        assertTrue(
+            "${violations.size} address-register violation(s) — rewrite in the locale's " +
+                "register (docs/i18n/glossary.json locales.<l>.register):\n" +
+                violations.joinToString("\n"),
+            violations.isEmpty()
+        )
+    }
+
+    @Test fun hungarianIsPinnedToTheFormalRegister() {
+        val hu = locales.getValue("hu").forbiddenRegister
+        assertTrue("hu must declare register.forbidden", hu.isNotEmpty())
+        // The two strings found on device, in their original informal wording, must be caught.
+        assertTrue(hu.any { it.containsMatchIn("soha semmilyen adat nem hagyja el az eszközödet") })
+        assertTrue(hu.any { it.containsMatchIn("hogy megnézhesd, exportálhasd vagy törölhesd őket") })
+        // Formal copy must pass.
+        val formal = "Koppintson a visszavonáshoz. Az Ön által begépelt szó; törölheti az eszközéről."
+        assertTrue(hu.none { it.containsMatchIn(formal) })
     }
 
     /** Pins the matching rule so a refactor cannot silently loosen or tighten it. */

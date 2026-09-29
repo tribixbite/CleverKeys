@@ -39,7 +39,7 @@
     <!-- <string name="pref_circle_sensitivity_e_disabled">Disabled</string> -->
     <string name="key_action_next">بعدی</string>
     <string name="key_action_done">اتمام</string>
-    <string name="key_action_go">برو</string>
+    <string name="key_action_go">رفتن</string>
     <string name="key_action_prev">قبلی</string>
     <string name="key_action_search">جستجو</string>
     <string name="key_action_send">ارسال</string>
@@ -128,12 +128,12 @@
     <string name="private_copy_toast">به‌صورت خصوصی در CleverKeys کپی شد</string>
     <string name="private_copy_expose_dialog_title">در بریده‌دان سامانه کپی شود؟</string>
     <string name="private_copy_expose_dialog_message">این مورد به‌صورت خصوصی کپی شده بود. کپی آن در بریده‌دان سامانه، متن را در معرض برنامه پیش‌زمینه و دیگر مدیران بریده‌دان قرار می‌دهد. با این حال کپی شود؟</string>
-    <string name="private_copy_expose_dialog_confirm">به هر حال کپی کن</string>
+    <string name="private_copy_expose_dialog_confirm">به هر حال کپی شود</string>
     <string name="private_copy_expose_dialog_cancel">لغو</string>
     <string name="private_copy_too_large">مورد بریده‌دان بسیار بزرگ است (%1$d کیلوبایت). محدودیت %2$d کیلوبایت است.</string>
     <!-- #156 Private-only filter -->
     <string name="clipboard_filter_private_only">فقط خصوصی</string>
-    <string name="clipboard_filter_private_only_hint">فقط موارد کپی‌شده به‌صورت خصوصی را نشان بده (🔒)</string>
+    <string name="clipboard_filter_private_only_hint">فقط موارد کپی‌شده به‌صورت خصوصی را نشان دهید (🔒)</string>
 
     <!-- Settings Activity (Material 3) -->
     <string name="settings_title">⚙️ تنظیمات CleverKeys</string>
@@ -148,9 +148,9 @@
     <!-- Input Behavior Section -->
     <string name="settings_section_input">📝 رفتار ورودی</string>
     <string name="settings_auto_capitalization_title">بزرگ‌نویسی خودکار</string>
-    <string name="settings_auto_capitalization_desc">واژه‌های ابتدای جمله را به‌صورت خودکار با حرف بزرگ بنویس</string>
+    <string name="settings_auto_capitalization_desc">واژه‌های ابتدای جمله را به‌صورت خودکار با حرف بزرگ بنویسید</string>
     <string name="settings_vibration_title">بازخورد لرزشی</string>
-    <string name="settings_vibration_desc">هنگام فشردن کلیدها بلرزان</string>
+    <string name="settings_vibration_desc">هنگام فشردن کلیدها لرزش ایجاد شود</string>
 
     <!-- Accessibility Section -->
     <string name="settings_section_accessibility">♿ دسترس‌پذیری</string>
@@ -180,7 +180,7 @@
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">«%1$s» به واژه‌نامه افزوده شود؟</string>
     <string name="suggestion_prefer_when_swiping">هنگام کشیدن، «%1$s» ترجیح داده شود؟</string>
-    <string name="suggestion_prefer_when_swiping_decline">نپرس</string>
+    <string name="suggestion_prefer_when_swiping_decline">پرسیده نشود</string>
     <string name="suggestion_prefer_when_swiping_added">اکنون هنگام کشیدن «%1$s» ترجیح داده می‌شود</string>
     <string name="suggestion_added_to_dictionary">«%1$s» به واژه‌نامه افزوده شد</string>
     <string name="suggestion_tap_again_to_undo">برای واگرد دوباره ضربه بزنید</string>
@@ -621,7 +621,7 @@
     <string name="input_personalization_weight_desc">میزان تقویت پیش‌بینی‌ها بر پایهٔ کاربرد واژه‌های شما (0 = خاموش، 2 = دو برابر)</string>
     <string name="input_personalization_max_words_title">بیشینهٔ واژه‌های آموخته‌شده</string>
     <string name="input_personalization_max_words_desc">سقف واژگان آموخته‌شده؛ کم‌ارزش‌ترین واژه‌ها زودتر حذف می‌شوند (پیش‌فرض 5000)</string>
-    <string name="privacy_on_device_learning_title">از تایپ من یاد بگیر</string>
+    <string name="privacy_on_device_learning_title">یادگیری از تایپ من</string>
     <string name="privacy_on_device_learning_desc">از آنچه تایپ می‌کنید، مدل‌های خصوصی عبارت‌ها و کاربرد واژه‌ها را روی خود دستگاه می‌سازد. با خاموش کردن، همهٔ ضبط خودکار رفتار تایپ متوقف می‌شود — تا زمانی که خاموش است چیز تازه‌ای ذخیره نمی‌شود. داده‌هایی که آشکارا خودتان می‌سازید جدا هستند: آمار کارایی پیش‌بینی و داده‌های آموخته‌شده‌ای که از پشتیبان بازیابی شده‌اند.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">افزوده شد، اما برای کشیدن بیش از حد بلند است</string>
@@ -786,7 +786,7 @@
     <string name="privacy_forget_learned_title">داده‌های آموخته‌شده هم فراموش شوند؟</string>
     <string name="privacy_forget_learned_body">یادگیری اکنون خاموش است — چیز جدیدی ضبط نمی‌شود. آیا می‌خواهید هر آنچه تاکنون آموخته شده (الگوهای عبارت، کاربرد واژه‌ها، تاریخچهٔ انتخاب پیشنهادها و تصحیح‌های کشیدن) نیز حذف شود؟ قابل بازگشت نیست.</string>
     <string name="privacy_forget_learned_confirm">حذف داده‌های آموخته‌شده</string>
-    <string name="privacy_forget_learned_keep">نگهش دار</string>
+    <string name="privacy_forget_learned_keep">نگه داشتن</string>
     <string name="privacy_local_collection_header">گردآوری محلی داده (اختیاری)</string>
     <string name="privacy_collected_data_header">داده‌های گردآوری‌شده</string>
     <string name="privacy_swipe_stats">مجموع کشیدن‌ها: %1$d • واژه‌های یکتا: %2$d</string>
@@ -935,7 +935,7 @@
     <string name="import_preview_diff_changed">~%1$d تغییریافته</string>
     <string name="import_preview_diff_unchanged">(%1$d بدون تغییر)</string>
     <plurals name="import_preview_short_swipe_count"><item quantity="one">%1$d نگاشت کشیدن کوتاه در این پشتیبان</item><item quantity="other">%1$d نگاشت کشیدن کوتاه در این پشتیبان</item></plurals>
-    <string name="import_preview_short_swipe_skip">رد شدن — وارد نکن</string>
+    <string name="import_preview_short_swipe_skip">رد شدن — وارد نشود</string>
     <string name="import_preview_short_swipe_merge">ادغام — در تعارض فایل برنده است، بقیه حفظ می‌شود (توصیه‌شده)</string>
     <string name="import_preview_short_swipe_replace">جایگزینی — پاک کردن موجود، نصب مجموعهٔ فایل</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">این کار همهٔ سفارشی‌سازی‌های کشیدن کوتاه موجود شما را با %1$d نگاشت فایل جایگزین می‌کند.</item><item quantity="other">این کار همهٔ سفارشی‌سازی‌های کشیدن کوتاه موجود شما را با %1$d نگاشت فایل جایگزین می‌کند.</item></plurals>
@@ -977,7 +977,7 @@
     <string name="geo_settings_endpoint_desc">گذشت برای شروع/پایان نادقیق کشیدن، بر حسب پهنای کلید. بالاتر = بخشنده‌تر؛ خیلی بالا ممکن است حرف اول/آخر اشتباه بیاورد.</string>
     <string name="geo_settings_reset">بازنشانی به پیش‌فرض‌های واسنجی‌شده</string>
     <string name="autocorrect_settings_title">تنظیمات تصحیح خودکار</string>
-    <string name="autocorrect_activity_enable_desc">واژه‌های غلط را هنگام تایپ به‌طور خودکار تصحیح کن</string>
+    <string name="autocorrect_activity_enable_desc">واژه‌های غلط را هنگام تایپ به‌طور خودکار تصحیح کنید</string>
     <string name="autocorrect_about_title">دربارهٔ تصحیح خودکار</string>
     <string name="autocorrect_about_body">تصحیح خودکار واژه‌های تایپ‌شده را با الگوریتم فاصلهٔ لِوِنشتاین با واژه‌نامه مقایسه می‌کند. واژه‌ها وقتی تصحیح می‌شوند که به‌اندازهٔ کافی نزدیک باشند (آستانهٔ تطابق نویسه) و در واژه‌نامه بسامد کافی داشته باشند (حداقل بسامد).</string>
     <string name="autocorrect_params_title">پارامترهای تصحیح</string>

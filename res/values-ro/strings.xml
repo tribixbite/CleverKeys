@@ -113,7 +113,7 @@
     <string name="key_descr_switch_gif">Tastatură GIF</string>
     <!-- <string name="clipboard_history_heading">Recently copied text</string> -->
     <!-- <string name="clipboard_pin_heading">Pinned</string> -->
-    <string name="clipboard_remove_confirm">Elimini acest element din clipboard?</string>
+    <string name="clipboard_remove_confirm">Eliminați acest element din clipboard?</string>
     <string name="clipboard_remove_confirmed">Da</string>
     <string name="toast_no_voice_input">Nicio aplicație de dictare vocală instalată</string>
 
@@ -190,7 +190,7 @@
     <string name="dict_search_hint">Caută cuvinte…</string>
     <string name="dict_reset">Resetează</string>
     <string name="dict_add_new_word">+ Adaugă un cuvânt nou</string>
-    <string name="dict_add_new_word_hint">Atinge pentru a adăuga un cuvânt personalizat</string>
+    <string name="dict_add_new_word_hint">Atingeți pentru a adăuga un cuvânt personalizat</string>
     <string name="dict_word_frequency">Frecvență: %1$d</string>
     <string name="dict_edit">Editează</string>
     <string name="dict_delete">Șterge</string>
@@ -270,9 +270,9 @@
     <string name="short_swipe_title">Personalizare glisare scurtă</string>
     <string name="short_swipe_show_keyboard">Afișează tastatura</string>
     <string name="short_swipe_reset_all">Resetează tot</string>
-    <string name="short_swipe_tap_hint">Atinge orice tastă de mai jos pentru a-i personaliza gesturile de glisare scurtă</string>
-    <string name="short_swipe_instruction_title">Atinge orice tastă pentru a o personaliza</string>
-    <string name="short_swipe_instruction_body">Tastatura de mai jos este tastatura ta CleverKeys.\nAtinge o tastă pentru a adăuga acțiuni de glisare scurtă.</string>
+    <string name="short_swipe_tap_hint">Atingeți orice tastă de mai jos pentru a-i personaliza gesturile de glisare scurtă</string>
+    <string name="short_swipe_instruction_title">Atingeți orice tastă pentru a o personaliza</string>
+    <string name="short_swipe_instruction_body">Tastatura de mai jos este tastatura dvs. CleverKeys.\nAtingeți o tastă pentru a adăuga acțiuni de glisare scurtă.</string>
     <string name="short_swipe_custom_mappings">Mapări personalizate</string>
     <string name="theme_settings_title">Teme pentru tastatură</string>
     <string name="theme_restart_keyboard">Repornește tastatura</string>
@@ -282,9 +282,9 @@
     <string name="theme_builtin_desc">Aceste teme se aplică direct pe tastatură</string>
     <string name="theme_section_custom">Teme personalizate</string>
     <string name="theme_section_decorative">Teme decorative</string>
-    <string name="theme_decorative_desc">Scheme de culori pentru tastatura ta</string>
+    <string name="theme_decorative_desc">Scheme de culori pentru tastatura dvs.</string>
     <string name="theme_delete_title">Șterge tema</string>
-    <string name="theme_delete_confirm">Sigur vrei să ștergi această temă personalizată?</string>
+    <string name="theme_delete_confirm">Sigur doriți să ștergeți această temă personalizată?</string>
     <string name="theme_edit_desc">Editează</string>
     <string name="theme_selected_desc">Selectată</string>
     <string name="theme_trail_label">Urmă</string>
@@ -294,7 +294,7 @@
     <string name="theme_section_label_colors">Culorile etichetelor</string>
     <string name="theme_section_border_colors">Culorile chenarelor</string>
     <string name="theme_swipe_trail_card">✨ Urmă de glisare</string>
-    <string name="theme_swipe_trail_desc">Culoarea afișată în timp ce glisezi pentru a scrie</string>
+    <string name="theme_swipe_trail_desc">Culoarea afișată în timp ce glisați pentru a scrie</string>
     <string name="theme_section_suggestion_bar">Bara de sugestii</string>
     <string name="theme_section_background_colors">Culorile fundalului</string>
     <string name="theme_color_hue">Nuanță</string>
@@ -321,9 +321,9 @@
     <string name="activities_calibration_title">Calibrare glisare scurtă</string>
     <string name="activities_calibration_desc">Exersează și reglează sensibilitatea gesturilor</string>
     <string name="activities_whats_new_title">Noutăți</string>
-    <string name="activities_whats_new_desc">Vezi cele mai recente funcții și jurnalul de modificări</string>
+    <string name="activities_whats_new_desc">Vedeți cele mai recente funcții și jurnalul de modificări</string>
     <string name="test_keyboard_section_title">⌨️ Testează tastatura</string>
-    <string name="test_keyboard_hint">Scrie aici pentru a-ți testa tastatura…</string>
+    <string name="test_keyboard_hint">Scrieți aici pentru a vă testa tastatura…</string>
     <!-- BEGIN auto-generated translations (wp8b) -->
     <string name="settings_section_autocorrection">✏️ Corectare automată</string>
     <string name="settings_section_backup_restore">💾 Backup și restaurare</string>
@@ -335,7 +335,7 @@
     <string name="settings_section_privacy">🔒 Confidențialitate și date</string>
     <string name="settings_section_swipe_trail">✨ Urmă de glisare</string>
     <string name="accessibility_custom_duration_title">Durată personalizată (opțional)</string>
-    <string name="accessibility_custom_duration_desc">Setează o durată de vibrație personalizată. Lasă valoarea implicită pentru a utiliza modelul haptic al sistemului (latență minimă, reglat de producător).</string>
+    <string name="accessibility_custom_duration_desc">Setați o durată de vibrație personalizată. Lăsați valoarea implicită pentru a utiliza modelul haptic al sistemului (latență minimă, reglat de producător).</string>
     <string name="accessibility_key_press_title">Apăsare tastă</string>
     <string name="accessibility_key_press_desc">Vibrează la apăsarea unei taste</string>
     <string name="accessibility_suggestion_tap_title">Atingere sugestie</string>
@@ -349,7 +349,7 @@
     <string name="advanced_terminal_mode_title">Mod terminal</string>
     <string name="advanced_terminal_mode_desc">Afișează taste Ctrl, Meta, PageUp/Down pentru aplicații de terminal precum Termux</string>
     <string name="advanced_ime_prompt_title">Memento tastatură implicită</string>
-    <string name="advanced_ime_prompt_desc">Amintește o dată la fiecare pornire să setezi CleverKeys ca tastatură implicită. Dezactivează pentru a nu mai întreba niciodată.</string>
+    <string name="advanced_ime_prompt_desc">Amintește o dată la fiecare pornire să setați CleverKeys ca tastatură implicită. Dezactivați pentru a nu mai întreba niciodată.</string>
     <string name="advanced_swipe_debug_log_title">Jurnal depanare glisare</string>
     <string name="advanced_swipe_debug_log_desc">Analiză în timp real a pipeline-ului pentru gesturile de glisare (necesită logcat)</string>
     <string name="advanced_detailed_logging_title">Jurnalizare detaliată</string>
@@ -419,7 +419,7 @@
     <string name="clipboard_history_title">Istoric clipboard</string>
     <string name="clipboard_history_desc">Reține textul copiat pentru lipire rapidă</string>
     <string name="clipboard_limit_type_title">Tip limită</string>
-    <string name="clipboard_limit_type_desc">Cum să limitezi istoricul clipboard-ului</string>
+    <string name="clipboard_limit_type_desc">Cum să limitați istoricul clipboard-ului</string>
     <string name="clipboard_history_limit_title">Limită istoric</string>
     <string name="clipboard_history_limit_desc">Numărul maxim de intrări în clipboard (0 = nelimitat)</string>
     <string name="clipboard_entry_duration_title">Durată intrare</string>
@@ -466,7 +466,7 @@
     <string name="gesture_tap_duration_title">Prag durată atingere</string>
     <string name="gesture_tap_duration_desc">Durata maximă pentru un gest de atingere (ms). Mai mare = atingeri mai ușoare, dar poate interfera cu glisările.</string>
     <string name="gesture_double_space_period_title">Dublu spațiu pentru punct</string>
-    <string name="gesture_double_space_period_desc">Atinge de două ori rapid spațiu pentru a insera un punct. Se declanșează doar după litere/cifre.</string>
+    <string name="gesture_double_space_period_desc">Atingeți de două ori rapid spațiu pentru a insera un punct. Se declanșează doar după litere/cifre.</string>
     <string name="gesture_double_space_timing_title">Timp dublu spațiu</string>
     <string name="gesture_double_space_timing_desc">Timpul maxim între spații pentru a activa punctul (ms)</string>
     <string name="gesture_sensitivity_preset_title">Presetare sensibilitate</string>
@@ -501,7 +501,7 @@
     <string name="input_backspace_undo_swipe_title">Backspace anulează glisarea</string>
     <string name="input_backspace_undo_swipe_desc">Apăsarea Backspace imediat după un cuvânt scris prin glisare șterge întregul cuvânt</string>
     <string name="input_show_exact_typed_title">Afișează cuvântul tastat exact</string>
-    <string name="input_show_exact_typed_desc">Oferă literele tastate efectiv ca sugestie; atinge pentru a le adăuga în dicționar</string>
+    <string name="input_show_exact_typed_desc">Oferă literele tastate efectiv ca sugestie; atingeți pentru a le adăuga în dicționar</string>
     <string name="input_context_aware_title">Predicții contextuale</string>
     <string name="input_context_aware_desc">Învață din tipare de scriere (model N-gram)</string>
     <string name="input_personalized_learning_title">Învățare personalizată</string>
@@ -537,7 +537,7 @@
     <string name="input_number_row_title">Rând de cifre</string>
     <string name="input_number_row_desc">Afișează rândul de cifre în partea de sus a tastaturii</string>
     <string name="input_show_numpad_title">Afișează tastatura numerică</string>
-    <string name="input_show_numpad_desc">Când să afișezi tastatura numerică</string>
+    <string name="input_show_numpad_desc">Când să afișați tastatura numerică</string>
     <string name="input_numpad_layout_title">Aranjament tastatură numerică</string>
     <string name="input_numpad_layout_desc">Ordinea cifrelor pe tastatura numerică</string>
     <string name="input_pin_entry_layout_title">Aranjament introducere PIN</string>
@@ -639,7 +639,7 @@
     <string name="provenance_origin_dictionary_prefix">Potrivire de prefix din dicționar</string>
     <string name="provenance_origin_contraction">Injectare de contracție</string>
     <string name="provenance_origin_possessive">Formă posesivă</string>
-    <string name="provenance_origin_exact_add">Cuvântul tastat exact (atinge pentru a adăuga)</string>
+    <string name="provenance_origin_exact_add">Cuvântul tastat exact (atingeți pentru a adăuga)</string>
     <string name="provenance_origin_next_word">Predicția cuvântului următor</string>
     <string name="provenance_origin_autocorrect">Solicitare de autocorectare</string>
     <string name="provenance_origin_typo_correction">Corectarea greșelii de tastare</string>
@@ -671,7 +671,7 @@
     <string name="provenance_note_promoted_learned">Promovat de contextul învățat</string>
     <string name="provenance_note_next_built_in">După „%1$s”: continuare frecventă (integrată, nu învățată)</string>
     <string name="provenance_note_next_learned">După „%1$s”: văzut de %2$d×, %3$d%%</string>
-    <string name="provenance_note_typed_undo">Cuvântul tastat de dvs. (atinge pentru a anula)</string>
+    <string name="provenance_note_typed_undo">Cuvântul tastat de dvs. (atingeți pentru a anula)</string>
     <string name="provenance_note_autocorrected_from">Autocorectat din „%1$s”</string>
     <string name="provenance_note_typo_correction_of">Corectare pentru textul tastat „%1$s”</string>
     <string name="backup_base64_too_large">Importul a eșuat: conținutul inline al backupului este prea mare</string>
@@ -801,7 +801,7 @@
     <string name="multilang_pack_license">Licența pachetului: %1$s</string>
     <string name="multilang_pack_source_label">Sursă</string>
     <string name="multilang_pack_attribution_missing">Acest pachet nu include informații despre sursă sau licență. Importați versiunea actuală a pachetului pentru a le vedea.</string>
-    <string name="multilang_pack_view_notice">Vezi notificarea completă</string>
+    <string name="multilang_pack_view_notice">Vedeți notificarea completă</string>
     <string name="multilang_pack_notice_title">Notificare: %1$s</string>
     <string name="multilang_pack_notice_missing">Notificarea completă nu a fost păstrată la importarea acestui pachet. Importați din nou pachetul pentru a o salva.</string>
     <string name="input_manage_layouts">Gestionează aranjamentele tastaturii</string>
@@ -893,13 +893,13 @@
     <string name="layout_manager_title">Aranjamente de tastatură</string>
     <string name="layout_manager_add">Adaugă aranjament</string>
     <plurals name="layout_manager_hint">
-        <item quantity="one">Trage pentru a reordona • Atinge pentru a edita • %1$d aranjament</item>
-        <item quantity="few">Trage pentru a reordona • Atinge pentru a edita • %1$d aranjamente</item>
-        <item quantity="other">Trage pentru a reordona • Atinge pentru a edita • %1$d de aranjamente</item>
+        <item quantity="one">Trageți pentru a reordona • Atingeți pentru a edita • %1$d aranjament</item>
+        <item quantity="few">Trageți pentru a reordona • Atingeți pentru a edita • %1$d aranjamente</item>
+        <item quantity="other">Trageți pentru a reordona • Atingeți pentru a edita • %1$d de aranjamente</item>
     </plurals>
     <string name="layout_manager_remove_title">Eliminați aranjamentul?</string>
     <string name="layout_manager_remove_body">Sigur doriți să eliminați acest aranjament?</string>
-    <string name="layout_manager_drag_desc">Trage pentru a reordona</string>
+    <string name="layout_manager_drag_desc">Trageți pentru a reordona</string>
     <string name="layout_manager_item_index">Aranjament %1$d</string>
     <string name="layout_manager_tab_system">Sistem</string>
     <string name="layout_manager_tab_predefined">Predefinite</string>
@@ -944,8 +944,8 @@
     <string name="import_preview_modified">Modificate (%1$d)</string>
     <string name="import_preview_added">Adăugate (%1$d)</string>
     <string name="import_preview_short_swipe_header">Personalizări de glisare scurtă</string>
-    <string name="import_preview_skipped_collapse">▼ Neimportabile — interne/derivate (%1$d) — atinge pentru a restrânge</string>
-    <string name="import_preview_skipped_expand">▶ Neimportabile — interne/derivate (%1$d) — atinge pentru a extinde</string>
+    <string name="import_preview_skipped_collapse">▼ Neimportabile — interne/derivate (%1$d) — atingeți pentru a restrânge</string>
+    <string name="import_preview_skipped_expand">▶ Neimportabile — interne/derivate (%1$d) — atingeți pentru a extinde</string>
     <string name="ctc_settings_title">Setările motorului CTC</string>
     <string name="ctc_settings_intro">Reglaje pentru motorul de glisare CTC (aranjamente latine, chirilice, grecești și ebraice sub motorul de predicție CTC). Constantele de scor sunt calibrate offline și nu pot fi reglate de utilizator.</string>
     <string name="ctc_settings_beam_section">Căutare beam</string>
@@ -987,7 +987,7 @@
     <string name="calibration_customize_desc">Glisări scurte, comenzi personalizate pentru fiecare direcție a tastei</string>
     <string name="calibration_practice_title">Zonă de exersare</string>
     <string name="calibration_practice_desc">Atingeți și trageți pentru a vă testa setările</string>
-    <string name="calibration_touch_here">👆 Atinge aici</string>
+    <string name="calibration_touch_here">👆 Atingeți aici</string>
     <string name="calibration_min_readout">Min: %1$d%%</string>
     <string name="calibration_max_readout">Max: %1$d%%</string>
     <string name="launcher_logo_desc">Sigla CleverKeys</string>
@@ -995,7 +995,7 @@
     <string name="launcher_step_enable">Activează tastatura</string>
     <string name="launcher_step_select">Selectează tastatura</string>
     <string name="launcher_step_calibrate">Calibrează gesturile per tastă</string>
-    <string name="launcher_test_field_label">Testează-ți noua tastatură aici</string>
+    <string name="launcher_test_field_label">Testați-vă noua tastatură aici</string>
     <string name="launcher_footer">O tastatură open source fără compromisuri.</string>
     <string name="launcher_step_completed_desc">Finalizat</string>
     <string name="theme_selector_title">Teme pentru tastatură</string>

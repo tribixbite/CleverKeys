@@ -248,7 +248,7 @@
     <string name="short_swipe_reset_all">全部重置</string>
     <string name="short_swipe_tap_hint">点击下方任意按键以自定义其短滑动手势</string>
     <string name="short_swipe_instruction_title">点击任意按键进行自定义</string>
-    <string name="short_swipe_instruction_body">下方键盘是您实际使用的 CleverKeys 键盘。\n点击某个按键以为其添加短滑动操作。</string>
+    <string name="short_swipe_instruction_body">下方键盘是你实际使用的 CleverKeys 键盘。\n点击某个按键以为其添加短滑动操作。</string>
     <string name="short_swipe_custom_mappings">自定义映射</string>
     <string name="theme_settings_title">键盘主题</string>
     <string name="theme_restart_keyboard">重启键盘</string>
@@ -258,7 +258,7 @@
     <string name="theme_builtin_desc">这些主题直接应用于键盘</string>
     <string name="theme_section_custom">自定义主题</string>
     <string name="theme_section_decorative">装饰主题</string>
-    <string name="theme_decorative_desc">为您的键盘提供的设计师配色方案</string>
+    <string name="theme_decorative_desc">为你的键盘提供的设计师配色方案</string>
     <string name="theme_delete_title">删除主题</string>
     <string name="theme_delete_confirm">确定要删除此自定义主题吗？</string>
     <string name="theme_edit_desc">编辑</string>
@@ -299,7 +299,7 @@
     <string name="activities_whats_new_title">新功能</string>
     <string name="activities_whats_new_desc">查看最新功能和更新日志</string>
     <string name="test_keyboard_section_title">⌨️ 测试键盘</string>
-    <string name="test_keyboard_hint">在此输入以测试您的键盘…</string>
+    <string name="test_keyboard_hint">在此输入以测试你的键盘…</string>
     <!-- New settings strings (2026-07) -->
     <string name="settings_section_autocorrection">✏️ 自动纠错</string>
     <string name="settings_section_backup_restore">💾 备份与恢复</string>
@@ -428,7 +428,7 @@
     <string name="clipboard_embed_enrich_title">分享时优化嵌入内容</string>
     <string name="clipboard_embed_enrich_desc">将 x.com 改写为 fxtwitter.com，将 reddit.com 改写为 rxddit.com 等。</string>
     <string name="clipboard_custom_rules_title">使用自定义规则</string>
-    <string name="clipboard_custom_rules_desc">应用您自己的 ClearURLs 格式 JSON。</string>
+    <string name="clipboard_custom_rules_desc">应用你自己的 ClearURLs 格式 JSON。</string>
     <string name="gesture_enable_short_title">启用短手势</string>
     <string name="gesture_enable_short_desc">识别用于快速输入词汇（it、is、at 等）的短滑动。</string>
     <string name="gesture_min_distance_title">最小距离</string>

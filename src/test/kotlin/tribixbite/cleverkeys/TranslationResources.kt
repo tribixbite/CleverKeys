@@ -52,6 +52,40 @@ internal object TranslationResources {
 
     private val cache = HashMap<String, Map<String, String>>()
 
+    /**
+     * Every user-visible text in [dir]/strings.xml: each `<string>` under its name and each
+     * `<plurals>` item under `name#quantity`. Used by checks that must see ALL copy in a locale
+     * (the register rule), where skipping plurals would leave count strings unchecked.
+     */
+    fun allTexts(dir: File): Map<String, String> = allCache.getOrPut(dir.path) {
+        val factory = DocumentBuilderFactory.newInstance().apply {
+            isNamespaceAware = false
+            isValidating = false
+            setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+        }
+        val doc = factory.newDocumentBuilder().parse(File(dir, "strings.xml"))
+        val out = LinkedHashMap<String, String>()
+        val children = doc.documentElement.childNodes
+        for (i in 0 until children.length) {
+            val node = children.item(i) as? Element ?: continue
+            val name = node.getAttribute("name")
+            if (name.isNullOrEmpty()) continue
+            when (node.tagName) {
+                "string" -> out[name] = node.textContent.orEmpty()
+                "plurals" -> {
+                    val items = node.getElementsByTagName("item")
+                    for (j in 0 until items.length) {
+                        val item = items.item(j) as Element
+                        out["$name#${item.getAttribute("quantity")}"] = item.textContent.orEmpty()
+                    }
+                }
+            }
+        }
+        out
+    }
+
+    private val allCache = HashMap<String, Map<String, String>>()
+
     /** Resolves the Android string-resource escapes that affect visible text. */
     fun unescape(text: String): String = text
         .replace("\\'", "'")

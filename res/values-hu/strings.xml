@@ -752,7 +752,7 @@
     <string name="gif_remove_all_body">Ez törli az összes importált GIF-csomagot, bélyegképet és az adatbázist. Ez nem vonható vissza.</string>
     <string name="gif_remove_all_confirm">Összes eltávolítása</string>
     <string name="gif_remove_pack_body">Ez törli a csomag összes GIF-jét, és felszabadítja a tárhelyet.</string>
-    <string name="privacy_section_intro">A CleverKeys teljesen offline működik — soha semmilyen adat nem hagyja el az eszközödet. Ezek a választható beállítások helyben tárolnak adatokat, hogy megnézhesd, exportálhasd vagy törölhesd őket; az exportált csúsztatási adatok máshol modellek betanítására használhatók.</string>
+    <string name="privacy_section_intro">A CleverKeys teljesen offline működik — soha semmilyen adat nem hagyja el az eszközét. Ezek a választható beállítások helyben tárolnak adatokat, hogy megnézhesse, exportálhassa vagy törölhesse őket; az exportált csúsztatási adatok máshol modellek betanítására használhatók.</string>
     <string name="privacy_on_device_learning_header">Tanulás az eszközön</string>
     <string name="privacy_forget_learned_title">A tanult adatokat is elfelejti?</string>
     <string name="privacy_forget_learned_body">A tanulás mostantól ki van kapcsolva — semmi új nem kerül rögzítésre. Törli a már megtanultakat is (kifejezésminták, szóhasználat, javaslatválasztási előzmények és csúsztatási javítások)? Ez nem vonható vissza.</string>
@@ -1003,7 +1003,7 @@
     <string name="privacy_learned_forget">Tanultak törlése</string>
     <string name="privacy_learned_forget_body">Törli az összes megtanult szópárt és szóhármast, a szóhasználati számlálókat, a javaslatválasztási előzményeket és a csúsztatási javítások nyilvántartását. A szótárak és a beállítások érintetlenek maradnak.</string>
     <string name="privacy_delete_data_title">Gyűjtött adatok törlése</string>
-    <string name="privacy_delete_data_body">Ezzel véglegesen törlöd az összes gyűjtött csúsztatási adatot.\n\nA művelet nem vonható vissza.</string>
+    <string name="privacy_delete_data_body">Ezzel véglegesen törli az összes gyűjtött csúsztatási adatot.\n\nA művelet nem vonható vissza.</string>
     <string name="privacy_delete_data_done">Minden csúsztatási adat törölve</string>
     <string name="privacy_delete_data_error">Hiba az adatok törlésekor: %1$s</string>
 
