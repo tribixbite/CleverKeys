@@ -18,8 +18,10 @@ internal object KotlinSourceScan {
 
     /**
      * Blanks comments while keeping every newline, so line numbers computed on the result
-     * match the file. Only block comments that OPEN a line are removed: a "/*" inside a MIME
-     * string such as "image/*" never starts a line, so string contents are never eaten.
+     * match the file. Only block comments that OPEN a line are removed: a comment opener inside
+     * a string literal (a MIME wildcard such as `image/` + `*`) never starts a line, so string
+     * contents are never eaten. (Spelled out: Kotlin block comments nest, so the two characters
+     * written together in this KDoc would open a nested comment.)
      */
     fun stripComments(src: String): String {
         fun blank(m: MatchResult) = m.value.replace(Regex("[^\\n]"), " ")
