@@ -1145,6 +1145,8 @@ tasks.register('runMockTests', JavaExec) {
     // master + context-aware + field allow it; accepting a next-word learns nothing with the
     // gate off. Real SuggestionHandler + WordPredictor over the shipped en.cklm.
     'tribixbite.cleverkeys.NextWordStaticTierTest',
+    // 2026-09-29: contraction continuations admitted through their apostrophe-free key.
+    'tribixbite.cleverkeys.NextWordContractionAllowTest',
     // Same audit, KeyEventHandler side: Enter / IME action report a word boundary, the #110
     // backspace undos report the rejected word (KeyEventHandler.LearningHooks).
     'tribixbite.cleverkeys.KeyEventHandlerLearningHooksTest',

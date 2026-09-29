@@ -281,10 +281,12 @@ English keeps its curated gap-fill. Budgets: ≤ 475 KB asset, ≤ 0.91 MB heap 
 retry of es/pt/sv must change an input for a stated reason and select on dev, never on the test
 set. The failed S3 swipe gate remains in force for every language: no swipe rescoring.
 
-# TODO: next-word display forms are dropped on the device — `NextWordPredictor.candidatesFor`'s
-# allow check (`WordPredictor.isInDictionary`) knows no apostrophe word, so LM continuations such
-# as `c'est`/`don't` never reach the bar. Accept a display form of the active language's
-# REPLACE/PAIRED contractions there. Also open: es/pt/sv retry with a changed input; the legacy
+Contraction continuations (fixed 2026-09-29): `NextWordPredictor.candidatesFor` judges an
+apostrophe form (`don't`, `c'est`, straight or typographic apostrophe) by its apostrophe-free
+dictionary key, because every bundled dictionary stores contractions that way; a Dictionary
+Manager disable of the key blocks the display form too (`NextWordContractionAllowTest`).
+
+# TODO: es/pt/sv retry with a changed input; the legacy
 # hardcoded tables still hurt `static_only` tap ranking for languages without an LM;
 # imported-pack LM support would need a separate importer contract.
 Evaluation:

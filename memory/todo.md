@@ -33,15 +33,14 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   `i → dont` 0.51 vs `i → don't` 27.5). One re-evaluation, unchanged gates: de +5.16, fr +6.75,
   it +7.48 pt prefix-1 → SHIPPED (with Tatoeba contributor lists, NOTICE, PROVENANCE);
   es/pt/sv still fail, unshipped. `docs/eval/2026-09-29-static-lm-multilingual.md`.
-- [ ] TODO: next-word allow check drops LM display forms on the device (`isInDictionary` knows no
-  apostrophe word, so `c'est`/`don't` continuations never reach the bar) — accept the active
-  language's contraction display forms in `NextWordPredictor.candidatesFor`.
+- [x] Next-word allow check admits contraction display forms through their apostrophe-free
+  dictionary key (`NextWordContractionAllowTest`, 2026-09-29).
 - [ ] TODO: es/pt/sv LM retry needs a changed input selected on dev; the legacy hardcoded tables
   still hurt `static_only` tap ranking for languages without an LM (outside the LM files).
-- [ ] TODO: pack-attribution UI. PAL design review was blocked by automatic approval review;
-  the specific external payload approval is pending.
-- [ ] TODO: reconcile the disable-learning delete prompt (`privacy_forget_learned_body`)
-  with swipe-correction deletion; the separate Forget dialog already names it.
+- [x] Pack-attribution UI: Settings → Multi-Language → Language Packs → Manage shows each pack's
+  licence, credit, source links and full NOTICE.txt (`269d8bb1`/`6fed1b12`, 2026-09-29).
+- [x] `privacy_forget_learned_body` names swipe corrections in all 22 locales (`535a2a28`);
+  terminology unified per locale with `TranslationGlossaryTest` (`4871c7e5`, `a91aad5a`).
 - [ ] TODO: native-speaker translation review and device visual verification remain distinct
   from automated structural checks; preserve the maintainer's manual-checklist edits.
 

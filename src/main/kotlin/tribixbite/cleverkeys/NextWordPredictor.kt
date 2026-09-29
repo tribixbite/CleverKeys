@@ -34,6 +34,18 @@ object NextWordPredictor {
     /** Maximum candidates APPENDED after swipe alternates (call-site 3, §4.4). */
     const val MAX_SWIPE_APPEND = 2
 
+    /** Straight and typographic apostrophes, the two a contraction continuation may carry. */
+    private val APOSTROPHES = charArrayOf('\'', '’')
+
+    /**
+     * The apostrophe-free dictionary key for a contraction display form ("don't" → "dont",
+     * "c’est" → "cest"), or null when [word] carries no apostrophe or has nothing else left.
+     */
+    internal fun apostropheFreeKey(word: String): String? {
+        if (word.none { it in APOSTROPHES }) return null
+        return word.filterNot { it in APOSTROPHES }.takeIf { it.isNotEmpty() }
+    }
+
     /**
      * Confidence floor (§4.2-6): an empty next-word bar must be a common,
      * acceptable outcome — show nothing rather than noise.
@@ -222,8 +234,15 @@ object NextWordPredictor {
                 { _ -> 0f }
             },
             isWordAllowed = { w ->
-                !predictor.isWordDisabled(w) &&
+                // Contraction continuations ("don't", "c'est") are judged by their
+                // apostrophe-free dictionary key: every bundled dictionary stores contractions
+                // that way (contraction-system skill §1), so asking about the display form
+                // alone dropped every one of them. A Dictionary Manager disable of the key
+                // blocks the display form as well.
+                val key = apostropheFreeKey(w)
+                !predictor.isWordDisabled(w) && (key == null || !predictor.isWordDisabled(key)) &&
                     (predictor.isInDictionary(w, gate.fieldAllowsPersonalizedLearning) ||
+                        (key != null && predictor.isInDictionary(key, gate.fieldAllowsPersonalizedLearning)) ||
                         (useLearned && predictor.isInUserVocabulary(w)))
             },
             // Shipped continuations fill only the slots the learned tier could not (ARC-020);
