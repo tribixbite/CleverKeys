@@ -273,15 +273,38 @@ context LM `assets/lm/en.cklm` (Leipzig CC BY 4.0 + Tatoeba CC BY 2.0 FR, 439 KB
 wiring; `docs/eval/2026-09-26-static-lm-replay.md`). Typo-tolerant bar entries now carry their
 own `SuggestionOrigin.TYPO_CORRECTION` (purple marker, "Typo correction" label + "Correction of
 typed “x”" note in all 22 locales; whole-word corrections included) instead of AUTOCORRECT.
-**Open:** static LMs for de/es/fr/it/pt/sv (S4, base vs langpack by size); apostrophe/hyphen words
-in the swipe offer need decoder changes (audit doc). Possessive placement is resolved by
-`341b4847`: splice after a confident top base, otherwise retain at the tail.
+Possessive placement is resolved by `341b4847`: splice after a confident top base, otherwise
+retain at the tail.
+
+**Round 3 (2026-09-29, pushed through `4a4f9b30`, CI + APK + deploy green):**
+- Static LM: REPLACE contraction keys resolve to their display form inside `StaticContextLm`
+  (`c957d31a`; en contraction targets 0% → 32.7% top-3 at prefix 1). One re-evaluation with the
+  unchanged pre-registered gates → **de/fr/it SHIPPED** (`4775300e`, +968 KB APK); **es/pt/sv
+  FAIL** (prefix-1 +4.69/+4.19/+4.59 vs +5; sv prefix-2 +1.92 vs +2) and stay unshipped.
+  `docs/eval/2026-09-29-static-lm-multilingual.md`. Next-word admits contraction display forms
+  via their apostrophe-free key (`b5456285`). Help credits name en/de/fr/it (`4a4f9b30`).
+- Translations: per-locale glossary unification + `TranslationGlossaryTest`/`TranslationLengthTest`
+  (`4871c7e5`, `a91aad5a`), blind back-translation review fixed 33 strings
+  (`docs/i18n/2026-09-29-back-translation-review.md`), `privacy_forget_learned_body` names swipe
+  corrections, debug-only pseudolocales en-XA/ar-XB (`b430b386`).
+- Pack attribution UI (`269d8bb1` — that commit also carries the i18n review doc; `6fed1b12`
+  explains the sweep; history NOT rewritten because it is pushed).
+
+**Open (in priority order):**
+1. es/pt/sv LM retry — must change an input for a stated reason and select on DEV only (never
+   the UD test split). Candidates: a second Leipzig corpus/register, AnCora dev for es.
+2. Legacy hardcoded context tables HURT `static_only` tap ranking for languages without an LM
+   (es −22.7 pt prefix-1 top-3 in static_only; ~0 in the default `both`) — measure and fix.
+3. Device-only: native-speaker review of the new strings; RTL (fa, ar-XB), en-XA long text, large
+   font and TalkBack on a TEST phone (Saga was in use 2026-09-29 — never the host phone).
+4. Apostrophe/hyphen words in the swipe "Prefer" offer need decoder changes (audit doc).
+5. Two mock tests are load-sensitive (W6 persistence, fuzzy latency) — contention, not bugs.
 **licensing:** repo side DONE 2026-09-26 — see `docs/audit/2026-09-26-data-licensing-audit.md`
 (Norvig pack removed: no redistribution grant; OpenSubtitles packs are FrequencyWords CC BY-SA 4.0
 and stay; every pack now carries `NOTICE.txt` + manifest `license`/`attribution`/`source`).
 **Completed with maintainer authorization, 2026-09-27:** removed the Norvig release asset,
 replaced all 22 packs and the release description, and verified SHA-256 of every downloaded
-asset. Follow-up: show pack attribution in the language-pack manager UI.
+asset. Pack attribution UI landed 2026-09-29.
 Local wiki build and TypeScript check pass; use `cd site && bun run build:termux`.
 Legacy wiki HTML paths redirect to canonical Astro pages during deployment.
 
