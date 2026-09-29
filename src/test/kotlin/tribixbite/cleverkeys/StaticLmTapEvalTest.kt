@@ -5,19 +5,25 @@ import org.junit.Assume
 import org.junit.Test
 import tribixbite.cleverkeys.contextaware.ContextContinuation
 import java.io.File
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 /**
- * Stage S1 evaluation of the shipped static context LM (`assets/lm/en.cklm`) on TAP prediction —
- * a measurement instrument, not a regression gate (it prints a report and asserts only that it
+ * Stage S1 evaluation of each static context LM (`assets/lm/<lang>.cklm`) on TAP prediction —
+ * a measurement instrument, not a regression gate (it prints a report per language, with a
+ * PASS/FAIL verdict line against the pre-registered S1 thresholds, and asserts only that it
  * measured something).
+ *
+ * Languages: every shipped `.cklm` whose local eval files exist, or the comma list in the
+ * `STATIC_LM_EVAL_LANGS` environment variable (environment, because Gradle `-P` properties do not
+ * reach the forked test JVM without a build.gradle bridge). `STATIC_LM_MODEL_DIR` points the eval
+ * at candidate models outside the assets ([StaticLmLanguageData.EVAL_LM_DIR]).
  *
  * ## Populations
  *
- * - **OOD** (the gate population): UD English-EWT *test* surface sentences — web reviews, email,
- *   forum and answers text the model never saw. Eval-only; UD is CC BY-SA and is never shipped.
- * - **In-domain**: a deterministic ~10% sample of the builder's own held-out split (Leipzig +
+ * - **OOD** (the gate population): a UD treebank's *test* surface sentences the model never saw
+ *   (English-EWT for en; the builder's `LangConfig.ood_test` per language — e.g. Spanish-GSD).
+ *   Eval-only; UD is CC BY-SA and is never shipped. The builder also removes any corpus sentence
+ *   equal to an OOD sentence before counting (non-English configs).
+ * - **In-domain**: a deterministic ~5% sample of the builder's own held-out split (Leipzig +
  *   Tatoeba sentences whose hash put them outside training).
  *
  * Both files are written by `scripts/build_static_lm.py` to
@@ -34,21 +40,27 @@ import java.nio.ByteOrder
  * 2. **Prefix re-rank** top-3 at prefix lengths 1–3: every lexicon completion of the typed prefix
  *    scored through the REAL [UnifiedScore.combine] with the shipped default settings
  *    (context boost 0.5, frequency scale 100, no adaptation/personalization), the frequency the
- *    tap predictor derives from `en_enhanced.bin`, and the tap predictor's prefix score.
+ *    tap predictor derives from `<lang>_enhanced.bin`, and the tap predictor's prefix score.
+ *
+ * Counts: every cell reports token POSITIONS; the header also reports distinct sentences,
+ * distinct previous words (contexts) and distinct (previous, target) pairs, so a rate built on
+ * a few repeated contexts is visible as such.
  *
  * ## Arms (the `context_source` pref, plus the status quo)
  *
  * | arm | static multiplier | learned boost | source |
  * |---|---|---|---|
  * | none | 1 | 1 | — (baseline) |
- * | legacy_static | today's hardcoded `BigramModel` table | 1 | static_only |
+ * | legacy_static | the pre-LM path: `BigramModel.hardcodedContextMultiplier` (English tables for a language without its own) | 1 | static_only |
  * | lm_static | this LM | 1 | static_only |
  * | learned_only | 1 | device export | learned_only |
  * | legacy_both | hardcoded table | device export | both (today's default) |
  * | lm_both | this LM | device export | both (the new default) |
  *
- * The learned arms read `~/.cache/cleverkeys-corpora/device_bigrams.json` — the maintainer's own
- * export, PRIVATE: only aggregate rates are printed, never a pair.
+ * The learned arms read `~/.cache/cleverkeys-corpora/device_bigrams.json` (that language's rows) —
+ * the maintainer's own export, PRIVATE: only aggregate rates are printed, never a pair. Legacy
+ * next-word = `bigrams/<lang>_bigrams.json` merged with the language's hardcoded pairs, as
+ * `BigramModel` builds it when no LM is installed.
  *
  * ## Exactness of the fast path
  *
@@ -94,40 +106,67 @@ class StaticLmTapEvalTest {
 
     @Test
     fun evaluateStaticLmOnTapPrediction() {
-        // OPT-IN measurement (minutes on a loaded box), same switch as the replay instruments:
-        //   scripts/gradle-guard.sh runPureTests -PtestClass=StaticLmTapEvalTest -PgeoFull=true
+        // OPT-IN measurement (minutes per language on a loaded box), same switch as the replays:
+        //   STATIC_LM_EVAL_LANGS=es scripts/gradle-guard.sh runPureTests -PtestClass=StaticLmTapEvalTest -PgeoFull=true
         if (System.getProperty("geoFull") != "true") {
             println("[skip] static LM tap eval — set -PgeoFull=true to run")
             return
         }
-        val lmFile = File("src/main/assets/lm/en.cklm")
-        val oodFile = File(evalDir, "ood_test_en.txt")
-        val heldFile = File(evalDir, "heldout_en.txt")
-        Assume.assumeTrue("no shipped LM at ${lmFile.path}", lmFile.exists())
-        Assume.assumeTrue("no eval sentences in $evalDir — run scripts/build_static_lm.py (local only)",
-            oodFile.exists() && heldFile.exists())
+        val requested = System.getenv("STATIC_LM_EVAL_LANGS")?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+        val languages = requested ?: StaticLmLanguageData.shippedLanguages(StaticLmLanguageData.EVAL_LM_DIR)
+            .filter { File(evalDir, "ood_test_$it.txt").exists() && File(evalDir, "heldout_$it.txt").exists() }
+        Assume.assumeTrue("no language with a model and local eval files (run scripts/build_static_lm.py)",
+            languages.isNotEmpty())
+        var measured = 0
+        for (lang in languages) measured += evaluateLanguage(lang)
+        assertThat(measured).isGreaterThan(0)
+    }
+
+    /** Evaluate one language; returns the number of OOD sentences measured (0 = skipped). */
+    private fun evaluateLanguage(lang: String): Int {
+        val lmFile = StaticLmLanguageData.asset(lang, StaticLmLanguageData.EVAL_LM_DIR)
+        val oodFile = File(evalDir, "ood_test_$lang.txt")
+        val heldFile = File(evalDir, "heldout_$lang.txt")
+        val lexFile = File(StaticLmLanguageData.DICT_DIR, "${lang}_enhanced.bin")
+        for ((what, f) in listOf("model" to lmFile, "OOD eval" to oodFile, "held-out eval" to heldFile, "lexicon" to lexFile)) {
+            if (!f.exists()) { println("[skip] $lang: no $what at ${f.path}"); return 0 }
+        }
 
         val loadStart = System.nanoTime()
         val lm = StaticContextLm.parse(lmFile.readBytes())
         val loadMs = (System.nanoTime() - loadStart) / 1e6
-        val lexicon = loadLexicon(File("src/main/assets/dictionaries/en_enhanced.bin"))
+        val lexicon = loadLexicon(lexFile)
         buildPrefixIndex(lexicon)
-        val allowed = lexicon.index.keys + contractionForms()
-        val learned = loadLearned(File(corpora, "device_bigrams.json"))
+        val allowed = lexicon.index.keys + StaticLmLanguageData.contractionForms(lang, StaticLmLanguageData.EVAL_LM_DIR)
+        val learned = loadLearned(File(corpora, "device_bigrams.json"), lang)
+        val legacy = Legacy(lang)
 
         println("═══════════════════════════════════════════════════════════════")
         println("  STATIC LM — TAP EVAL (S1)  lm=${lm.language} vocab=${lm.vocabSize} prevs=${lm.prevCount} " +
             "pairs=${lm.pairCount} bytes=${lmFile.length()} parse=%.1f ms".format(loadMs))
-        println("  learned arm: " + if (learned == null) "ABSENT (device export missing — learned arms = none)"
+        println("  learned arm: " + if (learned == null) "ABSENT (no '$lang' rows in the device export — learned arms = none)"
             else "device export, ${learned.values.sumOf { it.size }} confident pairs over ${learned.size} prev words")
 
         val ood = readSentences(oodFile, sampleEvery = 1)
         val held = readSentences(heldFile, sampleEvery = HELD_SAMPLE)
-        for ((label, sents) in listOf("OOD (UD EWT test) — GATE POPULATION" to ood, "IN-DOMAIN held-out (1/$HELD_SAMPLE sample)" to held)) {
-            report(label, sents, lm, lexicon, allowed, learned)
-        }
+        report("[$lang] OOD (${oodFile.name}) — GATE POPULATION", ood, lm, lexicon, allowed, learned, legacy)
+        report("[$lang] IN-DOMAIN held-out (1/$HELD_SAMPLE sample)", held, lm, lexicon, allowed, learned, legacy)
         println("═══════════════════════════════════════════════════════════════")
-        assertThat(ood).isNotEmpty()
+        return ood.size
+    }
+
+    /** The pre-LM path for one language, from the REAL BigramModel tables (no LM installed). */
+    private class Legacy(val language: String) {
+        private val model = BigramModel()
+        /** Words whose legacy multiplier can differ from 1 (given a previous word). */
+        val words: Set<String> = model.hardcodedTableWords(language)
+        fun multiplier(word: String, prev: String?): Float =
+            if (prev == null) 1f else model.hardcodedContextMultiplier(language, word, listOf(prev))
+        val seed: StaticBigramSeed.Index = run {
+            val json = File("src/main/assets/${BigramModel.assetNameFor(language)}")
+            val parsed = if (json.exists()) StaticBigramSeed.parseAsset(json.readText()) else emptyMap()
+            StaticBigramSeed.build(parsed, model.hardcodedPairs(language))
+        }
     }
 
     // ── report ──────────────────────────────────────────────────────────────────────────────
@@ -139,6 +178,7 @@ class StaticLmTapEvalTest {
         lexicon: Lexicon,
         allowed: Set<String>,
         learned: Map<String, List<ContextContinuation>>?,
+        legacy: Legacy,
     ) {
         val nextWord = Cell()
         val prefix = Array(3) { Cell() }
@@ -147,34 +187,39 @@ class StaticLmTapEvalTest {
         var targetOov = 0
         var prevKnown = 0
         val unigramTop = topUnigrams(lm, allowed, 3)
-        val legacySeed = legacySeed()
+        val distinctSentences = sentences.map { it.joinToString(" ") }.toHashSet().size
+        val distinctPrev = HashSet<String>()
+        val distinctPairs = HashSet<String>()
 
         for (toks in sentences) {
             for (i in toks.indices) {
                 val target = toks[i]
                 // Sentence-initial: context empty — every arm must equal the baseline.
                 if (i == 0) {
-                    for (p in 1..3) rankPrefix(target, p, null, lm, lexicon, learned)?.let { tally(emptyCtx[p - 1], it) }
+                    for (p in 1..3) rankPrefix(target, p, null, lm, lexicon, learned, legacy)?.let { tally(emptyCtx[p - 1], it) }
                     continue
                 }
                 positions++
                 val prev = toks[i - 1]
+                distinctPrev.add(prev)
+                distinctPairs.add("$prev $target")
                 if (lm.hasContext(prev)) prevKnown++
                 if (target !in allowed) { targetOov++ } else {
                     nextWord.n++
-                    val lists = nextWordLists(prev, lm, learned, legacySeed, unigramTop, allowed)
+                    val lists = nextWordLists(prev, lm, learned, legacy.seed, unigramTop, allowed)
                     for (arm in Arm.entries) {
                         val list = lists.getValue(arm)
                         if (list.firstOrNull() == target) nextWord.top1[arm.ordinal]++
                         if (target in list.take(3)) nextWord.top3[arm.ordinal]++
                     }
                 }
-                for (p in 1..3) rankPrefix(target, p, prev, lm, lexicon, learned)?.let { tally(prefix[p - 1], it) }
+                for (p in 1..3) rankPrefix(target, p, prev, lm, lexicon, learned, legacy)?.let { tally(prefix[p - 1], it) }
             }
         }
 
         println("  ─────────────────────────────────────────────────────────────")
-        println("  $label: ${sentences.size} sentences, $positions positions with context; " +
+        println("  $label: ${sentences.size} sentences ($distinctSentences distinct), $positions positions with context " +
+            "over ${distinctPrev.size} distinct previous words / ${distinctPairs.size} distinct (prev, target) pairs; " +
             "target outside lexicon∪contractions ${pct(targetOov, positions)}; prev word known to LM ${pct(prevKnown, positions)}")
         println("     NEXT-WORD (n=${nextWord.n}; baseline 'none' = corpus top unigrams ${unigramTop})")
         printCell(nextWord)
@@ -196,6 +241,15 @@ class StaticLmTapEvalTest {
             .format(gate1, gate2, gate3))
         val both3 = prefix[2].pct(prefix[2].top3[Arm.LM_BOTH.ordinal]) - prefix[2].pct(prefix[2].top3[Arm.LEGACY_BOTH.ordinal])
         println("     default-mode change at prefix-3 (lm_both vs legacy_both): %+.2f pt".format(both3))
+        val legacy1 = prefix[0].pct(prefix[0].top3[Arm.LM_STATIC.ordinal]) - prefix[0].pct(prefix[0].top3[Arm.LEGACY_STATIC.ordinal])
+        println("     lm_static vs legacy_static (the path it replaces): prefix-1 %+.2f pt; next-word top-3 %+.2f pt".format(
+            legacy1, nextWord.pct(nextWord.top3[Arm.LM_STATIC.ordinal]) - nextWord.pct(nextWord.top3[Arm.LEGACY_STATIC.ordinal])))
+        val emptyDev = (0 until 3).maxOf { p ->
+            val c = emptyCtx[p]
+            Arm.entries.maxOf { kotlin.math.abs(c.top3[it.ordinal] - c.top3[Arm.NONE.ordinal]) }
+        }
+        val pass = gate1 >= 5.0 && gate2 >= 2.0 && gate3 >= 0.0 && emptyDev == 0
+        println("     S1 VERDICT: ${if (pass) "PASS" else "FAIL"} (prefix-1 ≥ +5, prefix-2 ≥ +2, prefix-3 ≥ 0, empty-context deviation 0)")
     }
 
     private fun printCell(c: Cell) {
@@ -260,6 +314,7 @@ class StaticLmTapEvalTest {
         lm: StaticContextLm,
         lexicon: Lexicon,
         learned: Map<String, List<ContextContinuation>>?,
+        legacy: Legacy,
     ): IntArray? {
         if (target.length <= plen) return null
         val targetIdx = lexicon.index[target] ?: return null
@@ -277,13 +332,13 @@ class StaticLmTapEvalTest {
             val staticOf: (String) -> Float = when (arm.static) {
                 StaticSource.NONE -> { _ -> 1f }
                 StaticSource.LM -> { w -> if (prev == null) 1f else clampMult(lm.contextRatio(prev, w)) }
-                StaticSource.LEGACY -> { w -> LegacyEnglishContext.multiplier(w, prev) }
+                StaticSource.LEGACY -> { w -> legacy.multiplier(w, prev) }
             }
             val learnedOf: (String) -> Float = if (arm.learned) { w -> learnedFor[w] ?: 1f } else { _ -> 1f }
             val special = HashSet<Int>()
             when (arm.static) {
                 StaticSource.LM -> lmSpecial.forEach { w -> lexicon.index[w]?.let(special::add) }
-                StaticSource.LEGACY -> if (prev != null) LegacyEnglishContext.WORDS.forEach { w -> lexicon.index[w]?.let(special::add) }
+                StaticSource.LEGACY -> if (prev != null) legacy.words.forEach { w -> lexicon.index[w]?.let(special::add) }
                 StaticSource.NONE -> Unit
             }
             if (arm.learned) learnedFor.keys.forEach { w -> lexicon.index[w]?.let(special::add) }
@@ -352,24 +407,10 @@ class StaticLmTapEvalTest {
 
     // ── data ────────────────────────────────────────────────────────────────────────────────
 
-    /** en_enhanced.bin (CKDT v2): rank byte → the tap predictor's `1_000_000 − rank × 3900`. */
+    /** `<lang>_enhanced.bin` (CKDT v2): rank byte → the tap predictor's `1_000_000 − rank × 3900`. */
     private fun loadLexicon(file: File): Lexicon {
-        val b = ByteBuffer.wrap(file.readBytes()).order(ByteOrder.LITTLE_ENDIAN)
-        check(b.int == 0x54444B43 && b.int == 2) { "unexpected dictionary header" }
-        b.position(b.position() + 4)
-        val count = b.int
-        val canonical = b.int
-        b.position(canonical)
-        val words = arrayOfNulls<String>(count)
-        val freq = IntArray(count)
-        for (i in 0 until count) {
-            val len = b.short.toInt() and 0xFFFF
-            val bytes = ByteArray(len).also { b.get(it) }
-            words[i] = String(bytes, Charsets.UTF_8).lowercase()
-            freq[i] = 1_000_000 - (b.get().toInt() and 0xFF) * 3900
-        }
-        @Suppress("UNCHECKED_CAST")
-        return Lexicon(words as Array<String>, freq)
+        val ckdt = StaticLmLanguageData.readCkdt(file)
+        return Lexicon(ckdt.words, IntArray(ckdt.ranks.size) { 1_000_000 - ckdt.ranks[it] * 3900 })
     }
 
     private fun buildPrefixIndex(lex: Lexicon) {
@@ -390,25 +431,10 @@ class StaticLmTapEvalTest {
         }
     }
 
-    private fun contractionForms(): Set<String> {
-        val dir = File("src/main/assets/dictionaries")
-        val out = HashSet<String>()
-        for (name in listOf("contractions_en.json", "contractions_non_paired.json")) {
-            val o = org.json.JSONObject(File(dir, name).readText())
-            for (k in o.keys()) out.add(o.getString(k).lowercase())
-        }
-        val pairings = org.json.JSONObject(File(dir, "contraction_pairings.json").readText())
-        for (k in pairings.keys()) {
-            val arr = pairings.getJSONArray(k)
-            for (i in 0 until arr.length()) out.add(arr.getJSONObject(i).getString("contraction").lowercase())
-        }
-        return out
-    }
-
     /** Device export → prev → confident continuations (store floors applied), probability-ranked. */
-    private fun loadLearned(file: File): Map<String, List<ContextContinuation>>? {
+    private fun loadLearned(file: File, lang: String): Map<String, List<ContextContinuation>>? {
         if (!file.exists()) return null
-        val rows = org.json.JSONObject(file.readText()).getJSONObject("learned_bigrams_by_language").optJSONArray("en")
+        val rows = org.json.JSONObject(file.readText()).getJSONObject("learned_bigrams_by_language").optJSONArray(lang)
             ?: return null
         val out = HashMap<String, MutableList<ContextContinuation>>()
         for (i in 0 until rows.length()) {
@@ -426,11 +452,6 @@ class StaticLmTapEvalTest {
     /** `ContextModel.calculateBoost`: (1 + p)² clamped to [1, 5]. */
     private fun boostOf(c: ContextContinuation): Float =
         ((1.0 + c.probability) * (1.0 + c.probability)).toFloat().coerceIn(1f, 5f)
-
-    private fun legacySeed(): StaticBigramSeed.Index = StaticBigramSeed.build(
-        StaticBigramSeed.parseAsset(File("src/main/assets/bigrams/en_bigrams.json").readText()),
-        LegacyEnglishContext.PAIRS,
-    )
 
     private fun topUnigrams(lm: StaticContextLm, allowed: Set<String>, k: Int): List<String> {
         val all = ArrayList<Pair<String, Float>>()

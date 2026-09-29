@@ -2,110 +2,142 @@ package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
-import org.json.JSONObject
 import org.junit.Test
 import java.io.File
 import java.security.MessageDigest
 
 /**
- * Drift pins for the SHIPPED static context LM (`src/main/assets/lm/en.cklm`) and everything that
- * must travel with it: the builder's sidecar, the attribution the corpus licences require, and the
- * memory/size budget the design approved (docs/audit/2026-09-10-memory-oom-root-cause.md is why
- * the heap budget is a test, not a comment).
+ * Drift pins for EVERY shipped static context LM (`src/main/assets/lm/<lang>.cklm`) and everything
+ * that must travel with it: the builder's sidecar, the attribution the corpus licences require,
+ * and the memory/size budget the design approved (docs/audit/2026-09-10-memory-oom-root-cause.md
+ * is why the heap budget is a test, not a comment).
+ *
+ * Languages are discovered from the asset directory, so a newly shipped model is covered without
+ * editing this file; `en` is additionally required to exist (it is the shipped default).
  *
  * Project root as CWD (same convention as [StaticBigramSeedTest]).
  */
 class StaticLmAssetDriftTest {
 
-    private val asset = File("src/main/assets/lm/en.cklm")
-    private val sidecar = File("src/main/assets/lm/en.json")
-    private val bytes by lazy { asset.readBytes() }
-    private val side by lazy { JSONObject(sidecar.readText()) }
-    private val lm by lazy { StaticContextLm.parse(bytes) }
+    private val languages by lazy { StaticLmLanguageData.shippedLanguages() }
+    private val bytes = HashMap<String, ByteArray>()
+    private val models = HashMap<String, StaticContextLm>()
+
+    private fun bytesOf(lang: String) = bytes.getOrPut(lang) { StaticLmLanguageData.asset(lang).readBytes() }
+    private fun lmOf(lang: String) = models.getOrPut(lang) { StaticContextLm.parse(bytesOf(lang)) }
+
+    @Test
+    fun `english ships and every model has a sidecar`() {
+        assertThat(languages).contains("en")
+        for (lang in languages) {
+            assertWithMessage("lm/$lang.json sidecar").that(File(StaticLmLanguageData.LM_DIR, "$lang.json").exists()).isTrue()
+        }
+        // Nothing else lives in lm/: an orphan sidecar would mean a model was deleted without it.
+        val stray = StaticLmLanguageData.LM_DIR.listFiles()!!.map { it.name }
+            .filterNot { n -> languages.any { n == "$it.cklm" || n == "$it.json" } }
+        assertWithMessage("unexpected files in assets/lm").that(stray).isEmpty()
+    }
 
     @Test
     fun `header and version match the loader`() {
-        assertThat(String(bytes, 0, 4, Charsets.US_ASCII)).isEqualTo(StaticContextLm.MAGIC)
-        assertThat(lm.language).isEqualTo("en")
-        assertThat(side.getString("format")).isEqualTo(StaticContextLm.MAGIC)
-        assertThat(side.getInt("version")).isEqualTo(StaticContextLm.FORMAT_VERSION)
+        for (lang in languages) {
+            val side = StaticLmLanguageData.sidecar(lang)
+            assertThat(String(bytesOf(lang), 0, 4, Charsets.US_ASCII)).isEqualTo(StaticContextLm.MAGIC)
+            assertWithMessage("$lang.cklm header language").that(lmOf(lang).language).isEqualTo(lang)
+            assertThat(side.getString("language")).isEqualTo(lang)
+            assertThat(side.getString("format")).isEqualTo(StaticContextLm.MAGIC)
+            assertThat(side.getInt("version")).isEqualTo(StaticContextLm.FORMAT_VERSION)
+        }
     }
 
     @Test
     fun `counts, size and sha256 equal the sidecar the builder wrote`() {
-        assertThat(lm.vocabSize).isEqualTo(side.getInt("vocab"))
-        assertThat(lm.prevCount).isEqualTo(side.getInt("prevs"))
-        assertThat(lm.pairCount).isEqualTo(side.getInt("pairs"))
-        assertThat(bytes.size).isEqualTo(side.getInt("bytes"))
-        val sha = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
-        assertWithMessage("en.cklm was edited without rerunning scripts/build_static_lm.py")
-            .that(sha).isEqualTo(side.getString("sha256"))
+        for (lang in languages) {
+            val side = StaticLmLanguageData.sidecar(lang)
+            val lm = lmOf(lang)
+            assertThat(lm.vocabSize).isEqualTo(side.getInt("vocab"))
+            assertThat(lm.prevCount).isEqualTo(side.getInt("prevs"))
+            assertThat(lm.pairCount).isEqualTo(side.getInt("pairs"))
+            assertThat(bytesOf(lang).size).isEqualTo(side.getInt("bytes"))
+            val sha = MessageDigest.getInstance("SHA-256").digest(bytesOf(lang)).joinToString("") { "%02x".format(it) }
+            assertWithMessage("$lang.cklm was edited without rerunning scripts/build_static_lm.py")
+                .that(sha).isEqualTo(side.getString("sha256"))
+        }
     }
 
     @Test
     fun `every word the model names is a word the app can show`() {
-        val dir = File("src/main/assets/dictionaries")
-        val allowed = HashSet<String>()
-        JSONObject(File(dir, "en_enhanced.json").readText()).keys().forEach { allowed.add(it.lowercase()) }
-        for (name in listOf("contractions_en.json", "contractions_non_paired.json")) {
-            val o = JSONObject(File(dir, name).readText())
-            o.keys().forEach { allowed.add(o.getString(it).lowercase()) }
+        for (lang in languages) {
+            val allowed = StaticLmLanguageData.lexiconWords(lang) + StaticLmLanguageData.contractionForms(lang)
+            val outside = ArrayList<String>()
+            lmOf(lang).forEachWord { w, _ -> if (w !in allowed) outside.add(w) }
+            assertWithMessage("$lang: words outside lexicon ∪ contraction forms").that(outside).isEmpty()
         }
-        val pairings = JSONObject(File(dir, "contraction_pairings.json").readText())
-        pairings.keys().forEach { k ->
-            val arr = pairings.getJSONArray(k)
-            for (i in 0 until arr.length()) allowed.add(arr.getJSONObject(i).getString("contraction").lowercase())
-        }
-        val outside = ArrayList<String>()
-        lm.forEachWord { w, _ -> if (w !in allowed) outside.add(w) }
-        assertWithMessage("words outside lexicon ∪ contraction forms").that(outside).isEmpty()
     }
 
     @Test
     fun `continuations respect the cap and form a sub-distribution`() {
-        var prevs = 0
-        lm.forEachWord { w, p ->
-            assertThat(p).isAtMost(1f)
-            if (!lm.hasContext(w)) return@forEachWord
-            prevs++
-            val all = lm.top(w, Int.MAX_VALUE)
-            assertThat(all.size).isAtMost(StaticContextLm.MAX_CONTINUATIONS)
-            // Quantisation rounds each term by at most 1/32 nat (~3%), so allow that slack.
-            assertWithMessage("continuations of '$w' sum past 1").that(all.sumOf { it.probability.toDouble() })
-                .isAtMost(1.035)
+        for (lang in languages) {
+            val lm = lmOf(lang)
+            var prevs = 0
+            lm.forEachWord { w, p ->
+                assertThat(p).isAtMost(1f)
+                if (!lm.hasContext(w)) return@forEachWord
+                prevs++
+                val all = lm.top(w, Int.MAX_VALUE)
+                assertThat(all.size).isAtMost(StaticContextLm.MAX_CONTINUATIONS)
+                // Quantisation rounds each term by at most 1/32 nat (~3%), so allow that slack.
+                assertWithMessage("$lang: continuations of '$w' sum past 1")
+                    .that(all.sumOf { it.probability.toDouble() }).isAtMost(1.035)
+            }
+            assertThat(prevs).isEqualTo(lm.prevCount)
         }
-        assertThat(prevs).isEqualTo(lm.prevCount)
     }
 
     @Test
     fun `size and heap stay inside the approved budget`() {
-        assertThat(bytes.size).isAtMost(SIZE_CAP_BYTES)
-        println("[static-lm] asset ${bytes.size} B, retained heap ${lm.retainedBytes()} B")
-        assertWithMessage("retained heap of the loaded model").that(lm.retainedBytes()).isAtMost(HEAP_CAP_BYTES)
+        var resident = 0L
+        for (lang in languages) {
+            val size = bytesOf(lang).size
+            val heap = lmOf(lang).retainedBytes()
+            resident += heap
+            println("[static-lm] $lang: asset $size B, retained heap $heap B")
+            assertWithMessage("$lang asset size").that(size).isAtMost(SIZE_CAP_BYTES)
+            assertWithMessage("$lang retained heap of the loaded model").that(heap).isAtMost(HEAP_CAP_BYTES)
+        }
+        // BigramModel keeps every language it has loaded (one per language the user switches to),
+        // so the worst case is all of them resident at once.
+        println("[static-lm] all ${languages.size} models resident: $resident B")
+        assertThat(resident).isAtMost(HEAP_CAP_BYTES * languages.size)
     }
 
     /**
      * Load cost and heap, REPORTED (not asserted — this box's load average makes wall-clock
      * thresholds flaky; the S2 gate reads these lines together with `uptime`). The retained-byte
-     * figure above is exact array accounting; the GC delta here is the cross-check.
+     * figure above is exact array accounting; the GC delta here is the cross-check. "cold" is the
+     * first read+parse of that language in this JVM (file cache warm, JIT mostly cold for the
+     * first language only); "warm" is the median of the repeats.
      */
     @Test
     fun `report load time and heap delta`() {
-        val times = DoubleArray(LOAD_ROUNDS) {
-            val t0 = System.nanoTime()
-            StaticContextLm.parse(asset.readBytes())
-            (System.nanoTime() - t0) / 1e6
+        for (lang in languages) {
+            val asset = StaticLmLanguageData.asset(lang)
+            val times = DoubleArray(LOAD_ROUNDS) {
+                val t0 = System.nanoTime()
+                StaticContextLm.parse(asset.readBytes())
+                (System.nanoTime() - t0) / 1e6
+            }
+            val sorted = times.sorted()
+            println("[static-lm] $lang read+parse ms: cold=%.1f min=%.1f warm-median=%.1f (n=%d)".format(
+                times[0], sorted.first(), sorted[sorted.size / 2], LOAD_ROUNDS))
+            val rt = Runtime.getRuntime()
+            fun used(): Long { repeat(3) { System.gc(); Thread.sleep(50) }; return rt.totalMemory() - rt.freeMemory() }
+            val before = used()
+            val held = StaticContextLm.parse(asset.readBytes())
+            val after = used()
+            println("[static-lm] $lang GC-measured heap delta ${after - before} B (array accounting ${held.retainedBytes()} B)")
+            assertThat(held.pairCount).isGreaterThan(0) // keeps `held` reachable across the second measure
         }
-        val sorted = times.sorted()
-        println("[static-lm] read+parse ms: first=%.1f min=%.1f median=%.1f (n=%d)".format(
-            times[0], sorted.first(), sorted[sorted.size / 2], LOAD_ROUNDS))
-        val rt = Runtime.getRuntime()
-        fun used(): Long { repeat(3) { System.gc(); Thread.sleep(50) }; return rt.totalMemory() - rt.freeMemory() }
-        val before = used()
-        val held = StaticContextLm.parse(asset.readBytes())
-        val after = used()
-        println("[static-lm] GC-measured heap delta ${after - before} B (array accounting ${held.retainedBytes()} B)")
-        assertThat(held.pairCount).isGreaterThan(0) // keeps `held` reachable across the second measure
     }
 
     @Test
@@ -116,24 +148,42 @@ class StaticLmAssetDriftTest {
         assertThat(notice).contains("CC BY 4.0")
         assertThat(notice).contains("Tatoeba")
         assertThat(notice).contains("CC BY 2.0 FR")
-        assertThat(notice).contains("scripts/data/tatoeba-contributors-en.txt")
-        val contributors = File("scripts/data/tatoeba-contributors-en.txt")
-        assertThat(contributors.exists()).isTrue()
-        val names = contributors.readLines().filter { it.isNotBlank() && !it.startsWith("#") }
-        assertThat(names.size).isEqualTo(side.getInt("tatoebaContributors"))
         val provenance = File("scripts/data/PROVENANCE.md").readText()
-        val sources = side.getJSONArray("sources")
-        for (i in 0 until sources.length()) {
-            val s = sources.getJSONObject(i)
-            assertWithMessage("source ${s.getString("key")} built UNPINNED").that(s.getBoolean("pinned")).isTrue()
-            assertWithMessage("PROVENANCE.md must record ${s.getString("key")}'s sha256")
-                .that(provenance).contains(s.getString("sha256"))
+        for (lang in languages) {
+            val side = StaticLmLanguageData.sidecar(lang)
+            val sources = side.getJSONArray("sources")
+            for (i in 0 until sources.length()) {
+                val s = sources.getJSONObject(i)
+                val key = s.getString("key")
+                assertWithMessage("$lang source $key built UNPINNED").that(s.getBoolean("pinned")).isTrue()
+                assertWithMessage("PROVENANCE.md must record $lang $key's sha256")
+                    .that(provenance).contains(s.getString("sha256"))
+                if (key == "leipzig") {
+                    val corpus = s.getString("url").substringAfterLast('/').removeSuffix(".tar.gz")
+                    assertWithMessage("NOTICE must name $lang's Leipzig corpus").that(notice).contains(corpus)
+                }
+            }
+            val tatoebaWeight = side.getJSONObject("corpus").getJSONObject("weights").getDouble("tatoeba")
+            val path = "scripts/data/tatoeba-contributors-$lang.txt"
+            val contributors = File(path)
+            val names = if (contributors.exists()) {
+                contributors.readLines().filter { it.isNotBlank() && !it.startsWith("#") }
+            } else {
+                emptyList()
+            }
+            assertThat(names.size).isEqualTo(side.getInt("tatoebaContributors"))
+            if (tatoebaWeight > 0.0) {
+                // CC BY 2.0 FR: counted sentences need their authors credited.
+                assertWithMessage("$lang counts Tatoeba (weight $tatoebaWeight) — contributor list required")
+                    .that(names).isNotEmpty()
+                assertWithMessage("NOTICE must point at $path").that(notice).contains(path)
+            }
         }
     }
 
     private companion object {
         const val SIZE_CAP_BYTES = 512 * 1024
-        /** Design budget: ≈1 MB heap for en, and the S2 gate is +1.5 MB. */
+        /** Design budget: ≈1 MB heap per language, and the S2 gate is +1.5 MB each. */
         const val HEAP_CAP_BYTES = 1_500_000L
         const val LOAD_ROUNDS = 15
     }

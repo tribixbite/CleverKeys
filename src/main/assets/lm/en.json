@@ -12,7 +12,13 @@
     "minCount": 3.0,
     "topK": 20,
     "quantStepsPerNat": 16,
-    "vocabulary": "dictionaries/en_enhanced.json UNION contraction display forms"
+    "vocabulary": "dictionaries/en_enhanced.json UNION contraction display forms",
+    "lexicon": "en_enhanced.json",
+    "contractionFiles": [
+      "contractions_en.json",
+      "contractions_non_paired.json",
+      "contraction_pairings.json"
+    ]
   },
   "corpus": {
     "sentenceTokens": [
@@ -39,45 +45,51 @@
         "top1": 12.82,
         "top3": 21.613,
         "n": 16217,
-        "pairs": 70315
+        "pairs": 70315,
+        "bytes": 419171
       },
       {
         "weight": 0.05,
         "top1": 12.697,
         "top3": 21.749,
         "n": 16217,
-        "pairs": 71917
+        "pairs": 71917,
+        "bytes": 425649
       },
       {
         "weight": 0.1,
         "top1": 12.32,
         "top3": 21.786,
         "n": 16217,
-        "pairs": 74797
+        "pairs": 74797,
+        "bytes": 439017
       },
       {
         "weight": 0.25,
         "top1": 11.994,
         "top3": 21.539,
         "n": 16217,
-        "pairs": 85278
+        "pairs": 85278,
+        "bytes": 490182
       },
       {
         "weight": 0.5,
         "top1": 11.833,
         "top3": 21.132,
         "n": 16217,
-        "pairs": 103436
+        "pairs": 103436,
+        "bytes": 586257
       },
       {
         "weight": 1.0,
         "top1": 11.648,
         "top3": 20.929,
         "n": 16217,
-        "pairs": 141895
+        "pairs": 141895,
+        "bytes": 787187
       }
     ],
-    "weightRule": "max OOD-dev (UD EWT dev) next-word top-3 of the pruned model; ties -> lower weight"
+    "weightRule": "max OOD-dev (UD EWT dev) next-word top-3 of the pruned model among weights whose model fits the 524288-byte cap; ties -> lower weight"
   },
   "artefactFilter": {
     "ratio": 20.0,

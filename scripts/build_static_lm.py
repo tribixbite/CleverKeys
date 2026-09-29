@@ -4,32 +4,39 @@ Build the shipped static context language model (`CKLM` v1) for CleverKeys.
 
 The model is a pruned word BIGRAM table — for each previous word, its top continuations with a
 quantised conditional log-probability — plus a quantised log-unigram per vocabulary word. It is
-the general-English prior behind `StaticContextLm` (tap-prediction context multiplier and the
-next-word cold-start seed). See `docs/specs/context-learning-and-next-word.md` and
+the per-language general prior behind `StaticContextLm` (tap-prediction context multiplier and
+the next-word cold-start seed; NEVER swipe — the S3 swipe gate failed). Every language-specific
+input lives in one `LangConfig` in `CONFIGS`; a language without a configuration cannot be built. See `docs/specs/context-learning-and-next-word.md` and
 `scripts/data/PROVENANCE.md` for the sources and why they were chosen.
 
 Pipeline (every step deterministic — the same inputs give byte-identical output):
 
- 1. fetch     : sources are PINNED by sha256 in `SOURCES`; a missing file is downloaded, a hash
+ 1. fetch     : sources are PINNED by sha256 per language in `CONFIGS`; a missing file is downloaded, a hash
                 mismatch is refused unless --allow-unpinned (Tatoeba's export rotates weekly, so
                 a fresh download will not match the snapshot this model was built from).
  2. tokenize  : the on-device context contract (`NextWordPredictor.contextFromEditorText`) —
-                runs of letters plus word-internal apostrophes/hyphens, lowercased, edge '/-
-                trimmed; sentence-final `.` `?` `!` and line breaks end a sentence. Typographic
-                apostrophes are normalised to ASCII first (the keyboard types `'`). A digit run
+                runs of Unicode letters (accents, ñ, ç, å, ß kept) plus word-internal
+                apostrophes/hyphens (so `j'ai`, `l'eau`, `c'est` stay one token), lowercased, edge
+                '/- trimmed; sentence-final `.` `?` `!` and line breaks end a sentence. Typographic
+                apostrophes are normalised to ASCII first (the keyboard types `'`); non-English
+                configs also NFC-compose (the keyboard emits precomposed letters). A digit run
                 BREAKS the bigram chain (on-device the digits are not a word either, but pairing
                 the words either side of "3" would teach "have cats" from "have 3 cats").
  3. filter    : dedupe sentences (normalised text), keep 2..30-token sentences, split 90/10
                 train/held-out by sentence hash (the held-out 10% is written for the pure-JVM
-                eval and NEVER counted).
+                eval and NEVER counted). Non-English configs also drop any corpus sentence that
+                is also an OOD dev/test sentence (train/eval leakage; counted in the sidecar).
  4. artefacts : per corpus, drop words whose share exceeds `ARTEFACT_RATIO` x their wordfreq
                 share (Tatoeba's "Tom"/"Mary" register: 452x / 174x) — they become chain breaks
                 for that corpus only.
- 5. vocab     : the shipped en lexicon (`dictionaries/en_enhanced.json`) UNION the contraction
-                display forms, so every word the model can name is a word the app can show.
- 6. combine   : weighted count sum, Leipzig x 1 + Tatoeba x W, W selected on the OUT-OF-DOMAIN
-                DEV set (UD English-EWT dev; eval-only, never shipped) by next-word top-3 of the
-                pruned model; ties go to the lower weight.
+ 5. vocab     : the language's shipped lexicon (`dictionaries/en_enhanced.json`, or the CKDT
+                `dictionaries/<lang>_enhanced.bin` canonical section) UNION its contraction
+                display forms (REPLACE + PAIRED files, e.g. fr `c'est`, it `l'acqua`), so every
+                word the model can name is a word the app can show.
+ 6. combine   : weighted count sum, Leipzig x 1 + Tatoeba x W, W (among weights whose model fits
+                the size cap) selected on the OUT-OF-DOMAIN
+                DEV set (a UD treebank dev split per language; eval-only, never shipped) by
+                next-word top-3 of the pruned model; ties go to the lower weight.
  7. prune     : weighted count >= MIN_COUNT, top TOP_K continuations per previous word.
  8. quantise  : -ln P in 1/16-nat steps, one byte (0..255 => P >= 1.2e-7).
  9. write     : `<out>.cklm` + `<out>.json` sidecar (counts, sha256, sources, weights) + the
@@ -60,6 +67,7 @@ the probability mass left after the listed continuations is an honest backoff.
 
 Usage:
     python3 scripts/build_static_lm.py                       # build en from the pinned sources
+    python3 scripts/build_static_lm.py --lang es             # any language in CONFIGS
     python3 scripts/build_static_lm.py --select-weight-only  # print the weight grid, write nothing
 
 Requirements: Python 3.10+ standard library; `wordfreq` for the artefact filter (without it the
@@ -80,11 +88,12 @@ import re
 import struct
 import sys
 import tarfile
+import unicodedata
 import urllib.request
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable, Iterator
+from typing import Callable, Iterable, Iterator, Union
 
 REPO = Path(__file__).resolve().parent.parent
 CACHE = Path.home() / ".cache" / "cleverkeys-corpora"
@@ -125,46 +134,211 @@ class Source:
     note: str
 
 
-SOURCES: dict[str, Source] = {
-    s.key: s
-    for s in (
-        Source(
-            key="leipzig",
-            filename="leipzig/eng-com_web-public_2018_300K.tar.gz",
-            url="https://downloads.wortschatz-leipzig.de/corpora/eng-com_web-public_2018_300K.tar.gz",
-            sha256="cc6a36b245e68523bc92b9d8131ac93592116b0167b3785418fcee9eb9c0dad7",
-            license="CC BY 4.0 (Leipzig Corpora Collection download terms)",
-            shipped=True,
-            note="English web (.com) 2018, 300K sentences",
+# Contraction display-form files: a JSON object whose values are the display form (str), a list
+# of display forms (the PAIRED files), or a list of {"contraction": form} objects (en pairings).
+ContractionValue = Union[str, list[Union[str, dict[str, object]]]]
+
+
+@dataclass(frozen=True)
+class LangConfig:
+    """Everything language-specific the builder reads. Adding a language = adding one of these
+    (with pinned hashes) plus a measured gate run — never widening `--lang` on its own."""
+
+    code: str  # asset code: lm/<code>.cklm, CKLM header language
+    name: str  # English name, for generated headers ("Spanish")
+    leipzig: Source
+    tatoeba: Source
+    ood_dev: Source
+    ood_test: Source
+    ood_label: str  # short treebank name for the sidecar, e.g. "UD EWT"
+    lexicon: str  # file under dictionaries/: en_enhanced.json (JSON object keys) or *.bin (CKDT)
+    contraction_files: tuple[str, ...]  # display-form files under dictionaries/ (see above)
+    wordfreq_lang: str  # artefact-filter reference language
+    # NFC-compose corpus text before tokenizing. False only for en, whose shipped model predates
+    # the flag (its corpus is already composed; kept off so en.cklm stays byte-identical).
+    nfc: bool = True
+    # Drop corpus sentences that also occur in the OOD dev/test files. Off for en only for the
+    # same byte-reproducibility reason (the en overlap count is reported by --check-overlap).
+    exclude_eval_overlap: bool = True
+
+    @property
+    def sources(self) -> tuple[Source, ...]:
+        return (self.leipzig, self.tatoeba, self.ood_dev, self.ood_test)
+
+    @property
+    def vocabulary_note(self) -> str:
+        return f"dictionaries/{self.lexicon} UNION contraction display forms"
+
+
+def _leipzig(corpus: str, sha256: str, note: str) -> Source:
+    return Source(
+        key="leipzig",
+        filename=f"leipzig/{corpus}.tar.gz",
+        url=f"https://downloads.wortschatz-leipzig.de/corpora/{corpus}.tar.gz",
+        sha256=sha256,
+        license="CC BY 4.0 (Leipzig Corpora Collection download terms)",
+        shipped=True,
+        note=note,
+    )
+
+
+def _tatoeba(iso3: str, sha256: str, fetched: str) -> Source:
+    return Source(
+        key="tatoeba",
+        filename=f"tatoeba/{iso3}_sentences_detailed.tsv.bz2",
+        url=f"https://downloads.tatoeba.org/exports/per_language/{iso3}/{iso3}_sentences_detailed.tsv.bz2",
+        sha256=sha256,
+        license="CC BY 2.0 FR",
+        shipped=True,
+        note=f"weekly-rotating export; snapshot fetched {fetched}",
+    )
+
+
+def _ud(repo: str, commit: str, stem: str, split: str, sha256: str, license: str = "CC BY-SA 4.0") -> Source:
+    dev = split == "dev"
+    return Source(
+        key="ood_dev" if dev else "ood_test",
+        filename=f"ud/{stem}-ud-{split}.conllu",
+        url=f"https://raw.githubusercontent.com/UniversalDependencies/{repo}/{commit}/{stem}-ud-{split}.conllu",
+        sha256=sha256,
+        license=f"{license} (eval-only, never shipped)",
+        shipped=False,
+        note="weight selection only" if dev else "gate evaluation only (read by the Kotlin eval)",
+    )
+
+
+CONFIGS: dict[str, LangConfig] = {
+    c.code: c
+    for c in (
+        LangConfig(
+            code="en",
+            name="English",
+            leipzig=_leipzig(
+                "eng-com_web-public_2018_300K",
+                "cc6a36b245e68523bc92b9d8131ac93592116b0167b3785418fcee9eb9c0dad7",
+                "English web (.com) 2018, 300K sentences",
+            ),
+            tatoeba=_tatoeba("eng", "353d48de7905952cf6f1500f6a3158516ecf9e10cd844ba051982cfa4a11c111", "2026-09-26"),
+            ood_dev=_ud("UD_English-EWT", "4a4d77f599ea53cc405f85d0cec4b2f14f81d42b", "en_ewt", "dev",
+                        "39239e0a60db3ae68f4b7036189f11b6692741d10ff8240dd91f74f2760d90f8"),
+            ood_test=_ud("UD_English-EWT", "4a4d77f599ea53cc405f85d0cec4b2f14f81d42b", "en_ewt", "test",
+                         "fa024f43dc5da3c5ac02563bc9bd0e974f46cbb1560823976a8f342a37dc494a"),
+            ood_label="UD EWT",
+            lexicon="en_enhanced.json",
+            contraction_files=("contractions_en.json", "contractions_non_paired.json", "contraction_pairings.json"),
+            wordfreq_lang="en",
+            nfc=False,
+            exclude_eval_overlap=False,
         ),
-        Source(
-            key="tatoeba",
-            filename="tatoeba/eng_sentences_detailed.tsv.bz2",
-            url="https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences_detailed.tsv.bz2",
-            sha256="353d48de7905952cf6f1500f6a3158516ecf9e10cd844ba051982cfa4a11c111",
-            license="CC BY 2.0 FR",
-            shipped=True,
-            note="weekly-rotating export; snapshot fetched 2026-09-26",
+        LangConfig(
+            code="es",
+            name="Spanish",
+            leipzig=_leipzig(
+                "spa_web_2016_300K",
+                "e7f921d53d542fc9997c8d8b9c198add96961624b274e50289ee9936bcfd362d",
+                "Spanish web 2016, 300K sentences",
+            ),
+            tatoeba=_tatoeba("spa", "76425b39fcfba2e0acb5348fb172bb5eeead611876f1b1daf4f3f00a7ae9ac9d", "2026-09-29"),
+            ood_dev=_ud("UD_Spanish-GSD", "267f3530d4f122ee85d1891800211a06dfb79347", "es_gsd", "dev",
+                        "704fb19afc0a34cff476e1a70351b7026c4364f862e8e8388b02873852567c22"),
+            ood_test=_ud("UD_Spanish-GSD", "267f3530d4f122ee85d1891800211a06dfb79347", "es_gsd", "test",
+                         "ecce253f44bffaa9803ae7ec0c10911c13e4f1fc3cb439dbd1db2cebe0a12741"),
+            ood_label="UD Spanish-GSD",
+            lexicon="es_enhanced.bin",
+            contraction_files=("contractions_es.json",),
+            wordfreq_lang="es",
         ),
-        Source(
-            key="ood_dev",
-            filename="ud/en_ewt-ud-dev.conllu",
-            url="https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/"
-            "4a4d77f599ea53cc405f85d0cec4b2f14f81d42b/en_ewt-ud-dev.conllu",
-            sha256="39239e0a60db3ae68f4b7036189f11b6692741d10ff8240dd91f74f2760d90f8",
-            license="CC BY-SA 4.0 (eval-only, never shipped)",
-            shipped=False,
-            note="weight selection only",
+        LangConfig(
+            code="de",
+            name="German",
+            leipzig=_leipzig(
+                "deu-de_web_2021_300K",
+                "3fed1175ee2c76fd169d00ff28b402e139082ae9bf02b9c72a04f0ce163185bc",
+                "German web (.de) 2021, 300K sentences",
+            ),
+            tatoeba=_tatoeba("deu", "eb80b6a8d6b938a48fc33d65848d6efaf53d264c96e458ba6e4deec2deaaab59", "2026-09-29"),
+            ood_dev=_ud("UD_German-GSD", "ce54dbe9c6a5640c93e9952f069f582f6cd1f9fc", "de_gsd", "dev",
+                        "01e8e674973592747ffe9a8c77fcf9d2f5936a8484e731ad4f76254318a8952c"),
+            ood_test=_ud("UD_German-GSD", "ce54dbe9c6a5640c93e9952f069f582f6cd1f9fc", "de_gsd", "test",
+                         "595070aa50b706a91dc66f17c296f7a9a25cbc75269f177c27680fb1c21528ab"),
+            ood_label="UD German-GSD",
+            lexicon="de_enhanced.bin",
+            contraction_files=("contractions_de.json",),
+            wordfreq_lang="de",
         ),
-        Source(
-            key="ood_test",
-            filename="ud/en_ewt-ud-test.conllu",
-            url="https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/"
-            "4a4d77f599ea53cc405f85d0cec4b2f14f81d42b/en_ewt-ud-test.conllu",
-            sha256="fa024f43dc5da3c5ac02563bc9bd0e974f46cbb1560823976a8f342a37dc494a",
-            license="CC BY-SA 4.0 (eval-only, never shipped)",
-            shipped=False,
-            note="gate evaluation only (read by the Kotlin eval)",
+        LangConfig(
+            code="fr",
+            name="French",
+            leipzig=_leipzig(
+                "fra-fr_web_2013_300K",
+                "4c917a4929a12d6e7c8abf1c90b3fc41e6839a90d88f18a834180bdc2dbc7593",
+                "French web (.fr) 2013, 300K sentences (newest France web corpus offered)",
+            ),
+            tatoeba=_tatoeba("fra", "c54845fd6a01649d4cbb17d1af736ad24afce93eabd045d63db2f1f0d6c5492a", "2026-09-29"),
+            ood_dev=_ud("UD_French-GSD", "94d5b68e185fc22a9ef292040e84f476d36d9b0e", "fr_gsd", "dev",
+                        "9221e5084cc6a1b1540671cfbd2fc0456efc223b2fe8dd2146c2bad921be02d4"),
+            ood_test=_ud("UD_French-GSD", "94d5b68e185fc22a9ef292040e84f476d36d9b0e", "fr_gsd", "test",
+                         "eee5a599b429658b6ee8582fae9993eb07161247fc64bad57d16b2050ed4eb1a"),
+            ood_label="UD French-GSD",
+            lexicon="fr_enhanced.bin",
+            # REPLACE (c'est, j'ai, aujourd'hui …) + PAIRED (l'une, est-elle …) display forms.
+            contraction_files=("contractions_fr.json", "contraction_pairs_fr.json"),
+            wordfreq_lang="fr",
+        ),
+        LangConfig(
+            code="it",
+            name="Italian",
+            leipzig=_leipzig(
+                "ita-it_web-public_2019_300K",
+                "e8be0d4f3a49a627a8bcf5cb93160419ba170ac794f561d16ea89de413def42e",
+                "Italian public web (.it) 2019, 300K sentences",
+            ),
+            tatoeba=_tatoeba("ita", "a07bbd0f64f226edb7109f7f955a6456518863fef50d64f83573ed5efc99a399", "2026-09-29"),
+            # Not ISDT/VIT/ParTUT/PoSTWITA: those are CC BY-NC-SA ("research purposes only").
+            ood_dev=_ud("UD_Italian-TWITTIRO", "ff4c607327db615e219e1613b6e804ec55a4cffc", "it_twittiro", "dev",
+                        "1f16040ae17395d2910784742e6b3344620a67937524d47ed96fd56f811a8c99"),
+            ood_test=_ud("UD_Italian-PUD", "71d932aa096368331ba2fd9bc906ec8dd853da8e", "it_pud", "test",
+                         "ad5d302bdfd05194155d9ad43dc54c3cb915076d66b3eb6ef33eca9a11f1372a", "CC BY-SA 3.0"),
+            ood_label="UD Italian-TWITTIRO",
+            lexicon="it_enhanced.bin",
+            contraction_files=("contractions_it.json", "contraction_pairs_it.json"),
+            wordfreq_lang="it",
+        ),
+        LangConfig(
+            code="pt",
+            name="Portuguese",
+            leipzig=_leipzig(
+                "por-pt_web_2015_300K",
+                "8ba1f5e84cbcc3924277396962b2b6851a06472aad640a80f8837694b9d64695",
+                "Portuguese web (.pt) 2015, 300K sentences (no Brazilian web corpus is offered)",
+            ),
+            tatoeba=_tatoeba("por", "3c76d939d12528971264728fa48f4de52170d13eb2a36340b82fde311c3ad8f4", "2026-09-29"),
+            ood_dev=_ud("UD_Portuguese-Bosque", "884288537f7e8e02e50f125791cf279d905d1043", "pt_bosque", "dev",
+                        "f8a67abae12fbab85a3995204a6459d1958c11065062d4ea5349d6b914e78f81"),
+            ood_test=_ud("UD_Portuguese-Bosque", "884288537f7e8e02e50f125791cf279d905d1043", "pt_bosque", "test",
+                         "9a824650b7a02cf411f6e09b39e8fb423c85e1a5fb3a55b87e7f4c0c2ea5b3bb"),
+            ood_label="UD Portuguese-Bosque",
+            lexicon="pt_enhanced.bin",
+            contraction_files=("contractions_pt.json",),
+            wordfreq_lang="pt",
+        ),
+        LangConfig(
+            code="sv",
+            name="Swedish",
+            leipzig=_leipzig(
+                "swe-se_web_2023_300K",
+                "c5a86fb055db346076055a64b8a4537e5a8787e61a4131bf9cf81f11ab4a0773",
+                "Swedish web (.se) 2023, 300K sentences",
+            ),
+            tatoeba=_tatoeba("swe", "63fa7da77b5a9f72d0d30777bb1868b9ae871a020c79e8b8d0db213d3efbe71a", "2026-09-29"),
+            ood_dev=_ud("UD_Swedish-Talbanken", "c434778d9511be5c35a6a11531f0107a960fb5d6", "sv_talbanken", "dev",
+                        "e1c14ae088f575d9f5f2d870d456b9e3911a04725f141752bb8c972a81cb6c6c"),
+            ood_test=_ud("UD_Swedish-Talbanken", "c434778d9511be5c35a6a11531f0107a960fb5d6", "sv_talbanken", "test",
+                         "f7bc84ce37cd6a71e95b8d8684801da0bb6d2be4e419ba2e865eb109d6cd1bc6"),
+            ood_label="UD Swedish-Talbanken",
+            lexicon="sv_enhanced.bin",
+            contraction_files=("contractions_sv.json",),
+            wordfreq_lang="sv",
         ),
     )
 }
@@ -211,8 +385,14 @@ def ensure_source(src: Source, cache: Path, allow_unpinned: bool, offline: bool)
 # ── tokenization (the on-device contract) ──────────────────────────────────────────────────────
 
 
-def split_sentences(text: str) -> list[str]:
-    """Split on sentence-final punctuation / line breaks, exactly where the device resets context."""
+def split_sentences(text: str, nfc: bool = False) -> list[str]:
+    """Split on sentence-final punctuation / line breaks, exactly where the device resets context.
+
+    [nfc] composes decomposed accents first (`e` + U+0301 → `é`): the keyboard commits precomposed
+    letters, and Kotlin's `Char.isLetter` would otherwise split a word at the combining mark.
+    """
+    if nfc:
+        text = unicodedata.normalize("NFC", text)
     return [s for s in SENTENCE_END.split(text.translate(APOSTROPHES)) if s.strip()]
 
 
@@ -296,22 +476,27 @@ class CorpusCounts:
     """Train-split counts for one corpus."""
 
     name: str
-    unigrams: Counter = field(default_factory=Counter)  # every token
-    successors: Counter = field(default_factory=Counter)  # c(prev, *) over every following token
-    bigrams: Counter = field(default_factory=Counter)  # (prev, next), both in vocab
+    unigrams: Counter[str] = field(default_factory=Counter)  # every token
+    successors: Counter[str] = field(default_factory=Counter)  # c(prev, *) over every following token
+    bigrams: Counter[tuple[str, str]] = field(default_factory=Counter)  # (prev, next), both in vocab
     tokens: int = 0
     sentences: int = 0
     heldout: int = 0
     duplicates: int = 0
+    eval_overlap: int = 0  # segments dropped because an OOD dev/test sentence has the same key
     contributors: set[str] = field(default_factory=set)
 
 
 def iter_segments(
-    lines: Iterable[tuple[str, str]], seen: set[str]
+    lines: Iterable[tuple[str, str]], seen: set[str], nfc: bool
 ) -> Iterator[tuple[str, str, list[str | None], bool]]:
-    """(segment text, contributor, tokens, heldout) for every kept, non-duplicate segment."""
+    """(segment text, contributor, tokens, heldout) for every kept, non-duplicate segment.
+
+    A key already in [seen] yields the duplicate marker (empty tokens). Callers that exclude the
+    evaluation sentences pre-seed [seen] with their keys; `count_corpus` tells the two apart.
+    """
     for text, who in lines:
-        for seg in split_sentences(text):
+        for seg in split_sentences(text, nfc):
             toks = tokenize(seg)
             if not MIN_TOKENS <= word_count(toks) <= MAX_TOKENS:
                 continue
@@ -329,13 +514,21 @@ def count_corpus(
     vocab: set[str],
     seen: set[str],
     heldout_sink: Callable[[str], None],
+    nfc: bool = False,
+    eval_keys: frozenset[str] = frozenset(),
 ) -> tuple[CorpusCounts, list[list[str | None]]]:
-    """Count one corpus; return counts plus its train sentences (kept for the artefact re-count)."""
+    """Count one corpus; return counts plus its train sentences (kept for the artefact re-count).
+
+    [eval_keys] must already be in [seen]; a hit on one is counted as eval overlap, not a duplicate.
+    """
     c = CorpusCounts(name)
     train: list[list[str | None]] = []
-    for seg, who, toks, held in iter_segments(lines, seen):
+    for seg, who, toks, held in iter_segments(lines, seen, nfc):
         if not toks:
-            c.duplicates += 1
+            if sentence_key(seg) in eval_keys:
+                c.eval_overlap += 1
+            else:
+                c.duplicates += 1
             continue
         if held:
             c.heldout += 1
@@ -414,8 +607,8 @@ def combine(corpora: list[tuple[CorpusCounts, float]]) -> tuple[
             uni[k] += v * w
         for k, v in c.successors.items():
             succ[k] += v * w
-        for k, v in c.bigrams.items():
-            bi[k] += v * w
+        for pair, v in c.bigrams.items():
+            bi[pair] += v * w
         n += c.tokens * w
     return uni, succ, bi, n
 
@@ -534,27 +727,60 @@ def next_word_topk(model: Model, sentences: list[list[str | None]], vocab: set[s
 # ── vocabulary ─────────────────────────────────────────────────────────────────────────────────
 
 
-def load_vocab(dict_dir: Path) -> tuple[set[str], set[str]]:
+CKDT_MAGIC = 0x54444B43  # "CKDT"
+
+
+def ckdt_words(path: Path) -> list[str]:
+    """Canonical words of a CKDT v2 dictionary (`<lang>_enhanced.bin`), lowercased.
+
+    Header (little-endian u32s): magic, version, (reserved), word count, canonical-section offset.
+    Each canonical entry: u16 UTF-8 length, the word, u8 frequency rank — the same walk as the
+    Kotlin readers (`StaticLmTapEvalTest.loadLexicon`, `CkdtDictionaryReader`).
+    """
+    b = path.read_bytes()
+    magic, version, _reserved, count, offset = struct.unpack_from("<IIIII", b, 0)
+    if magic != CKDT_MAGIC or version != 2:
+        raise SystemExit(f"{path}: not a CKDT v2 dictionary (magic {magic:#x}, version {version})")
+    words: list[str] = []
+    pos = offset
+    for _ in range(count):
+        (n,) = struct.unpack_from("<H", b, pos)
+        words.append(b[pos + 2:pos + 2 + n].decode("utf-8").lower())
+        pos += 3 + n  # length, word, rank byte
+    return words
+
+
+def contraction_forms(values: Iterable[ContractionValue]) -> Iterator[str]:
+    """Display forms in a contraction file's values (str | [str] | [{"contraction": str}])."""
+    for v in values:
+        if isinstance(v, str):
+            yield v.lower()
+            continue
+        for e in v:
+            yield str(e["contraction"] if isinstance(e, dict) else e).lower()
+
+
+def load_vocab(dict_dir: Path, cfg: LangConfig) -> tuple[set[str], set[str]]:
     """(lexicon, contraction display forms) — the model may only name words from their union."""
-    lexicon = {w.lower() for w in json.loads((dict_dir / "en_enhanced.json").read_text("utf-8"))}
+    lex_path = dict_dir / cfg.lexicon
+    if cfg.lexicon.endswith(".json"):
+        lexicon = {w.lower() for w in json.loads(lex_path.read_text("utf-8"))}
+    else:
+        lexicon = set(ckdt_words(lex_path))
     forms: set[str] = set()
-    for name in ("contractions_en.json", "contractions_non_paired.json"):
-        for v in json.loads((dict_dir / name).read_text("utf-8")).values():
-            forms.add(v.lower())
-    for entries in json.loads((dict_dir / "contraction_pairings.json").read_text("utf-8")).values():
-        for e in entries:
-            forms.add(e["contraction"].lower())
+    for name in cfg.contraction_files:
+        forms.update(contraction_forms(json.loads((dict_dir / name).read_text("utf-8")).values()))
     return lexicon, forms
 
 
-def wordfreq_reference() -> tuple[Callable[[str], float] | None, str]:
+def wordfreq_reference(lang: str) -> tuple[Callable[[str], float] | None, str]:
     try:
-        import wordfreq  # type: ignore[import-not-found]
+        import wordfreq  # type: ignore[import-not-found,unused-ignore]
     except ImportError:
         return None, "unavailable"
     from importlib.metadata import version
 
-    return (lambda w: float(wordfreq.word_frequency(w, "en"))), f"wordfreq {version('wordfreq')}"
+    return (lambda w: float(wordfreq.word_frequency(w, lang))), f"wordfreq {version('wordfreq')}"
 
 
 def corpus_reference(other: CorpusCounts) -> Callable[[str], float]:
@@ -567,14 +793,14 @@ def corpus_reference(other: CorpusCounts) -> Callable[[str], float]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    # Until sources, vocabulary and evaluation are configured per language, accepting another
-    # header code would silently relabel the English model and overwrite that language's asset.
-    # TODO: expand these choices only with a pinned, evaluated language-specific configuration.
-    ap.add_argument("--lang", choices=("en",), default="en",
-                    help="model language (only English has configured corpora and evaluation)")
+    # Only languages with a pinned, evaluated configuration: a free-form code would relabel another
+    # language's data and overwrite that language's asset (the pre-2026-09-27 --lang bug).
+    ap.add_argument("--lang", choices=tuple(CONFIGS), default="en",
+                    help="model language (each has pinned corpora, vocabulary and evaluation in CONFIGS)")
     ap.add_argument("--cache", type=Path, default=CACHE)
     ap.add_argument("--out-dir", type=Path, default=REPO / "src/main/assets/lm")
-    ap.add_argument("--contributors", type=Path, default=REPO / "scripts/data/tatoeba-contributors-en.txt")
+    ap.add_argument("--contributors", type=Path, default=None,
+                    help="Tatoeba contributor list (default scripts/data/tatoeba-contributors-<lang>.txt)")
     ap.add_argument("--eval-dir", type=Path, default=CACHE / "static-lm-eval",
                     help="local-only held-out + OOD sentence files for the Kotlin eval")
     ap.add_argument("--weight", type=float, default=None, help="skip selection, use this Tatoeba weight")
@@ -582,48 +808,54 @@ def main() -> int:
     ap.add_argument("--allow-unpinned", action="store_true")
     ap.add_argument("--offline", action="store_true")
     args = ap.parse_args()
-    if args.lang != "en":
-        raise SystemExit("only en is built today (other languages keep their bigram seeds)")
+    cfg = CONFIGS[args.lang]
+    contributors_path: Path = args.contributors or REPO / f"scripts/data/tatoeba-contributors-{cfg.code}.txt"
 
     paths: dict[str, Path] = {}
     hashes: dict[str, str] = {}
-    for key, src in SOURCES.items():
-        paths[key], hashes[key] = ensure_source(src, args.cache, args.allow_unpinned, args.offline)
+    for src in cfg.sources:
+        paths[src.key], hashes[src.key] = ensure_source(src, args.cache, args.allow_unpinned, args.offline)
 
-    lexicon, forms = load_vocab(REPO / "src/main/assets/dictionaries")
+    lexicon, forms = load_vocab(REPO / "src/main/assets/dictionaries", cfg)
     vocab = lexicon | forms
-    print(f"[vocab] lexicon {len(lexicon)} + contraction forms {len(forms)} -> {len(vocab)}")
+    print(f"[vocab] {cfg.lexicon}: lexicon {len(lexicon)} + contraction forms {len(forms)} -> {len(vocab)}")
 
+    # OOD files — surface text, same sentence splitting, never counted. Read first so their keys
+    # can be excluded from training (cfg.exclude_eval_overlap).
     args.eval_dir.mkdir(parents=True, exist_ok=True)
-    heldout_path = args.eval_dir / f"heldout_{args.lang}.txt"
-    seen: set[str] = set()
-    with open(heldout_path, "w", encoding="utf-8") as held:
-        def sink(sentence: str) -> None:
-            held.write(sentence + "\n")
-        leipzig, leipzig_train = count_corpus("leipzig", leipzig_lines(paths["leipzig"]), vocab, seen, sink)
-        tatoeba, tatoeba_train = count_corpus("tatoeba", tatoeba_lines(paths["tatoeba"]), vocab, seen, sink)
-    del seen
-    for c in (leipzig, tatoeba):
-        print(f"[{c.name}] train sentences {c.sentences}, held-out {c.heldout}, "
-              f"duplicates {c.duplicates}, tokens {c.tokens}")
-
-    # OOD files — surface text, same sentence splitting, never counted.
     ood: dict[str, list[list[str | None]]] = {}
+    eval_keys: set[str] = set()
     for key in ("ood_dev", "ood_test"):
-        out = args.eval_dir / f"{key}_{args.lang}.txt"
+        out = args.eval_dir / f"{key}_{cfg.code}.txt"
         sents: list[list[str | None]] = []
         with open(out, "w", encoding="utf-8") as fh:
             for text in conllu_texts(paths[key]):
-                for seg in split_sentences(text):
+                for seg in split_sentences(text, cfg.nfc):
                     toks = tokenize(seg)
                     if MIN_TOKENS <= word_count(toks) <= MAX_TOKENS:
                         fh.write(" ".join(seg.split()) + "\n")
                         sents.append(toks)
+                        eval_keys.add(sentence_key(seg))
         ood[key] = sents
         print(f"[{key}] {len(sents)} sentences -> {out}")
 
+    heldout_path = args.eval_dir / f"heldout_{cfg.code}.txt"
+    excluded = frozenset(eval_keys) if cfg.exclude_eval_overlap else frozenset()
+    seen: set[str] = set(excluded)
+    with open(heldout_path, "w", encoding="utf-8") as held:
+        def sink(sentence: str) -> None:
+            held.write(sentence + "\n")
+        leipzig, leipzig_train = count_corpus(
+            "leipzig", leipzig_lines(paths["leipzig"]), vocab, seen, sink, cfg.nfc, excluded)
+        tatoeba, tatoeba_train = count_corpus(
+            "tatoeba", tatoeba_lines(paths["tatoeba"]), vocab, seen, sink, cfg.nfc, excluded)
+    del seen
+    for c in (leipzig, tatoeba):
+        print(f"[{c.name}] train sentences {c.sentences}, held-out {c.heldout}, "
+              f"duplicates {c.duplicates}, eval-overlap dropped {c.eval_overlap}, tokens {c.tokens}")
+
     # Artefact filter, per corpus.
-    ref, ref_name = wordfreq_reference()
+    ref, ref_name = wordfreq_reference(cfg.wordfreq_lang)
     artefacts: dict[str, dict[str, float]] = {}
     for c, train, other in ((leipzig, leipzig_train, tatoeba), (tatoeba, tatoeba_train, leipzig)):
         reference = ref if ref is not None else corpus_reference(other)
@@ -646,42 +878,65 @@ def main() -> int:
             m = prune(*combine([(leipzig, 1.0), (tatoeba, w)]))
             t1, t3, n = next_word_topk(m, ood["ood_dev"], vocab)
             pairs = sum(len(v) for v in m.table.values())
-            grid.append({"weight": w, "top1": round(t1, 3), "top3": round(t3, 3), "n": n, "pairs": pairs})
+            size = len(encode(m, cfg.code)[0])
+            grid.append({"weight": w, "top1": round(t1, 3), "top3": round(t3, 3), "n": n, "pairs": pairs,
+                         "bytes": size})
             print(f"[select] tatoeba weight {w:<5} OOD-dev next-word top1 {t1:6.2f}%  top3 {t3:6.2f}%  "
-                  f"(n={n}, pairs={pairs})")
-        best = max(grid, key=lambda g: (g["top3"], -g["weight"]))
+                  f"(n={n}, pairs={pairs}, bytes={size}{'' if size <= SIZE_CAP_BYTES else ' OVER CAP'})")
+        # Only weights whose model fits the size cap are eligible (a larger Tatoeba weight adds
+        # pairs; Spanish's dev optimum sat at the grid edge, over the cap).
+        eligible = [g for g in grid if g["bytes"] <= SIZE_CAP_BYTES]
+        if not eligible:
+            raise SystemExit(f"no Tatoeba weight gives a model within {SIZE_CAP_BYTES} bytes")
+        best = max(eligible, key=lambda g: (g["top3"], -g["weight"]))
         weight = best["weight"]
         print(f"[select] chosen weight {weight}")
     if args.select_weight_only:
         return 0
 
     model = prune(*combine([(leipzig, 1.0), (tatoeba, weight)]))
-    blob, stats = encode(model, args.lang)
+    blob, stats = encode(model, cfg.code)
     if len(blob) > SIZE_CAP_BYTES:
         raise SystemExit(f"model is {len(blob)} bytes, over the {SIZE_CAP_BYTES}-byte cap")
     t1, t3, n = next_word_topk(model, ood["ood_test"], vocab)
     print(f"[model] {stats} {len(blob)} bytes; OOD-test next-word top1 {t1:.2f}% top3 {t3:.2f}% (n={n})")
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    cklm = args.out_dir / f"{args.lang}.cklm"
+    cklm = args.out_dir / f"{cfg.code}.cklm"
     cklm.write_bytes(blob)
     digest = hashlib.sha256(blob).hexdigest()
 
     # Tatoeba contributors whose sentences were counted (CC BY 2.0 FR attribution).
     names = sorted(tatoeba.contributors, key=lambda s: (s.lower(), s)) if weight > 0 else []
-    args.contributors.parent.mkdir(parents=True, exist_ok=True)
-    with open(args.contributors, "w", encoding="utf-8") as fh:
-        fh.write("# Tatoeba contributors whose English sentences were counted into\n")
-        fh.write(f"# src/main/assets/lm/{args.lang}.cklm (CC BY 2.0 FR, https://tatoeba.org).\n")
-        fh.write(f"# Snapshot: {SOURCES['tatoeba'].filename.split('/')[-1]} sha256 {hashes['tatoeba']}\n")
+    contributors_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(contributors_path, "w", encoding="utf-8") as fh:
+        fh.write(f"# Tatoeba contributors whose {cfg.name} sentences were counted into\n")
+        fh.write(f"# src/main/assets/lm/{cfg.code}.cklm (CC BY 2.0 FR, https://tatoeba.org).\n")
+        fh.write(f"# Snapshot: {cfg.tatoeba.filename.split('/')[-1]} sha256 {hashes['tatoeba']}\n")
         fh.write("# Generated by scripts/build_static_lm.py — do not edit by hand.\n")
         for name in names:
             fh.write(name + "\n")
 
+    corpus: dict[str, object] = {
+        "sentenceTokens": [MIN_TOKENS, MAX_TOKENS],
+        "heldoutFraction": HELDOUT_FRACTION,
+        "split": "sha1(normalised sentence)[:8] / 0xFFFFFFFF < heldoutFraction",
+        "trainSentences": {c.name: c.sentences for c in (leipzig, tatoeba)},
+        "trainTokens": {c.name: c.tokens for c in (leipzig, tatoeba)},
+        "weights": {"leipzig": 1.0, "tatoeba": weight},
+        "weightGrid": grid,
+        "weightRule": f"max OOD-dev ({cfg.ood_label} dev) next-word top-3 of the pruned model among weights "
+                      f"whose model fits the {SIZE_CAP_BYTES}-byte cap; ties -> lower weight",
+    }
+    # Recorded only where the step ran, so the shipped en sidecar stays byte-identical.
+    if cfg.nfc:
+        corpus["normalisation"] = "NFC"
+    if cfg.exclude_eval_overlap:
+        corpus["evalOverlapDropped"] = {c.name: c.eval_overlap for c in (leipzig, tatoeba)}
     sidecar = {
         "format": "CKLM",
         "version": FORMAT_VERSION,
-        "language": args.lang,
+        "language": cfg.code,
         "vocab": stats["vocab"],
         "prevs": stats["prevs"],
         "pairs": stats["pairs"],
@@ -692,18 +947,13 @@ def main() -> int:
             "minCount": MIN_COUNT,
             "topK": TOP_K,
             "quantStepsPerNat": QUANT_STEPS_PER_NAT,
-            "vocabulary": "dictionaries/en_enhanced.json UNION contraction display forms",
+            "vocabulary": cfg.vocabulary_note,
+            # Machine-readable form of the above: StaticLmAssetDriftTest rebuilds the allowed set
+            # from these files, so the pin cannot drift from the builder's configuration.
+            "lexicon": cfg.lexicon,
+            "contractionFiles": list(cfg.contraction_files),
         },
-        "corpus": {
-            "sentenceTokens": [MIN_TOKENS, MAX_TOKENS],
-            "heldoutFraction": HELDOUT_FRACTION,
-            "split": "sha1(normalised sentence)[:8] / 0xFFFFFFFF < heldoutFraction",
-            "trainSentences": {c.name: c.sentences for c in (leipzig, tatoeba)},
-            "trainTokens": {c.name: c.tokens for c in (leipzig, tatoeba)},
-            "weights": {"leipzig": 1.0, "tatoeba": weight},
-            "weightGrid": grid,
-            "weightRule": "max OOD-dev (UD EWT dev) next-word top-3 of the pruned model; ties -> lower weight",
-        },
+        "corpus": corpus,
         "artefactFilter": {
             "ratio": ARTEFACT_RATIO,
             "minCount": ARTEFACT_MIN_COUNT,
@@ -720,12 +970,12 @@ def main() -> int:
                 "shipped": s.shipped,
                 "note": s.note,
             }
-            for s in SOURCES.values()
+            for s in cfg.sources
         ],
         "tatoebaContributors": len(names),
     }
-    (args.out_dir / f"{args.lang}.json").write_text(json.dumps(sidecar, indent=2, ensure_ascii=False) + "\n", "utf-8")
-    print(f"[write] {cklm} sha256 {digest}; {len(names)} Tatoeba contributors -> {args.contributors}")
+    (args.out_dir / f"{cfg.code}.json").write_text(json.dumps(sidecar, indent=2, ensure_ascii=False) + "\n", "utf-8")
+    print(f"[write] {cklm} sha256 {digest}; {len(names)} Tatoeba contributors -> {contributors_path}")
     return 0
 
 

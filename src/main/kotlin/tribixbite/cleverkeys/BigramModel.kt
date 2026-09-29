@@ -615,7 +615,14 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
      * Get the probability of a word given the previous word(s)
      * Uses linear interpolation between bigram and unigram probabilities
      */
-    fun getContextualProbability(word: String?, context: List<String>?): Float {
+    fun getContextualProbability(word: String?, context: List<String>?): Float =
+        contextualProbability(currentLanguage, word, context)
+
+    /**
+     * [getContextualProbability] over [language]'s hardcoded tables (English when it has none —
+     * the same fallback [setLanguage] applies to [currentLanguage]).
+     */
+    private fun contextualProbability(language: String, word: String?, context: List<String>?): Float {
         if (word.isNullOrEmpty()) {
             return MIN_PROB
         }
@@ -623,10 +630,10 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
         val normalizedWord = word.lowercase()
 
         // Get language-specific probability maps
-        var bigramProbs = languageBigramProbs[currentLanguage]
-        var unigramProbs = languageUnigramProbs[currentLanguage]
+        var bigramProbs = languageBigramProbs[language]
+        var unigramProbs = languageUnigramProbs[language]
 
-        // Fallback to English if current language not available
+        // Fallback to English if the language has no table
         if (bigramProbs == null || unigramProbs == null) {
             bigramProbs = languageBigramProbs["en"]
             unigramProbs = languageUnigramProbs["en"]
@@ -677,13 +684,24 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
                 .coerceIn(MIN_CONTEXT_MULTIPLIER, MAX_CONTEXT_MULTIPLIER)
         }
 
+        return hardcodedContextMultiplier(currentLanguage, word, context)
+    }
+
+    /**
+     * The pre-LM multiplier: [language]'s hardcoded tables (English when it has none), ratio of
+     * contextual to base probability, clamped. What [getContextMultiplier] returns for a language
+     * with no `lm/<language>.cklm`; also the S1 eval's `legacy` arm (`StaticLmTapEvalTest`), so
+     * the baseline it compares against is this code, not a copy of it.
+     */
+    internal fun hardcodedContextMultiplier(language: String, word: String, context: List<String>?): Float {
+        if (context.isNullOrEmpty()) return 1.0f
         // Get language-specific unigram probabilities
-        var unigramProbs = languageUnigramProbs[currentLanguage]
-        if (unigramProbs == null) {
+        var unigramProbs = languageUnigramProbs[language]
+        if (unigramProbs == null || languageBigramProbs[language] == null) {
             unigramProbs = languageUnigramProbs["en"] // Fallback to English
         }
 
-        val contextProb = getContextualProbability(word, context)
+        val contextProb = contextualProbability(language, word, context)
         val baseProb = unigramProbs?.get(word.lowercase()) ?: MIN_PROB
 
         // Return ratio of contextual to base probability
@@ -693,6 +711,22 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
         // Cap the multiplier to avoid extreme values
         return min(max(multiplier, MIN_CONTEXT_MULTIPLIER), MAX_CONTEXT_MULTIPLIER)
     }
+
+    /**
+     * Every word [hardcodedContextMultiplier] can give a non-neutral value for [language]
+     * (its table's pair words and unigrams, English's when it has none) — eval support.
+     */
+    internal fun hardcodedTableWords(language: String): Set<String> {
+        val lang = if (languageBigramProbs.containsKey(language)) language else "en"
+        val out = HashSet<String>()
+        languageBigramProbs[lang]?.keys?.forEach { k -> out.addAll(k.split('|')) }
+        languageUnigramProbs[lang]?.keys?.let(out::addAll)
+        return out
+    }
+
+    /** [language]'s hardcoded `prev|next` pairs (empty when it has none) — the seed's pre-asset fallback. */
+    internal fun hardcodedPairs(language: String): Map<String, Float> =
+        languageBigramProbs[language]?.toMap() ?: emptyMap()
 
     /**
      * Add a bigram observation (for user adaptation)
