@@ -217,10 +217,9 @@ a correction is recorded, each rejected swipe's row gets `target_word = Y` and
 The change is additive inside the JSON blob, so no SQLite migration is needed. This makes
 on-device exports usable as a per-user replay pool, which §6 of the eval asked for.
 
-**Apostrophe and hyphen targets are never offered — investigated 2026-09-26, kept out.**
-The offer works only if a personal-dictionary entry makes swipes produce the word. For a joiner
-word on the default EN CTC path it does the opposite (`swipe.SwipePreferJoinerWordTest` composes
-the real pieces as `CtcEngineAdapter` wires them):
+**Apostrophe and hyphen targets — excluded 2026-09-26, enabled 2026-09-29.**
+The offer works only if a personal-dictionary entry makes swipes produce the word. On
+2026-09-26, for a joiner word on the default EN CTC path, it did the opposite:
 1. `CtcLexiconTrie.loadStrippingNonAlphabet` files the user word `she'd` under the a–z surface
    `shed`. The trie keeps the maximum frequency per surface, so the entry raises `shed` to the
    user ceiling. That is the word the user was correcting away from.
@@ -229,15 +228,42 @@ the real pieces as `CtcEngineAdapter` wires them):
    `she'd` changes neither number, so `shed` stays the auto-insert.
 3. A hyphen word has no overlay entry, and the EN branch keeps no display map. `co-op` can only
    surface as `coop`.
+4. The CKDT languages let a user word win its surface's display slot, which made the
+   apostrophe-free homograph unswipeable (fr `lune` for `l'une`).
 
-The CKDT languages do keep a display map, and a user word would win its surface's display slot.
-But it would also make the apostrophe-free homograph unswipeable (fr `lune` for `l'une`). The
-geometric engine skips joiner forms altogether. So one rule applies to every engine: joiner
-words are excluded (`SwipeCorrectionPolicy` rule 2, KDoc updated). To make "prefer" work for
-them, the decoder needs two changes (follow-ups, outside this offer):
-- a user-word term in `ContractionOverlay`'s promotion rule, for example the variant's
-  merged-lexicon frequency when it is a user word;
-- an EN display map for joiner user words in `CtcEngineAdapter`/`CtcLexiconTrie`.
+So joiner words were excluded (`8a62400c`). The two decoder follow-ups proposed then were a
+user-word term in the overlay's promotion rule and an EN display map for joiner user words.
+**What shipped (2026-09-29) is one mechanism that covers both**: the user-dictionary entry is
+read as a per-surface DISPLAY preference (`swipe/UserJoinerPreference`) that
+`ContractionOverlay` honours before any data-driven rule (contraction-system skill §6d):
+- the user's form takes the decoded surface's rank and score — rank 0, the auto-insert, when
+  the surface was rank 0 — so prefer `she'd` → the next `shed` swipe shows `she'd` first;
+- the surface stays one slot behind when it is a real word (`shed`, fr `lune`, `coop`), and is
+  dropped when it exists only through the user word (`xray` for `x-ray`);
+- the trie lift of step 1 is kept on purpose: it makes the trace decode to that surface;
+- the CKDT projection no longer gives a joiner user word the surface's display slot
+  (`projectWithoutJoinerDisplay`), which fixes step 4 — `lune` survives behind a user `l'une`;
+- a hyphen word needs no dictionary data: the trie already decodes `co-op` as `coop`, the
+  preference supplies the display.
+
+Why a display preference instead of a promotion-rule term: the promotion rule compares corpus
+frequencies and a margin, which is right for a default everyone gets; a user who asked for
+`she'd` has already decided, so there is nothing to weigh. Storage is the dictionary entry that
+already exists (backed up, visible in the Dictionary Manager), so no new store or gate: an entry
+is an explicit user act, and the tap-again undo of "Added …" removes it, which changes the
+`custom_words_<lang>` lexicon-memo key, so the preference is gone on the next build.
+
+Offer changes: `SwipeCorrectionPolicy` rule 2 admits words of ≥ 2 letters with inner `'`/`’`/`-`
+(endpoints and length compared on letters); rule 3 also accepts a known contraction display
+form, because dictionaries store `she'd` only as `shed`. **Not offered:** a joiner word whose
+surface is already a user word. With both `shed` and `she'd` claimed, no preference is produced
+and the traced literal keeps its slot, which keeps the reverse contract
+(`ContractionPromotionUserWordTest`: a user `id` beats a promoted `i'd`). Accepting would change
+nothing, so it is not offered; removing the base in the Dictionary Manager lifts it.
+
+Engines: CTC en, CTC CKDT (fr/it/…/packs) and geometric all read the preference, each keyed on
+the surface it shows. Geometric residue: its templates skip joiner forms, so a surface that
+exists only through the user word (`xray`) is not decodable there.
 
 ### Undoable dictionary adds (2026-09-26, user request)
 
@@ -265,7 +291,7 @@ The state machine is `UndoableBarMessage` (pure). The bar owns the timers
 **Tests.**
 - `SwipeCorrectionTrackerTest`, `SwipeCorrectionPolicyTest`, `SwipeCorrectionStoreTest`,
   `ContractionPromotionUserWordTest`, `SwipeMLDataRelabelTest`, `UndoableBarMessageTest`,
-  `SwipePreferJoinerWordTest` (pure).
+  `SwipePreferJoinerWordTest` (joiner preference, 2026-09-29), `ContractionOverlayTest` rule 0 (pure).
 - `SwipeCorrectionOfferTest` (+ accept-undo, deferred offers), `DictionaryAddUndoTest`,
   `DictionaryManagerTest` (`addUserWord` return), `SwipeMLRelabelStoreTest` (mock).
 
@@ -278,4 +304,7 @@ The state machine is `UndoableBarMessage` (pure). The bar owns the timers
   running the cursor park, so the deferred offer waits for the next typed completion or tap.
 - The bar's view wiring (click listener, timers) has no JVM test; the state machine and the
   handler side do. Device check pending.
-- Apostrophe and hyphen targets are never offered (see above).
+- A joiner word whose apostrophe-free surface is already a user word is not offered (see above).
+- Geometric cannot decode a surface that exists only through a joiner user word (`xray`).
+- Platform `UserDictionary.Words` rows count as user words (ARC-081), so a synced `we'll` row
+  now shows `we'll` ahead of `well` for that user. Accepted: it is an explicit user entry.

@@ -319,6 +319,49 @@ re-run (`build_contraction_collisions.py`: unchanged, `etoo` is in no other lexi
 `etoo` paired base at all; `eto → eto'o` stays a non-projection completion. Swiping `etoo` now shows
 `eto'o` in the slot. The pairing file is 1,790 entries.
 
+### 6d. User preference for a joiner word (2026-09-29) — rule 0 of the overlay
+
+Everything in §6c decides from SHIPPED data for everyone. A personal-dictionary word spelled
+with an apostrophe or hyphen (`she'd`, `l'une`, `co-op`) is a per-user claim, and it is read as
+a **display preference, not a frequency lift** (`swipe/UserJoinerPreference.kt`):
+
+- No engine can spell a joiner, so the entry only ever decodes as its joiner-free SURFACE
+  (`shed`, `lune`, `coop`). `ContractionOverlay.apply(userPreferredForm = …)` runs **before
+  every other rule**: the user's form takes the surface's rank and score (rank 0 → it is the
+  auto-insert), the surface stays right behind it when it is a real word, and is dropped when it
+  exists only through the user word (`xray` for `x-ray`, `replacesSurface`). The surface's other
+  mapped forms then follow the normal rules (deduped), or go to the tail when it was replaced.
+- **Why not the frequency.** Before this, EN CTC filed `she'd` under `shed` in the trie
+  (max-per-surface — lifting `shed`) while placement compared `she'd`'s PAIRING frequency with
+  `shed`'s LEXICON frequency, neither touched by the user word: `shed` stayed the auto-insert, so
+  the swipe offer could not include joiner words (commit `8a62400c`). The trie lift is KEPT —
+  it makes the trace the user keeps swiping decode to that surface more readily.
+- **No preference when the surface is itself a letters-only user word** (both `shed` and
+  `she'd` claimed): the traced literal keeps its slot, preserving the older reverse contract
+  (`ContractionPromotionUserWordTest`: a user `id` beats a promoted `i'd`). The swipe offer is
+  suppressed for a joiner word in that state (`SwipeCorrectionPolicy.joinerSurface`). Two joiner
+  words on one surface: higher user frequency, then merge order.
+- **fr/it cannot regress for anyone without such a word** — the map is empty, rule 0 never
+  fires. WITH a user `l'une`, `lune` is kept at #1, never destroyed. The CKDT branch used to be
+  worse than that: `CtcAzProjection.projectLexicon` gave the surface's accent-display slot to the
+  highest-frequency form, i.e. the user word at 255, so every decoded `lune` was REPLACED. Joiner
+  user words are now projected separately (`projectWithoutJoinerDisplay`): they raise the
+  surface frequency (max) but own no display entry.
+- **Surface key per engine** (it must equal what the overlay sees): CTC en = a–z strip
+  (`stripToAlphabet`, same as `loadStrippingNonAlphabet`); CTC CKDT = the projection resolved
+  through the accent-display map; geometric = `joinerFree` (lowercase, accents kept — its words
+  are canonical). "Is a real word" = the engine's own ordinals.
+- **Geometric residue.** Its templates skip joiner forms and nothing adds the stripped surface,
+  so a surface that exists ONLY through the user word (`xray`) is undecodable there; the
+  preference serves real-word surfaces (`shed`, `lune`, `coop`) identically to CTC.
+- **Hyphens** needed no dictionary data (the lexicons hold 0 hyphenated EN entries): the trie
+  already files `co-op` under `coop`; rule 0 supplies the display. So hyphen words are offered too.
+- Lifetime = the dictionary entry. Undo of "Added …" / Dictionary Manager removal changes
+  `custom_words_<lang>`, the lexicon memo key, so the next build has no preference.
+- **Signal breadth, accepted**: platform `UserDictionary.Words` rows are user words too
+  (ARC-081), so a `we'll` row synced from another keyboard now shows `we'll` ahead of `well` for
+  that user. An explicit user-dictionary entry is treated as the user's act everywhere else.
+
 ## 7. Empty files are CORRECT, not unfinished
 
 `es`, `pt`, `sv` ship zero contractions, and the tests assert the positive linguistic evidence:
@@ -423,6 +466,10 @@ guard.
 | pairing `frequency` survives parsing, base-scoped; the 19 projection values pinned; one value per non-possessive variant; no flat 200 on a promotable pair | `BundledContractionDataTest` (pure) |
 | every non-possessive pair DERIVED from `contractions.bin` has a pairing frequency (none excepted since `etoo` went REPLACE) | `BundledContractionDataTest` (pure) |
 | `etoo → eto'o` is REPLACE in the JSON and the binary, not a pairing base, and `etoo` is no lexicon word | `BundledContractionDataTest` (pure) |
+| rule 0 (user joiner word): preferred form at the surface's rank + score, real surface kept behind, non-word surface replaced (mapped forms → tail), junk alias yields one entry, empty map = byte-identical output | `ContractionOverlayTest` (pure) |
+| prefer `she'd` → next `shed` swipe has `she'd` at rank 0; any rank; user `id` still beats promoted `i'd`; both claimed → base keeps slot; undo restores; `co-op` ahead of `coop`; `x-ray` replaces `xray`; fr `lune` unchanged without a user word and kept at #1 behind a user `l'une`; CKDT display slot never taken by a joiner user word; adapters wired (source pin) | `SwipePreferJoinerWordTest` (pure) |
+| shipped pronoun near-ties (`shed`/`shell`/`well`/`hell`): preferred variant rank 0, base #1; unchanged without the user word | `CtcContractionDisplayTest` (pure) |
+| joiner words pass the offer's plausibility rule on their letters; contraction table counts as a real word; surface-claimed joiner words are not offered; accept/undo add and remove exactly the joiner word | `SwipeCorrectionPolicyTest` (pure) + `SwipeCorrectionOfferTest` (mock) |
 | language isolation (no code-switched output) | `SwipeContractionLanguageIsolationTest` |
 
 ---
