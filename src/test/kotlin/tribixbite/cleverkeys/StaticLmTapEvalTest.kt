@@ -55,6 +55,16 @@ import java.io.File
  * `STATIC_LM_EVAL_ALIASES=off` loads the model without aliases (the pre-fix lookup), for a
  * same-harness before/after.
  *
+ * ## Dev-split selection (es/pt/sv retry, 2026-09-29)
+ *
+ * `STATIC_LM_EVAL_SPLIT=dev` scores the OOD **dev** split (`ood_dev_<lang>.txt`) instead of the
+ * test split and skips the in-domain sample — the pre-registered selection metric is the gate
+ * metric itself, measured where choosing is allowed. `STATIC_LM_EVAL_CANDIDATES=<root>` evaluates
+ * every `<root>/<tag>/<lang>.cklm` (a grid written by `build_static_lm.py --emit-grid`) and prints
+ * one `GRID` line per candidate with its gate deltas; lexicon and prefix index are built once per
+ * language. `STATIC_LM_EVAL_DIR` overrides the directory the eval files are read from (a
+ * candidate build's own held-out split).
+ *
  * Counts: every cell reports token POSITIONS; the header also reports distinct sentences,
  * distinct previous words (contexts) and distinct (previous, target) pairs, so a rate built on
  * a few repeated contexts is visible as such.
@@ -87,7 +97,24 @@ import java.io.File
 class StaticLmTapEvalTest {
 
     private val corpora = File(System.getProperty("user.home"), ".cache/cleverkeys-corpora")
-    private val evalDir = File(corpora, "static-lm-eval")
+    private val evalDir = System.getenv("STATIC_LM_EVAL_DIR")?.takeIf { it.isNotBlank() }?.let(::File)
+        ?: File(corpora, "static-lm-eval")
+    /** true = score the OOD dev split (selection); false = the test split (the gate). */
+    private val devSplit = System.getenv("STATIC_LM_EVAL_SPLIT") == "dev"
+    private val oodPrefix = if (devSplit) "ood_dev" else "ood_test"
+
+    /** One population's gate deltas (lm_static − none, top-3, points) and empty-context deviation. */
+    private data class Gates(val prefix1: Double, val prefix2: Double, val prefix3: Double, val emptyDeviation: Int, val n1: Int) {
+        val pass get() = prefix1 >= 5.0 && prefix2 >= 2.0 && prefix3 >= 0.0 && emptyDeviation == 0
+    }
+
+    /** Per-language inputs that do not depend on the model (built once per language). */
+    private inner class LangInputs(val lang: String) {
+        val lexicon = loadLexicon(File(StaticLmLanguageData.DICT_DIR, "${lang}_enhanced.bin")).also(::buildPrefixIndex)
+        val learned = loadLearned(File(corpora, "device_bigrams.json"), lang)
+        val legacy = Legacy(lang)
+        val ood = readSentences(File(evalDir, "${oodPrefix}_$lang.txt"), sampleEvery = 1)
+    }
 
     /** One arm's static/learned sources. */
     private enum class Arm(val static: StaticSource, val learned: Boolean, val source: String) {
@@ -126,8 +153,14 @@ class StaticLmTapEvalTest {
             return
         }
         val requested = System.getenv("STATIC_LM_EVAL_LANGS")?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+        val candidates = System.getenv("STATIC_LM_EVAL_CANDIDATES")?.takeIf { it.isNotBlank() }?.let(::File)
+        if (candidates != null) {
+            val langs = requested ?: error("STATIC_LM_EVAL_CANDIDATES needs STATIC_LM_EVAL_LANGS")
+            assertThat(evaluateGrid(candidates, langs)).isGreaterThan(0)
+            return
+        }
         val languages = requested ?: StaticLmLanguageData.shippedLanguages(StaticLmLanguageData.EVAL_LM_DIR)
-            .filter { File(evalDir, "ood_test_$it.txt").exists() && File(evalDir, "heldout_$it.txt").exists() }
+            .filter { File(evalDir, "${oodPrefix}_$it.txt").exists() && File(evalDir, "heldout_$it.txt").exists() }
         Assume.assumeTrue("no language with a model and local eval files (run scripts/build_static_lm.py)",
             languages.isNotEmpty())
         var measured = 0
@@ -135,10 +168,37 @@ class StaticLmTapEvalTest {
         assertThat(measured).isGreaterThan(0)
     }
 
+    /**
+     * Every `<root>/<tag>/<lang>.cklm` for each of [langs], on the split [devSplit] selects; prints
+     * the full report per candidate plus one machine-readable `GRID` line. Returns the number of
+     * candidates measured.
+     */
+    private fun evaluateGrid(root: File, langs: List<String>): Int {
+        var measured = 0
+        for (lang in langs) {
+            val tags = (root.listFiles { f -> File(f, "$lang.cklm").isFile } ?: emptyArray()).map { it.name }.sorted()
+            if (tags.isEmpty()) { println("[skip] $lang: no candidates under $root"); continue }
+            val inputs = LangInputs(lang)
+            println("[grid] $lang: ${tags.size} candidates, ${inputs.ood.size} $oodPrefix sentences (uptime-independent counts)")
+            for (tag in tags) {
+                val dir = File(root, tag)
+                val lm = StaticContextLm.parse(File(dir, "$lang.cklm").readBytes())
+                    .withReplaceAliases(StaticLmLanguageData.replaceAliases(lang))
+                val allowed = inputs.lexicon.index.keys + StaticLmLanguageData.contractionForms(lang, dir)
+                val g = report("[$lang] $tag $oodPrefix", inputs.ood, lm, inputs.lexicon, allowed, inputs.learned,
+                    inputs.legacy, contraction = null)
+                println("GRID lang=$lang tag=$tag split=$oodPrefix bytes=${File(dir, "$lang.cklm").length()} " +
+                    "n1=${g.n1} p1=%.2f p2=%.2f p3=%.2f emptyDev=%d".format(g.prefix1, g.prefix2, g.prefix3, g.emptyDeviation))
+                measured++
+            }
+        }
+        return measured
+    }
+
     /** Evaluate one language; returns the number of OOD sentences measured (0 = skipped). */
     private fun evaluateLanguage(lang: String): Int {
         val lmFile = StaticLmLanguageData.asset(lang, StaticLmLanguageData.EVAL_LM_DIR)
-        val oodFile = File(evalDir, "ood_test_$lang.txt")
+        val oodFile = File(evalDir, "${oodPrefix}_$lang.txt")
         val heldFile = File(evalDir, "heldout_$lang.txt")
         val lexFile = File(StaticLmLanguageData.DICT_DIR, "${lang}_enhanced.bin")
         for ((what, f) in listOf("model" to lmFile, "OOD eval" to oodFile, "held-out eval" to heldFile, "lexicon" to lexFile)) {
@@ -172,9 +232,12 @@ class StaticLmTapEvalTest {
             else "device export, ${learned.values.sumOf { it.size }} confident pairs over ${learned.size} prev words")
 
         val ood = readSentences(oodFile, sampleEvery = 1)
-        val held = readSentences(heldFile, sampleEvery = HELD_SAMPLE)
-        report("[$lang] OOD (${oodFile.name}) — GATE POPULATION", ood, lm, lexicon, allowed, learned, legacy, contraction)
-        report("[$lang] IN-DOMAIN held-out (1/$HELD_SAMPLE sample)", held, lm, lexicon, allowed, learned, legacy, contraction)
+        report("[$lang] OOD (${oodFile.name}) — " + (if (devSplit) "DEV (selection only)" else "GATE POPULATION"),
+            ood, lm, lexicon, allowed, learned, legacy, contraction)
+        if (!devSplit) {
+            val held = readSentences(heldFile, sampleEvery = HELD_SAMPLE)
+            report("[$lang] IN-DOMAIN held-out (1/$HELD_SAMPLE sample)", held, lm, lexicon, allowed, learned, legacy, contraction)
+        }
         println("═══════════════════════════════════════════════════════════════")
         return ood.size
     }
@@ -210,7 +273,7 @@ class StaticLmTapEvalTest {
         learned: Map<String, List<ContextContinuation>>?,
         legacy: Legacy,
         contraction: ContractionEval?,
-    ) {
+    ): Gates {
         val nextWord = Cell()
         val prefix = Array(3) { Cell() }
         val contractionPrefix = Array(3) { Cell() }
@@ -296,8 +359,19 @@ class StaticLmTapEvalTest {
             val c = emptyCtx[p]
             Arm.entries.maxOf { kotlin.math.abs(c.top3[it.ordinal] - c.top3[Arm.NONE.ordinal]) }
         }
-        val pass = gate1 >= 5.0 && gate2 >= 2.0 && gate3 >= 0.0 && emptyDev == 0
-        println("     S1 VERDICT: ${if (pass) "PASS" else "FAIL"} (prefix-1 ≥ +5, prefix-2 ≥ +2, prefix-3 ≥ 0, empty-context deviation 0)")
+        val gates = Gates(gate1, gate2, gate3, emptyDev, prefix[0].n)
+        println("     S1 VERDICT: ${if (gates.pass) "PASS" else "FAIL"} (prefix-1 ≥ +5, prefix-2 ≥ +2, prefix-3 ≥ 0, empty-context deviation 0)")
+        // Task-2 line: the legacy (no-LM) path against no context, per prefix — what a language
+        // without a shipped model gets in static_only (and in both, where learned data is absent).
+        val legacyDeltas = (0 until 3).map { p ->
+            prefix[p].pct(prefix[p].top3[Arm.LEGACY_STATIC.ordinal]) - prefix[p].pct(prefix[p].top3[Arm.NONE.ordinal])
+        }
+        val legacyBoth = (0 until 3).map { p ->
+            prefix[p].pct(prefix[p].top3[Arm.LEGACY_BOTH.ordinal]) - prefix[p].pct(prefix[p].top3[Arm.NONE.ordinal])
+        }
+        println("     LEGACY (no LM) vs none, top-3: static_only %+.2f / %+.2f / %+.2f pt; both %+.2f / %+.2f / %+.2f pt (prefix 1/2/3)"
+            .format(legacyDeltas[0], legacyDeltas[1], legacyDeltas[2], legacyBoth[0], legacyBoth[1], legacyBoth[2]))
+        return gates
     }
 
     private fun printCell(c: Cell) {

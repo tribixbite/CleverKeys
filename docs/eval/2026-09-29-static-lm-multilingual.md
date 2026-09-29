@@ -370,3 +370,31 @@ never below 1 (every unlisted pair is neutral); **B** — no hardcoded multiplie
 1.0; the curated next-word seed stays). Chosen on the es/pt/sv OOD **dev** splits by
 `legacy_static` prefix-1 top-3 Δ vs `none`: A if it is ≥ 0 at prefixes 1–3 on every language
 and > 0 on at least one; otherwise B. Before/after is then reported on the test splits.
+
+### Dev choices (2026-09-29, committed before the test evaluation)
+
+One guarded run of `StaticLmTapEvalTest` (`STATIC_LM_EVAL_SPLIT=dev`, `STATIC_LM_EVAL_CANDIDATES`)
+over every grid point within the cap: es 43 of 63, pt 51 of 63, sv 63 of 63 (the rest were
+over 524,288 B and were not written). The λ = 0 / pilot-weight point reproduces the pilot model
+byte-for-byte (es sha256 `a304a06c…`). The rule from the pre-registration was applied mechanically
+(`select_dev.py` over the `GRID` lines). OOD **dev** deltas, `lm_static` − `none`, top-3:
+
+| Lang | Dev n (prefix-1) | Pilot inputs on dev (p1 / p2 / p3) | Chosen point | Chosen on dev (p1 / p2 / p3) | Bytes |
+|---|---|---|---|---|---|
+| es | 16,211 | +2.89 / +3.78 / +2.54 | `spa_wikipedia_2021_300K`, λ 0.75, W 0.1 | **+5.37** / +6.39 / +4.63 | 405,743 |
+| pt | 11,260 | +4.75 / +5.26 / +3.09 | `por-br_newscrawl_2011_300K`, λ 0.5, W 0 | **+5.85** / +5.81 / +3.39 | 351,738 |
+| sv | 5,352 | +3.87 / +1.46 / +0.65 | `swe_news_2023_300K`, λ 1.0, W 2.0 | **+5.33** / +1.85 / +1.28 | 443,229 |
+
+- **es**: every one of the top 8 points is the Wikipedia candidate at λ ≥ 0.75 (news peaked lower),
+  consistent with the register hypothesis (GSD is encyclopedic prose).
+- **pt**: the Brazilian-news candidate (a) at λ 0.5 wins; the variety-mixed 2023 news (b) is 0.10
+  pt behind. W = 0, so the pt model counts no Tatoeba sentence (no contributor list needed).
+- **sv**: **no grid point met the dev prefix-2 ≥ +2 constraint** (the best is +1.85, the chosen point itself); per the rule the
+  max-prefix-1 point is chosen anyway and this is recorded. It REPLACES the web corpus with news
+  (λ = 1.0, a pre-registered grid value) and sits at the new W edge (2.0). On dev it would fail
+  the prefix-2 gate; the test evaluation still runs once, as registered.
+- Dev deltas are optimistic after choosing the maximum of 43–63 points; the test split decides.
+
+Task 2 "before" on dev (unchanged `BigramModel`, same run): `legacy_static` − `none` top-3 at
+prefix 1 / 2 / 3 — es −23.40 / −2.26 / +0.02; pt −2.25 / +0.13 / +0.19; sv −0.11 / +0.19 / 0.00.
+In `both` with no learned data: es +0.08, pt −0.03, sv −0.07 at prefix 1.

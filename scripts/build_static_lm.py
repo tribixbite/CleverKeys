@@ -36,7 +36,11 @@ Pipeline (every step deterministic — the same inputs give byte-identical outpu
  6. combine   : weighted count sum, Leipzig x 1 + Tatoeba x W, W (among weights whose model fits
                 the size cap) selected on the OUT-OF-DOMAIN
                 DEV set (a UD treebank dev split per language; eval-only, never shipped) by
-                next-word top-3 of the pruned model; ties go to the lower weight.
+                next-word top-3 of the pruned model; ties go to the lower weight. A config may
+                instead MIX a second Leipzig corpus (Leipzig x (1-m) + Leipzig2 x m + Tatoeba x W)
+                with m and W fixed by the dev-split GATE metric in Kotlin: `--emit-grid DIR`
+                writes every (candidate corpus, m, W) point for `StaticLmTapEvalTest`
+                (STATIC_LM_EVAL_CANDIDATES + STATIC_LM_EVAL_SPLIT=dev) to choose from.
  7. prune     : weighted count >= MIN_COUNT, top TOP_K continuations per previous word.
  8. quantise  : -ln P in 1/16-nat steps, one byte (0..255 => P >= 1.2e-7).
  9. write     : `<out>.cklm` + `<out>.json` sidecar (counts, sha256, sources, weights) + the
@@ -160,19 +164,32 @@ class LangConfig:
     # Drop corpus sentences that also occur in the OOD dev/test files. Off for en only for the
     # same byte-reproducibility reason (the en overlap count is reported by --check-overlap).
     exclude_eval_overlap: bool = True
+    # Optional SECOND Leipzig corpus mixed into the first: Leipzig weights become
+    # leipzig x (1 - mix) + leipzig2 x mix (they sum to 1, so the count mass — and how many pairs
+    # clear MIN_COUNT — stays near a single-corpus model's). Chosen on the OOD dev split by the
+    # gate metric (docs/eval/2026-09-29-static-lm-multilingual.md, es/pt/sv retry); None = one corpus.
+    leipzig2: Source | None = None
+    mix: float = 0.0
+    # Tatoeba weight fixed by that dev selection. None = select here by the next-word proxy
+    # (`WEIGHT_GRID`, the rule every model shipped before the retry was built with).
+    tatoeba_weight: float | None = None
+    # Second-corpus CANDIDATES for `--emit-grid` (pinned; evaluation-stage only — a candidate
+    # that is not chosen never reaches a shipped model).
+    candidates: tuple[Source, ...] = ()
 
     @property
     def sources(self) -> tuple[Source, ...]:
-        return (self.leipzig, self.tatoeba, self.ood_dev, self.ood_test)
+        extra = (self.leipzig2,) if self.leipzig2 is not None else ()
+        return (self.leipzig, self.tatoeba, *extra, self.ood_dev, self.ood_test)
 
     @property
     def vocabulary_note(self) -> str:
         return f"dictionaries/{self.lexicon} UNION contraction display forms"
 
 
-def _leipzig(corpus: str, sha256: str, note: str) -> Source:
+def _leipzig(corpus: str, sha256: str, note: str, key: str = "leipzig") -> Source:
     return Source(
-        key="leipzig",
+        key=key,
         filename=f"leipzig/{corpus}.tar.gz",
         url=f"https://downloads.wortschatz-leipzig.de/corpora/{corpus}.tar.gz",
         sha256=sha256,
@@ -247,6 +264,16 @@ CONFIGS: dict[str, LangConfig] = {
             lexicon="es_enhanced.bin",
             contraction_files=("contractions_es.json",),
             wordfreq_lang="es",
+            # es/pt/sv retry (pre-registered 2026-09-29): register candidates for GSD's
+            # encyclopedic/news-style prose, mixed into the web corpus by a dev-chosen weight.
+            candidates=(
+                _leipzig("spa_news_2023_300K",
+                         "668ee9fbb6ee70aaff0164b2fa2f6acff54950cf7b444f8f2021997684b06d6f",
+                         "Spanish news 2023, 300K sentences", key="leipzig2"),
+                _leipzig("spa_wikipedia_2021_300K",
+                         "8f6d62de098a7615c5b8d40d4e449e883888252fa599102747c5eec91b10fa46",
+                         "Spanish Wikipedia 2021, 300K sentences", key="leipzig2"),
+            ),
         ),
         LangConfig(
             code="de",
@@ -321,6 +348,16 @@ CONFIGS: dict[str, LangConfig] = {
             lexicon="pt_enhanced.bin",
             contraction_files=("contractions_pt.json",),
             wordfreq_lang="pt",
+            # Retry candidates: Bosque dev is 45% Brazilian news (CETENFolha) + 55% European news
+            # (CETEMPúblico); the web corpus is Portugal-only. (a) supplies variety AND register.
+            candidates=(
+                _leipzig("por-br_newscrawl_2011_300K",
+                         "20b8dad08d98ef1d9a4aa17b959532ba0c7b0e6f8fee7da6324cfd1e818452ce",
+                         "Brazilian Portuguese news crawl 2011, 300K sentences", key="leipzig2"),
+                _leipzig("por_news_2023_300K",
+                         "ffd654ebb29e8afdd802fbd6a1cdc3258f927f15339f368e55529ed058bb5a70",
+                         "Portuguese news 2023, 300K sentences", key="leipzig2"),
+            ),
         ),
         LangConfig(
             code="sv",
@@ -339,6 +376,15 @@ CONFIGS: dict[str, LangConfig] = {
             lexicon="sv_enhanced.bin",
             contraction_files=("contractions_sv.json",),
             wordfreq_lang="sv",
+            # Retry candidates: Talbanken is professional prose (register mismatch with web text).
+            candidates=(
+                _leipzig("swe_news_2023_300K",
+                         "e7c777651a432df0e9f108c9b7f452e22c6cfe9d6572ba00d1891a9baa69db85",
+                         "Swedish news 2023, 300K sentences", key="leipzig2"),
+                _leipzig("swe_wikipedia_2021_300K",
+                         "e4a0725749bef237b530493d2119d863d264a8de295f945ffb2c8185abd84f98",
+                         "Swedish Wikipedia 2021, 300K sentences", key="leipzig2"),
+            ),
         ),
     )
 }
@@ -790,6 +836,106 @@ def corpus_reference(other: CorpusCounts) -> Callable[[str], float]:
 
 # ── main ─────────────────────────────────────────────────────────────────────────────────────
 
+# Retry grid (pre-registered 2026-09-29): second-corpus mix and Tatoeba weights for --emit-grid.
+MIX_GRID = (0.0, 0.25, 0.5, 0.75, 1.0)
+GRID_WEIGHTS = (0.0, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0)
+
+
+def filter_artefacts(
+    corpora: list[tuple[CorpusCounts, list[list[str | None]], CorpusCounts]],
+    ref: Callable[[str], float] | None,
+    ref_name: str,
+    vocab: set[str],
+) -> dict[str, dict[str, float]]:
+    """Per corpus (counts, train sentences, fallback reference corpus): find its artefacts
+    against wordfreq (or the fallback corpus when wordfreq is absent), print them and recount
+    with them as chain breaks. Returns corpus name -> {word: ratio}."""
+    artefacts: dict[str, dict[str, float]] = {}
+    for c, train, other in corpora:
+        reference = ref if ref is not None else corpus_reference(other)
+        found = find_artefacts(c, reference)
+        artefacts[c.name] = found
+        top = sorted(found.items(), key=lambda kv: -c.unigrams[kv[0]])[:15]
+        print(f"[artefacts:{c.name}] {len(found)} words dropped (reference: "
+              f"{ref_name if ref else 'other corpus'}); most frequent: "
+              + ", ".join(f"{w} {r:.0f}x" for w, r in top))
+        recount(c, train, vocab, frozenset(found))
+    return artefacts
+
+
+def mixture(leipzig: CorpusCounts, tatoeba: CorpusCounts, weight: float,
+            second: CorpusCounts | None, mix: float) -> list[tuple[CorpusCounts, float]]:
+    """The weighted corpus list, in the ONE order both the grid and the final build use (float
+    sums depend on it, and the shipped model must be byte-identical to the grid point chosen).
+    Without a second corpus this is exactly the pre-retry `[(leipzig, 1), (tatoeba, W)]`."""
+    out = [(leipzig, 1.0 - mix), (tatoeba, weight)]
+    if second is not None:
+        out.append((second, mix))
+    return out
+
+
+def emit_grid(
+    args: argparse.Namespace,
+    cfg: LangConfig,
+    leipzig: CorpusCounts,
+    tatoeba: CorpusCounts,
+    seen_after_tatoeba: set[str],
+    paths: dict[str, Path],
+    vocab: set[str],
+    excluded: frozenset[str],
+    ref: Callable[[str], float] | None,
+    ref_name: str,
+) -> int:
+    """Write every (second corpus, mix, Tatoeba weight) grid point within the size cap to
+    `<emit_grid>/<tag>/<lang>.cklm` + a sidecar, for the Kotlin dev-split selection
+    (`StaticLmTapEvalTest`, STATIC_LM_EVAL_CANDIDATES). Nothing here is shipped; mix 0 is the
+    single-corpus model and is written once, as `base_*`."""
+    root: Path = args.emit_grid
+    root.mkdir(parents=True, exist_ok=True)
+    rows: list[dict[str, object]] = []
+
+    def write(tag: str, corpora: list[tuple[CorpusCounts, float]], meta: dict[str, object]) -> None:
+        model = prune(*combine(corpora))
+        blob, stats = encode(model, cfg.code)
+        row = {"tag": tag, **meta, "bytes": len(blob), **stats}
+        rows.append(row)
+        over = len(blob) > SIZE_CAP_BYTES
+        print(f"[grid] {tag}: {len(blob)} bytes{' OVER CAP (not written)' if over else ''}", flush=True)
+        if over:
+            return
+        out = root / tag
+        out.mkdir(parents=True, exist_ok=True)
+        (out / f"{cfg.code}.cklm").write_bytes(blob)
+        side = {
+            "format": "CKLM", "version": FORMAT_VERSION, "language": cfg.code,
+            **stats, "bytes": len(blob), "sha256": hashlib.sha256(blob).hexdigest(),
+            "model": {"lexicon": cfg.lexicon, "contractionFiles": list(cfg.contraction_files)},
+            "grid": meta,
+        }
+        (out / f"{cfg.code}.json").write_text(json.dumps(side, indent=2, ensure_ascii=False) + "\n", "utf-8")
+
+    for w in GRID_WEIGHTS:
+        write(f"base_m0_w{w}", mixture(leipzig, tatoeba, w, None, 0.0),
+              {"second": None, "mix": 0.0, "tatoeba": w})
+    for cand in cfg.candidates:
+        path, _ = ensure_source(cand, args.cache, args.allow_unpinned, args.offline)
+        name = cand.filename.split("/")[-1].removesuffix(".tar.gz")
+        # The second corpus is counted after Leipzig + Tatoeba, exactly as the final build does.
+        second, second_train = count_corpus(
+            "leipzig2", leipzig_lines(path), vocab, set(seen_after_tatoeba), lambda _s: None, cfg.nfc, excluded)
+        print(f"[{name}] train sentences {second.sentences}, held-out {second.heldout}, "
+              f"duplicates {second.duplicates}, eval-overlap dropped {second.eval_overlap}, tokens {second.tokens}")
+        filter_artefacts([(second, second_train, leipzig)], ref, ref_name, vocab)
+        del second_train
+        for mix in MIX_GRID[1:]:
+            for w in GRID_WEIGHTS:
+                write(f"{name}_m{mix}_w{w}", mixture(leipzig, tatoeba, w, second, mix),
+                      {"second": name, "mix": mix, "tatoeba": w})
+        del second
+    (root / f"grid_{cfg.code}.json").write_text(json.dumps(rows, indent=2) + "\n", "utf-8")
+    print(f"[grid] {len(rows)} points -> {root}")
+    return 0
+
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -805,10 +951,15 @@ def main() -> int:
                     help="local-only held-out + OOD sentence files for the Kotlin eval")
     ap.add_argument("--weight", type=float, default=None, help="skip selection, use this Tatoeba weight")
     ap.add_argument("--select-weight-only", action="store_true")
+    ap.add_argument("--emit-grid", type=Path, default=None,
+                    help="write every (second corpus, mix, Tatoeba weight) grid point under this directory "
+                         "for the Kotlin dev-split selection, and nothing else")
     ap.add_argument("--allow-unpinned", action="store_true")
     ap.add_argument("--offline", action="store_true")
     args = ap.parse_args()
     cfg = CONFIGS[args.lang]
+    if args.emit_grid is not None and cfg.leipzig2 is not None:
+        raise SystemExit("--emit-grid starts from the single-corpus configuration; this one already mixes")
     contributors_path: Path = args.contributors or REPO / f"scripts/data/tatoeba-contributors-{cfg.code}.txt"
 
     paths: dict[str, Path] = {}
@@ -842,6 +993,8 @@ def main() -> int:
     heldout_path = args.eval_dir / f"heldout_{cfg.code}.txt"
     excluded = frozenset(eval_keys) if cfg.exclude_eval_overlap else frozenset()
     seen: set[str] = set(excluded)
+    second: CorpusCounts | None = None
+    second_train: list[list[str | None]] = []
     with open(heldout_path, "w", encoding="utf-8") as held:
         def sink(sentence: str) -> None:
             held.write(sentence + "\n")
@@ -849,33 +1002,37 @@ def main() -> int:
             "leipzig", leipzig_lines(paths["leipzig"]), vocab, seen, sink, cfg.nfc, excluded)
         tatoeba, tatoeba_train = count_corpus(
             "tatoeba", tatoeba_lines(paths["tatoeba"]), vocab, seen, sink, cfg.nfc, excluded)
+        seen_after_tatoeba = set(seen) if args.emit_grid is not None else set()
+        if cfg.leipzig2 is not None:
+            second, second_train = count_corpus(
+                "leipzig2", leipzig_lines(paths["leipzig2"]), vocab, seen, sink, cfg.nfc, excluded)
     del seen
-    for c in (leipzig, tatoeba):
+    counted = [c for c in (leipzig, tatoeba, second) if c is not None]
+    for c in counted:
         print(f"[{c.name}] train sentences {c.sentences}, held-out {c.heldout}, "
               f"duplicates {c.duplicates}, eval-overlap dropped {c.eval_overlap}, tokens {c.tokens}")
 
-    # Artefact filter, per corpus.
+    # Artefact filter, per corpus (the fallback reference, without wordfreq, is the other corpus).
     ref, ref_name = wordfreq_reference(cfg.wordfreq_lang)
-    artefacts: dict[str, dict[str, float]] = {}
-    for c, train, other in ((leipzig, leipzig_train, tatoeba), (tatoeba, tatoeba_train, leipzig)):
-        reference = ref if ref is not None else corpus_reference(other)
-        found = find_artefacts(c, reference)
-        artefacts[c.name] = found
-        top = sorted(found.items(), key=lambda kv: -c.unigrams[kv[0]])[:15]
-        print(f"[artefacts:{c.name}] {len(found)} words dropped (reference: "
-              f"{ref_name if ref else 'other corpus'}); most frequent: "
-              + ", ".join(f"{w} {r:.0f}x" for w, r in top))
-        recount(c, train, vocab, frozenset(found))
-    del leipzig_train, tatoeba_train
+    jobs = [(leipzig, leipzig_train, tatoeba), (tatoeba, tatoeba_train, leipzig)]
+    if second is not None:
+        jobs.append((second, second_train, leipzig))
+    artefacts = filter_artefacts(jobs, ref, ref_name, vocab)
+    del leipzig_train, tatoeba_train, second_train, jobs
 
-    # Weight selection on OOD dev (pre-registered: max next-word top-3, ties → lower weight).
+    if args.emit_grid is not None:
+        return emit_grid(args, cfg, leipzig, tatoeba, seen_after_tatoeba, paths, vocab, excluded, ref, ref_name)
+
+    # Tatoeba weight: fixed by the dev-split gate-metric selection (cfg.tatoeba_weight), given on
+    # the command line, or selected here on OOD dev by the next-word proxy (ties -> lower weight).
+    grid: list[dict[str, float]] = []
     if args.weight is not None:
         weight = args.weight
-        grid: list[dict[str, float]] = []
+    elif cfg.tatoeba_weight is not None:
+        weight = cfg.tatoeba_weight
     else:
-        grid = []
         for w in WEIGHT_GRID:
-            m = prune(*combine([(leipzig, 1.0), (tatoeba, w)]))
+            m = prune(*combine(mixture(leipzig, tatoeba, w, second, cfg.mix)))
             t1, t3, n = next_word_topk(m, ood["ood_dev"], vocab)
             pairs = sum(len(v) for v in m.table.values())
             size = len(encode(m, cfg.code)[0])
@@ -894,7 +1051,7 @@ def main() -> int:
     if args.select_weight_only:
         return 0
 
-    model = prune(*combine([(leipzig, 1.0), (tatoeba, weight)]))
+    model = prune(*combine(mixture(leipzig, tatoeba, weight, second, cfg.mix)))
     blob, stats = encode(model, cfg.code)
     if len(blob) > SIZE_CAP_BYTES:
         raise SystemExit(f"model is {len(blob)} bytes, over the {SIZE_CAP_BYTES}-byte cap")
@@ -917,22 +1074,32 @@ def main() -> int:
         for name in names:
             fh.write(name + "\n")
 
+    weights: dict[str, float] = {"leipzig": 1.0 - cfg.mix, "tatoeba": weight}
+    if second is not None:
+        weights["leipzig2"] = cfg.mix
+    if cfg.tatoeba_weight is not None and args.weight is None:
+        rule = (f"Tatoeba weight{' and leipzig2 mix' if second is not None else ''} chosen on the OOD dev split "
+                f"({cfg.ood_label} dev) by the S1 gate metric — StaticLmTapEvalTest prefix-1 top-3 delta, "
+                f"STATIC_LM_EVAL_SPLIT=dev — over the pre-registered grid within the {SIZE_CAP_BYTES}-byte cap "
+                f"(docs/eval/2026-09-29-static-lm-multilingual.md, es/pt/sv retry)")
+    else:
+        rule = (f"max OOD-dev ({cfg.ood_label} dev) next-word top-3 of the pruned model among weights "
+                f"whose model fits the {SIZE_CAP_BYTES}-byte cap; ties -> lower weight")
     corpus: dict[str, object] = {
         "sentenceTokens": [MIN_TOKENS, MAX_TOKENS],
         "heldoutFraction": HELDOUT_FRACTION,
         "split": "sha1(normalised sentence)[:8] / 0xFFFFFFFF < heldoutFraction",
-        "trainSentences": {c.name: c.sentences for c in (leipzig, tatoeba)},
-        "trainTokens": {c.name: c.tokens for c in (leipzig, tatoeba)},
-        "weights": {"leipzig": 1.0, "tatoeba": weight},
+        "trainSentences": {c.name: c.sentences for c in counted},
+        "trainTokens": {c.name: c.tokens for c in counted},
+        "weights": weights,
         "weightGrid": grid,
-        "weightRule": f"max OOD-dev ({cfg.ood_label} dev) next-word top-3 of the pruned model among weights "
-                      f"whose model fits the {SIZE_CAP_BYTES}-byte cap; ties -> lower weight",
+        "weightRule": rule,
     }
     # Recorded only where the step ran, so the shipped en sidecar stays byte-identical.
     if cfg.nfc:
         corpus["normalisation"] = "NFC"
     if cfg.exclude_eval_overlap:
-        corpus["evalOverlapDropped"] = {c.name: c.eval_overlap for c in (leipzig, tatoeba)}
+        corpus["evalOverlapDropped"] = {c.name: c.eval_overlap for c in counted}
     sidecar = {
         "format": "CKLM",
         "version": FORMAT_VERSION,
