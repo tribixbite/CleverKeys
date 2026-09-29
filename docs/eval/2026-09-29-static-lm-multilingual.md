@@ -297,3 +297,76 @@ STATIC_LM_MODEL_DIR=<stage> STATIC_LM_EVAL_LANGS=es,de,fr,it,pt,sv \
 STATIC_LM_EVAL_LANGS=en scripts/gradle-guard.sh runPureTests -PtestClass=StaticLmTapEvalTest -PgeoFull=true
 # add STATIC_LM_EVAL_ALIASES=off to either for the pre-fix lookup
 ```
+
+## es/pt/sv retry — PRE-REGISTRATION (2026-09-29, written and committed before any retry model is built or measured)
+
+Nothing below has been measured yet. The UD **test** splits are not read by anything that
+chooses an input; each language's single chosen model is evaluated on its test split exactly
+once, after this section and the dev choices are committed.
+
+### What is unchanged
+
+- **Gates** (per language, OOD test, `lm_static` vs `none`, through the Kotlin path in
+  `StaticLmTapEvalTest`): prefix-1 top-3 ≥ +5 pt, prefix-2 ≥ +2 pt, prefix-3 ≥ 0, zero
+  empty-context deviation. Same thresholds as the pilot.
+- **Test populations**: UD Spanish-GSD test, UD Portuguese-Bosque test, UD Swedish-Talbanken test
+  at the pinned commits (not swapped for a treebank that "fits better" — that would be choosing
+  the exam after failing it).
+- Model format and pruning: CKLM v1, `MIN_COUNT` 3 on weighted counts, top-20, 512 KiB cap,
+  lexicon ∪ contraction forms, artefact filter, NFC, eval-overlap exclusion.
+- Shipping rule: each language ships iff it passes its own gates; a failure is recorded and the
+  language stays unshipped. No second test evaluation for any language.
+
+### What changes, and why (hypotheses)
+
+| Lang | Dev composition checked (dev split only) | Hypothesis | Candidate second Leipzig corpus |
+|---|---|---|---|
+| pt | Bosque dev `sent_id`: 523 `CF` (CETENFolha, **Brazilian** news) / 649 `CP` (CETEMPúblico, European news) — 45 % Brazilian, 100 % newspaper | **Variety + register mismatch.** The pilot trained on Portugal web text only (`por-pt_web_2015`); 45 % of the evaluation variety (pt-BR) and its register (news) are absent. | (a) `por-br_newscrawl_2011_300K` — Brazilian news (variety AND register); (b) `por_news_2023_300K` — news, variety-mixed |
+| es | GSD dev: encyclopedic/news-style prose (e.g. "Lo hizo siguiendo las nuevas corrientes …") | **Register mismatch.** GSD is Wikipedia/news-like web prose; `spa_web_2016` is general web. | (a) `spa_news_2023_300K`; (b) `spa_wikipedia_2021_300K` |
+| sv | Talbanken dev: professional prose (textbook/informational) | **Register mismatch + Tatoeba weight at the grid edge** (1.0 was the largest weight offered, so the dev optimum may lie beyond it). | (a) `swe_news_2023_300K`; (b) `swe_wikipedia_2021_300K` |
+
+The pilot's Leipzig web corpus stays the PRIMARY corpus in every candidate (it is the closest
+register to keyboard text); a second corpus is MIXED in, never substituted blindly.
+
+### Mixing and grid (identical for the three languages)
+
+- Leipzig weights sum to 1: primary × (1 − λ) + second × λ, so the total count mass — and with
+  it how many pairs clear `MIN_COUNT` — stays near the pilot's, which keeps the model near the
+  cap without changing the pruning rule. Tatoeba × W on top, as before.
+- λ ∈ {0, 0.25, 0.5, 0.75, 1.0}; W ∈ {0, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0} (2.0 added for every
+  language because sv's pilot optimum sat at the old edge). λ = 0 reproduces the pilot inputs
+  (so the pilot model is itself a grid point and can win).
+- Grid points whose model exceeds 524,288 B are ineligible.
+
+### Dev metric and selection rule
+
+- **Metric: the gate metric itself, on the OOD dev split** — `StaticLmTapEvalTest` over
+  `ood_dev_<lang>.txt` (UD dev `# text` lines, same tokenization), prefix-1 top-3 Δ
+  (`lm_static` − `none`), through the same `UnifiedScore.combine` path. (The pilot chose W by a
+  Python next-word top-3 proxy; selecting on the gated quantity is the stated change.)
+- **Rule:** among eligible grid points of all candidate corpora for a language, take those with
+  dev prefix-2 Δ ≥ +2 and dev prefix-3 Δ ≥ 0 and zero empty-context deviation; choose the
+  maximum dev prefix-1 Δ. Ties (to 0.01 pt) → smaller λ, then smaller W, then candidate (a)
+  before (b). If no point meets the prefix-2/3 constraints, choose the maximum dev prefix-1 Δ
+  anyway and record that.
+- The chosen point is rebuilt from the committed builder, and that one model per language is
+  evaluated on the test split once.
+- Disk: each candidate archive is deleted after the grid is counted unless it was chosen
+  (chosen archives stay cached so the shipped model can be rebuilt byte-identically).
+
+### Risks stated in advance
+
+- Selecting across 2 corpora × 5 λ × 7 W (63 points) on dev makes the dev number optimistic;
+  the test evaluation is the honest check, and the in-domain held-out is reported beside it.
+- Mixing in news/encyclopedic text moves the model toward treebank register and possibly away
+  from chat register; the λ = 0 points keep the pilot inputs eligible, and the held-out of the
+  primary web corpus is reported so a regression there is visible.
+
+### Task 2 (legacy tables in `static_only`) — also pre-registered here
+
+Two candidate fixes for languages WITHOUT an LM: **A** — never use another language's tables,
+and within a language's own tables only a LISTED `(prev, word)` pair may move the multiplier,
+never below 1 (every unlisted pair is neutral); **B** — no hardcoded multiplier at all (neutral
+1.0; the curated next-word seed stays). Chosen on the es/pt/sv OOD **dev** splits by
+`legacy_static` prefix-1 top-3 Δ vs `none`: A if it is ≥ 0 at prefixes 1–3 on every language
+and > 0 on at least one; otherwise B. Before/after is then reported on the test splits.
