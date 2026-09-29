@@ -148,9 +148,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Hozzáadja a(z) „%1$s” szót a szótárhoz?</string>
-    <string name="suggestion_prefer_when_swiping">Előnyben részesíti a(z) „%1$s” szót csúsztatáskor?</string>
+    <string name="suggestion_prefer_when_swiping">Csúsztatáskor „%1$s” legyen az első?</string>
     <string name="suggestion_prefer_when_swiping_decline">Ne kérdezze</string>
-    <string name="suggestion_prefer_when_swiping_added">Csúsztatáskor mostantól a(z) „%1$s” az elsődleges</string>
+    <string name="suggestion_prefer_when_swiping_added">Csúsztatáskor mostantól „%1$s” az első</string>
     <string name="suggestion_added_to_dictionary">„%1$s” hozzáadva a szótárhoz</string>
     <string name="suggestion_tap_again_to_undo">Koppintson újra a visszavonáshoz</string>
     <string name="suggestion_removed_from_dictionary">„%1$s” eltávolítva a szótárból</string>
@@ -342,7 +342,7 @@
     <string name="appearance_height_portrait_desc">Billentyűzet magasságának beállítása álló módban</string>
     <string name="appearance_height_landscape_title">Billentyűzet magassága (Fekvő)</string>
     <string name="appearance_height_landscape_desc">Billentyűzet magasságának beállítása fekvő módban</string>
-    <string name="appearance_scale_numpad_title">Numerikus billentyűzet magasságának igazítása</string>
+    <string name="appearance_scale_numpad_title">Számbillentyűzet magasságának nyújtása</string>
     <string name="appearance_scale_numpad_desc">A PIN- és numerikus sorok nyújtása a billentyűzet teljes magasságára</string>
     <string name="appearance_bottom_margin_portrait_title">Alsó margó (Álló)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Függőleges margó a képernyő magasságának %-ában</string>
@@ -481,7 +481,7 @@
     <string name="input_auto_space_after_desc">Záró szóköz hozzáadása javaslat kiválasztásakor</string>
     <string name="input_auto_space_before_title">Automatikus szóköz javaslat előtt</string>
     <string name="input_auto_space_before_desc">Vezető szóköz beillesztése érintett javaslat elé (csúsztatás mindig szóközt ad)</string>
-    <string name="input_backspace_undo_swipe_title">Csúsztatás visszavonása törlőbillentyűvel</string>
+    <string name="input_backspace_undo_swipe_title">Csúsztatás visszavonása törléssel</string>
     <string name="input_backspace_undo_swipe_desc">A törlőbillentyű megnyomása egy csúsztatott szó után azonnal törli az egész szót</string>
     <string name="input_show_exact_typed_title">Pontosan begépelt szó mutatása</string>
     <string name="input_show_exact_typed_desc">A ténylegesen begépelt betűk felajánlása javaslatként; koppintással a szótárba kerül</string>
@@ -755,7 +755,7 @@
     <string name="privacy_section_intro">A CleverKeys teljesen offline működik — soha semmilyen adat nem hagyja el az eszközödet. Ezek a választható beállítások helyben tárolnak adatokat, hogy megnézhesd, exportálhasd vagy törölhesd őket; az exportált csúsztatási adatok máshol modellek betanítására használhatók.</string>
     <string name="privacy_on_device_learning_header">Tanulás az eszközön</string>
     <string name="privacy_forget_learned_title">A tanult adatokat is elfelejti?</string>
-    <string name="privacy_forget_learned_body">A tanulás mostantól ki van kapcsolva — semmi új nem kerül rögzítésre. Törli a már megtanultakat is (kifejezésminták, szóhasználat és kijelölési előzmények)? Ez nem vonható vissza.</string>
+    <string name="privacy_forget_learned_body">A tanulás mostantól ki van kapcsolva — semmi új nem kerül rögzítésre. Törli a már megtanultakat is (kifejezésminták, szóhasználat, javaslatválasztási előzmények és csúsztatási javítások)? Ez nem vonható vissza.</string>
     <string name="privacy_forget_learned_confirm">Tanult adatok törlése</string>
     <string name="privacy_forget_learned_keep">Megtartás</string>
     <string name="privacy_local_collection_header">Helyi adatgyűjtés (opcionális)</string>

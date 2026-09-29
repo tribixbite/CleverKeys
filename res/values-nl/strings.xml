@@ -749,7 +749,7 @@
     <string name="privacy_section_intro">CleverKeys werkt volledig offline — er verlaten nooit gegevens je apparaat. Deze optionele instellingen bewaren gegevens lokaal zodat je ze kunt bekijken, exporteren of verwijderen; geëxporteerde veeggegevens kun je elders gebruiken om modellen te trainen.</string>
     <string name="privacy_on_device_learning_header">Leren op het apparaat</string>
     <string name="privacy_forget_learned_title">Ook geleerde gegevens vergeten?</string>
-    <string name="privacy_forget_learned_body">Leren staat nu uit — er wordt niets nieuws opgenomen. Wil je ook alles verwijderen wat al is geleerd (uitdrukkingspatronen, woordgebruik en selectiegeschiedenis)? Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="privacy_forget_learned_body">Leren staat nu uit — er wordt niets nieuws opgenomen. Wil je ook alles verwijderen wat al is geleerd (uitdrukkingspatronen, woordgebruik, selectiegeschiedenis en veegcorrecties)? Dit kan niet ongedaan worden gemaakt.</string>
     <string name="privacy_forget_learned_confirm">Geleerde gegevens verwijderen</string>
     <string name="privacy_forget_learned_keep">Behouden</string>
     <string name="privacy_local_collection_header">Lokale gegevensverzameling (optioneel)</string>

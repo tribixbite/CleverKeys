@@ -705,7 +705,7 @@
     <string name="backup_password_remove">Quitar</string>
     <string name="backup_password_allow_intent_title">Permitir la contraseña vía intent de automatización</string>
     <string name="backup_password_allow_intent_desc">Desactivado por defecto. Si se activa, IMPORT vía am start puede pasar --es passphrase. Puede filtrarse por el historial del shell — usa HISTIGNORE o un espacio inicial.</string>
-    <string name="backup_password_set_dialog_title">Establecer contraseña de copia de seguridad</string>
+    <string name="backup_password_set_dialog_title">Contraseña de copia de seguridad</string>
     <string name="backup_password_change_dialog_title">Cambiar contraseña de copia de seguridad</string>
     <string name="backup_password_remove_dialog_title">Quitar contraseña de copia de seguridad</string>
     <string name="backup_password_remove_dialog_body">La copia/restauración por automatización dejará de funcionar, y las nuevas exportaciones solo serán sin cifrar mediante la exclusión manual. Introduce la contraseña actual para confirmar.</string>
@@ -767,7 +767,7 @@
     <string name="privacy_section_intro">CleverKeys funciona totalmente sin conexión: ningún dato sale nunca de tu dispositivo. Estos ajustes opcionales guardan datos localmente para que puedas revisarlos, exportarlos o eliminarlos; los datos de deslizamiento exportados pueden servir para entrenar modelos en otro lugar.</string>
     <string name="privacy_on_device_learning_header">Aprendizaje en el dispositivo</string>
     <string name="privacy_forget_learned_title">¿Olvidar también los datos aprendidos?</string>
-    <string name="privacy_forget_learned_body">El aprendizaje está ahora desactivado — no se registrará nada nuevo. ¿Quieres eliminar también todo lo ya aprendido (patrones de frases, uso de palabras e historial de selecciones)? No se puede deshacer.</string>
+    <string name="privacy_forget_learned_body">El aprendizaje está ahora desactivado — no se registrará nada nuevo. ¿Quieres eliminar también todo lo ya aprendido (patrones de frases, uso de palabras, historial de selecciones y correcciones de deslizamiento)? No se puede deshacer.</string>
     <string name="privacy_forget_learned_confirm">Eliminar datos aprendidos</string>
     <string name="privacy_forget_learned_keep">Conservarlos</string>
     <string name="privacy_local_collection_header">Recopilación local de datos (opcional)</string>

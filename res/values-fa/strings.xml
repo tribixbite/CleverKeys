@@ -784,7 +784,7 @@
     <string name="privacy_section_intro">CleverKeys کاملاً آفلاین است — هیچ داده‌ای هرگز از دستگاه شما بیرون نمی‌رود. این تنظیمات اختیاری داده‌ها را به‌صورت محلی نگه می‌دارند تا بتوانید آن‌ها را ببینید، برون‌بری یا حذف کنید؛ داده‌های کشیدنِ برون‌بری‌شده را می‌توان برای آموزش مدل‌ها در جای دیگر به کار برد.</string>
     <string name="privacy_on_device_learning_header">یادگیری روی دستگاه</string>
     <string name="privacy_forget_learned_title">داده‌های آموخته‌شده هم فراموش شوند؟</string>
-    <string name="privacy_forget_learned_body">یادگیری اکنون خاموش است — چیز جدیدی ضبط نمی‌شود. آیا می‌خواهید هر آنچه تاکنون آموخته شده (الگوهای عبارت، کاربرد واژه‌ها و تاریخچهٔ انتخاب) نیز حذف شود؟ قابل بازگشت نیست.</string>
+    <string name="privacy_forget_learned_body">یادگیری اکنون خاموش است — چیز جدیدی ضبط نمی‌شود. آیا می‌خواهید هر آنچه تاکنون آموخته شده (الگوهای عبارت، کاربرد واژه‌ها، تاریخچهٔ انتخاب و اصلاحات کشیدن) نیز حذف شود؟ قابل بازگشت نیست.</string>
     <string name="privacy_forget_learned_confirm">حذف داده‌های آموخته‌شده</string>
     <string name="privacy_forget_learned_keep">نگهش دار</string>
     <string name="privacy_local_collection_header">گردآوری محلی داده (اختیاری)</string>

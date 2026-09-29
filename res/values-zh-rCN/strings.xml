@@ -907,7 +907,7 @@
     <string name="privacy_collected_data_header">已收集的数据</string>
     <string name="privacy_export_json">导出 JSON</string>
     <string name="privacy_export_ndjson">导出 NDJSON</string>
-    <string name="privacy_forget_learned_body">学习现已关闭 — 不会再记录新内容。是否同时删除已学到的一切（短语模式、用词数据和选择历史）？此操作无法撤销。</string>
+    <string name="privacy_forget_learned_body">学习现已关闭 — 不会再记录新内容。是否同时删除已学到的一切（短语模式、用词数据、选择历史和滑动纠正）？此操作无法撤销。</string>
     <string name="privacy_forget_learned_confirm">删除已学数据</string>
     <string name="privacy_forget_learned_keep">保留</string>
     <string name="privacy_forget_learned_title">同时忘记已学数据？</string>

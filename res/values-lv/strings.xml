@@ -760,7 +760,7 @@
     <string name="privacy_section_intro">CleverKeys darbojas pilnībā bezsaistē — nekādi dati nekad neatstāj jūsu ierīci. Šie neobligātie iestatījumi glabā datus lokāli, lai jūs varētu tos apskatīt, eksportēt vai dzēst; eksportētos vilkšanas datus var izmantot modeļu apmācībai citur.</string>
     <string name="privacy_on_device_learning_header">Mācīšanās ierīcē</string>
     <string name="privacy_forget_learned_title">Aizmirst arī apgūtos datus?</string>
-    <string name="privacy_forget_learned_body">Mācīšanās tagad ir izslēgta — nekas jauns netiks ierakstīts. Vai vēlaties dzēst arī visu jau apgūto (frāžu paradumus, vārdu lietojumu un atlases vēsturi)? To nevar atsaukt.</string>
+    <string name="privacy_forget_learned_body">Mācīšanās tagad ir izslēgta — nekas jauns netiks ierakstīts. Vai vēlaties dzēst arī visu jau apgūto (frāžu paradumus, vārdu lietojumu, atlases vēsturi un vilkšanas labojumus)? To nevar atsaukt.</string>
     <string name="privacy_forget_learned_confirm">Dzēst apgūtos datus</string>
     <string name="privacy_forget_learned_keep">Paturēt</string>
     <string name="privacy_local_collection_header">Lokāla datu vākšana (neobligāta)</string>

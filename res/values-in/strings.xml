@@ -761,7 +761,7 @@
     <string name="privacy_section_intro">CleverKeys sepenuhnya luring — tidak ada data yang pernah meninggalkan perangkat Anda. Pengaturan opsional ini menyimpan data secara lokal agar Anda dapat meninjau, mengekspor, atau menghapusnya; data gesekan yang diekspor dapat dipakai untuk melatih model di tempat lain.</string>
     <string name="privacy_on_device_learning_header">Pembelajaran di Perangkat</string>
     <string name="privacy_forget_learned_title">Lupakan juga data yang dipelajari?</string>
-    <string name="privacy_forget_learned_body">Pembelajaran kini mati — tidak ada yang baru akan direkam. Apakah Anda juga ingin menghapus semua yang sudah dipelajari (pola frasa, penggunaan kata, dan riwayat seleksi)? Tindakan ini tidak dapat dibatalkan.</string>
+    <string name="privacy_forget_learned_body">Pembelajaran kini mati — tidak ada yang baru akan direkam. Apakah Anda juga ingin menghapus semua yang sudah dipelajari (pola frasa, penggunaan kata, riwayat pemilihan saran, dan koreksi geser)? Tindakan ini tidak dapat dibatalkan.</string>
     <string name="privacy_forget_learned_confirm">Hapus data yang dipelajari</string>
     <string name="privacy_forget_learned_keep">Simpan</string>
     <string name="privacy_local_collection_header">Pengumpulan Data Lokal (Opsional)</string>

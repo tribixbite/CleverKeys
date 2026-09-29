@@ -1040,7 +1040,7 @@
     <string name="privacy_section_intro">CleverKeys is fully offline — no data ever leaves your device. These optional settings keep data locally so you can review, export or delete it; exported swipe data can be used to train models elsewhere.</string>
     <string name="privacy_on_device_learning_header">On-Device Learning</string>
     <string name="privacy_forget_learned_title">Also forget learned data?</string>
-    <string name="privacy_forget_learned_body">Learning is now off — nothing new will be recorded. Do you also want to delete everything already learned (phrase patterns, word usage, and selection history)? This cannot be undone.</string>
+    <string name="privacy_forget_learned_body">Learning is now off — nothing new will be recorded. Do you also want to delete everything already learned (phrase patterns, word usage, selection history and swipe corrections)? This cannot be undone.</string>
     <string name="privacy_forget_learned_confirm">Delete learned data</string>
     <string name="privacy_forget_learned_keep">Keep it</string>
     <string name="privacy_local_collection_header">Local Data Collection (Optional)</string>

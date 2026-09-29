@@ -155,7 +155,7 @@
     <string name="suggestion_add_to_dictionary">\'%1$s\' sözlüğe eklensin mi?</string>
     <string name="suggestion_prefer_when_swiping">Kaydırırken \'%1$s\' tercih edilsin mi?</string>
     <string name="suggestion_prefer_when_swiping_decline">Sorma</string>
-    <string name="suggestion_prefer_when_swiping_added">Kaydırma artık \'%1$s\' kelimesini tercih ediyor</string>
+    <string name="suggestion_prefer_when_swiping_added">Kaydırmada artık \'%1$s\' tercih ediliyor</string>
     <string name="suggestion_added_to_dictionary">\'%1$s\' sözlüğe eklendi</string>
     <string name="suggestion_tap_again_to_undo">Geri almak için tekrar dokunun</string>
     <string name="suggestion_removed_from_dictionary">\'%1$s\' sözlükten kaldırıldı</string>
@@ -757,7 +757,7 @@
     <string name="privacy_section_intro">CleverKeys tamamen çevrimdışıdır — hiçbir veri cihazınızdan çıkmaz. Bu isteğe bağlı ayarlar verileri yerel olarak saklar; böylece inceleyebilir, dışa aktarabilir veya silebilirsiniz. Dışa aktarılan kaydırma verileri başka bir yerde model eğitmek için kullanılabilir.</string>
     <string name="privacy_on_device_learning_header">Cihaz Üzerinde Öğrenme</string>
     <string name="privacy_forget_learned_title">Öğrenilen veriler de unutulsun mu?</string>
-    <string name="privacy_forget_learned_body">Öğrenme artık kapalı — yeni hiçbir şey kaydedilmeyecek. Zaten öğrenilmiş her şeyi de (ifade kalıpları, kelime kullanımı ve seçim geçmişi) silmek ister misiniz? Bu işlem geri alınamaz.</string>
+    <string name="privacy_forget_learned_body">Öğrenme artık kapalı — yeni hiçbir şey kaydedilmeyecek. Zaten öğrenilmiş her şeyi de (ifade kalıpları, kelime kullanımı, seçim geçmişi ve kaydırma düzeltmeleri) silmek ister misiniz? Bu işlem geri alınamaz.</string>
     <string name="privacy_forget_learned_confirm">Öğrenilen verileri sil</string>
     <string name="privacy_forget_learned_keep">Sakla</string>
     <string name="privacy_local_collection_header">Yerel Veri Toplama (İsteğe Bağlı)</string>

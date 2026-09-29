@@ -789,7 +789,7 @@
     <string name="privacy_section_intro">CleverKeys è completamente offline: nessun dato lascia mai il tuo dispositivo. Queste impostazioni facoltative conservano i dati in locale per consentirti di consultarli, esportarli o eliminarli; i dati di scorrimento esportati possono servire ad addestrare modelli altrove.</string>
     <string name="privacy_on_device_learning_header">Apprendimento sul dispositivo</string>
     <string name="privacy_forget_learned_title">Dimenticare anche i dati appresi?</string>
-    <string name="privacy_forget_learned_body">L\'apprendimento è ora disattivato — non verrà registrato nulla di nuovo. Vuoi eliminare anche tutto ciò che è già stato appreso (pattern di frasi, utilizzo delle parole e cronologia delle selezioni)? L\'operazione non può essere annullata.</string>
+    <string name="privacy_forget_learned_body">L\'apprendimento è ora disattivato — non verrà registrato nulla di nuovo. Vuoi eliminare anche tutto ciò che è già stato appreso (pattern di frasi, utilizzo delle parole, cronologia delle selezioni e correzioni dello scorrimento)? L\'operazione non può essere annullata.</string>
     <string name="privacy_forget_learned_confirm">Elimina dati appresi</string>
     <string name="privacy_forget_learned_keep">Mantieni</string>
     <string name="privacy_local_collection_header">Raccolta dati locale (facoltativa)</string>

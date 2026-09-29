@@ -749,7 +749,7 @@
     <string name="privacy_section_intro">CleverKeys는 완전히 오프라인으로 작동하며 데이터가 기기를 벗어나지 않습니다. 이 선택 설정은 데이터를 기기에 저장해 확인·내보내기·삭제할 수 있게 합니다. 내보낸 스와이프 데이터는 다른 곳에서 모델 학습에 사용할 수 있습니다.</string>
     <string name="privacy_on_device_learning_header">기기 내 학습</string>
     <string name="privacy_forget_learned_title">학습된 데이터도 삭제할까요?</string>
-    <string name="privacy_forget_learned_body">학습이 꺼졌습니다 — 새로운 기록은 없습니다. 이미 학습된 모든 것(표현 패턴, 단어 사용, 선택 기록)도 삭제할까요? 이 작업은 되돌릴 수 없습니다.</string>
+    <string name="privacy_forget_learned_body">학습이 꺼졌습니다 — 새로운 기록은 없습니다. 이미 학습된 모든 것(표현 패턴, 단어 사용, 선택 기록, 스와이프 수정)도 삭제할까요? 이 작업은 되돌릴 수 없습니다.</string>
     <string name="privacy_forget_learned_confirm">학습 데이터 삭제</string>
     <string name="privacy_forget_learned_keep">유지</string>
     <string name="privacy_local_collection_header">로컬 데이터 수집(선택 사항)</string>

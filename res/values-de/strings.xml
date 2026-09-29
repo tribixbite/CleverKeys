@@ -769,7 +769,7 @@
     <string name="privacy_section_intro">CleverKeys arbeitet vollständig offline — es verlassen niemals Daten Ihr Gerät. Diese optionalen Einstellungen speichern Daten lokal, damit Sie sie ansehen, exportieren oder löschen können; exportierte Wischdaten lassen sich anderswo zum Trainieren von Modellen nutzen.</string>
     <string name="privacy_on_device_learning_header">Lernen auf dem Gerät</string>
     <string name="privacy_forget_learned_title">Auch gelernte Daten vergessen?</string>
-    <string name="privacy_forget_learned_body">Das Lernen ist jetzt aus — es wird nichts Neues aufgezeichnet. Möchten Sie auch alles bereits Gelernte löschen (Wendungsmuster, Wortnutzung und Auswahlverlauf)? Dies kann nicht rückgängig gemacht werden.</string>
+    <string name="privacy_forget_learned_body">Das Lernen ist jetzt aus — es wird nichts Neues aufgezeichnet. Möchten Sie auch alles bereits Gelernte löschen (Wendungsmuster, Wortnutzung, Auswahlverlauf und Wisch-Korrekturen)? Dies kann nicht rückgängig gemacht werden.</string>
     <string name="privacy_forget_learned_confirm">Gelernte Daten löschen</string>
     <string name="privacy_forget_learned_keep">Behalten</string>
     <string name="privacy_local_collection_header">Lokale Datenerfassung (optional)</string>

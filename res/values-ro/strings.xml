@@ -772,7 +772,7 @@
     <string name="privacy_section_intro">CleverKeys funcționează complet offline — niciun fel de date nu părăsesc dispozitivul dvs. Aceste setări opționale păstrează datele local, ca să le puteți consulta, exporta sau șterge; datele de glisare exportate pot fi folosite pentru antrenarea modelelor în altă parte.</string>
     <string name="privacy_on_device_learning_header">Învățare pe dispozitiv</string>
     <string name="privacy_forget_learned_title">Uitați și datele învățate?</string>
-    <string name="privacy_forget_learned_body">Învățarea este acum dezactivată — nu se va mai înregistra nimic nou. Doriți să ștergeți și tot ce a fost deja învățat (tipare de expresii, utilizarea cuvintelor și istoricul selecțiilor)? Nu se poate anula.</string>
+    <string name="privacy_forget_learned_body">Învățarea este acum dezactivată — nu se va mai înregistra nimic nou. Doriți să ștergeți și tot ce a fost deja învățat (tipare de expresii, utilizarea cuvintelor, istoricul selecțiilor și corecturile de glisare)? Nu se poate anula.</string>
     <string name="privacy_forget_learned_confirm">Șterge datele învățate</string>
     <string name="privacy_forget_learned_keep">Păstrează-le</string>
     <string name="privacy_local_collection_header">Colectare locală de date (opțional)</string>
