@@ -251,32 +251,29 @@ loads on `BigramModel`'s seed thread and then serves BOTH static products:
 
 Other languages keep the hardcoded tables and JSON seeds until they get an LM.
 
-**Multilingual follow-through (2026-09-27):** runtime asset lookup already uses
-`lm/<language>.cklm`, but the builder's corpus pins, vocabulary, contraction forms, wordfreq
-reference and evaluation inputs are English-only. Merely passing `--lang es` formerly wrote
-English counts with a Spanish header; the CLI now rejects unsupported language codes before
-any corpus reads or output writes. # TODO: implement a language configuration only after the
-required design review and language-specific evaluation.
+**Multilingual follow-through (2026-09-27 → 2026-09-29):** runtime asset lookup already uses
+`lm/<language>.cklm`. The builder is now configured per language (`LangConfig` in
+`scripts/build_static_lm.py` `CONFIGS`: pinned Leipzig web corpus + Tatoeba detailed export +
+UD dev/test, the language's shipped lexicon — `en_enhanced.json` or the CKDT
+`<lang>_enhanced.bin` canonical words — ∪ its REPLACE + PAIRED contraction display forms,
+wordfreq artefact reference, NFC composition and train/eval-overlap exclusion). `--lang` accepts
+exactly the configured codes (en es de fr it pt sv); en rebuilds byte-identically. Weight
+selection is restricted to weights whose model fits the 512 KiB cap.
 
-Proposed first pilot: Spanish, using a pinned Spanish corpus and the shipped Spanish
-vocabulary, with Spanish surface forms preserved (including accents, ñ and contractions).
-Keep source sentences/evaluation data out of assets. Check corpus licences at the actual
-snapshot, retain required attribution, and deduplicate across training/development/test before
-selection. UD Spanish-GSD is a possible out-of-domain evaluation source, not a training source:
-its [upstream README](https://github.com/UniversalDependencies/UD_Spanish-GSD) distinguishes
-annotation licensing from underlying text. Leipzig's download/usage pages returned a bot
-challenge during this investigation; a new Spanish source/licence snapshot is not yet verified.
+**Spanish pilot: FAILED S1 (2026-09-29) — nothing beyond `en` ships.** On UD Spanish-GSD test
+(339 sentences, 5,026 positions) prefix-1 top-3 was +4.69 pt (gate +5); prefix-2 +4.74, prefix-3
++3.26, empty context unchanged. The rollout was conditional on Spanish, so de/fr/it/pt/sv were
+measured but not shipped (de +5.16 marginal, fr +7.33, it +7.49 pass; pt +4.19 and sv +4.59 /
+prefix-2 +1.92 fail). Full tables, inputs and the separate finding that the legacy hardcoded
+tables HURT `static_only` tap ranking for every non-English language:
+`docs/eval/2026-09-29-static-lm-multilingual.md`. The pre-registered gates stay as they are; a
+retry must change an input for a stated reason and select on dev, never on the test set.
+The failed S3 swipe gate remains in force for every language: no swipe rescoring.
 
-Preserve English byte reproducibility. Use the existing S1 gates (+5 pt prefix-1 top-3,
-+2 pt prefix-2, no prefix-3 or empty-context regression), compare next-word against Spanish
-seeds, and report distinct sentences/contexts alongside token-position counts. Test production
-Kotlin tokenization and scoring, not only the Python model. Bound each model to 512 KiB,
-measure cold and warm off-main loading separately, and account for all resident languages.
-Start with bundled assets; imported-pack LM support would require a separate importer contract.
-The existing failed S3 swipe gate remains in force: this pilot must not enable swipe rescoring.
-
-# TODO: Spanish model generation and evaluation are not done; PAL/Gemini design-payload
-# approval is pending after automatic review blocked the external consultation.
+# TODO: decide the next multilingual step from the 2026-09-29 evidence (Spanish retry with a
+# different corpus/treebank; whether to ship the three passing languages without Spanish is a
+# maintainer decision, since the pilot condition was not met). Imported-pack LM support would
+# need a separate importer contract.
 Evaluation:
 `docs/eval/2026-09-26-static-lm-replay.md` (tap S1 and swipe S3); provenance:
 `scripts/data/PROVENANCE.md`; attribution: `NOTICE`, Settings → Help & FAQ.

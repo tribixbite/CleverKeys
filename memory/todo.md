@@ -24,8 +24,15 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   TypeScript and Python mypy pass. Saga connected read-only; no app/settings changes.
 - [x] Translation structural audit: 936/936 resources in all 21 locales; indexed arguments
   and plural items match. Expanded translation guard passes 6/6 focused tests.
-- [ ] TODO: multilingual LM pilot/evaluation and pack-attribution UI. PAL design review
-  was blocked by automatic approval review; the specific external payload approval is pending.
+- [x] Multilingual LM pilot (2026-09-29): per-language builder configs (en byte-identical),
+  language-parameterised S1 eval + drift test. Spanish FAILED S1 (prefix-1 +4.69 < +5), so
+  nothing beyond `en` ships; de/fr/it measured passing, pt/sv failing —
+  `docs/eval/2026-09-29-static-lm-multilingual.md`.
+- [ ] TODO: maintainer decision on the next LM step (Spanish retry with a changed input vs
+  shipping the passing de/fr/it without the pilot); fix legacy hardcoded tables hurting
+  `static_only` tap ranking for non-English languages (outside the LM files).
+- [ ] TODO: pack-attribution UI. PAL design review was blocked by automatic approval review;
+  the specific external payload approval is pending.
 - [ ] TODO: reconcile the disable-learning delete prompt (`privacy_forget_learned_body`)
   with swipe-correction deletion; the separate Forget dialog already names it.
 - [ ] TODO: native-speaker translation review and device visual verification remain distinct
