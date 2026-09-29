@@ -438,4 +438,48 @@ class ContractionOverlayTest {
         val (words, _) = applyEn(listOf("Well"), listOf(900))
         assertThat(words).containsExactly("Well", "we'll").inOrder()
     }
+
+    // ── Rule 0: user preference for a joiner word (2026-09-29) ─────────────────────────────
+
+    private fun applyEnPreferring(
+        prefs: Map<String, UserJoinerPreference.Preference>,
+        words: List<String>,
+        scores: List<Int>,
+    ) = ContractionOverlay.apply(
+        words, scores,
+        pairedVariants = { enPaired[it] },
+        nonPairedMapping = { enNonPaired[it] },
+        wordOrdinal = { enOrdinals[it] },
+        userPreferredForm = { prefs[it] },
+    )
+
+    @Test
+    fun `a preferred form takes its surface's rank and score, the real surface stays behind`() {
+        val prefs = mapOf("well" to UserJoinerPreference.Preference("we'll", replacesSurface = false))
+        val (words, scores) = applyEnPreferring(prefs, listOf("the", "well", "wall"), listOf(900, 800, 700))
+        assertThat(words).containsExactly("the", "we'll", "well", "wall").inOrder()
+        assertThat(scores).containsExactly(900, 800, 800, 700).inOrder()
+    }
+
+    @Test
+    fun `a preferred form on a junk alias leaves one entry, not the alias`() {
+        val prefs = mapOf("theyd" to UserJoinerPreference.Preference("they'd", replacesSurface = false))
+        val (words, _) = applyEnPreferring(prefs, listOf("theyd", "them"), listOf(900, 800))
+        assertThat(words).containsExactly("they'd", "them").inOrder()
+    }
+
+    @Test
+    fun `a preferred form whose surface is no word replaces it, mapped forms go to the tail`() {
+        val prefs = mapOf("dont" to UserJoinerPreference.Preference("do-n't", replacesSurface = true))
+        val (words, scores) = applyEnPreferring(prefs, listOf("dont", "done"), listOf(900, 800))
+        assertThat(words).containsExactly("do-n't", "done", "don't").inOrder()
+        assertThat(scores).isInOrder(Comparator.reverseOrder<Int>())
+    }
+
+    @Test
+    fun `no preference leaves every existing rule untouched`() {
+        val none = applyEnPreferring(emptyMap(), listOf("well", "theyd", "dont"), listOf(900, 800, 700))
+        val plain = applyEn(listOf("well", "theyd", "dont"), listOf(900, 800, 700))
+        assertThat(none).isEqualTo(plain)
+    }
 }

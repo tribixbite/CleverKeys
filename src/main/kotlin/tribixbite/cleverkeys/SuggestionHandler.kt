@@ -2086,8 +2086,12 @@ class SuggestionHandler(
     private fun recordSwipeCorrection(correction: SwipeCorrectionTracker.Correction?, editorInfo: EditorInfo?): String? {
         if (correction == null || !swipeCorrectionsAllowed(editorInfo)) return null
         val predictor = predictionCoordinator.getWordPredictor() ?: return null
+        // A contraction display form (`she'd`) is a real word although every dictionary stores
+        // it only apostrophe-free (`shed`) — the joiner case of SwipeCorrectionPolicy rule 3.
         val rejected = SwipeCorrectionPolicy.plausibleRejections(correction) { w ->
-            !predictor.isWordDisabled(w) && (predictor.isInDictionary(w) || predictor.isInUserVocabulary(w))
+            !predictor.isWordDisabled(w) &&
+                (predictor.isInDictionary(w) || predictor.isInUserVocabulary(w) ||
+                    contractionManager.isKnownContraction(w))
         }
         if (rejected.isEmpty()) {
             vlog { "SWIPE CORRECTION: dropped as implausible (${correction.rejected.size} rejected)" }
@@ -2109,10 +2113,24 @@ class SuggestionHandler(
             for (swipe in rejected) swipe.traceId?.let { mlStore.relabelSwipe(it, chosen) }
         }
 
-        val isUserWord = predictionCoordinator.getDictionaryManager()?.isUserWordIgnoringCase(chosen) ?: false
+        val isUserWord = isUserSwipePreference(chosen)
         return chosen.takeIf {
             SwipeCorrectionPolicy.shouldOffer(count, isUserWord, store.isDeclined(language, chosen))
         }
+    }
+
+    /**
+     * Is there nothing to offer for [word] because the personal dictionary already decides it?
+     * True when [word] itself is a user word (any casing), and — for an apostrophe/hyphen word —
+     * also when its joiner-free surface is ([SwipeCorrectionPolicy.joinerSurface]): with both
+     * readings claimed the swipe display keeps the traced literal, so accepting would change
+     * nothing the user could see.
+     */
+    private fun isUserSwipePreference(word: String): Boolean {
+        val dictionary = predictionCoordinator.getDictionaryManager() ?: return false
+        if (dictionary.isUserWordIgnoringCase(word)) return true
+        val surface = SwipeCorrectionPolicy.joinerSurface(word) ?: return false
+        return dictionary.isUserWordIgnoringCase(surface)
     }
 
     /**
@@ -2164,7 +2182,7 @@ class SuggestionHandler(
         if (pending.language != activeLanguageCode()) return null
         deferredSwipeOffer = null
         val store = correctionStore() ?: return null
-        val isUserWord = predictionCoordinator.getDictionaryManager()?.isUserWordIgnoringCase(pending.word) ?: false
+        val isUserWord = isUserSwipePreference(pending.word)
         val due = try {
             SwipeCorrectionPolicy.shouldOffer(
                 store.correctionCount(pending.language, pending.word),

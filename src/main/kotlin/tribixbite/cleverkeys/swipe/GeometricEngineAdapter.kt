@@ -192,12 +192,19 @@ class GeometricEngineAdapter(
      *  - [pairingBaseFrequencies] — paired-contraction base → its `en_enhanced.json` byte
      *    frequency, feeding the overlay's "variant ahead of base" promotion rule. Populated
      *    ONLY for the bundled English dictionary (see [enPairingBaseFrequencies]); EMPTY
-     *    otherwise, which the overlay reads as "never promote".
+     *    otherwise, which the overlay reads as "never promote";
+     *  - [userPreferences] — decoded word → the joiner user word (`she'd`, `l'une`) the user
+     *    wants shown for it ([UserJoinerPreference]), keyed like CTC's so both engines honour
+     *    the same entry alike. This engine cannot decode a surface that exists ONLY through a
+     *    joiner user word (`xray` for `x-ray` — its templates skip the joiner form and nothing
+     *    adds the stripped surface), so here the preference matters for surfaces that are
+     *    dictionary words of their own (`shed`, `lune`, `coop`).
      */
     private class DictMemo(
         val dictionary: GeometricDictionary,
         val ordinals: HashMap<String, Int>,
         val pairingBaseFrequencies: Map<String, Int>,
+        val userPreferences: Map<String, UserJoinerPreference.Preference>,
     )
 
     /**
@@ -284,6 +291,7 @@ class GeometricEngineAdapter(
         language: String,
         ordinals: HashMap<String, Int>,
         pairingBaseFrequencies: Map<String, Int>,
+        userPreferences: Map<String, UserJoinerPreference.Preference>,
     ): PredictionResult {
         if (result.words.isEmpty()) return result
         val cm = contractionsFor(language)
@@ -295,6 +303,7 @@ class GeometricEngineAdapter(
             wordOrdinal = { ordinals[it] },
             pairedVariantFrequency = { base, variant -> cm.getPairedVariantFrequency(base, variant) },
             baseFrequency = { pairingBaseFrequencies[it] },
+            userPreferredForm = { userPreferences[it] },
         )
         return PredictionResult(words, scores)
     }
@@ -372,6 +381,7 @@ class GeometricEngineAdapter(
                         language,
                         memo.ordinals,
                         memo.pairingBaseFrequencies,
+                        memo.userPreferences,
                     )
                 }
                 postIfNewest(generation, result, onResult)
@@ -684,7 +694,12 @@ class GeometricEngineAdapter(
             } else {
                 emptyMap()
             }
-        val built = DictMemo(merged, ordinals, pairingBaseFrequencies)
+        // Decoded words here are canonical dictionary forms, so the surface key is the user
+        // word minus its joiners with accents kept ([UserJoinerPreference.joinerFree]).
+        val userPreferences = UserJoinerPreference.build(
+            userWords, UserJoinerPreference::joinerFree, { ordinals.containsKey(it) }
+        )
+        val built = DictMemo(merged, ordinals, pairingBaseFrequencies, userPreferences)
         dictionaryMemos[lang] = built
         return built
     }

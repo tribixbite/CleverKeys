@@ -291,4 +291,36 @@ class CtcContractionDisplayTest {
             assertThat(ordinals[word]!!).isLessThan(max)
         }
     }
+
+    // ── User preference for a joiner word, over the SHIPPED data (2026-09-29) ──────────────
+
+    /**
+     * The whole paired pronoun set a user can prefer after the swipe offer: with the variant
+     * in the personal dictionary, the variant is rank 0 and the base is kept at #1 — over the
+     * shipped lexicon, pairings and merge, built exactly as `CtcEngineAdapter`'s EN branch.
+     */
+    @Test
+    fun `a preferred contraction is rank 0 over its base for every shipped near-tie pronoun`() {
+        val alphabetSet = ('a'..'z').toHashSet()
+        for ((base, variant) in listOf("shed" to "she'd", "shell" to "she'll", "well" to "we'll", "hell" to "he'll")) {
+            val userWords = listOf(variant to tribixbite.cleverkeys.UserWordFrequency.DEFAULT)
+            val prefs = tribixbite.cleverkeys.swipe.UserJoinerPreference.build(
+                userWords,
+                { tribixbite.cleverkeys.swipe.UserJoinerPreference.stripToAlphabet(it, alphabetSet) },
+                { ordinals.containsKey(it) },
+            )
+            val (words, _) = ContractionOverlay.apply(
+                listOf(base, "the"), listOf(900, 100),
+                pairedVariants = { b -> pairings[b]?.map { it.contraction } },
+                nonPairedMapping = { null },
+                wordOrdinal = { ordinals[it] },
+                pairedVariantFrequency = ::shippedPairFrequency,
+                baseFrequency = ::shippedBaseFrequency,
+                userPreferredForm = { prefs[it] },
+            )
+            assertWithMessage("prefer $variant").that(words.take(2)).containsExactly(variant, base).inOrder()
+            val (plain, _) = applyShipped(listOf(base, "the"), listOf(900, 100))
+            assertWithMessage("without the user word $base keeps rank 0").that(plain.first()).isEqualTo(base)
+        }
+    }
 }

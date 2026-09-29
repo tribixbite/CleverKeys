@@ -552,6 +552,9 @@ class CtcEngineAdapter(
      *    `frequency` field is on; EMPTY for CKDT (`255 − rank`, not comparable — and those
      *    languages' pairs files carry no frequency anyway). Restricted to the ~1.7k bases
      *    with a known pairing frequency, so it costs nothing next to [ordinals].
+     *  - [userPreferences] — decoded surface → the joiner user word (`she'd`, `l'une`,
+     *    `co-op`) the user wants shown for it ([UserJoinerPreference]); empty for a user with
+     *    no apostrophe/hyphen words, which is nearly everyone.
      *
      * [language] is part of the memo IDENTITY, not just the content hash: a language
      * switch must never reuse the previous language's trie (the content hash alone would
@@ -566,6 +569,7 @@ class CtcEngineAdapter(
         val fuzzyRescue: CtcFuzzyRescue,
         val version: Long,
         val pairingBaseFrequencies: Map<String, Int>,
+        val userPreferences: Map<String, UserJoinerPreference.Preference>,
     )
 
     /** Keep only the active primary/secondary tries; wider caching would retain ~19 MB each. */
@@ -745,6 +749,9 @@ class CtcEngineAdapter(
 
         val trie: CtcLexiconTrie
         val display: Map<String, String>
+        // Joiner user words ([UserJoinerPreference]) — keyed on the surface the overlay sees,
+        // which is branch-specific (raw a–z strip for en, the accent-display form for CKDT).
+        val userPreferences: Map<String, UserJoinerPreference.Preference>
         // The REAL word frequencies actually loaded into the trie — captured per branch because
         // the two sources differ (raw merged map vs the a-z projection). Used to derive the
         // contraction-injection floor from this lexicon's rarest real word.
@@ -762,6 +769,14 @@ class CtcEngineAdapter(
                 // en contractions are restored by the ContractionOverlay instead.
                 trie = CtcLexiconTrie.loadStrippingNonAlphabet(alphabet, merged)
                 display = emptyMap()
+                // The trie files a joiner user word under its stripped surface (raising it);
+                // WHAT that surface shows is the user's form, via the overlay.
+                val alphabetSet = alphabet.toHashSet()
+                userPreferences = UserJoinerPreference.build(
+                    userWordPairs,
+                    { UserJoinerPreference.stripToAlphabet(it, alphabetSet) },
+                    { ordinals.containsKey(it) },
+                )
                 lexiconFrequencies = merged.values
                 rescueFrequencies = merged
             }
@@ -772,15 +787,24 @@ class CtcEngineAdapter(
                 // Script: the per-script rules in [CtcScriptProjection] — folds not NFD for
                 // Cyrillic (NFD would decompose й), mark-stripping plus final-sigma repair for
                 // Greek, ї/ґ rejection for Ukrainian.
-                val projected = if (CtcScriptSupport.wiringFor(lang) != null) {
-                    CtcScriptProjection.projectLexicon(
-                        merged, CtcScriptProjection.projectorFor(lang, alphabet)
-                    )
+                val project: (String) -> String? = if (CtcScriptSupport.wiringFor(lang) != null) {
+                    CtcScriptProjection.projectorFor(lang, alphabet)
                 } else {
-                    CtcAzProjection.projectLexicon(merged)
+                    CtcAzProjection::project
                 }
+                // Joiner USER words project separately: they raise their surface's frequency
+                // but never take its display slot, which used to make a user `l'une` REPLACE
+                // every decoded `lune` (contraction-system skill §2 casualty, per user).
+                val projected = UserJoinerPreference.projectWithoutJoinerDisplay(
+                    merged, userWordPairs, { CtcScriptProjection.projectLexicon(it, project) }, project
+                )
                 trie = CtcLexiconTrie.loadFromFrequencyMap(alphabet, projected.freqs)
                 display = projected.display
+                userPreferences = UserJoinerPreference.build(
+                    userWordPairs,
+                    { w -> project(w)?.let { projected.display[it] ?: it } },
+                    { ordinals.containsKey(it) },
+                )
                 lexiconFrequencies = projected.freqs.values
                 rescueFrequencies = projected.freqs
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -836,6 +860,7 @@ class CtcEngineAdapter(
             CtcFuzzyRescue.fromFrequencies(rescueFrequencies, alphabet.toHashSet()),
             version,
             pairingBaseFrequencies,
+            userPreferences,
         )
         if (Thread.currentThread().isInterrupted) throw InterruptedException("Lexicon load cancelled")
         trieMemos[lang] = built
@@ -955,6 +980,7 @@ class CtcEngineAdapter(
         language: String,
         ordinals: HashMap<String, Int>,
         pairingBaseFrequencies: Map<String, Int>,
+        userPreferences: Map<String, UserJoinerPreference.Preference>,
     ): PredictionResult {
         if (result.words.isEmpty()) return result
         val cm = contractionsFor(language)
@@ -966,6 +992,7 @@ class CtcEngineAdapter(
             wordOrdinal = { ordinals[it] },
             pairedVariantFrequency = { base, variant -> cm.getPairedVariantFrequency(base, variant) },
             baseFrequency = { pairingBaseFrequencies[it] },
+            userPreferredForm = { userPreferences[it] },
         )
         return PredictionResult(words, scores)
     }
@@ -977,6 +1004,7 @@ class CtcEngineAdapter(
             lexicon.language,
             lexicon.ordinals,
             lexicon.pairingBaseFrequencies,
+            lexicon.userPreferences,
         )
 
     /**

@@ -12,7 +12,10 @@ import tribixbite.cleverkeys.SwipeCorrectionTracker.SwipeRecord
  */
 class SwipeCorrectionPolicyTest {
 
-    private val lexicon = setOf("git", "got", "for", "fix", "fox", "hello", "hi", "help", "id", "son", "soon", "gits", "gifts")
+    private val lexicon = setOf(
+        "git", "got", "for", "fix", "fox", "hello", "hi", "help", "id", "son", "soon", "gits", "gifts",
+        "shed", "she'd", "i'd", "coop", "co-op",
+    )
     private val isReal: (String) -> Boolean = { it in lexicon }
 
     private fun plausible(x: String, y: String, vararg slate: String) =
@@ -49,10 +52,30 @@ class SwipeCorrectionPolicyTest {
     }
 
     @Test
-    fun onlyRealLettersOnlyWordsCount() {
+    fun onlyRealWordsOfTwoOrMoreLettersCount() {
         assertWithMessage("typo").that(plausible("got", "gxt", "gxt")).isFalse()
-        assertWithMessage("apostrophe form").that(plausible("id", "i'd", "id", "i'd")).isFalse()
         assertWithMessage("single letter").that(plausible("at", "a", "a")).isFalse()
+        assertWithMessage("digits are not joiners").that(plausible("got", "g0t", "g0t")).isFalse()
+    }
+
+    /** Since 2026-09-29 a joiner word is offerable: its dictionary entry is a display preference. */
+    @Test
+    fun apostropheAndHyphenWordsCount() {
+        assertWithMessage("bar tap").that(plausible("id", "i'd", "id", "i'd")).isTrue()
+        assertWithMessage("typed after undo: endpoints on the letters").that(plausible("shed", "she'd")).isTrue()
+        assertWithMessage("hyphen word").that(plausible("coop", "co-op")).isTrue()
+        assertWithMessage("a joiner alone is not a word").that(plausible("id", "'", "'")).isFalse()
+        assertWithMessage("one letter plus a joiner").that(plausible("at", "a'", "a'")).isFalse()
+        assertWithMessage("leading/trailing hyphen").that(plausible("coop", "-coop", "-coop")).isFalse()
+        assertWithMessage("an unknown joiner form is still a typo").that(plausible("shed", "sh'ed", "sh'ed")).isFalse()
+    }
+
+    @Test
+    fun joinerSurfaceIsTheLettersOfAJoinerWordOnly() {
+        assertThat(SwipeCorrectionPolicy.joinerSurface("She'd")).isEqualTo("shed")
+        assertThat(SwipeCorrectionPolicy.joinerSurface("co-op")).isEqualTo("coop")
+        assertThat(SwipeCorrectionPolicy.joinerSurface("l’une")).isEqualTo("lune")
+        assertThat(SwipeCorrectionPolicy.joinerSurface("git")).isNull()
     }
 
     @Test

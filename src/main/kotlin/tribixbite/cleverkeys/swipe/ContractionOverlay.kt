@@ -81,6 +81,21 @@ import java.util.Locale
  *    disagree with wordfreq, among them `teams`→`team's`, `ones`→`one's`, `sons`→`son's`
  *    (measured 2026-09-26). A pronoun `'s` clitic (`she's`, `he's`) is not a possessive.
  *
+ * ## User preference (2026-09-29 — joiner follow-up to the learning-system audit)
+ *
+ * Every rule above is driven by shipped data; none of it can express "this user wants
+ * `she'd` when they swipe s-h-e-d". A personal-dictionary word spelled with an apostrophe or
+ * hyphen does ([UserJoinerPreference]): the engines cannot spell the joiner, so the entry is a
+ * claim on its joiner-free surface's DISPLAY, and [apply]'s `userPreferredForm` honours it
+ * before any other rule — the user's form takes the surface's rank (becoming the auto-insert
+ * when the surface is rank 0), and the surface stays right behind it when it is a real word
+ * (`lune` behind a user `l'une` — never destroyed) or is dropped when it exists only through
+ * the user word (`xray` for `x-ray`). This is the user-driven twin of [PROMOTION_MARGIN]:
+ * the margin decides from corpus frequencies for everyone; the preference decides for the one
+ * user who asked, which is why it needs no margin. The reverse (a user `shed` over a promoted
+ * `she'd`) needs no rule here — a user base word lifts the base frequency the margin compares
+ * — and when the user claimed BOTH, no preference is produced, so the base keeps its slot.
+ *
  * Scores stay non-increasing in list order (the context rescorer re-sorts by score with an
  * index tie-break): a spliced pair shares the base's score, and a tail variant is clamped
  * to the last score already emitted.
@@ -144,6 +159,8 @@ object ContractionOverlay {
      * @param baseFrequency lowercase word → its lexicon frequency ON THE PAIRING FILE'S 0..255
      *   BYTE SCALE, or null ([PairingBaseFrequencies] — `en_enhanced.json` for both English
      *   engines); null means "not comparable", and a spliced variant then never goes ahead.
+     * @param userPreferredForm lowercase decoded word → the joiner user word the user wants
+     *   shown for it ([UserJoinerPreference.build]), or null. Default: none.
      * @return overlaid (words, scores) — same lists when nothing applies.
      */
     fun apply(
@@ -155,6 +172,7 @@ object ContractionOverlay {
         realWordOrdinalMax: Int = REAL_WORD_ORDINAL_MAX,
         pairedVariantFrequency: (base: String, variant: String) -> Int? = { _, _ -> null },
         baseFrequency: (String) -> Int? = { null },
+        userPreferredForm: (String) -> UserJoinerPreference.Preference? = { null },
     ): Pair<List<String>, List<Int>> {
         if (words.isEmpty()) return words to scores
 
@@ -184,6 +202,21 @@ object ContractionOverlay {
             val word = words[i]
             val lower = word.lowercase(Locale.ROOT)
             val score = scores.getOrElse(i) { 0 }
+
+            // Rule 0: a joiner user word claims this surface's display (see "User preference"
+            // in the class KDoc) — it goes FIRST at the surface's rank. The surface's own
+            // readings then follow through the rules below (the dedupe drops a repeat of the
+            // preferred form), unless the surface is no word of its own, in which case only
+            // its mapped forms survive, at the tail.
+            val preferred = userPreferredForm(lower)
+            if (preferred != null) {
+                emit(preferred.form, score)
+                if (preferred.replacesSurface) {
+                    pairedVariants(lower)?.forEach { deferVariant(it, score - 1) }
+                    nonPairedMapping(lower)?.let { deferVariant(it, score - 1) }
+                    continue
+                }
+            }
 
             val paired = pairedVariants(lower)
             if (!paired.isNullOrEmpty()) {
@@ -238,6 +271,7 @@ object ContractionOverlay {
 
             emit(word, score)
         }
+        // (A preferred form shares its surface's score, so rule 0 keeps scores monotone too.)
         // Appended AFTER all engine candidates so they never displace distinct words from
         // the top ranks (see class KDoc); clamped so scores stay non-increasing.
         for (i in variantWords.indices) {

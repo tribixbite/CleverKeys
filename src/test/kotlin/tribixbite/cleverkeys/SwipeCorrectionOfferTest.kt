@@ -608,6 +608,66 @@ class SwipeCorrectionOfferTest {
         ).inOrder()
     }
 
+    // ================================================================ joiner words (2026-09-29)
+
+    private val preferShed = Suggestion.PreferSwipeWord("she'd").wire
+
+    /** `shed` auto-inserted (she'd 189 vs shed 188 keeps the base first) → the user taps she'd. */
+    private fun correctShedToSheD() {
+        swipe("shed", "she'd", "she")
+        tap("she'd")
+    }
+
+    @Test
+    fun anApostropheWordIsOfferedAfterTwoCorrections() {
+        editor.append("I said ")
+        correctShedToSheD()
+        type("and ")
+        correctShedToSheD()
+
+        assertThat(store.correctionCount("en", "she'd")).isEqualTo(2)
+        assertThat(barWords).containsExactly(preferShed, Suggestion.DeclineSwipePreference("she'd").wire).inOrder()
+    }
+
+    @Test
+    fun acceptingAndUndoingAnApostropheWordAddsThenRemovesExactlyIt() {
+        every { dictionary.addUserWord("she'd") } returns true
+        correctShedToSheD()
+        type("and ")
+        correctShedToSheD()
+        tap(preferShed)
+
+        verify(exactly = 1) { dictionary.addUserWord("she'd") }
+        undoConfirmation.captured.invoke()
+        verify(exactly = 1) { dictionary.removeUserWord("she'd") }
+        verify(exactly = 0) { dictionary.removeUserWord("shed") }
+        verify(exactly = 2) { coordinator.refreshCustomWords() }
+    }
+
+    @Test
+    fun aContractionThatIsNoDictionaryKeyCountsAsARealWordThroughTheContractionTable() {
+        every { predictor.isInDictionary("she'd") } returns false
+        every { predictor.isInDictionary("she'd", any()) } returns false
+        val contractions = mockk<ContractionManager>(relaxed = true)
+        every { contractions.isKnownContraction("she'd") } returns true
+        handler.setField("contractionManager", contractions)
+
+        correctShedToSheD()
+        assertThat(store.correctionCount("en", "she'd")).isEqualTo(1)
+    }
+
+    @Test
+    fun aJoinerWordWhoseSurfaceIsAUserWordIsNotOffered() {
+        // The user already claimed `shed`: with both readings claimed the display keeps the
+        // traced literal (UserJoinerPreference), so the offer would promise nothing.
+        every { dictionary.isUserWordIgnoringCase("shed") } returns true
+        correctShedToSheD()
+        type("and ")
+        correctShedToSheD()
+
+        assertThat(barWords).doesNotContain(preferShed)
+    }
+
     // ================================================================ Feature B — ML relabel
 
     @Test
