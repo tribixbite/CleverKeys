@@ -221,11 +221,17 @@ Two delivery routes, both of them "shipped":
 ================================================================================
 Static context language model — Leipzig Corpora Collection
 ================================================================================
-The bundled English context model (src/main/assets/lm/en.cklm, built by
-scripts/build_static_lm.py) is derived from word-pair counts over the Leipzig
-Corpora Collection download "eng-com_web-public_2018_300K" (English web text,
-2018). Only pruned, quantised word-pair statistics are distributed; no sentence
-text is shipped.
+The bundled context models (src/main/assets/lm/<lang>.cklm, built by
+scripts/build_static_lm.py) are derived from word-pair counts over these
+Leipzig Corpora Collection downloads (web text):
+
+  English  (lm/en.cklm)  eng-com_web-public_2018_300K
+  German   (lm/de.cklm)  deu-de_web_2021_300K
+  French   (lm/fr.cklm)  fra-fr_web_2013_300K
+  Italian  (lm/it.cklm)  ita-it_web-public_2019_300K
+
+Only pruned, quantised word-pair statistics are distributed; no sentence text
+is shipped.
 
   Leipzig Corpora Collection — Universität Leipzig
   https://wortschatz.uni-leipzig.de/en/download
@@ -243,13 +249,19 @@ here. Source hashes are pinned in scripts/data/PROVENANCE.md.
 ================================================================================
 Static context language model — Tatoeba
 ================================================================================
-The same model additionally counts English sentences from the Tatoeba
-collaborative sentence database (weighted 0.1 against the Leipzig counts; the
-per-snapshot weight and hash are recorded in src/main/assets/lm/en.json).
+The same models additionally count sentences in their language from the
+Tatoeba collaborative sentence database, weighted against the Leipzig counts
+(English 0.1, German 0.25, French 0.05, Italian 0.1; the per-snapshot weight
+and hash are recorded in src/main/assets/lm/<lang>.json).
 
   Tatoeba — https://tatoeba.org
   License: Creative Commons Attribution 2.0 France (CC BY 2.0 FR)
   https://creativecommons.org/licenses/by/2.0/fr/
 
-The contributors whose sentences were counted are listed in
-scripts/data/tatoeba-contributors-en.txt, generated with the model.
+The contributors whose sentences were counted are listed, per language, in
+files generated with each model:
+
+  scripts/data/tatoeba-contributors-en.txt
+  scripts/data/tatoeba-contributors-de.txt
+  scripts/data/tatoeba-contributors-fr.txt
+  scripts/data/tatoeba-contributors-it.txt

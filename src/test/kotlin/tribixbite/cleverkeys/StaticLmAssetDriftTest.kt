@@ -25,6 +25,11 @@ class StaticLmAssetDriftTest {
 
     private fun bytesOf(lang: String) = bytes.getOrPut(lang) { StaticLmLanguageData.asset(lang).readBytes() }
     private fun lmOf(lang: String) = models.getOrPut(lang) { StaticContextLm.parse(bytesOf(lang)) }
+    private val aliasMaps = HashMap<String, Map<String, String>>()
+    private fun replaceOf(lang: String) = aliasMaps.getOrPut(lang) { StaticLmLanguageData.replaceAliases(lang) }
+
+    /** The model as `BigramModel` installs it on the device: parsed + REPLACE aliases. */
+    private fun installedOf(lang: String) = lmOf(lang).withReplaceAliases(replaceOf(lang))
 
     @Test
     fun `english ships and every model has a sidecar`() {
@@ -101,6 +106,42 @@ class StaticLmAssetDriftTest {
         }
     }
 
+    /**
+     * Every shipped language: an alias resolves only a REPLACE key, never a PAIRED base (`lune`,
+     * the English pairing bases), and a key resolves exactly to its display form's statistics.
+     * French additionally pins `cest` → `c'est` and `lune` ≠ `l'une` on the real model.
+     */
+    @Test
+    fun `aliases cover REPLACE keys only, on every shipped model`() {
+        for (lang in languages) {
+            val raw = lmOf(lang)
+            val fixed = installedOf(lang)
+            val replace = replaceOf(lang)
+            val pairedFile = File(StaticLmLanguageData.DICT_DIR,
+                if (lang == "en") "contraction_pairings.json" else "contraction_pairs_$lang.json")
+            val paired = if (pairedFile.isFile) org.json.JSONObject(pairedFile.readText()).keys().asSequence()
+                .map { it.lowercase() }.toList() else emptyList()
+            assertWithMessage("$lang: a PAIRED base in the REPLACE bucket").that(replace.keys.intersect(paired.toSet())).isEmpty()
+            for (base in paired) {
+                assertWithMessage("$lang PAIRED $base").that(fixed.unigram(base)).isEqualTo(raw.unigram(base))
+                assertWithMessage("$lang PAIRED $base").that(fixed.hasContext(base)).isEqualTo(raw.hasContext(base))
+            }
+            var resolved = 0
+            for ((key, display) in replace) {
+                if (!raw.contains(display)) continue
+                resolved++
+                assertWithMessage("$lang $key → $display").that(fixed.wordId(key)).isEqualTo(raw.wordId(display))
+            }
+            assertWithMessage("$lang alias count").that(fixed.aliasCount).isEqualTo(resolved)
+        }
+        if ("fr" in languages) {
+            val fr = installedOf("fr")
+            assertThat(fr.contextRatio("et", "cest")).isEqualTo(fr.contextRatio("et", "c'est"))
+            assertThat(fr.top("cest", 5)).isEqualTo(fr.top("c'est", 5))
+            assertThat(fr.wordId("lune")).isNotEqualTo(fr.wordId("l'une"))
+        }
+    }
+
     @Test
     fun `continuations respect the cap and form a sub-distribution`() {
         for (lang in languages) {
@@ -125,9 +166,11 @@ class StaticLmAssetDriftTest {
         var resident = 0L
         for (lang in languages) {
             val size = bytesOf(lang).size
-            val heap = lmOf(lang).retainedBytes()
+            val installed = installedOf(lang)
+            val heap = installed.retainedBytes()
             resident += heap
-            println("[static-lm] $lang: asset $size B, retained heap $heap B")
+            println("[static-lm] $lang: asset $size B, retained heap $heap B " +
+                "(${installed.aliasCount} contraction aliases, ${heap - lmOf(lang).retainedBytes()} B of it)")
             assertWithMessage("$lang asset size").that(size).isAtMost(SIZE_CAP_BYTES)
             assertWithMessage("$lang retained heap of the loaded model").that(heap).isAtMost(HEAP_CAP_BYTES)
         }
@@ -138,7 +181,9 @@ class StaticLmAssetDriftTest {
     }
 
     /**
-     * Load cost and heap, REPORTED (not asserted — this box's load average makes wall-clock
+     * Load cost and heap, REPORTED (not asserted — the timed load is read + parse + alias index;
+     * the REPLACE map itself is read once outside the timing, since on the device it comes from
+     * `ContractionManager`'s own asset load — this box's load average makes wall-clock
      * thresholds flaky; the S2 gate reads these lines together with `uptime`). The retained-byte
      * figure above is exact array accounting; the GC delta here is the cross-check. "cold" is the
      * first read+parse of that language in this JVM (file cache warm, JIT mostly cold for the
@@ -148,18 +193,19 @@ class StaticLmAssetDriftTest {
     fun `report load time and heap delta`() {
         for (lang in languages) {
             val asset = StaticLmLanguageData.asset(lang)
+            val replace = replaceOf(lang)
             val times = DoubleArray(LOAD_ROUNDS) {
                 val t0 = System.nanoTime()
-                StaticContextLm.parse(asset.readBytes())
+                StaticContextLm.parse(asset.readBytes()).withReplaceAliases(replace)
                 (System.nanoTime() - t0) / 1e6
             }
             val sorted = times.sorted()
-            println("[static-lm] $lang read+parse ms: cold=%.1f min=%.1f warm-median=%.1f (n=%d)".format(
+            println("[static-lm] $lang read+parse+alias-index ms: cold=%.1f min=%.1f warm-median=%.1f (n=%d)".format(
                 times[0], sorted.first(), sorted[sorted.size / 2], LOAD_ROUNDS))
             val rt = Runtime.getRuntime()
             fun used(): Long { repeat(3) { System.gc(); Thread.sleep(50) }; return rt.totalMemory() - rt.freeMemory() }
             val before = used()
-            val held = StaticContextLm.parse(asset.readBytes())
+            val held = StaticContextLm.parse(asset.readBytes()).withReplaceAliases(replace)
             val after = used()
             println("[static-lm] $lang GC-measured heap delta ${after - before} B (array accounting ${held.retainedBytes()} B)")
             assertThat(held.pairCount).isGreaterThan(0) // keeps `held` reachable across the second measure

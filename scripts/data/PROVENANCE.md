@@ -88,9 +88,12 @@ committed with the model.
 Each language is one `LangConfig` in `scripts/build_static_lm.py`; the pins below are copied from
 it. Every row was fetched 2026-09-29. Whether a language's model SHIPS is decided by its S1 gate
 (`docs/eval/2026-09-29-static-lm-multilingual.md`); a row stays recorded either way so a failed
-candidate can be rebuilt byte-identically. **As of 2026-09-29 none of these languages ships** (Spanish failed
-S1, which stopped the rollout); "counts only" below describes what a shipped model would carry. Tatoeba rows are the `*_sentences_detailed` exports
-(the per-sentence username is what the CC BY 2.0 FR contributor list is generated from).
+candidate can be rebuilt byte-identically. **Shipped (2026-09-29, after the contraction-lookup fix and
+re-evaluation): de, fr, it** — `src/main/assets/lm/{de,fr,it}.cklm`, with
+`scripts/data/tatoeba-contributors-{de,fr,it}.txt` committed alongside (CC BY 2.0 FR). **Not
+shipped: es, pt, sv** (failed S1); for them "counts only" below describes what a shipped model
+would carry. Tatoeba rows are the `*_sentences_detailed` exports (the per-sentence username is
+what the CC BY 2.0 FR contributor list is generated from).
 
 | Lang | Key | File | URL | License | Shipped? | Fetched | sha256 |
 |---|---|---|---|---|---|---|---|
