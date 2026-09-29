@@ -782,6 +782,13 @@
     <string name="multilang_packs_dialog_title">Yüklü Dil Paketleri</string>
     <string name="multilang_packs_dialog_empty">Yüklü dil paketi yok.\n\nBir ZIP indirmek için \'Mevcut paketlere göz at\', ardından eklemek için \'Paket İçe Aktar\' seçeneğini kullanın.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">Kod: %1$s • %2$d kelime</item><item quantity="other">Kod: %1$s • %2$d kelime</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Kaynak ve lisans</string>
+    <string name="multilang_pack_license">Paket lisansı: %1$s</string>
+    <string name="multilang_pack_source_label">Kaynak</string>
+    <string name="multilang_pack_attribution_missing">Bu paket kaynak veya lisans bilgisi içermiyor. Görmek için paketin güncel sürümünü içe aktarın.</string>
+    <string name="multilang_pack_view_notice">Tam bildirimi görüntüle</string>
+    <string name="multilang_pack_notice_title">Bildirim: %1$s</string>
+    <string name="multilang_pack_notice_missing">Bu paket içe aktarılırken tam bildirim saklanmadı. Saklamak için paketi yeniden içe aktarın.</string>
     <string name="input_manage_layouts">Klavye Düzenlerini Yönet</string>
     <string name="input_configure_extra_keys">Ek Tuşları Yapılandır</string>
     <string name="input_advanced_prediction">Gelişmiş Tahmin Ayarları</string>

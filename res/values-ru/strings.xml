@@ -774,6 +774,13 @@
     <string name="multilang_packs_dialog_title">Установленные языковые пакеты</string>
     <string name="multilang_packs_dialog_empty">Языковые пакеты не установлены.\n\nИспользуйте «Просмотреть доступные пакеты», чтобы скачать ZIP, затем «Импортировать пакет», чтобы добавить его.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">Код: %1$s • слов: %2$d</item><item quantity="few">Код: %1$s • слов: %2$d</item><item quantity="many">Код: %1$s • слов: %2$d</item><item quantity="other">Код: %1$s • слов: %2$d</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Источник и лицензия</string>
+    <string name="multilang_pack_license">Лицензия пакета: %1$s</string>
+    <string name="multilang_pack_source_label">Источник</string>
+    <string name="multilang_pack_attribution_missing">Этот пакет не содержит сведений об источнике и лицензии. Импортируйте текущую версию пакета, чтобы их увидеть.</string>
+    <string name="multilang_pack_view_notice">Показать полное уведомление</string>
+    <string name="multilang_pack_notice_title">Уведомление: %1$s</string>
+    <string name="multilang_pack_notice_missing">Полное уведомление не было сохранено при импорте этого пакета. Импортируйте пакет повторно, чтобы сохранить его.</string>
     <string name="input_manage_layouts">Управление раскладками клавиатуры</string>
     <string name="input_configure_extra_keys">Настроить дополнительные клавиши</string>
     <string name="input_advanced_prediction">Расширенные настройки предсказаний</string>

@@ -927,6 +927,13 @@
     <plurals name="multilang_installed_count"><item quantity="other">Đã cài: %1$d gói ngôn ngữ</item></plurals>
     <string name="multilang_manage">Quản lý</string>
     <plurals name="multilang_pack_stats"><item quantity="other">Mã: %1$s • %2$d từ</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Nguồn &amp; giấy phép</string>
+    <string name="multilang_pack_license">Giấy phép gói: %1$s</string>
+    <string name="multilang_pack_source_label">Nguồn</string>
+    <string name="multilang_pack_attribution_missing">Gói này không có thông tin nguồn hoặc giấy phép. Hãy nhập phiên bản hiện tại của gói để xem.</string>
+    <string name="multilang_pack_view_notice">Xem toàn bộ thông báo</string>
+    <string name="multilang_pack_notice_title">Thông báo: %1$s</string>
+    <string name="multilang_pack_notice_missing">Toàn bộ thông báo đã không được giữ lại khi nhập gói này. Hãy nhập lại gói để lưu.</string>
     <string name="multilang_packs_desc">Nhập thêm từ điển ngôn ngữ từ tệp ZIP. Tải gói từ bên ngoài rồi nhập tại đây (không cần quyền internet).</string>
     <string name="multilang_packs_dialog_empty">Chưa cài gói ngôn ngữ nào.\n\nDùng \'Duyệt các gói hiện có\' để tải ZIP, rồi \'Nhập gói\' để thêm.</string>
     <string name="multilang_packs_dialog_title">Gói ngôn ngữ đã cài</string>

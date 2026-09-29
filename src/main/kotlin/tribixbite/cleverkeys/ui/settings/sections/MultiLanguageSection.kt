@@ -1,33 +1,56 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.langpack.LanguagePackManifest
+import tribixbite.cleverkeys.langpack.PackAttributionDisplay
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
@@ -35,11 +58,22 @@ import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.io.deleteLanguagePack
 import tribixbite.cleverkeys.ui.settings.io.getLanguageDisplayName
 import tribixbite.cleverkeys.ui.settings.io.importLanguagePack
+import tribixbite.cleverkeys.ui.settings.io.loadLanguagePackNotice
 import tribixbite.cleverkeys.ui.settings.io.rescanContractionCollisions
 import tribixbite.cleverkeys.ui.settings.saveSetting
 
+/**
+ * The NOTICE.txt viewer's state: which pack is open, and its text once loaded. [text] is null
+ * while loading AND when the pack kept no notice; [loaded] tells the two apart.
+ */
+private data class PackNoticeViewer(val packName: String, val loaded: Boolean, val text: String?)
+
 @Composable
 internal fun SettingsActivity.MultiLanguageSection() {
+            // Language-pack NOTICE.txt viewer (licensing-audit follow-up). Local, not in the
+            // ViewModel: it is a read-only view that is cheap to reopen after a rotation.
+            var noticeViewer by remember { mutableStateOf<PackNoticeViewer?>(null) }
+
             // Multi-Language Section (Collapsible)
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_multilang),
@@ -340,7 +374,9 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     onDismissRequest = { showLanguagePackDialog = false },
                     title = { Text(stringResource(R.string.multilang_packs_dialog_title)) },
                     text = {
-                        Column {
+                        // Scrollable: with the per-pack "Source & license" sections expanded the
+                        // list easily outgrows the dialog.
+                        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                             if (installedLanguagePacks.isEmpty()) {
                                 Text(
                                     text = stringResource(R.string.multilang_packs_dialog_empty),
@@ -348,38 +384,56 @@ internal fun SettingsActivity.MultiLanguageSection() {
                                 )
                             } else {
                                 installedLanguagePacks.forEach { pack ->
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 4.dp)
-                                    ) {
-                                        Row(
+                                    key(pack.code) {
+                                        Card(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(12.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
+                                                .padding(vertical = 4.dp)
                                         ) {
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(
-                                                    text = pack.name,
-                                                    fontWeight = FontWeight.Medium
+                                            Column {
+                                                Row(
+                                                    // No bottom padding: the "Source & license"
+                                                    // header below supplies the card's lower edge.
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(start = 12.dp, end = 12.dp, top = 12.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Column(modifier = Modifier.weight(1f)) {
+                                                        Text(
+                                                            text = pack.name,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                        Text(
+                                                            text = pluralStringResource(
+                                                                R.plurals.multilang_pack_stats,
+                                                                pack.wordCount,
+                                                                pack.code,
+                                                                pack.wordCount
+                                                            ),
+                                                            fontSize = 11.sp,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+                                                    }
+                                                    TextButton(
+                                                        onClick = { deleteLanguagePack(pack.code) }
+                                                    ) {
+                                                        Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error)
+                                                    }
+                                                }
+                                                LanguagePackAttributionSection(
+                                                    pack = pack,
+                                                    onViewNotice = {
+                                                        noticeViewer = PackNoticeViewer(pack.name, loaded = false, text = null)
+                                                        loadLanguagePackNotice(pack.code) { text ->
+                                                            // Ignore a late result for a viewer the user already closed.
+                                                            if (noticeViewer?.packName == pack.name) {
+                                                                noticeViewer = PackNoticeViewer(pack.name, loaded = true, text = text)
+                                                            }
+                                                        }
+                                                    },
                                                 )
-                                                Text(
-                                                    text = pluralStringResource(
-                                                        R.plurals.multilang_pack_stats,
-                                                        pack.wordCount,
-                                                        pack.code,
-                                                        pack.wordCount
-                                                    ),
-                                                    fontSize = 11.sp,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            TextButton(
-                                                onClick = { deleteLanguagePack(pack.code) }
-                                            ) {
-                                                Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error)
                                             }
                                         }
                                     }
@@ -394,4 +448,161 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     }
                 )
             }
+
+            // Full NOTICE.txt of one pack, opened from its "Source & license" section. Stacks
+            // over the management dialog; closing it returns there.
+            noticeViewer?.let { viewer ->
+                AlertDialog(
+                    onDismissRequest = { noticeViewer = null },
+                    title = { Text(stringResource(R.string.multilang_pack_notice_title, viewer.packName)) },
+                    text = {
+                        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                            when {
+                                // Loading a ~3 KB file: leave the body empty rather than flash a spinner.
+                                !viewer.loaded -> Unit
+                                viewer.text == null -> Text(
+                                    text = stringResource(R.string.multilang_pack_notice_missing),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                // Monospace: NOTICE.txt is laid out with ===== rules and indents.
+                                // Selectable, so a URL or a credit can be copied out.
+                                else -> SelectionContainer {
+                                    Text(
+                                        text = viewer.text,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = 11.sp,
+                                        lineHeight = 15.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { noticeViewer = null }) {
+                            Text(stringResource(R.string.common_close))
+                        }
+                    }
+                )
+            }
+}
+
+/**
+ * A pack card's collapsible "Source & license" section (data-licensing audit 2026-09-26
+ * follow-up): the pack licence, the data credit line and the source link(s) from the pack's
+ * manifest, plus a button for the full NOTICE.txt. Collapsed by default so the card stays one
+ * line tall. Packs built before 2026-09-27 carry no attribution and get a one-line note
+ * instead. Every display decision is made by [PackAttributionDisplay].
+ */
+@Composable
+private fun SettingsActivity.LanguagePackAttributionSection(
+    pack: LanguagePackManifest,
+    onViewNotice: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val display = remember(pack) { PackAttributionDisplay.from(pack) }
+
+    Column(modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 4.dp)) {
+        // Header row: full-width, 48dp minimum touch target.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .clickable(role = Role.Button) { expanded = !expanded },
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.multilang_pack_attribution_toggle),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Icon(
+                imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        AnimatedVisibility(
+            visible = expanded,
+            enter = expandVertically(),
+            exit = shrinkVertically()
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.padding(bottom = 8.dp)
+            ) {
+                if (!display.hasAttribution) {
+                    Text(
+                        text = stringResource(R.string.multilang_pack_attribution_missing),
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    display.license?.let { license ->
+                        Text(
+                            text = stringResource(R.string.multilang_pack_license, license),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    display.attribution?.let { credit ->
+                        SelectionContainer {
+                            Text(
+                                text = credit,
+                                fontSize = 11.sp,
+                                lineHeight = 15.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    if (display.sources.isNotEmpty()) {
+                        Text(
+                            text = stringResource(R.string.multilang_pack_source_label),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        display.sources.forEach { source ->
+                            if (source.isLink) {
+                                // Only http(s) reaches here (PackAttributionDisplay), so the
+                                // intent can only ever open a web page. 48dp row = touch target.
+                                Box(
+                                    contentAlignment = Alignment.CenterStart,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 48.dp)
+                                        .clickable(role = Role.Button) {
+                                            try {
+                                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(source.text)))
+                                            } catch (_: ActivityNotFoundException) {
+                                                // No browser: the URL is still readable on screen.
+                                            }
+                                        }
+                                ) {
+                                    Text(
+                                        text = source.text,
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        textDecoration = TextDecoration.Underline
+                                    )
+                                }
+                            } else {
+                                SelectionContainer {
+                                    Text(
+                                        text = source.text,
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    TextButton(onClick = onViewNotice) {
+                        Text(stringResource(R.string.multilang_pack_view_notice), fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+    }
 }

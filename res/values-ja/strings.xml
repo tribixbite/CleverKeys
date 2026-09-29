@@ -773,6 +773,13 @@
     <string name="multilang_packs_dialog_title">インストール済み言語パック</string>
     <string name="multilang_packs_dialog_empty">言語パックはインストールされていません。\n\n「利用可能なパックを見る」で ZIP をダウンロードし、「パックをインポート」で追加してください。</string>
     <plurals name="multilang_pack_stats"><item quantity="other">コード: %1$s • %2$d 単語</item></plurals>
+    <string name="multilang_pack_attribution_toggle">出典とライセンス</string>
+    <string name="multilang_pack_license">パックのライセンス: %1$s</string>
+    <string name="multilang_pack_source_label">出典</string>
+    <string name="multilang_pack_attribution_missing">このパックには出典やライセンスの情報が含まれていません。表示するには、パックの最新版をインポートしてください。</string>
+    <string name="multilang_pack_view_notice">通知全文を表示</string>
+    <string name="multilang_pack_notice_title">通知: %1$s</string>
+    <string name="multilang_pack_notice_missing">このパックのインポート時に通知全文は保存されませんでした。保存するには、パックを再度インポートしてください。</string>
     <string name="input_manage_layouts">キーボードレイアウトの管理</string>
     <string name="input_configure_extra_keys">追加キーの設定</string>
     <string name="input_advanced_prediction">高度な予測設定</string>

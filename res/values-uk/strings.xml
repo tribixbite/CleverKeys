@@ -910,6 +910,13 @@
     <plurals name="multilang_installed_count"><item quantity="one">Встановлено: %1$d мовний пакет</item><item quantity="few">Встановлено: %1$d мовні пакети</item><item quantity="many">Встановлено: %1$d мовних пакетів</item><item quantity="other">Встановлено: %1$d мовних пакетів</item></plurals>
     <string name="multilang_manage">Керувати</string>
     <plurals name="multilang_pack_stats"><item quantity="one">Код: %1$s • %2$d слово</item><item quantity="few">Код: %1$s • %2$d слова</item><item quantity="many">Код: %1$s • %2$d слів</item><item quantity="other">Код: %1$s • %2$d слів</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Джерело та ліцензія</string>
+    <string name="multilang_pack_license">Ліцензія пакета: %1$s</string>
+    <string name="multilang_pack_source_label">Джерело</string>
+    <string name="multilang_pack_attribution_missing">Цей пакет не містить відомостей про джерело чи ліцензію. Імпортуйте поточну версію пакета, щоб їх побачити.</string>
+    <string name="multilang_pack_view_notice">Показати повне повідомлення</string>
+    <string name="multilang_pack_notice_title">Повідомлення: %1$s</string>
+    <string name="multilang_pack_notice_missing">Повне повідомлення не було збережено під час імпорту цього пакета. Імпортуйте пакет повторно, щоб зберегти його.</string>
     <string name="multilang_packs_desc">Імпортуйте додаткові мовні словники із ZIP-файлів. Завантажуйте пакети окремо та імпортуйте тут (дозвіл на інтернет не потрібен).</string>
     <string name="multilang_packs_dialog_empty">Мовні пакети не встановлено.\n\nСкористайтеся «Переглянути доступні пакети», щоб завантажити ZIP, а потім «Імпортувати пакет», щоб додати його.</string>
     <string name="multilang_packs_dialog_title">Встановлені мовні пакети</string>

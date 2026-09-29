@@ -75,6 +75,11 @@ class TranslationCoverageDriftTest {
         "provenance_note_typo_correction_of", "suggestion_tap_again_to_undo",
         "suggestion_prefer_when_swiping", "suggestion_prefer_when_swiping_decline",
         "suggestion_prefer_when_swiping_added",
+        // Licensing-audit follow-up: per-pack data attribution in the language-pack manager.
+        "multilang_pack_attribution_toggle", "multilang_pack_license",
+        "multilang_pack_source_label", "multilang_pack_attribution_missing",
+        "multilang_pack_view_notice", "multilang_pack_notice_title",
+        "multilang_pack_notice_missing",
 
     ) + convertedCountPlurals
 

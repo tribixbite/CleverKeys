@@ -25,6 +25,10 @@ import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
  * - model.onnx: optional CTC swipe encoder for a non-Latin script (added 2026-09-10). Accepted
  *   only when the manifest DECLARES it — `"model": {"file": "model.onnx", "sha256": "…"}` —
  *   and the bytes hash to what the manifest says. See "The model member" below.
+ * - NOTICE.txt: optional full data-attribution text (every pack built since the 2026-09-26
+ *   data-licensing audit carries one). Kept on install so the credits CC BY-SA requires travel
+ *   with the data onto the device, and shown from the language-pack manager ([readNotice]).
+ *   The manifest's `license` / `attribution` / `source` keys carry the short form.
  *
  * Packs are imported via Storage Access Framework (no internet permission needed).
  * Stored in app internal storage: files/langpacks/{code}/
@@ -59,6 +63,20 @@ class LanguagePackManager(private val context: Context) {
         private const val UNIGRAMS_FILE = "unigrams.txt"
         private const val CONTRACTIONS_FILE = "contractions.json"
         private const val PREFIX_BOOST_FILE = "prefix_boost.bin"
+        private const val NOTICE_FILE = "NOTICE.txt"
+
+        /**
+         * Upper bound on each manifest attribution field (`license`, `attribution`, `source`).
+         * The real values are a few hundred characters; a pack is untrusted input, so a
+         * megabyte "attribution" must not reach a dialog `Text` unbounded.
+         */
+        const val MAX_ATTRIBUTION_FIELD_CHARS = 2_000
+
+        /**
+         * Upper bound on the NOTICE.txt text [readNotice] returns. The shipped notices are ~3 KB;
+         * the cap keeps a hostile pack's multi-megabyte notice out of memory and out of the UI.
+         */
+        const val MAX_NOTICE_CHARS = 64 * 1024
 
         /**
          * The pack's optional CTC encoder. Name and size cap come from [CtcPackModel] so the
@@ -248,6 +266,14 @@ class LanguagePackManager(private val context: Context) {
                     Log.d(TAG, "Copied prefix_boost.bin for ${manifest.code} (${prefixBoostFile.length() / 1024}KB)")
                 }
 
+                // Keep the full attribution text (2026-09-26 data-licensing audit): the pack's
+                // CC BY-SA credits must travel with the data, and the manifest's short
+                // `attribution` line points at this file. Absent from older packs.
+                val noticeFile = File(tempDir, NOTICE_FILE)
+                if (noticeFile.exists()) {
+                    noticeFile.copyTo(File(stagingDir, NOTICE_FILE), overwrite = true)
+                }
+
                 // Copy the CTC encoder if the manifest declared it and it verified above.
                 if (installModel) {
                     modelFile.copyTo(File(stagingDir, MODEL_FILE), overwrite = true)
@@ -298,12 +324,30 @@ class LanguagePackManager(private val context: Context) {
                 hasPrefixBoost = obj.optBoolean("hasPrefixBoost", false),
                 modelFile = model?.optString("file")?.takeIf { it.isNotEmpty() },
                 modelSha256 = model?.optString("sha256")?.takeIf { it.isNotEmpty() },
+                // Data attribution (2026-09-26 licensing audit). Absent from every pack built
+                // before 2026-09-27, so each one is optional; see attributionField.
+                license = attributionField(obj, "license"),
+                attribution = attributionField(obj, "attribution"),
+                source = attributionField(obj, "source"),
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to parse manifest", e)
             null
         }
     }
+
+    /**
+     * One attribution key from a manifest, or null when it is absent, blank or not a JSON
+     * string. Deliberately NOT `optString`: that stringifies a number to "42", and depending on
+     * the org.json build a JSON `null` to the text "null" — neither is a licence or a credit.
+     * Trimmed and capped at [MAX_ATTRIBUTION_FIELD_CHARS] because a pack is untrusted input
+     * and the value is rendered verbatim in the language-pack manager.
+     */
+    private fun attributionField(obj: JSONObject, key: String): String? =
+        (obj.opt(key) as? String)
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?.take(MAX_ATTRIBUTION_FIELD_CHARS)
 
     /**
      * Copy at most [limit] bytes from [input] to [output].
@@ -455,6 +499,40 @@ class LanguagePackManager(private val context: Context) {
     }
 
     /**
+     * Path to an installed pack's NOTICE.txt, or null when the pack carries none (every pack
+     * built before the 2026-09-26 audit, and packs imported by app versions that dropped the
+     * member on install).
+     */
+    fun getNoticePath(code: String): File? {
+        val noticeFile = File(langpacksDir, "$code/$NOTICE_FILE")
+        return if (noticeFile.isFile) noticeFile else null
+    }
+
+    /**
+     * The installed pack's NOTICE.txt as text, at most [MAX_NOTICE_CHARS] characters, or null
+     * when there is none or it cannot be read. Read in chunks so a hostile oversized notice is
+     * never materialised whole. Does file IO: call off the main thread.
+     */
+    fun readNotice(code: String): String? {
+        val noticeFile = getNoticePath(code) ?: return null
+        return try {
+            noticeFile.reader(Charsets.UTF_8).use { reader ->
+                val out = StringBuilder()
+                val buffer = CharArray(DEFAULT_BUFFER_SIZE)
+                while (out.length < MAX_NOTICE_CHARS) {
+                    val read = reader.read(buffer, 0, minOf(buffer.size, MAX_NOTICE_CHARS - out.length))
+                    if (read <= 0) break
+                    out.append(buffer, 0, read)
+                }
+                out.toString()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to read $NOTICE_FILE for $code", e)
+            null
+        }
+    }
+
+    /**
      * Check if a language pack is installed.
      */
     fun isInstalled(code: String): Boolean {
@@ -517,6 +595,22 @@ data class LanguagePackManifest(
      * pinned hash (`CtcPackModel`), which trusts nothing in this field.
      */
     val modelSha256: String? = null,
+    /**
+     * `license` — the pack's own licence identifier (`GPL-3.0-only` for every shipped pack).
+     * Null when absent (packs built before 2026-09-27), blank, or not a JSON string.
+     */
+    val license: String? = null,
+    /**
+     * `attribution` — the short credit line for the pack's word data: upstream author, upstream
+     * licence and the change note CC BY-SA requires. Null under the same rules as [license].
+     */
+    val attribution: String? = null,
+    /**
+     * `source` — where the word data came from: one URL, or several separated by spaces. Null
+     * under the same rules as [license]. Rendering (which tokens become links) is decided by
+     * [PackAttributionDisplay].
+     */
+    val source: String? = null,
 )
 
 /**

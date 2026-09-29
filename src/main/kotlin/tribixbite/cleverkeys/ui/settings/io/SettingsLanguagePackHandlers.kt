@@ -166,6 +166,19 @@ internal fun SettingsActivity.deleteLanguagePack(code: String) {
     }
 }
 
+/**
+ * Read an installed pack's NOTICE.txt off the main thread and hand it to [onLoaded] on the
+ * main thread: the text (capped by [LanguagePackManager.readNotice]) or null when the pack kept
+ * none — packs built before 2026-09-27, or imported by an app version that dropped the member.
+ */
+internal fun SettingsActivity.loadLanguagePackNotice(code: String, onLoaded: (String?) -> Unit) {
+    val manager = LanguagePackManager.getInstance(this)
+    lifecycleScope.launch {
+        val text = withContext(Dispatchers.IO) { manager.readNotice(code) }
+        onLoaded(text)
+    }
+}
+
 internal fun SettingsActivity.refreshInstalledLanguagePacks() {
     try {
         val manager = LanguagePackManager.getInstance(this)

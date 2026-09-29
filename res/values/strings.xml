@@ -1079,6 +1079,16 @@
         <item quantity="one">Code: %1$s • %2$d word</item>
         <item quantity="other">Code: %1$s • %2$d words</item>
     </plurals>
+    <!-- Language-pack manager: per-pack data attribution (licensing audit 2026-09-26).
+         %1$s in _license = the pack's licence identifier, e.g. GPL-3.0-only;
+         %1$s in _notice_title = the pack's display name. -->
+    <string name="multilang_pack_attribution_toggle">Source &amp; license</string>
+    <string name="multilang_pack_license">Pack license: %1$s</string>
+    <string name="multilang_pack_source_label">Source</string>
+    <string name="multilang_pack_attribution_missing">This pack does not include source or license details. Import the current version of the pack to see them.</string>
+    <string name="multilang_pack_view_notice">View full notice</string>
+    <string name="multilang_pack_notice_title">Notice: %1$s</string>
+    <string name="multilang_pack_notice_missing">The full notice was not kept when this pack was imported. Import the pack again to store it.</string>
 
     <!-- InputBehaviorSection.kt -->
     <string name="input_manage_layouts">Manage Keyboard Layouts</string>

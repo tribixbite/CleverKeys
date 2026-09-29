@@ -774,6 +774,13 @@
     <string name="multilang_packs_dialog_title">Geïnstalleerde taalpakketten</string>
     <string name="multilang_packs_dialog_empty">Geen taalpakketten geïnstalleerd.\n\nGebruik \'Beschikbare pakketten bekijken\' om een ZIP te downloaden en daarna \'Pakket importeren\' om het toe te voegen.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">Code: %1$s • %2$d woord</item><item quantity="other">Code: %1$s • %2$d woorden</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Bron en licentie</string>
+    <string name="multilang_pack_license">Pakketlicentie: %1$s</string>
+    <string name="multilang_pack_source_label">Bron</string>
+    <string name="multilang_pack_attribution_missing">Dit pakket bevat geen bron- of licentiegegevens. Importeer de huidige versie van het pakket om ze te zien.</string>
+    <string name="multilang_pack_view_notice">Volledige kennisgeving bekijken</string>
+    <string name="multilang_pack_notice_title">Kennisgeving: %1$s</string>
+    <string name="multilang_pack_notice_missing">De volledige kennisgeving is bij het importeren van dit pakket niet bewaard. Importeer het pakket opnieuw om deze op te slaan.</string>
     <string name="input_manage_layouts">Toetsenbordlay-outs beheren</string>
     <string name="input_configure_extra_keys">Extra toetsen configureren</string>
     <string name="input_advanced_prediction">Geavanceerde voorspellingsinstellingen</string>

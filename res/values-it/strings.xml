@@ -814,6 +814,13 @@
     <string name="multilang_packs_dialog_title">Pacchetti lingua installati</string>
     <string name="multilang_packs_dialog_empty">Nessun pacchetto lingua installato.\n\nUsa \'Sfoglia i pacchetti disponibili\' per scaricare uno ZIP, poi \'Importa pacchetto\' per aggiungerlo.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">Codice: %1$s • %2$d parola</item><item quantity="many">Codice: %1$s • %2$d parole</item><item quantity="other">Codice: %1$s • %2$d parole</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Fonte e licenza</string>
+    <string name="multilang_pack_license">Licenza del pacchetto: %1$s</string>
+    <string name="multilang_pack_source_label">Fonte</string>
+    <string name="multilang_pack_attribution_missing">Questo pacchetto non include informazioni su fonte o licenza. Importa la versione attuale del pacchetto per vederle.</string>
+    <string name="multilang_pack_view_notice">Visualizza avviso completo</string>
+    <string name="multilang_pack_notice_title">Avviso: %1$s</string>
+    <string name="multilang_pack_notice_missing">L\'avviso completo non è stato conservato durante l\'importazione di questo pacchetto. Importa di nuovo il pacchetto per salvarlo.</string>
     <string name="input_manage_layouts">Gestisci layout tastiera</string>
     <string name="input_configure_extra_keys">Configura tasti aggiuntivi</string>
     <string name="input_advanced_prediction">Impostazioni avanzate di previsione</string>

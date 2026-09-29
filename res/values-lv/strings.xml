@@ -785,6 +785,13 @@
     <string name="multilang_packs_dialog_title">Instalētās valodu pakotnes</string>
     <string name="multilang_packs_dialog_empty">Nav instalētu valodu pakotņu.\n\nIzmantojiet \'Pārlūkot pieejamās pakotnes\', lai lejupielādētu ZIP, un pēc tam \'Importēt pakotni\', lai to pievienotu.</string>
     <plurals name="multilang_pack_stats"><item quantity="zero">Kods: %1$s • %2$d vārdu</item><item quantity="one">Kods: %1$s • %2$d vārds</item><item quantity="other">Kods: %1$s • %2$d vārdi</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Avots un licence</string>
+    <string name="multilang_pack_license">Pakotnes licence: %1$s</string>
+    <string name="multilang_pack_source_label">Avots</string>
+    <string name="multilang_pack_attribution_missing">Šajā pakotnē nav norādīts avots vai licence. Lai tos redzētu, importējiet pakotnes pašreizējo versiju.</string>
+    <string name="multilang_pack_view_notice">Skatīt pilnu paziņojumu</string>
+    <string name="multilang_pack_notice_title">Paziņojums: %1$s</string>
+    <string name="multilang_pack_notice_missing">Importējot šo pakotni, pilnais paziņojums netika saglabāts. Lai to saglabātu, importējiet pakotni vēlreiz.</string>
     <string name="input_manage_layouts">Pārvaldīt tastatūras izkārtojumus</string>
     <string name="input_configure_extra_keys">Konfigurēt papildu taustiņus</string>
     <string name="input_advanced_prediction">Papildu prognožu iestatījumi</string>

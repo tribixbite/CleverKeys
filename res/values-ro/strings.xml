@@ -797,6 +797,13 @@
     <string name="multilang_packs_dialog_title">Pachete de limbă instalate</string>
     <string name="multilang_packs_dialog_empty">Niciun pachet de limbă instalat.\n\nFolosiți „Răsfoiește pachetele disponibile” pentru a descărca un ZIP, apoi „Importă pachet” pentru a-l adăuga.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">Cod: %1$s • %2$d cuvânt</item><item quantity="few">Cod: %1$s • %2$d cuvinte</item><item quantity="other">Cod: %1$s • %2$d de cuvinte</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Sursă și licență</string>
+    <string name="multilang_pack_license">Licența pachetului: %1$s</string>
+    <string name="multilang_pack_source_label">Sursă</string>
+    <string name="multilang_pack_attribution_missing">Acest pachet nu include informații despre sursă sau licență. Importați versiunea actuală a pachetului pentru a le vedea.</string>
+    <string name="multilang_pack_view_notice">Vezi notificarea completă</string>
+    <string name="multilang_pack_notice_title">Notificare: %1$s</string>
+    <string name="multilang_pack_notice_missing">Notificarea completă nu a fost păstrată la importarea acestui pachet. Importați din nou pachetul pentru a o salva.</string>
     <string name="input_manage_layouts">Gestionează aranjamentele tastaturii</string>
     <string name="input_configure_extra_keys">Configurează tastele suplimentare</string>
     <string name="input_advanced_prediction">Setări avansate de predicție</string>

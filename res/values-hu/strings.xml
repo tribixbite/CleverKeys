@@ -780,6 +780,13 @@
     <string name="multilang_packs_dialog_title">Telepített nyelvi csomagok</string>
     <string name="multilang_packs_dialog_empty">Nincsenek telepített nyelvi csomagok.\n\nHasználja az \'Elérhető csomagok böngészése\' lehetőséget egy ZIP letöltéséhez, majd a \'Csomag importálása\' gombot a hozzáadásához.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">Kód: %1$s • %2$d szó</item><item quantity="other">Kód: %1$s • %2$d szó</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Forrás és licenc</string>
+    <string name="multilang_pack_license">A csomag licence: %1$s</string>
+    <string name="multilang_pack_source_label">Forrás</string>
+    <string name="multilang_pack_attribution_missing">Ez a csomag nem tartalmaz forrás- vagy licencadatokat. A megtekintésükhöz importálja a csomag aktuális verzióját.</string>
+    <string name="multilang_pack_view_notice">Teljes közlemény megtekintése</string>
+    <string name="multilang_pack_notice_title">Közlemény: %1$s</string>
+    <string name="multilang_pack_notice_missing">A teljes közlemény nem maradt meg a csomag importálásakor. A tárolásához importálja újra a csomagot.</string>
     <string name="input_manage_layouts">Billentyűzetkiosztások kezelése</string>
     <string name="input_configure_extra_keys">Extra billentyűk beállítása</string>
     <string name="input_advanced_prediction">Speciális előrejelzési beállítások</string>

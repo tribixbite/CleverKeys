@@ -159,7 +159,10 @@ langpack-{lang}.zip
 Since 2026-09-26 every prebuilt pack also records its licence in `manifest.json` —
 `"license"` (`GPL-3.0-only`), `"attribution"` (credit line + upstream licence + change note)
 and `"source"` (upstream URL) — so the credits travel with a pack downloaded on its own. The
-importer ignores both additions; the installed manifest keeps the three keys.
+importer keeps both on the device: the installed manifest holds the three keys and
+`NOTICE.txt` is installed beside the dictionary, and the language-pack manager shows them
+(see [Attribution](#attribution)). All three keys and `NOTICE.txt` are optional — a pack
+without them still imports.
 
 `manifest.json` and `dictionary.bin` are required; the importer rejects a
 pack missing either, or a `dictionary.bin` without the V2 (`CKDT`) header.
@@ -203,13 +206,15 @@ Languages available through the wordfreq Python package:
 
 ### View Installed
 
-1. Go to **Settings > Activities > Layout Manager**
-2. Installed layouts show available languages
+1. Go to **Settings > Multi-Language** (with multi-language enabled)
+2. Under **Language Packs**, tap **Manage**
+3. Each installed pack is listed with its code and word count; tap **Source & license** on a
+   pack to see where its word data came from (see [Attribution](#attribution))
 
 ### Remove a Language Pack
 
-1. Delete the language files from the app's internal storage
-2. Or use Backup & Restore to reset to defaults
+1. Open **Manage** as above
+2. Tap **Delete** on the pack
 
 ## Offline Operation
 
@@ -282,6 +287,22 @@ under GPLv3 ([CC compatible licenses](https://creativecommons.org/compatible-lic
 Swwiki's CC BY-SA 3.0 reaches 4.0 through its §4(b) later-version clause; Apache-2.0 is
 one-way compatible with GPLv3. The former `en-norvig-50k` pack was withdrawn on 2026-09-26
 (Google Web 1T data, no redistribution grant). See the repository `NOTICE` file.
+
+### Seeing a pack's attribution in the app
+
+**Settings > Multi-Language > Language Packs > Manage**, then tap **Source & license** on a
+pack. It expands to show:
+
+- **Pack license** — the pack's licence (`GPL-3.0-only` for every prebuilt pack)
+- the credit line from the manifest: upstream author, upstream licence and the change note
+- **Source** — the upstream URL(s); tap one to open it in the browser (only `http`/`https`
+  addresses are tappable, since a pack's contents come from whoever made it)
+- **View full notice** — the pack's complete `NOTICE.txt`, as installed on the device
+
+Packs built before 2026-09-27 carry none of this, and the section says so. Packs imported
+with app versions before the attribution viewer kept the manifest keys but not
+`NOTICE.txt`; **View full notice** then asks you to import the pack again. Re-importing the
+current zip from the `langpacks` release fixes both cases and does not change your settings.
 
 ## Related Features
 

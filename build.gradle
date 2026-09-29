@@ -593,6 +593,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ShortSwipeIntentTest',
     'tribixbite.cleverkeys.customization.ShortSwipeMappingTest',
     'tribixbite.cleverkeys.GestureTest',
+    // Licensing-audit follow-up (2026-09-29): which parts of a pack's manifest attribution the
+    // language-pack manager shows, and that only http(s) source tokens become tappable links.
+    'tribixbite.cleverkeys.langpack.PackAttributionDisplayTest',
     // ARC-112 (2026-09-02): the swipe key-registration filter's pure core. Pins the
     // travel-since-last-registration distance basis (dense-sampled two-key swipes were
     // silently dropped when the gate compared the per-sample step) and the boundary-

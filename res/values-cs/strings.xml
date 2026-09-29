@@ -774,6 +774,13 @@
     <string name="multilang_packs_dialog_title">Nainstalované jazykové balíčky</string>
     <string name="multilang_packs_dialog_empty">Žádné jazykové balíčky nejsou nainstalované.\n\nPřes „Procházet dostupné balíčky“ stáhněte ZIP a pak jej přidejte přes „Importovat balíček“.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">Kód: %1$s • %2$d slovo</item><item quantity="few">Kód: %1$s • %2$d slova</item><item quantity="many">Kód: %1$s • %2$d slov</item><item quantity="other">Kód: %1$s • %2$d slov</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Zdroj a licence</string>
+    <string name="multilang_pack_license">Licence balíčku: %1$s</string>
+    <string name="multilang_pack_source_label">Zdroj</string>
+    <string name="multilang_pack_attribution_missing">Tento balíček neobsahuje údaje o zdroji ani licenci. Pro jejich zobrazení importujte aktuální verzi balíčku.</string>
+    <string name="multilang_pack_view_notice">Zobrazit úplné upozornění</string>
+    <string name="multilang_pack_notice_title">Upozornění: %1$s</string>
+    <string name="multilang_pack_notice_missing">Úplné upozornění nebylo při importu tohoto balíčku uloženo. Pro jeho uložení balíček importujte znovu.</string>
     <string name="input_manage_layouts">Spravovat rozložení klávesnice</string>
     <string name="input_configure_extra_keys">Nastavit doplňkové klávesy</string>
     <string name="input_advanced_prediction">Pokročilá nastavení předpovědí</string>

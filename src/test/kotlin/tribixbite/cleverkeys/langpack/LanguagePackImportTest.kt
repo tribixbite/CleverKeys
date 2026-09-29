@@ -656,7 +656,142 @@ class LanguagePackImportTest {
             val installed = org.json.JSONObject(File(installedDir(code), "manifest.json").readText())
             assertWithMessage("${pack.name}: the installed manifest keeps the attribution on the device")
                 .that(installed.optString("attribution")).isEqualTo(attribution)
+
+            // What the language-pack manager UI reads back: the parsed record and the notice.
+            val listed = manager.getInstalledPacks().single { it.code == code }
+            assertWithMessage("${pack.name}: getInstalledPacks() exposes the licence")
+                .that(listed.license).isEqualTo("GPL-3.0-only")
+            assertWithMessage("${pack.name}: getInstalledPacks() exposes the attribution")
+                .that(listed.attribution).isEqualTo(attribution)
+            assertWithMessage("${pack.name}: getInstalledPacks() exposes the source")
+                .that(listed.source).isEqualTo(json.optString("source"))
+            assertWithMessage("${pack.name}: NOTICE.txt is kept on the device, byte-for-byte")
+                .that(manager.readNotice(code)).isEqualTo(notice)
         }
+    }
+
+    // ------------------------------------------ data attribution (licensing audit follow-up)
+    //
+    // The attribution keys and NOTICE.txt are what CC BY-SA requires to travel with the data;
+    // the UI shows them per installed pack. Packs installed before 2026-09-27 have neither,
+    // and a pack is untrusted input, so absent and malformed values must parse to null rather
+    // than fail the import or render garbage.
+
+    private fun attributedManifest(
+        code: String,
+        name: String,
+        extraFields: String,
+    ): String = """{"code":"$code","name":"$name","version":2,"wordCount":5$extraFields}"""
+
+    @Test
+    fun attributionKeysAreParsedIntoTheManifest() {
+        val manifest = attributedManifest(
+            "sw", "Swahili",
+            ""","license":"GPL-3.0-only","attribution":"Swwiki by Kevin Donnelly (CC BY-SA 3.0)","source":"https://kevindonnelly.org.uk/swahili/swwiki/""""
+        )
+        val result = import(validPack("sw", "Swahili", manifest = manifest))
+        assertThat(result).isInstanceOf(ImportResult.Success::class.java)
+        val parsed = (result as ImportResult.Success).manifest
+        assertThat(parsed.license).isEqualTo("GPL-3.0-only")
+        assertThat(parsed.attribution).isEqualTo("Swwiki by Kevin Donnelly (CC BY-SA 3.0)")
+        assertThat(parsed.source).isEqualTo("https://kevindonnelly.org.uk/swahili/swwiki/")
+    }
+
+    @Test
+    fun aPackWithoutAttributionKeysParsesThemAsNull() {
+        // The shape of every pack built before the 2026-09-26 audit.
+        val result = import(validPack("nl", "Dutch", wordCount = 3))
+        val parsed = (result as ImportResult.Success).manifest
+        assertThat(parsed.license).isNull()
+        assertThat(parsed.attribution).isNull()
+        assertThat(parsed.source).isNull()
+        assertWithMessage("an old pack still compares equal to its pre-attribution record")
+            .that(parsed).isEqualTo(LanguagePackManifest("nl", "Dutch", 1, "", 3, false))
+        assertWithMessage("an old pack has no notice on disk")
+            .that(manager.readNotice("nl")).isNull()
+    }
+
+    @Test
+    fun malformedAttributionValuesAreIgnoredWithoutFailingTheImport() {
+        val manifest = attributedManifest(
+            "tl", "Tagalog",
+            ""","license":42,"attribution":null,"source":{"url":"https://example.org"}"""
+        )
+        val result = import(validPack("tl", "Tagalog", manifest = manifest))
+        assertWithMessage("wrong-typed attribution keys must not reject an otherwise valid pack")
+            .that(result).isInstanceOf(ImportResult.Success::class.java)
+        val parsed = (result as ImportResult.Success).manifest
+        assertWithMessage("a number is not a licence identifier").that(parsed.license).isNull()
+        assertWithMessage("JSON null must not become the text \"null\"").that(parsed.attribution).isNull()
+        assertWithMessage("an object is not a source").that(parsed.source).isNull()
+    }
+
+    @Test
+    fun blankAttributionValuesAreTreatedAsAbsentAndOthersAreTrimmed() {
+        val manifest = attributedManifest(
+            "ms", "Malay",
+            ""","license":"   ","attribution":"","source":"  https://github.com/rspeer/wordfreq  """"
+        )
+        val parsed = (import(validPack("ms", "Malay", manifest = manifest)) as ImportResult.Success).manifest
+        assertThat(parsed.license).isNull()
+        assertThat(parsed.attribution).isNull()
+        assertThat(parsed.source).isEqualTo("https://github.com/rspeer/wordfreq")
+    }
+
+    @Test
+    fun anOversizedAttributionIsCappedSoAHostilePackCannotFloodTheDialog() {
+        val huge = "x".repeat(LanguagePackManager.MAX_ATTRIBUTION_FIELD_CHARS * 4)
+        val manifest = attributedManifest("id", "Indonesian", ""","attribution":"$huge"""")
+        val parsed = (import(validPack("id", "Indonesian", manifest = manifest)) as ImportResult.Success).manifest
+        assertThat(parsed.attribution?.length).isEqualTo(LanguagePackManager.MAX_ATTRIBUTION_FIELD_CHARS)
+    }
+
+    @Test
+    fun attributionSurvivesARestartBecauseItIsReadBackFromTheInstalledManifest() {
+        val manifest = attributedManifest(
+            "de", "German",
+            ""","license":"GPL-3.0-only","attribution":"wordfreq (CC BY-SA 4.0)","source":"https://github.com/rspeer/wordfreq""""
+        )
+        import(validPack("de", "German", manifest = manifest))
+
+        // A fresh manager over the same filesDir is what the app sees after a process restart.
+        val afterRestart = LanguagePackManager(context).getInstalledPacks().single()
+        assertThat(afterRestart.license).isEqualTo("GPL-3.0-only")
+        assertThat(afterRestart.attribution).isEqualTo("wordfreq (CC BY-SA 4.0)")
+        assertThat(afterRestart.source).isEqualTo("https://github.com/rspeer/wordfreq")
+    }
+
+    @Test
+    fun noticeTxtIsInstalledAndReadableAfterImport() {
+        val notice = "CleverKeys language pack: German (de)\nwordfreq -- CC BY-SA 4.0\n"
+        val zip = validPack("de", "German", extras = listOf("NOTICE.txt" to notice.toByteArray()))
+        assertThat(import(zip)).isInstanceOf(ImportResult.Success::class.java)
+
+        assertThat(File(installedDir("de"), "NOTICE.txt").readText()).isEqualTo(notice)
+        assertThat(manager.readNotice("de")).isEqualTo(notice)
+        assertWithMessage("a fresh manager (process restart) still finds the notice")
+            .that(LanguagePackManager(context).readNotice("de")).isEqualTo(notice)
+    }
+
+    @Test
+    fun reimportingWithoutANoticeRemovesTheStaleOne() {
+        import(validPack("de", "German", extras = listOf("NOTICE.txt" to "old".toByteArray())))
+        assertThat(manager.readNotice("de")).isEqualTo("old")
+        import(validPack("de", "German"))
+        assertWithMessage("a replaced pack must not keep the previous version's credits")
+            .that(manager.readNotice("de")).isNull()
+    }
+
+    @Test
+    fun anOversizedNoticeIsReadBackTruncatedToTheCap() {
+        val big = "y".repeat(LanguagePackManager.MAX_NOTICE_CHARS + 5000)
+        import(validPack("de", "German", extras = listOf("NOTICE.txt" to big.toByteArray())))
+        assertThat(manager.readNotice("de")?.length).isEqualTo(LanguagePackManager.MAX_NOTICE_CHARS)
+    }
+
+    @Test
+    fun readNoticeForAPackThatIsNotInstalledIsNull() {
+        assertThat(manager.readNotice("fr")).isNull()
     }
 
     // ------------------------------------------------------- re-import and enumeration

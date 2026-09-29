@@ -794,6 +794,13 @@
     <string name="multilang_packs_dialog_title">Installierte Sprachpakete</string>
     <string name="multilang_packs_dialog_empty">Keine Sprachpakete installiert.\n\nÜber „Verfügbare Pakete ansehen“ ein ZIP herunterladen und es dann mit „Paket importieren“ hinzufügen.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">Code: %1$s • %2$d Wort</item><item quantity="other">Code: %1$s • %2$d Wörter</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Quelle &amp; Lizenz</string>
+    <string name="multilang_pack_license">Paketlizenz: %1$s</string>
+    <string name="multilang_pack_source_label">Quelle</string>
+    <string name="multilang_pack_attribution_missing">Dieses Paket enthält keine Angaben zu Quelle oder Lizenz. Importieren Sie die aktuelle Version des Pakets, um sie anzuzeigen.</string>
+    <string name="multilang_pack_view_notice">Vollständigen Hinweis anzeigen</string>
+    <string name="multilang_pack_notice_title">Hinweis: %1$s</string>
+    <string name="multilang_pack_notice_missing">Der vollständige Hinweis wurde beim Import dieses Pakets nicht gespeichert. Importieren Sie das Paket erneut, um ihn zu speichern.</string>
     <string name="input_manage_layouts">Tastaturlayouts verwalten</string>
     <string name="input_configure_extra_keys">Zusatztasten konfigurieren</string>
     <string name="input_advanced_prediction">Erweiterte Vorhersage-Einstellungen</string>

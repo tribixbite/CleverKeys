@@ -783,6 +783,13 @@
     <string name="multilang_packs_dialog_title">Mga Naka-install na Language Pack</string>
     <string name="multilang_packs_dialog_empty">Walang naka-install na language pack.\n\nGamitin ang \'I-browse ang mga available na pack\' para mag-download ng ZIP, pagkatapos ay \'Mag-import ng Pack\' para idagdag ito.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">Code: %1$s • %2$d salita</item><item quantity="other">Code: %1$s • %2$d salita</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Pinagmulan at lisensya</string>
+    <string name="multilang_pack_license">Lisensya ng pack: %1$s</string>
+    <string name="multilang_pack_source_label">Pinagmulan</string>
+    <string name="multilang_pack_attribution_missing">Walang detalye ng pinagmulan o lisensya ang pack na ito. I-import ang kasalukuyang bersyon ng pack para makita ang mga ito.</string>
+    <string name="multilang_pack_view_notice">Tingnan ang buong abiso</string>
+    <string name="multilang_pack_notice_title">Abiso: %1$s</string>
+    <string name="multilang_pack_notice_missing">Hindi naitago ang buong abiso nang i-import ang pack na ito. I-import muli ang pack para maitago ito.</string>
     <string name="input_manage_layouts">Pamahalaan ang mga Keyboard Layout</string>
     <string name="input_configure_extra_keys">I-configure ang Karagdagang Key</string>
     <string name="input_advanced_prediction">Mga Advanced na Setting ng Prediction</string>

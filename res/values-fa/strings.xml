@@ -809,6 +809,13 @@
     <string name="multilang_packs_dialog_title">بسته‌های زبان نصب‌شده</string>
     <string name="multilang_packs_dialog_empty">هیچ بستهٔ زبانی نصب نشده است.\n\nبا «مرور بسته‌های موجود» یک ZIP دانلود کنید، سپس با «وارد کردن بسته» آن را بیفزایید.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">کد: %1$s • %2$d واژه</item><item quantity="other">کد: %1$s • %2$d واژه</item></plurals>
+    <string name="multilang_pack_attribution_toggle">منبع و مجوز</string>
+    <string name="multilang_pack_license">مجوز بسته: %1$s</string>
+    <string name="multilang_pack_source_label">منبع</string>
+    <string name="multilang_pack_attribution_missing">این بسته اطلاعات منبع یا مجوز را ندارد. برای دیدن آن‌ها، نسخهٔ فعلی بسته را وارد کنید.</string>
+    <string name="multilang_pack_view_notice">مشاهدهٔ اطلاعیهٔ کامل</string>
+    <string name="multilang_pack_notice_title">اطلاعیه: %1$s</string>
+    <string name="multilang_pack_notice_missing">اطلاعیهٔ کامل هنگام وارد کردن این بسته نگه داشته نشد. برای ذخیرهٔ آن، بسته را دوباره وارد کنید.</string>
     <string name="input_manage_layouts">مدیریت چیدمان‌های صفحه‌کلید</string>
     <string name="input_configure_extra_keys">پیکربندی کلیدهای اضافی</string>
     <string name="input_advanced_prediction">تنظیمات پیشرفتهٔ پیش‌بینی</string>

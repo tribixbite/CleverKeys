@@ -774,6 +774,13 @@
     <string name="multilang_packs_dialog_title">설치된 언어 팩</string>
     <string name="multilang_packs_dialog_empty">설치된 언어 팩이 없습니다.\n\n\'사용 가능한 팩 보기\'로 ZIP을 다운로드한 다음 \'팩 가져오기\'로 추가하세요.</string>
     <plurals name="multilang_pack_stats"><item quantity="other">코드: %1$s • 단어 %2$d개</item></plurals>
+    <string name="multilang_pack_attribution_toggle">출처 및 라이선스</string>
+    <string name="multilang_pack_license">팩 라이선스: %1$s</string>
+    <string name="multilang_pack_source_label">출처</string>
+    <string name="multilang_pack_attribution_missing">이 팩에는 출처나 라이선스 정보가 없습니다. 확인하려면 팩의 최신 버전을 가져오세요.</string>
+    <string name="multilang_pack_view_notice">전체 고지 보기</string>
+    <string name="multilang_pack_notice_title">고지: %1$s</string>
+    <string name="multilang_pack_notice_missing">이 팩을 가져올 때 전체 고지가 보관되지 않았습니다. 저장하려면 팩을 다시 가져오세요.</string>
     <string name="input_manage_layouts">키보드 레이아웃 관리</string>
     <string name="input_configure_extra_keys">추가 키 설정</string>
     <string name="input_advanced_prediction">고급 예측 설정</string>

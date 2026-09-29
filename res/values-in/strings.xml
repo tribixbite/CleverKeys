@@ -786,6 +786,13 @@
     <string name="multilang_packs_dialog_title">Paket Bahasa Terpasang</string>
     <string name="multilang_packs_dialog_empty">Tidak ada paket bahasa terpasang.\n\nGunakan \'Telusuri paket yang tersedia\' untuk mengunduh ZIP, lalu \'Impor Paket\' untuk menambahkannya.</string>
     <plurals name="multilang_pack_stats"><item quantity="other">Kode: %1$s • %2$d kata</item></plurals>
+    <string name="multilang_pack_attribution_toggle">Sumber &amp; lisensi</string>
+    <string name="multilang_pack_license">Lisensi paket: %1$s</string>
+    <string name="multilang_pack_source_label">Sumber</string>
+    <string name="multilang_pack_attribution_missing">Paket ini tidak menyertakan detail sumber atau lisensi. Impor versi terbaru paket untuk melihatnya.</string>
+    <string name="multilang_pack_view_notice">Lihat pemberitahuan lengkap</string>
+    <string name="multilang_pack_notice_title">Pemberitahuan: %1$s</string>
+    <string name="multilang_pack_notice_missing">Pemberitahuan lengkap tidak disimpan saat paket ini diimpor. Impor ulang paket untuk menyimpannya.</string>
     <string name="input_manage_layouts">Kelola Tata Letak Keyboard</string>
     <string name="input_configure_extra_keys">Konfigurasikan Tombol Tambahan</string>
     <string name="input_advanced_prediction">Pengaturan Prediksi Lanjutan</string>
