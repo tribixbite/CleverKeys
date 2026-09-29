@@ -920,7 +920,7 @@
     <string name="privacy_collected_data_header">Зібрані дані</string>
     <string name="privacy_export_json">Експорт JSON</string>
     <string name="privacy_export_ndjson">Експорт NDJSON</string>
-    <string name="privacy_forget_learned_body">Навчання тепер вимкнено — нічого нового не записуватиметься. Видалити також усе вже вивчене (шаблони фраз, вживання слів, історію вибору та виправлення свайпу)? Цю дію не можна скасувати.</string>
+    <string name="privacy_forget_learned_body">Навчання тепер вимкнено — нічого нового не записуватиметься. Видалити також усе вже вивчене (шаблони фраз, вживання слів, історію вибору підказок та виправлення свайпу)? Цю дію не можна скасувати.</string>
     <string name="privacy_forget_learned_confirm">Видалити вивчені дані</string>
     <string name="privacy_forget_learned_keep">Залишити</string>
     <string name="privacy_forget_learned_title">Також забути вивчені дані?</string>

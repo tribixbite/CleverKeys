@@ -180,7 +180,7 @@
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Adăugați „%1$s” în dicționar?</string>
     <string name="suggestion_prefer_when_swiping">Preferați „%1$s” la glisare?</string>
-    <string name="suggestion_prefer_when_swiping_decline">Nu mai întreba</string>
+    <string name="suggestion_prefer_when_swiping_decline">Nu mai întrebați</string>
     <string name="suggestion_prefer_when_swiping_added">Glisarea preferă acum „%1$s”</string>
     <string name="suggestion_added_to_dictionary">„%1$s” a fost adăugat în dicționar</string>
     <string name="suggestion_tap_again_to_undo">Atingeți din nou pentru a anula</string>
@@ -642,7 +642,7 @@
     <string name="provenance_origin_exact_add">Cuvântul tastat exact (atinge pentru a adăuga)</string>
     <string name="provenance_origin_next_word">Predicția cuvântului următor</string>
     <string name="provenance_origin_autocorrect">Solicitare de autocorectare</string>
-    <string name="provenance_origin_typo_correction">Corectare greșeală de tastare</string>
+    <string name="provenance_origin_typo_correction">Corectarea greșelii de tastare</string>
     <string name="provenance_unknown">Necunoscut</string>
     <string name="provenance_source">Sursă: %1$s</string>
     <string name="provenance_score">Scor: %1$d</string>
@@ -772,7 +772,7 @@
     <string name="privacy_section_intro">CleverKeys funcționează complet offline — niciun fel de date nu părăsesc dispozitivul dvs. Aceste setări opționale păstrează datele local, ca să le puteți consulta, exporta sau șterge; datele de glisare exportate pot fi folosite pentru antrenarea modelelor în altă parte.</string>
     <string name="privacy_on_device_learning_header">Învățare pe dispozitiv</string>
     <string name="privacy_forget_learned_title">Uitați și datele învățate?</string>
-    <string name="privacy_forget_learned_body">Învățarea este acum dezactivată — nu se va mai înregistra nimic nou. Doriți să ștergeți și tot ce a fost deja învățat (tipare de expresii, utilizarea cuvintelor, istoricul selecțiilor și corecturile de glisare)? Nu se poate anula.</string>
+    <string name="privacy_forget_learned_body">Învățarea este acum dezactivată — nu se va mai înregistra nimic nou. Doriți să ștergeți și tot ce a fost deja învățat (tipare de expresii, utilizarea cuvintelor, istoricul selectării sugestiilor și corecturile de glisare)? Nu se poate anula.</string>
     <string name="privacy_forget_learned_confirm">Șterge datele învățate</string>
     <string name="privacy_forget_learned_keep">Păstrează-le</string>
     <string name="privacy_local_collection_header">Colectare locală de date (opțional)</string>

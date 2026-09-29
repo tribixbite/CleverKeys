@@ -767,7 +767,7 @@
     <string name="privacy_section_intro">CleverKeys funciona totalmente sin conexión: ningún dato sale nunca de tu dispositivo. Estos ajustes opcionales guardan datos localmente para que puedas revisarlos, exportarlos o eliminarlos; los datos de deslizamiento exportados pueden servir para entrenar modelos en otro lugar.</string>
     <string name="privacy_on_device_learning_header">Aprendizaje en el dispositivo</string>
     <string name="privacy_forget_learned_title">¿Olvidar también los datos aprendidos?</string>
-    <string name="privacy_forget_learned_body">El aprendizaje está ahora desactivado — no se registrará nada nuevo. ¿Quieres eliminar también todo lo ya aprendido (patrones de frases, uso de palabras, historial de selecciones y correcciones de deslizamiento)? No se puede deshacer.</string>
+    <string name="privacy_forget_learned_body">El aprendizaje está ahora desactivado — no se registrará nada nuevo. ¿Quieres eliminar también todo lo ya aprendido (patrones de frases, uso de palabras, historial de selección de sugerencias y correcciones de deslizamiento)? No se puede deshacer.</string>
     <string name="privacy_forget_learned_confirm">Eliminar datos aprendidos</string>
     <string name="privacy_forget_learned_keep">Conservarlos</string>
     <string name="privacy_local_collection_header">Recopilación local de datos (opcional)</string>

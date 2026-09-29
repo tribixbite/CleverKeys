@@ -749,7 +749,7 @@
     <string name="privacy_section_intro">O CleverKeys é totalmente offline — nenhum dado sai do seu dispositivo. Estas configurações opcionais guardam dados localmente para que você possa revisá-los, exportá-los ou excluí-los; os dados de deslize exportados podem ser usados para treinar modelos em outro lugar.</string>
     <string name="privacy_on_device_learning_header">Aprendizado no dispositivo</string>
     <string name="privacy_forget_learned_title">Esquecer também os dados aprendidos?</string>
-    <string name="privacy_forget_learned_body">O aprendizado agora está desativado — nada de novo será registrado. Você também quer excluir tudo o que já foi aprendido (padrões de frases, uso de palavras, histórico de seleção e correções de deslize)? Não é possível desfazer.</string>
+    <string name="privacy_forget_learned_body">O aprendizado agora está desativado — nada de novo será registrado. Você também quer excluir tudo o que já foi aprendido (padrões de frases, uso de palavras, histórico de seleção de sugestões e correções de deslize)? Não é possível desfazer.</string>
     <string name="privacy_forget_learned_confirm">Excluir dados aprendidos</string>
     <string name="privacy_forget_learned_keep">Manter</string>
     <string name="privacy_local_collection_header">Coleta local de dados (opcional)</string>

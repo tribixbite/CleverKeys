@@ -755,7 +755,7 @@
     <string name="privacy_section_intro">CleverKeys fonctionne entièrement hors ligne — aucune donnée ne quitte jamais votre appareil. Ces réglages facultatifs conservent des données en local pour que vous puissiez les consulter, les exporter ou les supprimer ; les données de glissé exportées peuvent servir à entraîner des modèles ailleurs.</string>
     <string name="privacy_on_device_learning_header">Apprentissage sur l\'appareil</string>
     <string name="privacy_forget_learned_title">Oublier aussi les données apprises ?</string>
-    <string name="privacy_forget_learned_body">L\'apprentissage est maintenant désactivé — rien de nouveau ne sera enregistré. Voulez-vous aussi supprimer tout ce qui a déjà été appris (habitudes d\'expressions, usage des mots, historique de sélection et corrections de glissé) ? Cette action est irréversible.</string>
+    <string name="privacy_forget_learned_body">L\'apprentissage est maintenant désactivé — rien de nouveau ne sera enregistré. Voulez-vous aussi supprimer tout ce qui a déjà été appris (habitudes d\'expressions, usage des mots, historique de sélection des suggestions et corrections de glissé) ? Cette action est irréversible.</string>
     <string name="privacy_forget_learned_confirm">Supprimer les données apprises</string>
     <string name="privacy_forget_learned_keep">Les conserver</string>
     <string name="privacy_local_collection_header">Collecte locale de données (facultatif)</string>

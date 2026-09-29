@@ -758,7 +758,7 @@
     <string name="privacy_section_intro">Ganap na offline ang CleverKeys — walang datos na umaalis sa iyong device. Ang mga opsyonal na setting na ito ay nag-iimbak ng datos nang lokal upang matingnan, ma-export, o mabura mo ito; magagamit ang na-export na datos ng swipe sa pagsasanay ng mga modelo sa ibang lugar.</string>
     <string name="privacy_on_device_learning_header">On-Device na Pagkatuto</string>
     <string name="privacy_forget_learned_title">Kalimutan din ang natutunang data?</string>
-    <string name="privacy_forget_learned_body">Naka-off na ngayon ang pagkatuto — walang bagong itatala. Gusto mo rin bang tanggalin ang lahat ng natutunan na (mga pattern ng parirala, paggamit ng salita, history ng seleksyon, at mga pagwawasto sa swipe)? Hindi ito maibabalik.</string>
+    <string name="privacy_forget_learned_body">Naka-off na ngayon ang pagkatuto — walang bagong itatala. Gusto mo rin bang tanggalin ang lahat ng natutunan na (mga pattern ng parirala, paggamit ng salita, kasaysayan ng pagpili ng mungkahi, at mga pagwawasto sa swipe)? Hindi ito maibabalik.</string>
     <string name="privacy_forget_learned_confirm">Tanggalin ang natutunang data</string>
     <string name="privacy_forget_learned_keep">Panatilihin</string>
     <string name="privacy_local_collection_header">Lokal na Pagkolekta ng Data (Opsyonal)</string>
@@ -996,7 +996,7 @@
     <string name="privacy_learned_none">Wala pang natutunan.</string>
     <string name="privacy_learned_sources">Kasalukuyang itinatala: %1$s</string>
     <string name="privacy_learned_sources_none">Walang itinatala sa ngayon.</string>
-    <string name="privacy_learned_source_swipe_corrections">Mga pagtatama sa swipe</string>
+    <string name="privacy_learned_source_swipe_corrections">Mga pagwawasto sa swipe</string>
     <string name="privacy_learned_source_selections">Mga napiling mungkahi</string>
     <string name="privacy_learned_manage">Pinagmumulan ng Pagkatuto</string>
     <string name="privacy_learned_forget">Kalimutan ang Natutunan</string>

@@ -937,7 +937,7 @@
     <string name="privacy_collected_data_header">Dữ liệu đã thu thập</string>
     <string name="privacy_export_json">Xuất JSON</string>
     <string name="privacy_export_ndjson">Xuất NDJSON</string>
-    <string name="privacy_forget_learned_body">Việc học hiện đã tắt — sẽ không ghi thêm gì mới. Bạn có muốn xóa cả những gì đã học (mẫu cụm từ, mức dùng từ, lịch sử lựa chọn và sửa lỗi vuốt)? Không thể hoàn tác.</string>
+    <string name="privacy_forget_learned_body">Việc học hiện đã tắt — sẽ không ghi thêm gì mới. Bạn có muốn xóa cả những gì đã học (mẫu cụm từ, số lần dùng từ, lịch sử chọn gợi ý và sửa lỗi vuốt)? Không thể hoàn tác.</string>
     <string name="privacy_forget_learned_confirm">Xóa dữ liệu đã học</string>
     <string name="privacy_forget_learned_keep">Giữ lại</string>
     <string name="privacy_forget_learned_title">Quên luôn dữ liệu đã học?</string>

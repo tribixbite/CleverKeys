@@ -650,7 +650,7 @@
     <string name="provenance_note_next_learned">Na “%1$s”: %2$d× gezien, %3$d%%</string>
     <string name="provenance_note_typed_undo">Je getypte woord (tik om ongedaan te maken)</string>
     <string name="provenance_note_autocorrected_from">Automatisch gecorrigeerd van “%1$s”</string>
-    <string name="provenance_note_typo_correction_of">Correctie van getypt “%1$s”</string>
+    <string name="provenance_note_typo_correction_of">Correctie van het getypte “%1$s”</string>
     <string name="backup_base64_too_large">Import mislukt: de inline back-uppayload is te groot</string>
     <string name="clipboard_private_copy_toast_title">Privé kopieën bevestigen</string>
     <string name="clipboard_private_copy_toast_desc">Toon een korte melding na privé kopiëren vanuit het selectiemenu van een andere app. Waarschuwingen worden altijd getoond.</string>
@@ -749,7 +749,7 @@
     <string name="privacy_section_intro">CleverKeys werkt volledig offline — er verlaten nooit gegevens je apparaat. Deze optionele instellingen bewaren gegevens lokaal zodat je ze kunt bekijken, exporteren of verwijderen; geëxporteerde veeggegevens kun je elders gebruiken om modellen te trainen.</string>
     <string name="privacy_on_device_learning_header">Leren op het apparaat</string>
     <string name="privacy_forget_learned_title">Ook geleerde gegevens vergeten?</string>
-    <string name="privacy_forget_learned_body">Leren staat nu uit — er wordt niets nieuws opgenomen. Wil je ook alles verwijderen wat al is geleerd (uitdrukkingspatronen, woordgebruik, selectiegeschiedenis en veegcorrecties)? Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="privacy_forget_learned_body">Leren staat nu uit — er wordt niets nieuws opgenomen. Wil je ook alles verwijderen wat al is geleerd (uitdrukkingspatronen, woordgebruik, geschiedenis van gekozen suggesties en veegcorrecties)? Dit kan niet ongedaan worden gemaakt.</string>
     <string name="privacy_forget_learned_confirm">Geleerde gegevens verwijderen</string>
     <string name="privacy_forget_learned_keep">Behouden</string>
     <string name="privacy_local_collection_header">Lokale gegevensverzameling (optioneel)</string>

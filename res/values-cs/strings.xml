@@ -749,7 +749,7 @@
     <string name="privacy_section_intro">CleverKeys funguje plně offline — žádná data nikdy neopustí vaše zařízení. Tato volitelná nastavení ukládají data místně, abyste si je mohli prohlédnout, exportovat nebo smazat; exportovaná data o tazích lze použít k trénování modelů jinde.</string>
     <string name="privacy_on_device_learning_header">Učení v zařízení</string>
     <string name="privacy_forget_learned_title">Zapomenout i naučená data?</string>
-    <string name="privacy_forget_learned_body">Učení je nyní vypnuté — nic nového se nezaznamenává. Chcete smazat i vše, co už je naučené (vzory frází, používání slov, historii výběrů a opravy tahů)? Nelze vrátit zpět.</string>
+    <string name="privacy_forget_learned_body">Učení je nyní vypnuté — nic nového se nezaznamenává. Chcete smazat i vše, co už je naučené (vzory frází, používání slov, historii výběru návrhů a opravy tahů)? Nelze vrátit zpět.</string>
     <string name="privacy_forget_learned_confirm">Smazat naučená data</string>
     <string name="privacy_forget_learned_keep">Ponechat</string>
     <string name="privacy_local_collection_header">Místní sběr dat (volitelné)</string>

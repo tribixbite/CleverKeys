@@ -748,7 +748,7 @@
     <string name="privacy_section_intro">CleverKeys は完全にオフラインで動作し、データが端末外に出ることはありません。これらの任意の設定はデータを端末内に保存し、確認・エクスポート・削除できるようにします。エクスポートしたスワイプデータは、別の場所でモデルの学習に利用できます。</string>
     <string name="privacy_on_device_learning_header">端末内学習</string>
     <string name="privacy_forget_learned_title">学習データも消去しますか?</string>
-    <string name="privacy_forget_learned_body">学習はオフになりました — 新しい記録は行われません。すでに学習した内容（フレーズパターン、単語の使用状況、選択履歴、スワイプの修正）もすべて削除しますか?この操作は元に戻せません。</string>
+    <string name="privacy_forget_learned_body">学習はオフになりました — 新しい記録は行われません。すでに学習した内容（フレーズパターン、単語の使用状況、候補選択の履歴、スワイプの修正）もすべて削除しますか?この操作は元に戻せません。</string>
     <string name="privacy_forget_learned_confirm">学習データを削除</string>
     <string name="privacy_forget_learned_keep">残す</string>
     <string name="privacy_local_collection_header">ローカルデータ収集(任意)</string>

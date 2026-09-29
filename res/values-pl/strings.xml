@@ -759,7 +759,7 @@
     <string name="privacy_section_intro">CleverKeys działa całkowicie offline — żadne dane nigdy nie opuszczają Twojego urządzenia. Te opcjonalne ustawienia przechowują dane lokalnie, abyś mógł je przejrzeć, wyeksportować lub usunąć; wyeksportowane dane o gestach mogą posłużyć do trenowania modeli gdzie indziej.</string>
     <string name="privacy_on_device_learning_header">Uczenie na urządzeniu</string>
     <string name="privacy_forget_learned_title">Zapomnieć też wyuczone dane?</string>
-    <string name="privacy_forget_learned_body">Uczenie jest teraz wyłączone — nic nowego nie będzie rejestrowane. Czy chcesz też usunąć wszystko, co już wyuczone (wzorce zwrotów, użycie słów, historię wyboru i poprawki gestów)? Nie można tego cofnąć.</string>
+    <string name="privacy_forget_learned_body">Uczenie jest teraz wyłączone — nic nowego nie będzie rejestrowane. Czy chcesz też usunąć wszystko, co już wyuczone (wzorce zwrotów, użycie słów, historię wyboru podpowiedzi i poprawki gestów)? Nie można tego cofnąć.</string>
     <string name="privacy_forget_learned_confirm">Usuń wyuczone dane</string>
     <string name="privacy_forget_learned_keep">Zachowaj</string>
     <string name="privacy_local_collection_header">Lokalne zbieranie danych (opcjonalne)</string>
