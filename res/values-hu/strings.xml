@@ -793,7 +793,7 @@
     <string name="swipe_full_geometric_settings">Teljes geometriai beállítások</string>
     <string name="swipe_full_ctc_settings">Teljes CTC-beállítások</string>
     <string name="help_open_wiki">Teljes wiki megnyitása</string>
-    <string name="help_third_party_data">Harmadik féltől származó adatok: a szólisták forrása a wordfreq (CC BY-SA 4.0), az OpenSubtitles a FrequencyWords révén (CC BY-SA 4.0), az AOSP LatinIME (Apache-2.0) és a Swwiki (CC BY-SA 3.0); az angol szókörnyezet a Leipzig Corpora Collectionből (CC BY 4.0) és a Tatoebából (CC BY 2.0 FR) származik. A teljes forrásmegjelölés a forráskód NOTICE fájljában található.</string>
+    <string name="help_third_party_data">Harmadik féltől származó adatok: a szólisták forrása a wordfreq (CC BY-SA 4.0), az OpenSubtitles a FrequencyWords révén (CC BY-SA 4.0), az AOSP LatinIME (Apache-2.0) és a Swwiki (CC BY-SA 3.0); az angol, német, francia és olasz szókörnyezet a Leipzig Corpora Collectionből (CC BY 4.0) és a Tatoebából (CC BY 2.0 FR) származik. A teljes forrásmegjelölés a forráskód NOTICE fájljában található.</string>
     <string name="gesture_section_intro">Az érintés, a csúsztatás és a csúszka viselkedésének finomhangolása az Ön gépelési stílusához.</string>
     <string name="gesture_short_gestures_header">Rövid gesztusok</string>
     <string name="gesture_open_calibration">📐 Kalibrálóeszköz megnyitása</string>

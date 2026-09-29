@@ -786,7 +786,7 @@
     <string name="swipe_full_geometric_settings">幾何エンジンの全設定</string>
     <string name="swipe_full_ctc_settings">CTC の全設定</string>
     <string name="help_open_wiki">Wiki 全体を開く</string>
-    <string name="help_third_party_data">サードパーティデータ：単語リストは wordfreq (CC BY-SA 4.0)、FrequencyWords 経由の OpenSubtitles (CC BY-SA 4.0)、AOSP LatinIME (Apache-2.0)、Swwiki (CC BY-SA 3.0) に、英単語の文脈は Leipzig Corpora Collection (CC BY 4.0) と Tatoeba (CC BY 2.0 FR) に由来します。完全な帰属表示はソースコードの NOTICE ファイルにあります。</string>
+    <string name="help_third_party_data">サードパーティデータ：単語リストは wordfreq (CC BY-SA 4.0)、FrequencyWords 経由の OpenSubtitles (CC BY-SA 4.0)、AOSP LatinIME (Apache-2.0)、Swwiki (CC BY-SA 3.0) に、英語・ドイツ語・フランス語・イタリア語の単語の文脈は Leipzig Corpora Collection (CC BY 4.0) と Tatoeba (CC BY 2.0 FR) に由来します。完全な帰属表示はソースコードの NOTICE ファイルにあります。</string>
     <string name="gesture_section_intro">タップ、スワイプ、スライダーの動作を入力スタイルに合わせて微調整します。</string>
     <string name="gesture_short_gestures_header">ショートジェスチャー</string>
     <string name="gesture_open_calibration">📐 キャリブレーションツールを開く</string>

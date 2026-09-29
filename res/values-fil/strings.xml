@@ -796,7 +796,7 @@
     <string name="swipe_full_geometric_settings">Buong Mga Setting ng Geometric</string>
     <string name="swipe_full_ctc_settings">Buong Mga Setting ng CTC</string>
     <string name="help_open_wiki">Buksan ang Buong Wiki</string>
-    <string name="help_third_party_data">Datos ng third party: ang mga listahan ng salita ay mula sa wordfreq (CC BY-SA 4.0), OpenSubtitles sa pamamagitan ng FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) at Swwiki (CC BY-SA 3.0); ang konteksto ng mga salitang Ingles ay mula sa Leipzig Corpora Collection (CC BY 4.0) at Tatoeba (CC BY 2.0 FR). Nasa NOTICE file ng source code ang buong atribusyon.</string>
+    <string name="help_third_party_data">Datos ng third party: ang mga listahan ng salita ay mula sa wordfreq (CC BY-SA 4.0), OpenSubtitles sa pamamagitan ng FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) at Swwiki (CC BY-SA 3.0); ang konteksto ng mga salita sa Ingles, Aleman, Pranses at Italyano ay mula sa Leipzig Corpora Collection (CC BY 4.0) at Tatoeba (CC BY 2.0 FR). Nasa NOTICE file ng source code ang buong atribusyon.</string>
     <string name="gesture_section_intro">I-fine-tune ang gawi ng tap, swipe, at slider para sa iyong istilo ng pag-type.</string>
     <string name="gesture_short_gestures_header">Mga Maikling Gesture</string>
     <string name="gesture_open_calibration">📐 Buksan ang Calibration Tool</string>

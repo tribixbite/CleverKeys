@@ -787,7 +787,7 @@
     <string name="swipe_full_geometric_settings">Všechna geometrická nastavení</string>
     <string name="swipe_full_ctc_settings">Všechna nastavení CTC</string>
     <string name="help_open_wiki">Otevřít celou wiki</string>
-    <string name="help_third_party_data">Data třetích stran: seznamy slov pocházejí z wordfreq (CC BY-SA 4.0), OpenSubtitles přes FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) a Swwiki (CC BY-SA 3.0); kontext anglických slov pochází z Leipzig Corpora Collection (CC BY 4.0) a Tatoeba (CC BY 2.0 FR). Úplné uvedení autorství je v souboru NOTICE zdrojového kódu.</string>
+    <string name="help_third_party_data">Data třetích stran: seznamy slov pocházejí z wordfreq (CC BY-SA 4.0), OpenSubtitles přes FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) a Swwiki (CC BY-SA 3.0); kontext slov v angličtině, němčině, francouzštině a italštině pochází z Leipzig Corpora Collection (CC BY 4.0) a Tatoeba (CC BY 2.0 FR). Úplné uvedení autorství je v souboru NOTICE zdrojového kódu.</string>
     <string name="gesture_section_intro">Dolaďte chování klepnutí, tahů a posuvníků podle svého stylu psaní.</string>
     <string name="gesture_short_gestures_header">Krátká gesta</string>
     <string name="gesture_open_calibration">📐 Otevřít kalibrační nástroj</string>

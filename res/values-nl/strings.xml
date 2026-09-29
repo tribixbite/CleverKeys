@@ -787,7 +787,7 @@
     <string name="swipe_full_geometric_settings">Volledige geometrische instellingen</string>
     <string name="swipe_full_ctc_settings">Volledige CTC-instellingen</string>
     <string name="help_open_wiki">Volledige wiki openen</string>
-    <string name="help_third_party_data">Gegevens van derden: woordenlijsten komen uit wordfreq (CC BY-SA 4.0), OpenSubtitles via FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) en Swwiki (CC BY-SA 3.0); Engelse woordcontext komt uit de Leipzig Corpora Collection (CC BY 4.0) en Tatoeba (CC BY 2.0 FR). De volledige naamsvermelding staat in het NOTICE-bestand van de broncode.</string>
+    <string name="help_third_party_data">Gegevens van derden: woordenlijsten komen uit wordfreq (CC BY-SA 4.0), OpenSubtitles via FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) en Swwiki (CC BY-SA 3.0); woordcontext voor Engels, Duits, Frans en Italiaans komt uit de Leipzig Corpora Collection (CC BY 4.0) en Tatoeba (CC BY 2.0 FR). De volledige naamsvermelding staat in het NOTICE-bestand van de broncode.</string>
     <string name="gesture_section_intro">Stem tik-, veeg- en schuifgedrag af op je typstijl.</string>
     <string name="gesture_short_gestures_header">Korte gebaren</string>
     <string name="gesture_open_calibration">📐 Kalibratietool openen</string>

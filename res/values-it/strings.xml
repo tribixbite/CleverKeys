@@ -827,7 +827,7 @@
     <string name="swipe_full_geometric_settings">Impostazioni geometriche complete</string>
     <string name="swipe_full_ctc_settings">Impostazioni CTC complete</string>
     <string name="help_open_wiki">Apri il wiki completo</string>
-    <string name="help_third_party_data">Dati di terze parti: gli elenchi di parole provengono da wordfreq (CC BY-SA 4.0), OpenSubtitles tramite FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) e Swwiki (CC BY-SA 3.0); il contesto delle parole inglesi proviene da Leipzig Corpora Collection (CC BY 4.0) e Tatoeba (CC BY 2.0 FR). L\'attribuzione completa è nel file NOTICE del codice sorgente.</string>
+    <string name="help_third_party_data">Dati di terze parti: gli elenchi di parole provengono da wordfreq (CC BY-SA 4.0), OpenSubtitles tramite FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) e Swwiki (CC BY-SA 3.0); il contesto delle parole in inglese, tedesco, francese e italiano proviene da Leipzig Corpora Collection (CC BY 4.0) e Tatoeba (CC BY 2.0 FR). L\'attribuzione completa è nel file NOTICE del codice sorgente.</string>
     <string name="gesture_section_intro">Regola con precisione il comportamento di tocco, scorrimento e slider per il tuo stile di digitazione.</string>
     <string name="gesture_short_gestures_header">Gesti brevi</string>
     <string name="gesture_open_calibration">📐 Apri strumento di calibrazione</string>

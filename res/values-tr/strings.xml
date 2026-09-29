@@ -795,7 +795,7 @@
     <string name="swipe_full_geometric_settings">Tüm Geometrik Ayarlar</string>
     <string name="swipe_full_ctc_settings">Tüm CTC Ayarları</string>
     <string name="help_open_wiki">Tam Wiki\'yi Aç</string>
-    <string name="help_third_party_data">Üçüncü taraf verileri: Kelime listeleri wordfreq (CC BY-SA 4.0), FrequencyWords aracılığıyla OpenSubtitles (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) ve Swwiki (CC BY-SA 3.0) kaynaklıdır; İngilizce kelime bağlamı Leipzig Corpora Collection (CC BY 4.0) ve Tatoeba (CC BY 2.0 FR) kaynaklıdır. Tam atıf, kaynak kodundaki NOTICE dosyasındadır.</string>
+    <string name="help_third_party_data">Üçüncü taraf verileri: Kelime listeleri wordfreq (CC BY-SA 4.0), FrequencyWords aracılığıyla OpenSubtitles (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) ve Swwiki (CC BY-SA 3.0) kaynaklıdır; İngilizce, Almanca, Fransızca ve İtalyanca kelime bağlamı Leipzig Corpora Collection (CC BY 4.0) ve Tatoeba (CC BY 2.0 FR) kaynaklıdır. Tam atıf, kaynak kodundaki NOTICE dosyasındadır.</string>
     <string name="gesture_section_intro">Dokunma, kaydırma ve kaydırıcı davranışını yazma tarzınıza göre ince ayarlayın.</string>
     <string name="gesture_short_gestures_header">Kısa Hareketler</string>
     <string name="gesture_open_calibration">📐 Kalibrasyon Aracını Aç</string>

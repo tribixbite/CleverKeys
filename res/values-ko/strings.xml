@@ -787,7 +787,7 @@
     <string name="swipe_full_geometric_settings">기하학 엔진 전체 설정</string>
     <string name="swipe_full_ctc_settings">CTC 전체 설정</string>
     <string name="help_open_wiki">전체 위키 열기</string>
-    <string name="help_third_party_data">타사 데이터: 단어 목록은 wordfreq (CC BY-SA 4.0), FrequencyWords를 통한 OpenSubtitles (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0), Swwiki (CC BY-SA 3.0)에서, 영어 단어 문맥은 Leipzig Corpora Collection (CC BY 4.0) 및 Tatoeba (CC BY 2.0 FR)에서 가져왔습니다. 전체 저작자 표시는 소스 코드의 NOTICE 파일에 있습니다.</string>
+    <string name="help_third_party_data">타사 데이터: 단어 목록은 wordfreq (CC BY-SA 4.0), FrequencyWords를 통한 OpenSubtitles (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0), Swwiki (CC BY-SA 3.0)에서, 영어, 독일어, 프랑스어, 이탈리아어 단어 문맥은 Leipzig Corpora Collection (CC BY 4.0) 및 Tatoeba (CC BY 2.0 FR)에서 가져왔습니다. 전체 저작자 표시는 소스 코드의 NOTICE 파일에 있습니다.</string>
     <string name="gesture_section_intro">입력 스타일에 맞게 탭, 스와이프, 슬라이더 동작을 미세 조정합니다.</string>
     <string name="gesture_short_gestures_header">짧은 제스처</string>
     <string name="gesture_open_calibration">📐 보정 도구 열기</string>
