@@ -107,7 +107,7 @@
     <string name="settings_description">Configurez les paramètres de votre clavier pour une expérience de saisie optimale.</string>
 
     <!-- Swipe Typing Section -->
-    <string name="settings_section_swipe_typing">👆 Saisie par glissement</string>
+    <string name="settings_section_swipe_typing">👆 Saisie par glissé</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Apparence</string>
@@ -148,7 +148,7 @@
     <string name="suggestion_add_to_dictionary">Ajouter « %1$s » au dictionnaire ?</string>
     <string name="suggestion_prefer_when_swiping">Préférer « %1$s » en glissant ?</string>
     <string name="suggestion_prefer_when_swiping_decline">Ne plus demander</string>
-    <string name="suggestion_prefer_when_swiping_added">Le glissement privilégie désormais « %1$s »</string>
+    <string name="suggestion_prefer_when_swiping_added">Le glissé privilégie désormais « %1$s »</string>
     <string name="suggestion_added_to_dictionary">« %1$s » ajouté au dictionnaire</string>
     <string name="suggestion_tap_again_to_undo">Touchez à nouveau pour annuler</string>
     <string name="suggestion_removed_from_dictionary">« %1$s » retiré du dictionnaire</string>
@@ -528,7 +528,7 @@
     <string name="multilang_enable_title">Activer le multilangue</string>
     <string name="multilang_enable_desc">Prendre en charge la saisie en plusieurs langues</string>
     <string name="multilang_primary_title">Langue principale</string>
-    <string name="multilang_primary_desc">Langue principale pour les prédictions et le décodage des glissements</string>
+    <string name="multilang_primary_desc">Langue principale pour les prédictions et le décodage des glissés</string>
     <string name="multilang_secondary_title">Langue secondaire</string>
     <string name="multilang_secondary_weight_title">Poids de la langue secondaire</string>
     <string name="multilang_secondary_weight_desc">Poids de prédiction pour le dictionnaire secondaire (0,5–1,5)</string>
@@ -595,19 +595,19 @@
     <string name="privacy_on_device_learning_title">Apprendre de ma frappe</string>
     <string name="privacy_on_device_learning_desc">Construire sur l\'appareil des modèles privés d\'expressions et d\'usage des mots à partir de ce qui est saisi. Désactiver arrête tout enregistrement automatique du comportement de frappe — rien de nouveau n\'est stocké tant que l\'option est désactivée. Les données créées explicitement restent distinctes : les statistiques de performance des prédictions et les données apprises restaurées depuis une sauvegarde.</string>
     <!-- v1.6 swipe diagnostics and controls -->
-    <string name="dict_word_too_long_for_swipe_title">Ajouté, mais trop long pour le glissement</string>
+    <string name="dict_word_too_long_for_swipe_title">Ajouté, mais trop long pour le glissé</string>
     <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">« %1$s » a été ajouté pour la frappe, mais CTC exige %2$d étapes et ne peut en décoder que %3$d.</item><item quantity="many">« %1$s » a été ajouté pour la frappe, mais CTC exige %2$d étapes et ne peut en décoder que %3$d.</item><item quantity="other">« %1$s » a été ajouté pour la frappe, mais CTC exige %2$d étapes et ne peut en décoder que %3$d.</item></plurals>
     <string name="gesture_finger_occlusion_title">Correction du décalage tactile</string>
-    <string name="gesture_finger_occlusion_desc">Décale la lecture du glissement par rapport au doigt. Valeur positive si les tracés sont trop hauts, négative s\'ils sont trop bas. Désactivé par défaut.</string>
+    <string name="gesture_finger_occlusion_desc">Décale la lecture du glissé par rapport au doigt. Valeur positive si les tracés sont trop hauts, négative s\'ils sont trop bas. Désactivé par défaut.</string>
     <string name="gesture_touch_smoothing_title">Lissage tactile</string>
     <string name="gesture_touch_smoothing_desc">Nombre de points du lissage par moyenne mobile. 1 = tracé brut, 3 = recommandé. S\'applique aux deux moteurs.</string>
     <string name="swipe_engine_fallback_title">Le moteur géométrique sera utilisé</string>
-    <string name="swipe_engine_fallback_desc">CTC ne possède pas de dictionnaire pour %1$s. Le moteur géométrique décodera donc les glissements. CTC prend en charge : %2$s.</string>
+    <string name="swipe_engine_fallback_desc">CTC ne possède pas de dictionnaire pour %1$s. Le moteur géométrique décodera donc les glissés. CTC prend en charge : %2$s.</string>
     <string name="collision_warning_title">Conflits de contractions détectés</string>
     <plurals name="collision_warning_body"><item quantity="one">%1$d raccourci d\'un paquet importé aurait remplacé un mot réel de l\'autre langue active (%2$s). Il devient une suggestion facultative.</item><item quantity="many">%1$d raccourcis d\'un paquet importé auraient remplacé des mots réels de l\'autre langue active (%2$s). Ils deviennent des suggestions facultatives.</item><item quantity="other">%1$d raccourcis d\'un paquet importé auraient remplacé des mots réels de l\'autre langue active (%2$s). Ils deviennent des suggestions facultatives.</item></plurals>
     <string name="collision_warning_examples">Raccourcis concernés :</string>
     <string name="swipe_context_rescoring_title">Utiliser le contexte pour classer</string>
-    <string name="swipe_context_rescoring_desc">Réordonne les suggestions avec les paires de mots déjà saisies sur cet appareil. Seuls les résultats proches changent; un glissement clair reste prioritaire. Nécessite l\'apprentissage local.</string>
+    <string name="swipe_context_rescoring_desc">Réordonne les suggestions avec les paires de mots déjà saisies sur cet appareil. Seuls les résultats proches changent; un glissé clair reste prioritaire. Nécessite l\'apprentissage local.</string>
     <!-- ARC-067 batch (2026-09-01): machine translations pending native review -->
     <string name="swipe_engine_pack_not_typeable">Le paquet de langue %1$s que vous avez importé ne peut pas être décodé par CTC : seuls %2$d %% de ses mots peuvent s\'épeler avec les touches a–z. Des lettres comme ı, ł et đ n\'ont pas de forme a–z, ces mots ne pourraient donc pas être saisis par glissé. Le moteur géométrique les décode à la place.</string>
     <string name="swipe_engine_pack_head_not_typeable">Le paquet de langue %1$s que vous avez importé ne peut pas être décodé par CTC : trop de ses mots les plus courants utilisent des lettres sans forme a–z, ils ne pourraient donc pas être saisis par glissé. Le moteur géométrique les décode à la place.</string>
@@ -994,11 +994,11 @@
     <string name="privacy_learned_none">Rien n\'a encore été appris.</string>
     <string name="privacy_learned_sources">Enregistrement en cours : %1$s</string>
     <string name="privacy_learned_sources_none">Rien n\'est enregistré actuellement.</string>
-    <string name="privacy_learned_source_swipe_corrections">Corrections de glissement</string>
+    <string name="privacy_learned_source_swipe_corrections">Corrections de glissé</string>
     <string name="privacy_learned_source_selections">Suggestions choisies</string>
     <string name="privacy_learned_manage">Sources d\'apprentissage</string>
     <string name="privacy_learned_forget">Oublier l\'appris</string>
-    <string name="privacy_learned_forget_body">Supprime toutes les paires et tous les triplets de mots appris, les compteurs d\'usage des mots, l\'historique de sélection des suggestions et les corrections de glissement. Les dictionnaires et les réglages ne sont pas touchés.</string>
+    <string name="privacy_learned_forget_body">Supprime toutes les paires et tous les triplets de mots appris, les compteurs d\'usage des mots, l\'historique de sélection des suggestions et les corrections de glissé. Les dictionnaires et les réglages ne sont pas touchés.</string>
     <string name="privacy_delete_data_title">Supprimer les données collectées</string>
     <string name="privacy_delete_data_body">Toutes les données de glissé collectées seront définitivement supprimées.\n\nCette action est irréversible.</string>
     <string name="privacy_delete_data_done">Toutes les données de glissé ont été supprimées</string>

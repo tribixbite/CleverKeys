@@ -155,9 +155,9 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Přidat „%1$s“ do slovníku?</string>
-    <string name="suggestion_prefer_when_swiping">Při swipování upřednostnit „%1$s“?</string>
+    <string name="suggestion_prefer_when_swiping">Při psaní tahem upřednostnit „%1$s“?</string>
     <string name="suggestion_prefer_when_swiping_decline">Neptat se</string>
-    <string name="suggestion_prefer_when_swiping_added">Swipování nyní upřednostňuje „%1$s“</string>
+    <string name="suggestion_prefer_when_swiping_added">Psaní tahem nyní upřednostňuje „%1$s“</string>
     <string name="suggestion_added_to_dictionary">„%1$s“ přidáno do slovníku</string>
     <string name="suggestion_tap_again_to_undo">Klepnutím znovu vrátíte zpět</string>
     <string name="suggestion_removed_from_dictionary">„%1$s“ odebráno ze slovníku</string>
@@ -984,11 +984,11 @@
     <string name="privacy_learned_none">Zatím nic naučeno.</string>
     <string name="privacy_learned_sources">Právě se zaznamenává: %1$s</string>
     <string name="privacy_learned_sources_none">Právě se nic nezaznamenává.</string>
-    <string name="privacy_learned_source_swipe_corrections">Opravy swipování</string>
+    <string name="privacy_learned_source_swipe_corrections">Opravy tahů</string>
     <string name="privacy_learned_source_selections">Výběry návrhů</string>
     <string name="privacy_learned_manage">Zdroje učení</string>
     <string name="privacy_learned_forget">Zapomenout naučené</string>
-    <string name="privacy_learned_forget_body">Smaže všechny naučené dvojice a trojice slov, počty použití slov, historii výběru návrhů i záznam oprav tažení. Slovníky a nastavení zůstanou nedotčeny.</string>
+    <string name="privacy_learned_forget_body">Smaže všechny naučené dvojice a trojice slov, počty použití slov, historii výběru návrhů i záznam oprav tahů. Slovníky a nastavení zůstanou nedotčeny.</string>
     <string name="privacy_delete_data_title">Smazat shromážděná data</string>
     <string name="privacy_delete_data_body">Tímto trvale smažete všechna shromážděná data o tazích.\n\nTuto akci nelze vrátit zpět.</string>
     <string name="privacy_delete_data_done">Všechna data o tazích byla smazána</string>

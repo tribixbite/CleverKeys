@@ -275,7 +275,7 @@
     <string name="theme_section_border_colors">Mga Kulay ng Hangganan</string>
     <string name="theme_swipe_trail_card">✨ Swipe Trail</string>
     <string name="theme_swipe_trail_desc">Ang kulay na ipinapakita habang nagswi-swipe para mag-type</string>
-    <string name="theme_section_suggestion_bar">Suggestion Bar</string>
+    <string name="theme_section_suggestion_bar">Bar ng Suhestiyon</string>
     <string name="theme_section_background_colors">Mga Kulay ng Background</string>
     <string name="theme_color_hue">Hue</string>
     <string name="theme_color_saturation">Saturation</string>
@@ -479,8 +479,8 @@
     <string name="gif_remove_pack_confirm">Tanggalin ang %1$s?</string>
     <string name="input_enable_predictions_title">I-enable ang Word Prediction</string>
     <string name="input_enable_predictions_desc">Ipakita ang mga suhestiyon ng salita habang nagtatype</string>
-    <string name="input_suggestion_bar_opacity_title">Opacity ng Suggestion Bar</string>
-    <string name="input_suggestion_bar_opacity_desc">Transparency ng suggestion bar</string>
+    <string name="input_suggestion_bar_opacity_title">Opacity ng Bar ng Suhestiyon</string>
+    <string name="input_suggestion_bar_opacity_desc">Transparency ng bar ng suhestiyon</string>
     <string name="input_auto_space_after_title">Auto-Space Pagkatapos ng Suhestiyon</string>
     <string name="input_auto_space_after_desc">Magdagdag ng trailing space kapag pumili ng suhestiyon</string>
     <string name="input_auto_space_before_title">Auto-Space Bago ang Suhestiyon</string>
@@ -588,7 +588,7 @@
     <string name="advanced_provenance_markers_title">Mga marka ng pinagmulan ng mungkahi</string>
     <string name="advanced_provenance_markers_desc">Nagpapakita sa bawat mungkahi ng may kulay na tuldok na nagsasaad kung aling makina ang gumawa nito (pindutin nang matagal ang isang mungkahi para sa buong detalye)</string>
     <string name="input_next_word_title">Hula sa susunod na salita</string>
-    <string name="input_next_word_desc">Nagmumungkahi ng susunod na salita bago ka mag-type ng letra. Gumagamit ng mga karaniwang parirala; idinaragdag ang mga natutunang parirala kapag naka-on ang pag-aaral sa device</string>
+    <string name="input_next_word_desc">Nagmumungkahi ng susunod na salita bago ka mag-type ng letra. Gumagamit ng mga karaniwang parirala; idinaragdag ang mga natutunang parirala kapag naka-on ang pagkatuto sa device</string>
     <string name="input_context_source_title">Pinagmulan ng konteksto</string>
     <string name="input_context_source_desc">Aling modelo ng parirala ang nagpapalakas sa mga hula: ang built-in, ang mga natutunang pattern, o pareho</string>
     <string name="input_personalization_weight_title">Lakas ng personalisasyon</string>
@@ -937,7 +937,7 @@
     <string name="geo_settings_intro">I-tune ang geometric (shape-matching) na swipe engine na ginagamit sa mga hindi QWERTY na layout sa Hybrid mode, o sa lahat ng layout sa Geometric mode. Ang ibang parameter ng engine ay na-calibrate laban sa sinukat na accuracy at hindi maaaring baguhin.</string>
     <string name="geo_settings_decoding_section">Pag-decode</string>
     <string name="geo_settings_max_suggestions_title">Max na Suhestiyon</string>
-    <string name="geo_settings_max_suggestions_desc">Mga ranggong kandidato na inilalabas bawat swipe (ipinapakita ng suggestion bar ang mga nangunguna).</string>
+    <string name="geo_settings_max_suggestions_desc">Mga ranggong kandidato na inilalabas bawat swipe (ipinapakita ng bar ng suhestiyon ang mga nangunguna).</string>
     <string name="geo_settings_freq_weight_title">Timbang ng Dalas</string>
     <string name="geo_settings_freq_weight_desc">Kiling sa mga karaniwang salita kumpara sa eksaktong katapatan sa hugis. Mas mataas = mas madalas mananalo ang mga karaniwang salita; 0 = purong pagtutugma ng hugis.</string>
     <string name="geo_settings_endpoint_title">Tolerance ng Endpoint</string>

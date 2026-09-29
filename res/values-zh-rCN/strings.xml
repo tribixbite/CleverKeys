@@ -271,7 +271,7 @@
     <string name="theme_section_border_colors">边框颜色</string>
     <string name="theme_swipe_trail_card">✨ 滑动轨迹</string>
     <string name="theme_swipe_trail_desc">滑动输入时显示的颜色</string>
-    <string name="theme_section_suggestion_bar">建议栏</string>
+    <string name="theme_section_suggestion_bar">候选栏</string>
     <string name="theme_section_background_colors">背景颜色</string>
     <string name="theme_color_hue">色调</string>
     <string name="theme_color_saturation">饱和度</string>
@@ -756,7 +756,7 @@
     <string name="geo_settings_freq_weight_desc">在常用词与精确形状匹配之间的偏向。越高常用词越常胜出；0 = 纯形状匹配。</string>
     <string name="geo_settings_freq_weight_title">频率权重</string>
     <string name="geo_settings_intro">调节几何（形状匹配）滑动引擎：混合模式下用于非 QWERTY 布局，几何模式下用于所有布局。其余引擎参数已按实测精度校准，不可调整。</string>
-    <string name="geo_settings_max_suggestions_desc">每次滑动输出的排序候选数（建议栏显示前几个）。</string>
+    <string name="geo_settings_max_suggestions_desc">每次滑动输出的排序候选数（候选栏显示前几个）。</string>
     <string name="geo_settings_max_suggestions_title">最大建议数</string>
     <string name="geo_settings_reset">恢复为已校准的默认值</string>
     <string name="geo_settings_title">几何引擎设置</string>
@@ -982,11 +982,11 @@
     <string name="privacy_learned_none">尚未学习任何内容。</string>
     <string name="privacy_learned_sources">正在记录：%1$s</string>
     <string name="privacy_learned_sources_none">当前未记录任何内容。</string>
-    <string name="privacy_learned_source_swipe_corrections">滑动输入更正</string>
+    <string name="privacy_learned_source_swipe_corrections">滑动纠正</string>
     <string name="privacy_learned_source_selections">候选词选择</string>
     <string name="privacy_learned_manage">学习来源</string>
     <string name="privacy_learned_forget">清除已学习</string>
-    <string name="privacy_learned_forget_body">删除所有已学习的词对和三词组、词语使用次数、候选选择记录以及滑行纠正记录。词典和设置不受影响。</string>
+    <string name="privacy_learned_forget_body">删除所有已学习的词对和三词组、词语使用次数、候选选择记录以及滑动纠正记录。词典和设置不受影响。</string>
     <string name="privacy_delete_data_title">删除已收集的数据</string>
     <string name="privacy_delete_data_body">将永久删除所有已收集的滑动数据。\n\n此操作无法撤销。</string>
     <string name="privacy_delete_data_done">已删除所有滑动数据</string>

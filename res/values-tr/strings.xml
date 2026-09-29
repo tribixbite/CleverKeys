@@ -999,7 +999,7 @@
     <string name="privacy_learned_source_selections">Öneri seçimleri</string>
     <string name="privacy_learned_manage">Öğrenme Kaynakları</string>
     <string name="privacy_learned_forget">Öğrenilenleri Sil</string>
-    <string name="privacy_learned_forget_body">Öğrenilen tüm sözcük çiftlerini ve üçlülerini, sözcük kullanım sayaçlarını, öneri seçim geçmişini ve kaydırma düzeltmelerini siler. Sözlükler ve ayarlar etkilenmez.</string>
+    <string name="privacy_learned_forget_body">Öğrenilen tüm kelime çiftlerini ve üçlülerini, kelime kullanım sayaçlarını, öneri seçim geçmişini ve kaydırma düzeltmelerini siler. Sözlükler ve ayarlar etkilenmez.</string>
     <string name="privacy_delete_data_title">Toplanan Verileri Sil</string>
     <string name="privacy_delete_data_body">Toplanan tüm kaydırma verileri kalıcı olarak silinecek.\n\nBu işlem geri alınamaz.</string>
     <string name="privacy_delete_data_done">Tüm kaydırma verileri silindi</string>

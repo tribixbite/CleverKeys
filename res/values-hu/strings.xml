@@ -109,7 +109,7 @@
     <string name="settings_description">Állítsa be a billentyűzetet az optimális gépelési élményhez.</string>
 
     <!-- Swipe Typing Section -->
-    <string name="settings_section_swipe_typing">👆 Húzásos gépelés</string>
+    <string name="settings_section_swipe_typing">👆 Csúsztatásos gépelés</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Megjelenés</string>
@@ -528,7 +528,7 @@
     <string name="multilang_enable_title">Többnyelvűség engedélyezése</string>
     <string name="multilang_enable_desc">Több nyelven való gépelés támogatása</string>
     <string name="multilang_primary_title">Elsődleges nyelv</string>
-    <string name="multilang_primary_desc">Fő nyelv az előrejelzésekhez és a húzás felismeréséhez</string>
+    <string name="multilang_primary_desc">Fő nyelv az előrejelzésekhez és a csúsztatás felismeréséhez</string>
     <string name="multilang_secondary_title">Másodlagos nyelv</string>
     <string name="multilang_secondary_weight_title">Másodlagos nyelv súlya</string>
     <string name="multilang_secondary_weight_desc">Előrejelzési súly a másodlagos szótárhoz (0,5–1,5)</string>
@@ -994,7 +994,7 @@
     <string name="privacy_learned_source_selections">Javaslatválasztások</string>
     <string name="privacy_learned_manage">Tanulási források</string>
     <string name="privacy_learned_forget">Tanultak törlése</string>
-    <string name="privacy_learned_forget_body">Törli az összes megtanult szópárt és szóhármast, a szóhasználati számlálókat, a javaslatválasztási előzményeket és a húzásjavítások nyilvántartását. A szótárak és a beállítások érintetlenek maradnak.</string>
+    <string name="privacy_learned_forget_body">Törli az összes megtanult szópárt és szóhármast, a szóhasználati számlálókat, a javaslatválasztási előzményeket és a csúsztatási javítások nyilvántartását. A szótárak és a beállítások érintetlenek maradnak.</string>
     <string name="privacy_delete_data_title">Gyűjtött adatok törlése</string>
     <string name="privacy_delete_data_body">Ezzel véglegesen törlöd az összes gyűjtött csúsztatási adatot.\n\nA művelet nem vonható vissza.</string>
     <string name="privacy_delete_data_done">Minden csúsztatási adat törölve</string>

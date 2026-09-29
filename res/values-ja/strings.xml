@@ -272,7 +272,7 @@
     <string name="theme_section_border_colors">ボーダーの色</string>
     <string name="theme_swipe_trail_card">✨ スワイプトレイル</string>
     <string name="theme_swipe_trail_desc">スワイプ入力中に表示される色</string>
-    <string name="theme_section_suggestion_bar">サジェストバー</string>
+    <string name="theme_section_suggestion_bar">候補バー</string>
     <string name="theme_section_background_colors">背景の色</string>
     <string name="theme_color_hue">色相</string>
     <string name="theme_color_saturation">彩度</string>
