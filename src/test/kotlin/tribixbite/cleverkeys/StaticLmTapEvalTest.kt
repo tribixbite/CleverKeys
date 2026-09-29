@@ -74,7 +74,7 @@ import java.io.File
  * | arm | static multiplier | learned boost | source |
  * |---|---|---|---|
  * | none | 1 | 1 | — (baseline) |
- * | legacy_static | the pre-LM path: `BigramModel.hardcodedContextMultiplier` (English tables for a language without its own) | 1 | static_only |
+ * | legacy_static | the pre-LM path: `BigramModel.hardcodedContextMultiplier` (the language's own listed pairs only; neutral without tables — since 2026-09-29) | 1 | static_only |
  * | lm_static | this LM | 1 | static_only |
  * | learned_only | 1 | device export | learned_only |
  * | legacy_both | hardcoded table | device export | both (today's default) |

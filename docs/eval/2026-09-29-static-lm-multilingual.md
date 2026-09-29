@@ -398,3 +398,102 @@ byte-for-byte (es sha256 `a304a06c…`). The rule from the pre-registration was 
 Task 2 "before" on dev (unchanged `BigramModel`, same run): `legacy_static` − `none` top-3 at
 prefix 1 / 2 / 3 — es −23.40 / −2.26 / +0.02; pt −2.25 / +0.13 / +0.19; sv −0.11 / +0.19 / 0.00.
 In `both` with no learned data: es +0.08, pt −0.03, sv −0.07 at prefix 1.
+
+### Test evaluation — once per language (2026-09-29)
+
+One guarded run, `STATIC_LM_MODEL_DIR=<final> STATIC_LM_EVAL_DIR=<final>/eval
+STATIC_LM_EVAL_LANGS=es,pt,sv … StaticLmTapEvalTest -PgeoFull=true`, over the three models rebuilt
+from the committed configs (`7ca01d6c`; each byte-identical to its dev-chosen grid point). Test
+populations are exactly the pilot's (same sentence/position counts). Box load average ~13–15 from
+other agents; the counts are deterministic. (The builder's final-build log line also prints a
+Python next-word number on the test split; it was printed after the choice was committed and
+used for nothing.)
+
+OOD test, top-3, `lm_static` − `none`:
+
+| Lang | Population | prefix-1 (≥ +5) | prefix-2 (≥ +2) | prefix-3 (≥ 0) | empty ctx dev. | **S1** | pilot prefix-1 |
+|---|---|---|---|---|---|---|---|
+| es | 339 sent.; 5,026 pos / 1,992 prev / 4,318 pairs | **+4.96** | +5.13 | +3.66 | 0 | **FAIL** | +4.69 |
+| pt | 1,008 sent.; 13,443 pos / 4,370 prev / 11,374 pairs | **+5.41** | +5.97 | +3.56 | 0 | **PASS** | +4.19 |
+| sv | 1,143 sent.; 14,524 pos / 3,728 prev / 11,444 pairs | **+5.98** | +2.95 | +1.94 | 0 | **PASS** | +4.59 (p2 +1.92) |
+
+Levels (none → lm_static): es prefix-1 42.19 → 47.15 %, next-word 15.25 → 22.16 %; pt 33.03 →
+38.44 %, next-word 11.41 → 16.81 %; sv 38.06 → 44.04 %, next-word 8.15 → 17.12 %. In-domain
+held-out (1/20 sample of each build's own held-out split) passes all three for all three
+languages (prefix-1 es +6.32, pt +6.95, sv +7.30).
+
+- **Spanish fails again, by 0.04 pt** (≈ 2 target hits of 4,539). It stays unshipped. The dev
+  gain (+5.37) did not fully transfer; per the registration there is no second test look, and
+  the next attempt needs a new stated reason (a larger Spanish test population would be the
+  honest one — 339 sentences carry ±0.7 pt of sampling error).
+- **Portuguese passes** with the Brazilian-news mix (+1.22 pt over the pilot at prefix-1) —
+  consistent with the variety + register hypothesis. **Ships.**
+- **Swedish passes** on test although no grid point met prefix-2 ≥ +2 on dev (dev +1.85; test
+  +2.95). The dev constraint was a selection aid, the test gate is the rule; recorded as a pass
+  with the caveat that Talbanken dev and test disagree by 1.1 pt at prefix-2. Its model is
+  news-only Leipzig (λ = 1.0) + Tatoeba × 2.0: the web corpus the pilot used contributes nothing.
+  **Ships.**
+- `lm_both` (the shipped default, no learned data) beats `lm_static` at prefix-1 on all three
+  (es +6.08, pt +6.05, sv +6.78 vs none): in `both` the LM's below-1 backoff ratios are floored
+  at 1 (see Task 2 below), so the gate as measured in `static_only` is the conservative number.
+
+## Legacy tables in `static_only` — root cause and fix (Task 2, 2026-09-29)
+
+### Why the legacy path lowered prefix-1 top-3
+
+`BigramModel.hardcodedContextMultiplier` computed `clamp((λ·P(w|prev) + (1−λ)·P(w)) / P(w), 0.1, 10)`
+with λ = 0.95 over 14 (es/fr/de) or 68 (en) hand-listed pairs and a 14–20-word unigram table.
+Three defects, the first two decisive:
+
+1. **Unlisted pairs were treated as impossible.** `P(w|prev)` was 0 for every pair not listed, so
+   every table unigram (es `de la que el en y a es se no …` — the commonest words, i.e. the
+   likeliest targets) not listed after the previous word got 0.05 × its own probability → the
+   0.1 clamp. Spanish "de" after "muy" was a 10× demotion. The hand tables were never a
+   conditional distribution; the formula read them as one.
+2. **Cross-language fallback.** A language without tables (it, pt, sv, and every other language —
+   nl, pl, ru, …) was scored with ENGLISH's tables, twice over: `hardcodedContextMultiplier` fell
+   back to `en`, and the device call passed `currentLanguage`, which `setLanguage` rewrites to
+   `en` for them. Portuguese "de do" was demoted as the English verb "do"; Italian/Portuguese
+   "in a" was boosted by English `in|a`.
+3. A listed pair whose word is also a frequent unigram could score BELOW 1 (`todo|el` 0.525).
+
+### Fix (candidate A, selected on dev by the pre-registered rule)
+
+Only a listed `(prev, word)` pair of the language's OWN table moves the multiplier, and never
+below 1; everything else is exactly 1.0; the device path uses the requested language
+(`seedLanguage`), not the English fallback. Dev, `legacy_static` − `none` top-3 at prefix 1/2/3:
+es +0.08 / +0.03 / 0.00, pt 0 / 0 / 0, sv 0 / 0 / 0 → A (≥ 0 everywhere, > 0 on es) rather than B
+(no multiplier). The curated next-word seed is untouched. Fail-first: three new
+`BigramModelStaticLmTest` cases failed on the old code (0.1, 0.1, 0.525) and pass with the fix.
+
+### Before / after (OOD test)
+
+`legacy_static` and `legacy_both` − `none`, prefix-1 top-3 (pt). "Before" = the pilot run's
+published levels (table above: legacy_static / legacy_both vs none); "after" = this change, from
+the same run as the test evaluation (the legacy arm does not depend on the model):
+
+| Lang | static_only before → after | both before → after | after, prefix-2 / prefix-3 (both modes) |
+|---|---|---|---|
+| es | −22.65 → **+0.04** | +0.04 → +0.04 | +0.03 / 0.00 |
+| pt | −1.82 → **0.00** | −0.01 → 0.00 | 0.00 / 0.00 |
+| sv | −0.12 → **0.00** | −0.04 → 0.00 | 0.00 / 0.00 |
+
+(de −16.92, fr −16.42, it −1.70 before; those languages now ship an LM, so the legacy path only
+applies until the LM loads — same fix. Dev "before" at prefix 2/3: es −2.26 / +0.02.) pt and sv
+now also ship an LM; the table is what any LM-less language (es, and every other language) gets.
+
+### Why `both` was ≈ 0 — and what it reveals
+
+`UnifiedScore.combine` applies `max(static, learned)` in `both`. The learned boost is
+`(1 + p)²` clamped to [1, 5], and exactly 1.0 when the store has nothing — so with an empty
+store `both` = `max(static, 1)`: **every static value below 1 is discarded**. The legacy damage
+was all sub-1 (the 0.1 clamps), so it vanished in `both`; the residue (pt −0.01, sv −0.04) was
+English pairs BOOSTING the wrong word. So `both` with an empty store is not the same as
+`static_only`, and that is the formula, not a learned-store bug.
+
+The same flooring applies to the LMs: in the default `both`, an LM's backoff ratio (< 1 for words
+outside the previous word's top 20) never bites, and `lm_both` beats `lm_static` at prefix-1 on
+every language measured here (es +6.08 vs +4.96, pt +6.05 vs +5.41, sv +6.78 vs +5.98). That
+suggests the backoff PENALTY costs prefix-1 accuracy in `static_only`. Not changed here
+(`UnifiedScore`/`StaticContextLm.contextRatio` semantics, outside this change); recorded as a
+follow-up: measure `contextRatio` floored at 1 on dev before touching it.

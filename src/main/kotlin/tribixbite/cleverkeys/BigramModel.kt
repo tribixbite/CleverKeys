@@ -48,8 +48,10 @@ import kotlin.math.min
  * retired wherever the LM covers the previous word ([CURATED_GAP_FILL_LANGUAGES]);
  * it remains the fallback before the LM loads and for words the LM does not know.
  *
- * Languages without an LM asset keep the hardcoded tables and the JSON seed
- * unchanged. The LM is keyed by the REQUESTED language ([seedLanguage]), never the
+ * Languages without an LM asset keep the JSON seed and their OWN hardcoded
+ * tables, which since 2026-09-29 only ever boost a listed pair
+ * ([hardcodedContextMultiplier]); a language without tables is neutral, never
+ * scored by English's. The LM is keyed by the REQUESTED language ([seedLanguage]), never the
  * English-fallback [currentLanguage], so Italian typing never reads the English LM.
  */
 class BigramModel internal constructor() { // internal: a fresh instance per pure-JVM test
@@ -439,17 +441,25 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
      * Set the active language for predictions
      */
     fun setLanguage(language: String) {
+        if (applyLanguage(language)) {
+            Log.d(TAG, "Language set to: $language")
+        } else {
+            Log.w(TAG, "Language not supported: $language, falling back to English")
+        }
+    }
+
+    /**
+     * [setLanguage] without the logging (pure-JVM seam: `android.util.Log` is absent there).
+     * @return true when [language] has its own hardcoded tables
+     */
+    internal fun applyLanguage(language: String): Boolean {
         // The seed follows the requested language exactly — its asset coverage
         // (6 languages) is wider than the hardcoded tables' (4), so the "fall
         // back to English" rule below must not reach it.
         seedLanguage = language
-        if (languageBigramProbs.containsKey(language)) {
-            currentLanguage = language
-            Log.d(TAG, "Language set to: $language")
-        } else {
-            Log.w(TAG, "Language not supported: $language, falling back to English")
-            currentLanguage = "en"
-        }
+        val own = languageBigramProbs.containsKey(language)
+        currentLanguage = if (own) language else "en"
+        return own
     }
 
     /**
@@ -750,45 +760,45 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
                 .coerceIn(MIN_CONTEXT_MULTIPLIER, MAX_CONTEXT_MULTIPLIER)
         }
 
-        return hardcodedContextMultiplier(currentLanguage, word, context)
+        // The REQUESTED language (seedLanguage), never the English-fallback currentLanguage: an
+        // Italian user must not be scored by the English tables (2026-09-29 fix).
+        return hardcodedContextMultiplier(seedLanguage, word, context)
     }
 
     /**
-     * The pre-LM multiplier: [language]'s hardcoded tables (English when it has none), ratio of
-     * contextual to base probability, clamped. What [getContextMultiplier] returns for a language
-     * with no `lm/<language>.cklm`; also the S1 eval's `legacy` arm (`StaticLmTapEvalTest`), so
-     * the baseline it compares against is this code, not a copy of it.
+     * The pre-LM multiplier: [language]'s OWN hardcoded tables, for a language with no
+     * `lm/<language>.cklm` (and for any language before its LM loads). Also the S1 eval's
+     * `legacy` arm (`StaticLmTapEvalTest`), so the baseline it compares against is this code.
+     *
+     * Only a LISTED `(previous, word)` pair moves the multiplier, and never below 1:
+     *  - A language without tables gets 1.0 (neutral). It used to read the ENGLISH tables, so
+     *    Portuguese "de do" was penalised as the English verb "do" (0.1×) and Italian "in a"
+     *    boosted by English "in|a".
+     *  - An unlisted pair gets 1.0. The old `λ·P(w|prev) + (1−λ)·P(w)` interpolation treated the
+     *    14–68 hand-listed pairs as the WHOLE conditional distribution, so every table unigram
+     *    not listed after the previous word fell to 0.05× its own probability and hit the 0.1
+     *    clamp — es "de" after "muy" (−23.4 pt prefix-1 top-3 on UD Spanish-GSD dev in
+     *    `static_only`; docs/eval/2026-09-29-static-lm-multilingual.md).
+     *  - A listed pair keeps the interpolated ratio but at least 1: "todo|el" (0.015) sat below
+     *    el's own unigram (0.03) and scored 0.525 — listing a pair must not demote it.
      */
     internal fun hardcodedContextMultiplier(language: String, word: String, context: List<String>?): Float {
         if (context.isNullOrEmpty()) return 1.0f
-        // Get language-specific unigram probabilities
-        var unigramProbs = languageUnigramProbs[language]
-        if (unigramProbs == null || languageBigramProbs[language] == null) {
-            unigramProbs = languageUnigramProbs["en"] // Fallback to English
-        }
-
-        val contextProb = contextualProbability(language, word, context)
-        val baseProb = unigramProbs?.get(word.lowercase()) ?: MIN_PROB
-
-        // Return ratio of contextual to base probability
-        // This gives a boost when context makes the word more likely
-        val multiplier = contextProb / baseProb
-
-        // Cap the multiplier to avoid extreme values
-        return min(max(multiplier, MIN_CONTEXT_MULTIPLIER), MAX_CONTEXT_MULTIPLIER)
+        val pairs = languageBigramProbs[language] ?: return 1.0f
+        val unigrams = languageUnigramProbs[language] ?: return 1.0f
+        val normalizedWord = word.lowercase()
+        val listed = pairs["${context.last().lowercase()}|$normalizedWord"] ?: return 1.0f
+        val baseProb = unigrams[normalizedWord] ?: MIN_PROB
+        val contextProb = max(LAMBDA * listed + (1 - LAMBDA) * baseProb, MIN_PROB)
+        return min(max(contextProb / baseProb, 1.0f), MAX_CONTEXT_MULTIPLIER)
     }
 
     /**
-     * Every word [hardcodedContextMultiplier] can give a non-neutral value for [language]
-     * (its table's pair words and unigrams, English's when it has none) — eval support.
+     * Every word [hardcodedContextMultiplier] can give a non-neutral value for [language] — the
+     * second word of its own listed pairs (none for a language without tables) — eval support.
      */
-    internal fun hardcodedTableWords(language: String): Set<String> {
-        val lang = if (languageBigramProbs.containsKey(language)) language else "en"
-        val out = HashSet<String>()
-        languageBigramProbs[lang]?.keys?.forEach { k -> out.addAll(k.split('|')) }
-        languageUnigramProbs[lang]?.keys?.let(out::addAll)
-        return out
-    }
+    internal fun hardcodedTableWords(language: String): Set<String> =
+        languageBigramProbs[language]?.keys?.mapTo(HashSet()) { it.substringAfter('|') } ?: emptySet()
 
     /** [language]'s hardcoded `prev|next` pairs (empty when it has none) — the seed's pre-asset fallback. */
     internal fun hardcodedPairs(language: String): Map<String, Float> =

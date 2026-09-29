@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import tribixbite.cleverkeys.StaticContextLmFixtures.dequantised
 
@@ -113,5 +114,50 @@ class BigramModelStaticLmTest {
             .isEqualTo(LegacyEnglishContext.multiplier("end", "the"))
         assertThat(m.getContextMultiplier("zebra", listOf("the")))
             .isEqualTo(LegacyEnglishContext.multiplier("zebra", "the"))
+    }
+
+    // ── Legacy hardcoded tables for languages WITHOUT an LM (2026-09-29, Task 2) ─────────────────
+    // docs/eval/2026-09-29-static-lm-multilingual.md "Legacy tables in static_only": the tables
+    // treated their 14-68 hand-listed pairs as the WHOLE conditional distribution, so every table
+    // unigram not listed after the previous word got 0.05x its own probability → the 0.1 clamp
+    // (es "de" after "muy"); languages with no table (it/pt/sv/nl/…) read ENGLISH's tables, so
+    // Portuguese "do" (of the) after "de" was penalised as the English verb.
+
+    @Test
+    fun `a language without its own tables never reads the English tables`() {
+        val m = model()
+        // What setLanguage("pt") does: the seed/LM language is pt; the tables have no pt entry.
+        m.applyLanguage("pt")
+        // English lists "do" as a unigram; pt "de do" must not be penalised by it.
+        assertThat(m.getContextMultiplier("do", listOf("de"))).isEqualTo(1f)
+        // English "in|a" is a listed pair: must not boost Italian/Swedish either.
+        m.applyLanguage("sv")
+        assertThat(m.getContextMultiplier("i", listOf("och"))).isEqualTo(1f)
+        m.applyLanguage("it")
+        assertThat(m.getContextMultiplier("a", listOf("in"))).isEqualTo(1f)
+        for (lang in listOf("pt", "sv", "it", "nl", "pl")) {
+            assertWithMessage(lang).that(m.hardcodedContextMultiplier(lang, "the", listOf("of"))).isEqualTo(1f)
+        }
+    }
+
+    @Test
+    fun `an unlisted pair is neutral within a language's own tables`() {
+        val m = model()
+        m.applyLanguage("es")
+        // "de" is a Spanish table unigram, never listed after "muy": was clamped to 0.1.
+        assertThat(m.getContextMultiplier("de", listOf("muy"))).isEqualTo(1f)
+        assertThat(m.hardcodedContextMultiplier("fr", "le", listOf("je"))).isEqualTo(1f)
+        assertThat(m.hardcodedContextMultiplier("de", "und", listOf("ich"))).isEqualTo(1f)
+        // English before its LM loads: "the" after "i" was 0.1.
+        assertThat(m.hardcodedContextMultiplier("en", "the", listOf("i"))).isEqualTo(1f)
+    }
+
+    @Test
+    fun `a listed pair never lowers its word`() {
+        val m = model()
+        // "todo|el" (0.015) sits below el's own unigram (0.03): the interpolation gave 0.525.
+        assertThat(m.hardcodedContextMultiplier("es", "el", listOf("todo"))).isAtLeast(1f)
+        // A listed pair whose word is not a table unigram keeps its boost ("por favor").
+        assertThat(m.hardcodedContextMultiplier("es", "favor", listOf("por"))).isEqualTo(BigramModel.MAX_CONTEXT_MULTIPLIER)
     }
 }
