@@ -91,6 +91,21 @@ class BigramModelStaticLmTest {
     }
 
     @Test
+    fun `a non-English LM retires the legacy seed where it covers the previous word`() {
+        val m = model()
+        // Before the LM loads, the hardcoded German pairs are the seed.
+        assertThat(m.seedFor("de", "vielen", 3).map { it.word }).containsExactly("dank")
+        m.installStaticLm("de", lm)
+        // "want" is covered: the LM's two continuations are the whole seed (English would gap-fill).
+        assertThat(m.seedFor("de", "want", 3).map { it.word }).containsExactly("to", "a").inOrder()
+        // "vielen" is not covered by the LM: the legacy seed stays the fallback.
+        assertThat(m.seedFor("de", "vielen", 3).map { it.word }).containsExactly("dank")
+        // English keeps its reviewed curated gap-fill under the LM.
+        m.installStaticLm("en", lm)
+        assertThat(m.seedFor("en", "you", 3)).hasSize(3)
+    }
+
+    @Test
     fun `without an LM the hardcoded tables are unchanged`() {
         val m = model()
         // Legacy table: the|end is listed → 10x clamp; see LegacyEnglishContext.

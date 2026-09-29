@@ -44,6 +44,9 @@ import kotlin.math.min
  * Both lookups resolve a REPLACE contraction key to its display form
  * ([StaticContextLm.withReplaceAliases], installed at load from the language's
  * REPLACE bucket): the tap candidate `dont` scores as the `don't` the bar shows.
+ * For every LM language but English the legacy seed (hardcoded pairs + JSON) is
+ * retired wherever the LM covers the previous word ([CURATED_GAP_FILL_LANGUAGES]);
+ * it remains the fallback before the LM loads and for words the LM does not know.
  *
  * Languages without an LM asset keep the hardcoded tables and the JSON seed
  * unchanged. The LM is keyed by the REQUESTED language ([seedLanguage]), never the
@@ -63,6 +66,18 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
 
         /** Gap-filler rank as a fraction of the lowest LM rank (see [getPredictions]). */
         private const val GAP_FILL_DECAY = 0.5f
+
+        /**
+         * Languages whose curated seed still gap-fills UNDER the LM's continuations of a word the
+         * LM covers. English only: its curated pairs were reviewed against the LM when it shipped
+         * (2026-09-26 — e.g. "good morning", ranked below the corpus' top 20). Every other LM
+         * language RETIRES its legacy seed (hardcoded pairs + `bigrams/<lang>_bigrams.json`)
+         * wherever the LM covers the previous word — the maintainer's per-language shipping rule
+         * (2026-09-29), after the legacy seeds scored below the plain top-unigram baseline in
+         * every language measured (docs/eval/2026-09-29-static-lm-multilingual.md). The seed
+         * stays the fallback before the LM loads and for previous words the LM does not know.
+         */
+        private val CURATED_GAP_FILL_LANGUAGES = setOf("en")
 
         /** Default seed size when a caller does not state one. */
         const val DEFAULT_SEED_RESULTS = 5
@@ -623,15 +638,31 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
         maxResults: Int = DEFAULT_SEED_RESULTS
     ): List<StaticBigramSeed.Continuation> {
         if (maxResults <= 0) return emptyList()
+        return seedFor(seedLanguage, context, maxResults)
+    }
+
+    /**
+     * [getPredictions] for an explicit [language] — the seam the pure-JVM tests use, since
+     * [setLanguage] logs through `android.util.Log`.
+     */
+    internal fun seedFor(
+        language: String,
+        context: String,
+        maxResults: Int
+    ): List<StaticBigramSeed.Continuation> {
+        if (maxResults <= 0) return emptyList()
         val prevWord = context.trim().substringAfterLast(' ').trim().lowercase()
         if (prevWord.isEmpty()) return emptyList()
-        val index = seedIndexes[seedLanguage]
-        staticLms[seedLanguage]?.let { lm ->
+        val index = seedIndexes[language]
+        staticLms[language]?.let { lm ->
             // The conditional probability is the rank: comparable within one
             // previous word, which is all the seed's consumer compares.
             val fromLm = lm.top(prevWord, maxResults).map {
                 StaticBigramSeed.Continuation(it.word, it.probability)
             }
+            // Where the LM covers the previous word, its list is the whole seed for every
+            // language but English (CURATED_GAP_FILL_LANGUAGES).
+            if (fromLm.isNotEmpty() && language !in CURATED_GAP_FILL_LANGUAGES) return fromLm
             if (fromLm.size >= maxResults || index == null) return fromLm
             // Curated gap fillers (e.g. "good morning", which the corpus ranks
             // below its top 20) — only into slots the LM left empty, ranked
