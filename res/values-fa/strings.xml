@@ -667,7 +667,7 @@
     <string name="provenance_context_winner_built_in">• برندهٔ زمینه: مدل داخلی</string>
     <string name="provenance_context_no_boost">• زمینه: بدون تقویت</string>
     <string name="provenance_context_boost_setting">• تنظیم تقویت زمینه: %1$.1f×</string>
-    <string name="provenance_personalization">• شخصی‌سازی: %1$.2f → %2$.2f×</string>
+    <string name="provenance_personalization">• شخصی‌سازی: ⁦%1$.2f → %2$.2f×⁩</string>
     <string name="provenance_frequency_factor">• ضریب بسامد: %1$.2f×</string>
     <string name="provenance_final_score">= امتیاز نهایی: %1$d</string>
     <string name="provenance_personal_usage">کاربرد شخصی:</string>
@@ -711,7 +711,7 @@
     <plurals name="learning_data_forget_words_body"><item quantity="one">%1$d واژهٔ آموخته‌شده حذف شود؟ تقویت شخصی‌سازی‌شده از تایپ شما دوباره یاد می‌گیرد.</item><item quantity="other">%1$d واژهٔ آموخته‌شده حذف شود؟ تقویت شخصی‌سازی‌شده از تایپ شما دوباره یاد می‌گیرد.</item></plurals>
     <string name="learning_data_phrases_dialog_title">عبارت‌های آموخته‌شده</string>
     <string name="learning_data_phrases_dialog_empty">عبارت آموخته‌شده‌ای نیست.</string>
-    <string name="learning_data_phrase_row">"%1$s → %2$s  (%3$d×, %4$s)"</string>
+    <string name="learning_data_phrase_row">"⁦%1$s → %2$s⁩  (%3$d×, %4$s)"</string>
     <string name="learning_data_words_dialog_title">واژه‌های آموخته‌شده</string>
     <string name="learning_data_words_dialog_empty">واژهٔ آموخته‌شده‌ای نیست.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
@@ -805,7 +805,7 @@
     <plurals name="multilang_installed_count"><item quantity="one">نصب‌شده: %1$d بستهٔ زبان</item><item quantity="other">نصب‌شده: %1$d بستهٔ زبان</item></plurals>
     <string name="multilang_import_pack">وارد کردن بسته</string>
     <string name="multilang_manage">مدیریت</string>
-    <string name="multilang_collision_example">"  %1$s → %2$s"</string>
+    <string name="multilang_collision_example">"  ⁦%1$s → %2$s⁩"</string>
     <string name="multilang_packs_dialog_title">بسته‌های زبان نصب‌شده</string>
     <string name="multilang_packs_dialog_empty">هیچ بستهٔ زبانی نصب نشده است.\n\nبا «مرور بسته‌های موجود» یک ZIP دانلود کنید، سپس با «وارد کردن بسته» آن را بیفزایید.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">کد: %1$s • %2$d واژه</item><item quantity="other">کد: %1$s • %2$d واژه</item></plurals>
@@ -856,7 +856,7 @@
     <string name="command_palette_action_command">فرمان: %1$s</string>
     <string name="command_palette_action_text">متن: \"%1$s\"</string>
     <string name="command_palette_action_intent">اینتنت: %1$s</string>
-    <string name="command_palette_action_timestamp">برچسب زمانی: %1$s (اکنون → \"%2$s\")</string>
+    <string name="command_palette_action_timestamp">برچسب زمانی: %1$s (اکنون ← \"%2$s\")</string>
     <string name="command_palette_customize_label">سفارشی‌سازی برچسب</string>
     <string name="command_palette_display_label">برچسب نمایشی</string>
     <string name="command_palette_icon_placeholder">[نماد: %1$s]</string>
