@@ -1011,4 +1011,10 @@
     <string name="privacy_delete_data_body">Tiks neatgriezeniski dzēsti visi savāktie vilkšanas dati.\n\nŠo darbību nevar atsaukt.</string>
     <string name="privacy_delete_data_done">Visi vilkšanas dati dzēsti</string>
     <string name="privacy_delete_data_error">Kļūda, dzēšot datus: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Izvērst</string>
+    <string name="common_collapse">Sakļaut</string>
+    <string name="common_previous_page">Iepriekšējā lapa</string>
+    <string name="common_next_page">Nākamā lapa</string>
 </resources>

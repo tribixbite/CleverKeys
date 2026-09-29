@@ -7,6 +7,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -109,7 +112,11 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
                             },
                             enabled = collectedDataCurrentPage > 0
                         ) {
-                            Text("◀", fontSize = 16.sp)
+                            // AutoMirrored: "previous" points toward the reading start in RTL too.
+                            Icon(
+                                Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                contentDescription = stringResource(R.string.common_previous_page)
+                            )
                         }
                         Text(
                             text = "${collectedDataCurrentPage + 1} / $totalPages",
@@ -125,7 +132,10 @@ internal fun SettingsActivity.CollectedDataViewerDialog(
                             },
                             enabled = collectedDataCurrentPage < totalPages - 1
                         ) {
-                            Text("▶", fontSize = 16.sp)
+                            Icon(
+                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = stringResource(R.string.common_next_page)
+                            )
                         }
                     }
                 }

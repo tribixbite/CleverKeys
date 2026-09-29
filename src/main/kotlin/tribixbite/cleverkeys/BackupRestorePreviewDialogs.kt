@@ -7,7 +7,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -130,7 +130,7 @@ private fun SettingsPreviewTopBar(
         navigationIcon = {
             IconButton(onClick = onCancel) {
                 Icon(
-                        Icons.Filled.ArrowBack,
+                        Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.import_preview_cancel_desc)
                     )
             }
@@ -840,7 +840,7 @@ fun DictionaryImportPreviewDialog(
                     title = { Text(stringResource(R.string.import_preview_dict_title)) },
                     navigationIcon = {
                         IconButton(onClick = onCancel) {
-                            Icon(Icons.Filled.ArrowBack, contentDescription = "Cancel preview")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Cancel preview")
                         }
                     },
                     actions = {

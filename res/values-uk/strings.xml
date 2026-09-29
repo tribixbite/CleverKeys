@@ -1011,4 +1011,10 @@
     <string name="privacy_delete_data_body">Усі зібрані дані свайпів буде видалено назавжди.\n\nЦю дію неможливо скасувати.</string>
     <string name="privacy_delete_data_done">Усі дані свайпів видалено</string>
     <string name="privacy_delete_data_error">Помилка видалення даних: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Розгорнути</string>
+    <string name="common_collapse">Згорнути</string>
+    <string name="common_previous_page">Попередня сторінка</string>
+    <string name="common_next_page">Наступна сторінка</string>
 </resources>

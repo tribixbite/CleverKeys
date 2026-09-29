@@ -1011,4 +1011,10 @@
     <string name="privacy_delete_data_body">Toplanan tüm kaydırma verileri kalıcı olarak silinecek.\n\nBu işlem geri alınamaz.</string>
     <string name="privacy_delete_data_done">Tüm kaydırma verileri silindi</string>
     <string name="privacy_delete_data_error">Veriler silinirken hata: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Genişlet</string>
+    <string name="common_collapse">Daralt</string>
+    <string name="common_previous_page">Önceki sayfa</string>
+    <string name="common_next_page">Sonraki sayfa</string>
 </resources>

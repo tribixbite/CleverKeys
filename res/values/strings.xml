@@ -1400,4 +1400,10 @@
     <string name="privacy_delete_data_body">This will permanently delete all collected swipe data.\n\nThis action cannot be undone.</string>
     <string name="privacy_delete_data_done">All swipe data deleted</string>
     <string name="privacy_delete_data_error">Error deleting data: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Expand</string>
+    <string name="common_collapse">Collapse</string>
+    <string name="common_previous_page">Previous page</string>
+    <string name="common_next_page">Next page</string>
 </resources>

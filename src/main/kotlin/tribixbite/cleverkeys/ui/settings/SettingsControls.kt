@@ -25,9 +25,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 
 // Composable helper components
@@ -75,15 +77,23 @@ internal fun SettingsActivity.CollapsibleSettingsSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // weight(1f): the title takes only the space left after the chevron and wraps
+                // onto a second line instead of running underneath it (device finding
+                // 2026-09-29: hu "Biztonsági mentés & Visszaállítás" collided with the icon).
                 Text(
                     text = title,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
                 )
                 Icon(
                     imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    contentDescription = stringResource(
+                        if (expanded) R.string.common_collapse else R.string.common_expand
+                    ),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -248,10 +258,15 @@ internal fun SettingsActivity.SettingsSlider(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Same wrap-before-collide rule as the section header: a long translated title
+            // must not push the value readout off the row or overlap it.
             Text(
                 text = title,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = contentAlpha),
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
             )
             Text(
                 text = displayValue,

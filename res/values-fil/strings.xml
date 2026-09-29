@@ -1012,4 +1012,10 @@
     <string name="privacy_delete_data_body">Permanenteng buburahin nito ang lahat ng nakolektang datos ng swipe.\n\nHindi na ito maibabalik.</string>
     <string name="privacy_delete_data_done">Nabura ang lahat ng datos ng swipe</string>
     <string name="privacy_delete_data_error">Error sa pagbura ng datos: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">I-expand</string>
+    <string name="common_collapse">I-collapse</string>
+    <string name="common_previous_page">Nakaraang pahina</string>
+    <string name="common_next_page">Susunod na pahina</string>
 </resources>

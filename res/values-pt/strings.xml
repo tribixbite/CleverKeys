@@ -1000,4 +1000,10 @@
     <string name="privacy_delete_data_body">Isso excluirá permanentemente todos os dados de deslize coletados.\n\nEsta ação não pode ser desfeita.</string>
     <string name="privacy_delete_data_done">Todos os dados de deslize foram excluídos</string>
     <string name="privacy_delete_data_error">Erro ao excluir dados: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Expandir</string>
+    <string name="common_collapse">Recolher</string>
+    <string name="common_previous_page">Página anterior</string>
+    <string name="common_next_page">Próxima página</string>
 </resources>

@@ -1010,4 +1010,10 @@
     <string name="privacy_delete_data_body">Toutes les données de glissé collectées seront définitivement supprimées.\n\nCette action est irréversible.</string>
     <string name="privacy_delete_data_done">Toutes les données de glissé ont été supprimées</string>
     <string name="privacy_delete_data_error">Erreur lors de la suppression des données : %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Développer</string>
+    <string name="common_collapse">Réduire</string>
+    <string name="common_previous_page">Page précédente</string>
+    <string name="common_next_page">Page suivante</string>
 </resources>

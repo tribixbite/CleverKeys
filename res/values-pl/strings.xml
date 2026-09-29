@@ -1010,4 +1010,10 @@
     <string name="privacy_delete_data_body">Spowoduje to trwałe usunięcie wszystkich zebranych danych o gestach.\n\nTej operacji nie można cofnąć.</string>
     <string name="privacy_delete_data_done">Usunięto wszystkie dane o gestach</string>
     <string name="privacy_delete_data_error">Błąd podczas usuwania danych: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Rozwiń</string>
+    <string name="common_collapse">Zwiń</string>
+    <string name="common_previous_page">Poprzednia strona</string>
+    <string name="common_next_page">Następna strona</string>
 </resources>

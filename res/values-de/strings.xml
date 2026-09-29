@@ -1020,4 +1020,10 @@
     <string name="privacy_delete_data_body">Dadurch werden alle gesammelten Wischdaten dauerhaft gelöscht.\n\nDiese Aktion kann nicht rückgängig gemacht werden.</string>
     <string name="privacy_delete_data_done">Alle Wischdaten gelöscht</string>
     <string name="privacy_delete_data_error">Fehler beim Löschen der Daten: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Ausklappen</string>
+    <string name="common_collapse">Einklappen</string>
+    <string name="common_previous_page">Vorherige Seite</string>
+    <string name="common_next_page">Nächste Seite</string>
 </resources>

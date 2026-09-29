@@ -1006,4 +1006,10 @@
     <string name="privacy_delete_data_body">Ezzel véglegesen törlöd az összes gyűjtött csúsztatási adatot.\n\nA művelet nem vonható vissza.</string>
     <string name="privacy_delete_data_done">Minden csúsztatási adat törölve</string>
     <string name="privacy_delete_data_error">Hiba az adatok törlésekor: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Kibontás</string>
+    <string name="common_collapse">Összecsukás</string>
+    <string name="common_previous_page">Előző oldal</string>
+    <string name="common_next_page">Következő oldal</string>
 </resources>

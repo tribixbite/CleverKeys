@@ -1040,4 +1040,10 @@
     <string name="privacy_delete_data_body">Tutti i dati di scorrimento raccolti verranno eliminati definitivamente.\n\nL\'azione non può essere annullata.</string>
     <string name="privacy_delete_data_done">Tutti i dati di scorrimento eliminati</string>
     <string name="privacy_delete_data_error">Errore durante l\'eliminazione dei dati: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Espandi</string>
+    <string name="common_collapse">Comprimi</string>
+    <string name="common_previous_page">Pagina precedente</string>
+    <string name="common_next_page">Pagina successiva</string>
 </resources>

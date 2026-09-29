@@ -998,4 +998,10 @@
     <string name="privacy_delete_data_body">将永久删除所有已收集的滑动数据。\n\n此操作无法撤销。</string>
     <string name="privacy_delete_data_done">已删除所有滑动数据</string>
     <string name="privacy_delete_data_error">删除数据出错：%1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">展开</string>
+    <string name="common_collapse">收起</string>
+    <string name="common_previous_page">上一页</string>
+    <string name="common_next_page">下一页</string>
 </resources>

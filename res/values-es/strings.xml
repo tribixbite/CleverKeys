@@ -1018,4 +1018,10 @@
     <string name="privacy_delete_data_body">Se eliminarán de forma permanente todos los datos de deslizamiento recopilados.\n\nEsta acción no se puede deshacer.</string>
     <string name="privacy_delete_data_done">Se eliminaron todos los datos de deslizamiento</string>
     <string name="privacy_delete_data_error">Error al eliminar los datos: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Expandir</string>
+    <string name="common_collapse">Contraer</string>
+    <string name="common_previous_page">Página anterior</string>
+    <string name="common_next_page">Página siguiente</string>
 </resources>

@@ -204,7 +204,9 @@ internal fun SettingsActivity.FAQItemCard(item: FAQItem) {
                 )
                 Icon(
                     imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    contentDescription = stringResource(
+                        if (expanded) R.string.common_collapse else R.string.common_expand
+                    ),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

@@ -1027,4 +1027,10 @@
     <string name="privacy_delete_data_body">Toate datele de glisare colectate vor fi șterse definitiv.\n\nAcțiunea nu poate fi anulată.</string>
     <string name="privacy_delete_data_done">Toate datele de glisare au fost șterse</string>
     <string name="privacy_delete_data_error">Eroare la ștergerea datelor: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Extinde</string>
+    <string name="common_collapse">Restrânge</string>
+    <string name="common_previous_page">Pagina anterioară</string>
+    <string name="common_next_page">Pagina următoare</string>
 </resources>

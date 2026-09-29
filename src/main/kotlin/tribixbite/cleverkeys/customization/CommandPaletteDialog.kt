@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -269,7 +271,7 @@ fun CommandPaletteDialog(
                             }
                         }) {
                             Icon(
-                                imageVector = if (showTextInput) Icons.Filled.ArrowBack else Icons.Filled.Close,
+                                imageVector = if (showTextInput) Icons.AutoMirrored.Filled.ArrowBack else Icons.Filled.Close,
                                 contentDescription = stringResource(
                                     if (showTextInput) R.string.common_back
                                     else R.string.common_close
@@ -554,7 +556,7 @@ private fun CommandSearchSection(
                     )
                 }
                 Icon(
-                    Icons.Filled.KeyboardArrowRight,
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
@@ -596,7 +598,7 @@ private fun CommandSearchSection(
                     )
                 }
                 Icon(
-                    Icons.Filled.KeyboardArrowRight,
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onTertiaryContainer
                 )
@@ -638,7 +640,7 @@ private fun CommandSearchSection(
                     )
                 }
                 Icon(
-                    Icons.Filled.KeyboardArrowRight,
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
@@ -704,6 +706,9 @@ private fun CategoryHeader(category: CommandRegistry.Category, commandCount: Int
         val icon = when (category) {
             CommandRegistry.Category.CLIPBOARD -> Icons.Filled.List        // Clipboard actions
             CommandRegistry.Category.EDITING -> Icons.Filled.Edit          // Edit actions
+            // Deliberately NOT auto-mirrored: this glyph depicts the physical cursor-right
+            // key action (the category's commands are left/right/up/down cursor keys), not
+            // "forward/next" navigation, so it must point right in RTL locales too.
             CommandRegistry.Category.CURSOR -> Icons.Filled.KeyboardArrowRight // Cursor movement
             CommandRegistry.Category.NAVIGATION -> Icons.Filled.Menu       // Navigation
             CommandRegistry.Category.SELECTION -> Icons.Filled.Done        // Selection

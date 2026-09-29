@@ -1000,4 +1000,10 @@
     <string name="privacy_delete_data_body">수집된 스와이프 데이터를 모두 영구히 삭제합니다.\n\n이 작업은 되돌릴 수 없습니다.</string>
     <string name="privacy_delete_data_done">모든 스와이프 데이터를 삭제했습니다</string>
     <string name="privacy_delete_data_error">데이터 삭제 오류: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">펼치기</string>
+    <string name="common_collapse">접기</string>
+    <string name="common_previous_page">이전 페이지</string>
+    <string name="common_next_page">다음 페이지</string>
 </resources>

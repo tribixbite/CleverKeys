@@ -999,4 +999,10 @@
     <string name="privacy_delete_data_body">収集したスワイプデータをすべて完全に削除します。\n\nこの操作は取り消せません。</string>
     <string name="privacy_delete_data_done">すべてのスワイプデータを削除しました</string>
     <string name="privacy_delete_data_error">データの削除エラー: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">展開</string>
+    <string name="common_collapse">折りたたむ</string>
+    <string name="common_previous_page">前のページ</string>
+    <string name="common_next_page">次のページ</string>
 </resources>

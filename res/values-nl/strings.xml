@@ -1000,4 +1000,10 @@
     <string name="privacy_delete_data_body">Hiermee worden alle verzamelde veeggegevens definitief verwijderd.\n\nDeze actie kan niet ongedaan worden gemaakt.</string>
     <string name="privacy_delete_data_done">Alle veeggegevens verwijderd</string>
     <string name="privacy_delete_data_error">Fout bij verwijderen van gegevens: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Uitvouwen</string>
+    <string name="common_collapse">Samenvouwen</string>
+    <string name="common_previous_page">Vorige pagina</string>
+    <string name="common_next_page">Volgende pagina</string>
 </resources>

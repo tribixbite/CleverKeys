@@ -1028,4 +1028,10 @@
     <string name="privacy_delete_data_body">Thao tác này sẽ xoá vĩnh viễn toàn bộ dữ liệu vuốt đã thu thập.\n\nKhông thể hoàn tác.</string>
     <string name="privacy_delete_data_done">Đã xoá toàn bộ dữ liệu vuốt</string>
     <string name="privacy_delete_data_error">Lỗi khi xoá dữ liệu: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Mở rộng</string>
+    <string name="common_collapse">Thu gọn</string>
+    <string name="common_previous_page">Trang trước</string>
+    <string name="common_next_page">Trang sau</string>
 </resources>

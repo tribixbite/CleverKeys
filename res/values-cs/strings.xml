@@ -1000,4 +1000,10 @@
     <string name="privacy_delete_data_body">Tímto trvale smažete všechna shromážděná data o tazích.\n\nTuto akci nelze vrátit zpět.</string>
     <string name="privacy_delete_data_done">Všechna data o tazích byla smazána</string>
     <string name="privacy_delete_data_error">Chyba při mazání dat: %1$s</string>
+
+    <!-- 2026-09-29 device findings: localized expand/collapse + pager descriptions (reviewer=model) -->
+    <string name="common_expand">Rozbalit</string>
+    <string name="common_collapse">Sbalit</string>
+    <string name="common_previous_page">Předchozí stránka</string>
+    <string name="common_next_page">Další stránka</string>
 </resources>

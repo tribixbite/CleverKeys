@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -76,7 +76,7 @@ internal fun SettingsActivity.ActivitiesSection() {
                             )
                         }
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
@@ -117,7 +117,7 @@ internal fun SettingsActivity.ActivitiesSection() {
                             )
                         }
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
@@ -160,7 +160,7 @@ internal fun SettingsActivity.ActivitiesSection() {
                             )
                         }
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
@@ -198,7 +198,7 @@ internal fun SettingsActivity.ActivitiesSection() {
                             )
                         }
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
@@ -239,7 +239,7 @@ internal fun SettingsActivity.ActivitiesSection() {
                             )
                         }
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
@@ -279,7 +279,7 @@ internal fun SettingsActivity.ActivitiesSection() {
                             )
                         }
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
