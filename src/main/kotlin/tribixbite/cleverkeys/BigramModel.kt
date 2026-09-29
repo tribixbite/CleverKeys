@@ -754,9 +754,10 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
             return 1.0f
         }
 
-        // Static context LM for the requested language: P(w|prev)/P(w), same clamp.
+        // Static context LM for the requested language: P(w|prev)/P(w) through the shipped ratio
+        // shape (RAW — measured 2026-09-29, see StaticContextLm.RatioShape), same clamp.
         staticLms[seedLanguage]?.let { lm ->
-            return lm.contextRatio(context.last(), word)
+            return StaticContextLm.SHIPPED_RATIO_SHAPE.apply(lm.contextRatio(context.last(), word))
                 .coerceIn(MIN_CONTEXT_MULTIPLIER, MAX_CONTEXT_MULTIPLIER)
         }
 

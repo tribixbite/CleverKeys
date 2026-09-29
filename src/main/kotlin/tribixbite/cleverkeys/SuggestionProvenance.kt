@@ -181,6 +181,11 @@ object UnifiedScore {
      * `personalizationMult = 1 + boost×weight/4`, and
      * `freqFactor = 1 + ln1p(frequency / frequencyScale)`.
      *
+     * In `both`, the learned boost is never below 1 (`ContextModel`: 1.0 without evidence,
+     * else clamped to [1, 5]), so `max` discards every static multiplier below 1 — the static
+     * LM's backoff penalty applies only in `static_only`, whether or not anything is learned
+     * (measured: docs/eval/2026-09-29-static-lm-multilingual.md, "LM ratio shape").
+     *
      * @param prefixScore base prefix-match quality (0 short-circuits to a zero score)
      * @param adaptationMultiplier selection-adaptation multiplier (1.0 = neutral)
      * @param staticContextMultiplier shipped BigramModel multiplier (1.0 = neutral)
