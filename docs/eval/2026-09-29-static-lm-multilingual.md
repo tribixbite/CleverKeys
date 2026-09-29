@@ -566,3 +566,39 @@ rows `FLOOR_ONE` must equal it exactly).
   demoting frequent-but-unlikely words, `FLOOR_ONE` will lose there and be ineligible.
 - Dev and test disagree by up to ~1 pt on the smaller treebanks (sv prefix-2, es prefix-1), so
   a dev win smaller than that is weak evidence; the test rule is the check.
+
+### Dev results and choice (2026-09-29, committed before the test split is read)
+
+One guarded run per model set (`STATIC_LM_EVAL_SPLIT=dev`; shipped assets for en/de/fr/it/pt/sv,
+`lmretry/final/es.cklm` for es), code at `b10391cf`, 1 min 40 s wall at load average 13.6–18.2
+(counts are deterministic). The rule was applied mechanically to the `SHAPE` lines. OOD **dev**,
+`static_only`, top-3 Δ vs `none` in points (prefix 1 / 2 / 3):
+
+| Lang | n (p1) | `RAW` | `FLOOR_ONE` | `FLOOR_HALF` | `SQRT_BELOW_ONE` |
+|---|---|---|---|---|---|
+| en | 15,544 | +10.35 / +3.89 / +2.35 | **+10.20** / +4.26 / +2.39 | +10.30 / +3.90 / +2.34 | **+10.24** / +3.93 / +2.34 |
+| de | 8,267 | +5.46 / +3.75 / +3.02 | +5.90 / +4.35 / +3.00 | +5.50 / +3.81 / +3.02 | +5.48 / +3.77 / +3.02 |
+| fr | 17,211 | +5.55 / +5.47 / +3.27 | +6.16 / +5.63 / +3.28 | +5.60 / +5.46 / +3.27 | +5.60 / +5.47 / +3.27 |
+| it | 1,727 | +6.02 / +5.27 / +2.23 | +6.66 / +5.56 / +2.23 | +6.02 / +5.27 / +2.23 | +6.08 / +5.27 / +2.23 |
+| pt | 11,260 | +5.85 / +5.81 / +3.39 | +6.36 / +6.08 / +3.43 | +5.85 / +5.81 / +3.39 | +5.90 / +5.81 / +3.39 |
+| sv | 5,352 | +5.33 / +1.85 / +1.28 | +6.17 / +2.58 / +1.37 | +5.33 / +1.85 / +1.28 | +5.51 / +1.89 / +1.28 |
+| es (eval only) | 16,211 | +5.37 / +6.39 / +4.63 | +6.61 / +6.76 / +4.63 | +5.44 / +6.44 / +4.63 | +5.40 / +6.40 / +4.63 |
+| **mean p1, shipped six** | | **+6.427** | +6.908 | +6.433 | +6.468 |
+| eligible (no cell < `RAW` − 0.05) | | yes | **no** (en p1 −0.15) | yes | **no** (en p1 −0.11) |
+
+**Choice: `RAW` — no production change.** `FLOOR_ONE` has the best mean (+0.48 pt) and wins
+every non-English cell except de prefix-3 (−0.02, inside tolerance), but English prefix-1 drops
+0.15 pt, so it is ineligible by the pre-registered rule. `FLOOR_HALF` is eligible but its mean
+beats `RAW` by only 0.006 pt, inside the 0.01 tie band, so the tie-break keeps the status quo.
+The test split is still read once, as registered, to report all four shapes; it cannot change
+this choice.
+
+Sanity check (pre-registered): `lm_static_floor_one` equals `lm_both` exactly — top-1 and top-3,
+every prefix — for every language with no learned rows (de, it, pt, sv, es) and for fr (2 learned
+pairs, none at these positions). For en (642 learned pairs over 332 previous words) `lm_both` is
++0.11 pt above `FLOOR_ONE` at prefix-1: the learned boosts, not any static penalty.
+
+Reading (not a selection input): the English loss under `FLOOR_ONE` says the backoff penalty
+does useful work where the model is strongest (en: the largest corpus, the curated contraction
+aliases); the other languages' gains say it over-demotes where the model is weaker. A per-language
+shape was not a registered candidate and is not chosen here.
