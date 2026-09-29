@@ -223,6 +223,7 @@ class StaticLmAssetDriftTest {
         val provenance = File("scripts/data/PROVENANCE.md").readText()
         for (lang in languages) {
             val side = StaticLmLanguageData.sidecar(lang)
+            val weights = side.getJSONObject("corpus").getJSONObject("weights")
             val sources = side.getJSONArray("sources")
             for (i in 0 until sources.length()) {
                 val s = sources.getJSONObject(i)
@@ -230,12 +231,14 @@ class StaticLmAssetDriftTest {
                 assertWithMessage("$lang source $key built UNPINNED").that(s.getBoolean("pinned")).isTrue()
                 assertWithMessage("PROVENANCE.md must record $lang $key's sha256")
                     .that(provenance).contains(s.getString("sha256"))
-                if (key == "leipzig") {
+                // Every Leipzig corpus that was COUNTED (a second, mixed corpus too — 2026-09-29
+                // retry) needs its CC BY 4.0 credit; a weight-0 corpus contributed nothing.
+                if (key.startsWith("leipzig") && weights.getDouble(key) > 0.0) {
                     val corpus = s.getString("url").substringAfterLast('/').removeSuffix(".tar.gz")
-                    assertWithMessage("NOTICE must name $lang's Leipzig corpus").that(notice).contains(corpus)
+                    assertWithMessage("NOTICE must name $lang's Leipzig corpus ($key)").that(notice).contains(corpus)
                 }
             }
-            val tatoebaWeight = side.getJSONObject("corpus").getJSONObject("weights").getDouble("tatoeba")
+            val tatoebaWeight = weights.getDouble("tatoeba")
             val path = "scripts/data/tatoeba-contributors-$lang.txt"
             val contributors = File(path)
             val names = if (contributors.exists()) {

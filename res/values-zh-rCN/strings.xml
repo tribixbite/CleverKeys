@@ -785,7 +785,7 @@
     <string name="gif_toast_no_file_picker">无法打开文件选择器</string>
     <string name="gif_total_storage">总计：%1$s</string>
     <string name="help_open_wiki">打开完整 Wiki</string>
-    <string name="help_third_party_data">第三方数据：词表来自 wordfreq (CC BY-SA 4.0)、经由 FrequencyWords 的 OpenSubtitles (CC BY-SA 4.0)、AOSP LatinIME (Apache-2.0) 和 Swwiki (CC BY-SA 3.0)；英语、德语、法语和意大利语的词语上下文来自 Leipzig Corpora Collection (CC BY 4.0) 和 Tatoeba (CC BY 2.0 FR)。完整署名见源代码中的 NOTICE 文件。</string>
+    <string name="help_third_party_data">第三方数据：词表来自 wordfreq (CC BY-SA 4.0)、经由 FrequencyWords 的 OpenSubtitles (CC BY-SA 4.0)、AOSP LatinIME (Apache-2.0) 和 Swwiki (CC BY-SA 3.0)；英语、德语、法语、意大利语、葡萄牙语和瑞典语的词语上下文来自 Leipzig Corpora Collection (CC BY 4.0) 和 Tatoeba (CC BY 2.0 FR)。完整署名见源代码中的 NOTICE 文件。</string>
     <string name="import_preview_added">新增（%1$d）</string>
     <string name="import_preview_apply">应用（%1$d）</string>
     <string name="import_preview_cancel_desc">取消预览</string>

@@ -787,7 +787,7 @@
     <string name="swipe_full_geometric_settings">Все настройки геометрического движка</string>
     <string name="swipe_full_ctc_settings">Все настройки CTC</string>
     <string name="help_open_wiki">Открыть полную вики</string>
-    <string name="help_third_party_data">Сторонние данные: списки слов получены из wordfreq (CC BY-SA 4.0), OpenSubtitles через FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) и Swwiki (CC BY-SA 3.0); контекст слов для английского, немецкого, французского и итальянского языков получен из Leipzig Corpora Collection (CC BY 4.0) и Tatoeba (CC BY 2.0 FR). Полная атрибуция — в файле NOTICE исходного кода.</string>
+    <string name="help_third_party_data">Сторонние данные: списки слов получены из wordfreq (CC BY-SA 4.0), OpenSubtitles через FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) и Swwiki (CC BY-SA 3.0); контекст слов для английского, немецкого, французского, итальянского, португальского и шведского языков получен из Leipzig Corpora Collection (CC BY 4.0) и Tatoeba (CC BY 2.0 FR). Полная атрибуция — в файле NOTICE исходного кода.</string>
     <string name="gesture_section_intro">Тонкая настройка нажатий, свайпов и слайдеров под ваш стиль набора.</string>
     <string name="gesture_short_gestures_header">Короткие жесты</string>
     <string name="gesture_open_calibration">📐 Открыть инструмент калибровки</string>

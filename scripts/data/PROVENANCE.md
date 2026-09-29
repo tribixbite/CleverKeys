@@ -90,8 +90,10 @@ it. Every row was fetched 2026-09-29. Whether a language's model SHIPS is decide
 (`docs/eval/2026-09-29-static-lm-multilingual.md`); a row stays recorded either way so a failed
 candidate can be rebuilt byte-identically. **Shipped (2026-09-29, after the contraction-lookup fix and
 re-evaluation): de, fr, it** — `src/main/assets/lm/{de,fr,it}.cklm`, with
-`scripts/data/tatoeba-contributors-{de,fr,it}.txt` committed alongside (CC BY 2.0 FR). **Not
-shipped: es, pt, sv** (failed S1); for them "counts only" below describes what a shipped model
+`scripts/data/tatoeba-contributors-{de,fr,it}.txt` committed alongside (CC BY 2.0 FR). **Shipped
+after the pre-registered es/pt/sv retry (2026-09-29): pt, sv** — `lm/{pt,sv}.cklm`; sv's
+contributor list is committed, pt counts no Tatoeba sentence (weight 0, so none is needed).
+**Not shipped: es** (failed S1 twice); for it "counts only" below describes what a shipped model
 would carry. Tatoeba rows are the `*_sentences_detailed` exports (the per-sentence username is
 what the CC BY 2.0 FR contributor list is generated from).
 
@@ -121,6 +123,27 @@ what the CC BY 2.0 FR contributor list is generated from).
 | sv | tatoeba | `tatoeba/swe_sentences_detailed.tsv.bz2` | https://downloads.tatoeba.org/exports/per_language/swe/swe_sentences_detailed.tsv.bz2 | CC BY 2.0 FR | counts only | 2026-09-29 | 63fa7da77b5a9f72d0d30777bb1868b9ae871a020c79e8b8d0db213d3efbe71a |
 | sv | ood_dev | `ud/sv_talbanken-ud-dev.conllu` | UD_Swedish-Talbanken @ `c434778d9511be5c35a6a11531f0107a960fb5d6` | CC BY-SA 4.0 | **no** (weight selection only) | 2026-09-29 | e1c14ae088f575d9f5f2d870d456b9e3911a04725f141752bb8c972a81cb6c6c |
 | sv | ood_test | `ud/sv_talbanken-ud-test.conllu` | UD_Swedish-Talbanken @ `c434778d9511be5c35a6a11531f0107a960fb5d6` | CC BY-SA 4.0 | **no** (gate evaluation only) | 2026-09-29 | f7bc84ce37cd6a71e95b8d8684801da0bb6d2be4e419ba2e865eb109d6cd1bc6 |
+
+#### Retry second corpora (2026-09-29, `leipzig2`; pre-registered in docs/eval/2026-09-29-static-lm-multilingual.md)
+
+All fetched 2026-09-29 from `https://downloads.wortschatz-leipzig.de/corpora/<name>.tar.gz`,
+CC BY 4.0. The chosen corpus per language was selected on the OOD dev split and is mixed into
+(or, for sv, replaces) the web corpus above; the others were evaluated on dev only, never
+shipped, and their archives were deleted after counting (the pins allow a byte-identical
+re-fetch).
+
+| Lang | File | Chosen? (mix weight) | Shipped? | sha256 |
+|---|---|---|---|---|
+| es | `leipzig/spa_wikipedia_2021_300K.tar.gz` | yes (0.75; web 0.25, Tatoeba 0.1) | **no** (es failed S1) | 8f6d62de098a7615c5b8d40d4e449e883888252fa599102747c5eec91b10fa46 |
+| es | `leipzig/spa_news_2023_300K.tar.gz` | no | no | 668ee9fbb6ee70aaff0164b2fa2f6acff54950cf7b444f8f2021997684b06d6f |
+| pt | `leipzig/por-br_newscrawl_2011_300K.tar.gz` | yes (0.5; web 0.5, Tatoeba 0) | counts only | 20b8dad08d98ef1d9a4aa17b959532ba0c7b0e6f8fee7da6324cfd1e818452ce |
+| pt | `leipzig/por_news_2023_300K.tar.gz` | no | no | ffd654ebb29e8afdd802fbd6a1cdc3258f927f15339f368e55529ed058bb5a70 |
+| sv | `leipzig/swe_news_2023_300K.tar.gz` | yes (1.0; web 0, Tatoeba 2.0) | counts only | e7c777651a432df0e9f108c9b7f452e22c6cfe9d6572ba00d1891a9baa69db85 |
+| sv | `leipzig/swe_wikipedia_2021_300K.tar.gz` | no | no | e4a0725749bef237b530493d2119d863d264a8de295f945ffb2c8185abd84f98 |
+
+The Portuguese choice is the variety match: UD Bosque is 45 % Brazilian news (CETENFolha) and
+the only Portuguese web corpus Leipzig offers is Portugal's. The Swedish model counts the
+`swe-se_web_2023` web corpus at weight 0 (it is still read, so its pin stays in the sidecar).
 
 Choice of corpus (the Leipzig listing was read 2026-09-29): the newest general-WEB 300K corpus for
 the language's main locale, since web text is closest to keyboard register (en uses web too).

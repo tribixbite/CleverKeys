@@ -810,7 +810,7 @@
     <string name="swipe_full_geometric_settings">Toate setările geometrice</string>
     <string name="swipe_full_ctc_settings">Toate setările CTC</string>
     <string name="help_open_wiki">Deschide wiki-ul complet</string>
-    <string name="help_third_party_data">Date de la terți: listele de cuvinte provin din wordfreq (CC BY-SA 4.0), OpenSubtitles prin FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) și Swwiki (CC BY-SA 3.0); contextul cuvintelor în engleză, germană, franceză și italiană provine din Leipzig Corpora Collection (CC BY 4.0) și Tatoeba (CC BY 2.0 FR). Atribuirea completă se află în fișierul NOTICE din codul sursă.</string>
+    <string name="help_third_party_data">Date de la terți: listele de cuvinte provin din wordfreq (CC BY-SA 4.0), OpenSubtitles prin FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) și Swwiki (CC BY-SA 3.0); contextul cuvintelor în engleză, germană, franceză, italiană, portugheză și suedeză provine din Leipzig Corpora Collection (CC BY 4.0) și Tatoeba (CC BY 2.0 FR). Atribuirea completă se află în fișierul NOTICE din codul sursă.</string>
     <string name="gesture_section_intro">Reglați fin comportamentul atingerilor, glisărilor și cursoarelor pentru stilul dvs. de tastare.</string>
     <string name="gesture_short_gestures_header">Gesturi scurte</string>
     <string name="gesture_open_calibration">📐 Deschide instrumentul de calibrare</string>

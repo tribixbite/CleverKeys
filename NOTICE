@@ -223,12 +223,15 @@ Static context language model — Leipzig Corpora Collection
 ================================================================================
 The bundled context models (src/main/assets/lm/<lang>.cklm, built by
 scripts/build_static_lm.py) are derived from word-pair counts over these
-Leipzig Corpora Collection downloads (web text):
+Leipzig Corpora Collection downloads (web and news text):
 
-  English  (lm/en.cklm)  eng-com_web-public_2018_300K
-  German   (lm/de.cklm)  deu-de_web_2021_300K
-  French   (lm/fr.cklm)  fra-fr_web_2013_300K
-  Italian  (lm/it.cklm)  ita-it_web-public_2019_300K
+  English     (lm/en.cklm)  eng-com_web-public_2018_300K
+  German      (lm/de.cklm)  deu-de_web_2021_300K
+  French      (lm/fr.cklm)  fra-fr_web_2013_300K
+  Italian     (lm/it.cklm)  ita-it_web-public_2019_300K
+  Portuguese  (lm/pt.cklm)  por-pt_web_2015_300K (weight 0.5) +
+                            por-br_newscrawl_2011_300K (weight 0.5)
+  Swedish     (lm/sv.cklm)  swe_news_2023_300K
 
 Only pruned, quantised word-pair statistics are distributed; no sentence text
 is shipped.
@@ -251,8 +254,9 @@ Static context language model — Tatoeba
 ================================================================================
 The same models additionally count sentences in their language from the
 Tatoeba collaborative sentence database, weighted against the Leipzig counts
-(English 0.1, German 0.25, French 0.05, Italian 0.1; the per-snapshot weight
-and hash are recorded in src/main/assets/lm/<lang>.json).
+(English 0.1, German 0.25, French 0.05, Italian 0.1, Swedish 2.0; the
+Portuguese model counts no Tatoeba sentence; the per-snapshot weight and hash
+are recorded in src/main/assets/lm/<lang>.json).
 
   Tatoeba — https://tatoeba.org
   License: Creative Commons Attribution 2.0 France (CC BY 2.0 FR)
@@ -265,3 +269,4 @@ files generated with each model:
   scripts/data/tatoeba-contributors-de.txt
   scripts/data/tatoeba-contributors-fr.txt
   scripts/data/tatoeba-contributors-it.txt
+  scripts/data/tatoeba-contributors-sv.txt
