@@ -462,6 +462,9 @@ android {
       minifyEnabled false
       shrinkResources false
       debuggable true
+      // Translation QA (2026-09-29): generate en-XA (accented, ~30% longer) and ar-XB (RTL)
+      // pseudolocales for visual long-text/RTL checks. DEBUG ONLY — release stays false.
+      pseudoLocalesEnabled true
       resValue "string", "app_name", "CleverKeys (Debug)"
       resValue "bool", "debug_logs", "true"
       buildConfigField "boolean", "ENABLE_VERBOSE_LOGGING", "true"

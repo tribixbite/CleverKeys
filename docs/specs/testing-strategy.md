@@ -31,37 +31,79 @@ snapshot and this section disagree, this section wins.
   it from CI compilation — commit `afbd2bed`; not part of any suite)
 - `MockClasses.kt` - Mock implementations
 
-## Translation verification (2026-09-27)
+## Translation verification (2026-09-27, extended 2026-09-29)
 
-Structural audit: all 21 locale files parse, preserve resource kinds and indexed arguments,
-and provide `other` plus matching arguments in every plural item. Each contains all 936
-translatable default resources; the 19 default-only resources explicitly use
-`translatable="false"`. Literal percentages in `formatted="false"` strings and Hungarian
-`%-a` are not formatter arguments. Android lint remains the formatting-syntax gate.
-`TranslationCoverageDriftTest` now includes the September privacy disclosures, typo provenance,
-swipe-preference offer and tap-again undo strings; 6/6 focused cases pass. It rejects duplicate
-resource names and checks indexed argument identity in pinned strings.
+All 21 locales are machine-translated, and none has had a native-speaker review. The
+automated gates below catch structural, terminology and length defects. They cannot certify
+fluency.
 
-For semantic review, provide the English source, feature behavior, screenshot/context, and a
-shared terminology list. Review privacy and irreversible actions first: recording vs reading,
-what gets deleted, what remains, and whether an action is reversible. Independent review and
-blind back-translation can identify disagreements, but agreement does not certify fluency.
-Record reviewer language competence and unresolved wording rather than calling machine output
-native-reviewed. The existing review found vocabulary inconsistencies worth native review
-(e.g. Czech swipování/tažení and Indonesian geser/usap across the source label and delete dialog).
-An English-copy scan also flagged Filipino `import_preview_source_screen` and
-`provenance_aggression` (the related `input_learning_aggression_title` is English too).
-# TODO: native review should distinguish intended technical borrowing from untranslated copy.
-The shared `learning_data_phrase_row` is a placeholder/arrow/count format, not English prose.
+### Automated (pure JVM, in `runPureTests`)
 
-# TODO: Native-speaker review of new strings; verify long text, enlarged fonts, TalkBack,
-# and Persian RTL on a dedicated test phone/emulator. Resize screenshots below 2000 pixels
-# in both dimensions and below 4 MB before processing. No host-phone UI tests.
+- **`TranslationCoverageDriftTest`** checks structure. It pins which resources are
+  `<string>` vs `<plurals>` and requires every pinned key in every locale. It also checks
+  per-item plural placeholders, indexed format arguments, and guards against English
+  copy-paste (at least 12 of 21 locales must differ from English). The 2026-09-27 audit
+  confirmed all 21 files parse. Each has all 936 translatable resources, and the 19
+  default-only ones are `translatable="false"`. Literal percentages in
+  `formatted="false"` strings and Hungarian `%-a` are not formatter arguments. Android lint
+  remains the formatting-syntax gate.
+- **`TranslationGlossaryTest`** checks terminology. `docs/i18n/glossary.json` maps each
+  product concept (swipe, dictionary, suggestion, learn, clipboard, layout, gesture;
+  correction for zh/vi; "word" for tr) to the keys that express it. For each locale it lists
+  allowed and forbidden term stems. Every keyed string must contain an allowed stem and no
+  forbidden one. Matching is NFC-normalized, ROOT-lowercased, drops U+0307, and is
+  word-initial unless the locale sets `matchAnywhere` (compounding languages, CJK). The
+  checks are key-scoped, so Czech *tažením* meaning "drag" in an unrelated string is not
+  flagged. The test also requires the glossary to cover exactly the `res/values-*` locales,
+  and it pins the matcher with unit cases. Fail-first: 66 violations before the 2026-09-29
+  fixes, 0 after. The choices and counts are in `docs/i18n/2026-09-29-terminology.md`.
+  When adding a locale or concept, add its glossary entry with a `note` saying why.
+- **`TranslationLengthTest`** is an overflow heuristic. It flags a translation longer than
+  **1.75×** English for suggestion-bar copy (`suggestion_*`; a 2-line chip in a horizontal
+  strip), or longer than **2.0×** English for `*_title` and `provenance_origin_*`. In both
+  cases the translation must also exceed **40** code points. Format arguments count as a
+  4-character word. It counts code points, not glyph width, so CJK expansion is invisible
+  to it. A justified exception goes in its `accepted` map with a reason. On 2026-09-29 it
+  found 8 offenders, all shortened: hu ×4 (2 titles, 2 bar offers), ru and es titles, uk and tr bar offers.
 
-A second destructive-action prompt, `privacy_forget_learned_body` (shown when disabling
-learning), still enumerates phrase patterns, usage and selections without naming swipe
-corrections. The shared clearing function does clear them; the explicit Forget dialog already
-names them. # TODO: reconcile that second prompt in all locales with a semantic review.
+### Model-assisted (repeatable, not automated)
+
+- **Blind back-translation.** Give a separate model only the target-language strings,
+  under neutral IDs with no English and no key names. Ask for a literal English rendering
+  plus notes, then diff it against the English source. Focus on privacy and destructive
+  actions: recording vs reading, what gets deleted, what remains, reversibility. The first
+  run is recorded in `docs/i18n/2026-09-29-back-translation-review.md` (reviewer = model).
+  It found that the learning-off prompt's bare "selection history" read as text selection
+  in about 15 locales. That was fixed in all 22, including English.
+- **Terminology dominance.** Count the candidate terms per concept across each
+  `strings.xml`. When usage is split, use AOSP LatinIME's translation (Apache-2.0; LineageOS
+  mirror, since android.googlesource.com and the old aosp-mirror were unavailable).
+
+### Pseudolocales (visual long-text and RTL checks)
+
+The debug build type sets `pseudoLocalesEnabled true`; release does not. Install a debug
+build on a dedicated test phone or emulator, never the Termux host. Then switch the
+device language to **English (XA)** (accented, about 30% longer, bracketed) or **Arabic
+(XB)** (mirrored RTL). Both appear after enabling Developer options. From adb:
+`adb shell am start -a android.settings.LOCALE_SETTINGS`. On API 33+ you can instead set
+the per-app language: `adb shell cmd locale set-app-locales tribixbite.cleverkeys.debug
+--locales en-XA`, then reset with `--locales ""`. Restore the device language afterwards
+(leave no trace). Resize screenshots below 2000 px in both dimensions and 4 MB before
+processing. Check the suggestion-bar offers, the privacy dialogs, settings rows and the
+Persian (real RTL) locale.
+
+### Still requires native speakers
+
+- Semantic and fluency review of every locale, starting with privacy and deletion copy. Each
+  back-translation NOTE in the review doc is an open question.
+- The established splits listed in `docs/i18n/2026-09-29-terminology.md`: es/nl/uk/fa layout,
+  vi clipboard, tr kelime/sözcük, fil mungkahi/suhestiyon, and whether it *scorrimento*,
+  tr *kaydırma*, fa *کشیدن*, lv *vilkšana* and pt *deslize* read as swipe typing.
+- Device checks on a dedicated test phone or emulator, never the host phone: long text with
+  enlarged fonts, TalkBack, and Persian RTL.
+
+Record the reviewer's language competence and any unresolved wording. Never label machine
+output as native-reviewed.
 
 ## Architecture: Humble Object Pattern
 
