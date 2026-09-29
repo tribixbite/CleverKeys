@@ -1026,4 +1026,8 @@
     <string name="common_collapse">Einklappen</string>
     <string name="common_previous_page">Vorherige Seite</string>
     <string name="common_next_page">Nächste Seite</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">%1$s löschen?</string>
+    <string name="multilang_pack_delete_body">Das Wörterbuch und die Wischdateien des Pakets werden von diesem Gerät entfernt. Hinzugefügte Wörter und gelernte Daten bleiben erhalten. Das Paket kann später erneut importiert werden.</string>
 </resources>

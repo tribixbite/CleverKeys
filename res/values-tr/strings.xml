@@ -1017,4 +1017,8 @@
     <string name="common_collapse">Daralt</string>
     <string name="common_previous_page">Önceki sayfa</string>
     <string name="common_next_page">Sonraki sayfa</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">%1$s silinsin mi?</string>
+    <string name="multilang_pack_delete_body">Paketin sözlüğü ve kaydırma dosyaları bu cihazdan kaldırılır. Eklenen kelimeler ve öğrenilen veriler korunur. Paket daha sonra yeniden içe aktarılabilir.</string>
 </resources>

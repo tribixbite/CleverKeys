@@ -1016,4 +1016,8 @@
     <string name="common_collapse">Zwiń</string>
     <string name="common_previous_page">Poprzednia strona</string>
     <string name="common_next_page">Następna strona</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Usunąć %1$s?</string>
+    <string name="multilang_pack_delete_body">Słownik i pliki pisania gestem z tego pakietu zostaną usunięte z urządzenia. Dodane słowa i wyuczone dane zostaną zachowane. Pakiet można później zaimportować ponownie.</string>
 </resources>

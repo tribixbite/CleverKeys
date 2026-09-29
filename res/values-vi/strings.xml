@@ -1034,4 +1034,8 @@
     <string name="common_collapse">Thu gọn</string>
     <string name="common_previous_page">Trang trước</string>
     <string name="common_next_page">Trang sau</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Xóa %1$s?</string>
+    <string name="multilang_pack_delete_body">Từ điển và tệp vuốt của gói sẽ bị xóa khỏi thiết bị này. Các từ đã thêm và dữ liệu đã học vẫn được giữ lại. Có thể nhập lại gói sau.</string>
 </resources>

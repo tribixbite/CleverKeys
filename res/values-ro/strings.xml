@@ -1033,4 +1033,8 @@
     <string name="common_collapse">Restrânge</string>
     <string name="common_previous_page">Pagina anterioară</string>
     <string name="common_next_page">Pagina următoare</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Ștergeți %1$s?</string>
+    <string name="multilang_pack_delete_body">Dicționarul și fișierele de glisare ale pachetului vor fi eliminate de pe acest dispozitiv. Cuvintele adăugate și datele învățate se păstrează. Pachetul poate fi importat din nou mai târziu.</string>
 </resources>

@@ -1005,4 +1005,8 @@
     <string name="common_collapse">折りたたむ</string>
     <string name="common_previous_page">前のページ</string>
     <string name="common_next_page">次のページ</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">%1$s を削除しますか？</string>
+    <string name="multilang_pack_delete_body">このパックの辞書とスワイプ用ファイルがこの端末から削除されます。追加した単語と学習データは残ります。パックは後で再インポートできます。</string>
 </resources>

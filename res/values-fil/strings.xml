@@ -1018,4 +1018,8 @@
     <string name="common_collapse">I-collapse</string>
     <string name="common_previous_page">Nakaraang pahina</string>
     <string name="common_next_page">Susunod na pahina</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">I-delete ang %1$s?</string>
+    <string name="multilang_pack_delete_body">Aalisin sa device na ito ang diksyunaryo at mga swipe file ng pack. Mananatili ang mga salitang idinagdag at ang natutunang data. Maaaring i-import muli ang pack mamaya.</string>
 </resources>

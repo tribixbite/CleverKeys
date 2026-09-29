@@ -1017,4 +1017,8 @@
     <string name="common_collapse">Sakļaut</string>
     <string name="common_previous_page">Iepriekšējā lapa</string>
     <string name="common_next_page">Nākamā lapa</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Dzēst %1$s?</string>
+    <string name="multilang_pack_delete_body">Pakotnes vārdnīca un vilkšanas faili tiks noņemti no šīs ierīces. Pievienotie vārdi un apgūtie dati tiek saglabāti. Pakotni vēlāk var importēt atkārtoti.</string>
 </resources>

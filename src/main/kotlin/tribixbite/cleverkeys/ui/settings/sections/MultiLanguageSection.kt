@@ -73,6 +73,9 @@ internal fun SettingsActivity.MultiLanguageSection() {
             // Language-pack NOTICE.txt viewer (licensing-audit follow-up). Local, not in the
             // ViewModel: it is a read-only view that is cheap to reopen after a rotation.
             var noticeViewer by remember { mutableStateOf<PackNoticeViewer?>(null) }
+            // Pack awaiting delete confirmation (device finding 2026-09-29: a single tap on
+            // Delete used to remove an installed pack outright). Holds code + display name.
+            var pendingPackDelete by remember { mutableStateOf<Pair<String, String>?>(null) }
 
             // Multi-Language Section (Collapsible)
             CollapsibleSettingsSection(
@@ -417,7 +420,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                                                         )
                                                     }
                                                     TextButton(
-                                                        onClick = { deleteLanguagePack(pack.code) }
+                                                        onClick = { pendingPackDelete = pack.code to pack.name }
                                                     ) {
                                                         Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error)
                                                     }
@@ -444,6 +447,30 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     confirmButton = {
                         TextButton(onClick = { showLanguagePackDialog = false }) {
                             Text(stringResource(R.string.common_close))
+                        }
+                    }
+                )
+            }
+
+            // Destructive-action confirmation, same shape as the GIF pack removal dialog:
+            // named title, what is removed vs kept, error-coloured confirm, Cancel to dismiss.
+            // Stacks over the management dialog; either button returns there.
+            pendingPackDelete?.let { (code, name) ->
+                AlertDialog(
+                    onDismissRequest = { pendingPackDelete = null },
+                    title = { Text(stringResource(R.string.multilang_pack_delete_title, name)) },
+                    text = { Text(stringResource(R.string.multilang_pack_delete_body)) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            pendingPackDelete = null
+                            deleteLanguagePack(code)
+                        }) {
+                            Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { pendingPackDelete = null }) {
+                            Text(stringResource(R.string.common_cancel))
                         }
                     }
                 )

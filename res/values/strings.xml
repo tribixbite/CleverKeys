@@ -1406,4 +1406,8 @@
     <string name="common_collapse">Collapse</string>
     <string name="common_previous_page">Previous page</string>
     <string name="common_next_page">Next page</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Delete %1$s?</string>
+    <string name="multilang_pack_delete_body">The pack\'s dictionary and swipe files are removed from this device. Words you added and learned data are kept. You can import the pack again later.</string>
 </resources>

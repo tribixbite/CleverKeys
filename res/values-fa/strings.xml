@@ -1044,4 +1044,8 @@
     <string name="common_collapse">جمع کردن</string>
     <string name="common_previous_page">صفحهٔ قبلی</string>
     <string name="common_next_page">صفحهٔ بعدی</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">%1$s حذف شود؟</string>
+    <string name="multilang_pack_delete_body">واژه‌نامه و پرونده‌های کشیدن این بسته از این دستگاه حذف می‌شوند. واژه‌های افزوده‌شده و داده‌های آموخته‌شده حفظ می‌شوند. می‌توانید بعداً بسته را دوباره وارد کنید.</string>
 </resources>

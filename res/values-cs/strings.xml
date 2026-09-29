@@ -1006,4 +1006,8 @@
     <string name="common_collapse">Sbalit</string>
     <string name="common_previous_page">Předchozí stránka</string>
     <string name="common_next_page">Další stránka</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Smazat %1$s?</string>
+    <string name="multilang_pack_delete_body">Slovník a soubory pro psaní tahem z tohoto balíčku budou ze zařízení odstraněny. Přidaná slova a naučená data zůstanou zachována. Balíček lze později znovu importovat.</string>
 </resources>

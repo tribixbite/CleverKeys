@@ -1011,4 +1011,8 @@
     <string name="common_collapse">Свернуть</string>
     <string name="common_previous_page">Предыдущая страница</string>
     <string name="common_next_page">Следующая страница</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Удалить %1$s?</string>
+    <string name="multilang_pack_delete_body">Словарь и файлы свайп-ввода этого пакета будут удалены с устройства. Добавленные слова и данные обучения сохранятся. Пакет можно будет импортировать снова.</string>
 </resources>

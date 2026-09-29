@@ -1012,4 +1012,8 @@
     <string name="common_collapse">Összecsukás</string>
     <string name="common_previous_page">Előző oldal</string>
     <string name="common_next_page">Következő oldal</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Törli a következőt: %1$s?</string>
+    <string name="multilang_pack_delete_body">A csomag szótára és csúsztatási fájljai törlődnek erről az eszközről. A hozzáadott szavak és a tanult adatok megmaradnak. A csomagot később újra importálhatja.</string>
 </resources>

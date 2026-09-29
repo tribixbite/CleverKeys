@@ -1004,4 +1004,8 @@
     <string name="common_collapse">收起</string>
     <string name="common_previous_page">上一页</string>
     <string name="common_next_page">下一页</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">删除 %1$s？</string>
+    <string name="multilang_pack_delete_body">此语言包的词典和滑动输入文件将从本设备中删除。已添加的词语和学习数据会保留。之后可以重新导入该语言包。</string>
 </resources>

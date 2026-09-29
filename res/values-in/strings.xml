@@ -1018,4 +1018,8 @@
     <string name="common_collapse">Ciutkan</string>
     <string name="common_previous_page">Halaman sebelumnya</string>
     <string name="common_next_page">Halaman berikutnya</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Hapus %1$s?</string>
+    <string name="multilang_pack_delete_body">Kamus dan file geser dari paket ini akan dihapus dari perangkat ini. Kata yang ditambahkan dan data yang dipelajari tetap disimpan. Paket dapat diimpor lagi nanti.</string>
 </resources>

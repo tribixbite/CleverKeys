@@ -599,6 +599,8 @@ tasks.register('runPureTests', JavaExec) {
     // Licensing-audit follow-up (2026-09-29): which parts of a pack's manifest attribution the
     // language-pack manager shows, and that only http(s) source tokens become tappable links.
     'tribixbite.cleverkeys.langpack.PackAttributionDisplayTest',
+    // 2026-09-29 device finding: installed language packs are only deleted after confirmation.
+    'tribixbite.cleverkeys.langpack.LanguagePackDeleteConfirmationTest',
     // RTL (fa): directional arrows must be Icons.AutoMirrored.*.
     'tribixbite.cleverkeys.RtlMirroringDriftTest',
     // ARC-112 (2026-09-02): the swipe key-registration filter's pure core. Pins the

@@ -1024,4 +1024,8 @@
     <string name="common_collapse">Contraer</string>
     <string name="common_previous_page">Página anterior</string>
     <string name="common_next_page">Página siguiente</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">¿Eliminar %1$s?</string>
+    <string name="multilang_pack_delete_body">El diccionario y los archivos de deslizamiento del paquete se eliminarán de este dispositivo. Las palabras añadidas y los datos aprendidos se conservan. El paquete se puede volver a importar más tarde.</string>
 </resources>

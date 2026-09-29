@@ -1006,4 +1006,8 @@
     <string name="common_collapse">Recolher</string>
     <string name="common_previous_page">Página anterior</string>
     <string name="common_next_page">Próxima página</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Excluir %1$s?</string>
+    <string name="multilang_pack_delete_body">O dicionário e os arquivos de deslize do pacote serão removidos deste dispositivo. As palavras adicionadas e os dados aprendidos são mantidos. O pacote pode ser importado novamente depois.</string>
 </resources>

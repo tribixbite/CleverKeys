@@ -1046,4 +1046,8 @@
     <string name="common_collapse">Comprimi</string>
     <string name="common_previous_page">Pagina precedente</string>
     <string name="common_next_page">Pagina successiva</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Eliminare %1$s?</string>
+    <string name="multilang_pack_delete_body">Il dizionario e i file di scorrimento del pacchetto verranno rimossi da questo dispositivo. Le parole aggiunte e i dati appresi vengono conservati. Il pacchetto potrà essere importato di nuovo in seguito.</string>
 </resources>

@@ -1006,4 +1006,8 @@
     <string name="common_collapse">Samenvouwen</string>
     <string name="common_previous_page">Vorige pagina</string>
     <string name="common_next_page">Volgende pagina</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">%1$s verwijderen?</string>
+    <string name="multilang_pack_delete_body">Het woordenboek en de veegbestanden van het pakket worden van dit apparaat verwijderd. Toegevoegde woorden en geleerde gegevens blijven behouden. Het pakket kan later opnieuw worden geïmporteerd.</string>
 </resources>

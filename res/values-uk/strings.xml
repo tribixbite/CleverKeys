@@ -1017,4 +1017,8 @@
     <string name="common_collapse">Згорнути</string>
     <string name="common_previous_page">Попередня сторінка</string>
     <string name="common_next_page">Наступна сторінка</string>
+
+    <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
+    <string name="multilang_pack_delete_title">Видалити %1$s?</string>
+    <string name="multilang_pack_delete_body">Словник і файли свайп-введення цього пакета буде видалено з пристрою. Додані слова та дані навчання збережуться. Пакет можна буде імпортувати знову.</string>
 </resources>
