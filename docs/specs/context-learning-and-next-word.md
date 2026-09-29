@@ -249,8 +249,18 @@ loads on `BigramModel`'s seed thread and then serves BOTH static products:
   conditional probability; the curated `en_bigrams.json` pairs only fill slots the LM leaves
   empty (14 of its 319 pairs, e.g. "good morning", are outside the corpus top-20).
 
-Other languages keep the hardcoded tables and JSON seeds until they get an LM. Since
-2026-09-29 German, French and Italian have one (below).
+Other languages keep the JSON seeds (and, for es/fr/de/en before load, their own hardcoded
+pairs) until they get an LM. Since 2026-09-29 German, French, Italian, Portuguese and Swedish have
+one (below).
+
+**Legacy multiplier fix (2026-09-29).** Without an LM, `hardcodedContextMultiplier` now moves the
+tap multiplier only for a LISTED `(prev, word)` pair of the language's OWN table, never below 1;
+everything else is 1.0, and the device path uses the requested language. Before, the formula read
+the handful of listed pairs as the whole conditional distribution (every unlisted table unigram →
+0.1×) and languages without tables were scored by ENGLISH's tables — `static_only` prefix-1 top-3
+on UD Spanish-GSD test went −22.65 → +0.04 pt vs no context. `both` was ≈ 0 before because
+`max(static, learned)` with an empty store is `max(static, 1)`: it discards every sub-1 static
+value — which also means an LM's backoff penalty never applies in the default mode.
 
 **Contraction keys (2026-09-29 lookup fix).** The model names contractions by display form
 (`don't`, `c'est`); the dictionaries — and so the tap candidates — hold the apostrophe-free key
@@ -268,7 +278,7 @@ wordfreq artefact reference, NFC composition and train/eval-overlap exclusion). 
 exactly the configured codes (en es de fr it pt sv); en rebuilds byte-identically. Weight
 selection is restricted to weights whose model fits the 512 KiB cap.
 
-**Shipped per language (2026-09-29): en, de, fr, it.** The maintainer's rule is that each
+**Shipped per language (2026-09-29): en, de, fr, it, then pt and sv** (retry below). The maintainer's rule is that each
 language ships on its OWN pre-registered S1 gate. After the contraction-lookup fix, one
 re-evaluation on the unchanged gates (OOD prefix-1 top-3 Δ): de +5.16, fr +6.75, it +7.48 pass
 and ship; es +4.69, pt +4.19, sv +4.59 (prefix-2 +1.92) fail and stay unshipped (es/pt/sv have no
@@ -277,18 +287,27 @@ the whole next-word seed wherever it covers the previous word; the legacy seed (
 + `bigrams/<lang>_bigrams.json`) is the fallback before load and for unknown previous words.
 English keeps its curated gap-fill. Budgets: ≤ 475 KB asset, ≤ 0.91 MB heap per language,
 3.15 MB with all four resident. Tables, before/after and S2:
-`docs/eval/2026-09-29-static-lm-multilingual.md`. The pre-registered gates stay as they are; a
-retry of es/pt/sv must change an input for a stated reason and select on dev, never on the test
-set. The failed S3 swipe gate remains in force for every language: no swipe rescoring.
+`docs/eval/2026-09-29-static-lm-multilingual.md`. The failed S3 swipe gate remains in force for
+every language: no swipe rescoring.
+
+**es/pt/sv retry (pre-registered, 2026-09-29).** Changed input: a second Leipzig corpus mixed into
+the web corpus (weights sum to 1) plus the Tatoeba weight, chosen on the OOD **dev** split by the
+gate metric itself (`StaticLmTapEvalTest` `STATIC_LM_EVAL_SPLIT=dev`), then one test evaluation per
+language on the unchanged gates and treebanks. **pt SHIPS** (Portugal web + Brazilian news 2011,
+0.5/0.5, no Tatoeba — UD Bosque is 45 % Brazilian news; prefix-1 +5.41), **sv SHIPS** (news 2023 +
+Tatoeba × 2.0; +5.98 / prefix-2 +2.95), **es FAILS again** (Wikipedia 2021 × 0.75; +4.96) and stays
+unshipped. pt/sv retire their legacy seed where the LM covers the previous word, like de/fr/it.
+Budgets now: ≤ 475 KB asset and ≤ 0.91 MB heap per language, 4.55 MB with all six resident.
 
 Contraction continuations (fixed 2026-09-29): `NextWordPredictor.candidatesFor` judges an
 apostrophe form (`don't`, `c'est`, straight or typographic apostrophe) by its apostrophe-free
 dictionary key, because every bundled dictionary stores contractions that way; a Dictionary
 Manager disable of the key blocks the display form too (`NextWordContractionAllowTest`).
 
-# TODO: es/pt/sv retry with a changed input; the legacy
-# hardcoded tables still hurt `static_only` tap ranking for languages without an LM;
-# imported-pack LM support would need a separate importer contract.
+# TODO: es needs a new stated reason before any further attempt (e.g. a larger Spanish test
+# population; GSD test is 339 sentences, ±0.7 pt); measure an LM contextRatio floored at 1 on dev
+# (lm_both beats lm_static at prefix-1 by 0.6–1.1 pt); imported-pack LM support would need a
+# separate importer contract.
 Evaluation:
 `docs/eval/2026-09-26-static-lm-replay.md` (tap S1 and swipe S3); provenance:
 `scripts/data/PROVENANCE.md`; attribution: `NOTICE`, Settings → Help & FAQ.

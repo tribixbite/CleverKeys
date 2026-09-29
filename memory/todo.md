@@ -35,8 +35,12 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   es/pt/sv still fail, unshipped. `docs/eval/2026-09-29-static-lm-multilingual.md`.
 - [x] Next-word allow check admits contraction display forms through their apostrophe-free
   dictionary key (`NextWordContractionAllowTest`, 2026-09-29).
-- [ ] TODO: es/pt/sv LM retry needs a changed input selected on dev; the legacy hardcoded tables
-  still hurt `static_only` tap ranking for languages without an LM (outside the LM files).
+- [x] es/pt/sv LM retry (2026-09-29, pre-registered, dev-selected second Leipzig corpus + Tatoeba
+  weight, one test look): pt +5.41 and sv +5.98 prefix-1 → SHIPPED; es +4.96 → FAILED, unshipped.
+- [x] Legacy hardcoded tables no longer penalise unlisted pairs or apply English's tables to other
+  languages (es `static_only` prefix-1 −22.65 → +0.04 pt). `docs/eval/2026-09-29-static-lm-multilingual.md`.
+- [ ] TODO: es LM needs a NEW stated reason before another attempt (e.g. a larger test population);
+  measure LM `contextRatio` floored at 1 on dev (lm_both > lm_static at prefix-1 by 0.6–1.1 pt).
 - [x] Pack-attribution UI: Settings → Multi-Language → Language Packs → Manage shows each pack's
   licence, credit, source links and full NOTICE.txt (`269d8bb1`/`6fed1b12`, 2026-09-29).
 - [x] `privacy_forget_learned_body` names swipe corrections in all 22 locales (`535a2a28`);

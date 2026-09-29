@@ -291,10 +291,15 @@ retain at the tail.
   explains the sweep; history NOT rewritten because it is pushed).
 
 **Open (in priority order):**
-1. es/pt/sv LM retry — must change an input for a stated reason and select on DEV only (never
-   the UD test split). Candidates: a second Leipzig corpus/register, AnCora dev for es.
-2. Legacy hardcoded context tables HURT `static_only` tap ranking for languages without an LM
-   (es −22.7 pt prefix-1 top-3 in static_only; ~0 in the default `both`) — measure and fix.
+1. ~~es/pt/sv LM retry~~ DONE 2026-09-29 (pre-registered `25145b63`, dev choices `7cb2fa36`, one
+   test look): **pt and sv SHIPPED** (`807c56bd`; pt = Portugal web + Brazilian news 0.5/0.5, +5.41;
+   sv = news 2023 + Tatoeba ×2, +5.98 / prefix-2 +2.95); **es FAILED again** (+4.96) — do not
+   retry without a new stated reason (e.g. larger test population). APK/S2 in the eval doc.
+2. ~~Legacy tables hurt `static_only`~~ FIXED 2026-09-29 (`baff9bf1`): only a listed pair of the
+   language's own table moves the multiplier, never below 1; no English fallback (es −22.65 →
+   +0.04 pt). Open follow-up: `both` = max(static, 1) with an empty learned store, so an LM's
+   backoff penalty never bites there and lm_both beats lm_static at prefix-1 by 0.6–1.1 pt —
+   measure `contextRatio` floored at 1 on dev before changing anything.
 3. Device-only: native-speaker review of the new strings; RTL (fa, ar-XB), en-XA long text, large
    font and TalkBack on a TEST phone (Saga was in use 2026-09-29 — never the host phone).
 4. Apostrophe/hyphen words in the swipe "Prefer" offer need decoder changes (audit doc).

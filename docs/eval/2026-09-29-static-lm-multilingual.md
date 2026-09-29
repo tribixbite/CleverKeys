@@ -497,3 +497,17 @@ every language measured here (es +6.08 vs +4.96, pt +6.05 vs +5.41, sv +6.78 vs 
 suggests the backoff PENALTY costs prefix-1 accuracy in `static_only`. Not changed here
 (`UnifiedScore`/`StaticContextLm.contextRatio` semantics, outside this change); recorded as a
 follow-up: measure `contextRatio` floored at 1 on dev before touching it.
+
+### S2 for pt and sv (shipped in `807c56bd`)
+
+| Lang | asset B (cap 524,288) | retained heap B (cap 1.5 MB) | load ms, pure JVM (cold / warm median) | stored in APK (deflated) |
+|---|---|---|---|---|
+| pt | 351,738 | 576,600 | 4.7 / 2.1 | 237,526 + 3,307 sidecar |
+| sv | 443,229 | 823,501 | 4.3 / 4.2 | 307,718 + 3,647 sidecar |
+
+All six models resident at once: 4,545,885 B (`StaticLmAssetDriftTest`; GC deltas agree with the
+array accounting to < 100 B). Release APK (`./build-on-termux.sh release --no-install`): arm64-v8a
+23,164,285 B, **+556,576 B** against the 22,607,709 B de/fr/it build; the pt/sv models and
+sidecars are 552,198 B of that as stored, the rest is other commits since. Load average 13–18
+from other agents during these runs; the load times are indicative only. en and de rebuild
+byte-identically from the refactored builder (model, sidecar, contributor list).
