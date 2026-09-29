@@ -238,6 +238,35 @@ story. Two habits came out of it and are worth keeping:
 
 ## Open work, in priority order
 
+### -2. i18n follow-ups from the 2026-09-29 fa/hu device run (sweep done; these are left)
+
+Done: the hardcoded-UI sweep (guard `HardcodedUiStringTest`), RTL arrows, section-title wrap,
+per-locale address register (hu formal), language-pack delete confirmation and the NOTICE
+layout. See `docs/i18n/2026-09-29-hardcoded-ui-sweep.md` and `docs/i18n/2026-09-29-register.md`.
+
+Still open:
+- **Settings search is English-only, and scroll targets break outside English.**
+  - The generated index titles come from `res/values`.
+  - `settingSlug(title)` is taken from the *visible* title, which is ASCII-only, so under
+    fa/ja/ru/… controls register positions under slugs no search entry uses.
+  - Fix with locale-independent setting ids plus resource-backed titles.
+- **Command catalog.** `CommandRegistry` has about 228 names, descriptions and keywords, plus
+  its category names, all English. It also drives palette search ranking.
+- **Domain-layer error text is English**, shown inside a localized "…failed: %1$s" wrapper.
+  Sources: `ImportResult.Error`, `GifPackImportResult.Error`, `BackupRestoreManager` and
+  `backup.crypto` messages, `SkippedKey.reason` and `WRONG_PASSWORD_OR_CORRUPT`.
+- **Stale FAQ.** The swipe-typing and other-languages answers name "Length Penalty (Alpha)",
+  "Vocab Frequency Weight" and "Prefix Boost" (neural-era settings). "Per-Key Customization"
+  does not match any screen title.
+- **Keyboard pane pagers.** The IME's GIF/clipboard ◀/▶ glyphs are not mirrored for RTL.
+- **Native review.** It is owed for every locale. Specific requests from the translators:
+  - short compass abbreviations (fa, uk, fil, in);
+  - diacritic key names;
+  - AOSP register dissent for de (AOSP uses du) and zh-rCN (AOSP uses 您);
+  - the ro short-label imperatives.
+- **Device verification.** fa (RTL arrows, notice dialog) and hu (headers, register) need
+  rechecking on the Seeker/Saga test phone.
+
 ### -1. Learning system audit (2026-09-26) — mostly RESOLVED same day
 
 `docs/audit/2026-09-26-learning-system-audit.md`. Two device reports: swipe `she'd`/`I'd`/`they'll`
