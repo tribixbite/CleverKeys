@@ -1,0 +1,1085 @@
+{
+  "_about": [
+    "Per-locale product-term glossary, enforced by src/test/kotlin/tribixbite/cleverkeys/TranslationGlossaryTest.kt.",
+    "concepts.<c>.keys: string resources whose English text expresses concept <c>. For every locale that has a",
+    "locales.<l>.terms.<c> entry, each keyed string must contain at least one 'allowed' stem and no 'forbidden' stem.",
+    "Matching: NFC-normalized, lower-cased with Locale.ROOT, U+0307 (combining dot) dropped. A stem must start a",
+    "word (preceded by start-of-text or a non-letter/non-mark character) unless the locale sets matchAnywhere",
+    "(compounding languages and scripts written without spaces).",
+    "Stems were chosen from the DOMINANT established usage in each strings.xml (counts recorded in 'note') and,",
+    "where usage was genuinely split, from AOSP LatinIME's translation (see docs/i18n/2026-09-29-terminology.md).",
+    "Machine-derived: no entry here is native-speaker reviewed."
+  ],
+  "concepts": {
+    "swipe": {
+      "keys": [
+        "settings_section_swipe_typing",
+        "swipe_enable_title",
+        "privacy_swipe_pattern_title",
+        "dict_word_too_long_for_swipe_title",
+        "input_backspace_undo_swipe_title",
+        "gesture_swipe_recognition_header",
+        "swipe_trail_enable_title",
+        "suggestion_prefer_when_swiping",
+        "suggestion_prefer_when_swiping_added",
+        "privacy_learned_source_swipe_corrections",
+        "privacy_learned_forget_body",
+        "privacy_forget_learned_body"
+      ]
+    },
+    "dictionary": {
+      "keys": [
+        "activities_dictionary_title",
+        "backup_section_custom_dictionary",
+        "import_preview_dict_title",
+        "suggestion_add_to_dictionary",
+        "suggestion_added_to_dictionary",
+        "suggestion_removed_from_dictionary",
+        "privacy_learned_forget_body"
+      ]
+    },
+    "suggestion": {
+      "keys": [
+        "theme_section_suggestion_bar",
+        "input_suggestion_bar_opacity_title",
+        "advanced_provenance_markers_title",
+        "accessibility_suggestion_tap_title",
+        "privacy_learned_source_selections",
+        "privacy_learned_forget_body"
+      ]
+    },
+    "learn": {
+      "keys": [
+        "privacy_on_device_learning_header",
+        "privacy_learned_data_header",
+        "learning_data_words_dialog_title",
+        "learning_data_phrases_dialog_title",
+        "input_personalized_learning_title",
+        "input_next_word_desc",
+        "privacy_forget_learned_title",
+        "privacy_learned_forget_body",
+        "privacy_forget_learned_body"
+      ]
+    },
+    "clipboard": {
+      "keys": [
+        "settings_section_clipboard",
+        "clipboard_history_title",
+        "backup_section_clipboard_history",
+        "clipboard_sanitize_system_title",
+        "private_copy_expose_dialog_title"
+      ]
+    },
+    "layout": {
+      "keys": [
+        "layout_manager_title",
+        "activities_layout_title",
+        "pref_custom_layout_title",
+        "layout_manager_remove_title",
+        "layout_manager_editor_title"
+      ]
+    },
+    "gesture": {
+      "keys": [
+        "gesture_enable_short_title",
+        "gesture_short_gestures_header",
+        "settings_section_gesture_tuning",
+        "input_circle_gesture_title"
+      ]
+    },
+    "word": {
+      "keys": [
+        "learning_data_words_dialog_title",
+        "privacy_learned_forget_body",
+        "privacy_forget_learned_body"
+      ]
+    },
+    "correction": {
+      "keys": [
+        "privacy_learned_source_swipe_corrections",
+        "provenance_origin_typo_correction",
+        "privacy_learned_forget_body"
+      ]
+    }
+  },
+  "locales": {
+    "cs": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "tah",
+            "tažen"
+          ],
+          "forbidden": [
+            "swipov",
+            "tažení"
+          ],
+          "note": "psaní tahem / tah* in ~62 strings; swipování (3) and tažení (1) were 2026-09-26 outliers. AOSP says 'psaní gesty' but the file never uses it for swipe."
+        },
+        "dictionary": {
+          "allowed": [
+            "slovník"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "návrh"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "uč",
+            "nauč"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "schránk"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "rozložení"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "gest"
+          ]
+        }
+      }
+    },
+    "de": {
+      "matchAnywhere": true,
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "wisch"
+          ],
+          "forbidden": [
+            "swip"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "wörterbuch",
+            "wörterbüch"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "vorschl"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "lern"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "zwischenablage"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "layout"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "geste"
+          ]
+        }
+      }
+    },
+    "es": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "desliz"
+          ],
+          "forbidden": [
+            "swip"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "diccionario"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "sugerencia"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "aprend"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "portapapeles"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "diseño",
+            "distribuci"
+          ],
+          "note": "established split (diseño 22 / distribución 8); not touched by recent strings — native review."
+        },
+        "gesture": {
+          "allowed": [
+            "gesto"
+          ]
+        }
+      }
+    },
+    "fa": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "کشید"
+          ],
+          "forbidden": [
+            "سوایپ"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "واژه‌نامه"
+          ],
+          "forbidden": [
+            "دیکشنری",
+            "لغت‌نامه"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "پیشنهاد"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "یادگیری",
+            "آموخته"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "بریده‌دان"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "چیدمان",
+            "طرح"
+          ],
+          "note": "established split (چیدمان 25 / طرح 6, e.g. pref_custom_layout_title); not touched by recent strings — native review."
+        },
+        "gesture": {
+          "allowed": [
+            "اشاره"
+          ]
+        }
+      }
+    },
+    "fil": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "swip"
+          ],
+          "note": "English 'swipe' (i-swipe / nag-swipe) is the established Filipino UI borrowing (83 strings)."
+        },
+        "dictionary": {
+          "allowed": [
+            "diksyunaryo",
+            "dictionary"
+          ],
+          "note": "'Dictionary Manager' is kept as an English screen name alongside Theme/Layout Manager (intentional borrowing); prose uses diksyunaryo."
+        },
+        "suggestion": {
+          "allowed": [
+            "mungkahi",
+            "suhest"
+          ],
+          "forbidden": [
+            "suggestion"
+          ],
+          "note": "genuinely split (mungkahi 10 / suhestiyon 11); AOSP LatinIME values-tl leans mungkahi (5/4). Recent privacy strings use mungkahi; the bar titles follow the neighbouring theme strings (Teksto/Background ng Suhestiyon) as \"Bar ng Suhestiyon\". English \"Suggestion Bar\" (4 strings) fixed 2026-09-29. Native review should pick one."
+        },
+        "learn": {
+          "allowed": [
+            "natutun",
+            "pagkatuto",
+            "matuto"
+          ],
+          "forbidden": [
+            "pag-aaral"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "clipboard"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "layout"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "gesture"
+          ]
+        }
+      }
+    },
+    "fr": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "gliss"
+          ],
+          "forbidden": [
+            "glissement",
+            "swip"
+          ],
+          "note": "noun glissé (72) vs glissement (10 outliers, normalized 2026-09-29); verb glisser/en glissant stays allowed."
+        },
+        "dictionary": {
+          "allowed": [
+            "dictionnaire"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "suggestion"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "appr"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "presse-papiers"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "disposition"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "geste"
+          ]
+        }
+      }
+    },
+    "hu": {
+      "matchAnywhere": true,
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "csúsztat"
+          ],
+          "forbidden": [
+            "húzás"
+          ],
+          "note": "csúsztatás (80) vs húzás (3 outliers, fixed 2026-09-29)."
+        },
+        "dictionary": {
+          "allowed": [
+            "szótár"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "javasl"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "tanul"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "vágólap"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "kiosztás"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "gesztus"
+          ]
+        }
+      }
+    },
+    "in": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "geser",
+            "menggeser",
+            "digeser"
+          ],
+          "forbidden": [
+            "usap",
+            "mengusap"
+          ],
+          "note": "geser (79) vs usap (1 outlier, fixed 2026-09-29)."
+        },
+        "dictionary": {
+          "allowed": [
+            "kamus"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "saran"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "dipelajari",
+            "pembelajaran",
+            "belajar",
+            "mempelajari"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "clipboard"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "tata letak"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "gestur"
+          ]
+        }
+      }
+    },
+    "it": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "scorr"
+          ],
+          "forbidden": [
+            "swip"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "dizionari"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "suggeriment"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "appre"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "appunti"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "layout"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "gest"
+          ]
+        }
+      }
+    },
+    "ja": {
+      "matchAnywhere": true,
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "スワイプ"
+          ],
+          "forbidden": [
+            "なぞり"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "辞書"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "候補"
+          ],
+          "forbidden": [
+            "サジェスト"
+          ],
+          "note": "候補 (26) vs サジェスト (1 outlier, fixed 2026-09-29); AOSP LatinIME ja also uses 候補."
+        },
+        "learn": {
+          "allowed": [
+            "学習"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "クリップボード"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "レイアウト"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "ジェスチャー"
+          ]
+        }
+      }
+    },
+    "ko": {
+      "matchAnywhere": true,
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "스와이프"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "사전"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "추천"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "학습"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "클립보드"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "레이아웃"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "제스처"
+          ]
+        }
+      }
+    },
+    "lv": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "vilk"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "vārdnīc"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "ieteikum"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "apgūt",
+            "mācīš"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "starpliktuv"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "izkārtojum"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "žest"
+          ]
+        }
+      }
+    },
+    "nl": {
+      "matchAnywhere": true,
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "veeg",
+            "vegen",
+            "geveegd"
+          ],
+          "forbidden": [
+            "swip"
+          ],
+          "note": "veeg/vegen (80) vs swipen (5 outliers, fixed 2026-09-29)."
+        },
+        "dictionary": {
+          "allowed": [
+            "woordenboek"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "suggesti"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "leer",
+            "leren",
+            "geleerd"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "klembord"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "lay-out",
+            "indeling"
+          ],
+          "note": "established split (lay-out 19 / indeling 11); not touched by recent strings — native review."
+        },
+        "gesture": {
+          "allowed": [
+            "gebaar",
+            "gebar"
+          ]
+        }
+      }
+    },
+    "pl": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "gest"
+          ],
+          "forbidden": [
+            "przesuw",
+            "przesunię"
+          ],
+          "note": "pisanie gestem / gest* is the swipe term (AOSP: 'pisanie gestami'); przesuwanie was a 2026-09-26 outlier (przesuń stays correct for cursor keys, which are not keyed here)."
+        },
+        "dictionary": {
+          "allowed": [
+            "słowni"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "podpowi"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "wyucz",
+            "ucz"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "schow"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "układ"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "gest"
+          ]
+        }
+      }
+    },
+    "pt": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "desliz"
+          ],
+          "forbidden": [
+            "swip"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "dicionário"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "sugest"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "aprend"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "área de transferência"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "layout"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "gesto"
+          ]
+        }
+      }
+    },
+    "ro": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "glis"
+          ],
+          "forbidden": [
+            "swip"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "dicționar"
+          ],
+          "forbidden": [
+            "dicţionar"
+          ],
+          "note": "comma-below ț/ș are correct Romanian; cedilla ţ/ş are forbidden."
+        },
+        "suggestion": {
+          "allowed": [
+            "sugest"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "învăța",
+            "învăț"
+          ],
+          "forbidden": [
+            "învăţ"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "clipboard"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "aranjament"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "gest"
+          ]
+        }
+      }
+    },
+    "ru": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "свайп"
+          ],
+          "forbidden": [
+            "скольж"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "словар"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "подсказ"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "выучен",
+            "обучени"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "буфер"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "расклад"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "жест"
+          ]
+        }
+      }
+    },
+    "tr": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "kaydır"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "sözlü"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "öneri"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "öğren"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "pano"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "düzen"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "hareket"
+          ]
+        },
+        "word": {
+          "allowed": [
+            "kelime"
+          ],
+          "forbidden": [
+            "sözcük"
+          ],
+          "note": "genuinely split (kelime 38 / sözcük 33); AOSP LatinIME tr uses kelime exclusively (15/0), so recent strings use kelime. Older sözcük strings left for native review."
+        }
+      }
+    },
+    "uk": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "свайп"
+          ],
+          "forbidden": [
+            "ковз"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "словник"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "підказ"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "вивчен",
+            "навчан"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "буфер"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "макет",
+            "розклад"
+          ],
+          "note": "established split (макет 26 / розкладка 4); not touched by recent strings — native review."
+        },
+        "gesture": {
+          "allowed": [
+            "жест"
+          ]
+        }
+      }
+    },
+    "vi": {
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "vuốt"
+          ],
+          "forbidden": [
+            "trượt"
+          ]
+        },
+        "dictionary": {
+          "allowed": [
+            "từ điển"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "gợi ý"
+          ]
+        },
+        "learn": {
+          "allowed": [
+            "học"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "bảng tạm",
+            "bộ nhớ tạm"
+          ],
+          "note": "established split (bộ nhớ tạm 17 / bảng tạm 11); not touched by recent strings — native review."
+        },
+        "layout": {
+          "allowed": [
+            "bố cục"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "cử chỉ"
+          ]
+        },
+        "correction": {
+          "allowed": [
+            "sửa lỗi"
+          ],
+          "forbidden": [
+            "sửa từ"
+          ],
+          "note": "the source label says 'Sửa lỗi vuốt'; the forget dialog's 'sửa từ vuốt' was aligned to it."
+        }
+      }
+    },
+    "zh-rCN": {
+      "matchAnywhere": true,
+      "terms": {
+        "swipe": {
+          "allowed": [
+            "滑动"
+          ],
+          "forbidden": [
+            "滑行"
+          ],
+          "note": "滑动 (86) vs 滑行 (1 outlier). AOSP LatinIME zh-rCN says 滑行输入, but the file is not split."
+        },
+        "dictionary": {
+          "allowed": [
+            "词典"
+          ],
+          "forbidden": [
+            "字典"
+          ]
+        },
+        "suggestion": {
+          "allowed": [
+            "候选"
+          ],
+          "forbidden": [
+            "建议栏"
+          ],
+          "note": "bar items are 候选/候选词 (15), bar is 候选栏 (3) vs 建议栏 (2 outliers, fixed). 建议 stays correct for the verb 'suggest'. AOSP uses 建议 for the abstract setting."
+        },
+        "learn": {
+          "allowed": [
+            "学"
+          ]
+        },
+        "clipboard": {
+          "allowed": [
+            "剪贴板"
+          ]
+        },
+        "layout": {
+          "allowed": [
+            "布局"
+          ]
+        },
+        "gesture": {
+          "allowed": [
+            "手势"
+          ]
+        },
+        "correction": {
+          "allowed": [
+            "纠正"
+          ],
+          "forbidden": [
+            "更正"
+          ],
+          "note": "纠正 (11) vs 更正 (1 outlier, fixed 2026-09-29). AOSP uses 更正, but the file is not split."
+        }
+      }
+    }
+  }
+}

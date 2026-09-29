@@ -717,6 +717,9 @@ tasks.register('runPureTests', JavaExec) {
     // a renamed/deleted curated class used to false-green the release device gate.
     'tribixbite.cleverkeys.CuratedInstrumentationListTest',
     'tribixbite.cleverkeys.TranslationCoverageDriftTest',
+    // 2026-09-29 translation verification: glossary terminology + constrained-length checks.
+    'tribixbite.cleverkeys.TranslationGlossaryTest',
+    'tribixbite.cleverkeys.TranslationLengthTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
