@@ -739,6 +739,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.FaqContentDriftTest',
     // Import/export/backup failures show a localized reason, never the raw exception text.
     'tribixbite.cleverkeys.IoFailureLocalizationTest',
+    // Command palette catalog: resources keyed by stable command id, in every locale.
+    'tribixbite.cleverkeys.customization.CommandCatalogLocalizationTest',
     // Locale-aware language names (replaced the English-only tables; fa/hu device finding).
     'tribixbite.cleverkeys.LanguageDisplayNamesTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',

@@ -1,7 +1,10 @@
 package tribixbite.cleverkeys.customization
 
 import android.view.KeyEvent
+import androidx.annotation.StringRes
 import tribixbite.cleverkeys.KeyValue
+import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.ResultText
 
 /**
  * Comprehensive registry of ALL available keyboard commands.
@@ -9,6 +12,12 @@ import tribixbite.cleverkeys.KeyValue
  * This registry enumerates every command from KeyValue.kt's getSpecialKeyByName() function,
  * organized into searchable categories. Used by the Short Swipe Customization UI to present
  * the COMPLETE list of available actions to users.
+ *
+ * Display text is localized (2026-09-30): each command's name and description are string
+ * resources `cmd_<id>` / `cmd_<id>_desc` (ids snake-cased; `b(`-style ids spelled out, see
+ * `CommandCatalogLocalizationTest`), and each category's header is `command_category_<cat>`.
+ * The command [Command.name] ids themselves never change: they are persisted in short-swipe
+ * bindings and backups.
  *
  * Categories:
  * - Modifiers (shift, ctrl, alt, meta, fn)
@@ -26,43 +35,46 @@ object CommandRegistry {
     data class Command(
         /** Internal name used in KeyValue.getKeyByName() */
         val name: String,
-        /** Human-readable display name */
-        val displayName: String,
-        /** Short description of what this command does */
-        val description: String,
+        /** Display name, a string resource keyed by [name] (`cmd_<id>`); localized per locale. */
+        @StringRes val nameRes: Int,
+        /** One-line description, `cmd_<id>_desc`; localized per locale. */
+        @StringRes val descriptionRes: Int,
         /** Category for grouping in UI */
         val category: Category,
         /** Symbol shown on keyboard (from KeyValue font) */
         val symbol: String? = null,
-        /** Search keywords for filtering */
+        /**
+         * Search keywords for filtering. English on purpose: they are extra search aids next to
+         * the localized name and description (and the English ones), not user-visible text.
+         */
         val keywords: List<String> = emptyList()
     )
 
     /**
      * Command categories for UI organization.
      */
-    enum class Category(val displayName: String, val sortOrder: Int) {
-        CLIPBOARD("Clipboard", 0),
-        EDITING("Editing", 1),
-        CURSOR("Cursor Movement", 2),
-        NAVIGATION("Navigation", 3),
-        SELECTION("Selection", 4),
-        DELETE("Delete", 5),
-        EVENTS("Keyboard Events", 6),
-        MODIFIERS("Modifiers", 7),
-        FUNCTION_KEYS("Function Keys", 8),
-        SPECIAL_KEYS("Special Keys", 9),
-        MEDIA("Media Controls", 10),
-        SYSTEM("System & Apps", 11),
-        SPACES("Spaces & Formatting", 12),
-        DIACRITICS("Diacritics", 13),
-        DIACRITICS_SLAVONIC("Slavonic Diacritics", 14),
-        DIACRITICS_ARABIC("Arabic Diacritics", 15),
-        HEBREW("Hebrew Marks", 16),
-        TEXT("Text Input", 17),
-        LANGUAGE("Language", 18),
-        TEXT_ACTIONS("Text Actions", 19),
-        TIMESTAMP("Timestamps", 20)
+    enum class Category(@StringRes val labelRes: Int, val sortOrder: Int) {
+        CLIPBOARD(R.string.command_category_clipboard, 0),
+        EDITING(R.string.command_category_editing, 1),
+        CURSOR(R.string.command_category_cursor, 2),
+        NAVIGATION(R.string.command_category_navigation, 3),
+        SELECTION(R.string.command_category_selection, 4),
+        DELETE(R.string.command_category_delete, 5),
+        EVENTS(R.string.command_category_events, 6),
+        MODIFIERS(R.string.command_category_modifiers, 7),
+        FUNCTION_KEYS(R.string.command_category_function_keys, 8),
+        SPECIAL_KEYS(R.string.command_category_special_keys, 9),
+        MEDIA(R.string.command_category_media, 10),
+        SYSTEM(R.string.command_category_system, 11),
+        SPACES(R.string.command_category_spaces, 12),
+        DIACRITICS(R.string.command_category_diacritics, 13),
+        DIACRITICS_SLAVONIC(R.string.command_category_diacritics_slavonic, 14),
+        DIACRITICS_ARABIC(R.string.command_category_diacritics_arabic, 15),
+        HEBREW(R.string.command_category_hebrew, 16),
+        TEXT(R.string.command_category_text, 17),
+        LANGUAGE(R.string.command_category_language, 18),
+        TEXT_ACTIONS(R.string.command_category_text_actions, 19),
+        TIMESTAMP(R.string.command_category_timestamp, 20)
     }
 
     /**
@@ -71,327 +83,326 @@ object CommandRegistry {
      */
     val ALL_COMMANDS: List<Command> = listOf(
         // ========== CLIPBOARD ==========
-        Command("copy", "Copy", "Copy selected text to clipboard", Category.CLIPBOARD,
+        Command("copy", R.string.cmd_copy, R.string.cmd_copy_desc, Category.CLIPBOARD,
             keywords = listOf("copy", "clipboard", "ctrl+c")),
         // #156: Private copy — stores the selection in CleverKeys' clipboard only, never the OS clipboard.
-        Command("copy_private", "Private Copy",
-            "Copy selection to CleverKeys only — never the system clipboard", Category.CLIPBOARD,
+        Command("copy_private", R.string.cmd_copy_private, R.string.cmd_copy_private_desc, Category.CLIPBOARD,
             keywords = listOf("private", "copy", "clipboard", "secure", "lock")),
-        Command("paste", "Paste", "Paste from clipboard", Category.CLIPBOARD,
+        Command("paste", R.string.cmd_paste, R.string.cmd_paste_desc, Category.CLIPBOARD,
             keywords = listOf("paste", "clipboard", "ctrl+v")),
-        Command("cut", "Cut", "Cut selected text to clipboard", Category.CLIPBOARD,
+        Command("cut", R.string.cmd_cut, R.string.cmd_cut_desc, Category.CLIPBOARD,
             keywords = listOf("cut", "clipboard", "ctrl+x")),
-        Command("selectAll", "Select All", "Select all text in field", Category.CLIPBOARD,
+        Command("selectAll", R.string.cmd_select_all, R.string.cmd_select_all_desc, Category.CLIPBOARD,
             keywords = listOf("select", "all", "ctrl+a")),
-        Command("pasteAsPlainText", "Paste Plain", "Paste as plain text (no formatting)", Category.CLIPBOARD,
+        Command("pasteAsPlainText", R.string.cmd_paste_as_plain_text, R.string.cmd_paste_as_plain_text_desc, Category.CLIPBOARD,
             keywords = listOf("paste", "plain", "text", "no format")),
-        Command("shareText", "Share", "Share selected text", Category.CLIPBOARD,
+        Command("shareText", R.string.cmd_share_text, R.string.cmd_share_text_desc, Category.CLIPBOARD,
             keywords = listOf("share", "send")),
         // Pinned clipboard entry insertion — dynamically pastes the Nth pinned entry.
         // These dispatch by NAME (CustomShortSwipeExecutor), not by KeyValue, so each
         // declares a symbol — without one the palette label degraded to "past" (name.take(4)).
-        Command("paste_pinned_1", "Paste Pin #1", "Insert 1st pinned clipboard entry", Category.CLIPBOARD,
+        Command("paste_pinned_1", R.string.cmd_paste_pinned_1, R.string.cmd_paste_pinned_1_desc, Category.CLIPBOARD,
             symbol = "📌1",
             keywords = listOf("pin", "pinned", "clipboard", "paste", "1", "first")),
-        Command("paste_pinned_2", "Paste Pin #2", "Insert 2nd pinned clipboard entry", Category.CLIPBOARD,
+        Command("paste_pinned_2", R.string.cmd_paste_pinned_2, R.string.cmd_paste_pinned_2_desc, Category.CLIPBOARD,
             symbol = "📌2",
             keywords = listOf("pin", "pinned", "clipboard", "paste", "2", "second")),
-        Command("paste_pinned_3", "Paste Pin #3", "Insert 3rd pinned clipboard entry", Category.CLIPBOARD,
+        Command("paste_pinned_3", R.string.cmd_paste_pinned_3, R.string.cmd_paste_pinned_3_desc, Category.CLIPBOARD,
             symbol = "📌3",
             keywords = listOf("pin", "pinned", "clipboard", "paste", "3", "third")),
-        Command("paste_pinned_4", "Paste Pin #4", "Insert 4th pinned clipboard entry", Category.CLIPBOARD,
+        Command("paste_pinned_4", R.string.cmd_paste_pinned_4, R.string.cmd_paste_pinned_4_desc, Category.CLIPBOARD,
             symbol = "📌4",
             keywords = listOf("pin", "pinned", "clipboard", "paste", "4", "fourth")),
-        Command("paste_pinned_5", "Paste Pin #5", "Insert 5th pinned clipboard entry", Category.CLIPBOARD,
+        Command("paste_pinned_5", R.string.cmd_paste_pinned_5, R.string.cmd_paste_pinned_5_desc, Category.CLIPBOARD,
             symbol = "📌5",
             keywords = listOf("pin", "pinned", "clipboard", "paste", "5", "fifth")),
 
         // ========== EDITING ==========
-        Command("undo", "Undo", "Undo last action", Category.EDITING,
+        Command("undo", R.string.cmd_undo, R.string.cmd_undo_desc, Category.EDITING,
             keywords = listOf("undo", "ctrl+z", "back", "revert")),
-        Command("redo", "Redo", "Redo last undone action", Category.EDITING,
+        Command("redo", R.string.cmd_redo, R.string.cmd_redo_desc, Category.EDITING,
             keywords = listOf("redo", "ctrl+y", "forward")),
-        Command("clear", "Clear", "Erase entire field (select all + delete)", Category.EDITING,
+        Command("clear", R.string.cmd_clear, R.string.cmd_clear_desc, Category.EDITING,
             keywords = listOf("clear", "erase", "wipe", "empty", "select all delete")),
-        Command("delete_word", "Delete Word", "Delete word before cursor", Category.DELETE,
+        Command("delete_word", R.string.cmd_delete_word, R.string.cmd_delete_word_desc, Category.DELETE,
             keywords = listOf("delete", "word", "backspace", "ctrl+backspace")),
-        Command("forward_delete_word", "Forward Delete Word", "Delete word after cursor", Category.DELETE,
+        Command("forward_delete_word", R.string.cmd_forward_delete_word, R.string.cmd_forward_delete_word_desc, Category.DELETE,
             keywords = listOf("delete", "word", "forward", "ctrl+delete")),
-        Command("delete_last_word", "Delete Last Word", "Smart delete last auto-inserted or typed word", Category.DELETE,
+        Command("delete_last_word", R.string.cmd_delete_last_word, R.string.cmd_delete_last_word_desc, Category.DELETE,
             keywords = listOf("delete", "word", "last", "smart")),
-        Command("backspace", "Backspace", "Delete character before cursor", Category.DELETE,
+        Command("backspace", R.string.cmd_backspace, R.string.cmd_backspace_desc, Category.DELETE,
             keywords = listOf("backspace", "delete", "back")),
-        Command("delete", "Delete", "Delete character after cursor", Category.DELETE,
+        Command("delete", R.string.cmd_delete, R.string.cmd_delete_desc, Category.DELETE,
             keywords = listOf("delete", "forward", "del")),
 
         // ========== CURSOR MOVEMENT ==========
-        Command("cursor_left", "Cursor Left", "Move cursor one character left", Category.CURSOR,
+        Command("cursor_left", R.string.cmd_cursor_left, R.string.cmd_cursor_left_desc, Category.CURSOR,
             keywords = listOf("cursor", "left", "arrow", "move")),
-        Command("cursor_right", "Cursor Right", "Move cursor one character right", Category.CURSOR,
+        Command("cursor_right", R.string.cmd_cursor_right, R.string.cmd_cursor_right_desc, Category.CURSOR,
             keywords = listOf("cursor", "right", "arrow", "move")),
-        Command("cursor_up", "Cursor Up", "Move cursor one line up", Category.CURSOR,
+        Command("cursor_up", R.string.cmd_cursor_up, R.string.cmd_cursor_up_desc, Category.CURSOR,
             keywords = listOf("cursor", "up", "arrow", "move")),
-        Command("cursor_down", "Cursor Down", "Move cursor one line down", Category.CURSOR,
+        Command("cursor_down", R.string.cmd_cursor_down, R.string.cmd_cursor_down_desc, Category.CURSOR,
             keywords = listOf("cursor", "down", "arrow", "move")),
-        Command("left", "Arrow Left", "Send left arrow key event", Category.CURSOR,
+        Command("left", R.string.cmd_left, R.string.cmd_left_desc, Category.CURSOR,
             keywords = listOf("left", "arrow", "dpad")),
-        Command("right", "Arrow Right", "Send right arrow key event", Category.CURSOR,
+        Command("right", R.string.cmd_right, R.string.cmd_right_desc, Category.CURSOR,
             keywords = listOf("right", "arrow", "dpad")),
-        Command("up", "Arrow Up", "Send up arrow key event", Category.CURSOR,
+        Command("up", R.string.cmd_up, R.string.cmd_up_desc, Category.CURSOR,
             keywords = listOf("up", "arrow", "dpad")),
-        Command("down", "Arrow Down", "Send down arrow key event", Category.CURSOR,
+        Command("down", R.string.cmd_down, R.string.cmd_down_desc, Category.CURSOR,
             keywords = listOf("down", "arrow", "dpad")),
 
         // ========== NAVIGATION ==========
-        Command("home", "Home", "Move cursor to line start", Category.NAVIGATION,
+        Command("home", R.string.cmd_home, R.string.cmd_home_desc, Category.NAVIGATION,
             keywords = listOf("home", "line", "start", "beginning")),
-        Command("end", "End", "Move cursor to line end", Category.NAVIGATION,
+        Command("end", R.string.cmd_end, R.string.cmd_end_desc, Category.NAVIGATION,
             keywords = listOf("end", "line", "end")),
-        Command("doc_home", "Document Start", "Move cursor to document start (Ctrl+Home)", Category.NAVIGATION,
+        Command("doc_home", R.string.cmd_doc_home, R.string.cmd_doc_home_desc, Category.NAVIGATION,
             keywords = listOf("home", "document", "start", "beginning", "top")),
-        Command("doc_end", "Document End", "Move cursor to document end (Ctrl+End)", Category.NAVIGATION,
+        Command("doc_end", R.string.cmd_doc_end, R.string.cmd_doc_end_desc, Category.NAVIGATION,
             keywords = listOf("end", "document", "bottom")),
-        Command("page_up", "Page Up", "Scroll/move one page up", Category.NAVIGATION,
+        Command("page_up", R.string.cmd_page_up, R.string.cmd_page_up_desc, Category.NAVIGATION,
             keywords = listOf("page", "up", "scroll")),
-        Command("page_down", "Page Down", "Scroll/move one page down", Category.NAVIGATION,
+        Command("page_down", R.string.cmd_page_down, R.string.cmd_page_down_desc, Category.NAVIGATION,
             keywords = listOf("page", "down", "scroll")),
 
         // ========== SELECTION ==========
-        Command("selection_cursor_left", "Extend Selection Left", "Extend selection to the left", Category.SELECTION,
+        Command("selection_cursor_left", R.string.cmd_selection_cursor_left, R.string.cmd_selection_cursor_left_desc, Category.SELECTION,
             keywords = listOf("select", "left", "extend", "shift")),
-        Command("selection_cursor_right", "Extend Selection Right", "Extend selection to the right", Category.SELECTION,
+        Command("selection_cursor_right", R.string.cmd_selection_cursor_right, R.string.cmd_selection_cursor_right_desc, Category.SELECTION,
             keywords = listOf("select", "right", "extend", "shift")),
-        Command("selection_cancel", "Cancel Selection", "Cancel current selection", Category.SELECTION,
+        Command("selection_cancel", R.string.cmd_selection_cancel, R.string.cmd_selection_cancel_desc, Category.SELECTION,
             keywords = listOf("select", "cancel", "deselect", "esc")),
 
         // ========== KEYBOARD EVENTS ==========
-        Command("config", "Settings", "Open keyboard settings", Category.EVENTS,
+        Command("config", R.string.cmd_config, R.string.cmd_config_desc, Category.EVENTS,
             keywords = listOf("settings", "config", "configure", "options")),
-        Command("switch_text", "Switch to Text", "Switch to text keyboard layout", Category.EVENTS,
+        Command("switch_text", R.string.cmd_switch_text, R.string.cmd_switch_text_desc, Category.EVENTS,
             keywords = listOf("switch", "text", "abc", "letters")),
-        Command("switch_numeric", "Switch to Numbers", "Switch to numeric/symbol keyboard", Category.EVENTS,
+        Command("switch_numeric", R.string.cmd_switch_numeric, R.string.cmd_switch_numeric_desc, Category.EVENTS,
             keywords = listOf("switch", "numbers", "numeric", "123", "symbols")),
-        Command("switch_emoji", "Switch to Emoji", "Switch to emoji keyboard", Category.EVENTS,
+        Command("switch_emoji", R.string.cmd_switch_emoji, R.string.cmd_switch_emoji_desc, Category.EVENTS,
             keywords = listOf("switch", "emoji", "emoticon", "smiley")),
-        Command("switch_back_emoji", "Back from Emoji", "Return from emoji keyboard", Category.EVENTS,
+        Command("switch_back_emoji", R.string.cmd_switch_back_emoji, R.string.cmd_switch_back_emoji_desc, Category.EVENTS,
             keywords = listOf("switch", "back", "emoji", "abc")),
-        Command("switch_clipboard", "Clipboard History", "Open clipboard history", Category.EVENTS,
+        Command("switch_clipboard", R.string.cmd_switch_clipboard, R.string.cmd_switch_clipboard_desc, Category.EVENTS,
             keywords = listOf("clipboard", "history", "paste", "recent")),
-        Command("switch_back_clipboard", "Back from Clipboard", "Return from clipboard", Category.EVENTS,
+        Command("switch_back_clipboard", R.string.cmd_switch_back_clipboard, R.string.cmd_switch_back_clipboard_desc, Category.EVENTS,
             keywords = listOf("switch", "back", "clipboard", "abc")),
-        Command("switch_forward", "Next Layout", "Switch to next keyboard layout", Category.EVENTS,
+        Command("switch_forward", R.string.cmd_switch_forward, R.string.cmd_switch_forward_desc, Category.EVENTS,
             keywords = listOf("switch", "next", "layout", "forward")),
-        Command("switch_backward", "Previous Layout", "Switch to previous keyboard layout", Category.EVENTS,
+        Command("switch_backward", R.string.cmd_switch_backward, R.string.cmd_switch_backward_desc, Category.EVENTS,
             keywords = listOf("switch", "previous", "layout", "back")),
-        Command("switch_greekmath", "Greek/Math", "Switch to Greek/Math symbols", Category.EVENTS,
+        Command("switch_greekmath", R.string.cmd_switch_greekmath, R.string.cmd_switch_greekmath_desc, Category.EVENTS,
             keywords = listOf("greek", "math", "symbols", "pi")),
-        Command("change_method", "Change Keyboard", "Show input method picker", Category.EVENTS,
+        Command("change_method", R.string.cmd_change_method, R.string.cmd_change_method_desc, Category.EVENTS,
             keywords = listOf("change", "keyboard", "input", "method", "picker", "switch")),
-        Command("change_method_prev", "Previous Keyboard", "Switch to previous input method", Category.EVENTS,
+        Command("change_method_prev", R.string.cmd_change_method_prev, R.string.cmd_change_method_prev_desc, Category.EVENTS,
             keywords = listOf("change", "keyboard", "previous", "auto")),
-        Command("action", "Action", "Editor action (Go/Search/Send)", Category.EVENTS,
+        Command("action", R.string.cmd_action, R.string.cmd_action_desc, Category.EVENTS,
             keywords = listOf("action", "go", "search", "send", "enter")),
-        Command("capslock", "Caps Lock", "Toggle caps lock", Category.EVENTS,
+        Command("capslock", R.string.cmd_capslock, R.string.cmd_capslock_desc, Category.EVENTS,
             keywords = listOf("caps", "lock", "uppercase", "capital")),
-        Command("voice_typing", "Voice Typing", "Activate voice input", Category.EVENTS,
+        Command("voice_typing", R.string.cmd_voice_typing, R.string.cmd_voice_typing_desc, Category.EVENTS,
             keywords = listOf("voice", "speech", "dictate", "microphone")),
-        Command("voice_typing_chooser", "Voice Typing Picker", "Choose voice input method", Category.EVENTS,
+        Command("voice_typing_chooser", R.string.cmd_voice_typing_chooser, R.string.cmd_voice_typing_chooser_desc, Category.EVENTS,
             keywords = listOf("voice", "speech", "picker", "choose")),
 
         // ========== MODIFIERS ==========
-        Command("shift", "Shift", "Shift modifier (uppercase/symbols)", Category.MODIFIERS,
+        Command("shift", R.string.cmd_shift, R.string.cmd_shift_desc, Category.MODIFIERS,
             keywords = listOf("shift", "uppercase", "capital")),
-        Command("ctrl", "Ctrl", "Control modifier", Category.MODIFIERS,
+        Command("ctrl", R.string.cmd_ctrl, R.string.cmd_ctrl_desc, Category.MODIFIERS,
             keywords = listOf("ctrl", "control", "modifier")),
-        Command("alt", "Alt", "Alt modifier", Category.MODIFIERS,
+        Command("alt", R.string.cmd_alt, R.string.cmd_alt_desc, Category.MODIFIERS,
             keywords = listOf("alt", "alternate", "modifier")),
-        Command("meta", "Meta", "Meta/Windows modifier", Category.MODIFIERS,
+        Command("meta", R.string.cmd_meta, R.string.cmd_meta_desc, Category.MODIFIERS,
             keywords = listOf("meta", "windows", "super", "modifier")),
-        Command("fn", "Fn", "Function modifier", Category.MODIFIERS,
+        Command("fn", R.string.cmd_fn, R.string.cmd_fn_desc, Category.MODIFIERS,
             keywords = listOf("fn", "function", "modifier")),
 
         // ========== FUNCTION KEYS ==========
-        Command("f1", "F1", "Function key F1", Category.FUNCTION_KEYS,
+        Command("f1", R.string.cmd_f1, R.string.cmd_f1_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f1", "function", "help")),
-        Command("f2", "F2", "Function key F2", Category.FUNCTION_KEYS,
+        Command("f2", R.string.cmd_f2, R.string.cmd_f2_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f2", "function", "rename")),
-        Command("f3", "F3", "Function key F3", Category.FUNCTION_KEYS,
+        Command("f3", R.string.cmd_f3, R.string.cmd_f3_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f3", "function", "find")),
-        Command("f4", "F4", "Function key F4", Category.FUNCTION_KEYS,
+        Command("f4", R.string.cmd_f4, R.string.cmd_f4_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f4", "function", "close")),
-        Command("f5", "F5", "Function key F5", Category.FUNCTION_KEYS,
+        Command("f5", R.string.cmd_f5, R.string.cmd_f5_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f5", "function", "refresh")),
-        Command("f6", "F6", "Function key F6", Category.FUNCTION_KEYS,
+        Command("f6", R.string.cmd_f6, R.string.cmd_f6_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f6", "function")),
-        Command("f7", "F7", "Function key F7", Category.FUNCTION_KEYS,
+        Command("f7", R.string.cmd_f7, R.string.cmd_f7_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f7", "function", "spell")),
-        Command("f8", "F8", "Function key F8", Category.FUNCTION_KEYS,
+        Command("f8", R.string.cmd_f8, R.string.cmd_f8_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f8", "function")),
-        Command("f9", "F9", "Function key F9", Category.FUNCTION_KEYS,
+        Command("f9", R.string.cmd_f9, R.string.cmd_f9_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f9", "function")),
-        Command("f10", "F10", "Function key F10", Category.FUNCTION_KEYS,
+        Command("f10", R.string.cmd_f10, R.string.cmd_f10_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f10", "function", "menu")),
-        Command("f11", "F11", "Function key F11", Category.FUNCTION_KEYS,
+        Command("f11", R.string.cmd_f11, R.string.cmd_f11_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f11", "function", "fullscreen")),
-        Command("f12", "F12", "Function key F12", Category.FUNCTION_KEYS,
+        Command("f12", R.string.cmd_f12, R.string.cmd_f12_desc, Category.FUNCTION_KEYS,
             keywords = listOf("f12", "function", "devtools")),
 
         // ========== SPECIAL KEYS ==========
-        Command("esc", "Escape", "Escape key", Category.SPECIAL_KEYS,
+        Command("esc", R.string.cmd_esc, R.string.cmd_esc_desc, Category.SPECIAL_KEYS,
             keywords = listOf("esc", "escape", "cancel", "close")),
-        Command("enter", "Enter", "Enter/Return key", Category.SPECIAL_KEYS,
+        Command("enter", R.string.cmd_enter, R.string.cmd_enter_desc, Category.SPECIAL_KEYS,
             keywords = listOf("enter", "return", "newline")),
-        Command("tab", "Tab", "Tab key", Category.SPECIAL_KEYS,
+        Command("tab", R.string.cmd_tab, R.string.cmd_tab_desc, Category.SPECIAL_KEYS,
             keywords = listOf("tab", "indent", "next")),
-        Command("menu", "Menu", "Context menu key", Category.SPECIAL_KEYS,
+        Command("menu", R.string.cmd_menu, R.string.cmd_menu_desc, Category.SPECIAL_KEYS,
             keywords = listOf("menu", "context", "right click")),
-        Command("insert", "Insert", "Insert key (toggle overwrite)", Category.SPECIAL_KEYS,
+        Command("insert", R.string.cmd_insert, R.string.cmd_insert_desc, Category.SPECIAL_KEYS,
             keywords = listOf("insert", "ins", "overwrite")),
-        Command("scroll_lock", "Scroll Lock", "Scroll lock key", Category.SPECIAL_KEYS,
+        Command("scroll_lock", R.string.cmd_scroll_lock, R.string.cmd_scroll_lock_desc, Category.SPECIAL_KEYS,
             keywords = listOf("scroll", "lock")),
-        Command("compose", "Compose", "Compose key (for accents)", Category.SPECIAL_KEYS,
+        Command("compose", R.string.cmd_compose, R.string.cmd_compose_desc, Category.SPECIAL_KEYS,
             keywords = listOf("compose", "accent", "dead key")),
-        Command("compose_cancel", "Cancel Compose", "Cancel compose sequence", Category.SPECIAL_KEYS,
+        Command("compose_cancel", R.string.cmd_compose_cancel, R.string.cmd_compose_cancel_desc, Category.SPECIAL_KEYS,
             keywords = listOf("compose", "cancel")),
 
         // ========== SPACES & FORMATTING ==========
-        Command("space", "Space", "Regular space character", Category.SPACES,
+        Command("space", R.string.cmd_space, R.string.cmd_space_desc, Category.SPACES,
             keywords = listOf("space", "blank")),
-        Command("nbsp", "Non-Breaking Space", "Non-breaking space (no line wrap)", Category.SPACES,
+        Command("nbsp", R.string.cmd_nbsp, R.string.cmd_nbsp_desc, Category.SPACES,
             keywords = listOf("nbsp", "space", "non-breaking", "no wrap")),
-        Command("nnbsp", "Narrow NBSP", "Narrow non-breaking space", Category.SPACES,
+        Command("nnbsp", R.string.cmd_nnbsp, R.string.cmd_nnbsp_desc, Category.SPACES,
             keywords = listOf("nnbsp", "narrow", "space", "thin")),
-        Command("\\t", "Tab Char", "Tab character", Category.SPACES,
+        Command("\\t", R.string.cmd_backslash_t, R.string.cmd_backslash_t_desc, Category.SPACES,
             keywords = listOf("tab", "character", "indent")),
-        Command("\\n", "Newline", "Newline character", Category.SPACES,
+        Command("\\n", R.string.cmd_backslash_n, R.string.cmd_backslash_n_desc, Category.SPACES,
             keywords = listOf("newline", "line break", "enter")),
-        Command("zwj", "ZWJ", "Zero-width joiner (ligature)", Category.SPACES,
+        Command("zwj", R.string.cmd_zwj, R.string.cmd_zwj_desc, Category.SPACES,
             keywords = listOf("zwj", "zero width", "joiner", "ligature")),
-        Command("zwnj", "ZWNJ", "Zero-width non-joiner (halfspace)", Category.SPACES,
+        Command("zwnj", R.string.cmd_zwnj, R.string.cmd_zwnj_desc, Category.SPACES,
             keywords = listOf("zwnj", "zero width", "non joiner", "halfspace")),
-        Command("lrm", "LRM", "Left-to-right mark", Category.SPACES,
+        Command("lrm", R.string.cmd_lrm, R.string.cmd_lrm_desc, Category.SPACES,
             keywords = listOf("lrm", "left to right", "bidi", "direction")),
-        Command("rlm", "RLM", "Right-to-left mark", Category.SPACES,
+        Command("rlm", R.string.cmd_rlm, R.string.cmd_rlm_desc, Category.SPACES,
             keywords = listOf("rlm", "right to left", "bidi", "direction")),
 
         // ========== DIACRITICS (Dead Keys) ==========
-        Command("accent_aigu", "Acute Accent", "Dead key for acute accent (é)", Category.DIACRITICS,
+        Command("accent_aigu", R.string.cmd_accent_aigu, R.string.cmd_accent_aigu_desc, Category.DIACRITICS,
             keywords = listOf("accent", "acute", "aigu", "diacritic")),
-        Command("accent_grave", "Grave Accent", "Dead key for grave accent (è)", Category.DIACRITICS,
+        Command("accent_grave", R.string.cmd_accent_grave, R.string.cmd_accent_grave_desc, Category.DIACRITICS,
             keywords = listOf("accent", "grave", "diacritic")),
-        Command("accent_circonflexe", "Circumflex", "Dead key for circumflex (ê)", Category.DIACRITICS,
+        Command("accent_circonflexe", R.string.cmd_accent_circonflexe, R.string.cmd_accent_circonflexe_desc, Category.DIACRITICS,
             keywords = listOf("accent", "circumflex", "hat", "diacritic")),
-        Command("accent_tilde", "Tilde", "Dead key for tilde (ñ)", Category.DIACRITICS,
+        Command("accent_tilde", R.string.cmd_accent_tilde, R.string.cmd_accent_tilde_desc, Category.DIACRITICS,
             keywords = listOf("accent", "tilde", "diacritic")),
-        Command("accent_trema", "Umlaut", "Dead key for umlaut/diaeresis (ë)", Category.DIACRITICS,
+        Command("accent_trema", R.string.cmd_accent_trema, R.string.cmd_accent_trema_desc, Category.DIACRITICS,
             keywords = listOf("accent", "umlaut", "trema", "diaeresis", "diacritic")),
-        Command("accent_cedille", "Cedilla", "Dead key for cedilla (ç)", Category.DIACRITICS,
+        Command("accent_cedille", R.string.cmd_accent_cedille, R.string.cmd_accent_cedille_desc, Category.DIACRITICS,
             keywords = listOf("accent", "cedilla", "diacritic")),
-        Command("accent_caron", "Caron", "Dead key for caron/háček (č)", Category.DIACRITICS,
+        Command("accent_caron", R.string.cmd_accent_caron, R.string.cmd_accent_caron_desc, Category.DIACRITICS,
             keywords = listOf("accent", "caron", "hacek", "diacritic")),
-        Command("accent_macron", "Macron", "Dead key for macron (ā)", Category.DIACRITICS,
+        Command("accent_macron", R.string.cmd_accent_macron, R.string.cmd_accent_macron_desc, Category.DIACRITICS,
             keywords = listOf("accent", "macron", "bar", "diacritic")),
-        Command("accent_ring", "Ring", "Dead key for ring (å)", Category.DIACRITICS,
+        Command("accent_ring", R.string.cmd_accent_ring, R.string.cmd_accent_ring_desc, Category.DIACRITICS,
             keywords = listOf("accent", "ring", "circle", "diacritic")),
-        Command("accent_ogonek", "Ogonek", "Dead key for ogonek (ą)", Category.DIACRITICS,
+        Command("accent_ogonek", R.string.cmd_accent_ogonek, R.string.cmd_accent_ogonek_desc, Category.DIACRITICS,
             keywords = listOf("accent", "ogonek", "tail", "diacritic")),
-        Command("accent_dot_above", "Dot Above", "Dead key for dot above (ż)", Category.DIACRITICS,
+        Command("accent_dot_above", R.string.cmd_accent_dot_above, R.string.cmd_accent_dot_above_desc, Category.DIACRITICS,
             keywords = listOf("accent", "dot", "above", "diacritic")),
-        Command("accent_dot_below", "Dot Below", "Dead key for dot below (ḍ)", Category.DIACRITICS,
+        Command("accent_dot_below", R.string.cmd_accent_dot_below, R.string.cmd_accent_dot_below_desc, Category.DIACRITICS,
             keywords = listOf("accent", "dot", "below", "diacritic")),
-        Command("accent_double_aigu", "Double Acute", "Dead key for double acute (ő)", Category.DIACRITICS,
+        Command("accent_double_aigu", R.string.cmd_accent_double_aigu, R.string.cmd_accent_double_aigu_desc, Category.DIACRITICS,
             keywords = listOf("accent", "double", "acute", "diacritic")),
-        Command("accent_breve", "Breve", "Dead key for breve (ă)", Category.DIACRITICS,
+        Command("accent_breve", R.string.cmd_accent_breve, R.string.cmd_accent_breve_desc, Category.DIACRITICS,
             keywords = listOf("accent", "breve", "short", "diacritic")),
-        Command("accent_slash", "Slash", "Dead key for slash (ø)", Category.DIACRITICS,
+        Command("accent_slash", R.string.cmd_accent_slash, R.string.cmd_accent_slash_desc, Category.DIACRITICS,
             keywords = listOf("accent", "slash", "stroke", "diacritic")),
-        Command("accent_bar", "Bar", "Dead key for bar (đ)", Category.DIACRITICS,
+        Command("accent_bar", R.string.cmd_accent_bar, R.string.cmd_accent_bar_desc, Category.DIACRITICS,
             keywords = listOf("accent", "bar", "stroke", "diacritic")),
-        Command("accent_horn", "Horn", "Dead key for horn (ơ)", Category.DIACRITICS,
+        Command("accent_horn", R.string.cmd_accent_horn, R.string.cmd_accent_horn_desc, Category.DIACRITICS,
             keywords = listOf("accent", "horn", "vietnamese", "diacritic")),
-        Command("accent_hook_above", "Hook Above", "Dead key for hook above (ả)", Category.DIACRITICS,
+        Command("accent_hook_above", R.string.cmd_accent_hook_above, R.string.cmd_accent_hook_above_desc, Category.DIACRITICS,
             keywords = listOf("accent", "hook", "above", "vietnamese", "diacritic")),
-        Command("accent_double_grave", "Double Grave", "Dead key for double grave (ȁ)", Category.DIACRITICS,
+        Command("accent_double_grave", R.string.cmd_accent_double_grave, R.string.cmd_accent_double_grave_desc, Category.DIACRITICS,
             keywords = listOf("accent", "double", "grave", "diacritic")),
-        Command("accent_arrow_right", "Arrow Right", "Dead key for rightward arrow (a⃗)", Category.DIACRITICS,
+        Command("accent_arrow_right", R.string.cmd_accent_arrow_right, R.string.cmd_accent_arrow_right_desc, Category.DIACRITICS,
             keywords = listOf("accent", "arrow", "vector", "diacritic")),
-        Command("superscript", "Superscript", "Modifier for superscript (¹²³)", Category.DIACRITICS,
+        Command("superscript", R.string.cmd_superscript, R.string.cmd_superscript_desc, Category.DIACRITICS,
             keywords = listOf("superscript", "sup", "exponent", "power")),
-        Command("subscript", "Subscript", "Modifier for subscript (₁₂₃)", Category.DIACRITICS,
+        Command("subscript", R.string.cmd_subscript, R.string.cmd_subscript_desc, Category.DIACRITICS,
             keywords = listOf("subscript", "sub", "index")),
-        Command("ordinal", "Ordinal", "Modifier for ordinal indicators (º)", Category.DIACRITICS,
+        Command("ordinal", R.string.cmd_ordinal, R.string.cmd_ordinal_desc, Category.DIACRITICS,
             keywords = listOf("ordinal", "ord", "degree")),
-        Command("arrows", "Arrows", "Modifier for arrow symbols", Category.DIACRITICS,
+        Command("arrows", R.string.cmd_arrows, R.string.cmd_arrows_desc, Category.DIACRITICS,
             keywords = listOf("arrows", "modifier")),
-        Command("box", "Box Drawing", "Modifier for box drawing characters", Category.DIACRITICS,
+        Command("box", R.string.cmd_box, R.string.cmd_box_desc, Category.DIACRITICS,
             keywords = listOf("box", "drawing", "lines")),
 
         // ========== COMBINING DIACRITICS (Type characters with accents) ==========
-        Command("combining_aigu", "Combining Acute", "Add acute accent to previous char", Category.DIACRITICS,
+        Command("combining_aigu", R.string.cmd_combining_aigu, R.string.cmd_combining_aigu_desc, Category.DIACRITICS,
             keywords = listOf("combining", "acute", "accent")),
-        Command("combining_grave", "Combining Grave", "Add grave accent to previous char", Category.DIACRITICS,
+        Command("combining_grave", R.string.cmd_combining_grave, R.string.cmd_combining_grave_desc, Category.DIACRITICS,
             keywords = listOf("combining", "grave", "accent")),
-        Command("combining_circonflexe", "Combining Circumflex", "Add circumflex to previous char", Category.DIACRITICS,
+        Command("combining_circonflexe", R.string.cmd_combining_circonflexe, R.string.cmd_combining_circonflexe_desc, Category.DIACRITICS,
             keywords = listOf("combining", "circumflex", "hat")),
-        Command("combining_tilde", "Combining Tilde", "Add tilde to previous char", Category.DIACRITICS,
+        Command("combining_tilde", R.string.cmd_combining_tilde, R.string.cmd_combining_tilde_desc, Category.DIACRITICS,
             keywords = listOf("combining", "tilde")),
-        Command("combining_trema", "Combining Umlaut", "Add umlaut to previous char", Category.DIACRITICS,
+        Command("combining_trema", R.string.cmd_combining_trema, R.string.cmd_combining_trema_desc, Category.DIACRITICS,
             keywords = listOf("combining", "umlaut", "trema", "diaeresis")),
-        Command("combining_cedille", "Combining Cedilla", "Add cedilla to previous char", Category.DIACRITICS,
+        Command("combining_cedille", R.string.cmd_combining_cedille, R.string.cmd_combining_cedille_desc, Category.DIACRITICS,
             keywords = listOf("combining", "cedilla")),
-        Command("combining_caron", "Combining Caron", "Add caron to previous char", Category.DIACRITICS,
+        Command("combining_caron", R.string.cmd_combining_caron, R.string.cmd_combining_caron_desc, Category.DIACRITICS,
             keywords = listOf("combining", "caron", "hacek")),
-        Command("combining_macron", "Combining Macron", "Add macron to previous char", Category.DIACRITICS,
+        Command("combining_macron", R.string.cmd_combining_macron, R.string.cmd_combining_macron_desc, Category.DIACRITICS,
             keywords = listOf("combining", "macron", "bar")),
-        Command("combining_ring", "Combining Ring", "Add ring above to previous char", Category.DIACRITICS,
+        Command("combining_ring", R.string.cmd_combining_ring, R.string.cmd_combining_ring_desc, Category.DIACRITICS,
             keywords = listOf("combining", "ring", "circle")),
-        Command("combining_ogonek", "Combining Ogonek", "Add ogonek to previous char", Category.DIACRITICS,
+        Command("combining_ogonek", R.string.cmd_combining_ogonek, R.string.cmd_combining_ogonek_desc, Category.DIACRITICS,
             keywords = listOf("combining", "ogonek", "tail")),
-        Command("combining_dot_above", "Combining Dot Above", "Add dot above to previous char", Category.DIACRITICS,
+        Command("combining_dot_above", R.string.cmd_combining_dot_above, R.string.cmd_combining_dot_above_desc, Category.DIACRITICS,
             keywords = listOf("combining", "dot", "above")),
-        Command("combining_dot_below", "Combining Dot Below", "Add dot below to previous char", Category.DIACRITICS,
+        Command("combining_dot_below", R.string.cmd_combining_dot_below, R.string.cmd_combining_dot_below_desc, Category.DIACRITICS,
             keywords = listOf("combining", "dot", "below")),
-        Command("combining_double_aigu", "Combining Double Acute", "Add double acute to previous char", Category.DIACRITICS,
+        Command("combining_double_aigu", R.string.cmd_combining_double_aigu, R.string.cmd_combining_double_aigu_desc, Category.DIACRITICS,
             keywords = listOf("combining", "double", "acute")),
-        Command("combining_breve", "Combining Breve", "Add breve to previous char", Category.DIACRITICS,
+        Command("combining_breve", R.string.cmd_combining_breve, R.string.cmd_combining_breve_desc, Category.DIACRITICS,
             keywords = listOf("combining", "breve", "short")),
-        Command("combining_slash", "Combining Slash", "Add slash through previous char", Category.DIACRITICS,
+        Command("combining_slash", R.string.cmd_combining_slash, R.string.cmd_combining_slash_desc, Category.DIACRITICS,
             keywords = listOf("combining", "slash", "stroke")),
-        Command("combining_bar", "Combining Bar", "Add bar through previous char", Category.DIACRITICS,
+        Command("combining_bar", R.string.cmd_combining_bar, R.string.cmd_combining_bar_desc, Category.DIACRITICS,
             keywords = listOf("combining", "bar", "stroke")),
-        Command("combining_horn", "Combining Horn", "Add horn to previous char", Category.DIACRITICS,
+        Command("combining_horn", R.string.cmd_combining_horn, R.string.cmd_combining_horn_desc, Category.DIACRITICS,
             keywords = listOf("combining", "horn", "vietnamese")),
-        Command("combining_hook_above", "Combining Hook Above", "Add hook above to previous char", Category.DIACRITICS,
+        Command("combining_hook_above", R.string.cmd_combining_hook_above, R.string.cmd_combining_hook_above_desc, Category.DIACRITICS,
             keywords = listOf("combining", "hook", "vietnamese")),
-        Command("combining_arrow_right", "Combining Arrow Right", "Add rightward arrow to previous char", Category.DIACRITICS,
+        Command("combining_arrow_right", R.string.cmd_combining_arrow_right, R.string.cmd_combining_arrow_right_desc, Category.DIACRITICS,
             keywords = listOf("combining", "arrow", "vector")),
 
         // NOTE: compose, compose_cancel, doc_home, doc_end already defined above - removed duplicates
 
         // ========== BIDI (Bidirectional Text) ==========
-        Command("b(", "Bidi Open Paren", "Bidirectional open parenthesis (displays as close)", Category.TEXT,
+        Command("b(", R.string.cmd_bidi_paren_open, R.string.cmd_bidi_paren_open_desc, Category.TEXT,
             keywords = listOf("bidi", "parenthesis", "rtl", "arabic", "hebrew")),
-        Command("b)", "Bidi Close Paren", "Bidirectional close parenthesis (displays as open)", Category.TEXT,
+        Command("b)", R.string.cmd_bidi_paren_close, R.string.cmd_bidi_paren_close_desc, Category.TEXT,
             keywords = listOf("bidi", "parenthesis", "rtl")),
-        Command("b[", "Bidi Open Bracket", "Bidirectional open bracket", Category.TEXT,
+        Command("b[", R.string.cmd_bidi_bracket_open, R.string.cmd_bidi_bracket_open_desc, Category.TEXT,
             keywords = listOf("bidi", "bracket", "rtl")),
-        Command("b]", "Bidi Close Bracket", "Bidirectional close bracket", Category.TEXT,
+        Command("b]", R.string.cmd_bidi_bracket_close, R.string.cmd_bidi_bracket_close_desc, Category.TEXT,
             keywords = listOf("bidi", "bracket", "rtl")),
-        Command("b{", "Bidi Open Brace", "Bidirectional open brace", Category.TEXT,
+        Command("b{", R.string.cmd_bidi_brace_open, R.string.cmd_bidi_brace_open_desc, Category.TEXT,
             keywords = listOf("bidi", "brace", "rtl")),
-        Command("b}", "Bidi Close Brace", "Bidirectional close brace", Category.TEXT,
+        Command("b}", R.string.cmd_bidi_brace_close, R.string.cmd_bidi_brace_close_desc, Category.TEXT,
             keywords = listOf("bidi", "brace", "rtl")),
-        Command("blt", "Bidi Less Than", "Bidirectional less than (displays as greater)", Category.TEXT,
+        Command("blt", R.string.cmd_blt, R.string.cmd_blt_desc, Category.TEXT,
             keywords = listOf("bidi", "less", "angle", "rtl")),
-        Command("bgt", "Bidi Greater Than", "Bidirectional greater than (displays as less)", Category.TEXT,
+        Command("bgt", R.string.cmd_bgt, R.string.cmd_bgt_desc, Category.TEXT,
             keywords = listOf("bidi", "greater", "angle", "rtl")),
 
         // NOTE: zwj and zwnj are defined above in the SPACES category (lines ~236-239)
-        Command("halfspace", "Half Space", "Zero-width non-joiner (halfspace)", Category.SPACES,
+        Command("halfspace", R.string.cmd_halfspace, R.string.cmd_halfspace_desc, Category.SPACES,
             keywords = listOf("halfspace", "zero", "width", "persian", "arabic")),
 
         // ========== REMOVED/PLACEHOLDER KEYS ==========
-        Command("removed", "Removed", "Placeholder for removed key (no action)", Category.SPECIAL_KEYS,
+        Command("removed", R.string.cmd_removed, R.string.cmd_removed_desc, Category.SPECIAL_KEYS,
             keywords = listOf("removed", "placeholder", "none", "empty")),
 
         // ========== TEXT EDITING (additional) ==========
@@ -399,198 +410,198 @@ object CommandRegistry {
         // v1.2.0 announced them in). They were briefly duplicated here as EDITING rows
         // (v1.1.98) with identical by-name KeyValue resolution — deduped 2026-09; the
         // catalogue must stay duplicate-free (see ReleaseClaimCommandCatalogueTest).
-        Command("autofill", "Autofill", "Trigger autofill", Category.EDITING,
+        Command("autofill", R.string.cmd_autofill, R.string.cmd_autofill_desc, Category.EDITING,
             keywords = listOf("autofill", "password", "form")),
 
         // ========== MEDIA CONTROLS ==========
-        Command("media_play_pause", "Play/Pause", "Toggle media playback", Category.MEDIA,
+        Command("media_play_pause", R.string.cmd_media_play_pause, R.string.cmd_media_play_pause_desc, Category.MEDIA,
             keywords = listOf("media", "play", "pause", "music", "video")),
-        Command("media_play", "Play", "Start media playback", Category.MEDIA,
+        Command("media_play", R.string.cmd_media_play, R.string.cmd_media_play_desc, Category.MEDIA,
             keywords = listOf("media", "play", "start")),
-        Command("media_pause", "Pause", "Pause media playback", Category.MEDIA,
+        Command("media_pause", R.string.cmd_media_pause, R.string.cmd_media_pause_desc, Category.MEDIA,
             keywords = listOf("media", "pause", "stop")),
-        Command("media_stop", "Stop", "Stop media playback", Category.MEDIA,
+        Command("media_stop", R.string.cmd_media_stop, R.string.cmd_media_stop_desc, Category.MEDIA,
             keywords = listOf("media", "stop")),
-        Command("media_next", "Next Track", "Skip to next track", Category.MEDIA,
+        Command("media_next", R.string.cmd_media_next, R.string.cmd_media_next_desc, Category.MEDIA,
             keywords = listOf("media", "next", "skip", "forward")),
-        Command("media_previous", "Previous Track", "Skip to previous track", Category.MEDIA,
+        Command("media_previous", R.string.cmd_media_previous, R.string.cmd_media_previous_desc, Category.MEDIA,
             keywords = listOf("media", "previous", "back", "rewind")),
-        Command("media_rewind", "Rewind", "Rewind media", Category.MEDIA,
+        Command("media_rewind", R.string.cmd_media_rewind, R.string.cmd_media_rewind_desc, Category.MEDIA,
             keywords = listOf("media", "rewind", "back")),
-        Command("media_fast_forward", "Fast Forward", "Fast forward media", Category.MEDIA,
+        Command("media_fast_forward", R.string.cmd_media_fast_forward, R.string.cmd_media_fast_forward_desc, Category.MEDIA,
             keywords = listOf("media", "fast", "forward", "skip")),
-        Command("media_record", "Record", "Start recording", Category.MEDIA,
+        Command("media_record", R.string.cmd_media_record, R.string.cmd_media_record_desc, Category.MEDIA,
             keywords = listOf("media", "record", "capture")),
 
         // ========== VOLUME CONTROLS ==========
-        Command("volume_up", "Volume Up", "Increase volume", Category.MEDIA,
+        Command("volume_up", R.string.cmd_volume_up, R.string.cmd_volume_up_desc, Category.MEDIA,
             keywords = listOf("volume", "up", "louder", "sound")),
-        Command("volume_down", "Volume Down", "Decrease volume", Category.MEDIA,
+        Command("volume_down", R.string.cmd_volume_down, R.string.cmd_volume_down_desc, Category.MEDIA,
             keywords = listOf("volume", "down", "quieter", "sound")),
-        Command("volume_mute", "Mute", "Toggle mute", Category.MEDIA,
+        Command("volume_mute", R.string.cmd_volume_mute, R.string.cmd_volume_mute_desc, Category.MEDIA,
             keywords = listOf("volume", "mute", "silent", "sound")),
 
         // ========== SYSTEM & APPS ==========
-        Command("brightness_up", "Brightness Up", "Increase screen brightness", Category.SYSTEM,
+        Command("brightness_up", R.string.cmd_brightness_up, R.string.cmd_brightness_up_desc, Category.SYSTEM,
             keywords = listOf("brightness", "up", "brighter", "screen")),
-        Command("brightness_down", "Brightness Down", "Decrease screen brightness", Category.SYSTEM,
+        Command("brightness_down", R.string.cmd_brightness_down, R.string.cmd_brightness_down_desc, Category.SYSTEM,
             keywords = listOf("brightness", "down", "dimmer", "screen")),
-        Command("zoom_in", "Zoom In", "Zoom in / magnify", Category.SYSTEM,
+        Command("zoom_in", R.string.cmd_zoom_in, R.string.cmd_zoom_in_desc, Category.SYSTEM,
             keywords = listOf("zoom", "in", "magnify", "larger")),
-        Command("zoom_out", "Zoom Out", "Zoom out / reduce", Category.SYSTEM,
+        Command("zoom_out", R.string.cmd_zoom_out, R.string.cmd_zoom_out_desc, Category.SYSTEM,
             keywords = listOf("zoom", "out", "reduce", "smaller")),
-        Command("search", "Search", "Open search", Category.SYSTEM,
+        Command("search", R.string.cmd_search, R.string.cmd_search_desc, Category.SYSTEM,
             keywords = listOf("search", "find", "lookup")),
-        Command("calculator", "Calculator", "Open calculator app", Category.SYSTEM,
+        Command("calculator", R.string.cmd_calculator, R.string.cmd_calculator_desc, Category.SYSTEM,
             keywords = listOf("calculator", "calc", "math")),
-        Command("calendar", "Calendar", "Open calendar app", Category.SYSTEM,
+        Command("calendar", R.string.cmd_calendar, R.string.cmd_calendar_desc, Category.SYSTEM,
             keywords = listOf("calendar", "date", "schedule")),
-        Command("contacts", "Contacts", "Open contacts app", Category.SYSTEM,
+        Command("contacts", R.string.cmd_contacts, R.string.cmd_contacts_desc, Category.SYSTEM,
             keywords = listOf("contacts", "people", "address")),
-        Command("explorer", "File Explorer", "Open file manager", Category.SYSTEM,
+        Command("explorer", R.string.cmd_explorer, R.string.cmd_explorer_desc, Category.SYSTEM,
             keywords = listOf("explorer", "files", "folder", "manager")),
-        Command("notification", "Notifications", "Open notification shade", Category.SYSTEM,
+        Command("notification", R.string.cmd_notification, R.string.cmd_notification_desc, Category.SYSTEM,
             keywords = listOf("notification", "alert", "shade")),
 
         // ========== SELECTION MODE ==========
-        Command("selection_mode", "Selection Mode", "Toggle text selection mode", Category.SELECTION,
+        Command("selection_mode", R.string.cmd_selection_mode, R.string.cmd_selection_mode_desc, Category.SELECTION,
             keywords = listOf("selection", "mode", "select", "highlight")),
 
         // ========== SLAVONIC COMBINING DIACRITICS ==========
-        Command("combining_vertical_tilde", "Vertical Tilde", "Add vertical tilde (◌̾)", Category.DIACRITICS_SLAVONIC,
+        Command("combining_vertical_tilde", R.string.cmd_combining_vertical_tilde, R.string.cmd_combining_vertical_tilde_desc, Category.DIACRITICS_SLAVONIC,
             keywords = listOf("combining", "vertical", "tilde", "slavonic")),
-        Command("combining_inverted_breve", "Inverted Breve", "Add inverted breve (◌̑)", Category.DIACRITICS_SLAVONIC,
+        Command("combining_inverted_breve", R.string.cmd_combining_inverted_breve, R.string.cmd_combining_inverted_breve_desc, Category.DIACRITICS_SLAVONIC,
             keywords = listOf("combining", "inverted", "breve", "slavonic")),
-        Command("combining_pokrytie", "Pokrytie", "Add pokrytie (◌҇)", Category.DIACRITICS_SLAVONIC,
+        Command("combining_pokrytie", R.string.cmd_combining_pokrytie, R.string.cmd_combining_pokrytie_desc, Category.DIACRITICS_SLAVONIC,
             keywords = listOf("combining", "pokrytie", "slavonic", "church")),
-        Command("combining_slavonic_psili", "Slavonic Psili", "Add Slavonic psili (◌҆)", Category.DIACRITICS_SLAVONIC,
+        Command("combining_slavonic_psili", R.string.cmd_combining_slavonic_psili, R.string.cmd_combining_slavonic_psili_desc, Category.DIACRITICS_SLAVONIC,
             keywords = listOf("combining", "psili", "slavonic", "church")),
-        Command("combining_slavonic_dasia", "Slavonic Dasia", "Add Slavonic dasia (◌҅)", Category.DIACRITICS_SLAVONIC,
+        Command("combining_slavonic_dasia", R.string.cmd_combining_slavonic_dasia, R.string.cmd_combining_slavonic_dasia_desc, Category.DIACRITICS_SLAVONIC,
             keywords = listOf("combining", "dasia", "slavonic", "church")),
-        Command("combining_payerok", "Payerok", "Add payerok (◌꙽)", Category.DIACRITICS_SLAVONIC,
+        Command("combining_payerok", R.string.cmd_combining_payerok, R.string.cmd_combining_payerok_desc, Category.DIACRITICS_SLAVONIC,
             keywords = listOf("combining", "payerok", "slavonic", "church")),
-        Command("combining_titlo", "Titlo", "Add titlo (◌҃)", Category.DIACRITICS_SLAVONIC,
+        Command("combining_titlo", R.string.cmd_combining_titlo, R.string.cmd_combining_titlo_desc, Category.DIACRITICS_SLAVONIC,
             keywords = listOf("combining", "titlo", "slavonic", "church")),
-        Command("combining_vzmet", "Vzmet", "Add vzmet (◌꙯)", Category.DIACRITICS_SLAVONIC,
+        Command("combining_vzmet", R.string.cmd_combining_vzmet, R.string.cmd_combining_vzmet_desc, Category.DIACRITICS_SLAVONIC,
             keywords = listOf("combining", "vzmet", "slavonic", "church")),
-        Command("combining_kavyka", "Kavyka", "Add kavyka (◌꙼)", Category.DIACRITICS_SLAVONIC,
+        Command("combining_kavyka", R.string.cmd_combining_kavyka, R.string.cmd_combining_kavyka_desc, Category.DIACRITICS_SLAVONIC,
             keywords = listOf("combining", "kavyka", "slavonic", "church")),
-        Command("combining_palatalization", "Palatalization", "Add palatalization (◌҄)", Category.DIACRITICS_SLAVONIC,
+        Command("combining_palatalization", R.string.cmd_combining_palatalization, R.string.cmd_combining_palatalization_desc, Category.DIACRITICS_SLAVONIC,
             keywords = listOf("combining", "palatalization", "slavonic")),
 
         // ========== ARABIC COMBINING DIACRITICS ==========
-        Command("combining_arabic_v", "Arabic V Above", "Add Arabic mark above (◌ٚ)", Category.DIACRITICS_ARABIC,
+        Command("combining_arabic_v", R.string.cmd_combining_arabic_v, R.string.cmd_combining_arabic_v_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "arabic", "v", "above")),
-        Command("combining_arabic_inverted_v", "Arabic Inverted V", "Add Arabic inverted v above (◌ٛ)", Category.DIACRITICS_ARABIC,
+        Command("combining_arabic_inverted_v", R.string.cmd_combining_arabic_inverted_v, R.string.cmd_combining_arabic_inverted_v_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "arabic", "inverted", "v")),
-        Command("combining_shaddah", "Shaddah", "Add shaddah/gemination (◌ّ)", Category.DIACRITICS_ARABIC,
+        Command("combining_shaddah", R.string.cmd_combining_shaddah, R.string.cmd_combining_shaddah_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "shaddah", "arabic", "double")),
-        Command("combining_sukun", "Sukun", "Add sukun/no vowel (◌ْ)", Category.DIACRITICS_ARABIC,
+        Command("combining_sukun", R.string.cmd_combining_sukun, R.string.cmd_combining_sukun_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "sukun", "arabic", "silent")),
-        Command("combining_fatha", "Fatha", "Add fatha/short a (◌َ)", Category.DIACRITICS_ARABIC,
+        Command("combining_fatha", R.string.cmd_combining_fatha, R.string.cmd_combining_fatha_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "fatha", "arabic", "vowel")),
-        Command("combining_dammah", "Dammah", "Add dammah/short u (◌ُ)", Category.DIACRITICS_ARABIC,
+        Command("combining_dammah", R.string.cmd_combining_dammah, R.string.cmd_combining_dammah_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "dammah", "arabic", "vowel")),
-        Command("combining_kasra", "Kasra", "Add kasra/short i (◌ِ)", Category.DIACRITICS_ARABIC,
+        Command("combining_kasra", R.string.cmd_combining_kasra, R.string.cmd_combining_kasra_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "kasra", "arabic", "vowel")),
-        Command("combining_hamza_above", "Hamza Above", "Add hamza above (◌ٔ)", Category.DIACRITICS_ARABIC,
+        Command("combining_hamza_above", R.string.cmd_combining_hamza_above, R.string.cmd_combining_hamza_above_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "hamza", "above", "arabic")),
-        Command("combining_hamza_below", "Hamza Below", "Add hamza below (◌ٕ)", Category.DIACRITICS_ARABIC,
+        Command("combining_hamza_below", R.string.cmd_combining_hamza_below, R.string.cmd_combining_hamza_below_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "hamza", "below", "arabic")),
-        Command("combining_alef_above", "Alef Above", "Add superscript alef (◌ٰ)", Category.DIACRITICS_ARABIC,
+        Command("combining_alef_above", R.string.cmd_combining_alef_above, R.string.cmd_combining_alef_above_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "alef", "above", "arabic")),
-        Command("combining_fathatan", "Fathatan", "Add fathatan/nunation a (◌ً)", Category.DIACRITICS_ARABIC,
+        Command("combining_fathatan", R.string.cmd_combining_fathatan, R.string.cmd_combining_fathatan_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "fathatan", "tanwin", "arabic")),
-        Command("combining_kasratan", "Kasratan", "Add kasratan/nunation i (◌ٍ)", Category.DIACRITICS_ARABIC,
+        Command("combining_kasratan", R.string.cmd_combining_kasratan, R.string.cmd_combining_kasratan_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "kasratan", "tanwin", "arabic")),
-        Command("combining_dammatan", "Dammatan", "Add dammatan/nunation u (◌ٌ)", Category.DIACRITICS_ARABIC,
+        Command("combining_dammatan", R.string.cmd_combining_dammatan, R.string.cmd_combining_dammatan_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "dammatan", "tanwin", "arabic")),
-        Command("combining_alef_below", "Alef Below", "Add subscript alef (◌ٖ)", Category.DIACRITICS_ARABIC,
+        Command("combining_alef_below", R.string.cmd_combining_alef_below, R.string.cmd_combining_alef_below_desc, Category.DIACRITICS_ARABIC,
             keywords = listOf("combining", "alef", "below", "arabic")),
 
         // ========== HEBREW NIQQUD (Vowel Points) ==========
-        Command("qamats", "Qamats", "Hebrew qamats/kamatz vowel (אָ)", Category.HEBREW,
+        Command("qamats", R.string.cmd_qamats, R.string.cmd_qamats_desc, Category.HEBREW,
             keywords = listOf("hebrew", "qamats", "kamatz", "vowel", "niqqud")),
-        Command("patah", "Patah", "Hebrew patah/patach vowel (אַ)", Category.HEBREW,
+        Command("patah", R.string.cmd_patah, R.string.cmd_patah_desc, Category.HEBREW,
             keywords = listOf("hebrew", "patah", "patach", "vowel", "niqqud")),
-        Command("sheva", "Sheva", "Hebrew sheva vowel (אְ)", Category.HEBREW,
+        Command("sheva", R.string.cmd_sheva, R.string.cmd_sheva_desc, Category.HEBREW,
             keywords = listOf("hebrew", "sheva", "vowel", "niqqud")),
-        Command("dagesh", "Dagesh", "Hebrew dagesh/mapiq (אּ)", Category.HEBREW,
+        Command("dagesh", R.string.cmd_dagesh, R.string.cmd_dagesh_desc, Category.HEBREW,
             keywords = listOf("hebrew", "dagesh", "mapiq", "niqqud")),
-        Command("hiriq", "Hiriq", "Hebrew hiriq vowel (אִ)", Category.HEBREW,
+        Command("hiriq", R.string.cmd_hiriq, R.string.cmd_hiriq_desc, Category.HEBREW,
             keywords = listOf("hebrew", "hiriq", "vowel", "niqqud")),
-        Command("segol", "Segol", "Hebrew segol vowel (אֶ)", Category.HEBREW,
+        Command("segol", R.string.cmd_segol, R.string.cmd_segol_desc, Category.HEBREW,
             keywords = listOf("hebrew", "segol", "vowel", "niqqud")),
-        Command("tsere", "Tsere", "Hebrew tsere vowel (אֵ)", Category.HEBREW,
+        Command("tsere", R.string.cmd_tsere, R.string.cmd_tsere_desc, Category.HEBREW,
             keywords = listOf("hebrew", "tsere", "vowel", "niqqud")),
-        Command("holam", "Holam", "Hebrew holam vowel (אֹ)", Category.HEBREW,
+        Command("holam", R.string.cmd_holam, R.string.cmd_holam_desc, Category.HEBREW,
             keywords = listOf("hebrew", "holam", "vowel", "niqqud")),
-        Command("qubuts", "Qubuts", "Hebrew qubuts/kubuts vowel (אֻ)", Category.HEBREW,
+        Command("qubuts", R.string.cmd_qubuts, R.string.cmd_qubuts_desc, Category.HEBREW,
             keywords = listOf("hebrew", "qubuts", "kubuts", "vowel", "niqqud")),
-        Command("hataf_patah", "Hataf Patah", "Hebrew reduced patah (אֲ)", Category.HEBREW,
+        Command("hataf_patah", R.string.cmd_hataf_patah, R.string.cmd_hataf_patah_desc, Category.HEBREW,
             keywords = listOf("hebrew", "hataf", "patah", "reduced", "niqqud")),
-        Command("hataf_qamats", "Hataf Qamats", "Hebrew reduced qamats (אֳ)", Category.HEBREW,
+        Command("hataf_qamats", R.string.cmd_hataf_qamats, R.string.cmd_hataf_qamats_desc, Category.HEBREW,
             keywords = listOf("hebrew", "hataf", "qamats", "reduced", "niqqud")),
-        Command("hataf_segol", "Hataf Segol", "Hebrew reduced segol (אֱ)", Category.HEBREW,
+        Command("hataf_segol", R.string.cmd_hataf_segol, R.string.cmd_hataf_segol_desc, Category.HEBREW,
             keywords = listOf("hebrew", "hataf", "segol", "reduced", "niqqud")),
-        Command("geresh", "Geresh", "Hebrew geresh punctuation (׳)", Category.HEBREW,
+        Command("geresh", R.string.cmd_geresh, R.string.cmd_geresh_desc, Category.HEBREW,
             keywords = listOf("hebrew", "geresh", "punctuation")),
-        Command("gershayim", "Gershayim", "Hebrew gershayim punctuation (״)", Category.HEBREW,
+        Command("gershayim", R.string.cmd_gershayim, R.string.cmd_gershayim_desc, Category.HEBREW,
             keywords = listOf("hebrew", "gershayim", "punctuation", "quote")),
-        Command("maqaf", "Maqaf", "Hebrew maqaf/hyphen (־)", Category.HEBREW,
+        Command("maqaf", R.string.cmd_maqaf, R.string.cmd_maqaf_desc, Category.HEBREW,
             keywords = listOf("hebrew", "maqaf", "hyphen", "dash")),
-        Command("rafe", "Rafe", "Hebrew rafe mark (אֿ)", Category.HEBREW,
+        Command("rafe", R.string.cmd_rafe, R.string.cmd_rafe_desc, Category.HEBREW,
             keywords = listOf("hebrew", "rafe", "rapheh", "niqqud")),
-        Command("ole", "Ole", "Hebrew ole cantillation (א֫)", Category.HEBREW,
+        Command("ole", R.string.cmd_ole, R.string.cmd_ole_desc, Category.HEBREW,
             keywords = listOf("hebrew", "ole", "cantillation", "trope")),
-        Command("meteg", "Meteg", "Hebrew meteg/siluq (אֽ)", Category.HEBREW,
+        Command("meteg", R.string.cmd_meteg, R.string.cmd_meteg_desc, Category.HEBREW,
             keywords = listOf("hebrew", "meteg", "siluq", "niqqud")),
-        Command("shindot", "Shin Dot", "Hebrew shin dot (שׁ)", Category.HEBREW,
+        Command("shindot", R.string.cmd_shindot, R.string.cmd_shindot_desc, Category.HEBREW,
             keywords = listOf("hebrew", "shin", "dot", "niqqud")),
-        Command("sindot", "Sin Dot", "Hebrew sin dot (שׂ)", Category.HEBREW,
+        Command("sindot", R.string.cmd_sindot, R.string.cmd_sindot_desc, Category.HEBREW,
             keywords = listOf("hebrew", "sin", "dot", "niqqud")),
 
         // ========== LANGUAGE (v1.2.0) ==========
         // Name-dispatched (Keyboard2View), no KeyValue — symbols required, as for paste_pinned_N.
-        Command("primaryLangToggle", "Toggle Primary Language", "Swap between two primary languages", Category.LANGUAGE,
+        Command("primaryLangToggle", R.string.cmd_primary_lang_toggle, R.string.cmd_primary_lang_toggle_desc, Category.LANGUAGE,
             symbol = "🌐1",
             keywords = listOf("language", "toggle", "primary", "switch", "swap")),
-        Command("secondaryLangToggle", "Toggle Secondary Language", "Swap between two secondary languages", Category.LANGUAGE,
+        Command("secondaryLangToggle", R.string.cmd_secondary_lang_toggle, R.string.cmd_secondary_lang_toggle_desc, Category.LANGUAGE,
             symbol = "🌐2",
             keywords = listOf("language", "toggle", "secondary", "switch", "swap")),
 
         // ========== TEXT ACTIONS (v1.2.0) ==========
-        Command("textAssist", "Text Assist", "Process selected text with AI assistants", Category.TEXT_ACTIONS,
+        Command("textAssist", R.string.cmd_text_assist, R.string.cmd_text_assist_desc, Category.TEXT_ACTIONS,
             keywords = listOf("text", "assist", "ai", "process", "google")),
-        Command("replaceText", "Replace Text", "Replace selected text with alternatives", Category.TEXT_ACTIONS,
+        Command("replaceText", R.string.cmd_replace_text, R.string.cmd_replace_text_desc, Category.TEXT_ACTIONS,
             keywords = listOf("replace", "text", "substitute", "change")),
-        Command("showTextMenu", "Show Text Menu", "Select word at cursor and show native toolbar", Category.TEXT_ACTIONS,
+        Command("showTextMenu", R.string.cmd_show_text_menu, R.string.cmd_show_text_menu_desc, Category.TEXT_ACTIONS,
             symbol = "☰", // name-dispatched (Keyboard2View), no KeyValue — see paste_pinned_N note
             keywords = listOf("text", "menu", "toolbar", "cut", "copy", "paste", "translate", "select")),
 
         // ========== TIMESTAMPS ==========
-        Command("timestamp_date", "Date (ISO)", "Insert current date (YYYY-MM-DD)", Category.TIMESTAMP,
+        Command("timestamp_date", R.string.cmd_timestamp_date, R.string.cmd_timestamp_date_desc, Category.TIMESTAMP,
             symbol = "📅",
             keywords = listOf("timestamp", "date", "iso", "today", "current")),
-        Command("timestamp_time", "Time (24h)", "Insert current time (HH:mm)", Category.TIMESTAMP,
+        Command("timestamp_time", R.string.cmd_timestamp_time, R.string.cmd_timestamp_time_desc, Category.TIMESTAMP,
             symbol = "🕐",
             keywords = listOf("timestamp", "time", "clock", "now", "24h")),
-        Command("timestamp_datetime", "Date & Time", "Insert date and time (YYYY-MM-DD HH:mm)", Category.TIMESTAMP,
+        Command("timestamp_datetime", R.string.cmd_timestamp_datetime, R.string.cmd_timestamp_datetime_desc, Category.TIMESTAMP,
             symbol = "📆",
             keywords = listOf("timestamp", "datetime", "date", "time", "now")),
-        Command("timestamp_time_seconds", "Time with Seconds", "Insert time with seconds (HH:mm:ss)", Category.TIMESTAMP,
+        Command("timestamp_time_seconds", R.string.cmd_timestamp_time_seconds, R.string.cmd_timestamp_time_seconds_desc, Category.TIMESTAMP,
             symbol = "⏱",
             keywords = listOf("timestamp", "time", "seconds", "precise")),
-        Command("timestamp_date_short", "Date (Short)", "Insert short date (MM/dd/yy)", Category.TIMESTAMP,
+        Command("timestamp_date_short", R.string.cmd_timestamp_date_short, R.string.cmd_timestamp_date_short_desc, Category.TIMESTAMP,
             symbol = "📅",
             keywords = listOf("timestamp", "date", "short", "american")),
-        Command("timestamp_date_long", "Date (Long)", "Insert long date (Day, Month DD, YYYY)", Category.TIMESTAMP,
+        Command("timestamp_date_long", R.string.cmd_timestamp_date_long, R.string.cmd_timestamp_date_long_desc, Category.TIMESTAMP,
             symbol = "🗓",
             keywords = listOf("timestamp", "date", "long", "full", "weekday")),
-        Command("timestamp_time_12h", "Time (12h)", "Insert 12-hour time (h:mm AM/PM)", Category.TIMESTAMP,
+        Command("timestamp_time_12h", R.string.cmd_timestamp_time_12h, R.string.cmd_timestamp_time_12h_desc, Category.TIMESTAMP,
             symbol = "🕐",
             keywords = listOf("timestamp", "time", "12h", "am", "pm")),
-        Command("timestamp_iso", "ISO 8601", "Insert ISO 8601 timestamp (YYYY-MM-DDTHH:mm:ss)", Category.TIMESTAMP,
+        Command("timestamp_iso", R.string.cmd_timestamp_iso, R.string.cmd_timestamp_iso_desc, Category.TIMESTAMP,
             symbol = "📋",
             keywords = listOf("timestamp", "iso", "8601", "full", "standard"))
     )
@@ -604,33 +615,52 @@ object CommandRegistry {
     }
 
     /**
-     * Search commands by query string.
-     * Matches against name, displayName, description, and keywords.
+     * The texts a query is matched against, most specific first: the localized name and
+     * description from [text], then the English ones from [english] (so a user who knows the
+     * English command names still finds them under any UI language). Lower-cased with
+     * [java.util.Locale.ROOT] like the query.
      */
-    fun search(query: String): List<Command> {
+    private fun displayTexts(cmd: Command, text: ResultText, english: ResultText?): Pair<List<String>, List<String>> {
+        val names = mutableListOf(text.string(cmd.nameRes).lowercase())
+        val descriptions = mutableListOf(text.string(cmd.descriptionRes).lowercase())
+        if (english != null) {
+            english.string(cmd.nameRes).lowercase().let { if (it !in names) names += it }
+            english.string(cmd.descriptionRes).lowercase().let { if (it !in descriptions) descriptions += it }
+        }
+        return names to descriptions
+    }
+
+    /**
+     * Search commands by query string.
+     * Matches against the internal name, the localized (and optionally English) display name
+     * and description, and the keywords.
+     */
+    internal fun search(query: String, text: ResultText, english: ResultText? = null): List<Command> {
         if (query.isBlank()) return ALL_COMMANDS
 
         val lowerQuery = query.lowercase().trim()
         return ALL_COMMANDS.filter { cmd ->
+            val (names, descriptions) = displayTexts(cmd, text, english)
             cmd.name.lowercase().contains(lowerQuery) ||
-            cmd.displayName.lowercase().contains(lowerQuery) ||
-            cmd.description.lowercase().contains(lowerQuery) ||
+            names.any { it.contains(lowerQuery) } ||
+            descriptions.any { it.contains(lowerQuery) } ||
             cmd.keywords.any { it.lowercase().contains(lowerQuery) }
         }
     }
 
     /**
      * Search commands with ranking.
-     * Returns commands sorted by relevance (exact matches first, then partial).
+     * Returns commands sorted by relevance (exact matches first, then partial). Display-name
+     * matches score the best of the localized and English names.
      */
-    fun searchRanked(query: String): List<Command> {
+    internal fun searchRanked(query: String, text: ResultText, english: ResultText? = null): List<Command> {
         if (query.isBlank()) return ALL_COMMANDS
 
         val lowerQuery = query.lowercase().trim()
 
         return ALL_COMMANDS
             .map { cmd ->
-                val score = calculateScore(cmd, lowerQuery)
+                val score = calculateScore(cmd, lowerQuery, displayTexts(cmd, text, english))
                 cmd to score
             }
             .filter { it.second > 0 }
@@ -638,7 +668,7 @@ object CommandRegistry {
             .map { it.first }
     }
 
-    private fun calculateScore(cmd: Command, query: String): Int {
+    private fun calculateScore(cmd: Command, query: String, texts: Pair<List<String>, List<String>>): Int {
         var score = 0
 
         // Exact name match (highest)
@@ -646,13 +676,18 @@ object CommandRegistry {
         else if (cmd.name.lowercase().startsWith(query)) score += 50
         else if (cmd.name.lowercase().contains(query)) score += 20
 
-        // Display name match
-        if (cmd.displayName.lowercase() == query) score += 80
-        else if (cmd.displayName.lowercase().startsWith(query)) score += 40
-        else if (cmd.displayName.lowercase().contains(query)) score += 15
+        // Display name match: the best of the localized/English variants
+        score += texts.first.maxOf { name ->
+            when {
+                name == query -> 80
+                name.startsWith(query) -> 40
+                name.contains(query) -> 15
+                else -> 0
+            }
+        }
 
         // Description match
-        if (cmd.description.lowercase().contains(query)) score += 10
+        if (texts.second.any { it.contains(query) }) score += 10
 
         // Keyword match
         cmd.keywords.forEach { keyword ->
@@ -713,7 +748,7 @@ object CommandRegistry {
                 useKeyFont = keyValue.hasFlagsAny(KeyValue.FLAG_KEY_FONT)
             )
         } else {
-            // Fallback: use the command's display name or first 4 chars of name
+            // Fallback: the command's declared symbol, or the first 4 chars of its id
             val command = getByName(commandName)
             CommandDisplayInfo(
                 displayText = command?.symbol ?: commandName.take(4),

@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.customization
 
+import tribixbite.cleverkeys.EnglishResourceText
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
@@ -73,10 +74,10 @@ class ReleaseClaimCommandCatalogueTest {
     fun `every catalogue entry is reachable by searching for its own name`() {
         for (command in CommandRegistry.ALL_COMMANDS) {
             assertWithMessage("search('${command.name}') must surface it")
-                .that(CommandRegistry.search(command.name).map { it.name })
+                .that(CommandRegistry.search(command.name, EnglishResourceText).map { it.name })
                 .contains(command.name)
             assertWithMessage("searchRanked('${command.name}') must surface it")
-                .that(CommandRegistry.searchRanked(command.name).map { it.name })
+                .that(CommandRegistry.searchRanked(command.name, EnglishResourceText).map { it.name })
                 .contains(command.name)
         }
     }
@@ -86,7 +87,7 @@ class ReleaseClaimCommandCatalogueTest {
         // A user typing the full command name expects that command at the top of the palette.
         for (name in listOf("copy", "paste", "undo", "selectAll", "showTextMenu")) {
             assertWithMessage("searchRanked('$name')[0]")
-                .that(CommandRegistry.searchRanked(name).first().name)
+                .that(CommandRegistry.searchRanked(name, EnglishResourceText).first().name)
                 .isEqualTo(name)
         }
     }
@@ -167,16 +168,16 @@ class ReleaseClaimCommandCatalogueTest {
             .containsExactly("textAssist", "replaceText", "showTextMenu")
 
         val assist = textActions.single { it.name == "textAssist" }
-        assertThat(assist.displayName).isEqualTo("Text Assist")
-        assertThat(assist.description).isEqualTo("Process selected text with AI assistants")
+        assertThat(EnglishResourceText.string(assist.nameRes)).isEqualTo("Text Assist")
+        assertThat(EnglishResourceText.string(assist.descriptionRes)).isEqualTo("Process selected text with AI assistants")
     }
 
     @Test
     fun `showTextMenu is published as a Text Action for the native toolbar`() {
         val menu = CommandRegistry.getByName("showTextMenu")!!
         assertThat(menu.category).isEqualTo(CommandRegistry.Category.TEXT_ACTIONS)
-        assertThat(menu.displayName).isEqualTo("Show Text Menu")
-        assertThat(menu.description).isEqualTo("Select word at cursor and show native toolbar")
+        assertThat(EnglishResourceText.string(menu.nameRes)).isEqualTo("Show Text Menu")
+        assertThat(EnglishResourceText.string(menu.descriptionRes)).isEqualTo("Select word at cursor and show native toolbar")
         assertThat(menu.keywords).containsAtLeast("toolbar", "cut", "copy", "paste", "select")
     }
 

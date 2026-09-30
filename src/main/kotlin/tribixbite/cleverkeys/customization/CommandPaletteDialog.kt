@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.customization
 
+import tribixbite.cleverkeys.ResourcesResultText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -81,12 +82,22 @@ fun CommandPaletteDialog(
     var pendingTimestampPattern by remember { mutableStateOf<String?>(null) }
     var customLabel by remember { mutableStateOf("") }
 
+    // Command names/descriptions are string resources: search matches them in the UI
+    // language and, secondarily, in English (users who learned the English names).
+    val paletteContext = LocalContext.current
+    val commandText = remember(paletteContext) { ResourcesResultText(paletteContext.resources) }
+    val englishCommandText = remember(paletteContext) {
+        val config = android.content.res.Configuration(paletteContext.resources.configuration)
+        config.setLocale(java.util.Locale.ENGLISH)
+        ResourcesResultText(paletteContext.createConfigurationContext(config).resources)
+    }
+
     // Get filtered commands
-    val filteredCommands = remember(searchQuery) {
+    val filteredCommands = remember(searchQuery, commandText) {
         if (searchQuery.isBlank()) {
             CommandRegistry.getByCategory()
         } else {
-            CommandRegistry.searchRanked(searchQuery).groupBy { it.category }
+            CommandRegistry.searchRanked(searchQuery, commandText, englishCommandText).groupBy { it.category }
         }
     }
 
@@ -110,7 +121,7 @@ fun CommandPaletteDialog(
 
         LabelConfirmationDialog(
             defaultLabel = when {
-                pendingCommand != null -> commandDisplayInfo?.displayText ?: pendingCommand!!.displayName.take(4)
+                pendingCommand != null -> commandDisplayInfo?.displayText ?: commandText.string(pendingCommand!!.nameRes).take(4)
                 pendingText != null -> pendingText!!.take(4)
                 pendingIntentDef != null -> pendingIntentDef!!.name.take(4)
                 pendingTimestampPattern != null -> (timestampPreview ?: pendingTimestampPattern!!).take(4)
@@ -118,7 +129,7 @@ fun CommandPaletteDialog(
             },
             actionDescription = when {
                 pendingCommand != null -> stringResource(
-                    R.string.command_palette_action_command, pendingCommand!!.displayName
+                    R.string.command_palette_action_command, stringResource(pendingCommand!!.nameRes)
                 )
                 pendingText != null -> stringResource(
                     R.string.command_palette_action_text,
@@ -137,12 +148,12 @@ fun CommandPaletteDialog(
             },
             currentLabel = customLabel,
             isIconMode = isIconMode,
-            iconPreviewText = if (isIconMode) pendingCommand?.displayName else null,
+            iconPreviewText = if (isIconMode) pendingCommand?.let { stringResource(it.nameRes) } else null,
             onLabelChange = { customLabel = it },
             onConfirm = {
                 val label = customLabel.ifBlank {
                     when {
-                        pendingCommand != null -> commandDisplayInfo?.displayText ?: pendingCommand!!.displayName.take(4)
+                        pendingCommand != null -> commandDisplayInfo?.displayText ?: commandText.string(pendingCommand!!.nameRes).take(4)
                         pendingText != null -> pendingText!!.take(4)
                         pendingIntentDef != null -> pendingIntentDef!!.name.take(4)
                         pendingTimestampPattern != null -> (timestampPreview ?: pendingTimestampPattern!!).take(4)
@@ -306,7 +317,7 @@ fun CommandPaletteDialog(
                         onCommandSelected = { command ->
                             // Show label confirmation instead of directly calling callback
                             pendingCommand = command
-                            customLabel = command.displayName.take(4)
+                            customLabel = commandText.string(command.nameRes).take(4)
                         },
                         onShowTextInput = { showTextInput = true },
                         onShowIntentEditor = { showIntentEditor = true },
@@ -738,7 +749,7 @@ private fun CategoryHeader(category: CommandRegistry.Category, commandCount: Int
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = category.displayName,
+            text = stringResource(category.labelRes),
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
@@ -793,13 +804,13 @@ private fun CommandItem(
             // Display name and description
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = command.displayName,
+                    text = stringResource(command.nameRes),
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = command.description,
+                    text = stringResource(command.descriptionRes),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -971,7 +982,7 @@ fun QuickCommandPicker(
                         onClick = { onCommandSelected(command) },
                         label = {
                             Text(
-                                command.displayName,
+                                stringResource(command.nameRes),
                                 fontSize = 11.sp,
                                 maxLines = 1
                             )

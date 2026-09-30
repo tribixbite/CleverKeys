@@ -40,6 +40,14 @@ class PastePinnedCommandTest {
 
     private val futureExpiry = System.currentTimeMillis() + 3600_000L
 
+    /** English command text (names/descriptions are string resources since 2026-09-30). */
+    private val englishText: ResultText by lazy {
+        val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+        val config = android.content.res.Configuration(ctx.resources.configuration)
+        config.setLocale(java.util.Locale.ENGLISH)
+        ResourcesResultText(ctx.createConfigurationContext(config).resources)
+    }
+
     @Before
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -87,13 +95,13 @@ class PastePinnedCommandTest {
         expected.forEach { (name, displayName) ->
             val cmd = CommandRegistry.getByName(name)
             assertNotNull("$name should exist", cmd)
-            assertEquals("$name display name", displayName, cmd!!.displayName)
+            assertEquals("$name display name", displayName, englishText.string(cmd!!.nameRes))
         }
     }
 
     @Test
     fun searchByPinReturnsAllPinnedCommands() {
-        val results = CommandRegistry.search("pin")
+        val results = CommandRegistry.search("pin", englishText)
         val pinnedNames = results.map { it.name }.filter { it.startsWith("paste_pinned_") }
         assertEquals(
             "Searching 'pin' should return all 5 paste_pinned commands",
@@ -110,7 +118,7 @@ class PastePinnedCommandTest {
 
     @Test
     fun searchByPinnedKeywordAlsoWorks() {
-        val results = CommandRegistry.search("pinned")
+        val results = CommandRegistry.search("pinned", englishText)
         val pinnedNames = results.map { it.name }.filter { it.startsWith("paste_pinned_") }
         assertEquals(
             "Searching 'pinned' should return all 5 paste_pinned commands",

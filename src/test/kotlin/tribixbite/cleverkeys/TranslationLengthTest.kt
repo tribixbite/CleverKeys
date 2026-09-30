@@ -17,6 +17,8 @@ import org.junit.Test
  *  - Settings/dialog titles (`*_title`) and origin labels (`provenance_origin_*`): these
  *    wrap, so only flag gross expansion, above [TITLE_RATIO]× English AND above
  *    [MIN_LENGTH] chars.
+ *  - Command palette rows (`cmd_*` name/description, `command_category_*` headers): one line
+ *    each, ellipsized, so the same gross-expansion bound as titles applies.
  *
  * The absolute floor keeps short strings (where 2× is a handful of characters) out of it.
  * Format arguments count as a 4-character word on both sides. A justified exception goes in
@@ -42,6 +44,7 @@ class TranslationLengthTest {
     private fun ratioFor(key: String): Double? = when {
         key.startsWith("suggestion_") -> BAR_RATIO
         key.endsWith("_title") || key.startsWith("provenance_origin_") -> TITLE_RATIO
+        key.startsWith("cmd_") || key.startsWith("command_category_") -> TITLE_RATIO
         else -> null
     }
 
@@ -73,6 +76,7 @@ class TranslationLengthTest {
             .filter { it.startsWith("suggestion_") }
         assertTrue("no suggestion_* strings found — scope rule is stale", barKeys.size >= 5)
         assertEquals(BAR_RATIO, ratioFor("suggestion_tap_again_to_undo")!!, 0.0)
+        assertEquals(TITLE_RATIO, ratioFor("cmd_copy_desc")!!, 0.0)
         // "%1$s 'x'" -> "xxxx 'x'": argument = 4 chars, Android escapes resolved.
         assertEquals(8, visibleLength("%1\$s \\'x\\'"))
     }

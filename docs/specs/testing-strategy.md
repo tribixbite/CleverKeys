@@ -60,7 +60,8 @@ fluency.
   When adding a locale or concept, add its glossary entry with a `note` saying why.
 - **`TranslationLengthTest`** is an overflow heuristic. It flags a translation longer than
   **1.75×** English for suggestion-bar copy (`suggestion_*`; a 2-line chip in a horizontal
-  strip), or longer than **2.0×** English for `*_title` and `provenance_origin_*`. In both
+  strip), or longer than **2.0×** English for `*_title`, `provenance_origin_*` and the
+  single-line command-palette rows (`cmd_*`, `command_category_*`, added 2026-09-30). In all
   cases the translation must also exceed **40** code points. Format arguments count as a
   4-character word. It counts code points, not glyph width, so CJK expansion is invisible
   to it. A justified exception goes in its `accepted` map with a reason. On 2026-09-29 it

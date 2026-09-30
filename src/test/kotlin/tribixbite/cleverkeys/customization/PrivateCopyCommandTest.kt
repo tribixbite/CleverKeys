@@ -28,7 +28,7 @@ class PrivateCopyCommandTest {
     fun `CommandRegistry exposes copy_private`() {
         val cmd = CommandRegistry.getByName("copy_private")
         assertThat(cmd).isNotNull()
-        assertThat(cmd!!.displayName).isEqualTo("Private Copy")
+        assertThat(tribixbite.cleverkeys.EnglishResourceText.string(cmd!!.nameRes)).isEqualTo("Private Copy")
         assertThat(cmd.category).isEqualTo(CommandRegistry.Category.CLIPBOARD)
     }
 
@@ -40,7 +40,7 @@ class PrivateCopyCommandTest {
 
     @Test
     fun `copy_private is searchable by its private keyword`() {
-        val results = CommandRegistry.searchRanked("private")
+        val results = CommandRegistry.searchRanked("private", tribixbite.cleverkeys.EnglishResourceText)
         assertThat(results.map { it.name }).contains("copy_private")
     }
 
