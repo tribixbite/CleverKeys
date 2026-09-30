@@ -1060,7 +1060,7 @@
     <string name="settings_swipe_data_target_word">„%1$s“</string>
     <string name="settings_swipe_data_keys">Klávesy: %1$s</string>
     <string name="settings_faq_numbers_q">Jak psát čísla a symboly?</string>
-    <string name="settings_faq_numbers_a">Používejte krátké tahy (podklávesy) na klávesách s písmeny. Každá klávesa má až 8 podkláves přiřazených světovým stranám S, SV, V, JV, J, JZ, Z, SZ. Například tahem na SEVEROVÝCHOD na klávese Q napíšete „1“ (tip: začněte v JZ rohu). Vlastní přiřazení podkláves přidáte v Nastavení → Aktivity → Přizpůsobení jednotlivých kláves.</string>
+    <string name="settings_faq_numbers_a">Používejte krátké tahy (podklávesy) na klávesách s písmeny. Každá klávesa má až 8 podkláves přiřazených světovým stranám S, SV, V, JV, J, JZ, Z, SZ. Například tahem na SEVEROVÝCHOD na klávese Q napíšete „1“ (tip: začněte v JZ rohu). Vlastní přiřazení podkláves přidáte v Nastavení → Aktivity → Přizpůsobit akce jednotlivých kláves.</string>
     <string name="settings_faq_cursor_q">Jak pohybovat kurzorem?</string>
     <string name="settings_faq_cursor_a">Táhněte prstem po mezerníku – rychlost pohybu kurzoru odpovídá délce tahu. Pro přesnou navigaci dlouze stiskněte navigační klávesu (mezi mezerníkem a Enterem), čímž přejdete do režimu TrackPoint, a poté pohybujte prstem jako joystickem.</string>
     <string name="settings_faq_select_delete_q">Jak vybrat a smazat text?</string>
@@ -1072,9 +1072,9 @@
     <string name="settings_faq_clipboard_q">Jak používat schránku?</string>
     <string name="settings_faq_clipboard_a">Tahem na JIHOZÁPAD na klávese Ctrl otevřete historii schránky. Panel má záložky Historie, Připnuté a Úkoly. Klepnutím na obsah položky ji rozbalíte; ikonovými tlačítky ji vložíte, přesunete do připnutých nebo zkopírujete jako úkol. Poznámka: opětovné zkopírování textu, který už v historii je, nevytvoří duplikát ani nezmění jeho pořadí (tip: použijte raději vyhledávání). Položky ze správců hesel a položky označené jako „citlivé“ jsou ve výchozím stavu vyloučeny.</string>
     <string name="settings_faq_swipe_typing_q">Jak funguje psaní tahem?</string>
-    <string name="settings_faq_swipe_typing_a">Dotkněte se prvního písmene slova, přejeďte prstem přes všechna písmena bez zvednutí a pusťte na posledním písmenu. Rychlejší tah může dávat lepší výsledky. Tip: pro angličtinu zvyšte „Length Penalty (Alpha)“ (~1.5), pro ostatní jazyky jej snižte (a zvyšte „Vocab Frequency Weight“).</string>
+    <string name="settings_faq_swipe_typing_a">Dotkněte se prvního písmene slova, přejeďte prstem přes všechna písmena bez zvednutí a pusťte na posledním písmenu. Rychlejší tah může dávat lepší výsledky. Dekodér zvolíte v Nastavení → Psaní tahem → Modul předpovědí: CTC pro jazyky a rozložení, které podporuje, nebo Geometrický, který funguje s každým rozložením.</string>
     <string name="settings_faq_other_languages_q">Mohu psát tahem i v jiných jazycích?</string>
-    <string name="settings_faq_other_languages_a">Ano, ale v současnosti to vyžaduje latinkové rozložení QWERTY a ruční vyladění několika nastavení, aby byl výstup použitelný – viz předchozí otázku v FAQ a nastavení Prefix Boost (jsou velmi citlivá; zkoušejte malé změny).</string>
+    <string name="settings_faq_other_languages_a">Ano. Importujte jazykový balíček v Nastavení → Více jazyků → Jazykové balíčky a pak ho zvolte jako primární nebo sekundární jazyk. Jazyky a rozložení, které CTC nepodporuje, dekóduje geometrický modul; v Nastavení → Psaní tahem uvidíte, který modul používá váš aktuální jazyk a rozložení.</string>
     <string name="settings_github_repo_title">Repozitář na GitHubu</string>
     <string name="settings_github_repo_desc">Klepnutím zobrazíte vydání a stáhnete aktualizace</string>
     <string name="settings_version_unknown">neznámé</string>

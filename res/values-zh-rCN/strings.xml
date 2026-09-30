@@ -1055,7 +1055,7 @@
     <string name="settings_swipe_data_target_word">“%1$s”</string>
     <string name="settings_swipe_data_keys">按键：%1$s</string>
     <string name="settings_faq_numbers_q">如何输入数字和符号？</string>
-    <string name="settings_faq_numbers_a">在字母键上使用短滑动（子键）。每个按键最多有 8 个子键，分别对应北、东北、东、东南、南、西南、西、西北八个方向。例如，在 Q 上向东北滑动可输入“1”（提示：从按键的西南角开始）。前往 设置 → 活动 → 按键自定义 可添加你自己的子键设置。</string>
+    <string name="settings_faq_numbers_a">在字母键上使用短滑动（子键）。每个按键最多有 8 个子键，分别对应北、东北、东、东南、南、西南、西、西北八个方向。例如，在 Q 上向东北滑动可输入“1”（提示：从按键的西南角开始）。前往 设置 → 活动 → 自定义按键操作 可添加你自己的子键设置。</string>
     <string name="settings_faq_cursor_q">如何移动光标？</string>
     <string name="settings_faq_cursor_a">在空格键上滑动——光标移动速度与滑动距离成正比。如需精确定位，长按导航键（位于空格键和回车键之间）进入 TrackPoint 模式，然后像操纵摇杆一样移动手指。</string>
     <string name="settings_faq_select_delete_q">如何选择和删除文字？</string>
@@ -1067,9 +1067,9 @@
     <string name="settings_faq_clipboard_q">如何使用剪贴板？</string>
     <string name="settings_faq_clipboard_a">在 Ctrl 键上向西南滑动可打开剪贴板历史。面板包含“历史”“已固定”和“待办”标签页。点击条目内容可展开；使用图标按钮可粘贴、移至已固定或复制为待办。注意：再次复制已在历史中的文字不会产生重复，也不会改变顺序（提示：请改用搜索）。密码管理器的内容以及标记为“敏感”的剪贴内容默认会被排除。</string>
     <string name="settings_faq_swipe_typing_q">滑动输入如何使用？</string>
-    <string name="settings_faq_swipe_typing_a">按住单词的第一个字母，手指不离开屏幕依次滑过每个字母，最后在最后一个字母上松开。滑得快一些效果可能更好。提示：英语可调高“Length Penalty (Alpha)”（约 1.5），其他语言则调低（并调高“Vocab Frequency Weight”）。</string>
+    <string name="settings_faq_swipe_typing_a">按住单词的第一个字母，手指不离开屏幕依次滑过每个字母，最后在最后一个字母上松开。滑得快一些效果可能更好。要选择解码器，请前往 设置 → 滑动输入 → 预测引擎：CTC 适用于其支持的语言和布局，几何 适用于所有布局。</string>
     <string name="settings_faq_other_languages_q">可以滑动输入其他语言吗？</string>
-    <string name="settings_faq_other_languages_a">可以，但目前需要使用 QWERTY 拉丁字母布局，并手动调整多项设置才能获得可用的结果——请参阅上方的常见问题条目以及 Prefix Boost 设置（这些设置非常敏感，请小幅调整）。</string>
+    <string name="settings_faq_other_languages_a">可以。在 设置 → 多语言 → 语言包 中导入语言包，然后将其选为主要语言或次要语言。CTC 不支持的语言和布局会由几何引擎解码；在 设置 → 滑动输入 中可以查看你当前的语言和布局使用哪个引擎。</string>
     <string name="settings_github_repo_title">GitHub 仓库</string>
     <string name="settings_github_repo_desc">点击查看版本发布并下载更新</string>
     <string name="settings_version_unknown">未知</string>

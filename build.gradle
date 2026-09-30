@@ -735,6 +735,8 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-09-29 device findings (fa/hu): no hardcoded user-visible literals in Kotlin UI
     // or manifest labels.
     'tribixbite.cleverkeys.HardcodedUiStringTest',
+    // The in-app FAQ names only settings/screens that exist (neural-era settings removed).
+    'tribixbite.cleverkeys.FaqContentDriftTest',
     // Locale-aware language names (replaced the English-only tables; fa/hu device finding).
     'tribixbite.cleverkeys.LanguageDisplayNamesTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',

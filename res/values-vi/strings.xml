@@ -1085,7 +1085,7 @@
     <string name="settings_swipe_data_target_word">“%1$s”</string>
     <string name="settings_swipe_data_keys">Phím: %1$s</string>
     <string name="settings_faq_numbers_q">Làm sao để gõ số và ký hiệu?</string>
-    <string name="settings_faq_numbers_a">Dùng vuốt ngắn (phím phụ) trên các phím chữ. Mỗi phím có tối đa 8 phím phụ ứng với các hướng Bắc, Đông Bắc, Đông, Đông Nam, Nam, Tây Nam, Tây, Tây Bắc. Ví dụ, vuốt về hướng ĐÔNG BẮC trên phím Q để nhập \'1\' (mẹo: bắt đầu từ góc Tây Nam). Vào Cài đặt → Hoạt động → Tùy chỉnh từng phím để thêm phím phụ của riêng bạn.</string>
+    <string name="settings_faq_numbers_a">Dùng vuốt ngắn (phím phụ) trên các phím chữ. Mỗi phím có tối đa 8 phím phụ ứng với các hướng Bắc, Đông Bắc, Đông, Đông Nam, Nam, Tây Nam, Tây, Tây Bắc. Ví dụ, vuốt về hướng ĐÔNG BẮC trên phím Q để nhập \'1\' (mẹo: bắt đầu từ góc Tây Nam). Vào Cài đặt → Hoạt động → Tùy chỉnh thao tác từng phím để thêm phím phụ của riêng bạn.</string>
     <string name="settings_faq_cursor_q">Làm sao để di chuyển con trỏ?</string>
     <string name="settings_faq_cursor_a">Vuốt trên phím cách — tốc độ di chuyển con trỏ tỷ lệ với độ dài của cú vuốt. Để điều hướng chính xác, nhấn giữ phím điều hướng (giữa phím cách và phím enter) để vào chế độ TrackPoint, rồi di chuyển ngón tay như cần điều khiển.</string>
     <string name="settings_faq_select_delete_q">Làm sao để chọn và xóa văn bản?</string>
@@ -1097,9 +1097,9 @@
     <string name="settings_faq_clipboard_q">Làm sao để dùng bảng tạm?</string>
     <string name="settings_faq_clipboard_a">Vuốt về hướng TÂY NAM trên phím Ctrl để mở lịch sử bảng tạm. Bảng này có các tab Lịch sử, Đã ghim và Việc cần làm. Chạm vào nội dung của một mục để mở rộng; dùng các nút biểu tượng để dán, chuyển vào mục đã ghim hoặc sao chép thành việc cần làm. Lưu ý: sao chép lại văn bản đã có trong lịch sử sẽ không tạo bản trùng hay thay đổi thứ tự (mẹo: hãy dùng tìm kiếm). Nội dung từ trình quản lý mật khẩu và các mục được gắn cờ \'nhạy cảm\' mặc định bị loại trừ.</string>
     <string name="settings_faq_swipe_typing_q">Gõ vuốt hoạt động thế nào?</string>
-    <string name="settings_faq_swipe_typing_a">Chạm vào chữ cái đầu tiên của từ, lướt ngón tay qua từng chữ cái mà không nhấc lên, rồi thả ra ở chữ cái cuối. Vuốt nhanh hơn có thể cho kết quả tốt hơn. Mẹo: tăng \'Length Penalty (Alpha)\' cho tiếng Anh (~1.5), giảm cho các ngôn ngữ khác (và tăng \'Vocab Frequency Weight\').</string>
+    <string name="settings_faq_swipe_typing_a">Chạm vào chữ cái đầu tiên của từ, lướt ngón tay qua từng chữ cái mà không nhấc lên, rồi thả ra ở chữ cái cuối. Vuốt nhanh hơn có thể cho kết quả tốt hơn. Để chọn bộ giải mã, vào Cài đặt → Gõ vuốt → Công cụ dự đoán: CTC cho các ngôn ngữ và bố cục được hỗ trợ, hoặc Hình học, hoạt động với mọi bố cục.</string>
     <string name="settings_faq_other_languages_q">Tôi có thể vuốt các ngôn ngữ khác không?</string>
-    <string name="settings_faq_other_languages_a">Có, nhưng hiện cần dùng bố cục QWERTY chữ Latinh và tự tinh chỉnh một số cài đặt để có kết quả dùng được — xem mục Câu hỏi thường gặp ở trên và các cài đặt Prefix Boost (chúng rất nhạy; hãy thử thay đổi nhỏ).</string>
+    <string name="settings_faq_other_languages_a">Có. Nhập gói ngôn ngữ trong Cài đặt → Đa ngôn ngữ → Gói ngôn ngữ, rồi chọn gói đó làm Ngôn ngữ chính hoặc Ngôn ngữ phụ. Các ngôn ngữ và bố cục mà CTC không hỗ trợ sẽ được công cụ hình học giải mã; Cài đặt → Gõ vuốt cho biết ngôn ngữ và bố cục hiện tại của bạn dùng công cụ nào.</string>
     <string name="settings_github_repo_title">Kho mã GitHub</string>
     <string name="settings_github_repo_desc">Chạm để xem các bản phát hành và tải bản cập nhật</string>
     <string name="settings_version_unknown">không rõ</string>

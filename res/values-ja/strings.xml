@@ -1056,7 +1056,7 @@
     <string name="settings_swipe_data_target_word">「%1$s」</string>
     <string name="settings_swipe_data_keys">キー: %1$s</string>
     <string name="settings_faq_numbers_q">数字や記号はどうやって入力しますか？</string>
-    <string name="settings_faq_numbers_a">文字キーでショートスワイプ(サブキー)を使います。各キーには、北、北東、東、南東、南、南西、西、北西の 8 方向に最大 8 つのサブキーが割り当てられています。たとえば、Q キーで「北東」にスワイプすると「1」を入力できます(ヒント: 南西の隅から始めます)。独自のサブキー割り当てを追加するには、設定 → アクティビティ → キーごとのカスタマイズ を使用してください。</string>
+    <string name="settings_faq_numbers_a">文字キーでショートスワイプ(サブキー)を使います。各キーには、北、北東、東、南東、南、南西、西、北西の 8 方向に最大 8 つのサブキーが割り当てられています。たとえば、Q キーで「北東」にスワイプすると「1」を入力できます(ヒント: 南西の隅から始めます)。独自のサブキー割り当てを追加するには、設定 → アクティビティ → キーごとのアクションをカスタマイズ を使用してください。</string>
     <string name="settings_faq_cursor_q">カーソルはどうやって移動しますか？</string>
     <string name="settings_faq_cursor_a">スペースバーの上でスワイプします。カーソルの移動速度はスワイプした距離に比例します。細かく移動するには、ナビキー(スペースバーと Enter の間)を長押しして TrackPoint モードに入り、指をジョイスティックのように動かします。</string>
     <string name="settings_faq_select_delete_q">テキストはどうやって選択・削除しますか？</string>
@@ -1068,9 +1068,9 @@
     <string name="settings_faq_clipboard_q">クリップボードはどうやって使いますか？</string>
     <string name="settings_faq_clipboard_a">Ctrl キーで「南西」にスワイプすると、クリップボード履歴が開きます。パネルには「履歴」「ピン留め」「Todo」のタブがあります。項目の内容をタップすると展開されます。アイコンボタンで、貼り付け、ピン留めへの移動、Todo としてのコピーができます。注: 履歴にすでにあるテキストをもう一度コピーしても、重複したり並び順が変わったりしません(ヒント: 代わりに検索を使用してください)。パスワードマネージャーのクリップと、「機密」フラグが付いたクリップは、デフォルトで除外されます。</string>
     <string name="settings_faq_swipe_typing_q">スワイプ入力はどのように機能しますか？</string>
-    <string name="settings_faq_swipe_typing_a">単語の最初の文字に触れ、指を離さずに各文字の上を通るように滑らせて、最後の文字で指を離します。速く動かすほうが良い結果になる場合があります。ヒント: 英語では「Length Penalty (Alpha)」を上げ(約 1.5)、他の言語では下げてください(あわせて「Vocab Frequency Weight」を上げます)。</string>
+    <string name="settings_faq_swipe_typing_a">単語の最初の文字に触れ、指を離さずに各文字の上を通るように滑らせて、最後の文字で指を離します。速く動かすほうが良い結果になる場合があります。デコーダーは 設定 → スワイプ入力 → 予測エンジン で選べます。CTC は対応している言語とレイアウトで使え、幾何 はすべてのレイアウトで動作します。</string>
     <string name="settings_faq_other_languages_q">他の言語でもスワイプできますか？</string>
-    <string name="settings_faq_other_languages_a">はい。ただし現時点では、QWERTY のラテン文字レイアウトを使用し、実用的な結果を得るためにいくつかの設定を手動で調整する必要があります。上の FAQ 項目と Prefix Boost の設定を参照してください(これらは非常に敏感なので、少しずつ変更してみてください)。</string>
+    <string name="settings_faq_other_languages_a">はい。設定 → 多言語 → 言語パック で言語パックをインポートし、主要言語または副言語として選択してください。CTC が対応していない言語とレイアウトは幾何エンジンでデコードされます。現在の言語とレイアウトでどちらのエンジンが使われるかは、設定 → スワイプ入力 で確認できます。</string>
     <string name="settings_github_repo_title">GitHub リポジトリ</string>
     <string name="settings_github_repo_desc">タップしてリリースを表示し、アップデートをダウンロード</string>
     <string name="settings_version_unknown">不明</string>

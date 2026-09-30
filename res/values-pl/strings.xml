@@ -1070,7 +1070,7 @@
     <string name="settings_swipe_data_target_word">„%1$s”</string>
     <string name="settings_swipe_data_keys">Klawisze: %1$s</string>
     <string name="settings_faq_numbers_q">Jak wpisywać cyfry i symbole?</string>
-    <string name="settings_faq_numbers_a">Używaj krótkich gestów (podklawiszy) na klawiszach liter. Każdy klawisz ma do 8 podklawiszy przypisanych do kierunków świata: N, NE, E, SE, S, SW, W, NW. Na przykład wykonaj gest na PÓŁNOCNY WSCHÓD na klawiszu Q, aby wpisać „1” (wskazówka: zacznij w rogu SW). Własne przypisania podklawiszy dodasz w Ustawienia → Narzędzia → Dostosowanie klawiszy.</string>
+    <string name="settings_faq_numbers_a">Używaj krótkich gestów (podklawiszy) na klawiszach liter. Każdy klawisz ma do 8 podklawiszy przypisanych do kierunków świata: N, NE, E, SE, S, SW, W, NW. Na przykład wykonaj gest na PÓŁNOCNY WSCHÓD na klawiszu Q, aby wpisać „1” (wskazówka: zacznij w rogu SW). Własne przypisania podklawiszy dodasz w Ustawienia → Narzędzia → Dostosuj akcje poszczególnych klawiszy.</string>
     <string name="settings_faq_cursor_q">Jak poruszać kursorem?</string>
     <string name="settings_faq_cursor_a">Przeciągnij palcem po spacji – szybkość ruchu kursora zależy od tego, jak daleko przeciągniesz. Do precyzyjnej nawigacji przytrzymaj klawisz nawigacji (między spacją a Enterem), aby włączyć tryb TrackPoint, a potem poruszaj palcem jak joystickiem.</string>
     <string name="settings_faq_select_delete_q">Jak zaznaczać i usuwać tekst?</string>
@@ -1082,9 +1082,9 @@
     <string name="settings_faq_clipboard_q">Jak korzystać ze schowka?</string>
     <string name="settings_faq_clipboard_a">Wykonaj gest na POŁUDNIOWY ZACHÓD na klawiszu Ctrl, aby otworzyć historię schowka. Panel ma karty Historia, Przypięte i Zadania. Dotknij treści elementu, aby go rozwinąć; przyciskami z ikonami wkleisz go, przeniesiesz do przypiętych lub skopiujesz jako zadanie. Uwaga: ponowne skopiowanie tekstu, który już jest w historii, nie utworzy duplikatu ani nie zmieni kolejności (wskazówka: użyj wyszukiwania). Elementy z menedżerów haseł i oznaczone jako „wrażliwe” są domyślnie pomijane.</string>
     <string name="settings_faq_swipe_typing_q">Jak działa pisanie gestem?</string>
-    <string name="settings_faq_swipe_typing_a">Dotknij pierwszej litery słowa, przeciągnij palec przez kolejne litery bez odrywania go, a potem puść na ostatniej literze. Szybszy ruch może dawać lepsze wyniki. Wskazówka: dla angielskiego zwiększ „Length Penalty (Alpha)” (~1.5), dla innych języków ją zmniejsz (i zwiększ „Vocab Frequency Weight”).</string>
+    <string name="settings_faq_swipe_typing_a">Dotknij pierwszej litery słowa, przeciągnij palec przez kolejne litery bez odrywania go, a potem puść na ostatniej literze. Szybszy ruch może dawać lepsze wyniki. Dekoder wybierzesz w Ustawienia → Pisanie gestem → Silnik przewidywania: CTC dla obsługiwanych języków i układów albo Geometryczny, który działa z każdym układem.</string>
     <string name="settings_faq_other_languages_q">Czy mogę pisać gestem w innych językach?</string>
-    <string name="settings_faq_other_languages_a">Tak, ale obecnie wymaga to łacińskiego układu QWERTY i ręcznego dostrojenia kilku ustawień, aby uzyskać użyteczne wyniki – zobacz poprzednie pytanie w FAQ i ustawienia Prefix Boost (są bardzo czułe; próbuj małych zmian).</string>
+    <string name="settings_faq_other_languages_a">Tak. Zaimportuj pakiet językowy w Ustawienia → Wiele języków → Pakiety językowe, a potem wybierz go jako język główny lub pomocniczy. Języki i układy, których CTC nie obsługuje, dekoduje silnik geometryczny; w Ustawienia → Pisanie gestem zobaczysz, którego silnika używa twój bieżący język i układ.</string>
     <string name="settings_github_repo_title">Repozytorium GitHub</string>
     <string name="settings_github_repo_desc">Dotknij, aby zobaczyć wydania i pobrać aktualizacje</string>
     <string name="settings_version_unknown">nieznana</string>

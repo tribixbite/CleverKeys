@@ -1069,7 +1069,7 @@
     <string name="settings_swipe_data_target_word">“%1$s”</string>
     <string name="settings_swipe_data_keys">Tuşlar: %1$s</string>
     <string name="settings_faq_numbers_q">Rakam ve simgeleri nasıl yazarım?</string>
-    <string name="settings_faq_numbers_a">Harf tuşlarında kısa kaydırmaları (alt tuşları) kullanın. Her tuşun, K, KD, D, GD, G, GB, B, KB ana yönlerine atanmış en fazla 8 alt tuşu vardır. Örneğin, \'1\' için Q üzerinde KUZEYDOĞU yönüne kaydırın (ipucu: GB köşesinden başlayın). Kendi alt tuş atamalarınızı eklemek için Ayarlar → Etkinlikler → Tuş Başına Özelleştirme bölümünü kullanın.</string>
+    <string name="settings_faq_numbers_a">Harf tuşlarında kısa kaydırmaları (alt tuşları) kullanın. Her tuşun, K, KD, D, GD, G, GB, B, KB ana yönlerine atanmış en fazla 8 alt tuşu vardır. Örneğin, \'1\' için Q üzerinde KUZEYDOĞU yönüne kaydırın (ipucu: GB köşesinden başlayın). Kendi alt tuş atamalarınızı eklemek için Ayarlar → Etkinlikler → Tuş Başına Eylemleri Özelleştir bölümünü kullanın.</string>
     <string name="settings_faq_cursor_q">İmleci nasıl hareket ettiririm?</string>
     <string name="settings_faq_cursor_a">Boşluk çubuğunda kaydırın - imleç hareket hızı, ne kadar uzağa kaydırdığınızla orantılıdır. Hassas gezinme için gezinme tuşuna (boşluk çubuğu ile enter arasında) uzun basarak TrackPoint moduna geçin, ardından parmağınızı bir joystick gibi hareket ettirin.</string>
     <string name="settings_faq_select_delete_q">Metni nasıl seçer ve silerim?</string>
@@ -1081,9 +1081,9 @@
     <string name="settings_faq_clipboard_q">Panoyu nasıl kullanırım?</string>
     <string name="settings_faq_clipboard_a">Pano geçmişini açmak için Ctrl tuşunda GÜNEYBATI yönüne kaydırın. Panelde Geçmiş, Sabitlenmiş ve Yapılacaklar sekmeleri bulunur. Genişletmek için bir öğenin içeriğine dokunun; yapıştırmak, sabitlenmişlere taşımak veya yapılacak olarak kopyalamak için simge düğmelerini kullanın. Not: geçmişte zaten bulunan bir metni yeniden kopyalamak onu çoğaltmaz veya yeniden sıralamaz (ipucu: bunun yerine aramayı kullanın). Parola yöneticisinden gelen ve \'hassas\' olarak işaretlenen kopyalar varsayılan olarak hariç tutulur.</string>
     <string name="settings_faq_swipe_typing_q">Kaydırarak yazma nasıl çalışır?</string>
-    <string name="settings_faq_swipe_typing_a">Kelimenizin ilk harfine dokunun, parmağınızı kaldırmadan her harfin üzerinden kaydırın, ardından son harfte bırakın. Daha hızlı kaydırmak daha iyi sonuç verebilir. İpucu: İngilizce için \'Length Penalty (Alpha)\' değerini artırın (~1.5), diğer diller için azaltın (ve \'Vocab Frequency Weight\' değerini artırın).</string>
+    <string name="settings_faq_swipe_typing_a">Kelimenizin ilk harfine dokunun, parmağınızı kaldırmadan her harfin üzerinden kaydırın, ardından son harfte bırakın. Daha hızlı kaydırmak daha iyi sonuç verebilir. Kod çözücüyü seçmek için Ayarlar → Kaydırarak yazma → Tahmin motoru bölümüne gidin: CTC desteklediği diller ve düzenler için, Geometrik ise her düzenle çalışır.</string>
     <string name="settings_faq_other_languages_q">Başka dillerde kaydırarak yazabilir miyim?</string>
-    <string name="settings_faq_other_languages_a">Evet, ancak bu şu anda Latin harfli QWERTY düzenini kullanmayı ve kullanılabilir sonuç almak için birkaç ayarı elle ince ayarlamayı gerektirir - yukarıdaki SSS maddesine ve Prefix Boost ayarlarına bakın (bunlar çok hassastır; küçük değişiklikler deneyin).</string>
+    <string name="settings_faq_other_languages_a">Evet. Ayarlar → Çoklu Dil → Dil Paketleri bölümünden bir dil paketi içe aktarın, ardından onu Birincil veya İkincil Dil olarak seçin. CTC\'nin desteklemediği diller ve düzenler geometrik motorla çözülür; mevcut dilinizin ve düzeninizin hangi motoru kullandığını Ayarlar → Kaydırarak yazma bölümünde görebilirsiniz.</string>
     <string name="settings_github_repo_title">GitHub Deposu</string>
     <string name="settings_github_repo_desc">Sürümleri görmek ve güncellemeleri indirmek için dokunun</string>
     <string name="settings_version_unknown">bilinmiyor</string>

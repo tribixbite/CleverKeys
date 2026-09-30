@@ -1077,7 +1077,7 @@
     <string name="settings_swipe_data_target_word">«%1$s»</string>
     <string name="settings_swipe_data_keys">Teclas: %1$s</string>
     <string name="settings_faq_numbers_q">¿Cómo escribo números y símbolos?</string>
-    <string name="settings_faq_numbers_a">Usa deslizamientos cortos (subteclas) en las teclas de letras. Cada tecla tiene hasta 8 subteclas asignadas a las direcciones cardinales N, NE, E, SE, S, SO, O y NO. Por ejemplo, desliza hacia el NORESTE sobre la Q para obtener «1» (consejo: empieza en la esquina SO). Usa Ajustes → Actividades → Personalización por tecla para añadir tus propias asignaciones de subteclas.</string>
+    <string name="settings_faq_numbers_a">Usa deslizamientos cortos (subteclas) en las teclas de letras. Cada tecla tiene hasta 8 subteclas asignadas a las direcciones cardinales N, NE, E, SE, S, SO, O y NO. Por ejemplo, desliza hacia el NORESTE sobre la Q para obtener «1» (consejo: empieza en la esquina SO). Usa Ajustes → Actividades → Personalizar acciones por tecla para añadir tus propias asignaciones de subteclas.</string>
     <string name="settings_faq_cursor_q">¿Cómo muevo el cursor?</string>
     <string name="settings_faq_cursor_a">Desliza sobre la barra espaciadora: la velocidad del cursor es proporcional a la distancia que deslizas. Para una navegación precisa, mantén pulsada la tecla de navegación (entre la barra espaciadora e Intro) para entrar en el modo TrackPoint y luego mueve el dedo como un joystick.</string>
     <string name="settings_faq_select_delete_q">¿Cómo selecciono y borro texto?</string>
@@ -1089,9 +1089,9 @@
     <string name="settings_faq_clipboard_q">¿Cómo uso el portapapeles?</string>
     <string name="settings_faq_clipboard_a">Desliza hacia el SUROESTE sobre la tecla Ctrl para abrir el historial del portapapeles. El panel tiene las pestañas Historial, Fijados y Tareas. Toca el contenido de un elemento para expandirlo; usa los botones de icono para pegar, mover a fijados o copiar como tarea. Nota: volver a copiar un texto que ya está en el historial no lo duplica ni lo reordena (consejo: usa la búsqueda). Los clips de gestores de contraseñas y los marcados como «sensibles» se excluyen de forma predeterminada.</string>
     <string name="settings_faq_swipe_typing_q">¿Cómo funciona la escritura deslizante?</string>
-    <string name="settings_faq_swipe_typing_a">Toca la primera letra de la palabra, desliza el dedo por cada letra sin levantarlo y suéltalo en la última letra. Ir más rápido puede dar mejores resultados. Consejo: aumenta «Length Penalty (Alpha)» para inglés (~1.5) y redúcelo para otros idiomas (y aumenta «Vocab Frequency Weight»).</string>
+    <string name="settings_faq_swipe_typing_a">Toca la primera letra de la palabra, desliza el dedo por cada letra sin levantarlo y suéltalo en la última letra. Ir más rápido puede dar mejores resultados. Para elegir el decodificador, ve a Ajustes → Escritura deslizante → Motor de predicción: CTC para los idiomas y distribuciones que admite, o Geométrico, que funciona con cualquier distribución.</string>
     <string name="settings_faq_other_languages_q">¿Puedo escribir deslizando en otros idiomas?</string>
-    <string name="settings_faq_other_languages_a">Sí, pero por ahora requiere usar la distribución QWERTY latina y ajustar manualmente varias opciones para obtener resultados utilizables: consulta la pregunta anterior y los ajustes de Prefix Boost (son muy sensibles; prueba con cambios pequeños).</string>
+    <string name="settings_faq_other_languages_a">Sí. Importa un paquete de idioma en Ajustes → Multiidioma → Paquetes de idioma y elígelo como idioma principal o secundario. Los idiomas y distribuciones que CTC no admite los decodifica el motor geométrico; en Ajustes → Escritura deslizante puedes ver qué motor usan tu idioma y tu distribución actuales.</string>
     <string name="settings_github_repo_title">Repositorio de GitHub</string>
     <string name="settings_github_repo_desc">Toca para ver las versiones y descargar actualizaciones</string>
     <string name="settings_version_unknown">desconocida</string>

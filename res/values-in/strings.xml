@@ -1069,7 +1069,7 @@
     <string name="settings_swipe_data_target_word">\"%1$s\"</string>
     <string name="settings_swipe_data_keys">Tombol: %1$s</string>
     <string name="settings_faq_numbers_q">Bagaimana cara mengetik angka dan simbol?</string>
-    <string name="settings_faq_numbers_a">Gunakan geser pendek (subtombol) pada tombol huruf. Setiap tombol memiliki hingga 8 subtombol yang dipetakan ke arah mata angin U, TL, T, TG, S, BD, B, BL. Misalnya, geser ke TIMUR LAUT pada Q untuk \'1\' (tips: mulai dari sudut barat daya). Gunakan Pengaturan → Aktivitas → Kustomisasi Per Tombol untuk menambahkan penetapan subtombol Anda sendiri.</string>
+    <string name="settings_faq_numbers_a">Gunakan geser pendek (subtombol) pada tombol huruf. Setiap tombol memiliki hingga 8 subtombol yang dipetakan ke arah mata angin U, TL, T, TG, S, BD, B, BL. Misalnya, geser ke TIMUR LAUT pada Q untuk \'1\' (tips: mulai dari sudut barat daya). Gunakan Pengaturan → Aktivitas → Sesuaikan Aksi Per Tombol untuk menambahkan penetapan subtombol Anda sendiri.</string>
     <string name="settings_faq_cursor_q">Bagaimana cara memindahkan kursor?</string>
     <string name="settings_faq_cursor_a">Geser pada bilah spasi - kecepatan gerak kursor sebanding dengan seberapa jauh Anda menggeser. Untuk navigasi presisi, tekan lama tombol navigasi (di antara bilah spasi dan enter) untuk masuk ke mode TrackPoint, lalu gerakkan jari Anda seperti joystick.</string>
     <string name="settings_faq_select_delete_q">Bagaimana cara memilih dan menghapus teks?</string>
@@ -1081,9 +1081,9 @@
     <string name="settings_faq_clipboard_q">Bagaimana cara menggunakan clipboard?</string>
     <string name="settings_faq_clipboard_a">Geser ke BARAT DAYA pada tombol Ctrl untuk membuka riwayat clipboard. Panel memiliki tab Riwayat, Disematkan, dan Todo. Ketuk konten item untuk membukanya; gunakan tombol ikon untuk menempel, memindahkan ke tersematkan, atau menyalin sebagai todo. Catatan: menyalin ulang teks yang sudah ada di riwayat tidak akan menduplikasi atau mengubah urutannya (tips: gunakan pencarian). Klip dari pengelola kata sandi dan yang ditandai \'sensitif\' dikecualikan secara default.</string>
     <string name="settings_faq_swipe_typing_q">Bagaimana cara kerja ketik geser?</string>
-    <string name="settings_faq_swipe_typing_a">Sentuh huruf pertama kata Anda, geser jari melewati setiap huruf tanpa mengangkatnya, lalu lepaskan pada huruf terakhir. Lebih cepat bisa memberi hasil lebih baik. Tips: naikkan \'Length Penalty (Alpha)\' untuk bahasa Inggris (~1,5), turunkan untuk bahasa lain (dan naikkan Vocab Frequency Weight).</string>
+    <string name="settings_faq_swipe_typing_a">Sentuh huruf pertama kata Anda, geser jari melewati setiap huruf tanpa mengangkatnya, lalu lepaskan pada huruf terakhir. Lebih cepat bisa memberi hasil lebih baik. Untuk memilih dekoder, buka Pengaturan → Ketik Geser → Mesin prediksi: CTC untuk bahasa dan tata letak yang didukungnya, atau Geometris, yang berfungsi di semua tata letak.</string>
     <string name="settings_faq_other_languages_q">Bisakah saya menggeser dalam bahasa lain?</string>
-    <string name="settings_faq_other_languages_a">Ya, tetapi saat ini hal itu memerlukan tata letak qwerty latin dan penyetelan manual beberapa pengaturan agar hasilnya dapat digunakan - lihat entri FAQ di atas dan pengaturan Prefix Boost (pengaturan ini sangat sensitif; coba perubahan kecil).</string>
+    <string name="settings_faq_other_languages_a">Ya. Impor paket bahasa di Pengaturan → Multi-Bahasa → Paket Bahasa, lalu pilih sebagai Bahasa Utama atau Bahasa Sekunder. Bahasa dan tata letak yang tidak didukung CTC didekode oleh mesin geometris; Pengaturan → Ketik Geser menampilkan mesin yang digunakan oleh bahasa dan tata letak Anda saat ini.</string>
     <string name="settings_github_repo_title">Repositori GitHub</string>
     <string name="settings_github_repo_desc">Ketuk untuk melihat rilis dan mengunduh pembaruan</string>
     <string name="settings_version_unknown">tidak diketahui</string>

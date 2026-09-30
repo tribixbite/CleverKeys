@@ -1458,7 +1458,7 @@
     <string name="settings_swipe_data_target_word">\"%1$s\"</string>
     <string name="settings_swipe_data_keys">Keys: %1$s</string>
     <string name="settings_faq_numbers_q">How do I type numbers and symbols?</string>
-    <string name="settings_faq_numbers_a">Use short swipes (subkeys) on letter keys. Each key has up to 8 subkeys mapped to the cardinal directions N, NE, E, SE, S, SW, W, NW. For example, swipe NORTHEAST on Q for \'1\' (hint: start in the SW corner). Use Settings → Activities → Per-Key Customization to add your own subkey assignments.</string>
+    <string name="settings_faq_numbers_a">Use short swipes (subkeys) on letter keys. Each key has up to 8 subkeys mapped to the cardinal directions N, NE, E, SE, S, SW, W, NW. For example, swipe NORTHEAST on Q for \'1\' (hint: start in the SW corner). Use Settings → Activities → Customize Per-Key Actions to add your own subkey assignments.</string>
     <string name="settings_faq_cursor_q">How do I move the cursor?</string>
     <string name="settings_faq_cursor_a">Swipe on the spacebar - cursor movement speed is proportional to how far you swipe. For precision navigation, long-press the nav key (between spacebar and enter) to enter TrackPoint mode, then move your finger like a joystick.</string>
     <string name="settings_faq_select_delete_q">How do I select and delete text?</string>
@@ -1470,9 +1470,9 @@
     <string name="settings_faq_clipboard_q">How do I use the clipboard?</string>
     <string name="settings_faq_clipboard_a">Swipe SOUTHWEST on the Ctrl key to open clipboard history. The panel has tabs for History, Pinned, and Todos. Tap an item\'s content to expand it; use the icon buttons to paste, move to pinned, or copy as todo. Note: re-copying text already in history won\'t duplicate or reorder it (tip: use search instead). Password manager and \'sensitive\' flagged clippings are excluded by default.</string>
     <string name="settings_faq_swipe_typing_q">How does swipe typing work?</string>
-    <string name="settings_faq_swipe_typing_a">Touch the first letter of your word, slide your finger through each letter without lifting, then release on the last letter. Faster may yield better results. Tip: increase \'Length Penalty (Alpha)\' for English (~1.5), decrease for other languages (and increase Vocab Frequency Weight).</string>
+    <string name="settings_faq_swipe_typing_a">Touch the first letter of your word, slide your finger through each letter without lifting, then release on the last letter. Faster may yield better results. To choose the decoder, go to Settings → Swipe Typing → Prediction Engine: CTC for the languages and layouts it supports, or Geometric, which works on every layout.</string>
     <string name="settings_faq_other_languages_q">Can I swipe other languages?</string>
-    <string name="settings_faq_other_languages_a">Yes, but this currently requires using the qwerty latin layout and manually tuning several settings to achieve usable output — see FAQ entry above and Prefix Boost settings (these are very sensitive; try small changes).</string>
+    <string name="settings_faq_other_languages_a">Yes. Import a language pack in Settings → Multi-Language → Language Packs, then select it as your Primary or Secondary Language. Languages and layouts that CTC does not support are decoded by the geometric engine; Settings → Swipe Typing shows which engine your current language and layout use.</string>
     <string name="settings_github_repo_title">GitHub Repository</string>
     <string name="settings_github_repo_desc">Tap to view releases and download updates</string>
     <string name="settings_version_unknown">unknown</string>

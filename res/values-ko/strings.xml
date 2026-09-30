@@ -1057,7 +1057,7 @@
     <string name="settings_swipe_data_target_word">“%1$s”</string>
     <string name="settings_swipe_data_keys">키: %1$s</string>
     <string name="settings_faq_numbers_q">숫자와 기호는 어떻게 입력하나요?</string>
-    <string name="settings_faq_numbers_a">문자 키에서 짧은 스와이프(하위 키)를 사용하세요. 각 키에는 북, 북동, 동, 남동, 남, 남서, 서, 북서의 8방향에 최대 8개의 하위 키가 할당됩니다. 예를 들어 Q 키에서 \'북동\' 방향으로 스와이프하면 \'1\'이 입력됩니다(팁: 남서쪽 모서리에서 시작하세요). 나만의 하위 키 할당을 추가하려면 설정 → 활동 → 키별 사용자 지정을 사용하세요.</string>
+    <string name="settings_faq_numbers_a">문자 키에서 짧은 스와이프(하위 키)를 사용하세요. 각 키에는 북, 북동, 동, 남동, 남, 남서, 서, 북서의 8방향에 최대 8개의 하위 키가 할당됩니다. 예를 들어 Q 키에서 \'북동\' 방향으로 스와이프하면 \'1\'이 입력됩니다(팁: 남서쪽 모서리에서 시작하세요). 나만의 하위 키 할당을 추가하려면 설정 → 활동 → 키별 동작 사용자 지정을 사용하세요.</string>
     <string name="settings_faq_cursor_q">커서는 어떻게 이동하나요?</string>
     <string name="settings_faq_cursor_a">스페이스바에서 스와이프하세요. 커서 이동 속도는 스와이프한 거리에 비례합니다. 정밀하게 이동하려면 탐색 키(스페이스바와 Enter 사이)를 길게 눌러 TrackPoint 모드로 전환한 다음, 손가락을 조이스틱처럼 움직이세요.</string>
     <string name="settings_faq_select_delete_q">텍스트는 어떻게 선택하고 삭제하나요?</string>
@@ -1069,9 +1069,9 @@
     <string name="settings_faq_clipboard_q">클립보드는 어떻게 사용하나요?</string>
     <string name="settings_faq_clipboard_a">Ctrl 키에서 \'남서\' 방향으로 스와이프하면 클립보드 기록이 열립니다. 패널에는 기록, 고정, 할 일 탭이 있습니다. 항목 내용을 탭하면 펼쳐지며, 아이콘 버튼으로 붙여넣기, 고정으로 이동, 할 일로 복사를 할 수 있습니다. 참고: 이미 기록에 있는 텍스트를 다시 복사해도 중복되거나 순서가 바뀌지 않습니다(팁: 대신 검색을 사용하세요). 비밀번호 관리자의 클립과 \'민감한 콘텐츠\'로 표시된 클립은 기본적으로 제외됩니다.</string>
     <string name="settings_faq_swipe_typing_q">스와이프 입력은 어떻게 작동하나요?</string>
-    <string name="settings_faq_swipe_typing_a">단어의 첫 글자를 터치하고, 손가락을 떼지 않은 채 각 글자를 지나도록 밀어서 마지막 글자에서 손을 떼세요. 빠르게 할수록 결과가 더 좋을 수 있습니다. 팁: 영어는 \'Length Penalty (Alpha)\'를 높이고(약 1.5), 다른 언어는 낮추세요(그리고 \'Vocab Frequency Weight\'를 높이세요).</string>
+    <string name="settings_faq_swipe_typing_a">단어의 첫 글자를 터치하고, 손가락을 떼지 않은 채 각 글자를 지나도록 밀어서 마지막 글자에서 손을 떼세요. 빠르게 할수록 결과가 더 좋을 수 있습니다. 디코더를 선택하려면 설정 → 스와이프 입력 → 예측 엔진으로 이동하세요. CTC는 지원하는 언어와 레이아웃에서, 기하학은 모든 레이아웃에서 작동합니다.</string>
     <string name="settings_faq_other_languages_q">다른 언어도 스와이프할 수 있나요?</string>
-    <string name="settings_faq_other_languages_a">네. 다만 현재는 QWERTY 라틴 문자 레이아웃을 사용해야 하며, 쓸 만한 결과를 얻으려면 여러 설정을 직접 조정해야 합니다. 위의 FAQ 항목과 Prefix Boost 설정을 참고하세요(매우 민감하므로 조금씩 변경해 보세요).</string>
+    <string name="settings_faq_other_languages_a">네. 설정 → 다국어 → 언어 팩에서 언어 팩을 가져온 다음 기본 언어 또는 보조 언어로 선택하세요. CTC가 지원하지 않는 언어와 레이아웃은 기하학 엔진이 디코딩합니다. 현재 언어와 레이아웃에서 어떤 엔진을 사용하는지는 설정 → 스와이프 입력에서 확인할 수 있습니다.</string>
     <string name="settings_github_repo_title">GitHub 저장소</string>
     <string name="settings_github_repo_desc">탭하여 릴리스 보기 및 업데이트 다운로드</string>
     <string name="settings_version_unknown">알 수 없음</string>

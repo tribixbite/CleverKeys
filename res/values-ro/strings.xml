@@ -1086,7 +1086,7 @@
     <string name="settings_swipe_data_target_word">„%1$s”</string>
     <string name="settings_swipe_data_keys">Taste: %1$s</string>
     <string name="settings_faq_numbers_q">Cum tastez cifre și simboluri?</string>
-    <string name="settings_faq_numbers_a">Folosiți glisări scurte (subtaste) pe tastele cu litere. Fiecare tastă are până la 8 subtaste, asociate direcțiilor cardinale N, NE, E, SE, S, SV, V, NV. De exemplu, glisați spre NORD-EST pe Q pentru „1” (sfat: începeți din colțul SV). Folosiți Setări → Activități → Personalizare per tastă pentru a adăuga propriile atribuiri de subtaste.</string>
+    <string name="settings_faq_numbers_a">Folosiți glisări scurte (subtaste) pe tastele cu litere. Fiecare tastă are până la 8 subtaste, asociate direcțiilor cardinale N, NE, E, SE, S, SV, V, NV. De exemplu, glisați spre NORD-EST pe Q pentru „1” (sfat: începeți din colțul SV). Folosiți Setări → Activități → Personalizează acțiunile per tastă pentru a adăuga propriile atribuiri de subtaste.</string>
     <string name="settings_faq_cursor_q">Cum mut cursorul?</string>
     <string name="settings_faq_cursor_a">Glisați pe bara de spațiu – viteza de deplasare a cursorului este proporțională cu distanța glisării. Pentru navigare precisă, apăsați lung tasta de navigare (între bara de spațiu și enter) pentru a intra în modul TrackPoint, apoi mișcați degetul ca pe un joystick.</string>
     <string name="settings_faq_select_delete_q">Cum selectez și șterg text?</string>
@@ -1098,9 +1098,9 @@
     <string name="settings_faq_clipboard_q">Cum folosesc clipboardul?</string>
     <string name="settings_faq_clipboard_a">Glisați spre SUD-VEST pe tasta Ctrl pentru a deschide istoricul clipboardului. Panoul are file pentru Istoric, Fixate și De făcut. Atingeți conținutul unui element pentru a-l extinde; folosiți butoanele cu pictograme pentru a lipi, a muta la fixate sau a copia ca sarcină de făcut. Notă: copierea din nou a unui text aflat deja în istoric nu îl duplică și nu îl reordonează (sfat: folosiți căutarea). Clipurile din managerele de parole și cele marcate ca „sensibile” sunt excluse implicit.</string>
     <string name="settings_faq_swipe_typing_q">Cum funcționează tastarea prin glisare?</string>
-    <string name="settings_faq_swipe_typing_a">Atingeți prima literă a cuvântului, glisați degetul prin fiecare literă fără a-l ridica, apoi ridicați-l pe ultima literă. O viteză mai mare poate da rezultate mai bune. Sfat: măriți „Length Penalty (Alpha)” pentru engleză (~1.5) și micșorați-o pentru alte limbi (mărind și „Vocab Frequency Weight”).</string>
+    <string name="settings_faq_swipe_typing_a">Atingeți prima literă a cuvântului, glisați degetul prin fiecare literă fără a-l ridica, apoi ridicați-l pe ultima literă. O viteză mai mare poate da rezultate mai bune. Pentru a alege decodorul, accesați Setări → Tastare prin glisare → Motor de predicție: CTC pentru limbile și aranjamentele pe care le acceptă sau Geometric, care funcționează cu orice aranjament.</string>
     <string name="settings_faq_other_languages_q">Pot glisa în alte limbi?</string>
-    <string name="settings_faq_other_languages_a">Da, dar deocamdată acest lucru necesită folosirea aranjamentului QWERTY cu litere latine și reglarea manuală a mai multor setări pentru a obține rezultate utilizabile – vedeți întrebarea de mai sus și setările Prefix Boost (acestea sunt foarte sensibile; încercați modificări mici).</string>
+    <string name="settings_faq_other_languages_a">Da. Importați un pachet de limbă din Setări → Multilingv → Pachete de limbă, apoi selectați-l ca limbă principală sau secundară. Limbile și aranjamentele pe care CTC nu le acceptă sunt decodate de motorul geometric; în Setări → Tastare prin glisare puteți vedea ce motor folosesc limba și aranjamentul dvs. actuale.</string>
     <string name="settings_github_repo_title">Depozit GitHub</string>
     <string name="settings_github_repo_desc">Atingeți pentru a vedea versiunile și a descărca actualizări</string>
     <string name="settings_version_unknown">necunoscută</string>

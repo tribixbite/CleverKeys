@@ -1059,7 +1059,7 @@
     <string name="settings_swipe_data_target_word">“%1$s”</string>
     <string name="settings_swipe_data_keys">Teclas: %1$s</string>
     <string name="settings_faq_numbers_q">Como digito números e símbolos?</string>
-    <string name="settings_faq_numbers_a">Use deslizes curtos (subteclas) nas teclas de letras. Cada tecla tem até 8 subteclas associadas às direções cardeais N, NE, L, SE, S, SO, O e NO. Por exemplo, deslize para o NORDESTE na tecla Q para obter “1” (dica: comece no canto SO). Use Configurações → Atividades → Personalização por tecla para adicionar suas próprias atribuições de subteclas.</string>
+    <string name="settings_faq_numbers_a">Use deslizes curtos (subteclas) nas teclas de letras. Cada tecla tem até 8 subteclas associadas às direções cardeais N, NE, L, SE, S, SO, O e NO. Por exemplo, deslize para o NORDESTE na tecla Q para obter “1” (dica: comece no canto SO). Use Configurações → Atividades → Personalizar ações por tecla para adicionar suas próprias atribuições de subteclas.</string>
     <string name="settings_faq_cursor_q">Como movo o cursor?</string>
     <string name="settings_faq_cursor_a">Deslize na barra de espaço — a velocidade do cursor é proporcional à distância do deslize. Para uma navegação precisa, mantenha pressionada a tecla de navegação (entre a barra de espaço e o Enter) para entrar no modo TrackPoint e depois mova o dedo como um joystick.</string>
     <string name="settings_faq_select_delete_q">Como seleciono e excluo texto?</string>
@@ -1071,9 +1071,9 @@
     <string name="settings_faq_clipboard_q">Como uso a área de transferência?</string>
     <string name="settings_faq_clipboard_a">Deslize para o SUDOESTE na tecla Ctrl para abrir o histórico da área de transferência. O painel tem as abas Histórico, Fixados e Tarefas. Toque no conteúdo de um item para expandi-lo; use os botões de ícone para colar, mover para fixados ou copiar como tarefa. Observação: copiar de novo um texto que já está no histórico não o duplica nem o reordena (dica: use a pesquisa). Clipes de gerenciadores de senhas e os marcados como “sensíveis” ficam de fora por padrão.</string>
     <string name="settings_faq_swipe_typing_q">Como funciona a digitação por deslize?</string>
-    <string name="settings_faq_swipe_typing_a">Toque na primeira letra da palavra, deslize o dedo por cada letra sem levantá-lo e solte na última letra. Deslizar mais rápido pode dar resultados melhores. Dica: aumente “Length Penalty (Alpha)” para inglês (~1.5) e diminua para outros idiomas (e aumente “Vocab Frequency Weight”).</string>
+    <string name="settings_faq_swipe_typing_a">Toque na primeira letra da palavra, deslize o dedo por cada letra sem levantá-lo e solte na última letra. Deslizar mais rápido pode dar resultados melhores. Para escolher o decodificador, acesse Configurações → Digitação por deslize → Motor de previsão: CTC para os idiomas e layouts que ele suporta, ou Geométrico, que funciona com qualquer layout.</string>
     <string name="settings_faq_other_languages_q">Posso digitar por deslize em outros idiomas?</string>
-    <string name="settings_faq_other_languages_a">Sim, mas no momento isso exige usar o layout QWERTY latino e ajustar manualmente várias configurações para obter resultados utilizáveis — veja a pergunta acima e as configurações de Prefix Boost (são muito sensíveis; experimente pequenas mudanças).</string>
+    <string name="settings_faq_other_languages_a">Sim. Importe um pacote de idioma em Configurações → Múltiplos idiomas → Pacotes de idiomas e depois selecione-o como idioma principal ou secundário. Os idiomas e layouts que o CTC não suporta são decodificados pelo motor geométrico; em Configurações → Digitação por deslize você vê qual motor seu idioma e layout atuais usam.</string>
     <string name="settings_github_repo_title">Repositório no GitHub</string>
     <string name="settings_github_repo_desc">Toque para ver as versões e baixar atualizações</string>
     <string name="settings_version_unknown">desconhecida</string>
