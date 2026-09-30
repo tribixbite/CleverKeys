@@ -23,7 +23,8 @@ internal fun SettingsActivity.HelpSection() {
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_help),
                 expanded = helpSectionExpanded,
-                onExpandChange = { helpSectionExpanded = it }
+                onExpandChange = { helpSectionExpanded = it },
+                sectionId = "help_faq"
             ) {
                 // FAQ Items
                 FAQSection()

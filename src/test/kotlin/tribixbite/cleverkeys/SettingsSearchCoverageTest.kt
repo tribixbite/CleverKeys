@@ -221,4 +221,31 @@ class SettingsSearchCoverageTest {
         )
         assertThat(topLevel.filter { it !in reset }).isEmpty()
     }
+
+    /**
+     * A hand-written search entry that stays on this page (no activity class) scrolls to its
+     * `settingId` — which only works if some composable registers a position under that id.
+     * Before 2026-09-30 only `backup_restore` did: "Help & FAQ", every FAQ question, Privacy and
+     * GIF import expanded their section and never scrolled (device check, fa UI). The id must
+     * appear as a string literal somewhere under ui/settings (a `sectionId = "…"`, a FAQ item's
+     * id, a control's highlight id). `whats_new` opens a URL instead and is exempt.
+     */
+    @Test
+    fun everyInPageHandEntryHasAScrollTarget() {
+        val activitySrc = settingsFile.readText()
+        // Each chunk runs from one searchEntry( call to the next; the first chunk is the preamble.
+        val inPageIds = activitySrc.split("searchEntry(").drop(1)
+            .map { it.substringBefore("\n        )") }
+            .filterNot { "::class.java" in it }
+            .mapNotNull { Regex("""settingId\s*=\s*"([a-z0-9_]+)"""").find(it)?.groupValues?.get(1) }
+            .filterNot { it == "whats_new" }
+            .toSortedSet()
+        check(inPageIds.size >= 5) { "Found only $inPageIds — the searchEntry scanner is broken, not a real pass." }
+
+        val uiSources = File("src/main/kotlin/tribixbite/cleverkeys/ui/settings").walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .joinToString("\n") { it.readText() }
+        val unregistered = inPageIds.filterNot { "\"$it\"" in uiSources }
+        assertThat(unregistered).isEmpty()
+    }
 }

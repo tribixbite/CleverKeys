@@ -38,7 +38,9 @@ internal fun SettingsActivity.GifPanelSection() {
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_gif_panel),
                 expanded = gifSectionExpanded,
-                onExpandChange = { gifSectionExpanded = it }
+                onExpandChange = { gifSectionExpanded = it },
+                // The "Import GIF pack" search entry lands on the section header.
+                sectionId = "gif_import"
             ) {
                 Text(
                     text = stringResource(R.string.gif_section_intro),

@@ -267,8 +267,14 @@ Still open:
   and stay flagged for the reviewer. **Review sheets:** `python3 scripts/export_translation_review.py
   --out <dir> [--since <ref>]` writes one CSV per locale (English beside translation, open questions
   pre-filled from `docs/i18n/review-flags.json`, flagged rows first) to hand to reviewers.
-- **Device verification.** fa (pane arrows, FAQ, search scroll, notice dialog) and hu (search,
-  headers, register) on the Seeker/Saga test phone.
+- **Device verification.** Seeker, 2026-09-30, fa per-app locale: settings search shows fa titles
+  and scrolls to controls; FAQ answers are the corrected text; search-result chevrons mirror.
+  Found and fixed there: in-page search entries (Help & FAQ, all 8 FAQ questions, Privacy, GIF
+  import) expanded their section but never scrolled — nothing registered those ids
+  (`SettingsSearchCoverageTest.everyInPageHandEntryHasAScrollTarget`); a FAQ result now also opens
+  its answer. **Still owed:** the GIF/clipboard pane arrows under RTL — the IME window follows the
+  SYSTEM locale, not the per-app one, and the Seeker has no root to change it; check with the phone
+  set to Persian/Arabic. hu (search, headers, register) not re-run.
 
 ### -1. Learning system audit (2026-09-26) — mostly RESOLVED same day
 

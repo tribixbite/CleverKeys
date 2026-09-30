@@ -81,7 +81,9 @@ internal fun SettingsActivity.PrivacySection() {
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_privacy),
                 expanded = privacySectionExpanded,
-                onExpandChange = { privacySectionExpanded = it }
+                onExpandChange = { privacySectionExpanded = it },
+                // The "Privacy" search entry's id (it predates the section and kept the FAQ name).
+                sectionId = "faq_privacy"
             ) {
                 Text(
                     text = stringResource(R.string.privacy_section_intro),

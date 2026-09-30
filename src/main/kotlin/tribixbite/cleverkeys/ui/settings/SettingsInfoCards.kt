@@ -11,6 +11,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -22,6 +23,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -36,7 +39,8 @@ import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 
 /** One FAQ entry; both texts are string resources resolved when the card composes. */
-internal data class FAQItem(@StringRes val question: Int, @StringRes val answer: Int)
+/** A FAQ question/answer; [settingId] is the id its search entry scrolls to (SettingsActivity). */
+internal data class FAQItem(@StringRes val question: Int, @StringRes val answer: Int, val settingId: String)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -142,14 +146,14 @@ internal fun SettingsActivity.FAQSection() {
     // FAQ data - each item is a question/answer pair (verified against source code).
     // Text lives in string resources so the FAQ follows the app language.
     val faqItems = listOf(
-        FAQItem(R.string.settings_faq_numbers_q, R.string.settings_faq_numbers_a),
-        FAQItem(R.string.settings_faq_cursor_q, R.string.settings_faq_cursor_a),
-        FAQItem(R.string.settings_faq_select_delete_q, R.string.settings_faq_select_delete_a),
-        FAQItem(R.string.settings_faq_switch_language_q, R.string.settings_faq_switch_language_a),
-        FAQItem(R.string.settings_faq_emoji_q, R.string.settings_faq_emoji_a),
-        FAQItem(R.string.settings_faq_clipboard_q, R.string.settings_faq_clipboard_a),
-        FAQItem(R.string.settings_faq_swipe_typing_q, R.string.settings_faq_swipe_typing_a),
-        FAQItem(R.string.settings_faq_other_languages_q, R.string.settings_faq_other_languages_a)
+        FAQItem(R.string.settings_faq_numbers_q, R.string.settings_faq_numbers_a, "faq_numbers"),
+        FAQItem(R.string.settings_faq_cursor_q, R.string.settings_faq_cursor_a, "faq_cursor"),
+        FAQItem(R.string.settings_faq_select_delete_q, R.string.settings_faq_select_delete_a, "faq_selection"),
+        FAQItem(R.string.settings_faq_switch_language_q, R.string.settings_faq_switch_language_a, "faq_language"),
+        FAQItem(R.string.settings_faq_emoji_q, R.string.settings_faq_emoji_a, "faq_emoji"),
+        FAQItem(R.string.settings_faq_clipboard_q, R.string.settings_faq_clipboard_a, "faq_clipboard"),
+        FAQItem(R.string.settings_faq_swipe_typing_q, R.string.settings_faq_swipe_typing_a, "faq_swipe"),
+        FAQItem(R.string.settings_faq_other_languages_q, R.string.settings_faq_other_languages_a, "faq_other_languages")
     )
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -162,10 +166,24 @@ internal fun SettingsActivity.FAQSection() {
 @Composable
 internal fun SettingsActivity.FAQItemCard(item: FAQItem) {
     var expanded by remember { mutableStateOf(false) }
+    // A search result for this question scrolls here (position registered below) and opens the
+    // answer, so the user lands on what they searched for rather than a collapsed card.
+    val isHighlighted = highlightedSettingId == item.settingId
+    LaunchedEffect(isHighlighted) { if (isHighlighted) expanded = true }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .onGloballyPositioned { coords ->
+                // Read the scroll offset inside the layout lambda only (issue #79, see
+                // CollapsibleSettingsSection): a composition-body read recomposes every scroll pixel.
+                val y = (coords.positionInRoot().y + (mainScrollState?.value ?: 0)).toInt()
+                recordSettingPosition(item.settingId, y)
+            }
+            .then(
+                if (isHighlighted) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                else Modifier
+            )
             .clickable { expanded = !expanded },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
