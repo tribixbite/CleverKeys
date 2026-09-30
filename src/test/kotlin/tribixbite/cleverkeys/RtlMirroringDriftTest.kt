@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys
 
+import java.io.File
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -46,5 +48,45 @@ class RtlMirroringDriftTest {
         assertTrue(!nonMirrored.containsMatchIn("Icons.AutoMirrored.Filled.ArrowForward"))
         assertTrue(!nonMirrored.containsMatchIn("Icons.Default.KeyboardArrowDown"))
         assertTrue(glyphArrow.containsMatchIn("Text(\"▶\", fontSize = 16.sp)"))
+    }
+
+    /**
+     * The keyboard panes' pagers (IME Views, not Compose) draw the ◀/▶ glyphs as text, so they
+     * cannot use AutoMirrored icons. [PanePagerArrows] swaps them under RTL; this pins the swap.
+     */
+    @Test fun panePagerGlyphsSwapUnderRtl() {
+        val ltr = PanePagerArrows.glyphsFor(rtl = false)
+        val rtl = PanePagerArrows.glyphsFor(rtl = true)
+        assertEquals(R.string.glyph_page_prev, ltr.prev)
+        assertEquals(R.string.glyph_page_next, ltr.next)
+        assertEquals("RTL previous-page button must point right", R.string.glyph_page_next, rtl.prev)
+        assertEquals("RTL next-page button must point left", R.string.glyph_page_prev, rtl.next)
+        val english = TranslationResources.strings(TranslationResources.defaultDir)
+        assertEquals("glyph_page_prev must be the left-pointing glyph", "◀", english["glyph_page_prev"])
+        assertEquals("glyph_page_next must be the right-pointing glyph", "▶", english["glyph_page_next"])
+    }
+
+    /**
+     * Every layout that puts a page glyph on a view must have that view bound through
+     * [PanePagerArrows.apply] somewhere in the Kotlin sources; otherwise a new pager would ship
+     * with fixed arrows again.
+     */
+    @Test fun everyGlyphPagerLayoutIsBoundThroughPanePagerArrows() {
+        val viewWithGlyph = Regex(
+            "android:id=\"@\\+id/(\\w+)\"[^>]*?android:text=\"@string/glyph_page_(?:prev|next)\"" +
+                "|android:text=\"@string/glyph_page_(?:prev|next)\"[^>]*?android:id=\"@\\+id/(\\w+)\"",
+            RegexOption.DOT_MATCHES_ALL
+        )
+        val ids = File("res/layout").listFiles().orEmpty().filter { it.extension == "xml" }
+            .flatMap { f -> f.readText().split("<").mapNotNull { tag ->
+                viewWithGlyph.find(tag)?.let { m -> m.groupValues[1].ifEmpty { m.groupValues[2] } }
+            } }
+        assertTrue("expected the GIF and clipboard pager glyph views, found $ids", ids.size >= 4)
+        val sources = KotlinSourceScan.kotlinFiles()
+            .map { KotlinSourceScan.stripComments(it.second) }
+            .filter { "PanePagerArrows.apply(" in it }
+            .toList()
+        val unbound = ids.filter { id -> sources.none { "R.id.$id" in it } }
+        assertTrue("pager glyph views not bound through PanePagerArrows.apply: $unbound", unbound.isEmpty())
     }
 }

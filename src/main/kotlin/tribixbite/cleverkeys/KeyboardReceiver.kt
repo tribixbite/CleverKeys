@@ -516,6 +516,8 @@ class KeyboardReceiver(
                 val pageInfo = gifPaneView.findViewById<TextView>(R.id.gif_page_info)
                 val pagePrev = gifPaneView.findViewById<TextView>(R.id.gif_page_prev)
                 val pageNext = gifPaneView.findViewById<TextView>(R.id.gif_page_next)
+                // ◀/▶ swap under RTL, where the bar lays "previous" out on the right.
+                PanePagerArrows.apply(pagePrev, pageNext)
 
                 gifGrid?.onPaginationChanged = { needsPagination, currentPage, totalPages ->
                     paginationBar?.visibility = if (needsPagination) View.VISIBLE else View.GONE

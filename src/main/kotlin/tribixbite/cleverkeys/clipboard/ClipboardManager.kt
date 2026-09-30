@@ -201,6 +201,8 @@ class ClipboardManager(
             pagePrev = clipboardPane?.findViewById(R.id.clipboard_page_prev)
             pageInfo = clipboardPane?.findViewById(R.id.clipboard_page_info)
             pageNext = clipboardPane?.findViewById(R.id.clipboard_page_next)
+            // ◀/▶ swap under RTL, where the bar lays "previous" out on the right.
+            PanePagerArrows.apply(pagePrev, pageNext)
 
             pagePrev?.setOnClickListener {
                 if (!isInEditMode()) clipboardHistoryView?.previousPage()
