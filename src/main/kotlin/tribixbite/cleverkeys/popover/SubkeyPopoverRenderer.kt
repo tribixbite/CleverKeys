@@ -87,7 +87,7 @@ class SubkeyPopoverRenderer {
             val scale = 1f + (ACTIVE_SCALE - 1f) * selectInterp.getInterpolation(selectT)
             drawSlot(canvas, state, activeSlot, scale, true, open, theme, keyPaints)
             if (SubkeyPopoverSlots.isEditable(activeSlot) && state.keyCode != null) {
-                animating = drawDwellRing(canvas, state, activeSlot.direction, scale, now, theme) || animating
+                animating = drawDwellRing(canvas, state, scale, now, theme) || animating
             }
         }
         canvas.restore()
@@ -98,11 +98,20 @@ class SubkeyPopoverRenderer {
         canvas: Canvas, state: SubkeyPopoverState, slot: PopoverSlot, scale: Float, selected: Boolean,
         open: Float, theme: Theme, keyPaints: Theme.Computed.Key,
     ) {
-        val cx = cellX(state, slot.direction)
-        val cy = cellY(state, slot.direction)
+        var cx = cellX(state, slot.direction)
+        var cy = cellY(state, slot.direction)
         val w = state.cellWidth * CELL_FILL * scale
         val h = state.cellHeight * CELL_FILL * scale
         rect.set(cx - w / 2f, cy - h / 2f, cx + w / 2f, cy + h / 2f)
+        if (selected) {
+            // The grid fits the view, but the enlarged cell can poke past its edge (a top-row
+            // key's N row sits at y = 0) and be clipped: nudge it back inside.
+            val shiftX = edgeShift(rect.left, rect.right, canvas.width.toFloat())
+            val shiftY = edgeShift(rect.top, rect.bottom, canvas.height.toFloat())
+            rect.offset(shiftX, shiftY)
+            cx += shiftX
+            cy += shiftY
+        }
         val radius = min(w, h) * CORNER
         val label = state.label(slot.direction)
         val alpha = (255 * open).toInt()
@@ -130,22 +139,31 @@ class SubkeyPopoverRenderer {
             withAlpha(if (selected) theme.activatedColor else theme.labelColor, alpha))
     }
 
-    /** Fill a ring around the selected cell while the finger dwells; true while filling. */
-    private fun drawDwellRing(
-        canvas: Canvas, state: SubkeyPopoverState, direction: SwipeDirection, scale: Float, now: Long, theme: Theme,
-    ): Boolean {
+    /**
+     * Fill a ring around the selected cell while the finger dwells; true while filling.
+     * Must run right after [drawSlot] drew the selected cell: [rect] still holds that cell's
+     * final (edge-nudged) bounds, which the ring is centred on.
+     */
+    private fun drawDwellRing(canvas: Canvas, state: SubkeyPopoverState, scale: Float, now: Long, theme: Theme): Boolean {
         val held = now - state.activeSince
         if (held < SubkeyPopoverState.DWELL_RING_START_MS) return true  // ring not started yet
         val span = (SubkeyPopoverState.DWELL_EDIT_MS - SubkeyPopoverState.DWELL_RING_START_MS).toFloat()
         val progress = ((held - SubkeyPopoverState.DWELL_RING_START_MS) / span).coerceIn(0f, 1f)
-        val cx = cellX(state, direction)
-        val cy = cellY(state, direction)
+        val cx = rect.centerX()
+        val cy = rect.centerY()
         val r = min(state.cellWidth, state.cellHeight) * CELL_FILL * scale * 0.62f
         rect.set(cx - r, cy - r, cx + r, cy + r)
         ringPaint.strokeWidth = max(2f, r * 0.12f)
         ringPaint.color = withAlpha(theme.activatedColor, 220)
         canvas.drawArc(rect, -90f, 360f * progress, false, ringPaint)
         return progress < 1f
+    }
+
+    /** Offset that moves the span [lo, hi] inside [0, size] (0 when it already fits). */
+    private fun edgeShift(lo: Float, hi: Float, size: Float): Float = when {
+        lo < 0f -> -lo
+        hi > size -> size - hi
+        else -> 0f
     }
 
     private fun cellX(state: SubkeyPopoverState, direction: SwipeDirection): Float =

@@ -24,7 +24,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -56,9 +55,7 @@ internal fun SettingsActivity.CollapsibleSettingsSection(
                     // the whole node chain re-diffs and re-lays-out mid-scroll: visible jitter.
                     // The other three call sites (SettingsSwitch/Slider/Dropdown) always read it
                     // here; this one is now consistent with them.
-                    val positionInParent = coords.positionInRoot()
-                    val scrollOffset = mainScrollState?.value ?: 0
-                    recordSettingPosition(sectionId, (positionInParent.y + scrollOffset).toInt())
+                    recordSettingPosition(sectionId, contentYOf(coords))
                 } else m
             },
         colors = CardDefaults.cardColors(
@@ -184,7 +181,7 @@ internal fun SettingsActivity.SettingsSwitch(
                 // Record position for scroll targeting. Always register under the title's
                 // setting ids (the generated search entries' settingId); also under an
                 // explicit highlightId when given (gated-setting highlight targets).
-                val y = (coordinates.positionInRoot().y + (mainScrollState?.value ?: 0)).toInt()
+                val y = contentYOf(coordinates)
                 regIds.forEach { recordSettingPosition(it, y) }
                 if (highlightId != null && highlightId !in regIds) recordSettingPosition(highlightId, y)
             }
@@ -242,7 +239,7 @@ internal fun SettingsActivity.SettingsSlider(
         modifier = Modifier
             .fillMaxWidth()
             .onGloballyPositioned { coordinates ->
-                val y = (coordinates.positionInRoot().y + (mainScrollState?.value ?: 0)).toInt()
+                val y = contentYOf(coordinates)
                 regIds.forEach { recordSettingPosition(it, y) }
             }
             .then(
@@ -318,7 +315,7 @@ internal fun SettingsActivity.SettingsDropdown(
         modifier = Modifier
             .fillMaxWidth()
             .onGloballyPositioned { coordinates ->
-                val y = (coordinates.positionInRoot().y + (mainScrollState?.value ?: 0)).toInt()
+                val y = contentYOf(coordinates)
                 regIds.forEach { recordSettingPosition(it, y) }
             }
             .then(

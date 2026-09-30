@@ -566,6 +566,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Position tracking for scroll-to-top functionality
     internal val settingPositions = mutableMapOf<String, Int>()  // settingId -> Y position in scroll content
     internal var mainScrollState: androidx.compose.foundation.ScrollState? = null
+    /** Root-space Y (px) of the settings scroll viewport's top edge; see [contentYOf]. */
+    internal var scrollViewportTop: Float = 0f
     internal var composeScope: kotlinx.coroutines.CoroutineScope? = null  // Compose-aware scope with MonotonicFrameClock
 
     /** Nested scroll connection to prevent search results from scrolling parent */

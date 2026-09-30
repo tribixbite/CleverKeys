@@ -263,8 +263,18 @@ Tests:
 - pure: `SubkeyPopoverGeometryTest`, `SubkeyPopoverSlotsTest`;
 - mock: `PointersSubkeyPopoverTest`, `SubkeyPopoverMigrationTest`.
 
+Seeker check, 2026-09-30 (release build, fa/en):
+- The upgrade migration left the toggle OFF.
+- Holding `e` (top row) opens the clamped grid.
+- NE types `3`.
+- An empty SW slot opens the palette; assigning `@` saves it (toast), and it then shows on the key and in the popover.
+- A 3 s dwell on NE opens the edit screen: Reassign / Remove, and no Restore for a layout default.
+- Fixed there:
+  - the enlarged selected cell is nudged back inside the view (it was clipped at the keyboard's top edge);
+  - settings search now waits for the target's position to SETTLE before scrolling. Section expand animations reported in-flight positions (the new toggle read −931 px, so it never scrolled), and positions are now relative to the scroll viewport (every result used to overshoot by the status bar plus padding). All Gesture Tuning results had silently failed to scroll.
+
 Open:
-- Device feel check. The animation constants are in `SubkeyPopoverRenderer`; the dwell and arming values are in `SubkeyPopoverState` / `SubkeyPopoverGeometry`.
+- Feel on a real finger (the timing was only driven by adb). The animation constants are in `SubkeyPopoverRenderer`; the dwell and arming values are in `SubkeyPopoverState` / `SubkeyPopoverGeometry`.
 - TalkBack: the popover is not exposed to accessibility (explore-by-touch users keep the per-key settings screen).
 - Native review of the 17 new strings (translator notes: inflected toasts in cs/lv/pl/ru/uk/hu; "slot" word in in/tr; hu "Újra hozzárendelés").
 

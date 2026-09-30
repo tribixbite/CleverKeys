@@ -2,6 +2,8 @@ package tribixbite.cleverkeys.ui.settings
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.positionInRoot
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.R
@@ -16,6 +18,56 @@ import tribixbite.cleverkeys.SettingsActivity
 internal fun SettingsActivity.recordSettingPosition(settingId: String, yPosition: Int) {
     settingPositions[settingId] = yPosition
 }
+
+/**
+ * Y (px) of [coords]' top inside the settings scroll CONTENT: its root-space position, minus the
+ * viewport's root-space top, plus the current scroll. The single conversion every scroll-target
+ * registration uses. (Before 2026-09-30 the viewport offset — status bar + padding — was left
+ * in, so every search result scrolled that far past its target.) Call it only from a layout
+ * lambda (issue #79: a composition-body read of the scroll value recomposes every pixel).
+ */
+internal fun SettingsActivity.contentYOf(coords: LayoutCoordinates): Int =
+    (coords.positionInRoot().y - scrollViewportTop + (mainScrollState?.value ?: 0)).toInt()
+
+/**
+ * Expand-then-scroll for a search result: forget [settingId]'s old position, run [expand], wait
+ * until the target's registered position is SETTLED, then scroll and highlight it.
+ *
+ * Sections open with an expand animation, and `onGloballyPositioned` reports the target every
+ * frame of it at an in-flight offset (seen on the Seeker 2026-09-30: the new popover toggle read
+ * -931 px 50 ms in, so the scroll clamped to the top; Vibration read 8000 and overshot). The fixed
+ * 200 ms delay this replaces read those in-flight values. Settled = registered and unchanged
+ * across two polls, capped at [SCROLL_TARGET_WAIT_MS].
+ */
+internal fun SettingsActivity.expandAndScrollTo(settingId: String, expand: () -> Unit) {
+    val self = this
+    settingPositions.remove(settingId)
+    expand()
+    lifecycleScope.launch {
+        var waited = 0L
+        var previous: Int? = null
+        while (waited < SCROLL_TARGET_WAIT_MS) {
+            kotlinx.coroutines.delay(SCROLL_TARGET_POLL_MS)
+            waited += SCROLL_TARGET_POLL_MS
+            val current = settingPositions[settingId]
+            if (current != null && current == previous) break
+            previous = current
+        }
+        if (tribixbite.cleverkeys.BuildConfig.ENABLE_VERBOSE_LOGGING) android.util.Log.d(
+            "SettingsSearch",
+            "scroll target $settingId: waited=${waited}ms pos=${settingPositions[settingId]} " +
+                "viewportTop=$scrollViewportTop scroll=${mainScrollState?.value} max=${mainScrollState?.maxValue} " +
+                "scope=${composeScope != null}"
+        )
+        self.scrollToSetting(settingId)
+        self.highlightedSettingId = settingId
+        kotlinx.coroutines.delay(2000)
+        self.highlightedSettingId = null
+    }
+}
+
+private const val SCROLL_TARGET_POLL_MS = 80L
+private const val SCROLL_TARGET_WAIT_MS = 1_500L
 
 /** Scroll to a setting by ID, positioning it at the top of the screen */
 internal fun SettingsActivity.scrollToSetting(settingId: String) {
@@ -156,26 +208,17 @@ internal fun SettingsActivity.isGateEnabled(gateId: String): Boolean {
 
 /** Execute search result action - collapse others, expand target, handle gating */
 internal fun SettingsActivity.executeSearchAction(setting: SearchableSetting) {
-    val _self = this  // capture extension receiver for use inside non-inline lambdas
-    // Check if gated by a disabled toggle
+    // Check if gated by a disabled toggle: land on the gating toggle instead.
     if (setting.gatedBy != null && !isGateEnabled(setting.gatedBy)) {
-        // Find the gating setting and highlight it
-        collapseAllSections()
         val targetId = setting.gatedBy
-        when (targetId) {
-            "swipe_typing" -> swipeTypingSectionExpanded = true
-            "short_gestures" -> gestureTuningSectionExpanded = true
-            "multilang" -> multiLangSectionExpanded = true
-            "gif_enabled" -> gifSectionExpanded = true
-        }
-        // Delay to let section expand, then scroll and highlight
-        // Use lifecycleScope for delay, scrollToSetting uses composeScope internally
-        lifecycleScope.launch {
-            kotlinx.coroutines.delay(200)  // Wait for layout
-            _self.scrollToSetting(targetId)
-            _self.highlightedSettingId = targetId
-            kotlinx.coroutines.delay(2000)
-            _self.highlightedSettingId = null
+        expandAndScrollTo(targetId) {
+            collapseAllSections()
+            when (targetId) {
+                "swipe_typing" -> swipeTypingSectionExpanded = true
+                "short_gestures" -> gestureTuningSectionExpanded = true
+                "multilang" -> multiLangSectionExpanded = true
+                "gif_enabled" -> gifSectionExpanded = true
+            }
         }
         return
     }
@@ -186,19 +229,14 @@ internal fun SettingsActivity.executeSearchAction(setting: SearchableSetting) {
     } else if (setting.settingId == "whats_new") {
         // Special handling for What's New - opens external URL
         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tribixbite/CleverKeys/releases/latest")))
+    } else if (setting.settingId.isNotEmpty()) {
+        expandAndScrollTo(setting.settingId) {
+            collapseAllSections()
+            setting.expandSection()
+        }
     } else {
         collapseAllSections()
         setting.expandSection()
-        // Delay to let section expand, then scroll to top and highlight
-        if (setting.settingId.isNotEmpty()) {
-            lifecycleScope.launch {
-                kotlinx.coroutines.delay(200)  // Wait for layout
-                _self.scrollToSetting(setting.settingId)
-                _self.highlightedSettingId = setting.settingId
-                kotlinx.coroutines.delay(2000)
-                _self.highlightedSettingId = null
-            }
-        }
     }
 }
 

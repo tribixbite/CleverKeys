@@ -39,6 +39,8 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -107,6 +109,9 @@ internal fun SettingsActivity.SettingsScreen() {
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(16.dp)
+                // The viewport's top in root space: positions recorded for search scrolling are
+                // made relative to it (contentYOf), or every scroll overshoots by this offset.
+                .onGloballyPositioned { scrollViewportTop = it.positionInRoot().y }
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {

@@ -24,7 +24,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -177,8 +176,7 @@ internal fun SettingsActivity.FAQItemCard(item: FAQItem) {
             .onGloballyPositioned { coords ->
                 // Read the scroll offset inside the layout lambda only (issue #79, see
                 // CollapsibleSettingsSection): a composition-body read recomposes every scroll pixel.
-                val y = (coords.positionInRoot().y + (mainScrollState?.value ?: 0)).toInt()
-                recordSettingPosition(item.settingId, y)
+                recordSettingPosition(item.settingId, contentYOf(coords))
             }
             .then(
                 if (isHighlighted) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
