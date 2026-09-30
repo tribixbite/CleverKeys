@@ -332,9 +332,16 @@ retain at the tail.
    boost ≥ 1 always, so `both` never applies a static penalty, empty store or not; only
    `static_only` users see `RAW`. Adopting `FLOOR_ONE` needs a new pre-registration + fresh dev
    evidence (second English dev set, or a per-language rule registered up front).
-3. Device-only: native-speaker review of the new strings; RTL (fa, ar-XB), en-XA long text, large
-   font and TalkBack on a TEST phone (Saga was in use 2026-09-29 — never the host phone).
-4. Apostrophe/hyphen words in the swipe "Prefer" offer need decoder changes (audit doc).
+3. Device checks — PARTLY DONE on the Seeker test phone (192.168.0.170:5555; recipe in the auto-memory
+   `seeker-test-device`), release builds of `abced4c0` and `59b2da2e`: tap "pka"/"pkay" → play; next-word
+   after "I" shows don't; swipes shed → Shed + She'd, ill → I'll, teams → Teams + Team's; fa RTL settings
+   + privacy; hu long titles wrap; pack attribution UI + NOTICE dialog; crash buffer empty. Found and
+   fixed in `59b2da2e`: hardcoded English, unmirrored arrows, title/chevron collision, hu register mix,
+   no delete confirmation, NOTICE wrap. Still owed: native-speaker review; TalkBack; large font;
+   en-XA/ar-XB pseudolocales (debug build only); re-check of the 2026-09-30 i18n fixes (§-2).
+4. ~~Apostrophe/hyphen words in the swipe "Prefer" offer~~ DONE 2026-09-29 (`1bb0ddb4`): a joiner
+   user word is a DISPLAY preference honoured by ContractionOverlay (skill §6d); also fixed a user
+   "l'une" hijacking every "lune" swipe. Note: system UserDictionary joiner entries count too.
 5. Two mock tests are load-sensitive (W6 persistence, fuzzy latency) — contention, not bugs.
 **licensing:** repo side DONE 2026-09-26 — see `docs/audit/2026-09-26-data-licensing-audit.md`
 (Norvig pack removed: no redistribution grant; OpenSubtitles packs are FrequencyWords CC BY-SA 4.0
