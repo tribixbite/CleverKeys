@@ -30,7 +30,8 @@ import tribixbite.cleverkeys.ui.settings.SearchableSetting
 import tribixbite.cleverkeys.ui.settings.expanderFor
 import tribixbite.cleverkeys.ui.settings.scrollToSetting
 import tribixbite.cleverkeys.ui.settings.sectionDisplayName
-import tribixbite.cleverkeys.ui.settings.settingSlug
+import tribixbite.cleverkeys.ui.settings.SettingsSearchMatch
+import tribixbite.cleverkeys.ui.settings.bareTitle
 import tribixbite.cleverkeys.ui.settings.io.CreateBackupDocument
 import tribixbite.cleverkeys.ui.settings.io.applyPlannedDictionaries
 import tribixbite.cleverkeys.ui.settings.io.applyPlannedSettings
@@ -575,33 +576,71 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /**
-     * `settingSlug`s of the controls living INSIDE the collapsible "Advanced Prediction
-     * Settings" sub-panel of the Input section ([InputBehaviorSection]'s
-     * `wordPredictionAdvancedExpanded` block). Their search entries must open that panel as
-     * well as the section. Derived from the same titles the generated index uses; if a control
-     * moves in or out of the panel, update this set — a miss degrades to today's behaviour
-     * (section opens, no scroll), it does not crash.
+     * Setting ids (title resource names, see [GeneratedSearchEntry.settingId]) of the controls
+     * living INSIDE the collapsible "Advanced Prediction Settings" sub-panel of the Input section
+     * ([InputBehaviorSection]'s `wordPredictionAdvancedExpanded` block). Their search entries must
+     * open that panel as well as the section. `SettingsSearchCoverageTest` pins this set to the
+     * panel's contents; a miss degrades to "section opens, no scroll", it does not crash.
      */
-    private val WORD_PREDICTION_ADVANCED_SLUGS = setOf(
-        "context_aware_predictions",
-        "next_word_prediction",
-        "context_source",
-        "personalized_learning",
-        "personalization_strength",
-        "learning_aggression",
-        "context_boost_multiplier",
-        "frequency_scale",
+    private val WORD_PREDICTION_ADVANCED_IDS = setOf(
+        "input_context_aware_title",
+        "input_next_word_title",
+        "input_context_source_title",
+        "input_personalized_learning_title",
+        "input_personalization_weight_title",
+        "input_learning_aggression_title",
+        "input_context_boost_title",
+        "input_frequency_scale_title",
+    )
+
+    /** English resources, for matching English titles under any UI language. */
+    private val englishResources: android.content.res.Resources by lazy {
+        val config = android.content.res.Configuration(resources.configuration)
+        config.setLocale(java.util.Locale.ENGLISH)
+        createConfigurationContext(config).resources
+    }
+
+    /**
+     * Visible (UI-language) control title -> the locale-independent setting ids of the index
+     * entries with that title. Controls register their scroll positions under these ids
+     * ([settingIdsFor]); the activity is recreated on a locale change, so this is rebuilt then.
+     */
+    internal val searchIdsByTitle: Map<String, List<String>> by lazy {
+        SettingsSearchMatch.idsByTitle(
+            GENERATED_SEARCH_ENTRIES.filter { it.titleRes != 0 }.map { getString(it.titleRes) to it.settingId }
+        )
+    }
+
+    /** A hand-maintained entry whose title is the string resource [titleRes]. */
+    private fun searchEntry(
+        @androidx.annotation.StringRes titleRes: Int,
+        keywords: List<String>,
+        sectionKey: String,
+        activityClass: Class<*>? = null,
+        expandSection: () -> Unit = {},
+        gatedBy: String? = null,
+        settingId: String = "",
+    ) = SearchableSetting(
+        title = bareTitle(getString(titleRes)),
+        englishTitle = bareTitle(englishResources.getString(titleRes)),
+        keywords = keywords,
+        sectionName = sectionDisplayName(sectionKey),
+        activityClass = activityClass,
+        expandSection = expandSection,
+        gatedBy = gatedBy,
+        settingId = settingId,
     )
 
     internal val searchableSettings: List<SearchableSetting> by lazy {
         listOf(
             // Auto-derived control entries — generated from the actual
             // SettingsSwitch/SettingsSlider/SettingsDropdown titles by
-            // scripts/generate_settings_search_index.py (never hand-maintained).
+            // scripts/generate_settings_search_index.py (never hand-maintained). Shown and
+            // matched in the UI language; the English title and keywords match as well.
             *GENERATED_SEARCH_ENTRIES.map { e ->
-                val slug = settingSlug(e.title)
                 SearchableSetting(
-                    title = e.title,
+                    title = if (e.titleRes != 0) getString(e.titleRes) else e.title,
+                    englishTitle = e.title,
                     keywords = e.keywords,
                     sectionName = sectionDisplayName(e.sectionKey),
                     // Controls inside the collapsed "Advanced Prediction Settings" sub-panel
@@ -609,39 +648,44 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     // scroll position, and the search result silently lands nowhere (audit
                     // 2026-08-26 — bit all eight advanced-panel entries, found via the
                     // next-word toggle).
-                    expandSection = if (slug in WORD_PREDICTION_ADVANCED_SLUGS) {
+                    expandSection = if (e.settingId in WORD_PREDICTION_ADVANCED_IDS) {
                         { expanderFor(e.sectionKey)(); wordPredictionAdvancedExpanded = true }
                     } else {
                         expanderFor(e.sectionKey)
                     },
-                    settingId = slug,
+                    settingId = e.settingId,
                 )
             }.toTypedArray(),
             // ===== Hand-maintained NON-control entries (activity navigation, FAQ) =====
-            SearchableSetting("Theme Manager", listOf("color", "dark mode", "light", "appearance", "theme"), "Activities", ThemeSettingsActivity::class.java),
-            SearchableSetting("Dictionary Manager", listOf("words", "custom", "disabled", "vocabulary"), "Activities", DictionaryManagerActivity::class.java),
-            SearchableSetting("Layout Manager", listOf("keyboard layout", "qwerty", "azerty"), "Activities", LayoutManagerActivity::class.java),
-            SearchableSetting("Per-Key Customization", listOf("short swipe", "gesture", "actions", "commands"), "Activities", ShortSwipeCustomizationActivity::class.java, gatedBy = "short_gestures", settingId = "per_key_customization"),
-            SearchableSetting("Short Swipe Calibration", listOf("calibrate", "practice", "tutorial", "test"), "Gesture Tuning", ShortSwipeCalibrationActivity::class.java, gatedBy = "short_gestures", settingId = "short_swipe_calibration"),
-            SearchableSetting("Extra Keys", listOf("toolbar", "arrows", "numbers"), "Activities", ExtraKeysConfigActivity::class.java),
-            SearchableSetting("Backup & Restore", listOf("backup", "export", "import", "restore", "zip", "preview", "deselect"), "Backup & Restore", expandSection = { backupRestoreSectionExpanded = true }, settingId = "backup_restore"),
-            SearchableSetting("What's New", listOf("changelog", "release", "update", "features", "version"), "Activities", settingId = "whats_new"),
-            SearchableSetting("Geometric Settings", listOf("geometric", "shape", "shark", "swipe engine", "tolerance"), "Swipe Typing", GeometricSettingsActivity::class.java),
+            // Titles are the screens' own string resources, so they read exactly like the
+            // screen they open, in the UI language.
+            searchEntry(R.string.activities_theme_title, listOf("color", "dark mode", "light", "appearance", "theme"), "activities", ThemeSettingsActivity::class.java),
+            searchEntry(R.string.activities_dictionary_title, listOf("words", "custom", "disabled", "vocabulary"), "activities", DictionaryManagerActivity::class.java),
+            searchEntry(R.string.activities_layout_title, listOf("keyboard layout", "qwerty", "azerty"), "activities", LayoutManagerActivity::class.java),
+            searchEntry(R.string.calibration_customize_title, listOf("short swipe", "gesture", "actions", "commands", "per-key"), "activities", ShortSwipeCustomizationActivity::class.java, gatedBy = "short_gestures", settingId = "per_key_customization"),
+            searchEntry(R.string.activities_calibration_title, listOf("calibrate", "practice", "tutorial", "test"), "gestureTuning", ShortSwipeCalibrationActivity::class.java, gatedBy = "short_gestures", settingId = "short_swipe_calibration"),
+            searchEntry(R.string.activities_extra_keys_title, listOf("toolbar", "arrows", "numbers"), "activities", ExtraKeysConfigActivity::class.java),
+            searchEntry(R.string.settings_section_backup_restore, listOf("backup", "export", "import", "restore", "zip", "preview", "deselect"), "backupRestore", expandSection = { backupRestoreSectionExpanded = true }, settingId = "backup_restore"),
+            searchEntry(R.string.activities_whats_new_title, listOf("changelog", "release", "update", "features", "version"), "activities", settingId = "whats_new"),
+            searchEntry(R.string.swipe_full_geometric_settings, listOf("geometric", "shape", "shark", "swipe engine", "tolerance"), "swipeTyping", GeometricSettingsActivity::class.java),
             // L4: ungated, matching the "Geometric Settings" twin — a search-driven visit
             // to a tuning screen is harmless with swipe typing off, and the asymmetric
             // gate made "ctc" unfindable exactly when the user is setting swipe up.
-            SearchableSetting("CTC Settings", listOf("ctc", "swipe engine", "beam", "trie"), "Swipe Typing", CtcSettingsActivity::class.java),
-            SearchableSetting("ONNX Threads", listOf("threads", "cpu", "xnnpack", "performance", "onnx"), "Swipe Typing", CtcSettingsActivity::class.java, gatedBy = "swipe_typing", settingId = "onnx_threads"),
-            SearchableSetting("GIF Import Pack", listOf("gif", "import", "pack", "zip", "download"), "GIF Panel", expandSection = { gifSectionExpanded = true }, gatedBy = "gif_enabled", settingId = "gif_import"),
-            SearchableSetting("Help & FAQ", listOf("help", "faq", "documentation", "wiki", "questions"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "help_faq"),
-            SearchableSetting("Type Numbers & Symbols", listOf("numbers", "symbols", "subkey", "short swipe"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_numbers"),
-            SearchableSetting("Cursor Control", listOf("cursor", "navigation", "spacebar", "move"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_cursor"),
-            SearchableSetting("Select & Delete Text", listOf("selection", "delete", "text", "backspace"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_selection"),
-            SearchableSetting("Language Switching", listOf("language", "switch", "toggle", "multilingual"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_language"),
-            SearchableSetting("Emoji Access", listOf("emoji", "emoticon", "symbols", "fn"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_emoji"),
-            SearchableSetting("Clipboard History", listOf("clipboard", "paste", "history", "pinned", "fn"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_clipboard"),
-            SearchableSetting("Swipe Typing Help", listOf("swipe", "typing", "glide", "gesture"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_swipe"),
-            SearchableSetting("Privacy Info", listOf("privacy", "offline", "data", "secure"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_privacy")
+            searchEntry(R.string.swipe_full_ctc_settings, listOf("ctc", "swipe engine", "beam", "trie"), "swipeTyping", CtcSettingsActivity::class.java),
+            searchEntry(R.string.ctc_settings_threads_title, listOf("threads", "cpu", "xnnpack", "performance", "onnx"), "swipeTyping", CtcSettingsActivity::class.java, gatedBy = "swipe_typing", settingId = "onnx_threads"),
+            searchEntry(R.string.gif_import_pack, listOf("gif", "import", "pack", "zip", "download"), "gif", expandSection = { gifSectionExpanded = true }, gatedBy = "gif_enabled", settingId = "gif_import"),
+            searchEntry(R.string.settings_section_help, listOf("help", "faq", "documentation", "wiki", "questions"), "help", expandSection = { helpSectionExpanded = true }, settingId = "help_faq"),
+            searchEntry(R.string.settings_faq_numbers_q, listOf("numbers", "symbols", "subkey", "short swipe"), "help", expandSection = { helpSectionExpanded = true }, settingId = "faq_numbers"),
+            searchEntry(R.string.settings_faq_cursor_q, listOf("cursor", "navigation", "spacebar", "move"), "help", expandSection = { helpSectionExpanded = true }, settingId = "faq_cursor"),
+            searchEntry(R.string.settings_faq_select_delete_q, listOf("selection", "delete", "text", "backspace"), "help", expandSection = { helpSectionExpanded = true }, settingId = "faq_selection"),
+            searchEntry(R.string.settings_faq_switch_language_q, listOf("language", "switch", "toggle", "multilingual"), "help", expandSection = { helpSectionExpanded = true }, settingId = "faq_language"),
+            searchEntry(R.string.settings_faq_emoji_q, listOf("emoji", "emoticon", "symbols", "fn"), "help", expandSection = { helpSectionExpanded = true }, settingId = "faq_emoji"),
+            searchEntry(R.string.settings_faq_clipboard_q, listOf("clipboard", "paste", "history", "pinned", "fn"), "help", expandSection = { helpSectionExpanded = true }, settingId = "faq_clipboard"),
+            searchEntry(R.string.settings_faq_swipe_typing_q, listOf("swipe", "typing", "glide", "gesture"), "help", expandSection = { helpSectionExpanded = true }, settingId = "faq_swipe"),
+            searchEntry(R.string.settings_faq_other_languages_q, listOf("language", "languages", "pack", "geometric", "ctc"), "help", expandSection = { helpSectionExpanded = true }, settingId = "faq_other_languages"),
+            // The privacy information lives in the Privacy & Data section (there is no privacy
+            // FAQ item), so this entry opens that section.
+            searchEntry(R.string.settings_section_privacy, listOf("privacy", "offline", "data", "secure"), "privacy", expandSection = { privacySectionExpanded = true }, settingId = "faq_privacy")
         )
     }
 

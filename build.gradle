@@ -656,6 +656,8 @@ tasks.register('runPureTests', JavaExec) {
     // context/bigram/trigram surface in the section that can already erase them.
     'tribixbite.cleverkeys.PrivacyDataSurfaceDriftTest',
     'tribixbite.cleverkeys.SettingsSearchCoverageTest',
+    // Settings search in the UI language; scroll targets keyed by stable setting ids.
+    'tribixbite.cleverkeys.SettingsSearchLocalizationTest',
     'tribixbite.cleverkeys.GesturePrefAccessDriftTest',
     // ARC-084/085/097 (2026-08-29): pins the deletions of the dead CGR chain and the dead
     // swipe_correction_preset control, and that both routed-engine dispatches derive their

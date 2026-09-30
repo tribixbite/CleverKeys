@@ -99,8 +99,8 @@ class TestKeyboardSectionTest {
     @Test
     fun panelIsFindableInSearch() {
         val search = read("src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsSearch.kt")
-        assertWithMessage("settings search must know the panel's display name")
-            .that(search).contains("\"testKeyboard\" -> \"Test Keyboard\"")
+        assertWithMessage("settings search must know the panel's display name (its localized title)")
+            .that(search).contains("\"testKeyboard\" -> R.string.test_keyboard_section_title")
         assertWithMessage("navigating to a search hit must expand the panel")
             .that(search).contains("\"testKeyboard\" -> testKeyboardExpanded = true")
         assertWithMessage("collapsing all sections must include this one, or search leaves it open")

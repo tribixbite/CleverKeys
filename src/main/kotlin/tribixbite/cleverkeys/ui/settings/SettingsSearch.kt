@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 
 /**
@@ -52,13 +53,16 @@ internal fun SettingsActivity.collapseAllSections() {
 
 /**
  * Searchable settings index. Each entry maps a setting name to its action.
+ * title: shown and matched, in the UI language
+ * englishTitle: matched as well (English habits keep working under any UI language)
  * activityClass: if not null, clicking navigates to that activity
  * expandSection: if activityClass is null, clicking expands this section
  * gatedBy: if set, this setting requires another toggle to be enabled first
- * settingId: unique ID for highlighting
+ * settingId: locale-independent ID for scrolling and highlighting (see [settingIdsFor])
  */
 internal data class SearchableSetting(
     val title: String,
+    val englishTitle: String,
     val keywords: List<String>,
     val sectionName: String,
     val activityClass: Class<*>? = null,
@@ -72,33 +76,49 @@ internal data class SearchableSetting(
  *  of every one of them (issue #79's amplifier). */
 private val SETTING_SLUG_SEPARATORS = Regex("[^a-z0-9]+")
 
-/** Stable scroll/highlight key for a control, derived from its visible title.
- *  MUST match scripts/generate_settings_search_index.py's slugify so an auto-derived
- *  search entry's settingId equals the key the control registers its position under. */
+/** Fallback scroll/highlight key for a control whose title is not in the generated index
+ *  (a literal title): a slug of that title, like scripts/generate_settings_search_index.py's
+ *  slugify. Index entries use the title's string-resource name instead — see [settingIdsFor]. */
 internal fun SettingsActivity.settingSlug(title: String): String =
     title.lowercase().replace(SETTING_SLUG_SEPARATORS, "_").trim('_')
 
-/** Display name shown as "in <section>" for an auto-derived (generated) search result. */
-internal fun SettingsActivity.sectionDisplayName(sectionKey: String): String = when (sectionKey) {
-    "swipeTyping" -> "Swipe Typing"
-    "appearance" -> "Appearance"
-    "swipeTrail" -> "Swipe Trail"
-    "input" -> "Word Prediction"
-    "swipeCorrections" -> "Swipe Corrections"
-    "gestureTuning" -> "Gesture Tuning"
-    "accessibility" -> "Accessibility"
-    "clipboard" -> "Clipboard"
-    "gif" -> "GIF Panel"
-    "multiLang" -> "Multi-Language"
-    "privacy" -> "Privacy"
-    "advanced" -> "Advanced"
-    "activities" -> "Activities"
-    "backupRestore" -> "Backup & Restore"
-    "help" -> "Help & FAQ"
-    "testKeyboard" -> "Test Keyboard"
-    "info" -> "Information & Actions"
-    else -> "Settings"
+/**
+ * The ids a control with the visible [title] registers its scroll position (and highlight)
+ * under: the locale-independent ids of the index entries whose title, in the UI language, is
+ * [title]; or the slug fallback for a title the index does not know.
+ */
+internal fun SettingsActivity.settingIdsFor(title: String): List<String> =
+    searchIdsByTitle[title] ?: listOf(settingSlug(title))
+
+/** The section title resource for a generated entry's `sectionKey`. */
+@androidx.annotation.StringRes
+internal fun sectionTitleRes(sectionKey: String): Int = when (sectionKey) {
+    "swipeTyping" -> R.string.settings_section_swipe_typing
+    "appearance" -> R.string.settings_section_appearance
+    "swipeTrail" -> R.string.settings_section_swipe_trail
+    "input" -> R.string.settings_section_input
+    "swipeCorrections" -> R.string.settings_section_autocorrection
+    "gestureTuning" -> R.string.settings_section_gesture_tuning
+    "accessibility" -> R.string.settings_section_accessibility
+    "clipboard" -> R.string.settings_section_clipboard
+    "gif" -> R.string.settings_section_gif_panel
+    "multiLang" -> R.string.settings_section_multilang
+    "privacy" -> R.string.settings_section_privacy
+    "advanced" -> R.string.settings_section_advanced
+    "activities" -> R.string.activities_section_title
+    "backupRestore" -> R.string.settings_section_backup_restore
+    "help" -> R.string.settings_section_help
+    "testKeyboard" -> R.string.test_keyboard_section_title
+    "info" -> R.string.settings_section_info
+    else -> R.string.settings_section_advanced
 }
+
+/** "📱 Activities" -> "Activities": section titles carry a leading emoji. */
+internal fun bareTitle(text: String): String = text.dropWhile { !it.isLetterOrDigit() }.trim()
+
+/** Section name shown as "in <section>" for a search result, in the UI language. */
+internal fun SettingsActivity.sectionDisplayName(sectionKey: String): String =
+    bareTitle(getString(sectionTitleRes(sectionKey)))
 
 /** Expand action for an auto-derived search result's enclosing section. */
 internal fun SettingsActivity.expanderFor(sectionKey: String): () -> Unit = {
@@ -184,9 +204,7 @@ internal fun SettingsActivity.executeSearchAction(setting: SearchableSetting) {
 
 internal fun SettingsActivity.getFilteredSettings(query: String): List<SearchableSetting> {
     if (query.isBlank()) return emptyList()
-    val lowerQuery = query.lowercase().trim()
     return searchableSettings.filter { setting ->
-        setting.title.lowercase().contains(lowerQuery) ||
-        setting.keywords.any { it.lowercase().contains(lowerQuery) }
+        SettingsSearchMatch.matches(query, setting.title, setting.englishTitle, setting.keywords)
     }
 }

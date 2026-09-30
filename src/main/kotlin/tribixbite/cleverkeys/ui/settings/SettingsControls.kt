@@ -158,10 +158,11 @@ internal fun SettingsActivity.SettingsSwitch(
      */
     enabled: Boolean = true
 ) {
-    // Pulse animation for highlighting. Every control is reachable by its title slug
-    // (the generated search entry's settingId); gated entries also highlight via highlightId.
-    val regId = settingSlug(title)
-    val isHighlighted = highlightedSettingId == regId ||
+    // Pulse animation for highlighting. Every control is reachable by the locale-independent
+    // setting ids of its title (the generated search entries' settingId, see settingIdsFor);
+    // gated entries also highlight via highlightId.
+    val regIds = settingIdsFor(title)
+    val isHighlighted = highlightedSettingId in regIds ||
         (highlightId != null && highlightedSettingId == highlightId)
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseAlpha by infiniteTransition.animateFloat(
@@ -180,12 +181,12 @@ internal fun SettingsActivity.SettingsSwitch(
         modifier = Modifier
             .fillMaxWidth()
             .onGloballyPositioned { coordinates ->
-                // Record position for scroll targeting. Always register under the title
-                // slug (matches the generated search entry's settingId); also under an
+                // Record position for scroll targeting. Always register under the title's
+                // setting ids (the generated search entries' settingId); also under an
                 // explicit highlightId when given (gated-setting highlight targets).
                 val y = (coordinates.positionInRoot().y + (mainScrollState?.value ?: 0)).toInt()
-                recordSettingPosition(regId, y)
-                if (highlightId != null && highlightId != regId) recordSettingPosition(highlightId, y)
+                regIds.forEach { recordSettingPosition(it, y) }
+                if (highlightId != null && highlightId !in regIds) recordSettingPosition(highlightId, y)
             }
             .then(
                 if (isHighlighted) {
@@ -234,18 +235,18 @@ internal fun SettingsActivity.SettingsSlider(
     /** False = visible but inert and dimmed; see [SettingsSwitch]'s `enabled` for the rationale. */
     enabled: Boolean = true
 ) {
-    // Register a scroll position by title slug so search results can scroll here.
-    val regId = settingSlug(title)
+    // Register a scroll position under the title's setting ids so search results can scroll here.
+    val regIds = settingIdsFor(title)
     val contentAlpha = if (enabled) 1f else 0.38f
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .onGloballyPositioned { coordinates ->
                 val y = (coordinates.positionInRoot().y + (mainScrollState?.value ?: 0)).toInt()
-                recordSettingPosition(regId, y)
+                regIds.forEach { recordSettingPosition(it, y) }
             }
             .then(
-                if (highlightedSettingId == regId)
+                if (highlightedSettingId in regIds)
                     Modifier.background(
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                         RoundedCornerShape(8.dp)
@@ -310,18 +311,18 @@ internal fun SettingsActivity.SettingsDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    // Register a scroll position by title slug so search results can scroll here.
-    val regId = settingSlug(title)
+    // Register a scroll position under the title's setting ids so search results can scroll here.
+    val regIds = settingIdsFor(title)
     val contentAlpha = if (enabled) 1f else 0.38f
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .onGloballyPositioned { coordinates ->
                 val y = (coordinates.positionInRoot().y + (mainScrollState?.value ?: 0)).toInt()
-                recordSettingPosition(regId, y)
+                regIds.forEach { recordSettingPosition(it, y) }
             }
             .then(
-                if (highlightedSettingId == regId)
+                if (highlightedSettingId in regIds)
                     Modifier.background(
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                         RoundedCornerShape(8.dp)

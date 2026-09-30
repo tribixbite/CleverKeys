@@ -209,7 +209,7 @@ internal fun SettingsActivity.SettingsScreen() {
                                         fontSize = 14.sp
                                     )
                                     Text(
-                                        text = "in ${setting.sectionName}",
+                                        text = stringResource(R.string.settings_search_in_section, setting.sectionName),
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )

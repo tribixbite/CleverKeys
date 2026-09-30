@@ -2192,4 +2192,6 @@
     <string name="cmd_timestamp_time_12h_desc">12-uurstijd invoegen (h:mm AM/PM)</string>
     <string name="cmd_timestamp_iso">ISO 8601</string>
     <string name="cmd_timestamp_iso_desc">ISO 8601-tijdstempel invoegen (YYYY-MM-DDTHH:mm:ss)</string>
+    <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
+    <string name="settings_search_in_section">in %1$s</string>
 </resources>

@@ -19,8 +19,15 @@ Output (argv[1], default build/generated/search/kotlin/.../SettingsSearchIndex.k
   internal val GENERATED_SEARCH_ENTRIES: List<GeneratedSearchEntry>
 
 The activity maps each `sectionKey` to a display name + expand action (a small, stable
-table — sections change far less often than individual settings) and registers a scroll
-position for every control by a slug of its title, so search results scroll precisely.
+table — sections change far less often than individual settings).
+
+Localization (2026-09-30): every entry carries its title's string resource (`titleRes`) and a
+locale-independent `settingId` — the resource NAME (e.g. `swipe_enable_title`). The UI shows
+and matches the title in the UI language (plus the English `title` here as a secondary match),
+and each control registers its scroll position under the ids whose localized title equals its
+visible title. The old key, a slug of the visible title, was ASCII-only: under fa/ja/ru/…
+controls registered under slugs no entry used, so results opened the section without scrolling.
+A control whose title is a literal (not a resource) falls back to the slug of that literal.
 """
 import os
 import re
@@ -148,8 +155,10 @@ def scan_file(text, strings, entries, seen, default_key="advanced"):
             continue
         if tm.group(1) is not None:
             title = tm.group(1)
+            res_name = None
         else:
-            title = strings.get(tm.group(2))
+            res_name = tm.group(2)
+            title = strings.get(res_name)
         if not title:
             continue
         var = section_for(m.start(), sections)
@@ -158,14 +167,14 @@ def scan_file(text, strings, entries, seen, default_key="advanced"):
         if dedup in seen:
             continue
         seen.add(dedup)
-        entries.append((title, keywords_for(title), key))
+        entries.append((title, keywords_for(title), key, res_name))
 
 
 def main():
     out_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
     strings = load_strings(STRINGS)
 
-    entries = []  # (title, keywords, sectionKey)
+    entries = []  # (title, keywords, sectionKey, titleResName or None)
     seen = set()
 
     # Scan SettingsActivity.kt (retains any controls defined inline there)
@@ -189,19 +198,28 @@ def main():
         "// generateSettingsSearchIndex Gradle task before compilation).",
         "package tribixbite.cleverkeys",
         "",
-        "/** One settings-search entry auto-derived from a SettingsSwitch/Slider/Dropdown control. */",
+        "/**",
+        " * One settings-search entry auto-derived from a SettingsSwitch/Slider/Dropdown control.",
+        " * [title] is the ENGLISH title (res/values) and [keywords] are English; [titleRes] is the",
+        " * title resource shown and matched in the UI language (0 for a literal title); [settingId]",
+        " * is the locale-independent scroll/highlight key (the resource name, or a slug of a literal).",
+        " */",
         "internal data class GeneratedSearchEntry(",
         "    val title: String,",
         "    val keywords: List<String>,",
         "    val sectionKey: String,",
+        "    val titleRes: Int,",
+        "    val settingId: String,",
         ")",
         "",
         "internal val GENERATED_SEARCH_ENTRIES: List<GeneratedSearchEntry> = listOf(",
     ]
-    for title, kws, key in entries:
+    for title, kws, key, res_name in entries:
         kw_lit = ", ".join('"' + k.replace('"', '\\"') + '"' for k in kws)
-        t_lit = title.replace("\\", "\\\\").replace('"', '\\"')
-        lines.append(f'    GeneratedSearchEntry("{t_lit}", listOf({kw_lit}), "{key}"),')
+        t_lit = title.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$")
+        res_lit = f"R.string.{res_name}" if res_name else "0"
+        sid = res_name if res_name else slugify(title)
+        lines.append(f'    GeneratedSearchEntry("{t_lit}", listOf({kw_lit}), "{key}", {res_lit}, "{sid}"),')
     lines.append(")")
     lines.append("")
 

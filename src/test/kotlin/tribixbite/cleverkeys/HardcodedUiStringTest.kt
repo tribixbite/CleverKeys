@@ -80,14 +80,6 @@ class HardcodedUiStringTest {
     private val allowed: Map<String, String> = mapOf(
         // Brand name: CleverKeys is never translated (app_name is translatable="false").
         "activities/LauncherActivity.kt|CleverKeys" to "brand wordmark; app_name is translatable=false",
-        // Settings search is English-only by design: its index is GENERATED from
-        // res/values (scripts/generate_settings_search_index.py) and its scroll targets are
-        // slugs of the English titles. Localizing only the hand-written entries would mix
-        // languages in one result list.
-        // TODO(i18n): localize settings search as a unit (index → string-resource ids,
-        //  locale-aware slugs); see docs/i18n/2026-09-29-hardcoded-ui-sweep.md.
-        "ui/settings/SettingsSearch.kt|*" to "settings search index is English-only (generated); TODO",
-        "activities/SettingsActivity.kt|*search*" to "hand-written SearchableSetting entries; same TODO",
         // File-format names are proper nouns rendered identically in every locale.
         "clipboard/ClipboardMediaManager.kt|WebP" to "image format name",
         "clipboard/ClipboardMediaManager.kt|WebM" to "video format name",
@@ -122,14 +114,9 @@ class HardcodedUiStringTest {
         return out
     }
 
-    private fun isAllowed(relPath: String, literal: String, source: String, line: Int): Boolean {
+    private fun isAllowed(relPath: String, literal: String): Boolean {
         if (allowed.containsKey("$relPath|*")) return true
         if (allowed.containsKey("$relPath|$literal")) return true
-        if (allowed.containsKey("$relPath|*search*")) {
-            // Only the SearchableSetting(...) lines of the file are exempt, not the whole file.
-            val text = source.lines().getOrNull(line - 1).orEmpty()
-            if ("SearchableSetting(" in text) return true
-        }
         return false
     }
 
@@ -141,7 +128,7 @@ class HardcodedUiStringTest {
             val source = file.readText()
             for ((where, literal) in scan(rel, source)) {
                 val (sink, line) = where.split("@").let { it[0] to it[1].toInt() }
-                if (!isAllowed(rel, literal, source, line)) hits += Hit(rel, line, sink, literal)
+                if (!isAllowed(rel, literal)) hits += Hit(rel, line, sink, literal)
             }
         }
         val distinct = hits.distinctBy { Triple(it.path, it.line, it.literal) }

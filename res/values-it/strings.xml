@@ -2273,4 +2273,6 @@
     <string name="cmd_timestamp_time_12h_desc">Inserisci l\'ora in formato 12 ore (h:mm AM/PM)</string>
     <string name="cmd_timestamp_iso">ISO 8601</string>
     <string name="cmd_timestamp_iso_desc">Inserisci un timestamp ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
+    <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
+    <string name="settings_search_in_section">in %1$s</string>
 </resources>

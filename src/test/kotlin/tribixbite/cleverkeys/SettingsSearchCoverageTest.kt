@@ -100,12 +100,13 @@ class SettingsSearchCoverageTest {
      * search entries to OPEN that panel, or the target is never composed, never registers a
      * scroll position, and the search result silently lands nowhere (audit 2026-08-26 — bit
      * all eight panel entries, found via the next-word toggle). `SettingsActivity` keeps the
-     * panel's slugs in `WORD_PREDICTION_ADVANCED_SLUGS`; this pins that hand-kept set to the
-     * panel's ACTUAL contents, both directions, so moving a control in or out of the panel
-     * without updating the set fails here instead of silently breaking its search entry.
+     * panel's setting ids (title resource names) in `WORD_PREDICTION_ADVANCED_IDS`; this pins
+     * that hand-kept set to the panel's ACTUAL contents, both directions, so moving a control in
+     * or out of the panel without updating the set fails here instead of silently breaking its
+     * search entry.
      */
     @Test
-    fun advancedPanelSlugSetMatchesThePanelContents() {
+    fun advancedPanelIdSetMatchesThePanelContents() {
         val section = File(sectionsDir, "InputBehaviorSection.kt").readText()
         // The panel body: from its AnimatedVisibility to the first control after it.
         val start = section.indexOf("AnimatedVisibility(visible = wordPredictionAdvancedExpanded)")
@@ -114,22 +115,37 @@ class SettingsSearchCoverageTest {
             "Panel markers not found in InputBehaviorSection.kt — the slicer needs updating, " +
                 "not a real pass."
         }
-        val panelSlugs = literalControlTitles(section.substring(start, end))
-            .map { it.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_') } // = settingSlug
+        val panelIds = controlRegex.findAll(section.substring(start, end))
+            .map { it.groupValues[4] }
+            .filter { it.isNotEmpty() }
             .toSortedSet()
-        check(panelSlugs.isNotEmpty()) { "No controls found inside the panel — scanner broken." }
+        check(panelIds.isNotEmpty()) { "No resource-titled controls found inside the panel — scanner broken." }
 
         val activitySrc = settingsFile.readText()
         val setBody = activitySrc
-            .substringAfter("WORD_PREDICTION_ADVANCED_SLUGS = setOf(", "")
+            .substringAfter("WORD_PREDICTION_ADVANCED_IDS = setOf(", "")
             .substringBefore(")")
-        val declaredSlugs = Regex("\"([a-z0-9_]+)\"").findAll(setBody)
+        val declaredIds = Regex("\"([a-z0-9_]+)\"").findAll(setBody)
             .map { it.groupValues[1] }.toSortedSet()
-        check(declaredSlugs.isNotEmpty()) {
-            "WORD_PREDICTION_ADVANCED_SLUGS not found in SettingsActivity.kt — renamed?"
+        check(declaredIds.isNotEmpty()) {
+            "WORD_PREDICTION_ADVANCED_IDS not found in SettingsActivity.kt — renamed?"
         }
 
-        assertThat(declaredSlugs).isEqualTo(panelSlugs)
+        assertThat(declaredIds).isEqualTo(panelIds)
+    }
+
+    /**
+     * Scroll targets are locale-independent: a resource-titled control's generated entry uses the
+     * title's resource NAME as its settingId (not a slug of the visible title, which is empty or
+     * partial for non-Latin UI languages).
+     */
+    @Test
+    fun resourceTitledEntriesUseTheResourceNameAsSettingId() {
+        val bad = GENERATED_SEARCH_ENTRIES.filter { e ->
+            e.titleRes != 0 && stringResources[e.settingId] != e.title
+        }.map { "${it.settingId} -> ${it.title}" }
+        assertThat(bad).isEmpty()
+        assertThat(GENERATED_SEARCH_ENTRIES.count { it.titleRes == 0 }).isEqualTo(0)
     }
 
     @Test
