@@ -104,9 +104,12 @@ class SettingsSearchCoverageTest {
      * that hand-kept set to the panel's ACTUAL contents, both directions, so moving a control in
      * or out of the panel without updating the set fails here instead of silently breaking its
      * search entry.
+     *
+     * The method keeps its pre-2026-09-30 name ("Slug") although it now compares setting ids:
+     * docs/RELEASE_RECORD.md v1.2.9 anchors this symbol and released sections are immutable.
      */
     @Test
-    fun advancedPanelIdSetMatchesThePanelContents() {
+    fun advancedPanelSlugSetMatchesThePanelContents() {
         val section = File(sectionsDir, "InputBehaviorSection.kt").readText()
         // The panel body: from its AnimatedVisibility to the first control after it.
         val start = section.indexOf("AnimatedVisibility(visible = wordPredictionAdvancedExpanded)")

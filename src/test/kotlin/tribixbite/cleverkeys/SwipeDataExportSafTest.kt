@@ -41,6 +41,10 @@ class SwipeDataExportSafTest {
     fun setUp() {
         mockkStatic(Toast::class)
         every { Toast.makeText(any(), any<CharSequence>(), any()) } returns mockk(relaxed = true)
+        // The picker-failure path logs the exception (the toast shows only the localized
+        // reason since 2026-09-30); android.util.Log is a stub off-device.
+        mockkStatic(android.util.Log::class)
+        every { android.util.Log.w(any(), any<String>(), any()) } returns 0
 
         jsonLauncher = mockk(relaxed = true)
         ndjsonLauncher = mockk(relaxed = true)
@@ -52,6 +56,7 @@ class SwipeDataExportSafTest {
     @After
     fun tearDown() {
         unmockkStatic(Toast::class)
+        unmockkStatic(android.util.Log::class)
     }
 
     @Test
