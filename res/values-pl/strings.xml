@@ -806,9 +806,9 @@
     <string name="gesture_subkey_popover_title">Okienko podklawiszy po przytrzymaniu</string>
     <string name="gesture_subkey_popover_desc">Przytrzymaj klawisz, aby pokazać jego podklawisze wokół palca. Przenieś palec na jeden z nich i puść, aby go wpisać, albo puść na środku, aby anulować. Wybierz puste miejsce, aby je przypisać; przytrzymaj palec na podklawiszu przez 3 sekundy, aby go edytować. Zastępuje powtarzanie klawiszy na klawiszach liter.</string>
     <string name="gesture_popover_neutral_width_title">Szerokość strefy neutralnej</string>
-    <string name="gesture_popover_neutral_width_desc">Szerokość środkowego obszaru, w którym puszczenie nic nie robi, jako % szerokości klawisza</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Szerokość środkowego obszaru, w którym puszczenie nic nie robi, jako % szerokości klawisza</string>
     <string name="gesture_popover_neutral_height_title">Wysokość strefy neutralnej</string>
-    <string name="gesture_popover_neutral_height_desc">Wysokość środkowego obszaru, w którym puszczenie nic nie robi, jako % wysokości klawisza</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Wysokość środkowego obszaru, w którym puszczenie nic nie robi, jako % wysokości klawisza</string>
     <string name="subkey_assign_activity_label">Przypisz podklawisz</string>
     <string name="subkey_assign_title">Klawisz %1$s · %2$s</string>
     <string name="subkey_edit_current">Obecnie: %1$s</string>

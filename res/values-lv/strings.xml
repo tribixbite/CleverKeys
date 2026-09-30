@@ -807,9 +807,9 @@
     <string name="gesture_subkey_popover_title">Apakštaustiņu logs, turot taustiņu</string>
     <string name="gesture_subkey_popover_desc">Turiet taustiņu, lai ap pirkstu parādītu tā apakštaustiņus. Pārvietojiet pirkstu uz vienu no tiem un atlaidiet, lai to ievadītu, vai atlaidiet vidū, lai atceltu. Izvēlieties tukšu vietu, lai to piešķirtu; paturiet pirkstu uz apakštaustiņa 3 sekundes, lai to rediģētu. Burtu taustiņiem aizstāj taustiņu atkārtošanu.</string>
     <string name="gesture_popover_neutral_width_title">Neitrālās zonas platums</string>
-    <string name="gesture_popover_neutral_width_desc">Vidējā apgabala platums, kur atlaišana neko nedara, % no taustiņa platuma</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Vidējā apgabala platums, kur atlaišana neko nedara, % no taustiņa platuma</string>
     <string name="gesture_popover_neutral_height_title">Neitrālās zonas augstums</string>
-    <string name="gesture_popover_neutral_height_desc">Vidējā apgabala augstums, kur atlaišana neko nedara, % no taustiņa augstuma</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Vidējā apgabala augstums, kur atlaišana neko nedara, % no taustiņa augstuma</string>
     <string name="subkey_assign_activity_label">Piešķirt apakštaustiņu</string>
     <string name="subkey_assign_title">Taustiņš %1$s · %2$s</string>
     <string name="subkey_edit_current">Pašlaik: %1$s</string>

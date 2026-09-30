@@ -796,9 +796,9 @@
     <string name="gesture_subkey_popover_title">Nabídka podkláves při podržení</string>
     <string name="gesture_subkey_popover_desc">Podržením klávesy zobrazíte kolem prstu její podklávesy. Přesuňte prst na jednu z nich a uvolněním ji napíšete; uvolněním uprostřed akci zrušíte. Výběrem prázdné pozice ji přiřadíte; podržením prstu na podklávese po dobu 3 sekund ji upravíte. U písmenných kláves nahrazuje opakování kláves.</string>
     <string name="gesture_popover_neutral_width_title">Šířka neutrální zóny</string>
-    <string name="gesture_popover_neutral_width_desc">Šířka prostřední oblasti, kde uvolnění prstu nic neudělá, v % šířky klávesy</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Šířka prostřední oblasti, kde uvolnění prstu nic neudělá, v % šířky klávesy</string>
     <string name="gesture_popover_neutral_height_title">Výška neutrální zóny</string>
-    <string name="gesture_popover_neutral_height_desc">Výška prostřední oblasti, kde uvolnění prstu nic neudělá, v % výšky klávesy</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Výška prostřední oblasti, kde uvolnění prstu nic neudělá, v % výšky klávesy</string>
     <string name="subkey_assign_activity_label">Přiřadit podklávesu</string>
     <string name="subkey_assign_title">Klávesa %1$s · %2$s</string>
     <string name="subkey_edit_current">Aktuálně: %1$s</string>

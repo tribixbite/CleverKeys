@@ -798,9 +798,9 @@
     <string name="gesture_subkey_popover_title">Bảng phím phụ khi nhấn giữ</string>
     <string name="gesture_subkey_popover_desc">Nhấn giữ một phím để hiện các phím phụ của nó quanh ngón tay bạn. Di chuyển ngón tay đến một phím phụ rồi thả ra để nhập, hoặc thả ra ở giữa để hủy. Chọn một ô trống để gán; giữ ngón tay trên một phím phụ trong 3 giây để chỉnh sửa. Thay thế tính năng lặp phím trên các phím chữ.</string>
     <string name="gesture_popover_neutral_width_title">Chiều rộng vùng trung tính</string>
-    <string name="gesture_popover_neutral_width_desc">Chiều rộng vùng giữa nơi thả tay không có tác dụng, tính theo % chiều rộng phím</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Chiều rộng vùng giữa nơi thả tay không có tác dụng, tính theo % chiều rộng phím</string>
     <string name="gesture_popover_neutral_height_title">Chiều cao vùng trung tính</string>
-    <string name="gesture_popover_neutral_height_desc">Chiều cao vùng giữa nơi thả tay không có tác dụng, tính theo % chiều cao phím</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Chiều cao vùng giữa nơi thả tay không có tác dụng, tính theo % chiều cao phím</string>
     <string name="subkey_assign_activity_label">Gán phím phụ</string>
     <string name="subkey_assign_title">Phím %1$s · %2$s</string>
     <string name="subkey_edit_current">Hiện tại: %1$s</string>

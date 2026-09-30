@@ -819,9 +819,9 @@
     <string name="gesture_subkey_popover_title">Fereastră subtaste la menținere</string>
     <string name="gesture_subkey_popover_desc">Mențineți apăsată o tastă pentru a afișa subtastele sale în jurul degetului. Mutați degetul pe una dintre ele și eliberați pentru a o tasta sau eliberați în mijloc pentru a anula. Alegeți un loc gol pentru a-l atribui; țineți degetul 3 secunde pe o subtastă pentru a o edita. Înlocuiește repetarea tastei pe tastele cu litere.</string>
     <string name="gesture_popover_neutral_width_title">Lățimea zonei neutre</string>
-    <string name="gesture_popover_neutral_width_desc">Lățimea zonei din mijloc unde eliberarea nu face nimic, ca % din lățimea tastei</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Lățimea zonei din mijloc unde eliberarea nu face nimic, ca % din lățimea tastei</string>
     <string name="gesture_popover_neutral_height_title">Înălțimea zonei neutre</string>
-    <string name="gesture_popover_neutral_height_desc">Înălțimea zonei din mijloc unde eliberarea nu face nimic, ca % din înălțimea tastei</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Înălțimea zonei din mijloc unde eliberarea nu face nimic, ca % din înălțimea tastei</string>
     <string name="subkey_assign_activity_label">Atribuire subtastă</string>
     <string name="subkey_assign_title">Tasta %1$s · %2$s</string>
     <string name="subkey_edit_current">În prezent: %1$s</string>

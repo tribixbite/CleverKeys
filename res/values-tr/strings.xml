@@ -804,9 +804,9 @@
     <string name="gesture_subkey_popover_title">Basılı Tutunca Alt Tuş Penceresi</string>
     <string name="gesture_subkey_popover_desc">Alt tuşlarını parmağınızın çevresinde göstermek için bir tuşu basılı tutun. Parmağınızı birine götürüp bırakarak onu yazın ya da iptal etmek için ortada bırakın. Atamak için boş bir yuva seçin; düzenlemek için bir alt tuşun üzerinde 3 saniye bekleyin. Harf tuşlarında tuş tekrarının yerini alır.</string>
     <string name="gesture_popover_neutral_width_title">Nötr Bölge Genişliği</string>
-    <string name="gesture_popover_neutral_width_desc">Bırakmanın hiçbir şey yapmadığı orta alanın genişliği, tuş genişliğinin yüzdesi olarak</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Bırakmanın hiçbir şey yapmadığı orta alanın genişliği, tuş genişliğinin yüzdesi olarak</string>
     <string name="gesture_popover_neutral_height_title">Nötr Bölge Yüksekliği</string>
-    <string name="gesture_popover_neutral_height_desc">Bırakmanın hiçbir şey yapmadığı orta alanın yüksekliği, tuş yüksekliğinin yüzdesi olarak</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Bırakmanın hiçbir şey yapmadığı orta alanın yüksekliği, tuş yüksekliğinin yüzdesi olarak</string>
     <string name="subkey_assign_activity_label">Alt Tuş Ata</string>
     <string name="subkey_assign_title">%1$s tuşu · %2$s</string>
     <string name="subkey_edit_current">Geçerli: %1$s</string>

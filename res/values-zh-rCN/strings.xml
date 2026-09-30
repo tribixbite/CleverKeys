@@ -768,9 +768,9 @@
     <string name="gesture_subkey_popover_title">长按弹出子键</string>
     <string name="gesture_subkey_popover_desc">长按一个键，即可在手指周围显示它的子键。将手指移到其中一个上并松开即可输入，在中间松开则取消。选择空位可为其分配操作；在子键上停留 3 秒可编辑它。在字母键上会取代按键重复。</string>
     <string name="gesture_popover_neutral_width_title">中立区宽度</string>
-    <string name="gesture_popover_neutral_width_desc">中间区域的宽度（在此松开手指不会触发任何操作），以按键宽度的 % 表示</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">中间区域的宽度（在此松开手指不会触发任何操作），以按键宽度的 % 表示</string>
     <string name="gesture_popover_neutral_height_title">中立区高度</string>
-    <string name="gesture_popover_neutral_height_desc">中间区域的高度（在此松开手指不会触发任何操作），以按键高度的 % 表示</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">中间区域的高度（在此松开手指不会触发任何操作），以按键高度的 % 表示</string>
     <string name="subkey_assign_activity_label">分配子键</string>
     <string name="subkey_assign_title">%1$s 键 · %2$s</string>
     <string name="subkey_edit_current">当前：%1$s</string>

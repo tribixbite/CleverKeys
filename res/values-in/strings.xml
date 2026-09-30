@@ -808,9 +808,9 @@
     <string name="gesture_subkey_popover_title">Popover subtombol saat ditahan</string>
     <string name="gesture_subkey_popover_desc">Tahan sebuah tombol untuk menampilkan subtombolnya di sekitar jari Anda. Gerakkan jari ke salah satunya lalu lepaskan untuk mengetiknya, atau lepaskan di tengah untuk membatalkan. Pilih slot kosong untuk menetapkannya; diamkan jari di atas subtombol selama 3 detik untuk mengeditnya. Menggantikan pengulangan tombol pada tombol huruf.</string>
     <string name="gesture_popover_neutral_width_title">Lebar zona netral</string>
-    <string name="gesture_popover_neutral_width_desc">Lebar area tengah tempat melepas jari tidak melakukan apa pun, dalam % lebar tombol</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Lebar area tengah tempat melepas jari tidak melakukan apa pun, dalam % lebar tombol</string>
     <string name="gesture_popover_neutral_height_title">Tinggi zona netral</string>
-    <string name="gesture_popover_neutral_height_desc">Tinggi area tengah tempat melepas jari tidak melakukan apa pun, dalam % tinggi tombol</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Tinggi area tengah tempat melepas jari tidak melakukan apa pun, dalam % tinggi tombol</string>
     <string name="subkey_assign_activity_label">Tetapkan subtombol</string>
     <string name="subkey_assign_title">Tombol %1$s · %2$s</string>
     <string name="subkey_edit_current">Saat ini: %1$s</string>

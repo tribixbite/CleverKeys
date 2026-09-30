@@ -802,9 +802,9 @@
     <string name="gesture_subkey_popover_title">Sous-touches au maintien</string>
     <string name="gesture_subkey_popover_desc">Maintenez une touche pour afficher ses sous-touches autour de votre doigt. Déplacez le doigt vers l\'une d\'elles et relâchez pour la saisir, ou relâchez au centre pour annuler. Choisissez un emplacement vide pour l\'attribuer ; restez 3 secondes sur une sous-touche pour la modifier. Remplace la répétition de touche sur les touches de lettres.</string>
     <string name="gesture_popover_neutral_width_title">Largeur de la zone neutre</string>
-    <string name="gesture_popover_neutral_width_desc">Largeur de la zone centrale où relâcher n\'a aucun effet, en % de la largeur de la touche</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Largeur de la zone centrale où relâcher n\'a aucun effet, en % de la largeur de la touche</string>
     <string name="gesture_popover_neutral_height_title">Hauteur de la zone neutre</string>
-    <string name="gesture_popover_neutral_height_desc">Hauteur de la zone centrale où relâcher n\'a aucun effet, en % de la hauteur de la touche</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Hauteur de la zone centrale où relâcher n\'a aucun effet, en % de la hauteur de la touche</string>
     <string name="subkey_assign_activity_label">Attribuer une sous-touche</string>
     <string name="subkey_assign_title">Touche %1$s · %2$s</string>
     <string name="subkey_edit_current">Actuellement : %1$s</string>

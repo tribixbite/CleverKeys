@@ -796,9 +796,9 @@
     <string name="gesture_subkey_popover_title">Subtoetsen-pop-up bij vasthouden</string>
     <string name="gesture_subkey_popover_desc">Houd een toets vast om de subtoetsen rond je vinger te tonen. Beweeg je vinger naar een subtoets en laat los om die te typen, of laat los in het midden om te annuleren. Kies een lege plek om er iets aan toe te wijzen; blijf 3 seconden op een subtoets om die te bewerken. Vervangt toetsherhaling op lettertoetsen.</string>
     <string name="gesture_popover_neutral_width_title">Breedte neutrale zone</string>
-    <string name="gesture_popover_neutral_width_desc">Breedte van het middengebied waar loslaten niets doet, als % van de toetsbreedte</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Breedte van het middengebied waar loslaten niets doet, als % van de toetsbreedte</string>
     <string name="gesture_popover_neutral_height_title">Hoogte neutrale zone</string>
-    <string name="gesture_popover_neutral_height_desc">Hoogte van het middengebied waar loslaten niets doet, als % van de toetshoogte</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Hoogte van het middengebied waar loslaten niets doet, als % van de toetshoogte</string>
     <string name="subkey_assign_activity_label">Subtoets toewijzen</string>
     <string name="subkey_assign_title">Toets %1$s · %2$s</string>
     <string name="subkey_edit_current">Huidig: %1$s</string>

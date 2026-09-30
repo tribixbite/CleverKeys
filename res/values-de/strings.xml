@@ -816,9 +816,9 @@
     <string name="gesture_subkey_popover_title">Untertasten-Popup beim Halten</string>
     <string name="gesture_subkey_popover_desc">Halten Sie eine Taste gedrückt, um ihre Untertasten rund um den Finger anzuzeigen. Bewegen Sie den Finger zu einer und lassen Sie los, um sie einzugeben, oder lassen Sie in der Mitte los, um abzubrechen. Wählen Sie einen leeren Platz, um ihn zu belegen; verweilen Sie 3 Sekunden auf einer Untertaste, um sie zu bearbeiten. Ersetzt die Tastenwiederholung auf Buchstabentasten.</string>
     <string name="gesture_popover_neutral_width_title">Breite der neutralen Zone</string>
-    <string name="gesture_popover_neutral_width_desc">Breite des mittleren Bereichs, in dem Loslassen nichts bewirkt, in % der Tastenbreite</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Breite des mittleren Bereichs, in dem Loslassen nichts bewirkt, in % der Tastenbreite</string>
     <string name="gesture_popover_neutral_height_title">Höhe der neutralen Zone</string>
-    <string name="gesture_popover_neutral_height_desc">Höhe des mittleren Bereichs, in dem Loslassen nichts bewirkt, in % der Tastenhöhe</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Höhe des mittleren Bereichs, in dem Loslassen nichts bewirkt, in % der Tastenhöhe</string>
     <string name="subkey_assign_activity_label">Untertaste zuweisen</string>
     <string name="subkey_assign_title">Taste %1$s · %2$s</string>
     <string name="subkey_edit_current">Aktuell: %1$s</string>

@@ -781,9 +781,9 @@
     <string name="gesture_subkey_popover_title">Спливні підклавіші при утриманні</string>
     <string name="gesture_subkey_popover_desc">Утримуйте клавішу, щоб навколо пальця з’явилися її підклавіші. Перемістіть палець на одну з них і відпустіть, щоб ввести її, або відпустіть у центрі для скасування. Виберіть порожню комірку, щоб призначити їй дію; затримайте палець на підклавіші 3 секунди, щоб змінити її. На літерних клавішах замінює повторення клавіш.</string>
     <string name="gesture_popover_neutral_width_title">Ширина нейтральної зони</string>
-    <string name="gesture_popover_neutral_width_desc">Ширина центральної області, де відпускання пальця нічого не робить, у % від ширини клавіші</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Ширина центральної області, де відпускання пальця нічого не робить, у % від ширини клавіші</string>
     <string name="gesture_popover_neutral_height_title">Висота нейтральної зони</string>
-    <string name="gesture_popover_neutral_height_desc">Висота центральної області, де відпускання пальця нічого не робить, у % від висоти клавіші</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Висота центральної області, де відпускання пальця нічого не робить, у % від висоти клавіші</string>
     <string name="subkey_assign_activity_label">Призначити підклавішу</string>
     <string name="subkey_assign_title">Клавіша %1$s · %2$s</string>
     <string name="subkey_edit_current">Зараз: %1$s</string>

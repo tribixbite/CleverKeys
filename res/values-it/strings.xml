@@ -836,9 +836,9 @@
     <string name="gesture_subkey_popover_title">Popup sottotasti tenendo premuto</string>
     <string name="gesture_subkey_popover_desc">Tieni premuto un tasto per mostrare i suoi sottotasti intorno al dito. Sposta il dito su uno e rilascia per digitarlo, oppure rilascia al centro per annullare. Scegli uno spazio vuoto per assegnarlo; resta 3 secondi su un sottotasto per modificarlo. Sostituisce la ripetizione dei tasti sui tasti delle lettere.</string>
     <string name="gesture_popover_neutral_width_title">Larghezza zona neutra</string>
-    <string name="gesture_popover_neutral_width_desc">Larghezza dell\'area centrale in cui rilasciare non fa nulla, in % della larghezza del tasto</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Larghezza dell\'area centrale in cui rilasciare non fa nulla, in % della larghezza del tasto</string>
     <string name="gesture_popover_neutral_height_title">Altezza zona neutra</string>
-    <string name="gesture_popover_neutral_height_desc">Altezza dell\'area centrale in cui rilasciare non fa nulla, in % dell\'altezza del tasto</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Altezza dell\'area centrale in cui rilasciare non fa nulla, in % dell\'altezza del tasto</string>
     <string name="subkey_assign_activity_label">Assegna sottotasto</string>
     <string name="subkey_assign_title">Tasto %1$s · %2$s</string>
     <string name="subkey_edit_current">Attuale: %1$s</string>

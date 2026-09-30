@@ -814,9 +814,9 @@
     <string name="gesture_subkey_popover_title">Menú de subteclas al mantener</string>
     <string name="gesture_subkey_popover_desc">Mantén pulsada una tecla para mostrar sus subteclas alrededor del dedo. Mueve el dedo hasta una y suéltalo para escribirla, o suéltalo en el centro para cancelar. Elige una posición vacía para asignarla; deja el dedo 3 segundos sobre una subtecla para editarla. Sustituye la repetición de tecla en las teclas de letras.</string>
     <string name="gesture_popover_neutral_width_title">Ancho de la zona neutral</string>
-    <string name="gesture_popover_neutral_width_desc">Ancho del área central donde soltar no hace nada, en % del ancho de la tecla</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Ancho del área central donde soltar no hace nada, en % del ancho de la tecla</string>
     <string name="gesture_popover_neutral_height_title">Alto de la zona neutral</string>
-    <string name="gesture_popover_neutral_height_desc">Alto del área central donde soltar no hace nada, en % del alto de la tecla</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Alto del área central donde soltar no hace nada, en % del alto de la tecla</string>
     <string name="subkey_assign_activity_label">Asignar subtecla</string>
     <string name="subkey_assign_title">Tecla %1$s · %2$s</string>
     <string name="subkey_edit_current">Actual: %1$s</string>

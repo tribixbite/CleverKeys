@@ -796,9 +796,9 @@
     <string name="gesture_subkey_popover_title">길게 누를 때 하위 키 팝업</string>
     <string name="gesture_subkey_popover_desc">키를 길게 누르면 손가락 주위에 해당 키의 하위 키가 표시됩니다. 손가락을 하나로 옮긴 뒤 떼면 입력되고, 가운데에서 떼면 취소됩니다. 빈 칸을 선택하면 동작을 할당할 수 있고, 하위 키 위에 3초 동안 머무르면 편집할 수 있습니다. 문자 키에서는 키 반복을 대신합니다.</string>
     <string name="gesture_popover_neutral_width_title">중립 영역 너비</string>
-    <string name="gesture_popover_neutral_width_desc">손을 떼도 아무 일도 일어나지 않는 가운데 영역의 너비(키 너비 대비 %)</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">손을 떼도 아무 일도 일어나지 않는 가운데 영역의 너비(키 너비 대비 %)</string>
     <string name="gesture_popover_neutral_height_title">중립 영역 높이</string>
-    <string name="gesture_popover_neutral_height_desc">손을 떼도 아무 일도 일어나지 않는 가운데 영역의 높이(키 높이 대비 %)</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">손을 떼도 아무 일도 일어나지 않는 가운데 영역의 높이(키 높이 대비 %)</string>
     <string name="subkey_assign_activity_label">하위 키 할당</string>
     <string name="subkey_assign_title">%1$s 키 · %2$s</string>
     <string name="subkey_edit_current">현재: %1$s</string>

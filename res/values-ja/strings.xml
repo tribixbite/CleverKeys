@@ -795,9 +795,9 @@
     <string name="gesture_subkey_popover_title">長押しでサブキーをポップアップ</string>
     <string name="gesture_subkey_popover_desc">キーを長押しすると、指の周りにそのキーのサブキーが表示されます。指をいずれかに動かして離すと入力され、中央で離すとキャンセルされます。空きスロットを選ぶと割り当てができ、サブキーの上で 3 秒間指を止めると編集できます。文字キーではキーリピートの代わりになります。</string>
     <string name="gesture_popover_neutral_width_title">ニュートラルゾーンの幅</string>
-    <string name="gesture_popover_neutral_width_desc">指を離しても何も起こらない中央領域の幅(キー幅に対する%)</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">指を離しても何も起こらない中央領域の幅(キー幅に対する%)</string>
     <string name="gesture_popover_neutral_height_title">ニュートラルゾーンの高さ</string>
-    <string name="gesture_popover_neutral_height_desc">指を離しても何も起こらない中央領域の高さ(キーの高さに対する%)</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">指を離しても何も起こらない中央領域の高さ(キーの高さに対する%)</string>
     <string name="subkey_assign_activity_label">サブキーを割り当て</string>
     <string name="subkey_assign_title">%1$s キー · %2$s</string>
     <string name="subkey_edit_current">現在: %1$s</string>

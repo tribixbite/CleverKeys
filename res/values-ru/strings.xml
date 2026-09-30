@@ -796,9 +796,9 @@
     <string name="gesture_subkey_popover_title">Всплывающие подклавиши при удержании</string>
     <string name="gesture_subkey_popover_desc">Удерживайте клавишу, чтобы вокруг пальца появились её подклавиши. Переместите палец на одну из них и отпустите, чтобы ввести её, или отпустите в центре для отмены. Выберите пустую ячейку, чтобы назначить ей действие; задержите палец на подклавише на 3 секунды, чтобы изменить её. На буквенных клавишах заменяет повторение клавиш.</string>
     <string name="gesture_popover_neutral_width_title">Ширина нейтральной зоны</string>
-    <string name="gesture_popover_neutral_width_desc">Ширина центральной области, где отпускание пальца ничего не делает, в % от ширины клавиши</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Ширина центральной области, где отпускание пальца ничего не делает, в % от ширины клавиши</string>
     <string name="gesture_popover_neutral_height_title">Высота нейтральной зоны</string>
-    <string name="gesture_popover_neutral_height_desc">Высота центральной области, где отпускание пальца ничего не делает, в % от высоты клавиши</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Высота центральной области, где отпускание пальца ничего не делает, в % от высоты клавиши</string>
     <string name="subkey_assign_activity_label">Назначить подклавишу</string>
     <string name="subkey_assign_title">Клавиша %1$s · %2$s</string>
     <string name="subkey_edit_current">Сейчас: %1$s</string>

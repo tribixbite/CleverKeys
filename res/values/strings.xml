@@ -1112,9 +1112,9 @@
     <string name="gesture_subkey_popover_title">Subkey popover on hold</string>
     <string name="gesture_subkey_popover_desc">Hold a key to show its subkeys around your finger. Slide to one and let go to type it, or let go in the middle to cancel. Pick an empty slot to assign it; rest on a subkey for 3 seconds to edit it. Replaces key repeat on letter keys.</string>
     <string name="gesture_popover_neutral_width_title">Neutral zone width</string>
-    <string name="gesture_popover_neutral_width_desc">Width of the middle area where letting go does nothing, as % of the key width</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">Width of the middle area where letting go does nothing, as % of the key width</string>
     <string name="gesture_popover_neutral_height_title">Neutral zone height</string>
-    <string name="gesture_popover_neutral_height_desc">Height of the middle area where letting go does nothing, as % of the key height</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">Height of the middle area where letting go does nothing, as % of the key height</string>
     <string name="subkey_assign_activity_label">Assign subkey</string>
     <string name="subkey_assign_title">%1$s key · %2$s</string>
     <string name="subkey_edit_current">Currently: %1$s</string>

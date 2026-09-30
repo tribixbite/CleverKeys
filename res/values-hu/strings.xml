@@ -802,9 +802,9 @@
     <string name="gesture_subkey_popover_title">Albillentyű-felugró nyomva tartáskor</string>
     <string name="gesture_subkey_popover_desc">Tartson nyomva egy billentyűt, hogy az albillentyűi megjelenjenek az ujja körül. Vigye az ujját az egyikre, és engedje fel a beíráshoz, vagy engedje fel középen a megszakításhoz. Üres helyet választva hozzárendelhet egy műveletet; ha 3 másodpercig egy albillentyűn tartja az ujját, szerkesztheti. Betűbillentyűkön a billentyűismétlést váltja fel.</string>
     <string name="gesture_popover_neutral_width_title">Semleges zóna szélessége</string>
-    <string name="gesture_popover_neutral_width_desc">A középső terület szélessége, ahol az elengedés nem csinál semmit, a billentyűszélesség %-ában</string>
+    <string name="gesture_popover_neutral_width_desc" formatted="false">A középső terület szélessége, ahol az elengedés nem csinál semmit, a billentyűszélesség %-ában</string>
     <string name="gesture_popover_neutral_height_title">Semleges zóna magassága</string>
-    <string name="gesture_popover_neutral_height_desc">A középső terület magassága, ahol az elengedés nem csinál semmit, a billentyűmagasság %-ában</string>
+    <string name="gesture_popover_neutral_height_desc" formatted="false">A középső terület magassága, ahol az elengedés nem csinál semmit, a billentyűmagasság %-ában</string>
     <string name="subkey_assign_activity_label">Albillentyű hozzárendelése</string>
     <string name="subkey_assign_title">%1$s billentyű · %2$s</string>
     <string name="subkey_edit_current">Jelenleg: %1$s</string>
