@@ -273,6 +273,11 @@ Seeker check, 2026-09-30 (release build, fa/en):
   - the enlarged selected cell is nudged back inside the view (it was clipped at the keyboard's top edge);
   - settings search now waits for the target's position to SETTLE before scrolling. Section expand animations reported in-flight positions (the new toggle read −931 px, so it never scrolled), and positions are now relative to the scroll viewport (every result used to overshoot by the status bar plus padding). All Gesture Tuning results had silently failed to scroll.
 
+State at handoff: pushed through `d8ddbc32`, CI green (CI, APK build, UI & Performance). The
+Seeker is back to its pre-test state (popover toggle OFF as the upgrade migration left it, test
+`@` mapping removed through the popover's own edit screen, font scale 1.0, no per-app locale,
+Android Settings focused).
+
 Open:
 - Feel on a real finger (the timing was only driven by adb). The animation constants are in `SubkeyPopoverRenderer`; the dwell and arming values are in `SubkeyPopoverState` / `SubkeyPopoverGeometry`.
 - TalkBack: the popover is not exposed to accessibility (explore-by-touch users keep the per-key settings screen).

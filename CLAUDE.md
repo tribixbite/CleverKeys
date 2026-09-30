@@ -237,3 +237,7 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 ### Test-rename and mock-test traps (2026-09-30)
 - `docs/RELEASE_RECORD.md` anchors TEST METHOD NAMES (`File.kt#method`) and released sections are hash-pinned (`ReleaseRecordDriftTest.historyIsImmutable`): renaming an anchored test breaks the anchor, and editing the old row breaks the hash. Keep the old method name (note why in its KDoc) or add a superseding row in the current release. `rg -n '<method>' docs/RELEASE_RECORD.md` before renaming any test.
 - Adding `android.util.Log` to a handler path breaks `runMockTests` classes that drive it (`RuntimeException: Stub!`): mock it next to Toast (`mockkStatic(android.util.Log::class)`).
+
+### String-resource and settings-search traps (2026-09-30)
+- A translation containing a literal `%` (e.g. "as % of the key width") must carry `formatted="false"` in EVERY locale: CI `lintDebug` fails `StringFormatInvalid` when the following characters read as a conversion (vi "% chiều"). The pure/mock suites do not catch it; run `scripts/gradle-guard.sh lintDebug` (≈45 min on Termux) or rely on CI.
+- Settings search scroll targets are recorded by `onGloballyPositioned`, which also fires mid expand-animation with in-flight offsets. Scroll only once a position is registered AND unchanged across polls (`expandAndScrollTo`), and record positions relative to the scroll viewport (`contentYOf`), never raw `positionInRoot`.
