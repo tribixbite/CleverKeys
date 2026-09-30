@@ -238,34 +238,33 @@ story. Two habits came out of it and are worth keeping:
 
 ## Open work, in priority order
 
-### -2. i18n follow-ups from the 2026-09-29 fa/hu device run (sweep done; these are left)
+### -2. i18n follow-ups from the 2026-09-29 fa/hu device run (code items CLOSED 2026-09-30)
 
-Done: the hardcoded-UI sweep (guard `HardcodedUiStringTest`), RTL arrows, section-title wrap,
-per-locale address register (hu formal), language-pack delete confirmation and the NOTICE
+Done 2026-09-29: the hardcoded-UI sweep (guard `HardcodedUiStringTest`), RTL arrows, section-title
+wrap, per-locale address register (hu formal), language-pack delete confirmation and the NOTICE
 layout. See `docs/i18n/2026-09-29-hardcoded-ui-sweep.md` and `docs/i18n/2026-09-29-register.md`.
 
+Closed 2026-09-30 (resolution table in the sweep doc):
+- Stale FAQ — `721c757d` (`FaqContentDriftTest`).
+- GIF/clipboard pane ◀/▶ mirrored under RTL — `213e8d52` (`RtlMirroringDriftTest`).
+- Domain-layer error text → localized `IoFailureReason` / `PackImportFailure` / `SkipKind`;
+  encrypted imports stop re-prompting for newer/damaged/wrong-kind files — `cfc0eed2`
+  (`IoFailureLocalizationTest`).
+- Command catalog: 465 strings × 21 locales keyed by stable command id — `19d64857`
+  (`CommandCatalogLocalizationTest`).
+- Settings search in the UI language; scroll targets keyed by title resource names — `607da6df`
+  (`SettingsSearchLocalizationTest`).
+
 Still open:
-- **Settings search is English-only, and scroll targets break outside English.**
-  - The generated index titles come from `res/values`.
-  - `settingSlug(title)` is taken from the *visible* title, which is ASCII-only, so under
-    fa/ja/ru/… controls register positions under slugs no search entry uses.
-  - Fix with locale-independent setting ids plus resource-backed titles.
-- **Command catalog.** `CommandRegistry` has about 228 names, descriptions and keywords, plus
-  its category names, all English. It also drives palette search ranking.
-- **Domain-layer error text is English**, shown inside a localized "…failed: %1$s" wrapper.
-  Sources: `ImportResult.Error`, `GifPackImportResult.Error`, `BackupRestoreManager` and
-  `backup.crypto` messages, `SkippedKey.reason` and `WRONG_PASSWORD_OR_CORRUPT`.
-- **Stale FAQ.** The swipe-typing and other-languages answers name "Length Penalty (Alpha)",
-  "Vocab Frequency Weight" and "Prefix Boost" (neural-era settings). "Per-Key Customization"
-  does not match any screen title.
-- **Keyboard pane pagers.** The IME's GIF/clipboard ◀/▶ glyphs are not mirrored for RTL.
-- **Native review.** It is owed for every locale. Specific requests from the translators:
-  - short compass abbreviations (fa, uk, fil, in);
-  - diacritic key names;
-  - AOSP register dissent for de (AOSP uses du) and zh-rCN (AOSP uses 您);
-  - the ro short-label imperatives.
-- **Device verification.** fa (RTL arrows, notice dialog) and hu (headers, register) need
-  rechecking on the Seeker/Saga test phone.
+- Clipboard custom-rules status shows the rules parser's English detail (TODO(i18n)); combining
+  diacritic extra-key titles; headless backup result messages.
+- **Native review.** Owed for every locale, now including the 465 command-catalog strings (notes
+  per locale in the sweep doc). Earlier translator requests: short compass abbreviations
+  (fa, uk, fil, in); diacritic key names; AOSP register dissent for de (du) and zh-rCN (您); ro
+  short-label imperatives. App strings flagged by the catalog translators: tr `key_descr_dead_key`
+  "Boş tuş", hu "Áthúzás" accent labels, in "Beranda"/"Halaman atas".
+- **Device verification.** fa (pane arrows, FAQ, search scroll, notice dialog) and hu (search,
+  headers, register) on the Seeker/Saga test phone.
 
 ### -1. Learning system audit (2026-09-26) — mostly RESOLVED same day
 

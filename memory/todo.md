@@ -1,6 +1,6 @@
 # Current work queue
 
-Updated: 2026-09-27. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
+Updated: 2026-09-30. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
 Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/2026-08-30-full-backlog-campaign.md).
 
 The September 1 campaign baseline was `5fb58037`; subsequent work through `79f0b464`
@@ -50,6 +50,11 @@ was pushed with maintainer authorization on September 27. Preserve shared-tree w
   terminology unified per locale with `TranslationGlossaryTest` (`4871c7e5`, `a91aad5a`).
 - [ ] TODO: native-speaker translation review and device visual verification remain distinct
   from automated structural checks; preserve the maintainer's manual-checklist edits.
+- [x] i18n follow-ups closed (2026-09-30): FAQ content `721c757d`, RTL pane arrows `213e8d52`,
+  localized I/O failure reasons `cfc0eed2`, command catalog in 21 locales `19d64857`, localized
+  settings search + id-keyed scroll `607da6df`. `docs/i18n/2026-09-29-hardcoded-ui-sweep.md`.
+- [ ] TODO: fa/hu device check of the above (pane arrows, search scroll) and native review of the
+  465 command-catalog strings.
 
 ## Maintainer/release gates
 

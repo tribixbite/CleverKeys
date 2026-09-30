@@ -49,8 +49,6 @@ the sweep it reports **0**, and the manifest check went from 11 hardcoded labels
 | File | Literal | Reason |
 |---|---|---|
 | activities/LauncherActivity.kt | CleverKeys | Brand wordmark. `app_name` is `translatable="false"`. |
-| ui/settings/SettingsSearch.kt | (whole file) | Settings search is English-only by design. See "Deferred" below. |
-| activities/SettingsActivity.kt | `SearchableSetting(…)` lines | Same as above. |
 | clipboard/ClipboardMediaManager.kt | WebP, WebM | File-format proper nouns. |
 | prefs/ExtraKeysPreference.kt | Esc, Fn | Key-cap abbreviations printed the same on every keyboard. |
 
@@ -112,7 +110,9 @@ f4c1418b. Menu-path breadcrumbs use "←" in fa.
   - the "Swipe Playground" screen name;
   - Android system-settings path names in `ime_default_prompt_toast`.
 
-## Deferred (TODO(i18n) in code)
+## Deferred (TODO(i18n) in code) — status as of 2026-09-29
+
+Resolved on 2026-09-30 except where noted; see "Resolution" below.
 
 - **Command catalog.** `customization/CommandRegistry.kt` holds about 228 command display names,
   descriptions, search keywords and category names. It also drives command-palette search
@@ -136,3 +136,45 @@ f4c1418b. Menu-path breadcrumbs use "←" in fa.
 - **Stale FAQ content.** The swipe-typing FAQ answers mention "Length Penalty (Alpha)",
   "Vocab Frequency Weight" and "Prefix Boost", which appear to be settings of the removed
   neural engine. The text was moved verbatim, and it needs a content fix.
+
+## Resolution (2026-09-30)
+
+Model work again (implementer and translators = model, reviewer = model). One commit per item.
+
+| Item | Commit | What changed | Guard (fail-first) |
+|---|---|---|---|
+| Stale FAQ | `721c757d` | The swipe-typing answer points at Swipe Typing → Prediction Engine (CTC or Geometric); the other-languages answer explains language packs and the geometric fallback; the numbers answer names the real card, "Customize Per-Key Actions". All 21 locales use their own section titles. | `FaqContentDriftTest`: no FAQ may name a removed neural setting (hit en + all 21 locales before), and every English "Settings → A → B" segment must be a real title. |
+| Pane pager arrows | `213e8d52` | `PanePagerArrows` picks ◀/▶ per button from the configuration's layout direction, so under RTL "previous" (laid out on the right) points right. GIF and clipboard panes bind through it. | `RtlMirroringDriftTest`: the swap, and every layout view carrying a page glyph is bound through `PanePagerArrows.apply` (4 unbound before). |
+| Domain error text | `cfc0eed2` | `IoFailureReason` + `IoFailureClassifier` (not found, permission, invalid format, newer version, out of space, too large, wrong password or tampered, no password, wrong backup kind, no file picker, read/write, unknown); typed throw sites (`ClassifiedIoException`, `BackupFormatException`/`BackupDecryptException` carry a reason); `PackImportFailure` for language/GIF packs; `SkipKind` for the settings-import preview. Raw text is logged only. Encrypted imports prompt for a password only when it is missing or wrong. 26 strings. | `IoFailureLocalizationTest` (classification, rendering, all locales, placeholders; source scan: no `getString(R.string.x, …e.message)` in `ui/settings/io` — 30 `e.message` uses there before, the only user-visible ones left are the two clipboard custom-rules parser details, which name the user's own rule). |
+| Command catalog | `19d64857` | 222 names + 222 descriptions + 21 category headers → `cmd_<id>`, `cmd_<id>_desc`, `command_category_<cat>` (465 strings × 21 locales). Search/ranking match the UI language, then English, then the English keywords. Command ids unchanged. | `CommandCatalogLocalizationTest`: names derived from the stable ids, every string in every locale, < 25% English copies per locale, localized-name search ranks the command first. `TranslationLengthTest` treats palette rows like titles. |
+| Settings search | `607da6df` | The index carries `titleRes` and a locale-independent `settingId` (the title's resource name); controls register under the ids of their visible title. Results show and match the UI-language title, then English title and keywords; matching folds accents, ZWNJ and Arabic-keyboard yeh/kaf. Hand entries and section names use the screens' own resources; "in %1$s" is a resource. | `SettingsSearchLocalizationTest`: every entry resolves by id in every locale; the old slug keys diverged for > 90% of fa entries; hu/fa queries find localized titles. `SettingsSearchCoverageTest` pins the advanced-panel ids. |
+
+### Translator notes for the native review (command catalog)
+
+- Terms were reused from each locale's `key_descr_*`, `extra_key_*` and `text_action_*` strings
+  where they existed; where the app itself is split, the majority form was used.
+- ru: "dead key" aligned to the app's «Немая клавиша»; Church Slavonic mark names (Звательце,
+  Дасия, Покрытие, Взмет, Паерок, Кавыка) need a liturgical-typography check.
+- pl: descriptions use 2sg imperatives, matching the existing pl `key_descr_*` style.
+- tr: the app's existing `key_descr_dead_key` "Boş tuş" ("empty key") looks wrong; the catalog
+  uses "ölü tuş".
+- hu: the app's own accent labels "Áthúzás"/"Vízszintes áthúzás" contain the glossary-forbidden
+  swipe stem "húzás"; the catalog uses "Ferde vonal"/"Vízszintes vonal".
+- in: Home/End/Page Up/Page Down kept Latin; the app's "Beranda"/"Halaman atas" read as
+  mistranslations.
+- zh-rCN: caron 抑扬符 vs circumflex 扬抑符 are easy to confuse; Slavonic marks rendered by
+  meaning.
+- fil follows the app's Taglish style; many key names and some descriptions stay English.
+- The long-date hint "(Day, Month DD, YYYY)" was translated around the DD/YYYY tokens in most
+  locales; the actual output pattern is fixed (`EEEE, MMMM d, yyyy`).
+
+### Still open
+
+- The clipboard custom-rules status shows the rules parser's English detail (TODO(i18n) in
+  `SettingsClipboardHandlers.kt`); it names the rule in the user's own JSON.
+- Combining-diacritic extra-key titles (`ExtraKeysPreference`) and the unrendered
+  `AvailableCommand` metadata are unchanged.
+- The headless (automation) backup path's result messages are unchanged English.
+- Native review of every locale and a device check of fa (pane arrows, FAQ, search scroll) and
+  hu (search) are still owed.
+
