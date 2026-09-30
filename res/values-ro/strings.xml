@@ -814,6 +814,24 @@
     <string name="gesture_section_intro">Reglați fin comportamentul atingerilor, glisărilor și cursoarelor pentru stilul dvs. de tastare.</string>
     <string name="gesture_short_gestures_header">Gesturi scurte</string>
     <string name="gesture_open_calibration">📐 Deschide instrumentul de calibrare</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">Menținere pentru subtaste</string>
+    <string name="gesture_subkey_popover_title">Fereastră subtaste la menținere</string>
+    <string name="gesture_subkey_popover_desc">Mențineți apăsată o tastă pentru a afișa subtastele sale în jurul degetului. Mutați degetul pe una dintre ele și eliberați pentru a o tasta sau eliberați în mijloc pentru a anula. Alegeți un loc gol pentru a-l atribui; țineți degetul 3 secunde pe o subtastă pentru a o edita. Înlocuiește repetarea tastei pe tastele cu litere.</string>
+    <string name="gesture_popover_neutral_width_title">Lățimea zonei neutre</string>
+    <string name="gesture_popover_neutral_width_desc">Lățimea zonei din mijloc unde eliberarea nu face nimic, ca % din lățimea tastei</string>
+    <string name="gesture_popover_neutral_height_title">Înălțimea zonei neutre</string>
+    <string name="gesture_popover_neutral_height_desc">Înălțimea zonei din mijloc unde eliberarea nu face nimic, ca % din înălțimea tastei</string>
+    <string name="subkey_assign_activity_label">Atribuire subtastă</string>
+    <string name="subkey_assign_title">Tasta %1$s · %2$s</string>
+    <string name="subkey_edit_current">În prezent: %1$s</string>
+    <string name="subkey_assign_default_removed">Subtasta integrată a acestui loc a fost eliminată.</string>
+    <string name="subkey_edit_reassign">Reatribuire</string>
+    <string name="subkey_assign_choose">Alegeți o acțiune</string>
+    <string name="subkey_edit_restore">Restaurare implicită</string>
+    <string name="subkey_edit_remove">Elimină</string>
+    <string name="subkey_toast_removed">Subtasta %1$s a fost eliminată de pe tasta %2$s</string>
+    <string name="subkey_toast_restored">Subtasta implicită %1$s a fost restaurată pe tasta %2$s</string>
     <string name="gesture_selection_delete_header">Mod selecție-ștergere</string>
     <string name="gesture_selection_delete_desc">Glisare scurtă + menținere pe Backspace pentru a selecta text, apoi eliberați pentru a șterge.</string>
     <string name="gesture_tap_typing_header">Atingere și tastare</string>

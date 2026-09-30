@@ -343,30 +343,10 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                 onMappingSelected = { selection ->
                     // This callback receives separate label and action from the dialog
                     scope.launch {
-                        val direction = editingDirection!!
-                        val mapping = ShortSwipeMapping(
-                            keyCode = selectedKeyCode!!,
-                            direction = direction,
-                            displayText = selection.displayLabel,  // User-customized label
-                            actionType = selection.actionType,
-                            actionValue = selection.actionValue,   // Actual action/command
-                            useKeyFont = selection.useKeyFont      // Use icon font if applicable
-                        )
-                        manager.setMapping(mapping)
+                        // Shared with the subkey popover's assign screen (ShortSwipeAssignment).
+                        ShortSwipeAssignment.apply(context, manager, selectedKeyCode!!, editingDirection!!, selection)
                         showCommandPalette = false
                         editingDirection = null
-
-                        val actionDesc = shortSwipeActionDescription(context, selection.actionType, selection.actionValue)
-                        Toast.makeText(
-                            context,
-                            context.getString(
-                                R.string.short_swipe_toast_mapped,
-                                context.getString(direction.displayNameRes),
-                                selection.displayLabel,
-                                actionDesc
-                            ),
-                            Toast.LENGTH_SHORT
-                        ).show()
                     }
                 }
             )

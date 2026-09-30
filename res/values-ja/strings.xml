@@ -790,6 +790,24 @@
     <string name="gesture_section_intro">タップ、スワイプ、スライダーの動作を入力スタイルに合わせて微調整します。</string>
     <string name="gesture_short_gestures_header">ショートジェスチャー</string>
     <string name="gesture_open_calibration">📐 キャリブレーションツールを開く</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">長押しでサブキー</string>
+    <string name="gesture_subkey_popover_title">長押しでサブキーをポップアップ</string>
+    <string name="gesture_subkey_popover_desc">キーを長押しすると、指の周りにそのキーのサブキーが表示されます。指をいずれかに動かして離すと入力され、中央で離すとキャンセルされます。空きスロットを選ぶと割り当てができ、サブキーの上で 3 秒間指を止めると編集できます。文字キーではキーリピートの代わりになります。</string>
+    <string name="gesture_popover_neutral_width_title">ニュートラルゾーンの幅</string>
+    <string name="gesture_popover_neutral_width_desc">指を離しても何も起こらない中央領域の幅(キー幅に対する%)</string>
+    <string name="gesture_popover_neutral_height_title">ニュートラルゾーンの高さ</string>
+    <string name="gesture_popover_neutral_height_desc">指を離しても何も起こらない中央領域の高さ(キーの高さに対する%)</string>
+    <string name="subkey_assign_activity_label">サブキーを割り当て</string>
+    <string name="subkey_assign_title">%1$s キー · %2$s</string>
+    <string name="subkey_edit_current">現在: %1$s</string>
+    <string name="subkey_assign_default_removed">このスロットのデフォルトのサブキーは削除されています。</string>
+    <string name="subkey_edit_reassign">再割り当て</string>
+    <string name="subkey_assign_choose">アクションを選択</string>
+    <string name="subkey_edit_restore">デフォルトに戻す</string>
+    <string name="subkey_edit_remove">削除</string>
+    <string name="subkey_toast_removed">%2$s キーの %1$s サブキーを削除しました</string>
+    <string name="subkey_toast_restored">%2$s キーの %1$s サブキーをデフォルトに戻しました</string>
     <string name="gesture_selection_delete_header">選択削除モード</string>
     <string name="gesture_selection_delete_desc">バックスペースでショートスワイプ+ホールドしてテキストを選択し、指を離すと削除されます。</string>
     <string name="gesture_tap_typing_header">タップと入力</string>

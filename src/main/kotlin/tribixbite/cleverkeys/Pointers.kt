@@ -13,6 +13,12 @@ import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
+import tribixbite.cleverkeys.popover.PopoverSlot
+import tribixbite.cleverkeys.popover.SubkeyAssignRequest
+import tribixbite.cleverkeys.popover.SubkeyPopoverGeometry
+import tribixbite.cleverkeys.popover.SubkeyPopoverMetrics
+import tribixbite.cleverkeys.popover.SubkeyPopoverSlots
+import tribixbite.cleverkeys.popover.SubkeyPopoverState
 import tribixbite.cleverkeys.prefs.ConfigSnapshot
 import java.util.NoSuchElementException
 import kotlin.math.abs
@@ -130,10 +136,13 @@ class Pointers(
     }
 
     fun clear() {
+        var hadPopover = false
         for (p in _ptrs) {
             stopLongPress(p)
+            p.popover?.let { _longpress_handler.removeMessages(it.dwellWhat); hadPopover = true }
         }
         _ptrs.clear()
+        if (hadPopover) _handler.onSubkeyPopoverDismiss()
     }
 
     fun isKeyDown(k: KeyboardData.Key): Boolean {
@@ -224,6 +233,12 @@ class Pointers(
             _handler.onSwipeEnd(_swipeRecognizer)
             _swipeRecognizer.reset()
             removePtr(ptr)
+            return
+        }
+
+        // Subkey popover: the release resolves whatever slot is selected (or nothing).
+        if (ptr.hasFlagsAny(FLAG_P_POPOVER_MODE)) {
+            finishSubkeyPopover(ptr, snap)
             return
         }
 
@@ -538,57 +553,7 @@ class Pointers(
                         }
 
                         if (gestureValue != null) {
-                            // v1.32.927: Apply shift capitalization to word sublabels
-                            // If shift is active and sublabel is a word (letters/apostrophe only),
-                            // capitalize the first character
-                            val hasShift = ptr.modifiers.has(KeyValue.Modifier.SHIFT)
-                            if (hasShift && gestureValue.getKind() == KeyValue.Kind.Char) {
-                                val str = gestureValue.getString()
-                                if (str.isNotEmpty() && str.all { it.isLetter() || it == '\'' }) {
-                                    // It's a word - capitalize first letter
-                                    val capitalized = str.replaceFirstChar { it.uppercaseChar() }
-                                    if (capitalized != str) {
-                                        gestureValue = if (capitalized.length == 1) {
-                                            KeyValue.makeCharKey(capitalized[0])
-                                        } else {
-                                            KeyValue.makeStringKey(capitalized)
-                                        }
-                                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE: Shift active, capitalized word '$str' -> '$capitalized'")
-                                    }
-                                }
-                            }
-
-                            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE SUCCESS: triggering ${gestureValue}")
-
-                            // v1.1.88: Handle latchable keys (modifiers/dead keys) correctly
-                            // Dead keys like accent_aigu should LATCH, not output immediately
-                            val gestureFlags = pointer_flags_of_kv(gestureValue, snap)
-                            if ((gestureFlags and FLAG_P_LATCHABLE) != 0) {
-                                // This is a latchable key (dead key/modifier) - create a latched pointer
-                                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE: Latchable key detected, creating latched pointer")
-                                // Clear existing latched modifiers if this is a non-special latchable key
-                                if ((gestureFlags and FLAG_P_CLEAR_LATCHED) != 0) {
-                                    clearLatched()
-                                }
-                                // Create a new latched pointer for this modifier
-                                val latchedFlags = gestureFlags or FLAG_P_LATCHED
-                                // Synthesised BY this gesture: it carries the same snapshot,
-                                // so the flags above and the pointer that holds them agree.
-                                val latchedPtr = Pointer(-1, ptr.key, gestureValue, ptr.downX, ptr.downY, Modifiers.EMPTY, latchedFlags, snap)
-                                _ptrs.add(latchedPtr)
-                                _handler.onPointerFlagsChanged(null)
-                                _swipeRecognizer.reset()
-                                removePtr(ptr)
-                                return
-                            }
-
-                            // Non-latchable key - trigger normally
-                            // Note: Navigation keys are handled during onTouchMove (hold-to-repeat mode)
-                            _handler.onPointerDown(gestureValue, false)
-                            _handler.onPointerUp(gestureValue, ptr.modifiers)
-                            clearLatched() // Clear shift after gesture completes
-                            _swipeRecognizer.reset()
-                            removePtr(ptr)
+                            emitSubkeyValue(ptr, gestureValue, snap)
                             return
                         } else {
                             // No subkey accepted for the swipe direction (none assigned, or only a
@@ -937,6 +902,12 @@ class Pointers(
             return
         }
 
+        // Subkey popover: movement only moves the selection — no swipe path, slider or gesture.
+        if (ptr.hasFlagsAny(FLAG_P_POPOVER_MODE)) {
+            updateSubkeyPopover(ptr, x, y)
+            return
+        }
+
         // Handle TrackPoint mode: joystick-style - position tracked, timer handles repeating
         // Just update position, the handleTrackPointRepeat timer will use lastX/lastY
         if (ptr.hasFlagsAny(FLAG_P_TRACKPOINT_MODE)) {
@@ -1154,6 +1125,12 @@ class Pointers(
             // Handle selection-delete repeat (Shift+Arrow for text selection)
             if (ptr.selectionDeleteWhat == msg.what) {
                 handleSelectionDeleteRepeat(ptr)
+                return true
+            }
+            // Subkey popover: the finger rested on one assigned slot for the dwell time
+            val popover = ptr.popover
+            if (popover != null && popover.dwellWhat == msg.what) {
+                onSubkeyPopoverDwell(ptr, popover)
                 return true
             }
         }
@@ -1453,11 +1430,16 @@ class Pointers(
             }
 
             // For regular deferred keys (swipe typing), check movement threshold
-            if (movementDist > 15f && !isBackspace) {
+            if (movementDist > HOLD_STILLNESS_PX && !isBackspace) {
                 // User has moved - don't trigger key repeat, let swipe typing take over
                 // (Backspace is handled above - either selection mode or key repeat)
                 return
             }
+        }
+
+        // Hold-then-select subkey popover: replaces key repeat on the keys it applies to.
+        if (snap.subkey_popover_enabled && movementDist <= HOLD_STILLNESS_PX && tryOpenSubkeyPopover(ptr, snap)) {
+            return
         }
 
         // Long press toggle lock on modifiers
@@ -1499,6 +1481,195 @@ class Pointers(
                 snap.longPressInterval.toLong()
             )
         }
+    }
+
+    // Subkey popover (docs/specs/subkey-popover.md)
+
+    /**
+     * Whether holding [ptr]'s key may open the popover. Keys that already own the hold keep it:
+     * modifiers (latch/lock), backspace (repeat/selection), keys with navigation subkeys
+     * (TrackPoint), keys `modify_long_press` remaps (voice/IME switch), and anything that is not
+     * text (Char/String).
+     */
+    private fun isSubkeyPopoverKey(ptr: Pointer): Boolean {
+        val value = ptr.value ?: return false
+        if (ptr.hasFlagsAny(FLAG_P_LATCHABLE or FLAG_P_LATCHED)) return false
+        if (value.hasFlagsAny(KeyValue.FLAG_SPECIAL)) return false
+        if (value.getKind() != KeyValue.Kind.Char && value.getKind() != KeyValue.Kind.String) return false
+        if (value.getString().isBlank()) return false
+        if (isBackspaceKey(value) || hasNavigationSubkeys(ptr)) return false
+        return KeyModifier.modify_long_press(value) == value
+    }
+
+    /** Open the popover for [ptr] if it applies; false leaves the hold to the other behaviours. */
+    private fun tryOpenSubkeyPopover(ptr: Pointer, snap: ConfigSnapshot): Boolean {
+        if (!isSubkeyPopoverKey(ptr)) return false
+        val metrics = _handler.subkeyPopoverMetrics(ptr.key) ?: return false
+
+        val rawCode = ptr.key.keys[0]?.getString()?.lowercase() ?: ""
+        val keyCode = rawCode.takeIf { ShortSwipeCustomizationManager.isMappableKeyCode(it) }
+        val slots = SubkeyPopoverSlots.resolve(
+            defaultAt = { dir -> _handler.modifyKey(ptr.key.keys[dir.subLabelIndex], ptr.modifiers) },
+            customAt = { dir -> keyCode?.let { _customSwipeManager.getMapping(it, dir) } },
+        )
+        // A key with nothing to show and nothing assignable keeps its old hold (repeat).
+        if (keyCode == null && slots.all { it is PopoverSlot.Empty }) return false
+
+        val value = ptr.value ?: return false
+        val state = SubkeyPopoverState(
+            keyCode = keyCode,
+            keyLabel = value.getString(),
+            keyLabelUsesKeyFont = value.hasFlagsAny(KeyValue.FLAG_KEY_FONT),
+            slots = slots,
+            restX = ptr.lastX,
+            restY = ptr.lastY,
+            centreX = SubkeyPopoverGeometry.gridCentre(ptr.lastX, metrics.cellWidth, metrics.viewWidth),
+            centreY = SubkeyPopoverGeometry.gridCentre(ptr.lastY, metrics.cellHeight, metrics.viewHeight),
+            cellWidth = metrics.cellWidth,
+            cellHeight = metrics.cellHeight,
+            neutralWidthFraction = snap.subkey_popover_neutral_width / 100f,
+            neutralHeightFraction = snap.subkey_popover_neutral_height / 100f,
+            openedAt = SubkeyPopoverState.now(),
+        )
+        vlog { "SUBKEY_POPOVER: open key=${ptr.key.keys[0]} code=$keyCode slots=${slots.map { it::class.simpleName }}" }
+
+        // The press is now a popover: never a tap, swipe word, or repeat.
+        ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_POPOVER_MODE
+        ptr.popover = state
+        if (snap.swipe_typing_enabled) _swipeRecognizer.reset()
+        _handler.onSubkeyPopoverShow(state)
+        _handler.onPointerFlagsChanged(HapticEvent.LONG_PRESS)
+        return true
+    }
+
+    private fun updateSubkeyPopover(ptr: Pointer, x: Float, y: Float) {
+        val state = ptr.popover ?: return
+        if (!state.track(x, y, SubkeyPopoverState.now())) return
+        _longpress_handler.removeMessages(state.dwellWhat)
+        state.dwellWhat = -1
+        val slot = state.slot(state.active)
+        if (slot != null && SubkeyPopoverSlots.isEditable(slot)) {
+            state.dwellWhat = uniqueTimeoutWhat++
+            _longpress_handler.sendEmptyMessageDelayed(state.dwellWhat, SubkeyPopoverState.DWELL_EDIT_MS)
+        }
+        _handler.onSubkeyPopoverUpdate(state)
+        // A light tick per slot change (the key-press haptic toggle governs it).
+        if (state.active != null) _handler.onPointerFlagsChanged(HapticEvent.KEY_PRESS)
+    }
+
+    /** The dwell timer fired on an assigned slot: close the popover and open its edit screen. */
+    private fun onSubkeyPopoverDwell(ptr: Pointer, state: SubkeyPopoverState) {
+        state.dwellWhat = -1
+        val slot = state.slot(state.active) ?: return
+        val keyCode = state.keyCode
+        // The finger is still down. The pointer KEEPS FLAG_P_POPOVER_MODE with no state, so its
+        // moves are ignored and its release lands in finishSubkeyPopover with no slot: nothing
+        // is typed, and the ordinary up path (short swipe, tap) never sees this press.
+        closeSubkeyPopover(ptr)
+        if (keyCode == null) return  // default subkey on a key that cannot carry mappings
+        _handler.onPointerFlagsChanged(HapticEvent.LONG_PRESS)
+        _handler.onSubkeyAssignRequested(assignRequest(keyCode, slot, SubkeyAssignRequest.Mode.EDIT))
+    }
+
+    /** Release in popover mode: emit, execute, or ask for an assignment — or nothing. */
+    private fun finishSubkeyPopover(ptr: Pointer, snap: ConfigSnapshot) {
+        val state = ptr.popover
+        closeSubkeyPopover(ptr)
+        val slot = state?.slot(state.active)
+        vlog { "SUBKEY_POPOVER: release slot=$slot" }
+        when (slot) {
+            null -> removePtr(ptr)  // neutral zone: nothing
+            is PopoverSlot.Default -> emitSubkeyValue(ptr, slot.value, snap)
+            is PopoverSlot.Custom -> executeCustomShortSwipe(ptr, slot.mapping)
+            is PopoverSlot.Empty -> {
+                removePtr(ptr)
+                val keyCode = state.keyCode ?: return
+                _handler.onSubkeyAssignRequested(assignRequest(keyCode, slot, SubkeyAssignRequest.Mode.ASSIGN))
+            }
+        }
+        _handler.onPointerFlagsChanged(null)
+    }
+
+    /** Hide the popover and stop its dwell timer. [FLAG_P_POPOVER_MODE] stays until release. */
+    private fun closeSubkeyPopover(ptr: Pointer) {
+        val state = ptr.popover ?: return
+        _longpress_handler.removeMessages(state.dwellWhat)
+        ptr.popover = null
+        _handler.onSubkeyPopoverDismiss()
+    }
+
+    private fun assignRequest(keyCode: String, slot: PopoverSlot, mode: SubkeyAssignRequest.Mode) =
+        SubkeyAssignRequest(
+            keyCode = keyCode,
+            direction = slot.direction,
+            mode = mode,
+            hasDefault = when (slot) {
+                is PopoverSlot.Default -> true
+                is PopoverSlot.Custom -> slot.hidesDefault
+                is PopoverSlot.Empty -> slot.hiddenDefault
+            },
+            isCustom = slot is PopoverSlot.Custom,
+            currentLabel = SubkeyPopoverSlots.labelOf(slot).text,
+        )
+
+    /**
+     * Emit a subkey [value] chosen by a short swipe or the popover, then retire [ptr].
+     * Shift capitalises word sublabels (v1.32.927); latchable values (dead keys, modifiers)
+     * latch instead of typing (v1.1.88).
+     */
+    private fun emitSubkeyValue(ptr: Pointer, value: KeyValue, snap: ConfigSnapshot) {
+        var gestureValue = value
+        // v1.32.927: Apply shift capitalization to word sublabels
+        // If shift is active and sublabel is a word (letters/apostrophe only),
+        // capitalize the first character
+        val hasShift = ptr.modifiers.has(KeyValue.Modifier.SHIFT)
+        if (hasShift && gestureValue.getKind() == KeyValue.Kind.Char) {
+            val str = gestureValue.getString()
+            if (str.isNotEmpty() && str.all { it.isLetter() || it == '\'' }) {
+                // It's a word - capitalize first letter
+                val capitalized = str.replaceFirstChar { it.uppercaseChar() }
+                if (capitalized != str) {
+                    gestureValue = if (capitalized.length == 1) {
+                        KeyValue.makeCharKey(capitalized[0])
+                    } else {
+                        KeyValue.makeStringKey(capitalized)
+                    }
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE: Shift active, capitalized word '$str' -> '$capitalized'")
+                }
+            }
+        }
+
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE SUCCESS: triggering ${gestureValue}")
+
+        // v1.1.88: Handle latchable keys (modifiers/dead keys) correctly
+        // Dead keys like accent_aigu should LATCH, not output immediately
+        val gestureFlags = pointer_flags_of_kv(gestureValue, snap)
+        if ((gestureFlags and FLAG_P_LATCHABLE) != 0) {
+            // This is a latchable key (dead key/modifier) - create a latched pointer
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE: Latchable key detected, creating latched pointer")
+            // Clear existing latched modifiers if this is a non-special latchable key
+            if ((gestureFlags and FLAG_P_CLEAR_LATCHED) != 0) {
+                clearLatched()
+            }
+            // Create a new latched pointer for this modifier
+            val latchedFlags = gestureFlags or FLAG_P_LATCHED
+            // Synthesised BY this gesture: it carries the same snapshot,
+            // so the flags above and the pointer that holds them agree.
+            val latchedPtr = Pointer(-1, ptr.key, gestureValue, ptr.downX, ptr.downY, Modifiers.EMPTY, latchedFlags, snap)
+            _ptrs.add(latchedPtr)
+            _handler.onPointerFlagsChanged(null)
+            _swipeRecognizer.reset()
+            removePtr(ptr)
+            return
+        }
+
+        // Non-latchable key - trigger normally
+        // Note: Navigation keys are handled during onTouchMove (hold-to-repeat mode)
+        _handler.onPointerDown(gestureValue, false)
+        _handler.onPointerUp(gestureValue, ptr.modifiers)
+        clearLatched() // Clear shift after gesture completes
+        _swipeRecognizer.reset()
+        removePtr(ptr)
     }
 
     // Sliding
@@ -1680,6 +1851,12 @@ class Pointers(
 
         /** Track if swipe has ever left the starting key's bounds (for short gesture detection). */
         var hasLeftStartingKey: Boolean = false
+
+        /**
+         * The open subkey popover. Null with [FLAG_P_POPOVER_MODE] still set after the dwell
+         * opened the edit screen: the press is spent and its release does nothing.
+         */
+        var popover: SubkeyPopoverState? = null
 
         fun hasFlagsAny(has: Int): Boolean {
             return (flags and has) != 0
@@ -1935,6 +2112,24 @@ class Pointers(
 
         /** Execute a custom short swipe mapping defined by the user. */
         fun onCustomShortSwipe(mapping: ShortSwipeMapping)
+
+        // ---- Subkey popover (docs/specs/subkey-popover.md). Defaults keep test fakes and any
+        // host without a popover surface working: no metrics = the popover never opens. ----
+
+        /** Cell and view sizes for a popover on [key], or null when it cannot be shown. */
+        fun subkeyPopoverMetrics(key: KeyboardData.Key): SubkeyPopoverMetrics? = null
+
+        /** A popover opened; draw [state] until [onSubkeyPopoverDismiss]. */
+        fun onSubkeyPopoverShow(state: SubkeyPopoverState) {}
+
+        /** The popover's selection changed; redraw. */
+        fun onSubkeyPopoverUpdate(state: SubkeyPopoverState) {}
+
+        /** The popover closed. */
+        fun onSubkeyPopoverDismiss() {}
+
+        /** Open the assign or edit screen for a popover slot. */
+        fun onSubkeyAssignRequested(request: SubkeyAssignRequest) {}
     }
 
     companion object {
@@ -1962,6 +2157,12 @@ class Pointers(
 
         /** Selection-delete mode - short swipe + hold on backspace to select text, delete on release. */
         const val FLAG_P_SELECTION_DELETE_MODE = 1 shl 11
+
+        /** Hold-then-select subkey popover is open for this pointer (docs/specs/subkey-popover.md). */
+        const val FLAG_P_POPOVER_MODE = 1 shl 12
+
+        /** Movement (px) past which a hold is a swipe, not a hold — shared by repeat and popover. */
+        private const val HOLD_STILLNESS_PX = 15f
 
         /** Minimum movement (px) to trigger nav event in TrackPoint mode. */
         const val TRACKPOINT_MOVEMENT_THRESHOLD = 15f

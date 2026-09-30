@@ -238,6 +238,36 @@ story. Two habits came out of it and are worth keeping:
 
 ## Open work, in priority order
 
+### -3. Subkey popover (hold-then-select), 2026-09-30
+
+Spec: `docs/specs/subkey-popover.md`.
+
+What it does:
+- Holding a text key opens a 3×3 grid of its subkeys, showing what a short swipe in each direction would do.
+- Sliding to a slot and letting go types or runs it.
+- Letting go in the neutral centre (width and height are % of the key size, set by the user) does nothing.
+- An empty slot opens the assign screen when released on.
+- Resting 3 s on an assigned slot opens the edit screen (Reassign / Remove / Restore default).
+
+Settings:
+- Toggle under Gesture tuning. Default ON for fresh installs; existing installs are seeded OFF by the config v5 `SubkeyPopoverMigration`.
+- On the keys it covers, it replaces key repeat. Backspace, space/nav, modifiers and voice/IME keys keep their own hold.
+
+Code:
+- `popover/`: Geometry, Slots, State, Renderer, `SubkeyAssignActivity`.
+- `Pointers`: `FLAG_P_POPOVER_MODE`, plus `emitSubkeyValue` shared with the short-swipe path.
+- `ShortSwipeAssignment` is the save / remove / restore used by both the per-key activity and the popover.
+- Removal reuses the `removed` command (`ShortSwipeMapping.removal`).
+
+Tests:
+- pure: `SubkeyPopoverGeometryTest`, `SubkeyPopoverSlotsTest`;
+- mock: `PointersSubkeyPopoverTest`, `SubkeyPopoverMigrationTest`.
+
+Open:
+- Device feel check. The animation constants are in `SubkeyPopoverRenderer`; the dwell and arming values are in `SubkeyPopoverState` / `SubkeyPopoverGeometry`.
+- TalkBack: the popover is not exposed to accessibility (explore-by-touch users keep the per-key settings screen).
+- Native review of the 17 new strings (translator notes: inflected toasts in cs/lv/pl/ru/uk/hu; "slot" word in in/tr; hu "Újra hozzárendelés").
+
 ### -2. i18n follow-ups from the 2026-09-29 fa/hu device run (code items CLOSED 2026-09-30)
 
 Done 2026-09-29: the hardcoded-UI sweep (guard `HardcodedUiStringTest`), RTL arrows, section-title

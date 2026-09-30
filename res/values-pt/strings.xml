@@ -791,6 +791,24 @@
     <string name="gesture_section_intro">Ajuste fino do comportamento de toque, deslize e controle deslizante para o seu estilo de digitação.</string>
     <string name="gesture_short_gestures_header">Gestos curtos</string>
     <string name="gesture_open_calibration">📐 Abrir ferramenta de calibração</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">Segurar para subteclas</string>
+    <string name="gesture_subkey_popover_title">Popup de subteclas ao segurar</string>
+    <string name="gesture_subkey_popover_desc">Mantenha uma tecla pressionada para mostrar as subteclas dela ao redor do seu dedo. Mova o dedo até uma e solte para digitá-la, ou solte no centro para cancelar. Escolha um espaço vazio para atribuí-lo; mantenha o dedo 3 segundos sobre uma subtecla para editá-la. Substitui a repetição de tecla nas teclas de letras.</string>
+    <string name="gesture_popover_neutral_width_title">Largura da zona neutra</string>
+    <string name="gesture_popover_neutral_width_desc">Largura da área central onde soltar não faz nada, em % da largura da tecla</string>
+    <string name="gesture_popover_neutral_height_title">Altura da zona neutra</string>
+    <string name="gesture_popover_neutral_height_desc">Altura da área central onde soltar não faz nada, em % da altura da tecla</string>
+    <string name="subkey_assign_activity_label">Atribuir subtecla</string>
+    <string name="subkey_assign_title">Tecla %1$s · %2$s</string>
+    <string name="subkey_edit_current">Atual: %1$s</string>
+    <string name="subkey_assign_default_removed">A subtecla integrada deste espaço foi removida.</string>
+    <string name="subkey_edit_reassign">Reatribuir</string>
+    <string name="subkey_assign_choose">Escolha uma ação</string>
+    <string name="subkey_edit_restore">Restaurar padrão</string>
+    <string name="subkey_edit_remove">Remover</string>
+    <string name="subkey_toast_removed">Subtecla %1$s removida da tecla %2$s</string>
+    <string name="subkey_toast_restored">Subtecla %1$s padrão restaurada na tecla %2$s</string>
     <string name="gesture_selection_delete_header">Modo de seleção e exclusão</string>
     <string name="gesture_selection_delete_desc">Deslize curto + segurar no Backspace para selecionar texto; solte para excluir.</string>
     <string name="gesture_tap_typing_header">Toque e digitação</string>

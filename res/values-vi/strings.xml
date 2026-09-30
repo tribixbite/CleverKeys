@@ -793,6 +793,24 @@
     <string name="gesture_open_calibration">📐 Mở công cụ hiệu chỉnh</string>
     <string name="gesture_section_intro">Tinh chỉnh hành vi chạm, vuốt và phím trượt theo phong cách gõ của bạn.</string>
     <string name="gesture_selection_delete_desc">Vuốt ngắn + giữ trên phím xóa để chọn văn bản, thả ra để xóa.</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">Giữ để hiện phím phụ</string>
+    <string name="gesture_subkey_popover_title">Bảng phím phụ khi nhấn giữ</string>
+    <string name="gesture_subkey_popover_desc">Nhấn giữ một phím để hiện các phím phụ của nó quanh ngón tay bạn. Di chuyển ngón tay đến một phím phụ rồi thả ra để nhập, hoặc thả ra ở giữa để hủy. Chọn một ô trống để gán; giữ ngón tay trên một phím phụ trong 3 giây để chỉnh sửa. Thay thế tính năng lặp phím trên các phím chữ.</string>
+    <string name="gesture_popover_neutral_width_title">Chiều rộng vùng trung tính</string>
+    <string name="gesture_popover_neutral_width_desc">Chiều rộng vùng giữa nơi thả tay không có tác dụng, tính theo % chiều rộng phím</string>
+    <string name="gesture_popover_neutral_height_title">Chiều cao vùng trung tính</string>
+    <string name="gesture_popover_neutral_height_desc">Chiều cao vùng giữa nơi thả tay không có tác dụng, tính theo % chiều cao phím</string>
+    <string name="subkey_assign_activity_label">Gán phím phụ</string>
+    <string name="subkey_assign_title">Phím %1$s · %2$s</string>
+    <string name="subkey_edit_current">Hiện tại: %1$s</string>
+    <string name="subkey_assign_default_removed">Phím phụ tích hợp của ô này đã bị xóa.</string>
+    <string name="subkey_edit_reassign">Gán lại</string>
+    <string name="subkey_assign_choose">Chọn một thao tác</string>
+    <string name="subkey_edit_restore">Khôi phục mặc định</string>
+    <string name="subkey_edit_remove">Xóa</string>
+    <string name="subkey_toast_removed">Đã xóa phím phụ %1$s khỏi phím %2$s</string>
+    <string name="subkey_toast_restored">Đã khôi phục phím phụ %1$s mặc định trên phím %2$s</string>
     <string name="gesture_selection_delete_header">Chế độ chọn-xóa</string>
     <string name="gesture_short_gestures_header">Cử chỉ ngắn</string>
     <string name="gesture_slider_key_header">Hành vi phím trượt</string>

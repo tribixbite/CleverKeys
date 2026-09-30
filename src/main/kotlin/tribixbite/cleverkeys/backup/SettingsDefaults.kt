@@ -113,6 +113,11 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "short_gesture_min_distance" to PrefValue.IntV(Defaults.SHORT_GESTURE_MIN_DISTANCE),
     "short_gesture_max_distance" to PrefValue.IntV(Defaults.SHORT_GESTURE_MAX_DISTANCE),
 
+    // ── Subkey popover (hold-then-select) ────────────────────────────
+    "subkey_popover_enabled" to PrefValue.Bool(Defaults.SUBKEY_POPOVER_ENABLED),
+    "subkey_popover_neutral_width" to PrefValue.IntV(Defaults.SUBKEY_POPOVER_NEUTRAL_WIDTH),
+    "subkey_popover_neutral_height" to PrefValue.IntV(Defaults.SUBKEY_POPOVER_NEUTRAL_HEIGHT),
+
     // ── Selection-delete ─────────────────────────────────────────────
     "selection_delete_vertical_threshold" to PrefValue.IntV(Defaults.SELECTION_DELETE_VERTICAL_THRESHOLD),
     "selection_delete_vertical_speed" to PrefValue.FloatV(Defaults.SELECTION_DELETE_VERTICAL_SPEED),

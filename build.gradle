@@ -595,6 +595,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.AutocorrectDefaultsDriftTest',
     'tribixbite.cleverkeys.ShortSwipeIntentTest',
     'tribixbite.cleverkeys.customization.ShortSwipeMappingTest',
+    // Subkey popover (2026-09-30, docs/specs/subkey-popover.md): neutral zone + sector
+    // hit-testing, grid clamping and arming; slot resolution mirrors the short-swipe path.
+    'tribixbite.cleverkeys.popover.SubkeyPopoverGeometryTest',
+    'tribixbite.cleverkeys.popover.SubkeyPopoverSlotsTest',
     'tribixbite.cleverkeys.GestureTest',
     // Licensing-audit follow-up (2026-09-29): which parts of a pack's manifest attribution the
     // language-pack manager shows, and that only http(s) source tokens become tappable links.
@@ -1148,6 +1152,10 @@ tasks.register('runMockTests', JavaExec) {
     // upgrades are seeded ON; selection history (the one store whose pre-2.0 writes
     // ignored the gate) is reset once on upgrade via a pending flag.
     'tribixbite.cleverkeys.LearningMigrationTest',
+    // Subkey popover (2026-09-30): v5 migration seeds it OFF for upgrades (mocked prefs), and
+    // Pointers routes hold / release / dwell through it (Unsafe-built Pointers, real manager).
+    'tribixbite.cleverkeys.SubkeyPopoverMigrationTest',
+    'tribixbite.cleverkeys.PointersSubkeyPopoverTest',
     // Learning-system audit 2026-09-26 (W4/W6): selection history persists via debounced
     // write-back and ages by halving instead of a 30-day wholesale wipe.
     'tribixbite.cleverkeys.UserAdaptationManagerPersistenceTest',

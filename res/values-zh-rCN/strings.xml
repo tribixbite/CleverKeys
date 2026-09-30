@@ -763,6 +763,24 @@
     <string name="gesture_open_calibration">📐 打开校准工具</string>
     <string name="gesture_section_intro">按你的输入习惯微调点按、滑动和滑块行为。</string>
     <string name="gesture_selection_delete_desc">在退格键上短滑动并按住以选择文本，松开即删除。</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">长按显示子键</string>
+    <string name="gesture_subkey_popover_title">长按弹出子键</string>
+    <string name="gesture_subkey_popover_desc">长按一个键，即可在手指周围显示它的子键。将手指移到其中一个上并松开即可输入，在中间松开则取消。选择空位可为其分配操作；在子键上停留 3 秒可编辑它。在字母键上会取代按键重复。</string>
+    <string name="gesture_popover_neutral_width_title">中立区宽度</string>
+    <string name="gesture_popover_neutral_width_desc">中间区域的宽度（在此松开手指不会触发任何操作），以按键宽度的 % 表示</string>
+    <string name="gesture_popover_neutral_height_title">中立区高度</string>
+    <string name="gesture_popover_neutral_height_desc">中间区域的高度（在此松开手指不会触发任何操作），以按键高度的 % 表示</string>
+    <string name="subkey_assign_activity_label">分配子键</string>
+    <string name="subkey_assign_title">%1$s 键 · %2$s</string>
+    <string name="subkey_edit_current">当前：%1$s</string>
+    <string name="subkey_assign_default_removed">此位置的内置子键已被移除。</string>
+    <string name="subkey_edit_reassign">重新分配</string>
+    <string name="subkey_assign_choose">选择操作</string>
+    <string name="subkey_edit_restore">恢复默认</string>
+    <string name="subkey_edit_remove">移除</string>
+    <string name="subkey_toast_removed">已移除 %2$s 键的%1$s子键</string>
+    <string name="subkey_toast_restored">已恢复 %2$s 键的默认%1$s子键</string>
     <string name="gesture_selection_delete_header">选择删除模式</string>
     <string name="gesture_short_gestures_header">短手势</string>
     <string name="gesture_slider_key_header">滑块键行为</string>

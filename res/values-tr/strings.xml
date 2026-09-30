@@ -799,6 +799,24 @@
     <string name="gesture_section_intro">Dokunma, kaydırma ve kaydırıcı davranışını yazma tarzınıza göre ince ayarlayın.</string>
     <string name="gesture_short_gestures_header">Kısa Hareketler</string>
     <string name="gesture_open_calibration">📐 Kalibrasyon Aracını Aç</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">Basılı Tutarak Alt Tuşlar</string>
+    <string name="gesture_subkey_popover_title">Basılı Tutunca Alt Tuş Penceresi</string>
+    <string name="gesture_subkey_popover_desc">Alt tuşlarını parmağınızın çevresinde göstermek için bir tuşu basılı tutun. Parmağınızı birine götürüp bırakarak onu yazın ya da iptal etmek için ortada bırakın. Atamak için boş bir yuva seçin; düzenlemek için bir alt tuşun üzerinde 3 saniye bekleyin. Harf tuşlarında tuş tekrarının yerini alır.</string>
+    <string name="gesture_popover_neutral_width_title">Nötr Bölge Genişliği</string>
+    <string name="gesture_popover_neutral_width_desc">Bırakmanın hiçbir şey yapmadığı orta alanın genişliği, tuş genişliğinin yüzdesi olarak</string>
+    <string name="gesture_popover_neutral_height_title">Nötr Bölge Yüksekliği</string>
+    <string name="gesture_popover_neutral_height_desc">Bırakmanın hiçbir şey yapmadığı orta alanın yüksekliği, tuş yüksekliğinin yüzdesi olarak</string>
+    <string name="subkey_assign_activity_label">Alt Tuş Ata</string>
+    <string name="subkey_assign_title">%1$s tuşu · %2$s</string>
+    <string name="subkey_edit_current">Geçerli: %1$s</string>
+    <string name="subkey_assign_default_removed">Bu yuvanın yerleşik alt tuşu kaldırıldı.</string>
+    <string name="subkey_edit_reassign">Yeniden Ata</string>
+    <string name="subkey_assign_choose">Bir eylem seçin</string>
+    <string name="subkey_edit_restore">Varsayılanı Geri Yükle</string>
+    <string name="subkey_edit_remove">Kaldır</string>
+    <string name="subkey_toast_removed">%2$s tuşundan %1$s alt tuşu kaldırıldı</string>
+    <string name="subkey_toast_restored">%2$s tuşunda varsayılan %1$s alt tuşu geri yüklendi</string>
     <string name="gesture_selection_delete_header">Seçerek Silme Modu</string>
     <string name="gesture_selection_delete_desc">Metin seçmek için geri silme tuşunda kısa kaydırma + basılı tutma, silmek için bırakın.</string>
     <string name="gesture_tap_typing_header">Dokunma ve Yazma</string>

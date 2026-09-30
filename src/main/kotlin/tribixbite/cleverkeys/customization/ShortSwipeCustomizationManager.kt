@@ -362,6 +362,15 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
         private const val FILE_NAME = "short_swipe_customizations.json"
 
         /**
+         * Whether a key whose main value's string is [keyCode] can carry custom mappings: non-empty
+         * and at most 4 characters (longer strings are special keys' names). Shared by the draw
+         * overlay in `Keyboard2View` and the subkey popover, so a slot the popover lets the user
+         * assign is always one the keyboard will draw.
+         */
+        @JvmStatic
+        fun isMappableKeyCode(keyCode: String): Boolean = keyCode.isNotEmpty() && keyCode.length <= 4
+
+        /**
          * Build the per-key render index from a set of mappings.
          *
          * Pure (no Android/IO deps) so it is unit-testable and reused by [rebuildByKeyIndex].

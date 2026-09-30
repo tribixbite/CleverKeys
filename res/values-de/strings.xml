@@ -811,6 +811,24 @@
     <string name="gesture_section_intro">Tipp-, Wisch- und Schieberegler-Verhalten auf Ihren Tippstil abstimmen.</string>
     <string name="gesture_short_gestures_header">Kurze Gesten</string>
     <string name="gesture_open_calibration">📐 Kalibrierungswerkzeug öffnen</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">Halten für Untertasten</string>
+    <string name="gesture_subkey_popover_title">Untertasten-Popup beim Halten</string>
+    <string name="gesture_subkey_popover_desc">Halten Sie eine Taste gedrückt, um ihre Untertasten rund um den Finger anzuzeigen. Bewegen Sie den Finger zu einer und lassen Sie los, um sie einzugeben, oder lassen Sie in der Mitte los, um abzubrechen. Wählen Sie einen leeren Platz, um ihn zu belegen; verweilen Sie 3 Sekunden auf einer Untertaste, um sie zu bearbeiten. Ersetzt die Tastenwiederholung auf Buchstabentasten.</string>
+    <string name="gesture_popover_neutral_width_title">Breite der neutralen Zone</string>
+    <string name="gesture_popover_neutral_width_desc">Breite des mittleren Bereichs, in dem Loslassen nichts bewirkt, in % der Tastenbreite</string>
+    <string name="gesture_popover_neutral_height_title">Höhe der neutralen Zone</string>
+    <string name="gesture_popover_neutral_height_desc">Höhe des mittleren Bereichs, in dem Loslassen nichts bewirkt, in % der Tastenhöhe</string>
+    <string name="subkey_assign_activity_label">Untertaste zuweisen</string>
+    <string name="subkey_assign_title">Taste %1$s · %2$s</string>
+    <string name="subkey_edit_current">Aktuell: %1$s</string>
+    <string name="subkey_assign_default_removed">Die integrierte Untertaste dieses Platzes wurde entfernt.</string>
+    <string name="subkey_edit_reassign">Neu zuweisen</string>
+    <string name="subkey_assign_choose">Aktion auswählen</string>
+    <string name="subkey_edit_restore">Standard wiederherstellen</string>
+    <string name="subkey_edit_remove">Entfernen</string>
+    <string name="subkey_toast_removed">Untertaste „%1$s“ von Taste %2$s entfernt</string>
+    <string name="subkey_toast_restored">Standard-Untertaste „%1$s“ auf Taste %2$s wiederhergestellt</string>
     <string name="gesture_selection_delete_header">Auswahl-Lösch-Modus</string>
     <string name="gesture_selection_delete_desc">Auf der Rücktaste kurz wischen + halten, um Text auszuwählen; Loslassen löscht ihn.</string>
     <string name="gesture_tap_typing_header">Tippen und Eingabe</string>

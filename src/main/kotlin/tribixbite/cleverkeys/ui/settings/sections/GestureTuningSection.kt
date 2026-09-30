@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ShortSwipeCalibrationActivity
@@ -96,6 +97,53 @@ internal fun SettingsActivity.GestureTuningSection() {
                         Text(stringResource(R.string.gesture_open_calibration))
                     }
                     // Customize Per-Key Actions button moved to Activities section at top
+                }
+
+                // Subkey popover subsection (hold-then-select, docs/specs/subkey-popover.md)
+                Text(
+                    text = stringResource(R.string.gesture_subkey_popover_header),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+
+                SettingsSwitch(
+                    title = stringResource(R.string.gesture_subkey_popover_title),
+                    description = stringResource(R.string.gesture_subkey_popover_desc),
+                    checked = subkeyPopoverEnabled,
+                    onCheckedChange = {
+                        subkeyPopoverEnabled = it
+                        saveSetting("subkey_popover_enabled", it)
+                    }
+                )
+
+                if (subkeyPopoverEnabled) {
+                    val neutralRange = Defaults.SUBKEY_POPOVER_NEUTRAL_MIN.toFloat()..Defaults.SUBKEY_POPOVER_NEUTRAL_MAX.toFloat()
+                    // 5% steps across the range: (max - min) / 5 - 1 intermediate stops.
+                    val neutralSteps = (Defaults.SUBKEY_POPOVER_NEUTRAL_MAX - Defaults.SUBKEY_POPOVER_NEUTRAL_MIN) / 5 - 1
+                    SettingsSlider(
+                        title = stringResource(R.string.gesture_popover_neutral_width_title),
+                        description = stringResource(R.string.gesture_popover_neutral_width_desc),
+                        value = subkeyPopoverNeutralWidth.toFloat(),
+                        valueRange = neutralRange,
+                        steps = neutralSteps,
+                        onValueChange = {
+                            subkeyPopoverNeutralWidth = it.toInt()
+                            saveSetting("subkey_popover_neutral_width", subkeyPopoverNeutralWidth)
+                        },
+                        displayValue = "${subkeyPopoverNeutralWidth}%"
+                    )
+                    SettingsSlider(
+                        title = stringResource(R.string.gesture_popover_neutral_height_title),
+                        description = stringResource(R.string.gesture_popover_neutral_height_desc),
+                        value = subkeyPopoverNeutralHeight.toFloat(),
+                        valueRange = neutralRange,
+                        steps = neutralSteps,
+                        onValueChange = {
+                            subkeyPopoverNeutralHeight = it.toInt()
+                            saveSetting("subkey_popover_neutral_height", subkeyPopoverNeutralHeight)
+                        },
+                        displayValue = "${subkeyPopoverNeutralHeight}%"
+                    )
                 }
 
                 // Selection-Delete Mode subsection (backspace swipe+hold)

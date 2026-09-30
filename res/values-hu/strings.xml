@@ -797,6 +797,24 @@
     <string name="gesture_section_intro">Az érintés, a csúsztatás és a csúszka viselkedésének finomhangolása az Ön gépelési stílusához.</string>
     <string name="gesture_short_gestures_header">Rövid gesztusok</string>
     <string name="gesture_open_calibration">📐 Kalibrálóeszköz megnyitása</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">Albillentyűk nyomva tartással</string>
+    <string name="gesture_subkey_popover_title">Albillentyű-felugró nyomva tartáskor</string>
+    <string name="gesture_subkey_popover_desc">Tartson nyomva egy billentyűt, hogy az albillentyűi megjelenjenek az ujja körül. Vigye az ujját az egyikre, és engedje fel a beíráshoz, vagy engedje fel középen a megszakításhoz. Üres helyet választva hozzárendelhet egy műveletet; ha 3 másodpercig egy albillentyűn tartja az ujját, szerkesztheti. Betűbillentyűkön a billentyűismétlést váltja fel.</string>
+    <string name="gesture_popover_neutral_width_title">Semleges zóna szélessége</string>
+    <string name="gesture_popover_neutral_width_desc">A középső terület szélessége, ahol az elengedés nem csinál semmit, a billentyűszélesség %-ában</string>
+    <string name="gesture_popover_neutral_height_title">Semleges zóna magassága</string>
+    <string name="gesture_popover_neutral_height_desc">A középső terület magassága, ahol az elengedés nem csinál semmit, a billentyűmagasság %-ában</string>
+    <string name="subkey_assign_activity_label">Albillentyű hozzárendelése</string>
+    <string name="subkey_assign_title">%1$s billentyű · %2$s</string>
+    <string name="subkey_edit_current">Jelenleg: %1$s</string>
+    <string name="subkey_assign_default_removed">A hely beépített albillentyűjét eltávolították.</string>
+    <string name="subkey_edit_reassign">Újra hozzárendelés</string>
+    <string name="subkey_assign_choose">Válasszon műveletet</string>
+    <string name="subkey_edit_restore">Alapértelmezett visszaállítása</string>
+    <string name="subkey_edit_remove">Eltávolítás</string>
+    <string name="subkey_toast_removed">%2$s billentyű: %1$s albillentyű eltávolítva</string>
+    <string name="subkey_toast_restored">%2$s billentyű: alapértelmezett %1$s albillentyű visszaállítva</string>
     <string name="gesture_selection_delete_header">Kijelölés-törlés mód</string>
     <string name="gesture_selection_delete_desc">Rövid csúsztatás + nyomva tartás a törlőbillentyűn a szöveg kijelöléséhez, majd elengedés a törléshez.</string>
     <string name="gesture_tap_typing_header">Érintés és gépelés</string>

@@ -53,6 +53,22 @@ data class ShortSwipeMapping(
         const val MAX_ACTION_LENGTH = 4096
 
         /**
+         * The `removed` placeholder command (CommandRegistry "REMOVED/PLACEHOLDER KEYS"). A
+         * mapping to it blanks its slot: it hides the layout's default subkey there (#171) and
+         * does nothing when swiped. The subkey popover treats such a slot as empty.
+         */
+        const val REMOVED_COMMAND = "removed"
+
+        /** A mapping that blanks [direction] on [keyCode] — see [REMOVED_COMMAND]. */
+        fun removal(keyCode: String, direction: SwipeDirection): ShortSwipeMapping = ShortSwipeMapping(
+            keyCode = keyCode.lowercase(),
+            direction = direction,
+            displayText = "",
+            actionType = ActionType.COMMAND,
+            actionValue = REMOVED_COMMAND
+        )
+
+        /**
          * Validate that [pattern] is a parseable [SimpleDateFormat] pattern.
          *
          * SimpleDateFormat's constructor throws [IllegalArgumentException] for unknown
@@ -172,6 +188,10 @@ data class ShortSwipeMapping(
             useKeyFont = useKeyFont
         )
     }
+
+    /** Whether this mapping blanks its slot rather than doing something (see [REMOVED_COMMAND]). */
+    val isRemoval: Boolean
+        get() = actionType == ActionType.COMMAND && actionValue == REMOVED_COMMAND
 
     /**
      * Get the command if this is a COMMAND type mapping.

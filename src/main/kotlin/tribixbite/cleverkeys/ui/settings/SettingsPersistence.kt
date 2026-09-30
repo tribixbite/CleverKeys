@@ -413,6 +413,11 @@ internal fun SettingsActivity.loadCurrentSettings() {
         shortGestureMinDistance = Config.safeGetInt(prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE)
         shortGestureMaxDistance = Config.safeGetInt(prefs, "short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE)
 
+        // Subkey popover settings
+        subkeyPopoverEnabled = prefs.getSafeBoolean("subkey_popover_enabled", Defaults.SUBKEY_POPOVER_ENABLED)
+        subkeyPopoverNeutralWidth = Config.safeGetInt(prefs, "subkey_popover_neutral_width", Defaults.SUBKEY_POPOVER_NEUTRAL_WIDTH)
+        subkeyPopoverNeutralHeight = Config.safeGetInt(prefs, "subkey_popover_neutral_height", Defaults.SUBKEY_POPOVER_NEUTRAL_HEIGHT)
+
         // Selection-delete mode settings
         selectionDeleteVerticalThreshold = Config.safeGetInt(prefs, "selection_delete_vertical_threshold", Defaults.SELECTION_DELETE_VERTICAL_THRESHOLD)
         selectionDeleteVerticalSpeed = Config.safeGetFloat(prefs, "selection_delete_vertical_speed", Defaults.SELECTION_DELETE_VERTICAL_SPEED)

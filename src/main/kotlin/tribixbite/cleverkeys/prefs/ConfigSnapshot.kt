@@ -69,6 +69,11 @@ data class ConfigSnapshot(
     val short_gestures_enabled: Boolean,
     val short_gesture_min_distance: PercentOfKey,
     val short_gesture_max_distance: PercentOfKey,
+    /** Hold-then-select subkey popover (docs/specs/subkey-popover.md). */
+    val subkey_popover_enabled: Boolean,
+    /** Popover neutral zone, % of the key's width / height. */
+    val subkey_popover_neutral_width: Int,
+    val subkey_popover_neutral_height: Int,
     /** Displacement (px) at which a press becomes a directional gesture. */
     val swipe_dist_px: Float,
     /** Slider step size in px. */

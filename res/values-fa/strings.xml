@@ -826,6 +826,24 @@
     <string name="gesture_section_intro">رفتار ضربه، کشیدن و اسلایدر را برای سبک تایپ خود به‌دقت تنظیم کنید.</string>
     <string name="gesture_short_gestures_header">اشاره‌های کوتاه</string>
     <string name="gesture_open_calibration">📐 باز کردن ابزار واسنجی</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">نگه داشتن برای زیرکلیدها</string>
+    <string name="gesture_subkey_popover_title">پنجرهٔ زیرکلید با نگه داشتن</string>
+    <string name="gesture_subkey_popover_desc">یک کلید را نگه دارید تا زیرکلیدهای آن دور انگشتتان نمایش داده شود. انگشت را روی یکی از آن‌ها ببرید و رها کنید تا تایپ شود، یا در وسط رها کنید تا لغو شود. برای اختصاص دادن، یک جایگاه خالی را انتخاب کنید؛ برای ویرایش یک زیرکلید، ۳ ثانیه روی آن بمانید. روی کلیدهای حروف جایگزین تکرار کلید می‌شود.</string>
+    <string name="gesture_popover_neutral_width_title">عرض ناحیهٔ خنثی</string>
+    <string name="gesture_popover_neutral_width_desc">عرض ناحیهٔ میانی که رها کردن در آن کاری انجام نمی‌دهد، به‌صورت ٪ از عرض کلید</string>
+    <string name="gesture_popover_neutral_height_title">ارتفاع ناحیهٔ خنثی</string>
+    <string name="gesture_popover_neutral_height_desc">ارتفاع ناحیهٔ میانی که رها کردن در آن کاری انجام نمی‌دهد، به‌صورت ٪ از ارتفاع کلید</string>
+    <string name="subkey_assign_activity_label">اختصاص زیرکلید</string>
+    <string name="subkey_assign_title">کلید %1$s · %2$s</string>
+    <string name="subkey_edit_current">فعلی: %1$s</string>
+    <string name="subkey_assign_default_removed">زیرکلید داخلی این جایگاه برداشته شد.</string>
+    <string name="subkey_edit_reassign">اختصاص دوباره</string>
+    <string name="subkey_assign_choose">یک کنش انتخاب کنید</string>
+    <string name="subkey_edit_restore">بازگرداندن پیش‌فرض</string>
+    <string name="subkey_edit_remove">برداشتن</string>
+    <string name="subkey_toast_removed">زیرکلید %1$s از کلید %2$s برداشته شد</string>
+    <string name="subkey_toast_restored">زیرکلید پیش‌فرض %1$s روی کلید %2$s بازگردانده شد</string>
     <string name="gesture_selection_delete_header">حالت انتخاب و حذف</string>
     <string name="gesture_selection_delete_desc">کشیدن کوتاه + نگه داشتن روی پس‌بر برای انتخاب متن؛ سپس رها کنید تا حذف شود.</string>
     <string name="gesture_tap_typing_header">ضربه و تایپ</string>

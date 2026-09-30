@@ -797,6 +797,24 @@
     <string name="gesture_section_intro">Ajustez finement le comportement des appuis, glissés et curseurs selon votre style de frappe.</string>
     <string name="gesture_short_gestures_header">Gestes courts</string>
     <string name="gesture_open_calibration">📐 Ouvrir l\'outil de calibrage</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">Maintien pour sous-touches</string>
+    <string name="gesture_subkey_popover_title">Sous-touches au maintien</string>
+    <string name="gesture_subkey_popover_desc">Maintenez une touche pour afficher ses sous-touches autour de votre doigt. Déplacez le doigt vers l\'une d\'elles et relâchez pour la saisir, ou relâchez au centre pour annuler. Choisissez un emplacement vide pour l\'attribuer ; restez 3 secondes sur une sous-touche pour la modifier. Remplace la répétition de touche sur les touches de lettres.</string>
+    <string name="gesture_popover_neutral_width_title">Largeur de la zone neutre</string>
+    <string name="gesture_popover_neutral_width_desc">Largeur de la zone centrale où relâcher n\'a aucun effet, en % de la largeur de la touche</string>
+    <string name="gesture_popover_neutral_height_title">Hauteur de la zone neutre</string>
+    <string name="gesture_popover_neutral_height_desc">Hauteur de la zone centrale où relâcher n\'a aucun effet, en % de la hauteur de la touche</string>
+    <string name="subkey_assign_activity_label">Attribuer une sous-touche</string>
+    <string name="subkey_assign_title">Touche %1$s · %2$s</string>
+    <string name="subkey_edit_current">Actuellement : %1$s</string>
+    <string name="subkey_assign_default_removed">La sous-touche intégrée de cet emplacement a été retirée.</string>
+    <string name="subkey_edit_reassign">Réattribuer</string>
+    <string name="subkey_assign_choose">Choisissez une action</string>
+    <string name="subkey_edit_restore">Rétablir par défaut</string>
+    <string name="subkey_edit_remove">Retirer</string>
+    <string name="subkey_toast_removed">Sous-touche %1$s retirée de la touche %2$s</string>
+    <string name="subkey_toast_restored">Sous-touche %1$s par défaut rétablie sur la touche %2$s</string>
     <string name="gesture_selection_delete_header">Mode sélection-suppression</string>
     <string name="gesture_selection_delete_desc">Glissé court + maintien sur Retour arrière pour sélectionner du texte, puis relâchez pour supprimer.</string>
     <string name="gesture_tap_typing_header">Appui et frappe</string>

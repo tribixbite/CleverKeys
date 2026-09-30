@@ -803,6 +803,24 @@
     <string name="gesture_section_intro">Sesuaikan perilaku ketuk, geser, dan slider untuk gaya mengetik Anda.</string>
     <string name="gesture_short_gestures_header">Gestur Pendek</string>
     <string name="gesture_open_calibration">📐 Buka Alat Kalibrasi</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">Tahan untuk Subtombol</string>
+    <string name="gesture_subkey_popover_title">Popover subtombol saat ditahan</string>
+    <string name="gesture_subkey_popover_desc">Tahan sebuah tombol untuk menampilkan subtombolnya di sekitar jari Anda. Gerakkan jari ke salah satunya lalu lepaskan untuk mengetiknya, atau lepaskan di tengah untuk membatalkan. Pilih slot kosong untuk menetapkannya; diamkan jari di atas subtombol selama 3 detik untuk mengeditnya. Menggantikan pengulangan tombol pada tombol huruf.</string>
+    <string name="gesture_popover_neutral_width_title">Lebar zona netral</string>
+    <string name="gesture_popover_neutral_width_desc">Lebar area tengah tempat melepas jari tidak melakukan apa pun, dalam % lebar tombol</string>
+    <string name="gesture_popover_neutral_height_title">Tinggi zona netral</string>
+    <string name="gesture_popover_neutral_height_desc">Tinggi area tengah tempat melepas jari tidak melakukan apa pun, dalam % tinggi tombol</string>
+    <string name="subkey_assign_activity_label">Tetapkan subtombol</string>
+    <string name="subkey_assign_title">Tombol %1$s · %2$s</string>
+    <string name="subkey_edit_current">Saat ini: %1$s</string>
+    <string name="subkey_assign_default_removed">Subtombol bawaan slot ini telah dihapus.</string>
+    <string name="subkey_edit_reassign">Tetapkan ulang</string>
+    <string name="subkey_assign_choose">Pilih aksi</string>
+    <string name="subkey_edit_restore">Pulihkan default</string>
+    <string name="subkey_edit_remove">Hapus</string>
+    <string name="subkey_toast_removed">Subtombol %1$s dihapus dari tombol %2$s</string>
+    <string name="subkey_toast_restored">Subtombol %1$s default dipulihkan pada tombol %2$s</string>
     <string name="gesture_selection_delete_header">Mode Seleksi-Hapus</string>
     <string name="gesture_selection_delete_desc">Geser pendek + tahan pada backspace untuk memilih teks, lalu lepaskan untuk menghapus.</string>
     <string name="gesture_tap_typing_header">Ketuk dan Pengetikan</string>

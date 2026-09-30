@@ -91,6 +91,11 @@ object SettingsResetPolicy {
         put("short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE)
         put("short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE)
 
+        // Subkey popover
+        put("subkey_popover_enabled", Defaults.SUBKEY_POPOVER_ENABLED)
+        put("subkey_popover_neutral_width", Defaults.SUBKEY_POPOVER_NEUTRAL_WIDTH)
+        put("subkey_popover_neutral_height", Defaults.SUBKEY_POPOVER_NEUTRAL_HEIGHT)
+
         // Swipe decoding (engine-mode / geo_* / ctc_beam_width are PRESERVED, see above)
         put("swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
         put("onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)

@@ -33,6 +33,11 @@ import tribixbite.cleverkeys.customization.CustomShortSwipeExecutor
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
+import tribixbite.cleverkeys.popover.SubkeyAssignActivity
+import tribixbite.cleverkeys.popover.SubkeyAssignRequest
+import tribixbite.cleverkeys.popover.SubkeyPopoverMetrics
+import tribixbite.cleverkeys.popover.SubkeyPopoverRenderer
+import tribixbite.cleverkeys.popover.SubkeyPopoverState
 import tribixbite.cleverkeys.prefs.ConfigSnapshot
 import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.ArrayList
@@ -729,6 +734,40 @@ class Keyboard2View @JvmOverloads constructor(
 
     override fun getKeyWidth(key: KeyboardData.Key): Float {
         return key.width * _keyWidth
+    }
+
+    // ---- Subkey popover (docs/specs/subkey-popover.md) ----
+
+    /** The open popover, drawn over the keys at the end of [onDraw]; null when closed. */
+    private var _subkeyPopover: SubkeyPopoverState? = null
+    private val _subkeyPopoverRenderer = SubkeyPopoverRenderer()
+
+    override fun subkeyPopoverMetrics(key: KeyboardData.Key): SubkeyPopoverMetrics? {
+        val keyboard = _keyboard ?: return null
+        val tc = _tc ?: return null
+        val row = keyboard.rows.firstOrNull { r -> r.keys.any { it === key } } ?: return null
+        val cellW = key.width * _keyWidth
+        val cellH = row.height * tc.row_height
+        if (cellW <= 0f || cellH <= 0f || width == 0 || height == 0) return null
+        return SubkeyPopoverMetrics(cellW, cellH, width.toFloat(), height.toFloat())
+    }
+
+    override fun onSubkeyPopoverShow(state: SubkeyPopoverState) {
+        _subkeyPopover = state
+        invalidate()
+    }
+
+    override fun onSubkeyPopoverUpdate(state: SubkeyPopoverState) {
+        invalidate()
+    }
+
+    override fun onSubkeyPopoverDismiss() {
+        _subkeyPopover = null
+        invalidate()
+    }
+
+    override fun onSubkeyAssignRequested(request: SubkeyAssignRequest) {
+        SubkeyAssignActivity.launch(context, request)
     }
 
     /**
@@ -1602,6 +1641,13 @@ class Keyboard2View @JvmOverloads constructor(
         if (snap.swipe_typing_enabled && _swipeRecognizer != null && _swipeRecognizer!!.isSwipeTyping()) {
             drawSwipeTrail(canvas, snap)
         }
+
+        // Subkey popover on top of everything; keep frames coming while it animates.
+        _subkeyPopover?.let { popover ->
+            if (_subkeyPopoverRenderer.draw(canvas, popover, SubkeyPopoverState.now(), _theme, tc.key)) {
+                postInvalidateOnAnimation()
+            }
+        }
     }
 
     /**
@@ -1794,7 +1840,7 @@ class Keyboard2View @JvmOverloads constructor(
             for (k in row.keys) {
                 val code = k.keys[0]?.getString()?.lowercase() ?: ""
                 // Empty or too long (likely a special key) → sentinel: not a candidate.
-                _keyCodeLowerCache[k] = if (code.isEmpty() || code.length > 4) "" else code
+                _keyCodeLowerCache[k] = if (ShortSwipeCustomizationManager.isMappableKeyCode(code)) code else ""
             }
         }
     }

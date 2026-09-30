@@ -1,0 +1,116 @@
+package tribixbite.cleverkeys.popover
+
+import tribixbite.cleverkeys.customization.SwipeDirection
+
+/**
+ * Size of the popover's cells and of the view it must fit in, in the keyboard view's px.
+ * Supplied by the view (`Pointers.IPointerEventHandler.subkeyPopoverMetrics`) because only it
+ * knows the laid-out key and row sizes.
+ */
+data class SubkeyPopoverMetrics(
+    val cellWidth: Float,
+    val cellHeight: Float,
+    val viewWidth: Float,
+    val viewHeight: Float,
+)
+
+/**
+ * One open popover. `Pointers` owns and mutates it on the UI thread; the view only reads it
+ * while drawing.
+ *
+ * @property keyCode the held key's custom-mapping code, or null when the key cannot carry
+ *   mappings (then empty slots are not assignable and are drawn blank).
+ * @property keyLabel what the neutral centre cell shows (the held key's own label).
+ */
+class SubkeyPopoverState(
+    val keyCode: String?,
+    val keyLabel: String,
+    val keyLabelUsesKeyFont: Boolean,
+    val slots: List<PopoverSlot>,
+    val restX: Float,
+    val restY: Float,
+    val centreX: Float,
+    val centreY: Float,
+    val cellWidth: Float,
+    val cellHeight: Float,
+    val neutralWidthFraction: Float,
+    val neutralHeightFraction: Float,
+    /** Uptime (ms) the popover opened; drives the open animation. */
+    val openedAt: Long,
+) {
+    /** The selected slot's direction, or null while in the neutral zone. */
+    var active: SwipeDirection? = null
+        private set
+
+    /** Uptime (ms) [active] last changed; drives the dwell ring. */
+    var activeSince: Long = openedAt
+        private set
+
+    /** Set once the finger has moved enough to select (see [SubkeyPopoverGeometry.isArmed]). */
+    var armed: Boolean = false
+        private set
+
+    /** Handler `what` of the pending dwell message, -1 when none. */
+    var dwellWhat: Int = -1
+
+    /** Labels resolved once at open, so drawing allocates nothing per frame. */
+    private val labels: Map<SwipeDirection, PopoverSlotLabel> =
+        java.util.EnumMap<SwipeDirection, PopoverSlotLabel>(SwipeDirection::class.java).apply {
+            for (s in slots) put(s.direction, SubkeyPopoverSlots.labelOf(s))
+        }
+
+    fun label(direction: SwipeDirection): PopoverSlotLabel = labels.getValue(direction)
+
+    fun slot(direction: SwipeDirection?): PopoverSlot? =
+        direction?.let { d -> slots.firstOrNull { it.direction == d } }
+
+    /**
+     * Feed a finger position (view px). Returns true when the selected slot changed, so the
+     * caller restarts the dwell timer, ticks the haptic and redraws.
+     */
+    fun track(x: Float, y: Float, now: Long): Boolean {
+        if (!armed) armed = SubkeyPopoverGeometry.isArmed(restX, restY, x, y, cellWidth, cellHeight)
+        val next = if (armed) SubkeyPopoverGeometry.slotAt(
+            x - centreX, y - centreY, cellWidth, cellHeight, neutralWidthFraction, neutralHeightFraction
+        ) else null
+        if (next == active) return false
+        active = next
+        activeSince = now
+        return true
+    }
+
+    companion object {
+        /**
+         * Monotonic ms clock shared by `Pointers` and the view. Not `SystemClock` so the gesture
+         * logic runs unchanged in JVM tests (android.jar stubs throw there).
+         */
+        fun now(): Long = System.nanoTime() / 1_000_000
+
+        /** Resting on an assigned slot this long opens its edit screen (owner spec: 3 s). */
+        const val DWELL_EDIT_MS = 3_000L
+
+        /** The dwell ring starts filling after this, so ordinary selection shows no ring. */
+        const val DWELL_RING_START_MS = 800L
+
+        /** Open animation length. */
+        const val OPEN_ANIM_MS = 140L
+
+        /** Selected-slot scale-up animation length. */
+        const val SELECT_ANIM_MS = 110L
+    }
+}
+
+/** What the keyboard asks the assign/edit screen to do for (key, direction). */
+data class SubkeyAssignRequest(
+    val keyCode: String,
+    val direction: SwipeDirection,
+    val mode: Mode,
+    /** A layout subkey sits in this slot (hidden by a mapping, or shown as the default). */
+    val hasDefault: Boolean,
+    /** The slot currently shows the user's custom mapping (not the layout's subkey). */
+    val isCustom: Boolean,
+    /** The slot's current label, for the edit screen's header; null when empty. */
+    val currentLabel: String?,
+) {
+    enum class Mode { ASSIGN, EDIT }
+}

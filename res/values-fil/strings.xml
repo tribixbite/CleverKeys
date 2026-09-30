@@ -800,6 +800,24 @@
     <string name="gesture_section_intro">I-fine-tune ang gawi ng tap, swipe, at slider para sa iyong istilo ng pag-type.</string>
     <string name="gesture_short_gestures_header">Mga Maikling Gesture</string>
     <string name="gesture_open_calibration">📐 Buksan ang Calibration Tool</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">I-hold para sa mga Subkey</string>
+    <string name="gesture_subkey_popover_title">Subkey popover kapag naka-hold</string>
+    <string name="gesture_subkey_popover_desc">I-hold ang isang key para ipakita ang mga subkey nito sa paligid ng iyong daliri. I-slide papunta sa isa at bitawan para i-type ito, o bitawan sa gitna para kanselahin. Pumili ng bakanteng slot para i-assign ito; ipahinga ang daliri sa isang subkey nang 3 segundo para i-edit ito. Pinapalitan nito ang key repeat sa mga letter key.</string>
+    <string name="gesture_popover_neutral_width_title">Lapad ng neutral zone</string>
+    <string name="gesture_popover_neutral_width_desc">Lapad ng gitnang bahagi kung saan walang mangyayari kapag binitawan, bilang % ng lapad ng key</string>
+    <string name="gesture_popover_neutral_height_title">Taas ng neutral zone</string>
+    <string name="gesture_popover_neutral_height_desc">Taas ng gitnang bahagi kung saan walang mangyayari kapag binitawan, bilang % ng taas ng key</string>
+    <string name="subkey_assign_activity_label">I-assign ang subkey</string>
+    <string name="subkey_assign_title">%1$s key · %2$s</string>
+    <string name="subkey_edit_current">Kasalukuyan: %1$s</string>
+    <string name="subkey_assign_default_removed">Inalis ang built-in na subkey ng slot na ito.</string>
+    <string name="subkey_edit_reassign">I-reassign</string>
+    <string name="subkey_assign_choose">Pumili ng aksyon</string>
+    <string name="subkey_edit_restore">Ibalik ang default</string>
+    <string name="subkey_edit_remove">Alisin</string>
+    <string name="subkey_toast_removed">Inalis ang %1$s subkey mula sa %2$s</string>
+    <string name="subkey_toast_restored">Naibalik ang default na %1$s subkey sa %2$s</string>
     <string name="gesture_selection_delete_header">Selection-Delete Mode</string>
     <string name="gesture_selection_delete_desc">Maikling swipe + hawak sa backspace para pumili ng teksto, pagkatapos ay bitawan para tanggalin.</string>
     <string name="gesture_tap_typing_header">Tap at Pag-type</string>

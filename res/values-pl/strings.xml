@@ -801,6 +801,24 @@
     <string name="gesture_section_intro">Dostrój zachowanie dotknięć, gestów i suwaków do swojego stylu pisania.</string>
     <string name="gesture_short_gestures_header">Krótkie gesty</string>
     <string name="gesture_open_calibration">📐 Otwórz narzędzie kalibracji</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">Podklawisze po przytrzymaniu</string>
+    <string name="gesture_subkey_popover_title">Okienko podklawiszy po przytrzymaniu</string>
+    <string name="gesture_subkey_popover_desc">Przytrzymaj klawisz, aby pokazać jego podklawisze wokół palca. Przenieś palec na jeden z nich i puść, aby go wpisać, albo puść na środku, aby anulować. Wybierz puste miejsce, aby je przypisać; przytrzymaj palec na podklawiszu przez 3 sekundy, aby go edytować. Zastępuje powtarzanie klawiszy na klawiszach liter.</string>
+    <string name="gesture_popover_neutral_width_title">Szerokość strefy neutralnej</string>
+    <string name="gesture_popover_neutral_width_desc">Szerokość środkowego obszaru, w którym puszczenie nic nie robi, jako % szerokości klawisza</string>
+    <string name="gesture_popover_neutral_height_title">Wysokość strefy neutralnej</string>
+    <string name="gesture_popover_neutral_height_desc">Wysokość środkowego obszaru, w którym puszczenie nic nie robi, jako % wysokości klawisza</string>
+    <string name="subkey_assign_activity_label">Przypisz podklawisz</string>
+    <string name="subkey_assign_title">Klawisz %1$s · %2$s</string>
+    <string name="subkey_edit_current">Obecnie: %1$s</string>
+    <string name="subkey_assign_default_removed">Wbudowany podklawisz tego miejsca został usunięty.</string>
+    <string name="subkey_edit_reassign">Przypisz ponownie</string>
+    <string name="subkey_assign_choose">Wybierz akcję</string>
+    <string name="subkey_edit_restore">Przywróć domyślny</string>
+    <string name="subkey_edit_remove">Usuń</string>
+    <string name="subkey_toast_removed">Klawisz %2$s: usunięto podklawisz %1$s</string>
+    <string name="subkey_toast_restored">Klawisz %2$s: przywrócono domyślny podklawisz %1$s</string>
     <string name="gesture_selection_delete_header">Tryb zaznacz i usuń</string>
     <string name="gesture_selection_delete_desc">Krótki gest + przytrzymanie na Backspace zaznacza tekst; puszczenie usuwa.</string>
     <string name="gesture_tap_typing_header">Dotknięcia i pisanie</string>

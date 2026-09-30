@@ -119,6 +119,15 @@ object Defaults {
     const val SHORT_GESTURE_MIN_DISTANCE = 28
     const val SHORT_GESTURE_MAX_DISTANCE = 141
 
+    // Hold-then-select subkey popover (docs/specs/subkey-popover.md). ON for fresh installs;
+    // existing installs are seeded OFF once by SubkeyPopoverMigration (config v5).
+    const val SUBKEY_POPOVER_ENABLED = true
+    /** Neutral-zone size as % of the key's width / height; releasing inside it does nothing. */
+    const val SUBKEY_POPOVER_NEUTRAL_WIDTH = 60
+    const val SUBKEY_POPOVER_NEUTRAL_HEIGHT = 60
+    const val SUBKEY_POPOVER_NEUTRAL_MIN = 20
+    const val SUBKEY_POPOVER_NEUTRAL_MAX = 150
+
     // Selection-delete mode (backspace swipe+hold)
     const val SELECTION_DELETE_VERTICAL_THRESHOLD = 40  // % of key height - must exceed to trigger vertical
     const val SELECTION_DELETE_VERTICAL_SPEED = 0.4f    // Speed multiplier for vertical (slower than horizontal)
@@ -517,6 +526,24 @@ object LearningMigration {
     ): Boolean = !isFreshInstall && savedVersion < INTRODUCED_IN_VERSION
 }
 
+/**
+ * v5 (2026-09-30): the hold-then-select subkey popover defaults ON for fresh installs
+ * (`Defaults.SUBKEY_POPOVER_ENABLED`) but must not change what holding a letter does for
+ * someone who already uses the keyboard — for them holding still repeats. Upgrades are seeded
+ * OFF once, unless the user already chose (the key exists, e.g. restored from a backup).
+ * Same fresh-vs-upgrade discriminator as [LearningMigration].
+ */
+object SubkeyPopoverMigration {
+    const val PREF_KEY = "subkey_popover_enabled"
+    private const val INTRODUCED_IN_VERSION = 5
+
+    fun seedsOff(
+        isFreshInstall: Boolean,
+        savedVersion: Int,
+        hasExplicitChoice: Boolean,
+    ): Boolean = !isFreshInstall && savedVersion < INTRODUCED_IN_VERSION && !hasExplicitChoice
+}
+
 object HapticsMigration {
     /** Persisted on user devices once the migration has run — never rename. */
     const val MIGRATION_MARKER_KEY = "vibrate_custom_migration_v1"
@@ -683,6 +710,11 @@ class Config private constructor(
     // the codebase is pure Kotlin, so nothing needed the Java field exposure.)
     var short_gesture_min_distance = PercentOfKey(Defaults.SHORT_GESTURE_MIN_DISTANCE)
     var short_gesture_max_distance = PercentOfKey(Defaults.SHORT_GESTURE_MAX_DISTANCE) // The short/long boundary (50-200): at/below = short swipe, beyond = word swipe. ("200=disabled" was a UI label that was never implemented; retired.)
+
+    // Hold-then-select subkey popover
+    @JvmField var subkey_popover_enabled = Defaults.SUBKEY_POPOVER_ENABLED
+    @JvmField var subkey_popover_neutral_width = Defaults.SUBKEY_POPOVER_NEUTRAL_WIDTH
+    @JvmField var subkey_popover_neutral_height = Defaults.SUBKEY_POPOVER_NEUTRAL_HEIGHT
 
     // Selection-delete mode configuration (backspace swipe+hold)
     @JvmField var selection_delete_vertical_threshold = 40  // % of key height to trigger vertical selection
@@ -999,6 +1031,12 @@ class Config private constructor(
         short_gesture_min_distance = PercentOfKey(safeGetInt(_prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE))
         short_gesture_max_distance = PercentOfKey(safeGetInt(_prefs, "short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE))
 
+        subkey_popover_enabled = _prefs.getBoolean("subkey_popover_enabled", Defaults.SUBKEY_POPOVER_ENABLED)
+        subkey_popover_neutral_width = safeGetInt(_prefs, "subkey_popover_neutral_width", Defaults.SUBKEY_POPOVER_NEUTRAL_WIDTH)
+            .coerceIn(Defaults.SUBKEY_POPOVER_NEUTRAL_MIN, Defaults.SUBKEY_POPOVER_NEUTRAL_MAX)
+        subkey_popover_neutral_height = safeGetInt(_prefs, "subkey_popover_neutral_height", Defaults.SUBKEY_POPOVER_NEUTRAL_HEIGHT)
+            .coerceIn(Defaults.SUBKEY_POPOVER_NEUTRAL_MIN, Defaults.SUBKEY_POPOVER_NEUTRAL_MAX)
+
         // Selection-delete mode configuration
         selection_delete_vertical_threshold = safeGetInt(_prefs, "selection_delete_vertical_threshold", Defaults.SELECTION_DELETE_VERTICAL_THRESHOLD)
         selection_delete_vertical_speed = safeGetFloat(_prefs, "selection_delete_vertical_speed", Defaults.SELECTION_DELETE_VERTICAL_SPEED)
@@ -1115,6 +1153,9 @@ class Config private constructor(
         short_gestures_enabled = short_gestures_enabled,
         short_gesture_min_distance = short_gesture_min_distance,
         short_gesture_max_distance = short_gesture_max_distance,
+        subkey_popover_enabled = subkey_popover_enabled,
+        subkey_popover_neutral_width = subkey_popover_neutral_width,
+        subkey_popover_neutral_height = subkey_popover_neutral_height,
         swipe_dist_px = swipe_dist_px,
         slide_step_px = slide_step_px,
         swipe_typing_enabled = swipe_typing_enabled,
@@ -1353,7 +1394,8 @@ class Config private constructor(
         // 3 → 4 (2026-09-24): the learning-consent step — upgrades re-enter migrate()
         // so LearningMigration can seed the master gate and stamp the one-time
         // selection-history reset. v1.5.0 devices sit exactly at version == 3.
-        private const val CONFIG_VERSION = 4
+        // 4 → 5 (2026-09-30): SubkeyPopoverMigration seeds the popover OFF for upgrades.
+        private const val CONFIG_VERSION = 5
         private const val MARGIN_PREFS_VERSION = 1  // For dp→percentage migration
 
         // `isSwipeTypingSupportedForLayout` (the #9 "QWERTY-Latin only" allowlist) was
@@ -1659,6 +1701,14 @@ class Config private constructor(
             }
             if (LearningMigration.requestsSelectionHistoryReset(isFreshInstall, saved_version)) {
                 e.putBoolean(LearningMigration.SELECTION_HISTORY_RESET_PENDING_KEY, true)
+            }
+            // v5 (2026-09-30): subkey popover — rules in [SubkeyPopoverMigration].
+            if (SubkeyPopoverMigration.seedsOff(
+                    isFreshInstall, saved_version,
+                    hasExplicitChoice = prefs.contains(SubkeyPopoverMigration.PREF_KEY)
+                )
+            ) {
+                e.putBoolean(SubkeyPopoverMigration.PREF_KEY, false)
             }
 
             when (saved_version) {

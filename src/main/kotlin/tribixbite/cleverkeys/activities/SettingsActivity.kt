@@ -479,6 +479,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var shortGestureMinDistance by mutableIntStateOf(37)
     internal var shortGestureMaxDistance by mutableIntStateOf(141)
 
+    // Subkey popover (hold-then-select) settings
+    internal var subkeyPopoverEnabled by mutableStateOf(Defaults.SUBKEY_POPOVER_ENABLED)
+    internal var subkeyPopoverNeutralWidth by mutableIntStateOf(Defaults.SUBKEY_POPOVER_NEUTRAL_WIDTH)
+    internal var subkeyPopoverNeutralHeight by mutableIntStateOf(Defaults.SUBKEY_POPOVER_NEUTRAL_HEIGHT)
+
     // Selection-delete mode settings (backspace swipe+hold)
     internal var selectionDeleteVerticalThreshold by mutableIntStateOf(40)
     internal var selectionDeleteVerticalSpeed by mutableFloatStateOf(0.4f)

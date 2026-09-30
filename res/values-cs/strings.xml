@@ -791,6 +791,24 @@
     <string name="gesture_section_intro">Dolaďte chování klepnutí, tahů a posuvníků podle svého stylu psaní.</string>
     <string name="gesture_short_gestures_header">Krátká gesta</string>
     <string name="gesture_open_calibration">📐 Otevřít kalibrační nástroj</string>
+    <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
+    <string name="gesture_subkey_popover_header">Podklávesy podržením</string>
+    <string name="gesture_subkey_popover_title">Nabídka podkláves při podržení</string>
+    <string name="gesture_subkey_popover_desc">Podržením klávesy zobrazíte kolem prstu její podklávesy. Přesuňte prst na jednu z nich a uvolněním ji napíšete; uvolněním uprostřed akci zrušíte. Výběrem prázdné pozice ji přiřadíte; podržením prstu na podklávese po dobu 3 sekund ji upravíte. U písmenných kláves nahrazuje opakování kláves.</string>
+    <string name="gesture_popover_neutral_width_title">Šířka neutrální zóny</string>
+    <string name="gesture_popover_neutral_width_desc">Šířka prostřední oblasti, kde uvolnění prstu nic neudělá, v % šířky klávesy</string>
+    <string name="gesture_popover_neutral_height_title">Výška neutrální zóny</string>
+    <string name="gesture_popover_neutral_height_desc">Výška prostřední oblasti, kde uvolnění prstu nic neudělá, v % výšky klávesy</string>
+    <string name="subkey_assign_activity_label">Přiřadit podklávesu</string>
+    <string name="subkey_assign_title">Klávesa %1$s · %2$s</string>
+    <string name="subkey_edit_current">Aktuálně: %1$s</string>
+    <string name="subkey_assign_default_removed">Vestavěná podklávesa této pozice byla odebrána.</string>
+    <string name="subkey_edit_reassign">Přiřadit znovu</string>
+    <string name="subkey_assign_choose">Vyberte akci</string>
+    <string name="subkey_edit_restore">Obnovit výchozí</string>
+    <string name="subkey_edit_remove">Odebrat</string>
+    <string name="subkey_toast_removed">Klávesa %2$s: podklávesa %1$s odebrána</string>
+    <string name="subkey_toast_restored">Klávesa %2$s: obnovena výchozí podklávesa %1$s</string>
     <string name="gesture_selection_delete_header">Režim výběru a mazání</string>
     <string name="gesture_selection_delete_desc">Krátký tah + podržení na backspace vybere text; uvolněním jej smažete.</string>
     <string name="gesture_tap_typing_header">Klepání a psaní</string>
