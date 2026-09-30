@@ -261,8 +261,12 @@ Still open:
 - **Native review.** Owed for every locale, now including the 465 command-catalog strings (notes
   per locale in the sweep doc). Earlier translator requests: short compass abbreviations
   (fa, uk, fil, in); diacritic key names; AOSP register dissent for de (du) and zh-rCN (您); ro
-  short-label imperatives. App strings flagged by the catalog translators: tr `key_descr_dead_key`
-  "Boş tuş", hu "Áthúzás" accent labels, in "Beranda"/"Halaman atas".
+  short-label imperatives. The three app strings the catalog translators flagged were aligned to
+  the catalog's terms on 2026-09-30 (tr `key_descr_dead_key` "Ölü tuş"; hu `extra_key_accent_slash`/
+  `_bar` "Ferde vonal"/"Vízszintes vonal"; in Home/End/Page Up/Page Down keycap names back to Latin)
+  and stay flagged for the reviewer. **Review sheets:** `python3 scripts/export_translation_review.py
+  --out <dir> [--since <ref>]` writes one CSV per locale (English beside translation, open questions
+  pre-filled from `docs/i18n/review-flags.json`, flagged rows first) to hand to reviewers.
 - **Device verification.** fa (pane arrows, FAQ, search scroll, notice dialog) and hu (search,
   headers, register) on the Seeker/Saga test phone.
 

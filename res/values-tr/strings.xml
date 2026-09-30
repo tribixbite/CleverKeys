@@ -48,7 +48,7 @@
     <string name="key_descr_doc_end">Belge sonu</string>
     <string name="key_descr_clipboard">Pano</string>
     <string name="key_descr_combining">Birleştirici aksan işareti</string>
-    <string name="key_descr_dead_key">Boş tuş</string>
+    <string name="key_descr_dead_key">Ölü tuş</string>
     <string name="key_descr_zwj">Sıfır genişlikli birleştirici</string>
     <string name="key_descr_zwnj">Sıfır genişlikte birleştirmeyen</string>
     <string name="key_descr_nbsp">Kırılmaz boşluk</string>

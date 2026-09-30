@@ -176,5 +176,9 @@ Model work again (implementer and translators = model, reviewer = model). One co
   `AvailableCommand` metadata are unchanged.
 - The headless (automation) backup path's result messages are unchanged English.
 - Native review of every locale and a device check of fa (pane arrows, FAQ, search scroll) and
-  hu (search) are still owed.
+  hu (search) are still owed. Review sheets per locale: `scripts/export_translation_review.py`;
+  the open questions above live in `docs/i18n/review-flags.json`.
+- 2026-09-30: the tr/hu/in app strings the catalog translators flagged now use the catalog's terms
+  ("Ölü tuş"; "Ferde vonal"/"Vízszintes vonal"; Latin Home/End/Page Up/Page Down). Still flagged
+  for the reviewer.
 

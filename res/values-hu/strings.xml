@@ -1630,8 +1630,8 @@
     <string name="extra_key_accent_macron">Makron</string>
     <string name="extra_key_accent_ogonek">Ogonek</string>
     <string name="extra_key_accent_breve">Breve</string>
-    <string name="extra_key_accent_slash">Áthúzás</string>
-    <string name="extra_key_accent_bar">Vízszintes áthúzás</string>
+    <string name="extra_key_accent_slash">Ferde vonal</string>
+    <string name="extra_key_accent_bar">Vízszintes vonal</string>
     <string name="extra_key_accent_dot_below">Alsó pont</string>
     <string name="extra_key_accent_hook_above">Felső horog</string>
     <string name="extra_key_accent_horn">Szarv</string>

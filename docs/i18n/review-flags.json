@@ -1,0 +1,81 @@
+{
+ "_about": [
+  "Open questions for native-speaker translation review, read by scripts/export_translation_review.py.",
+  "locales.<locale>.<key>: the question shown in the review sheet's flag column; locales['*'] applies to every locale.",
+  "Keys are resource names (a <plurals> name flags all its items). Sources: docs/i18n/2026-09-29-hardcoded-ui-sweep.md translator notes and memory/HANDOFF.md section -2.",
+  "Remove an entry once a native reviewer has answered it."
+ ],
+ "locales": {
+  "*": {
+   "ime_default_prompt_toast": "Names Android system-settings screens; check it matches the phone's own wording in this language.",
+   "swipe_debug_session_intro": "Screen name 'Swipe Playground': translate or keep English?"
+  },
+  "fa": {
+   "short_swipe_direction_short_n": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_ne": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_e": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_se": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_s": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_sw": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_w": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_nw": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally."
+  },
+  "uk": {
+   "short_swipe_direction_short_n": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_ne": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_e": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_se": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_s": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_sw": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_w": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_nw": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally."
+  },
+  "fil": {
+   "short_swipe_direction_short_n": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_ne": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_e": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_se": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_s": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_sw": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_w": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_nw": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally."
+  },
+  "in": {
+   "short_swipe_direction_short_n": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_ne": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_e": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_se": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_s": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_sw": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_w": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "short_swipe_direction_short_nw": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "key_descr_home": "Changed 2026-09-30 from 'Beranda' to Latin 'Home' to match the command palette. Is Latin right for keycap names?",
+   "key_descr_end": "Changed 2026-09-30 from 'Akhir' to Latin 'End' to match the command palette.",
+   "key_descr_page_up": "Changed 2026-09-30 from 'Halaman atas' to Latin 'Page Up' to match the command palette.",
+   "key_descr_page_down": "Changed 2026-09-30 from 'Halaman bawah' to Latin 'Page Down' to match the command palette."
+  },
+  "tr": {
+   "key_descr_dead_key": "Changed 2026-09-30 from 'Boş tuş' (empty key) to 'Ölü tuş' (dead key) to match the command palette."
+  },
+  "hu": {
+   "extra_key_accent_slash": "Changed 2026-09-30 from 'Áthúzás' (the glossary reserves 'húzás' for swipe) to 'Ferde vonal' to match the command palette.",
+   "extra_key_accent_bar": "Changed 2026-09-30 from 'Vízszintes áthúzás' to 'Vízszintes vonal' to match the command palette."
+  },
+  "ru": {
+   "cmd_combining_pokrytie": "Church Slavonic combining mark name; needs a liturgical-typography check.",
+   "cmd_combining_slavonic_psili": "Church Slavonic combining mark name; needs a liturgical-typography check.",
+   "cmd_combining_slavonic_dasia": "Church Slavonic combining mark name; needs a liturgical-typography check.",
+   "cmd_combining_payerok": "Church Slavonic combining mark name; needs a liturgical-typography check.",
+   "cmd_combining_vzmet": "Church Slavonic combining mark name; needs a liturgical-typography check.",
+   "cmd_combining_kavyka": "Church Slavonic combining mark name; needs a liturgical-typography check."
+  },
+  "zh-rCN": {
+   "extra_key_accent_circumflex": "Caron 抑扬符 vs circumflex 扬抑符 are easy to confuse; confirm this names the right mark.",
+   "extra_key_accent_caron": "Caron 抑扬符 vs circumflex 扬抑符 are easy to confuse; confirm this names the right mark.",
+   "cmd_accent_circonflexe": "Caron 抑扬符 vs circumflex 扬抑符 are easy to confuse; confirm this names the right mark.",
+   "cmd_accent_caron": "Caron 抑扬符 vs circumflex 扬抑符 are easy to confuse; confirm this names the right mark.",
+   "cmd_combining_circonflexe": "Caron 抑扬符 vs circumflex 扬抑符 are easy to confuse; confirm this names the right mark.",
+   "cmd_combining_caron": "Caron 抑扬符 vs circumflex 扬抑符 are easy to confuse; confirm this names the right mark."
+  }
+ }
+}
