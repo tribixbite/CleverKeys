@@ -1656,4 +1656,31 @@
     <plurals name="clipboard_time_days_ago">
         <item quantity="other">%1$d 天前</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">找不到或无法打开该文件。</string>
+    <string name="io_error_permission_denied">CleverKeys 无权访问该文件。</string>
+    <string name="io_error_invalid_format">文件格式与预期不符，或文件已损坏。</string>
+    <string name="io_error_newer_version">该文件由更新版本的 CleverKeys 创建。请更新应用后重试。</string>
+    <string name="io_error_out_of_space">存储空间不足。</string>
+    <string name="io_error_too_large">文件过大，CleverKeys 无法安全导入。</string>
+    <string name="io_error_wrong_password_or_corrupt">备份密码错误，或文件已损坏或被篡改。</string>
+    <string name="io_error_no_backup_password">此备份已加密，但没有可用的备份密码。</string>
+    <string name="io_error_wrong_backup_kind">此备份不包含本次导入所需的数据类型。</string>
+    <string name="io_error_no_file_picker">没有可用于选择文件的应用。</string>
+    <string name="io_error_read_write">无法读取或写入该文件。</string>
+    <string name="pack_error_missing_member">包中不含 %1$s。</string>
+    <string name="pack_error_invalid_member">包中的 %1$s 为空或已损坏。</string>
+    <string name="pack_error_invalid_language_code">包声明了无效的语言代码：%1$s</string>
+    <string name="pack_error_unsupported_model">包声明了不受支持的模型文件：%1$s</string>
+    <string name="pack_error_model_too_large">%1$s 超出了 %2$d MiB 的上限。</string>
+    <string name="pack_error_model_checksum">%1$s 与包清单中的校验和不匹配。</string>
+    <string name="pack_error_install_failed">无法安装该包。</string>
+    <string name="gif_pack_error_no_thumbnails">此包使用没有缩略图的旧格式，因此无法显示其中的 GIF。请下载最新的包。</string>
+    <string name="gif_pack_error_partial_thumbnails">缩略图复制中途失败（存储空间可能已满）。包未安装；请释放空间后重试。</string>
+    <string name="import_preview_skip_internal">内部设置</string>
+    <string name="import_preview_skip_deprecated">已不再使用</string>
+    <string name="import_preview_skip_separate_import">由词典导入恢复</string>
+    <string name="import_preview_skip_unreadable">无法读取的值</string>
+    <string name="import_preview_skip_invalid_value">无效或超出范围的值</string>
+    <string name="import_preview_skip_superseded">已转换为较新的设置</string>
 </resources>

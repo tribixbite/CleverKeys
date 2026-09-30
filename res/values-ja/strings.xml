@@ -1657,4 +1657,31 @@
     <plurals name="clipboard_time_days_ago">
         <item quantity="other">%1$d 日前</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">ファイルが見つからないか、開けませんでした。</string>
+    <string name="io_error_permission_denied">CleverKeys にはこのファイルへのアクセスが許可されていません。</string>
+    <string name="io_error_invalid_format">ファイルの形式が想定と異なるか、ファイルが破損しています。</string>
+    <string name="io_error_newer_version">このファイルは新しいバージョンの CleverKeys で作成されています。アプリを更新してもう一度お試しください。</string>
+    <string name="io_error_out_of_space">ストレージの空き容量が不足しています。</string>
+    <string name="io_error_too_large">ファイルが大きすぎるため、CleverKeys で安全にインポートできません。</string>
+    <string name="io_error_wrong_password_or_corrupt">バックアップパスワードが違うか、ファイルが破損または改ざんされています。</string>
+    <string name="io_error_no_backup_password">このバックアップは暗号化されていますが、使用できるバックアップパスワードがありません。</string>
+    <string name="io_error_wrong_backup_kind">このバックアップには、このインポートで想定している種類のデータが含まれていません。</string>
+    <string name="io_error_no_file_picker">ファイルを選択できるアプリがありません。</string>
+    <string name="io_error_read_write">ファイルを読み書きできませんでした。</string>
+    <string name="pack_error_missing_member">パックに %1$s が含まれていません。</string>
+    <string name="pack_error_invalid_member">パック内の %1$s が空か破損しています。</string>
+    <string name="pack_error_invalid_language_code">パックで無効な言語コードが指定されています: %1$s</string>
+    <string name="pack_error_unsupported_model">パックでサポートされていないモデルファイルが指定されています: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s が上限の %2$d MiB を超えています。</string>
+    <string name="pack_error_model_checksum">%1$s がパックのマニフェストのチェックサムと一致しません。</string>
+    <string name="pack_error_install_failed">パックをインストールできませんでした。</string>
+    <string name="gif_pack_error_no_thumbnails">このパックはサムネイルのない古い形式のため、GIF を表示できません。最新のパックをダウンロードしてください。</string>
+    <string name="gif_pack_error_partial_thumbnails">サムネイルのコピーが途中で失敗しました(ストレージがいっぱいの可能性があります)。パックはインストールされていません。空き容量を確保してもう一度お試しください。</string>
+    <string name="import_preview_skip_internal">内部設定</string>
+    <string name="import_preview_skip_deprecated">現在は使用されていません</string>
+    <string name="import_preview_skip_separate_import">辞書のインポートで復元されます</string>
+    <string name="import_preview_skip_unreadable">読み取れない値</string>
+    <string name="import_preview_skip_invalid_value">無効または範囲外の値</string>
+    <string name="import_preview_skip_superseded">新しい設定に変換されました</string>
 </resources>

@@ -1699,4 +1699,31 @@
         <item quantity="one">%1$d d geleden</item>
         <item quantity="other">%1$d d geleden</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">Het bestand kan niet worden gevonden of geopend.</string>
+    <string name="io_error_permission_denied">CleverKeys heeft geen toegang tot dit bestand.</string>
+    <string name="io_error_invalid_format">Het bestand heeft niet de verwachte indeling of is beschadigd.</string>
+    <string name="io_error_newer_version">Het bestand is gemaakt met een nieuwere versie van CleverKeys. Werk de app bij en probeer het opnieuw.</string>
+    <string name="io_error_out_of_space">Onvoldoende opslagruimte.</string>
+    <string name="io_error_too_large">Het bestand is groter dan CleverKeys veilig kan importeren.</string>
+    <string name="io_error_wrong_password_or_corrupt">Onjuist back-upwachtwoord, of het bestand is beschadigd of gewijzigd.</string>
+    <string name="io_error_no_backup_password">Deze back-up is versleuteld en er is geen back-upwachtwoord beschikbaar.</string>
+    <string name="io_error_wrong_backup_kind">Deze back-up bevat niet het soort gegevens dat deze import verwacht.</string>
+    <string name="io_error_no_file_picker">Er is geen app beschikbaar om bestanden te kiezen.</string>
+    <string name="io_error_read_write">Het bestand kan niet worden gelezen of geschreven.</string>
+    <string name="pack_error_missing_member">Het pakket bevat geen %1$s.</string>
+    <string name="pack_error_invalid_member">%1$s in het pakket is leeg of beschadigd.</string>
+    <string name="pack_error_invalid_language_code">Het pakket geeft een ongeldige taalcode op: %1$s</string>
+    <string name="pack_error_unsupported_model">Het pakket geeft een niet-ondersteund modelbestand op: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s is groter dan de limiet van %2$d MiB.</string>
+    <string name="pack_error_model_checksum">%1$s komt niet overeen met de controlesom in het manifest van het pakket.</string>
+    <string name="pack_error_install_failed">Het pakket kan niet worden geïnstalleerd.</string>
+    <string name="gif_pack_error_no_thumbnails">Dit pakket gebruikt een oude indeling zonder miniaturen, dus de GIF\'s kunnen niet worden getoond. Download een actueel pakket.</string>
+    <string name="gif_pack_error_partial_thumbnails">Het kopiëren van de miniaturen is halverwege mislukt (de opslag is mogelijk vol). Het pakket is niet geïnstalleerd; maak ruimte vrij en probeer het opnieuw.</string>
+    <string name="import_preview_skip_internal">Interne instelling</string>
+    <string name="import_preview_skip_deprecated">Niet meer in gebruik</string>
+    <string name="import_preview_skip_separate_import">Wordt hersteld door de woordenboekimport</string>
+    <string name="import_preview_skip_unreadable">Onleesbare waarde</string>
+    <string name="import_preview_skip_invalid_value">Ongeldige waarde of buiten bereik</string>
+    <string name="import_preview_skip_superseded">Omgezet naar nieuwere instellingen</string>
 </resources>

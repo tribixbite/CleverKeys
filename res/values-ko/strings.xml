@@ -1658,4 +1658,31 @@
     <plurals name="clipboard_time_days_ago">
         <item quantity="other">%1$d일 전</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">파일을 찾거나 열 수 없습니다.</string>
+    <string name="io_error_permission_denied">CleverKeys에 이 파일에 대한 액세스 권한이 없습니다.</string>
+    <string name="io_error_invalid_format">파일 형식이 예상과 다르거나 파일이 손상되었습니다.</string>
+    <string name="io_error_newer_version">이 파일은 최신 버전의 CleverKeys에서 만들어졌습니다. 앱을 업데이트한 후 다시 시도하세요.</string>
+    <string name="io_error_out_of_space">저장 공간이 부족합니다.</string>
+    <string name="io_error_too_large">파일이 너무 커서 CleverKeys에서 안전하게 가져올 수 없습니다.</string>
+    <string name="io_error_wrong_password_or_corrupt">백업 비밀번호가 틀렸거나 파일이 손상 또는 변조되었습니다.</string>
+    <string name="io_error_no_backup_password">이 백업은 암호화되어 있으며 사용할 수 있는 백업 비밀번호가 없습니다.</string>
+    <string name="io_error_wrong_backup_kind">이 백업에는 이 가져오기에 필요한 종류의 데이터가 없습니다.</string>
+    <string name="io_error_no_file_picker">파일을 선택할 수 있는 앱이 없습니다.</string>
+    <string name="io_error_read_write">파일을 읽거나 쓸 수 없습니다.</string>
+    <string name="pack_error_missing_member">팩에 %1$s이(가) 없습니다.</string>
+    <string name="pack_error_invalid_member">팩의 %1$s이(가) 비어 있거나 손상되었습니다.</string>
+    <string name="pack_error_invalid_language_code">팩에 잘못된 언어 코드가 지정되어 있습니다: %1$s</string>
+    <string name="pack_error_unsupported_model">팩에 지원되지 않는 모델 파일이 지정되어 있습니다: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s이(가) 한도인 %2$d MiB보다 큽니다.</string>
+    <string name="pack_error_model_checksum">%1$s이(가) 팩 매니페스트의 체크섬과 일치하지 않습니다.</string>
+    <string name="pack_error_install_failed">팩을 설치할 수 없습니다.</string>
+    <string name="gif_pack_error_no_thumbnails">이 팩은 미리보기 이미지가 없는 이전 형식이라 GIF를 표시할 수 없습니다. 최신 팩을 다운로드하세요.</string>
+    <string name="gif_pack_error_partial_thumbnails">미리보기 이미지를 복사하는 도중 실패했습니다(저장 공간이 가득 찼을 수 있습니다). 팩이 설치되지 않았습니다. 공간을 확보한 후 다시 시도하세요.</string>
+    <string name="import_preview_skip_internal">내부 설정</string>
+    <string name="import_preview_skip_deprecated">더 이상 사용되지 않음</string>
+    <string name="import_preview_skip_separate_import">사전 가져오기로 복원됨</string>
+    <string name="import_preview_skip_unreadable">읽을 수 없는 값</string>
+    <string name="import_preview_skip_invalid_value">잘못되었거나 범위를 벗어난 값</string>
+    <string name="import_preview_skip_superseded">최신 설정으로 변환됨</string>
 </resources>

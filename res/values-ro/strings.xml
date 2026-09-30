@@ -1767,4 +1767,31 @@
         <item quantity="few">acum %1$d zile</item>
         <item quantity="other">acum %1$d de zile</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">Fișierul nu a putut fi găsit sau deschis.</string>
+    <string name="io_error_permission_denied">CleverKeys nu are permisiunea de a accesa acest fișier.</string>
+    <string name="io_error_invalid_format">Fișierul nu are formatul așteptat sau este deteriorat.</string>
+    <string name="io_error_newer_version">Fișierul a fost creat de o versiune mai nouă a CleverKeys. Actualizați aplicația și încercați din nou.</string>
+    <string name="io_error_out_of_space">Spațiu de stocare insuficient.</string>
+    <string name="io_error_too_large">Fișierul este mai mare decât poate importa CleverKeys în siguranță.</string>
+    <string name="io_error_wrong_password_or_corrupt">Parolă de backup greșită sau fișierul este deteriorat ori a fost modificat.</string>
+    <string name="io_error_no_backup_password">Acest backup este criptat și nu este disponibilă nicio parolă de backup.</string>
+    <string name="io_error_wrong_backup_kind">Acest backup nu conține tipul de date pe care îl așteaptă acest import.</string>
+    <string name="io_error_no_file_picker">Nu este disponibilă nicio aplicație pentru alegerea fișierelor.</string>
+    <string name="io_error_read_write">Fișierul nu a putut fi citit sau scris.</string>
+    <string name="pack_error_missing_member">Pachetul nu conține %1$s.</string>
+    <string name="pack_error_invalid_member">%1$s din pachet este gol sau deteriorat.</string>
+    <string name="pack_error_invalid_language_code">Pachetul declară un cod de limbă nevalid: %1$s</string>
+    <string name="pack_error_unsupported_model">Pachetul declară un fișier de model neacceptat: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s depășește limita de %2$d MiB.</string>
+    <string name="pack_error_model_checksum">%1$s nu corespunde sumei de control din manifestul pachetului.</string>
+    <string name="pack_error_install_failed">Pachetul nu a putut fi instalat.</string>
+    <string name="gif_pack_error_no_thumbnails">Acest pachet folosește un format vechi, fără miniaturi, așa că GIF-urile sale nu pot fi afișate. Descărcați un pachet actual.</string>
+    <string name="gif_pack_error_partial_thumbnails">Copierea miniaturilor a eșuat la jumătate (este posibil ca spațiul de stocare să fie plin). Pachetul nu a fost instalat; eliberați spațiu și încercați din nou.</string>
+    <string name="import_preview_skip_internal">Setare internă</string>
+    <string name="import_preview_skip_deprecated">Nu mai este folosită</string>
+    <string name="import_preview_skip_separate_import">Restabilită de importul dicționarului</string>
+    <string name="import_preview_skip_unreadable">Valoare ilizibilă</string>
+    <string name="import_preview_skip_invalid_value">Valoare nevalidă sau în afara intervalului</string>
+    <string name="import_preview_skip_superseded">Convertită în setări mai noi</string>
 </resources>

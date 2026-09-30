@@ -661,10 +661,9 @@ private fun SkippedSection(skipped: List<SkippedKey>) {
             skipped.forEach { sk ->
                 Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
                     Text(sk.key, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    // TODO(i18n): SkippedKey.reason is produced in English by the domain layer
-                    //  (backup/SettingsImportPlanBuilder); it needs a typed reason to localize.
+                    // The typed kind, localized; the English detail (sk.reason) stays in logs.
                     Text(
-                        sk.reason,
+                        stringResource(sk.kind.labelRes),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

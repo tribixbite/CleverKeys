@@ -1710,4 +1710,31 @@
         <item quantity="one">%1$d gün önce</item>
         <item quantity="other">%1$d gün önce</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">Dosya bulunamadı veya açılamadı.</string>
+    <string name="io_error_permission_denied">CleverKeys\'in bu dosyaya erişim izni yok.</string>
+    <string name="io_error_invalid_format">Dosya beklenen biçimde değil veya hasarlı.</string>
+    <string name="io_error_newer_version">Dosya, CleverKeys\'in daha yeni bir sürümüyle oluşturulmuş. Uygulamayı güncelleyip tekrar deneyin.</string>
+    <string name="io_error_out_of_space">Yeterli depolama alanı yok.</string>
+    <string name="io_error_too_large">Dosya, CleverKeys\'in güvenle içe aktarabileceğinden daha büyük.</string>
+    <string name="io_error_wrong_password_or_corrupt">Yedek parolası yanlış veya dosya hasarlı ya da değiştirilmiş.</string>
+    <string name="io_error_no_backup_password">Bu yedek şifreli ve kullanılabilir bir yedek parolası yok.</string>
+    <string name="io_error_wrong_backup_kind">Bu yedek, bu içe aktarmanın beklediği türde veri içermiyor.</string>
+    <string name="io_error_no_file_picker">Dosya seçmek için kullanılabilir bir uygulama yok.</string>
+    <string name="io_error_read_write">Dosya okunamadı veya yazılamadı.</string>
+    <string name="pack_error_missing_member">Paket %1$s içermiyor.</string>
+    <string name="pack_error_invalid_member">Paketteki %1$s boş veya hasarlı.</string>
+    <string name="pack_error_invalid_language_code">Paket geçersiz bir dil kodu bildiriyor: %1$s</string>
+    <string name="pack_error_unsupported_model">Paket desteklenmeyen bir model dosyası bildiriyor: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s, %2$d MiB sınırından büyük.</string>
+    <string name="pack_error_model_checksum">%1$s, paket manifestindeki sağlama toplamıyla eşleşmiyor.</string>
+    <string name="pack_error_install_failed">Paket yüklenemedi.</string>
+    <string name="gif_pack_error_no_thumbnails">Bu paket küçük resimleri olmayan eski bir biçim kullanıyor, bu yüzden GIF\'leri gösterilemiyor. Güncel bir paket indirin.</string>
+    <string name="gif_pack_error_partial_thumbnails">Küçük resimlerin kopyalanması yarıda başarısız oldu (depolama dolu olabilir). Paket yüklenmedi; yer açıp tekrar deneyin.</string>
+    <string name="import_preview_skip_internal">Dahili ayar</string>
+    <string name="import_preview_skip_deprecated">Artık kullanılmıyor</string>
+    <string name="import_preview_skip_separate_import">Sözlük içe aktarımıyla geri yüklenir</string>
+    <string name="import_preview_skip_unreadable">Okunamayan değer</string>
+    <string name="import_preview_skip_invalid_value">Geçersiz veya aralık dışı değer</string>
+    <string name="import_preview_skip_superseded">Daha yeni ayarlara dönüştürüldü</string>
 </resources>

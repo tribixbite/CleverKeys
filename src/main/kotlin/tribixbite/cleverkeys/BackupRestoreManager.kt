@@ -150,7 +150,8 @@ open class BackupRestoreManager(
             throw BackupDecryptException(
                 "Plaintext backups are not accepted via automation. Under the mandatory-" +
                     "encryption (headless) policy, only encrypted (CKENC) backups may be imported. " +
-                    "Use the app's Import button, or supply an encrypted backup."
+                    "Use the app's Import button, or supply an encrypted backup.",
+                reason = IoFailureReason.WRONG_BACKUP_KIND,
             )
         }
     }
@@ -227,21 +228,23 @@ open class BackupRestoreManager(
         val passphrase = resolveImportPassphrase()
             ?: throw BackupDecryptException(
                 "This backup is encrypted but no backup password is available. " +
-                    "Set one in Settings → Backup & Restore, or enter it when prompted."
+                    "Set one in Settings → Backup & Restore, or enter it when prompted.",
+                reason = IoFailureReason.NO_BACKUP_PASSWORD,
             )
         return try {
             val payload = BackupCrypto.decrypt(container, passphrase)
             if (expectedContentTypes.isNotEmpty() && payload.contentType !in expectedContentTypes) {
                 throw BackupDecryptException(
                     "Encrypted backup content-type ${payload.contentType} does not match this " +
-                        "import action (expected one of $expectedContentTypes)."
+                        "import action (expected one of $expectedContentTypes).",
+                    reason = IoFailureReason.WRONG_BACKUP_KIND,
                 )
             }
             payload
         } catch (e: javax.crypto.AEADBadTagException) {
             throw BackupDecryptException(WRONG_PASSWORD_OR_CORRUPT, e)
         } catch (e: BackupFormatException) {
-            throw BackupDecryptException(e.message ?: WRONG_PASSWORD_OR_CORRUPT, e)
+            throw BackupDecryptException(e.message ?: WRONG_PASSWORD_OR_CORRUPT, e, e.reason)
         } finally {
             java.util.Arrays.fill(passphrase, '\u0000')
         }
@@ -262,7 +265,8 @@ open class BackupRestoreManager(
         val passphrase = resolveImportPassphrase()
             ?: throw BackupDecryptException(
                 "This backup is encrypted but no backup password is available. " +
-                    "Set one in Settings → Backup & Restore, or enter it when prompted."
+                    "Set one in Settings → Backup & Restore, or enter it when prompted.",
+                reason = IoFailureReason.NO_BACKUP_PASSWORD,
             )
         val tempFile = File(context.cacheDir, "ck_decrypt_${System.currentTimeMillis()}.zip")
         try {
@@ -281,7 +285,8 @@ open class BackupRestoreManager(
             if (expectedContentTypes.isNotEmpty() && header.contentType !in expectedContentTypes) {
                 throw BackupDecryptException(
                     "Encrypted backup content-type ${header.contentType} does not match this " +
-                        "import action (expected one of $expectedContentTypes)."
+                        "import action (expected one of $expectedContentTypes).",
+                    reason = IoFailureReason.WRONG_BACKUP_KIND,
                 )
             }
             // ARC-036: same import-time provenance record as the JSON seam. The archive imports
@@ -294,7 +299,7 @@ open class BackupRestoreManager(
             throw BackupDecryptException(WRONG_PASSWORD_OR_CORRUPT, e)
         } catch (e: BackupFormatException) {
             tempFile.delete()
-            throw BackupDecryptException(e.message ?: WRONG_PASSWORD_OR_CORRUPT, e)
+            throw BackupDecryptException(e.message ?: WRONG_PASSWORD_OR_CORRUPT, e, e.reason)
         } catch (e: BackupDecryptException) {
             tempFile.delete()
             throw e
@@ -362,7 +367,7 @@ open class BackupRestoreManager(
         // Open ONCE and peek the header via mark/reset so a non-re-openable content://
         // stream (and single-instance test mocks) isn't consumed by the sniff.
         val raw = context.contentResolver.openInputStream(uri)
-            ?: throw Exception("Cannot open ZIP file")
+            ?: throw ClassifiedIoException(IoFailureReason.FILE_NOT_FOUND, "Cannot open ZIP file")
         val buffered = java.io.BufferedInputStream(raw, 64 * 1024)
         buffered.mark(EncryptedBackupFormat.HEADER_LEN + 8)
         val head = ByteArray(EncryptedBackupFormat.HEADER_LEN)
@@ -399,9 +404,17 @@ open class BackupRestoreManager(
      * missing passphrase, header problem, or content-type mismatch). Callers map this
      * to the single user-facing message and guarantee no partial apply — the throw
      * happens before any parse/preview/write.
+     *
+     * [reason] tells the settings UI which of those it was: only
+     * [IoFailureReason.NO_BACKUP_PASSWORD] and [IoFailureReason.WRONG_PASSWORD_OR_CORRUPT]
+     * are worth a passphrase prompt; a newer-version or damaged header, or an encrypted
+     * backup of another kind, is reported as a failure instead.
      */
-    class BackupDecryptException(message: String, cause: Throwable? = null) :
-        Exception(message, cause)
+    class BackupDecryptException(
+        message: String,
+        cause: Throwable? = null,
+        reason: IoFailureReason = IoFailureReason.WRONG_PASSWORD_OR_CORRUPT,
+    ) : ClassifiedIoException(reason, message, cause)
 
     /**
      * Open an OutputStream for writing to a URI. Handles both content:// (SAF)
@@ -693,7 +706,8 @@ open class BackupRestoreManager(
     /** Read the entire contents of a URI as bytes, applying the scoped-storage fallbacks. */
     private fun readAllBytesFromUri(uri: Uri): ByteArray {
         val inputStream = openInputStream(uri)
-            ?: throw java.io.IOException(
+            ?: throw ClassifiedIoException(
+                IoFailureReason.PERMISSION_DENIED,
                 "Cannot read file: ${uri.lastPathSegment ?: uri}\n\n" +
                 "On Android 10+, files modified by external apps (cp, vim, etc.) " +
                 "become inaccessible due to scoped storage restrictions.\n\n" +
@@ -713,7 +727,8 @@ open class BackupRestoreManager(
                 // Cap the in-memory JSON read (types 1-3) — mirrors the crypto
                 // substrate's guard so a giant plaintext JSON can't OOM either.
                 if (total > BackupCrypto.MAX_IN_MEMORY_BYTES.toLong() + EncryptedBackupFormat.HEADER_LEN) {
-                    throw java.io.IOException(
+                    throw ClassifiedIoException(
+                        IoFailureReason.TOO_LARGE,
                         "Backup file exceeds ${BackupCrypto.MAX_IN_MEMORY_BYTES / (1024 * 1024)} MB " +
                             "in-memory limit — refusing to load."
                     )
@@ -1392,7 +1407,7 @@ open class BackupRestoreManager(
             val clipboardDb = ClipboardDatabase.getInstance(context)
             // #156 option B: include private entries only when the output is genuinely encrypted.
             val exportData = clipboardDb.exportToJSON(textOnly = true, includePrivate = enc.willEncrypt)
-                ?: throw Exception("Failed to export clipboard data")
+                ?: throw ClassifiedIoException(IoFailureReason.READ_WRITE, "Failed to export clipboard data")
 
             val jsonBytes = exportData.toString(2).toByteArray(Charsets.UTF_8)
             val outBytes = encryptIfRequired(jsonBytes, EncryptedBackupFormat.CLIPBOARD_JSON, enc)
@@ -1432,7 +1447,7 @@ open class BackupRestoreManager(
             // Export JSON manifest with all entries including media metadata.
             // #156 option B: include private entries only when the ZIP is genuinely encrypted.
             val exportData = clipboardDb.exportToJSON(textOnly = false, includePrivate = enc.willEncrypt)
-                ?: throw Exception("Failed to export clipboard data")
+                ?: throw ClassifiedIoException(IoFailureReason.READ_WRITE, "Failed to export clipboard data")
 
             val mediaManager = ClipboardMediaManager(context)
             var mediaFileCount = 0
@@ -1516,16 +1531,18 @@ open class BackupRestoreManager(
                         // Entry-count cap: reject archives with an implausible number of
                         // entries (per-entry work × count DoS) before processing this one.
                         if (++entryCount > MAX_IMPORT_ENTRIES) {
-                            throw java.io.IOException(
-                                "Backup ZIP has more than $MAX_IMPORT_ENTRIES entries — refusing to import."
+                            throw ClassifiedIoException(
+                                IoFailureReason.TOO_LARGE,
+                                "Backup ZIP has more than $MAX_IMPORT_ENTRIES entries — refusing to import.",
                             )
                         }
                         // CK-150-021: every named member participates in the duplicate guard,
                         // directory entries included — exempting them let an archive repeat a
                         // name unbounded.
                         if (!seenEntries.add(entry.name)) {
-                            throw java.io.IOException(
-                                "Backup ZIP contains duplicate entry '${entry.name}'"
+                            throw ClassifiedIoException(
+                                IoFailureReason.INVALID_FORMAT,
+                                "Backup ZIP contains duplicate entry '${entry.name}'",
                             )
                         }
                         when {
@@ -1559,7 +1576,10 @@ open class BackupRestoreManager(
                     }
 
                     if (jsonData == null) {
-                        throw Exception("ZIP does not contain clipboard_data.json manifest")
+                        throw ClassifiedIoException(
+                            IoFailureReason.INVALID_FORMAT,
+                            "ZIP does not contain clipboard_data.json manifest",
+                        )
                     }
 
                     // Commit staged media reversibly, then run the transactional DB import. A DB
@@ -1757,6 +1777,8 @@ open class BackupRestoreManager(
         // matching the clipboard-only export paths — otherwise a plaintext full backup silently
         // loses privately-copied entries and the user only discovers it after wiping the device.
         @JvmField val privateSkipped: Int = 0,
+        /** Localizable category of [errorMessage] (which is English, for the log). */
+        @JvmField val errorReason: IoFailureReason? = null,
     )
 
     /**
@@ -1775,6 +1797,8 @@ open class BackupRestoreManager(
         @JvmField val mediaFilesRestored: Int,
         @JvmField val sourceAppVersion: String? = null,
         @JvmField val errorMessage: String? = null,
+        /** Localizable category of [errorMessage] (which is English, for the log). */
+        @JvmField val errorReason: IoFailureReason? = null,
     )
 
     /**
@@ -1921,6 +1945,7 @@ open class BackupRestoreManager(
                 clipboardEntryCount = clipboardEntryCount,
                 mediaFileCount = mediaFileCount,
                 errorMessage = e.message ?: "Unknown error",
+                errorReason = IoFailureClassifier.classify(e),
                 totalBytes = totalBytes,
                 privateSkipped = privateSkipped,
             )
@@ -1994,14 +2019,16 @@ open class BackupRestoreManager(
                         // Entry-count cap: reject archives with an implausible number of
                         // entries (per-entry work × count DoS) before processing this one.
                         if (++entryCount > MAX_IMPORT_ENTRIES) {
-                            throw java.io.IOException(
-                                "Backup ZIP has more than $MAX_IMPORT_ENTRIES entries — refusing to import."
+                            throw ClassifiedIoException(
+                                IoFailureReason.TOO_LARGE,
+                                "Backup ZIP has more than $MAX_IMPORT_ENTRIES entries — refusing to import.",
                             )
                         }
                         // CK-150-021: directory members are subject to the duplicate guard too.
                         if (!seenEntries.add(entry.name)) {
-                            throw java.io.IOException(
-                                "Backup ZIP contains duplicate entry '${entry.name}'"
+                            throw ClassifiedIoException(
+                                IoFailureReason.INVALID_FORMAT,
+                                "Backup ZIP contains duplicate entry '${entry.name}'",
                             )
                         }
                         when {
@@ -2014,15 +2041,21 @@ open class BackupRestoreManager(
                                 // silently treating them as v1 full-backup files.
                                 val format = manifestJson?.get("format")?.asString
                                 if (format != "cleverkeys_full_backup") {
-                                    throw Exception("Not a CleverKeys full backup ZIP " +
-                                        "(manifest.json `format` was \"${format ?: "<missing>"}\", " +
-                                        "expected \"cleverkeys_full_backup\").")
+                                    throw ClassifiedIoException(
+                                        IoFailureReason.INVALID_FORMAT,
+                                        "Not a CleverKeys full backup ZIP " +
+                                            "(manifest.json `format` was \"${format ?: "<missing>"}\", " +
+                                            "expected \"cleverkeys_full_backup\").",
+                                    )
                                 }
                                 // Forward-compat check — refuse newer formats early.
                                 val formatVersion = manifestJson?.get("format_version")?.asInt ?: 1
                                 if (formatVersion > FULL_BACKUP_FORMAT_VERSION) {
-                                    throw Exception("Full backup format_version $formatVersion is newer " +
-                                        "than supported ($FULL_BACKUP_FORMAT_VERSION). Update the app and retry.")
+                                    throw ClassifiedIoException(
+                                        IoFailureReason.NEWER_VERSION,
+                                        "Full backup format_version $formatVersion is newer " +
+                                            "than supported ($FULL_BACKUP_FORMAT_VERSION). Update the app and retry.",
+                                    )
                                 }
                                 sourceAppVersion = manifestJson?.get("app_version")?.asString
                             }
@@ -2224,6 +2257,7 @@ open class BackupRestoreManager(
                 mediaFilesRestored = mediaFilesRestored,
                 sourceAppVersion = sourceAppVersion,
                 errorMessage = e.message ?: "Unknown error",
+                errorReason = IoFailureClassifier.classify(e),
             )
         } finally {
             stagingDir?.deleteRecursively()
@@ -2352,8 +2386,9 @@ open class BackupRestoreManager(
         fun add(bytes: Int) {
             consumed += bytes
             if (consumed > cap) {
-                throw java.io.IOException(
-                    "Backup expands beyond ${cap / (1024 * 1024)} MB aggregate limit"
+                throw ClassifiedIoException(
+                    IoFailureReason.TOO_LARGE,
+                    "Backup expands beyond ${cap / (1024 * 1024)} MB aggregate limit",
                 )
             }
         }
@@ -2441,7 +2476,8 @@ open class BackupRestoreManager(
                 if (read == 0) continue
                 entryBytes += read
                 if (entryBytes > importLimits.mediaEntryBytes) {
-                    throw java.io.IOException(
+                    throw ClassifiedIoException(
+                        IoFailureReason.TOO_LARGE,
                         "Media entry '$entryName' exceeds " +
                             "${importLimits.mediaEntryBytes} byte limit"
                     )
@@ -2471,7 +2507,8 @@ open class BackupRestoreManager(
             if (read == 0) continue
             entryBytes += read
             if (entryBytes > importLimits.mediaEntryBytes) {
-                throw java.io.IOException(
+                throw ClassifiedIoException(
+                    IoFailureReason.TOO_LARGE,
                     "Unknown ZIP entry '$entryName' exceeds " +
                         "${importLimits.mediaEntryBytes} byte limit"
                 )
@@ -2532,7 +2569,8 @@ open class BackupRestoreManager(
             if (read < 0) break
             total += read
             if (total > cap) {
-                throw java.io.IOException(
+                throw ClassifiedIoException(
+                    IoFailureReason.TOO_LARGE,
                     "ZIP entry exceeds ${cap / (1024 * 1024)} MB limit — refusing to buffer " +
                         "(possible zip bomb)."
                 )

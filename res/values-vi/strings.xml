@@ -1686,4 +1686,31 @@
     <plurals name="clipboard_time_days_ago">
         <item quantity="other">%1$d ngày trước</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">Không thể tìm thấy hoặc mở tệp.</string>
+    <string name="io_error_permission_denied">CleverKeys không được phép truy cập tệp này.</string>
+    <string name="io_error_invalid_format">Tệp không đúng định dạng mong đợi hoặc đã bị hỏng.</string>
+    <string name="io_error_newer_version">Tệp được tạo bằng phiên bản CleverKeys mới hơn. Hãy cập nhật ứng dụng rồi thử lại.</string>
+    <string name="io_error_out_of_space">Không đủ dung lượng lưu trữ.</string>
+    <string name="io_error_too_large">Tệp lớn hơn mức CleverKeys có thể nhập một cách an toàn.</string>
+    <string name="io_error_wrong_password_or_corrupt">Sai mật khẩu sao lưu, hoặc tệp bị hỏng hay đã bị thay đổi.</string>
+    <string name="io_error_no_backup_password">Bản sao lưu này được mã hóa và không có mật khẩu sao lưu nào.</string>
+    <string name="io_error_wrong_backup_kind">Bản sao lưu này không chứa loại dữ liệu mà lần nhập này cần.</string>
+    <string name="io_error_no_file_picker">Không có ứng dụng nào để chọn tệp.</string>
+    <string name="io_error_read_write">Không thể đọc hoặc ghi tệp.</string>
+    <string name="pack_error_missing_member">Gói không chứa %1$s.</string>
+    <string name="pack_error_invalid_member">%1$s trong gói bị trống hoặc bị hỏng.</string>
+    <string name="pack_error_invalid_language_code">Gói khai báo mã ngôn ngữ không hợp lệ: %1$s</string>
+    <string name="pack_error_unsupported_model">Gói khai báo tệp mô hình không được hỗ trợ: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s vượt quá giới hạn %2$d MiB.</string>
+    <string name="pack_error_model_checksum">%1$s không khớp với mã kiểm tra trong manifest của gói.</string>
+    <string name="pack_error_install_failed">Không thể cài đặt gói.</string>
+    <string name="gif_pack_error_no_thumbnails">Gói này dùng định dạng cũ không có hình thu nhỏ nên không thể hiển thị GIF. Hãy tải xuống gói mới.</string>
+    <string name="gif_pack_error_partial_thumbnails">Sao chép hình thu nhỏ bị lỗi giữa chừng (bộ nhớ có thể đã đầy). Gói chưa được cài đặt; hãy giải phóng dung lượng rồi thử lại.</string>
+    <string name="import_preview_skip_internal">Cài đặt nội bộ</string>
+    <string name="import_preview_skip_deprecated">Không còn được dùng</string>
+    <string name="import_preview_skip_separate_import">Được khôi phục qua lần nhập từ điển</string>
+    <string name="import_preview_skip_unreadable">Giá trị không đọc được</string>
+    <string name="import_preview_skip_invalid_value">Giá trị không hợp lệ hoặc ngoài phạm vi</string>
+    <string name="import_preview_skip_superseded">Đã chuyển sang cài đặt mới hơn</string>
 </resources>

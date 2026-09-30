@@ -1786,4 +1786,31 @@
         <item quantity="many">%1$d дн. назад</item>
         <item quantity="other">%1$d дн. назад</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">Не удалось найти или открыть файл.</string>
+    <string name="io_error_permission_denied">У CleverKeys нет доступа к этому файлу.</string>
+    <string name="io_error_invalid_format">Файл имеет неожиданный формат или повреждён.</string>
+    <string name="io_error_newer_version">Файл создан более новой версией CleverKeys. Обновите приложение и повторите попытку.</string>
+    <string name="io_error_out_of_space">Недостаточно места в хранилище.</string>
+    <string name="io_error_too_large">Файл слишком велик, чтобы CleverKeys мог безопасно его импортировать.</string>
+    <string name="io_error_wrong_password_or_corrupt">Неверный пароль резервной копии, либо файл повреждён или изменён.</string>
+    <string name="io_error_no_backup_password">Эта резервная копия зашифрована, а пароль резервной копии недоступен.</string>
+    <string name="io_error_wrong_backup_kind">Эта резервная копия не содержит данных того типа, который ожидает этот импорт.</string>
+    <string name="io_error_no_file_picker">Нет приложения для выбора файлов.</string>
+    <string name="io_error_read_write">Не удалось прочитать или записать файл.</string>
+    <string name="pack_error_missing_member">В пакете нет %1$s.</string>
+    <string name="pack_error_invalid_member">%1$s в пакете пуст или повреждён.</string>
+    <string name="pack_error_invalid_language_code">В пакете указан недопустимый код языка: %1$s</string>
+    <string name="pack_error_unsupported_model">В пакете указан неподдерживаемый файл модели: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s превышает ограничение в %2$d МиБ.</string>
+    <string name="pack_error_model_checksum">%1$s не совпадает с контрольной суммой в манифесте пакета.</string>
+    <string name="pack_error_install_failed">Не удалось установить пакет.</string>
+    <string name="gif_pack_error_no_thumbnails">Этот пакет использует старый формат без миниатюр, поэтому его GIF нельзя показать. Загрузите актуальный пакет.</string>
+    <string name="gif_pack_error_partial_thumbnails">Копирование миниатюр прервалось на полпути (возможно, хранилище заполнено). Пакет не установлен; освободите место и повторите попытку.</string>
+    <string name="import_preview_skip_internal">Внутренний параметр</string>
+    <string name="import_preview_skip_deprecated">Больше не используется</string>
+    <string name="import_preview_skip_separate_import">Восстанавливается импортом словаря</string>
+    <string name="import_preview_skip_unreadable">Нечитаемое значение</string>
+    <string name="import_preview_skip_invalid_value">Недопустимое значение или вне диапазона</string>
+    <string name="import_preview_skip_superseded">Преобразовано в новые настройки</string>
 </resources>

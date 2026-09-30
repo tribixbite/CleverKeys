@@ -11,6 +11,7 @@ import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.LanguageDisplayNames
 import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.ResourcesResultText
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.langpack.ImportResult
 import tribixbite.cleverkeys.langpack.LanguagePackManager
@@ -87,7 +88,7 @@ internal fun SettingsActivity.importLanguagePack() {
     try {
         languagePackImportLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "*/*"))
     } catch (e: Exception) {
-        Toast.makeText(this, getString(R.string.common_file_picker_failed, e.message.orEmpty()), Toast.LENGTH_SHORT).show()
+        toastFilePickerFailed(e)
     }
 }
 
@@ -120,18 +121,20 @@ internal fun SettingsActivity.performLanguagePackImport(uri: Uri) {
                     withContext(Dispatchers.IO) { CtcInstalledPacks.evaluateNow(_self, code) }
                 }
                 is ImportResult.Error -> {
-                    // The manager's reason text is not localized yet (domain layer).
-                    // TODO(i18n): typed ImportResult.Error reasons → string resources.
-                    languagePackImportStatus = LanguagePackImportStatus.Failed(result.message)
+                    // Typed reason → localized text; the English log text stays in logcat.
+                    android.util.Log.w(SettingsActivity.TAG, "Language pack import refused: ${result.message}")
+                    val reason = result.failure.render(ResourcesResultText(resources))
+                    languagePackImportStatus = LanguagePackImportStatus.Failed(reason)
                     Toast.makeText(
                         _self,
-                        getString(R.string.common_import_failed_detail, result.message),
+                        getString(R.string.common_import_failed_detail, reason),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         } catch (e: Exception) {
-            val detail = e.message ?: getString(R.string.common_unknown_error)
+            android.util.Log.e(SettingsActivity.TAG, "Language pack import failed", e)
+            val detail = ioFailureText(e)
             languagePackImportStatus = LanguagePackImportStatus.Failed(detail)
             Toast.makeText(_self, getString(R.string.common_import_failed_detail, detail), Toast.LENGTH_SHORT).show()
         }
@@ -153,9 +156,10 @@ internal fun SettingsActivity.deleteLanguagePack(code: String) {
                 Toast.makeText(_self, getString(R.string.multilang_pack_deleted), Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
+            android.util.Log.e(SettingsActivity.TAG, "Language pack delete failed", e)
             Toast.makeText(
                 _self,
-                getString(R.string.common_delete_failed_detail, e.message ?: getString(R.string.common_unknown_error)),
+                getString(R.string.common_delete_failed_detail, ioFailureText(e)),
                 Toast.LENGTH_SHORT
             ).show()
         }

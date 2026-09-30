@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.langpack
 
+import tribixbite.cleverkeys.IoFailureReason
+import tribixbite.cleverkeys.PackImportFailure
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
@@ -128,12 +130,14 @@ class LanguagePackManager(private val context: Context) {
 
         return try {
             val inputStream = context.contentResolver.openInputStream(uri)
-                ?: return ImportResult.Error("Cannot open file")
+                ?: return ImportResult.Error(
+                    PackImportFailure.Io(IoFailureReason.FILE_NOT_FOUND, "Cannot open file")
+                )
 
             importFromStream(inputStream)
         } catch (e: Exception) {
             Log.e(TAG, "Import failed", e)
-            ImportResult.Error("Import failed: ${e.message}")
+            ImportResult.Error(PackImportFailure.fromException(e))
         }
     }
 
@@ -164,7 +168,9 @@ class LanguagePackManager(private val context: Context) {
                             if (!withinCap) {
                                 Log.w(TAG, "Rejecting pack: $MODEL_FILE exceeds the size cap")
                                 return ImportResult.Error(
-                                    "$MODEL_FILE exceeds the ${MAX_MODEL_BYTES / (1024 * 1024)} MiB limit"
+                                    PackImportFailure.ModelTooLarge(
+                                        MODEL_FILE, (MAX_MODEL_BYTES / (1024 * 1024)).toInt()
+                                    )
                                 )
                             }
                         } else {
@@ -180,34 +186,34 @@ class LanguagePackManager(private val context: Context) {
 
             // Validate required files exist
             if (MANIFEST_FILE !in extractedFiles) {
-                return ImportResult.Error("Missing manifest.json")
+                return ImportResult.Error(PackImportFailure.MissingMember(MANIFEST_FILE))
             }
             if (DICTIONARY_FILE !in extractedFiles) {
-                return ImportResult.Error("Missing dictionary.bin")
+                return ImportResult.Error(PackImportFailure.MissingMember(DICTIONARY_FILE))
             }
 
             // Parse manifest
             val manifestFile = File(tempDir, MANIFEST_FILE)
             val manifest = parseManifest(manifestFile.readText())
-                ?: return ImportResult.Error("Invalid manifest.json format")
+                ?: return ImportResult.Error(PackImportFailure.InvalidMember(MANIFEST_FILE))
 
             // Validate dictionary binary
             val dictFile = File(tempDir, DICTIONARY_FILE)
             if (!validateDictionary(dictFile)) {
-                return ImportResult.Error("Invalid dictionary.bin format")
+                return ImportResult.Error(PackImportFailure.InvalidMember(DICTIONARY_FILE))
             }
 
             // G-1: validate the code BEFORE it is used as a path component. Regex first,
             // then a canonical-path containment check as belt-and-braces — the install
             // dir must be a direct child of langpacksDir, nothing else.
             if (!VALID_PACK_CODE.matches(manifest.code)) {
-                return ImportResult.Error("Invalid language code in manifest: \"${manifest.code}\"")
+                return ImportResult.Error(PackImportFailure.InvalidLanguageCode(manifest.code))
             }
 
             // Move to final location
             val packDir = File(langpacksDir, manifest.code)
             if (packDir.canonicalFile.parentFile != langpacksDir.canonicalFile) {
-                return ImportResult.Error("Invalid language code in manifest: \"${manifest.code}\"")
+                return ImportResult.Error(PackImportFailure.InvalidLanguageCode(manifest.code))
             }
 
             // The model member: the pack must agree with itself. A DECLARED model that is
@@ -218,15 +224,13 @@ class LanguagePackManager(private val context: Context) {
             val installModel = manifest.modelSha256 != null
             if (installModel) {
                 if (manifest.modelFile != MODEL_FILE) {
-                    return ImportResult.Error(
-                        "Unsupported model file in manifest: \"${manifest.modelFile}\""
-                    )
+                    return ImportResult.Error(PackImportFailure.UnsupportedModel(manifest.modelFile.orEmpty()))
                 }
                 if (!modelFile.exists()) {
-                    return ImportResult.Error("Missing $MODEL_FILE declared by manifest")
+                    return ImportResult.Error(PackImportFailure.MissingMember(MODEL_FILE))
                 }
                 if (!sha256OfFile(modelFile).equals(manifest.modelSha256, ignoreCase = true)) {
-                    return ImportResult.Error("$MODEL_FILE does not match its manifest sha256")
+                    return ImportResult.Error(PackImportFailure.ModelChecksumMismatch(MODEL_FILE))
                 }
             } else if (modelFile.exists()) {
                 Log.w(TAG, "Ignoring undeclared $MODEL_FILE in pack ${manifest.code}")
@@ -289,7 +293,7 @@ class LanguagePackManager(private val context: Context) {
                     packDir.deleteRecursively()
                 }
                 if (!stagingDir.renameTo(packDir)) {
-                    return ImportResult.Error("Failed to install language pack (rename failed)")
+                    return ImportResult.Error(PackImportFailure.InstallFailed)
                 }
             } finally {
                 if (stagingDir.exists()) {
@@ -618,7 +622,10 @@ data class LanguagePackManifest(
  */
 sealed class ImportResult {
     data class Success(val manifest: LanguagePackManifest) : ImportResult()
-    data class Error(val message: String) : ImportResult()
+    /** A refused import; [failure] renders the localized reason, [message] is the English log text. */
+    data class Error(val failure: PackImportFailure) : ImportResult() {
+        val message: String get() = failure.logMessage
+    }
 }
 
 /**

@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.gif
 
+import tribixbite.cleverkeys.IoFailureReason
+import tribixbite.cleverkeys.PackImportFailure
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -53,23 +55,28 @@ class GifPackManager private constructor(private val context: Context) {
         try {
             // Step 1: Extract ZIP to temp directory
             val inputStream = context.contentResolver.openInputStream(uri)
-                ?: return@withContext GifPackImportResult.Error("Cannot open file")
+                ?: return@withContext GifPackImportResult.Error(
+                    PackImportFailure.Io(IoFailureReason.FILE_NOT_FOUND, "Cannot open file")
+                )
 
             extractZip(inputStream, tempDir)
 
             // Step 2: Validate manifest.json
             val manifestFile = File(tempDir, MANIFEST_FILE)
             if (!manifestFile.exists()) {
-                return@withContext GifPackImportResult.Error("Missing manifest.json — not a valid GIF pack")
+                return@withContext GifPackImportResult.Error(PackImportFailure.MissingMember(MANIFEST_FILE))
             }
 
             val manifest = parseManifest(manifestFile.readText())
-                ?: return@withContext GifPackImportResult.Error("Invalid manifest.json format")
+                ?: return@withContext GifPackImportResult.Error(PackImportFailure.InvalidMember(MANIFEST_FILE))
 
             // Step 3: Validate pack.db
             val packDbFile = File(tempDir, PACK_DB_FILE)
             if (!packDbFile.exists() || packDbFile.length() == 0L) {
-                return@withContext GifPackImportResult.Error("Missing or empty pack.db")
+                return@withContext GifPackImportResult.Error(
+                    if (packDbFile.exists()) PackImportFailure.InvalidMember(PACK_DB_FILE)
+                    else PackImportFailure.MissingMember(PACK_DB_FILE)
+                )
             }
 
             // Step 3b: Validate thumbs/ (ARC-038 / #149).
@@ -81,7 +88,9 @@ class GifPackManager private constructor(private val context: Context) {
             val thumbsDir = File(tempDir, THUMBS_DIR)
             if (manifest.gifCount > 0 && !hasImportableThumbnails(thumbsDir)) {
                 Log.w(TAG, "Pack '${manifest.packId}' declares ${manifest.gifCount} GIFs but carries no thumbnails")
-                return@withContext GifPackImportResult.Error(ERROR_MISSING_THUMBNAILS)
+                return@withContext GifPackImportResult.Error(
+                    PackImportFailure.GifNoThumbnails(ERROR_MISSING_THUMBNAILS)
+                )
             }
 
             // Step 4: Check for duplicate
@@ -142,7 +151,8 @@ class GifPackManager private constructor(private val context: Context) {
                 assetManager.removeThumbnails(removal.orphanedThumbIds)
                 assetManager.removeFullGifs(removal.orphanedFullIds)
                 return@withContext GifPackImportResult.Error(
-                    if (thumbResult.failed > 0) ERROR_PARTIAL_THUMBNAILS else ERROR_MISSING_THUMBNAILS
+                    if (thumbResult.failed > 0) PackImportFailure.GifPartialThumbnails(ERROR_PARTIAL_THUMBNAILS)
+                    else PackImportFailure.GifNoThumbnails(ERROR_MISSING_THUMBNAILS)
                 )
             }
 
@@ -162,7 +172,7 @@ class GifPackManager private constructor(private val context: Context) {
             )
         } catch (e: Exception) {
             Log.e(TAG, "Pack import failed", e)
-            GifPackImportResult.Error("Import failed: ${e.message}")
+            GifPackImportResult.Error(PackImportFailure.fromException(e))
         } finally {
             // Clean up temp directory
             tempDir.deleteRecursively()
@@ -394,5 +404,8 @@ data class GifPackManifest(
 sealed class GifPackImportResult {
     data class Success(val packId: String, val name: String, val gifCount: Int) : GifPackImportResult()
     data class AlreadyInstalled(val packId: String, val name: String) : GifPackImportResult()
-    data class Error(val message: String) : GifPackImportResult()
+    /** A refused import; [failure] renders the localized reason, [message] is the English log text. */
+    data class Error(val failure: PackImportFailure) : GifPackImportResult() {
+        val message: String get() = failure.logMessage
+    }
 }

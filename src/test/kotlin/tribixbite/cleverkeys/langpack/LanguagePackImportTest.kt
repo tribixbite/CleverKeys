@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.langpack
 
+import tribixbite.cleverkeys.IoFailureReason
+import tribixbite.cleverkeys.PackImportFailure
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
@@ -353,7 +355,7 @@ class LanguagePackImportTest {
         assertWithMessage(
             "a pack whose model does not match its own manifest is corrupt — say so, rather " +
                 "than installing bytes that will silently never load"
-        ).that(import(zip)).isEqualTo(ImportResult.Error("model.onnx does not match its manifest sha256"))
+        ).that(import(zip)).isEqualTo(ImportResult.Error(PackImportFailure.ModelChecksumMismatch("model.onnx")))
         assertWithMessage("a rejected pack must install nothing")
             .that(File(filesDir, "langpacks").listFiles()?.toList().orEmpty()).isEmpty()
     }
@@ -364,7 +366,7 @@ class LanguagePackImportTest {
             "ru", "Russian",
             manifest = manifestJson("ru", "Russian", model = modelBytes(2048)),
         )
-        assertThat(import(zip)).isEqualTo(ImportResult.Error("Missing model.onnx declared by manifest"))
+        assertThat(import(zip)).isEqualTo(ImportResult.Error(PackImportFailure.MissingMember("model.onnx")))
     }
 
     /**
@@ -389,7 +391,7 @@ class LanguagePackImportTest {
             manifest = manifestJson("ru", "Russian", model = oversize),
             extras = listOf("model.onnx" to oversize),
         )
-        assertThat(import(zip)).isEqualTo(ImportResult.Error("model.onnx exceeds the 8 MiB limit"))
+        assertThat(import(zip)).isEqualTo(ImportResult.Error(PackImportFailure.ModelTooLarge("model.onnx", 8)))
         assertWithMessage(
             "the cap must abort the EXTRACTION, not merely refuse afterwards — otherwise a pack " +
                 "naming a multi-gigabyte model fills the cache dir before anything rejects it"
@@ -428,7 +430,7 @@ class LanguagePackImportTest {
     @Test
     fun aPackMissingItsManifestIsRejectedWithThatReason() {
         val zip = packZip("bad.zip", listOf("dictionary.bin" to dictionaryBytes()))
-        assertThat(import(zip)).isEqualTo(ImportResult.Error("Missing manifest.json"))
+        assertThat(import(zip)).isEqualTo(ImportResult.Error(PackImportFailure.MissingMember("manifest.json")))
         assertWithMessage("a rejected pack must install nothing")
             .that(File(filesDir, "langpacks").listFiles()?.toList().orEmpty()).isEmpty()
     }
@@ -439,7 +441,7 @@ class LanguagePackImportTest {
             "bad.zip",
             listOf("manifest.json" to manifestJson("nl", "Dutch").toByteArray())
         )
-        assertThat(import(zip)).isEqualTo(ImportResult.Error("Missing dictionary.bin"))
+        assertThat(import(zip)).isEqualTo(ImportResult.Error(PackImportFailure.MissingMember("dictionary.bin")))
     }
 
     @Test
@@ -451,7 +453,7 @@ class LanguagePackImportTest {
                 "dictionary.bin" to dictionaryBytes(),
             )
         )
-        assertThat(import(zip)).isEqualTo(ImportResult.Error("Invalid manifest.json format"))
+        assertThat(import(zip)).isEqualTo(ImportResult.Error(PackImportFailure.InvalidMember("manifest.json")))
     }
 
     @Test
@@ -462,7 +464,7 @@ class LanguagePackImportTest {
                 "manifest.json" to manifestJson("nl", "Dutch").toByteArray(),
                 "dictionary.bin" to wrongMagic,
             )))
-        ).isEqualTo(ImportResult.Error("Invalid dictionary.bin format"))
+        ).isEqualTo(ImportResult.Error(PackImportFailure.InvalidMember("dictionary.bin")))
 
         val v1 = dictionaryBytes().also { it[4] = 1 }
         assertWithMessage("the pre-V2 'DICT'-era layout must not be accepted").that(
@@ -470,7 +472,7 @@ class LanguagePackImportTest {
                 "manifest.json" to manifestJson("nl", "Dutch").toByteArray(),
                 "dictionary.bin" to v1,
             )))
-        ).isEqualTo(ImportResult.Error("Invalid dictionary.bin format"))
+        ).isEqualTo(ImportResult.Error(PackImportFailure.InvalidMember("dictionary.bin")))
     }
 
     @Test
@@ -482,14 +484,14 @@ class LanguagePackImportTest {
                 "manifest.json" to manifestJson("nl", "Dutch").toByteArray(),
                 "dictionary.bin" to dictionaryBytes(40),
             )))
-        ).isEqualTo(ImportResult.Error("Invalid dictionary.bin format"))
+        ).isEqualTo(ImportResult.Error(PackImportFailure.InvalidMember("dictionary.bin")))
     }
 
     @Test
     fun anUnreadableUriIsRejectedWithoutThrowing() {
         val uri = mockk<Uri>()
         every { resolver.openInputStream(uri) } returns null
-        assertThat(manager.importLanguagePack(uri)).isEqualTo(ImportResult.Error("Cannot open file"))
+        assertThat(manager.importLanguagePack(uri)).isEqualTo(ImportResult.Error(PackImportFailure.Io(IoFailureReason.FILE_NOT_FOUND, "Cannot open file")))
     }
 
     /**

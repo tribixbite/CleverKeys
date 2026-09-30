@@ -1670,4 +1670,31 @@
     <plurals name="clipboard_time_days_ago">
         <item quantity="other">%1$d h lalu</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">File tidak dapat ditemukan atau dibuka.</string>
+    <string name="io_error_permission_denied">CleverKeys tidak diizinkan mengakses file ini.</string>
+    <string name="io_error_invalid_format">Format file tidak sesuai yang diharapkan, atau file rusak.</string>
+    <string name="io_error_newer_version">File dibuat oleh versi CleverKeys yang lebih baru. Perbarui aplikasi dan coba lagi.</string>
+    <string name="io_error_out_of_space">Ruang penyimpanan tidak cukup.</string>
+    <string name="io_error_too_large">File lebih besar daripada yang dapat diimpor CleverKeys dengan aman.</string>
+    <string name="io_error_wrong_password_or_corrupt">Kata sandi cadangan salah, atau file rusak atau telah diubah.</string>
+    <string name="io_error_no_backup_password">Cadangan ini terenkripsi dan tidak ada kata sandi cadangan yang tersedia.</string>
+    <string name="io_error_wrong_backup_kind">Cadangan ini tidak berisi jenis data yang diharapkan oleh impor ini.</string>
+    <string name="io_error_no_file_picker">Tidak ada aplikasi yang tersedia untuk memilih file.</string>
+    <string name="io_error_read_write">File tidak dapat dibaca atau ditulis.</string>
+    <string name="pack_error_missing_member">Paket tidak berisi %1$s.</string>
+    <string name="pack_error_invalid_member">%1$s dalam paket kosong atau rusak.</string>
+    <string name="pack_error_invalid_language_code">Paket menyatakan kode bahasa yang tidak valid: %1$s</string>
+    <string name="pack_error_unsupported_model">Paket menyatakan file model yang tidak didukung: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s melebihi batas %2$d MiB.</string>
+    <string name="pack_error_model_checksum">%1$s tidak cocok dengan checksum di manifes paket.</string>
+    <string name="pack_error_install_failed">Paket tidak dapat dipasang.</string>
+    <string name="gif_pack_error_no_thumbnails">Paket ini memakai format lama tanpa gambar mini, sehingga GIF-nya tidak dapat ditampilkan. Unduh paket terbaru.</string>
+    <string name="gif_pack_error_partial_thumbnails">Penyalinan gambar mini gagal di tengah jalan (penyimpanan mungkin penuh). Paket tidak dipasang; kosongkan ruang dan coba lagi.</string>
+    <string name="import_preview_skip_internal">Pengaturan internal</string>
+    <string name="import_preview_skip_deprecated">Tidak digunakan lagi</string>
+    <string name="import_preview_skip_separate_import">Dipulihkan oleh impor kamus</string>
+    <string name="import_preview_skip_unreadable">Nilai tidak terbaca</string>
+    <string name="import_preview_skip_invalid_value">Nilai tidak valid atau di luar rentang</string>
+    <string name="import_preview_skip_superseded">Dikonversi ke pengaturan yang lebih baru</string>
 </resources>

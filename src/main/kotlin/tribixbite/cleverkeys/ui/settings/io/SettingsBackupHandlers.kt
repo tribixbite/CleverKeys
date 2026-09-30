@@ -13,6 +13,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import tribixbite.cleverkeys.BackupRestoreActivity
+import tribixbite.cleverkeys.IoFailureClassifier
+import tribixbite.cleverkeys.IoFailureReason
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.ResourcesResultText
@@ -30,10 +32,19 @@ import tribixbite.cleverkeys.buildSettingsResultMessage
  * Shared by every import/export entry point in `ui/settings/io`.
  */
 internal fun SettingsActivity.toastFilePickerFailed(e: Exception) {
+    android.util.Log.w(SettingsActivity.TAG, "File picker could not be launched", e)
     Toast.makeText(
-        this, getString(R.string.common_file_picker_failed, e.message.orEmpty()), Toast.LENGTH_SHORT
+        this, getString(R.string.common_file_picker_failed, ioFailureText(e)), Toast.LENGTH_SHORT
     ).show()
 }
+
+/**
+ * The localized reason for [error] (see [IoFailureClassifier]) to put in a "…failed: %1$s"
+ * message. The exception's own message is English or ROM-localized developer text, so it is never
+ * shown; callers log the throwable instead.
+ */
+internal fun SettingsActivity.ioFailureText(error: Throwable?): String =
+    getString(IoFailureClassifier.classify(error).messageRes)
 
 /** Show the shared Backup & Restore result dialog with already-localized text. */
 internal fun SettingsActivity.showIoResult(title: String, message: String) {
@@ -44,16 +55,23 @@ internal fun SettingsActivity.showIoResult(title: String, message: String) {
 
 /**
  * Show a failure result dialog: [bodyRes] is a localized message with one `%1$s` slot, which
- * receives [detail] (an exception or manager message) or "Unknown error" when there is none.
- *
- * TODO(i18n): [detail] comes from BackupRestoreManager / backup.crypto exception messages and
- *  platform exceptions, which are English (or ROM-localized) today; only the wrapper is ours.
+ * receives the localized [reason] ("Unknown error" when null). The raw exception text is only
+ * logged by the caller: it is English or ROM-localized developer text.
  */
-internal fun SettingsActivity.showIoFailure(@StringRes titleRes: Int, @StringRes bodyRes: Int, detail: String?) {
+internal fun SettingsActivity.showIoFailure(
+    @StringRes titleRes: Int,
+    @StringRes bodyRes: Int,
+    reason: IoFailureReason?,
+) {
     showIoResult(
         getString(titleRes),
-        getString(bodyRes, detail ?: getString(R.string.common_unknown_error)),
+        getString(bodyRes, getString((reason ?: IoFailureReason.UNKNOWN).messageRes)),
     )
+}
+
+/** [showIoFailure] for a caught exception, classified by [IoFailureClassifier]. */
+internal fun SettingsActivity.showIoFailure(@StringRes titleRes: Int, @StringRes bodyRes: Int, error: Throwable) {
+    showIoFailure(titleRes, bodyRes, IoFailureClassifier.classify(error))
 }
 
 /** Join localized paragraphs with the blank line the result dialogs use between them. */
@@ -159,7 +177,7 @@ internal fun SettingsActivity.performConfigExport(uri: Uri, plaintextOptOut: Boo
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Config export failed", e)
             showIoFailure(
-                R.string.backup_result_export_failed_title, R.string.backup_result_config_export_failed, e.message
+                R.string.backup_result_export_failed_title, R.string.backup_result_config_export_failed, e
             )
         } finally {
             backupRestoreViewModel.isProcessing = false
@@ -192,14 +210,17 @@ internal fun SettingsActivity.performConfigImport(uri: Uri, retryPassphrase: Cha
                 backupRestoreViewModel.settingsPreviewPlan = plan
             }
         } catch (e: BackupRestoreManager.BackupDecryptException) {
-            promptForPassphrase(e, retryPassphrase) { entered ->
+            promptForPassphrase(
+                e, retryPassphrase,
+                R.string.backup_result_import_failed_title, R.string.backup_result_read_backup_failed,
+            ) { entered ->
                 backupRestoreManager.setImportPassphraseOverride(entered)
                 performConfigImport(uri, entered)
             }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Build settings plan failed", e)
             showIoFailure(
-                R.string.backup_result_import_failed_title, R.string.backup_result_read_backup_failed, e.message
+                R.string.backup_result_import_failed_title, R.string.backup_result_read_backup_failed, e
             )
         } finally {
             backupRestoreViewModel.isProcessing = false
@@ -211,15 +232,27 @@ internal fun SettingsActivity.performConfigImport(uri: Uri, retryPassphrase: Cha
  * Stage B: show the passphrase-prompt dialog for an encrypted import that failed to
  * decrypt. On a WRONG-password retry ([retryPassphrase] non-null) the error text is
  * surfaced. [onEntered] re-runs the specific import with the entered passphrase.
+ *
+ * Only a missing or wrong password is worth a prompt. A header from a newer app version, a
+ * damaged header or an encrypted backup of another kind cannot be fixed by typing a password,
+ * so those show the import's failure dialog ([failedTitleRes]/[failedBodyRes]) instead —
+ * previously they re-prompted forever without saying why.
  */
 internal fun SettingsActivity.promptForPassphrase(
     e: BackupRestoreManager.BackupDecryptException,
     retryPassphrase: CharArray?,
+    @StringRes failedTitleRes: Int,
+    @StringRes failedBodyRes: Int,
     onEntered: (CharArray) -> Unit,
 ) {
+    if (e.reason != IoFailureReason.NO_BACKUP_PASSWORD && e.reason != IoFailureReason.WRONG_PASSWORD_OR_CORRUPT) {
+        android.util.Log.w(SettingsActivity.TAG, "Encrypted import refused: ${e.message}", e)
+        showIoFailure(failedTitleRes, failedBodyRes, e.reason)
+        return
+    }
     // A failed retry means the entered password was wrong (or the file is corrupt).
     backupRestoreViewModel.passphrasePromptError =
-        if (retryPassphrase != null) BackupRestoreManager.WRONG_PASSWORD_OR_CORRUPT else null
+        if (retryPassphrase != null) getString(IoFailureReason.WRONG_PASSWORD_OR_CORRUPT.messageRes) else null
     android.util.Log.i(SettingsActivity.TAG, "Prompting for backup passphrase: ${e.message}")
     backupRestoreViewModel.passphrasePromptRetry = { entered ->
         backupRestoreViewModel.dismissPassphrasePrompt()
@@ -253,7 +286,7 @@ internal fun SettingsActivity.applyPlannedSettings(
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Apply settings plan failed", e)
             showIoFailure(
-                R.string.backup_result_import_failed_title, R.string.backup_result_apply_settings_failed, e.message
+                R.string.backup_result_import_failed_title, R.string.backup_result_apply_settings_failed, e
             )
         } finally {
             backupRestoreViewModel.isProcessing = false
@@ -312,13 +345,13 @@ internal fun SettingsActivity.performFullBackupExport(uri: Uri, plaintextOptOut:
                 showIoFailure(
                     R.string.backup_result_full_backup_failed_title,
                     R.string.backup_result_full_backup_write_failed,
-                    result.errorMessage,
+                    result.errorReason,
                 )
             }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Full backup export failed", e)
             showIoFailure(
-                R.string.backup_result_full_backup_failed_title, R.string.backup_result_full_backup_write_failed, e.message
+                R.string.backup_result_full_backup_failed_title, R.string.backup_result_full_backup_write_failed, e
             )
         } finally {
             backupRestoreViewModel.isProcessing = false
@@ -369,18 +402,21 @@ internal fun SettingsActivity.performFullBackupImport(uri: Uri, retryPassphrase:
                 showIoFailure(
                     R.string.backup_result_full_import_failed_title,
                     R.string.backup_result_full_import_failed,
-                    result.errorMessage,
+                    result.errorReason,
                 )
             }
         } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
-            promptForPassphrase(e, retryPassphrase) { entered ->
+            promptForPassphrase(
+                e, retryPassphrase,
+                R.string.backup_result_full_import_failed_title, R.string.backup_result_full_import_failed,
+            ) { entered ->
                 backupRestoreManager.setImportPassphraseOverride(entered)
                 performFullBackupImport(uri, entered)
             }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Full backup import failed", e)
             showIoFailure(
-                R.string.backup_result_full_import_failed_title, R.string.backup_result_full_import_failed, e.message
+                R.string.backup_result_full_import_failed_title, R.string.backup_result_full_import_failed, e
             )
         } finally {
             backupRestoreViewModel.isProcessing = false

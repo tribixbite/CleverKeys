@@ -74,7 +74,7 @@ object SettingsImportPlanBuilder {
 
         for ((key, valueElement) in preferences.entrySet()) {
             if (SettingsValidation.isInternalPreference(key)) {
-                skipped += SkippedKey(key, "internal preference")
+                skipped += SkippedKey(key, "internal preference", SkipKind.INTERNAL)
                 continue
             }
             if (SettingsValidation.isDeprecatedPreference(key)) {
@@ -82,7 +82,7 @@ object SettingsImportPlanBuilder {
                 // surfacing it as a preview row would be misleading. Drop
                 // silently — also blocks it from being written by the apply
                 // step (which only writes keys present in `plan.changes`).
-                skipped += SkippedKey(key, "deprecated (no read site in current code)")
+                skipped += SkippedKey(key, "deprecated (no read site in current code)", SkipKind.DEPRECATED)
                 continue
             }
             if (SettingsValidation.isDictionaryPreference(key)) {
@@ -91,19 +91,19 @@ object SettingsImportPlanBuilder {
                 // dictionary import flow (DictImportPlan). They appearing
                 // in settings preview is a leak — silently drop so the
                 // user sees a clean settings preview.
-                skipped += SkippedKey(key, "dictionary words (separate import flow)")
+                skipped += SkippedKey(key, "dictionary words (separate import flow)", SkipKind.SEPARATE_IMPORT)
                 continue
             }
 
             val rawProposed = parsePrefValue(key, valueElement)
             if (rawProposed == null) {
-                skipped += SkippedKey(key, "unsupported JSON shape")
+                skipped += SkippedKey(key, "unsupported JSON shape", SkipKind.UNREADABLE)
                 continue
             }
 
             val rangeError = SettingsValidation.validate(key, rawProposed)
             if (rangeError != null) {
-                skipped += SkippedKey(key, rangeError)
+                skipped += SkippedKey(key, rangeError, SkipKind.INVALID_VALUE)
                 continue
             }
 
@@ -207,7 +207,7 @@ object SettingsImportPlanBuilder {
                     for (newKey in newKeys) out.addProperty(newKey, percentValue)
                     out.remove(oldKey)
                     removes += oldKey
-                    skipped += SkippedKey(oldKey, "superseded by ${newKeys[0]} + ${newKeys[1]}")
+                    skipped += SkippedKey(oldKey, "superseded by ${newKeys[0]} + ${newKeys[1]}", SkipKind.SUPERSEDED)
                 } catch (_: Exception) {
                     // Malformed value — leave for the validator to reject downstream.
                 }

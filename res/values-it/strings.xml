@@ -1780,4 +1780,31 @@
         <item quantity="many">%1$d g fa</item>
         <item quantity="other">%1$d g fa</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">Impossibile trovare o aprire il file.</string>
+    <string name="io_error_permission_denied">CleverKeys non ha il permesso di accedere a questo file.</string>
+    <string name="io_error_invalid_format">Il file non è nel formato previsto oppure è danneggiato.</string>
+    <string name="io_error_newer_version">Il file è stato creato da una versione più recente di CleverKeys. Aggiorna l\'app e riprova.</string>
+    <string name="io_error_out_of_space">Spazio di archiviazione insufficiente.</string>
+    <string name="io_error_too_large">Il file è più grande di quanto CleverKeys possa importare in sicurezza.</string>
+    <string name="io_error_wrong_password_or_corrupt">Password di backup errata, oppure il file è danneggiato o è stato modificato.</string>
+    <string name="io_error_no_backup_password">Questo backup è crittografato e non è disponibile nessuna password di backup.</string>
+    <string name="io_error_wrong_backup_kind">Questo backup non contiene il tipo di dati che questa importazione si aspetta.</string>
+    <string name="io_error_no_file_picker">Nessuna app disponibile per scegliere i file.</string>
+    <string name="io_error_read_write">Impossibile leggere o scrivere il file.</string>
+    <string name="pack_error_missing_member">Il pacchetto non contiene %1$s.</string>
+    <string name="pack_error_invalid_member">%1$s nel pacchetto è vuoto o danneggiato.</string>
+    <string name="pack_error_invalid_language_code">Il pacchetto dichiara un codice lingua non valido: %1$s</string>
+    <string name="pack_error_unsupported_model">Il pacchetto dichiara un file di modello non supportato: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s supera il limite di %2$d MiB.</string>
+    <string name="pack_error_model_checksum">%1$s non corrisponde al checksum nel manifest del pacchetto.</string>
+    <string name="pack_error_install_failed">Impossibile installare il pacchetto.</string>
+    <string name="gif_pack_error_no_thumbnails">Questo pacchetto usa un vecchio formato senza miniature, quindi le sue GIF non possono essere mostrate. Scarica un pacchetto aggiornato.</string>
+    <string name="gif_pack_error_partial_thumbnails">La copia delle miniature si è interrotta a metà (la memoria potrebbe essere piena). Il pacchetto non è stato installato; libera spazio e riprova.</string>
+    <string name="import_preview_skip_internal">Impostazione interna</string>
+    <string name="import_preview_skip_deprecated">Non più utilizzata</string>
+    <string name="import_preview_skip_separate_import">Ripristinata dall\'importazione del dizionario</string>
+    <string name="import_preview_skip_unreadable">Valore illeggibile</string>
+    <string name="import_preview_skip_invalid_value">Valore non valido o fuori intervallo</string>
+    <string name="import_preview_skip_superseded">Convertita in impostazioni più recenti</string>
 </resources>

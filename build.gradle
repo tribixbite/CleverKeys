@@ -737,6 +737,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.HardcodedUiStringTest',
     // The in-app FAQ names only settings/screens that exist (neural-era settings removed).
     'tribixbite.cleverkeys.FaqContentDriftTest',
+    // Import/export/backup failures show a localized reason, never the raw exception text.
+    'tribixbite.cleverkeys.IoFailureLocalizationTest',
     // Locale-aware language names (replaced the English-only tables; fa/hu device finding).
     'tribixbite.cleverkeys.LanguageDisplayNamesTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',

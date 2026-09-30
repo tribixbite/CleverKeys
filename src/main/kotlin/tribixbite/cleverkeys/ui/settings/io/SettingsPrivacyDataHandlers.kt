@@ -9,14 +9,13 @@ import tribixbite.cleverkeys.SwipePerformanceStats
 import tribixbite.cleverkeys.SettingsActivity
 
 /**
- * "Export failed: <detail>" toast shared by the privacy-data exporters (perf stats, swipe data).
- *
- * TODO(i18n): the detail is the exception message — ours is localized
- *  (privacy_export_open_failed), but I/O and JSON exceptions carry English platform text.
+ * "Export failed: <reason>" toast shared by the privacy-data exporters (perf stats, swipe data).
+ * The reason is the localized [IoFailureClassifier] category; the exception is logged.
  */
 internal fun SettingsActivity.toastExportFailed(e: Exception) {
+    android.util.Log.w(SettingsActivity.TAG, "Privacy data export failed", e)
     Toast.makeText(
-        this, getString(R.string.common_export_failed_detail, e.message.orEmpty()), Toast.LENGTH_SHORT
+        this, getString(R.string.common_export_failed_detail, ioFailureText(e)), Toast.LENGTH_SHORT
     ).show()
 }
 
@@ -55,8 +54,9 @@ internal fun SettingsActivity.loadCollectedDataPage() {
                 collectedDataStats = dataStore.getStatistics()
             }
         } catch (e: Exception) {
+            android.util.Log.w(SettingsActivity.TAG, "Loading collected swipe data failed", e)
             Toast.makeText(
-                _self, getString(R.string.privacy_error_loading_data, e.message.orEmpty()), Toast.LENGTH_SHORT
+                _self, getString(R.string.privacy_error_loading_data, ioFailureText(e)), Toast.LENGTH_SHORT
             ).show()
         }
     }
@@ -71,8 +71,9 @@ internal fun SettingsActivity.viewPerfStats() {
         perfStatsSummary = stats.formatSummary()
         showPerfStatsViewer = true
     } catch (e: Exception) {
+        android.util.Log.w(SettingsActivity.TAG, "Loading performance stats failed", e)
         Toast.makeText(
-            this, getString(R.string.privacy_error_loading_stats, e.message.orEmpty()), Toast.LENGTH_SHORT
+            this, getString(R.string.privacy_error_loading_stats, ioFailureText(e)), Toast.LENGTH_SHORT
         ).show()
     }
 }
@@ -117,9 +118,10 @@ internal fun SettingsActivity.deleteCollectedData(onDeleted: () -> Unit = {}) {
                     ).show()
                     onDeleted()
                 } catch (e: Exception) {
+                    android.util.Log.w(SettingsActivity.TAG, "Deleting collected swipe data failed", e)
                     Toast.makeText(
                         _self,
-                        _self.getString(R.string.privacy_delete_data_error, e.message ?: ""),
+                        _self.getString(R.string.privacy_delete_data_error, _self.ioFailureText(e)),
                         Toast.LENGTH_SHORT
                     ).show()
                 }

@@ -1751,4 +1751,31 @@
         <item quantity="one">pirms %1$d d.</item>
         <item quantity="other">pirms %1$d d.</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">Failu neizdevās atrast vai atvērt.</string>
+    <string name="io_error_permission_denied">CleverKeys nav atļauts piekļūt šim failam.</string>
+    <string name="io_error_invalid_format">Faila formāts nav tāds, kāds gaidīts, vai fails ir bojāts.</string>
+    <string name="io_error_newer_version">Fails ir izveidots ar jaunāku CleverKeys versiju. Atjauniniet lietotni un mēģiniet vēlreiz.</string>
+    <string name="io_error_out_of_space">Nepietiek krātuves vietas.</string>
+    <string name="io_error_too_large">Fails ir lielāks, nekā CleverKeys var droši importēt.</string>
+    <string name="io_error_wrong_password_or_corrupt">Nepareiza dublējuma parole, vai fails ir bojāts vai mainīts.</string>
+    <string name="io_error_no_backup_password">Šis dublējums ir šifrēts, un dublējuma parole nav pieejama.</string>
+    <string name="io_error_wrong_backup_kind">Šajā dublējumā nav tāda veida datu, kādus gaida šī importēšana.</string>
+    <string name="io_error_no_file_picker">Nav pieejamas lietotnes failu izvēlei.</string>
+    <string name="io_error_read_write">Failu neizdevās nolasīt vai ierakstīt.</string>
+    <string name="pack_error_missing_member">Pakotnē nav %1$s.</string>
+    <string name="pack_error_invalid_member">Pakotnes %1$s ir tukšs vai bojāts.</string>
+    <string name="pack_error_invalid_language_code">Pakotnē norādīts nederīgs valodas kods: %1$s</string>
+    <string name="pack_error_unsupported_model">Pakotnē norādīts neatbalstīts modeļa fails: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s pārsniedz %2$d MiB ierobežojumu.</string>
+    <string name="pack_error_model_checksum">%1$s neatbilst kontrolsummai pakotnes manifestā.</string>
+    <string name="pack_error_install_failed">Pakotni neizdevās instalēt.</string>
+    <string name="gif_pack_error_no_thumbnails">Šī pakotne izmanto vecu formātu bez sīktēliem, tāpēc tās GIF nevar parādīt. Lejupielādējiet aktuālu pakotni.</string>
+    <string name="gif_pack_error_partial_thumbnails">Sīktēlu kopēšana neizdevās pusceļā (iespējams, krātuve ir pilna). Pakotne netika instalēta; atbrīvojiet vietu un mēģiniet vēlreiz.</string>
+    <string name="import_preview_skip_internal">Iekšējs iestatījums</string>
+    <string name="import_preview_skip_deprecated">Vairs netiek lietots</string>
+    <string name="import_preview_skip_separate_import">Tiek atjaunots ar vārdnīcas importēšanu</string>
+    <string name="import_preview_skip_unreadable">Nenolasāma vērtība</string>
+    <string name="import_preview_skip_invalid_value">Nederīga vērtība vai vērtība ārpus diapazona</string>
+    <string name="import_preview_skip_superseded">Pārveidots jaunākos iestatījumos</string>
 </resources>

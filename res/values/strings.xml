@@ -2099,4 +2099,31 @@
         <item quantity="one">%1$dd ago</item>
         <item quantity="other">%1$dd ago</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">The file could not be found or opened.</string>
+    <string name="io_error_permission_denied">CleverKeys is not allowed to access this file.</string>
+    <string name="io_error_invalid_format">The file is not in the expected format, or it is damaged.</string>
+    <string name="io_error_newer_version">The file was made by a newer version of CleverKeys. Update the app and try again.</string>
+    <string name="io_error_out_of_space">Not enough storage space.</string>
+    <string name="io_error_too_large">The file is larger than CleverKeys can safely import.</string>
+    <string name="io_error_wrong_password_or_corrupt">Wrong backup password, or the file is damaged or was altered.</string>
+    <string name="io_error_no_backup_password">This backup is encrypted and no backup password is available.</string>
+    <string name="io_error_wrong_backup_kind">This backup does not contain the kind of data this import expects.</string>
+    <string name="io_error_no_file_picker">No app is available to choose files.</string>
+    <string name="io_error_read_write">The file could not be read or written.</string>
+    <string name="pack_error_missing_member">The pack does not contain %1$s.</string>
+    <string name="pack_error_invalid_member">%1$s in the pack is empty or damaged.</string>
+    <string name="pack_error_invalid_language_code">The pack declares an invalid language code: %1$s</string>
+    <string name="pack_error_unsupported_model">The pack declares an unsupported model file: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s is larger than the %2$d MiB limit.</string>
+    <string name="pack_error_model_checksum">%1$s does not match the checksum in the pack\'s manifest.</string>
+    <string name="pack_error_install_failed">The pack could not be installed.</string>
+    <string name="gif_pack_error_no_thumbnails">This pack uses an old format without thumbnails, so its GIFs cannot be shown. Download a current pack.</string>
+    <string name="gif_pack_error_partial_thumbnails">Copying the thumbnails failed partway (storage may be full). The pack was not installed; free up space and try again.</string>
+    <string name="import_preview_skip_internal">Internal setting</string>
+    <string name="import_preview_skip_deprecated">No longer used</string>
+    <string name="import_preview_skip_separate_import">Restored by the dictionary import</string>
+    <string name="import_preview_skip_unreadable">Unreadable value</string>
+    <string name="import_preview_skip_invalid_value">Invalid or out-of-range value</string>
+    <string name="import_preview_skip_superseded">Converted to newer settings</string>
 </resources>

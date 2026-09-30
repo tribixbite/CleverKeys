@@ -1781,4 +1781,31 @@
         <item quantity="many">před %1$d d</item>
         <item quantity="other">před %1$d d</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">Soubor se nepodařilo najít ani otevřít.</string>
+    <string name="io_error_permission_denied">CleverKeys nemá oprávnění k přístupu k tomuto souboru.</string>
+    <string name="io_error_invalid_format">Soubor nemá očekávaný formát, nebo je poškozený.</string>
+    <string name="io_error_newer_version">Soubor vytvořila novější verze CleverKeys. Aktualizujte aplikaci a zkuste to znovu.</string>
+    <string name="io_error_out_of_space">Nedostatek místa v úložišti.</string>
+    <string name="io_error_too_large">Soubor je větší, než může CleverKeys bezpečně importovat.</string>
+    <string name="io_error_wrong_password_or_corrupt">Nesprávné heslo zálohy, nebo je soubor poškozený či pozměněný.</string>
+    <string name="io_error_no_backup_password">Tato záloha je šifrovaná a není k dispozici žádné heslo zálohy.</string>
+    <string name="io_error_wrong_backup_kind">Tato záloha neobsahuje data, která tento import očekává.</string>
+    <string name="io_error_no_file_picker">Není k dispozici žádná aplikace pro výběr souborů.</string>
+    <string name="io_error_read_write">Soubor se nepodařilo přečíst ani zapsat.</string>
+    <string name="pack_error_missing_member">Balíček neobsahuje %1$s.</string>
+    <string name="pack_error_invalid_member">%1$s v balíčku je prázdný nebo poškozený.</string>
+    <string name="pack_error_invalid_language_code">Balíček uvádí neplatný kód jazyka: %1$s</string>
+    <string name="pack_error_unsupported_model">Balíček uvádí nepodporovaný soubor modelu: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s je větší než limit %2$d MiB.</string>
+    <string name="pack_error_model_checksum">%1$s neodpovídá kontrolnímu součtu v manifestu balíčku.</string>
+    <string name="pack_error_install_failed">Balíček se nepodařilo nainstalovat.</string>
+    <string name="gif_pack_error_no_thumbnails">Tento balíček používá starý formát bez náhledů, takže jeho GIFy nelze zobrazit. Stáhněte si aktuální balíček.</string>
+    <string name="gif_pack_error_partial_thumbnails">Kopírování náhledů selhalo v polovině (úložiště může být plné). Balíček nebyl nainstalován; uvolněte místo a zkuste to znovu.</string>
+    <string name="import_preview_skip_internal">Interní nastavení</string>
+    <string name="import_preview_skip_deprecated">Již se nepoužívá</string>
+    <string name="import_preview_skip_separate_import">Obnoví se importem slovníku</string>
+    <string name="import_preview_skip_unreadable">Nečitelná hodnota</string>
+    <string name="import_preview_skip_invalid_value">Neplatná hodnota nebo hodnota mimo rozsah</string>
+    <string name="import_preview_skip_superseded">Převedeno na novější nastavení</string>
 </resources>

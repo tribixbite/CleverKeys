@@ -1750,4 +1750,31 @@
         <item quantity="many">il y a %1$d j</item>
         <item quantity="other">il y a %1$d j</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">Le fichier est introuvable ou n\'a pas pu être ouvert.</string>
+    <string name="io_error_permission_denied">CleverKeys n\'est pas autorisé à accéder à ce fichier.</string>
+    <string name="io_error_invalid_format">Le fichier n\'est pas au format attendu ou il est endommagé.</string>
+    <string name="io_error_newer_version">Le fichier a été créé par une version plus récente de CleverKeys. Mettez l\'application à jour et réessayez.</string>
+    <string name="io_error_out_of_space">Espace de stockage insuffisant.</string>
+    <string name="io_error_too_large">Le fichier est plus volumineux que ce que CleverKeys peut importer en toute sécurité.</string>
+    <string name="io_error_wrong_password_or_corrupt">Mot de passe de sauvegarde incorrect, ou le fichier est endommagé ou a été modifié.</string>
+    <string name="io_error_no_backup_password">Cette sauvegarde est chiffrée et aucun mot de passe de sauvegarde n\'est disponible.</string>
+    <string name="io_error_wrong_backup_kind">Cette sauvegarde ne contient pas le type de données attendu par cette importation.</string>
+    <string name="io_error_no_file_picker">Aucune application n\'est disponible pour choisir des fichiers.</string>
+    <string name="io_error_read_write">Le fichier n\'a pas pu être lu ou écrit.</string>
+    <string name="pack_error_missing_member">Le pack ne contient pas %1$s.</string>
+    <string name="pack_error_invalid_member">%1$s dans le pack est vide ou endommagé.</string>
+    <string name="pack_error_invalid_language_code">Le pack déclare un code de langue non valide : %1$s</string>
+    <string name="pack_error_unsupported_model">Le pack déclare un fichier de modèle non pris en charge : %1$s</string>
+    <string name="pack_error_model_too_large">%1$s dépasse la limite de %2$d Mio.</string>
+    <string name="pack_error_model_checksum">%1$s ne correspond pas à la somme de contrôle du manifeste du pack.</string>
+    <string name="pack_error_install_failed">Le pack n\'a pas pu être installé.</string>
+    <string name="gif_pack_error_no_thumbnails">Ce pack utilise un ancien format sans miniatures ; ses GIF ne peuvent donc pas être affichés. Téléchargez un pack récent.</string>
+    <string name="gif_pack_error_partial_thumbnails">La copie des miniatures a échoué en cours de route (le stockage est peut-être plein). Le pack n\'a pas été installé ; libérez de l\'espace et réessayez.</string>
+    <string name="import_preview_skip_internal">Paramètre interne</string>
+    <string name="import_preview_skip_deprecated">N\'est plus utilisé</string>
+    <string name="import_preview_skip_separate_import">Restauré par l\'importation du dictionnaire</string>
+    <string name="import_preview_skip_unreadable">Valeur illisible</string>
+    <string name="import_preview_skip_invalid_value">Valeur non valide ou hors plage</string>
+    <string name="import_preview_skip_superseded">Converti en paramètres plus récents</string>
 </resources>

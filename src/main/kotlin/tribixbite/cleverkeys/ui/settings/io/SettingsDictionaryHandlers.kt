@@ -52,7 +52,7 @@ internal fun SettingsActivity.performDictionaryExport(uri: Uri, plaintextOptOut:
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Dictionary export failed", e)
             showIoFailure(
-                R.string.dictionary_backup_export_failed_title, R.string.dictionary_backup_export_failed, e.message
+                R.string.dictionary_backup_export_failed_title, R.string.dictionary_backup_export_failed, e
             )
         } finally {
             backupRestoreViewModel.isProcessing = false
@@ -85,14 +85,17 @@ internal fun SettingsActivity.performDictionaryImport(uri: Uri, retryPassphrase:
                 backupRestoreViewModel.dictPreviewPlan = plan
             }
         } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
-            promptForPassphrase(e, retryPassphrase) { entered ->
+            promptForPassphrase(
+                e, retryPassphrase,
+                R.string.backup_result_import_failed_title, R.string.dictionary_backup_read_failed,
+            ) { entered ->
                 backupRestoreManager.setImportPassphraseOverride(entered)
                 performDictionaryImport(uri, entered)
             }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Build dictionary plan failed", e)
             showIoFailure(
-                R.string.backup_result_import_failed_title, R.string.dictionary_backup_read_failed, e.message
+                R.string.backup_result_import_failed_title, R.string.dictionary_backup_read_failed, e
             )
         } finally {
             backupRestoreViewModel.isProcessing = false
@@ -126,7 +129,7 @@ internal fun SettingsActivity.applyPlannedDictionaries(
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Apply dictionary plan failed", e)
             showIoFailure(
-                R.string.backup_result_import_failed_title, R.string.dictionary_backup_apply_failed, e.message
+                R.string.backup_result_import_failed_title, R.string.dictionary_backup_apply_failed, e
             )
         } finally {
             backupRestoreViewModel.isProcessing = false

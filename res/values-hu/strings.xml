@@ -1705,4 +1705,31 @@
         <item quantity="one">%1$d napja</item>
         <item quantity="other">%1$d napja</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">A fájl nem található, vagy nem nyitható meg.</string>
+    <string name="io_error_permission_denied">A CleverKeys nem férhet hozzá ehhez a fájlhoz.</string>
+    <string name="io_error_invalid_format">A fájl nem a várt formátumú, vagy sérült.</string>
+    <string name="io_error_newer_version">A fájlt a CleverKeys egy újabb verziója készítette. Frissítse az alkalmazást, és próbálja újra.</string>
+    <string name="io_error_out_of_space">Nincs elég tárhely.</string>
+    <string name="io_error_too_large">A fájl nagyobb annál, amit a CleverKeys biztonságosan importálni tud.</string>
+    <string name="io_error_wrong_password_or_corrupt">Hibás biztonsági mentési jelszó, vagy a fájl sérült, illetve módosították.</string>
+    <string name="io_error_no_backup_password">Ez a biztonsági mentés titkosított, és nincs elérhető biztonsági mentési jelszó.</string>
+    <string name="io_error_wrong_backup_kind">Ez a biztonsági mentés nem az ehhez az importáláshoz szükséges adatokat tartalmazza.</string>
+    <string name="io_error_no_file_picker">Nincs elérhető alkalmazás fájlok kiválasztásához.</string>
+    <string name="io_error_read_write">A fájl nem olvasható vagy nem írható.</string>
+    <string name="pack_error_missing_member">A csomag nem tartalmazza ezt: %1$s.</string>
+    <string name="pack_error_invalid_member">A csomagban lévő %1$s üres vagy sérült.</string>
+    <string name="pack_error_invalid_language_code">A csomag érvénytelen nyelvkódot ad meg: %1$s</string>
+    <string name="pack_error_unsupported_model">A csomag nem támogatott modellfájlt ad meg: %1$s</string>
+    <string name="pack_error_model_too_large">A(z) %1$s nagyobb a(z) %2$d MiB-os korlátnál.</string>
+    <string name="pack_error_model_checksum">A(z) %1$s nem egyezik a csomag manifestjében szereplő ellenőrzőösszeggel.</string>
+    <string name="pack_error_install_failed">A csomag nem telepíthető.</string>
+    <string name="gif_pack_error_no_thumbnails">Ez a csomag régi, bélyegképek nélküli formátumú, ezért a GIF-jei nem jeleníthetők meg. Töltsön le egy aktuális csomagot.</string>
+    <string name="gif_pack_error_partial_thumbnails">A bélyegképek másolása félúton meghiúsult (lehet, hogy megtelt a tárhely). A csomag nem lett telepítve; szabadítson fel helyet, és próbálja újra.</string>
+    <string name="import_preview_skip_internal">Belső beállítás</string>
+    <string name="import_preview_skip_deprecated">Már nincs használatban</string>
+    <string name="import_preview_skip_separate_import">A szótár importálása állítja vissza</string>
+    <string name="import_preview_skip_unreadable">Olvashatatlan érték</string>
+    <string name="import_preview_skip_invalid_value">Érvénytelen vagy tartományon kívüli érték</string>
+    <string name="import_preview_skip_superseded">Újabb beállításokká alakítva</string>
 </resources>

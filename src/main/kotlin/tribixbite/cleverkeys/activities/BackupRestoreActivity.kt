@@ -137,7 +137,12 @@ class BackupRestoreActivity : ComponentActivity() {
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Error initializing", e)
             Toast.makeText(
-                this, getString(R.string.backup_headless_init_failed, e.message.orEmpty()), Toast.LENGTH_SHORT
+                this,
+                getString(
+                    R.string.backup_headless_init_failed,
+                    getString(tribixbite.cleverkeys.IoFailureClassifier.classify(e).messageRes),
+                ),
+                Toast.LENGTH_SHORT
             ).show()
             finish()
             return

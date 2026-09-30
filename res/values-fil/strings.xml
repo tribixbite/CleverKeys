@@ -1711,4 +1711,31 @@
         <item quantity="one">%1$dd ang nakalipas</item>
         <item quantity="other">%1$dd ang nakalipas</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">Hindi mahanap o mabuksan ang file.</string>
+    <string name="io_error_permission_denied">Walang pahintulot ang CleverKeys na i-access ang file na ito.</string>
+    <string name="io_error_invalid_format">Wala sa inaasahang format ang file, o sira ito.</string>
+    <string name="io_error_newer_version">Ginawa ang file ng mas bagong bersyon ng CleverKeys. I-update ang app at subukan ulit.</string>
+    <string name="io_error_out_of_space">Kulang ang storage space.</string>
+    <string name="io_error_too_large">Mas malaki ang file kaysa sa kayang ligtas na i-import ng CleverKeys.</string>
+    <string name="io_error_wrong_password_or_corrupt">Maling password ng backup, o sira o binago ang file.</string>
+    <string name="io_error_no_backup_password">Naka-encrypt ang backup na ito at walang available na password ng backup.</string>
+    <string name="io_error_wrong_backup_kind">Hindi naglalaman ang backup na ito ng uri ng data na inaasahan ng import na ito.</string>
+    <string name="io_error_no_file_picker">Walang available na app para pumili ng mga file.</string>
+    <string name="io_error_read_write">Hindi mabasa o maisulat ang file.</string>
+    <string name="pack_error_missing_member">Walang %1$s ang pack.</string>
+    <string name="pack_error_invalid_member">Walang laman o sira ang %1$s sa pack.</string>
+    <string name="pack_error_invalid_language_code">Di-wastong language code ang idineklara ng pack: %1$s</string>
+    <string name="pack_error_unsupported_model">Hindi sinusuportahang model file ang idineklara ng pack: %1$s</string>
+    <string name="pack_error_model_too_large">Mas malaki ang %1$s kaysa sa limitasyong %2$d MiB.</string>
+    <string name="pack_error_model_checksum">Hindi tugma ang %1$s sa checksum sa manifest ng pack.</string>
+    <string name="pack_error_install_failed">Hindi ma-install ang pack.</string>
+    <string name="gif_pack_error_no_thumbnails">Lumang format na walang thumbnail ang pack na ito, kaya hindi maipapakita ang mga GIF nito. Mag-download ng kasalukuyang pack.</string>
+    <string name="gif_pack_error_partial_thumbnails">Pumalya ang pagkopya ng mga thumbnail sa kalagitnaan (maaaring puno ang storage). Hindi na-install ang pack; magbakante ng espasyo at subukan ulit.</string>
+    <string name="import_preview_skip_internal">Internal na setting</string>
+    <string name="import_preview_skip_deprecated">Hindi na ginagamit</string>
+    <string name="import_preview_skip_separate_import">Ibinabalik ng import ng diksyunaryo</string>
+    <string name="import_preview_skip_unreadable">Hindi mabasang value</string>
+    <string name="import_preview_skip_invalid_value">Di-wasto o lampas-sa-saklaw na value</string>
+    <string name="import_preview_skip_superseded">Na-convert sa mas bagong mga setting</string>
 </resources>

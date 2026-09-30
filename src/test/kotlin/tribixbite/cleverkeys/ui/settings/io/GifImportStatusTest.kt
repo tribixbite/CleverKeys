@@ -38,9 +38,12 @@ class GifImportStatusTest {
     // ── behaviour: the variant decides, in every language ────────────────────────────
 
     /**
-     * The regression itself. `GifPackManager` surfaces `Exception.message` and
-     * `ContentResolver`/zip failures straight through, and those are localized by the platform —
-     * so this is the shipping case, not a hypothetical future one.
+     * The regression itself. A failure is classified by its result VARIANT: whatever text the
+     * log message carries (English, or a ROM-localized platform message wrapped by
+     * `PackImportFailure.fromException`), the status is Failed.
+     *
+     * Since 2026-09-30 the user sees the typed reason rendered through [ResultText], never the
+     * raw message: the English resolver here yields the `res/values` sentence for the reason.
      */
     @Test
     fun `a failure classifies as a failure whatever language its message is in`() {
@@ -51,8 +54,11 @@ class GifImportStatusTest {
             "无法打开文件",                                  // zh
         )
         for (message in messages) {
+            val failure = tribixbite.cleverkeys.PackImportFailure.Io(
+                tribixbite.cleverkeys.IoFailureReason.FILE_NOT_FOUND, message
+            )
             val status = GifImportStatus.forImportResult(
-                tribixbite.cleverkeys.gif.GifPackImportResult.Error(message), EnglishResourceText
+                tribixbite.cleverkeys.gif.GifPackImportResult.Error(failure), EnglishResourceText
             )
             assertWithMessage(
                 "ARC-075: '$message' is a failed import and must render as one; the pre-fix " +
@@ -61,9 +67,21 @@ class GifImportStatusTest {
             ).that(status).isInstanceOf(GifImportStatus.Failed::class.java)
             assertWithMessage("the pre-fix English-prefix rule misses this message entirely")
                 .that(message.startsWith("Error")).isFalse()
-            assertWithMessage("the message must reach the user exactly as produced")
-                .that(status.message).isEqualTo(message)
+            assertWithMessage("the user sees the localized reason, not the raw log message")
+                .that(status.message).isEqualTo("The file could not be found or opened.")
         }
+    }
+
+    @Test
+    fun `a typed GIF failure renders its own localized sentence`() {
+        val status = GifImportStatus.forImportResult(
+            tribixbite.cleverkeys.gif.GifPackImportResult.Error(
+                tribixbite.cleverkeys.PackImportFailure.MissingMember("manifest.json")
+            ),
+            EnglishResourceText,
+        )
+        assertThat(status).isInstanceOf(GifImportStatus.Failed::class.java)
+        assertThat(status.message).isEqualTo("The pack does not contain manifest.json.")
     }
 
     @Test

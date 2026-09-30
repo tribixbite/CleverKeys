@@ -1758,4 +1758,31 @@
         <item quantity="many">hace %1$d d</item>
         <item quantity="other">hace %1$d d</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">No se ha podido encontrar ni abrir el archivo.</string>
+    <string name="io_error_permission_denied">CleverKeys no tiene permiso para acceder a este archivo.</string>
+    <string name="io_error_invalid_format">El archivo no tiene el formato esperado o está dañado.</string>
+    <string name="io_error_newer_version">El archivo se creó con una versión más reciente de CleverKeys. Actualiza la aplicación e inténtalo de nuevo.</string>
+    <string name="io_error_out_of_space">No hay suficiente espacio de almacenamiento.</string>
+    <string name="io_error_too_large">El archivo es más grande de lo que CleverKeys puede importar de forma segura.</string>
+    <string name="io_error_wrong_password_or_corrupt">Contraseña de copia de seguridad incorrecta, o el archivo está dañado o se ha modificado.</string>
+    <string name="io_error_no_backup_password">Esta copia de seguridad está cifrada y no hay ninguna contraseña de copia de seguridad disponible.</string>
+    <string name="io_error_wrong_backup_kind">Esta copia de seguridad no contiene el tipo de datos que espera esta importación.</string>
+    <string name="io_error_no_file_picker">No hay ninguna aplicación disponible para elegir archivos.</string>
+    <string name="io_error_read_write">No se ha podido leer ni escribir el archivo.</string>
+    <string name="pack_error_missing_member">El paquete no contiene %1$s.</string>
+    <string name="pack_error_invalid_member">%1$s del paquete está vacío o dañado.</string>
+    <string name="pack_error_invalid_language_code">El paquete declara un código de idioma no válido: %1$s</string>
+    <string name="pack_error_unsupported_model">El paquete declara un archivo de modelo no compatible: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s supera el límite de %2$d MiB.</string>
+    <string name="pack_error_model_checksum">%1$s no coincide con la suma de comprobación del manifiesto del paquete.</string>
+    <string name="pack_error_install_failed">No se ha podido instalar el paquete.</string>
+    <string name="gif_pack_error_no_thumbnails">Este paquete usa un formato antiguo sin miniaturas, así que sus GIF no se pueden mostrar. Descarga un paquete actual.</string>
+    <string name="gif_pack_error_partial_thumbnails">La copia de las miniaturas falló a medias (puede que el almacenamiento esté lleno). El paquete no se ha instalado; libera espacio e inténtalo de nuevo.</string>
+    <string name="import_preview_skip_internal">Ajuste interno</string>
+    <string name="import_preview_skip_deprecated">Ya no se usa</string>
+    <string name="import_preview_skip_separate_import">Se restaura con la importación del diccionario</string>
+    <string name="import_preview_skip_unreadable">Valor ilegible</string>
+    <string name="import_preview_skip_invalid_value">Valor no válido o fuera de rango</string>
+    <string name="import_preview_skip_superseded">Convertido a ajustes más recientes</string>
 </resources>

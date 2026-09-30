@@ -1,5 +1,8 @@
 package tribixbite.cleverkeys.backup.crypto
 
+import tribixbite.cleverkeys.ClassifiedIoException
+import tribixbite.cleverkeys.IoFailureReason
+
 /**
  * Thrown for structural / header-level problems with a `CKENC1` container
  * (bad magic, unsupported version, unknown KDF id, out-of-range iteration count,
@@ -7,8 +10,15 @@ package tribixbite.cleverkeys.backup.crypto
  * ([javax.crypto.AEADBadTagException]) so callers can produce the right message:
  * header problems have their own copy, while wrong-passphrase and tamper both
  * surface as the AEAD exception (which is deliberately *not* wrapped by this type).
+ *
+ * Carries an [IoFailureReason] so the settings UI can say what went wrong in the user's language:
+ * a header from a newer app version is [IoFailureReason.NEWER_VERSION], everything else is
+ * [IoFailureReason.INVALID_FORMAT]. The message stays English, for the log.
  */
-class BackupFormatException(message: String) : Exception(message)
+class BackupFormatException(
+    message: String,
+    reason: IoFailureReason = IoFailureReason.INVALID_FORMAT,
+) : ClassifiedIoException(reason, message)
 
 /**
  * The `CKENC1` encrypted-backup container format (design §5).
@@ -165,7 +175,8 @@ object EncryptedBackupFormat {
         val version = bytes[OFF_VERSION]
         if (version > FORMAT_VERSION) {
             throw BackupFormatException(
-                "This backup is from a newer CleverKeys version (format v$version); update the app to restore it"
+                "This backup is from a newer CleverKeys version (format v$version); update the app to restore it",
+                IoFailureReason.NEWER_VERSION,
             )
         }
         if (version < FORMAT_VERSION) {

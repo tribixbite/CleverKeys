@@ -162,6 +162,8 @@ class SettingsImportPlanBuilderTest {
         )
         plan.parseSkippedKeys.forEach {
             assertThat(it.reason).isEqualTo("internal preference")
+            // The preview shows the typed kind (localized), not the English reason.
+            assertThat(it.kind).isEqualTo(SkipKind.INTERNAL)
         }
     }
 
@@ -833,6 +835,7 @@ class SettingsImportPlanBuilderTest {
         assertThat(plan.changes.map { it.key }).doesNotContain("finger_occlusion_offset")
         val skipped = plan.parseSkippedKeys.single { it.key == "finger_occlusion_offset" }
         assertThat(skipped.reason).isEqualTo("out of range, got 40")
+        assertThat(skipped.kind).isEqualTo(SkipKind.INVALID_VALUE)
     }
 
     @Test

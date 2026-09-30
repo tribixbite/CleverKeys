@@ -1,5 +1,8 @@
 package tribixbite.cleverkeys.backup.crypto
 
+import tribixbite.cleverkeys.ClassifiedIoException
+import tribixbite.cleverkeys.IoFailureReason
+
 import java.io.InputStream
 import java.io.IOException
 import java.io.OutputStream
@@ -297,8 +300,9 @@ object BackupCrypto {
                 if (chunk == null || chunk.isEmpty()) return
                 plaintextBytes += chunk.size
                 if (plaintextBytes > maxPlaintextBytes) {
-                    throw IOException(
-                        "Decrypted backup exceeds $maxPlaintextBytes byte limit"
+                    throw ClassifiedIoException(
+                        IoFailureReason.TOO_LARGE,
+                        "Decrypted backup exceeds $maxPlaintextBytes byte limit",
                     )
                 }
                 output.write(chunk)
@@ -310,8 +314,9 @@ object BackupCrypto {
                 if (read > 0) {
                     containerBytes += read
                     if (containerBytes > maxContainerBytes) {
-                        throw IOException(
-                            "Encrypted backup exceeds $maxContainerBytes byte limit"
+                        throw ClassifiedIoException(
+                            IoFailureReason.TOO_LARGE,
+                            "Encrypted backup exceeds $maxContainerBytes byte limit",
                         )
                     }
                     writePlaintext(cipher.update(buffer, 0, read))

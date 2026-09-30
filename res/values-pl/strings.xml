@@ -1791,4 +1791,31 @@
         <item quantity="many">%1$d d. temu</item>
         <item quantity="other">%1$d d. temu</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">Nie udało się znaleźć ani otworzyć pliku.</string>
+    <string name="io_error_permission_denied">CleverKeys nie ma uprawnień dostępu do tego pliku.</string>
+    <string name="io_error_invalid_format">Plik nie ma oczekiwanego formatu lub jest uszkodzony.</string>
+    <string name="io_error_newer_version">Plik został utworzony w nowszej wersji CleverKeys. Zaktualizuj aplikację i spróbuj ponownie.</string>
+    <string name="io_error_out_of_space">Za mało miejsca w pamięci.</string>
+    <string name="io_error_too_large">Plik jest większy, niż CleverKeys może bezpiecznie zaimportować.</string>
+    <string name="io_error_wrong_password_or_corrupt">Nieprawidłowe hasło kopii zapasowej albo plik jest uszkodzony lub zmieniony.</string>
+    <string name="io_error_no_backup_password">Ta kopia zapasowa jest zaszyfrowana, a hasło kopii zapasowej jest niedostępne.</string>
+    <string name="io_error_wrong_backup_kind">Ta kopia zapasowa nie zawiera danych, których oczekuje ten import.</string>
+    <string name="io_error_no_file_picker">Brak aplikacji do wybierania plików.</string>
+    <string name="io_error_read_write">Nie udało się odczytać ani zapisać pliku.</string>
+    <string name="pack_error_missing_member">Pakiet nie zawiera %1$s.</string>
+    <string name="pack_error_invalid_member">%1$s w pakiecie jest pusty lub uszkodzony.</string>
+    <string name="pack_error_invalid_language_code">Pakiet deklaruje nieprawidłowy kod języka: %1$s</string>
+    <string name="pack_error_unsupported_model">Pakiet deklaruje nieobsługiwany plik modelu: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s przekracza limit %2$d MiB.</string>
+    <string name="pack_error_model_checksum">%1$s nie zgadza się z sumą kontrolną w manifeście pakietu.</string>
+    <string name="pack_error_install_failed">Nie udało się zainstalować pakietu.</string>
+    <string name="gif_pack_error_no_thumbnails">Ten pakiet ma stary format bez miniatur, więc jego GIF-ów nie da się wyświetlić. Pobierz aktualny pakiet.</string>
+    <string name="gif_pack_error_partial_thumbnails">Kopiowanie miniatur przerwało się w połowie (pamięć może być pełna). Pakiet nie został zainstalowany; zwolnij miejsce i spróbuj ponownie.</string>
+    <string name="import_preview_skip_internal">Ustawienie wewnętrzne</string>
+    <string name="import_preview_skip_deprecated">Już nieużywane</string>
+    <string name="import_preview_skip_separate_import">Przywracane przez import słownika</string>
+    <string name="import_preview_skip_unreadable">Nieczytelna wartość</string>
+    <string name="import_preview_skip_invalid_value">Nieprawidłowa wartość lub spoza zakresu</string>
+    <string name="import_preview_skip_superseded">Przekształcone w nowsze ustawienia</string>
 </resources>

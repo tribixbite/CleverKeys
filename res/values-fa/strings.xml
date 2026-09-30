@@ -1737,4 +1737,31 @@
         <item quantity="one">%1$d روز پیش</item>
         <item quantity="other">%1$d روز پیش</item>
     </plurals>
+    <!-- 2026-09-30 i18n: typed import/export/backup failure reasons and settings-import skip kinds (reviewer=model) -->
+    <string name="io_error_file_not_found">فایل پیدا نشد یا باز نشد.</string>
+    <string name="io_error_permission_denied">CleverKeys اجازهٔ دسترسی به این فایل را ندارد.</string>
+    <string name="io_error_invalid_format">قالب فایل آن چیزی نیست که انتظار می‌رفت، یا فایل آسیب دیده است.</string>
+    <string name="io_error_newer_version">این فایل با نسخهٔ جدیدتری از CleverKeys ساخته شده است. برنامه را به‌روزرسانی کنید و دوباره امتحان کنید.</string>
+    <string name="io_error_out_of_space">فضای ذخیره‌سازی کافی نیست.</string>
+    <string name="io_error_too_large">فایل بزرگ‌تر از آن است که CleverKeys بتواند آن را با اطمینان وارد کند.</string>
+    <string name="io_error_wrong_password_or_corrupt">گذرواژهٔ پشتیبان نادرست است، یا فایل آسیب دیده یا تغییر کرده است.</string>
+    <string name="io_error_no_backup_password">این پشتیبان رمزگذاری شده است و هیچ گذرواژهٔ پشتیبانی در دسترس نیست.</string>
+    <string name="io_error_wrong_backup_kind">این پشتیبان نوع داده‌ای را که این واردسازی انتظار دارد در بر ندارد.</string>
+    <string name="io_error_no_file_picker">هیچ برنامه‌ای برای انتخاب فایل در دسترس نیست.</string>
+    <string name="io_error_read_write">خواندن یا نوشتن فایل ممکن نشد.</string>
+    <string name="pack_error_missing_member">بسته شامل %1$s نیست.</string>
+    <string name="pack_error_invalid_member">%1$s در بسته خالی یا آسیب‌دیده است.</string>
+    <string name="pack_error_invalid_language_code">بسته کد زبان نامعتبری اعلام کرده است: %1$s</string>
+    <string name="pack_error_unsupported_model">بسته فایل مدل پشتیبانی‌نشده‌ای اعلام کرده است: %1$s</string>
+    <string name="pack_error_model_too_large">%1$s از سقف %2$d مبی‌بایت بزرگ‌تر است.</string>
+    <string name="pack_error_model_checksum">%1$s با جمع آزمایی ثبت‌شده در مانیفست بسته مطابقت ندارد.</string>
+    <string name="pack_error_install_failed">نصب بسته ممکن نشد.</string>
+    <string name="gif_pack_error_no_thumbnails">این بسته قالب قدیمی و بدون تصویرک دارد، بنابراین گیف‌های آن نمایش داده نمی‌شوند. یک بستهٔ جدید بارگیری کنید.</string>
+    <string name="gif_pack_error_partial_thumbnails">رونوشت‌برداری از تصویرک‌ها در میانهٔ کار ناموفق بود (شاید حافظه پر باشد). بسته نصب نشد؛ فضا آزاد کنید و دوباره امتحان کنید.</string>
+    <string name="import_preview_skip_internal">تنظیم داخلی</string>
+    <string name="import_preview_skip_deprecated">دیگر استفاده نمی‌شود</string>
+    <string name="import_preview_skip_separate_import">با واردسازی واژه‌نامه بازیابی می‌شود</string>
+    <string name="import_preview_skip_unreadable">مقدار ناخوانا</string>
+    <string name="import_preview_skip_invalid_value">مقدار نامعتبر یا خارج از محدوده</string>
+    <string name="import_preview_skip_superseded">به تنظیمات جدیدتر تبدیل شد</string>
 </resources>

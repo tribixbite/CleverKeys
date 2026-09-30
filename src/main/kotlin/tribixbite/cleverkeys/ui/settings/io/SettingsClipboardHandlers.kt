@@ -184,7 +184,7 @@ internal fun SettingsActivity.performClipboardExport(uri: Uri, plaintextOptOut: 
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard export failed", e)
             showIoFailure(
-                R.string.clipboard_backup_export_failed_title, R.string.clipboard_backup_export_failed, e.message
+                R.string.clipboard_backup_export_failed_title, R.string.clipboard_backup_export_failed, e
             )
         } finally {
             backupRestoreViewModel.isProcessing = false
@@ -212,14 +212,17 @@ internal fun SettingsActivity.performClipboardImport(uri: Uri, retryPassphrase: 
             }
             showIoResult(getString(R.string.clipboard_backup_import_success_title), message)
         } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
-            promptForPassphrase(e, retryPassphrase) { entered ->
+            promptForPassphrase(
+                e, retryPassphrase,
+                R.string.clipboard_backup_import_failed_title, R.string.clipboard_backup_import_failed,
+            ) { entered ->
                 backupRestoreManager.setImportPassphraseOverride(entered)
                 performClipboardImport(uri, entered)
             }
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard import failed", e)
             showIoFailure(
-                R.string.clipboard_backup_import_failed_title, R.string.clipboard_backup_import_failed, e.message
+                R.string.clipboard_backup_import_failed_title, R.string.clipboard_backup_import_failed, e
             )
         } finally {
             backupRestoreViewModel.isProcessing = false
@@ -270,7 +273,7 @@ internal fun SettingsActivity.performClipboardZipExport(uri: Uri, plaintextOptOu
             showIoFailure(
                 R.string.clipboard_backup_zip_export_failed_title,
                 R.string.clipboard_backup_zip_export_failed,
-                e.message,
+                e,
             )
         } finally {
             backupRestoreViewModel.isProcessing = false
@@ -299,7 +302,10 @@ internal fun SettingsActivity.performClipboardZipImport(uri: Uri, retryPassphras
             }
             showIoResult(getString(R.string.clipboard_backup_zip_import_success_title), message)
         } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
-            promptForPassphrase(e, retryPassphrase) { entered ->
+            promptForPassphrase(
+                e, retryPassphrase,
+                R.string.clipboard_backup_zip_import_failed_title, R.string.clipboard_backup_zip_import_failed,
+            ) { entered ->
                 backupRestoreManager.setImportPassphraseOverride(entered)
                 performClipboardZipImport(uri, entered)
             }
@@ -308,7 +314,7 @@ internal fun SettingsActivity.performClipboardZipImport(uri: Uri, retryPassphras
             showIoFailure(
                 R.string.clipboard_backup_zip_import_failed_title,
                 R.string.clipboard_backup_zip_import_failed,
-                e.message,
+                e,
             )
         } finally {
             backupRestoreViewModel.isProcessing = false

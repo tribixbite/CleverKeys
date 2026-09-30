@@ -1,5 +1,8 @@
 package tribixbite.cleverkeys.backup
 
+import androidx.annotation.StringRes
+import tribixbite.cleverkeys.R
+
 enum class ChangeType { ADDED, MODIFIED }
 
 data class SettingsChange(
@@ -9,9 +12,35 @@ data class SettingsChange(
     val type: ChangeType,
 )
 
+/**
+ * Why a key in an imported settings file is not applied. The preview lists skipped keys with
+ * [labelRes] (localized); the English [SkippedKey.reason] detail is for logs and tests.
+ */
+enum class SkipKind(@StringRes val labelRes: Int) {
+    /** Bookkeeping pref that an import must never overwrite. */
+    INTERNAL(R.string.import_preview_skip_internal),
+
+    /** No code reads this key any more. */
+    DEPRECATED(R.string.import_preview_skip_deprecated),
+
+    /** Dictionary words: restored by the dictionary import, not the settings import. */
+    SEPARATE_IMPORT(R.string.import_preview_skip_separate_import),
+
+    /** The JSON value has a shape no preference uses (array, nested object, …). */
+    UNREADABLE(R.string.import_preview_skip_unreadable),
+
+    /** Wrong type or outside the accepted range. */
+    INVALID_VALUE(R.string.import_preview_skip_invalid_value),
+
+    /** A legacy key converted into its replacement keys. */
+    SUPERSEDED(R.string.import_preview_skip_superseded),
+}
+
 data class SkippedKey(
     val key: String,
+    /** English detail for logs and tests (e.g. "out of range, got 40"); not shown. */
     val reason: String,
+    val kind: SkipKind,
 )
 
 /**

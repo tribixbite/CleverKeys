@@ -43,18 +43,16 @@ sealed interface GifImportStatus {
         /**
          * Classifies [result] by its own sealed variant — the only place the mapping lives.
          *
-         * The failure message is the manager's verbatim reason: the error COLOUR already says
-         * "this failed", so re-stating it in the copy would just reintroduce an English marker
-         * in a string that is meant to be translatable.
-         *
-         * TODO(i18n): that verbatim reason comes from GifPackManager and is English today.
+         * The failure message is the manager's typed reason rendered through [text]: the error
+         * COLOUR already says "this failed", so re-stating it in the copy would just reintroduce
+         * a marker in a string that is meant to be translatable.
          */
         internal fun forImportResult(result: GifPackImportResult, text: ResultText): GifImportStatus = when (result) {
             is GifPackImportResult.Success ->
                 Ok(text.plural(R.plurals.gif_import_status_imported, result.gifCount, result.name, result.gifCount))
             is GifPackImportResult.AlreadyInstalled ->
                 Ok(text.string(R.string.gif_import_status_already_installed, result.name))
-            is GifPackImportResult.Error -> Failed(result.message)
+            is GifPackImportResult.Error -> Failed(result.failure.render(text))
         }
     }
 }
@@ -110,17 +108,19 @@ internal fun SettingsActivity.performGifPackImport(uri: Uri, replaceExisting: Bo
                         .show()
                 }
                 is GifPackImportResult.Error -> {
+                    android.util.Log.w(SettingsActivity.TAG, "GIF pack import refused: ${result.message}")
                     Toast.makeText(
                         _self,
-                        getString(R.string.common_import_failed_detail, result.message),
+                        getString(R.string.common_import_failed_detail, gifImportStatus?.message.orEmpty()),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         } catch (e: Exception) {
-            gifImportStatus = GifImportStatus.Failed(e.message ?: e.javaClass.simpleName)
+            android.util.Log.e(SettingsActivity.TAG, "GIF pack import failed", e)
+            gifImportStatus = GifImportStatus.Failed(ioFailureText(e))
             Toast.makeText(
-                _self, getString(R.string.common_import_failed_detail, e.message.orEmpty()), Toast.LENGTH_SHORT
+                _self, getString(R.string.common_import_failed_detail, ioFailureText(e)), Toast.LENGTH_SHORT
             ).show()
         } finally {
             gifImportInProgress = false
@@ -137,8 +137,9 @@ internal fun SettingsActivity.performGifRemovePack(packId: String) {
             refreshInstalledGifPacks()
             Toast.makeText(_self, R.string.gif_toast_pack_removed, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
+            android.util.Log.e(SettingsActivity.TAG, "GIF pack removal failed", e)
             Toast.makeText(
-                _self, getString(R.string.common_remove_failed_detail, e.message.orEmpty()), Toast.LENGTH_SHORT
+                _self, getString(R.string.common_remove_failed_detail, ioFailureText(e)), Toast.LENGTH_SHORT
             ).show()
         }
     }
@@ -156,8 +157,9 @@ internal fun SettingsActivity.performGifRemoveAll() {
             gifImportStatus = null
             Toast.makeText(_self, R.string.gif_toast_all_removed, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
+            android.util.Log.e(SettingsActivity.TAG, "GIF pack removal failed", e)
             Toast.makeText(
-                _self, getString(R.string.common_remove_failed_detail, e.message.orEmpty()), Toast.LENGTH_SHORT
+                _self, getString(R.string.common_remove_failed_detail, ioFailureText(e)), Toast.LENGTH_SHORT
             ).show()
         }
     }
