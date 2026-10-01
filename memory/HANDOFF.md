@@ -278,6 +278,22 @@ Seeker is back to its pre-test state (popover toggle OFF as the upgrade migratio
 `@` mapping removed through the popover's own edit screen, font scale 1.0, no per-app locale,
 Android Settings focused).
 
+Round 2, 2026-10-01 (owner screenshots of the palette and edit screen):
+- The dwell progress is now a border around the WHOLE popover (the cell ring sat under the finger).
+- Palette: compact header with key · direction; search fixed; Custom text / Intent / Timestamp
+  are one scroll-away tile row; sticky category headers; 96 % × 94 % dialog.
+- Edit screen shows the action itself (command name + description, full text, intent fields,
+  timestamp pattern + preview) and has **Edit**: `CommandPaletteDialog(initialMapping = …)`
+  opens that action's own editor filled in. Settings' per-key screen uses the same path.
+- Wiring bugs fixed: `shareText` only copied; modifier / dead-key / compose / timestamp / macro
+  / slider commands did nothing as custom mappings (now `CommandRouting` → key pipeline).
+  `CommandRoutingTest` guards the whole catalogue.
+- Full pure (2727) and mock (899) suites green; release build green.
+- NOT device-verified: the Seeker was off the network (192.168.0.170 no route; the only adb
+  host on the LAN was an unrelated Fire TV — touched read-only, disconnected). Re-check the
+  palette, the edit screen and the dwell border on the Seeker.
+- One new string `subkey_edit_layout_default` (22 locales) wants native review with the others.
+
 Open:
 - Feel on a real finger (the timing was only driven by adb). The animation constants are in `SubkeyPopoverRenderer`; the dwell and arming values are in `SubkeyPopoverState` / `SubkeyPopoverGeometry`.
 - TalkBack: the popover is not exposed to accessibility (explore-by-touch users keep the per-key settings screen).

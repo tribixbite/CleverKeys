@@ -803,6 +803,7 @@
     <string name="subkey_assign_title">Клавиша %1$s · %2$s</string>
     <string name="subkey_edit_current">Сейчас: %1$s</string>
     <string name="subkey_assign_default_removed">Встроенная подклавиша этой ячейки удалена.</string>
+    <string name="subkey_edit_layout_default">Встроенная подклавиша из раскладки клавиатуры</string>
     <string name="subkey_edit_reassign">Переназначить</string>
     <string name="subkey_assign_choose">Выберите действие</string>
     <string name="subkey_edit_restore">Восстановить по умолчанию</string>

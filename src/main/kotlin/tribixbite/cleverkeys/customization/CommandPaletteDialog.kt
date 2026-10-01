@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.customization
 
 import tribixbite.cleverkeys.ResourcesResultText
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,6 +61,14 @@ data class MappingSelection(
  * - Shows all 100+ commands from CommandRegistry
  * - Supports both command selection and custom text input
  * - Allows customizing the display label separately from the action
+ * - Edits an existing mapping in place when given [initialMapping]
+ *
+ * @param subtitle Optional context under the title, e.g. which key and direction is being set.
+ * @param initialMapping The mapping being edited, or null to pick a new action. Its own editor
+ *     opens straight away, filled in: custom text in the text editor, an intent in the intent
+ *     editor, a timestamp in the pattern dialog, a command in the label step. The existing label
+ *     is kept as the default. Backing out of that editor lands on the full list, so the same
+ *     screen also reassigns.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,20 +77,40 @@ fun CommandPaletteDialog(
     onCommandSelected: (CommandRegistry.Command) -> Unit,
     onTextSelected: (String) -> Unit,
     onMappingSelected: ((MappingSelection) -> Unit)? = null, // New callback with full control
-    initialSearchQuery: String = ""
+    initialSearchQuery: String = "",
+    subtitle: String? = null,
+    initialMapping: ShortSwipeMapping? = null,
 ) {
+    // Edit mode: what the editors start from. Icon-font labels are not kept as typed text: a
+    // blank label lets the label step fall back to the command's own icon.
+    val editing = initialMapping?.takeUnless { it.isRemoval }
+    val editLabel = editing?.takeUnless { it.useKeyFont }?.displayText.orEmpty()
+    val editCommand = remember(editing) {
+        editing?.takeIf { it.actionType == ActionType.COMMAND }?.let { CommandRegistry.getByName(it.actionValue) }
+    }
+    val editIntent = remember(editing) { editing?.getIntentDefinition() }
+
     var searchQuery by remember { mutableStateOf(initialSearchQuery) }
-    var showTextInput by remember { mutableStateOf(false) }
-    var showIntentEditor by remember { mutableStateOf(false) }
-    var showTimestampEditor by remember { mutableStateOf(false) }
-    var customText by remember { mutableStateOf("") }
+    var showTextInput by remember { mutableStateOf(editing?.actionType == ActionType.TEXT) }
+    var showIntentEditor by remember { mutableStateOf(editIntent != null) }
+    var showTimestampEditor by remember { mutableStateOf(editing?.actionType == ActionType.TIMESTAMP) }
+    var customText by remember {
+        mutableStateOf(editing?.takeIf { it.actionType == ActionType.TEXT }?.actionValue.orEmpty())
+    }
+    // The intent editor opens filled in only for the mapping being edited; the quick-action
+    // tile always starts a new intent.
+    var intentToEdit by remember { mutableStateOf(editIntent) }
 
     // State for label confirmation dialog
-    var pendingCommand by remember { mutableStateOf<CommandRegistry.Command?>(null) }
+    var pendingCommand by remember { mutableStateOf(editCommand) }
     var pendingText by remember { mutableStateOf<String?>(null) }
     var pendingIntentDef by remember { mutableStateOf<IntentDefinition?>(null) }
     var pendingTimestampPattern by remember { mutableStateOf<String?>(null) }
-    var customLabel by remember { mutableStateOf("") }
+    var customLabel by remember { mutableStateOf(if (editCommand != null) editLabel else "") }
+
+    /** The label an editor proposes: the edited mapping's own when the type is unchanged. */
+    fun proposedLabel(type: ActionType, fallback: String): String =
+        if (editing?.actionType == type && editLabel.isNotEmpty()) editLabel else fallback
 
     // Command names/descriptions are string resources: search matches them in the UI
     // language and, secondarily, in English (users who learned the English names).
@@ -220,27 +250,36 @@ fun CommandPaletteDialog(
 
     if (showIntentEditor) {
         IntentEditorDialog(
-            onDismiss = { showIntentEditor = false },
+            initialIntent = intentToEdit,
+            onDismiss = {
+                showIntentEditor = false
+                intentToEdit = null
+            },
             onConfirm = { intentDef ->
                 showIntentEditor = false
+                intentToEdit = null
                 pendingIntentDef = intentDef
-                customLabel = intentDef.name.take(4)
+                customLabel = proposedLabel(ActionType.INTENT, intentDef.name.take(4))
             }
         )
     }
 
     if (showTimestampEditor) {
         TimestampPatternDialog(
+            initialPattern = editing?.getTimestampPattern(),
             onDismiss = { showTimestampEditor = false },
             onConfirm = { pattern ->
                 showTimestampEditor = false
                 pendingTimestampPattern = pattern
                 // Default label: a short slice of the live formatted preview if possible,
                 // else the first 4 chars of the pattern itself.
-                customLabel = runCatching {
-                    java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault())
-                        .format(java.util.Date())
-                }.getOrNull()?.take(4) ?: pattern.take(4)
+                customLabel = proposedLabel(
+                    ActionType.TIMESTAMP,
+                    runCatching {
+                        java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault())
+                            .format(java.util.Date())
+                    }.getOrNull()?.take(4) ?: pattern.take(4)
+                )
             }
         )
     }
@@ -254,45 +293,25 @@ fun CommandPaletteDialog(
         )
     ) {
         Surface(
+            // Nearly full height: the command list is what the user is here for.
             modifier = Modifier
-                .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.85f),
+                .fillMaxWidth(PALETTE_WIDTH_FRACTION)
+                .fillMaxHeight(PALETTE_HEIGHT_FRACTION),
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Header
-                TopAppBar(
-                    title = {
-                        Text(
-                            stringResource(
-                                if (showTextInput) R.string.command_palette_title_custom_text
-                                else R.string.command_palette_title_select
-                            ),
-                            fontWeight = FontWeight.Bold
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            if (showTextInput) {
-                                showTextInput = false
-                            } else {
-                                onDismiss()
-                            }
-                        }) {
-                            Icon(
-                                imageVector = if (showTextInput) Icons.AutoMirrored.Filled.ArrowBack else Icons.Filled.Close,
-                                contentDescription = stringResource(
-                                    if (showTextInput) R.string.common_back
-                                    else R.string.common_close
-                                )
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
+                PaletteHeader(
+                    title = stringResource(
+                        if (showTextInput) R.string.command_palette_title_custom_text
+                        else R.string.command_palette_title_select
+                    ),
+                    subtitle = subtitle,
+                    showBack = showTextInput,
+                    onNavigate = {
+                        if (showTextInput) showTextInput = false else onDismiss()
+                    }
                 )
 
                 if (showTextInput) {
@@ -304,7 +323,7 @@ fun CommandPaletteDialog(
                             if (customText.isNotBlank()) {
                                 // Show label confirmation instead of directly calling callback
                                 pendingText = customText
-                                customLabel = customText.take(4)
+                                customLabel = proposedLabel(ActionType.TEXT, customText.take(4))
                             }
                         }
                     )
@@ -320,10 +339,56 @@ fun CommandPaletteDialog(
                             customLabel = commandText.string(command.nameRes).take(4)
                         },
                         onShowTextInput = { showTextInput = true },
-                        onShowIntentEditor = { showIntentEditor = true },
+                        onShowIntentEditor = {
+                            intentToEdit = null
+                            showIntentEditor = true
+                        },
                         onShowTimestampEditor = { showTimestampEditor = true }
                     )
                 }
+            }
+        }
+    }
+}
+
+/** Fraction of the window the palette fills; the rest shows what it is being opened over. */
+private const val PALETTE_WIDTH_FRACTION = 0.96f
+private const val PALETTE_HEIGHT_FRACTION = 0.94f
+
+/**
+ * Compact title row: a close (or back) button, the title and an optional subtitle. Replaces a
+ * full TopAppBar, whose 64 dp plus large-font wrapping left room for one command on screen.
+ */
+@Composable
+private fun PaletteHeader(title: String, subtitle: String?, showBack: Boolean, onNavigate: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 0.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onNavigate) {
+            Icon(
+                imageVector = if (showBack) Icons.AutoMirrored.Filled.ArrowBack else Icons.Filled.Close,
+                contentDescription = stringResource(if (showBack) R.string.common_back else R.string.common_close)
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (subtitle != null) {
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
@@ -495,7 +560,14 @@ private fun LabelConfirmationDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** One of the palette's non-catalogue actions (custom text, intent, timestamp). */
+private data class QuickAction(
+    val title: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val onClick: () -> Unit,
+)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun CommandSearchSection(
     searchQuery: String,
@@ -507,14 +579,20 @@ private fun CommandSearchSection(
     onShowTimestampEditor: () -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // Search bar
+        // Search bar: stays put while everything below scrolls.
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            placeholder = { Text(stringResource(R.string.command_palette_search_hint)) },
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            placeholder = {
+                Text(
+                    stringResource(R.string.command_palette_search_hint),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
             leadingIcon = {
                 Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.common_search))
             },
@@ -532,160 +610,53 @@ private fun CommandSearchSection(
             )
         )
 
-        // Quick action: Custom text
-        Card(
-            onClick = onShowTextInput,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Filled.Edit,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        stringResource(R.string.command_palette_custom_text_title),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        stringResource(R.string.command_palette_custom_text_desc),
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                    )
-                }
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            }
+        // The three non-catalogue actions, as one compact row that is the list's first item:
+        // it scrolls away with the list instead of permanently taking three tall cards' worth
+        // of the dialog. While searching, only the tiles whose title matches stay.
+        val quickActions = listOf(
+            QuickAction(stringResource(R.string.command_palette_custom_text_title), Icons.Filled.Edit, onShowTextInput),
+            QuickAction(stringResource(R.string.command_palette_send_intent_title), Icons.Filled.Share, onShowIntentEditor),
+            QuickAction(stringResource(R.string.command_palette_timestamp_title), Icons.Filled.DateRange, onShowTimestampEditor),
+        ).filter { searchQuery.isBlank() || it.title.contains(searchQuery.trim(), ignoreCase = true) }
+
+        val resultCount = filteredCommands.values.sumOf { it.size }
+        val countText = if (searchQuery.isBlank()) {
+            stringResource(R.string.command_palette_count_available, CommandRegistry.totalCount)
+        } else {
+            pluralStringResource(R.plurals.command_palette_count_results, resultCount, resultCount, searchQuery)
         }
 
-        // Quick action: Send Intent
-        Card(
-            onClick = onShowIntentEditor,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Filled.Share, // Using Share icon as a proxy for Intent/Sending
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        stringResource(R.string.command_palette_send_intent_title),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
-                    Text(
-                        stringResource(R.string.command_palette_send_intent_desc),
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
-                    )
-                }
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-            }
-        }
-
-        // Quick action: Timestamp (issue #141)
-        Card(
-            onClick = onShowTimestampEditor,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Filled.DateRange,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        stringResource(R.string.command_palette_timestamp_title),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        stringResource(R.string.command_palette_timestamp_desc),
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                    )
-                }
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            }
-        }
-
-        // Stats
-        Text(
-            text = if (searchQuery.isBlank()) {
-                stringResource(R.string.command_palette_count_available, CommandRegistry.totalCount)
-            } else {
-                val resultCount = filteredCommands.values.sumOf { it.size }
-                pluralStringResource(
-                    R.plurals.command_palette_count_results,
-                    resultCount,
-                    resultCount,
-                    searchQuery
-                )
-            },
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Divider(modifier = Modifier.padding(vertical = 4.dp))
-
-        // Command list grouped by category
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
+            if (quickActions.isNotEmpty()) {
+                item(key = "quick_actions") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        quickActions.forEach { action ->
+                            QuickActionTile(action, Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+
+            item(key = "count") {
+                Text(
+                    text = countText,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             filteredCommands.toSortedMap(compareBy { it.sortOrder }).forEach { (category, commands) ->
-                // Category header
-                item(key = "header_${category.name}") {
+                // Category header pins to the top while its commands scroll under it.
+                stickyHeader(key = "header_${category.name}") {
                     CategoryHeader(category = category, commandCount = commands.size)
                 }
 
@@ -704,12 +675,48 @@ private fun CommandSearchSection(
     }
 }
 
+/** A compact tile for one [QuickAction]: icon over a title of up to two lines. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun QuickActionTile(action: QuickAction, modifier: Modifier = Modifier) {
+    Card(
+        onClick = action.onClick,
+        modifier = modifier.heightIn(min = 64.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 6.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                action.icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                action.title,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
 @Composable
 private fun CategoryHeader(category: CommandRegistry.Category, commandCount: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            // Opaque: as a sticky header the rows scroll underneath it.
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -780,7 +787,7 @@ private fun CommandItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Command name badge
@@ -1021,12 +1028,14 @@ fun QuickCommandPicker(
  * - Live preview of "what would be inserted right now"
  * - Inline validation: invalid patterns disable Confirm and show error supportingText
  *
+ * @param initialPattern The pattern being edited; null starts from the first preset.
  * @param onDismiss Invoked when the user cancels.
  * @param onConfirm Invoked with the validated pattern when the user confirms.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TimestampPatternDialog(
+    initialPattern: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (pattern: String) -> Unit
 ) {
@@ -1048,7 +1057,7 @@ private fun TimestampPatternDialog(
         )
     }
 
-    var pattern by remember { mutableStateOf(presets.first().pattern) }
+    var pattern by remember { mutableStateOf(initialPattern ?: presets.first().pattern) }
 
     // The validity computation runs inside `remember`, which is not @Composable —
     // resolve its three failure messages here first.

@@ -1119,6 +1119,7 @@
     <string name="subkey_assign_title">%1$s key · %2$s</string>
     <string name="subkey_edit_current">Currently: %1$s</string>
     <string name="subkey_assign_default_removed">This slot\'s built-in subkey was removed.</string>
+    <string name="subkey_edit_layout_default">Built-in subkey from the keyboard layout</string>
     <string name="subkey_edit_reassign">Reassign</string>
     <string name="subkey_assign_choose">Choose an action</string>
     <string name="subkey_edit_restore">Restore default</string>

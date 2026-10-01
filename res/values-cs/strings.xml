@@ -803,6 +803,7 @@
     <string name="subkey_assign_title">Klávesa %1$s · %2$s</string>
     <string name="subkey_edit_current">Aktuálně: %1$s</string>
     <string name="subkey_assign_default_removed">Vestavěná podklávesa této pozice byla odebrána.</string>
+    <string name="subkey_edit_layout_default">Vestavěná podklávesa z rozložení klávesnice</string>
     <string name="subkey_edit_reassign">Přiřadit znovu</string>
     <string name="subkey_assign_choose">Vyberte akci</string>
     <string name="subkey_edit_restore">Obnovit výchozí</string>

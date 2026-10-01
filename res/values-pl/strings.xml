@@ -813,6 +813,7 @@
     <string name="subkey_assign_title">Klawisz %1$s · %2$s</string>
     <string name="subkey_edit_current">Obecnie: %1$s</string>
     <string name="subkey_assign_default_removed">Wbudowany podklawisz tego miejsca został usunięty.</string>
+    <string name="subkey_edit_layout_default">Wbudowany podklawisz z układu klawiatury</string>
     <string name="subkey_edit_reassign">Przypisz ponownie</string>
     <string name="subkey_assign_choose">Wybierz akcję</string>
     <string name="subkey_edit_restore">Przywróć domyślny</string>

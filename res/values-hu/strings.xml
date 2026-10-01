@@ -809,6 +809,7 @@
     <string name="subkey_assign_title">%1$s billentyű · %2$s</string>
     <string name="subkey_edit_current">Jelenleg: %1$s</string>
     <string name="subkey_assign_default_removed">A hely beépített albillentyűjét eltávolították.</string>
+    <string name="subkey_edit_layout_default">A billentyűzetkiosztás beépített albillentyűje</string>
     <string name="subkey_edit_reassign">Újra hozzárendelés</string>
     <string name="subkey_assign_choose">Válasszon műveletet</string>
     <string name="subkey_edit_restore">Alapértelmezett visszaállítása</string>

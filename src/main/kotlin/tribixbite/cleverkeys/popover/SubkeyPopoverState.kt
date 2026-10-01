@@ -42,7 +42,7 @@ class SubkeyPopoverState(
     var active: SwipeDirection? = null
         private set
 
-    /** Uptime (ms) [active] last changed; drives the dwell ring. */
+    /** Uptime (ms) [active] last changed; drives the dwell border. */
     var activeSince: Long = openedAt
         private set
 
@@ -89,7 +89,7 @@ class SubkeyPopoverState(
         /** Resting on an assigned slot this long opens its edit screen (owner spec: 3 s). */
         const val DWELL_EDIT_MS = 3_000L
 
-        /** The dwell ring starts filling after this, so ordinary selection shows no ring. */
+        /** The dwell border starts filling after this, so ordinary selection shows none. */
         const val DWELL_RING_START_MS = 800L
 
         /** Open animation length. */
@@ -111,6 +111,8 @@ data class SubkeyAssignRequest(
     val isCustom: Boolean,
     /** The slot's current label, for the edit screen's header; null when empty. */
     val currentLabel: String?,
+    /** [currentLabel] is a key-font icon glyph (drawn with the key font, not as text). */
+    val labelUsesKeyFont: Boolean = false,
 ) {
     enum class Mode { ASSIGN, EDIT }
 }

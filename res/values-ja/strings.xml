@@ -802,6 +802,7 @@
     <string name="subkey_assign_title">%1$s キー · %2$s</string>
     <string name="subkey_edit_current">現在: %1$s</string>
     <string name="subkey_assign_default_removed">このスロットのデフォルトのサブキーは削除されています。</string>
+    <string name="subkey_edit_layout_default">キーボードレイアウトに組み込まれたサブキー</string>
     <string name="subkey_edit_reassign">再割り当て</string>
     <string name="subkey_assign_choose">アクションを選択</string>
     <string name="subkey_edit_restore">デフォルトに戻す</string>

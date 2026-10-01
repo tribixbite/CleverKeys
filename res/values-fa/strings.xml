@@ -838,6 +838,7 @@
     <string name="subkey_assign_title">کلید %1$s · %2$s</string>
     <string name="subkey_edit_current">فعلی: %1$s</string>
     <string name="subkey_assign_default_removed">زیرکلید داخلی این جایگاه برداشته شد.</string>
+    <string name="subkey_edit_layout_default">زیرکلید داخلی چیدمان صفحه‌کلید</string>
     <string name="subkey_edit_reassign">اختصاص دوباره</string>
     <string name="subkey_assign_choose">یک کنش انتخاب کنید</string>
     <string name="subkey_edit_restore">بازگرداندن پیش‌فرض</string>

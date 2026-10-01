@@ -812,6 +812,7 @@
     <string name="subkey_assign_title">%1$s key · %2$s</string>
     <string name="subkey_edit_current">Kasalukuyan: %1$s</string>
     <string name="subkey_assign_default_removed">Inalis ang built-in na subkey ng slot na ito.</string>
+    <string name="subkey_edit_layout_default">Built-in na subkey mula sa layout ng keyboard</string>
     <string name="subkey_edit_reassign">I-reassign</string>
     <string name="subkey_assign_choose">Pumili ng aksyon</string>
     <string name="subkey_edit_restore">Ibalik ang default</string>

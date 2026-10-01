@@ -775,6 +775,7 @@
     <string name="subkey_assign_title">%1$s 键 · %2$s</string>
     <string name="subkey_edit_current">当前：%1$s</string>
     <string name="subkey_assign_default_removed">此位置的内置子键已被移除。</string>
+    <string name="subkey_edit_layout_default">键盘布局自带的子键</string>
     <string name="subkey_edit_reassign">重新分配</string>
     <string name="subkey_assign_choose">选择操作</string>
     <string name="subkey_edit_restore">恢复默认</string>

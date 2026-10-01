@@ -251,7 +251,9 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 "cut" -> inputConnection.performContextMenuAction(android.R.id.cut)
                 "selectAll" -> inputConnection.performContextMenuAction(android.R.id.selectAll)
                 "pasteAsPlainText" -> inputConnection.performContextMenuAction(android.R.id.paste)
-                "shareText" -> inputConnection.performContextMenuAction(android.R.id.copy) // Copy first, then share handled elsewhere
+                // The text field's own Share action (API 23+). This used to send android.R.id.copy
+                // ("share handled elsewhere"), but nothing shared afterwards: the command only copied.
+                "shareText" -> inputConnection.performContextMenuAction(android.R.id.shareText)
 
                 // Pinned clipboard entry insertion
                 "paste_pinned_1", "paste_pinned_2", "paste_pinned_3",

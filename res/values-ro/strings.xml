@@ -826,6 +826,7 @@
     <string name="subkey_assign_title">Tasta %1$s · %2$s</string>
     <string name="subkey_edit_current">În prezent: %1$s</string>
     <string name="subkey_assign_default_removed">Subtasta integrată a acestui loc a fost eliminată.</string>
+    <string name="subkey_edit_layout_default">Subtastă încorporată din aspectul tastaturii</string>
     <string name="subkey_edit_reassign">Reatribuire</string>
     <string name="subkey_assign_choose">Alegeți o acțiune</string>
     <string name="subkey_edit_restore">Restaurare implicită</string>

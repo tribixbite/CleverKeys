@@ -843,6 +843,7 @@
     <string name="subkey_assign_title">Tasto %1$s · %2$s</string>
     <string name="subkey_edit_current">Attuale: %1$s</string>
     <string name="subkey_assign_default_removed">Il sottotasto integrato di questa posizione è stato rimosso.</string>
+    <string name="subkey_edit_layout_default">Sottotasto integrato del layout di tastiera</string>
     <string name="subkey_edit_reassign">Riassegna</string>
     <string name="subkey_assign_choose">Scegli un\'azione</string>
     <string name="subkey_edit_restore">Ripristina predefinito</string>

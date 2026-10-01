@@ -811,6 +811,7 @@
     <string name="subkey_assign_title">%1$s tuşu · %2$s</string>
     <string name="subkey_edit_current">Geçerli: %1$s</string>
     <string name="subkey_assign_default_removed">Bu yuvanın yerleşik alt tuşu kaldırıldı.</string>
+    <string name="subkey_edit_layout_default">Klavye düzenindeki yerleşik alt tuş</string>
     <string name="subkey_edit_reassign">Yeniden Ata</string>
     <string name="subkey_assign_choose">Bir eylem seçin</string>
     <string name="subkey_edit_restore">Varsayılanı Geri Yükle</string>

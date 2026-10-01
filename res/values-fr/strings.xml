@@ -809,6 +809,7 @@
     <string name="subkey_assign_title">Touche %1$s · %2$s</string>
     <string name="subkey_edit_current">Actuellement : %1$s</string>
     <string name="subkey_assign_default_removed">La sous-touche intégrée de cet emplacement a été retirée.</string>
+    <string name="subkey_edit_layout_default">Sous-touche intégrée de la disposition du clavier</string>
     <string name="subkey_edit_reassign">Réattribuer</string>
     <string name="subkey_assign_choose">Choisissez une action</string>
     <string name="subkey_edit_restore">Rétablir par défaut</string>

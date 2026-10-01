@@ -3,6 +3,8 @@ package tribixbite.cleverkeys.popover
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.PathMeasure
 import android.graphics.RectF
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
@@ -22,8 +24,10 @@ import tribixbite.cleverkeys.customization.SwipeDirection
  * - open: the panel grows from 85 % and fades in over [SubkeyPopoverState.OPEN_ANIM_MS];
  * - selection: the selected cell springs from 1.0 to [ACTIVE_SCALE] (overshoot) over
  *   [SubkeyPopoverState.SELECT_ANIM_MS];
- * - dwell: from [SubkeyPopoverState.DWELL_RING_START_MS] a ring fills around the selected
- *   assigned cell, completing when the edit screen opens.
+ * - dwell: from [SubkeyPopoverState.DWELL_RING_START_MS] a progress border runs clockwise
+ *   from the top centre around the WHOLE popover, completing when the edit screen opens. It
+ *   used to be a ring around the selected cell, which sat under the finger and could not be
+ *   seen (owner report 2026-10-01).
  */
 class SubkeyPopoverRenderer {
 
@@ -36,6 +40,15 @@ class SubkeyPopoverRenderer {
         strokeCap = Paint.Cap.ROUND
     }
     private val rect = RectF()
+    private val arcRect = RectF()
+
+    // Dwell border: the perimeter path is rebuilt only when the popover's geometry changes
+    // (once per popover), the drawn segment is reset and refilled each frame.
+    private val dwellPath = Path()
+    private val dwellSegment = Path()
+    private val dwellMeasure = PathMeasure()
+    private var dwellLength = 0f
+    private val dwellKey = FloatArray(4) { Float.NaN }
     private val openInterp = DecelerateInterpolator(1.6f)
     private val selectInterp = OvershootInterpolator(2.2f)
 
@@ -87,7 +100,7 @@ class SubkeyPopoverRenderer {
             val scale = 1f + (ACTIVE_SCALE - 1f) * selectInterp.getInterpolation(selectT)
             drawSlot(canvas, state, activeSlot, scale, true, open, theme, keyPaints)
             if (SubkeyPopoverSlots.isEditable(activeSlot) && state.keyCode != null) {
-                animating = drawDwellRing(canvas, state, scale, now, theme) || animating
+                animating = drawDwellBorder(canvas, state, pad, radius * 1.4f, now, theme) || animating
             }
         }
         canvas.restore()
@@ -140,23 +153,59 @@ class SubkeyPopoverRenderer {
     }
 
     /**
-     * Fill a ring around the selected cell while the finger dwells; true while filling.
-     * Must run right after [drawSlot] drew the selected cell: [rect] still holds that cell's
-     * final (edge-nudged) bounds, which the ring is centred on.
+     * Run a progress border around the whole popover while the finger dwells on an assigned
+     * slot; true while it is still filling. The border follows the panel's rounded outline,
+     * clamped inside the view so a grid pushed against an edge keeps all of it visible.
      */
-    private fun drawDwellRing(canvas: Canvas, state: SubkeyPopoverState, scale: Float, now: Long, theme: Theme): Boolean {
+    private fun drawDwellBorder(
+        canvas: Canvas, state: SubkeyPopoverState, pad: Float, cornerRadius: Float, now: Long, theme: Theme,
+    ): Boolean {
         val held = now - state.activeSince
-        if (held < SubkeyPopoverState.DWELL_RING_START_MS) return true  // ring not started yet
+        if (held < SubkeyPopoverState.DWELL_RING_START_MS) return true  // not started yet
         val span = (SubkeyPopoverState.DWELL_EDIT_MS - SubkeyPopoverState.DWELL_RING_START_MS).toFloat()
         val progress = ((held - SubkeyPopoverState.DWELL_RING_START_MS) / span).coerceIn(0f, 1f)
-        val cx = rect.centerX()
-        val cy = rect.centerY()
-        val r = min(state.cellWidth, state.cellHeight) * CELL_FILL * scale * 0.62f
-        rect.set(cx - r, cy - r, cx + r, cy + r)
-        ringPaint.strokeWidth = max(2f, r * 0.12f)
-        ringPaint.color = withAlpha(theme.activatedColor, 220)
-        canvas.drawArc(rect, -90f, 360f * progress, false, ringPaint)
+
+        val stroke = max(DWELL_MIN_STROKE_PX, min(state.cellWidth, state.cellHeight) * DWELL_STROKE)
+        val half = stroke / 2f
+        val left = max(state.centreX - 1.5f * state.cellWidth - pad + half, half)
+        val top = max(state.centreY - 1.5f * state.cellHeight - pad + half, half)
+        val right = min(state.centreX + 1.5f * state.cellWidth + pad - half, canvas.width - half)
+        val bottom = min(state.centreY + 1.5f * state.cellHeight + pad - half, canvas.height - half)
+        ensureDwellPath(left, top, right, bottom, cornerRadius)
+
+        ringPaint.strokeWidth = stroke
+        // Faint full track first, so the user sees where the progress is heading.
+        ringPaint.color = withAlpha(theme.activatedColor, DWELL_TRACK_ALPHA)
+        canvas.drawPath(dwellPath, ringPaint)
+        dwellSegment.reset()
+        dwellMeasure.getSegment(0f, dwellLength * progress, dwellSegment, true)
+        ringPaint.color = withAlpha(theme.activatedColor, DWELL_FILL_ALPHA)
+        canvas.drawPath(dwellSegment, ringPaint)
         return progress < 1f
+    }
+
+    /**
+     * Rebuild [dwellPath] when the border rectangle changed: a rounded rectangle that starts at
+     * the top centre and runs clockwise, so progress reads like a clock hand.
+     */
+    private fun ensureDwellPath(l: Float, t: Float, r: Float, b: Float, cornerRadius: Float) {
+        if (dwellKey[0] == l && dwellKey[1] == t && dwellKey[2] == r && dwellKey[3] == b) return
+        dwellKey[0] = l; dwellKey[1] = t; dwellKey[2] = r; dwellKey[3] = b
+        val rad = min(cornerRadius, min(r - l, b - t) / 2f)
+        val d = rad * 2f
+        dwellPath.reset()
+        dwellPath.moveTo((l + r) / 2f, t)
+        dwellPath.lineTo(r - rad, t)
+        arcRect.set(r - d, t, r, t + d); dwellPath.arcTo(arcRect, -90f, 90f, false)
+        dwellPath.lineTo(r, b - rad)
+        arcRect.set(r - d, b - d, r, b); dwellPath.arcTo(arcRect, 0f, 90f, false)
+        dwellPath.lineTo(l + rad, b)
+        arcRect.set(l, b - d, l + d, b); dwellPath.arcTo(arcRect, 90f, 90f, false)
+        dwellPath.lineTo(l, t + rad)
+        arcRect.set(l, t, l + d, t + d); dwellPath.arcTo(arcRect, 180f, 90f, false)
+        dwellPath.close()
+        dwellMeasure.setPath(dwellPath, false)
+        dwellLength = dwellMeasure.length
     }
 
     /** Offset that moves the span [lo, hi] inside [0, size] (0 when it already fits). */
@@ -216,5 +265,9 @@ class SubkeyPopoverRenderer {
         const val SCRIM_ALPHA = 90
         const val NEUTRAL_OUTLINE_ALPHA = 110
         const val CENTRE_LABEL_ALPHA = 150
+        const val DWELL_STROKE = 0.07f
+        const val DWELL_MIN_STROKE_PX = 4f
+        const val DWELL_TRACK_ALPHA = 60
+        const val DWELL_FILL_ALPHA = 235
     }
 }

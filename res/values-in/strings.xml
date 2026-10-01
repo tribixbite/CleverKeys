@@ -815,6 +815,7 @@
     <string name="subkey_assign_title">Tombol %1$s · %2$s</string>
     <string name="subkey_edit_current">Saat ini: %1$s</string>
     <string name="subkey_assign_default_removed">Subtombol bawaan slot ini telah dihapus.</string>
+    <string name="subkey_edit_layout_default">Subtombol bawaan dari tata letak keyboard</string>
     <string name="subkey_edit_reassign">Tetapkan ulang</string>
     <string name="subkey_assign_choose">Pilih aksi</string>
     <string name="subkey_edit_restore">Pulihkan default</string>

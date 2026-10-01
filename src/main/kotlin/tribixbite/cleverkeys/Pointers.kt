@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import tribixbite.cleverkeys.customization.CommandRouting
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
@@ -867,6 +868,13 @@ class Pointers(
                     "${mapping.keyCode}:${mapping.direction} -> ${mapping.actionType}:${mapping.actionValue}"
             )
         }
+        // Modifiers, dead keys, compose, timestamp/macro/slider keys only work when pressed
+        // through the key pipeline (CommandRouting): emit them like a layout subkey.
+        val pipelineValue = CommandRouting.keyPipelineValue(mapping)
+        if (pipelineValue != null) {
+            emitSubkeyValue(ptr, pipelineValue, ptr.snap)
+            return
+        }
         // Delegate to handler for custom mapping execution
         _handler.onCustomShortSwipe(mapping)
         clearLatched()
@@ -1598,8 +1606,9 @@ class Pointers(
         _handler.onSubkeyPopoverDismiss()
     }
 
-    private fun assignRequest(keyCode: String, slot: PopoverSlot, mode: SubkeyAssignRequest.Mode) =
-        SubkeyAssignRequest(
+    private fun assignRequest(keyCode: String, slot: PopoverSlot, mode: SubkeyAssignRequest.Mode): SubkeyAssignRequest {
+        val label = SubkeyPopoverSlots.labelOf(slot)
+        return SubkeyAssignRequest(
             keyCode = keyCode,
             direction = slot.direction,
             mode = mode,
@@ -1609,8 +1618,10 @@ class Pointers(
                 is PopoverSlot.Empty -> slot.hiddenDefault
             },
             isCustom = slot is PopoverSlot.Custom,
-            currentLabel = SubkeyPopoverSlots.labelOf(slot).text,
+            currentLabel = label.text,
+            labelUsesKeyFont = label.useKeyFont,
         )
+    }
 
     /**
      * Emit a subkey [value] chosen by a short swipe or the popover, then retire [ptr].

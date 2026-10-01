@@ -17,6 +17,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import tribixbite.cleverkeys.customization.ActionType
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
@@ -201,6 +202,24 @@ class PointersSubkeyPopoverTest {
 
         assertEquals("€", handler.customs.single().actionValue)
         assertFalse("the overridden default must not be typed", typed("3"))
+    }
+
+    /**
+     * A slot mapped to a dead key (or modifier) must latch it for the next key, the way a
+     * layout's own dead-key subkey does. It used to reach onCustomShortSwipe, which had no
+     * handler for the Modifier kind and did nothing (CommandRouting, 2026-10-01).
+     */
+    @Test
+    fun aCustomDeadKeyMapping_latchesInsteadOfGoingToTheExecutor() {
+        putMapping(ShortSwipeMapping("e", SwipeDirection.NE, "´", ActionType.COMMAND, "accent_aigu"))
+        hold()
+        moveTo(600f, 150f)
+        release()
+
+        assertTrue("a dead key never reaches the executor", handler.customs.isEmpty())
+        val latched = ptrs.singleOrNull { it.hasFlagsAny(Pointers.FLAG_P_LATCHED) }
+        assertNotNull("the dead key waits, latched, for the next key", latched)
+        assertEquals(KeyValue.getKeyByName("accent_aigu"), latched!!.value)
     }
 
     @Test

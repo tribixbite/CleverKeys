@@ -980,6 +980,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ml.PlaygroundPayloadTest',
     // Release-record burn-down (2026-09-03): claims pinned by waves UA-UD
     'tribixbite.cleverkeys.customization.ReleaseClaimCommandCatalogueTest',
+    // Every catalogue command reaches a path that performs it (2026-10-01).
+    'tribixbite.cleverkeys.customization.CommandRoutingTest',
     'tribixbite.cleverkeys.ReleaseClaimTextActionsTest',
     'tribixbite.cleverkeys.ReleaseClaimNavBarTest',
     'tribixbite.cleverkeys.LayoutCatalogueTest',

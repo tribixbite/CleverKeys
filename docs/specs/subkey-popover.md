@@ -26,7 +26,7 @@ subkey popover found in mainstream keyboards".
    - On a default subkey: it is emitted exactly as a short swipe would emit it (shift capitalisation of word labels, dead keys latch).
    - On a custom mapping: it is executed.
    - On an empty slot: the popover closes and the **assign** screen opens for (key, direction).
-5. **Dwell to edit.** Resting on an assigned slot (default or custom) for 3 s closes the popover and opens the **edit** screen for that slot; the release that follows does nothing. A progress ring fills around the slot from 0.8 s so the user can see it coming and move away.
+5. **Dwell to edit.** Resting on an assigned slot (default or custom) for 3 s closes the popover and opens the **edit** screen for that slot; the release that follows does nothing. From 0.8 s a progress border runs clockwise from the top centre around the **whole popover** (a faint full track, then the fill), so the user can see it coming and move away. It was first a ring around the selected cell, which sat under the finger (owner report 2026-10-01).
 6. **Scope.** Only keys whose main value is a Char or String and not special. Keys that already
    own the hold keep their behaviour:
    - modifiers latch or lock;
@@ -44,11 +44,22 @@ subkey popover found in mainstream keyboards".
   - the shared `ShortSwipeAssignment.apply(...)` saves it and shows the confirmation toast; `ShortSwipeCustomizationActivity` now calls the same helper;
   - `ShortSwipeCustomizationManager` stores the mapping.
 - **Assign:** opens the palette directly.
-- **Edit:** shows the slot's current action and offers:
-  - *Reassign* (the palette);
+- **Edit:** shows what the slot does, not just its label:
+  - the label as the popover draws it (key-font icons through the key font) and the action type;
+  - the action itself: a command's name and description; the full custom text; an intent's name, target type, action, data, MIME type, package/class and extras; a timestamp pattern with a live preview; or "built-in subkey from the keyboard layout" for a layout default.
+
+  It offers:
+  - *Edit* (custom mappings, except raw key events): the palette opens straight into that action's own editor, filled in — the text editor, the intent editor, the pattern dialog, or the label step for a command — with the existing label kept. Backing out of the editor lands on the full list, so the same screen also reassigns. Settings → Customize Per-Key Actions opens existing mappings the same way (`CommandPaletteDialog(initialMapping = …)`);
+  - *Reassign* (the palette, empty);
   - *Remove*: a custom mapping over an empty slot is deleted; a default subkey, or a custom mapping over one, is replaced by the `removed` placeholder;
   - *Restore default*: only when a custom mapping hides a default subkey.
+- *Remove* is drawn in the error colour.
 - Removing uses the existing `removed` command, so no storage change.
+- **Palette layout** (2026-10-01): a compact title row with the key and direction as subtitle; the search field stays fixed; Custom text / Send intent / Timestamp are one row of compact tiles that is the list's first item, so it scrolls away (while searching, only matching tiles stay); category headers stick while their commands scroll; the dialog fills 96 % × 94 % of the window.
+
+## Command routing
+
+A custom mapping (short swipe or popover slot) runs through `CustomShortSwipeExecutor`, with events and editing actions finished by `Keyboard2View.onCustomShortSwipe`. Commands whose key only works through the key pipeline — modifiers and dead keys (latch onto the next key), `compose`, timestamp, macro and slider keys — are instead emitted like a layout subkey (`CommandRouting.keyPipelineValue` → `Pointers.emitSubkeyValue`). Before 2026-10-01 they reached `onCustomShortSwipe`, logged "Unhandled KeyValue kind" and did nothing. `shareText` now invokes the field's Share action; it used to only copy. `CommandRoutingTest` guards the whole catalogue: every command reaches a path that performs it.
 - An activity rather than an in-IME dialog, because the palette has a search field. The IME cannot type into its own window, and nothing hosts Compose in the IME window today.
 
 ## Settings
@@ -82,5 +93,6 @@ read through `ConfigSnapshot`, captured at touch-down (ARC-072).
 
 - `SubkeyPopoverGeometryTest` and `SubkeyPopoverSlotsTest` (pure).
 - `SubkeyPopoverMigrationTest`.
-- `PointersSubkeyPopoverTest` (mock tier, built like `PointersShortSwipeCustomOverrideTest`): open on hold; a neutral release emits nothing; a slot release emits the default or custom mapping; an empty slot asks for assign; the 3 s dwell asks for edit; repeat is not started.
+- `PointersSubkeyPopoverTest` (mock tier, built like `PointersShortSwipeCustomOverrideTest`): open on hold; a neutral release emits nothing; a slot release emits the default or custom mapping; a custom dead-key mapping latches; an empty slot asks for assign; the 3 s dwell asks for edit; repeat is not started.
+- `CommandRoutingTest` (pure): pipeline vs executor routing, and every catalogue command has a path.
 - Drift guards: `SettingsDefaultsDriftTest`, `SettingsResetPolicyTest`, `ConfigSnapshotFixture`.

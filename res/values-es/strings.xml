@@ -821,6 +821,7 @@
     <string name="subkey_assign_title">Tecla %1$s · %2$s</string>
     <string name="subkey_edit_current">Actual: %1$s</string>
     <string name="subkey_assign_default_removed">Se quitó la subtecla integrada de esta posición.</string>
+    <string name="subkey_edit_layout_default">Subtecla integrada de la distribución del teclado</string>
     <string name="subkey_edit_reassign">Reasignar</string>
     <string name="subkey_assign_choose">Elige una acción</string>
     <string name="subkey_edit_restore">Restaurar predeterminada</string>

@@ -805,6 +805,7 @@
     <string name="subkey_assign_title">Phím %1$s · %2$s</string>
     <string name="subkey_edit_current">Hiện tại: %1$s</string>
     <string name="subkey_assign_default_removed">Phím phụ tích hợp của ô này đã bị xóa.</string>
+    <string name="subkey_edit_layout_default">Phím phụ có sẵn trong bố cục bàn phím</string>
     <string name="subkey_edit_reassign">Gán lại</string>
     <string name="subkey_assign_choose">Chọn một thao tác</string>
     <string name="subkey_edit_restore">Khôi phục mặc định</string>

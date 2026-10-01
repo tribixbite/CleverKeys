@@ -803,6 +803,7 @@
     <string name="subkey_assign_title">Tecla %1$s · %2$s</string>
     <string name="subkey_edit_current">Atual: %1$s</string>
     <string name="subkey_assign_default_removed">A subtecla integrada deste espaço foi removida.</string>
+    <string name="subkey_edit_layout_default">Subtecla integrada do layout do teclado</string>
     <string name="subkey_edit_reassign">Reatribuir</string>
     <string name="subkey_assign_choose">Escolha uma ação</string>
     <string name="subkey_edit_restore">Restaurar padrão</string>

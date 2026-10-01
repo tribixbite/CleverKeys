@@ -803,6 +803,7 @@
     <string name="subkey_assign_title">%1$s 키 · %2$s</string>
     <string name="subkey_edit_current">현재: %1$s</string>
     <string name="subkey_assign_default_removed">이 칸의 기본 하위 키가 제거되었습니다.</string>
+    <string name="subkey_edit_layout_default">키보드 레이아웃에 내장된 하위 키</string>
     <string name="subkey_edit_reassign">다시 할당</string>
     <string name="subkey_assign_choose">동작 선택</string>
     <string name="subkey_edit_restore">기본값 복원</string>

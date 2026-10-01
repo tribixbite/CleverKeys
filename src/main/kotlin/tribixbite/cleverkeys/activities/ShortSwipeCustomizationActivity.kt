@@ -348,6 +348,16 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                         showCommandPalette = false
                         editingDirection = null
                     }
+                },
+                subtitle = stringResource(
+                    R.string.subkey_assign_title,
+                    selectedKeyCode!!.uppercase(),
+                    stringResource(editingDirection!!.displayNameRes)
+                ),
+                // An existing mapping opens in its own editor, filled in (shared with the
+                // subkey popover's edit screen); backing out of it reaches the full list.
+                initialMapping = mappings.firstOrNull {
+                    it.keyCode == selectedKeyCode && it.direction == editingDirection
                 }
             )
         }

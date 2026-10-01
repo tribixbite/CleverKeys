@@ -788,6 +788,7 @@
     <string name="subkey_assign_title">Клавіша %1$s · %2$s</string>
     <string name="subkey_edit_current">Зараз: %1$s</string>
     <string name="subkey_assign_default_removed">Вбудовану підклавішу цієї комірки видалено.</string>
+    <string name="subkey_edit_layout_default">Вбудована підклавіша з розкладки клавіатури</string>
     <string name="subkey_edit_reassign">Перепризначити</string>
     <string name="subkey_assign_choose">Виберіть дію</string>
     <string name="subkey_edit_restore">Відновити типове</string>

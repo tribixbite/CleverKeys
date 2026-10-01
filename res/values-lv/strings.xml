@@ -814,6 +814,7 @@
     <string name="subkey_assign_title">Taustiņš %1$s · %2$s</string>
     <string name="subkey_edit_current">Pašlaik: %1$s</string>
     <string name="subkey_assign_default_removed">Šīs vietas iebūvētais apakštaustiņš tika noņemts.</string>
+    <string name="subkey_edit_layout_default">Tastatūras izkārtojuma iebūvēts apakštaustiņš</string>
     <string name="subkey_edit_reassign">Piešķirt no jauna</string>
     <string name="subkey_assign_choose">Izvēlieties darbību</string>
     <string name="subkey_edit_restore">Atjaunot noklusējumu</string>
