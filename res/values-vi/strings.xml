@@ -1860,6 +1860,10 @@
     <string name="cmd_voice_typing_desc">Bật nhập bằng giọng nói</string>
     <string name="cmd_voice_typing_chooser">Chọn nhập giọng nói</string>
     <string name="cmd_voice_typing_chooser_desc">Chọn phương thức nhập bằng giọng nói</string>
+    <string name="cmd_minimize_bar">Thu nhỏ thành thanh</string>
+    <string name="cmd_minimize_bar_desc">Thu gọn bàn phím thành một thanh mỏng; chạm vào để mở lại bàn phím</string>
+    <string name="cmd_minimize_fab">Thu nhỏ thành nút nổi</string>
+    <string name="cmd_minimize_fab_desc">Thu gọn bàn phím thành một nút nổi để ứng dụng dùng toàn màn hình; chạm vào để mở lại bàn phím</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Phím bổ trợ Shift (chữ hoa/ký hiệu)</string>
     <string name="cmd_ctrl">Ctrl</string>

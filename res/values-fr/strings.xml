@@ -1924,6 +1924,10 @@
     <string name="cmd_voice_typing_desc">Activer la saisie vocale</string>
     <string name="cmd_voice_typing_chooser">Choix de la saisie vocale</string>
     <string name="cmd_voice_typing_chooser_desc">Choisir le mode de saisie vocale</string>
+    <string name="cmd_minimize_bar">Réduire en barre</string>
+    <string name="cmd_minimize_bar_desc">Réduit le clavier à une fine barre ; touchez-la pour le rétablir</string>
+    <string name="cmd_minimize_fab">Réduire en bouton flottant</string>
+    <string name="cmd_minimize_fab_desc">Réduit le clavier à un bouton flottant pour laisser tout l\'écran à l\'appli ; touchez-le pour le rétablir</string>
     <string name="cmd_shift">Maj</string>
     <string name="cmd_shift_desc">Touche Maj (majuscules/symboles)</string>
     <string name="cmd_ctrl">Ctrl</string>

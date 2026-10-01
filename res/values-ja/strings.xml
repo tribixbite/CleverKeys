@@ -1831,6 +1831,10 @@
     <string name="cmd_voice_typing_desc">音声入力を開始</string>
     <string name="cmd_voice_typing_chooser">音声入力の選択</string>
     <string name="cmd_voice_typing_chooser_desc">使用する音声入力方法を選択</string>
+    <string name="cmd_minimize_bar">バーに最小化</string>
+    <string name="cmd_minimize_bar_desc">キーボードを細いバーに折りたたみます。タップすると元に戻ります</string>
+    <string name="cmd_minimize_fab">フローティングボタンに最小化</string>
+    <string name="cmd_minimize_fab_desc">キーボードをフローティングボタンに折りたたみ、アプリが画面全体を使えるようにします。タップすると元に戻ります</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift 修飾キー(大文字/記号)</string>
     <string name="cmd_ctrl">Ctrl</string>

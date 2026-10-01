@@ -1873,6 +1873,10 @@
     <string name="cmd_voice_typing_desc">Spraakinvoer activeren</string>
     <string name="cmd_voice_typing_chooser">Spraakinvoer kiezen</string>
     <string name="cmd_voice_typing_chooser_desc">Methode voor spraakinvoer kiezen</string>
+    <string name="cmd_minimize_bar">Minimaliseren naar balk</string>
+    <string name="cmd_minimize_bar_desc">Klapt het toetsenbord in tot een smalle balk; tik erop om het terug te halen</string>
+    <string name="cmd_minimize_fab">Minimaliseren naar zwevende knop</string>
+    <string name="cmd_minimize_fab_desc">Klapt het toetsenbord in tot een zwevende knop zodat de app het hele scherm heeft; tik erop om het terug te halen</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift-modificatie (hoofdletters/symbolen)</string>
     <string name="cmd_ctrl">Ctrl</string>

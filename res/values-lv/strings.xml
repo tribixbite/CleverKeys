@@ -1925,6 +1925,10 @@
     <string name="cmd_voice_typing_desc">Sākt rakstīšanu ar balsi</string>
     <string name="cmd_voice_typing_chooser">Balss ievades izvēle</string>
     <string name="cmd_voice_typing_chooser_desc">Izvēlēties balss ievades metodi</string>
+    <string name="cmd_minimize_bar">Minimizēt līdz joslai</string>
+    <string name="cmd_minimize_bar_desc">Sakļauj tastatūru šaurā joslā; pieskarieties tai, lai atjaunotu tastatūru</string>
+    <string name="cmd_minimize_fab">Minimizēt līdz peldošai pogai</string>
+    <string name="cmd_minimize_fab_desc">Sakļauj tastatūru peldošā pogā, lai lietotnei būtu viss ekrāns; pieskarieties tai, lai atjaunotu tastatūru</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift modifikators (lielie burti/simboli)</string>
     <string name="cmd_ctrl">Ctrl</string>

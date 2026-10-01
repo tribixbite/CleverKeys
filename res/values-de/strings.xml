@@ -1893,6 +1893,10 @@
     <string name="cmd_voice_typing_desc">Spracheingabe aktivieren</string>
     <string name="cmd_voice_typing_chooser">Spracheingabe-Auswahl</string>
     <string name="cmd_voice_typing_chooser_desc">Methode für die Spracheingabe auswählen</string>
+    <string name="cmd_minimize_bar">Auf Leiste minimieren</string>
+    <string name="cmd_minimize_bar_desc">Tastatur zu einer schmalen Leiste einklappen; Tippen holt sie zurück</string>
+    <string name="cmd_minimize_fab">Auf schwebende Schaltfläche minimieren</string>
+    <string name="cmd_minimize_fab_desc">Tastatur zu einer schwebenden Schaltfläche einklappen, damit die App den ganzen Bildschirm hat; Tippen holt sie zurück</string>
     <string name="cmd_shift">Umschalt</string>
     <string name="cmd_shift_desc">Umschalttaste (Großbuchstaben/Symbole)</string>
     <string name="cmd_ctrl">Strg</string>

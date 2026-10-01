@@ -1885,6 +1885,10 @@
     <string name="cmd_voice_typing_desc">I-activate ang voice input</string>
     <string name="cmd_voice_typing_chooser">Pagpili ng Voice Typing</string>
     <string name="cmd_voice_typing_chooser_desc">Pumili ng paraan ng voice input</string>
+    <string name="cmd_minimize_bar">I-minimize sa Bar</string>
+    <string name="cmd_minimize_bar_desc">Itiklop ang keyboard sa manipis na bar; i-tap ito para ibalik ang keyboard</string>
+    <string name="cmd_minimize_fab">I-minimize sa Floating Button</string>
+    <string name="cmd_minimize_fab_desc">Itiklop ang keyboard sa isang floating button para makuha ng app ang buong screen; i-tap ito para ibalik ang keyboard</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift modifier (malalaking titik/simbolo)</string>
     <string name="cmd_ctrl">Ctrl</string>

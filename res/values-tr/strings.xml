@@ -1884,6 +1884,10 @@
     <string name="cmd_voice_typing_desc">Sesle girişi başlat</string>
     <string name="cmd_voice_typing_chooser">Sesle Yazma Seçici</string>
     <string name="cmd_voice_typing_chooser_desc">Sesle giriş yöntemini seç</string>
+    <string name="cmd_minimize_bar">Çubuğa küçült</string>
+    <string name="cmd_minimize_bar_desc">Klavyeyi ince bir çubuğa daraltır; geri getirmek için çubuğa dokunun</string>
+    <string name="cmd_minimize_fab">Kayan düğmeye küçült</string>
+    <string name="cmd_minimize_fab_desc">Uygulama tüm ekranı kullansın diye klavyeyi kayan bir düğmeye daraltır; geri getirmek için düğmeye dokunun</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift değiştiricisi (büyük harf/sembol)</string>
     <string name="cmd_ctrl">Ctrl</string>

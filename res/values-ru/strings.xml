@@ -1960,6 +1960,10 @@
     <string name="cmd_voice_typing_desc">Запустить голосовой ввод</string>
     <string name="cmd_voice_typing_chooser">Выбор голосового ввода</string>
     <string name="cmd_voice_typing_chooser_desc">Выбрать способ голосового ввода</string>
+    <string name="cmd_minimize_bar">Свернуть в полосу</string>
+    <string name="cmd_minimize_bar_desc">Сворачивает клавиатуру в тонкую полосу; коснитесь её, чтобы вернуть клавиатуру</string>
+    <string name="cmd_minimize_fab">Свернуть в плавающую кнопку</string>
+    <string name="cmd_minimize_fab_desc">Сворачивает клавиатуру в плавающую кнопку, чтобы приложению достался весь экран; коснитесь её, чтобы вернуть клавиатуру</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Модификатор Shift (заглавные/символы)</string>
     <string name="cmd_ctrl">Ctrl</string>

@@ -1966,6 +1966,10 @@
     <string name="cmd_voice_typing_desc">Запустити голосове введення</string>
     <string name="cmd_voice_typing_chooser">Вибір голосового введення</string>
     <string name="cmd_voice_typing_chooser_desc">Вибрати спосіб голосового введення</string>
+    <string name="cmd_minimize_bar">Згорнути в смугу</string>
+    <string name="cmd_minimize_bar_desc">Згортає клавіатуру в тонку смугу; торкніться її, щоб повернути клавіатуру</string>
+    <string name="cmd_minimize_fab">Згорнути в плаваючу кнопку</string>
+    <string name="cmd_minimize_fab_desc">Згортає клавіатуру в плаваючу кнопку, щоб застосунок мав увесь екран; торкніться її, щоб повернути клавіатуру</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Модифікатор Shift (великі літери/символи)</string>
     <string name="cmd_ctrl">Ctrl</string>

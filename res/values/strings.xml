@@ -2273,6 +2273,10 @@
     <string name="cmd_voice_typing_desc">Activate voice input</string>
     <string name="cmd_voice_typing_chooser">Voice Typing Picker</string>
     <string name="cmd_voice_typing_chooser_desc">Choose voice input method</string>
+    <string name="cmd_minimize_bar">Minimize to Bar</string>
+    <string name="cmd_minimize_bar_desc">Collapse the keyboard to a thin bar; tap it to bring the keyboard back</string>
+    <string name="cmd_minimize_fab">Minimize to Floating Button</string>
+    <string name="cmd_minimize_fab_desc">Collapse the keyboard to a floating button so the app gets the whole screen; tap it to bring the keyboard back</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift modifier (uppercase/symbols)</string>
     <string name="cmd_ctrl">Ctrl</string>

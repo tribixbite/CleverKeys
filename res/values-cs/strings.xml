@@ -1955,6 +1955,10 @@
     <string name="cmd_voice_typing_desc">Spustit hlasové zadávání</string>
     <string name="cmd_voice_typing_chooser">Výběr hlasového zadávání</string>
     <string name="cmd_voice_typing_chooser_desc">Vybrat metodu hlasového zadávání</string>
+    <string name="cmd_minimize_bar">Minimalizovat na lištu</string>
+    <string name="cmd_minimize_bar_desc">Sbalí klávesnici do tenké lišty; klepnutím na ni ji vrátíte</string>
+    <string name="cmd_minimize_fab">Minimalizovat na plovoucí tlačítko</string>
+    <string name="cmd_minimize_fab_desc">Sbalí klávesnici do plovoucího tlačítka, aby aplikace měla celou obrazovku; klepnutím ji vrátíte</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Modifikátor Shift (velká písmena/symboly)</string>
     <string name="cmd_ctrl">Ctrl</string>

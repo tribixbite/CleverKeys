@@ -1879,6 +1879,10 @@
     <string name="cmd_voice_typing_desc">Hangbevitel indítása</string>
     <string name="cmd_voice_typing_chooser">Hangbevitel választása</string>
     <string name="cmd_voice_typing_chooser_desc">Hangalapú beviteli mód kiválasztása</string>
+    <string name="cmd_minimize_bar">Kicsinyítés sávvá</string>
+    <string name="cmd_minimize_bar_desc">A billentyűzetet vékony sávvá csukja össze; koppintson rá a visszahozáshoz</string>
+    <string name="cmd_minimize_fab">Kicsinyítés lebegő gombbá</string>
+    <string name="cmd_minimize_fab_desc">A billentyűzetet lebegő gombbá csukja össze, így az alkalmazásé a teljes képernyő; koppintson rá a visszahozáshoz</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift módosító (nagybetűk/szimbólumok)</string>
     <string name="cmd_ctrl">Ctrl</string>

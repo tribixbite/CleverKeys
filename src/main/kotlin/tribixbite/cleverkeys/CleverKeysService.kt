@@ -22,6 +22,9 @@ import android.view.inputmethod.InputMethodManager
 import android.view.inputmethod.InputMethodSubtype
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import tribixbite.cleverkeys.minimize.KeyboardMinimizer
+import tribixbite.cleverkeys.minimize.MinimizedKeyboardView
+import tribixbite.cleverkeys.minimize.MinimizedStyle
 import tribixbite.cleverkeys.ml.SwipeMLData
 
 /**
@@ -63,6 +66,17 @@ class CleverKeysService : InputMethodService(),
     // Unified prediction strategy: all predictions wait for gesture completion, so a partial
     // trace never produces a suggestion.
     private lateinit var _keyboardView: Keyboard2View
+
+    /**
+     * gh #175: the minimize_bar / minimize_fab commands swap the input view for a thin bar or a
+     * floating button; every setInputView goes through it (see [setInputView]).
+     */
+    private val _minimizer: KeyboardMinimizer<View> = KeyboardMinimizer(
+        show = { setInputView(it) },
+        createMinimized = {
+            MinimizedKeyboardView(this).apply { onExpand = { _minimizer.expand() } }
+        },
+    )
     private lateinit var _keyeventhandler: KeyEventHandler
 
     // Layout management (v1.32.363: extracted to LayoutManager)
@@ -730,14 +744,44 @@ class CleverKeysService : InputMethodService(),
     }
 
     override fun setInputView(v: View) {
-        val parent = v.parent
+        // While minimized the requested view is remembered as the one to expand back to, and
+        // the minimized view stays (gh #175).
+        val shown = _minimizer.resolve(v)
+        val parent = shown.parent
         if (parent != null && parent is ViewGroup) {
-            parent.removeView(v)
+            parent.removeView(shown)
         }
-        super.setInputView(v)
+        super.setInputView(shown)
         updateSoftInputWindowLayoutParams()
-        v.requestApplyInsets()
+        shown.requestApplyInsets()
     }
+
+    /** gh #175: collapse the keyboard to [style] until it is tapped or hidden. */
+    fun minimizeKeyboard(style: MinimizedStyle) {
+        _minimizer.minimize(style) { view ->
+            (view as MinimizedKeyboardView).bind(style, _keyboardView.getTheme())
+        }
+    }
+
+    /**
+     * The floating button leaves the app the whole screen (content insets at the window's
+     * bottom) and takes touches only on the button itself, so the rest of the strip it sits in
+     * passes taps and scrolls through to the app. The bar keeps the default insets: the app is
+     * resized to sit above it.
+     */
+    override fun onComputeInsets(outInsets: Insets) {
+        super.onComputeInsets(outInsets)
+        val view = _minimizer.minimized as? MinimizedKeyboardView ?: return
+        if (_minimizer.style != MinimizedStyle.FAB || !view.isAttachedToWindow) return
+        val windowHeight = view.rootView.height
+        outInsets.contentTopInsets = windowHeight
+        outInsets.visibleTopInsets = windowHeight
+        outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_REGION
+        view.touchableArea(_touchableRect)
+        outInsets.touchableRegion.set(_touchableRect)
+    }
+
+    private val _touchableRect = android.graphics.Rect()
 
     override fun updateFullscreenMode() {
         super.updateFullscreenMode()
@@ -803,6 +847,8 @@ class CleverKeysService : InputMethodService(),
 
     override fun onFinishInputView(finishingInput: Boolean) {
         super.onFinishInputView(finishingInput)
+        // gh #175: a minimized keyboard comes back full size the next time it is shown.
+        _minimizer.reset()
         _keyboardView.reset()
 
         // Clear suggestions to prevent stale state/crashes on app switch

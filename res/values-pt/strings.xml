@@ -1914,6 +1914,10 @@
     <string name="cmd_voice_typing_desc">Ativar a entrada por voz</string>
     <string name="cmd_voice_typing_chooser">Seletor de digitação por voz</string>
     <string name="cmd_voice_typing_chooser_desc">Escolher o método de entrada por voz</string>
+    <string name="cmd_minimize_bar">Minimizar para barra</string>
+    <string name="cmd_minimize_bar_desc">Recolhe o teclado numa barra fina; toque nela para trazer o teclado de volta</string>
+    <string name="cmd_minimize_fab">Minimizar para botão flutuante</string>
+    <string name="cmd_minimize_fab_desc">Recolhe o teclado num botão flutuante para o app usar a tela inteira; toque nele para trazer o teclado de volta</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Modificador Shift (maiúsculas/símbolos)</string>
     <string name="cmd_ctrl">Ctrl</string>

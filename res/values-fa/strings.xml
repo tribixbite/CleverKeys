@@ -1911,6 +1911,10 @@
     <string name="cmd_voice_typing_desc">فعال کردن ورودی صوتی</string>
     <string name="cmd_voice_typing_chooser">انتخابگر تایپ صوتی</string>
     <string name="cmd_voice_typing_chooser_desc">انتخاب روش ورودی صوتی</string>
+    <string name="cmd_minimize_bar">کوچک‌کردن به نوار</string>
+    <string name="cmd_minimize_bar_desc">صفحه‌کلید را به یک نوار باریک جمع می‌کند؛ برای بازگرداندن آن ضربه بزنید</string>
+    <string name="cmd_minimize_fab">کوچک‌کردن به دکمهٔ شناور</string>
+    <string name="cmd_minimize_fab_desc">صفحه‌کلید را به یک دکمهٔ شناور جمع می‌کند تا برنامه کل صفحه را داشته باشد؛ برای بازگرداندن ضربه بزنید</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">تغییردهندهٔ Shift (حروف بزرگ/نمادها)</string>
     <string name="cmd_ctrl">Ctrl</string>

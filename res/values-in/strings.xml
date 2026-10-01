@@ -1844,6 +1844,10 @@
     <string name="cmd_voice_typing_desc">Aktifkan input suara</string>
     <string name="cmd_voice_typing_chooser">Pemilih pengetikan suara</string>
     <string name="cmd_voice_typing_chooser_desc">Pilih metode input suara</string>
+    <string name="cmd_minimize_bar">Perkecil ke Bilah</string>
+    <string name="cmd_minimize_bar_desc">Ciutkan keyboard menjadi bilah tipis; ketuk untuk mengembalikan keyboard</string>
+    <string name="cmd_minimize_fab">Perkecil ke Tombol Mengambang</string>
+    <string name="cmd_minimize_fab_desc">Ciutkan keyboard menjadi tombol mengambang agar aplikasi mendapat seluruh layar; ketuk untuk mengembalikan keyboard</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Pengubah Shift (huruf kapital/simbol)</string>
     <string name="cmd_ctrl">Ctrl</string>

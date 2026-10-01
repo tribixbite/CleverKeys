@@ -1954,6 +1954,10 @@
     <string name="cmd_voice_typing_desc">Attiva l\'input vocale</string>
     <string name="cmd_voice_typing_chooser">Scelta digitazione vocale</string>
     <string name="cmd_voice_typing_chooser_desc">Scegli il metodo di input vocale</string>
+    <string name="cmd_minimize_bar">Riduci a barra</string>
+    <string name="cmd_minimize_bar_desc">Comprime la tastiera in una barra sottile; toccala per ripristinarla</string>
+    <string name="cmd_minimize_fab">Riduci a pulsante flottante</string>
+    <string name="cmd_minimize_fab_desc">Comprime la tastiera in un pulsante flottante così l\'app ha tutto lo schermo; toccalo per ripristinarla</string>
     <string name="cmd_shift">Maiusc</string>
     <string name="cmd_shift_desc">Modificatore Maiusc (maiuscole/simboli)</string>
     <string name="cmd_ctrl">Ctrl</string>

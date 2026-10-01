@@ -982,6 +982,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.customization.ReleaseClaimCommandCatalogueTest',
     // Every catalogue command reaches a path that performs it (2026-10-01).
     'tribixbite.cleverkeys.customization.CommandRoutingTest',
+    // gh #175 minimize-to-bar/FAB view state (2026-10-01).
+    'tribixbite.cleverkeys.minimize.KeyboardMinimizerTest',
     'tribixbite.cleverkeys.ReleaseClaimTextActionsTest',
     'tribixbite.cleverkeys.ReleaseClaimNavBarTest',
     'tribixbite.cleverkeys.LayoutCatalogueTest',

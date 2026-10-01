@@ -1830,6 +1830,10 @@
     <string name="cmd_voice_typing_desc">启动语音输入</string>
     <string name="cmd_voice_typing_chooser">选择语音输入</string>
     <string name="cmd_voice_typing_chooser_desc">选择语音输入法</string>
+    <string name="cmd_minimize_bar">最小化为横条</string>
+    <string name="cmd_minimize_bar_desc">将键盘收起为细横条；点按即可恢复键盘</string>
+    <string name="cmd_minimize_fab">最小化为悬浮按钮</string>
+    <string name="cmd_minimize_fab_desc">将键盘收起为悬浮按钮，让应用占满屏幕；点按即可恢复键盘</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift 修饰键（大写/符号）</string>
     <string name="cmd_ctrl">Ctrl</string>

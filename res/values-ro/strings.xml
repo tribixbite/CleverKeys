@@ -1941,6 +1941,10 @@
     <string name="cmd_voice_typing_desc">Pornește introducerea vocală</string>
     <string name="cmd_voice_typing_chooser">Selector dictare vocală</string>
     <string name="cmd_voice_typing_chooser_desc">Alege metoda de introducere vocală</string>
+    <string name="cmd_minimize_bar">Minimizează la bară</string>
+    <string name="cmd_minimize_bar_desc">Restrânge tastatura la o bară subțire; atinge-o pentru a readuce tastatura</string>
+    <string name="cmd_minimize_fab">Minimizează la buton flotant</string>
+    <string name="cmd_minimize_fab_desc">Restrânge tastatura la un buton flotant, ca aplicația să aibă tot ecranul; atinge-l pentru a readuce tastatura</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Modificator Shift (majuscule/simboluri)</string>
     <string name="cmd_ctrl">Ctrl</string>

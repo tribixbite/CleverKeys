@@ -119,6 +119,8 @@ object KeyLabels {
             KeyValue.Event.SWITCH_VOICE_TYPING,
             KeyValue.Event.SWITCH_VOICE_TYPING_CHOOSER -> getString(R.string.key_descr_voice_typing)
             KeyValue.Event.CONFIG -> getString(R.string.key_descr_config)
+            KeyValue.Event.MINIMIZE_BAR -> getString(R.string.cmd_minimize_bar)
+            KeyValue.Event.MINIMIZE_FAB -> getString(R.string.cmd_minimize_fab)
             KeyValue.Event.ACTION -> getString(R.string.key_descr_action)
         }
 

@@ -25,6 +25,7 @@ import androidx.core.view.ViewCompat
 import tribixbite.cleverkeys.gif.Gif
 import tribixbite.cleverkeys.gif.GifAssetManager
 import tribixbite.cleverkeys.gif.GifInsertPolicy
+import tribixbite.cleverkeys.minimize.MinimizedStyle
 import tribixbite.cleverkeys.gif.GifGridManager
 import tribixbite.cleverkeys.gif.GifGroupButtonsBar
 
@@ -554,6 +555,10 @@ class KeyboardReceiver(
                 // restore; hideContentPane() is a safe no-op when the views are null.
                 hideContentPane()
             }
+
+            // gh #175: collapse to a thin bar / a floating button; tapping it expands again.
+            KeyValue.Event.MINIMIZE_BAR -> keyboard2.minimizeKeyboard(MinimizedStyle.BAR)
+            KeyValue.Event.MINIMIZE_FAB -> keyboard2.minimizeKeyboard(MinimizedStyle.FAB)
 
             KeyValue.Event.CHANGE_METHOD_PICKER -> {
                 subtypeManager.inputMethodManager.showInputMethodPicker()

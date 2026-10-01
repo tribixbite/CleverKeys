@@ -1965,6 +1965,10 @@
     <string name="cmd_voice_typing_desc">Uruchom pisanie głosowe</string>
     <string name="cmd_voice_typing_chooser">Wybór pisania głosowego</string>
     <string name="cmd_voice_typing_chooser_desc">Wybierz metodę pisania głosowego</string>
+    <string name="cmd_minimize_bar">Minimalizuj do paska</string>
+    <string name="cmd_minimize_bar_desc">Zwija klawiaturę do cienkiego paska; dotknij go, aby ją przywrócić</string>
+    <string name="cmd_minimize_fab">Minimalizuj do pływającego przycisku</string>
+    <string name="cmd_minimize_fab_desc">Zwija klawiaturę do pływającego przycisku, aby aplikacja miała cały ekran; dotknij go, aby ją przywrócić</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Modyfikator Shift (wielkie litery/symbole)</string>
     <string name="cmd_ctrl">Ctrl</string>

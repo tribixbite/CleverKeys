@@ -1832,6 +1832,10 @@
     <string name="cmd_voice_typing_desc">음성 입력 시작</string>
     <string name="cmd_voice_typing_chooser">음성 입력 선택</string>
     <string name="cmd_voice_typing_chooser_desc">사용할 음성 입력 방법 선택</string>
+    <string name="cmd_minimize_bar">막대로 최소화</string>
+    <string name="cmd_minimize_bar_desc">키보드를 얇은 막대로 접습니다. 탭하면 다시 펼쳐집니다</string>
+    <string name="cmd_minimize_fab">플로팅 버튼으로 최소화</string>
+    <string name="cmd_minimize_fab_desc">앱이 화면 전체를 쓰도록 키보드를 플로팅 버튼으로 접습니다. 탭하면 다시 펼쳐집니다</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift 보조 키(대문자/기호)</string>
     <string name="cmd_ctrl">Ctrl</string>
