@@ -217,6 +217,29 @@ Key attributes:
 - `width`: Key width multiplier (default 1.0)
 - `shift`: Behavior on shift (0=normal, 1=uppercase)
 
+### Row height and numeric scaling (GH #90)
+
+`bottom_row="false"` controls whether the standard bottom row is appended. It does
+not identify a numeric layout or request full-height scaling. Text, macro and navigation
+layouts with fewer rows keep the normal row unit, so a single-row board stays compact.
+
+`numpad_height="true"` opts a layout into Appearance → Scale Numpad Height. It defaults
+to `false` when absent. The built-in `numeric.xml` and `pin.xml` opt in explicitly;
+a custom numeric layout can opt in using the same attribute. With the preference off,
+even opted-in layouts use the normal row unit.
+
+`Theme.Computed` divides the configured height by `keysHeight` only when both the
+preference and the XML flag are true; otherwise it divides by the normal 3.95 units.
+Row `height` and `shift` remain proportional, and total layout height is capped at the
+screen height. All `KeyboardData` transformations preserve the immutable flag from the
+source layout; appending a numpad to a text board does not opt the text board into scaling.
+Custom layout persistence stores original XML, and mapping export preserves root attributes.
+
+`NumpadKeySizeTest` exercises production XML parsing and theme geometry in `runMockTests`,
+including compact custom rows, fractional row height/shift, numeric/PIN preference on/off,
+flag defaults, transformed layouts and the screen-height cap. The existing #58 width tests
+retain their release-anchored names.
+
 ### CTC swipe eligibility
 
 A layout can reach the CTC engine only when all of these checks pass:

@@ -5,7 +5,8 @@
 **v1.5.0 (2026-07-15)**; v2.0.0 is prepped but NOT tagged, so every fix marked "unreleased" below
 reaches reporters only when that tag ships, and reporters must retest on a build that contains it.
 Commit hashes are the evidence, and test anchors live in the commits and the ledger
-(`2026-08-28-archive-verification.md`). **Nothing has been posted to GitHub.** Closing and
+(`2026-08-28-archive-verification.md`). Local implementation update on 2026-10-02 adds
+#90 and the #145 regression pin below; the GitHub counts remain the dated snapshot. **Nothing has been posted to GitHub.** Closing and
 commenting are the maintainer's job. The "GH action" column is only a recommendation.
 
 Statuses: **DONE** (the ask is shipped on main; close candidate) · **FIXED** (bug fixed on main,
@@ -15,14 +16,14 @@ of the ask is shipped; the residual is named) · **IN PROGRESS** (being built no
 **OPEN-ROOT-CAUSED** (defect located in code, unfixed) · **NEEDS-REPRO** (plausible, cannot be
 settled from source alone).
 
-## Summary (2026-10-01)
+## Summary (GitHub snapshot 2026-10-01; implementation update 2026-10-02)
 
 | Bucket | Count | Issues |
 |---|---|---|
-| DONE/FIXED but still open (close candidates) | 32 | bugs: #179 #171 #169 #161 #160 #154 #152 #151 #149 #148 #146 #145 #141 #134 #130 #99 #96 #77 #75 #71 #67 #35 · features: #135 #111 #94 #93 #70 #68 #58 #49 #31 #26 |
+| DONE/FIXED but still open (close candidates) | 33 | bugs: #90 #179 #171 #169 #161 #160 #154 #152 #151 #149 #148 #146 #145 #141 #134 #130 #99 #96 #77 #75 #71 #67 #35 · features: #135 #111 #94 #93 #70 #68 #58 #49 #31 #26 |
 | Close with explanation (NOT-REPRO / BY-DESIGN) | 2 | #162 #83 |
 | PARTIAL | 8 | #175 #167 #156 #101 #97 #88 #80 #72 |
-| Still open | 21 | bugs: #188 #186 #184 #181 #90 #79 · features: #187 #177 #168 #165 #163 #147 #139 #121 #120 #115 #87 #84 #69 #61 #52 |
+| Still open | 20 | bugs: #188 #186 #184 #181 #79 · features: #187 #177 #168 #165 #163 #147 #139 #121 #120 #115 #87 #84 #69 #61 #52 |
 
 What changed since 2026-09-05:
 - The maintainer reopened nine bot-closed but resolved issues on 2026-09-21 (#67 #99 #130 #134
@@ -66,7 +67,7 @@ What changed since 2026-09-05:
 | 130 | Clipboard ignores custom theme colors | **FIXED** (unreleased) — reopened 2026-09-21 | Chrome fixed in v1.5.0. Cached-pane invalidation + row colors in `a7940256`; emoji/GIF panes got the same treatment in `7144e2c7` (H-3). Visual residue for the soak: inline edit-field text, search highlight | close as completed citing `a7940256` |
 | 99 | build_langpack.py docs unclear | **RESOLVED** — reopened 2026-09-21 | README shows the full `--input` invocation, and `docs/guides/adding-a-new-language.md` exists | close as completed |
 | 96 | Dictionary search resets after recreation | **FIXED** (unreleased) | `e46ed8c1` (toggle path) + `6c97756b` (recreation path, `DictionarySearchStatePersistenceTest`) | comment + close on v2.0.0 |
-| 90 | Custom size for keyboard/row (bug: `bottom_row="false"`) | **OPEN-ROOT-CAUSED** (was FEATURE) | The reporter's own edit says it used to work and breaks only with `bottom_row="false"`. Cause: `Theme.kt:294` uses `config.scale_numpad_height && !layout.bottom_row` as its numpad test, so **any** text layout without a bottom row has its rows stretched to fill the whole keyboard height (`heightDivisor = layout.keysHeight`), which makes a one-row layout full-height. Introduced by `bd8cbafe` (#58, v1.2.6, 2026-01-16), 12 days before the issue was filed. In v1.5.0 the toggle had no UI. It is surfaced as Appearance → Scale numpad height only in the unreleased `68bafddc` (F-8), so released users have no workaround. Fix: key the scaling on numeric/PIN layout identity, not on `bottom_row`. A reporter bumped the thread on 2026-09-20 | comment root cause + 2.0 workaround; fix |
+| 90 | Custom size for keyboard/row (bug: `bottom_row="false"`) | **FIXED** (local, unreleased, 2026-10-02) | `Theme.Computed` now checks explicit `layout.numpad_height`, parsed from XML with default false and preserved by every layout transformation. Built-in numeric/PIN opt in; custom bottom-row-free layouts retain normal row sizing. Two fail-first tests measured the old error (400px instead of 101.27px for a single row). `NumpadKeySizeTest` covers real parsing/geometry, custom row heights/shifts, numeric/PIN toggle behavior, metadata copies and screen-height cap: 12/12 pass; full suites 2,729 pure / 912 mock pass. See `docs/specs/layout-system.md` | maintainer device check; close after release |
 | 83 | keys-per-direction ignored on medium swipes | **BY-DESIGN** | `short_gesture_max_distance` IS the boundary (pinned in `47969359`). The "200=disabled" label was never implemented and is retired (`Config.kt:712`). The ask overlaps #147/#87 | comment + close; point to #87 |
 | 79 | Settings header flicker on scroll (A17) | **OPEN-LOW** | Distinct from #167. The Wave-K device pass did not reproduce it (`docs/eval/2026-09-02-wave-k-device-verification.md`). The only observable is ARC-114's A17 top-strip tint. Needs a reporter capture | ask for a screen recording, or close as not-repro |
 | 77 | Can't disable Greek/Math toggle (custom XML) | **FIXED** (unreleased) | `e2b64d32` (`loc switch_greekmath` in numeric.xml + `paneLocKeyStripped`) | comment + close on v2.0.0 |
@@ -190,9 +191,9 @@ Ordered by value ÷ cost. Sizes: S ≤ 1 day, M ≈ 2-5 days, L > 1 week.
    explicitly wants GitHub features/bugs addressed and to test personally before 2.0.
    The checklist is reopened in their working tree; do not infer release readiness from
    the older HANDOFF sign-off. Tagging, pushing, publishing and issue closures are deferred.
-1. **#90: `bottom_row="false"` layouts stretched to full height.** S. Root cause located
-   (`Theme.kt:294` uses `!bottom_row` as a numpad proxy). Released builds have no workaround, it
-   is a regression since v1.2.6, and it also undermines the #139/#60 bottom-row workaround.
+1. **#90 — FIXED locally (2026-10-02).** Explicit `numpad_height` metadata replaces
+   the bottom-row proxy. Compact custom layouts retain authored sizing, numeric/PIN still
+   scale. Fail-first geometry coverage and full JVM suites pass; maintainer device check owed.
 2. **#145 regression pin — DONE (2026-10-02).** The mock test executes actual graph/view
    wiring with both prediction settings off, a null predictor, and two fresh views; the service
    handle is assigned without model loading. Maintainer cold-start gesture testing remains.

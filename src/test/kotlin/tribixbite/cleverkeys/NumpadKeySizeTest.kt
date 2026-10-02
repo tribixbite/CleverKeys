@@ -2,6 +2,10 @@ package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
 import java.io.File
+import java.io.StringReader
+import org.kxml2.io.KXmlParser
+import org.objenesis.ObjenesisStd
+import org.xmlpull.v1.XmlPullParser
 import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.Test
 import org.w3c.dom.Element
@@ -22,11 +26,11 @@ import org.w3c.dom.Element
  *    a 1.20× enlargement — the announced 20%, and the reason the file still carries the
  *    comment *"This makes keys 20% larger by eliminating right-side padding"*.
  * 2. **Height.** `Theme.Computed` divides by `layout.keysHeight` instead of the usual 3.95
- *    when `config.scale_numpad_height && !layout.bottom_row`, so a numeric keyboard fills the
+ *    when `config.scale_numpad_height && layout.numpad_height`, so a numeric keyboard fills the
  *    configured keyboard height instead of overflowing it. That branch is only reachable if
- *    the shipped numeric layouts declare `bottom_row="false"` and the default stays on —
- *    both pinned below. (The arithmetic itself needs `android.graphics.Paint`, so it is out
- *    of reach of a pure test; what is pinned here is that the branch's inputs still hold.)
+ *    the shipped numeric layouts opt in with `numpad_height="true"` and the default stays on.
+ *    The real parser and Theme.Computed run in the mock tier with functional Paint support;
+ *    custom bottom-row-free layouts retain normal height (GH #90).
  *
  * A regression in either direction — someone re-adding an explicit `width`, adding a key to a
  * PIN row, or flipping `SCALE_NUMPAD_HEIGHT` — silently shrinks the keys back and turns this
@@ -116,11 +120,120 @@ class NumpadKeySizeTest {
 
     @Test
     fun numericLayouts_keepTheHeightScalingBranchReachable() {
-        // Theme.Computed: `if (config.scale_numpad_height && !layout.bottom_row)` → divide by
+        // Theme.Computed: `if (config.scale_numpad_height && layout.numpad_height)` → divide by
         // the layout's own keysHeight so the rows fill the configured keyboard height.
         assertThat(Defaults.SCALE_NUMPAD_HEIGHT).isTrue()
         assertThat(bottomRow(PIN)).isFalse()
         assertThat(bottomRow(NUMERIC)).isFalse()
+        assertThat(parseLayout(PIN.readText()).numpad_height).isTrue()
+        assertThat(parseLayout(NUMERIC.readText()).numpad_height).isTrue()
+    }
+
+    /** GH #90: no bottom row means no appended row, not numeric-height scaling. */
+    @Test
+    fun customSingleRow_keepsNormalRowHeightWithNumpadScalingEnabled() {
+        val layout = parseLayout(
+            """<keyboard bottom_row="false"><row><key key0="a"/></row></keyboard>"""
+        )
+        assertThat(rowHeight(layout, scaleNumpad = true)).isWithin(1e-4f).of(400f / 3.95f)
+    }
+
+    @Test
+    fun customRowHeightAndShift_keepTheirAuthoredProportions() {
+        val layout = parseLayout(
+            """<keyboard bottom_row="false"><row height="1.5" shift="0.25">
+                <key key0="a"/></row></keyboard>"""
+        )
+        assertThat(layout.keysHeight).isEqualTo(1.75f)
+        assertThat(layout.rows.single().height).isEqualTo(1.5f)
+        assertThat(layout.rows.single().shift).isEqualTo(0.25f)
+        assertThat(rowHeight(layout, scaleNumpad = true)).isWithin(1e-4f).of(400f / 3.95f)
+    }
+
+    @Test
+    fun numpadHeightFlag_defaultsOffAndOnlyExplicitTrueOptsIn() {
+        for ((attribute, expected) in listOf(
+            "" to false, "numpad_height=\"false\"" to false, "numpad_height=\"true\"" to true
+        )) {
+            val layout = parseLayout(
+                "<keyboard bottom_row=\"false\" $attribute><row><key key0=\"a\"/></row></keyboard>"
+            )
+            assertThat(layout.numpad_height).isEqualTo(expected)
+        }
+    }
+
+    @Test
+    fun numericAndPinLayouts_scaleToConfiguredHeightOnlyWhenEnabled() {
+        for (file in listOf(NUMERIC, PIN)) {
+            val layout = parseLayout(file.readText())
+            assertThat(rowHeight(layout, scaleNumpad = true) * layout.keysHeight)
+                .isWithin(1e-4f).of(400f)
+            assertThat(rowHeight(layout, scaleNumpad = false))
+                .isWithin(1e-4f).of(400f / 3.95f)
+        }
+    }
+
+    @Test
+    fun customOptIn_scalesAuthoredHeightAndShiftProportionally() {
+        val layout = parseLayout(
+            """<keyboard bottom_row="false" numpad_height="true">
+                <row height="1.5" shift="0.25"><key key0="a"/></row></keyboard>"""
+        )
+        assertThat(rowHeight(layout, scaleNumpad = true) * layout.keysHeight)
+            .isWithin(1e-4f).of(400f)
+        assertThat(rowHeight(layout, scaleNumpad = false))
+            .isWithin(1e-4f).of(400f / 3.95f)
+    }
+
+    @Test
+    fun rowAndKeyTransformations_preserveTheSourceHeightPolicy() {
+        val numpad = parseLayout(NUMERIC.readText())
+        val compact = parseLayout(
+            """<keyboard bottom_row="false"><row><key key0="a"/></row></keyboard>"""
+        )
+        for (layout in listOf(numpad, compact)) {
+            val extraKeys = mapOf(
+                KeyValue.makeCharKey('z') to KeyboardData.PreferredPos.ANYWHERE
+            )
+            val transformed = listOf(
+                layout.mapKeys(KeyboardData.MapKey { it }),
+                layout.insert_row(layout.rows.first(), 0),
+                layout.addExtraKeys(extraKeys.entries.iterator()),
+                layout.addNumPad(numpad),
+            )
+            for (result in transformed) {
+                assertThat(result.numpad_height).isEqualTo(layout.numpad_height)
+            }
+        }
+    }
+
+    @Test
+    fun tallCustomLayouts_stillFitWithinTheScreenHeight() {
+        val rows = "<row><key key0=\"a\"/></row>".repeat(20)
+        val layout = parseLayout("<keyboard bottom_row=\"false\">$rows</keyboard>")
+        assertThat(rowHeight(layout, scaleNumpad = true) * layout.keysHeight)
+            .isWithin(1e-4f).of(1600f)
+    }
+
+    /** Run production parsing with the functional pull parser on the test classpath. */
+    private fun parseLayout(xml: String): KeyboardData {
+        val parser = KXmlParser().apply { setInput(StringReader(xml)) }
+        val method = KeyboardData.Companion::class.java.getDeclaredMethod(
+            "parse_keyboard", XmlPullParser::class.java
+        ).apply { isAccessible = true }
+        return method.invoke(KeyboardData.Companion, parser) as KeyboardData
+    }
+
+    /** Exercise Theme.Computed itself; only constructors needing an Android Context are skipped. */
+    private fun rowHeight(layout: KeyboardData, scaleNumpad: Boolean): Float {
+        val objenesis = ObjenesisStd()
+        val config = objenesis.newInstance(Config::class.java).apply {
+            screenHeightPixels = 1600
+            keyboardHeightPercent = 25
+            scale_numpad_height = scaleNumpad
+        }
+        val theme = objenesis.newInstance(Theme::class.java)
+        return Theme.Computed(theme, config, 100f, layout).row_height
     }
 
     @Test

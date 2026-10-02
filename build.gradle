@@ -105,6 +105,8 @@ dependencies {
   testImplementation "androidx.test:core:1.5.0"
   testImplementation "io.mockk:mockk:1.13.8"
   testImplementation "com.google.truth:truth:1.1.5"
+  // Real pull parsing for layout/geometry regressions; Android Xml is a host stub.
+  testImplementation "net.sf.kxml:kxml2:2.3.0"
   // Real org.json JSONObject for mock tests — android.jar provides only stubs
   // that throw RuntimeException("Stub!") on construction. Tests that build a
   // real JSON payload (BackupRestoreFullBackupTest) need this to shadow the
@@ -987,7 +989,6 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ReleaseClaimTextActionsTest',
     'tribixbite.cleverkeys.ReleaseClaimNavBarTest',
     'tribixbite.cleverkeys.LayoutCatalogueTest',
-    'tribixbite.cleverkeys.NumpadKeySizeTest',
     'tribixbite.cleverkeys.SecondaryPredictionWeightTest',
     'tribixbite.cleverkeys.CustomSubLabelRenderingTest',
     'tribixbite.cleverkeys.DictionarySortOrderTest',
@@ -1335,6 +1336,8 @@ tasks.register('runMockTests', JavaExec) {
     // Audit 2026-09-06 W7 (H-6): the key border paint honours keyOpacity — setColor runs
     // BEFORE the alpha assignment (setColor writes the full ARGB). Runs on the functional
     // android.graphics.Paint test-source shadow, which models real colour semantics.
+    // GH #90: real XML parsing and Theme geometry require Android API types.
+    'tribixbite.cleverkeys.NumpadKeySizeTest',
     'tribixbite.cleverkeys.ThemeBorderPaintOpacityTest',
     // Audit 2026-09-06 W7 (H-8, #77 residual): all-null loc-stripped pane cells render as
     // empty space — onDraw consults Keyboard2View.keyCellIsEmpty before drawKeyFrame.

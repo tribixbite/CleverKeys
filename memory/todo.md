@@ -24,9 +24,16 @@ maintainer-owned uncommitted manual-checklist resets.
   SHA-256: `12d29fd7d8177946eb755c90fbccbc30e6e3173f3be7366da72a43ec7a23bb50`.
   Manual #145 check: both prediction toggles off, restart keyboard, custom short swipe
   works immediately; repeat after changing theme. Minimize checks: keyboard-minimize spec.
-- [x] PAL policy updated: Gemini 3.8 (`gemini-3.8-flash`), never 3.1. Maintainer
+- [x] User/project PAL policy updated: Gemini 3.8 (`gemini-3.8-flash`), never 3.1. Maintainer
   approved consultation and local continuation if PAL fails (2026-10-02).
-- [ ] TODO: #90 explicit numeric-height metadata fix and regression geometry coverage.
+- [x] #90 fixed with explicit `numpad_height` XML metadata (default false), copied
+  through transformations; numeric/PIN opt in. Gemini 3.8 reviewed the approach.
+  Two fail-first tests reproduced the bug (400px vs 101.27px single-row unit).
+  Focused geometry/parser tests 12/12; Kotlin compilation, 2,729 pure / 912 mock pass
+  (7m48s). Five existing numpad tests moved from pure to mock; seven new tests added.
+- [ ] TODO: refresh the minified #90 test APK and verify its signature/ZIP integrity.
+- [ ] TODO: maintainer checks a compact bottom-row-free layout with Scale Numpad Height
+  enabled, numeric/PIN with scaling on/off, and an explicitly opted-in custom numpad.
 - [ ] TODO: continue #181 glyph filtering, #175 clipboard bulk delete/#168 clear key,
   #188 compose repro, #186/#61 layout language, and #184 oversized-pack guard.
 - [ ] TODO: maintainer manually tests the issue fixes and both minimize styles before 2.0.

@@ -31,7 +31,9 @@ class KeyboardData private constructor(
     /** Whether the number row is included in the layout and thus another one shouldn't be added. */
     val embedded_number_row: Boolean,
     /** Whether extra keys from [method.xml] should be added to this layout. */
-    val locale_extra_keys: Boolean
+    val locale_extra_keys: Boolean,
+    /** Opt in to the Scale Numpad Height preference; independent of bottom-row insertion. */
+    val numpad_height: Boolean
 ) {
     /** Position of every keys on the layout, see [getKeys()]. */
     private var _key_pos: Map<KeyValue, KeyPos>? = null
@@ -179,7 +181,8 @@ class KeyboardData private constructor(
         src.name,
         src.bottom_row,
         src.embedded_number_row,
-        src.locale_extra_keys
+        src.locale_extra_keys,
+        src.numpad_height
     )
 
     data class Row(
@@ -533,6 +536,7 @@ class KeyboardData private constructor(
             if (!expect_tag(parser, "keyboard"))
                 throw error(parser, "Expected tag <keyboard>")
             val bottom_row = attribute_bool(parser, "bottom_row", true)
+            val numpad_height = attribute_bool(parser, "numpad_height", false)
             val embedded_number_row = attribute_bool(parser, "embedded_number_row", false)
             val locale_extra_keys = attribute_bool(parser, "locale_extra_keys", true)
             val specified_kw = attribute_float(parser, "width", 0f)
@@ -563,7 +567,7 @@ class KeyboardData private constructor(
             for (r in rows)
                 kh += r.height + r.shift
             return KeyboardData(rows, maxOf(kw, 1f), kh, modmap, script, numpad_script, name,
-                bottom_row, embedded_number_row, locale_extra_keys)
+                bottom_row, embedded_number_row, locale_extra_keys, numpad_height)
         }
 
         private fun compute_max_width(rows: List<Row>): Float {

@@ -288,10 +288,12 @@ class Theme {
             // layout has more rows and smaller if it has less because rows stay the
             // same height.
             //
-            // For numeric keyboards (bottom_row=false) with scale_numpad_height enabled,
+            // Only layouts explicitly opting into numpad_height use full-height scaling.
+            // bottom_row=false also describes compact custom text/macro layouts (#90).
+            // With scale_numpad_height enabled,
             // use the actual keysHeight as divisor so rows scale up to fill the full
             // keyboard height, making keys easier to hit on small screens (#58).
-            val heightDivisor = if (config.scale_numpad_height && !layout.bottom_row) {
+            val heightDivisor = if (config.scale_numpad_height && layout.numpad_height) {
                 layout.keysHeight
             } else {
                 3.95f
