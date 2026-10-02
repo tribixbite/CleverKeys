@@ -1,10 +1,26 @@
 # Current work queue
 
-Updated: 2026-09-30. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
+Updated: 2026-10-02. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
 Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/2026-08-30-full-backlog-campaign.md).
 
 The September 1 campaign baseline was `5fb58037`; subsequent work through `79f0b464`
 was pushed with maintainer authorization on September 27. Preserve shared-tree work.
+
+## October 2 issue work before 2.0
+
+The maintainer wants GitHub feature/bug work and personal testing before release.
+Do not tag, bump, push, publish, or close issues as part of this round. Preserve the
+maintainer-owned uncommitted manual-checklist resets.
+
+- [x] Recovered the pending SubkeyAssignActivity lint fix. The prior guarded lint run
+  finished successfully in 50m16s (0 errors, 210 warnings), after the source edit.
+- [ ] TODO: #145 cold-start regression pin: execute real service-handle assignment with
+  prediction and swipe typing both off; verify replacement views and no model load.
+- [ ] TODO: #90 custom bottom-row-free layout height fix; local implementation awaiting
+  permission after automatic review rejected the repository-required external PAL consultation.
+- [ ] TODO: continue #181 glyph filtering, #175 clipboard bulk delete/#168 clear key,
+  #188 compose repro, #186/#61 layout language, and #184 oversized-pack guard.
+- [ ] TODO: maintainer manually tests the issue fixes and both minimize styles before 2.0.
 
 ## September 27 follow-through
 

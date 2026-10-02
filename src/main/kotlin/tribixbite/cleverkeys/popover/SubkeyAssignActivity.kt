@@ -26,9 +26,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -145,9 +145,12 @@ private fun SubkeyAssignScreen(request: SubkeyAssignRequest, onDone: () -> Unit)
     val scope = rememberCoroutineScope()
     val manager = remember { ShortSwipeCustomizationManager.getInstance(context) }
     // The stored mapping: the edit screen shows what it does and edits it, not just its label.
-    val loaded by produceState<LoadedMapping?>(null) {
+    // A LaunchedEffect rather than produceState: lint's ProduceStateDoesNotAssignValue rejected
+    // the produceState form of this load and failed CI (run on a9d8cb1d).
+    var loaded by remember { mutableStateOf<LoadedMapping?>(null) }
+    LaunchedEffect(request.keyCode, request.direction) {
         manager.loadMappings()
-        value = LoadedMapping(manager.getMapping(request.keyCode, request.direction))
+        loaded = LoadedMapping(manager.getMapping(request.keyCode, request.direction))
     }
 
     val startWithPalette = request.mode == SubkeyAssignRequest.Mode.ASSIGN && !request.hasDefault
