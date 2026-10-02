@@ -17,7 +17,13 @@ maintainer-owned uncommitted manual-checklist resets.
 - [x] #145 cold-start regression pin: real service-handle assignment works with
   prediction and swipe typing both off, including replacement views, without model load.
   Kotlin compilation and full suites pass: 2,734 pure / 900 mock (4m03s).
-- [x] Pending lint fix committed as `2c1583c7`; no push.
+- [x] Pending lint fix committed as `2c1583c7`; #145 test as `a53a24a3`; no push.
+- [x] Fresh minified APK built with release lint, R8 and resource shrinking (5m25s),
+  signature/ZIP integrity/ARM64 ONNX library verified; no install or device changes.
+  Artifact: `build/outputs/apk/release/CleverKeys-v2.0.0-arm64-v8a.apk`.
+  SHA-256: `12d29fd7d8177946eb755c90fbccbc30e6e3173f3be7366da72a43ec7a23bb50`.
+  Manual #145 check: both prediction toggles off, restart keyboard, custom short swipe
+  works immediately; repeat after changing theme. Minimize checks: keyboard-minimize spec.
 - [ ] TODO: #90 custom bottom-row-free layout height fix; local implementation awaiting
   permission after automatic review rejected the repository-required external PAL consultation.
 - [ ] TODO: continue #181 glyph filtering, #175 clipboard bulk delete/#168 clear key,
