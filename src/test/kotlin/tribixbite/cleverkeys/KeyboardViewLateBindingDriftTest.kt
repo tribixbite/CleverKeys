@@ -1,8 +1,11 @@
 package tribixbite.cleverkeys
 
+import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -90,6 +93,43 @@ class KeyboardViewLateBindingDriftTest {
         assertThrows(ProviderConsulted::class.java) {
             receiver.set_shift_state(true, false)
         }
+    }
+
+    /**
+     * GH #145/#138: a cold view must get its service handle even with both prediction
+     * switches off and no predictor built yet. Execute the real graph wiring and the
+     * real view assignment; only the coordinator getter avoids constructing model services.
+     */
+    @Test
+    fun coldViewGetsServiceHandleWithPredictionAndSwipeTypingDisabled() {
+        val config = objenesis.newInstance(Config::class.java).apply {
+            word_prediction_enabled = false
+            swipe_typing_enabled = false
+        }
+        val service = mockk<CleverKeysService>(relaxed = true)
+        val coordinator = mockk<PredictionCoordinator>()
+        every { coordinator.getWordPredictor() } returns null
+        val graph = spyk(objenesis.newInstance(KeyboardComponentGraph::class.java))
+        every { graph.predictionCoordinator } returns coordinator
+        seedField(graph, "config", config)
+        seedField(graph, "service", service)
+
+        // Each newly inflated view starts without a handle, including a replacement
+        // after a theme change. The provider must resolve the current instance each time.
+        repeat(2) {
+            val view = objenesis.newInstance(Keyboard2View::class.java)
+            val handle = Keyboard2View::class.java.getDeclaredField("_keyboard2").apply {
+                isAccessible = true
+            }
+            assertThat(handle.get(view)).isNull()
+            seedField(graph, "keyboardViewProvider", { view })
+
+            graph.wireSwipeTypingComponents()
+
+            assertThat(handle.get(view)).isSameInstanceAs(service)
+        }
+        verify(exactly = 2) { coordinator.getWordPredictor() }
+        verify(exactly = 0) { coordinator.initialize() }
     }
 
     private fun seedField(target: Any, name: String, value: Any?) {

@@ -14,8 +14,10 @@ maintainer-owned uncommitted manual-checklist resets.
 
 - [x] Recovered the pending SubkeyAssignActivity lint fix. The prior guarded lint run
   finished successfully in 50m16s (0 errors, 210 warnings), after the source edit.
-- [ ] TODO: #145 cold-start regression pin: execute real service-handle assignment with
-  prediction and swipe typing both off; verify replacement views and no model load.
+- [x] #145 cold-start regression pin: real service-handle assignment works with
+  prediction and swipe typing both off, including replacement views, without model load.
+  Kotlin compilation and full suites pass: 2,734 pure / 900 mock (4m03s).
+- [x] Pending lint fix committed as `2c1583c7`; no push.
 - [ ] TODO: #90 custom bottom-row-free layout height fix; local implementation awaiting
   permission after automatic review rejected the repository-required external PAL consultation.
 - [ ] TODO: continue #181 glyph filtering, #175 clipboard bulk delete/#168 clear key,
