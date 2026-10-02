@@ -24,8 +24,9 @@ maintainer-owned uncommitted manual-checklist resets.
   SHA-256: `12d29fd7d8177946eb755c90fbccbc30e6e3173f3be7366da72a43ec7a23bb50`.
   Manual #145 check: both prediction toggles off, restart keyboard, custom short swipe
   works immediately; repeat after changing theme. Minimize checks: keyboard-minimize spec.
-- [ ] TODO: #90 custom bottom-row-free layout height fix; local implementation awaiting
-  permission after automatic review rejected the repository-required external PAL consultation.
+- [x] PAL policy updated: Gemini 3.8 (`gemini-3.8-flash`), never 3.1. Maintainer
+  approved consultation and local continuation if PAL fails (2026-10-02).
+- [ ] TODO: #90 explicit numeric-height metadata fix and regression geometry coverage.
 - [ ] TODO: continue #181 glyph filtering, #175 clipboard bulk delete/#168 clear key,
   #188 compose repro, #186/#61 layout language, and #184 oversized-pack guard.
 - [ ] TODO: maintainer manually tests the issue fixes and both minimize styles before 2.0.

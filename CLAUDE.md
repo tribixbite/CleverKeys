@@ -55,6 +55,12 @@ committed coordination over working-tree edits.
 
 ---
 
+## PAL model preference
+
+Use Gemini 3.8 (`gemini-3.8-flash`) for PAL consultation; never use Gemini 3.1.
+If PAL fails or is unavailable, proceed locally with independent validation rather
+than blocking the work (maintainer instruction, 2026-10-02).
+
 ## 🎯 **PROJECT OVERVIEW**
 
 CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featuring:

@@ -10,15 +10,17 @@ Quick reference for AI assistants and developers working in this codebase.
 - **Push release tags** without explicit user confirmation ("push release" or "tag and push")
 - **Reply to GitHub issues** - NEVER comment, close, or interact with issues on behalf of user
 - **Reply to GitLab MRs** - NEVER comment on F-Droid or other external MRs
-- **Make architectural changes** without consulting Gemini 3 Pro via PAL MCP first
+- **Use Gemini 3.1** for PAL consultation; use Gemini 3.8 (`gemini-3.8-flash`) only
 
 ### ALWAYS
 - **Check GitHub issues** when all tasks are done - look for new bugs or feature requests
-- **Consult Gemini 3 Pro** (via `mcp__pal__chat` or `mcp__pal__consensus`) for:
+- **Consult Gemini 3.8 (`gemini-3.8-flash`)** (via `mcp__pal__chat` or `mcp__pal__consensus`) for:
   - Architectural decisions
   - Multi-file refactors
   - Performance optimizations
   - Security-sensitive changes
+- If PAL is unavailable or fails, proceed locally with independent validation (maintainer
+  authorization, 2026-10-02); never substitute Gemini 3.1.
 - **Sync release notes** between GitHub releases and F-Droid fastlane changelogs
 - **Test on device** via `./build-on-termux.sh` before proposing release
 
