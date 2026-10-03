@@ -185,6 +185,92 @@ tagged.
 
 ## Recommended next (2026-10-01)
 
+### Seeker device pass and short-word investigation (2026-10-03)
+
+The maintainer requested the full manual checklist on `192.168.0.170:5555`.
+This pass is **blocked, not signed off**: the device initially responded, then lost
+Wi-Fi during the first test-field interaction. Subsequent transport reconnects returned
+`No route to host`. No keyboard interaction or checklist item was verified successfully.
+
+- Installed APK remains the previously verified minified build, SHA-256
+  `9014e7ee7e0c9a52fdd71839eb9ac30a2fba839958df38d71262c974c09acd9d`.
+- Initial focus: Android SearchLauncher, task 860. CleverKeys LauncherActivity opened
+  successfully and its test field was located through the UI hierarchy. The focus-field
+  request stalled; screenshot/IME-state requests also stalled. Host requests were cancelled
+  and the ADB transport reconnected without restarting Android.
+- No settings, dictionary, layouts, clipboard or learned data were intentionally changed.
+  TODO: once the device reconnects, inspect current focus, remove the temporary
+  `/sdcard/cleverkeys-test-ui.xml` dump and return to the original Android launcher.
+- The maintainer-owned checklist is untouched. Fresh-install, reset and reboot checks
+  need separate authorization; they cannot be inferred from an in-place install.
+- Read-only GitHub refresh still reports 63 open issues. No external posts or closures.
+
+#### Confirmed local recognition gap: “wet”
+
+The shipped English lexicon contains `wet` (frequency byte 195). The real shipped
+ONNX model and production CTC beam/trie were exercised through `CtcReplayEngine`,
+using the committed golden layout and the existing bionic ORT natives. This tests decoding
+independently of Android touch classification; it does **not** test the Seeker's live geometry.
+
+| Input | Result |
+|---|---|
+| Canonical w→e→t; 4/12/24 samples per segment × 8/20 ms per sample | `wet` rank 7 in all six variants; greedy `we` |
+| Existing local corpus: two `wet` traces | One rejected for nonmonotonic timestamps; the one valid trace ranks `wet` 6, returns `we` first |
+| Endpoint dwell, 4 extra samples × 16 ms (64 ms), five small midpoint arcs | `wet` rank 3 in all five variants; still `we` first |
+| Longer dwell, 12 extra samples × 16 ms (192 ms), five arcs | `wet` rank 4–5; still `we` first |
+| Twelve endpoint offsets (x −0.04/0/+0.04/+0.08; y −0.05/0/+0.05 in normalized frame) | `wet` rank 4–8; no rank-1 recovery |
+| Controls, six variants per word | `we`, `were`, `west`, `get`, `yet`, `red`, `try`, `git` rank 1 throughout; `pet` ranks 1–2, `hello` 1–2, `tree` 3–4 |
+
+These are **one failing word with repeated controlled variants, plus one independent valid
+corpus trace**, not six independent user failures. The `tree` result is an additional synthetic
+warning, not a confirmed device bug. Local diagnostic output: `build/wet-probe.log` (ignored).
+
+On the canonical trace, forced scoring gives `we`: CTC −0.340, log-frequency 5.451,
+final 22.122; `wet`: CTC −6.489, log-frequency 5.273, final 19.428. Under the shipped
+`ctc / length^0.9 + 0.25 * length + 4 * logFreq` formula, the raw CTC difference is
+length-normalized; frequency contributes about 0.712 of the 2.694 final-score gap.
+The missing final letter in greedy decoding and the stronger emission loss make an
+endpoint/short-path recognition investigation more promising than a word-list patch.
+
+Practical interim checks: scroll the suggestion strip to reach `wet` (the engine returns eight
+candidates); a brief endpoint pause may put it in the first three, but is **not a reliable fix**.
+Tap typing is the dependable fallback. Trying the geometric engine is an A/B experiment,
+not a verified workaround. Repeated usage alone must not be promised to fix this: the
+experimental CTC learned prior is not enabled in the shipping adapter, and context rescoring's
+0.5 score-ratio guard cannot promote `wet` at 44/645 on this trace.
+
+TODO: capture the maintainer's real failed `wet` traces in the playground, record active layout,
+engine and gesture settings, inspect final-letter emissions/resampling, and compare geometric
+decoding. Keep a protected `we` control and a broader short-word corpus when evaluating a fix;
+do not special-case `wet` or weaken global ranking guards from this small sample.
+
+#### Remaining hands-on release checks, ordered by consequence
+
+1. **Typing and language:** ordinary English words plus `wet/we/tree/get/yet/pet/git`,
+   contractions, possessives, custom/cased words, custom-word removal, non-QWERTY swipe,
+   language switching and first swipe after a cold IME process start.
+2. **Gestures/window:** #145 with prediction and swipe typing off, after a theme change;
+   custom override and popover assignment; both minimize styles, app taps/scrolls outside
+   the FAB, hide/reopen, numeric/PIN scaling on/off and a compact custom bottom-row-free board.
+3. **Themes/settings:** all nine theme fields round-trip/live-update, caps-lock coloring,
+   active-theme deletion fallback, built-ins/Monet day-night, new switches persist,
+   Sparkle trail, PIN layout, settings search and search-state persistence.
+4. **Clipboard/GIF/emoji:** media row deletion, private entry/OS clipboard isolation,
+   pane theme updates, GIF search/pagination/content insertion/reimport, emoji search,
+   categories/insertion/recent entries and unsupported-glyph behavior.
+5. **Data/privacy:** playground records only playground swipes; export/share; settings
+   merge collision winner; encrypted round-trip; pack import/licence display. Reset preserving
+   dictionary/layout/learning data requires a backed-up, separately authorized destructive pass.
+6. **Real app/system integration:** Chrome and chat/text editors, Termux editing, actual
+   password-manager autofill-chip taps, TalkBack labels/activation, rotation and navigation
+   insets. Fresh-install ONNX initialization and once-per-boot reminder need an isolated
+   install/reboot pass; this device was not cleared or rebooted.
+
+All six groups remain pending on this Seeker pass. Prior JVM/mock and historical device
+results support implementation claims but do not discharge this release-specific soak.
+
+### Ordered issue queue
+
 Ordered by value ÷ cost. Sizes: S ≤ 1 day, M ≈ 2-5 days, L > 1 week.
 
 0. **Release held for issue work and maintainer testing (2026-10-02).** The maintainer

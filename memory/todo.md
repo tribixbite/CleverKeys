@@ -41,6 +41,23 @@ maintainer-owned uncommitted manual-checklist resets.
   #188 compose repro, #186/#61 layout language, and #184 oversized-pack guard.
 - [ ] TODO: maintainer manually tests the issue fixes and both minimize styles before 2.0.
 
+## October 3 device pass and “wet” report
+
+- [x] Read-only GitHub refresh: still 63 open issues; no posts/closures/pushes.
+- [x] Reproduced `wet`→`we` locally through the real shipped CTC model/trie: rank 7 on
+  six canonical variants; rank 6 on one valid existing corpus trace (one other trace
+  rejected for nonmonotonic timestamps). Endpoint dwell improves rank to 3 but never 1.
+  `tree` ranks 3–4 on synthetic controls; needs a real trace before calling it a bug.
+  Score decomposition and limitations: `docs/audit/gh-issue-resolution.md`.
+- [ ] TODO: full Seeker manual pass remains blocked. Device initially responded and
+  CleverKeys launcher opened, then Wi-Fi dropped at first field focus; reconnect reports
+  `No route to host`. No keyboard/checklist checks passed, no settings/data changed.
+- [ ] TODO: on reconnect inspect focus, remove `/sdcard/cleverkeys-test-ui.xml`, return
+  to original Android SearchLauncher (task 860), then resume the six test groups in the audit.
+- [ ] TODO: investigate `wet` final-letter emissions/resampling using maintainer playground
+  traces and compare geometric decoding; protect `we` and broad short-word accuracy.
+  No production recognition fix made; do not promise usage-learning or endpoint dwell fixes it.
+
 ## September 27 follow-through
 
 - [x] Prior 54 commits through `79f0b464` pushed; commit-specific CI, site deployment,
