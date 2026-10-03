@@ -46,7 +46,8 @@ maintainer-owned uncommitted manual-checklist resets.
 - [x] #181 emoji glyph filtering implemented for category/recent/search grids, with
   actual themed cell paint, per-grid cache and separate text-face handling. Recent
   records are preserved. Focused 7/7, Kotlin compilation, 2,733 pure / 912 mock pass
-  (5m34s). TODO: refreshed minified APK and device check; Monet half remains open.
+  (5m34s). Refreshed minified APK now builds/verifies (see #184 below);
+  TODO: device check. Monet half remains open.
 - [x] Reconnected Seeker reproduced live `wet`→`We`. Popover hold/cancel, empty-slot
   assignment, saved-action dwell-to-edit, FAB minimize/expand and bar minimize/resize
   verified. Bar expansion and app interaction coverage still pending.
@@ -95,8 +96,15 @@ maintainer-owned uncommitted manual-checklist resets.
   `build/issue-184-final-tests.log`. The old oversized-NOTICE test expected import
   success; updated to test new refusal plus legacy read truncation. Added exact-count,
   misleading-manifest, byte, update rollback, duplicate, entry-count and aggregate guards.
-- [ ] TODO: refreshed minified APK verification and Seeker installation/device checks.
-- [ ] TODO: Seeker device checks remain blocked by repeated No route to host (15:06 UTC).
+- [x] #184 committed `af742286`; refreshed minified APK builds (9m23s), including
+  lint-vital, R8 and resource shrinking. ARM64 APK signature v2, alignment, ZIP CRC,
+  both ARM64 ELF libraries, embedded guard strings and numeric/PIN source hashes pass.
+  SHA-256 `a356ac06a3ca6a4fde204f92a28c76bb2aeea653cf0acc641d2e51bf8e5bc542`.
+  Logs: `build/issue-184-release.log`, `build/issue-184-artifact-verification.log`.
+- [ ] TODO: install this APK on Seeker after restoring test settings, then verify #181/#184.
+  Local path: `build/outputs/apk/release/CleverKeys-v2.0.0-arm64-v8a.apk`.
+  Last installed Seeker APK still predates these two fixes. No push/tag/release.
+- [ ] TODO: Seeker device checks remain blocked by repeated No route to host (final bounded retry also failed).
   The last successful install contains #90/minimize, not the new #181/#184 fixes.
   Restore temporary popover true to original false, remove test t/South mapping, clear
   launcher test text and scratch UI XML, then return to original Android launcher.

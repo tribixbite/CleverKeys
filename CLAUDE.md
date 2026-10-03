@@ -250,3 +250,9 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 
 ### Release APK raw-layout verification (2026-10-02)
 - Minified release APKs shorten raw XML paths (e.g. res/-0.xml), so looking for res/raw/numeric.xml falsely suggests the layout is absent. Verify packaged layouts by matching source-byte SHA-256 against archive entries; do not rely on resource filenames.
+
+### Dictionary import allocations (2026-10-03)
+- Streaming ZIP extraction does not bound later trie/word-array allocations. GH #184 shares 100,000 canonical entries / 16 MiB CKDT limits through `CkdtDictionaryReader`; validate actual header counts at import and load, never manifest metadata. Archive caps/refusal/rollback are in `docs/specs/dictionary-and-language-system.md`.
+
+### Pure helpers beside Android views (2026-10-03)
+- An Android View companion can still class-load Android-only outer types under pure JVM tests. Keep Android-free policies in a separate object in the existing source file (as `EmojiGlyphSupport`), rather than the View companion.
