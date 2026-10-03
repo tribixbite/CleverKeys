@@ -14,6 +14,24 @@ Users need word suggestions while typing, and the ability to quickly access emoj
 
 ## Architecture
 
+### Device glyph support (GH #181, 2026-10-03)
+
+`EmojiGridView` filters categories, recents and search through the same device-font
+support check. Unicode emoji sequences must pass `Paint.hasGlyph` as a whole; a
+decomposed unsupported ZWJ sequence is hidden as well as a missing single character.
+The paint comes from an actual cell with `emojiGridButton` styling, so fallback fonts
+match rendering. Answers are cached only for the lifetime of that grid.
+
+The final resource group is text emoticons/kaomoji. Those are checked per visible
+codepoint instead of demanding a single ligature for an entire face. Whitespace,
+format controls and variation selectors do not require standalone glyphs. Filtering
+does not delete recent-use records or modify the emoji catalogue: a later font update
+can make those entries visible again. Search's result count reflects the filtered list.
+`Issue118EmojiOverflowTest` covers unsupported compound emoji, supported keycaps and
+ZWJ sequences, ASCII/CJK text faces, and both presentation entry points.
+
+See [Android's glyph-check contract](https://developer.android.com/reference/android/graphics/Paint#hasGlyph(java.lang.String)).
+
 ### View Hierarchy
 
 ```

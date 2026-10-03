@@ -230,6 +230,41 @@ rebuilt, re-upload: the zips are deterministic, so a changed byte means changed 
 
 ## 6. Final checklist
 
+### Bangla path and current limitations (2026-10-03)
+
+Tap input already has two bundled layouts: `beng_national.xml` (National) and
+`beng_provat.xml` (Provat), both declared `script="bengali"`. There is no `bn` row in
+the dictionary classifier/orchestrator and no Bangla CTC model or routed script row.
+The existing layouts therefore do not promise Bangla word prediction or swipe accuracy.
+
+There is a path, but importing a dictionary alone is not full Bangla swipe support:
+
+1. **Dictionary and tap prediction:** obtain a licensed Bangla corpus/word list with
+   attribution, implement a Bengali-script candidate validator that allows meaningful
+   combining marks, and preserve spelling in CKDT normalized lookup keys. Today the
+   classifier's `isalpha()` gate rejects marked words, and `build_dictionary.py`'s
+   unconditional NFD/Mn stripping removes essential vowel signs and the hasant. Audit
+   runtime word-boundary/fuzzy-prefix handling alongside the builder. Add native-speaker
+   sentinels and canonical round-trip/prefix fixtures before generating/publishing a pack.
+2. **Geometric swipe:** define mark/conjunct projection explicitly for National and
+   Provat. `KeyLetter` currently accepts letter centers only; `LayoutGeometry` treats
+   all-letter labels as gesture nodes. `LayoutProjection` drops standalone Mn marks
+   and cannot resolve Mc vowel signs through those nodes. Treating all Bangla marks as
+   optional accents would conflate different words. Test dependent vowels, hasant,
+   conjuncts, corner-hosted signs and canonically equivalent spelling with real traces.
+3. **CTC swipe, later:** choose a script/token inventory that covers those sequences,
+   train a Bangla model, ship it in the pack with registry hash/golden fixtures, and
+   validate both layout geometry and a held-out Bangla corpus before routing it.
+
+The script's vowel signs and virama model are described in the
+[Unicode Bangla section](https://www.unicode.org/versions/Unicode16.0.0/core-spec/chapter-12/)
+and [Bangla FAQ](https://www.unicode.org/faq/bengali.html). Native-speaker validation
+is a release gate for spelling, layout behavior and swipe usefulness; this investigation
+does not claim a Bangla pack or recognizer has been implemented.
+
+TODO: implement and verify stage 1 before advertising Bangla prediction, then measure
+stage 2 before advertising Bangla swipe.
+
 - [ ] `LANG_CONFIG` row + review artifacts read + langpack built, guards green
 - [ ] layout XML with correct `script=`; `LayoutScriptDeclarationTest` green
 - [ ] (script track) `CtcScriptSupport` row, projection rules, model + fixture copied, shas

@@ -32,6 +32,48 @@ import java.io.File
  */
 class Issue118EmojiOverflowTest {
 
+    @Test
+    fun unsupportedEmojiSequenceIsHiddenEvenWhenItsComponentsExist() {
+        val checked = mutableListOf<String>()
+        val supported = EmojiGlyphSupport.hasDisplayGlyph("🐦‍🔥", false) {
+            checked.add(it)
+            it == "🐦" || it == "🔥"
+        }
+        assertThat(supported).isFalse()
+        assertThat(checked).containsExactly("🐦‍🔥")
+    }
+
+    @Test
+    fun supportedEmojiAndKeycapAreCheckedAsWholeSequences() {
+        for (text in listOf("😀", "1️⃣", "👩‍💻")) {
+            assertThat(EmojiGlyphSupport.hasDisplayGlyph(text, false) { it == text }).isTrue()
+        }
+        assertThat(EmojiGlyphSupport.hasDisplayGlyph("🫩", false) { false }).isFalse()
+        assertThat(EmojiGlyphSupport.hasDisplayGlyph("", false) { true }).isFalse()
+    }
+
+    @Test
+    fun textFacesKeepSupportedCharactersWithoutRequiringALigature() {
+        for (text in listOf(":)", "ಠ_ಠ", "¯\\_(ツ)_/¯")) {
+            assertThat(EmojiGlyphSupport.hasDisplayGlyph(text, true) {
+                it.codePointCount(0, it.length) == 1
+            }).isTrue()
+        }
+        assertThat(EmojiGlyphSupport.hasDisplayGlyph("(ツ)", true) { it != "ツ" }).isFalse()
+        assertThat(EmojiGlyphSupport.hasDisplayGlyph("A\uFE0F B", true) {
+            it == "A" || it == "B"
+        }).isTrue()
+    }
+
+    @Test
+    fun categoriesRecentsAndSearchUseTheSameDisplayFilter() {
+        val source = readSource("emoji/EmojiGridView.kt")
+        assertThat(Regex("emojiArray = emojiArray\\.filter\\(::isRenderable\\)")
+            .findAll(source).count()).isEqualTo(2)
+        // Filtering the view must not remove a recent entry from persistent storage.
+        assertThat(source).doesNotContain("lastUsed.remove")
+    }
+
     private val srcDir = File("src/main/kotlin/tribixbite/cleverkeys")
 
     private fun readSource(filename: String): String {

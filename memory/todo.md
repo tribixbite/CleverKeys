@@ -43,6 +43,24 @@ maintainer-owned uncommitted manual-checklist resets.
 
 ## October 3 device pass and “wet” report
 
+- [x] #181 emoji glyph filtering implemented for category/recent/search grids, with
+  actual themed cell paint, per-grid cache and separate text-face handling. Recent
+  records are preserved. Focused 7/7, Kotlin compilation, 2,733 pure / 912 mock pass
+  (5m34s). TODO: refreshed minified APK and device check; Monet half remains open.
+- [x] Reconnected Seeker reproduced live `wet`→`We`. Popover hold/cancel, empty-slot
+  assignment, saved-action dwell-to-edit, FAB minimize/expand and bar minimize/resize
+  verified. Bar expansion and app interaction coverage still pending.
+- [ ] TODO: Seeker dropped Wi-Fi again after the above checks. Restore temporary
+  popover enable (original false) and delete test `t`/South mapping (original empty),
+  clear only launcher test text, then restore Android launcher focus. No other settings
+  were changed; no reboot/data clear. Fresh-install/reset checks require separate approval.
+- [x] Bangla support path documented in `docs/guides/adding-a-new-language.md`: National
+  and Provat tap layouts exist, no published `bn` pack/model. Dictionary building strips
+  meaningful Mn signs and the geometric letter-node/projection policy excludes essential
+  marks. Stage 1 preserves spelling and adds licensed dictionary/tap fixtures; stage 2
+  defines/test mark/conjunct geometry; stage 3 is trained/validated CTC. Nothing advertised
+  as implemented prediction/swipe support.
+
 - [x] Read-only GitHub refresh: still 63 open issues; no posts/closures/pushes.
 - [x] Reproduced `wet`→`we` locally through the real shipped CTC model/trie: rank 7 on
   six canonical variants; rank 6 on one valid existing corpus trace (one other trace

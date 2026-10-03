@@ -16,6 +16,17 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
 
     private var emojiArray: List<Emoji> = emptyList()
     private val lastUsed: MutableMap<Emoji, Int> = mutableMapOf()
+    // Use the actual cell's themed paint, including system font fallback. A grid is
+    // recreated on theme changes, so cached answers cannot outlive its typeface.
+    private val glyphPaint by lazy {
+        EmojiView(ContextThemeWrapper(context, R.style.emojiGridButton)).paint
+    }
+    private val glyphSupport = mutableMapOf<Emoji, Boolean>()
+    private val textEmoticons by lazy {
+        // The final resource group contains text faces, including two-character
+        // ASCII faces and kaomoji that a punctuation-count heuristic misclassifies.
+        Emoji.getEmojisByGroup(Emoji.getNumGroups() - 1).toHashSet()
+    }
     private var saveScheduled = false  // Debounce flag for saveLastUsed
 
     // #41 v8: Reference to search manager for bypassing search routing on emoji selection
@@ -61,6 +72,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         } else {
             Emoji.getEmojisByGroup(group)
         }
+        emojiArray = emojiArray.filter(::isRenderable)
         adapter = EmojiViewAdapter(context, emojiArray)
     }
 
@@ -75,8 +87,15 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         } else {
             Emoji.searchByName(query)
         }
+        emojiArray = emojiArray.filter(::isRenderable)
         adapter = EmojiViewAdapter(context, emojiArray)
         return emojiArray.size
+    }
+
+    private fun isRenderable(emoji: Emoji): Boolean = glyphSupport.getOrPut(emoji) {
+        EmojiGlyphSupport.hasDisplayGlyph(
+            emoji.kv().getString(), emoji in textEmoticons, glyphPaint::hasGlyph
+        )
     }
 
     override fun onItemClick(parent: AdapterView<*>?, v: View, pos: Int, id: Long) {
@@ -301,5 +320,32 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         const val GROUP_LAST_USE = -1
         const val GROUP_SEARCH = -2  // #41: Search mode
         private const val LAST_USE_PREF = "emoji_last_use"
+    }
+}
+
+/** Android-free glyph policy shared by category, recent and search presentation. */
+internal object EmojiGlyphSupport {
+    /** Check emoji ligatures as a unit, but text faces as separate visible glyphs. */
+    fun hasDisplayGlyph(
+        text: String,
+        isTextEmoticon: Boolean,
+        hasGlyph: (String) -> Boolean
+    ): Boolean {
+        if (text.isEmpty()) return false
+        if (!isTextEmoticon) return hasGlyph(text)
+        var offset = 0
+        while (offset < text.length) {
+            val codePoint = text.codePointAt(offset)
+            val end = offset + Character.charCount(codePoint)
+            // These affect shaping or spacing and need no standalone glyph.
+            val type = Character.getType(codePoint)
+            if (!Character.isWhitespace(codePoint) &&
+                type != Character.FORMAT.toInt() &&
+                type != Character.CONTROL.toInt() &&
+                codePoint !in 0xFE00..0xFE0F && codePoint !in 0xE0100..0xE01EF &&
+                !hasGlyph(text.substring(offset, end))) return false
+            offset = end
+        }
+        return true
     }
 }
