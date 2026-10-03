@@ -2258,4 +2258,6 @@
     <string name="cmd_timestamp_iso_desc">Inserir carimbo de data/hora ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">em %1$s</string>
+    <string name="pack_error_dictionary_too_large">Este dicionário contém %1$d palavras; o limite é %2$d. Importe um pacote menor.</string>
+    <string name="pack_error_member_too_large">%1$s excede o limite de %2$d KiB.</string>
 </resources>

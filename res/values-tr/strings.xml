@@ -2228,4 +2228,6 @@
     <string name="cmd_timestamp_iso_desc">ISO 8601 zaman damgası ekle (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">Bölüm: %1$s</string>
+    <string name="pack_error_dictionary_too_large">Bu sözlük %1$d kelime içeriyor; sınır %2$d. Daha küçük bir paket içe aktarın.</string>
+    <string name="pack_error_member_too_large">%1$s, %2$d KiB sınırından büyük.</string>
 </resources>

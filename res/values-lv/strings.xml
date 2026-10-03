@@ -2269,4 +2269,6 @@
     <string name="cmd_timestamp_iso_desc">Ievietot ISO 8601 laikspiedolu (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">sadaļā %1$s</string>
+    <string name="pack_error_dictionary_too_large">Šī vārdnīca satur %1$d vārdus; ierobežojums ir %2$d. Importējiet mazāku pakotni.</string>
+    <string name="pack_error_member_too_large">%1$s pārsniedz %2$d KiB ierobežojumu.</string>
 </resources>

@@ -2223,4 +2223,6 @@
     <string name="cmd_timestamp_iso_desc">ISO 8601 időbélyeg beszúrása (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">Szakasz: %1$s</string>
+    <string name="pack_error_dictionary_too_large">Ez a szótár %1$d szót tartalmaz; a korlát %2$d. Importáljon kisebb csomagot.</string>
+    <string name="pack_error_member_too_large">A(z) %1$s nagyobb a(z) %2$d KiB-os korlátnál.</string>
 </resources>

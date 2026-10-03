@@ -37,8 +37,8 @@ maintainer-owned uncommitted manual-checklist resets.
 - [x] #90 committed as `ba5bbee6`; refreshed and verified minified test APK installed.
 - [ ] TODO: maintainer checks a compact bottom-row-free layout with Scale Numpad Height
   enabled, numeric/PIN with scaling on/off, and an explicitly opted-in custom numpad.
-- [ ] TODO: continue #181 glyph filtering, #175 clipboard bulk delete/#168 clear key,
-  #188 compose repro, #186/#61 layout language, and #184 oversized-pack guard.
+- [ ] TODO: device-check #181 glyph filtering and #184 oversized-pack guard; continue
+  #175 clipboard bulk delete/#168 clear key, #188 compose repro and #186/#61 layout language.
 - [ ] TODO: maintainer manually tests the issue fixes and both minimize styles before 2.0.
 
 ## October 3 device pass and “wet” report
@@ -50,6 +50,11 @@ maintainer-owned uncommitted manual-checklist resets.
 - [x] Reconnected Seeker reproduced live `wet`→`We`. Popover hold/cancel, empty-slot
   assignment, saved-action dwell-to-edit, FAB minimize/expand and bar minimize/resize
   verified. Bar expansion and app interaction coverage still pending.
+- [x] Full-dictionary geometric comparison: clean canonical `wet/we/tree/get/yet/pet/git`
+  all rank 1, `hello` rank 2. One valid human `wet` trace ranks 1 vs CTC rank 6.
+  Alternate engine is a promising trial, not a broad measured human
+  accuracy; CTC code/ranking remains unchanged. Evidence in issue audit and ignored
+  `build/wet-geo-probe.log`.
 - [ ] TODO: Seeker dropped Wi-Fi again after the above checks. Restore temporary
   popover enable (original false) and delete test `t`/South mapping (original empty),
   clear only launcher test text, then restore Android launcher focus. No other settings
@@ -67,14 +72,40 @@ maintainer-owned uncommitted manual-checklist resets.
   rejected for nonmonotonic timestamps). Endpoint dwell improves rank to 3 but never 1.
   `tree` ranks 3–4 on synthetic controls; needs a real trace before calling it a bug.
   Score decomposition and limitations: `docs/audit/gh-issue-resolution.md`.
-- [ ] TODO: full Seeker manual pass remains blocked. Device initially responded and
-  CleverKeys launcher opened, then Wi-Fi dropped at first field focus; reconnect reports
-  `No route to host`. No keyboard/checklist checks passed, no settings/data changed.
+- [ ] TODO: full Seeker manual pass remains blocked. Initial attempt dropped Wi-Fi at
+  field focus with no changes; the subsequent partial pass above did verify minimize/
+  popover paths and left two temporary changes pending restoration after another drop.
 - [ ] TODO: on reconnect inspect focus, remove `/sdcard/cleverkeys-test-ui.xml`, return
   to original Android SearchLauncher (task 860), then resume the six test groups in the audit.
 - [ ] TODO: investigate `wet` final-letter emissions/resampling using maintainer playground
   traces and compare geometric decoding; protect `we` and broad short-word accuracy.
   No production recognition fix made; do not promise usage-learning or endpoint dwell fixes it.
+
+## October 3 oversized-pack follow-through
+
+- [x] #184 guard implemented: shared 100,000 canonical words / 16 MiB CKDT policy;
+  import checks the actual header, independent of manifest metadata. Tap/geometric/CTC
+  refuse older oversized files before word-array allocation. Normalized count cannot
+  exceed canonical count. No vocabulary is silently truncated.
+- [x] ZIP extraction bounds all members, aggregate 64 MiB / 64 entries, manifest/NOTICE
+  64 KiB and model 8 MiB; rejects unsafe paths and duplicate flattened filenames.
+  Refusals preserve previous installation and clean scratch. New messages translated
+  in all 22 resource locales.
+- [x] Final Kotlin compilation and full suites: 2,737 pure / 919 mock pass (6m43s),
+  `build/issue-184-final-tests.log`. The old oversized-NOTICE test expected import
+  success; updated to test new refusal plus legacy read truncation. Added exact-count,
+  misleading-manifest, byte, update rollback, duplicate, entry-count and aggregate guards.
+- [ ] TODO: refreshed minified APK verification and Seeker installation/device checks.
+- [ ] TODO: Seeker device checks remain blocked by repeated No route to host (15:06 UTC).
+  The last successful install contains #90/minimize, not the new #181/#184 fixes.
+  Restore temporary popover true to original false, remove test t/South mapping, clear
+  launcher test text and scratch UI XML, then return to original Android launcher.
+- [ ] TODO: finish bar expansion, app scrolling around FAB, RTL/hide-show, compact and
+  numeric/PIN height, cold-start custom gestures with both swipe/prediction disabled,
+  emoji/category/search/recents + Monet day/night, compose, and main release-check groups.
+- [x] Optional PAL source-file review was blocked by automatic approval review (external
+  transfer not specifically authorized); continued local review/tests. No source files
+  exported through that rejected call. Earlier abstract review/translations used Gemini 3.8.
 
 ## September 27 follow-through
 

@@ -2285,4 +2285,6 @@
     <string name="cmd_timestamp_iso_desc">Inserează marcaj temporal ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">în %1$s</string>
+    <string name="pack_error_dictionary_too_large">Acest dicționar conține %1$d cuvinte; limita este de %2$d. Importați un pachet mai mic.</string>
+    <string name="pack_error_member_too_large">%1$s depășește limita de %2$d KiB.</string>
 </resources>

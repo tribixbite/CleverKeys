@@ -2176,4 +2176,6 @@
     <string name="cmd_timestamp_iso_desc">ISO 8601 타임스탬프 삽입(YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">%1$s 섹션</string>
+    <string name="pack_error_dictionary_too_large">이 사전에는 %1$d개의 단어가 포함되어 있습니다. 제한은 %2$d개입니다. 더 작은 팩을 가져오세요.</string>
+    <string name="pack_error_member_too_large">%1$s이(가) 한도인 %2$d KiB보다 큽니다.</string>
 </resources>

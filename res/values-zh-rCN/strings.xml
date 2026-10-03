@@ -2174,4 +2174,6 @@
     <string name="cmd_timestamp_iso_desc">插入 ISO 8601 时间戳（YYYY-MM-DDTHH:mm:ss）</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">位于 %1$s</string>
+    <string name="pack_error_dictionary_too_large">此词典包含 %1$d 个词；限制为 %2$d 个。请导入较小的词包。</string>
+    <string name="pack_error_member_too_large">%1$s 超出了 %2$d KiB 的上限。</string>
 </resources>

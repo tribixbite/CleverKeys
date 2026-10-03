@@ -30,6 +30,57 @@ class CkdtReaderTest {
         assertThat(CkdtDictionaryReader.readEntries(bytes)).isNotEmpty()
     }
 
+
+    @Test
+    fun oversizedCountIsRejectedBeforeWordArrayAllocation() {
+        for (count in intArrayOf(100_001, 1_000_000, Int.MAX_VALUE, -1)) {
+            val bytes = ByteArray(48)
+            java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                .putInt(0, 0x54444B43).putInt(4, 2).putInt(12, count).putInt(16, 48)
+            try {
+                CkdtDictionaryReader.readEntries(bytes)
+                throw AssertionError("Accepted oversized count $count")
+            } catch (expected: IllegalArgumentException) {
+                assertThat(expected.message).contains("wordCount")
+            }
+        }
+    }
+
+    @Test
+    fun streamByteCapDoesNotTrustAvailable() {
+        val input = object : java.io.InputStream() {
+            var consumed = 0L
+            override fun available() = 0
+            override fun read(): Int = if (consumed++ <= CkdtDictionaryReader.MAX_DICTIONARY_BYTES) 0 else -1
+            override fun read(bytes: ByteArray, offset: Int, length: Int): Int {
+                val remaining = CkdtDictionaryReader.MAX_DICTIONARY_BYTES + 1 - consumed
+                if (remaining <= 0) return -1
+                val count = minOf(length.toLong(), remaining).toInt()
+                bytes.fill(0, offset, offset + count)
+                consumed += count
+                return count
+            }
+        }
+        try {
+            CkdtDictionaryReader.readEntries(input)
+            throw AssertionError("Accepted oversized stream")
+        } catch (expected: java.io.IOException) {
+            assertThat(expected.message).contains("16 MiB")
+        }
+    }
+
+
+    @Test
+    fun maximumWordCountRemainsReadable() {
+        val count = CkdtDictionaryReader.MAX_WORD_COUNT
+        val bytes = ByteArray(48 + count * 4)
+        val buffer = java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        buffer.putInt(0, 0x54444B43).putInt(4, 2).putInt(12, count).putInt(16, 48)
+        buffer.position(48)
+        repeat(count) { buffer.putShort(1).put(97.toByte()).put(0.toByte()) }
+        assertThat(CkdtDictionaryReader.readEntries(bytes).size).isEqualTo(count)
+    }
+
     // ── English CKDT ──────────────────────────────────────────────────────────
 
     @Test

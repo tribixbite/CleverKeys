@@ -40,8 +40,8 @@ internal const val MIN_BINARY_CONTRACTION_BYTES = 16
  * `catch (IOException)` handlers catch) or read a garbage length prefix and allocated a huge array.
  * For a 2.5 MB dictionary that failure was silent.
  *
- * [InputStream.readBytes] loops until EOF, so the result is either the whole stream or an
- * exception — never a partial buffer that looks complete.
+ * The shared bounded reader loops until EOF and refuses dictionaries over 16 MiB or
+ * 100,000 CKDT entries before parsers allocate their word arrays (GH #184).
  *
  * @param stream Source stream (NOT closed here — caller owns the lifecycle).
  * @param sourceDescription Human-readable origin used in error messages.
@@ -53,14 +53,22 @@ internal fun readBinaryAssetFully(
     sourceDescription: String,
     minSizeBytes: Int
 ): ByteBuffer {
-    val bytes = stream.readBytes()
+    val bytes = tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader.readBoundedBytes(stream)
     if (bytes.size < minSizeBytes) {
         throw IOException(
             "Binary asset '$sourceDescription' is implausibly small (${bytes.size} bytes < " +
                 "$minSizeBytes) — truncated or corrupt stream"
         )
     }
-    return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
+    val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
+    // Reject old installed oversized packs before any word/trie arrays are allocated.
+    if (bytes.size >= 16 && buffer.getInt(0) == 0x54444B43) {
+        val count = buffer.getInt(12)
+        if (count !in 0..tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader.MAX_WORD_COUNT) {
+            throw IOException("Unsupported dictionary word count $count")
+        }
+    }
+    return buffer
 }
 
 /**
@@ -809,6 +817,10 @@ object BinaryDictionaryLoader {
         // Load normalized words
         buffer.seekSection(normalizedOffset, "normalized")
         val normalizedCount = buffer.int
+        // A forged secondary count must not bypass the canonical-header budget.
+        if (normalizedCount !in 0..wordCount || normalizedCount > buffer.remaining() / 2) {
+            throw IOException("Invalid normalized dictionary count $normalizedCount")
+        }
         val normalizeds = Array(normalizedCount) { "" }
 
         for (i in 0 until normalizedCount) {

@@ -2175,4 +2175,6 @@
     <string name="cmd_timestamp_iso_desc">ISO 8601 形式のタイムスタンプを挿入(YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">%1$s 内</string>
+    <string name="pack_error_dictionary_too_large">この辞書には%1$d単語が含まれています。上限は%2$dです。より小さいパックをインポートしてください。</string>
+    <string name="pack_error_member_too_large">%1$s が上限の %2$d KiB を超えています。</string>
 </resources>

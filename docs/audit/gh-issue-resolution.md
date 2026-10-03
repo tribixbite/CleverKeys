@@ -20,10 +20,10 @@ settled from source alone).
 
 | Bucket | Count | Issues |
 |---|---|---|
-| DONE/FIXED but still open (close candidates) | 33 | bugs: #90 #179 #171 #169 #161 #160 #154 #152 #151 #149 #148 #146 #145 #141 #134 #130 #99 #96 #77 #75 #71 #67 #35 · features: #135 #111 #94 #93 #70 #68 #58 #49 #31 #26 |
+| DONE/FIXED but still open (close candidates) | 34 | bugs: #184 #90 #179 #171 #169 #161 #160 #154 #152 #151 #149 #148 #146 #145 #141 #134 #130 #99 #96 #77 #75 #71 #67 #35 · features: #135 #111 #94 #93 #70 #68 #58 #49 #31 #26 |
 | Close with explanation (NOT-REPRO / BY-DESIGN) | 2 | #162 #83 |
 | PARTIAL | 9 | #181 #175 #167 #156 #101 #97 #88 #80 #72 |
-| Still open | 19 | bugs: #188 #186 #184 #79 · features: #187 #177 #168 #165 #163 #147 #139 #121 #120 #115 #87 #84 #69 #61 #52 |
+| Still open | 18 | bugs: #188 #186 #79 · features: #187 #177 #168 #165 #163 #147 #139 #121 #120 #115 #87 #84 #69 #61 #52 |
 
 What changed since 2026-09-05:
 - The maintainer reopened nine bot-closed but resolved issues on 2026-09-21 (#67 #99 #130 #134
@@ -46,7 +46,7 @@ What changed since 2026-09-05:
 |---|---|---|---|---|
 | 188 | Compose key doesn't work | **NEEDS-REPRO** (new 2026-09-26) | Two users, v1.3.0–v1.5.0, GrapheneOS 17 and LineageOS 23.2 (discussion #159): compose → `c` → `=` never yields `€`, and nothing else works either. Code reading found no divergence from upstream in the latch path: `loc compose` sits on the bottom row (`res/xml/bottom_row.xml`), `makeComposePending(…, FLAG_LATCH)` (`KeyValue.kt:760`), `Pointers.pointer_flags_of_kv` reads the modified value, and `KeyModifier.applyComposePending` greys non-sequence keys. The only pin, `649696b8`, exercises `ComposeKey.apply` (the state machine) and not the view/pointer latch path. The `modifyMemo` cache (`5fb58037`, 2026-09-01) postdates the reports, so it is not the cause. Next step: a device repro with a verbose release build. The `Pointers` "Path: …" logs show whether the `c` pointer latches as a Compose_pending (correct) or falls through to "Regular key up", which would reset the compose state. | comment asking for build + whether keys grey out after tapping compose; fix after repro |
 | 186 | Autocorrect only works for the primary language | **OPEN** (confirmed in code; new 2026-09-22) | `WordPredictor.autoCorrect` (`WordPredictor.kt:2876`) consults only the primary `dictionary`. Layouts carry no language binding, so `switch_forward` to a `script="persian"` layout leaves fa as secondary, and only primary-language typos get corrected. Workaround today: bind the `primaryLangToggle` command (`CommandRegistry.kt:566`) to a key or short swipe. Proper fix: a per-layout language binding that drives the primary language on layout switch. That is the same feature #61 asks for, and the reporter links a fork commit (`mostafaqanbaryan/CleverKeys@7c91d8f4`) that adds a `language` layout attribute as reference. | comment with the toggle workaround; fix with #61 |
-| 184 | 1M-word dictionary crashes | **OPEN** (new 2026-09-18) | dim-geo (author of the el source data, #68) loads a 1,000,000-word `langpack-el.zip` and the keyboard crashes. `LanguagePackManager` has no word-count or decompressed-size guard (only `MAX_MODEL_BYTES` for pack encoders). The tap, CTC and geometric tries are all Java-heap. The 2026-09-10 OOM audit measured a ~87 MiB bilingual baseline against a 256 MiB heap (`docs/audit/2026-09-10-memory-oom-root-cause.md`). Likely OOM, but no log was attached. Fix shape: an import-time size check that truncates to the top-N words by frequency (with a stated cap) or refuses with a clear message, never a crash. | comment: ask for logcat; fix guard |
+| 184 | 1M-word dictionary crashes | **FIXED locally (2026-10-03); device verification pending** | Import now refuses actual CKDT header counts above 100,000 with a translated smaller-pack message. Shared tap/geometric/CTC readers reject oversized installed dictionaries before count-sized allocation. Dictionary/member bytes are bounded at 16 MiB, model at 8 MiB, manifest/NOTICE at 64 KiB; ZIP aggregate 64 MiB/64 entries. Unsafe names and duplicate basenames are refused; rejected updates preserve the old pack. Kotlin compilation and full suites pass: 2,737 pure / 919 mock (6m43s). This bounds inputs, not every possible heap use. | verify refusal/retained pack/continued typing on Seeker before closure |
 | 181 | Monet Auto does not follow system dark mode; some emoji render as tofu | **PARTIAL** (glyph filtering implemented locally, 2026-10-03; Monet still NEEDS-REPRO) | `EmojiGridView` filters categories, recents and search using the actual themed cell paint. Whole Unicode sequences must have a glyph; the final text-emoticon group is checked per visible codepoint. Cache is grid-scoped and recent data is preserved. Focused tests 7/7; Kotlin compilation and full suites 2,733 pure / 912 mock pass. Fresh APK/device verification pending. The Monet configuration-change path remains wired but needs an on-device day/night reproduction. | test glyph filtering and Monet live update before closure |
 | 179 | Slow startup with custom langpack | **FIXED** (unreleased) | `70284a2c` pack-first async loads. The 4-10 s bulk was v1.5.0's sync neural init, which ADR-011 deleted | comment + close on v2.0.0 |
 | 171 | Custom per-key mappings don't override | **FIXED** (unreleased) | `47969359` (±1-bin fuzz resurrected defaults) + `c29a0d87` (render overlay suppressed) | comment + close on v2.0.0 |
@@ -244,6 +244,25 @@ engine and gesture settings, inspect final-letter emissions/resampling, and comp
 decoding. Keep a protected `we` control and a broader short-word corpus when evaluating a fix;
 do not special-case `wet` or weaken global ranking guards from this small sample.
 
+**Reconnected-device follow-up:** the Seeker's live IME reproduced `wet`→`We` with
+`input swipe 190 1900 540 1900 350` on the displayed QWERTY row; the test field read
+`We ` and current logcat recorded `SWIPE_TYPING completion` followed by a three-character
+commit. This confirms the touch pipeline reaches prediction rather than dispatching a subkey.
+Popover hold/neutral release, empty t/South assignment, saved-action dwell-to-edit,
+FAB minimize and expansion were verified. Bar minimize resized the app and rendered
+the strip; expansion was not verified before another Wi-Fi drop. The temporary mapping
+and popover switch still need restoration (see working todo).
+
+**Geometric comparison:** the production geometric engine with its default configuration,
+full 98,140-word English CKDT dictionary and the shipped QWERTY geometry ranks `wet`,
+`we`, `tree`, `get`, `yet`, `pet` and `git` first on their canonical 12-step-per-segment
+paths (`hello` second). These are eight distinct clean synthetic words, not a human-trace
+accuracy estimate. On the one usable existing human `wet` trace, geometric also ranks
+`wet` first, compared with CTC rank 6; this is one trace, not broad human validation.
+`build/wet-geo-probe.log` holds local output. Switching the engine is
+now a supported experimental workaround for `wet`; a real-finger A/B and wider corpus
+comparison remain necessary. No cross-engine score merge or CTC ranking change was made.
+
 #### Remaining hands-on release checks, ordered by consequence
 
 1. **Typing and language:** ordinary English words plus `wet/we/tree/get/yet/pet/git`,
@@ -296,8 +315,9 @@ Ordered by value ÷ cost. Sizes: S ≤ 1 day, M ≈ 2-5 days, L > 1 week.
 6. **#186 + #61: bind language to layout.** M. One feature closes two issues: autocorrect and
    predictions follow the active layout. A reference implementation exists in the #186
    reporter's fork commit.
-7. **#184 big-pack guard.** M. Turn an import-time crash (1M-word Greek pack) into a capped load
-   or a clear refusal. Relates to the 2026-09-10 heap work (256 MiB ceiling).
+7. **#184 big-pack guard — implemented locally.** Verify a refused oversized update keeps
+   the existing pack and typing operational on Seeker. Full format validation and broader
+   bilingual heap measurements remain separate follow-up work.
 8. **#147 + #87: "short swipes only" mode when swipe typing is off.** S-M. Five users across
    three issues (#147, #87, #83). Resolve any displacement to the nearest direction's subkey.
 9. **#167(2) password-manager inline chip unresponsive.** M. A security-relevant regression whose

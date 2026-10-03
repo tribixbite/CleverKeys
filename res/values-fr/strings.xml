@@ -2268,4 +2268,6 @@
     <string name="cmd_timestamp_iso_desc">Insérer un horodatage ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">dans %1$s</string>
+    <string name="pack_error_dictionary_too_large">Ce dictionnaire contient %1$d mots ; la limite est de %2$d. Importez un pack plus petit.</string>
+    <string name="pack_error_member_too_large">%1$s dépasse la limite de %2$d Kio.</string>
 </resources>

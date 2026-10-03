@@ -2217,4 +2217,6 @@
     <string name="cmd_timestamp_iso_desc">ISO 8601-tijdstempel invoegen (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">in %1$s</string>
+    <string name="pack_error_dictionary_too_large">Dit woordenboek bevat %1$d woorden; de limiet is %2$d. Importeer een kleiner pakket.</string>
+    <string name="pack_error_member_too_large">%1$s is groter dan de limiet van %2$d KiB.</string>
 </resources>

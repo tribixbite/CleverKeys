@@ -2276,4 +2276,6 @@
     <string name="cmd_timestamp_iso_desc">Insertar marca de tiempo ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">en %1$s</string>
+    <string name="pack_error_dictionary_too_large">Este diccionario contiene %1$d palabras; el límite es de %2$d. Importa un paquete más pequeño.</string>
+    <string name="pack_error_member_too_large">%1$s supera el límite de %2$d KiB.</string>
 </resources>

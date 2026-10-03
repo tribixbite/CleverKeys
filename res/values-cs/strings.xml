@@ -2299,4 +2299,6 @@
     <string name="cmd_timestamp_iso_desc">Vložit časové razítko ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">v sekci %1$s</string>
+    <string name="pack_error_dictionary_too_large">Tento slovník obsahuje %1$d slov; limit je %2$d. Importujte menší balíček.</string>
+    <string name="pack_error_member_too_large">%1$s je větší než limit %2$d KiB.</string>
 </resources>

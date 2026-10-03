@@ -2304,4 +2304,6 @@
     <string name="cmd_timestamp_iso_desc">Вставить метку времени ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">в разделе «%1$s»</string>
+    <string name="pack_error_dictionary_too_large">Этот словарь содержит %1$d слов; ограничение составляет %2$d. Импортируйте пакет меньшего размера.</string>
+    <string name="pack_error_member_too_large">%1$s превышает ограничение в %2$d КиБ.</string>
 </resources>

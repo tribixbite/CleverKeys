@@ -56,6 +56,20 @@ sealed class PackImportFailure {
             text.string(R.string.pack_error_model_too_large, fileName, limitMiB)
     }
 
+    /** Canonical entry count would exceed the dictionary loading budget. */
+    data class DictionaryTooLarge(val wordCount: Int, val limit: Int) : PackImportFailure() {
+        override val logMessage get() = "Dictionary contains $wordCount words; limit $limit"
+        override fun render(text: ResultText) =
+            text.string(R.string.pack_error_dictionary_too_large, wordCount, limit)
+    }
+
+    /** Any non-model archive member exceeds its extraction budget. */
+    data class MemberTooLarge(val fileName: String, val limitKiB: Int) : PackImportFailure() {
+        override val logMessage get() = "$fileName exceeds the $limitKiB KiB limit"
+        override fun render(text: ResultText) =
+            text.string(R.string.pack_error_member_too_large, fileName, limitKiB)
+    }
+
     /** The model member does not hash to the manifest's sha256. */
     data class ModelChecksumMismatch(val fileName: String) : PackImportFailure() {
         override val logMessage get() = "$fileName does not match its manifest sha256"

@@ -2204,4 +2204,6 @@
     <string name="cmd_timestamp_iso_desc">Chèn dấu thời gian ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">trong %1$s</string>
+    <string name="pack_error_dictionary_too_large">Từ điển này chứa %1$d từ; giới hạn là %2$d. Hãy nhập gói nhỏ hơn.</string>
+    <string name="pack_error_member_too_large">%1$s vượt quá giới hạn %2$d KiB.</string>
 </resources>

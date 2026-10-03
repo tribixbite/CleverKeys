@@ -55,7 +55,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
  * insertions to top 30k most frequent words" — lived in the neural beam search and went away
  * with it (ADR-011, 2026-08-18). What survives, and what a user importing a 236k-word pack
  * still depends on, is that **the import path never materialises the dictionary in memory**:
- * the ZIP entry is streamed to disk with `copyTo` and validation reads an 8-byte header.
+ * the ZIP entry is streamed to disk with a bounded copy and validation reads a 16-byte header. Oversized entry counts are now refused (GH #184).
  * [aPackFarLargerThanAnyBufferImportsByStreaming] proves that with a dictionary an order of
  * magnitude bigger than the Spanish one that originally crashed, and
  * [theImportPathNeverReadsAWholeEntryIntoMemory] is the anti-regression guard: a refactor to
@@ -144,6 +144,9 @@ class LanguagePackImportTest {
         val out = ByteArray(size)
         ckdtV2Header.copyInto(out)
         for (i in ckdtV2Header.size until size) out[i] = (i % 251).toByte()
+        if (size >= 16) {
+            java.nio.ByteBuffer.wrap(out).order(java.nio.ByteOrder.LITTLE_ENDIAN).putInt(12, 1)
+        }
         return out
     }
 
@@ -496,7 +499,7 @@ class LanguagePackImportTest {
 
     /**
      * A ZIP entry naming a traversal path must not escape the install directory: the importer
-     * keeps only `File(entry.name).name`.
+     * refuses traversal instead of silently flattening it into a valid pack.
      */
     @Test
     fun aTraversalEntryNameCannotEscapeTheTempDirectory() {
@@ -509,8 +512,9 @@ class LanguagePackImportTest {
             )
         )
 
-        assertWithMessage("the basenames still satisfy the required-file check, so the pack imports")
-            .that(import(zip)).isInstanceOf(ImportResult.Success::class.java)
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Error(PackImportFailure.InvalidMember("../../manifest.json"))
+        )
         assertWithMessage("nothing may be written above the app's cache/files roots")
             .that(File(scratch.parentFile, "pwned.txt").exists()).isFalse()
         assertThat(File(scratch, "pwned.txt").exists()).isFalse()
@@ -787,7 +791,11 @@ class LanguagePackImportTest {
     @Test
     fun anOversizedNoticeIsReadBackTruncatedToTheCap() {
         val big = "y".repeat(LanguagePackManager.MAX_NOTICE_CHARS + 5000)
-        import(validPack("de", "German", extras = listOf("NOTICE.txt" to big.toByteArray())))
+        assertThat(import(validPack("de", "German"))).isInstanceOf(ImportResult.Success::class.java)
+        assertThat(import(validPack("de", "German", extras = listOf("NOTICE.txt" to big.toByteArray()))))
+            .isEqualTo(ImportResult.Error(PackImportFailure.MemberTooLarge("NOTICE.txt", 64)))
+        // Older installs can predate the extraction cap; the UI still bounds their notice.
+        File(installedDir("de"), "NOTICE.txt").writeText(big)
         assertThat(manager.readNotice("de")?.length).isEqualTo(LanguagePackManager.MAX_NOTICE_CHARS)
     }
 
@@ -922,13 +930,13 @@ class LanguagePackImportTest {
         val zip = packZip(
             "big.zip",
             listOf(
-                "manifest.json" to manifestJson("es", "Spanish", wordCount = 236_000).toByteArray(),
+                "manifest.json" to manifestJson("es", "Spanish", wordCount = 1).toByteArray(),
                 "dictionary.bin" to dictionaryBytes(bigSize),
             )
         )
 
         assertThat(import(zip)).isEqualTo(
-            ImportResult.Success(LanguagePackManifest("es", "Spanish", 1, "", 236_000, false))
+            ImportResult.Success(LanguagePackManifest("es", "Spanish", 1, "", 1, false))
         )
 
         val installed = File(installedDir("es"), "dictionary.bin")
@@ -956,8 +964,8 @@ class LanguagePackImportTest {
      *
      * The behavioural test above passes on a machine with enough heap even if the importer
      * slurped the entry — the crash it guards is memory pressure on a phone, which no JVM test
-     * can reproduce faithfully. What CAN be pinned is the shape that makes the crash
-     * impossible: a streaming `copyTo` and no whole-entry read anywhere in the import path.
+     * can reproduce faithfully. What CAN be pinned is the bounded streaming extraction
+     * rather than whole-entry buffering and no whole-entry read anywhere in the import path.
      */
     @Test
     fun theImportPathNeverReadsAWholeEntryIntoMemory() {
@@ -972,10 +980,10 @@ class LanguagePackImportTest {
             .that(body).isNotEmpty()
 
         assertWithMessage(
-            "the ZIP entry must be streamed to disk. `zis.copyTo(fos)` is what keeps peak " +
+            "the ZIP entry must be streamed to disk. `copyBounded` keeps peak " +
                 "memory at one 8KB buffer regardless of pack size — the whole point of the " +
                 "v1.1.96 / v1.1.97 OOM fix."
-        ).that(body).contains("zis.copyTo(fos)")
+        ).that(body).contains("copyBounded(zis, fos, cap)")
 
         for (slurp in listOf("readBytes()", "readAllBytes()", "zis.readText()")) {
             assertWithMessage(
@@ -988,7 +996,106 @@ class LanguagePackImportTest {
         val validator = text.substringAfter("private fun validateDictionary(")
             .substringBefore("fun getInstalledPacks(")
         assertWithMessage("validateDictionary must read a fixed-size header, not the file")
-            .that(validator).contains("ByteArray(8)")
+            .that(validator).contains("ByteArray(16)")
         assertThat(validator).doesNotContain("readBytes()")
     }
+    @Test
+    fun oversizedCanonicalCountIsRefusedEvenWhenManifestClaimsOneWord() {
+        val dictionary = dictionaryBytes().also {
+            java.nio.ByteBuffer.wrap(it).order(java.nio.ByteOrder.LITTLE_ENDIAN).putInt(12, 1_000_000)
+        }
+        val zip = packZip("million.zip", listOf(
+            "manifest.json" to manifestJson("el", "Greek", wordCount = 1).toByteArray(),
+            "dictionary.bin" to dictionary,
+        ))
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Error(PackImportFailure.DictionaryTooLarge(1_000_000, 100_000))
+        )
+        assertThat(installedDir("el").exists()).isFalse()
+        assertThat(cacheDir.listFiles()?.toList().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun oversizedUpdatePreservesPreviouslyInstalledDictionary() {
+        val original = packZip("original.zip", listOf("manifest.json" to manifestJson("el", "Greek").toByteArray(), "dictionary.bin" to dictionaryBytes()))
+        assertThat(import(original)).isInstanceOf(ImportResult.Success::class.java)
+        val before = File(installedDir("el"), "dictionary.bin").readBytes()
+        val dictionary = dictionaryBytes().also {
+            java.nio.ByteBuffer.wrap(it).order(java.nio.ByteOrder.LITTLE_ENDIAN).putInt(12, 100_001)
+        }
+        val zip = packZip("update.zip", listOf(
+            "manifest.json" to manifestJson("el", "Greek").toByteArray(),
+            "dictionary.bin" to dictionary,
+        ))
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Error(PackImportFailure.DictionaryTooLarge(100_001, 100_000))
+        )
+        assertThat(File(installedDir("el"), "dictionary.bin").readBytes().toList()).isEqualTo(before.toList())
+    }
+
+    @Test
+    fun duplicateFlattenedMemberIsRefused() {
+        val zip = packZip("duplicate.zip", listOf(
+            "manifest.json" to manifestJson("el", "Greek").toByteArray(),
+            "dictionary.bin" to dictionaryBytes(),
+            "wrapper/dictionary.bin" to dictionaryBytes(),
+        ))
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Error(PackImportFailure.InvalidMember("dictionary.bin"))
+        )
+        assertThat(cacheDir.listFiles()?.toList().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun oversizedDictionaryBytesAreRefusedDuringExtraction() {
+        val zip = packZip("large-bytes.zip", listOf(
+            "manifest.json" to manifestJson("el", "Greek").toByteArray(),
+            "dictionary.bin" to dictionaryBytes(16 * 1024 * 1024 + 1),
+        ))
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Error(PackImportFailure.MemberTooLarge("dictionary.bin", 16 * 1024))
+        )
+        assertThat(cacheDir.listFiles()?.toList().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun oversizedManifestIsRefusedWithAccurateKiBLimit() {
+        val zip = packZip("manifest-cap.zip", listOf(
+            "manifest.json" to ByteArray(64 * 1024 + 1) { 32 },
+            "dictionary.bin" to dictionaryBytes(),
+        ))
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Error(PackImportFailure.MemberTooLarge("manifest.json", 64))
+        )
+        assertThat(cacheDir.listFiles()?.toList().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun excessiveArchiveEntryCountIsRefused() {
+        val zip = packZip("entries.zip", (0 until 65).map {
+            "entry-$it" to byteArrayOf(1)
+        })
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Error(PackImportFailure.InvalidMember("entry-64"))
+        )
+        assertThat(cacheDir.listFiles()?.toList().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun aggregateArchiveCapRejectsIndividuallyAllowedMembers() {
+        val member = dictionaryBytes(16 * 1024 * 1024)
+        val zip = packZip("aggregate.zip", listOf(
+            "manifest.json" to manifestJson("el", "Greek").toByteArray(),
+            "dictionary.bin" to member,
+            "extra-1.bin" to member,
+            "extra-2.bin" to member,
+            "extra-3.bin" to member,
+        ))
+        assertThat(import(zip)).isEqualTo(
+            ImportResult.Error(PackImportFailure.MemberTooLarge("ZIP", 64 * 1024))
+        )
+        assertThat(installedDir("el").exists()).isFalse()
+        assertThat(cacheDir.listFiles()?.toList().orEmpty()).isEmpty()
+    }
+
 }

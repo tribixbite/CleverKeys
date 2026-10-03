@@ -2298,4 +2298,6 @@
     <string name="cmd_timestamp_iso_desc">Inserisci un timestamp ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">in %1$s</string>
+    <string name="pack_error_dictionary_too_large">Questo dizionario contiene %1$d parole; il limite è %2$d. Importa un pacchetto più piccolo.</string>
+    <string name="pack_error_member_too_large">%1$s supera il limite di %2$d KiB.</string>
 </resources>

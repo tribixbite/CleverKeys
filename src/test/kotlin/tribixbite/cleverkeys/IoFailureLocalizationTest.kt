@@ -98,6 +98,14 @@ class IoFailureLocalizationTest {
             "model.onnx is larger than the 64 MiB limit.",
             PackImportFailure.ModelTooLarge("model.onnx", 64).render(text),
         )
+        assertEquals(
+            "This dictionary contains 1000000 words; the limit is 100000. Import a smaller pack.",
+            PackImportFailure.DictionaryTooLarge(1_000_000, 100_000).render(text),
+        )
+        assertEquals(
+            "dictionary.bin is larger than the 16384 KiB limit.",
+            PackImportFailure.MemberTooLarge("dictionary.bin", 16384).render(text),
+        )
         val io = PackImportFailure.fromException(Exception("Import failed", ZipException("bad")))
         assertEquals(PackImportFailure.Io(IoFailureReason.INVALID_FORMAT, "Import failed: Import failed"), io)
         assertEquals("The file is not in the expected format, or it is damaged.", io.render(text))

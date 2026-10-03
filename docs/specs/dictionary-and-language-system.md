@@ -11,22 +11,33 @@ The dictionary system manages word lookup, frequency ranking, and multi-language
 | `src/main/kotlin/tribixbite/cleverkeys/DictionaryManager.kt` | `DictionaryManager` | Per-language dictionary loading/coordination (`OptimizedVocabulary`/`OptimizedVocabularyImpl` were deleted with the neural engine, 2026-08-18 — ADR-011; the swipe engines' lexicons are now `swipe/ctc/CtcLexiconTrie`+`CtcCkdtLexicon`+`CtcLexiconMerge` and `GeometricEngineAdapter`'s merge) |
 | `src/main/kotlin/tribixbite/cleverkeys/LanguageDetector.kt` | `LanguageDetector` | Word-based language detection |
 | `src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt` | `WordPredictor` | Unified prediction pipeline |
-| `assets/dictionaries/{lang}_enhanced.bin` | Binary dictionaries | Trie-based word storage |
+| `src/main/assets/dictionaries/{lang}_enhanced.bin` | Binary dictionaries | Trie-based word storage |
 
 ## Architecture
 
 ### Language Pack Structure
 
-Each language pack is a self-contained unit:
+An imported ZIP contains `manifest.json`, V2 `dictionary.bin`, optional
+`unigrams.txt`, `contractions.json`, `prefix_boost.bin`, `model.onnx` and `NOTICE.txt`.
+Installed members live under `files/langpacks/{code}/`. Models are optional;
+the shipped registry must also approve their hash before ONNX loading.
 
-```
-Language Pack ({lang})
-├── dictionaries/{lang}_enhanced.bin    # Trie-based vocabulary
-├── dictionaries/{lang}_unigrams.bin    # Top 1000 words for detection
-├── models/ctc_swipe_encoder.onnx       # CTC emission encoder (one model, all languages)
-├── layouts/{lang}_*.xml                # Keyboard layouts
-└── metadata.json                       # Version, license info
-```
+### Import and loader bounds (GH #184)
+
+- Maximum canonical dictionary count: **100,000**, read from the binary header,
+  never trusted from manifest metadata. Larger packs are refused with a localized
+  message; no vocabulary is silently truncated. The bundled English dictionary has
+  98,140 entries and published packs normally have 50,000.
+- Maximum decompressed dictionary/other member: **16 MiB**. Model: **8 MiB**.
+  Manifest and NOTICE: **64 KiB** each. Entire archive: **64 MiB**, at most **64 entries**.
+- Extraction streams bounded chunks, rejects traversal and duplicate flattened basenames,
+  and accepts benign wrapper folders. Validation happens before the staged install swap;
+  failures preserve the existing pack and clean scratch data.
+- Tap, geometric and CTC dictionary readers share byte/count limits, so previously
+  installed oversized dictionaries also fail loading before count-sized allocation.
+  These limits bound inputs; they do not guarantee arbitrary bilingual heap usage.
+- TODO: verify refusal, retained old pack and continued typing on the connected Seeker;
+  broader malformed-record validation remains separate from the count/byte guard.
 
 ### Dictionary Layers
 
@@ -69,7 +80,13 @@ Language Pack ({lang})
 
 ### Accent Handling
 
-The swipe decoders emit a 26-letter alphabet (a-z only). Accented words are handled through normalization:
+The Latin CTC route projects supported accented spellings onto its a–z alphabet while
+preserving canonical words for display. Script-specific CTC encoders use their own
+token inventories, and geometric decoding follows supported layout nodes. A blanket
+mark-stripping policy is unsuitable for Bangla: vowel signs and conjuncts need explicit
+representation. See `docs/guides/adding-a-new-language.md` for the staged Bangla path.
+
+Latin accent lookup:
 
 ```kotlin
 // Accent mapping: normalized → canonical forms
@@ -87,30 +104,12 @@ data class AccentMapping(
 
 ### Binary Dictionary Format (v2)
 
-```
-┌────────────────────────────────────────┐
-│ HEADER (32 bytes)                      │
-│  - Magic: "CKDICT" (6 bytes)           │
-│  - Version: 2 (2 bytes)                │
-│  - Language: "es" (4 bytes)            │
-│  - Word Count (4 bytes)                │
-│  - Trie Offset (4 bytes)               │
-│  - Metadata Offset (4 bytes)           │
-│  - Accent Map Offset (4 bytes)         │
-├────────────────────────────────────────┤
-│ TRIE DATA BLOCK                        │
-│  - Compact trie of NORMALIZED words    │
-│  - Terminal nodes store word_id        │
-├────────────────────────────────────────┤
-│ WORD METADATA BLOCK                    │
-│  - Array indexed by word_id:           │
-│    - Canonical string (UTF-8, varint)  │
-│    - Frequency rank (UInt8, 0-255)     │
-├────────────────────────────────────────┤
-│ ACCENT MAP BLOCK (optional)            │
-│  - normalized_word → [canonical_ids]   │
-└────────────────────────────────────────┘
-```
+CKDT uses a **48-byte little-endian header**: magic `CKDT` (uint32),
+version 2 (uint32), four-byte language code, canonical word count (uint32),
+then canonical/normalized/accent-map section offsets and reserved fields.
+Canonical records contain a uint16 UTF-8 byte length, word bytes, and uint8
+frequency rank. See `BinaryDictionaryLoader.kt` and `scripts/build_dictionary.py`
+for normalized/accent-map records.
 
 **Frequency Ranking:**
 - Rank 0 = most frequent word

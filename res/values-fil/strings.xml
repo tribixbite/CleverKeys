@@ -2229,4 +2229,6 @@
     <string name="cmd_timestamp_iso_desc">Ilagay ang ISO 8601 timestamp (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">sa %1$s</string>
+    <string name="pack_error_dictionary_too_large">Naglalaman ang diksyunaryong ito ng %1$d na salita; ang limitasyon ay %2$d. Mag-import ng mas maliit na pack.</string>
+    <string name="pack_error_member_too_large">Mas malaki ang %1$s kaysa sa limitasyong %2$d KiB.</string>
 </resources>

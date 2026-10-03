@@ -12,6 +12,9 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.util.zip.ZipInputStream
 import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
+import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * Language Pack Manager - handles import, validation, and storage of language packs.
@@ -151,34 +154,44 @@ class LanguagePackManager(private val context: Context) {
         try {
             // Extract ZIP contents to temp directory
             val extractedFiles = mutableSetOf<String>()
+            var entryCount = 0
+            var extractedBytes = 0L
             ZipInputStream(inputStream).use { zis ->
                 var entry = zis.nextEntry
                 while (entry != null) {
+                    // Flatten benign wrapper folders, but reject ambiguous or unsafe names.
+                    val parts = entry.name.split('/')
+                    if (++entryCount > 64 || entry.name.startsWith('/') ||
+                        entry.name.contains('\\') || entry.name.contains('\u0000') ||
+                        parts.any { it == ".." || it == "." }) {
+                        return ImportResult.Error(PackImportFailure.InvalidMember(entry.name))
+                    }
                     if (!entry.isDirectory) {
-                        val fileName = File(entry.name).name // Strip path for security
-                        val outFile = File(tempDir, fileName)
-                        if (fileName == MODEL_FILE) {
-                            // Bounded, because the cap has to abort the EXTRACTION: a hash check
-                            // can only reject bytes that already exist, so an unbounded copy
-                            // would let a pack naming a multi-gigabyte model.onnx fill the cache
-                            // dir on its way to being refused.
-                            val withinCap = FileOutputStream(outFile).use { fos ->
-                                copyBounded(zis, fos, MAX_MODEL_BYTES)
-                            }
-                            if (!withinCap) {
-                                Log.w(TAG, "Rejecting pack: $MODEL_FILE exceeds the size cap")
-                                return ImportResult.Error(
-                                    PackImportFailure.ModelTooLarge(
-                                        MODEL_FILE, (MAX_MODEL_BYTES / (1024 * 1024)).toInt()
-                                    )
-                                )
-                            }
-                        } else {
-                            FileOutputStream(outFile).use { fos ->
-                                zis.copyTo(fos)
-                            }
+                        val fileName = parts.last()
+                        if (fileName.isEmpty() || !extractedFiles.add(fileName)) {
+                            return ImportResult.Error(PackImportFailure.InvalidMember(fileName))
                         }
-                        extractedFiles.add(fileName)
+                        val outFile = File(tempDir, fileName)
+                        val memberCap = when (fileName) {
+                            MODEL_FILE -> MAX_MODEL_BYTES
+                            MANIFEST_FILE, NOTICE_FILE -> 64L * 1024
+                            else -> CkdtDictionaryReader.MAX_DICTIONARY_BYTES
+                        }
+                        val remaining = 64L * 1024 * 1024 - extractedBytes
+                        val cap = minOf(memberCap, remaining)
+                        val withinCap = FileOutputStream(outFile).use { fos ->
+                            copyBounded(zis, fos, cap)
+                        }
+                        if (!withinCap) {
+                            val limitMiB = (cap / (1024 * 1024)).toInt()
+                            val failure = when {
+                                cap < memberCap -> PackImportFailure.MemberTooLarge("ZIP", 64 * 1024)
+                                fileName == MODEL_FILE -> PackImportFailure.ModelTooLarge(fileName, limitMiB)
+                                else -> PackImportFailure.MemberTooLarge(fileName, (memberCap / 1024).toInt())
+                            }
+                            return ImportResult.Error(failure)
+                        }
+                        extractedBytes += outFile.length()
                     }
                     entry = zis.nextEntry
                 }
@@ -199,9 +212,7 @@ class LanguagePackManager(private val context: Context) {
 
             // Validate dictionary binary
             val dictFile = File(tempDir, DICTIONARY_FILE)
-            if (!validateDictionary(dictFile)) {
-                return ImportResult.Error(PackImportFailure.InvalidMember(DICTIONARY_FILE))
-            }
+            validateDictionary(dictFile)?.let { return ImportResult.Error(it) }
 
             // G-1: validate the code BEFORE it is used as a path component. Regex first,
             // then a canonical-path containment check as belt-and-braces — the install
@@ -397,33 +408,30 @@ class LanguagePackManager(private val context: Context) {
     /**
      * Validate dictionary binary has correct magic number and version.
      */
-    private fun validateDictionary(file: File): Boolean {
+    private fun validateDictionary(file: File): PackImportFailure? {
         if (!file.exists() || file.length() < 48) {
-            return false
+            return PackImportFailure.InvalidMember(DICTIONARY_FILE)
         }
-
         return try {
             file.inputStream().use { fis ->
-                val header = ByteArray(8)
-                if (fis.read(header) != 8) return false
-
-                // Check magic (little-endian)
-                val magic = (header[0].toInt() and 0xFF) or
-                           ((header[1].toInt() and 0xFF) shl 8) or
-                           ((header[2].toInt() and 0xFF) shl 16) or
-                           ((header[3].toInt() and 0xFF) shl 24)
-
-                // Check version
-                val version = (header[4].toInt() and 0xFF) or
-                             ((header[5].toInt() and 0xFF) shl 8) or
-                             ((header[6].toInt() and 0xFF) shl 16) or
-                             ((header[7].toInt() and 0xFF) shl 24)
-
-                magic == DICT_MAGIC && version == 2
+                // Fixed header only: never allocate from manifest.wordCount or read the body.
+                val header = ByteArray(16)
+                java.io.DataInputStream(fis).readFully(header)
+                val buffer = ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN)
+                val magic = buffer.int
+                val version = buffer.int
+                val wordCount = buffer.getInt(12)
+                when {
+                    magic != DICT_MAGIC || version != 2 || wordCount < 0 ->
+                        PackImportFailure.InvalidMember(DICTIONARY_FILE)
+                    wordCount > CkdtDictionaryReader.MAX_WORD_COUNT ->
+                        PackImportFailure.DictionaryTooLarge(wordCount, CkdtDictionaryReader.MAX_WORD_COUNT)
+                    else -> null
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Dictionary validation failed", e)
-            false
+            PackImportFailure.InvalidMember(DICTIONARY_FILE)
         }
     }
 

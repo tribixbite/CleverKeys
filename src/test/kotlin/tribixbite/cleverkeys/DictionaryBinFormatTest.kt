@@ -25,6 +25,19 @@ class DictionaryBinFormatTest {
     private val assetsDir = File("src/main/assets/dictionaries")
 
     @Test
+    fun readBinaryAssetFully_rejectsOversizedInstalledPackBeforeParsing() {
+        val bytes = ByteArray(48)
+        java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+            .putInt(0, 0x54444B43).putInt(4, 2).putInt(12, 1_000_000)
+        try {
+            readBinaryAssetFully(bytes.inputStream(), "installed dictionary.bin", 48)
+            throw AssertionError("Accepted oversized installed dictionary")
+        } catch (expected: java.io.IOException) {
+            org.junit.Assert.assertTrue(expected.message.orEmpty().contains("1000000"))
+        }
+    }
+
+    @Test
     fun englishBinary_isV2CkdtFormat() {
         val bin = File(assetsDir, "en_enhanced.bin")
         assertWithMessage("en_enhanced.bin must exist").that(bin.exists()).isTrue()

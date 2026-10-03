@@ -2255,4 +2255,6 @@
     <string name="cmd_timestamp_iso_desc">درج برچسب زمانی ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">در %1$s</string>
+    <string name="pack_error_dictionary_too_large">این لغت‌نامه شامل %1$d واژه است؛ حد مجاز %2$d است. لطفاً بستهٔ کوچک‌تری را وارد کنید.</string>
+    <string name="pack_error_member_too_large">%1$s از سقف %2$d کیبی‌بایت بزرگ‌تر است.</string>
 </resources>

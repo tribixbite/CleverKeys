@@ -2309,4 +2309,6 @@
     <string name="cmd_timestamp_iso_desc">Wstaw znacznik czasu ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">w sekcji %1$s</string>
+    <string name="pack_error_dictionary_too_large">Ten słownik zawiera %1$d słów; limit wynosi %2$d. Zaimportuj mniejszy pakiet.</string>
+    <string name="pack_error_member_too_large">%1$s przekracza limit %2$d KiB.</string>
 </resources>

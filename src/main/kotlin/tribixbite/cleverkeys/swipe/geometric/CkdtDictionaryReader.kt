@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.swipe.geometric
 
+import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.File
 import java.io.InputStream
 import java.nio.ByteBuffer
@@ -36,6 +38,27 @@ import java.util.zip.ZipFile
  */
 object CkdtDictionaryReader {
 
+    /** Bounds shared by import, tap prediction and both swipe engines (GH #184). */
+    const val MAX_WORD_COUNT = 100_000
+    const val MAX_DICTIONARY_BYTES: Long = 16L * 1024 * 1024
+
+    /** Read to EOF with bounded allocation; never trust available() or a ZIP size hint. */
+    fun readBoundedBytes(input: InputStream): ByteArray {
+        val output = ByteArrayOutputStream()
+        val chunk = ByteArray(DEFAULT_BUFFER_SIZE)
+        var total = 0L
+        while (true) {
+            checkInterrupted()
+            val count = input.read(chunk)
+            if (count < 0) break
+            if (count == 0) continue
+            total += count
+            if (total > MAX_DICTIONARY_BYTES) throw IOException("Dictionary exceeds 16 MiB limit")
+            output.write(chunk, 0, count)
+        }
+        return output.toByteArray()
+    }
+
     /** "CKDT" little-endian, matching `BinaryDictionaryLoader.MAGIC_V2`. */
     private const val MAGIC_V2 = 0x54444B43
     private const val EXPECTED_VERSION_V2 = 2
@@ -51,7 +74,7 @@ object CkdtDictionaryReader {
      * @throws IllegalArgumentException on a bad magic / version.
      */
     fun read(input: InputStream, language: String, version: Long = 1L): GeometricDictionary {
-        val bytes = input.readBytes()
+        val bytes = readBoundedBytes(input)
         return read(bytes, language, version)
     }
 
@@ -78,11 +101,12 @@ object CkdtDictionaryReader {
      *
      * This is THE parser — [read] is a thin projection of it onto [GeometricDictionary].
      */
-    fun readEntries(input: InputStream): List<Entry> = readEntries(input.readBytes())
+    fun readEntries(input: InputStream): List<Entry> = readEntries(readBoundedBytes(input))
 
     /** [readEntries] over an in-memory byte array. */
     fun readEntries(bytes: ByteArray): List<Entry> {
         checkInterrupted()
+        require(bytes.size.toLong() <= MAX_DICTIONARY_BYTES) { "Dictionary exceeds 16 MiB limit" }
         require(bytes.size >= HEADER_SIZE_V2) {
             "CKDT file too short: ${bytes.size} bytes < header $HEADER_SIZE_V2"
         }
@@ -100,11 +124,13 @@ object CkdtDictionaryReader {
         buffer.get(langBytes)
 
         val wordCount = buffer.int
-        require(wordCount >= 0) { "negative wordCount $wordCount" }
+        require(wordCount in 0..MAX_WORD_COUNT) { "Unsupported wordCount $wordCount (limit $MAX_WORD_COUNT)" }
         val canonicalOffset = buffer.int
         // Skip normalized/accent-map offsets + reserved — unused by this engine.
 
         // Read the canonical section: (word, rank) pairs preserving file order.
+        require(canonicalOffset in HEADER_SIZE_V2..bytes.size) { "Invalid canonical offset $canonicalOffset" }
+        require(wordCount <= (bytes.size - canonicalOffset) / 3) { "Truncated canonical records" }
         buffer.position(canonicalOffset)
         val words = arrayOfNulls<String>(wordCount)
         val ranks = IntArray(wordCount)
