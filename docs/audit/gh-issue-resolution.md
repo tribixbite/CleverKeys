@@ -193,7 +193,8 @@ Ordered by value ÷ cost. Sizes: S ≤ 1 day, M ≈ 2-5 days, L > 1 week.
    the older HANDOFF sign-off. Tagging, pushing, publishing and issue closures are deferred.
 1. **#90 — FIXED locally (2026-10-02).** Explicit `numpad_height` metadata replaces
    the bottom-row proxy. Compact custom layouts retain authored sizing, numeric/PIN still
-   scale. Fail-first geometry coverage and full JVM suites pass; maintainer device check owed.
+   scale (`ba5bbee6`). Fail-first geometry coverage and full JVM suites pass. Verified
+   minified APK installed on Seeker on October 3; maintainer functional check remains pending.
 2. **#145 regression pin — DONE (2026-10-02).** The mock test executes actual graph/view
    wiring with both prediction settings off, a null predictor, and two fresh views; the service
    handle is assigned without model loading. Maintainer cold-start gesture testing remains.

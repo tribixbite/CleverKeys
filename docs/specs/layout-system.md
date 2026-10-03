@@ -230,9 +230,10 @@ even opted-in layouts use the normal row unit.
 
 `Theme.Computed` divides the configured height by `keysHeight` only when both the
 preference and the XML flag are true; otherwise it divides by the normal 3.95 units.
-Row `height` and `shift` remain proportional, and total layout height is capped at the
-screen height. All `KeyboardData` transformations preserve the immutable flag from the
-source layout; appending a numpad to a text board does not opt the text board into scaling.
+Row `height` and `shift` remain proportional, and the height of the rows is capped at
+the screen height before outer margins. All `KeyboardData` transformations preserve the
+immutable flag from the source layout; appending a numpad to a text board does not opt
+the text board into scaling.
 Custom layout persistence stores original XML, and mapping export preserves root attributes.
 
 `NumpadKeySizeTest` exercises production XML parsing and theme geometry in `runMockTests`,

@@ -1,12 +1,12 @@
 # Current work queue
 
-Updated: 2026-10-02. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
+Updated: 2026-10-03. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
 Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/2026-08-30-full-backlog-campaign.md).
 
 The September 1 campaign baseline was `5fb58037`; subsequent work through `79f0b464`
 was pushed with maintainer authorization on September 27. Preserve shared-tree work.
 
-## October 2 issue work before 2.0
+## October 2–3 issue work before 2.0
 
 The maintainer wants GitHub feature/bug work and personal testing before release.
 Do not tag, bump, push, publish, or close issues as part of this round. Preserve the
@@ -18,10 +18,13 @@ maintainer-owned uncommitted manual-checklist resets.
   prediction and swipe typing both off, including replacement views, without model load.
   Kotlin compilation and full suites pass: 2,734 pure / 900 mock (4m03s).
 - [x] Pending lint fix committed as `2c1583c7`; #145 test as `a53a24a3`; no push.
-- [x] Fresh minified APK built with release lint, R8 and resource shrinking (5m25s),
-  signature/ZIP integrity/ARM64 ONNX library verified; no install or device changes.
+- [x] Fresh minified #90 APK built with release lint, R8 and resource shrinking;
+  interrupted build resumed successfully (1m24s). Signature, ZIP integrity, ARM64 ONNX
+  library and exact packaged numeric/PIN XML bytes verified.
   Artifact: `build/outputs/apk/release/CleverKeys-v2.0.0-arm64-v8a.apk`.
-  SHA-256: `12d29fd7d8177946eb755c90fbccbc30e6e3173f3be7366da72a43ec7a23bb50`.
+  SHA-256: `9014e7ee7e0c9a52fdd71839eb9ac30a2fba839958df38d71262c974c09acd9d`.
+  Installed with `adb install -r` on Seeker `192.168.0.170:5555` (2026-10-03 UTC);
+  installed base.apk hash matches. Original CleverKeys IME and launcher focus preserved.
   Manual #145 check: both prediction toggles off, restart keyboard, custom short swipe
   works immediately; repeat after changing theme. Minimize checks: keyboard-minimize spec.
 - [x] User/project PAL policy updated: Gemini 3.8 (`gemini-3.8-flash`), never 3.1. Maintainer
@@ -31,7 +34,7 @@ maintainer-owned uncommitted manual-checklist resets.
   Two fail-first tests reproduced the bug (400px vs 101.27px single-row unit).
   Focused geometry/parser tests 12/12; Kotlin compilation, 2,729 pure / 912 mock pass
   (7m48s). Five existing numpad tests moved from pure to mock; seven new tests added.
-- [ ] TODO: refresh the minified #90 test APK and verify its signature/ZIP integrity.
+- [x] #90 committed as `ba5bbee6`; refreshed and verified minified test APK installed.
 - [ ] TODO: maintainer checks a compact bottom-row-free layout with Scale Numpad Height
   enabled, numeric/PIN with scaling on/off, and an explicitly opted-in custom numpad.
 - [ ] TODO: continue #181 glyph filtering, #175 clipboard bulk delete/#168 clear key,

@@ -247,3 +247,6 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 ### String-resource and settings-search traps (2026-09-30)
 - A translation containing a literal `%` (e.g. "as % of the key width") must carry `formatted="false"` in EVERY locale: CI `lintDebug` fails `StringFormatInvalid` when the following characters read as a conversion (vi "% chiều"). The pure/mock suites do not catch it; run `scripts/gradle-guard.sh lintDebug` (≈45 min on Termux) or rely on CI.
 - Settings search scroll targets are recorded by `onGloballyPositioned`, which also fires mid expand-animation with in-flight offsets. Scroll only once a position is registered AND unchanged across polls (`expandAndScrollTo`), and record positions relative to the scroll viewport (`contentYOf`), never raw `positionInRoot`.
+
+### Release APK raw-layout verification (2026-10-02)
+- Minified release APKs shorten raw XML paths (e.g. res/-0.xml), so looking for res/raw/numeric.xml falsely suggests the layout is absent. Verify packaged layouts by matching source-byte SHA-256 against archive entries; do not rely on resource filenames.

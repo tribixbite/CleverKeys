@@ -83,6 +83,7 @@ The project is optimized for building directly on an Android device via Termux.
 
 ## 4. Developer Quirks & Gotchas
 -   **"White Bar" Artifact:** If the keyboard animation shows a white bar at the top, ensure `WindowLayoutUtils` sets height to `WRAP_CONTENT` and the Service theme is fully transparent.
+-   **Numeric Height Scaling:** `KeyboardData.numpad_height` is an explicit XML opt-in, default false; numeric/PIN layouts set it true. Never use `bottom_row=false` as a numeric-layout proxy: compact custom boards also omit the bottom row (GH #90). Preserve the flag through every layout transformation; see `docs/specs/layout-system.md`.
 -   **Resource Duplication:** **DO NOT** manually copy XML files to `res/raw`. The Gradle build task handles this. Manual copying causes "Duplicate resource" errors.
 -   **F-Droid Compatibility:** The version code logic and split APK structure are designed to be compatible with F-Droid's build expectations.
 -   **Termux Environment:** When running shell commands, always prefer `./build-on-termux.sh` over direct `./gradlew` calls to ensure the correct environment variables and AAPT2 overrides are applied.
