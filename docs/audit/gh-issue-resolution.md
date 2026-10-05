@@ -44,7 +44,7 @@ What changed since 2026-09-05:
 
 | # | Title (short) | Status | Evidence | GH action |
 |---|---|---|---|---|
-| 188 | Compose key does not work | **FIXED locally; device retest pending (2026-10-05)** | Reproduced on Seeker: Compose activates visually, then the next letter commits raw. The deferred navigation-subkey tap branch emits key-up and immediately clears the pending compose state. `97d6c25f` routes taps through the shared latch/unlatch lifecycle instead; arrow flicks retain their own handling. A fail-first pointer test reproduced premature commit; a second protects exactly-once ordinary dispatch. Kotlin compilation and 2,737 pure / 921 mock tests pass. Minified APK built, but another Wi-Fi drop interrupted installation and retest. | retest composed output, cancel, arrows and ordinary typing before closure |
+| 188 | Compose key does not work | **FIXED locally; Seeker retest passed (2026-10-05)** | Reproduced on Seeker: Compose activates visually, then the next letter commits raw. The deferred navigation-subkey tap branch emits key-up and immediately clears the pending compose state. `97d6c25f` routes taps through the shared latch/unlatch lifecycle instead; arrow flicks retain their own handling. A fail-first pointer test reproduced premature commit; a second protects exactly-once ordinary dispatch. Kotlin compilation and 2,737 pure / 921 mock tests pass. Minified APK installed with matching hash; both é sequence orders, pending-state silence, cancellation and arrow navigation pass on Seeker. | retest composed output, cancel, arrows and ordinary typing before closure |
 | 186 | Autocorrect only works for the primary language | **OPEN** (confirmed in code; new 2026-09-22) | `WordPredictor.autoCorrect` (`WordPredictor.kt:2876`) consults only the primary `dictionary`. Layouts carry no language binding, so `switch_forward` to a `script="persian"` layout leaves fa as secondary, and only primary-language typos get corrected. Workaround today: bind the `primaryLangToggle` command (`CommandRegistry.kt:566`) to a key or short swipe. Proper fix: a per-layout language binding that drives the primary language on layout switch. That is the same feature #61 asks for, and the reporter links a fork commit (`mostafaqanbaryan/CleverKeys@7c91d8f4`) that adds a `language` layout attribute as reference. | comment with the toggle workaround; fix with #61 |
 | 184 | 1M-word dictionary crashes | **FIXED locally (2026-10-03); device refusal verified** | Import now refuses actual CKDT header counts above 100,000 with a translated smaller-pack message. Shared tap/geometric/CTC readers reject oversized installed dictionaries before count-sized allocation. Dictionary/member bytes are bounded at 16 MiB, model at 8 MiB, manifest/NOTICE at 64 KiB; ZIP aggregate 64 MiB/64 entries. Unsafe names and duplicate basenames are refused; rejected updates preserve the old pack. Kotlin compilation and full suites pass: 2,737 pure / 919 mock (6m43s). Seeker Settings refuses a real-header million-word fixture despite manifest wordCount=1; installed count remains 0 and UI stays responsive. Existing-pack rollback remains host-tested because Seeker has no installed packs. This bounds inputs, not every possible heap use. | verify refusal/retained pack/continued typing on Seeker before closure |
 | 181 | Monet Auto does not follow system dark mode; some emoji render as tofu | **PARTIAL** (glyph filtering implemented locally, 2026-10-03; Monet still NEEDS-REPRO) | `EmojiGridView` filters categories, recents and search using the actual themed cell paint. Whole Unicode sequences must have a glyph; the final text-emoticon group is checked per visible codepoint. Cache is grid-scoped and recent data is preserved. Focused tests 7/7; Kotlin compilation and full suites 2,733 pure / 912 mock pass. Refreshed minified APK builds and verifies; Installed on Seeker: sampled smiley/text-face grids and actual-keyboard face search render; reopening resets search and recents remain empty. Forced unsupported-font and Monet checks remain pending. The Monet configuration-change path remains wired but needs an on-device day/night reproduction. | test glyph filtering and Monet live update before closure |
@@ -259,9 +259,8 @@ full 98,140-word English CKDT dictionary and the shipped QWERTY geometry ranks `
 paths (`hello` second). These are eight distinct clean synthetic words, not a human-trace
 accuracy estimate. On the one usable existing human `wet` trace, geometric also ranks
 `wet` first, compared with CTC rank 6; this is one trace, not broad human validation.
-`build/wet-geo-probe.log` holds local output. Switching the engine is
-now a supported experimental workaround for `wet`; a real-finger A/B and wider corpus
-comparison remain necessary. No cross-engine score merge or CTC ranking change was made.
+`build/wet-geo-probe.log` holds local output. This comparison is diagnostic evidence, not a per-word engine-switching workflow.
+A general default-engine fix needs real-finger short-word and wider corpus validation. No cross-engine score merge or CTC ranking change was made.
 
 **Current test artifact:** source `97d6c25f`, ARM64 minified APK at
 `build/outputs/apk/release/CleverKeys-v2.0.0-arm64-v8a.apk`; SHA-256
@@ -360,3 +359,27 @@ When a fix lands, update the Status/Evidence columns and cite the commit. When t
 closes an issue on GitHub, flip it to CLOSED with the close date. New issues get a row on triage.
 Re-derive "shipped in vX" with `git tag --contains <hash>`, never from memory. #145 shows how an
 unverified attribution can survive two snapshots.
+
+### October 5 default-engine and apostrophe follow-through
+
+Seeker now runs the verified `97d6c25f` minified APK. Both Compose orders produce é,
+intermediate prefixes commit no raw text, cancellation resumes normal typing, and
+arrow-left followed by e produces Caet. The temporary bar mapping is removed and the
+two user mappings preserved; final focus/test-text restoration follows the next pass.
+
+The shipped-model diagnostic reproduces ad→as (ad rank 2 in six canonical sampling
+conditions; Seeker commits As). The lexicon includes ad at frequency 199. This is a
+second default-CTC recognition defect, not a missing dictionary word or gesture-route
+failure. There are 19 distinct synthetic words in `build/short-word-probe.log`; repeated
+sampling variants are not independent human evidence. Wet additionally competes with
+wt, which shares its endpoint, so endpoint-only penalties cannot resolve that ordering.
+TODO: collect held-out real short-word traces, inspect emissions and validate a general
+model/scoring correction with protected we/as and broader vocabulary. Manual engine
+switching is not an acceptable solution for ordinary words.
+
+Astra found a separate apostrophe defect: custom single-character apostrophe TEXT
+mappings bypass the ordinary text route. The fix routes ASCII/curly apostrophes through
+KeyEventHandler, preserving owned auto-space attachment, inline search and bookkeeping.
+Focused fail-first evidence: 3 failures → 15/15 pass. Literal multi-character macros are
+unchanged; explicit possessive suffix transactions and suffix-only undo remain TODO.
+See the reconciled roadmap §2.1 for plural/possessive/contraction distinctions.

@@ -215,6 +215,19 @@ class CustomShortSwipeExecutor(
 }
 ```
 
+### Single-apostrophe text actions
+
+For TEXT mappings whose entire value is ASCII apostrophe or U+2019, Keyboard2View
+uses the ordinary KeyEventHandler route with empty modifiers before invoking the
+custom executor. Smart Punctuation can then reclaim only a verified automatic space;
+manual whitespace and opening-quote behavior retain ordinary-key semantics. The same
+route supports inline search/edit fields and typed-text bookkeeping. Successful actions
+retain the normal custom-swipe haptic.
+
+Other text macros remain literal. A multi-character apostrophe-s macro is not a possessive
+transaction and does not provide suffix-only undo. Explicit suffix commands require
+separate verified attachment and undo state; see the October 5 feature roadmap.
+
 ### Timestamp Action Type
 
 The TIMESTAMP action type formats the current `Date` with a [SimpleDateFormat](https://developer.android.com/reference/java/text/SimpleDateFormat) pattern stored in `actionValue` and commits the result via `InputConnection.commitText`. The current system default `Locale` is used.

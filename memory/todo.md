@@ -232,3 +232,34 @@ Do not commit, tag, push, publish, or open external issues without explicit user
 
 - [ ] TODO: clear only launcher test text, remove scratch UI XML, return to Android
   SearchLauncher task 860 and restore the originally expanded Quick Settings shade.
+
+## October 5 roadmap and apostrophe follow-through
+
+- [x] Installed `97d6c25f` minified APK on reconnected Seeker; installed SHA matches
+  `798137106bd92b39c15280119c511d123f9a39f321b953b0efd1e2eb4cafdd23`.
+  Actual Compose e/apostrophe and apostrophe/e both produce é with no intermediate
+  raw text. Compose cancellation resumes plain e; arrow-left then e gives Caet.
+- [x] Removed temporary t/South minimize_bar mapping; confirmed original two user
+  mappings remain. Launcher test field was cleared before the next ad diagnostic.
+- [x] Astra reconciled apostrophe proposal against letter-only CTC + post-decoder overlay.
+  Implemented single-character custom ASCII/curly apostrophe routing through ordinary
+  key handling, preserving smart punctuation, inline search, typing bookkeeping/haptic.
+  Focused 15/15 pass after 3 expected behavioral failures. Multi-character macros,
+  including literal apostrophe-s, keep their existing behavior. No suffix command claimed.
+- [x] Roadmap low-hanging terminal pipeline: SuggestionHandler now shares TerminalUtils
+  detection with paste for correction, deletion and prediction guards. Focused real-handler
+  tests 8/8 pass: five SSH/AVF/Termux-Nix packages use Ctrl+W; terminal partial replacement
+  uses backspace events; ordinary editor uses document deletion. Custom package UI pending.
+- [x] ad exists in lexicon (frequency 199), yet six canonical variants rank it 2 behind as;
+  Seeker confirms ad→As. Existing wet still rank 7 synthetically, rank 6 on the one usable
+  human trace. These are recognition defects; users must not switch engines per word.
+  Endpoint-only rescoring cannot separate wet from wt (same final key); no unvalidated
+  ranking/model change shipped. TODO: held-out human short-word/model calibration.
+- [x] Combined Kotlin compilation and full suites pass: 2,737 pure / 933 mock (4m22s),
+  `build/oct5-terminal-apostrophe-tests.log`.
+- [ ] TODO: commit, fresh minified APK, actual custom-apostrophe device test, terminal
+  smoke test if safe, then restore any temporary mapping/test text,
+  original Android launcher + expanded Quick Settings and remove scratch UI XML.
+- [ ] TODO: explicit Append apostrophe-s / Append apostrophe commands need verified
+  immediate-word attachment plus suffix-only undo. Contraction projection selection is a
+  separate action; do not guess plural vs possessive from a final s or boost absent beam paths.

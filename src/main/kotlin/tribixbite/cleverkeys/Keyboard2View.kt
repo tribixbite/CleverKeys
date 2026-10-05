@@ -27,6 +27,7 @@ import androidx.core.view.ViewCompat
 import tribixbite.cleverkeys.a11y.KeyLabels
 import tribixbite.cleverkeys.a11y.KeyboardAccessibilityHelper
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
+import tribixbite.cleverkeys.customization.ActionType
 import tribixbite.cleverkeys.customization.AvailableCommand
 import tribixbite.cleverkeys.customization.CommandRegistry
 import tribixbite.cleverkeys.customization.CustomShortSwipeExecutor
@@ -786,8 +787,22 @@ class Keyboard2View @JvmOverloads constructor(
         val inputConnection = service.currentInputConnection
         val editorInfo = service.currentInputEditorInfo
 
-        // Execute the mapping using the CustomShortSwipeExecutor
-        val executed = _customSwipeExecutor.execute(mapping, inputConnection, editorInfo)
+        // A literal apostrophe flick is the same input as its built-in subkey: route it
+        // through smart punctuation, inline editors/search, and typed-text bookkeeping.
+        // Keep multi-character TEXT macros literal; splitting "'s" into keys would change
+        // existing macro semantics without providing a reversible possessive edit.
+        // TODO: Add explicit suffix commands with verified attachment and suffix-only undo.
+        val apostropheHandler = if (mapping.actionType == ActionType.TEXT &&
+            (mapping.actionValue == "'" || mapping.actionValue == "’")
+        ) _config.handler else null
+        val executed = if (apostropheHandler != null) {
+            apostropheHandler.key_up(
+                KeyValue.makeStringKey(mapping.actionValue), Pointers.Modifiers.EMPTY
+            )
+            true
+        } else {
+            _customSwipeExecutor.execute(mapping, inputConnection, editorInfo)
+        }
 
         if (!executed) {
             // Executor couldn't handle it - try KeyValue-based execution

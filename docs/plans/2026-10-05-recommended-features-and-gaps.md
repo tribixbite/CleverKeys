@@ -31,7 +31,14 @@ To extend this lead without falling into the bloat, maintenance traps, or permis
 * **The Remaining Gap**:
   1. **Pipeline Unification**: While terminal paste uses `TerminalUtils`, [`SuggestionHandler.kt:348`](file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/cleverkeys/SuggestionHandler.kt#L348) (`isTermuxEditor`) still checks `editorInfo?.packageName == TERMUX_PACKAGE` (`"com.termux"`) directly for `Ctrl+W` kill-word deletion and trailing space suppression. Connecting `SuggestionHandler`'s deletion logic to `TerminalUtils.isTerminalApp(editorInfo)` extends full terminal input behaviors to JuiceSSH, Termius, AVF, and ConnectBot.
   2. **Custom Package Config**: Add a user-facing setting: **"Custom Terminal Packages"** allowing users to enter custom package names (e.g. specialized NeoVim wrappers or remote desktop apps) to trigger terminal mode.
-* **Effort**: Low (1 day). Extends first-class terminal handling across the entire SSH/terminal ecosystem.
+* **October 5 implementation**: shared detection now covers SuggestionHandler correction,
+  undo, delete-word and terminal prediction guards. Real-handler focused tests pass 8/8:
+  ConnectBot/JuiceSSH/Termius/AVF/Termux-Nix use Ctrl+W; suggestion replacement emits native
+  backspaces; an ordinary editor retains document deletion. Custom package configuration
+  remains TODO; behavior in each external terminal app still needs device validation.
+* **Effort**: shared predicate is small; custom package UI requires preference/search/backup
+  integration and explicit validation. No claim that every SSH editor was device-tested.
+
 
 ---
 
@@ -65,15 +72,106 @@ To extend this lead without falling into the bloat, maintenance traps, or permis
 
 While CleverKeys' ONNX CTC model achieves outstanding accuracy (89.31% Top-1), certain edge cases in English and Latin-script swipe typing cause friction. WM Keyboard implemented clever, zero-weight heuristic mechanics that CleverKeys can adopt directly:
 
-### 2.1 Glide Apostrophe Waypoint & Possessive Flick (`'s`)
-* **The Problem**: Ambiguous contraction pairs (`its` vs `it's`, `were` vs `we're`, `lets` vs `let's`, `cant` vs `can't`, `hell` vs `he'll`) share identical or near-identical swipe geometries. Relying purely on unigram frequencies often misidentifies the intended word.
-* **The Solution**:
-  1. **Apostrophe Key Waypoint**: Allow users to designate a key (e.g. comma `,`, period `.`, or spacebar) as the apostrophe waypoint.
-     - When the swipe trajectory passes within threshold radius of the designated key, the beam search decoder explicitly restricts or massively boosts candidate paths containing an apostrophe (`its` $\to$ `it's`).
-  2. **Possessive Flick (`'s`)**:
-     - Immediately after swiping a noun (e.g. `Bowie`), a quick outward flick from the apostrophe key to `s` appends `'s` directly to the committed word without requiring backspace/spacebar fidgeting.
-     - Reclaims the trailing auto-space and binds `'s` as a single unit for backspace reversal.
-* **Effort**: Medium (3–4 days). Solves the primary cause of contraction mis-predictions.
+### 2.1 Explicit Apostrophe and Possessive Gestures
+
+**Code reconciliation (2026-10-05; phase 1 implemented, phases 2–5 pending).** The current CTC and
+geometric engines decode letter-only surfaces. Apostrophes are supplied afterward by
+`swipe/ContractionOverlay.kt`, using language-specific REPLACE and PAIRED mappings.
+Consequently, restricting the current beam to “paths containing an apostrophe” cannot
+work: those paths do not exist. Existing user joiner preferences and curated language
+collision rules must survive any new gesture.
+
+**What already works, and what remains weak:**
+
+- Non-possessive same-letter pairs can be placed beside the decoded word; frequency
+  promotion is deliberately conservative. For example, `its` remains first and `it's`
+  is offered alongside it. A confident rank-0 `teams` can expose `team's` beside it;
+  contested/lower-ranked possessives remain at the tail. These are presentation rules,
+  not evidence that the gesture expressed an apostrophe.
+- English-only suggestion augmentation also generates `cat's` and `parents'`.
+  Its s-ending heuristic is not a grammatical singular/plural classifier: `James`,
+  `news`, regular plurals and irregular plurals require different interpretation.
+  Plural `cats`, singular possessive `cat's`, and plural possessive `cats'` are
+  distinct user intents. Do not fix ambiguity by always preferring a possessive.
+- A built-in literal apostrophe tap/flick already reclaims an owned, cursor-stamped
+  automatic space when Smart Punctuation is enabled:
+  `Bowie ` + `'` → `Bowie'`; typing `s` afterward attaches normally.
+  Manual spaces and moved cursors are protected by `SmartAutoSpace.isSwallowEligible`.
+- **Concrete route gap, single-apostrophe case now fixed:** previously every custom TEXT mapping ran through
+  `Keyboard2View.onCustomShortSwipe` →
+  `CustomShortSwipeExecutor.executeTextInput`, which commits directly to the app.
+  This bypassed `KeyEventHandler.sendText`'s smart punctuation, inline search/edit
+  routing and typed-text bookkeeping. Other custom TEXT macros still take this path.
+  A custom `'s` string therefore does not acquire
+  possessive semantics; it appends literally after the automatic space.
+  Routing that string through `sendText` alone is insufficient: its swallow logic
+  intentionally applies only to single characters.
+
+**Minimal implementation sequence:**
+
+1. **Restore literal apostrophe parity — implemented, device check pending.** Route a custom TEXT mapping consisting of
+   exactly ASCII `'` or typographic `’` through the ordinary key text handler.
+   Preserve the literal contents of arbitrary multi-character macros; do not split
+   them into keystrokes or silently reclaim spaces before every punctuation-prefixed
+   string. Keep the normal inline editor/search routing and Smart Punctuation toggle.
+   A custom `'s` macro remains literal until the explicit command below exists.
+   **Validation:** `Keyboard2ViewCustomSwipeDispatchTest` failed before the fix in
+   exactly three cases (ASCII/curly attachment and inline-search destination), then
+   passed all 15 tests with the real view, key handler, executor and editable IC double.
+   Kotlin production/test compilation passed. Logs: `build/custom-apostrophe-red.log`
+   and `build/custom-apostrophe-green.log`. Existing command dispatch/haptics, manual
+   spaces, disabled Smart Punctuation, cursor mismatch and literal macros remain covered.
+2. **Add explicit, assignable suffix commands.** Offer “Append 's” and “Append
+   apostrophe” through the existing short-swipe/popover/command machinery. The first
+   means exactly `'s`, including after an s-final singular; the second supports
+   `parents'` without guessing morphology. Their labels state the insertion rather
+   than claiming to identify nouns or grammatical possession. No dedicated apostrophe
+   key or new apostrophe-to-S trajectory recognizer is required.
+   Initially scope attachment to the immediately preceding verified swipe commit.
+   Verify the same editor, a collapsed selection, cursor location and the exact
+   committed word with either its owned automatic space or no trailing space.
+   Never reclaim a manual space or edit a stale word after cursor/field changes.
+   A successful edit retains the prior automatic-space policy. When verification
+   fails, make no destructive edit and show concise feedback.
+3. **Make suffix editing one reversible transaction.** Integrate at
+   `SuggestionHandler`, where swipe replacements already roll back rejected-word
+   learning and update context. Track the pre-edit word/space and resulting suffix
+   separately: immediate Backspace restores the prior text, before the existing
+   whole-swipe undo handler can delete the noun. Verify at undo time too; expire the
+   transaction after any other edit, cursor move or field change. Refresh correction
+   candidates so an old `lastAutoInsertedWord` cannot delete the wrong length.
+   Do not automatically persist a one-off suffix choice as a dictionary preference.
+4. **Treat contraction choice as a separate action.** An optional “Use apostrophe
+   variant” action selects a same-letter projection from the current swipe candidates
+   (`its` → `it's`, `were` → `we're`). This is different from appending `'s`.
+   Multiple valid projections require an explicit choice; do not invent a global
+   English rule or borrow variants from another language.
+5. **Defer in-stroke waypoints until measured.** A later waypoint can carry explicit
+   apostrophe intent into the display-overlay stage, but detouring through comma,
+   period or space changes the trace seen by a model trained on letter paths.
+   Define collision behavior with existing subkey flicks/space gestures and validate
+   human traces before shipping. Hard beam filtering, huge ranking boosts, or a
+   hand-spliced trace are not a demonstrated solution.
+
+**Required regressions (test the real commit/routing path):**
+
+- Built-in and custom single apostrophe: identical `Bowie ` → `Bowie'` behavior
+  with Smart Punctuation on; unchanged literal behavior when off. ASCII/curly forms,
+  manual spaces, cursor movement, selected text and inline search/edit targets.
+- Explicit suffixes: `Bowie ` → `Bowie's `, `parents ` → `parents' `,
+  and `James ` → `James's ` when “Append 's” was requested; auto-space-off
+  retains no trailing space. Immediate Backspace restores exactly the pre-edit text.
+- Stale/failed editor reads or writes, duplicate invocation, field switch, password
+  fields, and composing-less editors do not delete unrelated text or learn fragments.
+- Context learns the resulting whole word once rather than `Bowie → s`; undo
+  removes that edit's learning without creating a persistent word preference.
+- `its/it's`, `were/we're`, `teams/team's/teams'`, `would/world`,
+  user-preferred joiner words, and French/Italian collision cases preserve existing
+  ranking unless the user explicitly requests a different form.
+
+**Effort:** literal route parity is a small, testable fix. Suffix transaction/undo and
+contraction selection are separate implementation rounds; the earlier combined
+  “3–4 days” estimate did not account for these state and gesture conflicts.
 
 ---
 

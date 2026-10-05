@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.content.res.Resources
 import android.text.InputType
 import android.util.Log
+import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import com.google.common.truth.Truth.assertThat
@@ -125,14 +126,14 @@ class SuggestionTapPartialReplaceTest {
 
     // ------------------------------------------------------------------ fixtures
 
-    private fun handler(): SuggestionHandler {
+    private fun handler(keyevents: KeyEventHandler = mockk(relaxed = true)): SuggestionHandler {
         val handler = objenesis.newInstance(SuggestionHandler::class.java)
         handler.setField("contextTracker", contextTracker)
         handler.setField("predictionCoordinator", coordinator)
         handler.setField("suggestionBar", bar)
         handler.setField("config", config)
         handler.setField("contractionManager", mockk<ContractionManager>(relaxed = true))
-        handler.setField("keyeventhandler", mockk<KeyEventHandler>(relaxed = true))
+        handler.setField("keyeventhandler", keyevents)
         handler.setField("predictionTasks", mockk<PredictionTaskRunner>(relaxed = true))
         return handler
     }
@@ -229,6 +230,55 @@ class SuggestionTapPartialReplaceTest {
         )
 
         assertThat(editorText.toString()).isEqualTo("go to example ")
+    }
+
+    /** Shared terminal detection must apply to correction as well as clipboard paste. */
+    @Test
+    fun knownSshAndTerminalEditorsDeleteLastWordWithControlW() {
+        val keyevents = mockk<KeyEventHandler>(relaxed = true)
+        val subject = handler(keyevents)
+        val packages = listOf(
+            "org.connectbot", "com.sonelli.juicessh", "com.server.auditor.ssh.client",
+            "com.android.virtualization.terminal", "com.termux.nix"
+        )
+        packages.forEach { pkg ->
+            subject.handleDeleteLastWord(ic, editorInfo(plainField).apply { packageName = pkg })
+        }
+        verify(exactly = packages.size) {
+            keyevents.send_key_down_up(KeyEvent.KEYCODE_W, KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
+        }
+        verify(exactly = 0) { ic.deleteSurroundingText(any(), any()) }
+    }
+
+    @Test
+    fun terminalSuggestionReplacementUsesBackspaceEventsInsteadOfDocumentDeletion() {
+        editorText.append("hel")
+        every { contextTracker.getCurrentWordLength() } returns 3
+        every { contextTracker.getCurrentWord() } returns "hel"
+        every { contextTracker.getCharsToDeleteForPrediction() } returns Pair(3, 0)
+        val keyevents = mockk<KeyEventHandler>(relaxed = true)
+        // The terminal double applies native backspace events to its line buffer.
+        every { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, 0) } answers {
+            editorText.setLength((editorText.length - 1).coerceAtLeast(0))
+        }
+        val editor = editorInfo(plainField).apply { packageName = "org.connectbot" }
+
+        handler(keyevents).onSuggestionSelected("hello", ic, editor, resources, isManualSelection = true)
+
+        verify(exactly = 3) { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, 0) }
+        verify(exactly = 0) { ic.deleteSurroundingText(any(), any()) }
+        verify { ic.commitText("hello ", 1) }
+    }
+
+    @Test
+    fun ordinaryEditorStillDeletesLastWordThroughDocumentApi() {
+        editorText.append("hello world ")
+        val keyevents = mockk<KeyEventHandler>(relaxed = true)
+
+        handler(keyevents).handleDeleteLastWord(ic, editorInfo(plainField))
+
+        assertThat(editorText.toString()).isEqualTo("hello ")
+        verify(exactly = 0) { keyevents.send_key_down_up(any(), any()) }
     }
 
     // ------------------------------------------------------------------ reflection
