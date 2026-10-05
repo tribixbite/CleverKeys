@@ -279,12 +279,11 @@ mapping then verified portrait/landscape minimize/expand; landscape scrolling fr
 the transparent strip moves launcher content while the FAB remains. Original rotation
 restored (accelerometer=0, user_rotation=0); temporary app locale restored to [].
 The Hebrew app locale did not create an RTL IME, so RTL placement remains unverified.
-Device dropped during the final Delete lookup, before deletion could execute. TODO:
-remove ONLY t/South `minimize_fab` (leave original two mappings), confirm launcher
-test text empty, remove `/sdcard/cleverkeys-test-ui.xml`, return to Android
-SearchLauncher task 860 and restore originally expanded Quick Settings. Last known
-focus is Customize T dialog. No reboot/data clear, clipboard overwrite or terminal
-command execution. Actual external-terminal editing remains pending.
+Final reconnection cleanup completed: deleted ONLY t/South minimize_fab, confirmed
+two original user mappings remain and launcher test field empty. Original IME,
+rotation 0/0 and app locales [] verified. Removed scratch UI XML; HOME and expanded
+Quick Settings restored (NotificationShade focus). No reboot/data clear, clipboard
+overwrite or terminal command execution. Actual external-terminal editing remains pending.
 
 #### Remaining hands-on release checks, ordered by consequence
 
@@ -396,7 +395,7 @@ Shared terminal detection is implemented in `5f07936e`; five terminal package
 fixtures use Ctrl+W and terminal prefix replacement uses native backspaces.
 Ordinary editor deletion remains covered. Combined suites pass 2,737 / 933; the new
 APK is installed with matching hash; custom apostrophe/emoji routing pass on device.
-Temporary FAB mapping cleanup and external-terminal editing remain pending.
+Temporary FAB mapping cleanup is complete; external-terminal editing remains pending.
 
 Astra's default-CTC proposal was screened before considering production changes.
 Geometry candidate rescoring fixes synthetic ad but cannot separate collinear wet/wt;

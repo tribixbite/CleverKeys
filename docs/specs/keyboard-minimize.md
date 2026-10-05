@@ -58,6 +58,7 @@ A landscape swipe starting inside the transparent IME strip scrolls launcher con
 while the FAB remains visible (`build/oct5-fab-landscape-scroll-down.jpg`). Portrait
 launcher had no available scroll range, so its unchanged scroll attempt proves nothing.
 Temporary Hebrew app locale did not change the IME to RTL; restored locale/rotation.
-TODO: RTL placement and cross-app pass-through checks. Device dropped during cleanup;
-remove only the temporary t/South FAB mapping after reconnection. These results do
-not claim a complete cross-app release pass.
+TODO: RTL placement and cross-app pass-through checks. Final reconnection cleanup
+removed the temporary t/South FAB mapping, verified original two mappings, cleared
+scratch UI XML and restored original launcher/expanded Quick Settings. These results
+do not claim a complete cross-app release pass.

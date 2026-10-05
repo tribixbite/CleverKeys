@@ -287,9 +287,10 @@ The apostrophe test mapping was removed, then that empty slot was temporarily as
 starting in the transparent IME strip moves launcher content while the FAB stays visible.
 Rotation restored to 0 (original accelerometer rotation 0); temporary Hebrew app locale
 restored to the original empty locale list. That locale did not make the IME RTL, so RTL
-placement is unverified. Device dropped Wi-Fi during mapping deletion: TODO remove ONLY
-t/South `minimize_fab`, confirm original two mappings, clear only launcher test text,
-remove scratch UI XML, and restore expanded Quick Settings over Android SearchLauncher.
+placement is unverified. Final reconnection cleanup complete: removed ONLY temporary
+t/South `minimize_fab`, confirmed original two mappings and empty launcher test field,
+removed scratch UI XML, verified original IME/rotation/locales and restored HOME with
+expanded Quick Settings (NotificationShade focus).
 External terminal smoke test remains pending; no terminal commands were executed.
 
 The default CTC engine still misrecognizes wet and ad. Endpoint-only rescoring cannot

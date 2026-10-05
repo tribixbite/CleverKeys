@@ -231,8 +231,8 @@ Do not commit, tag, push, publish, or open external issues without explicit user
 - [x] FAB portrait/landscape minimize/expand and landscape scroll through transparent
   strip pass on launcher. RTL and cross-app checks remain pending.
 
-- [ ] TODO: clear only launcher test text, remove scratch UI XML, return to Android
-  SearchLauncher task 860 and restore the originally expanded Quick Settings shade.
+- [x] Final cleanup: launcher test field empty, scratch UI XML removed, HOME and
+  original expanded Quick Settings restored (NotificationShade focus).
 
 ## October 5 roadmap and apostrophe follow-through
 
@@ -268,11 +268,11 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   strip scrolls launcher content while FAB remains. Screenshots `build/oct5-fab-*.jpg`.
   Restored rotation (accelerometer=0, user_rotation=0) and app locales []. Hebrew app
   locale did not create RTL IME; do not claim RTL pass.
-- [ ] TODO: Seeker dropped during final Delete lookup (No route to host). Remove ONLY
-  temporary t/South minimize_fab; confirm original two mappings and launcher test field
-  empty; restore Android SearchLauncher + expanded Quick Settings; remove scratch UI XML.
-  Last known focus Customize T dialog. Actual external-terminal smoke test remains pending;
-  no terminal commands executed.
+- [x] Reconnected cleanup complete: deleted ONLY t/South minimize_fab and confirmed
+  two original user mappings remain. Launcher test field is empty; original IME,
+  rotation 0/0 and app locales [] verified. Removed scratch UI XML; HOME then
+  expanded Quick Settings, confirmed NotificationShade focus. External-terminal
+  editing remains pending; no terminal commands executed.
 - [ ] TODO: explicit Append apostrophe-s / Append apostrophe commands need verified
   immediate-word attachment plus suffix-only undo. Contraction projection selection is a
   separate action; do not guess plural vs possessive from a final s or boost absent beam paths.
