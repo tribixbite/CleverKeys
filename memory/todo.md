@@ -1,6 +1,6 @@
 # Current work queue
 
-Updated: 2026-10-03. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
+Updated: 2026-10-05. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
 Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/2026-08-30-full-backlog-campaign.md).
 
 The September 1 campaign baseline was `5fb58037`; subsequent work through `79f0b464`
@@ -202,3 +202,27 @@ maintainer-owned uncommitted manual-checklist resets.
 ## Release authority
 
 Do not commit, tag, push, publish, or open external issues without explicit user authorization.
+
+## October 5 reconnected-device follow-through
+
+- [x] Seeker `.170` reconnected. Removed only temporary `t`/South mapping and restored
+  popover to false; the other two mappings remain intact. Installed the verified
+  `af742286` minified APK with data preserved; installed SHA matches `a356ac06…`.
+- [x] #181: sampled smiley and text-emoticon grids render; actual keyboard input routes
+  `face` into emoji search and renders mixed results. No recent items were added.
+  TODO: force an unsupported sequence/font and check Monet live day/night changes.
+- [x] #184: Settings import refuses a CKDT header declaring 1,000,000 words despite
+  manifest wordCount=1, displays the smaller-pack message, and retains installed count 0.
+  Removed the temporary ZIP and restored multi-language to false. Existing-pack rollback
+  is host-tested; this device has no installed packs to exercise that scenario.
+- [x] #188 reproduced: Compose activates visually, then `e` commits immediately. The
+  deferred navigation-key tap branch emits key-up and clears the newly pending state.
+  Fail-first pointer regression reproduces that premature commit (8 tests, 1 failure).
+  Fix routes the tap through shared latch/unlatch handling; navigation swipes retain their
+  separate handling. Second regression protects exactly-once ordinary key dispatch.
+- [x] #188 Kotlin compilation and full suites pass: 2,737 pure / 921 mock (5m12s),
+  `build/issue-188-tests.log`. Two new pointer tests included.
+- [ ] TODO: build minified APK, verify Compose both orders, cancellation, ordinary typing
+  and navigation on Seeker; record results.
+- [ ] TODO: clear only launcher test text, remove scratch UI XML, return to Android
+  SearchLauncher task 860 and restore the originally expanded Quick Settings shade.

@@ -40,6 +40,13 @@ From `res/xml/bottom_row.xml`:
 - `key7` = North (up swipe)
 - `key8` = South (down swipe)
 
+A tap on a primary key with navigation subkeys uses the same latch/unlatch lifecycle
+as other keys after delivering its deferred key-down. This preserves Compose prefixes:
+committing key-up and clearing modifiers inside the navigation tap branch immediately
+cancels Compose (GH #188). Arrow flicks and TrackPoint holds retain their own gesture
+paths. `PointersShortSwipeCustomOverrideTest` pins Compose latching and exactly-once
+ordinary primary-key dispatch.
+
 ## Configuration
 
 | Key | Type | Default | Description |

@@ -256,3 +256,5 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 
 ### Pure helpers beside Android views (2026-10-03)
 - An Android View companion can still class-load Android-only outer types under pure JVM tests. Keep Android-free policies in a separate object in the existing source file (as `EmojiGlyphSupport`), rather than the View companion.
+
+- **Compose/navigation tap lifecycle (GH #188, 2026-10-05):** the bottom-row Compose key also has arrow subkeys. A deferred tap must fall through to shared latch handling after key-down; early key-up plus clearLatched cancels its prefix immediately. State-machine-only tests miss this; pin the pointer release path.

@@ -177,6 +177,38 @@ class PointersShortSwipeCustomOverrideTest {
 
     private fun emitted(s: String): Boolean = handler.ups.any { it?.getString() == s }
 
+    /** #188: navigation subkeys must not bypass the primary key latch lifecycle. */
+    @Test
+    fun deferredComposeTap_latchesInsteadOfEmittingAndClearing() {
+        val key = KeyboardData.Key.EMPTY
+            .withKeyValue(0, KeyValue.getKeyByName("compose"))
+            .withKeyValue(7, KeyValue.getKeyByName("up"))
+        val snapshot = snap()
+        val value = requireNotNull(key.keys[0])
+        val flags = pointers.pointer_flags_of_kv(value, snapshot) or Pointers.FLAG_P_DEFERRED_DOWN
+
+        flick(key, 0f, 0f, snapshot, flags)
+
+        assertEquals("exactly one deferred key-down", listOf(value), handler.downs)
+        assertTrue("a pending compose prefix must not be committed", handler.ups.isEmpty())
+        assertEquals("compose remains available to the next key", 1, pointers.getModifiers().size())
+        assertEquals(value, pointers.getModifiers()[0])
+    }
+
+    /** Ordinary primary keys with arrows still commit exactly once. */
+    @Test
+    fun deferredNavigationTap_commitsOnce() {
+        val key = KeyboardData.Key.EMPTY
+            .withKeyValue(0, KeyValue.makeCharKey('x'))
+            .withKeyValue(7, KeyValue.getKeyByName("up"))
+
+        flick(key, 0f, 0f, snap(), Pointers.FLAG_P_DEFERRED_DOWN)
+
+        assertEquals(listOf(key.keys[0]), handler.downs)
+        assertEquals(listOf(key.keys[0]), handler.ups)
+        assertEquals(0, pointers.getModifiers().size())
+    }
+
     // =========================================================================
     // #171 — custom mapping vs default sublabel dispatch
     // =========================================================================
