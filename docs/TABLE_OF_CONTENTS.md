@@ -88,6 +88,7 @@
 | `2026-08-28-arc019-ctc-local-head2head.md` | CTC vs geometric same-inputs head-to-head (90.7 vs 63.0 top-1); UT-5/UT-7 closure record | ✅ Complete |
 | `2026-07-24-swipedata-onnx-validation.md` | Swipedata → ONNX input validation | ✅ Complete |
 | `futo-decoder-eval-notes.md` | FUTO reference decoder porting notes (floor + Viterbi-beam ceiling) | ✅ Complete |
+| `COMPARISON_WITH_WMKEYBOARD.md` | Comprehensive architectural, accuracy, training, and security comparison vs WM Keyboard | ✅ Complete |
 
 ### `/docs/guides/` Guides
 
