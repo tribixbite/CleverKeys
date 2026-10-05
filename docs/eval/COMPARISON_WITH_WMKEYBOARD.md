@@ -207,7 +207,8 @@ This is one of the starkest contrasts between the two applications.
 | | TrackPoint Cursor Navigation | ✅ **Hold-to-steer joystick cursor** | ❌ (2D touchpad on spacebar only) |
 | | Selection-Delete on Backspace | ✅ **Hold backspace + swipe to select text** | ❌ (Word-by-word swipe delete only) |
 | | Backspace Undo Autocorrect | ✅ Reverts word on single backspace | ✅ Reverts word + dedicated Undo chip |
-| **Terminal / Termux** | Termux `TYPE_NULL` Handling | ✅ **Flawless (Zero char duplication)** | ⚠️ Basic support (`KeyboardModes.kt`) |
+| **Terminal / Termux** | Terminal App Input Switching | ✅ **`TerminalUtils` whitelist (Termux, Termius, JuiceSSH, ConnectBot, AVF, etc.) + terminal paste** | ⚠️ Basic `com.termux` check (`KeyboardModes.kt`) |
+| | Termux `TYPE_NULL` Handling | ✅ **Flawless (Zero char duplication)** | ⚠️ Basic support (`KeyboardModes.kt`) |
 | | Terminal Special Keys | ✅ Ctrl, Alt, Meta, Esc, Tab, F1–F12 | ✅ Terminal mode / raw key codes |
 | | Termux Buildability | ✅ `build-on-termux.sh` included | ❌ Gradle fails in Termux (AAPT2/Compose) |
 | **Clipboard & Productivity**| Unlimited Persistent History | ✅ Persistent SQLite | ✅ In-memory + App storage |
@@ -215,7 +216,7 @@ This is one of the starkest contrasts between the two applications.
 | | Regex Search in Clipboard | ✅ **Full Regex (`.*`) & Glob Search** | ❌ Plain text search only |
 | | Inline Clipboard Editing | ✅ Edit clips directly in IME | ❌ |
 | | Media Clipboard (Images/PDFs) | ✅ Thumbnails, ZIP backup | ⚠️ Basic screenshot capture |
-| | Dynamic Snippets / Macros | ✅ Custom text macros | ✅ Rich snippets (`{date}`, `{clip}`) |
+| | Dynamic Snippets / Macros | ✅ **Timestamp macros (`SimpleDateFormat`, `ActionType.TIMESTAMP`) + text macros** | ✅ Rich snippets (`{date}`, `{clip}`) |
 | **AI, Voice & Toolbox** | Offline Voice Typing (Whisper) | ❌ | ✅ **whisper.cpp (29 offline models)** |
 | | Offline Grammar Check | ❌ | ✅ **Harper (Automattic) via Rust JNI** |
 | | OCR / Document Scanner | ❌ | ✅ **Google ML Kit / Tesseract** |

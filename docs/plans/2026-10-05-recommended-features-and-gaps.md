@@ -23,50 +23,29 @@ To extend this lead without falling into the bloat, maintenance traps, or permis
 
 ## 2. Priority 1: Terminal & Power-User Supremacy *(CleverKeys' Moat)*
 
-### 1.1 Generalize `TerminalUtils` & Expand Terminal Whitelist
-* **Current State**: [`InputCoordinator.kt`](file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/cleverkeys/InputCoordinator.kt) hardcodes `packageName == "com.termux"`.
-* **Problem**: Users running SSH clients (Termius, JuiceSSH, ConnectBot), Linux chroots (UserLAnd), NeoVim Android wrappers, or Android 15/16's native Linux Virtualization terminal (`com.android.virtualization.terminal`) suffer from the standard Android `InputConnection` desynchronization bugs (character duplication and broken backspacing).
-* **Implementation Plan**:
-  1. Create `tribixbite.cleverkeys.terminal.TerminalUtils`:
-     ```kotlin
-     object TerminalUtils {
-         private val KNOWN_TERMINAL_PACKAGES = setOf(
-             "com.termux",
-             "com.server.auditor.ssh.client", // Termius
-             "com.sonelli.juicessh",          // JuiceSSH
-             "org.connectbot",                // ConnectBot
-             "tech.ula",                      // UserLAnd
-             "com.android.virtualization.terminal" // Android 15/16 AVF
-         )
-
-         fun isTerminalContext(editorInfo: EditorInfo?, customPackages: Set<String>): Boolean {
-             val pkg = editorInfo?.packageName ?: return false
-             return pkg in KNOWN_TERMINAL_PACKAGES || pkg in customPackages
-         }
-     }
-     ```
-  2. Add a Multi-Select or Text Preference in Settings: **"Designate Custom Terminal Apps"** allowing users to enter custom package names that should trigger raw `Ctrl+W` delete and DPAD cursor handling.
-* **Effort**: Low (1–2 days). High community impact for developers and sysadmins.
+### 1.1 Unify Terminal Input Switching via `TerminalUtils` & Add Custom Package Whitelist
+* **Current State**: CleverKeys already has a mature [`TerminalUtils.kt`](file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/cleverkeys/TerminalUtils.kt) containing:
+  - Whitelist of known terminal packages: `com.termux`, `com.termux.nix`, `org.connectbot`, `com.sonelli.juicessh`, `com.server.auditor.ssh.client` (Termius), `jackpal.androidterm`, `com.magicandroidapps.bettertermpro`, `com.rbrq.terminal`, `com.android.virtualization.terminal` (AVF), `com.rk.terminal`, `green_green_avk.anotherterm.redist`.
+  - Heuristic detection: `contains("termux")`, `contains("anotherterm")`, `.endsWith(".terminal")`, `.contains(".terminal.")`, `.contains(".terminalemulator")`.
+  - Terminal-safe clipboard paste via [`TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo())`](file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt#L683) in `KeyEventHandler.kt` and `CustomShortSwipeExecutor.kt`.
+* **The Remaining Gap**:
+  1. **Pipeline Unification**: While terminal paste uses `TerminalUtils`, [`SuggestionHandler.kt:348`](file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/cleverkeys/SuggestionHandler.kt#L348) (`isTermuxEditor`) still checks `editorInfo?.packageName == TERMUX_PACKAGE` (`"com.termux"`) directly for `Ctrl+W` kill-word deletion and trailing space suppression. Connecting `SuggestionHandler`'s deletion logic to `TerminalUtils.isTerminalApp(editorInfo)` extends full terminal input behaviors to JuiceSSH, Termius, AVF, and ConnectBot.
+  2. **Custom Package Config**: Add a user-facing setting: **"Custom Terminal Packages"** allowing users to enter custom package names (e.g. specialized NeoVim wrappers or remote desktop apps) to trigger terminal mode.
+* **Effort**: Low (1 day). Extends first-class terminal handling across the entire SSH/terminal ecosystem.
 
 ---
 
-### 1.2 Dynamic Text Macro Expansion for Short-Swipes
-* **Current State**: CleverKeys supports 208 short-swipe actions (8 directions $\times$ 26 keys) that can emit custom strings, but strings are static text.
-* **Problem**: Power users frequently need dynamic snippets like today's date, current time, clipboard contents, or auto-positioning the cursor inside braces.
-* **Implementation Plan**:
-  1. Add a macro template processor:
-     ```kotlin
-     fun expandMacro(template: String, clipboardText: String?): String {
-         val now = java.time.LocalDateTime.now()
-         return template
-             .replace("{date}", now.format(DateTimeFormatter.ISO_LOCAL_DATE))
-             .replace("{time}", now.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-             .replace("{clipboard}", clipboardText ?: "")
-             .replace("{uuid}", java.util.UUID.randomUUID().toString())
-     }
-     ```
-  2. Add `{cursor}` marker support: after committing the expanded text, automatically position the caret where `{cursor}` was located (e.g. `console.log({cursor});` inserts text and places the caret inside the parentheses).
-* **Effort**: Low (1–2 days). Replaces external text expander utilities.
+### 1.2 Expand Dynamic Macros Beyond Timestamps ({clipboard}, {cursor}, {uuid})
+* **Current State**: CleverKeys **already has robust dynamic timestamp macros**:
+  - `ActionType.TIMESTAMP` in `ShortSwipeMapping.kt` and `CustomShortSwipeExecutor.kt` executes arbitrary `SimpleDateFormat` patterns with live pattern previews in `SubkeyAssignActivity.kt` and `CommandPaletteDialog.kt`.
+  - Key layout definition syntax `:timestamp symbol='📅':'yyyy-MM-dd HH:mm'` or `📅:timestamp:'yyyy-MM-dd'`.
+  - 8 pre-registered timestamp commands in `CommandRegistry.kt` (`timestamp_date`, `timestamp_time`, `timestamp_datetime`, `timestamp_iso`, etc.).
+* **The Remaining Gap**: Extending dynamic short-swipe expansion **beyond date/time formatting** to template variables:
+  1. `{clipboard}` — Embed current clipboard content within a text template (e.g. `Markdown link: [{clipboard}](...)`).
+  2. `{cursor}` — Reposition caret inside brackets or quotes after commit (e.g. `console.log({cursor});` commits text and positions caret inside the parens).
+  3. `{uuid}` — Generate a random UUIDv4 string on the fly.
+  4. `{selection}` — Wrap active selection.
+* **Effort**: Low (1–2 days). Complements existing timestamp macros to make CleverKeys a complete text expansion tool.
 
 ---
 
