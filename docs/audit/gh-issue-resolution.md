@@ -82,7 +82,7 @@ What changed since 2026-09-05:
 |---|---|---|---|---|
 | 187 | Accents: macron below + ring below | **OPEN** (new 2026-09-25) | ISO 15919 transliteration (ṟ ḻ r̥). The command catalogue has `accent_macron`/`accent_ring`/`accent_dot_below` and `combining_macron`/`combining_ring`, but no *below* variants (U+0331, U+0325) and no matching `src/main/compose/accent_*.json`. Small: two dead keys + compose tables + Extra Keys checkboxes + 21-locale strings | accept; S |
 | 177 | Pinyin IME (zh-Hans/zh-Hant) | **OPEN** — contributor PR #183 | PR #183 (Macho0x, +2934/−12, 24 files): pack schema, `CKPY` phrase table, tap engine, swipe feed. The PR itself says device validation and pack data are still owed | review PR #183 |
-| 175 | Hide/summon keyboard + clipboard bulk delete + toolbar + editing panel | **PARTIAL** — part 1 **IMPLEMENTED, device checks partial (2026-10-05)** | (1) `01b6212d` implements `minimize_bar`/`minimize_fab` commands; Seeker verifies FAB minimize/expand and bar resize/expand, typing after expand, and full-size restoration after hide. FAB app pass-through, RTL and landscape remain pending. Summoning an already-hidden keyboard remains unbuilt (overlay permission would be required). (2) **OPEN**: no bulk delete and no swipe-to-delete. `ClipboardHistoryService.clearHistory()` (`:456`) exists with **zero callers**, so an "All / Non-pinned / Cancel" dialog is mostly wiring. (3) **OPEN**: no customizable toolbar (same ask as #80 part 3). (4) **PARTIAL**: the actions exist as commands (`selectAll`, `cut`, `copy`, `paste`, `home`/`end`, `doc_home`/`doc_end`, `cursor_up`/`down`, `selection_mode`, `selection_cursor_*`) and can be bound to short swipes or the new subkey popover (`fde558cd`). The maintainer confirmed this on-thread 2026-09-29. There is no dedicated editing pane | update thread when (1) lands; (2) next |
+| 175 | Hide/summon keyboard + clipboard bulk delete + toolbar + editing panel | **PARTIAL** — part 1 **IMPLEMENTED, device checks partial (2026-10-05)** | (1) `01b6212d` implements `minimize_bar`/`minimize_fab` commands; Seeker verifies FAB minimize/expand and bar resize/expand, typing after expand, and full-size restoration after hide. Landscape transparent-strip scrolling and minimize/expand also pass on the launcher; RTL and cross-app checks remain pending. Summoning an already-hidden keyboard remains unbuilt (overlay permission would be required). (2) **OPEN**: no bulk delete and no swipe-to-delete. `ClipboardHistoryService.clearHistory()` (`:456`) exists with **zero callers**, so an "All / Non-pinned / Cancel" dialog is mostly wiring. (3) **OPEN**: no customizable toolbar (same ask as #80 part 3). (4) **PARTIAL**: the actions exist as commands (`selectAll`, `cut`, `copy`, `paste`, `home`/`end`, `doc_home`/`doc_end`, `cursor_up`/`down`, `selection_mode`, `selection_cursor_*`) and can be bound to short swipes or the new subkey popover (`fde558cd`). The maintainer confirmed this on-thread 2026-09-29. There is no dedicated editing pane | update thread when (1) lands; (2) next |
 | 168 | Clear-clipboard key | **OPEN** | No `clear_clipboard` command in `CommandRegistry`. Building blocks exist: `ClipboardManager.clearPrimaryClip()` is already used at `ClipboardHistoryService.kt:264`, and `clearHistory()` has no callers. Pairs with #175 part 2 | S; do with #175(2) |
 | 165 | Standard Korean behavior | **OPEN** | Only the upstream-inherited `hang_dubeolsik_kr.xml` with modifier-based Hangul composition (`KeyModifier` `Hangul_initial`/`Hangul_medial`). No standard automaton and no ko pack | L; needs a Korean-typing spec |
 | 163 | Background image | **OPEN** | No background-image support (`git grep` finds no hits). Theme Creator fields all wired (`c9939571`) | M |
@@ -266,20 +266,25 @@ A general default-engine fix needs real-finger short-word and wider corpus valid
 `build/outputs/apk/release/CleverKeys-v2.0.0-arm64-v8a.apk`; SHA-256
 `00e80393a4d130bc68cf47832ca0e106f9f7c11ac44106e62d9d8d7ce12d22f9`.
 Kotlin compilation and full suites: 2,737 pure / 933 mock. Minified build (5m23s),
-lint-vital, signature, alignment and ZIP CRC pass. Seeker still has verified `97d6c25f`
+lint-vital, signature, alignment and ZIP CRC pass. Previous Seeker artifact was verified `97d6c25f`
 (SHA `798137106bd92b39c15280119c511d123f9a39f321b953b0efd1e2eb4cafdd23`);
-Compose both orders/cancel/navigation pass there. New APK installation is pending.
+Compose both orders/cancel/navigation passed there. The new APK is now installed
+with matching SHA; actual custom apostrophe and inline emoji routing pass.
 
 **October 5 cleanup state:** popover and multi-language restored OFF; import ZIP
-removed. Temporary minimize-bar mapping removed and original two mappings confirmed.
-A new temporary t/South TEXT apostrophe mapping reproduced the old routing bug:
-ad swipe followed by that flick gives ` As '` with an intervening automatic space.
-The device disconnected before installing the fix; reconnect returns No route to host.
-TODO: retest on the new APK, delete only t/South apostrophe (preserve the two user
-mappings), clear only launcher test text (last known ` As '`), remove
-`/sdcard/cleverkeys-test-ui.xml`, return to Android SearchLauncher task 860 and restore
-its originally expanded Quick Settings shade. Last known focus is the launcher test
-field with keyboard visible. No reboot/data clear or clipboard overwrite occurred.
+removed. Both the temporary minimize-bar and apostrophe mappings were removed,
+preserving the original two mappings. The new APK fixes actual custom apostrophe
+attachment (`As'`) and routes it into emoji search. A fresh t/South `minimize_fab`
+mapping then verified portrait/landscape minimize/expand; landscape scrolling from
+the transparent strip moves launcher content while the FAB remains. Original rotation
+restored (accelerometer=0, user_rotation=0); temporary app locale restored to [].
+The Hebrew app locale did not create an RTL IME, so RTL placement remains unverified.
+Device dropped during the final Delete lookup, before deletion could execute. TODO:
+remove ONLY t/South `minimize_fab` (leave original two mappings), confirm launcher
+test text empty, remove `/sdcard/cleverkeys-test-ui.xml`, return to Android
+SearchLauncher task 860 and restore originally expanded Quick Settings. Last known
+focus is Customize T dialog. No reboot/data clear, clipboard overwrite or terminal
+command execution. Actual external-terminal editing remains pending.
 
 #### Remaining hands-on release checks, ordered by consequence
 
@@ -390,4 +395,16 @@ See the reconciled roadmap §2.1 for plural/possessive/contraction distinctions.
 Shared terminal detection is implemented in `5f07936e`; five terminal package
 fixtures use Ctrl+W and terminal prefix replacement uses native backspaces.
 Ordinary editor deletion remains covered. Combined suites pass 2,737 / 933; the new
-APK is verified but device retest and temporary-mapping cleanup remain pending.
+APK is installed with matching hash; custom apostrophe/emoji routing pass on device.
+Temporary FAB mapping cleanup and external-terminal editing remain pending.
+
+Astra's default-CTC proposal was screened before considering production changes.
+Geometry candidate rescoring fixes synthetic ad but cannot separate collinear wet/wt;
+an exploratory timing term gives synthetic success but regresses actual human input.
+Frozen 100-trace / 92-word screen: baseline93 correct, geometry83 (1 gain/11 losses),
+geometry+timing61 (1 gain/33 losses). Short-word subset20:17→14→11; longer80:76→69→50.
+Zero baseline differences from shipped replay. No ad/wet/as/we/wt in this sample;
+corpus is repeatedly inspected and not held-out. See `build/short-word-human-screen.log`.
+Both heuristic arms rejected; no model/ranking change. TODO: real-data encoder
+correction by general failure strata, separate writer/session development and held-out
+splits, protected common words, wider vocabulary/layout regression and device latency.

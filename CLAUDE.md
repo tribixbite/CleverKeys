@@ -260,3 +260,7 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 - **Compose/navigation tap lifecycle (GH #188, 2026-10-05):** the bottom-row Compose key also has arrow subkeys. A deferred tap must fall through to shared latch handling after key-down; early key-up plus clearLatched cancels its prefix immediately. State-machine-only tests miss this; pin the pointer release path.
 
 - **Custom apostrophe routing (2026-10-05):** single ASCII/curly apostrophe TEXT flicks must use `KeyEventHandler` to preserve owned auto-space, inline search and bookkeeping; literal multi-character macros do not acquire suffix semantics. Possessive commands need an explicit verified-word transaction and suffix-only undo (roadmap §2.1).
+
+- **Short-word CTC experiments (2026-10-05):** wet/wt have identical collinear geometric templates, so endpoint/path-only penalties cannot resolve them. Equal-duration letter timing fits the canonical generator by construction; synthetic 19/19 plus one human trace is not shipping evidence. Validate on separate human writers/sessions before changing shared ranking/model behavior.
+
+- **Human screen of synthetic ranking fixes (2026-10-05):** frozen geometry/timing weights reduced 93/100 correct to 83/100 and 61/100 on 100 real traces (92 words); reject both despite synthetic success. Keep distinct trace/word counts and do not retune against the screening set. Evidence in the October 5 roadmap and ignored probe logs.

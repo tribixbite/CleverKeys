@@ -228,7 +228,8 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   Used a new temporary t/South mapping (Mini/minimize_bar); two user mappings preserved.
 - [x] Subsequent reconnection: #188 APK installed and Compose both orders/cancel/arrows
   passed. Temporary minimize-bar t/South mapping removed; two user mappings preserved.
-- [ ] TODO: finish FAB app pass-through/RTL/landscape.
+- [x] FAB portrait/landscape minimize/expand and landscape scroll through transparent
+  strip pass on launcher. RTL and cross-app checks remain pending.
 
 - [ ] TODO: clear only launcher test text, remove scratch UI XML, return to Android
   SearchLauncher task 860 and restore the originally expanded Quick Settings shade.
@@ -260,11 +261,29 @@ Do not commit, tag, push, publish, or open external issues without explicit user
 - [x] Committed input fixes `5f07936e`; minified release build passes (5m23s). Signature,
   alignment and ZIP CRC verified; ARM64 SHA-256
   `00e80393a4d130bc68cf47832ca0e106f9f7c11ac44106e62d9d8d7ce12d22f9`.
-- [ ] TODO: device returns No route to host. Install fresh APK; retest single-apostrophe
-  flick and terminal smoke if safe. Remove ONLY new temporary t/South TEXT apostrophe
-  mapping (original two mappings preserved), clear ONLY launcher test text (` As '`),
-  restore original Android launcher + expanded Quick Settings; remove scratch UI XML.
-  Last installed APK remains `97d6c25f`; post-fix device behavior is unverified.
+- [x] Fresh `5f07936e` minified APK installed; on-device SHA matches. Actual custom
+  apostrophe produces `As'` without auto-space and reaches emoji search. Removed that
+  mapping, then temporarily assigned t/South minimize_fab for window checks.
+- [x] FAB portrait/landscape minimize/expand pass; landscape swipe starting in transparent
+  strip scrolls launcher content while FAB remains. Screenshots `build/oct5-fab-*.jpg`.
+  Restored rotation (accelerometer=0, user_rotation=0) and app locales []. Hebrew app
+  locale did not create RTL IME; do not claim RTL pass.
+- [ ] TODO: Seeker dropped during final Delete lookup (No route to host). Remove ONLY
+  temporary t/South minimize_fab; confirm original two mappings and launcher test field
+  empty; restore Android SearchLauncher + expanded Quick Settings; remove scratch UI XML.
+  Last known focus Customize T dialog. Actual external-terminal smoke test remains pending;
+  no terminal commands executed.
 - [ ] TODO: explicit Append apostrophe-s / Append apostrophe commands need verified
   immediate-word attachment plus suffix-only undo. Contraction projection selection is a
   separate action; do not guess plural vs possessive from a final s or boost absent beam paths.
+
+- [x] Astra proposes general short-word encoder correction; bounded candidate geometry
+  fixes ad but wet/wt collinear templates tie. Exploratory equal-duration timing fixes
+  19 synthetic cases + one human wet, but matches the generator and is unvalidated.
+  Existing roadmap records architecture, prior ML Phase K/I limits and held-out gates.
+- [x] Frozen human screen REJECTS heuristics: 100 traces / 92 words, baseline93 correct,
+  geometry83 (1 gain/11 losses), timing61 (1/33). Short20:17→14→11; long80:76→69→50.
+  Zero shipping-baseline disagreements; no target/control words in sample. Corpus is
+  repeatedly inspected, not held-out; no production ranking/model changes shipped.
+- [ ] TODO: fresh writer/session-separated human data, general-strata encoder training
+  and protected vocabulary/layout evaluation; do not keep tuning on this screen.

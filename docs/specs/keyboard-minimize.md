@@ -53,5 +53,11 @@ Two catalogue commands (Events category), assignable to any short swipe, popover
 FAB minimize/expand and bar resize/expand pass. Typing resumes after bar expansion,
 and hiding/reopening restores full size. Evidence screenshots are under ignored
 `build/oct5-bar-*.jpg`. A temporary mapping was used; see `memory/todo.md` for cleanup.
-TODO: finish FAB app tap/scroll pass-through, RTL placement and landscape checks after
-another Wi-Fi drop. These results do not claim a complete cross-app release pass.
+October 5 follow-up on `5f07936e`: portrait and landscape FAB minimize/expand pass.
+A landscape swipe starting inside the transparent IME strip scrolls launcher content
+while the FAB remains visible (`build/oct5-fab-landscape-scroll-down.jpg`). Portrait
+launcher had no available scroll range, so its unchanged scroll attempt proves nothing.
+Temporary Hebrew app locale did not change the IME to RTL; restored locale/rotation.
+TODO: RTL placement and cross-app pass-through checks. Device dropped during cleanup;
+remove only the temporary t/South FAB mapping after reconnection. These results do
+not claim a complete cross-app release pass.

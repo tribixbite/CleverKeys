@@ -280,12 +280,68 @@ CleverKeys' custom Canvas rendering is one of its greatest assets. It should be 
 Kotlin compilation and all 2,737 pure / 933 mock tests pass; minified release build
 passes in 5m23s. ARM64 APK signature, alignment and ZIP CRC pass; SHA-256
 `00e80393a4d130bc68cf47832ca0e106f9f7c11ac44106e62d9d8d7ce12d22f9`.
-Device installation/retest is pending: `.170` returns No route to host. The previous
-APK reproduced the custom-apostrophe spacing bug. TODO: retest the same t/South
-apostrophe mapping on the new APK, remove only that temporary mapping, clear only
-launcher test text and restore the original expanded Quick Settings over the launcher.
+Installed on Seeker with matching APK hash. The same custom t/South apostrophe
+flick now yields `As'` (no intervening automatic space), and routes into emoji search.
+The apostrophe test mapping was removed, then that empty slot was temporarily assigned
+`minimize_fab`: portrait and landscape minimize/expand pass, and landscape scrolling
+starting in the transparent IME strip moves launcher content while the FAB stays visible.
+Rotation restored to 0 (original accelerometer rotation 0); temporary Hebrew app locale
+restored to the original empty locale list. That locale did not make the IME RTL, so RTL
+placement is unverified. Device dropped Wi-Fi during mapping deletion: TODO remove ONLY
+t/South `minimize_fab`, confirm original two mappings, clear only launcher test text,
+remove scratch UI XML, and restore expanded Quick Settings over Android SearchLauncher.
+External terminal smoke test remains pending; no terminal commands were executed.
 
 The default CTC engine still misrecognizes wet and ad. Endpoint-only rescoring cannot
 separate wet from wt, which shares the endpoint. TODO: obtain held-out human traces
 and validate a general model/scoring correction with we/as controls and wider words;
 per-word engine switching is not a solution. No ranking change was shipped.
+
+### Proposed default-engine short-word correction (Astra, October 5)
+
+Both ad and wet survive in the CTC beam; greedy emissions are already wrong.
+The bounded `build/short-word-rescore-probe.log` experiment reuses production
+PathScorer on surviving CTC candidates with frequency contribution disabled.
+Across 19 distinct canonical synthetic words, current CTC gets 13/19; geometry-only
+(weight 4) gets 16/19; geometry plus exploratory timing (weights 4/8) gets 19/19.
+Additional wt control: baseline we, both rescoring arms wt. One usable human wet
+trace: baseline we (wet rank 6), geometry wt (wet rank 2), timing wet (rank 1).
+Protected we/as remain correct in this small probe.
+
+These are diagnostics, not a shipping result. Wet/wt have identical collinear path
+templates; geometry alone cannot distinguish them. The equal-duration letter timing
+template matches the synthetic generator, so 19/19 overstates useful evidence.
+No word exception, model change, second decoder or displayed-score merge was shipped.
+
+Recommended path:
+1. Collect labeled human traces separated by writer/session; cover short words, adjacent
+   final keys, collinear interior letters, repeated letters, we/as/wt controls and wider
+   vocabulary/layouts. Existing reported traces are development cases, not held-out data.
+2. Fine-tune the encoder on general failure strata with longer-word/alternate-layout
+   replay; retain the current input/32-frame output contract initially. Retune common
+   scoring parameters only on development data, preserving contraction overlays.
+3. Compare a residual geometry/timing ranking arm calibrated on real traces. If adopted,
+   apply before softmax in CtcEngineAdapter.decodeLexicon over bounded surviving CTC
+   candidates; do not merge displayed engine scores or weaken suggestion confidence.
+4. Require predeclared held-out gains across distinct words/writers, protected controls,
+   acceptable wider-vocabulary/layout behavior and on-device latency before shipping.
+
+Prior evidence: CleverKeys-ML/ctc/PHASE_K.md §5.1 reports inconsistent short-word
+reranker gains across seeds (+0.30/0/−0.18); its 14 features lack raw path geometry.
+PHASE_I.md §6.1 doubling emissions 32→64 did not improve the ≤3 stratum (−0.09).
+Neither repeating that ranker nor increasing frame count is an established fix.
+Frozen human regression screen completed (`build/short-word-human-screen.log`):
+100 distinct traces / 92 distinct words sampled deterministically by SHA (seed 20261005)
+from the repeatedly inspected corpus; not held-out. Input pool: 8,607 rows, 4,050
+excluded by timestamp-quality gate, 4,557 usable. Baseline matched the shipped replay
+on all 100 traces. Current CTC: 93/100 correct; geometry g4/t0: 83/100 (1 gain,
+11 losses); geometry+timing g4/t8: 61/100 (1 gain, 33 losses). Short ≤3: 20 traces,
+baseline 17 correct → geometry 14 → timing 11; longer words: 80 traces, 76 → 69 → 50.
+The sampled set contains no ad/wet/as/we/wt, so target/control screening still needs
+separate real traces. Counts measure distinct traces, not unique-word accuracy.
+
+**Decision:** reject both frozen heuristics for production; do not tune further on
+this screen. Synthetic success did not generalize, including to other short words.
+Prioritize general-strata encoder correction with proper development/held-out splits.
+TODO: obtain fresh writer/session-separated data, train and evaluate encoder changes.
+Training/runtime implementation remains open; no production ranking/model change.
