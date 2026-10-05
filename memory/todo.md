@@ -287,3 +287,8 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   repeatedly inspected, not held-out; no production ranking/model changes shipped.
 - [ ] TODO: fresh writer/session-separated human data, general-strata encoder training
   and protected vocabulary/layout evaluation; do not keep tuning on this screen.
+
+- [x] Gemini 3.8 PAL architecture critique cross-checked against actual time-uniform
+  featurizer and length/frequency-aware Viterbi decoder. Add development calibration
+  arm beside encoder training; consider teacher anchoring on actual 32-frame outputs.
+  PAL's incorrect frame assumption/numerical prescriptions were not adopted.

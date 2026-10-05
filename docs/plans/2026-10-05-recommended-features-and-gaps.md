@@ -345,3 +345,14 @@ this screen. Synthetic success did not generalize, including to other short word
 Prioritize general-strata encoder correction with proper development/held-out splits.
 TODO: obtain fresh writer/session-separated data, train and evaluate encoder changes.
 Training/runtime implementation remains open; no production ranking/model change.
+
+PAL architecture cross-check used gemini-3.8-flash only. Verified against source:
+CtcFeaturizer uses timestamps to produce time-uniform samples, preserving relative
+dwell implicitly; total duration is normalized away. CtcBeamDecoder uses Viterbi
+MAX-merge and already has length normalization, insertion and frequency terms.
+Beam survival does not establish correct encoder calibration, and raw-score dominance
+alone does not prove all possible decoder adjustments fail across different lengths.
+TODO: compare development-only score-component/shared-parameter diagnostics with the
+encoder arm; if training, evaluate frozen-teacher logit anchoring on the existing
+32-frame emissions to limit drift. Do not copy PAL's unvalidated numerical constants
+or its 64-output-frame assumption; keep the actual model contract.
