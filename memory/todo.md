@@ -222,7 +222,13 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   separate handling. Second regression protects exactly-once ordinary key dispatch.
 - [x] #188 Kotlin compilation and full suites pass: 2,737 pure / 921 mock (5m12s),
   `build/issue-188-tests.log`. Two new pointer tests included.
-- [ ] TODO: build minified APK, verify Compose both orders, cancellation, ordinary typing
-  and navigation on Seeker; record results.
+- [x] #188 committed `97d6c25f`; minified build/lint-vital pass (5m25s), signature,
+  alignment and ZIP CRC verified. SHA-256 `798137106bd92b39c15280119c511d123f9a39f321b953b0efd1e2eb4cafdd23`.
+- [x] Bar minimize/expand, typing after expand and full-size restoration after hide pass.
+  Used a new temporary t/South mapping (Mini/minimize_bar); two user mappings preserved.
+- [ ] TODO: Seeker dropped Wi-Fi again during FAB picker before replacement confirmed.
+  Install #188 APK and verify Compose both orders, cancellation, typing and arrows.
+  Finish FAB app pass-through/RTL/landscape. Remove only temporary t/South mapping.
+
 - [ ] TODO: clear only launcher test text, remove scratch UI XML, return to Android
   SearchLauncher task 860 and restore the originally expanded Quick Settings shade.

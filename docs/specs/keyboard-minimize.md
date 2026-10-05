@@ -1,6 +1,6 @@
 # Minimize the keyboard (bar / floating button)
 
-**Status:** implemented 2026-10-01; unit-tested, NOT yet device-verified. **Issue:** gh #175 part 1
+**Status:** implemented 2026-10-01; unit-tested; Seeker device checks partial (2026-10-05). **Issue:** gh #175 part 1
 ("hide and summon the keyboard … an optional floating button").
 
 ## Behaviour
@@ -47,3 +47,11 @@ Two catalogue commands (Events category), assignable to any short swipe, popover
   - the button expands the keyboard;
   - the bar resizes the app;
   - RTL places the button on the left.
+
+### Seeker evidence (October 3–5)
+
+FAB minimize/expand and bar resize/expand pass. Typing resumes after bar expansion,
+and hiding/reopening restores full size. Evidence screenshots are under ignored
+`build/oct5-bar-*.jpg`. A temporary mapping was used; see `memory/todo.md` for cleanup.
+TODO: finish FAB app tap/scroll pass-through, RTL placement and landscape checks after
+another Wi-Fi drop. These results do not claim a complete cross-app release pass.

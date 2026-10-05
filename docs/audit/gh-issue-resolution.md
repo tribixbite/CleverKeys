@@ -5,8 +5,8 @@
 **v1.5.0 (2026-07-15)**; v2.0.0 is prepped but NOT tagged, so every fix marked "unreleased" below
 reaches reporters only when that tag ships, and reporters must retest on a build that contains it.
 Commit hashes are the evidence, and test anchors live in the commits and the ledger
-(`2026-08-28-archive-verification.md`). Local implementation update on 2026-10-02 adds
-#90 and the #145 regression pin below; the GitHub counts remain the dated snapshot. **Nothing has been posted to GitHub.** Closing and
+(`2026-08-28-archive-verification.md`). Local implementation updates through 2026-10-05 add
+#90/#188 fixes, #145 coverage, #181 filtering and #184 bounds below; the GitHub counts remain the dated snapshot. **Nothing has been posted to GitHub.** Closing and
 commenting are the maintainer's job. The "GH action" column is only a recommendation.
 
 Statuses: **DONE** (the ask is shipped on main; close candidate) · **FIXED** (bug fixed on main,
@@ -16,14 +16,14 @@ of the ask is shipped; the residual is named) · **IN PROGRESS** (being built no
 **OPEN-ROOT-CAUSED** (defect located in code, unfixed) · **NEEDS-REPRO** (plausible, cannot be
 settled from source alone).
 
-## Summary (GitHub snapshot 2026-10-01; implementation update 2026-10-02)
+## Summary (GitHub snapshot 2026-10-01; implementation update 2026-10-05)
 
 | Bucket | Count | Issues |
 |---|---|---|
-| DONE/FIXED but still open (close candidates) | 34 | bugs: #184 #90 #179 #171 #169 #161 #160 #154 #152 #151 #149 #148 #146 #145 #141 #134 #130 #99 #96 #77 #75 #71 #67 #35 · features: #135 #111 #94 #93 #70 #68 #58 #49 #31 #26 |
+| DONE/FIXED but still open (close candidates) | 35 | bugs: #188 #184 #90 #179 #171 #169 #161 #160 #154 #152 #151 #149 #148 #146 #145 #141 #134 #130 #99 #96 #77 #75 #71 #67 #35 · features: #135 #111 #94 #93 #70 #68 #58 #49 #31 #26 |
 | Close with explanation (NOT-REPRO / BY-DESIGN) | 2 | #162 #83 |
 | PARTIAL | 9 | #181 #175 #167 #156 #101 #97 #88 #80 #72 |
-| Still open | 18 | bugs: #188 #186 #79 · features: #187 #177 #168 #165 #163 #147 #139 #121 #120 #115 #87 #84 #69 #61 #52 |
+| Still open | 17 | bugs: #186 #79 · features: #187 #177 #168 #165 #163 #147 #139 #121 #120 #115 #87 #84 #69 #61 #52 |
 
 What changed since 2026-09-05:
 - The maintainer reopened nine bot-closed but resolved issues on 2026-09-21 (#67 #99 #130 #134
@@ -44,10 +44,10 @@ What changed since 2026-09-05:
 
 | # | Title (short) | Status | Evidence | GH action |
 |---|---|---|---|---|
-| 188 | Compose key doesn't work | **NEEDS-REPRO** (new 2026-09-26) | Two users, v1.3.0–v1.5.0, GrapheneOS 17 and LineageOS 23.2 (discussion #159): compose → `c` → `=` never yields `€`, and nothing else works either. Code reading found no divergence from upstream in the latch path: `loc compose` sits on the bottom row (`res/xml/bottom_row.xml`), `makeComposePending(…, FLAG_LATCH)` (`KeyValue.kt:760`), `Pointers.pointer_flags_of_kv` reads the modified value, and `KeyModifier.applyComposePending` greys non-sequence keys. The only pin, `649696b8`, exercises `ComposeKey.apply` (the state machine) and not the view/pointer latch path. The `modifyMemo` cache (`5fb58037`, 2026-09-01) postdates the reports, so it is not the cause. Next step: a device repro with a verbose release build. The `Pointers` "Path: …" logs show whether the `c` pointer latches as a Compose_pending (correct) or falls through to "Regular key up", which would reset the compose state. | comment asking for build + whether keys grey out after tapping compose; fix after repro |
+| 188 | Compose key does not work | **FIXED locally; device retest pending (2026-10-05)** | Reproduced on Seeker: Compose activates visually, then the next letter commits raw. The deferred navigation-subkey tap branch emits key-up and immediately clears the pending compose state. `97d6c25f` routes taps through the shared latch/unlatch lifecycle instead; arrow flicks retain their own handling. A fail-first pointer test reproduced premature commit; a second protects exactly-once ordinary dispatch. Kotlin compilation and 2,737 pure / 921 mock tests pass. Minified APK built, but another Wi-Fi drop interrupted installation and retest. | retest composed output, cancel, arrows and ordinary typing before closure |
 | 186 | Autocorrect only works for the primary language | **OPEN** (confirmed in code; new 2026-09-22) | `WordPredictor.autoCorrect` (`WordPredictor.kt:2876`) consults only the primary `dictionary`. Layouts carry no language binding, so `switch_forward` to a `script="persian"` layout leaves fa as secondary, and only primary-language typos get corrected. Workaround today: bind the `primaryLangToggle` command (`CommandRegistry.kt:566`) to a key or short swipe. Proper fix: a per-layout language binding that drives the primary language on layout switch. That is the same feature #61 asks for, and the reporter links a fork commit (`mostafaqanbaryan/CleverKeys@7c91d8f4`) that adds a `language` layout attribute as reference. | comment with the toggle workaround; fix with #61 |
-| 184 | 1M-word dictionary crashes | **FIXED locally (2026-10-03); device verification pending** | Import now refuses actual CKDT header counts above 100,000 with a translated smaller-pack message. Shared tap/geometric/CTC readers reject oversized installed dictionaries before count-sized allocation. Dictionary/member bytes are bounded at 16 MiB, model at 8 MiB, manifest/NOTICE at 64 KiB; ZIP aggregate 64 MiB/64 entries. Unsafe names and duplicate basenames are refused; rejected updates preserve the old pack. Kotlin compilation and full suites pass: 2,737 pure / 919 mock (6m43s). This bounds inputs, not every possible heap use. | verify refusal/retained pack/continued typing on Seeker before closure |
-| 181 | Monet Auto does not follow system dark mode; some emoji render as tofu | **PARTIAL** (glyph filtering implemented locally, 2026-10-03; Monet still NEEDS-REPRO) | `EmojiGridView` filters categories, recents and search using the actual themed cell paint. Whole Unicode sequences must have a glyph; the final text-emoticon group is checked per visible codepoint. Cache is grid-scoped and recent data is preserved. Focused tests 7/7; Kotlin compilation and full suites 2,733 pure / 912 mock pass. Refreshed minified APK builds and verifies; Seeker installation/device verification pending. The Monet configuration-change path remains wired but needs an on-device day/night reproduction. | test glyph filtering and Monet live update before closure |
+| 184 | 1M-word dictionary crashes | **FIXED locally (2026-10-03); device refusal verified** | Import now refuses actual CKDT header counts above 100,000 with a translated smaller-pack message. Shared tap/geometric/CTC readers reject oversized installed dictionaries before count-sized allocation. Dictionary/member bytes are bounded at 16 MiB, model at 8 MiB, manifest/NOTICE at 64 KiB; ZIP aggregate 64 MiB/64 entries. Unsafe names and duplicate basenames are refused; rejected updates preserve the old pack. Kotlin compilation and full suites pass: 2,737 pure / 919 mock (6m43s). Seeker Settings refuses a real-header million-word fixture despite manifest wordCount=1; installed count remains 0 and UI stays responsive. Existing-pack rollback remains host-tested because Seeker has no installed packs. This bounds inputs, not every possible heap use. | verify refusal/retained pack/continued typing on Seeker before closure |
+| 181 | Monet Auto does not follow system dark mode; some emoji render as tofu | **PARTIAL** (glyph filtering implemented locally, 2026-10-03; Monet still NEEDS-REPRO) | `EmojiGridView` filters categories, recents and search using the actual themed cell paint. Whole Unicode sequences must have a glyph; the final text-emoticon group is checked per visible codepoint. Cache is grid-scoped and recent data is preserved. Focused tests 7/7; Kotlin compilation and full suites 2,733 pure / 912 mock pass. Refreshed minified APK builds and verifies; Installed on Seeker: sampled smiley/text-face grids and actual-keyboard face search render; reopening resets search and recents remain empty. Forced unsupported-font and Monet checks remain pending. The Monet configuration-change path remains wired but needs an on-device day/night reproduction. | test glyph filtering and Monet live update before closure |
 | 179 | Slow startup with custom langpack | **FIXED** (unreleased) | `70284a2c` pack-first async loads. The 4-10 s bulk was v1.5.0's sync neural init, which ADR-011 deleted | comment + close on v2.0.0 |
 | 171 | Custom per-key mappings don't override | **FIXED** (unreleased) | `47969359` (±1-bin fuzz resurrected defaults) + `c29a0d87` (render overlay suppressed) | comment + close on v2.0.0 |
 | 169 | next/prev layout keys unremovable | **FIXED** (unreleased) | `e7dda022` (non-`loc` bake → now removable, value-preserving) | comment + close on v2.0.0 |
@@ -82,7 +82,7 @@ What changed since 2026-09-05:
 |---|---|---|---|---|
 | 187 | Accents: macron below + ring below | **OPEN** (new 2026-09-25) | ISO 15919 transliteration (ṟ ḻ r̥). The command catalogue has `accent_macron`/`accent_ring`/`accent_dot_below` and `combining_macron`/`combining_ring`, but no *below* variants (U+0331, U+0325) and no matching `src/main/compose/accent_*.json`. Small: two dead keys + compose tables + Extra Keys checkboxes + 21-locale strings | accept; S |
 | 177 | Pinyin IME (zh-Hans/zh-Hant) | **OPEN** — contributor PR #183 | PR #183 (Macho0x, +2934/−12, 24 files): pack schema, `CKPY` phrase table, tap engine, swipe feed. The PR itself says device validation and pack data are still owed | review PR #183 |
-| 175 | Hide/summon keyboard + clipboard bulk delete + toolbar + editing panel | **PARTIAL** — part 1 **IMPLEMENTED, device check pending (2026-10-01)** | (1) `01b6212d` implements `minimize_bar`/`minimize_fab` commands; both styles still need device verification. Summoning an already-hidden keyboard remains unbuilt (overlay permission would be required). (2) **OPEN**: no bulk delete and no swipe-to-delete. `ClipboardHistoryService.clearHistory()` (`:456`) exists with **zero callers**, so an "All / Non-pinned / Cancel" dialog is mostly wiring. (3) **OPEN**: no customizable toolbar (same ask as #80 part 3). (4) **PARTIAL**: the actions exist as commands (`selectAll`, `cut`, `copy`, `paste`, `home`/`end`, `doc_home`/`doc_end`, `cursor_up`/`down`, `selection_mode`, `selection_cursor_*`) and can be bound to short swipes or the new subkey popover (`fde558cd`). The maintainer confirmed this on-thread 2026-09-29. There is no dedicated editing pane | update thread when (1) lands; (2) next |
+| 175 | Hide/summon keyboard + clipboard bulk delete + toolbar + editing panel | **PARTIAL** — part 1 **IMPLEMENTED, device checks partial (2026-10-05)** | (1) `01b6212d` implements `minimize_bar`/`minimize_fab` commands; Seeker verifies FAB minimize/expand and bar resize/expand, typing after expand, and full-size restoration after hide. FAB app pass-through, RTL and landscape remain pending. Summoning an already-hidden keyboard remains unbuilt (overlay permission would be required). (2) **OPEN**: no bulk delete and no swipe-to-delete. `ClipboardHistoryService.clearHistory()` (`:456`) exists with **zero callers**, so an "All / Non-pinned / Cancel" dialog is mostly wiring. (3) **OPEN**: no customizable toolbar (same ask as #80 part 3). (4) **PARTIAL**: the actions exist as commands (`selectAll`, `cut`, `copy`, `paste`, `home`/`end`, `doc_home`/`doc_end`, `cursor_up`/`down`, `selection_mode`, `selection_cursor_*`) and can be bound to short swipes or the new subkey popover (`fde558cd`). The maintainer confirmed this on-thread 2026-09-29. There is no dedicated editing pane | update thread when (1) lands; (2) next |
 | 168 | Clear-clipboard key | **OPEN** | No `clear_clipboard` command in `CommandRegistry`. Building blocks exist: `ClipboardManager.clearPrimaryClip()` is already used at `ClipboardHistoryService.kt:264`, and `clearHistory()` has no callers. Pairs with #175 part 2 | S; do with #175(2) |
 | 165 | Standard Korean behavior | **OPEN** | Only the upstream-inherited `hang_dubeolsik_kr.xml` with modifier-based Hangul composition (`KeyModifier` `Hangul_initial`/`Hangul_medial`). No standard automaton and no ko pack | L; needs a Korean-typing spec |
 | 163 | Background image | **OPEN** | No background-image support (`git grep` finds no hits). Theme Creator fields all wired (`c9939571`) | M |
@@ -263,14 +263,21 @@ accuracy estimate. On the one usable existing human `wet` trace, geometric also 
 now a supported experimental workaround for `wet`; a real-finger A/B and wider corpus
 comparison remain necessary. No cross-engine score merge or CTC ranking change was made.
 
-**Current test artifact:** source `af742286`, ARM64 minified APK at
+**Current test artifact:** source `97d6c25f`, ARM64 minified APK at
 `build/outputs/apk/release/CleverKeys-v2.0.0-arm64-v8a.apk`; SHA-256
-`a356ac06a3ca6a4fde204f92a28c76bb2aeea653cf0acc641d2e51bf8e5bc542`.
-Kotlin compilation and full suites: 2,737 pure / 919 mock. Minified build/lint-vital
-pass, with signature/alignment/ZIP/ARM64 and embedded-guard/layout verification.
-**Not installed on Seeker:** repeated No route to host prevented restoration and
-the remaining manual pass. Restore popover OFF and remove test t/South mapping,
-clear launcher test text and scratch UI XML, then return to original launcher focus.
+`798137106bd92b39c15280119c511d123f9a39f321b953b0efd1e2eb4cafdd23`.
+Kotlin compilation and full suites: 2,737 pure / 921 mock. Minified build (5m25s),
+lint-vital, signature, alignment and ZIP CRC pass. Seeker currently has the previous
+`af742286` artifact, whose installed hash matched `a356ac06…`; #181/#184 were tested there.
+
+**October 5 cleanup state:** previous popover override was restored OFF and old temporary
+mapping removed before installation. Multi-language was restored OFF after pack refusal;
+temporary ZIP removed. Bar minimize/expand, typing and hide/reset passed with a newly
+created temporary t/South mapping (`Mini`, `minimize_bar`). Another Wi-Fi drop occurred
+in its command picker before FAB replacement was confirmed. TODO: on reconnect inspect
+and delete only that mapping (leave the two user mappings), clear launcher test text
+(last known `e`), remove `/sdcard/cleverkeys-test-ui.xml`, return to Android SearchLauncher
+task 860 and restore its originally expanded Quick Settings shade. No reboot/data clear.
 
 #### Remaining hands-on release checks, ordered by consequence
 
@@ -294,8 +301,9 @@ clear launcher test text and scratch UI XML, then return to original launcher fo
    insets. Fresh-install ONNX initialization and once-per-boot reminder need an isolated
    install/reboot pass; this device was not cleared or rebooted.
 
-All six groups remain pending on this Seeker pass. Prior JVM/mock and historical device
-results support implementation claims but do not discharge this release-specific soak.
+No group has a complete release-specific pass. Targeted Seeker checks above cover
+parts of gestures/window, emoji and dictionary refusal; the other cases remain pending.
+Prior JVM/mock and historical device results do not replace the remaining soak.
 
 ### Ordered issue queue
 
@@ -313,14 +321,15 @@ Ordered by value ÷ cost. Sizes: S ≤ 1 day, M ≈ 2-5 days, L > 1 week.
    wiring with both prediction settings off, a null predictor, and two fresh views; the service
    handle is assigned without model loading. Maintainer cold-start gesture testing remains.
 3. **#181(2) emoji tofu — implemented locally (2026-10-03).** Glyph filtering and full
-   host suites pass. Verify the refreshed minified APK on Seeker; reproduce #181(1) Monet
-   live-update on the same device pass.
+   host suites pass. Sampled grids/search pass on Seeker; force an unsupported glyph and reproduce
+   #181(1) Monet live-update on the remaining device pass.
 4. **#175(2) + #168: clipboard bulk delete + clear-clipboard key.** S. Wire the zero-caller
    `clearHistory()` behind an All / Non-pinned / Cancel dialog, and add a `clear_clipboard`
    command (`clearPrimaryClip` is already used). Two issues, cheap, and a natural follow-on to
    the in-flight #175(1) minimize command. Swipe-to-delete rows can follow (M).
-5. **#188 compose key.** S-M. Two users on three releases, and compose is an upstream core
-   feature that is now dead. Device repro with verbose `Pointers` path logs, then fix.
+5. **#188 compose key — fixed locally (`97d6c25f`).** Device repro and fail-first
+   pointer coverage confirmed the navigation tap cancels pending state. Fresh minified
+   APK is verified; install and retest sequence/cancel/arrows after reconnection.
 6. **#186 + #61: bind language to layout.** M. One feature closes two issues: autocorrect and
    predictions follow the active layout. A reference implementation exists in the #186
    reporter's fork commit.
