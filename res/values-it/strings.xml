@@ -2300,4 +2300,19 @@
     <string name="settings_search_in_section">in %1$s</string>
     <string name="pack_error_dictionary_too_large">Questo dizionario contiene %1$d parole; il limite è %2$d. Importa un pacchetto più piccolo.</string>
     <string name="pack_error_member_too_large">%1$s supera il limite di %2$d KiB.</string>
+    <string name="clipboard_filter_size">Dimensione ritaglio</string>
+    <string name="clipboard_filter_size_hint">Testo UTF-8, miniature e contenuti multimediali salvati. I file condivisi sono conteggiati in ogni ritaglio; questo non è spazio liberato.</string>
+    <string name="clipboard_filter_size_min">Dimensione minima</string>
+    <string name="clipboard_filter_size_max">Dimensione massima</string>
+    <string name="clipboard_filter_size_any">Qualsiasi dimensione</string>
+    <string name="clipboard_filter_size_unlimited">Nessun massimo</string>
+    <string name="clipboard_filter_size_invalid">La dimensione massima deve essere almeno pari a quella minima.</string>
+    <string name="clipboard_delete_results">Elimina risultati</string>
+    <string name="clipboard_results_summary">%1$d risultati · %2$s</string>
+    <string name="clipboard_results_loading">Caricamento risultati…</string>
+    <string name="clipboard_delete_confirm_title">Eliminare %1$d risultati?</string>
+    <string name="clipboard_delete_confirm_message">Eliminare questi ritagli corrispondenti da %1$s in tutte le pagine? Dimensione totale dei ritagli: %2$s. Le copie in altre schede rimarranno. Le voci nuove o modificate verranno ignorate. L\'azione non può essere annullata.</string>
+    <string name="clipboard_delete_confirm_action">Elimina</string>
+    <string name="clipboard_delete_result">Eliminati %1$d di %2$d risultati confermati.</string>
+    <string name="clipboard_delete_error">Impossibile eliminare i risultati. Riprova.</string>
 </resources>

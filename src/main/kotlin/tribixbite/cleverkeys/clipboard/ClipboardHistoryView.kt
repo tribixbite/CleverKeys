@@ -147,6 +147,49 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // it is only reset via clearAllFilters().
     private var privateOnlyFilter = false
 
+    private var sizeMinimum = 0L
+    private var sizeMaximum: Long? = null
+    private var dataReady = false
+    private var bulkDeleting = false
+    var onResultsChanged: (() -> Unit)? = null
+
+    /** Current inclusive payload-size bounds; kept across tabs, reset by Clear filters. */
+    fun getSizeFilter(): Pair<Long, Long?> = sizeMinimum to sizeMaximum
+
+    fun setSizeFilter(minimum: Long, maximum: Long?) {
+        require(minimum >= 0 && (maximum == null || maximum >= minimum))
+        sizeMinimum = minimum
+        sizeMaximum = maximum
+        applyFilter()
+    }
+
+    fun isResultsReady(): Boolean = dataReady && !bulkDeleting
+    fun resultSummary(): Pair<Int, Long> = filteredHistory.size to filteredHistory.sumOf { it.sizeBytes }
+
+    fun deletionSnapshot(): ClipboardDeleteSnapshot? =
+        if (!dataReady || bulkDeleting || isEditing() || filteredHistory.isEmpty()) null
+        else ClipboardDeleteSnapshot(currentTab, filteredHistory.toList())
+
+    /** Execute a frozen confirmation once; detach cancels UI work, not a running DB transaction. */
+    fun deleteSnapshot(snapshot: ClipboardDeleteSnapshot, completed: (Result<Int>) -> Unit) {
+        val scope = viewScope ?: return
+        if (bulkDeleting || isEditing()) return
+        bulkDeleting = true
+        onResultsChanged?.invoke()
+        scope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    service?.deleteSnapshot(snapshot)
+                        ?: Result.failure(IllegalStateException("Clipboard unavailable"))
+                }
+                completed(result)
+            } finally {
+                bulkDeleting = false
+                loadDataAsync()
+            }
+        }
+    }
+
     // Pagination state
     private var currentPage = 0
     private var onPaginationChangeListener: ((needsPagination: Boolean, currentPage: Int, totalPages: Int) -> Unit)? = null
@@ -335,6 +378,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
         // Apply both search and date filters (searches ALL items)
         val filtered = history.filter { entry ->
+            if (!ClipboardSizePolicy.matches(entry.sizeBytes, sizeMinimum, sizeMaximum)) return@filter false
             // Apply search filter
             if (searchFilter.isNotEmpty()) {
                 if (regexMode) {
@@ -405,7 +449,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         val hasStatusFilter = currentTab == ClipboardTab.TODOS &&
             !(statusFilterActive && statusFilterPlanned && statusFilterCompleted)
         filteredHistory = if (searchFilter.isEmpty() && !dateFilterEnabled &&
-            tagFilterSelected.isEmpty() && !hasStatusFilter && !privateOnlyFilter) {
+            tagFilterSelected.isEmpty() && !hasStatusFilter && !privateOnlyFilter && sizeMinimum == 0L && sizeMaximum == null) {
             history
         } else {
             filtered
@@ -455,6 +499,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         )
 
         clipboardAdapter.notifyDataSetChanged()
+        onResultsChanged?.invoke()
         invalidate()
     }
 
@@ -947,15 +992,19 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      * with large clipboard histories.
      */
     private fun loadDataAsync() {
+        if (bulkDeleting) return
+        dataReady = false
+        onResultsChanged?.invoke()
         loadJob?.cancel()
+        val loadingTab = currentTab
         loadJob = viewScope?.launch {
             var entries = withContext(Dispatchers.IO) {
                 val database = ClipboardDatabase.getInstance(context)
-                when (currentTab) {
+                when (loadingTab) {
                     ClipboardTab.HISTORY -> service?.clearExpiredAndGetHistory() ?: emptyList()
                     ClipboardTab.PINNED -> database.getPinnedEntries()
                     ClipboardTab.TODOS -> database.getTodoEntries()
-                }
+                }.map { service?.measureEntry(it) ?: it }
             }
             // Filter out media entries when text-only mode is active
             if (Config.globalConfig().clipboard_text_only) {
@@ -964,6 +1013,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             // Back on Main thread — atomic reference replacement.
             // resetView=false: preserve page position and expand states on data reload
             history = entries
+            dataReady = true
             applyFilter(resetView = false)
         }
     }
@@ -1052,6 +1102,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         dateFilterEnabled = false
         dateFilterTimestamp = 0
         dateFilterBefore = false
+        sizeMinimum = 0L
+        sizeMaximum = null
         privateOnlyFilter = false
         tagFilterSelected = emptySet()
         tagFilterMatchAll = false
@@ -1063,6 +1115,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     /** Whether any filter is active (non-default state) — used for filter icon tinting */
     fun hasActiveFilters(): Boolean {
+        if (sizeMinimum > 0 || sizeMaximum != null) return true
         if (dateFilterEnabled) return true
         if (privateOnlyFilter) return true
         if (tagFilterSelected.isNotEmpty()) return true
@@ -1307,7 +1360,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 if (currentTab == ClipboardTab.TODOS && entry.todoStatus != null) {
                     val prefix = TodoEntry.statusPrefix(entry.todoStatus, context.resources)
                     // Non-breaking spaces so time suffix never wraps mid-unit
-                    val timeStr = "\u00A0\u00B7\u00A0${entry.getRelativeTime(context.resources).replace(' ', '\u00A0')}"
+                    val timeStr = entry.metadataText(context)
                     val spannable = android.text.SpannableStringBuilder(prefix + entry.content).append(timeStr)
 
                     // Strikethrough the content portion (not prefix or timestamp) for completed

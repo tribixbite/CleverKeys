@@ -2190,4 +2190,19 @@
     <string name="settings_search_in_section">di %1$s</string>
     <string name="pack_error_dictionary_too_large">Kamus ini berisi %1$d kata; batasnya adalah %2$d. Impor paket yang lebih kecil.</string>
     <string name="pack_error_member_too_large">%1$s melebihi batas %2$d KiB.</string>
+    <string name="clipboard_filter_size">Ukuran klip</string>
+    <string name="clipboard_filter_size_hint">Teks UTF-8, thumbnail, dan media tersimpan. File bersama dihitung di setiap klip; ini bukan ruang yang dikosongkan.</string>
+    <string name="clipboard_filter_size_min">Ukuran minimum</string>
+    <string name="clipboard_filter_size_max">Ukuran maksimum</string>
+    <string name="clipboard_filter_size_any">Semua ukuran</string>
+    <string name="clipboard_filter_size_unlimited">Tanpa batas</string>
+    <string name="clipboard_filter_size_invalid">Ukuran maksimum harus setidaknya sama dengan minimum.</string>
+    <string name="clipboard_delete_results">Hapus hasil</string>
+    <string name="clipboard_results_summary">%1$d hasil · %2$s</string>
+    <string name="clipboard_results_loading">Memuat hasil…</string>
+    <string name="clipboard_delete_confirm_title">Hapus %1$d hasil?</string>
+    <string name="clipboard_delete_confirm_message">Hapus klip yang cocok ini dari %1$s di semua halaman? Total ukuran klip: %2$s. Salinan di tab lain tetap tersimpan. Entri baru atau yang diubah akan dilewati. Tindakan ini tidak dapat diurungkan.</string>
+    <string name="clipboard_delete_confirm_action">Hapus</string>
+    <string name="clipboard_delete_result">Berhasil menghapus %1$d dari %2$d hasil yang dikonfirmasi.</string>
+    <string name="clipboard_delete_error">Gagal menghapus hasil. Coba lagi.</string>
 </resources>

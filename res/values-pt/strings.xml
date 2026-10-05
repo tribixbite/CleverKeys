@@ -2260,4 +2260,19 @@
     <string name="settings_search_in_section">em %1$s</string>
     <string name="pack_error_dictionary_too_large">Este dicionário contém %1$d palavras; o limite é %2$d. Importe um pacote menor.</string>
     <string name="pack_error_member_too_large">%1$s excede o limite de %2$d KiB.</string>
+    <string name="clipboard_filter_size">Tamanho do recorte</string>
+    <string name="clipboard_filter_size_hint">Texto UTF-8, miniaturas e mídias salvas. Arquivos compartilhados contam em cada recorte; este não é o espaço liberado.</string>
+    <string name="clipboard_filter_size_min">Tamanho mínimo</string>
+    <string name="clipboard_filter_size_max">Tamanho máximo</string>
+    <string name="clipboard_filter_size_any">Qualquer tamanho</string>
+    <string name="clipboard_filter_size_unlimited">Sem máximo</string>
+    <string name="clipboard_filter_size_invalid">O tamanho máximo deve ser pelo menos o mínimo.</string>
+    <string name="clipboard_delete_results">Excluir resultados</string>
+    <string name="clipboard_results_summary">%1$d resultados · %2$s</string>
+    <string name="clipboard_results_loading">Carregando resultados…</string>
+    <string name="clipboard_delete_confirm_title">Excluir %1$d resultados?</string>
+    <string name="clipboard_delete_confirm_message">Excluir estes recortes correspondentes de %1$s em todas as páginas? Tamanho combinado dos recortes: %2$s. Cópias em outras abas permanecem. Entradas novas ou alteradas são ignoradas. Esta ação não pode ser desfeita.</string>
+    <string name="clipboard_delete_confirm_action">Excluir</string>
+    <string name="clipboard_delete_result">Excluídos %1$d de %2$d resultados confirmados.</string>
+    <string name="clipboard_delete_error">Não foi possível excluir os resultados. Tente novamente.</string>
 </resources>

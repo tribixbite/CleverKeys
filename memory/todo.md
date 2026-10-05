@@ -292,3 +292,21 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   featurizer and length/frequency-aware Viterbi decoder. Add development calibration
   arm beside encoder training; consider teacher anchoring on actual 32-frame outputs.
   PAL's incorrect frame assumption/numerical prescriptions were not adopted.
+
+## Clipboard size filter and confirmed batch deletion
+
+- [x] Implemented inclusive min/max payload-size presets, row sizes, full-result
+  count/size and current-tab Delete results with mandatory frozen-snapshot confirmation.
+  Search/date/tag/privacy/status predicates combine; copies and OS clipboard remain
+  independent. Exact row-version transaction guards and shared-media cleanup added.
+- [x] Kotlin/resource compilation, debug app/test APK builds and full host suites pass:
+  2,739 pure / 938 mock (`build/clipboard-bulk-tests.log`).
+- [x] All four real SQLite tests pass on isolated Pixel7/API34, including a 205-row
+  batch, changed/new-row protection, tab isolation/shared media and transaction rollback.
+  emulator.wtf run `dcec77b5-0337-4d45-987b-0ad30676bc37`; 4 tests, zero skips/failures.
+- [x] Minified release build and release lint pass (26m39s); ARM64 signature,
+  alignment and ZIP integrity verified. SHA-256
+  `06287570847b841cd7033a629260487a885557ebe9b2e1df1191473ad4053264`.
+- [ ] TODO: install and verify device dialog, cancel,
+  range validation and synthetic-only deletion tests. Seeker `.170`
+  currently returns "No route to host"; no device state or personal clips changed.

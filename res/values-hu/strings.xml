@@ -2225,4 +2225,19 @@
     <string name="settings_search_in_section">Szakasz: %1$s</string>
     <string name="pack_error_dictionary_too_large">Ez a szótár %1$d szót tartalmaz; a korlát %2$d. Importáljon kisebb csomagot.</string>
     <string name="pack_error_member_too_large">A(z) %1$s nagyobb a(z) %2$d KiB-os korlátnál.</string>
+    <string name="clipboard_filter_size">Kivágás mérete</string>
+    <string name="clipboard_filter_size_hint">UTF-8 szöveg, bélyegképek és mentett média. A megosztott fájlok minden kivágásban beszámítanak; ez nem felszabadított terület.</string>
+    <string name="clipboard_filter_size_min">Minimális méret</string>
+    <string name="clipboard_filter_size_max">Maximális méret</string>
+    <string name="clipboard_filter_size_any">Bármilyen méret</string>
+    <string name="clipboard_filter_size_unlimited">Nincs maximum</string>
+    <string name="clipboard_filter_size_invalid">A maximális méret nem lehet kisebb a minimumnál.</string>
+    <string name="clipboard_delete_results">Találatok törlése</string>
+    <string name="clipboard_results_summary">%1$d találat · %2$s</string>
+    <string name="clipboard_results_loading">Találatok betöltése…</string>
+    <string name="clipboard_delete_confirm_title">Töröl %1$d találatot?</string>
+    <string name="clipboard_delete_confirm_message">Törli ezeket a találati kivágásokat innen: %1$s az összes oldalon? Összesített méret: %2$s. A más lapokon lévő másolatok megmaradnak. Az új vagy módosított elemek kimaradnak. Ez a művelet nem vonható vissza.</string>
+    <string name="clipboard_delete_confirm_action">Törlés</string>
+    <string name="clipboard_delete_result">%1$d / %2$d megerősített találat törölve.</string>
+    <string name="clipboard_delete_error">Nem sikerült törölni a találatokat. Próbálja újra.</string>
 </resources>

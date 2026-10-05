@@ -282,3 +282,48 @@ Routing priority matches the IME key-event chain (see `.claude/skills/ime-key-ro
 **Created**: 2026-04-17
 **Last Updated**: 2026-04-17
 **Related Skills**: `clipboard-panel-architecture`, `clipboard-tag-system`, `clipboard-todo-system`, `ime-visual-feedback`, `ime-key-routing`
+
+## Size filtering and confirmed result deletion (2.0 development)
+
+The existing filter dialog offers inclusive minimum and optional maximum payload
+size presets (1/10/100 kB, 1/10/100 MB, with any-size/no-maximum defaults).
+Size includes UTF-8 content, thumbnail bytes and actual saved media length. It
+excludes database overhead and counts a shared media file in each clipping; the
+combined result size is not a promise of reclaimed disk space. Missing files
+contribute zero file bytes. File stat and payload measurement run on IO during
+loading, not row rendering or interactive filter passes. Rows show age and size.
+
+Size combines with search (including regex), date, tags, private-only and todo
+status filters. Bounds persist across tab switches and reset with Clear filters.
+Invalid ranges disable Apply, together with the existing todo-status guard.
+
+Delete results applies to ALL matching pages in the CURRENT tab. With no search
+or size filter it can delete that tab's full visible result set (Todos retains
+its active-only default until the user enables the other statuses). A mandatory
+confirmation names the tab, count and combined clipping size; Cancel writes
+nothing. Deleting History does not remove pinned/todo copies. Deleting Pinned
+or Todos removes only the matching copies in that tab. OS clipboard is untouched.
+
+The confirmation captures immutable entry versions, not a live query. Existing
+SQLite row IDs are carried through all three loaders without a schema migration.
+An IO transaction checks exact content, tab timestamp, MIME, path, privacy, source,
+thumbnail, tags and todo status by ID before deleting. New/replaced/edited rows
+are excluded. Per-row parameterized statements avoid SQLite variable limits for
+multi-page batches; failures roll back the transaction. Media cleanup runs after
+commit only for paths no table still references; existing startup orphan cleanup
+recovers a crash between database commit and file removal. The UI reports actual
+deleted versus confirmed counts or an error, reloads and clamps pagination.
+Deletion is disabled during loading, inline editing, tag mode and another deletion;
+pane cleanup dismisses pending confirmation. All new strings have 21 translated
+resource variants alongside English.
+
+Verified: 2,739 pure / 938 mock tests; all four new SQLite tests pass on isolated
+Pixel7/API34 (205-row batch, version guards, tab/shared-media scope and rollback).
+Minified release build and release lint pass; ARM64 signature, alignment and ZIP
+integrity verified. Logs: `build/clipboard-bulk-{tests,ew,release}.log`.
+
+TODO: device soak of narrow/landscape dialogs, cancellation and synthetic-only
+deletions. Seeker `.170` was unreachable ("No route to host"); no device state or
+personal clips changed. SQLite transaction coverage runs only on an isolated
+emulator, never the maintainer's database. A separate clear-OS-clipboard command and row
+swipe-to-delete remain independent open features (#168 / #175).

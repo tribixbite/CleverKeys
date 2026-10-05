@@ -2311,4 +2311,19 @@
     <string name="settings_search_in_section">w sekcji %1$s</string>
     <string name="pack_error_dictionary_too_large">Ten słownik zawiera %1$d słów; limit wynosi %2$d. Zaimportuj mniejszy pakiet.</string>
     <string name="pack_error_member_too_large">%1$s przekracza limit %2$d KiB.</string>
+    <string name="clipboard_filter_size">Rozmiar wycinka</string>
+    <string name="clipboard_filter_size_hint">Tekst UTF-8, miniatury i zapisane multimedia. Udostępnione pliki są liczone w każdym wycinku; to nie jest odzyskane miejsce.</string>
+    <string name="clipboard_filter_size_min">Rozmiar minimalny</string>
+    <string name="clipboard_filter_size_max">Rozmiar maksymalny</string>
+    <string name="clipboard_filter_size_any">Dowolny rozmiar</string>
+    <string name="clipboard_filter_size_unlimited">Brak maksimum</string>
+    <string name="clipboard_filter_size_invalid">Rozmiar maksymalny musi być co najmniej równy minimalnemu.</string>
+    <string name="clipboard_delete_results">Usuń wyniki</string>
+    <string name="clipboard_results_summary">%1$d wyników · %2$s</string>
+    <string name="clipboard_results_loading">Ładowanie wyników…</string>
+    <string name="clipboard_delete_confirm_title">Usunąć %1$d wyników?</string>
+    <string name="clipboard_delete_confirm_message">Usunąć pasujące wycinki z %1$s ze wszystkich stron? Łączny rozmiar wycinków: %2$s. Kopie na innych kartach pozostaną. Nowe lub zmienione wpisy zostaną pominięte. Tej operacji nie można cofnąć.</string>
+    <string name="clipboard_delete_confirm_action">Usuń</string>
+    <string name="clipboard_delete_result">Usunięto %1$d z %2$d potwierdzonych wyników.</string>
+    <string name="clipboard_delete_error">Nie udało się usunąć wyników. Spróbuj ponownie.</string>
 </resources>

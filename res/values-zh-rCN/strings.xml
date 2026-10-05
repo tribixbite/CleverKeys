@@ -2176,4 +2176,19 @@
     <string name="settings_search_in_section">位于 %1$s</string>
     <string name="pack_error_dictionary_too_large">此词典包含 %1$d 个词；限制为 %2$d 个。请导入较小的词包。</string>
     <string name="pack_error_member_too_large">%1$s 超出了 %2$d KiB 的上限。</string>
+    <string name="clipboard_filter_size">剪贴项大小</string>
+    <string name="clipboard_filter_size_hint">UTF-8 文本、缩略图和已保存的媒体。共享文件计入每个剪贴项；这并非释放的空间。</string>
+    <string name="clipboard_filter_size_min">最小大小</string>
+    <string name="clipboard_filter_size_max">最大大小</string>
+    <string name="clipboard_filter_size_any">任意大小</string>
+    <string name="clipboard_filter_size_unlimited">无上限</string>
+    <string name="clipboard_filter_size_invalid">最大大小不能小于最小大小。</string>
+    <string name="clipboard_delete_results">删除结果</string>
+    <string name="clipboard_results_summary">%1$d 个结果 · %2$s</string>
+    <string name="clipboard_results_loading">正在加载结果…</string>
+    <string name="clipboard_delete_confirm_title">删除 %1$d 个结果？</string>
+    <string name="clipboard_delete_confirm_message">是否从所有页面的 %1$s 中删除这些匹配的剪贴项？剪贴项总大小：%2$s。其他标签页中的副本将保留。新增或更改的条目将被跳过。此操作无法撤消。</string>
+    <string name="clipboard_delete_confirm_action">删除</string>
+    <string name="clipboard_delete_result">已删除 %1$d 个已确认结果（共 %2$d 个）。</string>
+    <string name="clipboard_delete_error">无法删除结果。请重试。</string>
 </resources>

@@ -27,8 +27,14 @@ class ClipboardEntry(
     // #156: private-copy marker. isPrivate → 🔒 badge + confirm-before-OS-clipboard.
     // sourcePackage → provenance line ("via <app>" / "direct launch"). Defaults preserve compat.
     @JvmField val isPrivate: Boolean = false,
-    @JvmField val sourcePackage: String? = null
+    @JvmField val sourcePackage: String? = null,
+    @JvmField val rowId: Long = 0,
+    @JvmField val sizeBytes: Long = ClipboardSizePolicy.utf8Bytes(content) + (thumbnailBlob?.size ?: 0)
 ) {
+    /** Immutable IO-enriched copy; payload size excludes SQLite overhead and shared-file accounting. */
+    fun withSizeBytes(bytes: Long) = ClipboardEntry(content, timestamp, mimeType, thumbnailBlob,
+        mediaPath, tags, todoStatus, isPrivate, sourcePackage, rowId, bytes)
+
     /** Whether this entry contains non-text media (image, video, PDF, etc.) */
     val isMedia: Boolean get() = mimeType != MIME_TEXT_PLAIN
 
@@ -56,6 +62,11 @@ class ClipboardEntry(
         return dateFormat().format(Date(timestamp))
     }
 
+    /** Shared row metadata for text, media and todo rendering. */
+    fun metadataText(context: Context): String = "\u00A0\u00B7\u00A0" +
+        getRelativeTime(context.resources).replace(' ', '\u00A0') + "\u00A0\u00B7\u00A0" +
+        android.text.format.Formatter.formatShortFileSize(context, sizeBytes).replace(' ', '\u00A0')
+
     /**
      * Get formatted text with timestamp appended.
      * Uses SpannableStringBuilder to avoid intermediate String allocation —
@@ -64,7 +75,7 @@ class ClipboardEntry(
      */
     fun getFormattedText(context: Context): Spannable {
         // Use non-breaking spaces (\u00A0) so the time suffix never wraps mid-unit
-        val timeStr = "\u00A0\u00B7\u00A0${getRelativeTime(context.resources).replace(' ', '\u00A0')}"
+        val timeStr = metadataText(context)
         val contentLen = content.length
 
         // Append directly to builder — avoids content + timeStr intermediate String
@@ -145,4 +156,32 @@ sealed class RelativeTime {
             }
         }
     }
+}
+
+/** Allocation-free UTF-8 payload sizing, including Java's one-byte replacement for lone surrogates. */
+object ClipboardSizePolicy {
+    fun utf8Bytes(text: String): Long {
+        var bytes = 0L
+        var i = 0
+        while (i < text.length) {
+            val c = text[i++]
+            bytes += when {
+                c.code < 0x80 -> 1
+                c.code < 0x800 -> 2
+                c.isHighSurrogate() && i < text.length && text[i].isLowSurrogate() -> { i++; 4 }
+                c.isSurrogate() -> 1
+                else -> 3
+            }
+        }
+        return bytes
+    }
+
+    /** Inclusive bounds; null maximum means unlimited. */
+    fun matches(bytes: Long, minimum: Long, maximum: Long?): Boolean =
+        bytes >= minimum && (maximum == null || bytes <= maximum)
+}
+
+/** Frozen confirmation scope: current tab, ALL matching pages, never a live query. */
+data class ClipboardDeleteSnapshot(val tab: ClipboardTab, val entries: List<ClipboardEntry>) {
+    val totalBytes: Long get() = entries.sumOf { it.sizeBytes }
 }

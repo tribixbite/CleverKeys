@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertWithMessage
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.spyk
@@ -75,6 +76,10 @@ class ClipboardHistoryViewStateGuardsTest {
         // Objenesis skips initializers — restore the collection fields the code paths touch.
         view.setField("expandedStates", mutableMapOf<Long, Boolean>())
         view.setField("tagFilterSelected", emptySet<String>())
+        val cacheClass = Class.forName("tribixbite.cleverkeys.ClipboardHistoryView\$thumbnailCache\$1")
+        val cache = mockkClass(cacheClass.kotlin, relaxed = true)
+        view.setField("thumbnailCache", cache)
+        view.setField("animatedCache", mutableMapOf<Long, Any>())
         // A real inner adapter whose notifyDataSetChanged is stubbed (the BaseAdapter
         // observable was never constructed under Objenesis).
         val adapterClass = Class.forName(
@@ -239,6 +244,50 @@ class ClipboardHistoryViewStateGuardsTest {
         view.save_edit()
 
         assertThat(view.isEditing()).isFalse()
+    }
+
+    @Test
+    fun sizeSearchSnapshotIncludesAllPagesAndStaysFrozenAfterNewCapture() {
+        val entries = (1..205).map { ClipboardEntry("bulk-fixture-$it", it.toLong(), rowId = it.toLong(), sizeBytes = 2048) } +
+            ClipboardEntry("bulk-fixture-small", 900, rowId = 900, sizeBytes = 10) +
+            ClipboardEntry("unrelated-large", 901, rowId = 901, sizeBytes = 2048)
+        buildView()
+        every { view.invalidate() } just runs
+        view.setField("history", entries)
+        view.setField("searchFilter", "")
+        view.setField("dataReady", true)
+        view.setSearchFilter("bulk-fixture")
+        view.setSizeFilter(1024, 4096)
+        assertThat(view.getTotalPages()).isEqualTo(3)
+        val frozen = view.deletionSnapshot()!!
+        assertThat(frozen.entries).hasSize(205)
+        assertThat(frozen.totalBytes).isEqualTo(205 * 2048L)
+        view.setField("history", entries + ClipboardEntry("bulk-fixture-new", 902, rowId = 902, sizeBytes = 2048))
+        view.setSearchFilter("bulk-fixture")
+        assertThat(view.deletionSnapshot()!!.entries).hasSize(206)
+        assertThat(frozen.entries).hasSize(205)
+        view.clearAllFilters()
+        assertThat(view.getSizeFilter()).isEqualTo(0L to null)
+        assertThat(view.resultSummary().first).isEqualTo(207)
+    }
+
+    @Test
+    fun deletionDisabledForUnloadedEditingEmptyAndInvalidRegexResults() {
+        buildView()
+        every { view.invalidate() } just runs
+        view.setField("history", listOf(entry("fixture")))
+        view.setField("searchFilter", "")
+        view.setSearchFilter("fixture")
+        assertThat(view.deletionSnapshot()).isNull()
+        view.setField("dataReady", true)
+        assertThat(view.deletionSnapshot()).isNotNull()
+        view.setField("editingOriginalContent", "fixture")
+        assertThat(view.deletionSnapshot()).isNull()
+        view.setField("editingOriginalContent", null)
+        view.setRegexMode(true)
+        view.setSearchFilter("[")
+        assertThat(view.hasRegexError()).isTrue()
+        assertThat(view.deletionSnapshot()).isNull()
     }
 
     // ------------------------------------------------------------------ helpers

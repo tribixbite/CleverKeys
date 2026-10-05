@@ -2287,4 +2287,19 @@
     <string name="settings_search_in_section">în %1$s</string>
     <string name="pack_error_dictionary_too_large">Acest dicționar conține %1$d cuvinte; limita este de %2$d. Importați un pachet mai mic.</string>
     <string name="pack_error_member_too_large">%1$s depășește limita de %2$d KiB.</string>
+    <string name="clipboard_filter_size">Dimensiune decupaj</string>
+    <string name="clipboard_filter_size_hint">Text UTF-8, miniaturi și conținut media salvat. Fișierele partajate se contorizează în fiecare decupaj; acesta nu este spațiu eliberat.</string>
+    <string name="clipboard_filter_size_min">Dimensiune minimă</string>
+    <string name="clipboard_filter_size_max">Dimensiune maximă</string>
+    <string name="clipboard_filter_size_any">Orice dimensiune</string>
+    <string name="clipboard_filter_size_unlimited">Fără limită maximă</string>
+    <string name="clipboard_filter_size_invalid">Dimensiunea maximă trebuie să fie cel puțin egală cu cea minimă.</string>
+    <string name="clipboard_delete_results">Șterge rezultatele</string>
+    <string name="clipboard_results_summary">%1$d rezultate · %2$s</string>
+    <string name="clipboard_results_loading">Se încarcă rezultatele…</string>
+    <string name="clipboard_delete_confirm_title">Ștergeți %1$d rezultate?</string>
+    <string name="clipboard_delete_confirm_message">Ștergeți aceste decupaje potrivite din %1$s pe toate paginile? Dimensiune combinată a decupajelor: %2$s. Copiile din alte file rămân. Înregistrările noi sau modificate sunt ignorate. Această acțiune nu poate fi anulată.</string>
+    <string name="clipboard_delete_confirm_action">Șterge</string>
+    <string name="clipboard_delete_result">S-au șters %1$d din %2$d rezultate confirmate.</string>
+    <string name="clipboard_delete_error">Nu s-au putut șterge rezultatele. Încercați din nou.</string>
 </resources>

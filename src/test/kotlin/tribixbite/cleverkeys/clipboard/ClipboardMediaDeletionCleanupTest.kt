@@ -11,6 +11,9 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.objenesis.ObjenesisStd
+import tribixbite.cleverkeys.ClipboardEntry
+import tribixbite.cleverkeys.ClipboardTab
+import tribixbite.cleverkeys.ClipboardDeleteSnapshot
 import tribixbite.cleverkeys.ClipboardDatabase
 import tribixbite.cleverkeys.ClipboardHistoryService
 import tribixbite.cleverkeys.ClipboardMediaManager
@@ -64,6 +67,40 @@ class ClipboardMediaDeletionCleanupTest {
 
     @After
     fun teardown() = unmockkAll()
+
+    @Test
+    fun bulkDeletionKeepsSharedMediaAndCleansUnreferencedPathsExactlyOnce() {
+        val snapshot = ClipboardDeleteSnapshot(ClipboardTab.HISTORY, listOf(
+            ClipboardEntry("fixture", 1, rowId = 8)))
+        val shared = "clipboard_media/007/shared.png"
+        every { database.deleteSnapshot(snapshot) } returns Result.success(3 to setOf(mediaPath, shared))
+        every { database.isMediaPathReferenced(mediaPath) } returns false
+        every { database.isMediaPathReferenced(shared) } returns true
+        assertThat(service.deleteSnapshot(snapshot).getOrThrow()).isEqualTo(3)
+        verify(exactly = 1) { mediaManager.deleteMedia(mediaPath) }
+        verify(exactly = 0) { mediaManager.deleteMedia(shared) }
+    }
+
+    @Test
+    fun bulkDeletionFailureDoesNotCleanMediaOrReportSuccess() {
+        val snapshot = ClipboardDeleteSnapshot(ClipboardTab.PINNED, emptyList())
+        every { database.deleteSnapshot(snapshot) } returns Result.failure(IllegalStateException("disk"))
+        assertThat(service.deleteSnapshot(snapshot).isFailure).isTrue()
+        verify(exactly = 0) { mediaManager.deleteMedia(any()) }
+    }
+
+    @Test
+    fun payloadMeasurementIncludesSavedFileAndThumbnailButNotDatabaseOverhead() {
+        val file = File.createTempFile("clip-size", ".bin")
+        try {
+            file.writeBytes(ByteArray(4096))
+            every { mediaManager.getMediaFile(mediaPath) } returns file
+            val entry = ClipboardEntry("é", 1, "image/png", ByteArray(12), mediaPath, rowId = 9)
+            val measured = service.measureEntry(entry)
+            assertThat(measured.sizeBytes).isEqualTo(4110L)
+            assertThat(measured.rowId).isEqualTo(9L)
+        } finally { file.delete() }
+    }
 
     // ------------------------------------------------------ service tier: history
 

@@ -2219,4 +2219,19 @@
     <string name="settings_search_in_section">in %1$s</string>
     <string name="pack_error_dictionary_too_large">Dit woordenboek bevat %1$d woorden; de limiet is %2$d. Importeer een kleiner pakket.</string>
     <string name="pack_error_member_too_large">%1$s is groter dan de limiet van %2$d KiB.</string>
+    <string name="clipboard_filter_size">Fragmentgrootte</string>
+    <string name="clipboard_filter_size_hint">UTF-8-tekst, miniaturen en opgeslagen media. Gedeelde bestanden tellen mee in elk fragment; dit is geen vrijgemaakte ruimte.</string>
+    <string name="clipboard_filter_size_min">Minimumgrootte</string>
+    <string name="clipboard_filter_size_max">Maximumgrootte</string>
+    <string name="clipboard_filter_size_any">Elke grootte</string>
+    <string name="clipboard_filter_size_unlimited">Geen maximum</string>
+    <string name="clipboard_filter_size_invalid">Maximumgrootte moet minstens het minimum zijn.</string>
+    <string name="clipboard_delete_results">Resultaten verwijderen</string>
+    <string name="clipboard_results_summary">%1$d resultaten · %2$s</string>
+    <string name="clipboard_results_loading">Resultaten laden…</string>
+    <string name="clipboard_delete_confirm_title">%1$d resultaten verwijderen?</string>
+    <string name="clipboard_delete_confirm_message">Deze overeenkomende fragmenten van %1$s op alle pagina\'s verwijderen? Gecombineerde fragmentgrootte: %2$s. Kopieën op andere tabbladen blijven behouden. Nieuwe of gewijzigde items worden overgeslagen. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="clipboard_delete_confirm_action">Verwijderen</string>
+    <string name="clipboard_delete_result">%1$d van %2$d bevestigde resultaten verwijderd.</string>
+    <string name="clipboard_delete_error">Kon resultaten niet verwijderen. Probeer het opnieuw.</string>
 </resources>

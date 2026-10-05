@@ -453,6 +453,25 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
     }
 
+    /** Measure saved payload on IO, never stat files while rendering/filtering on the IME thread. */
+    fun measureEntry(entry: ClipboardEntry): ClipboardEntry {
+        val mediaBytes = entry.mediaPath?.let { path ->
+            // Imported paths are untrusted; the manager enforces containment in clipboard_media.
+            runCatching { _mediaManager.getMediaFile(path).length() }.getOrDefault(0L)
+        } ?: 0L
+        return entry.withSizeBytes(ClipboardSizePolicy.utf8Bytes(entry.content) +
+            (entry.thumbnailBlob?.size ?: 0) + mediaBytes)
+    }
+
+    /** Confirmed current-tab deletion, retaining shared media and the OS clipboard. Call on IO. */
+    fun deleteSnapshot(snapshot: ClipboardDeleteSnapshot): Result<Int> =
+        _database.deleteSnapshot(snapshot).map { (count, paths) ->
+            for (path in paths) {
+                if (!_database.isMediaPathReferenced(path)) _mediaManager.deleteMedia(path)
+            }
+            count
+        }
+
     fun clearHistory() {
         val result = _database.clearAllEntries()
         // Clean up media files that are no longer referenced by any table

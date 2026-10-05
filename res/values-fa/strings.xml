@@ -2257,4 +2257,19 @@
     <string name="settings_search_in_section">در %1$s</string>
     <string name="pack_error_dictionary_too_large">این لغت‌نامه شامل %1$d واژه است؛ حد مجاز %2$d است. لطفاً بستهٔ کوچک‌تری را وارد کنید.</string>
     <string name="pack_error_member_too_large">%1$s از سقف %2$d کیبی‌بایت بزرگ‌تر است.</string>
+    <string name="clipboard_filter_size">حجم بریده</string>
+    <string name="clipboard_filter_size_hint">متن UTF-8، تصاویر بندانگشتی و رسانه‌های ذخیره‌شده. فایل‌های هم‌رسانی‌شده در هر بریده شمارش می‌شوند؛ این فضا آزاد نمی‌شود.</string>
+    <string name="clipboard_filter_size_min">حداقل اندازه</string>
+    <string name="clipboard_filter_size_max">حداکثر اندازه</string>
+    <string name="clipboard_filter_size_any">هر اندازه‌ای</string>
+    <string name="clipboard_filter_size_unlimited">بدون حداکثر</string>
+    <string name="clipboard_filter_size_invalid">حداکثر اندازه باید حداقل برابر با حداقل اندازه باشد.</string>
+    <string name="clipboard_delete_results">حذف نتایج</string>
+    <string name="clipboard_results_summary">%1$d نتیجه · %2$s</string>
+    <string name="clipboard_results_loading">در حال بارگیری نتایج…</string>
+    <string name="clipboard_delete_confirm_title">حذف %1$d نتیجه؟</string>
+    <string name="clipboard_delete_confirm_message">آیا این بریده‌های منطبق از %1$s در تمام صفحه‌ها حذف شوند؟ مجموع حجم بریده‌ها: %2$s. نسخه‌های موجود در سایر تب‌ها باقی می‌مانند. ورودی‌های جدید یا تغییریافته نادیده گرفته می‌شوند. این عمل غیرقابل‌بازگشت است.</string>
+    <string name="clipboard_delete_confirm_action">حذف</string>
+    <string name="clipboard_delete_result">%1$d از %2$d نتیجه تأییدشده حذف شد.</string>
+    <string name="clipboard_delete_error">حذف نتایج ناموفق بود. دوباره امتحان کنید.</string>
 </resources>

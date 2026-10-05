@@ -2271,4 +2271,19 @@
     <string name="settings_search_in_section">sadaļā %1$s</string>
     <string name="pack_error_dictionary_too_large">Šī vārdnīca satur %1$d vārdus; ierobežojums ir %2$d. Importējiet mazāku pakotni.</string>
     <string name="pack_error_member_too_large">%1$s pārsniedz %2$d KiB ierobežojumu.</string>
+    <string name="clipboard_filter_size">Klipa lielums</string>
+    <string name="clipboard_filter_size_hint">UTF-8 teksts, sīktēli un saglabātā multivide. Kopīgotie faili tiek skaitīti katrā klipā; tā nav atbrīvotā vieta.</string>
+    <string name="clipboard_filter_size_min">Minimālais lielums</string>
+    <string name="clipboard_filter_size_max">Maksimālais lielums</string>
+    <string name="clipboard_filter_size_any">Jebkurš lielums</string>
+    <string name="clipboard_filter_size_unlimited">Bez ierobežojuma</string>
+    <string name="clipboard_filter_size_invalid">Maksimālajam lielumam jābūt vismaz vienādam ar minimālo.</string>
+    <string name="clipboard_delete_results">Dzēst rezultātus</string>
+    <string name="clipboard_results_summary">%1$d rezultāti · %2$s</string>
+    <string name="clipboard_results_loading">Ielādē rezultātus…</string>
+    <string name="clipboard_delete_confirm_title">Vai dzēst %1$d rezultātus?</string>
+    <string name="clipboard_delete_confirm_message">Vai dzēst šos atbilstošos klipus no %1$s visās lapās? Kopējais klipu lielums: %2$s. Kopijas citās cilnēs paliks. Jauni vai mainīti ieraksti tiek izlaisti. Šo darbību nevar atsaukt.</string>
+    <string name="clipboard_delete_confirm_action">Dzēst</string>
+    <string name="clipboard_delete_result">Izdzēsti %1$d no %2$d apstiprinātajiem rezultātiem.</string>
+    <string name="clipboard_delete_error">Neizdevās izdzēst rezultātus. Mēģiniet vēlreiz.</string>
 </resources>

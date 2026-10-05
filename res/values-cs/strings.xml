@@ -2301,4 +2301,19 @@
     <string name="settings_search_in_section">v sekci %1$s</string>
     <string name="pack_error_dictionary_too_large">Tento slovník obsahuje %1$d slov; limit je %2$d. Importujte menší balíček.</string>
     <string name="pack_error_member_too_large">%1$s je větší než limit %2$d KiB.</string>
+    <string name="clipboard_filter_size">Velikost výstřižku</string>
+    <string name="clipboard_filter_size_hint">Text UTF-8, miniatury a uložená média. Sdílené soubory se započítávají do každého výstřižku; nejedná se o uvolněné místo.</string>
+    <string name="clipboard_filter_size_min">Minimální velikost</string>
+    <string name="clipboard_filter_size_max">Maximální velikost</string>
+    <string name="clipboard_filter_size_any">Libovolná velikost</string>
+    <string name="clipboard_filter_size_unlimited">Bez maxima</string>
+    <string name="clipboard_filter_size_invalid">Maximální velikost musí být alespoň rovna minimální.</string>
+    <string name="clipboard_delete_results">Smazat výsledky</string>
+    <string name="clipboard_results_summary">%1$d výsledků · %2$s</string>
+    <string name="clipboard_results_loading">Načítání výsledků…</string>
+    <string name="clipboard_delete_confirm_title">Smazat %1$d výsledků?</string>
+    <string name="clipboard_delete_confirm_message">Smazat tyto odpovídající výstřižky z %1$s ze všech stránek? Celková velikost výstřižků: %2$s. Kopie na ostatních kartách zůstanou. Nové nebo změněné položky budou přeskočeny. Tuto akci nelze vrátit zpět.</string>
+    <string name="clipboard_delete_confirm_action">Smazat</string>
+    <string name="clipboard_delete_result">Smazáno %1$d z %2$d potvrzených výsledků.</string>
+    <string name="clipboard_delete_error">Výsledky se nepodařilo smazat. Zkuste to znovu.</string>
 </resources>

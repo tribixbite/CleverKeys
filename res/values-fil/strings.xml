@@ -2231,4 +2231,19 @@
     <string name="settings_search_in_section">sa %1$s</string>
     <string name="pack_error_dictionary_too_large">Naglalaman ang diksyunaryong ito ng %1$d na salita; ang limitasyon ay %2$d. Mag-import ng mas maliit na pack.</string>
     <string name="pack_error_member_too_large">Mas malaki ang %1$s kaysa sa limitasyong %2$d KiB.</string>
+    <string name="clipboard_filter_size">Laki ng clipping</string>
+    <string name="clipboard_filter_size_hint">UTF-8 text, mga thumbnail, at na-save na media. Kasama ang mga ibinahaging file sa bawat clipping; hindi ito nabawing espasyo.</string>
+    <string name="clipboard_filter_size_min">Minimum na laki</string>
+    <string name="clipboard_filter_size_max">Maximum na laki</string>
+    <string name="clipboard_filter_size_any">Kahit anong laki</string>
+    <string name="clipboard_filter_size_unlimited">Walang maximum</string>
+    <string name="clipboard_filter_size_invalid">Dapat hindi bababa ang maximum na laki sa minimum.</string>
+    <string name="clipboard_delete_results">I-delete ang mga resulta</string>
+    <string name="clipboard_results_summary">%1$d na resulta · %2$s</string>
+    <string name="clipboard_results_loading">Naglo-load ng mga resulta…</string>
+    <string name="clipboard_delete_confirm_title">I-delete ang %1$d na resulta?</string>
+    <string name="clipboard_delete_confirm_message">I-delete ang magkakatugmang clipping na ito mula sa %1$s sa lahat ng page? Pinagsamang laki ng clipping: %2$s. Mananatili ang mga kopya sa ibang tab. Lalampasan ang mga bago o binagong entry. Hindi na ito mababawi.</string>
+    <string name="clipboard_delete_confirm_action">I-delete</string>
+    <string name="clipboard_delete_result">Na-delete ang %1$d sa %2$d na nakumpirmang resulta.</string>
+    <string name="clipboard_delete_error">Hindi ma-delete ang mga resulta. Subukan muli.</string>
 </resources>

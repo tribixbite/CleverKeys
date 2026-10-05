@@ -2239,4 +2239,19 @@
     <string name="settings_search_in_section">in %1$s</string>
     <string name="pack_error_dictionary_too_large">Dieses Wörterbuch enthält %1$d Wörter; das Limit liegt bei %2$d. Importieren Sie ein kleineres Paket.</string>
     <string name="pack_error_member_too_large">%1$s ist größer als das Limit von %2$d KiB.</string>
+    <string name="clipboard_filter_size">Clipgröße</string>
+    <string name="clipboard_filter_size_hint">UTF-8-Text, Miniaturansichten und gespeicherte Medien. Geteilte Dateien zählen in jedem Clip; dies ist kein freigegebener Speicherplatz.</string>
+    <string name="clipboard_filter_size_min">Mindestgröße</string>
+    <string name="clipboard_filter_size_max">Maximale Größe</string>
+    <string name="clipboard_filter_size_any">Beliebige Größe</string>
+    <string name="clipboard_filter_size_unlimited">Kein Maximum</string>
+    <string name="clipboard_filter_size_invalid">Die maximale Größe muss mindestens der Mindestgröße entsprechen.</string>
+    <string name="clipboard_delete_results">Ergebnisse löschen</string>
+    <string name="clipboard_results_summary">%1$d Ergebnisse · %2$s</string>
+    <string name="clipboard_results_loading">Ergebnisse werden geladen…</string>
+    <string name="clipboard_delete_confirm_title">%1$d Ergebnisse löschen?</string>
+    <string name="clipboard_delete_confirm_message">Diese übereinstimmenden Clips aus %1$s über alle Seiten hinweg löschen? Gesamte Clipgröße: %2$s. Kopien in anderen Tabs bleiben erhalten. Neue oder geänderte Einträge werden übersprungen. Dies kann nicht rückgängig gemacht werden.</string>
+    <string name="clipboard_delete_confirm_action">Löschen</string>
+    <string name="clipboard_delete_result">%1$d von %2$d bestätigten Ergebnissen gelöscht.</string>
+    <string name="clipboard_delete_error">Ergebnisse konnten nicht gelöscht werden. Erneut versuchen.</string>
 </resources>

@@ -2230,4 +2230,19 @@
     <string name="settings_search_in_section">Bölüm: %1$s</string>
     <string name="pack_error_dictionary_too_large">Bu sözlük %1$d kelime içeriyor; sınır %2$d. Daha küçük bir paket içe aktarın.</string>
     <string name="pack_error_member_too_large">%1$s, %2$d KiB sınırından büyük.</string>
+    <string name="clipboard_filter_size">Kırpma boyutu</string>
+    <string name="clipboard_filter_size_hint">UTF-8 metin, küçük resimler ve kaydedilen medyalar. Paylaşılan dosyalar her kırpmada sayılır; bu geri kazanılan alan değildir.</string>
+    <string name="clipboard_filter_size_min">Minimum boyut</string>
+    <string name="clipboard_filter_size_max">Maksimum boyut</string>
+    <string name="clipboard_filter_size_any">Herhangi bir boyut</string>
+    <string name="clipboard_filter_size_unlimited">Maksimum yok</string>
+    <string name="clipboard_filter_size_invalid">Maksimum boyut en az minimum boyut kadar olmalıdır.</string>
+    <string name="clipboard_delete_results">Sonuçları sil</string>
+    <string name="clipboard_results_summary">%1$d sonuç · %2$s</string>
+    <string name="clipboard_results_loading">Sonuçlar yükleniyor…</string>
+    <string name="clipboard_delete_confirm_title">%1$d sonuç silinsin mi?</string>
+    <string name="clipboard_delete_confirm_message">Tüm sayfalarda %1$s kaynağından eşleşen bu kırpmalar silinsin mi? Toplam kırpma boyutu: %2$s. Diğer sekmelerdeki kopyalar kalır. Yeni veya değiştirilen girişler atlanır. Bu işlem geri alınamaz.</string>
+    <string name="clipboard_delete_confirm_action">Sil</string>
+    <string name="clipboard_delete_result">Onaylanan %2$d sonuçtan %1$d tanesi silindi.</string>
+    <string name="clipboard_delete_error">Sonuçlar silinemedi. Tekrar deneyin.</string>
 </resources>

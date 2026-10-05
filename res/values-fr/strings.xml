@@ -2270,4 +2270,19 @@
     <string name="settings_search_in_section">dans %1$s</string>
     <string name="pack_error_dictionary_too_large">Ce dictionnaire contient %1$d mots ; la limite est de %2$d. Importez un pack plus petit.</string>
     <string name="pack_error_member_too_large">%1$s dépasse la limite de %2$d Kio.</string>
+    <string name="clipboard_filter_size">Taille de l\'élément</string>
+    <string name="clipboard_filter_size_hint">Texte UTF-8, vignettes et médias enregistrés. Les fichiers partagés sont décomptés dans chaque élément ; cet espace n\'est pas libéré.</string>
+    <string name="clipboard_filter_size_min">Taille minimale</string>
+    <string name="clipboard_filter_size_max">Taille maximale</string>
+    <string name="clipboard_filter_size_any">Toutes tailles</string>
+    <string name="clipboard_filter_size_unlimited">Aucun maximum</string>
+    <string name="clipboard_filter_size_invalid">La taille maximale doit être supérieure ou égale à la taille minimale.</string>
+    <string name="clipboard_delete_results">Supprimer les résultats</string>
+    <string name="clipboard_results_summary">%1$d résultats · %2$s</string>
+    <string name="clipboard_results_loading">Chargement des résultats…</string>
+    <string name="clipboard_delete_confirm_title">Supprimer %1$d résultats ?</string>
+    <string name="clipboard_delete_confirm_message">Supprimer ces éléments correspondants de %1$s sur toutes les pages ? Taille cumulée : %2$s. Les copies dans les autres onglets sont conservées. Les entrées nouvelles ou modifiées sont ignorées. Action irréversible.</string>
+    <string name="clipboard_delete_confirm_action">Supprimer</string>
+    <string name="clipboard_delete_result">%1$d sur %2$d résultats confirmés supprimés.</string>
+    <string name="clipboard_delete_error">Impossible de supprimer les résultats. Réessayez.</string>
 </resources>

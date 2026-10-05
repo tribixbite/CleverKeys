@@ -2619,4 +2619,19 @@
     <string name="settings_search_in_section">in %1$s</string>
     <string name="pack_error_dictionary_too_large">This dictionary contains %1$d words; the limit is %2$d. Import a smaller pack.</string>
     <string name="pack_error_member_too_large">%1$s is larger than the %2$d KiB limit.</string>
+    <string name="clipboard_filter_size">Clipping size</string>
+    <string name="clipboard_filter_size_hint">UTF-8 text, thumbnails and saved media. Shared files count in each clipping; this is not space reclaimed.</string>
+    <string name="clipboard_filter_size_min">Minimum size</string>
+    <string name="clipboard_filter_size_max">Maximum size</string>
+    <string name="clipboard_filter_size_any">Any size</string>
+    <string name="clipboard_filter_size_unlimited">No maximum</string>
+    <string name="clipboard_filter_size_invalid">Maximum size must be at least the minimum.</string>
+    <string name="clipboard_delete_results">Delete results</string>
+    <string name="clipboard_results_summary">%1$d results · %2$s</string>
+    <string name="clipboard_results_loading">Loading results…</string>
+    <string name="clipboard_delete_confirm_title">Delete %1$d results?</string>
+    <string name="clipboard_delete_confirm_message">Delete these matching clippings from %1$s across all pages? Combined clipping size: %2$s. Copies in other tabs stay. New or changed entries are skipped. This cannot be undone.</string>
+    <string name="clipboard_delete_confirm_action">Delete</string>
+    <string name="clipboard_delete_result">Deleted %1$d of %2$d confirmed results.</string>
+    <string name="clipboard_delete_error">Could not delete results. Try again.</string>
 </resources>

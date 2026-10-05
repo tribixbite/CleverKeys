@@ -1547,4 +1547,52 @@ class ClipboardDatabaseTest {
         val result = db.updateHistoryEntryContent("Does not exist", "New content")
         assertTrue("Should return Error for missing entry", result is EditEntryResult.Error)
     }
+    @Test
+    fun bulkSnapshotAcrossPagesSkipsNewAndEditedEntries() {
+        repeat(205) { assertTrue(db.addClipboardEntry("bulk-$it", futureExpiry)) }
+        val snapshot = ClipboardDeleteSnapshot(ClipboardTab.HISTORY, db.getActiveClipboardEntries())
+        assertEquals(205, snapshot.entries.size)
+        assertTrue(db.addClipboardEntry("new-after-confirmation", futureExpiry))
+        assertEquals(EditEntryResult.Success, db.updateHistoryEntryContent("bulk-0", "changed-after-confirmation"))
+        assertEquals(204, db.deleteSnapshot(snapshot).getOrThrow().first)
+        assertEquals(setOf("new-after-confirmation", "changed-after-confirmation"),
+            db.getActiveClipboardEntries().map { it.content }.toSet())
+    }
+
+    @Test
+    fun bulkSnapshotsAreTabScopedAndRetainSharedMediaReferences() {
+        val media = "clipboard_media/test/shared.png"
+        assertTrue(db.addMediaClipboardEntry("media", futureExpiry, "image/png", byteArrayOf(1), media, "bulk-media-fixture-hash"))
+        assertTrue(db.pinEntry("media", System.currentTimeMillis(), "image/png", byteArrayOf(1), media))
+        assertTrue(db.addTodoEntry("media", System.currentTimeMillis(), "image/png", byteArrayOf(1), media))
+        val history = ClipboardDeleteSnapshot(ClipboardTab.HISTORY, db.getActiveClipboardEntries())
+        assertEquals(setOf(media), db.deleteSnapshot(history).getOrThrow().second)
+        assertEquals(1, db.getPinnedEntries().size)
+        assertEquals(1, db.getTodoEntries().size)
+        assertTrue(db.isMediaPathReferenced(media))
+        assertEquals(1, db.deleteSnapshot(ClipboardDeleteSnapshot(ClipboardTab.PINNED, db.getPinnedEntries())).getOrThrow().first)
+        assertTrue(db.isMediaPathReferenced(media))
+        assertEquals(1, db.deleteSnapshot(ClipboardDeleteSnapshot(ClipboardTab.TODOS, db.getTodoEntries())).getOrThrow().first)
+        assertFalse(db.isMediaPathReferenced(media))
+    }
+
+    @Test
+    fun bulkSnapshotRollsBackWhenAnyIdentityIsInvalid() {
+        db.addClipboardEntry("retained-on-error", futureExpiry)
+        val rows = db.getActiveClipboardEntries() + ClipboardEntry("invalid", 1, rowId = 0)
+        assertTrue(db.deleteSnapshot(ClipboardDeleteSnapshot(ClipboardTab.HISTORY, rows)).isFailure)
+        assertEquals(listOf("retained-on-error"), db.getActiveClipboardEntries().map { it.content })
+    }
+
+    @Test
+    fun bulkSnapshotSkipsMetadataChangesAndRepeatedConfirmationIsHarmless() {
+        db.pinEntry("tagged", System.currentTimeMillis())
+        val snapshot = ClipboardDeleteSnapshot(ClipboardTab.PINNED, db.getPinnedEntries())
+        db.setPinnedEntryTags("tagged", listOf("changed"))
+        assertEquals(0, db.deleteSnapshot(snapshot).getOrThrow().first)
+        val current = ClipboardDeleteSnapshot(ClipboardTab.PINNED, db.getPinnedEntries())
+        assertEquals(1, db.deleteSnapshot(current).getOrThrow().first)
+        assertEquals(0, db.deleteSnapshot(current).getOrThrow().first)
+    }
+
 }

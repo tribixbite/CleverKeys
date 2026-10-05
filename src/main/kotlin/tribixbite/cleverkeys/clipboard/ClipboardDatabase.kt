@@ -389,7 +389,7 @@ class ClipboardDatabase private constructor(context: Context) :
         val currentTime = System.currentTimeMillis()
         val query = """
             SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_MIME_TYPE,
-                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
+                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_ID
             FROM $TABLE_CLIPBOARD
             WHERE $COLUMN_EXPIRY_TIMESTAMP > ?
             ORDER BY $COLUMN_TIMESTAMP DESC
@@ -405,7 +405,8 @@ class ClipboardDatabase private constructor(context: Context) :
                             thumbnailBlob = cursor.getBlob(3),
                             mediaPath = cursor.getString(4),
                             isPrivate = cursor.getInt(5) != 0,
-                            sourcePackage = if (cursor.isNull(6)) null else cursor.getString(6)
+                            sourcePackage = if (cursor.isNull(6)) null else cursor.getString(6),
+                            rowId = cursor.getLong(7)
                         ))
                     } while (cursor.moveToNext())
                 }
@@ -415,6 +416,53 @@ class ClipboardDatabase private constructor(context: Context) :
         }
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Retrieved ${entries.size} active clipboard entries")
         return entries
+    }
+
+    /**
+     * Atomically delete a confirmed snapshot. Exact identity guards skip changed/replaced rows.
+     * One small parameterized statement per row avoids SQLite's variable limit across all pages.
+     * Returned paths are candidates for post-commit reference-checked media cleanup.
+     */
+    fun deleteSnapshot(snapshot: ClipboardDeleteSnapshot): Result<Pair<Int, Set<String>>> = runCatching {
+        val (table, timestampColumn) = when (snapshot.tab) {
+            ClipboardTab.HISTORY -> TABLE_CLIPBOARD to COLUMN_TIMESTAMP
+            ClipboardTab.PINNED -> TABLE_PINNED to COLUMN_PINNED_TIMESTAMP
+            ClipboardTab.TODOS -> TABLE_TODO to COLUMN_ADDED_TIMESTAMP
+        }
+        val db = writableDatabase
+        var deleted = 0
+        val paths = mutableSetOf<String>()
+        db.beginTransaction()
+        try {
+            for (entry in snapshot.entries.distinctBy { it.rowId }) {
+                require(entry.rowId > 0) { "Missing clipboard row identity" }
+                val tagsColumn = if (snapshot.tab == ClipboardTab.HISTORY) "'[]'" else COLUMN_TAGS
+                val statusColumn = if (snapshot.tab == ClipboardTab.TODOS) COLUMN_STATUS else "NULL"
+                val unchanged = db.rawQuery(
+                    "SELECT $COLUMN_CONTENT, $timestampColumn, $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH, " +
+                        "$COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_THUMBNAIL_BLOB, $tagsColumn, $statusColumn " +
+                        "FROM $table WHERE $COLUMN_ID = ?", arrayOf(entry.rowId.toString())
+                ).use { cursor ->
+                    cursor.moveToFirst() && cursor.getString(0) == entry.content &&
+                        cursor.getLong(1) == entry.timestamp &&
+                        (cursor.getString(2) ?: ClipboardEntry.MIME_TEXT_PLAIN) == entry.mimeType &&
+                        cursor.getString(3) == entry.mediaPath &&
+                        (cursor.getInt(4) != 0) == entry.isPrivate &&
+                        cursor.getString(5) == entry.sourcePackage &&
+                        java.util.Arrays.equals(cursor.getBlob(6), entry.thumbnailBlob) &&
+                        PinnedEntry.tagsFromJson(cursor.getString(7)) == entry.tags &&
+                        (if (snapshot.tab == ClipboardTab.TODOS) cursor.getString(8) ?: TodoEntry.STATUS_ACTIVE else null) == entry.todoStatus
+                }
+                // The transaction's writer lock keeps the checked version stable until deletion.
+                val count = if (unchanged) db.delete(table, "$COLUMN_ID = ?", arrayOf(entry.rowId.toString())) else 0
+                deleted += count
+                if (count > 0) entry.mediaPath?.let(paths::add)
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        deleted to paths
     }
 
     /**
@@ -686,7 +734,7 @@ class ClipboardDatabase private constructor(context: Context) :
         val query = """
             SELECT $COLUMN_CONTENT, $COLUMN_PINNED_TIMESTAMP, $COLUMN_MIME_TYPE,
                    $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS,
-                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
+                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_ID
             FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
@@ -701,7 +749,8 @@ class ClipboardDatabase private constructor(context: Context) :
                             mediaPath = cursor.getString(4),
                             tags = PinnedEntry.tagsFromJson(cursor.getString(5)),
                             isPrivate = cursor.getInt(6) != 0,
-                            sourcePackage = if (cursor.isNull(7)) null else cursor.getString(7)
+                            sourcePackage = if (cursor.isNull(7)) null else cursor.getString(7),
+                            rowId = cursor.getLong(8)
                         ))
                     } while (cursor.moveToNext())
                 }
@@ -1009,7 +1058,7 @@ class ClipboardDatabase private constructor(context: Context) :
         val query = """
             SELECT $COLUMN_CONTENT, $COLUMN_ADDED_TIMESTAMP, $COLUMN_MIME_TYPE,
                    $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS, $COLUMN_STATUS,
-                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
+                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_ID
             FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC
         """.trimIndent()
         try {
@@ -1025,7 +1074,8 @@ class ClipboardDatabase private constructor(context: Context) :
                             tags = TodoEntry.tagsFromJson(cursor.getString(5)),
                             todoStatus = cursor.getString(6) ?: TodoEntry.STATUS_ACTIVE,
                             isPrivate = cursor.getInt(7) != 0,
-                            sourcePackage = if (cursor.isNull(8)) null else cursor.getString(8)
+                            sourcePackage = if (cursor.isNull(8)) null else cursor.getString(8),
+                            rowId = cursor.getLong(9)
                         ))
                     } while (cursor.moveToNext())
                 }

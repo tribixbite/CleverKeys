@@ -239,4 +239,20 @@ class ClipboardSearchRegexTest {
             Regex(expanded, RegexOption.IGNORE_CASE)
         }
     }
+    @Test
+    fun `clipping size counts UTF8 without allocating encoded copies`() {
+        for (text in listOf("", "abc", "é", "বাংলা", "😀", "x\uD800y", "\uDC00", "a\u0000b")) {
+            assertThat(ClipboardSizePolicy.utf8Bytes(text)).isEqualTo(text.toByteArray(Charsets.UTF_8).size.toLong())
+        }
+    }
+
+    @Test
+    fun `size bounds include endpoints and support unbounded large payloads`() {
+        assertThat(ClipboardSizePolicy.matches(1024, 1024, 2048)).isTrue()
+        assertThat(ClipboardSizePolicy.matches(2048, 1024, 2048)).isTrue()
+        assertThat(ClipboardSizePolicy.matches(1023, 1024, 2048)).isFalse()
+        assertThat(ClipboardSizePolicy.matches(2049, 1024, 2048)).isFalse()
+        assertThat(ClipboardSizePolicy.matches(5_000_000_000, 1024, null)).isTrue()
+    }
+
 }

@@ -2278,4 +2278,19 @@
     <string name="settings_search_in_section">en %1$s</string>
     <string name="pack_error_dictionary_too_large">Este diccionario contiene %1$d palabras; el límite es de %2$d. Importa un paquete más pequeño.</string>
     <string name="pack_error_member_too_large">%1$s supera el límite de %2$d KiB.</string>
+    <string name="clipboard_filter_size">Tamaño del recorte</string>
+    <string name="clipboard_filter_size_hint">Texto UTF-8, miniaturas y medios guardados. Los archivos compartidos cuentan en cada recorte; esto no es espacio recuperado.</string>
+    <string name="clipboard_filter_size_min">Tamaño mínimo</string>
+    <string name="clipboard_filter_size_max">Tamaño máximo</string>
+    <string name="clipboard_filter_size_any">Cualquier tamaño</string>
+    <string name="clipboard_filter_size_unlimited">Sin máximo</string>
+    <string name="clipboard_filter_size_invalid">El tamaño máximo debe ser al menos igual al mínimo.</string>
+    <string name="clipboard_delete_results">Eliminar resultados</string>
+    <string name="clipboard_results_summary">%1$d resultados · %2$s</string>
+    <string name="clipboard_results_loading">Cargando resultados…</string>
+    <string name="clipboard_delete_confirm_title">¿Eliminar %1$d resultados?</string>
+    <string name="clipboard_delete_confirm_message">¿Eliminar estos recortes coincidentes de %1$s en todas las páginas? Tamaño total de los recortes: %2$s. Las copias en otras pestañas se conservan. Se omiten las entradas nuevas o modificadas. Esta acción no se puede deshacer.</string>
+    <string name="clipboard_delete_confirm_action">Eliminar</string>
+    <string name="clipboard_delete_result">Se eliminaron %1$d de %2$d resultados confirmados.</string>
+    <string name="clipboard_delete_error">No se pudieron eliminar los resultados. Vuelve a intentarlo.</string>
 </resources>

@@ -25,6 +25,25 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
+      <!-- Size uses presets so the IME never needs to type into its own dialog fields. -->
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:text="@string/clipboard_filter_size" android:textStyle="bold"
+          android:textSize="16sp" android:textColor="?android:attr/textColorPrimary"/>
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:text="@string/clipboard_filter_size_hint" android:textSize="12sp"
+          android:textColor="?android:attr/textColorSecondary" android:layout_marginBottom="8dp"/>
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:text="@string/clipboard_filter_size_min" android:textColor="?android:attr/textColorPrimary"/>
+      <Spinner android:id="@+id/clipboard_size_min" android:layout_width="match_parent"
+          android:layout_height="48dp" android:contentDescription="@string/clipboard_filter_size_min"/>
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:text="@string/clipboard_filter_size_max" android:textColor="?android:attr/textColorPrimary"/>
+      <Spinner android:id="@+id/clipboard_size_max" android:layout_width="match_parent"
+          android:layout_height="48dp" android:contentDescription="@string/clipboard_filter_size_max"/>
+      <TextView android:id="@+id/clipboard_size_error" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:text="@string/clipboard_filter_size_invalid"
+          android:textColor="?android:attr/textColorPrimary" android:visibility="gone"/>
+
       <!-- ═══ Private-only Section (#156 — available on ALL tabs) ═══ -->
       <LinearLayout
           android:orientation="horizontal"

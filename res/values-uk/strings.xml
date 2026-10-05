@@ -2312,4 +2312,19 @@
     <string name="settings_search_in_section">у розділі «%1$s»</string>
     <string name="pack_error_dictionary_too_large">Цей словник містить %1$d слів; ліміт становить %2$d. Імпортуйте менший пакет.</string>
     <string name="pack_error_member_too_large">%1$s перевищує обмеження %2$d КіБ.</string>
+    <string name="clipboard_filter_size">Розмір фрагмента</string>
+    <string name="clipboard_filter_size_hint">Текст UTF-8, мініатюри та збережені медіафайли. Спільні файли враховуються в кожному фрагменті; це не звільнене місце.</string>
+    <string name="clipboard_filter_size_min">Мінімальний розмір</string>
+    <string name="clipboard_filter_size_max">Максимальний розмір</string>
+    <string name="clipboard_filter_size_any">Будь-який розмір</string>
+    <string name="clipboard_filter_size_unlimited">Без максимуму</string>
+    <string name="clipboard_filter_size_invalid">Максимальний розмір має бути не меншим за мінімальний.</string>
+    <string name="clipboard_delete_results">Видалити результати</string>
+    <string name="clipboard_results_summary">%1$d результатів · %2$s</string>
+    <string name="clipboard_results_loading">Завантаження результатів…</string>
+    <string name="clipboard_delete_confirm_title">Видалити %1$d результатів?</string>
+    <string name="clipboard_delete_confirm_message">Видалити ці відповідні фрагменти з %1$s на всіх сторінках? Загальний розмір фрагментів: %2$s. Копії в інших вкладках залишаться. Нові або змінені записи буде пропущено. Цю дію не можна скасувати.</string>
+    <string name="clipboard_delete_confirm_action">Видалити</string>
+    <string name="clipboard_delete_result">Видалено %1$d із %2$d підтверджених результатів.</string>
+    <string name="clipboard_delete_error">Не вдалося видалити результати. Повторіть спробу.</string>
 </resources>
