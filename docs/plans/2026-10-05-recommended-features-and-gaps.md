@@ -29,7 +29,7 @@ To extend this lead without falling into the bloat, maintenance traps, or permis
   - Heuristic detection: `contains("termux")`, `contains("anotherterm")`, `.endsWith(".terminal")`, `.contains(".terminal.")`, `.contains(".terminalemulator")`.
   - Terminal-safe clipboard paste via [`TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo())`](file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt#L683) in `KeyEventHandler.kt` and `CustomShortSwipeExecutor.kt`.
 * **The Remaining Gap**:
-  1. **Pipeline Unification**: While terminal paste uses `TerminalUtils`, [`SuggestionHandler.kt:348`](file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/cleverkeys/SuggestionHandler.kt#L348) (`isTermuxEditor`) still checks `editorInfo?.packageName == TERMUX_PACKAGE` (`"com.termux"`) directly for `Ctrl+W` kill-word deletion and trailing space suppression. Connecting `SuggestionHandler`'s deletion logic to `TerminalUtils.isTerminalApp(editorInfo)` extends full terminal input behaviors to JuiceSSH, Termius, AVF, and ConnectBot.
+  1. **Pipeline Unification — implemented in `5f07936e`**: `SuggestionHandler` now uses `TerminalUtils.isTerminalApp(editorInfo)` for correction, undo, deletion and terminal prediction guards, matching terminal paste. Trailing suggestion spaces remain controlled by the existing user preference; they are not automatically suppressed for Termux. External terminal behavior still needs device validation.
   2. **Custom Package Config**: Add a user-facing setting: **"Custom Terminal Packages"** allowing users to enter custom package names (e.g. specialized NeoVim wrappers or remote desktop apps) to trigger terminal mode.
 * **October 5 implementation**: shared detection now covers SuggestionHandler correction,
   undo, delete-word and terminal prediction guards. Real-handler focused tests pass 8/8:
@@ -219,8 +219,8 @@ CleverKeys supports Latin, Cyrillic (ru, uk, bg, mk), Greek (el), and Hebrew (he
 CleverKeys' custom Canvas rendering is one of its greatest assets. It should be enhanced, not replaced:
 
 ### 4.1 Interactive Live Preview in DIY Theme Creator
-* **Problem**: Editing a theme currently requires adjusting hex values blind, saving, and testing in an external app.
-* **Solution**: Embed a live, scaled-down Canvas preview of the keyboard directly inside `ThemeCreatorActivity`. As color pickers, borders, or alpha sliders change, invalidate the preview Canvas in real time.
+* **Verified current state**: `ThemeSettingsActivity` already has a reactive DIY `ThemePreview(colors)` showing Q/W/E/R sample keys, border/label colors and a trail indicator. The proposed `ThemeCreatorActivity` is not the current implementation. Editing is not blind.
+* **Remaining improvement**: Replace the limited sample with a scaled actual keyboard renderer so activated/locked/modifier/special key states, background and all nine editable colors can be assessed together. Preserve the existing live update and theme tokens; avoid introducing a second renderer with different semantics.
 * **Effort**: Low (1–2 days).
 
 ### 4.2 Velocity-Responsive Bezier Swipe Trail
@@ -273,3 +273,19 @@ CleverKeys' custom Canvas rendering is one of its greatest assets. It should be 
 │  • Avro-Style Indic/Bengali Phonetic Transliteration        │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### October 5 validation and next steps
+
+`5f07936e` implements shared terminal detection and custom single-apostrophe routing.
+Kotlin compilation and all 2,737 pure / 933 mock tests pass; minified release build
+passes in 5m23s. ARM64 APK signature, alignment and ZIP CRC pass; SHA-256
+`00e80393a4d130bc68cf47832ca0e106f9f7c11ac44106e62d9d8d7ce12d22f9`.
+Device installation/retest is pending: `.170` returns No route to host. The previous
+APK reproduced the custom-apostrophe spacing bug. TODO: retest the same t/South
+apostrophe mapping on the new APK, remove only that temporary mapping, clear only
+launcher test text and restore the original expanded Quick Settings over the launcher.
+
+The default CTC engine still misrecognizes wet and ad. Endpoint-only rescoring cannot
+separate wet from wt, which shares the endpoint. TODO: obtain held-out human traces
+and validate a general model/scoring correction with we/as controls and wider words;
+per-word engine switching is not a solution. No ranking change was shipped.

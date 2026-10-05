@@ -262,21 +262,24 @@ accuracy estimate. On the one usable existing human `wet` trace, geometric also 
 `build/wet-geo-probe.log` holds local output. This comparison is diagnostic evidence, not a per-word engine-switching workflow.
 A general default-engine fix needs real-finger short-word and wider corpus validation. No cross-engine score merge or CTC ranking change was made.
 
-**Current test artifact:** source `97d6c25f`, ARM64 minified APK at
+**Current test artifact:** source `5f07936e`, ARM64 minified APK at
 `build/outputs/apk/release/CleverKeys-v2.0.0-arm64-v8a.apk`; SHA-256
-`798137106bd92b39c15280119c511d123f9a39f321b953b0efd1e2eb4cafdd23`.
-Kotlin compilation and full suites: 2,737 pure / 921 mock. Minified build (5m25s),
-lint-vital, signature, alignment and ZIP CRC pass. Seeker currently has the previous
-`af742286` artifact, whose installed hash matched `a356ac06…`; #181/#184 were tested there.
+`00e80393a4d130bc68cf47832ca0e106f9f7c11ac44106e62d9d8d7ce12d22f9`.
+Kotlin compilation and full suites: 2,737 pure / 933 mock. Minified build (5m23s),
+lint-vital, signature, alignment and ZIP CRC pass. Seeker still has verified `97d6c25f`
+(SHA `798137106bd92b39c15280119c511d123f9a39f321b953b0efd1e2eb4cafdd23`);
+Compose both orders/cancel/navigation pass there. New APK installation is pending.
 
-**October 5 cleanup state:** previous popover override was restored OFF and old temporary
-mapping removed before installation. Multi-language was restored OFF after pack refusal;
-temporary ZIP removed. Bar minimize/expand, typing and hide/reset passed with a newly
-created temporary t/South mapping (`Mini`, `minimize_bar`). Another Wi-Fi drop occurred
-in its command picker before FAB replacement was confirmed. TODO: on reconnect inspect
-and delete only that mapping (leave the two user mappings), clear launcher test text
-(last known `e`), remove `/sdcard/cleverkeys-test-ui.xml`, return to Android SearchLauncher
-task 860 and restore its originally expanded Quick Settings shade. No reboot/data clear.
+**October 5 cleanup state:** popover and multi-language restored OFF; import ZIP
+removed. Temporary minimize-bar mapping removed and original two mappings confirmed.
+A new temporary t/South TEXT apostrophe mapping reproduced the old routing bug:
+ad swipe followed by that flick gives ` As '` with an intervening automatic space.
+The device disconnected before installing the fix; reconnect returns No route to host.
+TODO: retest on the new APK, delete only t/South apostrophe (preserve the two user
+mappings), clear only launcher test text (last known ` As '`), remove
+`/sdcard/cleverkeys-test-ui.xml`, return to Android SearchLauncher task 860 and restore
+its originally expanded Quick Settings shade. Last known focus is the launcher test
+field with keyboard visible. No reboot/data clear or clipboard overwrite occurred.
 
 #### Remaining hands-on release checks, ordered by consequence
 
@@ -328,7 +331,7 @@ Ordered by value ÷ cost. Sizes: S ≤ 1 day, M ≈ 2-5 days, L > 1 week.
    the in-flight #175(1) minimize command. Swipe-to-delete rows can follow (M).
 5. **#188 compose key — fixed locally (`97d6c25f`).** Device repro and fail-first
    pointer coverage confirmed the navigation tap cancels pending state. Fresh minified
-   APK is verified; install and retest sequence/cancel/arrows after reconnection.
+   APK was installed with matching hash; both sequence orders, cancel and arrows pass.
 6. **#186 + #61: bind language to layout.** M. One feature closes two issues: autocorrect and
    predictions follow the active layout. A reference implementation exists in the #186
    reporter's fork commit.
@@ -383,3 +386,8 @@ KeyEventHandler, preserving owned auto-space attachment, inline search and bookk
 Focused fail-first evidence: 3 failures → 15/15 pass. Literal multi-character macros are
 unchanged; explicit possessive suffix transactions and suffix-only undo remain TODO.
 See the reconciled roadmap §2.1 for plural/possessive/contraction distinctions.
+
+Shared terminal detection is implemented in `5f07936e`; five terminal package
+fixtures use Ctrl+W and terminal prefix replacement uses native backspaces.
+Ordinary editor deletion remains covered. Combined suites pass 2,737 / 933; the new
+APK is verified but device retest and temporary-mapping cleanup remain pending.

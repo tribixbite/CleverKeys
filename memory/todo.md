@@ -226,9 +226,9 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   alignment and ZIP CRC verified. SHA-256 `798137106bd92b39c15280119c511d123f9a39f321b953b0efd1e2eb4cafdd23`.
 - [x] Bar minimize/expand, typing after expand and full-size restoration after hide pass.
   Used a new temporary t/South mapping (Mini/minimize_bar); two user mappings preserved.
-- [ ] TODO: Seeker dropped Wi-Fi again during FAB picker before replacement confirmed.
-  Install #188 APK and verify Compose both orders, cancellation, typing and arrows.
-  Finish FAB app pass-through/RTL/landscape. Remove only temporary t/South mapping.
+- [x] Subsequent reconnection: #188 APK installed and Compose both orders/cancel/arrows
+  passed. Temporary minimize-bar t/South mapping removed; two user mappings preserved.
+- [ ] TODO: finish FAB app pass-through/RTL/landscape.
 
 - [ ] TODO: clear only launcher test text, remove scratch UI XML, return to Android
   SearchLauncher task 860 and restore the originally expanded Quick Settings shade.
@@ -257,9 +257,14 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   ranking/model change shipped. TODO: held-out human short-word/model calibration.
 - [x] Combined Kotlin compilation and full suites pass: 2,737 pure / 933 mock (4m22s),
   `build/oct5-terminal-apostrophe-tests.log`.
-- [ ] TODO: commit, fresh minified APK, actual custom-apostrophe device test, terminal
-  smoke test if safe, then restore any temporary mapping/test text,
-  original Android launcher + expanded Quick Settings and remove scratch UI XML.
+- [x] Committed input fixes `5f07936e`; minified release build passes (5m23s). Signature,
+  alignment and ZIP CRC verified; ARM64 SHA-256
+  `00e80393a4d130bc68cf47832ca0e106f9f7c11ac44106e62d9d8d7ce12d22f9`.
+- [ ] TODO: device returns No route to host. Install fresh APK; retest single-apostrophe
+  flick and terminal smoke if safe. Remove ONLY new temporary t/South TEXT apostrophe
+  mapping (original two mappings preserved), clear ONLY launcher test text (` As '`),
+  restore original Android launcher + expanded Quick Settings; remove scratch UI XML.
+  Last installed APK remains `97d6c25f`; post-fix device behavior is unverified.
 - [ ] TODO: explicit Append apostrophe-s / Append apostrophe commands need verified
   immediate-word attachment plus suffix-only undo. Contraction projection selection is a
   separate action; do not guess plural vs possessive from a final s or boost absent beam paths.
