@@ -482,7 +482,7 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   `3e8f6000-e943-4110-9746-c5bd8508e46e`. Frozen hashes in testing strategy.
 - [x] Wiki build passes 84 pages; 30 paired-guide routes resolve. Earlier 2,182-link
   check missed relative engineering-note links; final normalized audit corrects this.
-- [x] Three features implemented: optional continuous swipe, explicit verified suffix
+- [x] Three features committed in `64f05dd2`: optional continuous swipe, explicit verified suffix
   commands/undo/owned learning, and TEMPLATE expansion/assignment/persistence/XML.
   Kotlin + 2,757 pure / 974 mock; native feature focus 137/137 and affected fixtures 76/76.
   Final unfiltered EW 1,588/1,588, zero failures/errors/skips/flakes, all 1,491 prior +97 new;

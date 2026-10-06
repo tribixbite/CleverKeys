@@ -551,8 +551,8 @@ TODO: this session has not performed these Seeker checks because `.170` is absen
 
 Continuous swipe, explicit verified suffix commands and dynamic templates are
 implemented. Astra finished and returned ownership. No build/test operation remains
-running. The next feature/docs commit contains this record; prior accepted-commit
-baseline is `388f4b6b`, earlier coverage baseline `ef36222c`.
+running. Feature implementation and validation are committed in `64f05dd2`; prior
+accepted-commit baseline is `388f4b6b`, earlier coverage baseline `ef36222c`.
 
 Final evidence:
 

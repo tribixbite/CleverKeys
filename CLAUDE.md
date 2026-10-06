@@ -57,7 +57,8 @@ committed coordination over working-tree edits.
 
 ## Active handoff (October 6)
 
-The three-feature automated validation is complete; Seeker/manual checks remain. Resume from the handoff in
+The three-feature implementation is committed in `64f05dd2`; automated validation
+is complete and Seeker/manual checks remain. Resume from the handoff in
 `docs/plans/2026-10-05-recommended-features-and-gaps.md` and `memory/todo.md` before
 editing or launching Gradle. It records exact tested artifacts/results; no push/release is authorized.
 
