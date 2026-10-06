@@ -24,6 +24,7 @@ and personal device testing before 2.0; tagging/publishing is not authorized.
 | 4.1 Theme preview | Live sample exists; actual keyboard/state preview remains. |
 | 4.2 Swipe trail | Proposed spline/velocity behavior remains; benchmark before claiming frame-rate or overhead. |
 | Clipboard follow-up | Size filtering + confirmed all-page Delete results and #168 system-clear command implemented locally. Assigned-command disposable-clip device check remains. |
+| Extra Keys follow-up | Autofill visibility, landscape scrolling and rotation-preserved search implemented and device-tested. |
 
 Full evidence and pending device checks: [`memory/todo.md`](../../memory/todo.md).
 
@@ -67,9 +68,19 @@ To extend this lead without falling into the bloat, maintenance traps, or permis
   draft, Cancel and clear all pass. Autofill identifier/title search now exposes the
   System row without changing enabled keys (19/108). Test package list, orientation,
   original IME and launcher/notification-shade focus restored; no clipboard changes.
-  **TODO:** Extra Keys still loses its search draft on rotation and its fixed header
-  consumes the landscape viewport; Seeker screenshot confirms only a category heading
-  fits. Make header and rows one scrollable list and preserve the query.
+* **October 6 Extra Keys follow-up — implemented**: a single keyed lazy list lets
+  search/info/reset scroll away, making key rows reachable in landscape. Saveable
+  search survives rotation/recreation. Seven Android UI tests pass
+  (`419bc86b-2a9c-45e1-a5a9-3e2f29158f65`); the behavioral regression fails on the
+  previous APK because recreation empties the query
+  (`4e1d72bf-0522-4147-8be9-96cbd098a262`). Seeker minified-build landscape scrolling,
+  portrait return, retained query and unchanged 19/108 preference count pass.
+  Final installed APK SHA-256:
+  `ffca616e836b496358638155df9017c3c2b6e7d69246609e715423d6ce743f75`.
+  Original IME, 0/0 rotation and launcher/notification-shade focus restored; own dump
+  removed, no clipboard changes. Canonical Extra Keys guide/spec now describe the
+  actual per-key preferences and preferred-slot placement, replacing fictional
+  bottom-row enums, position selectors and size caps.
 * **Effort**: shared predicate is small; custom package UI requires preference/search/backup
   integration and explicit validation. No claim that every SSH editor was device-tested.
 

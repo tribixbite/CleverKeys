@@ -239,3 +239,6 @@ backup validation. Store a canonical String, publish an immutable Config snapsho
 and pass it to each shared terminal-routing caller. Save/cancel/clear/rotation,
 exact-match removal, whole-list rejection and non-string backup types need tests.
 The Extra Keys catalog-completeness test guards against uncategorized entries.
+Extra Keys headers and rows use one keyed lazy list: fixed headers can consume the
+landscape viewport. Preserve the query with rememberSaveable; test row reachability
+and recreation through actual UI behavior, without requiring a specific header layout.

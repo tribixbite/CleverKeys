@@ -52,6 +52,10 @@ The remark plugin rewrites internal links at build time:
 
 Specs rewrite to a trailing-slash route (Astro convention), NOT `.html`. The legacy `.html` URLs continue to resolve via the no-clobber `cp -rn` step in `.github/workflows/deploy-web-demo.yml`.
 
+Frontmatter is not processed by this plugin: `SpecsLayout.astro` renders `user_guide`
+directly as `href`. Use a public `/wiki/<category>/<page>/` route there, and retain
+relative Markdown links in the body for repository navigation (verified 2026-10-06).
+
 ## Directory Structure
 
 ```
@@ -159,7 +163,7 @@ See [Feature Name Technical Specification](../specs/{category}/{page-name}-spec.
 ---
 title: Feature Name — Technical Specification
 description: One-line summary for the /specs/ landing card
-user_guide: ../../{category}/{page-name}.md   # Back-link to paired wiki page
+user_guide: /wiki/{category}/{page-name}/    # Rendered guide route; frontmatter is not rewritten
 status: implemented                            # enum: implemented | planning | planned | in-progress
 version: v1.4.0                                # current app version (or version feature was introduced)
 ---

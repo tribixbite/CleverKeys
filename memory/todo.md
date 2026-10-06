@@ -430,5 +430,12 @@ Do not commit, tag, push, publish, or open external issues without explicit user
 - [x] Autofill extra key now categorized; shared catalog partition coverage and UI
   visibility tests pass. Regression fails on previous APK; Seeker title/identifier
   search passes, enabled count unchanged (19/108).
-- [ ] TODO: Extra Keys fixed header consumes landscape viewport and rotation loses
-  the search draft (confirmed on Seeker). Use one scrollable list and saveable query.
+- [x] Extra Keys landscape/rotation follow-up: one keyed lazy list replaces fixed
+  headers; saveable query survives recreation. Seven UI tests pass; prior APK fails
+  query-restoration regression. Seeker scroll reaches Autofill in landscape, portrait
+  return retains query, enabled count stays 19/108. Final installed minified APK SHA
+  `ffca616e836b496358638155df9017c3c2b6e7d69246609e715423d6ce743f75`.
+  Original IME/0/0 rotation/launcher + notification shade restored; own dump removed.
+  Guide/spec corrected to actual per-key Boolean storage and preferred-slot placement;
+  docs build passes all 84 pages and paired guide/spec links resolve. Final Kotlin
+  compile passes. UI logs: `build/oct6-extra-keys-viewport-{ui,red}-v2.log`.

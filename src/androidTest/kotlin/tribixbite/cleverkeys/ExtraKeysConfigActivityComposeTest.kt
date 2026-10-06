@@ -1,21 +1,28 @@
 package tribixbite.cleverkeys
 
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import tribixbite.cleverkeys.prefs.ExtraKeysPreference
 
 /**
  * Compose UI tests for ExtraKeysConfigActivity.
@@ -73,8 +80,8 @@ class ExtraKeysConfigActivityComposeTest {
 
     @Test
     fun resetToDefaults_buttonReachable() {
-        // ExtraKeysConfig has no verticalScroll wrapper — assertExists, not scrollTo.
-        composeTestRule.onNodeWithText("Reset to Defaults", substring = true).assertExists()
+        composeTestRule.onNodeWithText("Reset to Defaults", substring = true)
+            .performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -85,5 +92,38 @@ class ExtraKeysConfigActivityComposeTest {
             .performScrollTo().assertIsDisplayed()
         composeTestRule.onNode(hasText("Autofill") and !hasSetTextAction()).assertIsDisplayed()
         composeTestRule.onAllNodes(isToggleable()).assertCountEquals(1)
+    }
+
+    @Test
+    fun keysRemainReachableInLandscapeAndSearchSurvivesRecreation() {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(composeTestRule.activity)
+        val key = ExtraKeysPreference.prefKeyOfKeyName("autofill")
+        val initiallyEnabled = prefs.getBoolean(key, ExtraKeysPreference.defaultChecked("autofill"))
+        composeTestRule.activityRule.scenario.onActivity {
+            it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
+        composeTestRule.waitUntil(10_000) {
+            composeTestRule.activity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        }
+        val search = composeTestRule.onNode(hasSetTextAction())
+        search.performTextInput("autofill")
+        composeTestRule.onNode(hasScrollToIndexAction())
+            .performScrollToNode(hasText("autofill") and !hasSetTextAction())
+        composeTestRule.onNode(hasText("autofill") and !hasSetTextAction(), useUnmergedTree = true)
+            .performScrollTo().assertIsDisplayed()
+        composeTestRule.onNode(hasText("Autofill") and !hasSetTextAction()).assertIsDisplayed()
+
+        composeTestRule.activityRule.scenario.recreate()
+        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToIndex(0)
+        composeTestRule.onNode(hasSetTextAction()).assertTextEquals("autofill")
+        composeTestRule.onNode(hasScrollToIndexAction())
+            .performScrollToNode(hasText("autofill") and !hasSetTextAction())
+        composeTestRule.onNode(hasText("autofill") and !hasSetTextAction(), useUnmergedTree = true)
+            .performScrollTo().assertIsDisplayed()
+        composeTestRule.onNode(hasText("Autofill") and !hasSetTextAction()).assertIsDisplayed()
+        // Inspect preferences rather than all lazy semantics: rows outside the viewport
+        // are deliberately detached, and this test must not toggle a user's extra key.
+        org.junit.Assert.assertEquals(initiallyEnabled,
+            prefs.getBoolean(key, ExtraKeysPreference.defaultChecked("autofill")))
     }
 }

@@ -1,6 +1,6 @@
 ---
 title: Extra Keys
-description: Add custom keys to the bottom row
+description: Enable additional keyboard actions, modifiers and characters
 category: Customization
 difficulty: intermediate
 related_spec: ../specs/customization/extra-keys-spec.md
@@ -8,136 +8,47 @@ related_spec: ../specs/customization/extra-keys-spec.md
 
 # Extra Keys
 
-Add custom keys to the bottom row of your keyboard for quick access to frequently used actions, characters, or modifiers.
+Enable additional keyboard actions, modifiers and characters. Their positions follow your layout's available slots and each key's preferred position; they are not restricted to the bottom row.
 
-## Quick Summary
+## How to Configure
 
-| What | Description |
-|------|-------------|
-| **Purpose** | Add custom keys to bottom row |
-| **Access** | Settings > Activities > Extra Keys |
-| **Position** | Left or right of spacebar |
+1. Open **CleverKeys Settings**.
+2. Expand **Activities** and tap **Configure Extra Keys**. The same screen is available from **Input Behavior**.
+3. Search by a key's displayed title or identifier, or scroll through the categories.
+4. Toggle a key's checkbox to enable or disable it. Changes save immediately.
+5. Return to a text field to check its placement on your selected layout.
 
-## What Are Extra Keys?
+Search, the enabled-key summary, **Reset to Defaults** and key rows scroll together, so rows remain reachable in landscape and on shorter screens. Search text survives rotation. **Reset to Defaults** restores every predefined key to its default enabled state.
 
-Extra keys appear on the bottom row alongside the spacebar. They provide quick access to:
+## Available Categories
 
-- Modifier keys (Ctrl, Alt, Meta)
-- Action keys (Tab, Escape)
-- Custom characters
-- Navigation keys
+| Category | Examples |
+|----------|----------|
+| Layout Switching | Next Layout, Previous Layout, Greek/Math |
+| System | Alt, Meta, Compose, voice typing, clipboard panel, Autofill |
+| Navigation | Tab, Escape, Page Up/Down, Home, End |
+| Editing | Copy, private copy, paste, cut, selection, undo/redo, delete word, Clear system clipboard |
+| Formatting | Superscript, subscript |
+| Accents | Accent transformations |
+| Symbols | Currency and special symbols |
+| Special Characters | Joiners and nonbreaking spaces |
+| Combining Characters | Combining marks |
+| Function Keys | Function-key placeholders, Menu, Scroll Lock |
 
-## How to Add Extra Keys
+The screen currently lists 108 predefined keys. The enabled count describes saved choices; placement depends on the layout and available slots. Next/Previous Layout keys are omitted from the keyboard when only one layout is enabled.
 
-### Step 1: Open Settings
+**Autofill** appears under System. **Clear system clipboard** appears under Editing and is disabled by default; it clears Android's current clip rather than deleting CleverKeys' saved history.
 
-1. Open CleverKeys Settings (gear icon)
-2. Navigate to **Activities** section
-3. Tap **Extra Keys**
+## Placement and Customization
 
-### Step 2: Select Position
+The screen enables predefined keys; it has no left/right position selector. Keys already present on a layout are not added again. Missing keys use preferred neighboring or row/column/direction positions, then try an available slot elsewhere.
 
-Choose where to add keys:
-
-- **Left of spacebar**: Keys appear on the left
-- **Right of spacebar**: Keys appear on the right
-
-### Step 3: Choose Keys
-
-Available extra keys:
-
-| Key | Description |
-|-----|-------------|
-| **Ctrl** | Control modifier |
-| **Alt** | Alt modifier |
-| **Meta** | Meta/Windows key |
-| **Tab** | Tab key |
-| **Escape** | Escape key |
-| **Arrows** | Navigation arrows |
-| **Fn** | Function key |
-
-### Step 4: Review Selection
-
-Enabled keys appear on the bottom row. The order follows a built-in layout.
-
-## Use Cases
-
-### Terminal/SSH Users
-
-Add Ctrl, Alt, Tab, and Escape for terminal commands:
-
-```
-[Ctrl] [Alt] [Tab] [Space] [Esc] [Arrows]
-```
-
-### Developers
-
-Add keys for code editing shortcuts:
-
-```
-[Tab] [Ctrl] [Space] [Fn]
-```
-
-### Power Users
-
-Full modifier access:
-
-```
-[Esc] [Ctrl] [Alt] [Meta] [Space] [Tab]
-```
-
-## Tips and Tricks
-
-- **Fewer is better**: Too many extra keys shrink the spacebar
-- **Modifiers first**: Put modifiers you hold (Ctrl, Alt) on edges
-- **Action keys center**: Put tap keys (Tab, Esc) near spacebar
-- **Test reach**: Ensure you can reach keys comfortably
-
-> [!TIP]
-> Start with just Ctrl and Tab. Add more only if you need them.
-
-## Extra Keys vs Subkeys
-
-| Feature | Extra Keys | Subkeys |
-|---------|------------|---------|
-| **Access** | Direct tap | Swipe gesture |
-| **Position** | Bottom row | On any key |
-| **Visibility** | Always visible | Hidden until swipe |
-| **Best for** | Modifiers | Characters |
-
-## Keyboard Layout Impact
-
-Extra keys affect bottom row layout:
-
-| Extra Keys | Spacebar Width |
-|------------|----------------|
-| **0** | Maximum |
-| **1-2** | Slightly reduced |
-| **3-4** | Moderately reduced |
-| **5+** | Significantly reduced |
-
-## Settings
-
-| Setting | Location | Description |
-|---------|----------|-------------|
-| **Extra Keys** | Activities section | Toggle keys on/off |
-
-## Common Questions
-
-### Q: Can I add custom characters as extra keys?
-A: Currently, extra keys are limited to predefined actions. For custom characters, use subkey customization.
-
-### Q: Why is my spacebar so small?
-A: Too many extra keys. Remove some to restore spacebar size.
-
-### Q: Do extra keys have subkeys?
-A: Most extra keys have subkeys. Short swipe in a direction to access them.
+Use [Per-Key Actions](per-key-actions.md) for custom text, commands and direction assignments. Test the keyboard after changing extra keys because available slots vary across layouts.
 
 ## Related Features
 
-- [Per-Key Actions](per-key-actions.md) - Customize subkeys
-- [Short Swipes](../gestures/short-swipes.md) - Access extra key subkeys
-- [Profiles](../troubleshooting/backup-restore.md) - Save extra key configuration
+- [Short Swipes](../gestures/short-swipes.md) - Use keys' directional actions
+- [Profiles](../troubleshooting/backup-restore.md) - Save keyboard configuration
 
 ## Technical Details
 

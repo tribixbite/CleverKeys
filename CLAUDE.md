@@ -126,6 +126,8 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
   backup imports and settings Save share the parser, with no installed-app enumeration.
 - ADB Compose dumps can mark a disabled button’s TextView `enabled=true`; check its
   clickable parent node for the actual button state (Seeker, 2026-10-06).
+- Extra Keys search/info/reset must share the rows' lazy viewport; fixed headers
+  starved landscape rows on Seeker. Keep search saveable across recreation.
 - Adding an extra key requires both `ExtraKeysPreference.EXTRA_KEYS` and the
   shared `ExtraKeysPreference.categorizedKeys` catalog; an unclassified key is counted and
   searchable in the data but silently absent from the UI (caught on Seeker, 2026-10-06).

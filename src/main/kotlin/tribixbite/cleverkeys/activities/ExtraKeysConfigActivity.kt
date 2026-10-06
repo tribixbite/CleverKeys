@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -67,7 +68,7 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
     }
 
     // Search query
-    var searchQuery by remember { mutableStateOf("") }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
 
     // Filter keys by search
     val filteredKeys = remember(searchQuery) {
@@ -109,103 +110,103 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
             )
         }
     ) { paddingValues ->
-        Column(
+        // Headers share the rows’ viewport: fixed controls must not crowd out keys
+        // in landscape, split-screen or large-font configurations.
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Search bar
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                placeholder = { Text(stringResource(R.string.extra_keys_search_hint)) },
-                leadingIcon = {
-                    Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.common_search))
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.common_clear))
+            item(key = "header:search") {
+                // Search bar
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.extra_keys_search_hint)) },
+                    leadingIcon = {
+                        Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.common_search))
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.common_clear))
+                            }
                         }
-                    }
-                },
-                singleLine = true
-            )
-
-            // Info card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    },
+                    singleLine = true
                 )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    val enabledCount = enabledKeys.values.count { it }
-                    Text(
-                        text = stringResource(R.string.extra_keys_enabled_count, enabledCount, ExtraKeysPreference.extraKeys.size),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+            }
+            item(key = "header:info") {
+                // Info card
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
-                    Text(
-                        text = stringResource(R.string.extra_keys_info),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        val enabledCount = enabledKeys.values.count { it }
+                        Text(
+                            text = stringResource(R.string.extra_keys_enabled_count, enabledCount, ExtraKeysPreference.extraKeys.size),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = stringResource(R.string.extra_keys_info),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+            item(key = "header:reset") {
+                // Reset to defaults button
+                OutlinedButton(
+                    onClick = {
+                        ExtraKeysPreference.extraKeys.forEach { keyName ->
+                            enabledKeys[keyName] = ExtraKeysPreference.defaultChecked(keyName)
+                            val prefKey = ExtraKeysPreference.prefKeyOfKeyName(keyName)
+                            prefs.edit().putBoolean(prefKey, enabledKeys[keyName] ?: false).apply()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.extra_keys_reset))
                 }
             }
 
-            // Reset to defaults button
-            OutlinedButton(
-                onClick = {
-                    ExtraKeysPreference.extraKeys.forEach { keyName ->
-                        enabledKeys[keyName] = ExtraKeysPreference.defaultChecked(keyName)
-                        val prefKey = ExtraKeysPreference.prefKeyOfKeyName(keyName)
-                        prefs.edit().putBoolean(prefKey, enabledKeys[keyName] ?: false).apply()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.extra_keys_reset))
-            }
+            categorizedKeys.forEach { (categoryRes, keys) ->
+                item(key = "category:$categoryRes") {
+                    Text(
+                        text = stringResource(categoryRes),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
 
-            // Categorized keys list
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                categorizedKeys.forEach { (categoryRes, keys) ->
-                    item(key = "category:$categoryRes") {
-                        Text(
-                            text = stringResource(categoryRes),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-
-                    items(keys, key = { it }) { keyName ->
-                        ExtraKeyItem(
-                            keyName = keyName,
-                            isEnabled = enabledKeys[keyName] ?: false,
-                            onToggle = { enabled ->
-                                enabledKeys[keyName] = enabled
-                                val prefKey = ExtraKeysPreference.prefKeyOfKeyName(keyName)
-                                prefs.edit().putBoolean(prefKey, enabled).apply()
-                            }
-                        )
-                    }
+                items(keys, key = { it }) { keyName ->
+                    ExtraKeyItem(
+                        keyName = keyName,
+                        isEnabled = enabledKeys[keyName] ?: false,
+                        onToggle = { enabled ->
+                            enabledKeys[keyName] = enabled
+                            val prefKey = ExtraKeysPreference.prefKeyOfKeyName(keyName)
+                            prefs.edit().putBoolean(prefKey, enabled).apply()
+                        }
+                    )
                 }
             }
         }

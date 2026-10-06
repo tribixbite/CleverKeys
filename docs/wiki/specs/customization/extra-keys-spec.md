@@ -1,188 +1,63 @@
 ---
 title: Extra Keys - Technical Specification
-user_guide: ../../customization/extra-keys.md
+description: Predefined key catalog, preference storage, responsive configuration and layout placement
+user_guide: /wiki/customization/extra-keys/
 status: implemented
-version: v1.2.7
+version: v2.0.0
 ---
 
 # Extra Keys Technical Specification
 
 ## Overview
 
-Extra keys are additional keys placed on the bottom row alongside the spacebar, providing quick access to modifiers (Ctrl, Alt), navigation keys (Tab, Escape), and function keys.
+Extra Keys configuration enables predefined actions and characters using per-key Boolean preferences. Layout placement uses `KeyboardData.PreferredPos`; it is not a separate left/right bottom-row list or a fixed spacebar-width calculation.
 
 ## Key Components
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| ExtraKeysManager | `ExtraKeysManager.kt` | Key definitions and ordering |
-| BottomRowLayout | `KeyboardView.kt:800-900` | Layout calculation |
-| Config | `Config.kt` | User preferences |
-| KeyValue | `KeyValue.kt` | Key action definitions |
+| Component | Source | Responsibility |
+|-----------|--------|----------------|
+| Catalog | `src/main/kotlin/tribixbite/cleverkeys/prefs/ExtraKeysPreference.kt:61` | 108 predefined key identifiers |
+| Categories | `src/main/kotlin/tribixbite/cleverkeys/prefs/ExtraKeysPreference.kt:177` | Shared category partition consumed by the UI and completeness tests |
+| Configuration screen | `src/main/kotlin/tribixbite/cleverkeys/activities/ExtraKeysConfigActivity.kt:55` | Search, saved checkbox state, defaults and category rows |
+| Row | `src/main/kotlin/tribixbite/cleverkeys/activities/ExtraKeysConfigActivity.kt:217` | Resource-derived label, optional description, identifier and checkbox |
+| Runtime preferences | `src/main/kotlin/tribixbite/cleverkeys/Config.kt:927` | Enabled predefined and custom extra-key maps |
+| Placement | `src/main/kotlin/tribixbite/cleverkeys/KeyboardData.kt:48` | Preferred-position insertion and fallback |
 
-## Data Model
+## Preference Storage
 
-### Extra Key Definition
+`ExtraKeysPreference.prefKeyOfKeyName` (`ExtraKeysPreference.kt:486`) returns `extra_key_<identifier>`. Each predefined key stores a Boolean in `DirectBootAwarePreferences`, shared with the keyboard service. Missing values use `defaultChecked` (`ExtraKeysPreference.kt:193`), rather than one universal default.
 
-```kotlin
-// ExtraKeysManager.kt
-enum class ExtraKey(
-    val displayLabel: String,
-    val keyValue: KeyValue,
-    val defaultPosition: Position
-) {
-    CTRL("Ctrl", KeyValue.Modifier(Modifier.CTRL), Position.LEFT),
-    ALT("Alt", KeyValue.Modifier(Modifier.ALT), Position.LEFT),
-    META("Meta", KeyValue.Modifier(Modifier.META), Position.LEFT),
-    TAB("Tab", KeyValue.Event(Event.TAB), Position.RIGHT),
-    ESCAPE("Esc", KeyValue.Event(Event.ESCAPE), Position.RIGHT),
-    FN("Fn", KeyValue.Modifier(Modifier.FN), Position.RIGHT),
-    ARROWS("←→", KeyValue.Special(Special.ARROWS), Position.RIGHT)
-}
+Toggling a checkbox updates the screen's state map and applies the corresponding preference immediately. Reset writes the catalog's default Boolean for every key. Search and orientation changes do not alter enabled preferences.
 
-enum class Position { LEFT, RIGHT }
-```
+`getExtraKeys` (`ExtraKeysPreference.kt:475`) converts enabled names into a map of `KeyValue` to `KeyboardData.PreferredPos`. `Config.extra_keys_param` holds this predefined map; `extra_keys_custom` is a separate custom-key map.
 
-### Configuration Storage
+## Search and Viewport Behavior
 
-```kotlin
-// Config.kt
-// Stored as comma-separated list
-// Example: "CTRL,ALT|TAB,ESCAPE"
-// Format: left_keys|right_keys
+The query uses `rememberSaveable` (`ExtraKeysConfigActivity.kt:71`). Filtering matches identifiers, localized titles and optional localized descriptions, ignoring case. The activity renders `ExtraKeysPreference.categorizedKeys`; every advertised identifier must appear in exactly one category. Autofill belongs to System; Clear system clipboard belongs to Editing.
 
-val extra_keys_left: String = "CTRL,ALT"
-val extra_keys_right: String = "TAB"
-```
+A single `LazyColumn` (`ExtraKeysConfigActivity.kt:115`) contains keyed search, summary and reset items followed by category and key items. Headers can scroll away to leave space for rows in landscape, split-screen or large-font configurations. The app bar remains outside the list. Query restoration and list scrolling do not toggle preferences.
 
-## Layout Calculation
+Category items use `category:<resource ID>` keys; key items use their identifiers (`ExtraKeysConfigActivity.kt:200`). Row labels derive from the current key/resources rather than unkeyed remembered labels, preventing stale titles after filtering or recycling.
 
-### Space Distribution
+## Layout Placement
 
-```kotlin
-// KeyboardView.kt:~850
-private fun calculateBottomRowLayout(): BottomRowLayout {
-    val leftKeys = config.extra_keys_left.split(",").filter { it.isNotEmpty() }
-    val rightKeys = config.extra_keys_right.split(",").filter { it.isNotEmpty() }
+`LayoutModifier.kt:45` combines predefined/custom extras with the mandatory configuration key. It suppresses Next/Previous Layout extras with one enabled layout, computes locale extras when the layout permits them, and removes keys already present before calling `KeyboardData.addExtraKeys` (`LayoutModifier.kt:108`).
 
-    val totalExtraKeys = leftKeys.size + rightKeys.size
+`KeyboardData.PreferredPos` (`KeyboardData.kt:416`) specifies an optional neighboring key and ordered row/column/direction candidates. A value of `-1` leaves a coordinate unspecified. `addExtraKeys` tries each preferred position; unplaced keys then try `PreferredPos.ANYWHERE`. Placement is limited by available slots, so an enabled preference is not a guarantee of a new visible key on every layout.
 
-    // Reserve minimum spacebar width
-    val minSpacebarWidth = keyWidth * 3
-    val availableWidth = rowWidth - minSpacebarWidth
+There is no `ExtraKeysManager` enum, `extra_keys_left`/`extra_keys_right` storage, six-key hard cap or percentage-based spacebar sizing in this implementation. Extra-key actions use the existing `KeyValue` input pipeline and layout/subkey behavior.
 
-    // Each extra key gets equal width
-    val extraKeyWidth = if (totalExtraKeys > 0) {
-        min(keyWidth, availableWidth / totalExtraKeys)
-    } else 0f
+## Test Coverage
 
-    val usedByExtras = extraKeyWidth * totalExtraKeys
-    val spacebarWidth = rowWidth - usedByExtras
-
-    return BottomRowLayout(
-        leftKeys = leftKeys.map { ExtraKey.valueOf(it) },
-        rightKeys = rightKeys.map { ExtraKey.valueOf(it) },
-        extraKeyWidth = extraKeyWidth,
-        spacebarWidth = spacebarWidth
-    )
-}
-```
-
-### Visual Layout
-
-```
-┌──────────────────────────────────────────────┐
-│ [Ctrl][Alt]   [     Spacebar     ]   [Tab]   │
-│   ↑     ↑              ↑               ↑     │
-│  left  left         center          right    │
-└──────────────────────────────────────────────┘
-```
-
-## Modifier Key Behavior
-
-```kotlin
-// Pointers.kt:~700
-private fun handleModifierKey(key: ExtraKey, isDown: Boolean) {
-    when (key) {
-        ExtraKey.CTRL -> {
-            if (isDown) {
-                activeModifiers = activeModifiers or Modifier.CTRL
-                // Visual feedback - key stays highlighted
-                invalidateKey(key)
-            } else {
-                // Modifier released on next key press
-            }
-        }
-        // Similar for ALT, META, FN
-    }
-}
-
-// Modifiers are "sticky" until next key press
-private fun handleKeyPress(keyValue: KeyValue) {
-    val modifiedValue = applyModifiers(keyValue, activeModifiers)
-    sendKeyValue(modifiedValue)
-
-    // Clear modifiers after use
-    activeModifiers = 0
-    invalidateModifierKeys()
-}
-```
-
-## Extra Key Subkeys
-
-Extra keys also support subkeys via short swipe:
-
-```kotlin
-// ExtraKeysManager.kt
-val extraKeySubkeys = mapOf(
-    ExtraKey.CTRL to mapOf(
-        Direction.N to KeyValue.Event(Event.SELECT_ALL),  // Ctrl+A
-        Direction.E to KeyValue.Event(Event.COPY),        // Ctrl+C
-        Direction.W to KeyValue.Event(Event.CUT),         // Ctrl+X
-        Direction.S to KeyValue.Event(Event.PASTE)        // Ctrl+V
-    ),
-    ExtraKey.TAB to mapOf(
-        Direction.W to KeyValue.Event(Event.SHIFT_TAB)    // Shift+Tab
-    )
-)
-```
-
-## Impact on Spacebar
-
-| Extra Keys | Spacebar Width |
-|------------|----------------|
-| 0 | 100% (maximum) |
-| 1 | ~85% |
-| 2 | ~70% |
-| 3 | ~60% |
-| 4 | ~50% |
-| 5+ | ~40% (minimum) |
-
-## Arrow Keys Mode
-
-```kotlin
-// ExtraKeysManager.kt
-// When ARROWS extra key is added, it creates a 4-key group
-private fun expandArrowsKey(): List<ExtraKey> {
-    return listOf(
-        ExtraKey.ARROW_LEFT,
-        ExtraKey.ARROW_UP,
-        ExtraKey.ARROW_DOWN,
-        ExtraKey.ARROW_RIGHT
-    )
-}
-```
-
-## Configuration
-
-| Setting | Key | Default | Range |
-|---------|-----|---------|-------|
-| **Left Extra Keys** | `extra_keys_left` | "" | Any combination |
-| **Right Extra Keys** | `extra_keys_right` | "" | Any combination |
-| **Max Extra Keys** | - | 6 | Hard limit |
+| Suite | Source | Protected behavior |
+|-------|--------|--------------------|
+| Host | `src/test/kotlin/tribixbite/cleverkeys/prefs/AndroidXPreferenceMigrationTest.kt` | Catalog completeness and Autofill classification |
+| Compose | `src/androidTest/kotlin/tribixbite/cleverkeys/ExtraKeysConfigActivityComposeTest.kt` | Search, labels, reset reachability, opt-in system-clear row, Autofill visibility, landscape row access and query recreation |
+| Seeker | Recorded in `memory/todo.md` | Minified-build identifier/title search, unchanged enabled count, landscape scrolling and rotation retention |
 
 ## Related Specifications
 
-- [Per-Key Actions](per-key-actions-spec.md) - Subkey customization
-- [Layout System](../../../specs/layout-system.md) - Keyboard layout
-- [Gesture System](../../../specs/gesture-system.md) - Short swipes on extra keys
+- [Extra Keys Guide](../../customization/extra-keys.md) - Configure predefined keys
+- [Per-Key Actions](per-key-actions-spec.md) - Custom direction assignments
+- [Layout System](../../../specs/layout-system.md) - Keyboard layout transformations
+- [Gesture System](../../../specs/gesture-system.md) - Gesture handling
