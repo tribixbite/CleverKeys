@@ -4,7 +4,7 @@ Updated: 2026-10-06. Counts below describe executed tests, not source annotation
 estimated coverage percentages. Automated passing results do not certify human swipe
 accuracy, all editor implementations, device fonts, or translated copy fluency.
 
-## Current verification
+## Expanded-coverage baseline (`ef36222c`)
 
 | Suite | Result | Evidence |
 |-------|--------|----------|
@@ -31,6 +31,26 @@ then passed 9/9 with no errors/skips (`7beda687-b5c6-4792-b352-a16a9e6b3730`) be
 the complete rerun. Earlier test-APK SHA was
 `fede978725fe39aaaace59eeff411d235161f22e240905c930a3748c24b8f53e`;
 that red run is retained as diagnosis evidence, not the final verdict.
+
+## Accepted-commit follow-through
+
+After the full baseline, six host regressions and two native rejection/exception
+wrappers were added. The shared engine now requires editor acknowledgement before
+new-word ownership/learning and returns the actual inserted spelling. The swipe caller
+removes prediction fallbacks after failure. Legacy pre-commit replacement deletion
+remains a separate verified-receipt gap.
+
+- Full Kotlin compilation, **2,741 pure + 959 mock** pass; debug APKs build
+  (`build/oct6-accepted-commit-full-tests-build-v2.log`, 6m56s).
+- Focused fail-first: 22/27; fixed including capitalization control: 28/28.
+- Native **33 distinct punctuation tests** pass, 0 failures/errors/skips:
+  [results](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/3e8f6000-e943-4110-9746-c5bd8508e46e).
+- Frozen app SHA: `ffbfce11f79cf2b9e362331370c764b3bdc9cf65d370a9f7387c8245c49bc4f6`.
+- Frozen test SHA: `fff71ee151e8d9e4ffed6e037e32763666b5012c3137a1157fc5fffba0087dd9`.
+
+The 1,491-test full run above predates this follow-through. New native cases will be
+included in the final full run after the three named features; do not merge different
+APK results into an invented full-suite verdict.
 
 ## October 6 missed-gap coverage
 

@@ -1,6 +1,6 @@
 ---
 title: Multi-Language Input - Technical Specification
-user_guide: ../../layouts/multi-language.md
+user_guide: /wiki/layouts/multi-language/
 status: implemented
 version: v1.2.7
 ---

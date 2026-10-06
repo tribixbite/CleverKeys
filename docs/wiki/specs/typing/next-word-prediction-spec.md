@@ -1,7 +1,7 @@
 ---
 title: Next-Word Prediction — Technical Specification
 description: Two-tier next-word generation (shipped static model + learned n-grams), tier gating, provenance, and the four suggestion-bar call-sites
-user_guide: ../../typing/next-word-prediction.md
+user_guide: /wiki/typing/next-word-prediction/
 status: implemented
 version: v1.5.x
 ---

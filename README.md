@@ -44,7 +44,7 @@
 
 # 🗺️ Project Overview
 
-CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, 208 customizable short-swipe actions, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
+CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, 225 customizable short-swipe actions, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
 
 </div>
 
@@ -165,7 +165,7 @@ Build your own themes on-the-fly with full control over:
 
 ### 🧠 Swipe Typing & Autocorrect
 - **CleverKeys-trained CTC model** (2.9MB) trained from scratch on MIT-licensed real swipe data
-- **Two selectable swipe engines** — CTC (default): the 7 bundled Latin languages on any full a–z Latin layout via a 2.9 MB CleverKeys-trained model scoring 89.3% top-1 on a 2,400-swipe held-out English benchmark, plus 6 non-Latin languages (ru, uk, bg, mk, el, he) on their own per-script encoders, plus any imported Latin pack that is a–z-typeable; and geometric (all layouts, all languages, no ML model), which serves every language CTC does not — including Turkish, whose dotless `ı` has no a–z spelling
+- **Two selectable swipe engines** — CTC (default): the 7 bundled Latin languages on any full a–z Latin layout via a 2.9 MB CleverKeys-trained model scoring 89.3% top-1 on a 2,400-swipe held-out English benchmark, plus 6 non-Latin languages (ru, uk, bg, mk, el, he) on their own per-script encoders, plus any imported Latin pack that is a–z-typeable; and geometric (layout-agnostic, no ML model), used when CTC prerequisites are unavailable — including Turkish, whose dotless `ı` has no a–z spelling
 - **Sub-200ms predictions** with XNNPACK hardware acceleration
 - **Autocorrect with contraction support** — "dont" to "don't", "im" to "I'm"
 - **Full inference control** — beam width, length normalization, pruning, early stopping
@@ -255,10 +255,10 @@ CleverKeys supports swipe typing in **19 languages** with intelligent multi-lang
 > quarter of the vocabulary — and a sixth of its thousand most frequent words —
 > would be unswipeable under CTC. Turkish is served by the **geometric** engine
 > instead, which decodes over the board's real keys. Geometric remains the
-> automatic fallback for every language and layout CTC does not serve, so swipe
-> typing works everywhere — the **Prediction Engine** setting only chooses
-> whether CTC is used at all. Tap typing + autocorrect works across every
-> supported layout and language regardless of mode.
+> automatic fallback when CTC prerequisites are unavailable. Successful decoding
+> still requires a usable dictionary, supported letter geometry and a valid trace.
+> The **Prediction Engine** setting chooses whether CTC is used. Tap typing
+> remains available independently of swipe support.
 >
 > **Evidence tiers, stated honestly.** Only English, French, German and Spanish
 > have their own measured accuracy bar. Italian, Portuguese and Swedish are
@@ -479,8 +479,9 @@ CleverKeys decodes swipes on-device with a CTC model:
 | Runtime | ONNX Runtime 1.20.0 with XNNPACK acceleration |
 | Total Size | 2.91 MB (encoder only — decoding is on the CPU, in Kotlin) |
 
-A layout-agnostic geometric (SHARK2-style) decoder with no ML model at all serves every
-(layout, language) pair CTC does not.
+A layout-agnostic geometric (SHARK2-style) decoder requires no ML model and is used
+when CTC prerequisites are unavailable. Dictionary and letter-geometry requirements
+still apply; Bangla tap layouts do not yet establish Bangla swipe support.
 
 Training code, model architecture, and datasets: **[CleverKeys-ML](https://github.com/tribixbite/CleverKeys-ML)**
 

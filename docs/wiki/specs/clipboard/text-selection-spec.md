@@ -1,6 +1,6 @@
 ---
 title: Text Selection - Technical Specification
-user_guide: ../../clipboard/text-selection.md
+user_guide: /wiki/clipboard/text-selection/
 status: implemented
 version: v1.2.7
 ---

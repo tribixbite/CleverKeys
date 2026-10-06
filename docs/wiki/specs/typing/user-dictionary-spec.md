@@ -1,6 +1,6 @@
 ---
 title: User Dictionary - Technical Specification
-user_guide: ../../typing/user-dictionary.md
+user_guide: /wiki/typing/user-dictionary/
 status: implemented
 version: v1.2.7
 ---

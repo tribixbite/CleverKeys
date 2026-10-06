@@ -1,7 +1,7 @@
 ---
 title: URL Sanitization — Technical Specification
 description: ClearURLs-format ruleset engine for stripping tracking parameters from clipboard URLs. Provider-aware, regex-based, with optional system-clipboard write-back and custom-rules SAF loader.
-user_guide: ../../clipboard/url-sanitization.md
+user_guide: /wiki/clipboard/url-sanitization/
 status: implemented
 version: v1.5.0
 ---

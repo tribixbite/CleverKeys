@@ -1,188 +1,120 @@
 # Cursor-Aware Predictions
 
-## Overview
+Updated: 2026-10-06. This describes the current shared prediction and commit path.
+Continuous swipe and verified suffix transactions remain under development.
 
-System for synchronizing prediction context with cursor position. When user moves cursor mid-word, the prediction system rebuilds state from InputConnection to enable accurate predictions and proper deletion of both prefix and suffix when selecting a suggestion.
+## Components
 
-## Key Files
+| Component | Responsibility |
+|-----------|----------------|
+| `CleverKeysService.onUpdateSelection` | Forward collapsed cursor movement and selection state |
+| `InputCoordinator.onCursorMoved` | Invalidate stale automatic-space ownership immediately; debounce cursor synchronization |
+| `PredictionContextTracker.synchronizeWithCursor` | Read the raw prefix/suffix around the cursor and retain deletion lengths |
+| `SuggestionHandler.handleCursorSyncPrediction` | Run the same guarded typing prediction pipeline used by ordinary typing |
+| `SuggestionHandler.handleCursorParkPrediction` | Request next-word candidates when no partial prefix is present |
+| `SuggestionHandler.onSuggestionSelected` | Replace the applicable partial/swipe word, commit the candidate and perform success bookkeeping |
 
-| File | Class/Function | Purpose |
-|------|----------------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/PredictionContextTracker.kt` | `synchronizeWithCursor()` | Reads text around cursor, rebuilds prefix/suffix |
-| `src/main/kotlin/tribixbite/cleverkeys/InputCoordinator.kt` | `onSuggestionSelected()` | Deletes both prefix AND suffix |
-| `src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt` | `onUpdateSelection()` | Triggers cursor sync on position change |
+Source files are under `src/main/kotlin/tribixbite/cleverkeys/`. InputCoordinator
+has no separate suggestion commit engine or cursor-sync prediction implementation.
 
-## Architecture
+## Cursor synchronization
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     onUpdateSelection()                      │
-│  Fires when cursor position changes (tap, arrow, paste)     │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼ (100ms debounce)
-┌─────────────────────────────────────────────────────────────┐
-│              PredictionContextTracker.synchronizeWithCursor  │
-│  1. getTextBeforeCursor(50)  →  extract prefix              │
-│  2. getTextAfterCursor(50)   →  extract suffix              │
-│  3. Store both normalized (for lookup) and raw (for delete) │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     Swipe Predictions                        │
-│  Uses the normalized prefix for lexicon lookup              │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│               onSuggestionSelected(word)                     │
-│  deleteSurroundingText(prefixLength, suffixLength)          │
-│  commitText(selectedWord)                                   │
-└─────────────────────────────────────────────────────────────┘
-```
+The service currently starts synchronization only when a collapsed cursor changes
+position. A selection-range change without that movement does not start this debounce.
+The view still receives its selection state. Verified suffix/phrase ownership must
+add range-aware lifecycle invalidation rather than relying on this prediction hook.
 
-## Configuration
+`onCursorMoved` calls `onCursorPositionChanged` before scheduling the 100 ms debounce.
+Moving away from an automatic-space stamp invalidates its punctuation ownership.
+The coordinator removes any previous runnable, then reads at most 50 UTF-16 units
+before and after the captured cursor connection. Finish/shutdown cancel the runnable.
 
-| Setting | Value | Description |
-|---------|-------|-------------|
-| `SYNC_DEBOUNCE_MS` | 100 | Delay before syncing after cursor move |
-| Max text fetch | 50 chars | Characters fetched in each direction |
+Synchronization returns immediately for a missing connection, an expected programmatic
+selection update, password/URI/email/number/phone fields, or Chinese/Japanese/Korean/Thai
+language codes. Detected CJK surrounding text clears the partial/deletion buffers.
+InputConnection text order is logical, including in RTL editors.
 
-## Implementation Details
+The tracker stores the **raw**, case-preserving prefix and suffix. Prediction lookup
+uses the prefix only; the suffix is retained for replacement. Internal extraction also
+computes normalized forms, but they do not replace the raw deletion strings.
+Apostrophes, including curly forms, join letters when both sides are letters. Digits,
+whitespace and explicit punctuation boundaries break a word. Other nonboundary
+characters are retained by the current word-character policy; this is not a universal
+Unicode word segmenter. Normalization uses NFD and removes Mn marks, which remains a
+known obstacle for Bangla spelling preservation.
 
-### Word Boundary Detection
+## Candidate generation and cursor parking
 
-```kotlin
-private val WORD_BOUNDARIES = setOf(
-    ' ', '\t', '\n', '\r',       // Whitespace
-    '.', ',', ';', ':', '!', '?' // Sentence punctuation
-)
+A nonempty synchronized prefix routes to `handleCursorSyncPrediction`, which shares
+SuggestionHandler's typing pipeline: dictionary/context lookup, contraction overlays,
+case handling, deduplication, special-prompt protection and exact-word addition.
+The pipeline is not a prefix filter on the swipe decoder.
 
-fun isWordChar(char: Char, language: String, text: String, pos: Int): Boolean {
-    if (char.isLetter()) return true
-    if (char == '\'') {
-        val before = text.getOrNull(pos - 1)
-        val after = text.getOrNull(pos + 1)
-        return before?.isLetter() == true && after?.isLetter() == true
-    }
-    return false
-}
-```
+An empty prefix preserves active autocorrect-undo or swipe-correction candidates.
+Otherwise it routes to `handleCursorParkPrediction(editorInfo, ic)`. The handler reads
+bounded preceding editor text for static next-word context, including text from an
+older session; an unreadable editor can fall back to session context. Static and
+learned candidate tiers have separate gates. Next-word prediction defaults ON;
+turning learning off closes the learned tier while the static tier can remain available.
+Password/prompt/terminal and feature/word-prediction controls still apply. See
+[Context Learning and Next-Word](context-learning-and-next-word.md).
 
-### Prefix/Suffix Extraction
+## Candidate replacement
 
-```kotlin
-fun synchronizeWithCursor(ic: InputConnection?, language: String) {
-    ic ?: return
-    if (!shouldSyncForInputType(editorInfo)) return
-    if (isCJKLanguage(language)) return  // Skip for CJK scripts
+`onSuggestionSelected` handles special suggestion protocols first, then applies
+contraction protection, final autocorrection where eligible, and I-word/case rules.
+A manual candidate over an owned swipe word uses the existing replacement branch.
+An ordinary manual candidate synchronizes immediately and obtains both prefix and
+suffix deletion lengths. A guarded editor scan supplies a partial-word fallback when
+cursor synchronization is suppressed or has no usable deletion information. URL and
+email fields do not receive a leading automatic space. Terminal routing uses shared
+built-ins plus exact configured package additions.
 
-    val beforeText = ic.getTextBeforeCursor(50, 0)?.toString() ?: ""
-    val afterText = ic.getTextAfterCursor(50, 0)?.toString() ?: ""
+Automatic spacing is decided by `SmartAutoSpace`: user policy, existing following
+space and opening punctuation affect leading/trailing spaces. Cursor stamps are
+absolute UTF-16 positions from `ExtractedText`, including `startOffset`.
 
-    val (prefix, rawPrefix) = extractWordPrefix(beforeText, language)
-    val (suffix, rawSuffix) = extractWordSuffix(afterText, language)
+## Accepted commit bookkeeping
 
-    currentWord.clear().append(prefix)
-    currentWordSuffix.clear().append(suffix)
-    rawPrefixForDeletion = rawPrefix
-    rawSuffixForDeletion = rawSuffix
-}
-```
+The shared engine checks `commitText`'s Boolean result. A false return, exception or
+missing connection returns null and clears destructive ownership, automatic-space
+and trailing-space watches, stale partial/autocorrect state and pending learning.
+Exceptions are logged by type without candidate text. Acknowledged insertion returns
+the actual inserted spelling, including capitalization inherited from a typed partial.
 
-### Dual Deletion on Selection
+Only an acknowledged commit can record manual selection adaptation, update the new
+word's context/learning, or return a successful candidate to the swipe caller.
+The caller does not substitute an offered prediction for a null result. Failed swipes
+retain their candidate slate, discard transient ML data and do not stamp a new swipe
+word/source/correction record or emit a success haptic. If manual typing precedes a
+swipe, its separator must be acknowledged before completing that typed word and
+inserting the decoded word; joiner-stem validation accounts for the accepted separator.
 
-```kotlin
-fun onSuggestionSelected(word: String, ic: InputConnection) {
-    val (prefixDelete, suffixDelete) = contextTracker.getCharsToDeleteForPrediction()
+Acknowledgement does not establish exact editor text ownership. Existing partial-word
+and old-swipe deletion can occur before the replacement commit, and Android batch edits
+are not atomic. A provider can mutate text before returning false or throwing. Failure
+handling does not blindly retry or compensate an unknown partial write.
 
-    if (prefixDelete > 0 || suffixDelete > 0) {
-        contextTracker.expectingSelectionUpdate = true
-        ic.deleteSurroundingText(prefixDelete, suffixDelete)
-    }
+<!-- TODO: Replace legacy manual replacement/deletion and learning rollback with
+verified text ownership and exact consumed learning receipts. -->
 
-    ic.commitText(word, 1)
-}
-```
+## Punctuation selections
 
-### Accent Handling
+`currentSelection` reports both absolute endpoints from a single ExtractedText read.
+Smart punctuation checks a collapsed selection before removing its owned automatic
+space. A range whose start equals the old stamp cannot reclaim the space before it:
+`Bowie abc` with `abc` selected becomes `Bowie '` when the apostrophe replaces it.
+Unreadable editors retain ordinary punctuation's selected-text/ownership fallback;
+they do not thereby qualify for the stronger suffix ownership under development.
 
-Normalized matching for prediction lookup, raw character count for deletion:
+## Verification
 
-```kotlin
-val (normalizedPrefix, rawPrefix) = extractWordPrefix(beforeText, language)
-
-// Use normalized for prediction
-predictions = wordPredictor.predict(normalizedPrefix)
-
-// Use raw for deletion (preserves actual char count)
-ic.deleteSurroundingText(rawPrefix.length, rawSuffix.length)
-```
-
-## Cursor Sync Prediction Pipeline
-
-When cursor sync fires, `InputCoordinator.triggerPredictionsForPrefix()` runs a full
-prediction pipeline that mirrors `SuggestionHandler.updatePredictionsForCurrentWord()`:
-
-1. **Predict**: `wordPredictor.predictWordsWithContext(prefix, contextWords)`
-2. **Non-paired contractions**: `contractionManager.getNonPairedMapping(prefix)` (e.g., dont → don't)
-3. **Paired contractions**: `contractionManager.getPairedContractions(prefix)` if prefix >= 3 chars
-4. **Transform predictions**: Map all results through non-paired contraction mapping + I-word capitalization
-5. **Merge & deduplicate**: Contraction words first, then filtered predictions
-6. **Capitalize**: Apply sentence-start capitalization if raw prefix started uppercase
-7. **exact_add**: Append `exact_add:$word` for non-dictionary words (if `config.show_exact_typed_word`)
-8. **Post to SuggestionBar**: Via `Handler(Looper.getMainLooper()).post{}`
-
-### Safety Mechanisms
-
-- `ic ?: return` at the top of `synchronizeWithCursor()` — null InputConnection = early return
-- `contextTracker.clearAll()` in `onFinishInputView()` — prevents cross-app text leaking
-- `Handler.post()` instead of `View.post()` — detached views silently drop runnables
-- SuggestionBar deduplication — skips re-render if new suggestions match existing ones
-
-## Edge Cases
-
-| Case | prefix | suffix | Behavior |
-|------|--------|--------|----------|
-| Cursor at end: `hello\|` | "hello" | "" | Normal predictions |
-| Cursor mid-word: `hel\|lo` | "hel" | "lo" | Delete both on select |
-| Cursor at start: `\|hello` | "" | "hello" | Clear predictions |
-| After space: `hello \|` | "" | "" | Cursor-park next-word predictions (see below) |
-| After emoji: `hi 👋 \|` | "" | "" | Reset prediction |
-| Numbers: `test\|123` | "test" | "" | Numbers break word |
-| Contraction: `don'\|t` | "don'" | "t" | Treated as single word |
-| Short prefix: `t\|` | "t" | "" | Predictions but no paired contractions (< 3 chars) |
-| Non-dict word: `xyzq\|` | "xyzq" | "" | Predictions + exact_add entry |
-| App switch: new field | "" | "" | contextTracker.clearAll() resets state |
-
-## Language Handling
-
-| Language Type | Behavior |
-|--------------|----------|
-| Space-delimited (Latin) | Standard word boundary detection |
-| CJK (Chinese, Japanese, Thai) | Skip cursor sync entirely |
-| RTL (Arabic, Hebrew) | Normal - InputConnection is logical order |
-| German compounds | Treated as single word |
-| French elision (l'homme) | Single unit treatment |
-
-## Cursor-Park Next-Word Predictions (2026-08-06)
-
-When cursor sync resolves an EMPTY prefix (cursor parked after existing text with no
-partial word under it), InputCoordinator's empty-prefix branch no longer just clears the
-bar — it routes to `SuggestionHandler.handleCursorParkPrediction(editorInfo)`, which runs
-the fully-gated next-word pipeline (`NextWordPredictor.shouldShow` — opt-in
-`next_word_prediction_enabled`, master `on_device_learning_enabled`, incognito-field flag,
-password/prompt/Termux guards). With the feature off (default) this degrades to the
-original clear.
-
-SCOPE (review L5, accepted): candidates derive from the SESSION's committed-word context
-(`contextTracker`), not the editor text preceding the parked cursor — parking into text
-typed in an earlier session usually shows nothing. See
-`docs/specs/context-learning-and-next-word.md` for the full next-word system.
-
-## Performance
-
-- **Debouncing**: 100ms delay prevents rapid fire during drag selection
-- **IPC Optimization**: Single call per direction, max 50 chars
-- **State Caching**: Skip sync if position unchanged
+Tracker extraction tests cover mid-word raw prefix/suffix lengths, contraction
+boundaries, casing, input-type exclusions and cursor synchronization. Real-handler
+`LearningFunnelBookkeepingTest` covers accepted/rejected writes, missing connections,
+separator rejection, selection adaptation, spelling and actual context-store counts.
+Native `SmartAutoSpaceTest` uses BaseInputConnection plus rejection/exception wrappers.
+Source drift checks protect failure cleanup and prohibit prediction ownership fallbacks.
+Current executed totals and artifact/run evidence are in
+[Testing Strategy](testing-strategy.md). These tests do not establish compatibility
+with every editor or validate human swipe recognition accuracy.

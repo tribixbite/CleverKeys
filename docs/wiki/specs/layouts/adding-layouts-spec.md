@@ -1,6 +1,6 @@
 ---
 title: Adding Layouts - Technical Specification
-user_guide: ../../layouts/adding-layouts.md
+user_guide: /wiki/layouts/adding-layouts/
 status: implemented
 version: v1.2.7
 ---

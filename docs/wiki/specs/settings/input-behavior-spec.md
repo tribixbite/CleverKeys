@@ -1,6 +1,6 @@
 ---
 title: Input Behavior Settings - Technical Specification
-user_guide: ../../settings/input-behavior.md
+user_guide: /wiki/settings/input-behavior/
 status: implemented
 version: v1.2.7
 ---

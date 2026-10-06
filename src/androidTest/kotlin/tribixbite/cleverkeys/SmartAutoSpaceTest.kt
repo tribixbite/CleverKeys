@@ -10,6 +10,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedText
 import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
+import android.view.inputmethod.InputConnectionWrapper
 import android.widget.EditText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -200,6 +201,38 @@ class SmartAutoSpaceTest {
     }
 
     private fun editorText() = inputConnection.editableText()
+
+    @Test
+    fun rejectedSuggestionCommitDoesNotOwnAnAutomaticSpaceOrContextWord() {
+        val rejected = object : InputConnectionWrapper(inputConnection, false) {
+            override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean = false
+        }
+        contextTracker.setWasLastInputSwipe(true)
+        assertEquals(null, suggestionHandler.onSuggestionSelected(
+            "Bowie", rejected, plainEditorInfo, context.resources, isManualSelection = false
+        ))
+        assertEquals("", editorText())
+        assertFalse(contextTracker.lastSpaceWasAutoInserted)
+        assertEquals(-1, contextTracker.autoSpaceStampedPosition)
+        assertTrue(contextTracker.getContextWords().isEmpty())
+        assertEquals(PredictionSource.UNKNOWN, contextTracker.getLastCommitSource())
+    }
+
+    @Test
+    fun throwingSuggestionCommitDoesNotOwnAnAutomaticSpaceOrContextWord() {
+        val rejected = object : InputConnectionWrapper(inputConnection, false) {
+            override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean =
+                throw IllegalStateException("Editor unavailable")
+        }
+        contextTracker.setWasLastInputSwipe(true)
+        assertEquals(null, suggestionHandler.onSuggestionSelected(
+            "Bowie", rejected, plainEditorInfo, context.resources, isManualSelection = false
+        ))
+        assertEquals("", editorText())
+        assertFalse(contextTracker.lastSpaceWasAutoInserted)
+        assertTrue(contextTracker.getContextWords().isEmpty())
+        assertEquals(PredictionSource.UNKNOWN, contextTracker.getLastCommitSource())
+    }
 
     @Test
     fun curlyApostropheAttachesToOwnedSpaceAndFollowingSTypesNormally() {

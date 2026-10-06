@@ -3,7 +3,7 @@ title: Swipe Typing - Technical Specification
 description: CTC and geometric routing, canonical display, and commit boundaries
 user_guide: /wiki/typing/swipe-typing/
 status: implemented
-version: v1.2.7
+version: v2.0.0 development
 ---
 
 # Swipe Typing Technical Specification
@@ -84,6 +84,20 @@ engines. Suggestion provenance tags the engine that actually decoded
 (`SuggestionProvenance.forRoutedEngine`). The CTC engine maps contraction aliases to display
 forms ("dont" → "don't") inside its adapter before the shared pipeline. Full CTC engine
 internals: `docs/specs/ctc-swipe-engine.md` (engineering spec).
+
+## Accepted insertion
+
+`SuggestionHandler.onSuggestionSelected` returns the actual inserted spelling only
+when the editor acknowledges `commitText`. False/throwing/missing connections clear
+failed ownership and pending learning. Manual adaptation is recorded after acceptance.
+The swipe caller preserves its slate on failure, resets transient ML data and does not
+fall back to an offered prediction for word/source/ML/correction tracking or a success
+haptic. A preceding typed separator must be accepted before its word is completed.
+
+An acknowledgement is separate from exact text readback; legacy replacement deletion
+is not atomic. Verified suffix ownership and ordered phrase commits need additional
+session/selection/learning receipts. See the internal
+[cursor/commit spec](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/cursor-aware-predictions.md).
 
 ## Gesture Sampling Robustness
 

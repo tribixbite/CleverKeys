@@ -1,7 +1,7 @@
 ---
 title: Autocorrect - Technical Specification
 description: Adjacency-weighted dictionary scorer with structural guards (non-prose context, possessives, inflections), Damerau transpositions, and a rule-based tiebreak.
-user_guide: ../../typing/autocorrect.md
+user_guide: /wiki/typing/autocorrect/
 status: implemented
 version: v1.5.0
 ---

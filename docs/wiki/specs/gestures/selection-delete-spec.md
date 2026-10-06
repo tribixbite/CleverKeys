@@ -1,7 +1,7 @@
 ---
 title: Selection Delete - Technical Specification
 description: Backspace swipe-and-hold joystick that selects text and deletes it on release.
-user_guide: ../../gestures/selection-delete.md
+user_guide: /wiki/gestures/selection-delete/
 status: implemented
 version: v1.4.0
 ---

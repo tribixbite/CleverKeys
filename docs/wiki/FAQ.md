@@ -95,19 +95,19 @@ A: Copy an image in any app (Gallery, Chrome, etc.) — it appears in clipboard 
 
 **Q: How does swipe typing work?**
 
-A: Touch the first letter of your word, slide your finger through each letter without lifting, then release on the last letter. Faster may yield better results.
+A: Touch the first letter of your word, slide through its letters, then release on the last letter. Aim at the starting and ending letters; slow, complete gestures are supported.
 
 **Tip:** There is nothing to tune. The default **CTC** engine ships with a decoder preset chosen per lexicon, and swipe typing works out of the box on every supported language — no per-language settings to adjust.
 
 **Q: Can I swipe other languages?**
 
-A: Yes, and it needs no tuning and no particular layout. The CTC engine serves the 7 bundled Latin languages (English, French, German, Spanish, Italian, Portuguese, Swedish) on any Latin layout with all 26 letters — QWERTY, AZERTY, QWERTZ, Dvorak, Colemak all work — plus imported Latin packs whose words are typeable on an a–z board (Dutch, Indonesian, Malay, Tagalog, Swahili).
+A: Yes, with the appropriate dictionary and letter layout. The CTC engine serves the 7 bundled Latin languages (English, French, German, Spanish, Italian, Portuguese, Swedish) on any Latin layout with all 26 letters — QWERTY, AZERTY, QWERTZ, Dvorak, Colemak all work — plus imported Latin packs whose words are typeable on an a–z board (Dutch, Indonesian, Malay, Tagalog, Swahili).
 
 Six non-Latin languages — Russian, Ukrainian, Bulgarian, Macedonian (Cyrillic), Greek, and Hebrew — are served **via their language packs**: one import brings both the dictionary and that script's swipe encoder (the encoder is verified against a hash pinned in the app, so only the exact published model loads). Until the pack is imported, these languages tap-type normally and swipe falls back to the geometric engine. **If you imported one of these packs before September 2026, re-import the updated zip** — older packs predate the bundled encoder and won't swipe-decode on current versions.
 
 To add a language beyond the bundled seven, go to **Settings > 🌐 Multi-Language > Import Pack** and import that language's pack; prebuilt zips are on the [langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks). Set it as your primary (or secondary) language and swipe normally.
 
-Turkish is the one language CleverKeys routes away from CTC on purpose: dotless `ı` has no a–z spelling, so a quarter of the vocabulary would be unswipeable. It uses the geometric engine instead, which decodes over the board's real keys. Geometric is likewise the automatic fallback for every other language and layout, so swipe typing is never disabled — see [Swipe Typing](./typing/swipe-typing.md) for the full engine-routing table and what accuracy evidence exists per language.
+Turkish is the one language CleverKeys routes away from CTC on purpose: dotless `ı` has no a–z spelling, so a quarter of the vocabulary would be unswipeable. It uses the geometric engine instead, which decodes over the board's real keys. Geometric is the automatic fallback when CTC prerequisites are unavailable. Successful decoding still requires a usable dictionary and supported letter geometry; existing Bangla tap layouts do not establish Bangla swipe support. See [Swipe Typing](./typing/swipe-typing.md) for the full engine-routing table and what accuracy evidence exists per language.
 
 **Q: Why did the space disappear when I typed a period after swiping a word?**
 

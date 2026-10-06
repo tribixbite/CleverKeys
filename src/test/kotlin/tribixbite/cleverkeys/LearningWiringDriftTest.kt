@@ -186,9 +186,8 @@ class LearningWiringDriftTest {
         // The flag rides into the learn funnel …
         assertThat(handler).contains("addWordToContext(word, fieldAllowsPersonalizedLearning)")
         // … gates adaptation recording …
-        assertThat(handler).contains(
-            "LearningGate.canLearnAdaptation(config.on_device_learning_enabled) &&\n" +
-                "            fieldAllowsPersonalizedLearning"
+        assertThat(handler).containsMatch(
+            """LearningGate\.canLearnAdaptation\(config\.on_device_learning_enabled\)\s*&&\s*fieldAllowsPersonalizedLearning"""
         )
         // … and the single next-word tier decision (2026-09-26: `nextWordTiers` is the only
         // place SuggestionHandler builds a next-word gate, so wiring the flag there covers the
@@ -274,9 +273,14 @@ class LearningWiringDriftTest {
         // Replacement tracking uses onSuggestionSelected's RETURN (post final
         // autocorrect + I-word handling) so REPLACE deletion counts match the
         // editor even when the correction changed the word's length.
-        assertThat(handler).containsMatch(
-            """setLastAutoInsertedWord\(\s*committedWord \?: topPrediction\.removePrefix\("raw:"\)"""
-        )
+        assertThat(handler).containsMatch("""setLastAutoInsertedWord\(\s*committedWord\s*\)""")
+        assertThat(handler).doesNotContain("committedWord ?:")
+        val rejectionIdx = handler.indexOf("if (committedWord == null)")
+        assertThat(rejectionIdx).isGreaterThan(-1)
+        assertThat(handler.indexOf("setLastAutoInsertedWord(committedWord)"))
+            .isGreaterThan(rejectionIdx)
+        assertThat(handler.indexOf("mlDataCollector.collectAndStoreSwipeData("))
+            .isGreaterThan(rejectionIdx)
         // And the learn funnel records the FINAL word: the final-autocorrect
         // rewrite (processedWord = correctedWord) happens BEFORE the single
         // updateContext(processedWord) learn call in onSuggestionSelected.

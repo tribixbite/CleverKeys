@@ -977,8 +977,12 @@ class SuggestionHandler(
             // Auto-insert the top (highest-scoring) prediction through THE single commit engine
             // (step 6): haptic + manual-typing termination + tracking clear were absorbed verbatim
             // from the deleted InputCoordinator.autoInsertTopSuggestion.
-            bar.getTopSuggestion()?.takeIf { it.isNotEmpty() }?.let { topPrediction ->
-                inputCoordinator.triggerSwipeCompleteHaptic()
+            bar.getTopSuggestion()?.takeIf { it.isNotEmpty() }?.let autoInsert@ { topPrediction ->
+                if (ic == null) {
+                    clearRejectedCommitState()
+                    inputCoordinator.resetSwipeData()
+                    return@autoInsert
+                }
 
                 // If manual typing was in progress, terminate it with a space. The typed chars are
                 // already committed via KeyEventHandler.send_text() — currentWord is only a tracking
@@ -989,10 +993,24 @@ class SuggestionHandler(
                 // typed→swiped in order. Previously it was never learned. No-op when nothing is
                 // pending. The typing-in-progress test is taken first: a successful flush clears
                 // the tracker's word, and the terminating space below must still be committed.
-                val typingInProgress = contextTracker.getCurrentWordLength() > 0
-                flushPendingTypedWord(ic)
-                if (typingInProgress && ic != null) {
-                    ic.commitText(" ", 1)
+                val typingInProgress = contextTracker.getCurrentWordLength() > 0 ||
+                    pendingTypedWord != null || pendingJoinerStem != null
+                if (typingInProgress) {
+                    // The separator is an editor write too: never learn the typed word
+                    // or append a prediction when that boundary was rejected. Batch edits
+                    // do not provide rollback for a provider that partially mutates text.
+                    val accepted = try {
+                        ic.commitText(" ", 1)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Swipe separator rejected (${e.javaClass.simpleName})")
+                        false
+                    }
+                    if (!accepted) {
+                        clearRejectedCommitState()
+                        inputCoordinator.resetSwipeData()
+                        return@autoInsert
+                    }
+                    flushPendingTypedWord(ic, editorSuffix = " ")
                     contextTracker.clearCurrentWord()
                     contextTracker.clearLastAutoInsertedWord()
                     contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
@@ -1026,6 +1044,13 @@ class SuggestionHandler(
                 val committedWord = onSuggestionSelected(
                     topPrediction, ic, editorInfo, resources, isManualSelection = false
                 )
+                if (committedWord == null) {
+                    clearRejectedCommitState()
+                    inputCoordinator.resetSwipeData()
+                    // The slate remains available for a deliberate candidate tap.
+                    return@autoInsert
+                }
+                inputCoordinator.triggerSwipeCompleteHaptic()
 
                 // D5 LANDED (step 6): swipe ML capture through MLDataCollector — the single
                 // implementation the tap path (SuggestionBridge) already uses.
@@ -1054,7 +1079,7 @@ class SuggestionHandler(
                 val storedGlobally =
                     if (wasSwipeAutoInsert && swipeData != null && !passwordField) {
                         mlDataCollector.collectAndStoreSwipeData(
-                            committedWord ?: topPrediction,
+                            committedWord,
                             swipeData,
                             inputCoordinator.keyboardHeightPx(),
                             predictionCoordinator.getMlDataStore(),
@@ -1073,7 +1098,7 @@ class SuggestionHandler(
                     PlaygroundTraceRecorder.recordAndBroadcast(
                         context,
                         swipeData,
-                        committedWord ?: topPrediction.removePrefix("raw:"),
+                        committedWord,
                         engineWordCount,
                         storedGlobally
                     )
@@ -1094,18 +1119,15 @@ class SuggestionHandler(
                 // raw word desynced deletion counts whenever the correction changed the length.
                 // (The learn funnel was already correct either way: updateContext() inside
                 // onSuggestionSelected records the post-autocorrect word.) A null return means
-                // nothing was committed (no InputConnection) — fall back to the raw prediction
-                // so the tracking state stays populated exactly as before.
-                contextTracker.setLastAutoInsertedWord(
-                    committedWord ?: topPrediction.removePrefix("raw:")
-                )
+                // no acknowledged commit; it must never create replacement ownership.
+                contextTracker.setLastAutoInsertedWord(committedWord)
                 contextTracker.setLastCommitSource(PredictionSource.SWIPE)
 
                 // Swipe-correction tracking: remember this auto-insert (the word in the editor,
                 // the engine slate it came from, its ML row) so a bar tap or backspace undo that
                 // rejects it can be recorded as a correction.
                 noteSwipeAutoInsert(
-                    committedWord ?: topPrediction.removePrefix("raw:"),
+                    committedWord,
                     rescoredPredictions, storedTraceId, ic, editorInfo
                 )
 
@@ -1232,7 +1254,9 @@ class SuggestionHandler(
      *                          false for auto-insert after swipe (final autocorrect may apply)
      * @return the processed word that was committed (post autocorrect / I-word handling), or null
      *         when nothing was committed (blank input, special-suggestion routes, autocorrect undo,
-     *         or no InputConnection). Step 6: the swipe auto-insert path uses this for ML capture.
+     *         no InputConnection, or a rejected/throwing editor write). The swipe path uses
+     *         this acknowledgement for ownership and ML capture; strict text ownership
+     *         additionally requires editor readback.
      */
     fun onSuggestionSelected(
         word: String?,
@@ -1292,6 +1316,11 @@ class SuggestionHandler(
             word.equals(lastAutocorrectOriginal, ignoreCase = true)
         ) {
             handleAutocorrectUndo(word, lastAutocorrectOriginal, ic, editorInfo)
+            return null
+        }
+
+        if (ic == null) {
+            clearRejectedCommitState()
             return null
         }
 
@@ -1359,23 +1388,6 @@ class SuggestionHandler(
         // committed — the user asked for that — but NOTHING about it may be learned. Detected
         // from the tracked mode OR the live editor, same rule as the swipe entry's D2 guard.
         val inPasswordField = isPasswordMode || SuggestionBar.isPasswordField(editorInfo)
-
-        // Record user selection for adaptation learning — behind the MASTER
-        // on-device-learning gate (Task A): UserAdaptationManager persists
-        // selection counts to prefs and previously had NO preference gate.
-        // M5: an incognito field (IME_FLAG_NO_PERSONALIZED_LEARNING) suppresses
-        // this learning path too.
-        // W1 (audit 2026-09-26): only a MANUAL selection (a bar tap) is a selection. The swipe
-        // auto-insert also routes through here (isManualSelection=false); recording it taught
-        // every mis-swipe as if the user had chosen it, and a corrective tap then only tied
-        // the score. The auto-inserted word's other learning (context LM + vocabulary via
-        // updateContext below) is kept, and rolled back if the user replaces or undoes it.
-        if (isManualSelection && !inPasswordField &&
-            LearningGate.canLearnAdaptation(config.on_device_learning_enabled) &&
-            fieldAllowsPersonalizedLearning
-        ) {
-            predictionCoordinator.getAdaptationManager()?.recordSelection(processedWord.trim())
-        }
 
         // CRITICAL: Save swipe flag before resetting for use in spacing logic below
         val isSwipeAutoInsert = contextTracker.wasLastInputSwipe()
@@ -1495,6 +1507,8 @@ class SuggestionHandler(
                     // back before updateContext() below learns the replacement, so the context LM
                     // ends with prev→chosen and never rejected→chosen. Same API and gate contract
                     // as the bar-tap autocorrect undo ([handleAutocorrectUndo]).
+                    // TODO: verify deletion and replace its learning through exact receipts;
+                    // acknowledgement of the new commit does not make earlier edits atomic.
                     rollbackRejectedWord(rejectedWord)
                     replacedSwipeWord = rejectedWord
 
@@ -1678,7 +1692,13 @@ class SuggestionHandler(
                 }
 
                 vlog { "Committing text: len=${textToInsert.length}" }
-                inputConnection.commitText(textToInsert, 1)
+                if (!inputConnection.commitText(textToInsert, 1)) {
+                    clearRejectedCommitState()
+                    return null
+                }
+                // Track the exact spelling acknowledged by the editor, including a
+                // typed partial's capitalization, rather than the offered candidate.
+                processedWord = capitalizedWord
 
                 if (addedTrailingSpace) {
                     contextTracker.markAutoSpacePending(
@@ -1713,11 +1733,26 @@ class SuggestionHandler(
                 // Log the failure (type/message only, never committed text) and reset the
                 // selection-tracking state so a botched commit can't leave stale context
                 // (hardening ported from the deleted InputCoordinator engine, step 6).
-                Log.e(TAG, "Error in onSuggestionSelected", e)
-                contextTracker.clearLastAutoInsertedWord()
-                contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
-                contextTracker.expectingSelectionUpdate = false
-                contextTracker.clearCurrentWordSuffix()
+                Log.e(TAG, "Suggestion commit rejected (${e.javaClass.simpleName})")
+                clearRejectedCommitState()
+                return null
+            }
+
+            // Record user selection for adaptation learning — behind the MASTER
+            // on-device-learning gate (Task A): UserAdaptationManager persists
+            // selection counts to prefs and previously had NO preference gate.
+            // M5: an incognito field (IME_FLAG_NO_PERSONALIZED_LEARNING) suppresses
+            // this learning path too.
+            // W1 (audit 2026-09-26): only a MANUAL selection (a bar tap) is a selection. The swipe
+            // auto-insert also routes through here (isManualSelection=false); recording it taught
+            // every mis-swipe as if the user had chosen it, and a corrective tap then only tied
+            // the score. The auto-inserted word's other learning (context LM + vocabulary via
+            // updateContext below) is kept, and rolled back if the user replaces or undoes it.
+            if (isManualSelection && !inPasswordField &&
+                LearningGate.canLearnAdaptation(config.on_device_learning_enabled) &&
+                fieldAllowsPersonalizedLearning
+            ) {
+                predictionCoordinator.getAdaptationManager()?.recordSelection(processedWord.trim())
             }
 
             // The selection REPLACES any typed partial / joiner stem (W5/W7): the selected word
@@ -1764,7 +1799,23 @@ class SuggestionHandler(
             }
         }
 
-        return if (ic != null) processedWord else null
+        return processedWord
+    }
+
+    /** Drop destructive ownership and deferred learning after an unacknowledged write. */
+    private fun clearRejectedCommitState() {
+        contextTracker.clearLastAutoInsertedWord()
+        contextTracker.clearAutocorrectTracking()
+        contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+        contextTracker.setWasLastInputSwipe(false)
+        contextTracker.invalidateAutoSpacePending()
+        contextTracker.clearTrailingSpaceWatch()
+        contextTracker.expectingSelectionUpdate = false
+        contextTracker.clearCurrentWord()
+        contextTracker.clearCurrentWordSuffix()
+        pendingTypedWord = null
+        pendingJoinerStem = null
+        swipeCorrectionTracker?.clear()
     }
 
     /**
@@ -2486,7 +2537,7 @@ class SuggestionHandler(
      *
      * @return true when a word was learned
      */
-    private fun flushPendingTypedWord(ic: InputConnection?): Boolean {
+    private fun flushPendingTypedWord(ic: InputConnection?, editorSuffix: String = ""): Boolean {
         val typed = pendingTypedWord
         val stem = pendingJoinerStem
         pendingTypedWord = null
@@ -2500,7 +2551,7 @@ class SuggestionHandler(
             stem != null && current.isEmpty() -> stem
             else -> return false
         }
-        if (stem != null && !editorEndsWithWholeToken(ic, rawToken, "")) return false
+        if (stem != null && !editorEndsWithWholeToken(ic, rawToken, editorSuffix)) return false
         val word = trimJoiners(rawToken)
         if (word.isEmpty()) return false
 

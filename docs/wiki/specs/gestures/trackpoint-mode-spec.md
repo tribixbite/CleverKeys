@@ -1,7 +1,7 @@
 ---
 title: TrackPoint Mode - Technical Specification
 description: Joystick-style cursor control activated by holding a navigation key.
-user_guide: ../../gestures/trackpoint-mode.md
+user_guide: /wiki/gestures/trackpoint-mode/
 status: implemented
 version: v1.4.0
 ---

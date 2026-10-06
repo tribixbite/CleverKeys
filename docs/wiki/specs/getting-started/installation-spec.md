@@ -1,6 +1,6 @@
 ---
 title: Installation - Technical Specification
-user_guide: ../../getting-started/installation.md
+user_guide: /wiki/getting-started/installation/
 status: implemented
 version: v1.2.9
 ---

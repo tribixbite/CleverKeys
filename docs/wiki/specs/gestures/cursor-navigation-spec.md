@@ -1,7 +1,7 @@
 ---
 title: Cursor Navigation - Technical Specification
 description: Spacebar-slider continuous cursor and discrete arrow-key navigation.
-user_guide: ../../gestures/cursor-navigation.md
+user_guide: /wiki/gestures/cursor-navigation/
 status: implemented
 version: v1.4.0
 ---

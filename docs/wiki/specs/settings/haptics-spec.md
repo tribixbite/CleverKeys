@@ -1,7 +1,7 @@
 ---
 title: Haptics Settings - Technical Specification
 description: Per-event haptic feedback via VibratorCompat — system performHapticFeedback by default, opt-in custom vibration duration, and the #154 one-time migration.
-user_guide: ../../settings/haptics.md
+user_guide: /wiki/settings/haptics/
 status: implemented
 version: v1.5.0
 ---

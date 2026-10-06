@@ -62,7 +62,9 @@ If the wrong word appears:
 
 ## Prediction Bar
 
-After swiping, predictions appear in a horizontal row ordered by confidence (best match on the left). The first suggestion is auto-inserted and highlighted. Up to 6 alternatives may appear.
+After swiping, predictions appear in a horizontal row with the best match on the left.
+The first suggestion is inserted when your app accepts the word. If insertion fails,
+the candidates stay available and the keyboard does not treat the word as inserted.
 
 Tap any prediction to use it instead.
 
@@ -95,9 +97,10 @@ The **Prediction Engine** dropdown (Settings > Swipe Typing) selects which decod
   the geometric engine, which decodes over the board's real keys and can therefore reach
   those words. The same test rejects Polish `ł`, Vietnamese `đ` and Icelandic `þ`/`ð`
   packs.
-- **Geometric** — a pure shape-matching decoder on all layouts. It is the automatic
-  fallback for every language and layout CTC does not serve, so choosing CTC never leaves
-  a layout without swipe typing. Also useful for comparison and battery-lean decoding.
+- **Geometric** — a layout-agnostic shape-matching decoder. It is the automatic
+  fallback when CTC prerequisites are unavailable. Both engines require a usable
+  dictionary, supported letter geometry and a valid gesture. Existing Bangla tap
+  layouts do not yet provide Bangla prediction or swipe support.
 
 ### How much we actually know per language
 

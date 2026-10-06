@@ -409,9 +409,9 @@ Do not commit, tag, push, publish, or open external issues without explicit user
 
 ### Current next work
 
-- [ ] TODO: before suffix commands, fix rejected/throwing swipe-commit success
-  bookkeeping: no word/source/space ownership, new-word learning or ML/correction
-  stamping after failed insertion. Astra audit details in the October 5 gaps plan.
+- [x] Rejected/throwing swipe commit bookkeeping fixed and tested; successful
+  acknowledgement is now required for new word/source/space/learning/ML/correction
+  state. Strict suffix receipts remain next; evidence in prerequisite section below.
 - [ ] TODO: explicit Append apostrophe-s / Append apostrophe commands with verified
   word attachment, suffix-only undo and learning-state correction.
 - [ ] TODO: `ad`/`wet` encoder/calibration work using fresh writer/session-separated traces;
@@ -462,8 +462,25 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   All 14 additions pass; inventory matches the first full run except corrected name.
 - [x] Current guides/specs/skills updated to actual behavior and final evidence;
   84-page build, 428 rendered local links and 8 paired-guide routes pass.
-  Coverage/docs round ready to commit; no push/release or maintainer-checklist edits.
-- [ ] TODO: then implement continuous multiword swipe, explicit apostrophe suffix
-  commands, and dynamic templates; fix accepted-commit bookkeeping first.
+  Coverage/docs round committed as `ef36222c`; no push/release or maintainer-checklist edits.
+- [x] Accepted-commit prerequisite completed below; named feature work follows.
 - [ ] TODO: language-pack final swap currently deletes the old directory before
   rename; add recovery and fault-injection coverage. Oversize rejection is protected.
+
+### Accepted-commit prerequisite (complete)
+
+- [x] Six added real-handler host cases and two native editor wrappers cover false,
+  throwing/missing writes, separator rejection, manual adaptation and exact spelling.
+  Final-fixture fail-first host: 22/27; fixed focused: 28/28.
+- [x] No new word/source/space/context/learning/ML/correction or success haptic after
+  a rejected insertion; candidate slate remains available. Manual adaptation waits
+  for acceptance; legacy pre-commit replacement deletion retains an explicit TODO.
+- [x] Full Kotlin compile and suites: 2,741 pure + 959 mock; app/test APKs build.
+  Log: `build/oct6-accepted-commit-full-tests-build-v2.log` (6m56s). Updated three
+  source drift assertions to protect rejection cleanup and prohibit ownership fallbacks.
+- [x] Native punctuation class: 33 distinct passed, 0 failures/errors/skips, run
+  `3e8f6000-e943-4110-9746-c5bd8508e46e`. Frozen hashes in testing strategy.
+- [x] Wiki build passes 84 pages; all 2,182 rendered wiki/spec links and all 30
+  paired-guide routes resolve after correcting 21 remaining frontmatter links.
+- [ ] TODO: implement continuous multiword swipe, verified suffix commands/undo/
+  exact learning receipts, and dynamic templates with native coverage and final full run.

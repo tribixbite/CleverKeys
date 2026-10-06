@@ -235,15 +235,15 @@ collision rules must survive any new gesture.
    human traces before shipping. Hard beam filtering, huge ranking boosts, or a
    hand-spliced trace are not a demonstrated solution.
 
-**Astra follow-up audit (October 6, read-only): prerequisite before phases 2–3.**
-`onSuggestionSelected` currently ignores the editor’s `commitText` Boolean, can
-continue to learn after an exception, and returns a word merely because an IC exists.
-The swipe caller then falls back to the prediction when recording word/source,
-correction state and ML labels. TODO: make accepted auto-insertion success-only,
-remove failed/null commit ownership fallbacks, preserve candidate display on failure,
-and test false/throwing writes with the real handler before adding suffix commands.
-A true return is acknowledgement, not verified text ownership; do not claim arbitrary
-editor mutations are atomic or that this alone fixes manual replacement/adaptation.
+**Astra follow-up audit (October 6): accepted-commit prerequisite implemented.**
+The shared suggestion engine now checks editor acknowledgement, returns the actual
+inserted spelling, and prevents new-word/context/selection learning after a rejected
+write. The swipe caller removes null-result prediction fallbacks for ownership,
+ML/correction tracking and success haptics. Typed separator rejection aborts the swipe.
+Six added host cases and two native wrappers protect the change; 2,741 pure + 959 mock
+and all 33 native punctuation tests pass. A true return is acknowledgement, not exact
+text ownership. Legacy deletion before manual replacement still needs verified
+receipts; these results do not claim atomic editor mutations.
 
 Suffix ownership additionally needs session/connection identity, both selection ends,
 exact readback word/owned-space and language/learning identity. Invalidate on field,
@@ -262,8 +262,7 @@ rollback does not restore historical timestamps or evicted entries; do not descr
 it as full store-state reversal. Reset/import/privacy/language changes must expire
 handles, including an off→on or away→back cycle.
 Unreadable editors retain ordinary literal typing but cannot qualify for initial
-verified suffix attachment. No production suffix command or ownership fix was made
-in the terminal-settings round.
+verified suffix attachment. Explicit suffix commands and their strict ownership/undo receipts remain pending.
 
 **Required regressions (test the real commit/routing path):**
 

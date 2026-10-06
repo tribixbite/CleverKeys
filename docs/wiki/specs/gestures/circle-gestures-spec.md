@@ -1,6 +1,6 @@
 ---
 title: Circle Gestures - Technical Specification
-user_guide: ../../gestures/circle-gestures.md
+user_guide: /wiki/gestures/circle-gestures/
 status: planned
 version: v1.3.0 (planned)
 ---

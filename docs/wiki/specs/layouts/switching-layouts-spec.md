@@ -1,6 +1,6 @@
 ---
 title: Switching Layouts - Technical Specification
-user_guide: ../../layouts/switching-layouts.md
+user_guide: /wiki/layouts/switching-layouts/
 status: implemented
 version: v1.2.7
 ---

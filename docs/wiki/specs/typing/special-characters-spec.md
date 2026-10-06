@@ -1,6 +1,6 @@
 ---
 title: Special Characters - Technical Specification
-user_guide: ../../typing/special-characters.md
+user_guide: /wiki/typing/special-characters/
 status: implemented
 version: v1.2.7
 ---

@@ -24,6 +24,7 @@ import tribixbite.cleverkeys.contextaware.ContextModel
 import tribixbite.cleverkeys.contextaware.TrigramStore
 import tribixbite.cleverkeys.persist.InMemoryLearnedStorage
 import tribixbite.cleverkeys.personalization.PersonalizationEngine
+import tribixbite.cleverkeys.ml.SwipeMLData
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -100,6 +101,8 @@ class LearningFunnelBookkeepingTest {
         config.autocorrect_enabled = false
         config.swipe_final_autocorrect_enabled = false
         config.next_word_prediction_enabled = false
+        config.primary_language = "en"
+        config.custom_terminal_packages = emptySet()
         config.swipe_context_rescoring = false
         config.swipe_on_password_fields = false
         config.backspace_undo_swipe = true
@@ -245,6 +248,83 @@ class LearningFunnelBookkeepingTest {
 
     private fun learnWindow(): List<String> = predictor.getRecentWords()
 
+    /** A decoder result is only an offer until the editor acknowledges insertion. */
+    private fun assertRejectedSwipe(connection: InputConnection?) {
+        editor.append("fix ")
+        handler.updateContext("fix")
+        val collector = mockk<MLDataCollector>(relaxed = true)
+        handler.setField("mlDataCollector", collector)
+        every { inputCoordinator.getCurrentSwipeData() } returns mockk<SwipeMLData>(relaxed = true)
+        tracker.setWasLastInputSwipe(true)
+        handler.handleSwipePredictionResults(
+            listOf("got", "git"), listOf(100, 90), connection, textField(), resources,
+            false, false, inputCoordinator
+        )
+
+        assertWithMessage("a rejected result must leave correction candidates available")
+            .that(barWords).containsAtLeast("got", "git").inOrder()
+        assertWithMessage("a rejected word cannot own a later replacement")
+            .that(tracker.getLastAutoInsertedWord()).isNull()
+        assertWithMessage("no successful commit provenance")
+            .that(tracker.getLastCommitSource()).isEqualTo(PredictionSource.UNKNOWN)
+        assertWithMessage("no automatic-space ownership").that(tracker.lastSpaceWasAutoInserted).isFalse()
+        assertWithMessage("selection callbacks must not be awaited").that(tracker.expectingSelectionUpdate).isFalse()
+        assertWithMessage("no rejected word in prediction context")
+            .that(tracker.getContextWords()).doesNotContain("got")
+        assertWithMessage("no rejected word in learning window").that(learnWindow()).containsExactly("fix")
+        assertWithMessage("no rejected bigram increment").that(bigram("fix", "got")).isEqualTo(0)
+        verify(exactly = 0) { personalization.recordWordTyped("got", any()) }
+        verify(exactly = 0) { adaptation.recordSelection(any()) }
+        verify(exactly = 0) { collector.collectAndStoreSwipeData(any(), any(), any(), any(), any()) }
+        verify(exactly = 1) { inputCoordinator.resetSwipeData() }
+        verify(exactly = 0) { inputCoordinator.triggerSwipeCompleteHaptic() }
+        assertWithMessage("no swipe-correction record for a rejected write")
+            .that(handler.javaClass.getDeclaredField("swipeCorrectionTracker").apply { isAccessible = true }.get(handler))
+            .isNull()
+    }
+
+    @Test
+    fun rejectedSwipeCommitDoesNotLearnOwnOrCapturePrediction() {
+        every { ic.commitText(any(), any()) } returns false
+        assertRejectedSwipe(ic)
+        assertWithMessage("rejected editor content").that(editor.toString()).isEqualTo("fix ")
+    }
+
+    @Test
+    fun throwingSwipeCommitDoesNotLearnOwnOrCapturePrediction() {
+        every { ic.commitText(any(), any()) } throws IllegalStateException("Editor unavailable")
+        assertRejectedSwipe(ic)
+        assertWithMessage("throwing editor content").that(editor.toString()).isEqualTo("fix ")
+    }
+
+    @Test
+    fun missingSwipeConnectionDoesNotLearnOwnOrCapturePrediction() {
+        assertRejectedSwipe(null)
+    }
+
+    @Test
+    fun rejectedManualCandidateDoesNotLearnSelection() {
+        every { ic.commitText(any(), any()) } returns false
+        val committed = handler.onSuggestionSelected("git", ic, textField(), resources, true)
+        assertWithMessage("rejected candidate result").that(committed).isNull()
+        assertWithMessage("no rejected candidate context").that(learnWindow()).isEmpty()
+        verify(exactly = 0) { adaptation.recordSelection(any()) }
+        verify(exactly = 0) { personalization.recordWordTyped(any(), any()) }
+    }
+
+    @Test
+    fun rejectedTypedSeparatorAbortsSwipeWithoutCompletingTypedWord() {
+        type("kids'toy")
+        every { ic.commitText(" ", 1) } returns false
+        swipe("toys")
+        assertWithMessage("separator rejection must not append the prediction")
+            .that(editor.toString()).isEqualTo("kids'toy")
+        assertWithMessage("no completed typed word without its accepted separator")
+            .that(learnWindow()).isEmpty()
+        assertWithMessage("no uncommitted swipe ownership").that(tracker.getLastAutoInsertedWord()).isNull()
+        verify(exactly = 0) { personalization.recordWordTyped(any(), any()) }
+    }
+
     // ================================================================ W1
 
     @Test
@@ -262,7 +342,19 @@ class LearningFunnelBookkeepingTest {
         editor.append("fix ")
         tap("git")
 
+        assertWithMessage("manual selection must actually reach the editor")
+            .that(editor.toString()).isEqualTo("fix git ")
         verify(exactly = 1) { adaptation.recordSelection("git") }
+    }
+
+    @Test
+    fun acknowledgedCandidateReturnsItsExactInsertedCapitalization() {
+        type("Bo")
+        val committed = handler.onSuggestionSelected("bowie", ic, textField(), resources, true)
+        assertWithMessage("acknowledged spelling").that(committed).isEqualTo("Bowie")
+        assertWithMessage("editor spelling").that(editor.toString()).isEqualTo("Bowie ")
+        assertWithMessage("whole normalized word learned once").that(learnWindow()).containsExactly("bowie")
+        verify(exactly = 1) { adaptation.recordSelection("Bowie") }
     }
 
     // ================================================================ W2 (bar REPLACE)

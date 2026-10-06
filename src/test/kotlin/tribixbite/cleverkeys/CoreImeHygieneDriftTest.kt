@@ -43,14 +43,26 @@ class CoreImeHygieneDriftTest {
                 "log + state reset; do not reintroduce it in either class."
         ).that(handler + coordinator).doesNotContain("Silently catch")
 
-        assertWithMessage(
-            "The commit-path catch must log the failure explicitly via " +
-                "\"Error in onSuggestionSelected\" and reset selection-tracking state."
-        ).that(handler).contains("Error in onSuggestionSelected")
+        val commit = handler.substringAfter("fun onSuggestionSelected(")
+            .substringBefore("private fun clearRejectedCommitState()")
+        val rejectionCatch = commit.substringAfterLast("} catch (e: Exception) {")
+            .substringBefore("\n            }")
+        assertWithMessage("The commit catch must log rejection without the offered text")
+            .that(rejectionCatch).contains("Log.e(TAG,")
+        assertWithMessage("The commit catch must clear failed ownership")
+            .that(rejectionCatch).contains("clearRejectedCommitState()")
+        assertWithMessage("The commit catch must not continue into learning")
+            .that(rejectionCatch).contains("return null")
+        val cleanup = handler.substringAfter("private fun clearRejectedCommitState()")
+            .substringBefore("\n    }")
         assertWithMessage(
             "The commit-path catch must reset expectingSelectionUpdate so a botched " +
                 "commit cannot leave stale context (hardening ported from InputCoordinator)."
-        ).that(handler).contains("contextTracker.expectingSelectionUpdate = false")
+        ).that(cleanup).contains("contextTracker.expectingSelectionUpdate = false")
+        assertWithMessage("Failed ownership cannot authorize punctuation or replacement")
+            .that(cleanup).contains("contextTracker.invalidateAutoSpacePending()")
+        assertWithMessage("Failed prediction cannot authorize replacing a later word")
+            .that(cleanup).contains("contextTracker.clearLastAutoInsertedWord()")
     }
 
     @Test

@@ -1,6 +1,6 @@
 ---
 title: First Time Setup - Technical Specification
-user_guide: ../../getting-started/first-time-setup.md
+user_guide: /wiki/getting-started/first-time-setup/
 status: implemented
 version: v1.5.0
 ---

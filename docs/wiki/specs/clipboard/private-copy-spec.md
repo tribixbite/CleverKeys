@@ -1,7 +1,7 @@
 ---
 title: Private Copy — Technical Specification
 description: Copy selected text into CleverKeys' private clipboard history without ever touching the Android system clipboard
-user_guide: ../../clipboard/private-copy.md
+user_guide: /wiki/clipboard/private-copy/
 status: implemented
 version: 1.5.0
 ---

@@ -1,6 +1,6 @@
 ---
 title: Short Swipes - Technical Specification
-user_guide: ../../gestures/short-swipes.md
+user_guide: /wiki/gestures/short-swipes/
 status: implemented
 version: v1.5.0
 ---

@@ -1,6 +1,6 @@
 ---
 title: Common Issues - Technical Specification
-user_guide: ../../troubleshooting/common-issues.md
+user_guide: /wiki/troubleshooting/common-issues/
 status: implemented
 version: v1.2.7
 ---

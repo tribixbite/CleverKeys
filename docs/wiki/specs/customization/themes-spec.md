@@ -1,7 +1,7 @@
 ---
 title: Themes - Technical Specification
 description: Built-in theme catalog, the custom-theme (DIY) pipeline, and how every Theme Creator field reaches the renderer.
-user_guide: ../../customization/themes.md
+user_guide: /wiki/customization/themes/
 status: implemented
 version: v1.6.0
 ---
