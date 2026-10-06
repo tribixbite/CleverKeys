@@ -2300,4 +2300,15 @@
     <string name="advanced_custom_terminal_invalid">Nom de paquet non valide (%2$d caractères maximum) : %1$s</string>
     <string name="advanced_custom_terminal_limit">Utilisez au maximum %1$d noms de paquet distincts.</string>
     <string name="advanced_custom_terminal_input_limit">La liste est trop longue (%1$d caractères maximum).</string>
+    <string name="command_palette_template_title">Modèle dynamique</string>
+    <string name="command_palette_template_help">Développez {clipboard}, {selection}, {uuid} et un {cursor}. Utilisez {{ et }} pour les accolades littérales. Les actions de texte existantes restent littérales.</string>
+    <string name="dynamic_action_unavailable">Action non disponible dans cet éditeur ou panneau</string>
+    <string name="dynamic_template_invalid">Modèle non valide : vérifiez les jetons, les accolades et les marqueurs de curseur.</string>
+    <string name="continuous_swipe_title">Glissement continu</string>
+    <string name="continuous_swipe_desc">Maintenez brièvement au centre de la barre d\'espace entre les mots sans lever le doigt. Un passage rapide conserve un seul mot.</string>
+    <string name="continuous_swipe_stopped">Glissement continu arrêté ; vérifiez le texte avant de continuer.</string>
+    <string name="cmd_append_possessive">Ajouter \'s</string>
+    <string name="cmd_append_possessive_desc">Attacher \'s au dernier mot vérifié ; un retour arrière supprime uniquement le suffixe</string>
+    <string name="cmd_append_apostrophe">Ajouter une apostrophe</string>
+    <string name="cmd_append_apostrophe_desc">Attacher une apostrophe au dernier mot vérifié (parents\') ; un retour arrière supprime uniquement le suffixe</string>
 </resources>

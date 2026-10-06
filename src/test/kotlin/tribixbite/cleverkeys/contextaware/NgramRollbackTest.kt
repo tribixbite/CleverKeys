@@ -35,6 +35,89 @@ class NgramRollbackTest {
         scheduler.awaitTermination(2, TimeUnit.SECONDS)
     }
 
+    @Test
+    fun `context receipt expires when model language changes away and back`() {
+        val bigrams = newBigramStore()
+        val model = ContextModel(bigrams, newTrigramStore(), "en")
+        val receipt = model.recordCommitWithReceipt(listOf("we", "like", "cats"))
+        model.language = "fr"
+        model.language = "en"
+        assertFalse(model.rollbackReceipt(receipt))
+        assertEquals(1, bigrams.getAllBigrams("en", "like").single().frequency)
+    }
+
+    @Test
+    fun `increment receipts consume once and reject older identical observations`() {
+        val store = newBigramStore()
+        store.recordBigram("en", "the", "cat")
+        val old = requireNotNull(store.recordBigramWithReceipt("en", "the", "cat"))
+        val latest = requireNotNull(store.recordBigramWithReceipt("en", "the", "cat"))
+        assertFalse(store.rollbackReceipt(old))
+        assertTrue(store.rollbackReceipt(latest))
+        assertFalse(store.rollbackReceipt(latest))
+        assertEquals(2, store.getAllBigrams("en", "the").single().frequency)
+    }
+
+    @Test
+    fun `receipt cannot cross stores or a clear and recreate of the same key`() {
+        val first = newBigramStore()
+        val second = newBigramStore()
+        val receipt = requireNotNull(first.recordBigramWithReceipt("en", "the", "cat"))
+        second.recordBigram("en", "the", "cat")
+        assertFalse(second.rollbackReceipt(receipt))
+        first.clear("en")
+        first.recordBigram("en", "the", "cat")
+        assertFalse(first.rollbackReceipt(receipt))
+        assertEquals(1, first.getAllBigrams("en", "the").single().frequency)
+        assertEquals(1, second.getAllBigrams("en", "the").single().frequency)
+    }
+
+    @Test
+    fun `skipped writes have no increment receipt and learnability is not reevaluated`() {
+        val bigrams = newBigramStore()
+        val trigrams = newTrigramStore()
+        assertEquals(null, bigrams.recordBigramWithReceipt("en", "same", "same"))
+        assertEquals(null, trigrams.recordTrigramWithReceipt("en", "a", "same", "same"))
+        val model = ContextModel(bigrams, trigrams, "en")
+        var allowed = true
+        val receipt = model.recordCommitWithReceipt(listOf("we", "like", "cats")) { allowed }
+        allowed = false
+        assertTrue(model.rollbackReceipt(receipt))
+        assertEquals(0, bigrams.getTotalBigramCount("en"))
+        assertEquals(0, trigrams.getTotalTrigramCount("en"))
+        assertFalse(model.rollbackReceipt(receipt))
+    }
+
+    @Test
+    fun `context receipt rejects partial rollback after one store changes`() {
+        val bigrams = newBigramStore()
+        val trigrams = newTrigramStore()
+        val model = ContextModel(bigrams, trigrams, "en")
+        val receipt = model.recordCommitWithReceipt(listOf("we", "like", "cats"))
+        trigrams.clearAll()
+        assertFalse(model.rollbackReceipt(receipt))
+        assertEquals(1, bigrams.getAllBigrams("en", "like").single().frequency)
+    }
+
+    @Test
+    fun `receipt survives flush and reads but expires on import purge or deletion`() {
+        val store = newBigramStore()
+        val receipt = requireNotNull(store.recordBigramWithReceipt("en", "the", "cat"))
+        store.flush()
+        store.getAllEntries("en")
+        assertTrue(store.isReceiptCurrent(receipt))
+        store.removeBigram("en", "the", "cat")
+        store.recordBigram("en", "the", "cat")
+        assertFalse(store.rollbackReceipt(receipt))
+        val afterDelete = requireNotNull(store.recordBigramWithReceipt("en", "the", "cat"))
+        store.purgeEntries("en") { it.word2 == "cat" }
+        store.recordBigram("en", "the", "cat")
+        assertFalse(store.rollbackReceipt(afterDelete))
+        val beforeImport = requireNotNull(store.recordBigramWithReceipt("en", "the", "cat"))
+        store.importFromJson("en", store.exportToJson("en"))
+        assertFalse(store.rollbackReceipt(beforeImport))
+    }
+
     // ------------------------------------------------------------ BigramStore
 
     @Test

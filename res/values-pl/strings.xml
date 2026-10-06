@@ -2341,4 +2341,15 @@
     <string name="advanced_custom_terminal_invalid">Nieprawidłowa nazwa pakietu (maksymalnie %2$d znaków): %1$s</string>
     <string name="advanced_custom_terminal_limit">Użyj maksymalnie %1$d unikalnych nazw pakietów.</string>
     <string name="advanced_custom_terminal_input_limit">Lista jest za długa (maksymalnie %1$d znaków).</string>
+    <string name="command_palette_template_title">Szablon dynamiczny</string>
+    <string name="command_palette_template_help">Rozwiń {clipboard}, {selection}, {uuid} oraz jeden {cursor}. Użyj {{ i }} dla dosłownych nawiasów klamrowych. Istniejące akcje tekstowe pozostaną bez zmian.</string>
+    <string name="dynamic_action_unavailable">Akcja niedostępna w tym edytorze lub panelu</string>
+    <string name="dynamic_template_invalid">Nieprawidłowy szablon: sprawdź tokeny, nawiasy klamrowe i znaczniki kursora.</string>
+    <string name="continuous_swipe_title">Ciągłe przeciąganie</string>
+    <string name="continuous_swipe_desc">Pomiędzy słowami przytrzymaj krótko środek spacji bez unoszenia palca. Szybkie przesunięcie zachowuje jedno słowo.</string>
+    <string name="continuous_swipe_stopped">Ciągłe przeciąganie zatrzymane; sprawdź tekst przed kontynuowaniem.</string>
+    <string name="cmd_append_possessive">Dołącz \'s</string>
+    <string name="cmd_append_possessive_desc">Dołącz \'s do ostatniego zweryfikowanego słowa; jedno cofnięcie usuwa tylko sufiks</string>
+    <string name="cmd_append_apostrophe">Dołącz apostrof</string>
+    <string name="cmd_append_apostrophe_desc">Dołącz apostrof do ostatniego zweryfikowanego słowa (parents\'); jedno cofnięcie usuwa tylko sufiks</string>
 </resources>

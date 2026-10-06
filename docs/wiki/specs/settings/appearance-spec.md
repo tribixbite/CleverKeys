@@ -235,5 +235,5 @@ Turn it down when a large Character Size makes sublabels crowd the main label.
 ## Related Specifications
 
 - [Themes](../customization/themes-spec.md) - Color system
-- [Settings System](../../../specs/settings-system.md) - Preferences
-- [Layout System](../../../specs/layout-system.md) - Key layout
+- [Settings System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/settings-system.md) - Preferences
+- [Layout System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/layout-system.md) - Key layout

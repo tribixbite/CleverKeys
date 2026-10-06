@@ -2261,4 +2261,15 @@
     <string name="advanced_custom_terminal_invalid">Di-wastong package name (maximum na %2$d character): %1$s</string>
     <string name="advanced_custom_terminal_limit">Gumamit ng hanggang %1$d natatanging package name.</string>
     <string name="advanced_custom_terminal_input_limit">Masyadong mahaba ang listahan (maximum na %1$d character).</string>
+    <string name="command_palette_template_title">Dinamikong template</string>
+    <string name="command_palette_template_help">I-expand ang {clipboard}, {selection}, {uuid} at isang {cursor}. Gamitin ang {{ at }} para sa mga literal na brace. Ang mga umiiral na pagkilos sa teksto ay mananatiling literal.</string>
+    <string name="dynamic_action_unavailable">Hindi available ang pagkilos sa editor o panel na ito</string>
+    <string name="dynamic_template_invalid">Di-wastong template: suriin ang mga token, brace, at cursor marker.</string>
+    <string name="continuous_swipe_title">Tuloy-tuloy na pag-swipe</string>
+    <string name="continuous_swipe_desc">Panandaliang huminto sa gitna ng spacebar sa pagitan ng mga salita nang hindi itinataas ang daliri. Ang mabilis na pagdaan ay nagpapanatili ng isang salita.</string>
+    <string name="continuous_swipe_stopped">Napatigil ang tuloy-tuloy na pag-swipe; suriin ang teksto bago magpatuloy.</string>
+    <string name="cmd_append_possessive">Idagdag ang \'s sa dulo</string>
+    <string name="cmd_append_possessive_desc">Ikabit ang \'s sa huling na-verify na salita; isang backspace ang nag-aalis lang ng hulapi</string>
+    <string name="cmd_append_apostrophe">Idagdag ang kudlit sa dulo</string>
+    <string name="cmd_append_apostrophe_desc">Ikabit ang kudlit sa huling na-verify na salita (parents\'); isang backspace ang nag-aalis lang ng hulapi</string>
 </resources>

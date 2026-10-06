@@ -283,3 +283,16 @@ To verify a new input mode works:
 ## Related Skills
 - `content-pane-layout.md` — View hierarchy and pane switching
 - `clipboard-panel-architecture.md` — Clipboard-specific tabs, filtering, pagination
+
+## Explicit templates and suffixes (October 6 development)
+
+TEMPLATE is an explicit ActionType/KeyValue kind; existing TEXT remains literal.
+All key, short-swipe and popover routes use KeyEventHandler.execute_template/execute_suffix.
+Both refuse the five inline panel/search/edit modes rather than targeting the app behind
+them; templates additionally refuse passwords and unreadable selection state. Failure
+returns false, shows existing IME feedback, and never falls back to typing the payload.
+Accepted template edits clear prior swipe/context ownership without learning the payload.
+Continuous segment commits carry EditorCommitGuard through InputCoordinator →
+SuggestionHandler, verifying actual insertion before learning/undo ownership. Forced
+separators use SuggestionHandler's bounded callback operation and preserve the same
+learning handle; they do not re-record the word.

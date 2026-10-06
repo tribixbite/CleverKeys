@@ -41,6 +41,11 @@ Repository skills under `.claude/skills/` are mandatory references when their to
 
 Also follow any session-provided global skill whose trigger matches. Record reusable architecture or workflow decisions in this handbook and the canonical spec instead of relying on chat history.
 
+For continuation status, read the operational handoff in
+`docs/plans/2026-10-05-recommended-features-and-gaps.md` and `memory/todo.md`.
+They distinguish tested artifacts from pending device validation. PAL uses
+Gemini 3.8 (`gemini-3.8-flash`) only; never substitute Gemini 3.1.
+
 ## 2. Build Infrastructure
 
 ### Local Build (Termux Optimized)
@@ -51,6 +56,11 @@ The project is optimized for building directly on an Android device via Termux.
     -   **Memory:** JVM args are tuned (`-Xmx2048m`) for limited resource environments.
     -   **Layout Resources:** Keyboard layouts (`src/main/layouts/*.xml`) are processed and copied to `build/generated-resources/raw` via a custom Gradle `Copy` task (`copyLayoutDefinitions`) to ensure they are available as `raw` resources for the `LayoutManager`.
     -   **Temporary Output:** Do not use `/tmp` on Termux. Use an ignored directory under `build/`, `context.cacheDir` in Android code, or the documented `~/ew-output` location for ew-cli.
+
+All Gradle tasks use `scripts/gradle-guard.sh` for the device-wide singleton and
+bounded memory. In-process Kotlin is the Gradle property
+`-Pkotlin.compiler.execution.strategy=in-process`; `-D` did not enforce it here.
+Fields used by view construction/reset must precede the Kotlin `init` block.
 
 ### Gradle Configuration (`build.gradle`)
 -   **Single Source of Truth (SSoT):** Versioning is controlled by `ext.VERSION_MAJOR`, `MINOR`, and `PATCH` at the top of `build.gradle`. `versionCode` and `versionName` are derived from these.
@@ -80,6 +90,26 @@ The project is optimized for building directly on an Android device via Termux.
 -   **ONNX Runtime:** Swipe prediction is handled by `com.microsoft.onnxruntime:onnxruntime-android`.
 -   **Models:** Models (encoder/decoder) are loaded from assets or external storage.
 -   **Privacy:** All inference happens strictly on-device.
+
+### Verified Editor Actions
+
+- `EditorReadback` guards editor identity, exact selection and bounded surrounding
+  text. Finish composition and revalidate before explicit template/suffix edits.
+  Never retry uncertain writes or infer success from a return value alone.
+- Continuous swipe is optional/default-off and uses bounded dwell segments plus one
+  serialized decode/commit queue. Revalidate editor/layout/config/language ownership
+  before every result and advance learning only after accepted readback.
+- Suffix learning replacement uses opaque instance/commit/epoch receipts and exact
+  owned store increments; it must not fall back to spelling-based rollback.
+- The shared `SuggestionHandler.onEditorSelectionChanged` gate keeps selection UI
+  unconditional but prevents verified owned callbacks from reaching manual caret
+  consumers. Android supplies no operation IDs; retain the bounded-ledger limitation.
+- TEMPLATE is explicit and nonrecursive; TEXT stays literal. Per-key and popover
+  assignment share validation and preserve action type through label/persistence/export.
+
+Canonical contracts: `docs/specs/context-learning-and-next-word.md`,
+`docs/specs/ctc-swipe-engine.md` and
+`docs/wiki/specs/customization/per-key-actions-spec.md`.
 
 ## 4. Developer Quirks & Gotchas
 -   **"White Bar" Artifact:** If the keyboard animation shows a white bar at the top, ensure `WindowLayoutUtils` sets height to `WRAP_CONTENT` and the Service theme is fully transparent.

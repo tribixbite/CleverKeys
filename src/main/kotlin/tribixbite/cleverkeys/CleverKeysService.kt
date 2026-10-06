@@ -632,6 +632,8 @@ class CleverKeysService : InputMethodService(),
     }
 
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {
+        _keyboardView.cancelContinuousSwipe()
+        _suggestionHandler.onEditorSessionChanged()
         // NOTE: Config refresh is handled by SharedPreferences listener (onSharedPreferenceChanged)
         // We only do initial config load here if config is completely null (shouldn't happen normally)
         if (_config == null) {
@@ -827,25 +829,30 @@ class CleverKeysService : InputMethodService(),
         candidatesEnd: Int
     ) {
         super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+        // Selection UI sees every callback, including ranges owned by a suffix
+        // edit. Only manual/unowned movement reaches phrase and cursor tracking.
         _keyeventhandler.selection_updated(oldSelStart, newSelStart)
         if ((oldSelStart == oldSelEnd) != (newSelStart == newSelEnd)) {
             _keyboardView.set_selection_state(newSelStart != newSelEnd)
         }
+        _suggestionHandler.onEditorSelectionChanged(newSelStart, newSelEnd) {
+            _keyboardView.onContinuousSelectionChanged(newSelStart, newSelEnd)
 
-        // v1.2.6: Trigger cursor-aware prediction sync when cursor moves
-        // Only sync when cursor position changes (not selection range change)
-        // and when there's no active selection (newSelStart == newSelEnd)
-        if (newSelStart == newSelEnd && oldSelStart != newSelStart) {
-            _inputCoordinator.onCursorMoved(
-                newPosition = newSelStart,
-                ic = currentInputConnection,
-                language = _config?.primary_language ?: "en",
-                editorInfo = currentInputEditorInfo
-            )
+            // Cursor prediction sync applies only to collapsed, moved selections.
+            if (newSelStart == newSelEnd && oldSelStart != newSelStart) {
+                _inputCoordinator.onCursorMoved(
+                    newPosition = newSelStart,
+                    ic = currentInputConnection,
+                    language = _config?.primary_language ?: "en",
+                    editorInfo = currentInputEditorInfo
+                )
+            }
         }
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
+        _keyboardView.cancelContinuousSwipe()
+        _suggestionHandler.onEditorSessionChanged()
         super.onFinishInputView(finishingInput)
         // gh #175: a minimized keyboard comes back full size the next time it is shown.
         _minimizer.reset()
@@ -1025,17 +1032,28 @@ class CleverKeysService : InputMethodService(),
     // Called by Keyboard2View when swipe typing completes.
     // wasShiftActive (v1.32.926): shift state for capitalize-first-letter;
     // wasShiftLocked (v1.33.8): caps-lock state for ALL CAPS.
+    fun cancelContinuousSwipe() { _keyboardView.cancelContinuousSwipe() }
+
+    /** Drop destructive ownership after an editor-verification failure in a phrase. */
+    fun onContinuousCommitRejected() { _suggestionHandler.onExplicitEdit() }
+
+    /** The verified separator belongs to the same word; do not learn it again. */
+    fun appendContinuousSeparator(ic: android.view.inputmethod.InputConnection,
+        info: android.view.inputmethod.EditorInfo, word: String, ownsSession: () -> Boolean): Boolean =
+        _suggestionHandler.appendContinuousSeparator(ic, info, word, ownsSession)
+
     fun handleSwipeTyping(
         swipedKeys: List<KeyboardData.Key>,
         swipePath: List<android.graphics.PointF>,
         timestamps: List<Long>,
         wasShiftActive: Boolean = false,
-        wasShiftLocked: Boolean = false
+        wasShiftLocked: Boolean = false,
+        control: InputCoordinator.SwipeCommitControl? = null
     ) {
         // v1.32.350: Delegated to InputCoordinator
         val ic = currentInputConnection
         val editorInfo = currentInputEditorInfo
-        _inputCoordinator.handleSwipeTyping(swipedKeys, swipePath, timestamps, ic, editorInfo, resources, wasShiftActive, wasShiftLocked)
+        _inputCoordinator.handleSwipeTyping(swipedKeys, swipePath, timestamps, ic, editorInfo, resources, wasShiftActive, wasShiftLocked, control)
     }
 
     /**

@@ -71,6 +71,8 @@ Changes are saved automatically. Tap **Done** to return.
 | **Undo/Redo** | Undo or redo action |
 | **Copy/Cut/Paste** | Clipboard operations (terminal-aware — see below) |
 | **Select All** | Select all text |
+| **Append 's / Append apostrophe** | Attach an exact suffix to the last verified word; Backspace undoes only that suffix |
+| **Dynamic template** | Expand clipboard, selection, UUID or a caret marker (see below) |
 | **Timestamp** | Insert current date/time using a SimpleDateFormat pattern (see below) |
 
 ### Timestamp Action
@@ -85,6 +87,38 @@ The **Timestamp** action type inserts the current date and/or time, formatted vi
 | `yyyy-MM-dd'T'HH:mm:ssXXX` | `2026-05-22T14:30:00+00:00` (ISO 8601) |
 
 Any valid SimpleDateFormat pattern works. The Command Palette dialog also offers a few preset chips covering the common date/time formats.
+
+## Dynamic Templates (development build)
+
+Choose **Dynamic template** in the command palette, or enable that option in the
+custom-text editor. The per-key screen and popover assignment use the same editor.
+Existing **Custom text** mappings remain literal, including text like `{uuid}`.
+
+| Token | Result |
+|-------|--------|
+| `{clipboard}` | Current plain clipboard text; media/URI clips are refused |
+| `{selection}` | Selected text, or empty text at a confirmed collapsed caret |
+| `{uuid}` | One UUIDv4 per invocation; repeated tokens share that UUID |
+| `{cursor}` | One caret marker, removed from the inserted text |
+
+For example, `[{selection}]({cursor})` wraps a selected label and leaves the caret
+inside the parentheses. `{{uuid}}` inserts the literal text `{uuid}`. Tokens inside
+clipboard or selected text are inserted literally; they are not expanded again.
+
+Templates are limited to 4,096 UTF-16 units, and expanded text to 65,536. Unknown
+tokens, unmatched braces, duplicate caret markers and unavailable token inputs are
+refused before editing. The editor must provide selection/content readback; password
+fields and active clipboard, emoji or GIF editors refuse these actions. Assignment
+previews never read your clipboard or selection. Template text is not automatically
+added to personalized vocabulary.
+
+If an app accepts the text but refuses caret movement, the text may remain inserted
+and the action reports failure. CleverKeys does not retry or erase an uncertain edit.
+An app can partially accept an edit; inspect the field before invoking it again.
+
+Custom-layout syntax: `{}:template:'[{selection}]({cursor})'`, or
+`:template symbol='{}':'[{selection}]({cursor})'`. XML export preserves the explicit
+TEMPLATE type, quotes and backslashes; mappings and backups retain the same type.
 
 ## Common Customizations
 
@@ -194,3 +228,31 @@ To restore defaults:
 ## Technical Details
 
 See [Per-Key Actions Technical Specification](../specs/customization/per-key-actions-spec.md).
+
+## Explicit Apostrophe Suffix Commands (development build)
+
+Assign **Append 's** or **Append apostrophe** to a short swipe, popover slot, ordinary
+layout key or Extra Keys. After `James`, Append 's produces `James's`; after `parents`,
+Append apostrophe produces `parents'`. The command makes the spelling explicit and
+does not infer singular/plural grammar. Literal apostrophe flicks and TEXT snippets
+continue to use their existing behavior.
+
+The command requires the exact last word and caret position to remain verified.
+It attaches before that word's single owned trailing space, or inserts no space when
+the original commit was spaceless. It refuses selected ranges, password fields,
+inline editors and stale editor/word ownership. Observed caret movement, changing
+fields or preferences, typing another character, or invoking a duplicate suffix
+invalidates attachment. Android does not identify which operation caused a selection
+callback: an identical manual move during the brief owned-callback window can be
+ambiguous, so cross-editor manual testing remains necessary.
+
+Immediately press Backspace to undo only the suffix, preserving the base word and
+its spacing. A refused or partial undo consumes that key press so whole-word swipe
+undo cannot delete the word underneath it. An uncertain editor write can leave text
+or a selection changed; there is no blind retry or compensating deletion.
+
+Personalized learning replaces the exact owned commit with the full suffixed word.
+Undo uses a fresh identity to replace it back; fragments like `s` are not separately
+learned. If a learning receipt expires after the text edit, the text remains and
+learning context is cleared rather than inventing another observation. Owned counts
+can be reversed; old timestamps and vocabulary evictions are not restored.

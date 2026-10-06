@@ -26,6 +26,7 @@ import tribixbite.cleverkeys.ui.settings.io.refreshInstalledLanguagePacks
 internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         // Handle preference changes for reactive updates
         when (key) {
+            "continuous_swipe_enabled" -> { continuousSwipeEnabled = prefs.getSafeBoolean(key, Defaults.CONTINUOUS_SWIPE_ENABLED) }
             "swipe_typing_enabled" -> {
                 swipeTypingEnabled = prefs.getBoolean(key, Defaults.SWIPE_TYPING_ENABLED)
             }
@@ -201,6 +202,7 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
 
 internal fun SettingsActivity.loadCurrentSettings() {
         // Swipe typing master switch
+        continuousSwipeEnabled = prefs.getSafeBoolean("continuous_swipe_enabled", Defaults.CONTINUOUS_SWIPE_ENABLED)
         swipeTypingEnabled = prefs.getSafeBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
         swipeOnPasswordFields = prefs.getSafeBoolean("swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)
 

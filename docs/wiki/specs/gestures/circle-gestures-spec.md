@@ -124,5 +124,5 @@ fun handleCircleGesture(result: CircleResult) {
 
 ## Related Specifications
 
-- [Gesture System](../../../specs/gesture-system.md) - Overall gesture architecture
+- [Gesture System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/gesture-system.md) - Overall gesture architecture
 - [Short Swipes Specification](short-swipes-spec.md) - Existing gesture patterns

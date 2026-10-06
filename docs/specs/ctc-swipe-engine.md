@@ -1094,3 +1094,28 @@ instrumented half is **device-only and not in CI** (audit HIGH-4).
 (1395 tests / 0 failures). Rebuild BOTH APKs before an ew-cli run —
 `assembleDebugAndroidTest` alone leaves a stale app APK and you get `NoSuchMethodError` for
 code you just wrote.
+
+## Continuous gesture segments (October 6 development)
+
+Opt-in continuous swipe serializes bounded immutable letter-path segments through the
+existing routed engine. A deliberate 280 ms dwell inside the physical spacebar's inner
+80% emits the preceding segment, excluding the space excursion. The next starts at
+its first letter; final lift emits it without an empty word. Without a deliberate boundary,
+the original full gesture remains the ordinary single-word request.
+
+Only one decode is in flight. Before committing, request guards verify gesture, layout,
+configuration, language, engine and editor identity, plus expected collapsed readback.
+After the editor accepts a word, context/learning advance before the next decode. An
+explicit boundary adds exactly one separator even when automatic trailing space is off.
+First-word shift and gesture-start Caps Lock are carried independently of the reset
+recognizer. A single observed English A/I segment is handled as that literal word;
+failed decodes do not receive guessed fallbacks. This does not fix `ad`/`wet` ranking.
+
+Each segment permits at most 2,048 samples; each gesture at most 32 segments. Overflow,
+rejected edits, selection/manual changes, new gestures, multitouch, cancellation, layout
+changes and input-session end cancel pending work. Cancellation must not fall back to
+decoding the original whole phrase on lift. Per-segment ML capture is reset.
+
+Selection callbacks arriving after an accepted commit are handled conservatively; a
+delayed intermediate caret callback can stop the phrase. Native mechanics tests do not
+certify human accuracy, latency or every editor's callback ordering.

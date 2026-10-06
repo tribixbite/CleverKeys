@@ -28,26 +28,29 @@ class DictionaryDataSourceTest {
     private lateinit var context: Context
     private lateinit var prefs: SharedPreferences
 
-    // Track words we disable during tests for cleanup
-    private val testDisabledWords = mutableListOf<String>()
+    // Restore the exact prior state, including an absent key, across orchestrator processes.
+    private var originalDisabledWords: Set<String>? = null
 
     @Before
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
         prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        originalDisabledWords = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey("en"), null)?.toSet()
         // Invalidate shared cache before each test so we get clean state
         MainDictionarySource.invalidateCache()
     }
 
     @After
     fun cleanup() {
-        // Remove any disabled words added during tests
-        if (testDisabledWords.isNotEmpty()) {
-            val key = LanguagePreferenceKeys.disabledWordsKey("en")
-            val disabled = prefs.getStringSet(key, emptySet())?.toMutableSet() ?: mutableSetOf()
-            disabled.removeAll(testDisabledWords.toSet())
-            prefs.edit().putStringSet(key, disabled).apply()
-        }
+        // Orchestrator kills this process after the test. apply() can lose the
+        // restoration and leave "because" disabled for later autocorrect tests.
+        val key = LanguagePreferenceKeys.disabledWordsKey("en")
+        val editor = prefs.edit()
+        val original = originalDisabledWords
+        if (original == null) editor.remove(key) else editor.putStringSet(key, original)
+        @Suppress("ApplySharedPref")
+        val restored = editor.commit()
+        assertTrue("Original disabled-word state must reach disk before process exit", restored)
         // Invalidate shared cache so other tests start clean
         MainDictionarySource.invalidateCache()
     }
@@ -157,7 +160,6 @@ class DictionaryDataSourceTest {
 
             // Toggle off
             source.toggleWord(wordText, false)
-            testDisabledWords.add(wordText.lowercase())
 
             // Verify in-place update
             val afterToggle = source.getAllWords()
@@ -255,7 +257,6 @@ class DictionaryDataSourceTest {
             val target = words.first { it.enabled && it.word.length >= 4 }
 
             source1.toggleWord(target.word, false)
-            testDisabledWords.add(target.word.lowercase())
 
             // Second instance should see the toggle (shared cache objects)
             val source2 = MainDictionarySource(context, disabledSource, "en")
@@ -405,7 +406,8 @@ class DictionaryDataSourceTest {
         val key = LanguagePreferenceKeys.disabledWordsKey("en")
         val disabled = prefs.getStringSet(key, emptySet())?.toMutableSet() ?: mutableSetOf()
         disabled.add(word.lowercase())
-        prefs.edit().putStringSet(key, disabled).apply()
-        testDisabledWords.add(word.lowercase())
+        @Suppress("ApplySharedPref")
+        val persisted = prefs.edit().putStringSet(key, disabled).commit()
+        assertTrue("Disabled test word must reach disk", persisted)
     }
 }

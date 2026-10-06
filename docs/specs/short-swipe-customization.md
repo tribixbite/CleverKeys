@@ -3,7 +3,7 @@
 > Canonical public documentation: [per-key actions guide](../wiki/customization/per-key-actions.md)
 > and [paired specification](../wiki/specs/customization/per-key-actions-spec.md).
 > This internal reference retains older implementation examples; current action metadata,
-> routing regressions, and pending suffix/template behavior are maintained in the paired spec.
+> routing regressions, and verified suffix/template behavior are maintained in the paired spec.
 
 
 > **Note:** As of v1.4.0, the canonical version of this specification lives at
@@ -532,3 +532,13 @@ The customization UI uses distinct colors for each direction:
 - Custom mapping lookup: < 1ms (HashMap)
 - UI response time: < 16ms (60fps)
 - JSON storage load: < 100ms
+
+## Dynamic templates (development)
+
+The canonical [per-key guide](../wiki/customization/per-key-actions.md) and
+[paired spec](../wiki/specs/customization/per-key-actions-spec.md) describe the explicit
+TEMPLATE action. TEXT stays literal. Template expansion is bounded/nonrecursive,
+uses verified editor readback and UTF-16 caret positions, and is guarded by the shared
+key router against hidden-editor writes. A rejected template never retries via the
+custom-action fallback. Native execution and parser coverage are in DynamicTemplateTest
+and KeyValueParserTest; final validation remains in testing-strategy.md.

@@ -59,6 +59,7 @@ class LearningFunnelBookkeepingTest {
 
     private lateinit var config: Config
     private lateinit var tracker: PredictionContextTracker
+    private lateinit var trigramStore: TrigramStore
     private lateinit var bigramStore: BigramStore
     private lateinit var predictor: WordPredictor
     private lateinit var personalization: PersonalizationEngine
@@ -112,11 +113,14 @@ class LearningFunnelBookkeepingTest {
         tracker = PredictionContextTracker()
 
         bigramStore = BigramStore(InMemoryLearnedStorage(), 60_000, 120_000, scheduler)
-        val trigramStore = TrigramStore(InMemoryLearnedStorage(), 60_000, 120_000, scheduler)
+        trigramStore = TrigramStore(InMemoryLearnedStorage(), 60_000, 120_000, scheduler)
         personalization = mockk(relaxed = true)
+        every { personalization.learningLock() } returns Any()
+        every { personalization.latestIncrementReceipt() } returns null
         val real = objenesis.newInstance(WordPredictor::class.java)
         real.setField("recentWords", mutableListOf<String>())
         real.setField("config", config)
+        real.setField("currentLanguage", "en")
         real.setField("contextModel", ContextModel(bigramStore, trigramStore, "en"))
         real.setField("personalizationEngine", personalization)
         real.setField("userWordOriginalCase", ConcurrentHashMap<String, String>())
@@ -181,6 +185,187 @@ class LearningFunnelBookkeepingTest {
         handler.setField("predictionTasks", mockk<PredictionTaskRunner>(relaxed = true))
         // Objenesis leaves booleans false; production's default for an ordinary field is true.
         handler.setField("fieldAllowsPersonalizedLearning", true)
+    }
+
+    /** Real vocabulary + engine for receipt tests; no production preferences are touched. */
+    private fun useReceiptVocabulary(): tribixbite.cleverkeys.personalization.UserVocabulary {
+        val vocabulary = tribixbite.cleverkeys.personalization.UserVocabulary(
+            InMemoryLearnedStorage(), 60_000, 120_000, scheduler
+        )
+        vocabulary.setField("lastCleanup", System.currentTimeMillis())
+        val engine = objenesis.newInstance(PersonalizationEngine::class.java)
+        engine.setField("vocabulary", vocabulary)
+        engine.setField("enabled", true)
+        engine.setField("prefs", mockk<android.content.SharedPreferences>(relaxed = true))
+        predictor.setField("personalizationEngine", engine)
+        config.learning_aggression = "BALANCED"
+        return vocabulary
+    }
+
+    private fun replaceReceipt(commit: LearningCommit, word: String): LearningCommit =
+        (predictor.replaceLearningCommit(commit, word, true) as LearningCommitReplacement.Applied).commit
+
+    @Test
+    fun exactReceiptReplacesSuffixThenUndoesWithoutLearningAnExtraWord() {
+        val vocabulary = useReceiptVocabulary()
+        listOf("we", "like", "bowie").forEach { predictor.addWordToContext(it, true) }
+        val base = requireNotNull(predictor.latestLearningCommit())
+        val suffix = replaceReceipt(base, "bowie's")
+        assertWithMessage("base pair removed").that(bigram("like", "bowie")).isEqualTo(0)
+        assertWithMessage("suffix pair once").that(bigram("like", "bowie's")).isEqualTo(1)
+        assertWithMessage("no base to suffix pair").that(bigram("bowie", "bowie's")).isEqualTo(0)
+        assertWithMessage("base usage removed").that(vocabulary.getWordUsage("bowie")).isNull()
+        assertWithMessage("suffix usage once").that(vocabulary.getWordUsage("bowie's")?.usageCount).isEqualTo(1)
+        assertWithMessage("original trigram removed").that(trigramStore.getProbability("en", "we", "like", "bowie")).isEqualTo(0f)
+        val restored = replaceReceipt(suffix, "bowie")
+        assertWithMessage("base restored once").that(bigram("like", "bowie")).isEqualTo(1)
+        assertWithMessage("suffix removed").that(bigram("like", "bowie's")).isEqualTo(0)
+        assertWithMessage("window restored").that(learnWindow()).containsExactly("we", "like", "bowie").inOrder()
+        assertWithMessage("fresh identity after undo").that(restored).isNotSameInstanceAs(base)
+        assertWithMessage("consumed original cannot run again").that(predictor.replaceLearningCommit(base, "wrong", true))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+        assertWithMessage("consumed suffix cannot run again").that(predictor.replaceLearningCommit(suffix, "wrong", true))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+        assertWithMessage("restored usage once").that(vocabulary.getWordUsage("bowie")?.usageCount).isEqualTo(1)
+    }
+
+    @Test
+    fun exactReceiptNeverFallsBackToAnOlderIdenticalWord() {
+        val vocabulary = useReceiptVocabulary()
+        predictor.addWordToContext("cat", true)
+        val old = requireNotNull(predictor.latestLearningCommit())
+        predictor.addWordToContext("cat", true)
+        val latest = requireNotNull(predictor.latestLearningCommit())
+        assertWithMessage("old same spelling rejected").that(predictor.replaceLearningCommit(old, "cat's", true))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+        replaceReceipt(latest, "cat's")
+        assertWithMessage("older cat usage retained").that(vocabulary.getWordUsage("cat")?.usageCount).isEqualTo(1)
+        assertWithMessage("only latest replaced").that(learnWindow()).containsExactly("cat", "cat's").inOrder()
+    }
+
+    @Test
+    fun exactReceiptRejectsStoreResetBeforeTouchingOtherStores() {
+        val vocabulary = useReceiptVocabulary()
+        listOf("we", "like", "cats").forEach { predictor.addWordToContext(it, true) }
+        val receipt = requireNotNull(predictor.latestLearningCommit())
+        trigramStore.clearAll()
+        assertWithMessage("preflight invalidated").that(predictor.canReplaceLearningCommit(receipt, true)).isFalse()
+        assertWithMessage("replacement invalidated").that(predictor.replaceLearningCommit(receipt, "cats'", true))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+        assertWithMessage("bigram untouched").that(bigram("like", "cats")).isEqualTo(1)
+        assertWithMessage("vocabulary untouched").that(vocabulary.getWordUsage("cats")?.usageCount).isEqualTo(1)
+        assertWithMessage("forgotten trigram not recreated").that(trigramStore.getTotalTrigramCount("en")).isEqualTo(0)
+    }
+
+    @Test
+    fun exactReceiptRejectsVocabularyForgetAndSameWordRecreation() {
+        val vocabulary = useReceiptVocabulary()
+        predictor.addWordToContext("cat", true)
+        val receipt = requireNotNull(predictor.latestLearningCommit())
+        vocabulary.clearAll()
+        vocabulary.recordWordUsage("cat")
+        assertWithMessage("recreated word is a different observation").that(predictor.replaceLearningCommit(receipt, "cat's", true))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+        assertWithMessage("new observation retained").that(vocabulary.getWordUsage("cat")?.usageCount).isEqualTo(1)
+    }
+
+    @Test
+    fun exactReceiptExpiresAcrossMutableConfigGateChanges() {
+        useReceiptVocabulary()
+        predictor.addWordToContext("cat", true)
+        val receipt = requireNotNull(predictor.latestLearningCommit())
+        config.on_device_learning_enabled = false
+        predictor.setConfig(config)
+        config.on_device_learning_enabled = true
+        predictor.setConfig(config)
+        assertWithMessage("same Config instance does not revive receipt").that(predictor.replaceLearningCommit(receipt, "cat's", true))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+    }
+
+    @Test
+    fun exactReceiptExpiresAsSoonAsConfiguredLanguageChangesBeforeDictionaryReload() {
+        useReceiptVocabulary()
+        predictor.addWordToContext("cat", true)
+        val receipt = requireNotNull(predictor.latestLearningCommit())
+        // The async loader has not called setLanguage yet: currentLanguage is still en.
+        config.primary_language = "fr"
+        predictor.setConfig(config)
+        config.primary_language = "en"
+        predictor.setConfig(config)
+        assertWithMessage("pre-reload language round trip cannot revive handle")
+            .that(predictor.replaceLearningCommit(receipt, "cat's", true))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+    }
+
+    @Test
+    fun exactReceiptSurvivesDetectionReturningTheAlreadyActiveStoreLanguage() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        val languages = mockk<MultiLanguageManager>()
+        // The manager can catch up to the predictor's language after a separate dictionary
+        // switch. Reporting en is not a change to this predictor's en context/store.
+        every { languages.detectAndSwitch(any(), any()) } returns "en"
+        predictor.setField("multiLanguageManager", languages)
+        listOf("we", "all", "really", "like", "cats").forEach { predictor.addWordToContext(it, true) }
+        val receipt = requireNotNull(predictor.latestLearningCommit())
+        assertWithMessage("same language detection keeps the context")
+            .that(learnWindow()).containsExactly("we", "all", "really", "like", "cats").inOrder()
+        replaceReceipt(receipt, "cats'")
+        assertWithMessage("suffix uses retained previous word").that(bigram("like", "cats'")).isEqualTo(1)
+    }
+
+    @Test
+    fun exactReceiptPreflightPermissionMismatchPermanentlyExpiresIt() {
+        val vocabulary = useReceiptVocabulary()
+        predictor.addWordToContext("cat", true)
+        val receipt = requireNotNull(predictor.latestLearningCommit())
+        assertWithMessage("incognito preflight rejected").that(predictor.canReplaceLearningCommit(receipt, false)).isFalse()
+        assertWithMessage("allowed again cannot revive it").that(predictor.canReplaceLearningCommit(receipt, true)).isFalse()
+        assertWithMessage("replacement also rejected").that(predictor.replaceLearningCommit(receipt, "cat's", true))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+        assertWithMessage("original usage untouched").that(vocabulary.getWordUsage("cat")?.usageCount).isEqualTo(1)
+    }
+
+    @Test
+    fun exactReceiptExpiresAcrossLanguageAndContextBoundaries() {
+        useReceiptVocabulary()
+        predictor.addWordToContext("cat", true)
+        val languageReceipt = requireNotNull(predictor.latestLearningCommit())
+        predictor.setLanguage("fr")
+        predictor.setLanguage("en")
+        assertWithMessage("language round trip invalidates").that(predictor.replaceLearningCommit(languageReceipt, "cat's", true))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+        predictor.addWordToContext("cat", true)
+        val sessionReceipt = requireNotNull(predictor.latestLearningCommit())
+        predictor.clearContext()
+        predictor.addWordToContext("cat", true)
+        assertWithMessage("new session identical word invalidates").that(predictor.replaceLearningCommit(sessionReceipt, "cat's", true))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+    }
+
+    @Test
+    fun exactReceiptSupportsContextOnlyReplacementWithoutStoreReads() {
+        config.on_device_learning_enabled = false
+        predictor.addWordToContext("cat", true)
+        val receipt = requireNotNull(predictor.latestLearningCommit())
+        replaceReceipt(receipt, "cat's")
+        assertWithMessage("context updated with learning off").that(learnWindow()).containsExactly("cat's")
+        verify(exactly = 0) { personalization.receiptVersion() }
+        verify(exactly = 0) { personalization.recordWordTyped(any(), any()) }
+        assertWithMessage("no ngrams").that(bigramStore.getTotalBigramCount("en")).isEqualTo(0)
+    }
+
+    @Test
+    fun exactReceiptRejectsChangedFieldPermissionWithoutMutation() {
+        val vocabulary = useReceiptVocabulary()
+        predictor.addWordToContext("cat", true)
+        val receipt = requireNotNull(predictor.latestLearningCommit())
+        assertWithMessage("incognito change invalidates").that(predictor.replaceLearningCommit(receipt, "cat's", false))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+        assertWithMessage("permission restored cannot revive rejected handle")
+            .that(predictor.replaceLearningCommit(receipt, "cat's", true))
+            .isEqualTo(LearningCommitReplacement.Invalidated)
+        assertWithMessage("original usage unchanged").that(vocabulary.getWordUsage("cat")?.usageCount).isEqualTo(1)
     }
 
     @After

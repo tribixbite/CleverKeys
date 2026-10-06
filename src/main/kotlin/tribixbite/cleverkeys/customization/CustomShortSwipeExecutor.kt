@@ -49,6 +49,8 @@ class CustomShortSwipeExecutor(private val context: Context) {
             ActionType.KEY_EVENT -> executeKeyEvent(mapping.getKeyEventCode(), inputConnection)
             ActionType.INTENT -> executeIntent(mapping.actionValue)
             ActionType.TIMESTAMP -> executeTimestamp(mapping.actionValue, inputConnection)
+            // Templates require the shared router’s current session and inline-mode guard.
+            ActionType.TEMPLATE -> false
         }
     }
 

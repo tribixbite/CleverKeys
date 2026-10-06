@@ -323,6 +323,6 @@ This architectural spec covers the shared scaffolding. For exact values, ranges,
 - [Appearance Settings](appearance-spec.md) — theme, keyboard height, opacity, borders, label brightness
 - [Input Behavior Settings](input-behavior-spec.md) — long-press timeout, key repeat, swipe geometry
 - [Haptics Settings](haptics-spec.md) — master haptic toggle and per-event vibration
-- [CTC Swipe Engine](../../../specs/ctc-swipe-engine.md) — beam width and the ONNX-threads knob
+- [CTC Swipe Engine](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/ctc-swipe-engine.md) — beam width and the ONNX-threads knob
 
 For backup/restore and the import-preview pipeline (which exercises `SETTINGS_DEFAULTS`, `PrefValue`, and the diff engine), see the backup/restore specs.

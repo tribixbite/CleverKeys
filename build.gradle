@@ -559,7 +559,13 @@ tasks.register('copyScriptLatencyPacks', Copy) {
   }
   into "${buildDir}/generated/scriptLatencyPacks/langpacks"
 }
-tasks.matching { it.name ==~ /merge\w+AndroidTestAssets/ }.configureEach {
+// Asset merging, lint model generation and lint analysis read the generated asset directory.
+// Declare its producer for combined assemble+lint runs as well as separate tasks.
+tasks.matching {
+  it.name ==~ /merge\w+AndroidTestAssets/ ||
+    it.name ==~ /generate\w+AndroidTestLintModel/ ||
+    it.name ==~ /lintAnalyze\w+AndroidTest/
+}.configureEach {
   dependsOn 'copyScriptLatencyPacks'
 }
 

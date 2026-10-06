@@ -458,7 +458,8 @@ class InputCoordinator(
         shiftActive: Boolean = wasShiftActiveAtSwipeStart,
         shiftLocked: Boolean = wasShiftLockedAtSwipeStart,
         origin: SuggestionOrigin? = null,
-        languages: List<String>? = null
+        languages: List<String>? = null,
+        commitGuard: EditorCommitGuard? = null
     ) {
         if (closed) return
         // Keep the fields in sync with the request-carried state (single source of truth for the
@@ -474,7 +475,7 @@ class InputCoordinator(
         }
         delegate.handleSwipePredictionResults(
             predictions, scores, ic, editorInfo, resources, shiftActive, shiftLocked, this, origin,
-            languages
+            languages, commitGuard
         )
     }
 
@@ -532,6 +533,14 @@ class InputCoordinator(
      * @param wasShiftActive v1.32.926: True if shift was latched (single tap) - capitalize first letter
      * @param wasShiftLocked v1.33.8: True if shift was locked (caps lock) - uppercase entire word
      */
+    /** Per-request guard/acknowledgement used by the serialized continuous phrase queue. */
+    class SwipeCommitControl(
+        val isCurrent: () -> Boolean,
+        val complete: (String?) -> Unit,
+        val prepareCommit: () -> Unit = {},
+        val commitGuard: EditorCommitGuard? = null,
+    )
+
     fun handleSwipeTyping(
         swipedKeys: List<KeyboardData.Key>,
         swipePath: List<android.graphics.PointF>?,
@@ -540,9 +549,10 @@ class InputCoordinator(
         editorInfo: EditorInfo?,
         resources: Resources,
         wasShiftActive: Boolean = false,  // v1.32.926: Track if shift was latched when swipe started
-        wasShiftLocked: Boolean = false   // v1.33.8: Track if shift was LOCKED (caps lock) when swipe started
+        wasShiftLocked: Boolean = false,  // v1.33.8: Track if shift was LOCKED (caps lock) when swipe started
+        control: SwipeCommitControl? = null
     ) {
-        if (closed) return
+        if (closed || control?.isCurrent() == false) { control?.complete(null); return }
         // v1.32.926: Store shift state for capitalize first letter in onSuggestionSelected
         wasShiftActiveAtSwipeStart = wasShiftActive
         // v1.33.8: Store caps lock state for ALL CAPS transformation in onSuggestionSelected
@@ -551,7 +561,19 @@ class InputCoordinator(
         // Clear auto-inserted word tracking when new swipe starts
         contextTracker.clearLastAutoInsertedWord()
 
-        if (!config.swipe_typing_enabled) return
+        if (!config.swipe_typing_enabled) { control?.complete(null); return }
+        // A one-key letter segment is an observed explicit choice, not a failed-decode guess.
+        // English I/a are valid words even though their path cannot satisfy model length gates.
+        if (control != null && config.primary_language == "en" && swipedKeys.distinct().size == 1) {
+            val char = swipedKeys.first().keys[0]?.takeIf { it.getKind() == KeyValue.Kind.Char }?.getChar()
+            if (char == 'i' || char == 'a') {
+                contextTracker.setWasLastInputSwipe(true)
+                control?.prepareCommit()
+                handlePredictionResults(listOf(char.toString()), listOf(100), ic, editorInfo, resources, wasShiftActive, wasShiftLocked, commitGuard = control.commitGuard)
+                control.complete(contextTracker.getLastAutoInsertedWord())
+                return
+            }
+        }
         // WP9 R-1 step 7: mode+layout-routed engine selection (swipe_engine_mode pref —
         // ctc (default) = CTC trie-beam on Latin layouts, geometric elsewhere;
         // geometric = SHARK2 everywhere). One engine owns each swipe end-to-end; both feed
@@ -562,11 +584,11 @@ class InputCoordinator(
         )) {
             SwipeEngineRouter.Engine.GEOMETRIC -> performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked
+                wasShiftActive, wasShiftLocked, control
             )
             SwipeEngineRouter.Engine.CTC -> performCtcSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked
+                wasShiftActive, wasShiftLocked, control
             )
         }
     }
@@ -673,14 +695,15 @@ class InputCoordinator(
         editorInfo: EditorInfo?,
         resources: Resources,
         wasShiftActive: Boolean,
-        wasShiftLocked: Boolean
+        wasShiftLocked: Boolean,
+        control: SwipeCommitControl? = null
     ) {
-        if (swipePath.isNullOrEmpty() || timestamps == null) return
-        val keyboard = keyboardView.getKeyboard() ?: return
-        val params = keyboardView.geometryParams() ?: return
+        if (swipePath.isNullOrEmpty() || timestamps == null) { control?.complete(null); return }
+        val keyboard = keyboardView.getKeyboard() ?: run { control?.complete(null); return }
+        val params = keyboardView.geometryParams() ?: run { control?.complete(null); return }
         val frameW = keyboardView.width.toFloat()
         val frameH = keyboardView.height.toFloat()
-        if (frameW <= 0f || frameH <= 0f) return
+        if (frameW <= 0f || frameH <= 0f) { control?.complete(null); return }
 
         // Same swipe-state + ML-trace capture as the CTC path (D5 collection works
         // identically for geometric selections), tagged with the geometric engine + layout
@@ -692,12 +715,14 @@ class InputCoordinator(
         geometricAdapterOrCreate().decodeAsync(
             keyboard, params, frameW, frameH, swipePath, timestamps, language
         ) { result ->
+            if (control?.isCurrent() == false) { control.complete(null); return@decodeAsync }
             // The decode callback replays the InputConnection/EditorInfo captured at swipe
             // time. A decode can land after the field changed (cold Tier-A build takes
             // 150-400 ms, and a same-field restart or an app switch replaces both handles),
             // so apply the SAME staleness guard the CTC decode callback uses — otherwise
             // this word would be committed into an unrelated field (audit M-2).
             if (isReplayInputStillCurrent(ic, editorInfo)) {
+                control?.prepareCommit()
                 handlePredictionResults(
                     result.words, result.scores, ic, editorInfo, resources,
                     wasShiftActive, wasShiftLocked,
@@ -706,8 +731,10 @@ class InputCoordinator(
                     // ARC-097: derived from the routed Engine rather than written as an
                     // origin literal, so the engine→origin mapping has exactly ONE
                     // implementation — the one SuggestionProvenanceTest pins for totality.
-                    SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.GEOMETRIC)
+                    SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.GEOMETRIC),
+                    commitGuard = control?.commitGuard
                 )
+                control?.complete(contextTracker.getLastAutoInsertedWord())
             } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 android.util.Log.d(TAG, "Dropping geometric decode: input field changed since swipe")
             }
@@ -755,7 +782,8 @@ class InputCoordinator(
         editorInfo: EditorInfo?,
         resources: Resources,
         wasShiftActive: Boolean,
-        wasShiftLocked: Boolean
+        wasShiftLocked: Boolean,
+        control: SwipeCommitControl? = null
     ) {
         val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
             ?: config.primary_language
@@ -775,16 +803,16 @@ class InputCoordinator(
             // it must never return without dispatching.
             performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked
+                wasShiftActive, wasShiftLocked, control
             )
             return
         }
-        if (swipePath.isNullOrEmpty() || timestamps == null) return
-        val keyboard = keyboardView.getKeyboard() ?: return
-        val params = keyboardView.geometryParams() ?: return
+        if (swipePath.isNullOrEmpty() || timestamps == null) { control?.complete(null); return }
+        val keyboard = keyboardView.getKeyboard() ?: run { control?.complete(null); return }
+        val params = keyboardView.geometryParams() ?: run { control?.complete(null); return }
         val frameW = keyboardView.width.toFloat()
         val frameH = keyboardView.height.toFloat()
-        if (frameW <= 0f || frameH <= 0f) return
+        if (frameW <= 0f || frameH <= 0f) { control?.complete(null); return }
 
         // Three reasons to hand this swipe to geometric, checked together because they have the
         // same remedy:
@@ -813,7 +841,7 @@ class InputCoordinator(
         ) {
             performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked
+                wasShiftActive, wasShiftLocked, control
             )
             return
         }
@@ -839,24 +867,25 @@ class InputCoordinator(
                 // Terminal: the geometric path never routes back here, so a failure costs at
                 // most one extra decode per swipe, and a geometric failure falls through to its
                 // own empty result — the final fallback.
-                if (isReplayInputStillCurrent(ic, editorInfo)) {
+                if (control?.isCurrent() != false && isReplayInputStillCurrent(ic, editorInfo)) {
                     performGeometricSwipeTyping(
                         swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                        wasShiftActive, wasShiftLocked
+                        wasShiftActive, wasShiftLocked, control
                     )
-                } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                    android.util.Log.d(
-                        TAG, "Dropping CTC geometric fallback: input field changed since swipe"
-                    )
+                } else {
+                    control?.complete(null)
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) android.util.Log.d(TAG, "Dropping CTC geometric fallback: input changed")
                 }
             },
         ) { result ->
+            if (control?.isCurrent() == false) { control.complete(null); return@decodeAsync }
             // The decode callback replays the InputConnection/EditorInfo captured at swipe
             // time. A decode can land after the field changed (cold path builds the ONNX
             // session + 98k-word trie, and a same-field restart or an app switch replaces
             // both handles), so apply the SAME staleness guard as the geometric path
             // (audit M-2) — otherwise this word could commit into an unrelated field.
             if (isReplayInputStillCurrent(ic, editorInfo)) {
+                control?.prepareCommit()
                 handlePredictionResults(
                     result.words, result.scores, ic, editorInfo, resources,
                     wasShiftActive, wasShiftLocked,
@@ -864,8 +893,9 @@ class InputCoordinator(
                     // ARC-097: same single-implementation rule as the geometric callback.
                     SuggestionOrigin.forRoutedEngine(SwipeEngineRouter.Engine.CTC),
                     // CK-150-024: non-null only for a dual-language merged slate.
-                    result.languages
+                    result.languages, control?.commitGuard
                 )
+                control?.complete(contextTracker.getLastAutoInsertedWord())
             } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 android.util.Log.d(TAG, "Dropping CTC decode: input field changed since swipe")
             }

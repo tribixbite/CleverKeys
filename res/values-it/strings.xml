@@ -2330,4 +2330,15 @@
     <string name="advanced_custom_terminal_invalid">Nome pacchetto non valido (massimo %2$d caratteri): %1$s</string>
     <string name="advanced_custom_terminal_limit">Usa al massimo %1$d nomi di pacchetto distinti.</string>
     <string name="advanced_custom_terminal_input_limit">L\'elenco è troppo lungo (massimo %1$d caratteri).</string>
+    <string name="command_palette_template_title">Modello dinamico</string>
+    <string name="command_palette_template_help">Espandi {clipboard}, {selection}, {uuid} e un {cursor}. Usa {{ e }} per le parentesi graffe letterali. Le azioni di testo esistenti rimangono letterali.</string>
+    <string name="dynamic_action_unavailable">Azione non disponibile in questo editor o riquadro</string>
+    <string name="dynamic_template_invalid">Modello non valido: controlla token, parentesi graffe e marcatori del cursore.</string>
+    <string name="continuous_swipe_title">Scorrimento continuo</string>
+    <string name="continuous_swipe_desc">Tieni premuto brevemente al centro della barra spaziatrice tra le parole senza sollevare il dito. Un passaggio rapido mantiene una sola parola.</string>
+    <string name="continuous_swipe_stopped">Scorrimento continuo interrotto; controlla il testo prima di continuare.</string>
+    <string name="cmd_append_possessive">Aggiungi \'s</string>
+    <string name="cmd_append_possessive_desc">Collega \'s all\'ultima parola verificata; un backspace rimuove solo il suffisso</string>
+    <string name="cmd_append_apostrophe">Aggiungi apostrofo</string>
+    <string name="cmd_append_apostrophe_desc">Collega un apostrofo all\'ultima parola verificata (parents\'); un backspace rimuove solo il suffisso</string>
 </resources>

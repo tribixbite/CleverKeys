@@ -2301,4 +2301,15 @@
     <string name="advanced_custom_terminal_invalid">Nederīgs pakotnes nosaukums (maksimums %2$d rakstzīmes): %1$s</string>
     <string name="advanced_custom_terminal_limit">Izmantojiet ne vairāk kā %1$d atšķirīgus pakotņu nosaukumus.</string>
     <string name="advanced_custom_terminal_input_limit">Saraksts ir pārāk garš (maksimums %1$d rakstzīmes).</string>
+    <string name="command_palette_template_title">Dinamiska veidne</string>
+    <string name="command_palette_template_help">Izvērst {clipboard}, {selection}, {uuid} un vienu {cursor}. Lietojiet {{ un }} burtiskām figūriekavām. Esošās teksta darbības paliek burtiskas.</string>
+    <string name="dynamic_action_unavailable">Darbība nav pieejama šajā redaktorā vai panelī</string>
+    <string name="dynamic_template_invalid">Nederīga veidne: pārbaudiet marķierus, figūriekavas un kursora marķierus.</string>
+    <string name="continuous_swipe_title">Nepārtraukta vilkšana</string>
+    <string name="continuous_swipe_desc">Starp vārdiem īsi aizturiet pirkstu atstarpes taustiņa centrā, to nepaceļot. Ātra šķērsošana saglabā vienu vārdu.</string>
+    <string name="continuous_swipe_stopped">Nepārtraukta vilkšana apturēta; pirms turpināšanas pārbaudiet tekstu.</string>
+    <string name="cmd_append_possessive">Pievienot \'s</string>
+    <string name="cmd_append_possessive_desc">Pievienot \'s pēdējam verificētajam vārdam; viena atpakaļatkāpe noņem tikai sufiksu</string>
+    <string name="cmd_append_apostrophe">Pievienot apostrofu</string>
+    <string name="cmd_append_apostrophe_desc">Pievienot apostrofu pēdējam verificētajam vārdam (parents\'); viena atpakaļatkāpe noņem tikai sufiksu</string>
 </resources>

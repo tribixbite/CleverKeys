@@ -304,6 +304,62 @@ class WordPredictor : Predictor {
     private var lastRecordedCommit: RecordedCommit? = null
 
     private class RecordedCommit(val word: String, val window: List<String>, val language: String)
+
+    private data class LearningGates(
+        val master: Boolean, val context: Boolean, val vocabulary: Boolean,
+        val configuredLanguage: String?
+    )
+
+    private class ExactLearningCommit(
+        val handle: LearningCommit,
+        val word: String,
+        val windowBefore: List<String>,
+        val language: String,
+        val gates: LearningGates,
+        val fieldAllowed: Boolean,
+        val contextOwner: ContextModel?,
+        val vocabularyOwner: PersonalizationEngine?,
+        val contextReceipt: ContextModel.CommitReceipt?,
+        val vocabularyReceipt: tribixbite.cleverkeys.personalization.UserVocabulary.IncrementReceipt?,
+        val vocabularyVersion: Long?,
+        val vocabularyEnabled: Boolean?
+    )
+
+    private var exactLearningCommit: ExactLearningCommit? = null
+    private var learningCommitId = 0L
+    private var learningEpoch = 0L
+    // Config is mutable and often re-supplied as the SAME object: cache values, not its reference.
+    private var lastLearningGates: LearningGates? = null
+
+    private fun learningGates(value: Config? = config): LearningGates = LearningGates(
+        value?.on_device_learning_enabled ?: false,
+        value?.context_aware_predictions_enabled ?: false,
+        value?.personalized_learning_enabled ?: false,
+        value?.primary_language
+    )
+
+    private fun invalidateExactLearningCommit() {
+        learningEpoch++
+        exactLearningCommit = null
+    }
+
+    private fun refreshLearningEpoch(): LearningGates {
+        val gates = learningGates()
+        if (lastLearningGates != gates) {
+            invalidateExactLearningCommit()
+            lastLearningGates = gates
+        }
+        return gates
+    }
+
+    /** Fixed lock order is bigram → trigram → vocabulary; no InputConnection work belongs here. */
+    private fun <T> withLearningStoreLocks(gates: LearningGates, fieldAllowed: Boolean, action: () -> T): T {
+        val context = contextModel.takeIf { gates.master && gates.context && fieldAllowed }
+        val vocabulary = personalizationEngine.takeIf { gates.master && gates.vocabulary && fieldAllowed }
+        val underVocabulary = { if (vocabulary == null) action() else synchronized(vocabulary.learningLock(), action) }
+        return if (context == null) underVocabulary() else context.withLearningLocks(underVocabulary)
+    }
+
     private var config: Config? = null
     private var adaptationManager: UserAdaptationManager? = null
     private var context: Context? = null // For accessing SharedPreferences for disabled words
@@ -658,6 +714,7 @@ class WordPredictor : Predictor {
      */
     override fun setConfig(config: Config) {
         this.config = config
+        refreshLearningEpoch()
 
         // H3 (review 2026-08-06): keep the selection-adaptation store's enabled
         // flag synced to the master gate so its multiplier READS are inert with
@@ -723,6 +780,7 @@ class WordPredictor : Predictor {
         // language switch — otherwise the first commits after the switch record
         // mixed-language pairs into the NEW language's store.
         if (language != currentLanguage) {
+            invalidateExactLearningCommit()
             recentWords.clear()
         }
         currentLanguage = language
@@ -837,50 +895,140 @@ class WordPredictor : Predictor {
      */
     override fun addWordToContext(word: String?, fieldAllowsPersonalizedLearning: Boolean) {
         if (word.isNullOrBlank()) return
-
-        val normalizedWord = word.lowercase().trim()
-        recentWords.add(normalizedWord)
-
-        // Keep only the most recent words
-        while (recentWords.size > MAX_RECENT_WORDS) {
-            recentWords.removeAt(0)
+        val gates = refreshLearningEpoch()
+        withLearningStoreLocks(gates, fieldAllowsPersonalizedLearning) {
+            recordContextCommit(word, gates, fieldAllowsPersonalizedLearning)
         }
-        lastRecordedCommit = RecordedCommit(
-            normalizedWord,
-            recentWords.takeLast(LearningGate.CONTEXT_WINDOW),
-            currentLanguage
-        )
+        // A replacement of the newest token must not switch language halfway through its
+        // transaction. Ordinary subsequent commits retain the existing detection behavior.
+        if (recentWords.size >= 5) tryAutoLanguageDetection()
+    }
 
-        // THE learn funnel (Task A master privacy gate, 2026-08-06): every
-        // typing-derived learn path — context LM (bigrams + trigrams, Phase 7.1)
-        // and personalization vocabulary (Phase 7.2) — flows through
-        // LearningGate.learnCommittedWord, which short-circuits BEFORE any
-        // in-RAM mutation or persistence when the master gate (or the
-        // per-feature gate) is off. The gate logic is pure and unit-tested
-        // (OnDeviceLearningPrivacyTest).
-        //
-        // M2 (review 2026-08-06): gate reads fail CLOSED — a predictor whose
-        // Config was never supplied (e.g. constructed by DictionaryManager
-        // before global config threading) must never learn.
-        //
-        // M3: the context sink is recordCommit (NEWEST bigram/trigram only) —
-        // the previous full-window recordSequence replay re-recorded earlier
-        // pairs on every commit, inflating a single typing past the ≥2 floor.
+    /** Caller holds the participating store locks. Receipts describe actual writes, not gate guesses. */
+    private fun recordContextCommit(
+        word: String, gates: LearningGates, fieldAllowed: Boolean
+    ): LearningCommit {
+        val normalizedWord = word.lowercase().trim()
+        val windowBefore = recentWords.toList()
+        recentWords.add(normalizedWord)
+        while (recentWords.size > MAX_RECENT_WORDS) recentWords.removeAt(0)
+        lastRecordedCommit = RecordedCommit(
+            normalizedWord, recentWords.takeLast(LearningGate.CONTEXT_WINDOW), currentLanguage
+        )
+        // Supersede the previous identity BEFORE any sink can throw or be interrupted.
+        exactLearningCommit = null
+        val contextOwner = contextModel.takeIf { gates.master && gates.context && fieldAllowed }
+        val vocabularyOwner = personalizationEngine.takeIf { gates.master && gates.vocabulary && fieldAllowed }
+        var contextReceipt: ContextModel.CommitReceipt? = null
+        var vocabularyReceipt: tribixbite.cleverkeys.personalization.UserVocabulary.IncrementReceipt? = null
         LearningGate.learnCommittedWord(
             recentWords = recentWords,
             committedWord = normalizedWord,
-            onDeviceLearningEnabled = config?.on_device_learning_enabled ?: false,
-            contextAwareEnabled = config?.context_aware_predictions_enabled ?: false,
-            personalizedLearningEnabled = config?.personalized_learning_enabled ?: false,
-            // Typo hygiene: only n-grams whose every word is learnable are recorded.
-            recordSequence = { sequence -> contextModel?.recordCommit(sequence, learnableWordPolicy::isLearnable) },
-            recordWordUsage = { word -> personalizationEngine?.recordWordTyped(word) },
-            fieldAllowsPersonalizedLearning = fieldAllowsPersonalizedLearning
+            onDeviceLearningEnabled = gates.master,
+            contextAwareEnabled = gates.context,
+            personalizedLearningEnabled = gates.vocabulary,
+            recordSequence = { sequence ->
+                contextReceipt = contextOwner?.recordCommitWithReceipt(sequence, learnableWordPolicy::isLearnable)
+            },
+            recordWordUsage = { committed ->
+                vocabularyOwner?.recordWordTyped(committed)
+                vocabularyReceipt = vocabularyOwner?.latestIncrementReceipt()
+            },
+            fieldAllowsPersonalizedLearning = fieldAllowed
         )
+        // Even a one-word or self-reference commit owns a version snapshot, so a reset while
+        // its suffix action is pending cannot resurrect context into a newly emptied store.
+        if (contextReceipt == null) contextReceipt = contextOwner?.recordCommitWithReceipt(emptyList())
+        val handle = LearningCommit(this, ++learningCommitId, learningEpoch)
+        exactLearningCommit = ExactLearningCommit(
+            handle, normalizedWord, windowBefore, currentLanguage, gates, fieldAllowed,
+            contextOwner, vocabularyOwner, contextReceipt, vocabularyReceipt,
+            vocabularyOwner?.receiptVersion(), vocabularyOwner?.isEnabled()
+        )
+        return handle
+    }
 
-        // Try to detect language change if we have enough words
-        if (recentWords.size >= 5) {
-            tryAutoLanguageDetection()
+    override fun latestLearningCommit(): LearningCommit? {
+        refreshLearningEpoch()
+        return exactLearningCommit?.takeIf { it.language == currentLanguage }?.handle
+    }
+
+    private fun matchingLearningCommit(
+        handle: LearningCommit, gates: LearningGates, fieldAllowed: Boolean
+    ): ExactLearningCommit? {
+        val recorded = exactLearningCommit ?: return null
+        if (recorded.handle !== handle || handle.owner !== this || handle.epoch != learningEpoch) return null
+        // An observed permission boundary expires this identity permanently. A later call
+        // from an allowed field must not revive the old field's same-spelled commit.
+        if (recorded.fieldAllowed != fieldAllowed) {
+            invalidateExactLearningCommit()
+            return null
+        }
+        return recorded.takeIf {
+            it.language == currentLanguage && it.gates == gates && it.word == recentWords.lastOrNull() &&
+                it.contextOwner === contextModel.takeIf { gates.master && gates.context && fieldAllowed } &&
+                it.vocabularyOwner === personalizationEngine.takeIf { gates.master && gates.vocabulary && fieldAllowed }
+        }
+    }
+
+    private fun receiptsAreCurrent(commit: ExactLearningCommit): Boolean =
+        (commit.contextReceipt?.let { commit.contextOwner?.isReceiptCurrent(it) == true } ?: true) &&
+            (commit.vocabularyOwner?.let { owner ->
+                owner.receiptVersion() == commit.vocabularyVersion &&
+                    owner.isEnabled() == commit.vocabularyEnabled &&
+                    (commit.vocabularyReceipt?.let(owner::isReceiptCurrent) ?: true)
+            } ?: true)
+
+    override fun canReplaceLearningCommit(commit: LearningCommit, fieldAllowsPersonalizedLearning: Boolean): Boolean {
+        val gates = refreshLearningEpoch()
+        val recorded = matchingLearningCommit(commit, gates, fieldAllowsPersonalizedLearning) ?: return false
+        return withLearningStoreLocks(gates, fieldAllowsPersonalizedLearning) { receiptsAreCurrent(recorded) }
+    }
+
+    override fun replaceLearningCommit(
+        commit: LearningCommit, replacement: String, fieldAllowsPersonalizedLearning: Boolean
+    ): LearningCommitReplacement {
+        if (replacement.isBlank()) return LearningCommitReplacement.Invalidated
+        val gates = refreshLearningEpoch()
+        if (matchingLearningCommit(commit, gates, fieldAllowsPersonalizedLearning) == null) {
+            return LearningCommitReplacement.Invalidated
+        }
+        return withLearningStoreLocks(gates, fieldAllowsPersonalizedLearning) {
+            val recorded = matchingLearningCommit(commit, gates, fieldAllowsPersonalizedLearning)
+                ?: return@withLearningStoreLocks LearningCommitReplacement.Invalidated
+            if (!receiptsAreCurrent(recorded)) {
+                invalidateExactLearningCommit()
+                return@withLearningStoreLocks LearningCommitReplacement.Invalidated
+            }
+            // Consume before mutation; a failed operation is never retried against an older
+            // same-spelled word. All validation precedes the first decrement under these locks.
+            exactLearningCommit = null
+            lastRecordedCommit = null
+            try {
+                val contextUndone = recorded.contextReceipt?.let {
+                    recorded.contextOwner?.rollbackReceipt(it) == true
+                } ?: true
+                val vocabularyUndone = recorded.vocabularyReceipt?.let {
+                    recorded.vocabularyOwner?.rollbackReceipt(it) == true
+                } ?: true
+                if (!contextUndone || !vocabularyUndone) {
+                    recentWords.clear()
+                    return@withLearningStoreLocks LearningCommitReplacement.Invalidated
+                }
+                recentWords.clear()
+                recentWords.addAll(recorded.windowBefore)
+                LearningCommitReplacement.Applied(
+                    recordContextCommit(replacement, gates, fieldAllowsPersonalizedLearning)
+                )
+            } catch (error: Exception) {
+                // Store/persistence failures are not an atomic rollback guarantee. Abandon
+                // transient ownership; do not replay writes or reconstruct forgotten data.
+                invalidateExactLearningCommit()
+                lastRecordedCommit = null
+                recentWords.clear()
+                Log.w(TAG, "Learning replacement failed; commit ownership invalidated", error)
+                LearningCommitReplacement.Invalidated
+            }
         }
     }
 
@@ -896,7 +1044,8 @@ class WordPredictor : Predictor {
         if (multiLanguageManager != null) {
             val sensitivity = config?.language_detection_sensitivity ?: 0.6f
             val detected = multiLanguageManager?.detectAndSwitch(recentWords, sensitivity)
-            if (detected != null) {
+            if (detected != null && detected != currentLanguage) {
+                invalidateExactLearningCommit()
                 currentLanguage = detected
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "MultiLanguageManager auto-detected and switched to: $detected")
@@ -943,6 +1092,7 @@ class WordPredictor : Predictor {
      * Clear the recent words context
      */
     override fun clearContext() {
+        invalidateExactLearningCommit()
         recentWords.clear()
         lastRecordedCommit = null
     }
@@ -982,6 +1132,7 @@ class WordPredictor : Predictor {
      *   as passed to [addWordToContext] for the original commit
      */
     override fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean) {
+        invalidateExactLearningCommit()
         val normalized = word.lowercase().trim()
         val inWindow = recentWords.isNotEmpty() && recentWords.last() == normalized
         // Window cleared by a sentence boundary since the commit: undo from the one-slot
@@ -1015,6 +1166,7 @@ class WordPredictor : Predictor {
      * and next-word generation).
      */
     override fun onSentenceBoundary() {
+        invalidateExactLearningCommit()
         recentWords.clear()
     }
 

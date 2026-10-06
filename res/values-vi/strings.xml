@@ -2236,4 +2236,15 @@
     <string name="advanced_custom_terminal_invalid">Tên gói không hợp lệ (tối đa %2$d ký tự): %1$s</string>
     <string name="advanced_custom_terminal_limit">Sử dụng tối đa %1$d tên gói khác nhau.</string>
     <string name="advanced_custom_terminal_input_limit">Danh sách quá dài (tối đa %1$d ký tự).</string>
+    <string name="command_palette_template_title">Mẫu động</string>
+    <string name="command_palette_template_help">Mở rộng {clipboard}, {selection}, {uuid} và một {cursor}. Sử dụng {{ và }} cho dấu ngoặc nhọn dạng chuỗi thuần. Các hành động văn bản hiện có sẽ giữ nguyên.</string>
+    <string name="dynamic_action_unavailable">Thao tác không khả dụng trong trình soạn thảo hoặc bảng điều khiển này</string>
+    <string name="dynamic_template_invalid">Mẫu không hợp lệ: kiểm tra các token, dấu ngoặc nhọn và dấu vị trí con trỏ.</string>
+    <string name="continuous_swipe_title">Vuốt liên tục</string>
+    <string name="continuous_swipe_desc">Chạm giữ nhanh ở giữa phím cách giữa các từ mà không nhấc tay. Lướt qua nhanh sẽ giữ lại một từ.</string>
+    <string name="continuous_swipe_stopped">Đã dừng vuốt liên tục; hãy kiểm tra văn bản trước khi tiếp tục.</string>
+    <string name="cmd_append_possessive">Thêm \'s vào cuối</string>
+    <string name="cmd_append_possessive_desc">Gắn \'s vào từ đã xác minh gần nhất; một lần backspace chỉ xóa hậu tố</string>
+    <string name="cmd_append_apostrophe">Thêm dấu nháy đơn vào cuối</string>
+    <string name="cmd_append_apostrophe_desc">Gắn dấu nháy đơn vào từ đã xác minh gần nhất (parents\'); một lần backspace chỉ xóa hậu tố</string>
 </resources>

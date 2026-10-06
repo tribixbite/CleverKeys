@@ -2249,4 +2249,15 @@
     <string name="advanced_custom_terminal_invalid">Ongeldige pakketnaam (maximaal %2$d tekens): %1$s</string>
     <string name="advanced_custom_terminal_limit">Gebruik maximaal %1$d unieke pakketnamen.</string>
     <string name="advanced_custom_terminal_input_limit">De lijst is te lang (maximaal %1$d tekens).</string>
+    <string name="command_palette_template_title">Dynamische sjabloon</string>
+    <string name="command_palette_template_help">Vouw {clipboard}, {selection}, {uuid} en één {cursor} uit. Gebruik {{ en }} voor letterlijke accolades. Bestaande tekstacties blijven letterlijk.</string>
+    <string name="dynamic_action_unavailable">Actie niet beschikbaar in deze editor of dit paneel</string>
+    <string name="dynamic_template_invalid">Ongeldige sjabloon: controleer tokens, accolades en cursormarkeringen.</string>
+    <string name="continuous_swipe_title">Continu vegen</string>
+    <string name="continuous_swipe_desc">Houd tussen woorden kort het midden van de spatiebalk vast zonder op te tillen. Een snelle oversteek behoudt één woord.</string>
+    <string name="continuous_swipe_stopped">Continu vegen gestopt; controleer de tekst voordat je doorgaat.</string>
+    <string name="cmd_append_possessive">\'s toevoegen</string>
+    <string name="cmd_append_possessive_desc">\'s aan het laatst geverifieerde woord koppelen; één backspace verwijdert alleen het achtervoegsel</string>
+    <string name="cmd_append_apostrophe">Apostrof toevoegen</string>
+    <string name="cmd_append_apostrophe_desc">Een apostrof aan het laatst geverifieerde woord koppelen (parents\'); één backspace verwijdert alleen het achtervoegsel</string>
 </resources>

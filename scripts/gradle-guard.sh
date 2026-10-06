@@ -100,7 +100,7 @@ while :; do
     sh "$REPO_DIR/gradlew" "$@" \
         --no-daemon \
         --max-workers=1 \
-        -Dkotlin.compiler.execution.strategy=in-process \
+        -Pkotlin.compiler.execution.strategy=in-process \
         -Dorg.gradle.jvmargs="-Xmx$XMX -XX:MaxMetaspaceSize=$METASPACE -XX:+UseSerialGC -Dfile.encoding=UTF-8 -Duser.timezone=UTC -Duser.language=en -Duser.country=US" \
         2>&1 | tee "$LAST_LOG"
     rc=${PIPESTATUS[0]}

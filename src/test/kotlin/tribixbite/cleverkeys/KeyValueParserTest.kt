@@ -30,6 +30,67 @@ import org.junit.Test
  * ARC-107 alias tests in section J2).
  */
 class KeyValueParserTest {
+    @Test fun templateTokensAreNonrecursiveAndLazy() {
+        var clipboardReads = 0; var uuidReads = 0
+        val expanded = tribixbite.cleverkeys.customization.DynamicTemplate.expand(
+            "{{literal}}:{clipboard}:{clipboard}:{uuid}:{uuid}:{selection}{cursor}",
+            clipboard = { clipboardReads++; "{uuid}" }, selection = { "😀" }, uuid = { uuidReads++; "id" }
+        )
+        assertThat(expanded.text).isEqualTo("{literal}:{uuid}:{uuid}:id:id:😀")
+        assertThat(expanded.cursorOffset).isEqualTo(expanded.text.length)
+        assertThat(clipboardReads).isEqualTo(1); assertThat(uuidReads).isEqualTo(1)
+        val literal = tribixbite.cleverkeys.customization.DynamicTemplate.expand("plain", { error("unused") }, { error("unused") }, { error("unused") })
+        assertThat(literal.text).isEqualTo("plain")
+    }
+    @Test fun templateRejectsMalformedTokensAndDuplicateCursor() {
+        for (text in listOf("{unknown}", "{", "}", "{cursor}{cursor}", "{selection")) {
+            assertThat(tribixbite.cleverkeys.customization.DynamicTemplate.isValid(text)).isFalse()
+        }
+    }
+    @Test fun templateBoundsRejectWithoutTruncating() {
+        val engine = tribixbite.cleverkeys.customization.DynamicTemplate
+        assertThat(engine.expand("{clipboard}", { "x".repeat(engine.MAX_EXPANDED_LENGTH) }, { "" }).text.length).isEqualTo(engine.MAX_EXPANDED_LENGTH)
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) { engine.expand("x{clipboard}", { "x".repeat(engine.MAX_EXPANDED_LENGTH) }, { "" }) }
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) { engine.expand("{clipboard}", { null }, { "" }) }
+        assertThat(engine.isValid("x".repeat(4097))).isFalse()
+    }
+    @Test fun templateXmlRoundTripEscapesQuotesAndBackslashes() {
+        val mapping = tribixbite.cleverkeys.customization.ShortSwipeMapping("a", tribixbite.cleverkeys.customization.SwipeDirection.N, "{}", tribixbite.cleverkeys.customization.ActionType.TEMPLATE, "C:\\work\\'[{selection}]\\")
+        val exported = tribixbite.cleverkeys.customization.XmlAttributeMapper.toXmlValue(mapping)
+        val key = KeyValueParser.parse("{}:" + exported)
+        assertThat(key.getKind()).isEqualTo(KeyValue.Kind.Template)
+        assertThat(key.getTemplateFormat().template).isEqualTo(mapping.actionValue)
+        val old = KeyValueParser.parse(":template symbol='{}':" + exported.substringAfter(':'))
+        assertThat(old.getTemplateFormat().template).isEqualTo(mapping.actionValue)
+        assertThat(key.withSymbol("new").getTemplateFormat().template).isEqualTo(mapping.actionValue)
+    }
+    @Test fun existingTextTokenSyntaxRemainsLiteral() {
+        val key = KeyValueParser.parse("x:'{uuid}'")
+        // A labeled literal string is represented as a single-element macro.
+        assertThat(key.getKind()).isEqualTo(KeyValue.Kind.Macro)
+        assertThat(key.getMacro()).hasLength(1)
+        assertThat(key.getMacro()[0].getKind()).isEqualTo(KeyValue.Kind.String)
+        assertThat(key.getMacro()[0].getString()).isEqualTo("{uuid}")
+    }
+
+
+    @Test fun exportedTimestampParsesQuotedPattern() {
+        val mapping = tribixbite.cleverkeys.customization.ShortSwipeMapping("a",
+            tribixbite.cleverkeys.customization.SwipeDirection.N, "date",
+            tribixbite.cleverkeys.customization.ActionType.TIMESTAMP, "yyyy-MM-dd 'stamp'")
+        val key = KeyValueParser.parse("date:" + tribixbite.cleverkeys.customization.XmlAttributeMapper.toXmlValue(mapping))
+        assertThat(key.getKind()).isEqualTo(KeyValue.Kind.Timestamp)
+        assertThat(key.getTimestampFormat().pattern).isEqualTo(mapping.actionValue)
+    }
+    @Test fun exportedIntentPreservesJsonQuotesAndBackslashes() {
+        val json = """{"name":"Quoted","targetType":"ACTIVITY","action":"test.action","extras":{"path":"C:\\work","label":"it's"}}"""
+        val mapping = tribixbite.cleverkeys.customization.ShortSwipeMapping("a",
+            tribixbite.cleverkeys.customization.SwipeDirection.N, "open",
+            tribixbite.cleverkeys.customization.ActionType.INTENT, json)
+        val key = KeyValueParser.parse("open:" + tribixbite.cleverkeys.customization.XmlAttributeMapper.toXmlValue(mapping))
+        assertThat(key.getKind()).isEqualTo(KeyValue.Kind.Macro)
+        assertThat(key.getMacro()[0].getString()).isEqualTo(tribixbite.cleverkeys.customization.IntentDefinition.INTENT_PREFIX + json)
+    }
 
     // =========================================================================
     // A. Simple String Keys (no colon in input)

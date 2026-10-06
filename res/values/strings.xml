@@ -2649,4 +2649,15 @@
     <string name="advanced_custom_terminal_invalid">Invalid package name (maximum %2$d characters): %1$s</string>
     <string name="advanced_custom_terminal_limit">Use at most %1$d distinct package names.</string>
     <string name="advanced_custom_terminal_input_limit">The list is too long (maximum %1$d characters).</string>
+    <string name="command_palette_template_title">Dynamic template</string>
+    <string name="command_palette_template_help">Expand {clipboard}, {selection}, {uuid} and one {cursor}. Use {{ and }} for literal braces. Existing text actions stay literal.</string>
+    <string name="dynamic_action_unavailable">Action unavailable in this editor or panel</string>
+    <string name="dynamic_template_invalid">Invalid template: check tokens, braces and cursor markers.</string>
+    <string name="continuous_swipe_title">Continuous swipe</string>
+    <string name="continuous_swipe_desc">Hold briefly in the spacebar center between words without lifting. A quick crossing keeps one word.</string>
+    <string name="continuous_swipe_stopped">Continuous swipe stopped; check the text before continuing.</string>
+    <string name="cmd_append_possessive">Append \'s</string>
+    <string name="cmd_append_possessive_desc">Attach \'s to the last verified word; one backspace removes only the suffix</string>
+    <string name="cmd_append_apostrophe">Append apostrophe</string>
+    <string name="cmd_append_apostrophe_desc">Attach an apostrophe to the last verified word (parents\'); one backspace removes only the suffix</string>
 </resources>

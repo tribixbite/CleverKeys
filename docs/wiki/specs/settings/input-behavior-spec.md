@@ -285,7 +285,7 @@ personal), which is deliberately outside every learning gate. See the
 
 ## Related Specifications
 
-- [Gesture System](../../../specs/gesture-system.md) - Gesture recognition
-- [Settings System](../../../specs/settings-system.md) - Preferences
+- [Gesture System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/gesture-system.md) - Gesture recognition
+- [Settings System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/settings-system.md) - Preferences
 - [Autocorrect](../typing/autocorrect-spec.md) - Text correction
 - [Next-Word Prediction](../typing/next-word-prediction-spec.md) - Built-in and learned next-word suggestions

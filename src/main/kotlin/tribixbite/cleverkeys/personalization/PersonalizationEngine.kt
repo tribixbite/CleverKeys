@@ -119,17 +119,33 @@ class PersonalizationEngine(private val context: Context) {
      * If personalization is enabled, adds/updates the word in user vocabulary.
      * No-op if personalization is disabled.
      */
+    private var lastIncrementReceipt: UserVocabulary.IncrementReceipt? = null
+
     fun recordWordTyped(word: String, timestamp: Long = System.currentTimeMillis()) {
-        if (!enabled) {
-            return // Learning disabled
-        }
-
-        if (word.isEmpty() || word.length < 2) {
-            return // Skip very short words
-        }
-
-        vocabulary.recordWordUsage(word, timestamp)
+        lastIncrementReceipt = null
+        lastIncrementReceipt = recordWordTypedWithReceipt(word, timestamp)
     }
+
+    internal fun latestIncrementReceipt(): UserVocabulary.IncrementReceipt? = lastIncrementReceipt
+
+    internal fun recordWordTypedWithReceipt(
+        word: String, timestamp: Long = System.currentTimeMillis()
+    ): UserVocabulary.IncrementReceipt? {
+        if (!enabled || word.length < 2) return null
+        return vocabulary.recordWordUsageWithReceipt(word, timestamp)
+    }
+
+    // The predictor acquires context-store locks before this vocabulary lock. No editor calls
+    // are made under these locks; they only protect validation and in-memory learning updates.
+    internal fun learningLock(): Any = vocabulary
+
+    internal fun receiptVersion(): Long = vocabulary.receiptVersion()
+
+    internal fun isReceiptCurrent(receipt: UserVocabulary.IncrementReceipt): Boolean =
+        vocabulary.isReceiptCurrent(receipt)
+
+    internal fun rollbackReceipt(receipt: UserVocabulary.IncrementReceipt): Boolean =
+        enabled && vocabulary.rollbackReceipt(receipt)
 
     /**
      * Inverse of [recordWordTyped] for a commit the user rejected (swipe replaced from the

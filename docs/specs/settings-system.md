@@ -327,3 +327,16 @@ fun CollapsibleSection(
 ```
 
 This pattern means settings paths are "Settings > [expand section] > [setting]" rather than hierarchical navigation like "Settings > Appearance > Theme".
+
+## Continuous swipe setting (October 6 development)
+
+`continuous_swipe_enabled` is a Boolean, default `false`, exposed in the Swipe Typing
+section only while swipe typing is enabled. Config's live value and immutable snapshot,
+Settings state/persistence, searchable title and typed backup/default/reset map use the
+same key. Turning off swipe typing suspends this behavior without rewriting its stored
+preference. Imported non-Boolean values are rejected by normal strict backup validation.
+
+The user pauses 280 ms inside the inner 80% of the physical spacebar to end a segment.
+This opt-in feature refuses password/inline panel editors and requires readable collapsed
+selection and editor state. Gesture/FIFO ownership is specified in the paired public
+swipe-typing specification. Human timing and cross-editor validation remain pending.

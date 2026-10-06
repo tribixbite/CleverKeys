@@ -124,11 +124,11 @@ Geometric engine knobs live in `GeometricSettingsActivity` (`geo_max_results`,
 
 ## Related Specifications
 
-- [CTC Swipe Engine](../../../specs/ctc-swipe-engine.md) - Deeper architectural reference for the shipping decoder (trie beam, lexicon merge, per-language λ)
+- [CTC Swipe Engine](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/ctc-swipe-engine.md) - Deeper architectural reference for the shipping decoder (trie beam, lexicon merge, per-language λ)
 - [Gesture System Overview](../gestures/gesture-system-overview-spec.md) - Touch event routing and `hasLeftStartingKey` gatekeeper
 - [Autocorrect Specification](autocorrect-spec.md)
 
-## October 6 boundary coverage and pending features
+## October 6 boundary coverage
 
 Native custom-gesture cold-start and SmartAutoSpace regressions now cover model-free
 startup with swipe disabled, literal curly apostrophes, manual spaces, and replacement
@@ -136,8 +136,37 @@ of a selected range. Reported noncollapsed selections cannot reclaim a prior spa
 editors without selection data retain the legacy text/ownership fallback. Results and
 actual full-suite counts live in [testing strategy](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/testing-strategy.md).
 
-Continuous multiword swipe and explicit apostrophe suffix transactions are not yet
-implemented. Before they land, rejected/throwing `commitText` must not create swipe
-ownership, learning, or correction/ML labels. The roadmap records this prerequisite.
+Continuous multiword swipe and explicit suffix transactions are implemented below
+and in the per-key specification. Rejected/throwing `commitText` does not create new
+swipe ownership, learning or correction/ML labels; the accepted-commit prerequisite
+is complete.
 Reported `ad`/`wet` accuracy remains unresolved; frozen geometric/timing heuristics
 were rejected, and fresh writer/session-separated calibration evidence is required.
+
+## Continuous phrase pipeline (development)
+
+`continuous_swipe_enabled` defaults false and is included in Config, immutable
+pointer-down ConfigSnapshot, Compose settings/search and typed backup defaults.
+`Pointers` starts the view-side session, and cancellation/multitouch invalidate it.
+`ContinuousSwipe` stores immutable letter samples separately from recognizer/trail
+state. A physical-space interior dwell of 280 ms establishes a boundary; the timer
+runs independently of MOVE/noise filtering. Space excursions are excluded, the next
+segment starts on its first letter, and final lift emits no empty segment. Bounds:
+2,048 samples per segment, 32 segments per gesture, 32 queued pending segments.
+Overflow aborts instead of silently truncating a phrase.
+
+`ContinuousSwipeQueue` dispatches one request at a time. InputCoordinator threads
+`SwipeCommitControl` through routed CTC/geometric decoding, including fallback. A
+result is guarded before the existing shared SuggestionHandler commit, then the queue
+observes accepted-word and editor readback. The next dispatch happens only after that
+callback, with the updated prediction context and a separate ML segment capture.
+An explicit boundary supplies one verified separator if the normal commit lacked it.
+English one-key a/I segments are explicit observed-key input, not decoder-error guesses.
+
+The session captures editor/field identity, collapsed selection and prefix/suffix,
+layout identity, Config snapshot generation, language, secondary language, engine and
+initial shift/caps state. Every pending result revalidates these; cancellation leaves
+accepted text in place. The feature refuses password/unreadable/selected or inline
+editors. The ordinary single-word path remains authoritative when no boundary occurred.
+Native `ContinuousSwipeTest` pins mechanics; synthetic evidence does not establish
+human word accuracy or device latency. Final run evidence is kept in the testing strategy.

@@ -2342,4 +2342,15 @@
     <string name="advanced_custom_terminal_invalid">Недійсна назва пакета (максимум %2$d символів): %1$s</string>
     <string name="advanced_custom_terminal_limit">Використовуйте щонайбільше %1$d різних назв пакетів.</string>
     <string name="advanced_custom_terminal_input_limit">Список задовгий (максимум %1$d символів).</string>
+    <string name="command_palette_template_title">Динамічний шаблон</string>
+    <string name="command_palette_template_help">Розгорнути {clipboard}, {selection}, {uuid} та один {cursor}. Використовуйте {{ та }} для літеральних фігурних дужок. Наявні дії над текстом залишаються без змін.</string>
+    <string name="dynamic_action_unavailable">Дія недоступна в цьому редакторі або панелі</string>
+    <string name="dynamic_template_invalid">Недійсний шаблон: перевірте токени, фігурні дужки та маркери курсора.</string>
+    <string name="continuous_swipe_title">Неперервне введення жестом</string>
+    <string name="continuous_swipe_desc">Між словами ненадовго затримайте палець у центрі пробілу, не відриваючи його. Швидке перетинання зберігає одне слово.</string>
+    <string name="continuous_swipe_stopped">Неперервне введення жестом зупинено; перевірте текст перед продовженням.</string>
+    <string name="cmd_append_possessive">Додати \'s</string>
+    <string name="cmd_append_possessive_desc">Приєднати \'s до останнього перевіреного слова; одне натискання backspace видаляє лише суфікс</string>
+    <string name="cmd_append_apostrophe">Додати апостроф</string>
+    <string name="cmd_append_apostrophe_desc">Приєднати апостроф до останнього перевіреного слова (parents\'); одне натискання backspace видаляє лише суфікс</string>
 </resources>

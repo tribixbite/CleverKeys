@@ -260,18 +260,47 @@ class BigramStore internal constructor(
      * @param word1 Previous word (context)
      * @param word2 Current word (prediction target)
      */
+    // Conservative process-local version: any store mutation expires outstanding receipts.
+    // Persistence flushes and reads leave it unchanged. All access holds the store monitor.
+    private var mutationVersion: Long = 0
+
+    internal class IncrementReceipt internal constructor(
+        internal val owner: BigramStore, internal val version: Long,
+        internal val language: String, internal val word1: String, internal val word2: String
+    ) {
+        internal var consumed = false
+    }
+
+    internal fun receiptVersion(): Long = synchronized(this) { mutationVersion }
+
+    internal fun isReceiptCurrent(receipt: IncrementReceipt): Boolean = synchronized(this) {
+        receipt.owner === this && !receipt.consumed && receipt.version == mutationVersion
+    }
+
+    /** Consume only this recorded increment; never search for an older matching observation. */
+    internal fun rollbackReceipt(receipt: IncrementReceipt): Boolean = synchronized(this) {
+        if (!isReceiptCurrent(receipt)) return false
+        receipt.consumed = true
+        unrecordBigram(receipt.language, receipt.word1, receipt.word2)
+    }
+
     fun recordBigram(language: String, word1: String, word2: String) {
+        recordBigramWithReceipt(language, word1, word2)
+    }
+
+    internal fun recordBigramWithReceipt(language: String, word1: String, word2: String): IncrementReceipt? {
         val normalizedWord1 = BigramEntry.normalizeWord(word1)
         val normalizedWord2 = BigramEntry.normalizeWord(word2)
 
         // Skip empty or invalid words
-        if (normalizedWord1.isEmpty() || normalizedWord2.isEmpty()) return
-        if (normalizedWord1 == normalizedWord2) return  // Skip self-references
+        if (normalizedWord1.isEmpty() || normalizedWord2.isEmpty()) return null
+        if (normalizedWord1 == normalizedWord2) return null  // Skip self-references
 
         val lang = normalizeLanguage(language)
         val data = forLanguage(lang)
 
-        synchronized(this) {
+        val receipt = synchronized(this) {
+            mutationVersion++
             // Advance the language-wide clock: this observation's position in the language's
             // whole history (cross-context recency for the global cap).
             val tick = ++data.clock
@@ -328,10 +357,12 @@ class BigramStore internal constructor(
 
             // Check total bigram count (never evicting the pair just recorded)
             pruneIfNeeded(data, normalizedWord1, normalizedWord2)
+            IncrementReceipt(this, mutationVersion, lang, normalizedWord1, normalizedWord2)
         }
 
         dirtyLanguages.add(lang)
         persister.markDirty()
+        return receipt
     }
 
     /**
@@ -480,6 +511,7 @@ class BigramStore internal constructor(
         val data = forLanguage(lang)
 
         synchronized(this) {
+            mutationVersion++
             val entries = data.bigramMap[normalizedWord1] ?: return false
             val existing = entries.find { it.word2 == normalizedWord2 } ?: return false
 
@@ -525,6 +557,7 @@ class BigramStore internal constructor(
 
         var removed = false
         synchronized(this) {
+            mutationVersion++
             val entries = data.bigramMap[normalized1] ?: return false
             val entry = entries.find { it.word2 == normalized2 } ?: return false
             entries.remove(entry)
@@ -560,6 +593,7 @@ class BigramStore internal constructor(
         val data = forLanguage(lang)
         var removed = 0
         synchronized(this) {
+            mutationVersion++
             // Snapshot keys: contexts emptied by the purge are removed from the map.
             for (word1 in data.bigramMap.keys.toList()) {
                 val entries = data.bigramMap[word1] ?: continue
@@ -629,6 +663,7 @@ class BigramStore internal constructor(
         // write, or this clear completes first and the flush serializes the
         // now-empty table (which maps to a key removal, not a write).
         synchronized(this) {
+            mutationVersion++
             val data = forLanguage(lang)
             data.bigramMap.clear()
             data.word1Frequencies.clear()
@@ -642,6 +677,7 @@ class BigramStore internal constructor(
         // M1: same lock discipline as [clear] — no flush can interleave between
         // the in-RAM wipe and the persisted-blob removal.
         synchronized(this) {
+            mutationVersion++
             languages.values.forEach {
                 it.bigramMap.clear()
                 it.word1Frequencies.clear()
@@ -966,6 +1002,7 @@ class BigramStore internal constructor(
             val data = forLanguage(lang)
 
             synchronized(this) {
+                mutationVersion++
                 for (i in 0 until json.length()) {
                     val obj = json.getJSONObject(i)
                     val word1 = BigramEntry.normalizeWord(obj.getString("word1"))

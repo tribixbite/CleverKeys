@@ -52,6 +52,7 @@ object KeyLabels {
             // (a snippet/emoticon/timestamp preview). Non-font, so echo it.
             KeyValue.Kind.String,
             KeyValue.Kind.Macro,
+            KeyValue.Kind.Template,
             KeyValue.Kind.Timestamp -> kv.getString().ifEmpty { null }
             else -> null
         }
@@ -142,6 +143,8 @@ object KeyLabels {
     private fun describeEditing(kv: KeyValue, getString: (Int) -> String): String? =
         when (kv.getEditing()) {
             KeyValue.Editing.COPY -> getString(R.string.key_descr_copy)
+            KeyValue.Editing.APPEND_POSSESSIVE -> getString(R.string.cmd_append_possessive)
+            KeyValue.Editing.APPEND_APOSTROPHE -> getString(R.string.cmd_append_apostrophe)
             KeyValue.Editing.CLEAR_CLIPBOARD -> getString(R.string.cmd_clear_clipboard)
             KeyValue.Editing.COPY_PRIVATE -> getString(R.string.key_descr_copy_private)
             KeyValue.Editing.PASTE -> getString(R.string.key_descr_paste)

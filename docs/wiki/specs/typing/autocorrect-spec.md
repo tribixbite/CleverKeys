@@ -534,5 +534,5 @@ IME add path (add-to-dictionary prompt, "+word" chip, autocorrect undo, acceptin
 ## Related Specifications
 
 - [Swipe Typing Specification](swipe-typing-spec.md) — the swipe decoders consume the same dict + freq
-- [Dictionary System](../../../specs/dictionary-and-language-system.md) — word storage, binary format, language packs
+- [Dictionary System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/dictionary-and-language-system.md) — word storage, binary format, language packs
 - [User Dictionary](../../specs/typing/user-dictionary-spec.md) — custom-word and disabled-word lists

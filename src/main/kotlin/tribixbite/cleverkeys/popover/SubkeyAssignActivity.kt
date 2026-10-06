@@ -283,6 +283,7 @@ private fun SlotDetails(request: SubkeyAssignRequest, custom: ShortSwipeMapping?
                 Text(custom.actionValue, style = mono)
             }
         }
+        ActionType.TEMPLATE -> DetailBox { Text(custom.actionValue, style = mono, maxLines = 8, overflow = TextOverflow.Ellipsis) }
         ActionType.TEXT -> DetailBox { Text(custom.actionValue, style = detail, maxLines = 8, overflow = TextOverflow.Ellipsis) }
         ActionType.INTENT -> {
             val intent = custom.getIntentDefinition()

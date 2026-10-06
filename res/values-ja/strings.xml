@@ -2207,4 +2207,15 @@
     <string name="advanced_custom_terminal_invalid">無効なパッケージ名です (最大%2$d文字): %1$s</string>
     <string name="advanced_custom_terminal_limit">指定できるパッケージ名は最大%1$d個です。</string>
     <string name="advanced_custom_terminal_input_limit">リストが長すぎます (最大%1$d文字)。</string>
+    <string name="command_palette_template_title">動的テンプレート</string>
+    <string name="command_palette_template_help">{clipboard}、{selection}、{uuid}、および1つの {cursor} を展開します。リテラルの中括弧には {{ および }} を使用します。既存のテキストアクションはリテラルのままになります。</string>
+    <string name="dynamic_action_unavailable">このエディターまたはパネルではアクションを利用できません</string>
+    <string name="dynamic_template_invalid">無効なテンプレート: トークン、中括弧、カーソルマーカーを確認してください。</string>
+    <string name="continuous_swipe_title">連続スワイプ</string>
+    <string name="continuous_swipe_desc">指を離さずに単語間でスペースキーの中央を一瞬長押しします。素早く通過すると1つの単語のままになります。</string>
+    <string name="continuous_swipe_stopped">連続スワイプが停止しました。続行する前にテキストを確認してください。</string>
+    <string name="cmd_append_possessive">\'s を追加</string>
+    <string name="cmd_append_possessive_desc">最後に確認された単語に \'s を付加。Backspace 1 回で接尾辞のみを削除</string>
+    <string name="cmd_append_apostrophe">アポストロフィを追加</string>
+    <string name="cmd_append_apostrophe_desc">最後に確認された単語にアポストロフィを付加 (parents\')。Backspace 1 回で接尾辞のみを削除</string>
 </resources>

@@ -208,10 +208,39 @@ Swipe typing may not activate when:
 A single apostrophe assigned as custom text follows ordinary punctuation behavior:
 automatic swipe spacing can be reclaimed, while manually typed spaces and spaces
 before a selected text range are preserved. A multi-character text macro such as
-`'s` remains literal; explicit suffix commands are still planned.
+`'s` remains literal. The separate **Append 's** and **Append apostrophe** commands
+attach to a verified word and support suffix-only undo; see
+[Per-Key Actions](../customization/per-key-actions.md).
 
 Some short words, including reported `ad` and `wet` traces, remain recognition gaps
 in default CTC. Changing engines for each word is not the intended solution. Fresh
 human traces and general model calibration are needed before shipping a correction;
 passing automated routing tests does not establish short-word recognition accuracy.
-Continuous multiword swipe is also planned; currently lift your finger between words.
+Continuous multiword swipe is optional and disabled by default; enable it to use
+intentional spacebar dwells between words, as described below.
+
+## Continuous Multiword Swipe (development build)
+
+Enable **Continuous swipe** under **Settings → Swipe Typing**. It is off by default.
+Swipe a word, hold in the center of the physical spacebar for about 280 ms, then
+continue to the next word without lifting. Each deliberate hold ends a word; lifting
+finishes the last segment. A quick crossing keeps the original single-word behavior.
+Subkeys, spacebar edges and empty space visits do not create words.
+
+Segments decode in order through the current engine. The preceding word must be
+accepted before the next word is decoded. A deliberate spacebar boundary adds one
+separator even if automatic trailing spaces are disabled; the final word follows
+your normal spacing preference. Observed one-key English `a` and `I` segments are
+inserted directly; other segments require actual decoder candidates.
+
+Changing field, layout, language or settings, starting another gesture, adding a
+second finger, or editing/moving the caret cancels pending words. Text already
+accepted remains. A rejected/empty decode or failed editor write stops the phrase
+with feedback; CleverKeys does not guess a replacement or retry an uncertain edit.
+Password fields, selected ranges, unreadable editors and active clipboard/emoji/GIF
+editors do not start continuous mode. With no intentional boundary, the normal
+single-word recognizer and its full original path still handle the gesture.
+
+The new automated tests cover segmentation and queue behavior. Human phrase accuracy,
+spacebar hold comfort and latency still need device testing before release. These
+changes do not repair the separate shipped CTC `ad`/`wet` ranking problem.

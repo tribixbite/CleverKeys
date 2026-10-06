@@ -26,6 +26,15 @@ Quick reference for AI assistants and developers working in this codebase.
 
 ---
 
+## Current continuation
+
+Read the October 6 operational handoff in
+`docs/plans/2026-10-05-recommended-features-and-gaps.md` alongside `memory/todo.md`.
+It records completed automated validation, exact APK/run evidence, remaining device
+checks and the foreign dirty checklist that must stay uncommitted.
+
+---
+
 ## Quick Start
 
 ```bash

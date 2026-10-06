@@ -253,6 +253,6 @@ class PersonalDictionary {
 
 ## Related Specifications
 
-- [Language System](../../../specs/dictionary-and-language-system.md) - Full language architecture
-- [CTC Swipe Engine](../../../specs/ctc-swipe-engine.md) - the per-language swipe decoder
-- [Secondary Language](../../../specs/secondary-language-integration.md) - Multi-language integration
+- [Language System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/dictionary-and-language-system.md) - Full language architecture
+- [CTC Swipe Engine](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/ctc-swipe-engine.md) - the per-language swipe decoder
+- [Secondary Language](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/secondary-language-integration.md) - Multi-language integration

@@ -233,6 +233,8 @@ class KeyEventReceiverBridge(
     // bridge-gap instance — the interface default is a no-op, so without this override every
     // copy_private feedback message (success, "no selection", dispatch failures) silently
     // vanished. Delegation completeness is now pinned by KeyEventReceiverBridgeDelegationTest.
+    override fun onExplicitEditStarted() { receiver?.onExplicitEditStarted() }
+
     override fun showPrivateCopyFeedback(message: String) {
         receiver?.showPrivateCopyFeedback(message)
     }

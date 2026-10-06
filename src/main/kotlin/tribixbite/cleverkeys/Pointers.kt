@@ -650,6 +650,7 @@ class Pointers(
     }
 
     fun onTouchCancel() {
+        _handler.onSwipeCancel()
         clear()
         _handler.onPointerFlagsChanged(null)  // No haptic on cancel
     }
@@ -692,6 +693,7 @@ class Pointers(
         // the thresholds under a swipe already in progress. See the class KDoc for the
         // multi-touch rule (each finger captures at its own down).
         val snap = _config.snapshot
+        if (countActivePointers() > 0) _handler.onSwipeCancel()
 
         // Initialize swipe recognizer if swipe typing OR short gestures enabled
         // Short gestures (e.g. arrow key SW/NW for home/end) also need path tracking
@@ -704,6 +706,7 @@ class Pointers(
             val shiftActive = currentMods.has(KeyValue.Modifier.SHIFT)
             val shiftLocked = _handler.isShiftLocked()
             _swipeRecognizer.startSwipe(x, y, key, shiftActive, shiftLocked)
+            _handler.onSwipeStart(x, y, key, snap, _swipeRecognizer)
         }
 
         // Don't take latched modifiers into account if an other key is pressed.
@@ -2091,6 +2094,9 @@ class Pointers(
 
         /** Key is repeating. */
         fun onPointerHold(k: KeyValue, mods: Modifiers)
+
+        fun onSwipeStart(x: Float, y: Float, key: KeyboardData.Key, snapshot: ConfigSnapshot, recognizer: ImprovedSwipeGestureRecognizer) {}
+        fun onSwipeCancel() {}
 
         /** Track swipe movement for swipe typing. */
         fun onSwipeMove(x: Float, y: Float, recognizer: ImprovedSwipeGestureRecognizer)

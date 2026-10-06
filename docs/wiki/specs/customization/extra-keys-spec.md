@@ -16,7 +16,7 @@ Extra Keys configuration enables predefined actions and characters using per-key
 
 | Component | Source | Responsibility |
 |-----------|--------|----------------|
-| Catalog | `src/main/kotlin/tribixbite/cleverkeys/prefs/ExtraKeysPreference.kt:61` | 108 predefined key identifiers |
+| Catalog | `src/main/kotlin/tribixbite/cleverkeys/prefs/ExtraKeysPreference.kt:61` | 110 predefined key identifiers |
 | Categories | `src/main/kotlin/tribixbite/cleverkeys/prefs/ExtraKeysPreference.kt:177` | Shared category partition consumed by the UI and completeness tests |
 | Configuration screen | `src/main/kotlin/tribixbite/cleverkeys/activities/ExtraKeysConfigActivity.kt:55` | Search, saved checkbox state, defaults and category rows |
 | Row | `src/main/kotlin/tribixbite/cleverkeys/activities/ExtraKeysConfigActivity.kt:217` | Resource-derived label, optional description, identifier and checkbox |
@@ -59,5 +59,5 @@ There is no `ExtraKeysManager` enum, `extra_keys_left`/`extra_keys_right` storag
 
 - [Extra Keys Guide](../../customization/extra-keys.md) - Configure predefined keys
 - [Per-Key Actions](per-key-actions-spec.md) - Custom direction assignments
-- [Layout System](../../../specs/layout-system.md) - Keyboard layout transformations
-- [Gesture System](../../../specs/gesture-system.md) - Gesture handling
+- [Layout System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/layout-system.md) - Keyboard layout transformations
+- [Gesture System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/gesture-system.md) - Gesture handling

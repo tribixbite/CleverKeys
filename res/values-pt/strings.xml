@@ -2290,4 +2290,15 @@
     <string name="advanced_custom_terminal_invalid">Nome de pacote inválido (máximo de %2$d caracteres): %1$s</string>
     <string name="advanced_custom_terminal_limit">Use no máximo %1$d nomes de pacotes distintos.</string>
     <string name="advanced_custom_terminal_input_limit">A lista é muito longa (máximo de %1$d caracteres).</string>
+    <string name="command_palette_template_title">Modelo dinâmico</string>
+    <string name="command_palette_template_help">Expanda {clipboard}, {selection}, {uuid} e um {cursor}. Use {{ e }} para chaves literais. Ações de texto existentes permanecem literais.</string>
+    <string name="dynamic_action_unavailable">Ação indisponível neste editor ou painel</string>
+    <string name="dynamic_template_invalid">Modelo inválido: verifique tokens, chaves e marcadores de cursor.</string>
+    <string name="continuous_swipe_title">Deslize contínuo</string>
+    <string name="continuous_swipe_desc">Segure brevemente no centro da barra de espaço entre as palavras sem levantar o dedo. Uma passagem rápida mantém uma única palavra.</string>
+    <string name="continuous_swipe_stopped">Deslize contínuo interrompido; verifique o texto antes de continuar.</string>
+    <string name="cmd_append_possessive">Anexar \'s</string>
+    <string name="cmd_append_possessive_desc">Anexar \'s à última palavra verificada; um backspace remove apenas o sufixo</string>
+    <string name="cmd_append_apostrophe">Anexar apóstrofo</string>
+    <string name="cmd_append_apostrophe_desc">Anexar um apóstrofo à última palavra verificada (parents\'); um backspace remove apenas o sufixo</string>
 </resources>

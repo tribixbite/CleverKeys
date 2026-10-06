@@ -123,4 +123,4 @@ If the pattern text appears instead of the formatted date:
 
 ## Technical Details
 
-For technical implementation details, see the [Timestamp Keys Specification](../../specs/timestamp-keys.md).
+For technical implementation details, see the [Timestamp Keys Specification](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/timestamp-keys.md).

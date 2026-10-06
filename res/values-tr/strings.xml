@@ -2260,4 +2260,15 @@
     <string name="advanced_custom_terminal_invalid">Geçersiz paket adı (en fazla %2$d karakter): %1$s</string>
     <string name="advanced_custom_terminal_limit">En fazla %1$d farklı paket adı kullanın.</string>
     <string name="advanced_custom_terminal_input_limit">Liste çok uzun (en fazla %1$d karakter).</string>
+    <string name="command_palette_template_title">Dinamik şablon</string>
+    <string name="command_palette_template_help">{clipboard}, {selection}, {uuid} ve bir {cursor} genişletin. Değişmez küme parantezleri için {{ ve }} kullanın. Mevcut metin eylemleri değişmez kalır.</string>
+    <string name="dynamic_action_unavailable">Eylem bu düzenleyicide veya panelde kullanılamıyor</string>
+    <string name="dynamic_template_invalid">Geçersiz şablon: belirteçleri, küme parantezlerini ve imleç işaretçilerini kontrol edin.</string>
+    <string name="continuous_swipe_title">Sürekli kaydırma</string>
+    <string name="continuous_swipe_desc">Kelimeler arasında parmağınızı kaldırmadan boşluk tuşunun ortasında kısa süre bekletin. Hızlı bir geçiş tek kelime olarak bırakır.</string>
+    <string name="continuous_swipe_stopped">Sürekli kaydırma durduruldu; devam etmeden önce metni kontrol edin.</string>
+    <string name="cmd_append_possessive">\'s ekle</string>
+    <string name="cmd_append_possessive_desc">Son doğrulanan kelimeye \'s iliştir; bir geri alma yalnızca son eki siler</string>
+    <string name="cmd_append_apostrophe">Kesme işareti ekle</string>
+    <string name="cmd_append_apostrophe_desc">Son doğrulanan kelimeye kesme işareti iliştir (parents\'); bir geri alma yalnızca son eki siler</string>
 </resources>

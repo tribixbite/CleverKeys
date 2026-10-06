@@ -68,6 +68,12 @@ internal fun SettingsActivity.SwipeTypingSection() {
                 )
 
                 if (swipeTypingEnabled) {
+                    SettingsSwitch(
+                        title = stringResource(R.string.continuous_swipe_title),
+                        description = stringResource(R.string.continuous_swipe_desc),
+                        checked = continuousSwipeEnabled,
+                        onCheckedChange = { continuousSwipeEnabled = it; saveSetting("continuous_swipe_enabled", it) }
+                    )
                     // WP9 R-1 step 7 (v1.2): engine mode selector. CTC (default) = CTC
                     // trie-beam on Latin layouts for the seven served languages — en/fr/de/es
                     // plus the provisional it/pt/sv, swipe.ctc.CtcLanguageSupport is the
@@ -223,6 +229,7 @@ internal fun SettingsActivity.SwipeTypingSection() {
                 }
 
                 if (swipeTypingEnabled) {
+
                     // #39: Option to enable swipe typing on password fields
                     SettingsSwitch(
                         title = stringResource(R.string.swipe_password_title),

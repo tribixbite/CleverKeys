@@ -169,6 +169,6 @@ fun drawSwipeTrail(canvas: Canvas, points: List<PointF>) {
 
 ## Related Specifications
 
-- [Gesture System](../../../specs/gesture-system.md) - Overall gesture handling
+- [Gesture System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/gesture-system.md) - Overall gesture handling
 - [Special Characters Specification](../typing/special-characters-spec.md) - Subkey access
-- [Per-Key Customization](../../../specs/short-swipe-customization.md) - Custom subkeys
+- [Per-Key Customization](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/short-swipe-customization.md) - Custom subkeys

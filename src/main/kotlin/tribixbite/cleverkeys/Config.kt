@@ -163,6 +163,7 @@ object Defaults {
 
 
     // Word prediction
+    const val CONTINUOUS_SWIPE_ENABLED = false
     const val SWIPE_TYPING_ENABLED = true
     const val SWIPE_ON_PASSWORD_FIELDS = false  // #39: Reenable swipe typing on password fields
     const val WORD_PREDICTION_ENABLED = true
@@ -660,6 +661,7 @@ class Config private constructor(
     @JvmField var gif_enabled = Defaults.GIF_ENABLED
     @JvmField var gif_thumbnail_columns = Defaults.GIF_THUMBNAIL_COLUMNS
 
+    @JvmField var continuous_swipe_enabled = Defaults.CONTINUOUS_SWIPE_ENABLED
     @JvmField var swipe_typing_enabled = true  // Default to enabled for CleverKeys
     @JvmField var swipe_on_password_fields = false  // #39: Reenable swipe typing on password fields
     @JvmField var swipe_show_debug_scores = false
@@ -975,6 +977,7 @@ class Config private constructor(
         gif_enabled = _prefs.getBoolean("gif_enabled", Defaults.GIF_ENABLED)
         gif_thumbnail_columns = safeGetInt(_prefs, "gif_thumbnail_columns", Defaults.GIF_THUMBNAIL_COLUMNS).coerceIn(2, 5)
 
+        continuous_swipe_enabled = safeGetBoolean(_prefs, "continuous_swipe_enabled", Defaults.CONTINUOUS_SWIPE_ENABLED)
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
         swipe_on_password_fields = _prefs.getBoolean("swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)
         swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)
@@ -1163,6 +1166,9 @@ class Config private constructor(
         subkey_popover_neutral_height = subkey_popover_neutral_height,
         swipe_dist_px = swipe_dist_px,
         slide_step_px = slide_step_px,
+        continuous_swipe_enabled = continuous_swipe_enabled,
+        primary_language = primary_language,
+        swipe_engine_mode = swipe_engine_mode,
         swipe_typing_enabled = swipe_typing_enabled,
         slider_speed_smoothing = slider_speed_smoothing,
         slider_speed_max = slider_speed_max,
@@ -1391,6 +1397,9 @@ class Config private constructor(
     interface IKeyEventHandler {
         fun key_down(key: KeyValue?, isSwipe: Boolean)
         fun key_up(key: KeyValue?, mods: Pointers.Modifiers, isKeyRepeat: Boolean = false)
+        fun canUseEditorActions(): Boolean = false
+        fun execute_suffix(suffix: String): Boolean = false
+        fun execute_template(template: String): Boolean = false
         fun mods_changed(mods: Pointers.Modifiers)
     }
 

@@ -288,6 +288,6 @@ enum class ConfigIssue {
 
 ## Related Specifications
 
-- [Settings System](../../../specs/settings-system.md) - Configuration
-- [CTC Swipe Engine](../../../specs/ctc-swipe-engine.md) - Prediction system
-- [Gesture System](../../../specs/gesture-system.md) - Gesture recognition
+- [Settings System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/settings-system.md) - Configuration
+- [CTC Swipe Engine](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/ctc-swipe-engine.md) - Prediction system
+- [Gesture System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/gesture-system.md) - Gesture recognition

@@ -94,4 +94,4 @@ CleverKeys has **no INTERNET permission** — language packs are never downloade
 ## Related Specifications
 
 - [Installation Specification](installation-spec.md)
-- [Settings System](../../../specs/settings-system.md)
+- [Settings System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/settings-system.md)

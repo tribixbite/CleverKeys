@@ -14,11 +14,11 @@ and personal device testing before 2.0; tagging/publishing is not authorized.
 | Item | Remaining work |
 |---|---|
 | 1.1 Terminal handling | Shared predicate and custom package setting implemented and tested. External terminal app smoke tests remain. |
-| 1.2 Dynamic macros | Clipboard, cursor, UUID and selection expansion not implemented; timestamps already work. |
+| 1.2 Dynamic macros | Explicit TEMPLATE actions implement clipboard, cursor, UUID and selection expansion; native execution/assignment tests pass; Seeker checks remain. Existing TEXT stays literal. |
 | 1.3 Clipboard encryption | At-rest encryption/unlock not implemented; backup encryption is a different, existing feature. |
-| 2.1 Apostrophes | Literal ASCII/curly flick parity implemented; ASCII device-tested. Explicit suffix transaction/undo/learning and contraction chooser remain. Waypoints deferred. |
+| 2.1 Apostrophes | Literal ASCII/curly flick parity implemented; ASCII device-tested. Explicit suffix transaction/undo and learning receipts implemented and native-tested; Seeker checks remain. Contraction chooser remains. Waypoints deferred. |
 | Short-word recognition | `ad`/`wet` still fail with default CTC. Frozen heuristic arms rejected; fresh writer/session data and general calibration/training remain. |
-| 2.2 Continuous swipe | Not implemented; needs gesture and model/segment validation. |
+| 2.2 Continuous swipe | Opt-in 280 ms spacebar dwell, bounded segments and serialized commits implemented; native routing tests pass; human/device validation remains. |
 | 2.3 Dwell picker | Not implemented; needs latency/conflict measurements before implementation. |
 | 3.1 Bangla | National/Provat tap layouts exist. Transliteration, spelling-preserving dictionary/mark support and a validated swipe model remain. |
 | 4.1 Theme preview | Live sample exists; actual keyboard/state preview remains. |
@@ -41,9 +41,11 @@ APK hashes and run evidence. Guides, paired specs and relevant skills now match 
 behavior; 84-page docs build, 428 rendered links and 8 guide routes pass. Final
 language-pack swap recovery remains a separate gap.
 
-The next authorized features are continuous multiword swipe, explicit apostrophe
-suffix commands, and dynamic templates. Accepted-commit bookkeeping is a prerequisite
-for safe segment and suffix ownership. No release publication is authorized.
+Continuous multiword swipe, explicit apostrophe suffix commands and dynamic templates
+are implemented and automated validation is complete (2,757 pure + 974 mock,
+1,588 distinct native tests, zero failures/errors/skips/flakes). Accepted-commit
+bookkeeping was committed in `388f4b6b` (2,741 pure + 959 mock, 33 native tests).
+The full baseline above predates these changes and must not be presented as their result. No release publication is authorized.
 
 Full evidence and pending device checks: [`memory/todo.md`](../../memory/todo.md).
 
@@ -111,7 +113,7 @@ controlled by the current execution table above.
   - `ActionType.TIMESTAMP` in `ShortSwipeMapping.kt` and `CustomShortSwipeExecutor.kt` executes arbitrary `SimpleDateFormat` patterns with live pattern previews in `SubkeyAssignActivity.kt` and `CommandPaletteDialog.kt`.
   - Key layout definition syntax `:timestamp symbol='📅':'yyyy-MM-dd HH:mm'` or `📅:timestamp:'yyyy-MM-dd'`.
   - 8 pre-registered timestamp commands in `CommandRegistry.kt` (`timestamp_date`, `timestamp_time`, `timestamp_datetime`, `timestamp_iso`, etc.).
-* **The Remaining Gap**: Extending dynamic short-swipe expansion **beyond date/time formatting** to template variables:
+* **October 6 implementation (automated validation complete; device checks pending)**: explicit TEMPLATE actions extend dynamic short-swipe expansion **beyond date/time formatting** with:
   1. `{clipboard}` — Embed current clipboard content within a text template (e.g. `Markdown link: [{clipboard}](...)`).
   2. `{cursor}` — Reposition caret inside brackets or quotes after commit (e.g. `console.log({cursor});` commits text and positions caret inside the parens).
   3. `{uuid}` — Generate a random UUIDv4 string on the fly.
@@ -156,7 +158,7 @@ Reported English short-word and apostrophe ambiguities need measured changes. Pr
 
 ### 2.1 Explicit Apostrophe and Possessive Gestures
 
-**Code reconciliation (2026-10-05; phase 1 implemented, phases 2–5 pending).** The current CTC and
+**Code reconciliation (October 6; phases 1–3 implemented and automated-tested; device checks pending; phases 4–5 deferred).** The current CTC and
 geometric engines decode letter-only surfaces. Apostrophes are supplied afterward by
 `swipe/ContractionOverlay.kt`, using language-specific REPLACE and PAIRED mappings.
 Consequently, restricting the current beam to “paths containing an apostrophe” cannot
@@ -209,7 +211,8 @@ collision rules must survive any new gesture.
    `parents'` without guessing morphology. Their labels state the insertion rather
    than claiming to identify nouns or grammatical possession. No dedicated apostrophe
    key or new apostrophe-to-S trajectory recognizer is required.
-   Initially scope attachment to the immediately preceding verified swipe commit.
+   Attachment supports the immediately preceding verified swipe, tapped suggestion or
+   completed typed word. Only an original swipe restores whole-swipe undo.
    Verify the same editor, a collapsed selection, cursor location and the exact
    committed word with either its owned automatic space or no trailing space.
    Never reclaim a manual space or edit a stale word after cursor/field changes.
@@ -288,11 +291,11 @@ contraction selection are separate implementation rounds; the earlier combined
 
 ### 2.2 Continuous Multi-Word Swiping across Spacebar
 
-**Authorized next feature; currently unimplemented.** Add an opt-in setting, disabled
+**Implemented and automated-tested (October 6).** An opt-in setting, disabled
 by default, allowing a deliberate spacebar boundary between word segments without
 lifting the finger. Use the actual finite space-key geometry. A brief accidental
-crossing must not split a word; boundary dwell/hysteresis needs explicit tests and
-human device validation.
+crossing must not split a word. Native tests cover boundary dwell/timer/edge behavior;
+human device validation remains.
 
 Decode each bounded, immutable letter-path segment through the existing routed engine.
 The adapters currently cancel older requests, so segments need a serialized FIFO:
@@ -509,5 +512,99 @@ or its 64-output-frame assumption; keep the actual model contract.
 `clear_clipboard` is implemented locally as an opt-in command for Android’s current
 clipboard. It preserves saved history, pins, todos and media; it is independent of
 size-filtered, confirmed Delete results. Extra-key category visibility, recycled labels and displayed-title search are also
-fixed. Validation and device status are recorded in `memory/todo.md`. Apostrophe suffix commands, short-word model work, layout-linked
-language and Bangla prediction remain separate work.
+fixed. Validation and device status are recorded in `memory/todo.md`. Suffix commands are implemented below; short-word model work,
+layout-linked language and Bangla prediction remain separate work.
+
+
+### Maintainer device checks for the new features
+
+These checks apply to the new minified development build after installation; the
+older installed build does not contain this round's features.
+
+- Enable Continuous multiword swipe and try natural phrases in a notes editor and
+  browser: dwell inside the spacebar between words, lift after the final word, try
+  quick crossings and spacebar edges, and repeat with automatic spacing off. Check
+  word order, single separators, first-word Shift, Caps Lock and i/I preferences.
+- While a phrase is decoding, move the caret, switch fields/apps/layouts/languages,
+  hide the keyboard or add a second finger. Already accepted text should remain;
+  pending words should stop. Check natural-word accuracy and latency separately.
+- Assign both suffix commands in per-key and popover slots and as extra keys. Try
+  swipe, tapped suggestion and completed typed words with/without automatic spaces;
+  verify immediate suffix-only Backspace, then whole-word swipe undo where enabled.
+  Try manual spaces, selected text, cursor movement, composing text, and app changes.
+- Confirm suffix learning replaces the full word and undo restores it, with learning
+  both enabled and disabled. Check command labels and TalkBack announcements.
+- Assign templates containing each token and doubled braces in both editors. Wrap
+  forward/reversed selections, insert plain clipboard text containing braces, place
+  the cursor after emoji, and confirm UUID reuse within one invocation. Reload and
+  export/import assignments; ordinary Text Input must keep token text literal.
+- Try templates in password fields and inline clipboard/search/GIF editors, and with
+  empty or media-only clipboard content. Refusal should not type raw template syntax.
+- Complete remaining cross-app terminal, minimize/window pass-through, RTL, large-font,
+  emoji-font and clear-system-clipboard checks using disposable content. Preserve
+  original settings, clipboard and foreground app after testing.
+
+TODO: this session has not performed these Seeker checks because `.170` is absent from `adb devices`. Native emulator passes cannot certify device-specific editor behavior.
+
+
+### Operational handoff — automated validation complete (October 6)
+
+Continuous swipe, explicit verified suffix commands and dynamic templates are
+implemented. Astra finished and returned ownership. No build/test operation remains
+running. The next feature/docs commit contains this record; prior accepted-commit
+baseline is `388f4b6b`, earlier coverage baseline `ef36222c`.
+
+Final evidence:
+
+- Kotlin + **2,757 pure / 974 mock** PASS (`build/oct6-three-features-check-v9.log`).
+- Feature-focused native **137/137** PASS, run
+  `3098fbd4-5171-4e8e-9359-2a2e7e3c435e`.
+- Affected autocorrect/dictionary native **76/76** PASS, run
+  `95a9ff8c-57b0-479c-887a-3f59859f941d`.
+- Unfiltered three-shard native **1,588/1,588** PASS, run
+  `29e624bf-7d30-4c38-b87d-a8a5671b319a`; zero failures/errors/skips/flakes.
+  All 1,491 prior methods are preserved; 97 additions. XML:
+  `~/ew-output/oct6-three-features-full-final-v2/results.xml`, log:
+  `build/oct6-three-features-full-final-v2.log`.
+- Combined assemble/lint PASS (6m54s), **0 errors/216 existing warnings**, log
+  `build/oct6-three-features-isolated-fixtures-v3.log`. Asset merging, test lint
+  model generation and test lint analysis all depend on copyScriptLatencyPacks.
+- Minified release/R8/shrinking PASS (8m49s), signature/CRC/two ARM64 ELFs/new
+  feature identifiers/benchmark exclusion/alignment verified; log
+  `build/oct6-three-features-lint-release-final-v2.log`.
+- Public docs build/audit PASS: **84 pages, 2,211 normalized local links, 30 guide
+  routes** (`build/oct6-three-features-docs-final-green.log`).
+
+Frozen final artifacts (full SHA-256 details also in testing strategy):
+
+| Artifact | SHA-256 |
+|---|---|
+| `build/oct6-three-features-debug-final.apk` | `6ce92aa660b382d9d46d7d0a72a98f2dfe2846cea1acf4210c2834e1ce92e9fa` |
+| `build/oct6-three-features-test-final-v3.apk` | `48fec1e1b569ca138f1f333d8eef13d15996b5a3dcbfd53d8d6b2cbf3f4cc00a` |
+| `build/oct6-three-features-arm64-final.apk` | `d5c3033b9dd53f6039db1b16a5a3c9b0b3bcdf2875a54345dbfed34fb48a9de3` |
+
+The full suite exposed an asynchronous native fixture cleanup leak: because remained
+explicitly disabled, causing becuase→purchase. DictionaryDataSourceTest now snapshots
+and synchronously commits exact prior disabled-word state. The same 1,588-method
+inventory then passes. No production ranking/model correction was made. Earlier
+constructor-order, prefixed XML quoting and template offset-overflow regressions are
+fixed and protected. The suffix review also fixed owned callbacks reaching manual
+cursor consumers; the shared service gate is tested with real coordinator/view paths.
+
+Next work:
+
+1. `.170` was absent throughout this continuation; `.202` identifies as Saga and was
+   not modified. Only install the verified minified ARM64 build on the intended Seeker,
+   then run the manual checks above and restore original focus/settings. Do not run
+   adb connect without a new reason/instruction. No phone install/state change occurred.
+2. Maintainer reviews cross-app timing/accuracy, suffix undo/learning, templates,
+   TalkBack, terminal apps, minimize/RTL/window pass-through, fonts and clipboard clear.
+3. Ad/wet encoder/calibration, Bangla dictionary/mark and engine validation,
+   layout-linked language, clipboard encryption, dwell picker, full keyboard theme
+   preview, spline trail and language-pack final-swap recovery remain open.
+4. No push, tag, version bump, external issue comment or release was authorized.
+
+**Foreign dirty file:** do not edit, stage or commit
+`docs/plans/v2.0.0-manual-test-checklist.md`; preserved SHA-256
+`7f6d1108dd9b0ba3d5ecd77af4be88e402b5b93c70b66deeed51bd35f888a8d0`.
+All other current modifications belong to this authorized feature/docs round.

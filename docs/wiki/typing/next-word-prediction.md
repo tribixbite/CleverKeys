@@ -147,3 +147,12 @@ suggestion is read as the word followed by its origin, e.g. "to, Next-word predi
 ## Technical Details
 
 See the [Next-Word Prediction Technical Specification](../specs/typing/next-word-prediction-spec.md).
+
+## Explicit apostrophe suffixes (development build)
+
+The assignable **Append 's** and **Append apostrophe** commands attach exact text to
+the last verified word. With learning enabled, a successful suffix replaces that
+word's own learning increments and context; immediate Backspace restores them through
+a fresh receipt. Moving the cursor, changing fields or clearing learned data expires
+ownership. These commands do not guess grammatical possession or alter contraction
+ranking. See [per-key actions](../customization/per-key-actions.md).

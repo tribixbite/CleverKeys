@@ -23,6 +23,7 @@ object CommandRouting {
     private val KEY_PIPELINE_KINDS: Set<KeyValue.Kind> = setOf(
         KeyValue.Kind.Modifier,
         KeyValue.Kind.Compose_pending,
+        KeyValue.Kind.Template,
         KeyValue.Kind.Timestamp,
         KeyValue.Kind.Macro,
         KeyValue.Kind.Slider,

@@ -432,6 +432,9 @@ open class ImprovedSwipeGestureRecognizer {
     /**
      * Check if currently swipe typing
      */
+    /** A verified continuous-space boundary establishes deliberate word intent. */
+    fun confirmContinuousSwipe() { _isSwipeTyping = true }
+
     fun isSwipeTyping(): Boolean {
         return _isSwipeTyping
     }

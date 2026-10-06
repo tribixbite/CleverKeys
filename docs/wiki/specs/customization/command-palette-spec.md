@@ -28,18 +28,20 @@ registry-owned executable lambdas or separate `PaletteSearch`/`PaletteView` clas
 
 ## Assignment and execution
 
-The dialog supports command selection, custom literal text, and timestamp formats.
+The dialog supports command selection, custom literal text, explicit dynamic templates, and timestamp formats.
 The label confirmation step stores a `ShortSwipeMapping` through
 `ShortSwipeCustomizationManager`. `CustomShortSwipeExecutor`, keyboard dispatch, and
 `KeyEventHandler` route the selected action when the user performs the gesture.
 
 Custom single ASCII or curly apostrophes use ordinary punctuation routing so they can
 attach to a pending automatic space under the ordinary punctuation checks. Multi-character literal text remains literal.
-Explicit apostrophe suffix commands and dynamic template expansion remain planned;
-this dialog does not implement them yet.
+The Editing category includes `append_possessive` and `append_apostrophe`; both use
+verified word receipts and support suffix-only undo. The shared template editor
+validates the four supported tokens before assignment and preserves TEMPLATE through
+label confirmation, JSON, backup and XML. Both per-key and popover assignment use it.
 
 Current commands include `selectAll`, `clear_clipboard`, `minimize_bar`, and
-`minimize_fab`. Clearing the system clipboard preserves CleverKeys' saved history,
+`minimize_fab`, `append_possessive`, and `append_apostrophe`. Clearing the system clipboard preserves CleverKeys' saved history,
 pins, todos, and media. Minimize commands change the visible IME while it is active;
 they do not restore a keyboard the system has already hidden.
 
@@ -49,7 +51,7 @@ Registry localization/search and persistence tests protect stable names and tran
 labels. `Keyboard2ViewCustomSwipeDispatchTest` exercises real view/executor/key-handler
 routing. `PointersGestureRoutingTest` verifies a persisted gesture mapping is loaded
 on a cold start with swipe typing disabled. The native settings tests exercise
-assignment/search UI. Full suite results are recorded in the internal
+assignment/search UI, including `DynamicTemplateAssignmentTest` for both contexts. Full suite results are recorded in the internal
 [testing strategy](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/testing-strategy.md).
 
 [User guide](../../customization/command-palette.md)

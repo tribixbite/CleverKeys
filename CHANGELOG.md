@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Optional continuous multiword swipe: dwell inside the spacebar between words;
+  serialized, verified commits preserve word order and stop after editor/session changes.
+- Assignable **Append 's** and **Append apostrophe** commands with verified word
+  attachment, suffix-only undo and exact owned learning replacement.
+- Explicit dynamic templates for clipboard text, selection, UUID and UTF-16 cursor
+  placement; ordinary Text Input keeps braces literal. Per-key and popover assignment,
+  persistence, backup and XML retain the template action type.
+
+### Fixed
+
+- Rejected editor writes no longer create new swipe, spacing, learning or correction ownership.
+- Prefixed timestamp and intent XML actions now parse opening quotes and preserve
+  escaped apostrophes/backslashes on export/import.
+- Delayed callbacks belonging to verified suffix/separator edits preserve automatic
+  spacing and continuous phrase state while genuine caret movement still cancels.
+
 ### Changed
 
 - **Next-word prediction is on by default and works without on-device learning.** The

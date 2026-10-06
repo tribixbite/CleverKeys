@@ -61,7 +61,10 @@ enum class ActionType(
     TIMESTAMP(
         displayNameRes = R.string.command_palette_timestamp_title,
         descriptionRes = R.string.action_type_timestamp_desc
-    );
+    ),
+
+    /** Explicit, nonrecursive text expansion; existing TEXT remains literal. */
+    TEMPLATE(R.string.command_palette_template_title, R.string.command_palette_template_help);
 
     companion object {
         /**

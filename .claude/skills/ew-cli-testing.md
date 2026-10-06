@@ -247,6 +247,10 @@ Rules:
 1. Any prefs write a test must undo → use **`commit()`**, never `apply()`.
 2. Mutate **inert state**: don't disable/add words other tests' inputs are
    near ("zebra", not "the") — even a leak then can't cascade.
+   October 6: DictionaryDataSourceTest also leaked disabled because through apply()
+   teardown, breaking an unrelated transposition case in an otherwise 1,587/1,588
+   full run. Snapshot/restore exact prior state with checked commit(), not removal
+   of just the test-added words; fresh processes still share preference files.
 3. When on-device results contradict a faithful local simulation, suspect
    leaked state from an earlier test before suspecting the algorithm.
 
@@ -412,3 +416,13 @@ Rebuild: `./scripts/gradle-guard.sh assembleDebug assembleDebugAndroidTest`
 | `build.gradle` | Test dependencies |
 | `scripts/run-pure-tests.sh` | Local JVM tests |
 | `.github/workflows/test.yml` | CI test workflow |
+
+
+## October 6 complete feature gate
+
+The three-feature suite passes all 1,588 distinct methods (all prior 1,491 plus 97),
+zero failures/errors/skips/flakes, run `29e624bf-7d30-4c38-b87d-a8a5671b319a`.
+Exact app/test/release hashes and earlier failed-fixture evidence are recorded in
+`docs/specs/testing-strategy.md`; do not confuse that cloud result with pending Seeker
+manual checks. Combined assemble+lint needs the generated language-pack copy producer
+wired to asset merge, AndroidTest lint model generation AND AndroidTest lint analysis.

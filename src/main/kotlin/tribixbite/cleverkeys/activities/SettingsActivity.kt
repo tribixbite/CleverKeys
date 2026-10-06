@@ -323,6 +323,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var capitalizeIWords by mutableStateOf(true)  // #72: Auto-capitalize I, I'm, I'll, etc.
 
     // Phase 1: Expose existing Config.kt settings
+    internal var continuousSwipeEnabled by mutableStateOf(Defaults.CONTINUOUS_SWIPE_ENABLED)
     internal var swipeTypingEnabled by mutableStateOf(true)  // Master switch for swipe typing (default ON for CleverKeys)
     internal var swipeOnPasswordFields by mutableStateOf(false)  // #39: Allow swipe on password fields
     internal var wordPredictionEnabled by mutableStateOf(true)  // Match Config.kt default

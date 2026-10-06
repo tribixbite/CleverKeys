@@ -55,6 +55,53 @@ committed coordination over working-tree edits.
 
 ---
 
+## Active handoff (October 6)
+
+The three-feature automated validation is complete; Seeker/manual checks remain. Resume from the handoff in
+`docs/plans/2026-10-05-recommended-features-and-gaps.md` and `memory/todo.md` before
+editing or launching Gradle. It records exact tested artifacts/results; no push/release is authorized.
+
+## Rendered documentation link checks
+
+Normalize relative HTML hrefs against each page URL before checking targets; an absolute-only
+checker missed 29 broken engineering-note links. Run after the site build finishes (2026-10-06).
+
+## Kotlin compiler execution on Termux
+
+Use `-Pkotlin.compiler.execution.strategy=in-process` (Gradle property), not the old
+`-D` system property. Kotlin 2.0 ignored the latter and spawned a separate 1 GiB daemon;
+a full compile spent most CPU in parallel GC. `gradle-guard.sh` now uses `-P` (2026-10-06).
+
+## Explicit editor edits and composition
+
+`InputConnection.commitText` replaces an active composing span even when a different
+selection was verified. Finish composition, require acknowledgement, and revalidate
+exact editor/session readback before explicit template or suffix writes (2026-10-06).
+
+## Generated Android-test assets and lint
+
+Asset merge, `generate*AndroidTestLintModel` and `lintAnalyze*AndroidTest` all read
+generated language packs; make each depend on `copyScriptLatencyPacks`. Analysis
+reads them directly too; separate invocations hid these dependencies (2026-10-06).
+
+## Orchestrator preference cleanup
+
+Native test processes can exit before `SharedPreferences.apply()` reaches disk.
+Snapshot and synchronously `commit()` exact prior preference state in teardown;
+a leaked disabled `because` broke an unrelated autocorrect test in the full suite.
+
+## Owned editor selection callbacks
+
+A suffix/separator callback accepted by SuggestionHandler's exact bounded ledger must
+also bypass manual-caret consumers in the service. Otherwise cursor sync clears the
+new auto-space stamp and continuous tracking cancels the phrase (2026-10-06).
+
+## Kotlin view initialization order
+
+Fields used by `reset()`/`setKeyboard()` must precede the constructor `init` block.
+Later property initializers run afterward; new continuous-swipe cancellation state
+caused a real null-list constructor crash caught by native view tests (2026-10-06).
+
 ## Native APK alignment check
 
 The installed Termux `zipalign` accepts `-c -p 4`, but lacks the newer `-P 16`

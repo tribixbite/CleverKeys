@@ -480,7 +480,15 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   source drift assertions to protect rejection cleanup and prohibit ownership fallbacks.
 - [x] Native punctuation class: 33 distinct passed, 0 failures/errors/skips, run
   `3e8f6000-e943-4110-9746-c5bd8508e46e`. Frozen hashes in testing strategy.
-- [x] Wiki build passes 84 pages; all 2,182 rendered wiki/spec links and all 30
-  paired-guide routes resolve after correcting 21 remaining frontmatter links.
-- [ ] TODO: implement continuous multiword swipe, verified suffix commands/undo/
-  exact learning receipts, and dynamic templates with native coverage and final full run.
+- [x] Wiki build passes 84 pages; 30 paired-guide routes resolve. Earlier 2,182-link
+  check missed relative engineering-note links; final normalized audit corrects this.
+- [x] Three features implemented: optional continuous swipe, explicit verified suffix
+  commands/undo/owned learning, and TEMPLATE expansion/assignment/persistence/XML.
+  Kotlin + 2,757 pure / 974 mock; native feature focus 137/137 and affected fixtures 76/76.
+  Final unfiltered EW 1,588/1,588, zero failures/errors/skips/flakes, all 1,491 prior +97 new;
+  run `29e624bf-7d30-4c38-b87d-a8a5671b319a`. Lint 0 errors/216 warnings; minified ARM64
+  signature/CRC/ELF/alignment/feature and benchmark-exclusion checks PASS. Docs 84 pages,
+  2,211 links/30 guide routes. Exact artifacts/logs and remaining manual checks in plan handoff.
+- [ ] TODO: install/test final minified APK on Seeker; .170 absent, .202 is Saga (untouched).
+  Maintainer cross-app/gesture/suffix/template/TalkBack checks remain; no push/release.
+  Foreign manual checklist preserved; ad/wet, Bangla pipeline and other plan gaps stay open.

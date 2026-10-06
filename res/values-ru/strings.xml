@@ -2336,4 +2336,15 @@
     <string name="advanced_custom_terminal_invalid">Недопустимое имя пакета (не более %2$d символов): %1$s</string>
     <string name="advanced_custom_terminal_limit">Используйте не более %1$d различных имен пакетов.</string>
     <string name="advanced_custom_terminal_input_limit">Список слишком длинный (не более %1$d символов).</string>
+    <string name="command_palette_template_title">Динамический шаблон</string>
+    <string name="command_palette_template_help">Развернуть {clipboard}, {selection}, {uuid} и один {cursor}. Используйте {{ и }} для литеральных фигурных скобок. Существующие текстовые действия остаются без изменений.</string>
+    <string name="dynamic_action_unavailable">Действие недоступно в этом редакторе или панели</string>
+    <string name="dynamic_template_invalid">Недействительный шаблон: проверьте токены, фигурные скобки и маркеры курсора.</string>
+    <string name="continuous_swipe_title">Непрерывный ввод жестом</string>
+    <string name="continuous_swipe_desc">Между словами ненадолго задержите палец в центре пробела, не отрывая его. Быстрое пересечение оставляет одно слово.</string>
+    <string name="continuous_swipe_stopped">Непрерывный ввод жестом остановлен; проверьте текст перед продолжением.</string>
+    <string name="cmd_append_possessive">Добавить \'s в конец</string>
+    <string name="cmd_append_possessive_desc">Прикрепить \'s к последнему проверенному слову; один backspace удаляет только суффикс</string>
+    <string name="cmd_append_apostrophe">Добавить апостроф в конец</string>
+    <string name="cmd_append_apostrophe_desc">Прикрепить апостроф к последнему проверенному слову (parents\'); один backspace удаляет только суффикс</string>
 </resources>

@@ -730,6 +730,7 @@ internal fun shortSwipeActionDescription(context: Context, type: ActionType, val
         } catch (e: Exception) {
             context.getString(R.string.short_swipe_action_desc_intent_invalid)
         }
+        ActionType.TEMPLATE -> context.getString(R.string.command_palette_template_title)
         ActionType.TIMESTAMP -> context.getString(R.string.short_swipe_action_desc_timestamp, value)
     }
 

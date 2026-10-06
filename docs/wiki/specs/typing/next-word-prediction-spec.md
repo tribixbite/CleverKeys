@@ -3,7 +3,7 @@ title: Next-Word Prediction — Technical Specification
 description: Two-tier next-word generation (shipped static model + learned n-grams), tier gating, provenance, and the four suggestion-bar call-sites
 user_guide: /wiki/typing/next-word-prediction/
 status: implemented
-version: v1.5.x
+version: v2.0.0 development
 ---
 
 # Next-Word Prediction Technical Specification
@@ -149,3 +149,23 @@ instead of the "●" glyph.
 - [Input Behavior Spec](../settings/input-behavior-spec.md) - Word-prediction section settings
 - [Swipe Typing Spec](./swipe-typing-spec.md) - The swipe pipeline the appended candidates compose with
 - [Autocorrect Spec](./autocorrect-spec.md) - Commit/undo interactions
+
+## Verified suffix learning replacement (October 6 development)
+
+Explicit “Append 's” and “Append apostrophe” use an opaque `LearningCommit`
+from the accepted word. A replacement consumes only that commit's owned bigram,
+trigram and user-vocabulary increments, restores its prior context window, then
+records the full suffixed spelling. Undo receives a fresh handle for the restored
+word. No word-only rollback or concrete-predictor cast is used for this feature.
+
+Receipts bind predictor/store identity, mutation versions, language and privacy
+gates. Another commit, context reset, clear/import, language or learning-gate change
+expires them. Validation and mutation hold locks in bigram → trigram → vocabulary
+order; editor calls occur outside these locks. With learning disabled, replacement
+updates ephemeral context without reading or writing learned stores.
+
+This is ownership of exact increments, not a durable database transaction. Recency
+timestamps, capacity evictions and asynchronous persistence cannot be fully restored.
+Suffix editing requires exact editor readback; unsupported editors refuse the command.
+Current native and host evidence is maintained in the engineering testing strategy;
+pre-feature full-suite counts do not validate this implementation.

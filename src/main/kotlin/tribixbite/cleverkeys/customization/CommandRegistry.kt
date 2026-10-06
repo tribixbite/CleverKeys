@@ -88,6 +88,8 @@ object CommandRegistry {
         // #156: Private copy — stores the selection in CleverKeys' clipboard only, never the OS clipboard.
         Command("copy_private", R.string.cmd_copy_private, R.string.cmd_copy_private_desc, Category.CLIPBOARD,
             keywords = listOf("private", "copy", "clipboard", "secure", "lock")),
+        Command("append_possessive", R.string.cmd_append_possessive, R.string.cmd_append_possessive_desc, Category.EDITING),
+        Command("append_apostrophe", R.string.cmd_append_apostrophe, R.string.cmd_append_apostrophe_desc, Category.EDITING),
         Command("clear_clipboard", R.string.cmd_clear_clipboard, R.string.cmd_clear_clipboard_desc, Category.CLIPBOARD,
             keywords = listOf("clear", "clipboard", "system", "empty")),
         Command("paste", R.string.cmd_paste, R.string.cmd_paste_desc, Category.CLIPBOARD,

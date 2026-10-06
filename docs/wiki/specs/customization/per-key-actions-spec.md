@@ -1,9 +1,9 @@
 ---
 title: Per-Key Actions — Technical Specification
-description: Full short-swipe customization system covering all 8 directions per key with TEXT/COMMAND/KEY_EVENT/INTENT/TIMESTAMP action types and 200+ command registry
+description: Full short-swipe customization system covering all 8 directions per key with TEXT/COMMAND/KEY_EVENT/INTENT/TIMESTAMP/TEMPLATE action types and 200+ command registry
 user_guide: /wiki/customization/per-key-actions/
 status: implemented
-version: v1.4.0
+version: development
 ---
 
 # Per-Key Actions Technical Specification
@@ -576,4 +576,76 @@ Multi-character TEXT actions remain literal. `SmartAutoSpaceTest` and
 `PointersGestureRoutingTest` loads an actual persisted custom mapping on a cold start
 with swipe typing disabled, protecting GH #145 without requiring a model load.
 Full validation is recorded in [testing strategy](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/testing-strategy.md).
-Explicit suffix transactions and dynamic templates remain planned.
+Explicit suffix transactions and dynamic templates are implemented below.
+
+## Explicit dynamic templates (October 6 development work)
+
+`ActionType.TEMPLATE` and `KeyValue.Kind.Template` hold a validated template payload.
+`DynamicTemplate` parses doubled brace escapes and the four fixed tokens in one pass.
+Provider values are memoized per invocation and never parsed recursively. Bounds are
+UTF-16 units: 4,096 input, 65,536 expanded. Existing TEXT values bypass this parser.
+
+The shared `KeyEventHandler.execute_template` guards all five inline modes and the
+editor identity/start epoch. `EditorReadback` captures a bounded prefix/suffix,
+absolute selection endpoints and exact selected text. Resolution and validation happen
+before one `commitText`, including absolute-offset overflow checks; replacement readback verifies the collapsed end and surrounding
+text. A cursor marker then uses `setSelection` with a UTF-16 offset and verifies it.
+False/throwing/partial writes and failed cursor moves return failure without retries or
+compensating deletions. Batch editing would not make the operation atomic.
+
+Only plain `ClipData.Item.text` is read, only when requested; content coercion/network
+reads are absent. Password fields fail closed. Editing invalidates old word/space/undo
+and prediction ownership through `LearningHooks.onExplicitEdit`; payload data does not
+enter the learning funnel. Failure feedback uses the suggestion bar. The custom-gesture
+path returns immediately after TEMPLATE handling, including failure, so a rejected
+payload cannot fall through as an ordinary named command or literal string.
+
+Both assignment contexts use `CommandPaletteDialog` and its template editor. JSON,
+backup and XML preserve TEMPLATE. `KeyValueParser` supports both quoted template
+syntaxes; prefixed template, timestamp and intent payloads share quote parsing that
+preserves escaped apostrophes and backslashes.
+Coverage lives in `KeyValueParserTest` and native `DynamicTemplateTest`. Final run
+counts belong to the [testing strategy source](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/testing-strategy.md).
+
+## Verified suffix transactions and learning
+
+`append_possessive` / `append_apostrophe` map to Editing keys and are included in the
+command/Extra Keys catalogs, labels and accessibility descriptions. The shared key
+handler guards inline priority and invokes SuggestionHandler. Custom gestures route
+these commands directly with success-only feedback rather than executing raw TEXT.
+
+SuggestionHandler captures WordEditReceipt after a successful candidate commit or
+verified typed-word boundary: editor identity/session, Config generation/language,
+exact VerifiedSuffixEdit and the latest opaque LearningCommit. At invocation it
+revalidates collapsed editor readback and full word+owned separator. VerifiedSuffixEdit
+requires acknowledged composition completion and unchanged readback before selecting
+only the owned tail, writing the exact suffix/space, and reading back. A false or
+throwing result is reconciled only when the desired edit is observed exactly, without
+retry. Suffix-only undo precedes legacy word undo and consumes an attempted failed undo.
+
+Predictor's typed receipt API validates instance/commit/epoch, prior context, immutable
+learning gates, language and store mutation versions. ContextModel aggregates receipts
+from actual writes; disabled/no-op sinks produce none. Replacement validates under
+bigram→trigram→vocabulary locks (never held across InputConnection), consumes the old
+identity, reverses owned increments, restores prior context and records the full new
+word with a fresh handle. Config/field permission/language away-and-back and store
+reset/import/cleanup expire handles permanently. Timestamps/cap evictions are not rewound;
+persistence is not an atomic storage transaction. The existing word-based rollback
+API remains separate; suffix replacement never uses its spelling fallback.
+
+### Editor callback limitation
+
+Android selection callbacks contain no operation ID. Suffix writes accept their own
+expected original-caret/tail-selection/final-caret callbacks only inside a bounded, next-main-loop
+ledger with the same session and exact editor readback. Real ranged selections or
+outside-window movement invalidate ownership. The shared selection gate keeps UI
+notifications unconditional, while consumed owned events bypass continuous cancellation
+and manual cursor synchronization; otherwise stale coordinates would erase the new
+auto-space stamp. An identical manual away/back sequence
+inside that brief window can be indistinguishable from delayed owned callbacks.
+This limitation requires cross-editor device testing; it is not an absolute guarantee
+that every cursor excursion can be identified.
+
+Template execution finishes composition and verifies the same editor/selection before
+its single text write. Refusal to finish composition aborts before insertion. A partial
+write or rejected caret move is reported without repeating or compensating the text.

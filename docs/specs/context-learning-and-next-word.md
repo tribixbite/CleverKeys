@@ -520,3 +520,23 @@ Existing related prefs (unchanged keys, now composed with the master gate):
 - User guide: `docs/wiki/typing/next-word-prediction.md`
 - Paired wiki spec: `docs/wiki/specs/typing/next-word-prediction-spec.md`
 - Cursor sync integration: `docs/specs/cursor-aware-predictions.md`
+
+## Verified suffix learning replacement (October 6 development)
+
+Explicit “Append 's” and “Append apostrophe” use an opaque `LearningCommit`
+from the accepted word. A replacement consumes only that commit's owned bigram,
+trigram and user-vocabulary increments, restores its prior context window, then
+records the full suffixed spelling. Undo receives a fresh handle for the restored
+word. No word-only rollback or concrete-predictor cast is used for this feature.
+
+Receipts bind predictor/store identity, mutation versions, language and privacy
+gates. Another commit, context reset, clear/import, language or learning-gate change
+expires them. Validation and mutation hold locks in bigram → trigram → vocabulary
+order; editor calls occur outside these locks. With learning disabled, replacement
+updates ephemeral context without reading or writing learned stores.
+
+This is ownership of exact increments, not a durable database transaction. Recency
+timestamps, capacity evictions and asynchronous persistence cannot be fully restored.
+Suffix editing requires exact editor readback; unsupported editors refuse the command.
+Current native and host evidence is maintained in the engineering testing strategy;
+pre-feature full-suite counts do not validate this implementation.

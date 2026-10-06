@@ -67,7 +67,7 @@ object KeyValueParser {
     private fun init() {
         if (::KEYDEF_TOKEN.isInitialized) return
 
-        KEYDEF_TOKEN = Pattern.compile("'|,|keyevent:|timestamp:|intent:|(?:[^\\\\',]+|\\\\.)+")
+        KEYDEF_TOKEN = Pattern.compile("'|,|keyevent:|timestamp:|template:|intent:|(?:[^\\\\',]+|\\\\.)+")
         QUOTED_PAT = Pattern.compile("((?:[^'\\\\]+|\\\\')*)'")
         WORD_PAT = Pattern.compile("[a-zA-Z0-9_]+|.")
     }
@@ -88,6 +88,7 @@ object KeyValueParser {
                 KeyValue.makeStringKey("") // Unreachable
             }
             "keyevent:" -> parseKeyeventKeydef(m)
+            "template:" -> parseTemplateKeydef(m)
             "timestamp:" -> parseTimestampKeydef(m)
             "intent:" -> parseIntentKeydef(m)
             else -> keyByNameOrStr(removeEscaping(token))
@@ -114,17 +115,30 @@ object KeyValueParser {
         return KeyValue.keyeventKey("", eventcode, 0)
     }
 
-    /**
-     * Parse a timestamp key definition.
-     * Syntax: timestamp:'format_pattern'
-     * Example: timestamp:'yyyy-MM-dd' or timestamp:'HH:mm:ss'
-     * Uses Java DateTimeFormatter patterns.
-     */
-    private fun parseTimestampKeydef(m: Matcher): KeyValue {
-        if (!match(m, QUOTED_PAT)) {
-            parseError("Expected quoted format pattern for timestamp, e.g. timestamp:'yyyy-MM-dd'", m)
+    /** Parse an explicitly typed, quoted template, preserving escaped quotes/backslashes. */
+    private fun parseTemplateKeydef(m: Matcher): KeyValue {
+        return KeyValue.makeTemplateKey("{}", parseQuotedPayload(m))
+    }
+
+    /** Prefixed actions include their opening quote; ordinary string parsing already consumed it. */
+    private fun parseQuotedPayload(m: Matcher): String {
+        val quoted = Pattern.compile("'((?:[^'\\\\]+|\\\\.)*)'")
+        if (!match(m, quoted)) parseError("Expected quoted action payload", m)
+        return unescapePayload(m.group(1))
+    }
+
+    private fun unescapePayload(value: String): String {
+        val output = StringBuilder()
+        var i = 0
+        while (i < value.length) {
+            if (value[i] == '\\' && i + 1 < value.length) i++
+            output.append(value[i++])
         }
-        val pattern = m.group(1).replace("\\'", "'")
+        return output.toString()
+    }
+
+    private fun parseTimestampKeydef(m: Matcher): KeyValue {
+        val pattern = parseQuotedPayload(m)
         return KeyValue.makeTimestampKey("📅", pattern, 0)
     }
 
@@ -140,10 +154,7 @@ object KeyValueParser {
      * @see tribixbite.cleverkeys.customization.IntentDefinition.INTENT_PREFIX
      */
     private fun parseIntentKeydef(m: Matcher): KeyValue {
-        if (!match(m, QUOTED_PAT)) {
-            parseError("Expected quoted JSON for intent, e.g. intent:'{\"name\":\"...\",\"action\":\"...\"}'", m)
-        }
-        val json = m.group(1).replace("\\'", "'")
+        val json = parseQuotedPayload(m)
         return KeyValue.makeStringKey(
             tribixbite.cleverkeys.customization.IntentDefinition.INTENT_PREFIX + json, 0
         )
@@ -252,6 +263,11 @@ object KeyValueParser {
                     }
                     val finalSymbol = symbol ?: eventcode.toString()
                     return KeyValue.keyeventKey(finalSymbol, eventcode, flags)
+                }
+
+                "template" -> {
+                    payload = parseQuotedPayload(m)
+                    return KeyValue.makeTemplateKey(symbol ?: "{}", payload, flags)
                 }
 
                 "timestamp" -> {

@@ -62,13 +62,13 @@ review counts are not a current full-tree audit.
 | `SPEC_TEMPLATE.md` | Template for new specs | ✅ Active |
 | `core-keyboard-system.md` | Core keyboard operations | ✅ Implemented |
 | `gesture-system.md` | Gesture recognition | ✅ Implemented |
-| `ctc-swipe-engine.md` | CTC swipe engine | ✅ Implemented |
+| `ctc-swipe-engine.md` | CTC swipe engine and bounded continuous gesture segments | ✅ Implemented |
 | `layout-system.md` | Layout & extra keys | ✅ Implemented |
 | `settings-system.md` | Settings & preferences | ✅ Implemented |
 | `ui-material3-modernization.md` | Material 3 UI | ✅ Implemented |
 | `performance-optimization.md` | Performance & monitoring | ✅ Complete |
 | `testing-strategy.md` | Measured suites, full cloud evidence, and remaining manual coverage | ✅ Active |
-| `short-swipe-customization.md` | **NEW** Short Swipe System | ✅ Implemented |
+| `short-swipe-customization.md` | Short swipes, explicit templates and verified apostrophe suffixes | ✅ Implemented |
 | `profile_system_restoration.md` | **NEW** Profile Import/Export | ✅ Implemented |
 | `geometric-swipe-engine.md` | Layout-agnostic geometric swipe decoder (standalone) | ✅ Implemented |
 | `context-learning-and-next-word.md` | **NEW 2026-08-06** Persistent context LM, master learning privacy gate, opt-in next-word prediction, suggestion provenance, learned-data manager | ✅ Implemented |

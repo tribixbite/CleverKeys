@@ -211,7 +211,7 @@ class LearnedTypoHygieneTest {
     @Test
     fun `WordPredictor wires the one policy into every consumer`() {
         val src = File("src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt").readText()
-        assertTrue(src.contains("contextModel?.recordCommit(sequence, learnableWordPolicy::isLearnable)"))
+        assertTrue(src.contains("contextOwner?.recordCommitWithReceipt(sequence, learnableWordPolicy::isLearnable)"))
         assertTrue(src.contains("learnableWordPolicy::isLearnable)"))
         assertTrue(src.contains("return learnableWordPolicy.isRepeatedlyObserved(word)"))
         // The purge is triggered from BOTH dictionary publication paths.

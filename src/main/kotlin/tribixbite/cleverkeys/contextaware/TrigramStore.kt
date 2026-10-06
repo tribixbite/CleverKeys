@@ -195,18 +195,47 @@ class TrigramStore internal constructor(
      * Increments frequency, recalculates conditional probability, and marks the
      * store dirty for the debounced write-back.
      */
+    // Conservative process-local version: any store mutation expires outstanding receipts.
+    // Persistence flushes and reads leave it unchanged. All access holds the store monitor.
+    private var mutationVersion: Long = 0
+
+    internal class IncrementReceipt internal constructor(
+        internal val owner: TrigramStore, internal val version: Long,
+        internal val language: String, internal val word1: String, internal val word2: String, internal val word3: String
+    ) {
+        internal var consumed = false
+    }
+
+    internal fun receiptVersion(): Long = synchronized(this) { mutationVersion }
+
+    internal fun isReceiptCurrent(receipt: IncrementReceipt): Boolean = synchronized(this) {
+        receipt.owner === this && !receipt.consumed && receipt.version == mutationVersion
+    }
+
+    /** Consume only this recorded increment; never search for an older matching observation. */
+    internal fun rollbackReceipt(receipt: IncrementReceipt): Boolean = synchronized(this) {
+        if (!isReceiptCurrent(receipt)) return false
+        receipt.consumed = true
+        unrecordTrigram(receipt.language, receipt.word1, receipt.word2, receipt.word3)
+    }
+
     fun recordTrigram(language: String, word1: String, word2: String, word3: String) {
+        recordTrigramWithReceipt(language, word1, word2, word3)
+    }
+
+    internal fun recordTrigramWithReceipt(language: String, word1: String, word2: String, word3: String): IncrementReceipt? {
         val w1 = TrigramEntry.normalizeWord(word1)
         val w2 = TrigramEntry.normalizeWord(word2)
         val w3 = TrigramEntry.normalizeWord(word3)
-        if (w1.isEmpty() || w2.isEmpty() || w3.isEmpty()) return
-        if (w2 == w3) return // Skip immediate self-references ("very very")
+        if (w1.isEmpty() || w2.isEmpty() || w3.isEmpty()) return null
+        if (w2 == w3) return null // Skip immediate self-references ("very very")
 
         val lang = BigramStore.normalizeLanguage(language)
         val data = forLanguage(lang)
         val key = prefixKey(w1, w2)
 
-        synchronized(this) {
+        val receipt = synchronized(this) {
+            mutationVersion++
             // Language-wide position of this observation (cross-prefix recency, global cap).
             val tick = ++data.clock
             val prefixFreq = (data.prefixFrequencies[key] ?: 0) + 1
@@ -244,10 +273,12 @@ class TrigramStore internal constructor(
             entries.sortByDescending { it.probability }
 
             pruneIfNeeded(data, key, w3)
+            IncrementReceipt(this, mutationVersion, lang, w1, w2, w3)
         }
 
         dirtyLanguages.add(lang)
         persister.markDirty()
+        return receipt
     }
 
     /**
@@ -351,6 +382,7 @@ class TrigramStore internal constructor(
         val key = prefixKey(w1, w2)
 
         synchronized(this) {
+            mutationVersion++
             val entries = data.trigramMap[key] ?: return false
             val existing = entries.find { it.word3 == w3 } ?: return false
 
@@ -409,6 +441,7 @@ class TrigramStore internal constructor(
         var removed = 0
 
         synchronized(this) {
+            mutationVersion++
             // Snapshot keys: we mutate the map inside the loop.
             for (key in data.trigramMap.keys.toList()) {
                 if (!key.endsWith(tailSuffix)) continue
@@ -462,6 +495,7 @@ class TrigramStore internal constructor(
         val data = forLanguage(lang)
         var removed = 0
         synchronized(this) {
+            mutationVersion++
             for (key in data.trigramMap.keys.toList()) {
                 val entries = data.trigramMap[key] ?: continue
                 val doomed = entries.filter(shouldPurge)
@@ -512,6 +546,7 @@ class TrigramStore internal constructor(
         // M1 (review 2026-08-06): storage removal INSIDE the serialize+write lock —
         // see BigramStore.clear for the interleaving this forbids.
         synchronized(this) {
+            mutationVersion++
             val data = forLanguage(lang)
             data.trigramMap.clear()
             data.prefixFrequencies.clear()
@@ -524,6 +559,7 @@ class TrigramStore internal constructor(
     fun clearAll() {
         // M1: same lock discipline as [clear].
         synchronized(this) {
+            mutationVersion++
             languages.values.forEach {
                 it.trigramMap.clear()
                 it.prefixFrequencies.clear()
@@ -804,6 +840,7 @@ class TrigramStore internal constructor(
             val data = forLanguage(lang)
 
             synchronized(this) {
+                mutationVersion++
                 for (i in 0 until json.length()) {
                     val obj = json.getJSONObject(i)
                     val w1 = TrigramEntry.normalizeWord(obj.getString("word1"))

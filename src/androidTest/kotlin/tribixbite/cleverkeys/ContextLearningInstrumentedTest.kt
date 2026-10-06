@@ -13,6 +13,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import tribixbite.cleverkeys.contextaware.BigramStore
+import tribixbite.cleverkeys.contextaware.ContextModel
 import tribixbite.cleverkeys.contextaware.ContextContinuation
 import tribixbite.cleverkeys.contextaware.TrigramStore
 import tribixbite.cleverkeys.persist.SharedPrefsLearnedStorage
@@ -96,6 +97,68 @@ class ContextLearningInstrumentedTest {
 
     private fun newUserVocabulary() =
         UserVocabulary(SharedPrefsLearnedStorage(vocabPrefs), 60_000, 120_000, scheduler)
+
+    @Test
+    fun exactIncrementReceipts_rollbackOnceAndPersistCounts() {
+        val bigrams = newBigramStore()
+        val trigrams = newTrigramStore()
+        val vocabulary = newUserVocabulary()
+        val model = ContextModel(bigrams, trigrams, "en")
+        repeat(2) {
+            model.recordCommit(listOf("we", "like", "cats"))
+            vocabulary.recordWordUsage("cats")
+        }
+        val contextReceipt = model.recordCommitWithReceipt(listOf("we", "like", "cats"))
+        val vocabularyReceipt = requireNotNull(vocabulary.recordWordUsageWithReceipt("cats"))
+        assertTrue(model.rollbackReceipt(contextReceipt))
+        assertTrue(vocabulary.rollbackReceipt(vocabularyReceipt))
+        assertFalse(model.rollbackReceipt(contextReceipt))
+        assertFalse(vocabulary.rollbackReceipt(vocabularyReceipt))
+        bigrams.flush()
+        trigrams.flush()
+        vocabulary.flush()
+        assertEquals(2, newBigramStore().getAllBigrams("en", "like").single().frequency)
+        assertEquals(2, newTrigramStore().getPredictions("en", "we", "like").single().frequency)
+        assertEquals(2, newUserVocabulary().getWordUsage("cats")?.usageCount)
+    }
+
+    @Test
+    fun exactIncrementReceipts_forgetAndRecreateCannotConsumeNewData() {
+        val bigrams = newBigramStore()
+        val trigrams = newTrigramStore()
+        val vocabulary = newUserVocabulary()
+        val model = ContextModel(bigrams, trigrams, "en")
+        val contextReceipt = model.recordCommitWithReceipt(listOf("we", "like", "cats"))
+        val vocabularyReceipt = requireNotNull(vocabulary.recordWordUsageWithReceipt("cats"))
+        bigrams.clearAll()
+        trigrams.clearAll()
+        vocabulary.clearAll()
+        model.recordCommit(listOf("we", "like", "cats"))
+        vocabulary.recordWordUsage("cats")
+        assertFalse(model.rollbackReceipt(contextReceipt))
+        assertFalse(vocabulary.rollbackReceipt(vocabularyReceipt))
+        bigrams.flush()
+        trigrams.flush()
+        vocabulary.flush()
+        assertEquals(1, newBigramStore().getAllBigrams("en", "like").single().frequency)
+        assertEquals(1, newTrigramStore().getTotalTrigramCount("en"))
+        assertEquals(1, newUserVocabulary().getWordUsage("cats")?.usageCount)
+    }
+
+    @Test
+    fun exactIncrementReceipts_freshStoreInstanceCannotReuseOldIdentity() {
+        val first = newBigramStore()
+        val receipt = requireNotNull(first.recordBigramWithReceipt("en", "like", "cats"))
+        first.flush()
+        val reloaded = newBigramStore()
+        assertFalse(reloaded.rollbackReceipt(receipt))
+        assertEquals(1, reloaded.getAllBigrams("en", "like").single().frequency)
+        // A read/flush of the original store does not mutate its token version.
+        first.getAllBigrams("en", "like")
+        assertTrue(first.rollbackReceipt(receipt))
+        first.flush()
+        assertEquals(0, newBigramStore().getTotalBigramCount("en"))
+    }
 
     // ================== 1. Real-SharedPreferences persistence round-trip
 

@@ -2220,4 +2220,15 @@
     <string name="advanced_custom_terminal_invalid">Nama paket tidak valid (maksimal %2$d karakter): %1$s</string>
     <string name="advanced_custom_terminal_limit">Gunakan maksimal %1$d nama paket yang berbeda.</string>
     <string name="advanced_custom_terminal_input_limit">Daftar terlalu panjang (maksimal %1$d karakter).</string>
+    <string name="command_palette_template_title">Templat dinamis</string>
+    <string name="command_palette_template_help">Bentangkan {clipboard}, {selection}, {uuid}, dan satu {cursor}. Gunakan {{ dan }} untuk kurung kurawal harfiah. Tindakan teks yang ada tetap harfiah.</string>
+    <string name="dynamic_action_unavailable">Tindakan tidak tersedia di editor atau panel ini</string>
+    <string name="dynamic_template_invalid">Templat tidak valid: periksa token, tanda kurung kurawal, dan penanda kursor.</string>
+    <string name="continuous_swipe_title">Geser terus-menerus</string>
+    <string name="continuous_swipe_desc">Tahan sebentar di bagian tengah bilah spasi di antara kata tanpa mengangkat jari. Lintasan cepat akan mempertahankan satu kata.</string>
+    <string name="continuous_swipe_stopped">Geser terus-menerus dihentikan; periksa teks sebelum melanjutkan.</string>
+    <string name="cmd_append_possessive">Tambahkan \'s di akhir</string>
+    <string name="cmd_append_possessive_desc">Lampirkan \'s ke kata terverifikasi terakhir; satu backspace hanya menghapus akhiran</string>
+    <string name="cmd_append_apostrophe">Tambahkan apostrof di akhir</string>
+    <string name="cmd_append_apostrophe_desc">Lampirkan apostrof ke kata terverifikasi terakhir (parents\'); satu backspace hanya menghapus akhiran</string>
 </resources>

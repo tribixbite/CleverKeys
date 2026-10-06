@@ -39,6 +39,9 @@ data class ShortSwipeMapping(
                 "TIMESTAMP actionValue must be a valid SimpleDateFormat pattern: '$actionValue'"
             }
         }
+        if (actionType == ActionType.TEMPLATE) {
+            require(DynamicTemplate.isValid(actionValue)) { "Invalid template" }
+        }
         // Note: We no longer validate command names here because we support two systems:
         // 1. CommandRegistry (camelCase names like "selectAll") - new system with 143+ commands
         // 2. AvailableCommand enum (SCREAMING_SNAKE like "SELECT_ALL") - legacy system

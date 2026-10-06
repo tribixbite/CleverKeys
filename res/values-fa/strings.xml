@@ -2287,4 +2287,15 @@
     <string name="advanced_custom_terminal_invalid">نام بسته نامعتبر است (حداکثر ۲۵۵ نویسه): %1$s</string>
     <string name="advanced_custom_terminal_limit">حداکثر از %1$d نام بسته متمایز استفاده کنید.</string>
     <string name="advanced_custom_terminal_input_limit">فهرست بیش از حد طولانی است (حداکثر %1$d نویسه).</string>
+    <string name="command_palette_template_title">الگوی پویا</string>
+    <string name="command_palette_template_help">گسترش {clipboard}، {selection}، {uuid} و یک {cursor}. از {{ و }} برای آکولادهای لفظی استفاده کنید. کنش‌های متنی موجود به‌صورت لفظی باقی می‌مانند.</string>
+    <string name="dynamic_action_unavailable">عملیات در این ویرایشگر یا پانل در دسترس نیست</string>
+    <string name="dynamic_template_invalid">الگوی نامعتبر: نشانه‌ها، آکولادها و نشانگرهای مکان‌نما را بررسی کنید.</string>
+    <string name="continuous_swipe_title">لغزش پیوسته</string>
+    <string name="continuous_swipe_desc">بین کلمات بدون برداشتن انگشت، مکث کوتاهی در مرکز کلید فاصله داشته باشید. عبور سریع یک کلمه را حفظ می‌کند.</string>
+    <string name="continuous_swipe_stopped">لغزش پیوسته متوقف شد؛ لطفاً قبل از ادامه، متن را بررسی کنید.</string>
+    <string name="cmd_append_possessive">الحاق \'s</string>
+    <string name="cmd_append_possessive_desc">پیوست \'s به آخرین کلمه تأییدشده؛ یک‌بار فشردن backspace فقط پسوند را حذف می‌کند</string>
+    <string name="cmd_append_apostrophe">الحاق آپوستروف</string>
+    <string name="cmd_append_apostrophe_desc">پیوست آپوستروف به آخرین کلمه تأییدشده (parents\')؛ یک‌بار فشردن backspace فقط پسوند را حذف می‌کند</string>
 </resources>

@@ -76,7 +76,7 @@ The selected-range regression exposed a production defect: a range starting at a
 owned auto-space stamp could remove the space before that range. Punctuation now
 checks both reported selection endpoints before reclaiming that automatic space.
 Editors without selection data retain the existing text/ownership fallback; this is
-separate from the strict readback required by planned suffix commands.
+separate from the strict readback required by explicit suffix commands.
 
 - Fail-first run `0685b528-9d4c-4624-8cb5-077b750852d0`: 56/57 passed; the regression
   expected `Bowie '` but observed `Bowie'`.
@@ -132,7 +132,7 @@ EW_VERSION=1.3.4 ew-cli \
   --app build/outputs/apk/debug/CleverKeys-v2.0.0-x86_64.apk \
   --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
   --device model=Pixel7,version=34 --use-orchestrator --timeout 40m \
-  --outputs merged_results_xml,logcat --outputs-dir ~/ew-output/new-full-run
+  --num-shards 3 --outputs merged_results_xml,logcat --outputs-dir ~/ew-output/new-full-run
 ```
 
 Use a fresh output directory and freeze/hash the app/test pair before a long run.
@@ -155,14 +155,14 @@ publish a release just to test it.
   SSH application's handling of key events.
 - Fresh writer/session-separated human traces for `ad`/`wet`; synthetic paths and suite
   totals do not establish encoder accuracy.
-- Continuous multiword swipe, explicit apostrophe suffix transactions/undo, and dynamic
-  templates are pending implementations. Existing tests do not cover unimplemented
-  behavior.
+- Continuous multiword swipe, explicit apostrophe suffix commands and dynamic templates
+  are implemented. Cross-app timing, touch trajectories, editor-specific behavior and
+  TalkBack still require manual validation; native coverage and final evidence follow below.
 - Final language-pack directory-swap recovery if rename fails after deleting the old
   directory. The oversized-update test protects preflight rejection only.
 
 <!-- TODO: Add final-swap recovery coverage when the importer retains an old-directory
-backup; add feature-specific native coverage with each pending implementation. -->
+backup. -->
 
 ## Historical reference
 
@@ -262,3 +262,102 @@ Persian (real RTL) locale.
 
 Record the reviewer's language competence and any unresolved wording. Never label machine
 output as native-reviewed.
+
+## Rendered-link audit correction
+
+The accepted-commit round's “all 2,182 links” wording overstated its scope: its checker
+missed relative engineering-note links. October 6's normalized URL check found 29 broken
+rendered references. Those source-only notes now link to their existing GitHub Markdown
+files, while public paired specifications keep public routes. A check during an active
+build also read incomplete output; only the completed build's result is valid.
+
+
+## October 6 feature regression coverage
+
+`ContinuousSwipeTest` exercises dwell segmentation, physical spacebar edges, bounded
+queues, callback cancellation and actual view timers. `DynamicTemplateTest` covers
+real editor selection, composition, UTF-16 carets, clipboard access, rejected/partial
+writes, session loss, persisted mappings and XML round trips.
+`DynamicTemplateAssignmentTest` drives both assignment editors. `SmartAutoSpaceTest`
+and `ContextLearningInstrumentedTest` cover suffix attachment/undo, selection callback
+ordering, owned learning replacement and persistence. Host tests protect the matching
+routing, parser and context-store contracts.
+
+The first focused cloud run executed 133 distinct methods: 128 passed and five failed.
+All five failures shared one constructor-order defect: keyboard reset accessed the
+continuous-swipe cancellation list before field initialization. The corrected ordering
+is protected by the actual-view regressions. Separate fail-first host cases exposed
+opening-quote parsing in exported timestamp/intent actions; prefixed quoted payloads
+now share backslash/quote decoding. Template absolute-offset overflow is rejected before
+composition or text changes. A final review also found accepted suffix/separator
+callbacks still reached manual cursor consumers. Three combined native regressions
+exercise the shared service gate with the real coordinator/view, preserving spacing
+and phrase ownership while genuine movement still cancels. The final rerun evidence
+below covers all fixes.
+
+
+The first corrected focused run `e9032db9-2c3e-4cd4-8477-96f84e4051f5` passed
+134 methods. After the final callback gate and three combined native additions,
+`1df50f51-0a42-4713-9375-34156d4183c2` passed 136/137: one new test omitted the
+configured trailing space after sentence punctuation. Production ownership/spacing
+checks passed; the expectation was corrected without a production change.
+
+Final focused run
+[3098fbd4-5171-4e8e-9359-2a2e7e3c435e](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/3098fbd4-5171-4e8e-9359-2a2e7e3c435e)
+passes **137 distinct methods**, zero failures/errors/skips/flakes: 75 smart-space/suffix,
+26 template execution, 20 continuous swipe, 12 context-learning and four assignment UI.
+Kotlin compilation and all host suites pass: **2,757 pure + 974 mock**.
+Debug lint passes with **0 errors/216 warnings**, including the corrected test fixture.
+
+The feature-focused run and first unfiltered full run used this frozen pair
+(the final full recheck uses the fixture-corrected v3 test APK recorded below):
+
+- App `build/oct6-three-features-debug-final.apk`, SHA-256
+  `6ce92aa660b382d9d46d7d0a72a98f2dfe2846cea1acf4210c2834e1ce92e9fa`.
+- Test `build/oct6-three-features-test-final-v2.apk`, SHA-256
+  `f34c54f5b78c906ceb99afcdfe0d8784fdf73e825b285adfcc53b75ae7fcc167`.
+
+Both archives pass CRC verification. All four real benchmark encoders match the
+source hashes recorded above and appear in the test APK only. The unfiltered
+three-shard run `10c84aba-31db-4fbf-9003-9f40a1776e07` executes 1,588 distinct
+methods: 1,587 pass, one existing autocorrect case fails with because disabled. All
+1,491 prior methods and 97 additions execute; all additions pass. No errors/skips/flakes.
+DictionaryDataSourceTest restored disabled words with asynchronous apply(); orchestrator
+process exit could lose that cleanup. The fixture now snapshots/restores exact original
+state with checked synchronous commit(). Affected native classes pass 76/76, run
+`95a9ff8c-57b0-479c-887a-3f59859f941d`. Final full recheck passes all 1,588 distinct
+methods, zero failures/errors/skips/flakes,
+`29e624bf-7d30-4c38-b87d-a8a5671b319a`, using the unchanged app and test
+`build/oct6-three-features-test-final-v3.apk`, SHA-256
+`48fec1e1b569ca138f1f333d8eef13d15996b5a3dcbfd53d8d6b2cbf3f4cc00a`.
+Combined assemble/lint exposed missing generated-assets dependencies for both test
+lint model generation and analysis; both now depend on copyScriptLatencyPacks.
+The corrected combined graph passes (6m54s), 0 errors/216 warnings. The final v3
+archive also passes CRC and all four benchmark-model hash checks. All 1,491 prior
+methods and 97 additions are preserved, and the final inventory matches
+the first feature full run. The final CLI verdict and XML both pass; no test was
+skipped to obtain this result. See the operational handoff for remaining device checks.
+
+The final guarded incremental lint + minified release build passes (8m49s), including
+release lint, R8 and resource shrinking. ARM64 artifact
+`build/oct6-three-features-arm64-final.apk`, SHA-256
+`d5c3033b9dd53f6039db1b16a5a3c9b0b3bcdf2875a54345dbfed34fb48a9de3`, verifies
+APK v2 signing, ZIP CRC, two ARM64 ELF libraries, all new feature identifiers and
+absence of benchmark-only assets. `zipalign -c -p 4` passes; this installed tool has
+no `-P 16`, so this check alone does not establish 16 KiB compatibility. Seeker .170
+is absent; the connected .202 identifies as Saga and was not modified. No installation
+or device testing of this artifact has occurred.
+
+
+Final complete cloud evidence:
+[29e624bf-7d30-4c38-b87d-a8a5671b319a](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/29e624bf-7d30-4c38-b87d-a8a5671b319a).
+Results: `~/ew-output/oct6-three-features-full-final-v2/results.xml`;
+log: `build/oct6-three-features-full-final-v2.log`. Maintainer/Seeker checks remain;
+this session did not install the final artifact or publish a release.
+
+
+Final public-documentation validation: 84-page Astro build passes, and the normalized
+completed-output audit resolves all 2,211 local wiki/spec links and 30 guide routes.
+Log: `build/oct6-three-features-docs-final-green.log`. Agent handbook, local instructions,
+working todo, relevant skills, roadmap, wiki/specs, README and changelog reflect the
+implemented behavior and remaining manual/architectural gaps.

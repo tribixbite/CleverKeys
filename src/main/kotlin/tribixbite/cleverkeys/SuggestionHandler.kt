@@ -867,7 +867,8 @@ class SuggestionHandler(
         shiftLocked: Boolean,
         inputCoordinator: InputCoordinator,
         origin: SuggestionOrigin? = null,
-        languages: List<String>? = null
+        languages: List<String>? = null,
+        commitGuard: EditorCommitGuard? = null
     ) {
         // Swipe results replace whatever the bar shows — any next-word display state ends here,
         // and so does an undoable "Added …" confirmation (the user moved on).
@@ -1000,7 +1001,8 @@ class SuggestionHandler(
                     // or append a prediction when that boundary was rejected. Batch edits
                     // do not provide rollback for a provider that partially mutates text.
                     val accepted = try {
-                        ic.commitText(" ", 1)
+                        (commitGuard == null || commitGuard.prepare(ic)) && ic.commitText(" ", 1) &&
+                            (commitGuard == null || commitGuard.accepted(ic, " "))
                     } catch (e: Exception) {
                         Log.w(TAG, "Swipe separator rejected (${e.javaClass.simpleName})")
                         false
@@ -1042,7 +1044,7 @@ class SuggestionHandler(
                 }
 
                 val committedWord = onSuggestionSelected(
-                    topPrediction, ic, editorInfo, resources, isManualSelection = false
+                    topPrediction, ic, editorInfo, resources, isManualSelection = false, commitGuard = commitGuard
                 )
                 if (committedWord == null) {
                     clearRejectedCommitState()
@@ -1263,7 +1265,8 @@ class SuggestionHandler(
         ic: InputConnection?,
         editorInfo: EditorInfo?,
         resources: Resources,
-        isManualSelection: Boolean = false
+        isManualSelection: Boolean = false,
+        commitGuard: EditorCommitGuard? = null
     ): String? {
         // Null/empty check
         if (word.isNullOrBlank()) return null
@@ -1692,7 +1695,9 @@ class SuggestionHandler(
                 }
 
                 vlog { "Committing text: len=${textToInsert.length}" }
-                if (!inputConnection.commitText(textToInsert, 1)) {
+                if ((commitGuard != null && !commitGuard.prepare(inputConnection)) ||
+                    !inputConnection.commitText(textToInsert, 1) ||
+                    (commitGuard != null && !commitGuard.accepted(inputConnection, textToInsert))) {
                     clearRejectedCommitState()
                     return null
                 }
@@ -1799,11 +1804,206 @@ class SuggestionHandler(
             }
         }
 
+        processedWord?.let { rememberVerifiedWord(ic, editorInfo, it, isSwipeAutoInsert = isSwipeAutoInsert) }
         return processedWord
     }
 
-    /** Drop destructive ownership and deferred learning after an unacknowledged write. */
+    /** Editor ownership and the original commit source survive a suffix-only undo. */
+    private data class WordEditReceipt(
+        val ic: InputConnection, val info: EditorInfo, val session: Long,
+        val configVersion: Int, val language: String, val edit: VerifiedSuffixEdit,
+        val learning: LearningCommit?, val originalSource: PredictionSource,
+        val originalSwipeAutoInsert: Boolean,
+    )
+    private data class SuffixOperation(
+        val id: Long, val receipt: WordEditReceipt,
+        val callbacks: ArrayDeque<EditorReadback> = ArrayDeque(),
+        var expected: EditorReadback? = null,
+    )
+    private var wordEditReceipt: WordEditReceipt? = null
+    private var suffixOperation: SuffixOperation? = null
+    private var suffixOperationId = 0L
+    private var wordEditSession = 0L
+    private var lastLearningCommit: LearningCommit? = null
+
+    fun onEditorSessionChanged() {
+        wordEditSession++; wordEditReceipt = null; suffixOperation = null; lastLearningCommit = null
+    }
+
+    private fun rememberVerifiedWord(ic: InputConnection?, info: EditorInfo?, word: String,
+        ownsSpace: Boolean = contextTracker.lastSpaceWasAutoInserted, isSwipeAutoInsert: Boolean = false) {
+        wordEditReceipt = null; suffixOperation = null
+        if (ic == null || info == null || isPasswordMode || SuggestionBar.isPasswordField(info)) return
+        val edit = runCatching { VerifiedSuffixEdit.capture(ic, word, ownsSpace) }.getOrNull() ?: return
+        wordEditReceipt = WordEditReceipt(ic, info, wordEditSession, config.snapshot.version,
+            config.primary_language, edit, lastLearningCommit,
+            if (isSwipeAutoInsert) PredictionSource.SWIPE else contextTracker.getLastCommitSource(), isSwipeAutoInsert)
+    }
+    private fun receiptSessionIsCurrent(receipt: WordEditReceipt): Boolean =
+        receipt.session == wordEditSession && receipt.configVersion == config.snapshot.version &&
+            receipt.language == config.primary_language && !isPasswordMode &&
+            keyeventhandler.isCurrentEditor(receipt.ic, receipt.info)
+
+    /**
+     * A continuous-swipe boundary appended one verified separator after this word.
+     * Preserve its exact learning handle; this is an editor receipt update, not a
+     * second word commit or a second learning event.
+     */
+    fun onContinuousSeparatorAccepted(ic: InputConnection, info: EditorInfo, word: String): Boolean {
+        val old = wordEditReceipt ?: return false
+        if (old.ic !== ic || old.info !== info || !receiptSessionIsCurrent(old) ||
+            old.edit.baseWord != word || old.edit.suffix.isNotEmpty() || old.edit.space.isNotEmpty() ||
+            old.learning !== lastLearningCommit ||
+            !EditorReadback.matchesReplacement(ic, old.edit.editor, " ", old.edit.editor.start + 1)) return false
+        val edit = runCatching { VerifiedSuffixEdit.capture(ic, word, ownsSpace = true) }.getOrNull() ?: return false
+        if (wordEditReceipt !== old || !receiptSessionIsCurrent(old)) return false
+        wordEditReceipt = old.copy(edit = edit, originalSwipeAutoInsert = true)
+        suffixOperation = null
+        contextTracker.markAutoSpacePending(edit.editor.start)
+        return true
+    }
+
+    /**
+     * Append a deliberate continuous-swipe separator as one owned editor operation.
+     * Guard composition, synchronous callbacks and the final readback before
+     * restamping; keep the word's existing learning event and never retry a write.
+     */
+    fun appendContinuousSeparator(ic: InputConnection, info: EditorInfo, word: String,
+        ownsSession: () -> Boolean): Boolean {
+        val old = currentWordReceipt() ?: return false
+        if (old.ic !== ic || old.info !== info || old.edit.baseWord != word ||
+            old.edit.suffix.isNotEmpty() || old.edit.space.isNotEmpty()) return false
+        val operation = startSuffixOperation(old)
+        val accepted = runCatching {
+            if (!ownsSession() || !prepareSuffixSelection(operation, old.edit.editor) ||
+                !ic.finishComposingText() || !ownsSession() || !old.edit.matches(ic)) return@runCatching false
+            val end = Math.addExact(old.edit.editor.start, 1)
+            val expected = old.edit.editor.copy(start = end, end = end,
+                before = (old.edit.editor.before + " ").takeLast(EditorReadback.GUARD_LENGTH))
+            if (!prepareSuffixSelection(operation, expected) || !ic.commitText(" ", 1) ||
+                !ownsSession() || suffixOperation !== operation || wordEditReceipt !== old ||
+                !expected.matches(ic) || !onContinuousSeparatorAccepted(ic, info, word)) return@runCatching false
+            // The restamp helper clears stale callback allowances. Retain only this
+            // operation's bounded ledger until queued own callbacks have a chance.
+            suffixOperation = operation
+            mainHandler.post { if (suffixOperation?.id == operation.id) suffixOperation = null }
+            true
+        }.getOrDefault(false)
+        if (!accepted) rejectSuffixOperation(operation)
+        return accepted
+    }
+
+    private fun currentWordReceipt(): WordEditReceipt? {
+        val receipt = wordEditReceipt ?: return null
+        if (!receiptSessionIsCurrent(receipt) || !runCatching { receipt.edit.matches(receipt.ic) }.getOrDefault(false)) {
+            wordEditReceipt = null; suffixOperation = null; return null
+        }
+        return receipt
+    }
+    /**
+     * Permit only callbacks stamped by the current bounded edit. Callback coordinates
+     * alone are insufficient: current editor text, selection and session must match too.
+     * Android does not supply operation IDs, so this ledger expires at the next main
+     * loop turn; late/ambiguous callbacks conservatively drop destructive ownership.
+     */
+    fun validateWordReceiptSelection(start: Int, end: Int): Boolean {
+        val operation = suffixOperation
+        if (operation != null && receiptSessionIsCurrent(operation.receipt) &&
+            operation.expected?.matches(operation.receipt.ic) == true) {
+            val index = operation.callbacks.indexOfFirst { it.start == start && it.end == end }
+            if (index >= 0) {
+                repeat(index + 1) { operation.callbacks.removeFirst() }
+                return true
+            }
+        }
+        val receipt = wordEditReceipt ?: return false
+        if (operation != null || start != receipt.edit.editor.start || end != receipt.edit.editor.end) {
+            wordEditReceipt = null; suffixOperation = null
+        } else currentWordReceipt()
+        return false
+    }
+
+    /**
+     * Share the owned-callback gate between the service and native integration
+     * tests. Verified own edits must not also look like manual cursor movement
+     * to phrase cancellation or automatic-space tracking. Selection UI still
+     * receives every callback independently of this gate.
+     */
+    fun onEditorSelectionChanged(start: Int, end: Int, onUnownedSelection: () -> Unit) {
+        if (!validateWordReceiptSelection(start, end)) onUnownedSelection()
+    }
+
+    private fun startSuffixOperation(receipt: WordEditReceipt): SuffixOperation =
+        SuffixOperation(++suffixOperationId, receipt).also { suffixOperation = it }
+
+    private fun prepareSuffixSelection(operation: SuffixOperation, expected: EditorReadback): Boolean {
+        if (suffixOperation !== operation || !receiptSessionIsCurrent(operation.receipt) ||
+            wordEditReceipt !== operation.receipt || operation.callbacks.size >= 3) return false
+        operation.expected = expected
+        operation.callbacks.addLast(expected)
+        return true
+    }
+
+    private fun rejectSuffixOperation(operation: SuffixOperation) {
+        // A reentrant field switch owns its own state; never clear that new session.
+        if (receiptSessionIsCurrent(operation.receipt)) clearRejectedCommitState()
+        if (suffixOperation === operation) suffixOperation = null
+    }
+
+    override fun appendSuffix(suffix: String): Boolean {
+        val receipt = currentWordReceipt() ?: return false
+        if (receipt.edit.suffix.isNotEmpty()) return false
+        val predictor = predictionCoordinator.getWordPredictor()
+        if (receipt.learning != null && predictor?.canReplaceLearningCommit(receipt.learning, fieldAllowsPersonalizedLearning) != true) {
+            wordEditReceipt = null; suffixOperation = null; return false
+        }
+        val operation = startSuffixOperation(receipt)
+        val edit = runCatching { receipt.edit.append(receipt.ic, suffix) { prepareSuffixSelection(operation, it) } }.getOrNull()
+        if (edit == null) { rejectSuffixOperation(operation); return false }
+        return finishSuffixEdit(operation, edit)
+    }
+    override fun undoSuffix(): Boolean {
+        val receipt = wordEditReceipt?.takeIf { it.edit.suffix.isNotEmpty() } ?: return false
+        // Once a suffix undo was requested, rejection must not fall through to a
+        // normal Backspace or the whole-word swipe undo in this same key dispatch.
+        if (currentWordReceipt() == null) { clearRejectedCommitState(); return true }
+        val operation = startSuffixOperation(receipt)
+        val edit = runCatching { receipt.edit.undo(receipt.ic) { prepareSuffixSelection(operation, it) } }.getOrNull()
+        if (edit == null) { rejectSuffixOperation(operation); return true }
+        finishSuffixEdit(operation, edit)
+        return true
+    }
+    private fun finishSuffixEdit(operation: SuffixOperation, edit: VerifiedSuffixEdit): Boolean {
+        val old = operation.receipt
+        if (suffixOperation !== operation || wordEditReceipt !== old || !receiptSessionIsCurrent(old) ||
+            !runCatching { edit.matches(old.ic) }.getOrDefault(false)) {
+            rejectSuffixOperation(operation); return false
+        }
+        val oldWord = old.edit.baseWord + old.edit.suffix
+        val newWord = edit.baseWord + edit.suffix
+        val predictor = predictionCoordinator.getWordPredictor()
+        val replacement = old.learning?.let { predictor?.replaceLearningCommit(it, newWord, fieldAllowsPersonalizedLearning) }
+        val fresh = (replacement as? LearningCommitReplacement.Applied)?.commit
+        if (old.learning != null && fresh == null) predictor?.clearContext()
+        contextTracker.rollbackLastWord(oldWord)
+        val restoringBase = edit.suffix.isEmpty()
+        contextTracker.commitWord(newWord,
+            if (restoringBase) old.originalSource else PredictionSource.CANDIDATE_SELECTION,
+            restoringBase && old.originalSwipeAutoInsert)
+        contextTracker.clearAutocorrectTracking()
+        contextTracker.clearTrailingSpaceWatch(); contextTracker.invalidateAutoSpacePending()
+        if (edit.space.isNotEmpty()) contextTracker.markAutoSpacePending(edit.editor.start)
+        swipeCorrectionTracker?.clear(); suggestionBar?.clearSuggestions()
+        wordEditReceipt = old.copy(edit = edit, learning = fresh)
+        lastLearningCommit = fresh
+        // Only this operation may expire its callback allowance; a later operation
+        // can already have replaced it before the runnable executes.
+        mainHandler.post { if (suffixOperation?.id == operation.id) suffixOperation = null }
+        return true
+    }
+
     private fun clearRejectedCommitState() {
+        wordEditReceipt = null; suffixOperation = null; lastLearningCommit = null
         contextTracker.clearLastAutoInsertedWord()
         contextTracker.clearAutocorrectTracking()
         contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
@@ -2466,6 +2666,7 @@ class SuggestionHandler(
         // in an IME_FLAG_NO_PERSONALIZED_LEARNING field is learned.
         predictionCoordinator.getWordPredictor()
             ?.addWordToContext(word, fieldAllowsPersonalizedLearning)
+        lastLearningCommit = predictionCoordinator.getWordPredictor()?.latestLearningCommit()
 
         // ARC-006: the UnigramLanguageDetector feed that used to live here was deleted
         // 2026-08-28. It had been write-only since OptimizedVocabulary was removed — every
@@ -2587,6 +2788,12 @@ class SuggestionHandler(
      * learned. Flush it, then close the learn window: a newline or a "send" separates the text
      * the same way sentence-final punctuation does (audit §4.6 — no bigram across it).
      */
+    override fun onExplicitEdit() {
+        clearRejectedCommitState()
+        predictionCoordinator.getWordPredictor()?.clearContext()
+        suggestionBar?.clearSuggestions()
+    }
+
     override fun onEditorWordBoundary(ic: InputConnection?) {
         flushPendingTypedWord(ic)
         predictionCoordinator.getWordPredictor()?.onSentenceBoundary()
@@ -2626,6 +2833,7 @@ class SuggestionHandler(
      * @param editorInfo Editor info for app detection
      */
     fun handleRegularTyping(text: String, ic: InputConnection?, editorInfo: EditorInfo?) {
+        wordEditReceipt = null
         // Any typing dismisses an undoable "Added …" confirmation — BEFORE the prediction update
         // below, which a showing bar message would otherwise swallow.
         suggestionBar?.dismissUndoableMessage()
@@ -2832,6 +3040,7 @@ class SuggestionHandler(
                         (!stemUnmerged || editorEndsWithWholeToken(ic, rawLearnToken, text))
                     ) {
                         updateContext(learnWord)
+                        rememberVerifiedWord(ic, editorInfo, learnWord, ownsSpace = text == " ")
                     }
 
                     // Swipe corrections: a word typed this session may answer a swipe undo; one
@@ -2953,6 +3162,7 @@ class SuggestionHandler(
      * Updates predictions as user deletes characters.
      */
     fun handleBackspace() {
+        wordEditReceipt = null
         suggestionBar?.dismissUndoableMessage()
 
         // Handle password mode: update password display

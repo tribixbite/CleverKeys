@@ -163,7 +163,7 @@ The multi-language system uses:
 - **Suggestion Ranker**: Merges results from multiple dictionaries
 - **Accent Normalizer**: Maps ASCII input to Unicode accented forms
 
-See [Secondary Language Integration](../../specs/secondary-language-integration.md) for implementation details.
+See [Secondary Language Integration](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/secondary-language-integration.md) for implementation details.
 
 ## Related Features
 

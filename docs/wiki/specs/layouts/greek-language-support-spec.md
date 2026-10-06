@@ -188,6 +188,6 @@ main go/no-go input for bundle-vs-pack.
 
 ## Related
 
-- [Dictionary System](../../../specs/dictionary-and-language-system.md)
+- [Dictionary System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/dictionary-and-language-system.md)
 - [Multi-language](./multi-language-spec.md) · [Language packs](./language-packs-spec.md)
 - [Swipe Typing](../typing/swipe-typing-spec.md) (Phase 2 tokenizer)

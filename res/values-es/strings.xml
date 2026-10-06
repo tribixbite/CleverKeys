@@ -2308,4 +2308,15 @@
     <string name="advanced_custom_terminal_invalid">Nombre de paquete no válido (máximo %2$d caracteres): %1$s</string>
     <string name="advanced_custom_terminal_limit">Usa como máximo %1$d nombres de paquete distintos.</string>
     <string name="advanced_custom_terminal_input_limit">La lista es demasiado larga (máximo %1$d caracteres).</string>
+    <string name="command_palette_template_title">Plantilla dinámica</string>
+    <string name="command_palette_template_help">Expanda {clipboard}, {selection}, {uuid} y un {cursor}. Use {{ y }} para llaves literales. Las acciones de texto existentes se mantienen literales.</string>
+    <string name="dynamic_action_unavailable">Acción no disponible en este editor o panel</string>
+    <string name="dynamic_template_invalid">Plantilla no válida: revise los tokens, las llaves y los marcadores de cursor.</string>
+    <string name="continuous_swipe_title">Deslizamiento continuo</string>
+    <string name="continuous_swipe_desc">Mantén presionado brevemente el centro de la barra espaciadora entre palabras sin levantar el dedo. Un cruce rápido mantiene una sola palabra.</string>
+    <string name="continuous_swipe_stopped">Deslizamiento continuo detenido; revisa el texto antes de continuar.</string>
+    <string name="cmd_append_possessive">Anexar \'s</string>
+    <string name="cmd_append_possessive_desc">Adjuntar \'s a la última palabra verificada; un retroceso elimina solo el sufijo</string>
+    <string name="cmd_append_apostrophe">Anexar apóstrofo</string>
+    <string name="cmd_append_apostrophe_desc">Adjuntar un apóstrofo a la última palabra verificada (parents\'); un retroceso elimina solo el sufijo</string>
 </resources>

@@ -379,6 +379,37 @@ class Keyboard2ViewCustomSwipeDispatchTest {
         actionValue = text,
     )
 
+    private fun explicitActionHandler(): Config.IKeyEventHandler {
+        val handler = mockk<Config.IKeyEventHandler>(relaxed = true)
+        view.setField("_config", mockk<Config>(relaxed = true).apply { setField("handler", handler) })
+        return handler
+    }
+    private fun assertTemplateDispatch(accepted: Boolean) {
+        val handler = explicitActionHandler()
+        every { handler.execute_template("[{selection}]{cursor}") } returns accepted
+        view.onCustomShortSwipe(ShortSwipeMapping("a", SwipeDirection.N, "wrap", ActionType.TEMPLATE, "[{selection}]{cursor}"))
+        verify(exactly = 1) { handler.execute_template("[{selection}]{cursor}") }
+        verify(exactly = if (accepted) 1 else 0) { view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP) }
+        verify(exactly = 0) { executor.execute(any(), any(), any()) }
+        verify(exactly = 0) { inputConnection.commitText(any(), any()) }
+        verify(exactly = 0) { service.triggerKeyboardEvent(any()) }
+    }
+    @Test fun templateUsesSharedHandlerAndOnlyOneSuccessHaptic() = assertTemplateDispatch(true)
+    @Test fun rejectedTemplateNeverFallsBackToLiteralPayload() = assertTemplateDispatch(false)
+    private fun assertSuffixDispatch(accepted: Boolean) {
+        val handler = explicitActionHandler()
+        every { handler.execute_suffix(any()) } returns accepted
+        view.onCustomShortSwipe(commandMapping("append_possessive"))
+        view.onCustomShortSwipe(commandMapping("append_apostrophe"))
+        verify(exactly = 1) { handler.execute_suffix("'s") }
+        verify(exactly = 1) { handler.execute_suffix("'") }
+        verify(exactly = if (accepted) 2 else 0) { view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP) }
+        verify(exactly = 0) { executor.execute(any(), any(), any()) }
+        verify(exactly = 0) { inputConnection.commitText(any(), any()) }
+    }
+    @Test fun suffixCommandsUseSharedHandlerAndSuccessHaptic() = assertSuffixDispatch(true)
+    @Test fun rejectedSuffixCommandsNeverFallBackToRawEditorWrites() = assertSuffixDispatch(false)
+
     // ----------------------------------------------------------------- helpers
 
     private fun Any.setField(name: String, value: Any?) {

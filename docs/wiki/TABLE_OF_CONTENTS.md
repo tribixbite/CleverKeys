@@ -1,7 +1,7 @@
 # CleverKeys User Guide
 
-**Last Updated**: 2026-08-06
-**Version**: v1.5.x
+**Last Updated**: 2026-10-06
+**Version**: v2.0.0 development
 
 Welcome to the CleverKeys documentation. This guide covers everything you need to know to get the most out of your keyboard.
 
@@ -29,7 +29,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 ### 2. Typing and Input (P0)
 | Page | Description |
 |------|-------------|
-| [Swipe Typing](./typing/swipe-typing.md) | Swipe prediction engines (CTC, geometric) and how to use them |
+| [Swipe Typing](./typing/swipe-typing.md) | CTC/geometric engines and opt-in continuous multiword swipe |
 | [Autocorrect & Predictions](./typing/autocorrect.md) | Smart text correction settings |
 | [Next-Word Prediction](./typing/next-word-prediction.md) | Next-word suggestions before you type a letter (built-in model, plus your phrases with learning on) |
 | [Smart Punctuation](./typing/smart-punctuation.md) | Automatic punctuation attachment and smart auto-space (v1.5.0) |
@@ -49,7 +49,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 ### 4. Customization (P1)
 | Page | Description |
 |------|-------------|
-| [Per-Key Actions](./customization/per-key-actions.md) | Customize swipe actions per key |
+| [Per-Key Actions](./customization/per-key-actions.md) | Customize actions, dynamic templates and explicit apostrophe suffixes |
 | [Extra Keys](./customization/extra-keys.md) | Add function keys, arrows, Tab, Ctrl |
 | [Themes](./customization/themes.md) | Color schemes and appearance |
 | [Command Palette](./customization/command-palette.md) | Quick access to keyboard commands |
@@ -97,18 +97,18 @@ Each user guide has a paired technical specification for developers:
 
 | User Guide | Tech Spec |
 |------------|-----------|
-| [Swipe Typing](./typing/swipe-typing.md) | [CTC Swipe Engine](../specs/ctc-swipe-engine.md) |
+| [Swipe Typing](./typing/swipe-typing.md) | [Swipe Typing Spec](./specs/typing/swipe-typing-spec.md) |
 | [Smart Punctuation](./typing/smart-punctuation.md) | [Smart Punctuation Spec](./specs/typing/smart-punctuation-spec.md) |
 | [User Dictionary](./typing/user-dictionary.md) | [User Dictionary Spec](./specs/typing/user-dictionary-spec.md) |
-| [Short Swipes](./gestures/short-swipes.md) | [Gesture System Spec](../specs/gesture-system.md) |
-| [TrackPoint Mode](./gestures/trackpoint-mode.md) | [TrackPoint Navigation Spec](../specs/trackpoint-navigation-mode.md) |
-| [Selection-Delete](./gestures/selection-delete.md) | [Selection-Delete Spec](../specs/selection-delete-mode.md) |
-| [Per-Key Actions](./customization/per-key-actions.md) | [Short Swipe Customization Spec](../specs/short-swipe-customization.md) |
-| [Themes](./customization/themes.md) | [Settings System Spec](../specs/settings-system.md) |
-| [Multi-Language](./layouts/multi-language.md) | [Dictionary & Language Spec](../specs/dictionary-and-language-system.md) |
+| [Short Swipes](./gestures/short-swipes.md) | [Gesture System Spec](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/gesture-system.md) |
+| [TrackPoint Mode](./gestures/trackpoint-mode.md) | [TrackPoint Navigation Spec](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/trackpoint-navigation-mode.md) |
+| [Selection-Delete](./gestures/selection-delete.md) | [Selection-Delete Spec](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/selection-delete-mode.md) |
+| [Per-Key Actions](./customization/per-key-actions.md) | [Short Swipe Customization Spec](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/short-swipe-customization.md) |
+| [Themes](./customization/themes.md) | [Settings System Spec](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/settings-system.md) |
+| [Multi-Language](./layouts/multi-language.md) | [Dictionary & Language Spec](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/dictionary-and-language-system.md) |
 | [Clipboard History](./clipboard/clipboard-history.md) | [Clipboard History Spec](./specs/clipboard/clipboard-history-spec.md) |
 | [Private Copy](./clipboard/private-copy.md) | [Private Copy Spec](./specs/clipboard/private-copy-spec.md) |
-| [Privacy](./settings/privacy.md) | [Clipboard Privacy Spec](../specs/clipboard-privacy.md) |
+| [Privacy](./settings/privacy.md) | [Clipboard Privacy Spec](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/clipboard-privacy.md) |
 
 ---
 
@@ -122,7 +122,7 @@ Each user guide has a paired technical specification for developers:
 
 ## Related Resources
 
-- [Feature Specifications](../specs/README.md) - Technical documentation
+- [Feature Specifications](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/README.md) - Technical documentation
 - [CHANGELOG](../../CHANGELOG.md) - Version history
 - [GitHub Issues](https://github.com/tribixbite/CleverKeys/issues) - Bug reports and feature requests
 

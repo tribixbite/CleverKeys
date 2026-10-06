@@ -53,8 +53,11 @@ class KeyEventHandler(
     private val doubleSpaceThresholdMs: Long
         get() = Config.globalConfig().double_space_threshold
 
+    private var editorEpoch = 0L
+
     /** Editing just started. */
     fun started(info: EditorInfo) {
+        editorEpoch++
         val conn = recv.getCurrentInputConnection()
         if (conn != null) {
             autocap.started(info, conn)
@@ -134,6 +137,8 @@ class KeyEventHandler(
                 // Arrow keys and Enter in clipboard edit mode — dispatch to inline EditText
                 } else if (recv.isClipboardEditMode() && key.getKeyevent() in EDIT_MODE_DISPATCH_KEYS) {
                     recv.dispatchKeyToClipboardEdit(key.getKeyevent())
+                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && learningHooks?.undoSuffix() == true) {
+                    // Suffix-only undo consumes even a failed edit; never fall through to word undo.
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && handleBackspaceUndoSwipe()) {
                     // #110: Backspace after swipe deletes entire swiped word
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && handleBackspaceUndoAutocorrect()) {
@@ -159,6 +164,7 @@ class KeyEventHandler(
             KeyValue.Kind.Compose_pending -> recv.set_compose_pending(true)
             KeyValue.Kind.Slider -> handleSlider(key.getSlider(), key.getSliderRepeat(), false)
             KeyValue.Kind.Macro -> evaluateMacro(key.getMacro())
+            KeyValue.Kind.Template -> execute_template(key.getTemplateFormat().template)
             KeyValue.Kind.Timestamp -> handleTimestampKey(key.getTimestampFormat())
             else -> {} // Handle Hangul_initial, Hangul_medial, Placeholder
         }
@@ -715,6 +721,11 @@ class KeyEventHandler(
 
     @SuppressLint("InlinedApi")
     private fun handleEditingKey(ev: KeyValue.Editing) {
+        if (ev == KeyValue.Editing.APPEND_POSSESSIVE || ev == KeyValue.Editing.APPEND_APOSTROPHE) {
+            val suffix = if (ev == KeyValue.Editing.APPEND_POSSESSIVE) "'s" else "'"
+            execute_suffix(suffix)
+            return
+        }
         // A system action must work even while an inline clipboard field owns text routing.
         if (ev == KeyValue.Editing.CLEAR_CLIPBOARD) {
             recv.getContext()?.let { context ->
@@ -737,6 +748,8 @@ class KeyEventHandler(
             return
         }
         when (ev) {
+            KeyValue.Editing.APPEND_POSSESSIVE -> execute_suffix("'s")
+            KeyValue.Editing.APPEND_APOSTROPHE -> execute_suffix("'")
             KeyValue.Editing.CLEAR_CLIPBOARD -> Unit // handled above, independent of InputConnection
             KeyValue.Editing.COPY_PRIVATE -> handlePrivateCopy()
             KeyValue.Editing.COPY -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.copy)
@@ -805,6 +818,30 @@ class KeyEventHandler(
      * Uses Java DateTimeFormatter patterns (e.g., "yyyy-MM-dd", "HH:mm:ss").
      * Requires Android API 26+ for java.time APIs.
      */
+    internal fun isCurrentEditor(ic: InputConnection, info: EditorInfo): Boolean = recv.getCurrentInputConnection() === ic && recv.getCurrentEditorInfo() === info
+
+    override fun execute_suffix(suffix: String): Boolean {
+        val success = canUseEditorActions() && learningHooks?.appendSuffix(suffix) == true
+        if (!success) recv.getContext()?.let { recv.showPrivateCopyFeedback(it.getString(R.string.dynamic_action_unavailable)) }
+        return success
+    }
+
+    override fun canUseEditorActions(): Boolean = !(recv.isClipboardTagMode() || recv.isClipboardEditMode() || recv.isClipboardSearchMode() || recv.isEmojiPaneOpen() || recv.isGifPaneOpen())
+
+    override fun execute_template(template: String): Boolean {
+        val context = recv.getContext() ?: return false
+        val ic = recv.getCurrentInputConnection()
+        val editor = recv.getCurrentEditorInfo()
+        val capturedEpoch = editorEpoch
+        val inline = recv.isClipboardTagMode() || recv.isClipboardEditMode() || recv.isClipboardSearchMode() || recv.isEmojiPaneOpen() || recv.isGifPaneOpen()
+        val success = !inline && ic != null && editor != null &&
+            tribixbite.cleverkeys.customization.DynamicTemplate.execute(template, context, ic, editor, onEditing = { learningHooks?.onExplicitEdit(); recv.onExplicitEditStarted() }) {
+                editorEpoch == capturedEpoch && recv.getCurrentInputConnection() === ic && recv.getCurrentEditorInfo() === editor
+            }
+        if (!success) recv.showPrivateCopyFeedback(context.getString(R.string.dynamic_action_unavailable))
+        return success
+    }
+
     private fun handleTimestampKey(format: KeyValue.TimestampFormat) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             // Fallback for API < 26: use SimpleDateFormat
@@ -1076,6 +1113,11 @@ class KeyEventHandler(
      * notifications to the prediction layer. The service wires the SuggestionHandler in directly.
      */
     interface LearningHooks {
+        /** Explicit template edits invalidate typing ownership without learning payload data. */
+        fun onExplicitEdit() {}
+        fun appendSuffix(suffix: String): Boolean = false
+        /** True means consumed, including a refused/uncertain suffix undo. */
+        fun undoSuffix(): Boolean = false
         /** Enter or the IME action is about to be sent; [ic] still ends with the typed word. */
         fun onEditorWordBoundary(ic: InputConnection?)
 
@@ -1103,6 +1145,7 @@ class KeyEventHandler(
         fun getContext(): Context? = null // #113: needed for terminal clipboard paste
         fun getHandler(): Handler
         fun handle_text_typed(text: String)
+        fun onExplicitEditStarted() {}
         fun handle_backspace() {} // Default implementation for backward compatibility
         fun handle_delete_last_word() {} // Delete last auto-inserted or typed word
         // Clipboard search mode methods

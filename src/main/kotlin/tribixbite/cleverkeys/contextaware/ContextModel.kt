@@ -100,10 +100,16 @@ class ContextModel internal constructor(
      * this on language switch / auto-detection so learning and lookups stay
      * language-isolated.
      */
+    private var languageEpoch = 0L
+
     @Volatile
     var language: String = BigramStore.normalizeLanguage(language)
         set(value) {
-            field = BigramStore.normalizeLanguage(value)
+            withLearningLocks {
+                val normalized = BigramStore.normalizeLanguage(value)
+                if (field != normalized) languageEpoch++
+                field = normalized
+            }
         }
 
     /**
@@ -169,15 +175,58 @@ class ContextModel internal constructor(
      * @param isLearnable per-word write gate; the default admits everything (bulk/test paths)
      */
     fun recordCommit(words: List<String>, isLearnable: (String) -> Boolean = { true }) {
+        recordCommitWithReceipt(words, isLearnable)
+    }
+
+    internal class CommitReceipt internal constructor(
+        internal val owner: ContextModel,
+        internal val languageEpoch: Long,
+        internal val bigramVersion: Long,
+        internal val trigramVersion: Long?,
+        internal val bigram: BigramStore.IncrementReceipt?,
+        internal val trigram: TrigramStore.IncrementReceipt?
+    ) {
+        internal var consumed = false
+    }
+
+    /** Fixed cross-store lock order: bigram, trigram, then (at the predictor) vocabulary. */
+    internal fun <T> withLearningLocks(action: () -> T): T = synchronized(bigramStore) {
+        val trigrams = trigramStore
+        if (trigrams == null) action() else synchronized(trigrams, action)
+    }
+
+    internal fun recordCommitWithReceipt(
+        words: List<String>, isLearnable: (String) -> Boolean = { true }
+    ): CommitReceipt = withLearningLocks {
+        var bigram: BigramStore.IncrementReceipt? = null
+        var trigram: TrigramStore.IncrementReceipt? = null
         val n = words.size
-        if (n < 2) return
-        val last = words[n - 1]
-        val prev = words[n - 2]
-        if (!isLearnable(last) || !isLearnable(prev)) return
-        bigramStore.recordBigram(language, prev, last)
-        if (trigramStore != null && n >= 3 && isLearnable(words[n - 3])) {
-            trigramStore.recordTrigram(language, words[n - 3], prev, last)
+        if (n >= 2 && isLearnable(words[n - 1]) && isLearnable(words[n - 2])) {
+            bigram = bigramStore.recordBigramWithReceipt(language, words[n - 2], words[n - 1])
+            if (n >= 3 && isLearnable(words[n - 3])) {
+                trigram = trigramStore?.recordTrigramWithReceipt(
+                    language, words[n - 3], words[n - 2], words[n - 1]
+                )
+            }
         }
+        CommitReceipt(this, languageEpoch, bigramStore.receiptVersion(), trigramStore?.receiptVersion(), bigram, trigram)
+    }
+
+    internal fun isReceiptCurrent(receipt: CommitReceipt): Boolean = withLearningLocks {
+        receipt.owner === this && !receipt.consumed && receipt.languageEpoch == languageEpoch &&
+            receipt.bigramVersion == bigramStore.receiptVersion() &&
+            receipt.trigramVersion == trigramStore?.receiptVersion() &&
+            (receipt.bigram?.let(bigramStore::isReceiptCurrent) ?: true) &&
+            (receipt.trigram?.let { trigramStore?.isReceiptCurrent(it) == true } ?: true)
+    }
+
+    /** No learnability re-evaluation: reverse only the increments whose sinks issued receipts. */
+    internal fun rollbackReceipt(receipt: CommitReceipt): Boolean = withLearningLocks {
+        if (!isReceiptCurrent(receipt)) return@withLearningLocks false
+        receipt.consumed = true
+        val bigramUndone = receipt.bigram?.let(bigramStore::rollbackReceipt) ?: true
+        val trigramUndone = receipt.trigram?.let { trigramStore?.rollbackReceipt(it) == true } ?: true
+        bigramUndone && trigramUndone
     }
 
     /**

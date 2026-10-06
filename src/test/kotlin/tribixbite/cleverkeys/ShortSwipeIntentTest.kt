@@ -298,13 +298,14 @@ class ShortSwipeIntentTest {
     fun `ActionType enum has expected values`() {
         val types = ActionType.values()
 
-        // 5 since #141 added TIMESTAMP
-        assertThat(types).hasLength(5)
+        // TEMPLATE is appended after the five existing types for persisted compatibility.
+        assertThat(types).hasLength(6)
         assertThat(types).asList().contains(ActionType.TEXT)
         assertThat(types).asList().contains(ActionType.COMMAND)
         assertThat(types).asList().contains(ActionType.KEY_EVENT)
         assertThat(types).asList().contains(ActionType.INTENT)
         assertThat(types).asList().contains(ActionType.TIMESTAMP)
+        assertThat(types).asList().contains(ActionType.TEMPLATE)
     }
 
     @Test

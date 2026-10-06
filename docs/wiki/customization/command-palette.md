@@ -15,7 +15,7 @@ The command palette is a searchable dialog that appears when customizing key act
 |------|-------------|
 | **Purpose** | Browse and search all assignable key actions |
 | **Access** | Opens automatically in Per-Key Customization |
-| **Features** | Search, categories, 100+ commands |
+| **Features** | Search, categories, 227 commands, text and template actions |
 
 ## Where It Appears
 
@@ -64,6 +64,18 @@ saved clippings instead.
 Button** (`minimize_fab`) leaves a restore button in the bottom corner. Tap either to
 restore the keyboard. These actions require a currently active keyboard; they cannot
 bring back a keyboard the system has already hidden.
+
+## Suffix Commands and Dynamic Templates
+
+The Editing category includes **Append 's** and **Append apostrophe**. They attach
+an exact suffix to the last verified word; immediate Backspace removes the suffix
+before deleting the word. Manual spaces, selected ranges and unrelated caret moves
+invalidate attachment.
+
+Choose **Dynamic template** to insert clipboard text, wrap selected text, generate a
+UUID or position the caret. Templates are explicit: ordinary Text Input keeps braces
+literal. Both per-key and popover assignment use the same editor and label confirmation.
+See [Per-Key Actions](per-key-actions.md) for token syntax and editor requirements.
 
 ## Available Commands
 

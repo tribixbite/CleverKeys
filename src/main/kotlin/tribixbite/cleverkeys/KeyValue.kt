@@ -105,6 +105,8 @@ class KeyValue private constructor(
         CLEAR, // #135: Erase entire field (selectAll + delete in one batched edit)
         COPY_PRIVATE, // #156: Copy selection into CleverKeys' private clipboard, never the OS clipboard
         CLEAR_CLIPBOARD, // #168: clear only the current Android clipboard
+        APPEND_POSSESSIVE,
+        APPEND_APOSTROPHE,
     }
 
     enum class Placeholder {
@@ -132,6 +134,7 @@ class KeyValue private constructor(
         Slider, // [_payload] is a [KeyValue.Slider], value is slider repeatition.
         Macro, // [_payload] is a [KeyValue.Macro], value is unused.
         Timestamp, // [_payload] is a [KeyValue.TimestampFormat], formats current date/time.
+        Template, // [_payload] is a TemplateFormat, expanded only on explicit invocation.
     }
 
     enum class Slider(val symbol: String) {
@@ -180,6 +183,11 @@ class KeyValue private constructor(
         }
     }
 
+    class TemplateFormat(val template: String, private val symbol: String) : Comparable<TemplateFormat> {
+        override fun toString(): String = symbol
+        override fun compareTo(other: TemplateFormat): Int = compareValuesBy(this, other, { it.template }, { it.symbol })
+    }
+
     // Accessors - methods that work from both Kotlin and Java
     // (Kotlin allows property-style access like .kind instead of .getKind())
     fun getKind(): Kind = Kind.entries[(_code and KIND_BITS) ushr KIND_OFFSET]
@@ -194,6 +202,7 @@ class KeyValue private constructor(
     fun getSlider(): Slider = _payload as Slider
     fun getSliderRepeat(): Int = (_code and VALUE_BITS).toShort().toInt()
     fun getMacro(): Array<KeyValue> = (_payload as Macro).keys
+    fun getTemplateFormat(): TemplateFormat = _payload as TemplateFormat
     fun getTimestampFormat(): TimestampFormat = _payload as TimestampFormat
 
     fun hasFlagsAny(has: Int): Boolean = ((_code and has) != 0)
@@ -235,6 +244,7 @@ class KeyValue private constructor(
                 KeyValue(symbol, _code, _code, f)
             }
             Kind.Macro -> makeMacro(symbol, getMacro(), f)
+            Kind.Template -> makeTemplateKey(symbol, getTemplateFormat().template, f)
             Kind.Timestamp -> makeTimestampKey(symbol, getTimestampFormat().pattern, f)
             else -> makeMacro(symbol, arrayOf(this), f)
         }
@@ -468,6 +478,11 @@ class KeyValue private constructor(
          */
         @JvmStatic
         @JvmOverloads
+        fun makeTemplateKey(symbol: String, template: String, flags: Int = 0): KeyValue {
+            require(tribixbite.cleverkeys.customization.DynamicTemplate.isValid(template))
+            return KeyValue(TemplateFormat(template, symbol), Kind.Template, 0, flags or FLAG_SMALLER_FONT)
+        }
+
         fun makeTimestampKey(symbol: String, pattern: String, flags: Int = 0): KeyValue {
             var f = flags
             if (symbol.length > 1) f = f or FLAG_SMALLER_FONT
@@ -726,6 +741,8 @@ class KeyValue private constructor(
             // #156: Private copy — stores the selection in CleverKeys' clipboard only, never the OS clipboard.
             // Text label (no key-font glyph reserved for this) so it always renders; small font to fit the key.
             "copy_private" -> editingKey("🔒⎘", Editing.COPY_PRIVATE, FLAG_SMALLER_FONT)
+            "append_possessive" -> editingKey("'s", Editing.APPEND_POSSESSIVE)
+            "append_apostrophe" -> editingKey("'", Editing.APPEND_APOSTROPHE)
             "clear_clipboard" -> editingKey("⌧", Editing.CLEAR_CLIPBOARD)
             "paste" -> editingKey(0xE032, Editing.PASTE)
             "cut" -> editingKey(0xE031, Editing.CUT)

@@ -44,7 +44,7 @@
 
 # 🗺️ Project Overview
 
-CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, 225 customizable short-swipe actions, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
+CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, 227 customizable short-swipe commands, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
 
 </div>
 
@@ -169,9 +169,15 @@ Build your own themes on-the-fly with full control over:
 - **Sub-200ms predictions** with XNNPACK hardware acceleration
 - **Autocorrect with contraction support** — "dont" to "don't", "im" to "I'm"
 - **Full inference control** — beam width, length normalization, pruning, early stopping
-- **Next-word prediction (opt-in)** — learned-phrase suggestions before you type a letter, with tap-to-chain
+- **Next-word prediction (on by default)** — built-in phrase suggestions before you type a letter, with optional personalized learning and tap-to-chain
 - **Suggestion transparency** — long-press any suggestion to see which engine produced it and its full score breakdown; optional per-origin markers
 - **100% on-device** — works in airplane mode, no cloud anything
+
+Development builds also offer optional **continuous multiword swipe**: enable it in
+Swipe Typing settings, then dwell inside the spacebar between words. It defaults off;
+pending words stop when editor/session ownership changes. See the
+[swipe guide](docs/wiki/typing/swipe-typing.md) and
+[assignment guide](docs/wiki/customization/per-key-actions.md) for behavior and limits.
 
 ### 🌍 Multi-Language with Hot-Swap
 - **19 swipe languages** — 7 bundled, 12 downloadable packs
@@ -199,8 +205,10 @@ As an IME, CleverKeys has legitimate clipboard access that other apps don't:
 
 ### 🎯 208 Short Swipe Actions
 Assign custom actions to any key's 8 swipe directions:
-- **204+ built-in commands** — navigation, editing, clipboard, function keys, special chars
+- **227 built-in commands** — navigation, editing, clipboard, function keys, special chars
 - **Custom text macros** — email addresses, signatures, code snippets, emoji sequences
+- **Explicit dynamic templates** — clipboard, selection, UUID and cursor tokens in per-key or popover assignments; ordinary text stays literal
+- **Verified apostrophe suffix commands** — append exact `'s` or `'` to the last verified word, with suffix-only undo and owned learning replacement
 - **Android intents** — launch any app, Termux commands, system settings, maps, browser
 - **Visual feedback** — custom icons displayed as sublabels on keys
 - **Import/Export** — share customizations as JSON profiles

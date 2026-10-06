@@ -43,20 +43,15 @@ object XmlAttributeMapper {
                 // Use keyevent syntax
                 "keyevent:${mapping.actionValue}"
             }
-            ActionType.INTENT -> {
-                // Export intent JSON with quoted syntax for KeyValueParser compatibility
-                // Escape single quotes in JSON and wrap in single quotes
-                val escapedJson = mapping.actionValue.replace("'", "\\'")
-                "intent:'$escapedJson'"
-            }
-            ActionType.TIMESTAMP -> {
-                // Use the timestamp:'pattern' syntax recognized by KeyValueParser.
-                // Escape single quotes in the pattern (rare but supported by quote escaping).
-                val escapedPattern = mapping.actionValue.replace("'", "\\'")
-                "timestamp:'$escapedPattern'"
-            }
+            ActionType.INTENT -> "intent:${quotedPayload(mapping.actionValue)}"
+            ActionType.TEMPLATE -> "template:${quotedPayload(mapping.actionValue)}"
+            ActionType.TIMESTAMP -> "timestamp:${quotedPayload(mapping.actionValue)}"
         }
     }
+
+    /** Match prefixed action parsing: escape backslashes before quote delimiters. */
+    private fun quotedPayload(value: String): String =
+        "'${value.replace("\\", "\\\\").replace("'", "\\'")}'"
 
     /**
      * Map legacy AvailableCommand enum to XML keyword (for backwards compatibility).

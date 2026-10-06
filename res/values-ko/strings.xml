@@ -2208,4 +2208,15 @@
     <string name="advanced_custom_terminal_invalid">잘못된 패키지 이름입니다(최대 %2$d자): %1$s</string>
     <string name="advanced_custom_terminal_limit">서로 다른 패키지 이름을 최대 %1$d개까지 사용하세요.</string>
     <string name="advanced_custom_terminal_input_limit">목록이 너무 깁니다(최대 %1$d자).</string>
+    <string name="command_palette_template_title">동적 템플릿</string>
+    <string name="command_palette_template_help">{clipboard}, {selection}, {uuid} 및 하나의 {cursor}를 확장합니다. 리터럴 중괄호에는 {{ 및 }}를 사용하세요. 기존 텍스트 작업은 그대로 유지됩니다.</string>
+    <string name="dynamic_action_unavailable">이 편집기 또는 패널에서는 작업을 사용할 수 없습니다</string>
+    <string name="dynamic_template_invalid">유효하지 않은 템플릿: 토큰, 중괄호 및 커서 마커를 확인하세요.</string>
+    <string name="continuous_swipe_title">연속 스와이프</string>
+    <string name="continuous_swipe_desc">손가락을 떼지 않고 단어 사이 스페이스바 중앙에서 잠시 멈추세요. 빠르게 지나가면 한 단어로 유지됩니다.</string>
+    <string name="continuous_swipe_stopped">연속 스와이프가 중단되었습니다. 계속하기 전에 텍스트를 확인하세요.</string>
+    <string name="cmd_append_possessive">\'s 추가</string>
+    <string name="cmd_append_possessive_desc">마지막으로 확인된 단어에 \'s 붙이기; 백스페이스를 한 번 누르면 접미사만 삭제됩니다</string>
+    <string name="cmd_append_apostrophe">아포스트로피 추가</string>
+    <string name="cmd_append_apostrophe_desc">마지막으로 확인된 단어에 아포스트로피 붙이기(parents\'); 백스페이스를 한 번 누르면 접미사만 삭제됩니다</string>
 </resources>

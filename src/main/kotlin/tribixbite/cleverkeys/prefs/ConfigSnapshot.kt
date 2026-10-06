@@ -45,9 +45,9 @@ import tribixbite.cleverkeys.PercentOfKey
  * consumer migration is a mechanical `_config.x` → `snap.x` with zero rename risk. The
  * camelCase normalisation is a separate, later pass (R7) and is explicitly NOT done here.
  *
- * There are no default values on purpose: every field must be supplied, so adding a field to
- * the model breaks `Config.buildSnapshot()` at compile time instead of silently publishing a
- * placeholder into the hot path.
+ * The original geometry fields remain required. Optional typing features use the shared
+ * production Defaults for source compatibility; Config.buildSnapshot supplies every value
+ * explicitly, so published snapshots always reflect the real preference state.
  */
 data class ConfigSnapshot(
     // ---- Rotation gestures — Gesture.kt ----
@@ -111,7 +111,10 @@ data class ConfigSnapshot(
      * Config generation counter, bumped by every `Config.refresh()`. Keyboard2View mixes it
      * into its rendered-layout cache keys; it doubles as the identity of this snapshot.
      */
-    val version: Int
+    val version: Int,
+    val continuous_swipe_enabled: Boolean = tribixbite.cleverkeys.Defaults.CONTINUOUS_SWIPE_ENABLED,
+    val primary_language: String = tribixbite.cleverkeys.Defaults.PRIMARY_LANGUAGE,
+    val swipe_engine_mode: String = tribixbite.cleverkeys.Defaults.SWIPE_ENGINE_MODE
 ) {
     /**
      * Runtime themes (decorative/custom) resolve their colours through `KeyboardColorScheme`

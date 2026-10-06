@@ -2206,4 +2206,15 @@
     <string name="advanced_custom_terminal_invalid">包名无效（最多 %2$d 个字符）：%1$s</string>
     <string name="advanced_custom_terminal_limit">最多使用 %1$d 个不同的包名。</string>
     <string name="advanced_custom_terminal_input_limit">列表过长（最多 %1$d 个字符）。</string>
+    <string name="command_palette_template_title">动态模板</string>
+    <string name="command_palette_template_help">展开 {clipboard}、{selection}、{uuid} 以及一个 {cursor}。使用 {{ 和 }} 表示字面花括号。现有的文本操作保持原样。</string>
+    <string name="dynamic_action_unavailable">此编辑器或面板中不可用此操作</string>
+    <string name="dynamic_template_invalid">模板无效：请检查标记、花括号和光标标记。</string>
+    <string name="continuous_swipe_title">连续滑行输入</string>
+    <string name="continuous_swipe_desc">在词与词之间，手指不抬起并在空格键中心短暂停留。快速滑过则保留为一个词。</string>
+    <string name="continuous_swipe_stopped">连续滑行输入已停止；继续前请检查文本。</string>
+    <string name="cmd_append_possessive">追加 \'s</string>
+    <string name="cmd_append_possessive_desc">将 \'s 附加到最后一个已验证的单词；按一次退格键仅删除后缀</string>
+    <string name="cmd_append_apostrophe">追加撇号</string>
+    <string name="cmd_append_apostrophe_desc">将撇号附加到最后一个已验证的单词 (parents\')；按一次退格键仅删除后缀</string>
 </resources>

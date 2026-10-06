@@ -135,6 +135,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "onnx_xnnpack_threads" to PrefValue.IntV(Defaults.ONNX_XNNPACK_THREADS),
 
     // ── Word prediction ──────────────────────────────────────────────
+    "continuous_swipe_enabled" to PrefValue.Bool(Defaults.CONTINUOUS_SWIPE_ENABLED),
     "swipe_typing_enabled" to PrefValue.Bool(Defaults.SWIPE_TYPING_ENABLED),
     "swipe_on_password_fields" to PrefValue.Bool(Defaults.SWIPE_ON_PASSWORD_FIELDS),
     "word_prediction_enabled" to PrefValue.Bool(Defaults.WORD_PREDICTION_ENABLED),

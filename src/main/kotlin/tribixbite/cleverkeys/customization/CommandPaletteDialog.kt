@@ -91,11 +91,12 @@ fun CommandPaletteDialog(
     val editIntent = remember(editing) { editing?.getIntentDefinition() }
 
     var searchQuery by remember { mutableStateOf(initialSearchQuery) }
-    var showTextInput by remember { mutableStateOf(editing?.actionType == ActionType.TEXT) }
+    var showTextInput by remember { mutableStateOf(editing?.actionType in setOf(ActionType.TEXT, ActionType.TEMPLATE)) }
+    var templateMode by remember { mutableStateOf(editing?.actionType == ActionType.TEMPLATE) }
     var showIntentEditor by remember { mutableStateOf(editIntent != null) }
     var showTimestampEditor by remember { mutableStateOf(editing?.actionType == ActionType.TIMESTAMP) }
     var customText by remember {
-        mutableStateOf(editing?.takeIf { it.actionType == ActionType.TEXT }?.actionValue.orEmpty())
+        mutableStateOf(editing?.takeIf { it.actionType in setOf(ActionType.TEXT, ActionType.TEMPLATE) }?.actionValue.orEmpty())
     }
     // The intent editor opens filled in only for the mapping being edited; the quick-action
     // tile always starts a new intent.
@@ -207,7 +208,7 @@ fun CommandPaletteDialog(
                         )
                         pendingText != null -> MappingSelection(
                             displayLabel = label,
-                            actionType = ActionType.TEXT,
+                            actionType = if (templateMode) ActionType.TEMPLATE else ActionType.TEXT,
                             actionValue = pendingText!!,
                             useKeyFont = false  // Text input never uses icon font
                         )
@@ -315,15 +316,21 @@ fun CommandPaletteDialog(
                 )
 
                 if (showTextInput) {
-                    // Custom text input mode
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = templateMode, onCheckedChange = { templateMode = it })
+                        Text(stringResource(R.string.command_palette_template_title))
+                    }
+                    if (templateMode) Text(stringResource(R.string.command_palette_template_help), modifier = Modifier.padding(horizontal = 16.dp))
+                    if (templateMode && !DynamicTemplate.isValid(customText)) Text(stringResource(R.string.dynamic_template_invalid), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp))
                     CustomTextInputSection(
                         text = customText,
+                        valid = !templateMode || DynamicTemplate.isValid(customText),
                         onTextChange = { customText = it },
                         onConfirm = {
-                            if (customText.isNotBlank()) {
+                            if (customText.isNotBlank() && (!templateMode || DynamicTemplate.isValid(customText))) {
                                 // Show label confirmation instead of directly calling callback
                                 pendingText = customText
-                                customLabel = proposedLabel(ActionType.TEXT, customText.take(4))
+                                customLabel = proposedLabel(if (templateMode) ActionType.TEMPLATE else ActionType.TEXT, customText.take(4))
                             }
                         }
                     )
@@ -338,7 +345,8 @@ fun CommandPaletteDialog(
                             pendingCommand = command
                             customLabel = commandText.string(command.nameRes).take(4)
                         },
-                        onShowTextInput = { showTextInput = true },
+                        onShowTextInput = { templateMode = false; showTextInput = true },
+                        onShowTemplateInput = { templateMode = true; showTextInput = true },
                         onShowIntentEditor = {
                             intentToEdit = null
                             showIntentEditor = true
@@ -576,7 +584,8 @@ private fun CommandSearchSection(
     onCommandSelected: (CommandRegistry.Command) -> Unit,
     onShowTextInput: () -> Unit,
     onShowIntentEditor: () -> Unit,
-    onShowTimestampEditor: () -> Unit = {}
+    onShowTimestampEditor: () -> Unit = {},
+    onShowTemplateInput: () -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Search bar: stays put while everything below scrolls.
@@ -614,6 +623,7 @@ private fun CommandSearchSection(
         // it scrolls away with the list instead of permanently taking three tall cards' worth
         // of the dialog. While searching, only the tiles whose title matches stay.
         val quickActions = listOf(
+            QuickAction(stringResource(R.string.command_palette_template_title), Icons.Filled.Edit, onShowTemplateInput),
             QuickAction(stringResource(R.string.command_palette_custom_text_title), Icons.Filled.Edit, onShowTextInput),
             QuickAction(stringResource(R.string.command_palette_send_intent_title), Icons.Filled.Share, onShowIntentEditor),
             QuickAction(stringResource(R.string.command_palette_timestamp_title), Icons.Filled.DateRange, onShowTimestampEditor),
@@ -838,6 +848,7 @@ private fun CommandItem(
 @Composable
 private fun CustomTextInputSection(
     text: String,
+    valid: Boolean = true,
     onTextChange: (String) -> Unit,
     onConfirm: () -> Unit
 ) {
@@ -935,7 +946,7 @@ private fun CustomTextInputSection(
         Button(
             onClick = onConfirm,
             modifier = Modifier.fillMaxWidth(),
-            enabled = text.isNotBlank()
+            enabled = text.isNotBlank() && valid
         ) {
             Icon(Icons.Filled.Check, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))

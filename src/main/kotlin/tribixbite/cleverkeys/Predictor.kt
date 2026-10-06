@@ -5,6 +5,17 @@ import tribixbite.cleverkeys.contextaware.ContextContinuation
 import tribixbite.cleverkeys.personalization.BoostExplanation
 import tribixbite.cleverkeys.swipe.SwipeContextRescorer
 
+/** An opaque, process-local identity for one committed word; never reconstructed from its spelling. */
+class LearningCommit internal constructor(
+    internal val owner: Any, internal val id: Long, internal val epoch: Long
+)
+
+/** An applied context-only replacement also returns a fresh handle when learning is disabled. */
+sealed interface LearningCommitReplacement {
+    data class Applied(val commit: LearningCommit) : LearningCommitReplacement
+    data object Invalidated : LearningCommitReplacement
+}
+
 /**
  * The word-prediction contract the IME actually consumes (ARC-048 / 5-architecture.md R6).
  *
@@ -119,6 +130,19 @@ interface Predictor {
      * [fieldAllowsPersonalizedLearning] is the per-field incognito gate, NOT the master pref.
      */
     fun addWordToContext(word: String?, fieldAllowsPersonalizedLearning: Boolean = true)
+
+    /** Capture immediately after [addWordToContext]; later commits supersede this identity. */
+    fun latestLearningCommit(): LearningCommit? = null
+
+    /** Advisory check only; [replaceLearningCommit] validates again under the learning-store locks. */
+    fun canReplaceLearningCommit(
+        commit: LearningCommit, fieldAllowsPersonalizedLearning: Boolean = true
+    ): Boolean = false
+
+    /** Replace the exact latest commit once, without searching the context window by word. */
+    fun replaceLearningCommit(
+        commit: LearningCommit, replacement: String, fieldAllowsPersonalizedLearning: Boolean = true
+    ): LearningCommitReplacement = LearningCommitReplacement.Invalidated
 
     /** Undo a learn performed by [addWordToContext] (autocorrect reverted by the user). */
     fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean = true)

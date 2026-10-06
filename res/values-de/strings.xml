@@ -2269,4 +2269,15 @@
     <string name="advanced_custom_terminal_invalid">Ungültiger Paketname (maximal %2$d Zeichen): %1$s</string>
     <string name="advanced_custom_terminal_limit">Maximal %1$d verschiedene Paketnamen verwenden.</string>
     <string name="advanced_custom_terminal_input_limit">Die Liste ist zu lang (maximal %1$d Zeichen).</string>
+    <string name="command_palette_template_title">Dynamische Vorlage</string>
+    <string name="command_palette_template_help">Erweitert {clipboard}, {selection}, {uuid} und einen {cursor}. Verwenden Sie {{ und }} für geschweifte Klammern. Bestehende Textaktionen bleiben unverändert.</string>
+    <string name="dynamic_action_unavailable">Aktion in diesem Editor oder Bereich nicht verfügbar</string>
+    <string name="dynamic_template_invalid">Ungültige Vorlage: Überprüfen Sie Tokens, geschweifte Klammern und Cursor-Markierungen.</string>
+    <string name="continuous_swipe_title">Kontinuierliches Wischen</string>
+    <string name="continuous_swipe_desc">Zwischen Wörtern kurz in der Mitte der Leertaste verweilen, ohne den Finger abzuheben. Ein schnelles Überqueren behält ein Wort bei.</string>
+    <string name="continuous_swipe_stopped">Kontinuierliches Wischen angehalten; Text vor dem Fortfahren überprüfen.</string>
+    <string name="cmd_append_possessive">\'s anfügen</string>
+    <string name="cmd_append_possessive_desc">\'s an das letzte verifizierte Wort anhängen; einmal Rückschritt löscht nur das Suffix</string>
+    <string name="cmd_append_apostrophe">Apostroph anfügen</string>
+    <string name="cmd_append_apostrophe_desc">Einen Apostroph an das letzte verifizierte Wort anhängen (parents\'); einmal Rückschritt löscht nur das Suffix</string>
 </resources>

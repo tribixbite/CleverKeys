@@ -35,7 +35,7 @@ Search, the enabled-key summary, **Reset to Defaults** and key rows scroll toget
 | Combining Characters | Combining marks |
 | Function Keys | Function-key placeholders, Menu, Scroll Lock |
 
-The screen currently lists 108 predefined keys. The enabled count describes saved choices; placement depends on the layout and available slots. Next/Previous Layout keys are omitted from the keyboard when only one layout is enabled.
+The screen currently lists 110 predefined keys. The enabled count describes saved choices; placement depends on the layout and available slots. Next/Previous Layout keys are omitted from the keyboard when only one layout is enabled.
 
 **Autofill** appears under System. **Clear system clipboard** appears under Editing and is disabled by default; it clears Android's current clip rather than deleting CleverKeys' saved history.
 
@@ -53,3 +53,10 @@ Use [Per-Key Actions](per-key-actions.md) for custom text, commands and directio
 ## Technical Details
 
 See [Extra Keys Technical Specification](../specs/customization/extra-keys-spec.md).
+
+### Explicit apostrophe suffix keys (development build)
+
+The editing group includes **Append 's** (`append_possessive`) and **Append apostrophe**
+(`append_apostrophe`). They use verified word ownership and suffix-only undo; see
+[per-key actions](per-key-actions.md#explicit-apostrophe-suffix-commands-development-build).
+The current catalog contains 110 keys; enabled counts depend on your selections.

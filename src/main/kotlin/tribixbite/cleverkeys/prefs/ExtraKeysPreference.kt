@@ -108,6 +108,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "copy",
             "paste",
             "cut",
+            "append_possessive", "append_apostrophe",
             "clear_clipboard", // #168: opt-in current Android clipboard action
             "copy_private",  // #156: copy selection into CleverKeys' private clipboard (never OS clipboard)
             "selectAll",
@@ -179,7 +180,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 R.string.extra_keys_group_layout_switching to keys.filter { it in listOf("switch_forward", "switch_backward", "switch_greekmath") },
                 R.string.extra_keys_group_system to keys.filter { it in listOf("alt", "meta", "compose", "voice_typing", "switch_clipboard", "change_method", "capslock", "autofill") },
                 R.string.extra_keys_group_navigation to keys.filter { it in listOf("tab", "esc", "page_up", "page_down", "home", "end") },
-                R.string.extra_keys_group_editing to keys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" || it == "clear_clipboard" },
+                R.string.extra_keys_group_editing to keys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" || it == "clear_clipboard" || it.startsWith("append_") },
                 R.string.extra_keys_group_formatting to keys.filter { it in listOf("superscript", "subscript") },
                 R.string.extra_keys_group_accents to keys.filter { it.startsWith("accent_") },
                 R.string.extra_keys_group_symbols to keys.filter { it in listOf("€", "ß", "£", "§", "†", "ª", "º") },
@@ -217,6 +218,8 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "change_method" -> id = R.string.key_descr_change_method
                 "compose" -> id = R.string.key_descr_compose
                 "copy" -> id = R.string.key_descr_copy
+                "append_possessive" -> id = R.string.cmd_append_possessive_desc
+                "append_apostrophe" -> id = R.string.cmd_append_apostrophe_desc
                 "clear_clipboard" -> id = R.string.cmd_clear_clipboard_desc
                 "copy_private" -> id = R.string.key_descr_copy_private
                 "cut" -> id = R.string.key_descr_cut
@@ -348,6 +351,8 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "copy" to R.string.key_descr_copy,
             "paste" to R.string.key_descr_paste,
             "cut" to R.string.key_descr_cut,
+            "append_possessive" to R.string.cmd_append_possessive,
+            "append_apostrophe" to R.string.cmd_append_apostrophe,
             "clear_clipboard" to R.string.cmd_clear_clipboard,
             "copy_private" to R.string.extra_key_title_private_copy,
             "selectAll" to R.string.extra_key_title_select_all,

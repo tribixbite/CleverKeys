@@ -207,6 +207,6 @@ fun validateLayout(layout: Layout): ValidationResult {
 
 ## Related Specifications
 
-- [Layout System](../../../specs/layout-system.md) - Full layout architecture
+- [Layout System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/layout-system.md) - Full layout architecture
 - [Switching Layouts](switching-layouts-spec.md) - Layout switching logic
-- [Profile System](../../../specs/profile_system_restoration.md) - Layout import/export
+- [Profile System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/profile_system_restoration.md) - Layout import/export

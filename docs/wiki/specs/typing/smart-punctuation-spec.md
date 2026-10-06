@@ -218,7 +218,7 @@ Only a plain `' '` qualifies (tabs/newlines are never eaten). When either positi
 The caller additionally checks both selection endpoints. A selected range starting
 at the old stamp cannot consume the space before that range. When extraction is
 unavailable, the existing selected-text fallback remains; this is not the strict
-ownership/readback planned for suffix commands.
+ownership/readback used by explicit suffix commands.
 
 ### Swallow execution (KeyEventHandler.sendText)
 

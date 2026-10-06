@@ -2255,4 +2255,15 @@
     <string name="advanced_custom_terminal_invalid">Érvénytelen csomagnév (legfeljebb %2$d karakter): %1$s</string>
     <string name="advanced_custom_terminal_limit">Legfeljebb %1$d különböző csomagnevet adjon meg.</string>
     <string name="advanced_custom_terminal_input_limit">A lista túl hosszú (legfeljebb %1$d karakter).</string>
+    <string name="command_palette_template_title">Dinamikus sablon</string>
+    <string name="command_palette_template_help">Kibontja a(z) {clipboard}, {selection}, {uuid} elemeket és egy {cursor} elemet. Szó szerinti kapcsos zárójelekhez használja a {{ és }} jeleket. A meglévő szövegműveletek szó szerintiek maradnak.</string>
+    <string name="dynamic_action_unavailable">A művelet nem érhető el ebben a szerkesztőben vagy panelen</string>
+    <string name="dynamic_template_invalid">Érvénytelen sablon: ellenőrizze a tokeneket, a kapcsos zárójeleket és a kurzorjelölőket.</string>
+    <string name="continuous_swipe_title">Folyamatos csúsztatás</string>
+    <string name="continuous_swipe_desc">A szavak között tartsa ujját röviden a szóközbillentyű közepén felemelés nélkül. A gyors áthaladás egy szót tart meg.</string>
+    <string name="continuous_swipe_stopped">Folyamatos csúsztatás leállítva; a folytatás előtt ellenőrizze a szöveget.</string>
+    <string name="cmd_append_possessive">\'s hozzáfűzése</string>
+    <string name="cmd_append_possessive_desc">\'s csatolása az utolsó ellenőrzött szóhoz; egy visszatörlés csak a toldalékot távolítja el</string>
+    <string name="cmd_append_apostrophe">Aposztróf hozzáfűzése</string>
+    <string name="cmd_append_apostrophe_desc">Aposztróf csatolása az utolsó ellenőrzött szóhoz (parents\'); egy visszatörlés csak a toldalékot távolítja el</string>
 </resources>

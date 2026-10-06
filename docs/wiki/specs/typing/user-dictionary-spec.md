@@ -200,7 +200,7 @@ userWordOriginalCase.clear()  // Reset before reloading
 
 - [Autocorrect Spec](autocorrect-spec.md) - Spelling corrections
 - [Swipe Typing Spec](swipe-typing-spec.md) - Swipe prediction
-- [CTC Swipe Engine](../../../specs/ctc-swipe-engine.md) - the decoder that consumes the merged lexicon
+- [CTC Swipe Engine](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/ctc-swipe-engine.md) - the decoder that consumes the merged lexicon
 
 ## Version History
 

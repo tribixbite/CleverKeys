@@ -143,6 +143,7 @@ class UserVocabulary internal constructor(
         synchronized(this) {
             val overflow = vocabulary.size - currentCap()
             if (overflow <= 0) return 0
+            mutationVersion++
             removeLowestValueWords(overflow, currentTime)
             removed = overflow
         }
@@ -161,14 +162,42 @@ class UserVocabulary internal constructor(
      * Persistence: marks the store dirty; the debounced persister writes back
      * in the background (NOT a per-word serialization).
      */
+    // Store-wide invalidation intentionally expires a receipt after any unrelated mutation,
+    // including cleanup, imports and explicit forget. A reset never revives an old token.
+    private var mutationVersion: Long = 0
+
+    internal class IncrementReceipt internal constructor(
+        internal val owner: UserVocabulary, internal val version: Long, internal val word: String
+    ) {
+        internal var consumed = false
+    }
+
+    internal fun receiptVersion(): Long = synchronized(this) { mutationVersion }
+
+    internal fun isReceiptCurrent(receipt: IncrementReceipt): Boolean = synchronized(this) {
+        receipt.owner === this && !receipt.consumed && receipt.version == mutationVersion
+    }
+
+    /** Reverses one owned count; timestamp updates and capacity evictions are not rewound. */
+    internal fun rollbackReceipt(receipt: IncrementReceipt): Boolean = synchronized(this) {
+        if (!isReceiptCurrent(receipt)) return false
+        receipt.consumed = true
+        unrecordWordUsage(receipt.word)
+    }
+
     fun recordWordUsage(word: String, timestamp: Long = System.currentTimeMillis()) {
+        recordWordUsageWithReceipt(word, timestamp)
+    }
+
+    internal fun recordWordUsageWithReceipt(word: String, timestamp: Long = System.currentTimeMillis()): IncrementReceipt? {
         val normalized = UserWordUsage.normalizeWord(word)
 
         if (normalized.isEmpty() || normalized.length < 2) {
-            return // Skip very short words
+            return null // Skip very short words
         }
 
-        synchronized(this) {
+        val receipt = synchronized(this) {
+            mutationVersion++
             val existing = vocabulary[normalized]
 
             if (existing != null) {
@@ -195,9 +224,11 @@ class UserVocabulary internal constructor(
             if (timestamp - lastCleanup > CLEANUP_INTERVAL_MS) {
                 performCleanupAsync()
             }
+            IncrementReceipt(this, mutationVersion, normalized)
         }
 
         persister.markDirty()
+        return receipt
     }
 
     /**
@@ -214,6 +245,7 @@ class UserVocabulary internal constructor(
         val normalized = UserWordUsage.normalizeWord(word)
         if (normalized.isEmpty()) return false
         val changed = synchronized(this) {
+            mutationVersion++
             val existing = vocabulary[normalized] ?: return false
             if (existing.usageCount <= 1) {
                 vocabulary.remove(normalized)
@@ -285,7 +317,10 @@ class UserVocabulary internal constructor(
      */
     fun removeWord(word: String): Boolean {
         val normalized = UserWordUsage.normalizeWord(word)
-        val removed = synchronized(this) { vocabulary.remove(normalized) != null }
+        val removed = synchronized(this) {
+            mutationVersion++
+            vocabulary.remove(normalized) != null
+        }
         if (removed) {
             persister.markDirty()
             // L4 (review 2026-08-06): user-initiated delete — flush promptly so
@@ -307,6 +342,7 @@ class UserVocabulary internal constructor(
 
         synchronized(this) {
             val staleWords = vocabulary.values.filter { it.isStale(currentTime) }
+            if (staleWords.isNotEmpty()) mutationVersion++
 
             staleWords.forEach { usage ->
                 vocabulary.remove(usage.word)
@@ -347,6 +383,7 @@ class UserVocabulary internal constructor(
         // lock [writeToStorage] holds across serialize+write, so an in-flight
         // flush can never re-persist the just-forgotten vocabulary.
         synchronized(this) {
+            mutationVersion++
             vocabulary.clear()
             lastCleanup = System.currentTimeMillis()
             storage.remove(PREFS_KEY_WORDS)
@@ -373,6 +410,7 @@ class UserVocabulary internal constructor(
             val imported: List<UserWordUsage> = gson.fromJson(json, type)
 
             synchronized(this) {
+                mutationVersion++
                 vocabulary.clear()
 
                 // Exports are sorted by boost descending (getAllWords), so a

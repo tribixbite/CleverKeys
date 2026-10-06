@@ -502,3 +502,16 @@ both contraction gates green after the deletion: `swipe.BundledContractionDataTe
 `swipe.ContractionCollisionDataTest` 6/6.
 
 No known dead data remains in `assets/dictionaries/`.
+
+## Explicit suffix commands (October 6 development)
+
+`append_possessive` means exactly ASCII `'s`; `append_apostrophe` means exactly `'`.
+Do not infer singular/plural morphology or change ContractionOverlay ranking. Both
+route through guarded KeyEventHandler → SuggestionHandler verified-word operations.
+A receipt owns accepted spelling/editor/session, automatic separator and opaque
+learning identity. Finish composition, revalidate, then write once; immediate Backspace
+undoes only the suffix. Only a restored original swipe regains whole-word swipe undo.
+Learning replaces exact owned increments through `Predictor.replaceLearningCommit`;
+never use word-only rollback or cast to WordPredictor for suffix transactions.
+Selection callbacks require the bounded original/selected/final operation ledger;
+coordinate equality alone is insufficient. See the paired per-key-actions spec.

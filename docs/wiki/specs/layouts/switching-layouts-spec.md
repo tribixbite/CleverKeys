@@ -266,5 +266,5 @@ fun saveLayoutForApp(packageName: String) {
 ## Related Specifications
 
 - [Adding Layouts](adding-layouts-spec.md) - Layout management
-- [Gesture System](../../../specs/gesture-system.md) - Globe key gestures
-- [Layout System](../../../specs/layout-system.md) - Full architecture
+- [Gesture System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/gesture-system.md) - Globe key gestures
+- [Layout System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/layout-system.md) - Full architecture

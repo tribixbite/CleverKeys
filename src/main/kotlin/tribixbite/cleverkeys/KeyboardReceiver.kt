@@ -888,6 +888,8 @@ class KeyboardReceiver(
     }
 
     // #156: private-copy feedback via the suggestion bar (Toasts are IME-suppressed on Android 13+).
+    override fun onExplicitEditStarted() { inputCoordinator.resetSwipeData(); keyboard2.cancelContinuousSwipe() }
+
     override fun showPrivateCopyFeedback(message: String) {
         keyboard2.showSuggestionBarMessage(message)
     }
@@ -897,6 +899,7 @@ class KeyboardReceiver(
     }
 
     override fun handle_text_typed(text: String) {
+        keyboard2.cancelContinuousSwipe()
         // Reset swipe tracking when regular typing occurs
         contextTracker.setWasLastInputSwipe(false)
         inputCoordinator.resetSwipeData()

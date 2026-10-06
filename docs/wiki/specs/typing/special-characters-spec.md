@@ -107,6 +107,6 @@ fun withModifiers(mods: Int): KeyValue {
 
 ## Related Specifications
 
-- [Gesture System](../../../specs/gesture-system.md) - Swipe detection
+- [Gesture System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/gesture-system.md) - Swipe detection
 - [Short Swipes Specification](../gestures/short-swipes-spec.md) - Subkey activation
-- [Layout System](../../../specs/layout-system.md) - XML format
+- [Layout System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/layout-system.md) - XML format

@@ -40,6 +40,45 @@ class UserVocabularyPersistenceTest {
     }
 
     @Test
+    fun `receipt reverses only its normalized increment once`() {
+        val vocab = newVocab(InMemoryLearnedStorage())
+        vocab.recordWordUsage("kotlin", 1000)
+        val receipt = requireNotNull(vocab.recordWordUsageWithReceipt(" Kotlin ", 2000))
+        assertTrue(vocab.rollbackReceipt(receipt))
+        assertFalse(vocab.rollbackReceipt(receipt))
+        assertEquals(1, vocab.getWordUsage("kotlin")?.usageCount)
+        assertEquals(null, vocab.recordWordUsageWithReceipt("a", 3000))
+        // Counts are reversed; timestamp history is deliberately not reconstructed.
+        assertEquals(2000L, vocab.getWordUsage("kotlin")?.lastUsed)
+    }
+
+    @Test
+    fun `receipt cannot touch recreated vocabulary after forget or import`() {
+        val vocab = newVocab(InMemoryLearnedStorage())
+        val forgotten = requireNotNull(vocab.recordWordUsageWithReceipt("kotlin", 1000))
+        vocab.clearAll()
+        vocab.recordWordUsage("kotlin", 2000)
+        assertFalse(vocab.rollbackReceipt(forgotten))
+        val imported = requireNotNull(vocab.recordWordUsageWithReceipt("kotlin", 3000))
+        vocab.importFromJson(vocab.exportToJson())
+        assertFalse(vocab.rollbackReceipt(imported))
+        assertEquals(2, vocab.getWordUsage("kotlin")?.usageCount)
+    }
+
+    @Test
+    fun `receipt rejects another store and an intervening vocabulary mutation`() {
+        val first = newVocab(InMemoryLearnedStorage())
+        val second = newVocab(InMemoryLearnedStorage())
+        val receipt = requireNotNull(first.recordWordUsageWithReceipt("kotlin", 1000))
+        second.recordWordUsage("kotlin", 1000)
+        assertFalse(second.rollbackReceipt(receipt))
+        first.recordWordUsage("other", 2000)
+        assertFalse(first.rollbackReceipt(receipt))
+        assertEquals(1, first.getWordUsage("kotlin")?.usageCount)
+        assertEquals(1, second.getWordUsage("kotlin")?.usageCount)
+    }
+
+    @Test
     fun `record then flush survives process restart`() {
         val storage = InMemoryLearnedStorage()
         val vocab = newVocab(storage)

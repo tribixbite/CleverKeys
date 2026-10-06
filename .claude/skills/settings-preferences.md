@@ -210,3 +210,10 @@ The Extra Keys catalog-completeness test guards against uncategorized entries.
 Extra Keys headers and rows use one keyed lazy list: fixed headers can consume the
 landscape viewport. Preserve the query with rememberSaveable; test row reachability
 and recreation through actual UI behavior, without requiring a specific header layout.
+
+## Continuous swipe (October 6 development)
+
+`continuous_swipe_enabled` is Boolean/default false. Keep Config refresh/snapshot,
+SettingsPersistence/UI, searchable title and typed SettingsDefaults backup/reset aligned.
+Its switch appears under enabled Swipe Typing. The gesture checks both live toggles and
+its captured Config snapshot before every result; turning swipe off suspends behavior.

@@ -2331,4 +2331,15 @@
     <string name="advanced_custom_terminal_invalid">Neplatný název balíčku (maximálně %2$d znaků): %1$s</string>
     <string name="advanced_custom_terminal_limit">Použijte nejvýše %1$d odlišných názvů balíčků.</string>
     <string name="advanced_custom_terminal_input_limit">Seznam je příliš dlouhý (maximálně %1$d znaků).</string>
+    <string name="command_palette_template_title">Dynamická šablona</string>
+    <string name="command_palette_template_help">Rozbalit {clipboard}, {selection}, {uuid} a jeden {cursor}. Pro doslovné složené závorky použijte {{ a }}. Stávající textové akce zůstanou beze změny.</string>
+    <string name="dynamic_action_unavailable">Akce není v tomto editoru nebo panelu k dispozici</string>
+    <string name="dynamic_template_invalid">Neplatná šablona: zkontrolujte tokeny, složené závorky a značky kurzoru.</string>
+    <string name="continuous_swipe_title">Souvislé psaní tahem</string>
+    <string name="continuous_swipe_desc">Mezi slovy krátce podržte prst ve středu mezerníku bez zvednutí. Rychlý přejezd zachová jedno slovo.</string>
+    <string name="continuous_swipe_stopped">Souvislé psaní tahem bylo zastaveno; před pokračováním zkontrolujte text.</string>
+    <string name="cmd_append_possessive">Připojit \'s</string>
+    <string name="cmd_append_possessive_desc">Připojit \'s k poslednímu ověřenému slovu; jeden backspace odstraní pouze příponu</string>
+    <string name="cmd_append_apostrophe">Připojit apostrof</string>
+    <string name="cmd_append_apostrophe_desc">Připojit apostrof k poslednímu ověřenému slovu (parents\'); jeden backspace odstraní pouze příponu</string>
 </resources>

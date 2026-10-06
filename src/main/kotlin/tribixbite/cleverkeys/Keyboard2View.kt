@@ -164,6 +164,19 @@ class Keyboard2View @JvmOverloads constructor(
         TOP, CENTER, BOTTOM
     }
 
+    // reset() runs during construction, so cancellation state must exist before init.
+    private var continuousSegmenter: tribixbite.cleverkeys.gesture.ContinuousSwipe<KeyboardData.Key>? = null
+    private var continuousQueue: tribixbite.cleverkeys.gesture.ContinuousSwipeQueue<tribixbite.cleverkeys.gesture.ContinuousSwipe.Segment<KeyboardData.Key>>? = null
+    private var continuousExpected: EditorReadback? = null
+    private var continuousEpoch = 0L
+    private var continuousWasCancelled = false
+    private var continuousCommitting = false
+    private val continuousCommitSelections = mutableListOf<Pair<Int, Int>>()
+    private var continuousSpaceBounds: KeyboardGeometry.KeyBounds? = null
+    private var continuousInsideSpace = false
+    private val continuousTimer = android.os.Handler(android.os.Looper.getMainLooper())
+    private var continuousDwell: Runnable? = null
+
     init {
         // The ONE acquisition of the live Config in this file (ARC-072). A View inflated
         // from XML has no constructor to inject one into, so the static accessor is the
@@ -428,6 +441,7 @@ class Keyboard2View @JvmOverloads constructor(
     fun getKeyboard(): KeyboardData? = _keyboard
 
     fun setKeyboard(kw: KeyboardData) {
+        cancelContinuousSwipe()
         _keyboard = kw
         rebuildKeyCodeLowerCache(kw)
         val shiftKv = KeyValue.getKeyByName("shift")
@@ -488,6 +502,7 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     fun reset() {
+        cancelContinuousSwipe()
         _mods = Pointers.Modifiers.EMPTY
         _pointers.clear()
         requestLayout()
@@ -597,14 +612,135 @@ class Keyboard2View @JvmOverloads constructor(
         invalidateAccessibilityRoot()
     }
 
+    /** Cancels pending segments; already accepted words remain in the editor. */
+    fun cancelContinuousSwipe() {
+        if (continuousSegmenter != null) continuousWasCancelled = true
+        continuousEpoch++
+        continuousDwell?.let { continuousTimer.removeCallbacks(it) }; continuousDwell = null
+        continuousSegmenter?.cancel(); continuousSegmenter = null
+        continuousQueue?.cancel(); continuousQueue = null
+        continuousExpected = null; continuousInsideSpace = false
+        continuousCommitting = false; continuousCommitSelections.clear()
+    }
+    override fun onSwipeCancel() = cancelContinuousSwipe()
+    fun onContinuousSelectionChanged(start: Int, end: Int) {
+        val expected = continuousExpected ?: return
+        if (continuousCommitting) {
+            if (continuousCommitSelections.size >= 8) cancelContinuousSwipe()
+            else continuousCommitSelections.add(start to end)
+        } else if (start != expected.start || end != expected.end) cancelContinuousSwipe()
+    }
+
+    override fun onSwipeStart(x: Float, y: Float, key: KeyboardData.Key, snapshot: ConfigSnapshot, recognizer: ImprovedSwipeGestureRecognizer) {
+        cancelContinuousSwipe()
+        continuousWasCancelled = false
+        if (!snapshot.swipe_typing_enabled || !snapshot.continuous_swipe_enabled || _config.handler?.canUseEditorActions() != true) return
+        val service = _keyboard2 ?: return
+        val ic = service.currentInputConnection ?: return
+        val editor = service.currentInputEditorInfo ?: return
+        if (SuggestionBar.isPasswordField(editor)) return
+        val layout = _keyboard ?: return
+        val params = geometryParams() ?: return
+        val space = KeyboardGeometry.computeKeyRects(layout, params).firstOrNull { it.kv.getKind() == KeyValue.Kind.Char && it.kv.getChar() == ' ' } ?: return
+        val before = EditorReadback.capture(ic)?.takeIf { it.collapsed } ?: return
+        val epoch = continuousEpoch
+        val language = snapshot.primary_language
+        val mode = snapshot.swipe_engine_mode
+        val secondary = DirectBootAwarePreferences.get_shared_preferences(context).getString("pref_secondary_language", "none")
+        continuousExpected = before
+        continuousSpaceBounds = space.bounds
+        var first = true
+        val shiftAtStart = recognizer.wasShiftActiveAtStart()
+        val capsAtStart = recognizer.wasShiftLockedAtStart()
+        fun ownsSession(): Boolean {
+            val current = _config.snapshot
+            return continuousEpoch == epoch && _keyboard === layout && current.version == snapshot.version &&
+                current.primary_language == language && current.swipe_engine_mode == mode &&
+                DirectBootAwarePreferences.get_shared_preferences(context).getString("pref_secondary_language", "none") == secondary &&
+                current.continuous_swipe_enabled && current.swipe_typing_enabled && _config.handler?.canUseEditorActions() == true &&
+                service.currentInputConnection === ic && service.currentInputEditorInfo === editor
+        }
+        fun valid(): Boolean = ownsSession() && continuousExpected?.matches(ic) == true
+        fun abort() {
+            if (ownsSession()) service.onContinuousCommitRejected()
+            cancelContinuousSwipe()
+            service.showSuggestionBarMessage(context.getString(R.string.continuous_swipe_stopped))
+        }
+        val queue = tribixbite.cleverkeys.gesture.ContinuousSwipeQueue<tribixbite.cleverkeys.gesture.ContinuousSwipe.Segment<KeyboardData.Key>>(
+            valid = ::valid,
+            aborted = ::abort,
+            dispatch = { segment, current, done ->
+                val shift = first && shiftAtStart; first = false
+                val old = continuousExpected
+                service.handleSwipeTyping(segment.keys, segment.samples.map { android.graphics.PointF(it.x, it.y) }, segment.samples.map { it.timestamp }, shift, capsAtStart,
+                    InputCoordinator.SwipeCommitControl(current, complete = { word ->
+                        if (continuousEpoch != epoch) { done(false); return@SwipeCommitControl }
+                        var now = EditorReadback.capture(ic)
+                        var accepted = word != null && old != null && now != null &&
+                            listOf(word, "$word ", " $word", " $word ").any { inserted ->
+                                EditorReadback.matchesReplacement(ic, old, inserted, old.rangeStart + inserted.length)
+                            }
+                        // The deliberate boundary means one separator, even when automatic space is off.
+                        if (accepted && segment.endedBySpace && now?.before?.endsWith(" ") != true) {
+                            accepted = word != null && service.appendContinuousSeparator(ic, editor, word, ::ownsSession)
+                            now = EditorReadback.capture(ic)
+                        }
+                        val allowed = setOfNotNull(old?.start, old?.start?.plus(1), now?.start, now?.start?.minus(1))
+                        accepted = accepted && continuousCommitSelections.all { (start, end) -> start == end && start in allowed }
+                        continuousCommitting = false; continuousCommitSelections.clear()
+                        continuousExpected = if (accepted) now else null
+                        done(accepted)
+                    }, prepareCommit = { continuousCommitting = true; continuousCommitSelections.clear() },
+                        commitGuard = old?.let { EditorCommitGuard(it, ::ownsSession) })
+                )
+            }
+        )
+        continuousQueue = queue
+        continuousSegmenter = tribixbite.cleverkeys.gesture.ContinuousSwipe(
+            emit = { recognizer.confirmContinuousSwipe(); queue.enqueue(it) }, overflow = ::abort
+        )
+        continuousSegmenter?.sample(x, y, System.currentTimeMillis(), android.os.SystemClock.uptimeMillis(), key.takeIf { tribixbite.cleverkeys.swipe.KeyLetter.centreLetterOf(it.keys[0]) != null }, false)
+    }
+
+    private fun sampleContinuousSwipe(x: Float, y: Float, key: KeyboardData.Key?) {
+        val segmenter = continuousSegmenter ?: return
+        val bounds = continuousSpaceBounds ?: return
+        // Stay away from the physical key edges; touch slop and subkey geometry do not count.
+        val insetX = (bounds.right - bounds.left) * 0.1f
+        val insetY = (bounds.bottom - bounds.top) * 0.1f
+        val inside = x >= bounds.left + insetX && x <= bounds.right - insetX && y >= bounds.top + insetY && y <= bounds.bottom - insetY
+        val physicalSpace = x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom
+        val wasInside = continuousInsideSpace
+        continuousInsideSpace = inside
+        segmenter.sample(x, y, System.currentTimeMillis(), android.os.SystemClock.uptimeMillis(), key?.takeIf { tribixbite.cleverkeys.swipe.KeyLetter.centreLetterOf(it.keys[0]) != null }, physicalSpace, inside)
+        if (!inside) {
+            continuousDwell?.let { continuousTimer.removeCallbacks(it) }; continuousDwell = null
+        } else if (!wasInside) {
+            val epoch = continuousEpoch
+            continuousDwell = Runnable {
+                if (continuousEpoch == epoch && continuousInsideSpace) continuousSegmenter?.dwell(android.os.SystemClock.uptimeMillis())
+            }.also { continuousTimer.postDelayed(it, tribixbite.cleverkeys.gesture.ContinuousSwipe.DWELL_MS) }
+        }
+    }
+
     override fun onSwipeMove(x: Float, y: Float, recognizer: ImprovedSwipeGestureRecognizer) {
         val key = getKeyAtPosition(x, y)
+        sampleContinuousSwipe(x, y, key)
         recognizer.addPoint(x, y, key)
         // Always invalidate to show visual trail, even before swipe typing confirmed
         invalidate()
     }
 
     override fun onSwipeEnd(recognizer: ImprovedSwipeGestureRecognizer) {
+        if (continuousWasCancelled) { recognizer.endSwipe(); recognizer.reset(); invalidate(); return }
+        continuousDwell?.let { continuousTimer.removeCallbacks(it) }; continuousDwell = null
+        if (continuousSegmenter?.hasBoundary == true) {
+            continuousSegmenter?.finish(); continuousSegmenter = null
+            recognizer.endSwipe(); recognizer.reset(); invalidate()
+            return
+        }
+        // With no deliberate boundary the original recognizer/path owns the entire swipe.
+        cancelContinuousSwipe()
         if (recognizer.isSwipeTyping()) {
             val result = recognizer.endSwipe()
             if (_keyboard2 != null && result.keys != null && result.keys.isNotEmpty() &&
@@ -776,7 +912,7 @@ class Keyboard2View @JvmOverloads constructor(
      * This is called from Pointers when a custom mapping is found for a short swipe gesture.
      */
     override fun onCustomShortSwipe(mapping: ShortSwipeMapping) {
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing custom short swipe: ${mapping.keyCode}:${mapping.direction} -> ${mapping.actionType}:${mapping.actionValue}")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing custom short swipe: ${mapping.keyCode}:${mapping.direction} -> ${mapping.actionType}")
 
         val service = _keyboard2
         if (service == null) {
@@ -791,10 +927,20 @@ class Keyboard2View @JvmOverloads constructor(
         // through smart punctuation, inline editors/search, and typed-text bookkeeping.
         // Keep multi-character TEXT macros literal; splitting "'s" into keys would change
         // existing macro semantics without providing a reversible possessive edit.
-        // TODO: Add explicit suffix commands with verified attachment and suffix-only undo.
+        // Explicit suffix commands below use verified attachment and suffix-only undo.
         val apostropheHandler = if (mapping.actionType == ActionType.TEXT &&
             (mapping.actionValue == "'" || mapping.actionValue == "’")
         ) _config.handler else null
+        if (mapping.actionType == ActionType.COMMAND && mapping.actionValue in setOf("append_possessive", "append_apostrophe")) {
+            val suffix = if (mapping.actionValue == "append_possessive") "'s" else "'"
+            if (_config.handler?.execute_suffix(suffix) == true) performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+            return
+        }
+        if (mapping.actionType == ActionType.TEMPLATE) {
+            val executed = _config.handler?.execute_template(mapping.actionValue) == true
+            if (executed) performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+            return // A rejected template must never fall back to typing its payload.
+        }
         val executed = if (apostropheHandler != null) {
             apostropheHandler.key_up(
                 KeyValue.makeStringKey(mapping.actionValue), Pointers.Modifiers.EMPTY
@@ -1764,6 +1910,7 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     override fun onDetachedFromWindow() {
+        cancelContinuousSwipe()
         super.onDetachedFromWindow()
         // R-6: cancel the Pointers-owned coroutine scope so the one-shot short-swipe
         // startup load doesn't leak an uncancelled scope when this view is detached or
