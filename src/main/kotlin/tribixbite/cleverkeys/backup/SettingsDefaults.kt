@@ -243,6 +243,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
 
     // ── Misc / runtime ───────────────────────────────────────────────
     "termux_mode_enabled" to PrefValue.Bool(Defaults.TERMUX_MODE_ENABLED),
+    "custom_terminal_packages" to PrefValue.Str(Defaults.CUSTOM_TERMINAL_PACKAGES),
     // I-7 (2026-09-08): the default-IME reminder switch — the "don't ask again"
     // pref. Portable (a user choice, not device state); default ON = prompting
     // enabled. The once-per-boot record (ime_prompt_last_boot_ms) is INTERNAL.

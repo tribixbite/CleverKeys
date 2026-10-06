@@ -281,6 +281,24 @@ class SuggestionTapPartialReplaceTest {
         verify(exactly = 0) { keyevents.send_key_down_up(any(), any()) }
     }
 
+    @Test
+    fun customTerminalAdditionAndRemovalChangesRealDeleteRouting() {
+        val keyevents = mockk<KeyEventHandler>(relaxed = true)
+        val subject = handler(keyevents)
+        val editor = editorInfo(plainField).apply { packageName = "org.custom.shell" }
+        config.custom_terminal_packages = setOf("org.custom.shell")
+        subject.handleDeleteLastWord(ic, editor)
+        verify(exactly = 1) {
+            keyevents.send_key_down_up(KeyEvent.KEYCODE_W, KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
+        }
+        verify(exactly = 0) { ic.deleteSurroundingText(any(), any()) }
+        config.custom_terminal_packages = emptySet()
+        editorText.append("hello world ")
+        subject.handleDeleteLastWord(ic, editor)
+        assertThat(editorText.toString()).isEqualTo("hello ")
+        verify(exactly = 1) { keyevents.send_key_down_up(any(), any()) }
+    }
+
     // ------------------------------------------------------------------ reflection
 
     private fun Any.setField(name: String, value: Any?) {

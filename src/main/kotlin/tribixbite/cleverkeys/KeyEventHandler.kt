@@ -576,12 +576,6 @@ class KeyEventHandler(
     }
 
     /**
-     * #113: Handle paste with terminal app fallback.
-     * performContextMenuAction(paste) doesn't work in terminal emulators (Termux, ConnectBot, etc.)
-     * because they don't implement the Android context menu protocol. Send Ctrl+V key event instead,
-     * which terminal emulators intercept and handle as paste.
-     */
-    /**
      * #110: If backspace_undo_swipe is enabled and last input was a swipe,
      * delete the entire swiped word + trailing auto-space in one backspace press.
      * Returns true if the undo was handled, false to fall through to normal backspace.
@@ -680,7 +674,7 @@ class KeyEventHandler(
      * clipboard popup uses (paste_from_clipboard_pane → sendText → commitText).
      */
     private fun handlePaste() {
-        if (TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo())) {
+        if (TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo(), Config.globalConfigOrNull()?.custom_terminal_packages)) {
             pasteFromSystemClipboard()
         } else {
             sendContextMenuAction(android.R.id.paste)

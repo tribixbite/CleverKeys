@@ -2198,4 +2198,13 @@
     <string name="cmd_clear_clipboard_desc">Androidの現在のクリップボードを消去します。保存した履歴、ピン留め、ToDoは保持されます。</string>
     <string name="system_clipboard_cleared">システムのクリップボードを消去しました</string>
     <string name="system_clipboard_clear_failed">システムのクリップボードを消去できませんでした</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">カスタム端末パッケージ</string>
+    <string name="advanced_custom_terminal_desc">他のアプリでもターミナル入力処理を使用します。組み込みのターミナル検出は有効のまま維持されます。</string>
+    <string name="advanced_custom_terminal_count">カスタムパッケージ: %1$d</string>
+    <string name="advanced_custom_terminal_help">アプリの正確なパッケージ名を1行に1つまたはカンマ区切りで入力してください。ワイルドカードは使用できません。組み込み検出のみを使用する場合は空のままにしてください。</string>
+    <string name="advanced_custom_terminal_invalid">無効なパッケージ名です (最大%2$d文字): %1$s</string>
+    <string name="advanced_custom_terminal_limit">指定できるパッケージ名は最大%1$d個です。</string>
+    <string name="advanced_custom_terminal_input_limit">リストが長すぎます (最大%1$d文字)。</string>
 </resources>

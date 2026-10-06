@@ -36,6 +36,15 @@ import tribixbite.cleverkeys.KeyValue
  */
 class AndroidXPreferenceMigrationTest {
 
+    @Test
+    fun everyAdvertisedExtraKeyAppearsInExactlyOneCategory() {
+        val advertised = ExtraKeysPreference.extraKeys
+        val categorized = ExtraKeysPreference.categorizedKeys(advertised).values.flatten()
+        assertThat(categorized).containsExactlyElementsIn(advertised)
+        assertThat(categorized).hasSize(advertised.size)
+        assertThat(ExtraKeysPreference.categorizedKeys(listOf("autofill")).values.flatten()).containsExactly("autofill")
+    }
+
     private lateinit var prefs: SharedPreferences
 
     @Before

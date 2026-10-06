@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import tribixbite.cleverkeys.BuildConfig
+import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.ClipboardDatabase
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.R
@@ -638,7 +639,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
      * clipboard popup uses (KeyEventHandler.paste_from_clipboard_pane).
      */
     private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo?): Boolean {
-        return if (TerminalUtils.isTerminalApp(editorInfo)) {
+        return if (TerminalUtils.isTerminalApp(editorInfo, Config.globalConfigOrNull()?.custom_terminal_packages)) {
             pasteFromSystemClipboard(inputConnection)
         } else {
             inputConnection.performContextMenuAction(android.R.id.paste)

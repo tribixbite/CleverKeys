@@ -2227,4 +2227,13 @@
     <string name="cmd_clear_clipboard_desc">Xóa khay nhớ tạm hiện tại của Android; nhật ký đã lưu, mục đã ghim và việc cần làm vẫn được giữ lại.</string>
     <string name="system_clipboard_cleared">Đã xóa khay nhớ tạm hệ thống</string>
     <string name="system_clipboard_clear_failed">Không thể xóa khay nhớ tạm hệ thống</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Gói ứng dụng terminal tuỳ chỉnh</string>
+    <string name="advanced_custom_terminal_desc">Dùng tính năng xử lý nhập dữ liệu terminal trong ứng dụng bổ sung. Tính năng phát hiện terminal tích hợp sẵn vẫn hoạt động.</string>
+    <string name="advanced_custom_terminal_count">Gói tuỳ chỉnh: %1$d</string>
+    <string name="advanced_custom_terminal_help">Nhập chính xác tên gói ứng dụng, mỗi tên trên một dòng hoặc phân tách bằng dấu phẩy. Không dùng ký tự đại diện. Để trống nếu chỉ dùng phát hiện tích hợp sẵn.</string>
+    <string name="advanced_custom_terminal_invalid">Tên gói không hợp lệ (tối đa %2$d ký tự): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Sử dụng tối đa %1$d tên gói khác nhau.</string>
+    <string name="advanced_custom_terminal_input_limit">Danh sách quá dài (tối đa %1$d ký tự).</string>
 </resources>

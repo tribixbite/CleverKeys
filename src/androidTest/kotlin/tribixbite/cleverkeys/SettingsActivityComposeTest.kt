@@ -1,6 +1,11 @@
 package tribixbite.cleverkeys
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -13,6 +18,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 
 /**
  * Compose UI tests for the main Settings screen.
@@ -40,6 +47,61 @@ class SettingsActivityComposeTest {
     // instead of hardcoding so the test tracks the string source of truth.
     private val searchHint: String
         get() = composeTestRule.activity.getString(R.string.settings_search_hint)
+
+    private fun openCustomTerminalPackages() {
+        val title = composeTestRule.activity.getString(R.string.advanced_custom_terminal_title)
+        composeTestRule.onNodeWithText(searchHint).performTextInput("custom terminal")
+        composeTestRule.onNodeWithText(title).performClick()
+        composeTestRule.onNode(hasText(title) and hasClickAction()).performScrollTo().performClick()
+    }
+
+    /** A real settings Save must update storage and the live routing snapshot. */
+    @Test
+    fun customTerminalPackagesSaveCancelAndClear() {
+        val prefs = composeTestRule.activity.prefs
+        val original = prefs.getString("custom_terminal_packages", null)
+        try {
+            openCustomTerminalPackages()
+            val title = composeTestRule.activity.getString(R.string.advanced_custom_terminal_title)
+            composeTestRule.onNode(hasText(title) and hasSetTextAction())
+                .performTextReplacement(" org.custom.shell,org.custom.shell\ncom.example.Remote ")
+            composeTestRule.onNodeWithText("Save").assertIsEnabled().performClick()
+            composeTestRule.runOnIdle {
+                assertEquals("org.custom.shell\ncom.example.Remote", prefs.getString("custom_terminal_packages", null))
+                assertEquals(setOf("org.custom.shell", "com.example.Remote"), Config.globalConfig().custom_terminal_packages)
+            }
+            composeTestRule.onNode(hasText(title) and hasClickAction()).performScrollTo().performClick()
+            composeTestRule.onNode(hasText(title) and hasSetTextAction()).performTextReplacement("org.cancelled.app")
+            composeTestRule.onNodeWithText("Cancel").performClick()
+            composeTestRule.runOnIdle { assertEquals("org.custom.shell\ncom.example.Remote", prefs.getString("custom_terminal_packages", null)) }
+            composeTestRule.onNode(hasText(title) and hasClickAction()).performScrollTo().performClick()
+            composeTestRule.onNode(hasText(title) and hasSetTextAction()).performTextReplacement("")
+            composeTestRule.onNodeWithText("Save").performClick()
+            composeTestRule.runOnIdle {
+                assertEquals("", prefs.getString("custom_terminal_packages", null))
+                assertTrue(Config.globalConfig().custom_terminal_packages.isEmpty())
+            }
+        } finally {
+            composeTestRule.runOnIdle {
+                val editor = prefs.edit()
+                if (original == null) editor.remove("custom_terminal_packages") else editor.putString("custom_terminal_packages", original)
+                editor.commit()
+                Config.globalConfig().refresh(composeTestRule.activity.resources, null)
+            }
+        }
+    }
+
+    @Test
+    fun customTerminalPackagesInvalidDraftCannotSaveAndSurvivesRotation() {
+        openCustomTerminalPackages()
+        val title = composeTestRule.activity.getString(R.string.advanced_custom_terminal_title)
+        composeTestRule.onNode(hasText(title) and hasSetTextAction()).performTextReplacement("org.valid.app,com.*")
+        composeTestRule.onNodeWithText("Save").assertIsNotEnabled()
+        composeTestRule.activityRule.scenario.recreate()
+        composeTestRule.onNode(hasText("org.valid.app,com.*") and hasSetTextAction()).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Save").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("Cancel").performClick()
+    }
 
     @Test
     fun activity_launches() {

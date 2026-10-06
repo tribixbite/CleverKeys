@@ -1,7 +1,11 @@
 package tribixbite.cleverkeys
 
 import android.os.Handler
+import android.content.Context
+import android.content.ClipboardManager
+import android.content.ClipData
 import android.util.Log
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import io.mockk.every
 import io.mockk.mockk
@@ -32,6 +36,45 @@ import org.junit.Test
  * tests hand the hook the connection and every later lookup null.
  */
 class KeyEventHandlerLearningHooksTest {
+
+    @Test
+    fun customTerminalPackageUsesDirectClipboardPasteForBothKeyRoutes() {
+        val context = mockk<Context>()
+        val clipboard = mockk<ClipboardManager>()
+        val clip = mockk<ClipData>()
+        val item = mockk<ClipData.Item>()
+        every { context.getSystemService(Context.CLIPBOARD_SERVICE) } returns clipboard
+        every { clipboard.primaryClip } returns clip
+        every { clip.itemCount } returns 1
+        every { clip.getItemAt(0) } returns item
+        every { item.coerceToText(context) } returns "terminal-paste-fixture"
+        every { recv.getContext() } returns context
+        val editor = mockk<EditorInfo>(relaxed = true).apply { packageName = "org.custom.shell" }
+        every { recv.getCurrentEditorInfo() } returns editor
+        every { Config.globalConfigOrNull() } returns config
+        config.custom_terminal_packages = setOf("org.custom.shell")
+        release("paste")
+        val executor = tribixbite.cleverkeys.customization.CustomShortSwipeExecutor(context)
+        val mapping = tribixbite.cleverkeys.customization.ShortSwipeMapping(
+            keyCode = "m", direction = tribixbite.cleverkeys.customization.SwipeDirection.SW,
+            displayText = "📋", actionType = tribixbite.cleverkeys.customization.ActionType.COMMAND,
+            actionValue = "paste"
+        )
+        org.junit.Assert.assertTrue(executor.execute(mapping, conn, editor))
+        verify(exactly = 2) { conn.commitText("terminal-paste-fixture", 1) }
+        verify(exactly = 0) { conn.performContextMenuAction(android.R.id.paste) }
+
+        config.custom_terminal_packages = emptySet()
+        every { conn.performContextMenuAction(android.R.id.paste) } returns true
+        release("paste")
+        org.junit.Assert.assertTrue(executor.execute(mapping, conn, editor))
+        verify(exactly = 2) { conn.performContextMenuAction(android.R.id.paste) }
+        verify(exactly = 2) { conn.commitText("terminal-paste-fixture", 1) }
+        // Editor siblings must not inherit the custom package's behavior.
+        config.custom_terminal_packages = setOf("org.custom.shell.child")
+        release("paste")
+        verify(exactly = 3) { conn.performContextMenuAction(android.R.id.paste) }
+    }
 
     private lateinit var recv: KeyEventHandler.IReceiver
     private lateinit var conn: InputConnection

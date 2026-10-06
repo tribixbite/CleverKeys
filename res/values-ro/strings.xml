@@ -2308,4 +2308,13 @@
     <string name="cmd_clear_clipboard_desc">Golește clipboardul curent din Android; istoricul salvat, elementele fixate și activitățile rămân.</string>
     <string name="system_clipboard_cleared">Clipboard de sistem golit</string>
     <string name="system_clipboard_clear_failed">Nu s-a putut goli clipboardul de sistem</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Pachete de terminal personalizate</string>
+    <string name="advanced_custom_terminal_desc">Utilizați gestionarea introducerii din terminal în aplicații suplimentare. Detectarea integrată a terminalului rămâne activată.</string>
+    <string name="advanced_custom_terminal_count">Pachete personalizate: %1$d</string>
+    <string name="advanced_custom_terminal_help">Introduceți numele exacte ale pachetelor aplicațiilor, câte unul pe linie sau separate prin virgulă. Fără metacaractere. Lăsați necompletat pentru a folosi doar detectarea integrată.</string>
+    <string name="advanced_custom_terminal_invalid">Nume de pachet nevalid (maximum %2$d de caractere): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Folosiți cel mult %1$d nume de pachete distincte.</string>
+    <string name="advanced_custom_terminal_input_limit">Lista este prea lungă (maximum %1$d caractere).</string>
 </resources>

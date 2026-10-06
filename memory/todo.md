@@ -57,10 +57,8 @@ maintainer-owned uncommitted manual-checklist resets.
   Alternate engine is a promising trial, not a broad measured human
   accuracy; CTC code/ranking remains unchanged. Evidence in issue audit and ignored
   `build/wet-geo-probe.log`.
-- [ ] TODO: Seeker dropped Wi-Fi again after the above checks. Restore temporary
-  popover enable (original false) and delete test `t`/South mapping (original empty),
-  clear only launcher test text, then restore Android launcher focus. No other settings
-  were changed; no reboot/data clear. Fresh-install/reset checks require separate approval.
+- [x] October 3 connectivity cleanup was completed in the October 5 reconnection
+  pass below: original popover/mappings/launcher/rotation/IME restored; no reboot/data clear. Fresh-install/reset checks require separate approval.
 - [x] Bangla support path documented in `docs/guides/adding-a-new-language.md`: National
   and Provat tap layouts exist, no published `bn` pack/model. Dictionary building strips
   meaningful Mn signs and the geometric letter-node/projection policy excludes essential
@@ -74,11 +72,10 @@ maintainer-owned uncommitted manual-checklist resets.
   rejected for nonmonotonic timestamps). Endpoint dwell improves rank to 3 but never 1.
   `tree` ranks 3–4 on synthetic controls; needs a real trace before calling it a bug.
   Score decomposition and limitations: `docs/audit/gh-issue-resolution.md`.
-- [ ] TODO: full Seeker manual pass remains blocked. Initial attempt dropped Wi-Fi at
-  field focus with no changes; the subsequent partial pass above did verify minimize/
-  popover paths and left two temporary changes pending restoration after another drop.
-- [ ] TODO: on reconnect inspect focus, remove `/sdcard/cleverkeys-test-ui.xml`, return
-  to original Android SearchLauncher (task 860), then resume the six test groups in the audit.
+- [ ] TODO: full Seeker manual pass remains pending. Connectivity and temporary
+  changes are restored; later minimize/popover/clipboard checks are recorded below.
+- [x] Reconnection focus/UI-dump cleanup completed; remaining device test groups
+  are tracked below and in the issue audit.
 - [ ] TODO: investigate `wet` final-letter emissions/resampling using maintainer playground
   traces and compare geometric decoding; protect `we` and broad short-word accuracy.
   No production recognition fix made; do not promise usage-learning or endpoint dwell fixes it.
@@ -102,13 +99,11 @@ maintainer-owned uncommitted manual-checklist resets.
   both ARM64 ELF libraries, embedded guard strings and numeric/PIN source hashes pass.
   SHA-256 `a356ac06a3ca6a4fde204f92a28c76bb2aeea653cf0acc641d2e51bf8e5bc542`.
   Logs: `build/issue-184-release.log`, `build/issue-184-artifact-verification.log`.
-- [ ] TODO: install this APK on Seeker after restoring test settings, then verify #181/#184.
-  Local path: `build/outputs/apk/release/CleverKeys-v2.0.0-arm64-v8a.apk`.
-  Last installed Seeker APK still predates these two fixes. No push/tag/release.
-- [ ] TODO: Seeker device checks remain blocked by repeated No route to host (final bounded retry also failed).
-  The last successful install contains #90/minimize, not the new #181/#184 fixes.
-  Restore temporary popover true to original false, remove test t/South mapping, clear
-  launcher test text and scratch UI XML, then return to original Android launcher.
+- [x] Later minified builds include #181/#184 and are installed on Seeker (latest
+  verified clear-clipboard artifact below). Their manual glyph/oversized-update checks
+  remain pending. No push/tag/release.
+- [x] Historical No route to host/install/cleanup blocker superseded by later
+  successful installations and restoration; do not repeat the old cleanup changes.
 - [ ] TODO: finish bar expansion, app scrolling around FAB, RTL/hide-show, compact and
   numeric/PIN height, cold-start custom gestures with both swipe/prediction disabled,
   emoji/category/search/recents + Monet day/night, compose, and main release-check groups.
@@ -407,20 +402,33 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   `5f87bd1d7e32287895b0e4eba81bf93f9aea11df4055ac15a1b9415acf492a15`.
   Log: `build/oct6-clear-system-clipboard-labels-release.log`. Android clipboard never
   replaced or cleared on Seeker.
-- [ ] TODO: finish focus/UI-dump cleanup and read back IME/rotation; ADB timed out
-  as final cleanup began, after the successful extra-key checks.
+- [x] Reconnected October 6: removed scratch UI XML, restored HOME + Quick Settings
+  (NotificationShade), verified original CleverKeys IME and rotation 0/0.
 - [ ] TODO: maintainer tests the assigned command on a disposable copied clip; this
   session preserves the Seeker’s existing Android clipboard. Native wording review remains.
 
 ### Current next work
 
+- [ ] TODO: before suffix commands, fix rejected/throwing swipe-commit success
+  bookkeeping: no word/source/space ownership, new-word learning or ML/correction
+  stamping after failed insertion. Astra audit details in the October 5 gaps plan.
 - [ ] TODO: explicit Append apostrophe-s / Append apostrophe commands with verified
   word attachment, suffix-only undo and learning-state correction.
 - [ ] TODO: `ad`/`wet` encoder/calibration work using fresh writer/session-separated traces;
   rejected heuristics remain unshipped. No per-word switch to geometric is proposed.
 - [ ] TODO: Bangla spelling-preserving dictionary/mark pipeline before a swipe model/pack;
   existing tap layouts remain the current support level.
-- [ ] TODO: layout-linked language (#186/#61), terminal package UI and remaining release
-  manual coverage.
-- [ ] TODO: existing `autofill` extra key is counted but still omitted from the screen’s
-  category filters; add its category/coverage gate. Short-viewport extra-key checks remain.
+- [ ] TODO: layout-linked language (#186/#61) and remaining release manual coverage.
+- [x] Custom terminal package setting: parser, exact live routing, search, strict
+  backup/default/reset and 22 locales. 2,741 pure + 953 mock and 8 Android UI tests
+  pass; signed/minified lint/build passes. Seeker Save/dedupe/readback/invalid/rotation/
+  Cancel/clear pass; test list and 0/0 orientation restored. Installed SHA-256
+  `97c289284237db8c2ea930ed42d1979e9b87a041532b547ba2f4266dfb464ce2`.
+  External terminal app editing remains pending; spec: docs/specs/termux_integration.md.
+- [ ] TODO: audit legacy Terminal Mode switch: no production consumer of its Config
+  field remains. Shared terminal routing is independent; do not imply it gates handling.
+- [x] Autofill extra key now categorized; shared catalog partition coverage and UI
+  visibility tests pass. Regression fails on previous APK; Seeker title/identifier
+  search passes, enabled count unchanged (19/108).
+- [ ] TODO: Extra Keys fixed header consumes landscape viewport and rotation loses
+  the search draft (confirmed on Seeker). Use one scrollable list and saveable query.

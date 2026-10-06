@@ -2292,4 +2292,13 @@
     <string name="cmd_clear_clipboard_desc">Notīrīt Android pašreizējo starpliktuvi; saglabātā vēsture, piespraudes un uzdevumi paliek.</string>
     <string name="system_clipboard_cleared">Sistēmas starpliktuve notīrīta</string>
     <string name="system_clipboard_clear_failed">Neizdevās notīrīt sistēmas starpliktuvi</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Pielāgotas termināļa pakotnes</string>
+    <string name="advanced_custom_terminal_desc">Izmantot termināļa ievades apstrādi papildu lietotnēs. Iebūvētā termināļa noteikšana paliek aktīva.</string>
+    <string name="advanced_custom_terminal_count">Pielāgotās pakotnes: %1$d</string>
+    <string name="advanced_custom_terminal_help">Ievadiet precīzus lietotņu pakotņu nosaukumus, pa vienam katrā rindiņā vai atdalītus ar komatiem. Aizstājējzīmes nav atļautas. Atstājiet tukšu, lai izmantotu tikai iebūvēto noteikšanu.</string>
+    <string name="advanced_custom_terminal_invalid">Nederīgs pakotnes nosaukums (maksimums %2$d rakstzīmes): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Izmantojiet ne vairāk kā %1$d atšķirīgus pakotņu nosaukumus.</string>
+    <string name="advanced_custom_terminal_input_limit">Saraksts ir pārāk garš (maksimums %1$d rakstzīmes).</string>
 </resources>

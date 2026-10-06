@@ -2260,4 +2260,13 @@
     <string name="cmd_clear_clipboard_desc">Aktuelle Android-Zwischenablage leeren; gespeicherter Verlauf, Angepinntes und Aufgaben bleiben erhalten.</string>
     <string name="system_clipboard_cleared">System-Zwischenablage geleert</string>
     <string name="system_clipboard_clear_failed">System-Zwischenablage konnte nicht geleert werden</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Eigene Terminal-Pakete</string>
+    <string name="advanced_custom_terminal_desc">Terminal-Eingabeverhalten in weiteren Apps nutzen. Integrierte Terminal-Erkennung bleibt aktiv.</string>
+    <string name="advanced_custom_terminal_count">Eigene Pakete: %1$d</string>
+    <string name="advanced_custom_terminal_help">Genaue Paketnamen der Apps eingeben, einer pro Zeile oder durch Kommas getrennt. Keine Platzhalter. Leer lassen, um nur die integrierte Erkennung zu nutzen.</string>
+    <string name="advanced_custom_terminal_invalid">Ungültiger Paketname (maximal %2$d Zeichen): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Maximal %1$d verschiedene Paketnamen verwenden.</string>
+    <string name="advanced_custom_terminal_input_limit">Die Liste ist zu lang (maximal %1$d Zeichen).</string>
 </resources>

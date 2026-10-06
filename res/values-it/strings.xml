@@ -2321,4 +2321,13 @@
     <string name="cmd_clear_clipboard_desc">Cancella gli appunti correnti di Android; la cronologia salvata, gli elementi bloccati e le attività restano.</string>
     <string name="system_clipboard_cleared">Appunti di sistema cancellati</string>
     <string name="system_clipboard_clear_failed">Impossibile cancellare gli appunti di sistema</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Pacchetti terminale personalizzati</string>
+    <string name="advanced_custom_terminal_desc">Usa la gestione dell\'input da terminale in altre app. Il rilevamento terminale integrato rimane attivo.</string>
+    <string name="advanced_custom_terminal_count">Pacchetti personalizzati: %1$d</string>
+    <string name="advanced_custom_terminal_help">Inserisci i nomi esatti dei pacchetti delle app, uno per riga o separati da virgole. Nessun carattere jolly. Lascia vuoto per usare solo il rilevamento integrato.</string>
+    <string name="advanced_custom_terminal_invalid">Nome pacchetto non valido (massimo %2$d caratteri): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Usa al massimo %1$d nomi di pacchetto distinti.</string>
+    <string name="advanced_custom_terminal_input_limit">L\'elenco è troppo lungo (massimo %1$d caratteri).</string>
 </resources>

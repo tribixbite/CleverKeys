@@ -2281,4 +2281,13 @@
     <string name="cmd_clear_clipboard_desc">Limpa a área de transferência atual do Android; histórico salvo, itens fixados e tarefas são mantidos.</string>
     <string name="system_clipboard_cleared">Área de transferência do sistema limpa</string>
     <string name="system_clipboard_clear_failed">Não foi possível limpar a área de transferência do sistema</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Pacotes de terminal personalizados</string>
+    <string name="advanced_custom_terminal_desc">Usar entrada de terminal em outros apps. A detecção integrada de terminal permanece ativada.</string>
+    <string name="advanced_custom_terminal_count">Pacotes personalizados: %1$d</string>
+    <string name="advanced_custom_terminal_help">Digite os nomes exatos dos pacotes dos apps, um por linha ou separados por vírgula. Sem caracteres curinga. Deixe em branco para usar apenas a detecção integrada.</string>
+    <string name="advanced_custom_terminal_invalid">Nome de pacote inválido (máximo de %2$d caracteres): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Use no máximo %1$d nomes de pacotes distintos.</string>
+    <string name="advanced_custom_terminal_input_limit">A lista é muito longa (máximo de %1$d caracteres).</string>
 </resources>

@@ -2252,4 +2252,13 @@
     <string name="cmd_clear_clipboard_desc">I-clear ang kasalukuyang clipboard ng Android; mananatili ang naka-save na history, mga pin, at todo.</string>
     <string name="system_clipboard_cleared">Na-clear ang clipboard ng system</string>
     <string name="system_clipboard_clear_failed">Hindi ma-clear ang clipboard ng system</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Mga custom na terminal package</string>
+    <string name="advanced_custom_terminal_desc">Gamitin ang input handling ng terminal sa iba pang app. Mananatiling aktibo ang built-in na pag-detect ng terminal.</string>
+    <string name="advanced_custom_terminal_count">Mga custom na package: %1$d</string>
+    <string name="advanced_custom_terminal_help">Ilagay ang eksaktong mga package name ng app, isa bawat linya o pinaghihiwalay ng kuwit. Walang wildcard. Iwanang blangko para built-in na pag-detect lang ang gamitin.</string>
+    <string name="advanced_custom_terminal_invalid">Di-wastong package name (maximum na %2$d character): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Gumamit ng hanggang %1$d natatanging package name.</string>
+    <string name="advanced_custom_terminal_input_limit">Masyadong mahaba ang listahan (maximum na %1$d character).</string>
 </resources>

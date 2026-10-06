@@ -2322,4 +2322,13 @@
     <string name="cmd_clear_clipboard_desc">Vymazat aktuální schránku Androidu; uložená historie, připnuté položky a úkoly zůstanou.</string>
     <string name="system_clipboard_cleared">Systémová schránka byla vymazána</string>
     <string name="system_clipboard_clear_failed">Systémovou schránku se nepodařilo vymazat</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Vlastní balíčky terminálů</string>
+    <string name="advanced_custom_terminal_desc">Použít terminálové zadávání v dalších aplikacích. Integrovaná detekce terminálů zůstává aktivní.</string>
+    <string name="advanced_custom_terminal_count">Vlastní balíčky: %1$d</string>
+    <string name="advanced_custom_terminal_help">Zadejte přesné názvy balíčků aplikací, jeden na řádek nebo oddělené čárkami. Zástupné znaky nejsou povoleny. Ponechte prázdné pro použití pouze integrované detekce.</string>
+    <string name="advanced_custom_terminal_invalid">Neplatný název balíčku (maximálně %2$d znaků): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Použijte nejvýše %1$d odlišných názvů balíčků.</string>
+    <string name="advanced_custom_terminal_input_limit">Seznam je příliš dlouhý (maximálně %1$d znaků).</string>
 </resources>

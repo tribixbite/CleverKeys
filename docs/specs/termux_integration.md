@@ -2,7 +2,7 @@
 
 ## Overview
 
-CleverKeys provides gesture typing and cursor control within terminal emulators (Termux) through a hybrid input architecture. When the target package is `com.termux`, the keyboard switches from standard InputConnection APIs to raw key event simulation for reliable operation.
+CleverKeys provides gesture typing and cursor control within terminal emulators (Termux) through a hybrid input architecture. `TerminalUtils` supplies shared built-in and user-configured package detection for suggestion correction, undo, delete-word and paste. Text insertion still uses `commitText`; deletion uses terminal key events and paste commits clipboard text directly. Cursor movement has its own editor-capability fallback.
 
 ## Key Files
 
@@ -11,7 +11,8 @@ CleverKeys provides gesture typing and cursor control within terminal emulators 
 | `src/main/kotlin/tribixbite/cleverkeys/InputCoordinator.kt` | `InputCoordinator` | Context detection, text commitment, deletion strategy |
 | `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt` | `moveCursorFallback()` | Raw key event simulation for cursor movement |
 | `src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt` | Swipe recognition | ONNX-based recognition (Play Services independent) |
-| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `termux_mode_enabled` | Feature toggle |
+| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `custom_terminal_packages` | Validated immutable package snapshot |
+| `src/main/kotlin/tribixbite/cleverkeys/TerminalUtils.kt` | `parseCustomPackages`, `isTerminalApp` | Shared package parsing and detection |
 
 ## Architecture
 
@@ -47,28 +48,45 @@ Standard Android keyboards rely on `InputConnection` methods:
 
 ## Implementation Details
 
-### Termux Detection
+### Terminal Detection and Custom Packages
 
-```kotlin
-// InputCoordinator.kt
-fun isTermuxContext(): Boolean {
-    val packageName = currentInputConnection?.editorInfo?.packageName
-    return packageName == "com.termux" && Config.globalConfig().termux_mode_enabled
-}
-```
+`SuggestionHandler.isTerminalEditor` passes its Config snapshot to
+`TerminalUtils.isTerminalApp(editorInfo, customPackages)`. Regular and custom paste
+pass the current global Config snapshot to the same predicate. Defaults preserve
+known package and ecosystem heuristics; custom additions match exact package names
+with case preserved. Null editor/package information yields false.
+
+**Advanced → Custom terminal packages** accepts comma/newline-separated app IDs.
+The shared parser trims whitespace and deduplicates, requires at least two dotted
+ASCII identifier segments (each starts with a letter), and enforces 100 distinct
+IDs, 255 characters per ID and 32,768 characters per draft. No wildcards or installed-app
+scan are used. Any invalid entry rejects the whole draft; Save is disabled and shows
+an error. Cancel/back changes nothing. Empty Save removes custom matches while
+preserving built-in detection. Dialog and draft survive configuration changes.
+
+`custom_terminal_packages` is stored as a canonical newline-separated String,
+empty by default. `Config.refresh` parses once into an immutable, volatile snapshot;
+invalid legacy/corrupt values fall back to no additions. Normal preference notifications
+refresh live IME routing, and a settings Save publishes immediately in the same process.
+The backup import validator uses the same parser and rejects invalid values/types.
+Defaults/export/reset classify this key; search includes the translated button title,
+terminal/package/SSH keywords and exact scroll target.
+
+This setting changes the shared correction/deletion/paste decision; it does not
+change automatic spacing or force cursor positioning. The existing Terminal Mode
+switch does not gate these paths. TODO: audit that older switch, whose current
+Config field has no production consumer beyond settings persistence.
 
 ### Text Commitment
 
 Both modes use `InputConnection.commitText()` for insertion (safe in terminals).
 
-**Automatic spacing difference:**
-- Standard apps: Auto-space after typed words
-- Termux mode: Auto-spacing disabled to prevent double-space in command lines
-- Exception: Swipe gestures still add trailing spaces for typing flow
+**Automatic spacing:** suggestion spaces follow the existing user preferences;
+terminal detection does not automatically suppress them.
 
-### Word Deletion (Ctrl+W Hack)
+### Word Deletion and Correction
 
-When correcting a prediction, the keyboard needs to delete the previously inserted word:
+The explicit delete-last-word command uses the terminal’s Ctrl+W behavior:
 
 ```kotlin
 // Standard App
@@ -78,44 +96,24 @@ inputConnection.deleteSurroundingText(wordLength, 0)
 KeyEventHandler.send_key_down_up(KeyEvent.KEYCODE_W, KeyEvent.META_CTRL_ON)
 ```
 
-**Why Ctrl+W works:**
+Suggestion replacement and swipe undo use repeated native Backspace events for
+terminal targets, rather than document deletion APIs. They do not blindly issue
+Ctrl+W for every replacement.
+
+**Why Ctrl+W works for delete-last-word:**
 - Bash, zsh, and most shells bind `^W` to `backward-kill-word`
 - Deletes using shell's own internal logic
-- Perfect synchronization with terminal buffer
+- The shell/line editor owns the deletion semantics
 
 ### Cursor Movement (DPAD Fallback)
 
-```kotlin
-// KeyEventHandler.kt
-fun moveCursor(direction: Int) {
-    val conn = inputConnection ?: return
-
-    if (isTermuxContext() || !canSetSelection(conn)) {
-        moveCursorFallback(direction)  // Use arrow keys
-    } else {
-        // Standard: setSelection()
-        val pos = getCursorPos(conn)
-        conn.setSelection(pos.selectionEnd + direction, pos.selectionEnd + direction)
-    }
-}
-
-private fun moveCursorFallback(direction: Int) {
-    val keyCode = if (direction < 0) {
-        KeyEvent.KEYCODE_DPAD_LEFT
-    } else {
-        KeyEvent.KEYCODE_DPAD_RIGHT
-    }
-
-    repeat(abs(direction)) {
-        send_key_down_up(keyCode, 0)
-    }
-}
-```
-
-**Why DPAD works:**
-- Simulates physical arrow key presses
-- Correctly interpreted by terminal emulators
-- Works in programs like Vim, Nano, Emacs
+`KeyEventHandler.moveCursor` has its own selection/capability fallback. The
+`moveCursorForceFallback` flag handles password variations and Godot editors;
+otherwise the handler attempts selection updates where possible and falls back
+to directional key events. Custom terminal packages do not force this flag.
+Programs inside a terminal can interpret those key events differently, so check
+cursor movement in the actual shell/editor instead of assuming package detection
+proves every cursor operation.
 
 ### Slider Gesture (Spacebar Cursor)
 
@@ -131,36 +129,18 @@ The spacebar acts as a slider for cursor control:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `termux_mode_enabled` | Boolean | true | Enable Termux-specific input handling |
+| `termux_mode_enabled` | Boolean | true | Legacy Terminal Mode control; not a gate for shared routing |
+| `custom_terminal_packages` | String | empty | Add exact custom package matches to shared terminal routing |
 
 ### Paste Operation
 
-Terminal apps don't implement `performContextMenuAction(android.R.id.paste)`. Paste is handled by sending a Ctrl+V key event instead, which all terminal emulators interpret as paste.
-
-This applies to both regular paste key and custom short swipe paste actions:
-
-```kotlin
-// KeyEventHandler.kt — regular paste key
-private fun handlePaste() {
-    if (TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo())) {
-        send_key_down_up(KeyEvent.KEYCODE_V, KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
-    } else {
-        sendContextMenuAction(android.R.id.paste)
-    }
-}
-
-// CustomShortSwipeExecutor.kt — custom short swipe paste
-private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo?): Boolean {
-    return if (TerminalUtils.isTerminalApp(editorInfo)) {
-        sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_V,
-            KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
-    } else {
-        inputConnection.performContextMenuAction(android.R.id.paste)
-    }
-}
-```
-
-Terminal detection uses `TerminalUtils.isTerminalApp()` which checks package names against a known set (Termux, ConnectBot, JuiceSSH, etc.) and pattern-matches for `termux`, `anotherterm`, `.terminal` in package names.
+Terminal apps often do not implement `performContextMenuAction(paste)`, and Ctrl+V
+is not reliably intercepted through the IME. Regular paste (`KeyEventHandler`) and
+custom paste (`CustomShortSwipeExecutor`) therefore use the shared package predicate:
+terminal targets read the system clip, coerce its first item to text and call
+`commitText`; ordinary editors retain the Android context-menu paste operation.
+Null/empty clipboard data does not insert text. Each external terminal still needs
+its own device check; package detection alone cannot prove editor behavior.
 
 ## Behavior Comparison
 
@@ -168,7 +148,7 @@ Terminal detection uses `TerminalUtils.isTerminalApp()` which checks package nam
 |-----------|---------------|-------------|
 | Insert text | `commitText()` | `commitText()` |
 | Delete word | `deleteSurroundingText()` | `Ctrl+W` key event |
-| Move cursor | `setSelection()` | `DPAD_LEFT/RIGHT` events |
-| Paste | `performContextMenuAction(paste)` | `Ctrl+V` key event |
-| Auto-space | Enabled | Disabled |
+| Move cursor | Selection/capability fallback | Selection/capability fallback; target-editor validation required |
+| Paste | `performContextMenuAction(paste)` | Clipboard text via `commitText()` |
+| Auto-space | User preference | User preference |
 | Swipe space | Normal | Enabled (exception) |

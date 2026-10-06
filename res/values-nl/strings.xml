@@ -2240,4 +2240,13 @@
     <string name="cmd_clear_clipboard_desc">Huidig Android-klembord wissen; opgeslagen geschiedenis, pins en to-do\'s blijven behouden.</string>
     <string name="system_clipboard_cleared">Systeemklembord gewist</string>
     <string name="system_clipboard_clear_failed">Kan systeemklembord niet wissen</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Aangepaste terminalpakketten</string>
+    <string name="advanced_custom_terminal_desc">Terminal-invoerafhandeling gebruiken in extra apps. Ingebouwde terminaldetectie blijft ingeschakeld.</string>
+    <string name="advanced_custom_terminal_count">Aangepaste pakketten: %1$d</string>
+    <string name="advanced_custom_terminal_help">Voer exacte app-pakketnamen in, één per regel of gescheiden door komma\'s. Geen jokertekens. Laat leeg om alleen ingebouwde detectie te gebruiken.</string>
+    <string name="advanced_custom_terminal_invalid">Ongeldige pakketnaam (maximaal %2$d tekens): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Gebruik maximaal %1$d unieke pakketnamen.</string>
+    <string name="advanced_custom_terminal_input_limit">De lijst is te lang (maximaal %1$d tekens).</string>
 </resources>

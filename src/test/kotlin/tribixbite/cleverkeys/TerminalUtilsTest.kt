@@ -13,6 +13,52 @@ import org.junit.Test
  */
 class TerminalUtilsTest {
 
+    @Test
+    fun `custom packages match exactly and retain built-ins`() {
+        val packages = (TerminalUtils.parseCustomPackages(" com.example.Remote ,\r\ncom.example.Remote\norg.my_shell.app,")
+            as TerminalUtils.PackageListResult.Valid).packages
+        assertThat(packages).containsExactly("com.example.Remote", "org.my_shell.app")
+        assertThat(TerminalUtils.isTerminalApp(editorInfoWithPackage("com.example.Remote"), packages)).isTrue()
+        for (name in listOf("com.example.remote", "com.example.Remote.child", "com.example")) {
+            assertThat(TerminalUtils.isTerminalApp(editorInfoWithPackage(name), packages)).isFalse()
+        }
+        assertThat(TerminalUtils.isTerminalApp(editorInfoWithPackage("org.connectbot"), packages)).isTrue()
+        assertThat(TerminalUtils.isTerminalApp(null, packages)).isFalse()
+        assertThat(TerminalUtils.isTerminalApp(editorInfoWithPackage(null), packages)).isFalse()
+    }
+
+    @Test
+    fun `invalid package rejects whole list without wildcard or partial matching`() {
+        for (bad in listOf("termux", "com.*", "com..app", ".com.app", "com.app.", "com.1app", "com.foo-bar", "com.foo app")) {
+            val result = TerminalUtils.parseCustomPackages("org.valid.app,$bad")
+            assertThat(result).isInstanceOf(TerminalUtils.PackageListResult.Invalid::class.java)
+        }
+    }
+
+    @Test
+    fun `package input enforces count length and payload boundaries`() {
+        val hundred = (1..100).joinToString("\n") { "org.app.p$it" }
+        assertThat(TerminalUtils.parseCustomPackages(hundred)).isInstanceOf(TerminalUtils.PackageListResult.Valid::class.java)
+        assertThat(TerminalUtils.parseCustomPackages("$hundred,org.extra.app")).isInstanceOf(TerminalUtils.PackageListResult.Invalid::class.java)
+        val longest = "a." + "b".repeat(253)
+        assertThat(TerminalUtils.parseCustomPackages(longest)).isInstanceOf(TerminalUtils.PackageListResult.Valid::class.java)
+        assertThat(TerminalUtils.parseCustomPackages(longest + "b")).isInstanceOf(TerminalUtils.PackageListResult.Invalid::class.java)
+        assertThat(TerminalUtils.parseCustomPackages(" ".repeat(TerminalUtils.MAX_PACKAGE_INPUT_LENGTH))).isInstanceOf(TerminalUtils.PackageListResult.Valid::class.java)
+        assertThat(TerminalUtils.parseCustomPackages(" ".repeat(TerminalUtils.MAX_PACKAGE_INPUT_LENGTH + 1))).isInstanceOf(TerminalUtils.PackageListResult.Invalid::class.java)
+    }
+
+    @Test
+    fun `empty list restores built-in behavior and snapshots cannot mutate`() {
+        val empty = (TerminalUtils.parseCustomPackages(" , \r\n") as TerminalUtils.PackageListResult.Valid).packages
+        assertThat(empty).isEmpty()
+        assertThat(TerminalUtils.isTerminalApp(editorInfoWithPackage("com.example.Remote"), empty)).isFalse()
+        assertThat(TerminalUtils.isTerminalApp(editorInfoWithPackage("com.termux"), empty)).isTrue()
+        val packages = (TerminalUtils.parseCustomPackages("com.example.Remote") as TerminalUtils.PackageListResult.Valid).packages
+        org.junit.Assert.assertThrows(UnsupportedOperationException::class.java) {
+            (packages as MutableSet<String>).add("org.other.app")
+        }
+    }
+
     private fun editorInfoWithPackage(pkg: String?): EditorInfo {
         // EditorInfo.packageName is a public Java FIELD, not a Kotlin property.
         // MockK's every{} only works for methods/getters, so we set the field directly.

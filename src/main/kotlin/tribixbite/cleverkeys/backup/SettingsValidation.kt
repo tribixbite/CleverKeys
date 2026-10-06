@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.backup
 
 import tribixbite.cleverkeys.SettingsRanges
+import tribixbite.cleverkeys.TerminalUtils
 
 /**
  * Single source of truth for SharedPreferences-backup validation rules.
@@ -243,6 +244,9 @@ object SettingsValidation {
      * to the wrong validator for the JSON shape — this port is stricter.
      */
     fun validate(key: String, value: PrefValue): String? {
+        if (key == "custom_terminal_packages" && value !is PrefValue.Str) {
+            return "expected String"
+        }
         return when (value) {
             is PrefValue.Bool -> validateBool(key, value.v)
             is PrefValue.IntV -> validateInt(key, value.v)
@@ -422,6 +426,13 @@ object SettingsValidation {
         if (isIntKey(key)) return "expected Int, got String"
         if (isFloatPreference(key)) return "expected Float, got String"
 
+        if (key == "custom_terminal_packages") {
+            return when (val result = TerminalUtils.parseCustomPackages(value)) {
+                is TerminalUtils.PackageListResult.Valid -> null
+                is TerminalUtils.PackageListResult.Invalid -> result.reason.name
+            }
+        }
+
         val ok = when (key) {
             // Theme values - relaxed validation for forward compatibility
             "theme" -> value.isNotEmpty()
@@ -506,7 +517,7 @@ object SettingsValidation {
     private fun isStringValidatedKey(key: String): Boolean = when (key) {
         "theme", "number_row", "show_numpad", "numpad_layout",
         "number_entry_layout", "circle_sensitivity", "slider_sensitivity",
-        "swipe_dist", "clipboard_history_limit" -> true
+        "swipe_dist", "clipboard_history_limit", "custom_terminal_packages" -> true
         else -> false
     }
 }

@@ -2299,4 +2299,13 @@
     <string name="cmd_clear_clipboard_desc">Borra el portapapeles actual de Android; el historial guardado, los elementos fijados y las tareas se conservan.</string>
     <string name="system_clipboard_cleared">Portapapeles del sistema borrado</string>
     <string name="system_clipboard_clear_failed">No se pudo borrar el portapapeles del sistema</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Paquetes de terminal personalizados</string>
+    <string name="advanced_custom_terminal_desc">Usa la entrada de terminal en apps adicionales. La detección de terminal integrada permanece activa.</string>
+    <string name="advanced_custom_terminal_count">Paquetes personalizados: %1$d</string>
+    <string name="advanced_custom_terminal_help">Introduce los nombres exactos de los paquetes de las apps, uno por línea o separados por comas. Sin comodines. Deja en blanco para usar solo la detección integrada.</string>
+    <string name="advanced_custom_terminal_invalid">Nombre de paquete no válido (máximo %2$d caracteres): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Usa como máximo %1$d nombres de paquete distintos.</string>
+    <string name="advanced_custom_terminal_input_limit">La lista es demasiado larga (máximo %1$d caracteres).</string>
 </resources>

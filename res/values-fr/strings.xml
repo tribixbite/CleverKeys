@@ -2291,4 +2291,13 @@
     <string name="cmd_clear_clipboard_desc">Effacer le presse-papiers Android actuel ; l’historique enregistré, les éléments épinglés et les tâches sont conservés.</string>
     <string name="system_clipboard_cleared">Presse-papiers système effacé</string>
     <string name="system_clipboard_clear_failed">Impossible d’effacer le presse-papiers système</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Paquets de terminal personnalisés</string>
+    <string name="advanced_custom_terminal_desc">Appliquer la saisie de terminal à d\'autres applications. La détection intégrée reste activée.</string>
+    <string name="advanced_custom_terminal_count">Paquets personnalisés : %1$d</string>
+    <string name="advanced_custom_terminal_help">Saisissez les noms de paquet exacts des applications, un par ligne ou séparés par des virgules. Aucun caractère générique. Laissez vide pour utiliser uniquement la détection intégrée.</string>
+    <string name="advanced_custom_terminal_invalid">Nom de paquet non valide (%2$d caractères maximum) : %1$s</string>
+    <string name="advanced_custom_terminal_limit">Utilisez au maximum %1$d noms de paquet distincts.</string>
+    <string name="advanced_custom_terminal_input_limit">La liste est trop longue (%1$d caractères maximum).</string>
 </resources>

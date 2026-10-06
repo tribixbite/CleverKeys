@@ -2211,4 +2211,13 @@
     <string name="cmd_clear_clipboard_desc">Bersihkan papan klip Android saat ini; riwayat tersimpan, sematan, dan tugas tetap ada.</string>
     <string name="system_clipboard_cleared">Papan klip sistem dibersihkan</string>
     <string name="system_clipboard_clear_failed">Gagal membersihkan papan klip sistem</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Paket terminal kustom</string>
+    <string name="advanced_custom_terminal_desc">Gunakan penanganan input terminal di aplikasi lain. Deteksi terminal bawaan tetap aktif.</string>
+    <string name="advanced_custom_terminal_count">Paket kustom: %1$d</string>
+    <string name="advanced_custom_terminal_help">Masukkan nama paket aplikasi yang tepat, satu per baris atau dipisahkan koma. Tanpa wildcard. Kosongkan untuk hanya menggunakan deteksi bawaan.</string>
+    <string name="advanced_custom_terminal_invalid">Nama paket tidak valid (maksimal %2$d karakter): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Gunakan maksimal %1$d nama paket yang berbeda.</string>
+    <string name="advanced_custom_terminal_input_limit">Daftar terlalu panjang (maksimal %1$d karakter).</string>
 </resources>

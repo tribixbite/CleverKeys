@@ -2640,4 +2640,13 @@
     <string name="cmd_clear_clipboard_desc">Clear Android’s current clipboard; saved history, pins and todos stay.</string>
     <string name="system_clipboard_cleared">System clipboard cleared</string>
     <string name="system_clipboard_clear_failed">Could not clear system clipboard</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Custom terminal packages</string>
+    <string name="advanced_custom_terminal_desc">Use terminal input handling in additional apps. Built-in terminal detection stays enabled.</string>
+    <string name="advanced_custom_terminal_count">Custom packages: %1$d</string>
+    <string name="advanced_custom_terminal_help">Enter exact app package names, one per line or separated by commas. No wildcards. Leave empty to use only built-in detection.</string>
+    <string name="advanced_custom_terminal_invalid">Invalid package name (maximum %2$d characters): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Use at most %1$d distinct package names.</string>
+    <string name="advanced_custom_terminal_input_limit">The list is too long (maximum %1$d characters).</string>
 </resources>

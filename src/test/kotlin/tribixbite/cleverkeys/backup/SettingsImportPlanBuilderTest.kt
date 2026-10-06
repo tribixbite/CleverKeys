@@ -6,6 +6,24 @@ import org.junit.Test
 
 class SettingsImportPlanBuilderTest {
 
+    @Test
+    fun customTerminalPackages_validImportAndInvalidTypesAreValidated() {
+        assertThat(SettingsValidation.validate("custom_terminal_packages", PrefValue.Str("org.custom.shell, com.example.Remote"))).isNull()
+        assertThat(SettingsValidation.validate("custom_terminal_packages", PrefValue.Str(""))).isNull()
+        assertThat(SettingsValidation.validate("custom_terminal_packages", PrefValue.Str("org.valid.app,com.*"))).isNotNull()
+        assertThat(SettingsValidation.validate("custom_terminal_packages", PrefValue.Bool(true))).isNotNull()
+        assertThat(SettingsValidation.validate("custom_terminal_packages", PrefValue.IntV(1))).isNotNull()
+        assertThat(SettingsValidation.validate("custom_terminal_packages", PrefValue.FloatV(1f))).isNotNull()
+        assertThat(SettingsValidation.validate("custom_terminal_packages", PrefValue.JsonBlob("[]"))).isNotNull()
+        val json = """{"preferences":{"custom_terminal_packages":"org.custom.shell"}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+        assertThat(plan.changes.single().proposed).isEqualTo(PrefValue.Str("org.custom.shell"))
+        assertThat(plan.parseSkippedKeys).isEmpty()
+        val invalid = SettingsImportPlanBuilder.fromJson(json.replace("org.custom.shell", "com.*"), emptyMap(), screen)
+        assertThat(invalid.changes).isEmpty()
+        assertThat(invalid.parseSkippedKeys.map { it.key }).contains("custom_terminal_packages")
+    }
+
     private val screen = ScreenMetrics(width = 1080, height = 2400, density = 3.0f)
 
     @Test

@@ -173,6 +173,21 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
         @JvmField
         val extraKeys: List<String> = EXTRA_KEYS.toList()
 
+        /** Shared catalog partition; every advertised key must appear exactly once. */
+        internal fun categorizedKeys(keys: List<String>): Map<Int, List<String>> =
+            mapOf(
+                R.string.extra_keys_group_layout_switching to keys.filter { it in listOf("switch_forward", "switch_backward", "switch_greekmath") },
+                R.string.extra_keys_group_system to keys.filter { it in listOf("alt", "meta", "compose", "voice_typing", "switch_clipboard", "change_method", "capslock", "autofill") },
+                R.string.extra_keys_group_navigation to keys.filter { it in listOf("tab", "esc", "page_up", "page_down", "home", "end") },
+                R.string.extra_keys_group_editing to keys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" || it == "clear_clipboard" },
+                R.string.extra_keys_group_formatting to keys.filter { it in listOf("superscript", "subscript") },
+                R.string.extra_keys_group_accents to keys.filter { it.startsWith("accent_") },
+                R.string.extra_keys_group_symbols to keys.filter { it in listOf("€", "ß", "£", "§", "†", "ª", "º") },
+                R.string.extra_keys_group_special_characters to keys.filter { it in listOf("zwj", "zwnj", "nbsp", "nnbsp") },
+                R.string.extra_keys_group_combining_characters to keys.filter { it.startsWith("combining_") },
+                R.string.extra_keys_group_functions to keys.filter { it in listOf("f11_placeholder", "f12_placeholder", "menu", "scroll_lock") }
+            ).filterValues { it.isNotEmpty() }
+
         /** Whether an extra key is enabled by default. */
         @JvmStatic
         fun defaultChecked(name: String): Boolean {

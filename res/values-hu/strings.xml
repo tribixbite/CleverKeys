@@ -2246,4 +2246,13 @@
     <string name="cmd_clear_clipboard_desc">Az Android aktuális vágólapjának törlése; a mentett előzmények, kitűzések és feladatok megmaradnak.</string>
     <string name="system_clipboard_cleared">Rendszervágólap törölve</string>
     <string name="system_clipboard_clear_failed">A rendszervágólap törlése nem sikerült</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Egyéni terminálcsomagok</string>
+    <string name="advanced_custom_terminal_desc">Terminálos beviteli mód használata további alkalmazásokban. A beépített terminálészlelés aktív marad.</string>
+    <string name="advanced_custom_terminal_count">Egyéni csomagok: %1$d</string>
+    <string name="advanced_custom_terminal_help">Adja meg az alkalmazások pontos csomagnevét, soronként egyet vagy vesszővel elválasztva. Helyettesítő karakterek nem használhatók. Hagyja üresen, ha csak a beépített észlelést szeretné használni.</string>
+    <string name="advanced_custom_terminal_invalid">Érvénytelen csomagnév (legfeljebb %2$d karakter): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Legfeljebb %1$d különböző csomagnevet adjon meg.</string>
+    <string name="advanced_custom_terminal_input_limit">A lista túl hosszú (legfeljebb %1$d karakter).</string>
 </resources>

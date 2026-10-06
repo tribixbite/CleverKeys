@@ -6,6 +6,27 @@
 
 ---
 
+## Current execution status (2026-10-06)
+
+This is a proposal queue, not a release checklist. The maintainer wants feature/bug work
+and personal device testing before 2.0; tagging/publishing is not authorized.
+
+| Item | Remaining work |
+|---|---|
+| 1.1 Terminal handling | Shared predicate and custom package setting implemented and tested. External terminal app smoke tests remain. |
+| 1.2 Dynamic macros | Clipboard, cursor, UUID and selection expansion not implemented; timestamps already work. |
+| 1.3 Clipboard encryption | At-rest encryption/unlock not implemented; backup encryption is a different, existing feature. |
+| 2.1 Apostrophes | Literal ASCII/curly flick parity implemented; ASCII device-tested. Explicit suffix transaction/undo/learning and contraction chooser remain. Waypoints deferred. |
+| Short-word recognition | `ad`/`wet` still fail with default CTC. Frozen heuristic arms rejected; fresh writer/session data and general calibration/training remain. |
+| 2.2 Continuous swipe | Not implemented; needs gesture and model/segment validation. |
+| 2.3 Dwell picker | Not implemented; needs latency/conflict measurements before implementation. |
+| 3.1 Bangla | National/Provat tap layouts exist. Transliteration, spelling-preserving dictionary/mark support and a validated swipe model remain. |
+| 4.1 Theme preview | Live sample exists; actual keyboard/state preview remains. |
+| 4.2 Swipe trail | Proposed spline/velocity behavior remains; benchmark before claiming frame-rate or overhead. |
+| Clipboard follow-up | Size filtering + confirmed all-page Delete results and #168 system-clear command implemented locally. Assigned-command disposable-clip device check remains. |
+
+Full evidence and pending device checks: [`memory/todo.md`](../../memory/todo.md).
+
 ## 1. Executive Summary
 
 CleverKeys occupies a unique and commanding position in the open-source Android ecosystem:
@@ -30,12 +51,25 @@ To extend this lead without falling into the bloat, maintenance traps, or permis
   - Terminal-safe clipboard paste via [`TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo())`](file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt#L683) in `KeyEventHandler.kt` and `CustomShortSwipeExecutor.kt`.
 * **The Remaining Gap**:
   1. **Pipeline Unification — implemented in `5f07936e`**: `SuggestionHandler` now uses `TerminalUtils.isTerminalApp(editorInfo)` for correction, undo, deletion and terminal prediction guards, matching terminal paste. Trailing suggestion spaces remain controlled by the existing user preference; they are not automatically suppressed for Termux. External terminal behavior still needs device validation.
-  2. **Custom Package Config**: Add a user-facing setting: **"Custom Terminal Packages"** allowing users to enter custom package names (e.g. specialized NeoVim wrappers or remote desktop apps) to trigger terminal mode.
+  2. **Custom Package Config — implemented October 6**: searchable **"Custom terminal packages"** setting adds exact package IDs to built-in detection, with whole-list validation, canonical deduplication, immutable live Config routing, backup/default/reset support and 22 locales.
 * **October 5 implementation**: shared detection now covers SuggestionHandler correction,
   undo, delete-word and terminal prediction guards. Real-handler focused tests pass 8/8:
   ConnectBot/JuiceSSH/Termius/AVF/Termux-Nix use Ctrl+W; suggestion replacement emits native
-  backspaces; an ordinary editor retains document deletion. Custom package configuration
-  remains TODO; behavior in each external terminal app still needs device validation.
+  backspaces; an ordinary editor retains document deletion. Behavior in each external
+  terminal app still needs device validation.
+* **October 6 validation**: 2,741 pure + 953 mock tests pass, including actual custom-app
+  delete-word and regular/custom paste routing, removal and strict backup types. Eight
+  Android UI tests pass (`2cea2c8b-e784-4b50-87da-a350b4c5e2e0`); the new Autofill
+  visibility test fails against the prior APK, protecting the category omission.
+  Signed/minified release builds with lint; Seeker installed APK SHA-256
+  `97c289284237db8c2ea930ed42d1979e9b87a041532b547ba2f4266dfb464ce2`.
+  Seeker search, duplicate Save/readback, invalid Save rejection, rotation-preserved
+  draft, Cancel and clear all pass. Autofill identifier/title search now exposes the
+  System row without changing enabled keys (19/108). Test package list, orientation,
+  original IME and launcher/notification-shade focus restored; no clipboard changes.
+  **TODO:** Extra Keys still loses its search draft on rotation and its fixed header
+  consumes the landscape viewport; Seeker screenshot confirms only a category heading
+  fits. Make header and rows one scrollable list and preserve the query.
 * **Effort**: shared predicate is small; custom package UI requires preference/search/backup
   integration and explicit validation. No claim that every SSH editor was device-tested.
 
@@ -109,7 +143,7 @@ collision rules must survive any new gesture.
 
 **Minimal implementation sequence:**
 
-1. **Restore literal apostrophe parity — implemented, device check pending.** Route a custom TEXT mapping consisting of
+1. **Restore literal apostrophe parity — implemented; ASCII device check passed, curly form remains a manual check.** Route a custom TEXT mapping consisting of
    exactly ASCII `'` or typographic `’` through the ordinary key text handler.
    Preserve the literal contents of arbitrary multi-character macros; do not split
    them into keystrokes or silently reclaim spaces before every punctuation-prefixed
@@ -152,6 +186,28 @@ collision rules must survive any new gesture.
    Define collision behavior with existing subkey flicks/space gestures and validate
    human traces before shipping. Hard beam filtering, huge ranking boosts, or a
    hand-spliced trace are not a demonstrated solution.
+
+**Astra follow-up audit (October 6, read-only): prerequisite before phases 2–3.**
+`onSuggestionSelected` currently ignores the editor’s `commitText` Boolean, can
+continue to learn after an exception, and returns a word merely because an IC exists.
+The swipe caller then falls back to the prediction when recording word/source,
+correction state and ML labels. TODO: make accepted auto-insertion success-only,
+remove failed/null commit ownership fallbacks, preserve candidate display on failure,
+and test false/throwing writes with the real handler before adding suffix commands.
+A true return is acknowledgement, not verified text ownership; do not claim arbitrary
+editor mutations are atomic or that this alone fixes manual replacement/adaptation.
+
+Suffix ownership additionally needs session/connection identity, both selection ends,
+exact readback word/owned-space and language/learning identity. Invalidate on field,
+cursor or selection-range changes (the present service callback forwards collapsed
+cursor moves only). Prefer editing just the owned space, then verify readback; never
+blindly retry or roll back unknown partial mutations. Failed suffix undo must consume
+Backspace instead of falling into whole-word deletion. Roll learning back with a
+receipt of the gates that actually ran, not whichever gates are enabled at undo time.
+Do not record suffix entry as a swipe correction or relabel its original trace.
+Unreadable editors retain ordinary literal typing but cannot qualify for initial
+verified suffix attachment. No production suffix command or ownership fix was made
+in the terminal-settings round.
 
 **Required regressions (test the real commit/routing path):**
 
@@ -203,6 +259,26 @@ contraction selection are separate implementation rounds; the earlier combined
 CleverKeys supports Latin, Cyrillic (ru, uk, bg, mk), Greek (el), and Hebrew (he). The largest untapped user base that aligns with CleverKeys' open-source ethos is South Asian languages.
 
 ### 3.1 Avro-Style Phonetic Transliteration Engine
+
+**October 6 feasibility check:** Roman-letter tap transliteration is a separate path
+from native-layout swipe prediction; it can be staged before a Bangla CTC model.
+The local WM checkout has a 576-line context-sensitive `AvroPhonetic` implementation
+and real spelling/conjunct tests in `core/language`/`app/src/test`. Its repository
+license is MIT, but the converter says its conjunct table comes from desktop Avro:
+TODO: verify upstream table provenance and required notices before adopting code/data.
+No converter or word list was imported into CleverKeys.
+
+A longest-match trie alone is insufficient: independent vowels versus vowel signs,
+inherent vowels, conjuncts/reph, explicit case and breaker syntax change the result.
+The rule layer also does not supply dictionary corrections (`asi` → আছি, or a
+lenient `valo` → ভালো); do not advertise the proposal example as rule-only output.
+First freeze native-speaker-reviewed input/output fixtures, then build an opt-in
+Roman-buffer composer with backspace, commit/cancel, cursor/field-change and unsupported
+editor handling. Keep passwords/URLs, literal macros, clipboard inline editors and
+English mode literal. Integrate prediction/learning through spelling-preserving Bangla
+validation instead of the existing mark-stripping pipeline. Dictionary provenance and
+layout-language association remain prerequisites for a supported candidate experience.
+
 * **The Opportunity**: WM Keyboard's most celebrated feature is its **Avro Bengali phonetic transliteration** (typing `ami valo achi` produces `আমি ভালো আছি`).
 * **Why it matters**: Hundreds of millions of mobile users in South Asia (Bengali, Hindi, Tamil, Telugu) do not use native InScript layouts; they type phonetically in Latin letters on standard English QWERTY layouts.
 * **Implementation Plan**:
@@ -225,7 +301,7 @@ CleverKeys' custom Canvas rendering is one of its greatest assets. It should be 
 
 ### 4.2 Velocity-Responsive Bezier Swipe Trail
 * **Problem**: The existing swipe trail is functional, but lacks modern fluid aesthetics.
-* **Solution**: Replace linear line segments with a Catmull-Rom spline interpolator. Dynamically modulate trail thickness based on fingertip velocity (thick on slow pivots, thin on fast transits) with a decaying alpha gradient. Because it draws directly to Canvas, this maintains a 120 FPS refresh rate with near-zero overhead.
+* **Solution**: Replace linear line segments with a Catmull-Rom spline interpolator. Dynamically modulate trail thickness based on fingertip velocity (thick on slow pivots, thin on fast transits) with a decaying alpha gradient. Reuse Canvas rendering and measure frame latency/allocations on devices before claiming a refresh rate or overhead improvement.
 * **Effort**: Low (1–2 days).
 
 ---
@@ -245,9 +321,9 @@ CleverKeys' custom Canvas rendering is one of its greatest assets. It should be 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    IMMEDIATE: v2.0.0 RELEASE                │
+│               IMMEDIATE: PRE-RELEASE WORK                   │
 │  • Finish device verification in checklist                  │
-│  • Tag and release v2.0.0 (F-Droid & GitHub)                │
+│  • Complete feature/bug work and maintainer manual testing │
 └──────────────────────────────┬──────────────────────────────┘
                                │
                                ▼

@@ -345,7 +345,7 @@ class SuggestionHandler(
      * arrives from another process and a hostile/broken one must not take the IME down.
      */
     private fun isTerminalEditor(editorInfo: EditorInfo?): Boolean = try {
-        TerminalUtils.isTerminalApp(editorInfo)
+        TerminalUtils.isTerminalApp(editorInfo, config.custom_terminal_packages)
     } catch (e: Exception) {
         false
     }

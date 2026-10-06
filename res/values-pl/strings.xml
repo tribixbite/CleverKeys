@@ -2332,4 +2332,13 @@
     <string name="cmd_clear_clipboard_desc">Wyczyść bieżący schowek Androida; zapisana historia, przypięte elementy i zadania zostaną zachowane.</string>
     <string name="system_clipboard_cleared">Schowek systemowy wyczyszczony</string>
     <string name="system_clipboard_clear_failed">Nie udało się wyczyścić schowka systemowego</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Niestandardowe pakiety terminala</string>
+    <string name="advanced_custom_terminal_desc">Używaj obsługi wprowadzania terminala w dodatkowych aplikacjach. Wbudowane wykrywanie terminala pozostaje włączone.</string>
+    <string name="advanced_custom_terminal_count">Niestandardowe pakiety: %1$d</string>
+    <string name="advanced_custom_terminal_help">Wprowadź dokładne nazwy pakietów aplikacji, po jednej w wierszu lub rozdzielone przecinkami. Bez symboli wieloznacznych. Pozostaw puste, aby używać tylko wykrywania wbudowanego.</string>
+    <string name="advanced_custom_terminal_invalid">Nieprawidłowa nazwa pakietu (maksymalnie %2$d znaków): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Użyj maksymalnie %1$d unikalnych nazw pakietów.</string>
+    <string name="advanced_custom_terminal_input_limit">Lista jest za długa (maksymalnie %1$d znaków).</string>
 </resources>

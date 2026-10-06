@@ -76,4 +76,14 @@ class ExtraKeysConfigActivityComposeTest {
         // ExtraKeysConfig has no verticalScroll wrapper — assertExists, not scrollTo.
         composeTestRule.onNodeWithText("Reset to Defaults", substring = true).assertExists()
     }
+
+    @Test
+    fun autofillIsVisibleInSystemCategoryWithoutChangingItsPreference() {
+        composeTestRule.onNode(hasSetTextAction()).performTextInput("autofill")
+        composeTestRule.onNodeWithText("System", substring = true).assertExists()
+        composeTestRule.onNode(hasText("autofill") and !hasSetTextAction(), useUnmergedTree = true)
+            .performScrollTo().assertIsDisplayed()
+        composeTestRule.onNode(hasText("Autofill") and !hasSetTextAction()).assertIsDisplayed()
+        composeTestRule.onAllNodes(isToggleable()).assertCountEquals(1)
+    }
 }

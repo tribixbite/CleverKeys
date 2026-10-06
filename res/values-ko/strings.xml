@@ -2199,4 +2199,13 @@
     <string name="cmd_clear_clipboard_desc">Android의 현재 클립보드를 지웁니다. 저장된 기록, 고정 항목 및 할 일은 유지됩니다.</string>
     <string name="system_clipboard_cleared">시스템 클립보드를 지웠습니다</string>
     <string name="system_clipboard_clear_failed">시스템 클립보드를 지울 수 없습니다</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">커스텀 터미널 패키지</string>
+    <string name="advanced_custom_terminal_desc">추가 앱에서 터미널 입력 처리를 사용합니다. 기본 제공 터미널 감지는 계속 활성화됩니다.</string>
+    <string name="advanced_custom_terminal_count">커스텀 패키지: %1$d</string>
+    <string name="advanced_custom_terminal_help">줄당 하나씩 또는 쉼표로 구분하여 정확한 앱 패키지 이름을 입력하세요. 와일드카드는 지원되지 않습니다. 기본 감지만 사용하려면 비워 두세요.</string>
+    <string name="advanced_custom_terminal_invalid">잘못된 패키지 이름입니다(최대 %2$d자): %1$s</string>
+    <string name="advanced_custom_terminal_limit">서로 다른 패키지 이름을 최대 %1$d개까지 사용하세요.</string>
+    <string name="advanced_custom_terminal_input_limit">목록이 너무 깁니다(최대 %1$d자).</string>
 </resources>

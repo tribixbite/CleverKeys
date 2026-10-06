@@ -165,6 +165,9 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "autocorrect_enabled" -> {
                 autoCorrectEnabled = prefs.getBoolean(key, Defaults.AUTOCORRECT_ENABLED)
             }
+            "custom_terminal_packages" -> {
+                customTerminalPackages = prefs.getSafeString(key, Defaults.CUSTOM_TERMINAL_PACKAGES)
+            }
             "termux_mode_enabled" -> {
                 termuxModeEnabled = prefs.getBoolean(key, Defaults.TERMUX_MODE_ENABLED)
             }
@@ -345,6 +348,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         suggestionBarOpacity = Config.safeGetInt(prefs, "suggestion_bar_opacity", Defaults.SUGGESTION_BAR_OPACITY)
         autoCorrectEnabled = prefs.getSafeBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
         termuxModeEnabled = prefs.getSafeBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)
+        customTerminalPackages = prefs.getSafeString("custom_terminal_packages", Defaults.CUSTOM_TERMINAL_PACKAGES)
         imeDefaultPromptEnabled = prefs.getSafeBoolean("ime_default_prompt_enabled", Defaults.IME_DEFAULT_PROMPT_ENABLED)
         vibrationDuration = prefs.getSafeInt("vibrate_duration", Defaults.VIBRATE_DURATION)
         // Per-event haptic feedback

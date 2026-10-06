@@ -2197,4 +2197,13 @@
     <string name="cmd_clear_clipboard_desc">清除 Android 当前剪贴板；已保存的历史记录、置顶和待办事项将保留。</string>
     <string name="system_clipboard_cleared">系统剪贴板已清除</string>
     <string name="system_clipboard_clear_failed">无法清除系统剪贴板</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">自定义终端应用包名</string>
+    <string name="advanced_custom_terminal_desc">在其他应用中启用终端输入逻辑。内置终端检测将保持启用状态。</string>
+    <string name="advanced_custom_terminal_count">自定义包名数：%1$d</string>
+    <string name="advanced_custom_terminal_help">输入精确的应用包名，每行一个或用逗号分隔。不支持通配符。留空则仅使用内置检测。</string>
+    <string name="advanced_custom_terminal_invalid">包名无效（最多 %2$d 个字符）：%1$s</string>
+    <string name="advanced_custom_terminal_limit">最多使用 %1$d 个不同的包名。</string>
+    <string name="advanced_custom_terminal_input_limit">列表过长（最多 %1$d 个字符）。</string>
 </resources>

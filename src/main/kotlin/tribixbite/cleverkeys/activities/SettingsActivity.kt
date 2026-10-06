@@ -334,6 +334,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var suggestionBarOpacity by mutableIntStateOf(90)
     internal var autoCorrectEnabled by mutableStateOf(true)
     internal var termuxModeEnabled by mutableStateOf(false)
+    internal var customTerminalPackages by mutableStateOf(Defaults.CUSTOM_TERMINAL_PACKAGES)
     internal var imeDefaultPromptEnabled by mutableStateOf(Defaults.IME_DEFAULT_PROMPT_ENABLED)  // I-7: default-IME reminder
     internal var vibrationDuration by mutableIntStateOf(20)
     // Per-event haptic feedback toggles
@@ -664,6 +665,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }.toTypedArray(),
             // ===== Hand-maintained NON-control entries (activity navigation, FAQ) =====
+            searchEntry(R.string.advanced_custom_terminal_title, listOf("terminal", "packages", "whitelist", "allowlist", "ssh"), "advanced", expandSection = { advancedSectionExpanded = true }, settingId = "custom_terminal_packages"),
             // Titles are the screens' own string resources, so they read exactly like the
             // screen they open, in the UI language.
             searchEntry(R.string.activities_theme_title, listOf("color", "dark mode", "light", "appearance", "theme"), "activities", ThemeSettingsActivity::class.java),

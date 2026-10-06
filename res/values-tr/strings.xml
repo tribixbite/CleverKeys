@@ -2251,4 +2251,13 @@
     <string name="cmd_clear_clipboard_desc">Android\'in mevcut panosunu temizle; kaydedilen geçmiş, sabitlenenler ve yapılacaklar korunur.</string>
     <string name="system_clipboard_cleared">Sistem panosu temizlendi</string>
     <string name="system_clipboard_clear_failed">Sistem panosu temizlenemedi</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Özel terminal paketleri</string>
+    <string name="advanced_custom_terminal_desc">Terminal girdi işlemeyi ek uygulamalarda kullanın. Yerleşik terminal algılama etkin kalır.</string>
+    <string name="advanced_custom_terminal_count">Özel paketler: %1$d</string>
+    <string name="advanced_custom_terminal_help">Tam uygulama paket adlarını her satıra bir tane gelecek şekilde veya virgülle ayırarak girin. Joker karakter kullanılamaz. Yalnızca yerleşik algılamayı kullanmak için boş bırakın.</string>
+    <string name="advanced_custom_terminal_invalid">Geçersiz paket adı (en fazla %2$d karakter): %1$s</string>
+    <string name="advanced_custom_terminal_limit">En fazla %1$d farklı paket adı kullanın.</string>
+    <string name="advanced_custom_terminal_input_limit">Liste çok uzun (en fazla %1$d karakter).</string>
 </resources>

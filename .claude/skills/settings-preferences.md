@@ -222,7 +222,7 @@ backup serialization format.
 ## Extra-key additions
 
 Update `ExtraKeysPreference.EXTRA_KEYS`, title/description resources and
-`ExtraKeysConfigActivity`’s category filters together. The screen renders only
+`ExtraKeysPreference.categorizedKeys` together (the activity consumes this shared catalog partition). The screen renders only
 categorized keys: adding to the underlying list alone increases the count while
 hiding the row, even under an exact-name search. Protect new keys with a Compose
 search/visibility test and assert opt-in state without toggling user preferences.
@@ -233,3 +233,9 @@ Greek/Math for `clear_clipboard` after filtering on Seeker. Search must match th
 displayed title as well as the identifier and description. For UI tests, distinguish
 the search field from the identical key-name text and scroll the filtered row into
 view before asserting visibility; never toggle a real device’s preference to test defaults.
+
+Custom terminal packages: use `TerminalUtils.parseCustomPackages` for settings and
+backup validation. Store a canonical String, publish an immutable Config snapshot
+and pass it to each shared terminal-routing caller. Save/cancel/clear/rotation,
+exact-match removal, whole-list rejection and non-string backup types need tests.
+The Extra Keys catalog-completeness test guards against uncategorized entries.

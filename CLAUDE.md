@@ -120,8 +120,14 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 - Extra-key filtering reused a row’s unkeyed `remember` labels, showing Greek/Math
   for `clear_clipboard` on Seeker. Use stable lazy-item keys, derive labels from the
   current key/resources, and include displayed titles in search (2026-10-06).
+- Terminal paste reads the OS clip and commits its text directly; old termux spec/Ctrl+V
+  comments were stale. Keep shared package routing independent of automatic-space policy.
+- Custom terminal additions must use exact validated IDs and immutable Config snapshots;
+  backup imports and settings Save share the parser, with no installed-app enumeration.
+- ADB Compose dumps can mark a disabled button’s TextView `enabled=true`; check its
+  clickable parent node for the actual button state (Seeker, 2026-10-06).
 - Adding an extra key requires both `ExtraKeysPreference.EXTRA_KEYS` and the
-  category filters in `ExtraKeysConfigActivity`; an unclassified key is counted and
+  shared `ExtraKeysPreference.categorizedKeys` catalog; an unclassified key is counted and
   searchable in the data but silently absent from the UI (caught on Seeker, 2026-10-06).
 - `clear_clipboard` clears only Android’s current clip via the shared platform operation;
   never route it to field CLEAR, history deletion or an InputConnection. API 21–27 keep

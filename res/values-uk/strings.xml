@@ -2333,4 +2333,13 @@
     <string name="cmd_clear_clipboard_desc">Очистити поточний буфер обміну Android; збережена історія, закріплені елементи та завдання залишаться.</string>
     <string name="system_clipboard_cleared">Системний буфер обміну очищено</string>
     <string name="system_clipboard_clear_failed">Не вдалося очистити системний буфер обміну</string>
+
+    <!-- Custom terminal package configuration -->
+    <string name="advanced_custom_terminal_title">Власні пакети терміналів</string>
+    <string name="advanced_custom_terminal_desc">Використовувати введення термінала в додаткових програмах. Вбудоване виявлення терміналів залишається активним.</string>
+    <string name="advanced_custom_terminal_count">Власні пакети: %1$d</string>
+    <string name="advanced_custom_terminal_help">Введіть точні назви пакетів програм, по одній у рядку або через кому. Без символів підстановки. Залиште порожнім, щоб використовувати лише вбудоване виявлення.</string>
+    <string name="advanced_custom_terminal_invalid">Недійсна назва пакета (максимум %2$d символів): %1$s</string>
+    <string name="advanced_custom_terminal_limit">Використовуйте щонайбільше %1$d різних назв пакетів.</string>
+    <string name="advanced_custom_terminal_input_limit">Список задовгий (максимум %1$d символів).</string>
 </resources>
