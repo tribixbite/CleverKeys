@@ -8,7 +8,7 @@ related_spec: ../specs/layouts/language-packs-spec.md
 
 # Language Packs
 
-Add language dictionaries and layouts by importing language pack files.
+Add language dictionaries by importing language pack files. Keyboard layouts are configured separately.
 
 ## Quick Summary
 
@@ -32,7 +32,21 @@ Each language pack includes:
 |-----------|-------------|
 | **Dictionary** | Binary word list for predictions |
 | **Contractions** | Language-specific contractions (if available) |
-| **Layout** | Keyboard layout with special keys |
+| **Frequency list** | Word frequencies for the dictionary |
+| **Notice** | Optional licensing and attribution text |
+| **Swipe model** | Optional declared model; runtime approval is checked separately |
+
+## Import Limits
+
+Packs can contain up to **100,000 dictionary words**. The dictionary is limited to
+16 MiB, an optional model to 8 MiB, and the archive to 64 entries and 64 MiB of
+extracted data. CleverKeys checks the dictionary header and extracted bytes, so a
+smaller advertised count does not bypass these limits. An oversized update is rejected
+before replacing the existing dictionary.
+
+A dictionary import does not automatically make every script swipe-compatible.
+Bangla National and Provat tap layouts are available; Bangla transliteration and a
+validated Bangla swipe dictionary/model remain outstanding.
 
 ## Bundled Languages
 

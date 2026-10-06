@@ -1,7 +1,8 @@
 # CleverKeys Documentation - Table of Contents
 
-**Last Updated**: 2026-08-15
-**Review Status**: Files 251 of 251 (100% complete) ✅
+**Last Updated**: 2026-10-06
+Current feature guides and paired specs are maintained in `docs/wiki/`. Historical
+review counts are not a current full-tree audit.
 
 ## 📋 Quick Navigation
 
@@ -12,6 +13,8 @@
   claim, anchored to live code + pinning test; guarded by `ReleaseRecordDriftTest` (hash-pinned
   history, completeness forced from the fastlane changelog dir)
 - **Current Tasks**: `memory/todo.md` - Active todo list
+- **Feature Roadmap**: `docs/plans/2026-10-05-recommended-features-and-gaps.md`
+- **Public Guides and Specs**: `docs/wiki/TABLE_OF_CONTENTS.md`
 - **History**: `docs/history/session_log_dec_2025.md` - Recent completed work
 
 ## 🗺️ Documentation Structure
@@ -24,13 +27,10 @@
 | `CLAUDE.md` | Main development guide | ✅ Active |
 | `README.md` | Project overview | ✅ Active |
 | `CONTRIBUTING.md` | Contribution guidelines | ✅ Active |
-| `DEVELOPMENT.md` | Development setup | ✅ Active |
 
 #### Build & Deployment
 | File | Purpose | Status |
 |------|---------|--------|
-| `BUILD_SCRIPTS.md` | Build automation | ✅ Active |
-| `DEPLOYMENT.md` | Deployment procedures | ✅ Active |
 | `build-on-termux.sh` | Termux build script | ✅ Active |
 
 #### Features & Issues
@@ -45,7 +45,7 @@
 | `docs/specs/ctc-swipe-engine.md` | CTC swipe engine spec | ✅ Active |
 | `docs/specs/geometric-swipe-engine.md` | Geometric swipe engine spec | ✅ Active |
 | `docs/history/neural-engine/` | The removed ONNX transformer engine (ADR-011) | 📚 Archived |
-| `CLI_TEST_README.md` | CLI testing guide | ✅ Active |
+| `.claude/skills/ew-cli-testing.md` | Pinned cloud testing workflow | ✅ Active |
 
 #### Testing
 | File | Purpose | Status |
@@ -67,7 +67,7 @@
 | `settings-system.md` | Settings & preferences | ✅ Implemented |
 | `ui-material3-modernization.md` | Material 3 UI | ✅ Implemented |
 | `performance-optimization.md` | Performance & monitoring | ✅ Complete |
-| `testing-strategy.md` | Testing infrastructure (2050+ tests) | ✅ Active |
+| `testing-strategy.md` | Measured suites, full cloud evidence, and remaining manual coverage | ✅ Active |
 | `short-swipe-customization.md` | **NEW** Short Swipe System | ✅ Implemented |
 | `profile_system_restoration.md` | **NEW** Profile Import/Export | ✅ Implemented |
 | `geometric-swipe-engine.md` | Layout-agnostic geometric swipe decoder (standalone) | ✅ Implemented |

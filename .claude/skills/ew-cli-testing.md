@@ -36,10 +36,10 @@ app apk" is past the zstd path).
 
 ```bash
 # emulator.wtf token must be exported as EW_API_TOKEN. On this device it is
-# injected into the Claude Code shell env — verify with `env | grep EW_API_TOKEN`.
+# injected into the Claude Code shell env — check presence without printing its value.
 # It is NOT defined in ~/.bashrc, so re-sourcing your profile won't set it; in a
 # plain shell, export it yourself first.
-env | grep -q EW_API_TOKEN || echo "EW_API_TOKEN not set — export it before running ew-cli"
+test -n "$EW_API_TOKEN" || echo "EW_API_TOKEN not set — export it before running ew-cli"
 
 # Verify ew-cli is installed (it's a wrapper at ~/bin/ew-cli that java -jars the CLI)
 which ew-cli || pip install emulatorwtf-cli
@@ -58,7 +58,7 @@ which ew-cli || pip install emulatorwtf-cli
 
 ```bash
 # Build both debug + test APKs together
-./gradlew assembleDebug assembleDebugAndroidTest
+./scripts/gradle-guard.sh assembleDebug assembleDebugAndroidTest
 
 # APK locations (version may change)
 APP_APK="build/outputs/apk/debug/CleverKeys-v1.2.9-x86_64.apk"
@@ -68,15 +68,39 @@ TEST_APK="build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk"
 **WARNING**: `build-on-termux.sh` runs assembleRelease which cleans the debug build outputs.
 If you run build-on-termux.sh after assembleDebug, you MUST rebuild the debug APK.
 
+## Full-suite benchmark assets
+
+The unfiltered suite includes two `CtcOnnxLatencyBenchmarkTest` methods that require
+four experimental encoders. They intentionally fail when these assets are missing;
+do not turn the failure into a skip or substitute the shipped encoder. Before building
+the full test APK, copy the actual local ML artifacts into the ignored test-only path:
+
+```bash
+mkdir -p src/androidTest/assets/ctc_bench
+cp ../CleverKeys-ML/ctc/artifacts/ch128_s1234.onnx \
+   ../CleverKeys-ML/ctc/artifacts/ch192_s1234.onnx \
+   ../CleverKeys-ML/ctc/artifacts/fast_resbn80_s1234.onnx \
+   ../CleverKeys-ML/ctc/artifacts/fast_resbn72_s1234.onnx \
+   src/androidTest/assets/ctc_bench/
+sha256sum src/androidTest/assets/ctc_bench/*.onnx
+```
+
+Verify all four members are in the androidTest APK and absent from the app APK.
+They are test inputs, not production model changes. Record their provenance/hashes in
+`docs/specs/testing-strategy.md`. October 6's first full run executed 1,491 tests but
+failed these two methods because the models had not been supplied. After restoring
+the genuine artifacts and correcting a stale settings assertion, the full unfiltered
+three-shard rerun passed all 1,491 distinct tests with no errors/skips.
+
 ## Run All Tests
 
 ```bash
 mkdir -p ~/ew-output
-ew-cli \
+EW_VERSION=1.3.4 ew-cli \
   --app build/outputs/apk/debug/CleverKeys-*-x86_64.apk \
   --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
   --outputs-dir ~/ew-output \
-  --timeout 15m \
+  --timeout 40m \
   --device model=Pixel7,version=34 \
   --use-orchestrator
 ```
@@ -85,11 +109,11 @@ ew-cli \
 
 ```bash
 mkdir -p ~/ew-output
-ew-cli \
+EW_VERSION=1.3.4 ew-cli \
   --app build/outputs/apk/debug/CleverKeys-*-x86_64.apk \
   --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
   --outputs-dir ~/ew-output \
-  --timeout 15m \
+  --timeout 40m \
   --device model=Pixel7,version=34 \
   --use-orchestrator \
   --test-targets "class tribixbite.cleverkeys.SuggestionBarAutofillTest"
@@ -99,11 +123,11 @@ ew-cli \
 
 ```bash
 mkdir -p ~/ew-output
-ew-cli \
+EW_VERSION=1.3.4 ew-cli \
   --app build/outputs/apk/debug/CleverKeys-*-x86_64.apk \
   --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
   --outputs-dir ~/ew-output \
-  --timeout 15m \
+  --timeout 40m \
   --device model=Pixel7,version=34 \
   --use-orchestrator \
   --test-targets "class tribixbite.cleverkeys.AutocapitalizationTest#testIWordCapitalization_SingleI"
@@ -114,7 +138,7 @@ ew-cli \
 `--test-targets` is a SINGLE-VALUE flag — repeating it only honors the LAST occurrence. To run multiple classes in one invocation, comma-separate inside one quoted arg:
 
 ```bash
-ew-cli \
+EW_VERSION=1.3.4 ew-cli \
   --app ... \
   --test ... \
   --test-targets "class tribixbite.cleverkeys.Issue94VersionCopyComposeTest,tribixbite.cleverkeys.Issue93ThemeHexInputComposeTest,tribixbite.cleverkeys.Issue134ShowKeyboardButtonComposeTest"
@@ -157,7 +181,7 @@ Activity is auto-launched per test (~1.2-1.8s overhead). Assertion failures surf
 | Device | API | Notes |
 |--------|-----|-------|
 | `model=Pixel7,version=34` | 34 (Android 14) | **Default — stable, x86_64 support** |
-| `model=Pixel7,version=35` | 35 (Android 15) | Latest |
+| `model=Pixel7,version=35` | 35 (Android 15) | Optional additional API coverage |
 | `model=Pixel6,version=33` | 33 (Android 13) | IS_SENSITIVE flag testing |
 
 **Do NOT use API 30** — x86 only, ONNX native libs are x86_64.
@@ -176,7 +200,7 @@ Activity is auto-launched per test (~1.2-1.8s overhead). Assertion failures surf
 | `ContractionFlickerTest` | 20 | Pipeline symmetry, paired contraction prefix guard |
 | `ContractionFlickerIntegrationTest` | 7 | Full real component wiring (SuggestionHandler+SuggestionBar+WordPredictor) |
 | `DictionaryDataSourceTest` | 19 | Dictionary cache, toggle coherence |
-| `VocabularyRankingTest` | 12 | Contraction scoring, trie lookup |
+| `swipe/ctc` pure suite | See testing strategy | Live contraction ranking/trie checks; transformer VocabularyRankingTest was removed |
 | `SettingsSearchTest` | 5 | Settings search-to-scroll crash regression |
 
 ## Infinitely-Animating Compose Screens Never Go Idle (hard-won, 2026-07-15)
@@ -273,22 +297,17 @@ class MyFeatureTest {
 ```kotlin
 @Test
 fun testConfigSetting() {
+    // Initialize Config in the test fixture before accessing it. Missing fixture
+    // setup must fail the test instead of becoming a silent pass.
+    val config = Config.globalConfig()
+    val original = config.my_setting
     try {
-        val config = Config.globalConfig()
-        if (config != null) {
-            val original = config.my_setting
-            try {
-                config.my_setting = true
-                assertTrue(config.my_setting)
-
-                config.my_setting = false
-                assertFalse(config.my_setting)
-            } finally {
-                config.my_setting = original
-            }
-        }
-    } catch (e: NullPointerException) {
-        // Config not available without full keyboard init
+        config.my_setting = true
+        assertTrue(config.my_setting)
+        config.my_setting = false
+        assertFalse(config.my_setting)
+    } finally {
+        config.my_setting = original
     }
 }
 ```
@@ -297,8 +316,8 @@ fun testConfigSetting() {
 
 ### Get Detailed Output
 ```bash
-env | grep -q EW_API_TOKEN || echo "export EW_API_TOKEN first"
-ew-cli \
+test -n "$EW_API_TOKEN" || echo "export EW_API_TOKEN first"
+EW_VERSION=1.3.4 ew-cli \
   --app build/outputs/apk/debug/CleverKeys-*-x86_64.apk \
   --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
   --device model=Pixel7,version=35 \
@@ -311,7 +330,7 @@ ew-cli \
 ### View Logcat
 ```bash
 # Results include logcat in outputs-dir
-cat test-results/logcat.txt | grep -i "cleverkeys\|error\|exception"
+rg -i "cleverkeys|error|exception" test-results/logcat.txt
 ```
 
 ## CI Integration
@@ -339,7 +358,7 @@ If wiring ew-cli into CI, the CLI reads `EW_API_TOKEN`:
 ### API Token Issues
 ```bash
 # The var ew-cli reads is EW_API_TOKEN. Verify it's exported:
-env | grep EW_API_TOKEN
+test -n "$EW_API_TOKEN" || echo "EW_API_TOKEN is missing"
 
 # If empty: it is injected into the Claude Code shell env, NOT ~/.bashrc, so
 # `source ~/.bashrc` will NOT set it. Export it directly in a plain shell:
@@ -362,7 +381,7 @@ ls -la build/outputs/apk/androidTest/debug/
 
 # Rebuild if missing
 ./build-on-termux.sh
-./gradlew assembleDebugAndroidTest
+./scripts/gradle-guard.sh assembleDebugAndroidTest
 ```
 
 ### Test Timeout
@@ -383,7 +402,7 @@ You're using API 30 which is 32-bit x86 only. Switch to `--device model=Pixel7,v
 
 ### Test APK Not Found After build-on-termux.sh
 `build-on-termux.sh` runs assembleRelease which cleans debug outputs.
-Rebuild: `./gradlew assembleDebug assembleDebugAndroidTest`
+Rebuild: `./scripts/gradle-guard.sh assembleDebug assembleDebugAndroidTest`
 
 ## Related Files
 

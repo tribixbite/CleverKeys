@@ -134,8 +134,8 @@ with open('en_enhanced.bin', 'rb') as f:
 
 ### How It Works
 1. **Load**: `ContractionManager.loadMappings()` loads `contractions.bin` (or JSON fallback)
-2. **Transform**: `InputCoordinator.kt:255-259` maps swipe predictions through `getNonPairedMapping()`
-3. **Boost**: `SuggestionHandler.kt:1100-1114` adds +1000 score to contraction matches
+2. **Decode**: CTC and geometric decode letter-only surfaces, then apply their canonical display overlays.
+3. **Present**: `SuggestionHandler` preserves paired collisions and confidence-sensitive possessive ordering; there is no unconditional +1000 swipe contraction boost. See `contraction-system.md` before modifying these rules.
 4. **Per-language**: `loadLanguageContractions(langCode)` adds language-specific mappings (fr, it, etc.)
 
 ### Contraction Files Explained

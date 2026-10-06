@@ -33,7 +33,7 @@ Quick reference for AI assistants and developers working in this codebase.
 ./build-on-termux.sh
 
 # Test compilation only
-./gradlew compileDebugKotlin
+./scripts/gradle-guard.sh compileDebugKotlin
 
 # Debug logs
 adb logcat -s "CleverKeys" "System.err" "AndroidRuntime"
@@ -70,7 +70,7 @@ adb logcat -s "CleverKeys" "System.err" "AndroidRuntime"
 | Purpose | File | Notes |
 |---------|------|-------|
 | **All settings** | `Config.kt` | Defaults + field definitions |
-| **Settings UI** | `SettingsActivity.kt` | 5000+ lines, searchable settings |
+| **Settings UI** | `activities/SettingsActivity.kt` + `ui/settings/` | Compose shell, preference state/persistence and searchable section controls |
 | **Swipe prediction** | `SwipePredictorOrchestrator.kt` | Swipe coordinator |
 | **Word prediction** | `WordPredictor.kt` | Touch typing predictions |
 | **Gesture handling** | `Pointers.kt` | Short swipe, trackpoint, selection-delete |
@@ -101,8 +101,8 @@ adb logcat -s "CleverKeys" "System.err" "AndroidRuntime"
 ### Version
 ```groovy
 // Top of build.gradle; derived versionName/versionCode are not edited directly.
-ext.VERSION_MAJOR = 1
-ext.VERSION_MINOR = 6
+ext.VERSION_MAJOR = 2
+ext.VERSION_MINOR = 0
 ext.VERSION_PATCH = 0
 ```
 
@@ -156,7 +156,7 @@ SearchableSetting(
 ## Release Workflow
 
 ### Pre-Release Checklist
-1. All tests pass: `./gradlew compileDebugKotlin`
+1. All tests pass: `./scripts/gradle-guard.sh compileDebugKotlin`
 2. Device tested: `./build-on-termux.sh` + manual testing
 3. User confirms: "ready to release" or "push release"
 
@@ -200,4 +200,4 @@ When all current tasks are complete:
 1. Check GitHub issues: `gh issue list -R tribixbite/CleverKeys`
 2. Review outstanding code TODOs in `memory/todo.md`
 3. Check F-Droid pipeline status if recent release
-4. Run `./gradlew lint` for code quality issues
+4. Run `./scripts/gradle-guard.sh lintDebug` for code quality issues

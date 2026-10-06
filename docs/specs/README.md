@@ -61,6 +61,7 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 | [Quick Settings Tile](./quick-settings-tile.md) | Android notification shade tile |
 | [Clipboard System](./clipboard-system.md) | 3-tab clipboard (history/pinned/todos), schema V4, media, tags, todos |
 | [Clipboard Privacy](./clipboard-privacy.md) | Password manager exclusion + media privacy gating |
+| [Keyboard Minimize](./keyboard-minimize.md) | Assignable bar and floating-button minimize commands, lifecycle and touch geometry |
 | [Timestamp Keys](./timestamp-keys.md) | Date/time insertion keys |
 | [Termux Integration](./termux_integration.md) | Terminal keyboard optimizations |
 
@@ -69,7 +70,7 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 | Spec | Description |
 |------|-------------|
 | [Architectural Decisions](./architectural-decisions.md) | ADRs for major design choices (10 decisions) |
-| [Testing Strategy](./testing-strategy.md) | Test architecture, 2050+ tests, ew-cli integration |
+| [Testing Strategy](./testing-strategy.md) | Executed JVM/MockK/native evidence, expanded gap coverage and pinned ew-cli workflow |
 | [Performance Optimization](./performance-optimization.md) | Rendering, memory, ONNX performance |
 | [SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md) | Template for new specifications |
 

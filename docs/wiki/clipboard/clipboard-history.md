@@ -191,6 +191,24 @@ The clipboard pane organizes items into three tabs:
 
 Pin, todo, and tag buttons appear when an entry is expanded (tap the entry or its chevron). Delete lives behind the ✏️ edit button for text entries and behind expansion for media entries (see [Delete Item](#delete-item)).
 
+## Filter by Clipping Size and Delete a Batch
+
+Open the filter controls and choose minimum and maximum clipping sizes. Size filtering
+combines with the current search and other filters in the active History, Pinned, or
+Todos tab. An inverted range cannot be applied. Cancel leaves the previous range
+unchanged; clearing all filters also clears the size range.
+
+Use **Delete results** to remove the entire matching batch, including results on other
+pages. The confirmation shows the batch before anything is deleted. Cancel preserves
+it. Confirmation applies to the captured row versions: a clipping added afterwards or
+edited while the confirmation is open is preserved. Copies in other tabs remain there.
+Stored media is removed only when no tab references it.
+
+Size describes clipping payload bytes, rather than guaranteed disk space recovered.
+SQLite allocation and shared media can make the recovered space smaller. To clear
+Android’s current clipboard while keeping saved clippings, assign the separate
+**Clear system clipboard** command.
+
 ## Pagination
 
 For large clipboard histories (>100 items), pagination improves performance:

@@ -11,7 +11,7 @@ Use this skill when adding, modifying, or removing settings/preferences in the C
 | File | Purpose |
 |------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | All defaults, preference reading, setter methods |
-| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | Compose settings shell — state, SAF launchers, `setContent { SettingsScreen() }` (845 lines; the screen body lives in `ui/settings/` + `ui/settings/sections/`) |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | Compose settings shell — state, SAF launchers, `setContent { SettingsScreen() }` (the screen body lives in `ui/settings/` + `ui/settings/sections/`) |
 | `src/main/kotlin/tribixbite/cleverkeys/ConfigurationManager.kt` | Manages Config instance, notifies listeners |
 
 ### Config.kt Structure (3 sections to modify)
@@ -41,50 +41,16 @@ class Config {                       // Line ~337
 }
 ```
 
-### SettingsActivity.kt Structure (4 sections to modify)
+### Current settings integration
 
-```kotlin
-class SettingsActivity : ComponentActivity() {
+`SettingsActivity` owns state and launchers. `ui/settings/SettingsPersistence.kt`
+initializes preference-backed state, handles preference changes, and persists updates. `SettingsScreen.kt` composes extension sections under `ui/settings/sections/`.
+Add a control to the matching section and follow an adjacent setting through all these
+files rather than relying on historical line numbers.
 
-    // 1. STATE VARIABLES (~line 163-356)
-    private var newFeatureEnabled by mutableStateOf(false)
-    private var newSectionExpanded by mutableStateOf(false)
-
-    // 2. COLLAPSE ALL (~line 399-411)
-    private fun collapseAllSections() {
-        newSectionExpanded = false  // Add here
-    }
-
-    // 3. SEARCHABLE SETTINGS (~line 525-570)
-    SearchableSetting("New Feature", listOf("keyword1"), "SectionName",
-        expandSection = { newSectionExpanded = true }, settingId = "new_feature")
-
-    // 4. PREFERENCE CHANGE LISTENER (~line 755-770)
-    "new_feature_enabled" -> {
-        newFeatureEnabled = prefs.getBoolean(key, Defaults.NEW_FEATURE)
-    }
-
-    // 5. UI SECTION (find insertion point among CollapsibleSettingsSection blocks)
-    CollapsibleSettingsSection(
-        title = "🎬 Section Title",
-        expanded = newSectionExpanded,
-        onExpandChange = { newSectionExpanded = it }
-    ) {
-        SettingsSwitch(
-            title = "Feature Name",
-            description = "What this does",
-            checked = newFeatureEnabled,
-            onCheckedChange = {
-                newFeatureEnabled = it
-                saveSetting("new_feature_enabled", it)
-            }
-        )
-    }
-
-    // 6. INIT FROM PREFS (~line 4600+)
-    newFeatureEnabled = prefs.getSafeBoolean("new_feature_enabled", Defaults.NEW_FEATURE)
-}
-```
+For a gesture-critical field, update immutable `prefs/ConfigSnapshot.kt` and snapshot
+fixtures as well as `Config.Defaults`, the live Config field, and `refresh()`. Capture
+preferences at pointer-down so a setting change does not alter an active gesture.
 
 ## Available Compose Components
 
@@ -105,7 +71,7 @@ safeGetBoolean(prefs, key, default)  // Parses string/int as boolean
 safeGetString(prefs, key, default)   // Converts any type to string
 ```
 
-## `saveSetting()` (SettingsActivity.kt line ~4767)
+## `saveSetting()` (ui/settings/SettingsPersistence.kt)
 
 Accepts `Any` — dispatches to `putBoolean/putInt/putFloat/putString/putLong` based on type.
 
@@ -134,11 +100,13 @@ if (featureEnabled) {
    as activity navigation or FAQ links.) See "Search Coverage" below.
 8. [ ] Add preference change handler (~line 755)
 9. [ ] Add UI in `SettingsScreen()` composable
-10. [ ] Init from prefs in `initSettingsFromPrefs()` (~line 4600)
+10. [ ] Init preference-backed state in SettingsPersistence.kt
+11. [ ] Update ConfigSnapshot and its fixtures when gesture-critical
+12. [ ] Classify backup validation/defaults and add all supported locale resources
 
 ## Existing Sections (in order)
 
-Activities, Multi-Language, Privacy, Neural, Appearance, Swipe Trail,
+Activities, Multi-Language, Privacy, Swipe Typing, Appearance, Swipe Trail,
 Input, Swipe Corrections, Gesture Tuning, Accessibility, **Clipboard**,
 Backup & Restore, Advanced, Info, Help & FAQ
 
@@ -165,7 +133,7 @@ never drift out of sync with the UI (it used to be a hand-maintained parallel li
 how the URL toggles and a whole Auto-Correction section silently fell out of search).
 
 - `scripts/generate_settings_search_index.py` (run by the `generateSettingsSearchIndex`
-  Gradle task, wired into `preBuild`) scans `SettingsActivity.kt` for every `SettingsSwitch`
+  Gradle task, wired into `preBuild`) scans the settings shell and section sources for every `SettingsSwitch`
   / `SettingsSlider` / `SettingsDropdown`, takes the control's **full title** (resolving
   `stringResource(...)` via `res/values/strings.xml`), derives keywords from the title words
   + a small synonym map, infers the enclosing collapsible section, and emits

@@ -1,7 +1,7 @@
 ---
 title: Per-Key Actions — Technical Specification
-description: Full short-swipe customization system covering all 8 directions per key with TEXT/COMMAND/KEY_EVENT/INTENT action types and 200+ command registry
-user_guide: ../../customization/per-key-actions.md
+description: Full short-swipe customization system covering all 8 directions per key with TEXT/COMMAND/KEY_EVENT/INTENT/TIMESTAMP action types and 200+ command registry
+user_guide: /wiki/customization/per-key-actions/
 status: implemented
 version: v1.4.0
 ---
@@ -86,15 +86,10 @@ enum class SwipeDirection {
 
 ### ActionType
 
-```kotlin
-enum class ActionType(val displayName: String, val description: String) {
-    TEXT("Text Input", "Insert text directly"),
-    COMMAND("Command", "Execute keyboard command (copy, paste, cursor, etc.)"),
-    KEY_EVENT("Key Event", "Send raw key event (advanced)"),
-    INTENT("Send Intent", "Send Android Intent (advanced)"),
-    TIMESTAMP("Timestamp", "Insert formatted date/time using SimpleDateFormat pattern")
-}
-```
+`ActionType` persists the stable enum names `TEXT`, `COMMAND`, `KEY_EVENT`,
+`INTENT`, and `TIMESTAMP`. Its user-visible labels and descriptions are string
+resources (`displayNameRes` and `descriptionRes`), resolved at the UI boundary.
+Literal TEXT does not interpret a timestamp pattern or a dynamic template.
 
 ### ShortSwipeMapping
 
@@ -139,17 +134,17 @@ File: `short_swipe_customizations.json`
 
 ## Available Commands
 
-CommandRegistry contains 200+ commands in 18 categories:
+CommandRegistry contains 200+ commands in 21 categories:
 
 ### Core Categories
 
 | Category | Example Commands |
 |----------|------------------|
-| `CLIPBOARD` | copy, paste, cut, paste_plain, paste_pinned_1..5 |
-| `EDITING` | undo, redo, select_all |
+| `CLIPBOARD` | copy, copy_private, clear_clipboard, paste, cut, pasteAsPlainText |
+| `EDITING` | undo, redo, clear |
 | `CURSOR` | cursor_left, cursor_right, home, end |
 | `NAVIGATION` | page_up, page_down, doc_home, doc_end |
-| `SELECTION` | select_all, selection_mode |
+| `SELECTION` | selection_cursor_left, selection_cursor_right, selection_cancel |
 | `DELETE` | delete_word, forward_delete_word |
 | `MODIFIERS` | shift, ctrl, alt, meta, fn |
 | `FUNCTION_KEYS` | f1-f12 |
@@ -568,3 +563,17 @@ The customization UI uses distinct colors for each direction:
 - Custom mapping lookup: < 1ms (HashMap)
 - UI response time: < 16ms (60fps)
 - JSON storage load: < 100ms
+
+## October 6 routing regressions
+
+A custom single ASCII or curly apostrophe uses ordinary key punctuation routing.
+With readable selection data, it can reclaim an owned automatic space only at a
+collapsed selection with a matching cursor stamp. Reported ranges and manual spaces
+are preserved; editors without selection data retain the existing text/ownership fallback.
+Multi-character TEXT actions remain literal. `SmartAutoSpaceTest` and
+`Keyboard2ViewCustomSwipeDispatchTest` protect these boundaries.
+
+`PointersGestureRoutingTest` loads an actual persisted custom mapping on a cold start
+with swipe typing disabled, protecting GH #145 without requiring a model load.
+Full validation is recorded in [testing strategy](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/testing-strategy.md).
+Explicit suffix transactions and dynamic templates remain planned.

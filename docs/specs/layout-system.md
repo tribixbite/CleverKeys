@@ -259,3 +259,10 @@ Settings → Swipe Typing reports these layout-axis fallbacks separately from la
 fallbacks and names corner-only or missing letters. `SwipeEngineFallback.factsFor` and
 `CtcEngineAdapter.supportsLayout` share this primary-value definition; authoring tools and
 tests must recognize both live XML schemas.
+
+### Native compact-height regression (October 6)
+
+`Keyboard2ViewCustomMappingRenderTest` also parses real XML and computes native theme
+geometry for a compact bottom-row-free layout versus explicit numeric opt-in, with
+scaling enabled and disabled. This protects GH #90 beyond the mock geometry suite.
+See [testing strategy](testing-strategy.md) for the full cloud verdict.

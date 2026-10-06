@@ -28,6 +28,58 @@ class EmojiSearchTest {
         runBlocking { EmojiKeywordIndex.awaitReady() }
     }
 
+    @Test
+    fun categoryAndSearchGridsExposeOnlyDeviceRenderableEmoji() {
+        TestConfigHelper.ensureConfigInitialized(context)
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        instrumentation.runOnMainSync {
+            val themed = android.view.ContextThemeWrapper(context, R.style.Dark)
+            val grid = EmojiGridView(themed, null)
+            val cellContext = android.view.ContextThemeWrapper(themed, R.style.emojiGridButton)
+            val paint = EmojiGridView.EmojiView(cellContext).paint
+            var checked = 0
+            for (group in 0 until Emoji.getNumGroups() - 1) {
+                grid.setEmojiGroup(group)
+                for (i in 0 until grid.adapter.count) {
+                    val text = (grid.adapter.getItem(i) as Emoji).kv().getString()
+                    assertTrue("Category exposes missing glyph: $text", paint.hasGlyph(text))
+                    checked++
+                }
+            }
+            assertTrue("Must exercise real font-backed entries", checked > 100)
+            val count = grid.searchEmojis("face")
+            assertTrue(count > 0)
+            assertEquals(count, grid.adapter.count)
+            val textFaces = Emoji.getEmojisByGroup(Emoji.getNumGroups() - 1).toSet()
+            for (i in 0 until count) {
+                val emoji = grid.adapter.getItem(i) as Emoji
+                val text = emoji.kv().getString()
+                if (emoji in textFaces) {
+                    // Text faces are separate characters, not a single emoji ligature.
+                    text.codePoints().toArray().filterNot { Character.isWhitespace(it) ||
+                        Character.getType(it) == Character.FORMAT.toInt() ||
+                        Character.getType(it) == Character.CONTROL.toInt() ||
+                        it in 0xFE00..0xFE0F || it in 0xE0100..0xE01EF }.forEach {
+                        assertTrue("Text face exposes missing glyph: $text", paint.hasGlyph(String(Character.toChars(it))))
+                    }
+                } else {
+                    assertTrue("Search exposes missing glyph: $text", paint.hasGlyph(text))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun textEmoticonGroupRetainsAsciiFacesDespiteWholeStringGlyphProbe() {
+        TestConfigHelper.ensureConfigInitialized(context)
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val grid = EmojiGridView(android.view.ContextThemeWrapper(context, R.style.Dark), null)
+            grid.setEmojiGroup(Emoji.getNumGroups() - 1)
+            val texts = (0 until grid.adapter.count).map { (grid.adapter.getItem(it) as Emoji).kv().getString() }
+            assertTrue("ASCII text faces must remain visible", texts.any { it == ":)" || it == ":D" || it == ";)" })
+        }
+    }
+
     // =========================================================================
     // Basic search functionality tests
     // =========================================================================

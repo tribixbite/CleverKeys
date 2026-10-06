@@ -157,12 +157,13 @@ class CtcImportedPackInstrumentedTest {
     private fun importFixturePack(
         words: List<String> = List(1_200) { azWord(it) },
         contractions: String? = null,
+        advertisedCount: Int = words.size,
     ): ImportResult {
         val zip = File(context.cacheDir, "langpack-$code.zip")
         ZipOutputStream(FileOutputStream(zip)).use { out ->
             out.putNextEntry(ZipEntry("manifest.json"))
             out.write(
-                """{"code":"$code","name":"Fixture","version":1,"wordCount":${words.size}}"""
+                """{"code":"$code","name":"Fixture","version":1,"wordCount":$advertisedCount}"""
                     .toByteArray(Charsets.UTF_8)
             )
             out.closeEntry()
@@ -462,6 +463,18 @@ class CtcImportedPackInstrumentedTest {
             after.verdict
         )
         assertFalse(CtcEngineAdapter.supportsLanguage(code))
+    }
+
+    @Test
+    fun oversizedUpdateWithMisleadingManifestPreservesInstalledDictionary() {
+        assertTrue(importFixturePack() is ImportResult.Success)
+        val dictionary = File(context.filesDir, "langpacks/$code/dictionary.bin")
+        val original = dictionary.readBytes()
+        val result = importFixturePack(List(100_001) { azWord(it) }, advertisedCount = 1_200)
+        assertTrue("Oversized CKDT header must be rejected independently of manifest: $result", result is ImportResult.Error)
+        org.junit.Assert.assertArrayEquals(original, dictionary.readBytes())
+        assertTrue(CtcInstalledPacks.evaluateNow(context, code)!!.eligible)
+        assertTrue(CtcEngineAdapter.supportsLanguage(code))
     }
 
     // ── ARC-064: imported-pack dispatch and trie edges ────────────────────────────────

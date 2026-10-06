@@ -1,6 +1,7 @@
 ---
 title: Clipboard History - Technical Specification
-user_guide: ../../clipboard/clipboard-history.md
+description: Persistent clipboard tabs, bounded filters, and confirmed result deletion
+user_guide: /wiki/clipboard/clipboard-history/
 status: implemented
 version: v1.4.0
 schema_version: v4
@@ -25,6 +26,25 @@ The clipboard history system maintains a persistent store of copied content — 
 | PinnedEntry | `PinnedEntry.kt` | Data model for pinned items (COPY semantics) |
 | TodoEntry | `TodoEntry.kt` | Data model for todo items (COPY semantics) |
 | Config | `Config.kt` | Clipboard preferences and toggles |
+
+## Size Filtering and Confirmed Batch Deletion
+
+The active tab’s query combines text, date/tag/type filters, and minimum/maximum
+payload bytes before pagination. Size bounds remain active when switching tabs;
+clearing all filters resets them. The native dialog disables Apply for an inverted
+range and preserves previous bounds on Cancel.
+
+Delete results captures all matching row versions across every page. A separate
+confirmation is required before deletion. New or changed rows are preserved, copies
+in other tabs remain intact, and media cleanup respects references from every tab.
+Reported payload bytes are not a disk-reclamation estimate. The `clear_clipboard`
+command clears only Android’s system clipboard; it does not invoke database deletion.
+
+`ClipboardFilterDialogTest` covers the actual size dialog and a 205-result batch,
+including Cancel, new/edit races, and pinned/todo copy preservation.
+[Internal architecture and validation](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/clipboard-system.md) documents
+the database predicates and snapshot transaction. Full-run results are recorded in
+[testing strategy](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/testing-strategy.md).
 
 ## Data Models
 

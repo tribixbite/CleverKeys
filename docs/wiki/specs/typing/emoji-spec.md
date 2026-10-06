@@ -1,163 +1,71 @@
 ---
 title: Emoji - Technical Specification
-user_guide: ../../typing/emoji.md
+description: Native emoji search, font support filtering, and usage history
+user_guide: /wiki/typing/emoji/
 status: implemented
-version: v1.2.10
+version: v2.0.0 development
 ---
 
 # Emoji Technical Specification
 
-## Overview
+The emoji panel uses native views and the emoji data bundled in `res/raw/emojis.txt`.
+Search and category browsing share the same font-support filter, so entries the actual
+button font cannot draw are hidden rather than shown as empty boxes.
 
-Emoji keyboard implementation with suggestion bar-based search, category navigation, and recent history.
+## Components
 
-## Key Components
+| Component | Responsibility |
+|-----------|----------------|
+| `Emoji` | Resource groups, names, and search results |
+| `EmojiKeywordIndex` | Indexed keyword lookup |
+| `EmojiGridView` | Adapter, glyph filtering, insertion, and usage counts |
+| `EmojiSearchManager` | Visible search field and keyboard routing while searching |
+| `EmojiGroupButtonsBar` | Usage-history button and resource category buttons |
+| `EmojiTooltipManager` | Long-press name tooltip |
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| EmojiSearchManager | `EmojiSearchManager.kt` | Search state and query routing |
-| EmojiGridView | `EmojiGridView.kt` | Emoji grid rendering |
-| Emoji | `Emoji.kt` | Emoji data with 500+ searchable names |
-| EmojiGroupButtonsBar | `EmojiGroupButtonsBar.kt` | Category navigation |
-| SuggestionBar | `SuggestionBar.kt` | Search status display |
-| KeyValue | `KeyValue.kt` | Emoji as KeyValue.Char |
-| SharedPreferences | - | Recent emoji storage |
+These are the production classes under `src/main/kotlin/tribixbite/cleverkeys/`.
+There is no separate `EmojiCategory` enum or EmojiCompat dependency.
 
-## Emoji Search
+## Search and insertion
 
-### Architecture
+`Emoji.searchByName` trims and lowercases the query, requests up to 60 indexed
+matches, and supplements sparse results with legacy name matching. Results are
+deduplicated and capped at 100 before the grid applies font filtering. The displayed
+count therefore reflects renderable results, rather than every keyword match.
 
-```
-User types → KeyEventHandler → KeyboardReceiver → EmojiSearchManager
-                                                        ↓
-SuggestionBar ← showEmojiSearchStatus() ← updateSearchDisplay()
-                                                        ↓
-EmojiGridView ← searchEmojis() ← Emoji.searchByName()
-```
+The panel has a visible search field with clear and close controls. Keyboard text
+and deletion are routed to the active emoji search instead of the app editor.
+Selecting a result temporarily leaves that routing mode to send its string through
+`Config.handler.key_up`, then restores the panel's routing and saves usage.
 
-### Search Manager
+## Font support
 
-```kotlin
-// EmojiSearchManager.kt
-class EmojiSearchManager(
-    private val suggestionBarProvider: () -> SuggestionBar?,
-    private val emojiGridProvider: () -> EmojiGridView?
-) {
-    fun enterSearchMode(initialQuery: String? = null)
-    fun exitSearchMode()
-    fun appendToSearch(text: String)
-    fun deleteFromSearch()
-    fun extractWordBeforeCursor(textBeforeCursor: CharSequence?): String?
-}
-```
+The support check uses the `Paint` of a real `EmojiView` themed with
+`R.style.emojiGridButton`. Ordinary emoji sequences require `Paint.hasGlyph` for the
+whole sequence. The final resource group contains text emoticons: its visible
+characters are checked individually, ignoring whitespace, format/control characters,
+and variation selectors. Treating `:)` as one emoji ligature would incorrectly hide it.
+Results are cached within the grid instance. Device font and Android version can
+change which entries are visible; this is not a downloadable font installation.
 
-### Name Mapping
+## Categories and usage history
 
-```kotlin
-// Emoji.kt initNameMap()
-// 500+ emoji name mappings organized by category:
-// - Faces: smile, happy, sad, angry, cry, love, etc.
-// - Gestures: thumbs, wave, clap, pray, etc.
-// - Animals: dog, cat, bird, fish, etc.
-// - Food: pizza, burger, apple, etc.
-// Supports partial matching with lowercase normalization
-```
+The first category button opens usage history. Other buttons come from the resource
+groups and use a representative entry as their icon. History is ordered by descending
+use count, rather than strictly by last-use time.
 
-## Emoji Categories
+Preferences file `emoji_last_use` contains a string set under the same key, with
+`count-string` entries. Saving is debounced by 500 ms. There is no JSON recent-list
+format or fixed 50-entry history cap. Long-press displays the entry's name in a tooltip
+that dismisses after two seconds and is hidden when scrolling. A global skin-tone
+picker is not implemented.
 
-```kotlin
-// EmojiCategory.kt
-enum class EmojiCategory(val icon: Int, val label: String) {
-    RECENT(R.drawable.ic_recent, "Recent"),
-    SMILEYS(R.drawable.ic_smiley, "Smileys"),
-    PEOPLE(R.drawable.ic_people, "People"),
-    ANIMALS(R.drawable.ic_animals, "Animals"),
-    FOOD(R.drawable.ic_food, "Food"),
-    ACTIVITIES(R.drawable.ic_activities, "Activities"),
-    TRAVEL(R.drawable.ic_travel, "Travel"),
-    OBJECTS(R.drawable.ic_objects, "Objects"),
-    SYMBOLS(R.drawable.ic_symbols, "Symbols"),
-    FLAGS(R.drawable.ic_flags, "Flags")
-}
-```
+## Verification
 
-## Recent Emoji Storage
+`EmojiSearchTest` exercises real resource search and the native themed grid, including
+supported category/search results and preservation of text faces. Pure
+`EmojiGlyphSupport` tests protect the sequence/visible-character rules. Test totals
+and the current full cloud verdict live in the internal
+[testing strategy](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/testing-strategy.md).
 
-```kotlin
-// Storage format in SharedPreferences
-// Key: "recent_emoji"
-// Value: JSON array of recent emoji codepoints
-// ["😀", "🎉", "❤️", "👍", ...]
-// Max size: 50 entries (configurable)
-```
-
-## Emoji Insertion
-
-```kotlin
-// EmojiGridView.kt:~120
-fun onEmojiSelected(emoji: String) {
-    // Add to recent
-    addToRecent(emoji)
-
-    // Send to input connection
-    val ic = inputConnection ?: return
-    ic.commitText(emoji, 1)
-
-    // Trigger haptic
-    triggerHaptic(HapticEvent.KEY_PRESS)
-}
-```
-
-## Skin Tone Variants
-
-Emoji with skin tone support use Unicode modifiers:
-
-| Modifier | Unicode | Skin Tone |
-|----------|---------|-----------|
-| 🏻 | U+1F3FB | Light |
-| 🏼 | U+1F3FC | Medium-Light |
-| 🏽 | U+1F3FD | Medium |
-| 🏾 | U+1F3FE | Medium-Dark |
-| 🏿 | U+1F3FF | Dark |
-
-```kotlin
-// Stored preference per base emoji
-// Key: "emoji_skin_tone_{codepoint}"
-// Value: modifier codepoint or null
-```
-
-## Layout Integration
-
-Emoji key defined in layout XML:
-
-```xml
-<!-- bottom_row.xml -->
-<key key0="loc emoji" ... />
-```
-
-KeyValue type: `KeyValue.Event(Event.SWITCH_EMOJI)`
-
-## Configuration
-
-| Setting | Key | Default |
-|---------|-----|---------|
-| **Recent Count** | `emoji_recent_count` | 50 |
-| **Show Skin Variants** | `emoji_skin_variants` | true |
-| **Default Category** | `emoji_default_category` | RECENT |
-
-## EmojiCompat Integration
-
-Uses AndroidX EmojiCompat for consistent rendering:
-
-```kotlin
-// Application.kt
-EmojiCompat.init(
-    BundledEmojiCompatConfig(this)
-        .setReplaceAll(false)
-)
-```
-
-## Related Specifications
-
-- [Special Characters Specification](special-characters-spec.md)
-- [Layout System](../../../specs/layout-system.md)
+[User guide](../../typing/emoji.md)

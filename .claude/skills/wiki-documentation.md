@@ -56,6 +56,11 @@ Frontmatter is not processed by this plugin: `SpecsLayout.astro` renders `user_g
 directly as `href`. Use a public `/wiki/<category>/<page>/` route there, and retain
 relative Markdown links in the body for repository navigation (verified 2026-10-06).
 
+Links to internal `docs/specs/` notes are not public Astro routes. Use their GitHub
+source URL in rendered wiki pages; the current remark fallback strips `.md` and
+otherwise produces a broken relative URL. Verify final HTML hrefs, not only Markdown
+paths or a successful site build (confirmed 2026-10-06).
+
 ## Directory Structure
 
 ```

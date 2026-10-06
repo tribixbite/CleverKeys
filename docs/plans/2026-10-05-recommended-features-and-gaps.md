@@ -26,20 +26,39 @@ and personal device testing before 2.0; tagging/publishing is not authorized.
 | Clipboard follow-up | Size filtering + confirmed all-page Delete results and #168 system-clear command implemented locally. Assigned-command disposable-clip device check remains. |
 | Extra Keys follow-up | Autofill visibility, landscape scrolling and rotation-preserved search implemented and device-tested. |
 
+October 6 expanded validation is complete: 14 added native regressions cover the
+new terminal setting, minimize/compact geometry, emoji filtering, oversized updates,
+apostrophe selection safety, size-dialog/confirmed batch races, and custom gesture cold
+start. Local suites pass 2,741 pure + 953 mock. A native fail-first selected-range
+apostrophe regression exposed and fixed removal of the space before a selected range.
+The final unfiltered three-shard run `3f0c33a3-c71b-49ff-a87b-da044859eb54` passes
+all 1,491 distinct tests, with zero failures/errors/skips/flakes. The earlier 1,488/1,491
+run exposed a stale settings assertion and missing benchmark assets; both were corrected
+and all tests rerun. Lint passes with 0 errors/216 warnings; minified ARM64 release
+build and artifact checks pass. Seeker is currently absent from ADB, so that artifact
+has not been installed. The [testing strategy](../specs/testing-strategy.md) records
+APK hashes and run evidence. Guides, paired specs and relevant skills now match actual
+behavior; 84-page docs build, 428 rendered links and 8 guide routes pass. Final
+language-pack swap recovery remains a separate gap.
+
+The next authorized features are continuous multiword swipe, explicit apostrophe
+suffix commands, and dynamic templates. Accepted-commit bookkeeping is a prerequisite
+for safe segment and suffix ownership. No release publication is authorized.
+
 Full evidence and pending device checks: [`memory/todo.md`](../../memory/todo.md).
 
 ## 1. Executive Summary
 
-CleverKeys occupies a unique and commanding position in the open-source Android ecosystem:
-- **Trained Neural CTC Model (2.91 MB ONNX)** with an independently measured **89.31% Top-1 accuracy** on real human swipe data (beating FUTO).
-- **100% Kernel-Enforced Air-Gap**: Literal zero network permissions (`android.permission.INTERNET` is absent).
-- **Canvas-Driven Performance**: Sub-millisecond draw calls, instant cold start, zero Compose runtime overhead, and full Termux buildability.
-- **Terminal-First Ergonomics**: Reliable gesture typing, selection-delete, and cursor navigation within Termux.
+CleverKeys uses local CTC and geometric swipe decoding and does not request the
+Android INTERNET permission. The CTC evaluation reported 89.31% top-1 on its dated
+test-2400 corpus; this does not establish current accuracy for every user or language.
+The keyboard is drawn on Canvas; settings use Compose.
 
-To extend this lead without falling into the bloat, maintenance traps, or permission sprawl seen in other keyboards (such as WM Keyboard's 34k-line service files or network dependencies), development should focus on **three high-leverage areas**:
-1. **Doubling down on terminal and hacker productivity** (expanding terminal whitelists, dynamic macros, at-rest database encryption).
-2. **Adopting zero-bloat gesture innovations** (glide apostrophe waypoints, possessive flick, continuous multi-word swipe).
-3. **Broadening multilingual reach via lightweight phonetic transliteration** (Avro/Indic transliteration engine).
+This queue proposes terminal productivity, explicit gesture intent, and additional
+language support. Implementation must preserve offline operation, bounded resources,
+existing customization, and dependable everyday typing. Each feature needs its own
+editor/routing tests and device checks before a release claim. Priority and scope are
+controlled by the current execution table above.
 
 ---
 
@@ -97,7 +116,25 @@ To extend this lead without falling into the bloat, maintenance traps, or permis
   2. `{cursor}` — Reposition caret inside brackets or quotes after commit (e.g. `console.log({cursor});` commits text and positions caret inside the parens).
   3. `{uuid}` — Generate a random UUIDv4 string on the fly.
   4. `{selection}` — Wrap active selection.
-* **Effort**: Low (1–2 days). Complements existing timestamp macros to make CleverKeys a complete text expansion tool.
+**Authorized implementation scope:** introduce an explicit template action type while
+keeping existing TEXT actions literal. Expand only the four recognized tokens, once,
+without interpreting tokens embedded in clipboard or selection content. Resolve UUID
+once per invocation, support literal brace escaping, reject duplicate cursor markers,
+and bound both template and expanded UTF-16 lengths without truncation.
+
+Read only plain clipboard text; do not coerce media/URI content or perform network
+reads. Missing/restricted/oversized token inputs must fail before editing. Selection
+and cursor templates require verified editor/session/selection readback. Android caret
+offsets use UTF-16; do not count Unicode code points for `setSelection`. A batch edit
+is not atomic, and partial/unknown writes must never be blindly retried. Prevent
+execution into the hidden app while an inline clipboard/emoji/GIF editor is active.
+
+Integrate the explicit type with both assignment editors, stored mappings, backups,
+XML export/import and ordinary key execution. Token help in settings must not expose
+the current clipboard/selection. Tests must cover literal TEXT compatibility, escaping,
+nonrecursive token content, bounds, supplementary characters, routing, editor failures,
+persistence, and actual native caret/selection behavior. This is a multi-file feature,
+not merely string substitution in the timestamp executor.
 
 ---
 
@@ -108,14 +145,14 @@ To extend this lead without falling into the bloat, maintenance traps, or permis
   1. Integrate SQLCipher or envelope encryption using Android Keystore (`AES/GCM/NoPadding`, 256-bit key master).
   2. Store encrypted blobs in standard SQLite or open a SQLCipher database connection.
   3. Gate clipboard access with optional biometric unlock (fingerprint / device PIN) when opening the clipboard panel.
-* **Why it matters**: CleverKeys already has zero network permissions. Adding at-rest encryption creates an **uncompromised hardware-backed privacy vault** unmatched by any keyboard on Android.
+* **Why it matters**: CleverKeys already has zero network permissions. At-rest encryption could reduce exposure of stored clipboard content; key lifecycle, recovery and backup behavior need a separate design and validation.
 * **Effort**: Medium (3–5 days).
 
 ---
 
 ## 3. Priority 2: Swipe Typing Ergonomics & Ambiguity Resolution
 
-While CleverKeys' ONNX CTC model achieves outstanding accuracy (89.31% Top-1), certain edge cases in English and Latin-script swipe typing cause friction. WM Keyboard implemented clever, zero-weight heuristic mechanics that CleverKeys can adopt directly:
+Reported English short-word and apostrophe ambiguities need measured changes. Proposed gesture mechanisms must be reconciled with the current model, hit-testing and editor lifecycle before implementation.
 
 ### 2.1 Explicit Apostrophe and Possessive Gestures
 
@@ -216,6 +253,14 @@ blindly retry or roll back unknown partial mutations. Failed suffix undo must co
 Backspace instead of falling into whole-word deletion. Roll learning back with a
 receipt of the gates that actually ran, not whichever gates are enabled at undo time.
 Do not record suffix entry as a swipe correction or relabel its original trace.
+The follow-up receipt audit found that passing a gate does not prove a write:
+ngram stores reject self references and vocabulary recording can reject disabled or
+short words after normalization. Exact receipts must originate inside actual store
+mutations, carry owner/version/consumption identity, and be validated together before
+replacement. Gate snapshots must be immutable because Config is mutable. Count
+rollback does not restore historical timestamps or evicted entries; do not describe
+it as full store-state reversal. Reset/import/privacy/language changes must expire
+handles, including an off→on or away→back cycle.
 Unreadable editors retain ordinary literal typing but cannot qualify for initial
 verified suffix attachment. No production suffix command or ownership fix was made
 in the terminal-settings round.
@@ -243,15 +288,30 @@ contraction selection are separate implementation rounds; the earlier combined
 ---
 
 ### 2.2 Continuous Multi-Word Swiping across Spacebar
-* **The Problem**: Lifting the finger between every single word introduces latency during rapid message composition.
-* **The Solution**:
-  1. Detect when a swipe trajectory crosses the horizontal midline of the spacebar key.
-  2. When crossing occurs:
-     - Finalize and commit the best candidate for the trajectory up to the spacebar.
-     - Emit an automatic space.
-     - Feed the newly committed word into the `BigramStore` / `ContextModel`.
-     - Reset the swipe trajectory buffer with the point exiting the spacebar as the origin for the subsequent word.
-* **Effort**: Medium (3–4 days). Enables uninterrupted flow typing.
+
+**Authorized next feature; currently unimplemented.** Add an opt-in setting, disabled
+by default, allowing a deliberate spacebar boundary between word segments without
+lifting the finger. Use the actual finite space-key geometry. A brief accidental
+crossing must not split a word; boundary dwell/hysteresis needs explicit tests and
+human device validation.
+
+Decode each bounded, immutable letter-path segment through the existing routed engine.
+The adapters currently cancel older requests, so segments need a serialized FIFO:
+commit segment N before decoding N+1 with its updated context. Remove the spacebar
+excursion from the decoder's letter path and begin the next segment at its first
+letter. Final lift flushes the last segment without an empty word or duplicate space.
+
+Capture setting, layout/language, field/session and edit generation at gesture start.
+Before every result, verify the same editor and expected collapsed selection/readback.
+Cancel pending segments on field/cursor/manual edits, a replacement gesture, multitouch
+or cancellation. A rejected commit aborts the queue; do not insert a guessed fallback.
+The phrase gesture must not create cross-segment learning or ML trace contamination.
+
+Required coverage: ordinary single-word behavior with the feature off, intentional and
+accidental boundaries, repeated/empty space visits, final lift, ordered delayed results,
+failed commit, and stale field/selection/manual-edit cancellation. Synthetic segmentation
+tests establish mechanics; fresh human device traces are still needed for accuracy and
+latency. The prior midline-crossing proposal did not address these routing conflicts.
 
 ---
 

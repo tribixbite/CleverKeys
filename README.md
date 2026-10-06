@@ -436,8 +436,8 @@ Download from the [langpacks release](https://github.com/tribixbite/CleverKeys/r
 
 ### Requirements
 - Android SDK Platform 34 (compileSdk 34; minSdk 24)
-- Gradle 8.6+
-- Kotlin 1.9.20
+- Gradle 8.10.2 (repository wrapper)
+- Kotlin 2.0.0
 - JDK 17
 
 ### Commands
@@ -447,13 +447,13 @@ git clone https://github.com/tribixbite/CleverKeys.git
 cd CleverKeys
 
 # Debug build
-./gradlew assembleDebug
+./scripts/gradle-guard.sh assembleDebug
 
 # Run tests
-./gradlew test
+./scripts/gradle-guard.sh runPureTests runMockTests
 
 # APK location
-# build/outputs/apk/debug/cleverkeys.apk
+# build/outputs/apk/debug/CleverKeys-v2.0.0-<abi>.apk
 ```
 
 ### Termux Users

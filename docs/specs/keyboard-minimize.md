@@ -62,3 +62,12 @@ TODO: RTL placement and cross-app pass-through checks. Final reconnection cleanu
 removed the temporary t/South FAB mapping, verified original two mappings, cleared
 scratch UI XML and restored original launcher/expanded Quick Settings. These results
 do not claim a complete cross-app release pass.
+
+### Native regression coverage (October 6)
+
+`Keyboard2ViewCustomMappingRenderTest` exercises the actual minimized view: FAB bounds
+in both LTR and RTL, rejection of outside touches, cancel without expansion, one
+expansion on a valid tap, and bar height including the navigation inset. Native RTL
+view coverage does not establish service-window RTL placement or cross-app touch
+pass-through; those device checks above remain owed. Full cloud results are in
+[testing strategy](testing-strategy.md).

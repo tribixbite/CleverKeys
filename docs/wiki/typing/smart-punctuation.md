@@ -92,6 +92,11 @@ Quotes have special handling:
 - **Straight double quote** (`"`): counted for balance — after an odd number of prior `"` it's closing (attaches), after an even number it's opening (keeps the space)
 - **Apostrophes** (`'`): mid-word apostrophes in contractions (don't, it's) are never touched — there is no space to remove. An apostrophe typed right after an auto-space is treated as a possessive or closing quote and attaches: swipe "kids" → type `'` → `kids'`
 
+A custom short swipe assigned exactly one ASCII or curly apostrophe follows the
+same smart-punctuation path as that ordinary key. Longer TEXT macros remain literal.
+When you select text after an automatic space, the apostrophe replaces that selection
+and preserves the space before it.
+
 ### Punctuation Chaining
 
 Sentence-ending punctuation (`.` `!` `?`) re-adds a space after attaching, and that space is itself marked automatic — so you can chain punctuation:

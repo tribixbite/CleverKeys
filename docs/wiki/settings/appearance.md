@@ -85,6 +85,9 @@ Control transparency levels:
 | **Numpad Layout** | Order of numpad keys (123 or 789 first) |
 | **Scale Numpad Height** | Stretch PIN and numpad rows to fill the full keyboard height (default: on) |
 
+Custom layouts without a bottom row keep their normal row height. A custom numeric
+layout can explicitly request scaling with XML `numpad_height="true"`.
+
 ## Tips and Tricks
 
 - **Large screens**: Increase height percentage

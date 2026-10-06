@@ -6,6 +6,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
@@ -151,6 +152,48 @@ class PointersGestureRoutingTest {
         }
         if (out.isEmpty() || out.last().first != toX) out.add(Pair(toX, y))
         return out
+    }
+
+    @After
+    fun closePointers() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { pointers.close() }
+    }
+
+    /** #145: startup must load a persisted mapping even when word swiping is off. */
+    @Test
+    fun persistedCustomMappingLoadsOnColdStartWithWordSwipingDisabled() {
+        val inst = InstrumentationRegistry.getInstrumentation()
+        val manager = ShortSwipeCustomizationManager.getInstance(context)
+        inst.runOnMainSync { pointers.close() }
+        runBlocking { manager.loadMappings() }
+        val original = manager.getMapping("b", SwipeDirection.E)
+        val singleton = ShortSwipeCustomizationManager::class.java.getDeclaredField("instance").apply {
+            isAccessible = true
+        }
+        try {
+            runBlocking { manager.setMapping(ShortSwipeMapping.textInput("b", SwipeDirection.E, "@", "@")) }
+            // Keep the persisted file, but replace only the in-memory singleton to emulate
+            // process startup. No explicit loadMappings() is allowed on this fresh instance.
+            singleton.set(null, null)
+            val fresh = ShortSwipeCustomizationManager.getInstance(context)
+            assertNull(fresh.getMapping("b", SwipeDirection.E))
+            config.edit { swipe_typing_enabled = false }
+            inst.runOnMainSync { pointers = Pointers(handler, config, context) }
+            val deadline = android.os.SystemClock.elapsedRealtime() + 5_000
+            while (fresh.getMapping("b", SwipeDirection.E) == null) {
+                assertTrue("Pointers startup did not load the saved mapping", android.os.SystemClock.elapsedRealtime() < deadline)
+                android.os.SystemClock.sleep(25)
+            }
+            drive(keyB, 180f, 80f, hMoves(180f, 310f, 80f))
+            assertEquals("saved flick must dispatch with word swiping disabled", 1, handler.customCount)
+            assertEquals("word decoder must remain inactive", 0, handler.swipeEndCount)
+        } finally {
+            inst.runOnMainSync { pointers.close() }
+            singleton.set(null, manager)
+            runBlocking {
+                if (original == null) manager.removeMapping("b", SwipeDirection.E) else manager.setMapping(original)
+            }
+        }
     }
 
     // =========================================================================

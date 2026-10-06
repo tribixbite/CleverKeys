@@ -79,15 +79,21 @@ class PredictionContextTracker {
          * KeyEventHandler (stamp validation at punctuation time).
          */
         fun currentCursorPosition(ic: InputConnection?): Int {
-            if (ic == null) return -1
+            return currentSelection(ic)?.first ?: -1
+        }
+
+        /** Absolute UTF-16 selection endpoints, or null when the editor cannot report them. */
+        fun currentSelection(ic: InputConnection?): Pair<Int, Int>? {
+            if (ic == null) return null
             return try {
                 val extracted = ic.getExtractedText(
                     android.view.inputmethod.ExtractedTextRequest(), 0
-                ) ?: return -1
-                if (extracted.selectionStart < 0) -1
-                else extracted.startOffset + extracted.selectionStart
+                ) ?: return null
+                if (extracted.selectionStart < 0 || extracted.selectionEnd < 0 || extracted.startOffset < 0) null
+                else (extracted.startOffset + extracted.selectionStart) to
+                    (extracted.startOffset + extracted.selectionEnd)
             } catch (e: Exception) {
-                -1
+                null
             }
         }
     }

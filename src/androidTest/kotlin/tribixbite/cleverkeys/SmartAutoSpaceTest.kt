@@ -15,7 +15,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -61,9 +60,10 @@ class SmartAutoSpaceTest {
             val ed = editable
             et.text = ed?.toString() ?: ""
             et.startOffset = 0
-            val sel = ed?.let { Selection.getSelectionEnd(it) } ?: 0
-            et.selectionStart = if (sel >= 0) sel else (ed?.length ?: 0)
-            et.selectionEnd = et.selectionStart
+            val start = ed?.let { Selection.getSelectionStart(it) } ?: 0
+            val end = ed?.let { Selection.getSelectionEnd(it) } ?: 0
+            et.selectionStart = if (start >= 0) start else (ed?.length ?: 0)
+            et.selectionEnd = if (end >= 0) end else (ed?.length ?: 0)
             return et
         }
     }
@@ -91,7 +91,7 @@ class SmartAutoSpaceTest {
     @Before
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
-        TestConfigHelper.ensureConfigInitialized(context)
+        assertTrue("Config must initialize", TestConfigHelper.ensureConfigInitialized(context))
         contextTracker = PredictionContextTracker()
 
         synchronized(SmartAutoSpaceTest::class.java) {
@@ -115,7 +115,7 @@ class SmartAutoSpaceTest {
                 }
             }
         }
-        assumeNotNull("WordPredictor required", sharedPredictor)
+        org.junit.Assert.assertNotNull("WordPredictor must initialize; OOM is a test failure", sharedPredictor)
 
         // Pin every pref this feature interacts with to a deterministic state.
         sharedConfig!!.word_prediction_enabled = true
@@ -200,6 +200,37 @@ class SmartAutoSpaceTest {
     }
 
     private fun editorText() = inputConnection.editableText()
+
+    @Test
+    fun curlyApostropheAttachesToOwnedSpaceAndFollowingSTypesNormally() {
+        swipe("Bowie")
+        press('’')
+        press('s')
+        assertEquals("Bowie’s", editorText())
+        assertFalse(contextTracker.lastSpaceWasAutoInserted)
+    }
+
+    @Test
+    fun curlyApostropheDoesNotConsumeAManualSpace() {
+        inputConnection.commitText("Bowie ", 1)
+        press('’')
+        assertEquals("Bowie ’", editorText())
+    }
+
+    @Test
+    fun apostropheReplacesSelectedTextWithoutReclaimingSpaceBeforeSelection() {
+        swipe("Bowie")
+        // Simulate an editor-side edit without cursor callbacks, then select the added
+        // text. Its start equals the old space stamp but its end is different.
+        inputConnection.commitText("abc", 1)
+        assertTrue(inputConnection.setSelection(6, 9))
+        val extracted = inputConnection.getExtractedText(ExtractedTextRequest(), 0)
+        assertEquals(6, extracted.selectionStart)
+        assertEquals(9, extracted.selectionEnd)
+        press('\'')
+        assertEquals("Bowie '", editorText())
+        assertFalse(contextTracker.lastSpaceWasAutoInserted)
+    }
 
     // ── Feature A: no leading auto-space after opening punctuation ──────────
 

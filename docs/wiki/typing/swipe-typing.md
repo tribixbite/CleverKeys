@@ -199,3 +199,16 @@ Swipe typing may not activate when:
 
 - [Short Swipes](../gestures/short-swipes.md) - Quick access to subkeys
 - [Autocorrect](autocorrect.md) - Fix mistakes automatically
+
+## Apostrophes and Short-Word Limits
+
+A single apostrophe assigned as custom text follows ordinary punctuation behavior:
+automatic swipe spacing can be reclaimed, while manually typed spaces and spaces
+before a selected text range are preserved. A multi-character text macro such as
+`'s` remains literal; explicit suffix commands are still planned.
+
+Some short words, including reported `ad` and `wet` traces, remain recognition gaps
+in default CTC. Changing engines for each word is not the intended solution. Fresh
+human traces and general model calibration are needed before shipping a correction;
+passing automated routing tests does not establish short-word recognition accuracy.
+Continuous multiword swipe is also planned; currently lift your finger between words.

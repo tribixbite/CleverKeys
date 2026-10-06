@@ -169,7 +169,7 @@ class SettingsSearchTest {
     // =========================================================================
 
     @Test
-    fun backspaceUndoSwipe_appearsInWordPredictionSection() {
+    fun backspaceUndoSwipe_appearsInInputBehaviorSection() {
         searchFor("backspace undo")
 
         val result = device.wait(
@@ -178,11 +178,16 @@ class SettingsSearchTest {
         )
         assertNotNull("Backspace Undo Swipe should appear in search results", result)
 
+        // The control lives in InputBehaviorSection. Use the localized section
+        // resource rather than a historical label from the old settings screen.
+        val sectionName = context.getString(R.string.settings_section_input)
+            .dropWhile { !it.isLetterOrDigit() }.trim()
+        val expectedLabel = context.getString(R.string.settings_search_in_section, sectionName)
         val sectionLabel = device.wait(
-            Until.findObject(By.text("in Word Prediction")),
+            Until.findObject(By.text(expectedLabel)),
             UI_TIMEOUT
         )
-        assertNotNull("Should show 'in Word Prediction' section label", sectionLabel)
+        assertNotNull("Should show the Input Behavior section label", sectionLabel)
     }
 
     @Test

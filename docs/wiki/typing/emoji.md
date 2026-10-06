@@ -63,7 +63,7 @@ The emoji keyboard is organized into categories:
 
 ### Searching by Name
 
-CleverKeys supports smart emoji search via the suggestion bar:
+The emoji panel has a search field with clear and close controls. Search results hide entries that the phone’s emoji font cannot draw. Text emoticons remain available when their visible characters are supported.
 
 **Auto-Context Search:**
 1. Type a word (e.g., "banana")
@@ -72,7 +72,7 @@ CleverKeys supports smart emoji search via the suggestion bar:
 4. Tap 🍌 to insert
 
 **Manual Search:**
-1. Open emoji keyboard (suggestion bar shows "Type to search emoji...")
+1. Open the emoji keyboard and use its search field
 2. Start typing on the keyboard
 3. Results update as you type
 4. Tap any emoji to insert
@@ -84,7 +84,7 @@ The search matches 500+ emoji names including:
 
 ### Recent Emoji
 
-Your most recently used emoji appear in the first category (clock icon) for quick access.
+The first category (clock icon) shows your used emoji, ordered by how often you use them.
 
 ### Long-Press Emoji Name
 

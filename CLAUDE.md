@@ -55,6 +55,12 @@ committed coordination over working-tree edits.
 
 ---
 
+## Native APK alignment check
+
+The installed Termux `zipalign` accepts `-c -p 4`, but lacks the newer `-P 16`
+option. Record the check actually run; its success alone is not evidence of 16 KiB
+page compatibility (2026-10-06).
+
 ## PAL model preference
 
 Use Gemini 3.8 (`gemini-3.8-flash`) for PAL consultation; never use Gemini 3.1.
@@ -300,3 +306,16 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 - **Short-word CTC experiments (2026-10-05):** wet/wt have identical collinear geometric templates, so endpoint/path-only penalties cannot resolve them. Equal-duration letter timing fits the canonical generator by construction; synthetic 19/19 plus one human trace is not shipping evidence. Validate on separate human writers/sessions before changing shared ranking/model behavior.
 
 - **Human screen of synthetic ranking fixes (2026-10-05):** frozen geometry/timing weights reduced 93/100 correct to 83/100 and 61/100 on 100 real traces (92 words); reject both despite synthetic success. Keep distinct trace/word counts and do not retune against the screening set. Evidence in the October 5 roadmap and ignored probe logs.
+
+## Native editor and dialog test lessons (2026-10-06)
+
+- Editor fixtures must report both real selection endpoints. Cursor-start equality
+  alone does not permit removing a prior automatic space when replacing a range;
+  InputConnection offsets are UTF-16, and a batch edit is not an atomic transaction.
+- Nonfocusable IME dialogs need UIAutomator interactions, rather than Espresso's
+  focused-window assumption. Wait for AlertDialog dismissal before reopening.
+  Remeasure detached views after changing RTL; integer bounds can round by one pixel.
+
+- An unfiltered ew-cli run needs the four ignored experimental `ctc_bench` encoders
+  from the local CleverKeys-ML artifacts in the test APK. Preflight their presence and
+  hashes; absent assets fail two real benchmarks. Never substitute production weights.

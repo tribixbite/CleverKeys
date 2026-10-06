@@ -17,6 +17,44 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class TerminalUtilsInstrumentedTest {
 
+    @Test
+    fun customPackagesRefreshFromRealPreferencesAndRemovalIsImmediate() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val prefs = context.getSharedPreferences("terminal_packages_instrumented", android.content.Context.MODE_PRIVATE)
+        try {
+            assertTrue(prefs.edit().putString("custom_terminal_packages", "org.custom.shell,org.custom.shell").commit())
+            Config.initGlobalConfig(prefs, context.resources, null, null)
+            val config = Config.globalConfig()
+            val custom = EditorInfo().apply { packageName = "org.custom.shell" }
+            assertTrue(TerminalUtils.isTerminalApp(custom, config.custom_terminal_packages))
+            assertEquals(setOf("org.custom.shell"), config.custom_terminal_packages)
+            assertFalse(TerminalUtils.isTerminalApp(EditorInfo().apply { packageName = "org.custom.shell.child" }, config.custom_terminal_packages))
+            assertTrue(prefs.edit().putString("custom_terminal_packages", "").commit())
+            config.refresh(context.resources, null)
+            assertFalse(TerminalUtils.isTerminalApp(custom, config.custom_terminal_packages))
+            assertTrue(TerminalUtils.isTerminalApp(EditorInfo().apply { packageName = "com.termux" }, config.custom_terminal_packages))
+        } finally {
+            assertTrue(prefs.edit().clear().commit())
+        }
+    }
+
+    @Test
+    fun malformedOrWrongTypeStoredPackageListDoesNotEnablePartialEntries() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val prefs = context.getSharedPreferences("terminal_packages_instrumented", android.content.Context.MODE_PRIVATE)
+        try {
+            assertTrue(prefs.edit().putString("custom_terminal_packages", "org.custom.shell,com.*").commit())
+            Config.initGlobalConfig(prefs, context.resources, null, null)
+            val config = Config.globalConfig()
+            assertTrue(config.custom_terminal_packages.isEmpty())
+            assertTrue(prefs.edit().putInt("custom_terminal_packages", 7).commit())
+            config.refresh(context.resources, null)
+            assertTrue(config.custom_terminal_packages.isEmpty())
+        } finally {
+            assertTrue(prefs.edit().clear().commit())
+        }
+    }
+
     // =========================================================================
     // isTerminalApp — null / empty cases
     // =========================================================================
@@ -203,38 +241,29 @@ class TerminalUtilsInstrumentedTest {
 
     @Test
     fun backspaceUndoSwipe_configToggle() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        assertTrue("Config must initialize before testing its toggle", TestConfigHelper.ensureConfigInitialized(context))
+        val config = Config.globalConfig()
+        val original = config.backspace_undo_swipe
         try {
-            val config = Config.globalConfig()
-            if (config != null) {
-                val original = config.backspace_undo_swipe
-                try {
-                    config.backspace_undo_swipe = true
-                    assertTrue("backspace_undo_swipe should be true after setting",
-                        config.backspace_undo_swipe)
-
-                    config.backspace_undo_swipe = false
-                    assertFalse("backspace_undo_swipe should be false after setting",
-                        config.backspace_undo_swipe)
-                } finally {
-                    config.backspace_undo_swipe = original
-                }
-            }
-        } catch (e: NullPointerException) {
-            // Config not available in test context without full keyboard init
+            config.backspace_undo_swipe = true
+            assertTrue("backspace_undo_swipe should be true after setting", config.backspace_undo_swipe)
+            config.backspace_undo_swipe = false
+            assertFalse("backspace_undo_swipe should be false after setting", config.backspace_undo_swipe)
+        } finally {
+            config.backspace_undo_swipe = original
         }
     }
 
     @Test
     fun backspaceUndoSwipe_prefsKey() {
         val prefs = InstrumentationRegistry.getInstrumentation().targetContext
-            .getSharedPreferences("music_typewriter_prefs", android.content.Context.MODE_PRIVATE)
-
-        // Save setting
-        prefs.edit().putBoolean("backspace_undo_swipe", false).commit()
-        assertFalse("SharedPreferences should store false value",
-            prefs.getBoolean("backspace_undo_swipe", true))
-
-        // Restore default
-        prefs.edit().putBoolean("backspace_undo_swipe", true).commit()
+            .getSharedPreferences("terminal_undo_instrumented", android.content.Context.MODE_PRIVATE)
+        try {
+            assertTrue(prefs.edit().putBoolean("backspace_undo_swipe", false).commit())
+            assertFalse("SharedPreferences should store false value", prefs.getBoolean("backspace_undo_swipe", true))
+        } finally {
+            assertTrue(prefs.edit().clear().commit())
+        }
     }
 }

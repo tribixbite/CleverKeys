@@ -35,8 +35,8 @@ Add Ctrl as an extra key to use standard shortcuts:
 ### Setting Up Ctrl Key
 
 1. Go to **Settings > Activities > Extra Keys**
-2. Add **Ctrl** to left or right side
-3. Ctrl key appears on bottom row
+2. Enable **Ctrl** in the searchable list
+3. It is inserted using available preferred slots for the current layout
 4. Tap Ctrl, then the letter key
 
 ## Gesture Shortcuts
@@ -70,7 +70,14 @@ To paste the most recently copied text:
 - Use **Ctrl+V** (with Ctrl extra key)
 - Or swipe S on Ctrl key (Ctrl→S subkey)
 
-To paste from clipboard history, open the clipboard panel (Ctrl SW swipe) and tap an item.
+To paste from clipboard history, open the clipboard panel (Ctrl SW swipe) and use an item’s send/paste button. Tapping a text row expands its actions.
+
+## Clear the System Clipboard
+
+Assign **Clear system clipboard** (`clear_clipboard`) through Per-Key Customization,
+or enable its extra key. It empties Android’s clipboard and preserves saved history,
+pins, todos, and media. To delete stored clippings, use **Delete results** in the
+clipboard panel and confirm the matching batch.
 
 ## Customizing Shortcuts
 

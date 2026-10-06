@@ -51,7 +51,19 @@ Commands are organized into categories:
 
 1. Tap any command to select it
 2. The command is assigned to the selected swipe direction
-3. Palette closes automatically
+3. Confirm the display label to save the assignment
+
+## Clipboard and Minimize Commands
+
+Search for **Clear system clipboard** (`clear_clipboard`) to assign an action that
+empties Android’s current clipboard. Saved CleverKeys history, pins, todos, and media
+are preserved. Use the clipboard panel’s confirmed **Delete results** action to remove
+saved clippings instead.
+
+**Minimize to Bar** (`minimize_bar`) leaves a thin restore strip. **Minimize to Floating
+Button** (`minimize_fab`) leaves a restore button in the bottom corner. Tap either to
+restore the keyboard. These actions require a currently active keyboard; they cannot
+bring back a keyboard the system has already hidden.
 
 ## Available Commands
 
@@ -62,7 +74,7 @@ Commands are organized into categories:
 | `copy` | Copy selected text |
 | `cut` | Cut selected text |
 | `paste` | Paste from clipboard |
-| `select_all` | Select all text |
+| `selectAll` | Select all text |
 | `undo` | Undo last action |
 | `redo` | Redo undone action |
 
@@ -83,12 +95,8 @@ Commands are organized into categories:
 
 | Command | Description |
 |---------|-------------|
-| `selection_left` | Select left |
-| `selection_right` | Select right |
-| `selection_up` | Select up |
-| `selection_down` | Select down |
-| `selection_word_left` | Select word left |
-| `selection_word_right` | Select word right |
+| `selection_cursor_left` | Select left |
+| `selection_cursor_right` | Select right |
 
 ### Delete Actions
 
@@ -97,7 +105,7 @@ Commands are organized into categories:
 | `backspace` | Delete character before cursor |
 | `delete` | Delete character after cursor |
 | `delete_word` | Delete word before cursor |
-| `delete_word_forward` | Delete word after cursor |
+| `forward_delete_word` | Delete word after cursor |
 
 ### Layout/Mode Actions
 
@@ -115,7 +123,7 @@ Commands are organized into categories:
 |---------|-------------|
 | `trackpoint_mode` | Enter TrackPoint navigation mode |
 | `selection_delete_mode` | Enter selection-delete mode |
-| `voice_typing_key` | Start voice input |
+| `voice_typing` | Start voice input |
 | `config` | Open settings |
 
 ## Tips for Customization

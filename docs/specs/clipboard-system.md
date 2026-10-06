@@ -404,3 +404,12 @@ search, correct recycled labels and opt-in state. The UI regression fails on the
 older APK. The minified Seeker build exposes 225 commands and the correct extra-key
 row; no binding was saved and the device’s Android clipboard was preserved. The
 maintainer should exercise the assigned command using a disposable copied clip.
+
+### Native filter and deletion follow-up (October 6)
+
+`ClipboardFilterDialogTest` now operates the actual nonfocusable IME filter dialog
+through UIAutomator: invalid range, Cancel, valid Apply, tab persistence and Clear all
+filters. Its confirmed-delete case creates 205 matching rows across multiple pages,
+cancels once, then verifies immutable confirmation against a new row and an edited
+row while preserving independent pinned/todo copies. Fixtures use unique prefixes
+and remove only their own data. Full cloud evidence: [testing strategy](testing-strategy.md).

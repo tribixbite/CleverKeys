@@ -426,11 +426,16 @@ class KeyEventHandler(
 
             if (smartPuncEnabled && (isPunctChar || isQuote)) {
                 val textBefore = conn.getTextBeforeCursor(500, 0)  // Get enough context for quote counting
-                val eligible = SmartAutoSpace.isSwallowEligible(
+                val selection = PredictionContextTracker.currentSelection(conn)
+                // A range can start at the old auto-space stamp. Replacing that range
+                // must preserve the space before it; cursor-start equality is insufficient.
+                val collapsedSelection = if (selection != null) selection.first == selection.second
+                    else try { conn.getSelectedText(0).isNullOrEmpty() } catch (_: Exception) { false }
+                val eligible = collapsedSelection && SmartAutoSpace.isSwallowEligible(
                     autoSpacePending = recv.wasLastSpaceAutoInserted(),
                     stampedPosition = recv.getAutoSpaceStampedPosition(),
                     actualPrevChar = textBefore?.lastOrNull(),
-                    actualPosition = PredictionContextTracker.currentCursorPosition(conn)
+                    actualPosition = selection?.first ?: -1
                 )
 
                 if (isPunctChar && eligible) {

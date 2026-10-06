@@ -1,7 +1,7 @@
 ---
 title: Smart Punctuation - Technical Specification
 description: Auto-space tracking, closing-punctuation space swallowing, and opening-punctuation leading-space suppression (SAS-1)
-user_guide: ../../typing/smart-punctuation.md
+user_guide: /wiki/typing/smart-punctuation/
 status: implemented
 version: v1.5.0
 ---
@@ -146,20 +146,26 @@ fun invalidateAutoSpacePending() {
 }
 ```
 
-The absolute cursor position is read via `ExtractedText` and degrades to `-1` when the editor doesn't support it:
+Absolute selection endpoints are read from one `ExtractedText` snapshot. Positions
+are UTF-16 offsets, including `startOffset`; an unreadable editor returns null.
 
 ```kotlin
-// PredictionContextTracker.kt:64-76
 fun currentCursorPosition(ic: InputConnection?): Int {
-    if (ic == null) return -1
+    return currentSelection(ic)?.first ?: -1
+}
+
+/** Absolute UTF-16 selection endpoints, or null when the editor cannot report them. */
+fun currentSelection(ic: InputConnection?): Pair<Int, Int>? {
+    if (ic == null) return null
     return try {
         val extracted = ic.getExtractedText(
             android.view.inputmethod.ExtractedTextRequest(), 0
-        ) ?: return -1
-        if (extracted.selectionStart < 0) -1
-        else extracted.startOffset + extracted.selectionStart
+        ) ?: return null
+        if (extracted.selectionStart < 0 || extracted.selectionEnd < 0 || extracted.startOffset < 0) null
+        else (extracted.startOffset + extracted.selectionStart) to
+            (extracted.startOffset + extracted.selectionEnd)
     } catch (e: Exception) {
-        -1
+        null
     }
 }
 ```
@@ -209,21 +215,29 @@ fun isSwallowEligible(
 
 Only a plain `' '` qualifies (tabs/newlines are never eaten). When either position is unknown (`-1`, editors without ExtractedText), eligibility degrades to the legacy v1.2.7 flag-plus-space check rather than breaking those editors.
 
+The caller additionally checks both selection endpoints. A selected range starting
+at the old stamp cannot consume the space before that range. When extraction is
+unavailable, the existing selected-text fallback remains; this is not the strict
+ownership/readback planned for suffix commands.
+
 ### Swallow execution (KeyEventHandler.sendText)
 
 ```kotlin
-// KeyEventHandler.kt:367-401
+// KeyEventHandler.sendText
 val smartPuncEnabled = Config.globalConfig().smart_punctuation
 val isPunctChar = isSmartPunctuationChar(char)
 val isQuote = isQuoteChar(char)
 
 if (smartPuncEnabled && (isPunctChar || isQuote)) {
     val textBefore = conn.getTextBeforeCursor(500, 0)  // Get enough context for quote counting
-    val eligible = SmartAutoSpace.isSwallowEligible(
+    val selection = PredictionContextTracker.currentSelection(conn)
+    val collapsedSelection = if (selection != null) selection.first == selection.second
+        else try { conn.getSelectedText(0).isNullOrEmpty() } catch (_: Exception) { false }
+    val eligible = collapsedSelection && SmartAutoSpace.isSwallowEligible(
         autoSpacePending = recv.wasLastSpaceAutoInserted(),
         stampedPosition = recv.getAutoSpaceStampedPosition(),
         actualPrevChar = textBefore?.lastOrNull(),
-        actualPosition = PredictionContextTracker.currentCursorPosition(conn)
+        actualPosition = selection?.first ?: -1
     )
 
     if (isPunctChar && eligible) {
@@ -431,9 +445,9 @@ SAS-1 introduces no new preference keys.
 | Suite | File | Cases |
 |-------|------|-------|
 | Pure JVM (`runPureTests`) | `src/test/kotlin/tribixbite/cleverkeys/SmartAutoSpaceLogicTest.kt` | 22 |
-| Instrumented (ew-cli, Pixel7 API 34) | `src/androidTest/kotlin/tribixbite/cleverkeys/SmartAutoSpaceTest.kt` | 28 |
+| Instrumented (ew-cli, Pixel7 API 34) | `src/androidTest/kotlin/tribixbite/cleverkeys/SmartAutoSpaceTest.kt` | 31 |
 
-The pure suite covers the opener/closer classification tables and every `isSwallowEligible` branch (no-flag, non-space prev char, empty field, position match/mismatch, unknown-stamp and unknown-position degradation, tab/newline rejection). The instrumented suite drives the real `KeyEventHandler` key path with a `TestInputConnection` implementing `ExtractedText`: opener suppression for swipe and tap commits, all closer swallows (incl. `”` `’` `…` `'`), possessive-apostrophe keep, manual-space preservation, cursor-move/backspace/field-switch invalidation, punctuation chaining, plain-typing regression, and a #151 URL-bar control. Full-suite gate: 1371/1371 instrumented tests green (2026-07-15, run `1c06495a`).
+The pure suite covers the opener/closer classification tables and every `isSwallowEligible` branch (no-flag, non-space prev char, empty field, position match/mismatch, unknown-stamp and unknown-position degradation, tab/newline rejection). The instrumented suite drives the real `KeyEventHandler` key path with a `TestInputConnection` implementing `ExtractedText`: opener suppression for swipe and tap commits, all closer swallows (incl. `”` `’` `…` `'`), possessive-apostrophe keep, manual-space preservation, cursor-move/backspace/field-switch invalidation, punctuation chaining, plain-typing regression, and a #151 URL-bar control. The October 6 additions cover literal curly apostrophe attachment, manual-space preservation, and replacing selected text without removing the preceding space. The selected-range regression failed before the fix and passed afterward. Current full-suite evidence is in the [testing strategy](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/testing-strategy.md); the older 1,371-test July result is historical.
 
 ## Related Specifications
 

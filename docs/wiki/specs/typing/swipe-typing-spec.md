@@ -1,6 +1,7 @@
 ---
 title: Swipe Typing - Technical Specification
-user_guide: ../../typing/swipe-typing.md
+description: CTC and geometric routing, canonical display, and commit boundaries
+user_guide: /wiki/typing/swipe-typing/
 status: implemented
 version: v1.2.7
 ---
@@ -38,34 +39,42 @@ Touch Events (Pointers.kt)
     ↓
 InputCoordinator.handleSwipeTyping
     ↓ SwipeEngineRouter.route(layout, mode)
-    ├─ CTC       → CtcEngineAdapter (en/fr/de/es/it/pt/sv; other languages fall through to geometric)
+    ├─ CTC       → CtcEngineAdapter (runtime language, pack, model, and alphabet gates)
     └─ GEOMETRIC → GeometricEngineAdapter
     ↓ (top-k candidates, engine-relative scores)
 SuggestionHandler.handleSwipePredictionResults → UI
 ```
 
-The router is TOTAL: every layout resolves to an engine, so no configuration can leave a
-layout without swipe typing.
+The router always selects an engine. Successful predictions still require a usable
+dictionary, letter geometry, and a valid trace.
 
 ## Engine Routing (`swipe_engine_mode`)
 
-The router (`swipe/SwipeEngineRouter.kt`) is layout-only; the `ctc` mode's language gate lives
-in `InputCoordinator.performCtcSwipeTyping`, which reads the active dictionary language before
-dispatch and falls through to the geometric engine for anything CTC does not serve:
+The layout-only router consults `CtcScriptSupport`. Runtime dispatch additionally
+checks active-language support, primary-key alphabet coverage, dictionary availability,
+and the encoder. Failure or unavailable CTC prerequisites fall through to geometric.
 
-| Mode | Latin layout + served language | Latin layout + other language | Non-Latin layout |
-|------|--------------------------------|-------------------------------|------------------|
-| `ctc` (default) | CTC | GEOMETRIC | GEOMETRIC |
-| `geometric` | GEOMETRIC | GEOMETRIC | GEOMETRIC |
+| Mode | Complete registered CTC script/language/model/dictionary | Other layouts or unavailable CTC prerequisites |
+|------|---------------------------------------------------------|-----------------------------------------------|
+| `ctc` (default) | CTC | Geometric |
+| `geometric` | Geometric | Geometric |
 
-Served languages are `swipe/ctc/CtcLanguageSupport.SUPPORTED` — **seven**: en, fr, de, es plus
-it, pt, sv. The last three are in `CtcLanguageSupport.PROVISIONAL`: they were enabled on
-2026-08-18 on scale-transferred evidence (they read the same CKDT `.bin` frequency scale the
-λ sweep fitted, and the encoder never sees a language) and have **no per-language accuracy
-bar**, because no swipe corpus exists for them. Their numbers are val-tier at best and must
-never be quoted beside the test-validated four. A Latin layout
-missing an a–z letter cannot build a `CtcLayout` and also falls through to geometric, checked
-at dispatch time by `CtcEngineAdapter.supportsLayout`.
+`CtcLanguageSupport` contains the seven bundled Latin languages en/fr/de/es/it/pt/sv
+and pack-backed non-Latin rows. `CtcScriptSupport` registers ru, el, uk, bg, mk, and he;
+their encoders arrive through language packs and must match the registry's approved
+digests. Imported Latin packs can also qualify through `CtcImportedPackSupport`,
+which measures a–z projection eligibility. Support is therefore a per-device answer,
+not a fixed seven-language list.
+
+A layout must expose every active-language emission character as a primary/centre
+key; directional subkeys do not satisfy this geometry requirement. The adapter checks
+both compact and numbered layout schemas. A missing script, incomplete alphabet,
+missing pack/model, or failed encoder routes to geometric.
+
+Evidence tiers remain separate: it/pt/sv use scale-transferred provisional evidence;
+ru's human probe is validation-only; el/uk/bg/mk/he have synthesis-holdout evidence.
+Do not label those synthetic results as measured human-language accuracy. Bangla is
+not a registered CTC script; existing tap layouts do not establish swipe support.
 
 `Mode.fromPref` maps any unrecognised stored value — including the removed `"neural"` and
 `"hybrid"` — onto `CTC`, so a pre-v1.6.0 backup imports without error.
@@ -104,3 +113,17 @@ Geometric engine knobs live in `GeometricSettingsActivity` (`geo_max_results`,
 - [CTC Swipe Engine](../../../specs/ctc-swipe-engine.md) - Deeper architectural reference for the shipping decoder (trie beam, lexicon merge, per-language λ)
 - [Gesture System Overview](../gestures/gesture-system-overview-spec.md) - Touch event routing and `hasLeftStartingKey` gatekeeper
 - [Autocorrect Specification](autocorrect-spec.md)
+
+## October 6 boundary coverage and pending features
+
+Native custom-gesture cold-start and SmartAutoSpace regressions now cover model-free
+startup with swipe disabled, literal curly apostrophes, manual spaces, and replacement
+of a selected range. Reported noncollapsed selections cannot reclaim a prior space;
+editors without selection data retain the legacy text/ownership fallback. Results and
+actual full-suite counts live in [testing strategy](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/testing-strategy.md).
+
+Continuous multiword swipe and explicit apostrophe suffix transactions are not yet
+implemented. Before they land, rejected/throwing `commitText` must not create swipe
+ownership, learning, or correction/ML labels. The roadmap records this prerequisite.
+Reported `ad`/`wet` accuracy remains unresolved; frozen geometric/timing heuristics
+were rejected, and fresh writer/session-separated calibration evidence is required.

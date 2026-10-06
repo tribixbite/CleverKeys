@@ -439,3 +439,31 @@ Do not commit, tag, push, publish, or open external issues without explicit user
   Guide/spec corrected to actual per-key Boolean storage and preferred-slot placement;
   docs build passes all 84 pages and paired guide/spec links resolve. Final Kotlin
   compile passes. UI logs: `build/oct6-extra-keys-viewport-{ui,red}-v2.log`.
+
+### October 6 expanded native coverage (complete)
+
+- [x] Added 14 native regressions across terminal Config refresh, minimize/compact
+  geometry, emoji glyph support, oversized pack update, apostrophe selection routing,
+  size-dialog/205-row deletion races, and persisted gesture cold start.
+- [x] Fixed selected-range punctuation removing a space before the selected text;
+  native fail-first 56/57 and fixed regression 1/1, no errors/skips.
+- [x] Kotlin compilation and 2,741 pure + 953 mock pass. Mock editor fixture now
+  reports both selection endpoints; hardened native fixtures fail on missing setup.
+- [x] Android lint passes in 46m54s: 0 errors, 216 warnings. Corrected APKs rebuild;
+  four real experimental encoders are verified in androidTest only, absent from app.
+- [x] Minified ARM64 build passes release lint/R8/shrinking (5m45s); signature,
+  archive, alignment and ARM64 libraries verified. SHA-256
+  `3f2fed25767860d8d857340264ed0ec4c61c7682ff44a9e99ad452c88c6afc4c`.
+  Not installed: Seeker absent from `adb devices`; earlier installed artifact stays.
+- [x] Both previously failing classes pass 9/9, no errors/skips, run
+  `7beda687-b5c6-4792-b352-a16a9e6b3730`; stale Settings section expectation corrected.
+- [x] Complete unfiltered three-shard recheck passes all 1,491 distinct methods,
+  0 failures/errors/skips/flakes, run `3f0c33a3-c71b-49ff-a87b-da044859eb54`.
+  All 14 additions pass; inventory matches the first full run except corrected name.
+- [x] Current guides/specs/skills updated to actual behavior and final evidence;
+  84-page build, 428 rendered local links and 8 paired-guide routes pass.
+  Coverage/docs round ready to commit; no push/release or maintainer-checklist edits.
+- [ ] TODO: then implement continuous multiword swipe, explicit apostrophe suffix
+  commands, and dynamic templates; fix accepted-commit bookkeeping first.
+- [ ] TODO: language-pack final swap currently deletes the old directory before
+  rename; add recovery and fault-injection coverage. Oversize rejection is protected.

@@ -5,6 +5,12 @@ import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.CompoundButton
+import android.app.AlertDialog
+import androidx.test.core.app.ActivityScenario
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiObject2
+import androidx.test.uiautomator.Until
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import java.util.concurrent.atomic.AtomicReference
@@ -56,6 +62,131 @@ class ClipboardFilterDialogTest {
     /** Mirrors ClipboardManager.showFilterDialog's themed context EXACTLY (framework dialog theme). */
     private fun productionDialogContext(): Context =
         ContextThemeWrapper(context, android.R.style.Theme_DeviceDefault_Dialog)
+
+    private fun <T> onMain(block: () -> T): T {
+        val result = AtomicReference<Result<T>>()
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { result.set(runCatching(block)) }
+        return result.get().getOrThrow()
+    }
+
+    private fun awaitCondition(condition: () -> Boolean) {
+        val deadline = android.os.SystemClock.elapsedRealtime() + 10_000
+        while (!onMain(condition)) {
+            assertTrue("Clipboard UI did not settle before deadline", android.os.SystemClock.elapsedRealtime() < deadline)
+            android.os.SystemClock.sleep(25)
+        }
+    }
+
+    private fun dialog(manager: ClipboardManager, field: String): AlertDialog? =
+        ClipboardManager::class.java.getDeclaredField(field).let {
+            it.isAccessible = true
+            it.get(manager) as AlertDialog?
+        }
+
+    /** IME dialogs deliberately lack focus, so use touch automation rather than Espresso. */
+    private fun control(name: String): UiObject2 =
+        requireNotNull(UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            .wait(Until.findObject(By.res(context.packageName, name)), 5_000)) { "Missing dialog control: $name" }
+
+    private fun selectSize(name: String, bytes: Long) {
+        control(name).click()
+        val label = android.text.format.Formatter.formatShortFileSize(context, bytes)
+        requireNotNull(UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            .wait(Until.findObject(By.text(label)), 5_000)) { "Missing size option: $label" }.click()
+    }
+
+    @Test
+    fun sizeDialogRejectsInvertedBoundsAndCancelDoesNotApplyDraft() {
+        var manager: ClipboardManager? = null
+        try {
+            ActivityScenario.launch(ClipboardEditTestActivity::class.java).use { scenario ->
+                lateinit var pane: android.view.ViewGroup
+                lateinit var history: ClipboardHistoryView
+                scenario.onActivity { activity ->
+                    manager = ClipboardManager(activity, Config.globalConfig())
+                    pane = manager!!.getClipboardPane(activity.layoutInflater)
+                    activity.setContentView(pane)
+                    history = pane.findViewById(R.id.clipboard_history_view)
+                    manager!!.showFilterDialog(pane)
+                }
+                selectSize("clipboard_size_min", 10_000)
+                selectSize("clipboard_size_max", 1_000)
+                assertFalse(control("date_filter_apply").isEnabled)
+                control("date_filter_cancel").click()
+                assertEquals(0L to null, onMain { history.getSizeFilter() })
+
+                onMain { manager!!.showFilterDialog(pane) }
+                selectSize("clipboard_size_min", 1_000)
+                selectSize("clipboard_size_max", 10_000)
+                assertTrue(control("date_filter_apply").isEnabled)
+                control("date_filter_apply").click()
+                assertEquals(1_000L to 10_000L, onMain { history.getSizeFilter() })
+                onMain { history.setTab(ClipboardTab.PINNED) }
+                assertEquals(1_000L to 10_000L, onMain { history.getSizeFilter() })
+                onMain { history.clearAllFilters() }
+                assertEquals(0L to null, onMain { history.getSizeFilter() })
+                onMain { manager!!.cleanup() }
+                manager = null
+            }
+        } finally {
+            manager?.let { onMain(it::cleanup) }
+        }
+    }
+
+    @Test
+    fun confirmedSizeFilteredDeletionCoversAllPagesAndPreservesChangedRowsAndCopies() {
+        val db = ClipboardDatabase.getInstance(context)
+        val prefix = "ewgap-${java.util.UUID.randomUUID()}-"
+        val expiry = System.currentTimeMillis() + 3600_000
+        val large = (0 until 205).map { "$prefix$it-${"x".repeat(2_000)}" }
+        large.forEach { assertTrue(db.addClipboardEntry(it, expiry)) }
+        val small = prefix + "small"
+        assertTrue(db.addClipboardEntry(small, expiry))
+        assertTrue(db.pinEntry(large.first(), System.currentTimeMillis()))
+        assertTrue(db.addTodoEntry(large.first(), System.currentTimeMillis()))
+        var manager: ClipboardManager? = null
+        try {
+            ActivityScenario.launch(ClipboardEditTestActivity::class.java).use { scenario ->
+                lateinit var pane: android.view.ViewGroup
+                lateinit var history: ClipboardHistoryView
+                scenario.onActivity { activity ->
+                    manager = ClipboardManager(activity, Config.globalConfig())
+                    pane = manager!!.getClipboardPane(activity.layoutInflater)
+                    activity.setContentView(pane)
+                    history = pane.findViewById(R.id.clipboard_history_view)
+                    history.setSearchFilter(prefix)
+                    history.setSizeFilter(1_000, null)
+                }
+                awaitCondition { history.isResultsReady() && history.resultSummary().first == 205 }
+                onMain { pane.findViewById<View>(R.id.clipboard_delete_results).performClick() }
+                assertEquals(205, db.getActiveClipboardEntries().count { it.content.startsWith(prefix) && it.content != small })
+                onMain { requireNotNull(dialog(manager!!, "bulkDialog")).getButton(AlertDialog.BUTTON_NEGATIVE).performClick() }
+                // AlertDialog dispatches button handling/dismissal through its Handler.
+                // Wait for dismissal before trying to open the next confirmation.
+                awaitCondition { dialog(manager!!, "bulkDialog") == null }
+                assertEquals(206, db.getActiveClipboardEntries().count { it.content.startsWith(prefix) })
+
+                onMain { pane.findViewById<View>(R.id.clipboard_delete_results).performClick() }
+                val added = prefix + "new-" + "x".repeat(2_000)
+                val changed = prefix + "changed-" + "x".repeat(2_000)
+                assertTrue(db.addClipboardEntry(added, expiry))
+                assertEquals(EditEntryResult.Success, db.updateHistoryEntryContent(large.first(), changed))
+                onMain { requireNotNull(dialog(manager!!, "bulkDialog")).getButton(AlertDialog.BUTTON_POSITIVE).performClick() }
+                awaitCondition { history.isResultsReady() && history.resultSummary().first == 2 }
+                assertEquals(setOf(small, added, changed), db.getActiveClipboardEntries()
+                    .filter { it.content.startsWith(prefix) }.map { it.content }.toSet())
+                assertTrue(db.getPinnedEntries().any { it.content == large.first() })
+                assertTrue(db.getTodoEntries().any { it.content == large.first() })
+                onMain { manager!!.cleanup() }
+                manager = null
+            }
+        } finally {
+            manager?.let { onMain(it::cleanup) }
+            for (table in listOf("clipboard_entries", "pinned_entries", "todo_entries")) {
+                db.writableDatabase.delete(table, "content LIKE ?", arrayOf("$prefix%"))
+            }
+        }
+    }
 
     /**
      * Inflate + measure the dialog content on the main thread, the same two steps the real

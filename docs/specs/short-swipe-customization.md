@@ -1,5 +1,11 @@
 # Short Swipe Customization
 
+> Canonical public documentation: [per-key actions guide](../wiki/customization/per-key-actions.md)
+> and [paired specification](../wiki/specs/customization/per-key-actions-spec.md).
+> This internal reference retains older implementation examples; current action metadata,
+> routing regressions, and pending suffix/template behavior are maintained in the paired spec.
+
+
 > **Note:** As of v1.4.0, the canonical version of this specification lives at
 > [`docs/wiki/specs/customization/per-key-actions-spec.md`](../wiki/specs/customization/per-key-actions-spec.md)
 > and renders at <https://cleverkeys.app/specs/customization/per-key-actions-spec/>.

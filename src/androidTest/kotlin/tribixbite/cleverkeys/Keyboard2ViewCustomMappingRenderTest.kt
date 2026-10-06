@@ -4,7 +4,12 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
+import android.view.MotionEvent
 import android.view.View
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
@@ -19,6 +24,8 @@ import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
 import tribixbite.cleverkeys.prefs.LayoutsPreference
+import tribixbite.cleverkeys.minimize.MinimizedKeyboardView
+import tribixbite.cleverkeys.minimize.MinimizedStyle
 
 /**
  * Render-truth test for the #171 overlay defect: when a custom short-swipe mapping
@@ -116,6 +123,83 @@ class Keyboard2ViewCustomMappingRenderTest {
         val canvas = RecordingCanvas(Bitmap.createBitmap(1080, 600, Bitmap.Config.ARGB_8888))
         InstrumentationRegistry.getInstrumentation().runOnMainSync { view.draw(canvas) }
         return canvas.texts
+    }
+
+    @Test
+    fun minimizedFabMirrorsTouchableBoundsAndRejectsOutsideTouches() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val minimized = MinimizedKeyboardView(context)
+            minimized.bind(MinimizedStyle.FAB, null)
+            minimized.measure(View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(600, View.MeasureSpec.AT_MOST))
+            minimized.layout(0, 0, 1080, minimized.measuredHeight)
+            val ltr = Rect().also(minimized::touchableArea)
+            assertTrue(ltr.centerX() > 540)
+            var expansions = 0
+            minimized.onExpand = { expansions++ }
+            val outside = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 540f, ltr.centerY().toFloat(), 0)
+            try { org.junit.Assert.assertFalse(minimized.onTouchEvent(outside)) } finally { outside.recycle() }
+            minimized.layoutDirection = View.LAYOUT_DIRECTION_RTL
+            // A detached view has no traversal to remeasure after requestLayout().
+            minimized.measure(View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(600, View.MeasureSpec.AT_MOST))
+            minimized.layout(0, 0, 1080, minimized.measuredHeight)
+            val rtl = Rect().also(minimized::touchableArea)
+            assertTrue(rtl.centerX() < 540)
+            // Pixel rectangles truncate fractional-density edges independently.
+            assertTrue(kotlin.math.abs(ltr.width() - rtl.width()) <= 1)
+            assertTrue(kotlin.math.abs(1080 - ltr.centerX() - rtl.centerX()) <= 1)
+            for (action in listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_CANCEL)) {
+                val event = MotionEvent.obtain(0, 1, action, rtl.centerX().toFloat(), rtl.centerY().toFloat(), 0)
+                try { minimized.onTouchEvent(event) } finally { event.recycle() }
+            }
+            assertEquals(0, expansions)
+            for (action in listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP)) {
+                val event = MotionEvent.obtain(2, 3, action, rtl.centerX().toFloat(), rtl.centerY().toFloat(), 0)
+                try { assertTrue(minimized.onTouchEvent(event)) } finally { event.recycle() }
+            }
+            assertEquals(1, expansions)
+        }
+    }
+
+    @Test
+    fun minimizedBarReservesNavigationInsetAndExpandsAcrossItsWidth() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val minimized = MinimizedKeyboardView(context)
+            minimized.bind(MinimizedStyle.BAR, null)
+            val density = context.resources.displayMetrics.density
+            ViewCompat.dispatchApplyWindowInsets(minimized, WindowInsetsCompat.Builder()
+                .setInsets(WindowInsetsCompat.Type.navigationBars(), Insets.of(0, 0, 0, 42)).build())
+            minimized.measure(View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(600, View.MeasureSpec.AT_MOST))
+            minimized.layout(0, 0, 1080, minimized.measuredHeight)
+            assertEquals((30 * density + 42).toInt(), minimized.measuredHeight)
+            val bounds = Rect().also(minimized::touchableArea)
+            assertEquals(1080, bounds.width())
+            assertEquals(minimized.measuredHeight, bounds.height())
+            var expansions = 0
+            minimized.onExpand = { expansions++ }
+            for (action in listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP)) {
+                val event = MotionEvent.obtain(0, 1, action, 2f, 2f, 0)
+                try { assertTrue(minimized.onTouchEvent(event)) } finally { event.recycle() }
+            }
+            assertEquals(1, expansions)
+        }
+    }
+
+    @Test
+    fun compactCustomLayoutUsesNormalRowHeightButExplicitNumpadOptsIn() {
+        val config = Config.globalConfig()
+        config.screenHeightPixels = 1600
+        config.keyboardHeightPercent = 25
+        config.scale_numpad_height = true
+        val compact = KeyboardData.load_string_exn("<keyboard bottom_row=\"false\"><row><key key0=\"a\"/></row></keyboard>")
+        val numeric = KeyboardData.load_string_exn("<keyboard bottom_row=\"false\" numpad_height=\"true\"><row><key key0=\"1\"/></row></keyboard>")
+        val theme = Theme(context, null)
+        assertEquals(400f / 3.95f, Theme.Computed(theme, config, 100f, compact).row_height, 0.001f)
+        assertEquals(400f, Theme.Computed(theme, config, 100f, numeric).row_height, 0.001f)
+        config.scale_numpad_height = false
+        assertEquals(400f / 3.95f, Theme.Computed(theme, config, 100f, numeric).row_height, 0.001f)
     }
 
     /** Fixture sanity: with no custom mapping, the default "~" is painted exactly once. */

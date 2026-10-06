@@ -32,7 +32,9 @@ the shipped registry must also approve their hash before ONNX loading.
   Manifest and NOTICE: **64 KiB** each. Entire archive: **64 MiB**, at most **64 entries**.
 - Extraction streams bounded chunks, rejects traversal and duplicate flattened basenames,
   and accepts benign wrapper folders. Validation happens before the staged install swap;
-  failures preserve the existing pack and clean scratch data.
+  preflight and staging-copy failures preserve the existing pack and clean scratch data.
+  The final swap currently deletes the old directory before renaming staging.
+  <!-- TODO: retain/recover the old directory when the final rename fails. -->
 - Tap, geometric and CTC dictionary readers share byte/count limits, so previously
   installed oversized dictionaries also fail loading before count-sized allocation.
   These limits bound inputs; they do not guarantee arbitrary bilingual heap usage.

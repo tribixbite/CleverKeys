@@ -26,8 +26,8 @@ CleverKeys ships **two separate changelog channels** plus a third human-readable
 
 Before starting a release:
 - [ ] All planned features/fixes are merged
-- [ ] Tests pass: `./gradlew runPureTests` (or skip on Termux — too slow; rely on CI)
-- [ ] Build succeeds: `./gradlew compileDebugKotlin`
+- [ ] Tests pass: `./scripts/gradle-guard.sh runPureTests runMockTests` (run locally on Termux)
+- [ ] Build succeeds: `./scripts/gradle-guard.sh compileDebugKotlin`
 - [ ] Manual testing completed
 - [ ] `memory/todo.md` updated with completed items
 - [ ] No `0words.py`-style stray scratch files in `git status`
@@ -151,7 +151,7 @@ Release-readiness sanity check for CleverKeys at <repo path>.
 3. `git diff <tag>..HEAD -- build.gradle gradle.properties gradle/wrapper/` — flag any AGP/Gradle/Kotlin/dependency bumps (LOW/MEDIUM/HIGH reproducibility risk)
 4. CI status: last release.yml + recent ci.yml runs
 5. Untracked files verdict (each file: keep / .gitignore / delete)
-6. Test status (or skip if Termux)
+6. Actual local test status; do not skip solely because the host is Termux
 
 Deliver: structured report with each section as a heading.
 ```
@@ -261,7 +261,7 @@ git commit -m "chore: bump version to v1.2.6
 - Update VERSION_PATCH in build.gradle
 - Add fastlane changelog for v1.2.6
 
--- claude-opus-4-5"
+— GPT-6"
 ```
 
 ### 6. Create and Push Tag
@@ -367,7 +367,7 @@ done
 - Adding `androidTestImplementation` deps doesn't affect the release APK (test-scoped). Adding `implementation` deps does.
 
 ### Untracked files at release time
-- Stray scratch files (`0words.py`, ad-hoc word lists) are NOT in the tagged tree because `git archive` only includes tracked files. So they don't leak into the release. But they CAN signal incomplete in-progress work — pause and ask before tagging.
+- AGP packages assets from the filesystem, including ignored/untracked files under production asset directories. Inspect the built APK as well as git status. Experimental `ctc_bench` models belong only under `src/androidTest/assets/`; verify their absence from the app APK. Preserve other sessions' changes and obtain explicit publication authority before tagging.
 
 ### Fastlane changelog 500-char limit (soft, but aim for it)
 - F-Droid docs specify `max 500 chars` for `changelogs/{versionCode}.txt`. The limit is a fastlane Play Store inheritance — F-Droid does NOT reject overlong files but truncates the in-app "What's New" preview.

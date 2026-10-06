@@ -1,6 +1,6 @@
 ---
 title: Appearance Settings - Technical Specification
-user_guide: ../../settings/appearance.md
+user_guide: /wiki/settings/appearance/
 status: implemented
 version: v1.5.0
 ---
@@ -73,12 +73,13 @@ if (orientation_landscape) {
 
 Row height then divides that by a fixed `3.95` layout-unit constant, so a layout with more
 rows makes the keyboard taller rather than squashing the rows — except for numeric layouts
-with `scale_numpad_height` on, which divide by the layout's own height so the rows stretch to
-fill (#58):
+with `scale_numpad_height` on and explicit XML `numpad_height="true"`, which divide
+by the layout's own height so the rows stretch to fill (#58). Omitting the bottom row
+does not opt a compact custom layout into numeric scaling (#90):
 
 ```kotlin
-// Theme.kt:294-302
-val heightDivisor = if (config.scale_numpad_height && !layout.bottom_row) {
+// Theme.kt:291-303
+val heightDivisor = if (config.scale_numpad_height && layout.numpad_height) {
     layout.keysHeight
 } else {
     3.95f
@@ -196,7 +197,7 @@ are shown.
 | **Theme** | `theme` | `cleverkeysdark` | theme id — see [Themes](../customization/themes-spec.md) |
 | **Portrait Height** | `keyboard_height` | 27 | slider 20-60 (% of screen height); validator 10-100 |
 | **Landscape Height** | `keyboard_height_landscape` | 40 | slider 20-60; validator 20-65 |
-| **Scale Numpad Height** | `scale_numpad_height` | true | bool — numeric layouts (`bottom_row=false`) stretch rows to the full keyboard height (`Config.kt:512`, consumer `Theme.kt:294`; switch added 2026-09-08, F-8/#58) |
+| **Scale Numpad Height** | `scale_numpad_height` | true | bool — explicitly opted-in layouts (`numpad_height=true`) stretch rows to the full keyboard height; bottom-row-free compact layouts retain normal row height (consumer `Theme.kt`; #58/#90) |
 | **Bottom Margin (Portrait)** | `margin_bottom_portrait` | 0 | 0-30 (% of screen height) |
 | **Bottom Margin (Landscape)** | `margin_bottom_landscape` | 0 | 0-30 |
 | **Left Margin (Portrait)** | `margin_left_portrait` | 1 | 0-45 (% of screen width); UI caps left+right at 90 combined |

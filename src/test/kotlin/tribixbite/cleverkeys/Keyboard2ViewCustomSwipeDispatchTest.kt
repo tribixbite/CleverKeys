@@ -343,6 +343,9 @@ class Keyboard2ViewCustomSwipeDispatchTest {
         every { PredictionContextTracker.currentCursorPosition(inputConnection) } answers {
             editor.length
         }
+        every { PredictionContextTracker.currentSelection(inputConnection) } answers {
+            editor.length to editor.length
+        }
         val receiver = mockk<KeyEventHandler.IReceiver>(relaxed = true)
         every { receiver.getCurrentInputConnection() } returns inputConnection
         every { receiver.wasLastSpaceAutoInserted() } answers { tracker.lastSpaceWasAutoInserted }

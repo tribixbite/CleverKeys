@@ -1,35 +1,156 @@
 # Testing Strategy Specification
 
-## Overview
+Updated: 2026-10-06. Counts below describe executed tests, not source annotations or
+estimated coverage percentages. Automated passing results do not certify human swipe
+accuracy, all editor implementations, device fonts, or translated copy fluency.
 
-Comprehensive testing strategy for CleverKeys Android keyboard, designed to enable testing without ADB/emulator dependencies.
+## Current verification
 
-## Current State (2026-09-27)
+| Suite | Result | Evidence |
+|-------|--------|----------|
+| Pure JVM | 2,741 passed | `build/oct6-selection-guard-tests-build.log` |
+| MockK | 953 passed | `build/oct6-selection-guard-mock-recheck.log`; stale cursor fixture corrected |
+| Android lint | Passed; 0 errors, 216 warnings | `build/oct6-expanded-gap-lint.log`; 46m54s |
+| Full instrumented | 1,491 distinct tests passed; 0 failures/errors/skips/flakes | Pixel7/API34, orchestrator, three unfiltered shards, run `3f0c33a3-c71b-49ff-a87b-da044859eb54` |
 
-**Measured, not estimated** — the two on-device suites were re-run for this line:
+Final cloud artifacts are under `~/ew-output/oct6-full-expanded-green`. Frozen APK SHA-256:
 
-| Suite | Count | How it was obtained |
-|---|---|---|
-| Pure JVM | **2610** green | `scripts/gradle-guard.sh lintDebug runPureTests runMockTests`, 2026-09-27, pure suite 125 s |
-| MockK | **859** green | same guarded run, 2026-09-27, mock suite 156 s |
-| Instrumented | 1395 / 0 failures | last full ew-cli sweep, 2026-08-18 — NOT re-run for this update (needs the device + `EW_API_TOKEN`), so treat it as a floor, not a current count |
+- App: `29753b130a5c594202425b8dc2ca206b67639506bfea2a315ab0d1e648e938a5`
+- Test: `871f883c956156221c681ab9d4d8659efad8e69cf53231936ecfbc33d6de30cc`
 
-Every other count in this document is a DATED SNAPSHOT and is labelled as such. Where a
-snapshot and this section disagree, this section wins.
+The merged XML contains all 1,491 distinct methods, matching the first unfiltered
+inventory except for the corrected settings test name. All 14 new cases passed.
+Final run: [emulator.wtf results](https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/r/3f0c33a3-c71b-49ff-a87b-da044859eb54),
+about 12 minutes wall time across three shards. No test filter, skip or timeout was used.
 
-> A "5 Robolectric unit / 6 instrumented" table stood here from the original 2026-01-18
-> draft until 2026-08-21; it described the pre-`runPureTests` era and contradicted the
-> doc's own later inventory. Removed rather than updated — the handful of original files
-> are listed below for orientation only.
+The first unfiltered run `3c321584-4bdb-45e3-b834-4daa1b0c36a3` passed 1,488/1,491
+in about 34 minutes; failures were an obsolete Word Prediction section assertion and
+two benchmarks missing experimental model assets. The assertion was corrected to
+Input Behavior and four actual test-only encoders were supplied. Both affected classes
+then passed 9/9 with no errors/skips (`7beda687-b5c6-4792-b352-a16a9e6b3730`) before
+the complete rerun. Earlier test-APK SHA was
+`fede978725fe39aaaace59eeff411d235161f22e240905c930a3748c24b8f53e`;
+that red run is retained as diagnosis evidence, not the final verdict.
 
-### Original (2026-01) Test Files — still present
-- `swipe/SwipeEngineRouterTest.kt` - engine routing table
-- `IntegrationTest.kt` - Robolectric integration tests (SwipeInput structure,
-  gesture/circular-gesture creation; skipped on ARM64 — Robolectric needs x86_64)
-- `ComposeKeyTest.kt` - Compose key sequences
-- `OnnxPredictionTest.kt.local` - ONNX prediction basics (renamed `.kt.local` to exclude
-  it from CI compilation — commit `afbd2bed`; not part of any suite)
-- `MockClasses.kt` - Mock implementations
+## October 6 missed-gap coverage
+
+Fourteen native regressions were added to existing test files:
+
+| Production boundary | New cases | Test class |
+|---------------------|-----------|------------|
+| Config refresh and terminal routing | 2 | `TerminalUtilsInstrumentedTest` |
+| Minimized native touch geometry and compact layout sizing | 3 | `Keyboard2ViewCustomMappingRenderTest` |
+| Themed emoji glyph filtering and text faces | 2 | `EmojiSearchTest` |
+| Oversized pack update despite understated manifest count | 1 | `swipe/CtcImportedPackInstrumentedTest` |
+| Literal curly apostrophe, manual space, selected-range replacement | 3 | `SmartAutoSpaceTest` |
+| Actual size dialog and confirmed multi-page deletion races | 2 | `ClipboardFilterDialogTest` |
+| Persisted custom gesture on cold start with swipe disabled | 1 | `PointersGestureRoutingTest` |
+
+Existing Config checks now assert initialization instead of swallowing fixture
+exceptions, and the SmartAutoSpace predictor fixture fails rather than silently
+skipping on OOM. Selected-range fixtures report both real selection endpoints.
+UIAutomator operates the deliberately nonfocusable IME dialog; tests wait for actual
+dismissal before reopening it. Test clipboard rows are uniquely scoped and cleaned.
+
+The selected-range regression exposed a production defect: a range starting at an
+owned auto-space stamp could remove the space before that range. Punctuation now
+checks both reported selection endpoints before reclaiming that automatic space.
+Editors without selection data retain the existing text/ownership fallback; this is
+separate from the strict readback required by planned suffix commands.
+
+- Fail-first run `0685b528-9d4c-4624-8cb5-077b750852d0`: 56/57 passed; the regression
+  expected `Bowie '` but observed `Bowie'`.
+- Fixed regression run `41ecb6e6-ac8d-4ce0-8f5b-ec66a45cc214`: 1/1 passed,
+  zero errors/skips, using the same app and the earlier test APK described above.
+- Earlier focused runs exposed and corrected fixture assumptions about text faces,
+  detached RTL remeasurement, one-pixel bounds rounding, and asynchronous dialogs.
+  They are diagnosis runs, not a claim that the final full suite passed.
+
+## Experimental benchmark fixture provenance
+
+Full-suite test inputs come from `../CleverKeys-ML/ctc/artifacts/`, copied into ignored
+`src/androidTest/assets/ctc_bench/`. They are not production encoders and are not
+committed or packaged in the app APK.
+
+| Model | SHA-256 |
+|-------|---------|
+| ch128_s1234 | `6c1144949e545f626419e1fa7b29e80f9ecf3e303886f30411fc37ae72c45c51` |
+| ch192_s1234 | `d5b5f10ea16f08743d0742b3c60aa37a469ada11c418a7f459d5ae4cff20c666` |
+| fast_resbn80_s1234 | `5e8c88756cbad5a5a8b8b3f289a990174fa6f3b6edfead46d8dbdb2927fb06f2` |
+| fast_resbn72_s1234 | `6567366b61bbbd04b5353f7f780aedb9aa507f7a87f52a381089cb54bf510985` |
+
+## Minified device artifact
+
+Release Kotlin compilation, lint-vital, R8 and resource shrinking passed in 5m45s
+(`build/oct6-expanded-gap-release.log`). ARM64 APK signature v2, ZIP CRC, page/4-byte
+alignment via the installed `zipalign -c -p 4`, native ELF architecture and exclusion
+of test encoders were verified. SHA-256:
+`3f2fed25767860d8d857340264ed0ec4c61c7682ff44a9e99ad452c88c6afc4c`.
+Logs: `build/oct6-expanded-gap-release-verification.log` and
+`build/oct6-expanded-gap-release-alignment.log`. The installed zipalign lacks `-P`;
+this does not establish 16 KiB page compatibility. Seeker was absent from `adb devices`,
+so this artifact has not been installed or device-tested. No tag/version/push/release.
+
+## Documentation verification
+
+The updated wiki builds all 84 Astro pages. Eight touched paired-spec `user_guide`
+frontmatter routes and 428 local wiki/spec links in the affected rendered pages
+resolve. Internal engineering notes link to GitHub source because they are not public
+Astro pages. Log: `build/oct6-expanded-docs-site-final.log`.
+
+## Running checks
+
+All Gradle operations on this Termux checkout use the singleton guard. Standard
+`testDebugUnitTest` is disabled locally: `runPureTests` runs pure JVM tests directly;
+`runMockTests` adds MockK and Android stubs. Run both after code changes.
+
+```bash
+./scripts/gradle-guard.sh compileDebugKotlin runPureTests runMockTests
+./scripts/gradle-guard.sh assembleDebug assembleDebugAndroidTest
+mkdir -p ~/ew-output/new-full-run
+EW_VERSION=1.3.4 ew-cli \
+  --app build/outputs/apk/debug/CleverKeys-v2.0.0-x86_64.apk \
+  --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
+  --device model=Pixel7,version=34 --use-orchestrator --timeout 40m \
+  --outputs merged_results_xml,logcat --outputs-dir ~/ew-output/new-full-run
+```
+
+Use a fresh output directory and freeze/hash the app/test pair before a long run.
+Read the final CLI verdict and merged XML together; missing tests after timeout or
+skips do not establish full completion. Orchestrator discovery/start messages can
+count a test twice in logcat: count distinct executed test names, not raw starts.
+Never print `EW_API_TOKEN`. The exact workflow and troubleshooting are in
+[ew-cli skill](../../.claude/skills/ew-cli-testing.md).
+
+Cloud tests use debug x86_64 APKs with matching debug signatures. Seeker device checks
+use the signed, minified ARM64 release build. A debug cloud pass does not replace R8,
+release lint, or installed-APK freshness checks. Do not change the app version or
+publish a release just to test it.
+
+## Remaining manual and architectural coverage
+
+- Actual IME lifecycle and touch pass-through across different apps, RTL service-window
+  placement, accessibility, large fonts, and device-specific emoji fonts.
+- External terminal editor behavior; host mocks establish routing rather than every
+  SSH application's handling of key events.
+- Fresh writer/session-separated human traces for `ad`/`wet`; synthetic paths and suite
+  totals do not establish encoder accuracy.
+- Continuous multiword swipe, explicit apostrophe suffix transactions/undo, and dynamic
+  templates are pending implementations. Existing tests do not cover unimplemented
+  behavior.
+- Final language-pack directory-swap recovery if rename fails after deleting the old
+  directory. The oversized-update test protects preflight rejection only.
+
+<!-- TODO: Add final-swap recovery coverage when the importer retains an old-directory
+backup; add feature-specific native coverage with each pending implementation. -->
+
+## Historical reference
+
+The August 18 full cloud sweep reported 1,395 tests. September 27 host suites reported
+2,610 pure and 859 mock tests. These dated measurements do not replace current results.
+The original January `:core` module proposal was never implemented: testable CTC and
+geometric code instead lives directly under `swipe/ctc/` and `swipe/geometric/`.
+The transformer-era beam/vocabulary/prefix-boost classes were removed with ADR-011.
 
 ## Translation verification (2026-09-27, extended 2026-09-29)
 
@@ -121,374 +242,3 @@ Persian (real RTL) locale.
 
 Record the reviewer's language competence and any unresolved wording. Never label machine
 output as native-reviewed.
-
-## Architecture: Humble Object Pattern
-
-> **Status note (2026-08-21)**: everything from here through "Implementation Phases" is the
-> original 2026-01-18 proposal, kept for rationale. The `:core` Gradle module was never
-> created, and the neural-era classes the proposal names — `BeamSearchEngine`,
-> `VocabularyTrie`, `PrefixBoostTrie` — were **deleted 2026-08-18 with the neural engine**
-> (ADR-011). The pure-JVM goal was reached by a different route: the CTC decoder core
-> (`swipe/ctc/` — `CtcBeamDecoder`, `CtcLexiconTrie`, `CtcCkdtLexicon`, all pure JVM) and
-> the geometric engine (`swipe/geometric/`, pure JVM with a purity drift test), both run
-> in-package via `runPureTests`. Current reality is the "Current Test Suite" section below.
-
-### Goal
-Decouple Android framework from testable business logic.
-
-### Module Structure
-```
-:app (Android)
-├── CleverKeysService.kt  → Humble Object, delegates to core
-├── Keyboard2View.kt      → View layer only
-└── SettingsActivity.kt   → UI only
-
-:core (Pure Kotlin) [NEW]
-├── prediction/
-│   ├── SwipeDecoder.kt      → Interface
-│   ├── BeamSearchEngine.kt  → Pure algorithm
-│   └── VocabularyTrie.kt    → Data structure
-├── dictionary/
-│   ├── DictionaryLoader.kt  → Binary parser
-│   └── WordLookup.kt        → Search logic
-├── gesture/
-│   ├── TouchPoint.kt        → data class (replaces PointF)
-│   ├── GestureClassifier.kt → Tap/Swipe/Hold detection
-│   └── SwipeAnalyzer.kt     → Path analysis
-└── text/
-    ├── TextCommitter.kt     → Interface (replaces InputConnection)
-    ├── AutoCorrector.kt     → Correction logic
-    └── ContractionHandler.kt→ don't → don't
-```
-
-## Abstraction Interfaces
-
-### SwipeDecoder Interface
-```kotlin
-interface SwipeDecoder {
-    fun predict(features: FloatArray): PredictionResult
-    fun isReady(): Boolean
-}
-
-data class PredictionResult(
-    val probabilities: Map<Char, Float>,
-    val confidence: Float
-)
-```
-
-### TextCommitter Interface
-```kotlin
-interface TextCommitter {
-    fun commitText(text: CharSequence)
-    fun deleteSurroundingText(beforeLength: Int, afterLength: Int)
-    fun getTextBeforeCursor(length: Int): CharSequence?
-    fun getTextAfterCursor(length: Int): CharSequence?
-}
-```
-
-### TouchPoint (Replaces PointF)
-```kotlin
-data class TouchPoint(
-    val x: Float,
-    val y: Float,
-    val timestamp: Long = System.currentTimeMillis()
-)
-```
-
-## Testing Framework
-
-### Recommended Stack
-```groovy
-// build.gradle (:core module)
-testImplementation "org.junit.jupiter:junit-jupiter:5.10.0"
-testImplementation "io.mockk:mockk:1.13.8"
-testImplementation "com.google.truth:truth:1.1.5"
-testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
-```
-
-## Coverage Priorities
-
-### P0: Critical (Must Have)
-| Component | Tests | Android Deps |
-|-----------|-------|--------------|
-| VocabularyTrie *(deleted 2026-08-18; now `CtcLexiconTrie`)* | Insert, lookup, prefix search | None |
-| BeamSearchEngine *(deleted 2026-08-18; now `CtcBeamDecoder`)* | Decoding, pruning, scoring | None |
-| DictionaryLoader | V2 binary parsing | None |
-| ContractionHandler | Mapping, reverse lookup | None |
-| AutoCorrector | Edit distance, threshold | None |
-
-### P1: High Priority
-| Component | Tests | Android Deps |
-|-----------|-------|--------------|
-| GestureClassifier | Tap vs swipe vs hold | TouchPoint only |
-| SwipeAnalyzer | Path smoothing, key detection | TouchPoint only |
-| FeatureExtractor | Velocity, acceleration | TouchPoint only |
-| Config validation | Setting ranges, defaults | None |
-
-### P2: Medium Priority
-| Component | Tests | Android Deps |
-|-----------|-------|--------------|
-| KeyboardState | Layer switching, modifiers | None |
-| LayoutParser | XML parsing | Resources abstraction |
-| LanguageDetector | Unigram scoring | None |
-| PrefixBoostTrie *(deleted 2026-08-18 with the neural engine; no replacement — the CTC/geometric engines use no prefix-boost tries)* | Aho-Corasick traversal | None |
-
-### P3: Low Priority (Keep Instrumented)
-| Component | Tests | Reason |
-|-----------|-------|--------|
-| View rendering | Screenshot comparison | Needs real Views |
-| IME lifecycle | onStartInput, onFinishInput | Needs Android |
-| Haptics | Vibration patterns | Needs hardware |
-
-## Quick Win Tests (No Refactor Needed)
-
-### 1. Pure Algorithm Tests
-Tests that can run today with minimal changes:
-
-```kotlin
-// (Historical example — VocabularyTrie and its VocabularyTrieTest were deleted 2026-08-18
-// with the neural engine. The equivalent live coverage is the pure swipe/ctc suite:
-// CtcModuleTest exercises CtcLexiconTrie build + lookup, CtcParityTest pins decode.)
-
-// ContractionTest.kt
-@Test
-fun `contraction mapping works for common words`() {
-    val handler = ContractionHandler()
-    handler.loadMappings(mapOf("dont" to "don't", "cant" to "can't"))
-
-    assertThat(handler.expand("dont")).isEqualTo("don't")
-    assertThat(handler.isContractionKey("cant")).isTrue()
-}
-
-// EditDistanceTest.kt
-@Test
-fun `Levenshtein distance calculated correctly`() {
-    assertThat(editDistance("hello", "hallo")).isEqualTo(1)
-    assertThat(editDistance("hello", "hello")).isEqualTo(0)
-    assertThat(editDistance("cat", "cut")).isEqualTo(1)
-}
-```
-
-### 2. Binary Parser Tests
-```kotlin
-// DictionaryLoaderTest.kt
-@Test
-fun `V2 binary format parses correctly`() {
-    val bytes = createValidV2Header() + createWordEntries(listOf("test", "word"))
-    val dict = DictionaryLoader.loadFromBytes(bytes)
-
-    assertThat(dict.contains("test")).isTrue()
-    assertThat(dict.getFrequency("test")).isGreaterThan(0)
-}
-
-@Test
-fun `invalid magic number throws exception`() {
-    val bytes = byteArrayOf(0x00, 0x00, 0x00, 0x00)
-
-    assertThrows<InvalidDictionaryException> {
-        DictionaryLoader.loadFromBytes(bytes)
-    }
-}
-```
-
-## CI/CD Configuration
-
-### GitHub Actions Workflow
-```yaml
-name: Tests
-on: [push, pull_request]
-
-jobs:
-  unit-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Run Unit Tests
-        run: ./gradlew test --continue
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
-
-  instrumented-tests:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ReactiveCircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          script: ./gradlew connectedAndroidTest
-```
-
-## Implementation Phases
-
-### Phase 1: Quick Wins (Week 1)
-- [ ] Add JUnit 5 + MockK + Truth to build.gradle
-- [ ] Create pure algorithm tests (no refactor needed)
-- [ ] Add CI workflow for unit tests
-
-### Phase 2: Abstractions (Week 2-3)
-- [ ] Create TouchPoint data class
-- [ ] Create SwipeDecoder interface
-- [ ] Create TextCommitter interface
-- [x] ~~Refactor BeamSearchEngine to use abstractions~~ (obsolete — `BeamSearchEngine` was deleted 2026-08-18 with the neural engine; its successor `CtcBeamDecoder` was born pure JVM in `swipe/ctc/`)
-
-### Phase 3: Core Module (Week 4+)
-- [ ] Create `:core` Gradle module
-- [ ] Move testable code to `:core`
-- [ ] Replace android.* imports with abstractions
-- [ ] Achieve 80% coverage on `:core`
-
-## Current Test Suite
-
-> Counts re-measured 2026-09-01. The 2026-03-15 column is kept beside them because the
-> growth rate is the useful signal; do not quote the old column on its own.
-
-| Type | Location | Count (2026-09-01) | was 2026-03-15 | Framework | Runner |
-|------|----------|-------|-------|-----------|--------|
-| Pure JVM | `src/test/kotlin/` | **2093** | 987 | JUnit4 + Truth | `scripts/gradle-guard.sh runPureTests` |
-| MockK | `src/test/kotlin/` | **343** | ~176 | JUnit4 + MockK | `scripts/gradle-guard.sh runMockTests` |
-| Instrumented | `src/androidTest/kotlin/` | 1395 (2026-08-18 sweep) | 887 | AndroidJUnit4 | emulator.wtf (Pixel7 API 34) |
-
-### ARM64 Termux Compatibility
-Standard `testDebugUnitTest` is disabled — custom `runPureTests` JavaExec task runs
-pure JVM tests directly. `runMockTests` adds MockK + android.jar to classpath.
-Single-class run: `./gradlew runPureTests -PtestClass=ClassName`
-
-### emulator.wtf (ew-cli) Configuration
-```bash
-ew-cli \
-  --app build/outputs/apk/debug/CleverKeys-v1.2.9-x86_64.apk \
-  --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
-  --device model=Pixel7,version=34 \
-  --use-orchestrator --clear-package-data \
-  --timeout 15m
-```
-**Note**: timeout needs unit suffix (`10m` not `600`). APKs must be x86_64 for emulator.
-
----
-
-## Full App Simulation — Typing Pipeline Tests (Espresso Plan)
-
-### Motivation
-The 5 bugs discovered in 2026-02-24 (contractions, toggle UI, custom words, perf)
-all lived at **composition boundaries** — places where multiple components interact
-in ways that unit tests miss. Specifically:
-- SuggestionHandler calls ContractionManager.getNonPairedMapping() but not getPairedContractions()
-- WordPredictor.autoCorrect() checks dictionary.containsKey() but dictionary was polluted by contraction aliases
-- MainDictionarySource.toggleWord() updates SharedPreferences but not cached DictionaryWord objects
-- WordPredictor.isWordDisabled() checks disabledWords but not customAndUserWords
-
-### Architecture: Pipeline-Level Testing
-
-```
-                                    ┌─────────────────────────────┐
-  User types "im" ────────────────▶ │ TypingSimulationTest.kt     │
-                                    │                             │
-                                    │ 1. ContractionManager       │
-                                    │    .getNonPairedMapping()   │
-                                    │    .getPairedContractions() │
-                                    │                             │
-                                    │ 2. WordPredictor             │
-                                    │    .predictWordsWithContext()│
-                                    │    .autoCorrect()           │
-                                    │                             │
-                                    │ 3. DictionaryDataSource      │
-                                    │    .toggleWord()            │
-                                    │    .getAllWords() (cache)    │
-                                    └─────────────────────────────┘
-                                                │
-  Validates: "I'm" ◀───────────────────────────┘
-```
-
-**Key insight**: We test the PRODUCTION components with REAL data (full dictionary,
-real contraction files, real SharedPreferences) — not mocks. This catches the
-composition bugs that mocks hide.
-
-### Test Categories in TypingSimulationTest.kt
-
-| Category | Count | What It Tests |
-|----------|-------|---------------|
-| Paired contraction lookup | 6 | its→it's, well→we'll, case insensitivity |
-| Non-paired contraction mapping | 4 | dont→don't, cant→can't, im→i'm, wont→won't |
-| Autocorrect expansion | 10 | Contraction autocorrect, I-capitalization, case preservation |
-| Autocorrect regression guards | 3 | "well"/"were"/"ill" should NOT autocorrect |
-| Dictionary toggle coherence | 2 | Toggle updates cached list without reload |
-| Custom word override | 2 | Custom word overrides disabled word |
-| Tap-typing predictions | 3 | Prefix completion, multiple results |
-| I-contraction capitalization | 3 | im→I'm, ill preserved, id documented |
-| End-to-end scenarios | 3 | Full sentence typing, contraction-heavy, case |
-| Pipeline integration | 3 | Scores descending, words=scores length, empty input |
-
-### Why NOT Full Espresso UI Testing
-
-InputMethodService runs in a separate process — Espresso can't instrument it directly.
-Options considered:
-1. **Test Activity with EditText + IME simulation** — complex, fragile, tests Android plumbing not our code
-2. **UiAutomator keyboard interaction** — slow, brittle, device-dependent
-3. **Pipeline-level testing (chosen)** — tests all production code paths with real data, fast, reliable
-
-The pipeline approach gives us 95% of the coverage at 5% of the complexity. The remaining
-5% (view rendering, touch coordinates, IME lifecycle) stays in manual QA.
-
-### Future Expansion
-
-1. **SuggestionHandler pipeline test** — requires mocking PredictionCoordinator
-   (SuggestionHandler instantiation needs keyboard context). Could test the full
-   contraction injection + merge + capitalization chain.
-2. **Multi-language scenarios** — bilingual typing with secondary dictionary
-3. **Adaptation learning** — verify UserAdaptationManager boosts recently used words
-4. **Performance benchmarks** — dictionary load time, prediction latency, cache hit rates
-
----
-
-## Metrics
-
-### Coverage (2026-09-01, measured on this device)
-| Type | Count | Execution Time |
-|------|-------|---------------|
-| Pure JVM | 2093 | 81 s |
-| MockK | 343 | 56 s |
-| Instrumented | 1395 (2026-08-18 sweep, not re-run) | ~31 min (emulator.wtf with orchestrator; use `--timeout 40m`) |
-| **Total** | **~3,831** | — |
-
-### New Test Classes (v1.3.0+)
-
-| Class | Tests | Type | Purpose |
-|-------|-------|------|---------|
-| `ContractionFlickerTest` | 20 | Instrumented | Paired contraction pipeline, prefix guard validation, flag mechanism |
-| `ContractionFlickerIntegrationTest` | 7 | Instrumented | Real SuggestionHandler + SuggestionBar + WordPredictor wired together |
-| ~~`SwipeLayoutSupportTest`~~ | — | JVM | Deleted 2026-08-18 (`a7d03bc8` — it validated the neural allowlist, which is gone). Layout routing is now covered by `swipe/SwipeEngineRouterTest` (routing table) + `swipe/LayoutScriptDeclarationTest` (layout `script` declarations) |
-| `BackspaceUndoTest` | 32 | JVM | Pipeline symmetry source scanning, backspace undo state |
-| `TypingSimulationTest` | 62 | Instrumented | End-to-end typing with real dictionary + contractions |
-| `DictionaryDataSourceTest` | 19 | Instrumented | Dictionary cache coherence, toggle word behavior |
-| ~~`VocabularyRankingTest`~~ | — | Instrumented | Deleted 2026-08-18 with the neural engine (`64f401d2` — it scored through `OptimizedVocabulary`). Contraction ranking/trie coverage now lives in the pure `swipe/ctc/` suite: `CtcContractionRankingTest` (real beam decoder over real shipped assets), `CtcContractionKeysTest`, `CtcModuleTest` |
-| `SuggestionBarAutofillTest` | 15 | Instrumented | Autofill padding, password mode |
-
-### Dual Pipeline Test Coverage
-
-The contraction flicker tests validate **pipeline symmetry** — both SuggestionHandler
-(typing path) and InputCoordinator (cursor sync path) must produce identical results:
-
-- **Paired contraction injection**: Both paths inject `it's` for `its`, `we'll` for `well`
-- **Prefix guard**: Both paths skip paired injection for prefixes < 3 chars
-- **exact_add support**: Both paths produce `exact_add:` entries for non-dictionary words
-- **SuggestionBar deduplication**: Identical suggestion lists don't trigger re-render
-- **Context clearing**: `onFinishInputView()` calls `clearAll()` to prevent cross-app leaking
-
----
-
-*Updated: 2026-03-15*
-*Original: 2026-01-18 (Gemini 3 Pro consultation)*
