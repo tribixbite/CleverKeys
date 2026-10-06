@@ -2286,9 +2286,9 @@
     <string name="clipboard_filter_size_unlimited">Sin máximo</string>
     <string name="clipboard_filter_size_invalid">El tamaño máximo debe ser al menos igual al mínimo.</string>
     <string name="clipboard_delete_results">Eliminar resultados</string>
-    <string name="clipboard_results_summary">%1$d resultados · %2$s</string>
+    <string name="clipboard_results_summary">Resultados: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Cargando resultados…</string>
-    <string name="clipboard_delete_confirm_title">¿Eliminar %1$d resultados?</string>
+    <string name="clipboard_delete_confirm_title">¿Eliminar resultados (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">¿Eliminar estos recortes coincidentes de %1$s en todas las páginas? Tamaño total de los recortes: %2$s. Las copias en otras pestañas se conservan. Se omiten las entradas nuevas o modificadas. Esta acción no se puede deshacer.</string>
     <string name="clipboard_delete_confirm_action">Eliminar</string>
     <string name="clipboard_delete_result">Se eliminaron %1$d de %2$d resultados confirmados.</string>

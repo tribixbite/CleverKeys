@@ -2238,9 +2238,9 @@
     <string name="clipboard_filter_size_unlimited">Maksimum yok</string>
     <string name="clipboard_filter_size_invalid">Maksimum boyut en az minimum boyut kadar olmalıdır.</string>
     <string name="clipboard_delete_results">Sonuçları sil</string>
-    <string name="clipboard_results_summary">%1$d sonuç · %2$s</string>
+    <string name="clipboard_results_summary">Sonuçlar: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Sonuçlar yükleniyor…</string>
-    <string name="clipboard_delete_confirm_title">%1$d sonuç silinsin mi?</string>
+    <string name="clipboard_delete_confirm_title">Sonuçları sil (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">Tüm sayfalarda %1$s kaynağından eşleşen bu kırpmalar silinsin mi? Toplam kırpma boyutu: %2$s. Diğer sekmelerdeki kopyalar kalır. Yeni veya değiştirilen girişler atlanır. Bu işlem geri alınamaz.</string>
     <string name="clipboard_delete_confirm_action">Sil</string>
     <string name="clipboard_delete_result">Onaylanan %2$d sonuçtan %1$d tanesi silindi.</string>

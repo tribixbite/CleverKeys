@@ -1,6 +1,6 @@
 # Current work queue
 
-Updated: 2026-10-05. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
+Updated: 2026-10-06. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
 Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/2026-08-30-full-backlog-campaign.md).
 
 The September 1 campaign baseline was `5fb58037`; subsequent work through `79f0b464`
@@ -307,6 +307,76 @@ Do not commit, tag, push, publish, or open external issues without explicit user
 - [x] Minified release build and release lint pass (26m39s); ARM64 signature,
   alignment and ZIP integrity verified. SHA-256
   `06287570847b841cd7033a629260487a885557ebe9b2e1df1191473ad4053264`.
-- [ ] TODO: install and verify device dialog, cancel,
-  range validation and synthetic-only deletion tests. Seeker `.170`
-  currently returns "No route to host"; no device state or personal clips changed.
+- [x] Oct 6 device dialog, cancel, range validation and synthetic-only deletion checks
+  pass (below). The earlier Oct 5 attempt could not reach Seeker `.170` and changed nothing.
+
+## Oct 6 Seeker clipboard verification
+
+- [x] Installed the verified `06287570...` ARM64 release APK; on-device hash matches.
+  Actual clipboard search isolates three `zzclip` synthetic private clippings (12 B,
+  1,264 B, 2,313 B). Confirmation shows 3 results / 3.6 kB; Cancel preserves them.
+  Minimum 1 kB leaves two results. Min 10 kB / max 1 kB shows error and disables Apply.
+- [x] Reconnected cleanup: confirmed deletion removed ONLY the two remaining
+  `zzclip-small` PINNED/TODOS copies (one in each); all three history fixtures were
+  already deleted. Private-copy toolbar restored OFF and read back in Settings.
+  System clipboard was never replaced; no personal clippings were selected for deletion.
+  Clipboard search/filter cleared; rotation 0/0, original CleverKeys IME and
+  NotificationShade focus verified after HOME + expanded Quick Settings. Scratch UI XML removed.
+- [x] Installed `7b763f5e...` minified APK and verified on-device hash; contrast fixed.
+  Actual confirmed two-entry size-filtered deletion passes; empty results disable deletion.
+  Cleared size filter and deleted the small history fixture; its pinned/todo copies remain.
+  Landscape filter and confirmation layout checks started; filter fits with reachable buttons.
+- [x] Verified final layout changes on device: integrated pagination + feedback into
+  result row after landscape tests exposed zero entry viewport. Clear old-tab feedback
+  on tab switch; use count-neutral summary/title wording in all 22 locales.
+  Intermediate minified APK built/verified/installed: SHA-256
+  `5bcb5cfccd8859bad557951a7d6fb23ab3af8b50481b4f725abf2741bf15108a`.
+  Intermediate synthetic HISTORY fixture `zzclip-final-oct6` deleted after landscape
+  confirmation/cancel/delete checks; toolbar restored OFF immediately after adding it,
+  then rotation 0 and Quick Settings restored. The 5bcb APK still clips entry text
+  in its 31dp landscape viewport. Responsive controls and a strengthened 48dp test
+  are implemented and verified on the final APK below.
+- [x] Contrast fix Kotlin/resource compilation and 15 focused clipboard state tests
+  pass (`build/oct6-clipboard-contrast-{compile,tests}.log`).
+- [x] First compact layout: Kotlin/resource/app/test APK build and all 2,739 pure tests pass.
+  Pixel7/API34 clipboard UI tests pass 4/4, zero skips: theme tint and compact 120dp
+  landscape entry viewport with paging/feedback. The initial viewport test fails against
+  the old APK (feedback hides entries), proving the regression before the fix.
+  EW final `da9a1948-5d91-4e39-9568-c704093f82d5`; baseline
+  `1d70de53-5929-4cd1-a28e-c6a630e21e4d` (expected failure).
+- [x] Responsive layout: guarded Kotlin/resource/app/test APK assembly + 15 clipboard
+  state tests pass (`build/oct6-clipboard-responsive-verified.log`). Two earlier test
+  invocations named the target incorrectly; corrected relative package suffix passes.
+  Pixel7/API34 UI tests pass 4/4, zero skips; viewport test covers 24 combinations:
+  720/890dp × 120dp landscape and 400dp × 300dp portrait, LTR/RTL, paging/feedback.
+  Requires ≥48dp entry viewport and 48dp paging targets, checks delete stays in bounds,
+  and remeasures the same view from wide to narrow. Against the intermediate two-row
+  APK it fails at the 48dp requirement (not a resource/class lookup error).
+  EW responsive `a7874daa-ec83-4810-bd3e-8bf93564cf93`; baseline
+  `33a8b2cc-2d9f-4860-b127-a1005032c9f7` (expected failure).
+- [x] Responsive minified release build + release lint pass (7m12s). Signature v2,
+  alignment and ZIP CRC verified; installed on Seeker with --no-streaming, on-device
+  SHA-256 matches `211798434811ca8e47d740e5b095ce7ae7ee38b52dc9b65b6c235c57b79d0526`.
+  Logs: `build/oct6-clipboard-responsive-{release,signature}.log`.
+- [x] Final minified Seeker pass: full clipping text and edit/send actions visible in
+  landscape; controls fit in portrait. Confirmation/cancel/confirmed deletion of ONLY
+  the 17-byte `zzclip-final-oct6` fixture pass. Empty results disable deletion; tab switch
+  clears old feedback. Real 32-page history: next reaches page 2, previous returns to 1;
+  all-result count remains 3,113 after removing the fixture. Portrait paging fits after rotation.
+  Evidence: `build/oct6-responsive-{landscape-entry,landscape-confirmation,
+  landscape-deleted,landscape-page2,portrait-paging-final}.jpg`.
+- [x] Final cleanup: all synthetic records removed; private-copy toolbar OFF, original
+  rotation 0/0 and CleverKeys IME retained. Host test field and Settings search empty,
+  clipboard search/filter cleared; scratch XML removed and NotificationShade focus restored.
+  All 55 Oct 6 screenshots are under 2000px and 4MiB. OS clipboard never replaced.
+- [x] Clipboard tab/close host regressions pass 9/9
+  (`build/oct6-clipboard-pane-close-tests.log`), alongside the 15 state guards and 4 UI tests.
+- [ ] TODO: maintainer daily-use pass with disposable text/media clippings and their usual
+  date/tag/privacy/status filters, editors, language/theme and accessibility settings.
+  Enlarged text and very short narrow split-screen panes need further device coverage.
+- [ ] TODO: host full mock suite is not clean this round: first run 937/938, predictor
+  latency 17.4ms vs 15ms; retry 937/938, adaptation background write missed 12s deadline.
+  Neither production area changed. Focused classes pass 16/16 and 11/11 without
+  changing limits. Host load was 12–15 on four cores; the cause is not established.
+  Logs: `build/oct6-clipboard-polish-{tests,recheck}.log`,
+  `build/oct6-{predictor-latency,persistence}-recheck.log`.

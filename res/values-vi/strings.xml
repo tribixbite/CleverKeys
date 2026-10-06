@@ -2214,9 +2214,9 @@
     <string name="clipboard_filter_size_unlimited">Không có tối đa</string>
     <string name="clipboard_filter_size_invalid">Kích thước tối đa phải lớn hơn hoặc bằng kích thước tối thiểu.</string>
     <string name="clipboard_delete_results">Xóa kết quả</string>
-    <string name="clipboard_results_summary">%1$d kết quả · %2$s</string>
+    <string name="clipboard_results_summary">Kết quả: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Đang tải kết quả…</string>
-    <string name="clipboard_delete_confirm_title">Xóa %1$d kết quả?</string>
+    <string name="clipboard_delete_confirm_title">Xóa kết quả (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">Xóa các đoạn cắt phù hợp này khỏi %1$s trên tất cả các trang? Tổng kích thước đoạn cắt: %2$s. Bản sao ở các thẻ khác vẫn được giữ lại. Mục mới hoặc đã thay đổi sẽ bị bỏ qua. Thao tác này không thể hoàn tác.</string>
     <string name="clipboard_delete_confirm_action">Xóa</string>
     <string name="clipboard_delete_result">Đã xóa %1$d trên %2$d kết quả đã xác nhận.</string>

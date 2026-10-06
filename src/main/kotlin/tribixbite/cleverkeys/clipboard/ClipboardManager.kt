@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.util.Log
+import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
@@ -29,6 +30,48 @@ import android.widget.Switch
 import android.widget.TextView
 import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.Calendar
+import kotlin.math.roundToInt
+
+/**
+ * Keeps a full entry row visible in short, wide clipboard panes. Measuring the
+ * available width also handles split-screen and remeasurement after rotation;
+ * device orientation alone does not describe the space the IME actually owns.
+ */
+class ClipboardPaneLayout @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null
+) : LinearLayout(context, attrs) {
+    private var wideControls: Boolean? = null
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val density = resources.displayMetrics.density
+        fun pixels(dp: Int) = (dp * density).roundToInt()
+        val wide = MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.UNSPECIFIED &&
+            MeasureSpec.getSize(widthMeasureSpec) >= pixels(720)
+        if (wideControls != wide) {
+            findViewById<LinearLayout>(R.id.clipboard_controls).orientation =
+                if (wide) HORIZONTAL else VERTICAL
+            findViewById<View>(R.id.clipboard_search_bar).apply {
+                layoutParams = (layoutParams as LayoutParams).apply {
+                    // Reserve room for the tabs, search and its action icons. Give
+                    // the remaining width to counts, paging and translated labels.
+                    width = if (wide) pixels(320) else LayoutParams.MATCH_PARENT
+                    height = pixels(if (wide) 48 else 40)
+                    weight = 0f
+                }
+            }
+            findViewById<View>(R.id.clipboard_result_controls).apply {
+                layoutParams = (layoutParams as LayoutParams).apply {
+                    width = if (wide) 0 else LayoutParams.MATCH_PARENT
+                    height = LayoutParams.WRAP_CONTENT
+                    weight = if (wide) 1f else 0f
+                }
+            }
+            wideControls = wide
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+}
 
 /**
  * Manages clipboard pane and clipboard history search functionality.
@@ -280,6 +323,8 @@ class ClipboardManager(
      */
     private fun switchToTab(tab: ClipboardTab) {
         if (currentTab == tab) return
+        // Deletion feedback belongs to the previous tab's confirmed snapshot.
+        bulkFeedback?.visibility = View.GONE
 
         // Cancel any in-progress edit or tag panel when switching tabs
         exitEditMode()
@@ -724,7 +769,10 @@ class ClipboardManager(
         resultSummary?.text = if (view.isResultsReady())
             context.getString(R.string.clipboard_results_summary, count, Formatter.formatShortFileSize(context, bytes))
         else context.getString(R.string.clipboard_results_loading)
-        deleteResultsButton?.isEnabled = !tagMode && !isInEditMode() && view.deletionSnapshot() != null
+        deleteResultsButton?.apply {
+            isEnabled = !tagMode && !isInEditMode() && view.deletionSnapshot() != null
+            alpha = if (isEnabled) 1f else 0.4f
+        }
     }
 
     /** Shows size, privacy, date and tab-specific status/tag filters. */
@@ -1022,6 +1070,8 @@ class ClipboardManager(
         if (key != 0) {
             pane.findViewById<View?>(R.id.clipboard_search_bar)?.setBackgroundColor(key)
             pane.findViewById<View?>(R.id.clipboard_pagination_bar)?.setBackgroundColor(key)
+            pane.findViewById<View?>(R.id.clipboard_delete_results)?.backgroundTintList =
+                android.content.res.ColorStateList.valueOf(key)
         }
         if (label != 0) {
             intArrayOf(

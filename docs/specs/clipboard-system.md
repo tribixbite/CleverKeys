@@ -322,8 +322,60 @@ Pixel7/API34 (205-row batch, version guards, tab/shared-media scope and rollback
 Minified release build and release lint pass; ARM64 signature, alignment and ZIP
 integrity verified. Logs: `build/clipboard-bulk-{tests,ew,release}.log`.
 
-TODO: device soak of narrow/landscape dialogs, cancellation and synthetic-only
-deletions. Seeker `.170` was unreachable ("No route to host"); no device state or
-personal clips changed. SQLite transaction coverage runs only on an isolated
+Oct 6 Seeker checks pass for the verified APK: search isolates three private fixtures,
+confirmation reports count/size, Cancel preserves them, minimum 1 kB leaves two,
+and min 10 kB / max 1 kB shows an error and disables Apply. Found and fixed faint
+Delete results text: background now follows colorKey, with explicit disabled dimming.
+Kotlin/resource compilation and 15 focused clipboard state tests pass.
+
+Oct 6 continued: the `7b763f5e...` APK passes on-device contrast, size-filtered
+two-entry deletion, empty-result disablement and independent pinned/todo retention
+after deleting all three history fixtures. The landscape filter fits with reachable
+buttons. Landscape also exposed zero entry space when separate pagination/feedback
+rows consume the short pane; pagination and feedback now share the result row.
+Tab changes hide old deletion feedback. Summary/title use count-neutral labels,
+translated by Gemini 3.8 in all 22 locales with placeholder validation.
+
+The first compact layout still left only 31dp in Seeker landscape and clipped entry
+text. `ClipboardPaneLayout` now measures actual available width: at 720dp or wider,
+search/tab controls and result/paging/deletion controls share one horizontal row;
+narrow panes retain two rows. Summary and feedback have bounded line counts (the
+full text remains available to accessibility). The regression now requires a full
+48dp entry viewport, across 720/890dp landscape and 400dp portrait, LTR/RTL,
+paging and feedback states, including remeasurement of the same view.
+
+The initial compact-viewport regression fails against the old APK and passes against
+the revised layout. All four UI tests pass on isolated Pixel7/API34, including
+framework-inflated button tint. Final Kotlin/resource compilation and 2,739 pure
+tests pass. Full mock runs each passed 937/938 but failed different unchanged
+timing checks (predictor latency, then asynchronous adaptation persistence); both
+classes pass in isolation without relaxed limits. These runs are not a clean full
+suite result; exact evidence and remaining checks are in `memory/todo.md`.
+
+Reconnected cleanup deleted both remaining synthetic pinned/todo copies and
+restored the private-copy toolbar OFF. Rotation 0/0, original IME and expanded
+Quick Settings focus were read back; scratch UI XML was removed. No personal
+clipping was selected for deletion, and the OS clipboard was never replaced.
+The intermediate minified APK (`5bcb5cfc...`) passes the count-neutral title,
+landscape confirmation/cancel/deletion and feedback-tab clearing checks. Its final
+synthetic history fixture was removed and rotation/focus restored. The stronger 48dp viewport test now
+passes all 24 width/direction/paging/feedback combinations;
+all four UI tests pass on Pixel7/API34 (`a7874daa-ec83-4810-bd3e-8bf93564cf93`).
+The intermediate APK fails the full-row requirement (`33a8b2cc-2d9f-4860-b127-a1005032c9f7`).
+Kotlin/resource/app/test assembly and all 15 clipboard state guards pass.
+
+Final responsive minified APK: release build/lint, signature v2, alignment and ZIP
+CRC pass; Seeker installed SHA matches
+`211798434811ca8e47d740e5b095ce7ae7ee38b52dc9b65b6c235c57b79d0526`.
+Actual landscape shows the full clipping row and its edit/send actions. Portrait
+paging fits after rotation; next/previous work across the real 32-page history,
+keeping the total at 3,113 after deleting the test fixture. Confirmation, Cancel,
+single-fixture deletion, empty-result disablement and tab-feedback clearing pass.
+The nine tab/close host tests pass too. All synthetic records are removed; toolbar,
+rotation, IME, empty test fields, scratch files and original focus are restored.
+Manual follow-through remains for everyday media/filter combinations, native-language
+review, enlarged text/accessibility and very short narrow split-screen panes.
+
+SQLite transaction coverage runs only on an isolated
 emulator, never the maintainer's database. A separate clear-OS-clipboard command and row
 swipe-to-delete remain independent open features (#168 / #175).

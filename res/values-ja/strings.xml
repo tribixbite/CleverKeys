@@ -2185,9 +2185,9 @@
     <string name="clipboard_filter_size_unlimited">上限なし</string>
     <string name="clipboard_filter_size_invalid">最大サイズは最小サイズ以上である必要があります。</string>
     <string name="clipboard_delete_results">結果を削除</string>
-    <string name="clipboard_results_summary">%1$d件の結果 · %2$s</string>
+    <string name="clipboard_results_summary">結果: %1$d · %2$s</string>
     <string name="clipboard_results_loading">結果を読み込み中…</string>
-    <string name="clipboard_delete_confirm_title">%1$d件の結果を削除しますか？</string>
+    <string name="clipboard_delete_confirm_title">結果を削除 (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">%1$sの全ページから一致するクリップを削除しますか？合計クリップサイズ: %2$s。他のタブのコピーは保持されます。新規または変更されたエントリはスキップされます。この操作は取り消せません。</string>
     <string name="clipboard_delete_confirm_action">削除</string>
     <string name="clipboard_delete_result">確認済みの結果%2$d件中%1$d件を削除しました。</string>

@@ -2627,9 +2627,9 @@
     <string name="clipboard_filter_size_unlimited">No maximum</string>
     <string name="clipboard_filter_size_invalid">Maximum size must be at least the minimum.</string>
     <string name="clipboard_delete_results">Delete results</string>
-    <string name="clipboard_results_summary">%1$d results · %2$s</string>
+    <string name="clipboard_results_summary">Results: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Loading results…</string>
-    <string name="clipboard_delete_confirm_title">Delete %1$d results?</string>
+    <string name="clipboard_delete_confirm_title">Delete results (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">Delete these matching clippings from %1$s across all pages? Combined clipping size: %2$s. Copies in other tabs stay. New or changed entries are skipped. This cannot be undone.</string>
     <string name="clipboard_delete_confirm_action">Delete</string>
     <string name="clipboard_delete_result">Deleted %1$d of %2$d confirmed results.</string>

@@ -20,7 +20,8 @@ Use this skill when working on clipboard tabs, entry rendering, inline editing, 
 ## Panel Layout Structure
 
 ```
-clipboard_pane.xml (LinearLayout, VERTICAL, match_parent)
+clipboard_pane.xml (ClipboardPaneLayout: LinearLayout, VERTICAL, match_parent)
+| Controls container: search + result rows (vertical narrow, horizontal at ≥720dp)
 |
 +-- Search bar row (LinearLayout, HORIZONTAL, 40dp, colorKey bg)
 |   +-- tab_history (ImageView, 36dp, ic_tab_history)
@@ -32,6 +33,9 @@ clipboard_pane.xml (LinearLayout, VERTICAL, match_parent)
 |   +-- clipboard_date_filter (ImageButton, 32dp)
 |   +-- clipboard_close_button (ImageButton, 32dp)
 |
++-- Result row (48dp minimum): summary + inline deletion feedback, pagination controls, Delete results
+|   +-- Pagination controls are GONE when ≤100 results; feedback is GONE until deletion
+|
 +-- Divider (View, 1dp, clipboard_divider_color)
 |
 +-- Content ScrollView (id: clipboard_content_scroll, weight=1)
@@ -41,8 +45,8 @@ clipboard_pane.xml (LinearLayout, VERTICAL, match_parent)
 +-- Tag panel (id: clipboard_tag_panel, weight=1, GONE)
 |   +-- Tag panel content (populated programmatically)
 |
-+-- Pagination bar (LinearLayout, 32dp, GONE)
-    +-- page_prev, page_info, page_next
+Pagination lives inside the result row; wide panes share search/results horizontally
+so a short landscape pane retains a full entry/action row.
 ```
 
 **Content area and tag panel are mutually exclusive** — when tag panel is VISIBLE, content scroll is GONE, and vice versa.
@@ -142,6 +146,7 @@ The clipboard pane has three mutually exclusive modes. Only one can be active at
 ```
 searchFilter (String) + regexMode (Boolean) + dateFilter (timestamp + direction)
 + tagFilter (Set<String> + matchAll) + statusFilter (active/planned/completed booleans)
++ sizeFilter (inclusive minimum/maximum payload bytes)
     ↓
 applyFilter(resetView=true) — filters full history → filteredHistory, resets page + expand
 applyFilter(resetView=false) — refilters but preserves page position + expand states
@@ -155,7 +160,14 @@ Regex uses `expandGlobShorthand()` for `*`/`?` glob support.
 
 ### Filter Dialog (`clipboard_filter_dialog.xml`)
 - Opened via filter icon in search bar (funnel icon, tinted when filters active)
-- Tab-aware sections: HISTORY=date only, PINNED=date+tags, TODOS=date+status+tags
+- All tabs: size + privacy + date; PINNED adds tags; TODOS adds status + tags
+- Size filter: UTF-8 text + thumbnails + saved media bytes, measured off the UI thread
+- Delete results: mandatory confirmation freezes every matching page in the current tab;
+  database row identity/version guards skip new or changed rows, and other-tab copies stay
+- Keep pagination and deletion feedback inside the result row. `ClipboardPaneLayout`
+  uses measured width (not orientation) to put search/results side by side at ≥720dp;
+  separate fixed rows consume the default 120dp landscape pane. Require at least 48dp
+  of entry viewport, not a partly clipped row. Tab switches hide old deletion feedback.
 - **Date filter**: Enable toggle + Before/After radio + DatePicker (spinner mode)
 - **Status filter** (TODOS): Active/Planned/Completed checkboxes, Apply disabled when all unchecked
 - **Tag filter**: Checkboxes for all known tags + Match Any/All toggle (Switch, no showText)

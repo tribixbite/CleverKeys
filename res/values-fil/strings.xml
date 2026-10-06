@@ -2239,9 +2239,9 @@
     <string name="clipboard_filter_size_unlimited">Walang maximum</string>
     <string name="clipboard_filter_size_invalid">Dapat hindi bababa ang maximum na laki sa minimum.</string>
     <string name="clipboard_delete_results">I-delete ang mga resulta</string>
-    <string name="clipboard_results_summary">%1$d na resulta · %2$s</string>
+    <string name="clipboard_results_summary">Mga resulta: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Naglo-load ng mga resulta…</string>
-    <string name="clipboard_delete_confirm_title">I-delete ang %1$d na resulta?</string>
+    <string name="clipboard_delete_confirm_title">I-delete ang mga resulta (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">I-delete ang magkakatugmang clipping na ito mula sa %1$s sa lahat ng page? Pinagsamang laki ng clipping: %2$s. Mananatili ang mga kopya sa ibang tab. Lalampasan ang mga bago o binagong entry. Hindi na ito mababawi.</string>
     <string name="clipboard_delete_confirm_action">I-delete</string>
     <string name="clipboard_delete_result">Na-delete ang %1$d sa %2$d na nakumpirmang resulta.</string>

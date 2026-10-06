@@ -106,6 +106,19 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
   use ADB for what they can't cover (visual verification, real-IME interaction, device state).
 - Saga hard rules stand: **never** framework restart (`stop`/`start` — bricks it), leave no
   trace (return focus, reinstall nothing extra), restore any settings you change (e.g. `ime set`).
+- Clipboard panes appear ABOVE the unchanged keyboard; a bottom-only screenshot cannot
+  confirm opening/closing. UIAutomator may omit IME nodes, and pane coordinates move with
+  host scroll/focus. Crop the header first and verify the synthetic query/count before
+  capturing entry content or deleting (Seeker, 2026-10-06).
+- Seeker streamed APK install stalled uncommitted near 99% after Wi-Fi trouble;
+  `adb install --no-streaming -r <apk>` succeeded. Verify installed SHA before UI checks.
+- Default landscape content panes are only ~120dp tall: separate 40dp search,
+  48dp result and 32dp pagination rows leave no entries. Even 31dp clips entry text;
+  require a full 48dp entry viewport and share search/results horizontally on wide panes.
+- `am start` can launch behind expanded Quick Settings on Seeker; collapse it with
+  `cmd statusbar collapse` before UI tests, then restore the original shade afterward.
+- Host `-PtestClass` is relative to `tribixbite.cleverkeys` (the runner always prepends it):
+  use `-PtestClass=clipboard.ClipboardHistoryViewStateGuardsTest`, not a fully qualified name.
 
 ---
 

@@ -2247,9 +2247,9 @@
     <string name="clipboard_filter_size_unlimited">Kein Maximum</string>
     <string name="clipboard_filter_size_invalid">Die maximale Größe muss mindestens der Mindestgröße entsprechen.</string>
     <string name="clipboard_delete_results">Ergebnisse löschen</string>
-    <string name="clipboard_results_summary">%1$d Ergebnisse · %2$s</string>
+    <string name="clipboard_results_summary">Ergebnisse: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Ergebnisse werden geladen…</string>
-    <string name="clipboard_delete_confirm_title">%1$d Ergebnisse löschen?</string>
+    <string name="clipboard_delete_confirm_title">Ergebnisse löschen (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">Diese übereinstimmenden Clips aus %1$s über alle Seiten hinweg löschen? Gesamte Clipgröße: %2$s. Kopien in anderen Tabs bleiben erhalten. Neue oder geänderte Einträge werden übersprungen. Dies kann nicht rückgängig gemacht werden.</string>
     <string name="clipboard_delete_confirm_action">Löschen</string>
     <string name="clipboard_delete_result">%1$d von %2$d bestätigten Ergebnissen gelöscht.</string>

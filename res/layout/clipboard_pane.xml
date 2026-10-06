@@ -9,7 +9,7 @@
      IGNORE app:tint entirely (only AppCompatImageView reads it). android:tint is applied natively
      (setImageTintList on API 21+) and keeps every icon on ?attr/colorLabel, matching the
      programmatic tints (updateFilterIconTint / applyRuntimeThemeColors) that resolve the same attr. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<tribixbite.cleverkeys.ClipboardPaneLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:background="?attr/colorKeyboard"
@@ -18,158 +18,216 @@
     android:layout_height="match_parent"
     tools:ignore="Overdraw">
 
-  <!-- Combined row: Tabs + Search + Close -->
-  <LinearLayout
-      android:id="@+id/clipboard_search_bar"
-      android:layout_width="match_parent"
-      android:layout_height="40dp"
-      android:orientation="horizontal"
-      android:gravity="center_vertical"
-      android:paddingStart="4dp"
-      android:paddingEnd="4dp"
-      android:background="?attr/colorKey">
-
-    <!-- History tab (default, highlighted) — vector icon replaces emoji -->
-    <ImageView
-        android:id="@+id/tab_history"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:src="@drawable/ic_tab_history"
-        android:tint="?attr/colorLabel"
-        tools:ignore="UseAppTint"
-        android:scaleType="centerInside"
-        android:padding="6dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/clipboard_tab_history"/>
-
-    <!-- Pinned tab -->
-    <ImageView
-        android:id="@+id/tab_pinned"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:src="@drawable/ic_tab_pinned"
-        android:tint="?attr/colorLabel"
-        tools:ignore="UseAppTint"
-        android:scaleType="centerInside"
-        android:padding="6dp"
-        android:alpha="0.5"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/clipboard_tab_pinned"/>
-
-    <!-- Todos tab -->
-    <ImageView
-        android:id="@+id/tab_todos"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:src="@drawable/ic_tab_todos"
-        android:tint="?attr/colorLabel"
-        tools:ignore="UseAppTint"
-        android:scaleType="centerInside"
-        android:padding="6dp"
-        android:alpha="0.5"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/clipboard_tab_todos"/>
-
-    <!-- Search field (fills remaining space) -->
-    <TextView
-        android:id="@+id/clipboard_search"
-        android:hint="@string/clipboard_search_hint"
-        android:layout_width="0dp"
-        android:layout_height="32dp"
-        android:layout_weight="1"
-        android:layout_marginStart="4dp"
-        android:layout_marginEnd="4dp"
+  <!-- Wide panes put search and results side by side; narrow panes retain two rows. -->
+  <LinearLayout android:id="@+id/clipboard_controls"
+      android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:orientation="vertical" android:gravity="center_vertical">
+    <!-- Combined row: Tabs + Search + Close -->
+    <LinearLayout
+        android:id="@+id/clipboard_search_bar"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:textSize="14sp"
-        android:textColor="?attr/colorLabel"
-        android:textColorHint="?attr/colorSubLabel"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:singleLine="true"
-        android:ellipsize="end"
-        android:clickable="true"
-        android:focusable="true"/>
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:background="?attr/colorKey">
 
-    <!-- Search clear button (hidden until user types) -->
-    <ImageButton
-        android:id="@+id/clipboard_search_clear"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
-        android:tint="?attr/colorLabel"
-        tools:ignore="UseAppTint"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/clipboard_clear_search"
-        android:scaleType="centerInside"
-        android:padding="4dp"
-        android:visibility="gone"/>
+      <!-- History tab (default, highlighted) — vector icon replaces emoji -->
+      <ImageView
+          android:id="@+id/tab_history"
+          android:layout_width="36dp"
+          android:layout_height="36dp"
+          android:src="@drawable/ic_tab_history"
+          android:tint="?attr/colorLabel"
+          tools:ignore="UseAppTint"
+          android:scaleType="centerInside"
+          android:padding="6dp"
+          android:clickable="true"
+          android:focusable="true"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:contentDescription="@string/clipboard_tab_history"/>
 
-    <!-- Regex toggle button (VSCode-style .* toggle, shown when search is active) -->
-    <TextView
-        android:id="@+id/clipboard_regex_toggle"
-        android:text="@string/glyph_regex_toggle"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:gravity="center"
-        android:textSize="12sp"
-        android:typeface="monospace"
-        android:textColor="?attr/colorLabel"
-        android:alpha="0.4"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/clipboard_toggle_regex"
-        android:visibility="gone"/>
+      <!-- Pinned tab -->
+      <ImageView
+          android:id="@+id/tab_pinned"
+          android:layout_width="36dp"
+          android:layout_height="36dp"
+          android:src="@drawable/ic_tab_pinned"
+          android:tint="?attr/colorLabel"
+          tools:ignore="UseAppTint"
+          android:scaleType="centerInside"
+          android:padding="6dp"
+          android:alpha="0.5"
+          android:clickable="true"
+          android:focusable="true"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:contentDescription="@string/clipboard_tab_pinned"/>
 
-    <!-- Date filter icon -->
-    <ImageButton
-        android:id="@+id/clipboard_date_filter"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:src="@android:drawable/ic_menu_sort_by_size"
-        android:tint="?attr/colorLabel"
-        tools:ignore="UseAppTint"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/clipboard_date_filter"
-        android:scaleType="centerInside"
-        android:padding="4dp"/>
+      <!-- Todos tab -->
+      <ImageView
+          android:id="@+id/tab_todos"
+          android:layout_width="36dp"
+          android:layout_height="36dp"
+          android:src="@drawable/ic_tab_todos"
+          android:tint="?attr/colorLabel"
+          tools:ignore="UseAppTint"
+          android:scaleType="centerInside"
+          android:padding="6dp"
+          android:alpha="0.5"
+          android:clickable="true"
+          android:focusable="true"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:contentDescription="@string/clipboard_tab_todos"/>
 
-    <!-- Close/dismiss clipboard pane button -->
-    <ImageButton
-        android:id="@+id/clipboard_close_button"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:src="@android:drawable/arrow_down_float"
-        android:tint="?attr/colorLabel"
-        tools:ignore="UseAppTint"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/clipboard_close"
-        android:scaleType="centerInside"
-        android:padding="4dp"/>
+      <!-- Search field (fills remaining space) -->
+      <TextView
+          android:id="@+id/clipboard_search"
+          android:hint="@string/clipboard_search_hint"
+          android:layout_width="0dp"
+          android:layout_height="32dp"
+          android:layout_weight="1"
+          android:layout_marginStart="4dp"
+          android:layout_marginEnd="4dp"
+          android:gravity="center_vertical"
+          android:textSize="14sp"
+          android:textColor="?attr/colorLabel"
+          android:textColorHint="?attr/colorSubLabel"
+          android:paddingStart="8dp"
+          android:paddingEnd="8dp"
+          android:singleLine="true"
+          android:ellipsize="end"
+          android:clickable="true"
+          android:focusable="true"/>
 
+      <!-- Search clear button (hidden until user types) -->
+      <ImageButton
+          android:id="@+id/clipboard_search_clear"
+          android:layout_width="28dp"
+          android:layout_height="28dp"
+          android:src="@android:drawable/ic_menu_close_clear_cancel"
+          android:tint="?attr/colorLabel"
+          tools:ignore="UseAppTint"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:contentDescription="@string/clipboard_clear_search"
+          android:scaleType="centerInside"
+          android:padding="4dp"
+          android:visibility="gone"/>
+
+      <!-- Regex toggle button (VSCode-style .* toggle, shown when search is active) -->
+      <TextView
+          android:id="@+id/clipboard_regex_toggle"
+          android:text="@string/glyph_regex_toggle"
+          android:layout_width="28dp"
+          android:layout_height="28dp"
+          android:gravity="center"
+          android:textSize="12sp"
+          android:typeface="monospace"
+          android:textColor="?attr/colorLabel"
+          android:alpha="0.4"
+          android:clickable="true"
+          android:focusable="true"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:contentDescription="@string/clipboard_toggle_regex"
+          android:visibility="gone"/>
+
+      <!-- Date filter icon -->
+      <ImageButton
+          android:id="@+id/clipboard_date_filter"
+          android:layout_width="32dp"
+          android:layout_height="32dp"
+          android:src="@android:drawable/ic_menu_sort_by_size"
+          android:tint="?attr/colorLabel"
+          tools:ignore="UseAppTint"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:contentDescription="@string/clipboard_date_filter"
+          android:scaleType="centerInside"
+          android:padding="4dp"/>
+
+      <!-- Close/dismiss clipboard pane button -->
+      <ImageButton
+          android:id="@+id/clipboard_close_button"
+          android:layout_width="32dp"
+          android:layout_height="32dp"
+          android:src="@android:drawable/arrow_down_float"
+          android:tint="?attr/colorLabel"
+          tools:ignore="UseAppTint"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:contentDescription="@string/clipboard_close"
+          android:scaleType="centerInside"
+          android:padding="4dp"/>
+
+    </LinearLayout>
+
+    <!-- Result scope always describes the full filtered list, not the current page. -->
+    <LinearLayout android:id="@+id/clipboard_result_controls"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="8dp"
+        android:paddingEnd="8dp" android:background="?attr/colorKeyboard">
+      <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+          android:layout_weight="1" android:orientation="vertical">
+        <TextView android:id="@+id/clipboard_result_summary" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:textSize="12sp"
+            android:maxLines="1" android:ellipsize="end"
+            android:textColor="?attr/colorSubLabel" android:accessibilityLiveRegion="polite"/>
+        <TextView android:id="@+id/clipboard_bulk_feedback" android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="2" android:ellipsize="end"
+            android:textSize="12sp" android:textColor="?attr/colorLabel" android:visibility="gone"
+            android:accessibilityLiveRegion="polite"/>
+      </LinearLayout>
+      <!-- Share the result row so pagination does not consume the landscape list. -->
+      <!-- Pagination bar (hidden when ≤100 items) -->
+      <LinearLayout
+          android:id="@+id/clipboard_pagination_bar"
+          android:layout_width="wrap_content"
+          android:layout_height="48dp"
+          android:orientation="horizontal"
+          android:gravity="center"
+          android:background="?attr/colorKey"
+          android:visibility="gone">
+
+        <TextView
+            android:id="@+id/clipboard_page_prev"
+            android:text="@string/glyph_page_prev"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:textColor="?attr/colorLabel"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackground"/>
+
+        <TextView
+            android:id="@+id/clipboard_page_info"
+            tools:text="1 / 1"
+            android:layout_width="wrap_content"
+            android:minWidth="48dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textSize="12sp"
+            android:textColor="?attr/colorSubLabel"/>
+
+        <TextView
+            android:id="@+id/clipboard_page_next"
+            android:text="@string/glyph_page_next"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:textColor="?attr/colorLabel"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackground"/>
+
+      </LinearLayout>
+      <Button android:id="@+id/clipboard_delete_results" android:layout_width="wrap_content"
+          android:layout_height="48dp" android:text="@string/clipboard_delete_results"
+          android:enabled="false" android:backgroundTint="?attr/colorKey"
+          android:textColor="?attr/colorLabel"/>
+    </LinearLayout>
   </LinearLayout>
-
-  <!-- Result scope always describes the full filtered list, not the current page. -->
-  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-      android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="8dp"
-      android:paddingEnd="8dp" android:background="?attr/colorKeyboard">
-    <TextView android:id="@+id/clipboard_result_summary" android:layout_width="0dp"
-        android:layout_height="wrap_content" android:layout_weight="1" android:textSize="12sp"
-        android:textColor="?attr/colorSubLabel" android:accessibilityLiveRegion="polite"/>
-    <Button android:id="@+id/clipboard_delete_results" android:layout_width="wrap_content"
-        android:layout_height="48dp" android:text="@string/clipboard_delete_results"
-        android:enabled="false" android:textColor="?attr/colorLabel"/>
-  </LinearLayout>
-  <TextView android:id="@+id/clipboard_bulk_feedback" android:layout_width="match_parent"
-      android:layout_height="wrap_content" android:paddingStart="8dp" android:paddingEnd="8dp"
-      android:textSize="12sp" android:textColor="?attr/colorLabel" android:visibility="gone"
-      android:accessibilityLiveRegion="polite"/>
 
   <!-- Divider below header -->
   <View
@@ -214,50 +272,6 @@
 
   </ScrollView>
 
-  <!-- Pagination bar (hidden when ≤100 items) -->
-  <LinearLayout
-      android:id="@+id/clipboard_pagination_bar"
-      android:layout_width="match_parent"
-      android:layout_height="32dp"
-      android:orientation="horizontal"
-      android:gravity="center"
-      android:background="?attr/colorKey"
-      android:visibility="gone">
 
-    <TextView
-        android:id="@+id/clipboard_page_prev"
-        android:text="@string/glyph_page_prev"
-        android:layout_width="48dp"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:textSize="16sp"
-        android:textColor="?attr/colorLabel"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="?android:attr/selectableItemBackground"/>
 
-    <TextView
-        android:id="@+id/clipboard_page_info"
-        tools:text="1 / 1"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:textSize="12sp"
-        android:textColor="?attr/colorSubLabel"/>
-
-    <TextView
-        android:id="@+id/clipboard_page_next"
-        android:text="@string/glyph_page_next"
-        android:layout_width="48dp"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:textSize="16sp"
-        android:textColor="?attr/colorLabel"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="?android:attr/selectableItemBackground"/>
-
-  </LinearLayout>
-
-</LinearLayout>
+</tribixbite.cleverkeys.ClipboardPaneLayout>

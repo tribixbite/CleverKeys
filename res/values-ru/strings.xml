@@ -2314,9 +2314,9 @@
     <string name="clipboard_filter_size_unlimited">Без максимума</string>
     <string name="clipboard_filter_size_invalid">Максимальный размер должен быть не меньше минимального.</string>
     <string name="clipboard_delete_results">Удалить результаты</string>
-    <string name="clipboard_results_summary">%1$d результатов · %2$s</string>
+    <string name="clipboard_results_summary">Результаты: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Загрузка результатов…</string>
-    <string name="clipboard_delete_confirm_title">Удалить %1$d результатов?</string>
+    <string name="clipboard_delete_confirm_title">Удалить результаты (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">Удалить эти совпадающие фрагменты из %1$s со всех страниц? Общий размер фрагментов: %2$s. Копии на других вкладках останутся. Новые или изменённые записи пропускаются. Это действие нельзя отменить.</string>
     <string name="clipboard_delete_confirm_action">Удалить</string>
     <string name="clipboard_delete_result">Удалено %1$d из %2$d подтверждённых результатов.</string>

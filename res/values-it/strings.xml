@@ -2308,9 +2308,9 @@
     <string name="clipboard_filter_size_unlimited">Nessun massimo</string>
     <string name="clipboard_filter_size_invalid">La dimensione massima deve essere almeno pari a quella minima.</string>
     <string name="clipboard_delete_results">Elimina risultati</string>
-    <string name="clipboard_results_summary">%1$d risultati · %2$s</string>
+    <string name="clipboard_results_summary">Risultati: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Caricamento risultati…</string>
-    <string name="clipboard_delete_confirm_title">Eliminare %1$d risultati?</string>
+    <string name="clipboard_delete_confirm_title">Elimina risultati (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">Eliminare questi ritagli corrispondenti da %1$s in tutte le pagine? Dimensione totale dei ritagli: %2$s. Le copie in altre schede rimarranno. Le voci nuove o modificate verranno ignorate. L\'azione non può essere annullata.</string>
     <string name="clipboard_delete_confirm_action">Elimina</string>
     <string name="clipboard_delete_result">Eliminati %1$d di %2$d risultati confermati.</string>

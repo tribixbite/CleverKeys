@@ -2279,9 +2279,9 @@
     <string name="clipboard_filter_size_unlimited">Bez ierobežojuma</string>
     <string name="clipboard_filter_size_invalid">Maksimālajam lielumam jābūt vismaz vienādam ar minimālo.</string>
     <string name="clipboard_delete_results">Dzēst rezultātus</string>
-    <string name="clipboard_results_summary">%1$d rezultāti · %2$s</string>
+    <string name="clipboard_results_summary">Rezultāti: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Ielādē rezultātus…</string>
-    <string name="clipboard_delete_confirm_title">Vai dzēst %1$d rezultātus?</string>
+    <string name="clipboard_delete_confirm_title">Dzēst rezultātus (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">Vai dzēst šos atbilstošos klipus no %1$s visās lapās? Kopējais klipu lielums: %2$s. Kopijas citās cilnēs paliks. Jauni vai mainīti ieraksti tiek izlaisti. Šo darbību nevar atsaukt.</string>
     <string name="clipboard_delete_confirm_action">Dzēst</string>
     <string name="clipboard_delete_result">Izdzēsti %1$d no %2$d apstiprinātajiem rezultātiem.</string>

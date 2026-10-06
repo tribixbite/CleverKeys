@@ -2320,9 +2320,9 @@
     <string name="clipboard_filter_size_unlimited">Без максимуму</string>
     <string name="clipboard_filter_size_invalid">Максимальний розмір має бути не меншим за мінімальний.</string>
     <string name="clipboard_delete_results">Видалити результати</string>
-    <string name="clipboard_results_summary">%1$d результатів · %2$s</string>
+    <string name="clipboard_results_summary">Результати: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Завантаження результатів…</string>
-    <string name="clipboard_delete_confirm_title">Видалити %1$d результатів?</string>
+    <string name="clipboard_delete_confirm_title">Видалити результати (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">Видалити ці відповідні фрагменти з %1$s на всіх сторінках? Загальний розмір фрагментів: %2$s. Копії в інших вкладках залишаться. Нові або змінені записи буде пропущено. Цю дію не можна скасувати.</string>
     <string name="clipboard_delete_confirm_action">Видалити</string>
     <string name="clipboard_delete_result">Видалено %1$d із %2$d підтверджених результатів.</string>

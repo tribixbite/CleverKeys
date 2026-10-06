@@ -2319,9 +2319,9 @@
     <string name="clipboard_filter_size_unlimited">Brak maksimum</string>
     <string name="clipboard_filter_size_invalid">Rozmiar maksymalny musi być co najmniej równy minimalnemu.</string>
     <string name="clipboard_delete_results">Usuń wyniki</string>
-    <string name="clipboard_results_summary">%1$d wyników · %2$s</string>
+    <string name="clipboard_results_summary">Wyniki: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Ładowanie wyników…</string>
-    <string name="clipboard_delete_confirm_title">Usunąć %1$d wyników?</string>
+    <string name="clipboard_delete_confirm_title">Usunąć wyniki (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">Usunąć pasujące wycinki z %1$s ze wszystkich stron? Łączny rozmiar wycinków: %2$s. Kopie na innych kartach pozostaną. Nowe lub zmienione wpisy zostaną pominięte. Tej operacji nie można cofnąć.</string>
     <string name="clipboard_delete_confirm_action">Usuń</string>
     <string name="clipboard_delete_result">Usunięto %1$d z %2$d potwierdzonych wyników.</string>

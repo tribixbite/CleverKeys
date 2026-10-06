@@ -2265,9 +2265,9 @@
     <string name="clipboard_filter_size_unlimited">بدون حداکثر</string>
     <string name="clipboard_filter_size_invalid">حداکثر اندازه باید حداقل برابر با حداقل اندازه باشد.</string>
     <string name="clipboard_delete_results">حذف نتایج</string>
-    <string name="clipboard_results_summary">%1$d نتیجه · %2$s</string>
+    <string name="clipboard_results_summary">نتایج: %1$d · %2$s</string>
     <string name="clipboard_results_loading">در حال بارگیری نتایج…</string>
-    <string name="clipboard_delete_confirm_title">حذف %1$d نتیجه؟</string>
+    <string name="clipboard_delete_confirm_title">حذف نتایج (%1$d)؟</string>
     <string name="clipboard_delete_confirm_message">آیا این بریده‌های منطبق از %1$s در تمام صفحه‌ها حذف شوند؟ مجموع حجم بریده‌ها: %2$s. نسخه‌های موجود در سایر تب‌ها باقی می‌مانند. ورودی‌های جدید یا تغییریافته نادیده گرفته می‌شوند. این عمل غیرقابل‌بازگشت است.</string>
     <string name="clipboard_delete_confirm_action">حذف</string>
     <string name="clipboard_delete_result">%1$d از %2$d نتیجه تأییدشده حذف شد.</string>

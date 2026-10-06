@@ -2227,9 +2227,9 @@
     <string name="clipboard_filter_size_unlimited">Geen maximum</string>
     <string name="clipboard_filter_size_invalid">Maximumgrootte moet minstens het minimum zijn.</string>
     <string name="clipboard_delete_results">Resultaten verwijderen</string>
-    <string name="clipboard_results_summary">%1$d resultaten · %2$s</string>
+    <string name="clipboard_results_summary">Resultaten: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Resultaten laden…</string>
-    <string name="clipboard_delete_confirm_title">%1$d resultaten verwijderen?</string>
+    <string name="clipboard_delete_confirm_title">Resultaten verwijderen (%1$d)?</string>
     <string name="clipboard_delete_confirm_message">Deze overeenkomende fragmenten van %1$s op alle pagina\'s verwijderen? Gecombineerde fragmentgrootte: %2$s. Kopieën op andere tabbladen blijven behouden. Nieuwe of gewijzigde items worden overgeslagen. Dit kan niet ongedaan worden gemaakt.</string>
     <string name="clipboard_delete_confirm_action">Verwijderen</string>
     <string name="clipboard_delete_result">%1$d van %2$d bevestigde resultaten verwijderd.</string>
