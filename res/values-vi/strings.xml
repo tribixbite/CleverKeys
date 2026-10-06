@@ -2221,4 +2221,10 @@
     <string name="clipboard_delete_confirm_action">Xóa</string>
     <string name="clipboard_delete_result">Đã xóa %1$d trên %2$d kết quả đã xác nhận.</string>
     <string name="clipboard_delete_error">Không thể xóa kết quả. Vui lòng thử lại.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Xóa khay nhớ tạm hệ thống</string>
+    <string name="cmd_clear_clipboard_desc">Xóa khay nhớ tạm hiện tại của Android; nhật ký đã lưu, mục đã ghim và việc cần làm vẫn được giữ lại.</string>
+    <string name="system_clipboard_cleared">Đã xóa khay nhớ tạm hệ thống</string>
+    <string name="system_clipboard_clear_failed">Không thể xóa khay nhớ tạm hệ thống</string>
 </resources>

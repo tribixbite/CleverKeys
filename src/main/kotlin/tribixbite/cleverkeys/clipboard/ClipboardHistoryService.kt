@@ -259,17 +259,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
         // If removing the entry that is actually on the OS clipboard, clear it too
         if (isCurrentClip) {
-            try {
-                if (VERSION.SDK_INT >= 28)
-                    _cm.clearPrimaryClip()
-                else
-                    _cm.setPrimaryClip(ClipData.newPlainText("", ""))
-            } catch (e: SecurityException) {
-                // Android 10+ may deny clipboard access when app is not in focus
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                    android.util.Log.d("ClipboardHistory", "Cannot clear clipboard (app not in focus): " + e.message)
-                }
-            }
+            clearPrimaryClipboard(_cm)
         }
 
         // Remove from database — returns media_path if entry had associated media file
@@ -916,6 +906,36 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     }
 
     companion object {
+        /**
+         * Clear Android's clipboard without reading it or initializing the saved-history service.
+         * Explicitly assigned command: no database writes, selection edits or bulk-delete behavior.
+         * API 21–27 retain one empty text item because native clearing starts at API 28.
+         */
+        fun clearSystemClipboard(context: Context): Int {
+            val cleared = try {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                clipboard != null && clearPrimaryClipboard(clipboard)
+            } catch (e: Exception) {
+                android.util.Log.w("ClipboardHistory", "System clipboard unavailable", e)
+                false
+            }
+            return if (cleared) R.string.system_clipboard_cleared else R.string.system_clipboard_clear_failed
+        }
+
+        /** Shared platform operation; production always uses the actual SDK, tests exercise both branches. */
+        @SuppressLint("NewApi") // Lint cannot infer the SDK guard through the injected host-test parameter.
+        internal fun clearPrimaryClipboard(clipboard: ClipboardManager, sdk: Int = VERSION.SDK_INT): Boolean {
+            return try {
+                if (sdk >= Build.VERSION_CODES.P) clipboard.clearPrimaryClip()
+                else clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
+                true
+            } catch (e: Exception) {
+                // OEM/Binder failures and profile restrictions must not crash the keyboard.
+                android.util.Log.w("ClipboardHistory", "Cannot clear system clipboard", e)
+                false
+            }
+        }
+
         // Stored callback for deferred initialization
         private var _pendingCallback: ClipboardPasteCallback? = null
         // Only ever holds ctx.applicationContext (assigned in on_startup) and is nulled after

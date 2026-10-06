@@ -2246,4 +2246,10 @@
     <string name="clipboard_delete_confirm_action">I-delete</string>
     <string name="clipboard_delete_result">Na-delete ang %1$d sa %2$d na nakumpirmang resulta.</string>
     <string name="clipboard_delete_error">Hindi ma-delete ang mga resulta. Subukan muli.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">I-clear ang clipboard ng system</string>
+    <string name="cmd_clear_clipboard_desc">I-clear ang kasalukuyang clipboard ng Android; mananatili ang naka-save na history, mga pin, at todo.</string>
+    <string name="system_clipboard_cleared">Na-clear ang clipboard ng system</string>
+    <string name="system_clipboard_clear_failed">Hindi ma-clear ang clipboard ng system</string>
 </resources>

@@ -2302,4 +2302,10 @@
     <string name="clipboard_delete_confirm_action">Șterge</string>
     <string name="clipboard_delete_result">S-au șters %1$d din %2$d rezultate confirmate.</string>
     <string name="clipboard_delete_error">Nu s-au putut șterge rezultatele. Încercați din nou.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Golește clipboardul de sistem</string>
+    <string name="cmd_clear_clipboard_desc">Golește clipboardul curent din Android; istoricul salvat, elementele fixate și activitățile rămân.</string>
+    <string name="system_clipboard_cleared">Clipboard de sistem golit</string>
+    <string name="system_clipboard_clear_failed">Nu s-a putut goli clipboardul de sistem</string>
 </resources>

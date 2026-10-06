@@ -1,6 +1,12 @@
 package tribixbite.cleverkeys
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.isToggleable
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -42,6 +48,27 @@ class ExtraKeysConfigActivityComposeTest {
         composeTestRule.onNodeWithText("Search extra keys", substring = true)
             .performTextInput("emoji")
         composeTestRule.waitForIdle()
+    }
+
+    @Test
+    fun clearSystemClipboardIsVisibleAndOptIn() {
+        val search = composeTestRule.onNode(hasSetTextAction())
+        search.performTextInput("clear_clipboard")
+        composeTestRule.onNodeWithText("Editing", substring = false).assertExists()
+        // Scroll by the stable key identifier: a recycled row can expose its new key ID
+        // while incorrectly retaining the old key's title and description.
+        composeTestRule.onNode(hasText("clear_clipboard") and !hasSetTextAction(), useUnmergedTree = true)
+            .performScrollTo().assertIsDisplayed()
+        composeTestRule.onNode(hasText("Clear system clipboard") and !hasSetTextAction()).assertIsDisplayed()
+        composeTestRule.onAllNodes(isToggleable()).assertCountEquals(1)
+        composeTestRule.onNode(isToggleable()).assertIsOff()
+
+        // A user can search the displayed label, not only the internal identifier.
+        search.performTextClearance()
+        search.performTextInput("Clear system clipboard")
+        composeTestRule.onNode(hasText("clear_clipboard") and !hasSetTextAction(), useUnmergedTree = true)
+            .performScrollTo().assertIsDisplayed()
+        composeTestRule.onNode(hasText("Clear system clipboard") and !hasSetTextAction()).assertIsDisplayed()
     }
 
     @Test

@@ -104,6 +104,7 @@ class KeyValue private constructor(
         CURSOR_DOC_END, // Move cursor to end of document (Ctrl+End)
         CLEAR, // #135: Erase entire field (selectAll + delete in one batched edit)
         COPY_PRIVATE, // #156: Copy selection into CleverKeys' private clipboard, never the OS clipboard
+        CLEAR_CLIPBOARD, // #168: clear only the current Android clipboard
     }
 
     enum class Placeholder {
@@ -725,6 +726,7 @@ class KeyValue private constructor(
             // #156: Private copy — stores the selection in CleverKeys' clipboard only, never the OS clipboard.
             // Text label (no key-font glyph reserved for this) so it always renders; small font to fit the key.
             "copy_private" -> editingKey("🔒⎘", Editing.COPY_PRIVATE, FLAG_SMALLER_FONT)
+            "clear_clipboard" -> editingKey("⌧", Editing.CLEAR_CLIPBOARD)
             "paste" -> editingKey(0xE032, Editing.PASTE)
             "cut" -> editingKey(0xE031, Editing.CUT)
             "selectAll" -> editingKey(0xE033, Editing.SELECT_ALL)

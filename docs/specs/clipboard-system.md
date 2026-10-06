@@ -377,5 +377,30 @@ Manual follow-through remains for everyday media/filter combinations, native-lan
 review, enlarged text/accessibility and very short narrow split-screen panes.
 
 SQLite transaction coverage runs only on an isolated
-emulator, never the maintainer's database. A separate clear-OS-clipboard command and row
-swipe-to-delete remain independent open features (#168 / #175).
+emulator, never the maintainer's database. Row swipe-to-delete remains an independent open feature (#175).
+
+### Clear system clipboard command (#168, 2026-10-06)
+
+`clear_clipboard` is an opt-in command in the Clipboard category, assignable to a
+short swipe, popover slot or extra key. It clears Android’s current clipboard and
+shows success/failure in the suggestion bar. It never deletes saved history, pinned
+entries, todos or their media, and never edits the target field or inline clipboard
+editor. No confirmation is shown for this explicitly assigned single-item action;
+Delete results continues to require confirmation.
+
+The shared platform operation uses `clearPrimaryClip()` on API 28+; API 21–27
+replace the current clip with one empty plain-text item. Existing empty-text
+ingestion rejects that fallback. The command does not read the clip, initialize
+the history singleton, or require an InputConnection. Missing services, profile
+restrictions and Binder/OEM failures produce failure feedback. Older apps checking
+only `hasPrimaryClip()` may still see an empty item on API 21–27. See the
+[Android ClipboardManager reference](https://developer.android.com/reference/android/content/ClipboardManager#clearPrimaryClip()).
+
+# TODO: native-speaker review of the new 22-locale command/feedback wording.
+
+Validation: core host suites 2,740 pure / 946 mock; final Android checks 6/6 include
+real clipboard clearing with unchanged saved rows/media references, extra-key ID/title
+search, correct recycled labels and opt-in state. The UI regression fails on the frozen
+older APK. The minified Seeker build exposes 225 commands and the correct extra-key
+row; no binding was saved and the device’s Android clipboard was preserved. The
+maintainer should exercise the assigned command using a disposable copied clip.

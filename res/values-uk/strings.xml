@@ -2327,4 +2327,10 @@
     <string name="clipboard_delete_confirm_action">Видалити</string>
     <string name="clipboard_delete_result">Видалено %1$d із %2$d підтверджених результатів.</string>
     <string name="clipboard_delete_error">Не вдалося видалити результати. Повторіть спробу.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Очистити системний буфер обміну</string>
+    <string name="cmd_clear_clipboard_desc">Очистити поточний буфер обміну Android; збережена історія, закріплені елементи та завдання залишаться.</string>
+    <string name="system_clipboard_cleared">Системний буфер обміну очищено</string>
+    <string name="system_clipboard_clear_failed">Не вдалося очистити системний буфер обміну</string>
 </resources>

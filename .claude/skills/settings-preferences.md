@@ -218,3 +218,18 @@ The companion spec at `docs/wiki/specs/settings/settings-system-
 architecture-spec.md` documents the full pipeline: Defaults singleton,
 Config constructor, ConfigurationManager listener, observer pattern,
 backup serialization format.
+
+## Extra-key additions
+
+Update `ExtraKeysPreference.EXTRA_KEYS`, title/description resources and
+`ExtraKeysConfigActivity`’s category filters together. The screen renders only
+categorized keys: adding to the underlying list alone increases the count while
+hiding the row, even under an exact-name search. Protect new keys with a Compose
+search/visibility test and assert opt-in state without toggling user preferences.
+
+Use stable lazy-item keys for extra-key rows and category headers. Resolve each
+row’s title/description from its current key/resources; unkeyed `remember` showed
+Greek/Math for `clear_clipboard` after filtering on Seeker. Search must match the
+displayed title as well as the identifier and description. For UI tests, distinguish
+the search field from the identical key-name text and scroll the filtered row into
+view before asserting visibility; never toggle a real device’s preference to test defaults.

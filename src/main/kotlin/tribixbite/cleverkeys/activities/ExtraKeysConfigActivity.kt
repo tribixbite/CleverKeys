@@ -76,6 +76,8 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
         } else {
             ExtraKeysPreference.extraKeys.filter { keyName ->
                 keyName.contains(searchQuery, ignoreCase = true) ||
+                ExtraKeysPreference.keyTitle(context.resources, keyName)
+                    .contains(searchQuery, ignoreCase = true) ||
                 ExtraKeysPreference.keyDescription(context.resources, keyName)
                     ?.contains(searchQuery, ignoreCase = true) == true
             }
@@ -89,7 +91,7 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
             R.string.extra_keys_group_layout_switching to filteredKeys.filter { it in listOf("switch_forward", "switch_backward", "switch_greekmath") },
             R.string.extra_keys_group_system to filteredKeys.filter { it in listOf("alt", "meta", "compose", "voice_typing", "switch_clipboard", "change_method", "capslock") },
             R.string.extra_keys_group_navigation to filteredKeys.filter { it in listOf("tab", "esc", "page_up", "page_down", "home", "end") },
-            R.string.extra_keys_group_editing to filteredKeys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" },
+            R.string.extra_keys_group_editing to filteredKeys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" || it == "clear_clipboard" },
             R.string.extra_keys_group_formatting to filteredKeys.filter { it in listOf("superscript", "subscript") },
             R.string.extra_keys_group_accents to filteredKeys.filter { it.startsWith("accent_") },
             R.string.extra_keys_group_symbols to filteredKeys.filter { it in listOf("€", "ß", "£", "§", "†", "ª", "º") },
@@ -194,7 +196,7 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 categorizedKeys.forEach { (categoryRes, keys) ->
-                    item {
+                    item(key = "category:$categoryRes") {
                         Text(
                             text = stringResource(categoryRes),
                             style = MaterialTheme.typography.titleMedium,
@@ -204,7 +206,7 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
                         )
                     }
 
-                    items(keys) { keyName ->
+                    items(keys, key = { it }) { keyName ->
                         ExtraKeyItem(
                             keyName = keyName,
                             isEnabled = enabledKeys[keyName] ?: false,
@@ -228,8 +230,8 @@ fun ExtraKeyItem(
     onToggle: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
-    val title = remember { ExtraKeysPreference.keyTitle(context.resources, keyName) }
-    val description = remember { ExtraKeysPreference.keyDescription(context.resources, keyName) }
+    val title = ExtraKeysPreference.keyTitle(context.resources, keyName)
+    val description = ExtraKeysPreference.keyDescription(context.resources, keyName)
 
     Card(
         modifier = Modifier.fillMaxWidth(),

@@ -2240,4 +2240,10 @@
     <string name="clipboard_delete_confirm_action">Törlés</string>
     <string name="clipboard_delete_result">%1$d / %2$d megerősített találat törölve.</string>
     <string name="clipboard_delete_error">Nem sikerült törölni a találatokat. Próbálja újra.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Rendszervágólap törlése</string>
+    <string name="cmd_clear_clipboard_desc">Az Android aktuális vágólapjának törlése; a mentett előzmények, kitűzések és feladatok megmaradnak.</string>
+    <string name="system_clipboard_cleared">Rendszervágólap törölve</string>
+    <string name="system_clipboard_clear_failed">A rendszervágólap törlése nem sikerült</string>
 </resources>

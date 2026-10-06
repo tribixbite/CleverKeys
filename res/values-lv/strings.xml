@@ -2286,4 +2286,10 @@
     <string name="clipboard_delete_confirm_action">Dzēst</string>
     <string name="clipboard_delete_result">Izdzēsti %1$d no %2$d apstiprinātajiem rezultātiem.</string>
     <string name="clipboard_delete_error">Neizdevās izdzēst rezultātus. Mēģiniet vēlreiz.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Notīrīt sistēmas starpliktuvi</string>
+    <string name="cmd_clear_clipboard_desc">Notīrīt Android pašreizējo starpliktuvi; saglabātā vēsture, piespraudes un uzdevumi paliek.</string>
+    <string name="system_clipboard_cleared">Sistēmas starpliktuve notīrīta</string>
+    <string name="system_clipboard_clear_failed">Neizdevās notīrīt sistēmas starpliktuvi</string>
 </resources>

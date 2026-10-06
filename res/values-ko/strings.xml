@@ -2193,4 +2193,10 @@
     <string name="clipboard_delete_confirm_action">삭제</string>
     <string name="clipboard_delete_result">확인된 결과 %2$d개 중 %1$d개를 삭제했습니다.</string>
     <string name="clipboard_delete_error">결과를 삭제하지 못했습니다. 다시 시도해 주세요.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">시스템 클립보드 지우기</string>
+    <string name="cmd_clear_clipboard_desc">Android의 현재 클립보드를 지웁니다. 저장된 기록, 고정 항목 및 할 일은 유지됩니다.</string>
+    <string name="system_clipboard_cleared">시스템 클립보드를 지웠습니다</string>
+    <string name="system_clipboard_clear_failed">시스템 클립보드를 지울 수 없습니다</string>
 </resources>

@@ -2234,4 +2234,10 @@
     <string name="clipboard_delete_confirm_action">Verwijderen</string>
     <string name="clipboard_delete_result">%1$d van %2$d bevestigde resultaten verwijderd.</string>
     <string name="clipboard_delete_error">Kon resultaten niet verwijderen. Probeer het opnieuw.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Systeemklembord wissen</string>
+    <string name="cmd_clear_clipboard_desc">Huidig Android-klembord wissen; opgeslagen geschiedenis, pins en to-do\'s blijven behouden.</string>
+    <string name="system_clipboard_cleared">Systeemklembord gewist</string>
+    <string name="system_clipboard_clear_failed">Kan systeemklembord niet wissen</string>
 </resources>

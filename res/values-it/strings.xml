@@ -2315,4 +2315,10 @@
     <string name="clipboard_delete_confirm_action">Elimina</string>
     <string name="clipboard_delete_result">Eliminati %1$d di %2$d risultati confermati.</string>
     <string name="clipboard_delete_error">Impossibile eliminare i risultati. Riprova.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Cancella appunti di sistema</string>
+    <string name="cmd_clear_clipboard_desc">Cancella gli appunti correnti di Android; la cronologia salvata, gli elementi bloccati e le attività restano.</string>
+    <string name="system_clipboard_cleared">Appunti di sistema cancellati</string>
+    <string name="system_clipboard_clear_failed">Impossibile cancellare gli appunti di sistema</string>
 </resources>

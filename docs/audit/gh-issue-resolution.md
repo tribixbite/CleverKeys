@@ -5,8 +5,8 @@
 **v1.5.0 (2026-07-15)**; v2.0.0 is prepped but NOT tagged, so every fix marked "unreleased" below
 reaches reporters only when that tag ships, and reporters must retest on a build that contains it.
 Commit hashes are the evidence, and test anchors live in the commits and the ledger
-(`2026-08-28-archive-verification.md`). Local implementation updates through 2026-10-05 add
-#90/#188 fixes, #145 coverage, #181 filtering and #184 bounds below; the GitHub counts remain the dated snapshot. **Nothing has been posted to GitHub.** Closing and
+(`2026-08-28-archive-verification.md`). Local implementation updates through 2026-10-06 add
+#90/#188 fixes, #145 coverage, #181 filtering, #184 bounds and #168’s clear-system-clipboard command below; the GitHub counts remain the dated snapshot. **Nothing has been posted to GitHub.** Closing and
 commenting are the maintainer's job. The "GH action" column is only a recommendation.
 
 Statuses: **DONE** (the ask is shipped on main; close candidate) · **FIXED** (bug fixed on main,
@@ -16,14 +16,14 @@ of the ask is shipped; the residual is named) · **IN PROGRESS** (being built no
 **OPEN-ROOT-CAUSED** (defect located in code, unfixed) · **NEEDS-REPRO** (plausible, cannot be
 settled from source alone).
 
-## Summary (GitHub snapshot 2026-10-01; implementation update 2026-10-05)
+## Summary (GitHub snapshot 2026-10-01; implementation update 2026-10-06)
 
 | Bucket | Count | Issues |
 |---|---|---|
-| DONE/FIXED but still open (close candidates) | 35 | bugs: #188 #184 #90 #179 #171 #169 #161 #160 #154 #152 #151 #149 #148 #146 #145 #141 #134 #130 #99 #96 #77 #75 #71 #67 #35 · features: #135 #111 #94 #93 #70 #68 #58 #49 #31 #26 |
+| DONE/FIXED but still open (close candidates) | 36 | bugs: #188 #184 #90 #179 #171 #169 #161 #160 #154 #152 #151 #149 #148 #146 #145 #141 #134 #130 #99 #96 #77 #75 #71 #67 #35 · features: #168 #135 #111 #94 #93 #70 #68 #58 #49 #31 #26 |
 | Close with explanation (NOT-REPRO / BY-DESIGN) | 2 | #162 #83 |
 | PARTIAL | 9 | #181 #175 #167 #156 #101 #97 #88 #80 #72 |
-| Still open | 17 | bugs: #186 #79 · features: #187 #177 #168 #165 #163 #147 #139 #121 #120 #115 #87 #84 #69 #61 #52 |
+| Still open | 16 | bugs: #186 #79 · features: #187 #177 #165 #163 #147 #139 #121 #120 #115 #87 #84 #69 #61 #52 |
 
 What changed since 2026-09-05:
 - The maintainer reopened nine bot-closed but resolved issues on 2026-09-21 (#67 #99 #130 #134
@@ -83,7 +83,7 @@ What changed since 2026-09-05:
 | 187 | Accents: macron below + ring below | **OPEN** (new 2026-09-25) | ISO 15919 transliteration (ṟ ḻ r̥). The command catalogue has `accent_macron`/`accent_ring`/`accent_dot_below` and `combining_macron`/`combining_ring`, but no *below* variants (U+0331, U+0325) and no matching `src/main/compose/accent_*.json`. Small: two dead keys + compose tables + Extra Keys checkboxes + 21-locale strings | accept; S |
 | 177 | Pinyin IME (zh-Hans/zh-Hant) | **OPEN** — contributor PR #183 | PR #183 (Macho0x, +2934/−12, 24 files): pack schema, `CKPY` phrase table, tap engine, swipe feed. The PR itself says device validation and pack data are still owed | review PR #183 |
 | 175 | Hide/summon keyboard + clipboard bulk delete + toolbar + editing panel | **PARTIAL** — part 1 **IMPLEMENTED, device checks partial (2026-10-05)** | (1) `01b6212d` implements `minimize_bar`/`minimize_fab` commands; Seeker verifies FAB minimize/expand and bar resize/expand, typing after expand, and full-size restoration after hide. Landscape transparent-strip scrolling and minimize/expand also pass on the launcher; RTL and cross-app checks remain pending. Summoning an already-hidden keyboard remains unbuilt (overlay permission would be required). (2) **IMPLEMENTED locally (2026-10-05)**: size filters combine with search and existing predicates; Delete results requires confirmation for a frozen all-page/current-tab snapshot. Changed/new entries and copies in other tabs remain; media cleanup checks references. Automated and device verification are tracked in `memory/todo.md`. Swipe-to-delete remains open. (3) **OPEN**: no customizable toolbar (same ask as #80 part 3). (4) **PARTIAL**: the actions exist as commands (`selectAll`, `cut`, `copy`, `paste`, `home`/`end`, `doc_home`/`doc_end`, `cursor_up`/`down`, `selection_mode`, `selection_cursor_*`) and can be bound to short swipes or the new subkey popover (`fde558cd`). The maintainer confirmed this on-thread 2026-09-29. There is no dedicated editing pane | update thread when (1) lands; (2) next |
-| 168 | Clear-clipboard key | **OPEN** | No `clear_clipboard` command in `CommandRegistry`. Building blocks exist: `ClipboardManager.clearPrimaryClip()` is already used at `ClipboardHistoryService.kt:264`, and `clearHistory()` has no callers. Pairs with #175 part 2 | S; do with #175(2) |
+| 168 | Clear-clipboard key | **DONE locally, unreleased** | Opt-in `clear_clipboard` command clears Android’s current clipboard, preserves saved history/pins/todos/media, uses native API 28+ or empty-text legacy fallback, and provides localized suggestion-bar feedback. Host/platform/device validation is recorded in `memory/todo.md` | Maintainer tests disposable clip before release |
 | 165 | Standard Korean behavior | **OPEN** | Only the upstream-inherited `hang_dubeolsik_kr.xml` with modifier-based Hangul composition (`KeyModifier` `Hangul_initial`/`Hangul_medial`). No standard automaton and no ko pack | L; needs a Korean-typing spec |
 | 163 | Background image | **OPEN** | No background-image support (`git grep` finds no hits). Theme Creator fields all wired (`c9939571`) | M |
 | 156 | Encrypted clipboard | **PARTIAL** | Ask 1 (OS clipboard never sees plaintext) **shipped, unreleased**: private copy/paste `4719feff`, short-swipe wiring `fde5e604`, leak fixes `cc91d127`, no system-clipboard fallback for private media `21a320ba` (ARC-001), provenance line `05db07eb`, schema V5 `is_private`. Ask 2 (at-rest encryption of the history DB) is **design-only**: `docs/plans/156-at-rest-clipboard-encryption.md` (PROPOSED, migration V6) | comment: ask 1 ships in 2.0; keep open for at-rest |
@@ -331,8 +331,9 @@ Ordered by value ÷ cost. Sizes: S ≤ 1 day, M ≈ 2-5 days, L > 1 week.
    #181(1) Monet live-update on the remaining device pass.
 4. **#175(2): size-filtered batch deletion implemented locally (2026-10-05).** Mandatory
    confirmation covers every matching page in the current tab; tests and device status
-   are recorded in `memory/todo.md`. **#168 remains open**: a separate `clear_clipboard`
-   command is not implemented. Swipe-to-delete rows remain open.
+   are recorded in `memory/todo.md`. **#168 is implemented locally (2026-10-06)**:
+   `clear_clipboard` clears Android’s current clipboard and preserves saved tabs.
+   Swipe-to-delete rows remain open.
 5. **#188 compose key — fixed locally (`97d6c25f`).** Device repro and fail-first
    pointer coverage confirmed the navigation tap cancels pending state. Fresh minified
    APK was installed with matching hash; both sequence orders, cancel and arrows pass.

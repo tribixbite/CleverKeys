@@ -926,6 +926,10 @@ class Keyboard2View @JvmOverloads constructor(
      */
     @android.annotation.SuppressLint("InlinedApi")
     private fun executeEditingCommand(editing: KeyValue.Editing, inputConnection: android.view.inputmethod.InputConnection?) {
+        if (editing == KeyValue.Editing.CLEAR_CLIPBOARD) {
+            _keyboard2?.showSuggestionBarMessage(context.getString(ClipboardHistoryService.clearSystemClipboard(context)))
+            return
+        }
         if (inputConnection == null) {
             Log.w("Keyboard2View", "Cannot execute editing command: no input connection")
             return

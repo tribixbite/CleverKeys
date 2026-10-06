@@ -2275,4 +2275,10 @@
     <string name="clipboard_delete_confirm_action">Excluir</string>
     <string name="clipboard_delete_result">Excluídos %1$d de %2$d resultados confirmados.</string>
     <string name="clipboard_delete_error">Não foi possível excluir os resultados. Tente novamente.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Limpar área de transferência do sistema</string>
+    <string name="cmd_clear_clipboard_desc">Limpa a área de transferência atual do Android; histórico salvo, itens fixados e tarefas são mantidos.</string>
+    <string name="system_clipboard_cleared">Área de transferência do sistema limpa</string>
+    <string name="system_clipboard_clear_failed">Não foi possível limpar a área de transferência do sistema</string>
 </resources>

@@ -268,6 +268,46 @@ class Keyboard2ViewCustomSwipeDispatchTest {
         verify(exactly = 0) { inputConnection.deleteSurroundingText(any(), any()) }
     }
 
+    @Test
+    fun clearClipboardCustomCommandDoesNotEditTheTargetField() {
+        val cm = mockk<android.content.ClipboardManager>(relaxed = true)
+        every { view.context.getSystemService(Context.CLIPBOARD_SERVICE) } returns cm
+        mockkStatic(android.content.ClipData::class)
+        every { android.content.ClipData.newPlainText("", "") } returns mockk()
+        every { view.context.getString(R.string.system_clipboard_cleared) } returns "System clipboard cleared"
+        view.onCustomShortSwipe(commandMapping("clear_clipboard"))
+        verify(exactly = 1) {
+            if (android.os.Build.VERSION.SDK_INT >= 28) cm.clearPrimaryClip() else cm.setPrimaryClip(any())
+        }
+        verify(exactly = 1) { service.showSuggestionBarMessage("System clipboard cleared") }
+        verify(exactly = 0) { inputConnection.commitText(any(), any()) }
+        verify(exactly = 0) { inputConnection.performContextMenuAction(any()) }
+        verify(exactly = 0) { inputConnection.deleteSurroundingText(any(), any()) }
+    }
+
+    @Test
+    fun clearClipboardOrdinaryKeyStillWorksDuringInlineEditing() {
+        val text = apostropheEditor("Bowie ", autoSpacePending = true)
+        val context = mockk<Context>(relaxed = true)
+        val cm = mockk<android.content.ClipboardManager>(relaxed = true)
+        every { context.getSystemService(Context.CLIPBOARD_SERVICE) } returns cm
+        every { context.getString(R.string.system_clipboard_cleared) } returns "System clipboard cleared"
+        every { text.receiver.getContext() } returns context
+        every { text.receiver.isClipboardEditMode() } returns true
+        mockkStatic(android.content.ClipData::class)
+        every { android.content.ClipData.newPlainText("", "") } returns mockk()
+        Config.globalConfig().handler!!.key_up(
+            KeyValue.getKeyByName("clear_clipboard"), Pointers.Modifiers.EMPTY, false
+        )
+        verify(exactly = 1) {
+            if (android.os.Build.VERSION.SDK_INT >= 28) cm.clearPrimaryClip() else cm.setPrimaryClip(any())
+        }
+        verify(exactly = 1) { text.receiver.showPrivateCopyFeedback("System clipboard cleared") }
+        verify(exactly = 0) { text.receiver.selectAllClipboardEdit() }
+        verify(exactly = 0) { text.receiver.backspaceClipboardEdit() }
+        assertEquals("Bowie ", text.editor.toString())
+    }
+
     private data class ApostropheEditor(
         val editor: StringBuilder,
         val tracker: PredictionContextTracker,

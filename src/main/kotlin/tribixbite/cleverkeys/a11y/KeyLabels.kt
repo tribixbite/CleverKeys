@@ -142,6 +142,7 @@ object KeyLabels {
     private fun describeEditing(kv: KeyValue, getString: (Int) -> String): String? =
         when (kv.getEditing()) {
             KeyValue.Editing.COPY -> getString(R.string.key_descr_copy)
+            KeyValue.Editing.CLEAR_CLIPBOARD -> getString(R.string.cmd_clear_clipboard)
             KeyValue.Editing.COPY_PRIVATE -> getString(R.string.key_descr_copy_private)
             KeyValue.Editing.PASTE -> getString(R.string.key_descr_paste)
             KeyValue.Editing.CUT -> getString(R.string.key_descr_cut)

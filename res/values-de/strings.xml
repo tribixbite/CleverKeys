@@ -2254,4 +2254,10 @@
     <string name="clipboard_delete_confirm_action">Löschen</string>
     <string name="clipboard_delete_result">%1$d von %2$d bestätigten Ergebnissen gelöscht.</string>
     <string name="clipboard_delete_error">Ergebnisse konnten nicht gelöscht werden. Erneut versuchen.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">System-Zwischenablage leeren</string>
+    <string name="cmd_clear_clipboard_desc">Aktuelle Android-Zwischenablage leeren; gespeicherter Verlauf, Angepinntes und Aufgaben bleiben erhalten.</string>
+    <string name="system_clipboard_cleared">System-Zwischenablage geleert</string>
+    <string name="system_clipboard_clear_failed">System-Zwischenablage konnte nicht geleert werden</string>
 </resources>

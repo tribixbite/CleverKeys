@@ -142,7 +142,7 @@ class KeyLabelsTest {
 
     @Test
     fun editingKeysAreSpeakable() {
-        for (name in listOf("copy", "paste", "cut", "selectAll", "undo", "redo", "copy_private")) {
+        for (name in listOf("copy", "paste", "cut", "selectAll", "undo", "redo", "copy_private", "clear_clipboard")) {
             val label = describe(KeyValue.getKeyByName(name))
             assertThat(label).isNotEmpty()
             assertThat(hasPua(label)).isFalse()

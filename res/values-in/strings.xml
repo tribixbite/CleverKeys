@@ -2205,4 +2205,10 @@
     <string name="clipboard_delete_confirm_action">Hapus</string>
     <string name="clipboard_delete_result">Berhasil menghapus %1$d dari %2$d hasil yang dikonfirmasi.</string>
     <string name="clipboard_delete_error">Gagal menghapus hasil. Coba lagi.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Bersihkan papan klip sistem</string>
+    <string name="cmd_clear_clipboard_desc">Bersihkan papan klip Android saat ini; riwayat tersimpan, sematan, dan tugas tetap ada.</string>
+    <string name="system_clipboard_cleared">Papan klip sistem dibersihkan</string>
+    <string name="system_clipboard_clear_failed">Gagal membersihkan papan klip sistem</string>
 </resources>

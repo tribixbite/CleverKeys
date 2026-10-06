@@ -2191,4 +2191,10 @@
     <string name="clipboard_delete_confirm_action">删除</string>
     <string name="clipboard_delete_result">已删除 %1$d 个已确认结果（共 %2$d 个）。</string>
     <string name="clipboard_delete_error">无法删除结果。请重试。</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">清除系统剪贴板</string>
+    <string name="cmd_clear_clipboard_desc">清除 Android 当前剪贴板；已保存的历史记录、置顶和待办事项将保留。</string>
+    <string name="system_clipboard_cleared">系统剪贴板已清除</string>
+    <string name="system_clipboard_clear_failed">无法清除系统剪贴板</string>
 </resources>

@@ -716,6 +716,13 @@ class KeyEventHandler(
 
     @SuppressLint("InlinedApi")
     private fun handleEditingKey(ev: KeyValue.Editing) {
+        // A system action must work even while an inline clipboard field owns text routing.
+        if (ev == KeyValue.Editing.CLEAR_CLIPBOARD) {
+            recv.getContext()?.let { context ->
+                recv.showPrivateCopyFeedback(context.getString(ClipboardHistoryService.clearSystemClipboard(context)))
+            }
+            return
+        }
         // Route editing operations to clipboard edit field when in inline edit mode
         if (recv.isClipboardEditMode()) {
             when (ev) {
@@ -731,6 +738,7 @@ class KeyEventHandler(
             return
         }
         when (ev) {
+            KeyValue.Editing.CLEAR_CLIPBOARD -> Unit // handled above, independent of InputConnection
             KeyValue.Editing.COPY_PRIVATE -> handlePrivateCopy()
             KeyValue.Editing.COPY -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.copy)
             KeyValue.Editing.PASTE -> handlePaste()

@@ -2316,4 +2316,10 @@
     <string name="clipboard_delete_confirm_action">Smazat</string>
     <string name="clipboard_delete_result">Smazáno %1$d z %2$d potvrzených výsledků.</string>
     <string name="clipboard_delete_error">Výsledky se nepodařilo smazat. Zkuste to znovu.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Vymazat systémovou schránku</string>
+    <string name="cmd_clear_clipboard_desc">Vymazat aktuální schránku Androidu; uložená historie, připnuté položky a úkoly zůstanou.</string>
+    <string name="system_clipboard_cleared">Systémová schránka byla vymazána</string>
+    <string name="system_clipboard_clear_failed">Systémovou schránku se nepodařilo vymazat</string>
 </resources>

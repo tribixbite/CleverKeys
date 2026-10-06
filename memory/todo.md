@@ -37,8 +37,9 @@ maintainer-owned uncommitted manual-checklist resets.
 - [x] #90 committed as `ba5bbee6`; refreshed and verified minified test APK installed.
 - [ ] TODO: maintainer checks a compact bottom-row-free layout with Scale Numpad Height
   enabled, numeric/PIN with scaling on/off, and an explicitly opted-in custom numpad.
-- [ ] TODO: device-check #181 glyph filtering and #184 oversized-pack guard; continue
-  #175 clipboard bulk delete/#168 clear key, #188 compose repro and #186/#61 layout language.
+- [ ] TODO: finish #181 unsupported-glyph and #184 oversized-update device checks;
+  #186/#61 layout language and explicit apostrophe suffix commands remain open.
+  Clipboard size/bulk deletion, #168 clear key and #188 compose are implemented; see below.
 - [ ] TODO: maintainer manually tests the issue fixes and both minimize styles before 2.0.
 
 ## October 3 device pass and “wet” report
@@ -374,9 +375,52 @@ Do not commit, tag, push, publish, or open external issues without explicit user
 - [ ] TODO: maintainer daily-use pass with disposable text/media clippings and their usual
   date/tag/privacy/status filters, editors, language/theme and accessibility settings.
   Enlarged text and very short narrow split-screen panes need further device coverage.
-- [ ] TODO: host full mock suite is not clean this round: first run 937/938, predictor
+- [ ] TODO: investigate intermittent full-suite timing failures from the clipboard polish
+  round: first run 937/938, predictor
   latency 17.4ms vs 15ms; retry 937/938, adaptation background write missed 12s deadline.
   Neither production area changed. Focused classes pass 16/16 and 11/11 without
   changing limits. Host load was 12–15 on four cores; the cause is not established.
-  Logs: `build/oct6-clipboard-polish-{tests,recheck}.log`,
+  The subsequent clear-command round passed all 946 mocks twice; no production timing
+  fix or relaxed limit was applied. Logs: `build/oct6-clipboard-polish-{tests,recheck}.log`,
   `build/oct6-{predictor-latency,persistence}-recheck.log`.
+
+## #168 clear system clipboard command and extra-key fixes (2026-10-06)
+
+- [x] Opt-in registry/extra-key command, shared ordinary-key/custom-gesture clearing,
+  native API 28+ and empty-text legacy fallback; saved clipboard tabs remain intact.
+- [x] Four command/feedback strings added to all 22 locales via PAL Gemini 3.8.
+- [x] Full core-command host suites pass: 2,740 pure and 946 mock tests; debug and
+  androidTest APKs build (`build/oct6-clear-clipboard-final-tests.log`).
+- [x] Real clipboard API + all-tab/media preservation: 1/1 executed, no errors/skips,
+  Pixel7/API34 emulator run `ae7ece84-4133-413c-8023-9995eff3a0d4`.
+- [x] First minified release lint/build passes; Seeker shows 225 commands, retains
+  its 2 mappings, finds `clear_clipboard` under search and previews the correct action.
+- [x] Extra-key category includes the command. Fixed recycled row labels (Seeker showed
+  Greek/Math for `clear_clipboard`) with stable item/header keys and current-resource
+  labels; search now matches displayed titles. Both searches show the right row on Seeker,
+  checkbox off, 19/108 keys enabled, original 2 mappings retained. No preference toggled.
+- [x] Final Android gates pass 6/6, zero errors/skips (`e9a2ba28-caea-4339-9fec-385b25e86667`);
+  same regression fails on frozen category-only APK at the stale-title assertion
+  (`2f93dbea-8ba1-4770-b867-77db737f1f6c`), after finding/scrolling the key ID.
+- [x] Final minified release Kotlin/lint-vital/R8/build passes (6m44s); signature,
+  alignment and archive checks pass. Seeker installation SHA matches
+  `5f87bd1d7e32287895b0e4eba81bf93f9aea11df4055ac15a1b9415acf492a15`.
+  Log: `build/oct6-clear-system-clipboard-labels-release.log`. Android clipboard never
+  replaced or cleared on Seeker.
+- [ ] TODO: finish focus/UI-dump cleanup and read back IME/rotation; ADB timed out
+  as final cleanup began, after the successful extra-key checks.
+- [ ] TODO: maintainer tests the assigned command on a disposable copied clip; this
+  session preserves the Seeker’s existing Android clipboard. Native wording review remains.
+
+### Current next work
+
+- [ ] TODO: explicit Append apostrophe-s / Append apostrophe commands with verified
+  word attachment, suffix-only undo and learning-state correction.
+- [ ] TODO: `ad`/`wet` encoder/calibration work using fresh writer/session-separated traces;
+  rejected heuristics remain unshipped. No per-word switch to geometric is proposed.
+- [ ] TODO: Bangla spelling-preserving dictionary/mark pipeline before a swipe model/pack;
+  existing tap layouts remain the current support level.
+- [ ] TODO: layout-linked language (#186/#61), terminal package UI and remaining release
+  manual coverage.
+- [ ] TODO: existing `autofill` extra key is counted but still omitted from the screen’s
+  category filters; add its category/coverage gate. Short-viewport extra-key checks remain.

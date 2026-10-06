@@ -2192,4 +2192,10 @@
     <string name="clipboard_delete_confirm_action">削除</string>
     <string name="clipboard_delete_result">確認済みの結果%2$d件中%1$d件を削除しました。</string>
     <string name="clipboard_delete_error">結果を削除できませんでした。もう一度お試しください。</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">システムのクリップボードを消去</string>
+    <string name="cmd_clear_clipboard_desc">Androidの現在のクリップボードを消去します。保存した履歴、ピン留め、ToDoは保持されます。</string>
+    <string name="system_clipboard_cleared">システムのクリップボードを消去しました</string>
+    <string name="system_clipboard_clear_failed">システムのクリップボードを消去できませんでした</string>
 </resources>

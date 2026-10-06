@@ -2293,4 +2293,10 @@
     <string name="clipboard_delete_confirm_action">Eliminar</string>
     <string name="clipboard_delete_result">Se eliminaron %1$d de %2$d resultados confirmados.</string>
     <string name="clipboard_delete_error">No se pudieron eliminar los resultados. Vuelve a intentarlo.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Borrar portapapeles del sistema</string>
+    <string name="cmd_clear_clipboard_desc">Borra el portapapeles actual de Android; el historial guardado, los elementos fijados y las tareas se conservan.</string>
+    <string name="system_clipboard_cleared">Portapapeles del sistema borrado</string>
+    <string name="system_clipboard_clear_failed">No se pudo borrar el portapapeles del sistema</string>
 </resources>

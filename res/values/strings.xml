@@ -2634,4 +2634,10 @@
     <string name="clipboard_delete_confirm_action">Delete</string>
     <string name="clipboard_delete_result">Deleted %1$d of %2$d confirmed results.</string>
     <string name="clipboard_delete_error">Could not delete results. Try again.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Clear system clipboard</string>
+    <string name="cmd_clear_clipboard_desc">Clear Android’s current clipboard; saved history, pins and todos stay.</string>
+    <string name="system_clipboard_cleared">System clipboard cleared</string>
+    <string name="system_clipboard_clear_failed">Could not clear system clipboard</string>
 </resources>

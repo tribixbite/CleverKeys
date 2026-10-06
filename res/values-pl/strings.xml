@@ -2326,4 +2326,10 @@
     <string name="clipboard_delete_confirm_action">Usuń</string>
     <string name="clipboard_delete_result">Usunięto %1$d z %2$d potwierdzonych wyników.</string>
     <string name="clipboard_delete_error">Nie udało się usunąć wyników. Spróbuj ponownie.</string>
+
+    <!-- #168: current Android clipboard only; saved entries are preserved. -->
+    <string name="cmd_clear_clipboard">Wyczyść schowek systemowy</string>
+    <string name="cmd_clear_clipboard_desc">Wyczyść bieżący schowek Androida; zapisana historia, przypięte elementy i zadania zostaną zachowane.</string>
+    <string name="system_clipboard_cleared">Schowek systemowy wyczyszczony</string>
+    <string name="system_clipboard_clear_failed">Nie udało się wyczyścić schowka systemowego</string>
 </resources>

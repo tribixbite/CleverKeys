@@ -52,6 +52,55 @@ class ClipboardMediaDatabaseTest {
         db.writableDatabase.delete("todo_entries", null, null)
     }
 
+    /** Emulator-only: foreground access to the real Android clipboard, preserving all DB tabs. */
+    @Test
+    fun clearSystemClipboardPreservesSavedMediaAndCopies() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val activity = instrumentation.startActivitySync(
+            android.content.Intent(context, SettingsActivity::class.java)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+        try {
+            val inserted = db.addMediaClipboardEntry("saved image", futureExpiry, "image/png",
+                testThumbnail, "media/kept.png", "clear-key-test")
+            assertTrue(inserted)
+            val entry = db.getActiveClipboardEntries().single()
+            db.pinEntry(content = entry.content, mimeType = entry.mimeType, thumbnailBlob = entry.thumbnailBlob,
+                mediaPath = entry.mediaPath, isPrivate = entry.isPrivate, sourcePackage = entry.sourcePackage)
+            db.addTodoEntry(content = entry.content, mimeType = entry.mimeType, thumbnailBlob = entry.thumbnailBlob,
+                mediaPath = entry.mediaPath, isPrivate = entry.isPrivate, sourcePackage = entry.sourcePackage)
+            fun snapshot(entries: List<ClipboardEntry>): List<List<Any?>> = entries.map {
+                listOf(it.rowId, it.content, it.timestamp, it.mimeType, it.thumbnailBlob?.toList(),
+                    it.mediaPath, it.tags, it.todoStatus, it.isPrivate, it.sourcePackage, it.sizeBytes)
+            }
+            val historyBefore = snapshot(db.getActiveClipboardEntries())
+            val pinnedBefore = snapshot(db.getPinnedEntries())
+            val todoBefore = snapshot(db.getTodoEntries())
+            instrumentation.runOnMainSync {
+                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val clip = android.content.ClipData.newPlainText("clear key fixture", "zz-clear-key")
+                if (android.os.Build.VERSION.SDK_INT >= 33) {
+                    clip.description.extras = android.os.PersistableBundle().apply {
+                        putBoolean("android.content.extra.IS_SENSITIVE", true)
+                    }
+                }
+                cm.setPrimaryClip(clip)
+                assertTrue(cm.hasPrimaryClip())
+                assertEquals(R.string.system_clipboard_cleared, ClipboardHistoryService.clearSystemClipboard(context))
+                assertFalse(cm.hasPrimaryClip())
+            }
+            assertEquals(historyBefore, snapshot(db.getActiveClipboardEntries()))
+            assertEquals(pinnedBefore, snapshot(db.getPinnedEntries()))
+            assertEquals(todoBefore, snapshot(db.getTodoEntries()))
+            listOf(db.getActiveClipboardEntries(), db.getPinnedEntries(), db.getTodoEntries()).forEach {
+                assertArrayEquals(testThumbnail, it.single().thumbnailBlob)
+            }
+            assertTrue(db.isMediaPathReferenced("media/kept.png"))
+        } finally {
+            instrumentation.runOnMainSync { activity.finish() }
+        }
+    }
+
     // =========================================================================
     // Basic media entry CRUD
     // =========================================================================

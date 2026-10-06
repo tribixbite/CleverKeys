@@ -108,6 +108,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "copy",
             "paste",
             "cut",
+            "clear_clipboard", // #168: opt-in current Android clipboard action
             "copy_private",  // #156: copy selection into CleverKeys' private clipboard (never OS clipboard)
             "selectAll",
             "shareText",
@@ -201,6 +202,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "change_method" -> id = R.string.key_descr_change_method
                 "compose" -> id = R.string.key_descr_compose
                 "copy" -> id = R.string.key_descr_copy
+                "clear_clipboard" -> id = R.string.cmd_clear_clipboard_desc
                 "copy_private" -> id = R.string.key_descr_copy_private
                 "cut" -> id = R.string.key_descr_cut
                 "end" -> {
@@ -331,6 +333,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "copy" to R.string.key_descr_copy,
             "paste" to R.string.key_descr_paste,
             "cut" to R.string.key_descr_cut,
+            "clear_clipboard" to R.string.cmd_clear_clipboard,
             "copy_private" to R.string.extra_key_title_private_copy,
             "selectAll" to R.string.extra_key_title_select_all,
             "shareText" to R.string.extra_key_title_share,

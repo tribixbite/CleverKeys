@@ -377,7 +377,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 // #156: Private copy is an Editing-kind KeyValue — route through the
                 // keyboard service (Keyboard2View.executeEditingCommand → executePrivateCopy)
                 // so it reaches the same COPY_PRIVATE handling as pressing the copy_private key.
-                "copy_private",
+                "copy_private", "clear_clipboard",
                 // Timestamp commands
                 "timestamp_date", "timestamp_time", "timestamp_datetime",
                 "timestamp_time_seconds", "timestamp_date_short", "timestamp_date_long",

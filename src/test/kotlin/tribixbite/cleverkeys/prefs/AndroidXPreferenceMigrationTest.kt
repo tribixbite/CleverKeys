@@ -152,6 +152,8 @@ class AndroidXPreferenceMigrationTest {
             .that(ExtraKeysPreference.defaultChecked("accent_aigu")).isFalse()
         assertWithMessage("copy_private (#156) is opt-in")
             .that(ExtraKeysPreference.defaultChecked("copy_private")).isFalse()
+        assertWithMessage("clear_clipboard (#168) is opt-in")
+            .that(ExtraKeysPreference.defaultChecked("clear_clipboard")).isFalse()
     }
 
     @Test

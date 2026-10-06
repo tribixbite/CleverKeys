@@ -20,6 +20,15 @@ import tribixbite.cleverkeys.KeyValue
  */
 class PrivateCopyCommandTest {
 
+    @Test
+    fun `clear system clipboard is an opt-in registry command distinct from field clear`() {
+        val command = CommandRegistry.getByName("clear_clipboard")!!
+        assertThat(command.category).isEqualTo(CommandRegistry.Category.CLIPBOARD)
+        assertThat(CommandRegistry.ALL_COMMANDS.filter { it.name == command.name }).hasSize(1)
+        assertThat(KeyValue.getKeyByName(command.name).getEditing()).isEqualTo(KeyValue.Editing.CLEAR_CLIPBOARD)
+        assertThat(AvailableCommand.fromString(command.name)).isNull()
+    }
+
     // =========================================================================
     // CommandRegistry
     // =========================================================================

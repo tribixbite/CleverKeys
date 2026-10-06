@@ -277,3 +277,14 @@ See `docs/wiki/specs/clipboard/url-sanitization-spec.md` for the full algorithm 
 - `clipboard-tag-system.md` — Tag storage, chip UI, filter integration for pinned/todos
 - `clipboard-todo-system.md` — Status cycle, done button, visual rendering for todos
 - `content-pane-layout.md` — View hierarchy and pane switching
+
+## Clear current Android clipboard (#168)
+
+`clear_clipboard` is an opt-in Editing command, separate from the pane’s confirmed
+Delete results action. Ordinary keys and custom gestures call
+`ClipboardHistoryService.clearSystemClipboard(context)` and show suggestion-bar
+feedback. It must bypass inline edit routing and never obtain an InputConnection
+or initialize the saved-history singleton. API 28+ clear natively; API 21–27 use
+an empty plain-text clip, rejected by the existing ingestion guard. Do not call
+`clearHistory()` or remove media for this action. Real clipboard tests belong on
+an isolated emulator; preserve the Seeker’s clipboard during UI validation.

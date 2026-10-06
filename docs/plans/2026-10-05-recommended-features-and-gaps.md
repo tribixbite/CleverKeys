@@ -357,3 +357,11 @@ TODO: compare development-only score-component/shared-parameter diagnostics with
 encoder arm; if training, evaluate frozen-teacher logit anchoring on the existing
 32-frame emissions to limit drift. Do not copy PAL's unvalidated numerical constants
 or its 64-output-frame assumption; keep the actual model contract.
+
+## Clipboard follow-up (#168, 2026-10-06)
+
+`clear_clipboard` is implemented locally as an opt-in command for Android’s current
+clipboard. It preserves saved history, pins, todos and media; it is independent of
+size-filtered, confirmed Delete results. Extra-key category visibility, recycled labels and displayed-title search are also
+fixed. Validation and device status are recorded in `memory/todo.md`. Apostrophe suffix commands, short-word model work, layout-linked
+language and Bangla prediction remain separate work.

@@ -2,8 +2,10 @@ package tribixbite.cleverkeys.clipboard
 
 import android.content.ClipData
 import android.util.Log
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
@@ -46,6 +48,7 @@ class ClipboardServiceHygieneTest {
         every { Log.d(any(), any<String>()) } returns 0
         every { Log.i(any(), any<String>()) } returns 0
         every { Log.w(any(), any<String>()) } returns 0
+        every { Log.w(any(), any<String>(), any()) } returns 0
         every { Log.e(any(), any<String>()) } returns 0
         every { Log.e(any(), any<String>(), any()) } returns 0
 
@@ -181,6 +184,63 @@ class ClipboardServiceHygieneTest {
 
         verify(exactly = 0) { database.applySizeLimit(any()) }
         verify(exactly = 0) { mediaManager.deleteMedia(any()) }
+    }
+
+    @Test
+    fun explicitClearUsesNativeApiWithoutReadingOrWritingHistory() {
+        org.junit.Assert.assertTrue(ClipboardHistoryService.clearPrimaryClipboard(cm, 28))
+        verify(exactly = 1) { cm.clearPrimaryClip() }
+        verify(exactly = 0) { cm.primaryClip }
+        verify(exactly = 0) { cm.setPrimaryClip(any()) }
+        verify { database wasNot Called }
+    }
+
+    @Test
+    fun explicitClearOnLegacyAndroidReplacesClipWithEmptyText() {
+        mockkStatic(ClipData::class)
+        val empty = mockk<ClipData>()
+        every { ClipData.newPlainText("", "") } returns empty
+        org.junit.Assert.assertTrue(ClipboardHistoryService.clearPrimaryClipboard(cm, 27))
+        verify(exactly = 1) { cm.setPrimaryClip(empty) }
+        verify(exactly = 0) { cm.clearPrimaryClip() }
+        verify { database wasNot Called }
+    }
+
+    @Test
+    fun explicitClearReportsFailureWhenProfileRestrictsIt() {
+        every { cm.clearPrimaryClip() } throws SecurityException("profile restriction")
+        org.junit.Assert.assertFalse(ClipboardHistoryService.clearPrimaryClipboard(cm, 35))
+        verify(exactly = 0) { cm.setPrimaryClip(any()) }
+        verify { database wasNot Called }
+    }
+
+    @Test
+    fun explicitClearReportsBinderFailureOnLegacyAndroid() {
+        mockkStatic(ClipData::class)
+        every { ClipData.newPlainText("", "") } returns mockk()
+        every { cm.setPrimaryClip(any()) } throws IllegalStateException("binder unavailable")
+        org.junit.Assert.assertFalse(ClipboardHistoryService.clearPrimaryClipboard(cm, 21))
+    }
+
+    @Test
+    fun missingSystemClipboardReportsFailureWithoutInitializingHistory() {
+        val context = mockk<android.content.Context>()
+        every { context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) } returns null
+        org.junit.Assert.assertEquals(tribixbite.cleverkeys.R.string.system_clipboard_clear_failed,
+            ClipboardHistoryService.clearSystemClipboard(context))
+        verify { database wasNot Called }
+    }
+
+    @Test
+    fun emptyLegacyClearCallbackCannotCreateHistoryEntry() {
+        // Both current-clip listener ingestion and private copy use this empty-text guard.
+        val config = mockk<tribixbite.cleverkeys.Config>(relaxed = true)
+        config.clipboard_history_enabled = true
+        mockkObject(tribixbite.cleverkeys.Config.Companion)
+        every { tribixbite.cleverkeys.Config.globalConfig() } returns config
+        service.addClip("")
+        verify { database wasNot Called }
+        verify { mediaManager wasNot Called }
     }
 
     // ------------------------------------------------------------------ helpers

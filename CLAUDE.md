@@ -117,6 +117,21 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
   require a full 48dp entry viewport and share search/results horizontally on wide panes.
 - `am start` can launch behind expanded Quick Settings on Seeker; collapse it with
   `cmd statusbar collapse` before UI tests, then restore the original shade afterward.
+- Extra-key filtering reused a row’s unkeyed `remember` labels, showing Greek/Math
+  for `clear_clipboard` on Seeker. Use stable lazy-item keys, derive labels from the
+  current key/resources, and include displayed titles in search (2026-10-06).
+- Adding an extra key requires both `ExtraKeysPreference.EXTRA_KEYS` and the
+  category filters in `ExtraKeysConfigActivity`; an unclassified key is counted and
+  searchable in the data but silently absent from the UI (caught on Seeker, 2026-10-06).
+- `clear_clipboard` clears only Android’s current clip via the shared platform operation;
+  never route it to field CLEAR, history deletion or an InputConnection. API 21–27 keep
+  an empty item; saved history/pinned/todo entries stay.
+- Freeze source edits before Gradle validation: edits during a running incremental
+  compile left an older unit-test class in use (2026-10-06). Force that task with
+  `compileDebugUnitTestKotlin --rerun` and rerun tests after final source changes.
+- Host tests can leave `Build.VERSION.SDK_INT` nonzero after another class; do not
+  assume android.jar’s initial zero in routing assertions. Test both injected platform
+  branches explicitly and assert the actual SDK branch for end-to-end routing.
 - Host `-PtestClass` is relative to `tribixbite.cleverkeys` (the runner always prepends it):
   use `-PtestClass=clipboard.ClipboardHistoryViewStateGuardsTest`, not a fully qualified name.
 
