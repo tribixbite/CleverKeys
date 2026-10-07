@@ -1356,6 +1356,7 @@ class Keyboard2View @JvmOverloads constructor(
      */
     private fun togglePrimaryLanguage() {
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "togglePrimaryLanguage() called")
+        if (explainLayoutLanguageBinding()) return
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
             val currentPrimary = prefs.getString("pref_primary_language", "en") ?: "en"
@@ -1389,6 +1390,7 @@ class Keyboard2View @JvmOverloads constructor(
      */
     private fun toggleSecondaryLanguage() {
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "toggleSecondaryLanguage() called")
+        if (explainLayoutLanguageBinding()) return
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
             val currentSecondary = prefs.getString("pref_secondary_language", "none") ?: "none"
@@ -1412,6 +1414,17 @@ class Keyboard2View @JvmOverloads constructor(
             _keyboard2?.showSuggestionBarMessage(context.getString(R.string.keyboard_lang_toggle_failed))
         }
     }
+
+    /**
+     * GH #186/#61: while the current layout has a language binding, that binding decides the
+     * language, so a primary/secondary toggle would change nothing the user can see. The
+     * service says so (it owns the live Config; this view reads only its snapshot) and the
+     * toggle leaves the preferences alone.
+     *
+     * @return true when the toggle was handled (a binding is active).
+     */
+    private fun explainLayoutLanguageBinding(): Boolean =
+        _keyboard2?.explainLayoutLanguageBinding() == true
 
     /**
      * Display name for a language code in the keyboard's UI language (the "none" sentinel is

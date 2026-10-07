@@ -96,6 +96,15 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     highlightId = "multilang"
                 )
 
+                // GH #186/#61: a layout can carry its own language (Layout Manager). Shown
+                // whether or not Multi-Language is on — a binding works in both cases.
+                Text(
+                    text = stringResource(R.string.multilang_layout_binding_hint),
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)
+                )
+
                 if (multiLangEnabled) {
                     // Primary Language selector - any QWERTY-compatible language
                     // NN outputs 26 letters, dictionary provides accent recovery
@@ -134,7 +143,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                             secondaryLanguage = secondaryOptions.getOrElse(index) { "none" }
                             saveSetting("pref_secondary_language", secondaryLanguage)
                         rescanContractionCollisions()
-                            // Dictionary reload triggered via PreferenceUIUpdateHandler.reloadLanguageDictionaryIfNeeded()
+                            // Dictionary reload: Config refresh -> ActiveLanguageSync (GH #186/#61)
                         }
                     )
 

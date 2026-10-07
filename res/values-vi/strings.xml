@@ -1077,6 +1077,17 @@
     <string name="keyboard_lang_primary_toggled">Ngôn ngữ chính: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">Ngôn ngữ phụ: %1$s</string>
     <string name="keyboard_lang_toggle_failed">Chuyển ngôn ngữ thất bại</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">Ngôn ngữ của bố cục</string>
+    <string name="layout_language_follow_multilang">Theo cài đặt Đa ngôn ngữ</string>
+    <string name="layout_language_from_xml">%1$s (mặc định của bố cục)</string>
+    <string name="layout_language_dialog_desc">Khi bố cục này đang hoạt động, ngôn ngữ đã chọn là ngôn ngữ duy nhất dùng cho gợi ý, tự động sửa và gõ vuốt. Theo cài đặt Đa ngôn ngữ sẽ giữ ngôn ngữ chính và ngôn ngữ phụ của bạn.</string>
+    <string name="layout_language_not_installed">Chưa cài từ điển %1$s. Bố cục vẫn hoạt động, nhưng gợi ý và tự động sửa sẽ trống cho đến khi bạn nhập gói ngôn ngữ của nó.</string>
+    <string name="layout_language_xml_invalid">Thuộc tính language phải là mã ngôn ngữ như fa hoặc pt_br</string>
+    <string name="keyboard_lang_layout_active">Ngôn ngữ: %1$s</string>
+    <string name="keyboard_lang_layout_missing">Ngôn ngữ: %1$s (chưa cài từ điển)</string>
+    <string name="keyboard_lang_bound_by_layout">Bố cục này đặt ngôn ngữ: %1$s</string>
+    <string name="multilang_layout_binding_hint">Mỗi bố cục có thể có ngôn ngữ riêng (Trình quản lý bố cục). Khi bố cục như vậy đang hoạt động, nó thay thế các cài đặt ngôn ngữ này.</string>
     <string name="text_action_assist_name">Hỗ trợ văn bản</string>
     <string name="text_action_replace_name">Thay thế văn bản</string>
     <string name="text_action_assist_chooser">Xử lý văn bản bằng…</string>

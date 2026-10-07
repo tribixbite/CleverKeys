@@ -61,6 +61,31 @@ Auto-detect adjusts prediction weighting:
 2. The system analyzes recent words
 3. If you're typing mostly Spanish, Spanish predictions get boosted
 
+## One Language per Layout
+
+If you type each language on its own layout (for example a Latin layout for English and a
+Persian layout for Persian), give each layout its own language instead of mixing
+dictionaries:
+
+1. Open **Settings > Layout Manager**
+2. Tap the **Language** chip on a layout
+3. Choose the language (or **Follow Multi-Language settings** to leave it unbound)
+
+While a layout with a language is active, that language is the only language used for
+predictions, autocorrect, swipe typing, contractions and learning; the secondary language
+is not mixed in. Switching layouts (`switch_forward`, `switch_backward`, the layout picker)
+switches the language with it, and the suggestion bar shows the new language. Layouts left
+on **Follow Multi-Language settings** use the Primary and Secondary languages above, exactly
+as before. This also works for three or more languages: bind one layout per language.
+
+- A custom layout can declare a default with `language="fa"` on its `<keyboard>` element;
+  the choice in Layout Manager overrides it.
+- If the chosen language has no dictionary installed, Layout Manager shows a warning and
+  the keyboard says "no dictionary installed" when you switch to it. The layout still works
+  for typing; import the language pack to get predictions and autocorrect.
+- On a layout with a language, the Primary/Secondary language toggle commands change
+  nothing and say that the layout sets the language. Language auto-detection is paused there.
+
 ## Detection Sensitivity
 
 Control how quickly the system adapts to detected language:
@@ -135,6 +160,7 @@ The system maps your 26-letter QWERTY input to properly accented words.
 | **Secondary Language** | Multi-Language section | Additional dictionary |
 | **Language Detection** | Multi-Language section | Auto-detect toggle |
 | **Detection Sensitivity** | Multi-Language section | 0.4-0.9 range |
+| **Layout language** | Layout Manager (Language chip) | Language of one layout; overrides Primary/Secondary while that layout is active |
 
 ## Common Questions
 
@@ -152,7 +178,7 @@ A: Use subkeys! Swipe on keys to access accented characters directly (e.g., swip
 
 ### Q: Can I use more than two languages?
 
-A: Currently, the system supports primary + secondary language. For three or more languages, you'd switch between secondary languages.
+A: Yes. Bind each layout to its language in Layout Manager (see [One Language per Layout](#one-language-per-layout)) and switch layouts to switch languages. Within one unbound layout, predictions combine at most the primary and secondary languages.
 
 ## Technical Details
 

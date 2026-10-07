@@ -54,7 +54,7 @@ class LayoutModifierCacheKeyTest {
         )
         val row = KeyboardData.Row(listOf(key), 1f, 0f)
         val ctor = KeyboardData::class.java.declaredConstructors
-            .first { it.parameterCount == 11 }
+            .first { it.parameterCount == 12 }
         ctor.isAccessible = true
         return ctor.newInstance(
             listOf(row),
@@ -68,6 +68,7 @@ class LayoutModifierCacheKeyTest {
             /* embedded_number_row */ false,
             /* locale_extra_keys */ false,
             /* numpad_height */ false,
+            /* declared_language */ null,
         ) as KeyboardData
     }
 

@@ -43,6 +43,27 @@ All commits local, unpushed (no push/tag/release authorized).
   moved to command time (# TODO in `rememberVerifiedWord`); #175 swipe-to-delete + batch
   select; summon-after-system-hide (needs overlay permission); Monet day/night repro (#181).
 
+## #186 / #61 per-layout language binding (2026-10-07)
+
+- [x] Layouts can carry a language (Layout Manager → Language chip; custom XML
+  `language="fa"` default, Layout Manager choice overrides; `"none"` unbinds). Stored in
+  the `layouts` entry, so reorder/edit/delete/backup carry it. Config resolves the ACTIVE
+  languages (`LayoutLanguageBinding.resolve`); a bound layout is single-language.
+  `ActiveLanguageSync` is now the only language-change path (replaced the key-based reload
+  in `PreferenceUIUpdateHandler`), wired in `KeyboardComponentGraph`, fed from
+  `CleverKeysService.onConfigChanged`. Toggles say "This layout sets the language" while
+  bound; auto-detect paused while bound. Spec: dictionary-and-language-system.md
+  "Per-layout language binding". Host: 2,825 pure / 1,016 mock OK; compileReleaseKotlin +
+  compileDebugAndroidTestKotlin OK.
+- [ ] Device retest (Saga/Seeker): Latin layout bound to en + Persian custom layout bound to
+  fa (fa pack imported); switch_forward → bar shows "Language: Persian"; a Persian typo is
+  autocorrected; back to Latin restores EN(+secondary if unbound). Three-layout cycle
+  (en/de/fr). Binding to an uninstalled language shows the Layout Manager warning and the
+  "no dictionary installed" bar message.
+- [ ] Not done: a per-binding "keep secondary" option (rejected for now, see spec);
+  built-in layouts never declare `language` (Layout Manager reads the XML default only
+  from custom layouts — # TODO if a built-in ever declares one).
+
 ## October 2–3 issue work before 2.0
 
 The maintainer wants GitHub feature/bug work and personal testing before release.

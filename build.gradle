@@ -765,6 +765,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.customization.CommandCatalogLocalizationTest',
     // Locale-aware language names (replaced the English-only tables; fa/hu device finding).
     'tribixbite.cleverkeys.LanguageDisplayNamesTest',
+    // GH #186/#61: per-layout language binding — code validation, entry precedence, active-language
+    // resolution, and the single diff-based language-change path (ActiveLanguageSync).
+    'tribixbite.cleverkeys.LayoutLanguageBindingTest',
+    'tribixbite.cleverkeys.ActiveLanguageSyncTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
@@ -1361,6 +1365,9 @@ tasks.register('runMockTests', JavaExec) {
     // android.graphics.Paint test-source shadow, which models real colour semantics.
     // GH #90: real XML parsing and Theme geometry require Android API types.
     'tribixbite.cleverkeys.NumpadKeySizeTest',
+    // GH #186/#61: layout switch -> active language through the real Config, the layouts
+    // serializer (backup round trip, invalid-code sanitising) and the XML `language` attribute.
+    'tribixbite.cleverkeys.LayoutLanguageBindingConfigTest',
     'tribixbite.cleverkeys.ThemeBorderPaintOpacityTest',
     // Audit 2026-09-06 W7 (H-8, #77 residual): all-null loc-stripped pane cells render as
     // empty space — onDraw consults Keyboard2View.keyCellIsEmpty before drawKeyFrame.

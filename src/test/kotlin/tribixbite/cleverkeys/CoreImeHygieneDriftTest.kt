@@ -721,12 +721,25 @@ class CoreImeHygieneDriftTest {
      * would make a partial revert silently reintroduce the leak in one language-change path
      * while the other stayed correct. `SwipeContractionLanguageIsolationTest` proves the POLICY
      * is right over the real assets; this proves the CODE uses it.
+     *
+     * GH #186/#61 (2026-10-07): the language-change reload moved out of
+     * `PreferenceUIUpdateHandler` into [ActiveLanguageSync], whose sink is wired in
+     * `KeyboardComponentGraph` next to the construction-time load — so both load sites now
+     * live in that one file, and the handler must no longer load contractions at all.
      */
     @Test
     fun typingContractionLoadSitesUseTheSharedLanguageScopedPolicy() {
+        val graph = source("tribixbite/cleverkeys/wiring/KeyboardComponentGraph.kt")
+        assertWithMessage(
+            "both typing contraction loads (construction and the ActiveLanguageSync sink) must " +
+                "go through loadTypingMappings"
+        ).that(Regex("""loadTypingMappings\(""").findAll(graph).count()).isAtLeast(2)
+        assertWithMessage(
+            "PreferenceUIUpdateHandler must not reload contractions any more — a second " +
+                "language-change path is how the two diverged before"
+        ).that(source("tribixbite/cleverkeys/PreferenceUIUpdateHandler.kt")).doesNotContain("loadTypingMappings(")
         for (relative in listOf(
             "tribixbite/cleverkeys/wiring/KeyboardComponentGraph.kt",
-            "tribixbite/cleverkeys/PreferenceUIUpdateHandler.kt",
         )) {
             val src = source(relative)
             assertWithMessage(
@@ -1246,36 +1259,50 @@ class CoreImeHygieneDriftTest {
      */
     @Test
     fun aMidSessionLanguageSwitchRewarmsTheSwipeEngine() {
-        val handler = source("tribixbite/cleverkeys/PreferenceUIUpdateHandler.kt")
-        val body = handler
-            .substringAfter("private fun reloadLanguageDictionaryIfNeeded(")
-            .substringBefore("companion object")
+        // GH #186/#61 (2026-10-07): the re-warm moved with the reload into ActiveLanguageSync,
+        // the one language-change path (a layout switch with a language binding changes the
+        // language without touching any language preference, so a key-based hook missed it).
+        val sync = source("tribixbite/cleverkeys/ActiveLanguageSync.kt")
+        val body = sync.substringAfter("fun apply(target: ActiveLanguages)")
 
-        val reloadIdx = body.indexOf("reloadWordPredictorDictionary(")
-        val rewarmIdx = body.indexOf("CleverKeysService.requestGeometricRewarm()")
+        val reloadIdx = body.indexOf("sink.reloadPrimary(")
+        val rewarmIdx = body.indexOf("sink.rewarmSwipe()")
         assertWithMessage(
-            "reloadLanguageDictionaryIfNeeded must ask the swipe engine to re-warm after a " +
-                "language change — otherwise the first swipe after a mid-session toggle " +
-                "rebuilds the template index in front of the user."
+            "ActiveLanguageSync.apply must ask the swipe engine to re-warm after a language " +
+                "change — otherwise the first swipe after a mid-session toggle rebuilds the " +
+                "template index in front of the user."
         ).that(rewarmIdx).isAtLeast(0)
         assertWithMessage(
             "the re-warm must come AFTER the dictionary reload: reloadWordPredictorDictionary " +
                 "sets DictionaryManager.currentLanguage synchronously and the prewarm reads " +
                 "it — warming first would warm the language the user just left."
         ).that(rewarmIdx).isGreaterThan(reloadIdx)
+        assertWithMessage("keep the ARC-014 marker beside the re-warm call")
+            .that(body.substringBefore("sink.rewarmSwipe()")).contains("// ARC-014")
 
-        // The guard is anchored on the ARC-014 marker comment; keep them together.
-        val guard = body.substringAfter("// ARC-014").substringBefore("} catch (")
+        val graph = source("tribixbite/cleverkeys/wiring/KeyboardComponentGraph.kt")
+        assertWithMessage("the sync's rewarmSwipe must be the single re-warm entry point")
+            .that(graph).contains("override fun rewarmSwipe() = CleverKeysService.requestGeometricRewarm()")
+        assertWithMessage("the sync's primary reload must be the predictor dictionary reload")
+            .that(graph).contains("coordinator.reloadWordPredictorDictionary(language)")
+
+        // Every language input reaches the sync: Config resolves the ACTIVE languages from
+        // these preferences (and the current layout's binding) on every refresh, and the
+        // service hands them to the sync after every refresh.
+        val config = source("tribixbite/cleverkeys/Config.kt")
         for (pref in listOf(
             "pref_primary_language", "pref_secondary_language", "pref_enable_multilang",
         )) {
             assertWithMessage(
-                "the re-warm guard must cover '$pref' — it changes which (layout, language) " +
-                    "pair the next swipe decodes against."
-            ).that(guard).contains(pref)
+                "Config must read '$pref' into the active-language resolution — it changes " +
+                    "which (layout, language) pair the next swipe decodes against."
+            ).that(config).contains("\"$pref\"")
         }
 
         val service = source("tribixbite/cleverkeys/CleverKeysService.kt")
+        assertWithMessage("onConfigChanged must feed the active languages to the sync")
+            .that(service.substringAfter("override fun onConfigChanged(newConfig: Config)").substringBefore("\n    }\n"))
+            .contains("_activeLanguageSync?.apply(newConfig.activeLanguages())")
         assertWithMessage(
             "requestGeometricRewarm must remain the single entry point and must delegate to " +
                 "InputCoordinator.prewarmGeometricEngine, which warms the SERVING engine " +

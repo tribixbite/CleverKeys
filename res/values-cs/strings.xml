@@ -1049,6 +1049,17 @@
     <string name="keyboard_lang_primary_toggled">Primární: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">Sekundární: %1$s</string>
     <string name="keyboard_lang_toggle_failed">Přepnutí jazyka se nezdařilo</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">Jazyk rozložení</string>
+    <string name="layout_language_follow_multilang">Podle nastavení Více jazyků</string>
+    <string name="layout_language_from_xml">%1$s (výchozí v rozložení)</string>
+    <string name="layout_language_dialog_desc">Když je toto rozložení aktivní, zvolený jazyk je jediným jazykem pro návrhy, automatické opravy a psaní tahem. Volba Podle nastavení Více jazyků ponechá váš primární a sekundární jazyk.</string>
+    <string name="layout_language_not_installed">Slovník pro jazyk %1$s není nainstalován. Rozložení funguje, ale návrhy a automatické opravy zůstanou prázdné, dokud neimportujete jeho jazykový balíček.</string>
+    <string name="layout_language_xml_invalid">Atribut language musí být kód jazyka, například fa nebo pt_br</string>
+    <string name="keyboard_lang_layout_active">Jazyk: %1$s</string>
+    <string name="keyboard_lang_layout_missing">Jazyk: %1$s (slovník není nainstalován)</string>
+    <string name="keyboard_lang_bound_by_layout">Jazyk určuje toto rozložení: %1$s</string>
+    <string name="multilang_layout_binding_hint">Každé rozložení může mít vlastní jazyk (Správce rozložení). Když je takové rozložení aktivní, nahrazuje tato nastavení jazyků.</string>
     <string name="text_action_assist_name">Asistent textu</string>
     <string name="text_action_replace_name">Nahradit text</string>
     <string name="text_action_assist_chooser">Zpracovat text pomocí…</string>

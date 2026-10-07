@@ -24,8 +24,10 @@ import java.io.File
  * survive and that a new slot would still have to join:
  *
  *  1. **live slots** (`pref_primary_language`, `pref_secondary_language`) drive the dictionary
- *     reload + swipe re-warm in `PreferenceUIUpdateHandler`. A live slot missing there changes
- *     the setting without changing what the keyboard predicts (the ARC-014 class of bug).
+ *     reload + swipe re-warm through Config's active-language resolution and
+ *     `ActiveLanguageSync` (GH #186/#61; formerly `PreferenceUIUpdateHandler`). A live slot
+ *     missing there changes the setting without changing what the keyboard predicts (the
+ *     ARC-014 class of bug).
  *  2. **`_alt` slots** exist only to be SWAPPED into their live counterpart by
  *     `Keyboard2View`'s language toggles. An `_alt` slot with no swap site is inert storage.
  *
@@ -70,15 +72,21 @@ class LanguageSlotCoverageDriftTest {
 
     @Test
     fun `every live language slot drives the dictionary reload seam`() {
-        val handler = mainSource("tribixbite/cleverkeys/PreferenceUIUpdateHandler.kt")
+        // GH #186/#61 (2026-10-07): the seam is Config's active-language resolution feeding
+        // ActiveLanguageSync (a layout binding changes the language without touching any
+        // language preference, so the old key-based handler could not be the seam any more).
+        val config = mainSource("tribixbite/cleverkeys/Config.kt")
+        val service = mainSource("tribixbite/cleverkeys/CleverKeysService.kt")
+        assertWithMessage("the service must hand Config's active languages to ActiveLanguageSync")
+            .that(service).contains("_activeLanguageSync?.apply(newConfig.activeLanguages())")
 
         for (key in slotKeysInUse().filterNot { it.endsWith("_alt") }) {
             assertWithMessage(
-                "'$key' is a live language slot, so a change to it must reach " +
-                    "PreferenceUIUpdateHandler — that is where the predictor's dictionary is " +
-                    "reloaded and the swipe engine re-warmed. A slot handled nowhere there " +
+                "'$key' is a live language slot, so Config must read it into the active-language " +
+                    "resolution — that is what ActiveLanguageSync reloads the predictor's " +
+                    "dictionary and re-warms the swipe engine from. A slot read nowhere there " +
                     "changes the pref and nothing else."
-            ).that(handler).contains("\"$key\"")
+            ).that(config).contains("\"$key\"")
         }
     }
 

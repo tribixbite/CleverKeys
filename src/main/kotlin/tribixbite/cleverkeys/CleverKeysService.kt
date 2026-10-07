@@ -157,6 +157,9 @@ class CleverKeysService : InputMethodService(),
     // Preference UI update handler (v1.32.412: extracted to PreferenceUIUpdateHandler)
     private var _preferenceUIUpdateHandler: PreferenceUIUpdateHandler? = null
 
+    // GH #186/#61: the single language-change path, built by the composition root.
+    private var _activeLanguageSync: ActiveLanguageSync? = null
+
     // Theme change broadcast receiver
     private var _themeChangeReceiver: BroadcastReceiver? = null
 
@@ -448,6 +451,8 @@ class CleverKeysService : InputMethodService(),
         _keyeventhandler.learningHooks = _suggestionHandler
         _keyboardDimensionsHelper = _graph.keyboardDimensionsHelper
         _mlDataCollector = _graph.mlDataCollector
+        // Read right after the managers so its seed is the languages they were built with.
+        _activeLanguageSync = _graph.activeLanguageSync
 
         // Suggestion bridge (v1.32.406: extracted to SuggestionBridge; built by the graph)
         _suggestionBridge = _graph.suggestionBridge
@@ -597,6 +602,45 @@ class CleverKeysService : InputMethodService(),
 
         // Propagate config to all managers (v1.32.386: delegated to ConfigPropagator)
         _configPropagator?.propagateConfig(newConfig, resources)
+
+        // GH #186/#61: the ONE language-change path. Runs after every Config refresh, so a
+        // layout switch onto/off a layout with a language binding reloads exactly like a
+        // language preference change does. Guarded like the other propagation: a failed
+        // dictionary reload must never take the IME down.
+        try {
+            _activeLanguageSync?.apply(newConfig.activeLanguages())
+        } catch (t: Throwable) {
+            android.util.Log.e("CleverKeysService", "Active language sync failed", t)
+        }
+    }
+
+    /**
+     * GH #186/#61: called by the primary/secondary language toggles. While the current layout
+     * has a language binding the toggles would change nothing visible, so say which language
+     * the layout sets instead.
+     *
+     * @return true when a binding is active (the toggle must then do nothing else).
+     */
+    fun explainLayoutLanguageBinding(): Boolean {
+        val bound = _config?.layout_bound_language ?: return false
+        val name = LanguageDisplayNames.displayName(bound, resources.configuration.locales[0])
+        showSuggestionBarMessage(getString(R.string.keyboard_lang_bound_by_layout, name))
+        return true
+    }
+
+    /**
+     * GH #186/#61: tell the user a layout's language binding changed the active language,
+     * and warn when that language has no dictionary on this device (the layout still works;
+     * predictions and autocorrect stay empty until its language pack is imported).
+     */
+    fun announceLayoutLanguage(language: String) {
+        val name = LanguageDisplayNames.displayName(language, resources.configuration.locales[0])
+        if (LanguageAvailability.isAvailable(this, language)) {
+            showSuggestionBarMessage(getString(R.string.keyboard_lang_layout_active, name))
+        } else {
+            // Longer: the warning has to be readable, not just glimpsed.
+            showSuggestionBarMessage(getString(R.string.keyboard_lang_layout_missing, name), 3000L)
+        }
     }
 
     /**
@@ -939,14 +983,13 @@ class CleverKeysService : InputMethodService(),
 
         // Initialize handler lazily (depends on components that may not exist yet)
         if (_preferenceUIUpdateHandler == null) {
+            // Language reloads are not here: they go through ActiveLanguageSync from
+            // onConfigChanged (GH #186/#61), which also sees layout switches.
             _preferenceUIUpdateHandler = PreferenceUIUpdateHandler.create(
-                this,  // Context for language dictionary reload (v1.1.86)
                 _config,
                 _layoutBridge,
-                _predictionCoordinator,
                 _keyboardView,
-                _suggestionBar,
-                _contractionManager  // v1.2.0: Enable contraction reload on language toggle
+                _suggestionBar
             )
         }
 

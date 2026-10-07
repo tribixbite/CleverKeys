@@ -110,8 +110,15 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
         }
     }
 
+    // GH #186/#61: languages with a dictionary on this device (bundled + installed packs), for
+    // the per-layout language picker and its "not installed" warning.
+    val availableLanguages = remember { LanguageAvailability.availableLanguages(context) }
+    val uiLocale = context.resources.configuration.locales[0]
+    fun languageName(code: String): String = LanguageDisplayNames.displayName(code, uiLocale)
+
     // Dialog states
     var showAddDialog by remember { mutableStateOf(false) }
+    var showLanguagePickerFor by remember { mutableStateOf<Int?>(null) }
     var showCustomLayoutDialog by remember { mutableStateOf<Pair<Int, String>?>(null) }
     var showDeleteConfirmDialog by remember { mutableStateOf<Int?>(null) }
 
@@ -207,6 +214,11 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                             layoutDisplayNames = layoutDisplayNames,
                             context = context,
                             elevation = elevation,
+                            languageLabel = layoutLanguageLabel(layoutWithId.layout, ::languageName),
+                            missingLanguage = layoutBindingOf(layoutWithId.layout)
+                                ?.takeIf { it !in availableLanguages }
+                                ?.let(::languageName),
+                            onLanguage = { showLanguagePickerFor = index },
                             onEdit = {
                                 val initialXml = when (val layout = layoutWithId.layout) {
                                     is LayoutsPreference.CustomLayout -> layout.xml
@@ -259,7 +271,12 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
             allowRemove = index >= 0,
             onDismiss = { showCustomLayoutDialog = null },
             onSave = { xml ->
-                val customLayout = LayoutsPreference.CustomLayout.parse(xml)
+                // Editing the XML (including renaming it) keeps the entry's language binding
+                // (GH #186/#61); a new layout starts with none.
+                val customLayout = LayoutsPreference.CustomLayout.parse(
+                    xml,
+                    language = layoutsWithIds.getOrNull(index)?.layout?.language
+                )
                 if (index >= 0) {
                     // Edit existing - create new list with updated item
                     layoutsWithIds = layoutsWithIds.toMutableList().apply {
@@ -280,6 +297,30 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                 showCustomLayoutDialog = null
             }
         )
+    }
+
+    // Per-layout language picker (GH #186/#61)
+    showLanguagePickerFor?.let { index ->
+        val entry = layoutsWithIds.getOrNull(index)
+        if (entry == null) {
+            showLanguagePickerFor = null
+        } else {
+            LayoutLanguageDialog(
+                layout = entry.layout,
+                availableLanguages = availableLanguages,
+                languageName = ::languageName,
+                onDismiss = { showLanguagePickerFor = null },
+                onSelect = { choice ->
+                    val declared = declaredLanguageOf(entry.layout)
+                    val updated = entry.layout.withLanguage(LayoutLanguageBinding.entryValueFor(choice, declared))
+                    layoutsWithIds = layoutsWithIds.toMutableList().apply {
+                        this[index] = LayoutWithId(id = entry.id, layout = updated)
+                    }
+                    saveLayouts(prefs, getLayoutsForSaving())
+                    showLanguagePickerFor = null
+                }
+            )
+        }
     }
 
     // Delete Confirmation Dialog
@@ -320,6 +361,9 @@ fun LayoutItem(
     layoutDisplayNames: Array<String>,
     context: android.content.Context,
     elevation: androidx.compose.ui.unit.Dp,
+    languageLabel: String,
+    missingLanguage: String?,
+    onLanguage: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     reorderState: ReorderableLazyListState
@@ -398,6 +442,26 @@ fun LayoutItem(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
+
+                // GH #186/#61: the layout's language binding; tap to change it.
+                AssistChip(
+                    onClick = onLanguage,
+                    label = {
+                        Text(
+                            text = stringResource(R.string.keyboard_lang_layout_active, languageLabel),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+                if (missingLanguage != null) {
+                    Text(
+                        text = stringResource(R.string.layout_language_not_installed, missingLanguage),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
 
             // Action buttons
@@ -422,6 +486,100 @@ fun LayoutItem(
             }
         }
     }
+}
+
+/**
+ * The XML `language` default of a layout entry. Only custom layouts are inspected: no built-in
+ * layout declares `language`, and Config (which does read built-ins) would still honour one.
+ * TODO: read the built-in XML here too if a built-in layout ever declares `language`.
+ */
+private fun declaredLanguageOf(layout: LayoutsPreference.Layout): String? =
+    (layout as? LayoutsPreference.CustomLayout)?.parsed?.declared_language
+
+/** The effective language binding of a layout entry, or null when it follows Multi-Language. */
+private fun layoutBindingOf(layout: LayoutsPreference.Layout): String? =
+    LayoutLanguageBinding.effective(layout.language, declaredLanguageOf(layout))
+
+/** Chip text for a layout's binding: the language, marked when it comes from the XML. */
+@Composable
+private fun layoutLanguageLabel(
+    layout: LayoutsPreference.Layout,
+    languageName: (String) -> String
+): String {
+    val bound = layoutBindingOf(layout)
+        ?: return stringResource(R.string.layout_language_follow_multilang)
+    return if (layout.language == null) {
+        stringResource(R.string.layout_language_from_xml, languageName(bound))
+    } else {
+        languageName(bound)
+    }
+}
+
+/**
+ * Picker for a layout's language binding (GH #186/#61): "Follow Multi-Language settings" or
+ * one language. Lists every language with a dictionary on this device, plus the current
+ * binding even when its pack is not installed (marked, so the warning has a visible cause).
+ */
+@Composable
+private fun LayoutLanguageDialog(
+    layout: LayoutsPreference.Layout,
+    availableLanguages: List<String>,
+    languageName: (String) -> String,
+    onDismiss: () -> Unit,
+    onSelect: (String?) -> Unit
+) {
+    val declared = LayoutLanguageBinding.normalizeCode(declaredLanguageOf(layout))
+    val current = layoutBindingOf(layout)
+    val options: List<String?> = listOf<String?>(null) +
+        (availableLanguages + listOfNotNull(current, declared)).distinct().sortedBy { languageName(it) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.layout_language_title)) },
+        text = {
+            Column {
+                Text(
+                    text = stringResource(R.string.layout_language_dialog_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                LazyColumn(modifier = Modifier.heightIn(max = 360.dp)) {
+                    items(options.size, key = { options[it] ?: "" }) { i ->
+                        val code = options[i]
+                        val name = code?.let(languageName)
+                        val label = when {
+                            code == null -> stringResource(R.string.layout_language_follow_multilang)
+                            code == declared -> stringResource(R.string.layout_language_from_xml, name!!)
+                            else -> name!!
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .clickable { onSelect(code) },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = code == current, onClick = { onSelect(code) })
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = label, style = MaterialTheme.typography.bodyMedium)
+                                if (code != null && code !in availableLanguages) {
+                                    Text(
+                                        text = stringResource(R.string.layout_language_not_installed, name!!),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+        }
+    )
 }
 
 @Composable
@@ -603,11 +761,14 @@ fun CustomLayoutEditorDialog(
 
     // Validate XML (the empty-input message is resolved here: LaunchedEffect is not composable)
     val emptyXmlError = stringResource(R.string.layout_manager_xml_empty_error)
+    val invalidLanguageError = stringResource(R.string.layout_language_xml_invalid)
     LaunchedEffect(xmlText) {
         validationError = try {
             if (xmlText.isNotBlank()) {
-                KeyboardData.load_string_exn(xmlText)
-                null
+                val parsed = KeyboardData.load_string_exn(xmlText)
+                // GH #186/#61: loading is lenient about `language`, so the editor is where an
+                // invalid code is caught — before it can be saved and silently ignored.
+                if (LayoutLanguageBinding.xmlLanguageProblem(parsed.declared_language)) invalidLanguageError else null
             } else {
                 emptyXmlError
             }

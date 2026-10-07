@@ -1060,6 +1060,17 @@
     <string name="keyboard_lang_primary_toggled">Birincil: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">İkincil: %1$s</string>
     <string name="keyboard_lang_toggle_failed">Dil değiştirilemedi</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">Düzen dili</string>
+    <string name="layout_language_follow_multilang">Çoklu Dil ayarlarını izle</string>
+    <string name="layout_language_from_xml">%1$s (düzen varsayılanı)</string>
+    <string name="layout_language_dialog_desc">Bu düzen etkinken seçilen dil, öneriler, otomatik düzeltme ve kaydırarak yazma için kullanılan tek dildir. “Çoklu Dil ayarlarını izle” birincil ve ikincil dillerinizi korur.</string>
+    <string name="layout_language_not_installed">%1$s sözlüğü yüklü değil. Düzen çalışır, ancak dil paketini içe aktarana kadar öneriler ve otomatik düzeltme boş kalır.</string>
+    <string name="layout_language_xml_invalid">language özniteliği fa veya pt_br gibi bir dil kodu olmalıdır</string>
+    <string name="keyboard_lang_layout_active">Dil: %1$s</string>
+    <string name="keyboard_lang_layout_missing">Dil: %1$s (sözlük yüklü değil)</string>
+    <string name="keyboard_lang_bound_by_layout">Dili bu düzen belirliyor: %1$s</string>
+    <string name="multilang_layout_binding_hint">Her düzenin kendi dili olabilir (Tuş Düzeni Yöneticisi). Böyle bir düzen etkinken bu dil ayarlarının yerini alır.</string>
     <string name="text_action_assist_name">Metin Yardımı</string>
     <string name="text_action_replace_name">Metni Değiştir</string>
     <string name="text_action_assist_chooser">Metni şununla işle…</string>

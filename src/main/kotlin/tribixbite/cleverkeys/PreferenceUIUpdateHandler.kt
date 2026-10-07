@@ -1,6 +1,5 @@
 package tribixbite.cleverkeys
 
-import android.content.Context
 import android.util.Log
 
 /**
@@ -9,7 +8,12 @@ import android.util.Log
  * This handler consolidates UI update logic triggered by preference changes:
  * - Updates keyboard layout view when layout preferences change
  * - Updates suggestion bar opacity when opacity preference changes
- * - Reloads primary/secondary language dictionaries when language settings change
+ * - Schedules a swipe re-warm after a custom/disabled-word change (ARC-082)
+ *
+ * Language changes are NOT handled here any more (GH #186/#61): the active language now also
+ * changes on a layout switch, which touches no language preference key, so the key-based
+ * reload that lived here could not see it. Every language change — preference or layout —
+ * goes through [ActiveLanguageSync], fed from `CleverKeysService.onConfigChanged`.
  *
  * Note: ConfigurationManager is the primary SharedPreferences listener and
  * handles config refresh. This handler focuses on UI-specific updates.
@@ -17,16 +21,12 @@ import android.util.Log
  * Extracted from CleverKeysService.onSharedPreferenceChanged() to reduce main class size.
  *
  * @since v1.32.412
- * @since v1.1.86 - Added language dictionary reload on pref_primary_language/pref_secondary_language change
  */
 class PreferenceUIUpdateHandler(
-    private val context: Context,
     private val config: Config?,
     private val layoutBridge: LayoutBridge?,
-    private val predictionCoordinator: PredictionCoordinator?,
     private val keyboardView: Keyboard2View?,
-    private val suggestionBar: SuggestionBar?,
-    private val contractionManager: ContractionManager? = null  // v1.2.0: For contraction reload on language toggle
+    private val suggestionBar: SuggestionBar?
 ) {
     /**
      * Handle UI updates for preference changes.
@@ -40,8 +40,8 @@ class PreferenceUIUpdateHandler(
         // Update suggestion bar opacity
         updateSuggestionBarOpacity()
 
-        // Reload language dictionaries if language settings changed
-        reloadLanguageDictionaryIfNeeded(key)
+        // Re-warm the swipe engine after a dictionary mutation
+        rewarmAfterDictionaryEditIfNeeded(key)
     }
 
     /**
@@ -64,113 +64,15 @@ class PreferenceUIUpdateHandler(
     }
 
     /**
-     * Reload language dictionaries if language settings changed.
-     *
-     * When the user changes pref_primary_language or pref_secondary_language, this reloads
-     * the tap-typing dictionaries and the contraction mappings, then asks the swipe engines
-     * to re-warm.
-     *
-     * The swipe engines are CORRECT without that last step — the CTC adapter re-derives its
-     * merged lexicon from a content hash and the geometric engine rebuilds its template
-     * index per (layout, language) — but they are not FAST: the rebuild happens lazily
-     * inside the first post-switch swipe, so the user pays the geometric engine's 150-400 ms
-     * Tier-A build (or the CTC session + trie build) on the decode thread, right after a
-     * deliberate mid-session toggle (ARC-014). `onStartInputView`'s prewarm does not cover
-     * it: the keyboard is already up and no new field is being started.
-     *
-     * The same latency argument applies to a DICTIONARY mutation — `custom_words_<lang>` and
-     * `disabled_words_<lang>` are both inputs to the swipe lexicon's content version — so this
-     * method also schedules a coalesced re-warm for those keys (ARC-082).
+     * Schedule a coalesced swipe re-warm when a custom-words or disabled-words preference of
+     * any language changed (ARC-082). Both are inputs to the swipe lexicon's content version.
      *
      * @param key The preference key that changed
-     * @since v1.1.86
      */
-    private fun reloadLanguageDictionaryIfNeeded(key: String?) {
+    private fun rewarmAfterDictionaryEditIfNeeded(key: String?) {
         if (key == null) return
 
         try {
-            when (key) {
-                "pref_primary_language" -> {
-                    // v1.1.90: Reload the WordPredictor dictionary for touch typing
-                    // Read fresh language value from prefs (config may be stale or shared)
-                    val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-                    val newPrimaryLang = prefs.getString("pref_primary_language", "en") ?: "en"
-                    predictionCoordinator?.reloadWordPredictorDictionary(newPrimaryLang)
-                    Log.i(TAG, "Primary language changed to '$newPrimaryLang' - touch typing dictionary reload triggered")
-
-                    // v1.2.0: Reload contractions for the new language.
-                    // Must match KeyboardComponentGraph — both go through loadTypingMappings, which
-                    // owns the precedence rule (primary, then secondary, then the English base
-                    // ONLY if English is one of the two). Before 2026-08-19 both call sites
-                    // hand-rolled "base + language + always English", which is how a German user
-                    // ended up with "I'm" for `im`; duplicating that order in two places is
-                    // exactly why it had to be fixed twice.
-                    contractionManager?.let { cm ->
-                        val secondary = prefs.getString("pref_secondary_language", "none")
-                            ?.takeIf { prefs.getBoolean("pref_enable_multilang", false) }
-                        cm.loadTypingMappings(newPrimaryLang, secondary)
-                        Log.i(TAG, "Contractions reloaded for primary '$newPrimaryLang'")
-                    }
-                }
-                "pref_secondary_language" -> {
-                    // v1.1.93: Reload the secondary dictionary for touch typing
-                    val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-                    val newSecondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
-                    predictionCoordinator?.reloadWordPredictorSecondaryDictionary(newSecondaryLang)
-                    // The secondary language now participates in contraction scoping too
-                    // (2026-08-19): selecting English as secondary is what RE-ADMITS English
-                    // morphology, and selecting French as secondary is what makes `m'appelle`
-                    // work. Neither takes effect until the manager reloads, so this must fire
-                    // here as well as on a primary change.
-                    contractionManager?.let { cm ->
-                        val primary = prefs.getString("pref_primary_language", "en") ?: "en"
-                        cm.loadTypingMappings(
-                            primary,
-                            newSecondaryLang.takeIf { prefs.getBoolean("pref_enable_multilang", false) }
-                        )
-                    }
-                    Log.i(TAG, "Secondary language changed to '$newSecondaryLang' - dictionaries reloaded")
-                }
-                "pref_enable_multilang" -> {
-                    // Reload secondary dict when multilang toggle changes
-                    val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-                    val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
-                    predictionCoordinator?.reloadWordPredictorSecondaryDictionary(secondaryLang)
-                    // Toggling multilang OFF must also retract the secondary language's
-                    // contractions — otherwise a user who disables it keeps seeing the second
-                    // language's apostrophe forms, which is the same class of leak the language
-                    // scoping fixed.
-                    contractionManager?.let { cm ->
-                        val primary = prefs.getString("pref_primary_language", "en") ?: "en"
-                        cm.loadTypingMappings(
-                            primary,
-                            secondaryLang.takeIf { prefs.getBoolean("pref_enable_multilang", false) }
-                        )
-                    }
-                    Log.i(TAG, "Multilang toggle changed - secondary dictionaries reloaded")
-                }
-            }
-
-            // ARC-014: re-warm the SERVING swipe engine after a mid-session language switch.
-            // Ordered after the reloads on purpose — reloadWordPredictorDictionary sets
-            // DictionaryManager.currentLanguage synchronously, and the prewarm reads exactly
-            // that to decide which (layout, language) pair to build. Called for the same
-            // three keys the reloads above handle, since each changes what the next swipe
-            // decodes against: primary is the geometric/CTC decode language, and secondary +
-            // the multilang master switch decide whether CTC builds a second trie.
-            //
-            // requestGeometricRewarm is the existing entry point (the Full Geometric
-            // Settings sliders use it): it no-ops when the service is not running, when
-            // swipe typing is off, when the router picks neither engine, or when the view is
-            // not laid out yet, and the warm-up itself runs in the adapter's BACKGROUND task
-            // slot so it can never cancel an in-flight decode. Repeats are cheap — a warm
-            // engine's warmUp is a cache hit, and a newer prewarm supersedes an older one.
-            if (key == "pref_primary_language" || key == "pref_secondary_language" ||
-                key == "pref_enable_multilang"
-            ) {
-                CleverKeysService.requestGeometricRewarm()
-            }
-
             // ARC-082: re-warm after a DICTIONARY mutation, for the same reason ARC-014 does
             // after a language switch. Adding a word writes `custom_words_<lang>` and toggling
             // one writes `disabled_words_<lang>`; either changes the swipe lexicon's content
@@ -191,8 +93,7 @@ class PreferenceUIUpdateHandler(
             }
         } catch (t: Throwable) {
             // Catch Throwable (not just Exception) to prevent OOM/Error from killing IME
-            // during dictionary reload triggered by language toggle
-            Log.e(TAG, "Failed to reload dictionary on language change: ${t.message}", t)
+            Log.e(TAG, "Failed to schedule swipe re-warm after a dictionary edit: ${t.message}", t)
         }
     }
 
@@ -203,34 +104,20 @@ class PreferenceUIUpdateHandler(
         /**
          * Create a PreferenceUIUpdateHandler.
          *
-         * @param context The Android context for accessing orchestrator
          * @param config The configuration
          * @param layoutBridge The layout bridge (nullable)
-         * @param predictionCoordinator The prediction coordinator (nullable)
          * @param keyboardView The keyboard view (nullable)
          * @param suggestionBar The suggestion bar (nullable)
-         * @param contractionManager The contraction manager (nullable, for v1.2.0 language toggle fix)
          * @return A new PreferenceUIUpdateHandler instance
          */
         @JvmStatic
         fun create(
-            context: Context,
             config: Config?,
             layoutBridge: LayoutBridge?,
-            predictionCoordinator: PredictionCoordinator?,
             keyboardView: Keyboard2View?,
-            suggestionBar: SuggestionBar?,
-            contractionManager: ContractionManager? = null
+            suggestionBar: SuggestionBar?
         ): PreferenceUIUpdateHandler {
-            return PreferenceUIUpdateHandler(
-                context,
-                config,
-                layoutBridge,
-                predictionCoordinator,
-                keyboardView,
-                suggestionBar,
-                contractionManager
-            )
+            return PreferenceUIUpdateHandler(config, layoutBridge, keyboardView, suggestionBar)
         }
     }
 }

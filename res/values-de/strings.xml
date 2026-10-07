@@ -1069,6 +1069,17 @@
     <string name="keyboard_lang_primary_toggled">Primär: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">Sekundär: %1$s</string>
     <string name="keyboard_lang_toggle_failed">Sprachwechsel fehlgeschlagen</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">Layout-Sprache</string>
+    <string name="layout_language_follow_multilang">Mehrsprachigkeits-Einstellungen folgen</string>
+    <string name="layout_language_from_xml">%1$s (Layout-Standard)</string>
+    <string name="layout_language_dialog_desc">Solange dieses Layout aktiv ist, ist die gewählte Sprache die einzige Sprache für Vorschläge, Autokorrektur und Wischtippen. „Mehrsprachigkeits-Einstellungen folgen“ behält Ihre Primär- und Sekundärsprache bei.</string>
+    <string name="layout_language_not_installed">Für %1$s ist kein Wörterbuch installiert. Das Layout funktioniert, aber Vorschläge und Autokorrektur bleiben leer, bis Sie das Sprachpaket importieren.</string>
+    <string name="layout_language_xml_invalid">Das Attribut language muss ein Sprachcode wie fa oder pt_br sein</string>
+    <string name="keyboard_lang_layout_active">Sprache: %1$s</string>
+    <string name="keyboard_lang_layout_missing">Sprache: %1$s (kein Wörterbuch installiert)</string>
+    <string name="keyboard_lang_bound_by_layout">Dieses Layout legt die Sprache fest: %1$s</string>
+    <string name="multilang_layout_binding_hint">Jedes Layout kann eine eigene Sprache haben (Layout-Manager). Solange ein solches Layout aktiv ist, ersetzt es diese Spracheinstellungen.</string>
     <string name="text_action_assist_name">Textassistent</string>
     <string name="text_action_replace_name">Text ersetzen</string>
     <string name="text_action_assist_chooser">Text verarbeiten mit…</string>

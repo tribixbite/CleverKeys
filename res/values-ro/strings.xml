@@ -1076,6 +1076,17 @@
     <string name="keyboard_lang_primary_toggled">Principală: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">Secundară: %1$s</string>
     <string name="keyboard_lang_toggle_failed">Comutarea limbii a eșuat</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">Limba aranjamentului</string>
+    <string name="layout_language_follow_multilang">Urmează setările Multilingv</string>
+    <string name="layout_language_from_xml">%1$s (implicită a aranjamentului)</string>
+    <string name="layout_language_dialog_desc">Cât timp acest aranjament este activ, limba aleasă este singura folosită pentru sugestii, corectare automată și tastare prin glisare. „Urmează setările Multilingv” păstrează limbile principală și secundară.</string>
+    <string name="layout_language_not_installed">Nu este instalat niciun dicționar pentru %1$s. Aranjamentul funcționează, dar sugestiile și corectarea automată rămân goale până când importați pachetul de limbă.</string>
+    <string name="layout_language_xml_invalid">Atributul language trebuie să fie un cod de limbă, de exemplu fa sau pt_br</string>
+    <string name="keyboard_lang_layout_active">Limbă: %1$s</string>
+    <string name="keyboard_lang_layout_missing">Limbă: %1$s (niciun dicționar instalat)</string>
+    <string name="keyboard_lang_bound_by_layout">Limba este stabilită de acest aranjament: %1$s</string>
+    <string name="multilang_layout_binding_hint">Fiecare aranjament poate avea propria limbă (Manager aranjamente). Cât timp un astfel de aranjament este activ, el înlocuiește aceste setări de limbă.</string>
     <string name="text_action_assist_name">Asistent text</string>
     <string name="text_action_replace_name">Înlocuire text</string>
     <string name="text_action_assist_chooser">Procesează textul cu…</string>

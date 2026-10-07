@@ -1061,6 +1061,17 @@
     <string name="keyboard_lang_primary_toggled">Utama: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">Sekunder: %1$s</string>
     <string name="keyboard_lang_toggle_failed">Gagal mengganti bahasa</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">Bahasa tata letak</string>
+    <string name="layout_language_follow_multilang">Ikuti pengaturan Multi-Bahasa</string>
+    <string name="layout_language_from_xml">%1$s (bawaan tata letak)</string>
+    <string name="layout_language_dialog_desc">Selama tata letak ini aktif, bahasa yang dipilih menjadi satu-satunya bahasa untuk saran, koreksi otomatis, dan pengetikan geser. Ikuti pengaturan Multi-Bahasa mempertahankan bahasa utama dan sekunder Anda.</string>
+    <string name="layout_language_not_installed">Tidak ada kamus %1$s yang terpasang. Tata letak tetap berfungsi, tetapi saran dan koreksi otomatis tetap kosong sampai Anda mengimpor paket bahasanya.</string>
+    <string name="layout_language_xml_invalid">Atribut language harus berupa kode bahasa seperti fa atau pt_br</string>
+    <string name="keyboard_lang_layout_active">Bahasa: %1$s</string>
+    <string name="keyboard_lang_layout_missing">Bahasa: %1$s (kamus tidak terpasang)</string>
+    <string name="keyboard_lang_bound_by_layout">Tata letak ini menentukan bahasa: %1$s</string>
+    <string name="multilang_layout_binding_hint">Setiap tata letak dapat memiliki bahasanya sendiri (Pengelola Tata Letak). Selama tata letak seperti itu aktif, tata letak tersebut menggantikan pengaturan bahasa ini.</string>
     <string name="text_action_assist_name">Bantuan Teks</string>
     <string name="text_action_replace_name">Ganti Teks</string>
     <string name="text_action_assist_chooser">Proses teks dengan…</string>

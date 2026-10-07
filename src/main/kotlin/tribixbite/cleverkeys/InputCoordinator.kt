@@ -789,11 +789,10 @@ class InputCoordinator(
     ) {
         val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
             ?: config.primary_language
-        val secondaryLanguage = if (config.enable_multilang) {
-            DirectBootAwarePreferences.get_shared_preferences(context)
-                .getString("pref_secondary_language", "none")
-                ?.takeIf { it != "none" && it != language && CtcEngineAdapter.supportsLanguage(it) }
-        } else null
+        // GH #186/#61: the ACTIVE secondary (null on a layout with a language binding), so a
+        // bound layout's swipes never merge in another language's lexicon.
+        val secondaryLanguage = config.active_secondary_language
+            ?.takeIf { it != language && CtcEngineAdapter.supportsLanguage(it) }
         if (!CtcEngineAdapter.supportsLanguage(language)) {
             // M1: CTC serves only the languages CtcLanguageSupport reports (en/fr/de/es, the
             // provisional it/pt/sv since 2026-08-18, ru since 2026-08-29, and since the same day
@@ -947,10 +946,8 @@ class InputCoordinator(
                         ctc.supportsLayout(keyboard, params, frameW, frameH, language)
                     when {
                         ctcServes -> {
-                            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-                            val secondary = if (config.enable_multilang) {
-                                prefs.getString("pref_secondary_language", "none")
-                            } else null
+                            // Same ACTIVE secondary the dispatcher merges (GH #186/#61).
+                            val secondary = config.active_secondary_language
                             ctc.warmUpAsync(
                                 keyboard, params, frameW, frameH, language, secondary
                             )

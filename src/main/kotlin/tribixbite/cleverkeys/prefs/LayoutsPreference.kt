@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.ArrayAdapter
 import tribixbite.cleverkeys.CustomLayoutEditDialog
 import tribixbite.cleverkeys.KeyboardData
+import tribixbite.cleverkeys.LayoutLanguageBinding
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.Utils
 import org.json.JSONException
@@ -127,7 +128,11 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
     /** Called when modifying a layout. Custom layouts behave differently. */
     override fun select(callback: SelectionCallback<Layout>, oldValue: Layout?) {
         if (oldValue is CustomLayout) {
-            selectCustom(callback, oldValue.xml)
+            // Editing the XML keeps the entry's language binding (GH #186/#61).
+            selectCustom(object : SelectionCallback<Layout> {
+                override fun select(value: Layout?) = callback.select(value?.withLanguage(oldValue.language))
+                override fun allowRemove(): Boolean = callback.allowRemove()
+            }, oldValue.xml)
         } else {
             selectDialog(callback)
         }
@@ -154,24 +159,49 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
 
     /** A layout selected by the user. The only implementations are
      * [NamedLayout], [SystemLayout] and [CustomLayout]. */
-    interface Layout
+    interface Layout {
+        /**
+         * The entry's language binding choice (GH #186/#61), already normalised by
+         * [LayoutLanguageBinding.normalizeEntry]: null = no choice (the XML `language` default
+         * applies), [LayoutLanguageBinding.UNBOUND] = explicitly unbound, else a language code.
+         * Stored inside the entry so reordering, editing and deleting carry the binding along.
+         */
+        val language: String?
 
-    class SystemLayout : Layout
+        /** This entry with its binding choice replaced by [language] (normalised). */
+        fun withLanguage(language: String?): Layout
+    }
+
+    data class SystemLayout(override val language: String? = null) : Layout {
+        override fun withLanguage(language: String?): Layout =
+            copy(language = LayoutLanguageBinding.normalizeEntry(language))
+    }
 
     /** The name of a layout defined in [srcs/layouts]. */
-    data class NamedLayout(val name: String) : Layout
+    data class NamedLayout(val name: String, override val language: String? = null) : Layout {
+        override fun withLanguage(language: String?): Layout =
+            copy(language = LayoutLanguageBinding.normalizeEntry(language))
+    }
 
     /** The XML description of a custom layout. */
-    data class CustomLayout(val xml: String, val parsed: KeyboardData?) : Layout {
+    data class CustomLayout(
+        val xml: String,
+        val parsed: KeyboardData?,
+        override val language: String? = null
+    ) : Layout {
+        override fun withLanguage(language: String?): Layout =
+            copy(language = LayoutLanguageBinding.normalizeEntry(language))
+
         companion object {
             @JvmStatic
-            fun parse(xml: String): CustomLayout {
+            @JvmOverloads
+            fun parse(xml: String, language: String? = null): CustomLayout {
                 val parsed = try {
                     KeyboardData.load_string_exn(xml)
                 } catch (e: Exception) {
                     null
                 }
-                return CustomLayout(xml, parsed)
+                return CustomLayout(xml, parsed, LayoutLanguageBinding.normalizeEntry(language))
             }
         }
     }
@@ -179,6 +209,12 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
     /**
      * Named layouts are serialized to strings and custom layouts to JSON
      * objects with a [kind] field.
+     *
+     * GH #186/#61: an entry with a language binding also carries a `language` field; a bound
+     * NAMED layout therefore needs the object form `{"kind":"named","name":…,"language":…}`.
+     * Unbound entries keep their exact pre-binding encoding. Loading sanitises `language`
+     * through [LayoutLanguageBinding.normalizeEntry] — the `layouts` blob is imported verbatim
+     * by Backup & Restore, so this is where an invalid code from a file is dropped.
      */
     class Serializer : ListGroupPreference.Serializer<Layout> {
         @Throws(JSONException::class)
@@ -191,9 +227,13 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
                 }
             } else {
                 val jsonObj = obj as JSONObject
+                val language = LayoutLanguageBinding.normalizeEntry(
+                    if (jsonObj.isNull(LANGUAGE_FIELD)) null else jsonObj.optString(LANGUAGE_FIELD)
+                )
                 when (jsonObj.getString("kind")) {
-                    "custom" -> CustomLayout.parse(jsonObj.getString("xml"))
-                    "system" -> SystemLayout()
+                    "custom" -> CustomLayout.parse(jsonObj.getString("xml"), language)
+                    "named" -> NamedLayout(jsonObj.getString("name"), language)
+                    "system" -> SystemLayout(language)
                     else -> SystemLayout()
                 }
             }
@@ -201,18 +241,26 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
 
         @Throws(JSONException::class)
         override fun saveItem(v: Layout): Any {
+            val language = LayoutLanguageBinding.normalizeEntry(v.language)
             return when (v) {
-                is NamedLayout -> v.name
+                is NamedLayout -> if (language == null) v.name else JSONObject()
+                    .put("kind", "named")
+                    .put("name", v.name)
+                    .put(LANGUAGE_FIELD, language)
                 is CustomLayout -> JSONObject()
                     .put("kind", "custom")
                     .put("xml", v.xml)
+                    .apply { if (language != null) put(LANGUAGE_FIELD, language) }
                 else -> JSONObject().put("kind", "system")
+                    .apply { if (language != null) put(LANGUAGE_FIELD, language) }
             }
         }
     }
 
     companion object {
         const val KEY = "layouts"
+        /** JSON field of an entry's language binding (GH #186/#61). */
+        private const val LANGUAGE_FIELD = "language"
         val DEFAULT: List<Layout> = listOf(SystemLayout())
         val SERIALIZER: ListGroupPreference.Serializer<Layout> = Serializer()
 
@@ -251,16 +299,31 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
         }
 
         @JvmStatic
-        fun loadFromPreferences(res: Resources, prefs: SharedPreferences): List<KeyboardData?> {
+        fun loadFromPreferences(res: Resources, prefs: SharedPreferences): List<KeyboardData?> =
+            loadLayoutsWithBindings(res, prefs).first
+
+        /**
+         * The layouts (null = System, resolved to the locale layout at runtime) together with
+         * each layout's EFFECTIVE language binding, index-aligned (GH #186/#61). Loads and parses
+         * the preference once for both, which is what `Config.refresh` needs.
+         */
+        @JvmStatic
+        fun loadLayoutsWithBindings(
+            res: Resources,
+            prefs: SharedPreferences
+        ): Pair<List<KeyboardData?>, List<String?>> {
             val layouts = mutableListOf<KeyboardData?>()
+            val bindings = mutableListOf<String?>()
             for (l in loadFromPreferences(KEY, prefs, DEFAULT, SERIALIZER) ?: DEFAULT) {
-                when (l) {
-                    is NamedLayout -> layouts.add(layoutOfString(res, l.name))
-                    is CustomLayout -> layouts.add(l.parsed)
-                    is SystemLayout -> layouts.add(null)
+                val data = when (l) {
+                    is NamedLayout -> layoutOfString(res, l.name)
+                    is CustomLayout -> l.parsed
+                    else -> null
                 }
+                layouts.add(data)
+                bindings.add(LayoutLanguageBinding.effective(l.language, data?.declared_language))
             }
-            return layouts
+            return layouts to bindings
         }
 
         /** Does not call [prefs.commit]. */

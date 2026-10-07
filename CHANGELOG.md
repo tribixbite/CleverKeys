@@ -131,6 +131,15 @@ editor that used to be listed here already ship in 2.0.)
 - Explicit dynamic templates for clipboard text, selection, UUID and UTF-16 cursor
   placement; ordinary Text Input keeps braces literal. Per-key and popover assignment,
   persistence, backup and XML retain the template action type.
+- **A language per layout (#186, #61)**: in Layout Manager, each layout can have its own
+  language (Language chip), and a custom layout can declare a default with
+  `language="fa"`. Switching to such a layout (next/previous layout, the layout picker)
+  switches predictions, autocorrect, swipe typing, contractions and learning to that
+  language alone — no secondary language is mixed in — so typos on a second-language
+  layout are now corrected. Layouts left on "Follow Multi-Language settings" behave
+  exactly as before; three or more languages work by binding three or more layouts.
+  Bindings travel with the layout in Backup & Restore; a binding to a language without an
+  installed dictionary is allowed and flagged.
 
 ### Changed
 

@@ -673,6 +673,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             searchEntry(R.string.activities_theme_title, listOf("color", "dark mode", "light", "appearance", "theme"), "activities", ThemeSettingsActivity::class.java),
             searchEntry(R.string.activities_dictionary_title, listOf("words", "custom", "disabled", "vocabulary"), "activities", DictionaryManagerActivity::class.java),
             searchEntry(R.string.activities_layout_title, listOf("keyboard layout", "qwerty", "azerty"), "activities", LayoutManagerActivity::class.java),
+            // GH #186/#61: per-layout language binding lives on each Layout Manager row.
+            searchEntry(R.string.layout_language_title, listOf("language", "layout language", "per layout", "bind", "switch language", "autocorrect"), "activities", LayoutManagerActivity::class.java),
             searchEntry(R.string.calibration_customize_title, listOf("short swipe", "gesture", "actions", "commands", "per-key"), "activities", ShortSwipeCustomizationActivity::class.java, gatedBy = "short_gestures", settingId = "per_key_customization"),
             searchEntry(R.string.activities_calibration_title, listOf("calibrate", "practice", "tutorial", "test"), "gestureTuning", ShortSwipeCalibrationActivity::class.java, gatedBy = "short_gestures", settingId = "short_swipe_calibration"),
             searchEntry(R.string.activities_extra_keys_title, listOf("toolbar", "arrows", "numbers"), "activities", ExtraKeysConfigActivity::class.java),

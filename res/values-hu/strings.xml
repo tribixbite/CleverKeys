@@ -1055,6 +1055,17 @@
     <string name="keyboard_lang_primary_toggled">Elsődleges: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">Másodlagos: %1$s</string>
     <string name="keyboard_lang_toggle_failed">Nem sikerült nyelvet váltani</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">Kiosztás nyelve</string>
+    <string name="layout_language_follow_multilang">A Többnyelvű beállítások követése</string>
+    <string name="layout_language_from_xml">%1$s (a kiosztás alapértelmezése)</string>
+    <string name="layout_language_dialog_desc">Amíg ez a kiosztás aktív, a kiválasztott nyelv az egyetlen nyelv a javaslatokhoz, az automatikus javításhoz és a csúsztatásos gépeléshez. „A Többnyelvű beállítások követése” megtartja az elsődleges és a másodlagos nyelvet.</string>
+    <string name="layout_language_not_installed">Nincs telepítve %1$s szótár. A kiosztás működik, de a javaslatok és az automatikus javítás üresek maradnak, amíg nem importálod a nyelvi csomagját.</string>
+    <string name="layout_language_xml_invalid">A language attribútumnak nyelvkódnak kell lennie, például fa vagy pt_br</string>
+    <string name="keyboard_lang_layout_active">Nyelv: %1$s</string>
+    <string name="keyboard_lang_layout_missing">Nyelv: %1$s (nincs telepített szótár)</string>
+    <string name="keyboard_lang_bound_by_layout">A nyelvet ez a kiosztás határozza meg: %1$s</string>
+    <string name="multilang_layout_binding_hint">Minden kiosztásnak lehet saját nyelve (Kiosztáskezelő). Amíg egy ilyen kiosztás aktív, az felülírja ezeket a nyelvi beállításokat.</string>
     <string name="text_action_assist_name">Szövegsegéd</string>
     <string name="text_action_replace_name">Szöveg cseréje</string>
     <string name="text_action_assist_chooser">Szöveg feldolgozása ezzel…</string>

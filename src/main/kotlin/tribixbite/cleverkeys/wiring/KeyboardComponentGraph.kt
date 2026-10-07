@@ -96,12 +96,11 @@ class KeyboardComponentGraph(
         // user got "don't" for `dont` (rank 104), because the base loaded first and both
         // loaders are earlier-wins. loadTypingMappings encodes the precedence: primary,
         // then secondary, then the English base ONLY if English is one of the two.
+        //
+        // GH #186/#61: the ACTIVE languages (Config resolves the current layout's binding), the
+        // same pair ActiveLanguageSync reloads with on every later language change.
         val contractionManager = ContractionManager(service)
-        val prefsForLang = DirectBootAwarePreferences.get_shared_preferences(service)
-        val secondaryLang = prefsForLang
-            .getString("pref_secondary_language", "none")
-            ?.takeIf { prefsForLang.getBoolean("pref_enable_multilang", false) }
-        contractionManager.loadTypingMappings(config.primary_language, secondaryLang)
+        contractionManager.loadTypingMappings(config.primary_language, config.active_secondary_language)
         MemoryProbe.mark("init.contractionManager", settle = true) {
             "known=${contractionManager.getTotalKnownCount()}"
         }
@@ -165,6 +164,35 @@ class KeyboardComponentGraph(
             keyboardDimensionsHelper,
             mlDataCollector
         )
+    }
+
+    /**
+     * GH #186/#61 — the ONE language-change path ([ActiveLanguageSync]). The service feeds it
+     * [Config.activeLanguages] after every Config refresh, so a layout switch onto or off a
+     * layout with a language binding, a Settings selector, a language toggle and a backup import
+     * all reload through the same diff. Seeded with the languages the [managers] cluster was
+     * just constructed with (the service reads this right after the managers), so startup does
+     * not reload a dictionary it already loaded.
+     */
+    val activeLanguageSync: ActiveLanguageSync by lazy {
+        val coordinator = predictionCoordinator
+        val contractions = contractionManager
+        ActiveLanguageSync(config.activeLanguages(), object : ActiveLanguageSync.Sink {
+            override fun reloadPrimary(language: String) =
+                coordinator.reloadWordPredictorDictionary(language)
+
+            override fun reloadSecondary(language: String?) =
+                coordinator.reloadWordPredictorSecondaryDictionary(language ?: LanguageDisplayNames.NONE)
+
+            // Same policy method as the construction-time load above (language-scoped
+            // precedence: primary, then secondary, then English only if selected).
+            override fun reloadContractions(primary: String, secondary: String?) =
+                contractions.loadTypingMappings(primary, secondary)
+
+            override fun rewarmSwipe() = CleverKeysService.requestGeometricRewarm()
+
+            override fun announce(active: ActiveLanguages) = service.announceLayoutLanguage(active.primary)
+        })
     }
 
     // Convenience reads — each forces the [managers] cluster on first access.

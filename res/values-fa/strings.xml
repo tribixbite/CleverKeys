@@ -1087,6 +1087,17 @@
     <string name="keyboard_lang_primary_toggled">اصلی: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">ثانویه: %1$s</string>
     <string name="keyboard_lang_toggle_failed">تغییر زبان ناموفق بود</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">زبان چیدمان</string>
+    <string name="layout_language_follow_multilang">پیروی از تنظیمات چندزبانه</string>
+    <string name="layout_language_from_xml">%1$s (پیش‌فرض چیدمان)</string>
+    <string name="layout_language_dialog_desc">تا وقتی این چیدمان فعال است، زبان انتخاب‌شده تنها زبانی است که برای پیشنهادها، تصحیح خودکار و تایپ کشیدنی استفاده می‌شود. «پیروی از تنظیمات چندزبانه» زبان اصلی و ثانویهٔ شما را حفظ می‌کند.</string>
+    <string name="layout_language_not_installed">هیچ واژه‌نامه‌ای برای %1$s نصب نشده است. چیدمان کار می‌کند، اما پیشنهادها و تصحیح خودکار تا وارد کردن بستهٔ زبانی آن خالی می‌مانند.</string>
+    <string name="layout_language_xml_invalid">ویژگی language باید کد زبان باشد، مانند fa یا pt_br</string>
+    <string name="keyboard_lang_layout_active">زبان: %1$s</string>
+    <string name="keyboard_lang_layout_missing">زبان: %1$s (واژه‌نامه نصب نشده)</string>
+    <string name="keyboard_lang_bound_by_layout">زبان را این چیدمان تعیین می‌کند: %1$s</string>
+    <string name="multilang_layout_binding_hint">هر چیدمان می‌تواند زبان خودش را داشته باشد (مدیر چیدمان). وقتی چنین چیدمانی فعال است، جایگزین این تنظیمات زبان می‌شود.</string>
     <string name="text_action_assist_name">دستیار متن</string>
     <string name="text_action_replace_name">جایگزینی متن</string>
     <string name="text_action_assist_chooser">پردازش متن با…</string>

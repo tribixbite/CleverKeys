@@ -241,6 +241,21 @@ including compact custom rows, fractional row height/shift, numeric/PIN preferen
 flag defaults, transformed layouts and the screen-height cap. The existing #58 width tests
 retain their release-anchored names.
 
+### Language binding (`language`, GH #186/#61)
+
+`<keyboard language="fa" …>` declares the layout's DEFAULT language binding. The parser keeps
+the raw value in `KeyboardData.declared_language` and never fails on it (a stored layout must
+not disappear over its attribute); `LayoutLanguageBinding.effective` validates it with the
+language-pack code shape (`^[a-z]{2,3}(?:[_-][a-z0-9]{1,16}){0,4}$`, case-insensitive) and the
+Layout Manager editor refuses to save an invalid value. Built-in layouts declare no language.
+
+The user's choice is stored per entry of the `layouts` preference (`language` field: absent =
+use the XML default, `"none"` = explicitly unbound, a code = bound) and overrides the XML
+default. While a bound layout is current, its language is the only active language for
+prediction, autocorrect, swipe routing, contractions and learning. Resolution, the single
+language-change path and the secondary-language policy are specified in
+[dictionary-and-language-system.md](dictionary-and-language-system.md#per-layout-language-binding-gh-186-gh-61--2026-10-07).
+
 ### CTC swipe eligibility
 
 A layout can reach the CTC engine only when all of these checks pass:

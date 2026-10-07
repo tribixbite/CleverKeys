@@ -146,10 +146,11 @@ class PredictionCoordinator(
             // (KeyboardComponentGraph.wireSwipeTypingComponents → initialize()), and for a
             // multilang user whose secondary language is an imported language pack the
             // blocking form parsed the whole pack file right here, on every process create.
-            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            val multiLangEnabled = prefs.getBoolean("pref_enable_multilang", false)
-            val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
-            if (multiLangEnabled && secondaryLang != "none" && secondaryLang.isNotEmpty()) {
+            //
+            // GH #186/#61: the ACTIVE secondary — null while a layout with a language binding
+            // is current (single-language), else the preference secondary under Multi-Language.
+            val secondaryLang = config.active_secondary_language
+            if (secondaryLang != null) {
                 Log.d(TAG, "Loading secondary dictionary for touch typing: $secondaryLang")
                 loadSecondaryDictionaryAsync(secondaryLang) {
                     MemoryProbe.mark("wordPredictor.secondary", settle = true) { "lang=$secondaryLang" }
@@ -183,21 +184,16 @@ class PredictionCoordinator(
      * @param newConfig Updated configuration
      */
     fun setConfig(newConfig: Config) {
-        val oldPrimaryLang = config.primary_language
         config = newConfig
-        val newPrimaryLang = config.primary_language
 
         // Update word predictor config if it exists
         wordPredictor?.setConfig(config)
 
-        // v1.1.89: Reload dictionary if primary language changed
-        if (oldPrimaryLang != newPrimaryLang && wordPredictor != null) {
-            Log.i(TAG, "Primary language changed from '$oldPrimaryLang' to '$newPrimaryLang' - reloading dictionary")
-            wordPredictor?.loadDictionaryAsync(context, newPrimaryLang) {
-                Log.i(TAG, "Dictionary reloaded for '$newPrimaryLang'")
-            }
-            dictionaryManager?.setLanguage(newPrimaryLang)
-        }
+        // Language changes are NOT detected here (GH #186/#61). This used to compare
+        // config.primary_language before and after the assignment, but the service hands the
+        // SAME Config instance back after refreshing it in place, so the comparison could never
+        // see a change. Dictionaries are reloaded by ActiveLanguageSync, which diffs against
+        // what is actually loaded and calls reloadWordPredictorDictionary below.
     }
 
     /**

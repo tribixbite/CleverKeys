@@ -1048,6 +1048,17 @@
     <string name="keyboard_lang_primary_toggled">主要言語: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">副言語: %1$s</string>
     <string name="keyboard_lang_toggle_failed">言語の切り替えに失敗しました</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">レイアウトの言語</string>
+    <string name="layout_language_follow_multilang">多言語の設定に従う</string>
+    <string name="layout_language_from_xml">%1$s（レイアウトの既定）</string>
+    <string name="layout_language_dialog_desc">このレイアウトが有効な間は、選択した言語だけが予測候補、自動修正、スワイプ入力に使われます。「多言語の設定に従う」を選ぶと主要言語と副言語がそのまま使われます。</string>
+    <string name="layout_language_not_installed">%1$s の辞書がインストールされていません。レイアウトは使えますが、言語パックをインポートするまで予測候補と自動修正は空のままです。</string>
+    <string name="layout_language_xml_invalid">language 属性は fa や pt_br のような言語コードである必要があります</string>
+    <string name="keyboard_lang_layout_active">言語: %1$s</string>
+    <string name="keyboard_lang_layout_missing">言語: %1$s（辞書未インストール）</string>
+    <string name="keyboard_lang_bound_by_layout">このレイアウトが言語を決めています: %1$s</string>
+    <string name="multilang_layout_binding_hint">各レイアウトに独自の言語を設定できます（レイアウトマネージャー）。そのようなレイアウトが有効な間は、ここの言語設定より優先されます。</string>
     <string name="text_action_assist_name">テキストアシスト</string>
     <string name="text_action_replace_name">テキストを置換</string>
     <string name="text_action_assist_chooser">テキストを処理するアプリ…</string>

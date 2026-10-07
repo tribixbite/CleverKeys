@@ -1059,6 +1059,17 @@
     <string name="keyboard_lang_primary_toggled">Principale : %1$s</string>
     <string name="keyboard_lang_secondary_toggled">Secondaire : %1$s</string>
     <string name="keyboard_lang_toggle_failed">Échec du changement de langue</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">Langue de la disposition</string>
+    <string name="layout_language_follow_multilang">Suivre les réglages Multilangue</string>
+    <string name="layout_language_from_xml">%1$s (par défaut de la disposition)</string>
+    <string name="layout_language_dialog_desc">Tant que cette disposition est active, la langue choisie est la seule utilisée pour les suggestions, la correction automatique et la saisie par glissement. « Suivre les réglages Multilangue » conserve vos langues principale et secondaire.</string>
+    <string name="layout_language_not_installed">Aucun dictionnaire %1$s n\'est installé. La disposition fonctionne, mais les suggestions et la correction automatique restent vides tant que vous n\'importez pas son pack de langue.</string>
+    <string name="layout_language_xml_invalid">L\'attribut language doit être un code de langue comme fa ou pt_br</string>
+    <string name="keyboard_lang_layout_active">Langue : %1$s</string>
+    <string name="keyboard_lang_layout_missing">Langue : %1$s (aucun dictionnaire installé)</string>
+    <string name="keyboard_lang_bound_by_layout">Cette disposition définit la langue : %1$s</string>
+    <string name="multilang_layout_binding_hint">Chaque disposition peut avoir sa propre langue (Gestionnaire de dispositions). Tant qu\'une telle disposition est active, elle remplace ces réglages de langue.</string>
     <string name="text_action_assist_name">Assistance texte</string>
     <string name="text_action_replace_name">Remplacer le texte</string>
     <string name="text_action_assist_chooser">Traiter le texte avec…</string>

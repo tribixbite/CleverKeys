@@ -683,7 +683,31 @@ class Config private constructor(
 
     // Multi-language support (Phase 8.3 & 8.4)
     @JvmField var enable_multilang = false // Phase 8.3: Enable multi-language support
-    @JvmField var primary_language = "en" // Phase 8.3: Primary language (default)
+    /**
+     * The ACTIVE primary language — what prediction, autocorrect, learning, the n-gram/static LM,
+     * contractions and swipe routing serve. Equals `pref_primary_language` unless the current
+     * layout carries a language binding (GH #186/#61), in which case it is the bound language.
+     * Settings and the language toggles read/write the PREFERENCE, never this field.
+     */
+    @JvmField var primary_language = "en"
+    /**
+     * GH #186/#61: each layout's EFFECTIVE language binding (null = unbound), index-aligned with
+     * [layouts]. Resolved by [LayoutLanguageBinding.effective] when the layouts are loaded.
+     */
+    @JvmField var layout_languages: List<String?> = emptyList()
+    /** `pref_primary_language` — the user's choice for unbound layouts. */
+    private var user_primary_language = Defaults.PRIMARY_LANGUAGE
+    /** `pref_secondary_language` ("none" = no secondary). */
+    private var user_secondary_language = LanguageDisplayNames.NONE
+    /**
+     * The ACTIVE secondary language, or null for single-language typing: the preference
+     * secondary while Multi-Language is on and the current layout is unbound; always null on a
+     * bound layout (#61 — no word mixing). Every consumer that loads or merges a secondary
+     * reads THIS, not the preferences.
+     */
+    @JvmField var active_secondary_language: String? = null
+    /** Non-null while the current layout is bound to a language (then == [primary_language]). */
+    @JvmField var layout_bound_language: String? = null
     @JvmField var auto_detect_language = true // Phase 8.3: Auto-detect language from context
     @JvmField var language_detection_sensitivity = 0.6f // Phase 8.3: Detection sensitivity (0.0-1.0)
     @JvmField var secondary_prediction_weight = Defaults.SECONDARY_PREDICTION_WEIGHT // v1.1.94: Weight for secondary predictions
@@ -842,8 +866,11 @@ class Config private constructor(
             )
         }
 
-        // Keep nulls - they represent SystemLayout entries (resolved to localeTextLayout at runtime)
-        layouts = LayoutsPreference.load_from_preferences(res, _prefs)
+        // Keep nulls - they represent SystemLayout entries (resolved to localeTextLayout at runtime).
+        // GH #186/#61: each entry's effective language binding is loaded in the same pass.
+        val (loadedLayouts, loadedLanguages) = LayoutsPreference.loadLayoutsWithBindings(res, _prefs)
+        layouts = loadedLayouts
+        layout_languages = loadedLanguages
         inverse_numpad = safeGetString(_prefs, "numpad_layout", Defaults.NUMPAD_LAYOUT) == "low_first"
         scale_numpad_height = _prefs.getBoolean("scale_numpad_height", Defaults.SCALE_NUMPAD_HEIGHT)
 
@@ -997,7 +1024,10 @@ class Config private constructor(
 
         // Multi-language settings (Phase 8.3 & 8.4)
         enable_multilang = _prefs.getBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
-        primary_language = safeGetString(_prefs, "pref_primary_language", Defaults.PRIMARY_LANGUAGE)
+        // The user's language choices; the ACTIVE languages are resolved against the current
+        // layout's binding at the end of refresh (recomputeActiveLanguages).
+        user_primary_language = safeGetString(_prefs, "pref_primary_language", Defaults.PRIMARY_LANGUAGE)
+        user_secondary_language = safeGetString(_prefs, "pref_secondary_language", LanguageDisplayNames.NONE)
         auto_detect_language = _prefs.getBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         // SlideBarPreference stores as Float (0.4-0.9), not Int
         language_detection_sensitivity = safeGetFloat(_prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
@@ -1100,6 +1130,10 @@ class Config private constructor(
         val screen_width_dp = dm.widthPixels / dm.density
         wide_screen = screen_width_dp >= WIDE_DEVICE_THRESHOLD
 
+        // GH #186/#61: needs layouts, the selection indices AND wide_screen (which of the two
+        // selections is current), so it runs after all three are read.
+        recomputeActiveLanguages()
+
         // MUST stay the last statement: every field the hot paths read has now been written,
         // so the published snapshot can never lag the vars it mirrors. refresh() has a single
         // exit by design — an early return here would publish a stale read-model.
@@ -1192,12 +1226,40 @@ class Config private constructor(
         return if (wide_screen) current_layout_wide else current_layout_narrow
     }
 
+    /** The active languages for the current layout (GH #186/#61); see [ActiveLanguageSync]. */
+    fun activeLanguages(): ActiveLanguages =
+        ActiveLanguages(primary_language, active_secondary_language, layout_bound_language)
+
+    /**
+     * Re-resolve the active languages from the current layout's binding and the user's
+     * language preferences. @return true when any of them changed.
+     */
+    private fun recomputeActiveLanguages(): Boolean {
+        val before = activeLanguages()
+        val active = LayoutLanguageBinding.resolve(
+            bindings = layout_languages,
+            currentIndex = get_current_layout(),
+            userPrimary = user_primary_language,
+            multilangEnabled = enable_multilang,
+            userSecondary = user_secondary_language,
+        )
+        primary_language = active.primary
+        active_secondary_language = active.secondary
+        layout_bound_language = active.boundLayoutLanguage
+        return active != before
+    }
+
     fun set_current_layout(l: Int) {
         if (wide_screen) {
             current_layout_wide = l
         } else {
             current_layout_narrow = l
         }
+        // GH #186/#61: a layout switch is a language switch when either layout is bound. Resolve
+        // now and re-publish the snapshot (gesture hot paths read primary_language from it), so
+        // nothing reads the old language between this call and the preference-listener refresh
+        // that follows the write below and drives ActiveLanguageSync.
+        if (recomputeActiveLanguages()) edit { }
         _prefs.edit().apply {
             putInt("current_layout_portrait", current_layout_narrow)
             putInt("current_layout_landscape", current_layout_wide)

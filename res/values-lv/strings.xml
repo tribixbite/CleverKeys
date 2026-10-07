@@ -1060,6 +1060,17 @@
     <string name="keyboard_lang_primary_toggled">Primārā: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">Sekundārā: %1$s</string>
     <string name="keyboard_lang_toggle_failed">Neizdevās pārslēgt valodu</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">Izkārtojuma valoda</string>
+    <string name="layout_language_follow_multilang">Sekot daudzvalodības iestatījumiem</string>
+    <string name="layout_language_from_xml">%1$s (izkārtojuma noklusējums)</string>
+    <string name="layout_language_dialog_desc">Kamēr šis izkārtojums ir aktīvs, izvēlētā valoda ir vienīgā valoda ieteikumiem, automātiskajai labošanai un vilkšanas rakstīšanai. “Sekot daudzvalodības iestatījumiem” saglabā jūsu primāro un sekundāro valodu.</string>
+    <string name="layout_language_not_installed">Valodai %1$s nav instalēta vārdnīca. Izkārtojums darbojas, bet ieteikumi un automātiskā labošana paliek tukši, līdz importējat tās valodas pakotni.</string>
+    <string name="layout_language_xml_invalid">Atribūtam language jābūt valodas kodam, piemēram, fa vai pt_br</string>
+    <string name="keyboard_lang_layout_active">Valoda: %1$s</string>
+    <string name="keyboard_lang_layout_missing">Valoda: %1$s (vārdnīca nav instalēta)</string>
+    <string name="keyboard_lang_bound_by_layout">Valodu nosaka šis izkārtojums: %1$s</string>
+    <string name="multilang_layout_binding_hint">Katram izkārtojumam var būt sava valoda (Izkārtojuma pārvaldnieks). Kamēr šāds izkārtojums ir aktīvs, tas aizstāj šos valodas iestatījumus.</string>
     <string name="text_action_assist_name">Teksta palīgs</string>
     <string name="text_action_replace_name">Aizstāt tekstu</string>
     <string name="text_action_assist_chooser">Apstrādāt tekstu ar…</string>

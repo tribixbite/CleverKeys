@@ -33,7 +33,14 @@ class KeyboardData private constructor(
     /** Whether extra keys from [method.xml] should be added to this layout. */
     val locale_extra_keys: Boolean,
     /** Opt in to the Scale Numpad Height preference; independent of bottom-row insertion. */
-    val numpad_height: Boolean
+    val numpad_height: Boolean,
+    /**
+     * The raw `language` attribute (GH #186/#61): the layout's DEFAULT language binding, or
+     * null when absent. Unvalidated on purpose — loading stays lenient so a stored layout never
+     * disappears over its attribute; always read it through `LayoutLanguageBinding`
+     * (`effective` / `xmlLanguageProblem`), never as a language code directly.
+     */
+    val declared_language: String?
 ) {
     /** Position of every keys on the layout, see [getKeys()]. */
     private var _key_pos: Map<KeyValue, KeyPos>? = null
@@ -182,7 +189,8 @@ class KeyboardData private constructor(
         src.bottom_row,
         src.embedded_number_row,
         src.locale_extra_keys,
-        src.numpad_height
+        src.numpad_height,
+        src.declared_language
     )
 
     data class Row(
@@ -549,6 +557,8 @@ class KeyboardData private constructor(
             else if (numpad_script.isEmpty())
                 throw error(parser, "'numpad_script' attribute cannot be empty")
             val name = parser.getAttributeValue(null, "name")
+            // GH #186/#61: optional default language binding, e.g. language="fa".
+            val declared_language = parser.getAttributeValue(null, "language")?.trim()
             val rows = ArrayList<Row>()
             var modmap: Modmap? = null
             while (next_tag(parser)) {
@@ -567,7 +577,7 @@ class KeyboardData private constructor(
             for (r in rows)
                 kh += r.height + r.shift
             return KeyboardData(rows, maxOf(kw, 1f), kh, modmap, script, numpad_script, name,
-                bottom_row, embedded_number_row, locale_extra_keys, numpad_height)
+                bottom_row, embedded_number_row, locale_extra_keys, numpad_height, declared_language)
         }
 
         private fun compute_max_width(rows: List<Row>): Float {

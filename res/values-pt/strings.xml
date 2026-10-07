@@ -1049,6 +1049,17 @@
     <string name="keyboard_lang_primary_toggled">Principal: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">Secundário: %1$s</string>
     <string name="keyboard_lang_toggle_failed">Falha ao alternar o idioma</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">Idioma do layout</string>
+    <string name="layout_language_follow_multilang">Seguir as configurações de Múltiplos idiomas</string>
+    <string name="layout_language_from_xml">%1$s (padrão do layout)</string>
+    <string name="layout_language_dialog_desc">Enquanto este layout estiver ativo, o idioma escolhido é o único usado para sugestões, correção automática e digitação por deslize. “Seguir as configurações de Múltiplos idiomas” mantém seus idiomas principal e secundário.</string>
+    <string name="layout_language_not_installed">Nenhum dicionário de %1$s está instalado. O layout funciona, mas as sugestões e a correção automática ficam vazias até você importar o pacote de idioma.</string>
+    <string name="layout_language_xml_invalid">O atributo language deve ser um código de idioma como fa ou pt_br</string>
+    <string name="keyboard_lang_layout_active">Idioma: %1$s</string>
+    <string name="keyboard_lang_layout_missing">Idioma: %1$s (nenhum dicionário instalado)</string>
+    <string name="keyboard_lang_bound_by_layout">Este layout define o idioma: %1$s</string>
+    <string name="multilang_layout_binding_hint">Cada layout pode ter seu próprio idioma (Gerenciador de layout). Enquanto um layout assim estiver ativo, ele substitui estas configurações de idioma.</string>
     <string name="text_action_assist_name">Assistente de texto</string>
     <string name="text_action_replace_name">Substituir texto</string>
     <string name="text_action_assist_chooser">Processar texto com…</string>

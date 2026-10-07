@@ -91,6 +91,14 @@ Configure in Settings under the layout/input behavior options.
 > [!TIP]
 > For bilingual typing, consider using Multi-Language mode instead of switching layouts. It suggests words from both languages simultaneously.
 
+## Switching Language with the Layout
+
+Each layout can have its own language (**Settings > Layout Manager**, the **Language** chip on
+the layout). Switching to such a layout switches predictions, autocorrect and swipe typing to
+that language only; switching to a layout left on **Follow Multi-Language settings** returns
+to your Primary/Secondary languages. See
+[Multi-Language: One Language per Layout](multi-language.md#one-language-per-layout).
+
 ## Multi-Language Alternative
 
 Instead of switching layouts, you can type in multiple languages on one layout:
@@ -120,7 +128,7 @@ Instead of switching layouts, you can type in multiple languages on one layout:
 
 ### Q: How do I quickly switch between two languages?
 
-A: If you only have 2 layouts enabled, any switch action toggles between them. Alternatively, enable Multi-Language mode for simultaneous bilingual typing.
+A: If you only have 2 layouts enabled, any switch action toggles between them. Give each layout its language in Layout Manager and the language switches with the layout. Alternatively, enable Multi-Language mode for simultaneous bilingual typing on one layout.
 
 ### Q: Where are the layout switch keys?
 

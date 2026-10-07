@@ -9,6 +9,7 @@ import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.DirectBootAwarePreferences
+import tribixbite.cleverkeys.LanguageAvailability
 import tribixbite.cleverkeys.LanguageDisplayNames
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.ResourcesResultText
@@ -18,38 +19,16 @@ import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.swipe.CtcInstalledPacks
 
 /**
- * Detect available V2 binary dictionaries for secondary language selection.
- * Scans assets/dictionaries/ for *_enhanced.bin files.
+ * Detect available V2 binary dictionaries for language selection: the bundled
+ * `<code>_enhanced.bin` dictionary assets plus installed language packs. Shared with Layout
+ * Manager's per-layout language picker through [LanguageAvailability] (GH #186/#61).
  *
  * @return List of language codes (e.g., ["es", "fr", "de"])
  */
 internal fun SettingsActivity.detectAvailableV2Dictionaries(): List<String> {
-    val languages = mutableSetOf<String>()
-    try {
-        // Bundled dictionaries in assets
-        val files = assets.list("dictionaries") ?: emptyArray()
-        for (file in files) {
-            if (file.endsWith("_enhanced.bin")) {
-                val langCode = file.removeSuffix("_enhanced.bin")
-                // v1.1.93: Include ALL languages including English
-                // UI already filters out primary language from secondary options
-                if (langCode.length in 2..3) {
-                    languages.add(langCode)
-                }
-            }
-        }
-
-        // Installed language packs
-        val packManager = LanguagePackManager.getInstance(this)
-        packManager.getInstalledPacks().forEach { pack ->
-            languages.add(pack.code)
-        }
-
-        android.util.Log.i(SettingsActivity.TAG, "Available V2 dictionaries: $languages")
-    } catch (e: Exception) {
-        android.util.Log.e(SettingsActivity.TAG, "Failed to detect V2 dictionaries", e)
-    }
-    return languages.sorted()
+    val languages = LanguageAvailability.availableLanguages(this)
+    android.util.Log.i(SettingsActivity.TAG, "Available V2 dictionaries: $languages")
+    return languages
 }
 
 internal fun SettingsActivity.refreshAvailableSecondaryLanguages() {

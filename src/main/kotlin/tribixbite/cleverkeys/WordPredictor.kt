@@ -1039,6 +1039,9 @@ class WordPredictor : Predictor {
         // Phase 8.3: Skip entirely if auto-detect is disabled
         val autoDetectEnabled = config?.auto_detect_language ?: false
         if (!autoDetectEnabled) return
+        // GH #186/#61: a layout with a language binding decides the language; detection must
+        // not switch the n-gram/context models away from it mid-sentence.
+        if (config?.layout_bound_language != null) return
 
         // Use MultiLanguageManager for detection and switching if available
         if (multiLanguageManager != null) {
@@ -1384,6 +1387,10 @@ class WordPredictor : Predictor {
      * lexicon still loading (or failed to load)"; the latter defers the purge.
      */
     private fun configuredSecondaryLanguage(): String? {
+        // GH #186/#61: the ACTIVE secondary, which is what PredictionCoordinator loads — null
+        // while a layout with a language binding is current, even with Multi-Language on.
+        config?.let { return it.active_secondary_language }
+        // No config yet: fall back to the preferences the active value is resolved from.
         val ctx = context ?: return null
         return try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(ctx)

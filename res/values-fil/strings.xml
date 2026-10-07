@@ -1061,6 +1061,17 @@
     <string name="keyboard_lang_primary_toggled">Pangunahin: %1$s</string>
     <string name="keyboard_lang_secondary_toggled">Pangalawa: %1$s</string>
     <string name="keyboard_lang_toggle_failed">Nabigo ang pagpapalit ng wika</string>
+    <!-- GH #186/#61: per-layout language binding -->
+    <string name="layout_language_title">Wika ng layout</string>
+    <string name="layout_language_follow_multilang">Sundin ang mga setting ng Multi-Wika</string>
+    <string name="layout_language_from_xml">%1$s (default ng layout)</string>
+    <string name="layout_language_dialog_desc">Habang aktibo ang layout na ito, ang napiling wika lamang ang gagamitin para sa mga mungkahi, autocorrect at swipe typing. Pinapanatili ng Sundin ang mga setting ng Multi-Wika ang iyong pangunahin at pangalawang wika.</string>
+    <string name="layout_language_not_installed">Walang naka-install na diksiyonaryo ng %1$s. Gumagana pa rin ang layout, pero mananatiling walang laman ang mga mungkahi at autocorrect hanggang i-import mo ang language pack nito.</string>
+    <string name="layout_language_xml_invalid">Ang attribute na language ay dapat isang language code gaya ng fa o pt_br</string>
+    <string name="keyboard_lang_layout_active">Wika: %1$s</string>
+    <string name="keyboard_lang_layout_missing">Wika: %1$s (walang naka-install na diksiyonaryo)</string>
+    <string name="keyboard_lang_bound_by_layout">Ang layout na ito ang nagtatakda ng wika: %1$s</string>
+    <string name="multilang_layout_binding_hint">Maaaring may sariling wika ang bawat layout (Layout Manager). Habang aktibo ang ganitong layout, pinapalitan nito ang mga setting ng wikang ito.</string>
     <string name="text_action_assist_name">Text Assist</string>
     <string name="text_action_replace_name">Palitan ang Text</string>
     <string name="text_action_assist_chooser">Iproseso ang text gamit ang…</string>

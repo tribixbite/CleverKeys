@@ -72,6 +72,15 @@ A complete layout consists of:
 | `width` | `width="1.5"` | Key width multiplier |
 | `shift` | `shift="0.5"` | Left margin/indent |
 
+### Default language (`language`)
+
+A layout can name the language it is meant for on its `<keyboard>` element, for example
+`<keyboard name="Persian" script="persian" language="fa">`. That becomes the layout's default
+language binding: while the layout is active, predictions, autocorrect and swipe typing use
+that language only. The **Language** chip in Layout Manager overrides it, including
+**Follow Multi-Language settings** to ignore it. The value must be a language code such as
+`fa`, `de` or `pt_br`; the editor refuses to save anything else.
+
 ### Keeping CTC swipe available
 
 If a custom layout should use the CTC engine, declare the correct `script` on its
