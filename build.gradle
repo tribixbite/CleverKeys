@@ -1233,6 +1233,8 @@ tasks.register('runMockTests', JavaExec) {
     // 2026-10-07: persistent clipboard selection — row-identity model that survives search,
     // size and page changes and only ever resolves unchanged rows for confirmed deletion.
     'tribixbite.cleverkeys.clipboard.ClipboardSelectionTest',
+    // 2026-10-07 (Saga/Chrome device report): IME dialogs never take window focus.
+    'tribixbite.cleverkeys.ImeDialogWindowTest',
     'tribixbite.cleverkeys.clipboard.ClipboardServiceHygieneTest',
     // #130 residual (2026-09-05): setConfig drops the cached pane when the theme
     // signature changes (switch OR color edit), preserving close callback + tab choice.

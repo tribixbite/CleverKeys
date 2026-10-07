@@ -17,8 +17,13 @@ object Utils {
         return s.substring(0, i).uppercase(Locale.getDefault()) + s.substring(i)
     }
 
-    /** Like [dialog.show()] but properly configure layout params when called
-        from an IME. [token] is the input view's [getWindowToken()]. */
+    /**
+     * Like [dialog.show()] but properly configure layout params when called from an IME.
+     * [token] is the input view's [getWindowToken()] (an IME window, never another dialog's:
+     * a sub-window cannot parent a sub-window). The window flags come from
+     * [ImeDialogWindowPolicy]: the dialog must never take window focus from the app being typed
+     * into (device report 2026-10-07).
+     */
     @JvmStatic
     fun show_dialog_on_ime(dialog: AlertDialog, token: IBinder) {
         val win = dialog.window
@@ -26,7 +31,8 @@ object Utils {
         lp.token = token
         lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG
         win.attributes = lp
-        win.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+        win.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+        win.addFlags(ImeDialogWindowPolicy.ADDED_FLAGS)
         dialog.show()
     }
 

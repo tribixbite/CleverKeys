@@ -34,11 +34,11 @@
           android:textColor="?android:attr/textColorSecondary" android:layout_marginBottom="8dp"/>
       <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
           android:text="@string/clipboard_filter_size_min" android:textColor="?android:attr/textColorPrimary"/>
-      <Spinner android:id="@+id/clipboard_size_min" android:layout_width="match_parent"
+      <tribixbite.cleverkeys.ImeDialogSpinner android:id="@+id/clipboard_size_min" android:layout_width="match_parent"
           android:layout_height="48dp" android:contentDescription="@string/clipboard_filter_size_min"/>
       <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
           android:text="@string/clipboard_filter_size_max" android:textColor="?android:attr/textColorPrimary"/>
-      <Spinner android:id="@+id/clipboard_size_max" android:layout_width="match_parent"
+      <tribixbite.cleverkeys.ImeDialogSpinner android:id="@+id/clipboard_size_max" android:layout_width="match_parent"
           android:layout_height="48dp" android:contentDescription="@string/clipboard_filter_size_max"/>
       <TextView android:id="@+id/clipboard_size_error" android:layout_width="match_parent"
           android:layout_height="wrap_content" android:text="@string/clipboard_filter_size_invalid"
