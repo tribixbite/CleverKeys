@@ -195,6 +195,11 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Swiping `is` or `as` no longer shows `i's` / `a's` beside the word (letter plurals from the
+  imported contraction data), and the swipe bar no longer appends possessives of function words
+  such as `the's`, `as'` or `this'`.
+- Swiping `lets` keeps `let's` first and now offers the bare word `lets` beside it; typing
+  `lets` still autocorrects to `let's`.
 - The 2026-09-06 comprehensive audit: 69 findings fixed across IME routing, dictionary updates,
   clipboard, GIF, settings validation, backup/langpack, ML data handling and theming — including
   all 8 critical ones (script-blind letter gate, late-bound keyboard view, GIF database crash on

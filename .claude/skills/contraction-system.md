@@ -75,7 +75,7 @@ English does not use `contractions_en.json` as its source of truth. `loadEnglish
 Step 3 is the 2026-07-23 fix. Without it, typing `well` produced `we'll` and the word "well" was
 destroyed in its own slot.
 
-**The effective English REPLACE set is `(base ∪ contractions_en) − pairings` = 107 keys** (106 + `etoo`, 2026-09-26).
+**The effective English REPLACE set is `(base ∪ contractions_en) − pairings` = 106 keys** (106 + `etoo` on 2026-09-26; −`lets` on 2026-10-07, now PAIRED — §6c).
 
 Anything that models English — the sidecar generator, the runtime scanner, a data test — must
 subtract the pairings. Two of the three once disagreed, and that disagreement is exactly how a
@@ -260,6 +260,20 @@ The rule now:
      still pass none: splice, never promote. Any read failure degrades to that too.
 5. Scores stay non-increasing: a spliced pair shares the base's score; tail variants are clamped
    to the last emitted score.
+6. **Letter plurals are never offered (2026-10-07).** A possessive projection of a base shorter
+   than `ContractionOverlay.SHORT_BASE_LENGTH_FLOOR` (= the tap path's
+   `ContractionInjectionPolicy.MIN_BASE_LENGTH`, 3) is dropped — not spliced, not tailed. The 17
+   two-letter pairing bases plus bin-derived `zs` (`is`→`i's`, `as`→`a's`, `vs`→`v's`, `ms`→`m's` …)
+   are letter plurals; before this every confident `is`/`as` swipe showed `i's`/`a's` at slot 1.
+   The data stays (the tap path already ignored it); the rule covers any future short entry.
+   The D1 augment has the matching guard: `ContractionManager.canTakePossessive` excludes the
+   English closed classes, so no `the's`/`as'`/`this'`/`his'` is appended.
+7. **`lets` is PAIRED (2026-10-07).** The bare verb is a real word (51 written vs 927 `let's` in
+   the LM held-out text), so it moved out of REPLACE: `EXTRA_EN_PAIRINGS` + `--en-pairing-frequencies`
+   (`let's` 207 vs lexicon `lets` 195 → let's rank 0, `lets` slot 1), removed from
+   `contractions_non_paired.json`, bin rebuilt. `contractions_en.json` KEEPS `lets` on purpose:
+   it is the tap path's autocorrect alias (typed `lets` + space → `let's`; `lets` is not in
+   `WordPredictor.REAL_WORD_CONTRACTION_BASES`). Evidence: eval doc 2026-10-07 §6.2.
 
 **The frequency is BASE-scoped in storage** (`base → variant → freq`) — that is the runtime
 contract — but since 2026-09-26 every non-possessive variant carries **one value file-wide**,
@@ -458,12 +472,15 @@ guard.
 | injected key surfaces but never outranks a real word | `CtcContractionRankingTest` |
 | paired placement: splice ≤1 projection variant, ahead only on higher known freq, possessives never ahead, tail otherwise, monotone scores | `ContractionOverlayTest` (pure) |
 | possessive splice only beside a CONFIDENT rank-0 base (runner-up < top/2, boundary pinned), one per base, unknown frequency allowed, lower-ranked/contested → tail, would/world holds | `ContractionOverlayTest` (pure) |
-| shipped possessives: `teams`→[teams, team's, …] when confident; contested/lower-ranked → tail; all 593 possessive-projection bases keep rank 0 with the possessive at slot 1 | `CtcContractionDisplayTest` (pure) |
+| shipped possessives: `teams`→[teams, team's, …] when confident; contested/lower-ranked → tail; all 576 possessive-projection bases of ≥ 3 letters keep rank 0 with the possessive at slot 1, and the 17 two-letter ones show none | `CtcContractionDisplayTest` (pure) |
+| letter plurals (`i's`/`a's` for `is`/`as`) never offered, spliced or tailed; `i'd`/`isn't`/`cd's` untouched; floor equals the tap path's | `ContractionOverlayTest` (pure) |
+| D1 augment: closed-class words never take `'s`/`'` | `PipelineOracleJvmTest#oracle_jvm_closedClassWordsNeverTakeAPossessive` (pure) |
+| `lets` is PAIRED (pairings + frequency, not in the REPLACE json or bin, kept in `contractions_en.json`); swipe shows [let's, lets] | `BundledContractionDataTest` + `CtcContractionDisplayTest` (pure) |
 | D1 augment (`SuggestionHandler.possessiveAdditions`) adds no second copy of a spliced possessive (case-insensitive) and only appends | `ContractionOverlayTest` (pure) |
 | shipped pronoun set over MEASURED data: I'd/I'll/we'd/he's/she's rank 0; shed/shell/whore/well/hell/were/its/natl keep rank 0 with the variant at #1; why's rank 0 over whys; its/it's inside PROMOTION_MARGIN; would/world keeps world at #2; REPLACE six keep their slot | `CtcContractionDisplayTest` (pure) |
 | promotion needs lead ≥ PROMOTION_MARGIN (boundary), possessive never ahead even above the margin | `ContractionOverlayTest` (pure) |
 | geometric ↔ CTC promotion parity: identical base frequencies for every base (user words incl.), identical placement for every shipped pair, both adapters wired through `PairingBaseFrequencies` (source pin) | `PairingBaseFrequenciesTest` (pure) |
-| pairing `frequency` survives parsing, base-scoped; the 19 projection values pinned; one value per non-possessive variant; no flat 200 on a promotable pair | `BundledContractionDataTest` (pure) |
+| pairing `frequency` survives parsing, base-scoped; the 20 projection values pinned (incl. `lets`); one value per non-possessive variant; no flat 200 on a promotable pair | `BundledContractionDataTest` (pure) |
 | every non-possessive pair DERIVED from `contractions.bin` has a pairing frequency (none excepted since `etoo` went REPLACE) | `BundledContractionDataTest` (pure) |
 | `etoo → eto'o` is REPLACE in the JSON and the binary, not a pairing base, and `etoo` is no lexicon word | `BundledContractionDataTest` (pure) |
 | rule 0 (user joiner word): preferred form at the surface's rank + score, real surface kept behind, non-word surface replaced (mapped forms → tail), junk alias yields one entry, empty map = byte-identical output | `ContractionOverlayTest` (pure) |
