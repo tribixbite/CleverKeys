@@ -11,7 +11,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.clearMocks
 import io.mockk.unmockkAll
+import io.mockk.verify
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -253,5 +255,37 @@ class SuggestionHandlerOwnedCallbackTest {
         ic.setSelection(6, 6); deliverCallbacks()
         assertThat(handler.appendSuffix("'s")).isFalse()
         assertThat(text.toString()).isEqualTo("Bowie ")
+    }
+
+    // ------------------------------------------------------------------ finding 3 (cost)
+
+    /**
+     * Every committed word and typed space makes a receipt, and its own final selection
+     * callback follows. That callback must not re-read the editor: a later command
+     * re-verifies the receipt in full before any edit.
+     */
+    @Test
+    fun plainWordReceiptsFinalCallbackCostsNoEditorRead() {
+        setEditor("James ")
+        rememberCommittedWord("James", ownsSpace = true)
+        queued.addLast(6 to 6)
+        clearMocks(EditorReadback.Companion, answers = false)
+        deliverCallbacks()
+        verify(exactly = 0) { EditorReadback.capture(any()) }
+        assertThat(handler.appendSuffix("'s")).isTrue() // still verified at command time
+        assertThat(text.toString()).isEqualTo("James's ")
+    }
+
+    /** The whole-word check reads from the receipt's own guard text, not another round-trip. */
+    @Test
+    fun receiptCaptureReusesTheReadbackGuardForTheWholeWordCheck() {
+        setEditor("say James ")
+        clearMocks(ic, answers = false)
+        rememberCommittedWord("James", ownsSpace = true)
+        verify(exactly = 0) { ic.getTextBeforeCursor(any(), any()) }
+        // Ownership rules are unchanged: a word that continues an earlier one is refused.
+        setEditor("bobcat ")
+        rememberCommittedWord("cat", ownsSpace = true)
+        assertThat(handler.appendSuffix("'s")).isFalse()
     }
 }

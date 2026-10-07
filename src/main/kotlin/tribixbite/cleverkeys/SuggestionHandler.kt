@@ -1839,6 +1839,18 @@ class SuggestionHandler(
         wordEditSession++; wordEditReceipt = null; suffixOperation = null; lastLearningCommit = null
     }
 
+    /**
+     * Receipt for a just-committed word: one editor readback (3 InputConnection reads; the
+     * whole-word check reuses its guard text).
+     *
+     * TODO(perf, review 2026-10-07 #3): this still runs after every committed word and typed
+     * space. Deferring it to command time was rejected: the receipt's caret and guard text are
+     * what let a command prove the cursor never left the word (a move away and back, or a
+     * coalesced/missing selection callback, is otherwise indistinguishable from staying), and
+     * the plan requires verifying cursor location, not just matching text. A safe deferral
+     * needs a commit-time caret source that costs no round-trip; none is available on the
+     * InputConnection API.
+     */
     private fun rememberVerifiedWord(ic: InputConnection?, info: EditorInfo?, word: String,
         ownsSpace: Boolean = contextTracker.lastSpaceWasAutoInserted, isSwipeAutoInsert: Boolean = false) {
         wordEditReceipt = null; suffixOperation = null
@@ -1947,9 +1959,15 @@ class SuggestionHandler(
             receipt.commitCallbacks.consume(start, end, now)
             return true
         }
-        if (active != null || start != receipt.edit.editor.start || end != receipt.edit.editor.end) {
+        if (active != null || start != receipt.edit.editor.start || end != receipt.edit.editor.end ||
+            !receiptSessionIsCurrent(receipt)) {
             wordEditReceipt = null; suffixOperation = null
-        } else currentWordReceipt()
+        } else if (receipt.edit.suffix.isNotEmpty()) {
+            // Only a suffixed receipt is re-read here: a stale one must not swallow the next
+            // Backspace. A plain word receipt is re-verified in full when a command uses it
+            // (currentWordReceipt), so the callback after every word costs no round-trip.
+            currentWordReceipt()
+        }
         return false
     }
 

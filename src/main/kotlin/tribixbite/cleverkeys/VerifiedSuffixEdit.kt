@@ -14,11 +14,26 @@ class VerifiedSuffixEdit private constructor(
             if (word.isEmpty() || word.length > 4096) return null
             val state = EditorReadback.capture(ic)?.takeIf { it.collapsed } ?: return null
             val space = if (ownsSpace) " " else ""
-            if (!matchesWholeWord(ic, word + space, state.start)) return null
+            if (!matchesWholeWord(ic, word + space, state)) return null
             return VerifiedSuffixEdit(word, space, state, "")
+        }
+
+        /**
+         * The readback's guard text already holds the last [EditorReadback.GUARD_LENGTH]
+         * characters before the caret; a tail that fits (with its boundary character) is
+         * checked from it instead of a further InputConnection round-trip. Longer words
+         * read exactly tail + 1 characters, as before.
+         */
+        private fun matchesWholeWord(ic: InputConnection, tail: String, state: EditorReadback): Boolean {
+            val before = if (tail.length + 1 <= EditorReadback.GUARD_LENGTH) state.before.takeLast(tail.length + 1)
+            else ic.getTextBeforeCursor(tail.length + 1, 0)?.toString() ?: return false
+            return matchesWholeWord(before, tail, state.start)
         }
         private fun matchesWholeWord(ic: InputConnection, tail: String, cursor: Int): Boolean {
             val before = ic.getTextBeforeCursor(tail.length + 1, 0)?.toString() ?: return false
+            return matchesWholeWord(before, tail, cursor)
+        }
+        private fun matchesWholeWord(before: String, tail: String, cursor: Int): Boolean {
             if (!before.endsWith(tail)) return false
             // Accepted text can be transformed by the editor. Do not own "cat"
             // inside "bobcat", including when the boundary is outside the guard.
@@ -30,8 +45,11 @@ class VerifiedSuffixEdit private constructor(
                 Character.COMBINING_SPACING_MARK.toInt(), Character.ENCLOSING_MARK.toInt()) ||
             c in "'’ʼ-‐‑" || Character.isSurrogate(c)
     }
-    fun matches(ic: InputConnection): Boolean = editor.matches(ic) &&
-        matchesWholeWord(ic, baseWord + suffix + space, editor.start)
+    /** One readback: exact editor state, then the whole-word tail from its guard text. */
+    fun matches(ic: InputConnection): Boolean {
+        val now = EditorReadback.capture(ic) ?: return false
+        return now == editor && matchesWholeWord(ic, baseWord + suffix + space, now)
+    }
 
     /**
      * Exact command intent. [prepareSelection] stamps each expected editor state
