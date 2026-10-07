@@ -4,6 +4,12 @@ Date: 2026-10-07. Scope: English, QWERTY, default CTC engine. This note re-deriv
 failure from first principles; the October 5 findings in
 `docs/plans/2026-10-05-recommended-features-and-gaps.md` were treated as hypotheses only.
 
+**Status (2026-10-07):** §5's app-side fix is WIRED — CTC now featurizes the recognizer's
+unsmoothed samples plus one finger-lift sample (the "proposed" row); geometric keeps the
+smoothed path. The shipped Kotlin code path reproduces the "proposed" held-out numbers trace for
+trace (§5.1). The encoder-side causes (§3, §6) are unchanged: a dwell-less `ad`/`wet` still
+fails.
+
 ## 1. Pre-registered evaluation protocol (written BEFORE any rescoring result was seen)
 
 Recorded at the time the dev/held-out dumps were started, before a single rescored
@@ -145,7 +151,7 @@ Bar 1 (targets +20 pt) fails for every decoder arm: the weight that keeps broad 
 (endpoint 0.2 ≈ 0.2 nat for a one-key miss) is an order of magnitude below the 1.2–2.7 nat
 gaps. No decoder change ships.
 
-## 5. App-side defect (hypothesis 2) — validated, fix outside this agent's file fence
+## 5. App-side defect (hypothesis 2) — validated; fixed 2026-10-07 (§5.1)
 
 The CTC engine featurizes `SwipeResult.path`, which is `ImprovedSwipeGestureRecognizer`'s
 **smoothed** path (trailing 3-point moving average, `SWIPE_SMOOTHING_WINDOW = 3`) after a
@@ -169,13 +175,45 @@ dominated by dropped/blurred final letters (`her→he`, `ours→our`, `towards�
 current app path, `ad` again with the lift sample; one real `wet` trace flips `wt → we`
 under smoothing.
 
-**Recommended change (needs the owner of `gesture/` + `CleverKeysService.handleSwipeTyping`):**
+**Recommended change (implemented 2026-10-07, §5.1):**
 give `SwipeResult` an unsmoothed `rawPath` (the recognizer's `_rawPath`, which already has
 a parallel `_timestamps`), append one terminal sample at ACTION_UP time (last position,
 event time) to the CTC copy, and route only CTC to it. Keep geometric on the smoothed path
 until its own replay says otherwise. `SwipeMLData` capture should store the raw path too,
 so on-device training data matches the corpus format. This does not by itself make a
 dwell-less `ad`/`wet` swipe correct.
+
+### 5.1 As wired (2026-10-07)
+
+Which configuration shipped: the "proposed" row (noise drop kept, no smoothing, one lift
+sample), not the "raw samples" row. The recognizer's own unsmoothed list (`_rawPath`, with the
+parallel `_timestamps`) already applies the 1.26 px drop; dropping it as well would mean a
+second, unfiltered sample list, and its measured value over "proposed" is 0.08 pt on 4,000
+traces (not separable from noise). The lift sample restores what the drop removes for a final
+stop — its duration. The lift is not clamped (the eval measured the unclamped form).
+
+- `ImprovedSwipeGestureRecognizer.ctcTrace()` → `SwipeResult.rawTrace` (`RawSwipeTrace`):
+  unsmoothed accepted samples + at most one lift sample (finite, strictly later than the last
+  sample). `Pointers.onTouchUp` records the ACTION_UP position/time immediately before every
+  word-swipe end.
+- `InputCoordinator.performCtcSwipeTyping` hands `rawTrace` to `CtcEngineAdapter.decodeAsync`;
+  every geometric hand-off, and the ML capture, keep the smoothed `path`.
+- Continuous swipe: segment samples were already unsmoothed (both engines keep them); the FINAL
+  segment additionally carries the lift sample for CTC when the finger lifted on letters.
+
+Integrated check — the real recognizer driven over the same 4,000 held-out traces
+(`CtcRawTraceReplayExport`, scaled to the emulation's 1000 × 470 px box), decoded by the
+Python decoder:
+
+| comparison | A top-1 | B top-1 | B-only / A-only |
+|---|---|---|---|
+| emulated "smooth" vs Kotlin smoothed path | 91.83 | 91.83 | 0 / 0 |
+| emulated "proposed" vs Kotlin `ctcTrace()` | 92.12 | 92.12 | 0 / 0 |
+| Kotlin smoothed vs Kotlin `ctcTrace()` (before → after) | 91.83 | 92.12 | 34 / 22, p = 0.070; ≤3 letters 95.24 → 95.62 |
+
+Straight synthetic traces through the same Kotlin path: `ad` with a 200 ms stop → `ad` (was
+`as`); `ad` without a stop → `as` (unchanged); `wet` with or without a stop → `we` (unchanged);
+controls `as`, `we` unchanged.
 
 ## 6. Model-side recipe (not feasible to ship from this device)
 
@@ -214,4 +252,10 @@ for e in raw smooth fix; do python3 scripts/short_word_ctc_eval.py dump \
   ~/.cache/cleverkeys-test/futo_swipe1_test_sample.jsonl.gz $S/held_$e.jsonl --emu $e; done
 python3 scripts/short_word_ctc_eval.py compare $S/held_smooth.jsonl $S/held_raw.jsonl
 python3 scripts/short_word_ctc_eval.py traces <file of real ad/wet rows>
+# §5.1: the SHIPPED recognizer over the same held-out rows
+python3 scripts/short_word_ctc_eval.py export-rows ~/.cache/cleverkeys-test/futo_swipe1_test_sample.jsonl.gz $S/rows.jsonl
+CK_REPLAY_IN=$PWD/$S/rows.jsonl CK_REPLAY_OUT=$PWD/$S/kt \
+  scripts/gradle-guard.sh runMockTests -PtestClass=CtcRawTraceReplayExport
+for m in ctc smooth; do python3 scripts/short_word_ctc_eval.py dump-trace $S/kt.$m.jsonl $S/held_kt_$m.jsonl; done
+python3 scripts/short_word_ctc_eval.py compare $S/held_kt_smooth.jsonl $S/held_kt_ctc.jsonl
 ```

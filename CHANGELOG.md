@@ -263,6 +263,9 @@ editor that used to be listed here already ship in 2.0.)
   escaped apostrophes/backslashes on export/import.
 - Delayed callbacks belonging to verified suffix/separator edits preserve automatic
   spacing and continuous phrase state while genuine caret movement still cancels.
+- Short-word swipe decoding improves when the swipe ends with a stop on the last letter
+  (e.g. `ad` no longer reads as `as`): the default CTC engine now receives the unsmoothed
+  touch path plus the lift point. This does not by itself fix `ad`/`wet` swiped without a stop.
 
 ---
 

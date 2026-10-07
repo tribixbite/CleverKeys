@@ -208,6 +208,31 @@ unreachable. Pure JVM, pinned by `CtcContractionKeysTest`.
 
 ### `CtcEngineAdapter` — the impurity boundary
 
+#### Input contract — the touch trace (2026-10-07)
+
+The encoder was trained on RAW touch samples, so the CTC engine does NOT featurize
+`SwipeResult.path` (the recognizer's trailing 3-point moving average, which the geometric engine
+and the ML capture keep). It featurizes `SwipeResult.rawTrace` (`RawSwipeTrace`, built by
+`ImprovedSwipeGestureRecognizer.ctcTrace()`):
+
+- the recognizer's accepted samples WITHOUT smoothing, with their timestamps (same clock and
+  same acceptance rules as the smoothed path: the `swipe_noise_threshold` drop, the
+  non-advancing-time drop and the 500 ms pause rule still apply);
+- plus at most ONE sample at finger lift — the ACTION_UP position and time, recorded by
+  `Pointers.onTouchUp` right before it ends a word swipe — appended only when finite and
+  strictly later than the last sample. It restores a final stop's duration, which the noise drop
+  erases (stationary samples are discarded). Not clamped.
+
+Continuous-swipe segments were already unsmoothed (both engines receive them unchanged); the
+final segment's CTC copy also gets the lift sample when the finger lifted on letters (never on
+the spacebar). `InputCoordinator` falls back to `path` when a caller supplies no `rawTrace`.
+Every geometric hand-off from the CTC path (unserved language, layout/model/lexicon gates,
+`onDecodeFailure`) keeps the smoothed path. Measured: held-out top-1 91.83 → 92.12 (34 gains /
+22 losses, p = 0.070), with the shipped Kotlin path reproducing the evaluated "proposed"
+pre-processing trace for trace; a deliberate stop now separates `ad` from `as`
+(`docs/eval/2026-10-07-short-word-ctc.md` §5.1). Pinned by `SwipeCtcRawTraceTest`,
+`ContinuousSwipePureTest`, `Keyboard2ViewContinuousLifecycleTest`.
+
 `swipe/CtcEngineAdapter.kt` mirrors `GeometricEngineAdapter`'s duties for the `ctc` mode:
 
 1. **Letter-box coordinate normalization.** `KeyboardData` → `CtcLayout` via
@@ -934,9 +959,9 @@ six table scripts have all four and are ROUTED (ru `da012ded`, el `5fb58037`, uk
 - No langpack-backed en lexicon (λ-scale constraint, As-Built "Lexicon").
 - Short words whose trace ends on a rare word's key read as an overshooting frequent word
   (`ad`→`as`, `wet`→`we`): an encoder end-of-trace word prior, not a decoder constant, and
-  collinear pass-through letters get no frame. The engine also featurizes the recognizer's
-  smoothed, dwell-stripped path; raw samples measured +0.37 pt held-out top-1. Evidence and
-  the fine-tune recipe: `docs/eval/2026-10-07-short-word-ctc.md`.
+  collinear pass-through letters get no frame. Evidence and the fine-tune recipe:
+  `docs/eval/2026-10-07-short-word-ctc.md`. (The app-side half — the engine featurized the
+  smoothed, stop-stripped path — is fixed; see "Input contract" under `CtcEngineAdapter`.)
 
 ---
 
