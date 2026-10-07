@@ -64,6 +64,21 @@ class KeyValueParserTest {
         assertThat(old.getTemplateFormat().template).isEqualTo(mapping.actionValue)
         assertThat(key.withSymbol("new").getTemplateFormat().template).isEqualTo(mapping.actionValue)
     }
+    /**
+     * Review 2026-10-07 finding 4: an invalid template payload must be a parse error, so
+     * user-string callers (Extra Keys, custom layouts, KeyModifier, command routing) degrade
+     * through getKeyByName's ParseError fallback instead of crashing on IllegalArgumentException.
+     */
+    @Test fun invalidTemplateKeydefDegradesLikeOtherInvalidKeydefs() {
+        for (name in listOf("T:template:'{x}'", ":template symbol='T':'{cursor}{cursor}'", "T:template:'}'")) {
+            org.junit.Assert.assertThrows(KeyValueParser.ParseError::class.java) { KeyValueParser.parse(name) }
+            val key = KeyValue.getKeyByName(name)
+            assertThat(key.getKind()).isEqualTo(KeyValue.Kind.String)
+            assertThat(key.getString()).isEqualTo(name)
+        }
+        // Same degradation as an existing invalid action payload.
+        assertThat(KeyValue.getKeyByName("T:keyevent:x").getKind()).isEqualTo(KeyValue.Kind.String)
+    }
     @Test fun existingTextTokenSyntaxRemainsLiteral() {
         val key = KeyValueParser.parse("x:'{uuid}'")
         // A labeled literal string is represented as a single-element macro.

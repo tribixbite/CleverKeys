@@ -117,7 +117,19 @@ object KeyValueParser {
 
     /** Parse an explicitly typed, quoted template, preserving escaped quotes/backslashes. */
     private fun parseTemplateKeydef(m: Matcher): KeyValue {
-        return KeyValue.makeTemplateKey("{}", parseQuotedPayload(m))
+        return KeyValue.makeTemplateKey("{}", parseTemplatePayload(m))
+    }
+
+    /**
+     * An invalid template is a key-definition error like any other malformed payload.
+     * [KeyValue.makeTemplateKey] enforces the same rule with `require`, but user strings
+     * (Extra Keys, custom layouts, command routing) reach it through [KeyValue.getKeyByName],
+     * which degrades only on [ParseError] — an IllegalArgumentException crashed the caller.
+     */
+    private fun parseTemplatePayload(m: Matcher): String {
+        val payload = parseQuotedPayload(m)
+        if (!tribixbite.cleverkeys.customization.DynamicTemplate.isValid(payload)) parseError("Invalid template", m)
+        return payload
     }
 
     /** Prefixed actions include their opening quote; ordinary string parsing already consumed it. */
@@ -266,7 +278,7 @@ object KeyValueParser {
                 }
 
                 "template" -> {
-                    payload = parseQuotedPayload(m)
+                    payload = parseTemplatePayload(m)
                     return KeyValue.makeTemplateKey(symbol ?: "{}", payload, flags)
                 }
 
