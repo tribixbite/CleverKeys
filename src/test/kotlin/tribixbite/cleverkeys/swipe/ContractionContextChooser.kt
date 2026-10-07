@@ -56,6 +56,11 @@ import kotlin.math.ln
  * evaluation and the starting point for the next attempt (see the doc's "Next steps"); moving
  * it to `src/main` and wiring it is a NEW decision that needs its own passing evaluation.
  *
+ * Round 2 (same doc, §6): the `its`-only scope ([Params.surfaces]) with the frozen arm-C
+ * parameters FAILED its pre-registered bar on fresh UD EWT train text (−1.78 pt, 84 wins / 88
+ * losses) while gaining on a fresh Ubuntu chat sample; the LISTED-evidence variant gained on
+ * both (+8.89 / +7.19 pt on `its`) but was registered as report-only. Still not shipped.
+ *
  * Pure JVM (no Android imports) so the rule and its evaluation run in `runPureTests`.
  */
 object ContractionContextChooser {
@@ -75,11 +80,14 @@ object ContractionContextChooser {
      * @property evidence see [Evidence].
      * @property promotePossessives whether a possessive ([ContractionOverlay.isPossessive]) may be
      *   swapped into slot 0.
+     * @property surfaces the letter surfaces (apostrophes/hyphens removed, lowercase) the chooser
+     *   may act on; null = every surface. Round 2's narrow variant is `setOf("its")`.
      */
     data class Params(
         val minLogOdds: Double,
         val evidence: Evidence,
         val promotePossessives: Boolean,
+        val surfaces: Set<String>? = null,
     )
 
     /** The probabilities the decision needs — [forStaticLm] adapts the shipped model. */
@@ -155,6 +163,9 @@ object ContractionContextChooser {
         val current = words[0]
         val challenger = words[1]
         if (!sameSurface(current, challenger)) return unchanged
+        if (params.surfaces != null &&
+            surfaceKey(current.lowercase(Locale.ROOT).replace('’', '\'')) !in params.surfaces
+        ) return unchanged
         if (isUserWord(current)) return unchanged
         if (!params.promotePossessives && ContractionOverlay.isPossessive(challenger)) return unchanged
         if (!model.hasContext(prev)) return unchanged

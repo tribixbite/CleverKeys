@@ -238,6 +238,68 @@ class ApostropheContextEvalTest {
                 model, { false }, params).first[0]
         }
 
+        // Display audit (eval doc §6, 2026-10-07 round 2): no chooser — what the OVERLAY alone shows
+        // for every written token of every population, so a data/placement change can be
+        // compared before/after on identical text. Optional APOSTROPHE_AUDIT_OUT writes every
+        // distinct surface's slate for a line diff between two runs.
+        if (System.getenv("APOSTROPHE_EVAL_STAGE") == "audit") {
+            val cv = File(corpora.parentFile, "commonvoice/sentence-collector.en.txt")
+            Assume.assumeTrue("Common Voice sentences missing", cv.isFile)
+            displayAudit(listOf("held-out" to held, "EWT dev" to oodDev, "EWT test" to oodTest, "Common Voice" to cv),
+                ::slateFor)
+            System.getenv("APOSTROPHE_AUDIT_OUT")?.let { out ->
+                File(out).printWriter().use { w ->
+                    for ((s, slate) in slates.entries.sortedBy { it.key }) w.println("$s\t${slate.joinToString("|")}")
+                }
+            }
+            return
+        }
+
+        // Stage 3 (round 2, pre-registered in the eval doc §6.0): the NARROW variants on two fresh
+        // populations, scored once. (a) its-only may ship; (b) listed-evidence is reported only.
+        if (System.getenv("APOSTROPHE_EVAL_STAGE") == "3") {
+            val p1 = File(corpora, "ewt_train_en.txt")
+            val p2 = File(corpora, "ubuntu_eval_en.txt")
+            Assume.assumeTrue("round-2 populations missing (eval doc §6.0)", p1.isFile && p2.isFile)
+            var n3Violations = 0L
+            var n3Checked = 0L
+            val populations = listOf("P1 EWT train" to p1, "P2 Ubuntu" to p2).map { (name, file) ->
+                val occ = ArrayList<Occurrence>()
+                val firstId = sentenceId
+                file.forEachLine { raw ->
+                    val line = raw.replace('’', '\'').replace('‘', '\'')
+                    val id = sentenceId++
+                    for (t in tokens(line)) {
+                        tokensSeen++
+                        if ('-' in t.form) continue
+                        val surface = t.form.replace("'", "")
+                        if (surface.isEmpty()) continue
+                        val slate = slateFor(surface)
+                        if (slate.size < 2) continue
+                        val prev = ContractionContextChooser.previousWord(line.substring(0, t.start))
+                        // N3: (a) changes nothing unless slots 0–1 are its/it's — every token checked.
+                        n3Checked++
+                        val outA = ContractionContextChooser.choose(slate, List(slate.size) { 900 }, "en", prev,
+                            model, { false }, ROUND2_ITS_ONLY).first
+                        if (outA !== slate && slate.take(2).map { it.replace("'", "") }.toSet() != setOf("its")) {
+                            n3Violations++
+                        }
+                        if (!ambiguous(slate) || t.form !in slate) continue
+                        occ.add(Occurrence(id, prev, t.form, surface, slate, heldout = false))
+                    }
+                }
+                println("[stage3] $name sentences=${sentenceId - firstId} occurrences=${occ.size} " +
+                    "sentence-start=${occ.count { it.prev == null }}")
+                name to occ
+            }
+            println("[stage3] N3 checked=$n3Checked violations=$n3Violations")
+            for ((variant, params) in listOf("a its-only" to ROUND2_ITS_ONLY, "b listed" to ROUND2_LISTED)) {
+                for ((name, occ) in populations) round2Report(variant, name, params, occ) { o, p -> top(o, p) }
+            }
+            assertThat(n3Violations).isEqualTo(0L)
+            return
+        }
+
         // Stage 2 (pre-registered in the eval doc §2): the FIXED arm-C hypothesis on Common Voice,
         // a population neither the LM builder nor stage 1 used. No grid, no tuning.
         if (System.getenv("APOSTROPHE_EVAL_STAGE") == "2") {
@@ -345,6 +407,100 @@ class ApostropheContextEvalTest {
             (if (b4Fail.isEmpty()) "" else " (failing: ${b4Fail.keys})"))
     }
 
+    /**
+     * The overlay-only display audit: for each population, every written token whose surface the
+     * overlay shows as anything but the bare surface alone (or whose written form has an
+     * apostrophe) — top-1 / top-2 / anywhere, pooled and for the surfaces this round touches.
+     * Counts are tokens plus distinct sentences (line numbers within the population).
+     */
+    private fun displayAudit(populations: List<Pair<String, File>>, slateFor: (String) -> List<String>) {
+        val watched = listOf("is", "as", "lets", "its", "vs")
+        for ((name, file) in populations) {
+            class Tally { var n = 0; var top1 = 0; var top2 = 0; var any = 0; val sentences = HashSet<Int>() }
+            val pooled = Tally()
+            val bySurface = HashMap<String, Tally>()
+            val byGold = HashMap<String, Tally>()
+            var ambiguousTokens = 0
+            var lineNo = 0
+            file.forEachLine { raw ->
+                val line = raw.replace('’', '\'').replace('‘', '\'')
+                val id = lineNo++
+                for (t in tokens(line)) {
+                    if ('-' in t.form) continue
+                    val surface = t.form.replace("'", "")
+                    if (surface.isEmpty()) continue
+                    val slate = slateFor(surface)
+                    if (slate == listOf(surface) && t.form == surface) continue
+                    if (slate.size >= 2 && ContractionContextChooser.sameSurface(slate[0], slate[1])) ambiguousTokens++
+                    fun add(tl: Tally) {
+                        tl.n++; tl.sentences += id
+                        if (slate.firstOrNull() == t.form) tl.top1++
+                        if (t.form in slate.take(2)) tl.top2++
+                        if (t.form in slate) tl.any++
+                    }
+                    add(pooled)
+                    if (surface in watched) add(bySurface.getOrPut(surface) { Tally() })
+                    if (surface in watched) add(byGold.getOrPut(t.form) { Tally() })
+                }
+            }
+            fun line(label: String, c: Tally) = println(
+                "[audit] %-14s %-22s n=%7d sent=%6d top1=%6.2f%% top2=%6.2f%% any=%6.2f%%"
+                    .format(name, label, c.n, c.sentences.size, pct(c.top1, c.n), pct(c.top2, c.n), pct(c.any, c.n)))
+            line("POOLED", pooled)
+            println("[audit] %-14s ambiguous-slot-0/1 tokens=%d".format(name, ambiguousTokens))
+            for (s in watched) bySurface[s]?.let { line("surface $s", it) }
+            for ((g, c) in byGold.entries.sortedByDescending { it.value.n }) line("gold $g", c)
+        }
+    }
+
+    /**
+     * Round-2 table for one variant on one population (eval doc §6.0): the `its` surface, the
+     * pooled positions with a previous word, every surface with ≥ 30 such occurrences, and the
+     * pre-registered verdict lines. Counts are occurrences plus distinct sentences.
+     */
+    private fun round2Report(
+        variant: String,
+        population: String,
+        params: Params,
+        all: List<Occurrence>,
+        top: (Occurrence, Params?) -> String,
+    ) {
+        class Cell { var n = 0; var cur = 0; var new = 0; var win = 0; var loss = 0
+            val sentences = HashSet<Int>()
+            fun delta() = pct(new, n) - pct(cur, n)
+            fun signTest() = (win - loss) >= 2 * sqrt((win + loss).toDouble()) }
+        fun cellOf(list: List<Occurrence>): Cell {
+            val c = Cell()
+            for (o in list) {
+                val a = top(o, null) == o.gold
+                val b = top(o, params) == o.gold
+                c.n++; if (a) c.cur++; if (b) c.new++
+                if (b && !a) c.win++; if (a && !b) c.loss++
+                c.sentences += o.sentence
+            }
+            return c
+        }
+        fun line(label: String, c: Cell) = println(
+            "[stage3] %-11s %-13s %-22s n=%6d sent=%6d cur=%6.2f%% new=%6.2f%% Δ=%+6.2f win=%5d loss=%5d"
+                .format(variant, population, label, c.n, c.sentences.size, pct(c.cur, c.n), pct(c.new, c.n),
+                    c.delta(), c.win, c.loss))
+        val ctx = all.filter { it.prev != null }
+        val its = cellOf(ctx.filter { it.surface == "its" })
+        val pooled = cellOf(ctx)
+        line("surface its", its)
+        line("POOLED", pooled)
+        val bySurface = ctx.groupBy { it.surface }.mapValues { cellOf(it.value) }
+        for ((s, c) in bySurface.entries.sortedByDescending { it.value.n }) {
+            if (c.n >= 30 && s != "its") line("surface $s", c)
+        }
+        val small = bySurface.entries.filter { it.value.n < 30 && it.value.win + it.value.loss > 0 }
+        println("[stage3] %-11s %-13s surfaces <30 with any change: %s".format(variant, population,
+            small.joinToString { "${it.key}(n=${it.value.n},+${it.value.win}/-${it.value.loss})" }))
+        val surfaceFloor = bySurface.filter { it.value.n >= 30 && it.value.delta() < -1.0 }.keys
+        println("[stage3-verdict] $variant $population its: Δ=%+.2f sign=%s | pooled: Δ=%+.2f sign=%s | surfaces ≥30 below −1.0: %s"
+            .format(its.delta(), pass(its.signTest()), pooled.delta(), pass(pooled.signTest()), surfaceFloor))
+    }
+
     private fun pass(b: Boolean) = if (b) "PASS" else "FAIL"
 
     private fun pct(k: Int, n: Int) = if (n == 0) 0.0 else 100.0 * k / n
@@ -355,5 +511,11 @@ class ApostropheContextEvalTest {
 
         /** Stage 1's DEV-selected arm C, frozen for the stage-2 confirmation. */
         val STAGE2_ARM_C = Params(minLogOdds = 0.0, evidence = Evidence.ANY, promotePossessives = false)
+
+        /** Round 2 (eval doc §6.0), variant (a): arm C acting on the `its` surface only. */
+        val ROUND2_ITS_ONLY = Params(0.0, Evidence.ANY, promotePossessives = false, surfaces = setOf("its"))
+
+        /** Round 2 (eval doc §6.0), variant (b): arm C with LISTED evidence — reported only. */
+        val ROUND2_LISTED = Params(0.0, Evidence.LISTED, promotePossessives = false)
     }
 }

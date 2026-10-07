@@ -305,3 +305,100 @@ any re-run is reported.
 to the `its` pair, and is wired as §5.2 describes (after `rescoreWithContext`, before the D1
 augment; skipped for password fields; user words respected; English only), with a real-path
 test. **If it fails:** nothing is wired; the result is committed here.
+
+### 6.1 `is` → `i's`, `as` → `a's` at slot 1 — root cause and fix (shipped)
+
+**Cause: data plus a missing floor on the swipe path.** `contraction_pairings.json` (imported
+from Unexpected-Keyboard) lists 17 two-letter bases whose "possessive" is a letter plural
+(`as`→`a's`, `is`→`i's`, `vs`→`v's`, `bs cs ds es gs js ks ms os ps qs rs ts xs`; `zs`→`z's` is
+derived from `contractions.bin`). Since 2026-09-26 `ContractionOverlay` splices a possessive
+projection beside a CONFIDENT rank-0 base, so every confident `is`/`as` swipe showed it at
+slot 1. The tap path never did: `ContractionInjectionPolicy.MIN_BASE_LENGTH` (3) keeps every
+two-letter base's variants out of the bar except the first-person `i'd`.
+
+**Fix (`swipe/ContractionOverlay.kt`, `SHORT_BASE_LENGTH_FLOOR` / `isSingleLetterPossessive`):**
+a possessive projection of a base shorter than `MIN_BASE_LENGTH` is never offered — neither
+spliced nor appended. A rule over the data, not a word list; non-possessive variants of short
+bases (`id`→`i'd`, `is`→`isn't`) are untouched. The data file is left as is (the tap path
+already ignores those entries; removing them would only be a second copy of the rule).
+
+**Related junk, same principle (`ContractionManager.canTakePossessive`):** the D1 swipe augment
+appended `the's`, `and's`, `as'`, `this'`, `his'` to confident swipes of those words — only a
+30-word pronoun/auxiliary set was excluded. It now excludes the English closed classes
+(pronouns, determiners, prepositions, conjunctions, auxiliaries/modals); open-class words stay
+eligible.
+
+**Measured (overlay-only display audit, same text before/after,
+`APOSTROPHE_EVAL_STAGE=audit`):** of 55,268 distinct surfaces seen in the four populations
+(held-out, EWT dev, EWT test, Common Voice), exactly 19 slates changed — the 18 letter plurals
+lost their possessive and `lets` gained its bare form (§6.2). **No slate's slot 0 changed, so
+top-1 is identical for every token.** Top-2 lost exactly the 4 written letter plurals in all
+four populations (`a's` ×3 held-out, `i's` ×1 Common Voice) and stopped showing a junk slot 1
+on 30,733 + 7,780 (held-out), 293 + 79 (EWT dev), 240 + 67 (EWT test) and 7,302 + 1,980 (CV)
+`is` + `as` tokens. Held-out tokens whose slots 0–1 are two forms of one surface fell from
+90,554 to 52,873 (the removed letter plurals, net of the 978 `lets` tokens that became ambiguous).
+
+### 6.2 `lets` → PAIRED (shipped)
+
+Before: `lets` was REPLACE (`contractions_non_paired.json`), so the bar showed only `let's`.
+Written forms: held-out `let's` 927 / `lets` 51; EWT dev 2 / 2; Common Voice 95 / 6 (all
+positions); in the fresh Ubuntu chat sample `lets` 115 / `let's` 49.
+
+Change: `lets → let's` added to `EXTRA_EN_PAIRINGS` and written by
+`extract_apostrophe_words.py --en-pairing-frequencies` (let's 207 = zipf 5.16, the file-wide
+value; lexicon `lets` 195), removed from `contractions_non_paired.json`, `contractions.bin`
+rebuilt (the generator reproduces the previous bin byte-for-byte from the previous inputs),
+collision sidecars unchanged (`--check`: en 10 colliding keys of 106). `contractions_en.json`
+keeps `lets` so the TAP path's autocorrect alias still turns typed `lets` + space into `let's`.
+
+Measured on the audit: swipe slate `[let's]` → `[let's, lets]`; top-1 unchanged (let's leads by
+12 bytes, over `PROMOTION_MARGIN`); top-2 for written `lets` 0 % → 100 % (51 held-out, 2 EWT dev,
+6 CV). On the tap path `let's` is still injected first and `lets` is no longer rewritten in the
+bar. The REPLACE alias set the static LM installs drops from 107 to 106 keys.
+
+### 6.3 Stage 3 result — (a) FAILS N1; nothing is wired
+
+Run once: worktree with §6.1/§6.2 applied, `ApostropheContextEvalTest` stage 3 (JUnitCore on the
+compiled test classes, same JVM arguments as `runPureTests`, `-DgeoFull=true`). P1 11,468
+segments → 3,529 occurrences (315 sentence-initial); P2 149,391 segments → 23,177 (5,291).
+**N3: 389,001 slates checked, 0 changes outside `its`/`it's`.**
+
+Positions with a previous word (n = occurrences, sent = distinct sentences):
+
+| Variant | Population | scope | n | sent | current | variant | Δ pt | wins / losses | sign test |
+|---|---|---|---|---|---|---|---|---|---|
+| (a) its-only | P1 EWT train | `its` | 225 | 215 | 60.00 % | 58.22 % | **−1.78** | 84 / 88 | fail |
+| (a) its-only | P2 Ubuntu | `its` | 4,380 | 4,243 | 45.78 % | 56.05 % | +10.27 | 2,154 / 1,704 | pass |
+| (b) listed | P1 EWT train | `its` | 225 | 215 | 60.00 % | 68.89 % | +8.89 | 47 / 27 | pass |
+| (b) listed | P1 EWT train | pooled | 3,214 | 2,560 | 88.36 % | 88.99 % | +0.62 | 47 / 27 | pass |
+| (b) listed | P2 Ubuntu | `its` | 4,380 | 4,243 | 45.78 % | 52.97 % | +7.19 | 1,288 / 973 | pass |
+| (b) listed | P2 Ubuntu | pooled | 17,886 | 16,286 | 82.04 % | 83.80 % | +1.76 | 1,289 / 974 | pass |
+
+(b) changed only `its` on P1, and on P2 `its` plus `id` (+1) and `shell` (−1); no surface with
+≥ 30 occurrences fell by more than 1 pt in either population.
+
+**Verdict (pre-registered): (a) fails N1** (−1.78 pt against +5.0 required, sign test not met);
+N2 passes (+10.27), N3 passes. **The chooser is not moved to `src/main` and not wired.** (b)
+would have failed its own reference bar on P1 too (pooled +0.62 < +1.0) and could not ship from
+this round by registration.
+
+What this shows, without re-reading the bar:
+
+1. **Backoff-driven `its` decisions do not travel.** On web text outside the LM's domain (EWT
+   train) the τ = 0 `ANY` rule wins as often as it loses (84 / 88): where the previous word has
+   no stored continuation for either form, the choice falls to the LM's unigram ratio, i.e. "it's
+   unless context says otherwise", and that prior is wrong for EWT's register as `shed` was for
+   Common Voice. The earlier its gains (+25.0 held-out, +11.3 Common Voice) were partly that prior.
+2. **Listed evidence is the signal that travels.** Requiring the challenger's pair to be stored
+   after `prev` kept a positive `its` gain on both fresh populations (+8.89, +7.19) with a
+   positive sign test, and changed almost nothing else. That is the hypothesis worth a third,
+   separately registered round: (b) restricted to `its`, scored on yet another fresh population,
+   with these two results NOT counted toward it.
+3. P2's written-form gold penalises any `it's` choice after a sloppy `its`; (a) still gained
+   there, so its P1 failure is not a chat-register artefact.
+
+## 7. Status after round 2
+
+Shipped: §6.1 (no letter-plural or closed-class possessives on the swipe bar) and §6.2 (`lets`
+PAIRED). Not shipped: any context chooser. The chooser and its round-2 scope parameter
+(`Params.surfaces`) stay in test sources with their decision tests.

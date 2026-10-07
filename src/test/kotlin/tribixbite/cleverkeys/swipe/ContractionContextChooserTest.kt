@@ -58,6 +58,29 @@ class ContractionContextChooserTest {
         assertThat(scores).containsExactly(900, 800, 700).inOrder()
     }
 
+    // ── round 2: the its-only scope (eval doc §6.0, N3) ──────────────────────────────────
+
+    private val itsOnly = Params(0.0, Evidence.ANY, promotePossessives = false, surfaces = setOf("its"))
+
+    @Test
+    fun `its-only scope acts on its and it's in either order`() {
+        assertThat(choose(listOf("its", "it's"), prev = "think", params = itsOnly).first)
+            .containsExactly("it's", "its").inOrder()
+        assertThat(choose(listOf("IT'S", "ITS"), prev = "of", params = itsOnly).first)
+            .containsExactly("ITS", "IT'S").inOrder()
+    }
+
+    @Test
+    fun `its-only scope leaves every other same-surface pair untouched`() {
+        // were/we're and well/we'll would swap under the unrestricted arm after "we".
+        for (slate in listOf(listOf("were", "we're"), listOf("well", "we'll"), listOf("cats", "cat's"))) {
+            val out = choose(slate, prev = "we", params = itsOnly).first
+            assertThat(out).isSameInstanceAs(slate)
+        }
+        val unrestricted = choose(listOf("were", "we're"), prev = "we", params = itsOnly.copy(surfaces = null)).first
+        assertThat(unrestricted).containsExactly("we're", "were").inOrder()
+    }
+
     @Test
     fun `after of the possessive determiner keeps slot 0`() {
         val (words, _) = choose(listOf("its", "it's"), prev = "of")
