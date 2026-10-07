@@ -1217,6 +1217,9 @@ tasks.register('runMockTests', JavaExec) {
     // tint truth, failed save keeps the edit session, bounds-guarded row handlers); D-4/D-5 —
     // service hygiene (primary-clip-keyed OS-clipboard clearing, count-prune media cleanup).
     'tribixbite.cleverkeys.clipboard.ClipboardHistoryViewStateGuardsTest',
+    // 2026-10-07: persistent clipboard selection — row-identity model that survives search,
+    // size and page changes and only ever resolves unchanged rows for confirmed deletion.
+    'tribixbite.cleverkeys.clipboard.ClipboardSelectionTest',
     'tribixbite.cleverkeys.clipboard.ClipboardServiceHygieneTest',
     // #130 residual (2026-09-05): setConfig drops the cached pane when the theme
     // signature changes (switch OR color edit), preserving close callback + tab choice.
