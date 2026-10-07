@@ -107,9 +107,13 @@ class MinimizedKeyboardView(context: Context) : View(context) {
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
         // The button sits at the end (right in LTR, left in RTL), centred in the content height.
+        // Direction comes from the configuration, not the view: inside the input window the
+        // view's resolved direction stayed LTR with the system set to Arabic (Saga, 2026-10-07),
+        // so the button drew on the right. PanePagerArrows reads the same configuration.
         val r = fabDiameter / 2f
         val cy = (height - navInset) / 2f
-        val cx = if (layoutDirection == LAYOUT_DIRECTION_RTL) fabMargin + r else width - fabMargin - r
+        val rtl = resources.configuration.layoutDirection == LAYOUT_DIRECTION_RTL
+        val cx = if (rtl) fabMargin + r else width - fabMargin - r
         fabBounds.set(cx - r, cy - r, cx + r, cy + r)
     }
 

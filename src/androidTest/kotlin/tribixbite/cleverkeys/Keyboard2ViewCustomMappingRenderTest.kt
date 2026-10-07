@@ -139,24 +139,30 @@ class Keyboard2ViewCustomMappingRenderTest {
             minimized.onExpand = { expansions++ }
             val outside = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 540f, ltr.centerY().toFloat(), 0)
             try { org.junit.Assert.assertFalse(minimized.onTouchEvent(outside)) } finally { outside.recycle() }
-            minimized.layoutDirection = View.LAYOUT_DIRECTION_RTL
-            // A detached view has no traversal to remeasure after requestLayout().
-            minimized.measure(View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),
+            // RTL comes from the CONFIGURATION (an RTL system locale), not the view's own
+            // layoutDirection, which stayed LTR inside the real input window (Saga, Arabic).
+            val rtlConfig = android.content.res.Configuration(context.resources.configuration)
+                .apply { setLocale(java.util.Locale("ar")) }
+            val rtlMinimized = MinimizedKeyboardView(context.createConfigurationContext(rtlConfig))
+            rtlMinimized.bind(MinimizedStyle.FAB, null)
+            rtlMinimized.layoutDirection = View.LAYOUT_DIRECTION_LTR  // the input window's case
+            rtlMinimized.onExpand = { expansions++ }
+            rtlMinimized.measure(View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(600, View.MeasureSpec.AT_MOST))
-            minimized.layout(0, 0, 1080, minimized.measuredHeight)
-            val rtl = Rect().also(minimized::touchableArea)
+            rtlMinimized.layout(0, 0, 1080, rtlMinimized.measuredHeight)
+            val rtl = Rect().also(rtlMinimized::touchableArea)
             assertTrue(rtl.centerX() < 540)
             // Pixel rectangles truncate fractional-density edges independently.
             assertTrue(kotlin.math.abs(ltr.width() - rtl.width()) <= 1)
             assertTrue(kotlin.math.abs(1080 - ltr.centerX() - rtl.centerX()) <= 1)
             for (action in listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_CANCEL)) {
                 val event = MotionEvent.obtain(0, 1, action, rtl.centerX().toFloat(), rtl.centerY().toFloat(), 0)
-                try { minimized.onTouchEvent(event) } finally { event.recycle() }
+                try { rtlMinimized.onTouchEvent(event) } finally { event.recycle() }
             }
             assertEquals(0, expansions)
             for (action in listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP)) {
                 val event = MotionEvent.obtain(2, 3, action, rtl.centerX().toFloat(), rtl.centerY().toFloat(), 0)
-                try { assertTrue(minimized.onTouchEvent(event)) } finally { event.recycle() }
+                try { assertTrue(rtlMinimized.onTouchEvent(event)) } finally { event.recycle() }
             }
             assertEquals(1, expansions)
         }
