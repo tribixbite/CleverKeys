@@ -71,6 +71,16 @@ class PredictionViewSetup(
         existingTopPane: android.widget.FrameLayout?,
         existingScrollView: android.widget.HorizontalScrollView?
     ): SetupResult {
+        // A theme change inflates a NEW keyboard view (CleverKeysService.onThemeChanged and the
+        // stale-theme branch of onStartInputView) while the container built around the OLD one
+        // persists. Reusing that container kept showing the old keyboard, so a theme switch —
+        // and Monet Auto following system dark mode — never appeared until the IME process
+        // restarted (Saga, 2026-10-07). When the container does not hold THIS view, rebuild the
+        // whole hierarchy; the suggestion bar is themed too, so it is rebuilt with it.
+        if (existingInputViewContainer != null && keyboardView.parent !== existingInputViewContainer) {
+            return setupPredictionViews(null, null, null, null, null)
+        }
+
         // Check if word prediction or swipe typing is enabled
         if (config.word_prediction_enabled || config.swipe_typing_enabled) {
             // Re-wire the view's predictor handle whenever a prediction-capable input view is

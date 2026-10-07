@@ -144,6 +144,27 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
+     * #181 / theme switching (2026-10-07): `CleverKeysService.onThemeChanged` inflates a NEW
+     * keyboard view, but the prediction container built around the OLD view persisted and was
+     * reused, so the old-theme keyboard kept showing (Monet Auto never followed dark mode on
+     * the Saga). Setup must rebuild when the container does not hold the current view, and
+     * that guard must run before either branch reuses the existing views. Behavioural
+     * coverage needs a live IME service (device-verified); this pins the guard.
+     */
+    @Test
+    fun aContainerHoldingAStaleKeyboardViewIsRebuilt() {
+        val setup = source("tribixbite/cleverkeys/PredictionViewSetup.kt")
+        val body = setup.substringAfter("fun setupPredictionViews(")
+        val guard = "keyboardView.parent !== existingInputViewContainer"
+        assertWithMessage("setupPredictionViews must detect a container that holds a stale keyboard view")
+            .that(body).contains(guard)
+        assertWithMessage("…and rebuild the whole hierarchy from scratch")
+            .that(body).contains("return setupPredictionViews(null, null, null, null, null)")
+        assertWithMessage("the guard must run before the existing-views branches")
+            .that(body.indexOf(guard)).isLessThan(body.indexOf("if (config.word_prediction_enabled"))
+    }
+
+    /**
      * #148 (2026-09-06, wave U3) — the other half of [predictionsDisabledStillBuildsTheContentPaneContainer]:
      * KeyboardReceiver's pane openers kept their `keyboard2.setInputView(<bare pane>)`
      * fallbacks after ARC-002 made the container unconditional. Dead in the normal
