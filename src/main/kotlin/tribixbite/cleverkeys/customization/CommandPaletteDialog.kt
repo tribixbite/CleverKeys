@@ -132,6 +132,84 @@ fun CommandPaletteDialog(
         }
     }
 
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
+    ) {
+        Surface(
+            // Nearly full height: the command list is what the user is here for.
+            modifier = Modifier
+                .fillMaxWidth(PALETTE_WIDTH_FRACTION)
+                .fillMaxHeight(PALETTE_HEIGHT_FRACTION),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                PaletteHeader(
+                    title = stringResource(
+                        if (showTextInput) R.string.command_palette_title_custom_text
+                        else R.string.command_palette_title_select
+                    ),
+                    subtitle = subtitle,
+                    showBack = showTextInput,
+                    onNavigate = {
+                        if (showTextInput) showTextInput = false else onDismiss()
+                    }
+                )
+
+                if (showTextInput) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = templateMode, onCheckedChange = { templateMode = it })
+                        Text(stringResource(R.string.command_palette_template_title))
+                    }
+                    if (templateMode) Text(stringResource(R.string.command_palette_template_help), modifier = Modifier.padding(horizontal = 16.dp))
+                    if (templateMode && !DynamicTemplate.isValid(customText)) Text(stringResource(R.string.dynamic_template_invalid), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp))
+                    CustomTextInputSection(
+                        text = customText,
+                        valid = !templateMode || DynamicTemplate.isValid(customText),
+                        onTextChange = { customText = it },
+                        onConfirm = {
+                            if (customText.isNotBlank() && (!templateMode || DynamicTemplate.isValid(customText))) {
+                                // Show label confirmation instead of directly calling callback
+                                pendingText = customText
+                                customLabel = proposedLabel(if (templateMode) ActionType.TEMPLATE else ActionType.TEXT, customText.take(4))
+                            }
+                        }
+                    )
+                } else {
+                    // Command search and list mode
+                    CommandSearchSection(
+                        searchQuery = searchQuery,
+                        onSearchChange = { searchQuery = it },
+                        filteredCommands = filteredCommands,
+                        onCommandSelected = { command ->
+                            // Show label confirmation instead of directly calling callback
+                            pendingCommand = command
+                            customLabel = commandText.string(command.nameRes).take(4)
+                        },
+                        onShowTextInput = { templateMode = false; showTextInput = true },
+                        onShowTemplateInput = { templateMode = true; showTextInput = true },
+                        onShowIntentEditor = {
+                            intentToEdit = null
+                            showIntentEditor = true
+                        },
+                        onShowTimestampEditor = { showTimestampEditor = true }
+                    )
+                }
+            }
+        }
+    }
+
+    // The sub-dialogs come AFTER the palette dialog in composition order. Dialog windows are
+    // stacked in the order they are first composed: in edit mode (initialMapping) a command's
+    // label step or an intent/timestamp editor is composed in the very first frame, and placed
+    // before the palette it opened UNDER it — invisible, so picking another command looked
+    // like it did nothing (Saga, 2026-10-07).
     // Show label confirmation dialog when pending selection exists
     if (pendingCommand != null || pendingText != null || pendingIntentDef != null || pendingTimestampPattern != null) {
         // Get display info for commands (includes icon and font flag)
@@ -283,79 +361,6 @@ fun CommandPaletteDialog(
                 )
             }
         )
-    }
-
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
-        )
-    ) {
-        Surface(
-            // Nearly full height: the command list is what the user is here for.
-            modifier = Modifier
-                .fillMaxWidth(PALETTE_WIDTH_FRACTION)
-                .fillMaxHeight(PALETTE_HEIGHT_FRACTION),
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                PaletteHeader(
-                    title = stringResource(
-                        if (showTextInput) R.string.command_palette_title_custom_text
-                        else R.string.command_palette_title_select
-                    ),
-                    subtitle = subtitle,
-                    showBack = showTextInput,
-                    onNavigate = {
-                        if (showTextInput) showTextInput = false else onDismiss()
-                    }
-                )
-
-                if (showTextInput) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = templateMode, onCheckedChange = { templateMode = it })
-                        Text(stringResource(R.string.command_palette_template_title))
-                    }
-                    if (templateMode) Text(stringResource(R.string.command_palette_template_help), modifier = Modifier.padding(horizontal = 16.dp))
-                    if (templateMode && !DynamicTemplate.isValid(customText)) Text(stringResource(R.string.dynamic_template_invalid), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp))
-                    CustomTextInputSection(
-                        text = customText,
-                        valid = !templateMode || DynamicTemplate.isValid(customText),
-                        onTextChange = { customText = it },
-                        onConfirm = {
-                            if (customText.isNotBlank() && (!templateMode || DynamicTemplate.isValid(customText))) {
-                                // Show label confirmation instead of directly calling callback
-                                pendingText = customText
-                                customLabel = proposedLabel(if (templateMode) ActionType.TEMPLATE else ActionType.TEXT, customText.take(4))
-                            }
-                        }
-                    )
-                } else {
-                    // Command search and list mode
-                    CommandSearchSection(
-                        searchQuery = searchQuery,
-                        onSearchChange = { searchQuery = it },
-                        filteredCommands = filteredCommands,
-                        onCommandSelected = { command ->
-                            // Show label confirmation instead of directly calling callback
-                            pendingCommand = command
-                            customLabel = commandText.string(command.nameRes).take(4)
-                        },
-                        onShowTextInput = { templateMode = false; showTextInput = true },
-                        onShowTemplateInput = { templateMode = true; showTextInput = true },
-                        onShowIntentEditor = {
-                            intentToEdit = null
-                            showIntentEditor = true
-                        },
-                        onShowTimestampEditor = { showTimestampEditor = true }
-                    )
-                }
-            }
-        }
     }
 }
 
