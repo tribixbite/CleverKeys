@@ -230,6 +230,29 @@ class SuggestionHandlerOwnedCallbackTest {
         assertThat(text.toString()).isEqualTo("James's ")
     }
 
+    /**
+     * Device report 2026-10-07 (Saga, Android 14, Chrome textarea, build bf417bf6): "Append
+     * apostrophe" attached, but the next Backspace removed the space and then the apostrophe
+     * as two ordinary deletions. Chrome's InputConnection runs on its own thread and reports
+     * selections asynchronously: the swiped word's own final caret can still be queued when
+     * the command runs, and the command's callbacks follow several loop turns later.
+     */
+    @Test
+    fun apostropheCommandWithChromeStyleLateCallbacksKeepsAtomicUndo() {
+        setEditor("parents ")
+        rememberCommittedWord("parents", ownsSpace = true)
+        queued.addLast(8 to 8) // the word commit's own callback, not yet delivered
+        assertThat(handler.appendSuffix("'")).isTrue()
+        assertThat(text.toString()).isEqualTo("parents' ")
+        assertThat(queued.toList()).containsExactly(8 to 8, 7 to 8, 9 to 9).inOrder()
+        runNextLoopTurn(); runNextLoopTurn()
+        SystemClock.uptime += 250
+        deliverCallbacks()
+        assertThat(unowned).isEmpty()
+        assertThat(handler.undoSuffix()).isTrue() // one Backspace restores the pre-edit text
+        assertThat(text.toString()).isEqualTo("parents ")
+    }
+
     // ------------------------------------------------------------------ finding 1
 
     @Test
