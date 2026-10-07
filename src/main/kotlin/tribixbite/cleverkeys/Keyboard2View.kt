@@ -1115,6 +1115,12 @@ class Keyboard2View @JvmOverloads constructor(
 
     /**
      * Execute an Editing-type command via InputConnection context menu actions or intents.
+     *
+     * This is the custom-short-swipe dispatcher; ordinary keys use
+     * KeyEventHandler.handleEditingKey. They are deliberately not merged: here REPLACE and
+     * ASSIST launch CleverKeys' own activities, and suffix commands are dispatched earlier in
+     * [onCustomShortSwipe] so their haptic fires only on success (this path's caller always
+     * vibrates). Terminal-aware paste is handled before this by CustomShortSwipeExecutor.
      */
     @android.annotation.SuppressLint("InlinedApi")
     private fun executeEditingCommand(editing: KeyValue.Editing, inputConnection: android.view.inputmethod.InputConnection?) {

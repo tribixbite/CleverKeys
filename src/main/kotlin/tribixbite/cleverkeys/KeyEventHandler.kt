@@ -748,9 +748,11 @@ class KeyEventHandler(
             return
         }
         when (ev) {
-            KeyValue.Editing.APPEND_POSSESSIVE -> execute_suffix("'s")
-            KeyValue.Editing.APPEND_APOSTROPHE -> execute_suffix("'")
-            KeyValue.Editing.CLEAR_CLIPBOARD -> Unit // handled above, independent of InputConnection
+            // Dispatched (and returned) above, before inline-editor routing: suffix commands
+            // must report "unavailable" there instead of becoming a silent no-op, and clearing
+            // the system clip never needs an InputConnection. Listed only for exhaustiveness.
+            KeyValue.Editing.APPEND_POSSESSIVE, KeyValue.Editing.APPEND_APOSTROPHE,
+            KeyValue.Editing.CLEAR_CLIPBOARD -> Unit
             KeyValue.Editing.COPY_PRIVATE -> handlePrivateCopy()
             KeyValue.Editing.COPY -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.copy)
             KeyValue.Editing.PASTE -> handlePaste()
