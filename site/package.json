@@ -30,7 +30,9 @@
   },
   "overrides": {
     "js-yaml": "^4.3.2",
-    "smol-toml": "^1.7.1"
+    "smol-toml": "^1.7.1",
+    "devalue": "^5.9.3",
+    "source-map-js": "^1.2.2"
   },
   "optionalDependencies": {
     "@rollup/rollup-android-arm64": "4.60.1"
