@@ -935,10 +935,19 @@ CLITIC_S_HOSTS = frozenset({
 #: collision sidecars by scripts/build_contraction_collisions.py.  Because eto'o is now a
 #: non-paired VALUE, ContractionManager no longer derives an `etoo` paired base at all;
 #: `eto -> eto'o` below stays a (non-projection) completion of the `eto` trace.
+#: Moved from REPLACE (2026-10-07, eval doc 2026-10-07-apostrophe-context.md §6.2):
+#:   lets -> let's  `lets` is a real word (the verb) written 53 times against 929 `let's`
+#:                  in the static LM's held-out text; as a REPLACE key the bare word was
+#:                  never offered. let's (zipf of the apostrophe form, one value file-wide)
+#:                  leads the lexicon's `lets` by more than PROMOTION_MARGIN, so let's keeps
+#:                  rank 0 and `lets` sits at slot 1.  Removed from the hand-curated
+#:                  contractions_non_paired.json in the same change; contractions_en.json
+#:                  keeps it (the tap path's autocorrect alias: typed lets + space -> let's).
 EXTRA_EN_PAIRINGS: dict[str, list[str]] = {
     "its": ["it's"],
     "whys": ["why's"],
     "natl": ["nat'l"],
+    "lets": ["let's"],
 }
 
 

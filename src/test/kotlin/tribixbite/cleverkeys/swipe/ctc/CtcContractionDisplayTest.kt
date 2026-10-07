@@ -274,6 +274,14 @@ class CtcContractionDisplayTest {
     }
 
     @Test
+    fun `shipped lets — let's keeps rank 0 and the bare word is one tap away`() {
+        // 2026-10-07 round 2: `lets` moved from REPLACE to PAIRED. let's leads the lexicon's
+        // `lets` by more than PROMOTION_MARGIN, so it stays the auto-insert.
+        val (words, _) = applyShipped(listOf("lets", "zzfill"), listOf(900, 100))
+        assertThat(words.take(3)).containsExactly("let's", "lets", "zzfill").inOrder()
+    }
+
+    @Test
     fun `its stays its with the variant appended`() {
         val (words, _) = applyCtc(listOf("its"), listOf(900))
         assertThat(words).containsExactly("its", "it's").inOrder()

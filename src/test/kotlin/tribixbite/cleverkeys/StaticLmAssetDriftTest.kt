@@ -88,7 +88,7 @@ class StaticLmAssetDriftTest {
     @Test
     fun `english REPLACE keys score as their display form, PAIRED bases keep their own`() {
         val replace = StaticLmLanguageData.replaceAliases("en")
-        assertThat(replace).hasSize(107) // contraction-system skill §3
+        assertThat(replace).hasSize(106) // contraction-system skill §3 (lets went PAIRED 2026-10-07)
         assertThat(replace.keys).containsNoneOf("well", "hell", "shell", "were", "shed", "wed")
         val raw = lmOf("en")
         val fixed = raw.withReplaceAliases(replace)

@@ -1022,6 +1022,7 @@ class BundledContractionDataTest {
             ("ima" to "i'ma") to 163, // 2.82 / ima 168
             ("intl" to "int'l") to 162, // 2.79 / intl 165
             ("quran" to "qur'an") to 171, // 3.25 / quran 176
+            ("lets" to "let's") to 207, // 5.16 / lets 195 — PAIRED 2026-10-07, promotes
         )
         for ((pair, expected) in measured) {
             assertWithMessage("${pair.first} -> ${pair.second}")
@@ -1058,7 +1059,7 @@ class BundledContractionDataTest {
         // whys -> why's and natl -> nat'l entries added so those variants have a frequency
         // (they lived only in contractions.bin before; see the bin-only sweep test below).
         val all = pairings.values.flatten()
-        assertThat(all.size).isEqualTo(1790)
+        assertThat(all.size).isEqualTo(1791) // +lets → let's (2026-10-07)
         for (v in all) {
             assertWithMessage("${v.contraction} frequency").that(v.frequency).isNotNull()
             assertWithMessage("${v.contraction} frequency").that(v.frequency!!).isIn(1..255)
@@ -1146,5 +1147,41 @@ class BundledContractionDataTest {
         assertThat(pairings.getValue("eto").map { it.contraction }).contains("eto'o")
         val lexicon = JsonParser.parseString(File("$DICT_DIR/en_enhanced.json").readText()).asJsonObject
         assertThat(lexicon.has("etoo")).isFalse()
+    }
+
+    /**
+     * `lets` is a PAIRED base (2026-10-07 round 2, eval doc §6.2): the bare verb form is a real
+     * word (written 53 times against 929 `let's` in the static LM's held-out text), so the bar
+     * must keep it one tap away instead of always rewriting it. `let's` keeps the auto-insert
+     * through the measured pairing frequency, and the tap path's autocorrect alias in
+     * `contractions_en.json` is deliberately kept (`lets` is not in
+     * `WordPredictor.REAL_WORD_CONTRACTION_BASES`), so typed `lets` + space still commits `let's`.
+     */
+    @Test
+    fun `lets is a PAIRED base with let's, not a REPLACE key`() {
+        val pairings = ContractionManager.parsePairings(
+            File("$DICT_DIR/contraction_pairings.json").readText()
+        )
+        val lets = pairings.getValue("lets")
+        assertThat(lets.map { it.contraction }).containsExactly("let's")
+        // One value file-wide per non-possessive variant: the same as under `let`.
+        assertThat(lets.single().frequency)
+            .isEqualTo(pairings.getValue("let").single { it.contraction == "let's" }.frequency)
+        assertThat(jsonObject("contractions_non_paired.json")).doesNotContainKey("lets")
+        assertThat(jsonObject("contractions_en.json")["lets"]).isEqualTo("let's")
+
+        val buf = java.nio.ByteBuffer.wrap(File("$DICT_DIR/contractions.bin").readBytes())
+            .order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        fun readString(): String {
+            val bytes = ByteArray(buf.short.toInt() and 0xFFFF)
+            buf.get(bytes)
+            return String(bytes, Charsets.UTF_8)
+        }
+        buf.position(8) // magic + version
+        val nonPairedCount = buf.int
+        buf.int // paired count
+        val binNonPaired = HashMap<String, String>()
+        repeat(nonPairedCount) { binNonPaired[readString()] = readString() }
+        assertThat(binNonPaired).doesNotContainKey("lets")
     }
 }
