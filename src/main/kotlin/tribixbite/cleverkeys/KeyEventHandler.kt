@@ -110,6 +110,8 @@ class KeyEventHandler(
                 // passing through handle_text_typed — let the learn funnel see it first.
                 if (key.getEvent() == KeyValue.Event.ACTION) {
                     learningHooks?.onEditorWordBoundary(recv.getCurrentInputConnection())
+                    // The action submits/advances the editor like Enter (terminals: see below).
+                    recv.handle_non_text_input()
                 }
                 recv.handle_event_key(key.getEvent())
             }
@@ -156,6 +158,12 @@ class KeyEventHandler(
                         // SAS-1: backspace invalidates the pending auto-space swallow
                         recv.setLastSpaceAutoInserted(false)
                         recv.handle_backspace()
+                    } else {
+                        // Enter, Tab, Esc, arrows, Home/End, Page keys and Ctrl/Alt chords (a
+                        // modified letter arrives here as a key event, KeyModifier.applyCtrl)
+                        // never reach handle_text_typed. A terminal sends no selection update
+                        // after them, so the receiver must hear about them to end the typed word.
+                        recv.handle_non_text_input()
                     }
                 }
             }
@@ -747,6 +755,9 @@ class KeyEventHandler(
             }
             return
         }
+        // Every command below acts on the target editor (paste, undo, cursor jumps, word
+        // deletion …); in a terminal the typed word it may have changed is no longer known.
+        recv.handle_non_text_input()
         when (ev) {
             // Dispatched (and returned) above, before inline-editor routing: suffix commands
             // must report "unavailable" there instead of becoming a silent no-op, and clearing
@@ -906,6 +917,8 @@ class KeyEventHandler(
             // sliders inside the clipboard edit field.
             return
         }
+        // Cursor sliders move the target's caret (key events in terminals): the typed word ends.
+        recv.handle_non_text_input()
         when (s) {
             KeyValue.Slider.Cursor_left -> moveCursor(-r)
             KeyValue.Slider.Cursor_right -> moveCursor(r)
@@ -1149,6 +1162,12 @@ class KeyEventHandler(
         fun handle_text_typed(text: String)
         fun onExplicitEditStarted() {}
         fun handle_backspace() {} // Default implementation for backward compatibility
+        /**
+         * A key or command that is not typed text reached the editor (Enter, Tab, Esc, arrows,
+         * Home/End, a Ctrl/Alt chord, the IME action, a cursor slider, an editing command).
+         * Terminals expose no readable buffer, so the receiver ends the typed word there.
+         */
+        fun handle_non_text_input() {}
         fun handle_delete_last_word() {} // Delete last auto-inserted or typed word
         // Clipboard search mode methods
         fun isClipboardSearchMode(): Boolean = false // Check if clipboard search mode is active

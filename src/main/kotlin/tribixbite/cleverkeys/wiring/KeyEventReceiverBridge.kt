@@ -91,6 +91,10 @@ class KeyEventReceiverBridge(
         receiver?.handle_backspace()
     }
 
+    override fun handle_non_text_input() {
+        receiver?.handle_non_text_input()
+    }
+
     override fun handle_delete_last_word() {
         receiver?.handle_delete_last_word()
     }

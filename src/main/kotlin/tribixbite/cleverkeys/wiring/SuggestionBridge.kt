@@ -63,6 +63,14 @@ class SuggestionBridge(
     }
 
     /**
+     * A non-text key or command reached the editor; SuggestionHandler ends the typed word
+     * when the editor is a terminal (see [SuggestionHandler.handleNonTextInput]).
+     */
+    fun handleNonTextInput() {
+        suggestionHandler?.handleNonTextInput(keyboard2.currentInputEditorInfo)
+    }
+
+    /**
      * Smart delete last word - deletes the last auto-inserted word or last typed word.
      *
      * Gathers InputConnection and EditorInfo, then delegates to SuggestionHandler.

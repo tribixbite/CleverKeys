@@ -1375,7 +1375,11 @@ class SuggestionHandler(
             // Applies when auto-inserting a prediction (even if beam autocorrect was OFF)
             // Useful for correcting vocabulary misses
             // SKIP for known contractions, raw predictions, and manual selections
-            if (config.swipe_final_autocorrect_enabled && predictionCoordinator.getWordPredictor() != null) {
+            // Never in a terminal: a shell token is not prose (`ls` must not become `is`), the
+            // same rule the typed-word autocorrect at the space already follows.
+            if (config.swipe_final_autocorrect_enabled && predictionCoordinator.getWordPredictor() != null &&
+                !isTerminalEditor(editorInfo)
+            ) {
                 var correctedWord = predictionCoordinator.getWordPredictor()?.autoCorrect(processedWord)
 
                 // If autocorrect found a better match, use it
@@ -3248,6 +3252,8 @@ class SuggestionHandler(
             if (contextTracker.getCurrentWordLength() > 0) {
                 updatePredictionsForCurrentWord()
             } else {
+                // The prediction still queued for the last letter describes a word that is gone.
+                predictionTasks.cancelCurrent()
                 suggestionBar?.clearSuggestions()
             }
         } else {
@@ -3255,6 +3261,40 @@ class SuggestionHandler(
             // held stem no longer describes the editor. Abandon it unlearned.
             pendingJoinerStem = null
         }
+    }
+
+    /**
+     * A key or command that is not typed text reached the editor: Enter, Tab, Esc, arrows,
+     * Home/End, a Ctrl/Alt chord (Ctrl+C, Ctrl+U, Ctrl+W), the IME action, a cursor slider or an
+     * editing command. Called by [KeyEventHandler] through `IReceiver.handle_non_text_input`.
+     *
+     * Only terminals act on it. A terminal exposes no readable buffer and sends no selection
+     * update, so the keystroke tracker is the only record of the typed word — and after one of
+     * these keys the shell may have submitted, cleared, completed, recalled or redrawn the line.
+     * The tracker cannot know which, so the typed word ends here (Seeker/Termux 2026-10-07:
+     * `ls` Enter `cd` was tracked as `lscd`; the bar corrected the phantom word and a tapped
+     * suggestion deleted four characters). Ordinary editors are left alone: the selection
+     * callback that follows the key re-syncs the tracker from their real text.
+     */
+    fun handleNonTextInput(editorInfo: EditorInfo?) {
+        if (!isTerminalEditor(editorInfo)) return
+        endTerminalTypedWord()
+    }
+
+    /**
+     * Ends the typed word in a terminal: the tracker, the swipe/autocorrect undo targets (a later
+     * backspace-undo or tap must never delete characters on a line the shell has taken), the
+     * pending learn of the word, any queued prediction for it, and the bar that shows it.
+     * Learning the word at Enter already happened through `LearningHooks.onEditorWordBoundary`,
+     * which [KeyEventHandler] reports before the key is sent.
+     */
+    private fun endTerminalTypedWord() {
+        clearRejectedCommitState()
+        predictionTasks.cancelCurrent()
+        predictionCoordinator.getWordPredictor()?.reset()
+        nextWordSuggestionsActive = false
+        specialPromptActive = false
+        suggestionBar?.clearSuggestions()
     }
 
     /**
@@ -3501,6 +3541,11 @@ class SuggestionHandler(
                     mainHandler.post {
                         // v1.2.6: Skip if special prompt became active while queued
                         if (specialPromptActive) return@post
+                        // A prediction is shown only for the word it was computed for. Backspace,
+                        // a word boundary or a terminal key may have changed or emptied the tracked
+                        // word while this was queued; painting it then is the stale bar the Termux
+                        // report described (2026-10-07). Read on the main thread, which owns the tracker.
+                        if (contextTracker.getCurrentWord() != partial) return@post
 
                         suggestionBar?.let { bar ->
                             // Prefix predictions supersede any next-word display state
@@ -3543,9 +3588,8 @@ class SuggestionHandler(
                 KeyEvent.KEYCODE_W,
                 KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
             )
-            // Clear tracking
-            contextTracker.clearLastAutoInsertedWord()
-            contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+            // Ctrl+W removed whatever word the shell had; the tracked word is gone with it.
+            endTerminalTypedWord()
             return
         }
 

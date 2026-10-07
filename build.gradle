@@ -1318,6 +1318,10 @@ tasks.register('runMockTests', JavaExec) {
     // composing/sync support (URL bars, #78 class). Pins the 736e4eee fix, which shipped
     // without coverage; red re-captured against the pre-fix conditions.
     'tribixbite.cleverkeys.SuggestionTapPartialReplaceTest',
+    // Termux stale suggestions (2026-10-07): terminals expose no buffer, so a non-text key
+    // (Enter, Ctrl chord, arrows, Tab, Esc, IME action, editing command, cursor slider) ends
+    // the tracked word; no autocorrect rewrite in terminals; stale predictions never repaint.
+    'tribixbite.cleverkeys.TerminalTypedWordTrackingTest',
     // gh #151 residual (2026-09-05): composing-less editors drop the TRAILING space of the
     // committed "word " app-side. Pins the trailing-space watch (arm at commit, resolve on
     // the stamp−1 cursor signature, owed-space repair on the next alphanumeric keystroke).

@@ -912,6 +912,10 @@ class KeyboardReceiver(
         keyboard2.handleBackspace()
     }
 
+    override fun handle_non_text_input() {
+        keyboard2.handleNonTextInput()
+    }
+
     override fun handle_delete_last_word() {
         keyboard2.handleDeleteLastWord()
     }

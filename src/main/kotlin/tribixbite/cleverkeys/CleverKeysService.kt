@@ -1051,6 +1051,10 @@ class CleverKeysService : InputMethodService(),
         _suggestionBridge.handleBackspace()
     }
 
+    fun handleNonTextInput() {
+        _suggestionBridge.handleNonTextInput()
+    }
+
     fun handleDeleteLastWord() {
         _suggestionBridge.handleDeleteLastWord()
     }
