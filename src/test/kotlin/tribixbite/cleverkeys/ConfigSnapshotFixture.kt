@@ -52,7 +52,10 @@ internal fun testConfigSnapshot(
     swipe_trail_color: Int = 0x11223344,
     swipe_trail_width: Float = 8f,
     swipe_trail_glow_radius: Float = 6f,
-    version: Int = 1
+    version: Int = 1,
+    continuous_swipe_enabled: Boolean = false,
+    primary_language: String = "en",
+    swipe_engine_mode: String = "ctc"
 ): ConfigSnapshot = ConfigSnapshot(
     circle_sensitivity = circle_sensitivity,
     tap_duration_threshold = tap_duration_threshold,
@@ -90,5 +93,8 @@ internal fun testConfigSnapshot(
     swipe_trail_color = swipe_trail_color,
     swipe_trail_width = swipe_trail_width,
     swipe_trail_glow_radius = swipe_trail_glow_radius,
-    version = version
+    version = version,
+    continuous_swipe_enabled = continuous_swipe_enabled,
+    primary_language = primary_language,
+    swipe_engine_mode = swipe_engine_mode
 )
