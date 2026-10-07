@@ -1534,13 +1534,26 @@ class SuggestionHandler(
                     // If a previous deletion set this flag and onUpdateSelection hasn't fired yet,
                     // the sync would be skipped, causing suffix deletion to fail (e.g., "ca|n't" → "canteen n't")
                     contextTracker.expectingSelectionUpdate = false
-                    contextTracker.synchronizeWithCursor(
-                        inputConnection,
-                        config.primary_language,
-                        editorInfo
-                    )
+                    // A terminal exposes no readable text buffer: syncing against it reads ""
+                    // and zeroes the word, and the #78 editor scan below finds nothing either,
+                    // so the typed word survived and the tap APPENDED ("hello" → "hellohellos",
+                    // Termux on the Seeker, 2026-10-07). There, the word the tracker followed
+                    // keystroke by keystroke is what sits before the cursor; read it before any
+                    // sync can clear it, and delete exactly that with backspace events below.
+                    val terminalTypedLength = if (inTermuxApp) contextTracker.getCurrentWordLength() else 0
+                    if (!inTermuxApp) {
+                        contextTracker.synchronizeWithCursor(
+                            inputConnection,
+                            config.primary_language,
+                            editorInfo
+                        )
+                    }
 
-                    var (prefixDelete, suffixDelete) = contextTracker.getCharsToDeleteForPrediction()
+                    var (prefixDelete, suffixDelete) = if (inTermuxApp) {
+                        terminalTypedLength to 0
+                    } else {
+                        contextTracker.getCharsToDeleteForPrediction()
+                    }
 
                     // #78 fallback: when ContextTracker reports 0 length, scan the editor
                     // for a partial word ending immediately before the cursor. Treats
