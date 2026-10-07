@@ -34,6 +34,10 @@ Sub-commands (all write/read JSONL in --work, default ./build/short-word-eval):
   lambda DUMP          exact λ sweep over the stored beams
   sweep                encoder last-frame posterior as the endpoint slides along a row
   traces FILE          per-trace greedy / emission peaks / forced scores (targets)
+  classes DUMP...      final-letter classes (s-plurals, stems, final-stroke length) and the
+                       anatomy of every prefix drop (top-1 = proper prefix of the target),
+                       docs/eval/2026-10-07-final-letter-drops.md
+  grid DUMP            exact (γ, β, λ) final-score grid with the s-plural class beside it
 
 Corpus rows: {"word", "pts": [[x, y, t_ms], ...]} in the letter-box frame, or HF FUTO rows
 {"word", "data": [{"x","y","t"}]}. Deterministic samples: SHA-256(seed + json(pts)).
@@ -472,6 +476,77 @@ def cmd_traces(a: argparse.Namespace) -> None:
                   f"\n    peaks {peaks(E)}\n    {'; '.join(comp)}")
 
 
+FINAL_FORM = (GAMMA, BETA, LAMBDA)
+
+
+def final_score(c: list, trie: Trie, form: Tuple[float, float, float] = FINAL_FORM) -> float:
+    """CtcBeamDecoder's final score of a stored beam entry [word, final, rawCtc] under `form`."""
+    g, b, lam = form
+    return c[2] / len(c[0]) ** g + b * len(c[0]) + lam * trie.node(c[0]).logf
+
+
+def top_word(r: dict, trie: Trie, form: Tuple[float, float, float] = FINAL_FORM) -> str:
+    return max(r["c"], key=lambda c: final_score(c, trie, form))[0] if r["c"] else ""
+
+
+def final_letter_classes(rows: List[dict], trie: Trie) -> Dict[str, List[dict]]:
+    """In-lexicon targets split into the classes the final-letter note reports."""
+    rows = [r for r in rows if trie.contains(r["w"])]
+    splural = [r for r in rows if r["w"].endswith("s") and len(r["w"]) > 2 and trie.contains(r["w"][:-1])]
+    return {
+        "all (in-lexicon targets)": rows,
+        "s-plural (stem+s, stem in lexicon)": splural,
+        "s-plural, stem more frequent": [r for r in splural if trie.node(r["w"][:-1]).logf > trie.node(r["w"]).logf],
+        "stem (its +s form is in lexicon)": [r for r in rows if trie.contains(r["w"] + "s")],
+    }
+
+
+def cmd_classes(a: argparse.Namespace) -> None:
+    trie = load_lexicon(); cx, cy = golden_layout()
+
+    def key_dist(p: str, q: str) -> float:
+        i, j = L2I[p], L2I[q]
+        return math.hypot((cx[i] - cx[j]) / PITCH_X, (cy[i] - cy[j]) / PITCH_Y)
+    for path in a.dumps:
+        rows = [json.loads(l) for l in open(path) if l.strip()]
+        print(f"== {path}")
+        classes = final_letter_classes(rows, trie)
+        sp = classes["s-plural (stem+s, stem in lexicon)"]
+        classes["s-plural, final stroke <= 1.1 key"] = [r for r in sp if key_dist(r["w"][-2], "s") <= 1.1]
+        classes["s-plural, final stroke > 1.1 key"] = [r for r in sp if key_dist(r["w"][-2], "s") > 1.1]
+        for name, rs in classes.items():
+            if not rs:
+                continue
+            tops = [top_word(r, trie) for r in rs]
+            ok = sum(t == r["w"] for t, r in zip(tops, rs))
+            drop = sum(t != r["w"] and r["w"].startswith(t) for t, r in zip(tops, rs))
+            print(f"  {name:38} traces={len(rs):5} words={len({r['w'] for r in rs}):5} "
+                  f"top1={100 * ok / len(rs):6.2f} prefix-drops={drop}")
+        print("  prefix drops: target -> top1 | greedy | raw-CTC gap (target - top1) | λ·Δln f")
+        for r in classes["all (in-lexicon targets)"]:
+            t = top_word(r, trie)
+            if t and t != r["w"] and r["w"].startswith(t):
+                d = {c[0]: c for c in r["c"]}
+                gap = d[r["w"]][2] - d[t][2] if r["w"] in d else float("nan")
+                lam = LAMBDA * (trie.node(t).logf - trie.node(r["w"]).logf)
+                print(f"    {r['w']:14} -> {t:12} | {r['g']:12} | {gap:7.2f} | {lam:5.2f}")
+
+
+def cmd_grid(a: argparse.Namespace) -> None:
+    trie = load_lexicon(); rows = [json.loads(l) for l in open(a.dump) if l.strip()]
+    sp = final_letter_classes(rows, trie)["s-plural (stem+s, stem in lexicon)"]
+    res = []
+    for g in (0.0, 0.25, 0.5, 0.7, 0.9, 1.0, 1.1):
+        for b in (-0.5, -0.25, 0.0, 0.25, 0.5, 1.0):
+            for lam in (1.0, 2.0, 3.0, 4.0, 6.0, 8.0):
+                f = (g, b, lam)
+                res.append((100 * sum(top_word(r, trie, f) == r["w"] for r in rows) / len(rows),
+                            100 * sum(top_word(r, trie, f) == r["w"] for r in sp) / max(len(sp), 1), f))
+    res.sort(key=lambda x: -x[0])
+    for t, s, f in res[:12] + [x for x in res if x[2] == FINAL_FORM]:
+        print(f"γ={f[0]:<4} β={f[1]:<5} λ={f[2]:<4} all t1={t:6.2f}  s-plural t1={s:6.2f}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -488,6 +563,8 @@ def main() -> int:
     p = sub.add_parser("lambda"); p.add_argument("dump"); p.set_defaults(fn=cmd_lambda)
     p = sub.add_parser("sweep"); p.set_defaults(fn=cmd_sweep)
     p = sub.add_parser("traces"); p.add_argument("file"); p.set_defaults(fn=cmd_traces)
+    p = sub.add_parser("classes"); p.add_argument("dumps", nargs="+"); p.set_defaults(fn=cmd_classes)
+    p = sub.add_parser("grid"); p.add_argument("dump"); p.set_defaults(fn=cmd_grid)
     a = ap.parse_args()
     a.fn(a)
     return 0

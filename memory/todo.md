@@ -44,6 +44,11 @@ and Seeker (Termux) unless noted.
 - [x] Language per layout (#186/#61) `f85c8dcd`; Saga layout switch → German PASS.
 - [x] CTC raw path + lift sample `745d1ca3`: held-out 91.83→92.12; `ad` with a stop PASS on Saga.
   ad/wet without a stop and wet need model retraining — recipe in docs/eval/2026-10-07-short-word-ctc.md.
+- [x] Final-letter drops (`adb`→`an`, `somethings`→`something`) measured: no decoder defect
+  (0 of 37 real prefix drops overturned an encoder preference; no (γ,β,λ) passes dev).
+  `adb` = not in lexicon + encoder silence on `d`; `somethings` = λ-prior near-tie, remedy is
+  the personal dictionary. Recipe additions in docs/eval/2026-10-07-final-letter-drops.md §6.
+- [ ] Device: add `adb` / `somethings` to the personal dictionary and swipe (note §8).
 - [x] Apostrophe: no i's/a's/closed-class possessives; `lets` PAIRED. Context chooser failed
   its bars twice (not wired); a listed-evidence its/it's variant needs its own pre-registered round.
 - [x] Theme change shows the new keyboard (Monet follows dark mode) PASS; Termux tapped

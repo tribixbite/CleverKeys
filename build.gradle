@@ -1068,6 +1068,10 @@ tasks.register('runPureTests', JavaExec) {
     // stored custom frequencies onto the base lexicon's byte scale (the "custom words are
     // harder to swipe than they should be" fix). Skips only when the ORT natives are absent.
     'tribixbite.cleverkeys.swipe.CtcCustomWordCalibrationReplayTest',
+    // Final-letter replay (2026-10-07, `adb` -> `an`, `somethings` -> `something`): lexicon
+    // coverage, custom-word reach, the personal-dictionary remedy and plural controls.
+    // Eval: docs/eval/2026-10-07-final-letter-drops.md. Skips only when ORT natives are absent.
+    'tribixbite.cleverkeys.swipe.CtcFinalLetterReplayTest',
     // Learned-unigram swipe prior (learning-system audit 2026-09-26, `git` → `got`): Stage-0
     // headroom + Stage-1 profile replay (geoFull + local corpora + ORT gated), and the pure
     // policy pins for CtcLearnedPrior. Eval: docs/eval/2026-09-26-learned-unigram-swipe-replay.md

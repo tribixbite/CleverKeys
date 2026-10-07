@@ -184,10 +184,17 @@ class CtcReplayEngine private constructor(
      * `CtcLexiconMerge.merge`, minus the contraction alias-key injection — fine for
      * measuring custom words that collide with no contraction alias, which is what the
      * calibration replay decodes.
+     *
+     * [topK] defaults to the shipped slate size; pass `scoringParams.beamWidth` to read every
+     * complete word the final beam holds (final-letter replay, 2026-10-07: a custom word that
+     * reaches the beam at rank 7-8 is invisible in an 8-word slate's tail otherwise).
      */
-    fun decoderWithLexicon(merged: LinkedHashMap<String, Double>): CtcSwipeDecoder {
+    fun decoderWithLexicon(
+        merged: LinkedHashMap<String, Double>,
+        topK: Int = params.topK,
+    ): CtcSwipeDecoder {
         val customTrie = CtcLexiconTrie.loadStrippingNonAlphabet(layout.alphabet, merged)
-        return CtcSwipeDecoder(model, layout, customTrie, params)
+        return CtcSwipeDecoder(model, layout, customTrie, params.copy(topK = topK))
     }
 
     // ── learned-unigram replay instrument (2026-09-26; additive) ───────────────────────
