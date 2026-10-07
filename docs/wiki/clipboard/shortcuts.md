@@ -76,8 +76,8 @@ To paste from clipboard history, open the clipboard panel (Ctrl SW swipe) and us
 
 Assign **Clear system clipboard** (`clear_clipboard`) through Per-Key Customization,
 or enable its extra key. It empties Android’s clipboard and preserves saved history,
-pins, todos, and media. To delete stored clippings, use **Delete results** in the
-clipboard panel and confirm the matching batch.
+pins, todos, and media. To delete stored clippings, use **Select** in the
+clipboard panel, select the clippings (or all matching results), and confirm **Delete selected**.
 
 ## Customizing Shortcuts
 

@@ -364,6 +364,28 @@ Do not commit, tag, push, publish, or open external issues without explicit user
 - [x] Oct 6 device dialog, cancel, range validation and synthetic-only deletion checks
   pass (below). The earlier Oct 5 attempt could not reach Seeker `.170` and changed nothing.
 
+## Clipboard persistent selection (2026-10-07)
+
+- [x] Select mode replaces "Delete results": persistent row-identity selection
+  (`clipboard/ClipboardSelection.kt`) survives search/size/filter/page changes;
+  select/deselect all matching covers every page; Delete selected reuses the frozen
+  `deleteSnapshot` transaction (one deletion path). All three tabs, one at a time; ends on
+  exit, tab switch, pane close and keyboard hide. 22-locale strings with plurals.
+- [x] Host tests: `ClipboardSelectionTest` (7), selection cases in
+  `ClipboardHistoryViewStateGuardsTest`, `ClipboardMediaDeleteAffordanceTest` (real
+  getView), `ClipboardTabsAndPaneCloseTest` (lifetime). androidTest sources compile.
+- [ ] Native (ew-cli, not run here): `ClipboardPaneTintTest#selectionModeKeepsEntryViewportCountAndActionTargetsInLandscape`,
+  `ClipboardDatabaseTest#selectionResolvedAfterReloadDeletesUnchangedRowsByIdentityAndKeepsCopies`,
+  the updated `ClipboardFilterDialogTest` 205-row flow and the renamed-id tint test.
+- [ ] Device (Seeker/Saga, synthetic clips only): copy ~5 disposable clips incl. two
+  >10 kB; open clipboard → Select; checkbox rows, actions hidden. Search one prefix →
+  select-all-matching (icon turns checked) → search another → add → deselect one row →
+  size filter min 10 kB → count stays. Rotate to landscape: full entry row visible, count +
+  4 icons + paging fit. TalkBack: row checkbox reads clip + state; icons read their labels.
+  Delete selected → dialog count/size → Cancel keeps selection → confirm → "Deleted N of N",
+  selection ends, pinned/todo copies stay. Re-enter, select, switch app → selection gone.
+  Restore rotation/IME/focus; delete only the synthetic clips.
+
 ## Oct 6 Seeker clipboard verification
 
 - [x] Installed the verified `06287570...` ARM64 release APK; on-device hash matches.

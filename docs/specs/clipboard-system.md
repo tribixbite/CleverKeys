@@ -297,7 +297,12 @@ Size combines with search (including regex), date, tags, private-only and todo
 status filters. Bounds persist across tab switches and reset with Clear filters.
 Invalid ranges disable Apply, together with the existing todo-status guard.
 
-Delete results applies to ALL matching pages in the CURRENT tab. With no search
+**Superseded 2026-10-07:** the "Delete results" button became "Select"; deleting
+filtered results is now Select → select all matching → Delete selected (next
+section). The confirmation, transaction and media rules below are unchanged and
+now serve that one deletion path.
+
+Delete results applied to ALL matching pages in the CURRENT tab. With no search
 or size filter it can delete that tab's full visible result set (Todos retains
 its active-only default until the user enables the other statuses). A mandatory
 confirmation names the tab, count and combined clipping size; Cancel writes
@@ -379,6 +384,75 @@ review, enlarged text/accessibility and very short narrow split-screen panes.
 SQLite transaction coverage runs only on an isolated
 emulator, never the maintainer's database. Row swipe-to-delete remains an independent open feature (#175).
 
+## Persistent selection and batch deletion (2026-10-07)
+
+Maintainer request: build one deletion out of several searches and size filters,
+deselect some, add more, and confirm once. Selection mode replaces the earlier
+"Delete results" button; there is one deletion path, not two.
+
+**Entering and the controls.** The result row's **Select** button enters selection
+mode (long-press stays "copy to the OS clipboard" in normal mode, so it is not the
+entry gesture). Rows then show a 48dp checkbox and hide their per-entry actions;
+tapping the text, thumbnail or checkbox toggles the row, and long-press toggles
+instead of copying. The selection bar holds four 48dp icon actions with content
+descriptions and API 26+ tooltips:
+
+| Action | Effect |
+|---|---|
+| Select/deselect all matching | A tri-state checkbox (none/partial/all of the current matches selected). Not all → adds every row matching the current search and filters on ALL pages; all → removes them. |
+| Clear selection | Deselects everything, including rows the current search/filters hide. Stays in selection mode. |
+| Delete selected | Confirmation dialog, then the transactional delete. Disabled with nothing selected, while loading, editing or deleting. |
+| Exit selection | Ends selection mode and forgets the selection. |
+
+The live count ("N selected", plural, polite live region) is the first line of the
+result summary, above the unchanged results/size line.
+
+**Persistence.** The selection survives search text, regex, size/date/private/tag/
+status filter changes and paging. It is NOT a filter: rows hidden by the current
+search stay selected and are deleted with the rest. "All matching" always means the
+full filtered list, never the visible page.
+
+**Scope and when it ends.** A selection belongs to the tab it started in (row ids are
+per table). All three tabs support it — Pinned and Todos benefit equally from batch
+cleanup, and their confirmation already states that only that tab's copies go. The
+other tab icons are hidden during selection, so switching tabs requires Exit first;
+any programmatic tab switch (config disables the tab, pane reopen) ends it too. It
+also ends on pane close, pane switch and keyboard hide (`resetSearchOnHide`, reached
+from `onFinishInputView`), so it never follows the user to another field or app; a
+pending confirmation is dismissed with it. A successful deletion ends it; a failed
+(rolled-back) deletion keeps it for a retry. Selection cannot start during inline
+edit; edit, tags and paste are not offered on selection rows.
+
+**Identity and stale rows.** `ClipboardSelection` stores the database row id plus a
+64-bit payload version (timestamp, content, MIME, media path) per selected row — no
+content, thumbnails or entry objects, so memory is bounded by the tab's row count.
+Every completed load reconciles: rows that vanished (deleted, expired, re-captured
+with a new timestamp) or whose payload changed (edited) are dropped from the
+selection and the count updates. Tag and todo-status edits keep the row selected.
+
+**Deletion.** Delete selected resolves the selection against the tab's complete loaded
+rows into the existing frozen `ClipboardDeleteSnapshot`, and the dialog states its
+count, tab and combined size. Confirming runs the unchanged
+`ClipboardDatabase.deleteSnapshot` transaction: each row is re-checked by id against
+the loaded version (content, timestamp, MIME, path, privacy, source, thumbnail, tags,
+status), so anything changed after the dialog opened is skipped; any invalid identity
+rolls the whole batch back. Post-commit media cleanup removes only files no table
+still references. Feedback reports "Deleted X of N selected clippings."
+
+**Layout.** Narrow (tall) panes give the selection bar its own 48dp row. Wide panes
+(≥720dp, i.e. landscape) put it beside the results; the hidden tab icons return
+their width (the wide search bar is 212dp + 36dp per visible tab), so the count,
+paging and actions fit at 720dp with the 48dp entry viewport intact
+(`ClipboardPaneTintTest#selectionModeKeepsEntryViewportCountAndActionTargetsInLandscape`).
+
+**Invariants (tests).** `ClipboardSelectionTest` (model: identity, persistence across
+lists, coverage, reconcile, resolve, no content retained);
+`ClipboardHistoryViewStateGuardsTest` (all pages, persistence across search/size/
+page, reload pruning, tab switch/exit, edit exclusion);
+`ClipboardMediaDeleteAffordanceTest` (real `getView` selection row);
+`ClipboardDatabaseTest#selectionResolvedAfterReloadDeletesUnchangedRowsByIdentityAndKeepsCopies`
+and the `ClipboardFilterDialogTest` 205-row flow (native).
+
 ### Clear system clipboard command (#168, 2026-10-06)
 
 `clear_clipboard` is an opt-in command in the Clipboard category, assignable to a
@@ -386,7 +460,7 @@ short swipe, popover slot or extra key. It clears Android’s current clipboard 
 shows success/failure in the suggestion bar. It never deletes saved history, pinned
 entries, todos or their media, and never edits the target field or inline clipboard
 editor. No confirmation is shown for this explicitly assigned single-item action;
-Delete results continues to require confirmation.
+Batch deletion (Delete selected) continues to require confirmation.
 
 The shared platform operation uses `clearPrimaryClip()` on API 28+; API 21–27
 replace the current clip with one empty plain-text item. Existing empty-text

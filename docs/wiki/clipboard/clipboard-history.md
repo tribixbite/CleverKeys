@@ -198,11 +198,29 @@ combines with the current search and other filters in the active History, Pinned
 Todos tab. An inverted range cannot be applied. Cancel leaves the previous range
 unchanged; clearing all filters also clears the size range.
 
-Use **Delete results** to remove the entire matching batch, including results on other
-pages. The confirmation shows the batch before anything is deleted. Cancel preserves
-it. Confirmation applies to the captured row versions: a clipping added afterwards or
-edited while the confirmation is open is preserved. Copies in other tabs remain there.
-Stored media is removed only when no tab references it.
+To delete a batch, tap **Select** in the results row. Each entry gets a checkbox:
+tap an entry (or its checkbox) to select or deselect it. The selection bar offers:
+
+- **Select all matching** (checkbox icon) — adds every entry that matches the current
+  search and filters, on every page, not just the one you see. When all matches are
+  already selected, the same button deselects them.
+- **Clear selection** — deselects everything, including entries the current search hides.
+- **Delete selected** (trash) — asks for confirmation, then deletes the batch.
+- **Exit selection** (✕) — leaves selection mode without deleting.
+
+The selection is kept while you change the search, the size range or other filters and
+the page, so you can build one batch from several searches — for example every clipping
+over 100 kB plus everything matching "log" — then deselect a few. The count ("N
+selected") stays visible. Long-press selects instead of copying while selection mode is on.
+
+The confirmation shows the number of clippings and their combined size before anything is
+deleted; Cancel keeps the selection. Only copies in the current tab are deleted — copies
+in other tabs remain there. A clipping edited or removed after you selected it is skipped,
+and the result line reports how many were deleted. Stored media is removed only when no
+tab references it.
+
+A selection belongs to one tab: the other tab icons are hidden until you exit. Closing
+the clipboard panel or the keyboard ends the selection.
 
 Size describes clipping payload bytes, rather than guaranteed disk space recovered.
 SQLite allocation and shared media can make the recovered space smaller. To clear

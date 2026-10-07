@@ -33,8 +33,11 @@ clipboard_pane.xml (ClipboardPaneLayout: LinearLayout, VERTICAL, match_parent)
 |   +-- clipboard_date_filter (ImageButton, 32dp)
 |   +-- clipboard_close_button (ImageButton, 32dp)
 |
-+-- Result row (48dp minimum): summary + inline deletion feedback, pagination controls, Delete results
++-- Result row (48dp minimum): [selection count (selection mode)] summary + deletion feedback,
+|   |                            pagination controls, Select (GONE in selection mode)
 |   +-- Pagination controls are GONE when ≤100 results; feedback is GONE until deletion
++-- Selection bar (48dp, GONE unless selecting): select/deselect-all-matching toggle,
+|   clear selection, delete selected, exit — 4 × 48dp ImageButtons
 |
 +-- Divider (View, 1dp, clipboard_divider_color)
 |
@@ -99,7 +102,7 @@ getView() renders each entry with tab-aware button visibility
 
 ## Modal Modes (Mutual Exclusion)
 
-The clipboard pane has three mutually exclusive modes. Only one can be active at a time.
+The clipboard pane has four mutually exclusive modes. Only one can be active at a time.
 
 ### 1. Normal Mode (default)
 - Entry list visible, search works, tabs switchable
@@ -124,6 +127,27 @@ The clipboard pane has three mutually exclusive modes. Only one can be active at
 - **UI**: Content scroll GONE, tag panel VISIBLE
 - **Key routing**: `isClipboardTagMode() → insertToClipboardTag()`
 - Highest priority in key routing chain (before edit and search).
+
+### 4. Selection Mode (2026-10-07, state in ClipboardHistoryView)
+- **State**: `selection: ClipboardSelection?` (non-null = active), scoped to `currentTab`
+- **Enter**: result-row **Select** button → `ClipboardManager.enterSelectionMode()` →
+  `startSelection()` (refused during edit/bulk delete). Long-press is NOT the entry gesture
+  (it copies to the OS clipboard in normal mode; in selection mode it toggles).
+- **Rows**: checkbox `clipboard_entry_select` VISIBLE, all action rows GONE, tint behind
+  selected rows; text/thumbnail/checkbox toggle by entry identity (`bindSelectionRow`).
+- **Persistence**: survives search/regex/filter/page changes; `selectAllMatching()` and
+  `deselectAllMatching()` use the FULL `filteredHistory` (all pages). Every load runs
+  `acceptLoadedHistory()` → `selection.reconcile()` (drops vanished/edited rows).
+- **Model**: `clipboard/ClipboardSelection.kt` keeps rowId → 64-bit payload version only
+  (timestamp, content, MIME, media path; tags/status ignored) — never content.
+- **Delete**: `selectionSnapshot()` resolves against the tab's complete `history` into a
+  `ClipboardDeleteSnapshot` → `deleteSnapshot()` (the ONE batch-deletion path; the old
+  "Delete results" button was replaced by Select). Success ends selection; failure keeps it.
+- **Ends**: Exit, tab switch (`setTab`), pane close / pane switch / keyboard hide
+  (`ClipboardManager.resetSearchOnHide()` → `exitSelectionMode()` also dismisses the
+  confirmation), successful delete. Non-current tab icons are GONE while selecting, which
+  also gives `ClipboardPaneLayout` (wide search = 212dp + 36dp per visible tab) room for
+  the bar beside the results in landscape; narrow panes put the bar on its own row.
 
 ## Expand/Collapse State
 
@@ -162,8 +186,9 @@ Regex uses `expandGlobShorthand()` for `*`/`?` glob support.
 - Opened via filter icon in search bar (funnel icon, tinted when filters active)
 - All tabs: size + privacy + date; PINNED adds tags; TODOS adds status + tags
 - Size filter: UTF-8 text + thumbnails + saved media bytes, measured off the UI thread
-- Delete results: mandatory confirmation freezes every matching page in the current tab;
-  database row identity/version guards skip new or changed rows, and other-tab copies stay
+- Batch deletion: Select → select all matching (every page) → Delete selected; mandatory
+  confirmation freezes the selected rows; database row identity/version guards skip new or
+  changed rows, and other-tab copies stay (see Selection Mode above)
 - Keep pagination and deletion feedback inside the result row. `ClipboardPaneLayout`
   uses measured width (not orientation) to put search/results side by side at ≥720dp;
   separate fixed rows consume the default 120dp landscape pane. Require at least 48dp

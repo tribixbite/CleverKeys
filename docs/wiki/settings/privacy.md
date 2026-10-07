@@ -184,7 +184,7 @@ Use Settings > Backup & Restore to:
 | Method | What's Cleared |
 |--------|----------------|
 | **Clear system clipboard** command | Android’s current copied item; saved history, pinned items and todos stay |
-| **Delete results** in clipboard panel | Confirmed matching rows across all pages of the current tab; filters can limit payload size |
+| **Select** → **Delete selected** in clipboard panel | The confirmed selection in the current tab; "select all matching" covers every page, and searches and size filters can build the batch |
 | **Reset Settings** | Settings > Backup & Restore > Reset |
 | **Clear App Data** | Android Settings > Apps > CleverKeys > Clear Data |
 

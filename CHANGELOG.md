@@ -115,9 +115,13 @@ editor that used to be listed here already ship in 2.0.)
   the app sits above) and `minimize_fab` (a floating button; touches outside it reach the
   app). Tapping either restores the keyboard; hiding the keyboard resets it to full size.
   See `docs/specs/keyboard-minimize.md`.
-- **Clipboard size filter**: filter history by entry size, and delete all filtered
-  results after a confirmation. The deletion acts on a snapshot of every matching page, so
-  an entry captured after you filtered is not removed.
+- **Clipboard size filter and batch selection**: filter history by entry size. **Select**
+  turns on a persistent selection: tap entries, or select/deselect everything matching the
+  current search and filters on all pages; the selection survives search, filter and page
+  changes so one batch can combine several searches. **Delete selected** confirms the count
+  and combined size, deletes by entry identity in one transaction, skips clippings changed
+  since you selected them, and reports how many were deleted. Works in History, Pinned and
+  Todos (one tab at a time); closing the panel or keyboard ends the selection.
 - **Clear system clipboard command (#168)**: clears only Android's current clip. Saved
   history, pinned and todo entries are kept; Android 7.0–8.1 leave an empty clip item.
 - **Custom terminal apps** (Settings → Advanced): add terminal package IDs; they match

@@ -34,9 +34,14 @@ payload bytes before pagination. Size bounds remain active when switching tabs;
 clearing all filters resets them. The native dialog disables Apply for an inverted
 range and preserves previous bounds on Cancel.
 
-Delete results captures all matching row versions across every page. A separate
-confirmation is required before deletion. New or changed rows are preserved, copies
-in other tabs remain intact, and media cleanup respects references from every tab.
+Batch deletion goes through a persistent selection (2026-10-07). **Select** enters
+selection mode; "select all matching" adds every matching row on every page, and the
+selection (row ids plus a payload version, never content) survives search, filter and
+page changes. Reloads drop rows that vanished or whose payload changed. **Delete
+selected** freezes the selected, unchanged rows into a snapshot, requires a
+confirmation, and deletes them by row identity in one transaction. New or changed rows
+are preserved, copies in other tabs remain intact, and media cleanup respects references
+from every tab. Selection ends on exit, tab switch, panel close and keyboard hide.
 Reported payload bytes are not a disk-reclamation estimate. The `clear_clipboard`
 command clears only Android’s system clipboard; it does not invoke database deletion.
 

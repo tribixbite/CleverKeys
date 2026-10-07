@@ -57,8 +57,8 @@ Commands are organized into categories:
 
 Search for **Clear system clipboard** (`clear_clipboard`) to assign an action that
 empties Android’s current clipboard. Saved CleverKeys history, pins, todos, and media
-are preserved. Use the clipboard panel’s confirmed **Delete results** action to remove
-saved clippings instead.
+are preserved. Use the clipboard panel’s **Select** mode and confirmed **Delete selected** action
+to remove saved clippings instead.
 
 **Minimize to Bar** (`minimize_bar`) leaves a thin restore strip. **Minimize to Floating
 Button** (`minimize_fab`) leaves a restore button in the bottom corner. Tap either to
