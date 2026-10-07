@@ -237,3 +237,71 @@ asset or default changed; the chooser stays in test sources as the evaluated can
    floor on the swipe path): a placement fix in `ContractionOverlay`, independent of context.
 4. **REPLACE keys with a real bare reading** (`lets` 53 bare vs 929 `let's`): the bare word is
    never offered. A bucket decision (tap path too), not a ranking one.
+
+## 6. Round 2 (2026-10-07): slot-1 junk, `lets`, and a NARROW context variant
+
+### 6.0 Pre-registration of the narrow variant (committed BEFORE any number in §6.3 was computed)
+
+Two display changes land before this evaluation and are measured on their own in §6.1/§6.2:
+the `is`/`as` slot-1 junk fix and `lets` moving to PAIRED. The narrow variant is scored over
+the slates the overlay produces AFTER both changes.
+
+**Hypotheses (frozen; no grid, no tuning on the new data).**
+
+- **(a) `its`-only.** `ContractionContextChooser` with τ = 0, `ANY` evidence, possessives never
+  promoted (stage 1's DEV-selected arm C), acting ONLY when slots 0–1 are `its` and `it's` (in
+  either order, any case). Every other no-action rule of §0 stands (English only, a previous word
+  in the current sentence segment, `hasContext(prev)`, slot 0 not a user word).
+- **(b) listed-evidence only.** Arm C with `LISTED` evidence (the challenger's pair must be a
+  STORED continuation of `prev`; no unigram-only decision), every surface. The hypothesis is
+  that listed evidence keeps the context gain without stage 2's `shed`/`shell` domain-prior flips.
+
+**Populations — fresh, never read by the LM builder, stage 1, stage 2 or any other evaluation
+in this repo.**
+
+- **P1 = UD English-EWT TRAIN** split, the builder's pinned commit `4a4d77f5` (the builder reads
+  only EWT dev/test, `scripts/build_static_lm.py:249-251`; `rg en_ewt-ud-train` finds no other
+  reference; the file was first downloaded 2026-10-07 for this round). `.conllu` sha256
+  `d68e0612…d952143`. Surface text produced with the builder's own `conllu_texts` /
+  `split_sentences` / `tokenize` and its MIN/MAX token bounds → `static-lm-eval/ewt_train_en.txt`,
+  11,468 segments, sha256 `aaf3110c48b6d1ba903d9e240d976a558b0941fb758f3f80630f384c24d1da66`.
+  Register: web text (reviews, email, newsgroups, blogs) — out of the LM's training domain.
+- **P2 = Ubuntu Dialogue Corpus**, `.tsv` members 100,001–125,000 in archive order of
+  `ubuntu_dialogs.tgz`, utterances passing `build_ubuntu_bigrams.usable_utterance`, segmented as
+  P1 → `static-lm-eval/ubuntu_eval_en.txt`, 149,391 segments, sha256
+  `cec4e401b12e26c396b02e37bccc91cbc2b814c5ea3d3fe90b751f7339fe8114`. The archive's only prior
+  use here is `build_ubuntu_bigrams.py` (default `--max-files 40000`: members 1–40,000) for the
+  context-rescoring replay; these members are disjoint from it. **Caveat, stated before
+  scoring:** chat writers often type `its` for `it's`, and gold is the WRITTEN form, so P2
+  counts any move toward `it's` after a sloppy `its` as a loss.
+
+Known before scoring (gold-form counts only, all positions): P1 `its` 221 / `it's` 194;
+P2 `its` 3,058 / `it's` 3,775. Corpora stay local (licences: EWT CC BY-SA 4.0 eval-only;
+Ubuntu no stated licence).
+
+Occurrence, oracle decoding and metric: identical to §0 (confident rank-0 surface, overlay over
+the shipped data, top-1 = slot 0 equals the written form, positions with a previous word).
+Counts are reported as occurrences and distinct sentences.
+
+**Bar for (a) — it ships only if ALL hold:**
+
+- **N1 (P1):** `its`-surface top-1 Δ ≥ +5.0 pt AND wins − losses ≥ 2·√(wins + losses).
+  (+5.0 is under half the smaller of the two gains measured so far, +11.3 on Common Voice.)
+- **N2 (P2, chat):** `its`-surface top-1 Δ ≥ 0.
+- **N3 structural:** over every token of P1 and P2, 0 changed slates whose slots 0–1 are not
+  `its`/`it's`; sentence-initial positions unchanged (by construction); a pure test pins both.
+- **N4:** every existing contraction/chooser test green.
+
+**(b) is evaluated and REPORTED ONLY; it cannot ship from this round whatever its numbers**:
+its non-`its` surfaces reversed direction between domains in stages 1–2, so any (b) ship needs
+its own later confirmation. Its numbers are read against: pooled Δ ≥ +1.0 pt with the sign test
+on P1, pooled Δ ≥ 0 on P2, and every surface with ≥ 30 occurrences in a population Δ ≥ −1.0 pt.
+
+Scored ONCE: `APOSTROPHE_EVAL_STAGE=3 scripts/gradle-guard.sh runPureTests
+-PtestClass=swipe.ApostropheContextEvalTest -PgeoFull=true`; a re-run only after a crash, and
+any re-run is reported.
+
+**If (a) passes:** the chooser moves to `src/main/kotlin/tribixbite/cleverkeys/swipe/`, restricted
+to the `its` pair, and is wired as §5.2 describes (after `rescoreWithContext`, before the D1
+augment; skipped for password fields; user words respected; English only), with a real-path
+test. **If it fails:** nothing is wired; the result is committed here.
