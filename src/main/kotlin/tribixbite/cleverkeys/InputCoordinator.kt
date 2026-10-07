@@ -735,8 +735,10 @@ class InputCoordinator(
                     commitGuard = control?.commitGuard
                 )
                 control?.complete(contextTracker.getLastAutoInsertedWord())
-            } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d(TAG, "Dropping geometric decode: input field changed since swipe")
+            } else {
+                // A continuous phrase waits for this acknowledgement; never leave it pending.
+                control?.complete(null)
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) android.util.Log.d(TAG, "Dropping geometric decode: input field changed since swipe")
             }
         }
     }
@@ -896,8 +898,10 @@ class InputCoordinator(
                     result.languages, control?.commitGuard
                 )
                 control?.complete(contextTracker.getLastAutoInsertedWord())
-            } else if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d(TAG, "Dropping CTC decode: input field changed since swipe")
+            } else {
+                // A continuous phrase waits for this acknowledgement; never leave it pending.
+                control?.complete(null)
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) android.util.Log.d(TAG, "Dropping CTC decode: input field changed since swipe")
             }
         }
     }

@@ -34,8 +34,12 @@ data class EditorReadback private constructor(
 
         fun matchesReplacement(ic: InputConnection, old: EditorReadback, text: String, cursor: Int): Boolean {
             val now = capture(ic) ?: return false
-            return now.start == cursor && now.end == cursor && now.before == (old.before + text).takeLast(GUARD_LENGTH) && now.after == old.after
+            return isReplacement(now, old, text, cursor)
         }
+
+        /** [now] is exactly [old] with its selection replaced by [text], caret at [cursor]. */
+        fun isReplacement(now: EditorReadback, old: EditorReadback, text: String, cursor: Int): Boolean =
+            now.start == cursor && now.end == cursor && now.before == (old.before + text).takeLast(GUARD_LENGTH) && now.after == old.after
     }
 }
 
@@ -48,9 +52,10 @@ class EditorCommitGuard(private var expected: EditorReadback, private val ownsSe
 
     fun accepted(ic: InputConnection, text: String): Boolean = runCatching {
         val end = Math.addExact(expected.rangeStart, text.length)
-        if (!ownsSession() || !EditorReadback.matchesReplacement(ic, expected, text, end)) return false
-        val now = EditorReadback.capture(ic) ?: return false
         if (!ownsSession()) return false
+        // One readback both verifies the write and becomes the next expected state.
+        val now = EditorReadback.capture(ic) ?: return false
+        if (!EditorReadback.isReplacement(now, expected, text, end) || !ownsSession()) return false
         expected = now
         true
     }.getOrDefault(false)

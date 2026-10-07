@@ -72,6 +72,9 @@ class ContinuousSwipeQueue<S>(
         pending.addLast(segment); pump()
     }
     fun cancel() { generation++; cancelled = true; pending.clear(); active = false }
+
+    /** A segment is waiting or its decode/commit has not acknowledged yet. */
+    val hasOutstandingWork: Boolean get() = !cancelled && (active || pending.isNotEmpty())
     private fun pump() {
         if (active || cancelled || pending.isEmpty()) return
         if (!valid()) { cancel(); aborted(); return }
@@ -87,5 +90,55 @@ class ContinuousSwipeQueue<S>(
         } catch (_: RuntimeException) {
             cancel(); aborted()
         }
+    }
+}
+
+/**
+ * Decides whether an editor selection callback belongs to a continuous phrase's own
+ * commits. Positions only: the view separately re-reads the whole editor state before
+ * every dispatch ([ContinuousSwipeQueue]'s `valid`) and verifies every write, so a callback
+ * judged "own" here can never authorize a commit into a changed editor.
+ *
+ * Android reports a commit's carets asynchronously, usually after the synchronous commit
+ * code (and [complete]) returned — and a multi-write commit (typed word's separator, then
+ * "word ") reports an intermediate caret first. So the positions of the last accepted
+ * commit stay owned until the next commit completes, not just while it is being written.
+ */
+class ContinuousSelectionGate {
+    enum class Decision { IGNORE, CANCEL }
+    companion object {
+        const val MAX_RECORDED = 8
+        /** Late own callbacks tolerated per accepted commit before treating them as foreign. */
+        const val MAX_LATE = 8
+    }
+    private var committing = false
+    private val recorded = ArrayList<Pair<Int, Int>>()
+    private var owned: Set<Int> = emptySet()
+    private var late = 0
+
+    fun reset() { committing = false; recorded.clear(); owned = emptySet(); late = 0 }
+    fun prepareCommit() { committing = true; recorded.clear() }
+
+    /** Returns whether the commit, including callbacks recorded during it, is accepted. */
+    fun complete(accepted: Boolean, oldStart: Int?, nowStart: Int?): Boolean {
+        val current = setOfNotNull(oldStart, oldStart?.plus(1), nowStart, nowStart?.minus(1))
+        // A callback recorded while this commit was written may still be the previous one's.
+        val ok = accepted && nowStart != null &&
+            recorded.all { (start, end) -> start == end && (start in current || start in owned) }
+        committing = false; recorded.clear()
+        owned = if (ok) current else emptySet()
+        late = 0
+        return ok
+    }
+
+    /** [expected] is the collapsed caret of the last verified phrase state. */
+    fun onSelection(start: Int, end: Int, expected: Int): Decision {
+        if (committing) {
+            if (recorded.size >= MAX_RECORDED) return Decision.CANCEL
+            recorded.add(start to end)
+            return Decision.IGNORE
+        }
+        if (start != end || (start != expected && start !in owned)) return Decision.CANCEL
+        return if (++late > MAX_LATE) Decision.CANCEL else Decision.IGNORE
     }
 }

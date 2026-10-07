@@ -170,12 +170,13 @@ class Keyboard2View @JvmOverloads constructor(
     private var continuousExpected: EditorReadback? = null
     private var continuousEpoch = 0L
     private var continuousWasCancelled = false
-    private var continuousCommitting = false
-    private val continuousCommitSelections = mutableListOf<Pair<Int, Int>>()
+    private val continuousGate = tribixbite.cleverkeys.gesture.ContinuousSelectionGate()
     private var continuousSpaceBounds: KeyboardGeometry.KeyBounds? = null
     private var continuousInsideSpace = false
     private val continuousTimer = android.os.Handler(android.os.Looper.getMainLooper())
     private var continuousDwell: Runnable? = null
+    private var continuousAbort: (() -> Unit)? = null
+    private var continuousSpaceCache: Triple<KeyboardData, KeyboardGeometry.Params, KeyboardGeometry.KeyBounds?>? = null
 
     init {
         // The ONE acquisition of the live Config in this file (ARC-072). A View inflated
@@ -612,23 +613,49 @@ class Keyboard2View @JvmOverloads constructor(
         invalidateAccessibilityRoot()
     }
 
-    /** Cancels pending segments; already accepted words remain in the editor. */
-    fun cancelContinuousSwipe() {
-        if (continuousSegmenter != null) continuousWasCancelled = true
+    /**
+     * Cancels pending segments; already accepted words remain in the editor. Every caller
+     * that supersedes a phrase (next touch-down, typed key, explicit edit, layout or field
+     * change, second finger) comes through here, so a segment that was still waiting or
+     * decoding — typically the final word right after lift — is reported, not lost silently.
+     */
+    fun cancelContinuousSwipe() = stopContinuousSwipe(reportLoss = true)
+
+    private fun stopContinuousSwipe(reportLoss: Boolean) {
+        val segmenter = continuousSegmenter
+        val lost = segmenter?.hasBoundary == true || continuousQueue?.hasOutstandingWork == true
+        // Only a phrase (a deliberate boundary was crossed) discards the rest of its gesture.
+        // Without a boundary the gesture is an ordinary swipe and still commits its word at lift.
+        if (segmenter?.hasBoundary == true) continuousWasCancelled = true
         continuousEpoch++
         continuousDwell?.let { continuousTimer.removeCallbacks(it) }; continuousDwell = null
-        continuousSegmenter?.cancel(); continuousSegmenter = null
+        segmenter?.cancel(); continuousSegmenter = null
         continuousQueue?.cancel(); continuousQueue = null
         continuousExpected = null; continuousInsideSpace = false
-        continuousCommitting = false; continuousCommitSelections.clear()
+        continuousAbort = null
+        continuousGate.reset()
+        if (reportLoss && lost) _keyboard2?.showSuggestionBarMessage(context.getString(R.string.continuous_swipe_stopped))
     }
     override fun onSwipeCancel() = cancelContinuousSwipe()
     fun onContinuousSelectionChanged(start: Int, end: Int) {
         val expected = continuousExpected ?: return
-        if (continuousCommitting) {
-            if (continuousCommitSelections.size >= 8) cancelContinuousSwipe()
-            else continuousCommitSelections.add(start to end)
-        } else if (start != expected.start || end != expected.end) cancelContinuousSwipe()
+        if (continuousGate.onSelection(start, end, expected.start) != tribixbite.cleverkeys.gesture.ContinuousSelectionGate.Decision.CANCEL) return
+        // A foreign selection change. While phrase work is pending, stop it like any other
+        // rejected commit (with feedback); a finished phrase just ends.
+        val abort = continuousAbort
+        if (abort != null && (continuousSegmenter?.hasBoundary == true || continuousQueue?.hasOutstandingWork == true)) abort()
+        else stopContinuousSwipe(reportLoss = false)
+    }
+
+    /** Space-key bounds per (layout, geometry); recomputed only when either changes. */
+    private fun continuousSpaceBoundsFor(layout: KeyboardData, params: KeyboardGeometry.Params): KeyboardGeometry.KeyBounds? {
+        continuousSpaceCache?.let { (cachedLayout, cachedParams, bounds) ->
+            if (cachedLayout === layout && cachedParams == params) return bounds
+        }
+        val bounds = KeyboardGeometry.computeKeyRects(layout, params)
+            .firstOrNull { it.kv.getKind() == KeyValue.Kind.Char && it.kv.getChar() == ' ' }?.bounds
+        continuousSpaceCache = Triple(layout, params, bounds)
+        return bounds
     }
 
     override fun onSwipeStart(x: Float, y: Float, key: KeyboardData.Key, snapshot: ConfigSnapshot, recognizer: ImprovedSwipeGestureRecognizer) {
@@ -641,14 +668,12 @@ class Keyboard2View @JvmOverloads constructor(
         if (SuggestionBar.isPasswordField(editor)) return
         val layout = _keyboard ?: return
         val params = geometryParams() ?: return
-        val space = KeyboardGeometry.computeKeyRects(layout, params).firstOrNull { it.kv.getKind() == KeyValue.Kind.Char && it.kv.getChar() == ' ' } ?: return
-        val before = EditorReadback.capture(ic)?.takeIf { it.collapsed } ?: return
+        val spaceBounds = continuousSpaceBoundsFor(layout, params) ?: return
         val epoch = continuousEpoch
         val language = snapshot.primary_language
         val mode = snapshot.swipe_engine_mode
         val secondary = DirectBootAwarePreferences.get_shared_preferences(context).getString("pref_secondary_language", "none")
-        continuousExpected = before
-        continuousSpaceBounds = space.bounds
+        continuousSpaceBounds = spaceBounds
         var first = true
         val shiftAtStart = recognizer.wasShiftActiveAtStart()
         val capsAtStart = recognizer.wasShiftLockedAtStart()
@@ -663,9 +688,10 @@ class Keyboard2View @JvmOverloads constructor(
         fun valid(): Boolean = ownsSession() && continuousExpected?.matches(ic) == true
         fun abort() {
             if (ownsSession()) service.onContinuousCommitRejected()
-            cancelContinuousSwipe()
+            stopContinuousSwipe(reportLoss = false)
             service.showSuggestionBarMessage(context.getString(R.string.continuous_swipe_stopped))
         }
+        continuousAbort = ::abort
         val queue = tribixbite.cleverkeys.gesture.ContinuousSwipeQueue<tribixbite.cleverkeys.gesture.ContinuousSwipe.Segment<KeyboardData.Key>>(
             valid = ::valid,
             aborted = ::abort,
@@ -675,31 +701,51 @@ class Keyboard2View @JvmOverloads constructor(
                 service.handleSwipeTyping(segment.keys, segment.samples.map { android.graphics.PointF(it.x, it.y) }, segment.samples.map { it.timestamp }, shift, capsAtStart,
                     InputCoordinator.SwipeCommitControl(current, complete = { word ->
                         if (continuousEpoch != epoch) { done(false); return@SwipeCommitControl }
+                        // One readback serves every candidate spelling of the insertion.
                         var now = EditorReadback.capture(ic)
                         var accepted = word != null && old != null && now != null &&
                             listOf(word, "$word ", " $word", " $word ").any { inserted ->
-                                EditorReadback.matchesReplacement(ic, old, inserted, old.rangeStart + inserted.length)
+                                EditorReadback.isReplacement(now!!, old, inserted, old.rangeStart + inserted.length)
                             }
                         // The deliberate boundary means one separator, even when automatic space is off.
                         if (accepted && segment.endedBySpace && now?.before?.endsWith(" ") != true) {
                             accepted = word != null && service.appendContinuousSeparator(ic, editor, word, ::ownsSession)
                             now = EditorReadback.capture(ic)
                         }
-                        val allowed = setOfNotNull(old?.start, old?.start?.plus(1), now?.start, now?.start?.minus(1))
-                        accepted = accepted && continuousCommitSelections.all { (start, end) -> start == end && start in allowed }
-                        continuousCommitting = false; continuousCommitSelections.clear()
+                        accepted = continuousGate.complete(accepted, old?.start, now?.start)
                         continuousExpected = if (accepted) now else null
                         done(accepted)
-                    }, prepareCommit = { continuousCommitting = true; continuousCommitSelections.clear() },
+                    }, prepareCommit = { continuousGate.prepareCommit() },
                         commitGuard = old?.let { EditorCommitGuard(it, ::ownsSession) })
                 )
             }
         )
         continuousQueue = queue
         continuousSegmenter = tribixbite.cleverkeys.gesture.ContinuousSwipe(
-            emit = { recognizer.confirmContinuousSwipe(); queue.enqueue(it) }, overflow = ::abort
+            emit = { segment ->
+                // The editor baseline is read lazily at the first deliberate boundary, so a
+                // gesture that never dwells on the spacebar costs no InputConnection round-trip.
+                // An unreadable or selected editor keeps the gesture an ordinary swipe, exactly
+                // as an eager touch-down read used to; later dispatches re-verify it (valid()).
+                if (continuousExpected == null) continuousExpected = EditorReadback.capture(ic)?.takeIf { it.collapsed }
+                if (continuousExpected == null) {
+                    if (continuousEpoch == epoch) disableContinuousForGesture()
+                } else {
+                    recognizer.confirmContinuousSwipe(); queue.enqueue(segment)
+                }
+            }, overflow = ::abort
         )
         continuousSegmenter?.sample(x, y, System.currentTimeMillis(), android.os.SystemClock.uptimeMillis(), key.takeIf { tribixbite.cleverkeys.swipe.KeyLetter.centreLetterOf(it.keys[0]) != null }, false)
+    }
+
+    /** Silent fallback: this gesture is an ordinary single swipe (no phrase, nothing lost). */
+    private fun disableContinuousForGesture() {
+        continuousEpoch++
+        continuousDwell?.let { continuousTimer.removeCallbacks(it) }; continuousDwell = null
+        continuousSegmenter?.cancel(); continuousSegmenter = null
+        continuousQueue?.cancel(); continuousQueue = null
+        continuousExpected = null; continuousInsideSpace = false; continuousAbort = null
+        continuousGate.reset()
     }
 
     private fun sampleContinuousSwipe(x: Float, y: Float, key: KeyboardData.Key?) {

@@ -630,6 +630,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.KeyValueParserTest',
     // Review 2026-10-07: own-write selection callbacks expire by consumption/time bound.
     'tribixbite.cleverkeys.OwnedSelectionLedgerTest',
+    // Review 2026-10-07: continuous-swipe segmentation, serialized queue and selection gate
+    // on the host tier (previously native-only).
+    'tribixbite.cleverkeys.gesture.ContinuousSwipePureTest',
     'tribixbite.cleverkeys.IssueRegressionTest',
     'tribixbite.cleverkeys.AutoSpaceLogicTest',
     'tribixbite.cleverkeys.SmartAutoSpaceLogicTest',
@@ -1343,6 +1346,9 @@ tasks.register('runMockTests', JavaExec) {
     // Review 2026-10-07: late own-write selection callbacks (suffix ledger lifetime, two-write
     // commits).
     'tribixbite.cleverkeys.SuggestionHandlerOwnedCallbackTest',
+    // Review 2026-10-07: continuous-swipe session lifecycle (lost final segment, cancel scope,
+    // touch-down cost).
+    'tribixbite.cleverkeys.Keyboard2ViewContinuousLifecycleTest',
     // Audit 2026-09-06 W7 (H-5): modify_layout's cache is keyed on layout IDENTITY, not
     // the nullable name — two same-named/unnamed custom layouts can no longer be served
     // each other's modified boards. Runs on the android.util.LruCache test-source shadow.
