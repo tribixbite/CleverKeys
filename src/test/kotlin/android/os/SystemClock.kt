@@ -9,7 +9,8 @@ package android.os
  * calling it on the JVM dies with `UnsatisfiedLinkError`, and MockK's
  * `mockkStatic` cannot instrument native methods either. `IMEStatusHelper`'s
  * once-per-boot guard (I-7) derives the boot instant from it, so tests pin the
- * uptime via [elapsed] instead.
+ * uptime via [elapsed] instead. [uptimeMillis] is shadowed the same way (tests set
+ * [uptime]) for the editor-callback ledgers, whose expiry is a monotonic time bound.
  *
  * `open` per the shadow rule (a final shadow breaks android.jar subclass
  * loading — the TextPaint:Paint lesson). Do not add behaviour the on-device
@@ -23,5 +24,12 @@ open class SystemClock {
 
         @JvmStatic
         fun elapsedRealtime(): Long = elapsed
+
+        /** The fake monotonic uptime returned by [uptimeMillis]; tests set this directly. */
+        @JvmStatic
+        var uptime: Long = 0L
+
+        @JvmStatic
+        fun uptimeMillis(): Long = uptime
     }
 }

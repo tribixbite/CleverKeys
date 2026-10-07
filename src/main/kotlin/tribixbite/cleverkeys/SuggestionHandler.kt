@@ -54,6 +54,9 @@ class SuggestionHandler(
     companion object {
         private const val TAG = "SuggestionHandler"
 
+        /** A suffix edit stamps at most: pre-edit caret, owned-tail selection, final caret. */
+        private const val MAX_SUFFIX_CALLBACKS = 3
+
         /**
          * W7 (learning-system audit 2026-09-26): characters that JOIN two letter runs into one
          * word — apostrophes (`don't`, `l'homme`, curly `don’t`) and the hyphen (`co-op`). Same
@@ -1808,16 +1811,22 @@ class SuggestionHandler(
         return processedWord
     }
 
-    /** Editor ownership and the original commit source survive a suffix-only undo. */
+    /**
+     * Editor ownership and the original commit source survive a suffix-only undo.
+     * [commitCallbacks] holds the intermediate carets of the commit that produced [edit]
+     * (before/after a separate separator or deletion write); they can be reported after
+     * the receipt exists. Copies share it on purpose: a restamp keeps the late allowance.
+     */
     private data class WordEditReceipt(
         val ic: InputConnection, val info: EditorInfo, val session: Long,
         val configVersion: Int, val language: String, val edit: VerifiedSuffixEdit,
         val learning: LearningCommit?, val originalSource: PredictionSource,
         val originalSwipeAutoInsert: Boolean,
+        val commitCallbacks: OwnedSelectionLedger = OwnedSelectionLedger(0),
     )
-    private data class SuffixOperation(
+    private class SuffixOperation(
         val id: Long, val receipt: WordEditReceipt,
-        val callbacks: ArrayDeque<EditorReadback> = ArrayDeque(),
+        val callbacks: OwnedSelectionLedger = OwnedSelectionLedger(MAX_SUFFIX_CALLBACKS),
         var expected: EditorReadback? = null,
     )
     private var wordEditReceipt: WordEditReceipt? = null
@@ -1835,9 +1844,18 @@ class SuggestionHandler(
         wordEditReceipt = null; suffixOperation = null
         if (ic == null || info == null || isPasswordMode || SuggestionBar.isPasswordField(info)) return
         val edit = runCatching { VerifiedSuffixEdit.capture(ic, word, ownsSpace) }.getOrNull() ?: return
+        // A commit may be several writes (typed word's separator, partial deletion, then
+        // "word "). Their intermediate carets precede the word and can be reported after
+        // this receipt exists; allow exactly those two positions, readback-verified.
+        val wordStart = edit.editor.start - word.length - edit.space.length
+        val now = android.os.SystemClock.uptimeMillis()
+        val commitCallbacks = OwnedSelectionLedger(2).apply {
+            for (position in listOf(wordStart - 1, wordStart)) if (position >= 0) stamp(position, position, now)
+        }
         wordEditReceipt = WordEditReceipt(ic, info, wordEditSession, config.snapshot.version,
             config.primary_language, edit, lastLearningCommit,
-            if (isSwipeAutoInsert) PredictionSource.SWIPE else contextTracker.getLastCommitSource(), isSwipeAutoInsert)
+            if (isSwipeAutoInsert) PredictionSource.SWIPE else contextTracker.getLastCommitSource(), isSwipeAutoInsert,
+            commitCallbacks)
     }
     private fun receiptSessionIsCurrent(receipt: WordEditReceipt): Boolean =
         receipt.session == wordEditSession && receipt.configVersion == config.snapshot.version &&
@@ -1884,9 +1902,8 @@ class SuggestionHandler(
                 !ownsSession() || suffixOperation !== operation || wordEditReceipt !== old ||
                 !expected.matches(ic) || !onContinuousSeparatorAccepted(ic, info, word)) return@runCatching false
             // The restamp helper clears stale callback allowances. Retain only this
-            // operation's bounded ledger until queued own callbacks have a chance.
+            // operation's bounded ledger; it expires by consumption or its time bound.
             suffixOperation = operation
-            mainHandler.post { if (suffixOperation?.id == operation.id) suffixOperation = null }
             true
         }.getOrDefault(false)
         if (!accepted) rejectSuffixOperation(operation)
@@ -1903,21 +1920,34 @@ class SuggestionHandler(
     /**
      * Permit only callbacks stamped by the current bounded edit. Callback coordinates
      * alone are insufficient: current editor text, selection and session must match too.
-     * Android does not supply operation IDs, so this ledger expires at the next main
-     * loop turn; late/ambiguous callbacks conservatively drop destructive ownership.
+     * Android supplies no operation IDs and may report a write several loop turns late,
+     * so each allowance ([OwnedSelectionLedger]) expires by consumption, replacement or
+     * its time bound — never by loop turn. Unmatched, expired or ambiguous callbacks
+     * conservatively drop destructive ownership. Returns true only for owned callbacks;
+     * those skip phrase cancellation and cursor tracking.
      */
     fun validateWordReceiptSelection(start: Int, end: Int): Boolean {
-        val operation = suffixOperation
-        if (operation != null && receiptSessionIsCurrent(operation.receipt) &&
-            operation.expected?.matches(operation.receipt.ic) == true) {
-            val index = operation.callbacks.indexOfFirst { it.start == start && it.end == end }
-            if (index >= 0) {
-                repeat(index + 1) { operation.callbacks.removeFirst() }
-                return true
-            }
+        val now = android.os.SystemClock.uptimeMillis()
+        var operation = suffixOperation
+        if (operation != null && operation.callbacks.isExpired(now)) { suffixOperation = null; operation = null }
+        if (operation != null && operation.callbacks.contains(start, end, now) &&
+            receiptSessionIsCurrent(operation.receipt) && operation.expected?.matches(operation.receipt.ic) == true) {
+            // The operation object stays published: a synchronous editor reports its
+            // final caret before finishSuffixEdit checks the operation's identity.
+            operation.callbacks.consume(start, end, now)
+            return true
         }
+        // A fully consumed operation no longer explains anything; judge by the receipt.
+        val active = operation?.takeUnless { it.callbacks.isEmpty }
         val receipt = wordEditReceipt ?: return false
-        if (operation != null || start != receipt.edit.editor.start || end != receipt.edit.editor.end) {
+        // Intermediate carets of the receipt's own commit can still arrive behind a later
+        // separator operation (written after it); they are owned only on exact readback.
+        if (start == end && receipt.commitCallbacks.contains(start, end, now) &&
+            receiptSessionIsCurrent(receipt) && runCatching { receipt.edit.matches(receipt.ic) }.getOrDefault(false)) {
+            receipt.commitCallbacks.consume(start, end, now)
+            return true
+        }
+        if (active != null || start != receipt.edit.editor.start || end != receipt.edit.editor.end) {
             wordEditReceipt = null; suffixOperation = null
         } else currentWordReceipt()
         return false
@@ -1938,9 +1968,9 @@ class SuggestionHandler(
 
     private fun prepareSuffixSelection(operation: SuffixOperation, expected: EditorReadback): Boolean {
         if (suffixOperation !== operation || !receiptSessionIsCurrent(operation.receipt) ||
-            wordEditReceipt !== operation.receipt || operation.callbacks.size >= 3) return false
+            wordEditReceipt !== operation.receipt ||
+            !operation.callbacks.stamp(expected.start, expected.end, android.os.SystemClock.uptimeMillis())) return false
         operation.expected = expected
-        operation.callbacks.addLast(expected)
         return true
     }
 
@@ -1996,9 +2026,8 @@ class SuggestionHandler(
         swipeCorrectionTracker?.clear(); suggestionBar?.clearSuggestions()
         wordEditReceipt = old.copy(edit = edit, learning = fresh)
         lastLearningCommit = fresh
-        // Only this operation may expire its callback allowance; a later operation
-        // can already have replaced it before the runnable executes.
-        mainHandler.post { if (suffixOperation?.id == operation.id) suffixOperation = null }
+        // The operation's callback allowance stays until its own callbacks consume it,
+        // a later operation replaces it, or its time bound passes (OwnedSelectionLedger).
         return true
     }
 
