@@ -1,10 +1,47 @@
 # Current work queue
 
-Updated: 2026-10-06. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
+Updated: 2026-10-07. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
 Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/2026-08-30-full-backlog-campaign.md).
 
 The September 1 campaign baseline was `5fb58037`; origin/main is `01b6212d` (2026-09-30), and
 local `main` is 30+ commits ahead, unpushed (2026-10-07). Preserve shared-tree work.
+
+## October 7 review round (independent review + fixes + device re-test)
+
+Three read-only reviews (typing features, issue fixes, release docs) and two device passes.
+All commits local, unpushed (no push/tag/release authorized).
+
+- [x] `17db49da`: removed the no-op Terminal Mode switch (DEPRECATED_KEYS tombstone +
+  DeadPlumbingDriftTest); #181 filter consults EmojiCompat (emoji2 now a direct dep);
+  #184 Settings names why an installed >100k pack is not loaded; #145 call-site pin;
+  `hide_keyboard` command (#175).
+- [x] `27b94fca`: v2.0 fastlane/RELEASE_NOTES (no longer "opt-in next-word"), 22 GUARDED
+  RELEASE_RECORD rows, CHANGELOG fold, README/TOC/tracker corrections.
+- [x] `39501aed`..`2782be56` (8 commits): continuous swipe no longer cancels itself on a
+  two-write commit or drops the last word silently; suffix undo survives late (Chrome)
+  callbacks; fewer blocking editor reads; invalid template keydef degrades instead of
+  crashing; docs. `a5e0464b`: palette edit-mode sub-dialogs open above the palette
+  (reassigning an occupied slot looked like a no-op).
+- [x] Host 2,790 pure / 991 mock (implementer run, includes the palette fix); native
+  1,588/1,588 distinct, 3 shards, 0 failures/errors/skips, run
+  `fe0d4b26-0d51-40fe-bc3a-a93fae509d9b` (`~/ew-output/oct7-review-full/`).
+- [x] Saga (Android 14) release `a5e0464b` (sha256 7a916c81…): occupied-slot reassign,
+  one-Backspace suffix undo (`parents'`, `Bowie's`), continuous swipe split/no-split
+  mechanics, hide_keyboard, regression + FAB — all PASS. Evidence `build/oct7-saga-retest/`.
+  Earlier pass (`build/oct7-saga/`): popover/edit screen, palette, minimize bar+FAB,
+  dead key, template `{cursor}` PASS. Restored: Gboard default, 0 mappings, own tabs closed.
+  CleverKeys was NOT on the Saga originally and is left installed + enabled (not default);
+  uninstall if the maintainer does not want it there. One pre-existing Chrome tab's page
+  was replaced by the first tester's test URL (count restored, content not recoverable),
+  and that tester once force-stopped CleverKeys by mistake (IME restored at once).
+- [ ] **Seeker cleanup owed** (dropped off Wi-Fi mid-test, 192.168.0.170): turn "Subkey
+  popover on hold" back OFF, delete the temporary K → North Custom Text
+  "TestMappingOriginal" (label "Test"; expect 2 custom mappings after), close the extra
+  Chrome data: tab. New APK bf417bf6 is installed there and is still the default IME.
+- [ ] Deferred from the review: unify `Keyboard2View.executeEditingCommand` with
+  `KeyEventHandler.handleEditingKey` (documented why not small); suffix receipt readback
+  moved to command time (# TODO in `rememberVerifiedWord`); #175 swipe-to-delete + batch
+  select; summon-after-system-hide (needs overlay permission); Monet day/night repro (#181).
 
 ## October 2–3 issue work before 2.0
 
