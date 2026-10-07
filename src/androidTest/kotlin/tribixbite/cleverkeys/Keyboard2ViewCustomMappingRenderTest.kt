@@ -139,11 +139,10 @@ class Keyboard2ViewCustomMappingRenderTest {
             minimized.onExpand = { expansions++ }
             val outside = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 540f, ltr.centerY().toFloat(), 0)
             try { org.junit.Assert.assertFalse(minimized.onTouchEvent(outside)) } finally { outside.recycle() }
-            // RTL comes from the CONFIGURATION (an RTL system locale), not the view's own
-            // layoutDirection, which stayed LTR inside the real input window (Saga, Arabic).
-            val rtlConfig = android.content.res.Configuration(context.resources.configuration)
-                .apply { setLocale(java.util.Locale("ar")) }
-            val rtlMinimized = MinimizedKeyboardView(context.createConfigurationContext(rtlConfig))
+            // RTL is decided by FabSide (system locale, per-app locale or configuration), not
+            // the view's own layoutDirection, which stays LTR inside the real input window.
+            val rtlMinimized = MinimizedKeyboardView(context)
+            rtlMinimized.isRtl = { true }
             rtlMinimized.bind(MinimizedStyle.FAB, null)
             rtlMinimized.layoutDirection = View.LAYOUT_DIRECTION_LTR  // the input window's case
             rtlMinimized.onExpand = { expansions++ }

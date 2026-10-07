@@ -18,6 +18,32 @@ import kotlin.math.min
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.Theme
 
+/**
+ * Which side the floating button sits on (gh #175). Neither the view's resolved direction nor
+ * the IME service's configuration is reliable inside the input window: on the Saga the button
+ * stayed on the right with the SYSTEM set to Arabic (the app has no Arabic translation, so
+ * Android resolves CleverKeys' own configuration to English/LTR) and with the APP locale set to
+ * Persian (CleverKeys Settings mirrored, the IME service did not) — 2026-10-07. So the button
+ * goes left when ANY of these is right-to-left: the system locale (Resources.getSystem(), which
+ * skips the app's locale resolution), CleverKeys' per-app locale (Android 13+), or the
+ * service's own configuration.
+ */
+internal object FabSide {
+    fun isRtl(context: Context): Boolean {
+        if (context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL) return true
+        val system = android.content.res.Resources.getSystem().configuration.locales
+        if (!system.isEmpty && rtl(system[0])) return true
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            val app = context.getSystemService(android.app.LocaleManager::class.java)?.applicationLocales
+            if (app != null && !app.isEmpty && rtl(app[0])) return true
+        }
+        return false
+    }
+
+    private fun rtl(locale: java.util.Locale): Boolean =
+        android.text.TextUtils.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
+}
+
 /** How the minimized keyboard looks (gh #175, docs/specs/keyboard-minimize.md). */
 enum class MinimizedStyle {
     /** A thin full-width strip; the app is resized to sit above it. */
@@ -41,6 +67,11 @@ class MinimizedKeyboardView(context: Context) : View(context) {
 
     /** Invoked when the user taps the bar or button. */
     var onExpand: (() -> Unit)? = null
+
+    /**
+     * Whether the button belongs on the left. Replaceable for tests; see [FabSide.isRtl].
+     */
+    var isRtl: () -> Boolean = { FabSide.isRtl(context) }
 
     private val density = resources.displayMetrics.density
     private val barHeight = BAR_HEIGHT_DP * density
@@ -107,13 +138,9 @@ class MinimizedKeyboardView(context: Context) : View(context) {
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
         // The button sits at the end (right in LTR, left in RTL), centred in the content height.
-        // Direction comes from the configuration, not the view: inside the input window the
-        // view's resolved direction stayed LTR with the system set to Arabic (Saga, 2026-10-07),
-        // so the button drew on the right. PanePagerArrows reads the same configuration.
         val r = fabDiameter / 2f
         val cy = (height - navInset) / 2f
-        val rtl = resources.configuration.layoutDirection == LAYOUT_DIRECTION_RTL
-        val cx = if (rtl) fabMargin + r else width - fabMargin - r
+        val cx = if (isRtl()) fabMargin + r else width - fabMargin - r
         fabBounds.set(cx - r, cy - r, cx + r, cy + r)
     }
 

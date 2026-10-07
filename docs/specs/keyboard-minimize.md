@@ -71,3 +71,12 @@ expansion on a valid tap, and bar height including the navigation inset. Native 
 view coverage does not establish service-window RTL placement or cross-app touch
 pass-through; those device checks above remain owed. Full cloud results are in
 [testing strategy](testing-strategy.md).
+
+### RTL side (2026-10-07)
+
+The button goes left when the system locale, CleverKeys' per-app locale (Android 13+) or the
+IME service's configuration is right-to-left (`FabSide.isRtl`). On the Saga, neither the view's
+resolved direction nor the service configuration reflected an Arabic system locale (no Arabic
+translation, so Android resolves the app to English) or a Persian per-app locale. Device
+re-check owed for both cases.
+
