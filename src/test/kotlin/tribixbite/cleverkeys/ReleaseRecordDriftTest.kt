@@ -548,7 +548,7 @@ class ReleaseRecordDriftTest {
          * Versions that have fastlane changelogs written but no published tag yet, so their
          * record section is still allowed to change.
          *
-         * # TODO(release): when v1.6.0 is tagged, replace its `unreleased` header date with the
+         * # TODO(release): when v2.0.0 is tagged, replace its `unreleased` header date with the
          * publish date, move it out of this set, and add its block hash to [versionBlockSha256].
          * From that moment its section is history and stops being editable.
          */

@@ -9,49 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Optional continuous multiword swipe: dwell inside the spacebar between words;
-  serialized, verified commits preserve word order and stop after editor/session changes.
-- Assignable **Append 's** and **Append apostrophe** commands with verified word
-  attachment, suffix-only undo and exact owned learning replacement.
-- Explicit dynamic templates for clipboard text, selection, UUID and UTF-16 cursor
-  placement; ordinary Text Input keeps braces literal. Per-key and popover assignment,
-  persistence, backup and XML retain the template action type.
-
-### Fixed
-
-- Rejected editor writes no longer create new swipe, spacing, learning or correction ownership.
-- Prefixed timestamp and intent XML actions now parse opening quotes and preserve
-  escaped apostrophes/backslashes on export/import.
-- Delayed callbacks belonging to verified suffix/separator edits preserve automatic
-  spacing and continuous phrase state while genuine caret movement still cancels.
-
-### Changed
-
-- **Next-word prediction is on by default and works without on-device learning.** The
-  suggestions shown before you type a letter now come from the built-in phrase data (the
-  English context model; curated phrase lists for German, Spanish, French, Italian and
-  Portuguese) even when "Learn from my typing" is off (the v2.0 default), when Context-Aware Predictions
-  is off, and in incognito fields. Your own learned phrases are still added only when
-  on-device learning and Context-Aware Predictions are on and the field allows learning;
-  with learning off they are neither read nor updated, and accepting a next-word suggestion
-  records nothing. The Settings switch is no longer greyed out when Context-Aware
-  Predictions is off. If you had turned next-word off, it stays off.
-- Language packs now carry their data attribution (NOTICE.txt + manifest licence keys); the
-  English Norvig variant was withdrawn (no redistribution licence).
-
 ### Planned for v2.1
 
-- Custom emoji picker with categories and search
-- Long-press popup UI for alternate characters
 - 50k dictionary assets for 20 languages
-- Theme customization UI (visual color picker)
 - Performance optimization (model quantization)
+
+(The emoji picker with categories and search, the hold-for-subkeys popover and the DIY theme
+editor that used to be listed here already ship in 2.0.)
 
 ---
 
-## [2.0.0] - 2026-09-09
+## [2.0.0] - unreleased
+
+> Not tagged yet. The section was first drafted 2026-09-09; items merged up to
+> 2026-10-06 are folded in.
 
 > Note: this file has gaps — v1.2.1, v1.2.2, v1.2.5 and v1.2.6 were tagged and shipped
 > but never given entries here. They are not backfilled by this release.
@@ -106,8 +77,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   counts, browse and delete individual learned phrases and words, bulk forget, and an
   adjustable learned-word cap (default 5,000; range 1,000–20,000). Learned data is
   included in Backup & Restore.
-- **Next-word prediction (opt-in, default off)**: after you finish a word, the bar can
-  offer likely next words from your own learned phrases.
+- **Next-word prediction, on by default**: after you finish a word, the bar offers likely
+  next words from the built-in phrase data (the English context model; curated phrase lists
+  for German, Spanish, French, Italian and Portuguese). This works when "Learn from my
+  typing" is off (the v2.0 default), when Context-Aware Predictions is off, and in incognito
+  fields. Your own learned phrases are added only when on-device learning and Context-Aware
+  Predictions are on and the field allows learning; with learning off they are neither read
+  nor updated, and accepting a next-word suggestion records nothing. If you had turned
+  next-word off, it stays off.
 - **Suggestion transparency**: long-press a suggestion to see why it was offered
   (dictionary frequency, learned context, personalization, engine); optional origin
   markers on the bar.
@@ -122,6 +99,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   virtual view tree, so keys can be explored by touch and activated by double-tap, with
   spoken labels for every key kind and working modifier latching. The settings UI also
   mirrors correctly on right-to-left locales.
+
+- **Subkey popover**: hold a text key past the long-press timeout to open a 3×3 grid of
+  its subkeys around your finger; slide to a slot and let go to type or run it. Letting go
+  in the neutral centre does nothing (its size is adjustable under Gesture tuning). Letting
+  go on an empty slot opens the assign screen; resting 3 s on an assigned slot opens an edit
+  screen (Edit, Reassign, Remove, Restore default). On for new installs; off for upgrades
+  unless already chosen. Backspace, space/navigation, modifier and voice/IME keys keep
+  their own hold behaviour.
+- **Command palette and edit screen rework**: compact header with key and direction, fixed
+  search, Custom text / Intent / Timestamp as one tile row, sticky category headers. Editing
+  an existing mapping (from the popover or Settings' per-key screen) opens that action's own
+  editor pre-filled.
+- **Minimize the keyboard (#175)**: two assignable commands, `minimize_bar` (a thin strip
+  the app sits above) and `minimize_fab` (a floating button; touches outside it reach the
+  app). Tapping either restores the keyboard; hiding the keyboard resets it to full size.
+  See `docs/specs/keyboard-minimize.md`.
+- **Clipboard size filter**: filter history by entry size, and delete all filtered
+  results after a confirmation. The deletion acts on a snapshot of every matching page, so
+  an entry captured after you filtered is not removed.
+- **Clear system clipboard command (#168)**: clears only Android's current clip. Saved
+  history, pinned and todo entries are kept; Android 7.0–8.1 leave an empty clip item.
+- **Custom terminal apps** (Settings → Advanced): add terminal package IDs; they match
+  exactly and are added to the built-in list. The **Autofill** extra key is now listed in its Extra
+  Keys category (it was searchable but not shown).
+- Optional continuous multiword swipe (Settings → Swipe Typing, off by default): dwell
+  inside the spacebar between words; serialized, verified commits preserve word order and
+  stop after editor/session changes.
+- Assignable **Append 's** and **Append apostrophe** commands with verified word
+  attachment, suffix-only undo and exact owned learning replacement.
+- Explicit dynamic templates for clipboard text, selection, UUID and UTF-16 cursor
+  placement; ordinary Text Input keeps braces literal. Per-key and popover assignment,
+  persistence, backup and XML retain the template action type.
 
 ### Changed
 
@@ -146,6 +155,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Android cloud backup and device transfer are now a strict allowlist: only theme and
   recent-emoji preferences leave the device. Learned data, clipboard history, the
   dictionary and all settings stay local.
+
+- Language packs now carry their data attribution (NOTICE.txt + manifest licence keys); the
+  English Norvig variant was withdrawn (no redistribution licence).
 
 ### Removed
 
@@ -214,6 +226,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   out of release builds.
 - A file named with a control character had been tracked since an early migration, which
   broke every checkout of the repository on Windows (#150, contributed by @rubahness).
+- Custom mappings for modifier, dead-key, compose, timestamp, macro and slider commands
+  did nothing, and Share text only copied; they now act like the key they name.
+- Custom rows stay compact (#90): numpad height scaling no longer applies to every layout
+  with `bottom_row="false"`. **Custom numeric layouts that relied on `bottom_row="false"`
+  for full-height scaling (#58) now need `numpad_height="true"`** — see
+  `docs/specs/layout-system.md`.
+- Emoji the device font cannot render are hidden instead of showing as boxes or split
+  components (#181).
+- Oversized language-pack dictionaries no longer crash the keyboard (#184): packs over
+  100,000 words (or 16 MiB of dictionary data) are refused before allocation and the
+  installed dictionary is kept. Packs above 100k words are refused, not supported.
+- Clipboard pane in landscape keeps entries visible next to search and pagination, and
+  deletion feedback is legible.
+- Extra Keys settings: search, info and the key list scroll together, so every key is
+  reachable in landscape; the search text survives rotation.
+- Tapping the bottom-row Compose key latches it again instead of cancelling (#188).
+- Custom apostrophe flicks keep the automatic-space handling of typed apostrophes, and
+  suggestion replacement in terminal apps uses backspace key events instead of document
+  deletion.
+- Rejected editor writes no longer create new swipe, spacing, learning or correction ownership.
+- Prefixed timestamp and intent XML actions now parse opening quotes and preserve
+  escaped apostrophes/backslashes on export/import.
+- Delayed callbacks belonging to verified suffix/separator edits preserve automatic
+  spacing and continuous phrase state while genuine caret movement still cancels.
 
 ---
 

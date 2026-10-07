@@ -173,8 +173,8 @@ Build your own themes on-the-fly with full control over:
 - **Suggestion transparency** — long-press any suggestion to see which engine produced it and its full score breakdown; optional per-origin markers
 - **100% on-device** — works in airplane mode, no cloud anything
 
-Development builds also offer optional **continuous multiword swipe**: enable it in
-Swipe Typing settings, then dwell inside the spacebar between words. It defaults off;
+Optional **continuous multiword swipe**: enable it in Swipe Typing settings, then dwell
+inside the spacebar between words. It defaults off;
 pending words stop when editor/session ownership changes. See the
 [swipe guide](docs/wiki/typing/swipe-typing.md) and
 [assignment guide](docs/wiki/customization/per-key-actions.md) for behavior and limits.
@@ -195,6 +195,8 @@ As an IME, CleverKeys has legitimate clipboard access that other apps don't:
 - **Regex search** — VSCode-style `.*` toggle, glob shorthand, full regex power
 - **Media clipboard** — images, videos, PDFs with thumbnail previews
 - **Tags** — organize pinned and todo entries with custom tag labels
+- **Size filter** — filter history by entry size and delete all matching entries after a confirmation
+- **Clear OS clipboard** — an assignable command that clears only Android's current clip; saved history stays (#168)
 - **Export/Import** — JSON (text) or ZIP (full backup with media)
 
 ### 🎮 Offline GIF Panel
@@ -212,6 +214,8 @@ Assign custom actions to any key's 8 swipe directions:
 - **Android intents** — launch any app, Termux commands, system settings, maps, browser
 - **Visual feedback** — custom icons displayed as sublabels on keys
 - **Import/Export** — share customizations as JSON profiles
+- **Subkey popover** — hold a text key to open a 3×3 grid of its subkeys, slide and release to type or run one; empty and assigned slots open assign/edit screens
+- **Minimize** — `minimize_bar` and `minimize_fab` commands shrink the keyboard to a strip or a floating button (#175)
 
 ### 🖱️ Cursor & Text Control
 - **TrackPoint navigation** — IBM/Lenovo-style joystick cursor on nav key (hold to activate)
@@ -232,7 +236,7 @@ Assign custom actions to any key's 8 swipe directions:
 - QWERTY, AZERTY, QWERTZ, Dvorak, Colemak, and programming layouts
 - International layouts for 30+ languages
 - Full XML customization with 8 sublabels per key
-- Terminal mode with Ctrl/Meta/Fn for Termux
+- Ctrl/Meta/Fn keys for Termux; terminal apps are detected automatically, and more can be added by package ID (Settings → Advanced)
 
 ### 🎨 35+ Themes with DIY Creator
 - Material You (Monet), Rose Pine, Everforest, Cobalt, ePaper, and more

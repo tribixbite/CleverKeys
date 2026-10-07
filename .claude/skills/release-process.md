@@ -183,7 +183,7 @@ Semantic versioning:
 
 ### 3. Update build.gradle
 
-Edit `build.gradle` lines 58-60:
+Edit the `ext.VERSION_*` lines in `build.gradle` (near line 140 as of 2026-10-07; the position drifts — locate with `rg -n 'ext.VERSION_' build.gradle`):
 ```gradle
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 2
@@ -332,7 +332,7 @@ done
 
 | File | Purpose |
 |------|---------|
-| `build.gradle` | VERSION_MAJOR/MINOR/PATCH (lines 58-60) |
+| `build.gradle` | `ext.VERSION_MAJOR/MINOR/PATCH` (near line 140 as of 2026-10-07; `rg -n 'ext.VERSION_' build.gradle`) |
 | `fastlane/metadata/android/en-US/changelogs/` | F-Droid/Fastlane changelogs |
 | `.github/workflows/release.yml` | GitHub Actions release workflow |
 | `memory/todo.md` | Track completed work for changelog |

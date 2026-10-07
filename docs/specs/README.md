@@ -18,9 +18,11 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 | Spec | Description |
 |------|-------------|
 | [Cursor-Aware Predictions](./cursor-aware-predictions.md) | Dual pipeline cursor sync, exact_add, contraction prefix guard |
-| [Context Learning & Next-Word](./context-learning-and-next-word.md) | Persistent learned n-gram LM, master privacy gate, opt-in next-word prediction, suggestion provenance, learned-data manager |
+| [Context Learning & Next-Word](./context-learning-and-next-word.md) | Persistent learned n-gram LM, master privacy gate, next-word prediction (on by default), suggestion provenance, learned-data manager |
 | [Geometric Swipe Engine](./geometric-swipe-engine.md) | Layout-agnostic geometric swipe decoder (`swipe/geometric/`) |
 | [CTC Swipe Engine](./ctc-swipe-engine.md) | CTC trie-beam swipe engine — the DEFAULT `ctc` mode, CleverKeys-trained ONNX encoder |
+| [CTC Architecture & Multi-Script Guide](./ctc-architecture-and-multiscript-guide.md) | Reference: CTC graph contract, routing rule, multi-script recipe |
+| [CTC Context Rescoring & Tunables](./ctc-context-rescoring-and-tunables.md) | Plan + reference: bigram/trigram rescoring and the decode-time tunables inventory |
 
 > The ONNX transformer engine's specs (`neural-prediction`, `neural-multilanguage-architecture`,
 > `kv-cache-optimization`, `nn-inference-optimization`, `memory-pool-optimization`) moved to
@@ -33,6 +35,7 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 | [Dictionary System](./dictionary-and-language-system.md) | Word lookup, frequency ranking, user dictionary |
 | [Secondary Language](./secondary-language-integration.md) | Multi-language typing, language detection |
 | [Language-Specific Dictionary](./language-specific-dictionary-manager.md) | Per-language dictionary management |
+| [English Dictionary Pipeline](./english-dictionary-pipeline.md) | Dictionary generation and quality pipeline (evidence classifier) |
 
 ### Customization
 
@@ -41,6 +44,7 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 | [Short Swipe Customization](./short-swipe-customization.md) | Per-key gesture customization, CommandRegistry |
 | [Per-Layout Subkey](./per-layout-subkey-customization.md) | Layout-specific subkey configuration |
 | [Subkey Customization](./subkey-customization-current.md) | Current subkey implementation details |
+| [Subkey Popover](./subkey-popover.md) | Hold-then-select 3×3 subkey grid, neutral zone, assign/edit screens |
 | [Profile System](./profile_system_restoration.md) | Settings backup/restore, layout import/export |
 
 ### Settings & Modes
@@ -64,6 +68,7 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 | [Keyboard Minimize](./keyboard-minimize.md) | Assignable bar and floating-button minimize commands, lifecycle and touch geometry |
 | [Timestamp Keys](./timestamp-keys.md) | Date/time insertion keys |
 | [Termux Integration](./termux_integration.md) | Terminal keyboard optimizations |
+| [GIF Panel](./gif-panel-spec.md) | Offline GIF panel and pack system |
 
 ### Reference
 
@@ -72,6 +77,7 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 | [Architectural Decisions](./architectural-decisions.md) | ADRs for major design choices (10 decisions) |
 | [Testing Strategy](./testing-strategy.md) | Executed JVM/MockK/native evidence, expanded gap coverage and pinned ew-cli workflow |
 | [Performance Optimization](./performance-optimization.md) | Rendering, memory, ONNX performance |
+| [Typo-Drop Rescue Pipeline](./typo-drop-rescue-pipeline.md) | Superseded 2026-07-02 by `scripts/build_wordlist.py`; kept for provenance |
 | [SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md) | Template for new specifications |
 
 ## Key Source Files

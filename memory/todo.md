@@ -3,8 +3,8 @@
 Updated: 2026-10-06. Full execution state and test evidence: [HANDOFF.md](HANDOFF.md).
 Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/2026-08-30-full-backlog-campaign.md).
 
-The September 1 campaign baseline was `5fb58037`; subsequent work through `79f0b464`
-was pushed with maintainer authorization on September 27. Preserve shared-tree work.
+The September 1 campaign baseline was `5fb58037`; origin/main is `01b6212d` (2026-09-30), and
+local `main` is 30+ commits ahead, unpushed (2026-10-07). Preserve shared-tree work.
 
 ## October 2–3 issue work before 2.0
 

@@ -61,19 +61,40 @@ review counts are not a current full-tree audit.
 | `README.md` | Master ToC for specs | ✅ Active |
 | `SPEC_TEMPLATE.md` | Template for new specs | ✅ Active |
 | `core-keyboard-system.md` | Core keyboard operations | ✅ Implemented |
+| `suggestion-bar-content-pane.md` | Suggestion bar, emoji/clipboard content pane | ✅ Implemented |
 | `gesture-system.md` | Gesture recognition | ✅ Implemented |
-| `ctc-swipe-engine.md` | CTC swipe engine and bounded continuous gesture segments | ✅ Implemented |
-| `layout-system.md` | Layout & extra keys | ✅ Implemented |
+| `layout-system.md` | Layout & extra keys (incl. `numpad_height`, GH #90) | ✅ Implemented |
 | `settings-system.md` | Settings & preferences | ✅ Implemented |
-| `ui-material3-modernization.md` | Material 3 UI | ✅ Implemented |
+| `settings-layout-integration.md` | Settings GUI mapping to the layout system | ✅ Implemented |
 | `performance-optimization.md` | Performance & monitoring | ✅ Complete |
 | `testing-strategy.md` | Measured suites, full cloud evidence, and remaining manual coverage | ✅ Active |
-| `short-swipe-customization.md` | Short swipes, explicit templates and verified apostrophe suffixes | ✅ Implemented |
-| `profile_system_restoration.md` | **NEW** Profile Import/Export | ✅ Implemented |
+| `ctc-swipe-engine.md` | CTC trie-beam swipe engine — the default `swipe_engine_mode`; bounded continuous gesture segments | ✅ Implemented |
+| `ctc-architecture-and-multiscript-guide.md` | CTC graph contract, routing rule, multi-script recipe | 📖 Reference |
+| `ctc-context-rescoring-and-tunables.md` | Bigram/trigram rescoring plan and decode-time tunables inventory | 📖 Reference |
 | `geometric-swipe-engine.md` | Layout-agnostic geometric swipe decoder (standalone) | ✅ Implemented |
-| `context-learning-and-next-word.md` | **NEW 2026-08-06** Persistent context LM, master learning privacy gate, opt-in next-word prediction, suggestion provenance, learned-data manager | ✅ Implemented |
-| `ctc-swipe-engine.md` | **UPDATED 2026-08-15** CTC trie-beam swipe engine — WIRED opt-in `ctc` mode (2026-08-08): CleverKeys-trained ONNX encoder, router/adapter/settings/provenance As-Built | ✅ Implemented |
+| `context-learning-and-next-word.md` | Persistent context LM, master learning privacy gate, next-word prediction (on by default), suggestion provenance, learned-data manager | ✅ Implemented |
 | `cursor-aware-predictions.md` | Cursor sync + cursor-park next-word integration | ✅ Implemented |
+| `dictionary-and-language-system.md` | Dictionary lookup, ranking, user dictionary, import size limits | ✅ Implemented |
+| `secondary-language-integration.md` | Multi-language typing, language detection | ✅ Implemented |
+| `language-specific-dictionary-manager.md` | Per-language dictionary management | ✅ Implemented |
+| `english-dictionary-pipeline.md` | Dictionary generation and quality pipeline | ✅ Complete |
+| `typo-drop-rescue-pipeline.md` | Typo-drop rescue triage — superseded 2026-07-02 by `scripts/build_wordlist.py` | 🗄️ Superseded |
+| `short-swipe-customization.md` | Short swipes, explicit templates and verified apostrophe suffixes | ✅ Implemented |
+| `subkey-popover.md` | Hold-then-select subkey popover, assign/edit screens | ✅ Implemented |
+| `per-layout-subkey-customization.md` | Layout-specific subkey configuration | ✅ Implemented |
+| `subkey-customization-current.md` | Current subkey implementation details | ✅ Implemented |
+| `profile_system_restoration.md` | Profile Import/Export | ✅ Implemented |
+| `keyboard-minimize.md` | Minimize to bar / floating button (GH #175) | ✅ Implemented |
+| `clipboard-system.md` | Clipboard history, pinned, todos, media, tags | ✅ Implemented |
+| `clipboard-privacy.md` | Password-manager exclusion and media privacy gating | ✅ Implemented |
+| `gif-panel-spec.md` | Offline GIF panel and pack system | ✅ Implemented |
+| `cursor-navigation-system.md` | Spacebar slider and arrow-key navigation | ✅ Implemented |
+| `trackpoint-navigation-mode.md` | Joystick-style cursor control | ✅ Implemented |
+| `selection-delete-mode.md` | Text selection via backspace gesture | ✅ Implemented |
+| `password-field-mode.md` | Password field input handling | ✅ Implemented |
+| `quick-settings-tile.md` | Notification-shade keyboard switch tile | ✅ Implemented |
+| `timestamp-keys.md` | Date/time insertion keys | ✅ Implemented |
+| `termux_integration.md` | Terminal keyboard behaviour and custom terminal packages | ✅ Implemented |
 | `architectural-decisions.md` | Architectural Decision Records | ✅ Active |
 
 ### `/docs/eval/` Decoder Evaluations (2026-07/08)
