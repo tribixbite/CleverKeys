@@ -328,6 +328,65 @@ class PointersShortSwipeCustomOverrideTest {
         )
     }
 
+    // =========================================================================
+    // Keys with NO center value (c unassigned) — subkeys must still fire
+    // =========================================================================
+
+    /** No center; nw (1) = "~", n (7) = "^", e (6) = "1". */
+    private val keyNoCenter = KeyboardData.Key.EMPTY
+        .withKeyValue(1, KeyValue.makeStringKey("~"))
+        .withKeyValue(7, KeyValue.makeStringKey("^"))
+        .withKeyValue(6, KeyValue.makeStringKey("1"))
+
+    /** Everything the key emitted, minus the null key_up of a center-less tap. */
+    private fun nonNullUps(): List<KeyValue> = handler.ups.filterNotNull()
+
+    /** A diagonal flick on a center-less key used to be dropped by the null-value gate. */
+    @Test
+    fun noCenter_diagonalFlick_emitsCornerSubkey() {
+        flick(keyNoCenter, dx = -40f, dy = -40f, snap = snap()) // dir 14 (NW)
+
+        assertEquals(listOf("~"), nonNullUps().map { it.getString() })
+        assertTrue("the gesture pointer must be retired", ptrs.isEmpty())
+    }
+
+    /** Edge directions (n/e) take the same path as corners. */
+    @Test
+    fun noCenter_edgeFlicks_emitEdgeSubkeys() {
+        flick(keyNoCenter, dx = 0f, dy = -60f, snap = snap()) // dir 0 (N)
+        flick(keyNoCenter, dx = 60f, dy = 0f, snap = snap())  // dir 4 (E)
+
+        assertEquals(listOf("^", "1"), nonNullUps().map { it.getString() })
+    }
+
+    /** Swipe typing ON must not change it: a center-less key is never a word candidate. */
+    @Test
+    fun noCenter_diagonalFlick_swipeTypingEnabled_emitsCornerSubkey() {
+        flick(keyNoCenter, dx = -40f, dy = -40f, snap = snap(swipeTyping = true))
+
+        assertEquals(listOf("~"), nonNullUps().map { it.getString() })
+        assertEquals("must not route to the word decoder", 0, handler.swipeEndCount)
+    }
+
+    /** A tap on the empty center emits nothing and does not crash. */
+    @Test
+    fun noCenter_tap_emitsNothing() {
+        flick(keyNoCenter, dx = 3f, dy = 2f, snap = snap()) // below the 50 px minimum
+
+        assertTrue("a center-less tap must emit nothing", nonNullUps().isEmpty())
+        assertEquals(0, handler.customs.size)
+        assertTrue("the tap pointer must be retired", ptrs.isEmpty())
+    }
+
+    /** A flick toward an unassigned direction (SE, no ±1 neighbor set) emits nothing. */
+    @Test
+    fun noCenter_flickTowardEmptySlot_emitsNothing() {
+        flick(keyNoCenter, dx = 40f, dy = 40f, snap = snap()) // dir 6 (SE); bins 5/7 (se/s) empty too
+
+        assertTrue(nonNullUps().isEmpty())
+        assertTrue(ptrs.isEmpty())
+    }
+
     // ------------------------------------------------------------------ harness
 
     /** Records everything Pointers reports back to the keyboard view. */

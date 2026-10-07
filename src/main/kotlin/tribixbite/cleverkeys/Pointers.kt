@@ -361,7 +361,12 @@ class Pointers(
         // Allow entry if either Swipe Typing (Char keys) OR Short Gestures (Any key) is enabled
         val isCharKey = ptr_value != null && ptr_value.getKind() == KeyValue.Kind.Char
         val canSwipeType = snap.swipe_typing_enabled && isCharKey
-        val canShortGesture = snap.short_gestures_enabled && ptr_value != null
+        // A key with no center value (c unassigned in a custom layout, or key0 removed by
+        // modifyKey) still owns its corner/edge subkeys — requiring ptr_value != null here
+        // silently dropped every short swipe on such keys (only nav keys were rescued, by
+        // FIX #104 above). A plain tap on such a key still ends in onPointerUp(null), a no-op.
+        val canShortGesture = snap.short_gestures_enabled &&
+            (ptr_value != null || ptr.key.keys.any { it != null })
 
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Gesture check: isCharKey=$isCharKey, canSwipeType=$canSwipeType, canShortGesture=$canShortGesture, " +
             "gesture=${ptr.gesture}, hasExcludedFlags=${ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED)}, hasKey=${ptr.key != null}")
