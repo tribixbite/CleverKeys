@@ -6,6 +6,30 @@ Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/
 The September 1 campaign baseline was `5fb58037`; origin/main is `01b6212d` (2026-09-30), and
 local `main` is 30+ commits ahead, unpushed (2026-10-07). Preserve shared-tree work.
 
+## October 7 clipboard selection: persistence, bulk actions, dialog focus fix
+
+Maintainer request (verbatim): "fix the rotation reset (bug imo) and make selected entries
+persistent until tap deselect all/cancel or complete action (delete or add to todo or
+pinned). also make a merge button that merges and clean button that removes trailing spaces
+and inserted newlines." Spec: `docs/specs/clipboard-system.md` "Persistent selection, batch
+deletion and bulk actions".
+
+- [x] Selection moved to the service-scoped `ClipboardSelectionHolder`: survives pane
+  close/reopen, pane switch, keyboard hide, rotation, field/app switch and theme rebuild;
+  reopening returns to its tab. Ends only on Exit, a completed action, or its tab disabled.
+- [x] ⋮ More actions: Add to Pinned / Add to Todos (one transaction, COPY), Merge (oldest
+  first, one per line, size limit, privacy kept), Clean (`ClipboardTextCleaner`, in place).
+- [x] Device report (Saga/Chrome): a focusable IME dialog let Chrome hide the keyboard
+  mid-tap, so Delete selected deleted nothing and the filter dialog closed itself. IME
+  dialogs are now non-focusable (`ImeDialogWindowPolicy`, `ImeDialogSpinner`) and confirmed
+  actions run on the holder's scope, independent of the view.
+- [ ] Device check on the Saga with disposable clippings (steps in the commit/handoff
+  report): Delete selected and the filter dialog in Chrome; rotation keeps the selection;
+  Merge/Clean previews; TalkBack reads the result line.
+- [ ] Native run of `ClipboardFilterDialogTest#selectionSurvivesPaneRebuildAndBulkActionsCompleteOnTheDatabase`
+  and the updated `ClipboardPaneTintTest` landscape case (compiled, not yet run).
+- [ ] TODO: native-speaker review of the 25 new strings in 21 locales.
+
 ## October 7 review round (independent review + fixes + device re-test)
 
 Three read-only reviews (typing features, issue fixes, release docs) and two device passes.

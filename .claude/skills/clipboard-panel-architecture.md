@@ -37,7 +37,7 @@ clipboard_pane.xml (ClipboardPaneLayout: LinearLayout, VERTICAL, match_parent)
 |   |                            pagination controls, Select (GONE in selection mode)
 |   +-- Pagination controls are GONE when ≤100 results; feedback is GONE until deletion
 +-- Selection bar (48dp, GONE unless selecting): select/deselect-all-matching toggle,
-|   clear selection, delete selected, exit — 4 × 48dp ImageButtons
+|   clear selection, more actions (⋮), delete selected, exit — 5 × 48dp ImageButtons
 |
 +-- Divider (View, 1dp, clipboard_divider_color)
 |
@@ -128,26 +128,41 @@ The clipboard pane has four mutually exclusive modes. Only one can be active at 
 - **Key routing**: `isClipboardTagMode() → insertToClipboardTag()`
 - Highest priority in key routing chain (before edit and search).
 
-### 4. Selection Mode (2026-10-07, state in ClipboardHistoryView)
-- **State**: `selection: ClipboardSelection?` (non-null = active), scoped to `currentTab`
+### 4. Selection Mode (2026-10-07, state in a service-scoped holder)
+- **State**: `ClipboardSelectionHolder` (clipboard/ClipboardSelectionHolder.kt), owned by the
+  service-lifetime `ClipboardManager` and attached to every inflated view
+  (`attachSelectionHolder`). The view's `selection` is a getter onto it. NEVER put selection
+  state back on the view: views are recreated on theme change, and the pane closes on
+  rotation / keyboard hide / app switch, yet the selection must survive all of them.
 - **Enter**: result-row **Select** button → `ClipboardManager.enterSelectionMode()` →
-  `startSelection()` (refused during edit/bulk delete). Long-press is NOT the entry gesture
-  (it copies to the OS clipboard in normal mode; in selection mode it toggles).
+  `startSelection()` (refused during edit or while a bulk action runs). Long-press is NOT the
+  entry gesture (it copies to the OS clipboard in normal mode; in selection mode it toggles).
 - **Rows**: checkbox `clipboard_entry_select` VISIBLE, all action rows GONE, tint behind
   selected rows; text/thumbnail/checkbox toggle by entry identity (`bindSelectionRow`).
-- **Persistence**: survives search/regex/filter/page changes; `selectAllMatching()` and
-  `deselectAllMatching()` use the FULL `filteredHistory` (all pages). Every load runs
-  `acceptLoadedHistory()` → `selection.reconcile()` (drops vanished/edited rows).
-- **Model**: `clipboard/ClipboardSelection.kt` keeps rowId → 64-bit payload version only
-  (timestamp, content, MIME, media path; tags/status ignored) — never content.
-- **Delete**: `selectionSnapshot()` resolves against the tab's complete `history` into a
-  `ClipboardDeleteSnapshot` → `deleteSnapshot()` (the ONE batch-deletion path; the old
-  "Delete results" button was replaced by Select). Success ends selection; failure keeps it.
-- **Ends**: Exit, tab switch (`setTab`), pane close / pane switch / keyboard hide
-  (`ClipboardManager.resetSearchOnHide()` → `exitSelectionMode()` also dismisses the
-  confirmation), successful delete. Non-current tab icons are GONE while selecting, which
-  also gives `ClipboardPaneLayout` (wide search = 212dp + 36dp per visible tab) room for
-  the bar beside the results in landscape; narrow panes put the bar on its own row.
+- **Persistence**: survives search/regex/filter/page changes AND pane close/reopen, pane
+  switch, keyboard hide, rotation, field/app switch and theme rebuild. `resetSearchOnHide`,
+  `cleanup` and `invalidatePane` only `dismissPendingDialog()`; `resetSearchOnShow` reopens on
+  the selection's tab. `acceptLoadedHistory(entries, loadedTab)` reconciles only loads of the
+  selection's own tab.
+- **Ends ONLY on**: Exit selection, a completed bulk action, or its tab being disabled in
+  Settings. Clear selection empties it but stays in selection mode. Process death loses it.
+- **Model**: `ClipboardSelection` keeps rowId → 64-bit payload version only.
+- **Actions**: bar = select-all toggle, clear, ⋮ more (Add to Pinned/Todos, Merge, Clean —
+  `ClipboardBulkPlans.actionsFor`), delete, exit. All resolve `selectionSnapshot()` (a frozen
+  `ClipboardDeleteSnapshot`) and run through `ClipboardSelectionHolder.runConfirmed` on the
+  HOLDER's scope (never `viewScope`): the transaction starts on IO at once and survives a
+  pane teardown; success ends selection, failure keeps it. Service entry points:
+  `deleteSnapshot`, `copyEntriesTo` (one transaction), `addMergedClip`, `applyClean`
+  (through `editEntryContent`). They run on IO and must not call the view listener directly
+  (`loadDataAsync` ignores reloads while an action runs). Text transform:
+  `ClipboardTextCleaner` (pure).
+- **Dialogs**: all go through `Utils.show_dialog_on_ime`, which is NON-FOCUSABLE
+  (`ImeDialogWindowPolicy`). A focusable IME dialog let Chrome hide the keyboard mid-tap and
+  tore the dialog down before its button ran (Saga, 2026-10-07). Never put a dropdown
+  `Spinner` (focusable popup) in an IME dialog — use `ImeDialogSpinner`.
+- Non-current tab icons are GONE while selecting, which also gives `ClipboardPaneLayout`
+  (wide search = 212dp + 36dp per visible tab) room for the 240dp bar beside the results in
+  landscape; narrow panes put the bar on its own row.
 
 ## Expand/Collapse State
 

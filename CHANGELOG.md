@@ -121,7 +121,14 @@ editor that used to be listed here already ship in 2.0.)
   changes so one batch can combine several searches. **Delete selected** confirms the count
   and combined size, deletes by entry identity in one transaction, skips clippings changed
   since you selected them, and reports how many were deleted. Works in History, Pinned and
-  Todos (one tab at a time); closing the panel or keyboard ends the selection.
+  Todos (one tab at a time). The selection is kept while the panel or keyboard is closed,
+  across rotation and when you switch fields or apps; reopening the panel returns to its tab
+  with the checkboxes and count. It ends only on **Exit selection** or a completed action
+  (Android closing the keyboard process loses it). The **⋮** button adds **Add to Pinned**,
+  **Add to Todos**, **Merge** (one new History clipping from the selected text, oldest first,
+  one per line; originals stay) and **Clean** (removes trailing spaces and line breaks that
+  were inserted inside paragraphs; lists, blank lines, short lines, links and code keep
+  theirs). Merge and Clean ask first and show a preview.
 - **Clear system clipboard command (#168)**: clears only Android's current clip. Saved
   history, pinned and todo entries are kept; Android 7.0–8.1 leave an empty clip item.
 - **Custom terminal apps** (Settings → Advanced): add terminal package IDs; they match
@@ -195,6 +202,11 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Keyboard dialogs (clipboard confirmations, the clipboard filter, private-copy and voice
+  input pickers) no longer take window focus. Tapping one could make the app (seen in Chrome)
+  hide the keyboard, which closed the dialog before its button acted: **Delete selected**
+  deleted nothing and the filter dialog closed by itself. A confirmed clipboard action now
+  also finishes if the keyboard closes right after.
 - Swiping `is` or `as` no longer shows `i's` / `a's` beside the word (letter plurals from the
   imported contraction data), and the swipe bar no longer appends possessives of function words
   such as `the's`, `as'` or `this'`.

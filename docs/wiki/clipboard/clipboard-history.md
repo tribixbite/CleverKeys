@@ -191,20 +191,22 @@ The clipboard pane organizes items into three tabs:
 
 Pin, todo, and tag buttons appear when an entry is expanded (tap the entry or its chevron). Delete lives behind the ✏️ edit button for text entries and behind expansion for media entries (see [Delete Item](#delete-item)).
 
-## Filter by Clipping Size and Delete a Batch
+## Filter by Clipping Size and Work with a Batch
 
 Open the filter controls and choose minimum and maximum clipping sizes. Size filtering
 combines with the current search and other filters in the active History, Pinned, or
 Todos tab. An inverted range cannot be applied. Cancel leaves the previous range
 unchanged; clearing all filters also clears the size range.
 
-To delete a batch, tap **Select** in the results row. Each entry gets a checkbox:
+To delete, copy, merge or clean a batch, tap **Select** in the results row. Each entry gets a checkbox:
 tap an entry (or its checkbox) to select or deselect it. The selection bar offers:
 
 - **Select all matching** (checkbox icon) — adds every entry that matches the current
   search and filters, on every page, not just the one you see. When all matches are
   already selected, the same button deselects them.
 - **Clear selection** — deselects everything, including entries the current search hides.
+- **More actions** (⋮) — **Add to Pinned**, **Add to Todos**, **Merge** and **Clean**
+  (described below). A tab is not offered as a target for its own entries.
 - **Delete selected** (trash) — asks for confirmation, then deletes the batch.
 - **Exit selection** (✕) — leaves selection mode without deleting.
 
@@ -219,8 +221,28 @@ in other tabs remain there. A clipping edited or removed after you selected it i
 and the result line reports how many were deleted. Stored media is removed only when no
 tab references it.
 
-A selection belongs to one tab: the other tab icons are hidden until you exit. Closing
-the clipboard panel or the keyboard ends the selection.
+A selection belongs to one tab: the other tab icons are hidden until you exit, so one
+count and one set of actions are always in view. The selection is kept when you close the
+clipboard panel, hide the keyboard, rotate the phone, or switch to another field or app;
+reopening the panel goes back to that tab with the same entries checked (any that were
+deleted or edited meanwhile drop out). It ends only when you tap **Exit selection** or an
+action completes. If Android closes the keyboard in the background, the selection is lost.
+
+**Add to Pinned / Add to Todos** copy every selected entry, text or media, into that tab;
+the originals stay. Entries already there are reported, not duplicated, and the tab icon
+pulses.
+
+**Merge** creates one new History entry from the selected text entries, oldest first, one
+per line. Media entries are skipped, the originals stay, and the result must fit the
+maximum clipping size. The confirmation shows a preview. If any selected entry is private,
+the merged entry is private too.
+
+**Clean** tidies the selected text entries in place: it removes spaces and tabs at line
+ends and joins lines that were broken inside a paragraph (as text copied from a PDF or
+an e-mail often is), rejoining a word split by a hyphen at the line end. Blank lines,
+lists, short lines (such as addresses), links and code keep their line breaks. Only the
+entries in the current tab change, never their copies in other tabs. The confirmation
+shows how many will change and a preview; entries that need no cleaning are left alone.
 
 Size describes clipping payload bytes, rather than guaranteed disk space recovered.
 SQLite allocation and shared media can make the recovered space smaller. To clear
