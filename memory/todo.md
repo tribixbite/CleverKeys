@@ -58,7 +58,10 @@ and Seeker (Termux) unless noted.
   Saga (keyboard Ctrl+C always did) — investigate the clip-change listener path.
 - [ ] A swipe starting on the backspace key (left) is read as swipe-typing ("mb"); swipe-up
   deletes the word. Decide whether swipes starting on non-letter keys should swipe-type.
-- [ ] Termux: suggestion bar keeps stale words after the line is cleared (no readable buffer).
+- [x] Termux: suggestion bar keeps stale words after the line is cleared (no readable buffer).
+  Fixed 2026-10-07: non-text keys (Enter/Tab/Esc/arrows/Ctrl chords/IME action/sliders/editing
+  commands) end the tracked word in terminals; stale predictions are dropped; swipe final
+  autocorrect skips terminals (TerminalTypedWordTrackingTest). Seeker device re-test pending.
 - [ ] Native-speaker review of the new strings (21 locales).
 
 ## October 7 review round (independent review + fixes + device re-test)

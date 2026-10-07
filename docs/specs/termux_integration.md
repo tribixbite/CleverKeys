@@ -107,6 +107,33 @@ Ctrl+W for every replacement.
 - Deletes using shell's own internal logic
 - The shell/line editor owns the deletion semantics
 
+### Typed-Word Tracking and Suggestions
+
+A terminal exposes no readable text buffer (`getTextBeforeCursor` returns "") and sends no
+selection updates, so every editor-sync path reads nothing. The keystroke tracker in
+`PredictionContextTracker` is the only record of the word being typed, and the suggestion bar,
+a tapped-suggestion replacement (N backspace events for the N tracked letters) and swipe undo
+all act on it.
+
+- **Letters extend it; Backspace shrinks it**; an emptied word clears the bar and cancels its
+  queued prediction.
+- **Any non-text key ends it** (2026-10-07): Enter, Tab, Esc, arrows, Home/End, Page keys,
+  Ctrl/Alt chords (Ctrl+C, Ctrl+U, Ctrl+W), the IME action, cursor sliders and editing
+  commands. `KeyEventHandler` reports them through `IReceiver.handle_non_text_input`;
+  `SuggestionHandler.handleNonTextInput` resets the tracker, swipe/autocorrect undo targets,
+  the queued prediction and the bar, for terminals only (ordinary editors re-sync from the
+  selection callback that follows). Delete-last-word (Ctrl+W) does the same. Before this,
+  `ls` Enter `cd` tracked `lscd`.
+- **A prediction is painted only for the word it was computed for**; one that finishes after
+  the tracked word changed is dropped (all editors).
+- **No autocorrect rewrites in terminals**: neither the space-time typed-word autocorrect nor
+  the swipe final autocorrect runs (`ls` is never committed as `is`). Word suggestions stay;
+  tapping one replaces the tracked word.
+
+Known limit: text the keyboard did not type (shell tab completion, history recall, a redrawn
+prompt, a backspace past the tracked word) is invisible to the tracker; the next non-text key
+resets it.
+
 ### Cursor Movement (DPAD Fallback)
 
 `KeyEventHandler.moveCursor` has its own selection/capability fallback. The
@@ -152,4 +179,6 @@ its own device check; package detection alone cannot prove editor behavior.
 | Move cursor | Selection/capability fallback | Selection/capability fallback; target-editor validation required |
 | Paste | `performContextMenuAction(paste)` | Clipboard text via `commitText()` |
 | Auto-space | User preference | User preference |
+| Typed-word autocorrect | Setting | Never |
+| Word ends on non-text key | Via selection re-sync | Enter/Tab/Esc/arrows/Ctrl chords reset it |
 | Swipe space | Normal | Enabled (exception) |

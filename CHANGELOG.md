@@ -283,6 +283,9 @@ editor that used to be listed here already ship in 2.0.)
 - Short-word swipe decoding improves when the swipe ends with a stop on the last letter
   (e.g. `ad` no longer reads as `as`): the default CTC engine now receives the unsmoothed
   touch path plus the lift point. This does not by itself fix `ad`/`wet` swiped without a stop.
+- Terminal apps: Enter, Tab, Esc, arrows, Home/End and Ctrl chords end the tracked word, so
+  suggestions no longer show or replace a word built from earlier lines (`ls` Enter `cd` was
+  read as `lscd`); swipe final autocorrect no longer rewrites words in terminals.
 
 ---
 
