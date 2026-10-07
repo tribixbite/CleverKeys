@@ -187,6 +187,12 @@ maintainer-owned uncommitted manual-checklist resets.
   TypeScript and Python mypy pass. Saga connected read-only; no app/settings changes.
 - [x] Translation structural audit: 936/936 resources in all 21 locales; indexed arguments
   and plural items match. Expanded translation guard passes 6/6 focused tests.
+- [x] Context-driven apostrophe choice for swipe (its/it's, shed/she'd, teams/team's) via the
+  static LM's previous word: EVALUATED, NOT SHIPPED. Two pre-registered stages failed their
+  bars (stage-1 arm B missed OOD/`years`; frozen arm C +0.39 pt on Common Voice vs +1.0, with
+  `shed`/`shell` reversing). `its` gains hold out of domain. Chooser + harness in test sources;
+  next steps (listed-evidence variant, wiring line, `is`→`i's` slot-1 junk, `lets` bucket) in
+  `docs/eval/2026-10-07-apostrophe-context.md`.
 - [x] Multilingual LM pilot (2026-09-29): per-language builder configs (en byte-identical),
   language-parameterised S1 eval + drift test. Spanish FAILED S1 (prefix-1 +4.69 < +5), so
   nothing beyond `en` ships; de/fr/it measured passing, pt/sv failing —

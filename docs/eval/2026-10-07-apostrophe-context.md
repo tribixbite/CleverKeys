@@ -169,3 +169,71 @@ Bar (all must hold, positions with a previous word): **S2-1** Δ ≥ +1.0 pt AND
 2·√(wins + losses); **S2-2** non-possessive class Δ ≥ 0; **S2-3** every surface with ≥ 50
 occurrences Δ ≥ −1.0 pt; **S2-4** B5 structural (0 changed non-ambiguous slates). If all hold,
 arm C ships as `ContractionContextChooser.SHIPPED`; otherwise nothing ships.
+
+Common Voice file sha256 `31ac8e200449ebd7aee4a8c6bd16d4dafd076cf11f7c3efe1035f0283712d136`.
+
+## 3. Stage 2 result — FAIL; nothing ships
+
+`APOSTROPHE_EVAL_STAGE=2 … -PtestClass=swipe.ApostropheContextEvalTest -PgeoFull=true` (worktree,
+same code as stage 1). 500,375 tokens; 20,491 occurrences (2,464 sentence-initial, unchanged).
+
+| Population | n | sent | pairs | current | arm C | Δ pt | wins / losses |
+|---|---|---|---|---|---|---|---|
+| pooled (with context) | 18,027 | 15,430 | 8,331 | 92.85 % | 93.24 % | **+0.39** | 314 / 244 |
+| class non-possessive | 3,356 | 3,275 | 1,427 | 86.26 % | 88.35 % | +2.09 | 314 / 244 |
+| class possessive | 14,671 | 12,914 | 6,904 | 94.36 % | 94.36 % | 0 | 0 / 0 |
+
+| Surface | n | sent | current | arm C | wins / losses |
+|---|---|---|---|---|---|
+| its | 716 | 706 | 58.52 % | 69.83 % | 277 / 196 |
+| hell | 47 | 47 | 38.30 % | 51.06 % | 24 / 18 |
+| ill | 200 | 200 | 72.50 % | 74.50 % | 4 / 0 |
+| were | 1,711 | 1,679 | 97.60 % | 97.66 % | 1 / 0 |
+| **shell** | 21 | 21 | 76.19 % | **38.10 %** | 5 / 13 |
+| **shed** | 20 | 20 | 85.00 % | **15.00 %** | 3 / 17 |
+| well / id / hes / shes | 465 / 37 / 87 / 43 | | 94.19 / 91.89 / 100 / 100 % | unchanged | 0 / 0 |
+
+Verdict: **S2-1 FAIL** (Δ +0.39 < +1.0; the sign-test half holds, 70 ≥ 47.2), S2-2 PASS, S2-3 PASS
+(no surface ≥ 50 occurrences loses; `shed`/`shell` are under the 50 line), S2-4 PASS (135,991
+non-ambiguous slates, 0 changed). **The ranking change is not shipped.** No production code,
+asset or default changed; the chooser stays in test sources as the evaluated candidate
+(`src/test/kotlin/tribixbite/cleverkeys/swipe/ContractionContextChooser.kt`, 18 decision tests).
+
+## 4. What the two stages show
+
+1. **The LM does carry real context signal for `its`/`it's`.** +25.0 pt on the in-domain TEST
+   (1,441 occurrences, 540 distinct contexts) and +11.3 pt on Common Voice (716, 293). That is
+   the maintainer's "of its" case, and it holds out of domain.
+2. **Most of the stage-1 gain beyond `its` is a DOMAIN PRIOR, not context.** With τ = 0 and
+   backoff allowed, any previous word the LM has no listing for reduces the choice to the LM's
+   unigram ratio. Web + Tatoeba text writes `she'd`/`she'll` far more than `shed`/`shell`
+   (stage 1: `shed` 9 % → 90 %), literary Common Voice text the reverse (85 % → 15 %). The
+   overlay's current context-free prior (`PROMOTION_MARGIN`, wordfreq-fitted) is the safer
+   default for those near-tie pronoun pairs.
+3. **Possessives** gain only with a large margin on rare bases (`fathers`, `worlds`, `peoples`),
+   lose on frequent plurals (`years`), and the B arm's OOD miss sat there. "Possessives never go
+   ahead" stays right without the FOLLOWING word.
+4. Sentence-initial positions (≈ 14 % of occurrences) get nothing from a bigram LM with no
+   sentence-start state; `It's` vs `Its` at sentence start would need start-of-sentence
+   statistics the shipped model does not store.
+
+## 5. Recommended next steps (each needs its own pre-registered evaluation)
+
+1. **`its`-only (or listed-evidence-only) chooser.** Restrict the swap to pairs where the
+   previous word has a STORED continuation for one of the forms (no unigram-only decisions) and
+   re-run both populations; the `LISTED` cells were 91.51 % on DEV (vs 90.18 % current), i.e.
+   most of the context gain without the domain-prior flips. Register it on a fresh population
+   (e.g. UD EWT train, never used here) before reading results.
+2. **Wiring, once a variant passes** (SuggestionHandler is outside this change's fence): in
+   `handleSwipePredictionResults`, after `rescoreWithContext` and before the D1 augment,
+   `ContractionContextChooser.choose(rescored.words, rescored.scores, activeLanguage,
+   ContractionContextChooser.previousWord(editorTextBeforeCursor(ic, 64)),
+   BigramModel.getInstance(context).staticLmFor("en")?.let(ContractionContextChooser::forStaticLm),
+   { dictionaryManager?.isUserWordIgnoringCase(it) == true }, params)` — and when it returns a
+   different list, swap `rescored.languages[0]`/`[1]` too. Read the previous word from the
+   editor (sentence-segment aware), not `PredictionContextTracker`, which does not reset at a
+   sentence boundary. Skip it for password fields.
+3. **Swipe `is` → `i's` / `as` → `a's` slot-1 junk** (bin-derived possessives with no length
+   floor on the swipe path): a placement fix in `ContractionOverlay`, independent of context.
+4. **REPLACE keys with a real bare reading** (`lets` 53 bare vs 929 `let's`): the bare word is
+   never offered. A bucket decision (tap path too), not a ranking one.
