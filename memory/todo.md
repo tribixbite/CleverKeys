@@ -30,6 +30,32 @@ deletion and bulk actions".
   and the updated `ClipboardPaneTintTest` landscape case (compiled, not yet run).
 - [ ] TODO: native-speaker review of the 25 new strings in 21 locales.
 
+## October 7 afternoon: requested features, CI, device verification
+
+All pushed to origin/main (push authorized 2026-10-07). Device-verified on Saga (991651d1)
+and Seeker (Termux) unless noted.
+
+- [x] Clipboard: persistent selection (survives rotation/pane close/keyboard hide/app
+  switch; ends on Exit, deselect-all or a completed action), select/deselect all matching
+  across pages, Delete selected, ⋮ Add to Pinned / Add to Todos / Merge (oldest first,
+  newline-joined, originals kept) / Clean (trailing spaces + in-paragraph line breaks;
+  lists/code/URLs kept). IME dialogs are non-focusable (the app had been hiding the keyboard
+  and nothing was deleted). Saga A1–A7 PASS; Seeker delete 1/1 PASS.
+- [x] Language per layout (#186/#61) `f85c8dcd`; Saga layout switch → German PASS.
+- [x] CTC raw path + lift sample `745d1ca3`: held-out 91.83→92.12; `ad` with a stop PASS on Saga.
+  ad/wet without a stop and wet need model retraining — recipe in docs/eval/2026-10-07-short-word-ctc.md.
+- [x] Apostrophe: no i's/a's/closed-class possessives; `lets` PAIRED. Context chooser failed
+  its bars twice (not wired); a listed-evidence its/it's variant needs its own pre-registered round.
+- [x] Theme change shows the new keyboard (Monet follows dark mode) PASS; Termux tapped
+  suggestion replaces PASS; FAB left in RTL (system ar-XB and app fa) PASS.
+- [x] CI: Security Scan fixed (site devalue/source-map-js overrides); lint fixed (6fd4fef4).
+- [ ] Clipboard: a clipping copied via Chrome's toolbar Copy once did not reach history on the
+  Saga (keyboard Ctrl+C always did) — investigate the clip-change listener path.
+- [ ] A swipe starting on the backspace key (left) is read as swipe-typing ("mb"); swipe-up
+  deletes the word. Decide whether swipes starting on non-letter keys should swipe-type.
+- [ ] Termux: suggestion bar keeps stale words after the line is cleared (no readable buffer).
+- [ ] Native-speaker review of the new strings (21 locales).
+
 ## October 7 review round (independent review + fixes + device re-test)
 
 Three read-only reviews (typing features, issue fixes, release docs) and two device passes.
