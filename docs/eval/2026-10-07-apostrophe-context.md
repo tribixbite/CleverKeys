@@ -86,3 +86,86 @@ against the same bar; otherwise NOTHING ships and only this evaluation is commit
 
 The harness is `src/test/kotlin/tribixbite/cleverkeys/swipe/ApostropheContextEvalTest.kt`
 (opt-in: `-PgeoFull=true`, needs the local eval files; Assume-skips otherwise).
+
+## 1. Stage 1 result (DEV selection, TEST scored once) — the pre-registered verdict is NOT MET
+
+Run: worktree at `df5cc6b5` + the chooser and harness (the shared tree did not compile — other
+agents' in-flight clipboard edits), `runPureTests -PtestClass=swipe.ApostropheContextEvalTest
+-PgeoFull=true`. 1,995,751 tokens scanned; DEV 45,906 / TEST 45,996 occurrences.
+
+DEV selection: arm B → τ = ln 1.5, `ANY` (92.19 % vs current 90.18 %); arm C → τ = 0, `ANY`
+(91.73 %). `LISTED` was below `ANY` in every cell.
+
+TEST, positions with a previous word (n = occurrences; sent = distinct sentences; pairs =
+distinct (prev, gold)):
+
+| Arm | Population | n | sent | pairs | current | arm | Δ pt | wins / losses |
+|---|---|---|---|---|---|---|---|---|
+| B | pooled | 39,460 | 32,056 | 14,347 | 90.26 % | 92.14 % | **+1.88** | 1,204 / 463 |
+| B | OOD (EWT test) | 669 | 525 | 503 | 92.97 % | 92.83 % | **−0.15** | 16 / 17 |
+| B | class non-possessive | 6,441 | 6,198 | 1,992 | 78.56 % | 86.99 % | +8.43 | 935 / 392 |
+| B | class possessive | 33,019 | 27,479 | 12,355 | 92.55 % | 93.15 % | +0.60 | 269 / 71 |
+| C | pooled | 39,460 | 32,056 | 14,347 | 90.26 % | 91.69 % | +1.42 | 998 / 437 |
+| C | OOD (EWT test) | 669 | 525 | 503 | 92.97 % | 93.12 % | +0.15 | 15 / 14 |
+| C | class non-possessive | 6,441 | 6,198 | 1,992 | 78.56 % | 87.27 % | +8.71 | 998 / 437 |
+| C | class possessive | 33,019 | 27,479 | 12,355 | 92.55 % | 92.55 % | 0 | 0 / 0 |
+
+Verdicts: **arm B: B1 PASS, B2 FAIL, B3 PASS, B4 FAIL** (`years` −1.32 pt, n = 760: 5 wins /
+15 losses). **Arm C: B1–B4 PASS.** B5: 601,443 non-ambiguous slates checked under context, 0
+changed; sentence-initial positions (6,536) unchanged by construction.
+
+**Decision under the pre-registered rule: nothing ships from stage 1.** Arm B failed B2, which is
+not one of the two conditions (B3/B4 on the possessive class) that opened the arm-C fallback;
+arm C's pass therefore cannot be used as a stage-1 result. Arm C also differs from B in τ (0 vs
+ln 1.5), so B's OOD miss cannot be attributed cleanly to possessives. Arm C is carried forward
+only as a FIXED hypothesis to an independent confirmation (§2), pre-registered below before it
+is run.
+
+Per-surface TEST detail (arm B unless noted; current → arm, wins/losses):
+
+| Surface | n | sent | current | arm B | arm C | B w/l | C w/l |
+|---|---|---|---|---|---|---|---|
+| its | 1,441 | 1,394 | 47.19 % | 72.17 % | 72.17 % | 728 / 368 | 728 / 368 |
+| were | 2,408 | 2,352 | 93.02 % | 93.06 % | 93.06 % | 3 / 2 | 3 / 2 |
+| well | 884 | 874 | 88.01 % | 88.35 % | 88.35 % | 3 / 0 | 3 / 0 |
+| ill | 334 | 331 | 79.94 % | 82.63 % | 82.63 % | 9 / 0 | 9 / 0 |
+| shed | 162 | 162 | 9.26 % | 90.12 % | 90.12 % | 146 / 15 | 146 / 15 |
+| hell | 121 | 121 | 37.19 % | 47.93 % | 62.81 % | 13 / 0 | 76 / 45 |
+| shell | 40 | 40 | 17.50 % | 82.50 % | 82.50 % | 33 / 7 | 33 / 7 |
+| id / wed / hes / shes | 288 / 42 / 447 / 236 | | 94.79 / 95.24 / 100 / 100 % | unchanged | unchanged | 0 / 0 | 0 / 0 |
+| years (poss.) | 760 | 749 | 95.53 % | 94.21 % | 95.53 % | 5 / 15 | 0 / 0 |
+| others (poss.) | 229 | 228 | 91.27 % | 98.25 % | 91.27 % | 16 / 0 | 0 / 0 |
+| fathers (poss.) | 74 | 74 | 16.22 % | 83.78 % | 16.22 % | 60 / 10 | 0 / 0 |
+| worlds / peoples / mothers (poss.) | 53 / 44 / 43 | | 22.6 / 18.2 / 30.2 % | 77.4 / 72.7 / 69.8 % | unchanged | 41/12, 32/8, 30/13 | 0 / 0 |
+
+Concentration: of arm C's 998 wins, 728 are `its` and 146 `shed` (87.6 %); of its 437 losses,
+368 are `its`. The gain is real on distinct contexts (`its`: 540 distinct (prev, gold) pairs)
+but it is mostly ONE surface.
+
+Findings outside the decision:
+
+- **`is` → `i's` and `as` → `a's` are spliced at slot 1 of every confident `is`/`as` swipe**
+  (15,039 + 3,684 TEST occurrences; bin-derived possessives, no length floor on the swipe path,
+  unlike the tap path's `ContractionInjectionPolicy`). Harmless to top-1 but a visible slot-1
+  junk entry; a separate fix candidate. They also dilute the possessive class counts above.
+- Possessive bases whose possessive is overwhelmingly what is written (`toms` 452, `marys` 294,
+  `todays` 41, `companys` 30: 0 % top-1 now) are untouched by context because the LM does not
+  name the bare surface — a data question (REPLACE vs PAIRED), not a ranking one.
+- REPLACE keys hide a real bare word: `lets` written bare 53 times vs `let's` 929 (TEST+DEV);
+  every bare `lets` currently becomes `let's`. Out of scope (bucket change, tap path too).
+- Gold forms the overlay never offers: mostly plural possessives `parents'` (35), `kids'` (13).
+
+## 2. Stage 2 — independent confirmation of the FIXED arm C (pre-registered before running)
+
+Hypothesis (no tuning): arm C exactly as selected — τ = 0, `ANY`, possessives never promoted.
+
+Population: Common Voice `sentence-collector.en.txt` (61,513 lines, sha256 below), every line,
+same tokenization and occurrence definition as stage 1. Never used by the LM builder (its
+sources are Leipzig + Tatoeba only) nor by stage 1. Caveat: public-domain sentence sources can
+overlap Tatoeba text; not checkable without the training tarball's text, stated rather than
+hidden. Register: largely literary/conversational, i.e. a third domain.
+
+Bar (all must hold, positions with a previous word): **S2-1** Δ ≥ +1.0 pt AND wins − losses ≥
+2·√(wins + losses); **S2-2** non-possessive class Δ ≥ 0; **S2-3** every surface with ≥ 50
+occurrences Δ ≥ −1.0 pt; **S2-4** B5 structural (0 changed non-ambiguous slates). If all hold,
+arm C ships as `ContractionContextChooser.SHIPPED`; otherwise nothing ships.
