@@ -109,6 +109,13 @@ The installed Termux `zipalign` accepts `-c -p 4`, but lacks the newer `-P 16`
 option. Record the check actually run; its success alone is not evidence of 16 KiB
 page compatibility (2026-10-06).
 
+## Compose dialog stacking order
+
+Compose `Dialog` windows stack in the order they are FIRST composed. A sub-dialog composed
+before its parent in the same frame (e.g. an edit mode that opens the label step at once)
+ends up hidden UNDER the parent and taps look like no-ops. Compose sub-dialogs after the
+parent `Dialog` (CommandPaletteDialog, Saga 2026-10-07).
+
 ## PAL model preference
 
 Use Gemini 3.8 (`gemini-3.8-flash`) for PAL consultation; never use Gemini 3.1.
