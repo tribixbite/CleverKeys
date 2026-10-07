@@ -329,8 +329,6 @@
     <string name="accessibility_long_press_desc">Vibrer lors du verrouillage d\'un modificateur</string>
     <string name="accessibility_swipe_complete_title">Glissé terminé</string>
     <string name="accessibility_swipe_complete_desc">Vibrer lorsqu\'un geste de glissé se termine</string>
-    <string name="advanced_terminal_mode_title">Mode terminal</string>
-    <string name="advanced_terminal_mode_desc">Afficher les touches Ctrl, Meta, Page précédente/suivante pour les applications terminales comme Termux</string>
     <string name="advanced_ime_prompt_title">Rappel du clavier par défaut</string>
     <string name="advanced_ime_prompt_desc">Rappeler une fois par démarrage de définir CleverKeys comme clavier par défaut. Désactivez pour ne plus jamais demander.</string>
     <string name="advanced_swipe_debug_log_title">Journal de débogage de glissé</string>
@@ -1928,6 +1926,8 @@
     <string name="cmd_minimize_bar_desc">Réduit le clavier à une fine barre ; touchez-la pour le rétablir</string>
     <string name="cmd_minimize_fab">Réduire en bouton flottant</string>
     <string name="cmd_minimize_fab_desc">Réduit le clavier à un bouton flottant pour laisser tout l\'écran à l\'appli ; touchez-le pour le rétablir</string>
+    <string name="cmd_hide_keyboard">Masquer le clavier</string>
+    <string name="cmd_hide_keyboard_desc">Ferme le clavier ; touchez un champ de texte pour le rétablir</string>
     <string name="cmd_shift">Maj</string>
     <string name="cmd_shift_desc">Touche Maj (majuscules/symboles)</string>
     <string name="cmd_ctrl">Ctrl</string>

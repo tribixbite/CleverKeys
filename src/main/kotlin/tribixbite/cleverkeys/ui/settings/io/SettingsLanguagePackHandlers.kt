@@ -182,8 +182,14 @@ internal fun SettingsActivity.loadLanguagePackNotice(code: String, onLoaded: (St
 internal fun SettingsActivity.refreshInstalledLanguagePacks() {
     try {
         val manager = LanguagePackManager.getInstance(this)
-        installedLanguagePacks = manager.getInstalledPacks()
+        val packs = manager.getInstalledPacks()
+        installedLanguagePacks = packs
+        // gh #184: an installed pack the loader refuses (e.g. over the word cap) says so.
+        languagePackProblems = packs.mapNotNull { pack ->
+            manager.installedDictionaryProblem(pack.code)?.let { pack.code to it }
+        }.toMap()
     } catch (e: Exception) {
         installedLanguagePacks = emptyList()
+        languagePackProblems = emptyMap()
     }
 }

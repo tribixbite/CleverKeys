@@ -341,8 +341,6 @@
     <string name="accessibility_long_press_desc">Vibrar al bloquear un modificador</string>
     <string name="accessibility_swipe_complete_title">Deslizamiento completado</string>
     <string name="accessibility_swipe_complete_desc">Vibrar cuando finaliza un gesto de deslizamiento</string>
-    <string name="advanced_terminal_mode_title">Modo terminal</string>
-    <string name="advanced_terminal_mode_desc">Muestra teclas Ctrl, Meta, AvPág/RePág para apps de terminal como Termux</string>
     <string name="advanced_ime_prompt_title">Recordatorio de teclado predeterminado</string>
     <string name="advanced_ime_prompt_desc">Recordar una vez por arranque establecer CleverKeys como teclado predeterminado. Desactívalo para no volver a preguntar.</string>
     <string name="advanced_swipe_debug_log_title">Registro de depuración de deslizamiento</string>
@@ -1936,6 +1934,8 @@
     <string name="cmd_minimize_bar_desc">Contrae el teclado a una barra fina; tócala para recuperarlo</string>
     <string name="cmd_minimize_fab">Minimizar a botón flotante</string>
     <string name="cmd_minimize_fab_desc">Contrae el teclado a un botón flotante para que la app use toda la pantalla; tócalo para recuperarlo</string>
+    <string name="cmd_hide_keyboard">Ocultar teclado</string>
+    <string name="cmd_hide_keyboard_desc">Cierra el teclado; toca un campo de texto para recuperarlo</string>
     <string name="cmd_shift">Mayús</string>
     <string name="cmd_shift_desc">Modificador Mayús (mayúsculas/símbolos)</string>
     <string name="cmd_ctrl">Ctrl</string>

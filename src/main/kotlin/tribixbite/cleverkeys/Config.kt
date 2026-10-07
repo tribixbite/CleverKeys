@@ -320,7 +320,6 @@ object Defaults {
     // Opt-in per-suggestion origin markers (pipeline transparency, audit §2.3 Tier 2)
     const val SUGGESTION_PROVENANCE_MARKERS = false
     const val SWIPE_DEBUG_DETAILED_LOGGING = false
-    const val TERMUX_MODE_ENABLED = true
     const val CUSTOM_TERMINAL_PACKAGES = ""
     // WP9 R-1 step 6: UNIFIED_SWIPE_PIPELINE (the step-4 QA escape hatch) was removed — the
     // SuggestionHandler pipeline is the only one; the pref key is in DEPRECATED_KEYS.
@@ -757,7 +756,6 @@ class Config private constructor(
     // CTC engine knob (read by CtcEngineAdapter per decode).
     @JvmField var ctc_beam_width = Defaults.CTC_BEAM_WIDTH
     @JvmField var swipe_context_rescoring = Defaults.SWIPE_CONTEXT_RESCORING
-    @JvmField var termux_mode_enabled = false
     @Volatile @JvmField var custom_terminal_packages: Set<String> = emptySet()
     @JvmField var auto_space_after_suggestion = true  // Add trailing space after selecting suggestion
     @JvmField var auto_space_before_suggestion = true  // Add leading space before tapped suggestion
@@ -1068,7 +1066,6 @@ class Config private constructor(
         swipe_trail_width = safeGetFloat(_prefs, "swipe_trail_width", Defaults.SWIPE_TRAIL_WIDTH)
         swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", Defaults.SWIPE_TRAIL_GLOW_RADIUS)
 
-        termux_mode_enabled = _prefs.getBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)
         custom_terminal_packages = (TerminalUtils.parseCustomPackages(
             safeGetString(_prefs, "custom_terminal_packages", Defaults.CUSTOM_TERMINAL_PACKAGES)
         ) as? TerminalUtils.PackageListResult.Valid)?.packages ?: emptySet()

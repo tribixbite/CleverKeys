@@ -42,18 +42,9 @@ internal fun SettingsActivity.AdvancedSection() {
                 expanded = advancedSectionExpanded,
                 onExpandChange = { advancedSectionExpanded = it }
             ) {
-                // TODO: audit this legacy toggle; its Config field no longer gates runtime handling.
-                // Terminal Mode - moved from the Swipe Typing section (layout setting, not prediction)
-                SettingsSwitch(
-                    title = stringResource(R.string.advanced_terminal_mode_title),
-                    description = stringResource(R.string.advanced_terminal_mode_desc),
-                    checked = termuxModeEnabled,
-                    onCheckedChange = {
-                        termuxModeEnabled = it
-                        saveSetting("termux_mode_enabled", it)
-                    }
-                )
-
+                // Terminal apps are detected automatically (TerminalUtils); this adds exact
+                // package IDs to that detection. (The old "Terminal Mode" switch was removed
+                // 2026-10-07: nothing read it — see SettingsValidation.DEPRECATED_KEYS.)
                 CustomTerminalPackagesSetting()
 
                 // I-7 (maintainer decision 2026-09-08): the "don't ask again"

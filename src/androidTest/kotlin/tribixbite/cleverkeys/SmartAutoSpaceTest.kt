@@ -200,7 +200,6 @@ class SmartAutoSpaceTest {
         sharedConfig!!.double_space_to_period = false
         sharedConfig!!.backspace_undo_swipe = false
         sharedConfig!!.backspace_undo_autocorrect = false
-        sharedConfig!!.termux_mode_enabled = false
 
         // Receiver mirrors KeyEventReceiverBridge: auto-space pending state
         // lives on the shared PredictionContextTracker.

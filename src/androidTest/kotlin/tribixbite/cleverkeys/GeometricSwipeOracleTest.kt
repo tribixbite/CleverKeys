@@ -214,7 +214,6 @@ class GeometricSwipeOracleTest {
         config.swipe_on_password_fields = false
         config.auto_space_after_suggestion = true
         config.auto_space_before_suggestion = true
-        config.termux_mode_enabled = false
         config.swipe_show_debug_scores = false
         config.haptic_enabled = false
 

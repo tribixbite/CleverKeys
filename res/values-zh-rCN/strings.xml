@@ -322,8 +322,6 @@
     <string name="accessibility_long_press_desc">修饰键锁定时振动</string>
     <string name="accessibility_swipe_complete_title">滑动完成触感</string>
     <string name="accessibility_swipe_complete_desc">滑动手势完成时振动</string>
-    <string name="advanced_terminal_mode_title">终端模式</string>
-    <string name="advanced_terminal_mode_desc">为 Termux 等终端应用显示 Ctrl、Meta、PageUp/Down 键。</string>
     <string name="advanced_ime_prompt_title">默认键盘提醒</string>
     <string name="advanced_ime_prompt_desc">每次开机提醒一次将 CleverKeys 设为默认键盘。关闭后不再询问。</string>
     <string name="advanced_swipe_debug_log_title">滑动调试日志</string>
@@ -1834,6 +1832,8 @@
     <string name="cmd_minimize_bar_desc">将键盘收起为细横条；点按即可恢复键盘</string>
     <string name="cmd_minimize_fab">最小化为悬浮按钮</string>
     <string name="cmd_minimize_fab_desc">将键盘收起为悬浮按钮，让应用占满屏幕；点按即可恢复键盘</string>
+    <string name="cmd_hide_keyboard">隐藏键盘</string>
+    <string name="cmd_hide_keyboard_desc">关闭键盘；点按文本框即可重新显示</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift 修饰键（大写/符号）</string>
     <string name="cmd_ctrl">Ctrl</string>

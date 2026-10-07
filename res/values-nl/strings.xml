@@ -324,8 +324,6 @@
     <string name="accessibility_long_press_desc">Trillen bij het vergrendelen van een modifier</string>
     <string name="accessibility_swipe_complete_title">Veeggebaar voltooid</string>
     <string name="accessibility_swipe_complete_desc">Trillen als het veeggebaar klaar is</string>
-    <string name="advanced_terminal_mode_title">Terminalmodus</string>
-    <string name="advanced_terminal_mode_desc">Toon Ctrl, Meta, PageUp/Down-toetsen voor terminalapps zoals Termux</string>
     <string name="advanced_ime_prompt_title">Herinnering standaardtoetsenbord</string>
     <string name="advanced_ime_prompt_desc">Eén keer per opstart herinneren om CleverKeys als standaardtoetsenbord in te stellen. Zet uit om nooit meer te vragen.</string>
     <string name="advanced_swipe_debug_log_title">Veeg-debuglogboek</string>
@@ -1877,6 +1875,8 @@
     <string name="cmd_minimize_bar_desc">Klapt het toetsenbord in tot een smalle balk; tik erop om het terug te halen</string>
     <string name="cmd_minimize_fab">Minimaliseren naar zwevende knop</string>
     <string name="cmd_minimize_fab_desc">Klapt het toetsenbord in tot een zwevende knop zodat de app het hele scherm heeft; tik erop om het terug te halen</string>
+    <string name="cmd_hide_keyboard">Toetsenbord verbergen</string>
+    <string name="cmd_hide_keyboard_desc">Sluit het toetsenbord; tik op een tekstveld om het terug te halen</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift-modificatie (hoofdletters/symbolen)</string>
     <string name="cmd_ctrl">Ctrl</string>

@@ -42,6 +42,8 @@ class KeyValue private constructor(
         // gh #175 (2026-10-01). Appended: KeyValue stores the ordinal.
         MINIMIZE_BAR,
         MINIMIZE_FAB,
+        // gh #175 (2026-10-07): explicit dismiss, like the "∨" button in other keyboards.
+        HIDE_KEYBOARD,
     }
 
     /**
@@ -620,6 +622,7 @@ class KeyValue private constructor(
             // gh #175: collapse the keyboard to a thin bar / a floating button.
             "minimize_bar" -> eventKey("▁", Event.MINIMIZE_BAR, 0)
             "minimize_fab" -> eventKey("◉", Event.MINIMIZE_FAB, 0)
+            "hide_keyboard" -> eventKey("⌄", Event.HIDE_KEYBOARD, 0)
             "switch_back_gif" -> eventKey("ABC", Event.SWITCH_BACK_GIF, 0)
 
             /* Key events */

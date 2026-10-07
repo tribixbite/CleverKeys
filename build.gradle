@@ -43,6 +43,9 @@ dependencies {
   implementation "androidx.window:window-java:1.3.0"
   implementation "androidx.core:core:1.13.1"
   implementation "androidx.appcompat:appcompat:1.6.1"
+  // #181: the emoji picker asks EmojiCompat whether it can draw a sequence before hiding it.
+  // Already on the runtime classpath through appcompat (same version); now compiled against.
+  implementation "androidx.emoji2:emoji2:1.3.0"
   implementation "androidx.multidex:multidex:2.0.1"
   implementation "com.google.android.material:material:1.11.0"
   implementation "androidx.viewpager2:viewpager2:1.0.0"

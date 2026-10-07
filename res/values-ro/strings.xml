@@ -346,8 +346,6 @@
     <string name="accessibility_long_press_desc">Vibrează la blocarea modificatorului</string>
     <string name="accessibility_swipe_complete_title">Glisare finalizată</string>
     <string name="accessibility_swipe_complete_desc">Vibrează când gestul de glisare se termină</string>
-    <string name="advanced_terminal_mode_title">Mod terminal</string>
-    <string name="advanced_terminal_mode_desc">Afișează taste Ctrl, Meta, PageUp/Down pentru aplicații de terminal precum Termux</string>
     <string name="advanced_ime_prompt_title">Memento tastatură implicită</string>
     <string name="advanced_ime_prompt_desc">Amintește o dată la fiecare pornire să setați CleverKeys ca tastatură implicită. Dezactivați pentru a nu mai întreba niciodată.</string>
     <string name="advanced_swipe_debug_log_title">Jurnal depanare glisare</string>
@@ -1945,6 +1943,8 @@
     <string name="cmd_minimize_bar_desc">Restrânge tastatura la o bară subțire; atinge-o pentru a readuce tastatura</string>
     <string name="cmd_minimize_fab">Minimizează la buton flotant</string>
     <string name="cmd_minimize_fab_desc">Restrânge tastatura la un buton flotant, ca aplicația să aibă tot ecranul; atinge-l pentru a readuce tastatura</string>
+    <string name="cmd_hide_keyboard">Ascunde tastatura</string>
+    <string name="cmd_hide_keyboard_desc">Închide tastatura; atinge un câmp de text pentru a o readuce</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Modificator Shift (majuscule/simboluri)</string>
     <string name="cmd_ctrl">Ctrl</string>

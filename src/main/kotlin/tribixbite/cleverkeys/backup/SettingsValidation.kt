@@ -99,6 +99,11 @@ object SettingsValidation {
         // pipeline, removed together with the legacy InputCoordinator-only path — the
         // SuggestionHandler pipeline is the only one. v1.5.x backups may still carry it.
         "unified_swipe_pipeline",
+        // 2026-10-07: the "Terminal Mode" switch ("Show Ctrl, Meta, PageUp/Down keys for
+        // terminal apps"). Its last reader (the tap trailing-space suppression) went with the
+        // unified pipeline in WP9 step 6, and it showed no keys; terminal handling is
+        // automatic (TerminalUtils + custom_terminal_packages). v1.x/v2.0-dev backups carry it.
+        "termux_mode_enabled",
         // ARC-085 (2026-08-29): the "Correction Style" dropdown (Strict/Balanced/Lenient)
         // wrote this on every selection and NOTHING ever read it — not Config, not a
         // predictor, not an engine adapter — so the control responded to touch and changed

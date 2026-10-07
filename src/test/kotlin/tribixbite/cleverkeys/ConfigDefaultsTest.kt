@@ -826,9 +826,4 @@ class ConfigDefaultsTest {
         assertThat(Defaults.SWIPE_TRAIL_WIDTH).isGreaterThan(0f)
         assertThat(Defaults.SWIPE_TRAIL_GLOW_RADIUS).isGreaterThan(0f)
     }
-
-    @Test
-    fun `termux mode enabled by default`() {
-        assertThat(Defaults.TERMUX_MODE_ENABLED).isTrue()
-    }
 }

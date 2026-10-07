@@ -172,7 +172,6 @@ class PipelineCharacterizationTest {
         config.swipe_on_password_fields = false
         config.auto_space_after_suggestion = true
         config.auto_space_before_suggestion = true
-        config.termux_mode_enabled = false
         config.swipe_show_debug_scores = false
         config.autocapitalize_i_words = true
         config.primary_language = "en"
@@ -494,14 +493,13 @@ class PipelineCharacterizationTest {
     @Test
     fun oracle_swipe_termuxMode_swipePathUnchangedGetsTrailingSpace() {
         val h = harness(initialText = "")
-        h.config.termux_mode_enabled = true
         swipeResults(h, listOf("ls"), listOf(300), termuxEditor())
         drainMainThread()
 
-        // INVARIANT: swipe auto-insert commits with a trailing space even in Termux mode —
-        // termux_mode_enabled suppresses the trailing space only for NON-swipe (tap) commits.
+        // INVARIANT: swipe auto-insert commits with a trailing space in a Termux editor too.
         // (Step 6: unchanged through the SH engine — SmartAutoSpace has no termux branch and
-        // auto_space_after_suggestion is on, so the swipe still gets TRAILING_SPACE.)
+        // auto_space_after_suggestion is on, so the swipe still gets TRAILING_SPACE. The
+        // termux_mode_enabled switch that once gated tap commits was removed 2026-10-07.)
         assertEquals("ls ", bufferOf(h))
     }
 

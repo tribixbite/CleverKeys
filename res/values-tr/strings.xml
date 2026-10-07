@@ -332,8 +332,6 @@
     <string name="accessibility_long_press_desc">Değiştirici kilidi etkinleştirildiğinde titreşim</string>
     <string name="accessibility_swipe_complete_title">Kaydırma Tamamlandı</string>
     <string name="accessibility_swipe_complete_desc">Kaydırma hareketi bittiğinde titreşim</string>
-    <string name="advanced_terminal_mode_title">Terminal Modu</string>
-    <string name="advanced_terminal_mode_desc">Termux gibi terminal uygulamaları için Ctrl, Meta, PageUp/Down tuşlarını göster</string>
     <string name="advanced_ime_prompt_title">Varsayılan klavye hatırlatıcısı</string>
     <string name="advanced_ime_prompt_desc">Her açılışta bir kez CleverKeys\'i varsayılan klavye yapmayı hatırlat. Bir daha sorulmaması için kapatın.</string>
     <string name="advanced_swipe_debug_log_title">Kaydırma Hata Ayıklama Günlüğü</string>
@@ -1888,6 +1886,8 @@
     <string name="cmd_minimize_bar_desc">Klavyeyi ince bir çubuğa daraltır; geri getirmek için çubuğa dokunun</string>
     <string name="cmd_minimize_fab">Kayan düğmeye küçült</string>
     <string name="cmd_minimize_fab_desc">Uygulama tüm ekranı kullansın diye klavyeyi kayan bir düğmeye daraltır; geri getirmek için düğmeye dokunun</string>
+    <string name="cmd_hide_keyboard">Klavyeyi gizle</string>
+    <string name="cmd_hide_keyboard_desc">Klavyeyi kapatır; geri getirmek için bir metin alanına dokunun</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift değiştiricisi (büyük harf/sembol)</string>
     <string name="cmd_ctrl">Ctrl</string>

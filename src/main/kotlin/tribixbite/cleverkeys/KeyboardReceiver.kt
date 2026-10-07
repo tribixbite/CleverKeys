@@ -559,6 +559,8 @@ class KeyboardReceiver(
             // gh #175: collapse to a thin bar / a floating button; tapping it expands again.
             KeyValue.Event.MINIMIZE_BAR -> keyboard2.minimizeKeyboard(MinimizedStyle.BAR)
             KeyValue.Event.MINIMIZE_FAB -> keyboard2.minimizeKeyboard(MinimizedStyle.FAB)
+            // gh #175: hide the keyboard entirely (the app's own focus/tap brings it back).
+            KeyValue.Event.HIDE_KEYBOARD -> keyboard2.requestHideSelf(0)
 
             KeyValue.Event.CHANGE_METHOD_PICKER -> {
                 subtypeManager.inputMethodManager.showInputMethodPicker()

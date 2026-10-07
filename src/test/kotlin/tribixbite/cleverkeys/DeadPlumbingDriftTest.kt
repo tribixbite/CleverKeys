@@ -176,6 +176,38 @@ class DeadPlumbingDriftTest {
         ).that(hits).isEmpty()
     }
 
+    // ------------------------------------------------- Terminal Mode (2026-10-07)
+
+    @Test
+    fun `the dead Terminal Mode switch is gone`() {
+        // "Terminal Mode — Show Ctrl, Meta, PageUp/Down keys for terminal apps" shows no keys
+        // on current main, and its last reader (tap trailing-space suppression) was deleted with the
+        // unified pipeline in WP9 step 6. Terminal handling is automatic (TerminalUtils plus
+        // the custom_terminal_packages setting). Only the DEPRECATED_KEYS tombstone, which
+        // keeps old backups from re-importing it, may name the key.
+        val tombstone = "tribixbite/cleverkeys/backup/SettingsValidation.kt"
+        val hits = occurrences(
+            Regex("termux_mode_enabled|TERMUX_MODE_ENABLED|\\btermuxModeEnabled\\b"),
+            allowedFiles = setOf(tombstone),
+        )
+        assertWithMessage(
+            "The Terminal Mode switch responded to touch and changed nothing; do not restore " +
+                "it without a real consumer.\nFound:\n" + hits.joinToString("\n")
+        ).that(hits).isEmpty()
+
+        val strings = Regex("""<string name="advanced_terminal_mode_(title|desc)"""")
+        val stringHits = File("res").walkTopDown()
+            .filter { it.isFile && it.name == "strings.xml" }
+            .flatMap { file ->
+                file.readLines().mapIndexedNotNull { index, line ->
+                    if (strings.containsMatchIn(line)) "${file.path}:${index + 1}" else null
+                }
+            }
+            .toList()
+        assertWithMessage("Terminal Mode strings must go from every locale.\nFound:\n" + stringHits.joinToString("\n"))
+            .that(stringHits).isEmpty()
+    }
+
     // ------------------------------------------------------------------- B-2
 
     @Test

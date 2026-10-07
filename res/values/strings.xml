@@ -472,8 +472,6 @@
 
     <!-- AdvancedSection (debug controls — kept translatable to match the
          settings_debug_* siblings already in this file) -->
-    <string name="advanced_terminal_mode_title">Terminal Mode</string>
-    <string name="advanced_terminal_mode_desc">Show Ctrl, Meta, PageUp/Down keys for terminal apps like Termux</string>
     <string name="advanced_ime_prompt_title">Default keyboard reminder</string>
     <string name="advanced_ime_prompt_desc">Remind once per boot to set CleverKeys as the default keyboard. Turn off to never ask again.</string>
     <string name="advanced_swipe_debug_log_title">Swipe Debug Log</string>
@@ -2277,6 +2275,8 @@
     <string name="cmd_minimize_bar_desc">Collapse the keyboard to a thin bar; tap it to bring the keyboard back</string>
     <string name="cmd_minimize_fab">Minimize to Floating Button</string>
     <string name="cmd_minimize_fab_desc">Collapse the keyboard to a floating button so the app gets the whole screen; tap it to bring the keyboard back</string>
+    <string name="cmd_hide_keyboard">Hide Keyboard</string>
+    <string name="cmd_hide_keyboard_desc">Close the keyboard; tap a text field to bring it back</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift modifier (uppercase/symbols)</string>
     <string name="cmd_ctrl">Ctrl</string>

@@ -455,6 +455,15 @@ class LanguagePackManager(private val context: Context) {
     }
 
     /**
+     * gh #184: why an INSTALLED pack's dictionary will not load, or null when it will. Packs
+     * imported before the 100,000-word cap existed are still on disk; the loader refuses them
+     * (before allocating), so Settings shows this message instead of failing silently.
+     * Reads only the 16-byte header.
+     */
+    fun installedDictionaryProblem(code: String): PackImportFailure? =
+        getDictionaryPath(code)?.let { validateDictionary(it) }
+
+    /**
      * Get dictionary file path for a language code.
      * Returns null if pack not installed.
      */

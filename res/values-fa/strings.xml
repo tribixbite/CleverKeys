@@ -359,8 +359,6 @@
     <string name="accessibility_long_press_desc">هنگام قفل کردن کلید اصلاح‌کننده لرزش ایجاد شود</string>
     <string name="accessibility_swipe_complete_title">اتمام کشیدن</string>
     <string name="accessibility_swipe_complete_desc">هنگام پایان اشاره کشیدن لرزش ایجاد شود</string>
-    <string name="advanced_terminal_mode_title">حالت ترمینال</string>
-    <string name="advanced_terminal_mode_desc">کلیدهای Ctrl، Meta و PageUp/Down را برای برنامه‌های ترمینال مانند Termux نمایش دهید</string>
     <string name="advanced_ime_prompt_title">یادآور صفحه‌کلید پیش‌فرض</string>
     <string name="advanced_ime_prompt_desc">در هر بار روشن‌شدن دستگاه یک بار یادآوری می‌کند CleverKeys را صفحه‌کلید پیش‌فرض کنید. برای اینکه دیگر پرسیده نشود خاموش کنید.</string>
     <string name="advanced_swipe_debug_log_title">گزارش اشکال‌زدایی کشیدن</string>
@@ -1915,6 +1913,8 @@
     <string name="cmd_minimize_bar_desc">صفحه‌کلید را به یک نوار باریک جمع می‌کند؛ برای بازگرداندن آن ضربه بزنید</string>
     <string name="cmd_minimize_fab">کوچک‌کردن به دکمهٔ شناور</string>
     <string name="cmd_minimize_fab_desc">صفحه‌کلید را به یک دکمهٔ شناور جمع می‌کند تا برنامه کل صفحه را داشته باشد؛ برای بازگرداندن ضربه بزنید</string>
+    <string name="cmd_hide_keyboard">پنهان کردن صفحه‌کلید</string>
+    <string name="cmd_hide_keyboard_desc">صفحه‌کلید را می‌بندد؛ برای بازگرداندن آن روی یک فیلد متنی ضربه بزنید</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">تغییردهندهٔ Shift (حروف بزرگ/نمادها)</string>
     <string name="cmd_ctrl">Ctrl</string>

@@ -329,8 +329,6 @@
     <string name="accessibility_long_press_desc">Rezgés módosítózár aktiválásakor</string>
     <string name="accessibility_swipe_complete_title">Csúsztatás befejezve</string>
     <string name="accessibility_swipe_complete_desc">Rezgés a csúsztatási gesztus befejezésekor</string>
-    <string name="advanced_terminal_mode_title">Terminál mód</string>
-    <string name="advanced_terminal_mode_desc">Ctrl, Meta, PageUp/Down billentyűk megjelenítése terminál alkalmazásokhoz, például Termux</string>
     <string name="advanced_ime_prompt_title">Alapértelmezett billentyűzet emlékeztető</string>
     <string name="advanced_ime_prompt_desc">Rendszerindításonként egyszer emlékeztet, hogy a CleverKeys legyen az alapértelmezett billentyűzet. Kikapcsolva soha többé nem kérdez.</string>
     <string name="advanced_swipe_debug_log_title">Csúsztatás hibakeresési napló</string>
@@ -1883,6 +1881,8 @@
     <string name="cmd_minimize_bar_desc">A billentyűzetet vékony sávvá csukja össze; koppintson rá a visszahozáshoz</string>
     <string name="cmd_minimize_fab">Kicsinyítés lebegő gombbá</string>
     <string name="cmd_minimize_fab_desc">A billentyűzetet lebegő gombbá csukja össze, így az alkalmazásé a teljes képernyő; koppintson rá a visszahozáshoz</string>
+    <string name="cmd_hide_keyboard">Billentyűzet elrejtése</string>
+    <string name="cmd_hide_keyboard_desc">Bezárja a billentyűzetet; koppintson egy szövegmezőbe a visszahozáshoz</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift módosító (nagybetűk/szimbólumok)</string>
     <string name="cmd_ctrl">Ctrl</string>

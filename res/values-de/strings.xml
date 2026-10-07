@@ -343,8 +343,6 @@
     <string name="accessibility_long_press_desc">Vibrieren beim Sperren eines Modifikators</string>
     <string name="accessibility_swipe_complete_title">Wischgeste abgeschlossen</string>
     <string name="accessibility_swipe_complete_desc">Vibrieren, wenn eine Wischgeste beendet wird</string>
-    <string name="advanced_terminal_mode_title">Terminal-Modus</string>
-    <string name="advanced_terminal_mode_desc">Strg-, Meta-, Bild-auf/ab-Tasten für Terminal-Apps wie Termux anzeigen</string>
     <string name="advanced_ime_prompt_title">Erinnerung an Standardtastatur</string>
     <string name="advanced_ime_prompt_desc">Einmal pro Gerätestart erinnern, CleverKeys als Standardtastatur festzulegen. Ausschalten, um nie wieder gefragt zu werden.</string>
     <string name="advanced_swipe_debug_log_title">Wisch-Debug-Protokoll</string>
@@ -1897,6 +1895,8 @@
     <string name="cmd_minimize_bar_desc">Tastatur zu einer schmalen Leiste einklappen; Tippen holt sie zurück</string>
     <string name="cmd_minimize_fab">Auf schwebende Schaltfläche minimieren</string>
     <string name="cmd_minimize_fab_desc">Tastatur zu einer schwebenden Schaltfläche einklappen, damit die App den ganzen Bildschirm hat; Tippen holt sie zurück</string>
+    <string name="cmd_hide_keyboard">Tastatur ausblenden</string>
+    <string name="cmd_hide_keyboard_desc">Schließt die Tastatur; Tippen in ein Textfeld holt sie zurück</string>
     <string name="cmd_shift">Umschalt</string>
     <string name="cmd_shift_desc">Umschalttaste (Großbuchstaben/Symbole)</string>
     <string name="cmd_ctrl">Strg</string>

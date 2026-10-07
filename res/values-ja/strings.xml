@@ -323,8 +323,6 @@
     <string name="accessibility_long_press_desc">修飾キーロック時に振動します</string>
     <string name="accessibility_swipe_complete_title">スワイプ完了</string>
     <string name="accessibility_swipe_complete_desc">スワイプジェスチャー完了時に振動します</string>
-    <string name="advanced_terminal_mode_title">ターミナルモード</string>
-    <string name="advanced_terminal_mode_desc">Termuxなどのターミナルアプリ向けにCtrl、Meta、PageUp/Downキーを表示します</string>
     <string name="advanced_ime_prompt_title">既定のキーボードのリマインダー</string>
     <string name="advanced_ime_prompt_desc">起動ごとに一度、CleverKeys を既定のキーボードに設定するよう通知します。オフにすると今後表示されません。</string>
     <string name="advanced_swipe_debug_log_title">スワイプデバッグログ</string>
@@ -1835,6 +1833,8 @@
     <string name="cmd_minimize_bar_desc">キーボードを細いバーに折りたたみます。タップすると元に戻ります</string>
     <string name="cmd_minimize_fab">フローティングボタンに最小化</string>
     <string name="cmd_minimize_fab_desc">キーボードをフローティングボタンに折りたたみ、アプリが画面全体を使えるようにします。タップすると元に戻ります</string>
+    <string name="cmd_hide_keyboard">キーボードを隠す</string>
+    <string name="cmd_hide_keyboard_desc">キーボードを閉じます。テキスト欄をタップすると再表示されます</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift 修飾キー(大文字/記号)</string>
     <string name="cmd_ctrl">Ctrl</string>

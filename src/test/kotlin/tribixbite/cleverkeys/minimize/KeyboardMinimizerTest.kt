@@ -84,5 +84,8 @@ class KeyboardMinimizerTest {
         assertThat(CommandRegistry.getByName("minimize_fab")).isNotNull()
         assertThat(KeyValue.getKeyByName("minimize_bar").getEvent()).isEqualTo(KeyValue.Event.MINIMIZE_BAR)
         assertThat(KeyValue.getKeyByName("minimize_fab").getEvent()).isEqualTo(KeyValue.Event.MINIMIZE_FAB)
+        // gh #175's explicit dismiss ("∨") sits beside the minimize commands.
+        assertThat(CommandRegistry.getByName("hide_keyboard")).isNotNull()
+        assertThat(KeyValue.getKeyByName("hide_keyboard").getEvent()).isEqualTo(KeyValue.Event.HIDE_KEYBOARD)
     }
 }

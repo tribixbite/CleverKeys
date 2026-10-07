@@ -73,9 +73,11 @@ Defaults/export/reset classify this key; search includes the translated button t
 terminal/package/SSH keywords and exact scroll target.
 
 This setting changes the shared correction/deletion/paste decision; it does not
-change automatic spacing or force cursor positioning. The existing Terminal Mode
-switch does not gate these paths. TODO: audit that older switch, whose current
-Config field has no production consumer beyond settings persistence.
+change automatic spacing or force cursor positioning. The older "Terminal Mode"
+switch was removed on 2026-10-07: nothing read it (its last consumer went with the
+unified pipeline), and it did not show the Ctrl/Meta/PageUp/Down keys its label
+promised. `termux_mode_enabled` is now a `SettingsValidation.DEPRECATED_KEYS`
+tombstone so old backups do not re-import it (`DeadPlumbingDriftTest`).
 
 ### Text Commitment
 
@@ -129,7 +131,6 @@ The spacebar acts as a slider for cursor control:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `termux_mode_enabled` | Boolean | true | Legacy Terminal Mode control; not a gate for shared routing |
 | `custom_terminal_packages` | String | empty | Add exact custom package matches to shared terminal routing |
 
 ### Paste Operation

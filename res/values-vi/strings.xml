@@ -352,8 +352,6 @@
     <string name="accessibility_long_press_desc">Rung khi khóa phím bổ trợ</string>
     <string name="accessibility_swipe_complete_title">Hoàn tất vuốt</string>
     <string name="accessibility_swipe_complete_desc">Rung khi cử chỉ vuốt kết thúc</string>
-    <string name="advanced_terminal_mode_title">Chế độ Terminal</string>
-    <string name="advanced_terminal_mode_desc">Hiển thị phím Ctrl, Meta, PageUp/Down cho các ứng dụng terminal như Termux</string>
     <string name="advanced_ime_prompt_title">Nhắc bàn phím mặc định</string>
     <string name="advanced_ime_prompt_desc">Nhắc một lần mỗi lần khởi động để đặt CleverKeys làm bàn phím mặc định. Tắt để không bao giờ hỏi lại.</string>
     <string name="advanced_swipe_debug_log_title">Nhật ký gỡ lỗi vuốt</string>
@@ -1864,6 +1862,8 @@
     <string name="cmd_minimize_bar_desc">Thu gọn bàn phím thành một thanh mỏng; chạm vào để mở lại bàn phím</string>
     <string name="cmd_minimize_fab">Thu nhỏ thành nút nổi</string>
     <string name="cmd_minimize_fab_desc">Thu gọn bàn phím thành một nút nổi để ứng dụng dùng toàn màn hình; chạm vào để mở lại bàn phím</string>
+    <string name="cmd_hide_keyboard">Ẩn bàn phím</string>
+    <string name="cmd_hide_keyboard_desc">Đóng bàn phím; chạm vào ô văn bản để mở lại</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Phím bổ trợ Shift (chữ hoa/ký hiệu)</string>
     <string name="cmd_ctrl">Ctrl</string>

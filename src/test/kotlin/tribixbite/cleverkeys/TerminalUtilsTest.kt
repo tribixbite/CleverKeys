@@ -229,11 +229,11 @@ class TerminalUtilsTest {
     }
 
     // =========================================================================
-    // Config defaults (#70)
+    // No setting gates detection (the old Terminal Mode switch was removed 2026-10-07)
     // =========================================================================
 
     @Test
-    fun `termux mode enabled by default`() {
-        assertThat(Defaults.TERMUX_MODE_ENABLED).isTrue()
+    fun `termux is detected with no setting to enable`() {
+        assertThat(TerminalUtils.isTerminalApp(editorInfoWithPackage("com.termux"))).isTrue()
     }
 }

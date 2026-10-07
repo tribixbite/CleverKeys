@@ -324,8 +324,6 @@
     <string name="accessibility_long_press_desc">Вибрировать при фиксации модификатора</string>
     <string name="accessibility_swipe_complete_title">Завершение свайпа</string>
     <string name="accessibility_swipe_complete_desc">Вибрировать после завершения жеста свайпа</string>
-    <string name="advanced_terminal_mode_title">Режим терминала</string>
-    <string name="advanced_terminal_mode_desc">Показывать Ctrl, Meta, PageUp/Down для терминальных приложений, например Termux</string>
     <string name="advanced_ime_prompt_title">Напоминание о клавиатуре по умолчанию</string>
     <string name="advanced_ime_prompt_desc">Напоминать раз за загрузку сделать CleverKeys клавиатурой по умолчанию. Выключите, чтобы больше не спрашивать.</string>
     <string name="advanced_swipe_debug_log_title">Журнал отладки свайпов</string>
@@ -1964,6 +1962,8 @@
     <string name="cmd_minimize_bar_desc">Сворачивает клавиатуру в тонкую полосу; коснитесь её, чтобы вернуть клавиатуру</string>
     <string name="cmd_minimize_fab">Свернуть в плавающую кнопку</string>
     <string name="cmd_minimize_fab_desc">Сворачивает клавиатуру в плавающую кнопку, чтобы приложению достался весь экран; коснитесь её, чтобы вернуть клавиатуру</string>
+    <string name="cmd_hide_keyboard">Скрыть клавиатуру</string>
+    <string name="cmd_hide_keyboard_desc">Закрывает клавиатуру; коснитесь текстового поля, чтобы вернуть её</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Модификатор Shift (заглавные/символы)</string>
     <string name="cmd_ctrl">Ctrl</string>

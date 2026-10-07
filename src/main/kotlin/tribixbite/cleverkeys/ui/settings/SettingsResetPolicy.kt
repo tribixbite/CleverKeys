@@ -149,7 +149,6 @@ object SettingsResetPolicy {
 
         // Debug (off by default)
         put("debug_enabled", Defaults.DEBUG_ENABLED)
-        put("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)
         put("custom_terminal_packages", Defaults.CUSTOM_TERMINAL_PACKAGES)
     }
 }

@@ -1033,6 +1033,28 @@ class LanguagePackImportTest {
         assertThat(File(installedDir("el"), "dictionary.bin").readBytes().toList()).isEqualTo(before.toList())
     }
 
+    /**
+     * gh #184: a pack installed before the word cap existed stays on disk and the loader now
+     * refuses it. Settings asks [LanguagePackManager.installedDictionaryProblem] so the user
+     * sees why the pack is unused; a valid installed pack reports no problem.
+     */
+    @Test
+    fun anInstalledPackOverTheWordCapReportsWhyItIsNotLoaded() {
+        val zip = packZip("ok.zip", listOf("manifest.json" to manifestJson("el", "Greek").toByteArray(), "dictionary.bin" to dictionaryBytes()))
+        assertThat(import(zip)).isInstanceOf(ImportResult.Success::class.java)
+        assertThat(manager.installedDictionaryProblem("el")).isNull()
+
+        // Simulate a pre-cap install: the header on disk claims more words than the cap.
+        val onDisk = File(installedDir("el"), "dictionary.bin")
+        val bytes = onDisk.readBytes()
+        java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).putInt(12, 236_000)
+        onDisk.writeBytes(bytes)
+
+        assertThat(manager.installedDictionaryProblem("el"))
+            .isEqualTo(PackImportFailure.DictionaryTooLarge(236_000, 100_000))
+        assertThat(manager.installedDictionaryProblem("zz")).isNull()  // not installed
+    }
+
     @Test
     fun duplicateFlattenedMemberIsRefused() {
         val zip = packZip("duplicate.zip", listOf(

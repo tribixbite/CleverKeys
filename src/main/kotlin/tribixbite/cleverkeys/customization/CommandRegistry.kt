@@ -217,6 +217,9 @@ object CommandRegistry {
             keywords = listOf("minimize", "minimise", "collapse", "hide", "bar", "small", "shrink")),
         Command("minimize_fab", R.string.cmd_minimize_fab, R.string.cmd_minimize_fab_desc, Category.EVENTS,
             keywords = listOf("minimize", "minimise", "collapse", "hide", "floating", "button", "fab", "bubble")),
+        // gh #175: dismiss the keyboard outright.
+        Command("hide_keyboard", R.string.cmd_hide_keyboard, R.string.cmd_hide_keyboard_desc, Category.EVENTS,
+            keywords = listOf("hide", "dismiss", "close", "keyboard", "down")),
 
         // ========== MODIFIERS ==========
         Command("shift", R.string.cmd_shift, R.string.cmd_shift_desc, Category.MODIFIERS,

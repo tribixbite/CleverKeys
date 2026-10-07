@@ -334,7 +334,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var backspaceUndoAutocorrect by mutableStateOf(true)  // #110: Backspace after autocorrect reverts to original word
     internal var suggestionBarOpacity by mutableIntStateOf(90)
     internal var autoCorrectEnabled by mutableStateOf(true)
-    internal var termuxModeEnabled by mutableStateOf(false)
     internal var customTerminalPackages by mutableStateOf(Defaults.CUSTOM_TERMINAL_PACKAGES)
     internal var imeDefaultPromptEnabled by mutableStateOf(Defaults.IME_DEFAULT_PROMPT_ENABLED)  // I-7: default-IME reminder
     internal var vibrationDuration by mutableIntStateOf(20)
@@ -452,6 +451,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var secondaryLanguageAlt by mutableStateOf("none") // v1.2.0: Alternate secondary for quick toggle
     internal var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
     internal var installedLanguagePacks by mutableStateOf(listOf<LanguagePackManifest>())
+    /** gh #184: installed packs whose dictionary the loader refuses, by language code. */
+    internal var languagePackProblems by mutableStateOf(mapOf<String, tribixbite.cleverkeys.PackImportFailure>())
     // showLanguagePackDialog/languagePackImportStatus delegated to settingsViewModel (survive rotation)
     internal var showLanguagePackDialog: Boolean
         get() = settingsViewModel.showLanguagePackDialog

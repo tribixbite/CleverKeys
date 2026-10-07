@@ -37,11 +37,6 @@ class AutoSpaceLogicTest {
         assertThat(Defaults.AUTO_SPACE_BEFORE_SUGGESTION).isTrue()
     }
 
-    @Test
-    fun `termux mode is enabled by default`() {
-        assertThat(Defaults.TERMUX_MODE_ENABLED).isTrue()
-    }
-
     // =========================================================================
     // Branch 1: User disabled auto-space (#82 feature)
     // =========================================================================

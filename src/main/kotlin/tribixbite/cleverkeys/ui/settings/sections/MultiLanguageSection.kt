@@ -381,6 +381,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     text = {
                         // Scrollable: with the per-pack "Source & license" sections expanded the
                         // list easily outgrows the dialog.
+                        val packProblemText = tribixbite.cleverkeys.rememberResultText()
                         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                             if (installedLanguagePacks.isEmpty()) {
                                 Text(
@@ -420,6 +421,14 @@ internal fun SettingsActivity.MultiLanguageSection() {
                                                             fontSize = 11.sp,
                                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                                         )
+                                                        // gh #184: say why this pack is not used.
+                                                        languagePackProblems[pack.code]?.let { problem ->
+                                                            Text(
+                                                                text = problem.render(packProblemText),
+                                                                fontSize = 11.sp,
+                                                                color = MaterialTheme.colorScheme.error
+                                                            )
+                                                        }
                                                     }
                                                     TextButton(
                                                         onClick = { pendingPackDelete = pack.code to pack.name }

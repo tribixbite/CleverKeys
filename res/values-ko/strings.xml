@@ -324,8 +324,6 @@
     <string name="accessibility_long_press_desc">수정자 키 잠금 시 진동합니다</string>
     <string name="accessibility_swipe_complete_title">스와이프 완료</string>
     <string name="accessibility_swipe_complete_desc">스와이프 제스처 완료 시 진동합니다</string>
-    <string name="advanced_terminal_mode_title">터미널 모드</string>
-    <string name="advanced_terminal_mode_desc">Termux 같은 터미널 앱을 위해 Ctrl, Meta, PageUp/Down 키를 표시합니다</string>
     <string name="advanced_ime_prompt_title">기본 키보드 알림</string>
     <string name="advanced_ime_prompt_desc">부팅마다 한 번 CleverKeys를 기본 키보드로 설정하도록 알립니다. 끄면 다시 묻지 않습니다.</string>
     <string name="advanced_swipe_debug_log_title">스와이프 디버그 로그</string>
@@ -1836,6 +1834,8 @@
     <string name="cmd_minimize_bar_desc">키보드를 얇은 막대로 접습니다. 탭하면 다시 펼쳐집니다</string>
     <string name="cmd_minimize_fab">플로팅 버튼으로 최소화</string>
     <string name="cmd_minimize_fab_desc">앱이 화면 전체를 쓰도록 키보드를 플로팅 버튼으로 접습니다. 탭하면 다시 펼쳐집니다</string>
+    <string name="cmd_hide_keyboard">키보드 숨기기</string>
+    <string name="cmd_hide_keyboard_desc">키보드를 닫습니다. 텍스트 필드를 탭하면 다시 나타납니다</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift 보조 키(대문자/기호)</string>
     <string name="cmd_ctrl">Ctrl</string>

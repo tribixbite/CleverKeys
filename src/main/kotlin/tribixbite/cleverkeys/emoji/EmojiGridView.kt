@@ -10,6 +10,7 @@ import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.GridView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.emoji2.text.EmojiCompat
 
 class EmojiGridView(context: Context, attrs: AttributeSet?) :
     GridView(context, attrs), AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
@@ -64,7 +65,41 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         setupScrollListener()  // v1.2.6: Dismiss tooltip on scroll
     }
 
+    // What the grid shows now, so it can be re-filtered once EmojiCompat finishes loading.
+    private var shownGroup = GROUP_LAST_USE
+    private var shownQuery: String? = null
+
+    /**
+     * #181: EmojiCompat (androidx.emoji2, initialised by androidx.startup when a font provider
+     * exists) loads its font asynchronously. Until it settles, renderability answers are not
+     * cached; when it finishes, the current grid is filtered again so emoji it can draw appear.
+     */
+    private val emojiCompatLoaded = object : EmojiCompat.InitCallback() {
+        override fun onInitialized() = refilter()
+        override fun onFailed(throwable: Throwable?) = refilter()
+    }
+
+    private fun refilter() {
+        post {
+            glyphSupport.clear()
+            shownQuery?.let { searchEmojis(it) } ?: setEmojiGroup(shownGroup)
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (EmojiCompatGlyphs.isLoading()) EmojiCompat.get().registerInitCallback(emojiCompatLoaded)
+    }
+
+    override fun onDetachedFromWindow() {
+        // EmojiCompat is a process singleton: never let it hold this view.
+        if (EmojiCompat.isConfigured()) EmojiCompat.get().unregisterInitCallback(emojiCompatLoaded)
+        super.onDetachedFromWindow()
+    }
+
     fun setEmojiGroup(group: Int) {
+        shownGroup = group
+        shownQuery = null
         emojiArray = if (group == GROUP_LAST_USE) {
             getLastEmojis()
         } else if (group == GROUP_SEARCH) {
@@ -82,6 +117,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
      * @return Number of results found
      */
     fun searchEmojis(query: String): Int {
+        shownQuery = query
         emojiArray = if (query.isBlank()) {
             getLastEmojis() // Show last used when empty
         } else {
@@ -92,10 +128,19 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         return emojiArray.size
     }
 
-    private fun isRenderable(emoji: Emoji): Boolean = glyphSupport.getOrPut(emoji) {
-        EmojiGlyphSupport.hasDisplayGlyph(
-            emoji.kv().getString(), emoji in textEmoticons, glyphPaint::hasGlyph
-        )
+    /**
+     * #181: hide an emoji only when nothing can draw it. The emoji cells are AppCompatTextViews,
+     * which render through EmojiCompat when it is loaded (its downloadable font can be newer
+     * than the system font), so a sequence it supports counts as drawable even when the system
+     * font lacks it. Without EmojiCompat (e.g. no font provider), the system font decides.
+     */
+    private fun isRenderable(emoji: Emoji): Boolean {
+        glyphSupport[emoji]?.let { return it }
+        val renderable = EmojiGlyphSupport.hasDisplayGlyph(
+            emoji.kv().getString(), emoji in textEmoticons
+        ) { glyphPaint.hasGlyph(it) || EmojiCompatGlyphs.supports(it) }
+        if (!EmojiCompatGlyphs.isLoading()) glyphSupport[emoji] = renderable
+        return renderable
     }
 
     override fun onItemClick(parent: AdapterView<*>?, v: View, pos: Int, id: Long) {
@@ -320,6 +365,20 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         const val GROUP_LAST_USE = -1
         const val GROUP_SEARCH = -2  // #41: Search mode
         private const val LAST_USE_PREF = "emoji_last_use"
+    }
+}
+
+/** EmojiCompat's view of a sequence, when it is configured and loaded (#181). */
+internal object EmojiCompatGlyphs {
+    fun isLoading(): Boolean =
+        EmojiCompat.isConfigured() && EmojiCompat.get().loadState == EmojiCompat.LOAD_STATE_LOADING
+
+    fun supports(text: String): Boolean {
+        if (!EmojiCompat.isConfigured()) return false
+        val compat = EmojiCompat.get()
+        if (compat.loadState != EmojiCompat.LOAD_STATE_SUCCEEDED) return false
+        // Int.MAX_VALUE: any emoji version EmojiCompat's metadata knows is acceptable.
+        return compat.getEmojiMatch(text, Int.MAX_VALUE) == EmojiCompat.EMOJI_SUPPORTED
     }
 }
 

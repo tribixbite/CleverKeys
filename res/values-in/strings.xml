@@ -335,8 +335,6 @@
     <string name="accessibility_long_press_desc">Bergetar saat mengunci tombol modifier</string>
     <string name="accessibility_swipe_complete_title">Geser Selesai</string>
     <string name="accessibility_swipe_complete_desc">Bergetar saat gesture geser selesai</string>
-    <string name="advanced_terminal_mode_title">Mode Terminal</string>
-    <string name="advanced_terminal_mode_desc">Tampilkan tombol Ctrl, Meta, PageUp/Down untuk aplikasi terminal seperti Termux</string>
     <string name="advanced_ime_prompt_title">Pengingat keyboard default</string>
     <string name="advanced_ime_prompt_desc">Ingatkan sekali per boot untuk menjadikan CleverKeys keyboard default. Matikan agar tidak pernah bertanya lagi.</string>
     <string name="advanced_swipe_debug_log_title">Log Debug Geser</string>
@@ -1848,6 +1846,8 @@
     <string name="cmd_minimize_bar_desc">Ciutkan keyboard menjadi bilah tipis; ketuk untuk mengembalikan keyboard</string>
     <string name="cmd_minimize_fab">Perkecil ke Tombol Mengambang</string>
     <string name="cmd_minimize_fab_desc">Ciutkan keyboard menjadi tombol mengambang agar aplikasi mendapat seluruh layar; ketuk untuk mengembalikan keyboard</string>
+    <string name="cmd_hide_keyboard">Sembunyikan Keyboard</string>
+    <string name="cmd_hide_keyboard_desc">Tutup keyboard; ketuk kolom teks untuk menampilkannya lagi</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Pengubah Shift (huruf kapital/simbol)</string>
     <string name="cmd_ctrl">Ctrl</string>

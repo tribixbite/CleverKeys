@@ -334,8 +334,6 @@
     <string name="accessibility_long_press_desc">Wibruj przy blokowaniu modyfikatora</string>
     <string name="accessibility_swipe_complete_title">Gest ukończony</string>
     <string name="accessibility_swipe_complete_desc">Wibruj po zakończeniu gestu przesuwania</string>
-    <string name="advanced_terminal_mode_title">Tryb terminala</string>
-    <string name="advanced_terminal_mode_desc">Pokaż klawisze Ctrl, Meta, PageUp/Down dla aplikacji terminalowych jak Termux</string>
     <string name="advanced_ime_prompt_title">Przypomnienie o domyślnej klawiaturze</string>
     <string name="advanced_ime_prompt_desc">Przypominaj raz na uruchomienie o ustawieniu CleverKeys jako klawiatury domyślnej. Wyłącz, aby nigdy więcej nie pytać.</string>
     <string name="advanced_swipe_debug_log_title">Dziennik debugowania gestów</string>
@@ -1969,6 +1967,8 @@
     <string name="cmd_minimize_bar_desc">Zwija klawiaturę do cienkiego paska; dotknij go, aby ją przywrócić</string>
     <string name="cmd_minimize_fab">Minimalizuj do pływającego przycisku</string>
     <string name="cmd_minimize_fab_desc">Zwija klawiaturę do pływającego przycisku, aby aplikacja miała cały ekran; dotknij go, aby ją przywrócić</string>
+    <string name="cmd_hide_keyboard">Ukryj klawiaturę</string>
+    <string name="cmd_hide_keyboard_desc">Zamyka klawiaturę; dotknij pola tekstowego, aby ją przywrócić</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Modyfikator Shift (wielkie litery/symbole)</string>
     <string name="cmd_ctrl">Ctrl</string>

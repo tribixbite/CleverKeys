@@ -132,6 +132,40 @@ class KeyboardViewLateBindingDriftTest {
         verify(exactly = 0) { coordinator.initialize() }
     }
 
+    /**
+     * GH #145, the call site: the test above runs the wiring itself, so re-gating the CALL in
+     * `CleverKeysService.onCreate` (`if (config.swipe_typing_enabled) _graph.wire…()`, the
+     * v1.5.0 shape of the bug) would leave it green. Pin the call as an unconditional
+     * statement directly in onCreate's body: brace depth 1, alone on its line.
+     */
+    @Test
+    fun onCreateWiresSwipeTypingComponentsUnconditionally() {
+        val source = java.io.File("src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt").readText()
+        val start = source.indexOf("override fun onCreate()")
+        assertWithMessage("CleverKeysService.onCreate not found").that(start).isAtLeast(0)
+        val bodyStart = source.indexOf('{', start)
+        var depth = 0
+        var callDepth = -1
+        var callLine = ""
+        var i = bodyStart
+        while (i < source.length) {
+            when (source[i]) {
+                '{' -> depth++
+                '}' -> { depth--; if (depth == 0) break }
+            }
+            if (source.startsWith("_graph.wireSwipeTypingComponents()", i)) {
+                callDepth = depth
+                val lineStart = source.lastIndexOf('\n', i) + 1
+                callLine = source.substring(lineStart, source.indexOf('\n', i)).trim()
+            }
+            i++
+        }
+        assertWithMessage("onCreate must call _graph.wireSwipeTypingComponents()").that(callDepth).isNotEqualTo(-1)
+        assertWithMessage("#145: the wiring call must not sit inside a block in onCreate").that(callDepth).isEqualTo(1)
+        assertWithMessage("#145: the wiring call must be its own unconditional statement")
+            .that(callLine).isEqualTo("_graph.wireSwipeTypingComponents()")
+    }
+
     private fun seedField(target: Any, name: String, value: Any?) {
         val field = target.javaClass.getDeclaredField(name)
         field.isAccessible = true
