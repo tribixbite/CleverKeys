@@ -17,7 +17,7 @@ and personal device testing before 2.0; tagging/publishing is not authorized.
 | 1.2 Dynamic macros | Explicit TEMPLATE actions implement clipboard, cursor, UUID and selection expansion; native execution/assignment tests pass; Seeker checks remain. Existing TEXT stays literal. |
 | 1.3 Clipboard encryption | At-rest encryption/unlock not implemented; backup encryption is a different, existing feature. |
 | 2.1 Apostrophes | Literal ASCII/curly flick parity implemented; ASCII device-tested. Explicit suffix transaction/undo and learning receipts implemented and native-tested. Saga/Chrome showed suffix undo failing on late selection callbacks; the October 7 review fix (consumption/time-bound callback ledger) is host-tested and needs a device recheck. Contraction chooser remains. Waypoints deferred. |
-| Short-word recognition | `ad`/`wet` still fail with default CTC. Frozen heuristic arms rejected; fresh writer/session data and general calibration/training remain. |
+| Short-word recognition | `ad`/`wet` still fail with default CTC: encoder end-of-trace word prior + collinear pass-through (re-measured October 7). Raw-path featurization fix validated (+0.37 pt held-out), not yet wired; word-balanced fine-tune recipe written. |
 | 2.2 Continuous swipe | Opt-in 280 ms spacebar dwell, bounded segments and serialized commits implemented. October 7 review fixes (late own callbacks no longer cancel phrases, lost final word reported, no-boundary cancel keeps the word, lazy touch-down reads) are host-tested; native tests not rerun; human/device validation remains. |
 | 2.3 Dwell picker | Not implemented; needs latency/conflict measurements before implementation. |
 | 3.1 Bangla | National/Provat tap layouts exist. Transliteration, spelling-preserving dictionary/mark support and a validated swipe model remain. |
@@ -498,6 +498,16 @@ this screen. Synthetic success did not generalize, including to other short word
 Prioritize general-strata encoder correction with proper development/held-out splits.
 TODO: obtain fresh writer/session-separated data, train and evaluate encoder changes.
 Training/runtime implementation remains open; no production ranking/model change.
+
+**Re-investigation (October 7, `docs/eval/2026-10-07-short-word-ctc.md`).** The geometric
+claims above re-verified; the conclusion is refined. Cause 1: the encoder's last frame
+encodes a learned word prior (a stroke ending on `d` reads `s` .78; ending on `t` reads `e`
+.63), so the failure is not a decoder parameter (λ 4 is the dev optimum; endpoint rescoring
+is neutral on 4,000 held-out traces). Cause 2 (`wet`): collinear pass-through `e` never gets
+a frame. Cause 3 (app): CTC featurizes the smoothed, dwell-stripped recognizer path; raw
+samples score +0.37 pt held-out top-1 (35/20, p 0.029) and restore the dwell that turns a
+deliberate `ad` stop into `ad`. Next steps: route the raw path plus a lift sample to CTC
+(gesture/service owners), then the word-balanced fine-tune recipe in that note.
 
 PAL architecture cross-check used gemini-3.8-flash only. Verified against source:
 CtcFeaturizer uses timestamps to produce time-uniform samples, preserving relative

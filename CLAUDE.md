@@ -362,6 +362,8 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 
 - **Human screen of synthetic ranking fixes (2026-10-05):** frozen geometry/timing weights reduced 93/100 correct to 83/100 and 61/100 on 100 real traces (92 words); reject both despite synthetic success. Keep distinct trace/word counts and do not retune against the screening set. Evidence in the October 5 roadmap and ignored probe logs.
 
+- **Short-word root cause, re-measured (2026-10-07):** `ad`→`as`/`wet`→`we` is the encoder's learned word prior at the trace END (last frame reads a stroke ending on `d`/`t` as an overshooting `as`/`we`; training has `we` 562× vs `wet` 4×) plus no emission for collinear pass-through letters. λ 4 is the dev optimum and endpoint rescoring is neutral on 4,000 held-out traces. Separately, the app featurizes the recognizer's SMOOTHED path with dwell samples dropped: raw input is +0.37 pt held-out top-1 (p 0.029). `docs/eval/2026-10-07-short-word-ctc.md`, `scripts/short_word_ctc_eval.py`.
+
 ## Native editor and dialog test lessons (2026-10-06)
 
 - Editor fixtures must report both real selection endpoints. Cursor-start equality

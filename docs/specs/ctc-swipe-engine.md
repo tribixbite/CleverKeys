@@ -932,6 +932,11 @@ six table scripts have all four and are ROUTED (ru `da012ded`, el `5fb58037`, uk
   recorded future option).
 - No during-gesture preview decode (commit-phase only).
 - No langpack-backed en lexicon (λ-scale constraint, As-Built "Lexicon").
+- Short words whose trace ends on a rare word's key read as an overshooting frequent word
+  (`ad`→`as`, `wet`→`we`): an encoder end-of-trace word prior, not a decoder constant, and
+  collinear pass-through letters get no frame. The engine also featurizes the recognizer's
+  smoothed, dwell-stripped path; raw samples measured +0.37 pt held-out top-1. Evidence and
+  the fine-tune recipe: `docs/eval/2026-10-07-short-word-ctc.md`.
 
 ---
 
