@@ -121,7 +121,7 @@ object ClipboardTextCleaner {
     private fun trimEndWhitespace(line: String): String = line.trimEnd(::isTrailingSpace)
 
     private fun isTrailingSpace(c: Char): Boolean =
-        c.isWhitespace() || Character.isSpaceChar(c) || c == '﻿'
+        c.isWhitespace() || Character.isSpaceChar(c) || c == '\uFEFF'
 
     private fun length(line: String): Int = line.codePointCount(0, line.length)
 

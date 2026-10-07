@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.Spinner
+import androidx.appcompat.widget.AppCompatSpinner
 
 /**
  * A [Spinner] for dialogs shown over the keyboard ([Utils.show_dialog_on_ime]).
@@ -18,7 +19,7 @@ import android.widget.Spinner
 class ImeDialogSpinner @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-) : Spinner(context, attrs) {
+) : AppCompatSpinner(context, attrs) {
 
     private var choices: AlertDialog? = null
 
