@@ -2210,6 +2210,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="other">選択した%1$d件のクリップを削除しますか？</item></plurals>
     <string name="clipboard_delete_selected_message">%1$sのコピーのみが削除され、他のタブのコピーは保持されます。合計クリップサイズ: %2$s。選択後に変更または削除されたクリップはスキップされます。この操作は取り消せません。</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="other">選択したクリップ%2$d件中%1$d件を削除しました。</item></plurals>
+    <string name="clipboard_selection_actions">その他の操作</string>
+    <string name="clipboard_action_add_to_pinned">ピン留めに追加</string>
+    <string name="clipboard_action_add_to_todos">To-Do に追加</string>
+    <string name="clipboard_action_merge">1 つのクリップに結合</string>
+    <string name="clipboard_action_clean">空白と改行を整理</string>
+    <string name="clipboard_bulk_action_error">完了できませんでした。選択は保持されています。</string>
+    <string name="clipboard_bulk_preview">プレビュー: %1$s</string>
+    <string name="clipboard_merge_message">選択したテキストから履歴に新しいクリップを 1 つ作成します。古い順に 1 行ずつ並べます（%1$s）。元のクリップは残ります。</string>
+    <string name="clipboard_merge_private_note">選択したクリップにプライベートのものが含まれるため、プライベートになります。</string>
+    <string name="clipboard_merge_action">結合</string>
+    <string name="clipboard_merge_too_few">結合するには、テキストのクリップを 2 つ以上選択してください。</string>
+    <string name="clipboard_merge_too_large">結合後のクリップは %1$s になります。上限は %2$s です。選択するクリップを減らしてください。</string>
+    <string name="clipboard_clean_message">行末の空白を削除し、段落の途中で折り返された行をつなげます。行末でハイフンで分割された単語は元に戻します。空行、リスト、短い行、リンク、コードの改行はそのまま残ります。変更されるのは %1$s のコピーのみです。この操作は取り消せません。</string>
+    <string name="clipboard_clean_action">整理</string>
+    <string name="clipboard_clean_nothing">整理するものはありません。</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="other">%1$d 件のクリップをピン留めに追加しました。</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="other">%1$d 件のクリップを To-Do に追加しました。</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="other">%1$d 件はすでに追加済みです。</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="other">%1$d 件を保存できませんでした。</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="other">メディアのクリップ %1$d 件をスキップしました。</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="other">%1$d 件は整理の必要がありません。</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="other">%1$d 件のクリップを結合しますか？</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="other">%1$d 件のクリップを履歴の新しいクリップに結合しました。</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="other">%1$d 件のクリップを整理しますか？</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="other">%1$d 件のクリップを整理しました。</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">システムのクリップボードを消去</string>

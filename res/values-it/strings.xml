@@ -2333,6 +2333,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Eliminare %1$d ritaglio selezionato?</item><item quantity="many">Eliminare %1$d ritagli selezionati?</item><item quantity="other">Eliminare %1$d ritagli selezionati?</item></plurals>
     <string name="clipboard_delete_selected_message">Vengono eliminate solo le copie in %1$s; le copie in altre schede rimarranno. Dimensione totale dei ritagli: %2$s. I ritagli modificati o rimossi dopo la selezione verranno ignorati. L\'azione non può essere annullata.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Eliminati %1$d di %2$d ritaglio selezionato.</item><item quantity="many">Eliminati %1$d di %2$d ritagli selezionati.</item><item quantity="other">Eliminati %1$d di %2$d ritagli selezionati.</item></plurals>
+    <string name="clipboard_selection_actions">Altre azioni</string>
+    <string name="clipboard_action_add_to_pinned">Aggiungi ai fissati</string>
+    <string name="clipboard_action_add_to_todos">Aggiungi ai To-do</string>
+    <string name="clipboard_action_merge">Unisci in un solo ritaglio</string>
+    <string name="clipboard_action_clean">Pulisci spazi e a capo</string>
+    <string name="clipboard_bulk_action_error">Impossibile completare. La selezione viene mantenuta.</string>
+    <string name="clipboard_bulk_preview">Anteprima: %1$s</string>
+    <string name="clipboard_merge_message">Crea un nuovo ritaglio nella cronologia con il testo selezionato, dal più vecchio, uno per riga (%1$s). Gli originali restano.</string>
+    <string name="clipboard_merge_private_note">Sarà privato, perché un ritaglio selezionato è privato.</string>
+    <string name="clipboard_merge_action">Unisci</string>
+    <string name="clipboard_merge_too_few">Seleziona almeno due ritagli di testo da unire.</string>
+    <string name="clipboard_merge_too_large">Il ritaglio unito occuperebbe %1$s; il limite è %2$s. Seleziona meno ritagli.</string>
+    <string name="clipboard_clean_message">Rimuove gli spazi a fine riga e unisce le righe spezzate all\'interno di un paragrafo; una parola divisa da un trattino a fine riga viene ricomposta. Righe vuote, elenchi, righe brevi, link e codice mantengono gli a capo. Cambiano solo le copie in %1$s; l\'operazione non può essere annullata.</string>
+    <string name="clipboard_clean_action">Pulisci</string>
+    <string name="clipboard_clean_nothing">Niente da pulire.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d ritaglio aggiunto ai fissati.</item><item quantity="many">%1$d ritagli aggiunti ai fissati.</item><item quantity="other">%1$d ritagli aggiunti ai fissati.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">%1$d ritaglio aggiunto ai To-do.</item><item quantity="many">%1$d ritagli aggiunti ai To-do.</item><item quantity="other">%1$d ritagli aggiunti ai To-do.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d era già presente.</item><item quantity="many">%1$d erano già presenti.</item><item quantity="other">%1$d erano già presenti.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">Impossibile salvare %1$d ritaglio.</item><item quantity="many">Impossibile salvare %1$d ritagli.</item><item quantity="other">Impossibile salvare %1$d ritagli.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">%1$d ritaglio multimediale ignorato.</item><item quantity="many">%1$d ritagli multimediali ignorati.</item><item quantity="other">%1$d ritagli multimediali ignorati.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d non richiede pulizia.</item><item quantity="many">%1$d non richiedono pulizia.</item><item quantity="other">%1$d non richiedono pulizia.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">Unire %1$d ritaglio?</item><item quantity="many">Unire %1$d ritagli?</item><item quantity="other">Unire %1$d ritagli?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">%1$d ritaglio unito in un nuovo ritaglio della cronologia.</item><item quantity="many">%1$d ritagli uniti in un nuovo ritaglio della cronologia.</item><item quantity="other">%1$d ritagli uniti in un nuovo ritaglio della cronologia.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">Pulire %1$d ritaglio?</item><item quantity="many">Pulire %1$d ritagli?</item><item quantity="other">Pulire %1$d ritagli?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">%1$d ritaglio pulito.</item><item quantity="many">%1$d ritagli puliti.</item><item quantity="other">%1$d ritagli puliti.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Cancella appunti di sistema</string>

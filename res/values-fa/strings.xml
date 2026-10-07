@@ -2290,6 +2290,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">%1$d بریده انتخاب‌شده حذف شود؟</item><item quantity="other">%1$d بریده انتخاب‌شده حذف شود؟</item></plurals>
     <string name="clipboard_delete_selected_message">فقط نسخه‌های موجود در %1$s حذف می‌شوند؛ نسخه‌های سایر تب‌ها باقی می‌مانند. مجموع حجم بریده‌ها: %2$s. بریده‌هایی که پس از انتخاب تغییر کرده یا حذف شده‌اند نادیده گرفته می‌شوند. این عمل غیرقابل‌بازگشت است.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d از %2$d بریده انتخاب‌شده حذف شد.</item><item quantity="other">%1$d از %2$d بریده انتخاب‌شده حذف شد.</item></plurals>
+    <string name="clipboard_selection_actions">اقدامات بیشتر</string>
+    <string name="clipboard_action_add_to_pinned">افزودن به سنجاق‌شده‌ها</string>
+    <string name="clipboard_action_add_to_todos">افزودن به کارها</string>
+    <string name="clipboard_action_merge">ادغام در یک بریده</string>
+    <string name="clipboard_action_clean">پاک‌سازی فاصله‌ها و شکست‌های خط</string>
+    <string name="clipboard_bulk_action_error">تکمیل نشد. انتخاب شما حفظ شده است.</string>
+    <string name="clipboard_bulk_preview">پیش‌نمایش: %1$s</string>
+    <string name="clipboard_merge_message">از متن انتخاب‌شده یک بریده جدید در تاریخچه می‌سازد؛ قدیمی‌ترین اول، هر کدام در یک خط (%1$s). بریده‌های اصلی باقی می‌مانند.</string>
+    <string name="clipboard_merge_private_note">این بریده خصوصی خواهد بود، چون یکی از بریده‌های انتخاب‌شده خصوصی است.</string>
+    <string name="clipboard_merge_action">ادغام</string>
+    <string name="clipboard_merge_too_few">برای ادغام دست‌کم دو بریده متنی انتخاب کنید.</string>
+    <string name="clipboard_merge_too_large">حجم بریده ادغام‌شده %1$s می‌شد؛ حد مجاز %2$s است. بریده‌های کمتری انتخاب کنید.</string>
+    <string name="clipboard_clean_message">فاصله‌های انتهای خط را حذف می‌کند و خط‌هایی را که درون یک بند شکسته شده‌اند به هم وصل می‌کند؛ واژه‌ای که در انتهای خط با خط تیره جدا شده دوباره وصل می‌شود. خط‌های خالی، فهرست‌ها، خط‌های کوتاه، پیوندها و کد شکست خط خود را حفظ می‌کنند. فقط نسخه‌های موجود در %1$s تغییر می‌کنند؛ این کار برگشت‌پذیر نیست.</string>
+    <string name="clipboard_clean_action">پاک‌سازی</string>
+    <string name="clipboard_clean_nothing">چیزی برای پاک‌سازی نیست.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d بریده به سنجاق‌شده‌ها افزوده شد.</item><item quantity="other">%1$d بریده به سنجاق‌شده‌ها افزوده شد.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">%1$d بریده به کارها افزوده شد.</item><item quantity="other">%1$d بریده به کارها افزوده شد.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d مورد از قبل وجود داشت.</item><item quantity="other">%1$d مورد از قبل وجود داشت.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">%1$d مورد ذخیره نشد.</item><item quantity="other">%1$d مورد ذخیره نشد.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">%1$d بریده رسانه‌ای نادیده گرفته شد.</item><item quantity="other">%1$d بریده رسانه‌ای نادیده گرفته شد.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d مورد نیازی به پاک‌سازی ندارد.</item><item quantity="other">%1$d مورد نیازی به پاک‌سازی ندارد.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">%1$d بریده ادغام شود؟</item><item quantity="other">%1$d بریده ادغام شود؟</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">%1$d بریده در یک بریده جدید تاریخچه ادغام شد.</item><item quantity="other">%1$d بریده در یک بریده جدید تاریخچه ادغام شد.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">%1$d بریده پاک‌سازی شود؟</item><item quantity="other">%1$d بریده پاک‌سازی شود؟</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">%1$d بریده پاک‌سازی شد.</item><item quantity="other">%1$d بریده پاک‌سازی شد.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">پاک کردن کلیپ‌بورد سیستم</string>

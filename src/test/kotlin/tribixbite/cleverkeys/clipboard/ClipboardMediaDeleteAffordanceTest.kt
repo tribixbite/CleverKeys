@@ -343,7 +343,7 @@ class ClipboardMediaDeleteAffordanceTest {
         expandedStates[entry.timestamp] = true  // selection rows never show expanded actions
         buildView(listOf(entry), ClipboardTab.HISTORY)
         view.setField("clipboardAdapter", adapter)
-        view.setField("selection", ClipboardSelection(ClipboardTab.HISTORY))
+        view.setField("holder", ClipboardSelectionHolder().apply { start(ClipboardTab.HISTORY) })
         val boxClick = slot<View.OnClickListener>()
         val textLongClick = slot<View.OnLongClickListener>()
         every { selectBox.setOnClickListener(capture(boxClick)) } just runs

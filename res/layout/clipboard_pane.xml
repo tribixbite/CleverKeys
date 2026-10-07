@@ -236,7 +236,7 @@
 
     <!-- Selection actions, VISIBLE only in selection mode. A third row in narrow (tall) panes;
          ClipboardPaneLayout puts it beside the results in wide (short) panes, where the
-         non-current tab icons are hidden to make room. Every target is 48dp. -->
+         non-current tab icons are hidden to make room. Five 48dp targets (240dp). -->
     <LinearLayout android:id="@+id/clipboard_selection_bar"
         android:layout_width="match_parent" android:layout_height="48dp"
         android:orientation="horizontal" android:gravity="center_vertical|end"
@@ -255,6 +255,15 @@
           android:background="?android:attr/selectableItemBackgroundBorderless"
           android:scaleType="centerInside" android:padding="12dp"
           android:contentDescription="@string/clipboard_selection_clear"/>
+      <!-- Add to Pinned / Add to Todos / Merge / Clean (2026-10-07): one 48dp target opening a
+           list, so five actions still fit beside the results in a compact landscape pane. -->
+      <ImageButton android:id="@+id/clipboard_selection_actions"
+          android:layout_width="48dp" android:layout_height="48dp"
+          android:src="@drawable/ic_more_vert"
+          android:tint="?attr/colorLabel" tools:ignore="UseAppTint"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:scaleType="centerInside" android:padding="12dp"
+          android:contentDescription="@string/clipboard_selection_actions"/>
       <ImageButton android:id="@+id/clipboard_delete_selected"
           android:layout_width="48dp" android:layout_height="48dp"
           android:src="@drawable/ic_delete"

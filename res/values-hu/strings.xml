@@ -2258,6 +2258,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Törli a(z) %1$d kijelölt kivágást?</item><item quantity="other">Törli a(z) %1$d kijelölt kivágást?</item></plurals>
     <string name="clipboard_delete_selected_message">Csak a(z) %1$s másolatai törlődnek; a más lapokon lévő másolatok megmaradnak. Összesített méret: %2$s. A kijelölés óta módosított vagy eltávolított kivágások kimaradnak. Ez a művelet nem vonható vissza.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d / %2$d kijelölt kivágás törölve.</item><item quantity="other">%1$d / %2$d kijelölt kivágás törölve.</item></plurals>
+    <string name="clipboard_selection_actions">További műveletek</string>
+    <string name="clipboard_action_add_to_pinned">Hozzáadás a rögzítettekhez</string>
+    <string name="clipboard_action_add_to_todos">Hozzáadás a teendőkhöz</string>
+    <string name="clipboard_action_merge">Egyesítés egy kivágásba</string>
+    <string name="clipboard_action_clean">Szóközök és sortörések rendbetétele</string>
+    <string name="clipboard_bulk_action_error">Nem sikerült befejezni. A kijelölés megmarad.</string>
+    <string name="clipboard_bulk_preview">Előnézet: %1$s</string>
+    <string name="clipboard_merge_message">Egy új kivágást hoz létre az előzményekben a kijelölt szövegből, a legrégebbivel kezdve, soronként egyet (%1$s). Az eredetiek megmaradnak.</string>
+    <string name="clipboard_merge_private_note">Privát lesz, mert az egyik kijelölt kivágás privát.</string>
+    <string name="clipboard_merge_action">Egyesítés</string>
+    <string name="clipboard_merge_too_few">Az egyesítéshez jelöljön ki legalább két szöveges kivágást.</string>
+    <string name="clipboard_merge_too_large">Az egyesített kivágás mérete %1$s lenne; a korlát %2$s. Jelöljön ki kevesebb kivágást.</string>
+    <string name="clipboard_clean_message">Eltávolítja a sorvégi szóközöket, és összefűzi a bekezdésen belül megtört sorokat; a sor végén kötőjellel elválasztott szót újra egyesíti. Az üres sorok, listák, rövid sorok, hivatkozások és kód megtartják a sortöréseiket. Csak a(z) %1$s másolatai változnak; ez nem vonható vissza.</string>
+    <string name="clipboard_clean_action">Rendbetétel</string>
+    <string name="clipboard_clean_nothing">Nincs mit rendbe tenni.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d kivágás hozzáadva a rögzítettekhez.</item><item quantity="other">%1$d kivágás hozzáadva a rögzítettekhez.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">%1$d kivágás hozzáadva a teendőkhöz.</item><item quantity="other">%1$d kivágás hozzáadva a teendőkhöz.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d már ott volt.</item><item quantity="other">%1$d már ott volt.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">%1$d mentése nem sikerült.</item><item quantity="other">%1$d mentése nem sikerült.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">%1$d médiakivágás kihagyva.</item><item quantity="other">%1$d médiakivágás kihagyva.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d nem igényel rendbetételt.</item><item quantity="other">%1$d nem igényel rendbetételt.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">Egyesít %1$d kivágást?</item><item quantity="other">Egyesít %1$d kivágást?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">%1$d kivágás egyesítve egy új előzménykivágásba.</item><item quantity="other">%1$d kivágás egyesítve egy új előzménykivágásba.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">Rendbe teszi a(z) %1$d kivágást?</item><item quantity="other">Rendbe teszi a(z) %1$d kivágást?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">%1$d kivágás rendbe téve.</item><item quantity="other">%1$d kivágás rendbe téve.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Rendszervágólap törlése</string>

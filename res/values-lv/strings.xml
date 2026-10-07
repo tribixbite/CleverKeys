@@ -2304,6 +2304,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="zero">Vai dzēst %1$d atlasīto klipu?</item><item quantity="one">Vai dzēst %1$d atlasīto klipu?</item><item quantity="other">Vai dzēst %1$d atlasītos klipus?</item></plurals>
     <string name="clipboard_delete_selected_message">Tiek dzēstas tikai kopijas no %1$s; kopijas citās cilnēs paliek. Kopējais klipu lielums: %2$s. Klipi, kas mainīti vai noņemti pēc to atlasīšanas, tiek izlaisti. Šo darbību nevar atsaukt.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="zero">Izdzēsti: %1$d no %2$d atlasītajiem klipiem.</item><item quantity="one">Izdzēsti: %1$d no %2$d atlasītā klipa.</item><item quantity="other">Izdzēsti: %1$d no %2$d atlasītajiem klipiem.</item></plurals>
+    <string name="clipboard_selection_actions">Citas darbības</string>
+    <string name="clipboard_action_add_to_pinned">Pievienot piespraustajiem</string>
+    <string name="clipboard_action_add_to_todos">Pievienot darāmajiem darbiem</string>
+    <string name="clipboard_action_merge">Apvienot vienā klipā</string>
+    <string name="clipboard_action_clean">Notīrīt atstarpes un rindiņu pārtraukumus</string>
+    <string name="clipboard_bulk_action_error">Neizdevās pabeigt. Atlase ir saglabāta.</string>
+    <string name="clipboard_bulk_preview">Priekšskatījums: %1$s</string>
+    <string name="clipboard_merge_message">Izveido vienu jaunu klipu vēsturē no atlasītā teksta, sākot ar vecāko, pa vienam rindiņā (%1$s). Oriģināli paliek.</string>
+    <string name="clipboard_merge_private_note">Tas būs privāts, jo kāds no atlasītajiem klipiem ir privāts.</string>
+    <string name="clipboard_merge_action">Apvienot</string>
+    <string name="clipboard_merge_too_few">Lai apvienotu, atlasiet vismaz divus teksta klipus.</string>
+    <string name="clipboard_merge_too_large">Apvienotais klips būtu %1$s; ierobežojums ir %2$s. Atlasiet mazāk klipu.</string>
+    <string name="clipboard_clean_message">Noņem atstarpes rindiņu beigās un savieno rindiņas, kas pārtrauktas rindkopas vidū; vārds, kas rindiņas beigās pārnests ar defisi, tiek savienots. Tukšās rindiņas, saraksti, īsas rindiņas, saites un kods saglabā rindiņu pārtraukumus. Mainās tikai kopijas no %1$s; to nevar atsaukt.</string>
+    <string name="clipboard_clean_action">Notīrīt</string>
+    <string name="clipboard_clean_nothing">Nav ko notīrīt.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="zero">Piespraustajiem pievienoti %1$d klipi.</item><item quantity="one">Piespraustajiem pievienots %1$d klips.</item><item quantity="other">Piespraustajiem pievienoti %1$d klipi.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="zero">Darāmajiem darbiem pievienoti %1$d klipi.</item><item quantity="one">Darāmajiem darbiem pievienots %1$d klips.</item><item quantity="other">Darāmajiem darbiem pievienoti %1$d klipi.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="zero">%1$d jau bija tur.</item><item quantity="one">%1$d jau bija tur.</item><item quantity="other">%1$d jau bija tur.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="zero">%1$d neizdevās saglabāt.</item><item quantity="one">%1$d neizdevās saglabāt.</item><item quantity="other">%1$d neizdevās saglabāt.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="zero">Izlaisti %1$d multivides klipi.</item><item quantity="one">Izlaists %1$d multivides klips.</item><item quantity="other">Izlaisti %1$d multivides klipi.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="zero">%1$d nav jānotīra.</item><item quantity="one">%1$d nav jānotīra.</item><item quantity="other">%1$d nav jānotīra.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="zero">Apvienot %1$d klipus?</item><item quantity="one">Apvienot %1$d klipu?</item><item quantity="other">Apvienot %1$d klipus?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="zero">%1$d klipi apvienoti jaunā vēstures klipā.</item><item quantity="one">%1$d klips apvienots jaunā vēstures klipā.</item><item quantity="other">%1$d klipi apvienoti jaunā vēstures klipā.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="zero">Notīrīt %1$d klipus?</item><item quantity="one">Notīrīt %1$d klipu?</item><item quantity="other">Notīrīt %1$d klipus?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="zero">Notīrīti %1$d klipi.</item><item quantity="one">Notīrīts %1$d klips.</item><item quantity="other">Notīrīti %1$d klipi.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Notīrīt sistēmas starpliktuvi</string>

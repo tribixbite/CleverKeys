@@ -2311,6 +2311,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">¿Eliminar %1$d recorte seleccionado?</item><item quantity="many">¿Eliminar %1$d recortes seleccionados?</item><item quantity="other">¿Eliminar %1$d recortes seleccionados?</item></plurals>
     <string name="clipboard_delete_selected_message">Solo se eliminan las copias de %1$s; las copias en otras pestañas se conservan. Tamaño total de los recortes: %2$s. Se omiten los recortes que cambiaron o se eliminaron después de seleccionarlos. Esta acción no se puede deshacer.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Eliminados: %1$d de %2$d recorte seleccionado.</item><item quantity="many">Eliminados: %1$d de %2$d recortes seleccionados.</item><item quantity="other">Eliminados: %1$d de %2$d recortes seleccionados.</item></plurals>
+    <string name="clipboard_selection_actions">Más acciones</string>
+    <string name="clipboard_action_add_to_pinned">Añadir a fijados</string>
+    <string name="clipboard_action_add_to_todos">Añadir a tareas pendientes</string>
+    <string name="clipboard_action_merge">Combinar en un solo recorte</string>
+    <string name="clipboard_action_clean">Limpiar espacios y saltos de línea</string>
+    <string name="clipboard_bulk_action_error">No se pudo completar. Tu selección se conserva.</string>
+    <string name="clipboard_bulk_preview">Vista previa: %1$s</string>
+    <string name="clipboard_merge_message">Crea un nuevo recorte en el historial con el texto seleccionado, del más antiguo al más reciente, uno por línea (%1$s). Los originales se conservan.</string>
+    <string name="clipboard_merge_private_note">Será privado, porque uno de los recortes seleccionados es privado.</string>
+    <string name="clipboard_merge_action">Combinar</string>
+    <string name="clipboard_merge_too_few">Selecciona al menos dos recortes de texto para combinarlos.</string>
+    <string name="clipboard_merge_too_large">El recorte combinado ocuparía %1$s; el límite es %2$s. Selecciona menos recortes.</string>
+    <string name="clipboard_clean_message">Quita los espacios al final de las líneas y une las líneas cortadas dentro de un párrafo; una palabra dividida con guion al final de una línea se vuelve a unir. Las líneas en blanco, las listas, las líneas cortas, los enlaces y el código conservan sus saltos de línea. Solo cambian las copias de %1$s; no se puede deshacer.</string>
+    <string name="clipboard_clean_action">Limpiar</string>
+    <string name="clipboard_clean_nothing">No hay nada que limpiar.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">Se añadió %1$d recorte a fijados.</item><item quantity="many">Se añadieron %1$d recortes a fijados.</item><item quantity="other">Se añadieron %1$d recortes a fijados.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">Se añadió %1$d recorte a tareas pendientes.</item><item quantity="many">Se añadieron %1$d recortes a tareas pendientes.</item><item quantity="other">Se añadieron %1$d recortes a tareas pendientes.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d ya estaba allí.</item><item quantity="many">%1$d ya estaban allí.</item><item quantity="other">%1$d ya estaban allí.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">%1$d no se pudo guardar.</item><item quantity="many">%1$d no se pudieron guardar.</item><item quantity="other">%1$d no se pudieron guardar.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">Se omitió %1$d recorte multimedia.</item><item quantity="many">Se omitieron %1$d recortes multimedia.</item><item quantity="other">Se omitieron %1$d recortes multimedia.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d no necesita limpieza.</item><item quantity="many">%1$d no necesitan limpieza.</item><item quantity="other">%1$d no necesitan limpieza.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">¿Combinar %1$d recorte?</item><item quantity="many">¿Combinar %1$d recortes?</item><item quantity="other">¿Combinar %1$d recortes?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">Se combinó %1$d recorte en un nuevo recorte del historial.</item><item quantity="many">Se combinaron %1$d recortes en un nuevo recorte del historial.</item><item quantity="other">Se combinaron %1$d recortes en un nuevo recorte del historial.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">¿Limpiar %1$d recorte?</item><item quantity="many">¿Limpiar %1$d recortes?</item><item quantity="other">¿Limpiar %1$d recortes?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">Se limpió %1$d recorte.</item><item quantity="many">Se limpiaron %1$d recortes.</item><item quantity="other">Se limpiaron %1$d recortes.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Borrar portapapeles del sistema</string>

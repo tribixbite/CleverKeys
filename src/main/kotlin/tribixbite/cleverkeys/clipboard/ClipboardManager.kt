@@ -28,7 +28,10 @@ import android.widget.RadioButton
 // (StaticLayout NPE via makeLayout(null)). See res/layout/clipboard_filter_dialog.xml header.
 import android.widget.Switch
 import android.widget.TextView
+import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
 import tribixbite.cleverkeys.clipboard.ClipboardSelection
+import tribixbite.cleverkeys.clipboard.ClipboardSelectionAction
+import tribixbite.cleverkeys.clipboard.ClipboardSelectionHolder
 import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.Calendar
 import kotlin.math.roundToInt
@@ -142,14 +145,17 @@ class ClipboardManager(
     private var bulkFeedback: TextView? = null
     private var bulkDialog: android.app.AlertDialog? = null
 
-    // Selection mode chrome (2026-10-07). State lives in ClipboardHistoryView; these only
-    // render it: the live count, and the select/deselect-all-matching, clear, delete and
-    // exit actions.
+    // Selection mode (2026-10-07). The selection itself lives in this service-scoped holder so
+    // it survives pane/view recreation, rotation, keyboard hide and field/app switches; every
+    // inflated ClipboardHistoryView attaches to it. The views below only render it: the live
+    // count, and the select/deselect-all-matching, clear, more-actions, delete and exit actions.
+    private val selectionHolder = ClipboardSelectionHolder()
     private var selectionBar: View? = null
     private var selectionCount: TextView? = null
     private var selectMatchingButton: ImageButton? = null
     private var clearSelectionButton: ImageButton? = null
     private var deleteSelectedButton: ImageButton? = null
+    private var selectionActionsButton: ImageButton? = null
     private var exitSelectionButton: ImageButton? = null
 
     // Tab buttons (ImageViews with vector drawable icons, tinted by colorLabel)
@@ -212,6 +218,8 @@ class ClipboardManager(
             // Save the themed text color before any setTextColor() calls overwrite it
             searchBoxDefaultTextColor = clipboardSearchBox?.currentTextColor ?: 0
             clipboardHistoryView = clipboardPane?.findViewById(R.id.clipboard_history_view)
+            // A re-inflated pane (theme change) resumes the selection the user built.
+            clipboardHistoryView?.attachSelectionHolder(selectionHolder)
 
             // Set up search box click listener
             clipboardSearchBox?.setOnClickListener {
@@ -281,11 +289,18 @@ class ClipboardManager(
             selectMatchingButton = clipboardPane?.findViewById(R.id.clipboard_select_matching)
             clearSelectionButton = clipboardPane?.findViewById(R.id.clipboard_selection_clear)
             deleteSelectedButton = clipboardPane?.findViewById(R.id.clipboard_delete_selected)
+            selectionActionsButton = clipboardPane?.findViewById(R.id.clipboard_selection_actions)
             exitSelectionButton = clipboardPane?.findViewById(R.id.clipboard_selection_exit)
             selectButton?.setOnClickListener { enterSelectionMode() }
             selectMatchingButton?.setOnClickListener { toggleAllMatching() }
             clearSelectionButton?.setOnClickListener { clipboardHistoryView?.clearSelection() }
             deleteSelectedButton?.setOnClickListener { confirmDeleteSelected(it) }
+            selectionActionsButton?.setOnClickListener { showSelectionActions(it) }
+            // Icon-only actions: long-press tooltips (API 26+) carry the same names as TalkBack.
+            clearSelectionButton?.let { describe(it, R.string.clipboard_selection_clear) }
+            selectionActionsButton?.let { describe(it, R.string.clipboard_selection_actions) }
+            deleteSelectedButton?.let { describe(it, R.string.clipboard_delete_selected) }
+            exitSelectionButton?.let { describe(it, R.string.clipboard_selection_exit) }
             exitSelectionButton?.setOnClickListener { exitSelectionMode() }
             clipboardHistoryView?.onResultsChanged = { updateResultSummary() }
             updateResultSummary()
@@ -531,9 +546,14 @@ class ClipboardManager(
         updateSearchBoxErrorState(false)
         updateSearchClearVisibility("")
 
-        // Reset to History tab when showing pane
-        currentTab = ClipboardTab.HISTORY
-        clipboardHistoryView?.setTab(ClipboardTab.HISTORY)
+        // Reopen on History — or, while a selection exists, on its tab, so the checkboxes, count
+        // and selection bar come back (it survives pane close, rotation and keyboard hide). A
+        // selection whose tab has since been disabled in Settings cannot be shown and ends.
+        val selectionTab = selectionHolder.tab
+        if (selectionTab != null && !isTabEnabled(selectionTab)) selectionHolder.end()
+        val tab = selectionHolder.tab ?: ClipboardTab.HISTORY
+        currentTab = tab
+        clipboardHistoryView?.setTab(tab)
         updateTabHighlighting()
         updateFilterIconTint()
     }
@@ -543,9 +563,12 @@ class ClipboardManager(
      * Exits search mode and clears search text.
      */
     fun resetSearchOnHide() {
-        // Pane close, pane switch and keyboard hide (onFinishInputView) all land here: a
-        // selection — and any confirmation for it — must never outlive the field it was made in.
-        exitSelectionMode()
+        // Pane close, pane switch, keyboard hide and the input restart rotation causes
+        // (onFinishInputView) all land here. The SELECTION survives (it is restored when the pane
+        // reopens); only a pending dialog goes, since an IME-attached window cannot outlive the
+        // pane it belongs to. IME dialogs never take window focus (ImeDialogWindowPolicy), so
+        // showing or tapping one does not itself reach this path.
+        dismissPendingDialog()
         searchMode = false
         clipboardSearchBox?.apply {
             text = ""
@@ -787,11 +810,22 @@ class ClipboardManager(
         clipboardHistoryView?.startSelection()
     }
 
-    /** End selection mode (explicit exit, pane close, keyboard hide); dismisses a pending confirmation. */
+    /** End selection mode (explicit Exit, or a tab disabled in Settings); dismisses a pending dialog. */
     fun exitSelectionMode() {
-        bulkDialog?.dismiss()
-        bulkDialog = null
+        dismissPendingDialog()
         clipboardHistoryView?.endSelection()
+    }
+
+    /**
+     * Dismiss a pending selection dialog (actions list or confirmation) without touching the
+     * selection: used when the pane goes away (close, switch, keyboard hide, rebuild). A dialog
+     * the user already confirmed has started its transaction on the holder; it still completes.
+     */
+    private fun dismissPendingDialog() {
+        val dialog = bulkDialog ?: return
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Dismissing pending selection dialog: pane hidden")
+        bulkDialog = null
+        dialog.dismiss()
     }
 
     /** One toggle for both directions: deselect when every match is selected, else select all. */
@@ -801,45 +835,208 @@ class ClipboardManager(
         else view.selectAllMatching()
     }
 
+    private fun tabName(tab: ClipboardTab): String = context.getString(when (tab) {
+        ClipboardTab.HISTORY -> R.string.clipboard_tab_history
+        ClipboardTab.PINNED -> R.string.clipboard_tab_pinned
+        ClipboardTab.TODOS -> R.string.clipboard_tab_todos
+    })
+
+    private fun isTabEnabled(tab: ClipboardTab): Boolean = when (tab) {
+        ClipboardTab.HISTORY -> true
+        ClipboardTab.PINNED -> config.clipboard_pinned_enabled
+        ClipboardTab.TODOS -> config.clipboard_todo_enabled
+    }
+
+    /** Whether a selection dialog may open now (one at a time, never during edit or tags). */
+    private fun canOpenSelectionDialog(): Boolean = !tagMode && !isInEditMode() && bulkDialog == null
+
+    /**
+     * Show [dialog] over the keyboard as THE pending selection dialog. Every selection dialog
+     * goes through here so pane teardown can dismiss it and only one is ever open.
+     */
+    private fun showSelectionDialog(dialog: android.app.AlertDialog, anchor: View) {
+        bulkDialog = dialog
+        dialog.setOnDismissListener { if (bulkDialog === dialog) bulkDialog = null }
+        Utils.show_dialog_on_ime(dialog, anchor.windowToken)
+    }
+
+    private fun dialogBuilder() =
+        android.app.AlertDialog.Builder(ContextThemeWrapper(context, android.R.style.Theme_DeviceDefault_Dialog))
+
+    /**
+     * A confirmation whose positive button runs [onConfirm] exactly once. The action starts its
+     * transaction on the selection holder before the dialog finishes dismissing, so nothing
+     * that tears the pane down afterwards can cancel it.
+     */
+    private fun confirm(anchor: View, title: CharSequence, message: CharSequence, actionLabel: Int, onConfirm: () -> Unit) {
+        var confirmed = false
+        val dialog = dialogBuilder()
+            .setTitle(title)
+            .setMessage(message)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(actionLabel) { _, _ ->
+                if (!confirmed) {
+                    confirmed = true
+                    onConfirm()
+                }
+            }.create()
+        showSelectionDialog(dialog, anchor)
+    }
+
+    /** Polite live-region feedback in the result row (TalkBack announces it). */
+    private fun showBulkFeedback(text: CharSequence) {
+        bulkFeedback?.apply {
+            this.text = text
+            visibility = View.VISIBLE
+        }
+    }
+
+    private fun plural(id: Int, count: Int): String = context.resources.getQuantityString(id, count, count)
+
+    /** Join the non-empty sentences of a result message. */
+    private fun sentences(vararg parts: String?): String = parts.filterNotNull().filter { it.isNotEmpty() }.joinToString(" ")
+
     /**
      * Confirm and delete the selection. The dialog states the exact frozen scope (count, tab,
      * combined size); confirming deletes those rows by identity in one transaction, skipping
      * any that changed after this dialog opened, and reports how many were deleted.
      */
     private fun confirmDeleteSelected(anchor: View) {
-        if (tagMode || isInEditMode() || bulkDialog != null) return
+        if (!canOpenSelectionDialog()) return
         val historyView = clipboardHistoryView ?: return
         val snapshot = historyView.selectionSnapshot() ?: return
-        val tabName = context.getString(when (snapshot.tab) {
-            ClipboardTab.HISTORY -> R.string.clipboard_tab_history
-            ClipboardTab.PINNED -> R.string.clipboard_tab_pinned
-            ClipboardTab.TODOS -> R.string.clipboard_tab_todos
-        })
         val total = snapshot.entries.size
-        val res = context.resources
-        val themed = ContextThemeWrapper(context, android.R.style.Theme_DeviceDefault_Dialog)
-        var confirmed = false
-        val dialog = android.app.AlertDialog.Builder(themed)
-            .setTitle(res.getQuantityString(R.plurals.clipboard_delete_selected_title, total, total))
-            .setMessage(context.getString(R.string.clipboard_delete_selected_message, tabName,
-                Formatter.formatShortFileSize(context, snapshot.totalBytes)))
+        confirm(anchor,
+            context.resources.getQuantityString(R.plurals.clipboard_delete_selected_title, total, total),
+            context.getString(R.string.clipboard_delete_selected_message, tabName(snapshot.tab),
+                Formatter.formatShortFileSize(context, snapshot.totalBytes)),
+            R.string.clipboard_delete_confirm_action) {
+            historyView.deleteSnapshot(snapshot) { result ->
+                showBulkFeedback(result.fold(
+                    { context.resources.getQuantityString(R.plurals.clipboard_delete_selected_result, total, it, total) },
+                    { context.getString(R.string.clipboard_delete_error) }))
+            }
+        }
+    }
+
+    /**
+     * The selection's other bulk actions (2026-10-07): Add to Pinned, Add to Todos, Merge and
+     * Clean, as a list dialog behind one 48dp "more" button so the bar still fits beside the
+     * results in a compact landscape pane. Only actions that make sense for the tab are listed.
+     */
+    private fun showSelectionActions(anchor: View) {
+        if (!canOpenSelectionDialog()) return
+        val historyView = clipboardHistoryView ?: return
+        val snapshot = historyView.selectionSnapshot() ?: return
+        val actions = ClipboardBulkPlans.actionsFor(snapshot.tab, config.clipboard_pinned_enabled, config.clipboard_todo_enabled)
+        val labels = actions.map { action ->
+            context.getString(when (action) {
+                ClipboardSelectionAction.ADD_TO_PINNED -> R.string.clipboard_action_add_to_pinned
+                ClipboardSelectionAction.ADD_TO_TODOS -> R.string.clipboard_action_add_to_todos
+                ClipboardSelectionAction.MERGE -> R.string.clipboard_action_merge
+                ClipboardSelectionAction.CLEAN -> R.string.clipboard_action_clean
+            })
+        }.toTypedArray<CharSequence>()
+        val dialog = dialogBuilder()
+            .setTitle(plural(R.plurals.clipboard_selection_count, snapshot.entries.size))
+            .setItems(labels) { _, which ->
+                // The list dismisses itself after this returns; free the slot for what follows.
+                bulkDialog = null
+                when (actions[which]) {
+                    ClipboardSelectionAction.ADD_TO_PINNED -> copySelection(ClipboardTab.PINNED, snapshot)
+                    ClipboardSelectionAction.ADD_TO_TODOS -> copySelection(ClipboardTab.TODOS, snapshot)
+                    ClipboardSelectionAction.MERGE -> confirmMerge(anchor, snapshot)
+                    ClipboardSelectionAction.CLEAN -> confirmClean(anchor, snapshot)
+                }
+            }
             .setNegativeButton(android.R.string.cancel, null)
-            .setPositiveButton(R.string.clipboard_delete_confirm_action) { _, _ ->
-                if (!confirmed) {
-                    confirmed = true
-                    historyView.deleteSnapshot(snapshot) { result ->
-                        bulkFeedback?.apply {
-                            text = result.fold(
-                                { res.getQuantityString(R.plurals.clipboard_delete_selected_result, total, it, total) },
-                                { context.getString(R.string.clipboard_delete_error) })
-                            visibility = View.VISIBLE
-                        }
+            .create()
+        showSelectionDialog(dialog, anchor)
+    }
+
+    /**
+     * Add to Pinned / Add to Todos. Copying is non-destructive (COPY semantics; duplicates are
+     * reported, not created), so the list choice itself is the confirmation. The target tab icon
+     * pulses once when something was added, three times when everything was already there.
+     */
+    private fun copySelection(target: ClipboardTab, snapshot: ClipboardDeleteSnapshot) {
+        val historyView = clipboardHistoryView ?: return
+        historyView.copySelectionTo(target, snapshot) { result ->
+            result.onSuccess { counts ->
+                val added = if (target == ClipboardTab.PINNED) R.plurals.clipboard_added_to_pinned_result
+                    else R.plurals.clipboard_added_to_todos_result
+                showBulkFeedback(sentences(
+                    plural(added, counts.added),
+                    counts.alreadyPresent.takeIf { it > 0 }?.let { plural(R.plurals.clipboard_bulk_already_present, it) },
+                    counts.failed.takeIf { it > 0 }?.let { plural(R.plurals.clipboard_bulk_failed, it) }))
+                val icon = if (target == ClipboardTab.PINNED) tabPinned else tabTodos
+                // Posted: the icon is hidden until the finished selection's chrome refreshes.
+                icon?.post { pulseTabIcon(icon, if (counts.added > 0) 1 else 3) }
+            }.onFailure { showBulkFeedback(context.getString(R.string.clipboard_bulk_action_error)) }
+        }
+    }
+
+    /**
+     * Merge: confirm with the count, size and a preview, then store one new History clipping.
+     * Refused up front (selection kept) with fewer than two text clippings or over the size limit.
+     */
+    private fun confirmMerge(anchor: View, snapshot: ClipboardDeleteSnapshot) {
+        val historyView = clipboardHistoryView ?: return
+        val limitKb = config.clipboard_max_item_size_kb
+        val mediaNote = { skipped: Int -> skipped.takeIf { it > 0 }?.let { plural(R.plurals.clipboard_bulk_media_skipped, it) } }
+        when (val decision = ClipboardBulkPlans.planMerge(snapshot.entries, if (limitKb > 0) limitKb * 1024L else null)) {
+            is ClipboardBulkPlans.MergeDecision.TooFewText ->
+                showBulkFeedback(sentences(context.getString(R.string.clipboard_merge_too_few), mediaNote(decision.skippedMedia)))
+            is ClipboardBulkPlans.MergeDecision.TooLarge ->
+                showBulkFeedback(context.getString(R.string.clipboard_merge_too_large,
+                    Formatter.formatShortFileSize(context, decision.bytes),
+                    Formatter.formatShortFileSize(context, decision.limitBytes)))
+            is ClipboardBulkPlans.MergeDecision.Ready -> {
+                val plan = decision.plan
+                if (!canOpenSelectionDialog()) return
+                val message = sentences(
+                    context.getString(R.string.clipboard_merge_message, Formatter.formatShortFileSize(context, plan.bytes)),
+                    mediaNote(plan.skippedMedia),
+                    if (plan.isPrivate) context.getString(R.string.clipboard_merge_private_note) else null,
+                ) + "\n\n" + context.getString(R.string.clipboard_bulk_preview, ClipboardBulkPlans.preview(plan.text))
+                confirm(anchor, plural(R.plurals.clipboard_merge_title, plan.sources), message, R.string.clipboard_merge_action) {
+                    historyView.mergeSelection(plan) { result ->
+                        showBulkFeedback(result.fold(
+                            { sentences(plural(R.plurals.clipboard_merge_result, plan.sources), mediaNote(plan.skippedMedia)) },
+                            { context.getString(R.string.clipboard_bulk_action_error) }))
                     }
                 }
-            }.create()
-        bulkDialog = dialog
-        dialog.setOnDismissListener { if (bulkDialog === dialog) bulkDialog = null }
-        Utils.show_dialog_on_ime(dialog, anchor.windowToken)
+            }
+        }
+    }
+
+    /**
+     * Clean: confirm with the rule summary, the counts and a preview of the first change, then
+     * edit the rows in place. With nothing to change it only reports so (selection kept).
+     */
+    private fun confirmClean(anchor: View, snapshot: ClipboardDeleteSnapshot) {
+        val historyView = clipboardHistoryView ?: return
+        val plan = ClipboardBulkPlans.planClean(snapshot.entries)
+        val counts = { unchanged: Int, media: Int -> arrayOf(
+            unchanged.takeIf { it > 0 }?.let { plural(R.plurals.clipboard_bulk_unchanged, it) },
+            media.takeIf { it > 0 }?.let { plural(R.plurals.clipboard_bulk_media_skipped, it) }) }
+        if (plan.edits.isEmpty()) {
+            showBulkFeedback(sentences(context.getString(R.string.clipboard_clean_nothing), *counts(plan.unchanged, plan.skippedMedia)))
+            return
+        }
+        if (!canOpenSelectionDialog()) return
+        val message = sentences(context.getString(R.string.clipboard_clean_message, tabName(snapshot.tab)),
+            *counts(plan.unchanged, plan.skippedMedia)) +
+            "\n\n" + context.getString(R.string.clipboard_bulk_preview, ClipboardBulkPlans.preview(plan.edits.first().second))
+        confirm(anchor, plural(R.plurals.clipboard_clean_title, plan.edits.size), message, R.string.clipboard_clean_action) {
+            historyView.cleanSelection(snapshot.tab, plan) { result ->
+                showBulkFeedback(result.fold({ done ->
+                    sentences(plural(R.plurals.clipboard_clean_result, done.cleaned),
+                        *counts(done.unchanged, done.skippedMedia),
+                        done.failed.takeIf { it > 0 }?.let { plural(R.plurals.clipboard_bulk_failed, it) })
+                }, { context.getString(R.string.clipboard_bulk_action_error) }))
+            }
+        }
     }
 
     private fun updateResultSummary() {
@@ -875,7 +1072,9 @@ class ClipboardManager(
             setEnabledVisual(this, ready && count > 0)
         }
         clearSelectionButton?.let { setEnabledVisual(it, ready && selected > 0) }
-        deleteSelectedButton?.let { setEnabledVisual(it, view.selectionSnapshot() != null && !tagMode) }
+        val actionable = view.selectionSnapshot() != null && !tagMode
+        deleteSelectedButton?.let { setEnabledVisual(it, actionable) }
+        selectionActionsButton?.let { setEnabledVisual(it, actionable) }
         exitSelectionButton?.let { setEnabledVisual(it, ready) }
     }
 
@@ -1196,7 +1395,7 @@ class ClipboardManager(
                 R.id.clipboard_search_clear, R.id.clipboard_date_filter,
                 R.id.clipboard_close_button, R.id.clipboard_select_matching,
                 R.id.clipboard_selection_clear, R.id.clipboard_delete_selected,
-                R.id.clipboard_selection_exit
+                R.id.clipboard_selection_actions, R.id.clipboard_selection_exit
             ).forEach { id ->
                 (pane.findViewById<View?>(id) as? ImageView)
                     ?.setColorFilter(label, PorterDuff.Mode.SRC_IN)
@@ -1279,7 +1478,8 @@ class ClipboardManager(
     private fun invalidatePane() {
         exitEditMode()
         hideTagPanelSilent()
-        exitSelectionMode()
+        // The pane is rebuilt under the new theme; the selection (service-scoped) is kept.
+        dismissPendingDialog()
         selectButton = null
         resultSummary = null
         bulkFeedback = null
@@ -1288,6 +1488,7 @@ class ClipboardManager(
         selectMatchingButton = null
         clearSelectionButton = null
         deleteSelectedButton = null
+        selectionActionsButton = null
         exitSelectionButton = null
         clipboardHistoryView?.onResultsChanged = null
         clipboardHistoryView?.onItemAddedToTab = null
@@ -1352,7 +1553,8 @@ class ClipboardManager(
         clipboardSearchBox = null
         clipboardSearchClear = null
         regexToggle = null
-        exitSelectionMode()
+        // Theme changes call this too: views go, the service-scoped selection stays.
+        dismissPendingDialog()
         selectButton = null
         resultSummary = null
         bulkFeedback = null
@@ -1361,6 +1563,7 @@ class ClipboardManager(
         selectMatchingButton = null
         clearSelectionButton = null
         deleteSelectedButton = null
+        selectionActionsButton = null
         exitSelectionButton = null
         clipboardHistoryView?.onResultsChanged = null
         clipboardHistoryView?.onItemAddedToTab = null

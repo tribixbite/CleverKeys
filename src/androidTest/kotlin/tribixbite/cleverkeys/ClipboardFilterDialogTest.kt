@@ -202,6 +202,108 @@ class ClipboardFilterDialogTest {
     }
 
     /**
+     * 2026-10-07 maintainer request: a selection survives the pane being hidden and rebuilt (the
+     * keyboard-hide / rotation / theme paths all run resetSearchOnHide and/or cleanup), and the
+     * new bulk actions complete against the real database: Add to Pinned (COPY, one transaction),
+     * Merge (one new History clipping, oldest first) and Clean (in place). Each completed action
+     * ends the selection. Also pins that IME dialogs are non-focusable (device report: a
+     * focusable dialog let the host app hide the keyboard mid-tap).
+     */
+    @Test
+    fun selectionSurvivesPaneRebuildAndBulkActionsCompleteOnTheDatabase() {
+        val db = ClipboardDatabase.getInstance(context)
+        val prefix = "ewsel-${java.util.UUID.randomUUID()}-"
+        val expiry = System.currentTimeMillis() + 3600_000
+        val first = prefix + "first line of a wrapped paragraph that goes on\nand ends here."
+        val second = prefix + "second   "
+        assertTrue(db.addClipboardEntry(first, expiry))
+        android.os.SystemClock.sleep(5)
+        assertTrue(db.addClipboardEntry(second, expiry))
+        var manager: ClipboardManager? = null
+        try {
+            ActivityScenario.launch(ClipboardEditTestActivity::class.java).use { scenario ->
+                lateinit var history: ClipboardHistoryView
+                lateinit var pane: android.view.ViewGroup
+                fun attachPane() {
+                    scenario.onActivity { activity ->
+                        pane = manager!!.getClipboardPane(activity.layoutInflater)
+                        manager!!.resetSearchOnShow()
+                        (pane.parent as? android.view.ViewGroup)?.removeView(pane)
+                        activity.setContentView(pane)
+                        history = pane.findViewById(R.id.clipboard_history_view)
+                        history.setSearchFilter(prefix)
+                    }
+                    awaitCondition { history.isResultsReady() && history.resultSummary().first == 2 }
+                }
+                fun selectAll() {
+                    onMain { pane.findViewById<View>(R.id.clipboard_select).performClick() }
+                    onMain { pane.findViewById<View>(R.id.clipboard_select_matching).performClick() }
+                    assertEquals(2, onMain { history.selectedCount() })
+                }
+                fun chooseAction(label: Int) {
+                    onMain { pane.findViewById<View>(R.id.clipboard_selection_actions).performClick() }
+                    val list = requireNotNull(onMain { dialog(manager!!, "bulkDialog") })
+                    val flags = onMain { list.window!!.attributes.flags }
+                    assertTrue("IME dialogs must not take window focus",
+                        flags and android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE != 0)
+                    onMain {
+                        val items = list.listView
+                        val position = (0 until items.adapter.count).first {
+                            items.adapter.getItem(it).toString() == context.getString(label)
+                        }
+                        items.performItemClick(null, position, position.toLong())
+                    }
+                }
+                scenario.onActivity { activity -> manager = ClipboardManager(activity, Config.globalConfig()) }
+                attachPane()
+                selectAll()
+
+                // Keyboard hide + theme rebuild: the views go, the selection stays.
+                onMain { manager!!.resetSearchOnHide(); manager!!.cleanup() }
+                attachPane()
+                assertTrue(onMain { history.isSelecting() })
+                assertEquals(2, onMain { history.selectedCount() })
+
+                // Add to Pinned: copies both, ends the selection.
+                chooseAction(R.string.clipboard_action_add_to_pinned)
+                awaitCondition { !history.isSelecting() }
+                assertEquals(setOf(first, second.trim()),
+                    db.getPinnedEntries().map { it.content }.filter { it.startsWith(prefix) }.toSet())
+
+                // Merge: one new History clipping, oldest first, one per line; originals stay.
+                selectAll()
+                chooseAction(R.string.clipboard_action_merge)
+                awaitCondition { dialog(manager!!, "bulkDialog") != null }
+                onMain { requireNotNull(dialog(manager!!, "bulkDialog")).getButton(AlertDialog.BUTTON_POSITIVE).performClick() }
+                awaitCondition { !history.isSelecting() && history.isResultsReady() }
+                val merged = first + "\n" + second.trim()
+                assertTrue(db.getActiveClipboardEntries().any { it.content == merged })
+                assertTrue(db.getActiveClipboardEntries().any { it.content == first })
+
+                // Clean the original two in place (the merged row is excluded by the size filter).
+                onMain { history.setSizeFilter(0, (first.length + 8).toLong()) }
+                awaitCondition { history.resultSummary().first == 2 }
+                selectAll()
+                chooseAction(R.string.clipboard_action_clean)
+                awaitCondition { dialog(manager!!, "bulkDialog") != null }
+                onMain { requireNotNull(dialog(manager!!, "bulkDialog")).getButton(AlertDialog.BUTTON_POSITIVE).performClick() }
+                awaitCondition { !history.isSelecting() && history.isResultsReady() }
+                val cleaned = prefix + "first line of a wrapped paragraph that goes on and ends here."
+                assertTrue(db.getActiveClipboardEntries().any { it.content == cleaned })
+                // The pinned copy is a separate row and stays untouched.
+                assertTrue(db.getPinnedEntries().any { it.content == first })
+                onMain { manager!!.cleanup() }
+                manager = null
+            }
+        } finally {
+            manager?.let { onMain(it::cleanup) }
+            for (table in listOf("clipboard_entries", "pinned_entries", "todo_entries")) {
+                db.writableDatabase.delete(table, "content LIKE ?", arrayOf("$prefix%"))
+            }
+        }
+    }
+
+    /**
      * Inflate + measure the dialog content on the main thread, the same two steps the real
      * AlertDialog performs when shown. Any Throwable is captured and rethrown as a test failure
      * (instead of crashing the main looper) so the pre-fix NPE reads as a clean red test.

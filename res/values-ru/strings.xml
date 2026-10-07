@@ -2339,6 +2339,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Удалить %1$d выбранный фрагмент?</item><item quantity="few">Удалить %1$d выбранных фрагмента?</item><item quantity="many">Удалить %1$d выбранных фрагментов?</item><item quantity="other">Удалить %1$d выбранного фрагмента?</item></plurals>
     <string name="clipboard_delete_selected_message">Удаляются только копии в %1$s; копии на других вкладках останутся. Общий размер фрагментов: %2$s. Фрагменты, изменённые или удалённые после выбора, пропускаются. Это действие нельзя отменить.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Удалено %1$d из %2$d выбранного фрагмента.</item><item quantity="few">Удалено %1$d из %2$d выбранных фрагментов.</item><item quantity="many">Удалено %1$d из %2$d выбранных фрагментов.</item><item quantity="other">Удалено %1$d из %2$d выбранного фрагмента.</item></plurals>
+    <string name="clipboard_selection_actions">Другие действия</string>
+    <string name="clipboard_action_add_to_pinned">Добавить в закреплённые</string>
+    <string name="clipboard_action_add_to_todos">Добавить в список дел</string>
+    <string name="clipboard_action_merge">Объединить в один фрагмент</string>
+    <string name="clipboard_action_clean">Убрать лишние пробелы и переносы строк</string>
+    <string name="clipboard_bulk_action_error">Не удалось завершить. Выбор сохранён.</string>
+    <string name="clipboard_bulk_preview">Предпросмотр: %1$s</string>
+    <string name="clipboard_merge_message">Создаёт один новый фрагмент в истории из выбранного текста: сначала самые старые, по одному на строку (%1$s). Исходные фрагменты остаются.</string>
+    <string name="clipboard_merge_private_note">Он будет приватным, потому что один из выбранных фрагментов приватный.</string>
+    <string name="clipboard_merge_action">Объединить</string>
+    <string name="clipboard_merge_too_few">Выберите хотя бы два текстовых фрагмента для объединения.</string>
+    <string name="clipboard_merge_too_large">Объединённый фрагмент занял бы %1$s; ограничение — %2$s. Выберите меньше фрагментов.</string>
+    <string name="clipboard_clean_message">Удаляет пробелы в конце строк и соединяет строки, разорванные внутри абзаца; слово, перенесённое через дефис в конце строки, соединяется. Пустые строки, списки, короткие строки, ссылки и код сохраняют переносы. Изменяются только копии в %1$s; это нельзя отменить.</string>
+    <string name="clipboard_clean_action">Очистить</string>
+    <string name="clipboard_clean_nothing">Нечего очищать.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d фрагмент добавлен в закреплённые.</item><item quantity="few">%1$d фрагмента добавлены в закреплённые.</item><item quantity="many">%1$d фрагментов добавлено в закреплённые.</item><item quantity="other">%1$d фрагмента добавлено в закреплённые.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">%1$d фрагмент добавлен в список дел.</item><item quantity="few">%1$d фрагмента добавлены в список дел.</item><item quantity="many">%1$d фрагментов добавлено в список дел.</item><item quantity="other">%1$d фрагмента добавлено в список дел.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d уже был там.</item><item quantity="few">%1$d уже были там.</item><item quantity="many">%1$d уже были там.</item><item quantity="other">%1$d уже были там.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">Не удалось сохранить %1$d фрагмент.</item><item quantity="few">Не удалось сохранить %1$d фрагмента.</item><item quantity="many">Не удалось сохранить %1$d фрагментов.</item><item quantity="other">Не удалось сохранить %1$d фрагмента.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">Пропущен %1$d медиафрагмент.</item><item quantity="few">Пропущено %1$d медиафрагмента.</item><item quantity="many">Пропущено %1$d медиафрагментов.</item><item quantity="other">Пропущено %1$d медиафрагмента.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d не нуждается в очистке.</item><item quantity="few">%1$d не нуждаются в очистке.</item><item quantity="many">%1$d не нуждаются в очистке.</item><item quantity="other">%1$d не нуждаются в очистке.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">Объединить %1$d фрагмент?</item><item quantity="few">Объединить %1$d фрагмента?</item><item quantity="many">Объединить %1$d фрагментов?</item><item quantity="other">Объединить %1$d фрагмента?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">%1$d фрагмент объединён в новый фрагмент истории.</item><item quantity="few">%1$d фрагмента объединены в новый фрагмент истории.</item><item quantity="many">%1$d фрагментов объединено в новый фрагмент истории.</item><item quantity="other">%1$d фрагмента объединено в новый фрагмент истории.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">Очистить %1$d фрагмент?</item><item quantity="few">Очистить %1$d фрагмента?</item><item quantity="many">Очистить %1$d фрагментов?</item><item quantity="other">Очистить %1$d фрагмента?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">Очищен %1$d фрагмент.</item><item quantity="few">Очищено %1$d фрагмента.</item><item quantity="many">Очищено %1$d фрагментов.</item><item quantity="other">Очищено %1$d фрагмента.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Очистить системный буфер обмена</string>

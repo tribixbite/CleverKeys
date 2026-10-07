@@ -2272,6 +2272,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">%1$d ausgewählten Clip löschen?</item><item quantity="other">%1$d ausgewählte Clips löschen?</item></plurals>
     <string name="clipboard_delete_selected_message">Nur die Kopien in %1$s werden gelöscht; Kopien in anderen Tabs bleiben erhalten. Gesamte Clipgröße: %2$s. Clips, die seit der Auswahl geändert oder entfernt wurden, werden übersprungen. Dies kann nicht rückgängig gemacht werden.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d von %2$d ausgewählten Clip gelöscht.</item><item quantity="other">%1$d von %2$d ausgewählten Clips gelöscht.</item></plurals>
+    <string name="clipboard_selection_actions">Weitere Aktionen</string>
+    <string name="clipboard_action_add_to_pinned">Zu Angehefteten hinzufügen</string>
+    <string name="clipboard_action_add_to_todos">Zu Aufgaben hinzufügen</string>
+    <string name="clipboard_action_merge">Zu einem Clip zusammenführen</string>
+    <string name="clipboard_action_clean">Leerzeichen und Zeilenumbrüche bereinigen</string>
+    <string name="clipboard_bulk_action_error">Konnte nicht abgeschlossen werden. Ihre Auswahl bleibt erhalten.</string>
+    <string name="clipboard_bulk_preview">Vorschau: %1$s</string>
+    <string name="clipboard_merge_message">Erstellt einen neuen Clip im Verlauf aus dem ausgewählten Text, der älteste zuerst, einer pro Zeile (%1$s). Die Originale bleiben erhalten.</string>
+    <string name="clipboard_merge_private_note">Er wird privat, weil ein ausgewählter Clip privat ist.</string>
+    <string name="clipboard_merge_action">Zusammenführen</string>
+    <string name="clipboard_merge_too_few">Wählen Sie mindestens zwei Text-Clips zum Zusammenführen aus.</string>
+    <string name="clipboard_merge_too_large">Der zusammengeführte Clip wäre %1$s groß; die Grenze ist %2$s. Wählen Sie weniger Clips aus.</string>
+    <string name="clipboard_clean_message">Entfernt Leerzeichen am Zeilenende und verbindet Zeilen, die innerhalb eines Absatzes umbrochen wurden; ein am Zeilenende getrenntes Wort wird wieder zusammengefügt. Leerzeilen, Listen, kurze Zeilen, Links und Code behalten ihre Zeilenumbrüche. Nur die Kopien in %1$s werden geändert; dies kann nicht rückgängig gemacht werden.</string>
+    <string name="clipboard_clean_action">Bereinigen</string>
+    <string name="clipboard_clean_nothing">Nichts zu bereinigen.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d Clip zu Angehefteten hinzugefügt.</item><item quantity="other">%1$d Clips zu Angehefteten hinzugefügt.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">%1$d Clip zu Aufgaben hinzugefügt.</item><item quantity="other">%1$d Clips zu Aufgaben hinzugefügt.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d war bereits vorhanden.</item><item quantity="other">%1$d waren bereits vorhanden.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">%1$d konnte nicht gespeichert werden.</item><item quantity="other">%1$d konnten nicht gespeichert werden.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">%1$d Medien-Clip übersprungen.</item><item quantity="other">%1$d Medien-Clips übersprungen.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d muss nicht bereinigt werden.</item><item quantity="other">%1$d müssen nicht bereinigt werden.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">%1$d Clip zusammenführen?</item><item quantity="other">%1$d Clips zusammenführen?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">%1$d Clip zu einem neuen Clip im Verlauf zusammengeführt.</item><item quantity="other">%1$d Clips zu einem neuen Clip im Verlauf zusammengeführt.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">%1$d Clip bereinigen?</item><item quantity="other">%1$d Clips bereinigen?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">%1$d Clip bereinigt.</item><item quantity="other">%1$d Clips bereinigt.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">System-Zwischenablage leeren</string>

@@ -2334,6 +2334,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Smazat %1$d vybraný výstřižek?</item><item quantity="few">Smazat %1$d vybrané výstřižky?</item><item quantity="many">Smazat %1$d vybraného výstřižku?</item><item quantity="other">Smazat %1$d vybraných výstřižků?</item></plurals>
     <string name="clipboard_delete_selected_message">Smažou se pouze kopie v %1$s; kopie na ostatních kartách zůstanou. Celková velikost výstřižků: %2$s. Výstřižky změněné nebo odstraněné od jejich výběru budou přeskočeny. Tuto akci nelze vrátit zpět.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Smazáno %1$d z %2$d vybraného výstřižku.</item><item quantity="few">Smazáno %1$d z %2$d vybraných výstřižků.</item><item quantity="many">Smazáno %1$d z %2$d vybraného výstřižku.</item><item quantity="other">Smazáno %1$d z %2$d vybraných výstřižků.</item></plurals>
+    <string name="clipboard_selection_actions">Další akce</string>
+    <string name="clipboard_action_add_to_pinned">Přidat do připnutých</string>
+    <string name="clipboard_action_add_to_todos">Přidat do úkolů</string>
+    <string name="clipboard_action_merge">Sloučit do jednoho výstřižku</string>
+    <string name="clipboard_action_clean">Vyčistit mezery a zalomení řádků</string>
+    <string name="clipboard_bulk_action_error">Nepodařilo se dokončit. Výběr zůstává zachován.</string>
+    <string name="clipboard_bulk_preview">Náhled: %1$s</string>
+    <string name="clipboard_merge_message">Vytvoří jeden nový výstřižek v historii z vybraného textu, od nejstaršího, jeden na řádek (%1$s). Původní výstřižky zůstanou.</string>
+    <string name="clipboard_merge_private_note">Bude soukromý, protože jeden z vybraných výstřižků je soukromý.</string>
+    <string name="clipboard_merge_action">Sloučit</string>
+    <string name="clipboard_merge_too_few">Ke sloučení vyberte alespoň dva textové výstřižky.</string>
+    <string name="clipboard_merge_too_large">Sloučený výstřižek by měl %1$s; limit je %2$s. Vyberte méně výstřižků.</string>
+    <string name="clipboard_clean_message">Odstraní mezery na koncích řádků a spojí řádky zalomené uvnitř odstavce; slovo rozdělené spojovníkem na konci řádku se opět spojí. Prázdné řádky, seznamy, krátké řádky, odkazy a kód si zalomení ponechají. Změní se pouze kopie v %1$s; akci nelze vrátit zpět.</string>
+    <string name="clipboard_clean_action">Vyčistit</string>
+    <string name="clipboard_clean_nothing">Není co čistit.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">Do připnutých přidán %1$d výstřižek.</item><item quantity="few">Do připnutých přidány %1$d výstřižky.</item><item quantity="many">Do připnutých přidáno %1$d výstřižku.</item><item quantity="other">Do připnutých přidáno %1$d výstřižků.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">Do úkolů přidán %1$d výstřižek.</item><item quantity="few">Do úkolů přidány %1$d výstřižky.</item><item quantity="many">Do úkolů přidáno %1$d výstřižku.</item><item quantity="other">Do úkolů přidáno %1$d výstřižků.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d už tam byl.</item><item quantity="few">%1$d už tam byly.</item><item quantity="many">%1$d už tam bylo.</item><item quantity="other">%1$d už tam bylo.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">%1$d nelze uložit.</item><item quantity="few">%1$d nelze uložit.</item><item quantity="many">%1$d nelze uložit.</item><item quantity="other">%1$d nelze uložit.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">%1$d mediální výstřižek přeskočen.</item><item quantity="few">%1$d mediální výstřižky přeskočeny.</item><item quantity="many">%1$d mediálního výstřižku přeskočeno.</item><item quantity="other">%1$d mediálních výstřižků přeskočeno.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d není třeba čistit.</item><item quantity="few">%1$d není třeba čistit.</item><item quantity="many">%1$d není třeba čistit.</item><item quantity="other">%1$d není třeba čistit.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">Sloučit %1$d výstřižek?</item><item quantity="few">Sloučit %1$d výstřižky?</item><item quantity="many">Sloučit %1$d výstřižku?</item><item quantity="other">Sloučit %1$d výstřižků?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">%1$d výstřižek sloučen do nového výstřižku v historii.</item><item quantity="few">%1$d výstřižky sloučeny do nového výstřižku v historii.</item><item quantity="many">%1$d výstřižku sloučeno do nového výstřižku v historii.</item><item quantity="other">%1$d výstřižků sloučeno do nového výstřižku v historii.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">Vyčistit %1$d výstřižek?</item><item quantity="few">Vyčistit %1$d výstřižky?</item><item quantity="many">Vyčistit %1$d výstřižku?</item><item quantity="other">Vyčistit %1$d výstřižků?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">Vyčištěn %1$d výstřižek.</item><item quantity="few">Vyčištěny %1$d výstřižky.</item><item quantity="many">Vyčištěno %1$d výstřižku.</item><item quantity="other">Vyčištěno %1$d výstřižků.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Vymazat systémovou schránku</string>

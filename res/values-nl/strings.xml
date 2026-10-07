@@ -2252,6 +2252,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">%1$d geselecteerd fragment verwijderen?</item><item quantity="other">%1$d geselecteerde fragmenten verwijderen?</item></plurals>
     <string name="clipboard_delete_selected_message">Alleen de kopieën in %1$s worden verwijderd; kopieën op andere tabbladen blijven behouden. Gecombineerde fragmentgrootte: %2$s. Fragmenten die sinds je selectie zijn gewijzigd of verwijderd, worden overgeslagen. Dit kan niet ongedaan worden gemaakt.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d van %2$d geselecteerd fragment verwijderd.</item><item quantity="other">%1$d van %2$d geselecteerde fragmenten verwijderd.</item></plurals>
+    <string name="clipboard_selection_actions">Meer acties</string>
+    <string name="clipboard_action_add_to_pinned">Toevoegen aan vastgezet</string>
+    <string name="clipboard_action_add_to_todos">Toevoegen aan to-do\'s</string>
+    <string name="clipboard_action_merge">Samenvoegen tot één fragment</string>
+    <string name="clipboard_action_clean">Spaties en regeleinden opschonen</string>
+    <string name="clipboard_bulk_action_error">Kon niet worden voltooid. Je selectie blijft behouden.</string>
+    <string name="clipboard_bulk_preview">Voorbeeld: %1$s</string>
+    <string name="clipboard_merge_message">Maakt één nieuw fragment in de geschiedenis van de geselecteerde tekst, oudste eerst, één per regel (%1$s). De originelen blijven behouden.</string>
+    <string name="clipboard_merge_private_note">Het wordt privé, omdat een geselecteerd fragment privé is.</string>
+    <string name="clipboard_merge_action">Samenvoegen</string>
+    <string name="clipboard_merge_too_few">Selecteer minstens twee tekstfragmenten om samen te voegen.</string>
+    <string name="clipboard_merge_too_large">Het samengevoegde fragment zou %1$s zijn; de limiet is %2$s. Selecteer minder fragmenten.</string>
+    <string name="clipboard_clean_message">Verwijdert spaties aan het einde van regels en voegt regels samen die binnen een alinea zijn afgebroken; een woord dat aan het einde van een regel met een koppelteken is afgebroken, wordt weer samengevoegd. Lege regels, lijsten, korte regels, links en code behouden hun regeleinden. Alleen de kopieën in %1$s veranderen; dit kan niet ongedaan worden gemaakt.</string>
+    <string name="clipboard_clean_action">Opschonen</string>
+    <string name="clipboard_clean_nothing">Niets op te schonen.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d fragment toegevoegd aan vastgezet.</item><item quantity="other">%1$d fragmenten toegevoegd aan vastgezet.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">%1$d fragment toegevoegd aan to-do\'s.</item><item quantity="other">%1$d fragmenten toegevoegd aan to-do\'s.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d stond er al.</item><item quantity="other">%1$d stonden er al.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">%1$d kon niet worden opgeslagen.</item><item quantity="other">%1$d konden niet worden opgeslagen.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">%1$d mediafragment overgeslagen.</item><item quantity="other">%1$d mediafragmenten overgeslagen.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d hoeft niet te worden opgeschoond.</item><item quantity="other">%1$d hoeven niet te worden opgeschoond.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">%1$d fragment samenvoegen?</item><item quantity="other">%1$d fragmenten samenvoegen?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">%1$d fragment samengevoegd tot een nieuw fragment in de geschiedenis.</item><item quantity="other">%1$d fragmenten samengevoegd tot een nieuw fragment in de geschiedenis.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">%1$d fragment opschonen?</item><item quantity="other">%1$d fragmenten opschonen?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">%1$d fragment opgeschoond.</item><item quantity="other">%1$d fragmenten opgeschoond.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Systeemklembord wissen</string>

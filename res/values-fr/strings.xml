@@ -2303,6 +2303,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Supprimer %1$d élément sélectionné ?</item><item quantity="many">Supprimer %1$d éléments sélectionnés ?</item><item quantity="other">Supprimer %1$d éléments sélectionnés ?</item></plurals>
     <string name="clipboard_delete_selected_message">Seules les copies dans %1$s sont supprimées ; les copies dans les autres onglets sont conservées. Taille cumulée : %2$s. Les éléments modifiés ou retirés depuis leur sélection sont ignorés. Action irréversible.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d sur %2$d élément sélectionné supprimé.</item><item quantity="many">%1$d sur %2$d éléments sélectionnés supprimés.</item><item quantity="other">%1$d sur %2$d éléments sélectionnés supprimés.</item></plurals>
+    <string name="clipboard_selection_actions">Plus d\'actions</string>
+    <string name="clipboard_action_add_to_pinned">Ajouter aux épinglés</string>
+    <string name="clipboard_action_add_to_todos">Ajouter aux tâches</string>
+    <string name="clipboard_action_merge">Fusionner en un seul élément</string>
+    <string name="clipboard_action_clean">Nettoyer les espaces et les retours à la ligne</string>
+    <string name="clipboard_bulk_action_error">Action inachevée. Votre sélection est conservée.</string>
+    <string name="clipboard_bulk_preview">Aperçu : %1$s</string>
+    <string name="clipboard_merge_message">Crée un nouvel élément dans l\'historique à partir du texte sélectionné, du plus ancien au plus récent, un par ligne (%1$s). Les originaux sont conservés.</string>
+    <string name="clipboard_merge_private_note">Il sera privé, car un élément sélectionné est privé.</string>
+    <string name="clipboard_merge_action">Fusionner</string>
+    <string name="clipboard_merge_too_few">Sélectionnez au moins deux éléments texte à fusionner.</string>
+    <string name="clipboard_merge_too_large">L\'élément fusionné ferait %1$s ; la limite est de %2$s. Sélectionnez moins d\'éléments.</string>
+    <string name="clipboard_clean_message">Supprime les espaces en fin de ligne et rejoint les lignes coupées au milieu d\'un paragraphe ; un mot coupé par un trait d\'union en fin de ligne est recollé. Les lignes vides, les listes, les lignes courtes, les liens et le code gardent leurs retours à la ligne. Seules les copies dans %1$s sont modifiées ; cette action est irréversible.</string>
+    <string name="clipboard_clean_action">Nettoyer</string>
+    <string name="clipboard_clean_nothing">Rien à nettoyer.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d élément ajouté aux épinglés.</item><item quantity="many">%1$d éléments ajoutés aux épinglés.</item><item quantity="other">%1$d éléments ajoutés aux épinglés.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">%1$d élément ajouté aux tâches.</item><item quantity="many">%1$d éléments ajoutés aux tâches.</item><item quantity="other">%1$d éléments ajoutés aux tâches.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d y était déjà.</item><item quantity="many">%1$d y étaient déjà.</item><item quantity="other">%1$d y étaient déjà.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">%1$d n\'a pas pu être enregistré.</item><item quantity="many">%1$d n\'ont pas pu être enregistrés.</item><item quantity="other">%1$d n\'ont pas pu être enregistrés.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">%1$d élément multimédia ignoré.</item><item quantity="many">%1$d éléments multimédias ignorés.</item><item quantity="other">%1$d éléments multimédias ignorés.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d n\'a pas besoin d\'être nettoyé.</item><item quantity="many">%1$d n\'ont pas besoin d\'être nettoyés.</item><item quantity="other">%1$d n\'ont pas besoin d\'être nettoyés.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">Fusionner %1$d élément ?</item><item quantity="many">Fusionner %1$d éléments ?</item><item quantity="other">Fusionner %1$d éléments ?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">%1$d élément fusionné en un nouvel élément de l\'historique.</item><item quantity="many">%1$d éléments fusionnés en un nouvel élément de l\'historique.</item><item quantity="other">%1$d éléments fusionnés en un nouvel élément de l\'historique.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">Nettoyer %1$d élément ?</item><item quantity="many">Nettoyer %1$d éléments ?</item><item quantity="other">Nettoyer %1$d éléments ?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">%1$d élément nettoyé.</item><item quantity="many">%1$d éléments nettoyés.</item><item quantity="other">%1$d éléments nettoyés.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Effacer le presse-papiers système</string>

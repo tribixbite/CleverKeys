@@ -2239,6 +2239,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="other">Xóa %1$d đoạn cắt đã chọn?</item></plurals>
     <string name="clipboard_delete_selected_message">Chỉ các bản sao trong %1$s bị xóa; bản sao ở các thẻ khác vẫn được giữ lại. Tổng kích thước đoạn cắt: %2$s. Các đoạn cắt đã thay đổi hoặc bị gỡ sau khi bạn chọn sẽ bị bỏ qua. Thao tác này không thể hoàn tác.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="other">Đã xóa %1$d trên %2$d đoạn cắt đã chọn.</item></plurals>
+    <string name="clipboard_selection_actions">Thao tác khác</string>
+    <string name="clipboard_action_add_to_pinned">Thêm vào mục đã ghim</string>
+    <string name="clipboard_action_add_to_todos">Thêm vào việc cần làm</string>
+    <string name="clipboard_action_merge">Gộp thành một đoạn cắt</string>
+    <string name="clipboard_action_clean">Dọn khoảng trắng và ngắt dòng</string>
+    <string name="clipboard_bulk_action_error">Không thể hoàn tất. Lựa chọn của bạn vẫn được giữ.</string>
+    <string name="clipboard_bulk_preview">Xem trước: %1$s</string>
+    <string name="clipboard_merge_message">Tạo một đoạn cắt mới trong lịch sử từ văn bản đã chọn, cũ nhất trước, mỗi đoạn một dòng (%1$s). Bản gốc vẫn được giữ.</string>
+    <string name="clipboard_merge_private_note">Đoạn cắt này sẽ ở chế độ riêng tư vì có một đoạn cắt đã chọn là riêng tư.</string>
+    <string name="clipboard_merge_action">Gộp</string>
+    <string name="clipboard_merge_too_few">Hãy chọn ít nhất hai đoạn cắt văn bản để gộp.</string>
+    <string name="clipboard_merge_too_large">Đoạn cắt sau khi gộp sẽ có kích thước %1$s; giới hạn là %2$s. Hãy chọn ít đoạn cắt hơn.</string>
+    <string name="clipboard_clean_message">Xóa khoảng trắng ở cuối dòng và nối các dòng bị ngắt giữa đoạn văn; từ bị tách bằng dấu gạch nối ở cuối dòng sẽ được nối lại. Dòng trống, danh sách, dòng ngắn, liên kết và mã vẫn giữ nguyên ngắt dòng. Chỉ các bản sao trong %1$s thay đổi; không thể hoàn tác.</string>
+    <string name="clipboard_clean_action">Dọn</string>
+    <string name="clipboard_clean_nothing">Không có gì để dọn.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="other">Đã thêm %1$d đoạn cắt vào mục đã ghim.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="other">Đã thêm %1$d đoạn cắt vào việc cần làm.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="other">%1$d đoạn cắt đã có sẵn.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="other">Không thể lưu %1$d đoạn cắt.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="other">Đã bỏ qua %1$d đoạn cắt đa phương tiện.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="other">%1$d đoạn cắt không cần dọn.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="other">Gộp %1$d đoạn cắt?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="other">Đã gộp %1$d đoạn cắt thành một đoạn cắt mới trong lịch sử.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="other">Dọn %1$d đoạn cắt?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="other">Đã dọn %1$d đoạn cắt.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Xóa khay nhớ tạm hệ thống</string>

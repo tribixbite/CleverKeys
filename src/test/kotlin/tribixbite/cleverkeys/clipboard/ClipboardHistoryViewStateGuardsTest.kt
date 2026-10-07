@@ -363,6 +363,102 @@ class ClipboardHistoryViewStateGuardsTest {
     }
 
     @Test
+    fun reopeningOnTheSelectionsOwnTabKeepsTheSelection() {
+        // Reopening the pane re-targets the list at the selection's tab (resetSearchOnShow):
+        // that must restore the selection, not end it.
+        val rows = (1..3).map { ClipboardEntry("keep-$it", it.toLong(), rowId = it.toLong()) }
+        buildReadyView(rows)
+        view.startSelection()
+        view.selectAllMatching()
+
+        view.setTab(ClipboardTab.HISTORY)
+        view.acceptLoadedHistory(rows)
+
+        assertThat(view.isSelecting()).isTrue()
+        assertThat(view.selectedCount()).isEqualTo(3)
+    }
+
+    @Test
+    fun selectionSurvivesViewRecreationThroughTheServiceScopedHolder() {
+        // Theme rebuilds re-inflate the pane, rotation and app switches close it: a NEW list
+        // view must come back with the same selection, checkboxes and count.
+        val rows = (1..3).map { ClipboardEntry("persist-$it", it.toLong(), rowId = it.toLong()) }
+        val holder = ClipboardSelectionHolder()
+        buildReadyView(rows)
+        view.attachSelectionHolder(holder)
+        view.startSelection()
+        view.toggleSelection(rows[0])
+        view.toggleSelection(rows[2])
+
+        buildReadyView(emptyList())          // a freshly inflated view, nothing loaded yet
+        view.attachSelectionHolder(holder)
+        assertThat(view.isSelecting()).isTrue()
+        view.acceptLoadedHistory(rows + ClipboardEntry("persist-new", 9, rowId = 9))
+
+        assertThat(view.selectedCount()).isEqualTo(2)
+        assertThat(view.isEntrySelected(rows[0])).isTrue()
+        assertThat(view.isEntrySelected(rows[1])).isFalse()
+        assertThat(view.selectionSnapshot()!!.entries.map { it.rowId }).containsExactly(1L, 3L)
+    }
+
+    @Test
+    fun aLoadForAnotherTabNeverReconcilesTheSelection() {
+        // A re-inflated view first loads History before it is pointed at the selection's tab;
+        // reconciling Pinned row ids against History rows would silently empty the selection.
+        val pinned = (1..2).map { ClipboardEntry("pin-$it", it.toLong(), rowId = it.toLong()) }
+        val holder = ClipboardSelectionHolder()
+        holder.start(ClipboardTab.PINNED).selectAll(pinned)
+        buildReadyView(emptyList())
+        view.attachSelectionHolder(holder)
+
+        view.acceptLoadedHistory(listOf(ClipboardEntry("history", 5, rowId = 5)), ClipboardTab.HISTORY)
+
+        assertThat(holder.selection!!.size).isEqualTo(2)
+    }
+
+    @Test
+    fun bulkCopyRunsOnTheHolderAndEndsTheSelectionWhenItCommits() {
+        val rows = (1..2).map { ClipboardEntry("copy-$it", it.toLong(), rowId = it.toLong()) }
+        val holder = ClipboardSelectionHolder(kotlinx.coroutines.Dispatchers.Unconfined, kotlinx.coroutines.Dispatchers.Unconfined)
+        buildReadyView(rows)
+        view.attachSelectionHolder(holder)
+        view.startSelection()
+        view.selectAllMatching()
+        every { service.copyEntriesTo(ClipboardTab.PINNED, any()) } returns
+            Result.success(ClipboardCopyResult(added = 2, alreadyPresent = 0, failed = 0))
+        var reported: ClipboardCopyResult? = null
+
+        val snapshot = view.selectionSnapshot()!!
+        view.copySelectionTo(ClipboardTab.PINNED, snapshot) { reported = it.getOrNull() }
+
+        verify(exactly = 1) { service.copyEntriesTo(ClipboardTab.PINNED, snapshot.entries) }
+        assertThat(reported).isEqualTo(ClipboardCopyResult(2, 0, 0))
+        assertThat(view.isSelecting()).isFalse()
+    }
+
+    @Test
+    fun bulkCleanAndMergeGoThroughTheServiceAndAFailureKeepsTheSelection() {
+        val rows = listOf(ClipboardEntry("a  ", 1, rowId = 1), ClipboardEntry("b", 2, rowId = 2))
+        val holder = ClipboardSelectionHolder(kotlinx.coroutines.Dispatchers.Unconfined, kotlinx.coroutines.Dispatchers.Unconfined)
+        buildReadyView(rows)
+        view.attachSelectionHolder(holder)
+        view.startSelection()
+        view.selectAllMatching()
+        val plan = ClipboardBulkPlans.planClean(view.selectionSnapshot()!!.entries)
+        every { service.applyClean(ClipboardTab.HISTORY, plan) } returns Result.failure(IllegalStateException("x"))
+
+        view.cleanSelection(ClipboardTab.HISTORY, plan) { }
+        assertThat(view.selectedCount()).isEqualTo(2)  // kept for a retry
+
+        val merge = (ClipboardBulkPlans.planMerge(view.selectionSnapshot()!!.entries, null)
+            as ClipboardBulkPlans.MergeDecision.Ready).plan
+        every { service.addMergedClip(merge) } returns Result.success(Unit)
+        view.mergeSelection(merge) { }
+        verify(exactly = 1) { service.addMergedClip(merge) }
+        assertThat(view.isSelecting()).isFalse()
+    }
+
+    @Test
     fun selectionCannotStartDuringEditAndSelectionChangesNotifyTheChrome() {
         buildReadyView(listOf(ClipboardEntry("a", 1, rowId = 1)))
         var notified = 0

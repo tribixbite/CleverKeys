@@ -786,6 +786,9 @@ tasks.register('runPureTests', JavaExec) {
     // runtime theme color beats the base-style ?attr, and a theme signature change
     // (including a color EDIT with unchanged name) drops the cached pane.
     'tribixbite.cleverkeys.clipboard.ClipboardPaneThemePolicyTest',
+    // 2026-10-07: the selection's Clean action — trailing whitespace and inserted line
+    // breaks removed; lists, blank lines, short lines, URLs and code keep their breaks.
+    'tribixbite.cleverkeys.clipboard.ClipboardTextCleanerTest',
     'tribixbite.cleverkeys.customization.PrivateCopyCommandTest',
     // TalkBack accessibility (a11y) — pure geometry + labeller
     'tribixbite.cleverkeys.a11y.KeyboardGeometryTest',
@@ -1235,6 +1238,12 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.ClipboardSelectionTest',
     // 2026-10-07 (Saga/Chrome device report): IME dialogs never take window focus.
     'tribixbite.cleverkeys.ImeDialogWindowTest',
+    // 2026-10-07: the selection outlives views/panes/input-view teardown in a service-scoped
+    // holder that also runs confirmed bulk actions to completion; Merge/Clean/Add-to planning
+    // and service execution.
+    'tribixbite.cleverkeys.clipboard.ClipboardSelectionHolderTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardBulkPlansTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardBulkServiceTest',
     'tribixbite.cleverkeys.clipboard.ClipboardServiceHygieneTest',
     // #130 residual (2026-09-05): setConfig drops the cached pane when the theme
     // signature changes (switch OR color edit), preserving close callback + tab choice.

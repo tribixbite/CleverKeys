@@ -2223,6 +2223,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="other">Hapus %1$d klip yang dipilih?</item></plurals>
     <string name="clipboard_delete_selected_message">Hanya salinan di %1$s yang dihapus; salinan di tab lain tetap tersimpan. Total ukuran klip: %2$s. Klip yang diubah atau dihapus sejak Anda memilihnya akan dilewati. Tindakan ini tidak dapat diurungkan.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="other">Berhasil menghapus %1$d dari %2$d klip yang dipilih.</item></plurals>
+    <string name="clipboard_selection_actions">Tindakan lainnya</string>
+    <string name="clipboard_action_add_to_pinned">Tambahkan ke yang disematkan</string>
+    <string name="clipboard_action_add_to_todos">Tambahkan ke to-do</string>
+    <string name="clipboard_action_merge">Gabungkan menjadi satu klip</string>
+    <string name="clipboard_action_clean">Rapikan spasi dan baris baru</string>
+    <string name="clipboard_bulk_action_error">Tidak dapat diselesaikan. Pilihan Anda tetap tersimpan.</string>
+    <string name="clipboard_bulk_preview">Pratinjau: %1$s</string>
+    <string name="clipboard_merge_message">Membuat satu klip baru di riwayat dari teks yang dipilih, yang terlama lebih dulu, satu per baris (%1$s). Klip aslinya tetap ada.</string>
+    <string name="clipboard_merge_private_note">Klip ini akan bersifat pribadi karena salah satu klip yang dipilih bersifat pribadi.</string>
+    <string name="clipboard_merge_action">Gabungkan</string>
+    <string name="clipboard_merge_too_few">Pilih setidaknya dua klip teks untuk digabungkan.</string>
+    <string name="clipboard_merge_too_large">Klip gabungan akan berukuran %1$s; batasnya %2$s. Pilih lebih sedikit klip.</string>
+    <string name="clipboard_clean_message">Menghapus spasi di akhir baris dan menyambung baris yang terputus di tengah paragraf; kata yang dipenggal dengan tanda hubung di akhir baris disambung kembali. Baris kosong, daftar, baris pendek, tautan, dan kode tetap mempertahankan baris barunya. Hanya salinan di %1$s yang berubah; tindakan ini tidak dapat diurungkan.</string>
+    <string name="clipboard_clean_action">Rapikan</string>
+    <string name="clipboard_clean_nothing">Tidak ada yang perlu dirapikan.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="other">%1$d klip ditambahkan ke yang disematkan.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="other">%1$d klip ditambahkan ke to-do.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="other">%1$d sudah ada di sana.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="other">%1$d tidak dapat disimpan.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="other">%1$d klip media dilewati.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="other">%1$d tidak perlu dirapikan.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="other">Gabungkan %1$d klip?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="other">%1$d klip digabungkan menjadi klip baru di riwayat.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="other">Rapikan %1$d klip?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="other">%1$d klip dirapikan.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Bersihkan papan klip sistem</string>

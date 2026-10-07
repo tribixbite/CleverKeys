@@ -2658,6 +2658,37 @@
     <string name="clipboard_delete_selected_message">Only the copies in %1$s are deleted; copies in other tabs stay. Combined clipping size: %2$s. Clippings changed or removed since you selected them are skipped. This cannot be undone.</string>
     <!-- %1$d = deleted, %2$d = confirmed selection (quantity); changed rows are skipped -->
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Deleted %1$d of %2$d selected clipping.</item><item quantity="other">Deleted %1$d of %2$d selected clippings.</item></plurals>
+    <!-- Clipboard selection bulk actions (2026-10-07): Add to Pinned/Todos, Merge, Clean. -->
+    <!-- Selection bar button (content description + tooltip) opening the list of bulk actions -->
+    <string name="clipboard_selection_actions">More actions</string>
+    <string name="clipboard_action_add_to_pinned">Add to Pinned</string>
+    <string name="clipboard_action_add_to_todos">Add to Todos</string>
+    <string name="clipboard_action_merge">Merge into one clipping</string>
+    <string name="clipboard_action_clean">Clean up spaces and line breaks</string>
+    <string name="clipboard_bulk_action_error">Could not finish. Your selection is kept.</string>
+    <!-- %1$s = start of the merged or cleaned text, line breaks shown as an arrow -->
+    <string name="clipboard_bulk_preview">Preview: %1$s</string>
+    <!-- %1$s = size of the merged clipping -->
+    <string name="clipboard_merge_message">Creates one new History clipping from the selected text, oldest first, one per line (%1$s). The originals stay.</string>
+    <string name="clipboard_merge_private_note">It will be private, because a selected clipping is private.</string>
+    <string name="clipboard_merge_action">Merge</string>
+    <string name="clipboard_merge_too_few">Select at least two text clippings to merge.</string>
+    <!-- %1$s = merged size, %2$s = per-clipping size limit -->
+    <string name="clipboard_merge_too_large">The merged clipping would be %1$s; the limit is %2$s. Select fewer clippings.</string>
+    <!-- %1$s = tab name -->
+    <string name="clipboard_clean_message">Removes spaces at line ends and joins lines broken inside a paragraph; a word split by a hyphen at a line end is rejoined. Blank lines, lists, short lines, links and code keep their line breaks. Only the copies in %1$s change; this cannot be undone.</string>
+    <string name="clipboard_clean_action">Clean</string>
+    <string name="clipboard_clean_nothing">Nothing to clean.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">Added %1$d clipping to Pinned.</item><item quantity="other">Added %1$d clippings to Pinned.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">Added %1$d clipping to Todos.</item><item quantity="other">Added %1$d clippings to Todos.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d was already there.</item><item quantity="other">%1$d were already there.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">%1$d could not be saved.</item><item quantity="other">%1$d could not be saved.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">%1$d media clipping skipped.</item><item quantity="other">%1$d media clippings skipped.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d needs no cleaning.</item><item quantity="other">%1$d need no cleaning.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">Merge %1$d clipping?</item><item quantity="other">Merge %1$d clippings?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">Merged %1$d clipping into a new History clipping.</item><item quantity="other">Merged %1$d clippings into a new History clipping.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">Clean %1$d clipping?</item><item quantity="other">Clean %1$d clippings?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">Cleaned %1$d clipping.</item><item quantity="other">Cleaned %1$d clippings.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Clear system clipboard</string>

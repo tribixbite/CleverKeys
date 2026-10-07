@@ -2344,6 +2344,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Usunąć %1$d zaznaczony wycinek?</item><item quantity="few">Usunąć %1$d zaznaczone wycinki?</item><item quantity="many">Usunąć %1$d zaznaczonych wycinków?</item><item quantity="other">Usunąć %1$d zaznaczonego wycinka?</item></plurals>
     <string name="clipboard_delete_selected_message">Usuwane są tylko kopie w %1$s; kopie na innych kartach pozostaną. Łączny rozmiar wycinków: %2$s. Wycinki zmienione lub usunięte od chwili zaznaczenia zostaną pominięte. Tej operacji nie można cofnąć.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Usunięto %1$d z %2$d zaznaczonego wycinka.</item><item quantity="few">Usunięto %1$d z %2$d zaznaczonych wycinków.</item><item quantity="many">Usunięto %1$d z %2$d zaznaczonych wycinków.</item><item quantity="other">Usunięto %1$d z %2$d zaznaczonego wycinka.</item></plurals>
+    <string name="clipboard_selection_actions">Więcej działań</string>
+    <string name="clipboard_action_add_to_pinned">Dodaj do przypiętych</string>
+    <string name="clipboard_action_add_to_todos">Dodaj do To-do</string>
+    <string name="clipboard_action_merge">Scal w jeden wycinek</string>
+    <string name="clipboard_action_clean">Wyczyść spacje i podziały wierszy</string>
+    <string name="clipboard_bulk_action_error">Nie udało się dokończyć. Zaznaczenie zostało zachowane.</string>
+    <string name="clipboard_bulk_preview">Podgląd: %1$s</string>
+    <string name="clipboard_merge_message">Tworzy jeden nowy wycinek w historii z zaznaczonego tekstu, od najstarszego, po jednym w wierszu (%1$s). Oryginały pozostają.</string>
+    <string name="clipboard_merge_private_note">Będzie prywatny, ponieważ jeden z zaznaczonych wycinków jest prywatny.</string>
+    <string name="clipboard_merge_action">Scal</string>
+    <string name="clipboard_merge_too_few">Zaznacz co najmniej dwa wycinki tekstowe, aby je scalić.</string>
+    <string name="clipboard_merge_too_large">Scalony wycinek miałby %1$s; limit to %2$s. Zaznacz mniej wycinków.</string>
+    <string name="clipboard_clean_message">Usuwa spacje na końcach wierszy i łączy wiersze podzielone wewnątrz akapitu; słowo przeniesione z dywizem na końcu wiersza zostaje połączone. Puste wiersze, listy, krótkie wiersze, linki i kod zachowują podziały wierszy. Zmieniają się tylko kopie w %1$s; tej operacji nie można cofnąć.</string>
+    <string name="clipboard_clean_action">Wyczyść</string>
+    <string name="clipboard_clean_nothing">Nie ma czego czyścić.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">Dodano %1$d wycinek do przypiętych.</item><item quantity="few">Dodano %1$d wycinki do przypiętych.</item><item quantity="many">Dodano %1$d wycinków do przypiętych.</item><item quantity="other">Dodano %1$d wycinka do przypiętych.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">Dodano %1$d wycinek do To-do.</item><item quantity="few">Dodano %1$d wycinki do To-do.</item><item quantity="many">Dodano %1$d wycinków do To-do.</item><item quantity="other">Dodano %1$d wycinka do To-do.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d już tam był.</item><item quantity="few">%1$d już tam były.</item><item quantity="many">%1$d już tam było.</item><item quantity="other">%1$d już tam było.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">Nie udało się zapisać %1$d wycinka.</item><item quantity="few">Nie udało się zapisać %1$d wycinków.</item><item quantity="many">Nie udało się zapisać %1$d wycinków.</item><item quantity="other">Nie udało się zapisać %1$d wycinka.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">Pominięto %1$d wycinek multimedialny.</item><item quantity="few">Pominięto %1$d wycinki multimedialne.</item><item quantity="many">Pominięto %1$d wycinków multimedialnych.</item><item quantity="other">Pominięto %1$d wycinka multimedialnego.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d nie wymaga czyszczenia.</item><item quantity="few">%1$d nie wymagają czyszczenia.</item><item quantity="many">%1$d nie wymaga czyszczenia.</item><item quantity="other">%1$d nie wymaga czyszczenia.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">Scalić %1$d wycinek?</item><item quantity="few">Scalić %1$d wycinki?</item><item quantity="many">Scalić %1$d wycinków?</item><item quantity="other">Scalić %1$d wycinka?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">Scalono %1$d wycinek w nowy wycinek w historii.</item><item quantity="few">Scalono %1$d wycinki w nowy wycinek w historii.</item><item quantity="many">Scalono %1$d wycinków w nowy wycinek w historii.</item><item quantity="other">Scalono %1$d wycinka w nowy wycinek w historii.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">Wyczyścić %1$d wycinek?</item><item quantity="few">Wyczyścić %1$d wycinki?</item><item quantity="many">Wyczyścić %1$d wycinków?</item><item quantity="other">Wyczyścić %1$d wycinka?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">Wyczyszczono %1$d wycinek.</item><item quantity="few">Wyczyszczono %1$d wycinki.</item><item quantity="many">Wyczyszczono %1$d wycinków.</item><item quantity="other">Wyczyszczono %1$d wycinka.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Wyczyść schowek systemowy</string>

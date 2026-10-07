@@ -2209,6 +2209,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="other">要删除所选的 %1$d 个剪贴项吗？</item></plurals>
     <string name="clipboard_delete_selected_message">仅删除 %1$s 中的副本；其他标签页中的副本将保留。剪贴项总大小：%2$s。选择后发生更改或被移除的剪贴项将被跳过。此操作无法撤消。</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="other">已删除 %1$d 个所选剪贴项（共 %2$d 个）。</item></plurals>
+    <string name="clipboard_selection_actions">更多操作</string>
+    <string name="clipboard_action_add_to_pinned">添加到已固定</string>
+    <string name="clipboard_action_add_to_todos">添加到待办</string>
+    <string name="clipboard_action_merge">合并为一个剪贴项</string>
+    <string name="clipboard_action_clean">清理空格和换行</string>
+    <string name="clipboard_bulk_action_error">无法完成。已保留你的选择。</string>
+    <string name="clipboard_bulk_preview">预览：%1$s</string>
+    <string name="clipboard_merge_message">用所选文本在历史记录中新建一个剪贴项，按从旧到新排列，每项一行（%1$s）。原剪贴项保留。</string>
+    <string name="clipboard_merge_private_note">由于所选剪贴项中有私密项，合并结果也将是私密的。</string>
+    <string name="clipboard_merge_action">合并</string>
+    <string name="clipboard_merge_too_few">请至少选择两个文本剪贴项进行合并。</string>
+    <string name="clipboard_merge_too_large">合并后的剪贴项将为 %1$s；上限为 %2$s。请减少所选剪贴项。</string>
+    <string name="clipboard_clean_message">删除行尾空格，并连接段落中被断开的行；行尾以连字符拆分的单词会重新连接。空行、列表、短行、链接和代码保留换行。仅更改 %1$s 中的副本；此操作无法撤消。</string>
+    <string name="clipboard_clean_action">清理</string>
+    <string name="clipboard_clean_nothing">没有需要清理的内容。</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="other">已将 %1$d 个剪贴项添加到已固定。</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="other">已将 %1$d 个剪贴项添加到待办。</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="other">%1$d 个已存在。</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="other">%1$d 个无法保存。</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="other">已跳过 %1$d 个媒体剪贴项。</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="other">%1$d 个无需清理。</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="other">合并 %1$d 个剪贴项？</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="other">已将 %1$d 个剪贴项合并为历史记录中的一个新剪贴项。</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="other">清理 %1$d 个剪贴项？</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="other">已清理 %1$d 个剪贴项。</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">清除系统剪贴板</string>

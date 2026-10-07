@@ -19,6 +19,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
+import tribixbite.cleverkeys.clipboard.ClipboardCleanResult
+import tribixbite.cleverkeys.clipboard.ClipboardCopyResult
 import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
 import tribixbite.cleverkeys.clipboard.sanitize.systemClipboardRewrite
 import java.io.InputStreamReader
@@ -394,27 +397,97 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         val added = _database.addClipboardEntry(processed, expiryTime, isPrivate, sourcePackage)
 
         if (added) {
-            // Apply size limits if configured (based on limit type). Null-safe: same cold-start
-            // rationale as the size cap above — fall back to the documented defaults.
-            val limitType = config?.clipboard_limit_type ?: Defaults.CLIPBOARD_LIMIT_TYPE
-            if ("size" == limitType) {
-                // Apply size-based limit (total MB — includes text + thumbnails + media files)
-                val maxSizeMB = config?.clipboard_size_limit_mb ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
-                if (maxSizeMB > 0) {
-                    val (_, mediaPaths) = _database.applySizeLimitBytes(maxSizeMB, _context.filesDir)
-                    // Delete media files of pruned entries (only if no other table references them)
-                    for (path in mediaPaths) {
-                        if (!_database.isMediaPathReferenced(path)) _mediaManager.deleteMedia(path)
-                    }
-                }
-            } else {
-                // Apply count-based limit (default)
-                val maxHistorySize = config?.clipboard_history_limit ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
-                pruneByCountAndCleanMedia(maxHistorySize)
-            }
-
+            applyHistoryLimits(config)
             _listener?.on_clipboard_history_change()
         }
+    }
+
+    /**
+     * Apply the configured history limit after an insert (based on limit type). Null-safe:
+     * same cold-start rationale as [storeClip]'s size cap — fall back to the documented defaults.
+     */
+    private fun applyHistoryLimits(config: Config?) {
+        val limitType = config?.clipboard_limit_type ?: Defaults.CLIPBOARD_LIMIT_TYPE
+        if ("size" == limitType) {
+            // Apply size-based limit (total MB — includes text + thumbnails + media files)
+            val maxSizeMB = config?.clipboard_size_limit_mb ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
+            if (maxSizeMB > 0) {
+                val (_, mediaPaths) = _database.applySizeLimitBytes(maxSizeMB, _context.filesDir)
+                // Delete media files of pruned entries (only if no other table references them)
+                for (path in mediaPaths) {
+                    if (!_database.isMediaPathReferenced(path)) _mediaManager.deleteMedia(path)
+                }
+            }
+        } else {
+            // Apply count-based limit (default)
+            val maxHistorySize = config?.clipboard_history_limit ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
+            pruneByCountAndCleanMedia(maxHistorySize)
+        }
+    }
+
+    // ─── Selection bulk actions (2026-10-07) ───
+    // Called on an IO thread by ClipboardSelectionHolder.runConfirmed. They deliberately do NOT
+    // call the history-change listener (the list view, which must be touched on the main
+    // thread); the holder's observer refreshes the attached view once the action finishes.
+
+    /**
+     * Add to Pinned / Add to Todos for a frozen selection: each row is copied with the same
+     * per-entry insert the row buttons use ([ClipboardDatabase.pinEntry] /
+     * [ClipboardDatabase.addTodoEntry]) — COPY semantics, media fields, privacy marker and
+     * provenance travel — and all inserts commit in one transaction. Rows the target already
+     * holds are counted, not duplicated; an insert the database refuses is counted as failed.
+     */
+    fun copyEntriesTo(target: ClipboardTab, entries: List<ClipboardEntry>): Result<ClipboardCopyResult> = runCatching {
+        require(target != ClipboardTab.HISTORY) { "History is not a copy target" }
+        _database.runInTransaction {
+            var added = 0
+            var present = 0
+            var failed = 0
+            for (entry in entries) {
+                val exists = if (target == ClipboardTab.PINNED) _database.isPinned(entry.content)
+                    else _database.isTodo(entry.content)
+                if (exists) { present++; continue }
+                val inserted = if (target == ClipboardTab.PINNED) {
+                    _database.pinEntry(entry.content, entry.timestamp, entry.mimeType, entry.thumbnailBlob,
+                        entry.mediaPath, entry.isPrivate, entry.sourcePackage)
+                } else {
+                    _database.addTodoEntry(entry.content, entry.timestamp, entry.mimeType, entry.thumbnailBlob,
+                        entry.mediaPath, entry.isPrivate, entry.sourcePackage)
+                }
+                if (inserted) added++ else failed++
+            }
+            ClipboardCopyResult(added, present, failed)
+        }
+    }
+
+    /**
+     * Merge: store [plan]'s text as ONE new History clipping (private when any source was).
+     * The originals are untouched. An explicit user action, so it works even when OS-clipboard
+     * monitoring is off; the size limit was enforced by [ClipboardBulkPlans.planMerge] and the
+     * normal history limits apply afterwards, exactly as for a capture.
+     */
+    fun addMergedClip(plan: ClipboardBulkPlans.MergePlan): Result<Unit> = runCatching {
+        val ttlMs = getHistoryTtlMs()
+        val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
+        check(_database.addClipboardEntry(plan.text, expiryTime, plan.isPrivate, null)) {
+            "Merged clipping was not stored"
+        }
+        applyHistoryLimits(Config.globalConfigOrNull())
+    }
+
+    /**
+     * Clean in place: each planned edit goes through [editEntryContent], the inline editor's own
+     * validation and per-table update (copies in other tabs stay). A row edited or removed since
+     * the confirmation, or whose cleaned text duplicates another row, is counted as failed.
+     * (editEntryContent notifies the listener; the list view ignores reloads while the holder
+     * reports a running action, so nothing touches it off the main thread.)
+     */
+    fun applyClean(tab: ClipboardTab, plan: ClipboardBulkPlans.CleanPlan): Result<ClipboardCleanResult> = runCatching {
+        var cleaned = 0
+        for ((entry, text) in plan.edits) {
+            if (editEntryContent(entry.content, text, tab) is EditEntryResult.Success) cleaned++
+        }
+        ClipboardCleanResult(cleaned, plan.unchanged, plan.skippedMedia, plan.edits.size - cleaned)
     }
 
     /**

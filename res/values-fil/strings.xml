@@ -2264,6 +2264,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">I-delete ang %1$d napiling clipping?</item><item quantity="other">I-delete ang %1$d napiling clipping?</item></plurals>
     <string name="clipboard_delete_selected_message">Ang mga kopya lang sa %1$s ang ide-delete; mananatili ang mga kopya sa ibang tab. Pinagsamang laki ng clipping: %2$s. Lalampasan ang mga clipping na binago o inalis mula nang piliin mo ang mga ito. Hindi na ito mababawi.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Na-delete ang %1$d sa %2$d napiling clipping.</item><item quantity="other">Na-delete ang %1$d sa %2$d napiling clipping.</item></plurals>
+    <string name="clipboard_selection_actions">Iba pang aksyon</string>
+    <string name="clipboard_action_add_to_pinned">Idagdag sa Naka-pin</string>
+    <string name="clipboard_action_add_to_todos">Idagdag sa To-do</string>
+    <string name="clipboard_action_merge">Pagsamahin sa iisang clipping</string>
+    <string name="clipboard_action_clean">Linisin ang mga space at line break</string>
+    <string name="clipboard_bulk_action_error">Hindi natapos. Nananatili ang iyong pinili.</string>
+    <string name="clipboard_bulk_preview">Preview: %1$s</string>
+    <string name="clipboard_merge_message">Gumagawa ng isang bagong clipping sa history mula sa napiling text, pinakaluma muna, isa bawat linya (%1$s). Mananatili ang mga orihinal.</string>
+    <string name="clipboard_merge_private_note">Magiging private ito dahil private ang isa sa mga napiling clipping.</string>
+    <string name="clipboard_merge_action">Pagsamahin</string>
+    <string name="clipboard_merge_too_few">Pumili ng hindi bababa sa dalawang text clipping na pagsasamahin.</string>
+    <string name="clipboard_merge_too_large">Magiging %1$s ang pinagsamang clipping; %2$s ang limitasyon. Pumili ng mas kaunting clipping.</string>
+    <string name="clipboard_clean_message">Inaalis ang mga space sa dulo ng linya at pinagdudugtong ang mga linyang naputol sa loob ng isang talata; muling pinagdudugtong ang salitang hinati ng gitling sa dulo ng linya. Pinananatili ng mga blangkong linya, listahan, maiikling linya, link at code ang kanilang mga line break. Ang mga kopya lang sa %1$s ang magbabago; hindi ito maa-undo.</string>
+    <string name="clipboard_clean_action">Linisin</string>
+    <string name="clipboard_clean_nothing">Walang lilinisin.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">Naidagdag ang %1$d clipping sa Naka-pin.</item><item quantity="other">Naidagdag ang %1$d clipping sa Naka-pin.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">Naidagdag ang %1$d clipping sa To-do.</item><item quantity="other">Naidagdag ang %1$d clipping sa To-do.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">Naroon na ang %1$d.</item><item quantity="other">Naroon na ang %1$d.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">Hindi ma-save ang %1$d.</item><item quantity="other">Hindi ma-save ang %1$d.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">Nilaktawan ang %1$d media clipping.</item><item quantity="other">Nilaktawan ang %1$d media clipping.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">Hindi na kailangang linisin ang %1$d.</item><item quantity="other">Hindi na kailangang linisin ang %1$d.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">Pagsamahin ang %1$d clipping?</item><item quantity="other">Pagsamahin ang %1$d clipping?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">Pinagsama ang %1$d clipping sa isang bagong clipping sa history.</item><item quantity="other">Pinagsama ang %1$d clipping sa isang bagong clipping sa history.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">Linisin ang %1$d clipping?</item><item quantity="other">Linisin ang %1$d clipping?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">Nalinis ang %1$d clipping.</item><item quantity="other">Nalinis ang %1$d clipping.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">I-clear ang clipboard ng system</string>

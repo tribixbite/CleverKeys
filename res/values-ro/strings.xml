@@ -2320,6 +2320,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Ștergeți %1$d decupaj selectat?</item><item quantity="few">Ștergeți %1$d decupaje selectate?</item><item quantity="other">Ștergeți %1$d de decupaje selectate?</item></plurals>
     <string name="clipboard_delete_selected_message">Se șterg doar copiile din %1$s; copiile din alte file rămân. Dimensiune combinată a decupajelor: %2$s. Decupajele modificate sau eliminate după selectare sunt ignorate. Această acțiune nu poate fi anulată.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">S-au șters %1$d din %2$d decupaj selectat.</item><item quantity="few">S-au șters %1$d din %2$d decupaje selectate.</item><item quantity="other">S-au șters %1$d din %2$d de decupaje selectate.</item></plurals>
+    <string name="clipboard_selection_actions">Mai multe acțiuni</string>
+    <string name="clipboard_action_add_to_pinned">Adaugă la fixate</string>
+    <string name="clipboard_action_add_to_todos">Adaugă la de făcut</string>
+    <string name="clipboard_action_merge">Îmbină într-un singur decupaj</string>
+    <string name="clipboard_action_clean">Curăță spațiile și întreruperile de rând</string>
+    <string name="clipboard_bulk_action_error">Acțiunea nu s-a putut finaliza. Selecția se păstrează.</string>
+    <string name="clipboard_bulk_preview">Previzualizare: %1$s</string>
+    <string name="clipboard_merge_message">Creează un singur decupaj nou în istoric din textul selectat, de la cel mai vechi, câte unul pe rând (%1$s). Originalele rămân.</string>
+    <string name="clipboard_merge_private_note">Va fi privat, deoarece un decupaj selectat este privat.</string>
+    <string name="clipboard_merge_action">Îmbină</string>
+    <string name="clipboard_merge_too_few">Selectați cel puțin două decupaje text pentru îmbinare.</string>
+    <string name="clipboard_merge_too_large">Decupajul îmbinat ar avea %1$s; limita este %2$s. Selectați mai puține decupaje.</string>
+    <string name="clipboard_clean_message">Elimină spațiile de la sfârșitul rândurilor și unește rândurile rupte în interiorul unui paragraf; un cuvânt despărțit cu cratimă la sfârșit de rând este reunit. Rândurile goale, listele, rândurile scurte, linkurile și codul își păstrează întreruperile de rând. Se modifică doar copiile din %1$s; acțiunea nu poate fi anulată.</string>
+    <string name="clipboard_clean_action">Curăță</string>
+    <string name="clipboard_clean_nothing">Nimic de curățat.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">S-a adăugat %1$d decupaj la fixate.</item><item quantity="few">S-au adăugat %1$d decupaje la fixate.</item><item quantity="other">S-au adăugat %1$d de decupaje la fixate.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">S-a adăugat %1$d decupaj la de făcut.</item><item quantity="few">S-au adăugat %1$d decupaje la de făcut.</item><item quantity="other">S-au adăugat %1$d de decupaje la de făcut.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d era deja acolo.</item><item quantity="few">%1$d erau deja acolo.</item><item quantity="other">%1$d erau deja acolo.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">%1$d nu a putut fi salvat.</item><item quantity="few">%1$d nu au putut fi salvate.</item><item quantity="other">%1$d nu au putut fi salvate.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">S-a omis %1$d decupaj media.</item><item quantity="few">S-au omis %1$d decupaje media.</item><item quantity="other">S-au omis %1$d de decupaje media.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d nu necesită curățare.</item><item quantity="few">%1$d nu necesită curățare.</item><item quantity="other">%1$d nu necesită curățare.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">Îmbinați %1$d decupaj?</item><item quantity="few">Îmbinați %1$d decupaje?</item><item quantity="other">Îmbinați %1$d de decupaje?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">S-a îmbinat %1$d decupaj într-un decupaj nou în istoric.</item><item quantity="few">S-au îmbinat %1$d decupaje într-un decupaj nou în istoric.</item><item quantity="other">S-au îmbinat %1$d de decupaje într-un decupaj nou în istoric.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">Curățați %1$d decupaj?</item><item quantity="few">Curățați %1$d decupaje?</item><item quantity="other">Curățați %1$d de decupaje?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">S-a curățat %1$d decupaj.</item><item quantity="few">S-au curățat %1$d decupaje.</item><item quantity="other">S-au curățat %1$d de decupaje.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Golește clipboardul de sistem</string>

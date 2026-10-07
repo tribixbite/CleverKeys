@@ -2211,6 +2211,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="other">선택한 클립 %1$d개를 삭제하시겠습니까?</item></plurals>
     <string name="clipboard_delete_selected_message">%1$s의 사본만 삭제되며 다른 탭의 사본은 유지됩니다. 총 클립 크기: %2$s. 선택한 후 변경되거나 제거된 클립은 건너뜁니다. 이 작업은 취소할 수 없습니다.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="other">선택한 클립 %2$d개 중 %1$d개를 삭제했습니다.</item></plurals>
+    <string name="clipboard_selection_actions">기타 작업</string>
+    <string name="clipboard_action_add_to_pinned">고정 항목에 추가</string>
+    <string name="clipboard_action_add_to_todos">할 일에 추가</string>
+    <string name="clipboard_action_merge">하나의 클립으로 병합</string>
+    <string name="clipboard_action_clean">공백 및 줄바꿈 정리</string>
+    <string name="clipboard_bulk_action_error">완료하지 못했습니다. 선택 항목은 유지됩니다.</string>
+    <string name="clipboard_bulk_preview">미리보기: %1$s</string>
+    <string name="clipboard_merge_message">선택한 텍스트로 기록에 새 클립 하나를 만듭니다. 오래된 것부터 한 줄에 하나씩 넣습니다(%1$s). 원본은 유지됩니다.</string>
+    <string name="clipboard_merge_private_note">선택한 클립 중 비공개 클립이 있으므로 비공개로 저장됩니다.</string>
+    <string name="clipboard_merge_action">병합</string>
+    <string name="clipboard_merge_too_few">병합하려면 텍스트 클립을 두 개 이상 선택하세요.</string>
+    <string name="clipboard_merge_too_large">병합된 클립은 %1$s입니다. 한도는 %2$s입니다. 더 적은 클립을 선택하세요.</string>
+    <string name="clipboard_clean_message">줄 끝의 공백을 제거하고 문단 안에서 끊긴 줄을 이어 붙입니다. 줄 끝에서 하이픈으로 나뉜 단어는 다시 합칩니다. 빈 줄, 목록, 짧은 줄, 링크, 코드는 줄바꿈을 유지합니다. %1$s의 사본만 변경되며 이 작업은 취소할 수 없습니다.</string>
+    <string name="clipboard_clean_action">정리</string>
+    <string name="clipboard_clean_nothing">정리할 내용이 없습니다.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="other">클립 %1$d개를 고정 항목에 추가했습니다.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="other">클립 %1$d개를 할 일에 추가했습니다.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="other">%1$d개는 이미 있었습니다.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="other">%1$d개를 저장하지 못했습니다.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="other">미디어 클립 %1$d개를 건너뛰었습니다.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="other">%1$d개는 정리할 필요가 없습니다.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="other">클립 %1$d개를 병합할까요?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="other">클립 %1$d개를 기록의 새 클립으로 병합했습니다.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="other">클립 %1$d개를 정리할까요?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="other">클립 %1$d개를 정리했습니다.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">시스템 클립보드 지우기</string>

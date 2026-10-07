@@ -5,13 +5,14 @@ import tribixbite.cleverkeys.ClipboardEntry
 import tribixbite.cleverkeys.ClipboardTab
 
 /**
- * A persistent, tab-scoped selection of clipboard rows for batch deletion.
+ * A persistent, tab-scoped selection of clipboard rows for the batch actions (delete, add to
+ * Pinned/Todos, merge, clean).
  *
  * The user builds it from several searches and size filters: "select all matching" adds every
  * row of whatever list the caller filtered (all pages, not the visible one), individual toggles
  * and "deselect all matching" remove rows, and changing the search, filters or page never
- * touches it. Only an explicit exit, a tab switch, the pane closing or the keyboard hiding
- * end it — the owning view simply drops the instance.
+ * touches it. It is owned by the service-scoped [ClipboardSelectionHolder], so it also outlives
+ * the pane and its views; only Exit, a completed bulk action or its tab being disabled end it.
  *
  * Identity is the database row id ([ClipboardEntry.rowId]) of the tab's own table, so the
  * selection is meaningless outside [tab]; rows without an id (never stored) cannot be
@@ -23,7 +24,7 @@ import tribixbite.cleverkeys.ClipboardTab
  *
  * Memory: one boxed id and one boxed version per selected row, never the clipping content or
  * thumbnail, so the cost is bounded by the tab's row count rather than by payload sizes.
- * Not thread-safe; the owning view touches it on the main thread only.
+ * Not thread-safe; it is only touched on the main thread.
  */
 class ClipboardSelection(val tab: ClipboardTab) {
 

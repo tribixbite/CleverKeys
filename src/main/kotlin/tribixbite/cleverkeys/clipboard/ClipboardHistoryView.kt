@@ -28,8 +28,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
+import tribixbite.cleverkeys.clipboard.ClipboardCleanResult
+import tribixbite.cleverkeys.clipboard.ClipboardCopyResult
 import tribixbite.cleverkeys.clipboard.ClipboardProvenance
 import tribixbite.cleverkeys.clipboard.ClipboardSelection
+import tribixbite.cleverkeys.clipboard.ClipboardSelectionHolder
 import java.util.regex.PatternSyntaxException
 
 /**
@@ -152,7 +156,6 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private var sizeMinimum = 0L
     private var sizeMaximum: Long? = null
     private var dataReady = false
-    private var bulkDeleting = false
     var onResultsChanged: (() -> Unit)? = null
 
     /** Current inclusive payload-size bounds; kept across tabs, reset by Clear filters. */
@@ -165,15 +168,42 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         applyFilter()
     }
 
-    fun isResultsReady(): Boolean = dataReady && !bulkDeleting
+    fun isResultsReady(): Boolean = dataReady && !bulkRunning
     fun resultSummary(): Pair<Int, Long> = filteredHistory.size to filteredHistory.sumOf { it.sizeBytes }
 
     // ─── Persistent selection (2026-10-07) ───
-    // Non-null = selection mode. Scoped to the tab it started in (row ids are per table) and
-    // kept while search text, filters or the page change, so a batch can be assembled from
-    // several searches. Ended by endSelection(): explicit exit, tab switch, pane close or
-    // keyboard hide (ClipboardManager), and after a confirmed deletion. Holds ids only.
-    private var selection: ClipboardSelection? = null
+    // The selection lives in a ClipboardSelectionHolder owned by the service-scoped
+    // ClipboardManager, which attaches it to every newly inflated view: it survives search,
+    // filter and page changes, view/pane recreation (theme change, rotation, keyboard hide,
+    // field and app switches) and ends ONLY on Deselect all/Exit selection or a completed bulk
+    // action. Scoped to one tab (row ids are per table). Holds row ids and versions only.
+    // Nullable + lazily created so Objenesis-built test views and a standalone view still work.
+    private var holder: ClipboardSelectionHolder? = null
+    private val selectionHolder: ClipboardSelectionHolder
+        get() = holder ?: ClipboardSelectionHolder().also { holder = it }
+    private val selection: ClipboardSelection? get() = holder?.selection
+    private val holderObserver: () -> Unit = {
+        selectionChanged()
+        loadDataAsync()
+    }
+
+    /** A confirmed bulk action (delete, copy, merge, clean) is executing on the holder. */
+    private val bulkRunning: Boolean get() = holder?.running == true
+
+    /**
+     * Share the service-scoped selection [newHolder]. Called by ClipboardManager right after
+     * inflating the pane, so a recreated view comes back in selection mode with the same rows.
+     */
+    fun attachSelectionHolder(newHolder: ClipboardSelectionHolder) {
+        if (holder === newHolder) return
+        holder?.let { if (it.observer === holderObserver) it.observer = null }
+        holder = newHolder
+        if (viewScope != null) newHolder.observer = holderObserver  // attached to a window
+        selectionChanged()
+    }
+
+    /** Tab the active selection belongs to, or null when not selecting. */
+    fun selectionTab(): ClipboardTab? = selection?.tab
 
     /** Whether selection mode is active. */
     fun isSelecting(): Boolean = selection != null
@@ -186,12 +216,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
     /**
      * Enter selection mode for the current tab. Refused while an entry is being edited or a
-     * deletion runs. Expanded rows collapse: selection rows show a checkbox, not actions.
+     * bulk action runs. Expanded rows collapse: selection rows show a checkbox, not actions.
      */
     fun startSelection(): Boolean {
-        if (isEditing() || bulkDeleting) return false
-        if (selection == null) {
-            selection = ClipboardSelection(currentTab)
+        if (isEditing() || bulkRunning) return false
+        if (selection?.tab != currentTab) {
+            selectionHolder.start(currentTab)
             expandedStates.clear()
             selectionChanged()
         }
@@ -201,26 +231,26 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Leave selection mode, forgetting every selected row. No-op when not selecting. */
     fun endSelection() {
         if (selection == null) return
-        selection = null
+        selectionHolder.end()
         selectionChanged()
     }
 
     /** Toggle one row by identity (never by list position, which reloads can shift). */
     fun toggleSelection(entry: ClipboardEntry) {
         val current = selection ?: return
-        if (bulkDeleting) return
+        if (bulkRunning) return
         current.toggle(entry)
         selectionChanged()
     }
 
     /**
      * Add every row matching the current search and filters, on ALL pages. Returns the number
-     * newly selected; 0 while results are still loading or a deletion runs, because the
+     * newly selected; 0 while results are still loading or a bulk action runs, because the
      * matching list would not yet describe what the user sees.
      */
     fun selectAllMatching(): Int {
         val current = selection ?: return 0
-        if (!dataReady || bulkDeleting) return 0
+        if (!dataReady || bulkRunning) return 0
         val added = current.selectAll(filteredHistory)
         selectionChanged()
         return added
@@ -229,7 +259,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Remove every row matching the current search and filters (all pages) from the selection. */
     fun deselectAllMatching(): Int {
         val current = selection ?: return 0
-        if (bulkDeleting) return 0
+        if (bulkRunning) return 0
         val removed = current.deselectAll(filteredHistory)
         selectionChanged()
         return removed
@@ -238,7 +268,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Deselect everything, including rows the current search or filters hide. */
     fun clearSelection() {
         val current = selection ?: return
-        if (bulkDeleting) return
+        if (bulkRunning) return
         current.clear()
         selectionChanged()
     }
@@ -248,13 +278,13 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         selection?.coverage(filteredHistory) ?: ClipboardSelection.Coverage.NONE
 
     /**
-     * The confirmation scope for "Delete selected": the selected rows of the tab's complete
+     * The confirmation scope for every bulk action: the selected rows of the tab's complete
      * loaded data that are unchanged since selection, regardless of the current search, filters
-     * or page. Null while loading, editing, deleting or when nothing selected still exists.
+     * or page. Null while loading, editing, running or when nothing selected still exists.
      */
     fun selectionSnapshot(): ClipboardDeleteSnapshot? {
         val current = selection ?: return null
-        if (!dataReady || bulkDeleting || isEditing()) return null
+        if (!dataReady || bulkRunning || isEditing() || current.tab != currentTab) return null
         return current.resolve(history).takeIf { it.entries.isNotEmpty() }
     }
 
@@ -264,31 +294,39 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     }
 
     /**
-     * Execute a frozen confirmation once, then end selection mode (the selection described
-     * the rows just deleted). Detach cancels UI work, not a running DB transaction.
+     * Run a confirmed bulk action on the holder: the work starts on IO at once and is not tied
+     * to this view, so a keyboard hide or pane teardown right after confirming can neither
+     * cancel it nor lose its result. Success ends selection mode; a failure keeps it.
      */
+    private fun <T> runBulk(work: () -> Result<T>, completed: (Result<T>) -> Unit) {
+        if (bulkRunning || isEditing()) return
+        if (selectionHolder.runConfirmed(work, completed)) onResultsChanged?.invoke()
+    }
+
+    private fun unavailable(): Result<Nothing> = Result.failure(IllegalStateException("Clipboard unavailable"))
+
+    /** Delete the frozen [snapshot] by row identity in one transaction. */
     fun deleteSnapshot(snapshot: ClipboardDeleteSnapshot, completed: (Result<Int>) -> Unit) {
-        val scope = viewScope ?: return
-        if (bulkDeleting || isEditing()) return
-        bulkDeleting = true
-        onResultsChanged?.invoke()
-        scope.launch {
-            var succeeded = false
-            try {
-                val result = withContext(Dispatchers.IO) {
-                    service?.deleteSnapshot(snapshot)
-                        ?: Result.failure(IllegalStateException("Clipboard unavailable"))
-                }
-                succeeded = result.isSuccess
-                completed(result)
-            } finally {
-                bulkDeleting = false
-                // Success ends selection mode; a failed (rolled-back) deletion keeps the
-                // selection so the user can retry without rebuilding it.
-                if (succeeded) endSelection()
-                loadDataAsync()
-            }
-        }
+        val svc = service
+        runBulk({ svc?.deleteSnapshot(snapshot) ?: unavailable() }, completed)
+    }
+
+    /** Add to Pinned / Add to Todos: copy the frozen [snapshot] rows into [target]. */
+    fun copySelectionTo(target: ClipboardTab, snapshot: ClipboardDeleteSnapshot, completed: (Result<ClipboardCopyResult>) -> Unit) {
+        val svc = service
+        runBulk({ svc?.copyEntriesTo(target, snapshot.entries) ?: unavailable() }, completed)
+    }
+
+    /** Merge: store the confirmed [plan] as one new History clipping. */
+    fun mergeSelection(plan: ClipboardBulkPlans.MergePlan, completed: (Result<Unit>) -> Unit) {
+        val svc = service
+        runBulk({ svc?.addMergedClip(plan) ?: unavailable() }, completed)
+    }
+
+    /** Clean: apply the confirmed [plan]'s edits in place to [tab]'s rows. */
+    fun cleanSelection(tab: ClipboardTab, plan: ClipboardBulkPlans.CleanPlan, completed: (Result<ClipboardCleanResult>) -> Unit) {
+        val svc = service
+        runBulk({ svc?.applyClean(tab, plan) ?: unavailable() }, completed)
     }
 
     // Pagination state
@@ -410,12 +448,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         viewScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
         // Register listener here (not init) to prevent singleton→view memory leak
         service?.setOnClipboardHistoryChange(this)
+        // This view is now the one a finishing bulk action refreshes.
+        holder?.observer = holderObserver
         loadDataAsync()
     }
 
     override fun onDetachedFromWindow() {
         // Unregister to break singleton→view reference and stop receiving callbacks
         service?.setOnClipboardHistoryChange(null)
+        holder?.let { if (it.observer === holderObserver) it.observer = null }
         loadJob?.cancel()
         loadJob = null
         viewScope?.cancel()
@@ -430,8 +471,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         // Cancel any in-progress edit before switching tabs (safety — tab clicks
         // are guarded in ClipboardManager, but direct callers like resetSearchOnShow need this)
         cancelEdit()
-        // Selection is scoped to one tab's row ids; switching tabs ends it.
-        endSelection()
+        // A selection names one table's rows: switching to ANOTHER tab ends it; re-targeting the
+        // selection's own tab (pane reopen) keeps it.
+        if (selection != null && selection?.tab != tab) endSelection()
         currentTab = tab
         expandedStates.clear()
         thumbnailCache.evictAll()
@@ -1101,7 +1143,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      * with large clipboard histories.
      */
     private fun loadDataAsync() {
-        if (bulkDeleting) return
+        // Also the guard that makes listener callbacks from a running action's IO thread inert.
+        if (bulkRunning) return
         dataReady = false
         onResultsChanged?.invoke()
         loadJob?.cancel()
@@ -1119,19 +1162,22 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             if (Config.globalConfig().clipboard_text_only) {
                 entries = entries.filter { !it.isMedia }
             }
-            acceptLoadedHistory(entries)
+            acceptLoadedHistory(entries, loadingTab)
         }
     }
 
     /**
      * Main-thread completion of a load: atomically replace the tab's rows, drop selected rows
-     * that vanished or changed, and refilter without resetting page or expand state.
+     * that vanished or changed, and refilter without resetting page or expand state. Rows of
+     * [loadedTab] only reconcile a selection of that same tab, and a load for a tab the view
+     * has already left is discarded.
      */
     @androidx.annotation.VisibleForTesting
-    internal fun acceptLoadedHistory(entries: List<ClipboardEntry>) {
+    internal fun acceptLoadedHistory(entries: List<ClipboardEntry>, loadedTab: ClipboardTab = currentTab) {
+        if (loadedTab != currentTab) return
         history = entries
         dataReady = true
-        selection?.reconcile(entries)
+        selection?.takeIf { it.tab == loadedTab }?.reconcile(entries)
         // resetView=false: preserve page position and expand states on data reload
         applyFilter(resetView = false)
     }

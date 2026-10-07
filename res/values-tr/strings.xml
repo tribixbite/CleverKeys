@@ -2263,6 +2263,31 @@
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Seçilen %1$d kırpma silinsin mi?</item><item quantity="other">Seçilen %1$d kırpma silinsin mi?</item></plurals>
     <string name="clipboard_delete_selected_message">Yalnızca %1$s içindeki kopyalar silinir; diğer sekmelerdeki kopyalar kalır. Toplam kırpma boyutu: %2$s. Seçtikten sonra değiştirilen veya kaldırılan kırpmalar atlanır. Bu işlem geri alınamaz.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Seçilen %2$d kırpmadan %1$d tanesi silindi.</item><item quantity="other">Seçilen %2$d kırpmadan %1$d tanesi silindi.</item></plurals>
+    <string name="clipboard_selection_actions">Diğer işlemler</string>
+    <string name="clipboard_action_add_to_pinned">Sabitlenenlere ekle</string>
+    <string name="clipboard_action_add_to_todos">Yapılacaklara ekle</string>
+    <string name="clipboard_action_merge">Tek bir kırpmada birleştir</string>
+    <string name="clipboard_action_clean">Boşlukları ve satır sonlarını temizle</string>
+    <string name="clipboard_bulk_action_error">Tamamlanamadı. Seçiminiz korunuyor.</string>
+    <string name="clipboard_bulk_preview">Önizleme: %1$s</string>
+    <string name="clipboard_merge_message">Seçili metinden geçmişte yeni bir kırpma oluşturur; en eskisi önce, her biri ayrı satırda (%1$s). Orijinaller kalır.</string>
+    <string name="clipboard_merge_private_note">Seçili kırpmalardan biri gizli olduğu için bu da gizli olacak.</string>
+    <string name="clipboard_merge_action">Birleştir</string>
+    <string name="clipboard_merge_too_few">Birleştirmek için en az iki metin kırpması seçin.</string>
+    <string name="clipboard_merge_too_large">Birleştirilmiş kırpma %1$s olurdu; sınır %2$s. Daha az kırpma seçin.</string>
+    <string name="clipboard_clean_message">Satır sonlarındaki boşlukları kaldırır ve paragraf içinde bölünmüş satırları birleştirir; satır sonunda kısa çizgiyle bölünmüş bir sözcük yeniden birleştirilir. Boş satırlar, listeler, kısa satırlar, bağlantılar ve kod satır sonlarını korur. Yalnızca %1$s içindeki kopyalar değişir; bu işlem geri alınamaz.</string>
+    <string name="clipboard_clean_action">Temizle</string>
+    <string name="clipboard_clean_nothing">Temizlenecek bir şey yok.</string>
+    <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d kırpma sabitlenenlere eklendi.</item><item quantity="other">%1$d kırpma sabitlenenlere eklendi.</item></plurals>
+    <plurals name="clipboard_added_to_todos_result"><item quantity="one">%1$d kırpma yapılacaklara eklendi.</item><item quantity="other">%1$d kırpma yapılacaklara eklendi.</item></plurals>
+    <plurals name="clipboard_bulk_already_present"><item quantity="one">%1$d tanesi zaten oradaydı.</item><item quantity="other">%1$d tanesi zaten oradaydı.</item></plurals>
+    <plurals name="clipboard_bulk_failed"><item quantity="one">%1$d tanesi kaydedilemedi.</item><item quantity="other">%1$d tanesi kaydedilemedi.</item></plurals>
+    <plurals name="clipboard_bulk_media_skipped"><item quantity="one">%1$d medya kırpması atlandı.</item><item quantity="other">%1$d medya kırpması atlandı.</item></plurals>
+    <plurals name="clipboard_bulk_unchanged"><item quantity="one">%1$d tanesinin temizlenmesi gerekmiyor.</item><item quantity="other">%1$d tanesinin temizlenmesi gerekmiyor.</item></plurals>
+    <plurals name="clipboard_merge_title"><item quantity="one">%1$d kırpma birleştirilsin mi?</item><item quantity="other">%1$d kırpma birleştirilsin mi?</item></plurals>
+    <plurals name="clipboard_merge_result"><item quantity="one">%1$d kırpma geçmişte yeni bir kırpmada birleştirildi.</item><item quantity="other">%1$d kırpma geçmişte yeni bir kırpmada birleştirildi.</item></plurals>
+    <plurals name="clipboard_clean_title"><item quantity="one">%1$d kırpma temizlensin mi?</item><item quantity="other">%1$d kırpma temizlensin mi?</item></plurals>
+    <plurals name="clipboard_clean_result"><item quantity="one">%1$d kırpma temizlendi.</item><item quantity="other">%1$d kırpma temizlendi.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Sistem panosunu temizle</string>

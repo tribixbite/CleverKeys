@@ -184,7 +184,7 @@ class ClipboardPaneTintTest {
                 context.getString(R.string.clipboard_results_summary, 3113, "1.1 MB")
             pane.findViewById<TextView>(R.id.clipboard_page_info).text = "1 / 32"
             val actions = listOf(R.id.clipboard_select_matching, R.id.clipboard_selection_clear,
-                R.id.clipboard_delete_selected, R.id.clipboard_selection_exit)
+                R.id.clipboard_selection_actions, R.id.clipboard_delete_selected, R.id.clipboard_selection_exit)
             for (direction in listOf(View.LAYOUT_DIRECTION_LTR, View.LAYOUT_DIRECTION_RTL)) {
                 pane.layoutDirection = direction
                 for ((width, height) in listOf(890 to 120, 720 to 120, 400 to 300)) {

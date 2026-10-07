@@ -211,10 +211,11 @@ class ClipboardTabsAndPaneCloseTest {
     }
 
     @Test
-    fun hidingThePaneEndsSelectionAndDismissesAPendingConfirmation() {
-        // resetSearchOnHide is reached on pane close, pane switch and keyboard hide
-        // (onFinishInputView): a selection — and its confirmation — must not reach
-        // another field or app.
+    fun hidingThePaneDismissesAPendingConfirmationButKeepsTheSelection() {
+        // resetSearchOnHide is reached on pane close, pane switch, keyboard hide and the input
+        // restart a rotation causes (onFinishInputView). An IME-attached confirmation cannot
+        // outlive its window, so it is dismissed — but the selection itself must survive and
+        // come back when the pane reopens (maintainer request 2026-10-07).
         val mgr = manager()
         val confirmation = mockk<android.app.AlertDialog>(relaxed = true)
         mgr.setField("bulkDialog", confirmation)
@@ -222,7 +223,90 @@ class ClipboardTabsAndPaneCloseTest {
         mgr.resetSearchOnHide()
 
         verify { confirmation.dismiss() }
-        verify { listView.endSelection() }
+        verify(exactly = 0) { listView.endSelection() }
+        verify(exactly = 0) { listView.clearSelection() }
+    }
+
+    @Test
+    fun explicitExitEndsSelectionAndDismissesAPendingConfirmation() {
+        val mgr = manager()
+        val confirmation = mockk<android.app.AlertDialog>(relaxed = true)
+        mgr.setField("bulkDialog", confirmation)
+
+        mgr.exitSelectionMode()
+
+        verify { confirmation.dismiss() }
+        verify(exactly = 1) { listView.endSelection() }
+    }
+
+    @Test
+    fun reopeningThePaneReturnsToTheSelectionsTab() {
+        // The pane normally reopens on History; with a selection alive it must reopen on the
+        // selection's tab so the checkboxes, count and selection bar come back.
+        val mgr = manager(startTab = ClipboardTab.HISTORY)
+        val holder = ClipboardSelectionHolder()
+        holder.start(ClipboardTab.TODOS)
+        mgr.setField("selectionHolder", holder)
+        mgr.setField("config", config(todosEnabled = true))
+
+        mgr.resetSearchOnShow()
+
+        verify(exactly = 1) { listView.setTab(ClipboardTab.TODOS) }
+        assertThat(mgr.getCurrentTab()).isEqualTo(ClipboardTab.TODOS)
+        assertThat(holder.selection).isNotNull()
+    }
+
+    @Test
+    fun aSelectionOnATabDisabledMeanwhileEndsOnReopen() {
+        // The Todos tab was switched off in Settings while the pane was closed: its rows cannot
+        // be shown, so the selection cannot be restored and ends (documented exception).
+        val mgr = manager(startTab = ClipboardTab.HISTORY)
+        val holder = ClipboardSelectionHolder()
+        holder.start(ClipboardTab.TODOS)
+        mgr.setField("selectionHolder", holder)
+        mgr.setField("config", config(todosEnabled = false))
+
+        mgr.resetSearchOnShow()
+
+        verify(exactly = 1) { listView.setTab(ClipboardTab.HISTORY) }
+        assertThat(holder.selection).isNull()
+    }
+
+    private fun config(todosEnabled: Boolean) = mockk<tribixbite.cleverkeys.Config>(relaxed = true).apply {
+        clipboard_pinned_enabled = true
+        clipboard_todo_enabled = todosEnabled
+    }
+
+    @Test
+    fun reopeningWithoutASelectionStartsOnHistory() {
+        val mgr = manager(startTab = ClipboardTab.PINNED)
+        mgr.setField("selectionHolder", ClipboardSelectionHolder())
+
+        mgr.resetSearchOnShow()
+
+        verify(exactly = 1) { listView.setTab(ClipboardTab.HISTORY) }
+        assertThat(mgr.getCurrentTab()).isEqualTo(ClipboardTab.HISTORY)
+    }
+
+    @Test
+    fun rebuildingThePaneKeepsTheSelection() {
+        // cleanup() runs on every theme change (the pane is re-inflated); the selection is not
+        // view state and must survive it.
+        val mgr = manager()
+        val holder = ClipboardSelectionHolder()
+        holder.start(ClipboardTab.HISTORY)
+        mgr.setField("selectionHolder", holder)
+        mgr.setField("config", mockk<tribixbite.cleverkeys.Config>(relaxed = true))
+        every { listView.resultSummary() } returns (0 to 0L)
+        every { listView.isResultsReady() } returns false
+        val confirmation = mockk<android.app.AlertDialog>(relaxed = true)
+        mgr.setField("bulkDialog", confirmation)
+
+        mgr.cleanup()
+
+        verify { confirmation.dismiss() }
+        verify(exactly = 0) { listView.endSelection() }
+        assertThat(holder.selection).isNotNull()
     }
 
     // ----------------------------------------------------- #80: the close buttons

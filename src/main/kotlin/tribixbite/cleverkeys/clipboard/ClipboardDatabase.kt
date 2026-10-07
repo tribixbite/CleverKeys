@@ -419,6 +419,26 @@ class ClipboardDatabase private constructor(context: Context) :
     }
 
     /**
+     * Run [block] inside one SQLite transaction on the writable database: every write it makes
+     * commits together (one journal sync) or, if it throws, none does. Used by the selection's
+     * Add to Pinned / Add to Todos, which reuse the per-entry [pinEntry] / [addTodoEntry]
+     * inserts. Do NOT call helpers that open and end their own transaction from inside —
+     * [updateEntryContentInTable] ends its transaction early on a duplicate, which would end
+     * this outer one.
+     */
+    fun <T> runInTransaction(block: () -> T): T {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            val result = block()
+            db.setTransactionSuccessful()
+            return result
+        } finally {
+            db.endTransaction()
+        }
+    }
+
+    /**
      * Atomically delete a confirmed snapshot. Exact identity guards skip changed/replaced rows.
      * One small parameterized statement per row avoids SQLite's variable limit across all pages.
      * Returned paths are candidates for post-commit reference-checked media cleanup.
