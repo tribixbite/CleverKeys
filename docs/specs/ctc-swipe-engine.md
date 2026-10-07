@@ -1113,9 +1113,23 @@ failed decodes do not receive guessed fallbacks. This does not fix `ad`/`wet` ra
 
 Each segment permits at most 2,048 samples; each gesture at most 32 segments. Overflow,
 rejected edits, selection/manual changes, new gestures, multitouch, cancellation, layout
-changes and input-session end cancel pending work. Cancellation must not fall back to
-decoding the original whole phrase on lift. Per-segment ML capture is reset.
+changes and input-session end cancel pending work. After a boundary was crossed,
+cancellation must not fall back to decoding the original whole phrase on lift; before
+any boundary the gesture is an ordinary swipe and still commits its single word.
+Superseding a phrase whose segment is still waiting or decoding (for example the final
+word, by a touch-down or typed key right after lift) shows the "continuous swipe stopped"
+feedback instead of dropping the word silently. Per-segment ML capture is reset.
 
-Selection callbacks arriving after an accepted commit are handled conservatively; a
-delayed intermediate caret callback can stop the phrase. Native mechanics tests do not
-certify human accuracy, latency or every editor's callback ordering.
+Selection callbacks reach the IME after the commit code returned. `ContinuousSelectionGate`
+keeps the carets of the last accepted commit (before/after its separator and word) owned
+until the next commit completes, at most eight late callbacks per commit; a callback of
+commit N recorded while N+1 is written is accepted too. Safety does not rest on these
+coordinates: every dispatch first re-reads the whole editor state. A foreign selection
+change with phrase work pending aborts with feedback (review 2026-10-07, findings 1/5/6).
+
+Touch-down performs no InputConnection read: the editor baseline is captured at the
+first deliberate boundary, and space-key bounds are cached per layout identity and
+geometry. An unreadable or selected editor at that point keeps the gesture an ordinary
+swipe. Host tests (`ContinuousSwipePureTest`, `Keyboard2ViewContinuousLifecycleTest`)
+and native mechanics tests do not certify human accuracy, latency or every editor's
+callback ordering.

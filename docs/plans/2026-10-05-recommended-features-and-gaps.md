@@ -16,9 +16,9 @@ and personal device testing before 2.0; tagging/publishing is not authorized.
 | 1.1 Terminal handling | Shared predicate and custom package setting implemented and tested. External terminal app smoke tests remain. |
 | 1.2 Dynamic macros | Explicit TEMPLATE actions implement clipboard, cursor, UUID and selection expansion; native execution/assignment tests pass; Seeker checks remain. Existing TEXT stays literal. |
 | 1.3 Clipboard encryption | At-rest encryption/unlock not implemented; backup encryption is a different, existing feature. |
-| 2.1 Apostrophes | Literal ASCII/curly flick parity implemented; ASCII device-tested. Explicit suffix transaction/undo and learning receipts implemented and native-tested; Seeker checks remain. Contraction chooser remains. Waypoints deferred. |
+| 2.1 Apostrophes | Literal ASCII/curly flick parity implemented; ASCII device-tested. Explicit suffix transaction/undo and learning receipts implemented and native-tested. Saga/Chrome showed suffix undo failing on late selection callbacks; the October 7 review fix (consumption/time-bound callback ledger) is host-tested and needs a device recheck. Contraction chooser remains. Waypoints deferred. |
 | Short-word recognition | `ad`/`wet` still fail with default CTC. Frozen heuristic arms rejected; fresh writer/session data and general calibration/training remain. |
-| 2.2 Continuous swipe | Opt-in 280 ms spacebar dwell, bounded segments and serialized commits implemented; native routing tests pass; human/device validation remains. |
+| 2.2 Continuous swipe | Opt-in 280 ms spacebar dwell, bounded segments and serialized commits implemented. October 7 review fixes (late own callbacks no longer cancel phrases, lost final word reported, no-boundary cancel keeps the word, lazy touch-down reads) are host-tested; native tests not rerun; human/device validation remains. |
 | 2.3 Dwell picker | Not implemented; needs latency/conflict measurements before implementation. |
 | 3.1 Bangla | National/Provat tap layouts exist. Transliteration, spelling-preserving dictionary/mark support and a validated swipe model remain. |
 | 4.1 Theme preview | Live sample exists; actual keyboard/state preview remains. |
@@ -215,7 +215,10 @@ collision rules must survive any new gesture.
    completed typed word. Only an original swipe restores whole-swipe undo.
    Verify the same editor, a collapsed selection, cursor location and the exact
    committed word with either its owned automatic space or no trailing space.
-   Never reclaim a manual space or edit a stale word after cursor/field changes.
+   Never reclaim a space typed anywhere else or edit a stale word after cursor/field
+   changes. A space typed immediately after completing the word is the boundary that
+   completed it and is attachable (`James ` → `James's `): the command explicitly targets
+   that word, and its receipt expires on any later edit or caret move.
    A successful edit retains the prior automatic-space policy. When verification
    fails, make no destructive edit and show concise feedback.
 3. **Make suffix editing one reversible transaction.** Integrate at
@@ -603,6 +606,29 @@ Next work:
    layout-linked language, clipboard encryption, dwell picker, full keyboard theme
    preview, spline trail and language-pack final-swap recovery remain open.
 4. No push, tag, version bump, external issue comment or release was authorized.
+
+### Review follow-up (October 7)
+
+A senior review of `64f05dd2`/`388f4b6b` found eight issues; all were confirmed in code
+and fixed with fail-first host tests (no native or device rerun in this round):
+
+1. Continuous phrases cancelled themselves when a two-write commit's late selection
+   callback arrived after `complete()` — `ContinuousSelectionGate` (`f20a8a6d`).
+2. Suffix-edit callback allowance expired on the next loop turn; late owned callbacks
+   dropped the receipt (also seen on Saga/Chrome) — `OwnedSelectionLedger` (`6eb7c7fe`,
+   Chrome-order pin `ede3f3b3`).
+3. Hot-path InputConnection reads: touch-down reads nothing, word receipts 8 → 3 reads
+   (`f20a8a6d`, `7f8c68dc`); the remaining commit-time readback is a documented TODO.
+4. Invalid `template:` keydefs crashed `getKeyByName` callers — now a parse error (`39501aed`).
+5. A still-decoding final segment was dropped silently — now reported (`f20a8a6d`).
+6. Cancellation without a spacebar boundary discarded the single word (`f20a8a6d`).
+7. A typed space after a completed word is attachable by design; docs now say so.
+8. ConfigSnapshot defaults removed (`a9abaa62`), dead editing arms documented
+   (`f77b06fb`), single-readback verification, host-tier continuous tests.
+
+Host evidence: 2,790 pure + 991 mock pass; `compileReleaseKotlin` and
+`compileDebugAndroidTestKotlin` pass. Native suites were not rerun; the Saga/Chrome suffix
+undo and continuous phrases need a device recheck with a fresh build.
 
 **Foreign dirty file:** do not edit, stage or commit
 `docs/plans/v2.0.0-manual-test-checklist.md`; preserved SHA-256

@@ -407,6 +407,19 @@ Do not commit, tag, push, publish, or open external issues without explicit user
 - [ ] TODO: maintainer tests the assigned command on a disposable copied clip; this
   session preserves the Seeker’s existing Android clipboard. Native wording review remains.
 
+### October 7 review of continuous swipe / suffix commands
+
+- [x] Eight review findings verified and fixed with fail-first host tests (commits
+  `39501aed`..`f77b06fb`); 2,790 pure + 991 mock pass, release/androidTest compile.
+  Details: plan doc "Review follow-up (October 7)".
+- [ ] TODO: device recheck on Saga/Chrome — Backspace after Append apostrophe must undo
+  the suffix in one press (failed on bf417bf6 build); continuous phrases with a typed
+  prefix ("I" + swipe "want to go") and tapping "." right after lift (expect feedback).
+- [ ] TODO: rerun the native suites (`SmartAutoSpaceTest`, `ContinuousSwipeTest`,
+  `DynamicTemplateTest`) on emulator.wtf with a fresh build.
+- [ ] TODO(perf): word receipts still cost one 3-read editor readback per committed word;
+  see rememberVerifiedWord for why it is not deferred.
+
 ### Current next work
 
 - [x] Rejected/throwing swipe commit bookkeeping fixed and tested; successful

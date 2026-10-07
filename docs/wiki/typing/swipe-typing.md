@@ -235,8 +235,12 @@ inserted directly; other segments require actual decoder candidates.
 
 Changing field, layout, language or settings, starting another gesture, adding a
 second finger, or editing/moving the caret cancels pending words. Text already
-accepted remains. A rejected/empty decode or failed editor write stops the phrase
-with feedback; CleverKeys does not guess a replacement or retry an uncertain edit.
+accepted remains. If a word was still being recognized — for example the last word,
+when you touch the keyboard or type a key right after lifting — the suggestion bar
+says the continuous swipe stopped, so check the text. Before your first spacebar hold,
+a cancellation simply leaves an ordinary single-word swipe. A rejected/empty decode or
+failed editor write stops the phrase with feedback; CleverKeys does not guess a
+replacement or retry an uncertain edit.
 Password fields, selected ranges, unreadable editors and active clipboard/emoji/GIF
 editors do not start continuous mode. With no intentional boundary, the normal
 single-word recognizer and its full original path still handle the gesture.

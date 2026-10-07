@@ -617,7 +617,15 @@ these commands directly with success-only feedback rather than executing raw TEX
 SuggestionHandler captures WordEditReceipt after a successful candidate commit or
 verified typed-word boundary: editor identity/session, Config generation/language,
 exact VerifiedSuffixEdit and the latest opaque LearningCommit. At invocation it
-revalidates collapsed editor readback and full word+owned separator. VerifiedSuffixEdit
+revalidates collapsed editor readback and full word+owned separator.
+
+A space the user types immediately after completing a word is recorded as that word's
+attachable separator (`James` + typed space + Append 's → `James's `). The command is an
+explicit request to edit the word just completed, and that space is the boundary that
+completed it; the receipt holds the caret and guard text of that exact moment. A space
+typed anywhere else is never attachable: any later edit, caret move or field change
+expires the receipt first. This does not change smart punctuation, which still preserves
+typed spaces for punctuation keys. VerifiedSuffixEdit
 requires acknowledged composition completion and unchanged readback before selecting
 only the owned tail, writing the exact suffix/space, and reading back. A false or
 throwing result is reconciled only when the desired edit is observed exactly, without
@@ -635,14 +643,27 @@ API remains separate; suffix replacement never uses its spelling fallback.
 
 ### Editor callback limitation
 
-Android selection callbacks contain no operation ID. Suffix writes accept their own
-expected original-caret/tail-selection/final-caret callbacks only inside a bounded, next-main-loop
-ledger with the same session and exact editor readback. Real ranged selections or
-outside-window movement invalidate ownership. The shared selection gate keeps UI
+Android selection callbacks contain no operation ID and arrive asynchronously; API 24–27
+TextView/WebView/Compose editors and Chrome can report them several main-loop turns late
+(Saga, Android 14, Chrome: before the fix, the Backspace after "Append apostrophe" deleted
+two characters instead of undoing the suffix). Suffix writes and continuous separators
+accept their own expected original-caret/tail-selection/final-caret callbacks through an
+`OwnedSelectionLedger` of at most three entries that expires by consumption, by a later
+operation, or after a 2-second monotonic bound — not on the next loop turn. Each accepted
+callback also requires the same session and an exact readback of the operation's final
+state. A word receipt additionally accepts the two carets just before its word (left by a
+separate separator or partial-deletion write in the same commit), again only on exact
+readback, so typing "I" then swiping "want" keeps "Append 's" available. Real ranged
+selections, unmatched or expired callbacks invalidate ownership.
+
+Cost: the receipt is one editor readback (three InputConnection reads; the whole-word
+check reuses its guard text), and the final callback after each plain word reads nothing,
+because every command re-verifies the receipt in full. Deferring the commit-time readback
+was rejected: its caret is what proves the cursor never left the word. The shared selection gate keeps UI
 notifications unconditional, while consumed owned events bypass continuous cancellation
 and manual cursor synchronization; otherwise stale coordinates would erase the new
 auto-space stamp. An identical manual away/back sequence
-inside that brief window can be indistinguishable from delayed owned callbacks.
+inside that window (up to 2 seconds) can be indistinguishable from delayed owned callbacks.
 This limitation requires cross-editor device testing; it is not an absolute guarantee
 that every cursor excursion can be identified.
 

@@ -361,3 +361,13 @@ completed-output audit resolves all 2,211 local wiki/spec links and 30 guide rou
 Log: `build/oct6-three-features-docs-final-green.log`. Agent handbook, local instructions,
 working todo, relevant skills, roadmap, wiki/specs, README and changelog reflect the
 implemented behavior and remaining manual/architectural gaps.
+
+## October 7 review fixes (host tier)
+
+Fail-first host regressions for the continuous-swipe/suffix review: `ContinuousSwipePureTest`
+(segmentation, queue and selection gate, 30 cases; previously native-only),
+`OwnedSelectionLedgerTest`, `SuggestionHandlerOwnedCallbackTest` (late own callbacks,
+Chrome ordering, receipt read cost), `Keyboard2ViewContinuousLifecycleTest` (lost final
+segment, no-boundary cancel, touch-down cost) and a `KeyValueParserTest` template case.
+Full runs: **2,790 pure + 991 mock** pass; release Kotlin and androidTest Kotlin compile.
+Logs: `build/review-1007/`. Native suites were not rerun in this round.

@@ -163,10 +163,21 @@ callback, with the updated prediction context and a separate ML segment capture.
 An explicit boundary supplies one verified separator if the normal commit lacked it.
 English one-key a/I segments are explicit observed-key input, not decoder-error guesses.
 
-The session captures editor/field identity, collapsed selection and prefix/suffix,
-layout identity, Config snapshot generation, language, secondary language, engine and
-initial shift/caps state. Every pending result revalidates these; cancellation leaves
+The session captures editor/field identity, layout identity, Config snapshot generation,
+language, secondary language, engine and initial shift/caps state at touch-down, and the
+collapsed selection and prefix/suffix readback at the first deliberate boundary (so a
+gesture without one costs no InputConnection round-trip; space-key bounds are cached per
+layout and geometry). Every pending result revalidates these; cancellation leaves
 accepted text in place. The feature refuses password/unreadable/selected or inline
-editors. The ordinary single-word path remains authoritative when no boundary occurred.
-Native `ContinuousSwipeTest` pins mechanics; synthetic evidence does not establish
-human word accuracy or device latency. Final run evidence is kept in the testing strategy.
+editors, which keep the ordinary single-word path. The ordinary path also stays
+authoritative when no boundary occurred, including after a cancellation (second finger,
+reset, app selection change) before any boundary.
+
+Own selection callbacks arrive after the commit returned, and a two-write commit reports
+an intermediate caret first. `ContinuousSelectionGate` keeps the last accepted commit's
+carets owned until the next commit completes (bounded); a foreign change with phrase work
+pending aborts with "continuous swipe stopped" feedback, as does superseding a segment
+that is still waiting or decoding (for example the final word right after lift).
+Host-tier `ContinuousSwipePureTest` and `Keyboard2ViewContinuousLifecycleTest` plus native
+`ContinuousSwipeTest` pin mechanics; synthetic evidence does not establish human word
+accuracy or device latency. Final run evidence is kept in the testing strategy.

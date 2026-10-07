@@ -69,8 +69,9 @@ bring back a keyboard the system has already hidden.
 
 The Editing category includes **Append 's** and **Append apostrophe**. They attach
 an exact suffix to the last verified word; immediate Backspace removes the suffix
-before deleting the word. Manual spaces, selected ranges and unrelated caret moves
-invalidate attachment.
+before deleting the word. A space you type right after finishing a word counts as that
+word's separator (`James ` → `James's `). Selected ranges, later edits and unrelated
+caret moves invalidate attachment.
 
 Choose **Dynamic template** to insert clipboard text, wrap selected text, generate a
 UUID or position the caret. Templates are explicit: ordinary Text Input keeps braces
