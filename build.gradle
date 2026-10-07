@@ -1163,6 +1163,10 @@ tasks.register('runMockTests', JavaExec) {
     // Cyrillic/Greek/Hebrew KeyValue keys — possible off-device because the test classpath
     // shadows the android.jar PointF stub (src/test/kotlin/android/graphics/PointF.kt).
     'tribixbite.cleverkeys.SwipeNonLatinSwipeTypingTest',
+    // Short-word CTC fix (2026-10-07): CTC featurizes the recognizer's unsmoothed samples
+    // plus one finger-lift sample (a final stop on `d` reaches the encoder at `d`); the
+    // geometric engine keeps the smoothed path.
+    'tribixbite.cleverkeys.SwipeCtcRawTraceTest',
     // Release-record burn-down (2026-09-03): claims pinned by waves UA-UD
     'tribixbite.cleverkeys.ReleaseClaimGestureModesTest',
     // #171/#145/#83 (2026-09-03): custom short-swipe dispatch — a custom mapping shadows

@@ -1091,12 +1091,14 @@ class CleverKeysService : InputMethodService(),
         timestamps: List<Long>,
         wasShiftActive: Boolean = false,
         wasShiftLocked: Boolean = false,
-        control: InputCoordinator.SwipeCommitControl? = null
+        control: InputCoordinator.SwipeCommitControl? = null,
+        /** CTC-only unsmoothed trace (+ lift sample); null → CTC uses [swipePath]. */
+        ctcTrace: RawSwipeTrace? = null,
     ) {
         // v1.32.350: Delegated to InputCoordinator
         val ic = currentInputConnection
         val editorInfo = currentInputEditorInfo
-        _inputCoordinator.handleSwipeTyping(swipedKeys, swipePath, timestamps, ic, editorInfo, resources, wasShiftActive, wasShiftLocked, control)
+        _inputCoordinator.handleSwipeTyping(swipedKeys, swipePath, timestamps, ic, editorInfo, resources, wasShiftActive, wasShiftLocked, control, ctcTrace)
     }
 
     /**

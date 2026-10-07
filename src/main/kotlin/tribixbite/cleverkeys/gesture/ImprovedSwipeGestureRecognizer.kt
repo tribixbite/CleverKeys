@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.graphics.PointF
 import android.util.Log
+import tribixbite.cleverkeys.gesture.ContinuousSwipe
 import tribixbite.cleverkeys.swipe.KeyLetter
 import java.util.ArrayList
 import kotlin.collections.List // Ensure kotlin.collections.List is used
@@ -17,7 +18,14 @@ import kotlin.math.sqrt
  * obtain() already fell through to a fresh PointF while the pool kept 200 PointF + 200
  * TrajectoryPoint + 30 ArrayLists eagerly allocated for the life of the process.
  */
-open class ImprovedSwipeGestureRecognizer {
+open class ImprovedSwipeGestureRecognizer(
+    /**
+     * Wall clock for sample timestamps (ms). Injectable so host tests can drive a
+     * deterministic timeline; production always uses [System.currentTimeMillis], the same
+     * clock the continuous-swipe segmenter stamps its samples with.
+     */
+    private val clock: () -> Long = System::currentTimeMillis,
+) {
 
     private val _rawPath: MutableList<PointF> = ArrayList()
     private val _smoothedPath: MutableList<PointF> = ArrayList()
@@ -38,6 +46,9 @@ open class ImprovedSwipeGestureRecognizer {
     )
     private val _touchedKeys: MutableList<KeyboardData.Key>
         get() = _registrar.touchedKeys
+
+    /** One sample at finger lift (ACTION_UP), CTC-only; see [recordLift]. */
+    private var _lift: ContinuousSwipe.Sample? = null
 
     private var _isSwipeTyping: Boolean = false
     private var _startTime: Long = 0
@@ -95,7 +106,7 @@ open class ImprovedSwipeGestureRecognizer {
         _rawPath.add(startPoint)
         _smoothedPath.add(startPoint)
         
-        _startTime = System.currentTimeMillis()
+        _startTime = clock()
         _lastPointTime = _startTime
         _timestamps.add(_startTime)
         
@@ -115,7 +126,7 @@ open class ImprovedSwipeGestureRecognizer {
         if (_rawPath.isEmpty())
             return
         
-        val now = System.currentTimeMillis()
+        val now = clock()
         val timeSinceLastPoint = now - _lastPointTime
 
         // Duplicate or backward timestamp - skip without moving the anchor.
@@ -258,7 +269,8 @@ open class ImprovedSwipeGestureRecognizer {
                 _smoothedPath.toList(), // Changed to .toList()
                 _timestamps.toList(),   // Changed to .toList()
                 _totalDistance,
-                _isSwipeTyping
+                _isSwipeTyping,
+                ctcTrace(),
             )
         }
 
@@ -423,6 +435,28 @@ open class ImprovedSwipeGestureRecognizer {
     }
     
     /**
+     * Records the finger-lift sample (ACTION_UP position, lift time on [clock]). Called by
+     * [Pointers] immediately before it ends a word swipe. A later call replaces an earlier
+     * one, so a trace never carries more than one lift sample. No-op without an active path
+     * or for non-finite coordinates.
+     */
+    fun recordLift(x: Float, y: Float) {
+        if (_rawPath.isEmpty() || !x.isFinite() || !y.isFinite()) return
+        _lift = ContinuousSwipe.Sample(x, y, clock())
+    }
+
+    /** The lift sample recorded for the current gesture, if any (continuous segments). */
+    fun liftSample(): ContinuousSwipe.Sample? = _lift
+
+    /**
+     * The CTC encoder's input for the current gesture — see [RawSwipeTrace]: the accepted
+     * samples WITHOUT smoothing (the [NOISE_THRESHOLD] drop and the pause rule still apply;
+     * [_timestamps] is parallel to [_rawPath]) plus the [recordLift] sample. Null when no path
+     * has been started. The smoothed path stays the geometric engine's input.
+     */
+    fun ctcTrace(): RawSwipeTrace? = RawSwipeTrace.withLift(_rawPath, _timestamps, _lift)
+
+    /**
      * Get the timestamps
      */
     fun getTimestamps(): List<Long> {
@@ -479,6 +513,7 @@ open class ImprovedSwipeGestureRecognizer {
         _rawPath.clear()
         _smoothedPath.clear()
         _timestamps.clear()
+        _lift = null
         _registrar.reset()
         _isSwipeTyping = false
         _totalDistance = 0f

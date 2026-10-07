@@ -25,6 +25,10 @@ Sub-commands (all write/read JSONL in --work, default ./build/short-word-eval):
         smooth noise + trailing 3-point moving average (SWIPE_SMOOTHING_WINDOW) — what the
                engines receive today via SwipeResult.path
         fix    noise, NO smoothing, plus a terminal sample at lift time (proposed)
+  export-rows CORPUS OUT [--sample N]
+      Write the usable rows ({"k","w","pts"}) for an external pre-processor: the Kotlin replay
+      `CtcRawTraceReplayExport` runs the SHIPPED recognizer over them (see §7 of the eval note).
+  dump-trace FILE OUT  decode rows that were pre-processed elsewhere, keeping their keys
   compare A B          paired top-1 comparison of two dumps of the same corpus (sign test)
   endpoint DUMP        isotropic endpoint-likelihood re-rank grid
   lambda DUMP          exact λ sweep over the stored beams
@@ -346,19 +350,49 @@ def sign_p(g: int, l: int) -> float:
 
 # ── sub-commands ──────────────────────────────────────────────────────────────────
 
-def cmd_dump(a: argparse.Namespace) -> None:
-    rows = list(read_rows(a.corpus))
-    if a.sample:
-        rows = sorted(rows)[:a.sample]
+def _decode_rows(rows: List[Tuple[str, str, Trace]], out: str) -> None:
+    """Decode (key, word, trace) rows and write one dump line per row (shared by dump modes)."""
     enc, trie = Encoder(), load_lexicon(); t0 = time.time()
-    with open(a.out, "w") as fo:
-        for i, (k, w, pts) in enumerate(rows):
-            x, y, t = app_emulate([p[0] for p in pts], [p[1] for p in pts], [p[2] for p in pts], a.emu)
+    with open(out, "w") as fo:
+        for i, (k, w, (x, y, t)) in enumerate(rows):
             E = enc.emit(x, y, t)
             fo.write(json.dumps({"w": w, "k": k, "x1": x[-1], "y1": y[-1], "g": greedy(E),
                                  "c": [[c[0], round(c[1], 5), round(c[2], 5)] for c in beam_decode(E, trie)]}) + "\n")
             if i % 500 == 0:
                 print(f"{i}/{len(rows)} {time.time() - t0:.0f}s", flush=True)
+
+
+def cmd_dump(a: argparse.Namespace) -> None:
+    rows = list(read_rows(a.corpus))
+    if a.sample:
+        rows = sorted(rows)[:a.sample]
+    _decode_rows([(k, w, app_emulate([p[0] for p in pts], [p[1] for p in pts], [p[2] for p in pts], a.emu))
+                  for k, w, pts in rows], a.out)
+
+
+def cmd_export_rows(a: argparse.Namespace) -> None:
+    """Write the usable rows as {"k","w","pts"} for an EXTERNAL touch-path pre-processor.
+
+    The Kotlin replay (`CtcRawTraceReplayExport`) drives the shipped recognizer over these rows
+    and writes the same shape back; `dump-trace` then decodes it under the original keys, so
+    `compare` pairs the shipped code path against the emulated ones trace by trace.
+    """
+    rows = list(read_rows(a.corpus))
+    if a.sample:
+        rows = sorted(rows)[:a.sample]
+    with open(a.out, "w") as fo:
+        for k, w, pts in rows:
+            fo.write(json.dumps({"k": k, "w": w, "pts": pts}) + "\n")
+
+
+def cmd_dump_trace(a: argparse.Namespace) -> None:
+    """Decode rows whose "pts" were already pre-processed elsewhere, keeping their "k"."""
+    rows = []
+    for line in open(a.file):
+        if line.strip():
+            r = json.loads(line); pts = r["pts"]
+            rows.append((r["k"], r["w"], ([p[0] for p in pts], [p[1] for p in pts], [p[2] for p in pts])))
+    _decode_rows(rows, a.out)
 
 
 def cmd_compare(a: argparse.Namespace) -> None:
@@ -445,6 +479,10 @@ def main() -> int:
     p.add_argument("--sample", type=int, default=0)
     p.add_argument("--emu", choices=("raw", "noise", "smooth", "fix"), default="raw")
     p.set_defaults(fn=cmd_dump)
+    p = sub.add_parser("export-rows"); p.add_argument("corpus"); p.add_argument("out")
+    p.add_argument("--sample", type=int, default=0); p.set_defaults(fn=cmd_export_rows)
+    p = sub.add_parser("dump-trace"); p.add_argument("file"); p.add_argument("out")
+    p.set_defaults(fn=cmd_dump_trace)
     p = sub.add_parser("compare"); p.add_argument("a"); p.add_argument("b"); p.set_defaults(fn=cmd_compare)
     p = sub.add_parser("endpoint"); p.add_argument("dump"); p.set_defaults(fn=cmd_endpoint)
     p = sub.add_parser("lambda"); p.add_argument("dump"); p.set_defaults(fn=cmd_lambda)

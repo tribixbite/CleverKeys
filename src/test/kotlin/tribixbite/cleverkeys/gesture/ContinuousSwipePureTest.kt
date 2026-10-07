@@ -98,6 +98,49 @@ class ContinuousSwipePureTest {
         assertEquals(1, h.overflow); assertTrue(h.output.isEmpty())
     }
 
+    // ---- CTC raw sub-paths and the lift sample (short-word fix, 2026-10-07) ----
+
+    /** A two-word phrase `a b|c`: boundary after `a`, finger then on `b`, `c`. */
+    private fun phrase(): Harness {
+        val h = Harness(); h.letter("a", 0); h.space(10); h.space(290)
+        h.letter("b", 310); h.letter("c", 320); return h
+    }
+
+    @Test fun finalSegmentCarriesTheLiftSampleForCtcOnly() {
+        val h = phrase()
+        val lift = ContinuousSwipe.Sample(320.5f, 1f, 1400)
+        h.swipe.finish(lift)
+        val last = h.output.last()
+        assertEquals(lift, last.lift)
+        // Engines' shared raw sub-path is unchanged; the CTC copy gains exactly one sample.
+        assertEquals(listOf(1310L, 1320L), last.samples.map { it.timestamp })
+        assertEquals(last.samples + lift, last.ctcSamples)
+    }
+
+    @Test fun spaceEndedSegmentsCarryNoLiftAndCtcSeesTheirRawSamples() {
+        val h = phrase(); h.swipe.finish(ContinuousSwipe.Sample(320f, 1f, 1400))
+        val first = h.output.first()
+        assertTrue(first.endedBySpace)
+        assertEquals(null, first.lift)
+        assertEquals(first.samples, first.ctcSamples)
+    }
+
+    @Test fun liftOnTheSpacebarAddsNoSample() {
+        // Lifted inside SPACE without the dwell: the word ends at its last letter sample;
+        // a spacebar position would be a false final key for the encoder.
+        val h = phrase(); h.space(330)
+        h.swipe.finish(ContinuousSwipe.Sample(1f, 10f, 1400))
+        assertEquals(null, h.output.last().lift)
+        assertEquals(h.output.last().samples, h.output.last().ctcSamples)
+    }
+
+    @Test fun liftNotLaterThanTheLastSampleOrNonFiniteIsDropped() {
+        val same = phrase(); same.swipe.finish(ContinuousSwipe.Sample(320f, 1f, 1320))
+        assertEquals(null, same.output.last().lift)
+        val nan = phrase(); nan.swipe.finish(ContinuousSwipe.Sample(Float.NaN, 1f, 1400))
+        assertEquals(null, nan.output.last().lift)
+    }
+
     // ---- serialized queue ----
 
     @Test fun fifoWaitsForAcknowledgedCommitBeforeNextDecode() {

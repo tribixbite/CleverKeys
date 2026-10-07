@@ -220,8 +220,23 @@ class Pointers(
 
     // Receiving events
 
-    fun onTouchUp(pointerId: Int) {
+    /**
+     * @param liftX ACTION_UP x of this pointer; NaN (e.g. an accessibility tap, which has no
+     *   motion event) falls back to the pointer's last MOVE position.
+     * @param liftY ACTION_UP y, same fallback.
+     */
+    fun onTouchUp(pointerId: Int, liftX: Float = Float.NaN, liftY: Float = Float.NaN) {
         val ptr = getPtr(pointerId) ?: return
+        // Every word-swipe end below goes through this, so the CTC trace gets exactly one
+        // sample at the moment THIS pointer lifted (short-word fix, 2026-10-07). It is recorded
+        // only where the swipe actually ends, never for another finger's release.
+        fun endWordSwipe() {
+            _swipeRecognizer.recordLift(
+                if (liftX.isFinite()) liftX else ptr.lastX,
+                if (liftY.isFinite()) liftY else ptr.lastY,
+            )
+            _handler.onSwipeEnd(_swipeRecognizer)
+        }
 
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "=== onTouchUp START: ptr_value=${ptr.value}, flags=0x${ptr.flags.toString(16)}, pointerId=$pointerId ===")
 
@@ -231,7 +246,7 @@ class Pointers(
         // Handle swipe typing completion
         if (snap.swipe_typing_enabled && ptr.hasFlagsAny(FLAG_P_SWIPE_TYPING)) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: SWIPE_TYPING completion")
-            _handler.onSwipeEnd(_swipeRecognizer)
+            endWordSwipe()
             _swipeRecognizer.reset()
             removePtr(ptr)
             return
@@ -417,7 +432,7 @@ class Pointers(
             if (effectiveGestureType == GestureClassifier.GestureType.SWIPE) {
                 // This is a swipe gesture - send to the swipe decoder
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Sending to swipe decoder")
-                _handler.onSwipeEnd(_swipeRecognizer)
+                endWordSwipe()
                 clearLatched() // Clear shift after swipe word completes
                 _swipeRecognizer.reset()
                 removePtr(ptr)
@@ -567,7 +582,7 @@ class Pointers(
                             // hasLeftStartingKey.
                             if (isWordCandidate) {
                                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE->WORD: no subkey in direction $direction, committing word swipe")
-                                _handler.onSwipeEnd(_swipeRecognizer)
+                                endWordSwipe()
                                 clearLatched()
                                 _swipeRecognizer.reset()
                                 removePtr(ptr)
@@ -597,7 +612,7 @@ class Pointers(
                     distance < totalDistance / 2
                 ) {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "RETURN_TRIP_WORD: disp=$distance path=$totalDistance time=${timeElapsed}ms -> word")
-                    _handler.onSwipeEnd(_swipeRecognizer)
+                    endWordSwipe()
                     clearLatched()
                     _swipeRecognizer.reset()
                     removePtr(ptr)

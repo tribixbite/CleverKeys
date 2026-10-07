@@ -550,7 +550,12 @@ class InputCoordinator(
         resources: Resources,
         wasShiftActive: Boolean = false,  // v1.32.926: Track if shift was latched when swipe started
         wasShiftLocked: Boolean = false,  // v1.33.8: Track if shift was LOCKED (caps lock) when swipe started
-        control: SwipeCommitControl? = null
+        control: SwipeCommitControl? = null,
+        // Short-word fix (2026-10-07): the UNSMOOTHED trace plus one finger-lift sample, for
+        // the CTC encoder only (it was trained on raw samples). swipePath/timestamps stay the
+        // recognizer's smoothed path, which the geometric engine was tuned on. Null (callers
+        // without a recognizer trace) → CTC falls back to swipePath.
+        ctcTrace: RawSwipeTrace? = null,
     ) {
         if (closed || control?.isCurrent() == false) { control?.complete(null); return }
         // v1.32.926: Store shift state for capitalize first letter in onSuggestionSelected
@@ -588,7 +593,7 @@ class InputCoordinator(
             )
             SwipeEngineRouter.Engine.CTC -> performCtcSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked, control
+                wasShiftActive, wasShiftLocked, control, ctcTrace
             )
         }
     }
@@ -785,7 +790,8 @@ class InputCoordinator(
         resources: Resources,
         wasShiftActive: Boolean,
         wasShiftLocked: Boolean,
-        control: SwipeCommitControl? = null
+        control: SwipeCommitControl? = null,
+        ctcTrace: RawSwipeTrace? = null,
     ) {
         val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
             ?: config.primary_language
@@ -851,8 +857,12 @@ class InputCoordinator(
         // the CTC engine + layout so ML exports stay separable per decoder (audit n-2).
         beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_CTC)
 
+        // The CTC encoder featurizes the unsmoothed trace (+ lift sample) when the gesture layer
+        // supplied one; every geometric hand-off in this function keeps the smoothed swipePath.
         ctcAdapterOrCreate().decodeAsync(
-            keyboard, params, frameW, frameH, swipePath, timestamps, language, secondaryLanguage,
+            keyboard, params, frameW, frameH,
+            ctcTrace?.points ?: swipePath, ctcTrace?.timestamps ?: timestamps,
+            language, secondaryLanguage,
             onDecodeFailure = {
                 // ARC-083 — the fourth reason to hand this swipe to geometric, and the only one
                 // that cannot be checked before dispatch: the decode itself failed. The three

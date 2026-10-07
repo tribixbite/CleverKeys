@@ -13,10 +13,12 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.objenesis.ObjenesisStd
@@ -88,7 +90,7 @@ class Keyboard2ViewContinuousLifecycleTest {
         view.setField("continuousSegmenter", segmenter(boundary = false))
         view.cancelContinuousSwipe() // second finger / app selection change / reset
         view.onSwipeEnd(recognizerWithWord())
-        verify(exactly = 1) { service.handleSwipeTyping(any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 1) { service.handleSwipeTyping(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -96,7 +98,7 @@ class Keyboard2ViewContinuousLifecycleTest {
         view.setField("continuousSegmenter", segmenter(boundary = true))
         view.cancelContinuousSwipe()
         view.onSwipeEnd(recognizerWithWord())
-        verify(exactly = 0) { service.handleSwipeTyping(any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { service.handleSwipeTyping(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     // ------------------------------------------------------------------ finding 5
@@ -182,7 +184,59 @@ class Keyboard2ViewContinuousLifecycleTest {
         segmenter.sample(150f, 50f, 2_010, 1_010, null, true)
         segmenter.dwell(1_010 + ContinuousSwipe.DWELL_MS)
         verify(atLeast = 1) { EditorReadback.capture(any()) }
-        verify(exactly = 1) { service.handleSwipeTyping(any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 1) { service.handleSwipeTyping(any(), any(), any(), any(), any(), any(), any()) }
+    }
+
+    // ------------------------------------------- short-word fix (2026-10-07): CTC raw trace
+
+    @Test
+    fun spaceEndedSegmentSendsItsRawSamplesToCtcWithoutALiftSample() {
+        val (letter, recognizer) = armContinuousStart()
+        view.onSwipeStart(10f, 50f, letter, testConfigSnapshot(continuous_swipe_enabled = true), recognizer)
+        @Suppress("UNCHECKED_CAST")
+        val segmenter = Keyboard2View::class.java.getDeclaredField("continuousSegmenter")
+            .apply { isAccessible = true }.get(view) as ContinuousSwipe<KeyboardData.Key>
+        segmenter.sample(20f, 50f, 2_000, 1_000, letter, false)
+        segmenter.sample(150f, 50f, 2_010, 1_010, null, true)
+        segmenter.dwell(1_010 + ContinuousSwipe.DWELL_MS)
+        val path = slot<List<PointF>>()
+        val times = slot<List<Long>>()
+        val trace = slot<RawSwipeTrace>()
+        verify(exactly = 1) {
+            service.handleSwipeTyping(any(), capture(path), capture(times), any(), any(), any(), capture(trace))
+        }
+        // Segment samples were already unsmoothed: geometric and CTC see the same samples.
+        assertEquals(path.captured.map { it.x to it.y }, trace.captured.points.map { it.x to it.y })
+        assertEquals(times.captured, trace.captured.timestamps)
+    }
+
+    @Test
+    fun liftEndsAPhraseWithTheRecognizersLiftSample() {
+        val lift = ContinuousSwipe.Sample(9f, 1f, 1_500)
+        val segmenter = mockk<ContinuousSwipe<KeyboardData.Key>>(relaxed = true) {
+            every { hasBoundary } returns true
+        }
+        view.setField("continuousSegmenter", segmenter)
+        val recognizer = mockk<ImprovedSwipeGestureRecognizer>(relaxed = true) {
+            every { liftSample() } returns lift
+        }
+        view.onSwipeEnd(recognizer)
+        verify(exactly = 1) { segmenter.finish(lift) }
+    }
+
+    @Test
+    fun singleSwipeSendsTheSmoothedPathAndTheRawTraceSeparately() {
+        val trace = RawSwipeTrace.withLift(
+            listOf(PointF(1f, 1f), PointF(10f, 1f)), listOf(1L, 2L), ContinuousSwipe.Sample(10f, 1f, 9L))!!
+        val smoothed = listOf(PointF(1f, 1f), PointF(5.5f, 1f))
+        val recognizer = mockk<ImprovedSwipeGestureRecognizer>(relaxed = true) {
+            every { isSwipeTyping() } returns true
+            every { endSwipe() } returns SwipeResult(listOf(key, key), smoothed, listOf(1L, 2L), 9f, true, trace)
+        }
+        view.onSwipeEnd(recognizer)
+        verify(exactly = 1) {
+            service.handleSwipeTyping(any(), smoothed, listOf(1L, 2L), any(), any(), any(), trace)
+        }
     }
 
     private fun Any.setField(name: String, value: Any?) {

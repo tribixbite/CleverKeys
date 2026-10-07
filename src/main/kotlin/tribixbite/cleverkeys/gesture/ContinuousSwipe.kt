@@ -3,7 +3,20 @@ package tribixbite.cleverkeys.gesture
 /** Immutable letter segments, separate from the full gesture recognizer/trail. */
 class ContinuousSwipe<K>(private val emit: (Segment<K>) -> Unit, private val overflow: () -> Unit) {
     data class Sample(val x: Float, val y: Float, val timestamp: Long)
-    data class Segment<K>(val keys: List<K>, val samples: List<Sample>, val endedBySpace: Boolean)
+    /**
+     * One word of a phrase. [samples] are the raw (unsmoothed) letter samples both engines
+     * have always received. [lift] is the finger-lift sample, present only on the FINAL
+     * segment of a gesture whose finger lifted on letters; it is CTC-only, see [ctcSamples].
+     */
+    data class Segment<K>(
+        val keys: List<K>,
+        val samples: List<Sample>,
+        val endedBySpace: Boolean,
+        val lift: Sample? = null,
+    ) {
+        /** The CTC encoder's input: [samples] plus the [lift] sample when there is one. */
+        val ctcSamples: List<Sample> get() = if (lift == null) samples else samples + lift
+    }
     companion object {
         const val DWELL_MS = 280L
         const val MAX_POINTS = 2048
@@ -15,11 +28,14 @@ class ContinuousSwipe<K>(private val emit: (Segment<K>) -> Unit, private val ove
     private var boundaryInThisVisit = false
     private var emitted = 0
     private var stopped = false
+    /** Whether the most recent sample was on the spacebar (a lift there adds no CTC sample). */
+    private var lastSampleInSpace = false
     val hasBoundary: Boolean get() = emitted > 0
 
     /** Physical SPACE membership is supplied by the view; key slop is never used. */
     fun sample(x: Float, y: Float, timestamp: Long, monotonicTime: Long, key: K?, inSpace: Boolean, boundaryEligible: Boolean = inSpace) {
         if (stopped) return
+        lastSampleInSpace = inSpace
         if (inSpace) {
             if (boundaryEligible) {
                 if (enteredSpaceAt == null) enteredSpaceAt = monotonicTime
@@ -45,12 +61,28 @@ class ContinuousSwipe<K>(private val emit: (Segment<K>) -> Unit, private val ove
             flush()
         }
     }
-    fun finish() { if (!stopped && hasBoundary) flush(false); stopped = true }
+    /**
+     * Ends the gesture at finger lift, flushing the final segment of a phrase.
+     * [lift] (ACTION_UP position and time) becomes that segment's [Segment.lift] when the
+     * finger lifted on letters (not on the spacebar, whose position would read as a false
+     * final key), the coordinates are finite and it is strictly later than the last sample.
+     */
+    fun finish(lift: Sample? = null) {
+        if (!stopped && hasBoundary) {
+            val last = samples.lastOrNull()
+            val accepted = lift?.takeIf {
+                !lastSampleInSpace && last != null && it.x.isFinite() && it.y.isFinite() &&
+                    it.timestamp > last.timestamp
+            }
+            flush(false, accepted)
+        }
+        stopped = true
+    }
     fun cancel() { stopped = true; samples.clear(); keys.clear() }
-    private fun flush(endedBySpace: Boolean = true) {
+    private fun flush(endedBySpace: Boolean = true, lift: Sample? = null) {
         if (keys.isEmpty() || samples.isEmpty()) return
         if (emitted >= MAX_SEGMENTS) { stopped = true; overflow(); return }
-        val segment = Segment(keys.toList(), samples.toList(), endedBySpace)
+        val segment = Segment(keys.toList(), samples.toList(), endedBySpace, lift)
         samples.clear(); keys.clear(); emitted++
         emit(segment)
     }

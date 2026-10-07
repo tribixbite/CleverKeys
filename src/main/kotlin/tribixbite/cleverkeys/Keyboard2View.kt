@@ -698,6 +698,11 @@ class Keyboard2View @JvmOverloads constructor(
             dispatch = { segment, current, done ->
                 val shift = first && shiftAtStart; first = false
                 val old = continuousExpected
+                // Segment samples are already unsmoothed, so both engines keep receiving them;
+                // the CTC copy additionally carries the final segment's lift sample.
+                val ctcSamples = segment.ctcSamples
+                val ctcTrace = RawSwipeTrace.withLift(
+                    ctcSamples.map { android.graphics.PointF(it.x, it.y) }, ctcSamples.map { it.timestamp }, null)
                 service.handleSwipeTyping(segment.keys, segment.samples.map { android.graphics.PointF(it.x, it.y) }, segment.samples.map { it.timestamp }, shift, capsAtStart,
                     InputCoordinator.SwipeCommitControl(current, complete = { word ->
                         if (continuousEpoch != epoch) { done(false); return@SwipeCommitControl }
@@ -716,7 +721,8 @@ class Keyboard2View @JvmOverloads constructor(
                         continuousExpected = if (accepted) now else null
                         done(accepted)
                     }, prepareCommit = { continuousGate.prepareCommit() },
-                        commitGuard = old?.let { EditorCommitGuard(it, ::ownsSession) })
+                        commitGuard = old?.let { EditorCommitGuard(it, ::ownsSession) }),
+                    ctcTrace = ctcTrace,
                 )
             }
         )
@@ -781,7 +787,7 @@ class Keyboard2View @JvmOverloads constructor(
         if (continuousWasCancelled) { recognizer.endSwipe(); recognizer.reset(); invalidate(); return }
         continuousDwell?.let { continuousTimer.removeCallbacks(it) }; continuousDwell = null
         if (continuousSegmenter?.hasBoundary == true) {
-            continuousSegmenter?.finish(); continuousSegmenter = null
+            continuousSegmenter?.finish(recognizer.liftSample()); continuousSegmenter = null
             recognizer.endSwipe(); recognizer.reset(); invalidate()
             return
         }
@@ -797,7 +803,9 @@ class Keyboard2View @JvmOverloads constructor(
                 val wasShiftLocked = recognizer.wasShiftLockedAtStart()
 
                 // Pass full swipe data for ML collection
-                _keyboard2!!.handleSwipeTyping(result.keys, result.path, result.timestamps, wasShiftActive, wasShiftLocked)
+                // path/timestamps are SMOOTHED (geometric + ML capture); rawTrace is the CTC input.
+                _keyboard2!!.handleSwipeTyping(result.keys, result.path, result.timestamps, wasShiftActive, wasShiftLocked,
+                    ctcTrace = result.rawTrace)
             }
         } else {
             recognizer.endSwipe() // Clean up even if not swipe typing
@@ -1499,7 +1507,9 @@ class Keyboard2View @JvmOverloads constructor(
 
         when (action) {
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
-                _pointers.onTouchUp(event.getPointerId(event.actionIndex))
+                // The release position feeds the CTC trace's single lift sample.
+                val p = event.actionIndex
+                _pointers.onTouchUp(event.getPointerId(p), event.getX(p), event.getY(p))
             }
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                 val p = event.actionIndex
