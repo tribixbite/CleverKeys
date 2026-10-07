@@ -2184,14 +2184,21 @@
     <string name="clipboard_filter_size_any">任意のサイズ</string>
     <string name="clipboard_filter_size_unlimited">上限なし</string>
     <string name="clipboard_filter_size_invalid">最大サイズは最小サイズ以上である必要があります。</string>
-    <string name="clipboard_delete_results">結果を削除</string>
     <string name="clipboard_results_summary">結果: %1$d · %2$s</string>
     <string name="clipboard_results_loading">結果を読み込み中…</string>
-    <string name="clipboard_delete_confirm_title">結果を削除 (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">%1$sの全ページから一致するクリップを削除しますか？合計クリップサイズ: %2$s。他のタブのコピーは保持されます。新規または変更されたエントリはスキップされます。この操作は取り消せません。</string>
     <string name="clipboard_delete_confirm_action">削除</string>
-    <string name="clipboard_delete_result">確認済みの結果%2$d件中%1$d件を削除しました。</string>
     <string name="clipboard_delete_error">結果を削除できませんでした。もう一度お試しください。</string>
+    <string name="clipboard_select">選択</string>
+    <plurals name="clipboard_selection_count"><item quantity="other">%1$d件選択中</item></plurals>
+    <string name="clipboard_select_all_matching">一致する結果をすべて選択</string>
+    <string name="clipboard_deselect_all_matching">一致する結果の選択をすべて解除</string>
+    <string name="clipboard_selection_clear">選択をクリア</string>
+    <string name="clipboard_delete_selected">選択項目を削除</string>
+    <string name="clipboard_selection_exit">選択を終了</string>
+    <string name="clipboard_select_entry_descr">クリップを選択: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="other">選択した%1$d件のクリップを削除しますか？</item></plurals>
+    <string name="clipboard_delete_selected_message">%1$sのコピーのみが削除され、他のタブのコピーは保持されます。合計クリップサイズ: %2$s。選択後に変更または削除されたクリップはスキップされます。この操作は取り消せません。</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="other">選択したクリップ%2$d件中%1$d件を削除しました。</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">システムのクリップボードを消去</string>

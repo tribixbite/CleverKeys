@@ -2226,14 +2226,21 @@
     <string name="clipboard_filter_size_any">Elke grootte</string>
     <string name="clipboard_filter_size_unlimited">Geen maximum</string>
     <string name="clipboard_filter_size_invalid">Maximumgrootte moet minstens het minimum zijn.</string>
-    <string name="clipboard_delete_results">Resultaten verwijderen</string>
     <string name="clipboard_results_summary">Resultaten: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Resultaten laden…</string>
-    <string name="clipboard_delete_confirm_title">Resultaten verwijderen (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">Deze overeenkomende fragmenten van %1$s op alle pagina\'s verwijderen? Gecombineerde fragmentgrootte: %2$s. Kopieën op andere tabbladen blijven behouden. Nieuwe of gewijzigde items worden overgeslagen. Dit kan niet ongedaan worden gemaakt.</string>
     <string name="clipboard_delete_confirm_action">Verwijderen</string>
-    <string name="clipboard_delete_result">%1$d van %2$d bevestigde resultaten verwijderd.</string>
     <string name="clipboard_delete_error">Kon resultaten niet verwijderen. Probeer het opnieuw.</string>
+    <string name="clipboard_select">Selecteren</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">%1$d geselecteerd</item><item quantity="other">%1$d geselecteerd</item></plurals>
+    <string name="clipboard_select_all_matching">Alle overeenkomende resultaten selecteren</string>
+    <string name="clipboard_deselect_all_matching">Alle overeenkomende resultaten deselecteren</string>
+    <string name="clipboard_selection_clear">Selectie wissen</string>
+    <string name="clipboard_delete_selected">Geselecteerde verwijderen</string>
+    <string name="clipboard_selection_exit">Selectie beëindigen</string>
+    <string name="clipboard_select_entry_descr">Fragment selecteren: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">%1$d geselecteerd fragment verwijderen?</item><item quantity="other">%1$d geselecteerde fragmenten verwijderen?</item></plurals>
+    <string name="clipboard_delete_selected_message">Alleen de kopieën in %1$s worden verwijderd; kopieën op andere tabbladen blijven behouden. Gecombineerde fragmentgrootte: %2$s. Fragmenten die sinds je selectie zijn gewijzigd of verwijderd, worden overgeslagen. Dit kan niet ongedaan worden gemaakt.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d van %2$d geselecteerd fragment verwijderd.</item><item quantity="other">%1$d van %2$d geselecteerde fragmenten verwijderd.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Systeemklembord wissen</string>

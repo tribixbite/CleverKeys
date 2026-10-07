@@ -2264,14 +2264,21 @@
     <string name="clipboard_filter_size_any">هر اندازه‌ای</string>
     <string name="clipboard_filter_size_unlimited">بدون حداکثر</string>
     <string name="clipboard_filter_size_invalid">حداکثر اندازه باید حداقل برابر با حداقل اندازه باشد.</string>
-    <string name="clipboard_delete_results">حذف نتایج</string>
     <string name="clipboard_results_summary">نتایج: %1$d · %2$s</string>
     <string name="clipboard_results_loading">در حال بارگیری نتایج…</string>
-    <string name="clipboard_delete_confirm_title">حذف نتایج (%1$d)؟</string>
-    <string name="clipboard_delete_confirm_message">آیا این بریده‌های منطبق از %1$s در تمام صفحه‌ها حذف شوند؟ مجموع حجم بریده‌ها: %2$s. نسخه‌های موجود در سایر تب‌ها باقی می‌مانند. ورودی‌های جدید یا تغییریافته نادیده گرفته می‌شوند. این عمل غیرقابل‌بازگشت است.</string>
     <string name="clipboard_delete_confirm_action">حذف</string>
-    <string name="clipboard_delete_result">%1$d از %2$d نتیجه تأییدشده حذف شد.</string>
     <string name="clipboard_delete_error">حذف نتایج ناموفق بود. دوباره امتحان کنید.</string>
+    <string name="clipboard_select">انتخاب</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">%1$d انتخاب‌شده</item><item quantity="other">%1$d انتخاب‌شده</item></plurals>
+    <string name="clipboard_select_all_matching">انتخاب همه نتایج منطبق</string>
+    <string name="clipboard_deselect_all_matching">لغو انتخاب همه نتایج منطبق</string>
+    <string name="clipboard_selection_clear">پاک کردن انتخاب</string>
+    <string name="clipboard_delete_selected">حذف موارد انتخاب‌شده</string>
+    <string name="clipboard_selection_exit">خروج از انتخاب</string>
+    <string name="clipboard_select_entry_descr">انتخاب بریده: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">%1$d بریده انتخاب‌شده حذف شود؟</item><item quantity="other">%1$d بریده انتخاب‌شده حذف شود؟</item></plurals>
+    <string name="clipboard_delete_selected_message">فقط نسخه‌های موجود در %1$s حذف می‌شوند؛ نسخه‌های سایر تب‌ها باقی می‌مانند. مجموع حجم بریده‌ها: %2$s. بریده‌هایی که پس از انتخاب تغییر کرده یا حذف شده‌اند نادیده گرفته می‌شوند. این عمل غیرقابل‌بازگشت است.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d از %2$d بریده انتخاب‌شده حذف شد.</item><item quantity="other">%1$d از %2$d بریده انتخاب‌شده حذف شد.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">پاک کردن کلیپ‌بورد سیستم</string>

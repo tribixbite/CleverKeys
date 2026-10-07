@@ -2294,14 +2294,21 @@
     <string name="clipboard_filter_size_any">Orice dimensiune</string>
     <string name="clipboard_filter_size_unlimited">Fără limită maximă</string>
     <string name="clipboard_filter_size_invalid">Dimensiunea maximă trebuie să fie cel puțin egală cu cea minimă.</string>
-    <string name="clipboard_delete_results">Șterge rezultatele</string>
     <string name="clipboard_results_summary">Rezultate: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Se încarcă rezultatele…</string>
-    <string name="clipboard_delete_confirm_title">Ștergeți rezultatele (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">Ștergeți aceste decupaje potrivite din %1$s pe toate paginile? Dimensiune combinată a decupajelor: %2$s. Copiile din alte file rămân. Înregistrările noi sau modificate sunt ignorate. Această acțiune nu poate fi anulată.</string>
     <string name="clipboard_delete_confirm_action">Șterge</string>
-    <string name="clipboard_delete_result">S-au șters %1$d din %2$d rezultate confirmate.</string>
     <string name="clipboard_delete_error">Nu s-au putut șterge rezultatele. Încercați din nou.</string>
+    <string name="clipboard_select">Selectează</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">Selectate: %1$d</item><item quantity="few">Selectate: %1$d</item><item quantity="other">Selectate: %1$d</item></plurals>
+    <string name="clipboard_select_all_matching">Selectează toate rezultatele potrivite</string>
+    <string name="clipboard_deselect_all_matching">Deselectează toate rezultatele potrivite</string>
+    <string name="clipboard_selection_clear">Golește selecția</string>
+    <string name="clipboard_delete_selected">Șterge elementele selectate</string>
+    <string name="clipboard_selection_exit">Ieși din selecție</string>
+    <string name="clipboard_select_entry_descr">Selectează decupajul: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">Ștergeți %1$d decupaj selectat?</item><item quantity="few">Ștergeți %1$d decupaje selectate?</item><item quantity="other">Ștergeți %1$d de decupaje selectate?</item></plurals>
+    <string name="clipboard_delete_selected_message">Se șterg doar copiile din %1$s; copiile din alte file rămân. Dimensiune combinată a decupajelor: %2$s. Decupajele modificate sau eliminate după selectare sunt ignorate. Această acțiune nu poate fi anulată.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">S-au șters %1$d din %2$d decupaj selectat.</item><item quantity="few">S-au șters %1$d din %2$d decupaje selectate.</item><item quantity="other">S-au șters %1$d din %2$d de decupaje selectate.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Golește clipboardul de sistem</string>

@@ -2183,14 +2183,21 @@
     <string name="clipboard_filter_size_any">任意大小</string>
     <string name="clipboard_filter_size_unlimited">无上限</string>
     <string name="clipboard_filter_size_invalid">最大大小不能小于最小大小。</string>
-    <string name="clipboard_delete_results">删除结果</string>
     <string name="clipboard_results_summary">结果: %1$d · %2$s</string>
     <string name="clipboard_results_loading">正在加载结果…</string>
-    <string name="clipboard_delete_confirm_title">删除结果 (%1$d)？</string>
-    <string name="clipboard_delete_confirm_message">是否从所有页面的 %1$s 中删除这些匹配的剪贴项？剪贴项总大小：%2$s。其他标签页中的副本将保留。新增或更改的条目将被跳过。此操作无法撤消。</string>
     <string name="clipboard_delete_confirm_action">删除</string>
-    <string name="clipboard_delete_result">已删除 %1$d 个已确认结果（共 %2$d 个）。</string>
     <string name="clipboard_delete_error">无法删除结果。请重试。</string>
+    <string name="clipboard_select">选择</string>
+    <plurals name="clipboard_selection_count"><item quantity="other">已选择 %1$d 项</item></plurals>
+    <string name="clipboard_select_all_matching">选择所有匹配结果</string>
+    <string name="clipboard_deselect_all_matching">取消选择所有匹配结果</string>
+    <string name="clipboard_selection_clear">清除选择</string>
+    <string name="clipboard_delete_selected">删除所选项</string>
+    <string name="clipboard_selection_exit">退出选择</string>
+    <string name="clipboard_select_entry_descr">选择剪贴项：%1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="other">要删除所选的 %1$d 个剪贴项吗？</item></plurals>
+    <string name="clipboard_delete_selected_message">仅删除 %1$s 中的副本；其他标签页中的副本将保留。剪贴项总大小：%2$s。选择后发生更改或被移除的剪贴项将被跳过。此操作无法撤消。</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="other">已删除 %1$d 个所选剪贴项（共 %2$d 个）。</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">清除系统剪贴板</string>

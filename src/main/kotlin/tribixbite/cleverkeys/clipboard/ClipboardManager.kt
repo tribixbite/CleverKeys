@@ -28,6 +28,7 @@ import android.widget.RadioButton
 // (StaticLayout NPE via makeLayout(null)). See res/layout/clipboard_filter_dialog.xml header.
 import android.widget.Switch
 import android.widget.TextView
+import tribixbite.cleverkeys.clipboard.ClipboardSelection
 import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.Calendar
 import kotlin.math.roundToInt
@@ -41,35 +42,53 @@ class ClipboardPaneLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : LinearLayout(context, attrs) {
-    private var wideControls: Boolean? = null
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val density = resources.displayMetrics.density
         fun pixels(dp: Int) = (dp * density).roundToInt()
         val wide = MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.UNSPECIFIED &&
-            MeasureSpec.getSize(widthMeasureSpec) >= pixels(720)
-        if (wideControls != wide) {
-            findViewById<LinearLayout>(R.id.clipboard_controls).orientation =
-                if (wide) HORIZONTAL else VERTICAL
-            findViewById<View>(R.id.clipboard_search_bar).apply {
-                layoutParams = (layoutParams as LayoutParams).apply {
-                    // Reserve room for the tabs, search and its action icons. Give
-                    // the remaining width to counts, paging and translated labels.
-                    width = if (wide) pixels(320) else LayoutParams.MATCH_PARENT
-                    height = pixels(if (wide) 48 else 40)
-                    weight = 0f
-                }
-            }
-            findViewById<View>(R.id.clipboard_result_controls).apply {
-                layoutParams = (layoutParams as LayoutParams).apply {
-                    width = if (wide) 0 else LayoutParams.MATCH_PARENT
-                    height = LayoutParams.WRAP_CONTENT
-                    weight = if (wide) 1f else 0f
-                }
-            }
-            wideControls = wide
+            MeasureSpec.getSize(widthMeasureSpec) >= pixels(WIDE_MIN_DP)
+        // Reserve room for the visible tabs, search and its action icons. Selection mode hides
+        // the non-current tabs, which returns their width to counts, paging and selection
+        // actions instead of starving the results beside a fixed-width search bar.
+        val visibleTabs = TAB_IDS.count { findViewById<View?>(it)?.visibility == VISIBLE }
+        findViewById<LinearLayout>(R.id.clipboard_controls).apply {
+            val orientation = if (wide) HORIZONTAL else VERTICAL
+            if (this.orientation != orientation) this.orientation = orientation
         }
+        updateParams(R.id.clipboard_search_bar,
+            width = if (wide) pixels(SEARCH_BASE_DP + TAB_DP * visibleTabs) else LayoutParams.MATCH_PARENT,
+            height = pixels(if (wide) 48 else 40), weight = 0f)
+        updateParams(R.id.clipboard_result_controls,
+            width = if (wide) 0 else LayoutParams.MATCH_PARENT,
+            height = LayoutParams.WRAP_CONTENT, weight = if (wide) 1f else 0f)
+        // Narrow panes are tall: the selection actions take their own row. Wide panes are
+        // short (landscape): they sit beside the results so a full entry row stays visible.
+        updateParams(R.id.clipboard_selection_bar,
+            width = if (wide) LayoutParams.WRAP_CONTENT else LayoutParams.MATCH_PARENT,
+            height = pixels(48), weight = 0f)
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    /** Assign layout params only when they differ, so measuring never loops on requestLayout. */
+    private fun updateParams(id: Int, width: Int, height: Int, weight: Float) {
+        val view = findViewById<View?>(id) ?: return
+        val params = view.layoutParams as LayoutParams
+        if (params.width == width && params.height == height && params.weight == weight) return
+        params.width = width
+        params.height = height
+        params.weight = weight
+        view.layoutParams = params
+    }
+
+    private companion object {
+        /** Panes at least this wide put search and results side by side. */
+        const val WIDE_MIN_DP = 720
+        /** Wide search bar without tab icons: search text plus its clear/regex/filter/close icons. */
+        const val SEARCH_BASE_DP = 212
+        /** Width of one tab icon (36dp ImageView). */
+        const val TAB_DP = 36
+        val TAB_IDS = intArrayOf(R.id.tab_history, R.id.tab_pinned, R.id.tab_todos)
     }
 }
 
@@ -118,10 +137,20 @@ class ClipboardManager(
     private var regexToggle: TextView? = null
     private var clipboardHistoryView: ClipboardHistoryView? = null
 
-    private var deleteResultsButton: Button? = null
+    private var selectButton: Button? = null
     private var resultSummary: TextView? = null
     private var bulkFeedback: TextView? = null
     private var bulkDialog: android.app.AlertDialog? = null
+
+    // Selection mode chrome (2026-10-07). State lives in ClipboardHistoryView; these only
+    // render it: the live count, and the select/deselect-all-matching, clear, delete and
+    // exit actions.
+    private var selectionBar: View? = null
+    private var selectionCount: TextView? = null
+    private var selectMatchingButton: ImageButton? = null
+    private var clearSelectionButton: ImageButton? = null
+    private var deleteSelectedButton: ImageButton? = null
+    private var exitSelectionButton: ImageButton? = null
 
     // Tab buttons (ImageViews with vector drawable icons, tinted by colorLabel)
     private var tabHistory: ImageView? = null
@@ -227,9 +256,11 @@ class ClipboardManager(
             tabPinned = clipboardPane?.findViewById<ImageView>(R.id.tab_pinned)
             tabTodos = clipboardPane?.findViewById<ImageView>(R.id.tab_todos)
 
-            tabHistory?.setOnClickListener { if (!isInEditMode() && !tagMode) switchToTab(ClipboardTab.HISTORY) }
-            tabPinned?.setOnClickListener { if (!isInEditMode() && !tagMode) switchToTab(ClipboardTab.PINNED) }
-            tabTodos?.setOnClickListener { if (!isInEditMode() && !tagMode) switchToTab(ClipboardTab.TODOS) }
+            // Selection mode hides the other tabs (a selection is scoped to one tab's rows);
+            // the guard covers a tap that lands while the visibility change is pending.
+            tabHistory?.setOnClickListener { if (canSwitchTabs()) switchToTab(ClipboardTab.HISTORY) }
+            tabPinned?.setOnClickListener { if (canSwitchTabs()) switchToTab(ClipboardTab.PINNED) }
+            tabTodos?.setOnClickListener { if (canSwitchTabs()) switchToTab(ClipboardTab.TODOS) }
 
             // Visual feedback: pulse target tab icon when item is added to another tab
             // pulseCount: 1 = success, 3 = duplicate (already exists)
@@ -242,10 +273,20 @@ class ClipboardManager(
                 target?.let { pulseTabIcon(it, pulseCount) }
             }
 
-            deleteResultsButton = clipboardPane?.findViewById(R.id.clipboard_delete_results)
+            selectButton = clipboardPane?.findViewById(R.id.clipboard_select)
             resultSummary = clipboardPane?.findViewById(R.id.clipboard_result_summary)
             bulkFeedback = clipboardPane?.findViewById(R.id.clipboard_bulk_feedback)
-            deleteResultsButton?.setOnClickListener { showDeleteResults(it) }
+            selectionBar = clipboardPane?.findViewById(R.id.clipboard_selection_bar)
+            selectionCount = clipboardPane?.findViewById(R.id.clipboard_selection_count)
+            selectMatchingButton = clipboardPane?.findViewById(R.id.clipboard_select_matching)
+            clearSelectionButton = clipboardPane?.findViewById(R.id.clipboard_selection_clear)
+            deleteSelectedButton = clipboardPane?.findViewById(R.id.clipboard_delete_selected)
+            exitSelectionButton = clipboardPane?.findViewById(R.id.clipboard_selection_exit)
+            selectButton?.setOnClickListener { enterSelectionMode() }
+            selectMatchingButton?.setOnClickListener { toggleAllMatching() }
+            clearSelectionButton?.setOnClickListener { clipboardHistoryView?.clearSelection() }
+            deleteSelectedButton?.setOnClickListener { confirmDeleteSelected(it) }
+            exitSelectionButton?.setOnClickListener { exitSelectionMode() }
             clipboardHistoryView?.onResultsChanged = { updateResultSummary() }
             updateResultSummary()
 
@@ -329,6 +370,8 @@ class ClipboardManager(
         // Cancel any in-progress edit or tag panel when switching tabs
         exitEditMode()
         if (tagMode) hideTagPanel()
+        // A selection holds one tab's row ids; it (and any open confirmation) ends here.
+        exitSelectionMode()
         currentTab = tab
         clipboardHistoryView?.setTab(tab)
         updateTabHighlighting()
@@ -500,6 +543,9 @@ class ClipboardManager(
      * Exits search mode and clears search text.
      */
     fun resetSearchOnHide() {
+        // Pane close, pane switch and keyboard hide (onFinishInputView) all land here: a
+        // selection — and any confirmation for it — must never outlive the field it was made in.
+        exitSelectionMode()
         searchMode = false
         clipboardSearchBox?.apply {
             text = ""
@@ -727,21 +773,55 @@ class ClipboardManager(
         clipboardHistoryView?.dispatchKeyToEditText(keyCode)
     }
 
-    /** Delete only the immutable result snapshot described by this confirmation. */
-    private fun showDeleteResults(anchor: View) {
+    // ─── Selection mode (2026-10-07) ───
+
+    /** Whether the clipboard list is in selection mode. */
+    fun isInSelectionMode(): Boolean = clipboardHistoryView?.isSelecting() == true
+
+    private fun canSwitchTabs(): Boolean = !isInEditMode() && !tagMode && !isInSelectionMode()
+
+    private fun enterSelectionMode() {
+        if (tagMode || isInEditMode()) return
+        // Feedback from a previous deletion describes a finished batch, not the new one.
+        bulkFeedback?.visibility = View.GONE
+        clipboardHistoryView?.startSelection()
+    }
+
+    /** End selection mode (explicit exit, pane close, keyboard hide); dismisses a pending confirmation. */
+    fun exitSelectionMode() {
+        bulkDialog?.dismiss()
+        bulkDialog = null
+        clipboardHistoryView?.endSelection()
+    }
+
+    /** One toggle for both directions: deselect when every match is selected, else select all. */
+    private fun toggleAllMatching() {
+        val view = clipboardHistoryView ?: return
+        if (view.matchingCoverage() == ClipboardSelection.Coverage.ALL) view.deselectAllMatching()
+        else view.selectAllMatching()
+    }
+
+    /**
+     * Confirm and delete the selection. The dialog states the exact frozen scope (count, tab,
+     * combined size); confirming deletes those rows by identity in one transaction, skipping
+     * any that changed after this dialog opened, and reports how many were deleted.
+     */
+    private fun confirmDeleteSelected(anchor: View) {
         if (tagMode || isInEditMode() || bulkDialog != null) return
         val historyView = clipboardHistoryView ?: return
-        val snapshot = historyView.deletionSnapshot() ?: return
+        val snapshot = historyView.selectionSnapshot() ?: return
         val tabName = context.getString(when (snapshot.tab) {
             ClipboardTab.HISTORY -> R.string.clipboard_tab_history
             ClipboardTab.PINNED -> R.string.clipboard_tab_pinned
             ClipboardTab.TODOS -> R.string.clipboard_tab_todos
         })
+        val total = snapshot.entries.size
+        val res = context.resources
         val themed = ContextThemeWrapper(context, android.R.style.Theme_DeviceDefault_Dialog)
         var confirmed = false
         val dialog = android.app.AlertDialog.Builder(themed)
-            .setTitle(context.getString(R.string.clipboard_delete_confirm_title, snapshot.entries.size))
-            .setMessage(context.getString(R.string.clipboard_delete_confirm_message, tabName,
+            .setTitle(res.getQuantityString(R.plurals.clipboard_delete_selected_title, total, total))
+            .setMessage(context.getString(R.string.clipboard_delete_selected_message, tabName,
                 Formatter.formatShortFileSize(context, snapshot.totalBytes)))
             .setNegativeButton(android.R.string.cancel, null)
             .setPositiveButton(R.string.clipboard_delete_confirm_action) { _, _ ->
@@ -750,7 +830,7 @@ class ClipboardManager(
                     historyView.deleteSnapshot(snapshot) { result ->
                         bulkFeedback?.apply {
                             text = result.fold(
-                                { context.getString(R.string.clipboard_delete_result, it, snapshot.entries.size) },
+                                { res.getQuantityString(R.plurals.clipboard_delete_selected_result, total, it, total) },
                                 { context.getString(R.string.clipboard_delete_error) })
                             visibility = View.VISIBLE
                         }
@@ -758,21 +838,57 @@ class ClipboardManager(
                 }
             }.create()
         bulkDialog = dialog
-        dialog.setOnDismissListener { bulkDialog = null }
-        bulkFeedback?.visibility = View.GONE
+        dialog.setOnDismissListener { if (bulkDialog === dialog) bulkDialog = null }
         Utils.show_dialog_on_ime(dialog, anchor.windowToken)
     }
 
     private fun updateResultSummary() {
         val view = clipboardHistoryView ?: return
         val (count, bytes) = view.resultSummary()
-        resultSummary?.text = if (view.isResultsReady())
+        val ready = view.isResultsReady()
+        resultSummary?.text = if (ready)
             context.getString(R.string.clipboard_results_summary, count, Formatter.formatShortFileSize(context, bytes))
         else context.getString(R.string.clipboard_results_loading)
-        deleteResultsButton?.apply {
-            isEnabled = !tagMode && !isInEditMode() && view.deletionSnapshot() != null
-            alpha = if (isEnabled) 1f else 0.4f
+        val selecting = view.isSelecting()
+        selectButton?.apply {
+            visibility = if (selecting) View.GONE else View.VISIBLE
+            isEnabled = ready && !tagMode && !isInEditMode()
+            alpha = if (isEnabled) 1f else DISABLED_ALPHA
         }
+        selectionBar?.visibility = if (selecting) View.VISIBLE else View.GONE
+        selectionCount?.visibility = if (selecting) View.VISIBLE else View.GONE
+        updateTabIcons()
+        if (!selecting) return
+
+        val selected = view.selectedCount()
+        selectionCount?.text = context.resources.getQuantityString(
+            R.plurals.clipboard_selection_count, selected, selected)
+        val coverage = view.matchingCoverage()
+        selectMatchingButton?.apply {
+            setImageResource(when (coverage) {
+                ClipboardSelection.Coverage.ALL -> R.drawable.ic_check_box_checked
+                ClipboardSelection.Coverage.PARTIAL -> R.drawable.ic_check_box_partial
+                ClipboardSelection.Coverage.NONE -> R.drawable.ic_check_box_outline
+            })
+            describe(this, if (coverage == ClipboardSelection.Coverage.ALL)
+                R.string.clipboard_deselect_all_matching else R.string.clipboard_select_all_matching)
+            setEnabledVisual(this, ready && count > 0)
+        }
+        clearSelectionButton?.let { setEnabledVisual(it, ready && selected > 0) }
+        deleteSelectedButton?.let { setEnabledVisual(it, view.selectionSnapshot() != null && !tagMode) }
+        exitSelectionButton?.let { setEnabledVisual(it, ready) }
+    }
+
+    /** Content description plus (API 26+) a long-press tooltip for an icon-only action. */
+    private fun describe(button: View, label: Int) {
+        val text = context.getString(label)
+        button.contentDescription = text
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) button.tooltipText = text
+    }
+
+    private fun setEnabledVisual(button: View, enabled: Boolean) {
+        button.isEnabled = enabled
+        button.alpha = if (enabled) 1f else DISABLED_ALPHA
     }
 
     /** Shows size, privacy, date and tab-specific status/tag filters. */
@@ -1066,24 +1182,28 @@ class ClipboardManager(
         if (bg != 0) {
             pane.setBackgroundColor(bg)
             pane.findViewById<View?>(R.id.clipboard_tag_panel)?.setBackgroundColor(bg)
+            pane.findViewById<View?>(R.id.clipboard_selection_bar)?.setBackgroundColor(bg)
         }
         if (key != 0) {
             pane.findViewById<View?>(R.id.clipboard_search_bar)?.setBackgroundColor(key)
             pane.findViewById<View?>(R.id.clipboard_pagination_bar)?.setBackgroundColor(key)
-            pane.findViewById<View?>(R.id.clipboard_delete_results)?.backgroundTintList =
+            pane.findViewById<View?>(R.id.clipboard_select)?.backgroundTintList =
                 android.content.res.ColorStateList.valueOf(key)
         }
         if (label != 0) {
             intArrayOf(
                 R.id.tab_history, R.id.tab_pinned, R.id.tab_todos,
                 R.id.clipboard_search_clear, R.id.clipboard_date_filter,
-                R.id.clipboard_close_button
+                R.id.clipboard_close_button, R.id.clipboard_select_matching,
+                R.id.clipboard_selection_clear, R.id.clipboard_delete_selected,
+                R.id.clipboard_selection_exit
             ).forEach { id ->
                 (pane.findViewById<View?>(id) as? ImageView)
                     ?.setColorFilter(label, PorterDuff.Mode.SRC_IN)
             }
             (pane.findViewById<TextView?>(R.id.clipboard_search))?.setTextColor(label)
-            (pane.findViewById<TextView?>(R.id.clipboard_delete_results))?.setTextColor(label)
+            (pane.findViewById<TextView?>(R.id.clipboard_select))?.setTextColor(label)
+            (pane.findViewById<TextView?>(R.id.clipboard_selection_count))?.setTextColor(label)
             (pane.findViewById<TextView?>(R.id.clipboard_result_summary))?.setTextColor(theme.subLabelColor)
             (pane.findViewById<TextView?>(R.id.clipboard_bulk_feedback))?.setTextColor(label)
             (pane.findViewById<TextView?>(R.id.clipboard_regex_toggle))?.setTextColor(label)
@@ -1159,11 +1279,16 @@ class ClipboardManager(
     private fun invalidatePane() {
         exitEditMode()
         hideTagPanelSilent()
-        bulkDialog?.dismiss()
-        bulkDialog = null
-        deleteResultsButton = null
+        exitSelectionMode()
+        selectButton = null
         resultSummary = null
         bulkFeedback = null
+        selectionBar = null
+        selectionCount = null
+        selectMatchingButton = null
+        clearSelectionButton = null
+        deleteSelectedButton = null
+        exitSelectionButton = null
         clipboardHistoryView?.onResultsChanged = null
         clipboardHistoryView?.onItemAddedToTab = null
         clipboardPane = null
@@ -1192,8 +1317,7 @@ class ClipboardManager(
      * Forces back to HISTORY tab if the current tab was just disabled.
      */
     private fun applyTabVisibility() {
-        tabPinned?.visibility = if (config.clipboard_pinned_enabled) View.VISIBLE else View.GONE
-        tabTodos?.visibility = if (config.clipboard_todo_enabled) View.VISIBLE else View.GONE
+        updateTabIcons()
 
         // Force back to HISTORY if sitting on a disabled tab
         if (currentTab == ClipboardTab.PINNED && !config.clipboard_pinned_enabled) {
@@ -1202,6 +1326,19 @@ class ClipboardManager(
         if (currentTab == ClipboardTab.TODOS && !config.clipboard_todo_enabled) {
             switchToTab(ClipboardTab.HISTORY)
         }
+    }
+
+    /**
+     * Tab icons honour the config toggles; in selection mode only the current tab's icon
+     * stays (the selection is scoped to that tab), freeing width for the selection actions.
+     */
+    private fun updateTabIcons() {
+        val selecting = isInSelectionMode()
+        fun visible(tab: ClipboardTab, enabled: Boolean) =
+            if (enabled && (!selecting || currentTab == tab)) View.VISIBLE else View.GONE
+        tabHistory?.visibility = visible(ClipboardTab.HISTORY, true)
+        tabPinned?.visibility = visible(ClipboardTab.PINNED, config.clipboard_pinned_enabled)
+        tabTodos?.visibility = visible(ClipboardTab.TODOS, config.clipboard_todo_enabled)
     }
 
     /**
@@ -1215,11 +1352,16 @@ class ClipboardManager(
         clipboardSearchBox = null
         clipboardSearchClear = null
         regexToggle = null
-        bulkDialog?.dismiss()
-        bulkDialog = null
-        deleteResultsButton = null
+        exitSelectionMode()
+        selectButton = null
         resultSummary = null
         bulkFeedback = null
+        selectionBar = null
+        selectionCount = null
+        selectMatchingButton = null
+        clearSelectionButton = null
+        deleteSelectedButton = null
+        exitSelectionButton = null
         clipboardHistoryView?.onResultsChanged = null
         clipboardHistoryView?.onItemAddedToTab = null
         clipboardHistoryView = null
@@ -1263,5 +1405,8 @@ class ClipboardManager(
 
     companion object {
         private const val TAG = "ClipboardManager"
+
+        /** Alpha of a disabled pane action (matches the edit-lock dimming family). */
+        private const val DISABLED_ALPHA = 0.4f
     }
 }

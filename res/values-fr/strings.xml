@@ -2277,14 +2277,21 @@
     <string name="clipboard_filter_size_any">Toutes tailles</string>
     <string name="clipboard_filter_size_unlimited">Aucun maximum</string>
     <string name="clipboard_filter_size_invalid">La taille maximale doit être supérieure ou égale à la taille minimale.</string>
-    <string name="clipboard_delete_results">Supprimer les résultats</string>
     <string name="clipboard_results_summary">Résultats : %1$d · %2$s</string>
     <string name="clipboard_results_loading">Chargement des résultats…</string>
-    <string name="clipboard_delete_confirm_title">Supprimer les résultats (%1$d) ?</string>
-    <string name="clipboard_delete_confirm_message">Supprimer ces éléments correspondants de %1$s sur toutes les pages ? Taille cumulée : %2$s. Les copies dans les autres onglets sont conservées. Les entrées nouvelles ou modifiées sont ignorées. Action irréversible.</string>
     <string name="clipboard_delete_confirm_action">Supprimer</string>
-    <string name="clipboard_delete_result">%1$d sur %2$d résultats confirmés supprimés.</string>
     <string name="clipboard_delete_error">Impossible de supprimer les résultats. Réessayez.</string>
+    <string name="clipboard_select">Sélectionner</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">%1$d sélectionné</item><item quantity="many">%1$d sélectionnés</item><item quantity="other">%1$d sélectionnés</item></plurals>
+    <string name="clipboard_select_all_matching">Sélectionner tous les résultats correspondants</string>
+    <string name="clipboard_deselect_all_matching">Désélectionner tous les résultats correspondants</string>
+    <string name="clipboard_selection_clear">Effacer la sélection</string>
+    <string name="clipboard_delete_selected">Supprimer la sélection</string>
+    <string name="clipboard_selection_exit">Quitter la sélection</string>
+    <string name="clipboard_select_entry_descr">Sélectionner l\'élément : %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">Supprimer %1$d élément sélectionné ?</item><item quantity="many">Supprimer %1$d éléments sélectionnés ?</item><item quantity="other">Supprimer %1$d éléments sélectionnés ?</item></plurals>
+    <string name="clipboard_delete_selected_message">Seules les copies dans %1$s sont supprimées ; les copies dans les autres onglets sont conservées. Taille cumulée : %2$s. Les éléments modifiés ou retirés depuis leur sélection sont ignorés. Action irréversible.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d sur %2$d élément sélectionné supprimé.</item><item quantity="many">%1$d sur %2$d éléments sélectionnés supprimés.</item><item quantity="other">%1$d sur %2$d éléments sélectionnés supprimés.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Effacer le presse-papiers système</string>

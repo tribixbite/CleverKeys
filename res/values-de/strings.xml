@@ -2246,14 +2246,21 @@
     <string name="clipboard_filter_size_any">Beliebige Größe</string>
     <string name="clipboard_filter_size_unlimited">Kein Maximum</string>
     <string name="clipboard_filter_size_invalid">Die maximale Größe muss mindestens der Mindestgröße entsprechen.</string>
-    <string name="clipboard_delete_results">Ergebnisse löschen</string>
     <string name="clipboard_results_summary">Ergebnisse: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Ergebnisse werden geladen…</string>
-    <string name="clipboard_delete_confirm_title">Ergebnisse löschen (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">Diese übereinstimmenden Clips aus %1$s über alle Seiten hinweg löschen? Gesamte Clipgröße: %2$s. Kopien in anderen Tabs bleiben erhalten. Neue oder geänderte Einträge werden übersprungen. Dies kann nicht rückgängig gemacht werden.</string>
     <string name="clipboard_delete_confirm_action">Löschen</string>
-    <string name="clipboard_delete_result">%1$d von %2$d bestätigten Ergebnissen gelöscht.</string>
     <string name="clipboard_delete_error">Ergebnisse konnten nicht gelöscht werden. Erneut versuchen.</string>
+    <string name="clipboard_select">Auswählen</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">%1$d ausgewählt</item><item quantity="other">%1$d ausgewählt</item></plurals>
+    <string name="clipboard_select_all_matching">Alle passenden Ergebnisse auswählen</string>
+    <string name="clipboard_deselect_all_matching">Auswahl aller passenden Ergebnisse aufheben</string>
+    <string name="clipboard_selection_clear">Auswahl aufheben</string>
+    <string name="clipboard_delete_selected">Ausgewählte löschen</string>
+    <string name="clipboard_selection_exit">Auswahl beenden</string>
+    <string name="clipboard_select_entry_descr">Clip auswählen: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">%1$d ausgewählten Clip löschen?</item><item quantity="other">%1$d ausgewählte Clips löschen?</item></plurals>
+    <string name="clipboard_delete_selected_message">Nur die Kopien in %1$s werden gelöscht; Kopien in anderen Tabs bleiben erhalten. Gesamte Clipgröße: %2$s. Clips, die seit der Auswahl geändert oder entfernt wurden, werden übersprungen. Dies kann nicht rückgängig gemacht werden.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d von %2$d ausgewählten Clip gelöscht.</item><item quantity="other">%1$d von %2$d ausgewählten Clips gelöscht.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">System-Zwischenablage leeren</string>

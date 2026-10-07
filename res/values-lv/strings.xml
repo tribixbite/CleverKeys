@@ -2278,14 +2278,21 @@
     <string name="clipboard_filter_size_any">Jebkurš lielums</string>
     <string name="clipboard_filter_size_unlimited">Bez ierobežojuma</string>
     <string name="clipboard_filter_size_invalid">Maksimālajam lielumam jābūt vismaz vienādam ar minimālo.</string>
-    <string name="clipboard_delete_results">Dzēst rezultātus</string>
     <string name="clipboard_results_summary">Rezultāti: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Ielādē rezultātus…</string>
-    <string name="clipboard_delete_confirm_title">Dzēst rezultātus (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">Vai dzēst šos atbilstošos klipus no %1$s visās lapās? Kopējais klipu lielums: %2$s. Kopijas citās cilnēs paliks. Jauni vai mainīti ieraksti tiek izlaisti. Šo darbību nevar atsaukt.</string>
     <string name="clipboard_delete_confirm_action">Dzēst</string>
-    <string name="clipboard_delete_result">Izdzēsti %1$d no %2$d apstiprinātajiem rezultātiem.</string>
     <string name="clipboard_delete_error">Neizdevās izdzēst rezultātus. Mēģiniet vēlreiz.</string>
+    <string name="clipboard_select">Atlasīt</string>
+    <plurals name="clipboard_selection_count"><item quantity="zero">Atlasīti: %1$d</item><item quantity="one">Atlasīti: %1$d</item><item quantity="other">Atlasīti: %1$d</item></plurals>
+    <string name="clipboard_select_all_matching">Atlasīt visus atbilstošos rezultātus</string>
+    <string name="clipboard_deselect_all_matching">Noņemt atlasi visiem atbilstošajiem rezultātiem</string>
+    <string name="clipboard_selection_clear">Notīrīt atlasi</string>
+    <string name="clipboard_delete_selected">Dzēst atlasītos</string>
+    <string name="clipboard_selection_exit">Iziet no atlases</string>
+    <string name="clipboard_select_entry_descr">Atlasīt klipu: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="zero">Vai dzēst %1$d atlasīto klipu?</item><item quantity="one">Vai dzēst %1$d atlasīto klipu?</item><item quantity="other">Vai dzēst %1$d atlasītos klipus?</item></plurals>
+    <string name="clipboard_delete_selected_message">Tiek dzēstas tikai kopijas no %1$s; kopijas citās cilnēs paliek. Kopējais klipu lielums: %2$s. Klipi, kas mainīti vai noņemti pēc to atlasīšanas, tiek izlaisti. Šo darbību nevar atsaukt.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="zero">Izdzēsti: %1$d no %2$d atlasītajiem klipiem.</item><item quantity="one">Izdzēsti: %1$d no %2$d atlasītā klipa.</item><item quantity="other">Izdzēsti: %1$d no %2$d atlasītajiem klipiem.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Notīrīt sistēmas starpliktuvi</string>

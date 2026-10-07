@@ -14,6 +14,7 @@ import android.util.LruCache
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -28,6 +29,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.clipboard.ClipboardProvenance
+import tribixbite.cleverkeys.clipboard.ClipboardSelection
 import java.util.regex.PatternSyntaxException
 
 /**
@@ -166,25 +168,124 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun isResultsReady(): Boolean = dataReady && !bulkDeleting
     fun resultSummary(): Pair<Int, Long> = filteredHistory.size to filteredHistory.sumOf { it.sizeBytes }
 
-    fun deletionSnapshot(): ClipboardDeleteSnapshot? =
-        if (!dataReady || bulkDeleting || isEditing() || filteredHistory.isEmpty()) null
-        else ClipboardDeleteSnapshot(currentTab, filteredHistory.toList())
+    // ─── Persistent selection (2026-10-07) ───
+    // Non-null = selection mode. Scoped to the tab it started in (row ids are per table) and
+    // kept while search text, filters or the page change, so a batch can be assembled from
+    // several searches. Ended by endSelection(): explicit exit, tab switch, pane close or
+    // keyboard hide (ClipboardManager), and after a confirmed deletion. Holds ids only.
+    private var selection: ClipboardSelection? = null
 
-    /** Execute a frozen confirmation once; detach cancels UI work, not a running DB transaction. */
+    /** Whether selection mode is active. */
+    fun isSelecting(): Boolean = selection != null
+
+    /** Number of selected rows in the current tab (0 outside selection mode). */
+    fun selectedCount(): Int = selection?.size ?: 0
+
+    /** Whether [entry] is selected in its current version. */
+    fun isEntrySelected(entry: ClipboardEntry): Boolean = selection?.isSelected(entry) == true
+
+    /**
+     * Enter selection mode for the current tab. Refused while an entry is being edited or a
+     * deletion runs. Expanded rows collapse: selection rows show a checkbox, not actions.
+     */
+    fun startSelection(): Boolean {
+        if (isEditing() || bulkDeleting) return false
+        if (selection == null) {
+            selection = ClipboardSelection(currentTab)
+            expandedStates.clear()
+            selectionChanged()
+        }
+        return true
+    }
+
+    /** Leave selection mode, forgetting every selected row. No-op when not selecting. */
+    fun endSelection() {
+        if (selection == null) return
+        selection = null
+        selectionChanged()
+    }
+
+    /** Toggle one row by identity (never by list position, which reloads can shift). */
+    fun toggleSelection(entry: ClipboardEntry) {
+        val current = selection ?: return
+        if (bulkDeleting) return
+        current.toggle(entry)
+        selectionChanged()
+    }
+
+    /**
+     * Add every row matching the current search and filters, on ALL pages. Returns the number
+     * newly selected; 0 while results are still loading or a deletion runs, because the
+     * matching list would not yet describe what the user sees.
+     */
+    fun selectAllMatching(): Int {
+        val current = selection ?: return 0
+        if (!dataReady || bulkDeleting) return 0
+        val added = current.selectAll(filteredHistory)
+        selectionChanged()
+        return added
+    }
+
+    /** Remove every row matching the current search and filters (all pages) from the selection. */
+    fun deselectAllMatching(): Int {
+        val current = selection ?: return 0
+        if (bulkDeleting) return 0
+        val removed = current.deselectAll(filteredHistory)
+        selectionChanged()
+        return removed
+    }
+
+    /** Deselect everything, including rows the current search or filters hide. */
+    fun clearSelection() {
+        val current = selection ?: return
+        if (bulkDeleting) return
+        current.clear()
+        selectionChanged()
+    }
+
+    /** How much of the current matching list (all pages) is selected. */
+    fun matchingCoverage(): ClipboardSelection.Coverage =
+        selection?.coverage(filteredHistory) ?: ClipboardSelection.Coverage.NONE
+
+    /**
+     * The confirmation scope for "Delete selected": the selected rows of the tab's complete
+     * loaded data that are unchanged since selection, regardless of the current search, filters
+     * or page. Null while loading, editing, deleting or when nothing selected still exists.
+     */
+    fun selectionSnapshot(): ClipboardDeleteSnapshot? {
+        val current = selection ?: return null
+        if (!dataReady || bulkDeleting || isEditing()) return null
+        return current.resolve(history).takeIf { it.entries.isNotEmpty() }
+    }
+
+    private fun selectionChanged() {
+        clipboardAdapter.notifyDataSetChanged()
+        onResultsChanged?.invoke()
+    }
+
+    /**
+     * Execute a frozen confirmation once, then end selection mode (the selection described
+     * the rows just deleted). Detach cancels UI work, not a running DB transaction.
+     */
     fun deleteSnapshot(snapshot: ClipboardDeleteSnapshot, completed: (Result<Int>) -> Unit) {
         val scope = viewScope ?: return
         if (bulkDeleting || isEditing()) return
         bulkDeleting = true
         onResultsChanged?.invoke()
         scope.launch {
+            var succeeded = false
             try {
                 val result = withContext(Dispatchers.IO) {
                     service?.deleteSnapshot(snapshot)
                         ?: Result.failure(IllegalStateException("Clipboard unavailable"))
                 }
+                succeeded = result.isSuccess
                 completed(result)
             } finally {
                 bulkDeleting = false
+                // Success ends selection mode; a failed (rolled-back) deletion keeps the
+                // selection so the user can retry without rebuilding it.
+                if (succeeded) endSelection()
                 loadDataAsync()
             }
         }
@@ -268,6 +369,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     companion object {
         const val ITEMS_PER_PAGE = 100
 
+        /** Characters of a clipping named in its selection checkbox's accessible label. */
+        private const val SELECTION_LABEL_CHARS = 80
+
+        /** Alpha of the label-colour tint behind a selected row (0x33 ≈ 20%). */
+        private const val SELECTED_ROW_ALPHA = 0x33
+
         /** #130: every clipboardEntryButton in clipboard_history_entry.xml (tinted via colorLabel). */
         private val ENTRY_BUTTON_IDS = intArrayOf(
             R.id.clipboard_entry_expand, R.id.clipboard_entry_edit, R.id.clipboard_entry_paste,
@@ -323,6 +430,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         // Cancel any in-progress edit before switching tabs (safety — tab clicks
         // are guarded in ClipboardManager, but direct callers like resetSearchOnShow need this)
         cancelEdit()
+        // Selection is scoped to one tab's row ids; switching tabs ends it.
+        endSelection()
         currentTab = tab
         expandedStates.clear()
         thumbnailCache.evictAll()
@@ -1010,12 +1119,21 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             if (Config.globalConfig().clipboard_text_only) {
                 entries = entries.filter { !it.isMedia }
             }
-            // Back on Main thread — atomic reference replacement.
-            // resetView=false: preserve page position and expand states on data reload
-            history = entries
-            dataReady = true
-            applyFilter(resetView = false)
+            acceptLoadedHistory(entries)
         }
+    }
+
+    /**
+     * Main-thread completion of a load: atomically replace the tab's rows, drop selected rows
+     * that vanished or changed, and refilter without resetting page or expand state.
+     */
+    @androidx.annotation.VisibleForTesting
+    internal fun acceptLoadedHistory(entries: List<ClipboardEntry>) {
+        history = entries
+        dataReady = true
+        selection?.reconcile(entries)
+        // resetView=false: preserve page position and expand states on data reload
+        applyFilter(resetView = false)
     }
 
     /**
@@ -1165,6 +1283,63 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         }
     }
 
+    /**
+     * Render one row in selection mode. Every tap target on the row toggles the same identity
+     * (the entry object captured here, never a list position). The checkbox carries the
+     * accessible name and checked state, so the text is hidden from TalkBack to avoid a
+     * second, action-less focus stop for the same clipping.
+     */
+    private fun bindSelectionRow(
+        row: View,
+        entry: ClipboardEntry,
+        textView: TextView,
+        selectBox: CheckBox,
+        thumbnailContainer: View,
+    ) {
+        val checked = isEntrySelected(entry)
+        selectBox.visibility = VISIBLE
+        selectBox.isChecked = checked
+        selectBox.contentDescription =
+            context.getString(R.string.clipboard_select_entry_descr, entry.content.take(SELECTION_LABEL_CHARS))
+        runtimeColors?.label?.takeIf { it != 0 }?.let {
+            selectBox.buttonTintList = android.content.res.ColorStateList.valueOf(it)
+        }
+        val toggle = View.OnClickListener { toggleSelection(entry) }
+        selectBox.setOnClickListener(toggle)
+        textView.setOnClickListener(toggle)
+        thumbnailContainer.setOnClickListener(toggle)
+        // Long-press copies in normal mode; in selection mode it must not leak a clip to the
+        // OS clipboard by accident, so it toggles like a tap.
+        textView.setOnLongClickListener { toggleSelection(entry); true }
+        textView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        textView.maxLines = if (entry.isMedia) 2 else 1
+        textView.ellipsize = android.text.TextUtils.TruncateAt.END
+        // Selected rows are tinted as well as checked, so the state is not colour-only
+        // or checkbox-only.
+        row.setBackgroundColor(if (checked) selectedRowColor() else android.graphics.Color.TRANSPARENT)
+    }
+
+    /** Return a (possibly recycled) row to its non-selection state. */
+    private fun resetSelectionRow(row: View, textView: TextView, selectBox: CheckBox) {
+        selectBox.visibility = GONE
+        selectBox.setOnClickListener(null)
+        textView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+        row.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+    }
+
+    /** Translucent label colour (runtime theme aware) behind selected rows. */
+    private fun selectedRowColor(): Int {
+        val typed = android.util.TypedValue()
+        val xml = if (context.theme.resolveAttribute(R.attr.colorLabel, typed, true)) typed.data else null
+        val label = ClipboardPaneThemePolicy.effectiveColor(
+            isRuntimeTheme = runtimeColors != null,
+            runtimeColor = runtimeColors?.label ?: 0,
+            xmlResolved = xml,
+            fallback = android.graphics.Color.WHITE
+        )
+        return androidx.core.graphics.ColorUtils.setAlphaComponent(label, SELECTED_ROW_ALPHA)
+    }
+
     inner class ClipboardEntriesAdapter : BaseAdapter() {
         override fun getCount(): Int = paginatedHistory.size
 
@@ -1204,6 +1379,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val tagsButton = view.findViewById<View>(R.id.clipboard_entry_tags)
             // Delete is in the edit_buttons row (only visible during edit mode)
             val deleteButton = view.findViewById<View>(R.id.clipboard_entry_delete)
+            // Selection-mode checkbox (GONE outside selection mode)
+            val selectBox = view.findViewById<CheckBox>(R.id.clipboard_entry_select)
 
             // #130: under a runtime theme, override the row's base-style ?attr colors
             // (entry text + button tints) with the active theme's — same colors the pane
@@ -1226,6 +1403,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 playBadge.visibility = GONE
                 privateBadge.visibility = GONE  // #156: hidden during edit
                 provenanceView.visibility = GONE  // ARC-011: hidden during edit
+                // Edit and selection are mutually exclusive; reset recycled selection rows.
+                resetSelectionRow(view, textView, selectBox)
 
                 // D-7: render any pending save failure inline; cleared when the user types.
                 val errRes = editingErrorRes
@@ -1397,6 +1576,17 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                     textView.text = entry.getFormattedText(context)
                 }
             }
+
+            // ── Selection mode: checkbox + whole-row toggle, no per-entry actions ──
+            if (selection != null) {
+                bindSelectionRow(view, entry, textView, selectBox, thumbnailContainer)
+                primaryButtons.visibility = GONE
+                secondaryButtons.visibility = GONE
+                deleteRow.visibility = GONE
+                provenanceView.visibility = GONE
+                return view
+            }
+            resetSelectionRow(view, textView, selectBox)
 
             // ── Expand state: single tap toggles text expansion + secondary row ──
             val isMultiLine = text.contains("\n")

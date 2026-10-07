@@ -2308,14 +2308,21 @@
     <string name="clipboard_filter_size_any">Libovolná velikost</string>
     <string name="clipboard_filter_size_unlimited">Bez maxima</string>
     <string name="clipboard_filter_size_invalid">Maximální velikost musí být alespoň rovna minimální.</string>
-    <string name="clipboard_delete_results">Smazat výsledky</string>
     <string name="clipboard_results_summary">Výsledky: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Načítání výsledků…</string>
-    <string name="clipboard_delete_confirm_title">Smazat výsledky (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">Smazat tyto odpovídající výstřižky z %1$s ze všech stránek? Celková velikost výstřižků: %2$s. Kopie na ostatních kartách zůstanou. Nové nebo změněné položky budou přeskočeny. Tuto akci nelze vrátit zpět.</string>
     <string name="clipboard_delete_confirm_action">Smazat</string>
-    <string name="clipboard_delete_result">Smazáno %1$d z %2$d potvrzených výsledků.</string>
     <string name="clipboard_delete_error">Výsledky se nepodařilo smazat. Zkuste to znovu.</string>
+    <string name="clipboard_select">Vybrat</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">Vybráno: %1$d</item><item quantity="few">Vybráno: %1$d</item><item quantity="many">Vybráno: %1$d</item><item quantity="other">Vybráno: %1$d</item></plurals>
+    <string name="clipboard_select_all_matching">Vybrat všechny odpovídající výsledky</string>
+    <string name="clipboard_deselect_all_matching">Zrušit výběr všech odpovídajících výsledků</string>
+    <string name="clipboard_selection_clear">Zrušit výběr</string>
+    <string name="clipboard_delete_selected">Smazat vybrané</string>
+    <string name="clipboard_selection_exit">Ukončit výběr</string>
+    <string name="clipboard_select_entry_descr">Vybrat výstřižek: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">Smazat %1$d vybraný výstřižek?</item><item quantity="few">Smazat %1$d vybrané výstřižky?</item><item quantity="many">Smazat %1$d vybraného výstřižku?</item><item quantity="other">Smazat %1$d vybraných výstřižků?</item></plurals>
+    <string name="clipboard_delete_selected_message">Smažou se pouze kopie v %1$s; kopie na ostatních kartách zůstanou. Celková velikost výstřižků: %2$s. Výstřižky změněné nebo odstraněné od jejich výběru budou přeskočeny. Tuto akci nelze vrátit zpět.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">Smazáno %1$d z %2$d vybraného výstřižku.</item><item quantity="few">Smazáno %1$d z %2$d vybraných výstřižků.</item><item quantity="many">Smazáno %1$d z %2$d vybraného výstřižku.</item><item quantity="other">Smazáno %1$d z %2$d vybraných výstřižků.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Vymazat systémovou schránku</string>

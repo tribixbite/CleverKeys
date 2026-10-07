@@ -2313,14 +2313,21 @@
     <string name="clipboard_filter_size_any">Любой размер</string>
     <string name="clipboard_filter_size_unlimited">Без максимума</string>
     <string name="clipboard_filter_size_invalid">Максимальный размер должен быть не меньше минимального.</string>
-    <string name="clipboard_delete_results">Удалить результаты</string>
     <string name="clipboard_results_summary">Результаты: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Загрузка результатов…</string>
-    <string name="clipboard_delete_confirm_title">Удалить результаты (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">Удалить эти совпадающие фрагменты из %1$s со всех страниц? Общий размер фрагментов: %2$s. Копии на других вкладках останутся. Новые или изменённые записи пропускаются. Это действие нельзя отменить.</string>
     <string name="clipboard_delete_confirm_action">Удалить</string>
-    <string name="clipboard_delete_result">Удалено %1$d из %2$d подтверждённых результатов.</string>
     <string name="clipboard_delete_error">Не удалось удалить результаты. Повторите попытку.</string>
+    <string name="clipboard_select">Выбрать</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">Выбрано: %1$d</item><item quantity="few">Выбрано: %1$d</item><item quantity="many">Выбрано: %1$d</item><item quantity="other">Выбрано: %1$d</item></plurals>
+    <string name="clipboard_select_all_matching">Выбрать все подходящие результаты</string>
+    <string name="clipboard_deselect_all_matching">Снять выбор со всех подходящих результатов</string>
+    <string name="clipboard_selection_clear">Очистить выбор</string>
+    <string name="clipboard_delete_selected">Удалить выбранное</string>
+    <string name="clipboard_selection_exit">Выйти из режима выбора</string>
+    <string name="clipboard_select_entry_descr">Выбрать фрагмент: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">Удалить %1$d выбранный фрагмент?</item><item quantity="few">Удалить %1$d выбранных фрагмента?</item><item quantity="many">Удалить %1$d выбранных фрагментов?</item><item quantity="other">Удалить %1$d выбранного фрагмента?</item></plurals>
+    <string name="clipboard_delete_selected_message">Удаляются только копии в %1$s; копии на других вкладках останутся. Общий размер фрагментов: %2$s. Фрагменты, изменённые или удалённые после выбора, пропускаются. Это действие нельзя отменить.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">Удалено %1$d из %2$d выбранного фрагмента.</item><item quantity="few">Удалено %1$d из %2$d выбранных фрагментов.</item><item quantity="many">Удалено %1$d из %2$d выбранных фрагментов.</item><item quantity="other">Удалено %1$d из %2$d выбранного фрагмента.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Очистить системный буфер обмена</string>

@@ -185,6 +185,46 @@ class ClipboardTabsAndPaneCloseTest {
             .that(xml).contains("@+id/clipboard_close_button")
     }
 
+    // ------------------------------------- selection mode lifetime (2026-10-07)
+
+    @Test
+    fun switchingTabEndsSelection() {
+        // A selection holds one table's row ids; carrying it into another tab would make
+        // those ids name unrelated rows.
+        val mgr = manager(startTab = ClipboardTab.HISTORY)
+
+        mgr.switchTo(ClipboardTab.TODOS)
+
+        verify { listView.endSelection() }
+    }
+
+    @Test
+    fun tabTapsAreRefusedWhileSelecting() {
+        val mgr = manager(startTab = ClipboardTab.PINNED)
+        every { listView.isSelecting() } returns true
+        val canSwitch = ClipboardManager::class.java.getDeclaredMethod("canSwitchTabs")
+            .apply { isAccessible = true }
+
+        assertThat(canSwitch.invoke(mgr) as Boolean).isFalse()
+        every { listView.isSelecting() } returns false
+        assertThat(canSwitch.invoke(mgr) as Boolean).isTrue()
+    }
+
+    @Test
+    fun hidingThePaneEndsSelectionAndDismissesAPendingConfirmation() {
+        // resetSearchOnHide is reached on pane close, pane switch and keyboard hide
+        // (onFinishInputView): a selection — and its confirmation — must not reach
+        // another field or app.
+        val mgr = manager()
+        val confirmation = mockk<android.app.AlertDialog>(relaxed = true)
+        mgr.setField("bulkDialog", confirmation)
+
+        mgr.resetSearchOnHide()
+
+        verify { confirmation.dismiss() }
+        verify { listView.endSelection() }
+    }
+
     // ----------------------------------------------------- #80: the close buttons
 
     @Test

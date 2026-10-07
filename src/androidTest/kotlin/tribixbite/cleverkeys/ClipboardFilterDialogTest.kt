@@ -158,15 +158,26 @@ class ClipboardFilterDialogTest {
                     history.setSizeFilter(1_000, null)
                 }
                 awaitCondition { history.isResultsReady() && history.resultSummary().first == 205 }
-                onMain { pane.findViewById<View>(R.id.clipboard_delete_results).performClick() }
+                // Filtered deletion goes through the selection: Select, then select all matching.
+                onMain { pane.findViewById<View>(R.id.clipboard_select).performClick() }
+                assertTrue(onMain { history.isSelecting() })
+                onMain { pane.findViewById<View>(R.id.clipboard_select_matching).performClick() }
+                assertEquals(205, onMain { history.selectedCount() })
+                // The selection survives a search that hides it, and adds to it.
+                onMain { history.setSearchFilter(small) }
+                onMain { pane.findViewById<View>(R.id.clipboard_select_matching).performClick() }
+                assertEquals(205, onMain { history.selectedCount() })  // the small clip fails the size filter
+                onMain { history.setSearchFilter(prefix) }
+                onMain { pane.findViewById<View>(R.id.clipboard_delete_selected).performClick() }
                 assertEquals(205, db.getActiveClipboardEntries().count { it.content.startsWith(prefix) && it.content != small })
                 onMain { requireNotNull(dialog(manager!!, "bulkDialog")).getButton(AlertDialog.BUTTON_NEGATIVE).performClick() }
                 // AlertDialog dispatches button handling/dismissal through its Handler.
                 // Wait for dismissal before trying to open the next confirmation.
                 awaitCondition { dialog(manager!!, "bulkDialog") == null }
                 assertEquals(206, db.getActiveClipboardEntries().count { it.content.startsWith(prefix) })
+                assertEquals(205, onMain { history.selectedCount() })  // cancel keeps the selection
 
-                onMain { pane.findViewById<View>(R.id.clipboard_delete_results).performClick() }
+                onMain { pane.findViewById<View>(R.id.clipboard_delete_selected).performClick() }
                 val added = prefix + "new-" + "x".repeat(2_000)
                 val changed = prefix + "changed-" + "x".repeat(2_000)
                 assertTrue(db.addClipboardEntry(added, expiry))
@@ -177,6 +188,8 @@ class ClipboardFilterDialogTest {
                     .filter { it.content.startsWith(prefix) }.map { it.content }.toSet())
                 assertTrue(db.getPinnedEntries().any { it.content == large.first() })
                 assertTrue(db.getTodoEntries().any { it.content == large.first() })
+                // A completed deletion ends selection mode.
+                assertFalse(onMain { history.isSelecting() })
                 onMain { manager!!.cleanup() }
                 manager = null
             }

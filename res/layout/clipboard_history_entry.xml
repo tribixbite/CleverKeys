@@ -6,6 +6,18 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content">
 
+  <!-- Selection mode (2026-10-07): GONE outside selection mode. 48dp touch target; the
+       contentDescription (set per row) names the clipping, so TalkBack announces
+       "<clipping>, checkbox, checked/not checked". Tapping the row text toggles it too. -->
+  <CheckBox
+      android:id="@+id/clipboard_entry_select"
+      android:layout_width="48dp"
+      android:layout_height="48dp"
+      android:layout_gravity="center_vertical"
+      android:layout_marginStart="4dp"
+      android:buttonTint="?attr/colorLabel"
+      android:visibility="gone"/>
+
   <!-- Media thumbnail container: GONE for text entries, VISIBLE for media -->
   <FrameLayout
       android:id="@+id/clipboard_entry_thumbnail_container"

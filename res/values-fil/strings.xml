@@ -2238,14 +2238,21 @@
     <string name="clipboard_filter_size_any">Kahit anong laki</string>
     <string name="clipboard_filter_size_unlimited">Walang maximum</string>
     <string name="clipboard_filter_size_invalid">Dapat hindi bababa ang maximum na laki sa minimum.</string>
-    <string name="clipboard_delete_results">I-delete ang mga resulta</string>
     <string name="clipboard_results_summary">Mga resulta: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Naglo-load ng mga resulta…</string>
-    <string name="clipboard_delete_confirm_title">I-delete ang mga resulta (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">I-delete ang magkakatugmang clipping na ito mula sa %1$s sa lahat ng page? Pinagsamang laki ng clipping: %2$s. Mananatili ang mga kopya sa ibang tab. Lalampasan ang mga bago o binagong entry. Hindi na ito mababawi.</string>
     <string name="clipboard_delete_confirm_action">I-delete</string>
-    <string name="clipboard_delete_result">Na-delete ang %1$d sa %2$d na nakumpirmang resulta.</string>
     <string name="clipboard_delete_error">Hindi ma-delete ang mga resulta. Subukan muli.</string>
+    <string name="clipboard_select">Pumili</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">%1$d ang napili</item><item quantity="other">%1$d ang napili</item></plurals>
+    <string name="clipboard_select_all_matching">Piliin ang lahat ng tugmang resulta</string>
+    <string name="clipboard_deselect_all_matching">Alisin sa pagkakapili ang lahat ng tugmang resulta</string>
+    <string name="clipboard_selection_clear">I-clear ang pinili</string>
+    <string name="clipboard_delete_selected">I-delete ang napili</string>
+    <string name="clipboard_selection_exit">Lumabas sa pagpili</string>
+    <string name="clipboard_select_entry_descr">Piliin ang clipping: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">I-delete ang %1$d napiling clipping?</item><item quantity="other">I-delete ang %1$d napiling clipping?</item></plurals>
+    <string name="clipboard_delete_selected_message">Ang mga kopya lang sa %1$s ang ide-delete; mananatili ang mga kopya sa ibang tab. Pinagsamang laki ng clipping: %2$s. Lalampasan ang mga clipping na binago o inalis mula nang piliin mo ang mga ito. Hindi na ito mababawi.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">Na-delete ang %1$d sa %2$d napiling clipping.</item><item quantity="other">Na-delete ang %1$d sa %2$d napiling clipping.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">I-clear ang clipboard ng system</string>

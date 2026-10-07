@@ -2237,14 +2237,21 @@
     <string name="clipboard_filter_size_any">Herhangi bir boyut</string>
     <string name="clipboard_filter_size_unlimited">Maksimum yok</string>
     <string name="clipboard_filter_size_invalid">Maksimum boyut en az minimum boyut kadar olmalıdır.</string>
-    <string name="clipboard_delete_results">Sonuçları sil</string>
     <string name="clipboard_results_summary">Sonuçlar: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Sonuçlar yükleniyor…</string>
-    <string name="clipboard_delete_confirm_title">Sonuçları sil (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">Tüm sayfalarda %1$s kaynağından eşleşen bu kırpmalar silinsin mi? Toplam kırpma boyutu: %2$s. Diğer sekmelerdeki kopyalar kalır. Yeni veya değiştirilen girişler atlanır. Bu işlem geri alınamaz.</string>
     <string name="clipboard_delete_confirm_action">Sil</string>
-    <string name="clipboard_delete_result">Onaylanan %2$d sonuçtan %1$d tanesi silindi.</string>
     <string name="clipboard_delete_error">Sonuçlar silinemedi. Tekrar deneyin.</string>
+    <string name="clipboard_select">Seç</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">%1$d seçildi</item><item quantity="other">%1$d seçildi</item></plurals>
+    <string name="clipboard_select_all_matching">Eşleşen tüm sonuçları seç</string>
+    <string name="clipboard_deselect_all_matching">Eşleşen tüm sonuçların seçimini kaldır</string>
+    <string name="clipboard_selection_clear">Seçimi temizle</string>
+    <string name="clipboard_delete_selected">Seçilenleri sil</string>
+    <string name="clipboard_selection_exit">Seçimden çık</string>
+    <string name="clipboard_select_entry_descr">Kırpmayı seç: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">Seçilen %1$d kırpma silinsin mi?</item><item quantity="other">Seçilen %1$d kırpma silinsin mi?</item></plurals>
+    <string name="clipboard_delete_selected_message">Yalnızca %1$s içindeki kopyalar silinir; diğer sekmelerdeki kopyalar kalır. Toplam kırpma boyutu: %2$s. Seçtikten sonra değiştirilen veya kaldırılan kırpmalar atlanır. Bu işlem geri alınamaz.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">Seçilen %2$d kırpmadan %1$d tanesi silindi.</item><item quantity="other">Seçilen %2$d kırpmadan %1$d tanesi silindi.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Sistem panosunu temizle</string>

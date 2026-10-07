@@ -2267,14 +2267,21 @@
     <string name="clipboard_filter_size_any">Qualquer tamanho</string>
     <string name="clipboard_filter_size_unlimited">Sem máximo</string>
     <string name="clipboard_filter_size_invalid">O tamanho máximo deve ser pelo menos o mínimo.</string>
-    <string name="clipboard_delete_results">Excluir resultados</string>
     <string name="clipboard_results_summary">Resultados: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Carregando resultados…</string>
-    <string name="clipboard_delete_confirm_title">Excluir resultados (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">Excluir estes recortes correspondentes de %1$s em todas as páginas? Tamanho combinado dos recortes: %2$s. Cópias em outras abas permanecem. Entradas novas ou alteradas são ignoradas. Esta ação não pode ser desfeita.</string>
     <string name="clipboard_delete_confirm_action">Excluir</string>
-    <string name="clipboard_delete_result">Excluídos %1$d de %2$d resultados confirmados.</string>
     <string name="clipboard_delete_error">Não foi possível excluir os resultados. Tente novamente.</string>
+    <string name="clipboard_select">Selecionar</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">%1$d selecionado</item><item quantity="many">%1$d selecionados</item><item quantity="other">%1$d selecionados</item></plurals>
+    <string name="clipboard_select_all_matching">Selecionar todos os resultados correspondentes</string>
+    <string name="clipboard_deselect_all_matching">Desmarcar todos os resultados correspondentes</string>
+    <string name="clipboard_selection_clear">Limpar seleção</string>
+    <string name="clipboard_delete_selected">Excluir selecionados</string>
+    <string name="clipboard_selection_exit">Sair da seleção</string>
+    <string name="clipboard_select_entry_descr">Selecionar recorte: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">Excluir %1$d recorte selecionado?</item><item quantity="many">Excluir %1$d recortes selecionados?</item><item quantity="other">Excluir %1$d recortes selecionados?</item></plurals>
+    <string name="clipboard_delete_selected_message">Somente as cópias em %1$s são excluídas; cópias em outras abas permanecem. Tamanho combinado dos recortes: %2$s. Recortes alterados ou removidos depois de selecionados são ignorados. Esta ação não pode ser desfeita.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">Excluídos: %1$d de %2$d recorte selecionado.</item><item quantity="many">Excluídos: %1$d de %2$d recortes selecionados.</item><item quantity="other">Excluídos: %1$d de %2$d recortes selecionados.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Limpar área de transferência do sistema</string>

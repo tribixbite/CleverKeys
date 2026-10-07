@@ -10,6 +10,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import tribixbite.cleverkeys.clipboard.ClipboardSelection
 
 /**
  * Instrumented tests for ClipboardDatabase.
@@ -1595,4 +1596,23 @@ class ClipboardDatabaseTest {
         assertEquals(0, db.deleteSnapshot(current).getOrThrow().first)
     }
 
+    /**
+     * Persistent selection (2026-10-07) against real rows: a selection built on one load,
+     * reconciled against a reload in which one row was edited, deletes only the unchanged
+     * rows — by row identity — and leaves the edited row and the pinned COPY in place.
+     */
+    @Test
+    fun selectionResolvedAfterReloadDeletesUnchangedRowsByIdentityAndKeepsCopies() {
+        repeat(3) { assertTrue(db.addClipboardEntry("sel-$it", futureExpiry)) }
+        assertTrue(db.pinEntry("sel-0", System.currentTimeMillis()))
+        val selection = ClipboardSelection(ClipboardTab.HISTORY)
+        assertEquals(3, selection.selectAll(db.getActiveClipboardEntries()))
+        assertEquals(EditEntryResult.Success, db.updateHistoryEntryContent("sel-1", "sel-1 edited"))
+        val reloaded = db.getActiveClipboardEntries()
+        assertEquals(1, selection.reconcile(reloaded))
+        val snapshot = selection.resolve(reloaded)
+        assertEquals(2, db.deleteSnapshot(snapshot).getOrThrow().first)
+        assertEquals(listOf("sel-1 edited"), db.getActiveClipboardEntries().map { it.content })
+        assertEquals(listOf("sel-0"), db.getPinnedEntries().map { it.content })
+    }
 }

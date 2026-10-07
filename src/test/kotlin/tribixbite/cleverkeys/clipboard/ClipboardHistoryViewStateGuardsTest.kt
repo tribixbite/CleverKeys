@@ -246,25 +246,29 @@ class ClipboardHistoryViewStateGuardsTest {
         assertThat(view.isEditing()).isFalse()
     }
 
+    // Release-record anchor (v2.0.0 "clipboard size filter and filtered delete"): the name
+    // predates the selection model. Deleting filtered results is now "select all matching"
+    // + "delete selected", and this still pins the claim — every page is covered and the
+    // confirmed scope stays frozen when a new matching clipping arrives afterwards.
     @Test
     fun sizeSearchSnapshotIncludesAllPagesAndStaysFrozenAfterNewCapture() {
         val entries = (1..205).map { ClipboardEntry("bulk-fixture-$it", it.toLong(), rowId = it.toLong(), sizeBytes = 2048) } +
             ClipboardEntry("bulk-fixture-small", 900, rowId = 900, sizeBytes = 10) +
             ClipboardEntry("unrelated-large", 901, rowId = 901, sizeBytes = 2048)
-        buildView()
-        every { view.invalidate() } just runs
-        view.setField("history", entries)
-        view.setField("searchFilter", "")
-        view.setField("dataReady", true)
+        buildReadyView(entries)
         view.setSearchFilter("bulk-fixture")
         view.setSizeFilter(1024, 4096)
         assertThat(view.getTotalPages()).isEqualTo(3)
-        val frozen = view.deletionSnapshot()!!
+        assertThat(view.startSelection()).isTrue()
+        assertThat(view.selectAllMatching()).isEqualTo(205)
+        val frozen = view.selectionSnapshot()!!
         assertThat(frozen.entries).hasSize(205)
         assertThat(frozen.totalBytes).isEqualTo(205 * 2048L)
-        view.setField("history", entries + ClipboardEntry("bulk-fixture-new", 902, rowId = 902, sizeBytes = 2048))
-        view.setSearchFilter("bulk-fixture")
-        assertThat(view.deletionSnapshot()!!.entries).hasSize(206)
+        view.acceptLoadedHistory(entries + ClipboardEntry("bulk-fixture-new", 902, rowId = 902, sizeBytes = 2048))
+        // The new capture matches the filter but was never selected.
+        assertThat(view.selectedCount()).isEqualTo(205)
+        assertThat(view.matchingCoverage()).isEqualTo(ClipboardSelection.Coverage.PARTIAL)
+        assertThat(view.selectionSnapshot()!!.entries).hasSize(205)
         assertThat(frozen.entries).hasSize(205)
         view.clearAllFilters()
         assertThat(view.getSizeFilter()).isEqualTo(0L to null)
@@ -273,21 +277,112 @@ class ClipboardHistoryViewStateGuardsTest {
 
     @Test
     fun deletionDisabledForUnloadedEditingEmptyAndInvalidRegexResults() {
+        val fixture = ClipboardEntry("fixture", 1, rowId = 1)
         buildView()
         every { view.invalidate() } just runs
-        view.setField("history", listOf(entry("fixture")))
+        view.setField("history", listOf(fixture))
         view.setField("searchFilter", "")
         view.setSearchFilter("fixture")
-        assertThat(view.deletionSnapshot()).isNull()
+        view.startSelection()
+        // Results that are still loading cannot be selected wholesale or deleted.
+        assertThat(view.selectAllMatching()).isEqualTo(0)
+        assertThat(view.selectionSnapshot()).isNull()
         view.setField("dataReady", true)
-        assertThat(view.deletionSnapshot()).isNotNull()
+        assertThat(view.selectAllMatching()).isEqualTo(1)
+        assertThat(view.selectionSnapshot()).isNotNull()
         view.setField("editingOriginalContent", "fixture")
-        assertThat(view.deletionSnapshot()).isNull()
+        assertThat(view.selectionSnapshot()).isNull()
         view.setField("editingOriginalContent", null)
+        view.clearSelection()
+        assertThat(view.selectionSnapshot()).isNull()
         view.setRegexMode(true)
         view.setSearchFilter("[")
         assertThat(view.hasRegexError()).isTrue()
-        assertThat(view.deletionSnapshot()).isNull()
+        assertThat(view.selectAllMatching()).isEqualTo(0)
+        assertThat(view.selectionSnapshot()).isNull()
+    }
+
+    // ─────────────────────────────────── persistent selection (2026-10-07)
+
+    @Test
+    fun selectionPersistsAcrossSearchSizeAndPageChanges() {
+        val large = (1..150).map { ClipboardEntry("log-$it", it.toLong(), rowId = it.toLong(), sizeBytes = 50_000) }
+        val small = (151..160).map { ClipboardEntry("log-$it", it.toLong(), rowId = it.toLong(), sizeBytes = 100) }
+        val photos = (161..170).map { ClipboardEntry("photo-$it", it.toLong(), rowId = it.toLong(), sizeBytes = 900_000) }
+        buildReadyView(large + small + photos)
+        view.startSelection()
+
+        view.setSearchFilter("log")
+        view.setSizeFilter(10_000, null)
+        view.nextPage()
+        assertThat(view.selectAllMatching()).isEqualTo(150)  // both pages, not the visible one
+        view.setSearchFilter("photo")
+        assertThat(view.selectedCount()).isEqualTo(150)
+        assertThat(view.matchingCoverage()).isEqualTo(ClipboardSelection.Coverage.NONE)
+        assertThat(view.selectAllMatching()).isEqualTo(10)
+        view.toggleSelection(photos[0])
+        view.setSearchFilter("")
+        view.setSizeFilter(0, 1_000)
+        assertThat(view.deselectAllMatching()).isEqualTo(0)  // the small logs were never selected
+        view.setSizeFilter(0, null)
+        assertThat(view.selectedCount()).isEqualTo(159)
+        assertThat(view.isEntrySelected(photos[0])).isFalse()
+        assertThat(view.selectionSnapshot()!!.entries.map { it.rowId }.toSet())
+            .isEqualTo(((1L..150L) + (162L..170L)).toSet())
+    }
+
+    @Test
+    fun reloadDropsVanishedAndChangedRowsFromTheSelection() {
+        val rows = (1..4).map { ClipboardEntry("row-$it", it.toLong(), rowId = it.toLong()) }
+        buildReadyView(rows)
+        view.startSelection()
+        view.selectAllMatching()
+        view.acceptLoadedHistory(listOf(rows[0], ClipboardEntry("row-2 edited", 2, rowId = 2), rows[3]))
+        assertThat(view.selectedCount()).isEqualTo(2)
+        assertThat(view.selectionSnapshot()!!.entries.map { it.rowId }).containsExactly(1L, 4L)
+    }
+
+    @Test
+    fun tabSwitchAndExplicitExitEndSelection() {
+        val rows = listOf(ClipboardEntry("a", 1, rowId = 1))
+        buildReadyView(rows)
+        assertThat(view.startSelection()).isTrue()
+        view.selectAllMatching()
+        view.setTab(ClipboardTab.PINNED)
+        assertThat(view.isSelecting()).isFalse()
+        assertThat(view.selectedCount()).isEqualTo(0)
+
+        view.acceptLoadedHistory(rows)
+        view.startSelection()
+        view.selectAllMatching()
+        view.endSelection()
+        assertThat(view.isSelecting()).isFalse()
+        // Re-entering starts empty: nothing leaks from the previous session.
+        view.startSelection()
+        assertThat(view.selectedCount()).isEqualTo(0)
+    }
+
+    @Test
+    fun selectionCannotStartDuringEditAndSelectionChangesNotifyTheChrome() {
+        buildReadyView(listOf(ClipboardEntry("a", 1, rowId = 1)))
+        var notified = 0
+        view.onResultsChanged = { notified++ }
+        view.setField("editingOriginalContent", "a")
+        assertThat(view.startSelection()).isFalse()
+        view.setField("editingOriginalContent", null)
+        assertThat(view.startSelection()).isTrue()
+        val before = notified
+        view.selectAllMatching()
+        view.clearSelection()
+        view.endSelection()
+        assertThat(notified - before).isAtLeast(3)
+    }
+
+    private fun buildReadyView(entries: List<ClipboardEntry>) {
+        buildView()
+        every { view.invalidate() } just runs
+        view.setField("searchFilter", "")
+        view.acceptLoadedHistory(entries)
     }
 
     // ------------------------------------------------------------------ helpers

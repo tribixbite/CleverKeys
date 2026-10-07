@@ -5,6 +5,7 @@ import android.text.Spannable
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -76,6 +77,7 @@ class ClipboardMediaDeleteAffordanceTest {
     private lateinit var privateBadge: TextView
     private lateinit var provenanceView: TextView
     private lateinit var deleteButton: View
+    private lateinit var selectBox: CheckBox
     private lateinit var rowView: View
     private lateinit var parent: ViewGroup
 
@@ -172,6 +174,7 @@ class ClipboardMediaDeleteAffordanceTest {
         privateBadge = mockk(relaxed = true)
         provenanceView = mockk(relaxed = true)
         deleteButton = mockk(relaxed = true)
+        selectBox = mockk(relaxed = true)
         parent = mockk(relaxed = true)
 
         every { deleteButton.setOnClickListener(capture(deleteClick)) } just runs
@@ -192,6 +195,8 @@ class ClipboardMediaDeleteAffordanceTest {
         every { rowView.findViewById<TextView>(R.id.clipboard_entry_private_badge) } returns privateBadge
         every { rowView.findViewById<TextView>(R.id.clipboard_entry_provenance) } returns provenanceView
         every { rowView.findViewById<View>(R.id.clipboard_entry_delete) } returns deleteButton
+        // 2026-10-07 selection mode: the row checkbox (typed lookup, GONE outside selection)
+        every { rowView.findViewById<CheckBox>(R.id.clipboard_entry_select) } returns selectBox
         // D-7: the inline save_edit error line (typed lookup, so a plain relaxed View won't do)
         every { rowView.findViewById<TextView>(R.id.clipboard_entry_edit_error) } returns mockk<TextView>(relaxed = true)
         // Remaining action buttons: plain relaxed mocks, no capture needed
@@ -326,6 +331,53 @@ class ClipboardMediaDeleteAffordanceTest {
         verify { deleteRow.visibility = View.VISIBLE }
         deleteClick.captured.onClick(deleteButton)
         verify(exactly = 1) { service.removeHistoryEntry(entry.content) }
+    }
+
+    // ----------------------------------- selection mode rows (2026-10-07)
+
+    @Test
+    fun selectionModeRowShowsCheckboxHidesActionsAndTogglesByIdentity() {
+        val entry = spyk(ClipboardEntry(content = "selectable", timestamp = 1700000000999L, rowId = 42)) {
+            every { getFormattedText(any()) } returns mockk<Spannable>(relaxed = true)
+        }
+        expandedStates[entry.timestamp] = true  // selection rows never show expanded actions
+        buildView(listOf(entry), ClipboardTab.HISTORY)
+        view.setField("clipboardAdapter", adapter)
+        view.setField("selection", ClipboardSelection(ClipboardTab.HISTORY))
+        val boxClick = slot<View.OnClickListener>()
+        val textLongClick = slot<View.OnLongClickListener>()
+        every { selectBox.setOnClickListener(capture(boxClick)) } just runs
+        every { textView.setOnLongClickListener(capture(textLongClick)) } just runs
+
+        render()
+
+        verify { selectBox.visibility = View.VISIBLE }
+        verify { selectBox.isChecked = false }
+        verify { primaryButtons.visibility = View.GONE }
+        verify { secondaryButtons.visibility = View.GONE }
+        verify { deleteRow.visibility = View.GONE }
+        verify(exactly = 0) { secondaryButtons.visibility = View.VISIBLE }
+        // The checkbox carries the accessible name; the text must not be a second stop.
+        verify { textView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO }
+
+        // Long-press copies in normal mode; in selection mode it toggles and never copies.
+        assertThat(textLongClick.captured.onLongClick(textView)).isTrue()
+        assertThat(view.isEntrySelected(entry)).isTrue()
+        verify(exactly = 0) { view.copyEntryToSystemClipboard(any()) }
+        boxClick.captured.onClick(selectBox)
+        assertThat(view.isEntrySelected(entry)).isFalse()
+    }
+
+    @Test
+    fun normalModeRowHidesTheSelectionCheckbox() {
+        val entry = textEntry()
+        buildView(listOf(entry), ClipboardTab.HISTORY)
+
+        render()
+
+        verify { selectBox.visibility = View.GONE }
+        verify(exactly = 0) { selectBox.visibility = View.VISIBLE }
+        verify { textView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO }
     }
 
     // ----------------------------------- D-6 (2026-09-06 audit): play badge accuracy

@@ -2318,14 +2318,21 @@
     <string name="clipboard_filter_size_any">Dowolny rozmiar</string>
     <string name="clipboard_filter_size_unlimited">Brak maksimum</string>
     <string name="clipboard_filter_size_invalid">Rozmiar maksymalny musi być co najmniej równy minimalnemu.</string>
-    <string name="clipboard_delete_results">Usuń wyniki</string>
     <string name="clipboard_results_summary">Wyniki: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Ładowanie wyników…</string>
-    <string name="clipboard_delete_confirm_title">Usunąć wyniki (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">Usunąć pasujące wycinki z %1$s ze wszystkich stron? Łączny rozmiar wycinków: %2$s. Kopie na innych kartach pozostaną. Nowe lub zmienione wpisy zostaną pominięte. Tej operacji nie można cofnąć.</string>
     <string name="clipboard_delete_confirm_action">Usuń</string>
-    <string name="clipboard_delete_result">Usunięto %1$d z %2$d potwierdzonych wyników.</string>
     <string name="clipboard_delete_error">Nie udało się usunąć wyników. Spróbuj ponownie.</string>
+    <string name="clipboard_select">Zaznacz</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">Zaznaczone: %1$d</item><item quantity="few">Zaznaczone: %1$d</item><item quantity="many">Zaznaczone: %1$d</item><item quantity="other">Zaznaczone: %1$d</item></plurals>
+    <string name="clipboard_select_all_matching">Zaznacz wszystkie pasujące wyniki</string>
+    <string name="clipboard_deselect_all_matching">Odznacz wszystkie pasujące wyniki</string>
+    <string name="clipboard_selection_clear">Wyczyść zaznaczenie</string>
+    <string name="clipboard_delete_selected">Usuń zaznaczone</string>
+    <string name="clipboard_selection_exit">Zakończ zaznaczanie</string>
+    <string name="clipboard_select_entry_descr">Zaznacz wycinek: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">Usunąć %1$d zaznaczony wycinek?</item><item quantity="few">Usunąć %1$d zaznaczone wycinki?</item><item quantity="many">Usunąć %1$d zaznaczonych wycinków?</item><item quantity="other">Usunąć %1$d zaznaczonego wycinka?</item></plurals>
+    <string name="clipboard_delete_selected_message">Usuwane są tylko kopie w %1$s; kopie na innych kartach pozostaną. Łączny rozmiar wycinków: %2$s. Wycinki zmienione lub usunięte od chwili zaznaczenia zostaną pominięte. Tej operacji nie można cofnąć.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">Usunięto %1$d z %2$d zaznaczonego wycinka.</item><item quantity="few">Usunięto %1$d z %2$d zaznaczonych wycinków.</item><item quantity="many">Usunięto %1$d z %2$d zaznaczonych wycinków.</item><item quantity="other">Usunięto %1$d z %2$d zaznaczonego wycinka.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Wyczyść schowek systemowy</string>

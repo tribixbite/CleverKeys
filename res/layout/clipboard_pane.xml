@@ -166,6 +166,11 @@
         android:paddingEnd="8dp" android:background="?attr/colorKeyboard">
       <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
           android:layout_weight="1" android:orientation="vertical">
+        <!-- Selection mode only: the live selected count, first so it is never ellipsized away. -->
+        <TextView android:id="@+id/clipboard_selection_count" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:textSize="12sp" android:textStyle="bold"
+            android:maxLines="1" android:ellipsize="end" android:visibility="gone"
+            android:textColor="?attr/colorLabel" android:accessibilityLiveRegion="polite"/>
         <TextView android:id="@+id/clipboard_result_summary" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:textSize="12sp"
             android:maxLines="1" android:ellipsize="end"
@@ -222,10 +227,48 @@
             android:background="?android:attr/selectableItemBackground"/>
 
       </LinearLayout>
-      <Button android:id="@+id/clipboard_delete_results" android:layout_width="wrap_content"
-          android:layout_height="48dp" android:text="@string/clipboard_delete_results"
+      <!-- Enters selection mode; batch deletion of results goes through the selection. -->
+      <Button android:id="@+id/clipboard_select" android:layout_width="wrap_content"
+          android:layout_height="48dp" android:minWidth="48dp" android:text="@string/clipboard_select"
           android:enabled="false" android:backgroundTint="?attr/colorKey"
           android:textColor="?attr/colorLabel"/>
+    </LinearLayout>
+
+    <!-- Selection actions, VISIBLE only in selection mode. A third row in narrow (tall) panes;
+         ClipboardPaneLayout puts it beside the results in wide (short) panes, where the
+         non-current tab icons are hidden to make room. Every target is 48dp. -->
+    <LinearLayout android:id="@+id/clipboard_selection_bar"
+        android:layout_width="match_parent" android:layout_height="48dp"
+        android:orientation="horizontal" android:gravity="center_vertical|end"
+        android:background="?attr/colorKeyboard" android:visibility="gone">
+      <ImageButton android:id="@+id/clipboard_select_matching"
+          android:layout_width="48dp" android:layout_height="48dp"
+          android:src="@drawable/ic_check_box_outline"
+          android:tint="?attr/colorLabel" tools:ignore="UseAppTint"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:scaleType="centerInside" android:padding="12dp"
+          android:contentDescription="@string/clipboard_select_all_matching"/>
+      <ImageButton android:id="@+id/clipboard_selection_clear"
+          android:layout_width="48dp" android:layout_height="48dp"
+          android:src="@drawable/ic_clear_all"
+          android:tint="?attr/colorLabel" tools:ignore="UseAppTint"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:scaleType="centerInside" android:padding="12dp"
+          android:contentDescription="@string/clipboard_selection_clear"/>
+      <ImageButton android:id="@+id/clipboard_delete_selected"
+          android:layout_width="48dp" android:layout_height="48dp"
+          android:src="@drawable/ic_delete"
+          android:tint="?attr/colorLabel" tools:ignore="UseAppTint"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:scaleType="centerInside" android:padding="12dp"
+          android:contentDescription="@string/clipboard_delete_selected"/>
+      <ImageButton android:id="@+id/clipboard_selection_exit"
+          android:layout_width="48dp" android:layout_height="48dp"
+          android:src="@drawable/ic_clipboard_cancel"
+          android:tint="?attr/colorLabel" tools:ignore="UseAppTint"
+          android:background="?android:attr/selectableItemBackgroundBorderless"
+          android:scaleType="centerInside" android:padding="12dp"
+          android:contentDescription="@string/clipboard_selection_exit"/>
     </LinearLayout>
   </LinearLayout>
 

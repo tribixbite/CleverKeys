@@ -2307,14 +2307,21 @@
     <string name="clipboard_filter_size_any">Qualsiasi dimensione</string>
     <string name="clipboard_filter_size_unlimited">Nessun massimo</string>
     <string name="clipboard_filter_size_invalid">La dimensione massima deve essere almeno pari a quella minima.</string>
-    <string name="clipboard_delete_results">Elimina risultati</string>
     <string name="clipboard_results_summary">Risultati: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Caricamento risultati…</string>
-    <string name="clipboard_delete_confirm_title">Elimina risultati (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">Eliminare questi ritagli corrispondenti da %1$s in tutte le pagine? Dimensione totale dei ritagli: %2$s. Le copie in altre schede rimarranno. Le voci nuove o modificate verranno ignorate. L\'azione non può essere annullata.</string>
     <string name="clipboard_delete_confirm_action">Elimina</string>
-    <string name="clipboard_delete_result">Eliminati %1$d di %2$d risultati confermati.</string>
     <string name="clipboard_delete_error">Impossibile eliminare i risultati. Riprova.</string>
+    <string name="clipboard_select">Seleziona</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">%1$d selezionato</item><item quantity="many">%1$d selezionati</item><item quantity="other">%1$d selezionati</item></plurals>
+    <string name="clipboard_select_all_matching">Seleziona tutti i risultati corrispondenti</string>
+    <string name="clipboard_deselect_all_matching">Deseleziona tutti i risultati corrispondenti</string>
+    <string name="clipboard_selection_clear">Annulla selezione</string>
+    <string name="clipboard_delete_selected">Elimina selezionati</string>
+    <string name="clipboard_selection_exit">Esci dalla selezione</string>
+    <string name="clipboard_select_entry_descr">Seleziona ritaglio: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">Eliminare %1$d ritaglio selezionato?</item><item quantity="many">Eliminare %1$d ritagli selezionati?</item><item quantity="other">Eliminare %1$d ritagli selezionati?</item></plurals>
+    <string name="clipboard_delete_selected_message">Vengono eliminate solo le copie in %1$s; le copie in altre schede rimarranno. Dimensione totale dei ritagli: %2$s. I ritagli modificati o rimossi dopo la selezione verranno ignorati. L\'azione non può essere annullata.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">Eliminati %1$d di %2$d ritaglio selezionato.</item><item quantity="many">Eliminati %1$d di %2$d ritagli selezionati.</item><item quantity="other">Eliminati %1$d di %2$d ritagli selezionati.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Cancella appunti di sistema</string>

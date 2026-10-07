@@ -2232,14 +2232,21 @@
     <string name="clipboard_filter_size_any">Bármilyen méret</string>
     <string name="clipboard_filter_size_unlimited">Nincs maximum</string>
     <string name="clipboard_filter_size_invalid">A maximális méret nem lehet kisebb a minimumnál.</string>
-    <string name="clipboard_delete_results">Találatok törlése</string>
     <string name="clipboard_results_summary">Találatok: %1$d · %2$s</string>
     <string name="clipboard_results_loading">Találatok betöltése…</string>
-    <string name="clipboard_delete_confirm_title">Találatok törlése (%1$d)?</string>
-    <string name="clipboard_delete_confirm_message">Törli ezeket a találati kivágásokat innen: %1$s az összes oldalon? Összesített méret: %2$s. A más lapokon lévő másolatok megmaradnak. Az új vagy módosított elemek kimaradnak. Ez a művelet nem vonható vissza.</string>
     <string name="clipboard_delete_confirm_action">Törlés</string>
-    <string name="clipboard_delete_result">%1$d / %2$d megerősített találat törölve.</string>
     <string name="clipboard_delete_error">Nem sikerült törölni a találatokat. Próbálja újra.</string>
+    <string name="clipboard_select">Kijelölés</string>
+    <plurals name="clipboard_selection_count"><item quantity="one">%1$d kijelölve</item><item quantity="other">%1$d kijelölve</item></plurals>
+    <string name="clipboard_select_all_matching">Az összes találat kijelölése</string>
+    <string name="clipboard_deselect_all_matching">Az összes találat kijelölésének megszüntetése</string>
+    <string name="clipboard_selection_clear">Kijelölés törlése</string>
+    <string name="clipboard_delete_selected">Kijelöltek törlése</string>
+    <string name="clipboard_selection_exit">Kilépés a kijelölésből</string>
+    <string name="clipboard_select_entry_descr">Kivágás kijelölése: %1$s</string>
+    <plurals name="clipboard_delete_selected_title"><item quantity="one">Törli a(z) %1$d kijelölt kivágást?</item><item quantity="other">Törli a(z) %1$d kijelölt kivágást?</item></plurals>
+    <string name="clipboard_delete_selected_message">Csak a(z) %1$s másolatai törlődnek; a más lapokon lévő másolatok megmaradnak. Összesített méret: %2$s. A kijelölés óta módosított vagy eltávolított kivágások kimaradnak. Ez a művelet nem vonható vissza.</string>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d / %2$d kijelölt kivágás törölve.</item><item quantity="other">%1$d / %2$d kijelölt kivágás törölve.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Rendszervágólap törlése</string>
