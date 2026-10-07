@@ -59,6 +59,9 @@ import java.util.Locale
  *    Italian placement is byte-for-byte unchanged — no elision can climb over a real word
  *    (the contraction-system skill's §2 casualties).
  *
+ *  - A possessive projection of a base shorter than [SHORT_BASE_LENGTH_FLOOR] (`is` → `i's`,
+ *    `as` → `a's`: a letter plural) is never offered at all (2026-10-07; tap-path parity).
+ *
  * Order within the splice: the variant goes AHEAD of its base only when its pairing
  * frequency ([pairedVariantFrequency]) beats the base's own lexicon frequency
  * ([baseFrequency]) by at least [PROMOTION_MARGIN] — i'd 211 vs id 196, i'll 212 vs ill 198,
@@ -147,6 +150,22 @@ object ContractionOverlay {
     const val POSSESSIVE_SPLICE_RUNNER_UP_DIVISOR = 2L
 
     /**
+     * Shortest base whose POSSESSIVE projection the overlay ever offers — the tap path's
+     * [tribixbite.cleverkeys.ContractionInjectionPolicy.MIN_BASE_LENGTH], for the same reason.
+     *
+     * A two-letter base with a possessive projection is a single letter plus `s`, so its
+     * "possessive" is the plural of a letter (`is` → `i's`, `as` → `a's`, `vs` → `v's`, and 14
+     * more in `contraction_pairings.json`: `bs cs ds es gs js ks ms os ps qs rs ts xs`) — never
+     * what a swipe of the word means. Before 2026-10-07 every confident swipe of `is`/`as` showed
+     * `i's`/`a's` at slot 1 (15,039 + 3,684 such positions in the stage-1 TEST text against 4
+     * written `i's`/`a's` across all four eval populations; eval doc §6.1). The tap path never
+     * offered them; the swipe path had no floor. Applied as a rule over the data, not a list:
+     * any future short possessive pairing is covered, and non-possessive variants of short bases
+     * (`id` → `i'd`, `is` → `isn't`) are untouched.
+     */
+    const val SHORT_BASE_LENGTH_FLOOR = tribixbite.cleverkeys.ContractionInjectionPolicy.MIN_BASE_LENGTH
+
+    /**
      * @param words decoded candidates, descending score order.
      * @param scores parallel scores (engine-relative).
      * @param pairedVariants alias → contraction variants when the alias is a PAIRED base.
@@ -212,13 +231,13 @@ object ContractionOverlay {
             if (preferred != null) {
                 emit(preferred.form, score)
                 if (preferred.replacesSurface) {
-                    pairedVariants(lower)?.forEach { deferVariant(it, score - 1) }
+                    offeredVariants(lower, pairedVariants(lower))?.forEach { deferVariant(it, score - 1) }
                     nonPairedMapping(lower)?.let { deferVariant(it, score - 1) }
                     continue
                 }
             }
 
-            val paired = pairedVariants(lower)
+            val paired = offeredVariants(lower, pairedVariants(lower))
             if (!paired.isNullOrEmpty()) {
                 // Rule 1: real word with contraction sibling(s) — keep it; splice at most one
                 // projection variant beside it and defer the rest (see class KDoc). A
@@ -280,6 +299,23 @@ object ContractionOverlay {
         }
         return outWords to outScores
     }
+
+    /**
+     * [variants] minus those never offered for [base] ([isSingleLetterPossessive]); the same
+     * list instance when nothing is dropped, null when [variants] is null.
+     */
+    private fun offeredVariants(base: String, variants: List<String>?): List<String>? {
+        if (variants == null || variants.none { isSingleLetterPossessive(base, it) }) return variants
+        return variants.filterNot { isSingleLetterPossessive(base, it) }
+    }
+
+    /**
+     * True for a possessive projection of a base shorter than [SHORT_BASE_LENGTH_FLOOR] — a letter
+     * plural such as `i's` for `is` (see [SHORT_BASE_LENGTH_FLOOR]). Such a variant is dropped from
+     * the slate entirely: neither spliced nor appended at the tail.
+     */
+    internal fun isSingleLetterPossessive(base: String, variant: String): Boolean =
+        base.length < SHORT_BASE_LENGTH_FLOOR && isProjectionOf(base, variant) && isPossessive(variant)
 
     /**
      * The single NON-POSSESSIVE variant of [base] to splice beside it: among [variants] whose

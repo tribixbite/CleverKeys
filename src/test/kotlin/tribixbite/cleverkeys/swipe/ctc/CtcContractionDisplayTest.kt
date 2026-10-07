@@ -244,12 +244,20 @@ class CtcContractionDisplayTest {
         // Sweep: EVERY shipped base with a possessive projection, decoded as a confident top-1,
         // keeps rank 0 and shows exactly its possessive at slot 1.
         var swept = 0
+        val shortBases = ArrayList<String>()
         for ((base, variants) in pairings) {
             val possessives = variants.map { it.contraction }.filter {
                 ContractionOverlay.isProjectionOf(base, it) && ContractionOverlay.isPossessive(it)
             }
             if (possessives.isEmpty()) continue
             val (words, _) = applyShipped(listOf(base, "zzfill"), listOf(900, 100))
+            if (base.length < tribixbite.cleverkeys.ContractionInjectionPolicy.MIN_BASE_LENGTH) {
+                // 2026-10-07: `is`→`i's`, `as`→`a's`, `ms`→`m's` … are letter plurals — never shown.
+                assertWithMessage("swiped '$base' slate $words").that(words).containsNoneIn(possessives)
+                assertWithMessage("swiped '$base' slate $words").that(words[0]).isEqualTo(base)
+                shortBases += base
+                continue
+            }
             assertWithMessage("swiped '$base' slate $words").that(words[0]).isEqualTo(base)
             assertWithMessage("swiped '$base' slate $words").that(words[1]).isIn(possessives)
             swept++
@@ -258,7 +266,11 @@ class CtcContractionDisplayTest {
         // itself (`teams` → `team's`); the other possessive entries are non-projections
         // (`world` → `world's`, a different trace) and are unaffected. Exact, so a data
         // regeneration that silently drops the family fails here.
-        assertThat(swept).isEqualTo(593)
+        assertThat(swept).isEqualTo(576)
+        // The 17 two-letter bases are all single-letter hosts (letter plurals): as is vs bs cs …
+        assertThat(shortBases).containsExactly(
+            "as", "bs", "cs", "ds", "es", "gs", "is", "js", "ks", "ms", "os", "ps", "qs", "rs", "ts", "vs", "xs",
+        )
     }
 
     @Test

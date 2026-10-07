@@ -621,7 +621,7 @@ class ContractionManager(private val context: Context) {
      * - Most words: add 's (cat -> cat's, dog -> dog's)
      * - Words ending in s/S: bare trailing apostrophe (parents -> parents', James -> James')
      * - Words already containing an apostrophe: never augmented (no "Book's's")
-     * - Never generate for pronouns/function words (handled by contractions)
+     * - Never generate for closed-class words ([canTakePossessive]: no "the's", "as'", "his'")
      *
      * @param word Base word to make possessive
      * @return Possessive form, or null when not eligible
@@ -644,9 +644,9 @@ class ContractionManager(private val context: Context) {
             return null
         }
 
-        // Don't generate for function words/pronouns that have special contractions
-        // These are already handled by the true contractions in the binary file
-        if (wordLower in FUNCTION_WORDS) {
+        // A closed-class word (pronoun, determiner, preposition, conjunction, auxiliary) is
+        // never a possessor — see [canTakePossessive].
+        if (!canTakePossessive(wordLower)) {
             return null
         }
 
@@ -807,15 +807,45 @@ class ContractionManager(private val context: Context) {
             else -> "$word's"
         }
 
-        // Function words/pronouns that have special contractions
-        private val FUNCTION_WORDS = setOf(
-            "i", "you", "he", "she", "it", "we", "they",
-            "who", "what", "that", "there", "here",
-            "will", "would", "shall", "should",
-            "can", "could", "may", "might", "must",
-            "do", "does", "did",
-            "is", "am", "are", "was", "were",
-            "have", "has", "had", "let"
+        /**
+         * False for an English CLOSED-CLASS word — a pronoun, determiner, preposition,
+         * conjunction or auxiliary/modal — which can never be a possessor, so the D1 swipe
+         * augment (`SuggestionHandler.possessiveAdditions`) must not offer `'s` / `'` for it.
+         *
+         * Before 2026-10-07 only a 30-word pronoun/auxiliary set was excluded, so a confident
+         * swipe of `the`, `and`, `as`, `this` or `his` ended its bar with `the's`, `and's`,
+         * `as'`, `this'`, `his'`. A closed class is enumerable by definition, which is why this
+         * is a list and not a frequency rule: an open-class word stays eligible however frequent
+         * it is. Modals that double as nouns (`will`, `can`, `may`) stay excluded, as they were
+         * in the original set.
+         *
+         * @param wordLower the candidate, lowercased.
+         */
+        fun canTakePossessive(wordLower: String): Boolean = wordLower !in CLOSED_CLASS_WORDS
+
+        private val CLOSED_CLASS_WORDS = setOf(
+            // Personal, possessive, reflexive, relative, interrogative and demonstrative pronouns
+            "i", "me", "my", "mine", "myself", "you", "your", "yours", "yourself", "yourselves",
+            "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself",
+            "we", "us", "our", "ours", "ourselves", "they", "them", "their", "theirs", "themselves",
+            "who", "whom", "whose", "which", "what", "that", "this", "these", "those",
+            "there", "here",
+            // Articles and determiners
+            "a", "an", "the", "some", "any", "each", "every", "either", "neither", "no", "all",
+            "both", "such",
+            // Prepositions
+            "of", "in", "on", "at", "by", "for", "from", "to", "with", "without", "into", "onto",
+            "upon", "about", "above", "below", "over", "under", "after", "before", "since",
+            "until", "till", "than", "as", "via", "per", "across", "among", "amongst", "between",
+            "through", "throughout", "towards", "toward", "during", "within", "against",
+            "beside", "besides", "despite", "unless", "plus", "versus", "vs",
+            // Conjunctions
+            "and", "or", "but", "nor", "so", "yet", "if", "because", "although", "though",
+            "whether", "while", "whereas",
+            // Auxiliaries and modals (the original set, kept whole)
+            "am", "is", "are", "was", "were", "be", "been", "being", "do", "does", "did",
+            "have", "has", "had", "will", "would", "shall", "should", "can", "could", "may",
+            "might", "must", "let", "not",
         )
     }
 }

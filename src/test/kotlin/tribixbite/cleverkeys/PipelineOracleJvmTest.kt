@@ -213,6 +213,19 @@ class PipelineOracleJvmTest {
         assertNull(ContractionManager.possessiveForm("Book’s"))
     }
 
+    @Test
+    fun oracle_jvm_closedClassWordsNeverTakeAPossessive() {
+        // 2026-10-07: a confident swipe of `the`/`as`/`this` ended its bar with `the's`/`as'`/
+        // `this'` through the D1 augment. Closed-class words are never possessors.
+        for (w in listOf("the", "a", "and", "as", "this", "his", "its", "us", "of", "with", "is", "will", "they")) {
+            assertEquals(w, false, ContractionManager.canTakePossessive(w))
+        }
+        // Open-class words stay eligible, frequent or not, plural or not.
+        for (w in listOf("cat", "parents", "james", "team", "teams", "world", "bus", "class")) {
+            assertEquals(w, true, ContractionManager.canTakePossessive(w))
+        }
+    }
+
     // =========================================================================
     // n-1 (WP9 audit 2026-08-11) — the ENGLISH-ONLY possessive gate, both sides.
     // Unlike the array-behavior mirrors above, these call the PRODUCTION helper

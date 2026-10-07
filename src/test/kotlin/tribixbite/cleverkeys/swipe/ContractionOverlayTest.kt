@@ -250,6 +250,54 @@ class ContractionOverlayTest {
         assertThat(words).containsExactly("trams", "teams", "terms", "team's").inOrder()
     }
 
+    // ── Single-letter "possessives" (2026-10-07 round 2) ──────────────────────────────────
+    //
+    // The shipped pairing data lists `is` → `i's`, `as` → `a's`, `vs` → `v's`: the plural of a
+    // letter, never what a swipe of the function word means. Every confident swipe of `is`/`as`
+    // showed it at slot 1. The tap path has never offered them (ContractionInjectionPolicy's
+    // MIN_BASE_LENGTH floor); the swipe overlay now applies the same floor to possessives.
+
+    private fun applyShort(words: List<String>, scores: List<Int>) = ContractionOverlay.apply(
+        words, scores,
+        pairedVariants = {
+            mapOf(
+                "is" to listOf("i's", "isn't"), "as" to listOf("a's"), "vs" to listOf("v's"),
+                "id" to listOf("i'd"), "cds" to listOf("cd's"),
+            )[it]
+        },
+        nonPairedMapping = { null },
+        wordOrdinal = { null },
+        pairedVariantFrequency = { base, variant ->
+            mapOf("is" to mapOf("i's" to 160, "isn't" to 212), "as" to mapOf("a's" to 178), "id" to mapOf("i'd" to 211))[base]?.get(variant)
+        },
+        baseFrequency = { mapOf("is" to 243, "as" to 237, "id" to 196, "cds" to 178)[it] },
+    )
+
+    @Test
+    fun `a confident is or as never shows a single-letter possessive anywhere`() {
+        val (isWords, isScores) = applyShort(listOf("is", "its"), listOf(900, 100))
+        assertThat(isWords).containsExactly("is", "its", "isn't").inOrder()
+        assertThat(isScores).containsExactly(900, 100, 100).inOrder()
+        assertThat(applyShort(listOf("as"), listOf(900)).first).containsExactly("as")
+        assertThat(applyShort(listOf("vs", "us"), listOf(900, 100)).first).containsExactly("vs", "us").inOrder()
+        // Not only the splice: a contested or lower-ranked short base gets no tail copy either.
+        assertThat(applyShort(listOf("as", "ad"), listOf(900, 800)).first).containsExactly("as", "ad").inOrder()
+        assertThat(applyShort(listOf("at", "as"), listOf(900, 100)).first).containsExactly("at", "as").inOrder()
+    }
+
+    @Test
+    fun `the length floor removes only possessives — i'd and a three-letter possessive are untouched`() {
+        assertThat(applyShort(listOf("id"), listOf(900)).first).containsExactly("i'd", "id").inOrder()
+        assertThat(applyShort(listOf("cds"), listOf(900)).first).containsExactly("cds", "cd's").inOrder()
+        assertThat(ContractionOverlay.isSingleLetterPossessive("is", "i's")).isTrue()
+        assertThat(ContractionOverlay.isSingleLetterPossessive("as", "a's")).isTrue()
+        assertThat(ContractionOverlay.isSingleLetterPossessive("id", "i'd")).isFalse()
+        assertThat(ContractionOverlay.isSingleLetterPossessive("is", "isn't")).isFalse()
+        assertThat(ContractionOverlay.isSingleLetterPossessive("cds", "cd's")).isFalse()
+        assertThat(ContractionOverlay.SHORT_BASE_LENGTH_FLOOR)
+            .isEqualTo(tribixbite.cleverkeys.ContractionInjectionPolicy.MIN_BASE_LENGTH)
+    }
+
     @Test
     fun `a possessive with no known frequency is spliced beside a confident base`() {
         // 510 bin-derived possessives carry no pairing frequency (alzheimers -> alzheimer's).
