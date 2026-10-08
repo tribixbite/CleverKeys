@@ -38,7 +38,12 @@
    "short_swipe_direction_short_s": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
    "short_swipe_direction_short_sw": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
    "short_swipe_direction_short_w": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
-   "short_swipe_direction_short_nw": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally."
+   "short_swipe_direction_short_nw": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",
+   "autocorrect_typo_forgiveness_title": "2026-10-08 machine translation of an English-identical title; check it reads naturally or whether the English borrowing was better.",
+   "gesture_speed_smoothing_title": "2026-10-08 machine translation of an English-identical title; check it reads naturally or whether the English borrowing was better.",
+   "input_backspace_only_repeat_title": "2026-10-08 machine translation of an English-identical title; check it reads naturally or whether the English borrowing was better.",
+   "gesture_selection_delete_header": "2026-10-08 machine translation of an English-identical title; check it reads naturally or whether the English borrowing was better.",
+   "settings_auto_capitalization_title": "2026-10-08 machine translation of an English-identical title; check it reads naturally or whether the English borrowing was better."
   },
   "in": {
    "short_swipe_direction_short_n": "Short compass abbreviation for a short-swipe direction; the translator asked whether this abbreviation reads naturally.",

@@ -413,6 +413,9 @@ maintainer-owned uncommitted manual-checklist resets.
 
 - [x] ARC-067: the 21-locale pass CLOSED in Wave D, 2026-09-01 (ledger "Wave D — ARC-067
   CLOSED", lint-enforced coverage, zero MissingTranslation suppressions). ARC-066/087 complete.
+  Re-audited 2026-10-08: 0 missing names in all 21 locales, plurals/placeholders clean; fil
+  English copies and one fa dropped argument fixed (`docs/i18n/2026-10-08-coverage-audit.md`).
+  All translations are machine-quality pending native-speaker review.
 - [x] Finish Wave E: ARC-073 citation/doc drift (`d20ed3b5`), ARC-098 phantom-`keyboard2`
   tooling sweep (`f482faf4`), the four verified doc-claim repairs, and the
   `contraction_pairings_cleaned.json` gate run (the file was already deleted in `030265ee`).

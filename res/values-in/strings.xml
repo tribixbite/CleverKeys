@@ -1424,7 +1424,7 @@
     <string name="short_swipe_dialog_hint_no_layout">Ketuk arah untuk menambah atau mengedit gestur geser pendek</string>
     <string name="short_swipe_action_desc_command">Perintah: %1$s</string>
     <string name="short_swipe_action_desc_text">Teks: \"%1$s\"</string>
-    <string name="short_swipe_action_desc_key_event">Key Event: %1$s</string>
+    <string name="short_swipe_action_desc_key_event">Peristiwa tombol: %1$s</string>
     <string name="short_swipe_action_desc_intent">Intent: %1$s</string>
     <string name="short_swipe_action_desc_intent_invalid">Intent (tidak valid)</string>
     <string name="short_swipe_action_desc_timestamp">Stempel waktu: %1$s</string>

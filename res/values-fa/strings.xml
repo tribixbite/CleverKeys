@@ -2327,7 +2327,7 @@
     <string name="advanced_custom_terminal_desc">استفاده از ورودی ترمینال در برنامه‌های دیگر. شناسایی پیش‌فرض ترمینال فعال می‌ماند.</string>
     <string name="advanced_custom_terminal_count">بسته‌های سفارشی: %1$d</string>
     <string name="advanced_custom_terminal_help">نام دقیق بسته برنامه‌ها را وارد کنید؛ در هر خط یکی یا با ویرگول جدا شوند. نویسه عام مجاز نیست. برای استفاده از شناسایی پیش‌فرض خالی بگذارید.</string>
-    <string name="advanced_custom_terminal_invalid">نام بسته نامعتبر است (حداکثر ۲۵۵ نویسه): %1$s</string>
+    <string name="advanced_custom_terminal_invalid">نام بسته نامعتبر است (حداکثر %2$d نویسه): %1$s</string>
     <string name="advanced_custom_terminal_limit">حداکثر از %1$d نام بسته متمایز استفاده کنید.</string>
     <string name="advanced_custom_terminal_input_limit">فهرست بیش از حد طولانی است (حداکثر %1$d نویسه).</string>
     <string name="command_palette_template_title">الگوی پویا</string>

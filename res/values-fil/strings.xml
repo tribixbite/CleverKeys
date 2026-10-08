@@ -2,7 +2,7 @@
 <resources>
     <!-- <string name="pref_portrait_unfolded">In portrait mode unfolded</string> -->
     <!-- <string name="pref_landscape_unfolded">In landscape mode unfolded</string> -->
-    <string name="pref_layout_e_system">System settings</string>
+    <string name="pref_layout_e_system">Mga setting ng system</string>
     <string name="pref_layout_e_custom">Custom na layout</string>
     <string name="pref_layouts_add">Maglagay ng isa pang layout</string>
     <string name="pref_layouts_item">Layout %1$d: %2$s</string>
@@ -72,7 +72,7 @@
     <string name="key_descr_config">Mga Setting</string>
     <string name="key_descr_action">Enter</string>
     <string name="key_descr_clear">Burahin ang text field</string>
-    <string name="key_descr_selection_mode">Selection mode</string>
+    <string name="key_descr_selection_mode">Mode ng pagpili</string>
     <string name="key_descr_selection_cancel">Kanselahin ang seleksyon</string>
     <string name="key_descr_arrow_left">Kaliwang arrow</string>
     <string name="key_descr_arrow_right">Kanang arrow</string>
@@ -121,9 +121,9 @@
 
     <!-- Input Behavior Section -->
     <string name="settings_section_input">📝 Ugali ng Input</string>
-    <string name="settings_auto_capitalization_title">Auto-Capitalization</string>
+    <string name="settings_auto_capitalization_title">Awtomatikong Malaking Titik</string>
     <string name="settings_auto_capitalization_desc">Awtomatikong gawing malaking titik ang mga salita sa simula ng pangungusap</string>
-    <string name="settings_vibration_title">Vibration Feedback</string>
+    <string name="settings_vibration_title">Feedback ng Vibration</string>
     <string name="settings_vibration_desc">Mag-vibrate kapag pinindot ang mga key</string>
 
     <!-- Accessibility Section -->
@@ -282,7 +282,7 @@
     <string name="theme_color_lightness">Lightness</string>
     <string name="theme_color_opacity">Opacity</string>
     <string name="theme_color_hex">Hex</string>
-    <string name="theme_color_hex_desc">Hex color input</string>
+    <string name="theme_color_hex_desc">Input ng kulay na hex</string>
     <string name="theme_quick_colors">Mga Mabilis na Kulay</string>
 
     <!-- Mga setting / Settings -->
@@ -346,17 +346,17 @@
     <string name="appearance_height_landscape_desc">Ayusin ang taas ng keyboard sa landscape mode</string>
     <string name="appearance_scale_numpad_title">I-scale ang taas ng numpad</string>
     <string name="appearance_scale_numpad_desc">Ibanat ang mga hilera ng PIN at numpad sa buong taas ng keyboard</string>
-    <string name="appearance_bottom_margin_portrait_title">Bottom Margin (Portrait)</string>
+    <string name="appearance_bottom_margin_portrait_title">Margin sa Ibaba (Portrait)</string>
     <string name="appearance_bottom_margin_portrait_desc" formatted="false">Vertical na margin bilang % ng taas ng screen</string>
-    <string name="appearance_bottom_margin_landscape_title">Bottom Margin (Landscape)</string>
+    <string name="appearance_bottom_margin_landscape_title">Margin sa Ibaba (Landscape)</string>
     <string name="appearance_bottom_margin_landscape_desc" formatted="false">Vertical na margin bilang % ng taas ng screen</string>
-    <string name="appearance_left_margin_portrait_title">Left Margin (Portrait)</string>
+    <string name="appearance_left_margin_portrait_title">Margin sa Kaliwa (Portrait)</string>
     <string name="appearance_left_margin_portrait_desc" formatted="false">Left na margin bilang % ng lapad ng screen</string>
-    <string name="appearance_right_margin_portrait_title">Right Margin (Portrait)</string>
+    <string name="appearance_right_margin_portrait_title">Margin sa Kanan (Portrait)</string>
     <string name="appearance_right_margin_portrait_desc" formatted="false">Right na margin bilang % ng lapad ng screen</string>
-    <string name="appearance_left_margin_landscape_title">Left Margin (Landscape)</string>
+    <string name="appearance_left_margin_landscape_title">Margin sa Kaliwa (Landscape)</string>
     <string name="appearance_left_margin_landscape_desc" formatted="false">Left na margin bilang % ng lapad ng screen</string>
-    <string name="appearance_right_margin_landscape_title">Right Margin (Landscape)</string>
+    <string name="appearance_right_margin_landscape_title">Margin sa Kanan (Landscape)</string>
     <string name="appearance_right_margin_landscape_desc" formatted="false">Right na margin bilang % ng lapad ng screen</string>
     <string name="appearance_label_brightness_title">Liwanag ng Label</string>
     <string name="appearance_label_brightness_desc" formatted="false">Liwanag ng mga label ng key (0–100%)</string>
@@ -392,7 +392,7 @@
     <string name="autocorrect_min_word_frequency_desc">Itama lamang sa mga salitang may dalas &gt;= ito</string>
     <string name="autocorrect_final_title">Final na Autocorrect</string>
     <string name="autocorrect_final_desc">Mag-apply ng mga pagwawasto batay sa diksyunaryo sa final na output</string>
-    <string name="autocorrect_typo_forgiveness_title">Typo Forgiveness</string>
+    <string name="autocorrect_typo_forgiveness_title">Pagpapalampas sa Typo</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximum na pinapayagang pagkakaiba ng karakter (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kawastuhan ng Unang Titik</string>
     <string name="autocorrect_starting_letter_desc">Kinakailangang haba ng prefix na tumutugma (0–4)</string>
@@ -454,7 +454,7 @@
     <string name="gesture_double_space_period_desc">Pindutin ang space nang mabilis nang dalawang beses para mag-insert ng tuldok. Mag-trigger lang pagkatapos ng mga titik/numero.</string>
     <string name="gesture_double_space_timing_title">Timing ng Double-Space</string>
     <string name="gesture_double_space_timing_desc">Maximum na oras sa pagitan ng mga space para mag-trigger ng tuldok (ms)</string>
-    <string name="gesture_sensitivity_preset_title">Sensitivity Preset</string>
+    <string name="gesture_sensitivity_preset_title">Preset ng Sensitivity</string>
     <string name="gesture_sensitivity_preset_desc">Mabilis na mga preset para sa pagtukoy ng swipe. Ang Custom ay lilitaw kapag naiiba ang mga halaga mula sa mga preset.</string>
     <string name="gesture_min_swipe_distance_title">Minimum na Distansya ng Swipe</string>
     <string name="gesture_min_swipe_distance_desc">Minimum na natunton na landas (px) bago maging kwalipikado ang gesture bilang salitang na-swipe. Ang mas mababa ay nakatulong sa mga napakaikling salita na mairehistro; itaas kung ang mga pag-aaksidenteng haplos ay nagpapaputok bilang mga salita.</string>
@@ -466,7 +466,7 @@
     <string name="gesture_noise_filter_desc">Minimum na kilusan para mairehistro (px). Mas mataas ang nag-filter ng jitter ngunit maaaring mawala ang data.</string>
     <string name="gesture_high_velocity_title">Threshold ng Mataas na Bilis</string>
     <string name="gesture_high_velocity_desc">Bilis para sa mabilis na pagtukoy ng swipe (px/sec). Ang mas mataas ay nagpapahintulot ng mas mabilis na pag-swipe.</string>
-    <string name="gesture_speed_smoothing_title">Speed Smoothing</string>
+    <string name="gesture_speed_smoothing_title">Smoothing ng Bilis</string>
     <string name="gesture_speed_smoothing_desc">Smoothing factor para sa galaw ng slider. Mas mataas ay mas maayos ngunit mas hindi tugon.</string>
     <string name="gesture_max_speed_multiplier_title">Maximum na Speed Multiplier</string>
     <string name="gesture_max_speed_multiplier_desc">Maximum na acceleration ng slider. Ang mas mataas ay nagpapahintulot ng mas mabilis na pag-slide.</string>
@@ -493,27 +493,27 @@
     <string name="input_personalized_learning_desc">Palakasin ang mga prediction para sa mga madalas na na-type na salita</string>
     <string name="input_learning_aggression_title">Pagka-agresibo ng Pagkatuto</string>
     <string name="input_learning_aggression_desc">Gaano kalakas ang mga gawi na nakakaapekto sa mga prediction</string>
-    <string name="input_context_boost_title">Context Boost Multiplier</string>
+    <string name="input_context_boost_title">Multiplier ng Context Boost</string>
     <string name="input_context_boost_desc">Gaano kalakas ang konteksto na nakakaimpluwensya sa mga prediction (0.5–5.0)</string>
-    <string name="input_frequency_scale_title">Frequency Scale</string>
+    <string name="input_frequency_scale_title">Scale ng Frequency</string>
     <string name="input_frequency_scale_desc">Balansein ang mga karaniwang kumpara sa mga hindi karaniwang salita (100–5000)</string>
     <string name="input_capitalize_i_title">I-capitalize ang mga Salitang I</string>
     <string name="input_capitalize_i_desc">Auto-capitalize ang "I" at mga contraction (I\'m, I\'ll, I\'d, I\'ve)</string>
-    <string name="input_smart_punctuation_title">Smart Punctuation</string>
+    <string name="input_smart_punctuation_title">Matalinong Bantas</string>
     <string name="input_smart_punctuation_desc">Ilakip ang mga punctuation sa dulo ng mga salita (tinatanggal ang space bago ang . , ! ? atbp.)</string>
-    <string name="input_swipe_distance_threshold_title">Swipe Distance Threshold</string>
+    <string name="input_swipe_distance_threshold_title">Threshold ng Distansya ng Swipe</string>
     <string name="input_swipe_distance_threshold_desc">Distansya (mga unit na naka-scale sa device) para i-activate ang slider/event subkey sa gitna ng swipe (hal. spacebar cursor slider). Nililimitahan din ang minimum ng maikling swipe sa malalawak na key tulad ng backspace.</string>
     <string name="input_circle_gesture_title">Sensitivity ng Circle Gesture</string>
     <string name="input_circle_gesture_desc">Sensitivity para sa mga loop/circle gesture</string>
     <string name="input_space_slider_title">Sensitivity ng Space Bar Slider</string>
     <string name="input_space_slider_desc">Sensitivity para sa paggalaw ng cursor sa pamamagitan ng horizontal swipe ng spacebar</string>
-    <string name="input_long_press_timeout_title">Long Press Timeout</string>
+    <string name="input_long_press_timeout_title">Tagal ng Matagal na Pagpindot</string>
     <string name="input_long_press_timeout_desc">Tagal para mag-trigger ng long press (millisecond)</string>
-    <string name="input_long_press_interval_title">Long Press Interval</string>
+    <string name="input_long_press_interval_title">Interval ng Matagal na Pagpindot</string>
     <string name="input_long_press_interval_desc">Interval ng pag-uulit ng key kapag matagal na pinindot (millisecond)</string>
     <string name="input_key_repeat_title">Key Repeat na Naka-enable</string>
     <string name="input_key_repeat_desc">Payagan ang mga key na mag-ulit kapag matagal na pinindot</string>
-    <string name="input_backspace_only_repeat_title">Backspace Only Repeat</string>
+    <string name="input_backspace_only_repeat_title">Backspace Lang ang Umuulit</string>
     <string name="input_backspace_only_repeat_desc">Ulitin lang ang backspace/navigation key, hindi mga character key</string>
     <string name="input_double_tap_shift_title">Double Tap Shift para sa Caps Lock</string>
     <string name="input_double_tap_shift_desc">I-lock ang shift key sa pamamagitan ng mabilis na pag-double tap</string>
@@ -545,7 +545,7 @@
     <string name="swipe_enable_desc">Mag-swipe sa mga key para mag-type ng buong salita.</string>
     <string name="swipe_password_title">Swipe sa Mga Password Field</string>
     <string name="swipe_password_desc">I-enable ang swipe typing kahit sa mga password field. Ipapakita ang mga prediction ngunit ang mga indibidwal na na-type na karakter ay mananatiling nakatago.</string>
-    <string name="privacy_swipe_pattern_title">Swipe Pattern Data</string>
+    <string name="privacy_swipe_pattern_title">Data ng Swipe Pattern</string>
     <string name="privacy_swipe_pattern_desc">Itago ang mga swipe trajectory nang lokal para sa on-device na pagkatuto</string>
     <string name="privacy_performance_metrics_title">Mga Sukatan ng Performance</string>
     <string name="privacy_performance_metrics_desc">Itago ang timing data nang lokal para sa optimization</string>
@@ -570,7 +570,7 @@
     <string name="theme_color_key_border">Border ng Key</string>
     <string name="theme_color_border_activated">Aktibong Border</string>
     <string name="theme_color_swipe_trail">Kulay ng Swipe Trail</string>
-    <string name="theme_color_ripple">Ripple Effect</string>
+    <string name="theme_color_ripple">Epekto ng Ripple</string>
     <string name="theme_color_suggestion_text">Teksto ng Suhestiyon</string>
     <string name="theme_color_suggestion_background">Background ng Suhestiyon</string>
     <string name="theme_color_high_confidence">Mataas na Confidence</string>
@@ -618,7 +618,7 @@
     <string name="swipe_engine_layout_incomplete_fallback">Sa %1$s, kailangan ng CTC ng mga pangunahing key para sa %2$s. Ang mga swipe sa layout na iyon ay gumagamit ng geometric engine.</string>
     <string name="clipboard_provenance_via">Private na copy · sa pamamagitan ng %1$s</string>
     <string name="clipboard_provenance_direct_launch">direktang paglulunsad (hindi selection menu)</string>
-    <string name="provenance_origin_geometric">Geometric swipe decoder</string>
+    <string name="provenance_origin_geometric">Geometric na swipe decoder</string>
     <string name="provenance_origin_ctc">CTC swipe (trie beam)</string>
     <string name="provenance_origin_dictionary_prefix">Tugma sa prefix ng diksyunaryo</string>
     <string name="provenance_origin_contraction">Pagdaragdag ng contraction</string>
@@ -817,7 +817,7 @@
     <string name="subkey_edit_remove">Alisin</string>
     <string name="subkey_toast_removed">Inalis ang %1$s subkey mula sa %2$s</string>
     <string name="subkey_toast_restored">Naibalik ang default na %1$s subkey sa %2$s</string>
-    <string name="gesture_selection_delete_header">Selection-Delete Mode</string>
+    <string name="gesture_selection_delete_header">Mode ng Pagpili at Pagbura</string>
     <string name="gesture_selection_delete_desc">Maikling swipe + hawak sa backspace para pumili ng teksto, pagkatapos ay bitawan para tanggalin.</string>
     <string name="gesture_tap_typing_header">Tap at Pag-type</string>
     <string name="gesture_swipe_recognition_header">Pagkilala ng Swipe</string>
@@ -987,7 +987,7 @@
     <string name="calibration_boundary_desc" formatted="false">Sa o mas mababa = maikling swipe (subkey); lampas = salitang na-swipe (% ng diagonal ng key)</string>
     <string name="calibration_customize_title">I-customize ang Mga Aksyon Bawat Key</string>
     <string name="calibration_customize_desc">Mga maikling swipe, custom na command bawat direksyon ng key</string>
-    <string name="calibration_practice_title">Practice Area</string>
+    <string name="calibration_practice_title">Lugar ng Pagsasanay</string>
     <string name="calibration_practice_desc">Pindutin at i-drag para subukan ang iyong mga setting</string>
     <string name="calibration_touch_here">👆 Pindutin dito</string>
     <string name="calibration_min_readout">Min: %1$d%%</string>
@@ -1008,7 +1008,7 @@
     <string name="custom_theme_title">Gumawa ng Custom na Tema</string>
     <string name="custom_theme_name_label">Pangalan ng Tema</string>
     <string name="custom_theme_name_placeholder">Aking Tema</string>
-    <string name="custom_theme_palette">Color Palette</string>
+    <string name="custom_theme_palette">Paleta ng Kulay</string>
     <string name="custom_theme_preview">Preview</string>
     <string name="custom_theme_create">Gumawa</string>
     <string name="theme_select_attribute">Pumili ng %1$s</string>
@@ -1412,7 +1412,7 @@
     <string name="dict_tab_active">Aktibo</string>
     <string name="dict_tab_active_lang">Aktibo [%1$s]</string>
     <string name="dict_tab_disabled">Disabled</string>
-    <string name="dict_tab_disabled_lang">Disabled [%1$s]</string>
+    <string name="dict_tab_disabled_lang">Naka-disable [%1$s]</string>
     <string name="dict_tab_custom">Custom</string>
     <string name="dict_tab_custom_lang">Custom [%1$s]</string>
     <string name="dict_tab_user">User Dict</string>
@@ -1455,10 +1455,10 @@
     <string name="short_swipe_dialog_hint_with_layout">Ipinapakita ang mga kasalukuyang layout mapping + custom na mapping</string>
     <string name="short_swipe_dialog_hint_no_layout">I-tap ang isang direksyon para magdagdag o mag-edit ng maikling swipe gesture</string>
     <string name="short_swipe_action_desc_command">Command: %1$s</string>
-    <string name="short_swipe_action_desc_text">Text: \"%1$s\"</string>
+    <string name="short_swipe_action_desc_text">Teksto: \"%1$s\"</string>
     <string name="short_swipe_action_desc_key_event">Key Event: %1$s</string>
     <string name="short_swipe_action_desc_intent">Intent: %1$s</string>
-    <string name="short_swipe_action_desc_intent_invalid">Intent (invalid)</string>
+    <string name="short_swipe_action_desc_intent_invalid">Intent (hindi wasto)</string>
     <string name="short_swipe_action_desc_timestamp">Timestamp: %1$s</string>
     <string name="short_swipe_direction_short_n">H</string>
     <string name="short_swipe_direction_short_ne">HS</string>
@@ -2122,7 +2122,7 @@
     <string name="cmd_explorer_desc">Buksan ang file manager</string>
     <string name="cmd_notification">Mga Notification</string>
     <string name="cmd_notification_desc">Buksan ang notification shade</string>
-    <string name="cmd_selection_mode">Selection Mode</string>
+    <string name="cmd_selection_mode">Mode ng Pagpili</string>
     <string name="cmd_selection_mode_desc">I-toggle ang selection mode ng text</string>
     <string name="cmd_combining_vertical_tilde">Patayong Tilde</string>
     <string name="cmd_combining_vertical_tilde_desc">Magdagdag ng patayong tilde (◌̾)</string>
