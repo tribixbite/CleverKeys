@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlin.math.ceil
 import kotlin.math.min
+import tribixbite.cleverkeys.ComposeKeyData
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.Keyboard2View
@@ -60,8 +61,8 @@ object ThemeEditorPreview {
  * accessibility exposes only this view's summary [getContentDescription] — nothing in the
  * preview can type or reach the IME.
  *
- * Requires no IME service: the global [Config] is initialised from the device-protected
- * preferences when the settings process started cold.
+ * Requires no IME service: the global [Config] (from the device-protected preferences)
+ * and the compose-key tables are initialised when the settings process started cold.
  */
 @SuppressLint("ViewConstructor")
 class ThemeKeyboardPreviewView(context: Context) : ViewGroup(context) {
@@ -82,7 +83,7 @@ class ThemeKeyboardPreviewView(context: Context) : ViewGroup(context) {
         private set
 
     init {
-        ensureGlobalConfig(context)
+        ensureRendererData(context)
         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
         keyboardView = Keyboard2View(context).apply {
             enterThemePreviewMode()
@@ -211,12 +212,22 @@ class ThemeKeyboardPreviewView(context: Context) : ViewGroup(context) {
         /** Matches the IME's suggestion-bar height (KeyboardComponentGraph.initialize). */
         private const val SUGGESTION_BAR_HEIGHT_DP = 40f
 
-        /** Settings can be the process's first component: initialise Config like the IME. */
-        private fun ensureGlobalConfig(context: Context) {
+        /**
+         * Settings can be the process's first component: initialise the process-global data
+         * the renderer reads, exactly as CleverKeysService.onCreate does — the global [Config]
+         * and the compose-key tables. The latter are read on every frame that draws a
+         * sub-label under the preview's latched Shift (KeyModifier.applyShift ->
+         * ComposeKey.apply). Without them the first hardware draw threw inside Compose's
+         * layer recording, leaving that RenderNode open, and Theme Creator crashed with
+         * "Recording currently in progress" whenever the IME had not yet run in this
+         * process (ew-cli 28f7c45e, 2026-10-08). Both initialisers are idempotent.
+         */
+        private fun ensureRendererData(context: Context) {
             if (Config.globalConfigOrNull() == null) {
                 val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
                 Config.initGlobalConfig(prefs, context.resources, null, null)
             }
+            ComposeKeyData.initialize(context)
         }
 
         /**

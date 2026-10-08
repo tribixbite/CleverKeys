@@ -3,10 +3,13 @@ package tribixbite.cleverkeys.theme
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.RenderNode
+import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -16,7 +19,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import tribixbite.cleverkeys.ComposeKeyData
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.Pointers
@@ -60,7 +62,10 @@ class ThemeKeyboardPreviewViewTest {
             .putBoolean("haptic_enabled", false)
             .commit()
         Config.initGlobalConfig(prefs, context.resources, handler, null)
-        ComposeKeyData.initialize(context)
+        // ComposeKeyData is deliberately NOT initialised here: Theme Creator can be the
+        // process's first component, and the preview must load the compose-key tables itself
+        // (its latched-Shift sub-labels read them on every frame). Initialising them in setup
+        // hid the cold-process crash that ew-cli caught on 28f7c45e.
     }
 
     private fun scheme(key: Long, background: Long): KeyboardColorScheme =
@@ -108,6 +113,39 @@ class ThemeKeyboardPreviewViewTest {
             centre = p.x.toInt() to p.y.toInt()
         }
         return centre
+    }
+
+    /**
+     * The preview draws on a HARDWARE recording canvas — the canvas Compose's layer gives the
+     * AndroidView in Theme Creator — in a process where the IME never ran. On 28f7c45e the
+     * first such draw threw (compose-key tables not loaded) inside Compose's RenderNode
+     * recording; the open recording then crashed the next frame with "Recording currently in
+     * progress - missing #endRecording() call?".
+     */
+    @Test
+    @SdkSuppress(minSdkVersion = Build.VERSION_CODES.Q) // RenderNode is API 29+
+    fun drawsOnAHardwareCanvasInAColdProcess() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val preview = ThemeKeyboardPreviewView(context)
+            preview.bind(scheme(0xFF204060, 0xFF102030), "color,colors,colorful")
+            val width = context.resources.displayMetrics.widthPixels
+            preview.measure(
+                View.MeasureSpec.makeMeasureSpec(width * 4 / 5, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.AT_MOST),
+            )
+            preview.layout(0, 0, preview.measuredWidth, preview.measuredHeight)
+            assertTrue("preview must lay out", preview.width > 0 && preview.height > 0)
+            val node = RenderNode("theme-preview-test")
+            node.setPosition(0, 0, preview.width, preview.height)
+            val canvas = node.beginRecording()
+            try {
+                assertTrue(canvas.isHardwareAccelerated)
+                preview.draw(canvas)
+            } finally {
+                node.endRecording()
+            }
+            assertTrue("the recording must hold the drawn preview", node.hasDisplayList())
+        }
     }
 
     @Test

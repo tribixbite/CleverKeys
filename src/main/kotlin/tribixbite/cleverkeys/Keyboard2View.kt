@@ -258,8 +258,11 @@ class Keyboard2View @JvmOverloads constructor(
         requestApplyInsets()
 
         // FIX: If insets are 0, get nav bar height from system resources as fallback
-        // This ensures keyboard is positioned correctly even before WindowInsets callback
-        if (_insets_bottom == 0) {
+        // This ensures keyboard is positioned correctly even before WindowInsets callback.
+        // Preview mode (§4.1): the theme editor's preview is hosted in a settings window, so
+        // the nav bar must not add a bottom margin once it attaches (enterThemePreviewMode
+        // zeroed the insets; this fallback used to re-add them on attach).
+        if (!_previewMode && _insets_bottom == 0) {
             val navBarHeight = getNavigationBarHeight()
             if (navBarHeight > 0) {
                 _insets_bottom = navBarHeight
