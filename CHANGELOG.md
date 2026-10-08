@@ -291,14 +291,26 @@ editor that used to be listed here already ship in 2.0.)
   suggestions no longer show or replace a word built from earlier lines (`ls` Enter `cd` was
   read as `lscd`); swipe final autocorrect no longer rewrites words in terminals.
 - Swipe typing starts only on letter keys: a swipe that begins on Backspace, Shift, Enter,
-  Space, a modifier, a digit or punctuation and then crosses letters no longer types a word
-  (a swipe-left from Backspace over `m n b` had typed "mb").
+  Tab or a modifier and then crosses letters no longer types a word (a swipe-left from
+  Backspace over `m n b` had typed "mb"). A sloppy start on space, a digit or punctuation
+  still becomes a word once the finger leaves that key across two letters.
 - Clipboard history catches up when the keyboard is shown: a copy made while the clipboard
   listener could not see it (e.g. the keyboard process was restarting) is recorded then,
   with all capture filters applied.
 - Sublabel icons and emoji (layout subkeys, short-swipe mappings, the subkey popover and the
   customization previews) are drawn at the size of the text sublabels and kept clear of the
   key's main letter; Private Copy shows a copy-with-padlock icon instead of a large "🔒⎘".
+- Custom short swipes and popover slots that insert one character (or a character-key
+  command such as `nbsp`) are typed like that key: autocapitalisation, smart punctuation,
+  automatic space and word tracking now apply. Longer custom text stays a literal macro.
+- Subkey popover: it no longer opens under TalkBack (the hold keeps key repeat); a second
+  finger dismisses it without typing; blank slots are not selected.
+- Hiding the keyboard while minimized brings back the full keyboard; the bar or button could
+  stay up and ignore taps.
+- Rotating while assigning a key action keeps what was typed and the step that was open.
+- A long hold on the last letter before lifting no longer distorts the swipe for the default
+  engine (the final pause is capped at 500 ms).
+- Swipe ML data also records the unsmoothed trace the default engine decodes.
 
 ---
 
