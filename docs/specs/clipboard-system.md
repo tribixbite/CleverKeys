@@ -620,3 +620,53 @@ filters. Its confirmed-delete case creates 205 matching rows across multiple pag
 cancels once, then verifies immutable confirmation against a new row and an edited
 row while preserving independent pinned/todo copies. Fixtures use unique prefixes
 and remove only their own data. Full cloud evidence: [testing strategy](testing-strategy.md).
+
+## Capture limits and the keyboard-shown catch-up (2026-10-08)
+
+Saga report (2026-10-07): one of four clippings copied with Chrome's selection-toolbar
+**Copy** never reached History; the keyboard's own Ctrl+C always did.
+
+**What the platform allows (verified against AOSP 13/14 `ClipboardService`).** Reads and
+`OnPrimaryClipChangedListener` callbacks are allowed for the app that has window focus and,
+regardless of focus or visibility, for the **default input method** ("The default IME is
+always allowed to access the clipboard"). A hidden CleverKeys keyboard is therefore NOT a
+capture gap by itself: while CleverKeys is the selected keyboard and its process is alive with
+the listener registered, a copy made in any app is delivered. `getPrimaryClip` returns nothing
+while the device is locked.
+
+**What cannot be captured.**
+
+- Copies made while another keyboard is selected (the listener is unregistered with the IME
+  service), or while the CleverKeys process is dead/restarting (e.g. reaped by the low-memory
+  killer — observed on the Saga). Only the clip that is current when CleverKeys next sees the
+  clipboard can be recovered; earlier copies in that window are gone.
+- Clips set while the device is locked, until the next read after unlock.
+- Content the system never hands to the IME: text beyond the Binder transaction limit, and
+  content-URI items whose temporary read grant lapsed before they were read.
+- Clips deliberately skipped: `IS_SENSITIVE` (API 33+), password-manager foreground package
+  (needs Usage Access; fails open without it), over the per-item size limit, or history off.
+
+**Catch-up.** `onStartInputView` calls `ClipboardHistoryService.on_keyboard_shown()`:
+
+1. If the listener is not registered (registration bailed at `onCreate` because the
+   default-IME check failed — nothing retried it before), register it now; registration
+   reads the current clip once.
+2. Otherwise, with history enabled, read the current clip once and pass it to the normal
+   capture path only if it is a set event the service has not observed
+   (`ClipboardCatchUp.shouldRecord`). Identity is `ClipDescription.getTimestamp()` (API 26+;
+   content hash on API 24–25). Every read — listener, registration, catch-up — marks the clip
+   observed **before** any filter, so a skipped clip stays skipped and an entry the user deleted
+   while it is still on the system clipboard is not re-added. The password-manager skip marks
+   the clip from its description only, so the secret is never read into the IME process.
+
+Residual risks: on API 24–25 a password-manager copy that the listener skipped cannot be
+marked (no timestamp without reading content), so a later catch-up in an ordinary app could
+record it unless it carries `IS_SENSITIVE` (API 33+ only) — the same exposure the listener
+already has when the copy's app is not detected as the foreground app. The single Saga miss
+was not reproduced and its exact cause is unconfirmed (logcat had rotated; `exit-info` shows
+LOW_MEMORY kills of the CleverKeys process that evening).
+
+Tests: `ClipboardCatchUpTest` (missed copy recorded on show; observed clip not re-recorded;
+same text copied again recorded; history off reads nothing; IS_SENSITIVE and
+password-manager clips stay skipped; unregistered listener re-registered on show; pure
+decision). Device check: see `memory/todo.md` (October 7 afternoon).

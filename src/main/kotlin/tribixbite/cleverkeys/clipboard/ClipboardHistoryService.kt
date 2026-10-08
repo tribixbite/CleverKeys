@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
+import tribixbite.cleverkeys.clipboard.ClipboardCatchUp
 import tribixbite.cleverkeys.clipboard.ClipboardCleanResult
 import tribixbite.cleverkeys.clipboard.ClipboardCopyResult
 import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
@@ -35,6 +36,15 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     private var _listener: OnClipboardHistoryChange? = null
     private var _isListenerRegistered = false
     private var _systemListener: ClipboardManager.OnPrimaryClipChangedListener? = null
+
+    /**
+     * The last primary-clip set event this service OBSERVED (listener, registration read or
+     * keyboard-shown catch-up), recorded before any capture filter runs. The catch-up in
+     * [onKeyboardShown] records only clips that differ from it, so a skipped clip stays skipped
+     * and a history entry the user deleted is not re-added while it is still on the clipboard.
+     * Main thread only (listener callbacks and IME lifecycle both run there).
+     */
+    private var _lastSeenClip: ClipboardCatchUp.ClipFingerprint? = null
 
     // Coroutine scope for IO-dispatched clipboard reads (survives entire service lifetime)
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -146,6 +156,31 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             _isListenerRegistered = false
             android.util.Log.e("ClipboardHistory", "Failed to register clipboard listener", e)
         }
+    }
+
+    /**
+     * Keyboard-shown catch-up (Saga report, 2026-10-07). Called from `onStartInputView`.
+     *
+     * The platform delivers [SystemListener] callbacks to the default IME while its keyboard is
+     * hidden, but nothing is delivered while no listener is registered — the IME process was
+     * reaped or is restarting, another keyboard was selected, or [registerClipboardListener]
+     * bailed at `onCreate` because the default-IME check failed (nothing used to retry it). A
+     * copy made in such a gap (e.g. Chrome's selection-toolbar Copy) was lost for good.
+     *
+     * Here: an unregistered listener is registered again (registration itself reads the current
+     * clip); otherwise the current clip is read once and handed to the normal capture path only
+     * when it is a set event this service has not observed ([ClipboardCatchUp.shouldRecord]).
+     * Every capture filter — password-manager exclusion, IS_SENSITIVE, size limit, dedupe,
+     * sanitizer, the history switch — applies unchanged.
+     */
+    fun onKeyboardShown() {
+        if (!_isListenerRegistered) {
+            registerClipboardListener()
+            return
+        }
+        val historyEnabled = Config.globalConfigOrNull()?.clipboard_history_enabled ?: false
+        if (!historyEnabled) return
+        captureClip(catchUp = true)
     }
 
     /**
@@ -766,7 +801,14 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      * - text MIME: stream text via ContentResolver.openInputStream (bypasses Binder limit)
      * - media MIME: save file via ClipboardMediaManager, store thumbnail in DB
      */
-    private fun addCurrentClip() {
+    private fun addCurrentClip() = captureClip(catchUp = false)
+
+    /**
+     * Shared body of [addCurrentClip] (listener / registration) and the [onKeyboardShown]
+     * catch-up. Every read marks the clip OBSERVED in [_lastSeenClip] before any filter runs;
+     * with [catchUp] an already-observed clip is left alone.
+     */
+    private fun captureClip(catchUp: Boolean) {
         try {
             // Check if password manager exclusion is enabled
             if (Config.globalConfig().clipboard_exclude_password_managers) {
@@ -775,11 +817,22 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                         android.util.Log.d("ClipboardHistory", "Skipping clipboard from password manager: $foregroundApp")
                     }
+                    // Mark the set event observed from its DESCRIPTION only (API 26+ timestamp),
+                    // so the secret never crosses into this process yet a later catch-up in an
+                    // ordinary app does not record it. Without a timestamp nothing is marked.
+                    clipSetTime(runCatching { _cm.primaryClipDescription }.getOrNull())
+                        .takeIf { it > 0 }
+                        ?.let { _lastSeenClip = ClipboardCatchUp.fingerprint(it, emptyList()) }
                     return // Don't store clipboard from password managers
                 }
             }
 
             val clip = _cm.primaryClip ?: return
+            val seen = ClipboardCatchUp.fingerprint(clipSetTime(clip.description), clipItemKeys(clip))
+            if (catchUp && !ClipboardCatchUp.shouldRecord(historyEnabled = true, current = seen, lastSeen = _lastSeenClip)) {
+                return
+            }
+            _lastSeenClip = seen
 
             // #86: Android 13+ (API 33): Respect IS_SENSITIVE flag set by password managers
             // This is a more robust detection than package blocklisting
@@ -953,6 +1006,17 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
     }
 
+    /** `ClipDescription.getTimestamp()` (API 26+); 0 when unavailable. */
+    private fun clipSetTime(description: android.content.ClipDescription?): Long =
+        if (description != null && VERSION.SDK_INT >= Build.VERSION_CODES.O) description.timestamp else 0L
+
+    /** Per-item identity for the no-timestamp fingerprint: text, else URI string, else null. */
+    private fun clipItemKeys(clip: ClipData): List<String?> =
+        (0 until clip.itemCount).map { i ->
+            val item = clip.getItemAt(i)
+            item.text?.toString() ?: item.uri?.toString()
+        }
+
     inner class SystemListener : ClipboardManager.OnPrimaryClipChangedListener {
         override fun onPrimaryClipChanged() {
             addCurrentClip()
@@ -1067,6 +1131,15 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                 // Register listener immediately on service startup for system-wide monitoring
                 service.registerClipboardListener()
             }
+        }
+
+        /**
+         * Keyboard-shown clipboard catch-up; call from `onStartInputView`. A no-op until the
+         * service exists (it is never constructed here — on a locked device it is deferred).
+         */
+        @JvmStatic
+        fun on_keyboard_shown() {
+            _service?.onKeyboardShown()
         }
 
         /** Cleanup and unregister listener. Call from InputMethodService.onDestroy(). */

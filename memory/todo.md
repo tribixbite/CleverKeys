@@ -54,10 +54,19 @@ and Seeker (Termux) unless noted.
 - [x] Theme change shows the new keyboard (Monet follows dark mode) PASS; Termux tapped
   suggestion replaces PASS; FAB left in RTL (system ar-XB and app fa) PASS.
 - [x] CI: Security Scan fixed (site devalue/source-map-js overrides); lint fixed (6fd4fef4).
-- [ ] Clipboard: a clipping copied via Chrome's toolbar Copy once did not reach history on the
-  Saga (keyboard Ctrl+C always did) — investigate the clip-change listener path.
-- [ ] A swipe starting on the backspace key (left) is read as swipe-typing ("mb"); swipe-up
-  deletes the word. Decide whether swipes starting on non-letter keys should swipe-type.
+- [x] Clipboard: a clipping copied via Chrome's toolbar Copy once did not reach history on the
+  Saga (keyboard Ctrl+C always did). Fixed 2026-10-08: the platform does deliver clip changes
+  to the default IME while its keyboard is hidden (AOSP 13/14 ClipboardService), so the loss
+  needs a window with NO registered listener (process reaped/restarting, registration that
+  bailed at onCreate and was never retried); the only other read was at registration. Now
+  onStartInputView re-registers or catches up once, recording only an unobserved clip
+  (ClipboardCatchUpTest). The single Saga miss is not reproduced; root cause of that instance
+  unconfirmed (logcat rotated). Saga re-test pending.
+- [x] A swipe starting on the backspace key (left) was read as swipe-typing ("mb"). Fixed
+  2026-10-08: the move-time latch (Pointers) never checked the start key, and Backspace collects
+  its path as a short-gesture key; word swipes now start only on letter keys
+  (KeyLetter.startsWordSwipe), continuous phrases too (PointersSwipeStartKeyTest). Device
+  re-test pending.
 - [x] Termux: suggestion bar keeps stale words after the line is cleared (no readable buffer).
   Fixed 2026-10-07: non-text keys (Enter/Tab/Esc/arrows/Ctrl chords/IME action/sliders/editing
   commands) end the tracked word in terminals; stale predictions are dropped; swipe final

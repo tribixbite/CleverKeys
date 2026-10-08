@@ -113,6 +113,9 @@ class ClipboardCaptureExclusionTest {
     /** A plain-text clip, optionally carrying the platform IS_SENSITIVE extra. */
     private fun primaryClip(text: String, sensitive: Boolean? = null) {
         val description = mockk<ClipDescription>()
+        // The capture path reads the set time to mark the clip observed (keyboard-shown
+        // catch-up, 2026-10-08); 0 = no timestamp, so the identity falls back to content.
+        every { description.timestamp } returns 0L
         every { description.extras } returns when (sensitive) {
             null -> null
             else -> mockk<PersistableBundle>().also {
@@ -304,6 +307,7 @@ class ClipboardCaptureExclusionTest {
         val extras = mockk<PersistableBundle>()
         every { extras.getBoolean(isSensitiveKey, false) } returns true
         every { description.extras } returns extras
+        every { description.timestamp } returns 0L
         val item = mockk<ClipData.Item>()
         every { item.text } returns "secret"
         every { item.uri } returns null

@@ -289,6 +289,9 @@ editor that used to be listed here already ship in 2.0.)
 - Swipe typing starts only on letter keys: a swipe that begins on Backspace, Shift, Enter,
   Space, a modifier, a digit or punctuation and then crosses letters no longer types a word
   (a swipe-left from Backspace over `m n b` had typed "mb").
+- Clipboard history catches up when the keyboard is shown: a copy made while the clipboard
+  listener could not see it (e.g. the keyboard process was restarting) is recorded then,
+  with all capture filters applied.
 
 ---
 

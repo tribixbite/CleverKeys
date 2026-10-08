@@ -678,6 +678,9 @@ class CleverKeysService : InputMethodService(),
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {
         _keyboardView.cancelContinuousSwipe()
         _suggestionHandler.onEditorSessionChanged()
+        // Record a copy the clipboard listener could not see (Saga 2026-10-07): one bounded
+        // read of the current clip, recorded only if this service has not observed it.
+        ClipboardHistoryService.on_keyboard_shown()
         // NOTE: Config refresh is handled by SharedPreferences listener (onSharedPreferenceChanged)
         // We only do initial config load here if config is completely null (shouldn't happen normally)
         if (_config == null) {

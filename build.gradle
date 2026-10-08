@@ -1200,6 +1200,7 @@ tasks.register('runMockTests', JavaExec) {
     // write-back and ages by halving instead of a 30-day wholesale wipe.
     'tribixbite.cleverkeys.UserAdaptationManagerPersistenceTest',
     'tribixbite.cleverkeys.clipboard.ClipboardLockedStartupTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardCatchUpTest',
     'tribixbite.cleverkeys.clipboard.ClipboardCaptureExclusionTest',
     'tribixbite.cleverkeys.SuggestionTapAddAndIWordTest',
     // Learning-system audit 2026-09-26 (W1/W2/W5/W7/W8): learn-funnel bookkeeping — only
