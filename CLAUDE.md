@@ -119,6 +119,12 @@ before its parent in the same frame (e.g. an edit mode that opens the label step
 ends up hidden UNDER the parent and taps look like no-ops. Compose sub-dialogs after the
 parent `Dialog` (CommandPaletteDialog, Saga 2026-10-07).
 
+## Compose "Recording currently in progress" crashes
+
+A throw inside an AndroidView's draw leaves Compose's RenderNodeLayer recording open;
+the NEXT frame dies with this message and no app frames, and Espresso swallows the real
+throw. Draw the view into `RenderNode.beginRecording()` in a test to surface it (2026-10-08).
+
 ## PAL model preference
 
 Use Gemini 3.8 (`gemini-3.8-flash`) for PAL consultation; never use Gemini 3.1.
