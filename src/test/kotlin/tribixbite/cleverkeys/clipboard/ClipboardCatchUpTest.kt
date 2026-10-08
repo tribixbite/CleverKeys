@@ -26,6 +26,7 @@ import org.junit.Before
 import org.junit.Test
 import tribixbite.cleverkeys.ClipboardHistoryService
 import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.MockSharedPreferences
 import java.lang.reflect.Field
 
 /**
@@ -57,6 +58,8 @@ class ClipboardCatchUpTest {
     private lateinit var context: Context
     private lateinit var config: Config
     private lateinit var service: ClipboardHistoryService
+    /** The persisted last-seen store, shared by every service instance a test builds. */
+    private lateinit var prefs: MockSharedPreferences
 
     @Before
     fun setUp() {
@@ -72,18 +75,38 @@ class ClipboardCatchUpTest {
         cm = mockk(relaxed = true)
         context = mockk(relaxed = true)
         every { context.packageName } returns "tribixbite.cleverkeys"
+        prefs = MockSharedPreferences()
+        every { context.getSharedPreferences(ClipboardHistoryService.LAST_SEEN_PREFS, any()) } returns prefs
         config = mockk(relaxed = true)
         config.clipboard_history_enabled = true
         config.clipboard_exclude_password_managers = false
         config.clipboard_respect_sensitive_flag = true
         setGlobalConfig(config)
 
+        service = newService(registered = true)
+    }
+
+    /** A fresh service instance (a process restart: nothing in memory, same prefs file). */
+    private fun newService(registered: Boolean): ClipboardHistoryService {
         val raw = allocate(ClipboardHistoryService::class.java)
         setField(raw, "_cm", cm)
         setField(raw, "_context", context)
-        setBooleanField(raw, "_isListenerRegistered", true)
-        service = spyk(raw)
-        every { service.addClip(any()) } just Runs
+        setBooleanField(raw, "_isListenerRegistered", registered)
+        val spy = spyk(raw)
+        every { spy.addClip(any()) } just Runs
+        return spy
+    }
+
+    /** Put [clip] on the mocked system clipboard (content AND description, like the platform). */
+    private fun setClip(clip: ClipData?) {
+        every { cm.primaryClip } returns clip
+        every { cm.primaryClipDescription } returns clip?.description
+    }
+
+    private fun asDefaultIme() {
+        mockkStatic(Settings.Secure::class)
+        every { Settings.Secure.getString(any(), Settings.Secure.DEFAULT_INPUT_METHOD) } returns
+            "tribixbite.cleverkeys/.CleverKeysService"
     }
 
     @After
@@ -202,6 +225,132 @@ class ClipboardCatchUpTest {
         service.onKeyboardShown()
         verify(exactly = 1) { cm.addPrimaryClipChangedListener(any()) }
         verify(exactly = 1) { service.addClip("copied while unregistered") }
+    }
+
+    // ------------------------------------------------------------------ 2026-10-08 audit
+
+    /**
+     * Perf (audit item 2): an unchanged clipboard costs the catch-up one DESCRIPTION read; the
+     * clip's content is not fetched over Binder again on every keyboard show (API 26+).
+     */
+    @Test
+    fun unchangedClip_catchUpNeverRefetchesTheContent() {
+        setClip(clip("big clip", 1_000))
+        listenerFires()
+        repeat(3) { service.onKeyboardShown() }
+        verify(exactly = 1) { cm.primaryClip }
+        verify(exactly = 1) { service.addClip("big clip") }
+    }
+
+    @Test
+    fun changedSetTime_catchUpFetchesAndRecords() {
+        setClip(clip("one", 1_000))
+        listenerFires()
+        setClip(clip("two", 2_000))
+        service.onKeyboardShown()
+        verify(exactly = 2) { cm.primaryClip }
+        verify(exactly = 1) { service.addClip("two") }
+    }
+
+    /**
+     * API 24-25 have no set timestamp: a registered listener already sees every set event
+     * (pre-29 delivery is unrestricted), so the catch-up reads nothing at all.
+     */
+    @Test
+    fun api25_registeredListener_catchUpReadsNothing() {
+        setSdkInt(25)
+        setClip(clip("legacy", 0))
+        service.onKeyboardShown()
+        verify(exactly = 0) { cm.primaryClip }
+        verify(exactly = 0) { service.addClip(any()) }
+    }
+
+    /**
+     * API 24-25 password-manager branch (no timestamp): the secret is neither read nor marked
+     * observed, and a later keyboard show in an ordinary app must not record it either.
+     */
+    @Test
+    fun api25_passwordManagerCopy_isNotReadAndNotRecordedByALaterCatchUp() {
+        setSdkInt(25)
+        config.clipboard_exclude_password_managers = true
+        val usage = mockk<UsageStatsManager>()
+        every { context.getSystemService(Context.USAGE_STATS_SERVICE) } returns usage
+        fun foreground(pkg: String) {
+            val row = mockk<UsageStats>()
+            every { row.packageName } returns pkg
+            every { row.lastTimeUsed } returns System.currentTimeMillis()
+            every { usage.queryUsageStats(any(), any(), any()) } returns listOf(row)
+        }
+        setClip(clip("correct-horse", 0))
+        foreground("com.x8bit.bitwarden")
+        listenerFires()
+        foreground("com.android.chrome")
+        service.onKeyboardShown()
+        verify(exactly = 0) { cm.primaryClip }
+        verify(exactly = 0) { service.addClip(any()) }
+        assertEquals(null, prefs.getString("last_seen_clip", null))
+    }
+
+    /**
+     * Resurrection (audit item 3): a clip observed (and then deleted from history) must not be
+     * re-recorded by the listener-registration read of a restarted service / IME switch-back,
+     * while a clip copied during the gap still is.
+     */
+    @Test
+    fun restart_registrationDoesNotReRecordAnObservedClip() {
+        asDefaultIme()
+        setClip(clip("deleted later", 1_000))
+        listenerFires()
+        verify(exactly = 1) { service.addClip("deleted later") }
+
+        val restarted = newService(registered = false)
+        restarted.onKeyboardShown()
+        verify(exactly = 1) { cm.addPrimaryClipChangedListener(any()) }
+        verify(exactly = 0) { restarted.addClip(any()) }
+
+        setClip(clip("copied while away", 2_000))
+        val again = newService(registered = false)
+        again.registerClipboardListener()
+        verify(exactly = 1) { again.addClip("copied while away") }
+    }
+
+    @Test
+    fun restartOnApi25_contentHashKeepsADeletedClipDeleted() {
+        setSdkInt(25)
+        setClip(clip("legacy deleted", 0))
+        listenerFires()
+        val restarted = newService(registered = false)
+        restarted.registerClipboardListener()
+        verify(exactly = 0) { restarted.addClip(any()) }
+        setClip(clip("legacy new", 0))
+        val again = newService(registered = false)
+        again.registerClipboardListener()
+        verify(exactly = 1) { again.addClip("legacy new") }
+    }
+
+    @Test
+    fun persistedIdentityIsNeverTheClipContent() {
+        setClip(clip("s3cret text", 1_000))
+        listenerFires()
+        assertEquals("t:1000", prefs.getString("last_seen_clip", null))
+        setSdkInt(25)
+        setClip(clip("s3cret text", 0))
+        listenerFires()
+        val stored = prefs.getString("last_seen_clip", null)!!
+        assertTrue(stored.startsWith("h:"))
+        assertFalse(stored.contains("s3cret"))
+    }
+
+    @Test
+    fun encodeDecodeRoundTripAndRejectMalformed() {
+        val withTime = ClipboardCatchUp.fingerprint(1_234, listOf("x"))
+        val hashed = ClipboardCatchUp.fingerprint(0, listOf("x", null))
+        assertEquals(withTime, ClipboardCatchUp.decode(ClipboardCatchUp.encode(withTime)))
+        assertEquals(hashed, ClipboardCatchUp.decode(ClipboardCatchUp.encode(hashed)))
+        assertEquals(null, ClipboardCatchUp.encode(null))
+        for (bad in listOf(null, "", "t:", "t:abc", "t:-5", "t:0", "h:", "h:9999999999", "x:1", "t1000")) {
+            assertEquals(bad, null, ClipboardCatchUp.decode(bad))
+        }
     }
 
     // ------------------------------------------------------------------ pure helper

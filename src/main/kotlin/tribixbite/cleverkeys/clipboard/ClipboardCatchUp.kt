@@ -20,7 +20,15 @@ package tribixbite.cleverkeys.clipboard
  * yet. "Observed" is tracked by [ClipFingerprint], updated on EVERY read (listener,
  * registration and catch-up) before any filter runs — so a clip that was deliberately skipped
  * (sensitive flag, password manager, too large) and an entry the user deleted from history
- * while it is still on the system clipboard are never resurrected by a later keyboard show.
+ * while it is still on the system clipboard are not resurrected by a later keyboard show.
+ *
+ * The identity is persisted ([encode]/[decode], 2026-10-08), and the listener-registration
+ * read uses the same "only if not observed" rule, so a deleted entry also stays deleted across
+ * an IME switch-back or a process restart. Limits, by design: on API 24-25 (no set timestamp)
+ * copying the same text again while the service was not listening cannot be told apart from
+ * the old copy; a clip copied inside a password manager on API 24-25 cannot be marked observed
+ * without reading it, so it is excluded only while the password manager is in front; turning
+ * clipboard history back on deliberately records the current clip.
  */
 object ClipboardCatchUp {
 
@@ -55,4 +63,26 @@ object ClipboardCatchUp {
      */
     fun shouldRecord(historyEnabled: Boolean, current: ClipFingerprint?, lastSeen: ClipFingerprint?): Boolean =
         historyEnabled && current != null && current != lastSeen
+
+    /**
+     * Persistable form of [fingerprint]: `t:<setAtMillis>` or `h:<contentHash>`. Never the
+     * clip's content — a set timestamp, or on API 24-25 a 32-bit hash of the item strings.
+     * Null encodes to null (nothing observed).
+     */
+    fun encode(fingerprint: ClipFingerprint?): String? = when {
+        fingerprint == null -> null
+        fingerprint.setAtMillis > 0 -> "t:${fingerprint.setAtMillis}"
+        else -> "h:${fingerprint.contentHash}"
+    }
+
+    /** Inverse of [encode]; null for absent or malformed input (treated as "nothing observed"). */
+    fun decode(stored: String?): ClipFingerprint? {
+        if (stored == null || stored.length < 3 || stored[1] != ':') return null
+        val value = stored.substring(2)
+        return when (stored[0]) {
+            't' -> value.toLongOrNull()?.takeIf { it > 0 }?.let { ClipFingerprint(it, 0) }
+            'h' -> value.toIntOrNull()?.let { ClipFingerprint(0, it) }
+            else -> null
+        }
+    }
 }

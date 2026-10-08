@@ -1413,4 +1413,24 @@ class CoreImeHygieneDriftTest {
                 "in-flight dedup stay identical to the swipe path"
         ).that(scan).contains(".forEach(::servesImportedPack)")
     }
+
+    /**
+     * Saga 2026-10-07 / audit 2026-10-08: the clipboard catch-up runs only because
+     * onStartInputView calls `ClipboardHistoryService.on_keyboard_shown()`. A copy made while no
+     * listener was registered (process reaped, another keyboard selected) is otherwise lost,
+     * and nothing else would notice the call disappearing.
+     */
+    @Test
+    fun keyboardShownRunsTheClipboardCatchUp() {
+        val service = source("tribixbite/cleverkeys/CleverKeysService.kt")
+        val startInputView = service
+            .substringAfter("override fun onStartInputView(info: EditorInfo, restarting: Boolean) {")
+            .substringBefore("\n    override fun ")
+        assertWithMessage("onStartInputView must run the clipboard catch-up")
+            .that(startInputView).contains("ClipboardHistoryService.on_keyboard_shown()")
+        val history = source("tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt")
+        assertWithMessage("on_keyboard_shown must reach the instance catch-up")
+            .that(history.substringAfter("fun on_keyboard_shown()").substringBefore("\n        }"))
+            .contains("_service?.onKeyboardShown()")
+    }
 }

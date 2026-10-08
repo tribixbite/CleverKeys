@@ -39,12 +39,51 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     /**
      * The last primary-clip set event this service OBSERVED (listener, registration read or
-     * keyboard-shown catch-up), recorded before any capture filter runs. The catch-up in
-     * [onKeyboardShown] records only clips that differ from it, so a skipped clip stays skipped
-     * and a history entry the user deleted is not re-added while it is still on the clipboard.
-     * Main thread only (listener callbacks and IME lifecycle both run there).
+     * keyboard-shown catch-up), recorded before any capture filter runs. The registration read
+     * and the catch-up in [onKeyboardShown] record only clips that differ from it, so a skipped
+     * clip stays skipped and a history entry the user deleted is not re-added while it is still
+     * on the clipboard. Main thread only (listener callbacks and IME lifecycle both run there).
+     *
+     * Persisted ([ClipboardCatchUp.encode], one string in [LAST_SEEN_PREFS]) so the identity
+     * survives an IME switch-away, a process restart and a reboot-free service rebuild: before
+     * 2026-10-08 it lived only in memory, the registration read on every `on_startup` saw `null`
+     * and re-recorded whatever was on the clipboard — including a clip the user had deleted.
+     * Never the clip's content: a set timestamp (API 26+) or a 32-bit content hash (API 24-25).
+     * Accessed only through [lastSeenClip].
      */
     private var _lastSeenClip: ClipboardCatchUp.ClipFingerprint? = null
+
+    /** Whether [_lastSeenClip] has been read from [LAST_SEEN_PREFS] in this process. */
+    private var _lastSeenLoaded = false
+
+    /** [_lastSeenClip], loaded from its pref on first use and written through on every change. */
+    private var lastSeenClip: ClipboardCatchUp.ClipFingerprint?
+        get() {
+            if (!_lastSeenLoaded) {
+                lastSeenPrefs()?.let { prefs ->
+                    _lastSeenClip = ClipboardCatchUp.decode(prefs.getString(LAST_SEEN_KEY, null))
+                    _lastSeenLoaded = true
+                }
+            }
+            return _lastSeenClip
+        }
+        set(value) {
+            _lastSeenLoaded = true
+            if (value == _lastSeenClip) return
+            _lastSeenClip = value
+            lastSeenPrefs()?.edit()?.putString(LAST_SEEN_KEY, ClipboardCatchUp.encode(value))?.apply()
+        }
+
+    /**
+     * Credential-protected prefs for [lastSeenClip]; null while the device is locked (direct
+     * boot), when the clipboard is unreadable anyway — the next read retries. A separate file,
+     * so it is outside Auto Backup's allowlist and the settings export.
+     */
+    private fun lastSeenPrefs(): android.content.SharedPreferences? = try {
+        _context.getSharedPreferences(LAST_SEEN_PREFS, Context.MODE_PRIVATE)
+    } catch (e: IllegalStateException) {
+        null
+    }
 
     // Coroutine scope for IO-dispatched clipboard reads (survives entire service lifetime)
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -147,8 +186,10 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             _isListenerRegistered = true
             android.util.Log.i("ClipboardHistory", "Clipboard listener registered for system-wide monitoring")
 
-            // Add current clip in case it changed while listener was not active
-            addCurrentClip()
+            // Record the current clip in case it changed while no listener was registered —
+            // unless this service already observed it (persisted [lastSeenClip]), so a clip the
+            // user deleted from history is not re-added by an IME switch-back or a restart.
+            captureClip(catchUp = true)
         } catch (e: SecurityException) {
             _isListenerRegistered = false
             android.util.Log.e("ClipboardHistory", "Clipboard access denied: " + e.message)
@@ -180,6 +221,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
         val historyEnabled = Config.globalConfigOrNull()?.clipboard_history_enabled ?: false
         if (!historyEnabled) return
+        // API 24-25: ClipDescription has no set timestamp, so a catch-up could only tell clips
+        // apart by reading the whole clip over Binder on every keyboard show. It is also
+        // unnecessary there: before API 29 the platform delivers onPrimaryClipChanged to every
+        // registered listener regardless of focus or default-IME status, so a registered
+        // listener has already observed every set event. Gaps happen only while no listener is
+        // registered, and registration (above) performs the one read that covers them.
+        if (VERSION.SDK_INT < Build.VERSION_CODES.O) return
         captureClip(catchUp = true)
     }
 
@@ -805,8 +853,10 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     /**
      * Shared body of [addCurrentClip] (listener / registration) and the [onKeyboardShown]
-     * catch-up. Every read marks the clip OBSERVED in [_lastSeenClip] before any filter runs;
-     * with [catchUp] an already-observed clip is left alone.
+     * catch-up. Every read marks the clip OBSERVED in [lastSeenClip] before any filter runs;
+     * with [catchUp] (registration read and keyboard-shown catch-up) an already-observed clip is
+     * left alone, checked from the description's set time first so that, on API 26+, an
+     * unchanged clipboard costs one small description read and never a content fetch.
      */
     private fun captureClip(catchUp: Boolean) {
         try {
@@ -822,17 +872,32 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                     // ordinary app does not record it. Without a timestamp nothing is marked.
                     clipSetTime(runCatching { _cm.primaryClipDescription }.getOrNull())
                         .takeIf { it > 0 }
-                        ?.let { _lastSeenClip = ClipboardCatchUp.fingerprint(it, emptyList()) }
+                        ?.let { lastSeenClip = ClipboardCatchUp.fingerprint(it, emptyList()) }
                     return // Don't store clipboard from password managers
+                }
+            }
+
+            if (catchUp) {
+                // Cheap pre-check (API 26+): the set timestamp is the whole identity and lives
+                // in the DESCRIPTION, so an already-observed clip is rejected without fetching
+                // its content over Binder (which can be up to the ~1 MB transaction limit).
+                val setAt = clipSetTime(runCatching { _cm.primaryClipDescription }.getOrNull())
+                if (setAt > 0 && !ClipboardCatchUp.shouldRecord(
+                        historyEnabled = true,
+                        current = ClipboardCatchUp.fingerprint(setAt, emptyList()),
+                        lastSeen = lastSeenClip,
+                    )
+                ) {
+                    return
                 }
             }
 
             val clip = _cm.primaryClip ?: return
             val seen = ClipboardCatchUp.fingerprint(clipSetTime(clip.description), clipItemKeys(clip))
-            if (catchUp && !ClipboardCatchUp.shouldRecord(historyEnabled = true, current = seen, lastSeen = _lastSeenClip)) {
+            if (catchUp && !ClipboardCatchUp.shouldRecord(historyEnabled = true, current = seen, lastSeen = lastSeenClip)) {
                 return
             }
-            _lastSeenClip = seen
+            lastSeenClip = seen
 
             // #86: Android 13+ (API 33): Respect IS_SENSITIVE flag set by password managers
             // This is a more robust detection than package blocklisting
@@ -1043,6 +1108,10 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     }
 
     companion object {
+        /** SharedPreferences file holding only [lastSeenClip] (not backed up, not exported). */
+        const val LAST_SEEN_PREFS = "clipboard_last_seen"
+        private const val LAST_SEEN_KEY = "last_seen_clip"
+
         /**
          * Clear Android's clipboard without reading it or initializing the saved-history service.
          * Explicitly assigned command: no database writes, selection edits or bulk-delete behavior.
