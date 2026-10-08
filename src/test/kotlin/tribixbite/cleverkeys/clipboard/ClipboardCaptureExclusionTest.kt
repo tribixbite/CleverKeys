@@ -87,6 +87,13 @@ class ClipboardCaptureExclusionTest {
         clipboard = mockk()
         context = mockk()
         every { context.getSystemService(Context.USAGE_STATS_SERVICE) } returns usageStats
+        // The capture path persists the last observed clip identity (2026-10-08, deleted clips
+        // stay deleted). Without this stub the strict context throws inside captureClip's
+        // try/catch and every positive control silently records nothing. A relaxed store reads
+        // back "" (no identity), so each test starts from a never-observed clipboard.
+        every {
+            context.getSharedPreferences(ClipboardHistoryService.LAST_SEEN_PREFS, any())
+        } returns mockk(relaxed = true)
         foregroundApp("com.example.notes")
     }
 
