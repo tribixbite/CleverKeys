@@ -1467,15 +1467,24 @@ tasks.register('runAllTests') {
   description = 'Run all tests (pure JVM + MockK-based)'
 }
 
-tasks.register('buildKeyboardFont') {
-  def fontFile = file("assets/special_font.ttf")
-  if (fontFile.exists()) return
-  exec {
-    workingDir "$projectDir/srcs/special_font"
-    def svgFiles = workingDir.listFiles().findAll { it.isFile() && it.name.endsWith(".svg") }
-    commandLine("fontforge", "-lang=ff", "-script", "build.pe", "$buildDir/special_font.ttf", *svgFiles)
+// Rebuilds assets/special_font.ttf (the key-icon font, glyphs U+E000+NNN) from the SVG
+// sources in src/main/special_font with fontforge: `scripts/gradle-guard.sh buildKeyboardFont`.
+// Explicit-only — nothing depends on it, and the committed TTF is what ships. It used to
+// read the upstream `srcs/special_font` path (absent here) and ran its exec at
+// configuration time, so it could never rebuild the font.
+tasks.register('buildKeyboardFont', Exec) {
+  def srcDir = file("src/main/special_font")
+  def builtFont = file("$buildDir/special_font.ttf")
+  inputs.dir(srcDir)
+  outputs.file(builtFont)
+  workingDir srcDir
+  doFirst {
+    def svgFiles = srcDir.listFiles().findAll { it.isFile() && it.name.endsWith(".svg") }.sort { it.name }
+    commandLine("fontforge", "-lang=ff", "-script", "build.pe", builtFont.path, *svgFiles)
   }
-  copy { from "$buildDir/special_font.ttf" into "assets" }
+  doLast {
+    copy { from builtFont into "assets" }
+  }
 }
 
 tasks.register('genEmojis') {
