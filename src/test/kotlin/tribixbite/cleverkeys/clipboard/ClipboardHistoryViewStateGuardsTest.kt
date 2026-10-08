@@ -474,6 +474,39 @@ class ClipboardHistoryViewStateGuardsTest {
         assertThat(notified - before).isAtLeast(3)
     }
 
+    /**
+     * 2026-10-08 audit gap: history-change callbacks (fired from a running action's IO thread
+     * and by the clipboard listener) must be inert while a confirmed bulk action runs — no
+     * reload, no "loading" flip, no chrome notification — and live again once it finishes.
+     */
+    @Test
+    fun historyChangeCallbacksAreInertWhileABulkActionRuns() {
+        val rows = (1..2).map { ClipboardEntry("inert-$it", it.toLong(), rowId = it.toLong()) }
+        val holder = ClipboardSelectionHolder()
+        buildReadyView(rows)
+        view.attachSelectionHolder(holder)
+        // "Attached": a scope whose dispatcher never runs, so a load that starts is observable
+        // (dataReady flips, the job exists) without touching the database.
+        val parked = object : kotlinx.coroutines.CoroutineDispatcher() {
+            override fun dispatch(context: kotlin.coroutines.CoroutineContext, block: Runnable) = Unit
+        }
+        view.setField("viewScope", kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + parked))
+        var notified = 0
+        view.onResultsChanged = { notified++ }
+
+        holder.setField("running", true)
+        view.on_clipboard_history_change()
+        assertThat(notified).isEqualTo(0)
+        assertThat(view.getField("dataReady")).isEqualTo(true)
+        assertThat(view.getField("loadJob")).isNull()
+
+        holder.setField("running", false)
+        view.on_clipboard_history_change()
+        assertWithMessage("the same callback reloads once the action is over").that(notified).isEqualTo(1)
+        assertThat(view.getField("dataReady")).isEqualTo(false)
+        assertThat(view.getField("loadJob")).isNotNull()
+    }
+
     private fun buildReadyView(entries: List<ClipboardEntry>) {
         buildView()
         every { view.invalidate() } just runs
@@ -482,6 +515,15 @@ class ClipboardHistoryViewStateGuardsTest {
     }
 
     // ------------------------------------------------------------------ helpers
+
+    private fun Any.getField(name: String): Any? {
+        var cls: Class<*>? = javaClass
+        while (cls != null) {
+            cls.declaredFields.firstOrNull { it.name == name }?.let { it.isAccessible = true; return it.get(this) }
+            cls = cls.superclass
+        }
+        throw AssertionError("field '$name' not found on ${javaClass.name}")
+    }
 
     private fun Any.setField(name: String, value: Any?) {
         var cls: Class<*>? = javaClass

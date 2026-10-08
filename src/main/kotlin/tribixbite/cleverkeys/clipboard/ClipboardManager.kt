@@ -143,6 +143,15 @@ class ClipboardManager(
     private var selectButton: Button? = null
     private var resultSummary: TextView? = null
     private var bulkFeedback: TextView? = null
+
+    /**
+     * The last bulk-action result line, kept here (not only in [bulkFeedback]) because a
+     * confirmed action finishes asynchronously: when the pane is rebuilt meanwhile (theme
+     * change, keyboard hide/show — [invalidatePane]/[cleanup] drop the views) the result would
+     * otherwise land on no view and be lost. [getClipboardPane] re-renders it; it is cleared by
+     * the same events that used to hide the line (tab switch, a new selection).
+     */
+    private var lastBulkFeedback: CharSequence? = null
     private var bulkDialog: android.app.AlertDialog? = null
 
     // Selection mode (2026-10-07). The selection itself lives in this service-scoped holder so
@@ -284,6 +293,8 @@ class ClipboardManager(
             selectButton = clipboardPane?.findViewById(R.id.clipboard_select)
             resultSummary = clipboardPane?.findViewById(R.id.clipboard_result_summary)
             bulkFeedback = clipboardPane?.findViewById(R.id.clipboard_bulk_feedback)
+            // A result that arrived while no pane existed (or before this one was built).
+            lastBulkFeedback?.let { renderBulkFeedback(it) }
             selectionBar = clipboardPane?.findViewById(R.id.clipboard_selection_bar)
             selectionCount = clipboardPane?.findViewById(R.id.clipboard_selection_count)
             selectMatchingButton = clipboardPane?.findViewById(R.id.clipboard_select_matching)
@@ -380,7 +391,7 @@ class ClipboardManager(
     private fun switchToTab(tab: ClipboardTab) {
         if (currentTab == tab) return
         // Deletion feedback belongs to the previous tab's confirmed snapshot.
-        bulkFeedback?.visibility = View.GONE
+        clearBulkFeedback()
 
         // Cancel any in-progress edit or tag panel when switching tabs
         exitEditMode()
@@ -806,7 +817,7 @@ class ClipboardManager(
     private fun enterSelectionMode() {
         if (tagMode || isInEditMode()) return
         // Feedback from a previous deletion describes a finished batch, not the new one.
-        bulkFeedback?.visibility = View.GONE
+        clearBulkFeedback()
         clipboardHistoryView?.startSelection()
     }
 
@@ -885,11 +896,24 @@ class ClipboardManager(
 
     /** Polite live-region feedback in the result row (TalkBack announces it). */
     private fun showBulkFeedback(text: CharSequence) {
+        lastBulkFeedback = text
+        renderBulkFeedback(text)
+    }
+
+    private fun renderBulkFeedback(text: CharSequence) {
         bulkFeedback?.apply {
             this.text = text
             visibility = View.VISIBLE
         }
     }
+
+    private fun clearBulkFeedback() {
+        lastBulkFeedback = null
+        bulkFeedback?.visibility = View.GONE
+    }
+
+    /** The result line currently kept for re-rendering (tests). */
+    internal fun bulkFeedbackText(): CharSequence? = lastBulkFeedback
 
     private fun plural(id: Int, count: Int): String = context.resources.getQuantityString(id, count, count)
 

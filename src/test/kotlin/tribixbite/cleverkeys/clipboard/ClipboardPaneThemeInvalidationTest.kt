@@ -152,6 +152,33 @@ class ClipboardPaneThemeInvalidationTest {
             .that(mgr.getField("currentTab")).isEqualTo(ClipboardTab.PINNED)
     }
 
+    /**
+     * 2026-10-08 audit: a confirmed bulk action finishes asynchronously. When the pane is
+     * rebuilt meanwhile (theme change → invalidatePane; keyboard hide → cleanup) its result
+     * line ("Deleted X of N") used to land on a null view and was lost. The manager keeps it
+     * and getClipboardPane re-renders it on the next pane.
+     */
+    @Test
+    fun aBulkResultArrivingAfterThePaneWasDroppedIsKept() {
+        val (mgr, _) = managerWithCachedPane("custom_reporters_theme")
+        val oldLine = mockk<android.widget.TextView>(relaxed = true)
+        mgr.setField("bulkFeedback", oldLine)
+
+        mgr.setConfig(configWith("dark"))  // pane rebuilt mid-action: the views are gone
+        assertWithMessage("pane must be dropped").that(mgr.getField("bulkFeedback")).isNull()
+        val show = ClipboardManager::class.java.getDeclaredMethod("showBulkFeedback", CharSequence::class.java)
+        show.isAccessible = true
+        show.invoke(mgr, "Deleted 3 of 4")
+
+        assertWithMessage("the result must survive the rebuild for the next pane to render")
+            .that(mgr.bulkFeedbackText()?.toString()).isEqualTo("Deleted 3 of 4")
+        // And the source-level contract: a newly built pane renders the kept line.
+        val source = java.io.File("src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardManager.kt").readText()
+        val build = source.substringAfter("fun getClipboardPane(").substringBefore("\n    fun ")
+        assertWithMessage("getClipboardPane must re-render the kept result line")
+            .that(build).contains("lastBulkFeedback?.let { renderBulkFeedback(it) }")
+    }
+
     private fun Any.setField(name: String, value: Any?) {
         val field = javaClass.declaredFields.firstOrNull { it.name == name }
         assertWithMessage(
