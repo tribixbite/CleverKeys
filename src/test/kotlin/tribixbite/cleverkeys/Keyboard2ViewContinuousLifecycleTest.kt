@@ -187,6 +187,25 @@ class Keyboard2ViewContinuousLifecycleTest {
         verify(exactly = 1) { service.handleSwipeTyping(any(), any(), any(), any(), any(), any(), any()) }
     }
 
+    /**
+     * Seeker 2026-10-07: a gesture that STARTS on a non-letter key (backspace, space, enter,
+     * shift) must never open a continuous phrase session — its spacebar dwell would otherwise
+     * dispatch letter segments straight to the word decoder, bypassing Pointers' start-key rule.
+     */
+    @Test
+    fun nonLetterStartNeverArmsAContinuousSession() {
+        val (_, recognizer) = armContinuousStart()
+        val snap = testConfigSnapshot(continuous_swipe_enabled = true)
+        for (name in listOf("backspace", "space", "enter", "shift")) {
+            val start = KeyboardData.Key(
+                listOf(KeyValue.getKeyByName(name), null, null, null, null, null, null, null, null), null, 0, 1f, 0f, null)
+            view.onSwipeStart(10f, 50f, start, snap, recognizer)
+            val segmenter = Keyboard2View::class.java.getDeclaredField("continuousSegmenter")
+                .apply { isAccessible = true }.get(view)
+            assertEquals("$name start must not arm continuous swipe", null, segmenter)
+        }
+    }
+
     // ------------------------------------------- short-word fix (2026-10-07): CTC raw trace
 
     @Test

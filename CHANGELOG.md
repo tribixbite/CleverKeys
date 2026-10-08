@@ -286,6 +286,9 @@ editor that used to be listed here already ship in 2.0.)
 - Terminal apps: Enter, Tab, Esc, arrows, Home/End and Ctrl chords end the tracked word, so
   suggestions no longer show or replace a word built from earlier lines (`ls` Enter `cd` was
   read as `lscd`); swipe final autocorrect no longer rewrites words in terminals.
+- Swipe typing starts only on letter keys: a swipe that begins on Backspace, Shift, Enter,
+  Space, a modifier, a digit or punctuation and then crosses letters no longer types a word
+  (a swipe-left from Backspace over `m n b` had typed "mb").
 
 ---
 

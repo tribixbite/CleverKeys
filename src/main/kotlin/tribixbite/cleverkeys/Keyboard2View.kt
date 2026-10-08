@@ -662,6 +662,11 @@ class Keyboard2View @JvmOverloads constructor(
         cancelContinuousSwipe()
         continuousWasCancelled = false
         if (!snapshot.swipe_typing_enabled || !snapshot.continuous_swipe_enabled || _config.handler?.canUseEditorActions() != true) return
+        // Word swipes only start on letters (Seeker 2026-10-07). Pointers enforces that for the
+        // single-word routes; a phrase session dispatches segments itself at spacebar dwells,
+        // so it must apply the same start-key rule or a swipe from Backspace/Space could still
+        // commit words through this path.
+        if (!tribixbite.cleverkeys.swipe.KeyLetter.startsWordSwipe(key)) return
         val service = _keyboard2 ?: return
         val ic = service.currentInputConnection ?: return
         val editor = service.currentInputEditorInfo ?: return

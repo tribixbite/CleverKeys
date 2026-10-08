@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.swipe
 
 import tribixbite.cleverkeys.KeyValue
+import tribixbite.cleverkeys.KeyboardData
 import java.util.Locale
 
 /**
@@ -48,4 +49,18 @@ internal object KeyLetter {
         val folded = raw.lowercase(Locale.ROOT)
         return folded.singleOrNull()?.takeIf(Char::isLetter)
     }
+
+    /**
+     * THE rule for which key a word swipe may START on (Seeker report, 2026-10-07): only a key
+     * whose centre value is a single letter. Backspace, Shift, Enter, Space, Ctrl/Fn, digits
+     * and punctuation keep their own tap/short-swipe handling even when the finger then
+     * crosses letters — a swipe-left from Backspace over `m n b` used to latch swipe typing
+     * and insert "mb". Consumed by every word-swipe route in `Pointers` (move-time latch,
+     * touch-up SWIPE classification, word-candidate subkeys, return-trip rescue) and by
+     * `Keyboard2View.onSwipeStart` (continuous phrase sessions). It is the same predicate the
+     * recognizer applies when registering keys, so a letter that starts a swipe is also the
+     * swipe's first registered key. A gesture that starts on a letter and later crosses the
+     * spacebar (continuous multi-word swipe) is unaffected.
+     */
+    fun startsWordSwipe(key: KeyboardData.Key?): Boolean = centreLetterOf(key?.keys?.getOrNull(0)) != null
 }

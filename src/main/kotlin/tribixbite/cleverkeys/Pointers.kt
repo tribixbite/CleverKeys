@@ -21,6 +21,7 @@ import tribixbite.cleverkeys.popover.SubkeyPopoverMetrics
 import tribixbite.cleverkeys.popover.SubkeyPopoverSlots
 import tribixbite.cleverkeys.popover.SubkeyPopoverState
 import tribixbite.cleverkeys.prefs.ConfigSnapshot
+import tribixbite.cleverkeys.swipe.KeyLetter
 import java.util.NoSuchElementException
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -360,13 +361,20 @@ class Pointers(
         // This eliminates race conditions between multiple prediction systems
         // Allow entry if either Swipe Typing (Char keys) OR Short Gestures (Any key) is enabled
         val isCharKey = ptr_value != null && ptr_value.getKind() == KeyValue.Kind.Char
-        val canSwipeType = snap.swipe_typing_enabled && isCharKey
+        // Word swipes may only START on a letter key (Seeker 2026-10-07: a swipe from
+        // Backspace across m/n/b typed "mb"). Space, digits and punctuation are Char keys
+        // too, so isCharKey alone is not the rule — KeyLetter.startsWordSwipe is.
+        val canSwipeType = snap.swipe_typing_enabled && isCharKey && KeyLetter.startsWordSwipe(ptr.key)
         val canShortGesture = snap.short_gestures_enabled && ptr_value != null
+        // Entry into the classification block keeps its historical Char-key rule so a
+        // Space/punctuation gesture with short gestures OFF still reaches the TAP branch
+        // (which emits its deferred key-down); only the word-swipe ROUTES need canSwipeType.
+        val canClassify = (snap.swipe_typing_enabled && isCharKey) || canShortGesture
 
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Gesture check: isCharKey=$isCharKey, canSwipeType=$canSwipeType, canShortGesture=$canShortGesture, " +
             "gesture=${ptr.gesture}, hasExcludedFlags=${ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED)}, hasKey=${ptr.key != null}")
 
-        if ((canSwipeType || canShortGesture) && ptr.gesture == null &&
+        if (canClassify && ptr.gesture == null &&
             !ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED) &&
             ptr.key != null
         ) {
@@ -375,7 +383,7 @@ class Pointers(
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SKIPPING gesture block: canSwipe=$canSwipeType canShort=$canShortGesture " +
                 "gesture=${ptr.gesture} excluded=${ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED)} hasKey=${ptr.key != null}")
         }
-        if ((canSwipeType || canShortGesture) && ptr.gesture == null &&
+        if (canClassify && ptr.gesture == null &&
             !ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED) &&
             ptr.key != null
         ) {
@@ -415,7 +423,9 @@ class Pointers(
             // - swipe typing disabled: SWIPE must degrade to TAP so the gesture commits the
             //   starting key instead of hitting onSwipeEnd (a no-op without word candidacy)
             //   and silently dropping the letter.
-            // canSwipeType = swipe_typing_enabled && isCharKey covers both.
+            // - a Char key that is not a letter (space, digit, punctuation): swipe typing
+            //   only starts on letters, so the gesture stays that key's tap/short swipe.
+            // canSwipeType = swipe_typing_enabled && isCharKey && letter start covers all three.
             val effectiveGestureType = if (!canSwipeType && gestureType == GestureClassifier.GestureType.SWIPE) {
                 GestureClassifier.GestureType.TAP
             } else {
@@ -536,8 +546,7 @@ class Pointers(
                         // fuzz-only matches lose to the word fallback below. Non-candidates
                         // (single-key flicks, non-char keys e.g. backspace nw=delete_last_word)
                         // keep the full +/-1 forgiveness.
-                        val isWordCandidate = isCharKey && snap.swipe_typing_enabled &&
-                            _swipeRecognizer.promoteWordCandidacy()
+                        val isWordCandidate = canSwipeType && _swipeRecognizer.promoteWordCandidacy()
                         var gestureValue = if (isWordCandidate) {
                             _handler.modifyKey(getKeyAtDirection(ptr.key, direction), ptr.modifiers)
                         } else {
@@ -607,7 +616,7 @@ class Pointers(
                 // Straight gestures (taps, overshoots, flicks) have displacement ~= path and
                 // can never satisfy the ratio; fast grazes fail the duration check. This
                 // restores the pre-boundary-gate behavior for exactly this gesture class.
-                if (isCharKey && snap.swipe_typing_enabled && _swipeRecognizer.promoteWordCandidacy() &&
+                if (canSwipeType && _swipeRecognizer.promoteWordCandidacy() &&
                     timeElapsed > snap.tap_duration_threshold &&
                     distance < totalDistance / 2
                 ) {
@@ -1010,7 +1019,8 @@ class Pointers(
         val ptrValue = ptr.value
         val activePointers = countActivePointers()
         val isSwipeTypingKey = snap.swipe_typing_enabled && activePointers == 1 &&
-            ptrValue != null && ptrValue.getKind() == KeyValue.Kind.Char
+            ptrValue != null && ptrValue.getKind() == KeyValue.Kind.Char &&
+            KeyLetter.startsWordSwipe(ptr.key)
         val isShortGestureKey = snap.short_gestures_enabled && activePointers == 1 && ptrValue != null
         val shouldCollectPath = isSwipeTypingKey || isShortGestureKey
 
@@ -1043,7 +1053,11 @@ class Pointers(
             // could latch FLAG_P_SWIPE_TYPING with swipe typing OFF and then be excluded
             // from BOTH the completion path (:163 requires the setting) and the touch-up
             // gesture block (flag exclusion).
-            if (snap.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping() && ptr.hasLeftStartingKey) {
+            // isSwipeTypingKey gates it on the START key (Seeker 2026-10-07): a short-gesture
+            // key such as Backspace also collects its path here, and the recognizer reports
+            // isSwipeTyping() once the finger has crossed two letters — without this check a
+            // swipe-left from Backspace over m/n/b latched a word swipe and typed "mb".
+            if (isSwipeTypingKey && _swipeRecognizer.isSwipeTyping() && ptr.hasLeftStartingKey) {
                 ptr.flags = ptr.flags or FLAG_P_SWIPE_TYPING
                 stopLongPress(ptr)
             }

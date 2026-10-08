@@ -1180,6 +1180,7 @@ tasks.register('runMockTests', JavaExec) {
     // the default at every fuzzed direction bin; cold-load independence from swipe typing;
     // the short/long boundary is authoritative (BY-DESIGN pin for #83).
     'tribixbite.cleverkeys.PointersShortSwipeCustomOverrideTest',
+    'tribixbite.cleverkeys.PointersSwipeStartKeyTest',
     'tribixbite.cleverkeys.ReleaseClaimKeyModifierTest',
     'tribixbite.cleverkeys.WindowLayoutUtilsTest',
     'tribixbite.cleverkeys.MarginPercentPolicyTest',
