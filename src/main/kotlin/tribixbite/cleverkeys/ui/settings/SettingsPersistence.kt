@@ -17,6 +17,7 @@ import tribixbite.cleverkeys.ui.settings.sections.setPrivateCopyToolbarComponent
 import tribixbite.cleverkeys.ui.settings.io.detectAvailableV2Dictionaries
 import tribixbite.cleverkeys.ui.settings.io.recomputeCustomRulesStatus
 import tribixbite.cleverkeys.ui.settings.io.refreshInstalledGifPacks
+import tribixbite.cleverkeys.ui.settings.io.refreshBoundLayoutLanguages
 import tribixbite.cleverkeys.ui.settings.io.refreshInstalledLanguagePacks
 
 /**
@@ -403,6 +404,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
 
         // Load installed language packs
         refreshInstalledLanguagePacks()
+        refreshBoundLayoutLanguages()
 
         // Privacy settings - collection OFF by default (CleverKeys is fully offline);
         // the MASTER on-device learning gate defaults ON (it is the opt-OUT)

@@ -1062,6 +1062,7 @@
     <string name="keyboard_lang_layout_missing">언어: %1$s (사전 미설치)</string>
     <string name="keyboard_lang_bound_by_layout">이 레이아웃이 언어를 정합니다: %1$s</string>
     <string name="multilang_layout_binding_hint">각 레이아웃은 자체 언어를 가질 수 있습니다(레이아웃 관리자). 그런 레이아웃이 활성화된 동안에는 이 언어 설정을 대신합니다.</string>
+    <string name="multilang_layout_bound_note">자체 언어가 있는 레이아웃: %1$s</string>
     <string name="text_action_assist_name">텍스트 도우미</string>
     <string name="text_action_replace_name">텍스트 바꾸기</string>
     <string name="text_action_assist_chooser">텍스트를 처리할 앱…</string>

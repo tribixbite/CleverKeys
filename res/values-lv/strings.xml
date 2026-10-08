@@ -1073,6 +1073,7 @@
     <string name="keyboard_lang_layout_missing">Valoda: %1$s (vārdnīca nav instalēta)</string>
     <string name="keyboard_lang_bound_by_layout">Valodu nosaka šis izkārtojums: %1$s</string>
     <string name="multilang_layout_binding_hint">Katram izkārtojumam var būt sava valoda (Izkārtojuma pārvaldnieks). Kamēr šāds izkārtojums ir aktīvs, tas aizstāj šos valodas iestatījumus.</string>
+    <string name="multilang_layout_bound_note">Izkārtojumi ar savu valodu: %1$s</string>
     <string name="text_action_assist_name">Teksta palīgs</string>
     <string name="text_action_replace_name">Aizstāt tekstu</string>
     <string name="text_action_assist_chooser">Apstrādāt tekstu ar…</string>

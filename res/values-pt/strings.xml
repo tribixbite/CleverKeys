@@ -1062,6 +1062,7 @@
     <string name="keyboard_lang_layout_missing">Idioma: %1$s (nenhum dicionário instalado)</string>
     <string name="keyboard_lang_bound_by_layout">Este layout define o idioma: %1$s</string>
     <string name="multilang_layout_binding_hint">Cada layout pode ter seu próprio idioma (Gerenciador de layout). Enquanto um layout assim estiver ativo, ele substitui estas configurações de idioma.</string>
+    <string name="multilang_layout_bound_note">Layouts com idioma próprio: %1$s</string>
     <string name="text_action_assist_name">Assistente de texto</string>
     <string name="text_action_replace_name">Substituir texto</string>
     <string name="text_action_assist_chooser">Processar texto com…</string>

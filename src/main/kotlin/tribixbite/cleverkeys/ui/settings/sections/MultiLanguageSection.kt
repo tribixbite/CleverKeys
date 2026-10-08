@@ -104,6 +104,19 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)
                 )
+                // 2026-10-08 audit: say when a binding is actually configured, not only that one
+                // can be — the selectors below are then overridden while that layout is active.
+                if (boundLayoutLanguages.isNotEmpty()) {
+                    Text(
+                        text = stringResource(
+                            R.string.multilang_layout_bound_note,
+                            boundLayoutLanguages.joinToString(", ") { getLanguageDisplayName(it) },
+                        ),
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                    )
+                }
 
                 if (multiLangEnabled) {
                     // Primary Language selector - any QWERTY-compatible language

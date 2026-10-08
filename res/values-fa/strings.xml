@@ -1100,6 +1100,7 @@
     <string name="keyboard_lang_layout_missing">زبان: %1$s (واژه‌نامه نصب نشده)</string>
     <string name="keyboard_lang_bound_by_layout">زبان را این چیدمان تعیین می‌کند: %1$s</string>
     <string name="multilang_layout_binding_hint">هر چیدمان می‌تواند زبان خودش را داشته باشد (مدیر چیدمان). وقتی چنین چیدمانی فعال است، جایگزین این تنظیمات زبان می‌شود.</string>
+    <string name="multilang_layout_bound_note">چیدمان‌های دارای زبان خود: %1$s</string>
     <string name="text_action_assist_name">دستیار متن</string>
     <string name="text_action_replace_name">جایگزینی متن</string>
     <string name="text_action_assist_chooser">پردازش متن با…</string>

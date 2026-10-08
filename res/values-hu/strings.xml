@@ -1068,6 +1068,7 @@
     <string name="keyboard_lang_layout_missing">Nyelv: %1$s (nincs telepített szótár)</string>
     <string name="keyboard_lang_bound_by_layout">A nyelvet ez a kiosztás határozza meg: %1$s</string>
     <string name="multilang_layout_binding_hint">Minden kiosztásnak lehet saját nyelve (Kiosztáskezelő). Amíg egy ilyen kiosztás aktív, az felülírja ezeket a nyelvi beállításokat.</string>
+    <string name="multilang_layout_bound_note">Saját nyelvvel rendelkező kiosztások: %1$s</string>
     <string name="text_action_assist_name">Szövegsegéd</string>
     <string name="text_action_replace_name">Szöveg cseréje</string>
     <string name="text_action_assist_chooser">Szöveg feldolgozása ezzel…</string>

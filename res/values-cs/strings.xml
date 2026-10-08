@@ -1062,6 +1062,7 @@
     <string name="keyboard_lang_layout_missing">Jazyk: %1$s (slovník není nainstalován)</string>
     <string name="keyboard_lang_bound_by_layout">Jazyk určuje toto rozložení: %1$s</string>
     <string name="multilang_layout_binding_hint">Každé rozložení může mít vlastní jazyk (Správce rozložení). Když je takové rozložení aktivní, nahrazuje tato nastavení jazyků.</string>
+    <string name="multilang_layout_bound_note">Rozložení s vlastním jazykem: %1$s</string>
     <string name="text_action_assist_name">Asistent textu</string>
     <string name="text_action_replace_name">Nahradit text</string>
     <string name="text_action_assist_chooser">Zpracovat text pomocí…</string>

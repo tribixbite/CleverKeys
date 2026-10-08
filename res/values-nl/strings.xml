@@ -1062,6 +1062,7 @@
     <string name="keyboard_lang_layout_missing">Taal: %1$s (geen woordenboek geïnstalleerd)</string>
     <string name="keyboard_lang_bound_by_layout">Deze lay-out bepaalt de taal: %1$s</string>
     <string name="multilang_layout_binding_hint">Elke lay-out kan een eigen taal hebben (Lay-outbeheer). Zolang zo’n lay-out actief is, vervangt die deze taalinstellingen.</string>
+    <string name="multilang_layout_bound_note">Lay-outs met een eigen taal: %1$s</string>
     <string name="text_action_assist_name">Tekstassistent</string>
     <string name="text_action_replace_name">Tekst vervangen</string>
     <string name="text_action_assist_chooser">Tekst verwerken met…</string>

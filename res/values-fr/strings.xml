@@ -1072,6 +1072,7 @@
     <string name="keyboard_lang_layout_missing">Langue : %1$s (aucun dictionnaire installé)</string>
     <string name="keyboard_lang_bound_by_layout">Cette disposition définit la langue : %1$s</string>
     <string name="multilang_layout_binding_hint">Chaque disposition peut avoir sa propre langue (Gestionnaire de dispositions). Tant qu\'une telle disposition est active, elle remplace ces réglages de langue.</string>
+    <string name="multilang_layout_bound_note">Dispositions avec leur propre langue : %1$s</string>
     <string name="text_action_assist_name">Assistance texte</string>
     <string name="text_action_replace_name">Remplacer le texte</string>
     <string name="text_action_assist_chooser">Traiter le texte avec…</string>

@@ -1089,6 +1089,7 @@
     <string name="keyboard_lang_layout_missing">Limbă: %1$s (niciun dicționar instalat)</string>
     <string name="keyboard_lang_bound_by_layout">Limba este stabilită de acest aranjament: %1$s</string>
     <string name="multilang_layout_binding_hint">Fiecare aranjament poate avea propria limbă (Manager aranjamente). Cât timp un astfel de aranjament este activ, el înlocuiește aceste setări de limbă.</string>
+    <string name="multilang_layout_bound_note">Aranjamente cu limbă proprie: %1$s</string>
     <string name="text_action_assist_name">Asistent text</string>
     <string name="text_action_replace_name">Înlocuire text</string>
     <string name="text_action_assist_chooser">Procesează textul cu…</string>

@@ -1072,6 +1072,7 @@
     <string name="keyboard_lang_layout_missing">Język: %1$s (brak zainstalowanego słownika)</string>
     <string name="keyboard_lang_bound_by_layout">Język ustala ten układ: %1$s</string>
     <string name="multilang_layout_binding_hint">Każdy układ może mieć własny język (Menedżer układów). Gdy taki układ jest aktywny, zastępuje te ustawienia języka.</string>
+    <string name="multilang_layout_bound_note">Układy z własnym językiem: %1$s</string>
     <string name="text_action_assist_name">Asystent tekstu</string>
     <string name="text_action_replace_name">Zastąp tekst</string>
     <string name="text_action_assist_chooser">Przetwórz tekst za pomocą…</string>

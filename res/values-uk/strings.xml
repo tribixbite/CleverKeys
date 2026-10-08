@@ -1073,6 +1073,7 @@
     <string name="keyboard_lang_layout_missing">Мова: %1$s (словник не встановлено)</string>
     <string name="keyboard_lang_bound_by_layout">Мову задає цей макет: %1$s</string>
     <string name="multilang_layout_binding_hint">Кожен макет може мати власну мову (Менеджер макетів). Поки такий макет активний, він замінює ці мовні налаштування.</string>
+    <string name="multilang_layout_bound_note">Макети з власною мовою: %1$s</string>
     <string name="text_action_assist_name">Допомога з текстом</string>
     <string name="text_action_replace_name">Заміна тексту</string>
     <string name="text_action_assist_chooser">Обробити текст за допомогою…</string>

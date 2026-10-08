@@ -1060,6 +1060,7 @@
     <string name="keyboard_lang_layout_missing">语言：%1$s（未安装词典）</string>
     <string name="keyboard_lang_bound_by_layout">此布局决定语言：%1$s</string>
     <string name="multilang_layout_binding_hint">每个布局都可以有自己的语言（布局管理器）。此类布局处于活动状态时，会取代这些语言设置。</string>
+    <string name="multilang_layout_bound_note">有自己语言的布局：%1$s</string>
     <string name="text_action_assist_name">文字助手</string>
     <string name="text_action_replace_name">替换文字</string>
     <string name="text_action_assist_chooser">使用以下应用处理文字…</string>

@@ -103,6 +103,39 @@ class SettingsActivityComposeTest {
         composeTestRule.onNodeWithText("Cancel").performClick()
     }
 
+    /**
+     * 2026-10-08 audit: Multi-Language names the languages that layouts bind (GH #186/#61) —
+     * the generic hint said a binding replaces these settings, but never whether one exists.
+     * The note is refreshed on resume, since Layout Manager edits land while Settings is paused.
+     */
+    @Test
+    fun multiLanguageNamesTheLanguagesBoundByLayouts() {
+        val activity = composeTestRule.activity
+        val prefs = activity.prefs
+        val key = tribixbite.cleverkeys.prefs.LayoutsPreference.KEY
+        val had = prefs.contains(key)
+        val original = prefs.getString(key, null)
+        try {
+            val editor = prefs.edit()
+            tribixbite.cleverkeys.prefs.LayoutsPreference.saveToPreferences(editor, listOf(
+                tribixbite.cleverkeys.prefs.LayoutsPreference.NamedLayout("latn_qwerty_us", language = "fa"),
+                tribixbite.cleverkeys.prefs.LayoutsPreference.NamedLayout("latn_qwerty_us"),
+            ))
+            check(editor.commit())
+            composeTestRule.activityRule.scenario.recreate()
+            val a = composeTestRule.activity
+            val name = LanguageDisplayNames.displayName("fa", a.resources.configuration.locales[0])
+            val note = a.getString(R.string.multilang_layout_bound_note, name)
+            composeTestRule.onNodeWithText(a.getString(R.string.settings_section_multilang), substring = true)
+                .performScrollTo().performClick()
+            composeTestRule.onNodeWithText(note).performScrollTo().assertIsDisplayed()
+        } finally {
+            val editor = prefs.edit()
+            if (had) editor.putString(key, original) else editor.remove(key)
+            check(editor.commit())
+        }
+    }
+
     @Test
     fun activity_launches() {
         composeTestRule.onNodeWithText("CleverKeys", substring = true).assertIsDisplayed()

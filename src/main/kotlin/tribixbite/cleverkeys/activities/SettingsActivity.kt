@@ -52,6 +52,7 @@ import tribixbite.cleverkeys.ui.settings.io.performLanguagePackImport
 import tribixbite.cleverkeys.ui.settings.io.performPerfStatsExport
 import tribixbite.cleverkeys.ui.settings.io.performSwipeDataJsonExport
 import tribixbite.cleverkeys.ui.settings.io.performSwipeDataNdjsonExport
+import tribixbite.cleverkeys.ui.settings.io.refreshBoundLayoutLanguages
 import tribixbite.cleverkeys.ui.settings.fallbackEncrypted
 import tribixbite.cleverkeys.ui.settings.handlePreferenceChanged
 import tribixbite.cleverkeys.ui.settings.loadCurrentSettings
@@ -450,6 +451,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var primaryLanguageAlt by mutableStateOf("es") // v1.2.0: Alternate primary for quick toggle
     internal var secondaryLanguageAlt by mutableStateOf("none") // v1.2.0: Alternate secondary for quick toggle
     internal var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
+    /** Distinct languages bound to a layout in Layout Manager (GH #186/#61), refreshed on resume. */
+    internal var boundLayoutLanguages by mutableStateOf(listOf<String>())
     internal var installedLanguagePacks by mutableStateOf(listOf<LanguagePackManifest>())
     /** gh #184: installed packs whose dictionary the loader refuses, by language code. */
     internal var languagePackProblems by mutableStateOf(mapOf<String, tribixbite.cleverkeys.PackImportFailure>())
@@ -883,6 +886,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         super.onResume()
         // Register for preference changes
         prefs.registerOnSharedPreferenceChangeListener(this)
+        // Layout Manager is a separate activity whose edits land while this one is paused.
+        refreshBoundLayoutLanguages()
     }
 
     override fun onPause() {

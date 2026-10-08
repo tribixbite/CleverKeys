@@ -36,6 +36,23 @@ internal fun SettingsActivity.refreshAvailableSecondaryLanguages() {
 }
 
 /**
+ * The distinct languages bound to a layout (Layout Manager, GH #186/#61) — the user's entry
+ * choice or the layout XML's `language` default, exactly as the keyboard resolves them — for
+ * the Multi-Language note that such a binding replaces these settings while its layout is
+ * active (2026-10-08 audit). Parsing the few configured layouts is cheap; on failure the note
+ * is simply not shown.
+ */
+internal fun SettingsActivity.refreshBoundLayoutLanguages() {
+    boundLayoutLanguages = try {
+        tribixbite.cleverkeys.prefs.LayoutsPreference.loadLayoutsWithBindings(resources, prefs)
+            .second.filterNotNull().distinct()
+    } catch (e: Exception) {
+        android.util.Log.w(SettingsActivity.TAG, "Could not read layout language bindings", e)
+        emptyList()
+    }
+}
+
+/**
  * Display name for a dictionary language code in the app's UI language, e.g. "Spanish (Español)"
  * under English and "Spanyol (Español)" under Hungarian; the "none" sentinel is the translated
  * "None". Replaces a hand-written English table (device finding 2026-09-29, fa/hu) — see
