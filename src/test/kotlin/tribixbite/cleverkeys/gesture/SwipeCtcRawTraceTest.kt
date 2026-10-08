@@ -123,6 +123,31 @@ class SwipeCtcRawTraceTest {
         assertThat(abs(features[CtcFeaturizer.RESAMPLE_LENGTH - 1] - 0.25f)).isLessThan(0.001f)
     }
 
+    /**
+     * Typing audit (2026-10-08): a 2 s hold on `d` before lift. Unclamped, the lift sample
+     * carried 2000 of 2160 ms and the featurizer's 64 TIME-resampled columns were ~59 copies
+     * of `d` — the a→d stroke shrank to a handful of columns. The lift gap is clamped to
+     * 500 ms, so the stroke keeps a share of the timeline comparable to the 200 ms `ad` stop.
+     */
+    @Test
+    fun `a two second hold before lift is clamped and the stroke keeps its shape`() {
+        val recognizer = swipeAToD()
+        now += 1_848 // ACTION_UP at t = 2200: a 2 s hold on d after the last accepted sample (t = 160)
+        recognizer.recordLift(250.2f, 100.1f)
+        val trace = assertNotNull(recognizer.endSwipe().rawTrace)
+
+        assertWithMessage("the lift gap is clamped to MAX_LIFT_GAP_MS")
+            .that(trace.timestamps.last() - trace.timestamps[trace.timestamps.size - 2])
+            .isEqualTo(tribixbite.cleverkeys.gesture.ContinuousSwipe.MAX_LIFT_GAP_MS)
+        assertThat(abs(trace.points.last().x - 250.2f)).isLessThan(0.01f)
+
+        val features = featurize(trace.points, trace.timestamps)
+        val stroke = (0 until CtcFeaturizer.RESAMPLE_LENGTH).count { features[it] < 0.249f }
+        assertWithMessage("columns on the a→d stroke (160 of 660 ms ≈ 15 of 64)")
+            .that(stroke).isAtLeast(12)
+        assertThat(abs(features[CtcFeaturizer.RESAMPLE_LENGTH - 1] - 0.25f)).isLessThan(0.001f)
+    }
+
     @Test
     fun `the lift sample is present exactly once`() {
         val recognizer = swipeAToD()

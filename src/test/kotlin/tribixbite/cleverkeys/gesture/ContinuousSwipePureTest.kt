@@ -141,6 +141,22 @@ class ContinuousSwipePureTest {
         assertEquals(null, nan.output.last().lift)
     }
 
+    /**
+     * A long hold on the final letter before lift is clamped to 500 ms (the recognizer's own
+     * MAX_POINT_INTERVAL_MS): an unclamped 2 s gap would turn most of the encoder's 64
+     * time-resampled columns into one stationary point (typing audit, 2026-10-08).
+     */
+    @Test fun aLongFinalHoldIsClampedBeforeItReachesCtc() {
+        val h = phrase()
+        h.swipe.finish(ContinuousSwipe.Sample(320.5f, 1f, 1320 + 2_000))
+        val lift = h.output.last().lift!!
+        assertEquals(1320L + ContinuousSwipe.MAX_LIFT_GAP_MS, lift.timestamp)
+        assertEquals(320.5f, lift.x)
+        // A stop within the bound (the `ad` case's 200 ms) is untouched.
+        val short = phrase(); short.swipe.finish(ContinuousSwipe.Sample(320.5f, 1f, 1520))
+        assertEquals(1520L, short.output.last().lift!!.timestamp)
+    }
+
     // ---- serialized queue ----
 
     @Test fun fifoWaitsForAcknowledgedCommitBeforeNextDecode() {

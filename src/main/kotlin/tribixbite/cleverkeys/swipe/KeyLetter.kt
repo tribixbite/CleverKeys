@@ -61,6 +61,13 @@ internal object KeyLetter {
      * recognizer applies when registering keys, so a letter that starts a swipe is also the
      * swipe's first registered key. A gesture that starts on a letter and later crosses the
      * spacebar (continuous multi-word swipe) is unaffected.
+     *
+     * `Pointers.mayBeWordSwipe` adds one exception for single-word swipes (typing audit,
+     * 2026-10-08): a non-letter CHARACTER start (space, digit, punctuation) is promoted once the
+     * finger has left that key and the recognizer has registered two letters — a sloppy start
+     * one key off the first letter. Non-character keys (Backspace, Shift, Enter, Tab,
+     * modifiers) never are. Continuous phrase sessions keep this letter-only rule: they are
+     * armed at touch-down, before the gesture can qualify.
      */
     fun startsWordSwipe(key: KeyboardData.Key?): Boolean = centreLetterOf(key?.keys?.getOrNull(0)) != null
 }

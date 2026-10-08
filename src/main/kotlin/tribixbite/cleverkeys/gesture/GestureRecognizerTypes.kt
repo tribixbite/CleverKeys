@@ -66,7 +66,10 @@ class RawSwipeTrace private constructor(
          *
          * The lift keeps a final stop's DURATION, which the noise drop otherwise erases:
          * stationary samples are discarded, so without it the timeline ended at the last
-         * moving sample. It is not clamped — the eval measured the unclamped form.
+         * moving sample. The eval measured the unclamped form, whose stops were short (the
+         * `ad` case: 200 ms); the gap is now clamped to [ContinuousSwipe.MAX_LIFT_GAP_MS]
+         * (500 ms) so a long final hold cannot fill most of the encoder's 64 time-resampled
+         * columns with one stationary point (typing audit, 2026-10-08).
          */
         fun withLift(
             points: List<PointF>,
@@ -82,8 +85,9 @@ class RawSwipeTrace private constructor(
             val outTimes = ArrayList<Long>(n)
             outTimes.addAll(timestamps)
             if (useLift) {
-                outPoints.add(PointF(lift!!.x, lift.y))
-                outTimes.add(lift.timestamp)
+                val clamped = ContinuousSwipe.clampLift(timestamps.last(), lift!!)
+                outPoints.add(PointF(clamped.x, clamped.y))
+                outTimes.add(clamped.timestamp)
             }
             return RawSwipeTrace(outPoints, outTimes)
         }

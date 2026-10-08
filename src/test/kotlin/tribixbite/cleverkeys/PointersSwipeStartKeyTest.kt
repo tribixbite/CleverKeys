@@ -13,6 +13,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.prefs.ConfigSnapshot
 import tribixbite.cleverkeys.swipe.KeyLetter
@@ -59,22 +60,38 @@ class PointersSwipeStartKeyTest {
 
     private fun named(name: String): KeyboardData.Key = key(requireNotNull(KeyValue.getKeyByName(name)) { name })
 
-    /** Every non-letter key class a swipe can begin on. */
-    private val nonLetterStarts: List<Pair<String, KeyboardData.Key>> by lazy {
+    /**
+     * Non-CHARACTER keys: Backspace (the original "mb" bug), modifiers, Enter, Tab. A word
+     * swipe can never start on these.
+     */
+    private val nonCharStarts: List<Pair<String, KeyboardData.Key>> by lazy {
         listOf(
             "backspace" to named("backspace"),
             "delete" to named("delete"),
             "shift" to named("shift"),
             "enter" to named("enter"),
-            "space" to named("space"),
             "ctrl" to named("ctrl"),
             "fn" to named("fn"),
             "tab" to named("tab"),
+        )
+    }
+
+    /**
+     * Character keys that are not letters: space, digits, punctuation. A sloppy start on them
+     * may be PROMOTED to a word swipe once the finger has left the key (beyond
+     * short_gesture_max_distance) and the recognizer has registered two letters
+     * (typing audit, 2026-10-08); a short flick on them stays their own subkey/tap.
+     */
+    private val nonLetterCharStarts: List<Pair<String, KeyboardData.Key>> by lazy {
+        listOf(
+            "space" to named("space"),
             "period" to key(KeyValue.makeCharKey('.')),
             "apostrophe" to key(KeyValue.makeCharKey('\'')),
             "digit" to key(KeyValue.makeCharKey('1')),
         )
     }
+
+    private val nonLetterStarts get() = nonCharStarts + nonLetterCharStarts
 
     private val letterM = key(KeyValue.makeCharKey('m'))
 
@@ -113,6 +130,10 @@ class PointersSwipeStartKeyTest {
         setField(pointers, "_ptrs", ptrs)
         setField(pointers, "_swipeRecognizer", recognizer)
         setField(pointers, "_gestureClassifier", GestureClassifier())
+        // No custom mappings: a short swipe resolves against the layout's own subkeys.
+        val noMappings = mockk<ShortSwipeCustomizationManager>(relaxed = true)
+        every { noMappings.getMapping(any(), any()) } returns null
+        setField(pointers, "_customSwipeManager", noMappings)
     }
 
     @After
@@ -142,23 +163,86 @@ class PointersSwipeStartKeyTest {
     }
 
     @Test
-    fun nonLetterStart_neverLatchesSwipeTypingOnMove() {
-        for ((name, start) in nonLetterStarts) {
+    fun nonCharStart_neverLatchesSwipeTypingOnMove() {
+        for ((name, start) in nonCharStarts) {
             val ptr = swipeLeftAcrossLetters(start)
             assertFalse(
-                "$name: a gesture starting on a non-letter key must not latch swipe typing",
+                "$name: a gesture starting on a non-character key must not latch swipe typing",
                 ptr.hasFlagsAny(Pointers.FLAG_P_SWIPE_TYPING)
             )
         }
     }
 
     @Test
-    fun nonLetterStart_neverReachesTheWordDecoderOnRelease() {
-        for ((name, start) in nonLetterStarts) {
+    fun nonCharStart_neverReachesTheWordDecoderOnRelease() {
+        for ((name, start) in nonCharStarts) {
             swipeLeftAcrossLetters(start)
             pointers.onTouchUp(0)
             assertEquals("$name: release must not commit a swiped word", 0, handler.swipeEndCount)
         }
+    }
+
+    /**
+     * A sloppy start on space, a digit or punctuation that then crosses letters well past the
+     * start key is a word swipe: the user aimed at the first letter and missed.
+     */
+    @Test
+    fun nonLetterCharStart_isPromotedOnceItLeftTheKeyAcrossTwoLetters() {
+        for ((name, start) in nonLetterCharStarts) {
+            val ptr = swipeLeftAcrossLetters(start)
+            assertTrue("$name: promoted to a word swipe", ptr.hasFlagsAny(Pointers.FLAG_P_SWIPE_TYPING))
+            pointers.onTouchUp(0)
+            assertEquals("$name: exactly one word swipe", 1, handler.swipeEndCount)
+        }
+    }
+
+    /** Without two registered letters the gesture stays that key's own (nothing to promote). */
+    @Test
+    fun nonLetterCharStart_isNotPromotedWithoutTwoLetters() {
+        every { recognizer.isSwipeTyping() } returns false
+        every { recognizer.promoteWordCandidacy() } returns false
+        for ((name, start) in nonLetterCharStarts) {
+            val ptr = swipeLeftAcrossLetters(start)
+            assertFalse("$name", ptr.hasFlagsAny(Pointers.FLAG_P_SWIPE_TYPING))
+            pointers.onTouchUp(0)
+            assertEquals("$name: no word swipe", 0, handler.swipeEndCount)
+        }
+    }
+
+    /**
+     * Within short_gesture_max_distance of the start key the gesture is a short swipe of that
+     * key (e.g. a flick from `.` to its subkey), never a promoted word swipe.
+     */
+    @Test
+    fun nonLetterCharStart_isNotPromotedInsideTheStartKey() {
+        for ((name, start) in nonLetterCharStarts) {
+            handler.reset()
+            ptrs.clear()
+            val value = requireNotNull(start.keys[0])
+            val s = snap()
+            val ptr = Pointers.Pointer(0, start, value, 400f, 100f, noMods(), pointers.pointer_flags_of_kv(value, s), s)
+            ptrs.add(ptr)
+            pointers.onTouchMove(250f, 100f, 0)  // 150 px < the 200 px boundary
+            assertFalse("$name", ptr.hasFlagsAny(Pointers.FLAG_P_SWIPE_TYPING))
+            pointers.onTouchUp(0)
+            assertEquals("$name: no word swipe", 0, handler.swipeEndCount)
+        }
+    }
+
+    /** A letter-start swipe that crosses the spacebar on its way still latches as one word. */
+    @Test
+    fun letterStart_crossingSpace_stillLatches() {
+        handler.reset()
+        ptrs.clear()
+        val s = snap()
+        val value = requireNotNull(letterM.keys[0])
+        val ptr = Pointers.Pointer(0, letterM, value, 400f, 100f, noMods(), pointers.pointer_flags_of_kv(value, s), s)
+        ptrs.add(ptr)
+        pointers.onTouchMove(400f, 300f, 0)  // down onto the spacebar row
+        pointers.onTouchMove(100f, 300f, 0)  // along it, past the start key
+        assertTrue(ptr.hasFlagsAny(Pointers.FLAG_P_SWIPE_TYPING))
+        pointers.onTouchUp(0)
+        assertEquals(1, handler.swipeEndCount)
     }
 
     /**
@@ -178,7 +262,8 @@ class PointersSwipeStartKeyTest {
             ptr.hasLeftStartingKey = true
             ptrs.add(ptr)
             pointers.onTouchUp(0)
-            val expected = if (start === letterM) 1 else 0
+            // A letter start, or a non-letter CHARACTER start that left its key over two letters.
+            val expected = if (nonCharStarts.any { it.second === start }) 0 else 1
             assertEquals("$name: word decoder calls", expected, handler.swipeEndCount)
         }
     }
@@ -191,6 +276,33 @@ class PointersSwipeStartKeyTest {
         for ((name, start) in nonLetterStarts) {
             assertFalse("$name must not start swipe typing", KeyLetter.startsWordSwipe(start))
         }
+    }
+
+    /** Non-Latin letters start word swipes too: Cyrillic, Greek, Hebrew, Arabic. */
+    @Test
+    fun startPredicate_acceptsNonLatinLetters() {
+        for (c in listOf('ж', 'Ж', 'λ', 'Ω', 'ש', 'ب')) {
+            assertTrue("$c", KeyLetter.startsWordSwipe(key(KeyValue.makeCharKey(c))))
+        }
+    }
+
+    /** An uppercase String centre (a shifted layout) folds to its letter and starts a swipe. */
+    @Test
+    fun startPredicate_acceptsAnUppercaseStringCentre() {
+        assertTrue(KeyLetter.startsWordSwipe(key(KeyValue.makeStringKey("A"))))
+        assertTrue(KeyLetter.startsWordSwipe(key(KeyValue.makeStringKey("É"))))
+        assertFalse("multi-letter strings are not a letter key", KeyLetter.startsWordSwipe(key(KeyValue.makeStringKey("ab"))))
+    }
+
+    /**
+     * Documented edge: Turkish dotted capital İ lowercases (Locale.ROOT) to two code units
+     * (i + combining dot), so it is NOT a single-letter centre and does not start a word swipe
+     * (KeyLetter KDoc). Pinned so a change to that rule is deliberate.
+     */
+    @Test
+    fun startPredicate_rejectsDottedCapitalI() {
+        assertFalse(KeyLetter.startsWordSwipe(key(KeyValue.makeCharKey('İ'))))
+        assertTrue("dotless ı is a letter", KeyLetter.startsWordSwipe(key(KeyValue.makeCharKey('ı'))))
     }
 
     // ------------------------------------------------------------------ harness

@@ -21,6 +21,24 @@ class ContinuousSwipe<K>(private val emit: (Segment<K>) -> Unit, private val ove
         const val DWELL_MS = 280L
         const val MAX_POINTS = 2048
         const val MAX_SEGMENTS = 32
+
+        /**
+         * Longest time a finger-lift sample may add after the last accepted sample (typing
+         * audit, 2026-10-08). Equal to the recognizer's MAX_POINT_INTERVAL_MS (500 ms), the
+         * gap beyond which a mid-gesture pause is already not treated as path time. A final
+         * hold longer than this is still a stop on the last key, but an unclamped 2 s hold
+         * filled most of the encoder's 64 time-resampled columns with one stationary point.
+         */
+        const val MAX_LIFT_GAP_MS = 500L
+
+        /**
+         * [lift] with its time clamped to at most [MAX_LIFT_GAP_MS] after [lastTimestamp]; the
+         * position is kept. Shared by the single-word trace ([tribixbite.cleverkeys.RawSwipeTrace])
+         * and continuous segments so both engines' CTC inputs agree.
+         */
+        fun clampLift(lastTimestamp: Long, lift: Sample): Sample =
+            if (lift.timestamp - lastTimestamp <= MAX_LIFT_GAP_MS) lift
+            else lift.copy(timestamp = lastTimestamp + MAX_LIFT_GAP_MS)
     }
     private val samples = mutableListOf<Sample>()
     private val keys = mutableListOf<K>()
@@ -66,6 +84,7 @@ class ContinuousSwipe<K>(private val emit: (Segment<K>) -> Unit, private val ove
      * [lift] (ACTION_UP position and time) becomes that segment's [Segment.lift] when the
      * finger lifted on letters (not on the spacebar, whose position would read as a false
      * final key), the coordinates are finite and it is strictly later than the last sample.
+     * Its time is clamped to [MAX_LIFT_GAP_MS] after the last sample ([clampLift]).
      */
     fun finish(lift: Sample? = null) {
         if (!stopped && hasBoundary) {
@@ -73,7 +92,7 @@ class ContinuousSwipe<K>(private val emit: (Segment<K>) -> Unit, private val ove
             val accepted = lift?.takeIf {
                 !lastSampleInSpace && last != null && it.x.isFinite() && it.y.isFinite() &&
                     it.timestamp > last.timestamp
-            }
+            }?.let { clampLift(last!!.timestamp, it) }
             flush(false, accepted)
         }
         stopped = true

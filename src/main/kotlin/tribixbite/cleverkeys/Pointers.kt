@@ -361,10 +361,10 @@ class Pointers(
         // This eliminates race conditions between multiple prediction systems
         // Allow entry if either Swipe Typing (Char keys) OR Short Gestures (Any key) is enabled
         val isCharKey = ptr_value != null && ptr_value.getKind() == KeyValue.Kind.Char
-        // Word swipes may only START on a letter key (Seeker 2026-10-07: a swipe from
-        // Backspace across m/n/b typed "mb"). Space, digits and punctuation are Char keys
-        // too, so isCharKey alone is not the rule — KeyLetter.startsWordSwipe is.
-        val canSwipeType = snap.swipe_typing_enabled && isCharKey && KeyLetter.startsWordSwipe(ptr.key)
+        // Word swipes START on a letter key (Seeker 2026-10-07: a swipe from Backspace across
+        // m/n/b typed "mb"), or are promoted from a sloppy space/digit/punctuation start — see
+        // mayBeWordSwipe. isCharKey alone is not the rule.
+        val canSwipeType = snap.swipe_typing_enabled && isCharKey && mayBeWordSwipe(ptr)
         val canShortGesture = snap.short_gestures_enabled && ptr_value != null
         // Entry into the classification block keeps its historical Char-key rule so a
         // Space/punctuation gesture with short gestures OFF still reaches the TAP branch
@@ -690,6 +690,25 @@ class Pointers(
             }
         }
         return false
+    }
+
+    /**
+     * Whether [ptr]'s gesture may be a word swipe, given the key it STARTED on.
+     *
+     * - A letter start always may ([Pointer.startsOnLetter], [KeyLetter.startsWordSwipe]).
+     * - A non-letter CHARACTER start (space, digit, punctuation) is promoted only once the
+     *   finger has left that key by more than `short_gesture_max_distance`
+     *   ([Pointer.hasLeftStartingKey]) AND the recognizer has registered at least two letters
+     *   ([ImprovedSwipeGestureRecognizer.isSwipeTyping]): the user aimed at the first letter
+     *   and landed on its neighbour, so typing the space or digit instead of the word was the
+     *   wrong answer (typing audit, 2026-10-08). A short flick on that key stays its subkey.
+     * - Any other start never may: Backspace (the original "mb" bug), Shift and the other
+     *   modifiers, Enter, Tab — they keep their own short swipes and taps.
+     */
+    private fun mayBeWordSwipe(ptr: Pointer): Boolean {
+        if (ptr.startsOnLetter) return true
+        if (ptr.key.keys[0]?.getKind() != KeyValue.Kind.Char) return false
+        return ptr.hasLeftStartingKey && _swipeRecognizer.isSwipeTyping()
     }
 
     /** Count active (non-latched) pointers for swipe detection. */
@@ -1024,9 +1043,11 @@ class Pointers(
         // TrackPoint mode only activates on HOLD, not short swipe
         val ptrValue = ptr.value
         val activePointers = countActivePointers()
+        // Path collection follows the historical Char-key rule (space, digits and punctuation
+        // included): the recognizer must see a sloppy non-letter start's path for it to be
+        // promoted. The LATCH below applies the start-key rule (mayBeWordSwipe).
         val isSwipeTypingKey = snap.swipe_typing_enabled && activePointers == 1 &&
-            ptrValue != null && ptrValue.getKind() == KeyValue.Kind.Char &&
-            KeyLetter.startsWordSwipe(ptr.key)
+            ptrValue != null && ptrValue.getKind() == KeyValue.Kind.Char
         val isShortGestureKey = snap.short_gestures_enabled && activePointers == 1 && ptrValue != null
         val shouldCollectPath = isSwipeTypingKey || isShortGestureKey
 
@@ -1059,11 +1080,13 @@ class Pointers(
             // could latch FLAG_P_SWIPE_TYPING with swipe typing OFF and then be excluded
             // from BOTH the completion path (:163 requires the setting) and the touch-up
             // gesture block (flag exclusion).
-            // isSwipeTypingKey gates it on the START key (Seeker 2026-10-07): a short-gesture
-            // key such as Backspace also collects its path here, and the recognizer reports
-            // isSwipeTyping() once the finger has crossed two letters — without this check a
-            // swipe-left from Backspace over m/n/b latched a word swipe and typed "mb".
-            if (isSwipeTypingKey && _swipeRecognizer.isSwipeTyping() && ptr.hasLeftStartingKey) {
+            // isSwipeTypingKey + mayBeWordSwipe gate it on the START key (Seeker 2026-10-07): a
+            // short-gesture key such as Backspace also collects its path here, and the
+            // recognizer reports isSwipeTyping() once the finger has crossed two letters —
+            // without this check a swipe-left from Backspace over m/n/b typed "mb".
+            if (isSwipeTypingKey && _swipeRecognizer.isSwipeTyping() && ptr.hasLeftStartingKey &&
+                mayBeWordSwipe(ptr)
+            ) {
                 ptr.flags = ptr.flags or FLAG_P_SWIPE_TYPING
                 stopLongPress(ptr)
             }
@@ -1901,6 +1924,12 @@ class Pointers(
 
         /** Track if swipe has ever left the starting key's bounds (for short gesture detection). */
         var hasLeftStartingKey: Boolean = false
+
+        /**
+         * [KeyLetter.startsWordSwipe] for [key], resolved once at touch-down: the move path
+         * consults it on every MOVE, and the predicate allocates (string + case fold).
+         */
+        @JvmField val startsOnLetter: Boolean = KeyLetter.startsWordSwipe(key)
 
         /**
          * The open subkey popover. Null with [FLAG_P_POPOVER_MODE] still set after the dwell

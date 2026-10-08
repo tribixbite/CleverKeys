@@ -58,6 +58,7 @@ open class ImprovedSwipeGestureRecognizer(
     // Thresholds for improved filtering
     private val SMOOTHING_WINDOW: Int
         get() = Config.globalConfig().swipe_smoothing_window.coerceIn(1, 7)
+    // Equal to ContinuousSwipe.MAX_LIFT_GAP_MS, the clamp on the finger-lift sample.
     private val MAX_POINT_INTERVAL_MS = 500L
 
     // Configurable thresholds from settings
