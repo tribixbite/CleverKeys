@@ -1,6 +1,6 @@
 # CleverKeys User Guide
 
-**Last Updated**: 2026-10-06
+**Last Updated**: 2026-10-08
 **Version**: v2.0.0 development
 
 Welcome to the CleverKeys documentation. This guide covers everything you need to know to get the most out of your keyboard.
@@ -41,6 +41,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | Page | Description |
 |------|-------------|
 | [Short Swipes](./gestures/short-swipes.md) | Quick swipe actions on any key |
+| [Subkey Popover](./gestures/subkey-popover.md) | Hold a key to see its subkeys, slide and let go to type |
 | [Cursor Navigation](./gestures/cursor-navigation.md) | Spacebar slider and arrow keys |
 | [Selection-Delete Mode](./gestures/selection-delete.md) | Select text by holding backspace |
 | [TrackPoint Mode](./gestures/trackpoint-mode.md) | Joystick-style cursor on nav keys |
@@ -52,7 +53,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [Per-Key Actions](./customization/per-key-actions.md) | Customize actions, dynamic templates and explicit apostrophe suffixes |
 | [Extra Keys](./customization/extra-keys.md) | Add function keys, arrows, Tab, Ctrl |
 | [Themes](./customization/themes.md) | Color schemes and appearance |
-| [Command Palette](./customization/command-palette.md) | Quick access to keyboard commands |
+| [Command Palette](./customization/command-palette.md) | Searchable list of 228 assignable commands, plus minimize and hide |
 | [Timestamp Keys](./customization/timestamp-keys.md) | Insert formatted date/time |
 
 ### 5. Layouts and Languages (P1)
@@ -72,6 +73,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [Haptics & Sound](./settings/haptics.md) | Vibration and key press sounds |
 | [Privacy](./settings/privacy.md) | Data collection and clipboard settings |
 | [Accessibility](./settings/accessibility.md) | Switch Access, TalkBack, large keys |
+| [Advanced](./settings/advanced.md) | Terminal apps and custom terminal packages, debug options |
 
 ### 7. Clipboard and Text (P2)
 | Page | Description |

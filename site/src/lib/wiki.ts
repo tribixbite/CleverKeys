@@ -47,10 +47,10 @@ export function pageSlug(entry: CollectionEntry<'wiki'>): string {
 export const PRIORITY: Record<string, string[]> = {
   'getting-started': ['installation', 'enabling-keyboard', 'first-time-setup', 'basic-typing', 'quick-settings'],
   typing:            ['swipe-typing', 'autocorrect', 'emoji', 'smart-punctuation', 'special-characters', 'user-dictionary'],
-  gestures:          ['short-swipes', 'circle-gestures', 'cursor-navigation', 'selection-delete', 'trackpoint-mode'],
+  gestures:          ['short-swipes', 'subkey-popover', 'circle-gestures', 'cursor-navigation', 'selection-delete', 'trackpoint-mode'],
   customization:     ['per-key-actions', 'extra-keys', 'themes', 'timestamp-keys', 'command-palette'],
   layouts:           ['adding-layouts', 'switching-layouts', 'multi-language', 'language-packs', 'custom-layouts', 'profiles'],
-  settings:          ['appearance', 'input-behavior', 'haptics', 'accessibility'],
+  settings:          ['appearance', 'input-behavior', 'haptics', 'accessibility', 'advanced'],
   clipboard:         ['clipboard-history', 'text-selection', 'shortcuts'],
   troubleshooting:   ['common-issues', 'performance', 'reset-defaults'],
 }
