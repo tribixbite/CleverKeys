@@ -71,6 +71,38 @@ class SwipeMLDataEnrichmentTest {
     }
 
     /**
+     * The CTC encoder's raw trace (typing audit, 2026-10-08) is stored beside the smoothed
+     * path under "raw_trace_points", in the same normalized/delta format, and round-trips
+     * through JSON and copyWith. Absent → null, and the key is omitted.
+     */
+    @Test
+    fun rawTraceIsSerializedBesideTheSmoothedPathAndRoundTrips() {
+        val data = sample().apply {
+            addRawTracePoint(100f, 1500f, 1_000L)
+            addRawTracePoint(210f, 1522f, 1_020L)
+            addRawTracePoint(320f, 1544f, 1_060L)
+            addRawTracePoint(321f, 1544f, 1_400L)  // lift sample
+        }
+        val raw = requireNotNull(data.getRawTracePoints())
+        assertThat(raw).hasSize(4)
+        assertThat(raw[1].x).isWithin(1e-6f).of(210f / 1080)
+        assertThat(raw.drop(1).map { it.tDeltaMs }).containsExactly(20L, 40L, 340L).inOrder()
+        assertThat(data.getTracePoints()).hasSize(3)
+
+        val json = data.toJSON()
+        assertThat(json.getJSONArray("raw_trace_points").length()).isEqualTo(4)
+        val restored = SwipeMLData(json)
+        assertThat(restored.getRawTracePoints()).isEqualTo(raw)
+        assertThat(restored.getTracePoints()).isEqualTo(data.getTracePoints())
+        assertThat(data.copyWith("hello", "user_selection").getRawTracePoints()).isEqualTo(raw)
+
+        val without = sample()
+        assertThat(without.getRawTracePoints()).isNull()
+        assertThat(without.toJSON().has("raw_trace_points")).isFalse()
+        assertThat(SwipeMLData(without.toJSON()).getRawTracePoints()).isNull()
+    }
+
+    /**
      * BACKWARDS COMPATIBILITY: rows recorded before the playground existed (and imports of
      * older exports) have none of the enrichment keys. They must load with null enrichment —
      * never a crash, never fabricated empty lists pretending geometry was captured.

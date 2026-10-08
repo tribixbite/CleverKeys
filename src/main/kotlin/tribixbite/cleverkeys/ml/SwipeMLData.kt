@@ -123,6 +123,15 @@ class SwipeMLData {
     // under, when the user later replaced it. Null for a row whose label was never corrected.
     private var correctedFrom: String? = null
 
+    // The CTC encoder's input for this gesture (typing audit, 2026-10-08): the UNSMOOTHED
+    // samples plus the finger-lift sample ([tribixbite.cleverkeys.RawSwipeTrace]), normalized
+    // and delta-timed like [tracePoints]. [tracePoints] stays the recognizer's smoothed path,
+    // which is what earlier exports contain, so existing consumers see no change. Null when
+    // the gesture layer supplied no raw trace (and for every row recorded before 2026-10-08).
+    // JSON key "raw_trace_points", omitted when null.
+    private var rawTracePoints: MutableList<TracePoint>? = null
+    private var lastRawAbsoluteTimestamp: Long = 0L
+
     // Constructor for new swipe data
     @JvmOverloads
     constructor(
@@ -219,6 +228,15 @@ class SwipeMLData {
         if (json.has("decode_latency_ms")) {
             decodeLatencyMs = json.getLong("decode_latency_ms")
         }
+        json.optJSONArray("raw_trace_points")?.let { rawArray ->
+            val raw = ArrayList<TracePoint>(rawArray.length())
+            for (i in 0 until rawArray.length()) {
+                val point = rawArray.getJSONObject(i)
+                raw.add(TracePoint(point.getDouble("x").toFloat(), point.getDouble("y").toFloat(), point.getLong("t_delta_ms")))
+            }
+            rawTracePoints = raw
+            lastRawAbsoluteTimestamp = timestampUtc + raw.sumOf { it.tDeltaMs }
+        }
         keyboardOffsetY = metadata.optInt("keyboard_offset_y", 0)
 
         // Reconstruct last absolute timestamp from deltas
@@ -243,6 +261,19 @@ class SwipeMLData {
         lastAbsoluteTimestamp = timestamp
 
         tracePoints.add(TracePoint(normalizedX, normalizedY, deltaMs))
+    }
+
+    /**
+     * Add one sample of the CTC encoder's raw trace (unsmoothed + lift), normalized and
+     * delta-timed exactly like [addRawPoint] so the two lists are directly comparable.
+     */
+    fun addRawTracePoint(rawX: Float, rawY: Float, timestamp: Long) {
+        val list = rawTracePoints ?: ArrayList<TracePoint>().also {
+            rawTracePoints = it
+            lastRawAbsoluteTimestamp = timestampUtc
+        }
+        list.add(TracePoint(rawX / screenWidthPx, rawY / screenHeightPx, timestamp - lastRawAbsoluteTimestamp))
+        lastRawAbsoluteTimestamp = timestamp
     }
 
     /**
@@ -309,6 +340,17 @@ class SwipeMLData {
             pointsArray.put(p)
         }
         json.put("trace_points", pointsArray)
+        rawTracePoints?.let { raw ->
+            val rawArray = JSONArray()
+            for (point in raw) {
+                rawArray.put(JSONObject().apply {
+                    put("x", point.x)
+                    put("y", point.y)
+                    put("t_delta_ms", point.tDeltaMs)
+                })
+            }
+            json.put("raw_trace_points", rawArray)
+        }
 
         // Registered keys
         val keysArray = JSONArray()
@@ -405,6 +447,9 @@ class SwipeMLData {
 
     // Getters with defensive copies
     fun getTracePoints(): List<TracePoint> = tracePoints.toList()
+
+    /** The CTC raw trace (unsmoothed + lift), or null when none was captured. */
+    fun getRawTracePoints(): List<TracePoint>? = rawTracePoints?.toList()
     fun getRegisteredKeys(): List<String> = registeredKeys.toList()
 
     // ── Enrichment accessors (Swipe Playground) ──────────────────────────────────────────
@@ -460,6 +505,8 @@ class SwipeMLData {
         copy.keyGeometry = keyGeometry
         copy.candidates = candidates
         copy.decodeLatencyMs = decodeLatencyMs
+        copy.rawTracePoints = rawTracePoints?.toMutableList()
+        copy.lastRawAbsoluteTimestamp = lastRawAbsoluteTimestamp
         return copy
     }
 

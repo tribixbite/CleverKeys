@@ -1180,6 +1180,8 @@ tasks.register('runMockTests', JavaExec) {
     // plus one finger-lift sample (a final stop on `d` reaches the encoder at `d`); the
     // geometric engine keeps the smoothed path.
     'tribixbite.cleverkeys.SwipeCtcRawTraceTest',
+    // Behavioural engine-input routing + ML raw-trace capture (audit 2026-10-08).
+    'tribixbite.cleverkeys.InputCoordinatorEngineInputTest',
     // Release-record burn-down (2026-09-03): claims pinned by waves UA-UD
     'tribixbite.cleverkeys.ReleaseClaimGestureModesTest',
     // #171/#145/#83 (2026-09-03): custom short-swipe dispatch — a custom mapping shadows

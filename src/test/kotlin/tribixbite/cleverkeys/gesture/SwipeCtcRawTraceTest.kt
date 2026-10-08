@@ -217,28 +217,6 @@ class SwipeCtcRawTraceTest {
     }
 
     @Test
-    fun `the dispatcher hands CTC the raw trace and geometric the smoothed path`() {
-        // Source pin (the coordinator needs a live IME to drive): the ONLY decodeAsync call
-        // featurizes the raw trace, and every geometric hand-off keeps swipePath/timestamps.
-        val source = java.io.File("src/main/kotlin/tribixbite/cleverkeys/InputCoordinator.kt").readText()
-        val ctcBody = source.substringAfter("private fun performCtcSwipeTyping(")
-            .substringBefore("\n    private fun ").substringBefore("\n    fun ")
-        assertThat(ctcBody).contains("ctcTrace?.points ?: swipePath, ctcTrace?.timestamps ?: timestamps")
-        val geometricCalls = Regex("""(?<!fun )performGeometricSwipeTyping\(\s*([^)]*)\)""").findAll(source).toList()
-        assertThat(geometricCalls).isNotEmpty()
-        for (call in geometricCalls) {
-            assertWithMessage("geometric must keep the smoothed path: ${call.value}")
-                .that(call.groupValues[1].replace(Regex("\\s+"), " "))
-                .startsWith("swipedKeys, swipePath, timestamps,")
-        }
-        // Pointers: every word-swipe end in onTouchUp records the lift first.
-        val pointers = java.io.File("src/main/kotlin/tribixbite/cleverkeys/Pointers.kt").readText()
-        val up = pointers.substringAfter("fun onTouchUp(").substringBefore("\n    }\n")
-        assertThat(Regex("""_handler\.onSwipeEnd\(""").findAll(up).count()).isEqualTo(1)
-        assertThat(up).contains("_swipeRecognizer.recordLift(")
-    }
-
-    @Test
     fun `RawSwipeTrace copies its input and rejects malformed input`() {
         val points = mutableListOf(PointF(1f, 2f), PointF(3f, 4f))
         val times = mutableListOf(10L, 20L)

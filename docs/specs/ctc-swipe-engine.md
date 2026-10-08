@@ -221,17 +221,26 @@ and the ML capture keep). It featurizes `SwipeResult.rawTrace` (`RawSwipeTrace`,
 - plus at most ONE sample at finger lift — the ACTION_UP position and time, recorded by
   `Pointers.onTouchUp` right before it ends a word swipe — appended only when finite and
   strictly later than the last sample. It restores a final stop's duration, which the noise drop
-  erases (stationary samples are discarded). Not clamped.
+  erases (stationary samples are discarded). Its time is clamped to at most 500 ms after the
+  last sample (`ContinuousSwipe.MAX_LIFT_GAP_MS` = the recognizer's `MAX_POINT_INTERVAL_MS`,
+  `ContinuousSwipe.clampLift`; typing audit 2026-10-08): unclamped, a 1–2 s hold on the last
+  key before lift filled most of the 64 time-resampled columns with one stationary point. The
+  evaluated stops (the `ad` case, 200 ms) are below the clamp and unchanged.
 
 Continuous-swipe segments were already unsmoothed (both engines receive them unchanged); the
 final segment's CTC copy also gets the lift sample when the finger lifted on letters (never on
-the spacebar). `InputCoordinator` falls back to `path` when a caller supplies no `rawTrace`.
+the spacebar), with the same clamp. `InputCoordinator` falls back to `path` when a caller
+supplies no `rawTrace`. The ML capture (`SwipeMLData`) keeps the smoothed path in
+`trace_points` and, since 2026-10-08, stores the raw trace beside it in the optional
+`raw_trace_points` (same normalized/delta format; absent on older rows), for either engine.
 Every geometric hand-off from the CTC path (unserved language, layout/model/lexicon gates,
 `onDecodeFailure`) keeps the smoothed path. Measured: held-out top-1 91.83 → 92.12 (34 gains /
 22 losses, p = 0.070), with the shipped Kotlin path reproducing the evaluated "proposed"
 pre-processing trace for trace; a deliberate stop now separates `ad` from `as`
-(`docs/eval/2026-10-07-short-word-ctc.md` §5.1). Pinned by `SwipeCtcRawTraceTest`,
-`ContinuousSwipePureTest`, `Keyboard2ViewContinuousLifecycleTest`.
+(`docs/eval/2026-10-07-short-word-ctc.md` §5.1). Pinned by `SwipeCtcRawTraceTest` (incl. the
+2 s hold), `ContinuousSwipePureTest`, `Keyboard2ViewContinuousLifecycleTest` and the behavioural
+`InputCoordinatorEngineInputTest` (fake adapters: CTC gets the raw trace or falls back to the
+path, geometric always gets the smoothed path, the ML capture records both).
 
 `swipe/CtcEngineAdapter.kt` mirrors `GeometricEngineAdapter`'s duties for the `ctc` mode:
 

@@ -7,6 +7,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verifyOrder
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -158,8 +159,13 @@ class PointersSwipeStartKeyTest {
     fun letterStart_stillLatchesAndCommitsAWord() {
         val ptr = swipeLeftAcrossLetters(letterM)
         assertTrue("a letter-start gesture must latch swipe typing", ptr.hasFlagsAny(Pointers.FLAG_P_SWIPE_TYPING))
-        pointers.onTouchUp(0)
+        pointers.onTouchUp(0, liftX = 95f, liftY = 101f)
         assertEquals("exactly one word swipe", 1, handler.swipeEndCount)
+        // The CTC lift sample is recorded at the ACTION_UP position before the swipe ends.
+        verifyOrder {
+            recognizer.recordLift(95f, 101f)
+            recognizer.reset()
+        }
     }
 
     @Test

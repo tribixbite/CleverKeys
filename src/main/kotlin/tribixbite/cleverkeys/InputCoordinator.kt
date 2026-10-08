@@ -589,7 +589,7 @@ class InputCoordinator(
         )) {
             SwipeEngineRouter.Engine.GEOMETRIC -> performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked, control
+                wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace
             )
             SwipeEngineRouter.Engine.CTC -> performCtcSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
@@ -619,7 +619,8 @@ class InputCoordinator(
         swipePath: List<android.graphics.PointF>?,
         timestamps: List<Long>?,
         resources: Resources,
-        engine: String
+        engine: String,
+        rawTrace: RawSwipeTrace? = null,
     ) {
         // Mark that last input was a swipe for ML data collection
         contextTracker.setWasLastInputSwipe(true)
@@ -640,6 +641,14 @@ class InputCoordinator(
                 val point = swipePath[i]
                 val timestamp = timestamps[i]
                 currentSwipeData?.addRawPoint(point.x, point.y, timestamp)
+            }
+        }
+
+        // The CTC encoder's raw trace (unsmoothed + lift), whichever engine decodes: the
+        // smoothed path above is not what CTC featurizes (typing audit, 2026-10-08).
+        rawTrace?.let { trace ->
+            for (i in trace.points.indices) {
+                currentSwipeData?.addRawTracePoint(trace.points[i].x, trace.points[i].y, trace.timestamps[i])
             }
         }
 
@@ -701,7 +710,9 @@ class InputCoordinator(
         resources: Resources,
         wasShiftActive: Boolean,
         wasShiftLocked: Boolean,
-        control: SwipeCommitControl? = null
+        control: SwipeCommitControl? = null,
+        // ML capture only: the geometric engine always decodes the smoothed swipePath.
+        rawTrace: RawSwipeTrace? = null,
     ) {
         if (swipePath.isNullOrEmpty() || timestamps == null) { control?.complete(null); return }
         val keyboard = keyboardView.getKeyboard() ?: run { control?.complete(null); return }
@@ -713,7 +724,7 @@ class InputCoordinator(
         // Same swipe-state + ML-trace capture as the CTC path (D5 collection works
         // identically for geometric selections), tagged with the geometric engine + layout
         // so ML exports stay separable from QWERTY/CTC traces (audit n-2).
-        beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_GEOMETRIC)
+        beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_GEOMETRIC, rawTrace)
 
         val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
             ?: config.primary_language
@@ -810,7 +821,7 @@ class InputCoordinator(
             // it must never return without dispatching.
             performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked, control
+                wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace
             )
             return
         }
@@ -848,14 +859,14 @@ class InputCoordinator(
         ) {
             performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked, control
+                wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace
             )
             return
         }
 
         // Same swipe-state + ML-trace capture as the geometric path, tagged with
         // the CTC engine + layout so ML exports stay separable per decoder (audit n-2).
-        beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_CTC)
+        beginSwipeCapture(swipedKeys, swipePath, timestamps, resources, SwipeMLData.ENGINE_CTC, ctcTrace)
 
         // The CTC encoder featurizes the unsmoothed trace (+ lift sample) when the gesture layer
         // supplied one; every geometric hand-off in this function keeps the smoothed swipePath.
@@ -881,7 +892,7 @@ class InputCoordinator(
                 if (control?.isCurrent() != false && isReplayInputStillCurrent(ic, editorInfo)) {
                     performGeometricSwipeTyping(
                         swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                        wasShiftActive, wasShiftLocked, control
+                        wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace
                     )
                 } else {
                     control?.complete(null)
