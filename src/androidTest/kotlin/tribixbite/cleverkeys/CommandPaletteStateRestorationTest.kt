@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -59,11 +60,13 @@ class CommandPaletteStateRestorationTest {
         rule.onNode(hasSetTextAction()).performTextInput("signature")
         rule.onNodeWithText(text(R.string.command_palette_use_text)).performClick()
         // The label step is open, prefilled with the first four characters; the user edits it.
-        rule.onNodeWithText("sign").performTextReplacement("SIG")
+        // Match the FIELD only: the step also draws a key-label preview showing the same text
+        // (SubLabelSizing previews, f3fad66a), so a plain text matcher finds two nodes.
+        rule.onNode(hasSetTextAction() and hasText("sign")).performTextReplacement("SIG")
 
         restoration.emulateSavedInstanceStateRestore()
 
-        rule.onNodeWithText("SIG").assertExists()
+        rule.onNode(hasSetTextAction() and hasText("SIG")).assertExists()
         rule.onNodeWithText(text(R.string.command_palette_confirm)).performClick()
         rule.runOnIdle {
             assertEquals("signature", result?.actionValue)

@@ -3,10 +3,14 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -81,8 +85,17 @@ class LayoutManagerLanguageBindingComposeTest {
             // The picker lists the bound language with the same warning, plus "Follow".
             compose.onNodeWithText(chip).performClick()
             compose.onNodeWithText(context.getString(R.string.layout_language_title)).assertIsDisplayed()
-            assertEquals(2, compose.onAllNodesWithText(warning).fetchSemanticsNodes().size)
             val follow = context.getString(R.string.layout_language_follow_multilang)
+            // The picker is a height-capped LazyColumn sorted by display name, so the unavailable
+            // binding can sit below the fold among the device's installed languages and is not
+            // composed until scrolled to (ew-cli Pixel7/34, 2026-10-08: 1 warning, not 2). The
+            // picker's list is the scrollable whose first row is "Follow …".
+            val picker = compose.onNode(hasScrollToNodeAction() and hasAnyDescendant(hasText(follow)))
+            picker.performScrollToNode(hasText(warning))
+            assertEquals(2, compose.onAllNodesWithText(warning).fetchSemanticsNodes().size)
+            // Scroll "Follow …" back into view before tapping it: a click on a row the scroll
+            // left outside the dialog lands outside it and only dismisses the picker.
+            picker.performScrollToNode(hasText(follow))
             compose.onAllNodesWithText(follow)[0].performClick()
             compose.waitForIdle()
 
