@@ -1,270 +1,110 @@
 ---
 title: Switching Layouts - Technical Specification
+description: Layout cycling, the narrow/wide layout selection, and language changes on bound layouts
 user_guide: /wiki/layouts/switching-layouts/
 status: implemented
-version: v1.2.7
+version: v2.0.0 development
 ---
 
 # Switching Layouts Technical Specification
 
 ## Overview
 
-Layout switching handles transitions between installed keyboard layouts via gesture, button, or programmatic triggers, including visual feedback and state management.
+The enabled text layouts are the ordered list `Config.layouts` (Layout Manager order).
+`switch_forward` and `switch_backward` cycle through that list; special layouts (numeric,
+emoji, Greek/math) are shown on top of the current text layout without changing the
+selection. The selected index is stored separately for narrow and wide screens. Since
+GH #186/#61 a layout may carry a language binding, so a layout switch can also be a
+language switch; see [Multi-Language Input](./multi-language-spec.md).
 
 ## Key Components
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| LayoutSwitcher | `LayoutSwitcher.kt` | Switch logic and history |
-| GlobeKeyHandler | `Pointers.kt:900-1000` | Globe key gestures |
-| LayoutIndicator | `KeyboardView.kt:600-700` | Visual feedback |
-| LayoutPicker | `LayoutPickerView.kt` | Selection overlay |
-| Config | `Config.kt` | Switching preferences |
+| KeyboardReceiver | `KeyboardReceiver.kt` (`handle_event_key`) | Handles `SWITCH_FORWARD`, `SWITCH_BACKWARD`, `SWITCH_GREEKMATH` events |
+| LayoutManager | `LayoutManager.kt` | Current text/special layout; `incrTextLayout`, `setTextLayout`, `current_layout_unmodified` |
+| LayoutBridge | `wiring/LayoutBridge.kt` | Service-facing wrapper that also applies the layout to the view |
+| Config | `Config.kt` | `layouts`, `layout_languages`, `get_current_layout`, `set_current_layout` |
+| LayoutLanguageBinding | `LayoutLanguageBinding.kt` | Resolves the active languages for the selected layout |
+| ActiveLanguageSync | `ActiveLanguageSync.kt` | Reloads dictionaries/contractions and re-warms swipe when the active language changes |
 
-## State Management
-
-### Current Layout State
-
-```kotlin
-// LayoutSwitcher.kt
-class LayoutSwitcher {
-    var currentLayout: Layout
-        private set
-
-    var layoutHistory: ArrayDeque<String> = ArrayDeque(5)
-        private set
-
-    val activeLayouts: List<Layout>
-        get() = config.active_layouts.map { layoutManager.getLayout(it) }
-}
-```
-
-### Layout History
+## Cycling
 
 ```kotlin
-// LayoutSwitcher.kt
-private fun recordLayoutSwitch(layoutId: String) {
-    layoutHistory.addFirst(currentLayout.id)
-    if (layoutHistory.size > 5) {
-        layoutHistory.removeLast()
-    }
-}
-
-fun getPreviousLayout(): Layout? {
-    return layoutHistory.firstOrNull()?.let { layoutManager.getLayout(it) }
-}
-```
-
-## Globe Key Handler
-
-### Gesture Detection
-
-```kotlin
-// Pointers.kt:~950
-private fun handleGlobeKey(ptr: Pointer, event: MotionEvent) {
-    when (event.action) {
-        MotionEvent.ACTION_DOWN -> {
-            globeKeyDownTime = System.currentTimeMillis()
-            globeKeyStartX = event.x
-        }
-
-        MotionEvent.ACTION_UP -> {
-            val duration = System.currentTimeMillis() - globeKeyDownTime
-            val deltaX = event.x - globeKeyStartX
-
-            when {
-                // Long press - show picker
-                duration > LONG_PRESS_THRESHOLD -> {
-                    showLayoutPicker()
-                }
-                // Double tap - toggle last two
-                isDoubleTap() -> {
-                    toggleLastTwoLayouts()
-                }
-                // Swipe - directional switch
-                abs(deltaX) > SWIPE_THRESHOLD -> {
-                    if (deltaX > 0) switchToNextLayout()
-                    else switchToPreviousLayout()
-                }
-                // Single tap - cycle
-                else -> {
-                    cycleToNextLayout()
-                }
-            }
-        }
+// KeyboardReceiver.kt
+KeyValue.Event.SWITCH_FORWARD -> {
+    if (layoutManager.getLayoutCount() > 1) {
+        keyboardView.setKeyboard(layoutManager.incrTextLayout(1))
     }
 }
 ```
 
-### Double Tap Detection
-
 ```kotlin
-// Pointers.kt:~980
-private var lastGlobeTapTime = 0L
-private val DOUBLE_TAP_TIMEOUT = 300L
-
-private fun isDoubleTap(): Boolean {
-    val now = System.currentTimeMillis()
-    val isDouble = (now - lastGlobeTapTime) < DOUBLE_TAP_TIMEOUT
-    lastGlobeTapTime = now
-    return isDouble
-}
-
-private fun toggleLastTwoLayouts() {
-    val previous = layoutHistory.firstOrNull() ?: return
-    switchToLayout(previous)
+// LayoutManager.kt
+fun incrTextLayout(delta: Int): KeyboardData {
+    val s = config.layouts.size
+    val newIndex = (config.get_current_layout() + delta + s) % s
+    return setTextLayout(newIndex)
 }
 ```
 
-## Switch Methods
+`setTextLayout` calls `Config.set_current_layout`, clears any special layout and returns the
+current layout with modifiers applied. With one enabled layout the switch events do nothing.
+An index past the end of the list resolves to layout 0 (`current_layout_unmodified`); a
+`null` entry is the System layout and resolves to the locale text layout.
 
-### Cycle Switch
+## Narrow and Wide Selection
 
-```kotlin
-// LayoutSwitcher.kt
-fun cycleToNextLayout() {
-    val layouts = activeLayouts
-    val currentIndex = layouts.indexOfFirst { it.id == currentLayout.id }
-    val nextIndex = (currentIndex + 1) % layouts.size
+`Config.wide_screen` is true when the screen is at least 600 dp wide
+(`WIDE_DEVICE_THRESHOLD`). `get_current_layout()` returns `current_layout_wide` or
+`current_layout_narrow` accordingly, and `set_current_layout` writes the one in use. Both
+are persisted (`current_layout_landscape`, `current_layout_portrait`), so rotating can
+change the selected layout.
 
-    switchToLayout(layouts[nextIndex].id)
-}
+## Language Change on Switch
 
-fun cycleToPreviousLayout() {
-    val layouts = activeLayouts
-    val currentIndex = layouts.indexOfFirst { it.id == currentLayout.id }
-    val prevIndex = (currentIndex - 1 + layouts.size) % layouts.size
-
-    switchToLayout(layouts[prevIndex].id)
-}
-```
-
-### Direct Switch
+`set_current_layout` resolves the active languages immediately and re-publishes the config
+snapshot when they changed, so gesture paths never read the old language:
 
 ```kotlin
-// LayoutSwitcher.kt
-fun switchToLayout(layoutId: String) {
-    val newLayout = layoutManager.getLayout(layoutId) ?: return
-
-    // Record history
-    recordLayoutSwitch(layoutId)
-
-    // Update state
-    currentLayout = newLayout
-    config.current_layout = layoutId
-
-    // Notify keyboard
-    keyboardView.setLayout(newLayout)
-
-    // Show indicator
-    showLayoutIndicator(newLayout)
-
-    // Haptic feedback
-    triggerHaptic(HapticEvent.LAYOUT_SWITCH)
-}
+// Config.kt
+// GH #186/#61: a layout switch is a language switch when either layout is bound. Resolve
+// now and re-publish the snapshot (gesture hot paths read primary_language from it), so
+// nothing reads the old language between this call and the preference-listener refresh
+// that follows the write below and drives ActiveLanguageSync.
+if (recomputeActiveLanguages()) edit { }
 ```
 
-## Layout Indicator
+The preference write that follows triggers a Config refresh; `CleverKeysService.onConfigChanged`
+hands the active languages to `ActiveLanguageSync`, which reloads only what changed.
 
-```kotlin
-// KeyboardView.kt:~650
-private fun showLayoutIndicator(layout: Layout) {
-    if (!config.show_layout_indicator) return
+| Switch | Effect on languages |
+|--------|---------------------|
+| Unbound → unbound | None; nothing reloads, no message |
+| Unbound → bound to X | Primary becomes X, secondary unloaded; bar shows "Language: X" (or "(no dictionary installed)") |
+| Bound to X → bound to Y | Primary becomes Y; bar shows "Language: Y" |
+| Bound → unbound | Back to the user's Multi-Language settings; no message |
 
-    layoutIndicatorView.apply {
-        text = layout.name
-        subtitle = layout.localeTag
-        alpha = 1f
-        visibility = VISIBLE
-    }
-
-    // Fade out after delay
-    handler.postDelayed({
-        layoutIndicatorView.animate()
-            .alpha(0f)
-            .setDuration(200)
-            .withEndAction { layoutIndicatorView.visibility = GONE }
-            .start()
-    }, INDICATOR_DISPLAY_TIME)
-}
-```
-
-## Layout Picker
-
-```kotlin
-// LayoutPickerView.kt
-class LayoutPickerView : FrameLayout {
-    fun show() {
-        // Populate list with all installed layouts
-        val layouts = layoutManager.getInstalledLayouts()
-
-        adapter.submitList(layouts.map { layout ->
-            LayoutItem(
-                layout = layout,
-                isActive = layout.id == currentLayout.id,
-                isInQuickSwitch = config.active_layouts.contains(layout.id)
-            )
-        })
-
-        visibility = VISIBLE
-        requestFocus()
-    }
-
-    fun onLayoutSelected(layoutId: String) {
-        hide()
-        layoutSwitcher.switchToLayout(layoutId)
-    }
-}
-```
-
-## Spacebar Gesture
-
-```kotlin
-// Pointers.kt:~850
-private fun handleSpacebarSwipe(ptr: Pointer, dx: Float) {
-    if (abs(dx) < LAYOUT_SWITCH_THRESHOLD) return
-
-    if (dx > 0) {
-        layoutSwitcher.cycleToNextLayout()
-    } else {
-        layoutSwitcher.cycleToPreviousLayout()
-    }
-}
-```
-
-## Per-App Layout
-
-```kotlin
-// LayoutSwitcher.kt
-private val perAppLayouts = mutableMapOf<String, String>()
-
-fun onAppChanged(packageName: String) {
-    if (!config.per_app_layout_enabled) return
-
-    val savedLayout = perAppLayouts[packageName]
-    if (savedLayout != null && savedLayout != currentLayout.id) {
-        switchToLayout(savedLayout, animate = false)
-    }
-}
-
-fun saveLayoutForApp(packageName: String) {
-    perAppLayouts[packageName] = currentLayout.id
-    savePerAppLayoutsToPrefs()
-}
-```
+A rotation that changes the narrow/wide selection follows the same path.
 
 ## Configuration
 
 | Setting | Key | Default | Description |
 |---------|-----|---------|-------------|
-| **Show Globe** | `show_globe_key` | true | Display globe key |
-| **Quick Switch Layouts** | `active_layouts` | All | Layouts in cycle |
-| **Per-App Layout** | `per_app_layout_enabled` | false | Remember per app |
-| **Show Indicator** | `show_layout_indicator` | true | Show switch indicator |
-| **Indicator Duration** | `indicator_duration` | 1000ms | Display time |
+| **Layouts** | `layouts` | Built-in default list | Ordered enabled layouts; each entry may carry a `language` binding |
+| **Portrait selection** | `current_layout_portrait` | 0 | Selected index when not wide |
+| **Landscape selection** | `current_layout_landscape` | 0 | Selected index when wide (≥ 600 dp) |
+
+## Test Coverage
+
+| Suite | File |
+|-------|------|
+| Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/LayoutLanguageBindingTest.kt` (includes a three-language cycle) |
+| Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/ActiveLanguageSyncTest.kt` (unbound switches reload nothing) |
+| Mock | `src/test/kotlin/tribixbite/cleverkeys/LayoutLanguageBindingConfigTest.kt` (`set_current_layout` onto a bound layout) |
 
 ## Related Specifications
 
+- [Multi-Language Input](./multi-language-spec.md) - Active languages and per-layout binding
 - [Adding Layouts](adding-layouts-spec.md) - Layout management
-- [Gesture System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/gesture-system.md) - Globe key gestures
 - [Layout System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/layout-system.md) - Full architecture
