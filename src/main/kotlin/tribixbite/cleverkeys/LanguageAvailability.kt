@@ -17,21 +17,56 @@ object LanguageAvailability {
     private const val DICTIONARY_ASSET_DIR = "dictionaries"
     private const val DICTIONARY_SUFFIX = "_enhanced.bin"
 
+    /**
+     * One scan of the device's dictionaries. [packs] are installed packs with a parseable
+     * manifest (what the pickers list); [packsWithDictionary] are those whose dictionary file
+     * exists (what [isAvailable] has always required).
+     */
+    private data class Snapshot(
+        val bundled: Set<String>,
+        val packs: Set<String>,
+        val packsWithDictionary: Set<String>,
+    )
+
+    /**
+     * Per-process cache (2026-10-08 audit). A scan is `assets.list` plus a directory walk and
+     * a manifest parse per pack — callers run on the main thread (Layout Manager's first
+     * composition, the keyboard's message on every bound-layout switch), so it is done once
+     * and reused. Bundled dictionaries cannot change while the process lives; installed packs
+     * change only through [LanguagePackManager.importLanguagePack] / [LanguagePackManager.deletePack],
+     * which call [invalidate]. Settings and the keyboard share one process, so one cache serves
+     * both. A failed scan is not cached.
+     */
+    @Volatile
+    private var cached: Snapshot? = null
+
+    /** Drop the cached scan; the next query rescans. Called after every pack import/delete. */
+    fun invalidate() {
+        cached = null
+    }
+
+    private fun snapshot(context: Context): Snapshot {
+        cached?.let { return it }
+        val manager = LanguagePackManager.getInstance(context)
+        val packs = manager.getInstalledPacks().map { it.code }.toSet()
+        return Snapshot(
+            bundled = bundledLanguages(context),
+            packs = packs,
+            packsWithDictionary = packs.filterTo(mutableSetOf()) { manager.isInstalled(it) },
+        ).also { cached = it }
+    }
+
     /** Sorted language codes with a bundled dictionary or an installed pack. */
-    fun availableLanguages(context: Context): List<String> {
-        val languages = mutableSetOf<String>()
-        try {
-            languages += bundledLanguages(context)
-            LanguagePackManager.getInstance(context).getInstalledPacks().forEach { languages += it.code }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to list available dictionaries", e)
-        }
-        return languages.sorted()
+    fun availableLanguages(context: Context): List<String> = try {
+        snapshot(context).let { (it.bundled + it.packs).sorted() }
+    } catch (e: Exception) {
+        Log.e(TAG, "Failed to list available dictionaries", e)
+        emptyList()
     }
 
     /** True when [code] has a bundled dictionary or an installed language pack. */
     fun isAvailable(context: Context, code: String): Boolean = try {
-        code in bundledLanguages(context) || LanguagePackManager.getInstance(context).isInstalled(code)
+        snapshot(context).let { code in it.bundled || code in it.packsWithDictionary }
     } catch (e: Exception) {
         Log.e(TAG, "Failed to check dictionary for '$code'", e)
         // Unknown is reported as available: a false "not installed" warning would be worse

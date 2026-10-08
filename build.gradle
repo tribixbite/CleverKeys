@@ -1194,6 +1194,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.MarginPercentPolicyTest',
     'tribixbite.cleverkeys.theme.MonetDynamicColorGateTest',
     'tribixbite.cleverkeys.langpack.LanguagePackImportTest',
+    // 2026-10-08 audit: per-process dictionary-availability cache, invalidated by pack import/delete.
+    'tribixbite.cleverkeys.LanguageAvailabilityCacheTest',
     'tribixbite.cleverkeys.UserDictionaryLocaleFilterTest',
     'tribixbite.cleverkeys.MLDataCollectionToggleTest',
     // v2.0 learning-consent migration (2026-09-24): fresh installs default learning OFF,

@@ -314,6 +314,30 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("suffix uses retained previous word").that(bigram("like", "cats'")).isEqualTo(1)
     }
 
+    /**
+     * GH #186/#61 gate (audit gap 2026-10-08): while the current layout carries a language
+     * binding, auto-detection must not run — it would switch the n-gram/context models away
+     * from the bound language mid-sentence. Unbound, the same five words do reach detection.
+     */
+    @Test
+    fun autoDetectionIsSkippedWhileTheLayoutBindsALanguage() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        val languages = mockk<MultiLanguageManager>()
+        every { languages.detectAndSwitch(any(), any()) } returns "es"
+        predictor.setField("multiLanguageManager", languages)
+
+        config.layout_bound_language = "en"
+        listOf("we", "all", "really", "like", "cats").forEach { predictor.addWordToContext(it, true) }
+        verify(exactly = 0) { languages.detectAndSwitch(any(), any()) }
+        assertWithMessage("bound language kept").that(predictor.getField("currentLanguage")).isEqualTo("en")
+
+        config.layout_bound_language = null
+        predictor.addWordToContext("dogs", true)
+        verify(exactly = 1) { languages.detectAndSwitch(any(), any()) }
+        assertWithMessage("unbound: detection switches").that(predictor.getField("currentLanguage")).isEqualTo("es")
+    }
+
     @Test
     fun exactReceiptPreflightPermissionMismatchPermanentlyExpiresIt() {
         val vocabulary = useReceiptVocabulary()
@@ -892,6 +916,15 @@ class LearningFunnelBookkeepingTest {
         )
         predictor.setField("customAndUserWords", emptySet<String>())
         predictor.setField("learnableWordPolicyCache", null)
+    }
+
+    private fun Any.getField(name: String): Any? {
+        var cls: Class<*>? = javaClass
+        while (cls != null) {
+            cls.declaredFields.firstOrNull { it.name == name }?.let { it.isAccessible = true; return it.get(this) }
+            cls = cls.superclass
+        }
+        throw AssertionError("field '$name' not found on ${javaClass.simpleName}")
     }
 
     private fun Any.setField(name: String, value: Any?) {

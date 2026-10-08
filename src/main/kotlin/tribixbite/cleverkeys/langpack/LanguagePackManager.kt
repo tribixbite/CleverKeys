@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.langpack
 
 import tribixbite.cleverkeys.IoFailureReason
+import tribixbite.cleverkeys.LanguageAvailability
 import tribixbite.cleverkeys.PackImportFailure
 import android.annotation.SuppressLint
 import android.content.Context
@@ -141,6 +142,10 @@ class LanguagePackManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Import failed", e)
             ImportResult.Error(PackImportFailure.fromException(e))
+        } finally {
+            // Success installs a pack; a failure late in the swap can remove the old one. Either
+            // way the installed set may have changed, so the cached availability scan is stale.
+            LanguageAvailability.invalidate()
         }
     }
 
@@ -565,10 +570,15 @@ class LanguagePackManager(private val context: Context) {
      */
     fun deletePack(code: String): Boolean {
         val packDir = File(langpacksDir, code)
-        return if (packDir.exists()) {
-            packDir.deleteRecursively()
-        } else {
-            false
+        return try {
+            if (packDir.exists()) {
+                packDir.deleteRecursively()
+            } else {
+                false
+            }
+        } finally {
+            // Even a partial delete changes what is installed.
+            LanguageAvailability.invalidate()
         }
     }
 
