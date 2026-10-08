@@ -156,6 +156,7 @@
     <string name="suggestion_prefer_when_swiping">滑动输入时优先“%1$s”？</string>
     <string name="suggestion_prefer_when_swiping_decline">不再询问</string>
     <string name="suggestion_prefer_when_swiping_added">滑动输入现在优先“%1$s”</string>
+    <string name="suggestion_prefer_when_swiping_raised">滑动输入现在强烈优先“%1$s”</string>
     <string name="suggestion_added_to_dictionary">已将“%1$s”添加到词典</string>
     <string name="suggestion_tap_again_to_undo">再次点按即可撤销</string>
     <string name="suggestion_removed_from_dictionary">已将“%1$s”从词典中移除</string>
@@ -166,6 +167,12 @@
     <string name="dict_add_new_word">+ 添加新单词</string>
     <string name="dict_add_new_word_hint">点按以添加自定义单词</string>
     <string name="dict_word_frequency">频率：%1$d</string>
+    <string name="dict_swipe_priority_label">滑动优先级</string>
+    <string name="dict_swipe_priority_normal">普通</string>
+    <string name="dict_swipe_priority_high">高</string>
+    <string name="dict_swipe_priority_highest">最高</string>
+    <string name="dict_swipe_priority_help">频率（1-255）决定词语相对于词典的排名；255 已经是最高值。滑动优先级会在此之上为滑动时仍然落选的词语增加固定加分：“高”为适中，“最高”为强。提高优先级的词语也会赢得一些相似词语的滑动（例如用“ad”代替“as”）。打字时的候选建议不受影响。</string>
+    <string name="dict_word_frequency_swipe_priority">频率：%1$d · 滑动优先级：%2$s</string>
     <string name="dict_edit">编辑</string>
     <string name="dict_delete">删除</string>
     <string name="dict_no_words">未找到单词</string>

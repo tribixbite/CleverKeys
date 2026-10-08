@@ -1133,6 +1133,15 @@ open class BackupRestoreManager(
         }
         root.add("custom_words_by_language", customWordsPerLang)
 
+        // User swipe priority (2026-10-08): the raised levels of personal-dictionary words,
+        // per language, in the stored `{word: level}` form. Older app versions ignore the
+        // section; DictImportPlanBuilder reads it back.
+        val swipePrioritiesByLang = LanguagePreferenceKeys.getLanguagesWithSwipePriorities(prefs)
+            .associateWith { lang ->
+                SwipePriority.parseMap(prefs.getString(LanguagePreferenceKeys.swipePriorityKey(lang), null))
+            }
+        root.add(SwipePriority.BACKUP_SECTION, SwipePriority.toBackupSection(swipePrioritiesByLang))
+
         // Export disabled words per language (new format)
         val disabledWordsPerLang = JsonObject()
         val disabledLanguages = LanguagePreferenceKeys.getLanguagesWithDisabledWords(prefs)

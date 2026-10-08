@@ -2,12 +2,16 @@ package tribixbite.cleverkeys
 
 /**
  * Represents a word in the dictionary with its metadata
+ *
+ * @property swipePriority the user's swipe priority for a personal-dictionary word
+ *   ([SwipePriority]); always [SwipePriority.NORMAL] for main-dictionary and platform rows.
  */
 data class DictionaryWord(
     val word: String,
     val frequency: Int = 0,
     val source: WordSource,
-    var enabled: Boolean = true
+    var enabled: Boolean = true,
+    val swipePriority: SwipePriority = SwipePriority.NORMAL,
 ) : Comparable<DictionaryWord> {
 
     override fun compareTo(other: DictionaryWord): Int {

@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import tribixbite.cleverkeys.LanguagePreferenceKeys
+import tribixbite.cleverkeys.SwipePriority
 
 /**
  * Stateless apply step for `DictImportPlan`.
@@ -35,6 +36,10 @@ object DictImportApplier {
         var customApplied = 0
         var disabledApplied = 0
 
+        // The custom-word map each language ends up with — what swipe priorities are
+        // checked against below.
+        val finalCustom = HashMap<String, Set<String>>()
+
         // Custom words: read-modify-write per language, but write goes through
         // the SAME editor so commit() is atomic across all languages.
         for ((lang, words) in plan.mergedCustomWordsByLang) {
@@ -52,7 +57,27 @@ object DictImportApplier {
             }
 
             editor.putString(key, gson.toJson(existing))
+            finalCustom[lang] = existing.keys.toSet()
         }
+
+        // Swipe priorities (2026-10-08): a level is applied only to a word that IS a
+        // personal-dictionary word once this import lands (so a deselected word gets none),
+        // and only where this device has no level for it yet — an import adds, never lowers.
+        var prioritiesApplied = 0
+        for ((lang, levels) in plan.mergedSwipePrioritiesByLang) {
+            val words = finalCustom[lang] ?: readCustomWordKeys(prefs, lang)
+            val key = LanguagePreferenceKeys.swipePriorityKey(lang)
+            var current = SwipePriority.parseMap(prefs.getString(key, null))
+            var changed = false
+            for ((word, level) in levels) {
+                if (word !in words || word in current) continue
+                current = SwipePriority.withLevel(current, word, level)
+                changed = true
+                prioritiesApplied++
+            }
+            if (changed) editor.putString(key, SwipePriority.toJson(current))
+        }
+        if (prioritiesApplied > 0) Log.i(TAG, "Applied $prioritiesApplied swipe priorities")
 
         // Disabled words: same pattern with StringSet storage.
         for ((lang, words) in plan.mergedDisabledWordsByLang) {
@@ -75,5 +100,14 @@ object DictImportApplier {
             Log.w(TAG, "editor.commit() returned false — disk full or IPC failure")
         }
         return customApplied to disabledApplied
+    }
+
+    /** The stored custom-word keys of [lang] (a language the plan carries no words for). */
+    private fun readCustomWordKeys(prefs: SharedPreferences, lang: String): Set<String> = try {
+        gson.fromJson<MutableMap<String, Int>>(
+            prefs.getString(LanguagePreferenceKeys.customWordsKey(lang), "{}"), mapType
+        )?.keys ?: emptySet()
+    } catch (_: Exception) {
+        emptySet()
     }
 }

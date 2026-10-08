@@ -150,4 +150,79 @@ class DictImportPlanApplyTest {
             })
         }
     }
+
+    // ── user swipe priority (2026-10-08) ─────────────────────────────────────────
+
+    /** Capture what the applier writes per key. */
+    private fun captureWrites(): MutableMap<String, String> {
+        val writes = mutableMapOf<String, String>()
+        every { editor.putString(any(), any()) } answers {
+            writes[firstArg()] = secondArg()
+            editor
+        }
+        return writes
+    }
+
+    /**
+     * Full round trip: the export section ([tribixbite.cleverkeys.SwipePriority.toBackupSection])
+     * → the backup JSON → [DictImportPlanBuilder] → [DictImportApplier] → the stored levels.
+     */
+    @Test
+    fun swipePriorities_roundTripThroughABackup() {
+        val levels = mapOf(
+            "en" to mapOf(
+                "adb" to tribixbite.cleverkeys.SwipePriority.HIGHEST,
+                "wet" to tribixbite.cleverkeys.SwipePriority.HIGH,
+            ),
+        )
+        val root = com.google.gson.JsonObject()
+        root.add("custom_words_by_language", com.google.gson.JsonParser.parseString("""{"en":{"adb":255,"wet":255}}"""))
+        root.add(tribixbite.cleverkeys.SwipePriority.BACKUP_SECTION, tribixbite.cleverkeys.SwipePriority.toBackupSection(levels))
+        val plan = DictImportPlanBuilder.fromJson(root.toString(), emptyMap(), emptyMap())
+        assertThat(plan.mergedSwipePrioritiesByLang).isEqualTo(levels)
+
+        val writes = captureWrites()
+        DictImportApplier.apply(plan, emptySet(), emptySet(), prefs)
+
+        assertThat(tribixbite.cleverkeys.SwipePriority.parseMap(writes["swipe_priority_en"]))
+            .isEqualTo(levels.getValue("en"))
+        verify(exactly = 1) { editor.commit() }
+    }
+
+    @Test
+    fun swipePriorities_applyOnlyToImportedWordsAndNeverOverrideALocalLevel() {
+        // Local state: `wet` already a custom word raised to HIGH here.
+        every { prefs.getString("custom_words_en", any()) } returns """{"wet":255}"""
+        every { prefs.getString("swipe_priority_en", any()) } returns """{"wet":1}"""
+        val plan = DictImportPlan(
+            sourceVersion = "2.0.0",
+            perLanguage = mapOf("en" to LangChanges(mapOf("adb" to 255, "skip" to 255), emptyList())),
+            mergedCustomWordsByLang = mapOf("en" to mapOf("adb" to 255, "skip" to 255, "wet" to 255)),
+            mergedDisabledWordsByLang = emptyMap(),
+            mergedSwipePrioritiesByLang = mapOf(
+                "en" to mapOf(
+                    "adb" to tribixbite.cleverkeys.SwipePriority.HIGHEST,
+                    "wet" to tribixbite.cleverkeys.SwipePriority.HIGHEST, // local HIGH wins
+                    "skip" to tribixbite.cleverkeys.SwipePriority.HIGH,   // deselected in preview
+                    "nowhere" to tribixbite.cleverkeys.SwipePriority.HIGH, // not a custom word
+                ),
+            ),
+        )
+        val writes = captureWrites()
+        DictImportApplier.apply(plan, setOf(LangWord("en", "skip")), emptySet(), prefs)
+
+        assertThat(tribixbite.cleverkeys.SwipePriority.parseMap(writes["swipe_priority_en"])).containsExactly(
+            "wet", tribixbite.cleverkeys.SwipePriority.HIGH,
+            "adb", tribixbite.cleverkeys.SwipePriority.HIGHEST,
+        )
+    }
+
+    @Test
+    fun swipePriorities_absentSectionWritesNothing() {
+        val plan = DictImportPlanBuilder.fromJson("""{"custom_words_by_language":{"en":{"adb":255}}}""", emptyMap(), emptyMap())
+        assertThat(plan.mergedSwipePrioritiesByLang).isEmpty()
+        val writes = captureWrites()
+        DictImportApplier.apply(plan, emptySet(), emptySet(), prefs)
+        assertThat(writes.keys).containsExactly("custom_words_en")
+    }
 }

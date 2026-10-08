@@ -8,6 +8,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcEmissionModel
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
 import tribixbite.cleverkeys.swipe.ctc.CtcLearnedPrior
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
+import tribixbite.cleverkeys.swipe.ctc.CtcPriorityBonus
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
 import tribixbite.cleverkeys.swipe.ctc.CtcSwipeDecoder
 import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
@@ -188,13 +189,17 @@ class CtcReplayEngine private constructor(
      * [topK] defaults to the shipped slate size; pass `scoringParams.beamWidth` to read every
      * complete word the final beam holds (final-letter replay, 2026-10-07: a custom word that
      * reaches the beam at rank 7-8 is invisible in an 8-word slate's tail otherwise).
+     *
+     * [priority] is the user swipe-priority bonus the adapter passes for raised personal-
+     * dictionary words (user swipe priority, 2026-10-08).
      */
     fun decoderWithLexicon(
         merged: LinkedHashMap<String, Double>,
         topK: Int = params.topK,
+        priority: CtcPriorityBonus = CtcPriorityBonus.NONE,
     ): CtcSwipeDecoder {
         val customTrie = CtcLexiconTrie.loadStrippingNonAlphabet(layout.alphabet, merged)
-        return CtcSwipeDecoder(model, layout, customTrie, params.copy(topK = topK))
+        return CtcSwipeDecoder(model, layout, customTrie, params.copy(topK = topK), priority = priority)
     }
 
     // ── learned-unigram replay instrument (2026-09-26; additive) ───────────────────────

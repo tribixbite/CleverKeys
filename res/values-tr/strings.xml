@@ -156,6 +156,7 @@
     <string name="suggestion_prefer_when_swiping">Kaydırırken \'%1$s\' tercih edilsin mi?</string>
     <string name="suggestion_prefer_when_swiping_decline">Sorma</string>
     <string name="suggestion_prefer_when_swiping_added">Kaydırmada artık \'%1$s\' tercih ediliyor</string>
+    <string name="suggestion_prefer_when_swiping_raised">Kaydırmada artık \'%1$s\' güçlü biçimde tercih ediliyor</string>
     <string name="suggestion_added_to_dictionary">\'%1$s\' sözlüğe eklendi</string>
     <string name="suggestion_tap_again_to_undo">Geri almak için tekrar dokunun</string>
     <string name="suggestion_removed_from_dictionary">\'%1$s\' sözlükten kaldırıldı</string>
@@ -166,6 +167,12 @@
     <string name="dict_add_new_word">+ Yeni Kelime Ekle</string>
     <string name="dict_add_new_word_hint">Özel bir kelime eklemek için dokunun</string>
     <string name="dict_word_frequency">Sıklık: %1$d</string>
+    <string name="dict_swipe_priority_label">Kaydırma önceliği</string>
+    <string name="dict_swipe_priority_normal">Normal</string>
+    <string name="dict_swipe_priority_high">Yüksek</string>
+    <string name="dict_swipe_priority_highest">En yüksek</string>
+    <string name="dict_swipe_priority_help">Sıklık (1-255) kelimenizi sözlüğe göre sıralar; 255 zaten en yüksek değerdir. Kaydırma önceliği, kaydırırken hâlâ kaybeden bir kelimeye ek olarak sabit bir avantaj verir: Yüksek orta düzeyde, En yüksek güçlüdür. Önceliği yükseltilen kelime benzer kelimelerin bazı kaydırmalarını da kazanır (örneğin \'as\' yerine \'ad\'). Yazarken çıkan öneriler etkilenmez.</string>
+    <string name="dict_word_frequency_swipe_priority">Sıklık: %1$d · Kaydırma önceliği: %2$s</string>
     <string name="dict_edit">Düzenle</string>
     <string name="dict_delete">Sil</string>
     <string name="dict_no_words">Kelime bulunamadı</string>

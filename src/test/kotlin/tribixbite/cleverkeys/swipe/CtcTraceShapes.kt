@@ -76,4 +76,49 @@ object CtcTraceShapes {
         }
         return Triple(x, y, t)
     }
+
+    /**
+     * [trace] plus the finger-lift sample the shipped recognizer appends at ACTION_UP
+     * (`SwipeCtcRawTraceTest`): the last position again, [dwellMs] later. A dwell of one
+     * step (16 ms) is a quick lift; 200 ms is a deliberate stop on the last key (the noise
+     * filter drops the sub-pixel jitter of the stop, so only the lift sample carries it).
+     */
+    fun withLift(
+        trace: Triple<DoubleArray, DoubleArray, DoubleArray>,
+        dwellMs: Double = 16.0,
+    ): Triple<DoubleArray, DoubleArray, DoubleArray> {
+        val (x, y, t) = trace
+        return Triple(x + x.last(), y + y.last(), t + (t.last() + dwellMs))
+    }
+
+    /**
+     * An eased trace: per segment the position follows smoothstep, so the finger slows to a
+     * stop on EVERY key of [word] (the "deliberate" swipe a user falls back to when a word
+     * keeps failing). Same 12 steps × 16 ms per segment as [straight].
+     */
+    fun eased(
+        word: String,
+        layout: CtcLayout,
+        stepsPerSegment: Int = 12,
+        stepMs: Double = 16.0,
+    ): Triple<DoubleArray, DoubleArray, DoubleArray> {
+        val cx = DoubleArray(word.length) { layout.keyCentersX[layout.alphabet.indexOf(word[it])].toDouble() }
+        val cy = DoubleArray(word.length) { layout.keyCentersY[layout.alphabet.indexOf(word[it])].toDouble() }
+        val xs = ArrayList<Double>()
+        val ys = ArrayList<Double>()
+        val ts = ArrayList<Double>()
+        var t = 0.0
+        for (i in 0 until word.length - 1) {
+            for (s in 0 until stepsPerSegment) {
+                val u = s / stepsPerSegment.toDouble()
+                val f = u * u * (3 - 2 * u) // smoothstep: zero velocity at both keys
+                xs.add(cx[i] + (cx[i + 1] - cx[i]) * f)
+                ys.add(cy[i] + (cy[i + 1] - cy[i]) * f)
+                ts.add(t)
+                t += stepMs
+            }
+        }
+        xs.add(cx.last()); ys.add(cy.last()); ts.add(t)
+        return Triple(xs.toDoubleArray(), ys.toDoubleArray(), ts.toDoubleArray())
+    }
 }

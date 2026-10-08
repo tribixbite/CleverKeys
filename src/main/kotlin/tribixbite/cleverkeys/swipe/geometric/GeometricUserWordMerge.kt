@@ -16,7 +16,12 @@ import java.util.Locale
  *  - a base word that a user word already covers (case-folded) is dropped, so the user's
  *    ranking wins rather than sitting beside the base entry;
  *  - disabled words are removed from the base, and a user word OVERRIDES a disabled entry —
- *    matching `WordPredictor`'s custom-and-user-words semantics and `CtcLexiconMerge`.
+ *    matching `WordPredictor`'s custom-and-user-words semantics and `CtcLexiconMerge`;
+ *  - a user word the user RAISED in the Dictionary Manager (swipe priority, 2026-10-08)
+ *    carries its bonus on the merged dictionary ([GeometricDictionary.swipeBonus]). Rank 0
+ *    is already the strongest prior this engine has, so the priority is an explicit score
+ *    term rather than a reordering; with no raised word the merged dictionary carries no
+ *    bonus array at all and decodes exactly as before.
  */
 object GeometricUserWordMerge {
 
@@ -27,6 +32,10 @@ object GeometricUserWordMerge {
      *   [tribixbite.cleverkeys.swipe.UserDictionarySnapshot.mergeWithCustom]. Blank words are
      *   skipped; the frequency is used for ORDER only, which is why no clamping happens here.
      * @param disabled the `disabled_words_<lang>` preference set.
+     * @param bonusByWord user word (exactly as listed in [userWords]) → swipe-priority bonus in
+     *   `S(w)` units (`tribixbite.cleverkeys.swipe.UserSwipePriorityBonus.geometricBonusByWord`).
+     *   Entries for words not in [userWords] are ignored: a priority only ever applies to a
+     *   personal-dictionary word.
      * @return [base] itself when there is nothing to overlay, else a new [ArrayBackedDictionary].
      */
     fun merge(
@@ -35,6 +44,7 @@ object GeometricUserWordMerge {
         disabled: Set<String>,
         language: String,
         version: Long,
+        bonusByWord: Map<String, Float> = emptyMap(),
     ): GeometricDictionary {
         val user = ArrayList<Pair<String, Int>>(userWords.size)
         for (entry in userWords) if (entry.first.isNotBlank()) user.add(entry)
@@ -52,6 +62,15 @@ object GeometricUserWordMerge {
             if (lower in userLower || lower in disabledLower) continue
             words.add(w)
         }
-        return ArrayBackedDictionary(language, version, words.toTypedArray())
+        // Bonuses align with the prepended user words (ordinals 0 until user.size); null when no
+        // user word carries one, so an un-raised dictionary is byte-for-byte the old merge.
+        val bonuses = if (user.any { (bonusByWord[it.first] ?: 0f) > 0f }) {
+            FloatArray(words.size).also { arr ->
+                for (i in user.indices) arr[i] = (bonusByWord[user[i].first] ?: 0f).coerceAtLeast(0f)
+            }
+        } else {
+            null
+        }
+        return ArrayBackedDictionary(language, version, words.toTypedArray(), bonuses)
     }
 }

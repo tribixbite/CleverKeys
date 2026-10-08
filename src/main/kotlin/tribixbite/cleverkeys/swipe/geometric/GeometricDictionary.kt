@@ -34,4 +34,13 @@ interface GeometricDictionary {
      * @throws IndexOutOfBoundsException if [i] is out of range.
      */
     fun word(i: Int): String
+
+    /**
+     * The user swipe-priority bonus for the word at ordinal [i], added to its score `S(w)`
+     * by [GeometricSwipeEngine] after pruning — so it only re-ranks words whose template the
+     * trace already passed the geometric pruner for, and can never surface an unrelated word.
+     * `0` for every word of a base dictionary; set only by [GeometricUserWordMerge] for user
+     * words the user raised (`docs/eval/2026-10-08-user-swipe-priority.md`).
+     */
+    fun swipeBonus(i: Int): Float = 0f
 }

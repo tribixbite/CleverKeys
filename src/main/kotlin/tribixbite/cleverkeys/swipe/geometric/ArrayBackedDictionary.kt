@@ -14,14 +14,26 @@ package tribixbite.cleverkeys.swipe.geometric
  * @param version generation token (cache key); callers bump on any word-set change.
  * @param words words in descending frequency order, deterministic tie-break already
  *   applied by the loader.
+ * @param bonuses optional per-ordinal swipe-priority bonus ([GeometricDictionary.swipeBonus]),
+ *   aligned with [words]; null (every base dictionary) means 0 everywhere. Any change to it must
+ *   come with a new [version], like a word-set change.
  */
 class ArrayBackedDictionary(
     override val language: String,
     override val version: Long,
     private val words: Array<String>,
+    private val bonuses: FloatArray? = null,
 ) : GeometricDictionary {
+
+    init {
+        require(bonuses == null || bonuses.size == words.size) {
+            "bonuses (${bonuses?.size}) must align with words (${words.size})"
+        }
+    }
 
     override val size: Int get() = words.size
 
     override fun word(i: Int): String = words[i]
+
+    override fun swipeBonus(i: Int): Float = bonuses?.get(i) ?: 0f
 }

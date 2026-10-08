@@ -55,6 +55,14 @@ data class DictImportPlan(
     val mergedDisabledWordsByLang: Map<String, Set<String>>,
     val learnedData: LearnedDataImportPlan = LearnedDataImportPlan.NONE,
     /**
+     * User swipe priority (2026-10-08): the backup's `swipe_priority_by_language` section —
+     * per language, personal-dictionary word → raised level. Applied by [DictImportApplier]
+     * only to words that are personal-dictionary words after the import and carry no level
+     * locally, so an import never lowers or overrides a level the user set on this device.
+     * Empty for backups older than the feature.
+     */
+    val mergedSwipePrioritiesByLang: Map<String, Map<String, tribixbite.cleverkeys.SwipePriority>> = emptyMap(),
+    /**
      * ARC-036: encrypted-vs-plaintext + export timestamp of the source file. See
      * [SettingsImportPlan.source] — same contract, same default, set by the manager after read.
      */

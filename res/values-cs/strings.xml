@@ -158,6 +158,7 @@
     <string name="suggestion_prefer_when_swiping">Při psaní tahem upřednostnit „%1$s“?</string>
     <string name="suggestion_prefer_when_swiping_decline">Neptat se</string>
     <string name="suggestion_prefer_when_swiping_added">Psaní tahem nyní upřednostňuje „%1$s“</string>
+    <string name="suggestion_prefer_when_swiping_raised">Psaní tahem nyní výrazně upřednostňuje „%1$s“</string>
     <string name="suggestion_added_to_dictionary">„%1$s“ přidáno do slovníku</string>
     <string name="suggestion_tap_again_to_undo">Klepnutím znovu vrátíte zpět</string>
     <string name="suggestion_removed_from_dictionary">„%1$s“ odebráno ze slovníku</string>
@@ -168,6 +169,12 @@
     <string name="dict_add_new_word">+ Přidat nové slovo</string>
     <string name="dict_add_new_word_hint">Klepnutím přidáte vlastní slovo</string>
     <string name="dict_word_frequency">Četnost: %1$d</string>
+    <string name="dict_swipe_priority_label">Priorita psaní tahem</string>
+    <string name="dict_swipe_priority_normal">Normální</string>
+    <string name="dict_swipe_priority_high">Vysoká</string>
+    <string name="dict_swipe_priority_highest">Nejvyšší</string>
+    <string name="dict_swipe_priority_help">Četnost (1–255) řadí slovo vůči slovníku; 255 je už maximum. Priorita psaní tahem k tomu přidává pevné zvýhodnění pro slovo, které při psaní tahem stále prohrává: Vysoká je mírná, Nejvyšší silná. Zvýhodněné slovo pak vyhraje i některé tahy podobných slov (např. „ad“ místo „as“). Návrhy při psaní na klávesnici to neovlivní.</string>
+    <string name="dict_word_frequency_swipe_priority">Četnost: %1$d · Priorita psaní tahem: %2$s</string>
     <string name="dict_edit">Upravit</string>
     <string name="dict_delete">Smazat</string>
     <string name="dict_no_words">Nenalezena žádná slova</string>

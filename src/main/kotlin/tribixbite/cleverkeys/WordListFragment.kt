@@ -329,6 +329,8 @@ class WordListFragment : Fragment() {
         freqInput.selectAll()
         layout.addView(freqInput)
 
+        val priorityGroup = addSwipePriorityPicker(layout, SwipePriority.NORMAL)
+
         AlertDialog.Builder(requireContext())
             .setTitle(R.string.dict_add_word_title)
             .setView(layout)
@@ -337,13 +339,18 @@ class WordListFragment : Fragment() {
                 val freqText = freqInput.text.toString().trim()
                 val frequency = freqText.toIntOrNull() ?: UserWordFrequency.DEFAULT
 
+                val priority = selectedSwipePriority(priorityGroup)
+
                 if (word.isNotBlank()) {
                     lifecycleScope.launch {
                         try {
-                            dataSource.addWord(
-                                word,
-                                frequency.coerceIn(UserWordFrequency.MIN, UserWordFrequency.MAX)
-                            )
+                            val clamped = frequency.coerceIn(UserWordFrequency.MIN, UserWordFrequency.MAX)
+                            val source = dataSource
+                            if (source is CustomDictionarySource) {
+                                source.addWord(word, clamped, priority)
+                            } else {
+                                dataSource.addWord(word, clamped)
+                            }
                             loadWords()
                             // Notify parent activity to refresh predictions
                             (activity as? DictionaryManagerActivity)?.refreshAllTabs()
@@ -404,6 +411,8 @@ class WordListFragment : Fragment() {
         freqInput.setText(word.frequency.coerceIn(UserWordFrequency.MIN, UserWordFrequency.MAX).toString())
         layout.addView(freqInput)
 
+        val priorityGroup = addSwipePriorityPicker(layout, word.swipePriority)
+
         AlertDialog.Builder(requireContext())
             .setTitle(R.string.dict_edit_word_title)
             .setView(layout)
@@ -411,14 +420,18 @@ class WordListFragment : Fragment() {
                 val newWord = wordInput.text.toString().trim()
                 val freqText = freqInput.text.toString().trim()
                 val newFrequency = freqText.toIntOrNull() ?: word.frequency
+                val priority = selectedSwipePriority(priorityGroup)
 
                 if (newWord.isNotBlank()) {
                     lifecycleScope.launch {
                         try {
-                            dataSource.updateWord(
-                                word.word, newWord,
-                                newFrequency.coerceIn(UserWordFrequency.MIN, UserWordFrequency.MAX)
-                            )
+                            val clamped = newFrequency.coerceIn(UserWordFrequency.MIN, UserWordFrequency.MAX)
+                            val source = dataSource
+                            if (source is CustomDictionarySource) {
+                                source.updateWord(word.word, newWord, clamped, priority)
+                            } else {
+                                dataSource.updateWord(word.word, newWord, clamped)
+                            }
                             loadWords()
                             // Notify parent activity to refresh predictions
                             (activity as? DictionaryManagerActivity)?.refreshAllTabs()
@@ -431,6 +444,50 @@ class WordListFragment : Fragment() {
             .setNegativeButton(R.string.common_cancel, null)
             .show()
     }
+
+    /**
+     * Append the "Swipe priority" picker (label, Normal/High/Highest radio buttons, and the
+     * explanation of what the levels and the frequency field each do) to [layout], with
+     * [initial] checked. The radio buttons carry their [SwipePriority] as the view tag;
+     * [selectedSwipePriority] reads it back.
+     *
+     * Radio buttons rather than a slider: each level is one discrete, measured bonus
+     * (`docs/eval/2026-10-08-user-swipe-priority.md`), and the store is written once on Save,
+     * so no debouncing of lexicon rebuilds is needed.
+     */
+    private fun addSwipePriorityPicker(
+        layout: android.widget.LinearLayout,
+        initial: SwipePriority,
+    ): android.widget.RadioGroup {
+        val ctx = requireContext()
+        val label = TextView(ctx)
+        label.text = getString(R.string.dict_swipe_priority_label)
+        label.setPadding(0, 24, 0, 0)
+        layout.addView(label)
+
+        val group = android.widget.RadioGroup(ctx)
+        group.orientation = android.widget.RadioGroup.HORIZONTAL
+        for (level in SwipePriority.entries) {
+            val button = android.widget.RadioButton(ctx)
+            button.id = View.generateViewId()
+            button.text = getString(swipePriorityLabelRes(level))
+            button.tag = level
+            group.addView(button)
+            if (level == initial) group.check(button.id)
+        }
+        layout.addView(group)
+
+        val help = TextView(ctx)
+        help.text = getString(R.string.dict_swipe_priority_help)
+        help.textSize = 12f
+        help.alpha = 0.8f
+        layout.addView(help)
+        return group
+    }
+
+    /** The level whose radio button is checked in [group]; NORMAL when none is. */
+    private fun selectedSwipePriority(group: android.widget.RadioGroup): SwipePriority =
+        group.findViewById<View>(group.checkedRadioButtonId)?.tag as? SwipePriority ?: SwipePriority.NORMAL
 
     /**
      * Show the shared "operation failed" dialog for a word action.

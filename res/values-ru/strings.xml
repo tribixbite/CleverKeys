@@ -147,6 +147,7 @@
     <string name="suggestion_prefer_when_swiping">Предпочитать «%1$s» при свайпе?</string>
     <string name="suggestion_prefer_when_swiping_decline">Не спрашивать</string>
     <string name="suggestion_prefer_when_swiping_added">Теперь при свайпе предпочитается «%1$s»</string>
+    <string name="suggestion_prefer_when_swiping_raised">Теперь при свайпе «%1$s» имеет сильный приоритет</string>
     <string name="suggestion_added_to_dictionary">«%1$s» добавлено в словарь</string>
     <string name="suggestion_tap_again_to_undo">Нажмите ещё раз, чтобы отменить</string>
     <string name="suggestion_removed_from_dictionary">«%1$s» удалено из словаря</string>
@@ -157,6 +158,12 @@
     <string name="dict_add_new_word">+ Добавить новое слово</string>
     <string name="dict_add_new_word_hint">Нажмите, чтобы добавить пользовательское слово</string>
     <string name="dict_word_frequency">Частота: %1$d</string>
+    <string name="dict_swipe_priority_label">Приоритет при свайпе</string>
+    <string name="dict_swipe_priority_normal">Обычный</string>
+    <string name="dict_swipe_priority_high">Высокий</string>
+    <string name="dict_swipe_priority_highest">Наивысший</string>
+    <string name="dict_swipe_priority_help">Частота (1–255) задаёт место слова относительно словаря; 255 — уже максимум. Приоритет при свайпе добавляет фиксированное преимущество слову, которое при свайпе всё равно проигрывает: «Высокий» — умеренное, «Наивысший» — сильное. Слово с приоритетом выигрывает и часть свайпов похожих слов (например, «ad» вместо «as»). Подсказки при наборе не меняются.</string>
+    <string name="dict_word_frequency_swipe_priority">Частота: %1$d · Приоритет при свайпе: %2$s</string>
     <string name="dict_edit">Изменить</string>
     <string name="dict_delete">Удалить</string>
     <string name="dict_no_words">Слова не найдены</string>

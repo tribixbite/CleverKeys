@@ -110,10 +110,32 @@ object SwipeCorrectionPolicy {
         correction.rejected.filter { isPlausible(it, correction.chosen, isRealWord) }
 
     /**
-     * Offer "Prefer “Y” when swiping?" once Y has [OFFER_MIN_CORRECTIONS] recorded corrections,
-     * unless Y is already in the personal dictionary (nothing to offer — it already carries the
-     * user frequency) or the user declined Y before.
+     * What accepting "Prefer “Y” when swiping?" would do, given Y's current personal-dictionary
+     * state (user swipe priority, 2026-10-08 — `docs/eval/2026-10-08-user-swipe-priority.md`):
+     *
+     *  - `null` current (Y is not a personal-dictionary word) → [SwipePriority.NORMAL]: add Y,
+     *    which gives it the personal-dictionary frequency (the shipped remedy, enough for
+     *    `git` and `somethings`);
+     *  - [SwipePriority.NORMAL] → [SwipePriority.HIGH]: Y is already the user's word and the
+     *    swipe still keeps getting corrected toward it, so the frequency cap was not enough —
+     *    the next step is the bounded priority bonus;
+     *  - [SwipePriority.HIGH] / [SwipePriority.HIGHEST] → null: nothing more to offer. The bar
+     *    never escalates to HIGHEST: that level takes noticeably more swipes of Y's neighbours
+     *    (eval note §3) and is only set deliberately in the Dictionary Manager, where its cost
+     *    is explained.
      */
-    fun shouldOffer(corrections: Int, isUserDictionaryWord: Boolean, declined: Boolean): Boolean =
-        corrections >= OFFER_MIN_CORRECTIONS && !isUserDictionaryWord && !declined
+    fun offerLevel(current: SwipePriority?): SwipePriority? = when (current) {
+        null -> SwipePriority.NORMAL
+        SwipePriority.NORMAL -> SwipePriority.HIGH
+        SwipePriority.HIGH, SwipePriority.HIGHEST -> null
+    }
+
+    /**
+     * Offer "Prefer “Y” when swiping?" once Y has [OFFER_MIN_CORRECTIONS] recorded corrections,
+     * unless there is nothing left to offer ([offerLevel] of Y's current state is null — pass
+     * null as [offerLevel] for a state with nothing to offer) or the user declined Y before.
+     * Accepting resets Y's correction count, so each step needs its own fresh corrections.
+     */
+    fun shouldOffer(corrections: Int, offerLevel: SwipePriority?, declined: Boolean): Boolean =
+        corrections >= OFFER_MIN_CORRECTIONS && offerLevel != null && !declined
 }

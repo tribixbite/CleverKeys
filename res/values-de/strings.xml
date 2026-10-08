@@ -161,6 +161,7 @@
     <string name="suggestion_prefer_when_swiping">„%1$s“ beim Wischen bevorzugen?</string>
     <string name="suggestion_prefer_when_swiping_decline">Nicht fragen</string>
     <string name="suggestion_prefer_when_swiping_added">Wischen bevorzugt jetzt „%1$s“</string>
+    <string name="suggestion_prefer_when_swiping_raised">Wischen bevorzugt jetzt stark „%1$s“</string>
     <string name="suggestion_added_to_dictionary">„%1$s“ zum Wörterbuch hinzugefügt</string>
     <string name="suggestion_tap_again_to_undo">Zum Rückgängigmachen erneut tippen</string>
     <string name="suggestion_removed_from_dictionary">„%1$s“ aus dem Wörterbuch entfernt</string>
@@ -171,6 +172,12 @@
     <string name="dict_add_new_word">+ Neues Wort hinzufügen</string>
     <string name="dict_add_new_word_hint">Zum Hinzufügen eines eigenen Worts tippen</string>
     <string name="dict_word_frequency">Häufigkeit: %1$d</string>
+    <string name="dict_swipe_priority_label">Wisch-Priorität</string>
+    <string name="dict_swipe_priority_normal">Normal</string>
+    <string name="dict_swipe_priority_high">Hoch</string>
+    <string name="dict_swipe_priority_highest">Am höchsten</string>
+    <string name="dict_swipe_priority_help">Die Häufigkeit (1–255) ordnet Ihr Wort gegenüber dem Wörterbuch ein; 255 ist bereits das Maximum. Die Wisch-Priorität gibt einem Wort, das beim Wischen trotzdem verliert, zusätzlich einen festen Vorteil: Hoch ist mäßig, Am höchsten stark. Ein hochgestuftes Wort gewinnt dann auch manche Wischgesten ähnlicher Wörter (z. B. „ad“ statt „as“). Vorschläge beim Tippen bleiben unverändert.</string>
+    <string name="dict_word_frequency_swipe_priority">Häufigkeit: %1$d · Wisch-Priorität: %2$s</string>
     <string name="dict_edit">Bearbeiten</string>
     <string name="dict_delete">Löschen</string>
     <string name="dict_no_words">Keine Wörter gefunden</string>

@@ -88,7 +88,9 @@ class GeometricSwipeEngine(
         val topK = TopKScored(config.maxResults)
         for (ordinal in survivors) {
             val template = cached.template(ordinal) ?: continue // untypeable guard (never proposed)
-            val s = scorer.score(gesture, template, layout, ordinal)
+            // User swipe priority (GeometricDictionary.swipeBonus): added only to pruner
+            // survivors, so it re-ranks words the trace already reached; 0 for base words.
+            val s = scorer.score(gesture, template, layout, ordinal) + dictionary.swipeBonus(ordinal)
             // Only the finite scores contribute; the loop-primary rule + clamps make
             // non-finite impossible, but stay defensive so no NaN escapes the ranker.
             if (!s.isFinite()) continue

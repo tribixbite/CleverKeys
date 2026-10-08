@@ -182,6 +182,7 @@
     <string name="suggestion_prefer_when_swiping">هنگام کشیدن، «%1$s» ترجیح داده شود؟</string>
     <string name="suggestion_prefer_when_swiping_decline">پرسیده نشود</string>
     <string name="suggestion_prefer_when_swiping_added">اکنون هنگام کشیدن «%1$s» ترجیح داده می‌شود</string>
+    <string name="suggestion_prefer_when_swiping_raised">اکنون هنگام کشیدن «%1$s» بسیار بیشتر ترجیح داده می‌شود</string>
     <string name="suggestion_added_to_dictionary">«%1$s» به واژه‌نامه افزوده شد</string>
     <string name="suggestion_tap_again_to_undo">برای واگرد دوباره ضربه بزنید</string>
     <string name="suggestion_removed_from_dictionary">«%1$s» از واژه‌نامه حذف شد</string>
@@ -192,6 +193,12 @@
     <string name="dict_add_new_word">+ افزودن واژه جدید</string>
     <string name="dict_add_new_word_hint">برای افزودن واژه سفارشی ضربه بزنید</string>
     <string name="dict_word_frequency">بسامد: %1$d</string>
+    <string name="dict_swipe_priority_label">اولویت کشیدن</string>
+    <string name="dict_swipe_priority_normal">عادی</string>
+    <string name="dict_swipe_priority_high">زیاد</string>
+    <string name="dict_swipe_priority_highest">بیشترین</string>
+    <string name="dict_swipe_priority_help">بسامد (۱ تا ۲۵۵) جایگاه واژهٔ شما را نسبت به واژه‌نامه تعیین می‌کند؛ ۲۵۵ همین حالا بالاترین مقدار است. اولویت کشیدن برای واژه‌ای که هنگام کشیدن همچنان می‌بازد یک امتیاز ثابت اضافه می‌کند: «زیاد» متوسط و «بیشترین» قوی است. واژهٔ اولویت‌دار برخی کشیدن‌های واژه‌های مشابه را هم می‌برد (مثلاً «ad» به‌جای «as»). پیشنهادهای تایپ تغییری نمی‌کنند.</string>
+    <string name="dict_word_frequency_swipe_priority">بسامد: %1$d · اولویت کشیدن: %2$s</string>
     <string name="dict_edit">ویرایش</string>
     <string name="dict_delete">حذف</string>
     <string name="dict_no_words">واژه‌ای یافت نشد</string>

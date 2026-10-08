@@ -159,6 +159,7 @@
     <string name="suggestion_prefer_when_swiping">¿Preferir «%1$s» al deslizar?</string>
     <string name="suggestion_prefer_when_swiping_decline">No preguntar</string>
     <string name="suggestion_prefer_when_swiping_added">Al deslizar ahora se prefiere «%1$s»</string>
+    <string name="suggestion_prefer_when_swiping_raised">Al deslizar ahora se prefiere mucho más «%1$s»</string>
     <string name="suggestion_added_to_dictionary">«%1$s» añadida al diccionario</string>
     <string name="suggestion_tap_again_to_undo">Toca de nuevo para deshacer</string>
     <string name="suggestion_removed_from_dictionary">«%1$s» eliminada del diccionario</string>
@@ -169,6 +170,12 @@
     <string name="dict_add_new_word">+ Añadir palabra nueva</string>
     <string name="dict_add_new_word_hint">Toca para añadir una palabra personalizada</string>
     <string name="dict_word_frequency">Frecuencia: %1$d</string>
+    <string name="dict_swipe_priority_label">Prioridad al deslizar</string>
+    <string name="dict_swipe_priority_normal">Normal</string>
+    <string name="dict_swipe_priority_high">Alta</string>
+    <string name="dict_swipe_priority_highest">Máxima</string>
+    <string name="dict_swipe_priority_help">La frecuencia (1-255) ordena tu palabra frente al diccionario; 255 ya es el máximo. La prioridad al deslizar añade además una ventaja fija para una palabra que sigue perdiendo al deslizar: Alta es moderada y Máxima es fuerte. Una palabra con prioridad también gana algunos deslizamientos de palabras parecidas (por ejemplo, «ad» en lugar de «as»). Las sugerencias al teclear no cambian.</string>
+    <string name="dict_word_frequency_swipe_priority">Frecuencia: %1$d · Prioridad al deslizar: %2$s</string>
     <string name="dict_edit">Editar</string>
     <string name="dict_delete">Eliminar</string>
     <string name="dict_no_words">No se encontraron palabras</string>

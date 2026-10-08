@@ -99,11 +99,32 @@ class SwipeCorrectionPolicyTest {
     fun offerThreshold() {
         val min = SwipeCorrectionPolicy.OFFER_MIN_CORRECTIONS
         assertThat(min).isEqualTo(2)
-        assertThat(SwipeCorrectionPolicy.shouldOffer(min - 1, false, false)).isFalse()
-        assertThat(SwipeCorrectionPolicy.shouldOffer(min, false, false)).isTrue()
-        assertThat(SwipeCorrectionPolicy.shouldOffer(min + 3, false, false)).isTrue()
-        assertWithMessage("already a personal-dictionary word")
-            .that(SwipeCorrectionPolicy.shouldOffer(min, true, false)).isFalse()
-        assertWithMessage("declined before").that(SwipeCorrectionPolicy.shouldOffer(min, false, true)).isFalse()
+        val add = SwipeCorrectionPolicy.offerLevel(null)
+        assertThat(SwipeCorrectionPolicy.shouldOffer(min - 1, add, false)).isFalse()
+        assertThat(SwipeCorrectionPolicy.shouldOffer(min, add, false)).isTrue()
+        assertThat(SwipeCorrectionPolicy.shouldOffer(min + 3, add, false)).isTrue()
+        assertWithMessage("nothing left to offer")
+            .that(SwipeCorrectionPolicy.shouldOffer(min, null, false)).isFalse()
+        assertWithMessage("declined before").that(SwipeCorrectionPolicy.shouldOffer(min, add, true)).isFalse()
+    }
+
+    /**
+     * User swipe priority (2026-10-08): the offer's step ladder. A new word is ADDED (NORMAL);
+     * a personal-dictionary word still corrected toward is RAISED to HIGH; the bar never offers
+     * HIGHEST (Dictionary Manager only — its collateral is explained there).
+     */
+    @Test
+    fun offerLevelLadder() {
+        assertThat(SwipeCorrectionPolicy.offerLevel(null)).isEqualTo(SwipePriority.NORMAL)
+        assertThat(SwipeCorrectionPolicy.offerLevel(SwipePriority.NORMAL)).isEqualTo(SwipePriority.HIGH)
+        assertThat(SwipeCorrectionPolicy.offerLevel(SwipePriority.HIGH)).isNull()
+        assertThat(SwipeCorrectionPolicy.offerLevel(SwipePriority.HIGHEST)).isNull()
+        val min = SwipeCorrectionPolicy.OFFER_MIN_CORRECTIONS
+        assertWithMessage("a NORMAL user word is offered the raise")
+            .that(SwipeCorrectionPolicy.shouldOffer(min, SwipeCorrectionPolicy.offerLevel(SwipePriority.NORMAL), false))
+            .isTrue()
+        assertWithMessage("a HIGH user word is not offered anything")
+            .that(SwipeCorrectionPolicy.shouldOffer(min, SwipeCorrectionPolicy.offerLevel(SwipePriority.HIGH), false))
+            .isFalse()
     }
 }

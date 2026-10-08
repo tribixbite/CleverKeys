@@ -190,6 +190,46 @@ class DictionaryManager(private val context: Context) {
     }
 
     /**
+     * The swipe priority of personal-dictionary word [word] (any casing), or null when [word]
+     * is not a personal-dictionary word at all. Read fresh from the store, so a level set in
+     * the Dictionary Manager is seen immediately. Used by the "Prefer … when swiping?" offer to
+     * decide whether there is still a level to raise to ([SwipeCorrectionPolicy.offerLevel]).
+     */
+    fun getSwipePriority(word: String): SwipePriority? {
+        val stored = storedUserWordFor(word) ?: return null
+        val map = SwipePriority.parseMap(
+            prefs.getString(LanguagePreferenceKeys.swipePriorityKey(currentLanguage), null)
+        )
+        return map[stored] ?: SwipePriority.NORMAL
+    }
+
+    /**
+     * Set the swipe priority of personal-dictionary word [word] (matched in any casing; the
+     * level is stored under the casing the dictionary holds). [SwipePriority.NORMAL] removes
+     * the entry.
+     *
+     * @return false (nothing written) when [word] is not a personal-dictionary word — a level
+     *   only ever applies to a word the user owns.
+     */
+    fun setSwipePriority(word: String, priority: SwipePriority): Boolean {
+        val stored = storedUserWordFor(word) ?: return false
+        val key = LanguagePreferenceKeys.swipePriorityKey(currentLanguage)
+        val updated = SwipePriority.withLevel(SwipePriority.parseMap(prefs.getString(key, null)), stored, priority)
+        val editor = prefs.edit()
+        if (updated.isEmpty()) editor.remove(key) else editor.putString(key, SwipePriority.toJson(updated))
+        editor.apply()
+        return true
+    }
+
+    /** The stored spelling of [word] in the FRESHLY read store: exact first, then case-folded. */
+    private fun storedUserWordFor(word: String): String? {
+        val keys = readStoredWordMap(getCustomWordsKey()).keys
+        if (word in keys) return word
+        val folded = word.lowercase(Locale.ROOT)
+        return keys.firstOrNull { it.lowercase(Locale.ROOT) == folded }
+    }
+
+    /**
      * Check if a word is in the user dictionary, EXACTLY as stored.
      *
      * This is the storage's own semantics and the right question for "is this string, as
@@ -329,9 +369,16 @@ class DictionaryManager(private val context: Context) {
             addAll(merged)
         }
         val wordsMap = merged.associateWith { stored[it] ?: UserWordFrequency.DEFAULT }
-        prefs.edit()
-            .putString(key, gson.toJson(wordsMap))
-            .apply()
+        val editor = prefs.edit().putString(key, gson.toJson(wordsMap))
+        // A word that leaves the store leaves its swipe priority too (same editor, so the two
+        // keys can never disagree on disk): re-adding it later starts at NORMAL.
+        val priorityKey = LanguagePreferenceKeys.swipePriorityKey(currentLanguage)
+        val priorities = SwipePriority.parseMap(prefs.getString(priorityKey, null))
+        val kept = priorities.filterKeys { it in merged }
+        if (kept.size != priorities.size) {
+            if (kept.isEmpty()) editor.remove(priorityKey) else editor.putString(priorityKey, SwipePriority.toJson(kept))
+        }
+        editor.apply()
         return added.filterTo(HashSet()) { it !in stored && it !in removed }
     }
 

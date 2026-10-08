@@ -158,6 +158,7 @@
     <string name="suggestion_prefer_when_swiping">스와이프할 때 \'%1$s\'을(를) 우선할까요?</string>
     <string name="suggestion_prefer_when_swiping_decline">다시 묻지 않기</string>
     <string name="suggestion_prefer_when_swiping_added">이제 스와이프할 때 \'%1$s\'을(를) 우선합니다</string>
+    <string name="suggestion_prefer_when_swiping_raised">이제 스와이프할 때 \'%1$s\'을(를) 강하게 우선합니다</string>
     <string name="suggestion_added_to_dictionary">\'%1$s\'을(를) 사전에 추가했습니다</string>
     <string name="suggestion_tap_again_to_undo">다시 탭하여 실행 취소</string>
     <string name="suggestion_removed_from_dictionary">\'%1$s\'을(를) 사전에서 삭제했습니다</string>
@@ -168,6 +169,12 @@
     <string name="dict_add_new_word">+ 새 단어 추가</string>
     <string name="dict_add_new_word_hint">탭하여 사용자 정의 단어 추가</string>
     <string name="dict_word_frequency">빈도: %1$d</string>
+    <string name="dict_swipe_priority_label">스와이프 우선순위</string>
+    <string name="dict_swipe_priority_normal">보통</string>
+    <string name="dict_swipe_priority_high">높음</string>
+    <string name="dict_swipe_priority_highest">가장 높음</string>
+    <string name="dict_swipe_priority_help">빈도(1-255)는 사전 단어 대비 순위를 정하며 255가 이미 최고값입니다. 스와이프 우선순위는 스와이프해도 계속 밀리는 단어에 고정된 가산점을 추가로 줍니다. 높음은 중간, 가장 높음은 강한 가산점입니다. 우선순위를 높인 단어는 비슷한 단어의 스와이프 일부에서도 선택됩니다(예: \'as\' 대신 \'ad\'). 타이핑 추천에는 영향이 없습니다.</string>
+    <string name="dict_word_frequency_swipe_priority">빈도: %1$d · 스와이프 우선순위: %2$s</string>
     <string name="dict_edit">편집</string>
     <string name="dict_delete">삭제</string>
     <string name="dict_no_words">단어를 찾을 수 없습니다</string>

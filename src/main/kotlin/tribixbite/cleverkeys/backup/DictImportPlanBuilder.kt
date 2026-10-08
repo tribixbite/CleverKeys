@@ -2,6 +2,7 @@ package tribixbite.cleverkeys.backup
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import tribixbite.cleverkeys.SwipePriority
 
 /**
  * Pure JSON → `DictImportPlan` builder. No Android deps.
@@ -38,6 +39,7 @@ object DictImportPlanBuilder {
         val mergedCustom = mergeCustomWords(root)
         val mergedDisabled = mergeDisabledWords(root)
         val learnedData = parseLearnedData(root)
+        val swipePriorities = parseSwipePriorities(root)
 
         // Compute deltas: subtract current state from merged.
         val perLanguage = HashMap<String, LangChanges>()
@@ -67,7 +69,25 @@ object DictImportPlanBuilder {
             mergedCustomWordsByLang = mergedCustom,
             mergedDisabledWordsByLang = mergedDisabled,
             learnedData = learnedData,
+            mergedSwipePrioritiesByLang = swipePriorities,
         )
+    }
+
+    /**
+     * [SwipePriority.BACKUP_SECTION] (`swipe_priority_by_language`) → lang → (word → raised level). Each language's object is
+     * parsed by the same [SwipePriority.parseMap] the engines read the preference with, so a
+     * damaged entry degrades to NORMAL (absent) exactly as it would on the device.
+     */
+    private fun parseSwipePriorities(root: JsonObject): Map<String, Map<String, SwipePriority>> {
+        val section = root.get(SwipePriority.BACKUP_SECTION)?.takeIf { it.isJsonObject }?.asJsonObject
+            ?: return emptyMap()
+        val out = LinkedHashMap<String, Map<String, SwipePriority>>()
+        for ((lang, el) in section.entrySet()) {
+            if (!el.isJsonObject) continue
+            val levels = SwipePriority.parseMap(el.toString())
+            if (levels.isNotEmpty()) out[lang] = levels
+        }
+        return out
     }
 
     private fun mergeCustomWords(root: JsonObject): Map<String, Map<String, Int>> {

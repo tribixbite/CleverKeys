@@ -27,12 +27,16 @@ object LexiconContentVersion {
      *   `Set`'s unspecified iteration order cannot churn the version).
      * @param userDictionaryFingerprint [UserDictionarySnapshot.fingerprint] of the platform
      *   user-dictionary rows for this language (ARC-081).
+     * @param swipePriorityJson the raw `swipe_priority_<lang>` preference value (user swipe
+     *   priority, 2026-10-08). Hashed ONLY when non-empty, so a user who never raised a word
+     *   keeps the exact version (and memo) they had before the input existed.
      */
     fun of(
         sourceId: String,
         customJson: String,
         disabled: Set<String>,
         userDictionaryFingerprint: String,
+        swipePriorityJson: String = "",
     ): Long {
         val md = MessageDigest.getInstance("SHA-256")
         md.update(sourceId.toByteArray(Charsets.UTF_8)); md.update(0)
@@ -42,6 +46,10 @@ object LexiconContentVersion {
         }
         md.update(2)
         md.update(userDictionaryFingerprint.toByteArray(Charsets.UTF_8))
+        if (swipePriorityJson.isNotEmpty()) {
+            md.update(3)
+            md.update(swipePriorityJson.toByteArray(Charsets.UTF_8))
+        }
         val d = md.digest()
         var v = 0L
         for (i in 0 until 8) v = (v shl 8) or (d[i].toLong() and 0xFF)

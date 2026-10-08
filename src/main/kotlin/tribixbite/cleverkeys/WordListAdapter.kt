@@ -154,7 +154,15 @@ class WordEditableAdapter(
             onDelete: (DictionaryWord) -> Unit
         ) {
             wordText.text = word.word
-            frequencyText.text = itemView.context.getString(R.string.dict_word_frequency, word.frequency)
+            frequencyText.text = if (word.swipePriority == SwipePriority.NORMAL) {
+                itemView.context.getString(R.string.dict_word_frequency, word.frequency)
+            } else {
+                itemView.context.getString(
+                    R.string.dict_word_frequency_swipe_priority,
+                    word.frequency,
+                    itemView.context.getString(swipePriorityLabelRes(word.swipePriority)),
+                )
+            }
             editButton.visibility = View.VISIBLE
             deleteButton.visibility = View.VISIBLE
 
@@ -163,4 +171,12 @@ class WordEditableAdapter(
             itemView.setOnClickListener(null)
         }
     }
+}
+
+/** The display label of [level] (Dictionary Manager row and the Add/Edit picker). */
+@androidx.annotation.StringRes
+internal fun swipePriorityLabelRes(level: SwipePriority): Int = when (level) {
+    SwipePriority.NORMAL -> R.string.dict_swipe_priority_normal
+    SwipePriority.HIGH -> R.string.dict_swipe_priority_high
+    SwipePriority.HIGHEST -> R.string.dict_swipe_priority_highest
 }

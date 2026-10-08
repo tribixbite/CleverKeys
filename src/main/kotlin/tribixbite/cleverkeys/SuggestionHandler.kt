@@ -2428,24 +2428,28 @@ class SuggestionHandler(
             for (swipe in rejected) swipe.traceId?.let { mlStore.relabelSwipe(it, chosen) }
         }
 
-        val isUserWord = isUserSwipePreference(chosen)
+        val level = swipeOfferLevel(chosen)
         return chosen.takeIf {
-            SwipeCorrectionPolicy.shouldOffer(count, isUserWord, store.isDeclined(language, chosen))
+            SwipeCorrectionPolicy.shouldOffer(count, level, store.isDeclined(language, chosen))
         }
     }
 
     /**
-     * Is there nothing to offer for [word] because the personal dictionary already decides it?
-     * True when [word] itself is a user word (any casing), and — for an apostrophe/hyphen word —
-     * also when its joiner-free surface is ([SwipeCorrectionPolicy.joinerSurface]): with both
-     * readings claimed the swipe display keeps the traced literal, so accepting would change
-     * nothing the user could see.
+     * What accepting "Prefer “[word]” when swiping?" would do now ([SwipeCorrectionPolicy.offerLevel]):
+     * [SwipePriority.NORMAL] = add [word] to the personal dictionary, [SwipePriority.HIGH] =
+     * raise the user's existing entry, null = nothing to offer. Null too when [word] is not a
+     * user word but its joiner-free surface is ([SwipeCorrectionPolicy.joinerSurface]): with
+     * both readings claimed the swipe display keeps the traced literal, so accepting would
+     * change nothing the user could see.
      */
-    private fun isUserSwipePreference(word: String): Boolean {
-        val dictionary = predictionCoordinator.getDictionaryManager() ?: return false
-        if (dictionary.isUserWordIgnoringCase(word)) return true
-        val surface = SwipeCorrectionPolicy.joinerSurface(word) ?: return false
-        return dictionary.isUserWordIgnoringCase(surface)
+    private fun swipeOfferLevel(word: String): SwipePriority? {
+        val dictionary = predictionCoordinator.getDictionaryManager() ?: return null
+        val current = dictionary.getSwipePriority(word)
+        if (current == null) {
+            val surface = SwipeCorrectionPolicy.joinerSurface(word)
+            if (surface != null && dictionary.isUserWordIgnoringCase(surface)) return null
+        }
+        return SwipeCorrectionPolicy.offerLevel(current)
     }
 
     /**
@@ -2497,11 +2501,11 @@ class SuggestionHandler(
         if (pending.language != activeLanguageCode()) return null
         deferredSwipeOffer = null
         val store = correctionStore() ?: return null
-        val isUserWord = isUserSwipePreference(pending.word)
+        val level = swipeOfferLevel(pending.word)
         val due = try {
             SwipeCorrectionPolicy.shouldOffer(
                 store.correctionCount(pending.language, pending.word),
-                isUserWord,
+                level,
                 store.isDeclined(pending.language, pending.word)
             )
         } catch (e: Exception) {
@@ -2531,6 +2535,12 @@ class SuggestionHandler(
         swipePreferenceOffer = null
         specialPromptActive = false
         if (word.isBlank()) return
+        // Already the user's word at NORMAL and still corrected toward: the offer raises it to
+        // HIGH (user swipe priority, 2026-10-08) instead of adding it again.
+        if (swipeOfferLevel(word) == SwipePriority.HIGH) {
+            raiseSwipePriority(word)
+            return
+        }
         vlog { "SWIPE PREFER: adding '$word' to the personal dictionary" }
         val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(word) ?: false
         predictionCoordinator.refreshCustomWords()
@@ -2544,6 +2554,33 @@ class SuggestionHandler(
         // offered again, but only after a fresh [SwipeCorrectionPolicy.OFFER_MIN_CORRECTIONS]
         // corrections: an undo says "not now", and re-offering on the very next slip would nag.
         confirmDictionaryAdd(word, inserted, R.string.suggestion_prefer_when_swiping_added)
+    }
+
+    /**
+     * The accepted offer for a personal-dictionary word at NORMAL: raise it to
+     * [SwipePriority.HIGH]. The swipe engines key their lexicon memo on the
+     * `swipe_priority_<lang>` content ([tribixbite.cleverkeys.swipe.LexiconContentVersion]), so
+     * the next swipe decodes with the bonus, and [SwipeRewarmScheduler] rebuilds in the
+     * background first. Correction counts are dropped as on an add, so a further step would
+     * need fresh corrections — and there is none: the bar never offers HIGHEST.
+     *
+     * Undo (tap the confirmation again) puts the word back to NORMAL; the word itself stays.
+     */
+    private fun raiseSwipePriority(word: String) {
+        val dictionary = predictionCoordinator.getDictionaryManager() ?: return
+        val language = activeLanguageCode()
+        vlog { "SWIPE PREFER: raising '$word' to HIGH swipe priority" }
+        if (!dictionary.setSwipePriority(word, SwipePriority.HIGH)) return
+        try {
+            correctionStore()?.forgetWord(language, word)
+        } catch (e: Exception) {
+            Log.w(TAG, "Swipe-correction store update failed", e)
+        }
+        val message = context.getString(R.string.suggestion_prefer_when_swiping_raised, word)
+        suggestionBar?.showUndoableMessage(message, context.getString(R.string.suggestion_tap_again_to_undo)) {
+            // Language-scoped like the add undo: never touch another language's entry.
+            if (activeLanguageCode() == language) dictionary.setSwipePriority(word, SwipePriority.NORMAL)
+        }
     }
 
     /** The user declined the offer for [word]: remember it so it is never offered again. */

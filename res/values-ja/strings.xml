@@ -157,6 +157,7 @@
     <string name="suggestion_prefer_when_swiping">スワイプ時に「%1$s」を優先しますか？</string>
     <string name="suggestion_prefer_when_swiping_decline">今後表示しない</string>
     <string name="suggestion_prefer_when_swiping_added">スワイプで「%1$s」を優先します</string>
+    <string name="suggestion_prefer_when_swiping_raised">スワイプで「%1$s」を強く優先します</string>
     <string name="suggestion_added_to_dictionary">「%1$s」を辞書に追加しました</string>
     <string name="suggestion_tap_again_to_undo">もう一度タップで元に戻す</string>
     <string name="suggestion_removed_from_dictionary">「%1$s」を辞書から削除しました</string>
@@ -167,6 +168,12 @@
     <string name="dict_add_new_word">+ 新しい単語を追加</string>
     <string name="dict_add_new_word_hint">タップしてカスタム単語を追加</string>
     <string name="dict_word_frequency">頻度: %1$d</string>
+    <string name="dict_swipe_priority_label">スワイプ優先度</string>
+    <string name="dict_swipe_priority_normal">標準</string>
+    <string name="dict_swipe_priority_high">高</string>
+    <string name="dict_swipe_priority_highest">最高</string>
+    <string name="dict_swipe_priority_help">頻度(1-255)は辞書の単語に対する順位を決めます。255はすでに最大です。スワイプ優先度は、スワイプしても負けてしまう単語に一定の加点をさらに与えます。「高」は中程度、「最高」は強い加点です。優先度を上げた単語は似た単語のスワイプの一部でも選ばれるようになります(例:「as」の代わりに「ad」)。タップ入力の候補には影響しません。</string>
+    <string name="dict_word_frequency_swipe_priority">頻度: %1$d · スワイプ優先度: %2$s</string>
     <string name="dict_edit">編集</string>
     <string name="dict_delete">削除</string>
     <string name="dict_no_words">単語が見つかりません</string>

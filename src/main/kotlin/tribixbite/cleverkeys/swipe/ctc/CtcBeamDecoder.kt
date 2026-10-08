@@ -11,6 +11,8 @@ package tribixbite.cleverkeys.swipe.ctc
  * @property logFreq the AOSP-scale log-frequency contributed to the score.
  * @property learnedBonus the [CtcLearnedPrior] bonus already INCLUDED in [finalScore]
  *   (0.0 under [CtcLearnedPrior.NONE]).
+ * @property priorityBonus the user swipe-priority bonus ([CtcPriorityBonus]) already INCLUDED
+ *   in [finalScore] (0.0 for a word the user did not raise).
  */
 data class CtcCandidate(
     val word: String,
@@ -19,6 +21,7 @@ data class CtcCandidate(
     val length: Int,
     val logFreq: Double,
     val learnedBonus: Double = 0.0,
+    val priorityBonus: Double = 0.0,
 )
 
 /**
@@ -92,12 +95,17 @@ object CtcBeamDecoder {
      * [prior] adds a learned-usage bonus to the FINAL score of each complete word (never to
      * the per-frame prune key). [CtcLearnedPrior.NONE] — the default — skips the lookup
      * entirely, so the result is byte-identical to a decode without a prior.
+     *
+     * [priority] adds the user's per-word swipe-priority bonus the same way — final score
+     * only, so it re-ranks words the beam already holds and can never pull in a word the
+     * trace did not reach. [CtcPriorityBonus.NONE] (or any empty instance) skips the lookup.
      */
     fun decode(
         emissions: CtcEmissions,
         trie: CtcLexiconTrie,
         params: CtcScoringParams,
         prior: CtcLearnedPrior = CtcLearnedPrior.NONE,
+        priority: CtcPriorityBonus = CtcPriorityBonus.NONE,
     ): List<CtcCandidate> {
         require(emissions.alphabetSize == trie.alphabet.size) {
             "emissions alphabet size ${emissions.alphabetSize} != trie alphabet size ${trie.alphabet.size}"
@@ -179,10 +187,12 @@ object CtcBeamDecoder {
             // the addition, keeping the decode byte-identical to the pre-prior decoder.
             val bonus = if (prior === CtcLearnedPrior.NONE) 0.0
                 else prior.bonusFor(word, node.logFreq, params.lambda)
-            val finalScore = if (bonus == 0.0) baseScore else baseScore + bonus
+            // User swipe priority: the same final-score-only seam (see [CtcPriorityBonus]).
+            val userBonus = if (priority.isEmpty) 0.0 else priority.bonusFor(word)
+            val finalScore = baseScore + bonus + userBonus
             val prev = best[word]
             if (prev == null || prev.finalScore < finalScore) {
-                best[word] = CtcCandidate(word, finalScore, ctc, len, node.logFreq, bonus)
+                best[word] = CtcCandidate(word, finalScore, ctc, len, node.logFreq, bonus, userBonus)
             }
         }
         return best.values.sortedByDescending { it.finalScore }.take(params.topK)

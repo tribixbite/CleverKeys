@@ -1078,11 +1078,22 @@ tasks.register('runPureTests', JavaExec) {
     // coverage, custom-word reach, the personal-dictionary remedy and plural controls.
     // Eval: docs/eval/2026-10-07-final-letter-drops.md. Skips only when ORT natives are absent.
     'tribixbite.cleverkeys.swipe.CtcFinalLetterReplayTest',
+    // User swipe priority (2026-10-08): per-word final-score bonus sweep on the shipped CTC
+    // stack — target wins, rival-trace collateral, and the level pins.
+    // Eval: docs/eval/2026-10-08-user-swipe-priority.md. Skips only when ORT natives are absent.
+    'tribixbite.cleverkeys.swipe.UserSwipePriorityReplayTest',
     // Learned-unigram swipe prior (learning-system audit 2026-09-26, `git` → `got`): Stage-0
     // headroom + Stage-1 profile replay (geoFull + local corpora + ORT gated), and the pure
     // policy pins for CtcLearnedPrior. Eval: docs/eval/2026-09-26-learned-unigram-swipe-replay.md
     'tribixbite.cleverkeys.swipe.LearnedUnigramReplayTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcLearnedPriorTest',
+    // User swipe priority (2026-10-08, docs/eval/2026-10-08-user-swipe-priority.md): the stored
+    // levels, the engine tables and memo version, the CTC final-score seam, and the geometric
+    // merge/engine seam (its level sweep runs only with -PgeoFull=true).
+    'tribixbite.cleverkeys.SwipePriorityTest',
+    'tribixbite.cleverkeys.swipe.UserSwipePriorityBonusTest',
+    'tribixbite.cleverkeys.swipe.ctc.CtcPriorityBonusTest',
+    'tribixbite.cleverkeys.swipe.geometric.GeoUserSwipePriorityTest',
     // Correction-driven swipe prior (second attempt at the `git` → `got` report): phase-A
     // corrections on one half lift phase-B decodes on the other; pin: git flips within ≤ 3
     // corrections. Eval: docs/eval/2026-09-26-correction-driven-swipe-prior-replay.md

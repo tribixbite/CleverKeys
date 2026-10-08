@@ -158,6 +158,7 @@
     <string name="suggestion_prefer_when_swiping">\'%1$s\' voorrang geven bij vegen?</string>
     <string name="suggestion_prefer_when_swiping_decline">Niet vragen</string>
     <string name="suggestion_prefer_when_swiping_added">Vegen geeft nu voorrang aan \'%1$s\'</string>
+    <string name="suggestion_prefer_when_swiping_raised">Vegen geeft nu sterk voorrang aan \'%1$s\'</string>
     <string name="suggestion_added_to_dictionary">\'%1$s\' toegevoegd aan woordenboek</string>
     <string name="suggestion_tap_again_to_undo">Tik nogmaals om ongedaan te maken</string>
     <string name="suggestion_removed_from_dictionary">\'%1$s\' verwijderd uit woordenboek</string>
@@ -168,6 +169,12 @@
     <string name="dict_add_new_word">+ Nieuw woord toevoegen</string>
     <string name="dict_add_new_word_hint">Tik om een aangepast woord toe te voegen</string>
     <string name="dict_word_frequency">Frequentie: %1$d</string>
+    <string name="dict_swipe_priority_label">Veegprioriteit</string>
+    <string name="dict_swipe_priority_normal">Normaal</string>
+    <string name="dict_swipe_priority_high">Hoog</string>
+    <string name="dict_swipe_priority_highest">Hoogst</string>
+    <string name="dict_swipe_priority_help">De frequentie (1-255) rangschikt je woord ten opzichte van het woordenboek; 255 is al het maximum. Veegprioriteit geeft daarbovenop een vaste voorsprong aan een woord dat bij vegen nog steeds verliest: Hoog is gematigd, Hoogst is sterk. Een verhoogd woord wint ook sommige veegbewegingen van vergelijkbare woorden (bijvoorbeeld \'ad\' in plaats van \'as\'). Typsuggesties veranderen niet.</string>
+    <string name="dict_word_frequency_swipe_priority">Frequentie: %1$d · Veegprioriteit: %2$s</string>
     <string name="dict_edit">Bewerken</string>
     <string name="dict_delete">Verwijderen</string>
     <string name="dict_no_words">Geen woorden gevonden</string>

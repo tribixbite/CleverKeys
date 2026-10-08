@@ -54,6 +54,7 @@ interface CtcEmissionModel {
  * @property trie the lexicon surface to decode against.
  * @property params scoring/beam parameters (a `scoring.json` preset).
  * @property prior learned-usage final-score prior ([CtcLearnedPrior.NONE] = none).
+ * @property priority user swipe-priority bonus ([CtcPriorityBonus.NONE] = none).
  */
 class CtcSwipeDecoder(
     private val model: CtcEmissionModel,
@@ -61,6 +62,7 @@ class CtcSwipeDecoder(
     private val trie: CtcLexiconTrie,
     private val params: CtcScoringParams,
     private val prior: CtcLearnedPrior = CtcLearnedPrior.NONE,
+    private val priority: CtcPriorityBonus = CtcPriorityBonus.NONE,
 ) {
     data class DecodeResult(
         val candidates: List<CtcCandidate>,
@@ -91,7 +93,7 @@ class CtcSwipeDecoder(
         val features = CtcFeaturizer.featurize(px, py, pt)
         val emissions = model.emit(features, paddedLayout)
         return DecodeResult(
-            candidates = CtcBeamDecoder.decode(emissions, trie, params, prior),
+            candidates = CtcBeamDecoder.decode(emissions, trie, params, prior, priority),
             greedy = CtcBeamDecoder.greedy(emissions, layout.alphabet),
         )
     }

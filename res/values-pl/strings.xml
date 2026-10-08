@@ -156,6 +156,7 @@
     <string name="suggestion_prefer_when_swiping">Preferować „%1$s” przy pisaniu gestem?</string>
     <string name="suggestion_prefer_when_swiping_decline">Nie pytaj</string>
     <string name="suggestion_prefer_when_swiping_added">Pisanie gestem preferuje teraz „%1$s”</string>
+    <string name="suggestion_prefer_when_swiping_raised">Pisanie gestem zdecydowanie preferuje teraz „%1$s”</string>
     <string name="suggestion_added_to_dictionary">Dodano „%1$s” do słownika</string>
     <string name="suggestion_tap_again_to_undo">Dotknij ponownie, aby cofnąć</string>
     <string name="suggestion_removed_from_dictionary">Usunięto „%1$s” ze słownika</string>
@@ -166,6 +167,12 @@
     <string name="dict_add_new_word">+ Dodaj nowe słowo</string>
     <string name="dict_add_new_word_hint">Dotknij, aby dodać własne słowo</string>
     <string name="dict_word_frequency">Częstotliwość: %1$d</string>
+    <string name="dict_swipe_priority_label">Priorytet pisania gestem</string>
+    <string name="dict_swipe_priority_normal">Normalny</string>
+    <string name="dict_swipe_priority_high">Wysoki</string>
+    <string name="dict_swipe_priority_highest">Najwyższy</string>
+    <string name="dict_swipe_priority_help">Częstość (1–255) ustala pozycję słowa względem słownika; 255 to już maksimum. Priorytet pisania gestem dodaje stały bonus słowu, które przy pisaniu gestem nadal przegrywa: Wysoki jest umiarkowany, Najwyższy silny. Podniesione słowo wygrywa też część gestów podobnych słów (np. „ad” zamiast „as”). Podpowiedzi przy pisaniu na klawiaturze się nie zmieniają.</string>
+    <string name="dict_word_frequency_swipe_priority">Częstotliwość: %1$d · Priorytet pisania gestem: %2$s</string>
     <string name="dict_edit">Edytuj</string>
     <string name="dict_delete">Usuń</string>
     <string name="dict_no_words">Nie znaleziono słów</string>

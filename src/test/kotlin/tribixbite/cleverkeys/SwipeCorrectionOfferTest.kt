@@ -127,6 +127,8 @@ class SwipeCorrectionOfferTest {
         dictionary = mockk(relaxed = true)
         every { dictionary.getCurrentLanguage() } returns "en"
         every { dictionary.isUserWordIgnoringCase(any()) } returns false
+        // Not a personal-dictionary word unless a test says so (user swipe priority, 2026-10-08).
+        every { dictionary.getSwipePriority(any()) } returns null
         mlStore = mockk(relaxed = true)
         coordinator = mockk(relaxed = true)
         every { coordinator.getWordPredictor() } returns predictor
@@ -413,14 +415,42 @@ class SwipeCorrectionOfferTest {
         assertThat(barWords).doesNotContain(offer)
     }
 
+    /**
+     * Since user swipe priority (2026-10-08) "already in the personal dictionary" means: at a
+     * raised level. A word at HIGH (or HIGHEST) has nothing left for the bar to offer.
+     */
     @Test
     fun aWordAlreadyInThePersonalDictionaryIsNotOffered() {
         every { dictionary.isUserWordIgnoringCase("git") } returns true
+        every { dictionary.getSwipePriority("git") } returns SwipePriority.HIGH
         correctGotToGitFromTheBar()
         type("and ")
         correctGotToGitFromTheBar()
 
         assertThat(barWords).doesNotContain(offer)
+    }
+
+    @Test
+    fun aNormalPersonalDictionaryWordIsOfferedTheRaiseAndAcceptingSetsHigh() {
+        every { dictionary.isUserWordIgnoringCase("git") } returns true
+        every { dictionary.getSwipePriority("git") } returns SwipePriority.NORMAL
+        every { dictionary.setSwipePriority("git", any()) } returns true
+        correctGotToGitFromTheBar()
+        type("and ")
+        correctGotToGitFromTheBar()
+        assertThat(barWords).containsExactly(offer, decline).inOrder()
+
+        tap(offer)
+
+        verify(exactly = 1) { dictionary.setSwipePriority("git", SwipePriority.HIGH) }
+        verify(exactly = 0) { dictionary.addUserWord(any()) }
+        assertWithMessage("the counts restart, as on an add")
+            .that(store.correctionCount("en", "git")).isEqualTo(0)
+
+        // Undo returns the word to NORMAL; the word itself stays in the dictionary.
+        undoConfirmation.captured.invoke()
+        verify(exactly = 1) { dictionary.setSwipePriority("git", SwipePriority.NORMAL) }
+        verify(exactly = 0) { dictionary.removeUserWord(any()) }
     }
 
     @Test
@@ -559,6 +589,8 @@ class SwipeCorrectionOfferTest {
         undoThenReSwipeGit()
         handler.onEditorWordBoundary(ic)
         every { dictionary.isUserWordIgnoringCase("git") } returns true
+        // Added meanwhile AND raised (Dictionary Manager): nothing left to offer at show time.
+        every { dictionary.getSwipePriority("git") } returns SwipePriority.HIGH
 
         type("so ")
         assertThat(barWords).doesNotContain(offer)

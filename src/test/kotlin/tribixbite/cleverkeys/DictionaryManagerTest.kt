@@ -72,7 +72,10 @@ class DictionaryManagerTest {
             savedStrings[firstArg()] = secondArg()
             mockEditor
         }
-        every { mockEditor.remove(any()) } returns mockEditor
+        every { mockEditor.remove(any()) } answers {
+            savedStrings.remove(firstArg<String>())
+            mockEditor
+        }
         every { mockPrefs.getString(any(), any()) } answers {
             savedStrings[firstArg()] ?: secondArg()
         }
@@ -492,5 +495,77 @@ class DictionaryManagerTest {
         assertThat(json).isNotNull()
         assertThat(json).contains("\"boosted\":40")
         assertThat(json).contains("\"testword\":255")
+    }
+
+    // =========================================================================
+    // User swipe priority (2026-10-08, docs/eval/2026-10-08-user-swipe-priority.md)
+    // =========================================================================
+
+    private fun storedPriorities(key: String = "swipe_priority_en"): Map<String, SwipePriority> =
+        SwipePriority.parseMap(savedStrings[key])
+
+    @Test
+    fun `swipe priority is set and read for a personal-dictionary word only`() {
+        val manager = buildManager(existingWords = """{"Adb":255,"wet":255}""")
+
+        assertWithMessage("not a user word: no level, nothing written")
+            .that(manager.getSwipePriority("an")).isNull()
+        assertThat(manager.setSwipePriority("an", SwipePriority.HIGH)).isFalse()
+        assertThat(savedStrings).doesNotContainKey("swipe_priority_en")
+
+        assertThat(manager.getSwipePriority("wet")).isEqualTo(SwipePriority.NORMAL)
+        assertThat(manager.setSwipePriority("adb", SwipePriority.HIGHEST)).isTrue()
+        assertWithMessage("stored under the casing the dictionary holds")
+            .that(storedPriorities()).containsExactly("Adb", SwipePriority.HIGHEST)
+        assertThat(manager.getSwipePriority("ADB")).isEqualTo(SwipePriority.HIGHEST)
+
+        manager.setSwipePriority("adb", SwipePriority.NORMAL)
+        assertWithMessage("back to NORMAL removes the key: absence is the default")
+            .that(savedStrings).doesNotContainKey("swipe_priority_en")
+    }
+
+    @Test
+    fun `removing a word drops its swipe priority and clearing drops them all`() {
+        val manager = buildManager(existingWords = """{"adb":255,"wet":255}""")
+        manager.setSwipePriority("adb", SwipePriority.HIGH)
+        manager.setSwipePriority("wet", SwipePriority.HIGHEST)
+
+        manager.removeUserWord("adb")
+        assertThat(storedPriorities()).containsExactly("wet", SwipePriority.HIGHEST)
+
+        manager.clearUserDictionary()
+        assertThat(savedStrings).doesNotContainKey("swipe_priority_en")
+    }
+
+    @Test
+    fun `adding a word keeps the other words' levels untouched`() {
+        val manager = buildManager(existingWords = """{"adb":255}""")
+        manager.setSwipePriority("adb", SwipePriority.HIGH)
+        manager.addUserWord("wet")
+        assertThat(storedPriorities()).containsExactly("adb", SwipePriority.HIGH)
+    }
+
+    @Test
+    fun `dictionary manager custom source carries the level through add, rename and delete`() {
+        kotlinx.coroutines.runBlocking {
+            val source = CustomDictionarySource(mockPrefs, "en")
+            source.addWord("adb", 255, SwipePriority.HIGHEST)
+            source.addWord("plain", 200)
+            val listed = source.getAllWords().associate { it.word to it.swipePriority }
+            assertWithMessage("the row state the Dictionary Manager shows")
+                .that(listed).containsExactly("adb", SwipePriority.HIGHEST, "plain", SwipePriority.NORMAL)
+
+            source.updateWord("adb", "ADB", 255)
+            assertWithMessage("a rename carries the level")
+                .that(storedPriorities()).containsExactly("ADB", SwipePriority.HIGHEST)
+
+            source.updateWord("ADB", "ADB", 250, SwipePriority.HIGH)
+            assertThat(storedPriorities()).containsExactly("ADB", SwipePriority.HIGH)
+            assertThat(storedWords()).containsEntry("ADB", 250)
+
+            source.deleteWord("ADB")
+            assertThat(savedStrings).doesNotContainKey("swipe_priority_en")
+            assertThat(source.getAllWords().map { it.word }).containsExactly("plain")
+        }
     }
 }

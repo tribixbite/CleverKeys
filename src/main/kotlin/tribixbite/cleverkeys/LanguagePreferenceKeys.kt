@@ -39,6 +39,17 @@ object LanguagePreferenceKeys {
     fun disabledWordsKey(languageCode: String): String = "disabled_words_${languageCode.lowercase()}"
 
     /**
+     * Get the swipe-priority preference key for a language: a JSON object
+     * `{word: storedLevel}` of the personal-dictionary words the user RAISED for swiping
+     * ([SwipePriority]). Absent = every word at [SwipePriority.NORMAL].
+     *
+     * @param languageCode ISO 639-1 language code (e.g., "en", "es", "fr")
+     * @return Preference key like "swipe_priority_en"
+     * @since 2026-10-08 (user swipe priority)
+     */
+    fun swipePriorityKey(languageCode: String): String = "swipe_priority_${languageCode.lowercase()}"
+
+    /**
      * Check if migration from global keys to language-specific keys is needed.
      *
      * @param prefs SharedPreferences to check
@@ -107,6 +118,13 @@ object LanguagePreferenceKeys {
             key.removePrefix("custom_words_") else null
 
     /**
+     * Inverse of swipePriorityKey (user swipe priority, 2026-10-08).
+     */
+    fun languageFromSwipePriorityKey(key: String): String? =
+        if (key.startsWith("swipe_priority_") && key.length > "swipe_priority_".length)
+            key.removePrefix("swipe_priority_") else null
+
+    /**
      * Inverse of disabledWordsKey.
      */
     fun languageFromDisabledWordsKey(key: String): String? =
@@ -123,6 +141,19 @@ object LanguagePreferenceKeys {
         return prefs.all.keys
             .filter { it.startsWith("custom_words_") }
             .map { it.removePrefix("custom_words_") }
+            .distinct()
+    }
+
+    /**
+     * Get all language codes that have a swipe-priority map stored.
+     *
+     * @param prefs SharedPreferences to scan
+     * @return List of language codes with a `swipe_priority_<lang>` key
+     */
+    fun getLanguagesWithSwipePriorities(prefs: SharedPreferences): List<String> {
+        return prefs.all.keys
+            .filter { it.startsWith("swipe_priority_") && it.length > "swipe_priority_".length }
+            .map { it.removePrefix("swipe_priority_") }
             .distinct()
     }
 

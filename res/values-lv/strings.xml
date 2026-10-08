@@ -156,6 +156,7 @@
     <string name="suggestion_prefer_when_swiping">Vilkšanā dot priekšroku “%1$s”?</string>
     <string name="suggestion_prefer_when_swiping_decline">Nejautāt</string>
     <string name="suggestion_prefer_when_swiping_added">Vilkšanā tagad priekšroka ir “%1$s”</string>
+    <string name="suggestion_prefer_when_swiping_raised">Vilkšanā tagad izteikta priekšroka ir “%1$s”</string>
     <string name="suggestion_added_to_dictionary">“%1$s” pievienots vārdnīcai</string>
     <string name="suggestion_tap_again_to_undo">Pieskarieties vēlreiz, lai atsauktu</string>
     <string name="suggestion_removed_from_dictionary">“%1$s” noņemts no vārdnīcas</string>
@@ -166,6 +167,12 @@
     <string name="dict_add_new_word">+ Pievienot jaunu vārdu</string>
     <string name="dict_add_new_word_hint">Pieskarieties, lai pievienotu pielāgotu vārdu</string>
     <string name="dict_word_frequency">Biežums: %1$d</string>
+    <string name="dict_swipe_priority_label">Vilkšanas prioritāte</string>
+    <string name="dict_swipe_priority_normal">Parasta</string>
+    <string name="dict_swipe_priority_high">Augsta</string>
+    <string name="dict_swipe_priority_highest">Visaugstākā</string>
+    <string name="dict_swipe_priority_help">Biežums (1–255) sarindo vārdu attiecībā pret vārdnīcu; 255 jau ir maksimums. Vilkšanas prioritāte papildus dod fiksētu priekšrocību vārdam, kas vilkšanā joprojām zaudē: Augsta ir mērena, Visaugstākā – spēcīga. Paaugstināts vārds uzvar arī dažās līdzīgu vārdu vilkšanās (piemēram, “ad” nevis “as”). Rakstīšanas ieteikumus tas neietekmē.</string>
+    <string name="dict_word_frequency_swipe_priority">Biežums: %1$d · Vilkšanas prioritāte: %2$s</string>
     <string name="dict_edit">Rediģēt</string>
     <string name="dict_delete">Dzēst</string>
     <string name="dict_no_words">Vārdi nav atrasti</string>

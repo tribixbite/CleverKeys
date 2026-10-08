@@ -195,10 +195,12 @@ object SettingsValidation {
      * these out so they don't appear as "(unset) → {huge JSON blob}" rows
      * that the user can't act on usefully.
      *
-     * Keys: `custom_words_<lang>` and `disabled_words_<lang>` where `<lang>`
+     * Keys: `custom_words_<lang>`, `disabled_words_<lang>` and (2026-10-08)
+     * `swipe_priority_<lang>` — the per-word swipe priority of personal-dictionary
+     * words, which travels with them in the dictionaries payload — where `<lang>`
      * is any 2+ letter language code.
      */
-    private val DICTIONARY_KEY_PREFIXES = listOf("custom_words_", "disabled_words_")
+    private val DICTIONARY_KEY_PREFIXES = listOf("custom_words_", "disabled_words_", "swipe_priority_")
 
     fun isDictionaryPreference(key: String): Boolean =
         DICTIONARY_KEY_PREFIXES.any { key.startsWith(it) }

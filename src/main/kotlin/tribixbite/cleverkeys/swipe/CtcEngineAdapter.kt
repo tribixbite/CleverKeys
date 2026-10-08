@@ -18,6 +18,7 @@ import tribixbite.cleverkeys.MemoryProbe
 import tribixbite.cleverkeys.LanguagePreferenceKeys
 import tribixbite.cleverkeys.PredictionResult
 import tribixbite.cleverkeys.PredictionTaskRunner
+import tribixbite.cleverkeys.SwipePriority
 import tribixbite.cleverkeys.UserDictionaryWords
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.onnx.ModelLoader
@@ -32,6 +33,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
 import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
+import tribixbite.cleverkeys.swipe.ctc.CtcPriorityBonus
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
 import tribixbite.cleverkeys.swipe.ctc.CtcRankMerger
@@ -555,6 +557,9 @@ class CtcEngineAdapter(
      *  - [userPreferences] — decoded surface → the joiner user word (`she'd`, `l'une`,
      *    `co-op`) the user wants shown for it ([UserJoinerPreference]); empty for a user with
      *    no apostrophe/hyphen words, which is nearly everyone.
+     *  - [priority] — decoded surface → the final-score bonus of a personal-dictionary word the
+     *    user raised for swiping ([UserSwipePriorityBonus]); [CtcPriorityBonus.NONE] for a user
+     *    who raised nothing, which keeps the decode byte-identical to the pre-priority one.
      *
      * [language] is part of the memo IDENTITY, not just the content hash: a language
      * switch must never reuse the previous language's trie (the content hash alone would
@@ -570,6 +575,7 @@ class CtcEngineAdapter(
         val version: Long,
         val pairingBaseFrequencies: Map<String, Int>,
         val userPreferences: Map<String, UserJoinerPreference.Preference>,
+        val priority: CtcPriorityBonus,
     )
 
     /** Keep only the active primary/secondary tries; wider caching would retain ~19 MB each. */
@@ -653,6 +659,9 @@ class CtcEngineAdapter(
         val customJson = prefs.getString(LanguagePreferenceKeys.customWordsKey(lang), "{}") ?: "{}"
         val disabled = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(lang), emptySet())
             ?: emptySet()
+        // User swipe priority (2026-10-08): the raised personal-dictionary words. Part of the
+        // memo key, so raising or lowering a word rebuilds exactly like adding one.
+        val priorityJson = prefs.getString(LanguagePreferenceKeys.swipePriorityKey(lang), "") ?: ""
         // A langpack is mutable on disk (import/re-import/removal), so its identity carries
         // length + mtime the way GeometricEngineAdapter's does; a bundled asset is immutable
         // within an APK and needs only its path. The fingerprint is built by the SAME pure
@@ -668,8 +677,9 @@ class CtcEngineAdapter(
         // ARC-081: the platform user dictionary is the SECOND user-word store and is mutable
         // outside this app entirely, so it is read per build and folded into the memo key.
         val userDictionary = userDictionarySource(lang)
-        val version =
-            LexiconContentVersion.of(sourceId, customJson, disabled, userDictionary.fingerprint)
+        val version = LexiconContentVersion.of(
+            sourceId, customJson, disabled, userDictionary.fingerprint, priorityJson
+        )
         trieMemos[lang]?.let { if (it.language == lang && it.version == version) return it }
 
         val start = System.currentTimeMillis()
@@ -747,7 +757,9 @@ class CtcEngineAdapter(
         val ordinals = CtcLexiconMerge.ordinals(merged)
         MemoryProbe.mark("ctc.mergeAndOrdinals") { "merged=${merged.size}" }
 
+        val priorities = SwipePriority.parseMap(priorityJson)
         val trie: CtcLexiconTrie
+        val priority: CtcPriorityBonus
         val display: Map<String, String>
         // Joiner user words ([UserJoinerPreference]) — keyed on the surface the overlay sees,
         // which is branch-specific (raw a–z strip for en, the accent-display form for CKDT).
@@ -777,6 +789,10 @@ class CtcEngineAdapter(
                     { UserJoinerPreference.stripToAlphabet(it, alphabetSet) },
                     { ordinals.containsKey(it) },
                 )
+                // Keyed on the same stripped surface the trie filed the user word under.
+                priority = UserSwipePriorityBonus.ctcBySurface(
+                    userWordPairs, priorities
+                ) { UserJoinerPreference.stripToAlphabet(it, alphabetSet) }
                 lexiconFrequencies = merged.values
                 rescueFrequencies = merged
             }
@@ -805,6 +821,9 @@ class CtcEngineAdapter(
                     { w -> project(w)?.let { projected.display[it] ?: it } },
                     { ordinals.containsKey(it) },
                 )
+                // The beam returns PROJECTED surfaces (display mapping happens afterwards), so
+                // the bonus is keyed on the projection itself.
+                priority = UserSwipePriorityBonus.ctcBySurface(userWordPairs, priorities, project)
                 lexiconFrequencies = projected.freqs.values
                 rescueFrequencies = projected.freqs
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -861,6 +880,7 @@ class CtcEngineAdapter(
             version,
             pairingBaseFrequencies,
             userPreferences,
+            priority,
         )
         if (Thread.currentThread().isInterrupted) throw InterruptedException("Lexicon load cancelled")
         trieMemos[lang] = built
@@ -1151,6 +1171,7 @@ class CtcEngineAdapter(
                             CtcScoringParams.presetFor(
                                 lexicon.language, beamWidth = beamWidth, topK = TOP_K
                             ),
+                            priority = lexicon.priority,
                         )
                         return applyDisplay(
                             applyFuzzyRescue(toPredictionResult(candidates), greedy, lexicon),

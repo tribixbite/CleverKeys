@@ -151,6 +151,7 @@
     <string name="suggestion_prefer_when_swiping">Előnyben részesíti „%1$s” szót csúsztatáskor?</string>
     <string name="suggestion_prefer_when_swiping_decline">Ne kérdezze</string>
     <string name="suggestion_prefer_when_swiping_added">Csúsztatáskor mostantól „%1$s” élvez előnyt</string>
+    <string name="suggestion_prefer_when_swiping_raised">Csúsztatáskor mostantól „%1$s” erős előnyt élvez</string>
     <string name="suggestion_added_to_dictionary">„%1$s” hozzáadva a szótárhoz</string>
     <string name="suggestion_tap_again_to_undo">Koppintson újra a visszavonáshoz</string>
     <string name="suggestion_removed_from_dictionary">„%1$s” eltávolítva a szótárból</string>
@@ -161,6 +162,12 @@
     <string name="dict_add_new_word">+ Új szó hozzáadása</string>
     <string name="dict_add_new_word_hint">Koppintson egyéni szó hozzáadásához</string>
     <string name="dict_word_frequency">Gyakoriság: %1$d</string>
+    <string name="dict_swipe_priority_label">Csúsztatási prioritás</string>
+    <string name="dict_swipe_priority_normal">Normál</string>
+    <string name="dict_swipe_priority_high">Magas</string>
+    <string name="dict_swipe_priority_highest">Legmagasabb</string>
+    <string name="dict_swipe_priority_help">A gyakoriság (1–255) a szótárhoz képest rangsorolja a szót; a 255 már a maximum. A csúsztatási prioritás ezen felül fix előnyt ad annak a szónak, amely csúsztatáskor még mindig veszít: a Magas mérsékelt, a Legmagasabb erős. A kiemelt szó a hasonló szavak egyes csúsztatásait is elnyeri (például „ad” az „as” helyett). A gépelési javaslatok nem változnak.</string>
+    <string name="dict_word_frequency_swipe_priority">Gyakoriság: %1$d · Csúsztatási prioritás: %2$s</string>
     <string name="dict_edit">Szerkesztés</string>
     <string name="dict_delete">Törlés</string>
     <string name="dict_no_words">Nem található szó</string>

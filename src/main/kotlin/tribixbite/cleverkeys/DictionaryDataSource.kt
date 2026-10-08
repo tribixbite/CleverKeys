@@ -599,11 +599,31 @@ class CustomDictionarySource(
         prefs.edit().putString(customWordsKey, gson.toJson(words)).apply()
     }
 
+    /**
+     * Swipe-priority key for this language (2026-10-08). The legacy global source (null
+     * [languageCode]) has none: priorities only exist for the per-language stores the swipe
+     * engines read.
+     */
+    private val swipePriorityKey: String? = languageCode?.let { LanguagePreferenceKeys.swipePriorityKey(it) }
+
+    /** The stored raised levels of this language; empty for the legacy source. */
+    fun getSwipePriorities(): Map<String, SwipePriority> =
+        swipePriorityKey?.let { SwipePriority.parseMap(prefs.getString(it, null)) } ?: emptyMap()
+
+    /** Persist [map]; an empty map removes the key, so "nothing raised" is the absent default. */
+    private fun saveSwipePriorities(map: Map<String, SwipePriority>) {
+        val key = swipePriorityKey ?: return
+        val edit = prefs.edit()
+        if (map.isEmpty()) edit.remove(key) else edit.putString(key, SwipePriority.toJson(map))
+        edit.apply()
+    }
+
     override suspend fun getAllWords(): List<DictionaryWord> = withContext(Dispatchers.IO) {
+        val priorities = getSwipePriorities()
         getCustomWords()
             .map { (word, freq) ->
                 // Use stored frequency or default to 100
-                DictionaryWord(word, freq, WordSource.CUSTOM, true)
+                DictionaryWord(word, freq, WordSource.CUSTOM, true, priorities[word] ?: SwipePriority.NORMAL)
             }
             .sorted()
     }
@@ -624,10 +644,19 @@ class CustomDictionarySource(
         saveCustomWords(words)
     }
 
+    /** Add [word] with an explicit swipe [priority] (Dictionary Manager "Add word" dialog). */
+    suspend fun addWord(word: String, frequency: Int, priority: SwipePriority) {
+        addWord(word, frequency)
+        saveSwipePriorities(SwipePriority.withLevel(getSwipePriorities(), word, priority))
+    }
+
     override suspend fun deleteWord(word: String) {
         val words = getCustomWords()
         words.remove(word)
         saveCustomWords(words)
+        // A removed word keeps no level: re-adding it later starts at NORMAL.
+        val priorities = getSwipePriorities()
+        if (word in priorities) saveSwipePriorities(SwipePriority.without(priorities, listOf(word)))
     }
 
     override suspend fun updateWord(oldWord: String, newWord: String, frequency: Int) {
@@ -635,6 +664,21 @@ class CustomDictionarySource(
         words.remove(oldWord)
         words[newWord] = frequency
         saveCustomWords(words)
+        // A rename carries the word's swipe priority with it.
+        val priorities = getSwipePriorities()
+        if (oldWord != newWord && oldWord in priorities) {
+            saveSwipePriorities(SwipePriority.renamed(priorities, oldWord, newWord))
+        }
+    }
+
+    /** Edit [oldWord] into [newWord] at [frequency] and set its swipe [priority] (Edit dialog). */
+    suspend fun updateWord(oldWord: String, newWord: String, frequency: Int, priority: SwipePriority) {
+        val words = getCustomWords()
+        words.remove(oldWord)
+        words[newWord] = frequency
+        saveCustomWords(words)
+        val priorities = SwipePriority.without(getSwipePriorities(), listOf(oldWord))
+        saveSwipePriorities(SwipePriority.withLevel(priorities, newWord, priority))
     }
 
     companion object {

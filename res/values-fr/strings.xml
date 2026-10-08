@@ -149,6 +149,7 @@
     <string name="suggestion_prefer_when_swiping">Préférer « %1$s » en glissant ?</string>
     <string name="suggestion_prefer_when_swiping_decline">Ne plus demander</string>
     <string name="suggestion_prefer_when_swiping_added">Le glissé privilégie désormais « %1$s »</string>
+    <string name="suggestion_prefer_when_swiping_raised">Le glissé privilégie désormais nettement « %1$s »</string>
     <string name="suggestion_added_to_dictionary">« %1$s » ajouté au dictionnaire</string>
     <string name="suggestion_tap_again_to_undo">Touchez à nouveau pour annuler</string>
     <string name="suggestion_removed_from_dictionary">« %1$s » retiré du dictionnaire</string>
@@ -159,6 +160,12 @@
     <string name="dict_add_new_word">+ Ajouter un nouveau mot</string>
     <string name="dict_add_new_word_hint">Appuyez pour ajouter un mot personnalisé</string>
     <string name="dict_word_frequency">Fréquence : %1$d</string>
+    <string name="dict_swipe_priority_label">Priorité au glissé</string>
+    <string name="dict_swipe_priority_normal">Normale</string>
+    <string name="dict_swipe_priority_high">Haute</string>
+    <string name="dict_swipe_priority_highest">Maximale</string>
+    <string name="dict_swipe_priority_help">La fréquence (1-255) classe votre mot par rapport au dictionnaire ; 255 est déjà le maximum. La priorité au glissé ajoute en plus un avantage fixe à un mot qui perd encore quand vous le glissez : Haute est modérée, Maximale est forte. Un mot prioritaire gagne aussi certains glissés de mots proches (par exemple « ad » au lieu de « as »). Les suggestions de frappe ne changent pas.</string>
+    <string name="dict_word_frequency_swipe_priority">Fréquence : %1$d · Priorité au glissé : %2$s</string>
     <string name="dict_edit">Modifier</string>
     <string name="dict_delete">Supprimer</string>
     <string name="dict_no_words">Aucun mot trouvé</string>

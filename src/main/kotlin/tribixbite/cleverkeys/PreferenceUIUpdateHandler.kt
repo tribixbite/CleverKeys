@@ -64,8 +64,9 @@ class PreferenceUIUpdateHandler(
     }
 
     /**
-     * Schedule a coalesced swipe re-warm when a custom-words or disabled-words preference of
-     * any language changed (ARC-082). Both are inputs to the swipe lexicon's content version.
+     * Schedule a coalesced swipe re-warm when a custom-words, disabled-words or swipe-priority
+     * preference of any language changed (ARC-082). All are inputs to the swipe lexicon's
+     * content version.
      *
      * @param key The preference key that changed
      */
@@ -86,8 +87,10 @@ class PreferenceUIUpdateHandler(
             // so adding five words fires five callbacks, and the scheduler coalesces the burst
             // into one rebuild against the FINAL state (it then delegates to the same single
             // entry point, which keeps the serving-engine selection and the background slot).
+            // A swipe-priority change (2026-10-08) is a lexicon-version input as well.
             if (LanguagePreferenceKeys.languageFromCustomWordsKey(key) != null ||
-                LanguagePreferenceKeys.languageFromDisabledWordsKey(key) != null
+                LanguagePreferenceKeys.languageFromDisabledWordsKey(key) != null ||
+                LanguagePreferenceKeys.languageFromSwipePriorityKey(key) != null
             ) {
                 SwipeRewarmScheduler.requestRewarm()
             }

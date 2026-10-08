@@ -14,6 +14,7 @@ import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.LanguagePreferenceKeys
 import tribixbite.cleverkeys.PredictionResult
 import tribixbite.cleverkeys.PredictionTaskRunner
+import tribixbite.cleverkeys.SwipePriority
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.GeoKnobRanges
@@ -632,6 +633,8 @@ class GeometricEngineAdapter(
         val customJson = prefs.getString(LanguagePreferenceKeys.customWordsKey(lang), "{}") ?: "{}"
         val disabled = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(lang), emptySet())
             ?: emptySet()
+        // User swipe priority (2026-10-08) — part of the version, like the words themselves.
+        val priorityJson = prefs.getString(LanguagePreferenceKeys.swipePriorityKey(lang), "") ?: ""
 
         // ARC-081: the platform user dictionary is the SECOND user-word store, and it is
         // mutable outside this app entirely, so it has to be read here (not cached across
@@ -644,8 +647,9 @@ class GeometricEngineAdapter(
         } else {
             "asset:dictionaries/${lang}_enhanced.bin"
         }
-        val version =
-            LexiconContentVersion.of(sourceId, customJson, disabled, userDictionary.fingerprint)
+        val version = LexiconContentVersion.of(
+            sourceId, customJson, disabled, userDictionary.fingerprint, priorityJson
+        )
 
         // The LANGUAGE is part of the memo identity, not just the content hash — the same
         // invariant `CtcEngineAdapter.lexiconFor` states: a language switch may never reuse
@@ -673,7 +677,12 @@ class GeometricEngineAdapter(
         }
 
         val userWords = userWordsOf(customJson, lang, userDictionary)
-        val merged = GeometricUserWordMerge.merge(base, userWords, disabled, lang, version)
+        // Raised personal-dictionary words carry an S(w) bonus on the merged dictionary
+        // ([UserSwipePriorityBonus]); none raised → no bonus array, the pre-priority merge.
+        val bonusByWord = UserSwipePriorityBonus.geometricBonusByWord(
+            userWords, SwipePriority.parseMap(priorityJson)
+        )
+        val merged = GeometricUserWordMerge.merge(base, userWords, disabled, lang, version, bonusByWord)
         // Lowercase word → ordinal rank, for ContractionOverlay's real-word guard. First
         // occurrence wins (ties can only come from case-variant duplicates).
         val ordinals = HashMap<String, Int>(merged.size * 2)

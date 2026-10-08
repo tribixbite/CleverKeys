@@ -186,6 +186,7 @@
     <string name="suggestion_prefer_when_swiping">Ưu tiên \'%1$s\' khi vuốt?</string>
     <string name="suggestion_prefer_when_swiping_decline">Không hỏi lại</string>
     <string name="suggestion_prefer_when_swiping_added">Giờ khi vuốt sẽ ưu tiên \'%1$s\'</string>
+    <string name="suggestion_prefer_when_swiping_raised">Giờ khi vuốt sẽ ưu tiên mạnh \'%1$s\'</string>
     <string name="suggestion_added_to_dictionary">Đã thêm \'%1$s\' vào từ điển</string>
     <string name="suggestion_tap_again_to_undo">Nhấn lần nữa để hoàn tác</string>
     <string name="suggestion_removed_from_dictionary">Đã xóa \'%1$s\' khỏi từ điển</string>
@@ -196,6 +197,12 @@
     <string name="dict_add_new_word">+ Thêm từ mới</string>
     <string name="dict_add_new_word_hint">Chạm để thêm từ tùy chỉnh</string>
     <string name="dict_word_frequency">Tần suất: %1$d</string>
+    <string name="dict_swipe_priority_label">Độ ưu tiên khi vuốt</string>
+    <string name="dict_swipe_priority_normal">Bình thường</string>
+    <string name="dict_swipe_priority_high">Cao</string>
+    <string name="dict_swipe_priority_highest">Cao nhất</string>
+    <string name="dict_swipe_priority_help">Tần suất (1-255) xếp hạng từ của bạn so với từ điển; 255 đã là mức cao nhất. Độ ưu tiên khi vuốt cộng thêm một lợi thế cố định cho từ vẫn bị thua khi bạn vuốt: Cao là vừa phải, Cao nhất là mạnh. Từ được nâng ưu tiên cũng sẽ thắng một số lần vuốt của các từ tương tự (ví dụ \'ad\' thay vì \'as\'). Gợi ý khi gõ không bị ảnh hưởng.</string>
+    <string name="dict_word_frequency_swipe_priority">Tần suất: %1$d · Độ ưu tiên khi vuốt: %2$s</string>
     <string name="dict_edit">Sửa</string>
     <string name="dict_delete">Xóa</string>
     <string name="dict_no_words">Không tìm thấy từ nào</string>

@@ -199,6 +199,7 @@
     <string name="suggestion_prefer_when_swiping">Prefer “%1$s” when swiping?</string>
     <string name="suggestion_prefer_when_swiping_decline">Don\'t ask</string>
     <string name="suggestion_prefer_when_swiping_added">Swiping now prefers “%1$s”</string>
+    <string name="suggestion_prefer_when_swiping_raised">Swiping now strongly prefers “%1$s”</string>
     <!-- Suggestion bar: tappable confirmation after a word is added to the personal dictionary
          (add prompt, "+word", autocorrect undo, swipe offer). First tap arms, second tap undoes. -->
     <string name="suggestion_added_to_dictionary">Added “%1$s” to dictionary</string>
@@ -237,6 +238,12 @@
     <string name="dict_add_new_word_hint">Tap to add a custom word</string>
     <!-- %1$d = frequency count of a dictionary word -->
     <string name="dict_word_frequency">Frequency: %1$d</string>
+    <string name="dict_swipe_priority_label">Swipe priority</string>
+    <string name="dict_swipe_priority_normal">Normal</string>
+    <string name="dict_swipe_priority_high">High</string>
+    <string name="dict_swipe_priority_highest">Highest</string>
+    <string name="dict_swipe_priority_help">Frequency (1–255) ranks your word against the dictionary; 255 is already the top. Swipe priority adds a fixed boost on top of that for a word that still loses when you swipe it: High is moderate, Highest is strong. A raised word also wins some swipes of similar words (for example “ad” over “as”). Typing suggestions are not affected.</string>
+    <string name="dict_word_frequency_swipe_priority">Frequency: %1$d · Swipe priority: %2$s</string>
     <string name="dict_edit">Edit</string>
     <string name="dict_delete">Delete</string>
     <string name="dict_no_words">No words found</string>
