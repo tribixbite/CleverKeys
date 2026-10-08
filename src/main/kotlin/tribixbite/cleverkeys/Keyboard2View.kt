@@ -27,6 +27,7 @@ import androidx.core.view.ViewCompat
 import tribixbite.cleverkeys.a11y.KeyLabels
 import tribixbite.cleverkeys.a11y.KeyboardAccessibilityHelper
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
+import tribixbite.cleverkeys.customization.CommandRouting
 import tribixbite.cleverkeys.customization.ActionType
 import tribixbite.cleverkeys.customization.AvailableCommand
 import tribixbite.cleverkeys.customization.CommandRegistry
@@ -1065,14 +1066,16 @@ class Keyboard2View @JvmOverloads constructor(
         val inputConnection = service.currentInputConnection
         val editorInfo = service.currentInputEditorInfo
 
-        // A literal apostrophe flick is the same input as its built-in subkey: route it
-        // through smart punctuation, inline editors/search, and typed-text bookkeeping.
-        // Keep multi-character TEXT macros literal; splitting "'s" into keys would change
+        // A TYPED mapping — single-character TEXT (an apostrophe flick, "€") or a catalogue
+        // command naming a character key (nbsp) — is the same input as a key: route it through
+        // KeyEventHandler for smart punctuation, inline editors/search, autocap, automatic
+        // space and typed-text bookkeeping (CommandRouting). Pointers already emits these
+        // through the key pipeline; this covers any caller that reaches the view directly.
+        // Multi-character TEXT macros stay literal: splitting "'s" into keys would change
         // existing macro semantics without providing a reversible possessive edit.
         // Explicit suffix commands below use verified attachment and suffix-only undo.
-        val apostropheHandler = if (mapping.actionType == ActionType.TEXT &&
-            (mapping.actionValue == "'" || mapping.actionValue == "’")
-        ) _config.handler else null
+        val typedValue = CommandRouting.typedValue(mapping)
+        val typedHandler = if (typedValue != null) _config.handler else null
         if (mapping.actionType == ActionType.COMMAND && mapping.actionValue in setOf("append_possessive", "append_apostrophe")) {
             val suffix = if (mapping.actionValue == "append_possessive") "'s" else "'"
             if (_config.handler?.execute_suffix(suffix) == true) performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
@@ -1083,10 +1086,8 @@ class Keyboard2View @JvmOverloads constructor(
             if (executed) performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
             return // A rejected template must never fall back to typing its payload.
         }
-        val executed = if (apostropheHandler != null) {
-            apostropheHandler.key_up(
-                KeyValue.makeStringKey(mapping.actionValue), Pointers.Modifiers.EMPTY
-            )
+        val executed = if (typedHandler != null && typedValue != null) {
+            typedHandler.key_up(typedValue, Pointers.Modifiers.EMPTY)
             true
         } else {
             _customSwipeExecutor.execute(mapping, inputConnection, editorInfo)

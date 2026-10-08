@@ -257,15 +257,19 @@ class Keyboard2ViewCustomSwipeDispatchTest {
         verify(exactly = 0) { inputConnection.deleteSurroundingText(any(), any()) }
     }
 
+    /**
+     * Any single-character custom TEXT is typed through KeyEventHandler, like the key it
+     * names — not only apostrophes (popover/palette audit, 2026-10-08). Before, a custom `"`
+     * was committed raw and never reached typed-text bookkeeping.
+     */
     @Test
-    fun otherCustomQuoteTextKeepsItsExistingLiteralBehavior() {
-        val text = apostropheEditor("Bowie ", autoSpacePending = true)
+    fun otherSingleCharacterCustomTextIsTypedThroughTheKeyPipeline() {
+        val text = apostropheEditor("Bowie ", autoSpacePending = false)
 
         view.onCustomShortSwipe(textMapping("\""))
 
         assertEquals("Bowie \"", text.editor.toString())
-        verify(exactly = 0) { text.receiver.handle_text_typed(any()) }
-        verify(exactly = 0) { inputConnection.deleteSurroundingText(any(), any()) }
+        verify(exactly = 1) { text.receiver.handle_text_typed("\"") }
     }
 
     @Test

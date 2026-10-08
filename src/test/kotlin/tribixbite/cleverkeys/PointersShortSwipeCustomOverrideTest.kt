@@ -13,6 +13,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import tribixbite.cleverkeys.customization.ActionType
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
@@ -177,6 +178,14 @@ class PointersShortSwipeCustomOverrideTest {
 
     private fun emitted(s: String): Boolean = handler.ups.any { it?.getString() == s }
 
+    /**
+     * The custom NW "!" fired. A single-character TEXT mapping is typed through the key
+     * pipeline (CommandRouting, 2026-10-08) — the same up event a layout's own subkey gives —
+     * so it is recorded as an emitted key, never as an executor call.
+     */
+    private fun customBangFired(): Boolean =
+        handler.customs.isEmpty() && handler.ups.count { it?.getString() == "!" } == 1
+
     /** #188: navigation subkeys must not bypass the primary key latch lifecycle. */
     @Test
     fun deferredComposeTap_latchesInsteadOfEmittingAndClearing() {
@@ -220,8 +229,7 @@ class PointersShortSwipeCustomOverrideTest {
 
         flick(keyQ, dx = -40f, dy = -40f, snap = snap()) // 45° up-left, dist 56.6 -> dir 13 (NW)
 
-        assertEquals("custom mapping must execute exactly once", 1, handler.customs.size)
-        assertEquals("!", handler.customs.single().actionValue)
+        assertTrue("custom mapping must fire exactly once", customBangFired())
         assertTrue("the shadowed default \"~\" must not be emitted", !emitted("~"))
     }
 
@@ -237,9 +245,9 @@ class PointersShortSwipeCustomOverrideTest {
         // Angle mid-bin of dir 12: dx = -58.85, dy = -11.7 (r = 60 px).
         flick(keyQ, dx = -58.85f, dy = -11.7f, snap = snap())
 
-        assertEquals(
+        assertTrue(
             "the custom NW mapping must shadow the default at the fuzzed nw slot",
-            1, handler.customs.size
+            customBangFired()
         )
         assertTrue("the overridden default \"~\" must never fire", !emitted("~"))
     }
@@ -252,9 +260,9 @@ class PointersShortSwipeCustomOverrideTest {
         // Angle mid-bin of dir 15: dx = -11.7, dy = -58.85 (r = 60 px).
         flick(keyQ, dx = -11.7f, dy = -58.85f, snap = snap())
 
-        assertEquals(
+        assertTrue(
             "the custom NW mapping must shadow the default at the fuzzed nw slot",
-            1, handler.customs.size
+            customBangFired()
         )
         assertTrue("the overridden default \"~\" must never fire", !emitted("~"))
     }
@@ -271,6 +279,7 @@ class PointersShortSwipeCustomOverrideTest {
         flick(keyQWithW, dx = -58.85f, dy = -11.7f, snap = snap()) // exact dir 12 (W)
 
         assertEquals("no custom mapping may fire for the W-bin flick", 0, handler.customs.size)
+        assertTrue("nor may its \"!\" be typed", !emitted("!"))
         assertTrue("the exact-direction default \"`\" must be emitted", emitted("`"))
         assertTrue("the NW default stays shadowed", !emitted("~"))
     }
@@ -295,11 +304,10 @@ class PointersShortSwipeCustomOverrideTest {
 
         flick(keyQ, dx = -40f, dy = -40f, snap = snap(swipeTyping = false))
 
-        assertEquals(
+        assertTrue(
             "a cold-loaded custom mapping must resolve with swipe typing disabled",
-            1, handler.customs.size
+            customBangFired()
         )
-        assertEquals("!", handler.customs.single().actionValue)
     }
 
     // =========================================================================
@@ -326,6 +334,54 @@ class PointersShortSwipeCustomOverrideTest {
             "the starting key must be committed as a tap",
             handler.ups.any { it?.getChar() == 'a' }
         )
+    }
+
+    // =========================================================================
+    // Typing-pipeline routing of custom mappings (popover/palette audit, 2026-10-08)
+    // =========================================================================
+
+    /**
+     * A multi-character TEXT mapping is a literal macro: it stays on the executor and is never
+     * split into keys (CLAUDE.md "Custom apostrophe routing").
+     */
+    @Test
+    fun multiCharacterCustomText_staysALiteralMacroOnTheExecutor() {
+        putMapping(ShortSwipeMapping.textInput("q", SwipeDirection.NW, "!?", "!?"))
+
+        flick(keyQ, dx = -40f, dy = -40f, snap = snap())
+
+        assertEquals("!?", handler.customs.single().actionValue)
+        assertTrue("a macro is not typed key by key", handler.ups.isEmpty())
+    }
+
+    /**
+     * A catalogue command that resolves to a CHARACTER key (`nbsp`) is typed through the key
+     * pipeline, like the layout key it names, instead of the executor's raw commitText.
+     */
+    @Test
+    fun charKindCustomCommand_isTypedThroughTheKeyPipeline() {
+        putMapping(ShortSwipeMapping("q", SwipeDirection.NW, "⍽", ActionType.COMMAND, "nbsp"))
+
+        flick(keyQ, dx = -40f, dy = -40f, snap = snap())
+
+        assertTrue("a Char-kind command never reaches the executor", handler.customs.isEmpty())
+        assertEquals(KeyValue.getKeyByName("nbsp"), handler.ups.single())
+    }
+
+    /**
+     * A plain short swipe (no popover) onto a custom DEAD-KEY mapping latches it for the next
+     * key, exactly as the layout's own dead-key subkey does.
+     */
+    @Test
+    fun shortSwipeOntoACustomDeadKey_latchesIt() {
+        putMapping(ShortSwipeMapping("q", SwipeDirection.NW, "´", ActionType.COMMAND, "accent_aigu"))
+
+        flick(keyQ, dx = -40f, dy = -40f, snap = snap())
+
+        assertTrue("a dead key never reaches the executor", handler.customs.isEmpty())
+        assertTrue("nothing is typed yet", handler.ups.isEmpty())
+        val latched = ptrs.singleOrNull { it.hasFlagsAny(Pointers.FLAG_P_LATCHED) }
+        assertEquals(KeyValue.getKeyByName("accent_aigu"), latched?.value)
     }
 
     // ------------------------------------------------------------------ harness

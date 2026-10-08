@@ -34,11 +34,60 @@ class CommandRoutingTest {
     }
 
     @Test
-    fun nonCommandMappingsAndTheRemovedPlaceholderNeverRouteToTheKeyPipeline() {
+    fun theRemovedPlaceholderAndMultiCharacterTextNeverRouteToTheKeyPipeline() {
         assertThat(CommandRouting.keyPipelineValue(ShortSwipeMapping.removal("g", SwipeDirection.W))).isNull()
-        // A TEXT mapping whose text happens to be a key name is still text.
+        // A TEXT mapping whose text happens to be a key name is still literal text.
         assertThat(CommandRouting.keyPipelineValue(
             ShortSwipeMapping("g", SwipeDirection.W, "s", ActionType.TEXT, "shift"))).isNull()
+        // Multi-character TEXT is a literal macro (CLAUDE.md "Custom apostrophe routing").
+        for (text in listOf("'s", "hello", "\n", "\t", "")) {
+            assertWithMessage(text).that(CommandRouting.keyPipelineValue(text(text))).isNull()
+        }
+        // Other action types keep their own executors, even with a one-character value.
+        for ((type, value) in listOf(
+            ActionType.INTENT to "x", ActionType.TIMESTAMP to "H", ActionType.TEMPLATE to "x", ActionType.KEY_EVENT to "6",
+        )) {
+            assertWithMessage(type.name).that(CommandRouting.keyPipelineValue(
+                ShortSwipeMapping("g", SwipeDirection.W, "x", type, value))).isNull()
+        }
+    }
+
+    private fun text(value: String) = ShortSwipeMapping("g", SwipeDirection.W, "x", ActionType.TEXT, value)
+
+    /**
+     * A single-character TEXT mapping is TYPED through the key pipeline, the value a layout key
+     * for that character carries (popover/palette audit, 2026-10-08): the executor's raw
+     * commitText skipped autocap, smart punctuation, automatic space and typed-word tracking.
+     */
+    @Test
+    fun singleCharacterTextIsTypedThroughTheKeyPipeline() {
+        assertThat(CommandRouting.keyPipelineValue(text("'"))).isEqualTo(KeyValue.makeCharKey('\''))
+        assertThat(CommandRouting.keyPipelineValue(text("’"))).isEqualTo(KeyValue.makeCharKey('’'))
+        assertThat(CommandRouting.keyPipelineValue(text("€"))).isEqualTo(KeyValue.makeCharKey('€'))
+        assertThat(CommandRouting.keyPipelineValue(text(" "))).isEqualTo(KeyValue.makeCharKey(' '))
+        // One code point outside the BMP (a surrogate pair) is one typed String key.
+        assertThat(CommandRouting.keyPipelineValue(text("😀"))).isEqualTo(KeyValue.makeStringKey("😀"))
+    }
+
+    /**
+     * Catalogue-wide: every command whose name resolves to a real CHARACTER or STRING key
+     * (not getKeyByName's "unknown name" echo) is typed through the key pipeline, never
+     * committed raw by the executor. A Char-kind command going to raw commit fails here.
+     */
+    @Test
+    fun everyCharOrStringKindCatalogueCommandIsTypedThroughTheKeyPipeline() {
+        val typed = CommandRegistry.ALL_COMMANDS.map { it.name }.filter { name ->
+            val kv = KeyValue.getKeyByName(name)
+            kv.getKind() == KeyValue.Kind.Char ||
+                (kv.getKind() == KeyValue.Kind.String && kv.getString() != name)
+        }
+        assertWithMessage("the catalogue has typed commands to route").that(typed).isNotEmpty()
+        for (name in typed) {
+            assertWithMessage(name).that(CommandRouting.keyPipelineValue(command(name)))
+                .isEqualTo(KeyValue.getKeyByName(name))
+        }
+        assertThat(CommandRouting.keyPipelineValue(command("space"))).isEqualTo(KeyValue.getKeyByName("space"))
+        assertThat(CommandRouting.keyPipelineValue(command("nbsp"))).isEqualTo(KeyValue.getKeyByName("nbsp"))
     }
 
     /**
