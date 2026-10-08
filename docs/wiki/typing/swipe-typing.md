@@ -197,11 +197,21 @@ Swipe typing may not activate when:
 - Typing in password fields (unless enabled in settings)
 - The swipe is too short (detected as tap)
 - No language pack is available
+- The swipe **starts on a key that is not a letter**. A word swipe must begin on a letter
+  key. A swipe that starts on Backspace, Shift, Enter, Space, Ctrl/Fn, a digit or
+  punctuation keeps that key's own tap or short-swipe action, even if your finger then
+  crosses letters (for example, a swipe-left from Backspace over `m n b` no longer types
+  "mb"). A swipe that starts on a letter and later crosses the spacebar is unaffected.
+
+In terminal apps the swiped word is inserted as recognised, without the final
+autocorrect step (so `ls` is not changed to `is`). See
+[Advanced Settings](../settings/advanced.md#terminal-apps).
 
 ## Related Features
 
 - [Short Swipes](../gestures/short-swipes.md) - Quick access to subkeys
 - [Autocorrect](autocorrect.md) - Fix mistakes automatically
+- [Per-Key Actions](../customization/per-key-actions.md) - Append 's / Append apostrophe and dynamic templates
 
 ## Apostrophes and Short-Word Limits
 
