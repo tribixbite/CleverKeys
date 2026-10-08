@@ -1316,6 +1316,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfigBuildTest',
     'tribixbite.cleverkeys.customization.CustomShortSwipeExecutorTest',
     'tribixbite.cleverkeys.autocorrect.AutoCorrectEndToEndTest',
+    // 2026-10-08 Saga report: Hebrew neighbour-key typos were not corrected — KeyAdjacency
+    // positioned only Latin letters. Real he pack + real hebr_1_il grid, shipped defaults.
+    'tribixbite.cleverkeys.autocorrect.HebrewLayoutAutoCorrectTest',
     // 2026-09-26 user report: typo-tolerant tap-typing bar (pka/pkay → play) over the
     // real 98k dictionary — ranking guards, provenance, secondary language, latency bound.
     'tribixbite.cleverkeys.WordPredictorFuzzyTypingTest',

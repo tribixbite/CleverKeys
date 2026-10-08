@@ -33,6 +33,13 @@ import kotlin.math.hypot
  *
  * `substitutionScore(a, b) = 1 - keyDistance(a, b)`.
  *
+ * # Non-Latin boards
+ *
+ * Letters the QWERTY table does not cover (Hebrew, Cyrillic, Greek, Arabic …) are
+ * positioned from the ACTIVE layout's own key grid via [setLayoutLetters]
+ * (`Keyboard2View.setKeyboard` → [LayoutLetterGrid.of]), on the same key-pitch scale, so a
+ * neighbour typo on a Hebrew board earns the same credit as one on QWERTY.
+ *
  * # Future extension
  *
  * The current QWERTY table is hardcoded — it correctly handles the
@@ -81,6 +88,16 @@ object KeyAdjacency {
     }
 
     /**
+     * Normalizer for [layoutLetters] distances: the built-in QWERTY table's span (9 key
+     * pitches, `q` ↔ `p`). Both tables are in key-grid units, so dividing by the same span
+     * makes one key pitch cost the same on a Hebrew or Cyrillic board as on QWERTY
+     * (≈ 0.11, substitution score ≈ 0.89) — the calibration every autocorrect threshold
+     * was tuned on. Not the layout's own span: an 11-key row would otherwise make its
+     * neighbours look closer than QWERTY's.
+     */
+    private val GRID_SCALE: Float = computeMaxDistance(DEFAULT_POSITIONS)
+
+    /**
      * Currently-active position table — defaults to QWERTY, replaced by
      * the most recent [setLayout] call. `@Volatile` so calls from the UI
      * thread (`Keyboard2View.onLayout`) are visible to autocorrect calls
@@ -126,6 +143,41 @@ object KeyAdjacency {
         maxDistance = computeMaxDistance(normalized).coerceAtLeast(1e-6f)
         azDist = buildAzDist(normalized, maxDistance)
         neighborRadius = computeNeighborRadius(normalized, maxDistance)
+    }
+
+    /**
+     * Letters of the ACTIVE layout that the Latin table does not position — Hebrew,
+     * Cyrillic, Greek, Arabic … — in key-grid units ([LayoutLetterGrid]). Empty on a Latin
+     * board. Without this every substitution between two such letters cost 1.0 (as far
+     * apart as the board allows), so a neighbour-key typo on a Hebrew board got no more
+     * credit than a random letter and lost to transpositions and insertions
+     * (`החא` → `האח` instead of `הוא`).
+     *
+     * Deliberately a SEPARATE table: the Latin table stays authoritative for every letter
+     * it covers (switching Latin letters to live geometry is a separate, unmeasured change —
+     * see the TODO in `Keyboard2View.onLayout`), and a pair with one letter in each table
+     * keeps the "unrelated keys" distance 1.0.
+     */
+    @Volatile
+    private var layoutLetters: Map<Char, Pair<Float, Float>> = emptyMap()
+
+    /**
+     * Install the active layout's letter-key grid ([LayoutLetterGrid.of]). Letters the Latin
+     * table already positions are ignored, so a Latin board leaves this empty and changes
+     * nothing. Called by `Keyboard2View.setKeyboard` for the live (non-preview) keyboard;
+     * an empty map clears it.
+     */
+    @JvmStatic
+    fun setLayoutLetters(gridPositions: Map<Char, Pair<Float, Float>>) {
+        val own = HashMap<Char, Pair<Float, Float>>()
+        for ((c, p) in gridPositions) {
+            val lc = c.lowercaseChar()
+            if (lc !in DEFAULT_POSITIONS) own[lc] = p
+        }
+        // Two @Volatile writes, no lock: a lookup racing a layout switch may pair one board's
+        // letters with the other's radius once — harmless for a typo heuristic.
+        layoutLetterNeighborRadius = computeNeighborRadius(own, GRID_SCALE)
+        layoutLetters = own
     }
 
     /** Revert to the default US-QWERTY position table (plus accents). */
@@ -182,10 +234,18 @@ object KeyAdjacency {
             return azDist[ca - 'a'][cb - 'a']
         }
         val p = positions  // local snapshot to dodge mid-call layout swap
-        val pa = p[ca] ?: return 1f
-        val pb = p[cb] ?: return 1f
-        val d = hypot(pa.first - pb.first, pa.second - pb.second)
-        return (d / maxDistance).coerceIn(0f, 1f)
+        val pa = p[ca]
+        val pb = p[cb]
+        if (pa != null && pb != null) {
+            val d = hypot(pa.first - pb.first, pa.second - pb.second)
+            return (d / maxDistance).coerceIn(0f, 1f)
+        }
+        // Both letters on the active layout's own (non-Latin) grid → the same physics, on
+        // the QWERTY scale. A letter in neither table, or one in each, stays "unrelated".
+        val l = layoutLetters
+        val la = l[ca] ?: return 1f
+        val lb = l[cb] ?: return 1f
+        return (hypot(la.first - lb.first, la.second - lb.second) / GRID_SCALE).coerceIn(0f, 1f)
     }
 
     /**
@@ -262,9 +322,21 @@ object KeyAdjacency {
      * accent variants separately must check for that first.
      */
     fun areNeighbors(a: Char, b: Char): Boolean {
-        if (a.lowercaseChar() == b.lowercaseChar()) return false
+        val ca = a.lowercaseChar()
+        val cb = b.lowercaseChar()
+        if (ca == cb) return false
+        val l = layoutLetters
+        if (ca in l && cb in l) return keyDistance(ca, cb) <= layoutLetterNeighborRadius
         return keyDistance(a, b) <= neighborRadius
     }
+
+    /**
+     * [areNeighbors] radius for two [layoutLetters] keys: [NEIGHBOR_RADIUS_PITCHES] of that
+     * grid's own median key pitch ([computeNeighborRadius]) on the [GRID_SCALE] scale.
+     * Rebuilt by [setLayoutLetters].
+     */
+    @Volatile
+    private var layoutLetterNeighborRadius: Float = 0f
 
     /**
      * Substitution score = 1 - keyDistance. Returned value:

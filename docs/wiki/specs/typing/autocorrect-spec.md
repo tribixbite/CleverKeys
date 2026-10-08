@@ -10,7 +10,7 @@ version: v1.5.0
 
 ## Overview
 
-CleverKeys autocorrect is an adjacency-weighted dictionary scorer with a rule-based selection function. The scoring model uses physical keyboard distance to rank candidate replacements, so fingertip-typical typos (adjacent-key substitutions and adjacent transpositions) outscore arbitrary string-distance matches. Contractions, accented Latin characters, and runtime layout swaps (AZERTY/QWERTZ/Dvorak/custom) are all first-class citizens in the model.
+CleverKeys autocorrect is an adjacency-weighted dictionary scorer with a rule-based selection function. The scoring model uses physical keyboard distance to rank candidate replacements, so fingertip-typical typos (adjacent-key substitutions and adjacent transpositions) outscore arbitrary string-distance matches. Contractions and accented Latin characters are first-class citizens in the model; Latin letters are scored on a built-in QWERTY table, and the letters of non-Latin boards on the active layout's own key grid.
 
 This spec covers the v1.5.0 pipeline: the Tier A (#101) + Tier B (layout-aware) adjacency model from v1.4.0, plus the guard layer added since — non-prose context suppression (URLs/emails/paths), possessive and inflection guards, doubled-letter elongation collapse, the Damerau transposition fast path, a dictionary-scaled frequency floor, and disabled-word exclusion.
 
@@ -24,7 +24,8 @@ This spec covers the v1.5.0 pipeline: the Tier A (#101) + Tier B (layout-aware) 
 | `FrequencyFloor` | `src/main/kotlin/tribixbite/cleverkeys/autocorrect/FrequencyFloor.kt` | Maps the 100–2000 slider onto the loaded dictionary's frequency scale |
 | `WordPredictor.autoCorrect` | `WordPredictor.kt:1855` | The pipeline entry point + selection logic |
 | `WordPredictor.isAdjacentTransposition` | `WordPredictor.kt:1831` | Damerau swap detector |
-| `Keyboard2View.onLayout` | `Keyboard2View.kt:1303` | Pushes the active layout's key positions into `KeyAdjacency` |
+| `LayoutLetterGrid` | `src/main/kotlin/tribixbite/cleverkeys/autocorrect/LayoutLetterGrid.kt` | Letter-key centres of a layout in key-grid units |
+| `Keyboard2View.setKeyboard` | `Keyboard2View.kt` | Installs the live layout's non-Latin letter grid into `KeyAdjacency` |
 | `SuggestionHandler` | `SuggestionHandler.kt:999-1004` | Wires autocorrect into the IME's word-completion flow (context guard + undo) |
 | `PredictionContextTracker` | `PredictionContextTracker.kt` | Tracks `lastAutocorrectOriginalWord` for undo; `shouldSyncForInputType` (`:612`) detects URI/email/password fields |
 
@@ -115,7 +116,8 @@ object KeyAdjacency {
     fun substitutionScore(a: Char, b: Char): Float  // 1 - keyDistance (:220)
     fun weightedEditDistance(a: String, b: String): Float  // weighted Levenshtein (:231)
     fun weightedEditDistance(a: String, b: String, maxDistance: Float): Float  // early-abandon overload (:248)
-    fun setLayout(positions: Map<Char, Pair<Float, Float>>)  // Tier B injection (:115)
+    fun setLayout(positions: Map<Char, Pair<Float, Float>>)  // replace the Latin table (tests only today)
+    fun setLayoutLetters(gridPositions: Map<Char, Pair<Float, Float>>)  // non-Latin letters of the live layout
     fun resetLayout()                                // revert to default QWERTY (:131)
 }
 ```
@@ -163,24 +165,19 @@ private fun computeMaxDistance(p: Map<Char, Pair<Float, Float>>): Float {
 
 For the default QWERTY layout this is `q ↔ p = 9.0` (opposite ends of the top row). The previous hardcoded value of `q ↔ m = 7.28` was mathematically incorrect; the refactor at v1.4.0 fixed this and updated calibrated thresholds accordingly.
 
-### Layout Injection (Tier B)
+### Layout Injection
 
-`Keyboard2View.onLayout` extracts key positions in pixel coordinates and pushes them to `KeyAdjacency`:
+**Latin letters.** `Keyboard2View.onLayout` calls `KeyAdjacency.resetLayout()`: every Latin layout is scored on the default QWERTY (+ accents) table. Pushing live pixel geometry for Latin letters (AZERTY/QWERTZ/Dvorak/custom) is a TODO in `onLayout` — it must be measured on the autocorrect replay first (no accent rows, row stagger in the distances).
 
-```kotlin
-// Keyboard2View.kt:~1303
-override fun onLayout(changed: Boolean, ...) {
-    if (!changed) return
-    // ...gesture exclusion rects...
-    try {
-        val realPositions = getRealKeyPositions()
-        val adjacencyPositions = realPositions.mapValues { (_, pt) -> pt.x to pt.y }
-        KeyAdjacency.setLayout(adjacencyPositions)
-    } catch (e: Exception) {
-        Log.w("Keyboard2View", "Failed to push layout to KeyAdjacency: ${e.message}")
-    }
-}
-```
+**Non-Latin letters (2026-10-08).** `Keyboard2View.setKeyboard` (live keyboard only, never a preview) calls `KeyAdjacency.setLayoutLetters(LayoutLetterGrid.of(kw))`. `LayoutLetterGrid` takes every centre-letter key (`KeyLetter.centreLetterOf`) from the shared hit-test geometry (`KeyboardGeometry.computeKeyRects`) at unit key width / row height, i.e. in the same key-grid units as the QWERTY table. `KeyAdjacency` keeps only letters the QWERTY table does not position, in a separate table:
+
+- both letters in the QWERTY table → QWERTY distance (unchanged; `a`–`z` keep the precomputed fast path);
+- both letters in the layout table → grid distance divided by the QWERTY span (9.0), so one key pitch costs ≈ 0.11 on any board, the calibration all thresholds were tuned on;
+- anything else (a letter in neither table, or one in each) → 1.0.
+
+`areNeighbors` uses the layout table's own median key pitch × 1.5 for two layout letters. `setKeyboard` rather than `onLayout` because the grid depends only on the layout and `onLayout` returns early on same-size passes.
+
+Why it matters: before this, every substitution between two Hebrew letters cost 1.0, so a one-letter neighbour typo scored no better than any one-letter change and lost to transpositions and length changes. Measured on the shipped Hebrew pack at the shipped defaults (one random neighbour typo for each of the top-500 words, typos that are themselves words excluded): 3+ letter words corrected to the intended word 189/352 → 231/352, two-letter words 0/12 → 9/12. The same protocol on English (unchanged by the fix) corrects 296/403. The remaining misses are the frequency tiebreak between several equally close words, the same class as English's.
 
 Thread safety is `@Volatile` + local snapshot inside `keyDistance`:
 
@@ -190,11 +187,14 @@ Thread safety is `@Volatile` + local snapshot inside `keyDistance`:
 
 fun keyDistance(a: Char, b: Char): Float {
     if (a == b) return 0f
+    // a–z × a–z: precomputed table (fast path)
     val p = positions  // local snapshot — dodges mid-call layout swap
-    val pa = p[a.lowercaseChar()] ?: return 1f
-    val pb = p[b.lowercaseChar()] ?: return 1f
-    val d = hypot(pa.first - pb.first, pa.second - pb.second)
-    return (d / maxDistance).coerceIn(0f, 1f)
+    val pa = p[a.lowercaseChar()]; val pb = p[b.lowercaseChar()]
+    if (pa != null && pb != null) return (hypot(pa.first - pb.first, pa.second - pb.second) / maxDistance).coerceIn(0f, 1f)
+    val l = layoutLetters      // non-Latin letters of the live layout
+    val la = l[a.lowercaseChar()] ?: return 1f
+    val lb = l[b.lowercaseChar()] ?: return 1f
+    return (hypot(la.first - lb.first, la.second - lb.second) / GRID_SCALE).coerceIn(0f, 1f)
 }
 ```
 
@@ -523,6 +523,7 @@ IME add path (add-to-dictionary prompt, "+word" chip, autocorrect undo, acceptin
 | Suite | File | Coverage |
 |-------|------|----------|
 | Pure JVM — KeyAdjacency | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/KeyAdjacencyTest.kt` | Position math, accents, layout swap |
+| Mock JVM — Hebrew board | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/HebrewLayoutAutoCorrectTest.kt` | Real he pack + real `hebr_1_il` grid: neighbour typos correct, Latin distances unchanged, live wiring |
 | Pure JVM — Context guard | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/AutocorrectContextGuardTest.kt` | Non-prose token detection |
 | Pure JVM — Frequency floor | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/FrequencyFloorTest.kt` | Slider→floor mapping, unloaded-dict guard |
 | Pure JVM — Morphology | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/MorphologyTest.kt` | Inflection stem generation |

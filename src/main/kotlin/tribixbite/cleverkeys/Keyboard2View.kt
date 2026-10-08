@@ -480,6 +480,17 @@ class Keyboard2View @JvmOverloads constructor(
         // Preview mode (§4.1): the modmap is process-global and the IME may share this
         // process — a theme-editor preview must not swap the live keyboard's modmap.
         if (!_previewMode) KeyModifier.set_modmap(kw.modmap)
+        // Autocorrect adjacency for the letters the built-in QWERTY table cannot position
+        // (Hebrew, Cyrillic, Greek …): without it every substitution on those boards cost the
+        // maximum and neighbour-key typos were not corrected (Saga, Hebrew, 2026-10-08).
+        // Process-global like the modmap, so never from a preview. Here and not in onLayout:
+        // the grid depends only on the layout, and onLayout skips unchanged-size passes —
+        // a layout switch at the same size would never reach it.
+        if (!_previewMode) {
+            tribixbite.cleverkeys.autocorrect.KeyAdjacency.setLayoutLetters(
+                tribixbite.cleverkeys.autocorrect.LayoutLetterGrid.of(kw)
+            )
+        }
 
         // Refresh swipe trail paint with latest config settings
         initSwipeTrailPaint()
@@ -1868,7 +1879,8 @@ class Keyboard2View @JvmOverloads constructor(
             systemGestureExclusionRects = listOf(_gestureExclusionRect)
         }
 
-        // Autocorrect adjacency keeps its default US-QWERTY (+ accents) table, which is what
+        // Autocorrect adjacency keeps its default US-QWERTY (+ accents) table for Latin letters
+        // (letters outside it are positioned from the layout grid in setKeyboard), which is what
         // every release so far has actually used: this block used to push
         // getRealKeyPositions(), but that map was always empty (see its comment), so
         // KeyAdjacency.setLayout always fell back to the default. Fixing the map must not

@@ -17,8 +17,8 @@ CleverKeys autocorrect knows that **adjacent keys are more likely typos than dis
 | **Purpose** | Fix tap-typing mistakes using keyboard physics + dictionary frequency |
 | **Access** | Automatic while typing; toggle in Settings → Word Prediction |
 | **Undo** | Tap the original word in the prediction bar |
-| **Layouts** | Adapts automatically to AZERTY / QWERTZ / Dvorak / custom layouts |
-| **Languages** | Latin accents (é, ñ, ü, etc.) covered out of the box |
+| **Layouts** | Latin letters use a built-in QWERTY map; non-Latin boards (Hebrew, Cyrillic, Greek …) use their own key grid |
+| **Languages** | Latin accents (é, ñ, ü, etc.) covered out of the box; non-Latin letters get adjacency from your layout |
 
 ## How Autocorrect Works
 
@@ -57,7 +57,9 @@ So `tge → the` (one `g↔h` substitution, score ~0.96) ranks far above `tge �
 
 ### Layout-Aware Adjacency
 
-Adjacency is computed from **your actual keyboard layout**, not a hardcoded QWERTY map. When you switch to AZERTY (where `a` and `q` swap from QWERTY positions), or use Dvorak, or load a custom layout, the proximity model updates automatically. French AZERTY users get the right adjacency for their `q↔a` typos; QWERTZ users get `y↔z` treated as adjacent.
+**Latin letters** (`a`–`z` and the accented forms below) are scored on a built-in US-QWERTY map, whatever Latin layout is active. Using the live AZERTY / QWERTZ / Dvorak / custom geometry for them is planned but not enabled yet: it has to be measured on the autocorrect replay first.
+
+**Letters the QWERTY map does not cover** — Hebrew, Cyrillic, Greek, Arabic and other non-Latin boards — are positioned from **the active layout's own key grid**, on the same key-pitch scale. A neighbour-key typo on a Hebrew board (`החא` for `הוא`, `ח` next to `ו`) earns the same credit as `tge` for `the` on QWERTY. Before 2026-10-08 these letters had no positions at all, so every substitution looked maximally distant and Hebrew neighbour typos were left alone or "corrected" to an anagram or a shorter word (`החא` → `האח`).
 
 ### Accented Letters
 
@@ -201,7 +203,7 @@ learned next-word candidate will show the statistics behind it, like
 - **Proper nouns:** Add names and places to prevent miscorrection. They'll then short-circuit the dictionary scan and never get autocorrected.
 - **Technical jargon:** Same as proper nouns — add to dictionary.
 - **Disabled list:** Move a word to the Disabled tab in Dictionary Manager to prevent autocorrect from EVER picking it as a candidate.
-- **Language-specific behavior:** Each language has its own dictionary AND its own contractions file. The adjacency model uses your current keyboard layout, regardless of language.
+- **Language-specific behavior:** Each language has its own dictionary AND its own contractions file. Adjacency follows the keys, not the language: Latin letters use the QWERTY map, other letters your current layout's grid.
 
 ## Common Questions
 
@@ -218,7 +220,7 @@ A: By design. Tokens containing `. / : @ # ? & = %` or digits are treated as non
 A: Add it to your dictionary via the "Add to dictionary?" prompt, or via Settings → Dictionary Manager → Custom tab. Once added, autocorrect skips it.
 
 ### Q: Does autocorrect work for languages other than English?
-A: Yes — the adjacency model is language-independent (it's about which keys you tapped). Each language has its own word dictionary and contractions file.
+A: Yes. Each language has its own word dictionary and contractions file, and adjacency is about which keys you tapped: Latin letters are scored on the QWERTY map, and the letters of a non-Latin board (Hebrew, Cyrillic, Greek …) on that board's own key grid.
 
 ### Q: Why does `well` stay as `well` instead of becoming `we'll`?
 A: `well` is a real English word, so it's on the protected list. CleverKeys won't expand it to `we'll` because that would be wrong in most contexts ("the well ran dry").
