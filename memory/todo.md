@@ -91,6 +91,20 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
 
 # History (reconciled 2026-10-08; boxes below are closed or point at "Open now")
 
+## October 8: user swipe priority (frequency-setting fix for hard swipe words)
+
+Maintainer request: a frequency-setting-based fix for `ad`/`wet`/`adb`/`somethings`.
+Eval: `docs/eval/2026-10-08-user-swipe-priority.md`.
+
+- [x] Measured: per-word frequency cannot raise (255 is the cap); needed bonus per target and
+  collateral per level (real dev/held/focus traces + synthetic shapes, distinct counts).
+- [x] Normal/High/Highest swipe priority for custom words (CTC +2.0/+4.0 final-score nats,
+  geometric +2.0/+4.0 on pruner survivors), Dictionary Manager picker + row label, backup
+  round trip, offer raises a Normal user word to High; tap prediction untouched.
+- [ ] Device check (eval note §8): `adb` Highest + `wet` High swipes, then `an`/`we`/`as`
+  collateral; restore Normal afterwards.
+- [ ] TODO: native-speaker review of the 7 new strings in 21 locales.
+
 ## October 7 clipboard selection: persistence, bulk actions, dialog focus fix
 
 Maintainer request (verbatim): "fix the rotation reset (bug imo) and make selected entries

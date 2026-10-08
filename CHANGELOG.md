@@ -155,6 +155,18 @@ editor that used to be listed here already ship in 2.0.)
   exactly as before; three or more languages work by binding three or more layouts.
   Bindings travel with the layout in Backup & Restore; a binding to a language without an
   installed dictionary is allowed and flagged.
+- **Swipe priority for your own words**: in Dictionary Manager → Custom, each word has a Swipe
+  priority (Normal / High / Highest) beside its frequency. Frequency 255, the default, is already
+  the top of the scale. A raised word gets a fixed extra boost in both swipe engines, but only
+  when the swipe already passed close to it. It never appears on an unrelated swipe, and tap
+  suggestions are unchanged. High fixes words that lose narrowly (measured: `ad`, `wet`).
+  Highest is for words whose middle letter the swipe passes straight through (`adb`). A raised
+  word also wins some swipes of similar words; for example, `ad` at High takes many `as`
+  swipes. The Dictionary Manager says so, and the measured costs are in
+  `docs/eval/2026-10-08-user-swipe-priority.md`. A "Prefer “word” when swiping?" offer for a
+  word that is already in your dictionary now raises it to High (tap the confirmation twice to
+  undo). Priorities travel in dictionary backups. Words you never raise behave exactly as
+  before.
 
 ### Changed
 

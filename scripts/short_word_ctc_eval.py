@@ -38,6 +38,9 @@ Sub-commands (all write/read JSONL in --work, default ./build/short-word-eval):
                        anatomy of every prefix drop (top-1 = proper prefix of the target),
                        docs/eval/2026-10-07-final-letter-drops.md
   grid DUMP            exact (γ, β, λ) final-score grid with the s-plural class beside it
+  priority DUMP...     per-word swipe-priority bonus sweep: target fixes, collateral breaks
+                       (distinct traces/words) and the generic per-word steal rate,
+                       docs/eval/2026-10-08-user-swipe-priority.md (dump with --add adb)
 
 Corpus rows: {"word", "pts": [[x, y, t_ms], ...]} in the letter-box frame, or HF FUTO rows
 {"word", "data": [{"x","y","t"}]}. Deterministic samples: SHA-256(seed + json(pts)).
@@ -186,9 +189,17 @@ class Trie:
         return n is not None and n.is_word
 
 
-def load_lexicon() -> Trie:
-    """EN_JSON strip loader + contraction alias keys at the derived floor (shipped en trie)."""
+def load_lexicon(extra: Sequence[str] = ()) -> Trie:
+    """EN_JSON strip loader + contraction alias keys at the derived floor (shipped en trie).
+
+    [extra] are personal-dictionary words merged ahead of the base at the scale cap (255), as
+    `CtcLexiconMerge.merge` does for a default-stored custom word. A frequency only reaches the
+    final score, so a word ALREADY in the lexicon changes nothing in a dump; a NEW word (`adb`)
+    adds trie paths and so must be present while decoding.
+    """
     data = json.loads(LEXICON.read_text())
+    for w in extra:
+        data = {w: 255, **{k: v for k, v in data.items() if k.lower() != w}}
     trie = Trie(); freqs: List[float] = []
     for raw, f in data.items():
         s = "".join(c for c in raw.lower() if c in L2I)
@@ -354,9 +365,9 @@ def sign_p(g: int, l: int) -> float:
 
 # ── sub-commands ──────────────────────────────────────────────────────────────────
 
-def _decode_rows(rows: List[Tuple[str, str, Trace]], out: str) -> None:
+def _decode_rows(rows: List[Tuple[str, str, Trace]], out: str, extra: Sequence[str] = ()) -> None:
     """Decode (key, word, trace) rows and write one dump line per row (shared by dump modes)."""
-    enc, trie = Encoder(), load_lexicon(); t0 = time.time()
+    enc, trie = Encoder(), load_lexicon(extra); t0 = time.time()
     with open(out, "w") as fo:
         for i, (k, w, (x, y, t)) in enumerate(rows):
             E = enc.emit(x, y, t)
@@ -368,10 +379,13 @@ def _decode_rows(rows: List[Tuple[str, str, Trace]], out: str) -> None:
 
 def cmd_dump(a: argparse.Namespace) -> None:
     rows = list(read_rows(a.corpus))
+    if a.words:
+        keep = set(a.words.split(","))
+        rows = [r for r in rows if r[1] in keep]
     if a.sample:
         rows = sorted(rows)[:a.sample]
     _decode_rows([(k, w, app_emulate([p[0] for p in pts], [p[1] for p in pts], [p[2] for p in pts], a.emu))
-                  for k, w, pts in rows], a.out)
+                  for k, w, pts in rows], a.out, [w for w in a.add.split(",") if w])
 
 
 def cmd_export_rows(a: argparse.Namespace) -> None:
@@ -547,12 +561,94 @@ def cmd_grid(a: argparse.Namespace) -> None:
         print(f"γ={f[0]:<4} β={f[1]:<5} λ={f[2]:<4} all t1={t:6.2f}  s-plural t1={s:6.2f}")
 
 
+#: Per-word final-score bonus levels (nats) swept by `priority`; 0 = a plain user word at 255.
+PRIORITY_LEVELS = (0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0, 6.0)
+
+
+def boosted_final(c: list, boosted: Dict[str, float]) -> float:
+    """Final score of beam entry [word, final, rawCtc] when its word is a personal-dictionary
+    word at the scale cap (255) carrying a swipe-priority bonus; other words keep their dump
+    score. Mirrors CtcLexiconMerge (default-stored user word -> 255) + the decoder's additive
+    final-score bonus, which applies only to words ALREADY in the final beam."""
+    w = c[0]
+    if w not in boosted:
+        return c[1]
+    return c[2] / len(w) ** GAMMA + BETA * len(w) + LAMBDA * math.log(255.0) + boosted[w]
+
+
+def boosted_top(r: dict, boosted: Dict[str, float]) -> str:
+    return max(r["c"], key=lambda c: boosted_final(c, boosted))[0] if r["c"] else ""
+
+
+def cmd_priority(a: argparse.Namespace) -> None:
+    """User swipe-priority sweep (docs/eval/2026-10-08-user-swipe-priority.md).
+
+    For each bonus level and each boosted set (every target alone, then all together):
+    fixes = traces OF a boosted word that become top-1; breaks = traces of any OTHER word that
+    were top-1 under the shipped stack and lose top-1 to a boosted word. Distinct traces and
+    distinct words for both, plus the exposure (traces whose final beam holds a boosted word).
+    Then the generic per-word cost: for every word seen below top-1 in some beam, how many
+    correct traces it would steal if a user gave it the bonus (mean / p90 / max over words)."""
+    rows = [r for path in a.dumps for r in (json.loads(l) for l in open(path) if l.strip())]
+    targets = a.targets.split(",")
+    base_top = {id(r): (r["c"][0][0] if r["c"] else "") for r in rows}
+    print(f"rows={len(rows)} words={len({r['w'] for r in rows})} dumps={a.dumps}")
+    sets = [[t] for t in targets] + [targets]
+    for ws in sets:
+        exposed = [r for r in rows if any(c[0] in ws for c in r["c"])]
+        print(f"== boosted {'+'.join(ws)}: exposure {len(exposed)} traces / "
+              f"{len({r['w'] for r in exposed})} words")
+        for b in PRIORITY_LEVELS:
+            boosted = {w: b for w in ws}
+            fix_t, brk_t = [], []
+            for r in exposed:
+                was = base_top[id(r)]; now = boosted_top(r, boosted)
+                if r["w"] in ws and now == r["w"] and was != r["w"]:
+                    fix_t.append(r)
+                if r["w"] not in ws and was == r["w"] and now in ws:
+                    brk_t.append(r)
+            tgt = [r for r in rows if r["w"] in ws]
+            tgt_ok = sum(boosted_top(r, boosted) == r["w"] for r in tgt)
+            # Per rival word: lost / that word's traces the shipped stack got right.
+            right: Dict[str, int] = {}
+            for r in rows:
+                if base_top[id(r)] == r["w"]:
+                    right[r["w"]] = right.get(r["w"], 0) + 1
+            by_word: Dict[str, int] = {}
+            for r in brk_t:
+                by_word[r["w"]] = by_word.get(r["w"], 0) + 1
+            lost = [f"{w}:{k}/{right[w]}" for w, k in sorted(by_word.items(), key=lambda kv: -kv[1])]
+            print(f"  b={b:3.1f} target top1 {tgt_ok}/{len(tgt)} | fixes {len(fix_t)} | breaks "
+                  f"{len(brk_t)} traces / {len({r['w'] for r in brk_t})} words {lost[:10]}")
+    # Generic cost: margin of each below-top-1 beam word on traces the shipped stack gets right.
+    per_word: Dict[str, List[float]] = {}
+    correct = [r for r in rows if base_top[id(r)] == r["w"]]
+    for r in correct:
+        top = r["c"][0][1]
+        for c in r["c"][1:]:
+            if c[0] == r["w"]:
+                continue
+            m = top - boosted_final(c, {c[0]: 0.0})  # bonus needed to overtake (as a user word)
+            per_word.setdefault(c[0], []).append(m)
+    print(f"== generic: {len(correct)} correct traces, {len(per_word)} distinct runner-up words")
+    for b in PRIORITY_LEVELS:
+        steals = sorted((sum(m < b for m in ms) for ms in per_word.values()), reverse=True)
+        n = len(steals)
+        mean = sum(steals) / n if n else 0.0
+        p90 = steals[int(0.1 * n)] if n else 0
+        worst = sorted(((sum(m < b for m in ms), w) for w, ms in per_word.items()), reverse=True)[:5]
+        print(f"  b={b:3.1f} steals/word mean {mean:6.3f} p90 {p90:4d} max {steals[0] if steals else 0:4d} "
+              f"words stealing >=1: {sum(s > 0 for s in steals):5d}/{n}  worst {worst}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("dump"); p.add_argument("corpus"); p.add_argument("out")
     p.add_argument("--sample", type=int, default=0)
     p.add_argument("--emu", choices=("raw", "noise", "smooth", "fix"), default="raw")
+    p.add_argument("--add", default="", help="comma-separated personal-dictionary words merged at 255")
+    p.add_argument("--words", default="", help="keep only rows labelled with one of these comma-separated words")
     p.set_defaults(fn=cmd_dump)
     p = sub.add_parser("export-rows"); p.add_argument("corpus"); p.add_argument("out")
     p.add_argument("--sample", type=int, default=0); p.set_defaults(fn=cmd_export_rows)
@@ -565,6 +661,8 @@ def main() -> int:
     p = sub.add_parser("traces"); p.add_argument("file"); p.set_defaults(fn=cmd_traces)
     p = sub.add_parser("classes"); p.add_argument("dumps", nargs="+"); p.set_defaults(fn=cmd_classes)
     p = sub.add_parser("grid"); p.add_argument("dump"); p.set_defaults(fn=cmd_grid)
+    p = sub.add_parser("priority"); p.add_argument("dumps", nargs="+")
+    p.add_argument("--targets", default="ad,wet,adb,somethings"); p.set_defaults(fn=cmd_priority)
     a = ap.parse_args()
     a.fn(a)
     return 0

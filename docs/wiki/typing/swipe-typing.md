@@ -184,6 +184,13 @@ option next to it:
   it from then on ("Swiping now prefers “git”"). Tap that confirmation twice to undo it.
 - **Don't ask** remembers your answer for that word.
 
+If the word is **already** in your personal dictionary and you keep correcting swipes to it,
+the bar asks again after two more corrections. Accepting then raises the word's
+[swipe priority](user-dictionary.md#frequency-and-swipe-priority) to **High** ("Swiping now
+strongly prefers “git”"). Tapping the confirmation twice puts the word back to Normal. The bar
+offers nothing after High. Highest can only be set in the Dictionary Manager, because it also
+takes more swipes of similar words.
+
 Only plausible corrections count (the chosen word must resemble the swiped one, so changing
 your mind about what to write is not recorded). The counts are part of on-device learning:
 they are kept only while **Learn From My Typing** is on, never in private/incognito or
@@ -226,6 +233,9 @@ Some short words, including reported `ad` and `wet` traces, remain recognition g
 in default CTC. Changing engines for each word is not the intended solution. Fresh
 human traces and general model calibration are needed before shipping a correction;
 passing automated routing tests does not establish short-word recognition accuracy.
+If you use one of these words, you can give it a
+[swipe priority](user-dictionary.md#frequency-and-swipe-priority) in the Dictionary
+Manager. Similar words then lose some swipes; for example, `as` loses some swipes to `ad`.
 Continuous multiword swipe is optional and disabled by default; enable it to use
 intentional spacebar dwells between words, as described below.
 

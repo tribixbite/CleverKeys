@@ -65,6 +65,64 @@ chip for the exact letters you typed, undoing an autocorrection, and accepting a
 3. Tap **Custom** tab
 4. Use the add button to enter new words
 
+## Frequency and Swipe Priority
+
+Each custom word in the Dictionary Manager has two numbers you can edit (tap the word's edit
+button). The two numbers do different jobs.
+
+### Frequency (1–255)
+
+Frequency ranks your word against the built-in dictionary. **255, the default, is already the
+top**, so a word you add is ranked like the most common dictionary words. Lower it to demote a
+word, for example a name that should not crowd out a common word on the same keys.
+
+Each engine reads it on its own scale:
+
+| Where | What frequency does |
+|-------|---------------------|
+| Tap suggestions | Ranks the word among completions; 255 is the strongest |
+| CTC swipe (default engine) | Maps 1–255 onto the dictionary's own range; 255 ties the most common words |
+| Geometric swipe | Orders your words among themselves; they always sit ahead of dictionary words |
+
+Raising frequency cannot go past the top. That is why some words still lose when you swipe
+them, even at 255.
+
+### Swipe priority (Normal / High / Highest)
+
+Some words still lose when swiped, even as a custom word at 255. The decoder may not notice a
+letter that the swipe passes straight through. Or a short swipe may look like a more common
+word that ends near the same key. Examples: `adb` comes out as `an`, `ad` as `as`, `wet` as
+`we`. Swipe priority adds a fixed boost for that word on top of its frequency:
+
+| Level | What it does |
+|-------|--------------|
+| **Normal** (default) | No boost. The word swipes exactly as before |
+| **High** | A moderate boost. Fixes most swipes of the word that lose narrowly |
+| **Highest** | A strong boost, for words that still lose at High |
+
+The boost has limits:
+
+- It only applies when your swipe already passed close to the word. It never puts the word on
+  a swipe that went somewhere else.
+- It applies **only to swiping**. Tap suggestions and autocorrect stay as they were.
+- It works with both swipe engines (CTC and Geometric).
+
+> [!WARNING]
+> A raised word also wins some swipes of **similar words**. With `ad` at High, some `as`
+> swipes become `ad`. With `wet` at Highest, some `we` swipes become `wet`. Raise only the
+> words you need, start at High, and use Highest only if High is not enough. The measured
+> trade-offs are in
+> [User swipe priority (eval)](https://github.com/tribixbite/CleverKeys/blob/main/docs/eval/2026-10-08-user-swipe-priority.md).
+
+The keyboard can also raise a word for you. If you keep correcting the same swipe to a word,
+the bar asks "Prefer “word” when swiping?". Accepting the first time adds the word at Normal.
+If you still correct swipes to that word, the bar asks again, and accepting raises it to High.
+The bar never sets Highest; only the Dictionary Manager does
+([Swipe Typing](swipe-typing.md#prefer-a-word-when-swiping)).
+
+Swipe priority is saved with the word. Dictionary backups include it, and it is restored
+with the word. Deleting a word removes its priority. Renaming a word keeps it.
+
 ## Using Custom Words
 
 Once added, custom words:
@@ -109,7 +167,7 @@ When you swipe a pattern matching a custom word:
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Dictionary Manager** | Settings > Activities | View and manage custom words |
+| **Dictionary Manager** | Settings > Activities | View and manage custom words, their frequency and swipe priority |
 | **Personalized Learning** | Word Prediction section | Adapt to your typing patterns |
 
 ## How Capitalization Works
@@ -163,6 +221,12 @@ A: Delete and re-add with new capitalization, or edit in Dictionary Manager.
 ### Q: Does this work with swipe typing?
 
 A: Yes! Swipe predictions apply your custom word capitalization.
+
+### Q: I added a word and swiping still gives a different word. What now?
+
+A: Edit the word in the Dictionary Manager and set **Swipe priority** to High (see
+[Frequency and Swipe Priority](#frequency-and-swipe-priority)). Raising the frequency
+does not help: 255 is already the top.
 
 ## Related Features
 

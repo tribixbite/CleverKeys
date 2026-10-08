@@ -150,10 +150,45 @@ Custom words stored in SharedPreferences:
 - Key: `"custom_words_{language}"`
 - Format: JSON object `{"word": frequency, ...}`
 
+### Frequency and swipe priority
+
+The stored frequency is 1..255, default 255 (`UserWordFrequency.DEFAULT`, the top of the
+scale). Each consumer reads it on its own scale:
+
+| Consumer | Use of the stored frequency |
+|---|---|
+| Tap prediction (`WordPredictor`) | rank `255 − stored`; 255 is the strongest |
+| CTC swipe (`CtcLexiconMerge`) | mapped linearly onto the base lexicon's `[floor..255]` (en floor 134); 255 → 255 |
+| Geometric swipe (`GeometricUserWordMerge`) | ORDER among the prepended user words only; all of them sit ahead of base words |
+
+The frequency can therefore only lower a word. **Swipe priority** (2026-10-08) is the separate,
+bounded way to raise one:
+
+- Key: `"swipe_priority_{language}"`. Format: JSON object `{"word": 1|2}` (1 = High,
+  2 = Highest), raised words only (`SwipePriority`). An absent key means every word is Normal.
+- Applies only to current personal-dictionary words (`SwipePriority.forUserWords`). Deleting
+  a word drops its level, renaming carries it (`CustomDictionarySource`, `DictionaryManager`).
+- Engines: CTC adds 2.0 / 4.0 nats to the final score of words already in the beam
+  (`CtcPriorityBonus`). Geometric adds `GEO_HIGH` / `GEO_HIGHEST` to `S(w)` of pruner survivors
+  (`GeometricDictionary.swipeBonus`). Tap prediction does not read it.
+- Both swipe adapters fold the raw JSON into `LexiconContentVersion`, so a change rebuilds the
+  lexicon like any word edit; `SwipeRewarmScheduler` pre-warms it.
+- Backups: `swipe_priority_by_language` in the dictionaries payload. On import a level is
+  applied only to a word that is a personal-dictionary word after the import and has no level
+  on this device yet (`DictImportApplier`).
+- The "Prefer … when swiping?" offer adds a new word at Normal, raises a Normal word to High,
+  and offers nothing at High or Highest (`SwipeCorrectionPolicy.offerLevel`).
+
+Measurements and the collateral cost per level:
+[User swipe priority eval](https://github.com/tribixbite/CleverKeys/blob/main/docs/eval/2026-10-08-user-swipe-priority.md).
+
 ### Dictionary Manager Access
 
 - Settings > Activities > Dictionary Manager
 - Tabs: Active, Disabled, User, Custom
+- Custom tab Add/Edit dialogs: word, frequency (1–255) and Swipe priority (Normal / High /
+  Highest radio buttons, with an explanation of what each number does). A raised word's row
+  reads "Frequency: N · Swipe priority: High".
 
 ## State Management
 
@@ -206,6 +241,7 @@ userWordOriginalCase.clear()  // Reset before reloading
 
 | Version | Change |
 |---------|--------|
+| v2.0.0 | Per-word swipe priority (Normal / High / Highest) for custom words |
 | v1.2.7 | Added swipe prediction case preservation |
 | v1.2.5 | Initial user word case preservation for tap |
 | v1.2.0 | Basic custom dictionary support |

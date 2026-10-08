@@ -373,6 +373,19 @@ All CKDT V2 magics verified on disk. One pure loader covers everything:
 - **fr**: `src/main/assets/dictionaries/fr_enhanced.bin` (CKDT verified). **`fr.txt` is a 58-line sample stub (verified `wc -l`) — never use it.**
 - **de**: `de_enhanced.bin` (CKDT verified). Same warning for `de.txt` (58 lines).
 
+### User swipe priority (2026-10-08)
+
+Personal-dictionary words the user raised (Normal / High / Highest, `swipe_priority_<lang>`)
+carry a bonus on the merged dictionary: `GeometricUserWordMerge.merge(…, bonusByWord)` builds
+a per-ordinal array that `GeometricDictionary.swipeBonus(i)` serves; base dictionaries return 0.
+`GeometricSwipeEngine` adds it to `S(w)` of PRUNER SURVIVORS only, so it re-ranks words whose
+start/end buckets and prefilter the trace already passed and can never surface an unrelated
+word. High = 2.0, Highest = 4.0 (`UserSwipePriorityBonus.GEO_*`), equal to the CTC values
+because both engines show a temperature-1 softmax, so equal bonuses multiply the odds equally.
+With nothing raised the merge carries no array and decodes byte-identically. The priority JSON
+is part of `LexiconContentVersion`, like the words. Measurement:
+`docs/eval/2026-10-08-user-swipe-priority.md` §6; pins in `GeoUserSwipePriorityTest`.
+
 ## Implementation Plan
 Each phase compiles, registers every new test class in `pureTestClasses` (`build.gradle:365` — mandatory: `TestRunnerListDriftTest` fails otherwise), and is green under `runPureTests` before the next begins.
 

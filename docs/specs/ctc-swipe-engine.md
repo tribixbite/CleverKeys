@@ -274,7 +274,8 @@ path, geometric always gets the smoothed path, the ML capture records both).
    lookup order keeps fr/de/es/it/pt/sv on their bundled binaries. Known limitation: the CTC en
    vocabulary can diverge from the en dictionary source the other engines see.
 3. **Per-decode trie freshness.** The trie memo is keyed by (LANGUAGE, SHA-256
-   content-hash over source id + custom-words JSON + disabled-words set), recomputed per
+   content-hash over source id + custom-words JSON + disabled-words set + platform
+   user-dictionary fingerprint + the `swipe_priority_<lang>` JSON when non-empty), recomputed per
    `lexiconFor(language)` call — any user dictionary mutation rebuilds the trie on the next
    decode with no ContentObserver plumbing, and a language switch can never reuse the
    previous language's trie. The decoder memo carries the language too, because the preset
@@ -321,6 +322,33 @@ engines. Results feed the SAME single seam as the geometric engine:
 inheriting the password guard, possessive augmentation, shift/caps transform, and THE
 commit engine. ML trace capture is tagged `SwipeMLData.ENGINE_CTC` + layout name so
 exports stay separable per decoder (audit n-2 conventions).
+
+### User swipe priority (2026-10-08)
+
+Personal-dictionary words carry an optional per-word **swipe priority** (Normal / High /
+Highest; `SwipePriority`, stored as `swipe_priority_<lang>` = `{word: 1|2}`, raised words only).
+The engine turns it into a final-score bonus, separate from the 1..255 frequency, because a
+user word already enters the lexicon at the cap (`CtcLexiconMerge`: stored 255 → 255).
+
+- **Table.** `lexiconFor` builds `TrieMemo.priority`, a `CtcPriorityBonus` mapping decoded
+  surface → bonus (`UserSwipePriorityBonus.ctcBySurface`). Surfaces are keyed the way the trie
+  files the word: the a–z strip for EN_JSON, the projection for CKDT and script sources. Only
+  current personal-dictionary words count (`SwipePriority.forUserWords`). On a surface
+  collision the larger bonus wins.
+- **Seam.** `CtcBeamDecoder.decode(…, priority)` adds the bonus to the FINAL score of complete
+  words only, the same seam as `CtcLearnedPrior`. The prune key carries none, so the surviving
+  beam is unchanged and a word the trace did not keep alive can never be pulled in.
+  `CtcCandidate.priorityBonus` records the addition.
+- **Levels.** High = `UserSwipePriorityBonus.CTC_HIGH` = 2.0 nats; Highest = `CTC_HIGHEST` =
+  4.0 = `CtcPriorityBonus.MAX_BONUS` (clamp). Measured on the shipped stack: High makes `ad`/`wet`
+  win every synthetic shape (deficits ≤ 1.62); only Highest covers `adb` (deficit up to 3.62).
+  Collateral per level and per rival is in `docs/eval/2026-10-08-user-swipe-priority.md` §3.
+- **Invariants kept.** Merged frequencies, `CtcLexiconMerge.ordinals` (the contraction real-word
+  guard) and `PairingBaseFrequencies` are byte-identical with or without priorities. With
+  nothing raised the table is `CtcPriorityBonus.NONE`, the decoder skips every lookup, and the
+  memo version is the pre-feature one (`LexiconContentVersion` hashes the priority JSON only
+  when non-empty).
+- **Not applied** to tap prediction (eval note §5).
 
 ### Per-language enablement
 
@@ -716,6 +744,9 @@ counts are `@Test` counts at 2026-08-19 and move with the suites:
 | `swipe/ctc/CtcParityTest` | 4 | Golden parity vs the Python port, **once per shipped encoder** (en + ru): featurizer tensor bit-identical; beam top-k words identical, scores within 1e-4. Plus `fixture_model_and_shipPreset_travelTogether` — the device-free half of the fixture-and-preset rule above (asset sha256 vs the fixture's `source_onnx_sha256`, fixture preset vs `presetFor(language)` term-by-term, every beam case at that preset, both fixture copies byte-identical) — and `everyRoutedScriptHasAParityRow` |
 | `swipe/ctc/CtcModuleTest` | 14 | Emissions slice, trie loaders, preset constants, featurizer branches, beam behavior, facade seam |
 | `swipe/ctc/CtcLexiconMergeTest` | 10 | Merge policy: custom-first, 1..255 clamp, custom-overrides-disabled, case-folded dedupe, ordinals |
+| `swipe/ctc/CtcPriorityBonusTest` | 4 | User swipe priority seam: empty priority is byte-identical, exact final-score addition, never pulls in a pruned word, clamp |
+| `swipe/UserSwipePriorityBonusTest` | 9 | Level table, surface keying (strip / joiner / CKDT projection), geometric table, memo version, adapter wiring, tap untouched |
+| `swipe/UserSwipePriorityReplayTest` | 3 | Shipped-stack level sweep + pins: `ad`/`wet` win at High, `adb` at Highest, `somethings` at Normal; zero bonus is identical |
 | `swipe/ctc/CtcContractionDisplayTest` | 7 | Alias→apostrophe display over the real merged-lexicon ordinals (H1) |
 | `swipe/ctc/CtcContractionKeysTest` | 7 | Alias-key injection: injectability over the trie alphabet, the MIN_FREQ floor, native-key skip |
 | `swipe/ctc/CtcLanguagePresetTest` | 23 | `presetFor` λ-by-lexicon-scale (en 4.0 / the CKDT six 2.0 / unknown→en) and the SCRIPT footing (`tunedRuCkdt` verbatim for every `CtcScriptSupport` row), language-invariance of every other Latin constant, the `CtcLanguageSupport` table (the eight-language supported set, the `PROVISIONAL` three, the `VAL_ONLY` one, the empty `NEEDS_VALIDATION`, asset **and langpack** paths — exactly one resolution per language — and normalization) |
