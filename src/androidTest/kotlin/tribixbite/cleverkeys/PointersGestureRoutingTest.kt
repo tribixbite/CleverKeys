@@ -154,6 +154,14 @@ class PointersGestureRoutingTest {
         return out
     }
 
+    /**
+     * The custom b->E "@" mapping fired. A single-character TEXT mapping is typed through the
+     * key pipeline (CommandRouting, 835de98b) exactly like a layout subkey — one up event for
+     * "@" — and never reaches the raw-commit executor ([FakeHandler.onCustomShortSwipe]).
+     */
+    private fun customAtTyped(): Boolean =
+        handler.customCount == 0 && handler.upValues.count { it?.getString() == "@" } == 1
+
     @After
     fun closePointers() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync { pointers.close() }
@@ -185,7 +193,7 @@ class PointersGestureRoutingTest {
                 android.os.SystemClock.sleep(25)
             }
             drive(keyB, 180f, 80f, hMoves(180f, 310f, 80f))
-            assertEquals("saved flick must dispatch with word swiping disabled", 1, handler.customCount)
+            assertTrue("saved flick must dispatch with word swiping disabled", customAtTyped())
             assertEquals("word decoder must remain inactive", 0, handler.swipeEndCount)
         } finally {
             inst.runOnMainSync { pointers.close() }
@@ -349,7 +357,7 @@ class PointersGestureRoutingTest {
         try {
             // Same word-shaped flat-E gesture as T2 (which commits a word WITHOUT a mapping).
             drive(keyB, 180f, 80f, hMoves(180f, 310f, 80f))
-            assertEquals("custom mapping must execute", 1, handler.customCount)
+            assertTrue("custom mapping must execute", customAtTyped())
             assertEquals("custom mapping must pre-empt the word", 0, handler.swipeEndCount)
         } finally {
             runBlocking { manager.removeMapping("b", SwipeDirection.E) }
