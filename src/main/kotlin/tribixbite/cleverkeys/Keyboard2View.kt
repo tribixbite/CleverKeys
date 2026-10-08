@@ -1576,18 +1576,13 @@ class Keyboard2View @JvmOverloads constructor(
                 val centerX = (xLeft + xRight) / 2f
                 val centerY = (yTop + yBottom) / 2f
 
-                // Extract character from key (if alphabetic)
-                try {
-                    val keyString = key.toString()
-                    if (keyString.length == 1 && Character.isLetter(keyString[0])) {
-                        // Locale.ROOT (Kotlin .lowercase() is Locale.ROOT-invariant): key
-                        // identity must not depend on device locale — default-locale
-                        // lowercasing maps 'I'->'ı' on Turkish devices, mislocating the key.
-                        val keyChar = keyString.lowercase()[0]
-                        keyPositions[keyChar] = PointF(centerX, centerY)
-                    }
-                } catch (e: Exception) {
-                    // Skip keys that can't be extracted
+                // The key's centre letter, by the shared single-letter rule (Locale.ROOT
+                // folding, one code unit). Until 2026-10-08 this read `key.toString()`, which
+                // for the `KeyboardData.Key` data class is "Key(keys=…)" — never one
+                // character — so the map was ALWAYS empty: the theme editor preview drew no
+                // sample trail (caught by the native ThemeKeyboardPreviewViewTest).
+                tribixbite.cleverkeys.swipe.KeyLetter.centreLetterOf(key.keys[0])?.let { keyChar ->
+                    keyPositions[keyChar] = PointF(centerX, centerY)
                 }
 
                 x = xRight
@@ -1870,19 +1865,15 @@ class Keyboard2View @JvmOverloads constructor(
             systemGestureExclusionRects = listOf(_gestureExclusionRect)
         }
 
-        // Push current layout's key positions to the autocorrect adjacency
-        // model so non-QWERTY layouts (AZERTY, QWERTZ, Dvorak, Colemak,
-        // user-custom) get adjacency-aware scoring. `getRealKeyPositions`
-        // returns an empty map when the layout isn't ready yet — the
-        // setter falls back to the QWERTY default in that case.
-        try {
-            val realPositions = getRealKeyPositions()
-            val adjacencyPositions = realPositions.mapValues { (_, pt) -> pt.x to pt.y }
-            tribixbite.cleverkeys.autocorrect.KeyAdjacency.setLayout(adjacencyPositions)
-        } catch (e: Exception) {
-            android.util.Log.w("Keyboard2View",
-                "Failed to push layout to KeyAdjacency: ${e.message}")
-        }
+        // Autocorrect adjacency keeps its default US-QWERTY (+ accents) table, which is what
+        // every release so far has actually used: this block used to push
+        // getRealKeyPositions(), but that map was always empty (see its comment), so
+        // KeyAdjacency.setLayout always fell back to the default. Fixing the map must not
+        // silently switch autocorrect to pixel-space live geometry (no accent rows, row
+        // stagger in the distances) without measurement.
+        // TODO(2026-10-08): evaluate live layout adjacency (AZERTY/QWERTZ/Dvorak/Colemak and
+        // accent coverage) on the autocorrect replay before pushing getRealKeyPositions() here.
+        tribixbite.cleverkeys.autocorrect.KeyAdjacency.resetLayout()
     }
 
     override fun onApplyWindowInsets(wi: WindowInsets?): WindowInsets? {

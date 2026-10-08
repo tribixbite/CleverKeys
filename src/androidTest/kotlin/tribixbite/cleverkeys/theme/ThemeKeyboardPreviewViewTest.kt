@@ -50,7 +50,11 @@ class ThemeKeyboardPreviewViewTest {
             .putInt("keyboard_opacity", 100)
             .putInt("key_opacity", 100)
             .putInt("key_activated_opacity", 100)
-            // A bottom margin guarantees a strip of pure keyboard background to sample.
+            // A bottom margin guarantees a strip of pure keyboard background to sample. The
+            // values are already percentages: without margin_prefs_version Config's one-time
+            // dp→percent migration rewrote 5 to 0% and the sampled row landed on a key
+            // (ew-cli Pixel7/34, 2026-10-08).
+            .putInt("margin_prefs_version", 1)
             .putInt("margin_bottom_portrait", 5)
             .putInt("margin_bottom_landscape", 5)
             .putBoolean("haptic_enabled", false)
