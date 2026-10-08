@@ -209,7 +209,7 @@ clipboard entirely.
 | `ClipboardHistoryService.kt` | `addPrivateClip()`, `privateCopy()`, `storeClip()` | Shared core with `addClip`; private path passes `rewriteOsClipboard = false` (never `systemClipboardRewrite`) |
 | `ClipboardDatabase.kt` | `PrivateClipMergeRule`, `onUpgrade` (V4→V5), `exportToJSON(includePrivate)` | V5 schema, sticky-privacy dedup, export exclusion |
 | `ClipboardHistoryView.kt` | `copyEntryToSystemClipboard()`, `privateBadge` | Confirm gate + lock badge |
-| `KeyValue.kt` | `Editing.COPY_PRIVATE`, `"copy_private"` (`🔒⎘`) | In-IME editing key; entry point A |
+| `KeyValue.kt` | `Editing.COPY_PRIVATE`, `"copy_private"` (key-font glyph U+E039; was the text `🔒⎘` until 2026-10-08) | In-IME editing key; entry point A |
 | `ui/settings/sections/ClipboardSection.kt` | toggle + `setPrivateCopyToolbarComponentEnabled()` | Settings toggle flips the manifest-disabled component |
 
 ### Schema V5

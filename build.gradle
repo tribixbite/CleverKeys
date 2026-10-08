@@ -1020,6 +1020,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.LayoutCatalogueTest',
     'tribixbite.cleverkeys.SecondaryPredictionWeightTest',
     'tribixbite.cleverkeys.CustomSubLabelRenderingTest',
+    'tribixbite.cleverkeys.SubLabelSizingTest',
     'tribixbite.cleverkeys.DictionarySortOrderTest',
     // #96 (2026-09-05): Dictionary Manager search context survives recreation — the fragment
     // self-saves query/sort/scroll, and the initial load routes through the cancellable

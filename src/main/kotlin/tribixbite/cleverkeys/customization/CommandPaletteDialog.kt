@@ -34,6 +34,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import android.content.ClipboardManager
 import android.content.Context
 import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.SubLabelSizing
 import tribixbite.cleverkeys.Theme
 
 /** How many characters of a custom-text action are echoed back in the confirmation dialog. */
@@ -41,6 +42,9 @@ private const val TEXT_PREVIEW_CHARS = 30
 
 /** Stand-in shown when a timestamp pattern cannot be formatted for preview. */
 private const val UNKNOWN_PREVIEW = "?"
+
+/** Text size of the label dialog's preview; icon/emoji previews scale from it (SubLabelSizing). */
+private const val PREVIEW_TEXT_SP = 18f
 
 /**
  * Data class to hold the complete mapping selection with separate label and action.
@@ -512,22 +516,26 @@ private fun LabelConfirmationDialog(
                         // Show actual icon using special font when in icon mode with default label
                         when {
                             currentLabel.isNotBlank() -> {
-                                // User typed custom text - show it as regular text
+                                // User typed custom text - show it as regular text (emoji at the
+                                // keyboard's glyph factor, SubLabelSizing)
                                 Text(
                                     currentLabel,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
+                                    fontSize = SubLabelSizing.previewSp(PREVIEW_TEXT_SP, false, currentLabel).sp,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             }
                             isIconMode -> {
-                                // Icon mode with default label - render with special font
-                                // Use 14sp to be visible in preview while smaller than 18sp text
+                                // Icon mode with default label - render with special font, at the
+                                // keyboard's icon factor against the 18 sp preview text
                                 AndroidView(
                                     factory = { ctx ->
                                         android.widget.TextView(ctx).apply {
                                             typeface = Theme.getKeyFont(ctx)
-                                            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14f)
+                                            setTextSize(
+                                                android.util.TypedValue.COMPLEX_UNIT_SP,
+                                                SubLabelSizing.previewSp(PREVIEW_TEXT_SP, true, defaultLabel)
+                                            )
                                             setTextColor(android.graphics.Color.WHITE)
                                             text = defaultLabel
                                         }
@@ -536,11 +544,11 @@ private fun LabelConfirmationDialog(
                                 )
                             }
                             else -> {
-                                // Regular text label
+                                // Regular text label (emoji at the keyboard's glyph factor)
                                 Text(
                                     defaultLabel,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
+                                    fontSize = SubLabelSizing.previewSp(PREVIEW_TEXT_SP, false, defaultLabel).sp,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             }

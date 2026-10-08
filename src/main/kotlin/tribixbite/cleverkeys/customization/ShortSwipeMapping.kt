@@ -257,13 +257,21 @@ data class ShortSwipeCustomizations(
             directions.mapNotNull { (directionName, mapping) ->
                 val direction = SwipeDirection.entries.find { it.name == directionName }
                 direction?.let {
+                    val actionType = ActionType.fromString(mapping.actionType)
+                    // A command's old default label (e.g. Private Copy's "🔒⎘") becomes its
+                    // current default; user-typed labels are kept as saved.
+                    val upgraded = if (actionType == ActionType.COMMAND) {
+                        CommandRegistry.upgradeLegacyDefaultLabel(
+                            mapping.actionValue, mapping.displayText, mapping.useKeyFont
+                        )
+                    } else null
                     ShortSwipeMapping(
                         keyCode = keyCode,
                         direction = it,
-                        displayText = mapping.displayText,
-                        actionType = ActionType.fromString(mapping.actionType),
+                        displayText = upgraded?.displayText ?: mapping.displayText,
+                        actionType = actionType,
                         actionValue = mapping.actionValue,
-                        useKeyFont = mapping.useKeyFont
+                        useKeyFont = upgraded?.useKeyFont ?: mapping.useKeyFont
                     )
                 }
             }

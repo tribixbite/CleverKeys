@@ -296,6 +296,9 @@ editor that used to be listed here already ship in 2.0.)
 - Clipboard history catches up when the keyboard is shown: a copy made while the clipboard
   listener could not see it (e.g. the keyboard process was restarting) is recorded then,
   with all capture filters applied.
+- Sublabel icons and emoji (layout subkeys, short-swipe mappings, the subkey popover and the
+  customization previews) are drawn at the size of the text sublabels and kept clear of the
+  key's main letter; Private Copy shows a copy-with-padlock icon instead of a large "🔒⎘".
 
 ---
 

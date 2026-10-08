@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.popover
 
 import tribixbite.cleverkeys.KeyValue
+import tribixbite.cleverkeys.SubLabelSizing
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
 
@@ -31,8 +32,12 @@ sealed interface PopoverSlot {
     data class Empty(override val direction: SwipeDirection, val hiddenDefault: Boolean) : PopoverSlot
 }
 
-/** Text and font for drawing a slot; `null` label = draw the empty-slot affordance. */
-data class PopoverSlotLabel(val text: String?, val useKeyFont: Boolean)
+/**
+ * Text and font for drawing a slot; `null` label = draw the empty-slot affordance.
+ * [sizeScale] is the [SubLabelSizing] factor the keyboard applies to the same label, so a
+ * cell's glyph keeps the proportions it has on the key (smaller-font labels and emoji at 0.75).
+ */
+data class PopoverSlotLabel(val text: String?, val useKeyFont: Boolean, val sizeScale: Float = 1f)
 
 object SubkeyPopoverSlots {
 
@@ -68,11 +73,13 @@ object SubkeyPopoverSlots {
     /** The label a slot is drawn with. */
     fun labelOf(slot: PopoverSlot): PopoverSlotLabel = when (slot) {
         is PopoverSlot.Default -> PopoverSlotLabel(
-            slot.value.getString(), slot.value.hasFlagsAny(KeyValue.FLAG_KEY_FONT)
+            slot.value.getString(), slot.value.hasFlagsAny(KeyValue.FLAG_KEY_FONT),
+            SubLabelSizing.scaleFor(slot.value)
         )
         is PopoverSlot.Custom -> PopoverSlotLabel(
             // A mapping saved with a blank label still needs something to aim at.
-            slot.mapping.displayText.ifEmpty { "•" }, slot.mapping.useKeyFont
+            slot.mapping.displayText.ifEmpty { "•" }, slot.mapping.useKeyFont,
+            SubLabelSizing.scaleFor(slot.mapping)
         )
         is PopoverSlot.Empty -> PopoverSlotLabel(null, false)
     }

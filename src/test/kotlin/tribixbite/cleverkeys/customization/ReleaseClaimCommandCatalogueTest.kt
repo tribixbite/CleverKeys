@@ -199,6 +199,52 @@ class ReleaseClaimCommandCatalogueTest {
     }
 
     @Test
+    fun `every catalogue default label is drawable in a single font`() {
+        // A label is drawn with ONE paint: the key font (useKeyFont) or the system font.
+        // getDisplayInfo cannot express a mixed label, so a key-font label must be all PUA
+        // (the key font has no text glyphs) and a system-font label must have no PUA (the
+        // system font has no key-font icons) — which also rules out emoji + PUA mixes.
+        val offenders = CommandRegistry.ALL_COMMANDS.mapNotNull { command ->
+            val info = CommandRegistry.getDisplayInfo(command.name)
+            val pua = info.displayText.count { it.code in privateUseArea }
+            val singleFont = if (info.useKeyFont) pua == info.displayText.length && pua > 0 else pua == 0
+            if (singleFont) null
+            else "${command.name} -> ${info.displayText.map { c -> "U+%04X".format(c.code) }} keyFont=${info.useKeyFont}"
+        }
+        assertWithMessage("default labels mixing key-font glyphs with other text").that(offenders).isEmpty()
+    }
+
+    @Test
+    fun `every key-font glyph a command shows exists in special_font_ttf`() {
+        // A PUA code point the font does not map draws as tofu (or a fallback font's glyph).
+        val mapped = TrueTypeCmap.codePoints(java.io.File("assets/special_font.ttf"))
+        assertWithMessage("special_font.ttf cmap parsed").that(mapped.size).isAtLeast(100)
+        val missing = CommandRegistry.ALL_COMMANDS.flatMap { command ->
+            CommandRegistry.getDisplayInfo(command.name).displayText
+                .filter { it.code in privateUseArea && it.code !in mapped }
+                .map { "${command.name} -> U+%04X".format(it.code) }
+        }
+        assertThat(missing).isEmpty()
+    }
+
+    @Test
+    fun `private copy shows one key-font glyph, not the colour-emoji text label`() {
+        // Seeker report 2026-10-08: the default label "🔒⎘" (a colour emoji + U+2398) drew a
+        // large yellow padlock over the key's main letter. Now the copy glyph's sibling U+E039.
+        val info = CommandRegistry.getDisplayInfo("copy_private")
+        assertThat(info.useKeyFont).isTrue()
+        assertThat(info.displayText).isEqualTo("\uE039")
+        val key = KeyValue.getKeyByName("copy_private")
+        assertThat(key.getString()).isEqualTo("\uE039")
+        assertThat(key.hasFlagsAny(KeyValue.FLAG_KEY_FONT)).isTrue()
+        // Same font and size class as the plain copy key (U+E030).
+        val copy = KeyValue.getKeyByName("copy")
+        assertThat(key.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)).isEqualTo(copy.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT))
+        // Its SVG source sits beside the other glyph sources (U+E000 + 0x039).
+        assertThat(java.io.File("src/main/special_font/039.svg").isFile).isTrue()
+    }
+
+    @Test
     fun `known icon commands report a private-use glyph and the key font`() {
         for (name in listOf("config", "switch_clipboard", "switch_emoji", "voice_typing", "shift", "left")) {
             val info = CommandRegistry.getDisplayInfo(name)
@@ -271,5 +317,46 @@ class ReleaseClaimCommandCatalogueTest {
                 .that(CommandRegistry.getDisplayInfo(command.name).displayText.length)
                 .isAtMost(ShortSwipeMapping.MAX_DISPLAY_LENGTH)
         }
+    }
+}
+
+/**
+ * Minimal TrueType `cmap` reader (format 4 subtables, i.e. the BMP — where every key-font glyph
+ * lives) so a pure test can ask which code points `special_font.ttf` actually maps.
+ */
+internal object TrueTypeCmap {
+    fun codePoints(file: java.io.File): Set<Int> {
+        val b = java.nio.ByteBuffer.wrap(file.readBytes())
+        fun u16(at: Int) = b.getShort(at).toInt() and 0xFFFF
+        fun u32(at: Int) = b.getInt(at).toLong() and 0xFFFFFFFFL
+        val numTables = u16(4)
+        val cmap = (0 until numTables).map { 12 + 16 * it }
+            .firstOrNull { String(ByteArray(4) { i -> b.get(it + i) }, Charsets.US_ASCII) == "cmap" }
+            ?.let { u32(it + 8).toInt() } ?: error("no cmap table")
+        val out = HashSet<Int>()
+        for (t in 0 until u16(cmap + 2)) {
+            val sub = cmap + u32(cmap + 4 + 8 * t + 4).toInt()
+            if (u16(sub) != 4) continue
+            val segX2 = u16(sub + 6)
+            val ends = sub + 14
+            val starts = ends + segX2 + 2
+            val deltas = starts + segX2
+            val offsets = deltas + segX2
+            for (s in 0 until segX2 / 2) {
+                val end = u16(ends + 2 * s)
+                val start = u16(starts + 2 * s)
+                val delta = u16(deltas + 2 * s)
+                val rangeOffset = u16(offsets + 2 * s)
+                for (c in start..end) {
+                    if (c == 0xFFFF) continue
+                    val glyph = if (rangeOffset == 0) (c + delta) and 0xFFFF
+                    else u16(offsets + 2 * s + rangeOffset + 2 * (c - start)).let { g ->
+                        if (g == 0) 0 else (g + delta) and 0xFFFF
+                    }
+                    if (glyph != 0) out += c
+                }
+            }
+        }
+        return out
     }
 }

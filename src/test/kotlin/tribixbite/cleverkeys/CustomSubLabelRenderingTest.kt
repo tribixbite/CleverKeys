@@ -3,7 +3,10 @@ package tribixbite.cleverkeys
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import org.junit.Test
+import tribixbite.cleverkeys.customization.ActionType
 import tribixbite.cleverkeys.customization.CommandRegistry
+import tribixbite.cleverkeys.customization.ShortSwipeMapping
+import tribixbite.cleverkeys.customization.SwipeDirection
 
 /**
  * Pins how a **custom short-swipe sublabel** is rendered against how a **built-in sublabel**
@@ -19,11 +22,12 @@ import tribixbite.cleverkeys.customization.CommandRegistry
  * `Keyboard2View` renders a key's corners twice over:
  *
  * - **built-in** — `drawSubLabel` → colour from `labelColor(kv, isKeyDown, sublabel = true)`,
- *   size from `scaleTextSize(kv, main_label = false)` = `_subLabelSize × (0.75 if the KeyValue
- *   carries FLAG_SMALLER_FONT else 1.0)`;
+ *   size `_subLabelSize × SubLabelSizing.scaleFor(kv)`;
  * - **custom** — `drawCustomMappings` → `drawCustomSubLabel`, colour `_theme.subLabelColor`,
- *   size `_subLabelSize × (0.75 if useKeyFont else 1.0)`, where
- *   `useKeyFont == KeyValue.hasFlagsAny(FLAG_KEY_FONT)` (`CommandRegistry.getDisplayInfo`).
+ *   size `_subLabelSize × SubLabelSizing.scaleFor(mapping)`.
+ *
+ * Since 2026-10-08 both sizes come from the one shared rule, [SubLabelSizing] (see
+ * `SubLabelSizingTest` for the rule itself, the width fit, and the magnifier/popover paths).
  *
  * Both paths end in the same `Theme.Computed.Key.sublabel_paint(...)` factory, so font
  * selection is shared; colour and size are each computed independently, which is why each got
@@ -54,37 +58,38 @@ import tribixbite.cleverkeys.customization.CommandRegistry
  * `useKeyFont` still selects the icon typeface; it no longer selects the size.
  * [iconCommands_matchBuiltInSizeAcrossAllIconCommands] pins the parity.
  *
- * Residual, deliberate: a mapping with a user-typed text label (`useKeyFont == false`) always
- * draws at 1.0× even when the command's KeyValue has `FLAG_SMALLER_FONT` — the drawn text is
- * the user's label, not the built-in glyph, so there is nothing to match.
+ * Residual, deliberate: a mapping with a user-typed text label always draws at 1.0× even when
+ * the command's KeyValue has `FLAG_SMALLER_FONT` — the drawn text is the user's label, not the
+ * built-in glyph, so there is nothing to match.
+ *
+ * 2026-10-08 (Seeker report): the 2026-09-03 rule still consulted the flag only for
+ * `useKeyFont` mappings, so a command whose DEFAULT label is text or emoji ("🔒⎘", "Ctrl",
+ * "word", "clr") was drawn 1.33× larger as a custom mapping than on a layout. The flag is now
+ * consulted whenever the mapping shows its command's default label
+ * (`SubLabelSizing.showsSmallerDefault`), whatever the typeface.
  */
 class CustomSubLabelRenderingTest {
 
     private companion object {
         val VIEW_SRC = File("src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt")
 
-        /** `Keyboard2View.scaleTextSize`'s smaller-font factor. */
-        const val SMALLER_FONT_FACTOR = 0.75f
+        /** The smaller-font factor ([SubLabelSizing.SMALLER_FONT_SCALE]). */
+        const val SMALLER_FONT_FACTOR = SubLabelSizing.SMALLER_FONT_SCALE
     }
 
     /** Size multiplier the built-in path applies to `_subLabelSize` for [command]. */
-    private fun builtInSubLabelScale(command: String): Float {
-        val kv = KeyValue.getKeyByName(command)
-        return if (kv.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)) SMALLER_FONT_FACTOR else 1f
-    }
+    private fun builtInSubLabelScale(command: String): Float =
+        SubLabelSizing.scaleFor(KeyValue.getKeyByName(command))
 
     /**
-     * Size multiplier the custom short-swipe path applies to `_subLabelSize` for [command].
-     *
-     * Mirrors `Keyboard2View.drawCustomMappings` + `commandCarriesSmallerFont`: the icon font
-     * (`useKeyFont`) gates WHETHER the built-in KeyValue's flag is consulted; the flag itself
-     * (`FLAG_SMALLER_FONT`) decides the size — identical to the built-in path.
+     * Size multiplier the custom short-swipe path applies to `_subLabelSize` for a mapping of
+     * [command] left on its default label (what the palette saves for an empty label field).
      */
     private fun customSubLabelScale(command: String): Float {
         val info = CommandRegistry.getDisplayInfo(command)
-        val smallerFont = info.useKeyFont &&
-            CommandRegistry.getKeyValue(command)?.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT) == true
-        return if (smallerFont) SMALLER_FONT_FACTOR else 1f
+        return SubLabelSizing.scaleFor(
+            ShortSwipeMapping("a", SwipeDirection.NE, info.displayText, ActionType.COMMAND, command, info.useKeyFont)
+        )
     }
 
     // =========================================================================
@@ -133,26 +138,16 @@ class CustomSubLabelRenderingTest {
     @Test
     fun bothPathsUseTheSameSmallerFontFactorOnTheSameBaseSize() {
         val src = VIEW_SRC.readText()
-        // Built-in.
-        assertThat(src).contains(
-            "val smaller_font = if (k.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)) " +
-                "${SMALLER_FONT_FACTOR}f else 1f"
-        )
-        assertThat(src).contains("val label_size = if (main_label) _mainLabelSize else _subLabelSize")
-        // Custom — same 0.75 factor, same _subLabelSize base, gated on the SAME flag the
-        // built-in path reads (FLAG_SMALLER_FONT of the resolved KeyValue), never on
-        // useKeyFont alone (the v1.1.98 regression).
-        assertThat(src).contains(
-            "val textSize = if (smallerFont) _subLabelSize * ${SMALLER_FONT_FACTOR}f " +
-                "else _subLabelSize"
-        )
+        // Built-in: _subLabelSize base, factor from the shared rule on the KeyValue.
+        assertThat(src).contains("val textSize = _subLabelSize * SubLabelSizing.scaleFor(modifiedKv)")
+        // Custom: the same base, factor from the same rule on the mapping — which reads the
+        // SAME flag (FLAG_SMALLER_FONT of the command's KeyValue), never useKeyFont alone (the
+        // v1.1.98 regression) and never gated on useKeyFont (the 2026-10-08 report).
+        assertThat(src).contains("val textSize = _subLabelSize * sizeScale")
+        assertThat(src).contains("SubLabelSizing.scaleFor(mapping)")
         assertThat(src).doesNotContain("if (useKeyFont) _subLabelSize * ${SMALLER_FONT_FACTOR}f")
-        // The flag is derived from the built-in KeyValue for the mapping's command…
-        assertThat(src).contains("?.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT) == true")
-        // …and only consulted when the drawn glyph IS that KeyValue's glyph (icon font).
-        assertThat(src).contains(
-            "mapping.useKeyFont && commandCarriesSmallerFont(mapping.actionValue)"
-        )
+        assertThat(src).doesNotContain("mapping.useKeyFont && commandCarriesSmallerFont")
+        assertThat(SMALLER_FONT_FACTOR).isEqualTo(0.75f)
     }
 
     @Test
@@ -166,8 +161,10 @@ class CustomSubLabelRenderingTest {
             assertThat(customSubLabelScale(command)).isEqualTo(SMALLER_FONT_FACTOR)
         }
 
-        // FLAG_KEY_FONT alone → both paths give 1.0×. Under the regressed v1.1.98 code the
-        // custom path drew these at 0.75× while the identical built-in glyph drew at 1.0×.
+        // FLAG_KEY_FONT alone. Under the regressed v1.1.98 code the custom path drew these at
+        // 0.75× while the identical built-in glyph drew at 1.0×. Since 2026-10-08 every key-font
+        // SUBLABEL is drawn at SubLabelSizing.GLYPH_SCALE (icons fill the em box, so 1.0× read
+        // 1.3× larger than the text sublabels) — on both paths alike, which is the claim.
         for (command in listOf(
             "paste", "copy", "cut", "undo", "redo", "selectAll",
             "up", "down", "enter", "backspace", "delete", "capslock"
@@ -175,7 +172,7 @@ class CustomSubLabelRenderingTest {
             val kv = KeyValue.getKeyByName(command)
             assertThat(kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT)).isTrue()
             assertThat(kv.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)).isFalse()
-            assertThat(builtInSubLabelScale(command)).isEqualTo(1f)
+            assertThat(builtInSubLabelScale(command)).isEqualTo(SubLabelSizing.GLYPH_SCALE)
             assertThat(customSubLabelScale(command)).isEqualTo(builtInSubLabelScale(command))
         }
     }

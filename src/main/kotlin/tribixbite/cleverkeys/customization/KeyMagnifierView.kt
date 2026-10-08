@@ -10,6 +10,7 @@ import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.SubLabelSizing
 import tribixbite.cleverkeys.Theme
 import tribixbite.cleverkeys.theme.ThemeProvider
 import android.graphics.Typeface
@@ -45,6 +46,9 @@ class KeyMagnifierView @JvmOverloads constructor(
 
         /** Scale factor for magnification (200% = 2.0) */
         const val MAGNIFICATION_SCALE = 2.0f
+
+        /** Sublabel base size as a fraction of the magnified key's height. */
+        private const val SUB_LABEL_HEIGHT_FRACTION = 0.14f
 
         /** Direction index to position mapping - matches Keyboard2View layout */
         val DIRECTION_POSITIONS = mapOf(
@@ -342,6 +346,7 @@ class KeyMagnifierView @JvmOverloads constructor(
         drawDirectionZones(canvas, keyRect)
 
         // Draw main label (center) - use key object or fall back to keyCodeLabel
+        mainLabelWidth = 0f
         if (k != null) {
             drawMainLabel(canvas, k, keyRect)
         } else if (label != null) {
@@ -456,20 +461,22 @@ class KeyMagnifierView @JvmOverloads constructor(
         val cy = keyRect.centerY() - (mainLabelPaint.descent() + mainLabelPaint.ascent()) / 2
 
         canvas.drawText(label, cx, cy, mainLabelPaint)
+        mainLabelWidth = mainLabelPaint.measureText(label)
     }
+
+    /** Width of the main label drawn this frame — bounds the W/E sublabel slots. */
+    private var mainLabelWidth = 0f
 
     /**
      * Draw sub-labels in their respective positions.
      */
     private fun drawSubLabels(canvas: Canvas, key: KeyboardData.Key, keyRect: RectF) {
-        subLabelPaint.textSize = keyRect.height() * 0.14f
-        specialSubLabelPaint.textSize = keyRect.height() * 0.14f
-
         for ((index, direction) in DIRECTION_POSITIONS) {
             // Check for custom mapping first
             val customMapping = customMappings[direction]
             if (customMapping != null) {
-                drawSubLabelForDirection(canvas, keyRect, direction, customMapping.displayText, true, customMapping.useKeyFont)
+                drawSubLabelForDirection(canvas, keyRect, direction, customMapping.displayText, true,
+                    customMapping.useKeyFont, SubLabelSizing.scaleFor(customMapping))
                 continue
             }
 
@@ -479,7 +486,8 @@ class KeyMagnifierView @JvmOverloads constructor(
                 val label = subKv.getString().take(4)
                 // Check if this KeyValue needs the special key font (for cursor arrows, symbols)
                 val useKeyFont = subKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT)
-                drawSubLabelForDirection(canvas, keyRect, direction, label, false, useKeyFont)
+                drawSubLabelForDirection(canvas, keyRect, direction, label, false, useKeyFont,
+                    SubLabelSizing.scaleFor(subKv))
             }
         }
     }
@@ -489,11 +497,9 @@ class KeyMagnifierView @JvmOverloads constructor(
      * When we don't have a Key object, we can only show custom mappings.
      */
     private fun drawSubLabelsFromMappings(canvas: Canvas, keyRect: RectF) {
-        subLabelPaint.textSize = keyRect.height() * 0.14f
-        specialSubLabelPaint.textSize = keyRect.height() * 0.14f
-
         for ((direction, mapping) in customMappings) {
-            drawSubLabelForDirection(canvas, keyRect, direction, mapping.displayText, true, mapping.useKeyFont)
+            drawSubLabelForDirection(canvas, keyRect, direction, mapping.displayText, true,
+                mapping.useKeyFont, SubLabelSizing.scaleFor(mapping))
         }
     }
 
@@ -506,6 +512,8 @@ class KeyMagnifierView @JvmOverloads constructor(
      * @param label The text to display
      * @param isCustom Whether this is a custom mapping (uses highlight color)
      * @param useKeyFont Whether to use the special key font (for cursor arrows, symbols in private use area)
+     * @param sizeScale [SubLabelSizing] factor — the same rule the keyboard uses, so a preview
+     *     shows a label at the size it will have on the key
      */
     private fun drawSubLabelForDirection(
         canvas: Canvas,
@@ -513,12 +521,21 @@ class KeyMagnifierView @JvmOverloads constructor(
         direction: SwipeDirection,
         label: String,
         isCustom: Boolean,
-        useKeyFont: Boolean = false
+        useKeyFont: Boolean = false,
+        sizeScale: Float = 1f
     ) {
         val bounds = directionBounds[direction] ?: return
 
         // Select the appropriate paint (special font for private use area characters)
         val paint = if (useKeyFont) specialSubLabelPaint else subLabelPaint
+        val padding = 8f * resources.displayMetrics.density
+        val text = label.take(4)
+        // Same size rule as the keyboard (SubLabelSizing): base x scale, then fit the slot.
+        val size = keyRect.height() * SUB_LABEL_HEIGHT_FRACTION * sizeScale
+        paint.textSize = size
+        paint.textSize = SubLabelSizing.fitToWidth(
+            size, paint.measureText(text),
+            SubLabelSizing.maxWidth(keyRect.width(), padding, direction.subLabelIndex, mainLabelWidth))
 
         // Use same color as default sublabels for visual consistency
         paint.color = theme?.subLabelColor ?: Color.parseColor("#BBBBBB")
@@ -536,7 +553,6 @@ class KeyMagnifierView @JvmOverloads constructor(
             }
         }
 
-        val padding = 8f * resources.displayMetrics.density
         val x: Float
         val y: Float
 
@@ -551,7 +567,7 @@ class KeyMagnifierView @JvmOverloads constructor(
             SwipeDirection.SE -> { x = bounds.right - padding; y = bounds.bottom - padding - paint.descent() }
         }
 
-        canvas.drawText(label.take(4), x, y, paint)
+        canvas.drawText(text, x, y, paint)
     }
 
     /**

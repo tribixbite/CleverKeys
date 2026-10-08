@@ -1946,8 +1946,10 @@ class Keyboard2View @JvmOverloads constructor(
                 )
 
                 drawKeyFrame(canvas, x, y, keyW, keyH, tc_key)
-                if (k.keys[0] != null)
+                // The main label's drawn width bounds the W/E sublabel slots (SubLabelSizing).
+                val mainLabelW = if (k.keys[0] != null)
                     drawLabel(canvas, k.keys[0]!!, keyW / 2f + x, y, keyH, isKeyDown, tc_key)
+                else 0f
                 // #171: a custom short-swipe mapping REPLACES the default sublabel in its
                 // slot — suppress the default glyph wherever a mapping covers the slot, or
                 // the two render overlaid. Mask is 0 (draw everything) for the common
@@ -1960,12 +1962,12 @@ class Keyboard2View @JvmOverloads constructor(
                 else 0
                 for (i in 1..8) {
                     if (k.keys[i] != null && (coveredSubLabels and (1 shl i)) == 0)
-                        drawSubLabel(canvas, k.keys[i]!!, x, y, keyW, keyH, i, isKeyDown, tc_key, snap)
+                        drawSubLabel(canvas, k.keys[i]!!, x, y, keyW, keyH, i, isKeyDown, tc_key, snap, mainLabelW)
                 }
                 // Draw custom short swipe mappings (they own their slots — see above).
                 // Skip the whole overlay when no custom mappings are configured (R2 early-out).
                 if (hasCustomMappings)
-                    drawCustomMappings(canvas, k, x, y, keyW, keyH, tc, snap)
+                    drawCustomMappings(canvas, k, x, y, keyW, keyH, tc, snap, mainLabelW)
                 drawIndication(canvas, k, x, y, keyW, keyH, tc)
                 x += _keyWidth * k.width
             }
@@ -2122,21 +2124,36 @@ class Keyboard2View @JvmOverloads constructor(
         return if (sublabel) _theme.subLabelColor else _theme.labelColor
     }
 
-    private fun drawLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyH: Float, isKeyDown: Boolean, tc: Theme.Computed.Key) {
-        val modifiedKv = modifyKey(kv, _mods) ?: return
+    /** Draws [kv] centred on [x]; returns the drawn label's width (0 when nothing is drawn). */
+    private fun drawLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyH: Float, isKeyDown: Boolean, tc: Theme.Computed.Key): Float {
+        val modifiedKv = modifyKey(kv, _mods) ?: return 0f
         val textSize = scaleTextSize(modifiedKv, true)
         val p = tc.label_paint(modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), labelColor(modifiedKv, isKeyDown, false), textSize)
-        canvas.drawText(modifiedKv.getString(), x, (keyH - p.ascent() - p.descent()) / 2f + y, p)
+        val label = modifiedKv.getString()
+        canvas.drawText(label, x, (keyH - p.ascent() - p.descent()) / 2f + y, p)
+        return p.measureText(label)
     }
 
-    /** [snap] is the frame's captured configuration — see [onDraw]. */
-    private fun drawSubLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyW: Float, keyH: Float, sub_index: Int, isKeyDown: Boolean, tc: Theme.Computed.Key, snap: ConfigSnapshot) {
+    /**
+     * [snap] is the frame's captured configuration — see [onDraw]. [mainLabelW] is the key's
+     * drawn main-label width, which bounds the W/E slots ([SubLabelSizing.maxWidth]).
+     */
+    private fun drawSubLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyW: Float, keyH: Float, sub_index: Int, isKeyDown: Boolean, tc: Theme.Computed.Key, snap: ConfigSnapshot, mainLabelW: Float) {
         val a = LABEL_POSITION_H[sub_index]
         val v = LABEL_POSITION_V[sub_index]
         val modifiedKv = modifyKey(kv, _mods) ?: return
-        val textSize = scaleTextSize(modifiedKv, false)
+        // SubLabelSizing is shared with drawCustomSubLabel, KeyMagnifierView and the popover:
+        // FLAG_SMALLER_FONT / colour-emoji scale, then shrink-to-fit the slot's width.
+        val textSize = _subLabelSize * SubLabelSizing.scaleFor(modifiedKv)
         val p = tc.sublabel_paint(modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), labelColor(modifiedKv, isKeyDown, true), textSize, a)
         val subPadding = snap.keyPadding
+        val label = modifiedKv.getString()
+        var label_len = label.length
+        // Limit the label of string keys to 3 characters
+        if (label_len > 3 && modifiedKv.getKind() == KeyValue.Kind.String)
+            label_len = 3
+        p.textSize = SubLabelSizing.fitToWidth(
+            textSize, p.measureText(label, 0, label_len), SubLabelSizing.maxWidth(keyW, subPadding, sub_index, mainLabelW))
         var yPos = y
         var xPos = x
 
@@ -2152,11 +2169,6 @@ class Keyboard2View @JvmOverloads constructor(
             Paint.Align.RIGHT -> keyW - subPadding
         }
 
-        val label = modifiedKv.getString()
-        var label_len = label.length
-        // Limit the label of string keys to 3 characters
-        if (label_len > 3 && modifiedKv.getKind() == KeyValue.Kind.String)
-            label_len = 3
         canvas.drawText(label, 0, label_len, xPos, yPos, p)
     }
 
@@ -2193,7 +2205,9 @@ class Keyboard2View @JvmOverloads constructor(
         keyH: Float,
         tc: Theme.Computed,
         /** The frame's captured configuration — see [onDraw]. */
-        snap: ConfigSnapshot
+        snap: ConfigSnapshot,
+        /** The key's drawn main-label width — bounds the W/E slots. */
+        mainLabelW: Float
     ) {
         // Get the pre-lowercased key identifier (cached per Key in setKeyboard) instead of
         // allocating a String via mainKey.getString().lowercase() every frame. Empty string is
@@ -2212,15 +2226,10 @@ class Keyboard2View @JvmOverloads constructor(
             val subIndex = directionToSubIndex(direction)
             if (subIndex < 1 || subIndex > 8) continue
 
-            // Size parity with built-ins (v1.1.98, re-fixed 2026-09-03): the persisted mapping
-            // only stores useKeyFont (typeface selection); the 0.75x smaller-font factor must
-            // follow the SAME flag the built-in path reads — FLAG_SMALLER_FONT on the KeyValue
-            // the mapping's command resolves to. Only consulted when the drawn glyph IS that
-            // KeyValue's glyph (useKeyFont), i.e. never for user-typed text labels.
-            val smallerFont =
-                mapping.useKeyFont && commandCarriesSmallerFont(mapping.actionValue)
-
-            // Draw the custom mapping label (matches default sublabel font size and color)
+            // Size parity with built-ins (v1.1.98, 2026-09-03, 2026-10-08): a mapping showing its
+            // command's default label is sized exactly like that command's KeyValue on a layout
+            // (FLAG_SMALLER_FONT, colour-emoji scale), whatever its typeface; typed labels are
+            // plain text. SubLabelSizing caches the per-command lookup (draw path, per frame).
             drawCustomSubLabel(
                 canvas,
                 mapping.displayText,
@@ -2230,28 +2239,11 @@ class Keyboard2View @JvmOverloads constructor(
                 tc.key,
                 snap,
                 mapping.useKeyFont,
-                smallerFont
+                SubLabelSizing.scaleFor(mapping),
+                mainLabelW
             )
         }
     }
-
-    /**
-     * Per-command-name cache for [commandCarriesSmallerFont]. Command → flag is static for the
-     * process lifetime, so entries never need invalidation; keyed by the mapping's
-     * `actionValue` (the CommandRegistry command name whenever `useKeyFont` is set).
-     */
-    private val _smallerFontCache = HashMap<String, Boolean>()
-
-    /**
-     * Whether the built-in [KeyValue] behind custom-mapping command [commandName] carries
-     * [KeyValue.FLAG_SMALLER_FONT] — the flag [scaleTextSize] uses for built-in sublabels.
-     * Cached because this runs on the draw path ([drawCustomMappings], per frame).
-     */
-    private fun commandCarriesSmallerFont(commandName: String): Boolean =
-        _smallerFontCache.getOrPut(commandName) {
-            CommandRegistry.getKeyValue(commandName)
-                ?.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT) == true
-        }
 
     /**
      * Convert SwipeDirection to sublabel index (1-8).
@@ -2265,8 +2257,9 @@ class Keyboard2View @JvmOverloads constructor(
     /**
      * Draw a custom sublabel with specific color (for custom short swipe mappings).
      * @param useKeyFont Whether to use the special keyboard icon font
-     * @param smallerFont Whether the resolved built-in KeyValue carries FLAG_SMALLER_FONT —
-     *     the size rule shared with [scaleTextSize], independent of the typeface choice
+     * @param sizeScale [SubLabelSizing.scaleFor] of the mapping — the size rule shared with
+     *     layout sublabels ([drawSubLabel])
+     * @param mainLabelW The key's drawn main-label width — bounds the W/E slots
      */
     private fun drawCustomSubLabel(
         canvas: Canvas,
@@ -2281,18 +2274,23 @@ class Keyboard2View @JvmOverloads constructor(
         /** The frame's captured configuration — see [onDraw]. */
         snap: ConfigSnapshot,
         useKeyFont: Boolean = false,
-        smallerFont: Boolean = false
+        sizeScale: Float = 1f,
+        mainLabelW: Float = 0f
     ) {
         val a = LABEL_POSITION_H[sub_index]
         val v = LABEL_POSITION_V[sub_index]
-        // Same 0.75f factor and same trigger (FLAG_SMALLER_FONT) as built-in sublabels in
-        // scaleTextSize(); useKeyFont only selects the typeface, never the size.
-        val textSize = if (smallerFont) _subLabelSize * 0.75f else _subLabelSize
+        // Same base and factors as layout sublabels (drawSubLabel); useKeyFont only selects
+        // the typeface, never the size.
+        val textSize = _subLabelSize * sizeScale
 
         // Use the theme's sublabel_paint for consistent font selection
         val paint = tc_key.sublabel_paint(useKeyFont, color, textSize, a)
 
         val subPadding = snap.keyPadding
+        // Limit label length for display, then keep it inside its slot (never over the main label)
+        val displayLen = minOf(label.length, 4)
+        paint.textSize = SubLabelSizing.fitToWidth(
+            textSize, paint.measureText(label, 0, displayLen), SubLabelSizing.maxWidth(keyW, subPadding, sub_index, mainLabelW))
         var yPos = y
         var xPos = x
 
@@ -2308,8 +2306,6 @@ class Keyboard2View @JvmOverloads constructor(
             Paint.Align.RIGHT -> keyW - subPadding
         }
 
-        // Limit label length for display
-        val displayLen = minOf(label.length, 4)
         canvas.drawText(label, 0, displayLen, xPos, yPos, paint)
     }
 

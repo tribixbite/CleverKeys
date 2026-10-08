@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.SubLabelSizing
 import tribixbite.cleverkeys.Theme
 import tribixbite.cleverkeys.customization.ActionType
 import tribixbite.cleverkeys.customization.CommandPaletteDialog
@@ -331,12 +332,15 @@ private fun LabelBadge(text: String, keyFont: Boolean) {
             .padding(horizontal = 10.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
+        // Icons and emoji take the keyboard's glyph factor against the badge's text size
+        // (SubLabelSizing), the same rule the command palette's label preview uses.
+        val textSp = MaterialTheme.typography.titleLarge.fontSize.value
         if (keyFont) {
             val color = MaterialTheme.colorScheme.onSecondaryContainer.toArgb()
             AndroidView(factory = { ctx ->
                 android.widget.TextView(ctx).apply {
                     typeface = Theme.getKeyFont(ctx)
-                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 18f)
+                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, SubLabelSizing.previewSp(textSp, true, text))
                     setTextColor(color)
                     this.text = text
                 }
@@ -345,6 +349,7 @@ private fun LabelBadge(text: String, keyFont: Boolean) {
             Text(
                 text,
                 style = MaterialTheme.typography.titleLarge,
+                fontSize = SubLabelSizing.previewSp(textSp, false, text).sp,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                 maxLines = 1
             )

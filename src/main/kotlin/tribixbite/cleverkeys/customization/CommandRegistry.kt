@@ -770,6 +770,31 @@ object CommandRegistry {
     }
 
     /**
+     * Default labels a command used to have, as saved into short-swipe mappings created before
+     * the label changed (command name → old default text). A mapping still showing one of these
+     * was never customised by the user — it carries a default that is no longer drawable the
+     * way it was meant — so [upgradeLegacyDefaultLabel] swaps in the current default.
+     */
+    val LEGACY_DEFAULT_LABELS: Map<String, String> = mapOf(
+        // Text label "🔒⎘" (colour emoji + U+2398) until 2026-10-08; now key-font glyph U+E039.
+        "copy_private" to "\uD83D\uDD12\u2398"
+    )
+
+    /**
+     * The current default (label, useKeyFont) for a saved COMMAND mapping of [commandName]
+     * whose label is that command's LEGACY default and was saved without the key font; null
+     * when the mapping should be kept as saved (a user-typed label, or already current).
+     */
+    fun upgradeLegacyDefaultLabel(
+        commandName: String,
+        displayText: String,
+        useKeyFont: Boolean
+    ): CommandDisplayInfo? {
+        if (useKeyFont || LEGACY_DEFAULT_LABELS[commandName] != displayText) return null
+        return getDisplayInfo(commandName)
+    }
+
+    /**
      * Get all commands in a specific category.
      */
     fun getByCategory(category: Category): List<Command> {

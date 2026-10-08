@@ -148,7 +148,7 @@ class SubkeyPopoverRenderer {
             strokePaint.color = withAlpha(theme.activatedColor, alpha)
             canvas.drawRoundRect(rect, radius, radius, strokePaint)
         }
-        drawText(canvas, keyPaints, label.text, label.useKeyFont, cx, cy, w, h * 0.46f,
+        drawText(canvas, keyPaints, label.text, label.useKeyFont, cx, cy, w, h * 0.46f * label.sizeScale,
             withAlpha(if (selected) theme.activatedColor else theme.labelColor, alpha))
     }
 

@@ -567,8 +567,8 @@ private fun MappingListItem(
             Column(modifier = Modifier.weight(1f)) {
                 // Use AndroidView with special font for icon characters when useKeyFont is true
                 if (mapping.useKeyFont) {
-                    // Show icon using special font via AndroidView
-                    // Keyboard sublabels are ~10sp but list rows are shorter, so use 8sp
+                    // Show icon using special font via AndroidView, at the keyboard's icon
+                    // factor against the row's 13 sp label text (SubLabelSizing)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "\"",
@@ -579,7 +579,10 @@ private fun MappingListItem(
                             factory = { ctx ->
                                 android.widget.TextView(ctx).apply {
                                     typeface = Theme.getKeyFont(ctx)
-                                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 8f)
+                                    setTextSize(
+                                        android.util.TypedValue.COMPLEX_UNIT_SP,
+                                        SubLabelSizing.previewSp(13f, true, mapping.displayText)
+                                    )
                                     setTextColor(android.graphics.Color.WHITE)
                                     text = mapping.displayText
                                 }

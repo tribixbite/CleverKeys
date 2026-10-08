@@ -742,8 +742,11 @@ class KeyValue private constructor(
             /* Editing keys */
             "copy" -> editingKey(0xE030, Editing.COPY)
             // #156: Private copy — stores the selection in CleverKeys' clipboard only, never the OS clipboard.
-            // Text label (no key-font glyph reserved for this) so it always renders; small font to fit the key.
-            "copy_private" -> editingKey("🔒⎘", Editing.COPY_PRIVATE, FLAG_SMALLER_FONT)
+            // Key-font glyph U+E039 (copy sheets with a padlock, src/main/special_font/039.svg). Was the
+            // text label "🔒⎘" until 2026-10-08: a colour emoji drawn at sublabel size dwarfed the
+            // other sublabels and ran over the key's main letter (Seeker report). Saved mappings
+            // carrying that old default are upgraded by CommandRegistry.upgradeLegacyDefaultLabel.
+            "copy_private" -> editingKey(0xE039, Editing.COPY_PRIVATE)
             "append_possessive" -> editingKey("'s", Editing.APPEND_POSSESSIVE)
             "append_apostrophe" -> editingKey("'", Editing.APPEND_APOSTROPHE)
             "clear_clipboard" -> editingKey("⌧", Editing.CLEAR_CLIPBOARD)
