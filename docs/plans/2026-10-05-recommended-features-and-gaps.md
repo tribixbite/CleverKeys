@@ -6,25 +6,29 @@
 
 ---
 
-## Current execution status (2026-10-06)
+## Current execution status (2026-10-08)
 
 This is a proposal queue, not a release checklist. The maintainer wants feature/bug work
-and personal device testing before 2.0; tagging/publishing is not authorized.
+and personal device testing before 2.0. Pushes to origin/main are authorized (2026-10-07) and
+HEAD `b9ce12e6` is pushed; tagging/publishing is not authorized. The prioritized open list
+with owners is `memory/todo.md` "Open now"; this table is the per-roadmap-item view.
 
 | Item | Remaining work |
 |---|---|
-| 1.1 Terminal handling | Shared predicate and custom package setting implemented and tested. External terminal app smoke tests remain. |
-| 1.2 Dynamic macros | Explicit TEMPLATE actions implement clipboard, cursor, UUID and selection expansion; native execution/assignment tests pass; Seeker checks remain. Existing TEXT stays literal. |
+| 1.1 Terminal handling | Shared predicate and custom package setting implemented and device-tested (Seeker). Terminal typed-word tracking shipped 2026-10-07 (`4939633b` tapped suggestion replaces the typed word — Seeker PASS on `78052e86`; `e4d50db4` non-text keys end the tracked word, no autocorrect rewrites — Seeker re-test NOT yet run, Seeker drops Wi-Fi). Other external terminal apps untested. |
+| 1.2 Dynamic macros | Explicit TEMPLATE actions implement clipboard, cursor, UUID and selection expansion; native execution/assignment tests pass; Saga `{cursor}` template PASS 2026-10-07 (`build/oct7-saga/`). Password/inline editors and media-only clipboard checks remain. Existing TEXT stays literal. |
 | 1.3 Clipboard encryption | At-rest encryption/unlock not implemented; backup encryption is a different, existing feature. |
-| 2.1 Apostrophes | Literal ASCII/curly flick parity implemented; ASCII device-tested. Explicit suffix transaction/undo and learning receipts implemented and native-tested. Saga/Chrome showed suffix undo failing on late selection callbacks; the October 7 review fix (consumption/time-bound callback ledger) is host-tested and needs a device recheck. Contraction chooser remains. Waypoints deferred. |
-| Short-word recognition | `ad`/`wet` still fail with default CTC: encoder end-of-trace word prior + collinear pass-through (re-measured October 7). CTC now featurizes the unsmoothed path plus one lift sample (wired 2026-10-07: held-out top-1 91.83 → 92.12; `ad` swiped with a final stop decodes `ad`); a dwell-less `ad`/`wet` still fails. Word-balanced fine-tune recipe written. |
-| 2.2 Continuous swipe | Opt-in 280 ms spacebar dwell, bounded segments and serialized commits implemented. October 7 review fixes (late own callbacks no longer cancel phrases, lost final word reported, no-boundary cancel keeps the word, lazy touch-down reads) are host-tested; native tests not rerun; human/device validation remains. |
+| 2.1 Apostrophes | Literal ASCII/curly flick parity implemented; ASCII device-tested. Explicit suffix transaction/undo and learning receipts implemented, native-tested, and the October 7 review fix (`6eb7c7fe`/`ede3f3b3`) passed on Saga/Chrome 2026-10-07: one-Backspace suffix undo for `parents'`/`Bowie's` (`build/oct7-saga-retest/`). Letter-plural/closed-class possessive junk removed and bare `lets` PAIRED (`9f78611f`, `94209334`; Saga PASS). Context chooser evaluated twice, failed its bars, not wired; a listed-evidence its/it's variant needs its own pre-registered round (`docs/eval/2026-10-07-apostrophe-context.md`). Waypoints deferred. |
+| Short-word recognition | `ad`/`wet` still fail with default CTC: encoder end-of-trace word prior + collinear pass-through (re-measured October 7). CTC now featurizes the unsmoothed path plus one lift sample (`745d1ca3`: held-out top-1 91.83 → 92.12; `ad` swiped with a final stop decodes `ad` — Saga PASS); a dwell-less `ad`/`wet` still fails. Final-letter drops (`adb`→`an`, `somethings`→`something`) measured 2026-10-07: no decoder defect (`docs/eval/2026-10-07-final-letter-drops.md`). Word-balanced fine-tune recipe written; needs the RTX box and fresh writer-separated human traces. |
+| 2.2 Continuous swipe | Opt-in 280 ms spacebar dwell, bounded segments and serialized commits implemented. October 7 review fixes (late own callbacks no longer cancel phrases, lost final word reported, no-boundary cancel keeps the word, lazy touch-down reads) are host-tested, native-rerun green (`ContinuousSwipeTest` 20, `SmartAutoSpaceTest` 75 in the 2026-10-07 full runs on `24afd33c`/`78052e86`/`991651d1`, 0 failures) and Saga split/no-split mechanics PASS (`a5e0464b`). Word swipes (and phrases) now start only on letter keys (`9c3fb179`, Saga A1–A4 PASS 2026-10-08). Human accuracy/latency validation and auto-space-OFF / interrupted-phrase checks remain. |
 | 2.3 Dwell picker | Not implemented; needs latency/conflict measurements before implementation. |
 | 3.1 Bangla | National/Provat tap layouts exist. Transliteration, spelling-preserving dictionary/mark support and a validated swipe model remain. |
 | 4.1 Theme preview | Live sample exists; actual keyboard/state preview remains. |
 | 4.2 Swipe trail | Proposed spline/velocity behavior remains; benchmark before claiming frame-rate or overhead. |
-| Clipboard follow-up | Size filtering + confirmed all-page Delete results and #168 system-clear command implemented locally. Assigned-command disposable-clip device check remains. |
+| Clipboard follow-up | Size filtering, persistent Select mode (service-scoped holder: survives rotation, pane close, keyboard hide, app switch; ends on Exit or a completed action), Delete selected, ⋮ Add to Pinned / Add to Todos / Merge / Clean, non-focusable IME dialogs (`027deaa1`, `06d8a58f`) and #168 system-clear command are pushed. Saga A1–A7 PASS on `991651d1`; Seeker delete 1/1 PASS; native selection tests green in the `991651d1` full run (1,591, 0 failures). Catch-up of a clip set while no listener was registered (`b9ce12e6`): Saga B1–B3 PASS 2026-10-08. Remaining: TalkBack pass, #168 disposable-clip check by the maintainer, enlarged-text / split-screen pane, #175 swipe-to-delete. |
 | Extra Keys follow-up | Autofill visibility, landscape scrolling and rotation-preserved search implemented and device-tested. |
+| Per-layout language binding (#186/#61) | Shipped `f85c8dcd` (Layout Manager → Language chip; custom XML `language=`; `ActiveLanguageSync` is the only language-change path). Saga Latin → German-bound layout PASS 2026-10-07. Remaining: Persian custom layout bound to `fa` with the fa pack, en/de/fr three-layout cycle, uninstalled-language warning. |
+| Minimize (#175 part 1) | `minimize_bar`/`minimize_fab` + `hide_keyboard` shipped; Seeker bar/FAB minimize, expand, landscape pass-through PASS (2026-10-05); FAB on the left for RTL system (`ar-XB`) and per-app (`fa`) locales `c6fe3594`, Saga PASS 2026-10-07. Remaining: cross-app window pass-through checks; summon after a system hide is unbuilt (overlay permission). |
 
 October 6 expanded validation is complete: 14 added native regressions cover the
 new terminal setting, minimize/compact geometry, emoji filtering, oversized updates,
@@ -637,8 +641,14 @@ and fixed with fail-first host tests (no native or device rerun in this round):
    (`f77b06fb`), single-readback verification, host-tier continuous tests.
 
 Host evidence: 2,790 pure + 991 mock pass; `compileReleaseKotlin` and
-`compileDebugAndroidTestKotlin` pass. Native suites were not rerun; the Saga/Chrome suffix
-undo and continuous phrases need a device recheck with a fresh build.
+`compileDebugAndroidTestKotlin` pass. Native suites were not rerun in this round; the Saga/Chrome
+suffix undo and continuous phrases needed a device recheck with a fresh build.
+
+Closed later on 2026-10-07: native full runs on `24afd33c`, `78052e86` and `991651d1`
+(1,590/1,590/1,591 tests, 0 failures/errors/skips/flakes, `~/ew-output/oct7-wave{2,3,4}-*/`)
+and the Saga `a5e0464b` recheck (one-Backspace suffix undo, continuous split/no-split
+mechanics PASS, `build/oct7-saga-retest/`). The eight fixes and everything after were pushed
+to origin/main on 2026-10-07.
 
 **Foreign dirty file:** do not edit, stage or commit
 `docs/plans/v2.0.0-manual-test-checklist.md`; preserved SHA-256

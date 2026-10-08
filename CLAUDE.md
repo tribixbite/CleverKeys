@@ -55,12 +55,15 @@ committed coordination over working-tree edits.
 
 ---
 
-## Active handoff (October 6)
+## Active handoff (2026-10-08)
 
-The three-feature implementation is committed in `64f05dd2`; automated validation
-is complete and Seeker/manual checks remain. Resume from the handoff in
-`docs/plans/2026-10-05-recommended-features-and-gaps.md` and `memory/todo.md` before
-editing or launching Gradle. It records exact tested artifacts/results; no push/release is authorized.
+HEAD `b9ce12e6` is pushed and equals origin/main. Pushes to origin/main are authorized
+(maintainer, 2026-10-07); tag, version bump, release and GitHub posts still are not. The
+only authoritative task list is the "Open now" section at the top of `memory/todo.md`
+(owners: device / maintainer / agent / RTX); everything below it there is dated history.
+`memory/HANDOFF.md` holds reference state and rules, `docs/audit/gh-issue-resolution.md`
+the per-issue status, and the plan doc's "Current execution status" table the roadmap
+state. Read those before editing or launching Gradle.
 
 ## Rendered documentation link checks
 

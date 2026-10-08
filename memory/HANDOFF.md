@@ -1,12 +1,21 @@
-# HANDOFF — updated 2026-09-01
+# HANDOFF — updated 2026-10-08 (body last reconciled 2026-09-01)
+
+**2026-10-08 pointer.** HEAD `b9ce12e6` is pushed and equals origin/main; pushes are authorized
+(2026-10-07), tag/version bump/release/GitHub posts are not. The prioritized, owner-tagged open
+list now lives at the top of [`memory/todo.md`](todo.md) ("Open now") and is authoritative;
+this file is the **reference** for state, evidence and rules. The sections below are dated
+2026-09-01..09-30 and were not re-verified on 2026-10-08: an item that is still open here also
+appears in todo.md's "Open now" (e.g. popover native-string review, i18n device checks, the
+`finger_occlusion_offset` decision, es LM); anything not listed there was closed by the October
+commits recorded in todo.md's history (e.g. ARC-072 slice 3 `fddb65d5`, ARC-098 `d6484ee9`,
+#186/#61 `f85c8dcd`, suffix commands `64f05dd2`).
 
 Read this first, then `docs/specs/ctc-architecture-and-multiscript-guide.md` (architecture,
-routing rule, multi-script recipe, full audit table). This file is the **task list**; the guide is
-the **reference**. Where they overlap, the guide wins on technical detail and this file on
-priority.
+routing rule, multi-script recipe, full audit table). Where they overlap, the guide wins on
+technical detail and todo.md's "Open now" on priority.
 
 **Completed work is DELETED from this file, not struck through.** Git history is the record of
-what was done; this file is only what is left. Anything below is open.
+what was done; this file is only what is left.
 
 ## State after the 2026-08-30..09-02 full-backlog campaign (all pushed through `e87c5b97`+)
 
@@ -708,8 +717,9 @@ strong — but "Colemak ≥ geometric" is an inference, not a measurement. Say i
 5. **Do not touch λ, γ, β, γ_prune, β_prune.** Corpus-fitted; the published-preset control
    measured −2.3 pt top-1. λ is per-lexicon-SCALE (4.0 en-JSON / 2.0 CKDT), so a raw user knob
    would be wrong by 2× on the wrong asset; expose only a bounded offset if ever.
-6. **Testing policy**: never test locally via ADB (build-install and log-read only). ew-cli
-   instrumented or pure JVM; if untestable, ask.
+6. **Testing policy** (rewritten 2026-09-03, see CLAUDE.md "TESTING POLICY"): ew-cli
+   instrumented or pure JVM first; ADB testing IS allowed on the dedicated phones (Saga, Seeker,
+   Pixel) — never UI-test the Termux host phone, never framework-restart the Saga, leave no trace.
 7. **CI emulator steps**: `reactivecircus/android-emulator-runner` runs each `script:` LINE as a
    separate `sh -c` (dash, no `pipefail`). Keep every `script:` a ONE-LINE call into
    `.github/scripts/emulator-ci.sh`; inline multi-line bash silently dies on line 1 and reports
