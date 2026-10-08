@@ -8,6 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -34,23 +36,24 @@ fun IntentEditorDialog(
 ) {
     val isEditMode = initialIntent != null
 
-    var name by remember { mutableStateOf(initialIntent?.name ?: "") }
-    var targetType by remember { mutableStateOf(initialIntent?.targetType ?: IntentTargetType.ACTIVITY) }
-    var action by remember { mutableStateOf(initialIntent?.action ?: "") }
-    var data by remember { mutableStateOf(initialIntent?.data ?: "") }
-    var type by remember { mutableStateOf(initialIntent?.type ?: "") }
-    var packageName by remember { mutableStateOf(initialIntent?.packageName ?: "") }
-    var className by remember { mutableStateOf(initialIntent?.className ?: "") }
+    // rememberSaveable: rotating mid-edit keeps the draft (audit 2026-10-08).
+    var name by rememberSaveable { mutableStateOf(initialIntent?.name ?: "") }
+    var targetType by rememberSaveable { mutableStateOf(initialIntent?.targetType ?: IntentTargetType.ACTIVITY) }
+    var action by rememberSaveable { mutableStateOf(initialIntent?.action ?: "") }
+    var data by rememberSaveable { mutableStateOf(initialIntent?.data ?: "") }
+    var type by rememberSaveable { mutableStateOf(initialIntent?.type ?: "") }
+    var packageName by rememberSaveable { mutableStateOf(initialIntent?.packageName ?: "") }
+    var className by rememberSaveable { mutableStateOf(initialIntent?.className ?: "") }
 
     // Simple key-value pairs for extras
-    var extrasList by remember {
+    var extrasList by rememberSaveable(stateSaver = ExtrasSaver) {
         mutableStateOf(initialIntent?.extras?.toList() ?: emptyList())
     }
-    var newExtraKey by remember { mutableStateOf("") }
-    var newExtraValue by remember { mutableStateOf("") }
+    var newExtraKey by rememberSaveable { mutableStateOf("") }
+    var newExtraValue by rememberSaveable { mutableStateOf("") }
 
     var expandedTypeDropdown by remember { mutableStateOf(false) }
-    var showPresets by remember { mutableStateOf(!isEditMode) } // Show presets only for new intents
+    var showPresets by rememberSaveable { mutableStateOf(!isEditMode) } // Show presets only for new intents
 
     val scrollState = rememberScrollState()
 
@@ -335,3 +338,9 @@ fun IntentEditorDialog(
         }
     }
 }
+
+/** Intent extras as a flat key, value, key, value… list of Strings, which a Bundle can hold. */
+private val ExtrasSaver = listSaver<List<Pair<String, String>>, String>(
+    save = { extras -> extras.flatMap { (k, v) -> listOf(k, v) } },
+    restore = { flat -> flat.chunked(2).map { it[0] to it[1] } },
+)

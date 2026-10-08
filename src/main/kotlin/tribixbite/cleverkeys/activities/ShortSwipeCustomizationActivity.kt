@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -110,15 +111,17 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
     var textFieldValue by remember { mutableStateOf(TextFieldValue("")) }
 
     // Selected key for customization modal - now includes both keyCode and optional KeyboardData.Key
-    var selectedKeyCode by remember { mutableStateOf<String?>(null) }
+    // Saveable (with the direction and the palette flag): rotating with the palette open keeps it
+    // open on the same key and direction (audit 2026-10-08). The Key itself is display-only.
+    var selectedKeyCode by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedKey by remember { mutableStateOf<KeyboardData.Key?>(null) }
     var selectedKeyRowHeight by remember { mutableFloatStateOf(1.0f) }
 
     // Direction being edited
-    var editingDirection by remember { mutableStateOf<SwipeDirection?>(null) }
+    var editingDirection by rememberSaveable { mutableStateOf<SwipeDirection?>(null) }
 
     // Show command palette
-    var showCommandPalette by remember { mutableStateOf(false) }
+    var showCommandPalette by rememberSaveable { mutableStateOf(false) }
 
     // Track last captured key for customization
     var lastCapturedKey by remember { mutableStateOf<String?>(null) }
@@ -338,8 +341,6 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                     showCommandPalette = false
                     editingDirection = null
                 },
-                onCommandSelected = { /* Legacy callback - not used when onMappingSelected is provided */ },
-                onTextSelected = { /* Legacy callback - not used when onMappingSelected is provided */ },
                 onMappingSelected = { selection ->
                     // This callback receives separate label and action from the dialog
                     scope.launch {

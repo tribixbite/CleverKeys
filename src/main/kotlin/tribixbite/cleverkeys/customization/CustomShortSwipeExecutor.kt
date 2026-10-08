@@ -49,7 +49,10 @@ class CustomShortSwipeExecutor(private val context: Context) {
             ActionType.KEY_EVENT -> executeKeyEvent(mapping.getKeyEventCode(), inputConnection)
             ActionType.INTENT -> executeIntent(mapping.actionValue)
             ActionType.TIMESTAMP -> executeTimestamp(mapping.actionValue, inputConnection)
-            // Templates require the shared router’s current session and inline-mode guard.
+            // Templates require the shared router’s current session and inline-mode guard, so
+            // Keyboard2View.onCustomShortSwipe runs them (execute_template) before it ever calls
+            // this method. The branch is unreachable from that caller but stays: the `when` is
+            // exhaustive, and a direct caller must get a refusal, never the payload typed raw.
             ActionType.TEMPLATE -> false
         }
     }

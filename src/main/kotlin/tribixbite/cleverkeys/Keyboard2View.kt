@@ -1155,6 +1155,13 @@ class Keyboard2View @JvmOverloads constructor(
             // Fallback to legacy AvailableCommand handling for backward compatibility.
             // Only reached when neither the custom-command nor the KeyValue branch
             // handled the action (H-1: never after a successful Event/Editing dispatch).
+            // TODO(audit 2026-10-08): AvailableCommand dispatch is split between
+            // CustomShortSwipeExecutor.executeCommand (editing/navigation commands it can run on
+            // the InputConnection) and this block (the ones that need the service). Unifying
+            // them means one dispatcher with access to both the InputConnection and the
+            // service; not done here because every legacy name is pinned by
+            // Keyboard2ViewCustomSwipeDispatchTest/CommandRoutingTest and a merge risks
+            // re-introducing H-1's double execution for names present on both sides.
             val command = if (customCommandHandled || keyValueHandled) null else mapping.getCommand()
             when (command) {
                 AvailableCommand.SWITCH_IME -> {

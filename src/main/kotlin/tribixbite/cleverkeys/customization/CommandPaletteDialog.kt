@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,6 +48,12 @@ private const val UNKNOWN_PREVIEW = "?"
 private const val PREVIEW_TEXT_SP = 18f
 
 /**
+ * Intent definitions cross recreation as JSON (the mapping storage format): the palette keeps
+ * its edit state in rememberSaveable, and an [IntentDefinition] is not Bundle-saveable.
+ */
+private val intentJson = com.google.gson.Gson()
+
+/**
  * Data class to hold the complete mapping selection with separate label and action.
  */
 data class MappingSelection(
@@ -67,6 +74,10 @@ data class MappingSelection(
  * - Allows customizing the display label separately from the action
  * - Edits an existing mapping in place when given [initialMapping]
  *
+ * Edit state (typed text, the open step, the pending label, intent/timestamp drafts) is held in
+ * rememberSaveable, so rotating mid-edit keeps it (audit 2026-10-08).
+ *
+ * @param onMappingSelected Receives the chosen action with its label.
  * @param subtitle Optional context under the title, e.g. which key and direction is being set.
  * @param initialMapping The mapping being edited, or null to pick a new action. Its own editor
  *     opens straight away, filled in: custom text in the text editor, an intent in the intent
@@ -78,9 +89,7 @@ data class MappingSelection(
 @Composable
 fun CommandPaletteDialog(
     onDismiss: () -> Unit,
-    onCommandSelected: (CommandRegistry.Command) -> Unit,
-    onTextSelected: (String) -> Unit,
-    onMappingSelected: ((MappingSelection) -> Unit)? = null, // New callback with full control
+    onMappingSelected: (MappingSelection) -> Unit,
     initialSearchQuery: String = "",
     subtitle: String? = null,
     initialMapping: ShortSwipeMapping? = null,
@@ -94,24 +103,27 @@ fun CommandPaletteDialog(
     }
     val editIntent = remember(editing) { editing?.getIntentDefinition() }
 
-    var searchQuery by remember { mutableStateOf(initialSearchQuery) }
-    var showTextInput by remember { mutableStateOf(editing?.actionType in setOf(ActionType.TEXT, ActionType.TEMPLATE)) }
-    var templateMode by remember { mutableStateOf(editing?.actionType == ActionType.TEMPLATE) }
-    var showIntentEditor by remember { mutableStateOf(editIntent != null) }
-    var showTimestampEditor by remember { mutableStateOf(editing?.actionType == ActionType.TIMESTAMP) }
-    var customText by remember {
+    var searchQuery by rememberSaveable { mutableStateOf(initialSearchQuery) }
+    var showTextInput by rememberSaveable { mutableStateOf(editing?.actionType in setOf(ActionType.TEXT, ActionType.TEMPLATE)) }
+    var templateMode by rememberSaveable { mutableStateOf(editing?.actionType == ActionType.TEMPLATE) }
+    var showIntentEditor by rememberSaveable { mutableStateOf(editIntent != null) }
+    var showTimestampEditor by rememberSaveable { mutableStateOf(editing?.actionType == ActionType.TIMESTAMP) }
+    var customText by rememberSaveable {
         mutableStateOf(editing?.takeIf { it.actionType in setOf(ActionType.TEXT, ActionType.TEMPLATE) }?.actionValue.orEmpty())
     }
     // The intent editor opens filled in only for the mapping being edited; the quick-action
-    // tile always starts a new intent.
-    var intentToEdit by remember { mutableStateOf(editIntent) }
+    // tile always starts a new intent. Saved as JSON (see [intentJson]).
+    var intentToEditJson by rememberSaveable { mutableStateOf(editIntent?.let { intentJson.toJson(it) }) }
+    val intentToEdit = remember(intentToEditJson) { intentToEditJson?.let { IntentDefinition.parseFromGson(it) } }
 
-    // State for label confirmation dialog
-    var pendingCommand by remember { mutableStateOf(editCommand) }
-    var pendingText by remember { mutableStateOf<String?>(null) }
-    var pendingIntentDef by remember { mutableStateOf<IntentDefinition?>(null) }
-    var pendingTimestampPattern by remember { mutableStateOf<String?>(null) }
-    var customLabel by remember { mutableStateOf(if (editCommand != null) editLabel else "") }
+    // State for label confirmation dialog. Commands are saved by name, intents as JSON.
+    var pendingCommandName by rememberSaveable { mutableStateOf(editCommand?.name) }
+    val pendingCommand = remember(pendingCommandName) { pendingCommandName?.let { CommandRegistry.getByName(it) } }
+    var pendingText by rememberSaveable { mutableStateOf<String?>(null) }
+    var pendingIntentJsonValue by rememberSaveable { mutableStateOf<String?>(null) }
+    val pendingIntentDef = remember(pendingIntentJsonValue) { pendingIntentJsonValue?.let { IntentDefinition.parseFromGson(it) } }
+    var pendingTimestampPattern by rememberSaveable { mutableStateOf<String?>(null) }
+    var customLabel by rememberSaveable { mutableStateOf(if (editCommand != null) editLabel else "") }
 
     /** The label an editor proposes: the edited mapping's own when the type is unchanged. */
     fun proposedLabel(type: ActionType, fallback: String): String =
@@ -193,13 +205,13 @@ fun CommandPaletteDialog(
                         filteredCommands = filteredCommands,
                         onCommandSelected = { command ->
                             // Show label confirmation instead of directly calling callback
-                            pendingCommand = command
+                            pendingCommandName = command.name
                             customLabel = commandText.string(command.nameRes).take(4)
                         },
                         onShowTextInput = { templateMode = false; showTextInput = true },
                         onShowTemplateInput = { templateMode = true; showTextInput = true },
                         onShowIntentEditor = {
-                            intentToEdit = null
+                            intentToEditJson = null
                             showIntentEditor = true
                         },
                         onShowTimestampEditor = { showTimestampEditor = true }
@@ -279,52 +291,45 @@ fun CommandPaletteDialog(
                 // - If using default label from command, use the command's font setting
                 val useIconFont = customLabel.isBlank() && commandDisplayInfo?.useKeyFont == true
 
-                if (onMappingSelected != null) {
-                    // Use the new callback with full mapping data
-                    val selection = when {
-                        pendingCommand != null -> MappingSelection(
-                            displayLabel = label,
-                            actionType = ActionType.COMMAND,
-                            actionValue = pendingCommand!!.name,
-                            useKeyFont = useIconFont
-                        )
-                        pendingText != null -> MappingSelection(
-                            displayLabel = label,
-                            actionType = if (templateMode) ActionType.TEMPLATE else ActionType.TEXT,
-                            actionValue = pendingText!!,
-                            useKeyFont = false  // Text input never uses icon font
-                        )
-                        pendingIntentDef != null -> MappingSelection(
-                            displayLabel = label,
-                            actionType = ActionType.INTENT,
-                            actionValue = com.google.gson.Gson().toJson(pendingIntentDef),
-                            useKeyFont = false
-                        )
-                        pendingTimestampPattern != null -> MappingSelection(
-                            displayLabel = label,
-                            actionType = ActionType.TIMESTAMP,
-                            actionValue = pendingTimestampPattern!!,
-                            useKeyFont = false
-                        )
-                        else -> null
-                    }
-                    selection?.let { onMappingSelected(it) }
-                } else {
-                    // Fallback to legacy callbacks (for backwards compatibility)
-                    pendingCommand?.let { onCommandSelected(it) }
-                    pendingText?.let { onTextSelected(it) }
+                val selection = when {
+                    pendingCommand != null -> MappingSelection(
+                        displayLabel = label,
+                        actionType = ActionType.COMMAND,
+                        actionValue = pendingCommand!!.name,
+                        useKeyFont = useIconFont
+                    )
+                    pendingText != null -> MappingSelection(
+                        displayLabel = label,
+                        actionType = if (templateMode) ActionType.TEMPLATE else ActionType.TEXT,
+                        actionValue = pendingText!!,
+                        useKeyFont = false  // Text input never uses icon font
+                    )
+                    pendingIntentDef != null -> MappingSelection(
+                        displayLabel = label,
+                        actionType = ActionType.INTENT,
+                        actionValue = intentJson.toJson(pendingIntentDef),
+                        useKeyFont = false
+                    )
+                    pendingTimestampPattern != null -> MappingSelection(
+                        displayLabel = label,
+                        actionType = ActionType.TIMESTAMP,
+                        actionValue = pendingTimestampPattern!!,
+                        useKeyFont = false
+                    )
+                    else -> null
                 }
+                selection?.let { onMappingSelected(it) }
 
-                pendingCommand = null
+                pendingCommandName = null
                 pendingText = null
-                pendingIntentDef = null
+                pendingIntentJsonValue = null
                 pendingTimestampPattern = null
                 customLabel = ""
             },
             onCancel = {
-                pendingCommand = null
+                pendingCommandName = null
                 pendingText = null
-                pendingIntentDef = null
+                pendingIntentJsonValue = null
                 pendingTimestampPattern = null
                 customLabel = ""
             }
@@ -336,12 +341,12 @@ fun CommandPaletteDialog(
             initialIntent = intentToEdit,
             onDismiss = {
                 showIntentEditor = false
-                intentToEdit = null
+                intentToEditJson = null
             },
             onConfirm = { intentDef ->
                 showIntentEditor = false
-                intentToEdit = null
-                pendingIntentDef = intentDef
+                intentToEditJson = null
+                pendingIntentJsonValue = intentJson.toJson(intentDef)
                 customLabel = proposedLabel(ActionType.INTENT, intentDef.name.take(4))
             }
         )
@@ -632,8 +637,8 @@ private fun CommandSearchSection(
             )
         )
 
-        // The three non-catalogue actions, as one compact row that is the list's first item:
-        // it scrolls away with the list instead of permanently taking three tall cards' worth
+        // The four non-catalogue actions, as one compact row that is the list's first item:
+        // it scrolls away with the list instead of permanently taking four tall cards' worth
         // of the dialog. While searching, only the tiles whose title matches stay.
         val quickActions = listOf(
             QuickAction(stringResource(R.string.command_palette_template_title), Icons.Filled.Edit, onShowTemplateInput),
@@ -1081,7 +1086,7 @@ private fun TimestampPatternDialog(
         )
     }
 
-    var pattern by remember { mutableStateOf(initialPattern ?: presets.first().pattern) }
+    var pattern by rememberSaveable { mutableStateOf(initialPattern ?: presets.first().pattern) }
 
     // The validity computation runs inside `remember`, which is not @Composable —
     // resolve its three failure messages here first.

@@ -125,3 +125,49 @@ data class SubkeyAssignRequest(
 ) {
     enum class Mode { ASSIGN, EDIT }
 }
+
+/**
+ * [SubkeyAssignRequest] as `SubkeyAssignActivity` intent extras, without `Intent` so the round
+ * trip is host-testable (`SubkeyAssignExtrasTest`). [read] returns null for a missing or
+ * unknown key code, direction or mode: the screen then closes instead of guessing.
+ */
+internal object SubkeyAssignExtras {
+    const val KEY = "key_code"
+    const val DIRECTION = "direction"
+    const val MODE = "mode"
+    const val HAS_DEFAULT = "has_default"
+    const val IS_CUSTOM = "is_custom"
+    const val LABEL = "current_label"
+    const val LABEL_KEY_FONT = "label_key_font"
+
+    fun write(
+        request: SubkeyAssignRequest,
+        putString: (String, String?) -> Unit,
+        putBoolean: (String, Boolean) -> Unit,
+    ) {
+        putString(KEY, request.keyCode)
+        putString(DIRECTION, request.direction.name)
+        putString(MODE, request.mode.name)
+        putBoolean(HAS_DEFAULT, request.hasDefault)
+        putBoolean(IS_CUSTOM, request.isCustom)
+        putString(LABEL, request.currentLabel)
+        putBoolean(LABEL_KEY_FONT, request.labelUsesKeyFont)
+    }
+
+    fun read(getString: (String) -> String?, getBoolean: (String, Boolean) -> Boolean): SubkeyAssignRequest? {
+        val keyCode = getString(KEY)?.takeIf { it.isNotEmpty() } ?: return null
+        val direction = getString(DIRECTION)
+            ?.let { name -> SwipeDirection.entries.firstOrNull { it.name == name } } ?: return null
+        val mode = getString(MODE)
+            ?.let { name -> SubkeyAssignRequest.Mode.entries.firstOrNull { it.name == name } } ?: return null
+        return SubkeyAssignRequest(
+            keyCode = keyCode,
+            direction = direction,
+            mode = mode,
+            hasDefault = getBoolean(HAS_DEFAULT, false),
+            isCustom = getBoolean(IS_CUSTOM, false),
+            currentLabel = getString(LABEL),
+            labelUsesKeyFont = getBoolean(LABEL_KEY_FONT, false),
+        )
+    }
+}

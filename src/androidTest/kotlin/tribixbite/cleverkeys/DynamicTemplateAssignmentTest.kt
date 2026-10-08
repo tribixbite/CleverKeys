@@ -19,7 +19,7 @@ class DynamicTemplateAssignmentTest {
     private fun text(id: Int) = context.getString(id)
     private var result: MappingSelection? = null
     private fun show(mapping: ShortSwipeMapping? = null) {
-        rule.setContent { MaterialTheme { CommandPaletteDialog(onDismiss = {}, onCommandSelected = {}, onTextSelected = {}, onMappingSelected = { result = it }, initialMapping = mapping) } }
+        rule.setContent { MaterialTheme { CommandPaletteDialog(onDismiss = {}, onMappingSelected = { result = it }, initialMapping = mapping) } }
     }
     @Test fun newTemplateKeepsExplicitTypeThroughLabelConfirmation() {
         show()

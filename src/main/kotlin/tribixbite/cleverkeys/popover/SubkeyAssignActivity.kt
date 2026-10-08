@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,25 +85,16 @@ class SubkeyAssignActivity : ComponentActivity() {
 
     companion object {
         private const val TAG = "SubkeyAssign"
-        private const val EXTRA_KEY = "key_code"
-        private const val EXTRA_DIRECTION = "direction"
-        private const val EXTRA_MODE = "mode"
-        private const val EXTRA_HAS_DEFAULT = "has_default"
-        private const val EXTRA_IS_CUSTOM = "is_custom"
-        private const val EXTRA_LABEL = "current_label"
-        private const val EXTRA_LABEL_KEY_FONT = "label_key_font"
 
         /** Start the screen from the keyboard (a non-activity context, hence a new task). */
         fun launch(context: Context, request: SubkeyAssignRequest) {
             val intent = Intent(context, SubkeyAssignActivity::class.java)
-                .putExtra(EXTRA_KEY, request.keyCode)
-                .putExtra(EXTRA_DIRECTION, request.direction.name)
-                .putExtra(EXTRA_MODE, request.mode.name)
-                .putExtra(EXTRA_HAS_DEFAULT, request.hasDefault)
-                .putExtra(EXTRA_IS_CUSTOM, request.isCustom)
-                .putExtra(EXTRA_LABEL, request.currentLabel)
-                .putExtra(EXTRA_LABEL_KEY_FONT, request.labelUsesKeyFont)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            SubkeyAssignExtras.write(
+                request,
+                putString = { key, value -> intent.putExtra(key, value) },
+                putBoolean = { key, value -> intent.putExtra(key, value) },
+            )
             try {
                 context.startActivity(intent)
             } catch (e: Exception) {
@@ -111,22 +103,8 @@ class SubkeyAssignActivity : ComponentActivity() {
             }
         }
 
-        internal fun requestFrom(intent: Intent): SubkeyAssignRequest? {
-            val keyCode = intent.getStringExtra(EXTRA_KEY)?.takeIf { it.isNotEmpty() } ?: return null
-            val direction = intent.getStringExtra(EXTRA_DIRECTION)
-                ?.let { name -> SwipeDirection.entries.firstOrNull { it.name == name } } ?: return null
-            val mode = intent.getStringExtra(EXTRA_MODE)
-                ?.let { name -> SubkeyAssignRequest.Mode.entries.firstOrNull { it.name == name } } ?: return null
-            return SubkeyAssignRequest(
-                keyCode = keyCode,
-                direction = direction,
-                mode = mode,
-                hasDefault = intent.getBooleanExtra(EXTRA_HAS_DEFAULT, false),
-                isCustom = intent.getBooleanExtra(EXTRA_IS_CUSTOM, false),
-                currentLabel = intent.getStringExtra(EXTRA_LABEL),
-                labelUsesKeyFont = intent.getBooleanExtra(EXTRA_LABEL_KEY_FONT, false),
-            )
-        }
+        internal fun requestFrom(intent: Intent): SubkeyAssignRequest? =
+            SubkeyAssignExtras.read(intent::getStringExtra, intent::getBooleanExtra)
     }
 }
 
@@ -155,7 +133,8 @@ private fun SubkeyAssignScreen(request: SubkeyAssignRequest, onDone: () -> Unit)
     }
 
     val startWithPalette = request.mode == SubkeyAssignRequest.Mode.ASSIGN && !request.hasDefault
-    var palette by remember { mutableStateOf(if (startWithPalette) PaletteMode.NEW else null) }
+    // Saveable: rotating with the palette open keeps it open, with its own draft (audit 2026-10-08).
+    var palette by rememberSaveable { mutableStateOf(if (startWithPalette) PaletteMode.NEW else null) }
     val title = stringResource(
         R.string.subkey_assign_title,
         request.keyCode.uppercase(),
@@ -170,8 +149,6 @@ private fun SubkeyAssignScreen(request: SubkeyAssignRequest, onDone: () -> Unit)
             // Opened straight from the popover: closing it is closing the screen. Opened from
             // the details: closing it goes back there.
             onDismiss = { if (startWithPalette) onDone() else palette = null },
-            onCommandSelected = { /* onMappingSelected below carries label + action */ },
-            onTextSelected = { /* onMappingSelected below carries label + action */ },
             onMappingSelected = { selection ->
                 scope.launch {
                     ShortSwipeAssignment.apply(context, manager, request.keyCode, request.direction, selection)
