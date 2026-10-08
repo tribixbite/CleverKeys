@@ -350,6 +350,14 @@ A: Swipe SW (southwest/down-left) on the Ctrl key, or add a clipboard key to you
 
 A: It may have been from a password field, or marked sensitive by a password manager (Android 13+ `IS_SENSITIVE` flag, skipped by default).
 
+Copies made while the keyboard is hidden are saved as usual, as long as CleverKeys is your
+selected keyboard. If you copied something while another keyboard was selected, or while
+Android had closed CleverKeys in the background, it was not seen at the time. When the
+keyboard next opens, CleverKeys checks the current clipboard and saves that clip if it has
+not seen it before. Only the most recent copy can be recovered this way; earlier copies
+from that gap are lost. A clip you deleted from history, or one that was skipped as
+sensitive, is not added back.
+
 ### Q: Can I recover deleted items?
 
 A: No, deleted items cannot be recovered. Pin important items.

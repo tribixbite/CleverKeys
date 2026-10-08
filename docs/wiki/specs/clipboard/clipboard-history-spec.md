@@ -1,6 +1,6 @@
 ---
 title: Clipboard History - Technical Specification
-description: Persistent clipboard tabs, bounded filters, and confirmed result deletion
+description: Persistent clipboard tabs, size filters, persistent selection with bulk actions, and capture catch-up
 user_guide: /wiki/clipboard/clipboard-history/
 status: implemented
 version: v1.4.0
@@ -27,29 +27,75 @@ The clipboard history system maintains a persistent store of copied content — 
 | TodoEntry | `TodoEntry.kt` | Data model for todo items (COPY semantics) |
 | Config | `Config.kt` | Clipboard preferences and toggles |
 
-## Size Filtering and Confirmed Batch Deletion
+## Size Filtering, Selection and Bulk Actions
 
 The active tab’s query combines text, date/tag/type filters, and minimum/maximum
 payload bytes before pagination. Size bounds remain active when switching tabs;
 clearing all filters resets them. The native dialog disables Apply for an inverted
 range and preserves previous bounds on Cancel.
 
-Batch deletion goes through a persistent selection (2026-10-07). **Select** enters
-selection mode; "select all matching" adds every matching row on every page, and the
-selection (row ids plus a payload version, never content) survives search, filter and
-page changes. Reloads drop rows that vanished or whose payload changed. **Delete
-selected** freezes the selected, unchanged rows into a snapshot, requires a
-confirmation, and deletes them by row identity in one transaction. New or changed rows
-are preserved, copies in other tabs remain intact, and media cleanup respects references
-from every tab. Selection ends on exit, tab switch, panel close and keyboard hide.
-Reported payload bytes are not a disk-reclamation estimate. The `clear_clipboard`
-command clears only Android’s system clipboard; it does not invoke database deletion.
+Batch work goes through a persistent selection (2026-10-07). **Select** enters
+selection mode: rows show a checkbox, tapping (or long-pressing) a row toggles it, and
+per-row actions are hidden. The selection bar has five actions:
+
+| Action | Effect |
+|--------|--------|
+| Select/deselect all matching | Tri-state; adds every row matching the current search and filters on all pages, or removes them when all are selected |
+| Clear selection | Deselects everything (including rows the current search hides); stays in selection mode |
+| More actions (⋮) | **Add to Pinned** (not on Pinned), **Add to Todos** (not on Todos), **Merge**, **Clean**; disabled tabs are never offered as targets |
+| Delete selected | Confirmation, then a transactional delete |
+| Exit selection | Ends selection mode and forgets the selection |
+
+The selection holds row ids plus a 64-bit payload version per row, never content. It is
+not a filter: it survives search, regex, size/date/private/tag/status filter changes and
+paging. It also survives closing and reopening the pane, switching to the emoji/GIF pane
+and back, hiding the keyboard, rotation, switching fields or apps, and the theme rebuild;
+the pane reopens on the selection's tab. It ends only on **Exit selection**, a completed
+bulk action (Delete, Add to Pinned, Add to Todos, Merge, Clean), or its tab being disabled
+in Settings. It lives in memory in `ClipboardSelectionHolder`, so it is lost if Android
+kills the keyboard process. A selection belongs to the tab it started in; the other tab
+icons are hidden until Exit. Every completed load of that tab drops rows that vanished or
+whose payload changed.
+
+Each action freezes the selected, unchanged rows into a snapshot when its dialog opens.
+**Delete selected** re-checks each row by identity in one transaction, preserves new or
+changed rows and copies in other tabs, and removes media only when no tab references it.
+**Add to Pinned/Todos** copy rows (text and media) in one transaction; rows already present
+are counted, not duplicated. **Merge** creates one new History clipping from the selected
+text rows, oldest first, joined by newlines; media is skipped, the result must fit
+`clipboard_max_item_size_kb`, and it is private if any source is private. **Clean** edits
+text rows in place (trailing whitespace removed, soft line breaks inside paragraphs
+joined) through the inline-edit path. A failed action keeps the selection. Reported
+payload bytes are not a disk-reclamation estimate. The `clear_clipboard` command clears
+only Android’s system clipboard; it does not invoke database deletion.
+
+**Keyboard dialogs.** Confirmation, filter and size-chooser dialogs shown from the keyboard
+are non-focusable (`ImeDialogWindowPolicy`: `FLAG_NOT_FOCUSABLE` plus
+`FLAG_WATCH_OUTSIDE_TOUCH`), so the app's editor keeps focus and the host app does not hide
+the keyboard when a dialog button is tapped; a touch outside cancels the dialog.
 
 `ClipboardFilterDialogTest` covers the actual size dialog and a 205-result batch,
 including Cancel, new/edit races, and pinned/todo copy preservation.
 [Internal architecture and validation](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/clipboard-system.md) documents
 the database predicates and snapshot transaction. Full-run results are recorded in
 [testing strategy](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/testing-strategy.md).
+
+## Capture While the Keyboard Is Closed (2026-10-08)
+
+As the default input method, CleverKeys may read the clipboard and receive change
+callbacks regardless of focus or keyboard visibility (AOSP 13/14 `ClipboardService`), so a
+copy made while the keyboard is merely hidden is captured normally. Copies are missed only
+while no listener is registered: another keyboard is selected, the CleverKeys process is
+dead or restarting, or registration failed at `onCreate`.
+
+`onStartInputView` calls `ClipboardHistoryService.on_keyboard_shown()`: an unregistered
+listener is registered again (which reads the current clip); otherwise, with history
+enabled, the current clip is read once and recorded only if it is a set event not already
+observed (`ClipboardCatchUp`, keyed by `ClipDescription` timestamp; content hash on API
+24–25). Every read marks the clip observed before filtering, so skipped (`IS_SENSITIVE`,
+password manager, size) and user-deleted clips are not re-added. Only the clip that is
+current at that moment can be recovered; earlier copies made during the gap are lost.
+Tests: `src/test/kotlin/tribixbite/cleverkeys/clipboard/ClipboardCatchUpTest.kt`.
 
 ## Data Models
 
