@@ -41,6 +41,7 @@ class InputCoordinatorEngineInputTest {
     private lateinit var config: Config
     private lateinit var ctc: CtcEngineAdapter
     private lateinit var geometric: GeometricEngineAdapter
+    private lateinit var view: Keyboard2View
     private val resources = mockk<Resources>(relaxed = true)
 
     private val ctcPoints = slot<List<PointF>>()
@@ -75,8 +76,12 @@ class InputCoordinatorEngineInputTest {
         config.swipe_engine_mode = "ctc"
         config.active_secondary_language = null
 
-        val view = mockk<Keyboard2View>(relaxed = true)
-        every { view.getKeyboard() } returns mockk(relaxed = true)
+        view = mockk(relaxed = true)
+        // A Latin layout: the real router sends it to CTC under the "ctc" mode.
+        val latin = mockk<KeyboardData>(relaxed = true)
+        every { latin.script } returns "latin"
+        every { latin.name } returns "latn_qwerty_us"
+        every { view.getKeyboard() } returns latin
         every { view.geometryParams() } returns mockk(relaxed = true)
         every { view.width } returns 1000
         every { view.height } returns 300
@@ -112,9 +117,11 @@ class InputCoordinatorEngineInputTest {
     @After
     fun tearDown() = unmockkAll()
 
+    /** Selects the engine through the real router: the "geometric" mode or the default "ctc". */
     private fun route(engine: SwipeEngineRouter.Engine) {
-        mockkObject(SwipeEngineRouter)
-        every { SwipeEngineRouter.route(any<KeyboardData>(), any()) } returns engine
+        config.swipe_engine_mode = if (engine == SwipeEngineRouter.Engine.GEOMETRIC) "geometric" else "ctc"
+        assertThat(SwipeEngineRouter.route(view.getKeyboard(), SwipeEngineRouter.Mode.fromPref(config.swipe_engine_mode)))
+            .isEqualTo(engine)
     }
 
     private fun swipe(trace: RawSwipeTrace?) = coordinator.handleSwipeTyping(
