@@ -72,12 +72,21 @@ class SubkeyPopoverState(
         if (!armed) armed = SubkeyPopoverGeometry.isArmed(restX, restY, x, y, cellWidth, cellHeight)
         val next = if (armed) SubkeyPopoverGeometry.slotAt(
             x - centreX, y - centreY, cellWidth, cellHeight, neutralWidthFraction, neutralHeightFraction
-        ) else null
+        )?.takeIf(::isSelectable) else null
         if (next == active) return false
         active = next
         activeSince = now
         return true
     }
+
+    /**
+     * Whether the slot at [direction] can be selected. An empty slot on a key without a
+     * [keyCode] is drawn blank and cannot be assigned, so selecting it (and ticking the haptic
+     * for it) would react to a cell the user cannot see (audit 2026-10-08): it reads as the
+     * neutral zone instead.
+     */
+    private fun isSelectable(direction: SwipeDirection): Boolean =
+        keyCode != null || slot(direction) !is PopoverSlot.Empty
 
     companion object {
         /**

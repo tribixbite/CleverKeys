@@ -1050,6 +1050,9 @@ class Keyboard2View @JvmOverloads constructor(
         SubkeyAssignActivity.launch(context, request)
     }
 
+    /** TalkBack's touch exploration: the subkey popover stays closed (it has no a11y nodes). */
+    override fun isTouchExplorationEnabled(): Boolean = _a11yManager?.isTouchExplorationEnabled == true
+
     /**
      * Execute a custom short swipe mapping defined by the user.
      * This is called from Pointers when a custom mapping is found for a short swipe gesture.

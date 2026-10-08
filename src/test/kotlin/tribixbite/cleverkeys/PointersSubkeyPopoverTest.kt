@@ -8,6 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -48,6 +49,8 @@ class PointersSubkeyPopoverTest {
     private lateinit var manager: ShortSwipeCustomizationManager
     private lateinit var ptrs: ArrayList<Pointers.Pointer>
     private lateinit var tmpDir: File
+    private lateinit var longPress: Handler
+    private lateinit var config: Config
 
     /** `e`: NE default "3", N default "é"; every other slot empty. */
     private val keyE = KeyboardData.Key.EMPTY
@@ -90,8 +93,11 @@ class PointersSubkeyPopoverTest {
         ptrs = ArrayList()
         pointers = allocate(Pointers::class.java)
         setField(pointers, "_handler", handler)
-        setField(pointers, "_config", mockk<Config>(relaxed = true))
-        setField(pointers, "_longpress_handler", mockk<Handler>(relaxed = true))
+        config = mockk(relaxed = true)
+        every { config.snapshot } returns snap()
+        longPress = mockk(relaxed = true)
+        setField(pointers, "_config", config)
+        setField(pointers, "_longpress_handler", longPress)
         setField(pointers, "_ptrs", ptrs)
         setField(pointers, "_swipeRecognizer", recognizer)
         setField(pointers, "_gestureClassifier", GestureClassifier())
@@ -139,6 +145,19 @@ class PointersSubkeyPopoverTest {
         assertTrue("nothing is typed on open", handler.ups.isEmpty())
         assertEquals(PopoverSlot.Default(SwipeDirection.NE, KeyValue.makeStringKey("3")), state!!.slot(SwipeDirection.NE))
         assertTrue(state.slot(SwipeDirection.SW) is PopoverSlot.Empty)
+    }
+
+    /**
+     * The popover is drawn only (no accessibility nodes), so with TalkBack's touch exploration
+     * it never opens and the hold keeps its old behaviour, key repeat (audit 2026-10-08).
+     */
+    @Test
+    fun touchExploration_keepsTheOldHold() {
+        handler.touchExploration = true
+        hold()
+
+        assertNull("no popover under TalkBack", handler.shown)
+        assertEquals("key repeat is untouched", 1, handler.holds.size)
     }
 
     @Test
@@ -195,13 +214,43 @@ class PointersSubkeyPopoverTest {
 
     @Test
     fun aCustomMapping_winsItsSlot_andExecutes() {
+        putMapping(ShortSwipeMapping.textInput("e", SwipeDirection.NE, "EUR", "EUR"))
+        hold()
+        moveTo(600f, 150f)
+        release()
+
+        assertEquals("EUR", handler.customs.single().actionValue)
+        assertFalse("the overridden default must not be typed", typed("3"))
+    }
+
+    /**
+     * A single-character custom TEXT slot is TYPED, through the same key pipeline as a
+     * layout's own subkey (autocap, smart punctuation, automatic space, typed-word and
+     * terminal tracking all live there). It used to be committed raw by the executor
+     * (popover/palette audit, 2026-10-08).
+     */
+    @Test
+    fun aSingleCharacterCustomText_isTypedThroughTheKeyPipeline() {
         putMapping(ShortSwipeMapping.textInput("e", SwipeDirection.NE, "€", "€"))
         hold()
         moveTo(600f, 150f)
         release()
 
-        assertEquals("€", handler.customs.single().actionValue)
-        assertFalse("the overridden default must not be typed", typed("3"))
+        assertTrue("a typed slot never reaches the executor", handler.customs.isEmpty())
+        assertEquals(KeyValue.makeCharKey('€'), handler.ups.single())
+        assertTrue(ptrs.isEmpty())
+    }
+
+    /** A catalogue command that resolves to a character key is typed the same way. */
+    @Test
+    fun aCharKindCustomCommand_isTypedThroughTheKeyPipeline() {
+        putMapping(ShortSwipeMapping("e", SwipeDirection.NE, "⍽", ActionType.COMMAND, "nbsp"))
+        hold()
+        moveTo(600f, 150f)
+        release()
+
+        assertTrue(handler.customs.isEmpty())
+        assertEquals(KeyValue.getKeyByName("nbsp"), handler.ups.single())
     }
 
     /**
@@ -304,6 +353,163 @@ class PointersSubkeyPopoverTest {
         assertTrue("N default \"é\" must be typed", typed("é"))
     }
 
+    // ------------------------------------------------------------------ audit 2026-10-08
+
+    /**
+     * A second finger landing while the popover is open dismisses it, like mainstream
+     * keyboards: the first finger's release is then inert. Finger B's own key behaves as
+     * usual — here a shift it latches survives A's later release.
+     */
+    @Test
+    fun aSecondFingerDown_dismissesThePopover_andTheFirstReleaseIsInert() {
+        hold()
+        moveTo(600f, 150f)  // NE "3" selected
+        val shift = KeyboardData.Key.EMPTY.withKeyValue(0, KeyValue.getKeyByName("shift"))
+
+        pointers.onTouchDown(100f, 500f, 1, shift)
+        assertTrue("a new finger closes the popover", handler.dismissed)
+
+        pointers.onTouchUp(1)  // B: shift latches
+        moveTo(400f, 450f)     // A wanders: nothing to select any more
+        release()              // A: inert
+
+        assertTrue("the dismissed popover types nothing", handler.ups.none { it?.getString() == "3" })
+        assertTrue(handler.customs.isEmpty())
+        assertTrue(handler.assignRequests.isEmpty())
+        val latched = ptrs.singleOrNull { it.hasFlagsAny(Pointers.FLAG_P_LATCHED) }
+        assertEquals("B's shift stays latched after A's release", KeyValue.getKeyByName("shift"), latched?.value)
+    }
+
+    /**
+     * On a key that cannot carry mappings (no key code) an empty slot is drawn blank and is
+     * not assignable, so it must not be selectable either: no selection, no tick.
+     */
+    @Test
+    fun anUnassignableEmptySlot_isNeitherSelectedNorTicked() {
+        val word = KeyboardData.Key.EMPTY
+            .withKeyValue(0, KeyValue.makeStringKey("hello"))  // > 4 chars: not a mappable key code
+            .withKeyValue(SwipeDirection.NE.subLabelIndex, KeyValue.makeStringKey("3"))
+        val ptr = hold(key = word)
+        assertNull(ptr.popover!!.keyCode)
+        handler.haptics.clear()
+
+        moveTo(400f, 450f)  // SW: empty and blank
+
+        assertNull("an invisible slot is never selected", ptr.popover!!.active)
+        assertFalse("no slot tick for an invisible slot", handler.haptics.contains(HapticEvent.KEY_PRESS))
+        release()
+        assertTrue(handler.ups.isEmpty())
+        assertTrue(handler.assignRequests.isEmpty())
+
+        // The visible default on the same key still selects and ticks.
+        hold(key = word)
+        handler.haptics.clear()
+        moveTo(600f, 150f)
+        assertTrue(handler.haptics.contains(HapticEvent.KEY_PRESS))
+        release()
+        assertTrue(typed("3"))
+    }
+
+    @Test
+    fun touchCancel_dismissesThePopover_andStopsItsDwellTimer() {
+        val ptr = hold()
+        moveTo(600f, 150f)
+        val dwellWhat = ptr.popover!!.dwellWhat
+
+        pointers.onTouchCancel()
+
+        assertTrue(handler.dismissed)
+        verify { longPress.removeMessages(dwellWhat) }
+        assertTrue(ptrs.isEmpty())
+        assertTrue(handler.ups.isEmpty())
+    }
+
+    @Test
+    fun clear_dismissesThePopover_andStopsItsDwellTimer() {
+        val ptr = hold()
+        moveTo(600f, 150f)
+        val dwellWhat = ptr.popover!!.dwellWhat
+
+        pointers.clear()
+
+        assertTrue(handler.dismissed)
+        verify { longPress.removeMessages(dwellWhat) }
+        assertTrue(ptrs.isEmpty())
+    }
+
+    /** Leaving an assigned slot cancels its pending dwell (the 3 s edit timer). */
+    @Test
+    fun leavingASlot_cancelsItsDwellTimer() {
+        val ptr = hold()
+        moveTo(600f, 150f)
+        val dwellWhat = ptr.popover!!.dwellWhat
+        assertTrue(dwellWhat >= 0)
+
+        moveTo(520f, 320f)  // back to the neutral zone
+
+        verify { longPress.removeMessages(dwellWhat) }
+        assertEquals(-1, ptr.popover!!.dwellWhat)
+    }
+
+    @Test
+    fun aModifierKey_keepsItsHold() {
+        val shift = KeyboardData.Key.EMPTY.withKeyValue(0, KeyValue.getKeyByName("shift"))
+        val value = requireNotNull(shift.keys[0])
+        hold(key = shift, flags = pointers.pointer_flags_of_kv(value, snap()))
+
+        assertNull("a modifier's hold locks it; no popover", handler.shown)
+    }
+
+    @Test
+    fun aKeyWithNavigationSubkeys_keepsItsTrackPointHold() {
+        val withArrows = keyE.withKeyValue(5, KeyValue.getKeyByName("left"))
+        hold(key = withArrows)
+
+        assertNull("TrackPoint owns the hold of a key with arrow subkeys", handler.shown)
+    }
+
+    /**
+     * Keys whose long press `modify_long_press` remaps (voice typing → its chooser) keep that
+     * remap. They are Event keys, so the popover's text-only rule already excludes them.
+     */
+    @Test
+    fun aLongPressRemappedKey_keepsItsRemap() {
+        val voice = KeyboardData.Key.EMPTY.withKeyValue(0, KeyValue.getKeyByName("voice_typing"))
+        val ptr = hold(key = voice)
+
+        assertNull(handler.shown)
+        assertEquals(KeyValue.getKeyByName("voice_typing_chooser"), ptr.value)
+    }
+
+    /**
+     * Default slots carry the current modifiers through the real [KeyModifier.modify]: with
+     * shift down and a layout modmap mapping `1` to `!`, the slot drawn over `1` types `!`.
+     */
+    @Test
+    fun shiftThroughTheLayoutModmap_typesTheShiftedSubkey() {
+        val mm = Modmap().apply { add(Modmap.M.Shift, KeyValue.makeCharKey('1'), KeyValue.makeCharKey('!')) }
+        KeyModifier.set_modmap(mm)
+        try {
+            handler.modify = { k, mods -> KeyModifier.modify(k, mods) }
+            val key = KeyboardData.Key.EMPTY
+                .withKeyValue(0, KeyValue.makeCharKey('q'))
+                .withKeyValue(SwipeDirection.NE.subLabelIndex, KeyValue.makeCharKey('1'))
+            val shift = Pointers.Modifiers.ofArray(arrayOf<KeyValue?>(KeyValue.getKeyByName("shift")), 1)
+            val ptr = Pointers.Pointer(0, key, key.keys[0], 500f, 300f, shift, 0, snap())
+            ptr.timeoutWhat = LONG_PRESS_WHAT
+            ptrs.add(ptr)
+            pointers.handleMessage(message(LONG_PRESS_WHAT))
+            assertEquals(KeyValue.makeCharKey('!'), (handler.shown!!.slot(SwipeDirection.NE) as PopoverSlot.Default).value)
+
+            moveTo(600f, 150f)
+            release()
+
+            assertEquals(KeyValue.makeCharKey('!'), handler.ups.single())
+        } finally {
+            KeyModifier.set_modmap(null)
+        }
+    }
+
     // ------------------------------------------------------------------ harness
 
     private class RecordingHandler : Pointers.IPointerEventHandler {
@@ -311,13 +517,16 @@ class PointersSubkeyPopoverTest {
         val holds = mutableListOf<KeyValue>()
         val customs = mutableListOf<ShortSwipeMapping>()
         val assignRequests = mutableListOf<SubkeyAssignRequest>()
+        val haptics = mutableListOf<HapticEvent>()
         var shown: SubkeyPopoverState? = null
         var dismissed = false
+        /** Defaults to identity; a test can install the real [KeyModifier.modify]. */
+        var modify: (KeyValue?, Pointers.Modifiers) -> KeyValue? = { k, _ -> k }
 
-        override fun modifyKey(k: KeyValue?, mods: Pointers.Modifiers): KeyValue? = k
+        override fun modifyKey(k: KeyValue?, mods: Pointers.Modifiers): KeyValue? = modify(k, mods)
         override fun onPointerDown(k: KeyValue?, isSwipe: Boolean) {}
         override fun onPointerUp(k: KeyValue?, mods: Pointers.Modifiers) { ups += k }
-        override fun onPointerFlagsChanged(hapticEvent: HapticEvent?) {}
+        override fun onPointerFlagsChanged(hapticEvent: HapticEvent?) { hapticEvent?.let { haptics += it } }
         override fun onPointerHold(k: KeyValue, mods: Pointers.Modifiers) { holds += k }
         override fun onSwipeMove(x: Float, y: Float, recognizer: ImprovedSwipeGestureRecognizer) {}
         override fun onSwipeEnd(recognizer: ImprovedSwipeGestureRecognizer) {}
@@ -332,6 +541,9 @@ class PointersSubkeyPopoverTest {
         override fun onSubkeyPopoverShow(state: SubkeyPopoverState) { shown = state }
         override fun onSubkeyPopoverDismiss() { dismissed = true }
         override fun onSubkeyAssignRequested(request: SubkeyAssignRequest) { assignRequests += request }
+
+        var touchExploration = false
+        override fun isTouchExplorationEnabled(): Boolean = touchExploration
     }
 
     private companion object {

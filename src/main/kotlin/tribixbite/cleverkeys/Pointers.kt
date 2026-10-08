@@ -710,6 +710,12 @@ class Pointers(
             return
         }
 
+        // A second finger closes an open subkey popover, as mainstream keyboards do (audit
+        // 2026-10-08). Its pointer keeps FLAG_P_POPOVER_MODE with no state, so its moves select
+        // nothing and its release is inert (finishSubkeyPopover with no slot: nothing typed,
+        // no latch cleared). The new finger then behaves as a normal second pointer.
+        for (p in _ptrs) if (p.popover != null) closeSubkeyPopover(p)
+
         // ARC-072 CAPTURE POINT. This is the one place a gesture reads the live config:
         // every later decision for this pointer — here, in onTouchMove, in onTouchUp and in
         // the long-press/repeat timers — reads this immutable copy, so a Config.refresh()
@@ -1540,6 +1546,10 @@ class Pointers(
 
     /** Open the popover for [ptr] if it applies; false leaves the hold to the other behaviours. */
     private fun tryOpenSubkeyPopover(ptr: Pointer, snap: ConfigSnapshot): Boolean {
+        // TalkBack / touch exploration: the popover is drawn only, with no accessibility nodes,
+        // so a blind user would get a silent hold that types nothing. Keep the old hold
+        // (key repeat) there (docs/specs/subkey-popover.md "Scope").
+        if (_handler.isTouchExplorationEnabled()) return false
         if (!isSubkeyPopoverKey(ptr)) return false
         val metrics = _handler.subkeyPopoverMetrics(ptr.key) ?: return false
 
@@ -2173,6 +2183,12 @@ class Pointers(
 
         /** Open the assign or edit screen for a popover slot. */
         fun onSubkeyAssignRequested(request: SubkeyAssignRequest) {}
+
+        /**
+         * Whether an accessibility service explores by touch (TalkBack). The popover has no
+         * accessibility surface, so it never opens then. Default false for test fakes.
+         */
+        fun isTouchExplorationEnabled(): Boolean = false
     }
 
     companion object {
