@@ -101,7 +101,7 @@ CleverKeys includes a powerful theme creator for custom colors. Every field in t
 2. Scroll to **Custom Theme** or **DIY** section
 3. Tap each color element to customize
 4. Use the color picker or enter hex codes
-5. Changes apply in real-time
+5. The preview at the top of the editor is the real keyboard, scaled down and read-only: every color change re-renders it immediately. It shows Shift active, a locked modifier (Ctrl on the default layout), modifier and action keys at rest, sub-labels, the suggestion bar and a sample swipe trail, using your own opacity, border and swipe-trail settings
 
 > [!NOTE]
 > Editing the theme you're currently using updates the live keyboard immediately — no restart needed. Saved edits to a non-active custom theme take effect when you select it.

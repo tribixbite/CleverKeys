@@ -76,6 +76,17 @@ The `theme` / `swipe_trail_color` prefs and the custom-theme store live in diffe
 - **Save the active custom theme** → `swipe_trail_color` is re-synced (H-4 mechanical half; previously edits to the active theme's trail were a silent no-op until re-selection).
 - Writes use `commit()` because the caller surface kills its process right after theme-selection writes.
 
+## Theme Creator Preview (roadmap 4.1)
+
+The creator dialog shows `ThemeKeyboardPreview(colors)` (`theme/ThemeEditorPreview.kt`), a Compose wrapper around `ThemeKeyboardPreviewView`. It reuses the real renderers instead of drawing look-alikes:
+
+- **Renderer**: a `Keyboard2View` switched into preview mode with `enterThemePreviewMode()` — touch and per-key accessibility activation off, `Config.handler` callbacks suppressed (the settings activity runs in the IME's process), window insets and the `KeyAdjacency` layout push skipped — and a `SuggestionBar(context, theme)` stacked above it at the IME's 40dp bar height.
+- **Theme**: `ThemeEditorPreview.themeFor(context, scheme)` is the same `Theme(context, scheme)` runtime constructor `ThemeProvider` uses for applied custom themes; `applyPreviewTheme` swaps it in and evicts the cached `Theme.Computed` frames. The trail colour uses `ThemeEditorPreview.trailColorFor`, the same conversion `CustomThemePrefPolicy` syncs into `swipe_trail_color`.
+- **Layout and scale**: the user's first layout through `LayoutModifier.modify_layout` (bottom row, extra keys), laid out at the device width so key/label geometry, opacity and border settings match, then uniformly scaled to the dialog width and a height cap (40% of screen height, at most 260dp).
+- **States** (`ThemePreviewScene`, pure): Shift latched → ACTIVATED frame; the first of ctrl/fn/alt/meta locked → LOCKED frame; modifier and action keys at rest show MODIFIER/SPECIAL; a static trail through the first localized sample word's letter keys (left/middle/right fallback). A disabled or `none` trail is drawn `solid` so its colour stays judgeable.
+- **Not visible statically**: ripple (press feedback) and keyboard surface (provenance popup).
+- The compact `ThemePreview` sample remains on the theme-list cards.
+
 ## Live Apply
 
 `ThemeSettingsActivity` mutates the `ThemeProvider`'s **own** `CustomThemeManager` instance (a private twin previously left the provider's in-memory store stale) and, when the save/delete touches the active theme, fires `CleverKeysService.ACTION_THEME_CHANGED` (package-restricted broadcast, `ThemeSettingsActivity.kt:249-252`). The IME rebuilds its keyboard view on receipt, so every edited color applies immediately. Theme *selection* additionally restarts the settings process for clean Compose re-theming.
@@ -97,6 +108,9 @@ Opacity (keyboard/key/suggestion-bar) lives in the Appearance section, not the t
 | Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/theme/CustomThemePrefPolicyTest.kt` | delete/save pref coherence |
 | Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/theme/ThemeProviderFallbackTest.kt` | dangling-id fallback |
 | Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/theme/MonetDynamicColorGateTest.kt` | Monet API gating |
+| Mock JVM | `src/test/kotlin/tribixbite/cleverkeys/theme/ThemeEditorPreviewMappingTest.kt` | every editable colour reaches exactly its renderer field in the preview |
+| Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/theme/ThemePreviewSceneTest.kt` | preview trail effect, sample words, sample trail |
+| Instrumented | `src/androidTest/kotlin/tribixbite/cleverkeys/theme/ThemeKeyboardPreviewViewTest.kt` | key/background pixels follow an edit; preview never calls the IME handler |
 
 ## Related Specifications
 

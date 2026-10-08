@@ -35,6 +35,10 @@ editor that used to be listed here already ship in 2.0.)
 - Theme Creator: all nine previously-inert fields (locked/modifier/special key backgrounds,
   activated border, ripple, suggestion text/background/high-confidence, keyboard surface) now
   persist, round-trip and render live, with built-ins rendering pixel-identically.
+- Theme Creator preview (roadmap 4.1): the editor now shows the real keyboard renderer and
+  suggestion bar, scaled to fit and read-only, re-rendered on every colour edit — Shift latched,
+  a modifier locked, modifier/action keys at rest, sub-labels, borders, background, suggestion
+  colours and a sample swipe trail, using your opacity, border and trail settings.
 - Four new settings: clipboard media capture toggle + size cap (MB), exact-typed-word suggestion,
   numpad height scaling.
 - Default-keyboard reminder fires once per boot with a permanent opt-out switch.
