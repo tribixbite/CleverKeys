@@ -476,6 +476,13 @@ id against the loaded version (content, timestamp, MIME, path, privacy, source, 
 tags, status), so anything changed after the dialog opened is skipped; any invalid
 identity rolls the whole batch back. Post-commit media cleanup removes only files no table
 still references. Feedback reports "Deleted X of N selected clippings."
+Every bulk result line is also kept by `ClipboardManager` (not only written to the pane's
+view): an action finishes asynchronously, and a pane rebuilt meanwhile (theme change,
+keyboard hide/show) would otherwise drop it. The next pane re-renders it; a tab switch or a
+new selection clears it (`ClipboardPaneThemeInvalidationTest`,
+`ClipboardFilterDialogTest#bulkResultLineSurvivesAPaneRebuildMidAction`). While an action
+runs, history-change callbacks are inert
+(`ClipboardHistoryViewStateGuardsTest#historyChangeCallbacksAreInertWhileABulkActionRuns`).
 
 **Add to Pinned / Add to Todos.** COPY semantics, exactly like the per-row pin and todo
 buttons: `ClipboardHistoryService.copyEntriesTo` calls the same per-entry inserts
@@ -559,7 +566,25 @@ non-focusable window is not touch-modal — a touch outside (e.g. on the keyboar
 the dialog instead of leaving it up. Widgets inside such dialogs must not open their own
 focusable popups, so the filter dialog's size choosers are `ImeDialogSpinner`s (a
 single-choice list in another non-focusable IME dialog, keyed to the keyboard's window
-token — a sub-window cannot parent another). The selection itself no longer depends on
+token — a sub-window cannot parent another).
+
+**Spinner policy (2026-10-08).** Overriding the click is not enough: a dropdown-mode
+spinner also opens its popup from the touch stream — AppCompat's and the framework's
+`ForwardingListener` turn a long press or press-and-drag into `showPopup()`, a focusable
+`ListPopupWindow`, which tore the filter dialog down on 2026-10-07. `ImeDialogSpinner`
+therefore (1) passes `MODE_DIALOG` to `AppCompatSpinner`, so AppCompat builds no dropdown
+popup or forwarding listener whatever the XML or theme says; (2) never hands a touch to
+either superclass — `onTouchEvent` runs a plain tap recogniser (`SpinnerTapTracker`: DOWN then
+UP inside the view is a click; leaving the view, CANCEL or a second pointer abandon it; a
+long press released in place is still a tap) and calls `performClick`; (3) defaults to the
+framework `android:spinnerStyle` and sets itself clickable — under the framework dialog
+theme AppCompat's own default style resolves to nothing, which left the spinner
+unclickable after it moved from `Spinner` to `AppCompatSpinner` (native failure
+`ClipboardFilterDialogTest#sizeDialogRejectsInvertedBoundsAndCancelDoesNotApplyDraft`,
+"Missing size option: 10 kB"). Every layout use also declares `android:spinnerMode="dialog"`
+(`ImeDialogWindowTest` checks all three, plus the tap recogniser;
+`ClipboardFilterDialogTest#sizeSpinnerLongPressAndDragOpenNoPopupAndKeepTheDialog` drives
+long press, drag-off and release-in-place on the real dialog). The selection itself no longer depends on
 any of this: it survives the input view finishing.
 
 **Layout.** Narrow (tall) panes give the selection bar its own 48dp row. Wide panes
@@ -646,27 +671,52 @@ while the device is locked.
 - Clips deliberately skipped: `IS_SENSITIVE` (API 33+), password-manager foreground package
   (needs Usage Access; fails open without it), over the per-item size limit, or history off.
 
-**Catch-up.** `onStartInputView` calls `ClipboardHistoryService.on_keyboard_shown()`:
+**Catch-up.** `onStartInputView` calls `ClipboardHistoryService.on_keyboard_shown()`
+(pinned by `CoreImeHygieneDriftTest#keyboardShownRunsTheClipboardCatchUp`):
 
 1. If the listener is not registered (registration bailed at `onCreate` because the
    default-IME check failed — nothing retried it before), register it now; registration
-   reads the current clip once.
-2. Otherwise, with history enabled, read the current clip once and pass it to the normal
+   reads the current clip once, under the same "not yet observed" rule as step 2.
+2. Otherwise, with history enabled, check the current clip and pass it to the normal
    capture path only if it is a set event the service has not observed
    (`ClipboardCatchUp.shouldRecord`). Identity is `ClipDescription.getTimestamp()` (API 26+;
    content hash on API 24–25). Every read — listener, registration, catch-up — marks the clip
-   observed **before** any filter, so a skipped clip stays skipped and an entry the user deleted
-   while it is still on the system clipboard is not re-added. The password-manager skip marks
-   the clip from its description only, so the secret is never read into the IME process.
+   observed **before** any filter, so a skipped clip stays skipped. The password-manager skip
+   marks the clip from its description only, so the secret is never read into the IME process.
+
+**Cost (2026-10-08).** On API 26+ the catch-up first reads only `primaryClipDescription`
+and returns when its set timestamp equals the last observed one; the clip's content is
+fetched over Binder only when it differs. On API 24–25 (no timestamp) the catch-up reads
+nothing while the listener is registered: before API 29 the platform delivers
+`onPrimaryClipChanged` to every registered listener regardless of focus or default-IME
+status, so a registered listener has already observed every set event, and the only gap
+(no listener) is covered by the registration read.
+
+**Deleted clips across restarts (2026-10-08).** The observed identity is persisted in its
+own SharedPreferences file, `clipboard_last_seen` (one string: `t:<timestamp>` or
+`h:<32-bit content hash>`, never the clip's content; outside Auto Backup's allowlist and the
+settings export; unreadable while the device is locked, when the clipboard is too). Before
+this it lived only in memory, and the registration read that runs on every `on_startup` (IME
+switch-back, process restart) re-recorded whatever was on the clipboard — so a clip deleted
+from History (bulk or single delete leaves the OS clipboard untouched) came back after the
+service restarted. Now an observed clip is not re-recorded by registration or catch-up while
+it stays on the clipboard. Limits, by design: on API 24–25 copying the same text again while
+CleverKeys was not listening cannot be told apart from the earlier copy; turning clipboard
+history back on deliberately records the current clip; the very first start after updating
+has no stored identity and may record the current clip once.
 
 Residual risks: on API 24–25 a password-manager copy that the listener skipped cannot be
-marked (no timestamp without reading content), so a later catch-up in an ordinary app could
-record it unless it carries `IS_SENSITIVE` (API 33+ only) — the same exposure the listener
-already has when the copy's app is not detected as the foreground app. The single Saga miss
-was not reproduced and its exact cause is unconfirmed (logcat had rotated; `exit-info` shows
-LOW_MEMORY kills of the CleverKeys process that evening).
+marked (no timestamp without reading content). While the listener stays registered the
+catch-up no longer reads at all on those versions, but a registration read after a restart
+could record it unless it carries `IS_SENSITIVE` (API 33+ only) — the same exposure the
+listener already has when the copy's app is not detected as the foreground app. The single
+Saga miss was not reproduced and its exact cause is unconfirmed (logcat had rotated;
+`exit-info` shows LOW_MEMORY kills of the CleverKeys process that evening).
 
 Tests: `ClipboardCatchUpTest` (missed copy recorded on show; observed clip not re-recorded;
 same text copied again recorded; history off reads nothing; IS_SENSITIVE and
 password-manager clips stay skipped; unregistered listener re-registered on show; pure
-decision). Device check: see `memory/todo.md` (October 7 afternoon).
+decision; an unchanged clip is never re-fetched; API 25 catch-up reads nothing and its
+password-manager copy is never recorded; a restarted service / IME switch-back does not
+re-record an observed clip on API 34 or 25; the persisted identity is never content;
+encode/decode). Device check: see `memory/todo.md` (October 7 afternoon).

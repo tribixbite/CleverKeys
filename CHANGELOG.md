@@ -311,6 +311,15 @@ editor that used to be listed here already ship in 2.0.)
 - A long hold on the last letter before lifting no longer distorts the swipe for the default
   engine (the final pause is capped at 500 ms).
 - Swipe ML data also records the unsmoothed trace the default engine decodes.
+- A clip deleted from clipboard history no longer comes back after switching keyboards or a
+  keyboard restart while it is still on the system clipboard. Showing the keyboard no longer
+  re-reads an unchanged clip's content.
+- Clipboard filter dialog: a long press or press-and-drag on a size chooser no longer opens a
+  popup that made the app hide the keyboard and close the dialog.
+- A bulk clipboard action's result line ("Deleted X of N", "Added …") is kept when the
+  clipboard pane is rebuilt while the action runs.
+- Settings → Multi-Language names the languages bound to layouts in Layout Manager, which
+  replace these settings while their layout is active.
 
 ---
 

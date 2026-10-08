@@ -159,7 +159,14 @@ The clipboard pane has four mutually exclusive modes. Only one can be active at 
 - **Dialogs**: all go through `Utils.show_dialog_on_ime`, which is NON-FOCUSABLE
   (`ImeDialogWindowPolicy`). A focusable IME dialog let Chrome hide the keyboard mid-tap and
   tore the dialog down before its button ran (Saga, 2026-10-07). Never put a dropdown
-  `Spinner` (focusable popup) in an IME dialog — use `ImeDialogSpinner`.
+  `Spinner` (focusable popup) in an IME dialog — use `ImeDialogSpinner`, and declare
+  `android:spinnerMode="dialog"` on it: a dropdown spinner's touch-forwarding listener opens
+  the focusable popup on long press / press-and-drag even when `performClick` is overridden
+  (2026-10-08). The class forces dialog mode, bypasses superclass touch handling and uses the
+  framework `android:spinnerStyle` (AppCompat's default style is empty under the framework
+  dialog theme, which left it unclickable).
+- The bulk result line is kept in `ClipboardManager.lastBulkFeedback` and re-rendered by
+  `getClipboardPane`; clear it only via `clearBulkFeedback()` (tab switch, new selection).
 - Non-current tab icons are GONE while selecting, which also gives `ClipboardPaneLayout`
   (wide search = 212dp + 36dp per visible tab) room for the 240dp bar beside the results in
   landscape; narrow panes put the bar on its own row.

@@ -333,6 +333,19 @@ warning on that layout, and switching to it shows "Language: X (no dictionary in
 in the suggestion bar. The layout keeps working for typing; predictions and autocorrect
 have no vocabulary until the pack is imported.
 
+**Availability scan (2026-10-08).** "Has a dictionary" is answered by
+`LanguageAvailability` (bundled `assets/dictionaries/<code>_enhanced.bin` plus installed
+packs). It caches one scan per process — Layout Manager's picker and the keyboard's
+layout-switch message both ran it on the main thread — and `LanguagePackManager`
+invalidates it after every import attempt and every delete (Settings and the keyboard share
+the process). A failed scan is not cached and still reports "available" to `isAvailable`.
+
+**Settings note.** Multi-Language always explains that a layout's own language replaces
+these settings while that layout is active; when any layout is bound (the user's choice or
+an XML default), a second line names the bound languages ("Layouts with their own language:
+Persian, Russian"), refreshed on every Settings resume because Layout Manager edits land
+while Settings is paused.
+
 **3+ languages.** Bind each layout; cycling with `switch_forward` walks the languages in
 layout order. There is no limit on the number of bound layouts.
 
@@ -349,3 +362,11 @@ layout order. There is no limit on the number of bound layouts.
   to fa makes fa the active primary (prediction/autocorrect language) and drops the
   secondary; unbound keeps the preference languages; serializer round trip of bindings
   and rejection of invalid codes from a backup; the XML `language` attribute default.
+- `LanguageAvailabilityCacheTest` (mock): one scan for repeated queries; delete and any
+  import attempt invalidate; manifest-only packs are listed but not available; a failed
+  scan is not cached.
+- `LearningFunnelBookkeepingTest#autoDetectionIsSkippedWhileTheLayoutBindsALanguage`
+  (mock): detection never runs on a bound layout and runs again once unbound.
+- `LayoutManagerLanguageBindingComposeTest` (androidTest): the Language chip, the
+  "not installed" warning on the row and in the picker, and unbinding via "Follow
+  Multi-Language settings".
