@@ -34,11 +34,17 @@
           android:textColor="?android:attr/textColorSecondary" android:layout_marginBottom="8dp"/>
       <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
           android:text="@string/clipboard_filter_size_min" android:textColor="?android:attr/textColorPrimary"/>
+      <!-- spinnerMode="dialog": no dropdown popup or touch-forwarding listener. In dropdown
+           mode a long press / press-and-drag opened a FOCUSABLE popup window, the host app hid
+           the keyboard and this dialog was torn down (2026-10-07). ImeDialogSpinner also forces
+           the mode in code and bypasses touch forwarding; keep this attribute regardless. -->
       <tribixbite.cleverkeys.ImeDialogSpinner android:id="@+id/clipboard_size_min" android:layout_width="match_parent"
+          android:spinnerMode="dialog"
           android:layout_height="48dp" android:contentDescription="@string/clipboard_filter_size_min"/>
       <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
           android:text="@string/clipboard_filter_size_max" android:textColor="?android:attr/textColorPrimary"/>
       <tribixbite.cleverkeys.ImeDialogSpinner android:id="@+id/clipboard_size_max" android:layout_width="match_parent"
+          android:spinnerMode="dialog"
           android:layout_height="48dp" android:contentDescription="@string/clipboard_filter_size_max"/>
       <TextView android:id="@+id/clipboard_size_error" android:layout_width="match_parent"
           android:layout_height="wrap_content" android:text="@string/clipboard_filter_size_invalid"

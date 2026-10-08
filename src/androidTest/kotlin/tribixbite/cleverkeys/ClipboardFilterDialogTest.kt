@@ -133,6 +133,90 @@ class ClipboardFilterDialogTest {
         }
     }
 
+    /** Inject one touchscreen event at screen coordinates (reaches non-focusable IME dialogs). */
+    private fun touch(downTime: Long, action: Int, x: Float, y: Float) {
+        val event = android.view.MotionEvent.obtain(downTime, android.os.SystemClock.uptimeMillis(), action, x, y, 0)
+        event.source = android.view.InputDevice.SOURCE_TOUCHSCREEN
+        try {
+            assertTrue("touch injection failed",
+                InstrumentationRegistry.getInstrumentation().uiAutomation.injectInputEvent(event, true))
+        } finally {
+            event.recycle()
+        }
+    }
+
+    private fun optionShown(label: String, waitMs: Long): Boolean =
+        UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            .wait(Until.findObject(By.text(label)), waitMs) != null
+
+    /**
+     * 2026-10-07 failure: a long press or press-and-drag on a size spinner made the dropdown
+     * spinner's touch-forwarding listener open a FOCUSABLE popup window; over a real app the app
+     * then hid the keyboard and the filter dialog was torn down. Pins, on the production dialog:
+     *  - construction: AppCompat built no forwarding listener and the spinner is clickable
+     *    (2026-10-08: under the framework dialog theme the AppCompat default style resolved to
+     *    nothing, the spinner was not clickable, and a tap never opened the choices);
+     *  - a held long press opens nothing while held, and dragging off releases with no click;
+     *  - the filter dialog survives both; a long press released IN PLACE is an ordinary tap
+     *    and opens the non-focusable choice list.
+     */
+    @Test
+    fun sizeSpinnerLongPressAndDragOpenNoPopupAndKeepTheDialog() {
+        val inflated = inflateAndMeasureFilterDialog().findViewById<ImeDialogSpinner>(R.id.clipboard_size_min)
+        assertTrue("size spinner must be clickable under the framework dialog theme", inflated.isClickable)
+        val forwarding = androidx.appcompat.widget.AppCompatSpinner::class.java
+            .getDeclaredField("mForwardingListener").apply { isAccessible = true }
+        assertNull("no dropdown touch-forwarding listener", forwarding.get(inflated))
+
+        val label = android.text.format.Formatter.formatShortFileSize(context, 10_000)
+        val longPress = android.view.ViewConfiguration.getLongPressTimeout() * 2L + 300
+        var manager: ClipboardManager? = null
+        try {
+            ActivityScenario.launch(ClipboardEditTestActivity::class.java).use { scenario ->
+                lateinit var pane: android.view.ViewGroup
+                scenario.onActivity { activity ->
+                    manager = ClipboardManager(activity, Config.globalConfig())
+                    pane = manager!!.getClipboardPane(activity.layoutInflater)
+                    activity.setContentView(pane)
+                    manager!!.showFilterDialog(pane)
+                }
+                val bounds = control("clipboard_size_min").visibleBounds
+                val x = bounds.exactCenterX()
+                val y = bounds.exactCenterY()
+
+                // Long press, held: no popup may appear.
+                var down = android.os.SystemClock.uptimeMillis()
+                touch(down, android.view.MotionEvent.ACTION_DOWN, x, y)
+                android.os.SystemClock.sleep(longPress)
+                assertFalse("a held long press must not open a popup", optionShown(label, 500))
+                // Drag off (the dropdown "drag to an item" gesture) and release: still nothing.
+                touch(down, android.view.MotionEvent.ACTION_MOVE, x, y + bounds.height() * 4)
+                android.os.SystemClock.sleep(300)
+                assertFalse("press-and-drag must not open a popup", optionShown(label, 500))
+                touch(down, android.view.MotionEvent.ACTION_UP, x, y + bounds.height() * 4)
+                assertFalse("a drag released off the spinner is not a click", optionShown(label, 800))
+                assertNotNull("the filter dialog must survive", control("date_filter_apply"))
+
+                // A long press released in place is a tap: the IME choice list opens.
+                down = android.os.SystemClock.uptimeMillis()
+                touch(down, android.view.MotionEvent.ACTION_DOWN, x, y)
+                android.os.SystemClock.sleep(longPress)
+                touch(down, android.view.MotionEvent.ACTION_UP, x, y)
+                assertTrue("long press released in place opens the choices", optionShown(label, 5_000))
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).findObject(By.text(label)).click()
+                assertNotNull("the chosen size is shown by the spinner",
+                    UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).wait(Until.findObject(
+                        By.res(context.packageName, "clipboard_size_min").hasDescendant(By.text(label))), 5_000))
+                assertNotNull("the filter dialog must survive choosing", control("date_filter_apply"))
+                control("date_filter_cancel").click()
+                onMain { manager!!.cleanup() }
+                manager = null
+            }
+        } finally {
+            manager?.let { onMain(it::cleanup) }
+        }
+    }
+
     @Test
     fun confirmedSizeFilteredDeletionCoversAllPagesAndPreservesChangedRowsAndCopies() {
         val db = ClipboardDatabase.getInstance(context)
@@ -292,6 +376,77 @@ class ClipboardFilterDialogTest {
                 assertTrue(db.getActiveClipboardEntries().any { it.content == cleaned })
                 // The pinned copy is a separate row and stays untouched.
                 assertTrue(db.getPinnedEntries().any { it.content == first })
+                onMain { manager!!.cleanup() }
+                manager = null
+            }
+        } finally {
+            manager?.let { onMain(it::cleanup) }
+            for (table in listOf("clipboard_entries", "pinned_entries", "todo_entries")) {
+                db.writableDatabase.delete(table, "content LIKE ?", arrayOf("$prefix%"))
+            }
+        }
+    }
+
+    /**
+     * 2026-10-08 audit: the bulk-action result line is written when the action finishes, which
+     * is asynchronous. A pane rebuilt meanwhile (keyboard hide + theme rebuild run cleanup())
+     * used to drop it. The manager keeps it and the next pane renders it; starting a new
+     * selection clears it.
+     */
+    @Test
+    fun bulkResultLineSurvivesAPaneRebuildMidAction() {
+        val db = ClipboardDatabase.getInstance(context)
+        val prefix = "ewfeed-${java.util.UUID.randomUUID()}-"
+        val expiry = System.currentTimeMillis() + 3600_000
+        assertTrue(db.addClipboardEntry(prefix + "one", expiry))
+        android.os.SystemClock.sleep(5)
+        assertTrue(db.addClipboardEntry(prefix + "two", expiry))
+        var manager: ClipboardManager? = null
+        try {
+            ActivityScenario.launch(ClipboardEditTestActivity::class.java).use { scenario ->
+                lateinit var history: ClipboardHistoryView
+                lateinit var pane: android.view.ViewGroup
+                fun attachPane() {
+                    scenario.onActivity { activity ->
+                        pane = manager!!.getClipboardPane(activity.layoutInflater)
+                        manager!!.resetSearchOnShow()
+                        (pane.parent as? android.view.ViewGroup)?.removeView(pane)
+                        activity.setContentView(pane)
+                        history = pane.findViewById(R.id.clipboard_history_view)
+                        history.setSearchFilter(prefix)
+                    }
+                    awaitCondition { history.isResultsReady() && history.resultSummary().first == 2 }
+                }
+                scenario.onActivity { activity -> manager = ClipboardManager(activity, Config.globalConfig()) }
+                attachPane()
+                onMain { pane.findViewById<View>(R.id.clipboard_select).performClick() }
+                onMain { pane.findViewById<View>(R.id.clipboard_select_matching).performClick() }
+                assertEquals(2, onMain { history.selectedCount() })
+
+                // Choose "Add to Pinned" and tear the pane down in the SAME main-thread turn,
+                // so the action's result can only arrive after the views are gone.
+                onMain {
+                    pane.findViewById<View>(R.id.clipboard_selection_actions).performClick()
+                    val items = requireNotNull(dialog(manager!!, "bulkDialog")).listView
+                    val position = (0 until items.adapter.count).first {
+                        items.adapter.getItem(it).toString() == context.getString(R.string.clipboard_action_add_to_pinned)
+                    }
+                    items.performItemClick(null, position, position.toLong())
+                    manager!!.resetSearchOnHide()
+                    manager!!.cleanup()
+                }
+                val expected = context.resources.getQuantityString(R.plurals.clipboard_added_to_pinned_result, 2, 2)
+                awaitCondition { manager!!.bulkFeedbackText()?.toString() == expected }
+
+                attachPane()
+                val line = onMain { pane.findViewById<android.widget.TextView>(R.id.clipboard_bulk_feedback) }
+                assertEquals(View.VISIBLE, onMain { line.visibility })
+                assertEquals(expected, onMain { line.text.toString() })
+
+                // A new selection describes a new batch: the kept line is cleared.
+                onMain { pane.findViewById<View>(R.id.clipboard_select).performClick() }
+                assertEquals(View.GONE, onMain { line.visibility })
+                assertNull(onMain { manager!!.bulkFeedbackText() })
                 onMain { manager!!.cleanup() }
                 manager = null
             }
