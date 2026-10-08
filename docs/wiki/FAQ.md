@@ -121,6 +121,9 @@ A: Swiping adds a trailing space automatically, and smart punctuation removes th
 |---------|--------|
 | **Tap** | Type the key's main character |
 | **Short swipe (8 directions)** | Trigger subkey for that direction |
+| **Hold a character key** | [Subkey popover](./gestures/subkey-popover.md): slide to a subkey and let go (when enabled) |
+| **Hold, let go on an empty popover slot** | Assign an action to that slot |
+| **Hold, rest 3 s on a popover slot** | Edit that slot's action |
 | **Swipe on spacebar** | Move cursor (proportional to swipe speed) |
 | **Long-press nav key** | Enter TrackPoint mode |
 | **Short swipe + hold on backspace** | Selection-Delete mode |

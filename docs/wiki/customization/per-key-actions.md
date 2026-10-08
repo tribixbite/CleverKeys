@@ -15,7 +15,7 @@ Customize what happens when you swipe in each of the 8 directions from any key. 
 | What | Description |
 |------|-------------|
 | **Purpose** | Customize subkey actions per direction |
-| **Access** | Settings > Activities > Per-Key Customization |
+| **Access** | Settings > Activities > Customize Per-Key Actions, or hold a key with the [Subkey Popover](../gestures/subkey-popover.md) on |
 | **Directions** | 8 directions (N, NE, E, SE, S, SW, W, NW) |
 
 ## Understanding Subkeys
@@ -30,33 +30,40 @@ Each key has up to 8 subkey positions:
     SW   S   SE
 ```
 
-When you short swipe in a direction, the corresponding subkey is activated.
+When you short swipe in a direction, the corresponding subkey is activated. With the
+[Subkey Popover](../gestures/subkey-popover.md) on, holding the key shows the same eight
+slots around your finger.
 
 ## How to Customize
 
-### Step 1: Open Customization
+### From Settings
 
 1. Open CleverKeys Settings (gear icon)
-2. Navigate to **Activities** section
-3. Tap **Per-Key Customization**
+2. In the **Activities** section, tap **Customize Per-Key Actions**
+3. The screen shows your actual keyboard. **Tap the key** you want to customize; a
+   magnified key opens with its 8 directions and any existing mappings
+4. **Tap a direction**. The [Command Palette](command-palette.md) opens:
+   - for an empty direction, pick a command, or one of the quick actions (Dynamic
+     template, Custom Text, Send Intent, Timestamp);
+   - for a direction you already customized, the palette opens in that action's editor,
+     filled in. Back out of the editor to choose a different action
+5. Confirm the label shown on the key. The mapping is saved immediately
 
-### Step 2: Select a Key
+The list of your custom mappings on the key screen lets you delete one; the reset button
+in the top bar clears all of them at once, without asking for confirmation.
 
-1. The keyboard layout is displayed
-2. **Tap the key** you want to customize
-3. A detail panel opens showing all 8 directions
+### From the Keyboard (Subkey Popover)
 
-### Step 3: Edit a Direction
+With **Subkey popover on hold** turned on (Settings > Gesture Tuning):
 
-1. Tap the direction you want to change
-2. Choose from:
-   - **Character**: Type a letter, symbol, or emoji
-   - **Action**: Select from built-in actions
-   - **Remove**: Clear the subkey
+1. **Hold** the key until the popover opens
+2. To add an action, slide to an empty slot (shown as **+**) and let go. The command
+   palette opens for that key and direction
+3. To change an action, rest your finger on its slot for 3 seconds. The edit screen offers
+   **Edit**, **Reassign**, **Restore default** (when your action covers a layout subkey)
+   and **Remove**
 
-### Step 4: Save Changes
-
-Changes are saved automatically. Tap **Done** to return.
+Both routes edit the same mappings. See [Subkey Popover](../gestures/subkey-popover.md).
 
 ## Available Actions
 
@@ -168,26 +175,27 @@ Pinned entries are ordered **most-recently-pinned first**. If you request an ind
 
 To set up:
 
-1. Go to **Settings > Activities > Per-Key Customization**
-2. Select a key and direction
-3. Choose **Command** as the action type
-4. Search for "paste_pinned" or browse the **Clipboard** category
-5. Select the desired slot (1-5)
+1. Go to **Settings > Activities > Customize Per-Key Actions** and tap a key and direction,
+   or let go on an empty slot of the [Subkey Popover](../gestures/subkey-popover.md)
+2. In the command palette, search for "paste_pinned" or browse the **Clipboard** category
+3. Select the desired slot (1-5)
 
 > [!TIP]
 > Pin your most-used text snippets (email signature, address, code boilerplate) and bind them to swipe directions for instant insertion.
 
 ### Terminal-Aware Actions
 
-Some actions adapt their behavior when typing in terminal apps like Termux:
+**Paste** adapts when you type in a terminal app such as Termux:
 
 | Action | Standard Apps | Terminal Apps |
 |--------|---------------|---------------|
-| **Paste** | Android paste API | Ctrl+V key event |
-| **Copy** | Android copy API | Standard |
-| **Cut** | Android cut API | Standard |
+| **Paste** | Android paste action | Types the current clipboard text directly |
+| **Copy** | Android copy action | Same |
+| **Cut** | Android cut action | Same |
 
-This is automatic — the same paste customization works in both regular apps and terminals.
+Terminals usually ignore Android's paste action, so CleverKeys inserts the clipboard text
+itself. This is automatic for known terminal apps; add others under **Settings > Advanced >
+Custom terminal packages** (see [Advanced Settings](../settings/advanced.md)).
 
 ### Custom Text Input
 
@@ -216,7 +224,8 @@ To restore defaults:
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Per-Key Customization** | Activities section | Visual subkey editor |
+| **Customize Per-Key Actions** | Activities section | Visual subkey editor |
+| **Subkey popover on hold** | Gesture Tuning | Assign and edit slots from the keyboard |
 | **Backup & Restore** | Activities section | Save/restore customizations |
 
 ## Related Features

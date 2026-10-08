@@ -99,13 +99,19 @@ Adjust sensitivity in Settings:
 > [!TIP]
 > If short swipes accidentally trigger, increase the minimum distance setting.
 
-## Difference from Long Press
+## Difference from Holding a Key
 
-| Action | Short Swipe | Long Press |
-|--------|-------------|------------|
-| **Speed** | Fast (instant) | Slow (wait 600ms) |
-| **Behavior** | Types subkey character | Key repeat |
-| **Access** | 8 directional subkeys | Repeats the main key |
+| | Short Swipe | Hold (Subkey Popover on) | Hold (Subkey Popover off) |
+|---|---|---|---|
+| **Speed** | Instant | Wait for the long-press timeout (600 ms by default), then slide | Wait for the long-press timeout |
+| **Result** | Types the subkey in that direction | Shows all 8 subkeys; slide to one and let go | Key repeat, if enabled for that key |
+| **Assign/edit** | Settings | Let go on an empty slot, or rest 3 s on an assigned one | Settings |
+
+With the [Subkey Popover](subkey-popover.md) on (the default for new installs), holding a
+character key shows the same subkeys a short swipe would type, so you can see them before
+you choose. It replaces key repeat on those keys. With the popover off, holding a letter
+repeats it only when **Key Repeat Enabled** is on and **Backspace Only Repeat** is off
+(Settings > Input Behavior); by default only Backspace and navigation keys repeat.
 
 ## Settings
 
@@ -113,25 +119,26 @@ Adjust sensitivity in Settings:
 |---------|----------|-------------|
 | **Min Distance** | Gesture Tuning | Minimum swipe length |
 | **Max Distance** | Gesture Tuning | Maximum swipe length |
-| **Enable Short Swipes** | Gesture Tuning | Toggle feature on/off |
+| **Enable Short Gestures** | Gesture Tuning | Toggle feature on/off |
+| **Subkey popover on hold** | Gesture Tuning | Show the subkeys when you hold a key |
 
 ## Terminal App Support
 
-When using CleverKeys in terminal emulators (Termux, ConnectBot, etc.), certain short swipe actions adapt automatically:
+When using CleverKeys in terminal emulators (Termux, ConnectBot, JuiceSSH, Termius and
+others), a **Paste** short swipe reads the current clipboard text and types it directly,
+because terminals usually do not handle Android's paste action. Copy and Cut behave as in
+other apps.
 
-| Action | Standard Apps | Terminal Apps |
-|--------|---------------|---------------|
-| **Paste** | Android paste API | Ctrl+V key event |
-| **Copy** | Android copy API | Same |
-| **Cut** | Android cut API | Same |
-
-Terminal apps don't implement the Android context menu protocol, so paste commands are sent as Ctrl+V key events instead. This happens automatically — no configuration needed.
+Common terminal apps are detected automatically. If yours is not, add its package name
+under **Settings > Advanced > Custom terminal packages**; see
+[Advanced Settings](../settings/advanced.md).
 
 ## Related Features
 
 - [Cursor Navigation](cursor-navigation.md) - Move cursor with gestures
 - [Selection Delete](selection-delete.md) - Select text with backspace
 - [Per-Key Actions](../customization/per-key-actions.md) - Customize subkeys
+- [Subkey Popover](subkey-popover.md) - Hold a key to see and pick its subkeys
 
 ## Technical Details
 

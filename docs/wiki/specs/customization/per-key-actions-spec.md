@@ -247,21 +247,20 @@ Invalid patterns are caught and result in a no-op (`false` return). Preset chips
 
 ### Terminal-Aware Paste
 
-Both the `AvailableCommand.PASTE` and `CommandRegistry` "paste" paths use `handlePaste()` which detects terminal apps and sends Ctrl+V instead of `performContextMenuAction(android.R.id.paste)`:
+Both the `AvailableCommand.PASTE` and `CommandRegistry` "paste" paths use `handlePaste()`. For terminal targets (built-in detection plus **Settings > Advanced > Custom terminal packages**) it reads the system clip and commits its text directly; other editors keep `performContextMenuAction(android.R.id.paste)`:
 
 ```kotlin
 // CustomShortSwipeExecutor.kt
 private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo?): Boolean {
-    return if (TerminalUtils.isTerminalApp(editorInfo)) {
-        sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_V,
-            KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
+    return if (TerminalUtils.isTerminalApp(editorInfo, Config.globalConfigOrNull()?.custom_terminal_packages)) {
+        pasteFromSystemClipboard(inputConnection)
     } else {
         inputConnection.performContextMenuAction(android.R.id.paste)
     }
 }
 ```
 
-This mirrors the same logic in `KeyEventHandler.handlePaste()` for the regular paste key. Without this, paste via custom short swipe does nothing in Termux because terminal apps don't implement the Android context menu protocol.
+`pasteFromSystemClipboard` coerces the first clip item to text and calls `commitText`; a null or empty clip inserts nothing. `KeyEventHandler.handlePaste()` applies the same rule to the regular paste key. Terminals usually implement neither the context-menu paste nor a Ctrl+V key event through the IME, which is why an earlier Ctrl+V approach was replaced.
 
 ### Pinned Clipboard Commands (paste_pinned_N)
 

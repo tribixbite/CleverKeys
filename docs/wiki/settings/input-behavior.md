@@ -104,27 +104,47 @@ Automatic punctuation formatting:
 
 ### Long Press Timeout
 
-Time before long press activates:
+Time before a held key counts as a long press (200–1000 ms, default 600 ms). It also sets
+how long you hold before the [Subkey Popover](../gestures/subkey-popover.md) opens:
 
 | Duration | Use Case |
 |----------|----------|
-| **Shorter** | Fast access to long-press actions |
+| **Shorter** | Fast access to long-press actions and the popover |
 | **Longer** | Avoid accidental activation |
 
 ### Long Press Interval
 
-Repeat rate when holding a key:
+Repeat rate when holding a key that repeats (25–200 ms, default 25 ms):
 
 | Setting | Effect |
 |---------|--------|
 | **Shorter** | Faster key repeating |
 | **Longer** | Slower key repeating |
 
+> [!NOTE]
+> Which keys repeat depends on **Key Repeat Enabled** and **Backspace Only Repeat** (on by
+> default: only Backspace and navigation keys repeat). With the Subkey Popover on, holding a
+> character key opens the popover instead of repeating it, whatever these settings say.
+
 ### Double Tap Shift for Caps Lock
 
 Double-tap shift key to enable caps lock mode.
 
 ## Gesture Tuning Section
+
+### Subkey Popover on Hold
+
+Under **Hold for Subkeys**. When on, holding a character key shows its subkeys around your
+finger; slide to one and let go to type it, or let go in the middle to cancel. See
+[Subkey Popover](../gestures/subkey-popover.md).
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Subkey popover on hold** | On for new installs, off after an upgrade | Turns the popover on or off. Replaces key repeat on character keys. |
+| **Neutral zone width** | 60% | Width of the middle area where letting go does nothing, as % of the key width (20–150%) |
+| **Neutral zone height** | 60% | Height of that area, as % of the key height (20–150%) |
+
+The two sliders are shown only while the popover is on.
 
 ### Double-Space to Period
 
@@ -170,6 +190,7 @@ A: Settings > Gesture Tuning > Double-Space to Period > Off.
 ## Related Features
 
 - [Short Swipes](../gestures/short-swipes.md) - Gesture configuration
+- [Subkey Popover](../gestures/subkey-popover.md) - Hold a key to pick its subkeys
 - [Accessibility](accessibility.md) - Haptic feedback settings
 - [Next-Word Prediction](../typing/next-word-prediction.md) - Next-word suggestions (built-in + learned)
 - [Privacy Settings](privacy.md) - The Learn From My Typing master switch
