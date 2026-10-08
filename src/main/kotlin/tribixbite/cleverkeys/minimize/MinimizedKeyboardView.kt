@@ -29,19 +29,63 @@ import tribixbite.cleverkeys.Theme
  * service's own configuration.
  */
 internal object FabSide {
-    fun isRtl(context: Context): Boolean {
-        if (context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL) return true
-        val system = android.content.res.Resources.getSystem().configuration.locales
-        if (!system.isEmpty && rtl(system[0])) return true
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            val app = context.getSystemService(android.app.LocaleManager::class.java)?.applicationLocales
-            if (app != null && !app.isEmpty && rtl(app[0])) return true
-        }
-        return false
-    }
+    fun isRtl(context: Context): Boolean = FabSidePolicy.isRtl(
+        serviceRtl = context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL,
+        systemLocale = {
+            val system = android.content.res.Resources.getSystem().configuration.locales
+            if (system.isEmpty) null else system[0]
+        },
+        appLocale = {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                val app = context.getSystemService(android.app.LocaleManager::class.java)?.applicationLocales
+                if (app == null || app.isEmpty) null else app[0]
+            } else null
+        },
+        localeIsRtl = ::rtl,
+    )
 
     private fun rtl(locale: java.util.Locale): Boolean =
         android.text.TextUtils.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
+}
+
+/**
+ * [FabSide]'s decision without Android types, so it is testable on the host JVM (a separate
+ * object: loading [FabSide] would resolve its Android-typed members). The button goes left when
+ * the service configuration is RTL, or the system locale, or CleverKeys' per-app locale is.
+ * The locale sources are read lazily, in that order, and stop at the first RTL answer.
+ */
+internal object FabSidePolicy {
+    fun isRtl(
+        serviceRtl: Boolean,
+        systemLocale: () -> java.util.Locale?,
+        appLocale: () -> java.util.Locale?,
+        localeIsRtl: (java.util.Locale) -> Boolean,
+    ): Boolean {
+        if (serviceRtl) return true
+        systemLocale()?.let { if (localeIsRtl(it)) return true }
+        appLocale()?.let { if (localeIsRtl(it)) return true }
+        return false
+    }
+}
+
+/** What `CleverKeysService.onComputeInsets` sets while the keyboard is minimized. */
+internal data class MinimizedInsetsPlan(
+    /** `contentTopInsets` and `visibleTopInsets`: the window height, so the app is not resized. */
+    val topInsets: Int,
+    /** `touchableInsets = TOUCHABLE_INSETS_REGION` with only the button's rectangle. */
+    val touchRegionOnly: Boolean,
+)
+
+/** Pure inset policy for the minimized views (docs/specs/keyboard-minimize.md "Architecture"). */
+internal object MinimizedInsets {
+    /**
+     * The FAB leaves the app the whole window and takes touches only on the button; null keeps
+     * the platform's default insets — the full keyboard, the BAR (the app is resized to sit
+     * above it), or a FAB not yet attached (no window height to report).
+     */
+    fun plan(style: MinimizedStyle?, attached: Boolean, windowHeight: () -> Int): MinimizedInsetsPlan? =
+        if (style != MinimizedStyle.FAB || !attached) null
+        else MinimizedInsetsPlan(topInsets = windowHeight(), touchRegionOnly = true)
 }
 
 /** How the minimized keyboard looks (gh #175, docs/specs/keyboard-minimize.md). */

@@ -9,7 +9,7 @@ package tribixbite.cleverkeys.minimize
  * restores that remembered view.
  *
  * Minimizing lasts while the keyboard stays up: [reset] (called when the input view finishes,
- * i.e. the keyboard is hidden) makes the next show full size again.
+ * i.e. the keyboard is hidden) shows the full view again, so the next show is full size.
  *
  * Generic over the view type so the state machine is testable without Android views.
  *
@@ -56,8 +56,11 @@ class KeyboardMinimizer<V : Any>(
         fullView?.let(show)
     }
 
-    /** The keyboard was hidden: its next appearance is full size. */
-    fun reset() {
-        style = null
-    }
+    /**
+     * The keyboard was hidden: its next appearance is full size. While minimized this puts the
+     * full view back in the input window right away; clearing only [style] left the bar/button
+     * as the live view with nothing to expand, so a tap on it did nothing until the next
+     * `onStartInputView` (audit 2026-10-08).
+     */
+    fun reset() = expand()
 }

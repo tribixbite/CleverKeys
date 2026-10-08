@@ -11,9 +11,10 @@ Two catalogue commands (Events category), assignable to any short swipe, popover
 |---|---|---|
 | `minimize_bar` | `Event.MINIMIZE_BAR` | The input view becomes a 30 dp full-width strip with an up chevron, in the keyboard background colour. The app is resized to sit above it. |
 | `minimize_fab` | `Event.MINIMIZE_FAB` | The input view becomes a 52 dp round button with an up chevron at the end side (right in LTR, left in RTL), 12 dp from the edges. The app gets the whole screen. Touches anywhere except the button pass through to the app. |
+| `hide_keyboard` | `Event.HIDE_KEYBOARD` | gh #175's explicit dismiss ("⌄"): hides the keyboard (`requestHideSelf(0)`). Not a minimized state; the next show is the full keyboard. |
 
 - Tapping the bar or button restores the full keyboard (haptic tick).
-- Minimizing lasts while the keyboard stays shown. When the keyboard is hidden (`onFinishInputView`), its next appearance is full size.
+- Minimizing lasts while the keyboard stays shown. When the keyboard is hidden (`onFinishInputView`), the full view is put back in the input window at once, so its next appearance is full size. (Until 2026-10-08 `reset()` only cleared the style: the bar or button stayed the live view with nothing to expand, and a tap on it did nothing until the next `onStartInputView`.)
 - Both pad themselves for the navigation bar under edge-to-edge.
 - The talkback label is "Show keyboard" (`short_swipe_show_keyboard`).
 - Out of scope: summoning a keyboard the system has already hidden. That needs an overlay outside the input window (`SYSTEM_ALERT_WINDOW`); this feature keeps the input window and only shrinks it.
@@ -23,10 +24,11 @@ Two catalogue commands (Events category), assignable to any short swipe, popover
 - `minimize/KeyboardMinimizer<V>` (pure, generic over the view type):
   - `resolve(requested)` gets every view the service asks to show; it remembers that view as the full one and returns the minimized view while minimized;
   - `minimize(style, prepare)` and `expand()`;
-  - `reset()`, called on hide.
+  - `reset()`, called on hide: `expand()` (shows the full view when minimized, no-op otherwise).
 - `CleverKeysService.setInputView` routes through `resolve`, so `onStartInputView` re-showing the prediction container, or a theme change re-inflating the key view, cannot un-minimize behind the user's back; the newest full view is what `expand()` restores.
 - `minimize/MinimizedKeyboardView`: drawn directly from `Theme` colours, with no per-frame allocation. `touchableArea()` reports the bar's or the button's bounds in window coordinates.
-- `CleverKeysService.onComputeInsets`, FAB only:
+- `FabSide.isRtl(context)` gathers the three sources; the decision itself is `FabSidePolicy.isRtl` (pure, lazy sources).
+- `CleverKeysService.onComputeInsets` applies `MinimizedInsets.plan(style, attached, windowHeight)` (pure), FAB only:
   - `contentTopInsets` and `visibleTopInsets` are set to the window height (the app is not resized);
   - `touchableInsets` is `TOUCHABLE_INSETS_REGION` with the button's rectangle.
 - Events reach `KeyboardReceiver.handle_event_key`, which calls `CleverKeysService.minimizeKeyboard(style)`. Custom mappings reach it through `Keyboard2View.onCustomShortSwipe`'s Event branch.
@@ -39,7 +41,10 @@ Two catalogue commands (Events category), assignable to any short swipe, popover
   - reset on hide;
   - the view is created once and restyled;
   - minimize with nothing to come back to does nothing;
-  - the catalogue entries resolve to the events.
+  - the catalogue entries resolve to the events;
+  - a reset while minimized shows the full view again;
+  - `FabSidePolicy`: any of the three sources RTL puts the button left, read lazily in order;
+  - `MinimizedInsets`: only an attached FAB changes the insets.
 - `CommandRoutingTest` covers that both commands have an execution path.
 - Device check owed:
   - assign `minimize_fab` to a slot in Chrome;

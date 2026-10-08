@@ -821,13 +821,16 @@ class CleverKeysService : InputMethodService(),
     override fun onComputeInsets(outInsets: Insets) {
         super.onComputeInsets(outInsets)
         val view = _minimizer.minimized as? MinimizedKeyboardView ?: return
-        if (_minimizer.style != MinimizedStyle.FAB || !view.isAttachedToWindow) return
-        val windowHeight = view.rootView.height
-        outInsets.contentTopInsets = windowHeight
-        outInsets.visibleTopInsets = windowHeight
-        outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_REGION
-        view.touchableArea(_touchableRect)
-        outInsets.touchableRegion.set(_touchableRect)
+        val plan = tribixbite.cleverkeys.minimize.MinimizedInsets.plan(
+            _minimizer.style, view.isAttachedToWindow
+        ) { view.rootView.height } ?: return
+        outInsets.contentTopInsets = plan.topInsets
+        outInsets.visibleTopInsets = plan.topInsets
+        if (plan.touchRegionOnly) {
+            outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_REGION
+            view.touchableArea(_touchableRect)
+            outInsets.touchableRegion.set(_touchableRect)
+        }
     }
 
     private val _touchableRect = android.graphics.Rect()
