@@ -160,6 +160,23 @@ class Keyboard2View @JvmOverloads constructor(
     private var _tc: Theme.Computed? = null
     private lateinit var _themeCache: LruCache<String, Theme.Computed>
 
+    // ---------------------------------------------------------------------------------
+    // Theme-editor preview mode (roadmap §4.1). The DIY theme creator renders THIS view —
+    // not a look-alike — so every colour is judged with the real draw loop. Preview mode
+    // makes the instance inert: no touch/a11y activation, no IME handler callbacks (the
+    // settings activity shares the IME's process, so Config.handler may be the live
+    // keyboard's), no window-inset margins and no global adjacency push.
+    // ---------------------------------------------------------------------------------
+
+    /** True once [enterThemePreviewMode] ran; never reverts for this instance. */
+    private var _previewMode = false
+
+    /** Static sample trail drawn in preview mode (view coordinates), or null. */
+    private var _previewTrail: List<PointF>? = null
+
+    /** Trail colour override from the edited scheme (preview mode only), or null. */
+    private var _previewTrailColor: Int? = null
+
     enum class Vertical {
         TOP, CENTER, BOTTOM
     }
@@ -277,6 +294,9 @@ class Keyboard2View @JvmOverloads constructor(
      * the nav bar on first load.
      */
     private fun applySystemBarInsets(insets: SystemBarInsets) {
+        // Preview mode: the host is an ordinary settings view, not the IME window — the
+        // activity's nav bar must not add a bottom margin to the scaled preview.
+        if (_previewMode) return
         if (insets.left == _insets_left &&
             insets.right == _insets_right &&
             insets.bottom == _insets_bottom
@@ -334,7 +354,7 @@ class Keyboard2View @JvmOverloads constructor(
         val density = resources.displayMetrics.density
 
         _swipeTrailPaint = Paint().apply {
-            color = snap.swipe_trail_color
+            color = _previewTrailColor ?: snap.swipe_trail_color
             strokeWidth = snap.swipe_trail_width * density
             style = Paint.Style.STROKE
             isAntiAlias = true
@@ -342,7 +362,7 @@ class Keyboard2View @JvmOverloads constructor(
             strokeJoin = Paint.Join.ROUND
 
             // Apply effect based on setting
-            when (snap.swipe_trail_effect) {
+            when (effectiveTrailEffect(snap)) {
                 "glow" -> {
                     // GPU-efficient glow using blur mask filter
                     // Use SOLID blur type for crisp center with soft edges
@@ -453,7 +473,9 @@ class Keyboard2View @JvmOverloads constructor(
         _compose_key = kw.findKeyWithValue(composeKv)
         // ARC-088: null is a real layout transition, not "leave the previous modmap active".
         // It also invalidates KeyModifier's per-(key, modifiers) render memo.
-        KeyModifier.set_modmap(kw.modmap)
+        // Preview mode (§4.1): the modmap is process-global and the IME may share this
+        // process — a theme-editor preview must not swap the live keyboard's modmap.
+        if (!_previewMode) KeyModifier.set_modmap(kw.modmap)
 
         // Refresh swipe trail paint with latest config settings
         initSwipeTrailPaint()
@@ -518,6 +540,66 @@ class Keyboard2View @JvmOverloads constructor(
         _pointers.clear()
         invalidate()
     }
+
+    /**
+     * Roadmap §4.1: turn this instance into an inert theme-editor preview. Touch and
+     * accessibility activation are disabled, IME handler callbacks are suppressed, and
+     * window insets / adjacency side effects are skipped (see the field block above).
+     * Idempotent; there is no way back — a preview instance is never used for typing.
+     */
+    fun enterThemePreviewMode() {
+        if (_previewMode) return
+        _previewMode = true
+        setOnTouchListener(null)
+        isClickable = false
+        isFocusable = false
+        // The host summarises the preview; per-key virtual views would invite activation.
+        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        // Drop any insets that were applied before the switch.
+        _insets_left = 0
+        _insets_right = 0
+        _insets_bottom = 0
+        initSwipeTrailPaint()
+        requestLayout()
+        invalidate()
+    }
+
+    /**
+     * Roadmap §4.1: render with [theme] (built from the editor's scheme by
+     * [tribixbite.cleverkeys.theme.ThemeEditorPreview.themeFor]) and draw the preview trail
+     * in [trailColor]. Everything else — opacity, borders, label sizes, trail width/effect
+     * — still comes from the user's real configuration, exactly as on the keyboard.
+     */
+    fun applyPreviewTheme(theme: Theme, trailColor: Int) {
+        check(_previewMode) { "applyPreviewTheme requires enterThemePreviewMode()" }
+        _theme = theme
+        _previewTrailColor = trailColor
+        // Cached frames hold the previous theme's paints.
+        _themeCache.evictAll()
+        if (theme.colorKeyboardBackground != 0) setBackgroundColor(theme.colorKeyboardBackground)
+        val kw = _keyboard
+        _tc = if (kw != null && _keyWidth > 0f) Theme.Computed(_theme, _config, _keyWidth, kw) else null
+        initSwipeTrailPaint()
+        requestLayout()
+        invalidate()
+    }
+
+    /** Roadmap §4.1: static sample trail (view coordinates) for preview mode; null clears. */
+    fun setPreviewTrail(points: List<PointF>?) {
+        check(_previewMode) { "setPreviewTrail requires enterThemePreviewMode()" }
+        _previewTrail = points?.takeIf { it.size >= 2 }
+        invalidate()
+    }
+
+    /** Effect used for the trail; preview mode keeps a disabled/"none" trail visible. */
+    private fun effectiveTrailEffect(snap: ConfigSnapshot): String =
+        if (_previewMode) {
+            tribixbite.cleverkeys.theme.ThemePreviewScene.previewTrailEffect(
+                snap.swipe_trail_enabled, snap.swipe_trail_effect
+            )
+        } else {
+            snap.swipe_trail_effect
+        }
 
     fun set_fake_ptr_latched(key: KeyboardData.Key?, kv: KeyValue?, latched: Boolean, lock: Boolean) {
         if (_keyboard == null || key == null || kv == null)
@@ -606,7 +688,8 @@ class Keyboard2View @JvmOverloads constructor(
 
     private fun updateFlags() {
         _mods = _pointers.getModifiers()
-        _config.handler?.mods_changed(_mods)
+        // Preview mode: the latched/locked sample state must never reach the live IME.
+        if (!_previewMode) _config.handler?.mods_changed(_mods)
         // Latched Shift changes every letter's spoken label ("a" -> "A") and the
         // Shift key's checked state — refresh the a11y tree. Cheap no-op when no
         // a11y service is enabled; kept out of onDraw/onTouch for that reason.
@@ -1618,6 +1701,7 @@ class Keyboard2View @JvmOverloads constructor(
      * behavior: key_down/up, latching, haptics, modifier application all for free.
      */
     private fun activateKeyForAccessibility(kr: KeyboardGeometry.KeyRect) {
+        if (_previewMode) return // read-only preview: never type
         val cx = (kr.bounds.left + kr.bounds.right) / 2f
         val cy = (kr.bounds.top + kr.bounds.bottom) / 2f
         _pointers.onTouchDown(cx, cy, a11yPointerId, kr.key)
@@ -1712,7 +1796,7 @@ class Keyboard2View @JvmOverloads constructor(
         // to disagree on API 30+ (systemBars-only here vs systemBars|displayCutout there),
         // so the recovered value could jump when the real dispatch landed (#167 residual).
         // No requestLayout here: we are inside onMeasure and consume the values below.
-        if (_insets_bottom == 0 && android.os.Build.VERSION.SDK_INT >= 23) {
+        if (!_previewMode && _insets_bottom == 0 && android.os.Build.VERSION.SDK_INT >= 23) {
             rootWindowInsets?.let { wi ->
                 val insets = WindowLayoutUtils.readSystemBarInsets(wi)
                 _insets_bottom = insets.bottom
@@ -1759,6 +1843,10 @@ class Keyboard2View @JvmOverloads constructor(
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         if (!changed)
             return
+        // Preview mode: no back-gesture exclusion and, above all, no push of the preview's
+        // geometry into the process-global autocorrect adjacency model.
+        if (_previewMode)
+            return
         if (VERSION.SDK_INT >= 29) {
             // Disable the back-gesture on the keyboard area (reused Rect — onLayout
             // is a layout op, lint DrawAllocation applies)
@@ -1788,6 +1876,8 @@ class Keyboard2View @JvmOverloads constructor(
 
     override fun onApplyWindowInsets(wi: WindowInsets?): WindowInsets? {
         if (wi == null) return wi
+        // Preview mode: leave the host window's insets alone (neither applied nor consumed).
+        if (_previewMode) return wi
 
         // #167 residual: the API ladder lives in WindowLayoutUtils.readSystemBarInsets —
         // ONE ladder shared with the onMeasure recovery and the onConfigurationChanged
@@ -1883,8 +1973,11 @@ class Keyboard2View @JvmOverloads constructor(
         }
 
         // Draw swipe trail if swipe typing is enabled and active
-        if (snap.swipe_typing_enabled && _swipeRecognizer != null && _swipeRecognizer!!.isSwipeTyping()) {
-            drawSwipeTrail(canvas, snap)
+        val previewTrail = _previewTrail
+        if (previewTrail != null) {
+            drawSwipeTrail(canvas, snap, previewTrail)
+        } else if (snap.swipe_typing_enabled && _swipeRecognizer != null && _swipeRecognizer!!.isSwipeTyping()) {
+            if (snap.swipe_trail_enabled) drawSwipeTrail(canvas, snap, _swipeRecognizer!!.getSwipePath())
         }
 
         // Subkey popover on top of everything; keep frames coming while it animates.
@@ -1900,12 +1993,8 @@ class Keyboard2View @JvmOverloads constructor(
      * Reuses _swipeTrailPath and directly accesses swipe path to avoid copying.
      * Supports glow, solid, fade, rainbow, and none effects.
      */
-    private fun drawSwipeTrail(canvas: Canvas, snap: ConfigSnapshot) {
-        // Check if trail is enabled
-        if (!snap.swipe_trail_enabled) return
-
-        val recognizer = _swipeRecognizer ?: return
-        val swipePath = recognizer.getSwipePath()
+    private fun drawSwipeTrail(canvas: Canvas, snap: ConfigSnapshot, swipePath: List<PointF>) {
+        val effect = effectiveTrailEffect(snap)
         if (swipePath.size < 2)
             return
 
@@ -1923,7 +2012,7 @@ class Keyboard2View @JvmOverloads constructor(
         val paint = _swipeTrailPaint ?: return
 
         // Handle rainbow effect with cycling colors
-        if (snap.swipe_trail_effect == "rainbow") {
+        if (effect == "rainbow") {
             val hue = (System.currentTimeMillis() % 3600) / 10f // 0-360 cycling
             paint.color = android.graphics.Color.HSVToColor(200, floatArrayOf(hue, 0.8f, 1.0f))
         }
@@ -1931,7 +2020,7 @@ class Keyboard2View @JvmOverloads constructor(
         canvas.drawPath(_swipeTrailPath, paint)
 
         // Handle sparkle effect
-        if (snap.swipe_trail_effect == "sparkle") {
+        if (effect == "sparkle") {
             val time = System.currentTimeMillis()
             val originalColor = paint.color
             val originalStrokeWidth = paint.strokeWidth

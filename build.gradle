@@ -610,6 +610,9 @@ tasks.register('runPureTests', JavaExec) {
     // hit-testing, grid clamping and arming; slot resolution mirrors the short-swipe path.
     'tribixbite.cleverkeys.popover.SubkeyPopoverGeometryTest',
     'tribixbite.cleverkeys.popover.SubkeyPopoverSlotsTest',
+    // Roadmap §4.1 (2026-10-08): theme-editor keyboard preview scene plan (trail effect
+    // fallback, sample words, static sample trail through the layout's letter keys).
+    'tribixbite.cleverkeys.theme.ThemePreviewSceneTest',
     'tribixbite.cleverkeys.GestureTest',
     // Licensing-audit follow-up (2026-09-29): which parts of a pack's manifest attribution the
     // language-pack manager shows, and that only http(s) source tokens become tappable links.
@@ -1407,6 +1410,9 @@ tasks.register('runMockTests', JavaExec) {
     // HighConfidence, keyboardSurface) persist, round-trip, and surface in Theme /
     // Theme.Computed paints and the SuggestionBar/Keyboard2View consumers.
     'tribixbite.cleverkeys.theme.ThemeCreatorFieldWiringTest',
+    // Roadmap §4.1 (2026-10-08): every one of the 17 editable theme-creator colours reaches
+    // exactly its renderer field (or the trail colour) in the theme-editor preview.
+    'tribixbite.cleverkeys.theme.ThemeEditorPreviewMappingTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

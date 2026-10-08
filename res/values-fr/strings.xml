@@ -266,6 +266,8 @@
     <string name="theme_trail_label">Traînée</string>
     <string name="theme_name_label">Nom du thème</string>
     <string name="theme_section_preview">Aperçu</string>
+    <string name="theme_keyboard_preview_desc">Aperçu du clavier en lecture seule avec les couleurs modifiées : Maj active, une touche de modification verrouillée, des suggestions et un tracé de glissement d’exemple</string>
+    <string name="theme_preview_sample_words">couleur,couleurs,coloré</string>
     <string name="theme_section_key_colors">Couleurs des touches</string>
     <string name="theme_section_label_colors">Couleurs des étiquettes</string>
     <string name="theme_section_border_colors">Couleurs des bordures</string>

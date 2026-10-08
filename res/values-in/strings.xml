@@ -272,6 +272,8 @@
     <string name="theme_trail_label">Jejak</string>
     <string name="theme_name_label">Nama Tema</string>
     <string name="theme_section_preview">Pratinjau</string>
+    <string name="theme_keyboard_preview_desc">Pratinjau keyboard hanya-baca dengan warna yang diedit: Shift aktif, tombol pengubah terkunci, contoh saran, dan contoh jejak usap</string>
+    <string name="theme_preview_sample_words">warna,warni,berwarna</string>
     <string name="theme_section_key_colors">Warna Tombol</string>
     <string name="theme_section_label_colors">Warna Label</string>
     <string name="theme_section_border_colors">Warna Batas</string>

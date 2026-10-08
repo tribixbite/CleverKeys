@@ -396,6 +396,8 @@
     <string name="theme_trail_label">Trail</string>
     <string name="theme_name_label">Theme Name</string>
     <string name="theme_section_preview">Preview</string>
+    <string name="theme_keyboard_preview_desc">Read-only keyboard preview in the edited colors, with Shift active, a locked modifier key, sample suggestions and a sample swipe trail</string>
+    <string name="theme_preview_sample_words">color,colors,colorful</string>
     <string name="theme_section_key_colors">Key Colors</string>
     <string name="theme_section_label_colors">Label Colors</string>
     <string name="theme_section_border_colors">Border Colors</string>

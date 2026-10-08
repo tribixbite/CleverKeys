@@ -290,6 +290,8 @@
     <string name="theme_trail_label">Urmă</string>
     <string name="theme_name_label">Numele temei</string>
     <string name="theme_section_preview">Previzualizare</string>
+    <string name="theme_keyboard_preview_desc">Previzualizare de tastatură doar în citire, în culorile editate: Shift activ, o tastă modificatoare blocată, sugestii și o urmă de glisare exemplu</string>
+    <string name="theme_preview_sample_words">culoare,culori,colorat</string>
     <string name="theme_section_key_colors">Culorile tastelor</string>
     <string name="theme_section_label_colors">Culorile etichetelor</string>
     <string name="theme_section_border_colors">Culorile chenarelor</string>

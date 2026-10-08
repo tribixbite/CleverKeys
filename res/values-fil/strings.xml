@@ -270,6 +270,8 @@
     <string name="theme_trail_label">Trail</string>
     <string name="theme_name_label">Pangalan ng Tema</string>
     <string name="theme_section_preview">Preview</string>
+    <string name="theme_keyboard_preview_desc">Read-only na preview ng keyboard sa mga na-edit na kulay: aktibong Shift, naka-lock na modifier key, mga halimbawang mungkahi at halimbawang bakas ng swipe</string>
+    <string name="theme_preview_sample_words">kulay,makulay,kulayan</string>
     <string name="theme_section_key_colors">Mga Kulay ng Key</string>
     <string name="theme_section_label_colors">Mga Kulay ng Label</string>
     <string name="theme_section_border_colors">Mga Kulay ng Hangganan</string>

@@ -267,6 +267,8 @@
     <string name="theme_trail_label">Rastro</string>
     <string name="theme_name_label">Nome do tema</string>
     <string name="theme_section_preview">Pré-visualização</string>
+    <string name="theme_keyboard_preview_desc">Pré-visualização do teclado somente leitura com as cores editadas: Shift ativo, uma tecla modificadora bloqueada, sugestões e um rastro de deslize de exemplo</string>
+    <string name="theme_preview_sample_words">cor,cores,colorido</string>
     <string name="theme_section_key_colors">Cores das teclas</string>
     <string name="theme_section_label_colors">Cores dos rótulos</string>
     <string name="theme_section_border_colors">Cores das bordas</string>

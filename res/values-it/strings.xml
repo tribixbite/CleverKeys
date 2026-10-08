@@ -300,6 +300,8 @@
     <string name="theme_trail_label">Scia</string>
     <string name="theme_name_label">Nome tema</string>
     <string name="theme_section_preview">Anteprima</string>
+    <string name="theme_keyboard_preview_desc">Anteprima della tastiera di sola lettura con i colori modificati: Maiusc attivo, un tasto modificatore bloccato, suggerimenti e una scia di scorrimento di esempio</string>
+    <string name="theme_preview_sample_words">colore,colori,colorato</string>
     <string name="theme_section_key_colors">Colori tasti</string>
     <string name="theme_section_label_colors">Colori etichette</string>
     <string name="theme_section_border_colors">Colori bordi</string>

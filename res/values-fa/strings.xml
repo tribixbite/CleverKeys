@@ -296,6 +296,8 @@
     <string name="theme_trail_label">ردپا</string>
     <string name="theme_name_label">نام تم</string>
     <string name="theme_section_preview">پیش‌نمایش</string>
+    <string name="theme_keyboard_preview_desc">پیش‌نمایش فقط‌خواندنی صفحه‌کلید با رنگ‌های ویرایش‌شده: Shift فعال، یک کلید تغییردهندهٔ قفل‌شده، پیشنهادهای نمونه و ردّ کشیدن نمونه</string>
+    <string name="theme_preview_sample_words">رنگ,رنگ‌ها,رنگارنگ</string>
     <string name="theme_section_key_colors">رنگ‌های کلید</string>
     <string name="theme_section_label_colors">رنگ‌های برچسب</string>
     <string name="theme_section_border_colors">رنگ‌های حاشیه</string>

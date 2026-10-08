@@ -56,8 +56,10 @@ class SettingsSurfaceDriftTest {
     fun swipeTrailDropdown_coversEveryRendererEffect() {
         val renderer = read("Keyboard2View.kt")
         val rendererEffects =
-            whenBlockLiterals(renderer, "when (snap.swipe_trail_effect)") +
-                Regex("""swipe_trail_effect\s*==\s*"([a-z_]+)"""").findAll(renderer)
+            // The paint switch and the per-frame branches read the effect through
+            // effectiveTrailEffect (theme-editor preview, roadmap §4.1).
+            whenBlockLiterals(renderer, "when (effectiveTrailEffect(snap))") +
+                Regex("""(?:swipe_trail_effect|\beffect)\s*==\s*"([a-z_]+)"""").findAll(renderer)
                     .map { it.groupValues[1] }
         check(rendererEffects.size >= 4 && "glow" in rendererEffects) {
             "Renderer-effect extraction broke (got $rendererEffects) — fix the scan, not the assert."

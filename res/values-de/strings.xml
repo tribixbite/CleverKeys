@@ -280,6 +280,8 @@
     <string name="theme_trail_label">Spur</string>
     <string name="theme_name_label">Theme-Name</string>
     <string name="theme_section_preview">Vorschau</string>
+    <string name="theme_keyboard_preview_desc">Schreibgeschützte Tastaturvorschau in den bearbeiteten Farben, mit aktiver Umschalttaste, einer gesperrten Modifikatortaste, Beispielvorschlägen und einer Beispiel-Wischspur</string>
+    <string name="theme_preview_sample_words">Farbe,Farben,farbig</string>
     <string name="theme_section_key_colors">Tastenfarben</string>
     <string name="theme_section_label_colors">Beschriftungsfarben</string>
     <string name="theme_section_border_colors">Rahmenfarben</string>

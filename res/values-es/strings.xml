@@ -278,6 +278,8 @@
     <string name="theme_trail_label">Trazo</string>
     <string name="theme_name_label">Nombre del tema</string>
     <string name="theme_section_preview">Vista previa</string>
+    <string name="theme_keyboard_preview_desc">Vista previa del teclado de solo lectura con los colores editados, con Mayús activa, una tecla modificadora bloqueada, sugerencias de ejemplo y un trazo de deslizamiento de ejemplo</string>
+    <string name="theme_preview_sample_words">color,colores,colorido</string>
     <string name="theme_section_key_colors">Colores de teclas</string>
     <string name="theme_section_label_colors">Colores de etiquetas</string>
     <string name="theme_section_border_colors">Colores de bordes</string>

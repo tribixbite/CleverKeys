@@ -261,6 +261,8 @@
     <string name="theme_trail_label">След</string>
     <string name="theme_name_label">Название темы</string>
     <string name="theme_section_preview">Предварительный просмотр</string>
+    <string name="theme_keyboard_preview_desc">Предпросмотр клавиатуры только для чтения в выбранных цветах: активный Shift, зафиксированная клавиша-модификатор, примеры подсказок и пример следа свайпа</string>
+    <string name="theme_preview_sample_words">цвет,цвета,цветной</string>
     <string name="theme_section_key_colors">Цвета клавиш</string>
     <string name="theme_section_label_colors">Цвета меток</string>
     <string name="theme_section_border_colors">Цвета рамок</string>

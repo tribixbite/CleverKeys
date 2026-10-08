@@ -266,6 +266,8 @@
     <string name="theme_trail_label">轨迹</string>
     <string name="theme_name_label">主题名称</string>
     <string name="theme_section_preview">预览</string>
+    <string name="theme_keyboard_preview_desc">以所编辑颜色显示的只读键盘预览：Shift 已激活、一个已锁定的修饰键、示例建议和示例滑动轨迹</string>
+    <string name="theme_preview_sample_words">颜色,色彩,彩色</string>
     <string name="theme_section_key_colors">按键颜色</string>
     <string name="theme_section_label_colors">标签颜色</string>
     <string name="theme_section_border_colors">边框颜色</string>

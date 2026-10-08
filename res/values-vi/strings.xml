@@ -296,6 +296,8 @@
     <string name="theme_trail_label">Vệt</string>
     <string name="theme_name_label">Tên chủ đề</string>
     <string name="theme_section_preview">Xem trước</string>
+    <string name="theme_keyboard_preview_desc">Bản xem trước bàn phím chỉ đọc với màu đã chỉnh: Shift đang bật, một phím bổ trợ bị khóa, gợi ý mẫu và vệt vuốt mẫu</string>
+    <string name="theme_preview_sample_words">màu,màu sắc,sặc sỡ</string>
     <string name="theme_section_key_colors">Màu phím</string>
     <string name="theme_section_label_colors">Màu nhãn</string>
     <string name="theme_section_border_colors">Màu viền</string>

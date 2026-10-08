@@ -270,6 +270,8 @@
     <string name="theme_trail_label">İz</string>
     <string name="theme_name_label">Tema Adı</string>
     <string name="theme_section_preview">Önizleme</string>
+    <string name="theme_keyboard_preview_desc">Düzenlenen renklerle salt okunur klavye önizlemesi: etkin Shift, kilitli bir değiştirici tuş, örnek öneriler ve örnek bir kaydırma izi</string>
+    <string name="theme_preview_sample_words">renk,renkler,renkli</string>
     <string name="theme_section_key_colors">Tuş Renkleri</string>
     <string name="theme_section_label_colors">Etiket Renkleri</string>
     <string name="theme_section_border_colors">Kenarlık Renkleri</string>

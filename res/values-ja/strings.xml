@@ -267,6 +267,8 @@
     <string name="theme_trail_label">トレイル</string>
     <string name="theme_name_label">テーマ名</string>
     <string name="theme_section_preview">プレビュー</string>
+    <string name="theme_keyboard_preview_desc">編集中の色で表示する読み取り専用のキーボードプレビュー（Shift 有効、ロックされた修飾キー、候補の例、スワイプ軌跡の例）</string>
+    <string name="theme_preview_sample_words">色,カラー,色彩</string>
     <string name="theme_section_key_colors">キーの色</string>
     <string name="theme_section_label_colors">ラベルの色</string>
     <string name="theme_section_border_colors">ボーダーの色</string>

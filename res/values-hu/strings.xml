@@ -267,6 +267,8 @@
     <string name="theme_trail_label">Nyomvonal</string>
     <string name="theme_name_label">Téma neve</string>
     <string name="theme_section_preview">Előnézet</string>
+    <string name="theme_keyboard_preview_desc">Csak olvasható billentyűzet-előnézet a szerkesztett színekkel: aktív Shift, rögzített módosítóbillentyű, mintajavaslatok és minta csúsztatási nyomvonal</string>
+    <string name="theme_preview_sample_words">szín,színek,színes</string>
     <string name="theme_section_key_colors">Billentyűszínek</string>
     <string name="theme_section_label_colors">Feliratszínek</string>
     <string name="theme_section_border_colors">Szegélyszínek</string>

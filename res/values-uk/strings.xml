@@ -272,6 +272,8 @@
     <string name="theme_trail_label">Слід</string>
     <string name="theme_name_label">Назва теми</string>
     <string name="theme_section_preview">Попередній перегляд</string>
+    <string name="theme_keyboard_preview_desc">Попередній перегляд клавіатури лише для читання у вибраних кольорах: активний Shift, зафіксована клавіша-модифікатор, приклади підказок і приклад сліду свайпу</string>
+    <string name="theme_preview_sample_words">колір,кольори,кольоровий</string>
     <string name="theme_section_key_colors">Кольори клавіш</string>
     <string name="theme_section_label_colors">Кольори підписів</string>
     <string name="theme_section_border_colors">Кольори рамок</string>

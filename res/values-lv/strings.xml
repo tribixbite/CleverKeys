@@ -272,6 +272,8 @@
     <string name="theme_trail_label">Pēda</string>
     <string name="theme_name_label">Tēmas nosaukums</string>
     <string name="theme_section_preview">Priekšskatījums</string>
+    <string name="theme_keyboard_preview_desc">Tikai lasāms tastatūras priekšskatījums rediģētajās krāsās: aktīvs Shift, bloķēts modifikatora taustiņš, parauga ieteikumi un parauga vilkšanas pēda</string>
+    <string name="theme_preview_sample_words">krāsa,krāsas,krāsains</string>
     <string name="theme_section_key_colors">Taustiņu krāsas</string>
     <string name="theme_section_label_colors">Uzrakstu krāsas</string>
     <string name="theme_section_border_colors">Apmales krāsas</string>

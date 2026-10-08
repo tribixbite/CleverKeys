@@ -268,6 +268,8 @@
     <string name="theme_trail_label">Spoor</string>
     <string name="theme_name_label">Thema naam</string>
     <string name="theme_section_preview">Voorbeeld</string>
+    <string name="theme_keyboard_preview_desc">Alleen-lezen toetsenbordvoorbeeld in de bewerkte kleuren, met Shift actief, een vergrendelde modificatietoets, voorbeeldsuggesties en een voorbeeldveegspoor</string>
+    <string name="theme_preview_sample_words">kleur,kleuren,kleurrijk</string>
     <string name="theme_section_key_colors">Toetskleuren</string>
     <string name="theme_section_label_colors">Labelkleuren</string>
     <string name="theme_section_border_colors">Randkleuren</string>

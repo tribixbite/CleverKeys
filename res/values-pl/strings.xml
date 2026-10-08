@@ -272,6 +272,8 @@
     <string name="theme_trail_label">Ślad</string>
     <string name="theme_name_label">Nazwa motywu</string>
     <string name="theme_section_preview">Podgląd</string>
+    <string name="theme_keyboard_preview_desc">Podgląd klawiatury tylko do odczytu w edytowanych kolorach: aktywny Shift, zablokowany klawisz modyfikujący, przykładowe podpowiedzi i przykładowy ślad przesunięcia</string>
+    <string name="theme_preview_sample_words">kolor,kolory,kolorowy</string>
     <string name="theme_section_key_colors">Kolory klawiszy</string>
     <string name="theme_section_label_colors">Kolory etykiet</string>
     <string name="theme_section_border_colors">Kolory obramowań</string>

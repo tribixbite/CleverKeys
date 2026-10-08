@@ -835,7 +835,13 @@ fun ThemeCreatorDialog(
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    ThemePreview(colors)
+                    // Roadmap §4.1: the REAL keyboard renderer (Keyboard2View + SuggestionBar),
+                    // scaled, with Shift latched, a locked modifier and a sample trail. The
+                    // compact ThemePreview stays on the theme-list cards only.
+                    ThemeKeyboardPreview(
+                        colors = colors,
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
