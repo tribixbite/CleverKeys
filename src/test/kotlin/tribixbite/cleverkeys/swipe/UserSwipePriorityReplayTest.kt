@@ -28,10 +28,18 @@ class UserSwipePriorityReplayTest {
         )
     }
 
-    /** The decoder a user with [target] in the personal dictionary at [bonus] decodes with. */
-    private fun decoderFor(engine: CtcReplayEngine, target: String, bonus: Double): CtcSwipeDecoder {
+    /**
+     * The decoder a user with [target] in the personal dictionary at [bonus] decodes with;
+     * [stored] is the word's stored 1..255 frequency (the Dictionary Manager's "Frequency").
+     */
+    private fun decoderFor(
+        engine: CtcReplayEngine,
+        target: String,
+        bonus: Double,
+        stored: Int = UserWordFrequency.DEFAULT,
+    ): CtcSwipeDecoder {
         val merged = CtcLexiconMerge.merge(
-            engine.baseLexiconPairs(), listOf(target to UserWordFrequency.DEFAULT), emptySet())
+            engine.baseLexiconPairs(), listOf(target to stored), emptySet())
         return engine.decoderWithLexicon(
             merged, topK = engine.scoringParams.beamWidth,
             priority = CtcPriorityBonus(mapOf(target to bonus)),
@@ -77,6 +85,64 @@ class UserSwipePriorityReplayTest {
                 }
             }
         }
+    }
+
+    /**
+     * Seeker device report (2026-10-10): an EXISTING custom `adb` raised to Highest still
+     * committed `an` for two synthetic a→d→b swipes, while a NEW `wet` at High won. Replays the
+     * device recipe (one `input motionevent` DOWN/MOVE/UP chain through key centres, 8 steps per
+     * segment, near-uniform event spacing, a finger-lift sample) at several stored frequencies,
+     * because a pre-existing custom word may carry a stored frequency below the 255 a new word
+     * gets, and the CTC merge turns that into a λ·ln penalty the bonus has to cover as well.
+     * Prints the bonus each case needs (`needs`, final-score nats) and its rank at Highest.
+     */
+    @Test
+    fun deviceRecipeAdbDiagnostic() {
+        assumeOrt()
+        CtcReplayEngine.build("en").use { engine ->
+            val layout = engine.layoutGeometry
+            for (stored in listOf(255, 200, 150, 100, 50)) {
+                val plain = decoderFor(engine, "adb", 0.0, stored)
+                val highest = decoderFor(engine, "adb", UserSwipePriorityBonus.CTC_HIGHEST, stored)
+                for ((label, shape) in deviceShapes("adb", layout)) {
+                    val (x, y, t) = shape
+                    val c0 = plain.decode(x, y, t)
+                    val c4 = highest.decode(x, y, t)
+                    println("[PRIO-DEV] adb stored=%3d %-26s needs=%6.3f rankHighest=%2d top3Highest=%s".format(
+                        stored, label, needed(c0, "adb"), rankOf(c4, "adb"),
+                        c4.take(3).map { "%s:%.2f".format(it.word, it.finalScore) }))
+                }
+            }
+            // The control the device ran alongside: a NEW `wet` (stored 255) at High.
+            val wet = decoderFor(engine, "wet", 0.0)
+            for ((label, shape) in deviceShapes("wet", layout)) {
+                val (x, y, t) = shape
+                println("[PRIO-DEV] wet stored=255 %-26s needs=%6.3f".format(label, needed(wet.decode(x, y, t), "wet")))
+            }
+        }
+    }
+
+    /**
+     * The device recipe's shapes: [CtcTraceShapes.straight] at 8 steps per segment, with a lift
+     * sample one step later (what ACTION_UP adds), plus seeded jitter of the per-event spacing
+     * (an adb `input motionevent` chain is not clocked) and the eval's 12-step reference.
+     */
+    private fun deviceShapes(word: String, layout: CtcLayout): List<Pair<String, Triple<DoubleArray, DoubleArray, DoubleArray>>> {
+        val out = ArrayList<Pair<String, Triple<DoubleArray, DoubleArray, DoubleArray>>>()
+        out += "eval straight+lift (12)" to CtcTraceShapes.withLift(CtcTraceShapes.straight(word, layout))
+        val eight = CtcTraceShapes.straight(word, layout, stepsPerSegment = 8, stepMs = 40.0)
+        out += "8-step" to eight
+        out += "8-step+lift" to CtcTraceShapes.withLift(eight, 40.0)
+        out += "8-step+lift500" to CtcTraceShapes.withLift(eight, 500.0)
+        for (seed in 1..6) {
+            val rnd = java.util.Random(seed.toLong())
+            val (x, y, _) = eight
+            val t = DoubleArray(x.size)
+            for (i in 1 until t.size) t[i] = t[i - 1] + 20.0 + rnd.nextDouble() * 80.0
+            out += "8-step+lift jitter s$seed" to
+                CtcTraceShapes.withLift(Triple(x, y, t), 20.0 + rnd.nextDouble() * 80.0)
+        }
+        return out
     }
 
     // ── pins ───────────────────────────────────────────────────────────────────────

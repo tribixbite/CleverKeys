@@ -280,3 +280,65 @@ scripts/gradle-guard.sh runPureTests -PtestClass=swipe.geometric.GeoUserSwipePri
 5. Put both words back to Normal. `an` and `we` should decode exactly as before.
 6. Backup & Restore → export Dictionaries, delete `adb`, import the file. `adb` returns with
    Highest.
+
+## 9. Device report, 2026-10-10: `adb` at Highest still committed `an`
+
+**Report.** On the Seeker, with release build 0e1d3c46, `adb` was already in the English
+custom words at Normal. The tester raised it to Highest in Dictionary Manager → Custom (Edit).
+Two synthetic a→d→b swipes in a Chrome textarea at sentence start both committed "An", and
+"Adb" appeared lower in the bar on one of them. The swipes were `input motionevent` chains
+through key centres, 8 steps per segment. A new custom `wet` added at High won both of its
+swipes.
+
+**Wiring: no defect found in the code.** The Edit dialog's Save calls
+`CustomDictionarySource.updateWord(old, new, freq, priority)`. That writes `swipe_priority_en`
+to the same DirectBootAware preferences the IME reads, in the same process.
+`CtcEngineAdapter.lexiconFor` reads the value on every decode and hashes it into
+`LexiconContentVersion`. Raising an existing word's level therefore rebuilds the trie exactly
+as adding a word does. The bonus is keyed on the lowercase a–z strip (`adb`). Autocap is
+applied after the decode, to the decoded slate (`SuggestionHandler.applyShiftTransformation`).
+Nothing between the decoder and the bar reorders the slate: context rescoring is off by
+default, and the possessive augment only appends. The add path and the edit path differ in
+one input only: **the stored frequency**. Add prefills 255. Edit prefills the word's existing
+stored value, which may be below 255. Before wave U2 the dialog default was 100, so a word
+added in that era keeps 100 when only its level is changed.
+
+**Replay of the device recipe**
+(`UserSwipePriorityReplayTest.deviceRecipeAdbDiagnostic`; same stack and golden QWERTY
+geometry as §2. The golden geometry equals `latn_qwerty_us`'s letter box: a 0.10, d 0.30,
+b 0.60.) The shapes are 8 steps per segment, with and without the lift sample, a 500 ms
+(clamped) lift, and six seeded jitters of the event spacing (20–100 ms). Each cell is the bonus
+`adb` needs (nats), followed by its rank at Highest (+4.0):
+
+| stored freq | eval straight+lift (12) | 8-step | 8-step+lift | 8-step+lift500 | jitter s1–s6 (needs) | rank 1 at Highest |
+|---|---|---|---|---|---|---|
+| 255 | 3.51 | 3.55 | 3.29 | 2.96 | 1.09–2.24 | 10/10 |
+| 200 | 3.94 | 3.99 | 3.72 | 3.39 | 1.52–2.68 | 10/10 |
+| 150 | 4.38 | 4.42 | 4.16 | 3.83 | 1.96–3.12 | 7/10 (rank 2 on the three uniform shapes) |
+| 100 | 4.87 | 4.92 | 4.65 | 4.33 | 2.46–3.61 | 6/10 (rank 2 on all four uniform shapes) |
+| 50 | 5.44 | 5.48 | 5.22 | 4.89 | 3.02–4.18 | 3/10 |
+
+`wet` at stored 255 needs 0.07–1.62 on the same shapes, under its High +2.0 on every one.
+
+**Reading.** At stored 255 the device recipe gives `adb` rank 1 at Highest on every shape,
+with a margin of 0.45–2.9 nats. The lift clamp (f135b2b7) cannot cause the loss: it landed
+before this measurement, it only shortens holds longer than 500 ms, and a longer lift
+*helps* `adb`. The replay reproduces the device symptom only when the stored frequency is
+about 150 or below. Each step down in frequency costs λ·ln of the calibrated ratio: −0.44 nats
+at 200, −0.87 at 150, −1.37 at 100. In that case `adb` lands at rank 2 behind `an`, which
+matches "Adb lower in the bar". The working hypothesis is therefore that the device's `adb`
+carries a stored frequency of about 150 or below. **This is not yet confirmed on the device.**
+The Dictionary Manager row shows the value ("Frequency: N · Swipe priority: Highest").
+
+The other live explanation is that the device swipes were not centred: for example, a y
+offset from the tester's key-centre coordinates, which the replay does not model. The device
+checks below separate the two.
+
+**Not changed.** The levels are unchanged. Whether raising a word's priority should also
+lift its stored frequency to 255, or whether the Edit dialog should warn that a frequency
+below 255 offsets the level, is a maintainer decision.
+
+**Device check.** (1) Read the `adb` row's "Frequency: N". (2) If N < 255, edit it to 255 at
+Highest and swipe a→d→b twice with the same recipe. The replay predicts `adb` first.
+(3) If N is already 255 and `an` still wins, the cause is not the frequency. In that case,
+capture the swipe's raw trace (Swipe Playground with debug mode on) and replay it.
