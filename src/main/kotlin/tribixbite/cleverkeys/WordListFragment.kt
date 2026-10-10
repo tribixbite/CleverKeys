@@ -9,9 +9,13 @@ import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -26,6 +30,9 @@ class WordListFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyText: TextView
     private lateinit var loadingProgress: ProgressBar
+    // Custom tab only: the old-default-frequency raise offer (LegacyCustomWordFrequency).
+    private var legacyFrequencyNotice: View? = null
+    private var legacyFrequencyNoticeText: TextView? = null
     private lateinit var dataSource: DictionaryDataSource
     private lateinit var adapter: BaseWordAdapter
 
@@ -87,6 +94,13 @@ class WordListFragment : Fragment() {
         recyclerView = view.findViewById(R.id.recycler_view)
         emptyText = view.findViewById(R.id.empty_text)
         loadingProgress = view.findViewById(R.id.loading_progress)
+        legacyFrequencyNotice = view.findViewById(R.id.legacy_freq_notice)
+        legacyFrequencyNoticeText = view.findViewById(R.id.legacy_freq_notice_text)
+        view.findViewById<Button>(R.id.legacy_freq_review).setOnClickListener { showLegacyFrequencyDialog() }
+        view.findViewById<Button>(R.id.legacy_freq_dismiss).setOnClickListener {
+            (dataSource as? CustomDictionarySource)?.dismissLegacyFrequencyOffer()
+            updateLegacyFrequencyNotice()
+        }
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
@@ -223,6 +237,9 @@ class WordListFragment : Fragment() {
 
                 adapter.setWords(sortedWords)
                 updateEmptyState()
+                // Every load/refresh/edit of the Custom tab re-evaluates the offer, so a word
+                // edited away from the old default, a raise, or a backup import is reflected.
+                updateLegacyFrequencyNotice()
 
                 // #96: re-apply the saved scroll position once the restored content is in the
                 // adapter. One-shot: consumed on the first successful population after
@@ -329,7 +346,7 @@ class WordListFragment : Fragment() {
         freqInput.selectAll()
         layout.addView(freqInput)
 
-        val priorityGroup = addSwipePriorityPicker(layout, SwipePriority.NORMAL)
+        val priorityGroup = addSwipePriorityPicker(layout, SwipePriority.NORMAL, freqInput)
 
         AlertDialog.Builder(requireContext())
             .setTitle(R.string.dict_add_word_title)
@@ -411,7 +428,7 @@ class WordListFragment : Fragment() {
         freqInput.setText(word.frequency.coerceIn(UserWordFrequency.MIN, UserWordFrequency.MAX).toString())
         layout.addView(freqInput)
 
-        val priorityGroup = addSwipePriorityPicker(layout, word.swipePriority)
+        val priorityGroup = addSwipePriorityPicker(layout, word.swipePriority, freqInput)
 
         AlertDialog.Builder(requireContext())
             .setTitle(R.string.dict_edit_word_title)
@@ -454,10 +471,18 @@ class WordListFragment : Fragment() {
      * Radio buttons rather than a slider: each level is one discrete, measured bonus
      * (`docs/eval/2026-10-08-user-swipe-priority.md`), and the store is written once on Save,
      * so no debouncing of lexicon rebuilds is needed.
+     *
+     * Selecting High or Highest while [freqInput] holds less than 255 (or nothing parseable)
+     * sets it to 255 and shows a line saying so ([UserWordFrequency.liftedForPriority],
+     * maintainer decision 2026-10-10): a lower stored frequency would silently cancel part of
+     * the bonus (the device `adb` at the legacy 100 lost at Highest). Normal leaves the field
+     * alone, and the [initial] check does not fire the listener, so opening the dialog never
+     * changes a value by itself.
      */
     private fun addSwipePriorityPicker(
         layout: android.widget.LinearLayout,
         initial: SwipePriority,
+        freqInput: EditText,
     ): android.widget.RadioGroup {
         val ctx = requireContext()
         val label = TextView(ctx)
@@ -477,6 +502,20 @@ class WordListFragment : Fragment() {
         }
         layout.addView(group)
 
+        val raisedNote = TextView(ctx)
+        raisedNote.textSize = 12f
+        raisedNote.visibility = View.GONE
+        layout.addView(raisedNote)
+        // Set AFTER the initial check, so only a user selection can lift the frequency.
+        group.setOnCheckedChangeListener { g, checkedId ->
+            val level = g.findViewById<View>(checkedId)?.tag as? SwipePriority ?: return@setOnCheckedChangeListener
+            val lifted = UserWordFrequency.liftedForPriority(level, freqInput.text.toString().trim().toIntOrNull())
+                ?: return@setOnCheckedChangeListener
+            freqInput.setText(lifted.toString())
+            raisedNote.text = getString(R.string.dict_swipe_priority_frequency_raised, lifted)
+            raisedNote.visibility = View.VISIBLE
+        }
+
         val help = TextView(ctx)
         help.text = getString(R.string.dict_swipe_priority_help)
         help.textSize = 12f
@@ -488,6 +527,88 @@ class WordListFragment : Fragment() {
     /** The level whose radio button is checked in [group]; NORMAL when none is. */
     private fun selectedSwipePriority(group: android.widget.RadioGroup): SwipePriority =
         group.findViewById<View>(group.checkedRadioButtonId)?.tag as? SwipePriority ?: SwipePriority.NORMAL
+
+    /**
+     * Show or hide the Custom tab's old-default-frequency notice: visible while this language
+     * has a custom word at exactly [LegacyCustomWordFrequency.LEGACY_DEFAULT] that the user has
+     * not dismissed. The store is one small JSON preference, read on the main thread like the
+     * dialogs' own reads.
+     */
+    private fun updateLegacyFrequencyNotice() {
+        val notice = legacyFrequencyNotice ?: return
+        val source = dataSource as? CustomDictionarySource
+        if (tabType != TabType.CUSTOM || source == null || !source.shouldOfferLegacyFrequencyRaise()) {
+            notice.visibility = View.GONE
+            return
+        }
+        val count = source.legacyFrequencyWords().size
+        legacyFrequencyNoticeText?.text = resources.getQuantityString(
+            R.plurals.dict_legacy_freq_notice, count,
+            count, LegacyCustomWordFrequency.LEGACY_DEFAULT, UserWordFrequency.DEFAULT,
+        )
+        notice.visibility = View.VISIBLE
+    }
+
+    /**
+     * "Review": list every word still at the old default and confirm before raising them
+     * (Raise / Not now). "Not now" changes nothing and keeps the notice; only Dismiss on the
+     * notice hides it. Raising re-reads the store, so a word edited meanwhile is left alone.
+     */
+    @SuppressLint("SetTextI18n")
+    private fun showLegacyFrequencyDialog() {
+        val source = dataSource as? CustomDictionarySource ?: return
+        val words = source.legacyFrequencyWords()
+        if (words.isEmpty()) {
+            updateLegacyFrequencyNotice()
+            return
+        }
+        val ctx = requireContext()
+        val column = LinearLayout(ctx)
+        column.orientation = LinearLayout.VERTICAL
+        column.setPadding(60, 40, 60, 20)
+        val message = TextView(ctx)
+        message.text = getString(
+            R.string.dict_legacy_freq_dialog_message,
+            LegacyCustomWordFrequency.LEGACY_DEFAULT, UserWordFrequency.DEFAULT,
+        )
+        column.addView(message)
+        // The words themselves, not translatable text: a plain comma-separated list.
+        val list = TextView(ctx)
+        list.text = words.joinToString(", ")
+        list.setPadding(0, 24, 0, 0)
+        list.setTypeface(list.typeface, android.graphics.Typeface.BOLD)
+        column.addView(list)
+        val scroll = ScrollView(ctx)
+        scroll.addView(column)
+
+        AlertDialog.Builder(ctx)
+            .setTitle(R.string.dict_legacy_freq_dialog_title)
+            .setView(scroll)
+            .setPositiveButton(R.string.dict_legacy_freq_raise) { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        val raised = source.raiseLegacyFrequencies(words)
+                        loadWords()
+                        // Same propagation as an Edit: other tabs refresh and the tap predictor
+                        // reloads; the swipe engines re-key on the custom-words content.
+                        (activity as? DictionaryManagerActivity)?.refreshAllTabs()
+                        context?.let {
+                            Toast.makeText(
+                                it,
+                                it.resources.getQuantityString(
+                                    R.plurals.dict_legacy_freq_raised, raised, raised, UserWordFrequency.DEFAULT,
+                                ),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    } catch (e: Exception) {
+                        showErrorDialog(R.string.dict_error_update_word, e)
+                    }
+                }
+            }
+            .setNegativeButton(R.string.dict_legacy_freq_not_now, null)
+            .show()
+    }
 
     /**
      * Show the shared "operation failed" dialog for a word action.

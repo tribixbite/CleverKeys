@@ -1094,6 +1094,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.UserSwipePriorityBonusTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcPriorityBonusTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoUserSwipePriorityTest',
+    // Legacy default-frequency offer + priority-driven frequency lift in the Add/Edit dialog
+    // (maintainer decisions A/B, 2026-10-10; the device `adb` stored at the old default 100).
+    'tribixbite.cleverkeys.LegacyCustomWordFrequencyTest',
     // Correction-driven swipe prior (second attempt at the `git` → `got` report): phase-A
     // corrections on one half lift phase-B decodes on the other; pin: git flips within ≤ 3
     // corrections. Eval: docs/eval/2026-09-26-correction-driven-swipe-prior-replay.md
@@ -1306,6 +1309,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.DirectBootManagerTest',
     'tribixbite.cleverkeys.DirectBootAwarePreferencesTest',
     'tribixbite.cleverkeys.DictionaryManagerTest',
+    // 2026-10-10 device report ("adb ranked first only from the SECOND swipe after the edit"):
+    // the Dictionary Manager Edit/raise writers -> the CTC lexicon inputs and memo version.
+    'tribixbite.cleverkeys.swipe.CustomWordEditLexiconInputTest',
     'tribixbite.cleverkeys.VibratorCompatTest',
     'tribixbite.cleverkeys.TerminalUtilsTest',
     'tribixbite.cleverkeys.KeyRepeatLogicTest',

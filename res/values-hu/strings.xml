@@ -168,6 +168,21 @@
     <string name="dict_swipe_priority_highest">Legmagasabb</string>
     <string name="dict_swipe_priority_help">A gyakoriság (1–255) a szótárhoz képest rangsorolja a szót; a 255 már a maximum. A csúsztatási prioritás ezen felül fix előnyt ad annak a szónak, amely csúsztatáskor még mindig veszít: a Magas mérsékelt, a Legmagasabb erős. A kiemelt szó a hasonló szavak egyes csúsztatásait is elnyeri (például „ad” az „as” helyett). A gépelési javaslatok nem változnak.</string>
     <string name="dict_word_frequency_swipe_priority">Gyakoriság: %1$d · Csúsztatási prioritás: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">A gyakoriság a legmagasabb, %1$d értékre emelkedett: alacsonyabb gyakoriság részben semlegesítené a csúsztatási prioritást.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d egyéni szó még a régi alapértelmezett %2$d gyakoriságot használja. Emeli %3$d értékre?</item>
+        <item quantity="other">%1$d egyéni szó még a régi alapértelmezett %2$d gyakoriságot használja. Emeli %3$d értékre?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Áttekintés</string>
+    <string name="dict_legacy_freq_dismiss">Elrejtés</string>
+    <string name="dict_legacy_freq_dialog_title">Emeli a régi alapértelmezett gyakoriságokat?</string>
+    <string name="dict_legacy_freq_dialog_message">A régebbi verziókban hozzáadott szavak %1$d gyakorisággal lettek mentve, ezért nehezebb őket csúsztatással beírni. Az Emelés csak az alábbi szavakat állítja %2$d értékre; csúsztatási prioritásuk nem változik. Ha valamelyiket szándékosan állította %1$d értékre, a Szerkesztés gombbal újra csökkentheti.</string>
+    <string name="dict_legacy_freq_raise">Emelés</string>
+    <string name="dict_legacy_freq_not_now">Most nem</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d szó %2$d értékre emelve</item>
+        <item quantity="other">%1$d szó %2$d értékre emelve</item>
+    </plurals>
     <string name="dict_edit">Szerkesztés</string>
     <string name="dict_delete">Törlés</string>
     <string name="dict_no_words">Nem található szó</string>

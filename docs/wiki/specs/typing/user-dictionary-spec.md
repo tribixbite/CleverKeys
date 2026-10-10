@@ -179,8 +179,34 @@ bounded way to raise one:
 - The "Prefer … when swiping?" offer adds a new word at Normal, raises a Normal word to High,
   and offers nothing at High or Highest (`SwipeCorrectionPolicy.offerLevel`).
 
+- Add/Edit dialog (2026-10-10): selecting High or Highest while the frequency field holds less
+  than 255, or nothing parseable, sets it to 255 and shows `dict_swipe_priority_frequency_raised`
+  (`UserWordFrequency.liftedForPriority`). Normal never changes the field. The initial check
+  does not fire, so opening the dialog changes nothing.
+
 Measurements and the collateral cost per level:
 [User swipe priority eval](https://github.com/tribixbite/CleverKeys/blob/main/docs/eval/2026-10-08-user-swipe-priority.md).
+
+### Legacy default frequency (100) offer
+
+The only default ever stored for a custom word before wave U2 (`4525eb9c`, 2026-09-06) was
+**100**. Writers: the Add Word dialog (`f743e49f`, pre-fill and fallback), the IME-side
+`DictionaryManager.saveUserWords` (`1ccb534e`, rewrote every word of the language to 100 on any
+IME add or remove), and the `user_words` migration (`10930d45`). Still live:
+`DictImportPlanBuilder.DEFAULT_USER_WORD_FREQ` = 100 for a backup entry without a frequency.
+
+U2 deliberately does not rewrite stored values. A 100 the user chose cannot be told from a
+default. So the Custom tab OFFERS the raise (`LegacyCustomWordFrequency`, pure):
+
+- Shown when the language has a word at exactly 100 that is not in the dismissed set.
+- Review lists the words, then Raise / Not now. Raise re-reads the store and sets only words
+  still at 100 to 255 (`CustomDictionarySource.raiseLegacyFrequencies`). Swipe priorities are
+  untouched. The write changes `custom_words_<lang>`, so both swipe lexicons re-key on it.
+- Dismiss stores that language's current legacy words in `legacy_custom_freq_offer_dismissed`
+  (JSON `{lang: [word…]}`). That key is in `SettingsValidation.INTERNAL_KEYS`, so it is never
+  exported. The notice returns only when a legacy word outside that set appears, for example
+  after a backup import (`DictImportApplier` keeps imported frequencies as stored).
+- Tests: `LegacyCustomWordFrequencyTest` (pure), `CustomWordEditLexiconInputTest` (mock).
 
 ### Dictionary Manager Access
 
@@ -189,6 +215,7 @@ Measurements and the collateral cost per level:
 - Custom tab Add/Edit dialogs: word, frequency (1–255) and Swipe priority (Normal / High /
   Highest radio buttons, with an explanation of what each number does). A raised word's row
   reads "Frequency: N · Swipe priority: High".
+- Custom tab notice for words at the legacy default frequency 100 (see above).
 
 ## State Management
 

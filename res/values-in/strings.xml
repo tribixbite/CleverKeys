@@ -173,6 +173,19 @@
     <string name="dict_swipe_priority_highest">Tertinggi</string>
     <string name="dict_swipe_priority_help">Frekuensi (1-255) memeringkat kata Anda terhadap kamus; 255 sudah yang tertinggi. Prioritas geser menambahkan keunggulan tetap untuk kata yang masih kalah saat digeser: Tinggi sedang, Tertinggi kuat. Kata yang dinaikkan juga memenangkan sebagian geseran kata yang mirip (misalnya \'ad\' alih-alih \'as\'). Saran saat mengetik tidak terpengaruh.</string>
     <string name="dict_word_frequency_swipe_priority">Frekuensi: %1$d · Prioritas geser: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Frekuensi dinaikkan ke %1$d: frekuensi yang lebih rendah akan membatalkan sebagian prioritas geser.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="other">%1$d kata kustom masih memakai frekuensi bawaan lama %2$d. Naikkan ke %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Tinjau</string>
+    <string name="dict_legacy_freq_dismiss">Tutup</string>
+    <string name="dict_legacy_freq_dialog_title">Naikkan frekuensi bawaan lama?</string>
+    <string name="dict_legacy_freq_dialog_message">Kata yang ditambahkan di versi lama disimpan dengan frekuensi %1$d, sehingga lebih sulit digeser. Naikkan hanya mengubah kata-kata di bawah menjadi %2$d; prioritas gesernya tetap. Jika Anda sengaja menyetel salah satunya ke %1$d, Anda bisa menurunkannya lagi dengan Edit.</string>
+    <string name="dict_legacy_freq_raise">Naikkan</string>
+    <string name="dict_legacy_freq_not_now">Nanti saja</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="other">%1$d kata dinaikkan ke %2$d</item>
+    </plurals>
     <string name="dict_edit">Edit</string>
     <string name="dict_delete">Hapus</string>
     <string name="dict_no_words">Tidak ada kata ditemukan</string>

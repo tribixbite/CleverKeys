@@ -622,7 +622,8 @@ class CustomDictionarySource(
         val priorities = getSwipePriorities()
         getCustomWords()
             .map { (word, freq) ->
-                // Use stored frequency or default to 100
+                // The stored 1..255 frequency, as written (legacy 100s are offered a raise,
+                // never rewritten silently — see LegacyCustomWordFrequency).
                 DictionaryWord(word, freq, WordSource.CUSTOM, true, priorities[word] ?: SwipePriority.NORMAL)
             }
             .sorted()
@@ -679,6 +680,53 @@ class CustomDictionarySource(
         saveCustomWords(words)
         val priorities = SwipePriority.without(getSwipePriorities(), listOf(oldWord))
         saveSwipePriorities(SwipePriority.withLevel(priorities, newWord, priority))
+    }
+
+    // ── Legacy default-frequency offer (maintainer decision A, 2026-10-10) ──────────────────
+    // Policy and evidence for the legacy value live in the pure LegacyCustomWordFrequency;
+    // these methods only read and write this language's stores.
+
+    /** This language's custom words still at the old default frequency (display order). */
+    fun legacyFrequencyWords(): List<String> =
+        LegacyCustomWordFrequency.legacyWords(getCustomWords())
+
+    /**
+     * Should the Custom tab show the legacy-frequency notice? True when a legacy word exists that
+     * the user has not already dismissed. Never for the legacy global store (no language).
+     */
+    fun shouldOfferLegacyFrequencyRaise(): Boolean {
+        val lang = languageCode ?: return false
+        val dismissed = LegacyCustomWordFrequency.dismissedFor(
+            prefs.getString(LegacyCustomWordFrequency.DISMISSED_PREF_KEY, null), lang
+        )
+        return LegacyCustomWordFrequency.shouldOffer(legacyFrequencyWords(), dismissed)
+    }
+
+    /**
+     * Raise [words] that are STILL at the old default to [UserWordFrequency.DEFAULT], in one
+     * write; swipe priorities are untouched. Reads the store fresh, so a word edited or removed
+     * since the list was shown is left as it now is.
+     *
+     * @return how many words were raised
+     */
+    suspend fun raiseLegacyFrequencies(words: Collection<String>): Int {
+        val stored = getCustomWords()
+        val count = LegacyCustomWordFrequency.raisableCount(stored, words)
+        if (count > 0) saveCustomWords(LegacyCustomWordFrequency.raise(stored, words))
+        return count
+    }
+
+    /**
+     * Remember that the user dismissed the notice for the legacy words shown now, so it stays
+     * hidden until a legacy word outside this set appears (e.g. from a backup import).
+     */
+    fun dismissLegacyFrequencyOffer() {
+        val lang = languageCode ?: return
+        val key = LegacyCustomWordFrequency.DISMISSED_PREF_KEY
+        prefs.edit().putString(
+            key,
+            LegacyCustomWordFrequency.withDismissed(prefs.getString(key, null), lang, legacyFrequencyWords()),
+        ).apply()
     }
 
     companion object {

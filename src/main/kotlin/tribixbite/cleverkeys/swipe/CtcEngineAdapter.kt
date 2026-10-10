@@ -2,6 +2,7 @@ package tribixbite.cleverkeys.swipe
 
 import ai.onnxruntime.OrtEnvironment
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.PointF
 import android.os.Handler
 import android.os.Looper
@@ -177,6 +178,52 @@ class CtcEngineAdapter(
          * (audit M1: ctc mode must never offer less coverage than geometric).
          */
         fun supportsLanguage(language: String?): Boolean = CtcLanguageSupport.isSupported(language)
+
+        /**
+         * The personal-dictionary preference values one language's merged lexicon is derived
+         * from, read raw so [LexiconContentVersion] hashes exactly what the build consumes.
+         * [customJson] carries each word's stored FREQUENCY as well as its membership, so an Edit
+         * that only changes a frequency changes the version and the very next decode rebuilds
+         * (pinned with the Dictionary Manager's own writer by `CustomWordEditLexiconInputTest`,
+         * 2026-10-10 device report). [priorityJson] is user swipe priority (2026-10-08): raising
+         * or lowering a word rebuilds exactly like adding one.
+         */
+        internal data class UserLexiconInputs(
+            val customJson: String,
+            val disabled: Set<String>,
+            val priorityJson: String,
+        )
+
+        /** Read [UserLexiconInputs] for [lang] from [prefs] — the only read [lexiconFor] does. */
+        internal fun userLexiconInputs(prefs: SharedPreferences, lang: String): UserLexiconInputs =
+            UserLexiconInputs(
+                customJson = prefs.getString(LanguagePreferenceKeys.customWordsKey(lang), "{}") ?: "{}",
+                disabled = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(lang), emptySet())
+                    ?: emptySet(),
+                priorityJson = prefs.getString(LanguagePreferenceKeys.swipePriorityKey(lang), "") ?: "",
+            )
+
+        /**
+         * `custom_words_<lang>` JSON → (word, stored frequency) pairs in file order. A non-integer
+         * value reads as 1000 (saturates to the scale top in [CtcLexiconMerge]); malformed JSON
+         * reads as no custom words (the JSONObject constructor is the only throwing step), logged,
+         * never a failed decode.
+         */
+        internal fun customWordPairs(customJson: String, lang: String): List<Pair<String, Int>> {
+            val customPairs = ArrayList<Pair<String, Int>>()
+            if (customJson == "{}") return customPairs
+            try {
+                val obj = JSONObject(customJson)
+                val it = obj.keys()
+                while (it.hasNext()) {
+                    val word = it.next()
+                    customPairs.add(word to obj.optInt(word, 1000))
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Malformed custom-words JSON for '$lang' — ignoring", e)
+            }
+            return customPairs
+        }
 
         /**
          * Emission-column alphabet for [language] — a–z for the Latin family, the per-script
@@ -655,13 +702,10 @@ class CtcEngineAdapter(
             }
             return null
         }
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-        val customJson = prefs.getString(LanguagePreferenceKeys.customWordsKey(lang), "{}") ?: "{}"
-        val disabled = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(lang), emptySet())
-            ?: emptySet()
-        // User swipe priority (2026-10-08): the raised personal-dictionary words. Part of the
-        // memo key, so raising or lowering a word rebuilds exactly like adding one.
-        val priorityJson = prefs.getString(LanguagePreferenceKeys.swipePriorityKey(lang), "") ?: ""
+        val inputs = userLexiconInputs(DirectBootAwarePreferences.get_shared_preferences(context), lang)
+        val customJson = inputs.customJson
+        val disabled = inputs.disabled
+        val priorityJson = inputs.priorityJson
         // A langpack is mutable on disk (import/re-import/removal), so its identity carries
         // length + mtime the way GeometricEngineAdapter's does; a bundled asset is immutable
         // within an APK and needs only its path. The fingerprint is built by the SAME pure
@@ -725,19 +769,7 @@ class CtcEngineAdapter(
             return null
         }
 
-        val customPairs = ArrayList<Pair<String, Int>>()
-        if (customJson != "{}") {
-            try {
-                val obj = JSONObject(customJson)
-                val it = obj.keys()
-                while (it.hasNext()) {
-                    val word = it.next()
-                    customPairs.add(word to obj.optInt(word, 1000))
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "Malformed custom-words JSON for '$lang' — ignoring", e)
-            }
-        }
+        val customPairs = customWordPairs(customJson, lang)
         // ARC-081: the preference and the platform provider are ONE user-word list from here
         // on, so the provider's rows get exactly the treatment custom words already got —
         // the wave-U2 base-scale calibration of the observed 1..255 frequency, and

@@ -199,6 +199,23 @@
     <string name="dict_swipe_priority_highest">Maximă</string>
     <string name="dict_swipe_priority_help">Frecvența (1-255) clasează cuvântul față de dicționar; 255 este deja maximul. Prioritatea la glisare adaugă un avantaj fix unui cuvânt care tot pierde când îl glisați: Ridicată este moderată, Maximă este puternică. Un cuvânt cu prioritate câștigă și unele glisări ale cuvintelor asemănătoare (de exemplu „ad” în loc de „as”). Sugestiile la tastare nu se schimbă.</string>
     <string name="dict_word_frequency_swipe_priority">Frecvență: %1$d · Prioritate la glisare: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Frecvența a fost ridicată la %1$d: o frecvență mai mică ar anula parțial prioritatea la glisare.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d cuvânt personalizat folosește încă vechea frecvență implicită %2$d. O ridicați la %3$d?</item>
+        <item quantity="few">%1$d cuvinte personalizate folosesc încă vechea frecvență implicită %2$d. O ridicați la %3$d?</item>
+        <item quantity="other">%1$d de cuvinte personalizate folosesc încă vechea frecvență implicită %2$d. O ridicați la %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Verifică</string>
+    <string name="dict_legacy_freq_dismiss">Ascunde</string>
+    <string name="dict_legacy_freq_dialog_title">Ridicați vechile frecvențe implicite?</string>
+    <string name="dict_legacy_freq_dialog_message">Cuvintele adăugate în versiunile mai vechi au fost salvate cu frecvența %1$d, așa că sunt mai greu de introdus prin glisare. Ridică modifică doar cuvintele de mai jos, la %2$d; prioritatea lor la glisare rămâne aceeași. Dacă ați setat intenționat unul dintre ele la %1$d, îl puteți coborî din nou cu Editează.</string>
+    <string name="dict_legacy_freq_raise">Ridică</string>
+    <string name="dict_legacy_freq_not_now">Nu acum</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d cuvânt ridicat la %2$d</item>
+        <item quantity="few">%1$d cuvinte ridicate la %2$d</item>
+        <item quantity="other">%1$d de cuvinte ridicate la %2$d</item>
+    </plurals>
     <string name="dict_edit">Editează</string>
     <string name="dict_delete">Șterge</string>
     <string name="dict_no_words">Niciun cuvânt găsit</string>

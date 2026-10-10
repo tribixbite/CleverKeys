@@ -174,6 +174,19 @@
     <string name="dict_swipe_priority_highest">最高</string>
     <string name="dict_swipe_priority_help">頻度(1-255)は辞書の単語に対する順位を決めます。255はすでに最大です。スワイプ優先度は、スワイプしても負けてしまう単語に一定の加点をさらに与えます。「高」は中程度、「最高」は強い加点です。優先度を上げた単語は似た単語のスワイプの一部でも選ばれるようになります(例:「as」の代わりに「ad」)。タップ入力の候補には影響しません。</string>
     <string name="dict_word_frequency_swipe_priority">頻度: %1$d · スワイプ優先度: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">頻度を%1$dに上げました。頻度が低いとスワイプ優先度の効果が一部打ち消されます。</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="other">%1$d個のカスタム単語が古い既定の頻度%2$dのままです。%3$dに上げますか？</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">確認</string>
+    <string name="dict_legacy_freq_dismiss">閉じる</string>
+    <string name="dict_legacy_freq_dialog_title">古い既定の頻度を上げますか？</string>
+    <string name="dict_legacy_freq_dialog_message">以前のバージョンで追加した単語は頻度%1$dで保存されており、スワイプで選ばれにくくなっています。「上げる」は下の単語だけを%2$dに変更し、スワイプ優先度は変わりません。意図的に%1$dにした単語は「編集」で再び下げられます。</string>
+    <string name="dict_legacy_freq_raise">上げる</string>
+    <string name="dict_legacy_freq_not_now">後で</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="other">%1$d個の単語を%2$dに上げました</item>
+    </plurals>
     <string name="dict_edit">編集</string>
     <string name="dict_delete">削除</string>
     <string name="dict_no_words">単語が見つかりません</string>

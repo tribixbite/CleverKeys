@@ -173,6 +173,19 @@
     <string name="dict_swipe_priority_highest">最高</string>
     <string name="dict_swipe_priority_help">频率（1-255）决定词语相对于词典的排名；255 已经是最高值。滑动优先级会在此之上为滑动时仍然落选的词语增加固定加分：“高”为适中，“最高”为强。提高优先级的词语也会赢得一些相似词语的滑动（例如用“ad”代替“as”）。打字时的候选建议不受影响。</string>
     <string name="dict_word_frequency_swipe_priority">频率：%1$d · 滑动优先级：%2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">频率已提高到%1$d：较低的频率会部分抵消滑动优先级。</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="other">有%1$d个自定义词仍使用旧的默认频率%2$d。是否提高到%3$d？</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">查看</string>
+    <string name="dict_legacy_freq_dismiss">关闭</string>
+    <string name="dict_legacy_freq_dialog_title">提高旧的默认频率？</string>
+    <string name="dict_legacy_freq_dialog_message">旧版本中添加的词以频率%1$d保存，因此较难通过滑动输入。“提高”只会把下列词改为%2$d，它们的滑动优先级保持不变。如果你是有意把某个词设为%1$d，可以通过“编辑”重新调低。</string>
+    <string name="dict_legacy_freq_raise">提高</string>
+    <string name="dict_legacy_freq_not_now">以后再说</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="other">已将%1$d个词提高到%2$d</item>
+    </plurals>
     <string name="dict_edit">编辑</string>
     <string name="dict_delete">删除</string>
     <string name="dict_no_words">未找到单词</string>

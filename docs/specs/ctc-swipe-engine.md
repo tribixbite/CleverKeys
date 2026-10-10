@@ -349,6 +349,16 @@ user word already enters the lexicon at the cap (`CtcLexiconMerge`: stored 255 �
   memo version is the pre-feature one (`LexiconContentVersion` hashes the priority JSON only
   when non-empty).
 - **Not applied** to tap prediction (eval note §5).
+- **Frequency still counts.** The bonus is added on top of the calibrated frequency prior, so a
+  word stored below 255 pays λ·ln of the ratio first: −1.37 nats at the legacy default 100
+  (eval note §9). On the Seeker (2026-10-10), `adb` at 100 lost to `an` at Highest and ranked
+  first once raised to 255. The Add/Edit dialog therefore lifts the frequency field to 255 when
+  High/Highest is selected, and the Custom tab offers to raise words still at exactly 100
+  (`UserWordFrequency.liftedForPriority`, `LegacyCustomWordFrequency`).
+- **Freshness.** `userLexiconInputs` reads the raw `custom_words_<lang>`,
+  `disabled_words_<lang>` and `swipe_priority_<lang>` values that `LexiconContentVersion` hashes,
+  so a frequency-only edit changes the memo version and the next decode rebuilds
+  (`CustomWordEditLexiconInputTest`).
 
 ### Per-language enablement
 
@@ -747,6 +757,7 @@ counts are `@Test` counts at 2026-08-19 and move with the suites:
 | `swipe/ctc/CtcPriorityBonusTest` | 4 | User swipe priority seam: empty priority is byte-identical, exact final-score addition, never pulls in a pruned word, clamp |
 | `swipe/UserSwipePriorityBonusTest` | 9 | Level table, surface keying (strip / joiner / CKDT projection), geometric table, memo version, adapter wiring, tap untouched |
 | `swipe/UserSwipePriorityReplayTest` | 3 | Shipped-stack level sweep + pins: `ad`/`wet` win at High, `adb` at Highest, `somethings` at Normal; zero bonus is identical |
+| `swipe/CustomWordEditLexiconInputTest` | 3 | Dictionary Manager Edit/raise writers → CTC lexicon inputs: a frequency-only edit changes the memo version and the next build carries 255 with the priority unchanged |
 | `swipe/ctc/CtcContractionDisplayTest` | 7 | Alias→apostrophe display over the real merged-lexicon ordinals (H1) |
 | `swipe/ctc/CtcContractionKeysTest` | 7 | Alias-key injection: injectability over the trie alphabet, the MIN_FREQ floor, native-key skip |
 | `swipe/ctc/CtcLanguagePresetTest` | 23 | `presetFor` λ-by-lexicon-scale (en 4.0 / the CKDT six 2.0 / unknown→en) and the SCRIPT footing (`tunedRuCkdt` verbatim for every `CtcScriptSupport` row), language-invariance of every other Latin constant, the `CtcLanguageSupport` table (the eight-language supported set, the `PROVISIONAL` three, the `VAL_ONLY` one, the empty `NEEDS_VALIDATION`, asset **and langpack** paths — exactly one resolution per language — and normalization) |

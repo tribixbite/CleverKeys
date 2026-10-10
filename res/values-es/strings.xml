@@ -176,6 +176,23 @@
     <string name="dict_swipe_priority_highest">Máxima</string>
     <string name="dict_swipe_priority_help">La frecuencia (1-255) ordena tu palabra frente al diccionario; 255 ya es el máximo. La prioridad al deslizar añade además una ventaja fija para una palabra que sigue perdiendo al deslizar: Alta es moderada y Máxima es fuerte. Una palabra con prioridad también gana algunos deslizamientos de palabras parecidas (por ejemplo, «ad» en lugar de «as»). Las sugerencias al teclear no cambian.</string>
     <string name="dict_word_frequency_swipe_priority">Frecuencia: %1$d · Prioridad al deslizar: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Frecuencia elevada a %1$d: una frecuencia menor anularía parte de la prioridad al deslizar.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d palabra personal aún usa la antigua frecuencia predeterminada %2$d. ¿Elevarla a %3$d?</item>
+        <item quantity="many">%1$d palabras personales aún usan la antigua frecuencia predeterminada %2$d. ¿Elevarlas a %3$d?</item>
+        <item quantity="other">%1$d palabras personales aún usan la antigua frecuencia predeterminada %2$d. ¿Elevarlas a %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Revisar</string>
+    <string name="dict_legacy_freq_dismiss">Descartar</string>
+    <string name="dict_legacy_freq_dialog_title">¿Elevar las frecuencias predeterminadas antiguas?</string>
+    <string name="dict_legacy_freq_dialog_message">Las palabras añadidas en versiones anteriores se guardaron con frecuencia %1$d, lo que las hace más difíciles de deslizar. Elevar cambia solo las palabras de abajo, a %2$d; su prioridad al deslizar no cambia. Si pusiste alguna en %1$d a propósito, puedes bajarla de nuevo con Editar.</string>
+    <string name="dict_legacy_freq_raise">Elevar</string>
+    <string name="dict_legacy_freq_not_now">Ahora no</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d palabra elevada a %2$d</item>
+        <item quantity="many">%1$d palabras elevadas a %2$d</item>
+        <item quantity="other">%1$d palabras elevadas a %2$d</item>
+    </plurals>
     <string name="dict_edit">Editar</string>
     <string name="dict_delete">Eliminar</string>
     <string name="dict_no_words">No se encontraron palabras</string>

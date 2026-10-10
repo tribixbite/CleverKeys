@@ -178,6 +178,21 @@
     <string name="dict_swipe_priority_highest">Am höchsten</string>
     <string name="dict_swipe_priority_help">Die Häufigkeit (1–255) ordnet Ihr Wort gegenüber dem Wörterbuch ein; 255 ist bereits das Maximum. Die Wisch-Priorität gibt einem Wort, das beim Wischen trotzdem verliert, zusätzlich einen festen Vorteil: Hoch ist mäßig, Am höchsten stark. Ein hochgestuftes Wort gewinnt dann auch manche Wischgesten ähnlicher Wörter (z. B. „ad“ statt „as“). Vorschläge beim Tippen bleiben unverändert.</string>
     <string name="dict_word_frequency_swipe_priority">Häufigkeit: %1$d · Wisch-Priorität: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Häufigkeit auf %1$d erhöht: Eine niedrigere Häufigkeit würde die Wisch-Priorität teilweise aufheben.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d eigenes Wort hat noch die alte Standard-Häufigkeit %2$d. Auf %3$d erhöhen?</item>
+        <item quantity="other">%1$d eigene Wörter haben noch die alte Standard-Häufigkeit %2$d. Auf %3$d erhöhen?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Prüfen</string>
+    <string name="dict_legacy_freq_dismiss">Ausblenden</string>
+    <string name="dict_legacy_freq_dialog_title">Alte Standard-Häufigkeiten erhöhen?</string>
+    <string name="dict_legacy_freq_dialog_message">In älteren Versionen hinzugefügte Wörter wurden mit der Häufigkeit %1$d gespeichert und lassen sich deshalb schlechter wischen. „Erhöhen“ setzt nur die Wörter unten auf %2$d; ihre Wisch-Priorität bleibt unverändert. Wenn Sie eines davon absichtlich auf %1$d gesetzt haben, können Sie es mit „Bearbeiten“ wieder senken.</string>
+    <string name="dict_legacy_freq_raise">Erhöhen</string>
+    <string name="dict_legacy_freq_not_now">Nicht jetzt</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d Wort auf %2$d erhöht</item>
+        <item quantity="other">%1$d Wörter auf %2$d erhöht</item>
+    </plurals>
     <string name="dict_edit">Bearbeiten</string>
     <string name="dict_delete">Löschen</string>
     <string name="dict_no_words">Keine Wörter gefunden</string>

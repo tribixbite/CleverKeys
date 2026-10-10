@@ -253,6 +253,9 @@ class SettingsImportPlanBuilderTest {
             // 2026-08-29: derived per-device cache of imported-langpack CTC eligibility,
             // fingerprinted by local file length+mtime — meaningless on any other device.
             "ctc_langpack_verdicts",
+            // 2026-10-10: Dictionary Manager legacy-frequency offer dismissals — per-device UI
+            // state, so a restore elsewhere re-offers imported old-default entries.
+            "legacy_custom_freq_offer_dismissed",
         )
         assertThat(SettingsValidation.INTERNAL_KEYS).isEqualTo(expected)
     }

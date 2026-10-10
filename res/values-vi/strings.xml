@@ -203,6 +203,19 @@
     <string name="dict_swipe_priority_highest">Cao nhất</string>
     <string name="dict_swipe_priority_help">Tần suất (1-255) xếp hạng từ của bạn so với từ điển; 255 đã là mức cao nhất. Độ ưu tiên khi vuốt cộng thêm một lợi thế cố định cho từ vẫn bị thua khi bạn vuốt: Cao là vừa phải, Cao nhất là mạnh. Từ được nâng ưu tiên cũng sẽ thắng một số lần vuốt của các từ tương tự (ví dụ \'ad\' thay vì \'as\'). Gợi ý khi gõ không bị ảnh hưởng.</string>
     <string name="dict_word_frequency_swipe_priority">Tần suất: %1$d · Độ ưu tiên khi vuốt: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Đã nâng tần suất lên %1$d: tần suất thấp hơn sẽ làm giảm một phần độ ưu tiên khi vuốt.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="other">%1$d từ tùy chỉnh vẫn dùng tần suất mặc định cũ %2$d. Nâng lên %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Xem lại</string>
+    <string name="dict_legacy_freq_dismiss">Ẩn</string>
+    <string name="dict_legacy_freq_dialog_title">Nâng các tần suất mặc định cũ?</string>
+    <string name="dict_legacy_freq_dialog_message">Các từ được thêm trong phiên bản cũ đã được lưu với tần suất %1$d nên khó nhập bằng cách vuốt hơn. Nâng chỉ đổi các từ bên dưới thành %2$d; độ ưu tiên khi vuốt của chúng giữ nguyên. Nếu bạn cố ý đặt một từ là %1$d, bạn có thể hạ lại bằng Sửa.</string>
+    <string name="dict_legacy_freq_raise">Nâng</string>
+    <string name="dict_legacy_freq_not_now">Để sau</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="other">Đã nâng %1$d từ lên %2$d</item>
+    </plurals>
     <string name="dict_edit">Sửa</string>
     <string name="dict_delete">Xóa</string>
     <string name="dict_no_words">Không tìm thấy từ nào</string>

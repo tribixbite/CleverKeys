@@ -134,6 +134,14 @@ class UserSwipePriorityReplayTest {
         out += "8-step" to eight
         out += "8-step+lift" to CtcTraceShapes.withLift(eight, 40.0)
         out += "8-step+lift500" to CtcTraceShapes.withLift(eight, 500.0)
+        // 2026-10-10 follow-up ("adb ranked first only from the SECOND swipe after the edit"):
+        // the first `input motionevent` of a burst runs a cold app_process, so the finger can
+        // rest on the first key well before the first MOVE. Same path, first MOVE delayed.
+        for (dwell in listOf(300.0, 600.0, 1000.0)) {
+            val (x, y, t) = eight
+            out += "8-step+lift firstDwell ${dwell.toInt()}ms" to
+                CtcTraceShapes.withLift(Triple(x, y, DoubleArray(t.size) { if (it == 0) t[0] else t[it] + dwell }), 40.0)
+        }
         for (seed in 1..6) {
             val rnd = java.util.Random(seed.toLong())
             val (x, y, _) = eight

@@ -175,6 +175,19 @@
     <string name="dict_swipe_priority_highest">가장 높음</string>
     <string name="dict_swipe_priority_help">빈도(1-255)는 사전 단어 대비 순위를 정하며 255가 이미 최고값입니다. 스와이프 우선순위는 스와이프해도 계속 밀리는 단어에 고정된 가산점을 추가로 줍니다. 높음은 중간, 가장 높음은 강한 가산점입니다. 우선순위를 높인 단어는 비슷한 단어의 스와이프 일부에서도 선택됩니다(예: \'as\' 대신 \'ad\'). 타이핑 추천에는 영향이 없습니다.</string>
     <string name="dict_word_frequency_swipe_priority">빈도: %1$d · 스와이프 우선순위: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">빈도를 %1$d(으)로 올렸습니다. 빈도가 낮으면 스와이프 우선순위의 효과가 일부 상쇄됩니다.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="other">사용자 정의 단어 %1$d개가 아직 이전 기본 빈도 %2$d을(를) 사용합니다. %3$d(으)로 올릴까요?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">검토</string>
+    <string name="dict_legacy_freq_dismiss">닫기</string>
+    <string name="dict_legacy_freq_dialog_title">이전 기본 빈도를 올릴까요?</string>
+    <string name="dict_legacy_freq_dialog_message">이전 버전에서 추가한 단어는 빈도 %1$d(으)로 저장되어 스와이프로 입력하기 더 어렵습니다. ‘올리기’는 아래 단어만 %2$d(으)로 바꾸며 스와이프 우선순위는 그대로 유지됩니다. 일부러 %1$d(으)로 설정한 단어가 있다면 ‘편집’에서 다시 낮출 수 있습니다.</string>
+    <string name="dict_legacy_freq_raise">올리기</string>
+    <string name="dict_legacy_freq_not_now">나중에</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="other">단어 %1$d개를 %2$d(으)로 올렸습니다</item>
+    </plurals>
     <string name="dict_edit">편집</string>
     <string name="dict_delete">삭제</string>
     <string name="dict_no_words">단어를 찾을 수 없습니다</string>

@@ -173,6 +173,25 @@
     <string name="dict_swipe_priority_highest">Najwyższy</string>
     <string name="dict_swipe_priority_help">Częstość (1–255) ustala pozycję słowa względem słownika; 255 to już maksimum. Priorytet pisania gestem dodaje stały bonus słowu, które przy pisaniu gestem nadal przegrywa: Wysoki jest umiarkowany, Najwyższy silny. Podniesione słowo wygrywa też część gestów podobnych słów (np. „ad” zamiast „as”). Podpowiedzi przy pisaniu na klawiaturze się nie zmieniają.</string>
     <string name="dict_word_frequency_swipe_priority">Częstotliwość: %1$d · Priorytet pisania gestem: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Częstotliwość podniesiona do %1$d: niższa częstotliwość częściowo zniwelowałaby priorytet pisania gestem.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d własne słowo nadal ma starą domyślną częstotliwość %2$d. Podnieść ją do %3$d?</item>
+        <item quantity="few">%1$d własne słowa nadal mają starą domyślną częstotliwość %2$d. Podnieść ją do %3$d?</item>
+        <item quantity="many">%1$d własnych słów nadal ma starą domyślną częstotliwość %2$d. Podnieść ją do %3$d?</item>
+        <item quantity="other">%1$d własnego słowa nadal ma starą domyślną częstotliwość %2$d. Podnieść ją do %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Przejrzyj</string>
+    <string name="dict_legacy_freq_dismiss">Ukryj</string>
+    <string name="dict_legacy_freq_dialog_title">Podnieść stare domyślne częstotliwości?</string>
+    <string name="dict_legacy_freq_dialog_message">Słowa dodane w starszych wersjach zapisano z częstotliwością %1$d, przez co trudniej je wpisać gestem. Podnieś zmienia tylko poniższe słowa, na %2$d; ich priorytet pisania gestem pozostaje bez zmian. Jeśli celowo ustawiono któreś na %1$d, można je ponownie obniżyć przez Edytuj.</string>
+    <string name="dict_legacy_freq_raise">Podnieś</string>
+    <string name="dict_legacy_freq_not_now">Nie teraz</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d słowo podniesione do %2$d</item>
+        <item quantity="few">%1$d słowa podniesione do %2$d</item>
+        <item quantity="many">%1$d słów podniesionych do %2$d</item>
+        <item quantity="other">%1$d słowa podniesione do %2$d</item>
+    </plurals>
     <string name="dict_edit">Edytuj</string>
     <string name="dict_delete">Usuń</string>
     <string name="dict_no_words">Nie znaleziono słów</string>

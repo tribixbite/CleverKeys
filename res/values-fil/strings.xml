@@ -173,6 +173,21 @@
     <string name="dict_swipe_priority_highest">Pinakamataas</string>
     <string name="dict_swipe_priority_help">Inihahanay ng dalas (1-255) ang salita mo laban sa diksiyonaryo; 255 na ang pinakamataas. Nagdadagdag pa ang priyoridad sa pag-swipe ng tiyak na kalamangan para sa salitang natatalo pa rin kapag sini-swipe mo: katamtaman ang Mataas, malakas ang Pinakamataas. Mananalo rin ang itinaas na salita sa ilang swipe ng magkakahawig na salita (halimbawa, \'ad\' sa halip na \'as\'). Hindi apektado ang mga mungkahi sa pag-type.</string>
     <string name="dict_word_frequency_swipe_priority">Dalas: %1$d · Priyoridad sa pag-swipe: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Itinaas ang dalas sa %1$d: babawasan ng mas mababang dalas ang bisa ng priyoridad sa pag-swipe.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d custom na salita ang gumagamit pa ng lumang default na dalas na %2$d. Itaas ito sa %3$d?</item>
+        <item quantity="other">%1$d custom na salita ang gumagamit pa ng lumang default na dalas na %2$d. Itaas ang mga ito sa %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Suriin</string>
+    <string name="dict_legacy_freq_dismiss">Isara</string>
+    <string name="dict_legacy_freq_dialog_title">Itaas ang mga lumang default na dalas?</string>
+    <string name="dict_legacy_freq_dialog_message">Ang mga salitang idinagdag sa mas lumang bersyon ay na-save sa dalas na %1$d, kaya mas mahirap silang i-swipe. Ang Itaas ay binabago lang ang mga salita sa ibaba, sa %2$d; hindi nagbabago ang priyoridad nila sa pag-swipe. Kung sinadya mong itakda sa %1$d ang isa sa mga ito, maibababa mo itong muli gamit ang I-edit.</string>
+    <string name="dict_legacy_freq_raise">Itaas</string>
+    <string name="dict_legacy_freq_not_now">Hindi ngayon</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d salita ang itinaas sa %2$d</item>
+        <item quantity="other">%1$d salita ang itinaas sa %2$d</item>
+    </plurals>
     <string name="dict_edit">I-edit</string>
     <string name="dict_delete">Tanggalin</string>
     <string name="dict_no_words">Walang nahanap na salita</string>

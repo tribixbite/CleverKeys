@@ -244,6 +244,21 @@
     <string name="dict_swipe_priority_highest">Highest</string>
     <string name="dict_swipe_priority_help">Frequency (1–255) ranks your word against the dictionary; 255 is already the top. Swipe priority adds a fixed boost on top of that for a word that still loses when you swipe it: High is moderate, Highest is strong. A raised word also wins some swipes of similar words (for example “ad” over “as”). Typing suggestions are not affected.</string>
     <string name="dict_word_frequency_swipe_priority">Frequency: %1$d · Swipe priority: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Frequency raised to %1$d: a lower frequency would cancel part of the swipe priority.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d custom word still uses the old default frequency %2$d. Raise it to %3$d?</item>
+        <item quantity="other">%1$d custom words still use the old default frequency %2$d. Raise them to %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Review</string>
+    <string name="dict_legacy_freq_dismiss">Dismiss</string>
+    <string name="dict_legacy_freq_dialog_title">Raise old default frequencies?</string>
+    <string name="dict_legacy_freq_dialog_message">Words added in older versions were stored at frequency %1$d, which makes them harder to swipe. Raise changes only the words below, to %2$d; their swipe priority stays as it is. If you set one of them to %1$d on purpose, you can lower it again with Edit.</string>
+    <string name="dict_legacy_freq_raise">Raise</string>
+    <string name="dict_legacy_freq_not_now">Not now</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d word raised to %2$d</item>
+        <item quantity="other">%1$d words raised to %2$d</item>
+    </plurals>
     <string name="dict_edit">Edit</string>
     <string name="dict_delete">Delete</string>
     <string name="dict_no_words">No words found</string>

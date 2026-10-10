@@ -199,6 +199,21 @@
     <string name="dict_swipe_priority_highest">بیشترین</string>
     <string name="dict_swipe_priority_help">بسامد (۱ تا ۲۵۵) جایگاه واژهٔ شما را نسبت به واژه‌نامه تعیین می‌کند؛ ۲۵۵ همین حالا بالاترین مقدار است. اولویت کشیدن برای واژه‌ای که هنگام کشیدن همچنان می‌بازد یک امتیاز ثابت اضافه می‌کند: «زیاد» متوسط و «بیشترین» قوی است. واژهٔ اولویت‌دار برخی کشیدن‌های واژه‌های مشابه را هم می‌برد (مثلاً «ad» به‌جای «as»). پیشنهادهای تایپ تغییری نمی‌کنند.</string>
     <string name="dict_word_frequency_swipe_priority">بسامد: %1$d · اولویت کشیدن: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">بسامد به %1$d افزایش یافت: بسامد کمتر بخشی از اولویت کشیدن را خنثی می‌کرد.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d واژهٔ سفارشی هنوز بسامد پیش‌فرض قدیمی %2$d را دارد. به %3$d افزایش یابد؟</item>
+        <item quantity="other">%1$d واژهٔ سفارشی هنوز بسامد پیش‌فرض قدیمی %2$d را دارند. به %3$d افزایش یابند؟</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">بررسی</string>
+    <string name="dict_legacy_freq_dismiss">بستن</string>
+    <string name="dict_legacy_freq_dialog_title">بسامدهای پیش‌فرض قدیمی افزایش یابند؟</string>
+    <string name="dict_legacy_freq_dialog_message">واژه‌هایی که در نسخه‌های قدیمی‌تر افزوده شده‌اند با بسامد %1$d ذخیره شده‌اند و به همین دلیل کشیدنشان دشوارتر است. «افزایش» فقط واژه‌های زیر را به %2$d تغییر می‌دهد و اولویت کشیدن آن‌ها تغییر نمی‌کند. اگر یکی از آن‌ها را عمداً روی %1$d گذاشته‌اید، می‌توانید با «ویرایش» دوباره آن را کم کنید.</string>
+    <string name="dict_legacy_freq_raise">افزایش</string>
+    <string name="dict_legacy_freq_not_now">اکنون نه</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d واژه به %2$d افزایش یافت</item>
+        <item quantity="other">%1$d واژه به %2$d افزایش یافت</item>
+    </plurals>
     <string name="dict_edit">ویرایش</string>
     <string name="dict_delete">حذف</string>
     <string name="dict_no_words">واژه‌ای یافت نشد</string>

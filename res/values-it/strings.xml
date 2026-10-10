@@ -198,6 +198,23 @@
     <string name="dict_swipe_priority_highest">Massima</string>
     <string name="dict_swipe_priority_help">La frequenza (1-255) classifica la parola rispetto al dizionario; 255 è già il massimo. La priorità di scorrimento aggiunge un vantaggio fisso per una parola che continua a perdere quando la scorri: Alta è moderata, Massima è forte. Una parola con priorità vince anche alcuni scorrimenti di parole simili (per esempio «ad» invece di «as»). I suggerimenti di digitazione non cambiano.</string>
     <string name="dict_word_frequency_swipe_priority">Frequenza: %1$d · Priorità di scorrimento: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Frequenza portata a %1$d: una frequenza più bassa annullerebbe in parte la priorità di scorrimento.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d parola personale usa ancora la vecchia frequenza predefinita %2$d. Portarla a %3$d?</item>
+        <item quantity="many">%1$d parole personali usano ancora la vecchia frequenza predefinita %2$d. Portarle a %3$d?</item>
+        <item quantity="other">%1$d parole personali usano ancora la vecchia frequenza predefinita %2$d. Portarle a %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Controlla</string>
+    <string name="dict_legacy_freq_dismiss">Ignora</string>
+    <string name="dict_legacy_freq_dialog_title">Alzare le vecchie frequenze predefinite?</string>
+    <string name="dict_legacy_freq_dialog_message">Le parole aggiunte nelle versioni precedenti sono state salvate con frequenza %1$d, quindi sono più difficili da inserire con lo scorrimento. Alza cambia solo le parole qui sotto, portandole a %2$d; la loro priorità di scorrimento resta invariata. Se ne hai impostata una a %1$d di proposito, puoi riabbassarla con Modifica.</string>
+    <string name="dict_legacy_freq_raise">Alza</string>
+    <string name="dict_legacy_freq_not_now">Non ora</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d parola portata a %2$d</item>
+        <item quantity="many">%1$d parole portate a %2$d</item>
+        <item quantity="other">%1$d parole portate a %2$d</item>
+    </plurals>
     <string name="dict_edit">Modifica</string>
     <string name="dict_delete">Elimina</string>
     <string name="dict_no_words">Nessuna parola trovata</string>

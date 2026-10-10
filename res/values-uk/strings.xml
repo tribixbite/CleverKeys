@@ -173,6 +173,25 @@
     <string name="dict_swipe_priority_highest">Найвищий</string>
     <string name="dict_swipe_priority_help">Частота (1–255) визначає місце слова відносно словника; 255 — вже максимум. Пріоритет під час свайпу додає фіксовану перевагу слову, яке під час свайпу все одно програє: «Високий» — помірна, «Найвищий» — сильна. Слово з пріоритетом виграє й частину свайпів схожих слів (наприклад, «ad» замість «as»). Підказки під час набору не змінюються.</string>
     <string name="dict_word_frequency_swipe_priority">Частота: %1$d · Пріоритет під час свайпу: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Частоту підвищено до %1$d: нижча частота частково звела б нанівець пріоритет під час свайпу.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d власне слово досі має стару типову частоту %2$d. Підвищити до %3$d?</item>
+        <item quantity="few">%1$d власні слова досі мають стару типову частоту %2$d. Підвищити до %3$d?</item>
+        <item quantity="many">%1$d власних слів досі мають стару типову частоту %2$d. Підвищити до %3$d?</item>
+        <item quantity="other">%1$d власного слова досі мають стару типову частоту %2$d. Підвищити до %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Переглянути</string>
+    <string name="dict_legacy_freq_dismiss">Сховати</string>
+    <string name="dict_legacy_freq_dialog_title">Підвищити старі типові частоти?</string>
+    <string name="dict_legacy_freq_dialog_message">Слова, додані в старіших версіях, збережено з частотою %1$d, тому їх важче вводити свайпом. «Підвищити» змінює лише слова нижче — на %2$d; їхній пріоритет під час свайпу не змінюється. Якщо ви навмисно встановили для якогось слова %1$d, його можна знову знизити через «Редагувати».</string>
+    <string name="dict_legacy_freq_raise">Підвищити</string>
+    <string name="dict_legacy_freq_not_now">Не зараз</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d слово підвищено до %2$d</item>
+        <item quantity="few">%1$d слова підвищено до %2$d</item>
+        <item quantity="many">%1$d слів підвищено до %2$d</item>
+        <item quantity="other">%1$d слова підвищено до %2$d</item>
+    </plurals>
     <string name="dict_edit">Редагувати</string>
     <string name="dict_delete">Видалити</string>
     <string name="dict_no_words">Слів не знайдено</string>

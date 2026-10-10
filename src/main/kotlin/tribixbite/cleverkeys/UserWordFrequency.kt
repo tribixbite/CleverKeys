@@ -38,9 +38,11 @@ package tribixbite.cleverkeys
  *    lexicons), so scales that were already calibrated stay byte-for-byte unchanged.
  *
  * Legacy stored values (e.g. the old default 100, or pre-fix 1..10000 dialog values)
- * are deliberately NOT rewritten in storage — this mapping lifts them at read time
+ * are deliberately NOT rewritten silently — this mapping lifts them at read time
  * (100 → mid-scale, ≥256 → ceiling), and rewriting would destroy the user's chosen
- * relative ordering for nothing.
+ * relative ordering for nothing. Mid-scale still loses swipes a raised priority should win
+ * (the device `adb` case, 2026-10-10), so the Dictionary Manager OFFERS to raise words at
+ * exactly the old default 100, listing them and asking first ([LegacyCustomWordFrequency]).
  */
 object UserWordFrequency {
 
@@ -68,4 +70,19 @@ object UserWordFrequency {
         if (lexiconCeil <= lexiconFloor) return lexiconFloor
         return lexiconFloor + (s - MIN).toDouble() / (MAX - MIN) * (lexiconCeil - lexiconFloor)
     }
+
+    /**
+     * The frequency the Add/Edit Word dialog switches to when the user selects swipe [priority]
+     * while the frequency field holds [frequency] (maintainer decision, 2026-10-10), or null to
+     * leave the field as it is.
+     *
+     * A raised level is a bonus ON TOP of the frequency prior: at a stored frequency below [MAX]
+     * the word first pays λ·ln of the calibrated ratio (−1.37 final-score nats at the legacy 100,
+     * `docs/eval/2026-10-08-user-swipe-priority.md` §9), which silently cancels most of what the
+     * user just asked for. So High/Highest lift a lower — or empty/unparseable ([frequency] null)
+     * — field to [MAX]; [SwipePriority.NORMAL] never touches it, and a field already at the top
+     * stays as it is.
+     */
+    fun liftedForPriority(priority: SwipePriority, frequency: Int?): Int? =
+        if (priority != SwipePriority.NORMAL && (frequency == null || frequency < MAX)) MAX else null
 }

@@ -1,31 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"><!-- Overdraw: host activity window already paints ?android:colorBackground; fragment root bg removed to avoid double-paint. -->
+    android:layout_height="match_parent"
+    android:orientation="vertical"><!-- Overdraw: host activity window already paints ?android:colorBackground; fragment root bg removed to avoid double-paint. -->
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view"
+    <!-- Custom tab only: one-time offer to raise words still at the old default frequency
+         (LegacyCustomWordFrequency, 2026-10-10). Hidden unless WordListFragment shows it. -->
+    <LinearLayout
+        android:id="@+id/legacy_freq_notice"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical"
-        android:padding="8dp"
-        android:clipToPadding="false" />
-
-    <TextView
-        android:id="@+id/empty_text"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/dict_no_words"
-        android:textColor="@color/dict_mgr_text_secondary"
-        android:textSize="16sp"
-        android:visibility="gone" />
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@color/dict_mgr_header_bg"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone">
 
-    <ProgressBar
-        android:id="@+id/loading_progress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
+        <TextView
+            android:id="@+id/legacy_freq_notice_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/dict_mgr_text_primary"
+            android:textSize="14sp" />
 
-</FrameLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/legacy_freq_dismiss"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:minHeight="48dp"
+                android:background="@color/dict_mgr_button_bg"
+                android:text="@string/dict_legacy_freq_dismiss"
+                android:textColor="@color/dict_mgr_button_text" />
+
+            <Button
+                android:id="@+id/legacy_freq_review"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:background="@color/dict_mgr_button_bg"
+                android:text="@string/dict_legacy_freq_review"
+                android:textColor="@color/dict_mgr_button_text" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical"
+            android:padding="8dp"
+            android:clipToPadding="false" />
+
+        <TextView
+            android:id="@+id/empty_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/dict_no_words"
+            android:textColor="@color/dict_mgr_text_secondary"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/loading_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</LinearLayout>

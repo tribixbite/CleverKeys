@@ -175,6 +175,25 @@
     <string name="dict_swipe_priority_highest">Nejvyšší</string>
     <string name="dict_swipe_priority_help">Četnost (1–255) řadí slovo vůči slovníku; 255 je už maximum. Priorita psaní tahem k tomu přidává pevné zvýhodnění pro slovo, které při psaní tahem stále prohrává: Vysoká je mírná, Nejvyšší silná. Zvýhodněné slovo pak vyhraje i některé tahy podobných slov (např. „ad“ místo „as“). Návrhy při psaní na klávesnici to neovlivní.</string>
     <string name="dict_word_frequency_swipe_priority">Četnost: %1$d · Priorita psaní tahem: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Četnost zvýšena na %1$d: nižší četnost by část priority psaní tahem zrušila.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d vlastní slovo stále používá starou výchozí četnost %2$d. Zvýšit ji na %3$d?</item>
+        <item quantity="few">%1$d vlastní slova stále používají starou výchozí četnost %2$d. Zvýšit ji na %3$d?</item>
+        <item quantity="many">%1$d vlastního slova stále používá starou výchozí četnost %2$d. Zvýšit ji na %3$d?</item>
+        <item quantity="other">%1$d vlastních slov stále používá starou výchozí četnost %2$d. Zvýšit ji na %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Zkontrolovat</string>
+    <string name="dict_legacy_freq_dismiss">Skrýt</string>
+    <string name="dict_legacy_freq_dialog_title">Zvýšit staré výchozí četnosti?</string>
+    <string name="dict_legacy_freq_dialog_message">Slova přidaná ve starších verzích byla uložena s četností %1$d, a proto se hůře píší tahem. Zvýšit změní jen slova níže, na %2$d; jejich priorita psaní tahem zůstane stejná. Pokud jste některé z nich nastavili na %1$d záměrně, můžete ho znovu snížit pomocí Upravit.</string>
+    <string name="dict_legacy_freq_raise">Zvýšit</string>
+    <string name="dict_legacy_freq_not_now">Teď ne</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d slovo zvýšeno na %2$d</item>
+        <item quantity="few">%1$d slova zvýšena na %2$d</item>
+        <item quantity="many">%1$d slova zvýšeno na %2$d</item>
+        <item quantity="other">%1$d slov zvýšeno na %2$d</item>
+    </plurals>
     <string name="dict_edit">Upravit</string>
     <string name="dict_delete">Smazat</string>
     <string name="dict_no_words">Nenalezena žádná slova</string>

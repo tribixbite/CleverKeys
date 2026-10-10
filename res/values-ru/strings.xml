@@ -164,6 +164,25 @@
     <string name="dict_swipe_priority_highest">Наивысший</string>
     <string name="dict_swipe_priority_help">Частота (1–255) задаёт место слова относительно словаря; 255 — уже максимум. Приоритет при свайпе добавляет фиксированное преимущество слову, которое при свайпе всё равно проигрывает: «Высокий» — умеренное, «Наивысший» — сильное. Слово с приоритетом выигрывает и часть свайпов похожих слов (например, «ad» вместо «as»). Подсказки при наборе не меняются.</string>
     <string name="dict_word_frequency_swipe_priority">Частота: %1$d · Приоритет при свайпе: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Частота повышена до %1$d: более низкая частота частично свела бы на нет приоритет при свайпе.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d пользовательское слово всё ещё имеет старую частоту по умолчанию %2$d. Повысить до %3$d?</item>
+        <item quantity="few">%1$d пользовательских слова всё ещё имеют старую частоту по умолчанию %2$d. Повысить до %3$d?</item>
+        <item quantity="many">%1$d пользовательских слов всё ещё имеют старую частоту по умолчанию %2$d. Повысить до %3$d?</item>
+        <item quantity="other">%1$d пользовательского слова всё ещё имеют старую частоту по умолчанию %2$d. Повысить до %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Просмотреть</string>
+    <string name="dict_legacy_freq_dismiss">Скрыть</string>
+    <string name="dict_legacy_freq_dialog_title">Повысить старые частоты по умолчанию?</string>
+    <string name="dict_legacy_freq_dialog_message">Слова, добавленные в старых версиях, сохранены с частотой %1$d, поэтому их труднее вводить свайпом. «Повысить» меняет только слова ниже — на %2$d; их приоритет при свайпе не меняется. Если вы намеренно задали какому-то слову %1$d, его можно снова понизить через «Изменить».</string>
+    <string name="dict_legacy_freq_raise">Повысить</string>
+    <string name="dict_legacy_freq_not_now">Не сейчас</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d слово повышено до %2$d</item>
+        <item quantity="few">%1$d слова повышены до %2$d</item>
+        <item quantity="many">%1$d слов повышено до %2$d</item>
+        <item quantity="other">%1$d слова повышено до %2$d</item>
+    </plurals>
     <string name="dict_edit">Изменить</string>
     <string name="dict_delete">Удалить</string>
     <string name="dict_no_words">Слова не найдены</string>

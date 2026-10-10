@@ -87,6 +87,24 @@ Each engine reads it on its own scale:
 Raising frequency cannot go past the top. That is why some words still lose when you swipe
 them, even at 255.
 
+#### Words added with older versions (frequency 100)
+
+Before September 2026 a new custom word was stored at frequency **100**, not 255. Some older
+versions also reset every custom word to 100 when a word was added from the keyboard. At 100 a
+word starts in the middle of the dictionary's range, so it loses swipes it would win at 255.
+On one test phone, `adb` at 100 lost to `an` even at swipe priority Highest. After it was raised
+to 255, `adb` ranked first.
+
+When a language has such words, the **Custom** tab shows a notice: "N custom words still use
+the old default frequency 100. Raise them to 255?"
+
+- **Review** lists the words and asks first. **Raise** sets only those words to 255 and leaves
+  their swipe priority unchanged. **Not now** changes nothing.
+- **Dismiss** hides the notice. It comes back only if a new word appears at 100, for example
+  from a backup that stored words without a frequency.
+- Only words at exactly 100 are listed. If you set a word to 100 on purpose, it is listed too.
+  Raising it is optional, and you can lower it again with Edit.
+
 ### Swipe priority (Normal / High / Highest)
 
 Some words still lose when swiped, even as a custom word at 255. The decoder may not notice a
@@ -99,6 +117,11 @@ word that ends near the same key. Examples: `adb` comes out as `an`, `ad` as `as
 | **Normal** (default) | No boost. The word swipes exactly as before |
 | **High** | A moderate boost. Fixes most swipes of the word that lose narrowly |
 | **Highest** | A strong boost, for words that still lose at High |
+
+Choosing **High** or **Highest** in the Add/Edit dialog also sets the frequency field to 255
+when it is lower, and a line under the buttons says so. A lower frequency would cancel part of
+the boost. Choosing **Normal** leaves the frequency as it is, and you can still lower it by hand
+before saving.
 
 The boost has limits:
 

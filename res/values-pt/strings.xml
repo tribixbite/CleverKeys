@@ -175,6 +175,23 @@
     <string name="dict_swipe_priority_highest">Máxima</string>
     <string name="dict_swipe_priority_help">A frequência (1-255) ordena a sua palavra em relação ao dicionário; 255 já é o máximo. A prioridade ao deslizar acrescenta uma vantagem fixa a uma palavra que continua a perder quando desliza: Alta é moderada, Máxima é forte. Uma palavra com prioridade também ganha alguns deslizes de palavras parecidas (por exemplo, \'ad\' em vez de \'as\'). As sugestões ao digitar não mudam.</string>
     <string name="dict_word_frequency_swipe_priority">Frequência: %1$d · Prioridade ao deslizar: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Frequência aumentada para %1$d: uma frequência menor anularia parte da prioridade ao deslizar.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d palavra pessoal ainda usa a antiga frequência padrão %2$d. Aumentá-la para %3$d?</item>
+        <item quantity="many">%1$d palavras pessoais ainda usam a antiga frequência padrão %2$d. Aumentá-las para %3$d?</item>
+        <item quantity="other">%1$d palavras pessoais ainda usam a antiga frequência padrão %2$d. Aumentá-las para %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Revisar</string>
+    <string name="dict_legacy_freq_dismiss">Dispensar</string>
+    <string name="dict_legacy_freq_dialog_title">Aumentar frequências padrão antigas?</string>
+    <string name="dict_legacy_freq_dialog_message">Palavras adicionadas em versões anteriores foram salvas com frequência %1$d, o que as torna mais difíceis de deslizar. Aumentar altera só as palavras abaixo, para %2$d; a prioridade ao deslizar delas não muda. Se você definiu alguma em %1$d de propósito, pode diminuí-la de novo em Editar.</string>
+    <string name="dict_legacy_freq_raise">Aumentar</string>
+    <string name="dict_legacy_freq_not_now">Agora não</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d palavra aumentada para %2$d</item>
+        <item quantity="many">%1$d palavras aumentadas para %2$d</item>
+        <item quantity="other">%1$d palavras aumentadas para %2$d</item>
+    </plurals>
     <string name="dict_edit">Editar</string>
     <string name="dict_delete">Excluir</string>
     <string name="dict_no_words">Nenhuma palavra encontrada</string>

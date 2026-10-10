@@ -175,6 +175,21 @@
     <string name="dict_swipe_priority_highest">Hoogst</string>
     <string name="dict_swipe_priority_help">De frequentie (1-255) rangschikt je woord ten opzichte van het woordenboek; 255 is al het maximum. Veegprioriteit geeft daarbovenop een vaste voorsprong aan een woord dat bij vegen nog steeds verliest: Hoog is gematigd, Hoogst is sterk. Een verhoogd woord wint ook sommige veegbewegingen van vergelijkbare woorden (bijvoorbeeld \'ad\' in plaats van \'as\'). Typsuggesties veranderen niet.</string>
     <string name="dict_word_frequency_swipe_priority">Frequentie: %1$d · Veegprioriteit: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Frequentie verhoogd naar %1$d: een lagere frequentie zou de veegprioriteit deels tenietdoen.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d aangepast woord gebruikt nog de oude standaardfrequentie %2$d. Verhogen naar %3$d?</item>
+        <item quantity="other">%1$d aangepaste woorden gebruiken nog de oude standaardfrequentie %2$d. Verhogen naar %3$d?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">Bekijken</string>
+    <string name="dict_legacy_freq_dismiss">Verbergen</string>
+    <string name="dict_legacy_freq_dialog_title">Oude standaardfrequenties verhogen?</string>
+    <string name="dict_legacy_freq_dialog_message">Woorden die in oudere versies zijn toegevoegd, zijn opgeslagen met frequentie %1$d en zijn daardoor moeilijker te vegen. Verhogen wijzigt alleen de woorden hieronder, naar %2$d; hun veegprioriteit blijft gelijk. Heb je er een bewust op %1$d gezet, dan kun je die met Bewerken weer verlagen.</string>
+    <string name="dict_legacy_freq_raise">Verhogen</string>
+    <string name="dict_legacy_freq_not_now">Niet nu</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d woord verhoogd naar %2$d</item>
+        <item quantity="other">%1$d woorden verhoogd naar %2$d</item>
+    </plurals>
     <string name="dict_edit">Bewerken</string>
     <string name="dict_delete">Verwijderen</string>
     <string name="dict_no_words">Geen woorden gevonden</string>

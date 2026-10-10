@@ -342,3 +342,74 @@ below 255 offsets the level, is a maintainer decision.
 Highest and swipe a→d→b twice with the same recipe. The replay predicts `adb` first.
 (3) If N is already 255 and `an` still wins, the cause is not the frequency. In that case,
 capture the swipe's raw trace (Swipe Playground with debug mode on) and replay it.
+
+### 9a. Outcome, 2026-10-10: confirmed on the device
+
+**Device result.** The Seeker's `adb` row read "Frequency: 100". It was added before wave U2,
+when 100 was the default. After an Edit to 255 at Highest, the same a→d→b recipe ranked `adb`
+first. This matches the replay above: rank 2 behind `an` at 100, rank 1 at 255. The working
+hypothesis is confirmed, and the levels stay as they are.
+
+**Where the 100 came from (git history).** 100 is the only default ever written into
+`custom_words_<lang>`:
+
+- the Add Word dialog pre-fill and fallback, from `f743e49f` (2025-11-28);
+- the IME-side `DictionaryManager.saveUserWords`, which rewrote *every* custom word of the
+  language to 100 on any keyboard-side add or remove (`1ccb534e`, 2026-01-12);
+- the `user_words` migration (`10930d45`, 2026-01-12).
+
+All three moved to 255 in `4525eb9c` (2026-09-06). One writer of 100 is still live:
+`DictImportPlanBuilder.DEFAULT_USER_WORD_FREQ` gives 100 to a backup entry that has no
+frequency.
+
+**What changed (maintainer decisions).**
+
+- The Custom tab now offers to raise words still at exactly 100 to 255. The user reviews the
+  list and confirms with Raise or Not now. Dismissing the notice is remembered per language,
+  and the notice returns only when a new word at 100 appears. Nothing is migrated silently.
+  See `LegacyCustomWordFrequency`.
+- In the Add/Edit dialog, selecting High or Highest lifts a frequency below 255 to 255 and
+  shows a line saying so. Normal leaves the frequency alone. See
+  `UserWordFrequency.liftedForPriority`.
+
+**"Only from the second swipe after the edit": no stale state found.**
+
+- **The CTC memo is keyed on content.** `CtcEngineAdapter.lexiconFor` hashes the raw
+  `custom_words_<lang>` JSON (frequencies included), `disabled_words_<lang>` and
+  `swipe_priority_<lang>` into `LexiconContentVersion`, and re-reads them on every decode.
+- **The write is visible at once.** The Edit dialog's Save writes the same in-process
+  SharedPreferences with `apply()`, which updates the in-memory map synchronously. Swipes share
+  one process with the Dictionary Manager, so the very next decode sees a new version and
+  rebuilds.
+- **The rewarm cannot serve an old trie.** The 400 ms `SwipeRewarmScheduler` prewarm computes
+  the version from the same read it builds from. A decode that interrupts it rebuilds itself.
+- **No other swipe stage reads custom-word frequencies.** Context rescoring is off by default.
+  The tap predictor's lazy reload affects tap suggestions only.
+- **Pinned with the production writer and reader.** `CustomWordEditLexiconInputTest` (mock)
+  uses `CustomDictionarySource.updateWord` and `CtcEngineAdapter.userLexiconInputs` /
+  `customWordPairs`, which were extracted from `lexiconFor` unchanged. A frequency-only edit
+  changes the version, and the next build carries 255 with Highest kept. This test is a pin,
+  not a fail-first reproduction: no failing case exists in the code.
+- **A slow first `input` event is not the cause.** One harness explanation was tested in
+  `deviceRecipeAdbDiagnostic`: the first `input motionevent` of a burst can leave the finger
+  resting on `a` (300, 600 or 1000 ms before the first MOVE). At 255 + Highest, `adb` still
+  ranks 1 on all three (needs 2.91–3.10 nats). At 100 it ranks 2 on all three (needs
+  4.27–4.47).
+
+The remaining explanations are outside the decoder and cannot be told apart from here. The
+first swipe may have been read before its decode landed. The cold rebuild runs inside that
+decode: it parses the 98k-word `en_enhanced.json`, and a second swipe arriving during it
+cancels the first decode without a result. Or that first trace may simply have differed.
+
+**Device check (to run).**
+
+1. Set a custom word to 100 with Edit (or restore an old backup). The Custom tab shows the
+   notice. Use Review, then Raise: the row reads 255, and a toast says how many words were
+   raised.
+2. Set one back to 100 and press Dismiss. The notice stays hidden after reopening the Dictionary
+   Manager. Add another word at 100: the notice returns.
+3. In Edit, with frequency 100, select Highest: the field changes to 255 and the explanatory
+   line appears. Select Normal: the field stays at 255.
+4. First-swipe timing: right after Save, return to the editor, wait about 2 s, swipe a→d→b
+   once, and take a screenshot only after the commit lands. Repeat 3 times. If the first swipe
+   still commits `an`, capture its raw trace (Swipe Playground, debug on) for replay.

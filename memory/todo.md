@@ -24,7 +24,10 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
    ("Language: Persian" bar, Persian typo autocorrected, Latin restores EN), en/de/fr
    three-layout cycle, uninstalled-language warning. Saga Latin→German PASS 2026-10-07.
 3. [ ] device: add `adb`/`somethings` to the personal dictionary and swipe them
-   (`docs/eval/2026-10-07-final-letter-drops.md` §8).
+   (`docs/eval/2026-10-07-final-letter-drops.md` §8). `adb` part done 2026-10-10 (Seeker):
+   stored at the legacy 100 it lost to `an` at Highest; raised to 255 it ranked first
+   (`docs/eval/2026-10-08-user-swipe-priority.md` §9). Still open: `somethings`, and the
+   follow-up device check of the legacy-frequency offer + dialog lift (eval §9 "Device check").
 4. [ ] device: clipboard Select/⋮ with TalkBack; #181 glyph filter on a device WITHOUT a
    font provider; #184 oversized UPDATE of an already-installed pack.
 5. [ ] device: leftovers of the plan's "Maintainer device checks" — continuous swipe with
@@ -37,7 +40,8 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
    disposable clip, #145 cold start, both minimize styles, suffix/template/continuous feel.
 8. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in
    21 locales (command catalogue 465, popover 18, clipboard selection/bulk 25, clear-clipboard
-   4, #184 refusal, terminal packages, language binding, Oct 7 dialog strings).
+   4, #184 refusal, terminal packages, language binding, Oct 7 dialog strings, Oct 10
+   legacy-frequency offer + priority lift 9).
 9. [ ] maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`
    needs a fresh pre-registration; nonzero `finger_occlusion_offset` only from device-trace
    A/B; keep or uninstall CleverKeys on the Saga (installed, enabled, not default).

@@ -173,6 +173,21 @@
     <string name="dict_swipe_priority_highest">En yüksek</string>
     <string name="dict_swipe_priority_help">Sıklık (1-255) kelimenizi sözlüğe göre sıralar; 255 zaten en yüksek değerdir. Kaydırma önceliği, kaydırırken hâlâ kaybeden bir kelimeye ek olarak sabit bir avantaj verir: Yüksek orta düzeyde, En yüksek güçlüdür. Önceliği yükseltilen kelime benzer kelimelerin bazı kaydırmalarını da kazanır (örneğin \'as\' yerine \'ad\'). Yazarken çıkan öneriler etkilenmez.</string>
     <string name="dict_word_frequency_swipe_priority">Sıklık: %1$d · Kaydırma önceliği: %2$s</string>
+    <string name="dict_swipe_priority_frequency_raised">Sıklık %1$d olarak yükseltildi: daha düşük bir sıklık kaydırma önceliğini kısmen boşa çıkarırdı.</string>
+    <plurals name="dict_legacy_freq_notice">
+        <item quantity="one">%1$d özel kelime hâlâ eski varsayılan sıklık %2$d değerini kullanıyor. %3$d değerine yükseltilsin mi?</item>
+        <item quantity="other">%1$d özel kelime hâlâ eski varsayılan sıklık %2$d değerini kullanıyor. %3$d değerine yükseltilsin mi?</item>
+    </plurals>
+    <string name="dict_legacy_freq_review">İncele</string>
+    <string name="dict_legacy_freq_dismiss">Kapat</string>
+    <string name="dict_legacy_freq_dialog_title">Eski varsayılan sıklıklar yükseltilsin mi?</string>
+    <string name="dict_legacy_freq_dialog_message">Eski sürümlerde eklenen kelimeler %1$d sıklığıyla kaydedildi, bu yüzden kaydırarak yazılmaları daha zor. Yükselt yalnızca aşağıdaki kelimeleri %2$d değerine değiştirir; kaydırma öncelikleri aynı kalır. Bunlardan birini bilerek %1$d yaptıysanız Düzenle ile yeniden düşürebilirsiniz.</string>
+    <string name="dict_legacy_freq_raise">Yükselt</string>
+    <string name="dict_legacy_freq_not_now">Şimdi değil</string>
+    <plurals name="dict_legacy_freq_raised">
+        <item quantity="one">%1$d kelime %2$d değerine yükseltildi</item>
+        <item quantity="other">%1$d kelime %2$d değerine yükseltildi</item>
+    </plurals>
     <string name="dict_edit">Düzenle</string>
     <string name="dict_delete">Sil</string>
     <string name="dict_no_words">Kelime bulunamadı</string>

@@ -57,6 +57,11 @@ object SettingsValidation {
         // match and the entries are at best dead weight. Recomputed on demand; see
         // swipe.CtcInstalledPacks.PREF_KEY.
         "ctc_langpack_verdicts",
+        // Dictionary Manager: which old-default-frequency (100) custom words the user dismissed
+        // the raise offer for (2026-10-10, tribixbite.cleverkeys.LegacyCustomWordFrequency).
+        // Per-device UI state: NOT exported, so a restore elsewhere re-offers imported legacy
+        // entries instead of inheriting another device's "not now".
+        "legacy_custom_freq_offer_dismissed",
     )
 
     fun isInternalPreference(key: String): Boolean = key in INTERNAL_KEYS
