@@ -110,7 +110,7 @@ class TerminalTypedWordTrackingTest {
 
         bar = mockk(relaxed = true)
         every { bar.getMetaForSuggestion(any()) } returns null
-        every { bar.setSuggestionsWithScores(any(), any(), any()) } answers {
+        every { bar.setSuggestionsWithScores(any(), any(), any(), any()) } answers {
             barPosts.add(firstArg<List<String>>().toList())
         }
 
@@ -144,6 +144,8 @@ class TerminalTypedWordTrackingTest {
         handler.setField("predictionTasks", tasks)
         handler.setField("mainHandler", main)
         handler.setField("fieldAllowsPersonalizedLearning", true)
+        // Objenesis skips field initializers: the space-commit memo (2026-10-11) must exist.
+        handler.setField("autocorrectMemo", tribixbite.cleverkeys.autocorrect.AutocorrectMemo())
     }
 
     @After

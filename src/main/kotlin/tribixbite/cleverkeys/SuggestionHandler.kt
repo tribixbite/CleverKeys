@@ -12,6 +12,10 @@ import android.view.inputmethod.InputConnection
 import tribixbite.cleverkeys.ml.PlaygroundTraceRecorder
 import tribixbite.cleverkeys.ml.SwipeMLData
 import tribixbite.cleverkeys.autocorrect.AutocorrectContextGuard
+import tribixbite.cleverkeys.autocorrect.AutocorrectMemo
+import tribixbite.cleverkeys.autocorrect.BarHighlightPlanner
+import tribixbite.cleverkeys.autocorrect.SpaceCommit
+import tribixbite.cleverkeys.autocorrect.SpaceCommitResolver
 import tribixbite.cleverkeys.swipe.SwipeContextRescorer
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 
@@ -416,18 +420,8 @@ class SuggestionHandler(
      * @param corrected The autocorrected word (typically lowercase)
      * @return Corrected word with original's capitalization pattern applied
      */
-    private fun preserveCapitalization(original: String, corrected: String): String {
-        if (original.isEmpty() || corrected.isEmpty()) return corrected
-
-        return when {
-            // All uppercase: "TEH" → "THE"
-            original.all { !it.isLetter() || it.isUpperCase() } -> corrected.uppercase()
-            // First letter uppercase (title case): "Teh" → "The"
-            original[0].isUpperCase() -> corrected.replaceFirstChar { it.uppercaseChar() }
-            // All lowercase: keep as-is
-            else -> corrected
-        }
-    }
+    private fun preserveCapitalization(original: String, corrected: String): String =
+        SpaceCommitResolver.preserveCapitalization(original, corrected)
 
     /**
      * Check if a capitalized word was intentionally capitalized (proper noun) vs auto-capitalized.
@@ -489,6 +483,13 @@ class SuggestionHandler(
 
     // Async prediction execution
     private val predictionTasks = PredictionTaskRunner()
+
+    /**
+     * Bar highlight == space commit (2026-10-11): `autoCorrect(word)` computed by the bar's
+     * prediction worker, reused by the bar post and the space path for the same word (see
+     * [resolveSpaceCommit]). Cleared at every new typed word and every cursor-sync re-read.
+     */
+    private val autocorrectMemo = AutocorrectMemo()
     // Post to main thread explicitly — View.post() silently drops runnables for detached views
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -573,6 +574,62 @@ class SuggestionHandler(
     fun setConfig(newConfig: Config) {
         config = newConfig
     }
+
+    /**
+     * Every setting `WordPredictor.autoCorrect` reads, so a settings change between the bar's
+     * computation and the space press is a memo miss, never a stale correction.
+     */
+    private data class AutocorrectSettings(
+        val enabled: Boolean,
+        val minWordLength: Int,
+        val charMatchThreshold: Float,
+        val maxLengthDiff: Int,
+        val minFrequency: Int,
+        val prefixLength: Int,
+    )
+
+    private fun autocorrectSettings() = AutocorrectSettings(
+        config.autocorrect_enabled,
+        config.autocorrect_min_word_length,
+        config.autocorrect_char_match_threshold,
+        config.autocorrect_max_length_diff,
+        config.autocorrect_confidence_min_frequency,
+        config.autocorrect_prefix_length,
+    )
+
+    /**
+     * What pressing space commits for [word] — THE decision both the space path and the tap-typing
+     * bar highlight use (2026-10-11). The predictor's correction comes from [autocorrectMemo], so
+     * the space press reuses the sweep the bar already ran for the same word. Thread: any (the
+     * memo is volatile-safe); [isNonProse] reads the editor and must be called on the main thread
+     * by its owner, and only runs when a correction would otherwise fire.
+     */
+    private fun resolveSpaceCommit(
+        word: String,
+        inTerminal: Boolean,
+        stemUnmerged: Boolean,
+        isNonProse: () -> Boolean,
+    ): SpaceCommit {
+        val predictor = predictionCoordinator.getWordPredictor()
+        return SpaceCommitResolver.resolve(
+            typed = word,
+            autocorrectEnabled = config.autocorrect_enabled && predictor != null,
+            inTerminal = inTerminal,
+            stemUnmerged = stemUnmerged,
+            capitalizeI = ::capitalizeIWord,
+            isNonProse = isNonProse,
+            autoCorrect = { w -> memoizedAutoCorrect(predictor, w) },
+        )
+    }
+
+    /** `autoCorrect(word)` through [autocorrectMemo]; the identity when no predictor is loaded. */
+    private fun memoizedAutoCorrect(predictor: Predictor?, word: String): String =
+        if (predictor == null) word
+        else autocorrectMemo.get(word, predictor, autocorrectSettings()) { predictor.autoCorrect(it) }
+
+    /** W7: [word] is only the tail after a held joiner stem ("don'" + "t"), not a whole word. */
+    private fun isStemUnmerged(word: String): Boolean =
+        pendingJoinerStem.let { it != null && !word.startsWith(it) }
 
     /** Verbose-only debug log; message lambda is not evaluated unless verbose logging is enabled. */
     private inline fun vlog(message: () -> String) { if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, message()) }
@@ -2960,6 +3017,9 @@ class SuggestionHandler(
                 // This prevents incorrectly deleting a previously swiped word when
                 // user types a new word then taps a prediction
                 if (contextTracker.getCurrentWordLength() == 1) {
+                    // A new word: whatever changed the dictionary since the last one (an
+                    // add-to-dictionary, an autocorrect undo) must not be served from the memo.
+                    autocorrectMemo.clear()
                     contextTracker.clearLastAutoInsertedWord()
                     contextTracker.clearAutocorrectTracking()
                     contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
@@ -2969,7 +3029,7 @@ class SuggestionHandler(
                 }
                 // W5: this word is now typed-but-unlearned until something completes it.
                 pendingTypedWord = contextTracker.getCurrentWord()
-                updatePredictionsForCurrentWord()
+                updatePredictionsForCurrentWord(ic, editorInfo)
             }
             // W7 (audit 2026-09-26): an apostrophe/hyphen INSIDE a word ("don'", "co-") does not
             // end the word for LEARNING. It used to fall into the branch below and learn "don",
@@ -3030,13 +3090,31 @@ class SuggestionHandler(
                     // DISABLED in Termux app due to erratic behavior with terminal input
                     val inTermuxApp = isTerminalEditor(editorInfo)
 
-                    // Issue #72: Auto-capitalize "I" words when completed
-                    // Check BEFORE autocorrect so this works even if autocorrect is disabled
-                    val capitalizedWord = capitalizeIWord(completedWord)
-                    val needsICapitalization = text == " " && !inTermuxApp && !stemUnmerged &&
-                        capitalizedWord != completedWord
+                    // Non-prose guard (2026-07-13): the word tracker only sees
+                    // LETTERS, so "teh" inside "foo.teh" / "user@teh" /
+                    // "https://teh…" looks identical to prose "teh". The editor
+                    // text reveals the real token — skip autocorrect when the
+                    // cursor just left a URL/email/path-like token, otherwise
+                    // domains and pasted-then-edited URLs get corrupted.
+                    // Lazy: read only when a correction would fire or the add-to-dictionary
+                    // check below needs it.
+                    val inNonProseToken by lazy {
+                        AutocorrectContextGuard.isNonProseContext(ic?.getTextBeforeCursor(72, 0))
+                    }
 
-                    if (needsICapitalization) {
+                    // What space commits — the SAME decision the bar highlighted for this word
+                    // (2026-10-11), reusing the bar's memoized correction when it is still valid.
+                    // Issue #72 I-word capitalization comes first (works even with autocorrect
+                    // off); autocorrect is skipped in terminals, non-prose tokens and joiner
+                    // fragments. Only a space triggers either.
+                    val spaceCommit = if (text == " ") {
+                        resolveSpaceCommit(completedWord, inTermuxApp, stemUnmerged) { inNonProseToken }
+                    } else {
+                        SpaceCommit(SpaceCommit.Kind.KEEP, completedWord)
+                    }
+
+                    if (spaceCommit.kind == SpaceCommit.Kind.CAPITALIZE_I) {
+                        val capitalizedWord = spaceCommit.commit
                         ic?.let { inputConnection ->
                             // Delete the typed word + space (already committed)
                             inputConnection.deleteSurroundingText(completedWord.length + 1, 0)
@@ -3054,83 +3132,64 @@ class SuggestionHandler(
                         }
                     }
 
-                    // Non-prose guard (2026-07-13): the word tracker only sees
-                    // LETTERS, so "teh" inside "foo.teh" / "user@teh" /
-                    // "https://teh…" looks identical to prose "teh". The editor
-                    // text reveals the real token — skip autocorrect when the
-                    // cursor just left a URL/email/path-like token, otherwise
-                    // domains and pasted-then-edited URLs get corrupted.
-                    val inNonProseToken = AutocorrectContextGuard.isNonProseContext(
-                        ic?.getTextBeforeCursor(72, 0)
-                    )
+                    if (spaceCommit.kind == SpaceCommit.Kind.AUTOCORRECT) {
+                        // Capitalization pattern and I-word casing already applied by the resolver.
+                        val correctedWord = spaceCommit.commit
+                        ic?.let { inputConnection ->
+                            // At this point:
+                            // - The typed word "thid" has been committed via KeyEventHandler.send_text()
+                            // - The space " " has ALSO been committed via handle_text_typed(" ")
+                            // - Editor contains "thid "
+                            // - We need to delete both the word AND the space, then insert corrected word + space
 
-                    if (config.autocorrect_enabled && predictionCoordinator.getWordPredictor() != null &&
-                        text == " " && !inTermuxApp && !inNonProseToken && !stemUnmerged) {
-                        var correctedWord = predictionCoordinator.getWordPredictor()?.autoCorrect(completedWord)
+                            // Delete the typed word + space (already committed)
+                            inputConnection.deleteSurroundingText(completedWord.length + 1, 0)
 
-                        // If correction was made, replace the typed word
-                        if (correctedWord != null && correctedWord != completedWord) {
-                            // Preserve original capitalization pattern
-                            correctedWord = preserveCapitalization(completedWord, correctedWord)
-                            // Also apply I-word capitalization
-                            correctedWord = capitalizeIWord(correctedWord)
+                            // Insert the corrected word WITH trailing space (normal apps only)
+                            inputConnection.commitText("$correctedWord ", 1)
 
-                            ic?.let { inputConnection ->
-                                // At this point:
-                                // - The typed word "thid" has been committed via KeyEventHandler.send_text()
-                                // - The space " " has ALSO been committed via handle_text_typed(" ")
-                                // - Editor contains "thid "
-                                // - We need to delete both the word AND the space, then insert corrected word + space
+                            // Update context with corrected word (learn-once: typed words only)
+                            if (typedThisSession) updateContext(correctedWord)
+                            // Swipe corrections: the committed word is autocorrect's, not the
+                            // user's — it cannot answer a swipe undo. (A kept re-swipe settles;
+                            // the bar is about to show the autocorrect undo, so its offer waits.)
+                            noteSwipeCorrectionBoundary(editorInfo)?.let { deferSwipeOffer(it) }
 
-                                // Delete the typed word + space (already committed)
-                                inputConnection.deleteSurroundingText(completedWord.length + 1, 0)
+                            // Clear current word
+                            contextTracker.clearCurrentWord()
 
-                                // Insert the corrected word WITH trailing space (normal apps only)
-                                inputConnection.commitText("$correctedWord ", 1)
+                            // Track autocorrect state for undo functionality
+                            // When user taps original word in suggestions, we can detect and replace
+                            contextTracker.setLastAutoInsertedWord(correctedWord)
+                            contextTracker.setLastCommitSource(PredictionSource.AUTOCORRECT)
+                            contextTracker.setLastAutocorrectOriginalWord(completedWord)
 
-                                // Update context with corrected word (learn-once: typed words only)
-                                if (typedThisSession) updateContext(correctedWord)
-                                // Swipe corrections: the committed word is autocorrect's, not the
-                                // user's — it cannot answer a swipe undo. (A kept re-swipe settles;
-                                // the bar is about to show the autocorrect undo, so its offer waits.)
-                                noteSwipeCorrectionBoundary(editorInfo)?.let { deferSwipeOffer(it) }
+                            vlog { "AUTOCORRECT: '$completedWord' → '$correctedWord' (tracking for undo)" }
 
-                                // Clear current word
-                                contextTracker.clearCurrentWord()
+                            // v1.2.6 FIX: Cancel pending prediction task and set flag to prevent overwriting
+                            predictionTasks.cancelCurrent()
+                            specialPromptActive = true
 
-                                // Track autocorrect state for undo functionality
-                                // When user taps original word in suggestions, we can detect and replace
-                                contextTracker.setLastAutoInsertedWord(correctedWord)
-                                contextTracker.setLastCommitSource(PredictionSource.AUTOCORRECT)
-                                contextTracker.setLastAutocorrectOriginalWord(completedWord)
-
-                                vlog { "AUTOCORRECT: '$completedWord' → '$correctedWord' (tracking for undo)" }
-
-                                // v1.2.6 FIX: Cancel pending prediction task and set flag to prevent overwriting
-                                predictionTasks.cancelCurrent()
-                                specialPromptActive = true
-
-                                // Show original word as first suggestion for easy undo
-                                suggestionBar?.setSuggestionsWithScores(
-                                    listOf(completedWord, correctedWord), // Original word first for undo
-                                    listOf(0, 0),
-                                    listOf(
-                                        SuggestionMeta(
-                                            SuggestionOrigin.AUTOCORRECT,
-                                            note = ProvenanceNote.TypedWordUndo
-                                        ),
-                                        SuggestionMeta(
-                                            SuggestionOrigin.AUTOCORRECT,
-                                            note = ProvenanceNote.AutocorrectedFrom(completedWord)
-                                        )
+                            // Show original word as first suggestion for easy undo
+                            suggestionBar?.setSuggestionsWithScores(
+                                listOf(completedWord, correctedWord), // Original word first for undo
+                                listOf(0, 0),
+                                listOf(
+                                    SuggestionMeta(
+                                        SuggestionOrigin.AUTOCORRECT,
+                                        note = ProvenanceNote.TypedWordUndo
+                                    ),
+                                    SuggestionMeta(
+                                        SuggestionOrigin.AUTOCORRECT,
+                                        note = ProvenanceNote.AutocorrectedFrom(completedWord)
                                     )
                                 )
+                            )
 
-                                // Reset prediction state
-                                predictionCoordinator.getWordPredictor()?.reset()
+                            // Reset prediction state
+                            predictionCoordinator.getWordPredictor()?.reset()
 
-                                return // Skip normal text processing - we've handled everything
-                            }
+                            return // Skip normal text processing - we've handled everything
                         }
                     }
 
@@ -3262,7 +3321,7 @@ class SuggestionHandler(
      * Handle backspace for prediction tracking.
      * Updates predictions as user deletes characters.
      */
-    fun handleBackspace() {
+    fun handleBackspace(ic: InputConnection? = null, editorInfo: EditorInfo? = null) {
         wordEditReceipt = null
         suggestionBar?.dismissUndoableMessage()
 
@@ -3287,7 +3346,7 @@ class SuggestionHandler(
                 pendingTypedWord = contextTracker.getCurrentWord().ifEmpty { null }
             }
             if (contextTracker.getCurrentWordLength() > 0) {
-                updatePredictionsForCurrentWord()
+                updatePredictionsForCurrentWord(ic, editorInfo)
             } else {
                 // The prediction still queued for the last letter describes a word that is gone.
                 predictionTasks.cancelCurrent()
@@ -3368,7 +3427,7 @@ class SuggestionHandler(
      * Dictionary possessives are unaffected: they arrive as ordinary predictions on BOTH paths,
      * so there is no gateable possessive delta here (oracle scenario 25 stays as-is).
      */
-    fun handleCursorSyncPrediction() {
+    fun handleCursorSyncPrediction(ic: InputConnection? = null, editorInfo: EditorInfo? = null) {
         // Password mode: never surface predictions from a cursor move (matches the tap-path guard
         // in handleRegularTyping and handlePredictionResults). synchronizeWithCursor already skips
         // password input types, so currentWord is normally empty here — this is defence in depth.
@@ -3383,7 +3442,9 @@ class SuggestionHandler(
             contextTracker.getCurrentWordSuffixLength() == 0 && synced.endsWith(it)
         }?.let { synced }
         pendingJoinerStem = pendingJoinerStem?.takeIf { synced.startsWith(it) }
-        updatePredictionsForCurrentWord()
+        // The editor was re-read: recompute the correction rather than trust an older memo.
+        autocorrectMemo.clear()
+        updatePredictionsForCurrentWord(ic, editorInfo)
     }
 
     /**
@@ -3397,9 +3458,11 @@ class SuggestionHandler(
      * term below is a no-op for the typing path (typed partials are letters-only) and restores the
      * legacy IC cursor-sync's dual-search so contraction bases hidden behind an apostrophe still hit.
      */
-    private fun updatePredictionsForCurrentWord() {
+    private fun updatePredictionsForCurrentWord(ic: InputConnection?, editorInfo: EditorInfo?) {
         if (contextTracker.getCurrentWordLength() > 0) {
             val partial = contextTracker.getCurrentWord()
+            // Bar highlight == space commit (2026-10-11): read on the main thread, which owns them.
+            val inTerminal = isTerminalEditor(editorInfo)
 
             // Check if first letter is uppercase (user typed with Shift, or cursor-synced from a
             // capitalized token). Mirrors the legacy IC cursor-sync rawPrefix capitalization check.
@@ -3569,9 +3632,18 @@ class SuggestionHandler(
                     finalMetas = mergedMetas
                 }
 
+                // Bar highlight == space commit (2026-10-11): run the dictionary-sweeping
+                // correction HERE, on the worker, so the main-thread resolve in the post below
+                // (and the space press) hits the memo. Its guards are evaluated there.
+                val wouldCorrect = config.autocorrect_enabled && !inTerminal &&
+                    memoizedAutoCorrect(predictionCoordinator.getWordPredictor(), partial) != partial
+                if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
+
                 // Post result to UI thread
                 // v1.2.6 FIX: Check if task was cancelled or special prompt is active
-                if (finalWords.isNotEmpty() && suggestionBar != null &&
+                // (An empty prediction list still posts when space would correct the word, so the
+                // bar can show the correction it is about to commit.)
+                if ((finalWords.isNotEmpty() || wouldCorrect) && suggestionBar != null &&
                     !Thread.currentThread().isInterrupted && !specialPromptActive) {
                     // Use Handler.post() instead of View.post() — View.post() silently
                     // drops runnables when the View is not attached to a window
@@ -3584,6 +3656,15 @@ class SuggestionHandler(
                         // report described (2026-10-07). Read on the main thread, which owns the tracker.
                         if (contextTracker.getCurrentWord() != partial) return@post
 
+                        // The highlighted entry is exactly what space would commit now: same
+                        // resolver, same guards, memo already warm. The non-prose read happens
+                        // only when a correction would fire.
+                        val spaceCommit = resolveSpaceCommit(partial, inTerminal, isStemUnmerged(partial)) {
+                            AutocorrectContextGuard.isNonProseContext(editorTextBeforeCursor(ic, 72))
+                        }
+                        val plan = BarHighlightPlanner.plan(finalWords, finalScores, finalMetas, partial, spaceCommit)
+                        if (plan.words.isEmpty()) return@post
+
                         suggestionBar?.let { bar ->
                             // Prefix predictions supersede any next-word display state
                             // (covers the cursor-sync path; the typing path already
@@ -3592,7 +3673,7 @@ class SuggestionHandler(
                             bar.setShowDebugScores(config.swipe_show_debug_scores)
                             bar.setShowOriginMarkers(config.suggestion_provenance_markers)
                             // v1.2.0: Use merged scores that include contraction scores
-                            bar.setSuggestionsWithScores(finalWords, finalScores, finalMetas)
+                            bar.setSuggestionsWithScores(plan.words, plan.scores, plan.metas, plan.highlightIndex)
                         }
                     }
                 }

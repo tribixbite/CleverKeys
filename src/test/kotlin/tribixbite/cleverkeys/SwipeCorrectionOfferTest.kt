@@ -139,7 +139,7 @@ class SwipeCorrectionOfferTest {
         barWords = emptyList()
         bar = mockk(relaxed = true)
         every { bar.getMetaForSuggestion(any()) } returns null
-        every { bar.setSuggestionsWithScores(any(), any(), any()) } answers {
+        every { bar.setSuggestionsWithScores(any(), any(), any(), any()) } answers {
             barWords = firstArg<List<String>>().toList()
         }
         every { bar.setSuggestionsWithScores(any(), any()) } answers {
@@ -191,6 +191,8 @@ class SwipeCorrectionOfferTest {
         handler.setField("keyeventhandler", mockk<KeyEventHandler>(relaxed = true))
         handler.setField("predictionTasks", mockk<PredictionTaskRunner>(relaxed = true))
         handler.setField("fieldAllowsPersonalizedLearning", true)
+        // Objenesis skips field initializers: the space-commit memo (2026-10-11) must exist.
+        handler.setField("autocorrectMemo", tribixbite.cleverkeys.autocorrect.AutocorrectMemo())
         handler.setField("swipeCorrectionStore", store)
     }
 

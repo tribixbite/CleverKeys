@@ -350,7 +350,7 @@ class InputCoordinator(
                 // bookkeeping above (onCursorPositionChanged, debounce, synchronizeWithCursor with
                 // the caller's language) stays here. Step 6 deleted the legacy IC-only pipeline;
                 // an unwired delegate means a misconfigured harness, not a fallback.
-                cursorSyncDelegate?.handleCursorSyncPrediction()
+                cursorSyncDelegate?.handleCursorSyncPrediction(ic, editorInfo)
                     ?: android.util.Log.e(TAG, "cursorSyncDelegate not wired — cursor-sync predictions dropped")
             } else {
                 // v1.2.6 FIX: Don't clear suggestions if showing special prompts or swipe corrections

@@ -47,6 +47,15 @@ class SuggestionBar : LinearLayout {
     // Task B (pipeline transparency): per-suggestion provenance parallel to
     // currentSuggestions. Empty when the caller provided no metas.
     private val currentMetas: MutableList<SuggestionMeta> = mutableListOf()
+
+    /**
+     * Index of the entry drawn in the high-confidence colour, or null for none (2026-10-11).
+     * Defaults to 0 (the historical "first entry" highlight) for every caller; the tap-typing
+     * path passes [tribixbite.cleverkeys.autocorrect.BarHighlightPlanner]'s index so the
+     * highlighted entry is exactly what space commits, and null when space keeps a typed word
+     * the bar does not list.
+     */
+    private var currentHighlightIndex: Int? = 0
     private var showOriginMarkers = false
     private var provenancePopup: android.widget.PopupWindow? = null
 
@@ -79,6 +88,7 @@ class SuggestionBar : LinearLayout {
     private var savedSuggestions: List<String> = emptyList()
     private var savedScores: List<Int> = emptyList()
     private var savedMetas: List<SuggestionMeta> = emptyList()
+    private var savedHighlightIndex: Int? = 0
     private var isShowingTemporaryMessage = false
 
     /**
@@ -92,7 +102,7 @@ class SuggestionBar : LinearLayout {
         activeUndoable?.finish()
         activeUndoable = null
         isShowingTemporaryMessage = false
-        setSuggestionsWithScores(savedSuggestions, savedScores, savedMetas)
+        setSuggestionsWithScores(savedSuggestions, savedScores, savedMetas, savedHighlightIndex)
     }
 
     // #41: Emoji search mode properties
@@ -371,10 +381,11 @@ class SuggestionBar : LinearLayout {
                 view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC)
                 view.setTextColor(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.LTGRAY)
             }
-            // Highlight first suggestion with the high-confidence colour (audit H-4:
+            // Highlight the commit item with the high-confidence colour (audit H-4:
             // the Theme-Creator's "High Confidence"; XML themes default it to the old
-            // activated colour).
-            index == 0 -> {
+            // activated colour). The first entry unless the caller chose another or none
+            // (tap typing: the word space commits — 2026-10-11).
+            index == currentHighlightIndex -> {
                 view.layoutParams = defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.NORMAL)
@@ -580,12 +591,16 @@ class SuggestionBar : LinearLayout {
     /**
      * Update the displayed suggestions with scores (and optional provenance
      * metas parallel to the suggestion list — Task B transparency).
+     *
+     * @param highlightIndex the entry drawn as the highlighted "commit" item, or null for none.
+     *   Defaults to 0 (first entry). An index outside the list highlights nothing.
      */
     @JvmOverloads
     fun setSuggestionsWithScores(
         suggestions: List<String>?,
         scores: List<Int>?,
-        metas: List<SuggestionMeta>? = null
+        metas: List<SuggestionMeta>? = null,
+        highlightIndex: Int? = 0
     ) {
         // Skip suggestion updates in password mode, unless swipe on password is enabled (#39)
         if (isPasswordMode && !allowSwipeInPasswordMode) {
@@ -603,7 +618,8 @@ class SuggestionBar : LinearLayout {
         // Metas participate so a provenance change (e.g. swipe alternates gaining
         // appended next-word candidates) still re-renders.
         if (suggestions != null && suggestions == currentSuggestions.toList() &&
-            (metas ?: emptyList()) == currentMetas.toList()
+            (metas ?: emptyList()) == currentMetas.toList() &&
+            highlightIndex == currentHighlightIndex
         ) {
             return
         }
@@ -619,6 +635,7 @@ class SuggestionBar : LinearLayout {
         currentSuggestions.clear()
         currentScores.clear()
         currentMetas.clear()
+        currentHighlightIndex = highlightIndex
 
         if (suggestions != null) {
             currentSuggestions.addAll(suggestions)
@@ -771,6 +788,7 @@ class SuggestionBar : LinearLayout {
             savedSuggestions = currentSuggestions.toList()
             savedScores = currentScores.toList()
             savedMetas = currentMetas.toList()
+            savedHighlightIndex = currentHighlightIndex
         } else if (clearAfter) {
             // Clear saved suggestions so nothing gets restored
             savedSuggestions = emptyList()

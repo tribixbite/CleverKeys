@@ -56,10 +56,11 @@ class SuggestionBridge(
     /**
      * Handle backspace for prediction tracking.
      *
-     * Simple delegation to SuggestionHandler.
+     * Passes the editor so the re-computed bar can apply the space-commit guards
+     * (terminal editor, non-prose token) to its highlighted entry.
      */
     fun handleBackspace() {
-        suggestionHandler?.handleBackspace()
+        suggestionHandler?.handleBackspace(keyboard2.currentInputConnection, keyboard2.currentInputEditorInfo)
     }
 
     /**

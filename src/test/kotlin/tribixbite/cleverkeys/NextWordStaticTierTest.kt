@@ -143,7 +143,7 @@ class NextWordStaticTierTest {
             val i = barWords.indexOf(firstArg<String>())
             if (i >= 0) barMetas.getOrNull(i) else null
         }
-        every { bar.setSuggestionsWithScores(any(), any(), any()) } answers {
+        every { bar.setSuggestionsWithScores(any(), any(), any(), any()) } answers {
             barWords = firstArg<List<String>>().toList()
             barMetas = thirdArg<List<SuggestionMeta>>().toList()
         }

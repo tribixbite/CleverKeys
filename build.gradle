@@ -1322,6 +1322,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfigBuildTest',
     'tribixbite.cleverkeys.customization.CustomShortSwipeExecutorTest',
     'tribixbite.cleverkeys.autocorrect.AutoCorrectEndToEndTest',
+    // 2026-10-11 Pixel report: the bar highlighted `Hello` for `Helo`, space committed `Help`.
+    // Real 98k dictionary: the highlighted bar entry is exactly what space commits.
+    'tribixbite.cleverkeys.autocorrect.SpaceCommitPreviewTest',
     // 2026-10-08 Saga report: Hebrew neighbour-key typos were not corrected — KeyAdjacency
     // positioned only Latin letters. Real he pack + real hebr_1_il grid, shipped defaults.
     'tribixbite.cleverkeys.autocorrect.HebrewLayoutAutoCorrectTest',
@@ -1356,6 +1359,8 @@ tasks.register('runMockTests', JavaExec) {
     // (Enter, Ctrl chord, arrows, Tab, Esc, IME action, editing command, cursor slider) ends
     // the tracked word; no autocorrect rewrite in terminals; stale predictions never repaint.
     'tribixbite.cleverkeys.TerminalTypedWordTrackingTest',
+    // 2026-10-11: the typed-word bar highlights what space commits (handler end to end).
+    'tribixbite.cleverkeys.TypedBarHighlightHandlerTest',
     // gh #151 residual (2026-09-05): composing-less editors drop the TRAILING space of the
     // committed "word " app-side. Pins the trailing-space watch (arm at commit, resolve on
     // the stamp−1 cursor signature, owed-space repair on the next alphanumeric keystroke).
