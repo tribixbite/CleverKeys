@@ -26,8 +26,10 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
 3. [ ] device: add `adb`/`somethings` to the personal dictionary and swipe them
    (`docs/eval/2026-10-07-final-letter-drops.md` §8). `adb` part done 2026-10-10 (Seeker):
    stored at the legacy 100 it lost to `an` at Highest; raised to 255 it ranked first
-   (`docs/eval/2026-10-08-user-swipe-priority.md` §9). Still open: `somethings`, and the
-   follow-up device check of the legacy-frequency offer + dialog lift (eval §9 "Device check").
+   (`docs/eval/2026-10-08-user-swipe-priority.md` §9). Legacy-frequency offer + dialog lift
+   PASS on the Pixel 2026-10-11 (Review/Not now/Dismiss/re-offer, lift to 255, `wet` at
+   Highest 3/3 — and it also takes plain `we` swipes, the eval's stated cost). Still open:
+   `somethings`.
 4. [ ] device: clipboard Select/⋮ with TalkBack; #181 glyph filter on a device WITHOUT a
    font provider; #184 oversized UPDATE of an already-installed pack.
 5. [ ] device: leftovers of the plan's "Maintainer device checks" — continuous swipe with
@@ -44,7 +46,8 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
    legacy-frequency offer + priority lift 9).
 9. [ ] maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`
    needs a fresh pre-registration; nonzero `finger_occlusion_offset` only from device-trace
-   A/B; keep or uninstall CleverKeys on the Saga (installed, enabled, not default).
+   A/B; keep or uninstall CleverKeys on the Saga (installed, enabled, not default); same for the
+   second Saga 192.168.0.144 (fresh install 2026-10-11: installed, IME disabled, Gboard default).
 10. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 11. [ ] agent: language-pack final swap deletes the old directory before `renameTo`
@@ -62,6 +65,13 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     pre-registered round on fresh data (`docs/eval/2026-10-07-apostrophe-context.md`).
 16. [ ] RTX: Bangla spelling-preserving dictionary + mark/conjunct geometry, then a validated
     model/pack (`docs/guides/adding-a-new-language.md`); ARC-061 `ctc_golden` fixture fix.
+18. [ ] agent→maintainer: autocorrect `helo` commits `help` while the bar's top pick is
+    `Hello` (Pixel 2026-10-11): no "dropped doubled letter" rule mirrors the elongation
+    collapse, and the bar and autocorrect rank differently. Measure a mirror rule on an
+    autocorrect replay before shipping (all-English ranking change).
+19. [ ] device: Hebrew autocorrect (`1d2f1d58`) unverified on a device — the Pixel run read
+    "no correction" for English too, but a direct re-check showed autocorrect firing
+    (`Helo`→`Help`), so its Hebrew result is unreliable. Re-run with the he pack on hebr_1_il.
 17. [ ] unowned roadmap: 1.3 at-rest clipboard encryption, 2.3 dwell picker (measure first),
     4.1 live theme preview, 4.2 spline swipe trail (benchmark first), #187 below-accents,
     #175(3)/#80(3) toolbar.
