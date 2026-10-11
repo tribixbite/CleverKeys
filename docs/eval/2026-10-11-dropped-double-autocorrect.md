@@ -114,3 +114,119 @@ R-typed ∪ R-hand; on a tie, ship A-post (the safer one). If neither passes, no
 numbers and this decision are committed and the device finding stays open.
 
 These thresholds are fixed now and will not be changed after seeing results.
+
+## 2. Results (run 2026-10-11 14:20–15:10 EDT, origin/main ddfeeac4)
+
+Harness: `src/test/kotlin/tribixbite/cleverkeys/autocorrect/DroppedDoubleAutocorrectEval.kt`,
+run with `GRADLE_GUARD_XMX=1536m scripts/gradle-guard.sh runMockTests
+-PtestClass=autocorrect.DroppedDoubleAutocorrectEval` (49 min on a box at load ~11).
+
+Corpus SHA-256 (all in `~/.cache/cleverkeys-test/misspell/`, not committed):
+
+| file | sha256 |
+|---|---|
+| wikipedia.dat | `061ec33aa12a4aea718a7bb121360812c8348770833e730124af1eecdc2cd380` |
+| aspell.dat | `0198fa5c343f82f0541ae39a0116b534e14bfadc54144377cadee2bd6d288988` |
+| missp.dat | `ed7d8c91961a1201632351943571e77af2011cdf45d24304c4d7cad6cf77ea15` |
+| holbrook-missp.dat | `e2f0f0564954d049a1f663f3c7e72899382570a4fe575015169b1117de85ae3c` |
+| words_alpha.txt | `3ed0c94610d8bcf7c11bbb49c56aa49c7234d32b66824df91f554169e572da48` |
+
+The GitHub Typo Corpus (keystroke-level typos from commits) was also tried, but its S3
+download no longer resolves. No keystroke-slip corpus was available.
+
+### 2.1 Sets after the §1.2 filter
+
+| set | pairs | distinct targets | distinct misspellings | real-word errors excluded | dropped-double pairs |
+|---|---|---|---|---|---|
+| R-typed | 2,780 | 2,078 | 2,529 | 149 | 297 |
+| R-hand | 30,545 | 5,095 | 29,570 | 5,472 | 655 |
+| S-adj | 278,631 | 10,000 base words | | | |
+| S-dd | 8,986 | 8,571 base words | | | |
+| C-oov | 292,027 words | | | | |
+
+Baseline accuracy on R-typed: 1,436 / 2,780 (51.7 %). On its dropped-double subset it is
+97 / 297 (32.7 %).
+
+### 2.2 Outcomes (raw pairs, with distinct target / base words in parentheses)
+
+| set | variant | eligible | fixes | breaks | swaps | net distinct |
+|---|---|---|---|---|---|---|
+| R-typed | A | 321 (286) | 199 (182) | 5 (5) | 17 (16) | **+177** |
+| R-typed | A-post | 289 (260) | 167 (155) | 5 (5) | 17 (16) | +150 |
+| R-hand | A | 1,036 (878) | 505 (483) | 24 (24) | 354 (278) | **+459** |
+| R-hand | A-post | 845 (733) | 407 (391) | 24 (24) | 261 (216) | +367 |
+| R-union | A | | 611 distinct | 27 distinct | | +584 |
+| R-union | A-post | | 506 distinct | 27 distinct | | +479 |
+| S-adj | A | 1,037 (804) | 0 | **198 (179)** | 839 (648) | −179 |
+| S-adj | A-post | 863 (682) | 0 | **198 (179)** | 665 (525) | −179 |
+| S-dd (not gated) | A | 8,962 (8,554) | 7,389 (7,168) | 0 | 39 (39) | +7,168 |
+| S-dd (not gated) | A-post | 8,110 (7,736) | 6,551 (6,355) | 0 | 25 (25) | +6,355 |
+| C-oov | A | 818 | 241 new changes (0.083 %) | | 526 already changed by baseline | |
+| C-oov | A-post | 577 | 0 new changes (0.000 %) | | 526 | |
+
+### 2.3 Gate
+
+| gate | A | A-post |
+|---|---|---|
+| G1. Net > 0 on R-typed and on R-hand | pass (+177 / +459) | pass (+150 / +367) |
+| G2. R-union breaks ≤ 0.10 × fixes | pass (27 ≤ 61.1) | pass (27 ≤ 50.6) |
+| G3. S-adj breaks ≤ 1.0 %, raw **and** distinct | **FAIL**: raw 198 / 278,631 = 0.071 %, distinct 179 / 10,000 = **1.79 %** | **FAIL**: same, 1.79 % |
+| G4. C-oov new changes ≤ 0.5 % | pass (0.083 %) | pass (0.000 %) |
+
+**Decision: neither variant passes the pre-registered gate. Nothing ships.** The device
+finding (`helo` → `help` on commit while the bar shows `hello`) stays open.
+
+### 2.4 What failed and why it matters
+
+The real-misspelling data is strongly in favour of the rule: 611 distinct words fixed against
+27 broken. The concentration check holds, because fixes and breaks are both almost one per
+target word. Most of the real breaks are label noise or British/American pairs
+(`jewelery` → `jewellery`, `milenium` → `millenium`, `personel` → `personnel`).
+
+The failure is the exact mirror of the reported bug. One adjacent-key slip in 179 of the 10,000
+most frequent words produces a string that a doubled letter turns into a different word, and
+those are high-frequency words that the baseline corrects correctly today:
+
+- `ghe`→the (rule: ghee), `wity`→with (witty), `grom`/`vrom`→from (groom/vroom)
+- `bery`/`fery`/`gery`→very (berry/ferry/gerry), `kne`→one (knee)
+- `sed`→see (seed), `gime`→time (gimme), `nany`→many (nanny), `boty`→both (booty)
+- `ner`→her (`ne'er` via the alias table), and `helo` → help (hello) itself
+
+Measured per occurrence in running text, these would weigh far more than the raw 0.071 %
+suggests, because `the`, `with`, `from` and `very` dominate real typing. The raw number treats
+every word of the top 10,000 equally.
+
+Exploratory only (not pre-registered, and it decides nothing): raising the minimum typed length
+does not separate the two effects. At length ≥ 5, S-adj still breaks 97 distinct words (0.97 %),
+while `helo` (4 letters) would no longer be fixed. Any follow-up needs a different rule shape,
+for example one gated on the frequency ratio between the insertion target and the sweep
+winner, or on the bar's own scoring. It also needs a fresh pre-registration, and ideally real
+keystroke-slip data. These corpora are cognitive spelling errors (R-hand mostly handwritten),
+not touch-typing slips, and the relative rate of dropped-double versus adjacent-key slips on a
+phone keyboard is unmeasured.
+
+### 2.5 Bar agreement (R-typed, reported only)
+
+The first entry of the tap-typing bar (`predictWordsWithContext(typed, [])`) equals the target
+on 935 / 2,780 pairs. The space-bar commit differs from that first entry on 2,053 pairs at
+baseline, 1,996 under A and 2,010 under A-post. Most of the disagreement is structural: for an
+out-of-dictionary input, the bar's first entry is often a prefix completion or a whole-word
+fuzzy correction from `FuzzyPrefixMatcher`, which is a different ranker from the
+`autoCorrect` sweep. On these corpora the commit is right more often than the bar's first entry
+(1,436 vs 935). Caveat: the harness reads `WordPredictor`'s list. What `SuggestionHandler`
+highlights on the device can differ (for example, the typed-word slot).
+
+### 2.6 Named examples
+
+| typed | baseline | A | A-post |
+|---|---|---|---|
+| helo | help | hello | hello |
+| tomorow | comoros | tomorrow | tomorrow |
+| ocasion | location | occasion | occasion |
+| begining | begining (morphology freeze) | beginning | begining |
+| adress | across | address | address |
+| sucess | access | success | success |
+
+The baseline's misses on long words (`tomorow` → `comoros`, `sucess` → `access`, `adress` →
+`across`) are a separate weakness that this rule does not have to solve alone. On R-typed the
+dropped-double class is only 32.7 % correct at baseline.
