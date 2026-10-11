@@ -94,9 +94,9 @@ class WordEditableAdapter(
         return if (position == 0) VIEW_TYPE_ADD else VIEW_TYPE_WORD
     }
 
-    override fun getItemCount() = currentList.size + 1  // +1 for add button
-
-    override fun getFilteredCount() = currentList.size + 1  // Include + Add button
+    // +1 row for the "+ Add word" button. getFilteredCount() (the tab label) is NOT
+    // overridden: it counts words only — an empty Custom tab used to read "(1)".
+    override fun getItemCount() = currentList.size + 1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == VIEW_TYPE_ADD) {

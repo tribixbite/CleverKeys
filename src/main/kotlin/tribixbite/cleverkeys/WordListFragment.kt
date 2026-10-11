@@ -276,7 +276,9 @@ class WordListFragment : Fragment() {
 
     private fun updateEmptyState() {
         if (!::adapter.isInitialized) return
-        if (adapter.getFilteredCount() == 0) {
+        // Rows, not words: the Custom tab's "+ Add word" row keeps its list visible even
+        // with no words, so the Add button stays reachable on a fresh install.
+        if (adapter.itemCount == 0) {
             emptyText.visibility = View.VISIBLE
             recyclerView.visibility = View.GONE
         } else {
