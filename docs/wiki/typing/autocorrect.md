@@ -166,6 +166,27 @@ All in Settings → **Word Prediction**. Most users only ever touch the top thre
 > [!NOTE]
 > Autocorrect's tap-typing path uses the absolute dictionary frequency directly via `autocorrect_confidence_min_frequency`. The swipe engines score candidates with their own per-language constants, which are calibrated offline and not user-tunable.
 
+## The Highlighted Suggestion Is What Space Commits
+
+While you tap-type a word, at most one suggestion is drawn in the highlight colour (the theme's
+**High Confidence** accent), and it is always the word pressing **space** will write:
+
+- If autocorrect will correct the word, the correction is highlighted in the **first** slot —
+  moved there if the bar already listed it, added if it did not. Typing `Helo` highlights
+  `Help` because that is what space commits; `Hello` stays in the bar to tap.
+- If space will keep what you typed, nothing else is highlighted. A valid word you typed is
+  highlighted where the bar lists it; a completion such as `hello` for `hel` is never
+  highlighted, because space would leave `hel`.
+- I-words follow the same rule: typing `i` highlights `I`.
+
+Anything that stops autocorrect also stops the highlighted replacement: autocorrect switched
+off, terminal apps, URL/email/path tokens, and words that are already valid. Tapping any
+suggestion still commits exactly that suggestion.
+
+Before 2026-10-11 the first bar entry was always highlighted, whichever ranker put it there,
+while space used autocorrect's own pick. On 2,780 real misspellings the two disagreed 2,053
+times (`docs/eval/2026-10-11-dropped-double-autocorrect.md` §2.5).
+
 ## Typo-Tolerant Suggestions
 
 While you tap-type, the suggestion bar also offers likely *intended* words when what you

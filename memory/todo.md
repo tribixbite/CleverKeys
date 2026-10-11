@@ -75,6 +75,10 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     real misspellings vs 27 broken but FAILS the pre-registered adjacent-slip gate (steals
     179/10k top words, e.g. bery→berry, grom→groom, sed→seed). Not shipped. Next step needs a
     new rule shape + fresh pre-registration (maintainer call).
+    Bar-consistency part DONE 2026-10-11 (maintainer decision: highlighted = what space
+    commits): the bar highlights `SpaceCommitResolver`'s answer (`help` for `helo`, slot 0),
+    and highlights no replacement when space keeps the typed word. Still OPEN here: the
+    smarter correction rule itself (another agent). Device check pending (see commit).
 19. [ ] device: Hebrew autocorrect (`1d2f1d58`) unverified on a device — the Pixel run read
     "no correction" for English too, but a direct re-check showed autocorrect firing
     (`Helo`→`Help`), so its Hebrew result is unreliable. Re-run with the he pack on hebr_1_il.

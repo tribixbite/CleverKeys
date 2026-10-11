@@ -392,6 +392,33 @@ fun effective(sliderValue: Int, maxFreq: Int): Int {
 
 Slider 100 → floor 0 (any dictionary word can win); slider 2000 → floor = 60% of the dictionary's max frequency. `MAX_STRICTNESS < 1` guarantees the most common words always clear the floor. Applied at `WordPredictor.kt:2023` via `FrequencyFloor.effective(configFloor, dictMaxFrequency(dict))`.
 
+## Bar Highlight = Space Commit (2026-10-11)
+
+The tap-typing bar's highlighted entry is exactly what space will commit for the composing
+word (maintainer decision after the Pixel `Helo` → bar `Hello` / commit `Help` report). The
+autocorrect ranking itself is unchanged; only the bar follows it.
+
+- **One decision.** `SpaceCommitResolver.resolve` (`autocorrect/SpaceCommitPreview.kt`) answers
+  "what does space commit for this word": I-word capitalization first (`CAPITALIZE_I`), then
+  `autoCorrect` gated on `autocorrect_enabled`, the terminal-editor exclusion, the non-prose
+  token guard and the unmerged joiner-stem guard (`AUTOCORRECT`), else `KEEP`. The space path in
+  `SuggestionHandler.handleRegularTyping` and the bar both call it. The non-prose editor read is
+  lazy: it happens only when a correction would otherwise fire.
+- **Bar arrangement.** `BarHighlightPlanner.plan` puts a replacement in slot 0 and highlights
+  it: an already-listed entry (any casing) is moved with its score and provenance and shown in
+  the committed casing; an absent one is inserted with `TYPO_CORRECTION` /
+  `TypoCorrectionOf(typed)`. With `KEEP`, only an entry equal to the typed text is highlighted,
+  or nothing. Protocol entries (add-to-dictionary, exact-add, swipe preference) are never
+  targets. `SuggestionBar.setSuggestionsWithScores(..., highlightIndex)` renders the highlight
+  (default `0` keeps every other caller, e.g. swipe results, unchanged).
+- **Cost and reuse.** `autoCorrect` sweeps the dictionary, so it runs on the prediction worker
+  with the bar's predictions, never on the UI thread per keystroke. `AutocorrectMemo` keeps the
+  result keyed on the exact word, the predictor instance and a fingerprint of the autocorrect
+  settings; the bar post (main thread) and the space path read it, so space reuses the bar's
+  sweep and recomputes only when the word or inputs differ. The memo is cleared at each new word
+  and on every cursor-sync re-read, so a dictionary edit between words is never served stale.
+  Measured in `SpaceCommitPreviewTest` (see the test table).
+
 ## Suggestion Taps in URI/Email Fields (#151)
 
 Browser URL bars, email fields, and password fields never get cursor-sync (`PredictionContextTracker.shouldSyncForInputType`, `PredictionContextTracker.kt:612`, skips `TYPE_TEXT_VARIATION_URI`/`EMAIL_ADDRESS`/password variants), so the tracker's deletion counts stay `(0,0)` there. `SuggestionHandler.onSuggestionSelected` detects these fields up front (`SuggestionHandler.kt:491`: `syncSuppressedField = !contextTracker.shouldSyncForInputType(editorInfo)`) and:
@@ -528,6 +555,7 @@ IME add path (add-to-dictionary prompt, "+word" chip, autocorrect undo, acceptin
 | Pure JVM — Frequency floor | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/FrequencyFloorTest.kt` | Slider→floor mapping, unloaded-dict guard |
 | Pure JVM — Morphology | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/MorphologyTest.kt` | Inflection stem generation |
 | Pure JVM — End to end | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/AutoCorrectEndToEndTest.kt` | Full pipeline against the shipped dictionary |
+| Mock JVM — Bar highlight | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/SpaceCommitPreviewTest.kt` | Real 98k dictionary: highlighted bar entry == space commit (`helo` → `help`), no replacement highlighted when autocorrect is off / terminal / non-prose / valid word, memo reuse, per-keystroke cost |
 | Instrumented — AutocorrectTest | `src/androidTest/kotlin/tribixbite/cleverkeys/AutocorrectTest.kt` | Adjacency typos, length-diff, contractions, prefix gate, case preservation |
 | Instrumented — URL guard | `src/androidTest/kotlin/tribixbite/cleverkeys/AutocorrectUrlGuardTest.kt` | Guard behavior in real input connections |
 | Instrumented — TypingSimulationTest | `src/androidTest/kotlin/tribixbite/cleverkeys/TypingSimulationTest.kt` | Typing scenarios incl. step-0 alias direct (`im → I'm`) |
