@@ -46,8 +46,8 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
    legacy-frequency offer + priority lift 9).
 9. [ ] maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`
    needs a fresh pre-registration; nonzero `finger_occlusion_offset` only from device-trace
-   A/B; keep or uninstall CleverKeys on the Saga (installed, enabled, not default); same for the
-   second Saga 192.168.0.144 (fresh install 2026-10-11: installed, IME disabled, Gboard default).
+   A/B; keep or uninstall CleverKeys on the Saga (installed, enabled, not default). The second
+   Saga 192.168.0.144 keeps it installed (maintainer, 2026-10-11; IME disabled, Gboard default).
 10. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 11. [ ] agent: language-pack final swap deletes the old directory before `renameTo`
