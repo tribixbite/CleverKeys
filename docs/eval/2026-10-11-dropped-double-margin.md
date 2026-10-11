@@ -114,3 +114,67 @@ smallest M wins. If no value is admissible, nothing ships and TEST is not used f
 If T1–T5 all pass, DD-M ships at the chosen M, implemented in `WordPredictor.autoCorrect` with
 fail-first unit tests. Otherwise nothing ships, and the numbers are committed here. These
 thresholds are fixed now.
+
+## 2. DEV tuning (run 2026-10-11, harness at eb7ef2b3; no TEST outcome computed)
+
+Command: `CK_DD_PHASE=dev GRADLE_GUARD_XMX=1536m scripts/gradle-guard.sh runMockTests
+-PtestClass=autocorrect.DroppedDoubleMarginEval`. The test phase took 48 s and the whole
+build 5 min.
+
+### 2.1 GTC-DEV after the dictionary filter, by typo class (descriptive)
+
+16,358 pairs, 5,845 distinct targets, 16,095 distinct typos, 27,231 commit occurrences.
+
+| class | pairs | share | distinct targets | occurrences | share |
+|---|---|---|---|---|---|
+| other deletion (letter missing, not of a pair) | 4,607 | 28.2 % | 2,806 | 8,505 | 31.2 % |
+| other insertion (extra letter, not a doubled one) | 2,977 | 18.2 % | 2,010 | 4,092 | 15.0 % |
+| transposition | 2,523 | 15.4 % | 1,815 | 4,734 | 17.4 % |
+| multi-edit | 2,055 | 12.6 % | 1,430 | 2,527 | 9.3 % |
+| non-adjacent substitution | 1,565 | 9.6 % | 1,295 | 2,624 | 9.6 % |
+| adjacent substitution | 1,098 | 6.7 % | 854 | 1,364 | 5.0 % |
+| extra double (handled by step 1.4) | 1,057 | 6.5 % | 926 | 1,815 | 6.7 % |
+| **dropped double** | **476** | **2.9 %** | 451 | **1,570** | **5.8 %** |
+
+In typed GitHub text, a dropped doubled letter is about as common as an adjacent-key
+substitution. By commit occurrences it is slightly more common (5.8 % vs 5.0 %), and by
+distinct pairs less common (2.9 % vs 6.7 %). The repeated misspellings `occured`,
+`overriden` and `succesful` concentrate its occurrences. GTC is typed on physical keyboards, so
+these are not phone-keyboard rates, and adjacent slips that produce a real word are excluded by
+the filter.
+
+### 2.2 Grid (distinct target / base words; raw pairs in parentheses)
+
+S-adj-DEV: 137,881 pairs, 4,924 base words. Admissibility limit (0.8 %): 1,103 raw and
+39 distinct.
+
+| M | GTC-DEV fixes | breaks | net | S-adj-DEV breaks | 6 named kept | `helo` |
+|---|---|---|---|---|---|---|
+| NEVER | 0 | 0 | 0 | 0 | yes | help |
+| −20 | 16 | 0 | 16 | 1 (1) | yes | help |
+| 0 | 84 | 1 | 83 | 5 (5) | yes | help |
+| 10 | 169 | 1 | 168 | 9 (9) | yes | help |
+| 18 | 231 | 3 | 228 | 17 (17) | yes | help |
+| 20 | 242 | 4 | 238 | 22 (22) | yes | **hello** |
+| 26 | 282 | 6 | 276 | 27 (27) | yes | hello |
+| 30 | 295 | 6 | 289 | 36 (37) | yes | hello |
+| **32** | **302** | **6** | **296** | **38 (39)** | **yes** | **hello** |
+| 34 | 310 | 9 | 301 | 44 (46) | **no** | hello |
+| 40 | 324 | 9 | 315 | 56 (60) | no | hello |
+| 60 | 337 | 15 | 322 | 91 (97) | no | hello |
+| ALWAYS (old A) | 339 | 16 | 323 | 99 (106) | no | hello |
+
+`NEVER` never fires, because the sweep commits *some* W for every DEV input that has an
+insertion target. Every value from −20 to 32 is admissible. Above 32, constraint 3 fails
+first: some of the six named cases flip. At 34, S-adj-DEV is also over the 0.8 % limit
+(44 > 39).
+
+**Chosen: M = 32** (most GTC-DEV net fixes among admissible values). S-adj-DEV sits at 38
+distinct breaks (0.77 %), close to its limit. The TEST gate is 1.0 %.
+
+Examples of the 38 S-adj-DEV breaks: `dors` → doors (does), `spon` → spoon (soon),
+`bef` → beef (bed), `fel` → feel (tel), `cel` → cell (ceo), `succeds` → succeeds (success), and
+`helo` → hello (help). The last is the reported case seen from the other direction, which the
+control counts as a break by construction. The 6 GTC-DEV breaks are mostly label noise in the
+corpus, for example `additionaly` → additionally (labelled additional) and `comute` → commute
+(labelled compute).
