@@ -85,4 +85,16 @@ object UserWordFrequency {
      */
     fun liftedForPriority(priority: SwipePriority, frequency: Int?): Int? =
         if (priority != SwipePriority.NORMAL && (frequency == null || frequency < MAX)) MAX else null
+
+    /**
+     * The undo of [liftedForPriority] within one dialog: going back to [SwipePriority.NORMAL]
+     * after the dialog lifted the field to [liftedTo] returns the text it held before the lift
+     * ([beforeLift]), so trying Highest and then Normal does not silently keep 255 (Pixel,
+     * 2026-10-11). Null — leave the field alone — when the level is still raised, when nothing
+     * was lifted, or when [current] no longer shows the lifted value (the user typed their own).
+     */
+    fun restoredAfterLift(priority: SwipePriority, current: String, liftedTo: Int?, beforeLift: String?): String? =
+        if (priority == SwipePriority.NORMAL && liftedTo != null && beforeLift != null &&
+            current.trim() == liftedTo.toString()
+        ) beforeLift else null
 }

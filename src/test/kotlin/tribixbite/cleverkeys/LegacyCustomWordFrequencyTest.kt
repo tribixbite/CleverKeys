@@ -118,4 +118,32 @@ class LegacyCustomWordFrequencyTest {
             assertWithMessage("NORMAL at $f").that(UserWordFrequency.liftedForPriority(SwipePriority.NORMAL, f)).isNull()
         }
     }
+
+    /**
+     * Pixel 2026-10-11: Highest lifted 100 → 255, then picking Normal again in the same dialog
+     * left 255 behind. Going back to Normal restores what the field held before the dialog
+     * lifted it — but only while the field still shows the lifted value untouched.
+     */
+    @Test
+    fun backToNormalRestoresTheFieldTheDialogLifted() {
+        assertThat(UserWordFrequency.restoredAfterLift(SwipePriority.NORMAL, "255", liftedTo = 255, beforeLift = "100"))
+            .isEqualTo("100")
+        // An empty field that was lifted goes back to empty.
+        assertThat(UserWordFrequency.restoredAfterLift(SwipePriority.NORMAL, " 255 ", liftedTo = 255, beforeLift = ""))
+            .isEqualTo("")
+    }
+
+    @Test
+    fun restoreLeavesTheFieldAloneOtherwise() {
+        // Still a raised level: nothing to undo.
+        for (p in listOf(SwipePriority.HIGH, SwipePriority.HIGHEST)) {
+            assertThat(UserWordFrequency.restoredAfterLift(p, "255", liftedTo = 255, beforeLift = "100")).isNull()
+        }
+        // The user typed their own value after the lift: theirs wins.
+        assertThat(UserWordFrequency.restoredAfterLift(SwipePriority.NORMAL, "180", liftedTo = 255, beforeLift = "100"))
+            .isNull()
+        // The dialog never lifted anything in this session.
+        assertThat(UserWordFrequency.restoredAfterLift(SwipePriority.NORMAL, "255", liftedTo = null, beforeLift = null))
+            .isNull()
+    }
 }

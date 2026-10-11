@@ -478,8 +478,9 @@ class WordListFragment : Fragment() {
      * sets it to 255 and shows a line saying so ([UserWordFrequency.liftedForPriority],
      * maintainer decision 2026-10-10): a lower stored frequency would silently cancel part of
      * the bonus (the device `adb` at the legacy 100 lost at Highest). Normal leaves the field
-     * alone, and the [initial] check does not fire the listener, so opening the dialog never
-     * changes a value by itself.
+     * alone — except that it undoes a lift THIS dialog made, while the field still shows it
+     * ([UserWordFrequency.restoredAfterLift]) — and the [initial] check does not fire the
+     * listener, so opening the dialog never changes a value by itself.
      */
     private fun addSwipePriorityPicker(
         layout: android.widget.LinearLayout,
@@ -508,11 +509,25 @@ class WordListFragment : Fragment() {
         raisedNote.textSize = 12f
         raisedNote.visibility = View.GONE
         layout.addView(raisedNote)
+        // What this dialog lifted the field to, and the text it held before — so going back to
+        // Normal can undo the lift (UserWordFrequency.restoredAfterLift).
+        var liftedTo: Int? = null
+        var beforeLift: String? = null
         // Set AFTER the initial check, so only a user selection can lift the frequency.
         group.setOnCheckedChangeListener { g, checkedId ->
             val level = g.findViewById<View>(checkedId)?.tag as? SwipePriority ?: return@setOnCheckedChangeListener
-            val lifted = UserWordFrequency.liftedForPriority(level, freqInput.text.toString().trim().toIntOrNull())
+            val current = freqInput.text.toString()
+            UserWordFrequency.restoredAfterLift(level, current, liftedTo, beforeLift)?.let { restored ->
+                freqInput.setText(restored)
+                raisedNote.visibility = View.GONE
+                liftedTo = null
+                beforeLift = null
+                return@setOnCheckedChangeListener
+            }
+            val lifted = UserWordFrequency.liftedForPriority(level, current.trim().toIntOrNull())
                 ?: return@setOnCheckedChangeListener
+            beforeLift = current
+            liftedTo = lifted
             freqInput.setText(lifted.toString())
             raisedNote.text = getString(R.string.dict_swipe_priority_frequency_raised, lifted)
             raisedNote.visibility = View.VISIBLE
