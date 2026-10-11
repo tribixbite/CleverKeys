@@ -65,6 +65,9 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     pre-registered round on fresh data (`docs/eval/2026-10-07-apostrophe-context.md`).
 16. [ ] RTX: Bangla spelling-preserving dictionary + mark/conjunct geometry, then a validated
     model/pack (`docs/guides/adding-a-new-language.md`); ARC-061 `ctc_golden` fixture fix.
+17. [ ] unowned roadmap: 1.3 at-rest clipboard encryption, 2.3 dwell picker (measure first),
+    4.1 live theme preview, 4.2 spline swipe trail (benchmark first), #187 below-accents,
+    #175(3)/#80(3) toolbar.
 18. [ ] agent→maintainer: autocorrect `helo` commits `help` while the bar's top pick is
     `Hello` (Pixel 2026-10-11): no "dropped doubled letter" rule mirrors the elongation
     collapse, and the bar and autocorrect rank differently. Measure a mirror rule on an
@@ -72,9 +75,6 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
 19. [ ] device: Hebrew autocorrect (`1d2f1d58`) unverified on a device — the Pixel run read
     "no correction" for English too, but a direct re-check showed autocorrect firing
     (`Helo`→`Help`), so its Hebrew result is unreliable. Re-run with the he pack on hebr_1_il.
-17. [ ] unowned roadmap: 1.3 at-rest clipboard encryption, 2.3 dwell picker (measure first),
-    4.1 live theme preview, 4.2 spline swipe trail (benchmark first), #187 below-accents,
-    #175(3)/#80(3) toolbar.
 
 ## Device results recorded 2026-10-07/08
 
