@@ -178,3 +178,72 @@ Examples of the 38 S-adj-DEV breaks: `dors` → doors (does), `spon` → spoon (
 control counts as a break by construction. The 6 GTC-DEV breaks are mostly label noise in the
 corpus, for example `additionaly` → additionally (labelled additional) and `comute` → commute
 (labelled compute).
+
+## 3. TEST (one evaluation at M = 32, run 2026-10-12, harness at 6a8f7eb3)
+
+Command: `CK_DD_PHASE=test CK_DD_MARGIN=32 CK_DD_DUMP=32 GRADLE_GUARD_XMX=1536m
+scripts/gradle-guard.sh runMockTests -PtestClass=autocorrect.DroppedDoubleMarginEval`
+(3 min 19 s).
+
+GTC-TEST after the filter: 16,210 pairs, 5,845 targets, 27,190 occurrences. Its class shares
+match DEV to within 0.4 points; dropped-double is 2.9 % of pairs and 6.0 % of occurrences.
+5,493 TEST pairs have a typo string that also occurs in DEV, through different commits. M was
+tuned on a single integer, so the overlap gives little room to overfit, but the two halves
+are not independent at the string level. Baseline accuracy on the GTC-TEST dropped-double
+class is 129 / 471 (27.4 %).
+
+### 3.1 Outcomes (raw pairs; distinct target / base words in parentheses)
+
+| set | pairs | eligible | fixes | breaks | swaps | net distinct |
+|---|---|---|---|---|---|---|
+| GTC-TEST | 16,210 | 487 | 294 (284; 1,030 occ) | 4 (4; 4 occ) | 54 (51) | **+280** |
+| R-typed | 2,780 | 292 | 176 (159) | 3 (3) | 13 (13) | +156 |
+| R-hand | 30,545 | 753 | 436 (415) | 15 (15) | 149 (132) | +400 |
+| R-union | | | 524 distinct | 17 distinct | | +507 |
+| S-adj-TEST | 140,750 (5,076 words) | 166 | 0 | **39 (36)** | 127 (115) | −36 |
+| C-oov | 292,027 words | 357 | | 104 new changes (0.036 %) | 202 already changed | |
+
+### 3.2 Gate
+
+| gate | result |
+|---|---|
+| T1. GTC net > 0, breaks ≤ 0.10 × fixes | pass: +280; 4 ≤ 28.4 |
+| T2. Birkbeck net > 0 on each set; union breaks ≤ 0.10 × fixes | pass: +156 / +400; 17 ≤ 52.4 |
+| T3. S-adj-TEST breaks ≤ 1.0 %, raw and distinct | pass: raw 39 / 140,750 = 0.028 %; distinct 36 / 5,076 = **0.71 %** |
+| T4. C-oov new changes ≤ 0.5 % | pass: 0.036 % |
+| T5. Six named cases kept | pass: very, from, the, see, one, many |
+
+**Decision: DD-M passes all pre-registered gates and ships at M = 32.** Reported, not gated:
+**`helo` → `hello`**. Other named examples: `tomorow` → tomorrow (was comoros),
+`ocasion` → occasion (was location), `begining` → beginning (was frozen), `adress` → address
+(was across), and `sucess` → success (was access).
+
+### 3.3 What still breaks
+
+- **S-adj-TEST (36 words).** The breaks are slips where the doubled form is a real word within
+  32 rank steps of the intended one: `fes` → fees (few), `cuf` → cuff (cut), `pil` → pill
+  (oil), `woried` → worried (worked), `trafic` → traffic (tragic), `slepy` → sleepy (slept),
+  `aply` → apply (ally). For several of these the doubled reading is at least as plausible as
+  the control's label (`trafic`, `woried`, `aply`).
+- **GTC-TEST (4).** `comute` → commute (labelled compute), `globaly` → globally (global),
+  `keps` → keeps (kept), `revaluated` → reevaluated (evaluated).
+- **Birkbeck (17).** These are mostly British/American or label-noise pairs (`jewelery`,
+  `milenium`, `personel`), plus `gril` → grill (girl) and `gose` → goose (goes).
+- **C-oov (104).** These are mostly single-consonant variant spellings, in the dictionary's
+  doubled form: `canvased` → canvassed, `controled` → controlled, `chaneled` → channeled,
+  `diagramed` → diagrammed.
+
+The measure is again per distinct word, not per occurrence in running text. The slips of very
+frequent words that the earlier rule hijacked are now kept, because their doubled forms are
+more than 32 steps rarer: very/berry 39, from/groom 57, the/ghee 95, see/seed 33, one/knee 41,
+many/nanny 44. That margin is narrow for `see`/`seed` at 33.
+
+### 3.4 Caveats
+
+- GTC was typed on physical keyboards, by developers, mostly in documentation and comments.
+  The rates of dropped-double and adjacent slips on a phone keyboard remain unmeasured.
+- The real-pair filter drops typos that are dictionary words. `occured` and `succesful` are
+  both in the bundled dictionary as corpus noise, so neither is corrected by this or any later
+  step (`occured` stays `occured`).
+- `productionMatchesSimulation` must pass against the M = 32 dump (2,894 rule-decided inputs)
+  for this result to apply to the shipped code. See §4.
