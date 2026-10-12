@@ -338,3 +338,43 @@ When this section was committed, no autocorrect output on the `.bin` had been ru
 - **Known weakness, stated in advance.** TEST is not untouched. Its outcomes at M = 32 on the
   other scale were computed and read on 2026-10-11/12 (§3). The re-tuning uses DEV only. The
   TEST result is still a second look at the same pairs.
+
+### 5.3 DEV tuning on the device dictionary (run 2026-10-12; no TEST outcome computed)
+
+Command: `CK_DD_PHASE=dev GRADLE_GUARD_XMX=1536m scripts/gradle-guard.sh runMockTests
+-PtestClass=autocorrect.DroppedDoubleMarginEval` (4 min 26 s, whole build).
+
+GTC-DEV after the filter is unchanged from §2.1: 16,358 pairs, 5,845 targets, 27,231
+occurrences, with the same class shares. S-adj-DEV is 137,871 pairs and 4,925 base words.
+These differ slightly from §2.2 because the top 10,000 words are now ranked on the `.bin`. The
+0.8 % limit is 1,102 raw and 39 distinct.
+
+| M | GTC-DEV fixes | breaks | net | S-adj-DEV breaks | 6 named kept | `helo` |
+|---|---|---|---|---|---|---|
+| NEVER | 0 | 0 | 0 | 0 | yes | help |
+| −40 | 18 | 0 | 18 | 1 (1) | yes | help |
+| 0 | 87 | 0 | 87 | 5 (5) | yes | help |
+| 32 (shipped) | 221 | 2 | 219 | 13 (13) | yes | **help** |
+| 38 | 241 | 2 | 239 | 16 (16) | yes | help |
+| 40 | 251 | 3 | 248 | 21 (21) | yes | **hello** |
+| 50 | 280 | 5 | 275 | 25 (25) | yes | hello |
+| 60 | 297 | 5 | 292 | 36 (37) | yes | hello |
+| 62 | 299 | 5 | 294 | 37 (38) | yes | hello |
+| **64** | **301** | **5** | **296** | **37 (38)** | **yes** | **hello** |
+| 66 | 305 | 6 | 299 | 38 (40) | **no** (`sed` → seed) | hello |
+| 80 | 322 | 9 | 313 | 55 (58) | no | hello |
+| 160 | 338 | 15 | 323 | 95 (101) | no | hello |
+| ALWAYS | 338 | 16 | 322 | 96 (102) | no | hello |
+
+Distinct target/base words; raw pairs in parentheses. Every M from −40 to 64 is admissible.
+At 66, constraint 3 fails first, because see/seed are 66 steps apart.
+
+**Chosen: M = 64.** S-adj-DEV is at 37 distinct breaks, against a limit of 39. The nearest
+named case, `sed` → see, keeps its target by 2 steps.
+
+The 37 S-adj-DEV breaks include `ses` → sees (see), `helo` → hello (help), `dors` → doors,
+`spon` → spoon, `bef` → beef, `hury` → hurry (hurt), `dolar` → dollar (solar), `cel` → cell,
+`sel` → sell, `fil` → fill and `fel` → feel. Some are proper nouns, such as `gelong` →
+geelong, `lenon` → lennon, `karem` → kareem and `jilian` → jillian. The 5 GTC-DEV breaks are
+label noise of the `additionaly` → additionally (labelled additional) kind, plus `esay` →
+essay (easy).
