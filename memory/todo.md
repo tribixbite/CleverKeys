@@ -50,8 +50,11 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
    Saga 192.168.0.144 keeps it installed (maintainer, 2026-10-11; IME disabled, Gboard default).
 10. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
-11. [ ] agent: language-pack final swap deletes the old directory before `renameTo`
-    (`LanguagePackManager.kt:304-311`) — add recovery + fault-injection coverage.
+11. [x] agent: language-pack final swap deleted the old directory before `renameTo` —
+    fixed `462c2eab` (2026-10-12): `LanguagePackSwap` backup-rename swap + rollback, trash
+    removal, once-per-manager startup recovery; `LanguagePackSwapTest` (18 pure) and 3 new
+    `LanguagePackImportTest` cases (fail-first 3/51 on the old swap). 2953 pure / 1198 mock.
+    Not device-verified (no adb in that session).
 12. [ ] agent: deferred review items — unify `Keyboard2View.executeEditingCommand` with
     `KeyEventHandler.handleEditingKey`; suffix receipt readback at command time (3 editor
     reads per committed word, # TODO in `rememberVerifiedWord`); #175 clipboard
