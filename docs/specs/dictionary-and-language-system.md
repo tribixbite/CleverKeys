@@ -33,8 +33,30 @@ the shipped registry must also approve their hash before ONNX loading.
 - Extraction streams bounded chunks, rejects traversal and duplicate flattened basenames,
   and accepts benign wrapper folders. Validation happens before the staged install swap;
   preflight and staging-copy failures preserve the existing pack and clean scratch data.
-  The final swap currently deletes the old directory before renaming staging.
-  <!-- TODO: retain/recover the old directory when the final rename fails. -->
+- Install/update swap (`LanguagePackSwap`, todo item 11, 2026-10-12). Under
+  `files/langpacks/`: rename `<code>` → `.backup-<code>`, rename the complete
+  `.staging-<code>-<ms>` (manifest copied last) → `<code>`, then delete the backup. All
+  renames stay in one directory, so each is atomic; there is never a moment with no
+  complete copy. A refused staged rename renames the backup straight back (old pack kept,
+  `InstallFailed`); if that also fails the backup survives for recovery. The old code
+  deleted `<code>` first, so a refused rename, a process death or a partial delete
+  (ENOTEMPTY on the rename) lost the installed pack.
+- Removal renames `<code>` → `.trash-<code>-<ms>` before deleting, so a partial delete
+  never leaves a manifest-only ghost; if the rename is refused it deletes in place.
+- Recovery (`LanguagePackSwap.recover`) runs once per `LanguagePackManager` (once per
+  process for the singleton) under the install lock, before the first listing, path
+  lookup, import or removal. Rules: a backup beside a complete `<code>` is stale and
+  deleted; otherwise the backup is restored. Staging directories are deleted, except the
+  newest complete one for a code with no install and no backup, which is promoted (an
+  interrupted first install, or the state the old swap left). Trash is deleted. Recovery
+  is idempotent and safe to interrupt. Dot-prefixed directories are never listed as packs.
+- Readers that open `langpacks/<code>/…` directly (`GeometricEngineAdapter`, CTC lexicon
+  paths) do not trigger recovery. After a crash mid-swap they see the pack as absent until
+  some `LanguagePackManager` query runs; the primary dictionary loads for a pack language
+  (`AsyncDictionaryLoader`, `WordPredictor`) query it first.
+- Coverage: `LanguagePackSwapTest` (pure) refuses or kills each rename/delete of install,
+  removal and recovery, including partial deletes. `LanguagePackImportTest` (mock) covers
+  the same cases through the real importer and a real undeletable old-pack subdirectory.
 - Tap, geometric and CTC dictionary readers share byte/count limits, so previously
   installed oversized dictionaries also fail loading before count-sized allocation.
   These limits bound inputs; they do not guarantee arbitrary bilingual heap usage.

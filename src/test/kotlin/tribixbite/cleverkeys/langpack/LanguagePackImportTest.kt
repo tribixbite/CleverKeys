@@ -1120,4 +1120,152 @@ class LanguagePackImportTest {
         assertThat(cacheDir.listFiles()?.toList().orEmpty()).isEmpty()
     }
 
+    // ------------------------------------------- todo item 11: the final install swap
+
+    /** Thrown by [CrashingOps] to stand in for the process dying between two filesystem calls. */
+    private class SimulatedProcessDeath : Error("simulated process death")
+
+    /**
+     * Real filesystem behaviour until [crashAfter] mutating calls have completed; the next
+     * mutating call throws [SimulatedProcessDeath] and every call after it does nothing, so
+     * the importer's `finally` cleanup cannot tidy up the way a real process death would not.
+     */
+    private class CrashingOps(private val crashAfter: Int) : PackFileOps {
+        var crashed = false
+            private set
+        private var mutations = 0
+
+        override fun exists(file: File) = PackFileOps.Real.exists(file)
+        override fun list(dir: File) = PackFileOps.Real.list(dir)
+        override fun rename(from: File, to: File) = mutate { PackFileOps.Real.rename(from, to) }
+        override fun deleteRecursively(file: File) = mutate { PackFileOps.Real.deleteRecursively(file) }
+
+        private fun mutate(op: () -> Boolean): Boolean {
+            if (crashed) return false
+            if (mutations == crashAfter) {
+                crashed = true
+                throw SimulatedProcessDeath()
+            }
+            mutations++
+            return op()
+        }
+    }
+
+    /** v1 and v2 of one pack, distinguishable by manifest version AND dictionary bytes. */
+    private fun greekV1() = packZip("el-v1.zip", listOf(
+        "manifest.json" to manifestJson("el", "Greek", version = 1, wordCount = 10).toByteArray(),
+        "dictionary.bin" to dictionaryBytes(64),
+    ))
+
+    private fun greekV2() = packZip("el-v2.zip", listOf(
+        "manifest.json" to manifestJson("el", "Greek", version = 2, wordCount = 20).toByteArray(),
+        "dictionary.bin" to dictionaryBytes(96),
+    ))
+
+    private fun importWith(target: LanguagePackManager, zip: File): ImportResult {
+        val uri = mockk<Uri>()
+        every { resolver.openInputStream(uri) } returns zip.inputStream()
+        return target.importLanguagePack(uri)
+    }
+
+    /** Every entry under files/langpacks whose name starts with a dot (staging, backup, trash). */
+    private fun leftoverDotDirs(): List<String> =
+        File(filesDir, "langpacks").listFiles().orEmpty().map { it.name }.filter { it.startsWith(".") }
+
+    /**
+     * The swap's last step failing must not cost the user the pack they already had. The old
+     * code deleted the installed directory first and then renamed the staged one into place,
+     * so a rename that returned false left NO pack — and reported the failure as if nothing
+     * had changed.
+     */
+    @Test
+    fun aFailedFinalRenameKeepsThePreviouslyInstalledPack() {
+        assertThat(import(greekV1())).isInstanceOf(ImportResult.Success::class.java)
+        val before = File(installedDir("el"), "dictionary.bin").readBytes()
+
+        val finalDir = installedDir("el")
+        val refusesTheStagedRename = object : PackFileOps by PackFileOps.Real {
+            override fun rename(from: File, to: File): Boolean =
+                if (from.name.startsWith(".staging-") && to.absolutePath == finalDir.absolutePath) false
+                else PackFileOps.Real.rename(from, to)
+        }
+        val failing = LanguagePackManager(context, refusesTheStagedRename)
+
+        assertThat(importWith(failing, greekV2()))
+            .isEqualTo(ImportResult.Error(PackImportFailure.InstallFailed))
+        assertWithMessage("a refused final rename must leave v1 installed (todo item 11)")
+            .that(manager.isInstalled("el")).isTrue()
+        assertThat(File(installedDir("el"), "dictionary.bin").readBytes().toList()).isEqualTo(before.toList())
+        assertThat(manager.getInstalledPacks())
+            .containsExactly(LanguagePackManifest("el", "Greek", 1, "", 10, false))
+        assertThat(leftoverDotDirs()).isEmpty()
+    }
+
+    /**
+     * Real filesystem, no seam: an old pack directory that cannot be fully deleted (here, a
+     * subdirectory without write permission). The old delete-then-rename removed the
+     * manifest and dictionary, failed on the locked entry, and then could not rename into the
+     * still-existing directory — the pack was gone. The swap now never deletes the installed
+     * pack before the replacement is in place, so the update succeeds and the undeletable
+     * remainder lives on only as an invisible backup directory.
+     */
+    @Test
+    fun anOldPackThatCannotBeFullyDeletedIsStillReplacedCleanly() {
+        assertThat(import(greekV1())).isInstanceOf(ImportResult.Success::class.java)
+        val locked = File(installedDir("el"), "locked").apply { mkdirs() }
+        File(locked, "pinned").writeText("x")
+        assertThat(locked.setWritable(false)).isTrue()
+        try {
+            assertThat(import(greekV2()))
+                .isEqualTo(ImportResult.Success(LanguagePackManifest("el", "Greek", 2, "", 20, false)))
+            assertThat(manager.isInstalled("el")).isTrue()
+            assertThat(File(installedDir("el"), "dictionary.bin").length()).isEqualTo(96)
+            assertThat(manager.getInstalledPacks().map { it.version }).containsExactly(2)
+        } finally {
+            File(filesDir, "langpacks").walkTopDown().forEach { it.setWritable(true) }
+        }
+    }
+
+    /**
+     * Process death at every point of a pack UPDATE, then a fresh manager on the same storage
+     * (what the next app start sees). Whatever step the process died at, the next start must
+     * find exactly one complete pack — v1 or v2, with manifest and dictionary from the same
+     * version — and no staging or backup directories left behind.
+     */
+    @Test
+    fun processDeathAtAnyStepOfAnUpdateLeavesOneCompletePackAfterRecovery() {
+        var crashAfter = 0
+        while (true) {
+            // Fresh storage per crash point.
+            scratch.resolve("files").deleteRecursively()
+            filesDir.mkdirs()
+            val baseline = LanguagePackManager(context)
+            assertThat(importWith(baseline, greekV1())).isInstanceOf(ImportResult.Success::class.java)
+
+            val ops = CrashingOps(crashAfter)
+            val dying = LanguagePackManager(context, ops)
+            val outcome = runCatching { importWith(dying, greekV2()) }
+            if (!ops.crashed) {
+                assertThat(outcome.getOrThrow()).isInstanceOf(ImportResult.Success::class.java)
+                break
+            }
+            assertThat(outcome.exceptionOrNull()).isInstanceOf(SimulatedProcessDeath::class.java)
+
+            val nextStart = LanguagePackManager(context)
+            val packs = nextStart.getInstalledPacks()
+            assertWithMessage("crash after $crashAfter mutations: the pack must survive")
+                .that(nextStart.isInstalled("el")).isTrue()
+            assertWithMessage("crash after $crashAfter mutations: exactly one listed pack")
+                .that(packs.map { it.code }).containsExactly("el")
+            val expectedSize = if (packs.single().version == 1) 64L else 96L
+            assertWithMessage("crash after $crashAfter mutations: manifest and dictionary agree")
+                .that(nextStart.getDictionaryPath("el")!!.length()).isEqualTo(expectedSize)
+            assertWithMessage("crash after $crashAfter mutations: no leftovers")
+                .that(leftoverDotDirs()).isEmpty()
+            crashAfter++
+        }
+        assertWithMessage("the swap must have at least one crash window under test")
+            .that(crashAfter).isAtLeast(2)
+    }
+
 }

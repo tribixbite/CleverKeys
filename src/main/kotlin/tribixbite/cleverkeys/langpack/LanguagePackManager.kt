@@ -59,7 +59,10 @@ import java.nio.ByteOrder
  * `model.onnx` being dropped rather than rejected: nothing can verify it, gate 2 would refuse
  * it anyway, and failing the whole import would punish the user for a stray file.
  */
-class LanguagePackManager(private val context: Context) {
+class LanguagePackManager(
+    private val context: Context,
+    private val fileOps: PackFileOps = PackFileOps.Real,
+) {
 
     companion object {
         private const val TAG = "LanguagePackManager"
@@ -102,9 +105,10 @@ class LanguagePackManager(private val context: Context) {
          * files dir and install there. Accepted shapes cover every shipped pack
          * (`en`, `ru`, `pt` …) and the build tooling's variant names (`en-web-50k`,
          * `en-opensubtitles`, `pt_br`): a 2-3 letter base plus up to 4 alphanumeric
-         * segments separated by `-`/`_`. No `/`, `\`, `.` or empty codes, ever.
+         * segments separated by `-`/`_`. No `/`, `\`, `.` or empty codes, ever. Defined
+         * beside the swap so its recovery acts only on names the importer can produce.
          */
-        private val VALID_PACK_CODE = Regex("^[a-z]{2,3}(?:[_-][a-z0-9]{1,16}){0,4}$")
+        private val VALID_PACK_CODE = LanguagePackSwap.VALID_PACK_CODE
 
         // Process-lifetime singleton holding only the applicationContext (see getInstance),
         // so it never leaks an Activity/Service. The reference lives as long as the process.
@@ -121,6 +125,41 @@ class LanguagePackManager(private val context: Context) {
 
     private val langpacksDir: File by lazy {
         File(context.filesDir, LANGPACKS_DIR).apply { mkdirs() }
+    }
+
+    /** Install/remove swap and its crash recovery over [langpacksDir] (todo item 11). */
+    private val swap: LanguagePackSwap by lazy { LanguagePackSwap(langpacksDir, fileOps) }
+
+    /**
+     * Serialises staging, the install swap, removal and recovery: recovery deletes staging
+     * directories, so it must never run while an import of this manager is mid-staging.
+     */
+    private val installLock = Any()
+
+    @Volatile
+    private var recovered = false
+
+    /**
+     * The langpacks directory, after repairing anything an interrupted install or removal left
+     * behind ([LanguagePackSwap.recover]). Runs once per manager — i.e. once per process for the
+     * [getInstance] singleton — before any pack is listed, resolved or installed, so no reader
+     * going through this class can observe a half-swapped pack. Normally a single directory
+     * listing; it renames or deletes only after an interruption.
+     */
+    private fun packsRoot(): File {
+        if (!recovered) {
+            synchronized(installLock) {
+                if (!recovered) {
+                    try {
+                        swap.recover().forEach { Log.w(TAG, "Pack recovery: $it") }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Pack recovery failed", e)
+                    }
+                    recovered = true
+                }
+            }
+        }
+        return langpacksDir
     }
 
     /**
@@ -227,8 +266,9 @@ class LanguagePackManager(private val context: Context) {
             }
 
             // Move to final location
-            val packDir = File(langpacksDir, manifest.code)
-            if (packDir.canonicalFile.parentFile != langpacksDir.canonicalFile) {
+            val packsRoot = packsRoot()
+            val packDir = File(packsRoot, manifest.code)
+            if (packDir.canonicalFile.parentFile != packsRoot.canonicalFile) {
                 return ImportResult.Error(PackImportFailure.InvalidLanguageCode(manifest.code))
             }
 
@@ -261,69 +301,99 @@ class LanguagePackManager(private val context: Context) {
             // keeps a half-built staging dir invisible to getInstalledPacks(). Within
             // the staging dir the manifest is copied LAST, so even a crash between
             // steps can never produce a manifest-without-dictionary directory.
-            val stagingDir = File(langpacksDir, ".staging-${manifest.code}-${System.currentTimeMillis()}")
-            stagingDir.mkdirs()
-            try {
-                dictFile.copyTo(File(stagingDir, DICTIONARY_FILE), overwrite = true)
-
-                // Copy unigrams if present
-                val unigramsFile = File(tempDir, UNIGRAMS_FILE)
-                if (unigramsFile.exists()) {
-                    unigramsFile.copyTo(File(stagingDir, UNIGRAMS_FILE), overwrite = true)
-                }
-
-                // Copy contractions if present
-                val contractionsFile = File(tempDir, CONTRACTIONS_FILE)
-                if (contractionsFile.exists()) {
-                    contractionsFile.copyTo(File(stagingDir, CONTRACTIONS_FILE), overwrite = true)
-                    Log.d(TAG, "Copied contractions.json for ${manifest.code}")
-                }
-
-                // Copy prefix boost trie if present
-                val prefixBoostFile = File(tempDir, PREFIX_BOOST_FILE)
-                if (prefixBoostFile.exists()) {
-                    prefixBoostFile.copyTo(File(stagingDir, PREFIX_BOOST_FILE), overwrite = true)
-                    Log.d(TAG, "Copied prefix_boost.bin for ${manifest.code} (${prefixBoostFile.length() / 1024}KB)")
-                }
-
-                // Keep the full attribution text (2026-09-26 data-licensing audit): the pack's
-                // CC BY-SA credits must travel with the data, and the manifest's short
-                // `attribution` line points at this file. Absent from older packs.
-                val noticeFile = File(tempDir, NOTICE_FILE)
-                if (noticeFile.exists()) {
-                    noticeFile.copyTo(File(stagingDir, NOTICE_FILE), overwrite = true)
-                }
-
-                // Copy the CTC encoder if the manifest declared it and it verified above.
-                if (installModel) {
-                    modelFile.copyTo(File(stagingDir, MODEL_FILE), overwrite = true)
-                    Log.d(TAG, "Copied $MODEL_FILE for ${manifest.code} (${modelFile.length() / 1024}KB)")
-                }
-
-                // Manifest last — a staged dir only becomes "complete" at this point.
-                manifestFile.copyTo(File(stagingDir, MANIFEST_FILE), overwrite = true)
-
-                // Swap: the old pack is deleted only once the replacement is fully staged
-                // on the same filesystem, so the unprotected window is a single rename.
-                if (packDir.exists()) {
-                    packDir.deleteRecursively()
-                }
-                if (!stagingDir.renameTo(packDir)) {
-                    return ImportResult.Error(PackImportFailure.InstallFailed)
-                }
-            } finally {
-                if (stagingDir.exists()) {
-                    stagingDir.deleteRecursively()
-                }
-            }
-
-            Log.i(TAG, "Successfully imported language pack: ${manifest.name} (${manifest.code})")
-            return ImportResult.Success(manifest)
+            return synchronized(installLock) { stageAndSwap(manifest, tempDir, installModel) }
 
         } finally {
             // Cleanup temp directory
             tempDir.deleteRecursively()
         }
+    }
+
+    /**
+     * Copy the validated members from [tempDir] into a staging directory and swap it in as the
+     * installed pack (G-6 staging, todo item 11 swap). Caller holds [installLock].
+     */
+    private fun stageAndSwap(
+        manifest: LanguagePackManifest,
+        tempDir: File,
+        installModel: Boolean,
+    ): ImportResult {
+        val dictFile = File(tempDir, DICTIONARY_FILE)
+        val manifestFile = File(tempDir, MANIFEST_FILE)
+        val modelFile = File(tempDir, MODEL_FILE)
+        val stagingDir = swap.stagingDir(manifest.code, System.currentTimeMillis())
+        stagingDir.mkdirs()
+        try {
+            dictFile.copyTo(File(stagingDir, DICTIONARY_FILE), overwrite = true)
+
+            // Copy unigrams if present
+            val unigramsFile = File(tempDir, UNIGRAMS_FILE)
+            if (unigramsFile.exists()) {
+                unigramsFile.copyTo(File(stagingDir, UNIGRAMS_FILE), overwrite = true)
+            }
+
+            // Copy contractions if present
+            val contractionsFile = File(tempDir, CONTRACTIONS_FILE)
+            if (contractionsFile.exists()) {
+                contractionsFile.copyTo(File(stagingDir, CONTRACTIONS_FILE), overwrite = true)
+                Log.d(TAG, "Copied contractions.json for ${manifest.code}")
+            }
+
+            // Copy prefix boost trie if present
+            val prefixBoostFile = File(tempDir, PREFIX_BOOST_FILE)
+            if (prefixBoostFile.exists()) {
+                prefixBoostFile.copyTo(File(stagingDir, PREFIX_BOOST_FILE), overwrite = true)
+                Log.d(TAG, "Copied prefix_boost.bin for ${manifest.code} (${prefixBoostFile.length() / 1024}KB)")
+            }
+
+            // Keep the full attribution text (2026-09-26 data-licensing audit): the pack's
+            // CC BY-SA credits must travel with the data, and the manifest's short
+            // `attribution` line points at this file. Absent from older packs.
+            val noticeFile = File(tempDir, NOTICE_FILE)
+            if (noticeFile.exists()) {
+                noticeFile.copyTo(File(stagingDir, NOTICE_FILE), overwrite = true)
+            }
+
+            // Copy the CTC encoder if the manifest declared it and it verified above.
+            if (installModel) {
+                modelFile.copyTo(File(stagingDir, MODEL_FILE), overwrite = true)
+                Log.d(TAG, "Copied $MODEL_FILE for ${manifest.code} (${modelFile.length() / 1024}KB)")
+            }
+
+            // Manifest last — a staged dir only becomes "complete" at this point.
+            manifestFile.copyTo(File(stagingDir, MANIFEST_FILE), overwrite = true)
+
+            // Swap (todo item 11): the old pack is renamed aside, the staged one renamed
+            // into place, and only then is the old copy deleted — at no point is there zero
+            // complete copies on disk. See LanguagePackSwap for the full state machine.
+            val outcome = try {
+                swap.install(stagingDir, manifest.code)
+            } catch (e: Exception) {
+                // A throwing rename/delete (e.g. SecurityException): settle the directory
+                // now rather than leave it to the next start.
+                swap.recover().forEach { Log.w(TAG, "Pack recovery: $it") }
+                throw e
+            }
+            when (outcome) {
+                is LanguagePackSwap.Outcome.Installed -> if (outcome.backupLeft) {
+                    Log.w(TAG, "Previous ${manifest.code} pack not fully deleted; recovery retries it")
+                }
+                LanguagePackSwap.Outcome.Refused ->
+                    return ImportResult.Error(PackImportFailure.InstallFailed)
+                LanguagePackSwap.Outcome.RollbackPending -> {
+                    // Old pack is intact under its backup name; try to put it back now.
+                    swap.recover().forEach { Log.w(TAG, "Pack recovery: $it") }
+                    return ImportResult.Error(PackImportFailure.InstallFailed)
+                }
+            }
+        } finally {
+            if (fileOps.exists(stagingDir)) {
+                fileOps.deleteRecursively(stagingDir)
+            }
+        }
+
+        Log.i(TAG, "Successfully imported language pack: ${manifest.name} (${manifest.code})")
+        return ImportResult.Success(manifest)
     }
 
     /**
@@ -446,8 +516,8 @@ class LanguagePackManager(private val context: Context) {
     fun getInstalledPacks(): List<LanguagePackManifest> {
         val packs = mutableListOf<LanguagePackManifest>()
 
-        langpacksDir.listFiles()?.forEach { dir ->
-            // Dot-prefixed dirs are in-flight import staging (G-6) — never installed packs.
+        packsRoot().listFiles()?.forEach { dir ->
+            // Dot-prefixed dirs are swap staging/backup/trash (G-6, item 11) — never installed packs.
             if (dir.isDirectory && !dir.name.startsWith(".")) {
                 val manifestFile = File(dir, MANIFEST_FILE)
                 if (manifestFile.exists()) {
@@ -473,7 +543,7 @@ class LanguagePackManager(private val context: Context) {
      * Returns null if pack not installed.
      */
     fun getDictionaryPath(code: String): File? {
-        val dictFile = File(langpacksDir, "$code/$DICTIONARY_FILE")
+        val dictFile = File(packsRoot(), "$code/$DICTIONARY_FILE")
         return if (dictFile.exists()) dictFile else null
     }
 
@@ -482,7 +552,7 @@ class LanguagePackManager(private val context: Context) {
      * Returns null if not available.
      */
     fun getUnigramsPath(code: String): File? {
-        val unigramsFile = File(langpacksDir, "$code/$UNIGRAMS_FILE")
+        val unigramsFile = File(packsRoot(), "$code/$UNIGRAMS_FILE")
         return if (unigramsFile.exists()) unigramsFile else null
     }
 
@@ -491,7 +561,7 @@ class LanguagePackManager(private val context: Context) {
      * Returns null if not available.
      */
     fun getContractionsPath(code: String): File? {
-        val contractionsFile = File(langpacksDir, "$code/$CONTRACTIONS_FILE")
+        val contractionsFile = File(packsRoot(), "$code/$CONTRACTIONS_FILE")
         return if (contractionsFile.exists()) contractionsFile else null
     }
 
@@ -506,7 +576,7 @@ class LanguagePackManager(private val context: Context) {
      */
     @Suppress("unused")
     fun getPrefixBoostPath(code: String): File? {
-        val prefixBoostFile = File(langpacksDir, "$code/$PREFIX_BOOST_FILE")
+        val prefixBoostFile = File(packsRoot(), "$code/$PREFIX_BOOST_FILE")
         return if (prefixBoostFile.exists()) prefixBoostFile else null
     }
 
@@ -520,7 +590,7 @@ class LanguagePackManager(private val context: Context) {
      * class's check only established that the pack agrees with itself.
      */
     fun getModelPath(code: String): File? {
-        val modelFile = File(langpacksDir, "$code/$MODEL_FILE")
+        val modelFile = File(packsRoot(), "$code/$MODEL_FILE")
         return if (modelFile.exists()) modelFile else null
     }
 
@@ -530,7 +600,7 @@ class LanguagePackManager(private val context: Context) {
      * member on install).
      */
     fun getNoticePath(code: String): File? {
-        val noticeFile = File(langpacksDir, "$code/$NOTICE_FILE")
+        val noticeFile = File(packsRoot(), "$code/$NOTICE_FILE")
         return if (noticeFile.isFile) noticeFile else null
     }
 
@@ -569,13 +639,18 @@ class LanguagePackManager(private val context: Context) {
      * Delete a language pack.
      */
     fun deletePack(code: String): Boolean {
-        val packDir = File(langpacksDir, code)
+        val root = packsRoot()
+        // Must name a direct, non-dot child of the langpacks dir. Not the import regex: a pack
+        // installed before G-1 (2026-09-06) may carry a code it would refuse, and must stay
+        // deletable.
+        if (code.isEmpty() || code.startsWith(".") ||
+            File(root, code).canonicalFile.parentFile != root.canonicalFile) {
+            return false
+        }
         return try {
-            if (packDir.exists()) {
-                packDir.deleteRecursively()
-            } else {
-                false
-            }
+            // Renamed to an invisible trash name first, then deleted: a delete that stops half
+            // way can no longer leave a manifest-only ghost under the pack's own name.
+            synchronized(installLock) { swap.remove(code, System.currentTimeMillis()) }
         } finally {
             // Even a partial delete changes what is installed.
             LanguageAvailability.invalidate()

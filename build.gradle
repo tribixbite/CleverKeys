@@ -621,6 +621,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.langpack.NoticeTextLayoutTest',
     // 2026-09-29 device finding: installed language packs are only deleted after confirmation.
     'tribixbite.cleverkeys.langpack.LanguagePackDeleteConfirmationTest',
+    // Todo item 11 (2026-10-12): crash-safe language-pack install swap and its recovery,
+    // with every rename/delete failed or interrupted through the PackFileOps seam.
+    'tribixbite.cleverkeys.langpack.LanguagePackSwapTest',
     // RTL (fa): directional arrows must be Icons.AutoMirrored.*.
     'tribixbite.cleverkeys.RtlMirroringDriftTest',
     // ARC-112 (2026-09-02): the swipe key-registration filter's pure core. Pins the
