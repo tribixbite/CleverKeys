@@ -208,6 +208,76 @@ class AutoCorrectEndToEndTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
+    // Step 1.45 DD-M: dropped doubled letter, frequency margin M = 32
+    // (docs/eval/2026-10-11-dropped-double-margin.md). The re-inserted word D
+    // beats the sweep's word W only when D is at most 32 byte-rank steps rarer.
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun droppedDouble_helo_correctsToHello() {
+        // Device report: "helo" committed "help" (one adjacent sub, score 0.96)
+        // while the bar showed "hello". hello (198) is 20 steps rarer than
+        // help (218): within the margin, so the doubled reading wins.
+        assertEquals("hello", predictor.autoCorrect("helo"))
+        assertEquals("Hello", predictor.autoCorrect("Helo"))
+    }
+
+    @Test
+    fun droppedDouble_longWords_fixedWhereTheSweepPickedALookalike() {
+        assertEquals("tomorrow", predictor.autoCorrect("tomorow"))   // was comoros
+        assertEquals("address", predictor.autoCorrect("adress"))     // was across
+        assertEquals("success", predictor.autoCorrect("sucess"))     // was access
+        // Runs before the morphology guard, which froze this as begin + -ing.
+        assertEquals("beginning", predictor.autoCorrect("begining"))
+    }
+
+    @Test
+    fun droppedDouble_doesNotHijackSlipsOfCommonWords() {
+        // The six cases that failed the unconditional rule's G3: the doubled
+        // word is more than 32 steps rarer than the intended one.
+        val expected = linkedMapOf(
+            "bery" to "very", "grom" to "from", "ghe" to "the",
+            "sed" to "see", "kne" to "one", "nany" to "many",
+        )
+        for ((typo, want) in expected) assertEquals(typo, want, predictor.autoCorrect(typo))
+    }
+
+    @Test
+    fun droppedDouble_validWordsUntouched() {
+        for (w in listOf("hello", "help", "tomorrow", "berry", "seed")) {
+            assertEquals(w, predictor.autoCorrect(w))
+        }
+    }
+
+    @Test
+    fun droppedDouble_disabledTargetNeverOffered() {
+        setField("disabledWords", mutableSetOf("hello"))
+        try {
+            org.junit.Assert.assertNotEquals("hello", predictor.autoCorrect("helo"))
+        } finally {
+            setField("disabledWords", mutableSetOf<String>())
+        }
+    }
+
+    @Test
+    fun droppedDouble_customSweepWinnerOutranksTheInsertion() {
+        // A sweep winner the user added by hand is kept over the structural guess.
+        setField("customAndUserWords", setOf("help"))
+        try {
+            assertEquals("help", predictor.autoCorrect("helo"))
+        } finally {
+            setField("customAndUserWords", emptySet<String>())
+        }
+    }
+
+    @Test
+    fun droppedDouble_respectsSameLengthOnlyConfig() {
+        // autocorrect_max_length_diff = 0 forbids length-changing corrections.
+        config.autocorrect_max_length_diff = 0
+        assertEquals("help", predictor.autoCorrect("helo"))
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     // TEST-1: capitalized contraction-alias correction
     // ─────────────────────────────────────────────────────────────────────
 

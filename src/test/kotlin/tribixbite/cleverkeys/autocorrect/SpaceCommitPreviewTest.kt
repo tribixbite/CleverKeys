@@ -189,22 +189,24 @@ class SpaceCommitPreviewTest {
         val commit = resolve("helo")
         assertNotEquals(commit.commit, bar.first())
         assertEquals(SpaceCommit(SpaceCommit.Kind.AUTOCORRECT, predictor.autoCorrect("helo")), commit)
-        assertEquals("help", commit.commit)
+        // DD-M (step 1.45, docs/eval/2026-10-11-dropped-double-margin.md): `hello` is within
+        // 32 rank steps of `help`, so the dropped-double reading now wins the commit.
+        assertEquals("hello", commit.commit)
 
         val plan = planFor("helo", commit)
         assertEquals(0, plan.highlightIndex)
         assertEquals(commit.commit, plan.highlighted())
         // Moved or inserted, never duplicated; the rest of the bar keeps the ranker's order.
-        assertEquals(1, plan.words.count { it.equals("help", ignoreCase = true) })
-        assertEquals(bar.filterNot { it == "help" }, plan.words.drop(1))
+        assertEquals(1, plan.words.count { it.equals("hello", ignoreCase = true) })
+        assertEquals(bar.filterNot { it == "hello" }, plan.words.drop(1))
     }
 
     @Test
-    fun titleCaseHelo_highlightsTitleCaseHelp() {
+    fun titleCaseHelo_highlightsTitleCaseHello() {
         val commit = resolve("Helo")
-        assertEquals("Help", commit.commit)
+        assertEquals("Hello", commit.commit)
         val plan = planFor("Helo", commit)
-        assertEquals("Help", plan.highlighted())
+        assertEquals("Hello", plan.highlighted())
         assertEquals(0, plan.highlightIndex)
     }
 
@@ -364,11 +366,11 @@ class SpaceCommitPreviewTest {
         var sweeps = 0
         val compute: (String) -> String = { sweeps++; predictor.autoCorrect(it) }
         val owner = Any()
-        assertEquals("help", memo.get("helo", owner, 1, compute))
-        assertEquals("help", memo.get("helo", owner, 1, compute))
+        assertEquals("hello", memo.get("helo", owner, 1, compute))
+        assertEquals("hello", memo.get("helo", owner, 1, compute))
         assertEquals("space reuses the bar's sweep", 1, sweeps)
         // The typed word changed since the bar: recompute, never reuse.
-        assertEquals("hello", memo.get("hello", owner, 1, compute))
+        assertEquals("help", memo.get("help", owner, 1, compute))
         assertEquals(2, sweeps)
         // Settings fingerprint or predictor changed: recompute.
         memo.get("hello", owner, 2, compute)

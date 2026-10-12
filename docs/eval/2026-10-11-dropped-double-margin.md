@@ -247,3 +247,23 @@ many/nanny 44. That margin is narrow for `see`/`seed` at 33.
   step (`occured` stays `occured`).
 - `productionMatchesSimulation` must pass against the M = 32 dump (2,894 rule-decided inputs)
   for this result to apply to the shipped code. See §4.
+
+## 4. Implementation (2026-10-12)
+
+`WordPredictor.autoCorrect` now has step 1.45. It uses `droppedDoubleTarget` and
+`DROPPED_DOUBLE_MARGIN_STEPS = 32`. The sweep (steps 3–4) was extracted into
+`autocorrectSweep` and is run once and reused by steps 1.45 and 5. Steps 1.4, 1.45 and 5 now
+share the alias re-route and C-5 guard (`finalizeCorrection`) and the step-5 commit test
+(`isCommittable`).
+
+- **Fail-first tests**, in `AutoCorrectEndToEndTest` (`droppedDouble_*`). `helo`/`Helo` →
+  hello/Hello and the long-word fixes failed before the change and pass after it. Five guards
+  passed before and after: the six named cases, valid words untouched, a disabled `hello` never
+  offered, a custom sweep winner `help` kept, and `autocorrect_max_length_diff = 0` keeping
+  `help`.
+- **Simulation parity.** `productionMatchesSimulation` ran with `CK_DD_VERIFY=32` against
+  the M = 32 dump made at the pre-implementation commit: 2,894 checked, 0 mismatches.
+- **Visible on the bar.** Since ebe46e19, the bar highlights exactly what space commits
+  (`SpaceCommitPreview` calls `autoCorrect`), so `helo` now highlights `hello` too.
+- **Scope.** The step applies to whichever tap dictionary is loaded, but it was measured
+  only for English QWERTY. Other languages use the same 0–255 rank scale and are unmeasured.

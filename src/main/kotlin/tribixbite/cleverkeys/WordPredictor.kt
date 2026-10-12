@@ -168,6 +168,17 @@ class WordPredictor : Predictor {
          * edge (2026-07-13 review H4).
          */
         private const val TRANSPOSITION_PENALTY = 0.15f
+
+        /**
+         * Step 1.45 (DD-M) margin, in byte-rank steps of the bundled 0–255
+         * frequency (`maxFreq / 255` on any load scale): a re-inserted doubled
+         * letter ("helo" → "hello") beats the sweep's word only when it is at most
+         * this many steps rarer. Tuned once on GitHub Typo Corpus DEV commits +
+         * half of a synthetic adjacent-slip control, gated on the held-out half
+         * (docs/eval/2026-10-11-dropped-double-margin.md). 32 keeps very/from/
+         * the/see/one/many against berry/groom/ghee/seed/knee/nanny (33–95 steps).
+         */
+        internal const val DROPPED_DOUBLE_MARGIN_STEPS = 32
         private const val MAX_EDIT_DISTANCE = 2
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
@@ -3117,18 +3128,49 @@ class WordPredictor : Predictor {
             }
             if (collapseBest != null) {
                 // Re-route alias-keyed hits ("doont" → collapse "dont" →
-                // "don't"), mirroring the sweep-winner re-route in step 5.
-                // C-5: guard #4 symmetry — when the collapse target is the
-                // user's own word, offer THEIR word, never the alias rewrite.
-                val aliasTarget =
-                    if (collapseBest in customAndUserWords) null else contractionAliases[collapseBest]
-                val outputWord = aliasTarget ?: collapseBest
-                val corrected = if (aliasTarget != null && aliasTarget.startsWith("i'")) {
-                    aliasTarget.replaceFirstChar { it.uppercase() }
-                } else {
-                    preserveCapitalization(typedWord, outputWord)
-                }
+                // "don't"), mirroring the sweep-winner re-route in step 5;
+                // C-5 guard #4 symmetry lives in finalizeCorrection.
+                val corrected = finalizeCorrection(typedWord, collapseBest)
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (elongation collapse): '$typedWord' → '$corrected'")
+                return corrected
+            }
+        }
+
+        // Shared sweep inputs, hoisted so step 1.45 can run the same sweep as step 4.
+        val configFloor = config?.autocorrect_confidence_min_frequency
+            ?: Defaults.AUTOCORRECT_MIN_FREQUENCY
+        val frequencyFloor = FrequencyFloor.effective(configFloor, dictMaxFrequency(dict))
+        val diagnosticsEnabled = config?.swipe_debug_detailed_logging == true
+        val rejectionLog = mutableListOf<Pair<String, Float>>()  // (word, score) for top-N
+        var sweepDone = false
+        var sweepBest: AutocorrectCandidate? = null
+
+        // 1.45. Dropped doubled letter, frequency margin (DD-M; eval
+        // docs/eval/2026-10-11-dropped-double-margin.md). The mirror of 1.4:
+        // "helo" → "hello", "tomorow" → "tomorrow", "begining" → "beginning".
+        // Unlike the collapse, an insertion does NOT win outright — that version
+        // hijacked one-key slips of common words ("bery" → berry, not very). The
+        // inserted word D competes with the word W the normal sweep (step 4)
+        // would commit, and wins only when it is at most
+        // DROPPED_DOUBLE_MARGIN_STEPS byte-rank steps rarer than W (or when the
+        // sweep commits nothing). W being the user's own word keeps W. Runs
+        // before the morphology guard, which would freeze "begining" as begin +
+        // -ing. If D loses, the input continues down the unchanged path and step
+        // 4 reuses this sweep.
+        val insertion = droppedDoubleTarget(lowerTypedWord, dict, frequencyFloor)
+        if (insertion != null) {
+            sweepBest = autocorrectSweep(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null)
+            sweepDone = true
+            val w = sweepBest?.takeIf { isCommittable(it, frequencyFloor) }
+            val insertionFreq = dict[insertion] ?: 0
+            val insertionWins = w == null ||
+                (w.word !in customAndUserWords &&
+                    insertionFreq.toLong() * 255 >=
+                    w.frequency.toLong() * 255 - DROPPED_DOUBLE_MARGIN_STEPS.toLong() * dictMaxFrequency(dict))
+            if (insertionWins) {
+                val corrected = finalizeCorrection(typedWord, insertion)
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (dropped double): '$typedWord' → '$corrected' " +
+                    "(insertion freq=$insertionFreq, sweep=${w?.word} freq=${w?.frequency})")
                 return corrected
             }
         }
@@ -3210,6 +3252,62 @@ class WordPredictor : Predictor {
             return typedWord
         }
 
+        // 3.–4. Candidate sweep (see autocorrectSweep); reuse step 1.45's run.
+        val bestCandidate: AutocorrectCandidate? =
+            if (sweepDone) sweepBest
+            else autocorrectSweep(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null)
+
+        // 5. Apply correction only if confident candidate found.
+        // Custom/user-added words are injected at a low placeholder frequency
+        // (1000) far below the binary dict's runtime scale (~52k..1M), so any
+        // non-zero slider floor would silently exclude EVERY custom word as a
+        // correction target. The user added them explicitly, so exempt them
+        // from the floor — analogous to the custom-word override in
+        // isWordDisabled. (AC-2, 2026-07.)
+        if (bestCandidate != null && isCommittable(bestCandidate, frequencyFloor)) {
+            // Re-route alias-keyed winners through contractionAliases so the
+            // returned form is the apostrophe-bearing contraction. Without
+            // this, `donr → dont` (the alias-key) would stop there; the
+            // user-visible result must be `don't` (see finalizeCorrection).
+            val corrected = finalizeCorrection(typedWord, bestCandidate.word)
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT: '$typedWord' → '$corrected' " +
+                "(winner=${bestCandidate.word} score=${"%.3f".format(bestCandidate.score)} " +
+                "freq=${bestCandidate.frequency})")
+            return corrected
+        }
+
+        // Diagnostic logging on rejection. Symmetric with the success log so
+        // "why didn't it correct X?" is answerable from logcat.
+        if (diagnosticsEnabled) {
+            val top = rejectionLog.sortedByDescending { it.second }.take(5)
+                .joinToString(", ") { "${it.first}=${"%.3f".format(it.second)}" }
+            val reason = when {
+                bestCandidate == null ->
+                    "no candidate above threshold ${config?.autocorrect_char_match_threshold ?: 0.66f}"
+                bestCandidate.frequency < frequencyFloor ->
+                    "best='${bestCandidate.word}' freq=${bestCandidate.frequency} < floor=$frequencyFloor"
+                else -> "?"
+            }
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT: '$typedWord' [$reason]  top=[$top]")
+        }
+
+        return typedWord // No suitable correction found
+    }
+
+    /**
+     * Steps 3–4 of [autoCorrect]: the scored dictionary sweep. Returns the best
+     * candidate by the score / structural / frequency tiebreak, or null when
+     * nothing clears `autocorrect_char_match_threshold`. The frequency floor and
+     * custom-word exemption are NOT applied here (see [isCommittable]). When
+     * [diagnostics] is non-null, every candidate scoring >= 0.4 is appended for
+     * rejection logging. Shared by step 1.45 (dropped-double margin) and step 5,
+     * so the two never disagree about W.
+     */
+    private fun autocorrectSweep(
+        lowerTypedWord: String,
+        dict: Map<String, Int>,
+        diagnostics: MutableList<Pair<String, Float>>?
+    ): AutocorrectCandidate? {
         // 3. Required-prefix rule. Configurable via `autocorrect_prefix_length`:
         //   - >0: candidate must share that many leading chars with typed word
         //   - 0:  no prefix required — typo on first char (e.g. "wuestion" →
@@ -3225,21 +3323,9 @@ class WordPredictor : Predictor {
 
         val wordLength = lowerTypedWord.length
         val charMatchThreshold = config?.autocorrect_char_match_threshold ?: 0.66f
-        // The configured value is on the fixed 100..2000 slider scale; the
-        // runtime dictionary frequency scale depends on the load path (~5k..1M
-        // for the V2 binary, 100..10k for the JSON fallback). Map the slider
-        // onto a fraction of THIS dictionary's max frequency so the floor is
-        // meaningful and consistent regardless of load path, and can never
-        // disable autocorrect outright. See FrequencyFloor.
-        val configFloor = config?.autocorrect_confidence_min_frequency
-            ?: Defaults.AUTOCORRECT_MIN_FREQUENCY
-        val frequencyFloor = FrequencyFloor.effective(configFloor, dictMaxFrequency(dict))
         val maxLengthDiff = (config?.autocorrect_max_length_diff ?: 0).coerceAtLeast(0)
 
-        // Track top-3 candidates for diagnostic logging on rejection.
         var bestCandidate: AutocorrectCandidate? = null
-        val rejectionLog = mutableListOf<Pair<String, Float>>()  // (word, score) for top-N
-        val diagnosticsEnabled = config?.swipe_debug_detailed_logging == true
 
         // 4. Iterate through dictionary to find candidates.
         //
@@ -3258,7 +3344,7 @@ class WordPredictor : Predictor {
         //    word length, no DP) and is the right model when the candidate
         //    aligns with the typed word index-by-index. Levenshtein handles
         //    the harder case where one is a one-off insertion or deletion.
-        for ((dictWord, candidateFrequency) in dictionary.get()) {
+        for ((dictWord, candidateFrequency) in dict) {
             val lengthDiff = kotlin.math.abs(dictWord.length - wordLength)
             if (lengthDiff > maxLengthDiff) continue
 
@@ -3349,8 +3435,8 @@ class WordPredictor : Predictor {
                 }
             }
 
-            if (diagnosticsEnabled && score >= 0.4f) {
-                rejectionLog += dictWord to score
+            if (diagnostics != null && score >= 0.4f) {
+                diagnostics += dictWord to score
             }
 
             if (score >= charMatchThreshold) {
@@ -3405,52 +3491,53 @@ class WordPredictor : Predictor {
             }
         }
 
-        // 5. Apply correction only if confident candidate found.
-        // Custom/user-added words are injected at a low placeholder frequency
-        // (1000) far below the binary dict's runtime scale (~52k..1M), so any
-        // non-zero slider floor would silently exclude EVERY custom word as a
-        // correction target. The user added them explicitly, so exempt them
-        // from the floor — analogous to the custom-word override in
-        // isWordDisabled. (AC-2, 2026-07.)
-        val winnerIsCustom = bestCandidate != null &&
-            customAndUserWords.contains(bestCandidate.word)
-        if (bestCandidate != null && (winnerIsCustom || bestCandidate.frequency >= frequencyFloor)) {
-            // Re-route alias-keyed winners through contractionAliases so the
-            // returned form is the apostrophe-bearing contraction. Without
-            // this, `donr → dont` (the alias-key) would stop there; the
-            // user-visible result must be `don't`. The same I-capitalization
-            // rule from step 0 applies.
-            val winnerWord = bestCandidate.word
-            // C-5: guard #4 symmetry — a sweep winner that IS the user's word
-            // is offered as-is, never rewritten through the alias table.
-            val aliasTarget = if (winnerIsCustom) null else contractionAliases[winnerWord]
-            val outputWord = aliasTarget ?: winnerWord
-            val corrected = if (aliasTarget != null && aliasTarget.startsWith("i'")) {
-                aliasTarget.replaceFirstChar { it.uppercase() }
-            } else {
-                preserveCapitalization(typedWord, outputWord)
-            }
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT: '$typedWord' → '$corrected' " +
-                "(winner=$winnerWord score=${"%.3f".format(bestCandidate.score)} " +
-                "freq=${bestCandidate.frequency})")
-            return corrected
-        }
+        return bestCandidate
+    }
 
-        // Diagnostic logging on rejection. Symmetric with the success log so
-        // "why didn't it correct X?" is answerable from logcat.
-        if (diagnosticsEnabled) {
-            val top = rejectionLog.sortedByDescending { it.second }.take(5)
-                .joinToString(", ") { "${it.first}=${"%.3f".format(it.second)}" }
-            val reason = when {
-                bestCandidate == null -> "no candidate above threshold $charMatchThreshold"
-                bestCandidate.frequency < frequencyFloor ->
-                    "best='${bestCandidate.word}' freq=${bestCandidate.frequency} < floor=$frequencyFloor"
-                else -> "?"
-            }
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT: '$typedWord' [$reason]  top=[$top]")
-        }
+    /** Step-5 commit test: clears the frequency floor, or is the user's own word (AC-2). */
+    private fun isCommittable(candidate: AutocorrectCandidate, frequencyFloor: Int): Boolean =
+        candidate.frequency >= frequencyFloor || customAndUserWords.contains(candidate.word)
 
-        return typedWord // No suitable correction found
+    /**
+     * Output form of an autocorrect target: alias keys are re-routed through
+     * [contractionAliases] (`dont` → `don't`, I-contractions capitalised) unless
+     * the key is the user's own word (C-5 guard #4), else the typed word's
+     * capitalisation is preserved. Shared by steps 1.4, 1.45 and 5.
+     */
+    private fun finalizeCorrection(typedWord: String, word: String): String {
+        val aliasTarget = if (word in customAndUserWords) null else contractionAliases[word]
+        return if (aliasTarget != null && aliasTarget.startsWith("i'")) {
+            aliasTarget.replaceFirstChar { it.uppercase() }
+        } else {
+            preserveCapitalization(typedWord, aliasTarget ?: word)
+        }
+    }
+
+    /**
+     * Step 1.45 candidate: the most frequent dictionary word made by doubling one
+     * letter of [lowerTypedWord] in place ("helo" → "hello"), or null. Same gates
+     * as the step-1.4 collapse (typed length above `autocorrect_min_word_length`,
+     * `autocorrect_max_length_diff >= 1`); letters-only input; disabled words are
+     * never offered; the frequency floor applies except to the user's own words.
+     */
+    private fun droppedDoubleTarget(lowerTypedWord: String, dict: Map<String, Int>, frequencyFloor: Int): String? {
+        if (lowerTypedWord.length <= (config?.autocorrect_min_word_length ?: 3) ||
+            (config?.autocorrect_max_length_diff ?: 0) < 1 ||
+            !lowerTypedWord.all { it.isLetter() }
+        ) return null
+        var best: String? = null
+        var bestFreq = -1
+        for (i in lowerTypedWord.indices) {
+            val inserted = StringBuilder(lowerTypedWord).insert(i, lowerTypedWord[i]).toString()
+            val freq = dict[inserted] ?: continue
+            if (disabledWords.isNotEmpty() && isWordDisabled(inserted)) continue
+            if (freq < frequencyFloor && inserted !in customAndUserWords) continue
+            if (freq > bestFreq) {
+                best = inserted
+                bestFreq = freq
+            }
+        }
+        return best
     }
 
     /**

@@ -79,6 +79,11 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     commits): the bar highlights `SpaceCommitResolver`'s answer (`help` for `helo`, slot 0),
     and highlights no replacement when space keeps the typed word. Still OPEN here: the
     smarter correction rule itself (another agent). Device check pending (see commit).
+    Rule part SHIPPED 2026-10-12: frequency-margin rule DD-M (M=32) passed its held-out
+    gate (`docs/eval/2026-10-11-dropped-double-margin.md`); `helo` now commits and highlights
+    `hello`, while bery/grom/ghe/sed/kne/nany keep very/from/the/see/one/many. Device check
+    pending. The bar examples that still say `Helo`→`Help` (wiki autocorrect.md bar section,
+    spec test-coverage row) belong to the bar owner and need updating.
 19. [ ] device: Hebrew autocorrect (`1d2f1d58`) unverified on a device — the Pixel run read
     "no correction" for English too, but a direct re-check showed autocorrect firing
     (`Helo`→`Help`), so its Hebrew result is unreliable. Re-run with the he pack on hebr_1_il.

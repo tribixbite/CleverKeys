@@ -12,7 +12,7 @@ version: v1.5.0
 
 CleverKeys autocorrect is an adjacency-weighted dictionary scorer with a rule-based selection function. The scoring model uses physical keyboard distance to rank candidate replacements, so fingertip-typical typos (adjacent-key substitutions and adjacent transpositions) outscore arbitrary string-distance matches. Contractions and accented Latin characters are first-class citizens in the model; Latin letters are scored on a built-in QWERTY table, and the letters of non-Latin boards on the active layout's own key grid.
 
-This spec covers the v1.5.0 pipeline: the Tier A (#101) + Tier B (layout-aware) adjacency model from v1.4.0, plus the guard layer added since — non-prose context suppression (URLs/emails/paths), possessive and inflection guards, doubled-letter elongation collapse, the Damerau transposition fast path, a dictionary-scaled frequency floor, and disabled-word exclusion.
+This spec covers the v1.5.0 pipeline: the Tier A (#101) + Tier B (layout-aware) adjacency model from v1.4.0, plus the guard layer added since — non-prose context suppression (URLs/emails/paths), possessive and inflection guards, doubled-letter elongation collapse, dropped-doubled-letter insertion with a frequency margin, the Damerau transposition fast path, a dictionary-scaled frequency floor, and disabled-word exclusion.
 
 ## Key Components
 
@@ -61,6 +61,12 @@ WordPredictor.autoCorrect(typedWord)   (WordPredictor.kt:1855)
 │   doubled letter whose removal yields a      │
 │   dictionary word → correct directly          │
 │   "gamees" → "games", "embeer" → "ember"     │
+├──────────────────────────────────────────────┤
+│ Step 1.45: dropped doubled letter (DD-M)     │
+│   double one letter → dictionary word D;     │
+│   D wins over the sweep's word W only if     │
+│   D is <= 32 rank steps rarer (or no W)      │
+│   "helo" → "hello", "bery" stays → "very"    │
 ├──────────────────────────────────────────────┤
 │ Step 1.5: morphological guard (:1946)        │
 │   inflectionStems(word) hits a dict word of  │
@@ -350,6 +356,37 @@ This is distinct from (and unrelated to) the clipboard [URL sanitization](../cli
 ### Elongation Collapse
 
 Before the dictionary scan, a doubled letter whose removal yields a dictionary word is corrected directly (`WordPredictor.kt:1889-1934`): each `cc` pair is tried with one half removed; the highest-frequency surviving dictionary word wins (disabled words excluded), and contraction aliases reroute as usual. Structural certainty exempts this path from the frequency floor. Handles `gamees → games` and the base step of `embeer's → ember's`.
+
+### Dropped Doubled Letter (DD-M, step 1.45)
+
+This step is the mirror of the collapse. It runs after the collapse and before the morphology
+guard, which would otherwise freeze `begining` as begin + -ing. For a letters-only typed
+word, each letter is doubled in place. The most frequent result that is in the dictionary, is
+not disabled, and clears the frequency floor becomes the insertion target D. Custom words are
+exempt from the floor. The gates are the same as the collapse: typed length above
+`autocorrect_min_word_length`, and `autocorrect_max_length_diff >= 1`.
+
+D does **not** win outright. An earlier version that did failed its evaluation, because it
+replaced one-key slips of common words (`bery` → berry, `grom` → groom). Instead, the normal
+sweep (steps 3–4) runs once and gives the word W that step 5 would commit. Then:
+
+- If there is no committable W, D wins.
+- If W is the user's own (custom) word, W wins.
+- Otherwise D wins only when `freq(D) ≥ freq(W) − DROPPED_DOUBLE_MARGIN_STEPS · maxFreq / 255`,
+  i.e. when D is at most **32** byte-rank steps rarer than W.
+
+When D wins, it is re-routed through the alias table like any other winner. When D loses, the
+input continues down the unchanged path, and step 4 reuses the same sweep.
+
+Examples: `helo` → hello (20 steps rarer than help), `tomorow` → tomorrow, `adress` →
+address, and `sucess` → success. `bery`, `grom`, `ghe`, `sed`, `kne` and `nany` still give
+very, from, the, see, one and many, because their doubled forms are 33–95 steps rarer.
+
+M was tuned once on DEV commits of the GitHub Typo Corpus plus half of a synthetic
+adjacent-slip control, then gated on the held-out half. Held-out results: +280 distinct net
+fixes against 4 breaks, 0.71 % of adjacent-slip base words broken, and 0.036 % of valid
+out-of-dictionary words newly changed. Details:
+`docs/eval/2026-10-11-dropped-double-margin.md`.
 
 ### Morphological Guard (valid inflections)
 
