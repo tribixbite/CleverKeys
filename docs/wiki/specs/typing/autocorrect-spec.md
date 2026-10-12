@@ -373,20 +373,35 @@ sweep (steps 3–4) runs once and gives the word W that step 5 would commit. The
 - If there is no committable W, D wins.
 - If W is the user's own (custom) word, W wins.
 - Otherwise D wins only when `freq(D) ≥ freq(W) − DROPPED_DOUBLE_MARGIN_STEPS · maxFreq / 255`,
-  i.e. when D is at most **32** byte-rank steps rarer than W.
+  i.e. when D is at most **64** steps rarer than W. On the bundled `en_enhanced.bin` one step
+  is about one rank, since `BinaryDictionaryLoader` reads rank r as `1 000 000 − r · 3 900`.
 
 When D wins, it is re-routed through the alias table like any other winner. When D loses, the
 input continues down the unchanged path, and step 4 reuses the same sweep.
 
-Examples: `helo` → hello (20 steps rarer than help), `tomorow` → tomorrow, `adress` →
-address, and `sucess` → success. `bery`, `grom`, `ghe`, `sed`, `kne` and `nany` still give
-very, from, the, see, one and many, because their doubled forms are 33–95 steps rarer.
+Examples on the device dictionary: `helo` → hello (39 ranks rarer than help), `tomorow` →
+tomorrow, `adress` → address, and `sucess` → success. `bery`, `grom`, `ghe`, `sed`, `kne` and
+`nany` still give very, from, the, see, one and many, because their doubled forms are 66–191
+ranks rarer. see/seed (66) is the narrowest.
+
+**Frequency scale.** The margin is only meaningful on the dictionary the device loads. The tap
+predictor loads `en_enhanced.bin`. `en_enhanced.json` is the CTC swipe lexicon's compressed
+134..255 scale, and it is not `255 − rank` of the `.bin`. The first tuning (M = 32, 2026-10-11)
+used a JSON-derived map. There help/hello were 20 steps apart, so phones kept `help`. JVM
+harnesses must load `ShippedTapDictionary` (`src/test/kotlin/tribixbite/cleverkeys/`), which
+parses the `.bin` with the production `BinaryDictionaryParser`; `ShippedTapDictionaryDriftTest`
+enforces this.
+
+**Prefix length.** With `autocorrect_prefix_length` > 0, the sweep only considers words that
+share the typed prefix. For example, `bery` cannot reach `very` with prefix length 1. Its W is
+then a b- word, and the insertion `berry` can win. That is what a Pixel with prefix length 1
+showed. The shipped default is 0, and no evaluation covers prefix lengths above 0.
 
 M was tuned once on DEV commits of the GitHub Typo Corpus plus half of a synthetic
-adjacent-slip control, then gated on the held-out half. Held-out results: +280 distinct net
-fixes against 4 breaks, 0.71 % of adjacent-slip base words broken, and 0.036 % of valid
-out-of-dictionary words newly changed. Details:
-`docs/eval/2026-10-11-dropped-double-margin.md`.
+adjacent-slip control, then gated on the held-out half, both on the device dictionary.
+Held-out results: +280 distinct net fixes against 3 breaks, 0.67 % of adjacent-slip base
+words broken, and 0.036 % of valid out-of-dictionary words newly changed. Details:
+`docs/eval/2026-10-11-dropped-double-margin.md` §5.
 
 ### Morphological Guard (valid inflections)
 
@@ -592,7 +607,8 @@ IME add path (add-to-dictionary prompt, "+word" chip, autocorrect undo, acceptin
 | Pure JVM — Context guard | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/AutocorrectContextGuardTest.kt` | Non-prose token detection |
 | Pure JVM — Frequency floor | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/FrequencyFloorTest.kt` | Slider→floor mapping, unloaded-dict guard |
 | Pure JVM — Morphology | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/MorphologyTest.kt` | Inflection stem generation |
-| Pure JVM — End to end | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/AutoCorrectEndToEndTest.kt` | Full pipeline against the shipped dictionary |
+| Mock JVM — End to end | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/AutoCorrectEndToEndTest.kt` | Full pipeline against the shipped tap dictionary (`en_enhanced.bin` via `ShippedTapDictionary`), incl. the DD-M margin pin |
+| Mock JVM — Tap dictionary drift | `src/test/kotlin/tribixbite/cleverkeys/ShippedTapDictionaryDriftTest.kt` | Harness dictionary == the production `.bin` asset load; independent V2 decode; no tap harness built from `en_enhanced.json` |
 | Mock JVM — Bar highlight | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/SpaceCommitPreviewTest.kt` | Real 98k dictionary: highlighted bar entry == space commit (`helo` → `hello`), no replacement highlighted when autocorrect is off / terminal / non-prose / valid word, memo reuse, per-keystroke cost |
 | Instrumented — AutocorrectTest | `src/androidTest/kotlin/tribixbite/cleverkeys/AutocorrectTest.kt` | Adjacency typos, length-diff, contractions, prefix gate, case preservation |
 | Instrumented — URL guard | `src/androidTest/kotlin/tribixbite/cleverkeys/AutocorrectUrlGuardTest.kt` | Guard behavior in real input connections |

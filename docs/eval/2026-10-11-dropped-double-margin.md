@@ -10,6 +10,11 @@ misspellings against 27 breaks, but failed G3. It took over one-key slips of ver
 seed instead of see, `kne` knee instead of one, and `nany` nanny instead of many. That doc
 also had no keystroke-slip corpus. The GitHub Typo Corpus has since been recovered.
 
+> **Superseded in part (2026-10-12).** §2–§4 ran on a `255 − byte` map of `en_enhanced.json`.
+> That is the swipe lexicon's scale, not the `en_enhanced.bin` that the device's tap predictor
+> loads. §5 repeats the tuning and the gate on the device dictionary. It ships M = 64, and with
+> it `helo` → hello on phones.
+
 ## 1. Pre-registration (written before any DEV or TEST outcome was computed)
 
 When this section was committed, only the GTC extraction counts in §1.2 had been computed. No
@@ -378,3 +383,71 @@ The 37 S-adj-DEV breaks include `ses` → sees (see), `helo` → hello (help), `
 geelong, `lenon` → lennon, `karem` → kareem and `jilian` → jillian. The 5 GTC-DEV breaks are
 label noise of the `additionaly` → additionally (labelled additional) kind, plus `esay` →
 essay (easy).
+
+### 5.4 TEST on the device dictionary (one evaluation at M = 64, run 2026-10-12)
+
+Command: `CK_DD_PHASE=test CK_DD_MARGIN=64 GRADLE_GUARD_XMX=1536m scripts/gradle-guard.sh
+runMockTests -PtestClass=autocorrect.DroppedDoubleMarginEval`.
+
+GTC-TEST after the filter is 16,210 pairs, 5,845 targets and 27,190 occurrences, as in §3.
+On the device dictionary, baseline accuracy on its dropped-double class is 130 / 471.
+
+| set | pairs | eligible | fixes | breaks | swaps | net distinct |
+|---|---|---|---|---|---|---|
+| GTC-TEST | 16,210 | 488 | 293 (283; 1,019 occ) | 3 (3; 3 occ) | 56 (53) | **+280** |
+| R-typed | 2,780 | 291 | 177 (159) | 3 (3) | 13 (13) | +156 |
+| R-hand | 30,545 | 756 | 435 (414) | 15 (15) | 148 (129) | +399 |
+| R-union | | | 522 distinct | 17 distinct | | +505 |
+| S-adj-TEST | 140,971 (5,075 words) | 163 | 0 | **37 (34)** | 126 (113) | −34 |
+| C-oov | 292,027 words | 371 | | 105 new changes (0.036 %) | 214 already changed | |
+
+| gate | result |
+|---|---|
+| T1. GTC | pass: +280; 3 ≤ 28.3 |
+| T2. Birkbeck | pass: +156 / +399; 17 ≤ 52.2 |
+| T3. S-adj-TEST ≤ 1.0 % | pass: raw 37 / 140,971 = 0.026 %; distinct 34 / 5,075 = **0.67 %** |
+| T4. C-oov ≤ 0.5 % | pass: 0.036 % |
+| T5. Six named cases | pass: very, from, the, see, one, many |
+
+**Decision: M = 64 passes every pre-registered gate and replaces M = 32.** Reported, not
+gated: **`helo` → `hello`** on the device dictionary. Other examples: `tomorow` → tomorrow
+(was follow), `ocasion` → occasion (was location), `begining` → beginning (was left
+frozen), `adress` → address (was across) and `sucess` → success (was access).
+
+Breaks:
+
+- **S-adj-TEST (34 words).** `fes` → fees (few), `woried` → worried (worked), `pil` → pill
+  (oil), `robery` → robbery (robert), `fision` → fission (vision), `cofers` → coffers
+  (covers), `slepy` → sleepy (slept), `aply` → apply (ally), `trafic` → traffic (tragic),
+  `payrol` → payroll (patrol), `pufin` → puffin (putin). As in §3.3, several doubled readings
+  are at least as plausible as the control's label.
+- **GTC-TEST (3).** `globaly` → globally (labelled global), `keps` → keeps (kept),
+  `revaluated` → reevaluated (evaluated).
+- **Birkbeck (17).** These are mostly the same British/American and label-noise pairs as in
+  §3.3: `jewelery`, `milenium`, `personel`, `gril` → grill (girl), `gose` → goose (goes),
+  `realy` → really (ready).
+- **C-oov (105).** These are single-consonant variant spellings, as before: `canvased`,
+  `controled`, `chaneled`.
+
+**Descriptive: the shipped M = 32 on the device dictionary** (run after the M = 64 result
+above was recorded; not used for selection). GTC-TEST +202 distinct (203 fixes, 1 break).
+Birkbeck +98 / +274, with 9 union breaks. S-adj-TEST 15 / 5,075 distinct (0.30 %), C-oov
+0.019 %, six named cases kept, and **`helo` → help**. M = 32 also passes T1–T5 on the
+device dictionary, so the shipped build is safe, but it is more conservative than intended
+and misses the reported case. Against M = 32, M = 64 adds 78 GTC and 231 Birkbeck distinct
+net fixes, and costs 19 more S-adj base words (0.37 points).
+
+### 5.5 Implementation and parity (2026-10-12)
+
+- `DROPPED_DOUBLE_MARGIN_STEPS` = 64, with its KDoc rewritten for the device scale.
+- **Parity.** `productionMatchesSimulation` ran with `CK_DD_VERIFY=64`. It compares production
+  `autoCorrect(word, 64)` with the simulation on every rule-decided input of every set:
+  2,889 checked, 0 mismatches.
+- **Unit tests** (`AutoCorrectEndToEndTest`, `SpaceCommitPreviewTest`, now on the device
+  dictionary). `helo`/`Helo` give hello/Hello, and the six named cases are kept.
+  `droppedDouble_marginSeparatesNamedPairsOnTheDeviceDictionary` pins the gaps (see/seed 66 > 64,
+  help/hello 39 ≤ 64). A rebuilt `.bin` that moves a pair across the margin fails there, before
+  the behaviour silently changes.
+- **Remaining risk.** see/seed sits 2 steps outside the margin. Any dictionary rebuild moves
+  ranks; the pin above is the guard. A non-zero `autocorrect_prefix_length` changes which W
+  the sweep can return, and is unmeasured (§5.1).

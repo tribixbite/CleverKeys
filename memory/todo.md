@@ -84,6 +84,16 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     `hello`, while bery/grom/ghe/sed/kne/nany keep very/from/the/see/one/many. Device check
     pending. The bar examples that still say `Helo`→`Help` (wiki autocorrect.md bar section,
     spec test-coverage row) belong to the bar owner and need updating.
+    CORRECTED 2026-10-12: the M=32 result did not hold on phones (Pixel, release dc7b3b2f:
+    `Helo`→`Help`). The JVM harnesses had run on a `255 − byte` map of `en_enhanced.json` (the
+    CTC swipe scale), and the tap predictor loads `en_enhanced.bin`: 98,139/98,140 words
+    differ, and help/hello are 39 ranks apart, not 20. The harnesses now use `ShippedTapDictionary`
+    (the production `BinaryDictionaryParser` on the `.bin`, pinned by
+    `ShippedTapDictionaryDriftTest`). DD-M was re-tuned on DEV and gated on TEST on the device
+    dictionary (eval doc §5): M=64 passes T1–T5, and `helo`→`hello` now holds on the device
+    dictionary. Device check pending. Note that `autocorrect_prefix_length` > 0 (Pixel has 1)
+    lets bery→berry / grom→groom through, because the sweep cannot reach very/from. This is
+    unmeasured; the default is 0.
 19. [ ] device: Hebrew autocorrect (`1d2f1d58`) unverified on a device — the Pixel run read
     "no correction" for English too, but a direct re-check showed autocorrect firing
     (`Helo`→`Help`), so its Hebrew result is unreliable. Re-run with the he pack on hebr_1_il.
