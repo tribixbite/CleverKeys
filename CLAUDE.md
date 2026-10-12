@@ -125,6 +125,13 @@ A throw inside an AndroidView's draw leaves Compose's RenderNodeLayer recording 
 the NEXT frame dies with this message and no app frames, and Espresso swallows the real
 throw. Draw the view into `RenderNode.beginRecording()` in a test to surface it (2026-10-08).
 
+## Tap predictor vs swipe lexicon frequency scales
+
+The tap predictor (autocorrect, suggestion bar) loads `en_enhanced.bin` (rank 0..255, full
+spread); the CTC swipe lexicon uses `en_enhanced.json` (compressed 134..255). They are NOT
+`byte = 255 − rank`: 98,139/98,140 words differ (help 180 vs 218). Autocorrect harnesses that
+read the JSON measured the wrong dictionary; DD-M's M=32 failed on the Pixel (2026-10-12).
+
 ## PAL model preference
 
 Use Gemini 3.8 (`gemini-3.8-flash`) for PAL consultation; never use Gemini 3.1.
