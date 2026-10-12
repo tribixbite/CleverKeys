@@ -85,11 +85,14 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     תושה→עושה is reproduced on the JVM (item 20). Also item 3: `somethings` swipes commit
     `Somethings` 3/3 with and without the custom word. Item 2 (Persian) not runnable: no fa pack
     or Persian layout exists.
-20. [ ] agent→maintainer: inside the ±0.10 score band a DISTANT one-letter substitution can beat a
+20. [ ] maintainer: inside the ±0.10 score band a DISTANT one-letter substitution can beat a
     neighbour-key one on frequency (he תושה→עושה ת↔ע ≈4 keys, over תודה ש↔ד; scores ≈0.89 vs
-    0.97). Candidate: structural tiebreak "neighbour substitution beats distant substitution"
-    (like transposition > multi-sub). All-language ranking change: pre-register and measure
-    (GTC adjacent vs non-adjacent classes for en) before shipping.
+    0.97). MEASURED 2026-10-12, NOT SHIPPED (`docs/eval/2026-10-12-neighbour-substitution-tiebreak.md`):
+    "neighbour sub beats distant sub" fixes תושה but fails DEV: GTC-DEV N1 −31 distinct net (60
+    breaks, mostly real distant misspellings like compatability→comparability, seprate→septate),
+    NA 135 breaks vs 167 fixes, both break the `tfe`→the calibration case. Large gains on synthetic
+    neighbour slips (N1 +848 S-adj words). Open: a narrower pre-registered rule, or a phone-typing
+    corpus to weigh the two error populations. Seam `NeighbourTiebreak` stays OFF.
 
 ## Device results recorded 2026-10-07/08
 

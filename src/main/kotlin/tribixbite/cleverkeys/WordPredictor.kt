@@ -152,6 +152,14 @@ class WordPredictor : Predictor {
         private const val SCORE_TIEBREAK_GAP = 0.10f
 
         /**
+         * Shipped NB tiebreak variant (see [NeighbourTiebreak]): OFF. Neither N1 nor NA was
+         * admissible on GTC-DEV (`docs/eval/2026-10-12-neighbour-substitution-tiebreak.md` §2:
+         * real distant one-letter misspellings outnumber the neighbour slips it fixes).
+         * The seam stays for that eval; OFF also skips the per-position neighbour check.
+         */
+        private val NEIGHBOUR_TIEBREAK = NeighbourTiebreak.OFF
+
+        /**
          * Length-normalized score penalty for an adjacent-transposition
          * (Damerau) match in the same-length path: score = 1 − penalty/len.
          * Calibrated (0.25 → 0.15, 2026-07-04) so a transposition ranks
@@ -3051,13 +3059,26 @@ class WordPredictor : Predictor {
         autoCorrect(typedWord, DROPPED_DOUBLE_MARGIN_STEPS)
 
     /**
+     * In-band "neighbour substitution beats distant substitution" tiebreak variants
+     * (eval: `docs/eval/2026-10-12-neighbour-substitution-tiebreak.md`). OFF = frequency
+     * decides between two in-band substitution candidates; N1 = between two ONE-substitution
+     * candidates, the one whose substituted key is a neighbour of the typed key wins; NA = the
+     * same over candidates with any number of substitutions (all-neighbour vs any-distant).
+     */
+    internal enum class NeighbourTiebreak { OFF, N1, NA }
+
+    /**
      * [autoCorrect] with step 1.45's margin as a parameter — the evaluation seam for
      * `DroppedDoubleMarginEval`, which needs the pre-DD-M behaviour ([droppedDoubleMarginSteps]
      * = null: step 1.45 skipped entirely) and the sweep's W without the step, on the
      * dictionary the device actually loads. Production always passes
      * [DROPPED_DOUBLE_MARGIN_STEPS].
      */
-    internal fun autoCorrect(typedWord: String, droppedDoubleMarginSteps: Int?): String {
+    internal fun autoCorrect(
+        typedWord: String,
+        droppedDoubleMarginSteps: Int?,
+        neighbourTiebreak: NeighbourTiebreak = NEIGHBOUR_TIEBREAK
+    ): String {
         if (config?.autocorrect_enabled != true || typedWord.isEmpty()) {
             return typedWord
         }
@@ -3173,7 +3194,7 @@ class WordPredictor : Predictor {
         // 4 reuses this sweep.
         val insertion = droppedDoubleMarginSteps?.let { droppedDoubleTarget(lowerTypedWord, dict, frequencyFloor) }
         if (insertion != null && droppedDoubleMarginSteps != null) {
-            sweepBest = autocorrectSweep(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null)
+            sweepBest = autocorrectSweep(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null, neighbourTiebreak)
             sweepDone = true
             val w = sweepBest?.takeIf { isCommittable(it, frequencyFloor) }
             val insertionFreq = dict[insertion] ?: 0
@@ -3250,7 +3271,7 @@ class WordPredictor : Predictor {
                 }
                 // AC-4: base is a typo — correct it alone, keep the suffix.
                 val originalBase = typedWord.substring(0, apostropheIdx)
-                val correctedBase = autoCorrect(originalBase, droppedDoubleMarginSteps)
+                val correctedBase = autoCorrect(originalBase, droppedDoubleMarginSteps, neighbourTiebreak)
                 if (correctedBase != originalBase) {
                     val corrected = correctedBase + typedWord.substring(apostropheIdx)
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (possessive base): '$typedWord' → '$corrected'")
@@ -3269,7 +3290,7 @@ class WordPredictor : Predictor {
         // 3.–4. Candidate sweep (see autocorrectSweep); reuse step 1.45's run.
         val bestCandidate: AutocorrectCandidate? =
             if (sweepDone) sweepBest
-            else autocorrectSweep(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null)
+            else autocorrectSweep(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null, neighbourTiebreak)
 
         // 5. Apply correction only if confident candidate found.
         // Custom/user-added words are injected at a low placeholder frequency
@@ -3320,7 +3341,8 @@ class WordPredictor : Predictor {
     private fun autocorrectSweep(
         lowerTypedWord: String,
         dict: Map<String, Int>,
-        diagnostics: MutableList<Pair<String, Float>>?
+        diagnostics: MutableList<Pair<String, Float>>?,
+        neighbourTiebreak: NeighbourTiebreak
     ): AutocorrectCandidate? {
         // 3. Required-prefix rule. Configurable via `autocorrect_prefix_length`:
         //   - >0: candidate must share that many leading chars with typed word
@@ -3396,6 +3418,11 @@ class WordPredictor : Predictor {
             //     unrelated candidates (ed≈3+ for `wuestion → wuthering`).
             var isTransposition = false
             var isMultiSub = false
+            // Same-length substitution candidates only (not transpositions, not length
+            // changes): how many keys differ, and whether every differing key is a neighbour
+            // of the typed key on the active layout. Feeds the NB tiebreak rule.
+            var substitutionCount = -1
+            var neighbourOnly = false
             val score: Float = if (lengthDiff == 0) {
                 if (isAdjacentTransposition(lowerTypedWord, dictWord)) {
                     // Damerau transposition fast path ("teh" → "the", "becuase"
@@ -3428,9 +3455,17 @@ class WordPredictor : Predictor {
                 ) {
                     // Pass 2: adjacency-weighted score, only for gate survivors.
                     var weightedSum = 0f
+                    var allNeighbours = true
                     for (i in 0 until wordLength) {
-                        weightedSum += KeyAdjacency.substitutionScore(lowerTypedWord[i], dictWord[i])
+                        val a = lowerTypedWord[i]
+                        val b = dictWord[i]
+                        weightedSum += KeyAdjacency.substitutionScore(a, b)
+                        if (neighbourTiebreak != NeighbourTiebreak.OFF && a != b && allNeighbours &&
+                            !KeyAdjacency.areNeighbors(a, b)
+                        ) allNeighbours = false
                     }
+                    substitutionCount = substitutions
+                    neighbourOnly = allNeighbours
                     weightedSum / wordLength
                 } else -1f
                 }
@@ -3490,6 +3525,9 @@ class WordPredictor : Predictor {
                     // One Damerau swap beats two independent substitutions.
                     isTransposition && bestCandidate.isMultiSub -> true
                     bestCandidate.isTransposition && isMultiSub -> false
+                    // A neighbour-key slip beats a distant-key substitution (NB rule).
+                    neighbourRuleApplies(neighbourTiebreak, substitutionCount, bestCandidate.substitutions) &&
+                        neighbourOnly != bestCandidate.neighbourOnly -> neighbourOnly
                     // Within the band, normal case → frequency wins.
                     candidateFrequency > bestCandidate.frequency -> true
                     candidateFrequency < bestCandidate.frequency -> false
@@ -3499,7 +3537,8 @@ class WordPredictor : Predictor {
                 if (better) {
                     bestCandidate = AutocorrectCandidate(
                         dictWord, score, candidateFrequency,
-                        isAlias, isTransposition, isMultiSub
+                        isAlias, isTransposition, isMultiSub,
+                        substitutionCount, neighbourOnly
                     )
                 }
             }
@@ -3623,8 +3662,19 @@ class WordPredictor : Predictor {
         val frequency: Int,
         val isAlias: Boolean,
         val isTransposition: Boolean,
-        val isMultiSub: Boolean
+        val isMultiSub: Boolean,
+        /** Differing keys of a same-length substitution candidate; −1 for transpositions and length changes. */
+        val substitutions: Int,
+        /** Every differing key is a neighbour of the typed key on the active layout. */
+        val neighbourOnly: Boolean
     )
+
+    /** Whether the NB tiebreak compares two candidates with these substitution counts. */
+    private fun neighbourRuleApplies(variant: NeighbourTiebreak, a: Int, b: Int): Boolean = when (variant) {
+        NeighbourTiebreak.OFF -> false
+        NeighbourTiebreak.N1 -> a == 1 && b == 1
+        NeighbourTiebreak.NA -> a >= 1 && b >= 1
+    }
 
     /**
      * Result class containing predictions and their scores

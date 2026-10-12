@@ -158,3 +158,81 @@ non-adjacent-sub), and the DEV/TEST typo-string overlap.
 If T1–T6 all pass, the chosen variant ships with fail-first unit tests (`תושה`→`תודה` in
 `HebrewLayoutAutoCorrectTest`, an English analogue, and guards). Otherwise nothing ships, and
 the numbers are committed here. These thresholds are fixed now.
+
+## 2. DEV (run 2026-10-12, harness and seam at the commit that records this section)
+
+Command: `CK_NB_PHASE=dev GRADLE_GUARD_XMX=1536m scripts/gradle-guard.sh runMockTests
+-PtestClass=autocorrect.NeighbourTiebreakEval`. The test phase took about 50 minutes.
+
+**Harness pre-filter (added after the pre-registration, does not change any outcome).** A full
+98k-word sweep costs about 25 ms of CPU per input on this device. The first attempt at sweeping
+every input was killed after 50 minutes. The harness now runs the sweep only on inputs where
+the rule can fire (`Lang.mayFire`): the dictionary must hold both a same-length all-neighbour
+candidate and a distant one that pass the sweep's gate 1. Every other input gives OFF's output
+by construction. As a soundness check, 400 seeded ruled-out inputs were swept under NA, with
+0 mismatches. Outcomes are counted over the eligible inputs only. Accuracy in the table is
+over the eligible inputs, not the whole set.
+
+Baseline (OFF) named cases: all pass except **`תושה` → `עושה`**, the reported case.
+
+| variant | set | eligible | fixes (distinct; occ) | breaks (distinct; occ) | swaps (distinct) | net distinct |
+|---|---|---|---|---|---|---|
+| N1 | GTC-DEV (16,358 pairs, 5,845 targets) | 1,683 | 29 (29; 33) | **62 (60; 145)** | 183 (162) | **−31** |
+| N1 | S-adj-DEV (137,871 pairs, 4,925 words) | 32,151 | 1,661 (852) | 5 (4) | 666 (452) | +848 |
+| NA | GTC-DEV | 3,838 | 181 (167; 217) | **159 (135; 287)** | 1,077 (815) | +32 |
+| NA | S-adj-DEV | 91,420 | 21,313 (2,726) | **172 (84)** | 4,364 (1,020) | +2,642 |
+
+Named cases under both variants: **`תושה` → `תודה` is fixed**, the other Hebrew cases and the
+DD-M cases hold, and **`tfe` → `tfw` breaks** (want `the`). w↔e are neighbours, while f↔h are
+two keys apart, so the rule overrides the frequency tiebreak that `SCORE_TIEBREAK_GAP` was
+calibrated on.
+
+Admissibility (§1.4):
+
+| variant | C1 GTC net > 0, breaks ≤ 0.25 × fixes | C2 S-adj net > 0, breaks ≤ 0.8 % | C3 named | admissible |
+|---|---|---|---|---|
+| N1 | **fail**: net −31; 60 > 7.25 | pass: 5 / 137,871 raw; 4 / 4,925 distinct (0.08 %) | **fail** (`tfe`) | no |
+| NA | **fail**: 135 > 41.75 | **fail**: 84 / 4,925 = 1.7 % distinct | **fail** (`tfe`) | no |
+
+**Decision: no variant is admissible. Nothing ships, and TEST was not run.** Under the
+pre-registration (§1.4), TEST is not used when nothing passes DEV, so the Birkbeck, C-oov and
+Hebrew HE-adj sweep (T6) numbers were not computed. The production default stays `OFF`.
+
+### 2.1 Why it fails
+
+The GTC breaks are real misspellings whose intended word is a distant one-letter substitution.
+Beside it sits a real word one neighbour key away, and frequency was ranking the intended word
+first. Under N1, 58 of the 62 breaks are in the 1-sub-distant class. Examples (typo → intended,
+what N1 commits; commit occurrences): `compatability` → compatibility, comparability (65);
+`releated` → related, repeated (7); `tipically` → typically, topically (4); `unter` → under,
+inter; `startet` → started, starter; `seprate` → separate, septate; `thet` → that, they;
+`hava` → have, java; `choise` → choice, choose; `zime` → time, some.
+
+Most of these are cognitive errors (a wrong vowel, a phonetic `s`/`c`, a German-style `t`). They
+are not fat-finger slips, and keyboard geometry says nothing about them. Frequency was the
+better signal. On synthetic neighbour slips, the rule is large and almost free (N1: +852
+distinct words on S-adj, 4 breaks), for example `hac`/`haf`/`har` → had (was has), `tham` →
+than (was that), `dould` → could (was would). The two error populations disagree, and on the
+real one N1 loses by 2 to 1.
+
+GTC was typed on physical keyboards. A phone keyboard plausibly has a higher share of
+neighbour slips, which is the S-adj side. That cannot be measured without a phone-typing
+corpus, and the pre-registered gate used the corpus that exists.
+
+### 2.2 What remains for `תושה`
+
+The device case is still open. A narrower rule might fix it without the GTC cost, for
+example by requiring the frequency ratio to stay inside a bound, or by applying only when the
+distant substitution is a consonant↔consonant pair far apart. Either would be a new
+pre-registration with a parameter tuned on GTC-DEV, and it would face the same cognitive-error
+population. `HebrewLayoutAutoCorrectTest` keeps `תושה` out of its passing cases, and its comment
+points at todo item 20.
+
+### 2.3 Artefacts
+
+- The seam stays: `WordPredictor.NeighbourTiebreak` (`OFF`/`N1`/`NA`) and
+  `autoCorrect(word, marginSteps, variant)`. `NEIGHBOUR_TIEBREAK = OFF`, and the per-position
+  neighbour check is skipped when the variant is OFF, so production behaviour and cost are
+  unchanged.
+- Harness: `src/test/kotlin/tribixbite/cleverkeys/autocorrect/NeighbourTiebreakEval.kt`.
+- Rows (local, not committed): `build/eval/neighbour-tiebreak/rows-dev.tsv`.
