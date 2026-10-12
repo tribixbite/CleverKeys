@@ -68,32 +68,14 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
 17. [ ] unowned roadmap: 1.3 at-rest clipboard encryption, 2.3 dwell picker (measure first),
     4.1 live theme preview, 4.2 spline swipe trail (benchmark first), #187 below-accents,
     #175(3)/#80(3) toolbar.
-18. [ ] agent→maintainer: autocorrect `helo` commits `help` while the bar's top pick is
-    `Hello` (Pixel 2026-10-11): no "dropped doubled letter" rule mirrors the elongation
-    collapse, and the bar and autocorrect rank differently. MEASURED 2026-10-11
-    (`docs/eval/2026-10-11-dropped-double-autocorrect.md`): the mirror rule fixes 611 distinct
-    real misspellings vs 27 broken but FAILS the pre-registered adjacent-slip gate (steals
-    179/10k top words, e.g. bery→berry, grom→groom, sed→seed). Not shipped. Next step needs a
-    new rule shape + fresh pre-registration (maintainer call).
-    Bar-consistency part DONE 2026-10-11 (maintainer decision: highlighted = what space
-    commits): the bar highlights `SpaceCommitResolver`'s answer (`help` for `helo`, slot 0),
-    and highlights no replacement when space keeps the typed word. Still OPEN here: the
-    smarter correction rule itself (another agent). Device check pending (see commit).
-    Rule part SHIPPED 2026-10-12: frequency-margin rule DD-M (M=32) passed its held-out
-    gate (`docs/eval/2026-10-11-dropped-double-margin.md`); `helo` now commits and highlights
-    `hello`, while bery/grom/ghe/sed/kne/nany keep very/from/the/see/one/many. Device check
-    pending. The bar examples that still say `Helo`→`Help` (wiki autocorrect.md bar section,
-    spec test-coverage row) belong to the bar owner and need updating.
-    CORRECTED 2026-10-12: the M=32 result did not hold on phones (Pixel, release dc7b3b2f:
-    `Helo`→`Help`). The JVM harnesses had run on a `255 − byte` map of `en_enhanced.json` (the
-    CTC swipe scale), and the tap predictor loads `en_enhanced.bin`: 98,139/98,140 words
-    differ, and help/hello are 39 ranks apart, not 20. The harnesses now use `ShippedTapDictionary`
-    (the production `BinaryDictionaryParser` on the `.bin`, pinned by
-    `ShippedTapDictionaryDriftTest`). DD-M was re-tuned on DEV and gated on TEST on the device
-    dictionary (eval doc §5): M=64 passes T1–T5, and `helo`→`hello` now holds on the device
-    dictionary. Device check pending. Note that `autocorrect_prefix_length` > 0 (Pixel has 1)
-    lets bery→berry / grom→groom through, because the sweep cannot reach very/from. This is
-    unmeasured; the default is 0.
+18. [x] DONE 2026-10-12 — `helo` autocorrect + bar consistency. The bar highlights what space
+    commits (`SpaceCommitResolver`), and the dropped-double margin rule DD-M (M=64, tuned and
+    gated on the shipped `en_enhanced.bin`, `docs/eval/2026-10-11-dropped-double-margin.md` §5)
+    makes `Helo` highlight and commit `Hello`. Device PASS, Pixel, release `7eef0b7c`:
+    `Helo`→`Hello` (undo chip `Helo`), `Sed`→`See` (not Seed). The earlier M=32 result was
+    measured on the CTC JSON scale by mistake. Harnesses now load the `.bin`
+    (`ShippedTapDictionaryDriftTest`). Follow-up, unmeasured: `autocorrect_prefix_length` > 0
+    (the Pixel has 1) lets bery→berry / grom→groom through, because very/from fail the prefix.
 19. [ ] device: Hebrew autocorrect (`1d2f1d58`) unverified on a device — the Pixel run read
     "no correction" for English too, but a direct re-check showed autocorrect firing
     (`Helo`→`Help`), so its Hebrew result is unreliable. Re-run with the he pack on hebr_1_il.
