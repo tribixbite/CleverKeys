@@ -55,10 +55,13 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     removal, once-per-manager startup recovery; `LanguagePackSwapTest` (18 pure) and 3 new
     `LanguagePackImportTest` cases (fail-first 3/51 on the old swap). 2953 pure / 1198 mock.
     Not device-verified (no adb in that session).
-12. [ ] agent: deferred review items — unify `Keyboard2View.executeEditingCommand` with
-    `KeyEventHandler.handleEditingKey`; suffix receipt readback at command time (3 editor
-    reads per committed word, # TODO in `rememberVerifiedWord`); #175 clipboard
-    swipe-to-delete; summon after system hide (overlay permission).
+12. [ ] agent: deferred review items — ~~unify `Keyboard2View.executeEditingCommand` with
+    `KeyEventHandler.handleEditingKey`~~ DONE 2026-10-12 in `7d1a3271` (editing mappings press
+    the key into `handleEditingKey`; `EditingCommandParityTest` 9 mock, fail-first 8/9; 2954
+    pure / 1207 mock; not device-verified. Maintainer call: layout `textAssist`/`replaceText`
+    keys now open the app chooser like the mapping did); still open: suffix receipt readback
+    at command time (3 editor reads per committed word, # TODO in `rememberVerifiedWord`);
+    #175 clipboard swipe-to-delete; summon after system hide (overlay permission).
 13. [ ] agent: intermittent mock-suite timing failures under host load 12–15 (predictor
     latency 17.4 vs 15 ms; adaptation write past 12 s) — cause not established.
 14. [ ] RTX: short-word CTC — word-balanced fine-tune on the raw-path input contract so
