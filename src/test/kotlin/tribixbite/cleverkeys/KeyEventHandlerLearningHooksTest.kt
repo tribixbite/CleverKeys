@@ -54,20 +54,23 @@ class KeyEventHandlerLearningHooksTest {
         every { Config.globalConfigOrNull() } returns config
         config.custom_terminal_packages = setOf("org.custom.shell")
         release("paste")
-        val executor = tribixbite.cleverkeys.customization.CustomShortSwipeExecutor(context)
+        // The mapping route (todo 12, 2026-10-12): a COMMAND mapping names the same editing key
+        // and Keyboard2View presses it into this handler — the executor keeps no paste copy.
         val mapping = tribixbite.cleverkeys.customization.ShortSwipeMapping(
             keyCode = "m", direction = tribixbite.cleverkeys.customization.SwipeDirection.SW,
             displayText = "📋", actionType = tribixbite.cleverkeys.customization.ActionType.COMMAND,
             actionValue = "paste"
         )
-        org.junit.Assert.assertTrue(executor.execute(mapping, conn, editor))
+        val mappedKey = tribixbite.cleverkeys.customization.CommandRouting.editingValue(mapping)
+        org.junit.Assert.assertEquals(KeyValue.getKeyByName("paste"), mappedKey)
+        handler.key_up(mappedKey, Pointers.Modifiers.EMPTY, false)
         verify(exactly = 2) { conn.commitText("terminal-paste-fixture", 1) }
         verify(exactly = 0) { conn.performContextMenuAction(android.R.id.paste) }
 
         config.custom_terminal_packages = emptySet()
         every { conn.performContextMenuAction(android.R.id.paste) } returns true
         release("paste")
-        org.junit.Assert.assertTrue(executor.execute(mapping, conn, editor))
+        handler.key_up(mappedKey, Pointers.Modifiers.EMPTY, false)
         verify(exactly = 2) { conn.performContextMenuAction(android.R.id.paste) }
         verify(exactly = 2) { conn.commitText("terminal-paste-fixture", 1) }
         // Editor siblings must not inherit the custom package's behavior.

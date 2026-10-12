@@ -113,7 +113,8 @@ class CommandRoutingTest {
     /** No catalogue command may land on a key kind that neither path performs. */
     @Test
     fun everyCatalogueKeyKindHasAPath() {
-        // Performed by the executor (Char/String/Keyevent) or Keyboard2View (Event/Editing);
+        // Performed by the executor (Char/String/Keyevent), Keyboard2View (Event) or
+        // KeyEventHandler.handleEditingKey via Keyboard2View (Editing, everyEditingCatalogue…);
         // Placeholder is the `removed` blank, which deliberately does nothing.
         val executorKinds = setOf(
             KeyValue.Kind.Char, KeyValue.Kind.String, KeyValue.Kind.Keyevent,
@@ -124,5 +125,27 @@ class CommandRoutingTest {
             kind !in executorKinds && CommandRouting.keyPipelineValue(name) == null
         }
         assertWithMessage("commands whose key kind has no execution path").that(stranded).isEmpty()
+    }
+
+    /**
+     * Todo 12 (2026-10-12): every Editing-kind catalogue command is pressed into the key
+     * handler (its one implementation), never run by an executor copy — and so is each legacy
+     * AvailableCommand spelling of an editing command.
+     */
+    @Test
+    fun everyEditingCatalogueCommandRoutesToTheKeyHandler() {
+        val editing = CommandRegistry.ALL_COMMANDS.map { it.name }
+            .filter { KeyValue.getKeyByName(it).getKind() == KeyValue.Kind.Editing }
+        assertWithMessage("the catalogue has editing commands").that(editing).isNotEmpty()
+        for (name in editing) {
+            assertWithMessage(name).that(CommandRouting.editingValue(command(name)))
+                .isEqualTo(KeyValue.getKeyByName(name))
+        }
+        assertThat(CommandRouting.editingValue("PRIVATE_COPY")).isEqualTo(KeyValue.getKeyByName("copy_private"))
+        assertThat(CommandRouting.editingValue("TEXT_ASSIST")).isEqualTo(KeyValue.getKeyByName("textAssist"))
+        assertThat(CommandRouting.editingValue("CURSOR_DOC_END")).isEqualTo(KeyValue.getKeyByName("doc_end"))
+        // Non-editing AvailableCommands and keys stay on their own paths.
+        assertThat(CommandRouting.editingValue("WORD_LEFT")).isNull()
+        assertThat(CommandRouting.editingValue("switch_forward")).isNull()
     }
 }

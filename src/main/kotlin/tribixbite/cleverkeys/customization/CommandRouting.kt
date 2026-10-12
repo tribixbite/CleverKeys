@@ -19,6 +19,12 @@ import tribixbite.cleverkeys.KeyValue
  *   terminal tracking only through `KeyEventHandler`. The executor's raw `commitText` bypassed
  *   all of them (popover/palette audit, 2026-10-08).
  *
+ * Editing commands (copy, paste, undo, clear, text assist, private copy …) have ONE
+ * implementation, `KeyEventHandler.handleEditingKey`: [editingValue] names the key, and
+ * `Keyboard2View.onCustomShortSwipe` presses it through `KeyEventHandler.key_up`, so a mapping
+ * gets the layout key's inline-editor routing, terminal paste and typed-word bookkeeping
+ * (todo 12, 2026-10-12; `EditingCommandParityTest`).
+ *
  * Multi-character TEXT mappings stay literal macros on the executor: splitting `'s` or a
  * signature into keys would change their semantics (CLAUDE.md "Custom apostrophe routing").
  */
@@ -54,6 +60,41 @@ object CommandRouting {
         val kv = KeyValue.getKeyByName(commandName)
         return kv.takeIf { it.getKind() in KEY_PIPELINE_KINDS || isTypedCommandKey(commandName, it) }
     }
+
+    /**
+     * The Editing-kind key a COMMAND [mapping] names, or null. Accepts the catalogue name
+     * (`copy`, `pasteAsPlainText`, `clear` …) and the legacy SCREAMING_SNAKE AvailableCommand
+     * spelling stored by pre-catalogue mappings (`COPY`, `PRIVATE_COPY`, `TEXT_ASSIST` …).
+     */
+    fun editingValue(mapping: ShortSwipeMapping): KeyValue? =
+        if (mapping.isRemoval || mapping.actionType != ActionType.COMMAND) null
+        else editingValue(mapping.actionValue)
+
+    /** The Editing-kind key the command named [commandName] denotes, or null. */
+    fun editingValue(commandName: String): KeyValue? {
+        // Legacy names match case-insensitively, exactly as the executor's AvailableCommand.fromString.
+        val name = AvailableCommand.fromString(commandName)?.let { LEGACY_EDITING_NAMES[it] } ?: commandName
+        return KeyValue.getKeyByName(name).takeIf { it.getKind() == KeyValue.Kind.Editing }
+    }
+
+    /**
+     * Legacy AvailableCommands that are editing keys, with the key's catalogue name. The other
+     * AvailableCommands (cursor/word moves, layout/IME switches …) stay on the executor/view.
+     */
+    private val LEGACY_EDITING_NAMES: Map<AvailableCommand, String> = mapOf(
+        AvailableCommand.COPY to "copy",
+        AvailableCommand.PRIVATE_COPY to "copy_private",
+        AvailableCommand.PASTE to "paste",
+        AvailableCommand.CUT to "cut",
+        AvailableCommand.SELECT_ALL to "selectAll",
+        AvailableCommand.UNDO to "undo",
+        AvailableCommand.REDO to "redo",
+        AvailableCommand.CURSOR_DOC_START to "doc_home",
+        AvailableCommand.CURSOR_DOC_END to "doc_end",
+        AvailableCommand.DELETE_WORD to "delete_word",
+        AvailableCommand.TEXT_ASSIST to "textAssist",
+        AvailableCommand.REPLACE_TEXT to "replaceText",
+    )
 
     /**
      * The TYPED part of [keyPipelineValue]: a character or string key that `KeyEventHandler.key_up`

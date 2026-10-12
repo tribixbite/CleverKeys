@@ -1103,6 +1103,23 @@ class Keyboard2View @JvmOverloads constructor(
             if (executed) performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
             return // A rejected template must never fall back to typing its payload.
         }
+        // Editing commands (copy, paste, undo, clear, text assist, private copy, clear clipboard
+        // …, catalogue or legacy AvailableCommand spelling) have ONE implementation:
+        // KeyEventHandler.handleEditingKey, reached exactly as a layout key presses it. It owns
+        // inline clipboard-editor routing, terminal paste and typed-word bookkeeping, which the
+        // executor's own copies and the old executeEditingCommand skipped (todo 12, 2026-10-12;
+        // EditingCommandParityTest). Like every executed custom swipe, it vibrates.
+        val editingValue = CommandRouting.editingValue(mapping)
+        if (editingValue != null) {
+            val handler = _config.handler
+            if (handler == null) {
+                Log.w("Keyboard2View", "Cannot execute editing command ${mapping.actionValue}: no key handler")
+                return
+            }
+            handler.key_up(editingValue, Pointers.Modifiers.EMPTY)
+            performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+            return
+        }
         val executed = if (typedHandler != null && typedValue != null) {
             typedHandler.key_up(typedValue, Pointers.Modifiers.EMPTY)
             true
@@ -1112,8 +1129,8 @@ class Keyboard2View @JvmOverloads constructor(
 
         if (!executed) {
             // Executor couldn't handle it - try KeyValue-based execution
-            // This handles Event-type keys (settings, clipboard, voice, numeric) and
-            // Editing-type keys (replaceText, textAssist) that require service/system handling
+            // This handles Event-type keys (settings, clipboard, voice, numeric) that require
+            // service/system handling. Editing-type keys never get here (see editingValue above).
             val actionValue = mapping.actionValue
             val keyValue = KeyValue.getKeyByName(actionValue)
 
@@ -1121,14 +1138,12 @@ class Keyboard2View @JvmOverloads constructor(
             val customCommandHandled = when (actionValue) {
                 "primaryLangToggle" -> { togglePrimaryLanguage(); true }
                 "secondaryLangToggle" -> { toggleSecondaryLanguage(); true }
-                "textAssist" -> { launchTextAssistActivity(inputConnection); true }
-                "replaceText" -> { launchReplaceTextActivity(inputConnection); true }
                 "showTextMenu" -> { showTextContextMenu(inputConnection); true }
                 else -> false
             }
 
             // Audit H-7: no early return here — the success haptic at the bottom of this
-            // function must fire for the five custom text-action commands too (they used
+            // function must fire for the custom text-action commands too (they used
             // to `return` past it and succeed silently while every other successful
             // custom swipe vibrated).
             //
@@ -1147,13 +1162,6 @@ class Keyboard2View @JvmOverloads constructor(
                         val event = keyValue.getEvent()
                         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing Event command via service: $actionValue -> $event")
                         service.triggerKeyboardEvent(event)
-                        keyValueHandled = true
-                    }
-                    KeyValue.Kind.Editing -> {
-                        // Editing-type commands use context menu actions
-                        val editing = keyValue.getEditing()
-                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing Editing command: $actionValue -> $editing")
-                        executeEditingCommand(editing, inputConnection)
                         keyValueHandled = true
                     }
                     KeyValue.Kind.String -> {
@@ -1195,14 +1203,6 @@ class Keyboard2View @JvmOverloads constructor(
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing SWITCH_BACKWARD via keyboard service")
                     service.triggerKeyboardEvent(KeyValue.Event.SWITCH_BACKWARD)
                 }
-                AvailableCommand.TEXT_ASSIST -> {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing TEXT_ASSIST")
-                    launchTextAssistActivity(inputConnection)
-                }
-                AvailableCommand.REPLACE_TEXT -> {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing REPLACE_TEXT")
-                    launchReplaceTextActivity(inputConnection)
-                }
                 AvailableCommand.SHOW_TEXT_MENU -> {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing SHOW_TEXT_MENU")
                     showTextContextMenu(inputConnection)
@@ -1215,13 +1215,6 @@ class Keyboard2View @JvmOverloads constructor(
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing SECONDARY_LANG_TOGGLE")
                     toggleSecondaryLanguage()
                 }
-                // #156: Legacy PRIVATE_COPY actionValue (SCREAMING_SNAKE) — CommandRegistry uses the
-                // "copy_private" name which already routes via the KeyValue.Kind.Editing branch above,
-                // but honor the AvailableCommand form too so both surfaces reach executePrivateCopy.
-                AvailableCommand.PRIVATE_COPY -> {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Executing PRIVATE_COPY")
-                    executeEditingCommand(KeyValue.Editing.COPY_PRIVATE, inputConnection)
-                }
                 else -> {
                     if (command != null) {
                         Log.w("Keyboard2View", "Custom swipe command failed to execute: ${mapping.actionValue}")
@@ -1232,163 +1225,6 @@ class Keyboard2View @JvmOverloads constructor(
 
         // Provide haptic feedback for successful gesture
         performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
-    }
-
-    /**
-     * Execute an Editing-type command via InputConnection context menu actions or intents.
-     *
-     * This is the custom-short-swipe dispatcher; ordinary keys use
-     * KeyEventHandler.handleEditingKey. They are deliberately not merged: here REPLACE and
-     * ASSIST launch CleverKeys' own activities, and suffix commands are dispatched earlier in
-     * [onCustomShortSwipe] so their haptic fires only on success (this path's caller always
-     * vibrates). Terminal-aware paste is handled before this by CustomShortSwipeExecutor.
-     */
-    @android.annotation.SuppressLint("InlinedApi")
-    private fun executeEditingCommand(editing: KeyValue.Editing, inputConnection: android.view.inputmethod.InputConnection?) {
-        if (editing == KeyValue.Editing.CLEAR_CLIPBOARD) {
-            _keyboard2?.showSuggestionBarMessage(context.getString(ClipboardHistoryService.clearSystemClipboard(context)))
-            return
-        }
-        if (inputConnection == null) {
-            Log.w("Keyboard2View", "Cannot execute editing command: no input connection")
-            return
-        }
-
-        when (editing) {
-            KeyValue.Editing.COPY -> inputConnection.performContextMenuAction(android.R.id.copy)
-            KeyValue.Editing.PASTE -> inputConnection.performContextMenuAction(android.R.id.paste)
-            KeyValue.Editing.CUT -> inputConnection.performContextMenuAction(android.R.id.cut)
-            KeyValue.Editing.SELECT_ALL -> inputConnection.performContextMenuAction(android.R.id.selectAll)
-            KeyValue.Editing.SHARE -> inputConnection.performContextMenuAction(android.R.id.shareText)
-            KeyValue.Editing.PASTE_PLAIN -> inputConnection.performContextMenuAction(android.R.id.pasteAsPlainText)
-            KeyValue.Editing.UNDO -> inputConnection.performContextMenuAction(android.R.id.undo)
-            KeyValue.Editing.REDO -> inputConnection.performContextMenuAction(android.R.id.redo)
-            KeyValue.Editing.REPLACE -> launchReplaceTextActivity(inputConnection)
-            KeyValue.Editing.ASSIST -> launchTextAssistActivity(inputConnection)
-            KeyValue.Editing.AUTOFILL -> inputConnection.performContextMenuAction(android.R.id.autofill)
-            KeyValue.Editing.COPY_PRIVATE -> executePrivateCopy(inputConnection)
-            else -> Log.w("Keyboard2View", "Unhandled editing command: $editing")
-        }
-    }
-
-    /**
-     * #156 Private copy (in-IME editing-pane surface): store the current selection into CleverKeys'
-     * clipboard DB marked private via the shared [tribixbite.cleverkeys.clipboard.PrivateCopyDispatch]
-     * — the SAME code [KeyEventHandler.handlePrivateCopy] runs, so the two surfaces cannot drift.
-     * NEVER touches the OS clipboard (delegates to [ClipboardHistoryService.privateCopy], the
-     * no-setPrimaryClip path). Provenance is the target editor's package. Feedback via the
-     * suggestion bar (Toasts are IME-suppressed on Android 13+, per project convention).
-     */
-    private fun executePrivateCopy(inputConnection: android.view.inputmethod.InputConnection) {
-        tribixbite.cleverkeys.clipboard.PrivateCopyDispatch.execute(
-            context,
-            inputConnection,
-            _keyboard2?.currentInputEditorInfo
-        ) { message ->
-            _keyboard2?.showSuggestionBarMessage(message)
-        }
-    }
-
-    /**
-     * Show a message indicating no text is selected for the given action.
-     * Uses suggestion bar instead of Toast (suppressed on Android 13+ IME).
-     */
-    private fun showNoTextSelectedMessage(action: TextActionPolicy.TextAction) {
-        _keyboard2?.showSuggestionBarMessage(
-            TextActionPolicy.noTextSelectedMessage(action) { id, args -> context.getString(id, *args) }
-        )
-    }
-
-    /**
-     * Launch text assist activity using ACTION_PROCESS_TEXT intent.
-     * This allows apps like Google Assistant, translation services, etc. to process selected text.
-     */
-    // Intent.ACTION_PROCESS_TEXT / EXTRA_PROCESS_TEXT* (API 23) and android.R.id.textAssist
-    // (API 26) are compile-time-inlined constants. On older APIs the process-text intent
-    // resolves to no handler (chooser empty / caught) and performContextMenuAction() is a
-    // safe no-op, so this degrades gracefully rather than crashing.
-    @SuppressLint("InlinedApi")
-    private fun launchTextAssistActivity(inputConnection: android.view.inputmethod.InputConnection) {
-        // Get selected text
-        val selectedText = inputConnection.getSelectedText(0)?.toString()
-        if (selectedText.isNullOrEmpty()) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "No text selected for text assist")
-            showNoTextSelectedMessage(TextActionPolicy.TextAction.ASSIST)
-            return
-        }
-
-        try {
-            val request = TextActionPolicy.processTextRequest(
-                selectedText, TextActionPolicy.TextAction.ASSIST
-            )
-            val intent = android.content.Intent(request.action).apply {
-                type = request.mimeType
-                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT, request.text)
-                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT_READONLY, request.readOnly)
-                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-
-            // Create chooser to let user pick which app to use
-            val chooser = android.content.Intent.createChooser(intent, context.getString(request.chooserTitleRes))
-            chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(chooser)
-            // PII: don't log the user's selected text in release builds.
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                Log.d("Keyboard2View", "Launched text assist chooser for: $selectedText")
-            } else {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Launched text assist chooser (len=${selectedText.length})")
-            }
-        } catch (e: Exception) {
-            Log.e("Keyboard2View", "Failed to launch text assist", e)
-            // Fallback to context menu action
-            inputConnection.performContextMenuAction(android.R.id.textAssist)
-        }
-    }
-
-    /**
-     * Launch replace text activity. Since most apps don't support android.R.id.replaceText,
-     * we use ACTION_PROCESS_TEXT with a hint that this is for replacement.
-     */
-    // Intent.ACTION_PROCESS_TEXT / EXTRA_PROCESS_TEXT* (API 23) and android.R.id.replaceText
-    // (API 23) are compile-time-inlined constants. On older APIs the process-text intent
-    // resolves to no handler (caught) and performContextMenuAction() is a safe no-op.
-    @SuppressLint("InlinedApi")
-    private fun launchReplaceTextActivity(inputConnection: android.view.inputmethod.InputConnection) {
-        // Get selected text
-        val selectedText = inputConnection.getSelectedText(0)?.toString()
-        if (selectedText.isNullOrEmpty()) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "No text selected for replace")
-            showNoTextSelectedMessage(TextActionPolicy.TextAction.REPLACE)
-            return
-        }
-
-        try {
-            // Use ACTION_PROCESS_TEXT which is more widely supported than replaceText context menu
-            val request = TextActionPolicy.processTextRequest(
-                selectedText, TextActionPolicy.TextAction.REPLACE
-            )
-            val intent = android.content.Intent(request.action).apply {
-                type = request.mimeType
-                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT, request.text)
-                // readOnly = false — the chosen app is allowed to REPLACE the selection.
-                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT_READONLY, request.readOnly)
-                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-
-            val chooser = android.content.Intent.createChooser(intent, context.getString(request.chooserTitleRes))
-            chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(chooser)
-            // PII: don't log the user's selected text in release builds.
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                Log.d("Keyboard2View", "Launched replace text chooser for: $selectedText")
-            } else {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Launched replace text chooser (len=${selectedText.length})")
-            }
-        } catch (e: Exception) {
-            Log.e("Keyboard2View", "Failed to launch replace text", e)
-            // Fallback to context menu action
-            inputConnection.performContextMenuAction(android.R.id.replaceText)
-        }
     }
 
     /**

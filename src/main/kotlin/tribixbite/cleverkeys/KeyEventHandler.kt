@@ -727,6 +727,13 @@ class KeyEventHandler(
         }
     }
 
+    /**
+     * The ONE implementation of every [KeyValue.Editing] command. Layout keys reach it through
+     * [key_up]; custom short-swipe / popover / palette COMMAND mappings are pressed into [key_up]
+     * by `Keyboard2View.onCustomShortSwipe` (CommandRouting.editingValue), so both surfaces share
+     * inline-editor routing, terminal paste and typed-word bookkeeping (todo 12, 2026-10-12;
+     * pinned by EditingCommandParityTest).
+     */
     @SuppressLint("InlinedApi")
     private fun handleEditingKey(ev: KeyValue.Editing) {
         if (ev == KeyValue.Editing.APPEND_POSSESSIVE || ev == KeyValue.Editing.APPEND_APOSTROPHE) {
@@ -773,8 +780,8 @@ class KeyEventHandler(
             KeyValue.Editing.PASTE_PLAIN -> sendContextMenuAction(android.R.id.pasteAsPlainText)
             KeyValue.Editing.UNDO -> sendContextMenuAction(android.R.id.undo)
             KeyValue.Editing.REDO -> sendContextMenuAction(android.R.id.redo)
-            KeyValue.Editing.REPLACE -> sendContextMenuAction(android.R.id.replaceText)
-            KeyValue.Editing.ASSIST -> sendContextMenuAction(android.R.id.textAssist)
+            KeyValue.Editing.REPLACE -> launchTextAction(TextActionPolicy.TextAction.REPLACE)
+            KeyValue.Editing.ASSIST -> launchTextAction(TextActionPolicy.TextAction.ASSIST)
             KeyValue.Editing.AUTOFILL -> sendContextMenuAction(android.R.id.autofill)
             KeyValue.Editing.DELETE_WORD -> send_key_down_up(
                 KeyEvent.KEYCODE_DEL,
@@ -802,6 +809,20 @@ class KeyEventHandler(
                 conn.endBatchEdit()
             }
         }
+    }
+
+    /**
+     * Text assist / replace text: the app chooser of [TextActionLauncher] (the editor's own
+     * context-menu id only as its fallback). Without a Context (UI-less receivers) only the
+     * context-menu id can be tried.
+     */
+    private fun launchTextAction(action: TextActionPolicy.TextAction) {
+        val conn = recv.getCurrentInputConnection() ?: return
+        val ctx = recv.getContext() ?: run {
+            conn.performContextMenuAction(TextActionLauncher.fallbackMenuId(action))
+            return
+        }
+        TextActionLauncher.launch(ctx, conn, action) { message -> recv.showPrivateCopyFeedback(message) }
     }
 
     /**

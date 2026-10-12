@@ -42,6 +42,9 @@ import tribixbite.cleverkeys.customization.SwipeDirection
  *
  * ## H-7 — the five custom text-action commands skipped the success haptic
  *
+ * (Since todo 12, 2026-10-12, `textAssist`/`replaceText` are editing keys pressed into the
+ * shared KeyEventHandler; the haptic contract is unchanged.)
+ *
  * `primaryLangToggle`/`secondaryLangToggle`/`textAssist`/`replaceText`/`showTextMenu`
  * `return`ed before the `performHapticFeedback(KEYBOARD_TAP)` that every other
  * successful custom swipe reaches ("Provide haptic feedback for successful gesture").
@@ -93,6 +96,11 @@ class Keyboard2ViewCustomSwipeDispatchTest {
         every { view.performHapticFeedback(any()) } returns true
         view.setField("_keyboard2", service)
         view.setField("_customSwipeExecutor", executor)
+        // Editing commands (textAssist …) are pressed into the key handler (todo 12); a relaxed
+        // handler stands in unless a test installs the real KeyEventHandler (apostropheEditor).
+        view.setField("_config", mockk<Config>(relaxed = true).apply {
+            setField("handler", mockk<Config.IKeyEventHandler>(relaxed = true))
+        })
     }
 
     @After
@@ -272,10 +280,13 @@ class Keyboard2ViewCustomSwipeDispatchTest {
         verify(exactly = 1) { text.receiver.handle_text_typed("\"") }
     }
 
+    /** Runs through the shared KeyEventHandler since todo 12 (2026-10-12); feedback via the receiver. */
     @Test
     fun clearClipboardCustomCommandDoesNotEditTheTargetField() {
+        val text = apostropheEditor("Bowie ", autoSpacePending = false)
         val cm = mockk<android.content.ClipboardManager>(relaxed = true)
         every { view.context.getSystemService(Context.CLIPBOARD_SERVICE) } returns cm
+        every { text.receiver.getContext() } returns view.context
         mockkStatic(android.content.ClipData::class)
         every { android.content.ClipData.newPlainText("", "") } returns mockk()
         every { view.context.getString(R.string.system_clipboard_cleared) } returns "System clipboard cleared"
@@ -283,7 +294,7 @@ class Keyboard2ViewCustomSwipeDispatchTest {
         verify(exactly = 1) {
             if (android.os.Build.VERSION.SDK_INT >= 28) cm.clearPrimaryClip() else cm.setPrimaryClip(any())
         }
-        verify(exactly = 1) { service.showSuggestionBarMessage("System clipboard cleared") }
+        verify(exactly = 1) { text.receiver.showPrivateCopyFeedback("System clipboard cleared") }
         verify(exactly = 0) { inputConnection.commitText(any(), any()) }
         verify(exactly = 0) { inputConnection.performContextMenuAction(any()) }
         verify(exactly = 0) { inputConnection.deleteSurroundingText(any(), any()) }

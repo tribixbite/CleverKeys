@@ -13,11 +13,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import tribixbite.cleverkeys.BuildConfig
-import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.ClipboardDatabase
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.R
-import tribixbite.cleverkeys.TerminalUtils
 
 /**
  * Executes custom short swipe actions.
@@ -95,6 +93,15 @@ class CustomShortSwipeExecutor(private val context: Context) {
         inputConnection: InputConnection,
         editorInfo: EditorInfo?
     ): Boolean {
+        // Editing commands (copy, paste, undo, clear, textAssist, copy_private …) are not run
+        // here: their one implementation is KeyEventHandler.handleEditingKey, which
+        // Keyboard2View.onCustomShortSwipe reaches before this executor (todo 12, 2026-10-12).
+        // A direct caller gets false — "needs keyboard-level handling" — never a second copy.
+        if (CommandRouting.editingValue(commandName) != null) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Editing command $commandName - requires key handler")
+            return false
+        }
+
         // First try the legacy AvailableCommand enum
         val legacyCommand = AvailableCommand.fromString(commandName)
         if (legacyCommand != null) {
@@ -251,25 +258,15 @@ class CustomShortSwipeExecutor(private val context: Context) {
         return try {
             // Map CommandRegistry commands to actions
             val success = when (command.name) {
-                // Clipboard operations
-                "copy" -> inputConnection.performContextMenuAction(android.R.id.copy)
-                "paste" -> handlePaste(inputConnection, editorInfo)
-                "cut" -> inputConnection.performContextMenuAction(android.R.id.cut)
-                "selectAll" -> inputConnection.performContextMenuAction(android.R.id.selectAll)
-                "pasteAsPlainText" -> inputConnection.performContextMenuAction(android.R.id.paste)
-                // The text field's own Share action (API 23+). This used to send android.R.id.copy
-                // ("share handled elsewhere"), but nothing shared afterwards: the command only copied.
-                "shareText" -> inputConnection.performContextMenuAction(android.R.id.shareText)
+                // Editing commands (copy, paste, cut, selectAll, pasteAsPlainText, shareText, undo,
+                // redo, delete_word, doc_home/doc_end, clear …) never reach this `when`: see the
+                // CommandRouting.editingValue guard in executeCommandByName.
 
                 // Pinned clipboard entry insertion
                 "paste_pinned_1", "paste_pinned_2", "paste_pinned_3",
                 "paste_pinned_4", "paste_pinned_5" -> {
                     executePastePinned(command.name, inputConnection)
                 }
-
-                // Edit operations
-                "undo" -> inputConnection.performContextMenuAction(android.R.id.undo)
-                "redo" -> inputConnection.performContextMenuAction(android.R.id.redo)
 
                 // Cursor movement - character
                 "left" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_DPAD_LEFT)
@@ -292,7 +289,6 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 // Delete operations
                 "backspace" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_DEL)
                 "delete" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_FORWARD_DEL)
-                "delete_word" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DEL, KeyEvent.META_CTRL_ON)
                 "delete_line" -> {
                     // Select to beginning of line, then delete
                     sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_HOME, KeyEvent.META_SHIFT_ON)
@@ -328,10 +324,6 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 "selectWordRight" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.META_CTRL_ON or KeyEvent.META_SHIFT_ON)
                 "selectToLineStart" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_HOME, KeyEvent.META_SHIFT_ON)
                 "selectToLineEnd" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_END, KeyEvent.META_SHIFT_ON)
-
-                // Document navigation
-                "doc_home" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_HOME, KeyEvent.META_CTRL_ON)
-                "doc_end" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_END, KeyEvent.META_CTRL_ON)
 
                 // Media controls
                 "media_play_pause" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
@@ -378,12 +370,8 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 "switch_forward", "switch_backward", "switch_greekmath",
                 "change_method", "change_method_prev", "action", "capslock",
                 "voice_typing", "voice_typing_chooser",
-                // Text action commands
-                "textAssist", "replaceText", "showTextMenu",
-                // #156: Private copy is an Editing-kind KeyValue — route through the
-                // keyboard service (Keyboard2View.executeEditingCommand → executePrivateCopy)
-                // so it reaches the same COPY_PRIVATE handling as pressing the copy_private key.
-                "copy_private", "clear_clipboard",
+                // Text action command (textAssist/replaceText are editing keys, routed above)
+                "showTextMenu",
                 // Timestamp commands
                 "timestamp_date", "timestamp_time", "timestamp_datetime",
                 "timestamp_time_seconds", "timestamp_date_short", "timestamp_date_long",
@@ -469,37 +457,14 @@ class CustomShortSwipeExecutor(private val context: Context) {
 
         return try {
             val success = when (command) {
-                // Clipboard operations
-                AvailableCommand.COPY -> {
-                    inputConnection.performContextMenuAction(android.R.id.copy)
-                }
-                // #156: Private copy needs keyboard-service handling (stores the selection into
-                // CleverKeys' private clipboard, never the OS clipboard). Return false so
-                // Keyboard2View.onCustomShortSwipe falls back to the copy_private KeyValue and
-                // routes to executeEditingCommand(COPY_PRIVATE) → executePrivateCopy.
-                AvailableCommand.PRIVATE_COPY -> {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "PRIVATE_COPY command - requires keyboard service handling")
-                    false
-                }
-                AvailableCommand.PASTE -> {
-                    // #113: Terminal apps don't implement context menu protocol.
-                    // Send Ctrl+V instead, which terminal emulators handle as paste.
-                    handlePaste(inputConnection, editorInfo)
-                }
-                AvailableCommand.CUT -> {
-                    inputConnection.performContextMenuAction(android.R.id.cut)
-                }
-                AvailableCommand.SELECT_ALL -> {
-                    inputConnection.performContextMenuAction(android.R.id.selectAll)
-                }
-
-                // Undo/Redo
-                AvailableCommand.UNDO -> {
-                    inputConnection.performContextMenuAction(android.R.id.undo)
-                }
-                AvailableCommand.REDO -> {
-                    inputConnection.performContextMenuAction(android.R.id.redo)
-                }
+                // Editing commands: one implementation, KeyEventHandler.handleEditingKey, reached
+                // through Keyboard2View.onCustomShortSwipe (CommandRouting.editingValue). Unreachable
+                // via executeCommandByName's guard; false here keeps a direct caller off a copy.
+                AvailableCommand.COPY, AvailableCommand.PRIVATE_COPY, AvailableCommand.PASTE,
+                AvailableCommand.CUT, AvailableCommand.SELECT_ALL, AvailableCommand.UNDO,
+                AvailableCommand.REDO, AvailableCommand.CURSOR_DOC_START,
+                AvailableCommand.CURSOR_DOC_END, AvailableCommand.DELETE_WORD,
+                AvailableCommand.TEXT_ASSIST, AvailableCommand.REPLACE_TEXT -> false
 
                 // Cursor movement - character
                 AvailableCommand.CURSOR_LEFT -> {
@@ -523,22 +488,6 @@ class CustomShortSwipeExecutor(private val context: Context) {
                     sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MOVE_END)
                 }
 
-                // Cursor movement - document (Ctrl+Home/End)
-                AvailableCommand.CURSOR_DOC_START -> {
-                    sendKeyEventWithModifier(
-                        inputConnection,
-                        KeyEvent.KEYCODE_MOVE_HOME,
-                        KeyEvent.META_CTRL_ON
-                    )
-                }
-                AvailableCommand.CURSOR_DOC_END -> {
-                    sendKeyEventWithModifier(
-                        inputConnection,
-                        KeyEvent.KEYCODE_MOVE_END,
-                        KeyEvent.META_CTRL_ON
-                    )
-                }
-
                 // Cursor movement - word (Ctrl+Arrow)
                 AvailableCommand.WORD_LEFT -> {
                     sendKeyEventWithModifier(
@@ -551,15 +500,6 @@ class CustomShortSwipeExecutor(private val context: Context) {
                     sendKeyEventWithModifier(
                         inputConnection,
                         KeyEvent.KEYCODE_DPAD_RIGHT,
-                        KeyEvent.META_CTRL_ON
-                    )
-                }
-
-                // Delete operations
-                AvailableCommand.DELETE_WORD -> {
-                    sendKeyEventWithModifier(
-                        inputConnection,
-                        KeyEvent.KEYCODE_DEL,
                         KeyEvent.META_CTRL_ON
                     )
                 }
@@ -586,14 +526,6 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 }
 
                 // Text processing commands - require keyboard view handling
-                AvailableCommand.TEXT_ASSIST -> {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "TEXT_ASSIST command - requires keyboard view handling")
-                    false
-                }
-                AvailableCommand.REPLACE_TEXT -> {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "REPLACE_TEXT command - requires keyboard view handling")
-                    false
-                }
                 AvailableCommand.SHOW_TEXT_MENU -> {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "SHOW_TEXT_MENU command - selecting word to show toolbar")
                     false
@@ -632,50 +564,6 @@ class CustomShortSwipeExecutor(private val context: Context) {
             true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to execute KEY_EVENT action", e)
-            false
-        }
-    }
-
-    /**
-     * #113: Terminal-aware paste. Terminal emulators (Termux, ConnectBot, etc.)
-     * don't implement performContextMenuAction, and Ctrl+V via sendKeyEvent()
-     * isn't intercepted by their input layer. Instead, read the system clipboard
-     * directly and commit the text via InputConnection — the same approach the
-     * clipboard popup uses (KeyEventHandler.paste_from_clipboard_pane).
-     */
-    private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo?): Boolean {
-        return if (TerminalUtils.isTerminalApp(editorInfo, Config.globalConfigOrNull()?.custom_terminal_packages)) {
-            pasteFromSystemClipboard(inputConnection)
-        } else {
-            inputConnection.performContextMenuAction(android.R.id.paste)
-        }
-    }
-
-    /**
-     * Read system clipboard and commit text directly via InputConnection.
-     * Works in terminal emulators where performContextMenuAction and Ctrl+V
-     * key events are not handled.
-     */
-    private fun pasteFromSystemClipboard(inputConnection: InputConnection): Boolean {
-        return try {
-            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE)
-                as android.content.ClipboardManager
-            val clip = clipboard.primaryClip
-            if (clip != null && clip.itemCount > 0) {
-                val text = clip.getItemAt(0).coerceToText(context).toString()
-                if (text.isNotEmpty()) {
-                    inputConnection.commitText(text, 1)
-                    true
-                } else {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Clipboard is empty")
-                    false
-                }
-            } else {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "No clipboard data available")
-                false
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to paste from system clipboard", e)
             false
         }
     }

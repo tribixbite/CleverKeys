@@ -296,3 +296,30 @@ Continuous segment commits carry EditorCommitGuard through InputCoordinator →
 SuggestionHandler, verifying actual insertion before learning/undo ownership. Forced
 separators use SuggestionHandler's bounded callback operation and preserve the same
 learning handle; they do not re-record the word.
+
+## Editing commands: one implementation (todo 12, 2026-10-12)
+
+Every `KeyValue.Kind.Editing` command (copy, cut, paste, pasteAsPlainText, selectAll,
+shareText, undo, redo, delete_word, forward_delete_word, delete_last_word, clear,
+selection_cancel, doc_home/doc_end, autofill, textAssist, replaceText, copy_private,
+clear_clipboard, append_possessive/append_apostrophe) runs ONLY in
+`KeyEventHandler.handleEditingKey`:
+
+```
+Layout key ............................ Pointers → KeyEventHandler.key_up → handleEditingKey
+Custom short swipe / popover / palette  Pointers.executeCustomShortSwipe
+  COMMAND mapping (catalogue name, or     → Keyboard2View.onCustomShortSwipe
+  legacy COPY/PASTE/PRIVATE_COPY/…)        → CommandRouting.editingValue(mapping)
+                                           → _config.handler.key_up(editingKey) → handleEditingKey
+```
+
+So a mapping gets what the key gets: clipboard inline-edit routing (paste/cut/selectAll/clear
+go to the edit field; other edits are swallowed — edit mode is modal), terminal paste from
+the system clip, `recv.handle_non_text_input()` (typed-word end), copy/cut only with a
+selection, and the text-action app chooser (`TextActionLauncher`, context-menu id only as
+fallback). `CustomShortSwipeExecutor` returns false for any editing name and keeps no copy;
+`Keyboard2View.executeEditingCommand` no longer exists. Suffix commands keep their own
+branch in `onCustomShortSwipe` only so the haptic fires on success; templates likewise.
+`EditingCommandParityTest` (mock) runs every Editing value through both entry points under
+{selection, none} × {inline edit open, closed} × {app, terminal} and requires identical
+editor/receiver effects — add any new Editing value there (it fails on an uncovered one).
