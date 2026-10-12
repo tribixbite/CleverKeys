@@ -173,7 +173,8 @@ While you tap-type a word, at most one suggestion is drawn in the highlight colo
 
 - If autocorrect will correct the word, the correction is highlighted in the **first** slot —
   moved there if the bar already listed it, added if it did not. Typing `Helo` highlights
-  `Help` because that is what space commits; `Hello` stays in the bar to tap.
+  `Hello` because that is what space commits; other candidates such as `Help` stay in the
+  bar to tap.
 - If space will keep what you typed, nothing else is highlighted. A valid word you typed is
   highlighted where the bar lists it; a completion such as `hello` for `hel` is never
   highlighted, because space would leave `hel`.

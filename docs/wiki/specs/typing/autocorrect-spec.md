@@ -433,7 +433,8 @@ Slider 100 → floor 0 (any dictionary word can win); slider 2000 → floor = 60
 
 The tap-typing bar's highlighted entry is exactly what space will commit for the composing
 word (maintainer decision after the Pixel `Helo` → bar `Hello` / commit `Help` report). The
-autocorrect ranking itself is unchanged; only the bar follows it.
+bar follows the autocorrect ranking and does not rank on its own; the dropped-double step
+(above) is what now makes that commit `Hello`.
 
 - **One decision.** `SpaceCommitResolver.resolve` (`autocorrect/SpaceCommitPreview.kt`) answers
   "what does space commit for this word": I-word capitalization first (`CAPITALIZE_I`), then
@@ -592,7 +593,7 @@ IME add path (add-to-dictionary prompt, "+word" chip, autocorrect undo, acceptin
 | Pure JVM — Frequency floor | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/FrequencyFloorTest.kt` | Slider→floor mapping, unloaded-dict guard |
 | Pure JVM — Morphology | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/MorphologyTest.kt` | Inflection stem generation |
 | Pure JVM — End to end | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/AutoCorrectEndToEndTest.kt` | Full pipeline against the shipped dictionary |
-| Mock JVM — Bar highlight | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/SpaceCommitPreviewTest.kt` | Real 98k dictionary: highlighted bar entry == space commit (`helo` → `help`), no replacement highlighted when autocorrect is off / terminal / non-prose / valid word, memo reuse, per-keystroke cost |
+| Mock JVM — Bar highlight | `src/test/kotlin/tribixbite/cleverkeys/autocorrect/SpaceCommitPreviewTest.kt` | Real 98k dictionary: highlighted bar entry == space commit (`helo` → `hello`), no replacement highlighted when autocorrect is off / terminal / non-prose / valid word, memo reuse, per-keystroke cost |
 | Instrumented — AutocorrectTest | `src/androidTest/kotlin/tribixbite/cleverkeys/AutocorrectTest.kt` | Adjacency typos, length-diff, contractions, prefix gate, case preservation |
 | Instrumented — URL guard | `src/androidTest/kotlin/tribixbite/cleverkeys/AutocorrectUrlGuardTest.kt` | Guard behavior in real input connections |
 | Instrumented — TypingSimulationTest | `src/androidTest/kotlin/tribixbite/cleverkeys/TypingSimulationTest.kt` | Typing scenarios incl. step-0 alias direct (`im → I'm`) |
