@@ -2,8 +2,6 @@ package tribixbite.cleverkeys.autocorrect
 
 import android.os.Trace
 import android.util.Log
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkStatic
@@ -15,6 +13,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
+import tribixbite.cleverkeys.ShippedTapDictionary
 import tribixbite.cleverkeys.WordPredictor
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -39,7 +38,8 @@ import java.util.concurrent.atomic.AtomicReference
  * `words_alpha.txt`. Absent corpora skip the eval (JUnit assumption), never fail it.
  * Per-item rows go to `$CK_EVAL_OUT` (default `build/eval/dropped-double`).
  *
- * Harness = `AutoCorrectEndToEndTest`'s (real 98k dictionary on the device frequency scale,
+ * Harness = `AutoCorrectEndToEndTest`'s (real 98k dictionary as the device loads it,
+ * `en_enhanced.bin` via `ShippedTapDictionary`,
  * real contraction aliases, shipped autocorrect defaults) plus a prefix index so the
  * tap-typing bar (`predictWordsWithContext`) can be compared with the space-bar commit.
  *
@@ -98,27 +98,12 @@ class DroppedDoubleAutocorrectEval {
             every { Trace.endSection() } just runs
             KeyAdjacency.resetLayout()
 
-            val gson = Gson()
-            val mapType = object : TypeToken<Map<String, Double>>() {}.type
-            val stringMapType = object : TypeToken<Map<String, String>>() {}.type
-            val rawDict: Map<String, Double> = File("src/main/assets/dictionaries/en_enhanced.json")
-                .reader().use { gson.fromJson(it, mapType) }
-            dict = HashMap(rawDict.size * 2)
-            for ((word, byteFreq) in rawDict) dict[word] = 1_000_000 - (255 - byteFreq.toInt()) * 3900
-
-            // Contraction aliases exactly as AutoCorrectEndToEndTest / loadContractionKeysAsync.
-            val contractions: Map<String, String> = File("src/main/assets/dictionaries/contractions_en.json")
-                .reader().use { gson.fromJson(it, stringMapType) }
-            val realWordBases = readCompanionSet("REAL_WORD_CONTRACTION_BASES")
-            val a = mutableMapOf<String, String>()
-            for ((bareRaw, apoRaw) in contractions) {
-                val bare = bareRaw.lowercase()
-                val apo = apoRaw.lowercase()
-                if (bare in realWordBases) continue
-                a[bare] = apo
-                dict[bare] = dict[apo] ?: dict[bare] ?: 5000
-            }
-            aliases = a
+            // The device's tap dictionary (en_enhanced.bin via the production parser) and the
+            // real contraction aliases (ShippedTapDictionary; until 2026-10-12 this read
+            // en_enhanced.json as 255 − byte, the CTC swipe lexicon's compressed scale).
+            val loaded = ShippedTapDictionary.withContractionAliases()
+            dict = loaded.dictionary
+            aliases = loaded.aliases
 
             config = org.objenesis.ObjenesisStd().newInstance(Config::class.java)
             config.autocorrect_enabled = true
@@ -136,10 +121,7 @@ class DroppedDoubleAutocorrectEval {
 
             predictor = org.objenesis.ObjenesisStd().newInstance(WordPredictor::class.java)
             setField("dictionary", AtomicReference<MutableMap<String, Int>>(dict))
-            val index = HashMap<String, MutableSet<String>>()
-            for (w in dict.keys) {
-                for (len in 1..minOf(3, w.length)) index.getOrPut(w.substring(0, len)) { HashSet() }.add(w)
-            }
+            val index = loaded.prefixIndex
             setField("prefixIndex", AtomicReference<MutableMap<String, MutableSet<String>>>(index))
             setField("contractionAliases", aliases)
             setField("customAndUserWords", emptySet<String>())
@@ -164,12 +146,6 @@ class DroppedDoubleAutocorrectEval {
             field.set(predictor, value)
         }
 
-        @Suppress("UNCHECKED_CAST")
-        private fun readCompanionSet(name: String): Set<String> {
-            val field = WordPredictor::class.java.getDeclaredField(name)
-            field.isAccessible = true
-            return field.get(null) as Set<String>
-        }
     }
 
     // ── Simulation of the pre-registered rule (doc §1.1) ─────────────────────
@@ -222,7 +198,8 @@ class DroppedDoubleAutocorrectEval {
     }
 
     private val baselineCache = HashMap<String, String>()
-    private fun baseline(t: String): String = baselineCache.getOrPut(t) { predictor.autoCorrect(t) }
+    /** Pre-DD-M production (step 1.45 skipped via the margin seam): the rule-free baseline. */
+    private fun baseline(t: String): String = baselineCache.getOrPut(t) { predictor.autoCorrect(t, null) }
 
     // ── Corpora ──────────────────────────────────────────────────────────────
 

@@ -2,12 +2,9 @@ package tribixbite.cleverkeys.autocorrect
 
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.io.File
 import kotlin.random.Random
 
 /**
@@ -257,9 +254,8 @@ class FuzzyPrefixMatcherTest {
     private fun realDictionary(): Map<String, Int> {
         val cached = dictCache
         if (cached != null) return cached
-        val type = object : TypeToken<Map<String, Double>>() {}.type
-        val raw: Map<String, Double> = File("src/main/assets/dictionaries/en_enhanced.json").reader().use { Gson().fromJson(it, type) }
-        return raw.mapValues { it.value.toInt() }.also { dictCache = it }
+        // The tap dictionary the matcher searches on device (en_enhanced.bin, device scale).
+        return tribixbite.cleverkeys.ShippedTapDictionary.frequencies().also { dictCache = it }
     }
 
     private companion object {

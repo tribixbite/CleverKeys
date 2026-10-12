@@ -1,8 +1,6 @@
 package tribixbite.cleverkeys.autocorrect
 
 import android.util.Log
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
@@ -12,8 +10,8 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.ShippedTapDictionary
 import tribixbite.cleverkeys.WordPredictor
-import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -31,14 +29,14 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * # Dictionary fidelity
  *
- * `en_enhanced.json` stores a byte-compressed rank (134..255, higher = more
- * common); the device's primary path loads `en_enhanced.bin` and converts
- * rank → frequency via `1_000_000 - rank * 3900` (BinaryDictionaryLoader V2).
- * We apply the same conversion (`byte b` ⇔ `rank 255 - b`) so the harness
- * runs on the DEVICE frequency scale — the FrequencyFloor fraction math and
- * frequency tiebreaks behave exactly as on-device. Contraction aliases are
- * injected with the same `dict[apo] ?: dict[bare] ?: 5000` freq rule as
- * `loadContractionKeysAsync`.
+ * The dictionary is [ShippedTapDictionary]: `en_enhanced.bin`, the file the device's tap
+ * predictor loads, parsed by the production `BinaryDictionaryParser` (V2 rank →
+ * `1_000_000 - rank * 3900`), so the FrequencyFloor fraction math, frequency tiebreaks and
+ * DD-M margin behave exactly as on-device. (Until 2026-10-12 this header claimed a
+ * `255 - byte` conversion of `en_enhanced.json` was equivalent. It was not: the JSON is the
+ * CTC swipe lexicon's compressed 134..255 scale, and 98,139 of 98,140 words differ.)
+ * Contraction aliases are injected with the same `dict[apo] ?: dict[bare] ?: 5000` rule as
+ * `loadContractionKeysIntoMaps`.
  *
  * Covers AC-4 (possessive-typo base correction) and TEST-1 leftovers
  * ("gamees" elongation, capitalized "Hadnr" alias, frequency-floor
@@ -60,35 +58,11 @@ class AutoCorrectEndToEndTest {
             every { Log.e(any(), any()) } returns 0
             every { Log.e(any(), any(), any()) } returns 0
 
-            val gson = Gson()
-            val mapType = object : TypeToken<Map<String, Double>>() {}.type
-            val stringMapType = object : TypeToken<Map<String, String>>() {}.type
-
-            // Real dictionary, converted to the V2-binary runtime freq scale.
-            val rawDict: Map<String, Double> = File(
-                "src/main/assets/dictionaries/en_enhanced.json"
-            ).reader().use { gson.fromJson(it, mapType) }
-            val dict = HashMap<String, Int>(rawDict.size * 2)
-            for ((word, byteFreq) in rawDict) {
-                val rank = 255 - byteFreq.toInt()
-                dict[word] = 1_000_000 - rank * 3900
-            }
-
-            // Real contraction aliases, mirroring loadContractionKeysAsync:
-            // skip real-word bases, inject bare key at the apostrophe form's
-            // freq (or existing bare freq, or the 5000 floor).
-            val contractions: Map<String, String> = File(
-                "src/main/assets/dictionaries/contractions_en.json"
-            ).reader().use { gson.fromJson(it, stringMapType) }
-            val realWordBases = readCompanionSet("REAL_WORD_CONTRACTION_BASES")
-            val aliases = mutableMapOf<String, String>()
-            for ((bareRaw, apoRaw) in contractions) {
-                val bare = bareRaw.lowercase()
-                val apo = apoRaw.lowercase()
-                if (bare in realWordBases) continue
-                aliases[bare] = apo
-                dict[bare] = dict[apo] ?: dict[bare] ?: 5000
-            }
+            // The device's tap dictionary (en_enhanced.bin via the production parser) plus the
+            // real contraction aliases, as loadContractionKeysIntoMaps merges them.
+            val loaded = ShippedTapDictionary.withContractionAliases()
+            val dict = loaded.dictionary
+            val aliases = loaded.aliases
 
             config = org.objenesis.ObjenesisStd().newInstance(Config::class.java)
 
@@ -113,12 +87,6 @@ class AutoCorrectEndToEndTest {
             field.set(predictor, value)
         }
 
-        @Suppress("UNCHECKED_CAST")
-        private fun readCompanionSet(name: String): Set<String> {
-            val field = WordPredictor::class.java.getDeclaredField(name)
-            field.isAccessible = true
-            return field.get(null) as Set<String>
-        }
     }
 
     @Before
@@ -208,23 +176,25 @@ class AutoCorrectEndToEndTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Step 1.45 DD-M: dropped doubled letter, frequency margin M = 32
-    // (docs/eval/2026-10-11-dropped-double-margin.md). The re-inserted word D
-    // beats the sweep's word W only when D is at most 32 byte-rank steps rarer.
+    // Step 1.45 DD-M: dropped doubled letter, frequency margin M = 64
+    // (docs/eval/2026-10-11-dropped-double-margin.md §5, tuned on the device
+    // dictionary). The re-inserted word D beats the sweep's word W only when D
+    // is at most 64 steps of maxFreq/255 (≈ .bin ranks) rarer.
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
     fun droppedDouble_helo_correctsToHello() {
         // Device report: "helo" committed "help" (one adjacent sub, score 0.96)
-        // while the bar showed "hello". hello (198) is 20 steps rarer than
-        // help (218): within the margin, so the doubled reading wins.
+        // while the bar showed "hello". On the device dictionary hello (rank 114)
+        // is 39 ranks rarer than help (rank 75): within the margin, so the
+        // doubled reading wins. (At the old M = 32 the phone kept "help".)
         assertEquals("hello", predictor.autoCorrect("helo"))
         assertEquals("Hello", predictor.autoCorrect("Helo"))
     }
 
     @Test
     fun droppedDouble_longWords_fixedWhereTheSweepPickedALookalike() {
-        assertEquals("tomorrow", predictor.autoCorrect("tomorow"))   // was comoros
+        assertEquals("tomorrow", predictor.autoCorrect("tomorow"))   // was follow
         assertEquals("address", predictor.autoCorrect("adress"))     // was across
         assertEquals("success", predictor.autoCorrect("sucess"))     // was access
         // Runs before the morphology guard, which froze this as begin + -ing.
@@ -234,12 +204,36 @@ class AutoCorrectEndToEndTest {
     @Test
     fun droppedDouble_doesNotHijackSlipsOfCommonWords() {
         // The six cases that failed the unconditional rule's G3: the doubled
-        // word is more than 32 steps rarer than the intended one.
+        // word is more than 64 steps rarer than the intended one (see/seed 66,
+        // very/berry 77, one/knee 81, many/nanny 88, from/groom 114, the/ghee 191).
         val expected = linkedMapOf(
             "bery" to "very", "grom" to "from", "ghe" to "the",
             "sed" to "see", "kne" to "one", "nany" to "many",
         )
         for ((typo, want) in expected) assertEquals(typo, want, predictor.autoCorrect(typo))
+    }
+
+    /**
+     * The margin's meaning on the device dictionary, independent of the sweep: every named
+     * hijack pair's doubled word lies MORE than DROPPED_DOUBLE_MARGIN_STEPS steps below the
+     * intended word, and hello lies within it of help. If the bundled `.bin` is rebuilt and a
+     * gap crosses the margin, this fails before the behaviour silently flips.
+     */
+    @Test
+    fun droppedDouble_marginSeparatesNamedPairsOnTheDeviceDictionary() {
+        @Suppress("UNCHECKED_CAST")
+        val dict = (WordPredictor::class.java.getDeclaredField("dictionary")
+            .apply { isAccessible = true }.get(predictor) as AtomicReference<Map<String, Int>>).get()
+        val step = dict.values.max() / 255.0
+        fun gap(intended: String, doubled: String) = (dict.getValue(intended) - dict.getValue(doubled)) / step
+        val m = WordPredictor.DROPPED_DOUBLE_MARGIN_STEPS
+        for ((intended, doubled) in listOf("see" to "seed", "very" to "berry", "one" to "knee",
+            "many" to "nanny", "from" to "groom", "the" to "ghee")) {
+            val g = gap(intended, doubled)
+            org.junit.Assert.assertTrue("$intended/$doubled gap $g must exceed M=$m", g > m)
+        }
+        val helo = gap("help", "hello")
+        org.junit.Assert.assertTrue("help/hello gap $helo must be within M=$m", helo <= m)
     }
 
     @Test

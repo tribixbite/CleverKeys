@@ -170,15 +170,18 @@ class WordPredictor : Predictor {
         private const val TRANSPOSITION_PENALTY = 0.15f
 
         /**
-         * Step 1.45 (DD-M) margin, in byte-rank steps of the bundled 0–255
-         * frequency (`maxFreq / 255` on any load scale): a re-inserted doubled
-         * letter ("helo" → "hello") beats the sweep's word only when it is at most
-         * this many steps rarer. Tuned once on GitHub Typo Corpus DEV commits +
-         * half of a synthetic adjacent-slip control, gated on the held-out half
-         * (docs/eval/2026-10-11-dropped-double-margin.md). 32 keeps very/from/
-         * the/see/one/many against berry/groom/ghee/seed/knee/nanny (33–95 steps).
+         * Step 1.45 (DD-M) margin, in steps of `maxFreq / 255` (on the shipped
+         * `en_enhanced.bin`, one step ≈ one rank: 3,921.6 vs 3,900): a re-inserted
+         * doubled letter ("helo" → "hello") beats the sweep's word only when it is at
+         * most this many steps rarer. Tuned once on GitHub Typo Corpus DEV commits +
+         * half of a synthetic adjacent-slip control, gated on the held-out half, ON THE
+         * DEVICE DICTIONARY (docs/eval/2026-10-11-dropped-double-margin.md §5; the
+         * earlier M = 32 was tuned on a JSON-derived scale the device never loads).
+         * 64 keeps see/very/one/many/from/the against seed/berry/knee/nanny/groom/ghee
+         * (66–191 steps) and gives hello over help (39 steps). The nearest, see/seed,
+         * is only 2 steps outside the margin.
          */
-        internal const val DROPPED_DOUBLE_MARGIN_STEPS = 32
+        internal const val DROPPED_DOUBLE_MARGIN_STEPS = 64
         private const val MAX_EDIT_DISTANCE = 2
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
@@ -230,8 +233,8 @@ class WordPredictor : Predictor {
          * already full of exact completions AND the best of them is at least as frequent as
          * the word at this fraction of the dictionary's frequency ranking (top 5%: ≈4.9k of
          * the 98k English words, e.g. `play`, `question`; `thwart` is not). Rank-based, not
-         * value-based, because the frequency SCALE differs by loader (binary ≈528k–1M, JSON
-         * 100–10k) and contraction aliases sit at a 5,000 floor that would skew a min/max span.
+         * value-based, because the frequency SCALE differs by loader (binary 5.5k–1M, JSON
+         * fallback 100–10k) and contraction aliases sit at a 5,000 floor that would skew a min/max span.
          */
         private const val FUZZY_STRONG_EXACT_TOP_FRACTION = 0.05f
 
@@ -247,10 +250,11 @@ class WordPredictor : Predictor {
         /**
          * Bar slots guaranteed to the best typo-tolerant candidates whenever the fuzzy search
          * ran (i.e. the exact results were missing, too few, or all rare). Needed because the
-         * unified score's frequency factor is log-compressed (`1 + ln1p(f/100)` is 9.5–10.2
-         * across the whole binary-dictionary range), so a bar full of rare exact completions —
-         * `thw` → thwart, thwack, thwarted, thwarts, thwaite — would otherwise ALWAYS hide the
-         * obvious correction `the`. Reserved entries keep their score order: they take the
+         * unified score's frequency factor is log-compressed (`1 + ln1p(f/100)` is 5.0–10.2
+         * across the whole binary-dictionary range), so a bar full of rare exact completions
+         * whose frequencies are close to the correction's would otherwise hide the obvious
+         * correction. (On the shipped `.bin`, `thw` → `the` already wins on raw score because
+         * `thwart` is 176 ranks rarer; the reservation matters when the gap is smaller.) Reserved entries keep their score order: they take the
          * places of the lowest-scoring exact entries, never the lead.
          */
         internal const val FUZZY_RESERVED_SLOTS = 2
@@ -3043,7 +3047,17 @@ class WordPredictor : Predictor {
         }
     }
 
-    override fun autoCorrect(typedWord: String): String {
+    override fun autoCorrect(typedWord: String): String =
+        autoCorrect(typedWord, DROPPED_DOUBLE_MARGIN_STEPS)
+
+    /**
+     * [autoCorrect] with step 1.45's margin as a parameter — the evaluation seam for
+     * `DroppedDoubleMarginEval`, which needs the pre-DD-M behaviour ([droppedDoubleMarginSteps]
+     * = null: step 1.45 skipped entirely) and the sweep's W without the step, on the
+     * dictionary the device actually loads. Production always passes
+     * [DROPPED_DOUBLE_MARGIN_STEPS].
+     */
+    internal fun autoCorrect(typedWord: String, droppedDoubleMarginSteps: Int?): String {
         if (config?.autocorrect_enabled != true || typedWord.isEmpty()) {
             return typedWord
         }
@@ -3157,8 +3171,8 @@ class WordPredictor : Predictor {
         // before the morphology guard, which would freeze "begining" as begin +
         // -ing. If D loses, the input continues down the unchanged path and step
         // 4 reuses this sweep.
-        val insertion = droppedDoubleTarget(lowerTypedWord, dict, frequencyFloor)
-        if (insertion != null) {
+        val insertion = droppedDoubleMarginSteps?.let { droppedDoubleTarget(lowerTypedWord, dict, frequencyFloor) }
+        if (insertion != null && droppedDoubleMarginSteps != null) {
             sweepBest = autocorrectSweep(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null)
             sweepDone = true
             val w = sweepBest?.takeIf { isCommittable(it, frequencyFloor) }
@@ -3166,7 +3180,7 @@ class WordPredictor : Predictor {
             val insertionWins = w == null ||
                 (w.word !in customAndUserWords &&
                     insertionFreq.toLong() * 255 >=
-                    w.frequency.toLong() * 255 - DROPPED_DOUBLE_MARGIN_STEPS.toLong() * dictMaxFrequency(dict))
+                    w.frequency.toLong() * 255 - droppedDoubleMarginSteps.toLong() * dictMaxFrequency(dict))
             if (insertionWins) {
                 val corrected = finalizeCorrection(typedWord, insertion)
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (dropped double): '$typedWord' → '$corrected' " +
@@ -3236,7 +3250,7 @@ class WordPredictor : Predictor {
                 }
                 // AC-4: base is a typo — correct it alone, keep the suffix.
                 val originalBase = typedWord.substring(0, apostropheIdx)
-                val correctedBase = autoCorrect(originalBase)
+                val correctedBase = autoCorrect(originalBase, droppedDoubleMarginSteps)
                 if (correctedBase != originalBase) {
                     val corrected = correctedBase + typedWord.substring(apostropheIdx)
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (possessive base): '$typedWord' → '$corrected'")
@@ -3259,7 +3273,7 @@ class WordPredictor : Predictor {
 
         // 5. Apply correction only if confident candidate found.
         // Custom/user-added words are injected at a low placeholder frequency
-        // (1000) far below the binary dict's runtime scale (~52k..1M), so any
+        // (1000) far below the binary dict's runtime scale (5.5k..1M), so any
         // non-zero slider floor would silently exclude EVERY custom word as a
         // correction target. The user added them explicitly, so exempt them
         // from the floor — analogous to the custom-word override in

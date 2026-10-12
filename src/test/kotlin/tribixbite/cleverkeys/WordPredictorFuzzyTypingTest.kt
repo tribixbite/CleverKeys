@@ -2,8 +2,6 @@ package tribixbite.cleverkeys
 
 import android.os.Trace
 import android.util.Log
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkStatic
@@ -18,7 +16,6 @@ import org.junit.BeforeClass
 import org.junit.Test
 import tribixbite.cleverkeys.autocorrect.FrequencyFloor
 import tribixbite.cleverkeys.autocorrect.KeyAdjacency
-import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
@@ -28,7 +25,8 @@ import java.util.concurrent.atomic.AtomicReference
  * reaching 'a'. 'pka' or 'pkay' should suggest 'play'."
  *
  * Drives the REAL `WordPredictor.predictWordsWithContext` (the tap-typing bar's source)
- * over the REAL bundled 98k English dictionary on the device frequency scale, harnessed
+ * over the REAL bundled 98k English dictionary as the device loads it (`en_enhanced.bin`
+ * via [ShippedTapDictionary]), harnessed
  * exactly like `AutoCorrectEndToEndTest` (Objenesis instance + reflection-injected
  * fields; MockK runner because the predictor touches `android.util.Log` and
  * `android.os.Trace`).
@@ -64,16 +62,8 @@ class WordPredictorFuzzyTypingTest {
             // QWERTY geometry — what Keyboard2View pushes for the default layout.
             KeyAdjacency.resetLayout()
 
-            val gson = Gson()
-            val mapType = object : TypeToken<Map<String, Double>>() {}.type
-            val rawDict: Map<String, Double> = File(
-                "src/main/assets/dictionaries/en_enhanced.json"
-            ).reader().use { gson.fromJson(it, mapType) }
-            // Same rank → frequency conversion as BinaryDictionaryLoader V2 (the device path).
-            baseDict = HashMap(rawDict.size * 2)
-            for ((word, byteFreq) in rawDict) {
-                baseDict[word] = 1_000_000 - (255 - byteFreq.toInt()) * 3900
-            }
+            // The device's tap dictionary: en_enhanced.bin through the production parser.
+            baseDict = ShippedTapDictionary.frequencies()
 
             config = org.objenesis.ObjenesisStd().newInstance(Config::class.java)
             predictor = org.objenesis.ObjenesisStd().newInstance(WordPredictor::class.java)
@@ -170,11 +160,19 @@ class WordPredictorFuzzyTypingTest {
         }
     }
 
+    /**
+     * `thw` (only rare exact completions) offers both the exact `thwart` and the slip
+     * correction `the`. On the device dictionary `the` LEADS on raw score: `thwart` is 176
+     * ranks rarer, i.e. "materially rarer" in [WordPredictor.FUZZY_PENALTY_PER_EDIT]'s terms.
+     * Until 2026-10-12 this test asserted `thwart` kept first place; that held only on the
+     * JSON-derived harness scale (`thwart` 88 bytes below `the`), never on a phone.
+     */
     @Test
-    fun thw_weakExactPrefix_keepsExactLead_andAddsTheCorrection() {
+    fun thw_weakExactPrefix_offersExactCompletionAndTheCorrection() {
         val words = bar("thw").words
-        assertEquals("the rare exact completion keeps first place (got $words)", "thwart", words.firstOrNull())
+        assertTrue("the exact completion 'thwart' is offered (got $words)", "thwart" in words)
         assertTrue("'the' (w↔e neighbour slip) must be offered (got $words)", "the" in words)
+        assertEquals("device scale: the far more common correction leads (got $words)", "the", words.firstOrNull())
     }
 
     @Test
@@ -190,15 +188,33 @@ class WordPredictorFuzzyTypingTest {
         assertTrue("the exact entry must score strictly higher", result.scores[0] > result.scores[1])
     }
 
+    /**
+     * The reservation itself: five weak exact completions that each outscore every fuzzy
+     * candidate still leave [WordPredictor.FUZZY_RESERVED_SLOTS] places to the best
+     * corrections, which take the lowest exact places, never the lead. Synthetic words keep
+     * this independent of the bundled frequencies (the old `thw` version stopped exercising
+     * the reservation on the device dictionary, where `the` wins on raw score).
+     */
     @Test
     fun weakFullBar_reservesSlotsForTheBestCorrections_withoutTakingTheLead() {
-        // "thw" has five exact (rare) completions — the fuzzy "the" would rank 6th on raw
-        // score alone; the reservation puts it (and the next correction) in the bar.
-        val result = bar("thw")
+        val dict = dictField()
+        // Exact: zqv… completions below the strong-exact top-5% rank (fuzzy search runs).
+        for ((i, suffix) in listOf("ara", "arb", "arc", "ard", "are").withIndex()) dict["zqv$suffix"] = 120_000 - i * 1_000
+        // Fuzzy: z↔x neighbour slips, rarer than every exact entry.
+        dict["xqvara"] = 60_000
+        dict["xqvarb"] = 59_000
+        rebuildIndex()
+        val result = bar("zqv")
         val fuzzy = result.metas!!.count { it.origin == SuggestionOrigin.TYPO_CORRECTION }
-        assertEquals("reserved fuzzy slots (got ${result.words})", 2, fuzzy)
+        assertEquals("reserved fuzzy slots (got ${result.words})", WordPredictor.FUZZY_RESERVED_SLOTS, fuzzy)
+        assertEquals("the lead stays exact (got ${result.words})", "zqvara", result.words.first())
         assertEquals(SuggestionOrigin.DICTIONARY_PREFIX, result.metas!![0].origin)
         assertEquals("bar stays in score order", result.scores.sortedDescending(), result.scores)
+
+        // On the real dictionary, `thw` also gets at least the reserved corrections.
+        val thw = bar("thw")
+        assertTrue("thw: ≥ ${WordPredictor.FUZZY_RESERVED_SLOTS} corrections (got ${thw.words})",
+            thw.metas!!.count { it.origin == SuggestionOrigin.TYPO_CORRECTION } >= WordPredictor.FUZZY_RESERVED_SLOTS)
     }
 
     @Test

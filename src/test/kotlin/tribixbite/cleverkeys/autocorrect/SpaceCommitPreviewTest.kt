@@ -2,8 +2,6 @@ package tribixbite.cleverkeys.autocorrect
 
 import android.os.Trace
 import android.util.Log
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkStatic
@@ -21,11 +19,11 @@ import org.junit.Test
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.ProvenanceNote
+import tribixbite.cleverkeys.ShippedTapDictionary
 import tribixbite.cleverkeys.Suggestion
 import tribixbite.cleverkeys.SuggestionMeta
 import tribixbite.cleverkeys.SuggestionOrigin
 import tribixbite.cleverkeys.WordPredictor
-import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
@@ -34,8 +32,8 @@ import java.util.concurrent.atomic.AtomicReference
  * space committed `Help`).
  *
  * Drives the REAL `WordPredictor` — `predictWordsWithContext` (the tap-typing bar's source) and
- * `autoCorrect` (the space path's correction) — over the REAL bundled 98k English dictionary on
- * the device frequency scale with the shipped autocorrect defaults, harnessed like
+ * `autoCorrect` (the space path's correction) — over the REAL bundled 98k English dictionary as
+ * the device loads it (`en_enhanced.bin`, [ShippedTapDictionary]) with the shipped autocorrect defaults, harnessed like
  * `DroppedDoubleAutocorrectEval` (Objenesis instance, reflection-injected fields, MockK runner
  * for `Log`/`Trace`). Then checks that [SpaceCommitResolver] + [BarHighlightPlanner] make the
  * highlighted entry exactly what space would commit, in every guard state.
@@ -61,29 +59,12 @@ class SpaceCommitPreviewTest {
             every { Trace.endSection() } just runs
             KeyAdjacency.resetLayout()
 
-            val gson = Gson()
-            val rawDict: Map<String, Double> = File("src/main/assets/dictionaries/en_enhanced.json")
-                .reader().use { gson.fromJson(it, object : TypeToken<Map<String, Double>>() {}.type) }
-            // Same rank → frequency conversion as BinaryDictionaryLoader V2 (the device path).
-            val dict = HashMap<String, Int>(rawDict.size * 2)
-            for ((word, byteFreq) in rawDict) dict[word] = 1_000_000 - (255 - byteFreq.toInt()) * 3900
-
-            // Real contraction aliases, as loadContractionKeysAsync injects them.
-            val contractions: Map<String, String> = File("src/main/assets/dictionaries/contractions_en.json")
-                .reader().use { gson.fromJson(it, object : TypeToken<Map<String, String>>() {}.type) }
-            val realWordBases = readCompanionSet("REAL_WORD_CONTRACTION_BASES")
-            val aliases = HashMap<String, String>()
-            for ((bareRaw, apoRaw) in contractions) {
-                val bare = bareRaw.lowercase()
-                val apo = apoRaw.lowercase()
-                if (bare in realWordBases) continue
-                aliases[bare] = apo
-                dict[bare] = dict[apo] ?: dict[bare] ?: 5000
-            }
-            val index = HashMap<String, MutableSet<String>>()
-            for (w in dict.keys) {
-                for (len in 1..minOf(3, w.length)) index.getOrPut(w.substring(0, len)) { HashSet() }.add(w)
-            }
+            // The device's tap dictionary (en_enhanced.bin via the production parser) plus the
+            // real contraction aliases, as loadContractionKeysIntoMaps merges them.
+            val loaded = ShippedTapDictionary.withContractionAliases()
+            val dict = loaded.dictionary
+            val index = loaded.prefixIndex
+            val aliases = loaded.aliases
 
             config = org.objenesis.ObjenesisStd().newInstance(Config::class.java)
             predictor = org.objenesis.ObjenesisStd().newInstance(WordPredictor::class.java)
@@ -112,12 +93,6 @@ class SpaceCommitPreviewTest {
             field.set(predictor, value)
         }
 
-        @Suppress("UNCHECKED_CAST")
-        private fun readCompanionSet(name: String): Set<String> {
-            val field = WordPredictor::class.java.getDeclaredField(name)
-            field.isAccessible = true
-            return field.get(null) as Set<String>
-        }
 
         /** Issue #72 I-word re-caser with the setting on (SuggestionHandler.capitalizeIWord's rule). */
         private fun capitalizeI(word: String): String =
@@ -190,7 +165,8 @@ class SpaceCommitPreviewTest {
         assertNotEquals(commit.commit, bar.first())
         assertEquals(SpaceCommit(SpaceCommit.Kind.AUTOCORRECT, predictor.autoCorrect("helo")), commit)
         // DD-M (step 1.45, docs/eval/2026-10-11-dropped-double-margin.md): `hello` is within
-        // 32 rank steps of `help`, so the dropped-double reading now wins the commit.
+        // 64 steps of `help` on the device dictionary (39 ranks), so the dropped-double reading
+        // wins the commit. At the old M = 32 the device kept `help` (Pixel, 2026-10-12).
         assertEquals("hello", commit.commit)
 
         val plan = planFor("helo", commit)

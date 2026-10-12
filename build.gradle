@@ -1325,6 +1325,9 @@ tasks.register('runMockTests', JavaExec) {
     // 2026-10-11 Pixel report: the bar highlighted `Hello` for `Helo`, space committed `Help`.
     // Real 98k dictionary: the highlighted bar entry is exactly what space commits.
     'tribixbite.cleverkeys.autocorrect.SpaceCommitPreviewTest',
+    // 2026-10-12: tap harnesses ran on en_enhanced.json (the CTC swipe scale), not the .bin the
+    // device's tap predictor loads. Pins ShippedTapDictionary == the production asset load.
+    'tribixbite.cleverkeys.ShippedTapDictionaryDriftTest',
     // 2026-10-08 Saga report: Hebrew neighbour-key typos were not corrected — KeyAdjacency
     // positioned only Latin letters. Real he pack + real hebr_1_il grid, shipped defaults.
     'tribixbite.cleverkeys.autocorrect.HebrewLayoutAutoCorrectTest',

@@ -93,6 +93,175 @@ internal fun ByteBuffer.seekSection(offset: Int, sectionName: String) {
 }
 
 /**
+ * Android-free parse of a V1 (`DICT`) or V2 (`CKDT`) binary dictionary into a word →
+ * frequency map plus a 1–3 character prefix index — the TAP-typing dictionary that
+ * `WordPredictor` (sync `loadDictionary`) and `AsyncDictionaryLoader` both load through
+ * [BinaryDictionaryLoader.loadDictionaryWithPrefixIndex] /
+ * [BinaryDictionaryLoader.loadDictionaryWithPrefixIndexFromFile].
+ *
+ * It lives outside [BinaryDictionaryLoader] (whose loaders use `android.os.Trace` and
+ * `android.util.Log`) so pure-JVM harnesses can parse the shipped asset with the SAME code
+ * the device runs. The JVM autocorrect harnesses used to re-derive the tap scale from
+ * `en_enhanced.json` as `255 − byte`; that JSON is the CTC swipe lexicon's compressed
+ * 134..255 scale, not the `.bin`'s rank, and 98,139 of 98,140 words disagreed
+ * (`help`/`hello` 39 rank steps apart on device, 20 in the harness). See
+ * `src/test/kotlin/tribixbite/cleverkeys/ShippedTapDictionary.kt` and its drift test.
+ */
+internal object BinaryDictionaryParser {
+    const val MAGIC_V1 = 0x54434944 // "DICT" in little-endian
+    const val MAGIC_V2 = 0x54444B43 // "CKDT" in little-endian (CleverKeys Dict)
+    const val VERSION_V1 = 1
+    const val VERSION_V2 = 2
+
+    /** V2 frequency of rank 0 (the most common word). */
+    const val V2_TOP_FREQUENCY = 1_000_000
+
+    /** V2 frequency lost per rank step: rank 255 → 5,500. */
+    const val V2_FREQUENCY_PER_RANK = 3_900
+
+    /** Prefix lengths indexed for V2 (V1 files carry their own pre-built index). */
+    private const val V2_PREFIX_MAX_LENGTH = 3
+
+    /**
+     * Runtime frequency of a V2 rank (0 = most common, 255 = least):
+     * `1 000 000 − rank · 3 900`, i.e. 1,000,000 … 5,500.
+     */
+    fun frequencyForRank(rank: Int): Int = V2_TOP_FREQUENCY - rank * V2_FREQUENCY_PER_RANK
+
+    /** Outcome of [parseWithPrefixIndex]. */
+    sealed class Result {
+        /** Parsed; [language] is the V2 header's language code (null for V1). */
+        data class Loaded(val formatVersion: Int, val language: String?, val wordCount: Int) : Result()
+
+        /** Not a supported dictionary (bad magic or version); [reason] is for the log. */
+        data class Rejected(val reason: String) : Result()
+    }
+
+    /**
+     * Parse [buffer] (little-endian, positioned at 0) into [outDictionary] and
+     * [outPrefixIndex], clearing both first on success of the header check.
+     *
+     * @throws java.io.IOException on a truncated/corrupt body (section offsets outside the buffer).
+     */
+    fun parseWithPrefixIndex(
+        buffer: ByteBuffer,
+        outDictionary: MutableMap<String, Int>,
+        outPrefixIndex: MutableMap<String, MutableSet<String>>
+    ): Result {
+        val magic = buffer.int
+        val isV1 = magic == MAGIC_V1
+        val isV2 = magic == MAGIC_V2
+        if (!isV1 && !isV2) {
+            return Result.Rejected(String.format(
+                "Invalid magic number: 0x%08X (expected V1=0x%08X or V2=0x%08X)", magic, MAGIC_V1, MAGIC_V2
+            ))
+        }
+        val version = buffer.int
+        if (isV1 && version != VERSION_V1) {
+            return Result.Rejected("Unsupported V1 version: $version (expected $VERSION_V1)")
+        }
+        if (isV2 && version != VERSION_V2) {
+            return Result.Rejected("Unsupported V2 version: $version (expected $VERSION_V2)")
+        }
+
+        outDictionary.clear()
+        outPrefixIndex.clear()
+        return if (isV1) {
+            Result.Loaded(VERSION_V1, null, parseV1(buffer, outDictionary, outPrefixIndex))
+        } else {
+            val langBytes = ByteArray(4)
+            buffer.get(langBytes)
+            val language = String(langBytes, Charsets.UTF_8).trim('\u0000')
+            Result.Loaded(VERSION_V2, language, parseV2(buffer, outDictionary, outPrefixIndex))
+        }
+    }
+
+    /** V1 body: words, parallel uint32 frequencies, pre-built prefix index. Returns the word count. */
+    private fun parseV1(
+        buffer: ByteBuffer,
+        outDictionary: MutableMap<String, Int>,
+        outPrefixIndex: MutableMap<String, MutableSet<String>>
+    ): Int {
+        val wordCount = buffer.int
+        val dictOffset = buffer.int
+        val freqOffset = buffer.int
+        val prefixOffset = buffer.int
+        buffer.position(buffer.position() + 8) // Skip reserved bytes
+
+        // Load dictionary words
+        buffer.seekSection(dictOffset, "dictionary")
+        val words = Array(wordCount) {
+            checkDictionaryLoadInterrupted()
+            val wordLen = buffer.short.toInt() and 0xFFFF // Unsigned short
+            val wordBytes = ByteArray(wordLen)
+            buffer.get(wordBytes)
+            String(wordBytes, Charsets.UTF_8)
+        }
+
+        // Load frequencies
+        buffer.seekSection(freqOffset, "frequency")
+        for (i in 0 until wordCount) {
+            checkDictionaryLoadInterrupted()
+            outDictionary[words[i]] = buffer.int
+        }
+
+        // Load prefix index
+        buffer.seekSection(prefixOffset, "prefix index")
+        val prefixCount = buffer.int
+        for (i in 0 until prefixCount) {
+            checkDictionaryLoadInterrupted()
+            val prefixLen = buffer.get().toInt() and 0xFF // Unsigned byte
+            val prefixBytes = ByteArray(prefixLen)
+            buffer.get(prefixBytes)
+            val prefix = String(prefixBytes, Charsets.UTF_8)
+
+            val matchCount = buffer.int
+            // HashSet, not LinkedHashSet (mutableSetOf default): ~16 bytes/entry less.
+            val matchingWords = HashSet<String>(matchCount)
+            for (j in 0 until matchCount) {
+                checkDictionaryLoadInterrupted()
+                matchingWords.add(words[buffer.int])
+            }
+            outPrefixIndex[prefix] = matchingWords
+        }
+        return wordCount
+    }
+
+    /**
+     * V2 body after the language code: canonical words with uint8 ranks, converted by
+     * [frequencyForRank]; the 1–3 character prefix index is built here (V2 files carry none).
+     * Returns the word count.
+     */
+    private fun parseV2(
+        buffer: ByteBuffer,
+        outDictionary: MutableMap<String, Int>,
+        outPrefixIndex: MutableMap<String, MutableSet<String>>
+    ): Int {
+        val wordCount = buffer.int
+        val canonicalOffset = buffer.int
+        buffer.position(buffer.position() + 28) // Skip normalized/accent offsets + reserved
+
+        buffer.seekSection(canonicalOffset, "canonical")
+        for (i in 0 until wordCount) {
+            checkDictionaryLoadInterrupted()
+            val wordLen = buffer.short.toInt() and 0xFFFF
+            val wordBytes = ByteArray(wordLen)
+            buffer.get(wordBytes)
+            val word = String(wordBytes, Charsets.UTF_8)
+            val rank = buffer.get().toInt() and 0xFF
+            outDictionary[word] = frequencyForRank(rank)
+
+            val maxPrefixLen = kotlin.math.min(V2_PREFIX_MAX_LENGTH, word.length)
+            for (len in 1..maxPrefixLen) {
+                val prefix = word.substring(0, len).lowercase()
+                outPrefixIndex.getOrPut(prefix) { HashSet() }.add(word)
+            }
+        }
+        return wordCount
+    }
+}
+
+/**
  * Fast binary dictionary loader with pre-built prefix index.
  *
  * Loads dictionaries from optimized binary format (generated by
@@ -165,11 +334,10 @@ internal fun ByteBuffer.seekSection(offset: Int, sectionName: String) {
  */
 object BinaryDictionaryLoader {
     private const val TAG = "BinaryDictionaryLoader"
-    private const val MAGIC_V1 = 0x54434944 // "DICT" in little-endian
-    private const val MAGIC_V2 = 0x54444B43 // "CKDT" in little-endian (CleverKeys Dict)
-    private const val MAGIC = MAGIC_V1 // For backward compatibility
-    private const val EXPECTED_VERSION = 1
-    private const val EXPECTED_VERSION_V2 = 2
+    private const val MAGIC_V1 = BinaryDictionaryParser.MAGIC_V1
+    private const val MAGIC_V2 = BinaryDictionaryParser.MAGIC_V2
+    private const val EXPECTED_VERSION = BinaryDictionaryParser.VERSION_V1
+    private const val EXPECTED_VERSION_V2 = BinaryDictionaryParser.VERSION_V2
     private const val HEADER_SIZE = 32
     private const val HEADER_SIZE_V2 = 48  // Extended header for v2
 
@@ -279,8 +447,8 @@ object BinaryDictionaryLoader {
      * Converts ranks (0-255) to frequencies for compatibility with WordPredictor.
      *
      * V2 rank 0 = most common, rank 255 = least common
-     * Converted to frequency: freq = 1000000 - (rank * 3900)
-     * This gives range ~1M (rank 0) to ~2500 (rank 255)
+     * Converted by [BinaryDictionaryParser.frequencyForRank]: freq = 1 000 000 − rank · 3 900,
+     * i.e. 1,000,000 (rank 0) to 5,500 (rank 255)
      *
      * @since v1.1.91
      */
@@ -308,11 +476,7 @@ object BinaryDictionaryLoader {
             val word = String(wordBytes, Charsets.UTF_8)
             val rank = buffer.get().toInt() and 0xFF
 
-            // Convert rank (0-255) to frequency
-            // rank 0 -> freq 1000000 (most common)
-            // rank 255 -> freq ~5000 (least common)
-            val frequency = 1000000 - (rank * 3900)
-            dictionary[word] = frequency
+            dictionary[word] = BinaryDictionaryParser.frequencyForRank(rank)
         }
 
         Log.d(TAG, "Loaded V2 dictionary for language '$language': $wordCount words")
@@ -352,42 +516,23 @@ object BinaryDictionaryLoader {
                     readBinaryAssetFully(stream, filename, MIN_BINARY_DICT_BYTES)
                 }
 
-                // Parse header - check magic to determine format version
-                val magic = buffer.int
-                val isV1 = magic == MAGIC_V1
-                val isV2 = magic == MAGIC_V2
-
-                if (!isV1 && !isV2) {
-                    Log.e(TAG, String.format("Invalid magic number: 0x%08X (expected V1=0x%08X or V2=0x%08X)",
-                        magic, MAGIC_V1, MAGIC_V2))
-                    return false
-                }
-
-                val version = buffer.int
-                if (isV1 && version != EXPECTED_VERSION) {
-                    Log.e(TAG, String.format("Unsupported V1 version: %d (expected %d)", version, EXPECTED_VERSION))
-                    return false
-                }
-                if (isV2 && version != EXPECTED_VERSION_V2) {
-                    Log.e(TAG, String.format("Unsupported V2 version: %d (expected %d)", version, EXPECTED_VERSION_V2))
-                    return false
-                }
-
-                outDictionary.clear()
-                outPrefixIndex.clear()
-
-                if (isV1) {
-                    // V1: Load pre-built prefix index from file
-                    loadDictionaryWithPrefixIndexV1(buffer, outDictionary, outPrefixIndex)
-                } else {
-                    // V2: Load dictionary and build prefix index at runtime
-                    loadDictionaryWithPrefixIndexV2(buffer, outDictionary, outPrefixIndex)
+                // Shared Android-free parse (BinaryDictionaryParser) — the same code the JVM
+                // autocorrect harnesses load the shipped dictionary with.
+                val loaded = when (val result = BinaryDictionaryParser.parseWithPrefixIndex(
+                    buffer, outDictionary, outPrefixIndex
+                )) {
+                    is BinaryDictionaryParser.Result.Rejected -> {
+                        Log.e(TAG, "${result.reason}: $filename")
+                        return false
+                    }
+                    is BinaryDictionaryParser.Result.Loaded -> result
                 }
 
                 val loadTime = System.currentTimeMillis() - startTime
                 Log.i(TAG, String.format(
-                    "Loaded %d words + %d prefixes from binary dictionary (V%d) in %dms",
-                    outDictionary.size, outPrefixIndex.size, if (isV1) 1 else 2, loadTime
+                    "Loaded %d words + %d prefixes from binary dictionary (V%d%s) in %dms",
+                    outDictionary.size, outPrefixIndex.size, loaded.formatVersion,
+                    loaded.language?.let { ", '$it'" } ?: "", loadTime
                 ))
 
                 return true
@@ -425,33 +570,14 @@ object BinaryDictionaryLoader {
                     readBinaryAssetFully(stream, file.name, MIN_BINARY_DICT_BYTES)
                 }
 
-                // Parse header - check magic to determine format version
-                val magic = buffer.int
-                val isV1 = magic == MAGIC_V1
-                val isV2 = magic == MAGIC_V2
-
-                if (!isV1 && !isV2) {
-                    Log.e(TAG, String.format("Invalid magic number for language pack: 0x%08X", magic))
-                    return false
-                }
-
-                val version = buffer.int
-                if (isV1 && version != EXPECTED_VERSION) {
-                    Log.e(TAG, "Unsupported V1 version for language pack: $version")
-                    return false
-                }
-                if (isV2 && version != EXPECTED_VERSION_V2) {
-                    Log.e(TAG, "Unsupported V2 version for language pack: $version")
-                    return false
-                }
-
-                outDictionary.clear()
-                outPrefixIndex.clear()
-
-                if (isV1) {
-                    loadDictionaryWithPrefixIndexV1(buffer, outDictionary, outPrefixIndex)
-                } else {
-                    loadDictionaryWithPrefixIndexV2(buffer, outDictionary, outPrefixIndex)
+                when (val result = BinaryDictionaryParser.parseWithPrefixIndex(
+                    buffer, outDictionary, outPrefixIndex
+                )) {
+                    is BinaryDictionaryParser.Result.Rejected -> {
+                        Log.e(TAG, "${result.reason} (language pack ${file.name})")
+                        return false
+                    }
+                    is BinaryDictionaryParser.Result.Loaded -> Unit
                 }
 
                 val loadTime = System.currentTimeMillis() - startTime
@@ -465,113 +591,6 @@ object BinaryDictionaryLoader {
         } finally {
             android.os.Trace.endSection()
         }
-    }
-
-    /**
-     * Load V1 format dictionary with pre-built prefix index.
-     */
-    private fun loadDictionaryWithPrefixIndexV1(
-        buffer: ByteBuffer,
-        outDictionary: MutableMap<String, Int>,
-        outPrefixIndex: MutableMap<String, MutableSet<String>>
-    ) {
-        val wordCount = buffer.int
-        val dictOffset = buffer.int
-        val freqOffset = buffer.int
-        val prefixOffset = buffer.int
-        buffer.position(buffer.position() + 8) // Skip reserved bytes
-
-        // Load dictionary words
-        buffer.seekSection(dictOffset, "dictionary")
-        val words = Array(wordCount) {
-            checkDictionaryLoadInterrupted()
-            val wordLen = buffer.short.toInt() and 0xFFFF // Unsigned short
-            val wordBytes = ByteArray(wordLen)
-            buffer.get(wordBytes)
-            String(wordBytes, Charsets.UTF_8)
-        }
-
-        // Load frequencies
-        buffer.seekSection(freqOffset, "frequency")
-        for (i in 0 until wordCount) {
-            checkDictionaryLoadInterrupted()
-            val frequency = buffer.int
-            outDictionary[words[i]] = frequency
-        }
-
-        // Load prefix index
-        buffer.seekSection(prefixOffset, "prefix index")
-        val prefixCount = buffer.int
-
-        for (i in 0 until prefixCount) {
-            checkDictionaryLoadInterrupted()
-            // Read prefix string
-            val prefixLen = buffer.get().toInt() and 0xFF // Unsigned byte
-            val prefixBytes = ByteArray(prefixLen)
-            buffer.get(prefixBytes)
-            val prefix = String(prefixBytes, Charsets.UTF_8)
-
-            // Read matching word indices
-            val matchCount = buffer.int
-            // Use HashSet instead of LinkedHashSet (mutableSetOf default)
-            // to save ~16 bytes/entry from linked-list overhead
-            val matchingWords = HashSet<String>(matchCount)
-            for (j in 0 until matchCount) {
-                checkDictionaryLoadInterrupted()
-                val wordIdx = buffer.int
-                matchingWords.add(words[wordIdx])
-            }
-
-            outPrefixIndex[prefix] = matchingWords
-        }
-    }
-
-    /**
-     * Load V2 format dictionary and build prefix index at runtime.
-     * V2 format doesn't include a pre-built prefix index, so we generate it.
-     *
-     * @since v1.1.91
-     */
-    private fun loadDictionaryWithPrefixIndexV2(
-        buffer: ByteBuffer,
-        outDictionary: MutableMap<String, Int>,
-        outPrefixIndex: MutableMap<String, MutableSet<String>>
-    ) {
-        // Read V2 header (magic+version already consumed)
-        val langBytes = ByteArray(4)
-        buffer.get(langBytes)
-        val language = String(langBytes, Charsets.UTF_8).trim('\u0000')
-
-        val wordCount = buffer.int
-        val canonicalOffset = buffer.int
-        buffer.position(buffer.position() + 28) // Skip normalized/accent offsets + reserved
-
-        // Load canonical words with frequency ranks
-        buffer.seekSection(canonicalOffset, "canonical")
-
-        for (i in 0 until wordCount) {
-            checkDictionaryLoadInterrupted()
-            val wordLen = buffer.short.toInt() and 0xFFFF
-            val wordBytes = ByteArray(wordLen)
-            buffer.get(wordBytes)
-            val word = String(wordBytes, Charsets.UTF_8)
-            val rank = buffer.get().toInt() and 0xFF
-
-            // Convert rank (0-255) to frequency
-            // rank 0 -> freq 1000000 (most common)
-            // rank 255 -> freq ~5000 (least common)
-            val frequency = 1000000 - (rank * 3900)
-            outDictionary[word] = frequency
-
-            // Build prefix index (1-3 character prefixes)
-            val maxPrefixLen = kotlin.math.min(3, word.length)
-            for (len in 1..maxPrefixLen) {
-                val prefix = word.substring(0, len).lowercase()
-                outPrefixIndex.getOrPut(prefix) { HashSet() }.add(word)
-            }
-        }
-
-        Log.d(TAG, "Loaded V2 dictionary for '$language': $wordCount words, built ${outPrefixIndex.size} prefix entries")
     }
 
     /**

@@ -2,8 +2,6 @@ package tribixbite.cleverkeys.autocorrect
 
 import android.os.Trace
 import android.util.Log
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkObject
@@ -18,6 +16,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
+import tribixbite.cleverkeys.ShippedTapDictionary
 import tribixbite.cleverkeys.WordPredictor
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -48,9 +47,14 @@ import java.util.concurrent.atomic.AtomicReference
  * `~/.cache/cleverkeys-test/misspell`); rows go to `$CK_EVAL_OUT` (default
  * `build/eval/dropped-double-margin`).
  *
- * The rule is SIMULATED exactly (doc §1.3). Before implementing, `CK_DD_DUMP=<M>` writes the
- * simulated output of every eligible input; afterwards `CK_DD_VERIFY=<M> CK_DD_EXPECTED=<dump>`
- * checks production against that dump ([productionMatchesSimulation]).
+ * The rule is SIMULATED exactly (doc §1.3) on top of the pre-DD-M baseline
+ * (`autoCorrect(t, null)`, step 1.45 skipped). `CK_DD_VERIFY=<M>` checks production at margin M
+ * against the simulation in-process ([productionMatchesSimulation]); `CK_DD_DUMP=<M>` writes the
+ * simulated output of every rule-decided input.
+ *
+ * Dictionary: `ShippedTapDictionary` (`en_enhanced.bin`, the device's tap dictionary). The first
+ * DEV/TEST run (doc §2–§3) used a `255 − byte` map of `en_enhanced.json`, which is not the device
+ * scale; doc §5 re-measures on the `.bin`.
  */
 class DroppedDoubleMarginEval {
 
@@ -104,10 +108,15 @@ class DroppedDoubleMarginEval {
             "sed" to "see", "kne" to "one", "nany" to "many",
         )
 
-        /** Pre-registered DEV grid (doc §1.4). NEVER = only when the sweep commits nothing; ALWAYS = old variant A. */
+        /**
+         * Pre-registered DEV grid. NEVER = only when the sweep commits nothing; ALWAYS = old
+         * variant A. The original grid (doc §1.4) was −20..60 on the JSON-derived scale; the
+         * device-scale re-measurement (doc §5.2) widens it to −40..160 because `.bin` rank gaps
+         * between the same words are roughly twice the JSON byte gaps.
+         */
         const val NEVER = Int.MIN_VALUE
         const val ALWAYS = Int.MAX_VALUE
-        val GRID: List<Int> = listOf(NEVER) + (-20..60 step 2).toList() + ALWAYS
+        val GRID: List<Int> = listOf(NEVER) + (-40..160 step 2).toList() + ALWAYS
 
         @JvmStatic
         @BeforeClass
@@ -128,28 +137,13 @@ class DroppedDoubleMarginEval {
             }
             KeyAdjacency.resetLayout()
 
-            val gson = Gson()
-            val mapType = object : TypeToken<Map<String, Double>>() {}.type
-            val stringMapType = object : TypeToken<Map<String, String>>() {}.type
-            val rawDict: Map<String, Double> = File("src/main/assets/dictionaries/en_enhanced.json")
-                .reader().use { gson.fromJson(it, mapType) }
-            dict = HashMap(rawDict.size * 2)
-            for ((word, byteFreq) in rawDict) dict[word] = 1_000_000 - (255 - byteFreq.toInt()) * 3900
-
-            // Contraction aliases exactly as AutoCorrectEndToEndTest / loadContractionKeysAsync.
-            val contractions: Map<String, String> = File("src/main/assets/dictionaries/contractions_en.json")
-                .reader().use { gson.fromJson(it, stringMapType) }
-            val realWordBases = readCompanionSet("REAL_WORD_CONTRACTION_BASES")
-            val a = mutableMapOf<String, String>()
-            for ((bareRaw, apoRaw) in contractions) {
-                val bare = bareRaw.lowercase()
-                val apo = apoRaw.lowercase()
-                if (bare in realWordBases) continue
-                a[bare] = apo
-                dict[bare] = dict[apo] ?: dict[bare] ?: 5000
-            }
-            aliases = a
-            aliasValueToKeys = a.entries.groupBy({ it.value }, { it.key })
+            // The device's tap dictionary (en_enhanced.bin via the production parser) and the
+            // real contraction aliases (ShippedTapDictionary; until 2026-10-12 this read
+            // en_enhanced.json as 255 − byte, the CTC swipe lexicon's compressed scale).
+            val loaded = ShippedTapDictionary.withContractionAliases()
+            dict = loaded.dictionary
+            aliases = loaded.aliases
+            aliasValueToKeys = aliases.entries.groupBy({ it.value }, { it.key })
             maxFreq = dict.values.max()
 
             config = org.objenesis.ObjenesisStd().newInstance(Config::class.java)
@@ -169,10 +163,7 @@ class DroppedDoubleMarginEval {
 
             predictor = org.objenesis.ObjenesisStd().newInstance(WordPredictor::class.java)
             setField("dictionary", AtomicReference<MutableMap<String, Int>>(dict))
-            val index = HashMap<String, MutableSet<String>>()
-            for (w in dict.keys) {
-                for (len in 1..minOf(3, w.length)) index.getOrPut(w.substring(0, len)) { HashSet() }.add(w)
-            }
+            val index = loaded.prefixIndex
             setField("prefixIndex", AtomicReference<MutableMap<String, MutableSet<String>>>(index))
             setField("contractionAliases", aliases)
             setField("customAndUserWords", emptySet<String>())
@@ -198,12 +189,6 @@ class DroppedDoubleMarginEval {
             field.set(predictor, value)
         }
 
-        @Suppress("UNCHECKED_CAST")
-        private fun readCompanionSet(name: String): Set<String> {
-            val field = WordPredictor::class.java.getDeclaredField(name)
-            field.isAccessible = true
-            return field.get(null) as Set<String>
-        }
 
         /** Deterministic split of a string key (S-adj base word): DEV when the FNV-1a hash is even. */
         fun isDevWord(w: String): Boolean {
@@ -261,8 +246,11 @@ class DroppedDoubleMarginEval {
 
     private val baselineCache = HashMap<String, String>()
 
-    /** Production autoCorrect at HEAD (cached; only computed where an outcome can differ). */
-    private fun baseline(t: String): String = baselineCache.getOrPut(t) { predictor.autoCorrect(t) }
+    /**
+     * Pre-DD-M production: `autoCorrect` with step 1.45 skipped (margin seam = null). Since
+     * DD-M shipped, plain `autoCorrect` already contains the rule and is no baseline.
+     */
+    private fun baseline(t: String): String = baselineCache.getOrPut(t) { predictor.autoCorrect(t, null) }
 
     private val noRule = Facts(null, 0, null, 0)
     private val factsCache = HashMap<String, Facts>()
@@ -275,7 +263,7 @@ class DroppedDoubleMarginEval {
         // W = what the sweep commits ignoring the morphology freeze (variant-A placement).
         val sweep = if (morphologyFreezes(t)) {
             bypassMorphology = true
-            try { predictor.autoCorrect(t) } finally { bypassMorphology = false }
+            try { predictor.autoCorrect(t, null) } finally { bypassMorphology = false }
         } else base
         val wOut = if (sweep == t) null else sweep
         Facts(d, dict.getValue(d), wOut, wOut?.let(::outputFreq) ?: 0)
@@ -424,7 +412,7 @@ class DroppedDoubleMarginEval {
         val adjWords = adj.map { it.target }.toSet().size
         say("S-adj-DEV: pairs=${adj.size} base words=$adjWords")
         val rows = mutableListOf("set\tM\ttyped\ttarget\tocc\tbaseline\tcandidate\tkind")
-        val hijackBase = HIJACK.keys.associateWith { predictor.autoCorrect(it) }
+        val hijackBase = HIJACK.keys.associateWith { baseline(it) }
         say("hijack baseline: $hijackBase")
         var best: Int? = null
         var bestNet = Int.MIN_VALUE
@@ -438,7 +426,7 @@ class DroppedDoubleMarginEval {
             val name = when (m) { NEVER -> "NEVER"; ALWAYS -> "ALWAYS"; else -> m.toString() }
             say("M=%-6s %s | %s | hijackOk=%s helo=%s → %s".format(
                 name, tg.line("GTC", gtc.size, 0), ta.line("S-adj", adj.size, adjWords), hijackOk,
-                ruleOutput("helo", m) ?: predictor.autoCorrect("helo"), if (pass) "admissible" else "-"))
+                ruleOutput("helo", m) ?: baseline("helo"), if (pass) "admissible" else "-"))
             if (pass && tg.netDistinct > bestNet) { best = m; bestNet = tg.netDistinct }
         }
         // Rows for the chosen value (or ALWAYS when none), for inspection of DEV only.
@@ -483,9 +471,9 @@ class DroppedDoubleMarginEval {
         say(ta.line("S-adj", adj.size, adjWords))
         say("C-oov words=${oov.size} eligible=${to.eligible} newChanges=${to.breaks.size} " +
             "(${"%.3f".format(100.0 * to.breaks.size / oov.size)}%) alreadyChangedByBaseline=${to.swaps.size}")
-        val hijack = HIJACK.mapValues { (typo, _) -> ruleOutput(typo, m) ?: predictor.autoCorrect(typo) }
+        val hijack = HIJACK.mapValues { (typo, _) -> ruleOutput(typo, m) ?: baseline(typo) }
         say("hijack outputs: $hijack")
-        val helo = ruleOutput("helo", m) ?: predictor.autoCorrect("helo")
+        val helo = ruleOutput("helo", m) ?: baseline("helo")
         say("helo → $helo")
         for (w in listOf("tomorow", "ocasion", "begining", "adress", "sucess", "occured", "succesful")) {
             say("example $w: baseline=${baseline(w)} candidate=${ruleOutput(w, m) ?: baseline(w)}")
@@ -502,31 +490,39 @@ class DroppedDoubleMarginEval {
     }
 
     /**
-     * After implementation: production autoCorrect must equal the simulated rule at margin
-     * `CK_DD_VERIFY` on every eligible input of every set (doc §1.3); the eval is void otherwise.
+     * Production autoCorrect at margin `CK_DD_VERIFY` (through the margin seam, so any M can be
+     * checked in-process) must equal the simulated rule on every rule-decided input of every set
+     * (doc §1.3); the eval is void otherwise. With `CK_DD_EXPECTED=<dump>` the shipped
+     * `autoCorrect` (its own constant margin) is additionally checked against that dump.
      */
     @Test
     fun productionMatchesSimulation() {
         val m = System.getenv("CK_DD_VERIFY")?.toInt() ?: return
         assumeTrue(File(corpusDir, "gtc-pairs.tsv").isFile)
-        // Production now contains the rule, so the expectation comes from a dump made at the
-        // pre-implementation commit (dumpSimulation), never from this run's own baseline.
         val inputs = LinkedHashSet<String>()
         (readGtc("DEV") + readGtc("TEST") + readDat("wikipedia.dat") + readDat("aspell.dat") +
             readDat("missp.dat") + readDat("holbrook-missp.dat") + sAdj(true) + sAdj(false)).forEach { inputs += it.typed }
         File(corpusDir, "words_alpha.txt").forEachLine { inputs += it.trim().lowercase() }
-        val expected = File(System.getenv("CK_DD_EXPECTED") ?: error("CK_DD_EXPECTED (baseline rows file) required"))
         val want = HashMap<String, String>()
-        expected.forEachLine { line -> val c = line.split('\t'); if (c.size == 2) want[c[0]] = c[1] }
+        System.getenv("CK_DD_EXPECTED")?.let { path ->
+            File(path).forEachLine { line -> val c = line.split('\t'); if (c.size == 2) want[c[0]] = c[1] }
+        }
         var checked = 0
+        var checkedDump = 0
         val mismatches = mutableListOf<String>()
         for (t in inputs) {
-            val w = want[t] ?: continue
+            if (!letters.matches(t) || facts(t).d == null) continue
             checked++
-            val actual = predictor.autoCorrect(t)
-            if (actual != w) mismatches += "$t: production=$actual simulated=$w"
+            val sim = ruleOutput(t, m) ?: baseline(t)
+            val actual = predictor.autoCorrect(t, m)
+            if (actual != sim) mismatches += "$t: production(M=$m)=$actual simulated=$sim"
+            want[t]?.let { w ->
+                checkedDump++
+                val shipped = predictor.autoCorrect(t)
+                if (shipped != w) mismatches += "$t: shipped=$shipped dump=$w"
+            }
         }
-        println("productionMatchesSimulation(M=$m): checked=$checked mismatches=${mismatches.size}")
+        println("productionMatchesSimulation(M=$m): checked=$checked dumpChecked=$checkedDump mismatches=${mismatches.size}")
         mismatches.take(50).forEach(::println)
         assertTrue("production diverges from the simulated rule", mismatches.isEmpty() && checked > 0)
     }
