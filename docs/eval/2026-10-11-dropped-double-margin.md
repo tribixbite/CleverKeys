@@ -267,3 +267,74 @@ share the alias re-route and C-5 guard (`finalizeCorrection`) and the step-5 com
   (`SpaceCommitPreview` calls `autoCorrect`), so `helo` now highlights `hello` too.
 - **Scope.** The step applies to whichever tap dictionary is loaded, but it was measured
   only for English QWERTY. Other languages use the same 0–255 rank scale and are unmeasured.
+
+## 5. Device-dictionary re-measurement (2026-10-12)
+
+### 5.1 The harness did not run on the device's dictionary
+
+§2–§4 were measured on the wrong frequency scale. The tap predictor on the device
+(`WordPredictor`: autocorrect, the suggestion bar, `SpaceCommitResolver`) loads
+`dictionaries/en_enhanced.bin` (`AsyncDictionaryLoader`, and `WordPredictor.loadDictionary`).
+`BinaryDictionaryLoader` reads its V2 uint8 rank as `freq = 1 000 000 − rank · 3 900`. The JSON
+is only a fallback. The JVM harnesses instead read `en_enhanced.json` and used `rank = 255 − b`
+for each byte `b`, and `AutoCorrectEndToEndTest`'s header claimed this equals the device path.
+It does not. The JSON is the CTC swipe lexicon's compressed 134..255 scale. That is correct for
+swipe, but it is not the `.bin`'s rank. Decoding the `.bin` shows that 98,139 of the 98,140 words
+have a different value. Both files hold the same 98,140 words, so the corpus filters and splits
+are unchanged; only the frequencies differ.
+
+Rank gaps (in steps; one step = `maxFreq / 255` ≈ one `.bin` rank) between the word a slip
+means and the doubled-letter word:
+
+| pair | `.bin` (device) | JSON-derived (§2–§4) |
+|---|---|---|
+| help / hello | 39 | 20 |
+| see / seed | 66 | 33 |
+| very / berry | 77 | 39 |
+| one / knee | 81 | 41 |
+| many / nanny | 88 | 44 |
+| from / groom | 114 | 57 |
+| the / ghee | 191 | 95 |
+
+So the shipped M = 32 gives `helo` → `help` on the phone, which is what the Pixel showed
+(2026-10-12, release dc7b3b2f). The M = 32 tuning, the TEST gate result in §3 and the
+simulation parity in §4 all describe a dictionary the device never loads.
+
+The Pixel also corrected `bery` → berry and `grom` → groom. That device has
+`autocorrect_prefix_length = 1`, so the sweep only considers words that start with the typed
+first letter. `very` and `from` are excluded, the sweep's W is a b-/g- word, and the
+insertion wins against it. The shipped default is 0. This interaction is not a bug in DD-M, but
+it is untested: none of the measurements here use a prefix length above 0.
+
+### 5.2 Pre-registration (written before any device-scale DEV or TEST outcome was computed)
+
+When this section was committed, no autocorrect output on the `.bin` had been run on any set.
+
+- **Rule, data, split, filter: unchanged.** The rule is DD-M as in §1.1. M counts steps of
+  `maxFreq / 255`; on the `.bin` `maxFreq` is 1,000,000, so one step is 3,921.6, about one
+  rank (3,900). The data and DEV/TEST split are §1.2's, and the dictionary filter is the same
+  word set.
+- **Harness.** `DroppedDoubleMarginEval` now loads `ShippedTapDictionary`: `en_enhanced.bin`
+  through the production `BinaryDictionaryParser`, plus the real contraction aliases.
+  `ShippedTapDictionaryDriftTest` pins this to the production asset load. DD-M is now in
+  production, so the baseline is production with step 1.45 skipped. A margin parameter
+  (`autoCorrect(word, null)`) provides this; production always passes
+  `DROPPED_DOUBLE_MARGIN_STEPS`. W is that baseline with the morphology freeze bypassed, as in
+  §1.3.
+- **Grid.** `M ∈ {NEVER, −40, −38, …, 158, 160, ALWAYS}`. This is wider than §1.4 because
+  device-scale gaps are about twice the JSON ones.
+- **Admissibility and selection.** These are §1.4's three constraints and its selection rule,
+  unchanged: the most GTC-DEV distinct net fixes, with the smallest M winning a tie.
+- **Ship gate.** T1–T5 of §1.5 with the same thresholds, evaluated once on TEST at the chosen
+  M. Whether `helo` → `hello` is reported, not gated.
+- **Descriptive extra (not used for selection or the gate).** After the chosen-M TEST result is
+  recorded, TEST is also run at the currently shipped M = 32. This describes what phones run
+  today. If the chosen M is 32, this is the same run.
+- **Decision.** If T1–T5 pass, `DROPPED_DOUBLE_MARGIN_STEPS` becomes the chosen M. Before that,
+  `productionMatchesSimulation` must pass at that M, and the unit tests must be updated to the
+  device-scale behaviour. If no M is admissible, or TEST fails, this addendum changes no code.
+  The numbers are reported, with a recommendation to the maintainer: keep a measured-safe M, or
+  revert the step.
+- **Known weakness, stated in advance.** TEST is not untouched. Its outcomes at M = 32 on the
+  other scale were computed and read on 2026-10-11/12 (§3). The re-tuning uses DEV only. The
+  TEST result is still a second look at the same pairs.
