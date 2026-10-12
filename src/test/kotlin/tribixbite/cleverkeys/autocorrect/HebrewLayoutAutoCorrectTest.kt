@@ -60,6 +60,9 @@ class HebrewLayoutAutoCorrectTest {
             "שםך" to "שלך",   // ם↔ל; was the deletion שם
             "זנ" to "זה",     // ה↔נ; two letters: was the anagram נז
             "טש" to "יש",     // ט↔י; two letters: was the anagram שט
+            // Pixel 2026-10-12 device pass (release 7eef0b7c) → אתמול. Its other typo, תושה, commits
+            // עושה (a distant 1-substitution inside the tie band, frequency wins): todo item 20.
+            "אתנול" to "אתמול", // נ↔מ
         )
 
         @JvmStatic

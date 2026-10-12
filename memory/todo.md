@@ -79,9 +79,17 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     measured on the CTC JSON scale by mistake. Harnesses now load the `.bin`
     (`ShippedTapDictionaryDriftTest`). Follow-up, unmeasured: `autocorrect_prefix_length` > 0
     (the Pixel has 1) lets bery→berry / grom→groom through, because very/from fail the prefix.
-19. [ ] device: Hebrew autocorrect (`1d2f1d58`) unverified on a device — the Pixel run read
-    "no correction" for English too, but a direct re-check showed autocorrect firing
-    (`Helo`→`Help`), so its Hebrew result is unreliable. Re-run with the he pack on hebr_1_il.
+19. [x] DONE 2026-10-12 — Hebrew autocorrect on a device (Pixel, release `7eef0b7c`, he pack on
+    `hebr_1_il`): English sanity `Helo`→`Hello`; controls 3/3; אתנול→אתמול corrected. Of the
+    other two "typos", שרום was not a neighbour typo (ר and ל are far apart on hebr_1_il), and
+    תושה→עושה is reproduced on the JVM (item 20). Also item 3: `somethings` swipes commit
+    `Somethings` 3/3 with and without the custom word. Item 2 (Persian) not runnable: no fa pack
+    or Persian layout exists.
+20. [ ] agent→maintainer: inside the ±0.10 score band a DISTANT one-letter substitution can beat a
+    neighbour-key one on frequency (he תושה→עושה ת↔ע ≈4 keys, over תודה ש↔ד; scores ≈0.89 vs
+    0.97). Candidate: structural tiebreak "neighbour substitution beats distant substitution"
+    (like transposition > multi-sub). All-language ranking change: pre-register and measure
+    (GTC adjacent vs non-adjacent classes for en) before shipping.
 
 ## Device results recorded 2026-10-07/08
 
