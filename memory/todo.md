@@ -114,7 +114,13 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     stays `teh`, tapped suggestion replaces the typed word, Backspace after a swipe removes
     the word, clipboard-panel tap and paste key type the phone clip, delete-last-word is
     Ctrl+Backspace; then the same in a RustDesk remote terminal; and AVNC (TYPE_NULL).
-    Also `textAssistMenu`/`replaceTextMenu` in a stock EditText with a selection.
+    Also `textAssistMenu`/`replaceTextMenu` in a stock EditText with a selection: on the Saga
+    (2026-10-13, release `68d91874`) they produced no visible change in Chrome — inconclusive,
+    re-check in an app that honours the context-menu action. Needs a RustDesk host from the
+    maintainer. Done on the Saga the same day: Termux (GitHub 0.118.3) no autocorrect, panel and
+    custom-swipe paste type the clip, Backspace PASS; inline clipboard editor Ctrl+V leaked to
+    the app behind it — fixed in `3439fff0` (with the search/tag-field paste leak), not yet
+    re-checked on a device.
 
 ## Device results recorded 2026-10-07/08
 
