@@ -49,7 +49,10 @@ class KeyEventHandlerLearningHooksTest {
         every { clip.getItemAt(0) } returns item
         every { item.coerceToText(context) } returns "terminal-paste-fixture"
         every { recv.getContext() } returns context
-        val editor = mockk<EditorInfo>(relaxed = true).apply { packageName = "org.custom.shell" }
+        val editor = mockk<EditorInfo>(relaxed = true).apply {
+            packageName = "org.custom.shell"
+            inputType = android.text.InputType.TYPE_CLASS_TEXT
+        }
         every { recv.getCurrentEditorInfo() } returns editor
         every { Config.globalConfigOrNull() } returns config
         config.custom_terminal_packages = setOf("org.custom.shell")
@@ -110,6 +113,10 @@ class KeyEventHandlerLearningHooksTest {
         every { recv.getLastAutocorrectOriginalWord() } returns null
         every { recv.getLastAutoInsertedWord() } returns null
         every { recv.getCurrentInputConnection() } returns conn
+        // An ordinary text field: an unset inputType is 0 = TYPE_NULL, a blind-field signal since 2026-10-13.
+        every { recv.getCurrentEditorInfo() } returns mockk<EditorInfo>(relaxed = true).apply {
+            inputType = android.text.InputType.TYPE_CLASS_TEXT
+        }
 
         hooks = mockk(relaxed = true)
         handler = KeyEventHandler(recv)

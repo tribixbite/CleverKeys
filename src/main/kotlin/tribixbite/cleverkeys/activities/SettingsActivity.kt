@@ -670,7 +670,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }.toTypedArray(),
             // ===== Hand-maintained NON-control entries (activity navigation, FAQ) =====
-            searchEntry(R.string.advanced_custom_terminal_title, listOf("terminal", "packages", "whitelist", "allowlist", "ssh"), "advanced", expandSection = { advancedSectionExpanded = true }, settingId = "custom_terminal_packages"),
+            searchEntry(R.string.advanced_custom_terminal_title, listOf("terminal", "packages", "whitelist", "allowlist", "ssh", "remote", "desktop", "rustdesk", "vnc"), "advanced", expandSection = { advancedSectionExpanded = true }, settingId = "custom_terminal_packages"),
             // Titles are the screens' own string resources, so they read exactly like the
             // screen they open, in the UI language.
             searchEntry(R.string.activities_theme_title, listOf("color", "dark mode", "light", "appearance", "theme"), "activities", ThemeSettingsActivity::class.java),

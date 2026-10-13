@@ -661,6 +661,16 @@ class PredictionContextTracker {
         // Skip for input types where prediction is inappropriate
         if (!shouldSyncForInputType(editorInfo)) return
 
+        // Terminal-style editors (terminals and BLIND remote fields, TerminalUtils.editorKind):
+        // the readback is not the user's text — a terminal reads "", RustDesk's hidden field
+        // reads 1024 '1' placeholders plus everything typed this session — so a sync would
+        // replace the keystroke-tracked word with "" or a 1000-char digit run, and a later
+        // suggestion tap would delete that many characters on the remote (2026-10-13). The
+        // keystroke tracker is the only record of the word there; keep it.
+        if (editorInfo != null &&
+            TerminalUtils.isTerminalApp(editorInfo, Config.globalConfigOrNull()?.custom_terminal_packages)
+        ) return
+
         // Skip for CJK text (no space-based word boundaries)
         if (isCJKLanguage(language)) return
 

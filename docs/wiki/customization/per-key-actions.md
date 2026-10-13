@@ -249,7 +249,8 @@ continue to use their existing behavior.
 The command requires the exact last word and caret position to remain verified.
 It attaches before that word's single owned trailing space, or inserts no space when
 the original commit was spaceless. It refuses selected ranges, password fields,
-inline editors and stale editor/word ownership. Observed caret movement, changing
+inline editors, terminals and remote-desktop fields (see
+[Advanced Settings](../settings/advanced.md#terminal-apps)) and stale editor/word ownership. Observed caret movement, changing
 fields or preferences, typing another character, or invoking a duplicate suffix
 invalidates attachment. Android does not identify which operation caused a selection
 callback: an identical manual move during the brief owned-callback window can be

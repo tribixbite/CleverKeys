@@ -118,7 +118,11 @@ class DictionaryAddUndoTest {
     }
 
     private fun field(): EditorInfo =
-        objenesis.newInstance(EditorInfo::class.java).apply { packageName = "com.example.notes" }
+        objenesis.newInstance(EditorInfo::class.java).apply {
+            packageName = "com.example.notes"
+            // An ordinary text field: an unset inputType is 0 = TYPE_NULL, a blind-field signal since 2026-10-13.
+            inputType = android.text.InputType.TYPE_CLASS_TEXT
+        }
 
     private fun SuggestionHandler.tap(wire: String) = onSuggestionSelected(wire, ic, field(), resources)
 

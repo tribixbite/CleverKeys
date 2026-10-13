@@ -65,6 +65,12 @@ only authoritative task list is the "Open now" section at the top of `memory/tod
 the per-issue status, and the plan doc's "Current execution status" table the roadmap
 state. Read those before editing or launching Gradle.
 
+## Blind fields and EditorInfo fixtures (2026-10-13)
+
+`TerminalUtils.editorKind` treats RustDesk and ANY `inputType == TYPE_NULL` editor as a blind
+REMOTE field (terminal-style input). An objenesis/relaxed-mock `EditorInfo` has inputType 0,
+so test fixtures modelling an ordinary editor must set `TYPE_CLASS_TEXT` (11 mock tests broke).
+
 ## Rendered documentation link checks
 
 Normalize relative HTML hrefs against each page URL before checking targets; an absolute-only

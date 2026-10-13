@@ -419,7 +419,7 @@ class KeyEventHandler(
             val charBeforeSpace = textBefore?.getOrNull(0)
             if (spacePrecedesCursor && charBeforeSpace != null && charBeforeSpace.isLetterOrDigit()) {
                 // Delete the previous space and insert ". "
-                conn.deleteSurroundingText(1, 0)
+                deleteBeforeCursor(conn, 1)
                 textToCommit = ". "
                 // Reset tracking to prevent triple-space weirdness
                 lastTypedChar = '.'
@@ -454,7 +454,7 @@ class KeyEventHandler(
 
                 if (isPunctChar && eligible) {
                     // Closing punctuation: swallow the automatic space to attach to the word
-                    conn.deleteSurroundingText(1, 0)
+                    deleteBeforeCursor(conn, 1)
                     // v1.2.8: For sentence-ending punctuation, add space after so autocap triggers
                     // "hello " + "." → "hello. " (enables getCursorCapsMode to detect sentence end)
                     if (isSentenceEndingPunctuation(char)) {
@@ -469,7 +469,7 @@ class KeyEventHandler(
                     // (Apostrophes are handled by isSmartPunctuationChar above.)
                     if (isClosingQuote(char, textBefore)) {
                         // Closing quote: delete space to attach to word
-                        conn.deleteSurroundingText(1, 0)
+                        deleteBeforeCursor(conn, 1)
                     }
                     // Opening quote: keep the space (do nothing)
                 }
@@ -595,6 +595,30 @@ class KeyEventHandler(
     }
 
     /**
+     * True when the current editor takes terminal-style input: a terminal or a BLIND field
+     * (remote desktop such as RustDesk, any TYPE_NULL editor) — [TerminalUtils.editorKind] is
+     * the one detector. Such a field cannot be read back or rewritten in place.
+     */
+    private fun isTerminalStyleEditor(): Boolean =
+        TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo(), Config.globalConfigOrNull()?.custom_terminal_packages)
+
+    /**
+     * Delete [count] chars before the cursor. Ordinary editors: one `deleteSurroundingText`.
+     * Terminal-style editors: [count] KEYCODE_DEL key events — the only deletion a pty or a
+     * remote screen receives (ARC-007). RustDesk forwards a LENGTH-ONLY diff of its hidden
+     * field, so `deleteSurroundingText(n)` reaches the remote as ONE Backspace whatever n is,
+     * and its terminal view's empty field ignores the call altogether (2026-10-13).
+     */
+    private fun deleteBeforeCursor(conn: InputConnection, count: Int) {
+        if (count <= 0) return
+        if (isTerminalStyleEditor()) {
+            repeat(count) { send_key_down_up(KeyEvent.KEYCODE_DEL, 0) }
+        } else {
+            conn.deleteSurroundingText(count, 0)
+        }
+    }
+
+    /**
      * #110: If backspace_undo_swipe is enabled and last input was a swipe,
      * delete the entire swiped word + trailing auto-space in one backspace press.
      * Returns true if the undo was handled, false to fall through to normal backspace.
@@ -625,7 +649,7 @@ class KeyEventHandler(
             else -> return false
         }
 
-        conn.deleteSurroundingText(charsToDelete, 0)
+        deleteBeforeCursor(conn, charsToDelete)
 
         // Clear swipe tracking and reset prediction state
         // SAS-1: the undone commit's auto-space is gone — invalidate the swallow
@@ -668,7 +692,7 @@ class KeyEventHandler(
         }
 
         // Replace corrected word with original, preserving trailing space if present
-        conn.deleteSurroundingText(charsToDelete, 0)
+        deleteBeforeCursor(conn, charsToDelete)
         val replacement = if (charsToDelete > correctedWord.length) "$originalWord " else originalWord
         conn.commitText(replacement, 1)
 
@@ -692,11 +716,15 @@ class KeyEventHandler(
      * directly and commit the text via InputConnection — the same approach the
      * clipboard popup uses (paste_from_clipboard_pane → sendText → commitText).
      */
-    private fun handlePaste() {
-        if (TerminalUtils.isTerminalApp(recv.getCurrentEditorInfo(), Config.globalConfigOrNull()?.custom_terminal_packages)) {
+    private fun handlePaste(menuId: Int = android.R.id.paste) {
+        // Terminal-style editors include BLIND remote fields (2026-10-13): RustDesk's terminal
+        // view has no clipboard path, and a Ctrl+V key event would paste the REMOTE clipboard
+        // (RustDesk syncs the phone's clip only when its app resumes). Committed text is the one
+        // route that reaches every such field; a clip is plain text there anyway.
+        if (isTerminalStyleEditor()) {
             pasteFromSystemClipboard()
         } else {
-            sendContextMenuAction(android.R.id.paste)
+            sendContextMenuAction(menuId)
         }
     }
 
@@ -777,7 +805,7 @@ class KeyEventHandler(
             KeyValue.Editing.CUT -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.cut)
             KeyValue.Editing.SELECT_ALL -> sendContextMenuAction(android.R.id.selectAll)
             KeyValue.Editing.SHARE -> sendContextMenuAction(android.R.id.shareText)
-            KeyValue.Editing.PASTE_PLAIN -> sendContextMenuAction(android.R.id.pasteAsPlainText)
+            KeyValue.Editing.PASTE_PLAIN -> handlePaste(android.R.id.pasteAsPlainText)
             KeyValue.Editing.UNDO -> sendContextMenuAction(android.R.id.undo)
             KeyValue.Editing.REDO -> sendContextMenuAction(android.R.id.redo)
             KeyValue.Editing.REPLACE -> launchTextAction(TextActionPolicy.TextAction.REPLACE)
@@ -806,6 +834,10 @@ class KeyEventHandler(
                 KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
             )
             KeyValue.Editing.CLEAR -> {
+                // A terminal-style field has no readable document to erase: select-all reaches
+                // nothing, and RustDesk's length diff would turn the commit into ONE remote
+                // Backspace. Leave the unseen text alone (2026-10-13).
+                if (isTerminalStyleEditor()) return
                 val conn = recv.getCurrentInputConnection() ?: return
                 conn.beginBatchEdit()
                 conn.performContextMenuAction(android.R.id.selectAll)
@@ -859,7 +891,10 @@ class KeyEventHandler(
     internal fun isCurrentEditor(ic: InputConnection, info: EditorInfo): Boolean = recv.getCurrentInputConnection() === ic && recv.getCurrentEditorInfo() === info
 
     override fun execute_suffix(suffix: String): Boolean {
-        val success = canUseEditorActions() && learningHooks?.appendSuffix(suffix) == true
+        // A suffix rewrites the committed word and its auto-space in place: impossible in a
+        // terminal-style (blind) field, where only appended text and key events arrive.
+        val success = canUseEditorActions() && !isTerminalStyleEditor() &&
+            learningHooks?.appendSuffix(suffix) == true
         if (!success) recv.getContext()?.let { recv.showPrivateCopyFeedback(it.getString(R.string.dynamic_action_unavailable)) }
         return success
     }

@@ -48,6 +48,49 @@ Standard Android keyboards rely on `InputConnection` methods:
 
 ## Implementation Details
 
+### Blind text fields (remote desktop / TYPE_NULL), 2026-10-13
+
+A BLIND field forwards what the IME writes to another screen and cannot be read back or
+edited in place. `TerminalUtils.editorKind(editorInfo, customPackages)` is the one
+detector and returns `TEXT`, `TERMINAL` or `REMOTE`:
+
+| Order | Signal | Kind |
+|------:|--------|------|
+| 1 | package in the user's custom terminal list (exact) | `TERMINAL` |
+| 2 | built-in terminal package / Termux, anotherterm, `.terminal` heuristics | `TERMINAL` |
+| 3 | built-in remote-input package (`com.carriez.flutter_hbb`, RustDesk) | `REMOTE` |
+| 4 | `inputType == InputType.TYPE_NULL` (AVNC, bVNC, any non-text editor) | `REMOTE` |
+| — | otherwise | `TEXT` |
+
+`isTerminalApp` = kind is not `TEXT`; every no-rewrite branch asks it, so `REMOTE` gets the
+whole terminal policy: no space autocorrect, no I-capitalization, no swipe-final
+autocorrect, suggestion replacement and backspace-undo by `KEYCODE_DEL` × n
+(`KeyEventHandler.deleteBeforeCursor`, also used by the smart-punctuation and
+double-space swallows), paste and paste-as-plain-text commit the system clip, `clear` and
+the `'s`/`'` suffix commands are refused, the typed word ends on non-text keys, cursor
+sync (`PredictionContextTracker.synchronizeWithCursor`) and the #78 editor scan never read
+the field. Only delete-last-word differs: `TERMINAL` sends Ctrl+W, `REMOTE` Ctrl+Backspace
+(Ctrl+W closes a remote window or tab).
+
+**Why (RustDesk source, master `0b5a3d74`, `flutter/lib/mobile/pages/remote_page.dart`):**
+the remote-desktop view's hidden multiline field starts as `'1' * 1024` (L28), is not reset
+while typing, and is forwarded as a LENGTH-ONLY diff (L328-L372): longer → the tail is
+typed remotely; shorter → ONE `VK_BACK` whatever the count; equal → nothing. So
+`deleteSurroundingText(n)` + `commitText(fix)` garbles the remote (`teh` → `tehthe `), a
+readback scan reads the 1024 placeholders as a word, and `KEYCODE_DEL` key events (routed
+through `RawKeyFocusScope`) are the only exact deletion. Its remote-terminal view (xterm
+4.0.0) resets an empty field after every commit, so there `deleteSurroundingText` does
+nothing at all. `performContextMenuAction(paste)` works in the desktop view but committed
+clip text works in both; a Ctrl+V key event would paste the REMOTE clipboard (RustDesk
+syncs the phone clip only when its app resumes).
+
+**Not done, deliberately:** no readback probe (an empty ordinary field also reads "", so a
+probe would misclassify every new message box); remote packages are listed only when their
+input code was read. Users add other apps through the custom terminal list, which gives
+`TERMINAL` semantics (Ctrl+W) — right for RustDesk used mainly as a remote shell.
+Tests: `BlindFieldPolicyTest` (RustDesk length-diff model; asserts what the remote
+receives), `TerminalUtilsTest`.
+
 ### Terminal Detection and Custom Packages
 
 `SuggestionHandler.isTerminalEditor` passes its Config snapshot to

@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.text.InputType
 import android.view.inputmethod.EditorInfo
 import com.google.common.truth.Truth.assertThat
 import io.mockk.mockk
@@ -64,7 +65,53 @@ class TerminalUtilsTest {
         // MockK's every{} only works for methods/getters, so we set the field directly.
         val ei = mockk<EditorInfo>(relaxed = true)
         ei.packageName = pkg
+        // An ordinary text field: a relaxed mock leaves inputType 0, which is TYPE_NULL — itself
+        // a blind-field signal since 2026-10-13 (see the blind-field tests below).
+        ei.inputType = InputType.TYPE_CLASS_TEXT
         return ei
+    }
+
+    // =========================================================================
+    // Blind fields (2026-10-13): remote desktop / TYPE_NULL editors
+    // =========================================================================
+
+    @Test
+    fun `RustDesk is a blind remote field and gets terminal-style input`() {
+        val rustdesk = editorInfoWithPackage("com.carriez.flutter_hbb")
+        assertThat(TerminalUtils.editorKind(rustdesk)).isEqualTo(TerminalUtils.EditorKind.REMOTE)
+        assertThat(TerminalUtils.isTerminalApp(rustdesk)).isTrue()
+    }
+
+    @Test
+    fun `any TYPE_NULL editor is blind unless it is a known terminal`() {
+        val vnc = editorInfoWithPackage("com.gaurav.avnc").apply { inputType = InputType.TYPE_NULL }
+        assertThat(TerminalUtils.editorKind(vnc)).isEqualTo(TerminalUtils.EditorKind.REMOTE)
+        assertThat(TerminalUtils.isTerminalApp(vnc)).isTrue()
+        val noPackage = editorInfoWithPackage(null).apply { inputType = InputType.TYPE_NULL }
+        assertThat(TerminalUtils.editorKind(noPackage)).isEqualTo(TerminalUtils.EditorKind.REMOTE)
+        // Termux declares TYPE_NULL too, but it is a terminal (Ctrl+W delete-last-word).
+        val termux = editorInfoWithPackage("com.termux").apply { inputType = InputType.TYPE_NULL }
+        assertThat(TerminalUtils.editorKind(termux)).isEqualTo(TerminalUtils.EditorKind.TERMINAL)
+    }
+
+    @Test
+    fun `the user's list makes any app a terminal, including RustDesk for a remote shell`() {
+        val custom = setOf("com.carriez.flutter_hbb")
+        assertThat(TerminalUtils.editorKind(editorInfoWithPackage("com.carriez.flutter_hbb"), custom))
+            .isEqualTo(TerminalUtils.EditorKind.TERMINAL)
+    }
+
+    @Test
+    fun `ordinary text fields stay ordinary`() {
+        for (type in listOf(
+            InputType.TYPE_CLASS_TEXT,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE,
+            InputType.TYPE_CLASS_NUMBER,
+        )) {
+            val notes = editorInfoWithPackage("com.example.notes").apply { inputType = type }
+            assertThat(TerminalUtils.editorKind(notes)).isEqualTo(TerminalUtils.EditorKind.TEXT)
+        }
+        assertThat(TerminalUtils.editorKind(null)).isEqualTo(TerminalUtils.EditorKind.TEXT)
     }
 
     // =========================================================================

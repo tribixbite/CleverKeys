@@ -1,6 +1,6 @@
 ---
 title: Advanced Settings
-description: Terminal app handling, the default-keyboard reminder, debug logging and suggestion origin markers
+description: Terminal and remote-desktop app handling, the default-keyboard reminder, debug logging and suggestion origin markers
 category: Settings
 difficulty: advanced
 ---
@@ -8,14 +8,14 @@ difficulty: advanced
 # Advanced Settings
 
 The **Advanced** section comes near the end of CleverKeys Settings, after Privacy. Most people never need
-it. It holds terminal-app handling and a few diagnostic options.
+it. It holds terminal and remote-desktop handling and a few diagnostic options.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
 | **Access** | Settings > Advanced (expand the section) |
-| **Main use** | Make CleverKeys treat an extra app as a terminal |
+| **Main use** | Make CleverKeys treat an extra app as a terminal (or a remote screen) |
 | **Also here** | Default keyboard reminder, debug logging, suggestion origin markers |
 
 ## Terminal Apps
@@ -24,16 +24,26 @@ Terminal emulators handle text differently from ordinary text fields: they do no
 keyboard read what is already on the line, and most ignore Android's paste action. When
 CleverKeys detects a terminal, it changes a few behaviours.
 
-### What Changes in a Terminal
+### What Changes in a Terminal or Remote Screen
 
-| Behaviour | Ordinary apps | Terminal apps |
-|-----------|---------------|---------------|
-| **Paste** (key, short swipe or popover slot) | Android paste action | Types the current clipboard text directly |
-| **Delete last word** | Deletes the word in the field | Sends Ctrl+W, so the shell deletes the word itself |
-| **Autocorrect while typing** | Follows your autocorrect settings | Never rewrites a word (`ls` stays `ls`) |
-| **Autocorrect after a swipe** | Follows your settings | Skipped; the recognised word is inserted as is |
-| **Word suggestions** | Shown | Shown for the word you are typing; tapping one replaces that word |
-| **Automatic spaces** | Your preference | Your preference (not changed by terminal detection) |
+Remote-desktop and VNC apps have the same problem as terminals: what you type goes to
+another screen, and the app's text field on the phone is "blind". CleverKeys cannot read
+it back or change text in it (RustDesk, for example, forwards only how much longer or
+shorter its hidden field got). These apps get the terminal behaviour below, with one
+difference for **Delete last word**.
+
+| Behaviour | Ordinary apps | Terminal apps | Remote-desktop apps |
+|-----------|---------------|---------------|---------------------|
+| **Paste** and **Paste as plain text** (key, short swipe or popover slot) | Android paste action | Types the current clipboard text directly | Types the phone's clipboard text directly |
+| **Delete last word** | Deletes the word in the field | Sends Ctrl+W, so the shell deletes the word itself | Sends Ctrl+Backspace (Ctrl+W would close a remote window) |
+| **Autocorrect while typing** | Follows your autocorrect settings | Never rewrites a word (`ls` stays `ls`) | Never rewrites a word |
+| **Capitalizing "i"** | Follows your setting | Never rewrites a word | Never rewrites a word |
+| **Autocorrect after a swipe** | Follows your settings | Skipped; the recognised word is inserted as is | Skipped |
+| **Word suggestions** | Shown | Shown for the word you are typing; tapping one deletes it with Backspace key presses and types the suggestion | Same as terminals |
+| **Backspace undo of a swipe** | Removes the word | Removes the word with one Backspace key press per character | Same as terminals |
+| **Clear field** | Selects all and deletes | Does nothing (the keyboard cannot see the text) | Does nothing |
+| **Append 's / '** | Adds the suffix to the last word | Not available | Not available |
+| **Automatic spaces** | Your preference | Your preference (not changed by terminal detection) | Your preference |
 
 Because the keyboard cannot read the terminal's line, it keeps track of the word you are
 typing from your own keystrokes:
@@ -50,9 +60,15 @@ typing from your own keystrokes:
 > recall (Up arrow), a redrawn prompt, or backspacing past the start of the word you typed.
 > The next non-text key resets the tracking.
 
-### Which Apps Count as Terminals
+### Which Apps Count as Terminals or Remote Screens
 
-These are detected automatically:
+Remote screens detected automatically:
+
+- RustDesk (`com.carriez.flutter_hbb`), for both remote desktops and its remote terminal
+- Any app whose text field tells Android it is not a text editor (input type "null"), such
+  as the VNC viewers AVNC and bVNC
+
+Terminals detected automatically:
 
 - Termux and apps whose package name contains `termux`
 - ConnectBot, JuiceSSH, Termius, Android Terminal Emulator, Better Terminal Pro and the
@@ -62,7 +78,10 @@ These are detected automatically:
 
 ### Custom Terminal Packages
 
-If your terminal or SSH app is not detected, add it here:
+If your terminal, SSH or remote-desktop app is not detected, add it here. Apps on this list
+get the terminal behaviour, including Ctrl+W for **Delete last word**. That suits a remote
+shell (add RustDesk here if you mostly use it to control a terminal) but not a remote
+desktop, where Ctrl+W closes the current window.
 
 1. Open **Settings > Advanced**
 2. Tap **Custom terminal packages**

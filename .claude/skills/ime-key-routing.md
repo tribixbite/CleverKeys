@@ -323,3 +323,26 @@ branch in `onCustomShortSwipe` only so the haptic fires on success; templates li
 `EditingCommandParityTest` (mock) runs every Editing value through both entry points under
 {selection, none} × {inline edit open, closed} × {app, terminal} and requires identical
 editor/receiver effects — add any new Editing value there (it fails on an uncovered one).
+
+## Editor-menu text actions (2026-10-13)
+
+`textAssist`/`replaceText` (Editing.ASSIST/REPLACE) keep the `TextActionLauncher` app
+chooser. `textAssistMenu`/`replaceTextMenu` (Editing.ASSIST_MENU/REPLACE_MENU, appended to
+the enum so ordinals stay stable) send the bare `android.R.id.textAssist`/`replaceText`
+context-menu action — the pre-7d1a3271 layout-key behaviour — with no chooser and no
+selection precondition. Text labels "asst"/"rplc" (single-font rule: a key-font glyph cannot
+share a sublabel with a text marker).
+
+## Blind fields: terminal-style input (2026-10-13)
+
+`TerminalUtils.editorKind(editorInfo, customPackages)` is the ONE detector: user list and
+built-in terminals → TERMINAL; RustDesk `com.carriez.flutter_hbb` and any
+`inputType == TYPE_NULL` editor → REMOTE; else TEXT. `isTerminalApp` (= not TEXT) gates every
+no-rewrite branch. In `KeyEventHandler`, delete text before the cursor ONLY through
+`deleteBeforeCursor(conn, n)` (KEYCODE_DEL × n in terminal-style editors) — RustDesk forwards
+a length-only diff, so `deleteSurroundingText(n)` reaches the remote as ONE Backspace. Paste
+and pasteAsPlainText commit the system clip there; `clear` and suffix commands are refused;
+cursor sync and the #78 editor scan never read the field (RustDesk's hidden field reads
+1024 '1' placeholders). REMOTE delete-last-word is Ctrl+Backspace, TERMINAL is Ctrl+W.
+A new editor-writing feature must ask `isTerminalApp` before any in-place rewrite;
+`BlindFieldPolicyTest` models RustDesk and asserts what the remote receives.

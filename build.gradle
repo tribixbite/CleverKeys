@@ -1365,6 +1365,10 @@ tasks.register('runMockTests', JavaExec) {
     // (Enter, Ctrl chord, arrows, Tab, Esc, IME action, editing command, cursor slider) ends
     // the tracked word; no autocorrect rewrite in terminals; stale predictions never repaint.
     'tribixbite.cleverkeys.TerminalTypedWordTrackingTest',
+    // Blind text fields (2026-10-13): RustDesk / TYPE_NULL editors get terminal-style input —
+    // no in-place rewrites, key-event deletion, clip-text paste — asserted on a model of
+    // RustDesk's length-diff forwarding (what the REMOTE receives).
+    'tribixbite.cleverkeys.BlindFieldPolicyTest',
     // 2026-10-11: the typed-word bar highlights what space commits (handler end to end).
     'tribixbite.cleverkeys.TypedBarHighlightHandlerTest',
     // gh #151 residual (2026-09-05): composing-less editors drop the TRAILING space of the

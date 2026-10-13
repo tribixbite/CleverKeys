@@ -97,6 +97,25 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     neighbour slips (N1 +848 S-adj words). Open: a narrower pre-registered rule, or a phone-typing
     corpus to weigh the two error populations. Seam `NeighbourTiebreak` stays OFF.
 
+21. [x] agent: DONE 2026-10-13 — editor-menu text actions. Maintainer decision: `textAssist`/
+    `replaceText` keep the app chooser; new `textAssistMenu`/`replaceTextMenu` commands and
+    layout values (Editing.ASSIST_MENU/REPLACE_MENU) send the bare context-menu id as before
+    `7d1a3271`. Catalogue 228 → 230, strings in 21 locales (→ item 8 review list), wiki
+    palette page. Fail-first: `EditingCommandParityTest` 2/10 red (the names typed literally).
+22. [x] agent: DONE 2026-10-13 — blind text fields (RustDesk, VNC, TYPE_NULL). One detector
+    `TerminalUtils.editorKind` (TEXT/TERMINAL/REMOTE; RustDesk + any TYPE_NULL editor =
+    REMOTE; no readback probe). REMOTE gets the terminal no-rewrite policy, paste commits
+    the clip, `clear`/suffix refused, no cursor sync or #78 scan, key-event deletion, and
+    Ctrl+Backspace (not Ctrl+W) for delete-last-word. Evidence and RustDesk source lines:
+    `docs/specs/termux_integration.md` "Blind text fields". `BlindFieldPolicyTest` fail-first
+    9/12 red on the old code. Not device-verified.
+23. [ ] device: blind-field checks with RustDesk installed on the Saga (F-Droid/GitHub APK
+    `com.carriez.flutter_hbb`), controlling any reachable desktop: typed text, `teh`+space
+    stays `teh`, tapped suggestion replaces the typed word, Backspace after a swipe removes
+    the word, clipboard-panel tap and paste key type the phone clip, delete-last-word is
+    Ctrl+Backspace; then the same in a RustDesk remote terminal; and AVNC (TYPE_NULL).
+    Also `textAssistMenu`/`replaceTextMenu` in a stock EditText with a selection.
+
 ## Device results recorded 2026-10-07/08
 
 - Saga, release `991651d1`: clipboard persistent selection A1–A7 PASS (`build/oct7-saga3/`);

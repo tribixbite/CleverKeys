@@ -318,7 +318,11 @@ class SuggestionHandler(
     )
 
     /**
-     * True when the editor belongs to a terminal recognized by the shared detector.
+     * True when the editor takes terminal-style input per the shared detector
+     * ([TerminalUtils.editorKind]): a terminal, or — since 2026-10-13 — a BLIND field that
+     * forwards input to a remote screen (RustDesk, any TYPE_NULL editor). Both get the same
+     * no-rewrite branches below (key-event deletion, no autocorrect or I-capitalization, typed
+     * word ended by non-text keys); only delete-last-word differs ([handleDeleteLastWord]).
      *
      * ## ARC-007 — the Termux deletion strategy, DECIDED 2026-08-29: KEEP the key-event branches
      *
@@ -1625,7 +1629,11 @@ class SuggestionHandler(
                     // typing (non-zero), but sync never populated the deletion counts,
                     // so without the scan the typed partial ("exa") was left behind and
                     // the tap produced "exa example ".
-                    if (prefixDelete == 0 && suffixDelete == 0 &&
+                    // Never in a terminal-style editor: there the tracker is the only record of
+                    // the word, and a blind field's readback is not the user's text — RustDesk's
+                    // hidden field starts as 1024 '1' characters, so the scan would read a
+                    // 64-char "word" and send 64 Backspaces to the remote (2026-10-13).
+                    if (prefixDelete == 0 && suffixDelete == 0 && !inTermuxApp &&
                         (contextTracker.getCurrentWordLength() == 0 || syncSuppressedField)) {
                         try {
                             val before = inputConnection.getTextBeforeCursor(64, 0)?.toString() ?: ""
@@ -3699,6 +3707,20 @@ class SuggestionHandler(
         // Termux doesn't support InputConnection methods, but processes terminal control sequences
         // (ARC-007: this is the fifth key-event branch the KEEP decision covers — see
         // [isTerminalEditor]. Ctrl+W is the terminal's own kill-word, not an approximation of it.)
+        // A BLIND remote field (RustDesk, VNC, TYPE_NULL) is not a shell: Ctrl+W there closes the
+        // remote window or tab. Ctrl+Backspace is the GUI word-delete, and it is the same key
+        // this function already falls back to when an editor exposes no text (2026-10-13).
+        if (inTermux && TerminalUtils.editorKind(editorInfo, config.custom_terminal_packages) ==
+            TerminalUtils.EditorKind.REMOTE
+        ) {
+            vlog { "DELETE_LAST_WORD: Ctrl+Backspace for a blind remote field" }
+            keyeventhandler.send_key_down_up(
+                KeyEvent.KEYCODE_DEL,
+                KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+            )
+            endTerminalTypedWord()
+            return
+        }
         if (inTermux) {
             vlog { "DELETE_LAST_WORD: Using Ctrl+W (^W) for Termux" }
             // Send Ctrl+W which is the standard terminal "delete word backward" sequence

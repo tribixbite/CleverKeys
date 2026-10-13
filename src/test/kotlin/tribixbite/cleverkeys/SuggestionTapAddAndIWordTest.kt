@@ -121,7 +121,11 @@ class SuggestionTapAddAndIWordTest {
 
     /** An EditorInfo naming [pkg]; the stub's constructor throws, so allocate without it. */
     private fun editorInfo(pkg: String?): EditorInfo =
-        objenesis.newInstance(EditorInfo::class.java).apply { packageName = pkg }
+        objenesis.newInstance(EditorInfo::class.java).apply {
+            packageName = pkg
+            // An ordinary text field: an unset inputType is 0 = TYPE_NULL, a blind-field signal since 2026-10-13.
+            inputType = android.text.InputType.TYPE_CLASS_TEXT
+        }
 
     private fun SuggestionHandler.capitalizeI(word: String): String =
         SuggestionHandler::class.java

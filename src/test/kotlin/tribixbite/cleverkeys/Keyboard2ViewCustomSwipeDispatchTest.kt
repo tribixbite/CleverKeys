@@ -86,7 +86,10 @@ class Keyboard2ViewCustomSwipeDispatchTest {
         inputConnection = mockk(relaxed = true)
         service = mockk(relaxed = true)
         every { service.currentInputConnection } returns inputConnection
-        every { service.currentInputEditorInfo } returns mockk<EditorInfo>(relaxed = true)
+        // An ordinary text field: an unset inputType is 0 = TYPE_NULL, a blind-field signal since 2026-10-13.
+        every { service.currentInputEditorInfo } returns mockk<EditorInfo>(relaxed = true).apply {
+            inputType = android.text.InputType.TYPE_CLASS_TEXT
+        }
 
         executor = mockk()
         every { executor.execute(any(), any(), any()) } returns false
@@ -367,6 +370,10 @@ class Keyboard2ViewCustomSwipeDispatchTest {
         every { receiver.getAutoSpaceStampedPosition() } answers { tracker.autoSpaceStampedPosition }
         every { receiver.setLastSpaceAutoInserted(false) } answers { tracker.invalidateAutoSpacePending() }
         every { receiver.takeOwedTrailingSpace() } returns null
+        // An ordinary text field: an unset inputType is 0 = TYPE_NULL, a blind-field signal since 2026-10-13.
+        every { receiver.getCurrentEditorInfo() } returns mockk<EditorInfo>(relaxed = true).apply {
+            inputType = android.text.InputType.TYPE_CLASS_TEXT
+        }
 
         val handler = objenesis.newInstance(KeyEventHandler::class.java).apply {
             setField("recv", receiver)
