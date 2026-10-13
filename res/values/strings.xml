@@ -2633,6 +2633,10 @@
     <string name="cmd_text_assist_desc">Process selected text with AI assistants</string>
     <string name="cmd_replace_text">Replace Text</string>
     <string name="cmd_replace_text_desc">Replace selected text with alternatives</string>
+    <string name="cmd_text_assist_menu">Text Assist (Editor Menu)</string>
+    <string name="cmd_text_assist_menu_desc">Send the app\'s own text-assist menu action, without the app chooser</string>
+    <string name="cmd_replace_text_menu">Replace Text (Editor Menu)</string>
+    <string name="cmd_replace_text_menu_desc">Send the app\'s own replace menu action, without the app chooser</string>
     <string name="cmd_show_text_menu">Show Text Menu</string>
     <string name="cmd_show_text_menu_desc">Select word at cursor and show native toolbar</string>
     <string name="cmd_timestamp_date">Date (ISO)</string>

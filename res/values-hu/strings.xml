@@ -2239,6 +2239,10 @@
     <string name="cmd_text_assist_desc">Kijelölt szöveg feldolgozása MI-asszisztensekkel</string>
     <string name="cmd_replace_text">Szöveg cseréje</string>
     <string name="cmd_replace_text_desc">Kijelölt szöveg cseréje alternatívákra</string>
+    <string name="cmd_text_assist_menu">Szövegsegéd (szerkesztőmenü)</string>
+    <string name="cmd_text_assist_menu_desc">Az alkalmazás saját szövegsegéd-menüműveletének küldése alkalmazásválasztó nélkül</string>
+    <string name="cmd_replace_text_menu">Szöveg cseréje (szerkesztőmenü)</string>
+    <string name="cmd_replace_text_menu_desc">Az alkalmazás saját csere-menüműveletének küldése alkalmazásválasztó nélkül</string>
     <string name="cmd_show_text_menu">Szövegmenü megjelenítése</string>
     <string name="cmd_show_text_menu_desc">A kurzornál lévő szó kijelölése, rendszereszköztár megjelenítése</string>
     <string name="cmd_timestamp_date">Dátum (ISO)</string>

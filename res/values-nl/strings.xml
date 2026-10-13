@@ -2233,6 +2233,10 @@
     <string name="cmd_text_assist_desc">Geselecteerde tekst verwerken met AI-assistenten</string>
     <string name="cmd_replace_text">Tekst vervangen</string>
     <string name="cmd_replace_text_desc">Geselecteerde tekst door alternatieven vervangen</string>
+    <string name="cmd_text_assist_menu">Tekstassistent (editormenu)</string>
+    <string name="cmd_text_assist_menu_desc">De tekstassistent-menuactie van de app zelf sturen, zonder app-kiezer</string>
+    <string name="cmd_replace_text_menu">Tekst vervangen (editormenu)</string>
+    <string name="cmd_replace_text_menu_desc">De vervang-menuactie van de app zelf sturen, zonder app-kiezer</string>
     <string name="cmd_show_text_menu">Tekstmenu tonen</string>
     <string name="cmd_show_text_menu_desc">Woord bij cursor selecteren en systeemwerkbalk tonen</string>
     <string name="cmd_timestamp_date">Datum (ISO)</string>

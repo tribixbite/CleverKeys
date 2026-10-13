@@ -43,7 +43,7 @@ import java.lang.reflect.Proxy
  * one context (receiver mode flags default to false, editor calls to success); only EFFECTS are logged (editor writes, receiver side effects, user-visible
  * feedback, clipboard/private-copy actions), never reads. Each command runs under every
  * combination of {selection, no selection} × {inline clipboard editor open, closed} ×
- * {ordinary app, terminal}.
+ * {ordinary app, terminal, blind remote field (RustDesk)}.
  */
 class EditingCommandParityTest {
 
@@ -52,7 +52,11 @@ class EditingCommandParityTest {
 
     private var selection: CharSequence? = null
     private var editMode = false
-    private val editorInfo: EditorInfo = objenesis.newInstance(EditorInfo::class.java)
+    // An ordinary text field unless a test says otherwise: objenesis leaves inputType 0, which
+    // is TYPE_NULL — a blind-field signal since 2026-10-13 (TerminalUtils.editorKind).
+    private val editorInfo: EditorInfo = objenesis.newInstance(EditorInfo::class.java).apply {
+        inputType = android.text.InputType.TYPE_CLASS_TEXT
+    }
 
     private lateinit var context: Context
     private lateinit var inputConnection: InputConnection
@@ -212,11 +216,37 @@ class EditingCommandParityTest {
         assertEquals(listOf("handle_non_text_input()", expected), layoutEffects("textAssist"))
     }
 
+    /**
+     * Maintainer decision 2026-10-13: textAssist/replaceText keep the app chooser, and the
+     * editor's own context-menu action (the layout key's behaviour before 7d1a3271) is its own
+     * command — no chooser, no selection precondition (the editor decides what the action does).
+     */
+    @Test
+    fun editorMenuTextActionsSendTheBareContextMenuIdWithoutAChooser() {
+        for (sel in listOf<CharSequence?>("sel", null)) {
+            selection = sel
+            for ((name, id) in listOf(
+                "textAssistMenu" to android.R.id.textAssist,
+                "replaceTextMenu" to android.R.id.replaceText,
+            )) {
+                val expected = listOf("handle_non_text_input()", "performContextMenuAction($id)")
+                assertEquals("$name key sel=${sel != null}", expected, layoutEffects(name))
+                assertEquals("$name mapping sel=${sel != null}", expected, mappingEffects(name))
+            }
+        }
+        // The chooser variants never send the bare id when nothing is selected: they report
+        // "no text selected" instead (the chooser itself needs a real Intent, absent here).
+        selection = null
+        for (name in listOf("textAssist", "replaceText")) {
+            assertTrue(name, layoutEffects(name).none { it.startsWith("performContextMenuAction") })
+        }
+    }
+
     // ------------------------------------------------------------------ harness
 
     private fun compareSurfaces(mappingName: String, keyName: String, mismatches: MutableList<String>) {
         for (sel in listOf<CharSequence?>("sel", null)) for (edit in listOf(false, true)) {
-            for (pkg in listOf("com.example.notes", "com.termux")) {
+            for (pkg in listOf("com.example.notes", "com.termux", "com.carriez.flutter_hbb")) {
                 selection = sel; editMode = edit; editorInfo.packageName = pkg
                 val key = layoutEffects(keyName)
                 val mapping = mappingEffects(mappingName)
@@ -312,6 +342,7 @@ class EditingCommandParityTest {
             "pasteAsPlainText", "undo", "redo", "delete_word", "forward_delete_word", "clear",
             "delete_last_word", "selection_cancel", "replaceText", "textAssist", "autofill",
             "doc_home", "doc_end", "append_possessive", "append_apostrophe",
+            "textAssistMenu", "replaceTextMenu",
         )
 
         /** Legacy SCREAMING_SNAKE AvailableCommand names that denote an editing command. */

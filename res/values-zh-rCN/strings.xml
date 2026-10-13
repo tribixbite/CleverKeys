@@ -2188,6 +2188,10 @@
     <string name="cmd_text_assist_desc">用 AI 助手处理所选文本</string>
     <string name="cmd_replace_text">替换文字</string>
     <string name="cmd_replace_text_desc">将所选文本替换为其他表述</string>
+    <string name="cmd_text_assist_menu">文字助手（编辑器菜单）</string>
+    <string name="cmd_text_assist_menu_desc">发送应用自身菜单中的文字助手操作，不经过应用选择器</string>
+    <string name="cmd_replace_text_menu">替换文字（编辑器菜单）</string>
+    <string name="cmd_replace_text_menu_desc">发送应用自身菜单中的替换操作，不经过应用选择器</string>
     <string name="cmd_show_text_menu">显示文本菜单</string>
     <string name="cmd_show_text_menu_desc">选中光标处的单词并显示系统工具栏</string>
     <string name="cmd_timestamp_date">日期（ISO）</string>

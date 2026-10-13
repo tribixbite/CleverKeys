@@ -2189,6 +2189,10 @@
     <string name="cmd_text_assist_desc">選択したテキストを AI アシスタントで処理</string>
     <string name="cmd_replace_text">テキストを置換</string>
     <string name="cmd_replace_text_desc">選択したテキストを別の表現に置き換え</string>
+    <string name="cmd_text_assist_menu">テキストアシスト（エディタメニュー）</string>
+    <string name="cmd_text_assist_menu_desc">アプリ選択を使わず、アプリ自身のメニューのテキストアシスト操作を送信</string>
+    <string name="cmd_replace_text_menu">テキストを置換（エディタメニュー）</string>
+    <string name="cmd_replace_text_menu_desc">アプリ選択を使わず、アプリ自身のメニューの置換操作を送信</string>
     <string name="cmd_show_text_menu">テキストメニューを表示</string>
     <string name="cmd_show_text_menu_desc">カーソル位置の単語を選択して標準のツールバーを表示</string>
     <string name="cmd_timestamp_date">日付(ISO)</string>

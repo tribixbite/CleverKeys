@@ -2303,6 +2303,10 @@
     <string name="cmd_text_assist_desc">Procesează textul selectat cu asistenți IA</string>
     <string name="cmd_replace_text">Înlocuiește textul</string>
     <string name="cmd_replace_text_desc">Înlocuiește textul selectat cu alternative</string>
+    <string name="cmd_text_assist_menu">Asistent text (meniul editorului)</string>
+    <string name="cmd_text_assist_menu_desc">Trimite acțiunea de asistent text din meniul aplicației înseși, fără selectorul de aplicații</string>
+    <string name="cmd_replace_text_menu">Înlocuiește textul (meniul editorului)</string>
+    <string name="cmd_replace_text_menu_desc">Trimite acțiunea de înlocuire din meniul aplicației înseși, fără selectorul de aplicații</string>
     <string name="cmd_show_text_menu">Afișează meniul text</string>
     <string name="cmd_show_text_menu_desc">Selectează cuvântul de la cursor și afișează bara nativă</string>
     <string name="cmd_timestamp_date">Data (ISO)</string>

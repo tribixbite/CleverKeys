@@ -2319,6 +2319,10 @@
     <string name="cmd_text_assist_desc">Zpracovat vybraný text pomocí AI asistentů</string>
     <string name="cmd_replace_text">Nahradit text</string>
     <string name="cmd_replace_text_desc">Nahradit vybraný text alternativami</string>
+    <string name="cmd_text_assist_menu">Asistent textu (nabídka editoru)</string>
+    <string name="cmd_text_assist_menu_desc">Odeslat akci asistenta textu z vlastní nabídky aplikace bez výběru aplikace</string>
+    <string name="cmd_replace_text_menu">Nahradit text (nabídka editoru)</string>
+    <string name="cmd_replace_text_menu_desc">Odeslat akci nahrazení z vlastní nabídky aplikace bez výběru aplikace</string>
     <string name="cmd_show_text_menu">Zobrazit nabídku textu</string>
     <string name="cmd_show_text_menu_desc">Vybrat slovo u kurzoru a zobrazit systémovou lištu</string>
     <string name="cmd_timestamp_date">Datum (ISO)</string>

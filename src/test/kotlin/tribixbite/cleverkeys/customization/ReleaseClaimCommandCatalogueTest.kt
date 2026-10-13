@@ -165,11 +165,30 @@ class ReleaseClaimCommandCatalogueTest {
     fun `textAssist is published as a Text Action usable on any selection`() {
         val textActions = CommandRegistry.getByCategory(CommandRegistry.Category.TEXT_ACTIONS)
         assertThat(textActions.map { it.name })
-            .containsExactly("textAssist", "replaceText", "showTextMenu")
+            .containsExactly("textAssist", "replaceText", "textAssistMenu", "replaceTextMenu", "showTextMenu")
 
         val assist = textActions.single { it.name == "textAssist" }
         assertThat(EnglishResourceText.string(assist.nameRes)).isEqualTo("Text Assist")
         assertThat(EnglishResourceText.string(assist.descriptionRes)).isEqualTo("Process selected text with AI assistants")
+    }
+
+    @Test
+    fun `the editor-menu text actions are Text Actions resolving to their own Editing keys`() {
+        // 2026-10-13: textAssist/replaceText open the app chooser; the editor's own context-menu
+        // action (what those layout keys sent before 7d1a3271) is a separate command.
+        for ((name, editing) in listOf(
+            "textAssistMenu" to KeyValue.Editing.ASSIST_MENU,
+            "replaceTextMenu" to KeyValue.Editing.REPLACE_MENU,
+        )) {
+            val command = CommandRegistry.getByName(name)!!
+            assertThat(command.category).isEqualTo(CommandRegistry.Category.TEXT_ACTIONS)
+            assertThat(command.keywords).containsAtLeast("menu", "editor")
+            val kv = CommandRegistry.getKeyValue(name)!!
+            assertWithMessage("'$name' kind").that(kv.getKind()).isEqualTo(KeyValue.Kind.Editing)
+            assertWithMessage("'$name' editing action").that(kv.getEditing()).isEqualTo(editing)
+        }
+        assertThat(EnglishResourceText.string(CommandRegistry.getByName("textAssistMenu")!!.nameRes))
+            .isEqualTo("Text Assist (Editor Menu)")
     }
 
     @Test

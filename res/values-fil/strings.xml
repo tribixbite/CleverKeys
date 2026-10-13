@@ -2245,6 +2245,10 @@
     <string name="cmd_text_assist_desc">Iproseso ang napiling text gamit ang mga AI assistant</string>
     <string name="cmd_replace_text">Palitan ang Text</string>
     <string name="cmd_replace_text_desc">Palitan ang napiling text ng mga alternatibo</string>
+    <string name="cmd_text_assist_menu">Text Assist (Menu ng Editor)</string>
+    <string name="cmd_text_assist_menu_desc">Ipadala ang sariling text-assist na aksyon sa menu ng app, nang walang pagpili ng app</string>
+    <string name="cmd_replace_text_menu">Palitan ang Text (Menu ng Editor)</string>
+    <string name="cmd_replace_text_menu_desc">Ipadala ang sariling aksyong palitan sa menu ng app, nang walang pagpili ng app</string>
     <string name="cmd_show_text_menu">Ipakita ang Text Menu</string>
     <string name="cmd_show_text_menu_desc">Piliin ang salita sa cursor at ipakita ang native toolbar</string>
     <string name="cmd_timestamp_date">Petsa (ISO)</string>

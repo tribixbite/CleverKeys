@@ -15,7 +15,7 @@ The command palette is a searchable dialog that appears when you assign an actio
 |------|-------------|
 | **Purpose** | Browse and search all assignable key actions |
 | **Access** | Per-Key Customization, or the [Subkey Popover](../gestures/subkey-popover.md) assign/edit screen |
-| **Features** | Search, 21 categories, 228 commands, four quick actions |
+| **Features** | Search, 21 categories, 230 commands, four quick actions |
 
 ## Where It Appears
 
@@ -59,7 +59,7 @@ The row scrolls away with the list. While you search, only tiles whose name matc
 
 ### Browse Categories
 
-The 228 commands are grouped into these categories, in this order. Category headers stay
+The 230 commands are grouped into these categories, in this order. Category headers stay
 at the top while their commands scroll.
 
 | Category | Commands | Examples |
@@ -83,7 +83,7 @@ at the top while their commands scroll.
 | **Hebrew Marks** | 20 | `qamats`, `patah`, `sheva`, `dagesh` |
 | **Text Input** | 8 | bracket pairs such as `b(`, `b[`, `b{` |
 | **Language** | 2 | `primaryLangToggle`, `secondaryLangToggle` |
-| **Text Actions** | 3 | `textAssist`, `replaceText`, `showTextMenu` |
+| **Text Actions** | 5 | `textAssist`, `replaceText`, `textAssistMenu`, `replaceTextMenu`, `showTextMenu` |
 | **Timestamps** | 8 | `timestamp_date`, `timestamp_time`, `timestamp_iso` |
 
 ### Select an Action
@@ -109,6 +109,15 @@ Three Keyboard Events commands shrink or close the keyboard:
 
 A minimized keyboard returns to full size the next time it is shown after being hidden.
 The minimize commands cannot bring back a keyboard the system has already hidden.
+
+## Text Assist and Replace Text
+
+Each text action comes in two forms:
+
+| Command | What it does |
+|---------|--------------|
+| **Text Assist** (`textAssist`), **Replace Text** (`replaceText`) | Opens a list of the apps that can process the selected text (translators, AI assistants, dictionaries). Replace Text lets the chosen app replace the selection. Shows "no text selected" when nothing is selected. |
+| **Text Assist (Editor Menu)** (`textAssistMenu`), **Replace Text (Editor Menu)** (`replaceTextMenu`) | Sends the app's own text-assist or replace menu action, without the app list. What happens depends on the app; many apps do nothing. |
 
 ## Suffix Commands and Dynamic Templates
 
@@ -137,7 +146,7 @@ description or keyword.
 - **Power user**: `selection_mode`, `doc_home`/`doc_end` and the function keys help in editors and terminals
 
 > [!TIP]
-> The palette lists 228 commands. Use search to find one quickly.
+> The palette lists 230 commands. Use search to find one quickly.
 
 ## Common Questions
 

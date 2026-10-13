@@ -109,6 +109,10 @@ class KeyValue private constructor(
         CLEAR_CLIPBOARD, // #168: clear only the current Android clipboard
         APPEND_POSSESSIVE,
         APPEND_APOSTROPHE,
+        // 2026-10-13: the editor's own context-menu text actions, without the app chooser that
+        // ASSIST/REPLACE open (TextActionLauncher). Appended so earlier ordinals stay stable.
+        ASSIST_MENU,
+        REPLACE_MENU,
     }
 
     enum class Placeholder {
@@ -782,6 +786,12 @@ class KeyValue private constructor(
             "replaceText" -> editingKey("repl", Editing.REPLACE)
             "textAssist" -> editingKey(0xE038, Editing.ASSIST)
             "autofill" -> editingKey("auto", Editing.AUTOFILL)
+            // The editor-menu variants: the bare android.R.id.textAssist / replaceText context-menu
+            // action — what the textAssist/replaceText layout keys sent before 7d1a3271. Plain-text
+            // labels (one font, FLAG_SMALLER_FONT like "repl"): the key-font glyph of textAssist
+            // cannot be combined with a text marker in a single sublabel.
+            "textAssistMenu" -> editingKey("asst", Editing.ASSIST_MENU)
+            "replaceTextMenu" -> editingKey("rplc", Editing.REPLACE_MENU)
 
             /* Document navigation - Ctrl+Home/End to move to start/end of entire text */
             "doc_home" -> editingKey(0xE00B, Editing.CURSOR_DOC_START)

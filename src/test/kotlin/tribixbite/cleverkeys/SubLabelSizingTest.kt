@@ -61,7 +61,7 @@ class SubLabelSizingTest {
 
     @Test
     fun smallerFontTextCommandsGetTheSmallerFactorAsMappingsToo() {
-        for (command in listOf("ctrl", "meta", "delete_last_word", "clear", "replaceText", "tab")) {
+        for (command in listOf("ctrl", "meta", "delete_last_word", "clear", "replaceText", "textAssistMenu", "replaceTextMenu", "tab")) {
             val kv = KeyValue.getKeyByName(command)
             assertWithMessage("'$command' carries FLAG_SMALLER_FONT")
                 .that(kv.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)).isTrue()

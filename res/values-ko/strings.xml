@@ -2190,6 +2190,10 @@
     <string name="cmd_text_assist_desc">선택한 텍스트를 AI 도우미로 처리</string>
     <string name="cmd_replace_text">텍스트 바꾸기</string>
     <string name="cmd_replace_text_desc">선택한 텍스트를 다른 표현으로 바꾸기</string>
+    <string name="cmd_text_assist_menu">텍스트 도우미(편집기 메뉴)</string>
+    <string name="cmd_text_assist_menu_desc">앱 선택기 없이 앱 자체 메뉴의 텍스트 도우미 동작 보내기</string>
+    <string name="cmd_replace_text_menu">텍스트 바꾸기(편집기 메뉴)</string>
+    <string name="cmd_replace_text_menu_desc">앱 선택기 없이 앱 자체 메뉴의 바꾸기 동작 보내기</string>
     <string name="cmd_show_text_menu">텍스트 메뉴 표시</string>
     <string name="cmd_show_text_menu_desc">커서 위치의 단어를 선택하고 기본 도구 모음 표시</string>
     <string name="cmd_timestamp_date">날짜(ISO)</string>

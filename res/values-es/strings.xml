@@ -2294,6 +2294,10 @@
     <string name="cmd_text_assist_desc">Procesar el texto seleccionado con asistentes de IA</string>
     <string name="cmd_replace_text">Reemplazar texto</string>
     <string name="cmd_replace_text_desc">Reemplazar el texto seleccionado por alternativas</string>
+    <string name="cmd_text_assist_menu">Asistente de texto (menú del editor)</string>
+    <string name="cmd_text_assist_menu_desc">Enviar la acción de asistente de texto del menú de la propia app, sin el selector de apps</string>
+    <string name="cmd_replace_text_menu">Reemplazar texto (menú del editor)</string>
+    <string name="cmd_replace_text_menu_desc">Enviar la acción de reemplazo del menú de la propia app, sin el selector de apps</string>
     <string name="cmd_show_text_menu">Mostrar menú de texto</string>
     <string name="cmd_show_text_menu_desc">Seleccionar la palabra del cursor y mostrar la barra nativa</string>
     <string name="cmd_timestamp_date">Fecha (ISO)</string>

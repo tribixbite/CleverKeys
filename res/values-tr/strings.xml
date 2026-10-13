@@ -2244,6 +2244,10 @@
     <string name="cmd_text_assist_desc">Seçili metni yapay zeka asistanlarıyla işle</string>
     <string name="cmd_replace_text">Metni Değiştir</string>
     <string name="cmd_replace_text_desc">Seçili metni alternatiflerle değiştir</string>
+    <string name="cmd_text_assist_menu">Metin Yardımı (Düzenleyici Menüsü)</string>
+    <string name="cmd_text_assist_menu_desc">Uygulama seçici olmadan uygulamanın kendi menüsündeki metin yardımı eylemini gönder</string>
+    <string name="cmd_replace_text_menu">Metni Değiştir (Düzenleyici Menüsü)</string>
+    <string name="cmd_replace_text_menu_desc">Uygulama seçici olmadan uygulamanın kendi menüsündeki değiştirme eylemini gönder</string>
     <string name="cmd_show_text_menu">Metin Menüsünü Göster</string>
     <string name="cmd_show_text_menu_desc">İmleçteki kelimeyi seç, sistem araç çubuğunu göster</string>
     <string name="cmd_timestamp_date">Tarih (ISO)</string>

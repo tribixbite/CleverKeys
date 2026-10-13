@@ -2324,6 +2324,10 @@
     <string name="cmd_text_assist_desc">Обработать выделенный текст с помощью ИИ-ассистентов</string>
     <string name="cmd_replace_text">Замена текста</string>
     <string name="cmd_replace_text_desc">Заменить выделенный текст вариантами</string>
+    <string name="cmd_text_assist_menu">Помощь с текстом (меню редактора)</string>
+    <string name="cmd_text_assist_menu_desc">Отправить действие помощи с текстом из меню самого приложения, без выбора приложения</string>
+    <string name="cmd_replace_text_menu">Замена текста (меню редактора)</string>
+    <string name="cmd_replace_text_menu_desc">Отправить действие замены из меню самого приложения, без выбора приложения</string>
     <string name="cmd_show_text_menu">Меню текста</string>
     <string name="cmd_show_text_menu_desc">Выделить слово у курсора и показать системную панель</string>
     <string name="cmd_timestamp_date">Дата (ISO)</string>

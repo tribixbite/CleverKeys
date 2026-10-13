@@ -2316,6 +2316,10 @@
     <string name="cmd_text_assist_desc">Elabora il testo selezionato con assistenti IA</string>
     <string name="cmd_replace_text">Sostituisci testo</string>
     <string name="cmd_replace_text_desc">Sostituisci il testo selezionato con alternative</string>
+    <string name="cmd_text_assist_menu">Assistenza testo (menu dell\'editor)</string>
+    <string name="cmd_text_assist_menu_desc">Invia l\'azione di assistenza del menu dell\'app stessa, senza il selettore di app</string>
+    <string name="cmd_replace_text_menu">Sostituisci testo (menu dell\'editor)</string>
+    <string name="cmd_replace_text_menu_desc">Invia l\'azione di sostituzione del menu dell\'app stessa, senza il selettore di app</string>
     <string name="cmd_show_text_menu">Mostra menu testo</string>
     <string name="cmd_show_text_menu_desc">Seleziona la parola al cursore e mostra la barra di sistema</string>
     <string name="cmd_timestamp_date">Data (ISO)</string>

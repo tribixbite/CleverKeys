@@ -2287,6 +2287,10 @@
     <string name="cmd_text_assist_desc">Apstrādāt atlasīto tekstu ar MI palīgiem</string>
     <string name="cmd_replace_text">Aizstāt tekstu</string>
     <string name="cmd_replace_text_desc">Aizstāt atlasīto tekstu ar alternatīvām</string>
+    <string name="cmd_text_assist_menu">Teksta palīgs (redaktora izvēlne)</string>
+    <string name="cmd_text_assist_menu_desc">Nosūtīt pašas lietotnes izvēlnes teksta palīga darbību bez lietotņu izvēles</string>
+    <string name="cmd_replace_text_menu">Aizstāt tekstu (redaktora izvēlne)</string>
+    <string name="cmd_replace_text_menu_desc">Nosūtīt pašas lietotnes izvēlnes aizstāšanas darbību bez lietotņu izvēles</string>
     <string name="cmd_show_text_menu">Rādīt teksta izvēlni</string>
     <string name="cmd_show_text_menu_desc">Atlasīt vārdu pie kursora un rādīt sistēmas rīkjoslu</string>
     <string name="cmd_timestamp_date">Datums (ISO)</string>

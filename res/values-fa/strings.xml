@@ -2271,6 +2271,10 @@
     <string name="cmd_text_assist_desc">پردازش متن انتخاب‌شده با دستیارهای هوش مصنوعی</string>
     <string name="cmd_replace_text">جایگزینی متن</string>
     <string name="cmd_replace_text_desc">جایگزینی متن انتخاب‌شده با گزینه‌های دیگر</string>
+    <string name="cmd_text_assist_menu">دستیار متن (منوی ویرایشگر)</string>
+    <string name="cmd_text_assist_menu_desc">ارسال کنش دستیار متن از منوی خود برنامه، بدون انتخابگر برنامه</string>
+    <string name="cmd_replace_text_menu">جایگزینی متن (منوی ویرایشگر)</string>
+    <string name="cmd_replace_text_menu_desc">ارسال کنش جایگزینی از منوی خود برنامه، بدون انتخابگر برنامه</string>
     <string name="cmd_show_text_menu">نمایش منوی متن</string>
     <string name="cmd_show_text_menu_desc">انتخاب واژهٔ زیر مکان‌نما و نمایش نوار ابزار سامانه</string>
     <string name="cmd_timestamp_date">تاریخ (ISO)</string>

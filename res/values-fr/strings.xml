@@ -2286,6 +2286,10 @@
     <string name="cmd_text_assist_desc">Traiter le texte sélectionné avec des assistants IA</string>
     <string name="cmd_replace_text">Remplacer le texte</string>
     <string name="cmd_replace_text_desc">Remplacer le texte sélectionné par des alternatives</string>
+    <string name="cmd_text_assist_menu">Assistance texte (menu de l\'éditeur)</string>
+    <string name="cmd_text_assist_menu_desc">Envoyer l\'action d\'assistance du menu de l\'application elle-même, sans sélecteur d\'applications</string>
+    <string name="cmd_replace_text_menu">Remplacer le texte (menu de l\'éditeur)</string>
+    <string name="cmd_replace_text_menu_desc">Envoyer l\'action de remplacement du menu de l\'application elle-même, sans sélecteur d\'applications</string>
     <string name="cmd_show_text_menu">Afficher le menu texte</string>
     <string name="cmd_show_text_menu_desc">Sélectionner le mot au curseur et afficher la barre système</string>
     <string name="cmd_timestamp_date">Date (ISO)</string>

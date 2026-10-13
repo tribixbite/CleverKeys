@@ -2218,6 +2218,10 @@
     <string name="cmd_text_assist_desc">Xử lý văn bản đã chọn bằng trợ lý AI</string>
     <string name="cmd_replace_text">Thay thế văn bản</string>
     <string name="cmd_replace_text_desc">Thay văn bản đã chọn bằng cách diễn đạt khác</string>
+    <string name="cmd_text_assist_menu">Hỗ trợ văn bản (menu trình soạn thảo)</string>
+    <string name="cmd_text_assist_menu_desc">Gửi thao tác hỗ trợ văn bản trong menu của chính ứng dụng, không qua bộ chọn ứng dụng</string>
+    <string name="cmd_replace_text_menu">Thay thế văn bản (menu trình soạn thảo)</string>
+    <string name="cmd_replace_text_menu_desc">Gửi thao tác thay thế trong menu của chính ứng dụng, không qua bộ chọn ứng dụng</string>
     <string name="cmd_show_text_menu">Hiện menu văn bản</string>
     <string name="cmd_show_text_menu_desc">Chọn từ tại con trỏ và hiện thanh công cụ gốc</string>
     <string name="cmd_timestamp_date">Ngày (ISO)</string>

@@ -587,6 +587,11 @@ object CommandRegistry {
             keywords = listOf("text", "assist", "ai", "process", "google")),
         Command("replaceText", R.string.cmd_replace_text, R.string.cmd_replace_text_desc, Category.TEXT_ACTIONS,
             keywords = listOf("replace", "text", "substitute", "change")),
+        // 2026-10-13: the editor's own context-menu actions, without the app chooser above.
+        Command("textAssistMenu", R.string.cmd_text_assist_menu, R.string.cmd_text_assist_menu_desc, Category.TEXT_ACTIONS,
+            keywords = listOf("text", "assist", "menu", "editor", "context", "native")),
+        Command("replaceTextMenu", R.string.cmd_replace_text_menu, R.string.cmd_replace_text_menu_desc, Category.TEXT_ACTIONS,
+            keywords = listOf("replace", "text", "menu", "editor", "context", "native")),
         Command("showTextMenu", R.string.cmd_show_text_menu, R.string.cmd_show_text_menu_desc, Category.TEXT_ACTIONS,
             symbol = "☰", // name-dispatched (Keyboard2View), no KeyValue — see paste_pinned_N note
             keywords = listOf("text", "menu", "toolbar", "cut", "copy", "paste", "translate", "select")),

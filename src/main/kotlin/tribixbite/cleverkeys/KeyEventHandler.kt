@@ -782,6 +782,10 @@ class KeyEventHandler(
             KeyValue.Editing.REDO -> sendContextMenuAction(android.R.id.redo)
             KeyValue.Editing.REPLACE -> launchTextAction(TextActionPolicy.TextAction.REPLACE)
             KeyValue.Editing.ASSIST -> launchTextAction(TextActionPolicy.TextAction.ASSIST)
+            // The editor's own menu action, no chooser and no selection precondition: the editor
+            // decides what text assist / replace means (maintainer decision 2026-10-13).
+            KeyValue.Editing.ASSIST_MENU -> sendContextMenuAction(TextActionLauncher.fallbackMenuId(TextActionPolicy.TextAction.ASSIST))
+            KeyValue.Editing.REPLACE_MENU -> sendContextMenuAction(TextActionLauncher.fallbackMenuId(TextActionPolicy.TextAction.REPLACE))
             KeyValue.Editing.AUTOFILL -> sendContextMenuAction(android.R.id.autofill)
             KeyValue.Editing.DELETE_WORD -> send_key_down_up(
                 KeyEvent.KEYCODE_DEL,
