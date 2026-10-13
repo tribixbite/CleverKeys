@@ -139,6 +139,11 @@ class KeyEventHandler(
                 // Arrow keys and Enter in clipboard edit mode — dispatch to inline EditText
                 } else if (recv.isClipboardEditMode() && key.getKeyevent() in EDIT_MODE_DISPATCH_KEYS) {
                     recv.dispatchKeyToClipboardEdit(key.getKeyevent())
+                // A Ctrl/Alt/Meta-modified letter arrives as a key event (KeyModifier.applyCtrl),
+                // so the text routing chain never sees it: keep shortcuts inside an active inline
+                // field instead of sending them to the app behind the panel (Saga 2026-10-13).
+                } else if (isInlineFieldActive() && (metaState and SYSTEM_META) != 0) {
+                    handleInlineShortcut(key.getKeyevent())
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && learningHooks?.undoSuffix() == true) {
                     // Suffix-only undo consumes even a failed edit; never fall through to word undo.
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && handleBackspaceUndoSwipe()) {
@@ -735,24 +740,46 @@ class KeyEventHandler(
      */
     private fun pasteFromSystemClipboard() {
         val conn = recv.getCurrentInputConnection() ?: return
-        val ctx = recv.getContext() ?: return
-        try {
+        readSystemClipText()?.let { conn.commitText(it, 1) }
+    }
+
+    /** The system clip as plain text, or null when there is none (or it cannot be read). */
+    private fun readSystemClipText(): String? {
+        val ctx = recv.getContext() ?: return null
+        return try {
             val clipboard = ctx.getSystemService(Context.CLIPBOARD_SERVICE)
                 as android.content.ClipboardManager
             val clip = clipboard.primaryClip
-            if (clip != null && clip.itemCount > 0) {
-                val text = clip.getItemAt(0).coerceToText(ctx).toString()
-                if (text.isNotEmpty()) {
-                    conn.commitText(text, 1)
-                } else {
-                    Log.d(TAG, "Clipboard is empty")
-                }
-            } else {
+            if (clip == null || clip.itemCount == 0) {
                 Log.d(TAG, "No clipboard data available")
+                return null
+            }
+            clip.getItemAt(0).coerceToText(ctx).toString().ifEmpty {
+                Log.d(TAG, "Clipboard is empty")
+                null
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to paste from system clipboard", e)
+            Log.e(TAG, "Failed to read the system clipboard", e)
+            null
         }
+    }
+
+    /** True while one of the IME's own inline fields owns typing (the five modal input modes). */
+    private fun isInlineFieldActive(): Boolean = !canUseEditorActions()
+
+    /**
+     * A Ctrl/Alt/Meta shortcut pressed while an inline field is active. In the clipboard entry
+     * editor, Ctrl+V/X/A paste, cut and select all in the editor; in the other inline fields
+     * Ctrl+V pastes into the field. Every other shortcut is swallowed — never sent to the app.
+     */
+    private fun handleInlineShortcut(keyCode: Int) {
+        val editing = when (keyCode) {
+            KeyEvent.KEYCODE_V -> KeyValue.Editing.PASTE
+            KeyEvent.KEYCODE_X -> KeyValue.Editing.CUT
+            KeyEvent.KEYCODE_A -> KeyValue.Editing.SELECT_ALL
+            else -> null
+        } ?: return
+        if (recv.isClipboardEditMode() || editing == KeyValue.Editing.PASTE) handleEditingKey(editing)
     }
 
     /**
@@ -787,6 +814,15 @@ class KeyEventHandler(
                     recv.backspaceClipboardEdit()
                 }
                 else -> {} // Other editing keys (undo, redo, share) — no-op during inline edit
+            }
+            return
+        }
+        // The other inline fields (clipboard search, tag entry, emoji / GIF search) are modal
+        // too: paste lands in the active field via the sendText routing chain, and no other
+        // editing command may act on the app hidden behind the panel.
+        if (isInlineFieldActive()) {
+            if (ev == KeyValue.Editing.PASTE || ev == KeyValue.Editing.PASTE_PLAIN) {
+                readSystemClipText()?.let { sendText(it) }
             }
             return
         }
@@ -1292,6 +1328,9 @@ class KeyEventHandler(
 
         // Key events that should be dispatched to the clipboard edit EditText
         // instead of the app's InputConnection when in edit mode
+        /** Modifier meta bits that turn a letter into a shortcut (Shift alone does not). */
+        private const val SYSTEM_META = KeyEvent.META_CTRL_ON or KeyEvent.META_ALT_ON or KeyEvent.META_META_ON
+
         private val EDIT_MODE_DISPATCH_KEYS = setOf(
             KeyEvent.KEYCODE_DPAD_LEFT,
             KeyEvent.KEYCODE_DPAD_RIGHT,

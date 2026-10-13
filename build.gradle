@@ -1430,6 +1430,8 @@ tasks.register('runMockTests', JavaExec) {
     // Todo 12 (2026-10-12): every Editing command has one implementation — layout key and
     // custom mapping produce identical editor/receiver effects.
     'tribixbite.cleverkeys.EditingCommandParityTest',
+    // 2026-10-13 Saga: Ctrl+V with the clipboard editor open pasted into the app behind it.
+    'tribixbite.cleverkeys.InlineFieldShortcutTest',
     // Review 2026-10-07: late own-write selection callbacks (suffix ledger lifetime, two-write
     // commits).
     'tribixbite.cleverkeys.SuggestionHandlerOwnedCallbackTest',

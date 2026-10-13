@@ -346,3 +346,13 @@ cursor sync and the #78 editor scan never read the field (RustDesk's hidden fiel
 1024 '1' placeholders). REMOTE delete-last-word is Ctrl+Backspace, TERMINAL is Ctrl+W.
 A new editor-writing feature must ask `isTerminalApp` before any in-place rewrite;
 `BlindFieldPolicyTest` models RustDesk and asserts what the remote receives.
+
+## Shortcuts and paste inside inline fields (2026-10-13)
+
+A Ctrl/Alt/Meta letter is a key EVENT (KeyModifier.applyCtrl), so `sendText`'s routing chain
+never sees it. `key_up`'s Keyevent branch sends it to `handleInlineShortcut` while any inline
+field is active (`!canUseEditorActions()`): in the clipboard entry editor Ctrl+V/X/A paste, cut
+and select all there; in search/tag/emoji/GIF fields Ctrl+V pastes the clip into the field; any
+other shortcut is swallowed. `handleEditingKey` likewise routes PASTE/PASTE_PLAIN into the active
+search/tag field via `sendText` and drops every other editing command, never touching the app
+behind the panel. Pinned by `InlineFieldShortcutTest` (Saga: Ctrl+V leaked to the app).
