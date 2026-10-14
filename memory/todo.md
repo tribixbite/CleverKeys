@@ -23,7 +23,7 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
 2. [ ] device: #186/#61 Persian half — custom layout bound to `fa` with the fa pack imported
    ("Language: Persian" bar, Persian typo autocorrected, Latin restores EN), en/de/fr
    three-layout cycle, uninstalled-language warning. Saga Latin→German PASS 2026-10-07.
-3. [ ] device: add `adb`/`somethings` to the personal dictionary and swipe them
+3. [x] DONE 2026-10-12 (Pixel: `somethings` commits 3/3; `adb` raised to 255 ranks first) — device: add `adb`/`somethings` to the personal dictionary and swipe them
    (`docs/eval/2026-10-07-final-letter-drops.md` §8). `adb` part done 2026-10-10 (Seeker):
    stored at the legacy 100 it lost to `an` at Highest; raised to 255 it ranked first
    (`docs/eval/2026-10-08-user-swipe-priority.md` §9). Legacy-frequency offer + dialog lift
