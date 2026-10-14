@@ -322,30 +322,70 @@ class WordPredictorFuzzyTypingTest {
         val typedWords = listOf("pkay", "wuestion", "thw", "becauae", "somethimg", "xorblaxx", "qqqqzzzz")
         val inputs = typedWords.flatMap { w -> (1..w.length).map { w.substring(0, it) } }
         repeat(3) { inputs.forEach { bar(it) } } // JIT warm-up
-        val rounds = 10
-        val perInput = LongArray(inputs.size)
+        // Measurement design (Open now 13, 2026-10-14). The mock suite runs on the shared 4-core
+        // dev phone, often at load 10–15. The old form — wall-clock MEAN of 10 rounds — failed once
+        // when a single ~170 ms descheduling/GC stall landed on one round of 'be'/'bec' (normally
+        // ~0.2 ms): 'bec' averaged 17.4 ms against the 15 ms bound, while every other prefix was
+        // normal. At a synthetic load of ~18 it failed 2 runs in 3 with the code unchanged. So:
+        //  - each call is timed in this thread's CPU time, which excludes time spent descheduled
+        //    and stop-the-world collector work done on the VM thread. bar() is synchronous,
+        //    in-memory computation on the calling thread, so its CPU time IS its cost; a
+        //    regression in that computation (the thing this guards) still shows in full;
+        //  - the per-input MEDIAN of an odd number of rounds is asserted, so a stall on fewer than
+        //    half the rounds cannot fail it, while a real regression slows every round.
+        // Bounds are unchanged. Not covered: a regression that BLOCKS (I/O, lock wait) without
+        // using CPU; wall-clock medians are printed beside the CPU ones to spot that.
+        val threadCpuNanos = currentThreadCpuClock()
+        val rounds = 11
+        val cpuSamples = Array(inputs.size) { LongArray(rounds) }
+        val wallSamples = Array(inputs.size) { LongArray(rounds) }
         for (r in 0 until rounds) {
             inputs.forEachIndexed { i, s ->
+                val c0 = threadCpuNanos()
                 val t0 = System.nanoTime()
                 bar(s)
-                perInput[i] += System.nanoTime() - t0
+                wallSamples[i][r] = System.nanoTime() - t0
+                cpuSamples[i][r] = threadCpuNanos() - c0
             }
         }
-        val avgUs = perInput.map { it / rounds / 1000 }
-        inputs.zip(avgUs).forEach { (s, us) -> println("[fuzzy-latency]   %-10s %6dµs".format(s, us)) }
+        fun LongArray.medianUs() = sorted()[size / 2] / 1000
+        val medianUs = cpuSamples.map { it.medianUs() }
+        val wallMedianUs = wallSamples.map { it.medianUs() }
+        val wallMaxUs = wallSamples.map { it.max() / 1000 }
+        inputs.indices.forEach { i ->
+            println(
+                "[fuzzy-latency]   %-10s cpu median %6dµs  wall median %6dµs  wall max %6dµs"
+                    .format(inputs[i], medianUs[i], wallMedianUs[i], wallMaxUs[i])
+            )
+        }
         // Only 3+ letter prefixes can take the fuzzy path; 1–2 letter prefixes are the
         // pre-existing exact path (e.g. "s" scores ~10k exact completions) and are reported
         // above but not bounded here.
-        val fuzzyEligible = inputs.zip(avgUs).filter { it.first.length >= 3 }
+        val fuzzyEligible = inputs.zip(medianUs).filter { it.first.length >= 3 }
         val worst = fuzzyEligible.maxByOrNull { it.second }!!
         val mean = fuzzyEligible.map { it.second }.average()
-        println("[fuzzy-latency] 3+ letters: mean=${"%.0f".format(mean)}µs worst=${worst.second}µs ('${worst.first}') over ${fuzzyEligible.size} prefixes × $rounds rounds")
+        println("[fuzzy-latency] 3+ letters: mean of cpu medians=${"%.0f".format(mean)}µs worst cpu median=${worst.second}µs ('${worst.first}') over ${fuzzyEligible.size} prefixes × $rounds rounds")
         // Generous ceilings (shared, loaded 4-core dev phone JVM): a typing frame is 16ms.
-        assertTrue("mean per-keystroke prediction ${mean}µs exceeds 5ms", mean < 5_000)
-        assertTrue("worst per-keystroke prediction ${worst.second}µs ('${worst.first}') exceeds 15ms", worst.second < 15_000)
+        assertTrue("mean of per-keystroke median prediction CPU times ${mean}µs exceeds 5ms", mean < 5_000)
+        assertTrue("worst per-keystroke median prediction CPU time ${worst.second}µs ('${worst.first}') exceeds 15ms", worst.second < 15_000)
     }
 
     // ── helpers ───────────────────────────────────────────────────────────
+
+    /**
+     * The host JVM's per-thread CPU clock (ns). Reached reflectively because unit tests compile
+     * against android.jar, which has no `java.lang.management`; the runner is a desktop JDK,
+     * which does. The reflective call costs ~1µs, negligible against the millisecond bounds.
+     */
+    private fun currentThreadCpuClock(): () -> Long {
+        val bean = Class.forName("java.lang.management.ManagementFactory")
+            .getMethod("getThreadMXBean").invoke(null)
+        val beanType = Class.forName("java.lang.management.ThreadMXBean")
+        val supported = beanType.getMethod("isCurrentThreadCpuTimeSupported").invoke(bean) as Boolean
+        assertTrue("thread CPU time must be measurable on the test JVM", supported)
+        val read = beanType.getMethod("getCurrentThreadCpuTime")
+        return { read.invoke(bean) as Long }
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun dictField(): MutableMap<String, Int> {

@@ -62,8 +62,16 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     keys now open the app chooser like the mapping did); still open: suffix receipt readback
     at command time (3 editor reads per committed word, # TODO in `rememberVerifiedWord`);
     #175 clipboard swipe-to-delete; summon after system hide (overlay permission).
-13. [ ] agent: intermittent mock-suite timing failures under host load 12–15 (predictor
-    latency 17.4 vs 15 ms; adaptation write past 12 s) — cause not established.
+13. [x] DONE 2026-10-14 — mock-suite timing flakes were measurement design, not regressions.
+    `WordPredictorFuzzyTypingTest` latency: wall-clock MEAN of 10 rounds; one ~170 ms stall on
+    a single round lifted 'bec' (normally ~0.2 ms) to 17.4 ms; same code failed 2/3 at
+    synthetic load ~18. Now per-input median of 11 rounds in thread CPU time, bounds unchanged
+    (wall medians printed; blocking regressions not covered). `UserAdaptationManagerPersistence
+    Test` W6: production 5 s debounce on the process-wide shared scheduler vs a 12 s wall
+    deadline; shared-scheduler contention was NOT reproduced (queue monitor quiet), so the
+    7 s+ stall is unattributed host load (failing suites ran 610–703 s vs ~180 s). Now its own
+    scheduler, 50 ms debounce, waits on the commit (30 s hang guard). 5× normal + 5× load ~20
+    pass both; full runMockTests 1228/1228.
 14. [ ] RTX: short-word CTC — word-balanced fine-tune on the raw-path input contract so
     dwell-less `ad`/`wet` decode, gated on fresh writer/session-separated human traces
     (`docs/eval/2026-10-07-short-word-ctc.md`, `…final-letter-drops.md` §6).

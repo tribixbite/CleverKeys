@@ -42,6 +42,10 @@ class UserAdaptationManagerPersistenceTest {
         @Volatile
         var beforeCommit: (() -> Unit)? = null
 
+        /** Test hook run after every commit's changes are visible, on the committing thread. */
+        @Volatile
+        var afterCommit: (() -> Unit)? = null
+
         override fun getAll(): Map<String, *> = HashMap(data)
         override fun getString(key: String, defValue: String?): String? = data[key] as? String ?: defValue
         @Suppress("UNCHECKED_CAST")
@@ -75,6 +79,7 @@ class UserAdaptationManagerPersistenceTest {
                     removes.forEach { data.remove(it) }
                     data.putAll(puts)
                 }
+                afterCommit?.invoke()
                 return true
             }
             override fun apply() { commit() }
@@ -92,18 +97,38 @@ class UserAdaptationManagerPersistenceTest {
 
     // ------------------------------------------------------------------ W6
 
+    /**
+     * Open now 13 (2026-10-14): this used to run on the PROCESS-WIDE single-thread
+     * `DebouncedPersister.sharedScheduler()` with the production 5 s debounce, then poll a 12 s
+     * wall-clock deadline. In `runMockTests` that thread is shared with every learned-data store
+     * and typo-purge task created by the ~40 classes before this one, and the suite runs on the
+     * loaded dev phone; once, the write landed after the deadline. The contract under test is
+     * "the write-back happens on its own, without a lifecycle call" — not the production debounce
+     * length (DebouncedPersisterTest owns the timing) — so the manager gets its own scheduler
+     * and a short debounce, and the test waits on the commit itself. The 30 s await is only a
+     * hang guard, far beyond the ~50 ms the write needs.
+     */
     @Test
     fun `W6 - a few selections are persisted by the write-back without any lifecycle call`() {
         val prefs = FakePrefs()
-        val manager = UserAdaptationManager(prefs, FakePrefs(), clock = { T0 })
-        repeat(3) { manager.recordSelection("git") }
+        val persisted = CountDownLatch(1)
+        prefs.afterCommit = { if (prefs.getInt("word_selections_git", 0) == 3) persisted.countDown() }
+        val scheduler = ScheduledThreadPoolExecutor(1)
+        try {
+            val manager = UserAdaptationManager(
+                prefs, FakePrefs(), clock = { T0 },
+                scheduler = scheduler, debounceMs = 50, maxDelayMs = 500
+            )
+            repeat(3) { manager.recordSelection("git") }
 
-        // No flush/cleanup call: process death may come at any moment after this.
-        val persisted = waitUntil { prefs.getInt("word_selections_git", 0) == 3 }
-        assertThat(persisted).isTrue()
+            // No flush/cleanup call: process death may come at any moment after this.
+            assertThat(persisted.await(30, TimeUnit.SECONDS)).isTrue()
 
-        val revived = UserAdaptationManager(prefs, FakePrefs(), clock = { T0 })
-        assertThat(revived.getSelectionCount("git")).isEqualTo(3)
+            val revived = UserAdaptationManager(prefs, FakePrefs(), clock = { T0 }, scheduler = scheduler)
+            assertThat(revived.getSelectionCount("git")).isEqualTo(3)
+        } finally {
+            scheduler.shutdownNow()
+        }
     }
 
     @Test
