@@ -250,6 +250,12 @@ class SuggestionTapPartialReplaceTest {
         verify(exactly = 0) { ic.deleteSurroundingText(any(), any()) }
     }
 
+    /**
+     * Name kept: it is the `docs/RELEASE_RECORD.md` anchor of the "terminal edit routing" row.
+     * Since 2026-10-15 a terminal tap deletes NOTHING — neither document deletion nor
+     * backspace events — and appends only what follows the typed letters
+     * (TerminalSuggestionPolicy; row "terminal taps never delete").
+     */
     @Test
     fun terminalSuggestionReplacementUsesBackspaceEventsInsteadOfDocumentDeletion() {
         editorText.append("hel")
@@ -265,20 +271,22 @@ class SuggestionTapPartialReplaceTest {
 
         handler(keyevents).onSuggestionSelected("hello", ic, editor, resources, isManualSelection = true)
 
-        verify(exactly = 3) { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, 0) }
+        verify(exactly = 0) { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, any()) }
         verify(exactly = 0) { ic.deleteSurroundingText(any(), any()) }
-        verify { ic.commitText("hello ", 1) }
+        verify { ic.commitText("lo ", 1) }
+        assertThat(editorText.toString()).isEqualTo("hello ")
     }
 
     /**
      * Seeker, Termux, 2026-10-07: typing "hello" then tapping "hellos" produced
      * "hellohellos ". A real terminal exposes NO readable text buffer, so the cursor sync
      * reads "" and zeroes the delete count, and the #78 editor scan also finds nothing.
-     * The typed word the tracker followed (keystroke by keystroke) is what sits before the
-     * cursor; a terminal must delete exactly that many characters with backspace events.
+     * The 2026-10-07 fix deleted the tracked word with backspace events; since 2026-10-15
+     * (Saga: Termux's toolbar keys change the line unseen) the tap appends only the
+     * remainder of the tracked word and deletes nothing (TerminalSuggestionPolicy).
      */
     @Test
-    fun terminalWithoutReadableBufferDeletesTheTrackedTypedWord() {
+    fun terminalWithoutReadableBufferAppendsOnlyTheRemainderOfTheTrackedWord() {
         every { ic.getTextBeforeCursor(any(), any()) } returns ""
         every { ic.getTextAfterCursor(any(), any()) } returns ""
         every { contextTracker.getCurrentWordLength() } returns 5
@@ -290,9 +298,9 @@ class SuggestionTapPartialReplaceTest {
 
         handler(keyevents).onSuggestionSelected("hellos", ic, editor, resources, isManualSelection = true)
 
-        verify(exactly = 5) { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, 0) }
+        verify(exactly = 0) { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, any()) }
         verify(exactly = 0) { ic.deleteSurroundingText(any(), any()) }
-        verify { ic.commitText("hellos ", 1) }
+        verify { ic.commitText("s ", 1) }
     }
 
     @Test

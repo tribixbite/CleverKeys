@@ -46,6 +46,12 @@ import org.objenesis.ObjenesisStd
  * ([ax], [abx], [abcx], [abx], [ax]); swipe final autocorrect committed "is " for "ls"; the key
  * routing reported no non-text key. Already green: space autocorrect skips terminals, and an
  * ordinary editor keeps its tracker.
+ *
+ * RED (2026-10-15, Saga D2/D4 replays — taps that delete what the IME cannot see): 8 of 20
+ * failed before [TerminalSuggestionPolicy] — `hel`→`hello` sent 3 Backspaces (and `Hel` 3),
+ * `cd`→`cdx` 2, `+foocbar` 7; `foodborne` was committed over the stale `foocbar`; the bar for
+ * `ecx` offered `except`/`excuse`, for `HEl` `Hello`/`Help`/`Hex`, for `foocbar`
+ * `foolhardy`/`foodborne`. Already green: an ordinary editor's bar still offers corrections.
  */
 class TerminalTypedWordTrackingTest {
 
@@ -65,6 +71,9 @@ class TerminalTypedWordTrackingTest {
 
     /** Every word list the handler pushed to the bar, in order. */
     private val barPosts = ArrayList<List<String>>()
+
+    /** Per-partial predictor output; a partial not listed predicts "<partial>x". */
+    private val predictions = HashMap<String, List<String>>()
 
     @Before
     fun setup() {
@@ -89,6 +98,7 @@ class TerminalTypedWordTrackingTest {
         config.on_device_learning_enabled = false
         config.custom_terminal_packages = emptySet()
         config.primary_language = "en"
+        config.show_exact_typed_word = false
         every { Config.globalConfig() } returns config
         every { Config.globalConfigOrNull() } returns config
 
@@ -97,7 +107,8 @@ class TerminalTypedWordTrackingTest {
         predictor = mockk(relaxed = true)
         every { predictor.predictWordsWithContext(any(), any()) } answers {
             val partial = firstArg<String>()
-            WordPredictor.PredictionResult(listOf("${partial}x"), listOf(100))
+            val words = predictions[partial] ?: listOf("${partial}x")
+            WordPredictor.PredictionResult(words, words.map { 100 })
         }
         // A shell token is "corrected" to prose if autocorrect is allowed to run.
         every { predictor.autoCorrect(any()) } answers {
@@ -128,6 +139,7 @@ class TerminalTypedWordTrackingTest {
 
         pendingTasks.clear()
         barPosts.clear()
+        predictions.clear()
         val tasks = mockk<PredictionTaskRunner>(relaxed = true)
         every { tasks.cancelAndSubmit(any()) } answers { pendingTasks.add(firstArg()) }
         val main = mockk<Handler>(relaxed = true)
@@ -146,6 +158,8 @@ class TerminalTypedWordTrackingTest {
         handler.setField("fieldAllowsPersonalizedLearning", true)
         // Objenesis skips field initializers: the space-commit memo (2026-10-11) must exist.
         handler.setField("autocorrectMemo", tribixbite.cleverkeys.autocorrect.AutocorrectMemo())
+        // The exact-add confirmation reads its message from resources.
+        handler.setField("context", mockk<android.content.Context>(relaxed = true))
     }
 
     @After
@@ -170,6 +184,9 @@ class TerminalTypedWordTrackingTest {
     }
 
     private fun tracked() = tracker.getCurrentWord()
+
+    private fun tap(word: String, editor: EditorInfo): String? =
+        handler.onSuggestionSelected(word, ic, editor, mockk<Resources>(relaxed = true), isManualSelection = true)
 
     // ------------------------------------------------------------------ word boundaries
 
@@ -221,13 +238,111 @@ class TerminalTypedWordTrackingTest {
     }
 
     @Test
-    fun aTappedSuggestionAfterEnterDeletesOnlyTheNewWord() {
+    fun aTappedSuggestionAfterEnterCompletesOnlyTheNewWord() {
         val termux = editor()
         type("ls", termux)
         handler.handleNonTextInput(termux)
         type("cd", termux)
-        handler.onSuggestionSelected("cdx", ic, termux, mockk<Resources>(relaxed = true), isManualSelection = true)
-        verify(exactly = 2) { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, 0) }
+        tap("cdx", termux)
+        verify(exactly = 0) { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, any()) }
+        verify(exactly = 1) { ic.commitText("x ", 1) }
+    }
+
+    // ------------------------------------------------------------------ edits the IME cannot see
+
+    /*
+     * Saga/Termux 0.118.3, 2026-10-15 (D2): `foo`, Termux's own extra-keys CTRL, CleverKeys `c`,
+     * then `bar`. Termux applies its latched toolbar CTRL inside `commitText` (TerminalView
+     * `sendTextToTerminal` → `inputCodePoint` reads `readControlKey()`), so the shell got ^C and a
+     * fresh prompt while the IME saw an ordinary, successful commit of "c". The tracker therefore
+     * held `foocbar` over a line that showed `bar`, and tapping `foodborne` sent seven Backspaces.
+     * Nothing the IME can observe distinguishes that "c" from a typed letter, so the guard is on
+     * the tap: in a terminal it never deletes.
+     */
+
+    @Test
+    fun aTerminalTapAppendsTheRemainderAndDeletesNothing() {
+        val termux = editor()
+        type("hel", termux)
+        tap("hello", termux)
+        verify(exactly = 0) { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, any()) }
+        verify(exactly = 0) { ic.deleteSurroundingText(any(), any()) }
+        verify(exactly = 1) { ic.commitText("lo ", 1) }
+        assertWithMessage("tracked word after the tap").that(tracked()).isEmpty()
+    }
+
+    @Test
+    fun aTerminalTapKeepsTheCaseTheUserTyped() {
+        val termux = editor()
+        type("Hel", termux)
+        tap("hello", termux)
+        verify(exactly = 0) { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, any()) }
+        verify(exactly = 1) { ic.commitText("lo ", 1) }
+    }
+
+    @Test
+    fun aSuggestionThatDoesNotExtendTheTrackedWordIsRefusedInATerminal() {
+        val termux = editor()
+        type("foo", termux)
+        type("c", termux) // Termux's toolbar CTRL turned it into ^C; the IME cannot tell
+        type("bar", termux)
+        assertWithMessage("the tracker cannot see the ^C").that(tracked()).isEqualTo("foocbar")
+        val committed = tap("foodborne", termux)
+        assertWithMessage("tap result").that(committed).isNull()
+        verify(exactly = 0) { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, any()) }
+        verify(exactly = 0) { ic.commitText(match { it.contains("foodborne") || it.contains("rne") }, any()) }
+    }
+
+    @Test
+    fun theTerminalBarOffersOnlyWordsThatExtendTheTrackedWord() {
+        val termux = editor()
+        predictions["ecx"] = listOf("except", "excuse", "ecxs")
+        type("ecx", termux)
+        runPredictions()
+        assertWithMessage("bar for the stale word 'ecx' (shell completed 'echo ' unseen)")
+            .that(barPosts.last()).containsExactly("ecxs")
+    }
+
+    @Test
+    fun theTerminalBarShowsTheTypedCaseOfAnExtension() {
+        val termux = editor()
+        predictions["HEl"] = listOf("hello", "help", "hex")
+        type("HEl", termux)
+        runPredictions()
+        assertWithMessage("an extension is shown as what the tap will produce")
+            .that(barPosts.last()).containsExactly("HEllo", "HElp").inOrder()
+    }
+
+    @Test
+    fun theTerminalBarIsNotPaintedWhenNothingExtendsTheWord() {
+        val termux = editor()
+        predictions["foocbar"] = listOf("foolhardy", "foodborne")
+        type("foocbar", termux)
+        val before = barPosts.size
+        io.mockk.clearMocks(bar, answers = false, recordedCalls = true)
+        pendingTasks.toList().also { pendingTasks.clear() }.last().run()
+        assertWithMessage("no non-extending word may reach the bar").that(barPosts.drop(before)).isEmpty()
+        // Nor may the previous word's chips stay up, offering a tap that would be refused.
+        verify(exactly = 1) { bar.clearSuggestions() }
+    }
+
+    @Test
+    fun anOrdinaryEditorBarStillOffersCorrections() {
+        val notes = editor("com.example.notes")
+        predictions["foocbar"] = listOf("foolhardy", "foodborne")
+        type("foocbar", notes)
+        pendingTasks.toList().also { pendingTasks.clear() }.last().run()
+        assertWithMessage("ordinary editor bar").that(barPosts.last()).containsExactly("foolhardy", "foodborne")
+    }
+
+    @Test
+    fun exactAddInATerminalDeletesNothing() {
+        val termux = editor()
+        type("foocbar", termux)
+        tap(Suggestion.ExactAdd("foocbar").wire, termux)
+        verify(exactly = 0) { keyevents.send_key_down_up(KeyEvent.KEYCODE_DEL, any()) }
+        verify(exactly = 0) { ic.commitText(match { it.contains("foocbar") }, any()) }
+        verify(exactly = 1) { ic.commitText(" ", 1) }
     }
 
     @Test

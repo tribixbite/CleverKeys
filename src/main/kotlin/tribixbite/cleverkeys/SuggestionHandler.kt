@@ -328,11 +328,13 @@ class SuggestionHandler(
      *
      * WP9 R-1 step 7 (`docs/history/audits/remediation/3-core-ime.md:157`) deferred a
      * keep-vs-unify decision: every other app has its typed text removed with
-     * `InputConnection.deleteSurroundingText`, while five sites in this class branch to key
-     * events when this returns true — four `KEYCODE_DEL` deletions ([onSuggestionSelected]'s
-     * swipe-REPLACE and typed-partial branches, [handleExactWordAdd], [handleAutocorrectUndo])
-     * plus [handleDeleteLastWord]'s Ctrl+W. The decision is **keep**, and the reason is that the
-     * two cases are not the same operation wearing different clothes:
+     * `InputConnection.deleteSurroundingText`, while sites in this class branch to key
+     * events when this returns true — `KEYCODE_DEL` deletions ([onSuggestionSelected]'s
+     * swipe-REPLACE branch, [handleAutocorrectUndo]) plus [handleDeleteLastWord]'s Ctrl+W.
+     * Since 2026-10-15 the typed-partial tap and [handleExactWordAdd] delete NOTHING here: the
+     * tracked word cannot be verified against the line, so a tap appends only what follows it
+     * ([TerminalSuggestionPolicy] has the device evidence). The decision is **keep**, and the
+     * reason is that the two cases are not the same operation wearing different clothes:
      *
      *  - A terminal has **no editable text buffer**. `deleteSurroundingText` is defined against a
      *    document with a cursor and surrounding characters; behind a pty there is no document to
@@ -1473,6 +1475,12 @@ class SuggestionHandler(
         // Swipe-correction tracking: the auto-inserted swipe word this tap REPLACED, if any.
         var replacedSwipeWord: String? = null
 
+        // Terminal-style editors: what a typed-word tap appends (it never deletes there —
+        // [TerminalSuggestionPolicy]); null everywhere else and for swipe commits.
+        var terminalAppend: TerminalSuggestionPolicy.TapPlan.Append? = null
+        // True when that append continues a tracked word (no leading space may separate them).
+        var terminalAppendsToTypedWord = false
+
         ic?.let { inputConnection ->
             try {
                 // Detect if we're in Termux for special handling
@@ -1599,14 +1607,27 @@ class SuggestionHandler(
                     // If a previous deletion set this flag and onUpdateSelection hasn't fired yet,
                     // the sync would be skipped, causing suffix deletion to fail (e.g., "ca|n't" → "canteen n't")
                     contextTracker.expectingSelectionUpdate = false
-                    // A terminal exposes no readable text buffer: syncing against it reads ""
-                    // and zeroes the word, and the #78 editor scan below finds nothing either,
-                    // so the typed word survived and the tap APPENDED ("hello" → "hellohellos",
-                    // Termux on the Seeker, 2026-10-07). There, the word the tracker followed
-                    // keystroke by keystroke is what sits before the cursor; read it before any
-                    // sync can clear it, and delete exactly that with backspace events below.
-                    val terminalTypedLength = if (inTermuxApp) contextTracker.getCurrentWordLength() else 0
-                    if (!inTermuxApp) {
+                    // A terminal-style editor exposes no readable text buffer (syncing against
+                    // it reads "" and zeroes the word) and the app can change the line without the
+                    // IME seeing it: Termux's toolbar TAB completed `ec` to `echo `, its toolbar
+                    // CTRL turned a committed "c" into ^C and a fresh prompt (Saga, 2026-10-15).
+                    // Deleting the tracked word's length there removed text that was not the
+                    // word, so a tap only APPENDS what follows the tracked word, and a suggestion
+                    // that would need a deletion is refused ([TerminalSuggestionPolicy]). The bar
+                    // offers extensions only, so a refusal means the word changed under the chip.
+                    if (inTermuxApp) {
+                        val trackedWord = contextTracker.getCurrentWord()
+                        when (val plan = TerminalSuggestionPolicy.planTap(trackedWord, processedWord)) {
+                            is TerminalSuggestionPolicy.TapPlan.Append -> {
+                                terminalAppend = plan
+                                terminalAppendsToTypedWord = trackedWord.isNotEmpty()
+                            }
+                            TerminalSuggestionPolicy.TapPlan.Refuse -> {
+                                vlog { "TERMINAL: tap does not extend the tracked word; nothing sent" }
+                                return null
+                            }
+                        }
+                    } else {
                         contextTracker.synchronizeWithCursor(
                             inputConnection,
                             config.primary_language,
@@ -1615,7 +1636,7 @@ class SuggestionHandler(
                     }
 
                     var (prefixDelete, suffixDelete) = if (inTermuxApp) {
-                        terminalTypedLength to 0
+                        0 to 0
                     } else {
                         contextTracker.getCharsToDeleteForPrediction()
                     }
@@ -1656,27 +1677,12 @@ class SuggestionHandler(
                         // Nothing to delete — neither composing-text nor a partial word at cursor.
                     } else {
                         vlog { "TYPING PREDICTION: Deleting partial word - prefix=$prefixDelete, suffix=$suffixDelete" }
-                        if (inTermuxApp) {
-                            // TERMUX: Use backspace key events
-                            // First delete suffix (move right then backspace), then delete prefix
-                            if (suffixDelete > 0) {
-                                // Move cursor to end of word
-                                repeat(suffixDelete) {
-                                    keyeventhandler.send_key_down_up(KeyEvent.KEYCODE_DPAD_RIGHT, 0)
-                                }
-                            }
-                            // Delete entire word (prefix + suffix)
-                            repeat(prefixDelete + suffixDelete) {
-                                keyeventhandler.send_key_down_up(KeyEvent.KEYCODE_DEL, 0)
-                            }
-                        } else {
-                            // NORMAL APPS: Use InputConnection with both prefix AND suffix deletion
-                            inputConnection.deleteSurroundingText(prefixDelete, suffixDelete)
+                        // Ordinary editors only: a terminal-style editor never deletes here (above).
+                        inputConnection.deleteSurroundingText(prefixDelete, suffixDelete)
 
-                            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                                val debugAfter = inputConnection.getTextBeforeCursor(50, 0)
-                                Log.d(TAG, "TYPING PREDICTION: After deleting partial, text before cursor: '$debugAfter'")
-                            }
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                            val debugAfter = inputConnection.getTextBeforeCursor(50, 0)
+                            Log.d(TAG, "TYPING PREDICTION: After deleting partial, text before cursor: '$debugAfter'")
                         }
                     }
                 }
@@ -1686,6 +1692,10 @@ class SuggestionHandler(
                 // Swipe auto-inserts always get the leading space since the swipe replaces no typed text.
                 val needsSpaceBefore = if (!isSwipeAutoInsert && !config.auto_space_before_suggestion) {
                     false  // User disabled leading space before tapped suggestions
+                } else if (terminalAppendsToTypedWord) {
+                    // The remainder continues the typed letters on the line (a blind field's
+                    // readback — RustDesk's '1' placeholders — must not decide this).
+                    false
                 } else if (syncSuppressedField) {
                     // #151: never inject a leading space into URL/email/etc. fields —
                     // after replacing "exa" in "https://exa" the previous char is '/',
@@ -1724,7 +1734,7 @@ class SuggestionHandler(
                 // Apply capitalization if user was typing with shift (first letter uppercase)
                 val currentWord = contextTracker.getCurrentWord()
                 val shouldCapitalize = currentWord.isNotEmpty() && currentWord[0].isUpperCase()
-                val capitalizedWord = if (shouldCapitalize && processedWord.isNotEmpty()) {
+                val capitalizedWord = terminalAppend?.word ?: if (shouldCapitalize && processedWord.isNotEmpty()) {
                     processedWord.replaceFirstChar {
                         if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
                     }
@@ -1745,22 +1755,25 @@ class SuggestionHandler(
                     isSwipeAutoInsert = isSwipeAutoInsert,
                     hasSpaceAfter = hasSpaceAfter
                 )
+                // What goes on the line: the whole word, or in a terminal-style editor only what
+                // follows the typed letters already there (the line then reads capitalizedWord).
+                val insertedWord = terminalAppend?.suffix ?: capitalizedWord
                 val insertMode: String
                 val textToInsert = when (trailingSpaceMode) {
                     SmartAutoSpace.TrailingSpaceMode.NO_SPACE_USER_DISABLED -> {
                         // #82: User disabled auto-space after suggestion (tap selection only)
                         insertMode = "AUTO-SPACE DISABLED"
-                        if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord
+                        if (needsSpaceBefore) " $insertedWord" else insertedWord
                     }
                     SmartAutoSpace.TrailingSpaceMode.NO_SPACE_MID_SENTENCE -> {
                         // v1.2.6: Mid-sentence replacement - don't add trailing space (already exists)
                         insertMode = "MID-SENTENCE (hasSpaceAfter=true)"
-                        if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord
+                        if (needsSpaceBefore) " $insertedWord" else insertedWord
                     }
                     SmartAutoSpace.TrailingSpaceMode.TRAILING_SPACE -> {
                         // Normal apps (incl. Termux when user opts in) or swipe: Insert word with trailing space
                         insertMode = "NORMAL/SWIPE MODE (needsSpaceBefore=$needsSpaceBefore, isSwipe=$isSwipeAutoInsert, capitalize=$shouldCapitalize)"
-                        if (needsSpaceBefore) " $capitalizedWord " else "$capitalizedWord "
+                        if (needsSpaceBefore) " $insertedWord " else "$insertedWord "
                     }
                 }
                 vlog { "$insertMode: textToInsert len=${textToInsert.length}" }
@@ -2696,24 +2709,22 @@ class SuggestionHandler(
 
         vlog { "EXACT ADD: Committing and adding '$exactWord' to dictionary" }
 
-        // First, delete the partial word that was typed (since we're replacing it)
+        // Ordinary editors: delete the typed partial and commit the exact word in its place.
+        // Terminal-style editors: the tracked letters ARE the exact word and are already on the
+        // line as far as the IME can know, and it cannot verify that they still are (Termux's
+        // toolbar keys and CTRL act unseen — Saga 2026-10-15: `+foocbar` sent seven Backspaces
+        // at a line showing `bar`). Delete nothing there; only the trailing space is committed
+        // ([TerminalSuggestionPolicy]).
         val currentWord = contextTracker.getCurrentWord()
-        if (currentWord.isNotEmpty() && ic != null) {
-            // Detect Termux
-            val inTermuxApp = isTerminalEditor(editorInfo)
-
-            if (inTermuxApp) {
-                // Termux: Use backspace key events
-                repeat(currentWord.length) {
-                    keyeventhandler.send_key_down_up(android.view.KeyEvent.KEYCODE_DEL, 0)
-                }
-            } else {
+        if (isTerminalEditor(editorInfo)) {
+            ic?.commitText(" ", 1)
+        } else {
+            if (currentWord.isNotEmpty() && ic != null) {
                 ic.deleteSurroundingText(currentWord.length, 0)
             }
+            // Commit the exact word with trailing space
+            ic?.commitText("$exactWord ", 1)
         }
-
-        // Commit the exact word with trailing space
-        ic?.commitText("$exactWord ", 1)
 
         // Add to user dictionary
         val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(exactWord) ?: false
@@ -3640,6 +3651,23 @@ class SuggestionHandler(
                     finalMetas = mergedMetas
                 }
 
+                // Terminal-style editors: a tap there only appends what follows the tracked word
+                // (it cannot verify the line — [TerminalSuggestionPolicy]), so offer only words
+                // that extend it, spelled as the tap will leave them. With none, the bar is
+                // cleared rather than left showing the previous word's chips.
+                val barRows = TerminalSuggestionPolicy.BarRows(finalWords, finalScores, finalMetas).let {
+                    if (inTerminal) TerminalSuggestionPolicy.restrictBar(partial, it) else it
+                }
+                if (inTerminal && barRows.words.isEmpty()) {
+                    if (Thread.currentThread().isInterrupted) return@cancelAndSubmit
+                    mainHandler.post {
+                        if (contextTracker.getCurrentWord() == partial && !specialPromptActive) {
+                            suggestionBar?.clearSuggestions()
+                        }
+                    }
+                    return@cancelAndSubmit
+                }
+
                 // Bar highlight == space commit (2026-10-11): run the dictionary-sweeping
                 // correction HERE, on the worker, so the main-thread resolve in the post below
                 // (and the space press) hits the memo. Its guards are evaluated there.
@@ -3651,7 +3679,7 @@ class SuggestionHandler(
                 // v1.2.6 FIX: Check if task was cancelled or special prompt is active
                 // (An empty prediction list still posts when space would correct the word, so the
                 // bar can show the correction it is about to commit.)
-                if ((finalWords.isNotEmpty() || wouldCorrect) && suggestionBar != null &&
+                if ((barRows.words.isNotEmpty() || wouldCorrect) && suggestionBar != null &&
                     !Thread.currentThread().isInterrupted && !specialPromptActive) {
                     // Use Handler.post() instead of View.post() — View.post() silently
                     // drops runnables when the View is not attached to a window
@@ -3670,7 +3698,7 @@ class SuggestionHandler(
                         val spaceCommit = resolveSpaceCommit(partial, inTerminal, isStemUnmerged(partial)) {
                             AutocorrectContextGuard.isNonProseContext(editorTextBeforeCursor(ic, 72))
                         }
-                        val plan = BarHighlightPlanner.plan(finalWords, finalScores, finalMetas, partial, spaceCommit)
+                        val plan = BarHighlightPlanner.plan(barRows.words, barRows.scores, barRows.metas, partial, spaceCommit)
                         if (plan.words.isEmpty()) return@post
 
                         suggestionBar?.let { bar ->

@@ -184,19 +184,20 @@ class SuggestionTapAddAndIWordTest {
     }
 
     @Test
-    fun inTermuxTheDeletionUsesKeyEventsInsteadOfDeleteSurroundingText() {
+    fun inATerminalExactAddDeletesNothingAndCommitsOnlyTheSpace() {
         val keyEvents = mockk<KeyEventHandler>(relaxed = true)
-        every { contextTracker.getCurrentWord() } returns "abc"
+        every { contextTracker.getCurrentWord() } returns "abcd"
 
         val handler = handler()
         handler.setField("keyeventhandler", keyEvents)
         handler.onSuggestionSelected("exact_add:abcd", ic, editorInfo(SuggestionHandler.TERMUX_PACKAGE), resources)
 
-        // Termux's terminal ignores deleteSurroundingText; the app-specific path is one
-        // KEYCODE_DEL per typed character.
+        // The typed letters are the word; the IME cannot verify they are still on the line
+        // (Termux's toolbar keys act unseen — Saga 2026-10-15), so nothing is deleted there
+        // (TerminalSuggestionPolicy). Until then this sent one KEYCODE_DEL per typed letter.
         verify(exactly = 0) { ic.deleteSurroundingText(any(), any()) }
-        verify(exactly = 3) { keyEvents.send_key_down_up(android.view.KeyEvent.KEYCODE_DEL, 0) }
-        verify(exactly = 1) { ic.commitText("abcd ", 1) }
+        verify(exactly = 0) { keyEvents.send_key_down_up(android.view.KeyEvent.KEYCODE_DEL, any()) }
+        verify(exactly = 1) { ic.commitText(" ", 1) }
         verify(exactly = 1) { dictionary.addUserWord("abcd") }
     }
 

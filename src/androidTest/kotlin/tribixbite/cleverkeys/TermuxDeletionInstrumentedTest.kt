@@ -223,30 +223,36 @@ class TermuxDeletionInstrumentedTest {
     // ===========================================================================================
 
     /**
-     * The ordinary "type `wor`, tap `world`" flow. The handler cursor-syncs, finds a 3-character
-     * prefix to remove, and in Termux must remove it with three DEL presses.
+     * The ordinary "type `wor`, tap `world`" flow. In Termux the tap deletes NOTHING
+     * (2026-10-15, [TerminalSuggestionPolicy]): the IME cannot verify that the tracked letters
+     * are still on the line (Termux's toolbar keys and CTRL change it unseen), so it appends
+     * only the remainder `ld ` after the tracked `wor`.
      */
     @Test
-    fun termux_typedPartialDeletion_usesKeyEventsOnly() {
+    fun termux_typedPartialTap_appendsWithoutDeleting() {
         withEditor("hello wor") {
             // No auto-inserted word and no swipe flag → the typed-partial branch.
             contextTracker.clearLastAutoInsertedWord()
             contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
             contextTracker.setWasLastInputSwipe(false)
+            // A terminal's only record of the word is the keystroke tracker.
+            contextTracker.appendToCurrentWord("wor")
 
             suggestionHandler.onSuggestionSelected(
                 "world", ic, termuxEditor, context.resources, isManualSelection = true
             )
 
             assertEquals(
-                "Termux typed-partial must delete 'wor' with DEL key events. Presses: ${ic.keyPresses}",
-                3, ic.pressesOf(KeyEvent.KEYCODE_DEL)
+                "Termux typed-partial tap must send no DEL. Presses: ${ic.keyPresses}",
+                0, ic.pressesOf(KeyEvent.KEYCODE_DEL)
             )
             assertEquals(
                 "Termux typed-partial must NOT use deleteSurroundingText. Calls: " +
                     "${ic.deleteSurroundingCalls}",
                 emptyList<Pair<Int, Int>>(), ic.deleteSurroundingCalls
             )
+            // The trailing space follows the user's auto-space preference.
+            assertEquals("Termux tap appends only the remainder", "ld", ic.commits.single().trimEnd())
         }
     }
 
