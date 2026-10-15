@@ -87,11 +87,29 @@ hands the active languages to `ActiveLanguageSync`, which reloads only what chan
 
 A rotation that changes the narrow/wide selection follows the same path.
 
+## Theme Change on Switch
+
+Each entry may also carry a `theme` binding (absent = the XML `theme` default, `"none"` = follow
+the global theme, an id = bound). Unlike the language, `set_current_layout` does NOT resolve the
+theme: the selection write triggers `ConfigurationManager.refresh`, which compares the theme
+style id and name before and after `Config.refresh` (where `recomputeActiveTheme` resolves the
+effective theme) and calls `onThemeChanged` only when they differ.
+
+| Switch | Effect on the keyboard view |
+|--------|-----------------------------|
+| Same effective theme (both follow global, both bound to X, or bound to the global theme) | None; no re-inflation |
+| Follow global → bound to X | Re-inflated in X; suggestion strip rebuilt with it while shown |
+| Bound to X → follow global | Re-inflated in the global theme |
+| Bound to a theme missing on the device | Global theme; Layout Manager marks the binding missing |
+
+The global `theme` preference is never written. Full rules: `docs/specs/layout-system.md`
+"Per-layout theme binding".
+
 ## Configuration
 
 | Setting | Key | Default | Description |
 |---------|-----|---------|-------------|
-| **Layouts** | `layouts` | Built-in default list | Ordered enabled layouts; each entry may carry a `language` binding |
+| **Layouts** | `layouts` | Built-in default list | Ordered enabled layouts; each entry may carry a `language` and a `theme` binding |
 | **Portrait selection** | `current_layout_portrait` | 0 | Selected index when not wide |
 | **Landscape selection** | `current_layout_landscape` | 0 | Selected index when wide (≥ 600 dp) |
 
@@ -102,6 +120,8 @@ A rotation that changes the narrow/wide selection follows the same path.
 | Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/LayoutLanguageBindingTest.kt` (includes a three-language cycle) |
 | Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/ActiveLanguageSyncTest.kt` (unbound switches reload nothing) |
 | Mock | `src/test/kotlin/tribixbite/cleverkeys/LayoutLanguageBindingConfigTest.kt` (`set_current_layout` onto a bound layout) |
+| Pure JVM | `src/test/kotlin/tribixbite/cleverkeys/LayoutThemeBindingTest.kt` (bound / unbound / missing theme resolution, XML attribute) |
+| Mock | `src/test/kotlin/tribixbite/cleverkeys/LayoutThemeBindingConfigTest.kt` (re-inflate only when the effective theme changes) |
 
 ## Related Specifications
 

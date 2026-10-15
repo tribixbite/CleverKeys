@@ -79,6 +79,22 @@ CleverKeys includes many pre-designed themes:
 
 The theme applies immediately. No restart required.
 
+## A Theme per Layout
+
+A layout can carry its own theme, so switching layouts switches the look too — for example
+a dark theme for your English layout and a light one for Persian.
+
+1. Open **Settings > Layout Manager**
+2. Tap the **Theme** chip on a layout
+3. Pick a theme (search by name), or **Follow global theme**
+
+While that layout is active the keyboard uses the chosen theme; switching back to a layout
+that follows the global theme restores the theme selected here in Theme Manager. Choosing a
+theme for a layout never changes your global theme. If a layout's theme is deleted, or a
+restored backup names a DIY theme that is not on this device, the layout uses the global theme
+and Layout Manager shows the missing theme. Custom layouts can also declare a default theme in
+their XML (`theme="rosepine"`); see [Custom Layouts](../layouts/custom-layouts.md#default-theme-theme).
+
 ## DIY Theme Creator
 
 CleverKeys includes a powerful theme creator for custom colors. Every field in the editor is rendered by the keyboard:

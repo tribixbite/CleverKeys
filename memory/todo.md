@@ -154,6 +154,23 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     (11 pure), `InlineFieldShortcutTest` + `EditingCommandParityTest` (mock; fail-first 2/6 and
     2/12); 2966 pure / 1232 mock green. Device check: Pixel — clipboard editor type two
     words, Ctrl+Z ×2, Ctrl+Y, select + Ctrl+C then paste in an app; undo/redo keys in Chrome, a Compose field and Termux.
+27. [x] agent: DONE 2026-10-15 — per-layout THEME binding (maintainer: "tie theme to layout
+    including backup/layout file xml"). Layout Manager **Theme** chip per layout (Follow global
+    theme / any built-in, decorative or DIY theme, searchable picker); `<keyboard theme="…">`
+    is the XML default, written on Export XML; stored as the `theme` field of the `layouts`
+    entry (rides in the backup blob; preview lists per-layout theme changes). Config resolves
+    the effective theme per refresh (`LayoutThemeBinding.resolve`); the global `theme` pref is
+    never written; a missing theme falls back to the global one. ConfigurationManager re-inflates
+    only when the effective theme changes; `onThemeChanged` rebuilds the suggestion strip while
+    shown. Spec: `docs/specs/layout-system.md` "Per-layout theme binding". Fail-first: preview
+    `[3 → 3 items]`, 3/3 new hygiene drift red, new API tests did not compile. 2977 pure /
+    1240 mock. 10 new strings × 21 locales (→ item 8 review). Not device-verified (→ item 28).
+28. [ ] device: theme binding — bind layout 2 to a theme ≠ global, switch with the globe key /
+    swipe: keyboard and suggestion strip redraw in that theme with no flicker or stale bar;
+    switch back restores the global theme; switching between two layouts on the same theme
+    does not redraw; bind a DIY theme, delete it in Theme Manager → layout falls back, Layout
+    Manager shows "not on this device"; import a layout XML with `theme="rosepine"`; Export XML
+    carries the binding; backup → restore preview shows the theme rows.
 
 ## Device results recorded 2026-10-07/08
 

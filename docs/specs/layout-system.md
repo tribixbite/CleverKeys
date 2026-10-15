@@ -256,6 +256,64 @@ prediction, autocorrect, swipe routing, contractions and learning. Resolution, t
 language-change path and the secondary-language policy are specified in
 [dictionary-and-language-system.md](dictionary-and-language-system.md#per-layout-language-binding-gh-186-gh-61--2026-10-07).
 
+### Per-layout theme binding (`theme`, 2026-10-15)
+
+Each layout entry can render in its own theme; switching layouts can therefore switch theme.
+Modelled on the language binding above, with the same three-state entry and the same storage.
+
+**XML.** `<keyboard theme="rosepine" …>` declares the layout's DEFAULT theme binding. The parser
+keeps the raw value in `KeyboardData.declared_theme` and never fails on it. A valid value is a
+theme id as Theme Manager stores it in `theme`: a built-in id (`ThemeProvider.BUILT_IN_THEME_IDS`),
+`decorative_<predefined id>`, or `custom_<uuid>` — shape `^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$`,
+case kept (custom ids are store keys). The Layout Manager editor refuses to save a malformed
+value; a well-formed id of a theme that is not on this device is accepted (it may be a DIY theme
+from another device). Built-in layouts declare no theme. An imported or added custom layout's
+attribute applies as its binding until the user picks something else. **Export XML** writes the
+entry's stored choice onto the root (`LayoutThemeBinding.applyToXml`): a theme id sets
+`theme="…"`, "Follow global theme" over an XML default removes it, no choice leaves the XML as
+written — so re-importing an exported file restores the binding.
+
+**Storage.** The `theme` field of a `layouts` preference entry: absent = use the XML default,
+`"none"` = explicitly follow the global theme, an id = bound. A bound named layout uses the
+object form `{"kind":"named","name":…,"theme":…}`; unbound entries keep their exact pre-binding
+encoding. Loading sanitises the field through `LayoutThemeBinding.normalizeEntry` (a hostile or
+malformed value from a backup is dropped, the layout survives). Reordering, editing the XML and
+the legacy preference dialog all carry the binding with the entry.
+
+**Resolution** (`LayoutThemeBinding.resolve`, called by `Config.recomputeActiveTheme` at the end
+of every `Config.refresh`): the current layout's effective binding (index past the end resolves
+to layout 0, as `LayoutManager` does) when `ThemeProvider.isAvailable` says it exists; otherwise
+the user's global `theme` preference. `Config.themeName`/`theme` are the EFFECTIVE theme;
+the preference is never written by a binding. `layout_bound_theme` / `layout_missing_theme`
+expose the state. A binding to a missing theme (deleted DIY theme, backup from another device)
+renders the global theme — not ThemeProvider's generic fallback — and Layout Manager shows it.
+`Config.themeAvailability` is installed by `CleverKeysService.onCreate` before
+`initGlobalConfig`; without it every well-formed id counts as available.
+
+**Applying it.** No new path: `Config.set_current_layout` writes the selection preference, whose
+listener runs `ConfigurationManager.refresh`; it compares theme id AND name before/after and
+calls `onThemeChanged` only when the rendered theme changed, so switching between layouts with
+the same effective theme never re-inflates. `set_current_layout` must not resolve the theme
+itself (that would hide the change from the comparison; pinned by `CoreImeHygieneDriftTest`).
+`CleverKeysService.onThemeChanged` inflates the new view and, while the keyboard is shown,
+rebuilds the whole input hierarchy through `installPredictionViews` (the setup
+`onStartInputView` uses), so the suggestion strip survives a mid-typing switch; the
+stale-view check in `onStartInputView` compares the theme name as well as the style id
+(runtime themes share one style). Layout Manager edits, reorders and keyboard start reach the
+same refresh. Deleting a custom theme broadcasts `ACTION_THEME_CHANGED` so bindings to it
+re-resolve. Limitation: `swipe_trail_color` stays the global theme's synced colour.
+
+**Backup & Restore.** The binding adds no preference key: it travels inside the `layouts` JSON
+blob, which is already classified (`SettingsImportPlanBuilder.JSON_BLOB_KEYS`), so the
+three-bucket classification and its drift test are unchanged. The import preview renders each
+entry whose effective theme changes (`LayoutThemeBindingDiff`, "<layout>: theme A → B").
+Custom themes themselves are not part of a backup; a restored binding to one that is not on the
+device degrades to the global theme as above.
+
+Tests: `LayoutThemeBindingTest` (pure), `LayoutThemeBindingConfigTest` (mock: Config,
+ConfigurationManager re-inflate gate, serializer round trip, XML attribute, built-in id drift),
+`BackupRestorePreviewRenderTest`, `SettingsImportPlanBuilderTest`, `CoreImeHygieneDriftTest`.
+
 ### CTC swipe eligibility
 
 A layout can reach the CTC engine only when all of these checks pass:

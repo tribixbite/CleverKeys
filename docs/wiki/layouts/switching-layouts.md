@@ -99,6 +99,13 @@ that language only; switching to a layout left on **Follow Multi-Language settin
 to your Primary/Secondary languages. See
 [Multi-Language: One Language per Layout](multi-language.md#one-language-per-layout).
 
+## Switching Theme with the Layout
+
+Each layout can also have its own theme (**Settings > Layout Manager**, the **Theme** chip).
+Switching to that layout redraws the keyboard in its theme; switching to a layout left on
+**Follow global theme** returns to the theme chosen in Theme Manager. The keyboard is only
+redrawn when the theme actually changes. See [Themes: A Theme per Layout](../customization/themes.md#a-theme-per-layout).
+
 ## Multi-Language Alternative
 
 Instead of switching layouts, you can type in multiple languages on one layout:

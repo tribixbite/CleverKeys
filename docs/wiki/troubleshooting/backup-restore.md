@@ -82,6 +82,12 @@ dialog before applying any changes:
     layout names being added/removed and key-count changes per
     shared-name layout (e.g. `+ azerty  − dvorak  (1 unchanged)` or
     `~ qwerty: 50→52 keys`).
+  - **Per-layout themes** — a layout's theme binding is saved inside the
+    `layouts` row. When an import changes it, the row lists each layout
+    whose theme changes (e.g. `latn_qwerty_us: theme Follow global theme
+    → cobalt`). DIY themes themselves are not in the backup: a restored
+    layout bound to one that is missing on this device uses the global
+    theme until you pick another in Layout Manager.
   - **Short-swipe diff** — short-swipe customizations show a per-mapping
     diff above the Skip/Merge/Replace radio so you can see exactly
     which `key+direction` mappings will change. In **Merge** mode the

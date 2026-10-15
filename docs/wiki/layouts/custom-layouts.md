@@ -81,6 +81,17 @@ that language only. The **Language** chip in Layout Manager overrides it, includ
 **Follow Multi-Language settings** to ignore it. The value must be a language code such as
 `fa`, `de` or `pt_br`; the editor refuses to save anything else.
 
+### Default theme (`theme`)
+
+A layout can also name a theme: `<keyboard name="Persian" script="persian" theme="rosepine">`.
+That theme is used while the layout is active, until you pick something else with the
+**Theme** chip in Layout Manager (including **Follow global theme** to ignore it). The value is
+a theme ID as Theme Manager stores it: a built-in name such as `rosepine` or `cobalt`,
+`decorative_` plus a decorative theme (for example `decorative_neon_cyberpunk`), or
+`custom_` plus a DIY theme's ID. The editor refuses a malformed value; a theme that is not on
+this device falls back to your global theme. **Export XML** writes the layout's current theme
+choice into the file, so importing it elsewhere keeps the theme.
+
 ### Keeping CTC swipe available
 
 If a custom layout should use the CTC engine, declare the correct `script` on its
