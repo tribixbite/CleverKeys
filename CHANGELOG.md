@@ -313,6 +313,10 @@ editor that used to be listed here already ship in 2.0.)
 - Terminal apps: Enter, Tab, Esc, arrows, Home/End and Ctrl chords end the tracked word, so
   suggestions no longer show or replace a word built from earlier lines (`ls` Enter `cd` was
   read as `lscd`); swipe final autocorrect no longer rewrites words in terminals.
+- Terminal apps: tapping a suggestion never deletes characters. The keyboard cannot see edits
+  the terminal makes itself (Termux's extra-keys Tab/Ctrl, shell completion, history), so the
+  bar offers only words that continue what you typed and a tap adds the rest; `+word` adds the
+  word to the dictionary and types only a space.
 - Swipe typing starts only on letter keys: a swipe that begins on Backspace, Shift, Enter,
   Tab or a modifier and then crosses letters no longer types a word (a swipe-left from
   Backspace over `m n b` had typed "mb"). A sloppy start on space, a digit or punctuation

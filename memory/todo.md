@@ -18,8 +18,17 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
 **maintainer** = the maintainer's hands or decision · **agent** = doable from this box ·
 **RTX** = needs the ML training box.
 
-1. [ ] device (Seeker): Termux drift re-test of `e4d50db4`/`99f4113e` (stale suggestions
-   after the line is cleared; non-text keys end the tracked word). Not run: Seeker off Wi-Fi.
+1. [ ] device: Termux drift re-test. Saga 2026-10-15 (release `7aea1ab8`, Termux 0.118.3,
+   `build/oct15-saga/`): D1 Backspace-to-empty clears and D3 CleverKeys Enter ends the word —
+   PASS. D2/D4 FAILED, but both used Termux's OWN extra-keys toolbar (CTRL, ⇥), which the IME
+   cannot see: D2 tracked `foocbar` over a line showing `bar` and the `foodborne` tap sent 7
+   Backspaces; D4 kept `ec` after shell completion (`ecx`). CleverKeys' own Ctrl/Tab do end
+   the word (already pinned). Fixed 2026-10-15: in terminal/remote fields a tap never deletes —
+   the bar offers only extensions of the tracked word and a tap appends the remainder;
+   `+word` commits only a space (`TerminalSuggestionPolicy`, spec `termux_integration.md`
+   "Why taps may not delete"). Re-test: repeat D2 (toolbar CTRL + `c`, `bar`: bar shows no
+   `foo…` words, nothing is deleted) and D4 (toolbar ⇥ then `x`: no `except`); type `hel`, tap
+   `hello` → line reads `hello `.
 2. [ ] device: #186/#61 Persian half — custom layout bound to `fa` with the fa pack imported
    ("Language: Persian" bar, Persian typo autocorrected, Latin restores EN), en/de/fr
    three-layout cycle, uninstalled-language warning. Saga Latin→German PASS 2026-10-07.
