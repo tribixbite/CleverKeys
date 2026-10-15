@@ -153,6 +153,18 @@ class KeyEventReceiverBridge(
         receiver?.selectAllClipboardEdit()
     }
 
+    override fun undoClipboardEdit() {
+        receiver?.undoClipboardEdit()
+    }
+
+    override fun redoClipboardEdit() {
+        receiver?.redoClipboardEdit()
+    }
+
+    override fun copyFromClipboardEdit() {
+        receiver?.copyFromClipboardEdit()
+    }
+
     override fun dispatchKeyToClipboardEdit(keyCode: Int) {
         receiver?.dispatchKeyToClipboardEdit(keyCode)
     }

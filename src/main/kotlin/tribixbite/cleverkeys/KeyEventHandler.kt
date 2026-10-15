@@ -600,6 +600,28 @@ class KeyEventHandler(
     }
 
     /**
+     * App-facing undo/redo as the Ctrl+Z / Ctrl+Shift+Z key events, NOT
+     * `performContextMenuAction(undo/redo)`: only a stock EditText honours those ids, while
+     * Chrome/WebView (ImeAdapterImpl) and Compose (StatelessInputConnection) return false. The
+     * shortcuts are mapped by TextView.onKeyShortcut, Blink's editing_behavior and Compose's
+     * KeyMapping alike (docs/research/2026-10-15-ime-editor-actions.md §1.3, §1.4, §2.1).
+     * Ctrl+Shift+Z rather than Ctrl+Y for redo: all three map it, and it is the Ctrl+Z family.
+     * Never send both forms — an EditText would undo twice.
+     *
+     * A terminal-style field gets neither: Ctrl+Z there is SIGTSTP (suspends the foreground job,
+     * locally or in a remote shell), so report the action as unavailable instead.
+     */
+    private fun sendUndoRedoShortcut(redo: Boolean) {
+        if (isTerminalStyleEditor()) {
+            recv.getContext()?.let { recv.showPrivateCopyFeedback(it.getString(R.string.dynamic_action_unavailable)) }
+            return
+        }
+        val ctrl = KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+        val meta = if (redo) ctrl or KeyEvent.META_SHIFT_ON or KeyEvent.META_SHIFT_LEFT_ON else ctrl
+        send_key_down_up(KeyEvent.KEYCODE_Z, meta)
+    }
+
+    /**
      * True when the current editor takes terminal-style input: a terminal or a BLIND field
      * (remote desktop such as RustDesk, any TYPE_NULL editor) — [TerminalUtils.editorKind] is
      * the one detector. Such a field cannot be read back or rewritten in place.
@@ -769,14 +791,20 @@ class KeyEventHandler(
 
     /**
      * A Ctrl/Alt/Meta shortcut pressed while an inline field is active. In the clipboard entry
-     * editor, Ctrl+V/X/A paste, cut and select all in the editor; in the other inline fields
-     * Ctrl+V pastes into the field. Every other shortcut is swallowed — never sent to the app.
+     * editor the standard text-field shortcuts act on the editor: Ctrl+V/X/C/A paste, cut, copy
+     * and select all; Ctrl+Z undoes; Ctrl+Shift+Z and Ctrl+Y redo (Pixel 2026-10-14). In the other
+     * inline fields only Ctrl+V does anything (pastes into the field). Every other shortcut is
+     * swallowed — never sent to the app behind the panel.
      */
     private fun handleInlineShortcut(keyCode: Int) {
+        val shifted = (metaState and KeyEvent.META_SHIFT_ON) != 0
         val editing = when (keyCode) {
             KeyEvent.KEYCODE_V -> KeyValue.Editing.PASTE
             KeyEvent.KEYCODE_X -> KeyValue.Editing.CUT
+            KeyEvent.KEYCODE_C -> KeyValue.Editing.COPY
             KeyEvent.KEYCODE_A -> KeyValue.Editing.SELECT_ALL
+            KeyEvent.KEYCODE_Z -> if (shifted) KeyValue.Editing.REDO else KeyValue.Editing.UNDO
+            KeyEvent.KEYCODE_Y -> KeyValue.Editing.REDO
             else -> null
         } ?: return
         if (recv.isClipboardEditMode() || editing == KeyValue.Editing.PASTE) handleEditingKey(editing)
@@ -809,11 +837,16 @@ class KeyEventHandler(
                 KeyValue.Editing.PASTE -> recv.pasteToClipboardEdit()
                 KeyValue.Editing.CUT -> recv.cutFromClipboardEdit()
                 KeyValue.Editing.SELECT_ALL -> recv.selectAllClipboardEdit()
+                KeyValue.Editing.COPY -> recv.copyFromClipboardEdit()
+                KeyValue.Editing.UNDO -> recv.undoClipboardEdit()
+                KeyValue.Editing.REDO -> recv.redoClipboardEdit()
                 KeyValue.Editing.CLEAR -> {
                     recv.selectAllClipboardEdit()
                     recv.backspaceClipboardEdit()
                 }
-                else -> {} // Other editing keys (undo, redo, share) — no-op during inline edit
+                // Other editing keys (share, replace, assist, cursor jumps …) have no inline
+                // editor equivalent — no-op, never sent to the app behind the panel.
+                else -> {}
             }
             return
         }
@@ -842,8 +875,8 @@ class KeyEventHandler(
             KeyValue.Editing.SELECT_ALL -> sendContextMenuAction(android.R.id.selectAll)
             KeyValue.Editing.SHARE -> sendContextMenuAction(android.R.id.shareText)
             KeyValue.Editing.PASTE_PLAIN -> handlePaste(android.R.id.pasteAsPlainText)
-            KeyValue.Editing.UNDO -> sendContextMenuAction(android.R.id.undo)
-            KeyValue.Editing.REDO -> sendContextMenuAction(android.R.id.redo)
+            KeyValue.Editing.UNDO -> sendUndoRedoShortcut(redo = false)
+            KeyValue.Editing.REDO -> sendUndoRedoShortcut(redo = true)
             KeyValue.Editing.REPLACE -> launchTextAction(TextActionPolicy.TextAction.REPLACE)
             KeyValue.Editing.ASSIST -> launchTextAction(TextActionPolicy.TextAction.ASSIST)
             // The editor's own menu action, no chooser and no selection precondition: the editor
@@ -1281,6 +1314,9 @@ class KeyEventHandler(
         fun pasteToClipboardEdit() {}
         fun cutFromClipboardEdit() {}
         fun selectAllClipboardEdit() {}
+        fun undoClipboardEdit() {}     // Undo the last edit in the inline editor
+        fun redoClipboardEdit() {}     // Redo the last undone edit in the inline editor
+        fun copyFromClipboardEdit() {} // Copy the inline editor's selection to the system clipboard
         fun dispatchKeyToClipboardEdit(keyCode: Int) {} // Arrow keys, Enter, etc.
         // #41 v5: Emoji search routes typing to visible EditText (IME can't type into own views)
         fun isEmojiPaneOpen(): Boolean = false // Check if emoji pane is visible

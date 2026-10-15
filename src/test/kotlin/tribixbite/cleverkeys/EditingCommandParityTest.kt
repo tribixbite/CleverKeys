@@ -209,6 +209,48 @@ class EditingCommandParityTest {
         assertTrue("handle_non_text_input()" in mappingEffects("undo"))
     }
 
+    /**
+     * 2026-10-15: undo/redo used `performContextMenuAction(undo/redo)`, which only a stock
+     * EditText honours — Chrome/WebView (ImeAdapterImpl) and Compose (StatelessInputConnection)
+     * return false, so the commands were silent no-ops there. Ctrl+Z / Ctrl+Shift+Z key events
+     * are honoured by all three (docs/research/2026-10-15-ime-editor-actions.md §1.3, §1.4, §2.1).
+     * Never BOTH: an EditText would then undo twice.
+     */
+    @Test
+    fun undoAndRedoSendCtrlZShortcutsInsteadOfTheContextMenuIds() {
+        editorInfo.packageName = "com.example.notes"
+        val ctrl = android.view.KeyEvent.META_CTRL_ON or android.view.KeyEvent.META_CTRL_LEFT_ON
+        val ctrlShift = ctrl or android.view.KeyEvent.META_SHIFT_ON or android.view.KeyEvent.META_SHIFT_LEFT_ON
+        val z = android.view.KeyEvent.KEYCODE_Z
+        for (sel in listOf<CharSequence?>("sel", null)) {
+            selection = sel
+            for ((name, meta) in listOf("undo" to ctrl, "redo" to ctrlShift)) {
+                val expected = listOf("handle_non_text_input()", "keyDownUp($z,$meta)")
+                assertEquals("$name key", expected, layoutEffects(name))
+                assertEquals("$name mapping", expected, mappingEffects(name))
+            }
+        }
+    }
+
+    /**
+     * In a terminal Ctrl+Z is SIGTSTP (suspends the foreground job) and a blind remote field
+     * forwards it to a remote shell the same way, so undo/redo there must not become Ctrl+Z:
+     * they report "unavailable" instead (the context-menu id was already a no-op there).
+     */
+    @Test
+    fun undoAndRedoInATerminalOrBlindFieldReportUnavailableInsteadOfSendingCtrlZ() {
+        for (pkg in listOf("com.termux", "com.carriez.flutter_hbb")) {
+            editorInfo.packageName = pkg
+            for (name in listOf("undo", "redo")) {
+                for (effects in listOf(layoutEffects(name), mappingEffects(name))) {
+                    assertTrue("$name $pkg $effects", effects.none { it.startsWith("keyDownUp") })
+                    assertTrue("$name $pkg $effects", effects.none { it.startsWith("performContextMenuAction") })
+                    assertTrue("$name $pkg $effects", "feedback(str#${R.string.dynamic_action_unavailable})" in effects)
+                }
+            }
+        }
+    }
+
     @Test
     fun textAssistLayoutKeyOffersTheSameNoSelectionFeedbackAsTheMapping() {
         selection = null

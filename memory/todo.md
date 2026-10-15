@@ -140,6 +140,20 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     side-by-side with the real keyboards' screenshots for row indent, Shift/Delete and
     bottom-row widths, hint placement, the "123"/"?123" labels; swipe a few words on each;
     123 opens the number pane and ABC returns; corner swipes on 123/emoji/comma/enter.
+26. [x] agent: DONE 2026-10-15 — undo/redo/copy (not device-verified; no adb in that session).
+    (a) Inline clipboard entry editor: Ctrl+Z and the undo key undo, Ctrl+Shift+Z / Ctrl+Y and
+    the redo key redo, Ctrl+C and the copy key copy the selection (Pixel: Ctrl+Z did nothing
+    there after `3439fff0`). The platform undo cannot serve it: every routed edit is a
+    `setText()`, which calls `Editor.forgetUndoRedo()`; so `InlineEditHistory` (pure, bounded
+    100 steps / 1M chars, one step per typed word) is the session history. Copy is an ordinary
+    copy: it lands in clipboard history like a cut; private entries ask first (#156 gate).
+    (b) App-facing undo/redo send Ctrl+Z / Ctrl+Shift+Z key events instead of
+    `performContextMenuAction(undo/redo)`, which Chrome/WebView and Compose ignore
+    (`docs/research/2026-10-15-ime-editor-actions.md`); in terminal-style fields they report
+    "Action unavailable" (Ctrl+Z would suspend the shell job). Tests: `InlineEditHistoryTest`
+    (11 pure), `InlineFieldShortcutTest` + `EditingCommandParityTest` (mock; fail-first 2/6 and
+    2/12); 2966 pure / 1232 mock green. Device check: Pixel — clipboard editor type two
+    words, Ctrl+Z ×2, Ctrl+Y, select + Ctrl+C then paste in an app; undo/redo keys in Chrome, a Compose field and Termux.
 
 ## Device results recorded 2026-10-07/08
 

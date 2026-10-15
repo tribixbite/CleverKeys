@@ -356,6 +356,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // TextWatcher reference — tracked to prevent accumulation on view recycling.
     // Removed from old EditText before adding to new one in getView().
     private var editingTextWatcher: android.text.TextWatcher? = null
+    // Undo/redo for the edit session (Ctrl+Z / Ctrl+Y / the undo & redo keys). Our own history
+    // because every routed edit is a setText(), which wipes the platform's (InlineEditHistory).
+    // Exists only while a session is active (created in edit_entry, dropped in cancelEdit), so a
+    // private entry's text never outlives its edit and no memory is held between sessions.
+    private var editingHistory: InlineEditHistory? = null
 
     // Dynamic lookup for the editing EditText — resilient to stale references from
     // ListView scrap view measurement passes. When Enter inserts a newline, the EditText
@@ -780,6 +785,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingOriginalContent = entry.content
         editingInProgressText = entry.content
         editingCursorPosition = entry.content.length
+        editingHistory = InlineEditHistory()
         // #156: remember the entry's privacy so cutFromEditText() can gate the OS-clipboard write.
         editingIsPrivate = entry.isPrivate
         // Re-render to show EditText + save/cancel buttons for this entry
@@ -819,6 +825,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         if (editingOriginalContent == null) return
         editingOriginalContent = null
         editingInProgressText = null
+        editingHistory = null
         editingCursorPosition = null
         editingIsPrivate = false
         editingErrorRes = null
@@ -848,8 +855,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** Insert text at cursor/selection in the active edit field (called by key routing).
      *  Trusts et.selectionStart/End first (reliable with textMultiLine inputType),
      *  falls back to editingCursorPosition only for view-recycling recovery. */
-    fun insertEditText(text: String) {
+    fun insertEditText(text: String) = replaceEditSelection(text, InlineEditHistory.EditKind.TYPING)
+
+    /** Replace the selection (or insert at the caret) with [text], recorded as a [kind] edit. */
+    private fun replaceEditSelection(text: String, kind: InlineEditHistory.EditKind) {
         activeEditingEditText?.let { et ->
+            val before = editSnapshotOf(et)
             val oldText = et.text.toString()
             // Trust EditText selection first (reliable regardless of inputType), tracked cursor as fallback
             val selStart = et.selectionStart
@@ -870,6 +881,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             editingCursorPosition = newCursorPos
             // Direct sync — resilient to missing TextWatcher (e.g., recycled view without guard entry)
             editingInProgressText = newText
+            editingHistory?.record(before, InlineEditHistory.Snapshot(newText, newCursorPos, newCursorPos), kind)
         }
     }
 
@@ -879,6 +891,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         activeEditingEditText?.let { et ->
             val oldText = et.text.toString()
             if (oldText.isEmpty()) return
+            val before = editSnapshotOf(et)
 
             // Trust EditText selection first, tracked cursor as fallback
             val selStart = et.selectionStart
@@ -903,10 +916,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 newCursorPos = cursor - 1
             }
 
+            val caret = newCursorPos.coerceIn(0, newText.length)
             et.setText(newText)
-            et.setSelection(newCursorPos.coerceIn(0, newText.length))
-            editingCursorPosition = newCursorPos.coerceIn(0, newText.length)
+            et.setSelection(caret)
+            editingCursorPosition = caret
             editingInProgressText = newText
+            // Deleting a selection is its own step; consecutive single-char backspaces merge.
+            val kind = if (hasSelection) InlineEditHistory.EditKind.OTHER else InlineEditHistory.EditKind.DELETION
+            editingHistory?.record(before, InlineEditHistory.Snapshot(newText, caret, caret), kind)
         }
     }
 
@@ -914,7 +931,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun pasteToEditText() {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
         val pasteText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString() ?: return
-        insertEditText(pasteText)
+        replaceEditSelection(pasteText, InlineEditHistory.EditKind.OTHER)
     }
 
     /** Cut selected text from the edit field to system clipboard.
@@ -929,41 +946,83 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      *  entries keep the immediate, unchanged copy-to-OS-clipboard behavior. */
     fun cutFromEditText() {
         activeEditingEditText?.let { et ->
-            val oldText = et.text.toString()
-            val selStart = et.selectionStart
-            val selEnd = et.selectionEnd
+            val before = editSnapshotOf(et)
+            val lo = minOf(before.selectionStart, before.selectionEnd)
+            val hi = maxOf(before.selectionStart, before.selectionEnd)
+            if (lo == hi) return
 
-            if (selStart >= 0 && selEnd >= 0 && selStart != selEnd) {
-                val lo = minOf(selStart, selEnd).coerceIn(0, oldText.length)
-                val hi = maxOf(selStart, selEnd).coerceIn(0, oldText.length)
-                val selected = oldText.substring(lo, hi)
+            exposeEditSelection(before.text.substring(lo, hi))
 
-                if (editingIsPrivate) {
-                    // Ask before exposing; the write to the OS clipboard only happens if the user
-                    // confirms. Reuses the exact dialog/strings of the read-path gate so the two
-                    // "expose a private clip" affordances stay consistent.
-                    val dialog = AlertDialog.Builder(context)
-                        .setTitle(R.string.private_copy_expose_dialog_title)
-                        .setMessage(R.string.private_copy_expose_dialog_message)
-                        .setPositiveButton(R.string.private_copy_expose_dialog_confirm) { _, _ ->
-                            writeToSystemClipboard(selected)
-                        }
-                        .setNegativeButton(R.string.private_copy_expose_dialog_cancel, null)
-                        .create()
-                    Utils.show_dialog_on_ime(dialog, windowToken)
-                } else {
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
-                    clipboard?.setPrimaryClip(ClipData.newPlainText("CleverKeys", selected))
-                }
+            // Text removal is unconditional — cut still removes the selection from the field
+            // whether or not the private-entry OS-clipboard write is confirmed.
+            val newText = before.text.removeRange(lo, hi)
+            et.setText(newText)
+            et.setSelection(lo)
+            editingCursorPosition = lo
+            editingInProgressText = newText
+            editingHistory?.record(before, InlineEditHistory.Snapshot(newText, lo, lo), InlineEditHistory.EditKind.OTHER)
+        }
+    }
 
-                // Text removal is unconditional — cut still removes the selection from the field
-                // whether or not the private-entry OS-clipboard write is confirmed.
-                val newText = oldText.removeRange(lo, hi)
-                et.setText(newText)
-                et.setSelection(lo.coerceIn(0, newText.length))
-                editingCursorPosition = lo.coerceIn(0, newText.length)
-                editingInProgressText = newText
-            }
+    /**
+     * Copy the edit field's selection to the system clipboard (Ctrl+C / the copy key). No-op
+     * without a selection, like any text field. It is an ordinary copy: the clipboard listener
+     * records it as a new history entry exactly as it does a copy made in any app (and as the
+     * editor's cut already did). Same #156 privacy gate as [cutFromEditText].
+     */
+    fun copyFromEditText() {
+        activeEditingEditText?.let { et ->
+            val snapshot = editSnapshotOf(et)
+            val lo = minOf(snapshot.selectionStart, snapshot.selectionEnd)
+            val hi = maxOf(snapshot.selectionStart, snapshot.selectionEnd)
+            if (lo != hi) exposeEditSelection(snapshot.text.substring(lo, hi))
+        }
+    }
+
+    /** Undo the last edit in the active edit field (Ctrl+Z / the undo key). */
+    fun undoEditText() = restoreEditStep { editingHistory?.undo(it) }
+
+    /** Redo the last undone edit in the active edit field (Ctrl+Shift+Z / Ctrl+Y / the redo key). */
+    fun redoEditText() = restoreEditStep { editingHistory?.redo(it) }
+
+    /** Apply the snapshot [step] returns for the field's current state; no-op when it has none. */
+    private inline fun restoreEditStep(step: (InlineEditHistory.Snapshot) -> InlineEditHistory.Snapshot?) {
+        activeEditingEditText?.let { et ->
+            val target = step(editSnapshotOf(et)) ?: return
+            val start = target.selectionStart.coerceIn(0, target.text.length)
+            val end = target.selectionEnd.coerceIn(0, target.text.length)
+            et.setText(target.text)
+            et.setSelection(start, end)
+            editingCursorPosition = end
+            editingInProgressText = target.text
+        }
+    }
+
+    /**
+     * The field's text and selection, clamped to the text. A detached/recycled EditText can
+     * report -1; the tracked cursor is the fallback, as in the edit methods above.
+     */
+    private fun editSnapshotOf(et: EditText): InlineEditHistory.Snapshot {
+        val text = et.text.toString()
+        val fallback = (editingCursorPosition ?: text.length).coerceIn(0, text.length)
+        val start = et.selectionStart.let { if (it >= 0) it.coerceIn(0, text.length) else fallback }
+        val end = et.selectionEnd.let { if (it >= 0) it.coerceIn(0, text.length) else start }
+        return InlineEditHistory.Snapshot(text, start, end)
+    }
+
+    /**
+     * Put [selected] (cut or copied from the edit field) on the OS clipboard. #156 privacy gate:
+     * when editing a PRIVATE (is_private) entry the write must NOT happen silently — that would
+     * leak plaintext to the foreground app and other clipboard managers, defeating private copy —
+     * so it goes through the same confirm-before-expose dialog as [copyEntryToSystemClipboard].
+     * Non-private entries are written immediately.
+     */
+    private fun exposeEditSelection(selected: String) {
+        if (editingIsPrivate) {
+            confirmPrivateExposure(selected)
+        } else {
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
+            clipboard?.setPrimaryClip(ClipData.newPlainText("CleverKeys", selected))
         }
     }
 
@@ -1091,18 +1150,23 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      */
     fun copyEntryToSystemClipboard(entry: ClipboardEntry) {
         if (entry.isPrivate) {
-            val dialog = AlertDialog.Builder(context)
-                .setTitle(R.string.private_copy_expose_dialog_title)
-                .setMessage(R.string.private_copy_expose_dialog_message)
-                .setPositiveButton(R.string.private_copy_expose_dialog_confirm) { _, _ ->
-                    writeToSystemClipboard(entry.content)
-                }
-                .setNegativeButton(R.string.private_copy_expose_dialog_cancel, null)
-                .create()
-            Utils.show_dialog_on_ime(dialog, windowToken)
+            confirmPrivateExposure(entry.content)
         } else {
             writeToSystemClipboard(entry.content)
         }
+    }
+
+    /** Ask before putting private [text] on the OS clipboard; writes it only on confirmation. */
+    private fun confirmPrivateExposure(text: String) {
+        val dialog = AlertDialog.Builder(context)
+            .setTitle(R.string.private_copy_expose_dialog_title)
+            .setMessage(R.string.private_copy_expose_dialog_message)
+            .setPositiveButton(R.string.private_copy_expose_dialog_confirm) { _, _ ->
+                writeToSystemClipboard(text)
+            }
+            .setNegativeButton(R.string.private_copy_expose_dialog_cancel, null)
+            .create()
+        Utils.show_dialog_on_ime(dialog, windowToken)
     }
 
     /** Actually place [text] on the OS clipboard + confirm to the user. Only reached after the

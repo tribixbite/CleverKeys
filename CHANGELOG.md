@@ -224,6 +224,11 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- The undo and redo keys now work in Chrome, WebView and Compose text fields (they send
+  Ctrl+Z / Ctrl+Shift+Z, which those editors honour; the old editor menu action was ignored
+  there). In terminals they report "Action unavailable" rather than sending Ctrl+Z.
+- In the clipboard entry editor, Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z / Ctrl+C and the undo, redo
+  and copy keys undo, redo and copy inside the editor instead of doing nothing.
 - Keyboard dialogs (clipboard confirmations, the clipboard filter, private-copy and voice
   input pickers) no longer take window focus. Tapping one could make the app (seen in Chrome)
   hide the keyboard, which closed the dialog before its button acted: **Delete selected**

@@ -802,6 +802,21 @@ class ClipboardManager(
         clipboardHistoryView?.selectAllEditText()
     }
 
+    /** Undo the last edit in the editing entry's EditText */
+    fun undoInEdit() {
+        clipboardHistoryView?.undoEditText()
+    }
+
+    /** Redo the last undone edit in the editing entry's EditText */
+    fun redoInEdit() {
+        clipboardHistoryView?.redoEditText()
+    }
+
+    /** Copy the editing entry's selection to the system clipboard */
+    fun copyFromEdit() {
+        clipboardHistoryView?.copyFromEditText()
+    }
+
     /** Dispatch a raw key event (arrow keys, Enter) to the editing EditText */
     fun dispatchKeyToEdit(keyCode: Int) {
         clipboardHistoryView?.dispatchKeyToEditText(keyCode)

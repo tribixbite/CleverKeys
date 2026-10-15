@@ -974,6 +974,18 @@ class KeyboardReceiver(
         clipboardManager.selectAllInEdit()
     }
 
+    override fun undoClipboardEdit() {
+        clipboardManager.undoInEdit()
+    }
+
+    override fun redoClipboardEdit() {
+        clipboardManager.redoInEdit()
+    }
+
+    override fun copyFromClipboardEdit() {
+        clipboardManager.copyFromEdit()
+    }
+
     override fun dispatchKeyToClipboardEdit(keyCode: Int) {
         clipboardManager.dispatchKeyToEdit(keyCode)
     }

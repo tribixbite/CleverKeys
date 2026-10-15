@@ -351,8 +351,25 @@ A new editor-writing feature must ask `isTerminalApp` before any in-place rewrit
 
 A Ctrl/Alt/Meta letter is a key EVENT (KeyModifier.applyCtrl), so `sendText`'s routing chain
 never sees it. `key_up`'s Keyevent branch sends it to `handleInlineShortcut` while any inline
-field is active (`!canUseEditorActions()`): in the clipboard entry editor Ctrl+V/X/A paste, cut
-and select all there; in search/tag/emoji/GIF fields Ctrl+V pastes the clip into the field; any
-other shortcut is swallowed. `handleEditingKey` likewise routes PASTE/PASTE_PLAIN into the active
-search/tag field via `sendText` and drops every other editing command, never touching the app
-behind the panel. Pinned by `InlineFieldShortcutTest` (Saga: Ctrl+V leaked to the app).
+field is active (`!canUseEditorActions()`): in the clipboard entry editor Ctrl+V/X/C/A paste,
+cut, copy and select all there, Ctrl+Z undoes, Ctrl+Shift+Z and Ctrl+Y redo; in
+search/tag/emoji/GIF fields Ctrl+V pastes the clip into the field; any other shortcut is
+swallowed. `handleEditingKey` routes the editing keys the same way (UNDO/REDO/COPY included in
+the editor) and, for the other fields, PASTE/PASTE_PLAIN via `sendText`, dropping every other
+command, never touching the app behind the panel. Pinned by `InlineFieldShortcutTest` (Saga:
+Ctrl+V leaked to the app; Pixel 2026-10-14: Ctrl+Z did nothing in the editor).
+
+**Inline editor undo is OUR history, not the platform's.** Every edit routed into the editor
+is `setText()` + `setSelection()` (IME-owned views), and `TextView.setText` calls
+`Editor.forgetUndoRedo()` for an editable buffer — so `onTextContextMenuItem(android.R.id.undo)`
+would always find an empty stack. `ClipboardHistoryView` records each edit in
+`InlineEditHistory` (pure, bounded; cleared on session start/exit). Any NEW mutation path in
+the editor must record a before/after snapshot or undo will skip it. Undo/redo/copy reach the
+view through IReceiver → `KeyEventReceiverBridge` → `KeyboardReceiver` → `ClipboardManager`.
+
+**App-facing undo/redo are Ctrl+Z / Ctrl+Shift+Z key events (2026-10-15)**, not
+`performContextMenuAction(undo/redo)`: only a stock EditText honours those ids; Chrome/WebView
+and Compose return false, while all three map the shortcuts
+(`docs/research/2026-10-15-ime-editor-actions.md`). Never send both — an EditText would undo
+twice. In a terminal-style field (`isTerminalStyleEditor()`) they show "Action unavailable":
+Ctrl+Z there is SIGTSTP. Pinned by `EditingCommandParityTest`.

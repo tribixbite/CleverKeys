@@ -95,16 +95,21 @@ class InlineFieldShortcutTest {
     }
 
     /** Press [keyCode]'s key event with Ctrl held (the state `updateMetaState` leaves behind). */
-    private fun ctrl(keyCode: Int): List<String> {
+    private fun ctrl(keyCode: Int, shift: Boolean = false): List<String> {
         log.clear()
-        handler.setField("metaState", KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
+        val shiftMeta = if (shift) KeyEvent.META_SHIFT_ON or KeyEvent.META_SHIFT_LEFT_ON else 0
+        handler.setField("metaState", KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON or shiftMeta)
         handler.key_up(KeyValue.keyeventKey("k", keyCode, 0), Pointers.Modifiers.EMPTY, false)
         return log.filter { !it.startsWith("is") && !it.startsWith("get") }
     }
 
-    private fun pasteKey(): List<String> {
+    private fun pasteKey(): List<String> = editingKey("paste")
+
+    /** Press the layout editing key named [name] (paste, undo, redo, copy …). */
+    private fun editingKey(name: String): List<String> {
         log.clear()
-        handler.key_up(KeyValue.getKeyByName("paste"), Pointers.Modifiers.EMPTY, false)
+        handler.setField("metaState", 0)
+        handler.key_up(KeyValue.getKeyByName(name), Pointers.Modifiers.EMPTY, false)
         return log.filter { !it.startsWith("is") && !it.startsWith("get") }
     }
 
@@ -114,9 +119,34 @@ class InlineFieldShortcutTest {
         assertEquals(listOf("pasteToClipboardEdit()"), ctrl(KeyEvent.KEYCODE_V))
         assertEquals(listOf("cutFromClipboardEdit()"), ctrl(KeyEvent.KEYCODE_X))
         assertEquals(listOf("selectAllClipboardEdit()"), ctrl(KeyEvent.KEYCODE_A))
+        // Pixel 2026-10-14: Ctrl+Z/Y/C act on the editor like in any text field.
+        assertEquals(listOf("undoClipboardEdit()"), ctrl(KeyEvent.KEYCODE_Z))
+        assertEquals(listOf("redoClipboardEdit()"), ctrl(KeyEvent.KEYCODE_Y))
+        assertEquals(listOf("redoClipboardEdit()"), ctrl(KeyEvent.KEYCODE_Z, shift = true))
+        assertEquals(listOf("copyFromClipboardEdit()"), ctrl(KeyEvent.KEYCODE_C))
         // Shortcuts without an editor equivalent are swallowed: never sent to the app behind.
-        assertEquals(emptyList<String>(), ctrl(KeyEvent.KEYCODE_Z))
-        assertEquals(emptyList<String>(), ctrl(KeyEvent.KEYCODE_C))
+        assertEquals(emptyList<String>(), ctrl(KeyEvent.KEYCODE_W))
+        assertEquals(emptyList<String>(), ctrl(KeyEvent.KEYCODE_S))
+    }
+
+    @Test
+    fun undoRedoAndCopyEditingKeysInTheClipboardEditorActOnTheEditor() {
+        mode = "edit"
+        assertEquals(listOf("undoClipboardEdit()"), editingKey("undo"))
+        assertEquals(listOf("redoClipboardEdit()"), editingKey("redo"))
+        assertEquals(listOf("copyFromClipboardEdit()"), editingKey("copy"))
+    }
+
+    @Test
+    fun undoAndCopyShortcutsInTheOtherInlineFieldsStaySwallowed() {
+        for (field in listOf("search", "tag", "emoji", "gif")) {
+            mode = field
+            assertEquals(field, emptyList<String>(), ctrl(KeyEvent.KEYCODE_Z))
+            assertEquals(field, emptyList<String>(), ctrl(KeyEvent.KEYCODE_Y))
+            assertEquals(field, emptyList<String>(), ctrl(KeyEvent.KEYCODE_C))
+            assertEquals(field, emptyList<String>(), editingKey("undo"))
+            assertEquals(field, emptyList<String>(), editingKey("copy"))
+        }
     }
 
     @Test
