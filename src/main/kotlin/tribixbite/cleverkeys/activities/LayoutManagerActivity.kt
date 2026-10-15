@@ -34,6 +34,7 @@ import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.XmlLayoutExporter
 
 import tribixbite.cleverkeys.theme.KeyboardTheme
+import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.UUID
 
 /** Wrapper to give each layout a stable unique ID for drag-reorder */
@@ -116,9 +117,18 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     val uiLocale = context.resources.configuration.locales[0]
     fun languageName(code: String): String = LanguageDisplayNames.displayName(code, uiLocale)
 
+    // Per-layout theme binding: the themes Theme Manager offers (custom themes live-updated from
+    // the same store ThemeProvider renders from), and which ids exist on this device.
+    val themeProvider = remember { ThemeProvider.getInstance(context) }
+    val customThemes by themeProvider.customThemeManager.customThemes.collectAsState()
+    val themeChoices = remember(customThemes) { layoutThemeChoices(context.resources, customThemes) }
+    fun themeName(id: String): String = layoutThemeDisplayName(id, context.resources, customThemes)
+    val globalThemeName = themeName(prefs.getString("theme", null) ?: ThemeProvider.FALLBACK_THEME_ID)
+
     // Dialog states
     var showAddDialog by remember { mutableStateOf(false) }
     var showLanguagePickerFor by remember { mutableStateOf<Int?>(null) }
+    var showThemePickerFor by remember { mutableStateOf<Int?>(null) }
     var showCustomLayoutDialog by remember { mutableStateOf<Pair<Int, String>?>(null) }
     var showDeleteConfirmDialog by remember { mutableStateOf<Int?>(null) }
 
@@ -219,6 +229,10 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                                 ?.takeIf { it !in availableLanguages }
                                 ?.let(::languageName),
                             onLanguage = { showLanguagePickerFor = index },
+                            themeLabel = layoutThemeLabel(layoutWithId.layout, ::themeName),
+                            missingTheme = layoutThemeBindingOf(layoutWithId.layout)
+                                ?.takeIf { !themeProvider.isAvailable(it) },
+                            onTheme = { showThemePickerFor = index },
                             onEdit = {
                                 val initialXml = when (val layout = layoutWithId.layout) {
                                     is LayoutsPreference.CustomLayout -> layout.xml
@@ -268,14 +282,18 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     showCustomLayoutDialog?.let { (index, initialXml) ->
         CustomLayoutEditorDialog(
             initialXml = initialXml,
+            exportThemeEntry = layoutsWithIds.getOrNull(index)?.layout?.theme,
             allowRemove = index >= 0,
             onDismiss = { showCustomLayoutDialog = null },
             onSave = { xml ->
                 // Editing the XML (including renaming it) keeps the entry's language binding
-                // (GH #186/#61); a new layout starts with none.
+                // (GH #186/#61) and theme binding; a new layout starts with none, so an imported
+                // XML's `theme`/`language` attributes are its default bindings.
+                val existing = layoutsWithIds.getOrNull(index)?.layout
                 val customLayout = LayoutsPreference.CustomLayout.parse(
                     xml,
-                    language = layoutsWithIds.getOrNull(index)?.layout?.language
+                    language = existing?.language,
+                    theme = existing?.theme
                 )
                 if (index >= 0) {
                     // Edit existing - create new list with updated item
@@ -323,6 +341,34 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
         }
     }
 
+    // Per-layout theme picker
+    showThemePickerFor?.let { index ->
+        val entry = layoutsWithIds.getOrNull(index)
+        if (entry == null) {
+            showThemePickerFor = null
+        } else {
+            LayoutThemeDialog(
+                layout = entry.layout,
+                choices = themeChoices,
+                globalThemeName = globalThemeName,
+                isAvailable = themeProvider::isAvailable,
+                onDismiss = { showThemePickerFor = null },
+                onSelect = { choice ->
+                    val updated = entry.layout.withTheme(
+                        LayoutThemeBinding.entryValueFor(choice, declaredThemeOf(entry.layout))
+                    )
+                    layoutsWithIds = layoutsWithIds.toMutableList().apply {
+                        this[index] = LayoutWithId(id = entry.id, layout = updated)
+                    }
+                    // Saving refreshes the keyboard's Config: if this is the current layout,
+                    // the keyboard re-renders in the new effective theme.
+                    saveLayouts(prefs, getLayoutsForSaving())
+                    showThemePickerFor = null
+                }
+            )
+        }
+    }
+
     // Delete Confirmation Dialog
     showDeleteConfirmDialog?.let { index ->
         AlertDialog(
@@ -364,6 +410,9 @@ fun LayoutItem(
     languageLabel: String,
     missingLanguage: String?,
     onLanguage: () -> Unit,
+    themeLabel: String,
+    missingTheme: String?,
+    onTheme: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     reorderState: ReorderableLazyListState
@@ -462,6 +511,25 @@ fun LayoutItem(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
+
+                // The layout's theme binding; tap to change it.
+                AssistChip(
+                    onClick = onTheme,
+                    label = {
+                        Text(
+                            text = stringResource(R.string.layout_theme_chip, themeLabel),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                )
+                if (missingTheme != null) {
+                    Text(
+                        text = stringResource(R.string.layout_theme_missing, missingTheme),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
 
             // Action buttons
@@ -512,6 +580,21 @@ private fun layoutLanguageLabel(
         stringResource(R.string.layout_language_from_xml, languageName(bound))
     } else {
         languageName(bound)
+    }
+}
+
+/** Chip text for a layout's theme binding: the theme, marked when it comes from the XML. */
+@Composable
+private fun layoutThemeLabel(
+    layout: LayoutsPreference.Layout,
+    themeName: (String) -> String
+): String {
+    val bound = layoutThemeBindingOf(layout)
+        ?: return stringResource(R.string.layout_theme_follow_global)
+    return if (layout.theme == null) {
+        stringResource(R.string.layout_language_from_xml, themeName(bound))
+    } else {
+        themeName(bound)
     }
 }
 
@@ -717,6 +800,8 @@ fun AddLayoutDialog(
 @Composable
 fun CustomLayoutEditorDialog(
     initialXml: String,
+    /** The entry's stored theme binding choice, written onto the root of an exported XML. */
+    exportThemeEntry: String?,
     allowRemove: Boolean,
     onDismiss: () -> Unit,
     onSave: (String) -> Unit,
@@ -762,13 +847,20 @@ fun CustomLayoutEditorDialog(
     // Validate XML (the empty-input message is resolved here: LaunchedEffect is not composable)
     val emptyXmlError = stringResource(R.string.layout_manager_xml_empty_error)
     val invalidLanguageError = stringResource(R.string.layout_language_xml_invalid)
+    val invalidThemeError = stringResource(R.string.layout_theme_xml_invalid)
     LaunchedEffect(xmlText) {
         validationError = try {
             if (xmlText.isNotBlank()) {
                 val parsed = KeyboardData.load_string_exn(xmlText)
                 // GH #186/#61: loading is lenient about `language`, so the editor is where an
                 // invalid code is caught — before it can be saved and silently ignored.
-                if (LayoutLanguageBinding.xmlLanguageProblem(parsed.declared_language)) invalidLanguageError else null
+                when {
+                    LayoutLanguageBinding.xmlLanguageProblem(parsed.declared_language) -> invalidLanguageError
+                    // Same rule for the optional `theme` attribute (a well-formed id of a theme
+                    // not on this device is accepted: it falls back to the global theme).
+                    LayoutThemeBinding.xmlThemeProblem(parsed.declared_theme) -> invalidThemeError
+                    else -> null
+                }
             } else {
                 emptyXmlError
             }
@@ -825,7 +917,10 @@ fun CustomLayoutEditorDialog(
                         onClick = {
                             val manager = ShortSwipeCustomizationManager.getInstance(context)
                             val mappings = manager.getAllMappings()
-                            pendingExportContent = XmlLayoutExporter.injectMappings(xmlText, mappings)
+                            // The exported file carries the entry's theme binding as the root
+                            // `theme` attribute, so re-importing it restores the binding.
+                            val themed = LayoutThemeBinding.applyToXml(xmlText, exportThemeEntry)
+                            pendingExportContent = XmlLayoutExporter.injectMappings(themed, mappings)
                             exportLauncher.launch("custom_layout.xml")
                         },
                         modifier = Modifier.weight(1f)

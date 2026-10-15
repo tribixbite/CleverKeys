@@ -2386,4 +2386,15 @@
     <string name="cmd_append_possessive_desc">Pievienot \'s pēdējam verificētajam vārdam; viena atpakaļatkāpe noņem tikai sufiksu</string>
     <string name="cmd_append_apostrophe">Pievienot apostrofu</string>
     <string name="cmd_append_apostrophe_desc">Pievienot apostrofu pēdējam verificētajam vārdam (parents\'); viena atpakaļatkāpe noņem tikai sufiksu</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Tēma: %1$s</string>
+    <string name="layout_theme_title">Izkārtojuma tēma</string>
+    <string name="layout_theme_follow_global">Sekot globālajai tēmai</string>
+    <string name="layout_theme_follow_global_desc">Pašlaik %1$s</string>
+    <string name="layout_theme_dialog_desc">Kamēr šis izkārtojums ir aktīvs, tastatūra izmanto izvēlēto tēmu. Jūsu globālā tēma tēmu pārvaldniekā nemainās.</string>
+    <string name="layout_theme_missing">Tēma %1$s šajā ierīcē nav pieejama, tāpēc tiek izmantota globālā tēma.</string>
+    <string name="layout_theme_xml_invalid">Atribūtam theme jābūt tēmas ID, piemēram, rosepine vai decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Meklēt tēmas</string>
+    <string name="layout_theme_no_results">Nav atbilstošu tēmu</string>
+    <string name="import_preview_layout_theme_change">%1$s: tēma %2$s → %3$s</string>
 </resources>

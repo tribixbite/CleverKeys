@@ -2338,4 +2338,15 @@
     <string name="cmd_append_possessive_desc">\'s csatolása az utolsó ellenőrzött szóhoz; egy visszatörlés csak a toldalékot távolítja el</string>
     <string name="cmd_append_apostrophe">Aposztróf hozzáfűzése</string>
     <string name="cmd_append_apostrophe_desc">Aposztróf csatolása az utolsó ellenőrzött szóhoz (parents\'); egy visszatörlés csak a toldalékot távolítja el</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Téma: %1$s</string>
+    <string name="layout_theme_title">Kiosztás témája</string>
+    <string name="layout_theme_follow_global">Globális téma követése</string>
+    <string name="layout_theme_follow_global_desc">Jelenleg: %1$s</string>
+    <string name="layout_theme_dialog_desc">Amíg ez a kiosztás aktív, a billentyűzet a kiválasztott témát használja. A Témakezelőben beállított globális téma nem változik.</string>
+    <string name="layout_theme_missing">A(z) %1$s téma nincs ezen az eszközön, ezért a globális téma érvényes.</string>
+    <string name="layout_theme_xml_invalid">A theme attribútumnak téma-azonosítónak kell lennie, például rosepine vagy decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Témák keresése</string>
+    <string name="layout_theme_no_results">Nincs egyező téma</string>
+    <string name="import_preview_layout_theme_change">%1$s: téma %2$s → %3$s</string>
 </resources>

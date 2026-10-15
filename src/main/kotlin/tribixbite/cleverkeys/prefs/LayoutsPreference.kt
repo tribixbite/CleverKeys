@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter
 import tribixbite.cleverkeys.CustomLayoutEditDialog
 import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.LayoutLanguageBinding
+import tribixbite.cleverkeys.LayoutThemeBinding
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.Utils
 import org.json.JSONException
@@ -128,9 +129,10 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
     /** Called when modifying a layout. Custom layouts behave differently. */
     override fun select(callback: SelectionCallback<Layout>, oldValue: Layout?) {
         if (oldValue is CustomLayout) {
-            // Editing the XML keeps the entry's language binding (GH #186/#61).
+            // Editing the XML keeps the entry's language (GH #186/#61) and theme bindings.
             selectCustom(object : SelectionCallback<Layout> {
-                override fun select(value: Layout?) = callback.select(value?.withLanguage(oldValue.language))
+                override fun select(value: Layout?) =
+                    callback.select(value?.withLanguage(oldValue.language)?.withTheme(oldValue.theme))
                 override fun allowRemove(): Boolean = callback.allowRemove()
             }, oldValue.xml)
         } else {
@@ -170,38 +172,72 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
 
         /** This entry with its binding choice replaced by [language] (normalised). */
         fun withLanguage(language: String?): Layout
+
+        /**
+         * The entry's THEME binding choice, already normalised by
+         * [LayoutThemeBinding.normalizeEntry]: null = no choice (the XML `theme` default applies),
+         * [LayoutThemeBinding.UNBOUND] = explicitly follows the global theme, else a theme id.
+         * Stored inside the entry, like [language], so reordering, editing, deleting and Backup &
+         * Restore carry it along.
+         */
+        val theme: String?
+
+        /** This entry with its theme binding choice replaced by [theme] (normalised). */
+        fun withTheme(theme: String?): Layout
     }
 
-    data class SystemLayout(override val language: String? = null) : Layout {
+    data class SystemLayout(
+        override val language: String? = null,
+        override val theme: String? = null
+    ) : Layout {
         override fun withLanguage(language: String?): Layout =
             copy(language = LayoutLanguageBinding.normalizeEntry(language))
+
+        override fun withTheme(theme: String?): Layout =
+            copy(theme = LayoutThemeBinding.normalizeEntry(theme))
     }
 
     /** The name of a layout defined in [srcs/layouts]. */
-    data class NamedLayout(val name: String, override val language: String? = null) : Layout {
+    data class NamedLayout(
+        val name: String,
+        override val language: String? = null,
+        override val theme: String? = null
+    ) : Layout {
         override fun withLanguage(language: String?): Layout =
             copy(language = LayoutLanguageBinding.normalizeEntry(language))
+
+        override fun withTheme(theme: String?): Layout =
+            copy(theme = LayoutThemeBinding.normalizeEntry(theme))
     }
 
     /** The XML description of a custom layout. */
     data class CustomLayout(
         val xml: String,
         val parsed: KeyboardData?,
-        override val language: String? = null
+        override val language: String? = null,
+        override val theme: String? = null
     ) : Layout {
         override fun withLanguage(language: String?): Layout =
             copy(language = LayoutLanguageBinding.normalizeEntry(language))
 
+        override fun withTheme(theme: String?): Layout =
+            copy(theme = LayoutThemeBinding.normalizeEntry(theme))
+
         companion object {
             @JvmStatic
             @JvmOverloads
-            fun parse(xml: String, language: String? = null): CustomLayout {
+            fun parse(xml: String, language: String? = null, theme: String? = null): CustomLayout {
                 val parsed = try {
                     KeyboardData.load_string_exn(xml)
                 } catch (e: Exception) {
                     null
                 }
-                return CustomLayout(xml, parsed, LayoutLanguageBinding.normalizeEntry(language))
+                return CustomLayout(
+                    xml,
+                    parsed,
+                    LayoutLanguageBinding.normalizeEntry(language),
+                    LayoutThemeBinding.normalizeEntry(theme)
+                )
             }
         }
     }
@@ -215,6 +251,10 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
      * Unbound entries keep their exact pre-binding encoding. Loading sanitises `language`
      * through [LayoutLanguageBinding.normalizeEntry] — the `layouts` blob is imported verbatim
      * by Backup & Restore, so this is where an invalid code from a file is dropped.
+     *
+     * The per-layout THEME binding follows the same rules with a `theme` field, sanitised by
+     * [LayoutThemeBinding.normalizeEntry]; a named layout uses the object form when either
+     * binding is set.
      */
     class Serializer : ListGroupPreference.Serializer<Layout> {
         @Throws(JSONException::class)
@@ -227,40 +267,62 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
                 }
             } else {
                 val jsonObj = obj as JSONObject
-                val language = LayoutLanguageBinding.normalizeEntry(
-                    if (jsonObj.isNull(LANGUAGE_FIELD)) null else jsonObj.optString(LANGUAGE_FIELD)
-                )
+                val language = LayoutLanguageBinding.normalizeEntry(optionalString(jsonObj, LANGUAGE_FIELD))
+                val theme = LayoutThemeBinding.normalizeEntry(optionalString(jsonObj, THEME_FIELD))
                 when (jsonObj.getString("kind")) {
-                    "custom" -> CustomLayout.parse(jsonObj.getString("xml"), language)
-                    "named" -> NamedLayout(jsonObj.getString("name"), language)
-                    "system" -> SystemLayout(language)
+                    "custom" -> CustomLayout.parse(jsonObj.getString("xml"), language, theme)
+                    "named" -> NamedLayout(jsonObj.getString("name"), language, theme)
+                    "system" -> SystemLayout(language, theme)
                     else -> SystemLayout()
                 }
             }
         }
 
+        /** [field] of [obj] as a string, or null when it is absent or JSON null. */
+        private fun optionalString(obj: JSONObject, field: String): String? =
+            if (obj.isNull(field)) null else obj.optString(field)
+
         @Throws(JSONException::class)
         override fun saveItem(v: Layout): Any {
             val language = LayoutLanguageBinding.normalizeEntry(v.language)
+            val theme = LayoutThemeBinding.normalizeEntry(v.theme)
+            // Unbound entries keep their exact pre-binding encoding (a named layout stays a
+            // plain string), so an untouched preference is byte-identical across versions.
+            val bindings: JSONObject.() -> JSONObject = {
+                if (language != null) put(LANGUAGE_FIELD, language)
+                if (theme != null) put(THEME_FIELD, theme)
+                this
+            }
             return when (v) {
-                is NamedLayout -> if (language == null) v.name else JSONObject()
+                is NamedLayout -> if (language == null && theme == null) v.name else JSONObject()
                     .put("kind", "named")
                     .put("name", v.name)
-                    .put(LANGUAGE_FIELD, language)
+                    .bindings()
                 is CustomLayout -> JSONObject()
                     .put("kind", "custom")
                     .put("xml", v.xml)
-                    .apply { if (language != null) put(LANGUAGE_FIELD, language) }
-                else -> JSONObject().put("kind", "system")
-                    .apply { if (language != null) put(LANGUAGE_FIELD, language) }
+                    .bindings()
+                else -> JSONObject().put("kind", "system").bindings()
             }
         }
     }
+
+    /**
+     * Result of [loadLayoutsWithBindings]: the layouts and each one's effective language and
+     * theme binding (null = unbound), index-aligned.
+     */
+    data class LoadedLayouts(
+        val layouts: List<KeyboardData?>,
+        val languages: List<String?>,
+        val themes: List<String?>,
+    )
 
     companion object {
         const val KEY = "layouts"
         /** JSON field of an entry's language binding (GH #186/#61). */
         private const val LANGUAGE_FIELD = "language"
+        /** JSON field of an entry's theme binding (see [LayoutThemeBinding]). */
+        private const val THEME_FIELD = "theme"
         val DEFAULT: List<Layout> = listOf(SystemLayout())
         val SERIALIZER: ListGroupPreference.Serializer<Layout> = Serializer()
 
@@ -300,20 +362,19 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
 
         @JvmStatic
         fun loadFromPreferences(res: Resources, prefs: SharedPreferences): List<KeyboardData?> =
-            loadLayoutsWithBindings(res, prefs).first
+            loadLayoutsWithBindings(res, prefs).layouts
 
         /**
          * The layouts (null = System, resolved to the locale layout at runtime) together with
-         * each layout's EFFECTIVE language binding, index-aligned (GH #186/#61). Loads and parses
-         * the preference once for both, which is what `Config.refresh` needs.
+         * each layout's EFFECTIVE language binding (GH #186/#61) and EFFECTIVE theme binding,
+         * all index-aligned. Loads and parses the preference once for all three, which is what
+         * `Config.refresh` needs. Destructures as `(layouts, languages, themes)`.
          */
         @JvmStatic
-        fun loadLayoutsWithBindings(
-            res: Resources,
-            prefs: SharedPreferences
-        ): Pair<List<KeyboardData?>, List<String?>> {
+        fun loadLayoutsWithBindings(res: Resources, prefs: SharedPreferences): LoadedLayouts {
             val layouts = mutableListOf<KeyboardData?>()
-            val bindings = mutableListOf<String?>()
+            val languages = mutableListOf<String?>()
+            val themes = mutableListOf<String?>()
             for (l in loadFromPreferences(KEY, prefs, DEFAULT, SERIALIZER) ?: DEFAULT) {
                 val data = when (l) {
                     is NamedLayout -> layoutOfString(res, l.name)
@@ -321,9 +382,10 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
                     else -> null
                 }
                 layouts.add(data)
-                bindings.add(LayoutLanguageBinding.effective(l.language, data?.declared_language))
+                languages.add(LayoutLanguageBinding.effective(l.language, data?.declared_language))
+                themes.add(LayoutThemeBinding.effective(l.theme, data?.declared_theme))
             }
-            return layouts to bindings
+            return LoadedLayouts(layouts, languages, themes)
         }
 
         /** Does not call [prefs.commit]. */

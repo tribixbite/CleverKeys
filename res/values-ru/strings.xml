@@ -2423,4 +2423,15 @@
     <string name="cmd_append_possessive_desc">Прикрепить \'s к последнему проверенному слову; один backspace удаляет только суффикс</string>
     <string name="cmd_append_apostrophe">Добавить апостроф в конец</string>
     <string name="cmd_append_apostrophe_desc">Прикрепить апостроф к последнему проверенному слову (parents\'); один backspace удаляет только суффикс</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Тема: %1$s</string>
+    <string name="layout_theme_title">Тема раскладки</string>
+    <string name="layout_theme_follow_global">Использовать общую тему</string>
+    <string name="layout_theme_follow_global_desc">Сейчас: %1$s</string>
+    <string name="layout_theme_dialog_desc">Пока эта раскладка активна, клавиатура использует выбранную тему. Общая тема в менеджере тем не меняется.</string>
+    <string name="layout_theme_missing">Темы %1$s нет на этом устройстве, поэтому используется общая тема.</string>
+    <string name="layout_theme_xml_invalid">Атрибут theme должен быть ID темы, например rosepine или decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Поиск тем</string>
+    <string name="layout_theme_no_results">Подходящих тем нет</string>
+    <string name="import_preview_layout_theme_change">%1$s: тема %2$s → %3$s</string>
 </resources>

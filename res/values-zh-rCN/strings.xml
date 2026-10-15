@@ -2287,4 +2287,15 @@
     <string name="cmd_append_possessive_desc">将 \'s 附加到最后一个已验证的单词；按一次退格键仅删除后缀</string>
     <string name="cmd_append_apostrophe">追加撇号</string>
     <string name="cmd_append_apostrophe_desc">将撇号附加到最后一个已验证的单词 (parents\')；按一次退格键仅删除后缀</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">主题：%1$s</string>
+    <string name="layout_theme_title">布局主题</string>
+    <string name="layout_theme_follow_global">跟随全局主题</string>
+    <string name="layout_theme_follow_global_desc">当前：%1$s</string>
+    <string name="layout_theme_dialog_desc">此布局处于活动状态时，键盘使用所选主题。主题管理器中的全局主题不会改变。</string>
+    <string name="layout_theme_missing">此设备上没有主题 %1$s，因此使用全局主题。</string>
+    <string name="layout_theme_xml_invalid">theme 属性必须是主题 ID，例如 rosepine 或 decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">搜索主题</string>
+    <string name="layout_theme_no_results">没有匹配的主题</string>
+    <string name="import_preview_layout_theme_change">%1$s：主题 %2$s → %3$s</string>
 </resources>

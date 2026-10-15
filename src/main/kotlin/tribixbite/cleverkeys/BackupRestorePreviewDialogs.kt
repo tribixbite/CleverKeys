@@ -399,6 +399,19 @@ private fun renderArrayDelta(
     prop: com.google.gson.JsonArray,
     text: ResultText,
 ): String {
+    // The stored `layouts` preference shape (plain names and `{"kind":…}` objects, checked
+    // BEFORE the `{"name":…}` shape below, which a list of only bound named entries also
+    // matches): a per-layout theme binding is a field INSIDE an entry, so a backup that only
+    // re-binds themes would otherwise read "[N → N items]".
+    if (tribixbite.cleverkeys.backup.LayoutThemeBindingDiff.isLayoutEntries(cur) &&
+        tribixbite.cleverkeys.backup.LayoutThemeBindingDiff.isLayoutEntries(prop)
+    ) {
+        val countDelta = text.plural(R.plurals.import_preview_json_items_delta, prop.size(), cur.size(), prop.size())
+        val themeChanges = tribixbite.cleverkeys.backup.LayoutThemeBindingDiff.themeChanges(cur, prop)
+        if (themeChanges.isEmpty()) return countDelta
+        val lines = themeChanges.map { renderLayoutThemeChange(it, text) }
+        return (if (cur.size() != prop.size()) listOf(countDelta) + lines else lines).joinToString("  ")
+    }
     // Layouts: array of objects with `name` field — diff by name + per-layout
     // deep-diff (key-count delta) for shared names.
     val curIsLayouts = cur.size() > 0 && cur.all { it.isJsonObject && it.asJsonObject.has("name") }
@@ -408,6 +421,20 @@ private fun renderArrayDelta(
     }
     // Generic array — count delta; the noun agrees with the proposed count.
     return text.plural(R.plurals.import_preview_json_items_delta, prop.size(), cur.size(), prop.size())
+}
+
+/** `<layout>: theme <from> → <to>`, with "Follow global theme" for an unbound side. */
+internal fun renderLayoutThemeChange(
+    change: tribixbite.cleverkeys.backup.LayoutThemeBindingDiff.Change,
+    text: ResultText,
+): String {
+    val label = change.name ?: when (change.kind) {
+        tribixbite.cleverkeys.backup.LayoutThemeBindingDiff.Kind.SYSTEM ->
+            text.string(R.string.layout_manager_system_layout_name)
+        else -> text.string(R.string.layout_manager_custom_layout_name)
+    }
+    val follow = text.string(R.string.layout_theme_follow_global)
+    return text.string(R.string.import_preview_layout_theme_change, label, change.from ?: follow, change.to ?: follow)
 }
 
 /**

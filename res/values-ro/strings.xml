@@ -2402,4 +2402,15 @@
     <string name="cmd_append_possessive_desc">Atașează \'s la ultimul cuvânt verificat; un backspace elimină doar sufixul</string>
     <string name="cmd_append_apostrophe">Adaugă apostrof la sfârșit</string>
     <string name="cmd_append_apostrophe_desc">Atașează un apostrof la ultimul cuvânt verificat (parents\'); un backspace elimină doar sufixul</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Temă: %1$s</string>
+    <string name="layout_theme_title">Tema aranjamentului</string>
+    <string name="layout_theme_follow_global">Urmează tema globală</string>
+    <string name="layout_theme_follow_global_desc">Acum %1$s</string>
+    <string name="layout_theme_dialog_desc">Cât timp acest aranjament este activ, tastatura folosește tema aleasă. Tema globală din Managerul de teme nu se schimbă.</string>
+    <string name="layout_theme_missing">Tema %1$s nu există pe acest dispozitiv, așa că se folosește tema globală.</string>
+    <string name="layout_theme_xml_invalid">Atributul theme trebuie să fie un ID de temă, de exemplu rosepine sau decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Caută teme</string>
+    <string name="layout_theme_no_results">Nicio temă potrivită</string>
+    <string name="import_preview_layout_theme_change">%1$s: temă %2$s → %3$s</string>
 </resources>

@@ -2370,4 +2370,15 @@
     <string name="cmd_append_possessive_desc">پیوست \'s به آخرین کلمه تأییدشده؛ یک‌بار فشردن backspace فقط پسوند را حذف می‌کند</string>
     <string name="cmd_append_apostrophe">الحاق آپوستروف</string>
     <string name="cmd_append_apostrophe_desc">پیوست آپوستروف به آخرین کلمه تأییدشده (parents\')؛ یک‌بار فشردن backspace فقط پسوند را حذف می‌کند</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">تم: %1$s</string>
+    <string name="layout_theme_title">تم چیدمان</string>
+    <string name="layout_theme_follow_global">پیروی از تم سراسری</string>
+    <string name="layout_theme_follow_global_desc">اکنون %1$s</string>
+    <string name="layout_theme_dialog_desc">تا زمانی که این چیدمان فعال است، صفحه‌کلید از تم انتخاب‌شده استفاده می‌کند. تم سراسری شما در مدیر تم تغییر نمی‌کند.</string>
+    <string name="layout_theme_missing">تم %1$s روی این دستگاه نیست، بنابراین تم سراسری استفاده می‌شود.</string>
+    <string name="layout_theme_xml_invalid">ویژگی theme باید شناسهٔ یک تم باشد، مانند rosepine یا decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">جستجوی تم‌ها</string>
+    <string name="layout_theme_no_results">هیچ تمی مطابقت ندارد</string>
+    <string name="import_preview_layout_theme_change">%1$s: تم %2$s → %3$s</string>
 </resources>

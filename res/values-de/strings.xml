@@ -2352,4 +2352,15 @@
     <string name="cmd_append_possessive_desc">\'s an das letzte verifizierte Wort anhängen; einmal Rückschritt löscht nur das Suffix</string>
     <string name="cmd_append_apostrophe">Apostroph anfügen</string>
     <string name="cmd_append_apostrophe_desc">Einen Apostroph an das letzte verifizierte Wort anhängen (parents\'); einmal Rückschritt löscht nur das Suffix</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Theme: %1$s</string>
+    <string name="layout_theme_title">Layout-Theme</string>
+    <string name="layout_theme_follow_global">Globalem Theme folgen</string>
+    <string name="layout_theme_follow_global_desc">Aktuell %1$s</string>
+    <string name="layout_theme_dialog_desc">Solange dieses Layout aktiv ist, verwendet die Tastatur das gewählte Theme. Das globale Theme im Theme-Manager bleibt unverändert.</string>
+    <string name="layout_theme_missing">Das Theme %1$s ist auf diesem Gerät nicht vorhanden, daher wird das globale Theme verwendet.</string>
+    <string name="layout_theme_xml_invalid">Das Attribut theme muss eine Theme-ID sein, z. B. rosepine oder decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Themes suchen</string>
+    <string name="layout_theme_no_results">Keine passenden Themes</string>
+    <string name="import_preview_layout_theme_change">%1$s: Theme %2$s → %3$s</string>
 </resources>

@@ -2418,4 +2418,15 @@
     <string name="cmd_append_possessive_desc">Připojit \'s k poslednímu ověřenému slovu; jeden backspace odstraní pouze příponu</string>
     <string name="cmd_append_apostrophe">Připojit apostrof</string>
     <string name="cmd_append_apostrophe_desc">Připojit apostrof k poslednímu ověřenému slovu (parents\'); jeden backspace odstraní pouze příponu</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Motiv: %1$s</string>
+    <string name="layout_theme_title">Motiv rozložení</string>
+    <string name="layout_theme_follow_global">Použít globální motiv</string>
+    <string name="layout_theme_follow_global_desc">Nyní %1$s</string>
+    <string name="layout_theme_dialog_desc">Když je toto rozložení aktivní, klávesnice použije zvolený motiv. Globální motiv ve Správci motivů se nezmění.</string>
+    <string name="layout_theme_missing">Motiv %1$s v tomto zařízení není, proto se použije globální motiv.</string>
+    <string name="layout_theme_xml_invalid">Atribut theme musí být ID motivu, například rosepine nebo decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Hledat motivy</string>
+    <string name="layout_theme_no_results">Žádné odpovídající motivy</string>
+    <string name="import_preview_layout_theme_change">%1$s: motiv %2$s → %3$s</string>
 </resources>

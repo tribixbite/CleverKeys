@@ -2332,4 +2332,15 @@
     <string name="cmd_append_possessive_desc">\'s aan het laatst geverifieerde woord koppelen; één backspace verwijdert alleen het achtervoegsel</string>
     <string name="cmd_append_apostrophe">Apostrof toevoegen</string>
     <string name="cmd_append_apostrophe_desc">Een apostrof aan het laatst geverifieerde woord koppelen (parents\'); één backspace verwijdert alleen het achtervoegsel</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Thema: %1$s</string>
+    <string name="layout_theme_title">Thema van de lay-out</string>
+    <string name="layout_theme_follow_global">Algemeen thema volgen</string>
+    <string name="layout_theme_follow_global_desc">Nu %1$s</string>
+    <string name="layout_theme_dialog_desc">Zolang deze lay-out actief is, gebruikt het toetsenbord het gekozen thema. Je algemene thema in Themabeheer verandert niet.</string>
+    <string name="layout_theme_missing">Thema %1$s staat niet op dit apparaat, dus het algemene thema wordt gebruikt.</string>
+    <string name="layout_theme_xml_invalid">Het attribuut theme moet een thema-ID zijn, zoals rosepine of decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Thema\'s zoeken</string>
+    <string name="layout_theme_no_results">Geen overeenkomende thema\'s</string>
+    <string name="import_preview_layout_theme_change">%1$s: thema %2$s → %3$s</string>
 </resources>

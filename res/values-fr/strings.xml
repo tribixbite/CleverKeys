@@ -2385,4 +2385,15 @@
     <string name="cmd_append_possessive_desc">Attacher \'s au dernier mot vérifié ; un retour arrière supprime uniquement le suffixe</string>
     <string name="cmd_append_apostrophe">Ajouter une apostrophe</string>
     <string name="cmd_append_apostrophe_desc">Attacher une apostrophe au dernier mot vérifié (parents\') ; un retour arrière supprime uniquement le suffixe</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Thème : %1$s</string>
+    <string name="layout_theme_title">Thème de la disposition</string>
+    <string name="layout_theme_follow_global">Suivre le thème global</string>
+    <string name="layout_theme_follow_global_desc">Actuellement %1$s</string>
+    <string name="layout_theme_dialog_desc">Tant que cette disposition est active, le clavier utilise le thème choisi. Votre thème global du gestionnaire de thèmes ne change pas.</string>
+    <string name="layout_theme_missing">Le thème %1$s n\'est pas présent sur cet appareil ; le thème global est donc utilisé.</string>
+    <string name="layout_theme_xml_invalid">L\'attribut theme doit être un identifiant de thème, par exemple rosepine ou decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Rechercher des thèmes</string>
+    <string name="layout_theme_no_results">Aucun thème ne correspond</string>
+    <string name="import_preview_layout_theme_change">%1$s : thème %2$s → %3$s</string>
 </resources>

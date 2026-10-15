@@ -99,6 +99,31 @@ class SettingsImportPlanBuilderTest {
         assertThat((c.proposed as PrefValue.JsonBlob).raw).isEqualTo(canonical)
     }
 
+    /**
+     * Per-layout theme binding: the binding is a field inside the `layouts` entries, so it adds
+     * no preference key to classify — it travels in the already-classified `layouts` JSON blob.
+     * Pins that a backup differing ONLY in a theme binding is a reviewable MODIFIED row (not
+     * silently "unchanged"), and that an identical blob produces no row.
+     */
+    @Test
+    fun layoutsBlob_differingOnlyInAThemeBinding_isAModifiedChange() {
+        val current = """["latn_qwerty_us",{"kind":"system"}]"""
+        val bound = """[{"kind":"named","name":"latn_qwerty_us","theme":"custom_not-on-this-device"},{"kind":"system"}]"""
+
+        val plan = SettingsImportPlanBuilder.fromJson(
+            """{"preferences":{"layouts":$bound}}""", mapOf("layouts" to current), screen,
+        )
+        val c = plan.changes.single { it.key == "layouts" }
+        assertThat(c.type).isEqualTo(ChangeType.MODIFIED)
+        assertThat((c.proposed as PrefValue.JsonBlob).raw).isEqualTo(JsonParser.parseString(bound).toString())
+        assertThat(plan.parseSkippedKeys).isEmpty()
+
+        val same = SettingsImportPlanBuilder.fromJson(
+            """{"preferences":{"layouts":$bound}}""", mapOf("layouts" to bound), screen,
+        )
+        assertThat(same.changes).isEmpty()
+    }
+
     @Test
     fun legacyHorizontalMargin_synthesizesNewKeysAndQueuesRemove() {
         val json = """{"preferences":{"horizontal_margin_portrait":24}}"""

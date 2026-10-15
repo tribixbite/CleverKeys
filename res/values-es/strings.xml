@@ -2393,4 +2393,15 @@
     <string name="cmd_append_possessive_desc">Adjuntar \'s a la última palabra verificada; un retroceso elimina solo el sufijo</string>
     <string name="cmd_append_apostrophe">Anexar apóstrofo</string>
     <string name="cmd_append_apostrophe_desc">Adjuntar un apóstrofo a la última palabra verificada (parents\'); un retroceso elimina solo el sufijo</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Tema: %1$s</string>
+    <string name="layout_theme_title">Tema de la distribución</string>
+    <string name="layout_theme_follow_global">Usar el tema global</string>
+    <string name="layout_theme_follow_global_desc">Actualmente %1$s</string>
+    <string name="layout_theme_dialog_desc">Mientras esta distribución esté activa, el teclado usa el tema elegido. Tu tema global del gestor de temas no cambia.</string>
+    <string name="layout_theme_missing">El tema %1$s no está en este dispositivo, así que se usa el tema global.</string>
+    <string name="layout_theme_xml_invalid">El atributo theme debe ser un ID de tema, como rosepine o decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Buscar temas</string>
+    <string name="layout_theme_no_results">Ningún tema coincide</string>
+    <string name="import_preview_layout_theme_change">%1$s: tema %2$s → %3$s</string>
 </resources>

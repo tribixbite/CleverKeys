@@ -2415,4 +2415,15 @@
     <string name="cmd_append_possessive_desc">Collega \'s all\'ultima parola verificata; un backspace rimuove solo il suffisso</string>
     <string name="cmd_append_apostrophe">Aggiungi apostrofo</string>
     <string name="cmd_append_apostrophe_desc">Collega un apostrofo all\'ultima parola verificata (parents\'); un backspace rimuove solo il suffisso</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Tema: %1$s</string>
+    <string name="layout_theme_title">Tema del layout</string>
+    <string name="layout_theme_follow_global">Segui il tema globale</string>
+    <string name="layout_theme_follow_global_desc">Attualmente %1$s</string>
+    <string name="layout_theme_dialog_desc">Finché questo layout è attivo, la tastiera usa il tema scelto. Il tema globale nel gestore dei temi non cambia.</string>
+    <string name="layout_theme_missing">Il tema %1$s non è presente su questo dispositivo, quindi viene usato il tema globale.</string>
+    <string name="layout_theme_xml_invalid">L\'attributo theme deve essere un ID di tema, ad esempio rosepine o decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Cerca temi</string>
+    <string name="layout_theme_no_results">Nessun tema corrispondente</string>
+    <string name="import_preview_layout_theme_change">%1$s: tema %2$s → %3$s</string>
 </resources>

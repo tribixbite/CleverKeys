@@ -2301,4 +2301,15 @@
     <string name="cmd_append_possessive_desc">Lampirkan \'s ke kata terverifikasi terakhir; satu backspace hanya menghapus akhiran</string>
     <string name="cmd_append_apostrophe">Tambahkan apostrof di akhir</string>
     <string name="cmd_append_apostrophe_desc">Lampirkan apostrof ke kata terverifikasi terakhir (parents\'); satu backspace hanya menghapus akhiran</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Tema: %1$s</string>
+    <string name="layout_theme_title">Tema tata letak</string>
+    <string name="layout_theme_follow_global">Ikuti tema global</string>
+    <string name="layout_theme_follow_global_desc">Saat ini %1$s</string>
+    <string name="layout_theme_dialog_desc">Selama tata letak ini aktif, keyboard memakai tema yang dipilih. Tema global Anda di Pengelola Tema tidak berubah.</string>
+    <string name="layout_theme_missing">Tema %1$s tidak ada di perangkat ini, jadi tema global yang dipakai.</string>
+    <string name="layout_theme_xml_invalid">Atribut theme harus berupa ID tema seperti rosepine atau decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Cari tema</string>
+    <string name="layout_theme_no_results">Tidak ada tema yang cocok</string>
+    <string name="import_preview_layout_theme_change">%1$s: tema %2$s → %3$s</string>
 </resources>

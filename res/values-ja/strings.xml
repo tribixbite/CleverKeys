@@ -2288,4 +2288,15 @@
     <string name="cmd_append_possessive_desc">最後に確認された単語に \'s を付加。Backspace 1 回で接尾辞のみを削除</string>
     <string name="cmd_append_apostrophe">アポストロフィを追加</string>
     <string name="cmd_append_apostrophe_desc">最後に確認された単語にアポストロフィを付加 (parents\')。Backspace 1 回で接尾辞のみを削除</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">テーマ: %1$s</string>
+    <string name="layout_theme_title">レイアウトのテーマ</string>
+    <string name="layout_theme_follow_global">全体のテーマに従う</string>
+    <string name="layout_theme_follow_global_desc">現在: %1$s</string>
+    <string name="layout_theme_dialog_desc">このレイアウトが有効な間、キーボードは選択したテーマを使います。テーマ管理で設定した全体のテーマは変わりません。</string>
+    <string name="layout_theme_missing">テーマ %1$s はこの端末にないため、全体のテーマを使用します。</string>
+    <string name="layout_theme_xml_invalid">theme 属性には rosepine や decorative_neon_cyberpunk などのテーマ ID を指定してください</string>
+    <string name="layout_theme_search_hint">テーマを検索</string>
+    <string name="layout_theme_no_results">一致するテーマはありません</string>
+    <string name="import_preview_layout_theme_change">%1$s: テーマ %2$s → %3$s</string>
 </resources>

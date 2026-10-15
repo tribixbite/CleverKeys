@@ -500,6 +500,10 @@ fun ThemeSettingsScreen(
                         if (wasActive) {
                             currentThemeId = ThemeProvider.FALLBACK_THEME_ID
                         }
+                        // A LAYOUT may be bound to the deleted theme. The theme store is another
+                        // prefs file, so no config listener fires: ask the keyboard to re-resolve
+                        // its layout theme bindings (the layout then falls back to the global theme).
+                        notifyKeyboardThemeChanged(context)
                         showDeleteConfirm = null
                     }
                 ) {

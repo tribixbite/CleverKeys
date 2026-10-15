@@ -98,6 +98,11 @@ class CleverKeysService : InputMethodService(),
 
     // Track the theme ID used to create the current keyboard view (for stale view detection)
     private var _currentViewThemeId: Int = 0
+    /**
+     * Theme NAME the current keyboard view was inflated with. Runtime themes (decorative/custom)
+     * all share one style id, so [_currentViewThemeId] alone cannot tell two of them apart.
+     */
+    private var _currentViewThemeName: String = ""
 
     // Prediction coordination (v1.32.346: extracted to PredictionCoordinator)
     private var _predictionCoordinator: PredictionCoordinator? = null
@@ -370,6 +375,12 @@ class CleverKeysService : InputMethodService(),
 
         // Create FoldStateTracker for device fold state monitoring
         val foldStateTracker = FoldStateTracker(this)
+
+        // Per-layout theme binding: let Config tell a missing bound theme (deleted DIY theme,
+        // backup from another device) from an available one, so it renders the global theme.
+        // Installed BEFORE initGlobalConfig, whose refresh resolves the first effective theme.
+        val themeProvider = tribixbite.cleverkeys.theme.ThemeProvider.getInstance(this)
+        Config.themeAvailability = themeProvider::isAvailable
 
         // Initialize global config for KeyEventHandler
         Config.initGlobalConfig(prefs, resources, _keyeventhandler, foldStateTracker.isUnfolded())
@@ -664,7 +675,18 @@ class CleverKeysService : InputMethodService(),
         // The service reference enables swipe handling callbacks
         _keyboardView.setSwipeTypingComponents(null, this)
 
-        setInputView(_keyboardView)
+        // Per-layout theme binding: a theme change can arrive MID-TYPING (switching onto a layout
+        // bound to another theme). Handing the bare view to setInputView would drop the
+        // suggestion strip until the next field focus, so while the keyboard is shown rebuild
+        // the whole input hierarchy now through the same setup onStartInputView uses (it sees
+        // the container no longer holds this view and rebuilds it, suggestion bar included).
+        // Hidden: the next onStartInputView does that rebuild.
+        val info = currentInputEditorInfo
+        if (isInputViewShown && info != null && _config != null) {
+            installPredictionViews(info)
+        } else {
+            setInputView(_keyboardView)
+        }
     }
 
     /**
@@ -691,9 +713,13 @@ class CleverKeysService : InputMethodService(),
         // 2026-08-28 along with UnigramLanguageDetector — it cleared a word window nothing
         // read. The remaining per-field resets live in KeyEventHandler.started(info) below.
 
-        // Check if the current view was created with a stale theme
+        // Check if the current view was created with a stale theme (style id OR theme name:
+        // runtime themes, and layouts bound to them, share one style id)
         val latestThemeId = _config?.theme ?: 0
-        if (_currentViewThemeId != latestThemeId && latestThemeId != 0) {
+        val latestThemeName = _config?.themeName ?: ""
+        if (latestThemeId != 0 &&
+            (_currentViewThemeId != latestThemeId || _currentViewThemeName != latestThemeName)
+        ) {
             _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
             _emojiPane = null
             _keyboardView.setKeyboard(current_layout())
@@ -738,58 +764,69 @@ class CleverKeysService : InputMethodService(),
 
         // Setup prediction views (v1.32.400: extracted prediction/swipe setup logic)
         // Handles initialization, suggestion bar creation, keyboard dimensions, and cleanup
-        val config = _config  // Capture for null safety
-        val predCoordinator = _predictionCoordinator  // Capture for null safety
-        config?.let { cfg ->
-            val predictionSetup = PredictionViewSetup.create(
-                this,
-                cfg,
-                _keyboardView,
-                predCoordinator,
-                _inputCoordinator,
-                _suggestionHandler,
-                _keyboardDimensionsHelper,
-                _receiver,
-                _emojiPane
-            ).setupPredictionViews(_suggestionBar, _inputViewContainer, _contentPaneContainer, _topPane, _scrollView)
-
-            // Update components from setup result
-            _suggestionBar = predictionSetup.suggestionBar
-            _inputViewContainer = predictionSetup.inputViewContainer
-            _contentPaneContainer = predictionSetup.contentPaneContainer
-            _topPane = predictionSetup.topPane
-            _scrollView = predictionSetup.scrollView
-            setInputView(predictionSetup.inputView)
-
-            // #41 v5: Emoji search manager persists across onStartInputView calls
-            // Only create once; it gets initialized when emoji pane is first opened
-            if (_emojiSearchManager == null) {
-                _emojiSearchManager = EmojiSearchManager()
-            }
-            _receiver?.setEmojiSearchManager(_emojiSearchManager!!)
-
-            // Password field detection: disable predictions and show eye toggle
-            val isPasswordField = SuggestionBar.isPasswordField(info)
-            _suggestionBar?.setPasswordMode(isPasswordField)
-            _suggestionHandler?.setPasswordMode(isPasswordField)
-
-            // M5 (review 2026-08-06): honor IME_FLAG_NO_PERSONALIZED_LEARNING —
-            // incognito fields (private browser tabs etc.) suppress the learn
-            // funnel, selection-adaptation recording, and next-word surfacing.
-            _suggestionHandler?.setFieldPersonalizedLearningAllowed(
-                LearningGate.fieldAllowsPersonalizedLearning(info.imeOptions)
-            )
-            // #39: Allow swipe predictions in password fields if enabled
-            _suggestionBar?.setAllowSwipeInPasswordMode(_config?.swipe_on_password_fields ?: false)
-            // Wire up InputConnectionProvider for accurate password text reading
-            // This enables the eye toggle to show actual field content even after cursor moves
-            _suggestionBar?.setInputConnectionProvider { currentInputConnection }
-        }
+        installPredictionViews(info)
 
         // Key positions are read per swipe from Keyboard2View.geometryParams()
         // The manual post() call here was causing redundant "key positions set" logs and layout updates
 
         _config?.let { Logs.debug_startup_input_view(info, it) }
+    }
+
+    /**
+     * Build (or re-propagate) the input-view hierarchy around [_keyboardView] — suggestion bar,
+     * content-pane container, top pane — and install it as the input view, then apply the
+     * per-field state for [info] (password mode, personalized-learning gate). The ONE setup path:
+     * [onStartInputView] calls it per field, and [onThemeChanged] calls it while the keyboard is
+     * shown so a theme switch from a layout binding keeps the suggestion strip.
+     * (v1.32.400: prediction/swipe setup extracted to PredictionViewSetup.)
+     */
+    private fun installPredictionViews(info: EditorInfo) {
+        val cfg = _config ?: return  // Capture for null safety
+        val predCoordinator = _predictionCoordinator  // Capture for null safety
+
+        val predictionSetup = PredictionViewSetup.create(
+            this,
+            cfg,
+            _keyboardView,
+            predCoordinator,
+            _inputCoordinator,
+            _suggestionHandler,
+            _keyboardDimensionsHelper,
+            _receiver,
+            _emojiPane
+        ).setupPredictionViews(_suggestionBar, _inputViewContainer, _contentPaneContainer, _topPane, _scrollView)
+
+        // Update components from setup result
+        _suggestionBar = predictionSetup.suggestionBar
+        _inputViewContainer = predictionSetup.inputViewContainer
+        _contentPaneContainer = predictionSetup.contentPaneContainer
+        _topPane = predictionSetup.topPane
+        _scrollView = predictionSetup.scrollView
+        setInputView(predictionSetup.inputView)
+
+        // #41 v5: Emoji search manager persists across onStartInputView calls
+        // Only create once; it gets initialized when emoji pane is first opened
+        if (_emojiSearchManager == null) {
+            _emojiSearchManager = EmojiSearchManager()
+        }
+        _receiver?.setEmojiSearchManager(_emojiSearchManager!!)
+
+        // Password field detection: disable predictions and show eye toggle
+        val isPasswordField = SuggestionBar.isPasswordField(info)
+        _suggestionBar?.setPasswordMode(isPasswordField)
+        _suggestionHandler?.setPasswordMode(isPasswordField)
+
+        // M5 (review 2026-08-06): honor IME_FLAG_NO_PERSONALIZED_LEARNING —
+        // incognito fields (private browser tabs etc.) suppress the learn
+        // funnel, selection-adaptation recording, and next-word surfacing.
+        _suggestionHandler?.setFieldPersonalizedLearningAllowed(
+            LearningGate.fieldAllowsPersonalizedLearning(info.imeOptions)
+        )
+        // #39: Allow swipe predictions in password fields if enabled
+        _suggestionBar?.setAllowSwipeInPasswordMode(_config?.swipe_on_password_fields ?: false)
+        // Wire up InputConnectionProvider for accurate password text reading
+        // This enables the eye toggle to show actual field content even after cursor moves
+        _suggestionBar?.setInputConnectionProvider { currentInputConnection }
     }
 
     override fun setInputView(v: View) {
@@ -1121,6 +1158,7 @@ class CleverKeysService : InputMethodService(),
         // Stamp the theme ID when inflating keyboard layout (for stale view detection in onStartInputView)
         if (layout == R.layout.keyboard) {
             _currentViewThemeId = themeId
+            _currentViewThemeName = _config?.themeName ?: ""
         }
         return View.inflate(ContextThemeWrapper(this, themeId), layout, null)
     }

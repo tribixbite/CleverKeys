@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import java.io.File
 import java.text.SimpleDateFormat
@@ -170,6 +171,46 @@ class BackupRestorePreviewRenderTest {
     fun malformedJsonDelta_fallsBackToGenericLabel() {
         val out = renderJsonBlobDelta("not json", """{"a":1}""", EnglishResourceText)
         assertThat(out).isEqualTo("(JSON change)")
+    }
+
+    // ── per-layout theme binding in the real `layouts` blob shape ────────────
+
+    /**
+     * The stored `layouts` preference is an array of plain names and `{"kind":…}` objects —
+     * not the `{"name","keys"}` shape above — and a theme binding is a field INSIDE an entry.
+     * Before the binding was rendered, a backup that only re-bound themes showed the generic
+     * "[2 items → 2 items]", hiding exactly what the import would change.
+     */
+    @Test
+    fun layoutsDelta_realShape_reportsEachThemeBindingChange() {
+        val themedXml = "<keyboard name=\\\"Themed\\\" theme=\\\"rosepine\\\"><row/></keyboard>"
+        val cur = """["latn_qwerty_us",{"kind":"custom","xml":"$themedXml"},{"kind":"system"}]"""
+        val prop = """[{"kind":"named","name":"latn_qwerty_us","theme":"cobalt"},""" +
+            """{"kind":"custom","xml":"$themedXml","theme":"none"},{"kind":"system","theme":"none"}]"""
+
+        val out = renderJsonBlobDelta(cur, prop, EnglishResourceText)
+
+        assertThat(out).contains("latn_qwerty_us: theme Follow global theme \u2192 cobalt")
+        assertThat(out).contains("Themed: theme rosepine \u2192 Follow global theme")
+        assertWithMessage("System entry: follow-global either way (no XML default) — no change to report")
+            .that(out).doesNotContain("System")
+        assertThat(out).doesNotContain("items")
+    }
+
+    @Test
+    fun layoutsDelta_realShape_onlyBoundNamedEntries_isNotMistakenForTheNameKeysShape() {
+        // Every entry a bound named object: these also carry a `name`, but they are the stored
+        // shape and must be diffed by binding, not by the legacy name/key-count path.
+        val cur = """[{"kind":"named","name":"latn_qwerty_us","theme":"dark"}]"""
+        val prop = """[{"kind":"named","name":"latn_qwerty_us","theme":"rosepine"}]"""
+        assertThat(renderJsonBlobDelta(cur, prop, EnglishResourceText))
+            .isEqualTo("latn_qwerty_us: theme dark \u2192 rosepine")
+    }
+
+    @Test
+    fun layoutsDelta_realShape_withoutThemeChangesKeepsTheGenericCount() {
+        val out = renderJsonBlobDelta("""["latn_qwerty_us"]""", """["latn_qwerty_us",{"kind":"system"}]""", EnglishResourceText)
+        assertThat(out).isEqualTo("[1 \u2192 2 items]")
     }
 
     // ── renderDelta integration ──────────────────────────────────────────

@@ -623,8 +623,28 @@ class Config private constructor(
     @JvmField var keyActivatedOpacity = 0
     @JvmField var double_tap_lock_shift = false
     @JvmField var characterSize = 0f
+    /** Android style id of the EFFECTIVE theme ([themeName]); what the keyboard view inflates with. */
     @JvmField var theme = 0
-    @JvmField var themeName: String = "" // Raw theme name for runtime theme detection
+    /**
+     * The EFFECTIVE theme id — what the keyboard renders. Equals the user's global `theme`
+     * preference unless the current layout carries a theme binding to a theme that exists on this
+     * device ([LayoutThemeBinding.resolve]). Theme Manager reads/writes the PREFERENCE, never this.
+     */
+    @JvmField var themeName: String = ""
+    /** The user's global `theme` preference — the theme of every layout that has no binding. */
+    private var user_theme_name = Defaults.THEME
+    /**
+     * Each layout's EFFECTIVE theme binding (null = follows the global theme), index-aligned with
+     * [layouts]. Resolved by [LayoutThemeBinding.effective] when the layouts are loaded.
+     */
+    @JvmField var layout_themes: List<String?> = emptyList()
+    /** Non-null while the current layout's theme binding is rendered (then == [themeName]). */
+    @JvmField var layout_bound_theme: String? = null
+    /**
+     * Non-null when the current layout is bound to a theme that is not on this device; the global
+     * theme is rendered instead. Shown by Layout Manager; never written back to the binding.
+     */
+    @JvmField var layout_missing_theme: String? = null
     @JvmField var autocapitalisation = false
     @JvmField var switch_input_immediate = false
     @JvmField var selected_number_layout: NumberLayout? = null
@@ -868,9 +888,11 @@ class Config private constructor(
 
         // Keep nulls - they represent SystemLayout entries (resolved to localeTextLayout at runtime).
         // GH #186/#61: each entry's effective language binding is loaded in the same pass.
-        val (loadedLayouts, loadedLanguages) = LayoutsPreference.loadLayoutsWithBindings(res, _prefs)
+        // Per-layout theme bindings are loaded in the same pass.
+        val (loadedLayouts, loadedLanguages, loadedThemes) = LayoutsPreference.loadLayoutsWithBindings(res, _prefs)
         layouts = loadedLayouts
         layout_languages = loadedLanguages
+        layout_themes = loadedThemes
         inverse_numpad = safeGetString(_prefs, "numpad_layout", Defaults.NUMPAD_LAYOUT) == "low_first"
         scale_numpad_height = _prefs.getBoolean("scale_numpad_height", Defaults.SCALE_NUMPAD_HEIGHT)
 
@@ -947,8 +969,9 @@ class Config private constructor(
         characterSize = safeGetFloat(_prefs, "character_size", Defaults.CHARACTER_SIZE)
             .coerceIn(SettingsRanges.CHARACTER_SIZE.start, SettingsRanges.CHARACTER_SIZE.endInclusive) * characterSizeScale
         secondary_label_size_scale = safeGetFloat(_prefs, "secondary_label_size_scale", Defaults.SECONDARY_LABEL_SIZE_SCALE)
-        themeName = safeGetString(_prefs, "theme", Defaults.THEME)
-        theme = getThemeId(res, themeName)
+        // The global theme preference. The EFFECTIVE theme (themeName/theme) is resolved at the
+        // end of refresh, once the layouts, the selection and wide_screen are known.
+        user_theme_name = safeGetString(_prefs, "theme", Defaults.THEME)
         autocapitalisation = _prefs.getBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)
         switch_input_immediate = _prefs.getBoolean("switch_input_immediate", Defaults.SWITCH_INPUT_IMMEDIATE)
         extra_keys_param = ExtraKeysPreference.get_extra_keys(_prefs) ?: emptyMap()
@@ -1133,6 +1156,10 @@ class Config private constructor(
         // GH #186/#61: needs layouts, the selection indices AND wide_screen (which of the two
         // selections is current), so it runs after all three are read.
         recomputeActiveLanguages()
+        // Per-layout theme binding: same inputs. ConfigurationManager compares the theme before
+        // and after this refresh, so a layout switch onto/off a bound layout re-inflates the
+        // keyboard exactly when the rendered theme changes — and never otherwise.
+        recomputeActiveTheme { getThemeId(res, it) }
 
         // MUST stay the last statement: every field the hot paths read has now been written,
         // so the published snapshot can never lag the vars it mirrors. refresh() has a single
@@ -1247,6 +1274,30 @@ class Config private constructor(
         active_secondary_language = active.secondary
         layout_bound_language = active.boundLayoutLanguage
         return active != before
+    }
+
+    /**
+     * Re-resolve the effective theme from the current layout's theme binding and the user's
+     * global theme ([LayoutThemeBinding.resolve]); [styleIdOf] maps a theme id to its Android
+     * style ([getThemeId] in production). Called by [refresh] only — NOT by [set_current_layout]:
+     * ConfigurationManager detects a theme change by comparing across the refresh that the
+     * selection write triggers, so resolving earlier would hide the change from it.
+     *
+     * @return true when the effective theme or its binding state changed.
+     */
+    internal fun recomputeActiveTheme(styleIdOf: (String) -> Int): Boolean {
+        val before = Triple(themeName, layout_bound_theme, layout_missing_theme)
+        val active = LayoutThemeBinding.resolve(
+            bindings = layout_themes,
+            currentIndex = get_current_layout(),
+            globalTheme = user_theme_name,
+            isAvailable = themeAvailability ?: { true },
+        )
+        themeName = active.themeName
+        layout_bound_theme = active.boundTheme
+        layout_missing_theme = active.missingTheme
+        theme = styleIdOf(active.themeName)
+        return Triple(themeName, layout_bound_theme, layout_missing_theme) != before
     }
 
     fun set_current_layout(l: Int) {
@@ -1479,6 +1530,16 @@ class Config private constructor(
 
         @Volatile
         private var _globalConfig: Config? = null
+
+        /**
+         * Whether a theme id exists on this device (`ThemeProvider.isAvailable`), consulted when a
+         * layout's theme binding is resolved. Installed by `CleverKeysService.onCreate` before
+         * [initGlobalConfig]; Config has no Context, and custom themes live in another prefs file.
+         * Null (not installed, e.g. a Settings-only process) treats every well-formed id as
+         * available — ThemeProvider still renders a total fallback for a dangling one.
+         */
+        @Volatile
+        var themeAvailability: ((String) -> Boolean)? = null
 
         @JvmStatic
         fun initGlobalConfig(

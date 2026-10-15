@@ -777,6 +777,9 @@ tasks.register('runPureTests', JavaExec) {
     // resolution, and the single diff-based language-change path (ActiveLanguageSync).
     'tribixbite.cleverkeys.LayoutLanguageBindingTest',
     'tribixbite.cleverkeys.ActiveLanguageSyncTest',
+    // Per-layout theme binding: id validation, entry precedence, effective-theme resolution
+    // (bound / unbound / missing theme) and the layout-XML `theme` attribute read/write.
+    'tribixbite.cleverkeys.LayoutThemeBindingTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
@@ -1454,6 +1457,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.LayoutLanguageBindingConfigTest',
     // iOS-/Gboard-/SwiftKey-style predefined layouts through the real layout parser.
     'tribixbite.cleverkeys.StyleLayoutsTest',
+    // Per-layout theme binding through the real Config, ConfigurationManager (re-inflate only on an
+    // effective-theme change), the layouts serializer (backup blob) and the XML `theme` attribute.
+    'tribixbite.cleverkeys.LayoutThemeBindingConfigTest',
     'tribixbite.cleverkeys.ThemeBorderPaintOpacityTest',
     // Audit 2026-09-06 W7 (H-8, #77 residual): all-null loc-stripped pane cells render as
     // empty space — onDraw consults Keyboard2View.keyCellIsEmpty before drawKeyFrame.

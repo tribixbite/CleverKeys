@@ -2343,4 +2343,15 @@
     <string name="cmd_append_possessive_desc">Son doğrulanan kelimeye \'s iliştir; bir geri alma yalnızca son eki siler</string>
     <string name="cmd_append_apostrophe">Kesme işareti ekle</string>
     <string name="cmd_append_apostrophe_desc">Son doğrulanan kelimeye kesme işareti iliştir (parents\'); bir geri alma yalnızca son eki siler</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Tema: %1$s</string>
+    <string name="layout_theme_title">Düzen teması</string>
+    <string name="layout_theme_follow_global">Genel temayı kullan</string>
+    <string name="layout_theme_follow_global_desc">Şu anda %1$s</string>
+    <string name="layout_theme_dialog_desc">Bu düzen etkinken klavye seçilen temayı kullanır. Tema Yöneticisi\'ndeki genel temanız değişmez.</string>
+    <string name="layout_theme_missing">%1$s teması bu cihazda yok, bu yüzden genel tema kullanılıyor.</string>
+    <string name="layout_theme_xml_invalid">theme özniteliği rosepine veya decorative_neon_cyberpunk gibi bir tema kimliği olmalıdır</string>
+    <string name="layout_theme_search_hint">Tema ara</string>
+    <string name="layout_theme_no_results">Eşleşen tema yok</string>
+    <string name="import_preview_layout_theme_change">%1$s: tema %2$s → %3$s</string>
 </resources>

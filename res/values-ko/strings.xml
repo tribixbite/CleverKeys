@@ -2289,4 +2289,15 @@
     <string name="cmd_append_possessive_desc">마지막으로 확인된 단어에 \'s 붙이기; 백스페이스를 한 번 누르면 접미사만 삭제됩니다</string>
     <string name="cmd_append_apostrophe">아포스트로피 추가</string>
     <string name="cmd_append_apostrophe_desc">마지막으로 확인된 단어에 아포스트로피 붙이기(parents\'); 백스페이스를 한 번 누르면 접미사만 삭제됩니다</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">테마: %1$s</string>
+    <string name="layout_theme_title">레이아웃 테마</string>
+    <string name="layout_theme_follow_global">전체 테마 따르기</string>
+    <string name="layout_theme_follow_global_desc">현재 %1$s</string>
+    <string name="layout_theme_dialog_desc">이 레이아웃이 활성화된 동안 키보드는 선택한 테마를 사용합니다. 테마 관리자의 전체 테마는 바뀌지 않습니다.</string>
+    <string name="layout_theme_missing">%1$s 테마가 이 기기에 없으므로 전체 테마를 사용합니다.</string>
+    <string name="layout_theme_xml_invalid">theme 속성은 rosepine 또는 decorative_neon_cyberpunk 같은 테마 ID여야 합니다</string>
+    <string name="layout_theme_search_hint">테마 검색</string>
+    <string name="layout_theme_no_results">일치하는 테마가 없습니다</string>
+    <string name="import_preview_layout_theme_change">%1$s: 테마 %2$s → %3$s</string>
 </resources>

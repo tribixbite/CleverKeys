@@ -2429,4 +2429,15 @@
     <string name="cmd_append_possessive_desc">Приєднати \'s до останнього перевіреного слова; одне натискання backspace видаляє лише суфікс</string>
     <string name="cmd_append_apostrophe">Додати апостроф</string>
     <string name="cmd_append_apostrophe_desc">Приєднати апостроф до останнього перевіреного слова (parents\'); одне натискання backspace видаляє лише суфікс</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Тема: %1$s</string>
+    <string name="layout_theme_title">Тема макета</string>
+    <string name="layout_theme_follow_global">Використовувати загальну тему</string>
+    <string name="layout_theme_follow_global_desc">Зараз: %1$s</string>
+    <string name="layout_theme_dialog_desc">Поки цей макет активний, клавіатура використовує вибрану тему. Загальна тема в менеджері тем не змінюється.</string>
+    <string name="layout_theme_missing">Теми %1$s немає на цьому пристрої, тому використовується загальна тема.</string>
+    <string name="layout_theme_xml_invalid">Атрибут theme має бути ID теми, наприклад rosepine або decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Пошук тем</string>
+    <string name="layout_theme_no_results">Немає відповідних тем</string>
+    <string name="import_preview_layout_theme_change">%1$s: тема %2$s → %3$s</string>
 </resources>

@@ -212,17 +212,25 @@ class ThemeProvider(
     }
 
     /**
+     * Whether [themeId] names a theme that exists on this device — a built-in theme, a known
+     * decorative theme, or a custom theme still in the store. Used to resolve per-layout theme
+     * bindings (`Config.themeAvailability`): a binding to a missing theme renders the user's
+     * global theme instead of [getTheme]'s generic fallback.
+     */
+    fun isAvailable(themeId: String): Boolean = when {
+        themeId.startsWith("custom_") -> customThemeManager.getCustomTheme(themeId) != null
+        themeId.startsWith("decorative_") -> getDecorativeColorScheme(themeId) != null
+        else -> themeId in BUILT_IN_THEME_IDS
+    }
+
+    /**
      * Get all available theme IDs organized by category.
      */
     fun getAllThemeIds(): Map<String, List<String>> {
         val themes = mutableMapOf<String, MutableList<String>>()
 
         // Built-in XML themes
-        themes["Built-in"] = mutableListOf(
-            "cleverkeysdark", "cleverkeyslight", "dark", "light", "black", "altblack",
-            "white", "rosepine", "cobalt", "pine", "desert", "jungle", "epaper",
-            "epaperblack", "everforestlight", "monet", "monetlight", "monetdark"
-        )
+        themes["Built-in"] = BUILT_IN_THEME_IDS.toMutableList()
 
         // Decorative themes (from PredefinedThemes) - IDs must match getDecorativeColorScheme()
         themes["Gemstone"] = mutableListOf("decorative_gemstone_ruby", "decorative_gemstone_sapphire", "decorative_gemstone_emerald")
@@ -329,6 +337,17 @@ class ThemeProvider(
         /** The theme every dangling-id fallback resolves to (audit H-2). Also the id the
          *  delete-active-theme guard resets the `theme` pref to (CustomThemePrefPolicy). */
         const val FALLBACK_THEME_ID = "cleverkeysdark"
+
+        /**
+         * Ids of the built-in XML themes — the `theme` values Theme Manager offers in its
+         * Built-in section. Drift-pinned against `ThemeSettingsActivity.BUILTIN_THEMES` by
+         * LayoutThemeBindingConfigTest.
+         */
+        val BUILT_IN_THEME_IDS: List<String> = listOf(
+            "cleverkeysdark", "cleverkeyslight", "dark", "light", "black", "altblack",
+            "white", "rosepine", "cobalt", "pine", "desert", "jungle", "epaper",
+            "epaperblack", "everforestlight", "monet", "monetlight", "monetdark"
+        )
 
         // Process-lifetime singleton holding only the applicationContext (see getInstance),
         // so it never leaks an Activity/Service. The reference lives as long as the process.

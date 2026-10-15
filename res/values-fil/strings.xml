@@ -2344,4 +2344,15 @@
     <string name="cmd_append_possessive_desc">Ikabit ang \'s sa huling na-verify na salita; isang backspace ang nag-aalis lang ng hulapi</string>
     <string name="cmd_append_apostrophe">Idagdag ang kudlit sa dulo</string>
     <string name="cmd_append_apostrophe_desc">Ikabit ang kudlit sa huling na-verify na salita (parents\'); isang backspace ang nag-aalis lang ng hulapi</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Tema: %1$s</string>
+    <string name="layout_theme_title">Tema ng layout</string>
+    <string name="layout_theme_follow_global">Sundin ang pangkalahatang tema</string>
+    <string name="layout_theme_follow_global_desc">Kasalukuyang %1$s</string>
+    <string name="layout_theme_dialog_desc">Habang aktibo ang layout na ito, gagamitin ng keyboard ang napiling tema. Hindi magbabago ang iyong pangkalahatang tema sa Theme Manager.</string>
+    <string name="layout_theme_missing">Wala sa device na ito ang temang %1$s, kaya ang pangkalahatang tema ang ginagamit.</string>
+    <string name="layout_theme_xml_invalid">Ang theme attribute ay dapat isang theme ID gaya ng rosepine o decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Maghanap ng tema</string>
+    <string name="layout_theme_no_results">Walang tumutugmang tema</string>
+    <string name="import_preview_layout_theme_change">%1$s: tema %2$s → %3$s</string>
 </resources>

@@ -45,7 +45,7 @@ internal fun SettingsActivity.refreshAvailableSecondaryLanguages() {
 internal fun SettingsActivity.refreshBoundLayoutLanguages() {
     boundLayoutLanguages = try {
         tribixbite.cleverkeys.prefs.LayoutsPreference.loadLayoutsWithBindings(resources, prefs)
-            .second.filterNotNull().distinct()
+            .languages.filterNotNull().distinct()
     } catch (e: Exception) {
         android.util.Log.w(SettingsActivity.TAG, "Could not read layout language bindings", e)
         emptyList()

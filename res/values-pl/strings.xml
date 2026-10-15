@@ -2428,4 +2428,15 @@
     <string name="cmd_append_possessive_desc">Dołącz \'s do ostatniego zweryfikowanego słowa; jedno cofnięcie usuwa tylko sufiks</string>
     <string name="cmd_append_apostrophe">Dołącz apostrof</string>
     <string name="cmd_append_apostrophe_desc">Dołącz apostrof do ostatniego zweryfikowanego słowa (parents\'); jedno cofnięcie usuwa tylko sufiks</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Motyw: %1$s</string>
+    <string name="layout_theme_title">Motyw układu</string>
+    <string name="layout_theme_follow_global">Użyj motywu globalnego</string>
+    <string name="layout_theme_follow_global_desc">Obecnie %1$s</string>
+    <string name="layout_theme_dialog_desc">Gdy ten układ jest aktywny, klawiatura używa wybranego motywu. Motyw globalny w menedżerze motywów się nie zmienia.</string>
+    <string name="layout_theme_missing">Motywu %1$s nie ma na tym urządzeniu, więc używany jest motyw globalny.</string>
+    <string name="layout_theme_xml_invalid">Atrybut theme musi być identyfikatorem motywu, np. rosepine lub decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Szukaj motywów</string>
+    <string name="layout_theme_no_results">Brak pasujących motywów</string>
+    <string name="import_preview_layout_theme_change">%1$s: motyw %2$s → %3$s</string>
 </resources>

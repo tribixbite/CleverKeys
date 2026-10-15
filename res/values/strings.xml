@@ -2744,4 +2744,15 @@
     <string name="cmd_append_possessive_desc">Attach \'s to the last verified word; one backspace removes only the suffix</string>
     <string name="cmd_append_apostrophe">Append apostrophe</string>
     <string name="cmd_append_apostrophe_desc">Attach an apostrophe to the last verified word (parents\'); one backspace removes only the suffix</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Theme: %1$s</string>
+    <string name="layout_theme_title">Layout theme</string>
+    <string name="layout_theme_follow_global">Follow global theme</string>
+    <string name="layout_theme_follow_global_desc">Currently %1$s</string>
+    <string name="layout_theme_dialog_desc">While this layout is active, the keyboard uses the chosen theme. Your global theme in Theme Manager does not change.</string>
+    <string name="layout_theme_missing">Theme %1$s is not on this device, so the global theme is used.</string>
+    <string name="layout_theme_xml_invalid">The theme attribute must be a theme ID such as rosepine or decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Search themes</string>
+    <string name="layout_theme_no_results">No matching themes</string>
+    <string name="import_preview_layout_theme_change">%1$s: theme %2$s → %3$s</string>
 </resources>

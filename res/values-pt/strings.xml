@@ -2375,4 +2375,15 @@
     <string name="cmd_append_possessive_desc">Anexar \'s à última palavra verificada; um backspace remove apenas o sufixo</string>
     <string name="cmd_append_apostrophe">Anexar apóstrofo</string>
     <string name="cmd_append_apostrophe_desc">Anexar um apóstrofo à última palavra verificada (parents\'); um backspace remove apenas o sufixo</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Tema: %1$s</string>
+    <string name="layout_theme_title">Tema do layout</string>
+    <string name="layout_theme_follow_global">Seguir o tema global</string>
+    <string name="layout_theme_follow_global_desc">Atualmente %1$s</string>
+    <string name="layout_theme_dialog_desc">Enquanto este layout estiver ativo, o teclado usa o tema escolhido. Seu tema global no gerenciador de temas não muda.</string>
+    <string name="layout_theme_missing">O tema %1$s não está neste dispositivo, então o tema global é usado.</string>
+    <string name="layout_theme_xml_invalid">O atributo theme deve ser um ID de tema, como rosepine ou decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Pesquisar temas</string>
+    <string name="layout_theme_no_results">Nenhum tema corresponde</string>
+    <string name="import_preview_layout_theme_change">%1$s: tema %2$s → %3$s</string>
 </resources>

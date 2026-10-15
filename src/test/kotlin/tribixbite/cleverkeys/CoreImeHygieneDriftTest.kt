@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import java.io.File
@@ -162,6 +163,58 @@ class CoreImeHygieneDriftTest {
             .that(body).contains("return setupPredictionViews(null, null, null, null, null)")
         assertWithMessage("the guard must run before the existing-views branches")
             .that(body.indexOf(guard)).isLessThan(body.indexOf("if (config.word_prediction_enabled"))
+    }
+
+    /**
+     * Per-layout theme binding: a theme change can now arrive MID-TYPING (switching onto a layout
+     * bound to another theme). `onThemeChanged` used to hand the bare new keyboard view to
+     * `setInputView`, dropping the suggestion strip until the next field focus rebuilt the
+     * container. While the input view is shown it must rebuild the whole input hierarchy through
+     * the same prediction-view setup `onStartInputView` uses. Behavioural coverage needs a live IME
+     * (device check); this pins the routing.
+     */
+    @Test
+    fun aThemeChangeWhileTheKeyboardIsShownRebuildsTheWholeInputHierarchy() {
+        val service = source("tribixbite/cleverkeys/CleverKeysService.kt")
+        val onThemeChanged = service.substringAfter("override fun onThemeChanged(").substringBefore("\n    }\n")
+        assertWithMessage("onThemeChanged must rebuild the input hierarchy when the keyboard is visible")
+            .that(onThemeChanged).contains("installPredictionViews(")
+        assertWithMessage("…only while the input view is shown (otherwise onStartInputView rebuilds it)")
+            .that(onThemeChanged).contains("isInputViewShown")
+        val onStart = service.substringAfter("override fun onStartInputView(").substringBefore("\n    override fun ")
+        assertWithMessage("onStartInputView and onThemeChanged must share ONE prediction-view setup path")
+            .that(onStart).contains("installPredictionViews(info)")
+        assertWithMessage("the stale-view check must compare the theme NAME too: runtime themes share a style id")
+            .that(onStart).contains("_currentViewThemeName")
+    }
+
+    /**
+     * Per-layout theme binding: `Config.set_current_layout` must NOT resolve the theme itself.
+     * ConfigurationManager decides whether to re-inflate by comparing the theme before and after
+     * the refresh that the selection write triggers; resolving early would make that comparison
+     * see no change, and the keyboard would keep the old theme.
+     */
+    @Test
+    fun aLayoutSwitchLeavesThemeResolutionToTheRefresh() {
+        val config = source("tribixbite/cleverkeys/Config.kt")
+        val setCurrent = config.substringAfter("fun set_current_layout(").substringBefore("\n    fun ")
+        assertThat(setCurrent).doesNotContain("recomputeActiveTheme")
+        assertThat(setCurrent).doesNotContain("themeName")
+        val refresh = config.substringAfter("fun refresh(res: Resources").substringBefore("publishSnapshot()")
+        assertWithMessage("refresh resolves the effective theme from the current layout")
+            .that(refresh).contains("recomputeActiveTheme")
+    }
+
+    /**
+     * Per-layout theme binding: deleting a DIY theme that only a LAYOUT is bound to changes the
+     * effective theme without touching the `theme` preference (the store is another prefs file),
+     * so no config listener fires. The Theme Manager must tell the keyboard to re-resolve.
+     */
+    @Test
+    fun deletingACustomThemeTellsTheKeyboardToReResolveLayoutBindings() {
+        val manager = source("tribixbite/cleverkeys/activities/ThemeSettingsActivity.kt")
+        val deleteBranch = manager.substringAfter("CustomThemePrefPolicy.deleteCustomTheme(").substringBefore("showDeleteConfirm = null")
+        assertThat(deleteBranch).contains("notifyKeyboardThemeChanged(context)")
     }
 
     /**

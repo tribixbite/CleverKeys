@@ -2317,4 +2317,15 @@
     <string name="cmd_append_possessive_desc">Gắn \'s vào từ đã xác minh gần nhất; một lần backspace chỉ xóa hậu tố</string>
     <string name="cmd_append_apostrophe">Thêm dấu nháy đơn vào cuối</string>
     <string name="cmd_append_apostrophe_desc">Gắn dấu nháy đơn vào từ đã xác minh gần nhất (parents\'); một lần backspace chỉ xóa hậu tố</string>
+    <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
+    <string name="layout_theme_chip">Chủ đề: %1$s</string>
+    <string name="layout_theme_title">Chủ đề của bố cục</string>
+    <string name="layout_theme_follow_global">Theo chủ đề chung</string>
+    <string name="layout_theme_follow_global_desc">Hiện tại: %1$s</string>
+    <string name="layout_theme_dialog_desc">Khi bố cục này đang dùng, bàn phím sử dụng chủ đề đã chọn. Chủ đề chung trong Trình quản lý chủ đề không thay đổi.</string>
+    <string name="layout_theme_missing">Chủ đề %1$s không có trên thiết bị này nên chủ đề chung được dùng.</string>
+    <string name="layout_theme_xml_invalid">Thuộc tính theme phải là ID chủ đề, ví dụ rosepine hoặc decorative_neon_cyberpunk</string>
+    <string name="layout_theme_search_hint">Tìm chủ đề</string>
+    <string name="layout_theme_no_results">Không có chủ đề phù hợp</string>
+    <string name="import_preview_layout_theme_change">%1$s: chủ đề %2$s → %3$s</string>
 </resources>
