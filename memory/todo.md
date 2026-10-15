@@ -129,6 +129,17 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     custom-swipe paste type the clip, Backspace PASS; inline clipboard editor Ctrl+V leaked to
     the app behind it — fixed in `3439fff0` (with the search/tag-field paste leak), not yet
     re-checked on a device.
+24. [x] agent: DONE 2026-10-15 — maintainer request "ship predefined layouts that mimic iOS,
+    SwiftKey, and Gboard (3 separate)". `latn_qwerty_us_{ios,gboard,swiftkey}_style.xml`
+    ("QWERTY (iOS-style)" etc.), each with its own bottom row (`bottom_row="false"`), the
+    product's widths and hints, SwiftKey with an embedded number row; the standard bottom
+    row's keys moved to corners. Researched from Apple/Microsoft support pages and a 9to5Google
+    Gboard 16 screenshot (sources in each file's header). `StyleLayoutsTest` (mock, real
+    parser); wiki "Familiar-style layouts" in `docs/wiki/layouts/adding-layouts.md`.
+25. [ ] device: visual check of the three "-style" layouts (Layout Manager > Add Layout):
+    side-by-side with the real keyboards' screenshots for row indent, Shift/Delete and
+    bottom-row widths, hint placement, the "123"/"?123" labels; swipe a few words on each;
+    123 opens the number pane and ABC returns; corner swipes on 123/emoji/comma/enter.
 
 ## Device results recorded 2026-10-07/08
 

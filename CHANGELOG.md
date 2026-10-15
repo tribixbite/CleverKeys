@@ -29,6 +29,12 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Added
 
+- **Familiar-style layouts**: QWERTY (iOS-style), QWERTY (Gboard-style) and QWERTY
+  (SwiftKey-style) copy the default US-English letter pane of those keyboards: rows, number
+  row, letter hints, key widths and the bottom row (123 / emoji / space / return; ?123 / comma /
+  space / period / enter; 123 / emoji / comma / space / period / enter). All three are complete
+  a–z Latin layouts, so both swipe engines serve them. Layout only; not affiliated with Apple,
+  Google or Microsoft.
 - **Russian swipe** (validation-tested) — the first non-Latin CTC script — plus early Greek and
   provisional Ukrainian, Bulgarian, Macedonian and Hebrew support, each via its language pack.
   Imported Latin-script language packs are served by CTC when the pack is typeable.

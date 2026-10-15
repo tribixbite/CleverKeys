@@ -29,6 +29,41 @@ CleverKeys includes several pre-installed layouts:
 | **Dvorak** | Alternative English layout |
 | **Colemak** | Ergonomic alternative layout |
 
+### Familiar-style layouts
+
+If you are coming from another phone keyboard, three US-English QWERTY layouts copy the
+arrangement of its default letter pane, so your thumbs find keys where they expect them.
+Add one from **Settings > Layout Manager > Add Layout**.
+
+| Layout | Number row | Letter hints | Bottom row (key widths) |
+|--------|------------|--------------|-------------------------|
+| **QWERTY (iOS-style)** | none | none | 123 (1.25) · emoji (1.25) · space (5) · return (2.5) |
+| **QWERTY (Gboard-style)** | none | digits 1–0 on the top row | ?123 (1.5) · comma, emoji above (1) · space (5) · period (1) · enter (1.5) |
+| **QWERTY (SwiftKey-style)** | 1–0 | one symbol per letter (`% ^ ~ \| [ ] < > { }`, `@ # & * - + = ( )`, `_ $ " ' : ; /`) | 123 (1) · emoji (1) · comma, mic above (1) · space (4.5) · period, `? !` (1) · enter (1.5) |
+
+All three keep the half-key indent of the second row and have all 26 letters as keys, so
+both swipe engines serve them as they serve standard QWERTY. Their own bottom row replaces
+CleverKeys' standard one, so the standard row's keys moved to corners: Ctrl and Fn on the
+123 key; settings, clipboard, GIF and the keyboard picker on the emoji key (Gboard-style: on
+the comma); arrows, Home/End of document and dictation on enter (SwiftKey-style: dictation
+on the comma); and the space bar still moves the cursor when you slide along it.
+
+What they cannot copy:
+
+- **Symbol pages.** 123 / ?123 opens CleverKeys' own number pane, not the other keyboard's
+  symbol pages.
+- **Press-and-hold menus.** Hints are swipe corners here: swipe toward the hint or, with
+  the subkey popover on, hold the key. iOS-style accents come from your language's extra
+  keys.
+- **Keys drawn outside the keyboard**, such as the iPhone's globe and microphone buttons
+  below the keys: these are the keyboard-picker and dictation corners instead.
+- **Extra Keys.** Keys enabled under **Settings > Extra Keys** (for example cut/copy/paste
+  on Z/X/C/V) are still added as on every layout; turn them off there for a cleaner board.
+
+These layouts describe a key arrangement only. CleverKeys is not affiliated with or
+endorsed by Apple, Google or Microsoft; iOS, Gboard and SwiftKey are their owners'
+trademarks.
+
 ## Adding Language Layouts
 
 ### Via Language Pack Import

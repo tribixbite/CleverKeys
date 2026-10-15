@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- QWERTY (SwiftKey-style): a US-English letter pane laid out like Microsoft SwiftKey's
+Android keyboard with its number row and long-press symbols shown. Layout only:
+"SwiftKey-style" describes the arrangement; this layout is not affiliated with or endorsed
+by Microsoft, and copies no artwork or fonts.
+
+References: Microsoft SwiftKey support articles "How do I turn the number row on/off"
+(https://support.microsoft.com/en-us/swiftkey-keyboard/how-do-i-turn-the-number-row-on-off-in-microsoft-swiftkey-keyboard),
+"Use long-press symbols" (https://support.microsoft.com/en-gb/swiftkey-keyboard/how-do-i-turn-on-off-symbols-on-my-keyboard)
+and "How to use Emoji" (https://support.microsoft.com/en-us/swiftkey-keyboard/how-to-use-emoji-with-microsoft-swiftkey-keyboard).
+
+What is mimicked:
+- a number row 1-0 above three letter rows (embedded, so CleverKeys' optional number row
+  is not added a second time);
+- SwiftKey's long-press symbol for every letter, shown as the top hint (swipe up):
+  % ^ ~ | [ ] < > { } on the top row, @ # & * - + = ( ) and _ $ " ' : ; / below;
+- the second row indented by half a key; Shift and Delete 1.5 keys wide;
+- bottom row "123 | emoji | , | space | . | enter" at 1 / 1 / 1 / 4.5 / 1 / 1.5 key widths,
+  with dictation as the comma's top hint and ? ! on the period, where SwiftKey draws them.
+
+How the SwiftKey features map onto CleverKeys keys:
+- 123 is `switch_numeric` with a "123" label. It opens CleverKeys' own number pane; the
+  SwiftKey number and symbol panes cannot be expressed by a layout file.
+- SwiftKey's hold-the-emoji-key globe becomes the emoji key's `loc change_method` corner;
+  settings, clipboard and GIF sit on its other corners.
+- Long-press symbols are swipe-up corners here (with the subkey popover on, holding the key
+  also offers them).
+- Ctrl, Fn, the arrow keys and the remaining CleverKeys bottom-row keys stay reachable as
+  corner swipes on 123, enter, Shift and Delete.
+-->
+<keyboard name="QWERTY (SwiftKey-style)" script="latin" bottom_row="false" embedded_number_row="true">
+  <row height="0.75">
+    <key c="1"/>
+    <key c="2"/>
+    <key c="3"/>
+    <key c="4"/>
+    <key c="5"/>
+    <key c="6"/>
+    <key c="7"/>
+    <key c="8"/>
+    <key c="9"/>
+    <key c="0"/>
+  </row>
+  <row>
+    <key c="q" n="%"/>
+    <key c="w" n="^"/>
+    <key c="e" n="~" se="loc €"/>
+    <key c="r" n="|"/>
+    <key c="t" n="["/>
+    <key c="y" n="]"/>
+    <key c="u" n="&lt;"/>
+    <key c="i" n="&gt;"/>
+    <key c="o" n="{"/>
+    <key c="p" n="}"/>
+  </row>
+  <row>
+    <key shift="0.5" c="a" n="\@"/>
+    <key c="s" n="\#" sw="loc ß"/>
+    <key c="d" n="&amp;"/>
+    <key c="f" n="*"/>
+    <key c="g" n="-"/>
+    <key c="h" n="+"/>
+    <key c="j" n="="/>
+    <key c="k" n="("/>
+    <key c="l" n=")"/>
+  </row>
+  <row>
+    <key width="1.5" c="shift" nw="home" ne="end" se="loc tab" sw="loc capslock"/>
+    <key c="z" n="_"/>
+    <key c="x" n="$" ne="loc †"/>
+    <key c="c" n="&quot;"/>
+    <key c="v" n="'"/>
+    <key c="b" n=":"/>
+    <key c="n" n=";"/>
+    <key c="m" n="/"/>
+    <key width="1.5" c="backspace" nw="delete_last_word" ne="delete" sw="loc esc" se="loc menu" n="loc page_up" s="loc page_down"/>
+  </row>
+  <row height="0.95">
+    <key c="123:switch_numeric" nw="ctrl" ne="fn" sw="loc switch_greekmath" se="loc meta" n="loc alt" s="loc compose"/>
+    <key c="switch_emoji" nw="loc change_method" ne="config" sw="loc switch_clipboard" se="switch_gif" n="switch_back_clipboard"/>
+    <key c="," n="loc voice_typing"/>
+    <key width="4.5" c="space" n="loc switch_forward" s="loc switch_backward" w="cursor_left" e="cursor_right"/>
+    <key c="." n="\?" ne="!"/>
+    <key width="1.5" c="enter" ne="action" n="up" s="down" w="left" e="right" sw="doc_home" se="doc_end"/>
+  </row>
+</keyboard>

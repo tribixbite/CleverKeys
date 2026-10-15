@@ -1450,6 +1450,8 @@ tasks.register('runMockTests', JavaExec) {
     // GH #186/#61: layout switch -> active language through the real Config, the layouts
     // serializer (backup round trip, invalid-code sanitising) and the XML `language` attribute.
     'tribixbite.cleverkeys.LayoutLanguageBindingConfigTest',
+    // iOS-/Gboard-/SwiftKey-style predefined layouts through the real layout parser.
+    'tribixbite.cleverkeys.StyleLayoutsTest',
     'tribixbite.cleverkeys.ThemeBorderPaintOpacityTest',
     // Audit 2026-09-06 W7 (H-8, #77 residual): all-null loc-stripped pane cells render as
     // empty space — onDraw consults Keyboard2View.keyCellIsEmpty before drawKeyFrame.
