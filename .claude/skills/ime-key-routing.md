@@ -428,6 +428,14 @@ From docs/research/2026-10-15-ime-editor-actions.md §4.2, all in `handleEditing
   `KeyEventHandler.deliverProcessTextResult` inserts only into the same package/field/inputType
   with the identical receipt, after finishing composition, and verifies the replacement;
   otherwise the result goes to the clipboard with feedback. Only the latest request counts.
+  The trampoline is started with NEW_TASK | CLEAR_TASK (`TRAMPOLINE_LAUNCH_FLAGS`): with
+  NEW_TASK alone a chooser left open by Home kept the task and, on API 34's IntentResolver, the
+  next press only brought that stale chooser back — the new request was never answered.
+  End-to-end proof: `ProcessTextResultInstrumentedTest` (androidTest; editor and processor are
+  Java activities in the TEST APK's own process — kotlin-stdlib and app classes are absent
+  there — so CleverKeys sees a foreign app and the onStartInput delivery path runs; the
+  chooser is tapped with UiAutomator; SystemUI's clipboard overlay is switched off via
+  `device_config ... clipboard_overlay_enabled` because it covers the chooser's first target).
 - **SuggestionSpan on commit**: swipe auto-insert passes the bar words, a tap replacing a swipe
   word passes that word + the bar, typed autocorrect passes the typed word;
   `SuggestionSpanPolicy` (≤5 alternatives, ≤48 chars, text fields allowing suggestions only)

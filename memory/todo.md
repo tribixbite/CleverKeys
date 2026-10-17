@@ -212,10 +212,20 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     cases) and select line (visual line) in Chrome PASS after `fcbef011`; Replace popup shows
     swipe alternatives PASS; "Replacement Suggestions (Editor)" listed, Text Assist (Editor Menu)
     gone PASS; Termux: word moves move the shell cursor, select word/line, case cycle and share
-    refuse with no change PASS. STILL OPEN: the process-text RESULT return path — Gemini closed
-    without a result and Google Translate's TapToTranslate offers no replace action, so no
-    installed app has returned text yet; needs an app that returns EXTRA_PROCESS_TEXT (e.g. a
-    small test app or a text-rewriting app). Compose-field checks not run.
+    refuse with no change PASS. On the phones no installed app returned text (Gemini closed
+    without a result; Google Translate's TapToTranslate has no replace action). Process-text
+    RESULT path — EMULATOR PASS 2026-10-17: `ProcessTextResultInstrumentedTest` (a foreign
+    editor + an EXTRA_PROCESS_TEXT upper-casing app in the test APK's own process, the real
+    service key_up → trampoline → system chooser tapped by UiAutomator → forwarded result),
+    emulator.wtf Pixel7 API 33 (system ChooserActivity) and API 34 (IntentResolver), 3/3 each:
+    in place (`say hello world now` → `say HELLO WORLD now`, caret 15); field changed while the
+    app was open → field untouched, clipboard `HELLO WORLD`, bar message shown; no trampoline
+    left live or in the visible recents. Bug found and fixed: with NEW_TASK alone, pressing the
+    command while an earlier chooser was left open (Home) brought that stale task forward on
+    API 34 and the new request was never answered — the trampoline task is now cleared on each
+    launch (`TextActionLauncher.TRAMPOLINE_LAUNCH_FLAGS`; pre-fix APK fails
+    `aChooserLeftOpenDoesNotAnswerTheNextRequest` on 34, passes on 33). Still owed on a phone:
+    one real rewriting/translating app that returns text, and Compose-field checks.
 31. [x] agent: DONE 2026-10-17 — `textAssistMenu` removed (maintainer decision; research §4.1:
     android.R.id.textAssist is handled by no editor, so it was always a silent no-op). Gone from
     the catalogue (palette/search; never an extra key), wiki (237 → 236 commands) and strings
