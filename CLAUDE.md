@@ -145,6 +145,13 @@ spread); the CTC swipe lexicon uses `en_enhanced.json` (compressed 134..255). Th
 `byte = 255 − rank`: 98,139/98,140 words differ (help 180 vs 218). Autocorrect harnesses that
 read the JSON measured the wrong dictionary; DD-M's M=32 failed on the Pixel (2026-10-12).
 
+## Instrumented tests on API 36+ (2026-10-17)
+
+Espresso < 3.7.0 dies on Android 16+ (`InputManager.getInstance` removed). The emulator.wtf
+36/37 images report a hardware keyboard with `show_ime_with_hard_keyboard=0`, so the IME
+input view never shows: tests that need it on screen use `ShowImeWithHardKeyboardRule`.
+A bare `EditorInfo()` is `TYPE_NULL`, i.e. a blind REMOTE field — set an input type.
+
 ## PAL model preference
 
 Use Gemini 3.8 (`gemini-3.8-flash`) for PAL consultation; never use Gemini 3.1.

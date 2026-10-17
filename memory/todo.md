@@ -236,6 +236,21 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     "Replacement Suggestions (Editor)" with a new description in all 21 locales (→ item 8
     review). Fail-first: ReleaseClaimCommandCatalogueTest 3 red, EditingCommandParityTest 1 red.
     Device check folded into item 30(d): the renamed command still opens the popup.
+32. [x] agent: DONE 2026-10-17 — instrumented coverage on Android 15/16/17 (emulator.wtf
+    Pixel7 API 35/36/37, full unfiltered suite, real `ctc_bench` encoders). Final: API 37
+    1606/1606, API 35 1606/1606, API 36 1605/1606 with the last failure fixed (class 3/3).
+    No app bug found; app APK byte-identical throughout (still compile/target 34). Fixes were
+    harness-only: espresso 3.7.0 stack (API 36 removed `InputManager.getInstance`, 100 tests),
+    `ShowImeWithHardKeyboardRule` (36/37 images ship `show_ime_with_hard_keyboard=0`),
+    clipboard-overlay swipe in the process-text test, and 9 stale `TYPE_NULL` fixtures
+    (fail on every API since `68d91874`). Details: `.claude/skills/ew-cli-testing.md`
+    "API 35–37 coverage". targetSdk-bump prerequisites found (maintainer decision, not done):
+    (a) targetSdk 35 forces edge-to-edge — only Settings and Launcher handle system-bar insets
+    out of 15 activities; (b) targetSdk 35 needs `values-id` beside `values-in` (build.gradle
+    TODO); (c) targetSdk 36 makes predictive back default — no custom back handling exists, so
+    low risk, but every Compose dialog/activity back path needs a device pass; (d) targetSdk 37
+    can no longer opt out of large-screen orientation/resizability; (e) Android 18 drops
+    implicit URI grants — both share paths are already explicit.
 
 ## Device results recorded 2026-10-07/08
 

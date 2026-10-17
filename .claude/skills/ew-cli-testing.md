@@ -181,7 +181,9 @@ Activity is auto-launched per test (~1.2-1.8s overhead). Assertion failures surf
 | Device | API | Notes |
 |--------|-----|-------|
 | `model=Pixel7,version=34` | 34 (Android 14) | **Default — stable, x86_64 support** |
-| `model=Pixel7,version=35` | 35 (Android 15) | Optional additional API coverage |
+| `model=Pixel7,version=35` | 35 (Android 15) | Full suite green 2026-10-17 |
+| `model=Pixel7,version=36` | 36 (Android 16) | Full suite green 2026-10-17 (needs espresso ≥ 3.7.0) |
+| `model=Pixel7,version=37` | 37 (Android 17) | Full suite green 2026-10-17 (needs espresso ≥ 3.7.0) |
 | `model=Pixel6,version=33` | 33 (Android 13) | IS_SENSITIVE flag testing |
 
 **Do NOT use API 30** — x86 only, ONNX native libs are x86_64.
@@ -426,3 +428,40 @@ Exact app/test/release hashes and earlier failed-fixture evidence are recorded i
 `docs/specs/testing-strategy.md`; do not confuse that cloud result with pending Seeker
 manual checks. Combined assemble+lint needs the generated language-pack copy producer
 wired to asset merge, AndroidTest lint model generation AND AndroidTest lint analysis.
+
+
+## API 35–37 coverage (2026-10-17)
+
+Android 17 is rolling out; the app stays compileSdk/targetSdk 34. Same app APK
+(sha256 `189e6a55…2e3b7`) on every run, so no production code changed. Unfiltered
+3-shard orchestrated runs with the four genuine `ctc_bench` encoders:
+
+| API | First run | Final |
+|-----|-----------|-------|
+| 37 | 1492/1605 (113 failed) | **1606/1606** (run `9ecf3c72`) |
+| 36 | 1492/1605 (113 failed) | 1605/1606, last failure fixed → class 3/3 (`ccd85f35`) |
+| 35 | 1596/1605 (9 failed) | **1606/1606** (`90510405`) |
+
+No failure was an app bug on newer Android. Root causes:
+
+1. **Espresso < 3.7.0 is dead on API 36+** (100 tests on 36/37): every Espresso and Compose
+   rule interaction threw `NoSuchMethodException: android.hardware.input.InputManager.getInstance`
+   — a hidden API Android 16 removed. Fixed by espresso-core 3.7.0 + runner/rules/core 1.7.0 +
+   ext:junit 1.3.0 (`gradle.lockfile` regenerated; re-check the hand-kept
+   `kotlin-stdlib-common … debugAndroidTestRuntimeClasspath` line after any regeneration).
+2. **The 36/37 images ship `show_ime_with_hard_keyboard=0` with `keyboard=qwerty`** (35 ships 1).
+   AOSP `onEvaluateInputViewShown()` then refuses every show — ImeTracker logs
+   `onFailed at PHASE_IME_ON_SHOW_SOFT_INPUT_TRUE`, and `isInputViewShown` never turns true
+   (3 tests + the process-text bar message). Platform-standard; a phone without a physical
+   keyboard is unaffected. Any test that needs the input view ON SCREEN must use
+   `ShowImeWithHardKeyboardRule` (sets 1, logs and restores the prior value).
+3. **SystemUI clipboard overlay on 36/37** has no "Dismiss copied text" node and ignores the
+   `clipboard_overlay_enabled` device_config flag; it sat over the chooser's first target and
+   ate all taps. `ProcessTextResultInstrumentedTest` now swipes `clipboard_ui` away.
+4. **Stale on every API, not version-specific** (9 tests): since `68d91874` a `TYPE_NULL` editor
+   is a blind REMOTE field, and a bare `EditorInfo()` IS `TYPE_NULL` — fixtures must set
+   `inputType = TYPE_CLASS_TEXT` (TerminalUtils, SuggestionStateMachine).
+
+Android 17 all-apps changes checked against the code: implicit URI grants for ACTION_SEND
+(Android 18 enforcement) — both share paths already grant explicitly or send text only;
+"IME visibility not restored after unhandled rotation" concerns host apps, not the IME.
