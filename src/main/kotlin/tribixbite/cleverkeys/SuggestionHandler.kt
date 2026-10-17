@@ -1110,7 +1110,8 @@ class SuggestionHandler(
                 }
 
                 val committedWord = onSuggestionSelected(
-                    topPrediction, ic, editorInfo, resources, isManualSelection = false, commitGuard = commitGuard
+                    topPrediction, ic, editorInfo, resources, isManualSelection = false, commitGuard = commitGuard,
+                    alternatives = barWords,
                 )
                 if (committedWord == null) {
                     clearRejectedCommitState()
@@ -1311,6 +1312,27 @@ class SuggestionHandler(
     }
 
     /**
+     * [text] carrying [word]'s alternatives as a SuggestionSpan ([SuggestionSpanPolicy],
+     * [SuggestionSpanCommit]), or [text] itself when there are none, the field does not take
+     * suggestions, or it is [excluded] (password, terminal-style / blind editor).
+     */
+    private fun withSuggestionSpan(
+        text: String,
+        word: String,
+        candidates: List<String>,
+        editorInfo: EditorInfo?,
+        excluded: Boolean,
+    ): CharSequence {
+        if (excluded || candidates.isEmpty() || editorInfo == null) return text
+        if (isTerminalEditor(editorInfo) || !SuggestionSpanPolicy.fieldAccepts(editorInfo.inputType)) return text
+        val plan = SuggestionSpanPolicy.plan(text, word, candidates) ?: return text
+        // The keyboard language's locale; the platform default if it is unset or malformed.
+        val locale = runCatching { java.util.Locale.forLanguageTag(config.primary_language) }.getOrNull()
+            ?.takeIf { it.language.isNotEmpty() } ?: java.util.Locale.getDefault()
+        return SuggestionSpanCommit.decorate(text, plan, locale)
+    }
+
+    /**
      * Called when user selects a suggestion from the suggestion bar.
      * Handles autocorrect, text replacement, and context updates.
      *
@@ -1325,6 +1347,8 @@ class SuggestionHandler(
      *         no InputConnection, or a rejected/throwing editor write). The swipe path uses
      *         this acknowledgement for ownership and ML capture; strict text ownership
      *         additionally requires editor readback.
+     * @param alternatives the other candidates of a swipe commit (the bar's words); offered by
+     *         the editor's Replace popup through a SuggestionSpan ([SuggestionSpanPolicy]).
      */
     fun onSuggestionSelected(
         word: String?,
@@ -1332,7 +1356,8 @@ class SuggestionHandler(
         editorInfo: EditorInfo?,
         resources: Resources,
         isManualSelection: Boolean = false,
-        commitGuard: EditorCommitGuard? = null
+        commitGuard: EditorCommitGuard? = null,
+        alternatives: List<String> = emptyList()
     ): String? {
         // Null/empty check
         if (word.isNullOrBlank()) return null
@@ -1793,8 +1818,19 @@ class SuggestionHandler(
                 }
 
                 vlog { "Committing text: len=${textToInsert.length}" }
+                // The other candidates ride along as a SuggestionSpan for the editor's Replace
+                // popup: a swipe's bar words, or — for a tap that replaced a swiped word — that
+                // word and the bar (research 2026-10-15 §1.2). Same characters either way, so
+                // the commit guard's readback is unaffected.
+                val spanCandidates = alternatives.ifEmpty {
+                    replacedSwipeWord?.let { listOf(it) + (suggestionBar?.getCurrentSuggestions() ?: emptyList()) } ?: emptyList()
+                }
+                val committedText = withSuggestionSpan(
+                    textToInsert, insertedWord, spanCandidates, editorInfo,
+                    excluded = inTermuxApp || terminalAppend != null || inPasswordField,
+                )
                 if ((commitGuard != null && !commitGuard.prepare(inputConnection)) ||
-                    !inputConnection.commitText(textToInsert, 1) ||
+                    !inputConnection.commitText(committedText, 1) ||
                     (commitGuard != null && !commitGuard.accepted(inputConnection, textToInsert))) {
                     clearRejectedCommitState()
                     return null
@@ -3164,8 +3200,15 @@ class SuggestionHandler(
                             // Delete the typed word + space (already committed)
                             inputConnection.deleteSurroundingText(completedWord.length + 1, 0)
 
-                            // Insert the corrected word WITH trailing space (normal apps only)
-                            inputConnection.commitText("$correctedWord ", 1)
+                            // Insert the corrected word WITH trailing space (normal apps only), the
+                            // typed word offered back through the editor's Replace popup.
+                            inputConnection.commitText(
+                                withSuggestionSpan(
+                                    "$correctedWord ", correctedWord, listOf(completedWord), editorInfo,
+                                    excluded = isPasswordMode || SuggestionBar.isPasswordField(editorInfo),
+                                ),
+                                1,
+                            )
 
                             // Update context with corrected word (learn-once: typed words only)
                             if (typedThisSession) updateContext(correctedWord)

@@ -604,6 +604,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.EditorTextNavigationTest',
     'tribixbite.cleverkeys.CaseCycleTest',
     'tribixbite.cleverkeys.ProcessTextReturnTest',
+    'tribixbite.cleverkeys.SuggestionSpanPolicyTest',
     'tribixbite.cleverkeys.AccentNormalizerTest',
     'tribixbite.cleverkeys.DictionaryWordTest',
     'tribixbite.cleverkeys.BeamSearchModelsTest',
@@ -1445,6 +1446,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.InlineFieldShortcutTest',
     // 2026-10-17: new editor commands against a fake editor (readback, refusals, inline routing).
     'tribixbite.cleverkeys.EditorTextCommandsTest',
+    // 2026-10-17: swipe/autocorrect commits carry their alternatives as a SuggestionSpan.
+    'tribixbite.cleverkeys.SuggestionSpanCommitTest',
     // Review 2026-10-07: late own-write selection callbacks (suffix ledger lifetime, two-write
     // commits).
     'tribixbite.cleverkeys.SuggestionHandlerOwnedCallbackTest',
