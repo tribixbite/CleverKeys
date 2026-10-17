@@ -3239,7 +3239,9 @@ class SuggestionHandler(
                     //    URL/email/path fragment (UT-3) — see
                     //    AutocorrectContextGuard.shouldOfferAddToDictionary.
                     // W7: never offer a post-joiner fragment ("roll" of "rock-n-roll") to the dictionary.
-                    if (text == " " && !stemUnmerged && swipeOffer == null) {
+                    // Never in a terminal / blind field: the tracked word there is unverifiable
+                    // (see the exact-add guard in updatePredictionsForCurrentWord).
+                    if (text == " " && !stemUnmerged && swipeOffer == null && !isTerminalEditor(editorInfo)) {
                         val wordPredictor = predictionCoordinator.getWordPredictor()
                         val dictionaryManager = predictionCoordinator.getDictionaryManager()
                         val shouldPrompt = AutocorrectContextGuard.shouldOfferAddToDictionary(
@@ -3612,7 +3614,10 @@ class SuggestionHandler(
                 val finalWords: List<String>
                 val finalScores: List<Int>
                 val finalMetas: List<SuggestionMeta>
-                if (config.show_exact_typed_word && partial.length >= 2) {
+                // A terminal / blind field's tracked word cannot be verified (Termux toolbar keys,
+                // shell completion and ^C change the line unseen — Saga 2026-10-17 offered
+                // `+foocbar`), so it is never offered for the dictionary there.
+                if (config.show_exact_typed_word && partial.length >= 2 && !inTerminal) {
                     // Check if the exact partial (with capitalization) is already in predictions
                     val exactTyped = if (shouldCapitalize) {
                         partial.replaceFirstChar {

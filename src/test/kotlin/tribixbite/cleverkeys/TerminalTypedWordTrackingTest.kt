@@ -335,6 +335,52 @@ class TerminalTypedWordTrackingTest {
         assertWithMessage("ordinary editor bar").that(barPosts.last()).containsExactly("foolhardy", "foodborne")
     }
 
+    /**
+     * Saga 2026-10-17 (release d8be659b): after Termux's toolbar Ctrl+C the tracked word was the
+     * stale `foocbar`, the bar offered `+foocbar`, and tapping it added that word to the user's
+     * dictionary. A terminal's tracked word cannot be verified, so it is never offered for adding.
+     */
+    @Test
+    fun aTerminalNeverOffersTheTrackedWordForTheDictionary() {
+        config.show_exact_typed_word = true
+        every { predictor.isInDictionary(any()) } returns false
+        every { predictor.isInDictionary(any(), any()) } returns false
+        val termux = editor()
+        predictions["foocbar"] = listOf("foocbars")
+        type("foocbar", termux)
+        runPredictions()
+        assertWithMessage("terminal bar for the unverifiable word 'foocbar'")
+            .that(barPosts.flatten().filter { it.startsWith(Suggestion.EXACT_ADD_PREFIX) }).isEmpty()
+    }
+
+    @Test
+    fun anOrdinaryEditorStillOffersTheTypedWordForTheDictionary() {
+        config.show_exact_typed_word = true
+        every { predictor.isInDictionary(any()) } returns false
+        every { predictor.isInDictionary(any(), any()) } returns false
+        val notes = editor("com.example.notes")
+        predictions["foocbar"] = listOf("foocbars")
+        type("foocbar", notes)
+        runPredictions()
+        assertWithMessage("ordinary editor bar").that(barPosts.last())
+            .contains(Suggestion.ExactAdd("foocbar").wire)
+    }
+
+    @Test
+    fun spaceAfterAnUnknownTerminalWordNeverPromptsToAddIt() {
+        every { predictor.isInDictionary(any()) } returns false
+        every { predictor.isInDictionary(any(), any()) } returns false
+        val termux = editor()
+        type("foocbar", termux)
+        runPredictions()
+        barPosts.clear()
+        handler.handleRegularTyping(" ", ic, termux)
+        runPredictions()
+        assertWithMessage("bar after space in a terminal")
+            .that(barPosts.flatten().filter { it.startsWith(Suggestion.DICT_ADD_PREFIX) }).isEmpty()
+        assertWithMessage("add-to-dictionary prompt armed").that(handler.getField("specialPromptActive")).isEqualTo(false)
+    }
+
     @Test
     fun exactAddInATerminalDeletesNothing() {
         val termux = editor()
@@ -445,6 +491,19 @@ class TerminalTypedWordTrackingTest {
                 field.isAccessible = true
                 field.set(this, value)
                 return
+            }
+            cls = cls.superclass
+        }
+        throw AssertionError("field '$name' not found on ${javaClass.simpleName}")
+    }
+
+    private fun Any.getField(name: String): Any? {
+        var cls: Class<*>? = javaClass
+        while (cls != null) {
+            val field = cls.declaredFields.firstOrNull { it.name == name }
+            if (field != null) {
+                field.isAccessible = true
+                return field.get(this)
             }
             cls = cls.superclass
         }
