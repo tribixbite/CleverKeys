@@ -156,6 +156,7 @@ class EditorTextCommandsTest {
     @After
     fun teardown() {
         unmockkAll()
+        ProcessTextReturn.reset()
     }
 
     // ------------------------------------------------------------------ word moves (command 5)
@@ -414,6 +415,107 @@ class EditorTextCommandsTest {
             inlineMode = mode
             assertEquals(mode, emptyList<String>(), press("shareText"))
         }
+    }
+
+    // ------------------------------------------------------------------ process text (command 2)
+
+    /** Launches recorded by the mocked trampoline: request id → selected text. */
+    private val launches = mutableListOf<Pair<Long, String>>()
+    private var launchSucceeds = true
+    private lateinit var clipboard: android.content.ClipboardManager
+
+    private fun mockProcessText() {
+        ProcessTextReturn.reset()
+        mockkObject(TextActionLauncher)
+        every { TextActionLauncher.launchForResult(any(), any(), any(), any()) } answers {
+            log += "launchForResult(${thirdArg<String>()},${arg<TextActionPolicy.TextAction>(3)})"
+            if (launchSucceeds) launches += secondArg<Long>() to thirdArg<String>()
+            launchSucceeds
+        }
+        clipboard = mockk(relaxed = true)
+        every { clipboard.setPrimaryClip(any()) } answers { log += "setPrimaryClip" }
+        every { context.getSystemService(Context.CLIPBOARD_SERVICE) } returns clipboard
+        mockkStatic(android.content.ClipData::class)
+        every { android.content.ClipData.newPlainText(any(), any()) } answers { log += "clip(${secondArg<CharSequence>()})"; mockk() }
+    }
+
+    private fun deliver(): List<String> {
+        log.clear()
+        handler.deliverProcessTextResult()
+        return log.toList()
+    }
+
+    /**
+     * The chooser used to be started with startActivity while promising an editable result, so
+     * a returned translation or rewrite was dropped (research §3.1). Now the trampoline asks for
+     * the result and the IME writes it over the original selection.
+     */
+    @Test
+    fun replaceTextWritesTheReturnedResultOverTheOriginalSelection() {
+        mockProcessText()
+        for (name in listOf("replaceText", "textAssist")) {
+            editor("say hola there", 4, 8)
+            val action = if (name == "replaceText") "REPLACE" else "ASSIST"
+            assertEquals(listOf("handle_non_text_input()", "launchForResult(hola,$action)"), press(name))
+            assertTrue(ProcessTextReturn.complete(launches.last().first, "hello"))
+            val effects = deliver()
+            assertEquals(name, "say hello there", text.toString())
+            assertEquals(name, 9 to 9, selection())
+            assertTrue(effects.toString(), effects.indexOf("finishComposingText()") < effects.indexOf("commitText(hello)"))
+            assertTrue(effects.toString(), effects.none { it.startsWith("clip(") || it.startsWith("feedback") })
+        }
+    }
+
+    @Test
+    fun aResultForAChangedTextOrAnotherFieldGoesToTheClipboardNotTheEditor() {
+        mockProcessText()
+        // The text around the selection changed while the app was open.
+        editor("say hola there", 4, 8)
+        press("replaceText")
+        text.append("!")
+        ProcessTextReturn.complete(launches.last().first, "hello")
+        assertEquals(listOf("clip(hello)", "setPrimaryClip", "feedback(str#${R.string.process_text_result_copied})"), deliver())
+        assertEquals("say hola there!", text.toString())
+        // Another field of the same app has the focus now.
+        editor("say hola there", 4, 8)
+        press("replaceText")
+        editorInfo.fieldId = 42
+        ProcessTextReturn.complete(launches.last().first, "hello")
+        assertTrue(deliver().contains("clip(hello)"))
+        assertEquals("say hola there", text.toString())
+        editorInfo.fieldId = 0
+        // An inline field opened over the app meanwhile.
+        press("replaceText")
+        inlineMode = "search"
+        ProcessTextReturn.complete(launches.last().first, "hello")
+        assertTrue(deliver().contains("clip(hello)"))
+        assertEquals("say hola there", text.toString())
+        // Nothing waiting: delivery is a no-op.
+        assertEquals(emptyList<String>(), deliver())
+    }
+
+    @Test
+    fun processTextNeedsAVerifiableSelectionInAnOrdinaryEditor() {
+        mockProcessText()
+        editor("say hola", 8)
+        assertEquals(listOf("handle_non_text_input()", "feedback(str#${R.string.text_action_no_selection})"), press("replaceText"))
+        editor("say hola", 4, 8)
+        readbackAvailable = false
+        assertEquals(listOf("handle_non_text_input()", UNAVAILABLE), press("replaceText"))
+        readbackAvailable = true
+        editorInfo.packageName = "com.termux"
+        assertEquals(listOf("handle_non_text_input()", UNAVAILABLE), press("replaceText"))
+        assertTrue(launches.isEmpty())
+    }
+
+    @Test
+    fun whenTheTrampolineCannotStartTheEditorsOwnMenuActionIsTried() {
+        mockProcessText()
+        launchSucceeds = false
+        editor("say hola", 4, 8)
+        val effects = press("replaceText")
+        assertTrue(effects.toString(), "performContextMenuAction(${android.R.id.replaceText})" in effects)
+        assertEquals(false, ProcessTextReturn.hasResult())
     }
 
     // ------------------------------------------------------------------ harness

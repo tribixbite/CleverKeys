@@ -1105,9 +1105,20 @@ class KeyEventHandler(
     }
 
     /**
-     * Text assist / replace text: the app chooser of [TextActionLauncher] (the editor's own
-     * context-menu id only as its fallback). Without a Context (UI-less receivers) only the
-     * context-menu id can be tried.
+     * Text assist / replace text: the ACTION_PROCESS_TEXT app chooser, now WITH the result.
+     *
+     * Before 2026-10-17 the chooser was started from the service with startActivity while
+     * promising an editable result (EXTRA_PROCESS_TEXT_READONLY = false), so any text an app
+     * returned was silently dropped (research §3.1). Now [ProcessTextActivity] starts the
+     * chooser for a result and [deliverProcessTextResult] writes it back — only into the same
+     * field with the same selection, else onto the clipboard. Both commands share this one
+     * implementation and differ only in the chooser title; both names stay (saved mappings,
+     * release record).
+     *
+     * Requires a selection ("no text selected" otherwise). Refused in terminal-style editors
+     * (no verifiable readback to write a result back against) and when the selection cannot be
+     * read back exactly. Without a Context (UI-less receivers) or when the trampoline cannot
+     * start, only the editor's own context-menu id is tried.
      */
     private fun launchTextAction(action: TextActionPolicy.TextAction) {
         val conn = recv.getCurrentInputConnection() ?: return
@@ -1115,7 +1126,65 @@ class KeyEventHandler(
             conn.performContextMenuAction(TextActionLauncher.fallbackMenuId(action))
             return
         }
-        TextActionLauncher.launch(ctx, conn, action) { message -> recv.showPrivateCopyFeedback(message) }
+        val selected = runCatching { conn.getSelectedText(0)?.toString() }.getOrNull()
+        if (selected.isNullOrEmpty()) {
+            recv.showPrivateCopyFeedback(TextActionPolicy.noTextSelectedMessage(action) { id, args -> ctx.getString(id, *args) })
+            return
+        }
+        if (isTerminalStyleEditor()) {
+            showFeedback(R.string.dynamic_action_unavailable)
+            return
+        }
+        val receipt = EditorReadback.capture(conn)
+        if (receipt == null || receipt.collapsed) {
+            showFeedback(R.string.dynamic_action_unavailable)
+            return
+        }
+        val info = recv.getCurrentEditorInfo()
+        val origin = ProcessTextReturn.begin(info?.packageName, info?.fieldId ?: 0, info?.inputType ?: 0, receipt)
+        if (!TextActionLauncher.launchForResult(ctx, origin.requestId, receipt.selectedText, action)) {
+            ProcessTextReturn.cancel(origin.requestId)
+            conn.performContextMenuAction(TextActionLauncher.fallbackMenuId(action))
+        }
+    }
+
+    /**
+     * Write a process-text app's returned text back (textAssist / replaceText, see
+     * [ProcessTextReturn]). Called by the service when an editor (re)starts input after a
+     * result arrived, or after a short delay when none does. The result replaces the original
+     * selection ONLY in the same field, with the same selection and text around it read back
+     * ([ProcessTextReturn.decide]), after finishing composition and re-checking; the write
+     * must read back as an exact replacement. Anything else — another field, an edited text, a
+     * terminal-style editor, an open inline field, no readback — puts the result on the
+     * clipboard with feedback, so it is never written into the wrong place.
+     */
+    fun deliverProcessTextResult() {
+        val ready = ProcessTextReturn.take<EditorReadback>() ?: return
+        val conn = recv.getCurrentInputConnection()
+        val info = recv.getCurrentEditorInfo()
+        val origin = ready.origin
+        val inserted = conn != null && info != null && runCatching {
+            val ordinary = !isTerminalStyleEditor() && canUseEditorActions()
+            val now = EditorReadback.capture(conn)
+            if (ProcessTextReturn.decide(origin, ready.result, info.packageName, info.fieldId, info.inputType, now, ordinary)
+                != ProcessTextReturn.Decision.INSERT
+            ) return@runCatching false
+            if (!conn.finishComposingText() || EditorReadback.capture(conn) != origin.receipt) return@runCatching false
+            learningHooks?.onExplicitEdit()
+            recv.onExplicitEditStarted()
+            val end = Math.addExact(origin.receipt.rangeStart, ready.result.length)
+            conn.commitText(ready.result, 1) && EditorReadback.matchesReplacement(conn, origin.receipt, ready.result, end)
+        }.getOrDefault(false)
+        if (inserted) return
+        val ctx = recv.getContext() ?: return
+        // PII: the result is never logged. The clipboard write is the user's own text, made
+        // because they asked for it; it records in history like any other copy.
+        val copied = runCatching {
+            val clipboard = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            clipboard.setPrimaryClip(android.content.ClipData.newPlainText("CleverKeys", ready.result))
+            true
+        }.getOrDefault(false)
+        showFeedback(if (copied) R.string.process_text_result_copied else R.string.dynamic_action_unavailable)
     }
 
     /**

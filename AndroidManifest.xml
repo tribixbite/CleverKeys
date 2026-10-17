@@ -146,6 +146,19 @@
 
     <activity android:name="tribixbite.cleverkeys.SwipeDebugActivity" android:label="@string/advanced_swipe_debug_log_title" android:theme="@style/swipeDebugTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
+    <!-- textAssist / replaceText (2026-10-17): transparent trampoline that starts the
+         ACTION_PROCESS_TEXT chooser FOR A RESULT (an IME service cannot receive one) and hands
+         the returned text to ProcessTextReturn. Not exported; own task (taskAffinity "") so
+         finishing returns to the app being typed in. Never noHistory: the result would be lost. -->
+    <activity
+        android:name="tribixbite.cleverkeys.ProcessTextActivity"
+        android:exported="false"
+        android:theme="@android:style/Theme.Translucent.NoTitleBar"
+        android:excludeFromRecents="true"
+        android:taskAffinity=""
+        android:directBootAware="false"
+        tools:targetApi="24"/>
+
     <!-- #156 Private copy: selection-toolbar receiver. Exported BY DESIGN (threat review:
          docs/history/audits/remediation-plans/156-private-copy-paste.md §6) but android:enabled="false"
          until the user opts in via Settings → Clipboard. Inbound-only: reads EXTRA_PROCESS_TEXT,

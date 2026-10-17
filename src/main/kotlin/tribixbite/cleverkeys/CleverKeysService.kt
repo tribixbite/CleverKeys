@@ -172,6 +172,9 @@ class CleverKeysService : InputMethodService(),
         /** Broadcast action sent when theme changes in ThemeSettingsActivity */
         const val ACTION_THEME_CHANGED = "tribixbite.cleverkeys.ACTION_THEME_CHANGED"
 
+        /** How long a returned process-text result waits for an editor to restart input. */
+        private const val PROCESS_TEXT_SETTLE_MS = 3_000L
+
         /** Flag indicating we're in short swipe customization mode (for UI to react) */
         @Volatile
         private var _customizationMode: Boolean = false
@@ -372,6 +375,11 @@ class CleverKeysService : InputMethodService(),
         // Receiver will be initialized later and set on the bridge
         _receiverBridge = KeyEventReceiverBridge.create(this, _handler)
         _keyeventhandler = KeyEventHandler(_receiverBridge)
+        // textAssist / replaceText: when a result arrives and no editor restarts input to take
+        // it (onStartInput below), deliver it anyway after a short settle delay.
+        ProcessTextReturn.onResultReady = {
+            _handler.postDelayed({ _keyeventhandler.deliverProcessTextResult() }, PROCESS_TEXT_SETTLE_MS)
+        }
 
         // Create FoldStateTracker for device fold state monitoring
         val foldStateTracker = FoldStateTracker(this)
@@ -501,6 +509,7 @@ class CleverKeysService : InputMethodService(),
 
     override fun onDestroy() {
         super.onDestroy()
+        ProcessTextReturn.onResultReady = null
 
         // Clear static instance reference
         if (_instance == this) {
@@ -695,6 +704,18 @@ class CleverKeysService : InputMethodService(),
      */
     private fun refresh_special_layout(info: EditorInfo): KeyboardData? {
         return _layoutManager?.refresh_special_layout(info)
+    }
+
+    /**
+     * textAssist / replaceText (2026-10-17): a process-text app's result waits in
+     * [ProcessTextReturn] until an editor starts input again; deliver it then (posted, so the
+     * connection is settled). Our own trampoline activity is skipped — it has no editor.
+     */
+    override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
+        super.onStartInput(attribute, restarting)
+        if (ProcessTextReturn.hasResult() && attribute != null && attribute.packageName != packageName) {
+            _handler.post { if (::_keyeventhandler.isInitialized) _keyeventhandler.deliverProcessTextResult() }
+        }
     }
 
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {

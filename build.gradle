@@ -603,6 +603,7 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-10-17: word/line boundaries of the word_left … select_line and case-cycle commands.
     'tribixbite.cleverkeys.EditorTextNavigationTest',
     'tribixbite.cleverkeys.CaseCycleTest',
+    'tribixbite.cleverkeys.ProcessTextReturnTest',
     'tribixbite.cleverkeys.AccentNormalizerTest',
     'tribixbite.cleverkeys.DictionaryWordTest',
     'tribixbite.cleverkeys.BeamSearchModelsTest',
