@@ -37,6 +37,11 @@ import tribixbite.cleverkeys.prefs.LayoutsPreference
 @RunWith(AndroidJUnit4::class)
 class LayoutThemeSuggestionBarInstrumentedTest {
 
+    /** The IME must be allowed on screen despite the emulator's hardware keyboard (API 36+ images). */
+    @get:org.junit.Rule
+    val showImeWithHardKeyboard = ShowImeWithHardKeyboardRule()
+
+
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = instrumentation.targetContext
 

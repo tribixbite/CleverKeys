@@ -54,6 +54,14 @@ import java.io.ByteArrayOutputStream
 @RunWith(AndroidJUnit4::class)
 class ProcessTextResultInstrumentedTest {
 
+    /**
+     * The suggestion bar that carries the "result copied" message exists on screen only while
+     * the input view is shown; the API 36/37 images ship show_ime_with_hard_keyboard=0 with a
+     * hardware keyboard configured, so without this the message was never observable there.
+     */
+    @get:org.junit.Rule
+    val showImeWithHardKeyboard = ShowImeWithHardKeyboardRule()
+
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context: Context = instrumentation.targetContext
     private val testPackage: String = instrumentation.context.packageName
@@ -183,12 +191,25 @@ class ProcessTextResultInstrumentedTest {
      * opened the overlay's editor instead (emulator.wtf API 33). setUp switches the overlay off
      * through device_config; this dismisses one that still shows (flag not honoured, or shown
      * before the flag was set) before tapping.
+     *
+     * API 36/37 (emulator.wtf, 2026-10-17): the flag is not honoured AND the overlay exposes no
+     * "Dismiss copied text" node — only `clipboard_ui`/`clipboard_preview` — so the button path
+     * found nothing and all 8 chooser taps landed on the overlay. There it is swiped off the
+     * screen instead (the overlay is swipe-dismissible); a swipe that starts on the overlay never
+     * reaches the chooser underneath.
      */
     private fun dismissClipboardOverlay() {
-        val dismiss = device.findObject(By.desc(CLIPBOARD_OVERLAY_DISMISS)) ?: return
-        dismiss.click()
-        device.wait(Until.gone(By.desc(CLIPBOARD_OVERLAY_DISMISS)), 3_000L)
-        Log.i(TAG, "dismissed the clipboard overlay")
+        device.findObject(By.desc(CLIPBOARD_OVERLAY_DISMISS))?.let { dismiss ->
+            dismiss.click()
+            device.wait(Until.gone(By.desc(CLIPBOARD_OVERLAY_DISMISS)), 3_000L)
+            Log.i(TAG, "dismissed the clipboard overlay")
+            return
+        }
+        val overlay = device.findObject(CLIPBOARD_OVERLAY_ROOT) ?: return
+        val bounds = overlay.visibleBounds
+        device.swipe(bounds.centerX(), bounds.centerY(), device.displayWidth - 1, bounds.centerY(), 5)
+        val gone = device.wait(Until.gone(CLIPBOARD_OVERLAY_ROOT), 3_000L) == true
+        Log.i(TAG, "swiped the clipboard overlay away (gone=$gone, bounds=$bounds)")
     }
 
     /** Wait until the system chooser lists the processor (it is NOT tapped). */
@@ -288,7 +309,8 @@ class ProcessTextResultInstrumentedTest {
         val baseline = "pt-baseline-${SystemClock.uptimeMillis()}"
         withShellClipboard { it.setPrimaryClip(ClipData.newPlainText("baseline", baseline)) }
         assertEquals(baseline, primaryClipText())
-        device.wait(Until.findObject(By.desc(CLIPBOARD_OVERLAY_DISMISS)), 3_000L)
+        // Either form of the overlay (with a dismiss button on API 33-35, without on 36+).
+        device.wait(Until.findObject(CLIPBOARD_OVERLAY_ROOT), 3_000L)
         dismissClipboardOverlay()
 
         openEditor(ORIGINAL, SEL_START, SEL_END)
@@ -358,6 +380,10 @@ class ProcessTextResultInstrumentedTest {
         const val TRAMPOLINE = "tribixbite.cleverkeys.ProcessTextActivity"
         const val STATUS_DESC = "pt-status"
         const val CLIPBOARD_OVERLAY_DISMISS = "Dismiss copied text"
+        const val SYSTEMUI = "com.android.systemui"
+
+        /** SystemUI's clipboard overlay root (Android 13+ resource id). */
+        val CLIPBOARD_OVERLAY_ROOT: androidx.test.uiautomator.BySelector = By.res(SYSTEMUI, "clipboard_ui")
         const val OVERLAY_FLAG = "clipboard_overlay_enabled"
         const val PROCESSOR_LABEL = "CK test uppercase"
         const val INPUT_PREFIX = "PT_INPUT:"

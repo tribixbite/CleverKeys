@@ -76,6 +76,11 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 class CtcImportedPackInstrumentedTest {
 
+    /** The IME must be allowed on screen despite the emulator's hardware keyboard (API 36+ images). */
+    @get:org.junit.Rule
+    val showImeWithHardKeyboard = tribixbite.cleverkeys.ShowImeWithHardKeyboardRule()
+
+
     private lateinit var context: Context
 
     /** Unassigned ISO 639-1 code: safe to create and destroy on a real device. */

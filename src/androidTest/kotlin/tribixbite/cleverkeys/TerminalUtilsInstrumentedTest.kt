@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.text.InputType
 import android.view.inputmethod.EditorInfo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -17,6 +18,25 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class TerminalUtilsInstrumentedTest {
 
+    /**
+     * An ordinary text field in [pkg]. The input type is explicit because a bare `EditorInfo()`
+     * has `inputType == TYPE_NULL`, which `TerminalUtils.editorKind` has classified as a blind
+     * REMOTE field since 68d91874 (2026-10-13) — that made every "not a terminal" case here
+     * read true on every API level. Package detection must be tested on a real text field.
+     */
+    private fun textEditor(pkg: String?) = EditorInfo().apply {
+        packageName = pkg
+        inputType = InputType.TYPE_CLASS_TEXT
+    }
+
+    @Test
+    fun typeNullEditorInOrdinaryPackageIsBlindRemoteField() {
+        val blind = EditorInfo().apply { packageName = "com.android.chrome" }
+        assertEquals(InputType.TYPE_NULL, blind.inputType)
+        assertEquals(TerminalUtils.EditorKind.REMOTE, TerminalUtils.editorKind(blind))
+        assertEquals(TerminalUtils.EditorKind.TEXT, TerminalUtils.editorKind(textEditor("com.android.chrome")))
+    }
+
     @Test
     fun customPackagesRefreshFromRealPreferencesAndRemovalIsImmediate() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -25,14 +45,14 @@ class TerminalUtilsInstrumentedTest {
             assertTrue(prefs.edit().putString("custom_terminal_packages", "org.custom.shell,org.custom.shell").commit())
             Config.initGlobalConfig(prefs, context.resources, null, null)
             val config = Config.globalConfig()
-            val custom = EditorInfo().apply { packageName = "org.custom.shell" }
+            val custom = textEditor("org.custom.shell")
             assertTrue(TerminalUtils.isTerminalApp(custom, config.custom_terminal_packages))
             assertEquals(setOf("org.custom.shell"), config.custom_terminal_packages)
-            assertFalse(TerminalUtils.isTerminalApp(EditorInfo().apply { packageName = "org.custom.shell.child" }, config.custom_terminal_packages))
+            assertFalse(TerminalUtils.isTerminalApp(textEditor("org.custom.shell.child"), config.custom_terminal_packages))
             assertTrue(prefs.edit().putString("custom_terminal_packages", "").commit())
             config.refresh(context.resources, null)
             assertFalse(TerminalUtils.isTerminalApp(custom, config.custom_terminal_packages))
-            assertTrue(TerminalUtils.isTerminalApp(EditorInfo().apply { packageName = "com.termux" }, config.custom_terminal_packages))
+            assertTrue(TerminalUtils.isTerminalApp(textEditor("com.termux"), config.custom_terminal_packages))
         } finally {
             assertTrue(prefs.edit().clear().commit())
         }
@@ -67,14 +87,14 @@ class TerminalUtilsInstrumentedTest {
 
     @Test
     fun isTerminalApp_nullPackageName_returnsFalse() {
-        val info = EditorInfo().apply { packageName = null }
+        val info = textEditor(null)
         assertFalse("null packageName should not be a terminal app",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_emptyPackageName_returnsFalse() {
-        val info = EditorInfo().apply { packageName = "" }
+        val info = textEditor("")
         assertFalse("empty packageName should not be a terminal app",
             TerminalUtils.isTerminalApp(info))
     }
@@ -85,42 +105,42 @@ class TerminalUtilsInstrumentedTest {
 
     @Test
     fun isTerminalApp_termux_returnsTrue() {
-        val info = EditorInfo().apply { packageName = "com.termux" }
+        val info = textEditor("com.termux")
         assertTrue("com.termux should be detected as terminal app",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_connectBot_returnsTrue() {
-        val info = EditorInfo().apply { packageName = "org.connectbot" }
+        val info = textEditor("org.connectbot")
         assertTrue("org.connectbot should be detected as terminal app",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_juiceSSH_returnsTrue() {
-        val info = EditorInfo().apply { packageName = "com.sonelli.juicessh" }
+        val info = textEditor("com.sonelli.juicessh")
         assertTrue("JuiceSSH should be detected as terminal app",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_termius_returnsTrue() {
-        val info = EditorInfo().apply { packageName = "com.server.auditor.ssh.client" }
+        val info = textEditor("com.server.auditor.ssh.client")
         assertTrue("Termius should be detected as terminal app",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_jackpalAndroidTerm_returnsTrue() {
-        val info = EditorInfo().apply { packageName = "jackpal.androidterm" }
+        val info = textEditor("jackpal.androidterm")
         assertTrue("jackpal.androidterm should be detected as terminal app",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_androidVirtualization_returnsTrue() {
-        val info = EditorInfo().apply { packageName = "com.android.virtualization.terminal" }
+        val info = textEditor("com.android.virtualization.terminal")
         assertTrue("Android Virtualization Framework terminal should be detected",
             TerminalUtils.isTerminalApp(info))
     }
@@ -131,7 +151,7 @@ class TerminalUtilsInstrumentedTest {
 
     @Test
     fun isTerminalApp_termuxNix_returnsTrue() {
-        val info = EditorInfo().apply { packageName = "com.termux.nix" }
+        val info = textEditor("com.termux.nix")
         assertTrue("com.termux.nix should be detected (in KNOWN set)",
             TerminalUtils.isTerminalApp(info))
     }
@@ -139,21 +159,21 @@ class TerminalUtilsInstrumentedTest {
     @Test
     fun isTerminalApp_termuxX11_returnsTrue() {
         // Matches via "termux" substring heuristic
-        val info = EditorInfo().apply { packageName = "com.termux.x11" }
+        val info = textEditor("com.termux.x11")
         assertTrue("com.termux.x11 should be detected via termux heuristic",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_termuxTasker_returnsTrue() {
-        val info = EditorInfo().apply { packageName = "com.termux.tasker" }
+        val info = textEditor("com.termux.tasker")
         assertTrue("com.termux.tasker should be detected via termux heuristic",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_anotherTermRedist_returnsTrue() {
-        val info = EditorInfo().apply { packageName = "green_green_avk.anotherterm.redist" }
+        val info = textEditor("green_green_avk.anotherterm.redist")
         assertTrue("Another Term should be detected (in KNOWN set)",
             TerminalUtils.isTerminalApp(info))
     }
@@ -161,7 +181,7 @@ class TerminalUtilsInstrumentedTest {
     @Test
     fun isTerminalApp_anotherTermVariant_returnsTrue() {
         // Matches via "anotherterm" substring heuristic
-        val info = EditorInfo().apply { packageName = "green_green_avk.anotherterm" }
+        val info = textEditor("green_green_avk.anotherterm")
         assertTrue("anotherterm variant should be detected via heuristic",
             TerminalUtils.isTerminalApp(info))
     }
@@ -169,7 +189,7 @@ class TerminalUtilsInstrumentedTest {
     @Test
     fun isTerminalApp_packageEndingInTerminal_returnsTrue() {
         // Heuristic: package ends with ".terminal"
-        val info = EditorInfo().apply { packageName = "com.example.terminal" }
+        val info = textEditor("com.example.terminal")
         assertTrue("Package ending in .terminal should be detected",
             TerminalUtils.isTerminalApp(info))
     }
@@ -177,7 +197,7 @@ class TerminalUtilsInstrumentedTest {
     @Test
     fun isTerminalApp_packageContainingTerminalDot_returnsTrue() {
         // Heuristic: package contains ".terminal."
-        val info = EditorInfo().apply { packageName = "com.example.terminal.pro" }
+        val info = textEditor("com.example.terminal.pro")
         assertTrue("Package containing .terminal. should be detected",
             TerminalUtils.isTerminalApp(info))
     }
@@ -185,7 +205,7 @@ class TerminalUtilsInstrumentedTest {
     @Test
     fun isTerminalApp_terminalEmulatorPackage_returnsTrue() {
         // Heuristic: package contains ".terminalemulator"
-        val info = EditorInfo().apply { packageName = "com.example.terminalemulator" }
+        val info = textEditor("com.example.terminalemulator")
         assertTrue("Package with .terminalemulator should be detected",
             TerminalUtils.isTerminalApp(info))
     }
@@ -196,35 +216,35 @@ class TerminalUtilsInstrumentedTest {
 
     @Test
     fun isTerminalApp_chrome_returnsFalse() {
-        val info = EditorInfo().apply { packageName = "com.android.chrome" }
+        val info = textEditor("com.android.chrome")
         assertFalse("Chrome should not be detected as terminal app",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_gmail_returnsFalse() {
-        val info = EditorInfo().apply { packageName = "com.google.android.gm" }
+        val info = textEditor("com.google.android.gm")
         assertFalse("Gmail should not be detected as terminal app",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_slack_returnsFalse() {
-        val info = EditorInfo().apply { packageName = "com.slack" }
+        val info = textEditor("com.slack")
         assertFalse("Slack should not be detected as terminal app",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_systemUI_returnsFalse() {
-        val info = EditorInfo().apply { packageName = "com.android.systemui" }
+        val info = textEditor("com.android.systemui")
         assertFalse("SystemUI should not be detected as terminal app",
             TerminalUtils.isTerminalApp(info))
     }
 
     @Test
     fun isTerminalApp_notes_returnsFalse() {
-        val info = EditorInfo().apply { packageName = "com.google.android.keep" }
+        val info = textEditor("com.google.android.keep")
         assertFalse("Google Keep should not be detected as terminal app",
             TerminalUtils.isTerminalApp(info))
     }

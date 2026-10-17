@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.text.InputType
 import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
@@ -48,7 +49,13 @@ class SuggestionStateMachineIntegrationTest {
     private lateinit var suggestionHandler: SuggestionHandler
     private lateinit var inputConnection: BaseInputConnection
     private lateinit var editText: EditText
-    private val editorInfo = EditorInfo().apply { packageName = "com.example" }
+    // An ordinary text field. A bare EditorInfo() is TYPE_NULL, which TerminalUtils treats as a
+    // blind REMOTE field since 68d91874 (2026-10-13) — that silently routed this fixture through
+    // the terminal path, where a typed prefix plus a suggestion tap no longer feeds context.
+    private val editorInfo = EditorInfo().apply {
+        packageName = "com.example"
+        inputType = InputType.TYPE_CLASS_TEXT
+    }
 
     companion object {
         private var sharedPredictor: WordPredictor? = null
