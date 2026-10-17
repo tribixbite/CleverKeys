@@ -206,34 +206,16 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     new keys. `textAssistMenu` kept (not confirmed). Fail-first per command (EditorTextCommandsTest,
     EditingCommandParityTest, SuggestionSpanCommitTest); 3009 pure / 1299 mock green. Not
     device-verified (no adb in that session) → item 30.
-30. [ ] device: editor commands (assign each to a custom swipe; Pixel/Saga, release build):
-    (a) `case_cycle` on `hello |` after a swipe in Messages/Keep → Hello → HELLO → hello, stays
-    selected; on a selection; `straße`; in Chrome and a Compose field; refused in Termux.
-    (b) `replaceText` and `textAssist` with a selection → chooser → Google Translate (or any
-    app that returns text) → result replaces the selection in an EditText, Chrome and Compose;
-    edit the text while the app is open → result on the clipboard + bar message; check the
-    trampoline leaves no recents entry and returns to the app; Samsung/Pixel chooser both
-    forward the result. (c) `shareText` in Chrome, a Compose field and an EditText: one share
-    sheet, nothing shared twice; no selection → bar message. (d) swipe a word in a stock
-    EditText (e.g. Settings search is NO_SUGGESTIONS — use Keep/Messages), select it, toolbar
-    Replace and `replaceTextMenu` (now "Replacement Suggestions (Editor)") show the other candidates; autocorrect a typo and check the
-    typed word is offered; no visible underline. (e) `word_left/right`, `select_word_left/right`,
-    `select_word`, `select_line` in EditText, Chrome, Compose and the inline clipboard editor;
-    in Termux `word_left` moves a word in bash and the select commands show "unavailable".
-    **Pixel, release `cc4fe37d` (2026-10-17):** case_cycle PASS in Chrome (`build/oct17b-pixel/
-    109-*`, `116-*`); select_word / select_line FAIL in a Chrome `<textarea>` ("Action
-    unavailable", `162-selword-chrome`, `163-selline-chrome`), PASS in an EditText (`159-*`,
-    `160-*`). Root cause: Chrome's EditorInfo variation WEB_EDIT_TEXT (0xa0) has bit 0x80, so
-    `shouldMoveCursorForceFallback` treats every web field as password-class; the readback window
-    was skipped and the two commands had no key route. FIXED (worktree commit after `cc4fe37d`):
-    in such editors (and with no readback window or a refused setSelection) they send the
-    editor's own keys — word: [Left] [Ctrl+Left unless at a word start] Ctrl+Shift+Right per
-    word; line: Home, Shift+End (visual line) — decided from the text around the cursor before
-    any key, so every refusal sends nothing (`EditorTextCommandsTest` Chrome cases, fail-first).
-    The reported cursor move before the refusal is NOT reproduced by the code: the old Chrome
-    path made no editor call before refusing. Re-check on device: Chrome textarea select_word at
-    `On|e`, `One|`, `|two`, over a selection; select_line on a wrapped line (selects the visual
-    line); a WebView field; Termux still "unavailable".
+30. [ ] device: editor commands — MOSTLY DONE 2026-10-17 (Pixel releases cc4fe37d/e940262c,
+    Saga for Termux): case cycle Hello→HELLO→hello (Chrome + EditText) PASS; Share one sheet /
+    "No text selected" PASS; word moves + select word left/right PASS; select word (4 cursor
+    cases) and select line (visual line) in Chrome PASS after `fcbef011`; Replace popup shows
+    swipe alternatives PASS; "Replacement Suggestions (Editor)" listed, Text Assist (Editor Menu)
+    gone PASS; Termux: word moves move the shell cursor, select word/line, case cycle and share
+    refuse with no change PASS. STILL OPEN: the process-text RESULT return path — Gemini closed
+    without a result and Google Translate's TapToTranslate offers no replace action, so no
+    installed app has returned text yet; needs an app that returns EXTRA_PROCESS_TEXT (e.g. a
+    small test app or a text-rewriting app). Compose-field checks not run.
 31. [x] agent: DONE 2026-10-17 — `textAssistMenu` removed (maintainer decision; research §4.1:
     android.R.id.textAssist is handled by no editor, so it was always a silent no-op). Gone from
     the catalogue (palette/search; never an extra key), wiki (237 → 236 commands) and strings
