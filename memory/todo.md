@@ -180,6 +180,17 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     does not redraw; bind a DIY theme, delete it in Theme Manager → layout falls back, Layout
     Manager shows "not on this device"; import a layout XML with `theme="rosepine"`; Export XML
     carries the binding; backup → restore preview shows the theme rows.
+    Pixel 2026-10-17 (release `d8be659b`, `build/oct17-pixel/151–155`): keys and chrome switched
+    to Light and back to Cyberpunk correctly, but after the switch the bar showed NO chips
+    (uniform grey after `input text test`), reported as "text same colour as bar". Agent
+    2026-10-17: not a colour mix — the bar takes all colours from the effective theme's Theme;
+    emulator.wtf (EditText and Chrome, real space-bar swipe, `input text`) shows black chips on
+    #CCCCCC with the pipeline writing to the on-screen bar. Black on grey cannot give zero
+    variance, so the device bar was empty; cause still open. Fixed alongside: unreadable
+    highlight/prompt colours on 9 XML + 4 decorative themes (`SuggestionBarPalette`, ≥3:1) and
+    the preference handler's stale bar/view references. RE-CHECK on the Pixel with a release
+    build ≥ `9e2a9804`: same steps; if the bar is empty again, `logcat -d -s PredictionViewSetup`
+    (the "Suggestion bar built" line) and whether a tap-typed word (not `input text`) fills it.
 29. [x] agent: DONE 2026-10-17 — the six editor commands from
     `docs/research/2026-10-15-ime-editor-actions.md` §4.2 (maintainer decision), all in
     `handleEditingKey`: `case_cycle` (verified readback rewrite, keyboard-language locale);

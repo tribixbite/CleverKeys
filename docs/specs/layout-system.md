@@ -310,9 +310,38 @@ entry whose effective theme changes (`LayoutThemeBindingDiff`, "<layout>: theme 
 Custom themes themselves are not part of a backup; a restored binding to one that is not on the
 device degrades to the global theme as above.
 
+**Suggestion bar colours (2026-10-17).** The bar takes every colour from ONE `Theme`: the
+rebuilt keyboard view's, which `Keyboard2View` builds from the effective theme
+(`SuggestionBarPane.initialize(…, keyboardView.getTheme(), …)`). There is no second source for
+text, background, separators, chip accents or ripple, so a bound theme and the global theme
+cannot mix in one bar. Each (re)build logs `Suggestion bar built: theme=… text=… highlight=…
+bg=…` (tag `PredictionViewSetup`). `PreferenceUIUpdateHandler` reads the CURRENT bar and view
+through providers; it used to keep the first ones, so after any rebuild an opacity change went
+to a detached bar. The three text roles (chips, highlighted commit chip, prompt chips) pass
+through `SuggestionBarPalette.resolve` against the bar background: a role below 3:1 falls back
+to the text colour, text below 3:1 to black or white. Readable colours are unchanged; this fixed
+highlights that equalled the bar on Cobalt, Pine and ePaper Black (1.00:1, `colorLabelActivated`
+was designed for `colorKeyActivated`) and lifted Desert, Jungle, Jewel/CleverKeys Light, Everforest
+Light, Rose Pine prompts, and the three pastel and the Desert decorative highlights (Desert's
+prompts too). Ordinary chip text needed
+no change on any built-in (lowest 4.29:1, Everforest Light). Monet styles are not covered
+(wallpaper colours at runtime).
+
+Device report (Pixel, release `d8be659b`, global Cyberpunk, iOS-style bound to Light): after the
+switch the bar showed no text at all (uniform grey, no glyphs). Not reproduced on emulator.wtf
+Pixel 7 API 34 with the same theme pair and layout, switched by a real space-bar swipe while
+shown, in an EditText and in Chrome on a `data:` textarea with `input text` (the device
+sequence): the on-screen bar was the one the pipeline writes to and showed black chips
+(`#FF000000`, highlight `#FF0066CC`) on `#CCCCCC`, also after hide/show and back to Cyberpunk.
+Black on that grey cannot have zero variance, so the device bar held no chips rather than
+same-coloured text; the cause is open (todo item 28).
+
 Tests: `LayoutThemeBindingTest` (pure), `LayoutThemeBindingConfigTest` (mock: Config,
 ConfigurationManager re-inflate gate, serializer round trip, XML attribute, built-in id drift),
-`BackupRestorePreviewRenderTest`, `SettingsImportPlanBuilderTest`, `CoreImeHygieneDriftTest`.
+`BackupRestorePreviewRenderTest`, `SettingsImportPlanBuilderTest`, `CoreImeHygieneDriftTest`,
+`SuggestionBarPaletteTest` and `PreferenceUIUpdateHandlerViewsTest` (mock),
+`LayoutThemeSuggestionBarInstrumentedTest` (ew-cli: the real IME, bound Light over Cyberpunk,
+EditText and Chrome).
 
 ### CTC swipe eligibility
 
