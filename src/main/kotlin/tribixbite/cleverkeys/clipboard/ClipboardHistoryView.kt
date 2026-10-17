@@ -1026,6 +1026,23 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         }
     }
 
+    /**
+     * Word moves, word selection and select word / line in the active edit field — the same
+     * [tribixbite.cleverkeys.EditorTextNavigation] rules the app-facing commands use, over the
+     * whole text (the IME owns it). A selection change is not a text edit: nothing is recorded
+     * in the undo history. False when there is no field or no word to select.
+     */
+    fun navigateEditText(command: tribixbite.cleverkeys.EditorTextNavigation.Command): Boolean {
+        val et = activeEditingEditText ?: return false
+        val snapshot = editSnapshotOf(et)
+        val window = tribixbite.cleverkeys.EditorTextWindow.ofWholeText(snapshot.text, snapshot.selectionStart, snapshot.selectionEnd)
+        val plan = tribixbite.cleverkeys.EditorTextNavigation.plan(command, window)
+            as? tribixbite.cleverkeys.EditorTextNavigation.Plan.Select ?: return false
+        et.setSelection(plan.start, plan.end)
+        editingCursorPosition = plan.end
+        return true
+    }
+
     /** Select all text in the active edit field */
     fun selectAllEditText() {
         activeEditingEditText?.let { et ->

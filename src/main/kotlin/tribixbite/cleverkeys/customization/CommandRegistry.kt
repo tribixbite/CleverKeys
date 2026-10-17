@@ -128,6 +128,9 @@ object CommandRegistry {
             keywords = listOf("redo", "ctrl+y", "forward")),
         Command("clear", R.string.cmd_clear, R.string.cmd_clear_desc, Category.EDITING,
             keywords = listOf("clear", "erase", "wipe", "empty", "select all delete")),
+        // 2026-10-17: lower → Title → UPPER of the selection or the word at the cursor.
+        Command("case_cycle", R.string.cmd_case_cycle, R.string.cmd_case_cycle_desc, Category.EDITING,
+            keywords = listOf("case", "capitalize", "uppercase", "lowercase", "title", "caps", "shift")),
         Command("delete_word", R.string.cmd_delete_word, R.string.cmd_delete_word_desc, Category.DELETE,
             keywords = listOf("delete", "word", "backspace", "ctrl+backspace")),
         Command("forward_delete_word", R.string.cmd_forward_delete_word, R.string.cmd_forward_delete_word_desc, Category.DELETE,
@@ -156,6 +159,11 @@ object CommandRegistry {
             keywords = listOf("up", "arrow", "dpad")),
         Command("down", R.string.cmd_down, R.string.cmd_down_desc, Category.CURSOR,
             keywords = listOf("down", "arrow", "dpad")),
+        // 2026-10-17: word moves (readback setSelection; Ctrl+arrow key events without readback).
+        Command("word_left", R.string.cmd_word_left, R.string.cmd_word_left_desc, Category.CURSOR,
+            keywords = listOf("word", "left", "previous", "back", "ctrl+left", "move", "jump")),
+        Command("word_right", R.string.cmd_word_right, R.string.cmd_word_right_desc, Category.CURSOR,
+            keywords = listOf("word", "right", "next", "forward", "ctrl+right", "move", "jump")),
 
         // ========== NAVIGATION ==========
         Command("home", R.string.cmd_home, R.string.cmd_home_desc, Category.NAVIGATION,
@@ -178,6 +186,15 @@ object CommandRegistry {
             keywords = listOf("select", "right", "extend", "shift")),
         Command("selection_cancel", R.string.cmd_selection_cancel, R.string.cmd_selection_cancel_desc, Category.SELECTION,
             keywords = listOf("select", "cancel", "deselect", "esc")),
+        // 2026-10-17: word selection and select word / line at the cursor.
+        Command("select_word_left", R.string.cmd_select_word_left, R.string.cmd_select_word_left_desc, Category.SELECTION,
+            keywords = listOf("select", "word", "left", "extend", "ctrl+shift+left")),
+        Command("select_word_right", R.string.cmd_select_word_right, R.string.cmd_select_word_right_desc, Category.SELECTION,
+            keywords = listOf("select", "word", "right", "extend", "ctrl+shift+right")),
+        Command("select_word", R.string.cmd_select_word, R.string.cmd_select_word_desc, Category.SELECTION,
+            keywords = listOf("select", "word", "cursor", "highlight")),
+        Command("select_line", R.string.cmd_select_line, R.string.cmd_select_line_desc, Category.SELECTION,
+            keywords = listOf("select", "line", "paragraph", "cursor", "highlight")),
 
         // ========== KEYBOARD EVENTS ==========
         Command("config", R.string.cmd_config, R.string.cmd_config_desc, Category.EVENTS,

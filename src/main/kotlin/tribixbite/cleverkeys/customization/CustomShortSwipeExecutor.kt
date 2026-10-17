@@ -278,9 +278,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 "home" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MOVE_HOME)
                 "end" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MOVE_END)
 
-                // Cursor movement - word
-                "word_left" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.META_CTRL_ON)
-                "word_right" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.META_CTRL_ON)
+                // word_left / word_right are editing keys since 2026-10-17 (handleEditingKey).
 
                 // Page navigation
                 "page_up" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_PAGE_UP)
@@ -464,7 +462,8 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 AvailableCommand.CUT, AvailableCommand.SELECT_ALL, AvailableCommand.UNDO,
                 AvailableCommand.REDO, AvailableCommand.CURSOR_DOC_START,
                 AvailableCommand.CURSOR_DOC_END, AvailableCommand.DELETE_WORD,
-                AvailableCommand.TEXT_ASSIST, AvailableCommand.REPLACE_TEXT -> false
+                AvailableCommand.TEXT_ASSIST, AvailableCommand.REPLACE_TEXT,
+                AvailableCommand.WORD_LEFT, AvailableCommand.WORD_RIGHT -> false
 
                 // Cursor movement - character
                 AvailableCommand.CURSOR_LEFT -> {
@@ -486,22 +485,6 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 }
                 AvailableCommand.CURSOR_END -> {
                     sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MOVE_END)
-                }
-
-                // Cursor movement - word (Ctrl+Arrow)
-                AvailableCommand.WORD_LEFT -> {
-                    sendKeyEventWithModifier(
-                        inputConnection,
-                        KeyEvent.KEYCODE_DPAD_LEFT,
-                        KeyEvent.META_CTRL_ON
-                    )
-                }
-                AvailableCommand.WORD_RIGHT -> {
-                    sendKeyEventWithModifier(
-                        inputConnection,
-                        KeyEvent.KEYCODE_DPAD_RIGHT,
-                        KeyEvent.META_CTRL_ON
-                    )
                 }
 
                 // System commands - these return KeyValue for special handling

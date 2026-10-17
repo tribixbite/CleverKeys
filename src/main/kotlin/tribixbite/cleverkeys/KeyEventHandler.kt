@@ -844,6 +844,19 @@ class KeyEventHandler(
                     recv.selectAllClipboardEdit()
                     recv.backspaceClipboardEdit()
                 }
+                // Case cycling rewrites text in place; the inline editor's own undo history and
+                // privacy gate are not built for it, so it is refused there, visibly.
+                KeyValue.Editing.CASE_CYCLE -> showFeedback(R.string.dynamic_action_unavailable)
+                // Word moves and word/line selection have an exact inline equivalent: the editor's
+                // text is the IME's own, so the same boundary rules run over all of it.
+                KeyValue.Editing.WORD_LEFT, KeyValue.Editing.WORD_RIGHT,
+                KeyValue.Editing.SELECT_WORD_LEFT, KeyValue.Editing.SELECT_WORD_RIGHT,
+                KeyValue.Editing.SELECT_WORD, KeyValue.Editing.SELECT_LINE -> {
+                    val command = navigationCommand(ev)
+                    if (!recv.navigateClipboardEdit(command) && command == EditorTextNavigation.Command.SELECT_WORD) {
+                        showFeedback(R.string.keyboard_text_menu_no_word)
+                    }
+                }
                 // Other editing keys (share, replace, assist, cursor jumps …) have no inline
                 // editor equivalent — no-op, never sent to the app behind the panel.
                 else -> {}
@@ -856,6 +869,8 @@ class KeyEventHandler(
         if (isInlineFieldActive()) {
             if (ev == KeyValue.Editing.PASTE || ev == KeyValue.Editing.PASTE_PLAIN) {
                 readSystemClipText()?.let { sendText(it) }
+            } else if (ev == KeyValue.Editing.CASE_CYCLE) {
+                showFeedback(R.string.dynamic_action_unavailable)
             }
             return
         }
@@ -873,7 +888,7 @@ class KeyEventHandler(
             KeyValue.Editing.PASTE -> handlePaste()
             KeyValue.Editing.CUT -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.cut)
             KeyValue.Editing.SELECT_ALL -> sendContextMenuAction(android.R.id.selectAll)
-            KeyValue.Editing.SHARE -> sendContextMenuAction(android.R.id.shareText)
+            KeyValue.Editing.SHARE -> shareSelection()
             KeyValue.Editing.PASTE_PLAIN -> handlePaste(android.R.id.pasteAsPlainText)
             KeyValue.Editing.UNDO -> sendUndoRedoShortcut(redo = false)
             KeyValue.Editing.REDO -> sendUndoRedoShortcut(redo = true)
@@ -902,6 +917,10 @@ class KeyEventHandler(
                 KeyEvent.KEYCODE_MOVE_END,
                 KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
             )
+            KeyValue.Editing.WORD_LEFT, KeyValue.Editing.WORD_RIGHT,
+            KeyValue.Editing.SELECT_WORD_LEFT, KeyValue.Editing.SELECT_WORD_RIGHT,
+            KeyValue.Editing.SELECT_WORD, KeyValue.Editing.SELECT_LINE -> navigateEditor(navigationCommand(ev))
+            KeyValue.Editing.CASE_CYCLE -> cycleCase()
             KeyValue.Editing.CLEAR -> {
                 // A terminal-style field has no readable document to erase: select-all reaches
                 // nothing, and RustDesk's length diff would turn the commit into ONE remote
@@ -914,6 +933,175 @@ class KeyEventHandler(
                 conn.endBatchEdit()
             }
         }
+    }
+
+    /**
+     * shareText: the selection through the IME's own ACTION_SEND chooser
+     * ([TextActionLauncher.share]), which works in every editor — the editor's
+     * `android.R.id.shareText` menu action is honoured only by a stock EditText. A selection is
+     * required ("no text selected" otherwise): sharing a guessed word or line is not what the
+     * user asked for. Refused in terminal-style editors, whose selection readback is not the
+     * user's text (a blind field reads back placeholders).
+     */
+    private fun shareSelection() {
+        val conn = recv.getCurrentInputConnection() ?: return
+        val ctx = recv.getContext() ?: return
+        if (isTerminalStyleEditor()) {
+            showFeedback(R.string.dynamic_action_unavailable)
+            return
+        }
+        val text = runCatching { conn.getSelectedText(0)?.toString() }.getOrNull()
+        if (text.isNullOrEmpty()) {
+            recv.showPrivateCopyFeedback(ctx.getString(R.string.text_action_no_selection, ctx.getString(R.string.cmd_share_text)))
+            return
+        }
+        TextActionLauncher.share(ctx, text) { message -> recv.showPrivateCopyFeedback(message) }
+    }
+
+    /** The [EditorTextNavigation.Command] of a word/line editing key. */
+    private fun navigationCommand(ev: KeyValue.Editing): EditorTextNavigation.Command = when (ev) {
+        KeyValue.Editing.WORD_LEFT -> EditorTextNavigation.Command.WORD_LEFT
+        KeyValue.Editing.WORD_RIGHT -> EditorTextNavigation.Command.WORD_RIGHT
+        KeyValue.Editing.SELECT_WORD_LEFT -> EditorTextNavigation.Command.SELECT_WORD_LEFT
+        KeyValue.Editing.SELECT_WORD_RIGHT -> EditorTextNavigation.Command.SELECT_WORD_RIGHT
+        KeyValue.Editing.SELECT_WORD -> EditorTextNavigation.Command.SELECT_WORD
+        KeyValue.Editing.SELECT_LINE -> EditorTextNavigation.Command.SELECT_LINE
+        else -> throw IllegalArgumentException("not a navigation key: $ev")
+    }
+
+    /** Show [messageRes] in the suggestion bar (Toasts are suppressed for IMEs on 13+). */
+    private fun showFeedback(messageRes: Int) {
+        recv.getContext()?.let { recv.showPrivateCopyFeedback(it.getString(messageRes)) }
+    }
+
+    /**
+     * Word moves (word_left/right), word selection (select_word_left/right) and select word /
+     * line in the target editor (docs/research/2026-10-15-ime-editor-actions.md §3.2, §4.2).
+     *
+     * - Ordinary editors: the text around the selection is read back and the new selection is
+     *   computed by [EditorTextNavigation] (the same rules everywhere, UTF-16 offsets), then set
+     *   with `setSelection` — after finishing composition and confirming nothing changed since
+     *   the read (CLAUDE.md "Explicit editor edits and composition").
+     * - No readback (or an editor that ignores setSelection, [moveCursorForceFallback]): moves
+     *   and extensions become Ctrl(+Shift)+Left/Right key events, which EditText, Chrome (Blink)
+     *   and Compose all map to word moves; select word / line need the text and are refused.
+     * - Terminal-style editors: the text cannot be read (a blind field's readback is not the
+     *   user's text) and a pty has no selection, so only the moves are sent, as Ctrl+arrow key
+     *   events; every selection command is refused.
+     *
+     * "Left" is the logical previous word (as the cursor_left slider), whatever the script's
+     * direction.
+     */
+    private fun navigateEditor(command: EditorTextNavigation.Command) {
+        val conn = recv.getCurrentInputConnection() ?: return
+        val keyable = command != EditorTextNavigation.Command.SELECT_WORD && command != EditorTextNavigation.Command.SELECT_LINE
+        val extends = command == EditorTextNavigation.Command.SELECT_WORD_LEFT || command == EditorTextNavigation.Command.SELECT_WORD_RIGHT
+        if (isTerminalStyleEditor()) {
+            if (keyable && !extends) sendWordKey(command) else showFeedback(R.string.dynamic_action_unavailable)
+            return
+        }
+        val reach = EditorTextNavigation.reachFor(command)
+        val window = if (moveCursorForceFallback) null else EditorTextWindowReader.capture(conn, reach)
+        if (window == null) {
+            if (keyable) sendWordKey(command) else showFeedback(R.string.dynamic_action_unavailable)
+            return
+        }
+        when (val plan = EditorTextNavigation.plan(command, window)) {
+            EditorTextNavigation.Plan.NoTarget -> showFeedback(R.string.keyboard_text_menu_no_word)
+            EditorTextNavigation.Plan.Unknown -> showFeedback(R.string.dynamic_action_unavailable)
+            is EditorTextNavigation.Plan.Select -> {
+                val unchanged = runCatching {
+                    conn.finishComposingText() && EditorTextWindowReader.capture(conn, reach) == window
+                }.getOrDefault(false)
+                if (!unchanged) {
+                    showFeedback(R.string.dynamic_action_unavailable)
+                    return
+                }
+                // As moveCursor: an editor that refuses setSelection still gets the key event.
+                if (!conn.setSelection(plan.start, plan.end) && keyable) sendWordKey(command)
+            }
+        }
+    }
+
+    /**
+     * case_cycle: lower → Title → UPPER → lower ([CaseCycle]) of the selection, or else of the
+     * word at or just before the cursor (`hello |` after a swipe's auto-space).
+     *
+     * An explicit rewrite, so every step is verified (CLAUDE.md "Explicit editor edits and
+     * composition"): the target is computed from a readback window; composition is finished and
+     * the window must read back unchanged; the target is selected and must read back as exactly
+     * the original text (UTF-16 offsets); the commit must read back as an exact replacement;
+     * only then is the new text re-selected so the next press cycles it again. Refused, with
+     * feedback, in terminal-style editors (their text cannot be read or rewritten in place),
+     * without readback, and — before this method — behind an inline field.
+     */
+    private fun cycleCase() {
+        val conn = recv.getCurrentInputConnection() ?: return
+        val editor = recv.getCurrentEditorInfo()
+        if (isTerminalStyleEditor()) {
+            showFeedback(R.string.dynamic_action_unavailable)
+            return
+        }
+        val reach = EditorTextNavigation.WORD_REACH
+        val window = EditorTextWindowReader.capture(conn, reach) ?: run {
+            showFeedback(R.string.dynamic_action_unavailable)
+            return
+        }
+        val target = when (val plan = EditorTextNavigation.caseTarget(window)) {
+            is EditorTextNavigation.Plan.Select -> plan
+            EditorTextNavigation.Plan.NoTarget -> { showFeedback(R.string.keyboard_text_menu_no_word); return }
+            EditorTextNavigation.Plan.Unknown -> { showFeedback(R.string.dynamic_action_unavailable); return }
+        }
+        val original = window.text.substring(target.start - window.base, target.end - window.base)
+        val replacement = CaseCycle.next(original, caseLocale())
+        if (replacement == original) {
+            showFeedback(R.string.case_cycle_failed)
+            return
+        }
+        val epoch = editorEpoch
+        val stillCurrent = { editorEpoch == epoch && recv.getCurrentInputConnection() === conn && recv.getCurrentEditorInfo() === editor }
+        val outcome = runCatching {
+            if (!conn.finishComposingText() || EditorTextWindowReader.capture(conn, reach) != window || !stillCurrent()) {
+                return@runCatching CaseOutcome.REFUSED
+            }
+            val alreadySelected = window.min == target.start && window.max == target.end
+            if (!alreadySelected && !conn.setSelection(target.start, target.end)) return@runCatching CaseOutcome.REFUSED
+            // The receipt the commit is verified against: exactly the target, selected.
+            val selected = EditorReadback.capture(conn)
+            if (selected == null || selected.rangeStart != target.start || selected.selectedText != original || !stillCurrent()) {
+                return@runCatching CaseOutcome.REFUSED
+            }
+            learningHooks?.onExplicitEdit()
+            recv.onExplicitEditStarted()
+            val end = target.start + replacement.length
+            if (!conn.commitText(replacement, 1) || !EditorReadback.matchesReplacement(conn, selected, replacement, end)) {
+                return@runCatching CaseOutcome.UNVERIFIED
+            }
+            // Keep the result selected: the next press cycles the same text.
+            conn.setSelection(target.start, end)
+            CaseOutcome.DONE
+        }.getOrDefault(CaseOutcome.UNVERIFIED)
+        when (outcome) {
+            CaseOutcome.DONE -> Unit
+            CaseOutcome.REFUSED -> showFeedback(R.string.dynamic_action_unavailable)
+            CaseOutcome.UNVERIFIED -> showFeedback(R.string.case_cycle_failed)
+        }
+    }
+
+    private enum class CaseOutcome { DONE, REFUSED, UNVERIFIED }
+
+    /** Case mapping follows the keyboard's language (Turkish dotted I), not the UI locale. */
+    private fun caseLocale(): java.util.Locale =
+        runCatching { java.util.Locale.forLanguageTag(Config.globalConfigOrNull()?.primary_language ?: "") }.getOrNull()
+            ?.takeIf { it.language.isNotEmpty() } ?: java.util.Locale.getDefault()
+
+    /** Ctrl+Left/Right (Ctrl+Shift for the selecting variants) as one key event. */
+    private fun sendWordKey(command: EditorTextNavigation.Command) {
+        val left = command == EditorTextNavigation.Command.WORD_LEFT || command == EditorTextNavigation.Command.SELECT_WORD_LEFT
+        val extends = command == EditorTextNavigation.Command.SELECT_WORD_LEFT || command == EditorTextNavigation.Command.SELECT_WORD_RIGHT
+        val ctrl = KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+        val meta = if (extends) ctrl or KeyEvent.META_SHIFT_ON or KeyEvent.META_SHIFT_LEFT_ON else ctrl
+        send_key_down_up(if (left) KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT, meta)
     }
 
     /**
@@ -1318,6 +1506,8 @@ class KeyEventHandler(
         fun redoClipboardEdit() {}     // Redo the last undone edit in the inline editor
         fun copyFromClipboardEdit() {} // Copy the inline editor's selection to the system clipboard
         fun dispatchKeyToClipboardEdit(keyCode: Int) {} // Arrow keys, Enter, etc.
+        /** Word/line move or selection in the inline editor; false when it had no target. */
+        fun navigateClipboardEdit(command: EditorTextNavigation.Command): Boolean = false
         // #41 v5: Emoji search routes typing to visible EditText (IME can't type into own views)
         fun isEmojiPaneOpen(): Boolean = false // Check if emoji pane is visible
         fun appendToEmojiSearch(text: String) {} // Append text to emoji search EditText

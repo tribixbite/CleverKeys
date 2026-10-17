@@ -119,6 +119,14 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "autofill",
             "delete_word",
             "forward_delete_word",
+            // 2026-10-17 editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2)
+            "word_left",
+            "word_right",
+            "select_word_left",
+            "select_word_right",
+            "select_word",
+            "select_line",
+            "case_cycle",
             "superscript",
             "subscript",
             "f11_placeholder",
@@ -170,6 +178,9 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "combining_palatalization"
         )
 
+        /** Word/line selection and case-cycle extra keys, listed with the editing keys. */
+        private val EDITOR_SELECTION_KEYS = setOf("select_word_left", "select_word_right", "select_word", "select_line", "case_cycle")
+
         /** Alias for EXTRA_KEYS for compatibility with ExtraKeysConfigActivity */
         @JvmField
         val extraKeys: List<String> = EXTRA_KEYS.toList()
@@ -179,8 +190,8 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             mapOf(
                 R.string.extra_keys_group_layout_switching to keys.filter { it in listOf("switch_forward", "switch_backward", "switch_greekmath") },
                 R.string.extra_keys_group_system to keys.filter { it in listOf("alt", "meta", "compose", "voice_typing", "switch_clipboard", "change_method", "capslock", "autofill") },
-                R.string.extra_keys_group_navigation to keys.filter { it in listOf("tab", "esc", "page_up", "page_down", "home", "end") },
-                R.string.extra_keys_group_editing to keys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" || it == "clear_clipboard" || it.startsWith("append_") },
+                R.string.extra_keys_group_navigation to keys.filter { it in listOf("tab", "esc", "page_up", "page_down", "home", "end", "word_left", "word_right") },
+                R.string.extra_keys_group_editing to keys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" || it == "clear_clipboard" || it.startsWith("append_") || it in EDITOR_SELECTION_KEYS },
                 R.string.extra_keys_group_formatting to keys.filter { it in listOf("superscript", "subscript") },
                 R.string.extra_keys_group_accents to keys.filter { it.startsWith("accent_") },
                 R.string.extra_keys_group_symbols to keys.filter { it in listOf("€", "ß", "£", "§", "†", "ª", "º") },
@@ -257,6 +268,13 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                     additionalInfo = formatKeyCombinationGesture(res, "forward_delete")
                 }
                 "selectAll" -> id = R.string.key_descr_selectAll
+                "word_left" -> id = R.string.cmd_word_left_desc
+                "word_right" -> id = R.string.cmd_word_right_desc
+                "select_word_left" -> id = R.string.cmd_select_word_left_desc
+                "select_word_right" -> id = R.string.cmd_select_word_right_desc
+                "select_word" -> id = R.string.cmd_select_word_desc
+                "select_line" -> id = R.string.cmd_select_line_desc
+                "case_cycle" -> id = R.string.cmd_case_cycle_desc
                 "subscript" -> id = R.string.key_descr_subscript
                 "superscript" -> id = R.string.key_descr_superscript
                 "switch_greekmath" -> id = R.string.key_descr_switch_greekmath
@@ -363,6 +381,13 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "autofill" to R.string.extra_key_title_autofill,
             "delete_word" to R.string.extra_key_title_delete_word,
             "forward_delete_word" to R.string.extra_key_title_forward_delete_word,
+            "word_left" to R.string.cmd_word_left,
+            "word_right" to R.string.cmd_word_right,
+            "select_word_left" to R.string.cmd_select_word_left,
+            "select_word_right" to R.string.cmd_select_word_right,
+            "select_word" to R.string.cmd_select_word,
+            "select_line" to R.string.cmd_select_line,
+            "case_cycle" to R.string.cmd_case_cycle,
             "superscript" to R.string.key_descr_superscript,
             "subscript" to R.string.key_descr_subscript,
             "switch_greekmath" to R.string.extra_key_title_greek_math,

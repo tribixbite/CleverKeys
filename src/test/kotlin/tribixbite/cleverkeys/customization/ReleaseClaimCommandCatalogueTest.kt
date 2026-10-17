@@ -169,7 +169,10 @@ class ReleaseClaimCommandCatalogueTest {
 
         val assist = textActions.single { it.name == "textAssist" }
         assertThat(EnglishResourceText.string(assist.nameRes)).isEqualTo("Text Assist")
-        assertThat(EnglishResourceText.string(assist.descriptionRes)).isEqualTo("Process selected text with AI assistants")
+        // 2026-10-17: a result the chosen app returns now replaces the selection (it used to be
+        // dropped: the chooser was started without asking for a result).
+        assertThat(EnglishResourceText.string(assist.descriptionRes))
+            .isEqualTo("Process selected text with an app (translator, AI assistant). If the app returns text, it replaces the selection")
     }
 
     @Test

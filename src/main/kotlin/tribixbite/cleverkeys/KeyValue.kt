@@ -113,6 +113,16 @@ class KeyValue private constructor(
         // ASSIST/REPLACE open (TextActionLauncher). Appended so earlier ordinals stay stable.
         ASSIST_MENU,
         REPLACE_MENU,
+        // 2026-10-17: word moves / word selection (Ctrl(+Shift)+arrow semantics, readback-driven)
+        // and select word / line at the cursor (docs/research/2026-10-15-ime-editor-actions.md §4.2).
+        WORD_LEFT,
+        WORD_RIGHT,
+        SELECT_WORD_LEFT,
+        SELECT_WORD_RIGHT,
+        SELECT_WORD,
+        SELECT_LINE,
+        // 2026-10-17: lower → Title → UPPER of the selection or the word at/before the cursor.
+        CASE_CYCLE,
     }
 
     enum class Placeholder {
@@ -792,6 +802,15 @@ class KeyValue private constructor(
             // cannot be combined with a text marker in a single sublabel.
             "textAssistMenu" -> editingKey("asst", Editing.ASSIST_MENU)
             "replaceTextMenu" -> editingKey("rplc", Editing.REPLACE_MENU)
+            // 2026-10-17 editor commands. Plain-text labels of at most 4 chars (single-font
+            // sublabel rule; CommandRegistry.getDisplayInfo truncates to 4).
+            "word_left" -> editingKey("←w", Editing.WORD_LEFT)
+            "word_right" -> editingKey("w→", Editing.WORD_RIGHT)
+            "select_word_left" -> editingKey("⇐w", Editing.SELECT_WORD_LEFT)
+            "select_word_right" -> editingKey("w⇒", Editing.SELECT_WORD_RIGHT)
+            "select_word" -> editingKey("[w]", Editing.SELECT_WORD)
+            "select_line" -> editingKey("[ln]", Editing.SELECT_LINE)
+            "case_cycle" -> editingKey("Aa", Editing.CASE_CYCLE)
 
             /* Document navigation - Ctrl+Home/End to move to start/end of entire text */
             "doc_home" -> editingKey(0xE00B, Editing.CURSOR_DOC_START)

@@ -94,6 +94,9 @@ object CommandRouting {
         AvailableCommand.DELETE_WORD to "delete_word",
         AvailableCommand.TEXT_ASSIST to "textAssist",
         AvailableCommand.REPLACE_TEXT to "replaceText",
+        // 2026-10-17: word moves have their own editing keys; the executor's Ctrl+Left copy is gone.
+        AvailableCommand.WORD_LEFT to "word_left",
+        AvailableCommand.WORD_RIGHT to "word_right",
     )
 
     /**

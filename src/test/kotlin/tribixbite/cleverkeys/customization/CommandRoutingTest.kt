@@ -145,7 +145,10 @@ class CommandRoutingTest {
         assertThat(CommandRouting.editingValue("TEXT_ASSIST")).isEqualTo(KeyValue.getKeyByName("textAssist"))
         assertThat(CommandRouting.editingValue("CURSOR_DOC_END")).isEqualTo(KeyValue.getKeyByName("doc_end"))
         // Non-editing AvailableCommands and keys stay on their own paths.
-        assertThat(CommandRouting.editingValue("WORD_LEFT")).isNull()
+        // 2026-10-17: legacy WORD_LEFT/WORD_RIGHT mappings run the word_left/word_right editing keys.
+        assertThat(CommandRouting.editingValue("WORD_LEFT")).isEqualTo(KeyValue.getKeyByName("word_left"))
+        assertThat(CommandRouting.editingValue("WORD_RIGHT")).isEqualTo(KeyValue.getKeyByName("word_right"))
+        assertThat(CommandRouting.editingValue("CURSOR_LEFT")).isNull()
         assertThat(CommandRouting.editingValue("switch_forward")).isNull()
     }
 }

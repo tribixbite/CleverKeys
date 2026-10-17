@@ -164,6 +164,13 @@ object KeyLabels {
             KeyValue.Editing.SELECTION_CANCEL -> getString(R.string.key_descr_selection_cancel)
             KeyValue.Editing.ASSIST_MENU -> getString(R.string.cmd_text_assist_menu)
             KeyValue.Editing.REPLACE_MENU -> getString(R.string.cmd_replace_text_menu)
+            KeyValue.Editing.WORD_LEFT -> getString(R.string.cmd_word_left)
+            KeyValue.Editing.WORD_RIGHT -> getString(R.string.cmd_word_right)
+            KeyValue.Editing.SELECT_WORD_LEFT -> getString(R.string.cmd_select_word_left)
+            KeyValue.Editing.SELECT_WORD_RIGHT -> getString(R.string.cmd_select_word_right)
+            KeyValue.Editing.SELECT_WORD -> getString(R.string.cmd_select_word)
+            KeyValue.Editing.SELECT_LINE -> getString(R.string.cmd_select_line)
+            KeyValue.Editing.CASE_CYCLE -> getString(R.string.cmd_case_cycle)
             // REPLACE/SHARE/ASSIST are context-menu actions with real text labels
             // supplied by the framework; echo their (non-font) symbol.
             KeyValue.Editing.REPLACE,

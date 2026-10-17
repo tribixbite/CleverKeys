@@ -822,6 +822,10 @@ class ClipboardManager(
         clipboardHistoryView?.dispatchKeyToEditText(keyCode)
     }
 
+    /** Word/line move or selection in the editing EditText; false when nothing was found. */
+    fun navigateInEdit(command: tribixbite.cleverkeys.EditorTextNavigation.Command): Boolean =
+        clipboardHistoryView?.navigateEditText(command) ?: false
+
     // ─── Selection mode (2026-10-07) ───
 
     /** Whether the clipboard list is in selection mode. */

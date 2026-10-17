@@ -990,6 +990,9 @@ class KeyboardReceiver(
         clipboardManager.dispatchKeyToEdit(keyCode)
     }
 
+    override fun navigateClipboardEdit(command: EditorTextNavigation.Command): Boolean =
+        clipboardManager.navigateInEdit(command)
+
     // #41 v5: Emoji search routes typing to visible EditText (IME can't type into own views)
     override fun isEmojiPaneOpen(): Boolean {
         return emojiSearchManager?.isEmojiPaneOpen() ?: false

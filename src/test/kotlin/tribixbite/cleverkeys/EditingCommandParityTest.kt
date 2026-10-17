@@ -385,6 +385,8 @@ class EditingCommandParityTest {
             "delete_last_word", "selection_cancel", "replaceText", "textAssist", "autofill",
             "doc_home", "doc_end", "append_possessive", "append_apostrophe",
             "textAssistMenu", "replaceTextMenu",
+            "word_left", "word_right", "select_word_left", "select_word_right", "select_word", "select_line",
+            "case_cycle",
         )
 
         /** Legacy SCREAMING_SNAKE AvailableCommand names that denote an editing command. */
@@ -393,7 +395,7 @@ class EditingCommandParityTest {
             "CUT" to "cut", "SELECT_ALL" to "selectAll", "UNDO" to "undo", "REDO" to "redo",
             "CURSOR_DOC_START" to "doc_home", "CURSOR_DOC_END" to "doc_end",
             "DELETE_WORD" to "delete_word", "TEXT_ASSIST" to "textAssist",
-            "REPLACE_TEXT" to "replaceText",
+            "REPLACE_TEXT" to "replaceText", "WORD_LEFT" to "word_left", "WORD_RIGHT" to "word_right",
         )
     }
 }
