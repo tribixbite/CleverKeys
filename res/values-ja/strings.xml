@@ -2189,10 +2189,9 @@
     <string name="cmd_text_assist_desc">選択したテキストをアプリで処理(翻訳アプリ、AI アシスタント)。アプリがテキストを返すと、選択範囲が置き換えられます</string>
     <string name="cmd_replace_text">テキストを置換</string>
     <string name="cmd_replace_text_desc">選択したテキストをアプリの結果で置き換え(翻訳、書き換え)</string>
-    <string name="cmd_text_assist_menu">テキストアシスト（エディタメニュー）</string>
-    <string name="cmd_text_assist_menu_desc">アプリ選択を使わず、アプリ自身のメニューのテキストアシスト操作を送信</string>
-    <string name="cmd_replace_text_menu">テキストを置換（エディタメニュー）</string>
-    <string name="cmd_replace_text_menu_desc">アプリ選択を使わず、アプリ自身のメニューの置換操作を送信</string>
+    <string name="cmd_replace_text_menu">置換候補（エディタ）</string>
+    <string name="cmd_replace_text_menu_desc">カーソル位置の単語について、アプリ自身の候補（スペル修正やほかのスワイプ候補）を開きます。標準の Android テキスト欄のみ。ほかのアプリでは何も起きないことがあります</string>
+    <string name="text_assist_menu_removed">テキストアシスト（エディタメニュー）はサポートされなくなりました。別のコマンドを割り当ててください</string>
     <string name="cmd_show_text_menu">テキストメニューを表示</string>
     <string name="cmd_show_text_menu_desc">カーソル位置の単語を選択して標準のツールバーを表示</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

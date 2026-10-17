@@ -2202,10 +2202,9 @@
     <string name="cmd_text_assist_desc">Proses teks yang dipilih dengan aplikasi (penerjemah, asisten AI). Jika aplikasi mengembalikan teks, teks itu menggantikan seleksi</string>
     <string name="cmd_replace_text">Ganti teks</string>
     <string name="cmd_replace_text_desc">Ganti teks yang dipilih dengan hasil dari aplikasi (terjemahkan, tulis ulang)</string>
-    <string name="cmd_text_assist_menu">Bantuan teks (menu editor)</string>
-    <string name="cmd_text_assist_menu_desc">Kirim tindakan bantuan teks dari menu aplikasi itu sendiri, tanpa pemilih aplikasi</string>
-    <string name="cmd_replace_text_menu">Ganti teks (menu editor)</string>
-    <string name="cmd_replace_text_menu_desc">Kirim tindakan ganti dari menu aplikasi itu sendiri, tanpa pemilih aplikasi</string>
+    <string name="cmd_replace_text_menu">Saran pengganti (editor)</string>
+    <string name="cmd_replace_text_menu_desc">Buka saran milik aplikasi untuk kata di kursor: perbaikan ejaan dan kandidat geser lainnya. Hanya kolom teks Android standar; aplikasi lain mungkin tidak melakukan apa pun</string>
+    <string name="text_assist_menu_removed">Bantuan teks (menu editor) tidak lagi didukung. Tetapkan perintah lain</string>
     <string name="cmd_show_text_menu">Tampilkan menu teks</string>
     <string name="cmd_show_text_menu_desc">Pilih kata di kursor dan tampilkan toolbar bawaan</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

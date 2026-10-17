@@ -2287,10 +2287,9 @@
     <string name="cmd_text_assist_desc">Apstrādāt atlasīto tekstu ar lietotni (tulkotājs, MI palīgs). Ja lietotne atgriež tekstu, tas aizstāj atlasi</string>
     <string name="cmd_replace_text">Aizstāt tekstu</string>
     <string name="cmd_replace_text_desc">Aizstāt atlasīto tekstu ar lietotnes rezultātu (tulkot, pārrakstīt)</string>
-    <string name="cmd_text_assist_menu">Teksta palīgs (redaktora izvēlne)</string>
-    <string name="cmd_text_assist_menu_desc">Nosūtīt pašas lietotnes izvēlnes teksta palīga darbību bez lietotņu izvēles</string>
-    <string name="cmd_replace_text_menu">Aizstāt tekstu (redaktora izvēlne)</string>
-    <string name="cmd_replace_text_menu_desc">Nosūtīt pašas lietotnes izvēlnes aizstāšanas darbību bez lietotņu izvēles</string>
+    <string name="cmd_replace_text_menu">Aizstāšanas ieteikumi (redaktors)</string>
+    <string name="cmd_replace_text_menu_desc">Atvērt pašas lietotnes ieteikumus vārdam pie kursora: pareizrakstības labojumus un citus vilkšanas kandidātus. Tikai standarta Android teksta laukos; citas lietotnes var nedarīt neko</string>
+    <string name="text_assist_menu_removed">Teksta palīgs (redaktora izvēlne) vairs netiek atbalstīts. Piešķiriet citu komandu</string>
     <string name="cmd_show_text_menu">Rādīt teksta izvēlni</string>
     <string name="cmd_show_text_menu_desc">Atlasīt vārdu pie kursora un rādīt sistēmas rīkjoslu</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

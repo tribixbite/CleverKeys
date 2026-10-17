@@ -15,7 +15,7 @@ The command palette is a searchable dialog that appears when you assign an actio
 |------|-------------|
 | **Purpose** | Browse and search all assignable key actions |
 | **Access** | Per-Key Customization, or the [Subkey Popover](../gestures/subkey-popover.md) assign/edit screen |
-| **Features** | Search, 21 categories, 237 commands, four quick actions |
+| **Features** | Search, 21 categories, 236 commands, four quick actions |
 
 ## Where It Appears
 
@@ -59,7 +59,7 @@ The row scrolls away with the list. While you search, only tiles whose name matc
 
 ### Browse Categories
 
-The 237 commands are grouped into these categories, in this order. Category headers stay
+The 236 commands are grouped into these categories, in this order. Category headers stay
 at the top while their commands scroll.
 
 | Category | Commands | Examples |
@@ -83,7 +83,7 @@ at the top while their commands scroll.
 | **Hebrew Marks** | 20 | `qamats`, `patah`, `sheva`, `dagesh` |
 | **Text Input** | 8 | bracket pairs such as `b(`, `b[`, `b{` |
 | **Language** | 2 | `primaryLangToggle`, `secondaryLangToggle` |
-| **Text Actions** | 5 | `textAssist`, `replaceText`, `textAssistMenu`, `replaceTextMenu`, `showTextMenu` |
+| **Text Actions** | 4 | `textAssist`, `replaceText`, `replaceTextMenu`, `showTextMenu` |
 | **Timestamps** | 8 | `timestamp_date`, `timestamp_time`, `timestamp_iso` |
 
 ### Select an Action
@@ -112,12 +112,16 @@ The minimize commands cannot bring back a keyboard the system has already hidden
 
 ## Text Assist and Replace Text
 
-Each text action comes in two forms:
+The text actions:
 
 | Command | What it does |
 |---------|--------------|
 | **Text Assist** (`textAssist`), **Replace Text** (`replaceText`) | Opens a list of the apps that can process the selected text (translators, AI assistants, dictionaries). If the chosen app returns text (a translation, a rewrite), it replaces the selection. The two commands differ only in the list's title. Shows "no text selected" when nothing is selected. |
-| **Text Assist (Editor Menu)** (`textAssistMenu`), **Replace Text (Editor Menu)** (`replaceTextMenu`) | Sends the app's own text-assist or replace menu action, without the app list. What happens depends on the app; many apps do nothing. In stock Android text fields, Replace Text (Editor Menu) offers the other swipe candidates of a swiped word (see below). |
+| **Replacement Suggestions (Editor)** (`replaceTextMenu`) | Opens the app's own suggestion popup for the word at the cursor: spelling fixes for a word the spell checker flagged, and the other swipe candidates of a swiped word (see below). Works in stock Android text fields; other apps (Chrome, many Compose apps) show nothing. Collapses a selection to the cursor. |
+
+The former **Text Assist (Editor Menu)** (`textAssistMenu`) command was removed: no app handles
+that menu action, so it never did anything. A key or gesture still assigned to it shows "no
+longer supported" in the suggestion bar; assign it another command.
 
 The returned text is written only into the same text field, over the same selection, after
 CleverKeys reads the field back and finds it unchanged. If you edited the text, switched
@@ -140,7 +144,7 @@ editor, the word and line commands move and select inside the editor; Cycle Case
 do nothing there.
 
 Swiped words carry their other candidates. In stock Android text fields, select a swiped
-word and use the app's **Replace** option (or **Replace Text (Editor Menu)**) to pick another
+word and use the app's **Replace** option (or **Replacement Suggestions (Editor)**) to pick another
 candidate. An autocorrected word offers the word you typed. Other apps may ignore this.
 
 ## Suffix Commands and Dynamic Templates
@@ -170,7 +174,7 @@ description or keyword.
 - **Power user**: `selection_mode`, `doc_home`/`doc_end` and the function keys help in editors and terminals
 
 > [!TIP]
-> The palette lists 237 commands. Use search to find one quickly.
+> The palette lists 236 commands. Use search to find one quickly.
 
 ## Common Questions
 

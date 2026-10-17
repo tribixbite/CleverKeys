@@ -203,6 +203,12 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Removed
 
+- The **Text Assist (Editor Menu)** command (`textAssistMenu`, in development builds only): no
+  app handles that menu action, so it never did anything. A key or gesture still assigned to
+  it now says "no longer supported" in the suggestion bar instead of failing silently. Its
+  sibling is renamed **Replacement Suggestions (Editor)** (`replaceTextMenu`) and opens the
+  app's own suggestions for the word at the cursor — spelling fixes and, for a swiped word,
+  the other swipe candidates — in standard Android text fields.
 - **The neural swipe engine.** The ONNX transformer that decoded swipes since v1.0, its
   vocabulary stack, its Neural Settings screen, the Swipe Calibration screen and ~26 MB of
   bundled models and prefix-boost data are gone. CTC replaced it on measured accuracy —

@@ -2286,10 +2286,9 @@
     <string name="cmd_text_assist_desc">Traiter le texte sélectionné avec une application (traducteur, assistant IA). Si l\'application renvoie du texte, il remplace la sélection</string>
     <string name="cmd_replace_text">Remplacer le texte</string>
     <string name="cmd_replace_text_desc">Remplacer le texte sélectionné par le résultat d\'une application (traduire, reformuler)</string>
-    <string name="cmd_text_assist_menu">Assistance texte (menu de l\'éditeur)</string>
-    <string name="cmd_text_assist_menu_desc">Envoyer l\'action d\'assistance du menu de l\'application elle-même, sans sélecteur d\'applications</string>
-    <string name="cmd_replace_text_menu">Remplacer le texte (menu de l\'éditeur)</string>
-    <string name="cmd_replace_text_menu_desc">Envoyer l\'action de remplacement du menu de l\'application elle-même, sans sélecteur d\'applications</string>
+    <string name="cmd_replace_text_menu">Suggestions de remplacement (éditeur)</string>
+    <string name="cmd_replace_text_menu_desc">Ouvrir les suggestions de l\'application elle-même pour le mot au curseur : corrections orthographiques et autres candidats du balayage. Champs de texte Android standard uniquement ; d\'autres applications peuvent ne rien faire</string>
+    <string name="text_assist_menu_removed">Assistance texte (menu de l\'éditeur) n\'est plus prise en charge. Attribuez une autre commande</string>
     <string name="cmd_show_text_menu">Afficher le menu texte</string>
     <string name="cmd_show_text_menu_desc">Sélectionner le mot au curseur et afficher la barre système</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

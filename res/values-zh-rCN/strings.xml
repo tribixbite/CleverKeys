@@ -2188,10 +2188,9 @@
     <string name="cmd_text_assist_desc">用应用处理所选文本（翻译器、AI 助手）。如果应用返回文本，将替换所选内容</string>
     <string name="cmd_replace_text">替换文字</string>
     <string name="cmd_replace_text_desc">用应用返回的结果替换所选文本（翻译、改写）</string>
-    <string name="cmd_text_assist_menu">文字助手（编辑器菜单）</string>
-    <string name="cmd_text_assist_menu_desc">发送应用自身菜单中的文字助手操作，不经过应用选择器</string>
-    <string name="cmd_replace_text_menu">替换文字（编辑器菜单）</string>
-    <string name="cmd_replace_text_menu_desc">发送应用自身菜单中的替换操作，不经过应用选择器</string>
+    <string name="cmd_replace_text_menu">替换建议（编辑器）</string>
+    <string name="cmd_replace_text_menu_desc">打开应用自身针对光标处单词的建议：拼写更正和其他滑行候选词。仅限标准 Android 文本框；其他应用可能没有反应</string>
+    <string name="text_assist_menu_removed">文本助手（编辑器菜单）已不再受支持。请分配其他命令</string>
     <string name="cmd_show_text_menu">显示文本菜单</string>
     <string name="cmd_show_text_menu_desc">选中光标处的单词并显示系统工具栏</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

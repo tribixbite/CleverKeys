@@ -2316,10 +2316,9 @@
     <string name="cmd_text_assist_desc">Elabora il testo selezionato con un\'app (traduttore, assistente IA). Se l\'app restituisce del testo, questo sostituisce la selezione</string>
     <string name="cmd_replace_text">Sostituisci testo</string>
     <string name="cmd_replace_text_desc">Sostituisci il testo selezionato con il risultato di un\'app (tradurre, riscrivere)</string>
-    <string name="cmd_text_assist_menu">Assistenza testo (menu dell\'editor)</string>
-    <string name="cmd_text_assist_menu_desc">Invia l\'azione di assistenza del menu dell\'app stessa, senza il selettore di app</string>
-    <string name="cmd_replace_text_menu">Sostituisci testo (menu dell\'editor)</string>
-    <string name="cmd_replace_text_menu_desc">Invia l\'azione di sostituzione del menu dell\'app stessa, senza il selettore di app</string>
+    <string name="cmd_replace_text_menu">Suggerimenti di sostituzione (editor)</string>
+    <string name="cmd_replace_text_menu_desc">Apri i suggerimenti dell\'app stessa per la parola al cursore: correzioni ortografiche e altri candidati dello scorrimento. Solo campi di testo Android standard; altre app potrebbero non fare nulla</string>
+    <string name="text_assist_menu_removed">Assistenza testo (menu dell\'editor) non è più supportata. Assegna un altro comando</string>
     <string name="cmd_show_text_menu">Mostra menu testo</string>
     <string name="cmd_show_text_menu_desc">Seleziona la parola al cursore e mostra la barra di sistema</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

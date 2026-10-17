@@ -2233,10 +2233,9 @@
     <string name="cmd_text_assist_desc">Geselecteerde tekst verwerken met een app (vertaler, AI-assistent). Als de app tekst teruggeeft, vervangt die de selectie</string>
     <string name="cmd_replace_text">Tekst vervangen</string>
     <string name="cmd_replace_text_desc">Geselecteerde tekst vervangen door het resultaat van een app (vertalen, herschrijven)</string>
-    <string name="cmd_text_assist_menu">Tekstassistent (editormenu)</string>
-    <string name="cmd_text_assist_menu_desc">De tekstassistent-menuactie van de app zelf sturen, zonder app-kiezer</string>
-    <string name="cmd_replace_text_menu">Tekst vervangen (editormenu)</string>
-    <string name="cmd_replace_text_menu_desc">De vervang-menuactie van de app zelf sturen, zonder app-kiezer</string>
+    <string name="cmd_replace_text_menu">Vervangingssuggesties (editor)</string>
+    <string name="cmd_replace_text_menu_desc">De eigen suggesties van de app openen voor het woord bij de cursor: spellingcorrecties en andere veegkandidaten. Alleen in standaard Android-tekstvelden; andere apps doen mogelijk niets</string>
+    <string name="text_assist_menu_removed">Tekstassistent (editormenu) wordt niet meer ondersteund. Wijs een andere opdracht toe</string>
     <string name="cmd_show_text_menu">Tekstmenu tonen</string>
     <string name="cmd_show_text_menu_desc">Woord bij cursor selecteren en systeemwerkbalk tonen</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

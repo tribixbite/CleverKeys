@@ -399,8 +399,11 @@ process text with the result written back (`ProcessTextActivity` + `ProcessTextR
 `textAssist`/`replaceText` kept as two names over one implementation, results editable),
 item 5 universal share (`shareText` now the IME's ACTION_SEND chooser), item 6 SuggestionSpan
 alternates on swipe/autocorrect commits (flags 0), items 7–8 `word_left`/`word_right`,
-`select_word_left`/`select_word_right`, `select_word`, `select_line`. §4.1's `textAssistMenu`
-removal is NOT done (maintainer has not confirmed). How each behaves where:
+`select_word_left`/`select_word_right`, `select_word`, `select_line`. §4.1 DONE 2026-10-17
+(maintainer decision): `textAssistMenu` left the catalogue; `Editing.ASSIST_MENU` keeps its
+ordinal and the name still resolves, so a saved mapping shows a "no longer supported" bar
+message. `replaceTextMenu` is now "Replacement Suggestions (Editor)" (not "Spelling
+suggestions": it also offers the swipe alternatives of item 6). How each behaves where:
 `.claude/skills/ime-key-routing.md` "Editor commands: case, share, process text, word/line".
 Still unverified on a device: chooser result forwarding on OEM choosers, selection survival
 across the trampoline, Ctrl+Shift+arrow extension in EditText, SuggestionSpan in Chrome and

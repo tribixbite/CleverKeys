@@ -2253,10 +2253,9 @@
     <string name="cmd_text_assist_desc">Ausgewählten Text mit einer App bearbeiten (Übersetzer, KI-Assistent). Gibt die App Text zurück, ersetzt er die Auswahl</string>
     <string name="cmd_replace_text">Text ersetzen</string>
     <string name="cmd_replace_text_desc">Ausgewählten Text durch das Ergebnis einer App ersetzen (übersetzen, umformulieren)</string>
-    <string name="cmd_text_assist_menu">Textassistent (Editormenü)</string>
-    <string name="cmd_text_assist_menu_desc">Die Textassistent-Menüaktion der App selbst senden, ohne App-Auswahl</string>
-    <string name="cmd_replace_text_menu">Text ersetzen (Editormenü)</string>
-    <string name="cmd_replace_text_menu_desc">Die Ersetzen-Menüaktion der App selbst senden, ohne App-Auswahl</string>
+    <string name="cmd_replace_text_menu">Ersetzungsvorschläge (Editor)</string>
+    <string name="cmd_replace_text_menu_desc">Die eigenen Vorschläge der App für das Wort am Cursor öffnen: Rechtschreibkorrekturen und weitere Wisch-Kandidaten. Nur in normalen Android-Textfeldern; andere Apps tun eventuell nichts</string>
+    <string name="text_assist_menu_removed">Textassistent (Editormenü) wird nicht mehr unterstützt. Bitte einen anderen Befehl zuweisen</string>
     <string name="cmd_show_text_menu">Textmenü anzeigen</string>
     <string name="cmd_show_text_menu_desc">Wort am Cursor auswählen und System-Textleiste anzeigen</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

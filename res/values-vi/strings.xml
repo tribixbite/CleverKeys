@@ -2218,10 +2218,9 @@
     <string name="cmd_text_assist_desc">Xử lý văn bản đã chọn bằng một ứng dụng (trình dịch, trợ lý AI). Nếu ứng dụng trả về văn bản, văn bản đó sẽ thay thế vùng chọn</string>
     <string name="cmd_replace_text">Thay thế văn bản</string>
     <string name="cmd_replace_text_desc">Thay văn bản đã chọn bằng kết quả từ một ứng dụng (dịch, viết lại)</string>
-    <string name="cmd_text_assist_menu">Hỗ trợ văn bản (menu trình soạn thảo)</string>
-    <string name="cmd_text_assist_menu_desc">Gửi thao tác hỗ trợ văn bản trong menu của chính ứng dụng, không qua bộ chọn ứng dụng</string>
-    <string name="cmd_replace_text_menu">Thay thế văn bản (menu trình soạn thảo)</string>
-    <string name="cmd_replace_text_menu_desc">Gửi thao tác thay thế trong menu của chính ứng dụng, không qua bộ chọn ứng dụng</string>
+    <string name="cmd_replace_text_menu">Gợi ý thay thế (trình soạn thảo)</string>
+    <string name="cmd_replace_text_menu_desc">Mở các gợi ý của chính ứng dụng cho từ tại con trỏ: sửa chính tả và các ứng viên vuốt khác. Chỉ trong ô văn bản Android tiêu chuẩn; ứng dụng khác có thể không làm gì</string>
+    <string name="text_assist_menu_removed">Hỗ trợ văn bản (menu trình soạn thảo) không còn được hỗ trợ. Hãy gán lệnh khác</string>
     <string name="cmd_show_text_menu">Hiện menu văn bản</string>
     <string name="cmd_show_text_menu_desc">Chọn từ tại con trỏ và hiện thanh công cụ gốc</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

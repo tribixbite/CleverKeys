@@ -162,7 +162,8 @@ object KeyLabels {
             KeyValue.Editing.CURSOR_DOC_END -> getString(R.string.key_descr_doc_end)
             KeyValue.Editing.CLEAR -> getString(R.string.key_descr_clear)
             KeyValue.Editing.SELECTION_CANCEL -> getString(R.string.key_descr_selection_cancel)
-            KeyValue.Editing.ASSIST_MENU -> getString(R.string.cmd_text_assist_menu)
+            // Removed command: a saved key still on the keyboard announces why it does nothing.
+            KeyValue.Editing.ASSIST_MENU -> getString(R.string.text_assist_menu_removed)
             KeyValue.Editing.REPLACE_MENU -> getString(R.string.cmd_replace_text_menu)
             KeyValue.Editing.WORD_LEFT -> getString(R.string.cmd_word_left)
             KeyValue.Editing.WORD_RIGHT -> getString(R.string.cmd_word_right)

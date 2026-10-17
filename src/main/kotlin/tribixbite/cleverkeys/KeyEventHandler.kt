@@ -824,6 +824,15 @@ class KeyEventHandler(
             execute_suffix(suffix)
             return
         }
+        // Removed command (maintainer decision 2026-10-17): android.R.id.textAssist is handled by
+        // no editor (EditText ignores it in onTextContextMenuItem; Chrome and Compose too), so
+        // it was always a silent no-op. Saved mappings, backups and custom layouts that still
+        // name `textAssistMenu` resolve here and get a visible refusal; nothing reaches the app
+        // and the typed-word state is untouched (docs/research/2026-10-15-ime-editor-actions.md §4.1).
+        if (ev == KeyValue.Editing.ASSIST_MENU) {
+            showFeedback(R.string.text_assist_menu_removed)
+            return
+        }
         // A system action must work even while an inline clipboard field owns text routing.
         if (ev == KeyValue.Editing.CLEAR_CLIPBOARD) {
             recv.getContext()?.let { context ->
@@ -882,7 +891,7 @@ class KeyEventHandler(
             // must report "unavailable" there instead of becoming a silent no-op, and clearing
             // the system clip never needs an InputConnection. Listed only for exhaustiveness.
             KeyValue.Editing.APPEND_POSSESSIVE, KeyValue.Editing.APPEND_APOSTROPHE,
-            KeyValue.Editing.CLEAR_CLIPBOARD -> Unit
+            KeyValue.Editing.CLEAR_CLIPBOARD, KeyValue.Editing.ASSIST_MENU -> Unit
             KeyValue.Editing.COPY_PRIVATE -> handlePrivateCopy()
             KeyValue.Editing.COPY -> if (isSelectionNotEmpty()) sendContextMenuAction(android.R.id.copy)
             KeyValue.Editing.PASTE -> handlePaste()
@@ -894,9 +903,9 @@ class KeyEventHandler(
             KeyValue.Editing.REDO -> sendUndoRedoShortcut(redo = true)
             KeyValue.Editing.REPLACE -> launchTextAction(TextActionPolicy.TextAction.REPLACE)
             KeyValue.Editing.ASSIST -> launchTextAction(TextActionPolicy.TextAction.ASSIST)
-            // The editor's own menu action, no chooser and no selection precondition: the editor
-            // decides what text assist / replace means (maintainer decision 2026-10-13).
-            KeyValue.Editing.ASSIST_MENU -> sendContextMenuAction(TextActionLauncher.fallbackMenuId(TextActionPolicy.TextAction.ASSIST))
+            // The editor's own replace action, no chooser and no selection precondition: stock
+            // EditText shows its suggestion popup (spelling fixes, our SuggestionSpan swipe
+            // alternatives) for the word at the cursor (maintainer decision 2026-10-13).
             KeyValue.Editing.REPLACE_MENU -> sendContextMenuAction(TextActionLauncher.fallbackMenuId(TextActionPolicy.TextAction.REPLACE))
             KeyValue.Editing.AUTOFILL -> sendContextMenuAction(android.R.id.autofill)
             KeyValue.Editing.DELETE_WORD -> send_key_down_up(

@@ -2239,10 +2239,9 @@
     <string name="cmd_text_assist_desc">Kijelölt szöveg feldolgozása egy alkalmazással (fordító, MI-asszisztens). Ha az alkalmazás szöveget ad vissza, az lecseréli a kijelölést</string>
     <string name="cmd_replace_text">Szöveg cseréje</string>
     <string name="cmd_replace_text_desc">Kijelölt szöveg cseréje egy alkalmazás eredményére (fordítás, átfogalmazás)</string>
-    <string name="cmd_text_assist_menu">Szövegsegéd (szerkesztőmenü)</string>
-    <string name="cmd_text_assist_menu_desc">Az alkalmazás saját szövegsegéd-menüműveletének küldése alkalmazásválasztó nélkül</string>
-    <string name="cmd_replace_text_menu">Szöveg cseréje (szerkesztőmenü)</string>
-    <string name="cmd_replace_text_menu_desc">Az alkalmazás saját csere-menüműveletének küldése alkalmazásválasztó nélkül</string>
+    <string name="cmd_replace_text_menu">Csere-javaslatok (szerkesztő)</string>
+    <string name="cmd_replace_text_menu_desc">Az alkalmazás saját javaslatainak megnyitása a kurzornál lévő szóhoz: helyesírási javítások és további csúsztatási jelöltek. Csak szabványos Android-szövegmezőkben; más alkalmazások esetleg semmit sem tesznek</string>
+    <string name="text_assist_menu_removed">A Szövegsegéd (szerkesztőmenü) már nem támogatott. Rendeljen hozzá másik parancsot</string>
     <string name="cmd_show_text_menu">Szövegmenü megjelenítése</string>
     <string name="cmd_show_text_menu_desc">A kurzornál lévő szó kijelölése, rendszereszköztár megjelenítése</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

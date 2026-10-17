@@ -165,7 +165,7 @@ class ReleaseClaimCommandCatalogueTest {
     fun `textAssist is published as a Text Action usable on any selection`() {
         val textActions = CommandRegistry.getByCategory(CommandRegistry.Category.TEXT_ACTIONS)
         assertThat(textActions.map { it.name })
-            .containsExactly("textAssist", "replaceText", "textAssistMenu", "replaceTextMenu", "showTextMenu")
+            .containsExactly("textAssist", "replaceText", "replaceTextMenu", "showTextMenu")
 
         val assist = textActions.single { it.name == "textAssist" }
         assertThat(EnglishResourceText.string(assist.nameRes)).isEqualTo("Text Assist")
@@ -176,22 +176,34 @@ class ReleaseClaimCommandCatalogueTest {
     }
 
     @Test
-    fun `the editor-menu text actions are Text Actions resolving to their own Editing keys`() {
+    fun `replaceTextMenu is a Text Action named for the editor's replacement suggestions`() {
         // 2026-10-13: textAssist/replaceText open the app chooser; the editor's own context-menu
-        // action (what those layout keys sent before 7d1a3271) is a separate command.
-        for ((name, editing) in listOf(
-            "textAssistMenu" to KeyValue.Editing.ASSIST_MENU,
-            "replaceTextMenu" to KeyValue.Editing.REPLACE_MENU,
-        )) {
-            val command = CommandRegistry.getByName(name)!!
-            assertThat(command.category).isEqualTo(CommandRegistry.Category.TEXT_ACTIONS)
-            assertThat(command.keywords).containsAtLeast("menu", "editor")
-            val kv = CommandRegistry.getKeyValue(name)!!
-            assertWithMessage("'$name' kind").that(kv.getKind()).isEqualTo(KeyValue.Kind.Editing)
-            assertWithMessage("'$name' editing action").that(kv.getEditing()).isEqualTo(editing)
-        }
-        assertThat(EnglishResourceText.string(CommandRegistry.getByName("textAssistMenu")!!.nameRes))
-            .isEqualTo("Text Assist (Editor Menu)")
+        // replace action is a separate command. 2026-10-17: renamed for what it shows — the
+        // editor's spelling/replacement suggestions (incl. our swipe alternatives, f12710b1).
+        val command = CommandRegistry.getByName("replaceTextMenu")!!
+        assertThat(command.category).isEqualTo(CommandRegistry.Category.TEXT_ACTIONS)
+        assertThat(command.keywords).containsAtLeast("menu", "editor", "suggestions", "spelling")
+        val kv = CommandRegistry.getKeyValue("replaceTextMenu")!!
+        assertThat(kv.getKind()).isEqualTo(KeyValue.Kind.Editing)
+        assertThat(kv.getEditing()).isEqualTo(KeyValue.Editing.REPLACE_MENU)
+        assertThat(EnglishResourceText.string(command.nameRes))
+            .isEqualTo("Replacement Suggestions (Editor)")
+        assertThat(EnglishResourceText.string(command.descriptionRes))
+            .isEqualTo("Open the app's own suggestions for the word at the cursor: spelling fixes and other swipe candidates. Standard Android text fields only; other apps may do nothing")
+    }
+
+    @Test
+    fun `textAssistMenu is no longer offered but a saved mapping still resolves`() {
+        // Maintainer decision 2026-10-17 (docs/research/2026-10-15-ime-editor-actions.md §4.1):
+        // android.R.id.textAssist is handled by no editor (EditText, Chrome, Compose), so the
+        // command always did nothing. It leaves the catalogue (palette, search; it was never an
+        // extra key — ExtraKeysPreference is Android-only, so not asserted here), while
+        // the KeyValue name stays resolvable so saved mappings/backups load and refuse visibly.
+        assertThat(CommandRegistry.getByName("textAssistMenu")).isNull()
+        assertThat(CommandRegistry.ALL_COMMANDS.map { it.name }).doesNotContain("textAssistMenu")
+        val kv = KeyValue.getKeyByName("textAssistMenu")
+        assertThat(kv.getKind()).isEqualTo(KeyValue.Kind.Editing)
+        assertThat(kv.getEditing()).isEqualTo(KeyValue.Editing.ASSIST_MENU)
     }
 
     @Test

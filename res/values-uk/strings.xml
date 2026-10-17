@@ -2330,10 +2330,9 @@
     <string name="cmd_text_assist_desc">Обробити виділений текст у застосунку (перекладач, ШІ-асистент). Якщо застосунок поверне текст, він замінить виділення</string>
     <string name="cmd_replace_text">Заміна тексту</string>
     <string name="cmd_replace_text_desc">Замінити виділений текст результатом із застосунку (переклад, перефразування)</string>
-    <string name="cmd_text_assist_menu">Допомога з текстом (меню редактора)</string>
-    <string name="cmd_text_assist_menu_desc">Надіслати дію допомоги з текстом із меню самого застосунку, без вибору застосунку</string>
-    <string name="cmd_replace_text_menu">Заміна тексту (меню редактора)</string>
-    <string name="cmd_replace_text_menu_desc">Надіслати дію заміни з меню самого застосунку, без вибору застосунку</string>
+    <string name="cmd_replace_text_menu">Варіанти заміни (редактор)</string>
+    <string name="cmd_replace_text_menu_desc">Відкрити власні варіанти застосунку для слова біля курсора: виправлення правопису та інші кандидати свайпу. Лише стандартні текстові поля Android; інші застосунки можуть нічого не робити</string>
+    <string name="text_assist_menu_removed">Допомога з текстом (меню редактора) більше не підтримується. Призначте іншу команду</string>
     <string name="cmd_show_text_menu">Меню тексту</string>
     <string name="cmd_show_text_menu_desc">Виділити слово біля курсора й показати системну панель</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

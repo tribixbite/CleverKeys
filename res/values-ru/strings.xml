@@ -2324,10 +2324,9 @@
     <string name="cmd_text_assist_desc">Обработать выделенный текст в приложении (переводчик, ИИ-ассистент). Если приложение вернёт текст, он заменит выделение</string>
     <string name="cmd_replace_text">Замена текста</string>
     <string name="cmd_replace_text_desc">Заменить выделенный текст результатом из приложения (перевод, переписывание)</string>
-    <string name="cmd_text_assist_menu">Помощь с текстом (меню редактора)</string>
-    <string name="cmd_text_assist_menu_desc">Отправить действие помощи с текстом из меню самого приложения, без выбора приложения</string>
-    <string name="cmd_replace_text_menu">Замена текста (меню редактора)</string>
-    <string name="cmd_replace_text_menu_desc">Отправить действие замены из меню самого приложения, без выбора приложения</string>
+    <string name="cmd_replace_text_menu">Варианты замены (редактор)</string>
+    <string name="cmd_replace_text_menu_desc">Открыть собственные варианты приложения для слова у курсора: исправления орфографии и другие кандидаты свайпа. Только стандартные текстовые поля Android; другие приложения могут ничего не делать</string>
+    <string name="text_assist_menu_removed">Помощь с текстом (меню редактора) больше не поддерживается. Назначьте другую команду</string>
     <string name="cmd_show_text_menu">Меню текста</string>
     <string name="cmd_show_text_menu_desc">Выделить слово у курсора и показать системную панель</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

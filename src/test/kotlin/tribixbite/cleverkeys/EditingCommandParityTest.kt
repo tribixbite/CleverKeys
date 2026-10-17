@@ -260,27 +260,41 @@ class EditingCommandParityTest {
 
     /**
      * Maintainer decision 2026-10-13: textAssist/replaceText keep the app chooser, and the
-     * editor's own context-menu action (the layout key's behaviour before 7d1a3271) is its own
-     * command — no chooser, no selection precondition (the editor decides what the action does).
+     * editor's own context-menu replace action (the layout key's behaviour before 7d1a3271) is
+     * its own command — no chooser, no selection precondition (the editor decides).
      */
     @Test
-    fun editorMenuTextActionsSendTheBareContextMenuIdWithoutAChooser() {
+    fun editorMenuReplaceSendsTheBareContextMenuIdWithoutAChooser() {
         for (sel in listOf<CharSequence?>("sel", null)) {
             selection = sel
-            for ((name, id) in listOf(
-                "textAssistMenu" to android.R.id.textAssist,
-                "replaceTextMenu" to android.R.id.replaceText,
-            )) {
-                val expected = listOf("handle_non_text_input()", "performContextMenuAction($id)")
-                assertEquals("$name key sel=${sel != null}", expected, layoutEffects(name))
-                assertEquals("$name mapping sel=${sel != null}", expected, mappingEffects(name))
-            }
+            val expected = listOf("handle_non_text_input()", "performContextMenuAction(${android.R.id.replaceText})")
+            assertEquals("key sel=${sel != null}", expected, layoutEffects("replaceTextMenu"))
+            assertEquals("mapping sel=${sel != null}", expected, mappingEffects("replaceTextMenu"))
         }
         // The chooser variants never send the bare id when nothing is selected: they report
         // "no text selected" instead (the chooser itself needs a real Intent, absent here).
         selection = null
         for (name in listOf("textAssist", "replaceText")) {
             assertTrue(name, layoutEffects(name).none { it.startsWith("performContextMenuAction") })
+        }
+    }
+
+    /**
+     * Maintainer decision 2026-10-17: `textAssistMenu` is removed — android.R.id.textAssist is
+     * handled by no editor, so it was a silent no-op. A saved mapping or layout value still
+     * resolves (Editing.ASSIST_MENU keeps its ordinal) and now refuses with a bar message,
+     * touching neither the app nor the typed-word state, on every surface and in every mode.
+     */
+    @Test
+    fun removedTextAssistMenuRefusesVisiblyAndSendsNothing() {
+        val expected = listOf("feedback(str#${R.string.text_assist_menu_removed})")
+        for (sel in listOf<CharSequence?>("sel", null)) for (edit in listOf(false, true)) {
+            for (pkg in listOf("com.example.notes", "com.termux")) {
+                selection = sel; editMode = edit; editorInfo.packageName = pkg
+                val tag = "sel=${sel != null} edit=$edit pkg=$pkg"
+                assertEquals("key $tag", expected, layoutEffects("textAssistMenu"))
+                assertEquals("mapping $tag", expected, mappingEffects("textAssistMenu"))
+            }
         }
     }
 

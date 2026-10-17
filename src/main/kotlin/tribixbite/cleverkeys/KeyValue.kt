@@ -111,6 +111,8 @@ class KeyValue private constructor(
         APPEND_APOSTROPHE,
         // 2026-10-13: the editor's own context-menu text actions, without the app chooser that
         // ASSIST/REPLACE open (TextActionLauncher). Appended so earlier ordinals stay stable.
+        // ASSIST_MENU is a REMOVED command (2026-10-17): kept only so saved `textAssistMenu`
+        // mappings resolve; KeyEventHandler refuses it with a bar message.
         ASSIST_MENU,
         REPLACE_MENU,
         // 2026-10-17: word moves / word selection (Ctrl(+Shift)+arrow semantics, readback-driven)
@@ -800,6 +802,7 @@ class KeyValue private constructor(
             // action — what the textAssist/replaceText layout keys sent before 7d1a3271. Plain-text
             // labels (one font, FLAG_SMALLER_FONT like "repl"): the key-font glyph of textAssist
             // cannot be combined with a text marker in a single sublabel.
+            // Removed from the catalogue 2026-10-17; resolvable so saved mappings refuse visibly.
             "textAssistMenu" -> editingKey("asst", Editing.ASSIST_MENU)
             "replaceTextMenu" -> editingKey("rplc", Editing.REPLACE_MENU)
             // 2026-10-17 editor commands. Plain-text labels of at most 4 chars (single-font

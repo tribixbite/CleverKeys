@@ -2244,10 +2244,9 @@
     <string name="cmd_text_assist_desc">Seçili metni bir uygulamayla işle (çevirmen, yapay zeka asistanı). Uygulama metin döndürürse seçimin yerine geçer</string>
     <string name="cmd_replace_text">Metni Değiştir</string>
     <string name="cmd_replace_text_desc">Seçili metni bir uygulamanın sonucuyla değiştir (çevir, yeniden yaz)</string>
-    <string name="cmd_text_assist_menu">Metin Yardımı (Düzenleyici Menüsü)</string>
-    <string name="cmd_text_assist_menu_desc">Uygulama seçici olmadan uygulamanın kendi menüsündeki metin yardımı eylemini gönder</string>
-    <string name="cmd_replace_text_menu">Metni Değiştir (Düzenleyici Menüsü)</string>
-    <string name="cmd_replace_text_menu_desc">Uygulama seçici olmadan uygulamanın kendi menüsündeki değiştirme eylemini gönder</string>
+    <string name="cmd_replace_text_menu">Değiştirme Önerileri (Düzenleyici)</string>
+    <string name="cmd_replace_text_menu_desc">İmleçteki sözcük için uygulamanın kendi önerilerini aç: yazım düzeltmeleri ve diğer kaydırma adayları. Yalnızca standart Android metin alanlarında; diğer uygulamalar hiçbir şey yapmayabilir</string>
+    <string name="text_assist_menu_removed">Metin Yardımı (Düzenleyici Menüsü) artık desteklenmiyor. Başka bir komut atayın</string>
     <string name="cmd_show_text_menu">Metin Menüsünü Göster</string>
     <string name="cmd_show_text_menu_desc">İmleçteki kelimeyi seç, sistem araç çubuğunu göster</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

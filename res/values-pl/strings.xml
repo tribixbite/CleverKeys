@@ -2329,10 +2329,9 @@
     <string name="cmd_text_assist_desc">Przetwórz zaznaczony tekst w aplikacji (tłumacz, asystent AI). Jeśli aplikacja zwróci tekst, zastąpi on zaznaczenie</string>
     <string name="cmd_replace_text">Zastąp tekst</string>
     <string name="cmd_replace_text_desc">Zastąp zaznaczony tekst wynikiem z aplikacji (tłumaczenie, przeredagowanie)</string>
-    <string name="cmd_text_assist_menu">Asystent tekstu (menu edytora)</string>
-    <string name="cmd_text_assist_menu_desc">Wyślij akcję asystenta tekstu z menu samej aplikacji, bez wyboru aplikacji</string>
-    <string name="cmd_replace_text_menu">Zastąp tekst (menu edytora)</string>
-    <string name="cmd_replace_text_menu_desc">Wyślij akcję zastępowania z menu samej aplikacji, bez wyboru aplikacji</string>
+    <string name="cmd_replace_text_menu">Propozycje zamiany (edytor)</string>
+    <string name="cmd_replace_text_menu_desc">Otwórz własne propozycje aplikacji dla słowa przy kursorze: poprawki pisowni i inne kandydaty przesunięcia. Tylko standardowe pola tekstowe Androida; inne aplikacje mogą nic nie zrobić</string>
+    <string name="text_assist_menu_removed">Asystent tekstu (menu edytora) nie jest już obsługiwany. Przypisz inne polecenie</string>
     <string name="cmd_show_text_menu">Pokaż menu tekstu</string>
     <string name="cmd_show_text_menu_desc">Zaznacz słowo przy kursorze i pokaż pasek systemowy</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

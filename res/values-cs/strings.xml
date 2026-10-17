@@ -2319,10 +2319,9 @@
     <string name="cmd_text_assist_desc">Zpracovat vybraný text pomocí aplikace (překladač, asistent AI). Pokud aplikace vrátí text, nahradí výběr</string>
     <string name="cmd_replace_text">Nahradit text</string>
     <string name="cmd_replace_text_desc">Nahradit vybraný text výsledkem z aplikace (překlad, přepsání)</string>
-    <string name="cmd_text_assist_menu">Asistent textu (nabídka editoru)</string>
-    <string name="cmd_text_assist_menu_desc">Odeslat akci asistenta textu z vlastní nabídky aplikace bez výběru aplikace</string>
-    <string name="cmd_replace_text_menu">Nahradit text (nabídka editoru)</string>
-    <string name="cmd_replace_text_menu_desc">Odeslat akci nahrazení z vlastní nabídky aplikace bez výběru aplikace</string>
+    <string name="cmd_replace_text_menu">Návrhy náhrad (editor)</string>
+    <string name="cmd_replace_text_menu_desc">Otevřít vlastní návrhy aplikace pro slovo u kurzoru: opravy pravopisu a další kandidáty tahu. Jen standardní textová pole Androidu; jiné aplikace nemusí nic udělat</string>
+    <string name="text_assist_menu_removed">Asistent textu (nabídka editoru) již není podporován. Přiřaďte tomuto místu jiný příkaz</string>
     <string name="cmd_show_text_menu">Zobrazit nabídku textu</string>
     <string name="cmd_show_text_menu_desc">Vybrat slovo u kurzoru a zobrazit systémovou lištu</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

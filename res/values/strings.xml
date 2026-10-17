@@ -2633,10 +2633,9 @@
     <string name="cmd_text_assist_desc">Process selected text with an app (translator, AI assistant). If the app returns text, it replaces the selection</string>
     <string name="cmd_replace_text">Replace Text</string>
     <string name="cmd_replace_text_desc">Replace selected text with the result from an app (translate, rewrite)</string>
-    <string name="cmd_text_assist_menu">Text Assist (Editor Menu)</string>
-    <string name="cmd_text_assist_menu_desc">Send the app\'s own text-assist menu action, without the app chooser</string>
-    <string name="cmd_replace_text_menu">Replace Text (Editor Menu)</string>
-    <string name="cmd_replace_text_menu_desc">Send the app\'s own replace menu action, without the app chooser</string>
+    <string name="cmd_replace_text_menu">Replacement Suggestions (Editor)</string>
+    <string name="cmd_replace_text_menu_desc">Open the app\'s own suggestions for the word at the cursor: spelling fixes and other swipe candidates. Standard Android text fields only; other apps may do nothing</string>
+    <string name="text_assist_menu_removed">Text Assist (Editor Menu) is no longer supported. Reassign this command</string>
     <string name="cmd_show_text_menu">Show Text Menu</string>
     <string name="cmd_show_text_menu_desc">Select word at cursor and show native toolbar</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->

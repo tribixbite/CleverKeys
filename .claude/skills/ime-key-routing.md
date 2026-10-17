@@ -327,11 +327,20 @@ editor/receiver effects — add any new Editing value there (it fails on an unco
 ## Editor-menu text actions (2026-10-13)
 
 `textAssist`/`replaceText` (Editing.ASSIST/REPLACE) keep the `TextActionLauncher` app
-chooser. `textAssistMenu`/`replaceTextMenu` (Editing.ASSIST_MENU/REPLACE_MENU, appended to
-the enum so ordinals stay stable) send the bare `android.R.id.textAssist`/`replaceText`
-context-menu action — the pre-7d1a3271 layout-key behaviour — with no chooser and no
-selection precondition. Text labels "asst"/"rplc" (single-font rule: a key-font glyph cannot
-share a sublabel with a text marker).
+chooser. `replaceTextMenu` (Editing.REPLACE_MENU, "Replacement Suggestions (Editor)") sends
+the bare `android.R.id.replaceText` context-menu action — the pre-7d1a3271 layout-key
+behaviour — with no chooser and no selection precondition; stock EditText shows its
+SuggestionSpan popup for the word at the cursor. Text label "rplc" (single-font rule).
+
+**Removed command `textAssistMenu` (2026-10-17).** `android.R.id.textAssist` is handled by no
+editor (EditText's `onTextContextMenuItem` has no case; Chrome, Compose neither), so it was a
+silent no-op. It is out of `CommandRegistry` (palette, search) but `Editing.ASSIST_MENU` and
+the KeyValue name `textAssistMenu` stay: saved mappings, backups and custom layouts still
+resolve, and `handleEditingKey` refuses it FIRST (before inline routing and
+`handle_non_text_input`) with `R.string.text_assist_menu_removed`; KeyLabels reads the same
+string. Pinned by `EditingCommandParityTest.removedTextAssistMenuRefusesVisiblyAndSendsNothing`.
+Convention for future removals: keep the enum value and name, refuse visibly, drop the
+catalogue entry and its strings.
 
 ## Blind fields: terminal-style input (2026-10-13)
 
@@ -424,4 +433,4 @@ From docs/research/2026-10-15-ime-editor-actions.md §4.2, all in `handleEditing
   `SuggestionSpanPolicy` (≤5 alternatives, ≤48 chars, text fields allowing suggestions only)
   and `SuggestionSpanCommit` (flags 0, LatinIME pattern). Never in password, terminal-style or
   blind fields. The commit guard compares characters, so spans do not affect readback.
-- `textAssistMenu` stays (maintainer has not confirmed its removal).
+- `textAssistMenu` removed 2026-10-17 (see "Editor-menu text actions").

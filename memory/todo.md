@@ -216,7 +216,7 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     forward the result. (c) `shareText` in Chrome, a Compose field and an EditText: one share
     sheet, nothing shared twice; no selection → bar message. (d) swipe a word in a stock
     EditText (e.g. Settings search is NO_SUGGESTIONS — use Keep/Messages), select it, toolbar
-    Replace and `replaceTextMenu` show the other candidates; autocorrect a typo and check the
+    Replace and `replaceTextMenu` (now "Replacement Suggestions (Editor)") show the other candidates; autocorrect a typo and check the
     typed word is offered; no visible underline. (e) `word_left/right`, `select_word_left/right`,
     `select_word`, `select_line` in EditText, Chrome, Compose and the inline clipboard editor;
     in Termux `word_left` moves a word in bash and the select commands show "unavailable".
@@ -234,6 +234,16 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     path made no editor call before refusing. Re-check on device: Chrome textarea select_word at
     `On|e`, `One|`, `|two`, over a selection; select_line on a wrapped line (selects the visual
     line); a WebView field; Termux still "unavailable".
+31. [x] agent: DONE 2026-10-17 — `textAssistMenu` removed (maintainer decision; research §4.1:
+    android.R.id.textAssist is handled by no editor, so it was always a silent no-op). Gone from
+    the catalogue (palette/search; never an extra key), wiki (237 → 236 commands) and strings
+    in 22 resource dirs. `Editing.ASSIST_MENU` and the `textAssistMenu` name stay so saved
+    mappings, backups and custom layouts load: pressing one shows "Text Assist (Editor Menu) is
+    no longer supported. Reassign this command" in the bar, on both surfaces, in every mode,
+    without touching the app (TalkBack reads the same text). `replaceTextMenu` renamed
+    "Replacement Suggestions (Editor)" with a new description in all 21 locales (→ item 8
+    review). Fail-first: ReleaseClaimCommandCatalogueTest 3 red, EditingCommandParityTest 1 red.
+    Device check folded into item 30(d): the renamed command still opens the popup.
 
 ## Device results recorded 2026-10-07/08
 

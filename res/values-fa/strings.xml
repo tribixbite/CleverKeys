@@ -2271,10 +2271,9 @@
     <string name="cmd_text_assist_desc">پردازش متن انتخاب‌شده با یک برنامه (مترجم، دستیار هوش مصنوعی). اگر برنامه متنی برگرداند، جایگزین بخش انتخاب‌شده می‌شود</string>
     <string name="cmd_replace_text">جایگزینی متن</string>
     <string name="cmd_replace_text_desc">جایگزینی متن انتخاب‌شده با نتیجهٔ یک برنامه (ترجمه، بازنویسی)</string>
-    <string name="cmd_text_assist_menu">دستیار متن (منوی ویرایشگر)</string>
-    <string name="cmd_text_assist_menu_desc">ارسال کنش دستیار متن از منوی خود برنامه، بدون انتخابگر برنامه</string>
-    <string name="cmd_replace_text_menu">جایگزینی متن (منوی ویرایشگر)</string>
-    <string name="cmd_replace_text_menu_desc">ارسال کنش جایگزینی از منوی خود برنامه، بدون انتخابگر برنامه</string>
+    <string name="cmd_replace_text_menu">پیشنهادهای جایگزینی (ویرایشگر)</string>
+    <string name="cmd_replace_text_menu_desc">باز کردن پیشنهادهای خود برنامه برای واژهٔ زیر مکان‌نما: اصلاح املا و دیگر گزینه‌های کشیدن. فقط در فیلدهای متنی استاندارد اندروید؛ ممکن است برنامه‌های دیگر کاری نکنند</string>
+    <string name="text_assist_menu_removed">دستیار متن (منوی ویرایشگر) دیگر پشتیبانی نمی‌شود. فرمان دیگری اختصاص دهید</string>
     <string name="cmd_show_text_menu">نمایش منوی متن</string>
     <string name="cmd_show_text_menu_desc">انتخاب واژهٔ زیر مکان‌نما و نمایش نوار ابزار سامانه</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->
