@@ -906,7 +906,7 @@ class KeyEventHandler(
             // The editor's own replace action, no chooser and no selection precondition: stock
             // EditText shows its suggestion popup (spelling fixes, our SuggestionSpan swipe
             // alternatives) for the word at the cursor (maintainer decision 2026-10-13).
-            KeyValue.Editing.REPLACE_MENU -> sendContextMenuAction(TextActionLauncher.fallbackMenuId(TextActionPolicy.TextAction.REPLACE))
+            KeyValue.Editing.REPLACE_MENU -> sendContextMenuAction(android.R.id.replaceText)
             KeyValue.Editing.AUTOFILL -> sendContextMenuAction(android.R.id.autofill)
             KeyValue.Editing.DELETE_WORD -> send_key_down_up(
                 KeyEvent.KEYCODE_DEL,
@@ -1182,7 +1182,7 @@ class KeyEventHandler(
     private fun launchTextAction(action: TextActionPolicy.TextAction) {
         val conn = recv.getCurrentInputConnection() ?: return
         val ctx = recv.getContext() ?: run {
-            conn.performContextMenuAction(TextActionLauncher.fallbackMenuId(action))
+            TextActionLauncher.fallbackMenuId(action)?.let { conn.performContextMenuAction(it) }
             return
         }
         val selected = runCatching { conn.getSelectedText(0)?.toString() }.getOrNull()
@@ -1203,7 +1203,8 @@ class KeyEventHandler(
         val origin = ProcessTextReturn.begin(info?.packageName, info?.fieldId ?: 0, info?.inputType ?: 0, receipt)
         if (!TextActionLauncher.launchForResult(ctx, origin.requestId, receipt.selectedText, action)) {
             ProcessTextReturn.cancel(origin.requestId)
-            conn.performContextMenuAction(TextActionLauncher.fallbackMenuId(action))
+            val fallback = TextActionLauncher.fallbackMenuId(action)
+            if (fallback != null) conn.performContextMenuAction(fallback) else showFeedback(R.string.dynamic_action_unavailable)
         }
     }
 

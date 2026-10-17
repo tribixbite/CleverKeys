@@ -565,6 +565,28 @@ class EditorTextCommandsTest {
         }
     }
 
+    /**
+     * When the chooser cannot be started, Text assist used to fall back to
+     * performContextMenuAction(android.R.id.textAssist) — an id no editor handles (research
+     * §1, the reason `textAssistMenu` was removed in 932207b0), so the press silently did
+     * nothing. It now says the action is unavailable. Replace text keeps its fallback: the
+     * editor's replace action does show suggestions on a word that carries them.
+     */
+    @Test
+    fun aFailedChooserLaunchTellsTheUserForTextAssistAndFallsBackForReplaceText() {
+        mockProcessText()
+        launchSucceeds = false
+        editor("say hola there", 4, 8)
+        val assist = press("textAssist")
+        assertTrue(assist.toString(), assist.none { it.startsWith("performContextMenuAction") })
+        assertTrue(assist.toString(), "feedback(str#${R.string.dynamic_action_unavailable})" in assist)
+        editor("say hola there", 4, 8)
+        assertTrue(
+            press("replaceText").toString(),
+            "performContextMenuAction(${android.R.id.replaceText})" in log,
+        )
+    }
+
     @Test
     fun aResultForAChangedTextOrAnotherFieldGoesToTheClipboardNotTheEditor() {
         mockProcessText()

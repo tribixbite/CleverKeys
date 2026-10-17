@@ -1,6 +1,5 @@
 package tribixbite.cleverkeys
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -66,10 +65,14 @@ internal object TextActionLauncher {
             false
         }
 
-    /** The editor context-menu id tried when the chooser cannot be started. */
-    @SuppressLint("InlinedApi")
-    fun fallbackMenuId(action: TextActionPolicy.TextAction): Int = when (action) {
-        TextActionPolicy.TextAction.ASSIST -> android.R.id.textAssist
+    /**
+     * The editor context-menu id tried when the chooser cannot be started, or null when no
+     * editor action would do anything: `android.R.id.textAssist` is handled by no editor
+     * (research 2026-10-15 §1 — why `textAssistMenu` was removed), so Text assist reports the
+     * action as unavailable instead. `replaceText` does show suggestions on a word carrying them.
+     */
+    fun fallbackMenuId(action: TextActionPolicy.TextAction): Int? = when (action) {
+        TextActionPolicy.TextAction.ASSIST -> null
         TextActionPolicy.TextAction.REPLACE -> android.R.id.replaceText
     }
 }
