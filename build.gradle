@@ -1472,6 +1472,10 @@ tasks.register('runMockTests', JavaExec) {
     // effective-theme change), the layouts serializer (backup blob) and the XML `theme` attribute.
     'tribixbite.cleverkeys.LayoutThemeBindingConfigTest',
     'tribixbite.cleverkeys.ThemeBorderPaintOpacityTest',
+    // 2026-10-17 Pixel: suggestion-bar text colour vs the bar, every role, every built-in theme
+    // (mock tier: the decorative schemes need Compose's Color on the classpath).
+    'tribixbite.cleverkeys.SuggestionBarPaletteTest',
+    'tribixbite.cleverkeys.PreferenceUIUpdateHandlerViewsTest',
     // Audit 2026-09-06 W7 (H-8, #77 residual): all-null loc-stripped pane cells render as
     // empty space — onDraw consults Keyboard2View.keyCellIsEmpty before drawKeyFrame.
     'tribixbite.cleverkeys.EmptyPaneCellRenderTest',

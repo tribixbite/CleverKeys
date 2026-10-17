@@ -21,12 +21,17 @@ import android.util.Log
  * Extracted from CleverKeysService.onSharedPreferenceChanged() to reduce main class size.
  *
  * @since v1.32.412
+ *
+ * The views are read through providers on every change, never captured: a theme change
+ * (including a switch onto a layout bound to another theme) replaces the keyboard view and the
+ * suggestion bar, and a captured reference kept applying opacity and layout to the detached
+ * originals for the rest of the service's life (2026-10-17).
  */
 class PreferenceUIUpdateHandler(
     private val config: Config?,
     private val layoutBridge: LayoutBridge?,
-    private val keyboardView: Keyboard2View?,
-    private val suggestionBar: SuggestionBar?
+    private val keyboardView: () -> Keyboard2View?,
+    private val suggestionBar: () -> SuggestionBar?
 ) {
     /**
      * Handle UI updates for preference changes.
@@ -50,7 +55,7 @@ class PreferenceUIUpdateHandler(
     private fun updateKeyboardLayout() {
         val layout = layoutBridge?.getCurrentLayout()
         if (layout != null) {
-            keyboardView?.setKeyboard(layout)
+            keyboardView()?.setKeyboard(layout)
         }
     }
 
@@ -59,7 +64,7 @@ class PreferenceUIUpdateHandler(
      */
     private fun updateSuggestionBarOpacity() {
         config?.let { cfg ->
-            suggestionBar?.setOpacity(cfg.suggestion_bar_opacity)
+            suggestionBar()?.setOpacity(cfg.suggestion_bar_opacity)
         }
     }
 
@@ -109,16 +114,16 @@ class PreferenceUIUpdateHandler(
          *
          * @param config The configuration
          * @param layoutBridge The layout bridge (nullable)
-         * @param keyboardView The keyboard view (nullable)
-         * @param suggestionBar The suggestion bar (nullable)
+         * @param keyboardView Supplies the CURRENT keyboard view (nullable result)
+         * @param suggestionBar Supplies the CURRENT suggestion bar (nullable result)
          * @return A new PreferenceUIUpdateHandler instance
          */
         @JvmStatic
         fun create(
             config: Config?,
             layoutBridge: LayoutBridge?,
-            keyboardView: Keyboard2View?,
-            suggestionBar: SuggestionBar?
+            keyboardView: () -> Keyboard2View?,
+            suggestionBar: () -> SuggestionBar?
         ): PreferenceUIUpdateHandler {
             return PreferenceUIUpdateHandler(config, layoutBridge, keyboardView, suggestionBar)
         }

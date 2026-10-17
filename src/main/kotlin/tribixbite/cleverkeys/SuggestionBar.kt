@@ -372,14 +372,14 @@ class SuggestionBar : LinearLayout {
                 view.layoutParams = defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
-                view.setTextColor(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.LTGRAY)
+                view.setTextColor(theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.LTGRAY)
             }
             // #42: Exact typed word (italic, sublabel color for "tap to add").
             suggestion is Suggestion.ExactAdd -> {
                 view.layoutParams = defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC)
-                view.setTextColor(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.LTGRAY)
+                view.setTextColor(theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.LTGRAY)
             }
             // Highlight the commit item with the high-confidence colour (audit H-4:
             // the Theme-Creator's "High Confidence"; XML themes default it to the old
@@ -812,7 +812,9 @@ class SuggestionBar : LinearLayout {
             )
             gravity = Gravity.CENTER
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-            setTextColor(theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN)
+            // The bar's accent role, checked against the bar background (SuggestionBarPalette);
+            // the raw activated label colour was unreadable on several XML themes' bars.
+            setTextColor(theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN)
             typeface = Typeface.DEFAULT_BOLD
             text = message
         }
@@ -874,7 +876,7 @@ class SuggestionBar : LinearLayout {
             )
             gravity = Gravity.CENTER
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-            setTextColor(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.LTGRAY)
+            setTextColor(theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.LTGRAY)
             typeface = Typeface.DEFAULT_BOLD
             text = message
         }
@@ -1200,8 +1202,8 @@ class SuggestionBar : LinearLayout {
 
             // Set initial icon (visibility off = hidden)
             setImageDrawable(getVisibilityDrawable(false))
-            // Apply theme color
-            setColorFilter(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.GRAY)
+            // Same role and colour as after a toggle (togglePasswordVisibility)
+            setColorFilter(theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.GRAY)
 
             setOnClickListener {
                 togglePasswordVisibility()
@@ -1265,7 +1267,7 @@ class SuggestionBar : LinearLayout {
             
             setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
-            setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
+            setTextColor(theme?.suggestionTextColor?.takeIf { it != 0 } ?: Color.WHITE)
             typeface = Typeface.MONOSPACE
             text = ""
             letterSpacing = 0.15f
@@ -1324,9 +1326,9 @@ class SuggestionBar : LinearLayout {
         eyeToggleView?.apply {
             setImageDrawable(getVisibilityDrawable(isPasswordVisible))
             val color = if (isPasswordVisible) {
-                theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN
+                theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN
             } else {
-                theme?.subLabelColor?.takeIf { it != 0 } ?: Color.GRAY
+                theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.GRAY
             }
             setColorFilter(color)
         }

@@ -78,9 +78,11 @@ class ThemeEditorPreviewMappingTest {
         keyBorderActivated = ComposeColor(0xFF1C1D1E),
         swipeTrail = ComposeColor(0xFF1F2021),
         ripple = ComposeColor(0xFF222324),
-        suggestionText = ComposeColor(0xFF252627),
+        // Mid greys: >= SuggestionBarPalette.MIN_CONTRAST against both this dark bar and the
+        // light edit colour (#FEDCBA), so no edit trips the palette's unreadable-colour guard.
+        suggestionText = ComposeColor(0xFF7A7B7C),
         suggestionBackground = ComposeColor(0xFF28292A),
-        suggestionHighConfidence = ComposeColor(0xFF2B2C2D),
+        suggestionHighConfidence = ComposeColor(0xFF7D7E7F),
         keyboardBackground = ComposeColor(0xFF2E2F30),
         keyboardSurface = ComposeColor(0xFF313233),
     )
@@ -175,9 +177,9 @@ class ThemeEditorPreviewMappingTest {
         assertThat(r["keyBorderColorActivated"]).isEqualTo(0xFF1C1D1E.toInt())
         assertThat(r["trail"]).isEqualTo(0xFF1F2021.toInt())
         assertThat(r["rippleColor"]).isEqualTo(0xFF222324.toInt())
-        assertThat(r["suggestionTextColor"]).isEqualTo(0xFF252627.toInt())
+        assertThat(r["suggestionTextColor"]).isEqualTo(0xFF7A7B7C.toInt())
         assertThat(r["suggestionBackgroundColor"]).isEqualTo(0xFF28292A.toInt())
-        assertThat(r["suggestionHighConfidenceColor"]).isEqualTo(0xFF2B2C2D.toInt())
+        assertThat(r["suggestionHighConfidenceColor"]).isEqualTo(0xFF7D7E7F.toInt())
         assertThat(r["colorKeyboardBackground"]).isEqualTo(0xFF2E2F30.toInt())
         assertThat(r["colorKeyboardSurface"]).isEqualTo(0xFF313233.toInt())
     }

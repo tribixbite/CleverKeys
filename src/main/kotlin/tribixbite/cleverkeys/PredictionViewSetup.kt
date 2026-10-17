@@ -112,6 +112,13 @@ class PredictionViewSetup(
                     config.clipboard_pane_height_percent
                 )
 
+                // One line per (re)build — rare (first show, theme change): names the theme and
+                // the colours the bar was given, so a device report can be checked from logcat.
+                theme?.let {
+                    android.util.Log.i("PredictionViewSetup", "Suggestion bar built: theme=${config.themeName} " +
+                        "text=#%08X highlight=#%08X bg=#%08X".format(
+                            it.suggestionTextColor, it.suggestionHighConfidenceColor, it.suggestionBackgroundColor))
+                }
                 inputViewContainer = result.inputViewContainer
                 suggestionBar = result.suggestionBar
                 contentPaneContainer = result.contentPaneContainer

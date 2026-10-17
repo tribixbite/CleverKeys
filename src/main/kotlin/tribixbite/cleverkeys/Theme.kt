@@ -104,6 +104,14 @@ class Theme {
     @JvmField
     val suggestionHighConfidenceColor: Int
 
+    /**
+     * Prompt chips ("+word" exact-add, "Don't ask"): the theme's sub-label colour, unless it is
+     * unreadable on the bar. All three suggestion text roles pass through
+     * [SuggestionBarPalette.resolve] against [suggestionBackgroundColor].
+     */
+    @JvmField
+    val suggestionSecondaryTextColor: Int
+
     /** Surface colour for elevated elements (popups) hosted by keyboard views. */
     @JvmField
     val colorKeyboardSurface: Int
@@ -148,9 +156,13 @@ class Theme {
         colorKeySpecial = colorKey
         keyBorderColorActivated = keyBorderColorTop
         rippleColor = 0 // platform-default ripple
-        suggestionTextColor = labelColor
         suggestionBackgroundColor = colorKey
-        suggestionHighConfidenceColor = activatedColor
+        // colorLabelActivated was designed for colorKeyActivated, not the bar (colorKey):
+        // readable only after SuggestionBarPalette (Cobalt's was the bar colour itself).
+        val bar = SuggestionBarPalette.resolve(labelColor, activatedColor, subLabelColor, colorKey)
+        suggestionTextColor = bar.text
+        suggestionHighConfidenceColor = bar.highlight
+        suggestionSecondaryTextColor = bar.secondary
         colorKeyboardSurface = colorKey
     }
 
@@ -208,9 +220,16 @@ class Theme {
             .compositeOver(colorScheme.keyDefault).toArgb()
         keyBorderColorActivated = colorScheme.keyBorderActivated.toArgb()
         rippleColor = colorScheme.ripple.toArgb()
-        suggestionTextColor = colorScheme.suggestionText.toArgb()
         suggestionBackgroundColor = colorScheme.suggestionBackground.toArgb()
-        suggestionHighConfidenceColor = colorScheme.suggestionHighConfidence.toArgb()
+        val bar = SuggestionBarPalette.resolve(
+            colorScheme.suggestionText.toArgb(),
+            colorScheme.suggestionHighConfidence.toArgb(),
+            subLabelColor,
+            suggestionBackgroundColor,
+        )
+        suggestionTextColor = bar.text
+        suggestionHighConfidenceColor = bar.highlight
+        suggestionSecondaryTextColor = bar.secondary
         colorKeyboardSurface = colorScheme.keyboardSurface.toArgb()
     }
 
@@ -464,5 +483,60 @@ class Theme {
             }
             return _key_font!!
         }
+    }
+}
+
+/**
+ * The suggestion bar's text colours, resolved against the bar background.
+ *
+ * Android-free (pure JVM testable), so it lives beside [Theme] rather than in it.
+ */
+object SuggestionBarPalette {
+    /** Minimum contrast of any suggestion text role against the bar (WCAG 1.4.11). */
+    const val MIN_CONTRAST = 3.0
+
+    /** The three text roles the bar draws, all on the same background. */
+    data class Colors(val text: Int, val highlight: Int, val secondary: Int)
+
+    /**
+     * Resolve the colours [Theme] hands the bar: each role keeps its theme colour when it reaches
+     * [MIN_CONTRAST] against [background]; otherwise the highlight and prompt roles fall back to
+     * the (resolved) text colour — the highlight is still told apart by its bold face — and the
+     * text itself falls back to black or white, whichever contrasts more. Readable colours are
+     * returned unchanged, so a theme that already works renders exactly as before.
+     *
+     * Needed because XML themes have no suggestion attrs: [Theme] borrows `colorLabelActivated`,
+     * which those themes designed for `colorKeyActivated`, not for the bar's `colorKey`
+     * (Cobalt/Pine/ePaper Black: the highlight equalled the background).
+     */
+    fun resolve(text: Int, highlight: Int, secondary: Int, background: Int): Colors {
+        val readableText = if (readable(text, background)) text else {
+            val black = 0xFF000000.toInt()
+            val white = 0xFFFFFFFF.toInt()
+            if (contrastRatio(black, background) >= contrastRatio(white, background)) black else white
+        }
+        return Colors(
+            text = readableText,
+            highlight = if (readable(highlight, background)) highlight else readableText,
+            secondary = if (readable(secondary, background)) secondary else readableText,
+        )
+    }
+
+    private fun readable(color: Int, background: Int): Boolean =
+        contrastRatio(color, background) >= MIN_CONTRAST
+
+    /** WCAG 2.x contrast ratio of two colours (alpha ignored), 1.0..21.0. */
+    fun contrastRatio(a: Int, b: Int): Double {
+        val la = relativeLuminance(a)
+        val lb = relativeLuminance(b)
+        return (maxOf(la, lb) + 0.05) / (minOf(la, lb) + 0.05)
+    }
+
+    private fun relativeLuminance(color: Int): Double {
+        fun channel(shift: Int): Double {
+            val c = ((color ushr shift) and 0xFF) / 255.0
+            return if (c <= 0.03928) c / 12.92 else Math.pow((c + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * channel(16) + 0.7152 * channel(8) + 0.0722 * channel(0)
     }
 }

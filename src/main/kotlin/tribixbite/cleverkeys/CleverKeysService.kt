@@ -1052,8 +1052,8 @@ class CleverKeysService : InputMethodService(),
             _preferenceUIUpdateHandler = PreferenceUIUpdateHandler.create(
                 _config,
                 _layoutBridge,
-                _keyboardView,
-                _suggestionBar
+                { _keyboardView },
+                { _suggestionBar }
             )
         }
 

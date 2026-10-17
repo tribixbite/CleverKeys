@@ -97,8 +97,10 @@ class ThemeCreatorFieldWiringTest {
         keyBorderActivated = ComposeColor(0xFF123456),
         ripple = ComposeColor(0xFF44D4D4),
         suggestionText = ComposeColor(0xFF55E5E5),
-        suggestionBackground = ComposeColor(0xFF66F6F6),
-        suggestionHighConfidence = ComposeColor(0xFF770707),
+        // Readable on the bar (>= SuggestionBarPalette.MIN_CONTRAST): an unreadable text
+        // sentinel would be substituted by the palette guard, not passed through.
+        suggestionBackground = ComposeColor(0xFF060616),
+        suggestionHighConfidence = ComposeColor(0xFFF77707),
         keyboardSurface = ComposeColor(0xFF881818),
     )
 
@@ -145,8 +147,8 @@ class ThemeCreatorFieldWiringTest {
         assertThat(theme.keyBorderColorActivated).isEqualTo(0xFF123456.toInt())
         assertThat(theme.rippleColor).isEqualTo(0xFF44D4D4.toInt())
         assertThat(theme.suggestionTextColor).isEqualTo(0xFF55E5E5.toInt())
-        assertThat(theme.suggestionBackgroundColor).isEqualTo(0xFF66F6F6.toInt())
-        assertThat(theme.suggestionHighConfidenceColor).isEqualTo(0xFF770707.toInt())
+        assertThat(theme.suggestionBackgroundColor).isEqualTo(0xFF060616.toInt())
+        assertThat(theme.suggestionHighConfidenceColor).isEqualTo(0xFFF77707.toInt())
         assertThat(theme.colorKeyboardSurface).isEqualTo(0xFF881818.toInt())
     }
 
@@ -293,8 +295,8 @@ class ThemeCreatorFieldWiringTest {
         assertThat(c.keyBorderActivated).isEqualTo(ComposeColor(0xFF123456))
         assertThat(c.ripple).isEqualTo(ComposeColor(0xFF44D4D4))
         assertThat(c.suggestionText).isEqualTo(ComposeColor(0xFF55E5E5))
-        assertThat(c.suggestionBackground).isEqualTo(ComposeColor(0xFF66F6F6))
-        assertThat(c.suggestionHighConfidence).isEqualTo(ComposeColor(0xFF770707))
+        assertThat(c.suggestionBackground).isEqualTo(ComposeColor(0xFF060616))
+        assertThat(c.suggestionHighConfidence).isEqualTo(ComposeColor(0xFFF77707))
         assertThat(c.keyboardSurface).isEqualTo(ComposeColor(0xFF881818))
     }
 }
