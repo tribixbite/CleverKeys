@@ -131,6 +131,13 @@ A throw inside an AndroidView's draw leaves Compose's RenderNodeLayer recording 
 the NEXT frame dies with this message and no app frames, and Espresso swallows the real
 throw. Draw the view into `RenderNode.beginRecording()` in a test to surface it (2026-10-08).
 
+## Gradle-guard memory caps (2026-10-17)
+
+With the current source size, `compileDebugKotlin` can OOM the heap at the 1 GiB default and
+`compileDebugUnitTestKotlin` can hit `AssertionError: Metaspace` at 256 MiB. Use
+`GRADLE_GUARD_XMX=1536m GRADLE_GUARD_METASPACE=384m` for test runs; check the log for the
+real error before blaming code (a red build may never have reached the tests).
+
 ## Tap predictor vs swipe lexicon frequency scales
 
 The tap predictor (autocorrect, suggestion bar) loads `en_enhanced.bin` (rank 0..255, full
