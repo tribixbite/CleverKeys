@@ -120,6 +120,86 @@ object EditorTextNavigation {
     }
 
     /**
+     * A navigation key the editor itself interprets. Used where `setSelection` cannot be used:
+     * no readback window, an editor that does not honour it, or a web field. Blink maps these
+     * (editing_behavior.cc, non-Mac; on Android a word move right stops at the word END, as only
+     * Windows skips the following space), and so do EditText and Compose.
+     */
+    enum class EditorKey {
+        /** Left: collapses a selection to its start (it does not move a collapsed caret here). */
+        COLLAPSE_TO_START,
+        /** Ctrl+Left: to the start of the word at or before the caret. */
+        WORD_START,
+        /** Ctrl+Shift+Right: extend the selection head to the end of the next word. */
+        EXTEND_TO_WORD_END,
+        /** Home: to the start of the line (Blink and EditText: the VISUAL, wrapped line). */
+        LINE_START,
+        /** Shift+End: extend the selection head to the end of the line (visual, as LINE_START). */
+        EXTEND_TO_LINE_END,
+    }
+
+    /** What select_word / select_line should send when acting through [EditorKey]s. */
+    sealed interface KeyPlan {
+        /** Send [keys] in order. */
+        data class Send(val keys: List<EditorKey>) : KeyPlan
+
+        /** There is no word to select. */
+        object NoTarget : KeyPlan
+
+        /** The keys cannot produce the selection: refuse, sending nothing. */
+        object Unknown : KeyPlan
+    }
+
+    /** More words than this in a selection are not walked one key event each. */
+    const val MAX_KEY_WORDS = 32
+
+    /**
+     * The key events that make the editor select what [command] (SELECT_WORD or SELECT_LINE)
+     * asks for, decided ONLY from text read around the selection — no absolute offsets needed:
+     * [before] is text before the selection's lower end (any length, possibly cut), [selected] the
+     * selected text (empty for a caret), [after] text after its upper end.
+     *
+     * - SELECT_WORD: collapse a selection to its start; Ctrl+Left only when the start is inside or
+     *   just after a word (at a word start it would reach the PREVIOUS word); then one
+     *   Ctrl+Shift+Right per word the target covers. A cut edge is harmless here: the editor
+     *   finds the real word boundary itself.
+     * - SELECT_LINE: Home, Shift+End (after collapsing a selection). That is the VISUAL line in
+     *   Blink and EditText, where the readback path selects the logical line.
+     *
+     * Nothing has been sent when this returns, so a [KeyPlan.NoTarget] / [KeyPlan.Unknown]
+     * refusal leaves the editor untouched.
+     */
+    fun keyPlan(command: Command, before: String, selected: String, after: String): KeyPlan {
+        require(command == Command.SELECT_WORD || command == Command.SELECT_LINE) { "not a select command: $command" }
+        val collapse = if (selected.isEmpty()) emptyList() else listOf(EditorKey.COLLAPSE_TO_START)
+        if (command == Command.SELECT_LINE) {
+            // TODO: a selection spanning lines (logical, or visual wraps) needs a multi-line key
+            //  walk; Home/Shift+End from its start would cover only the first line, so a selection
+            //  holding a line break is refused and a soft-wrapped one covers its first visual line.
+            if (selected.contains('\n')) return KeyPlan.Unknown
+            return KeyPlan.Send(collapse + EditorKey.LINE_START + EditorKey.EXTEND_TO_LINE_END)
+        }
+        val text = before + selected + after
+        val lo = before.length
+        val range = wordBounds(text, lo, lo + selected.length) ?: return KeyPlan.NoTarget
+        val words = wordStarts(text, range.first, range.last + 1)
+        if (words > MAX_KEY_WORDS) return KeyPlan.Unknown
+        val toStart = if (range.first < lo) listOf(EditorKey.WORD_START) else emptyList()
+        return KeyPlan.Send(collapse + toStart + List(words) { EditorKey.EXTEND_TO_WORD_END })
+    }
+
+    /** How many words start in [start, end) — one Ctrl+Shift+Right each. */
+    private fun wordStarts(text: CharSequence, start: Int, end: Int): Int {
+        var count = 0
+        var i = start
+        while (i < end) {
+            if (isWordAt(text, i) && !isWordBefore(text, i)) count++
+            i += Character.charCount(Character.codePointAt(text, i))
+        }
+        return count
+    }
+
+    /**
      * The range case cycling rewrites: the selection when there is one, else the word touching
      * the caret, else the word just before it across spaces or tabs (`hello |` after a swipe's
      * auto-space). [Plan.NoTarget] when there is no such word.

@@ -93,4 +93,44 @@ class EditorTextNavigationTest {
         assertEquals(Plan.NoTarget, EditorTextNavigation.caseTarget(whole("hello\n", 6)))
         assertEquals(Plan.NoTarget, EditorTextNavigation.caseTarget(whole("", 0)))
     }
+
+    // ------------------------------------------------------------------ editor-key plans
+
+    private fun keys(command: Command, before: String, selected: String, after: String) =
+        EditorTextNavigation.keyPlan(command, before, selected, after)
+
+    private fun send(vararg keys: EditorTextNavigation.EditorKey) = EditorTextNavigation.KeyPlan.Send(keys.toList())
+
+    @Test
+    fun selectWordKeysGoToTheWordStartOnlyWhenNotAlreadyThere() {
+        val start = EditorTextNavigation.EditorKey.WORD_START
+        val extend = EditorTextNavigation.EditorKey.EXTEND_TO_WORD_END
+        val collapse = EditorTextNavigation.EditorKey.COLLAPSE_TO_START
+        assertEquals(send(start, extend), keys(Command.SELECT_WORD, "On", "", "e two"))
+        assertEquals(send(start, extend), keys(Command.SELECT_WORD, "One", "", " two"))
+        assertEquals(send(extend), keys(Command.SELECT_WORD, "One ", "", "two"))
+        assertEquals(send(extend), keys(Command.SELECT_WORD, "", "", "One"))
+        // An inner apostrophe keeps one word; a selection covers every word it touches.
+        assertEquals(send(start, extend), keys(Command.SELECT_WORD, "we do", "", "n't"))
+        assertEquals(send(collapse, start, extend, extend), keys(Command.SELECT_WORD, "O", "ne tw", "o three"))
+        // A cut edge does not matter: the editor finds the real boundary.
+        assertEquals(send(start, extend), keys(Command.SELECT_WORD, "y".repeat(EditorTextNavigation.WORD_REACH), "", "yy"))
+    }
+
+    @Test
+    fun selectWordKeysRefuseWhatTheyCannotDo() {
+        assertEquals(EditorTextNavigation.KeyPlan.NoTarget, keys(Command.SELECT_WORD, "a ", "", " b"))
+        assertEquals(EditorTextNavigation.KeyPlan.NoTarget, keys(Command.SELECT_WORD, "", "", ""))
+        val many = (1..EditorTextNavigation.MAX_KEY_WORDS + 1).joinToString(" ") { "w" }
+        assertEquals(EditorTextNavigation.KeyPlan.Unknown, keys(Command.SELECT_WORD, "", many, ""))
+    }
+
+    @Test
+    fun selectLineKeysAreHomeThenShiftEndAndRefuseAMultiLineSelection() {
+        val home = EditorTextNavigation.EditorKey.LINE_START
+        val end = EditorTextNavigation.EditorKey.EXTEND_TO_LINE_END
+        assertEquals(send(home, end), keys(Command.SELECT_LINE, "first\nsec", "", "ond"))
+        assertEquals(send(EditorTextNavigation.EditorKey.COLLAPSE_TO_START, home, end), keys(Command.SELECT_LINE, "a", "bc", "d"))
+        assertEquals(EditorTextNavigation.KeyPlan.Unknown, keys(Command.SELECT_LINE, "", "one\ntwo", ""))
+    }
 }

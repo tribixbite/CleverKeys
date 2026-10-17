@@ -220,6 +220,20 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     typed word is offered; no visible underline. (e) `word_left/right`, `select_word_left/right`,
     `select_word`, `select_line` in EditText, Chrome, Compose and the inline clipboard editor;
     in Termux `word_left` moves a word in bash and the select commands show "unavailable".
+    **Pixel, release `cc4fe37d` (2026-10-17):** case_cycle PASS in Chrome (`build/oct17b-pixel/
+    109-*`, `116-*`); select_word / select_line FAIL in a Chrome `<textarea>` ("Action
+    unavailable", `162-selword-chrome`, `163-selline-chrome`), PASS in an EditText (`159-*`,
+    `160-*`). Root cause: Chrome's EditorInfo variation WEB_EDIT_TEXT (0xa0) has bit 0x80, so
+    `shouldMoveCursorForceFallback` treats every web field as password-class; the readback window
+    was skipped and the two commands had no key route. FIXED (worktree commit after `cc4fe37d`):
+    in such editors (and with no readback window or a refused setSelection) they send the
+    editor's own keys — word: [Left] [Ctrl+Left unless at a word start] Ctrl+Shift+Right per
+    word; line: Home, Shift+End (visual line) — decided from the text around the cursor before
+    any key, so every refusal sends nothing (`EditorTextCommandsTest` Chrome cases, fail-first).
+    The reported cursor move before the refusal is NOT reproduced by the code: the old Chrome
+    path made no editor call before refusing. Re-check on device: Chrome textarea select_word at
+    `On|e`, `One|`, `|two`, over a selection; select_line on a wrapped line (selects the visual
+    line); a WebView field; Termux still "unavailable".
 
 ## Device results recorded 2026-10-07/08
 

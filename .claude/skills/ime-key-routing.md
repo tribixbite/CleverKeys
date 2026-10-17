@@ -388,8 +388,22 @@ From docs/research/2026-10-15-ime-editor-actions.md §4.2, all in `handleEditing
 - **word_left/right, select_word_left/right, select_word, select_line**: `EditorTextNavigation`
   (pure; word = letters/digits/marks + inner apostrophe, by code point) over a readback window
   (256 chars; 4096 for lines). A word/line touching a cut window edge is refused, never guessed.
-  No readback or `moveCursorForceFallback` → Ctrl(+Shift)+DPAD key events for moves/extends;
-  terminal-style → moves as Ctrl+arrow keys only, every selection command refused. Inline
+  No readback window, `moveCursorForceFallback`, or a refused `setSelection` → Ctrl(+Shift)+DPAD
+  key events for moves/extends, and select_word/select_line as the editor's OWN keys
+  (`EditorTextNavigation.keyPlan`, decided from text read around the cursor, no offsets):
+  word = [Left to collapse a selection] [Ctrl+Left unless already at a word start] then one
+  Ctrl+Shift+Right per covered word (Blink on Android ends a word move right at the word END);
+  line = Home, Shift+End — the VISUAL line in Blink/EditText (readback path: logical line); a
+  selection holding `\n` is refused in key mode. All reads/decisions precede the first key, so a
+  refusal sends nothing. terminal-style → moves as Ctrl+arrow keys only, every selection command
+  refused, no events.
+  **`moveCursorForceFallback` is TRUE in every Chrome/WebView text field**: its password test
+  `(inputType & TYPE_MASK_VARIATION & TYPE_TEXT_VARIATION_PASSWORD) != 0` matches any variation
+  with bit 0x80, and Chromium's ImeUtils.computeEditorInfo gives text inputs / textareas
+  WEB_EDIT_TEXT (0xa0; also WEB_EMAIL 0xd0, FILTER 0xb0, PHONETIC 0xc0). So Chrome never gets
+  `setSelection` from the cursor slider or these commands; case_cycle does not consult the flag
+  and works there by readback (Pixel 2026-10-17). Before that fix select_word/select_line had
+  no key route and answered "Action unavailable" in Chrome. Inline
   clipboard editor: `navigateClipboardEdit` (IReceiver → bridge → KeyboardReceiver →
   ClipboardManager → ClipboardHistoryView), same rules over the whole text. Legacy
   WORD_LEFT/WORD_RIGHT mappings now route here (CommandRouting).

@@ -981,16 +981,21 @@ class KeyEventHandler(
      * - Ordinary editors: the text around the selection is read back and the new selection is
      *   computed by [EditorTextNavigation] (the same rules everywhere, UTF-16 offsets), then set
      *   with `setSelection` — after finishing composition and confirming nothing changed since
-     *   the read (CLAUDE.md "Explicit editor edits and composition").
-     * - No readback (or an editor that ignores setSelection, [moveCursorForceFallback]): moves
-     *   and extensions become Ctrl(+Shift)+Left/Right key events, which EditText, Chrome (Blink)
-     *   and Compose all map to word moves; select word / line need the text and are refused.
+     *   the read (CLAUDE.md "Explicit editor edits and composition"). A word or line reaching a
+     *   cut edge of the read is refused, not guessed.
+     * - Editors where `setSelection` is not used ([moveCursorForceFallback]: password-class
+     *   variations, which include Chrome/WebView's WEB_EDIT_TEXT 0xa0, and Godot) or that give
+     *   no readback window: moves and extensions are Ctrl(+Shift)+Left/Right key events, and
+     *   select word / line are the editor's own keys chosen from the text read around the
+     *   cursor ([selectWithEditorKeys]). Web fields are often a hidden textarea behind a JS
+     *   editor, so the editor's own keys are what reach its real cursor.
      * - Terminal-style editors: the text cannot be read (a blind field's readback is not the
      *   user's text) and a pty has no selection, so only the moves are sent, as Ctrl+arrow key
      *   events; every selection command is refused.
      *
-     * "Left" is the logical previous word (as the cursor_left slider), whatever the script's
-     * direction.
+     * Every read and decision happens before the first write or key event, so a refusal leaves
+     * the editor exactly as it was. "Left" is the logical previous word (as the cursor_left
+     * slider), whatever the script's direction.
      */
     private fun navigateEditor(command: EditorTextNavigation.Command) {
         val conn = recv.getCurrentInputConnection() ?: return
@@ -1000,10 +1005,14 @@ class KeyEventHandler(
             if (keyable && !extends) sendWordKey(command) else showFeedback(R.string.dynamic_action_unavailable)
             return
         }
+        if (moveCursorForceFallback && keyable) {
+            sendWordKey(command)
+            return
+        }
         val reach = EditorTextNavigation.reachFor(command)
-        val window = if (moveCursorForceFallback) null else EditorTextWindowReader.capture(conn, reach)
-        if (window == null) {
-            if (keyable) sendWordKey(command) else showFeedback(R.string.dynamic_action_unavailable)
+        val window = EditorTextWindowReader.capture(conn, reach)
+        if (window == null || moveCursorForceFallback) {
+            if (keyable) sendWordKey(command) else selectWithEditorKeys(conn, command, window)
             return
         }
         when (val plan = EditorTextNavigation.plan(command, window)) {
@@ -1017,9 +1026,50 @@ class KeyEventHandler(
                     showFeedback(R.string.dynamic_action_unavailable)
                     return
                 }
-                // As moveCursor: an editor that refuses setSelection still gets the key event.
-                if (!conn.setSelection(plan.start, plan.end) && keyable) sendWordKey(command)
+                // As moveCursor: an editor that refuses setSelection still gets the key events.
+                if (!conn.setSelection(plan.start, plan.end)) {
+                    if (keyable) sendWordKey(command) else selectWithEditorKeys(conn, command, window)
+                }
             }
+        }
+    }
+
+    /**
+     * select_word / select_line as the editor's own key events ([EditorTextNavigation.keyPlan]),
+     * for editors where `setSelection` is not used or not honoured. The text around the cursor
+     * comes from [window] when one was read, else from getTextBeforeCursor / getTextAfterCursor /
+     * getSelectedText (no offsets needed; a null selected text means none, as documented). When
+     * that text cannot be read the command is refused before any key is sent.
+     */
+    private fun selectWithEditorKeys(conn: InputConnection, command: EditorTextNavigation.Command, window: EditorTextWindow?) {
+        val reach = EditorTextNavigation.reachFor(command)
+        val around = if (window != null) Triple(window.before, window.selected, window.after) else runCatching {
+            val before = conn.getTextBeforeCursor(reach, 0)?.toString() ?: return@runCatching null
+            val after = conn.getTextAfterCursor(reach, 0)?.toString() ?: return@runCatching null
+            val selected = conn.getSelectedText(0)?.toString().orEmpty()
+            if (selected.length > EditorTextWindowReader.MAX_SELECTION) null else Triple(before, selected, after)
+        }.getOrNull()
+        if (around == null) {
+            showFeedback(R.string.dynamic_action_unavailable)
+            return
+        }
+        when (val plan = EditorTextNavigation.keyPlan(command, around.first, around.second, around.third)) {
+            EditorTextNavigation.KeyPlan.NoTarget -> showFeedback(R.string.keyboard_text_menu_no_word)
+            EditorTextNavigation.KeyPlan.Unknown -> showFeedback(R.string.dynamic_action_unavailable)
+            is EditorTextNavigation.KeyPlan.Send -> plan.keys.forEach(::sendEditorKey)
+        }
+    }
+
+    /** One [EditorTextNavigation.EditorKey] as a key down/up pair with exactly its modifiers. */
+    private fun sendEditorKey(key: EditorTextNavigation.EditorKey) {
+        val ctrl = KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+        val shift = KeyEvent.META_SHIFT_ON or KeyEvent.META_SHIFT_LEFT_ON
+        when (key) {
+            EditorTextNavigation.EditorKey.COLLAPSE_TO_START -> send_key_down_up(KeyEvent.KEYCODE_DPAD_LEFT, 0)
+            EditorTextNavigation.EditorKey.WORD_START -> send_key_down_up(KeyEvent.KEYCODE_DPAD_LEFT, ctrl)
+            EditorTextNavigation.EditorKey.EXTEND_TO_WORD_END -> send_key_down_up(KeyEvent.KEYCODE_DPAD_RIGHT, ctrl or shift)
+            EditorTextNavigation.EditorKey.LINE_START -> send_key_down_up(KeyEvent.KEYCODE_MOVE_HOME, 0)
+            EditorTextNavigation.EditorKey.EXTEND_TO_LINE_END -> send_key_down_up(KeyEvent.KEYCODE_MOVE_END, shift)
         }
     }
 

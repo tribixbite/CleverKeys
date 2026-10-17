@@ -46,6 +46,16 @@ class EditorTextCommandsTest {
     private var selEnd = 0
     /** False simulates an editor that cannot report its selection (no ExtractedText). */
     private var readbackAvailable = true
+    /** False also fails getTextBeforeCursor / getTextAfterCursor (no readback of any kind). */
+    private var neighbourReadsAvailable = true
+    /**
+     * True makes the fake editor apply the navigation key events it receives, the way Blink
+     * (editing_behavior.cc, non-Windows) and EditText interpret them: Left collapses a selection
+     * to its start, Ctrl+Left goes to the previous word start, Ctrl+Shift+Right extends the head
+     * to the next word end, Home / Shift+End go to the line start / extend to the line end (the
+     * fake has no soft wrapping, so its visual line is the logical line).
+     */
+    private var applyKeyEvents = false
     /** Simulates an editor that rewrites committed text (autoformat): applied to every commit. */
     private var commitTransform: (String) -> String = { it }
     /** Simulates an editor that changes its text between the IME's reads and its write. */
@@ -84,8 +94,8 @@ class EditorTextCommandsTest {
                 "equals" -> proxy === args?.get(0)
                 "hashCode" -> System.identityHashCode(proxy)
                 "toString" -> "FakeEditor"
-                "getTextBeforeCursor" -> text.substring(maxOf(0, lo - (args!![0] as Int)), lo)
-                "getTextAfterCursor" -> text.substring(hi, minOf(text.length, hi + (args!![0] as Int)))
+                "getTextBeforeCursor" -> if (!neighbourReadsAvailable) null else text.substring(maxOf(0, lo - (args!![0] as Int)), lo)
+                "getTextAfterCursor" -> if (!neighbourReadsAvailable) null else text.substring(hi, minOf(text.length, hi + (args!![0] as Int)))
                 "getSelectedText" -> if (lo == hi) null else text.substring(lo, hi)
                 "setSelection" -> {
                     selStart = args!![0] as Int; selEnd = args[1] as Int
@@ -139,6 +149,7 @@ class EditorTextCommandsTest {
         })
         every { handler.send_key_down_up(any(), any()) } answers {
             log += "keyDownUp(${keyName(firstArg())},${metaName(secondArg())})"
+            if (applyKeyEvents) applyKey(firstArg(), secondArg())
         }
 
         val config = mockk<Config>(relaxed = true)
@@ -257,11 +268,99 @@ class EditorTextCommandsTest {
     }
 
     @Test
-    fun selectWordAndLineWithoutReadbackAreRefused() {
+    fun withoutTheSelectionWindowSelectWordAndLineUseEditorKeysFromTheNeighbourText() {
+        // No ExtractedText (no absolute offsets), but the text around the cursor reads back:
+        // the editor's own word/line keys do the selecting.
+        applyKeyEvents = true
         editor("hello world", 3)
         readbackAvailable = false
+        assertEquals(
+            listOf("handle_non_text_input()", "keyDownUp(LEFT,CTRL)", "keyDownUp(RIGHT,CTRL+SHIFT)"),
+            press("select_word"),
+        )
+        assertEquals(0 to 5, selection())
+        editor("hello world", 3)
+        assertEquals(listOf("handle_non_text_input()", "keyDownUp(HOME,0)", "keyDownUp(END,SHIFT)"), press("select_line"))
+        assertEquals(0 to 11, selection())
+    }
+
+    @Test
+    fun withNoReadbackAtAllSelectWordAndLineAreRefusedWithoutTouchingTheEditor() {
+        editor("hello world", 3)
+        readbackAvailable = false
+        neighbourReadsAvailable = false
         assertEquals(listOf("handle_non_text_input()", UNAVAILABLE), press("select_word"))
         assertEquals(listOf("handle_non_text_input()", UNAVAILABLE), press("select_line"))
+        assertEquals(3 to 3, selection())
+    }
+
+    // ------------------------------------------------------------------ Chrome / WebView (device 2026-10-17)
+
+    /**
+     * Pixel, release cc4fe37d: in Chrome's <textarea> select_word / select_line answered
+     * "Action unavailable". Chrome reports TYPE_TEXT_VARIATION_WEB_EDIT_TEXT (0xa0), whose 0x80
+     * bit trips the password test in `shouldMoveCursorForceFallback`, so the readback window was
+     * never used and the two commands had no key-event route. They now select with the editor's
+     * own keys, decided from the text read around the cursor.
+     */
+    @Test
+    fun inAChromeTextareaSelectWordAndLineAreTheEditorsOwnKeys() {
+        chromeTextarea()
+        // Inside a word: to its start, then extend to its end.
+        editor("One two three", 2)
+        assertEquals(
+            listOf("handle_non_text_input()", "keyDownUp(LEFT,CTRL)", "keyDownUp(RIGHT,CTRL+SHIFT)"),
+            press("select_word"),
+        )
+        assertEquals(0 to 3, selection())
+        // Just after a word (after typing it): the same word.
+        editor("One two three", 3)
+        press("select_word")
+        assertEquals(0 to 3, selection())
+        // Already at a word start: Ctrl+Left would reach the PREVIOUS word, so it is not sent.
+        editor("One two three", 4)
+        assertEquals(listOf("handle_non_text_input()", "keyDownUp(RIGHT,CTRL+SHIFT)"), press("select_word"))
+        assertEquals(4 to 7, selection())
+        // A selection grows to every word it touches.
+        editor("One two three", 1, 6)
+        assertEquals(
+            listOf(
+                "handle_non_text_input()", "keyDownUp(LEFT,0)", "keyDownUp(LEFT,CTRL)",
+                "keyDownUp(RIGHT,CTRL+SHIFT)", "keyDownUp(RIGHT,CTRL+SHIFT)",
+            ),
+            press("select_word"),
+        )
+        assertEquals(0 to 7, selection())
+        // select_line: Home, then Shift+End (Blink: the visual line; no wrapping here).
+        editor("first\nsecond line\nthird", 9)
+        assertEquals(listOf("handle_non_text_input()", "keyDownUp(HOME,0)", "keyDownUp(END,SHIFT)"), press("select_line"))
+        assertEquals(6 to 17, selection())
+        // Never a setSelection Chrome would apply to stale offsets, and the text is untouched.
+        assertEquals("first\nsecond line\nthird", text.toString())
+        // Word moves there stay single Ctrl(+Shift)+arrow events, as before.
+        editor("One two three", 13)
+        assertEquals(listOf("handle_non_text_input()", "keyDownUp(LEFT,CTRL)"), press("word_left"))
+    }
+
+    @Test
+    fun aRefusalInAChromeTextareaSendsNothingToTheEditor() {
+        chromeTextarea()
+        // No word at the cursor.
+        editor("a  b", 2)
+        assertEquals(listOf("handle_non_text_input()", "feedback(str#${R.string.keyboard_text_menu_no_word})"), press("select_word"))
+        assertEquals(2 to 2, selection())
+        // A selection spanning a line break: Home/Shift+End cannot cover it.
+        editor("one\ntwo", 1, 5)
+        assertEquals(listOf("handle_non_text_input()", UNAVAILABLE), press("select_line"))
+        assertEquals(1 to 5, selection())
+        // Nothing reads back: refused before any key, so the caret never moves.
+        editor("One two three", 2)
+        readbackAvailable = false
+        neighbourReadsAvailable = false
+        for (name in listOf("select_word", "select_line")) {
+            assertEquals(name, listOf("handle_non_text_input()", UNAVAILABLE), press(name))
+            assertEquals(name, 2 to 2, selection())
+        }
     }
 
     @Test
@@ -558,7 +657,38 @@ class EditorTextCommandsTest {
     private fun keyName(code: Int) = when (code) {
         KeyEvent.KEYCODE_DPAD_LEFT -> "LEFT"
         KeyEvent.KEYCODE_DPAD_RIGHT -> "RIGHT"
+        KeyEvent.KEYCODE_MOVE_HOME -> "HOME"
+        KeyEvent.KEYCODE_MOVE_END -> "END"
         else -> code.toString()
+    }
+
+    /** The editor's own interpretation of a navigation key (see [applyKeyEvents]). */
+    private fun applyKey(code: Int, meta: Int) {
+        val ctrl = (meta and KeyEvent.META_CTRL_ON) != 0
+        val shift = (meta and KeyEvent.META_SHIFT_ON) != 0
+        val lo = minOf(selStart, selEnd)
+        val hi = maxOf(selStart, selEnd)
+        fun caret(at: Int) { selStart = at; selEnd = at }
+        fun head(at: Int) { selEnd = at }
+        when {
+            code == KeyEvent.KEYCODE_DPAD_LEFT && !ctrl && !shift -> caret(if (lo != hi) lo else maxOf(0, lo - 1))
+            code == KeyEvent.KEYCODE_DPAD_LEFT && ctrl && !shift -> caret(EditorTextNavigation.previousWordStart(text, lo))
+            code == KeyEvent.KEYCODE_DPAD_RIGHT && ctrl && !shift -> caret(EditorTextNavigation.nextWordEnd(text, hi))
+            code == KeyEvent.KEYCODE_DPAD_LEFT && ctrl && shift -> head(EditorTextNavigation.previousWordStart(text, selEnd))
+            code == KeyEvent.KEYCODE_DPAD_RIGHT && ctrl && shift -> head(EditorTextNavigation.nextWordEnd(text, selEnd))
+            code == KeyEvent.KEYCODE_MOVE_HOME && !shift -> caret(text.lastIndexOf('\n', lo - 1) + 1)
+            code == KeyEvent.KEYCODE_MOVE_END && shift -> head(text.indexOf('\n', selEnd).let { if (it < 0) text.length else it })
+            else -> throw AssertionError("unexpected key ${keyName(code)} ${metaName(meta)}")
+        }
+    }
+
+    /** Chrome's EditorInfo for a <textarea> (ImeUtils.computeEditorInfo): WEB_EDIT_TEXT + MULTI_LINE. */
+    private fun chromeTextarea() {
+        editorInfo.packageName = "com.android.chrome"
+        editorInfo.inputType = android.text.InputType.TYPE_CLASS_TEXT or
+            android.text.InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+        handler.started(editorInfo)
+        applyKeyEvents = true
     }
 
     private fun metaName(meta: Int): String {
