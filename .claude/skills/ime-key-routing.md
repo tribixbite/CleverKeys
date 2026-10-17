@@ -373,3 +373,41 @@ and Compose return false, while all three map the shortcuts
 (`docs/research/2026-10-15-ime-editor-actions.md`). Never send both — an EditText would undo
 twice. In a terminal-style field (`isTerminalStyleEditor()`) they show "Action unavailable":
 Ctrl+Z there is SIGTSTP. Pinned by `EditingCommandParityTest`.
+
+## Editor commands: case, share, process text, word/line (2026-10-17)
+
+From docs/research/2026-10-15-ime-editor-actions.md §4.2, all in `handleEditingKey`:
+
+- **case_cycle** (Editing.CASE_CYCLE): selection, else the word touching the caret, else the
+  word before spaces/tabs (`hello |`). `CaseCycle` (pure, keyboard-language locale) gives
+  lower → Title → UPPER → lower; mixed → lower; uncased → "could not change". Verified write:
+  `EditorTextWindowReader` window → finishComposingText → identical re-read → select target →
+  `EditorReadback` must read exactly the original → commit → `matchesReplacement` → re-select
+  the result (UTF-16 length may change: ß → SS). Refused with feedback in terminal-style
+  editors, without readback, and behind ANY inline field.
+- **word_left/right, select_word_left/right, select_word, select_line**: `EditorTextNavigation`
+  (pure; word = letters/digits/marks + inner apostrophe, by code point) over a readback window
+  (256 chars; 4096 for lines). A word/line touching a cut window edge is refused, never guessed.
+  No readback or `moveCursorForceFallback` → Ctrl(+Shift)+DPAD key events for moves/extends;
+  terminal-style → moves as Ctrl+arrow keys only, every selection command refused. Inline
+  clipboard editor: `navigateClipboardEdit` (IReceiver → bridge → KeyboardReceiver →
+  ClipboardManager → ClipboardHistoryView), same rules over the whole text. Legacy
+  WORD_LEFT/WORD_RIGHT mappings now route here (CommandRouting).
+- **shareText**: IME-built ACTION_SEND chooser (`TextActionLauncher.share`) from
+  `getSelectedText`; selection required; never the `android.R.id.shareText` id (EditText-only),
+  so nothing shares twice. Refused in terminal-style editors; swallowed in inline fields
+  (private entries must not leave through share).
+- **textAssist / replaceText**: one implementation, two names/chooser titles. The selection's
+  `EditorReadback` + field identity is registered in `ProcessTextReturn`; `ProcessTextActivity`
+  (transparent, not exported, own task, never noHistory) starts the chooser FOR A RESULT (the
+  system chooser forwards it: FLAG_ACTIVITY_FORWARD_RESULT). The service delivers on the next
+  `onStartInput` (not our own package) or 3 s after the result:
+  `KeyEventHandler.deliverProcessTextResult` inserts only into the same package/field/inputType
+  with the identical receipt, after finishing composition, and verifies the replacement;
+  otherwise the result goes to the clipboard with feedback. Only the latest request counts.
+- **SuggestionSpan on commit**: swipe auto-insert passes the bar words, a tap replacing a swipe
+  word passes that word + the bar, typed autocorrect passes the typed word;
+  `SuggestionSpanPolicy` (≤5 alternatives, ≤48 chars, text fields allowing suggestions only)
+  and `SuggestionSpanCommit` (flags 0, LatinIME pattern). Never in password, terminal-style or
+  blind fields. The commit guard compares characters, so spans do not affect readback.
+- `textAssistMenu` stays (maintainer has not confirmed its removal).

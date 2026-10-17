@@ -15,7 +15,7 @@ The command palette is a searchable dialog that appears when you assign an actio
 |------|-------------|
 | **Purpose** | Browse and search all assignable key actions |
 | **Access** | Per-Key Customization, or the [Subkey Popover](../gestures/subkey-popover.md) assign/edit screen |
-| **Features** | Search, 21 categories, 230 commands, four quick actions |
+| **Features** | Search, 21 categories, 237 commands, four quick actions |
 
 ## Where It Appears
 
@@ -59,16 +59,16 @@ The row scrolls away with the list. While you search, only tiles whose name matc
 
 ### Browse Categories
 
-The 230 commands are grouped into these categories, in this order. Category headers stay
+The 237 commands are grouped into these categories, in this order. Category headers stay
 at the top while their commands scroll.
 
 | Category | Commands | Examples |
 |----------|---------:|----------|
 | **Clipboard** | 13 | `copy`, `copy_private`, `paste`, `cut`, `selectAll`, `pasteAsPlainText`, `shareText`, `clear_clipboard`, `paste_pinned_1`–`5` |
-| **Editing** | 6 | `undo`, `redo`, `clear`, `autofill`, `append_possessive`, `append_apostrophe` |
-| **Cursor Movement** | 8 | `cursor_left`, `cursor_right`, `cursor_up`, `cursor_down` |
+| **Editing** | 7 | `undo`, `redo`, `clear`, `case_cycle`, `autofill`, `append_possessive`, `append_apostrophe` |
+| **Cursor Movement** | 10 | `cursor_left`, `cursor_right`, `cursor_up`, `cursor_down`, `word_left`, `word_right` |
 | **Navigation** | 6 | `home`, `end`, `doc_home`, `doc_end`, `page_up`, `page_down` |
-| **Selection** | 4 | `selection_cursor_left`, `selection_cursor_right`, `selection_cancel`, `selection_mode` |
+| **Selection** | 8 | `selection_cursor_left`, `selection_cursor_right`, `selection_cancel`, `selection_mode`, `select_word_left`, `select_word_right`, `select_word`, `select_line` |
 | **Delete** | 5 | `backspace`, `delete`, `delete_word`, `forward_delete_word`, `delete_last_word` |
 | **Keyboard Events** | 19 | `config`, `switch_forward`, `switch_backward`, `switch_clipboard`, `switch_emoji`, `switch_numeric`, `voice_typing`, `minimize_bar`, `minimize_fab`, `hide_keyboard` |
 | **Modifiers** | 5 | `shift`, `ctrl`, `alt`, `meta`, `fn` |
@@ -116,8 +116,32 @@ Each text action comes in two forms:
 
 | Command | What it does |
 |---------|--------------|
-| **Text Assist** (`textAssist`), **Replace Text** (`replaceText`) | Opens a list of the apps that can process the selected text (translators, AI assistants, dictionaries). Replace Text lets the chosen app replace the selection. Shows "no text selected" when nothing is selected. |
-| **Text Assist (Editor Menu)** (`textAssistMenu`), **Replace Text (Editor Menu)** (`replaceTextMenu`) | Sends the app's own text-assist or replace menu action, without the app list. What happens depends on the app; many apps do nothing. |
+| **Text Assist** (`textAssist`), **Replace Text** (`replaceText`) | Opens a list of the apps that can process the selected text (translators, AI assistants, dictionaries). If the chosen app returns text (a translation, a rewrite), it replaces the selection. The two commands differ only in the list's title. Shows "no text selected" when nothing is selected. |
+| **Text Assist (Editor Menu)** (`textAssistMenu`), **Replace Text (Editor Menu)** (`replaceTextMenu`) | Sends the app's own text-assist or replace menu action, without the app list. What happens depends on the app; many apps do nothing. In stock Android text fields, Replace Text (Editor Menu) offers the other swipe candidates of a swiped word (see below). |
+
+The returned text is written only into the same text field, over the same selection, after
+CleverKeys reads the field back and finds it unchanged. If you edited the text, switched
+fields or opened a keyboard panel meanwhile, the result is copied to the clipboard instead and
+the suggestion bar says so. In terminals and remote-desktop fields both commands report that
+the action is unavailable.
+
+## Editing Commands
+
+| Command | What it does | Where it does not work |
+|---------|--------------|------------------------|
+| **Cycle Case** (`case_cycle`) | Changes the selection, or the word at or just before the cursor, from lower case to Title Case to UPPER CASE and back. The changed text stays selected, so pressing again continues the cycle. Uses the keyboard language's rules (Turkish dotted İ). | Terminals, remote-desktop fields and keyboard panels: the bar shows "Action unavailable". |
+| **Share** (`shareText`) | Shares the selected text through Android's share sheet, in every app (it used to work only in standard Android text fields). Needs a selection. | Terminals and remote-desktop fields. |
+| **Word Left / Word Right** (`word_left`, `word_right`) | Moves the cursor to the start of the previous word or the end of the next word. "Left" means the previous word, as with the cursor keys. | In terminals they are sent as Ctrl+Left / Ctrl+Right, which most shells treat as word moves. |
+| **Select Word Left / Right** (`select_word_left`, `select_word_right`) | Extends the selection by one word, keeping where it started. | Terminals and remote-desktop fields. |
+| **Select Word** (`select_word`), **Select Line** (`select_line`) | Selects the word or the line (without its line break) at the cursor. | Terminals, remote-desktop fields, and apps that do not let the keyboard read the text. |
+
+A word includes letters, digits and an apostrophe inside it (`don't`). In the clipboard
+editor, the word and line commands move and select inside the editor; Cycle Case and Share
+do nothing there.
+
+Swiped words carry their other candidates. In stock Android text fields, select a swiped
+word and use the app's **Replace** option (or **Replace Text (Editor Menu)**) to pick another
+candidate. An autocorrected word offers the word you typed. Other apps may ignore this.
 
 ## Suffix Commands and Dynamic Templates
 
@@ -146,7 +170,7 @@ description or keyword.
 - **Power user**: `selection_mode`, `doc_home`/`doc_end` and the function keys help in editors and terminals
 
 > [!TIP]
-> The palette lists 230 commands. Use search to find one quickly.
+> The palette lists 237 commands. Use search to find one quickly.
 
 ## Common Questions
 

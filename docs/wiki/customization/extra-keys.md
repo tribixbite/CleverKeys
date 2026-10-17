@@ -26,8 +26,8 @@ Search, the enabled-key summary, **Reset to Defaults** and key rows scroll toget
 |----------|----------|
 | Layout Switching | Next Layout, Previous Layout, Greek/Math |
 | System | Alt, Meta, Compose, voice typing, clipboard panel, Autofill |
-| Navigation | Tab, Escape, Page Up/Down, Home, End |
-| Editing | Copy, private copy, paste, cut, selection, undo/redo, delete word, Clear system clipboard |
+| Navigation | Tab, Escape, Page Up/Down, Home, End, Word Left/Right |
+| Editing | Copy, private copy, paste, cut, selection, undo/redo, delete word, Clear system clipboard, Select Word Left/Right, Select Word, Select Line, Cycle Case |
 | Formatting | Superscript, subscript |
 | Accents | Accent transformations |
 | Symbols | Currency and special symbols |

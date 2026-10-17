@@ -389,3 +389,19 @@ Internal (non-command) follow-ups worth a todo:
 
 - `setImeConsumesInput(true)` while an inline search field owns typing (API 31+)
 - IC `replaceText` for atomic explicit edits on API 34+
+
+---
+
+## 5. Implementation status (2026-10-17)
+
+Implemented from §4.2 (maintainer decision): item 3 case cycle (`case_cycle`), item 4
+process text with the result written back (`ProcessTextActivity` + `ProcessTextReturn`;
+`textAssist`/`replaceText` kept as two names over one implementation, results editable),
+item 5 universal share (`shareText` now the IME's ACTION_SEND chooser), item 6 SuggestionSpan
+alternates on swipe/autocorrect commits (flags 0), items 7–8 `word_left`/`word_right`,
+`select_word_left`/`select_word_right`, `select_word`, `select_line`. §4.1's `textAssistMenu`
+removal is NOT done (maintainer has not confirmed). How each behaves where:
+`.claude/skills/ime-key-routing.md` "Editor commands: case, share, process text, word/line".
+Still unverified on a device: chooser result forwarding on OEM choosers, selection survival
+across the trampoline, Ctrl+Shift+arrow extension in EditText, SuggestionSpan in Chrome and
+Compose.

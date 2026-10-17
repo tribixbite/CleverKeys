@@ -180,6 +180,35 @@ Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps droppi
     does not redraw; bind a DIY theme, delete it in Theme Manager → layout falls back, Layout
     Manager shows "not on this device"; import a layout XML with `theme="rosepine"`; Export XML
     carries the binding; backup → restore preview shows the theme rows.
+29. [x] agent: DONE 2026-10-17 — the six editor commands from
+    `docs/research/2026-10-15-ime-editor-actions.md` §4.2 (maintainer decision), all in
+    `handleEditingKey`: `case_cycle` (verified readback rewrite, keyboard-language locale);
+    `textAssist`/`replaceText` now WRITE the app's result back (`ProcessTextActivity` asks the
+    chooser for a result; `ProcessTextReturn` + `deliverProcessTextResult` insert only into the
+    same field with the identical selection receipt, else clipboard + feedback; two names, one
+    implementation); `shareText` is the IME's own ACTION_SEND chooser (works in Chrome/Compose);
+    swipe/autocorrect commits carry their alternatives as a SuggestionSpan (flags 0, ≤5, text
+    fields only); `word_left`/`word_right`, `select_word_left`/`select_word_right` (readback
+    setSelection, Ctrl(+Shift)+arrow without readback, terminals: moves only) and
+    `select_word`/`select_line`. Catalogue 230 → 237, extra keys, TalkBack, 16 new + 2 reworded
+    strings × 21 locales (→ item 8 review). Legacy WORD_LEFT/WORD_RIGHT mappings route to the
+    new keys. `textAssistMenu` kept (not confirmed). Fail-first per command (EditorTextCommandsTest,
+    EditingCommandParityTest, SuggestionSpanCommitTest); 3009 pure / 1299 mock green. Not
+    device-verified (no adb in that session) → item 30.
+30. [ ] device: editor commands (assign each to a custom swipe; Pixel/Saga, release build):
+    (a) `case_cycle` on `hello |` after a swipe in Messages/Keep → Hello → HELLO → hello, stays
+    selected; on a selection; `straße`; in Chrome and a Compose field; refused in Termux.
+    (b) `replaceText` and `textAssist` with a selection → chooser → Google Translate (or any
+    app that returns text) → result replaces the selection in an EditText, Chrome and Compose;
+    edit the text while the app is open → result on the clipboard + bar message; check the
+    trampoline leaves no recents entry and returns to the app; Samsung/Pixel chooser both
+    forward the result. (c) `shareText` in Chrome, a Compose field and an EditText: one share
+    sheet, nothing shared twice; no selection → bar message. (d) swipe a word in a stock
+    EditText (e.g. Settings search is NO_SUGGESTIONS — use Keep/Messages), select it, toolbar
+    Replace and `replaceTextMenu` show the other candidates; autocorrect a typo and check the
+    typed word is offered; no visible underline. (e) `word_left/right`, `select_word_left/right`,
+    `select_word`, `select_line` in EditText, Chrome, Compose and the inline clipboard editor;
+    in Termux `word_left` moves a word in bash and the select commands show "unavailable".
 
 ## Device results recorded 2026-10-07/08
 

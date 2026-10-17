@@ -78,6 +78,10 @@ Both routes edit the same mappings. See [Subkey Popover](../gestures/subkey-popo
 | **Undo/Redo** | Undo or redo action |
 | **Copy/Cut/Paste** | Clipboard operations (terminal-aware — see below) |
 | **Select All** | Select all text |
+| **Word Left/Right, Select Word Left/Right** | Move by a word, or extend the selection by a word |
+| **Select Word / Select Line** | Select the word or line at the cursor |
+| **Cycle Case** | lower → Title → UPPER for the selection or the word at the cursor |
+| **Share** | Share the selected text in any app |
 | **Append 's / Append apostrophe** | Attach an exact suffix to the last verified word; Backspace undoes only that suffix |
 | **Dynamic template** | Expand clipboard, selection, UUID or a caret marker (see below) |
 | **Timestamp** | Insert current date/time using a SimpleDateFormat pattern (see below) |
