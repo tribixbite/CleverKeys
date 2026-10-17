@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Merged into the TEST APK only (never the app). The two activities below run in the test
+     package's own process, so to CleverKeys they are a foreign editor app and a foreign
+     text-processing app (ProcessTextResultInstrumentedTest). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- The editor the user is typing in. Exported: the instrumentation (app process)
+             starts it. -->
+        <activity
+            android:name="tribixbite.cleverkeys.processtext.ProcessTextHostActivity"
+            android:exported="true"
+            android:windowSoftInputMode="stateAlwaysVisible" />
+
+        <!-- The app picked in the Text assist / Replace text chooser: returns the selection
+             upper-cased as EXTRA_PROCESS_TEXT unless the request is read-only. -->
+        <activity
+            android:name="tribixbite.cleverkeys.processtext.ProcessTextUppercaseActivity"
+            android:exported="true"
+            android:label="CK test uppercase">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

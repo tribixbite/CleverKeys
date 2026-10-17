@@ -45,6 +45,16 @@ internal object TextActionLauncher {
     }
 
     /**
+     * Flags [launchForResult] starts [ProcessTextActivity] with: its own task (started from the
+     * service), CLEARED on every launch. With NEW_TASK alone a chooser still open from an earlier
+     * press (left with Home, or its process killed) owns the trampoline's task, so the launch only
+     * brought that task to the front: the OLD chooser for the OLD selection, no new trampoline, the
+     * new request never answered and the old result dropped as superseded (emulator.wtf API 34,
+     * 2026-10-17, ProcessTextResultInstrumentedTest). Pinned by ProcessTextReturnTest.
+     */
+    const val TRAMPOLINE_LAUNCH_FLAGS: Int = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+
+    /**
      * Start [ProcessTextActivity], which opens the ACTION_PROCESS_TEXT chooser for [text] with
      * startActivityForResult and hands any returned text to [ProcessTextReturn] under
      * [requestId]. False when the activity cannot be started (the caller falls back).
@@ -55,7 +65,7 @@ internal object TextActionLauncher {
                 putExtra(ProcessTextActivity.EXTRA_REQUEST_ID, requestId)
                 putExtra(ProcessTextActivity.EXTRA_TEXT, text)
                 putExtra(ProcessTextActivity.EXTRA_ACTION, action.name)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(TRAMPOLINE_LAUNCH_FLAGS)
             }
             context.startActivity(intent)
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Launched $action for a result (len=${text.length})")

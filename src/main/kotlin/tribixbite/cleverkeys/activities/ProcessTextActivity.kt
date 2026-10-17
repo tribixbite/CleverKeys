@@ -15,7 +15,8 @@ import android.util.Log
  * The system chooser forwards the chosen app's result to the caller
  * (FLAG_ACTIVITY_FORWARD_RESULT on its targets; AOSP DisplayResolveInfo, and IntentResolver's
  * since Android 14). Not exported: only [TextActionLauncher] starts it, in its own task
- * (taskAffinity "", excluded from recents), so finishing returns to the app being typed in.
+ * (taskAffinity "", excluded from recents), so finishing returns to the app being typed in. That
+ * task is cleared on every launch, so a stale chooser never answers a new request.
  * Never noHistory — that would finish it while the chooser is up and lose the result.
  */
 class ProcessTextActivity : Activity() {

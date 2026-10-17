@@ -36,6 +36,24 @@ class ProcessTextReturnTest {
         assertNull("delivered at most once", ProcessTextReturn.take<String>())
     }
 
+    /**
+     * emulator.wtf API 34, 2026-10-17 (ProcessTextResultInstrumentedTest): with only NEW_TASK,
+     * pressing the command while an earlier chooser was still open in the trampoline's task
+     * (left with Home, or its process gone) brought THAT task to the front — the old chooser
+     * for the OLD selection, no new ProcessTextActivity — so the new request never got a
+     * result and the old one's was dropped as superseded. CLEAR_TASK replaces the stale task.
+     */
+    @Test
+    fun theTrampolineReplacesAStaleChooserTask() {
+        val flags = TextActionLauncher.TRAMPOLINE_LAUNCH_FLAGS
+        assertEquals("own task (started from a service)",
+            android.content.Intent.FLAG_ACTIVITY_NEW_TASK, flags and android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        assertEquals("a stale chooser task is cleared, not resumed",
+            android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK, flags and android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        assertEquals("one trampoline task at a time",
+            0, flags and android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+    }
+
     @Test
     fun aNewerRequestSupersedesAnOlderOneAndCancelEndsIt() {
         val first = ProcessTextReturn.begin("pkg", 3, 1, "a")
