@@ -273,3 +273,60 @@ ranking mode with the grid-centre weights (s₁ = 1, g = 1, g₂ = 0.6, τ = 0.9
 switches it on and moves the sliders. A second round needs a new pre-registration (a guard-order
 fix, an alias term, joint γ, and any gate change), DEV re-run, and then the first TEST
 evaluation. TEST has not been touched.
+
+## 3. Round 2 pre-registration (written and committed before any round-2 outcome was computed)
+
+Maintainer go-ahead: 2026-10-18 ("continue" after §2's question, read as approval of the
+recommended round 2, including the gate change below). No output under the round-2 rule had been
+computed when this section was committed. TEST is still untouched.
+
+### 3.1 Rule C2 (changes to rule C, from §2.2's diagnosis only)
+
+1. **Re-doubling bypasses the inflection guard.** When step 1.5 deferred with a stem (§1.1
+   guard G) and the winner `w` is a *double reduction* of the typed word `t`, the guard does not
+   apply and `w` is committed (subject to the floor). `t` is a double reduction of `w` when
+   deleting some letters of `w`, each one equal to the letter before it in `w`, gives `t`
+   (`spaming` ← `spamming`, `helo` ← `hello`). This is structural and independent of the
+   weights. It restores the band path's order, where DD-M ran before the guard.
+2. **Alias bonus β.** A contraction alias key's total cost is `E + λ·r − β`. This replaces the
+   band's alias privilege (`donr` → `don't`). Ties are unchanged from §1.1.
+3. **γ joins the grid**, including ∞.
+
+Everything else in §1.1 is unchanged: the candidate set, E, `λ · r`, the tie order, the floor,
+DD-M skipped and step 1.4 kept.
+
+### 3.2 Grid (fixed now)
+
+- `s₁ ∈ {0.5, 1, 2, 4}`, `g ∈ {1.25, 1.5, 2.0}`, `g₂ ∈ {0.3, 0.45, 0.6, 1.0}`,
+  `τ ∈ {0.9, 1.2, 1.5}`, `λ ∈ {0.0025, 0.005, 0.0075, 0.01, 0.015}`, `β ∈ {0, 0.25, 0.5}`,
+  `γ ∈ {0.5, 1, 1.5, 2, 3, ∞}`.
+
+That is 12,960 configurations. The region follows round 1, where GTC favoured the smallest λ
+and S-adj favoured larger g and τ. Data, split and harness are as in §1.2, §1.3 and §2 (the
+contender pre-filter extends to β: an alias key's lower bound subtracts the largest β).
+
+### 3.3 Admissibility on DEV
+
+1. **C1.** GTC-DEV distinct net fixes > 0, and distinct breaks ≤ 0.5 × distinct fixes (as §1.4).
+2. **C2 (changed, maintainer-approved).** S-adj-DEV distinct net fixes > 0, distinct breaks
+   ≤ **0.05 × distinct fixes**, and raw breaks ≤ 0.8 % of pairs. The absolute distinct-word
+   ceiling is replaced by the ratio, because rule C replaces the ranking and fixes thousands of
+   S-adj words (§2.2). The raw-pair ceiling stays.
+3. **C3.** Every named case of §1.5 T5 holds, **including `shated` → `shared`**, for every
+   configuration (γ = ∞ therefore cannot be admissible).
+4. **C4.** C-oov-DEV new changes ≤ 0.5 % of C-oov-DEV words.
+
+Choice: the admissible configuration with the most GTC-DEV distinct net. Ties go to fewer
+S-adj-DEV distinct breaks, then the larger γ, then grid order. Soundness check as §1.3 (2,000
+seeded DEV inputs, replica = production, or the run is void).
+
+### 3.4 Ship gate on TEST (one evaluation of the chosen configuration; all must hold)
+
+T1, T2, T4, T5 (with `shated`) and T6 as §1.5. **T3 (changed)**: S-adj-TEST distinct net > 0,
+distinct breaks ≤ 0.05 × distinct fixes, and raw breaks ≤ 1.0 %.
+
+If T1–T6 pass, rule C2 with the chosen weights becomes the **default** ranking. If DEV has no
+admissible configuration, or TEST fails, the band ranking stays the default. The opt-in channel
+defaults then become the DEV configuration with the most GTC-DEV distinct net among those that
+pass C2, C3 and C4 (any C1), or stay at the round-1 grid centre if there is none. These
+thresholds are fixed now.
