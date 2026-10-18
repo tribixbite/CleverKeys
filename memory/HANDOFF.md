@@ -1,14 +1,15 @@
-# HANDOFF — updated 2026-10-08 (body last reconciled 2026-09-01)
+# HANDOFF — updated 2026-10-18 (body last reconciled 2026-09-01)
 
-**2026-10-08 pointer.** HEAD `b9ce12e6` is pushed and equals origin/main; pushes are authorized
-(2026-10-07), tag/version bump/release/GitHub posts are not. The prioritized, owner-tagged open
-list now lives at the top of [`memory/todo.md`](todo.md) ("Open now") and is authoritative;
-this file is the **reference** for state, evidence and rules. The sections below are dated
-2026-09-01..09-30 and were not re-verified on 2026-10-08: an item that is still open here also
-appears in todo.md's "Open now" (e.g. popover native-string review, i18n device checks, the
-`finger_occlusion_offset` decision, es LM); anything not listed there was closed by the October
-commits recorded in todo.md's history (e.g. ARC-072 slice 3 `fddb65d5`, ARC-098 `d6484ee9`,
-#186/#61 `f85c8dcd`, suffix commands `64f05dd2`).
+**2026-10-18 pointer.** HEAD `05a36547` plus the docs commit that follows it is pushed and equals
+origin/main; pushes are authorized (2026-10-07), tag/version bump/release/GitHub posts are not.
+The prioritized, owner-tagged open list lives at the top of [`memory/todo.md`](todo.md) ("Open
+now", 20 items) and is authoritative; this file is the **reference** for state, evidence and
+rules. The sections below are dated 2026-09-01..09-30 and were not re-verified on 2026-10-18: an
+item that is still open here also appears in todo.md's "Open now" (e.g. the native-speaker string
+review, i18n device checks, the `finger_occlusion_offset` decision, es LM); anything not listed
+there was closed by the October commits recorded in todo.md's history — 2026-10-07/08 sections
+and "Done 2026-10-10 → 10-17" (theme binding, style layouts, editor commands, blind fields, DD-M
+autocorrect, pack-swap safety; user-visible summary in CHANGELOG.md's 2.0.0 section).
 
 Read this first, then `docs/specs/ctc-architecture-and-multiscript-guide.md` (architecture,
 routing rule, multi-script recipe, full audit table). Where they overlap, the guide wins on

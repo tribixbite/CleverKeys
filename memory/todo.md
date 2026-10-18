@@ -1,256 +1,259 @@
 # Current work queue
 
-Updated: 2026-10-08. HEAD `b9ce12e6` is pushed and equals origin/main. Pushes to origin/main
-are authorized (2026-10-07) and in use; tag, version bump, release, publish and GitHub posts
-still need explicit authorization. Reference state and rules: [HANDOFF.md](HANDOFF.md).
+Updated: 2026-10-18. HEAD `05a36547` plus this docs commit is pushed and equals origin/main.
+Pushes to origin/main are authorized (2026-10-07) and in use; tag, version bump, release,
+publish and GitHub posts still need explicit authorization. Reference state and rules:
+[HANDOFF.md](HANDOFF.md).
 Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/2026-08-30-full-backlog-campaign.md).
 Issue tracker: [`docs/audit/gh-issue-resolution.md`](../docs/audit/gh-issue-resolution.md).
 
 The "Open now" section is the only authoritative task list. Everything after it is dated history,
-kept for evidence; its open boxes were reconciled on 2026-10-08 against git history, test files,
-`docs/eval/`, `~/ew-output/` and the device-evidence dirs `build/oct7-*/`, `build/oct8-*/`
-(screenshots, not in git). A history item that is still open says "→ Open now N" instead of
-carrying its own box, so duplicates are counted once.
+kept for evidence; its open boxes were reconciled on 2026-10-18 against the 92 commits
+`b9ce12e6..47be5f23` and their messages, the test files, `docs/eval/`, `~/ew-output/` and the
+device-evidence dirs `build/oct7-*/` … `build/oct17c-*/` (screenshots and logcat, not in git).
+A history item that is still open says "→ Open now N" instead of carrying its own box, so
+duplicates are counted once.
 
-## Open now (2026-10-08)
+## Open now (2026-10-18)
 
-Owners: **device** = needs a test phone (Saga; Seeker 192.168.0.170 keeps dropping Wi-Fi) ·
-**maintainer** = the maintainer's hands or decision · **agent** = doable from this box ·
-**RTX** = needs the ML training box.
+Owners: **device** = needs a test phone · **maintainer** = the maintainer's hands or decision ·
+**agent** = doable from this box · **RTX** = needs the ML training box.
 
-1. [ ] device: Termux drift re-test. Saga 2026-10-15 (release `7aea1ab8`, Termux 0.118.3,
-   `build/oct15-saga/`): D1 Backspace-to-empty clears and D3 CleverKeys Enter ends the word —
-   PASS. D2/D4 FAILED, but both used Termux's OWN extra-keys toolbar (CTRL, ⇥), which the IME
-   cannot see: D2 tracked `foocbar` over a line showing `bar` and the `foodborne` tap sent 7
-   Backspaces; D4 kept `ec` after shell completion (`ecx`). CleverKeys' own Ctrl/Tab do end
-   the word (already pinned). Fixed 2026-10-15: in terminal/remote fields a tap never deletes —
-   the bar offers only extensions of the tracked word and a tap appends the remainder;
-   `+word` commits only a space (`TerminalSuggestionPolicy`, spec `termux_integration.md`
-   "Why taps may not delete"). Re-test: repeat D2 (toolbar CTRL + `c`, `bar`: bar shows no
-   `foo…` words, nothing is deleted) and D4 (toolbar ⇥ then `x`: no `except`); type `hel`, tap
-   `hello` → line reads `hello `.
-2. [ ] device: #186/#61 Persian half — custom layout bound to `fa` with the fa pack imported
-   ("Language: Persian" bar, Persian typo autocorrected, Latin restores EN), en/de/fr
-   three-layout cycle, uninstalled-language warning. Saga Latin→German PASS 2026-10-07.
-3. [x] DONE 2026-10-12 (Pixel: `somethings` commits 3/3; `adb` raised to 255 ranks first) — device: add `adb`/`somethings` to the personal dictionary and swipe them
-   (`docs/eval/2026-10-07-final-letter-drops.md` §8). `adb` part done 2026-10-10 (Seeker):
-   stored at the legacy 100 it lost to `an` at Highest; raised to 255 it ranked first
-   (`docs/eval/2026-10-08-user-swipe-priority.md` §9). Legacy-frequency offer + dialog lift
-   PASS on the Pixel 2026-10-11 (Review/Not now/Dismiss/re-offer, lift to 255, `wet` at
-   Highest 3/3 — and it also takes plain `we` swipes, the eval's stated cost). Still open:
-   `somethings`.
-4. [ ] device: clipboard Select/⋮ with TalkBack; #181 glyph filter on a device WITHOUT a
-   font provider; #184 oversized UPDATE of an already-installed pack.
-5. [ ] device: leftovers of the plan's "Maintainer device checks" — continuous swipe with
+Test phones (DHCP leases as reported by the maintainer on 2026-10-18, not verified from this
+box — rediscover with `nmap -sn` and `getprop ro.product.model`): Pixel 8 Pro `192.168.0.216`
+(wireless-debugging port rotates), Saga `192.168.0.202` (CleverKeys installed, enabled, not
+default), second Saga `192.168.0.144` (Termux installed; CleverKeys installed, IME disabled,
+Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when idle). Never
+`stop`/`start` a Saga; leave no trace; restore any setting you change.
+
+1. [ ] device: Termux drift re-test after `fd3eec40` (the Saga with Termux). Done so far —
+   Saga 2026-10-15 (release `7aea1ab8`, Termux 0.118.3, `build/oct15-saga/`): D1
+   Backspace-to-empty clears and D3 CleverKeys Enter ends the word PASS; D2/D4 FAILED through
+   Termux's OWN toolbar CTRL/⇥, which the IME cannot see → `80207612`: in terminal/remote fields
+   a tap never deletes (`TerminalSuggestionPolicy`, spec `termux_integration.md` "Why taps may
+   not delete"). Saga 2026-10-16 (release `d8be659b`, `build/oct17-saga/03–19`): D2 deleted
+   nothing, but the bar offered `+foocbar` and the tap added it to the dictionary (removed
+   again, `build/oct17b-saga/09–12`) → `fd3eec40`: terminal/blind fields never offer the
+   exact-add chip or the space-time "Add to dictionary?" prompt; D4 (toolbar ⇥ then `x`) showed
+   only `ecx`, no `except`, nothing deleted PASS; `hel` + tap `help` → `help ` PASS. STILL TO
+   RUN with a release ≥ `fd3eec40`: D2 again — after toolbar CTRL + `c` and `bar`, no
+   `+foocbar` chip and no add prompt on space, nothing deleted.
+2. [ ] agent → device: Persian half of #186/#61. No `fa` language pack and no Persian layout
+   exist (checked 2026-10-12), so the device check cannot run: build the pack first
+   (`build_wordlist.py` LANG_CONFIG entry + layout XML + `build_langpack.py`;
+   `docs/guides/adding-a-new-language.md`, `.claude/skills/dictionary-pipeline.md`), then on a
+   phone: a custom layout bound to `fa` with the pack imported ("Language: Persian" bar, a
+   Persian typo autocorrected, Latin restores EN), the en/de/fr three-layout cycle, the
+   uninstalled-language warning. Saga Latin→German PASS 2026-10-07.
+3. [ ] device: clipboard Select/⋮ with TalkBack; #181 glyph filter on a device WITHOUT a font
+   provider; #184 oversized UPDATE of an already-installed pack.
+4. [ ] device: leftovers of the plan's "Maintainer device checks" — continuous swipe with
    auto-space OFF and interrupted phrases, "." tapped right after lift, templates in
    password/inline editors and media-only clipboard, enlarged text + narrow split-screen
    clipboard pane, fa/hu pane arrows + settings-search scroll.
-6. [ ] maintainer: ARC-053 daily-use soak of the minified release → ARC-063 narrow the
-   blanket R8 keeps → tag decision.
-7. [ ] maintainer: pre-tag checks — #90 numpad-height cases, #168 `clear_clipboard` on a
+5. [ ] device: inline clipboard editor and undo/redo (`d599f84a`, not device-checked) — Pixel:
+   type two words in the entry editor, Ctrl+Z ×2, Ctrl+Y, select + Ctrl+C then paste in an app
+   (the copy lands in history; a private entry asks first); the undo/redo keys in Chrome, a
+   Compose field and Termux ("Action unavailable"). Done: Pixel 2026-10-13/14 (release
+   `3439fff0`, `build/oct14-pixel/33–78`): Ctrl+V pastes into the editor, not the app behind it
+   PASS; Ctrl+Z did nothing there → fixed in `d599f84a`.
+6. [ ] device + maintainer: blind-field checks with RustDesk installed on a Saga (F-Droid/GitHub
+   APK `com.carriez.flutter_hbb`) controlling any reachable desktop — typed text, `teh`+space
+   stays `teh`, a tapped suggestion appends (never deletes), Backspace after a swipe removes
+   the word, clipboard-panel tap and paste key type the phone clip, delete-last-word is
+   Ctrl+Backspace; then the same in a RustDesk remote terminal; and AVNC (TYPE_NULL). Needs a
+   RustDesk host from the maintainer. `BlindFieldPolicyTest` models RustDesk (`68d91874`).
+7. [ ] device: editor-command leftovers (everything else PASS 2026-10-17 → history): one real
+   rewriting/translating app that RETURNS text on a phone (Gemini closed without a result,
+   Google Translate's TapToTranslate has no replace action; the result path is proven only on
+   emulator.wtf API 33/34 by `ProcessTextResultInstrumentedTest`), and Compose-field checks
+   (case cycle, share, word moves/selection, undo/redo, Replace popup).
+8. [ ] maintainer: ARC-053 daily-use soak of the minified release
+   (`docs/plans/v2.0.0-manual-test-checklist.md` carries uncommitted maintainer edits — never
+   edit or stage it) → ARC-063 narrow the blanket R8 keeps → tag decision.
+9. [ ] maintainer: pre-tag checks — #90 numpad-height cases, #168 `clear_clipboard` on a
    disposable clip, #145 cold start, both minimize styles, suffix/template/continuous feel.
-8. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in
-   21 locales (command catalogue 465, popover 18, clipboard selection/bulk 25, clear-clipboard
-   4, #184 refusal, terminal packages, language binding, Oct 7 dialog strings, Oct 10
-   legacy-frequency offer + priority lift 9).
-9. [ ] maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`
-   needs a fresh pre-registration; nonzero `finger_occlusion_offset` only from device-trace
-   A/B; keep or uninstall CleverKeys on the Saga (installed, enabled, not default). The second
-   Saga 192.168.0.144 keeps it installed (maintainer, 2026-10-11; IME disabled, Gboard default).
-10. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
+10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21
+    locales — command catalogue 465, popover 18, clipboard selection/bulk 25, clear-clipboard 4,
+    #184 refusal, terminal packages, language binding, Oct 7 dialog strings, Oct 8 swipe
+    priority 7 (`b2031f90`), Oct 10 legacy-frequency offer + lift 7 (`051dca51`), Oct 12
+    editor-menu commands 4 (`a516f6ae`; 2 of them removed again on Oct 17), Oct 15 theme
+    binding 10 (`e237fa95`), Oct 17 editor commands 16 new + 2 reworded (`d86f6606`), Oct 17
+    `textAssistMenu` removal notice + "Replacement Suggestions (Editor)" name and description 3
+    (`932207b0`). Counts are the `<string` lines added to `res/values/strings.xml` per commit.
+11. [ ] maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`
+    needs a fresh pre-registration; nonzero `finger_occlusion_offset` only from device-trace
+    A/B; keep or uninstall CleverKeys on the first Saga (installed, enabled, not default — the
+    second Saga keeps it, 2026-10-11); Text assist when no app can take the text: since
+    `e940262c` the bar says "Action unavailable" (the old `android.R.id.textAssist` fallback was
+    a silent no-op) — decide whether that is final or the command should fall back to the
+    editor's Replace popup as Replace text does; not device-checked on a phone without a
+    process-text app.
+12. [ ] maintainer: targetSdk bump (still compile/target 34; the full instrumented suite is
+    green on API 35/36/37, `6bdf282e`). Prerequisites found 2026-10-17: (a) targetSdk 35 forces
+    edge-to-edge — only Settings and Launcher handle system-bar insets out of 15 activities;
+    (b) targetSdk 35 needs `values-id` beside `values-in` (build.gradle TODO); (c) targetSdk 36
+    makes predictive back the default — no custom back handling exists, so low risk, but every
+    Compose dialog/activity back path needs a device pass; (d) targetSdk 37 can no longer opt
+    out of large-screen orientation/resizability; (e) Android 18 drops implicit URI grants —
+    both share paths are already explicit.
+13. [ ] maintainer: neighbour-substitution tiebreak — inside the ±0.10 score band a DISTANT
+    one-letter substitution can beat a neighbour-key one on frequency (he תושה→עושה ת↔ע ≈4
+    keys, over תודה ש↔ד; scores ≈0.89 vs 0.97). MEASURED 2026-10-12, NOT SHIPPED
+    (`docs/eval/2026-10-12-neighbour-substitution-tiebreak.md`): "neighbour sub beats distant
+    sub" fixes תושה but fails DEV (GTC-DEV N1 −31 distinct net, 60 breaks mostly real distant
+    misspellings such as compatability→comparability; NA 135 breaks vs 167 fixes; both break
+    the `tfe`→the calibration case) while gaining +848 S-adj words on synthetic neighbour slips.
+    Open: a narrower pre-registered rule, or a phone-typing corpus to weigh the two error
+    populations. Seam `NeighbourTiebreak` stays OFF.
+14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
-11. [x] agent: language-pack final swap deleted the old directory before `renameTo` —
-    fixed `462c2eab` (2026-10-12): `LanguagePackSwap` backup-rename swap + rollback, trash
-    removal, once-per-manager startup recovery; `LanguagePackSwapTest` (18 pure) and 3 new
-    `LanguagePackImportTest` cases (fail-first 3/51 on the old swap). 2953 pure / 1198 mock.
-    Not device-verified (no adb in that session).
-12. [ ] agent: deferred review items — ~~unify `Keyboard2View.executeEditingCommand` with
-    `KeyEventHandler.handleEditingKey`~~ DONE 2026-10-12 in `7d1a3271` (editing mappings press
-    the key into `handleEditingKey`; `EditingCommandParityTest` 9 mock, fail-first 8/9; 2954
-    pure / 1207 mock; not device-verified. Maintainer call: layout `textAssist`/`replaceText`
-    keys now open the app chooser like the mapping did); still open: suffix receipt readback
-    at command time (3 editor reads per committed word, # TODO in `rememberVerifiedWord`);
-    #175 clipboard swipe-to-delete; summon after system hide (overlay permission).
-13. [x] DONE 2026-10-14 — mock-suite timing flakes were measurement design, not regressions.
-    `WordPredictorFuzzyTypingTest` latency: wall-clock MEAN of 10 rounds; one ~170 ms stall on
-    a single round lifted 'bec' (normally ~0.2 ms) to 17.4 ms; same code failed 2/3 at
-    synthetic load ~18. Now per-input median of 11 rounds in thread CPU time, bounds unchanged
-    (wall medians printed; blocking regressions not covered). `UserAdaptationManagerPersistence
-    Test` W6: production 5 s debounce on the process-wide shared scheduler vs a 12 s wall
-    deadline; shared-scheduler contention was NOT reproduced (queue monitor quiet), so the
-    7 s+ stall is unattributed host load (failing suites ran 610–703 s vs ~180 s). Now its own
-    scheduler, 50 ms debounce, waits on the commit (30 s hang guard). 5× normal + 5× load ~20
-    pass both; full runMockTests 1228/1228.
-14. [ ] RTX: short-word CTC — word-balanced fine-tune on the raw-path input contract so
+15. [ ] agent: deferred review items — suffix receipt readback at command time (3 editor reads
+    per committed word, # TODO in `rememberVerifiedWord`); #175 clipboard swipe-to-delete;
+    summon after system hide (overlay permission).
+16. [ ] agent: `autocorrect_prefix_length` > 0 vs the dropped-double rule DD-M — unmeasured
+    (noted 2026-10-12): with prefix length 1 (the Pixel's setting) `bery`→`berry` and
+    `grom`→`groom` get through because `very`/`from` fail the prefix check and the sweep then
+    commits nothing. Pre-register and measure on the typo corpora at prefix 1 and 2 before
+    changing either the rule or the setting's reach
+    (`docs/eval/2026-10-11-dropped-double-margin.md`).
+17. [ ] RTX: short-word CTC — word-balanced fine-tune on the raw-path input contract so
     dwell-less `ad`/`wet` decode, gated on fresh writer/session-separated human traces
     (`docs/eval/2026-10-07-short-word-ctc.md`, `…final-letter-drops.md` §6).
-15. [ ] RTX: apostrophe context chooser — listed-evidence its/it's variant in its own
+18. [ ] RTX: apostrophe context chooser — listed-evidence its/it's variant in its own
     pre-registered round on fresh data (`docs/eval/2026-10-07-apostrophe-context.md`).
-16. [ ] RTX: Bangla spelling-preserving dictionary + mark/conjunct geometry, then a validated
+19. [ ] RTX: Bangla spelling-preserving dictionary + mark/conjunct geometry, then a validated
     model/pack (`docs/guides/adding-a-new-language.md`); ARC-061 `ctc_golden` fixture fix.
-17. [ ] unowned roadmap: 1.3 at-rest clipboard encryption, 2.3 dwell picker (measure first),
-    4.1 live theme preview, 4.2 spline swipe trail (benchmark first), #187 below-accents,
-    #175(3)/#80(3) toolbar.
-18. [x] DONE 2026-10-12 — `helo` autocorrect + bar consistency. The bar highlights what space
-    commits (`SpaceCommitResolver`), and the dropped-double margin rule DD-M (M=64, tuned and
-    gated on the shipped `en_enhanced.bin`, `docs/eval/2026-10-11-dropped-double-margin.md` §5)
-    makes `Helo` highlight and commit `Hello`. Device PASS, Pixel, release `7eef0b7c`:
-    `Helo`→`Hello` (undo chip `Helo`), `Sed`→`See` (not Seed). The earlier M=32 result was
-    measured on the CTC JSON scale by mistake. Harnesses now load the `.bin`
-    (`ShippedTapDictionaryDriftTest`). Follow-up, unmeasured: `autocorrect_prefix_length` > 0
-    (the Pixel has 1) lets bery→berry / grom→groom through, because very/from fail the prefix.
-19. [x] DONE 2026-10-12 — Hebrew autocorrect on a device (Pixel, release `7eef0b7c`, he pack on
-    `hebr_1_il`): English sanity `Helo`→`Hello`; controls 3/3; אתנול→אתמול corrected. Of the
-    other two "typos", שרום was not a neighbour typo (ר and ל are far apart on hebr_1_il), and
-    תושה→עושה is reproduced on the JVM (item 20). Also item 3: `somethings` swipes commit
-    `Somethings` 3/3 with and without the custom word. Item 2 (Persian) not runnable: no fa pack
-    or Persian layout exists.
-20. [ ] maintainer: inside the ±0.10 score band a DISTANT one-letter substitution can beat a
-    neighbour-key one on frequency (he תושה→עושה ת↔ע ≈4 keys, over תודה ש↔ד; scores ≈0.89 vs
-    0.97). MEASURED 2026-10-12, NOT SHIPPED (`docs/eval/2026-10-12-neighbour-substitution-tiebreak.md`):
-    "neighbour sub beats distant sub" fixes תושה but fails DEV: GTC-DEV N1 −31 distinct net (60
-    breaks, mostly real distant misspellings like compatability→comparability, seprate→septate),
-    NA 135 breaks vs 167 fixes, both break the `tfe`→the calibration case. Large gains on synthetic
-    neighbour slips (N1 +848 S-adj words). Open: a narrower pre-registered rule, or a phone-typing
-    corpus to weigh the two error populations. Seam `NeighbourTiebreak` stays OFF.
+20. [ ] unowned roadmap: 1.3 at-rest clipboard encryption, 2.3 dwell picker (measure first),
+    4.2 spline swipe trail (benchmark first), #187 below-accents, #175(3)/#80(3) toolbar.
+    (4.1 live theme preview shipped 2026-10-08, `70b94c11`.)
 
-21. [x] agent: DONE 2026-10-13 — editor-menu text actions. Maintainer decision: `textAssist`/
-    `replaceText` keep the app chooser; new `textAssistMenu`/`replaceTextMenu` commands and
-    layout values (Editing.ASSIST_MENU/REPLACE_MENU) send the bare context-menu id as before
-    `7d1a3271`. Catalogue 228 → 230, strings in 21 locales (→ item 8 review list), wiki
-    palette page. Fail-first: `EditingCommandParityTest` 2/10 red (the names typed literally).
-22. [x] agent: DONE 2026-10-13 — blind text fields (RustDesk, VNC, TYPE_NULL). One detector
-    `TerminalUtils.editorKind` (TEXT/TERMINAL/REMOTE; RustDesk + any TYPE_NULL editor =
-    REMOTE; no readback probe). REMOTE gets the terminal no-rewrite policy, paste commits
-    the clip, `clear`/suffix refused, no cursor sync or #78 scan, key-event deletion, and
-    Ctrl+Backspace (not Ctrl+W) for delete-last-word. Evidence and RustDesk source lines:
-    `docs/specs/termux_integration.md` "Blind text fields". `BlindFieldPolicyTest` fail-first
-    9/12 red on the old code. Not device-verified.
-23. [ ] device: blind-field checks with RustDesk installed on the Saga (F-Droid/GitHub APK
-    `com.carriez.flutter_hbb`), controlling any reachable desktop: typed text, `teh`+space
-    stays `teh`, tapped suggestion replaces the typed word, Backspace after a swipe removes
-    the word, clipboard-panel tap and paste key type the phone clip, delete-last-word is
-    Ctrl+Backspace; then the same in a RustDesk remote terminal; and AVNC (TYPE_NULL).
-    Also `textAssistMenu`/`replaceTextMenu` in a stock EditText with a selection: on the Saga
-    (2026-10-13, release `68d91874`) they produced no visible change in Chrome — inconclusive,
-    re-check in an app that honours the context-menu action. Needs a RustDesk host from the
-    maintainer. Done on the Saga the same day: Termux (GitHub 0.118.3) no autocorrect, panel and
-    custom-swipe paste type the clip, Backspace PASS; inline clipboard editor Ctrl+V leaked to
-    the app behind it — fixed in `3439fff0` (with the search/tag-field paste leak), not yet
-    re-checked on a device.
-24. [x] agent: DONE 2026-10-15 — maintainer request "ship predefined layouts that mimic iOS,
-    SwiftKey, and Gboard (3 separate)". `latn_qwerty_us_{ios,gboard,swiftkey}_style.xml`
-    ("QWERTY (iOS-style)" etc.), each with its own bottom row (`bottom_row="false"`), the
-    product's widths and hints, SwiftKey with an embedded number row; the standard bottom
-    row's keys moved to corners. Researched from Apple/Microsoft support pages and a 9to5Google
-    Gboard 16 screenshot (sources in each file's header). `StyleLayoutsTest` (mock, real
-    parser); wiki "Familiar-style layouts" in `docs/wiki/layouts/adding-layouts.md`.
-25. [ ] device: visual check of the three "-style" layouts (Layout Manager > Add Layout):
-    side-by-side with the real keyboards' screenshots for row indent, Shift/Delete and
-    bottom-row widths, hint placement, the "123"/"?123" labels; swipe a few words on each;
-    123 opens the number pane and ABC returns; corner swipes on 123/emoji/comma/enter.
-26. [x] agent: DONE 2026-10-15 — undo/redo/copy (not device-verified; no adb in that session).
-    (a) Inline clipboard entry editor: Ctrl+Z and the undo key undo, Ctrl+Shift+Z / Ctrl+Y and
-    the redo key redo, Ctrl+C and the copy key copy the selection (Pixel: Ctrl+Z did nothing
-    there after `3439fff0`). The platform undo cannot serve it: every routed edit is a
-    `setText()`, which calls `Editor.forgetUndoRedo()`; so `InlineEditHistory` (pure, bounded
-    100 steps / 1M chars, one step per typed word) is the session history. Copy is an ordinary
-    copy: it lands in clipboard history like a cut; private entries ask first (#156 gate).
-    (b) App-facing undo/redo send Ctrl+Z / Ctrl+Shift+Z key events instead of
-    `performContextMenuAction(undo/redo)`, which Chrome/WebView and Compose ignore
-    (`docs/research/2026-10-15-ime-editor-actions.md`); in terminal-style fields they report
-    "Action unavailable" (Ctrl+Z would suspend the shell job). Tests: `InlineEditHistoryTest`
-    (11 pure), `InlineFieldShortcutTest` + `EditingCommandParityTest` (mock; fail-first 2/6 and
-    2/12); 2966 pure / 1232 mock green. Device check: Pixel — clipboard editor type two
-    words, Ctrl+Z ×2, Ctrl+Y, select + Ctrl+C then paste in an app; undo/redo keys in Chrome, a Compose field and Termux.
-27. [x] agent: DONE 2026-10-15 — per-layout THEME binding (maintainer: "tie theme to layout
-    including backup/layout file xml"). Layout Manager **Theme** chip per layout (Follow global
-    theme / any built-in, decorative or DIY theme, searchable picker); `<keyboard theme="…">`
-    is the XML default, written on Export XML; stored as the `theme` field of the `layouts`
-    entry (rides in the backup blob; preview lists per-layout theme changes). Config resolves
-    the effective theme per refresh (`LayoutThemeBinding.resolve`); the global `theme` pref is
-    never written; a missing theme falls back to the global one. ConfigurationManager re-inflates
-    only when the effective theme changes; `onThemeChanged` rebuilds the suggestion strip while
-    shown. Spec: `docs/specs/layout-system.md` "Per-layout theme binding". Fail-first: preview
-    `[3 → 3 items]`, 3/3 new hygiene drift red, new API tests did not compile. 2977 pure /
-    1240 mock. 10 new strings × 21 locales (→ item 8 review). Not device-verified (→ item 28).
-28. [ ] device: theme binding — bind layout 2 to a theme ≠ global, switch with the globe key /
-    swipe: keyboard and suggestion strip redraw in that theme with no flicker or stale bar;
-    switch back restores the global theme; switching between two layouts on the same theme
-    does not redraw; bind a DIY theme, delete it in Theme Manager → layout falls back, Layout
-    Manager shows "not on this device"; import a layout XML with `theme="rosepine"`; Export XML
-    carries the binding; backup → restore preview shows the theme rows.
-    Pixel 2026-10-17 (release `d8be659b`, `build/oct17-pixel/151–155`): keys and chrome switched
-    to Light and back to Cyberpunk correctly, but after the switch the bar showed NO chips
-    (uniform grey after `input text test`), reported as "text same colour as bar". Agent
-    2026-10-17: not a colour mix — the bar takes all colours from the effective theme's Theme;
-    emulator.wtf (EditText and Chrome, real space-bar swipe, `input text`) shows black chips on
-    #CCCCCC with the pipeline writing to the on-screen bar. Black on grey cannot give zero
-    variance, so the device bar was empty; cause still open. Fixed alongside: unreadable
-    highlight/prompt colours on 9 XML + 4 decorative themes (`SuggestionBarPalette`, ≥3:1) and
-    the preference handler's stale bar/view references. RE-CHECK on the Pixel with a release
-    build ≥ `9e2a9804`: same steps; if the bar is empty again, `logcat -d -s PredictionViewSetup`
-    (the "Suggestion bar built" line) and whether a tap-typed word (not `input text`) fills it.
-29. [x] agent: DONE 2026-10-17 — the six editor commands from
-    `docs/research/2026-10-15-ime-editor-actions.md` §4.2 (maintainer decision), all in
-    `handleEditingKey`: `case_cycle` (verified readback rewrite, keyboard-language locale);
-    `textAssist`/`replaceText` now WRITE the app's result back (`ProcessTextActivity` asks the
-    chooser for a result; `ProcessTextReturn` + `deliverProcessTextResult` insert only into the
-    same field with the identical selection receipt, else clipboard + feedback; two names, one
-    implementation); `shareText` is the IME's own ACTION_SEND chooser (works in Chrome/Compose);
-    swipe/autocorrect commits carry their alternatives as a SuggestionSpan (flags 0, ≤5, text
-    fields only); `word_left`/`word_right`, `select_word_left`/`select_word_right` (readback
-    setSelection, Ctrl(+Shift)+arrow without readback, terminals: moves only) and
-    `select_word`/`select_line`. Catalogue 230 → 237, extra keys, TalkBack, 16 new + 2 reworded
-    strings × 21 locales (→ item 8 review). Legacy WORD_LEFT/WORD_RIGHT mappings route to the
-    new keys. `textAssistMenu` kept (not confirmed). Fail-first per command (EditorTextCommandsTest,
-    EditingCommandParityTest, SuggestionSpanCommitTest); 3009 pure / 1299 mock green. Not
-    device-verified (no adb in that session) → item 30.
-30. [ ] device: editor commands — MOSTLY DONE 2026-10-17 (Pixel releases cc4fe37d/e940262c,
-    Saga for Termux): case cycle Hello→HELLO→hello (Chrome + EditText) PASS; Share one sheet /
-    "No text selected" PASS; word moves + select word left/right PASS; select word (4 cursor
-    cases) and select line (visual line) in Chrome PASS after `fcbef011`; Replace popup shows
-    swipe alternatives PASS; "Replacement Suggestions (Editor)" listed, Text Assist (Editor Menu)
-    gone PASS; Termux: word moves move the shell cursor, select word/line, case cycle and share
-    refuse with no change PASS. On the phones no installed app returned text (Gemini closed
-    without a result; Google Translate's TapToTranslate has no replace action). Process-text
-    RESULT path — EMULATOR PASS 2026-10-17: `ProcessTextResultInstrumentedTest` (a foreign
-    editor + an EXTRA_PROCESS_TEXT upper-casing app in the test APK's own process, the real
-    service key_up → trampoline → system chooser tapped by UiAutomator → forwarded result),
-    emulator.wtf Pixel7 API 33 (system ChooserActivity) and API 34 (IntentResolver), 3/3 each:
-    in place (`say hello world now` → `say HELLO WORLD now`, caret 15); field changed while the
-    app was open → field untouched, clipboard `HELLO WORLD`, bar message shown; no trampoline
-    left live or in the visible recents. Bug found and fixed: with NEW_TASK alone, pressing the
-    command while an earlier chooser was left open (Home) brought that stale task forward on
-    API 34 and the new request was never answered — the trampoline task is now cleared on each
-    launch (`TextActionLauncher.TRAMPOLINE_LAUNCH_FLAGS`; pre-fix APK fails
-    `aChooserLeftOpenDoesNotAnswerTheNextRequest` on 34, passes on 33). Still owed on a phone:
-    one real rewriting/translating app that returns text, and Compose-field checks.
-31. [x] agent: DONE 2026-10-17 — `textAssistMenu` removed (maintainer decision; research §4.1:
-    android.R.id.textAssist is handled by no editor, so it was always a silent no-op). Gone from
-    the catalogue (palette/search; never an extra key), wiki (237 → 236 commands) and strings
-    in 22 resource dirs. `Editing.ASSIST_MENU` and the `textAssistMenu` name stay so saved
-    mappings, backups and custom layouts load: pressing one shows "Text Assist (Editor Menu) is
-    no longer supported. Reassign this command" in the bar, on both surfaces, in every mode,
-    without touching the app (TalkBack reads the same text). `replaceTextMenu` renamed
-    "Replacement Suggestions (Editor)" with a new description in all 21 locales (→ item 8
-    review). Fail-first: ReleaseClaimCommandCatalogueTest 3 red, EditingCommandParityTest 1 red.
-    Device check folded into item 30(d): the renamed command still opens the popup.
-32. [x] agent: DONE 2026-10-17 — instrumented coverage on Android 15/16/17 (emulator.wtf
-    Pixel7 API 35/36/37, full unfiltered suite, real `ctc_bench` encoders). Final: API 37
-    1606/1606, API 35 1606/1606, API 36 1605/1606 with the last failure fixed (class 3/3).
-    No app bug found; app APK byte-identical throughout (still compile/target 34). Fixes were
-    harness-only: espresso 3.7.0 stack (API 36 removed `InputManager.getInstance`, 100 tests),
-    `ShowImeWithHardKeyboardRule` (36/37 images ship `show_ime_with_hard_keyboard=0`),
-    clipboard-overlay swipe in the process-text test, and 9 stale `TYPE_NULL` fixtures
-    (fail on every API since `68d91874`). Details: `.claude/skills/ew-cli-testing.md`
-    "API 35–37 coverage". targetSdk-bump prerequisites found (maintainer decision, not done):
-    (a) targetSdk 35 forces edge-to-edge — only Settings and Launcher handle system-bar insets
-    out of 15 activities; (b) targetSdk 35 needs `values-id` beside `values-in` (build.gradle
-    TODO); (c) targetSdk 36 makes predictive back default — no custom back handling exists, so
-    low risk, but every Compose dialog/activity back path needs a device pass; (d) targetSdk 37
-    can no longer opt out of large-screen orientation/resizability; (e) Android 18 drops
-    implicit URI grants — both share paths are already explicit.
+## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
+
+The commits are the record; the evidence pointers stay here. Device dirs `build/oct10-*/` …
+`build/oct17c-*/` hold screenshots and logcat (not in git).
+
+- [x] Swipe-priority device check and hard words: `adb` stored at the legacy frequency 100 lost
+  to `an` even at Highest (Seeker 2026-10-10, `docs/eval/2026-10-08-user-swipe-priority.md`
+  §9); raised to 255 it ranked first (Pixel 2026-10-12). Legacy-frequency offer + dialog lift
+  (`051dca51`, `8f4bdf2b`) PASS on the Pixel 2026-10-11 (Review / Not now / Dismiss / re-offer,
+  lift to 255, `wet` at Highest 3/3 — it also takes plain `we` swipes, the eval's stated cost).
+  `somethings` commits 3/3 with and without the custom word (Pixel 2026-10-12). The Custom tab
+  counted the "+ Add" row → `8839ee85`.
+- [x] Language-pack swap crash safety (`462c2eab`): `LanguagePackSwap` backup-rename swap +
+  rollback, trash removal, once-per-manager startup recovery; `LanguagePackSwapTest` (18 pure)
+  + 3 new `LanguagePackImportTest` cases (fail-first 3/51 on the old swap). Not device-verified.
+- [x] Mock-suite timing flakes (2026-10-14, `e32a12d7`) were measurement design, not
+  regressions: `WordPredictorFuzzyTypingTest` latency is now the per-input median of 11 rounds in
+  thread CPU time (one ~170 ms stall had lifted a 0.2 ms input to 17.4 ms);
+  `UserAdaptationManagerPersistenceTest` W6 runs on its own scheduler with a 50 ms debounce and
+  waits on the commit (the 7 s+ stall was unattributed host load). 5× normal + 5× load ~20 pass;
+  full runMockTests 1228/1228.
+- [x] `helo` autocorrect + bar consistency: the bar highlights what space commits
+  (`SpaceCommitResolver`, `ebe46e19`); the dropped-double margin rule DD-M (`df4a61f0`; M=64
+  tuned and gated on the shipped `en_enhanced.bin`, `ee32d912`,
+  `docs/eval/2026-10-11-dropped-double-margin.md` §5) makes `Helo` highlight and commit `Hello`.
+  Pixel PASS, release `7eef0b7c`: `Helo`→`Hello` (undo chip `Helo`), `Sed`→`See` (not Seed). The
+  earlier M=32 was measured on the CTC JSON scale by mistake; harnesses now load the `.bin`
+  (`ShippedTapDictionaryDriftTest`). Prefix-length follow-up → Open now 16.
+- [x] Hebrew autocorrect: layout-grid adjacency for letters outside the QWERTY table
+  (`1d2f1d58`; he top-500 neighbour typos 189 → 231 of 352 corrected, two-letter words 0 → 9 of
+  12, English unchanged 296/403). Pixel, release `7eef0b7c`, he pack on `hebr_1_il`:
+  `Helo`→`Hello`; controls 3/3; אתנול→אתמול corrected; שרום was not a neighbour typo (ר and ל
+  are far apart); תושה→עושה reproduced on the JVM → Open now 13.
+- [x] Editing-command unification (`7d1a3271`): every Editing command runs in
+  `KeyEventHandler.handleEditingKey` from layout keys and custom mappings alike
+  (`EditingCommandParityTest`, fail-first 8/9; 20 of 22 commands differed before). Layout
+  `textAssist`/`replaceText` keys open the app chooser like the mapping did (maintainer call).
+- [x] Editor-menu commands (`a516f6ae`, 2026-10-13): `replaceTextMenu` sends the bare
+  context-menu id with no chooser or selection precondition; `textAssistMenu` was added the
+  same way and REMOVED again on 2026-10-17 (below). Saga 2026-10-13 (release `68d91874`,
+  `build/oct13-saga/`): `replaceTextMenu` in Chrome shows nothing — Chrome does not honour the
+  id (documented in the palette page), not a bug.
+- [x] Blind text fields (`68d91874`): `TerminalUtils.editorKind` TEXT / TERMINAL / REMOTE
+  (RustDesk + any TYPE_NULL editor = REMOTE; no readback probe). REMOTE gets the terminal
+  no-rewrite policy, paste commits the clip, `clear`/suffix refused, no cursor sync or #78
+  scan, key-event deletion, Ctrl+Backspace (not Ctrl+W) for delete-last-word. Evidence and
+  RustDesk source lines: `docs/specs/termux_integration.md` "Blind text fields".
+  `BlindFieldPolicyTest` fail-first 9/12. Device checks → Open now 6.
+- [x] Inline-field shortcuts and paste (`3439fff0`): Ctrl+V/X/A act on the clipboard editor,
+  Ctrl+V and the paste key paste into search/tag fields, other shortcuts are swallowed. Pixel
+  2026-10-13/14: Ctrl+V lands in the editor PASS (`build/oct14-pixel/65–67`). Saga 2026-10-13
+  (release `68d91874`, `build/oct13-saga/`): Termux no autocorrect, panel and custom-swipe paste
+  type the clip, Backspace PASS.
+- [x] Style layouts (`51d2a38d`): `latn_qwerty_us_{ios,gboard,swiftkey}_style.xml` ("QWERTY
+  (iOS-style)" etc.), each with its own bottom row, the product's widths and hints, SwiftKey
+  with an embedded number row; `StyleLayoutsTest` (mock, real parser); wiki "Familiar-style
+  layouts" in `docs/wiki/layouts/adding-layouts.md`. Pixel 2026-10-17 (release `d8be659b`,
+  `build/oct17-pixel/124–142`): each layout added and rendered, `the`/`hello` swiped on each,
+  123 opens the number pane and ABC returns; no side-by-side comparison against the real
+  keyboards' screenshots was recorded.
+- [x] Inline editor undo/redo/copy + app undo via Ctrl+Z (`d599f84a`): `InlineEditHistory`
+  (pure, bounded 100 steps / 1M chars, one step per typed word) is the editor's own history —
+  every routed edit is a `setText()`, which calls `Editor.forgetUndoRedo()`; app-facing
+  undo/redo send Ctrl+Z / Ctrl+Shift+Z key events (Chrome/WebView and Compose ignore the
+  context-menu ids, `docs/research/2026-10-15-ime-editor-actions.md`); terminal-style fields
+  report "Action unavailable" (Ctrl+Z would suspend the shell job). `InlineEditHistoryTest`
+  (11 pure), `InlineFieldShortcutTest`, `EditingCommandParityTest`. Device check → Open now 5.
+- [x] Per-layout theme binding (`e237fa95`, spec `docs/specs/layout-system.md` "Per-layout
+  theme binding"): Layout Manager Theme chip (Follow global theme / any built-in, decorative or
+  DIY theme), `<keyboard theme="…">` as the XML default written on Export XML, stored as the
+  `theme` field of the `layouts` entry (rides in the backup blob; preview lists per-layout
+  changes), `LayoutThemeBinding.resolve` per refresh, global `theme` pref never written,
+  fallback to the global theme when the bound one is missing. Pixel 2026-10-17 first run
+  (release `d8be659b`, `build/oct17-pixel/148–155`): keys and chrome switched Light ↔ Cyberpunk
+  correctly but the bar showed no chips → `9e2a9804` (every bar text role ≥ 3:1 on 9 XML + 4
+  decorative themes; the preference handler's stale bar/view references; one "Suggestion bar
+  built" log line per rebuild). Re-check 02:54–02:58 with the fixed build
+  (`build/oct17b-pixel/60–72`, `logcat-b1-ios.txt`, `logcat-b1-global.txt`): iOS-style bound
+  to Light shows black chips (`hello | help | hel | held | hell`) and switching back shows
+  Cyberpunk's cyan chips — PASS; the empty bar did not recur and its cause was not isolated.
+  DIY-theme binding and restore exercised (`164`, `185`, `263–264`, `291–292`); XML
+  import/export of `theme=` and the backup-preview rows have no screenshot evidence.
+- [x] Six editor commands (`d86f6606`, `9356f280`, `f12710b1`, `fcbef011`; maintainer decision
+  from `docs/research/2026-10-15-ime-editor-actions.md` §4.2), all in `handleEditingKey`:
+  `case_cycle` (verified readback rewrite, keyboard-language locale), `shareText` as the IME's
+  own ACTION_SEND chooser, `word_left`/`word_right`, `select_word_left`/`select_word_right`,
+  `select_word`/`select_line` (readback `setSelection`; Ctrl(+Shift)+arrow without readback;
+  Chrome/WebView get the editor's own keys because WEB_EDIT_TEXT 0xa0 trips the password test
+  in `shouldMoveCursorForceFallback`; terminals: moves only); `textAssist`/`replaceText` write
+  the app's result back (`ProcessTextActivity` → `ProcessTextReturn` → `deliverProcessTextResult`,
+  only into the same field with the identical selection receipt, else clipboard + feedback);
+  swipe/autocorrect commits carry their alternatives as a SuggestionSpan (flags 0, ≤ 5, text
+  fields only). Catalogue 230 → 237; extra keys, TalkBack, 16 new + 2 reworded strings.
+  Legacy WORD_LEFT/WORD_RIGHT mappings route to the new keys.
+- [x] Editor commands on devices (2026-10-17; Pixel releases `cc4fe37d`/`e940262c`,
+  `build/oct17b-pixel/`, `build/oct17c-pixel/`; Saga for Termux, `build/oct17b-saga/`,
+  `build/oct17c-saga/`): case cycle Hello→HELLO→hello (Chrome + EditText); Share one sheet /
+  "No text selected"; word moves + select word left/right; select word (4 cursor cases) and
+  select line (visual line) in Chrome after `fcbef011`; Replace popup shows swipe alternatives;
+  "Replacement Suggestions (Editor)" listed and Text Assist (Editor Menu) gone; Termux: word
+  moves move the shell cursor, select word/line, case cycle and share refuse with no change —
+  all PASS. Process-text RESULT path: emulator.wtf Pixel7 API 33 (ChooserActivity) and 34
+  (IntentResolver) 3/3 each via `ProcessTextResultInstrumentedTest` (foreign editor + an
+  EXTRA_PROCESS_TEXT upper-casing app in the test APK, the real service key_up → trampoline →
+  system chooser tapped by UiAutomator → forwarded result; in place `say hello world now` →
+  `say HELLO WORLD now`; field changed meanwhile → clipboard + bar message; no trampoline left
+  in recents). A chooser left open with Home blocked the next request on API 34 → `ca56957f`
+  (`TextActionLauncher.TRAMPOLINE_LAUNCH_FLAGS` adds CLEAR_TASK; the pre-fix APK fails
+  `aChooserLeftOpenDoesNotAnswerTheNextRequest` on 34). Leftovers → Open now 7.
+- [x] `textAssistMenu` removed (`932207b0`; research §4.1: `android.R.id.textAssist` is handled
+  by no editor, so it was always a silent no-op): out of the catalogue (237 → 236), the wiki and
+  22 resource dirs; `Editing.ASSIST_MENU` and the name stay so saved mappings, backups and
+  custom layouts load and show "Text Assist (Editor Menu) is no longer supported. Reassign this
+  command" without touching the app. `replaceTextMenu` renamed "Replacement Suggestions
+  (Editor)". Text assist whose chooser cannot start now says "Action unavailable" instead of
+  the silent id (`e940262c`) → decision in Open now 11.
+- [x] API 35–37 instrumented coverage (`6bdf282e`, `47be5f23`): emulator.wtf Pixel7 API
+  35/36/37, full unfiltered suite with the real `ctc_bench` encoders — 1606/1606 on 35 and 37,
+  1605/1606 on 36 with the last failure fixed (class 3/3). No app bug; the app APK stayed
+  byte-identical (compile/target 34). Harness-only fixes: espresso 3.7.0 stack (API 36 removed
+  `InputManager.getInstance`), `ShowImeWithHardKeyboardRule` (36/37 images ship
+  `show_ime_with_hard_keyboard=0`), clipboard-overlay swipe in the process-text test, 9 stale
+  `TYPE_NULL` fixtures. `.claude/skills/ew-cli-testing.md` "API 35–37 coverage". targetSdk
+  prerequisites → Open now 12.
+- [x] Terminal taps never delete (`80207612`) and no dictionary offer there (`fd3eec40`): the
+  device evidence and the one remaining re-test are in Open now 1.
 
 ## Device results recorded 2026-10-07/08
 
@@ -291,9 +294,11 @@ Eval: `docs/eval/2026-10-08-user-swipe-priority.md`.
 - [x] Normal/High/Highest swipe priority for custom words (CTC +2.0/+4.0 final-score nats,
   geometric +2.0/+4.0 on pruner survivors), Dictionary Manager picker + row label, backup
   round trip, offer raises a Normal user word to High; tap prediction untouched.
-- [ ] Device check (eval note §8): `adb` Highest + `wet` High swipes, then `an`/`we`/`as`
-  collateral; restore Normal afterwards.
-- [ ] TODO: native-speaker review of the 7 new strings in 21 locales.
+- [x] Device check (eval note §8): `adb` at Highest lost to `an` while stored at the legacy
+  frequency 100 (Seeker 2026-10-10) and ranked first once raised to 255 (Pixel 2026-10-12);
+  `wet` at Highest 3/3, taking plain `we` swipes as the eval predicts (Pixel 2026-10-11). See
+  "Done 2026-10-10 → 10-17". `an`/`as` collateral was not recorded separately.
+- Native-speaker review of the 7 new strings → Open now 10.
 
 ## October 7 clipboard selection: persistence, bulk actions, dialog focus fix
 

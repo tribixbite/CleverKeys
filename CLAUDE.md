@@ -55,15 +55,18 @@ committed coordination over working-tree edits.
 
 ---
 
-## Active handoff (2026-10-08)
+## Active handoff (2026-10-18)
 
-HEAD `b9ce12e6` is pushed and equals origin/main. Pushes to origin/main are authorized
-(maintainer, 2026-10-07); tag, version bump, release and GitHub posts still are not. The
-only authoritative task list is the "Open now" section at the top of `memory/todo.md`
-(owners: device / maintainer / agent / RTX); everything below it there is dated history.
-`memory/HANDOFF.md` holds reference state and rules, `docs/audit/gh-issue-resolution.md`
-the per-issue status, and the plan doc's "Current execution status" table the roadmap
-state. Read those before editing or launching Gradle.
+HEAD `05a36547` plus the docs commit that follows it is pushed and equals origin/main. Pushes to
+origin/main are authorized (maintainer, 2026-10-07); tag, version bump, release and GitHub
+posts still are not. The only authoritative task list is the "Open now" section at the top of
+`memory/todo.md` (20 items on 2026-10-18; owners: device / maintainer / agent / RTX, with the
+test phones' current addresses); everything below it there is dated history, including "Done
+2026-10-10 → 10-17" with the evidence pointers for the October work. `memory/HANDOFF.md` holds
+reference state and rules, `docs/audit/gh-issue-resolution.md` the per-issue status, the plan
+doc's "Current execution status" table the roadmap state, and CHANGELOG.md's 2.0.0 section the
+user-visible summary. `docs/plans/v2.0.0-manual-test-checklist.md` carries uncommitted
+maintainer edits — never edit or stage it. Read those before editing or launching Gradle.
 
 ## Blind fields and EditorInfo fixtures (2026-10-13)
 
@@ -196,8 +199,10 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 - **ALWAYS** do things the right way, not the expedient way.
 
 **TESTING POLICY** (rewritten 2026-09-03; supersedes the old "never test via ADB" rule):
-- **ADB testing IS allowed.** PREFER the dedicated test phones: Saga (192.168.1.243:5555) and
-  Pixel 8 Pro (wireless-debugging port rotates — rediscover with nmap, see global CLAUDE.md).
+- **ADB testing IS allowed.** PREFER the dedicated test phones: Pixel 8 Pro, the two Sagas (the
+  second one has Termux) and the Seeker. Their addresses are DHCP leases — the current ones are
+  kept in `memory/todo.md` "Open now" (test-phones paragraph); rediscover with `nmap -sn` and
+  `getprop ro.product.model`. The Pixel's wireless-debugging port also rotates (global CLAUDE.md).
 - **NEVER** run UI tests against the Termux HOST phone itself — this device is the dev box.
 - Instrumented tests (ew-cli) and pure JVM tests remain **first choice** where they fit;
   use ADB for what they can't cover (visual verification, real-IME interaction, device state).
