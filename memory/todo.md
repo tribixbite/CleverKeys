@@ -80,7 +80,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     editor-menu commands 4 (`a516f6ae`; 2 of them removed again on Oct 17), Oct 15 theme
     binding 10 (`e237fa95`), Oct 17 editor commands 16 new + 2 reworded (`d86f6606`), Oct 17
     `textAssistMenu` removal notice + "Replacement Suggestions (Editor)" name and description 3
-    (`932207b0`). Counts are the `<string` lines added to `res/values/strings.xml` per commit.
+    (`932207b0`), Oct 18 autocorrect "Ranking & Tuning" 46 + 2 plurals (`74c808e1`; written by
+    an agent in all 21 locales, the English typo examples kept verbatim). Counts are the
+    `<string` lines added to `res/values/strings.xml` per commit.
 11. [ ] maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`
     needs a fresh pre-registration; nonzero `finger_occlusion_offset` only from device-trace
     A/B; keep or uninstall CleverKeys on the first Saga (installed, enabled, not default — the
@@ -106,6 +108,19 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     the `tfe`→the calibration case) while gaining +848 S-adj words on synthetic neighbour slips.
     Open: a narrower pre-registered rule, or a phone-typing corpus to weigh the two error
     populations. Seam `NeighbourTiebreak` stays OFF.
+13b. [ ] maintainer → agent: noisy-channel autocorrect ranking, round 2
+    (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`). Round 1 (2026-10-18, from the
+    maintainer's `devixe`→decide / `shated` report) shipped rule C as an OPT-IN ranking
+    ("Ranking & Tuning" in Auto-Correction, every weight a setting) but NOT as the default: no
+    configuration was admissible on DEV. It lifts the GTC-DEV sample 54.6 % → 76–81 % and
+    S-adj-DEV 69.6 % → up to 95 %, and fails only the inherited absolute S-adj distinct-word
+    ceiling (39 words; best points break 73–144 against ~3,000 fixes) and the named cases.
+    Diagnosed causes, all in the rule's specification: the inflection guard ran after DD-M in
+    the band path but before any doubled-letter repair in rule C (`spaming`, `refering`…),
+    the band's alias privilege is lost (`donr`→done), and `helo` needs g₂ well below one
+    substitution. Maintainer decision first: may the S-adj gate become a breaks-to-fixes ratio
+    for a ranker replacement? Then the agent pre-registers round 2 (guard-order fix, an alias
+    term, joint γ), re-runs DEV in a separate worktree, and runs TEST once. TEST is untouched.
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 15. [ ] agent: deferred review items — suffix receipt readback at command time (3 editor reads

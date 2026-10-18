@@ -29,6 +29,14 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Added
 
+- **Autocorrect Ranking & Tuning** (Settings → Auto-Correction): every autocorrect weight and
+  step is now a setting, with a one-tap reset. That covers the score band and transposition
+  penalty, the candidate gates, the dropped-double margin, the neighbour tiebreak, the
+  doubled-letter and inflection steps, and a new opt-in **edit-cost ranking**. The new ranking
+  prices each candidate as edit cost plus a frequency term instead of "most frequent word
+  within a score band", so one wrong key is never outweighed by a tiny frequency difference
+  (`devixe` → device, not decide). The default ranking is unchanged until a second
+  evaluation round (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`).
 - **Familiar-style layouts**: QWERTY (iOS-style), QWERTY (Gboard-style) and QWERTY
   (SwiftKey-style) copy the default US-English letter pane of those keyboards: rows, number
   row, letter hints, key widths and the bottom row (123 / emoji / space / return; ?123 / comma /
