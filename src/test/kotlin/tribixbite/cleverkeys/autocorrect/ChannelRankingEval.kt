@@ -107,9 +107,10 @@ class ChannelRankingEval {
             var seen: WordPredictor.ChannelProbe? = null
             val out = predictor.autoCorrect(t, PROBE_TUNING) { seen = it }
             val p = seen ?: return Probed(t, out, emptyList(), emptyArray(), null, 0, 0)
-            val feats = Array(p.candidates.size) { k -> alignments(p.lowerTypedWord, p.candidates[k].word) }
+            val kept = contenders(p.lowerTypedWord, p.candidates, p.maxFrequency)
+            val feats = Array(kept.size) { k -> alignments(p.lowerTypedWord, kept[k].word) }
             val stemRank = p.guardStem?.let { ChannelRanker.rankSteps(dict[it] ?: 0, p.maxFrequency) }
-            return Probed(t, null, p.candidates, feats, stemRank, p.frequencyFloor, p.maxFrequency)
+            return Probed(t, null, kept, feats, stemRank, p.frequencyFloor, p.maxFrequency)
         }
     }
 
@@ -147,6 +148,30 @@ class ChannelRankingEval {
                 for (g2 in floatArrayOf(G2.first(), G2.last())) for (tau in floatArrayOf(TAU.first(), TAU.last()))
                     add(ChannelWeights(s1, g, g2, tau))
             add(ChannelWeights(1f, 1f, 0.6f, 0.9f))
+        }
+
+        /** The grid's cheapest and dearest edit weights (every feature is non-negative). */
+        private val W_MIN = ChannelWeights(S1.min(), G.min(), G2.min(), TAU.min())
+        private val W_MAX = ChannelWeights(S1.max(), G.max(), G2.max(), TAU.max())
+
+        /**
+         * The candidates that can win under SOME grid configuration (harness pre-filter, added
+         * after the pre-registration; it changes no outcome). Every alignment's cost is
+         * non-decreasing in each edit weight, so a candidate's optimal edit cost under any grid
+         * weights lies in [E(W_MIN), E(W_MAX)]. Candidate c is dropped when, for every λ in the
+         * grid, `E_c(W_MIN) + λ·r_c` exceeds the best `E_d(W_MAX) + λ·r_d` by more than the tie
+         * tolerance: then some d beats c under every configuration and c never wins. Input
+         * order is kept, so ties resolve exactly as in production.
+         */
+        private fun contenders(t: String, cands: List<ChannelCandidate>, maxFrequency: Int): List<ChannelCandidate> {
+            if (cands.size <= 1) return cands
+            val lo = FloatArray(cands.size) { ChannelEditCost.cost(t, cands[it].word, W_MIN) }
+            val hi = FloatArray(cands.size) { ChannelEditCost.cost(t, cands[it].word, W_MAX) }
+            val r = FloatArray(cands.size) { ChannelRanker.rankSteps(cands[it].frequency, maxFrequency) }
+            val upper = FloatArray(LAMBDA.size) { li -> cands.indices.minOf { hi[it] + LAMBDA[li] * r[it] } }
+            return cands.filterIndexed { k, _ ->
+                LAMBDA.indices.any { li -> lo[k] + LAMBDA[li] * r[k] <= upper[li] + 1e-3f }
+            }
         }
 
         /** Distinct optimal alignments of [t] → [c] over [REFERENCE_WEIGHTS], flattened. */
@@ -279,7 +304,10 @@ class ChannelRankingEval {
             var best = Float.POSITIVE_INFINITY
             var o = 0
             while (o < f.size) {
-                val v = ChannelEditCost.priced(f.copyOfRange(o, o + ChannelEditCost.FEATURE_COUNT), w)
+                // Inline ChannelEditCost.priced over one stored alignment (no copy per call).
+                val v = f[o + ChannelEditCost.F_SUBSTITUTIONS] + w.distanceCost * f[o + ChannelEditCost.F_KEY_DISTANCE] +
+                    w.indelCost * f[o + ChannelEditCost.F_INDELS] + w.doubleCost * f[o + ChannelEditCost.F_DOUBLES] +
+                    w.transpositionCost * f[o + ChannelEditCost.F_SWAPS]
                 if (v < best) best = v
                 o += ChannelEditCost.FEATURE_COUNT
             }
@@ -425,7 +453,7 @@ class ChannelRankingEval {
             if (n % 20_000 == 0) println("  $label prepared $n/${typed.size} in ${(System.nanoTime() - start) / 1_000_000_000}s")
         }
         say("$label: ${typed.size} distinct inputs prepared in ${(System.nanoTime() - start) / 1_000_000_000}s; " +
-            "mean gated candidates ${"%.1f".format(probed.values.filter { it.fixed == null }.map { it.candidates.size }.average())}")
+            "mean contending candidates after the pre-filter ${"%.2f".format(probed.values.filter { it.fixed == null }.map { it.candidates.size }.average())}")
         return base to probed
     }
 
