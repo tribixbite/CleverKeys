@@ -1201,6 +1201,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">Chi phí khi hai chữ cạnh nhau bị gõ sai thứ tự (teh → the)</string>
     <string name="autocorrect_channel_frequency_weight_title">Trọng số tần suất từ</string>
     <string name="autocorrect_channel_frequency_weight_desc">Chi phí của từ hiếm hơn cho mỗi bậc trong xếp hạng tần suất. Giá trị cao hơn ưu tiên từ phổ biến nhiều hơn.</string>
+    <string name="autocorrect_channel_alias_bonus_title">Ưu tiên dạng rút gọn</string>
+    <string name="autocorrect_channel_alias_bonus_desc">Giảm chi phí cho dạng rút gọn như don\'t so với một từ thường gần như nhau (donr → don\'t thay vì done). 0 = không ưu tiên.</string>
     <string name="autocorrect_frequency_ignored">Bỏ qua tần suất; chỉ các chỉnh sửa quyết định.</string>
     <string name="autocorrect_channel_inflection_cost_title">Chi phí giữ dạng từ</string>
     <string name="autocorrect_channel_inflection_cost_desc">Cách sửa phải tốt hơn bao nhiêu để thay một từ đã biết có đuôi. Ở mức cao nhất, những từ như vậy luôn được giữ.</string>

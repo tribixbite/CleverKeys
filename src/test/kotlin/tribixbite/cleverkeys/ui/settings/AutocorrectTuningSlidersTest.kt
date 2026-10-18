@@ -87,6 +87,14 @@ class AutocorrectTuningSlidersTest {
         reachable(sliders.CHANNEL_TRANSPOSITION_COST, listOf(0.6f, 0.9f, 1.2f))
         reachable(sliders.CHANNEL_FREQUENCY_WEIGHT,
             listOf(0.005f, 0.0075f, 0.01f, 0.015f, 0.02f, 0.03f, 0.04f, 0.06f))
+        // Round 2 (§3.2).
+        reachable(sliders.CHANNEL_DISTANCE_COST, listOf(0.5f, 1f, 2f, 4f))
+        reachable(sliders.CHANNEL_INDEL_COST, listOf(1.25f, 1.5f, 2.0f))
+        reachable(sliders.CHANNEL_DOUBLE_COST, listOf(0.3f, 0.45f, 0.6f, 1.0f))
+        reachable(sliders.CHANNEL_TRANSPOSITION_COST, listOf(0.9f, 1.2f, 1.5f))
+        reachable(sliders.CHANNEL_FREQUENCY_WEIGHT, listOf(0.0025f, 0.005f, 0.0075f, 0.01f, 0.015f))
+        reachable(sliders.CHANNEL_ALIAS_BONUS, listOf(0f, 0.25f, 0.5f))
+        reachable(sliders.CHANNEL_INFLECTION_COST, listOf(0.5f, 1f, 1.5f, 2f, 3f))
     }
 
     // ── Display rules ──
@@ -121,7 +129,7 @@ class AutocorrectTuningSlidersTest {
     fun groupResetRemovesExactlyTheTuningKeys() {
         assertThat(sliders.RESET_KEYS).containsExactlyElementsIn(Keys.ALL_KEYS)
         assertThat(sliders.RESET_KEYS).containsNoDuplicates()
-        assertThat(sliders.RESET_KEYS).hasSize(18)
+        assertThat(sliders.RESET_KEYS).hasSize(19)
         // None of the basic settings above the group.
         assertThat(sliders.RESET_KEYS).containsNoneOf(
             "autocorrect_enabled", "autocorrect_min_word_length", "autocorrect_char_match_threshold",

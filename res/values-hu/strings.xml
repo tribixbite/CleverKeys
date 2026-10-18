@@ -1182,6 +1182,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">Két rossz sorrendben leütött szomszédos betű költsége (teh → the)</string>
     <string name="autocorrect_channel_frequency_weight_title">Szógyakoriság súlya</string>
     <string name="autocorrect_channel_frequency_weight_desc">Mennyibe kerül egy ritkább szó a gyakorisági rangsor minden fokáért. Nagyobb érték jobban előnyben részesíti a gyakori szavakat.</string>
+    <string name="autocorrect_channel_alias_bonus_title">Összevont alakok előnyben</string>
+    <string name="autocorrect_channel_alias_bonus_desc">Költségkedvezmény egy összevont alaknak (pl. don\'t) egy ugyanilyen közeli egyszerű szóval szemben (donr → don\'t a done helyett). 0 = nincs előny.</string>
     <string name="autocorrect_frequency_ignored">A gyakoriság nem számít; csak a szerkesztések döntenek.</string>
     <string name="autocorrect_channel_inflection_cost_title">Szóalak megtartásának költsége</string>
     <string name="autocorrect_channel_inflection_cost_desc">Mennyivel jobbnak kell lennie egy javításnak, hogy lecseréljen egy végződéses ismert szót. A legfelső állásban az ilyen szavak mindig megmaradnak.</string>

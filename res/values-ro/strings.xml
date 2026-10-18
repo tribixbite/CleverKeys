@@ -1206,6 +1206,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">Costul a două litere vecine tastate în ordinea greșită (teh → the)</string>
     <string name="autocorrect_channel_frequency_weight_title">Ponderea frecvenței cuvintelor</string>
     <string name="autocorrect_channel_frequency_weight_desc">Cât costă un cuvânt mai rar pentru fiecare treaptă în clasamentul de frecvență. O valoare mai mare favorizează mai mult cuvintele frecvente.</string>
+    <string name="autocorrect_channel_alias_bonus_title">Preferință pentru contracții</string>
+    <string name="autocorrect_channel_alias_bonus_desc">Reducere de cost pentru o contracție precum don\'t față de un cuvânt obișnuit la fel de apropiat (donr → don\'t în loc de done). 0 = fără preferință.</string>
     <string name="autocorrect_frequency_ignored">Frecvența este ignorată; decid doar editările.</string>
     <string name="autocorrect_channel_inflection_cost_title">Costul păstrării formelor</string>
     <string name="autocorrect_channel_inflection_cost_desc">Cu cât trebuie să fie mai bună o corectură pentru a înlocui un cuvânt cunoscut cu terminație. La maximum, astfel de cuvinte sunt mereu păstrate.</string>

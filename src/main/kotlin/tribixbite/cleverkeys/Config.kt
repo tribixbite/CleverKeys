@@ -225,6 +225,8 @@ object Defaults {
     const val AUTOCORRECT_CHANNEL_DOUBLE_COST = 0.6f
     const val AUTOCORRECT_CHANNEL_TRANSPOSITION_COST = 0.9f
     const val AUTOCORRECT_CHANNEL_FREQUENCY_WEIGHT = 0.02f
+    /** β: cost discount of a contraction alias key (round 2, eval doc §3.1). */
+    const val AUTOCORRECT_CHANNEL_ALIAS_BONUS = 0f
     /** γ; 10 (the slider's top) means "always keep" (= the band ranking's guard). */
     const val AUTOCORRECT_CHANNEL_INFLECTION_COST = 10f
 

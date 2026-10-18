@@ -1187,6 +1187,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">Стоимость двух соседних букв, набранных в неверном порядке (teh → the)</string>
     <string name="autocorrect_channel_frequency_weight_title">Вес частоты слов</string>
     <string name="autocorrect_channel_frequency_weight_desc">Сколько стоит более редкое слово за каждую ступень в рейтинге частоты. Большее значение сильнее предпочитает частые слова.</string>
+    <string name="autocorrect_channel_alias_bonus_title">Предпочтение сокращённых форм</string>
+    <string name="autocorrect_channel_alias_bonus_desc">Скидка стоимости для сокращённой формы вроде don\'t перед столь же близким обычным словом (donr → don\'t вместо done). 0 = без предпочтения.</string>
     <string name="autocorrect_frequency_ignored">Частота не учитывается; решают только правки.</string>
     <string name="autocorrect_channel_inflection_cost_title">Стоимость сохранения формы слова</string>
     <string name="autocorrect_channel_inflection_cost_desc">Насколько лучше должно быть исправление, чтобы заменить известное слово с окончанием. В крайнем верхнем положении такие слова сохраняются всегда.</string>

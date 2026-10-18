@@ -1189,6 +1189,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">Coût de deux lettres voisines tapées dans le mauvais ordre (teh → the)</string>
     <string name="autocorrect_channel_frequency_weight_title">Poids de la fréquence des mots</string>
     <string name="autocorrect_channel_frequency_weight_desc">Coût d\'un mot plus rare par rang dans le classement de fréquence. Plus élevé favorise davantage les mots courants.</string>
+    <string name="autocorrect_channel_alias_bonus_title">Préférence pour les contractions</string>
+    <string name="autocorrect_channel_alias_bonus_desc">Réduction de coût pour une contraction comme don\'t face à un mot ordinaire aussi proche (donr → don\'t au lieu de done). 0 = aucune préférence.</string>
     <string name="autocorrect_frequency_ignored">La fréquence est ignorée ; seules les modifications décident.</string>
     <string name="autocorrect_channel_inflection_cost_title">Coût de conservation des formes</string>
     <string name="autocorrect_channel_inflection_cost_desc">De combien une correction doit être meilleure pour remplacer un mot connu suivi d\'une terminaison. Tout en haut, ces mots sont toujours conservés.</string>

@@ -125,6 +125,24 @@ object ChannelEditCost {
     }
 }
 
+/**
+ * True when [typed] is [word] with one or more doubled letters reduced to a single letter: deleting
+ * letters of [word], each equal to the letter before it, gives [typed] (`helo` ← `hello`,
+ * `spaming` ← `spamming`). Rule C2's guard bypass (eval doc §3.1) — structural, so it does not
+ * depend on any weight.
+ */
+fun isDoubleReduction(typed: String, word: String): Boolean {
+    if (word.length <= typed.length) return false
+    var i = 0
+    var j = 0
+    while (j < word.length) {
+        if (i < typed.length && typed[i] == word[j]) { i++; j++; continue }
+        if (j > 0 && word[j] == word[j - 1]) { j++; continue }
+        return false
+    }
+    return i == typed.length
+}
+
 /** A gated autocorrect candidate as rule C sees it. */
 data class ChannelCandidate(val word: String, val frequency: Int, val isAlias: Boolean)
 
@@ -147,20 +165,25 @@ object ChannelRanker {
         if (maxFrequency <= 0) 0f
         else (maxFrequency - frequency).coerceAtLeast(0).toFloat() * 255f / maxFrequency
 
-    /** `E + λ · rank` for one candidate. */
-    fun totalCost(editCost: Float, frequency: Int, maxFrequency: Int, frequencyWeight: Float): Float =
-        editCost + frequencyWeight * rankSteps(frequency, maxFrequency)
+    /** `E + λ · rank − (alias ? β : 0)` for one candidate (β: round 2, eval doc §3.1). */
+    fun totalCost(
+        editCost: Float, frequency: Int, maxFrequency: Int, frequencyWeight: Float,
+        isAlias: Boolean = false, aliasBonus: Float = 0f,
+    ): Float = editCost + frequencyWeight * rankSteps(frequency, maxFrequency) - if (isAlias) aliasBonus else 0f
 
     /**
      * Index of the winning candidate in [candidates] given each one's edit cost in
      * [editCosts] (same order), or −1 when there are none.
      */
-    fun pick(candidates: List<ChannelCandidate>, editCosts: FloatArray, maxFrequency: Int, frequencyWeight: Float): Int {
+    fun pick(
+        candidates: List<ChannelCandidate>, editCosts: FloatArray, maxFrequency: Int, frequencyWeight: Float,
+        aliasBonus: Float = 0f,
+    ): Int {
         var best = -1
         var bestCost = Float.POSITIVE_INFINITY
         for (k in candidates.indices) {
             val c = candidates[k]
-            val cost = totalCost(editCosts[k], c.frequency, maxFrequency, frequencyWeight)
+            val cost = totalCost(editCosts[k], c.frequency, maxFrequency, frequencyWeight, c.isAlias, aliasBonus)
             val better = when {
                 best < 0 -> true
                 cost < bestCost - TIE_EPSILON -> true

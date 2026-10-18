@@ -73,12 +73,33 @@ class ChannelRankingEval {
         val maxFrequency: Int,
     )
 
-    /** One rule-C configuration (eval doc §1.1). */
-    private data class Cfg(val s1: Float, val g: Float, val g2: Float, val tau: Float, val lambda: Float, val gamma: Float) {
-        val weights get() = ChannelWeights(s1, g, g2, tau, lambda, gamma)
-        override fun toString() = "s1=$s1 g=$g g2=$g2 tau=$tau lambda=$lambda gamma=" +
+    /** One rule-C configuration (eval doc §1.1; β from round 2, §3.1). */
+    private data class Cfg(
+        val s1: Float, val g: Float, val g2: Float, val tau: Float, val lambda: Float,
+        val beta: Float, val gamma: Float,
+    ) {
+        val weights get() = ChannelWeights(s1, g, g2, tau, lambda, aliasBonus = beta, inflectionCost = gamma)
+        override fun toString() = "s1=$s1 g=$g g2=$g2 tau=$tau lambda=$lambda beta=$beta gamma=" +
             if (gamma == Float.POSITIVE_INFINITY) "inf" else "$gamma"
+        /** The `CK_CH_CONFIG` spelling: `s1,g,g2,tau,lambda,beta,gamma`. */
+        val spec get() = "$s1,$g,$g2,$tau,$lambda,$beta," + if (gamma == Float.POSITIVE_INFINITY) "inf" else "$gamma"
+
+        companion object {
+            /** Parses [spec] (7 fields; `gamma` may be `inf`). */
+            fun parse(spec: String): Cfg {
+                val v = spec.split(',')
+                require(v.size == 7) { "config needs s1,g,g2,tau,lambda,beta,gamma: $spec" }
+                return Cfg(v[0].toFloat(), v[1].toFloat(), v[2].toFloat(), v[3].toFloat(), v[4].toFloat(),
+                    v[5].toFloat(), if (v[6] == "inf") Float.POSITIVE_INFINITY else v[6].toFloat())
+            }
+        }
     }
+
+    /** One pre-registered grid: round 1 (§1.4, β = 0, γ staged) or round 2 (§3.2, joint). */
+    private class Grid(
+        val s1: FloatArray, val g: FloatArray, val g2: FloatArray, val tau: FloatArray,
+        val lambda: FloatArray, val beta: FloatArray, val gamma: FloatArray,
+    )
 
     /** Outcome tallies in raw pairs, distinct target words and commit occurrences. */
     private class Tally {
@@ -134,25 +155,40 @@ class ChannelRankingEval {
             channel = ChannelWeights(inflectionCost = 1f),
         )
 
-        // Pre-registered grid (doc §1.4).
-        val S1 = floatArrayOf(0f, 0.5f, 1f, 2f, 4f)
-        val G = floatArrayOf(0.8f, 1.0f, 1.25f, 1.5f)
-        val G2 = floatArrayOf(0.3f, 0.6f, 1.0f)
-        val TAU = floatArrayOf(0.6f, 0.9f, 1.2f)
-        val LAMBDA = floatArrayOf(0.005f, 0.0075f, 0.01f, 0.015f, 0.02f, 0.03f, 0.04f, 0.06f)
-        val GAMMA = floatArrayOf(0.5f, 1f, 1.5f, 2f, 3f)
+        /** Round 1 grid (doc §1.4): γ is chosen in a second stage, β is always 0. */
+        private val ROUND1 = Grid(
+            s1 = floatArrayOf(0f, 0.5f, 1f, 2f, 4f), g = floatArrayOf(0.8f, 1.0f, 1.25f, 1.5f),
+            g2 = floatArrayOf(0.3f, 0.6f, 1.0f), tau = floatArrayOf(0.6f, 0.9f, 1.2f),
+            lambda = floatArrayOf(0.005f, 0.0075f, 0.01f, 0.015f, 0.02f, 0.03f, 0.04f, 0.06f),
+            beta = floatArrayOf(0f), gamma = floatArrayOf(0.5f, 1f, 1.5f, 2f, 3f),
+        )
+
+        /** Round 2 grid (doc §3.2), fully joint, γ including ∞. */
+        private val ROUND2 = Grid(
+            s1 = floatArrayOf(0.5f, 1f, 2f, 4f), g = floatArrayOf(1.25f, 1.5f, 2.0f),
+            g2 = floatArrayOf(0.3f, 0.45f, 0.6f, 1.0f), tau = floatArrayOf(0.9f, 1.2f, 1.5f),
+            lambda = floatArrayOf(0.0025f, 0.005f, 0.0075f, 0.01f, 0.015f),
+            beta = floatArrayOf(0f, 0.25f, 0.5f),
+            gamma = floatArrayOf(0.5f, 1f, 1.5f, 2f, 3f, Float.POSITIVE_INFINITY),
+        )
+
+        /** `CK_CH_ROUND` (default 2) selects the grid the DEV phase searches and the pre-filter covers. */
+        private val ROUND: Int = System.getenv("CK_CH_ROUND")?.toInt() ?: 2
+        private val GRID: Grid = if (ROUND == 1) ROUND1 else ROUND2
+        private val LAMBDA get() = GRID.lambda
 
         /** The 16 corners of the edit-weight grid plus its centre: the alignment references. */
         private val REFERENCE_WEIGHTS: List<ChannelWeights> = buildList {
-            for (s1 in floatArrayOf(S1.first(), S1.last())) for (g in floatArrayOf(G.first(), G.last()))
-                for (g2 in floatArrayOf(G2.first(), G2.last())) for (tau in floatArrayOf(TAU.first(), TAU.last()))
+            for (s1 in floatArrayOf(GRID.s1.first(), GRID.s1.last())) for (g in floatArrayOf(GRID.g.first(), GRID.g.last()))
+                for (g2 in floatArrayOf(GRID.g2.first(), GRID.g2.last())) for (tau in floatArrayOf(GRID.tau.first(), GRID.tau.last()))
                     add(ChannelWeights(s1, g, g2, tau))
-            add(ChannelWeights(1f, 1f, 0.6f, 0.9f))
+            add(ChannelWeights(GRID.s1[GRID.s1.size / 2], GRID.g[GRID.g.size / 2], GRID.g2[GRID.g2.size / 2], GRID.tau[GRID.tau.size / 2]))
         }
 
         /** The grid's cheapest and dearest edit weights (every feature is non-negative). */
-        private val W_MIN = ChannelWeights(S1.min(), G.min(), G2.min(), TAU.min())
-        private val W_MAX = ChannelWeights(S1.max(), G.max(), G2.max(), TAU.max())
+        private val W_MIN = ChannelWeights(GRID.s1.min(), GRID.g.min(), GRID.g2.min(), GRID.tau.min())
+        private val W_MAX = ChannelWeights(GRID.s1.max(), GRID.g.max(), GRID.g2.max(), GRID.tau.max())
+        private val BETA_MAX = GRID.beta.max()
 
         /**
          * The candidates that can win under SOME grid configuration (harness pre-filter, added
@@ -161,11 +197,15 @@ class ChannelRankingEval {
          * weights lies in [E(W_MIN), E(W_MAX)]. Candidate c is dropped when, for every λ in the
          * grid, `E_c(W_MIN) + λ·r_c` exceeds the best `E_d(W_MAX) + λ·r_d` by more than the tie
          * tolerance: then some d beats c under every configuration and c never wins. Input
-         * order is kept, so ties resolve exactly as in production.
+         * order is kept, so ties resolve exactly as in production. Round 2: an alias key's lower
+         * bound also subtracts the grid's largest β (the upper bounds use β = 0, which is valid
+         * because β only lowers a cost).
          */
         private fun contenders(t: String, cands: List<ChannelCandidate>, maxFrequency: Int): List<ChannelCandidate> {
             if (cands.size <= 1) return cands
-            val lo = FloatArray(cands.size) { ChannelEditCost.cost(t, cands[it].word, W_MIN) }
+            val lo = FloatArray(cands.size) {
+                ChannelEditCost.cost(t, cands[it].word, W_MIN) - if (cands[it].isAlias) BETA_MAX else 0f
+            }
             val hi = FloatArray(cands.size) { ChannelEditCost.cost(t, cands[it].word, W_MAX) }
             val r = FloatArray(cands.size) { ChannelRanker.rankSteps(cands[it].frequency, maxFrequency) }
             val upper = FloatArray(LAMBDA.size) { li -> cands.indices.minOf { hi[it] + LAMBDA[li] * r[it] } }
@@ -313,11 +353,14 @@ class ChannelRankingEval {
             }
             costs[k] = best
         }
-        val i = ChannelRanker.pick(p.candidates, costs, p.maxFrequency, cfg.lambda)
+        val i = ChannelRanker.pick(p.candidates, costs, p.maxFrequency, cfg.lambda, cfg.beta)
         if (i < 0) return p.typed
         val winner = p.candidates[i]
-        val winnerCost = ChannelRanker.totalCost(costs[i], winner.frequency, p.maxFrequency, cfg.lambda)
-        if (p.guardStemRank != null && cfg.gamma + cfg.lambda * p.guardStemRank <= winnerCost) return p.typed
+        val winnerCost = ChannelRanker.totalCost(costs[i], winner.frequency, p.maxFrequency, cfg.lambda,
+            winner.isAlias, cfg.beta)
+        if (p.guardStemRank != null && !isDoubleReduction(p.typed, winner.word) &&
+            cfg.gamma + cfg.lambda * p.guardStemRank <= winnerCost
+        ) return p.typed
         if (winner.frequency < p.floor) return p.typed
         val alias = lang.aliases[winner.word] ?: return winner.word
         return if (alias.startsWith("i'")) alias.replaceFirstChar { it.uppercase() } else alias
@@ -504,7 +547,7 @@ class ChannelRankingEval {
         val report = StringBuilder()
         fun say(s: String) { println(s); report.appendLine(s); File(outDir, "summary-$phase.txt").writeText(report.toString()) }
         when (phase) {
-            "dev" -> devPhase(::say)
+            "dev" -> if (ROUND == 1) devPhase(::say) else devPhase2(::say)
             "test" -> testPhase(::say)
             "inspect" -> inspectPhase(::say)
             else -> error("CK_CH_PHASE must be dev, test or inspect")
@@ -535,8 +578,8 @@ class ChannelRankingEval {
         data class Row(val cfg: Cfg, val gFix: Int, val gBreak: Int, val aFix: Int, val aBreakRaw: Int,
                        val aBreak: Int, val named: Int, val admissible: Boolean)
         val cfgs = buildList {
-            for (s1 in S1) for (g in G) for (g2 in G2) for (tau in TAU) for (l in LAMBDA)
-                add(Cfg(s1, g, g2, tau, l, Float.POSITIVE_INFINITY))
+            for (s1 in GRID.s1) for (g in GRID.g) for (g2 in GRID.g2) for (tau in GRID.tau) for (l in GRID.lambda)
+                add(Cfg(s1, g, g2, tau, l, 0f, Float.POSITIVE_INFINITY))
         }
         val start = System.nanoTime()
         val rowsByIndex = arrayOfNulls<Row>(cfgs.size)
@@ -612,7 +655,7 @@ class ChannelRankingEval {
         val netInf = tg.netDistinct
         var bestGamma: Float? = null
         var bestNet = Int.MIN_VALUE
-        for (gamma in GAMMA) {
+        for (gamma in ROUND1.gamma) {
             val cfg = chosen.cfg.copy(gamma = gamma)
             val g = tally(en, gtc, gBase, outputs(en, gProbe, cfg), rows, "GTC-DEV", cfg.toString())
             val a = tally(en, adj, aBase, outputs(en, aProbe, cfg), null, "S-adj-DEV", "")
@@ -632,8 +675,121 @@ class ChannelRankingEval {
         File(outDir, "rows-dev.tsv").writeText(rows.joinToString("\n") + "\n")
         val final = chosen.cfg.copy(gamma = bestGamma ?: Float.POSITIVE_INFINITY)
         say("\nDEV choice (doc §1.4): $final")
-        say("CK_CH_CONFIG=${final.s1},${final.g},${final.g2},${final.tau},${final.lambda}," +
-            (bestGamma?.toString() ?: "inf"))
+        say("CK_CH_CONFIG=${final.spec}")
+    }
+
+    /**
+     * Round 2 DEV (doc §3): the joint grid over (s₁, g, g₂, τ, λ, β, γ) with C1–C4, the choice,
+     * the soundness check and the chosen configuration's tallies.
+     */
+    private fun devPhase2(say: (String) -> Unit) {
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val gtc = readGtc("DEV")
+        val adj = sAdj(dev = true)
+        val oov = cOov(dev = true)
+        val adjWords = adj.map { it.target }.toSet().size
+        say("ROUND 2. GTC-DEV pairs=${gtc.size} targets=${gtc.map { it.target }.toSet().size}; " +
+            "S-adj-DEV pairs=${adj.size} words=$adjWords; C-oov-DEV words=${oov.size}")
+
+        val enNamed = (NAMED_EN.keys + SHATED).associateWith { en.probe(it) }
+        KeyAdjacency.setLayoutLetters(heGrid)
+        val heNamed = NAMED_HE.keys.associateWith { he.probe(it) }
+        KeyAdjacency.setLayoutLetters(emptyMap())
+
+        val (gBase, gProbe) = prepare(en, gtc, "GTC-DEV", say)
+        val (aBase, aProbe) = prepare(en, adj, "S-adj-DEV", say)
+        val (oBase, oProbe) = prepare(en, oov, "C-oov-DEV", say)
+
+        data class Row(val cfg: Cfg, val index: Int, val gFix: Int, val gBreak: Int, val aFix: Int, val aBreakRaw: Int,
+                       val aBreak: Int, val oNew: Int, val named: Int, val c1: Boolean, val c2: Boolean,
+                       val c4: Boolean) {
+            val gNet get() = gFix - gBreak
+            val admissible get() = c1 && c2 && named == 0 && c4
+        }
+        val cfgs = buildList {
+            for (s1 in GRID.s1) for (g in GRID.g) for (g2 in GRID.g2) for (tau in GRID.tau)
+                for (l in GRID.lambda) for (b in GRID.beta) for (gm in GRID.gamma)
+                    add(Cfg(s1, g, g2, tau, l, b, gm))
+        }
+        val start = System.nanoTime()
+        val done = AtomicInteger()
+        val rowsByIndex = arrayOfNulls<Row>(cfgs.size)
+        cfgs.indices.toList().parallelStream().forEach { idx ->
+            val cfg = cfgs[idx]
+            val scratch = FloatArray(4096)
+            fun counts(pairs: List<P>, base: Map<String, String>, probe: Map<String, Probed>): IntArray {
+                val fix = HashSet<String>(); val brk = HashSet<String>(); var brkRaw = 0
+                val memo = HashMap<String, String>()
+                for (p in pairs) {
+                    val c = memo.getOrPut(p.typed) { decide(en, probe.getValue(p.typed), cfg, scratch) }
+                    val bOk = en.ok(base.getValue(p.typed), p.target)
+                    val cOk = en.ok(c, p.target)
+                    if (!bOk && cOk) fix += p.target
+                    if (bOk && !cOk) { brk += p.target; brkRaw++ }
+                }
+                return intArrayOf(fix.size, brk.size, brkRaw)
+            }
+            val gc = counts(gtc, gBase, gProbe)
+            val ac = counts(adj, aBase, aProbe)
+            val oc = counts(oov, oBase, oProbe)
+            val named = namedFailuresReplica(cfg, enNamed, heNamed, includeShated = true)
+            val c1 = gc[0] - gc[1] > 0 && gc[1] <= 0.5 * gc[0]
+            val c2 = ac[0] - ac[1] > 0 && ac[1] <= 0.05 * ac[0] && ac[2] <= 0.008 * adj.size
+            val c4 = oc[2] <= 0.005 * oov.size
+            rowsByIndex[idx] = Row(cfg, idx, gc[0], gc[1], ac[0], ac[2], ac[1], oc[2], named, c1, c2, c4)
+            val n = done.incrementAndGet()
+            if (n % 1_000 == 0) println("  grid $n/${cfgs.size} in ${(System.nanoTime() - start) / 1_000_000_000}s")
+        }
+        val grid = rowsByIndex.map { it!! }
+        say("grid: ${grid.size} configurations in ${(System.nanoTime() - start) / 1_000_000_000}s; " +
+            "C1 ${grid.count { it.c1 }}, C2 ${grid.count { it.c2 }}, C3 ${grid.count { it.named == 0 }}, " +
+            "C4 ${grid.count { it.c4 }}, admissible ${grid.count { it.admissible }}")
+        File(outDir, "grid2-dev.tsv").writeText(
+            "s1\tg\tg2\ttau\tlambda\tbeta\tgamma\tgtcFix\tgtcBreak\tgtcNet\tadjFix\tadjBreakRaw\tadjBreak\toovNew\tnamedFail\tadmissible\n" +
+                grid.joinToString("\n") { r ->
+                    "${r.cfg.s1}\t${r.cfg.g}\t${r.cfg.g2}\t${r.cfg.tau}\t${r.cfg.lambda}\t${r.cfg.beta}\t${r.cfg.gamma}\t" +
+                        "${r.gFix}\t${r.gBreak}\t${r.gNet}\t${r.aFix}\t${r.aBreakRaw}\t${r.aBreak}\t${r.oNew}\t" +
+                        "${r.named}\t${r.admissible}"
+                } + "\n")
+        for (r in grid.filter { it.admissible }.sortedByDescending { it.gNet }.take(10)) {
+            say("  admissible ${r.cfg}: GTC fixes=${r.gFix} breaks=${r.gBreak} net=${r.gNet}; " +
+                "S-adj fixes=${r.aFix} breaks=${r.aBreak} (raw ${r.aBreakRaw}); C-oov new=${r.oNew}")
+        }
+        for (r in grid.filter { !it.admissible }.sortedByDescending { it.gNet }.take(5)) {
+            say("  top-net (inadmissible) ${r.cfg}: GTC net=${r.gNet}; S-adj fixes=${r.aFix} breaks=${r.aBreak} " +
+                "(raw ${r.aBreakRaw}); C-oov new=${r.oNew}; named fail=${r.named}; C1=${r.c1} C2=${r.c2} C4=${r.c4}")
+        }
+        // Choice (§3.3): max GTC net; ties → fewer S-adj distinct breaks, larger γ, grid order.
+        val order = compareByDescending<Row> { it.gNet }.thenBy { it.aBreak }
+            .thenByDescending { it.cfg.gamma }.thenBy { it.index }
+        val chosen = grid.filter { it.admissible }.sortedWith(order).firstOrNull()
+        // Opt-in fallback (§3.4): pass C2, C3, C4 (any C1), most GTC net.
+        val fallback = grid.filter { it.c2 && it.named == 0 && it.c4 }.sortedWith(order).firstOrNull()
+        say("opt-in fallback (§3.4): ${fallback?.cfg?.spec ?: "none — keep the round-1 grid centre"}")
+        if (chosen == null) {
+            say("\nDEV choice (doc §3.3): NONE — no admissible configuration; band stays the default, TEST not run")
+            return
+        }
+        say("\nDEV choice (doc §3.3): ${chosen.cfg}")
+        say("  production named failures at the choice: ${namedFailures(chosen.cfg, includeShated = true)}")
+        val sample = (gProbe.keys + aProbe.keys + oProbe.keys).sorted().shuffled(java.util.Random(20261018)).take(2_000)
+        val scratch = FloatArray(4096)
+        val mismatches = sample.filter { t ->
+            val probe = gProbe[t] ?: aProbe[t] ?: oProbe.getValue(t)
+            decide(en, probe, chosen.cfg, scratch) != en.predictor.autoCorrect(t, prodTuning(chosen.cfg))
+        }
+        say("  soundness: ${sample.size} inputs, mismatches=${mismatches.size} ${mismatches.take(20)}")
+        check(mismatches.isEmpty()) { "replica disagrees with production: run void" }
+        val rows = mutableListOf("set\tconfig\ttyped\ttarget\tocc\tbaseline\tcandidate\tkind\tclass")
+        val tg = tally(en, gtc, gBase, outputs(en, gProbe, chosen.cfg), rows, "GTC-DEV", chosen.cfg.toString())
+        val ta = tally(en, adj, aBase, outputs(en, aProbe, chosen.cfg), rows, "S-adj-DEV", chosen.cfg.toString())
+        val to = tally(en, oov, oBase, outputs(en, oProbe, chosen.cfg), rows, "C-oov-DEV", chosen.cfg.toString())
+        say("  ${tg.line("GTC-DEV", gtc.size, gtc.map { it.target }.toSet().size)}")
+        say("      ${classes(tg)}")
+        say("  ${ta.line("S-adj-DEV", adj.size, adjWords)}")
+        say("  C-oov-DEV new changes=${to.breaks.size} (${"%.3f".format(100.0 * to.breaks.size / oov.size)}%)")
+        File(outDir, "rows2-dev.tsv").writeText(rows.joinToString("\n") + "\n")
+        say("CK_CH_CONFIG=${chosen.cfg.spec}")
     }
 
     /**
@@ -645,9 +801,7 @@ class ChannelRankingEval {
     private fun inspectPhase(say: (String) -> Unit) {
         KeyAdjacency.setLayoutLetters(emptyMap())
         val cfgs = (System.getenv("CK_CH_CONFIGS") ?: error("CK_CH_CONFIGS required")).split(';').map { c ->
-            val v = c.split(',')
-            Cfg(v[0].toFloat(), v[1].toFloat(), v[2].toFloat(), v[3].toFloat(), v[4].toFloat(),
-                if (v[5] == "inf") Float.POSITIVE_INFINITY else v[5].toFloat())
+            Cfg.parse(c)
         }
         val rnd = java.util.Random(20261018)
         val gtc = readGtc("DEV").shuffled(rnd).take(3_000)
@@ -675,8 +829,7 @@ class ChannelRankingEval {
 
     private fun testPhase(say: (String) -> Unit) {
         val spec = (System.getenv("CK_CH_CONFIG") ?: error("CK_CH_CONFIG required")).split(',')
-        val cfg = Cfg(spec[0].toFloat(), spec[1].toFloat(), spec[2].toFloat(), spec[3].toFloat(), spec[4].toFloat(),
-            if (spec[5] == "inf") Float.POSITIVE_INFINITY else spec[5].toFloat())
+        val cfg = Cfg.parse(spec.joinToString(","))
         val tuning = prodTuning(cfg)
         KeyAdjacency.setLayoutLetters(emptyMap())
         val rows = mutableListOf("set\tconfig\ttyped\ttarget\tocc\tbaseline\tcandidate\tkind\tclass")
@@ -737,7 +890,9 @@ class ChannelRankingEval {
 
         val t1 = tg.netDistinct > 0 && tg.d(tg.breaks) <= 0.5 * tg.d(tg.fixes)
         val t2 = uFix.size - uBreak.size >= 0
-        val t3 = ta.netDistinct > 0 && ta.breaks.size <= 0.01 * adj.size && ta.d(ta.breaks) <= 0.01 * adjWords
+        // T3: round 1 (§1.5) absolute distinct ceiling; round 2 (§3.4) breaks ≤ 0.05 × fixes.
+        val t3 = ta.netDistinct > 0 && ta.breaks.size <= 0.01 * adj.size &&
+            if (ROUND == 1) ta.d(ta.breaks) <= 0.01 * adjWords else ta.d(ta.breaks) <= 0.05 * ta.d(ta.fixes)
         val t4 = to.breaks.size <= 0.005 * oov.size
         val t5 = named.isEmpty()
         val t6 = heTally.d(heTally.breaks) <= 0.01 * heWords && heTally.netDistinct >= 0

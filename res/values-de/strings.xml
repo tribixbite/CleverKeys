@@ -1196,6 +1196,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">Kosten für zwei benachbarte Buchstaben in falscher Reihenfolge (teh → the)</string>
     <string name="autocorrect_channel_frequency_weight_title">Gewicht der Worthäufigkeit</string>
     <string name="autocorrect_channel_frequency_weight_desc">Wie viel ein selteneres Wort pro Rangstufe in der Häufigkeitsliste kostet. Höher bevorzugt häufige Wörter stärker.</string>
+    <string name="autocorrect_channel_alias_bonus_title">Vorrang für Kurzformen</string>
+    <string name="autocorrect_channel_alias_bonus_desc">Kostenabzug für eine Kurzform wie don\'t gegenüber einem gleich nahen normalen Wort (donr → don\'t statt done). 0 = kein Vorrang.</string>
     <string name="autocorrect_frequency_ignored">Die Häufigkeit wird ignoriert; nur die Bearbeitungen entscheiden.</string>
     <string name="autocorrect_channel_inflection_cost_title">Kosten zum Behalten von Wortformen</string>
     <string name="autocorrect_channel_inflection_cost_desc">Wie viel besser eine Korrektur sein muss, um ein bekanntes Wort mit Endung zu ersetzen. Ganz oben werden solche Wörter immer behalten.</string>

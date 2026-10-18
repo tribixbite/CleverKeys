@@ -1192,6 +1192,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">Koszt dwóch sąsiednich liter wpisanych w złej kolejności (teh → the)</string>
     <string name="autocorrect_channel_frequency_weight_title">Waga częstości słów</string>
     <string name="autocorrect_channel_frequency_weight_desc">Ile kosztuje rzadsze słowo za każde miejsce w rankingu częstości. Większa wartość bardziej faworyzuje częste słowa.</string>
+    <string name="autocorrect_channel_alias_bonus_title">Preferencja form ściągniętych</string>
+    <string name="autocorrect_channel_alias_bonus_desc">Obniżka kosztu dla formy ściągniętej, np. don\'t, wobec równie bliskiego zwykłego słowa (donr → don\'t zamiast done). 0 = brak preferencji.</string>
     <string name="autocorrect_frequency_ignored">Częstość jest pomijana; decydują tylko edycje.</string>
     <string name="autocorrect_channel_inflection_cost_title">Koszt zachowania formy słowa</string>
     <string name="autocorrect_channel_inflection_cost_desc">O ile lepsza musi być poprawka, by zastąpić znane słowo z końcówką. Na maksimum takie słowa są zawsze zachowywane.</string>

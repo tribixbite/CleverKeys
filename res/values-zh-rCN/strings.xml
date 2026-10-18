@@ -1171,6 +1171,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">两个相邻字母顺序打反的代价（teh → the）</string>
     <string name="autocorrect_channel_frequency_weight_title">词频权重</string>
     <string name="autocorrect_channel_frequency_weight_desc">词频排名每低一级，较少用的词增加的代价。值越大，越偏向常用词。</string>
+    <string name="autocorrect_channel_alias_bonus_title">缩约形式优先</string>
+    <string name="autocorrect_channel_alias_bonus_desc">让 don\'t 这类缩约形式比同样接近的普通单词更优先的代价折扣(donr → don\'t 而不是 done)。0 = 不优先。</string>
     <string name="autocorrect_frequency_ignored">忽略词频，只由编辑决定。</string>
     <string name="autocorrect_channel_inflection_cost_title">保留词形代价</string>
     <string name="autocorrect_channel_inflection_cost_desc">纠正结果要好多少，才能替换带词尾的已知词。调到最高时，这类词总会保留。</string>

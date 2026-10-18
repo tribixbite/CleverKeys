@@ -1190,6 +1190,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">Izmaksas par diviem blakus burtiem nepareizā secībā (teh → the)</string>
     <string name="autocorrect_channel_frequency_weight_title">Vārdu biežuma svars</string>
     <string name="autocorrect_channel_frequency_weight_desc">Cik maksā retāks vārds par katru pakāpi biežuma rangā. Lielāka vērtība vairāk dod priekšroku bieži lietotiem vārdiem.</string>
+    <string name="autocorrect_channel_alias_bonus_title">Saīsināto formu priekšroka</string>
+    <string name="autocorrect_channel_alias_bonus_desc">Izmaksu atlaide saīsinātai formai, piemēram, don\'t, salīdzinot ar tikpat tuvu parastu vārdu (donr → don\'t, nevis done). 0 = bez priekšrokas.</string>
     <string name="autocorrect_frequency_ignored">Biežums netiek ņemts vērā; izšķir tikai labojumi.</string>
     <string name="autocorrect_channel_inflection_cost_title">Vārda formas saglabāšanas izmaksas</string>
     <string name="autocorrect_channel_inflection_cost_desc">Cik daudz labākam jābūt labojumam, lai aizstātu zināmu vārdu ar galotni. Augšējā pozīcijā šādi vārdi vienmēr tiek saglabāti.</string>

@@ -1214,6 +1214,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">هزینهٔ دو حرف کنار هم که با ترتیب نادرست تایپ شده‌اند (teh → the)</string>
     <string name="autocorrect_channel_frequency_weight_title">وزن بسامد واژه</string>
     <string name="autocorrect_channel_frequency_weight_desc">هزینهٔ واژهٔ کم‌کاربردتر برای هر پله در رتبه‌بندی بسامد. مقدار بیشتر واژه‌های رایج را بیشتر ترجیح می‌دهد.</string>
+    <string name="autocorrect_channel_alias_bonus_title">اولویت شکل‌های کوتاه‌شده</string>
+    <string name="autocorrect_channel_alias_bonus_desc">کاهش هزینه برای شکل کوتاه‌شده‌ای مانند don\'t در برابر واژهٔ عادی‌ای که به همان اندازه نزدیک است (donr ← don\'t به‌جای done). ۰ = بدون اولویت.</string>
     <string name="autocorrect_frequency_ignored">بسامد نادیده گرفته می‌شود؛ فقط ویرایش‌ها تعیین‌کننده‌اند.</string>
     <string name="autocorrect_channel_inflection_cost_title">هزینهٔ حفظ صورت واژه</string>
     <string name="autocorrect_channel_inflection_cost_desc">اصلاح چقدر باید بهتر باشد تا جایگزین واژهٔ شناخته‌شدهٔ پسونددار شود. در بالاترین حالت، چنین واژه‌هایی همیشه حفظ می‌شوند.</string>

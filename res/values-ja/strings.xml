@@ -1172,6 +1172,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">隣り合う2文字を逆の順序で入力した場合のコスト（teh → the）</string>
     <string name="autocorrect_channel_frequency_weight_title">単語頻度の重み</string>
     <string name="autocorrect_channel_frequency_weight_desc">頻度順位が1段下がるごとの、まれな単語のコスト。大きいほど一般的な単語を優先します。</string>
+    <string name="autocorrect_channel_alias_bonus_title">短縮形の優先</string>
+    <string name="autocorrect_channel_alias_bonus_desc">don\'t のような短縮形を、同じくらい近い通常の単語より優先するためのコスト割引(donr → done ではなく don\'t)。0 = 優先しません。</string>
     <string name="autocorrect_frequency_ignored">頻度は無視され、編集だけで決まります。</string>
     <string name="autocorrect_channel_inflection_cost_title">語形を残すコスト</string>
     <string name="autocorrect_channel_inflection_cost_desc">語尾付きの既知の単語を置き換えるには、修正がどれだけ優れている必要があるか。最大にすると、そのような単語は常に残ります。</string>

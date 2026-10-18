@@ -12,6 +12,7 @@ import tribixbite.cleverkeys.autocorrect.ChannelRanker
 import tribixbite.cleverkeys.autocorrect.ChannelWeights
 import tribixbite.cleverkeys.autocorrect.FrequencyFloor
 import tribixbite.cleverkeys.autocorrect.FuzzyPrefixMatcher
+import tribixbite.cleverkeys.autocorrect.isDoubleReduction
 import tribixbite.cleverkeys.autocorrect.KeyAdjacency
 import tribixbite.cleverkeys.autocorrect.Morphology
 import tribixbite.cleverkeys.swipe.SwipeContextRescorer
@@ -3658,14 +3659,17 @@ class WordPredictor : Predictor {
         frequencyFloor: Int,
         maxFrequency: Int,
     ): String {
-        val index = ChannelRanker.pick(candidates, editCosts, maxFrequency, weights.frequencyWeight)
+        val index = ChannelRanker.pick(candidates, editCosts, maxFrequency, weights.frequencyWeight, weights.aliasBonus)
         if (index < 0) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT (channel): '$typedWord' [no candidate]")
             return typedWord
         }
         val winner = candidates[index]
-        val winnerCost = ChannelRanker.totalCost(editCosts[index], winner.frequency, maxFrequency, weights.frequencyWeight)
-        if (guardStem != null) {
+        val winnerCost = ChannelRanker.totalCost(editCosts[index], winner.frequency, maxFrequency,
+            weights.frequencyWeight, winner.isAlias, weights.aliasBonus)
+        // Rule C2 (eval doc §3.1): a re-doubling ("spaming" → "spamming") bypasses guard G, as
+        // DD-M ran before the guard in the band path.
+        if (guardStem != null && !isDoubleReduction(typedWord.lowercase(), winner.word)) {
             val stemFrequency = dictionary.get()[guardStem] ?: 0
             val keepCost = weights.inflectionCost +
                 weights.frequencyWeight * ChannelRanker.rankSteps(stemFrequency, maxFrequency)

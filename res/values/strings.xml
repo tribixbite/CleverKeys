@@ -1576,6 +1576,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">Cost of two neighbouring letters typed in the wrong order (teh → the)</string>
     <string name="autocorrect_channel_frequency_weight_title">Word Frequency Weight</string>
     <string name="autocorrect_channel_frequency_weight_desc">How much a rarer word costs per step down the frequency ranking. Higher favours common words more.</string>
+    <string name="autocorrect_channel_alias_bonus_title">Contraction Preference</string>
+    <string name="autocorrect_channel_alias_bonus_desc">Cost discount for a contraction such as don\'t over an equally close plain word (donr → don\'t instead of done). 0 = no preference.</string>
     <string name="autocorrect_frequency_ignored">Frequency is ignored; only the edits decide.</string>
     <string name="autocorrect_channel_inflection_cost_title">Word-Form Keep Cost</string>
     <string name="autocorrect_channel_inflection_cost_desc">How much better a correction must be to replace a known word plus an ending. At the top, such words are always kept.</string>

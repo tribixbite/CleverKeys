@@ -546,6 +546,20 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         },
         displayValue = sliders.CHANNEL_FREQUENCY_WEIGHT.format(weights.frequencyWeight)
     )
+
+    SettingsSlider(
+        title = stringResource(R.string.autocorrect_channel_alias_bonus_title),
+        description = stringResource(R.string.autocorrect_channel_alias_bonus_desc),
+        value = weights.aliasBonus,
+        valueRange = Keys.CHANNEL_ALIAS_BONUS.range,
+        steps = sliders.CHANNEL_ALIAS_BONUS.steps,
+        onValueChange = {
+            val v = sliders.CHANNEL_ALIAS_BONUS.snap(it)
+            autocorrectTuning = tuning.copy(channel = weights.copy(aliasBonus = v))
+            saveSetting(Keys.CHANNEL_ALIAS_BONUS.key, v)
+        },
+        displayValue = sliders.CHANNEL_ALIAS_BONUS.format(weights.aliasBonus)
+    )
 }
 
 /**

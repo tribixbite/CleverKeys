@@ -1185,6 +1185,8 @@
     <string name="autocorrect_channel_transposition_cost_desc">Biaya dua huruf bersebelahan yang diketik dengan urutan salah (teh → the)</string>
     <string name="autocorrect_channel_frequency_weight_title">Bobot frekuensi kata</string>
     <string name="autocorrect_channel_frequency_weight_desc">Biaya kata yang lebih jarang untuk setiap tingkat dalam peringkat frekuensi. Nilai lebih tinggi lebih mengutamakan kata umum.</string>
+    <string name="autocorrect_channel_alias_bonus_title">Preferensi Kontraksi</string>
+    <string name="autocorrect_channel_alias_bonus_desc">Potongan biaya untuk kontraksi seperti don\'t dibanding kata biasa yang sama dekatnya (donr → don\'t, bukan done). 0 = tanpa preferensi.</string>
     <string name="autocorrect_frequency_ignored">Frekuensi diabaikan; hanya edit yang menentukan.</string>
     <string name="autocorrect_channel_inflection_cost_title">Biaya mempertahankan bentuk kata</string>
     <string name="autocorrect_channel_inflection_cost_desc">Seberapa jauh lebih baik koreksi harus untuk mengganti kata dikenal berakhiran. Di posisi teratas, kata seperti itu selalu dipertahankan.</string>

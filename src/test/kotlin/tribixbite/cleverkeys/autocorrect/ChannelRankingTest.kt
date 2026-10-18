@@ -116,6 +116,29 @@ class ChannelRankingTest {
     }
 
     @Test
+    fun doubleReductionIsStructural() {
+        assertTrue(isDoubleReduction("helo", "hello"))
+        assertTrue(isDoubleReduction("spaming", "spamming"))
+        assertTrue(isDoubleReduction("acomodate", "accommodate"))   // two doubles reduced
+        assertTrue(!isDoubleReduction("shated", "shared"))          // substitution
+        assertTrue(!isDoubleReduction("helo", "help"))              // substitution
+        assertTrue(!isDoubleReduction("hel", "hello"))              // non-doubled letter missing
+        assertTrue(!isDoubleReduction("hello", "hello"))            // identical
+        assertTrue(!isDoubleReduction("hello", "helo"))             // wrong direction
+    }
+
+    @Test
+    fun aliasBonusTipsAnEqualEditTowardTheContraction() {
+        // donr: dont (alias) and done are both one r→t / r→e neighbour slip.
+        val max = 1_000_000
+        val cands = listOf(ChannelCandidate("done", max - 60 * 3_900, false), ChannelCandidate("dont", max - 70 * 3_900, true))
+        val costs = floatArrayOf(ChannelEditCost.cost("donr", "done", w), ChannelEditCost.cost("donr", "dont", w))
+        assertEquals("done", cands[ChannelRanker.pick(cands, costs, max, 0.005f, aliasBonus = 0f)].word)
+        assertEquals("dont", cands[ChannelRanker.pick(cands, costs, max, 0.005f, aliasBonus = 0.25f)].word)
+        assertEquals(1f - 0.25f, ChannelRanker.totalCost(1f, max, max, 0.005f, isAlias = true, aliasBonus = 0.25f), eps)
+    }
+
+    @Test
     fun inflectionCostTopOfRangeMeansAlwaysKeep() {
         assertEquals(Float.POSITIVE_INFINITY, ChannelWeights.inflectionCostFromPref(ChannelWeights.INFLECTION_ALWAYS_KEEP), 0f)
         assertEquals(Float.POSITIVE_INFINITY, ChannelWeights.inflectionCostFromPref(Float.NaN), 0f)
