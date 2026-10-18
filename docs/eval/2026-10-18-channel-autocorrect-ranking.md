@@ -330,3 +330,41 @@ admissible configuration, or TEST fails, the band ranking stays the default. The
 defaults then become the DEV configuration with the most GTC-DEV distinct net among those that
 pass C2, C3 and C4 (any C1), or stay at the round-1 grid centre if there is none. These
 thresholds are fixed now.
+
+## 4. Round 2 DEV (run 2026-10-18, harness at 47f4bbc2, separate worktree)
+
+Command: `CK_CH_ROUND=2 CK_CH_PHASE=dev … runMockTests -PtestClass=autocorrect.ChannelRankingEval`.
+It took 111 minutes: prepare 469 s (GTC), 3,894 s (S-adj) and 1,111 s (C-oov); grid 770 s. Mean
+contenders after the pre-filter were 4.0 (GTC), 2.3 (S-adj) and 10.3 (C-oov).
+
+Grid (12,960 configurations): C1 holds in all of them, C2 in 934, C3 in 235, C4 in 4,629, and
+**12 are admissible**. Every admissible configuration has γ = 1 and g₂ = 1.0.
+
+| admissible configuration (s₁, g, g₂, τ, λ, β, γ) | GTC-DEV fixes / breaks / net | S-adj-DEV fixes / breaks (raw) | C-oov-DEV new |
+|---|---|---|---|
+| **2, 1.5, 1.0, 1.2, 0.005, 0.25, 1 (chosen)** | 2,670 / 182 / **+2,488** | 3,217 / 146 (207) | 98 |
+| 2, 1.5, 1.0, 1.2, 0.005, 0.5, 1 | 2,665 / 184 / +2,481 | 3,216 / 155 (226) | 100 |
+| 4, 2.0, 1.0, 1.5, 0.01, 0.5, 1 | 2,639 / 199 / +2,440 | 3,217 / 140 (206) | 99 |
+| 1, 1.5, 1.0, 1.2, 0.0025, 0.25, 1 (fewest S-adj breaks) | 2,403 / 285 / +2,118 | 3,239 / 52 (59) | 86 |
+
+The highest GTC net in the grid (+2,735, at γ = 3 and β = 0) is inadmissible. It breaks 1,114
+S-adj words and changes 2,994 C-oov words, because large γ with a small λ corrects valid
+unlisted inflections.
+
+**Chosen (§3.3): s₁ = 2, g = 1.5, g₂ = 1.0, τ = 1.2, λ = 0.005, β = 0.25, γ = 1.** Production
+named failures at the choice: none (all 15 calibration cases, `devixe` → device, `shated` →
+shared and the 12 Hebrew cases hold). **Soundness check: 2,000 inputs, 0 mismatches.**
+
+Full DEV outcomes at the choice (production-equivalent):
+
+- GTC-DEV accuracy **8,944 → 13,039** of 16,358 pairs (54.7 % → 79.7 %). Fixes 4,295 (2,670
+  distinct; 6,864 occurrences), breaks 200 (182; 327 occurrences), swaps 1,457. Fixes by class:
+  length change 3,538, 1-sub distant 359, 1-sub adjacent 282, transposition 83, multi-sub 33.
+  Breaks by class: length change 79, 1-sub distant 72, multi-sub 39, transposition 7, 1-sub
+  adjacent 3.
+- S-adj-DEV accuracy **96,948 → 131,790** of 137,871 (70.3 % → 95.6 %). Distinct breaks are
+  146 against 3,217 fixes (4.5 %, limit 5 %); raw breaks 207 (0.15 %, limit 0.8 %).
+- C-oov-DEV new changes 98 (0.27 %, limit 0.5 %).
+
+The opt-in fallback (§3.4) is the same configuration. TEST is next and runs once:
+`CK_CH_CONFIG=2.0,1.5,1.0,1.2,0.005,0.25,1.0`.
