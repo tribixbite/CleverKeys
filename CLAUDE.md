@@ -155,6 +155,15 @@ Espresso < 3.7.0 dies on Android 16+ (`InputManager.getInstance` removed). The e
 input view never shows: tests that need it on screen use `ShowImeWithHardKeyboardRule`.
 A bare `EditorInfo()` is `TYPE_NULL`, i.e. a blind REMOTE field — set an input type.
 
+## Autocorrect tuning and long evals (2026-10-18)
+
+Every autocorrect weight lives in `autocorrect/AutocorrectTuning.kt` (`Keys` = key, default and
+range for prefs, validation, backup and UI); `Config.autocorrect_tuning` is null on an Objenesis
+test Config, which means DEFAULT. The sweep's gates pass about 200 candidates per input (length
+difference 2), so a weight grid needs a bound-based pre-filter (`ChannelRankingEval`). Run a
+multi-hour eval from a separate `git worktree`: another session's half-finished edits in the
+shared tree broke the eval's compile.
+
 ## PAL model preference
 
 Use Gemini 3.8 (`gemini-3.8-flash`) for PAL consultation; never use Gemini 3.1.
