@@ -843,18 +843,37 @@ class ChannelRankingEval {
         val adjWords = adj.map { it.target }.toSet().size
         val oov = cOov(dev = false)
 
-        /** Production baseline and production rule C for every distinct input (TEST never uses the replica). */
+        /**
+         * Production baseline and production rule C for every distinct input (TEST never uses the
+         * replica). Each set's outputs are checkpointed to `test-<set>.tsv` the moment they are
+         * computed and reused by a rerun of the SAME configuration: a process killed mid-run (the
+         * first round-2 TEST run was SIGKILLed by Android's low-memory killer after five sets,
+         * before printing anything) loses at most one set and never changes an output.
+         */
         fun run(lang: Lang, pairs: List<P>, set: String): Tally {
             val inputs = pairs.map { it.typed }.distinct()
             val base = ConcurrentHashMap<String, String>()
             val cand = ConcurrentHashMap<String, String>()
-            val start = System.nanoTime()
-            inputs.parallelStream().forEach { t ->
-                base[t] = lang.base(t)
-                cand[t] = lang.predictor.autoCorrect(t, tuning)
+            val checkpoint = File(outDir, "test-$set.tsv")
+            val header = "# ${cfg.spec}"
+            if (checkpoint.isFile && checkpoint.useLines { it.firstOrNull() } == header) {
+                checkpoint.useLines { lines ->
+                    lines.drop(1).forEach { l -> val c = l.split('\t'); base[c[0]] = c[1]; cand[c[0]] = c[2] }
+                }
+                check(base.keys.containsAll(inputs)) { "checkpoint $checkpoint is incomplete" }
+                println("  $set: ${inputs.size} inputs from checkpoint")
+            } else {
+                val start = System.nanoTime()
+                inputs.parallelStream().forEach { t ->
+                    base[t] = lang.base(t)
+                    cand[t] = lang.predictor.autoCorrect(t, tuning)
+                }
+                println("  $set: ${inputs.size} inputs in ${(System.nanoTime() - start) / 1_000_000_000}s")
+                checkpoint.writeText(header + "\n" + inputs.joinToString("\n") { "$it\t${base[it]}\t${cand[it]}" } + "\n")
             }
-            println("  $set: ${inputs.size} inputs in ${(System.nanoTime() - start) / 1_000_000_000}s")
-            return tally(lang, pairs, base, cand, rows, set, cfg.toString())
+            val t = tally(lang, pairs, base, cand, rows, set, cfg.toString())
+            say("  ${t.line(set, pairs.size, pairs.map { it.target }.toSet().size)}")
+            return t
         }
 
         val tg = run(en, gtc, "GTC-TEST")
