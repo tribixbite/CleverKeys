@@ -217,7 +217,7 @@ C3 fails everywhere (the minimum is 1 failing named case).
 | configuration (s₁, g, g₂, τ, λ) | GTC-DEV fixes / breaks / net | S-adj-DEV fixes / breaks (raw) | named failing |
 |---|---|---|---|
 | 1, 1, 0.6, 0.6, 0.005 (most GTC net) | 2,818 / 293 / **+2,525** | 2,826 / 1,981 (5,983) | 12 |
-| 1, 1.5, 1.0, 1.2, 0.005 (fewest S-adj breaks) | 2,281 / 73 net **+2,208** | 3,070 / **73 (100)** | 2 |
+| 1, 1.5, 1.0, 1.2, 0.005 (fewest S-adj breaks) | 2,501 / 293 / **+2,208** | 3,070 / **73 (100)** | 2 |
 | 2, 1.5, 1.0, 1.2, 0.005 (1 named failure) | 2,646 / 254 / **+2,392** | 3,101 / 144 (204) | 1 |
 | 1, 1, 0.6, 0.9, 0.02 (grid centre) | 2,476 / 449 / +2,027 | 2,574 / 1,739 (6,303) | 7 |
 
