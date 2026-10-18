@@ -39,7 +39,8 @@ difference for **Delete last word**.
 | **Autocorrect while typing** | Follows your autocorrect settings | Never rewrites a word (`ls` stays `ls`) | Never rewrites a word |
 | **Capitalizing "i"** | Follows your setting | Never rewrites a word | Never rewrites a word |
 | **Autocorrect after a swipe** | Follows your settings | Skipped; the recognised word is inserted as is | Skipped |
-| **Word suggestions** | Shown | Shown for the word you are typing; tapping one deletes it with Backspace key presses and types the suggestion | Same as terminals |
+| **Word suggestions** | Shown | Only words that continue what you typed; tapping one types the rest of the word and never deletes anything (see below) | Same as terminals |
+| **Add to dictionary** | Prompt after space, tap-to-add chip | Not offered: the keyboard cannot verify what is on the line. Use Dictionary Manager | Not offered |
 | **Backspace undo of a swipe** | Removes the word | Removes the word with one Backspace key press per character | Same as terminals |
 | **Clear field** | Selects all and deletes | Does nothing (the keyboard cannot see the text) | Does nothing |
 | **Append 's / '** | Adds the suffix to the last word | Not available | Not available |
@@ -54,6 +55,12 @@ typing from your own keystrokes:
   Page Up/Down, Ctrl or Alt combinations (such as Ctrl+C), the Enter/action key, cursor
   slides on the spacebar and editing commands. So typing `ls`, Enter, `cd` gives
   suggestions for `cd`, not `lscd`.
+- A tapped suggestion only adds letters. The bar offers words that start with what you typed
+  (`hel` → `hello`, `help`), and a tap types the missing part (`lo `). A word that would need
+  something deleted — a correction, `don't` for `dont`, a suggestion left over from an earlier
+  word — is not offered. Termux's own toolbar keys (CTRL, TAB), shell completion and history
+  change the line without the keyboard seeing it, so deleting "the word's length" could remove
+  text you cannot see coming; adding is visible and undone with Backspace.
 
 > [!NOTE]
 > Text that CleverKeys did not type is invisible to it: shell tab completion, history

@@ -97,8 +97,9 @@ review counts are not a current full-tree audit.
 | `termux_integration.md` | Terminal keyboard behaviour and custom terminal packages | ✅ Implemented |
 | `architectural-decisions.md` | Architectural Decision Records | ✅ Active |
 
-### `/docs/eval/` Decoder Evaluations (2026-07/08)
-*CTC / geometric / FUTO-reference head-to-head evidence base*
+### `/docs/eval/` Decoder and typing evaluations (2026-07 → 10)
+*CTC / geometric / FUTO-reference head-to-head evidence base, then the pre-registered
+autocorrect / swipe-ranking measurements. "Not shipped" means the measured rule stays off.*
 
 | File | Purpose | Status |
 |------|---------|--------|
@@ -110,6 +111,29 @@ review counts are not a current full-tree audit.
 | `2026-07-24-swipedata-onnx-validation.md` | Swipedata → ONNX input validation | ✅ Complete |
 | `futo-decoder-eval-notes.md` | FUTO reference decoder porting notes (floor + Viterbi-beam ceiling) | ✅ Complete |
 | `COMPARISON_WITH_WMKEYBOARD.md` | Comprehensive architectural, accuracy, training, and security comparison vs WM Keyboard | ✅ Complete |
+| `HANDOFF-futo-head2head.md` | Handoff notes for the FUTO head-to-head harness | ✅ Complete |
+| `2026-08-15-ctc-per-language-lambda.md` | Per-language CTC λ (lexicon weight) presets | ✅ Complete |
+| `2026-08-22-context-rescoring-first-replay.md` | Swipe context rescoring replay — failed the ship bar on both corpora; feature stays default-OFF | ⛔ Not shipped |
+| `2026-09-02-wave-k-device-verification.md` | Wave K device-verification protocol and results (Pixel 8 Pro, Saga) | ✅ Complete |
+| `2026-09-26-context-oracle-and-alternates-replay.md` | Context-oracle ceiling and alternates replay | ✅ Complete |
+| `2026-09-26-learned-unigram-swipe-replay.md` | Usage-based learned swipe prior — failed the replay bar | ⛔ Not shipped |
+| `2026-09-26-correction-driven-swipe-prior-replay.md` | Correction-driven swipe prior — failed the replay bar | ⛔ Not shipped |
+| `2026-09-26-static-lm-replay.md` | Static context-LM next-word replay | ✅ Complete |
+| `2026-09-29-static-lm-multilingual.md` | Per-language S1 gates for the static LM (en/de/fr/it shipped; es/pt/sv failed) | ✅ Complete |
+| `2026-10-07-final-letter-drops.md` | Why `ad`/`wet` lose their last letter; device recipes for hard words | ✅ Complete |
+| `2026-10-07-short-word-ctc.md` | Short-word CTC root cause (encoder word prior at the trace end), raw-path input contract | ✅ Complete |
+| `2026-10-07-apostrophe-context.md` | its/it's context chooser — needs its own round on fresh data | ⛔ Not shipped |
+| `2026-10-08-user-swipe-priority.md` | Per-word swipe priority (Normal/High/Highest): bonus per target, collateral per level, device results | ✅ Shipped |
+| `2026-10-11-dropped-double-autocorrect.md` | Dropped-doubled-letter autocorrect, first rule — failed its gate | ⛔ Not shipped |
+| `2026-10-11-dropped-double-margin.md` | DD-M frequency-margin rule (`helo` → `hello`), M=64 tuned and gated on the shipped `.bin` | ✅ Shipped |
+| `2026-10-12-neighbour-substitution-tiebreak.md` | Neighbour-vs-distant substitution tiebreak — fixes תושה, fails DEV | ⛔ Not shipped |
+
+### `/docs/research/` Research notes
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `README.md` + `*.csv` | Dictionary optimisation research outputs (AOSP comparison, typo candidates) | 📁 Reference |
+| `2026-10-15-ime-editor-actions.md` | How Android editors (EditText, Chrome/WebView, Compose) handle IME context-menu ids, undo paths and process-text results; the source of the 2026-10-17 editor commands and the `textAssistMenu` removal | ✅ Complete |
 
 ### `/docs/guides/` Guides
 

@@ -27,7 +27,7 @@ When you finish a word (by pressing space or punctuation):
 1. **Non-prose context check** — if the token at the cursor looks like a URL, email address, or file path (it contains `. / : @ # ? & = %` or digits), autocorrect skips it entirely. Domains and pasted-then-edited links never get "corrected".
 2. **Exact alias check** — if the typed word is a known contraction base (`dont`, `im`, `cant`), it expands directly (`don't`, `I'm`, `can't`).
 3. **Dictionary hit** — if the word is in the dictionary as-is, no correction.
-4. **Elongation collapse** — a doubled letter that collapses to a real word is fixed directly: `gamees` → `games`, `embeer` → `ember`.
+4. **Elongation collapse** — a doubled letter that collapses to a real word is fixed directly: `gamees` → `games`, `embeer` → `ember`. The reverse, a **dropped double letter**, is fixed when doubling one letter gives a dictionary word that is not much rarer than the dictionary scan's own pick: `helo` → `hello`, while `bery`, `grom` and `sed` still become `very`, `from` and `see` (the margin was tuned and gated on the shipped dictionary, `docs/eval/2026-10-11-dropped-double-margin.md`).
 5. **Inflection guard** — regular inflections of dictionary words (`-s`, `-ed`, `-ing`, `-er`, `-est`, `-ly`, ...) are treated as valid even if the inflected form isn't stored, so real words don't get "corrected".
 6. **Possessive guard** — possessives of known words (`ember's`, `dogs'`) are valid and left alone. A possessive of a *typo* gets its base corrected while keeping the apostrophe: `embeer's` → `ember's`.
 7. **Length / prefix gates** — words shorter than the minimum length, or that violate the prefix rule, are skipped.

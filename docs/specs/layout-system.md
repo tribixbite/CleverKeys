@@ -334,7 +334,17 @@ shown, in an EditText and in Chrome on a `data:` textarea with `input text` (the
 sequence): the on-screen bar was the one the pipeline writes to and showed black chips
 (`#FF000000`, highlight `#FF0066CC`) on `#CCCCCC`, also after hide/show and back to Cyberpunk.
 Black on that grey cannot have zero variance, so the device bar held no chips rather than
-same-coloured text; the cause is open (todo item 28).
+same-coloured text.
+
+Re-check on the Pixel with the fixed build (2026-10-17 02:54–02:58, after `9e2a9804`;
+`build/oct17b-pixel/60–72`, `logcat-b1-ios.txt`, `logcat-b1-global.txt`): iOS-style bound to
+Light over global Cyberpunk, Chrome `data:` textarea, typed `hel`/`wor` — the Light bar showed
+black chips (`hello | help | hel | held | hell`, highlight blue) on grey, and switching back to the
+global layout showed Cyberpunk's cyan chips; the log carried `Suggestion bar built: theme=light
+text=#FF000000 highlight=#FF0066CC bg=#FFCCCCCC` on the switch. The empty bar did not recur. Its
+cause was not isolated: the fix that landed between the two runs changed the bar's readable-colour
+fallbacks and the preference handler's stale bar reference, neither of which explains an empty bar
+on the first run, so treat a recurrence as a new report rather than a regression of this fix.
 
 Tests: `LayoutThemeBindingTest` (pure), `LayoutThemeBindingConfigTest` (mock: Config,
 ConfigurationManager re-inflate gate, serializer round trip, XML attribute, built-in id drift),

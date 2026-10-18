@@ -22,7 +22,7 @@ editor that used to be listed here already ship in 2.0.)
 ## [2.0.0] - unreleased
 
 > Not tagged yet. The section was first drafted 2026-09-09; items merged up to
-> 2026-10-06 are folded in.
+> 2026-10-17 are folded in.
 
 > Note: this file has gaps — v1.2.1, v1.2.2, v1.2.5 and v1.2.6 were tagged and shipped
 > but never given entries here. They are not backfilled by this release.
@@ -173,6 +173,39 @@ editor that used to be listed here already ship in 2.0.)
   word that is already in your dictionary now raises it to High (tap the confirmation twice to
   undo). Priorities travel in dictionary backups. Words you never raise behave exactly as
   before.
+- **Custom words saved by older versions at frequency 100**: every release before 2.0 stored
+  custom words at 100, which loses to common dictionary words when swiped (new words get 255).
+  The Custom tab of Dictionary Manager now notices such words and offers to raise them:
+  **Review** lists them, **Raise** sets only the words still at 100 to 255 (swipe priorities are
+  untouched), **Not now** asks again only when another word at 100 appears, for example from a
+  backup import. Choosing High or Highest swipe priority in the add/edit dialog also lifts a
+  lower frequency to 255 and says so; going back to Normal restores the value.
+- **A theme per layout**: in Layout Manager each layout can be tied to a theme (**Theme** chip:
+  Follow global theme, or any built-in, decorative or DIY theme). Switching to that layout draws
+  the keyboard and the suggestion bar in its theme; switching to an unbound layout returns to
+  the global theme, which is never changed. A custom layout can declare a default with
+  `theme="rosepine"`, Export XML writes the binding, backups carry it and the restore preview
+  lists per-layout theme changes. A theme that is not on this device falls back to the global
+  one and Layout Manager says so.
+- **Six editor commands**, assignable to keys, gestures and popover slots: **Cycle Case**
+  (`case_cycle`: the selection or the word at the cursor, lower → Title → UPPER → lower),
+  **Word Left / Word Right**, **Select Word Left / Right**, **Select Word** and **Select Line**.
+  They work in standard text fields, Chrome/WebView and Compose apps; terminals get the word
+  moves only. **Share** now opens the share sheet in every app, not only in standard text
+  fields. **Text Assist** and **Replace Text** write the chosen app's result (a translation, a
+  rewrite) back over the selection — before, the result was dropped — and copy it to the
+  clipboard with a bar message if the field changed meanwhile. Swiped and autocorrected words
+  carry their alternatives, so the editor's own Replace popup and **Replacement Suggestions
+  (Editor)** can offer them.
+- **Remote-desktop and VNC fields** (RustDesk, AVNC, any app whose text field reports input type
+  "null") get the terminal treatment, because the keyboard cannot read them back: no autocorrect
+  or capital-I rewrite, deletion by Backspace key presses, Paste types the phone clipboard,
+  Clear and the suffix commands are refused, and Delete last word sends Ctrl+Backspace (Ctrl+W
+  would close a remote window). Settings → Advanced describes the rules.
+- Autocorrect fixes a dropped double letter when the doubled word is about as common as the
+  alternative: `helo` → `hello`, while `bery`, `grom` and `sed` still become `very`, `from` and
+  `see`. The margin was tuned and gated on the shipped dictionary
+  (`docs/eval/2026-10-11-dropped-double-margin.md`).
 
 ### Changed
 
@@ -230,6 +263,31 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- The highlighted suggestion is now exactly what space will commit. Typing `Helo` highlighted
+  `Hello` while space committed `Help`: the bar and the space key used different rankers, which
+  disagreed on 2,053 of 2,780 real misspellings. One resolver now decides both, and a completion
+  (`hello` for `hel`) is never highlighted, because space would leave `hel`.
+- Neighbour-key typos on Hebrew and other non-Latin layouts are corrected. Key adjacency was
+  known for Latin letters only, so every Hebrew substitution cost the same and anagrams or
+  length changes won (אתנול → אתמול now; Hebrew top-500 neighbour typos corrected 189 → 231 of
+  352, English unchanged).
+- Suggestion-bar text is readable on every theme: the highlighted and prompt chips equalled the
+  bar background on Cobalt, Pine and ePaper Black and were faint on ten more themes; every bar
+  text role now keeps at least 3:1 contrast. Bar opacity changes reach the live bar after a
+  theme change instead of a discarded one.
+- Custom short-swipe, popover and palette mappings of editing commands now do exactly what the
+  layout key does. Before: Paste as plain text pasted with formatting; Clear, Delete word and
+  Cancel selection mappings did nothing; a mapping edited the app behind an open clipboard
+  editor; Copy and Cut ran without a selection.
+- Ctrl+V in the clipboard entry editor pasted into the app behind the panel. Ctrl shortcuts and
+  the paste key now stay inside the inline editor, search and tag fields.
+- A language-pack update that is interrupted or refused halfway no longer loses the installed
+  pack: the old pack is kept as a backup until the new one is in place, and leftovers are
+  repaired at the next start.
+- Dictionary Manager's Custom tab counted the "+ Add" row as a word ("(1)" with no words).
+- Text Assist says "Action unavailable" when no app can take the text, instead of doing
+  nothing; a Text Assist or Replace Text chooser left open with the Home key no longer blocks
+  the next request on Android 14.
 - The undo and redo keys now work in Chrome, WebView and Compose text fields (they send
   Ctrl+Z / Ctrl+Shift+Z, which those editors honour; the old editor menu action was ignored
   there). In terminals they report "Action unavailable" rather than sending Ctrl+Z.
@@ -321,8 +379,9 @@ editor that used to be listed here already ship in 2.0.)
   read as `lscd`); swipe final autocorrect no longer rewrites words in terminals.
 - Terminal apps: tapping a suggestion never deletes characters. The keyboard cannot see edits
   the terminal makes itself (Termux's extra-keys Tab/Ctrl, shell completion, history), so the
-  bar offers only words that continue what you typed and a tap adds the rest; `+word` adds the
-  word to the dictionary and types only a space.
+  bar offers only words that continue what you typed and a tap adds the rest. The tap-to-add
+  chip and the "Add to dictionary?" prompt are not offered there, because the keyboard cannot
+  verify what is on the line (it offered `+foocbar` after a toolbar Ctrl+C).
 - Swipe typing starts only on letter keys: a swipe that begins on Backspace, Shift, Enter,
   Tab or a modifier and then crosses letters no longer types a word (a swipe-left from
   Backspace over `m n b` had typed "mb"). A sloppy start on space, a digit or punctuation

@@ -44,7 +44,7 @@
 
 # 🗺️ Project Overview
 
-CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, 227 customizable short-swipe commands, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
+CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, 236 customizable short-swipe commands, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
 
 </div>
 
@@ -67,7 +67,7 @@ CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe t
 | **APK Size** | ~32MB | ~45MB | ~200MB | ~15MB | ~25MB | ~40MB |
 | **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20-100 items | ❌ 15s hint only | ✅ Encrypted |
 | **Short-Swipe Actions**⁸ | ✅ 208 gestures | ⚠️ Limited | ❌ | ⚠️ Limited | ⚠️ Limited | ⚠️ Space/Del only¹¹ |
-| **Per-Key Customization** | ✅ 204+ commands | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Per-Key Customization** | ✅ 236 commands | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Custom Layouts** | ✅ XML (8 sublabels) | ✅ JSON | ✅ YAML | ⚠️ JSON (no editor) | ⚠️ Addon packs only | ✅ |
 | **DIY Theme Creator** | ✅ | ✅ | ❌ (16 built-in) | ✅ Snygg v2 | ✅ | ✅ |
 | **Word Suggestions** | ✅ | ✅ | ✅ | ❌ (v0.6 planned) | ✅ | ✅ |

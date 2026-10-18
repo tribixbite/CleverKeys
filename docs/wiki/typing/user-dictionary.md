@@ -58,6 +58,11 @@ The same tap-twice undo follows every add made from the keyboard: the prompt, th
 chip for the exact letters you typed, undoing an autocorrection, and accepting a
 "Prefer “word” when swiping?" offer ([Swipe Typing](swipe-typing.md#prefer-a-word-when-swiping)).
 
+> [!NOTE]
+> In terminal apps and remote-desktop fields (see [Advanced](../settings/advanced.md)) neither
+> the prompt nor the tap-to-add chip appears: the keyboard cannot read the line back, so it
+> cannot verify the word. Add such words in the Dictionary Manager instead.
+
 ### Method 2: Dictionary Manager
 
 1. Open keyboard settings (gear icon)
