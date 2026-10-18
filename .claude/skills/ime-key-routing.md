@@ -316,8 +316,10 @@ Custom short swipe / popover / palette  Pointers.executeCustomShortSwipe
 So a mapping gets what the key gets: clipboard inline-edit routing (paste/cut/selectAll/clear
 go to the edit field; other edits are swallowed — edit mode is modal), terminal paste from
 the system clip, `recv.handle_non_text_input()` (typed-word end), copy/cut only with a
-selection, and the text-action app chooser (`TextActionLauncher`, context-menu id only as
-fallback). `CustomShortSwipeExecutor` returns false for any editing name and keeps no copy;
+selection, and the text-action app chooser (`TextActionLauncher`; when the chooser cannot start,
+Replace text falls back to the `android.R.id.replaceText` context-menu id and Text assist shows
+"Action unavailable" — `e940262c`, because `android.R.id.textAssist` is handled by no editor).
+`CustomShortSwipeExecutor` returns false for any editing name and keeps no copy;
 `Keyboard2View.executeEditingCommand` no longer exists. Suffix commands keep their own
 branch in `onCustomShortSwipe` only so the haptic fires on success; templates likewise.
 `EditingCommandParityTest` (mock) runs every Editing value through both entry points under
@@ -355,6 +357,20 @@ cursor sync and the #78 editor scan never read the field (RustDesk's hidden fiel
 1024 '1' placeholders). REMOTE delete-last-word is Ctrl+Backspace, TERMINAL is Ctrl+W.
 A new editor-writing feature must ask `isTerminalApp` before any in-place rewrite;
 `BlindFieldPolicyTest` models RustDesk and asserts what the remote receives.
+
+## Terminal and blind fields: suggestion taps append, never delete (2026-10-15/17)
+
+`TerminalSuggestionPolicy` (pure) filters the bar for `TERMINAL`/`REMOTE` editors: only words
+that EXTEND the tracked word (case-insensitive prefix) are offered, shown with the user's own
+letters (`HEl` → `HEllo`); a tap commits the remainder only (`hel` + `hello` → `lo `). A
+correction, a contraction (`dont` → `don't`) or a chip left over from a changed word is refused
+and nothing is sent; with no extension the bar is cleared. The exact-add `+word` chip and the
+space-time "Add to dictionary?" prompt are NOT offered there (`fd3eec40`): Termux applies its
+toolbar CTRL inside `commitText`, so the tracked word can be stale (`foocbar`) and nothing the
+IME can read bounds what is on the line. Why any deletion is unsafe: `docs/specs/
+termux_integration.md` "Why taps may not delete" (Termux source table + the D2/D4 device
+evidence). Pinned by `TerminalSuggestionPolicyTest` and `TerminalTypedWordTrackingTest`.
+Ordinary editors are unchanged.
 
 ## Shortcuts and paste inside inline fields (2026-10-13)
 

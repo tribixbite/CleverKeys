@@ -335,3 +335,18 @@ or initialize the saved-history singleton. API 28+ clear natively; API 21–27 u
 an empty plain-text clip, rejected by the existing ingestion guard. Do not call
 `clearHistory()` or remove media for this action. Real clipboard tests belong on
 an isolated emulator; preserve the Seeker’s clipboard during UI validation.
+
+## Inline entry editor: shortcuts, undo history, copy (2026-10-13/15)
+
+While the entry editor is open, Ctrl+V/X/C/A act on it, Ctrl+Z and the undo key undo,
+Ctrl+Shift+Z / Ctrl+Y and the redo key redo, and every other shortcut or editing command is
+swallowed, never reaching the app behind the panel (`KeyEventHandler.handleInlineShortcut`;
+`3439fff0`, `d599f84a`). Undo is the view's own `InlineEditHistory` (pure, bounded 100 steps /
+1M chars, one step per typed word, cleared on session start/exit) because every routed edit is
+`setText()`, which calls `Editor.forgetUndoRedo()` — any new mutation path in the editor must
+record a before/after snapshot or undo skips it. Copy from the editor is an ordinary copy (it
+lands in history like a cut; private entries ask first, #156 gate); Share is swallowed in inline
+fields. Ctrl+V and the paste key also paste the clip into the search and tag fields. Routing
+detail: `ime-key-routing.md` "Shortcuts and paste inside inline fields". Device: Pixel
+2026-10-13/14 Ctrl+V in the editor PASS (`build/oct14-pixel/65–67`); Ctrl+Z/Ctrl+Y/Ctrl+C in
+the editor not yet device-checked (`memory/todo.md` "Open now").

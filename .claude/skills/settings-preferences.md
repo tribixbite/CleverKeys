@@ -217,3 +217,30 @@ and recreation through actual UI behavior, without requiring a specific header l
 SettingsPersistence/UI, searchable title and typed SettingsDefaults backup/reset aligned.
 Its switch appears under enabled Swipe Typing. The gesture checks both live toggles and
 its captured Config snapshot before every result; turning swipe off suspends behavior.
+
+## Per-layout theme binding is NOT a preference (2026-10-15, `e237fa95`)
+
+The binding is the `theme` field of each `layouts` entry (and `<keyboard theme="…">` in a
+layout XML), resolved by `LayoutThemeBinding.resolve` at the END of every `Config.refresh()`
+(not in `set_current_layout`). A layout switch never writes the global `theme` pref;
+`ConfigurationManager` re-inflates only when the EFFECTIVE theme changes, and `onThemeChanged`
+rebuilds the suggestion strip while shown. Backup carries the binding inside the classified
+`layouts` blob (the import preview lists per-layout theme changes) — do not add a parallel pref
+or a `SettingsDefaults` entry for it. Deleting a DIY theme asks the keyboard to re-resolve; a
+theme missing on this device falls back to the global one. Spec: `docs/specs/layout-system.md`
+"Per-layout theme binding". Bar colours under a bound theme come from `SuggestionBarPalette`
+(every text role ≥ 3:1 on the bar, `9e2a9804`).
+
+## Internal prefs added October 2026 (classify as INTERNAL, never exported)
+
+- `legacy_custom_freq_offer_dismissed` (per language): the Custom-tab offer to raise
+  frequency-100 words was dismissed for the listed words; the offer returns only when a word at
+  100 outside that set appears (e.g. from a backup import). Policy: `LegacyCustomWordFrequency`.
+
+## Autocorrect constants that are not prefs
+
+- `DROPPED_DOUBLE_MARGIN_STEPS = 64` (DD-M, `WordPredictor`): DEV-tuned and TEST-gated on the
+  shipped `en_enhanced.bin` scale (`docs/eval/2026-10-11-dropped-double-margin.md` §5). Re-tune
+  only against the `.bin`, never the CTC JSON (see `dictionary-pipeline.md`).
+- `autocorrect_prefix_length` > 0 interacts with DD-M unmeasured (todo "Open now"): at prefix
+  length 1, `very`/`from` fail the prefix check, so `bery`/`grom` are not corrected.

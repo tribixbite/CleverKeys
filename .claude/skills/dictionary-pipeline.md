@@ -198,6 +198,36 @@ es fr de it pt sv (40–50k) · nl tr (40k) · ru (50k) · el (~39.9k survivors)
 50+ languages including ar, bn, cs, da, fi, hi, hu, ja, ko, pl, ro, vi, zh
 (bg/he/uk graduated to configured languages with ARC-056)
 
+## Runtime user-dictionary policies (pointers, October 2026)
+
+The built dictionaries are half the story; the per-user layer has its own rules, each with a
+pure test. Read these before touching custom-word frequency, swipe ranking of user words or the
+add-to-dictionary offers:
+
+- **Swipe priority** (Normal / High / Highest per custom word, `b2031f90`): a fixed CTC and
+  geometric bonus for words the swipe already passed close to; tap prediction untouched. Costs
+  per level in `docs/eval/2026-10-08-user-swipe-priority.md`; user docs
+  `docs/wiki/typing/user-dictionary.md`.
+- **Legacy frequency 100** (`051dca51`, `8f4bdf2b`): every pre-2.0 writer stored custom words at
+  100 (the default is 255 since `4525eb9c`). `LegacyCustomWordFrequency` (pure) drives the
+  Custom-tab offer, `CustomDictionarySource.raiseLegacyFrequencies` raises only words still at
+  100, the dismissal is the internal per-language pref `legacy_custom_freq_offer_dismissed`
+  (never exported), and `UserWordFrequency.liftedForPriority` / `restoredAfterLift` handle the
+  add/edit dialog's lift to 255 on High/Highest and its restore on Normal.
+  `DictImportPlanBuilder` still gives 100 to a backup entry that carries no frequency, which is
+  why the offer can return after an import.
+- **No dictionary offers in terminal or blind fields** (`fd3eec40`): the exact-add chip and the
+  "Add to dictionary?" prompt are suppressed wherever the tracked word cannot be verified
+  (`TerminalUtils.editorKind` ≠ TEXT). Termux offered `+foocbar` after a toolbar Ctrl+C.
+- **Two frequency scales** (`ee32d912`; CLAUDE.md "tap predictor and swipe lexicon use different
+  frequency scales"): the tap predictor loads `en_enhanced.bin` (rank byte, 0 = most common);
+  `en_enhanced.json` is the CTC swipe lexicon on a compressed 134..255 scale, and 98,139 of
+  98,140 words differ between them (`help`/`hello` are 39 ranks apart, not 20). Any JVM tap
+  harness must load the `.bin` through `ShippedTapDictionary`; `ShippedTapDictionaryDriftTest`
+  pins fixture == production load and forbids a tap harness built from the JSON. The autocorrect
+  constant `DROPPED_DOUBLE_MARGIN_STEPS = 64` (DD-M) was tuned on the `.bin` scale — an M
+  measured on the JSON (the first M=32) kept `helo` → `help` on phones.
+
 ## Common Pitfalls
 
 1. **`en_enhanced.txt` is NOT the source of truth** — it's vestigial V1. The real source is `scripts/dictionaries/en/en_words.txt` and the `.bin` is what ships.
