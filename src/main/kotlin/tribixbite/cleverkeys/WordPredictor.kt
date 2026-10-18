@@ -4,6 +4,12 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import tribixbite.cleverkeys.autocorrect.AutocorrectRanking
+import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
+import tribixbite.cleverkeys.autocorrect.ChannelCandidate
+import tribixbite.cleverkeys.autocorrect.ChannelEditCost
+import tribixbite.cleverkeys.autocorrect.ChannelRanker
+import tribixbite.cleverkeys.autocorrect.ChannelWeights
 import tribixbite.cleverkeys.autocorrect.FrequencyFloor
 import tribixbite.cleverkeys.autocorrect.FuzzyPrefixMatcher
 import tribixbite.cleverkeys.autocorrect.KeyAdjacency
@@ -61,7 +67,7 @@ class WordPredictor : Predictor {
          * tiebreaker picks common-but-unrelated words (`questin →
          * without`).
          */
-        private const val MIN_SAME_LENGTH_EXACT_RATIO = 0.50f
+        internal const val MIN_SAME_LENGTH_EXACT_RATIO = 0.50f
 
         /**
          * Absolute cap on substituted positions for a same-length
@@ -87,7 +93,7 @@ class WordPredictor : Predictor {
          * Verified reject: `broight → thought` (3 subs), `delight`/`troughs`
          *   (3 subs each) — all drop out, brought wins on score.
          */
-        private const val MAX_SAME_LENGTH_SUBSTITUTIONS = 2
+        internal const val MAX_SAME_LENGTH_SUBSTITUTIONS = 2
 
         /**
          * Length-diff edit-distance budget — caps allowed substitution
@@ -114,7 +120,7 @@ class WordPredictor : Predictor {
          *   - `wuestion → wuthering` (lenDiff=1, ed≈2.79): 2.79 > 1.5 ✗
          *   - `wuestion → something` (lenDiff=1, ed≈2.71): 2.71 > 1.5 ✗
          */
-        private const val LENGTH_DIFF_ED_BUDGET = 0.5f
+        internal const val LENGTH_DIFF_ED_BUDGET = 0.5f
 
         // NOTE (2026-07-04): the old ALIAS_SCORE_BONUS (+0.15 to alias-key
         // candidates) is GONE. As a score bump it could beat candidates up to
@@ -149,15 +155,14 @@ class WordPredictor : Predictor {
          *   - `quuestion → question` (gap 0.049 vs `quotation`) → freq wins
          *   - `questin → question` (gap 0.052 vs `quentin`) → freq wins
          */
-        private const val SCORE_TIEBREAK_GAP = 0.10f
+        internal const val SCORE_TIEBREAK_GAP = 0.10f
 
-        /**
-         * Shipped NB tiebreak variant (see [NeighbourTiebreak]): OFF. Neither N1 nor NA was
-         * admissible on GTC-DEV (`docs/eval/2026-10-12-neighbour-substitution-tiebreak.md` §2:
-         * real distant one-letter misspellings outnumber the neighbour slips it fixes).
-         * The seam stays for that eval; OFF also skips the per-position neighbour check.
-         */
-        private val NEIGHBOUR_TIEBREAK = NeighbourTiebreak.OFF
+        // The shipped NB tiebreak variant (see [NeighbourTiebreak]) is OFF
+        // (`Defaults.AUTOCORRECT_NEIGHBOUR_TIEBREAK`, user-selectable since 2026-10-18).
+        // Neither N1 nor NA was admissible on GTC-DEV
+        // (`docs/eval/2026-10-12-neighbour-substitution-tiebreak.md` §2: real distant
+        // one-letter misspellings outnumber the neighbour slips it fixes). OFF also skips
+        // the per-position neighbour check.
 
         /**
          * Length-normalized score penalty for an adjacent-transposition
@@ -175,7 +180,7 @@ class WordPredictor : Predictor {
          * via alias privilege (e.g. hypothetical dnot→snot vs don't); accepted as an
          * edge (2026-07-13 review H4).
          */
-        private const val TRANSPOSITION_PENALTY = 0.15f
+        internal const val TRANSPOSITION_PENALTY = 0.15f
 
         /**
          * Step 1.45 (DD-M) margin, in steps of `maxFreq / 255` (on the shipped
@@ -3056,7 +3061,7 @@ class WordPredictor : Predictor {
     }
 
     override fun autoCorrect(typedWord: String): String =
-        autoCorrect(typedWord, DROPPED_DOUBLE_MARGIN_STEPS)
+        autoCorrect(typedWord, AutocorrectTuning.of(config))
 
     /**
      * In-band "neighbour substitution beats distant substitution" tiebreak variants
@@ -3065,19 +3070,50 @@ class WordPredictor : Predictor {
      * candidates, the one whose substituted key is a neighbour of the typed key wins; NA = the
      * same over candidates with any number of substitutions (all-neighbour vs any-distant).
      */
-    internal enum class NeighbourTiebreak { OFF, N1, NA }
+    enum class NeighbourTiebreak { OFF, N1, NA }
 
     /**
-     * [autoCorrect] with step 1.45's margin as a parameter — the evaluation seam for
-     * `DroppedDoubleMarginEval`, which needs the pre-DD-M behaviour ([droppedDoubleMarginSteps]
-     * = null: step 1.45 skipped entirely) and the sweep's W without the step, on the
-     * dictionary the device actually loads. Production always passes
-     * [DROPPED_DOUBLE_MARGIN_STEPS].
+     * [autoCorrect] under the BAND ranking with step 1.45's margin as a parameter — the
+     * evaluation seam for `DroppedDoubleMarginEval` and `NeighbourTiebreakEval`, which need the
+     * pre-DD-M behaviour ([droppedDoubleMarginSteps] = null: step 1.45 skipped entirely) and the
+     * sweep's W without the step, on the dictionary the device actually loads. Every other
+     * weight is the default; production goes through [autoCorrect] with the live tuning.
      */
     internal fun autoCorrect(
         typedWord: String,
         droppedDoubleMarginSteps: Int?,
-        neighbourTiebreak: NeighbourTiebreak = NEIGHBOUR_TIEBREAK
+        neighbourTiebreak: NeighbourTiebreak = AutocorrectTuning.DEFAULT.neighbourTiebreak
+    ): String = autoCorrect(
+        typedWord,
+        AutocorrectTuning.DEFAULT.copy(
+            ranking = AutocorrectRanking.BAND,
+            droppedDoubleEnabled = droppedDoubleMarginSteps != null,
+            droppedDoubleMarginSteps = droppedDoubleMarginSteps ?: DROPPED_DOUBLE_MARGIN_STEPS,
+            neighbourTiebreak = neighbourTiebreak,
+        )
+    )
+
+    /**
+     * What rule C saw for one input, for `ChannelRankingEval`: the gated candidates (in the
+     * order the sweep met them), the guard-G stem if step 1.5 deferred to the sweep, and the
+     * frequency floor and dictionary maximum the decision used.
+     */
+    internal class ChannelProbe(
+        val lowerTypedWord: String,
+        val candidates: List<ChannelCandidate>,
+        val guardStem: String?,
+        val frequencyFloor: Int,
+        val maxFrequency: Int,
+    )
+
+    /**
+     * Space-bar autocorrect of [typedWord] under [tuning]. [probe], when given, receives the
+     * channel ranking's inputs just before its decision (eval seam; never set in production).
+     */
+    internal fun autoCorrect(
+        typedWord: String,
+        tuning: AutocorrectTuning,
+        probe: ((ChannelProbe) -> Unit)? = null,
     ): String {
         if (config?.autocorrect_enabled != true || typedWord.isEmpty()) {
             return typedWord
@@ -3144,7 +3180,8 @@ class WordPredictor : Predictor {
         // correction, and a user who configured same-length-only corrections
         // keeps that guarantee. The collapsed word must still meet the
         // min-word-length bar (typed length must exceed it by the removed char).
-        if (lowerTypedWord.length > (config?.autocorrect_min_word_length ?: 3) &&
+        if (tuning.elongationCollapseEnabled &&
+            lowerTypedWord.length > (config?.autocorrect_min_word_length ?: 3) &&
             (config?.autocorrect_max_length_diff ?: 0) >= 1
         ) {
             var collapseBest: String? = null
@@ -3191,10 +3228,15 @@ class WordPredictor : Predictor {
         // sweep commits nothing). W being the user's own word keeps W. Runs
         // before the morphology guard, which would freeze "begining" as begin +
         // -ing. If D loses, the input continues down the unchanged path and step
-        // 4 reuses this sweep.
-        val insertion = droppedDoubleMarginSteps?.let { droppedDoubleTarget(lowerTypedWord, dict, frequencyFloor) }
-        if (insertion != null && droppedDoubleMarginSteps != null) {
-            sweepBest = autocorrectSweep(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null, neighbourTiebreak)
+        // 4 reuses this sweep. BAND ranking only: the channel ranking prices a
+        // re-doubled letter inside its edit cost (ChannelWeights.doubleCost).
+        val channel = tuning.ranking == AutocorrectRanking.CHANNEL
+        val droppedDoubleMarginSteps = tuning.droppedDoubleMarginSteps
+        val insertion = if (!channel && tuning.droppedDoubleEnabled) {
+            droppedDoubleTarget(lowerTypedWord, dict, frequencyFloor)
+        } else null
+        if (insertion != null) {
+            sweepBest = autocorrectSweep(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null, tuning)
             sweepDone = true
             val w = sweepBest?.takeIf { isCommittable(it, frequencyFloor) }
             val insertionFreq = dict[insertion] ?: 0
@@ -3223,11 +3265,23 @@ class WordPredictor : Predictor {
         // UT-8: an explicitly-disabled typed word outranks the inflection
         // heuristic — the user said this exact token is not a word, so don't
         // freeze it just because a plausible stem exists.
-        if (!typedWordDisabled &&
-            Morphology.inflectionStems(lowerTypedWord).any { it.length >= 4 && dict.containsKey(it) }
-        ) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT skip (valid inflection): '$typedWord'")
-            return typedWord
+        //
+        // Guard G (channel ranking, eval 2026-10-18 §1.1): with a finite
+        // inflection cost γ the guard does not return here. It records the most
+        // frequent qualifying stem and lets the sweep's winner compete against it
+        // after step 4 ("shated" = "shat" + -ed must lose to "shared").
+        var guardStem: String? = null
+        if (tuning.inflectionGuardEnabled && !typedWordDisabled) {
+            val stem = Morphology.inflectionStems(lowerTypedWord)
+                .filter { it.length >= tuning.inflectionGuardMinStem && dict.containsKey(it) }
+                .maxByOrNull { dict[it] ?: 0 }
+            if (stem != null) {
+                if (!channel || tuning.channel.inflectionCost == Float.POSITIVE_INFINITY) {
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT skip (valid inflection): '$typedWord'")
+                    return typedWord
+                }
+                guardStem = stem
+            }
         }
 
         // 1.6. Possessive guard + possessive-typo correction (AC-4). A
@@ -3271,7 +3325,7 @@ class WordPredictor : Predictor {
                 }
                 // AC-4: base is a typo — correct it alone, keep the suffix.
                 val originalBase = typedWord.substring(0, apostropheIdx)
-                val correctedBase = autoCorrect(originalBase, droppedDoubleMarginSteps, neighbourTiebreak)
+                val correctedBase = autoCorrect(originalBase, tuning)
                 if (correctedBase != originalBase) {
                     val corrected = correctedBase + typedWord.substring(apostropheIdx)
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (possessive base): '$typedWord' → '$corrected'")
@@ -3287,10 +3341,24 @@ class WordPredictor : Predictor {
             return typedWord
         }
 
+        // 3.–4. Channel ranking (rule C): gated candidates, minimum edit cost +
+        // λ · rank, then guard G and the frequency floor (channelDecide).
+        if (channel) {
+            val candidates = gatedCandidates(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null, tuning)
+                .map { ChannelCandidate(it.word, it.frequency, it.isAlias) }
+            val maxFrequency = dictMaxFrequency(dict)
+            probe?.invoke(ChannelProbe(lowerTypedWord, candidates, guardStem, frequencyFloor, maxFrequency))
+            val editCosts = FloatArray(candidates.size) {
+                ChannelEditCost.cost(lowerTypedWord, candidates[it].word, tuning.channel)
+            }
+            return channelDecide(typedWord, candidates, editCosts, guardStem,
+                tuning.channel, frequencyFloor, maxFrequency)
+        }
+
         // 3.–4. Candidate sweep (see autocorrectSweep); reuse step 1.45's run.
         val bestCandidate: AutocorrectCandidate? =
             if (sweepDone) sweepBest
-            else autocorrectSweep(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null, neighbourTiebreak)
+            else autocorrectSweep(lowerTypedWord, dict, if (diagnosticsEnabled) rejectionLog else null, tuning)
 
         // 5. Apply correction only if confident candidate found.
         // Custom/user-added words are injected at a low placeholder frequency
@@ -3330,20 +3398,39 @@ class WordPredictor : Predictor {
     }
 
     /**
-     * Steps 3–4 of [autoCorrect]: the scored dictionary sweep. Returns the best
-     * candidate by the score / structural / frequency tiebreak, or null when
-     * nothing clears `autocorrect_char_match_threshold`. The frequency floor and
-     * custom-word exemption are NOT applied here (see [isCommittable]). When
-     * [diagnostics] is non-null, every candidate scoring >= 0.4 is appended for
-     * rejection logging. Shared by step 1.45 (dropped-double margin) and step 5,
-     * so the two never disagree about W.
+     * Steps 3–4 of [autoCorrect] under the BAND ranking: the pairwise band fold over
+     * [gatedCandidates], in the order the sweep met them. Returns the best candidate by the
+     * score / structural / frequency tiebreak, or null when nothing clears
+     * `autocorrect_char_match_threshold`. The frequency floor and custom-word exemption are NOT
+     * applied here (see [isCommittable]). Shared by step 1.45 (dropped-double margin) and
+     * step 5, so the two never disagree about W.
      */
     private fun autocorrectSweep(
         lowerTypedWord: String,
         dict: Map<String, Int>,
         diagnostics: MutableList<Pair<String, Float>>?,
-        neighbourTiebreak: NeighbourTiebreak
+        tuning: AutocorrectTuning
     ): AutocorrectCandidate? {
+        var best: AutocorrectCandidate? = null
+        for (c in gatedCandidates(lowerTypedWord, dict, diagnostics, tuning)) {
+            if (bandBeats(c, best, tuning)) best = c
+        }
+        return best
+    }
+
+    /**
+     * Steps 3–4's candidate set, shared by both rankings: every dictionary word that passes
+     * the prefix, length, disabled-word and dual gates and scores at least
+     * `autocorrect_char_match_threshold`, in dictionary iteration order. When [diagnostics] is
+     * non-null, every candidate scoring >= 0.4 is appended for rejection logging.
+     */
+    private fun gatedCandidates(
+        lowerTypedWord: String,
+        dict: Map<String, Int>,
+        diagnostics: MutableList<Pair<String, Float>>?,
+        tuning: AutocorrectTuning
+    ): List<AutocorrectCandidate> {
+        val neighbourTiebreak = tuning.neighbourTiebreak
         // 3. Required-prefix rule. Configurable via `autocorrect_prefix_length`:
         //   - >0: candidate must share that many leading chars with typed word
         //   - 0:  no prefix required — typo on first char (e.g. "wuestion" →
@@ -3361,7 +3448,7 @@ class WordPredictor : Predictor {
         val charMatchThreshold = config?.autocorrect_char_match_threshold ?: 0.66f
         val maxLengthDiff = (config?.autocorrect_max_length_diff ?: 0).coerceAtLeast(0)
 
-        var bestCandidate: AutocorrectCandidate? = null
+        val gated = ArrayList<AutocorrectCandidate>()
 
         // 4. Iterate through dictionary to find candidates.
         //
@@ -3437,7 +3524,7 @@ class WordPredictor : Predictor {
                     // ("teh": ten scores 0.959 vs the 0.950, gap < 0.10 →
                     // freq picks "the").
                     isTransposition = true
-                    1f - TRANSPOSITION_PENALTY / wordLength
+                    1f - tuning.transpositionPenalty / wordLength
                 } else {
                 // Pass 1: cheap exact-match count only (`==`, no keyDistance).
                 // GATE 1a (ratio) + GATE 1b (sub-cap) depend solely on this, so
@@ -3450,8 +3537,8 @@ class WordPredictor : Predictor {
                 }
                 val substitutions = wordLength - exactCount
                 isMultiSub = substitutions >= 2
-                if (exactCount.toFloat() / wordLength >= MIN_SAME_LENGTH_EXACT_RATIO &&
-                    substitutions <= MAX_SAME_LENGTH_SUBSTITUTIONS
+                if (exactCount.toFloat() / wordLength >= tuning.minExactRatio &&
+                    substitutions <= tuning.maxSubstitutions
                 ) {
                     // Pass 2: adjacency-weighted score, only for gate survivors.
                     var weightedSum = 0f
@@ -3470,7 +3557,7 @@ class WordPredictor : Predictor {
                 } else -1f
                 }
             } else {
-                val maxEd = lengthDiff + LENGTH_DIFF_ED_BUDGET
+                val maxEd = lengthDiff + tuning.lengthEditBudget
                 // Early-abandon budget: most dict words in the ±length band are
                 // unrelated and blow past maxEd after 2-3 DP rows. When ed > maxEd
                 // the sweep rejects anyway, so a fast above-budget lower bound is
@@ -3489,62 +3576,114 @@ class WordPredictor : Predictor {
             }
 
             if (score >= charMatchThreshold) {
-                // Tiebreaker — RAW-score dominance first, then structural
-                // rules inside the ±SCORE_TIEBREAK_GAP band, then frequency:
-                //   1. SCORE PRIMARY — a candidate more than the gap better
-                //      wins outright (`wuestion → question` 0.986 beats the
-                //      freq-popular but distant `within`).
-                //   2. Within the band, ALIAS PRIVILEGE: a bare-contraction
-                //      key wins against a non-alias ONLY at equal-or-better
-                //      raw score. This flips true ties toward the contraction
-                //      (`donr → don't`, dont/done both 0.972) but — unlike the
-                //      old +0.15 score bonus, which could beat candidates up
-                //      to 0.15 STRONGER — can no longer override a
-                //      structurally better match (`thier → their`, not
-                //      `this'd`: the transposition outscores the 2-sub alias).
-                //   3. Within the band, TRANSPOSITION beats a 2-substitution
-                //      candidate regardless of frequency: one swap is almost
-                //      always the intent vs two independent wrong keys
-                //      (`thsi → this`, not the more frequent `that`).
-                //   4. FREQ — otherwise the more common word wins (the normal
-                //      "several 1-sub candidates" case).
-                val isAlias = dictWord in contractionAliases
-                val bestIsAlias = bestCandidate?.isAlias == true
-                val better = when {
-                    bestCandidate == null -> true
-                    // Raw-score dominance beyond the gap.
-                    score > bestCandidate.score + SCORE_TIEBREAK_GAP -> true
-                    score < bestCandidate.score - SCORE_TIEBREAK_GAP -> false
-                    // Alias vs alias: structural closeness (raw score) wins,
-                    // NOT frequency — sibling contractions (`hadnt` vs `hasnt`)
-                    // sit at similar freqs and typing `hadnr` means `hadnt`.
-                    isAlias && bestIsAlias -> score > bestCandidate.score
-                    // Alias privilege: only at equal-or-better raw score.
-                    isAlias && !bestIsAlias -> score >= bestCandidate.score
-                    bestIsAlias && !isAlias -> score > bestCandidate.score
-                    // One Damerau swap beats two independent substitutions.
-                    isTransposition && bestCandidate.isMultiSub -> true
-                    bestCandidate.isTransposition && isMultiSub -> false
-                    // A neighbour-key slip beats a distant-key substitution (NB rule).
-                    neighbourRuleApplies(neighbourTiebreak, substitutionCount, bestCandidate.substitutions) &&
-                        neighbourOnly != bestCandidate.neighbourOnly -> neighbourOnly
-                    // Within the band, normal case → frequency wins.
-                    candidateFrequency > bestCandidate.frequency -> true
-                    candidateFrequency < bestCandidate.frequency -> false
-                    // Score-close AND freq-tied → deterministic by score.
-                    else -> score > bestCandidate.score
-                }
-                if (better) {
-                    bestCandidate = AutocorrectCandidate(
-                        dictWord, score, candidateFrequency,
-                        isAlias, isTransposition, isMultiSub,
-                        substitutionCount, neighbourOnly
-                    )
-                }
+                gated += AutocorrectCandidate(
+                    dictWord, score, candidateFrequency,
+                    dictWord in contractionAliases, isTransposition, isMultiSub,
+                    substitutionCount, neighbourOnly
+                )
             }
         }
 
-        return bestCandidate
+        return gated
+    }
+
+    /**
+     * The band fold's pairwise rule: does gated candidate [c] replace [bestCandidate]?
+     */
+    private fun bandBeats(c: AutocorrectCandidate, bestCandidate: AutocorrectCandidate?, tuning: AutocorrectTuning): Boolean {
+        // Tiebreaker — RAW-score dominance first, then structural
+        // rules inside the ±SCORE_TIEBREAK_GAP band, then frequency:
+        //   1. SCORE PRIMARY — a candidate more than the gap better
+        //      wins outright (`wuestion → question` 0.986 beats the
+        //      freq-popular but distant `within`).
+        //   2. Within the band, ALIAS PRIVILEGE: a bare-contraction
+        //      key wins against a non-alias ONLY at equal-or-better
+        //      raw score. This flips true ties toward the contraction
+        //      (`donr → don't`, dont/done both 0.972) but — unlike the
+        //      old +0.15 score bonus, which could beat candidates up
+        //      to 0.15 STRONGER — can no longer override a
+        //      structurally better match (`thier → their`, not
+        //      `this'd`: the transposition outscores the 2-sub alias).
+        //   3. Within the band, TRANSPOSITION beats a 2-substitution
+        //      candidate regardless of frequency: one swap is almost
+        //      always the intent vs two independent wrong keys
+        //      (`thsi → this`, not the more frequent `that`).
+        //   4. FREQ — otherwise the more common word wins (the normal
+        //      "several 1-sub candidates" case).
+        // The gap is `tuning.bandGap` (default SCORE_TIEBREAK_GAP).
+        val bestIsAlias = bestCandidate?.isAlias == true
+        val isAlias = c.isAlias
+        return when {
+            bestCandidate == null -> true
+            // Raw-score dominance beyond the gap.
+            c.score > bestCandidate.score + tuning.bandGap -> true
+            c.score < bestCandidate.score - tuning.bandGap -> false
+            // Alias vs alias: structural closeness (raw score) wins,
+            // NOT frequency — sibling contractions (`hadnt` vs `hasnt`)
+            // sit at similar freqs and typing `hadnr` means `hadnt`.
+            isAlias && bestIsAlias -> c.score > bestCandidate.score
+            // Alias privilege: only at equal-or-better raw score.
+            isAlias && !bestIsAlias -> c.score >= bestCandidate.score
+            bestIsAlias && !isAlias -> c.score > bestCandidate.score
+            // One Damerau swap beats two independent substitutions.
+            c.isTransposition && bestCandidate.isMultiSub -> true
+            bestCandidate.isTransposition && c.isMultiSub -> false
+            // A neighbour-key slip beats a distant-key substitution (NB rule).
+            neighbourRuleApplies(tuning.neighbourTiebreak, c.substitutions, bestCandidate.substitutions) &&
+                c.neighbourOnly != bestCandidate.neighbourOnly -> c.neighbourOnly
+            // Within the band, normal case → frequency wins.
+            c.frequency > bestCandidate.frequency -> true
+            c.frequency < bestCandidate.frequency -> false
+            // Score-close AND freq-tied → deterministic by score.
+            else -> c.score > bestCandidate.score
+        }
+    }
+
+    /**
+     * The channel ranking's decision (rule C + guard G, eval 2026-10-18 §1.1), given the gated
+     * [candidates] and each one's edit cost in [editCosts]: pick the minimum `E + λ · rank`;
+     * when step 1.5 deferred with [guardStem], keep [typedWord] if `γ + λ · rank(stem)` is no
+     * worse than the winner; then the frequency floor / custom-word exemption and the
+     * alias/capitalization finalization, exactly as the band ranking applies them.
+     *
+     * Internal so `ChannelRankingEval` can replay a probed input under many weights with the
+     * production decision; production calls it once per autocorrect.
+     */
+    internal fun channelDecide(
+        typedWord: String,
+        candidates: List<ChannelCandidate>,
+        editCosts: FloatArray,
+        guardStem: String?,
+        weights: ChannelWeights,
+        frequencyFloor: Int,
+        maxFrequency: Int,
+    ): String {
+        val index = ChannelRanker.pick(candidates, editCosts, maxFrequency, weights.frequencyWeight)
+        if (index < 0) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT (channel): '$typedWord' [no candidate]")
+            return typedWord
+        }
+        val winner = candidates[index]
+        val winnerCost = ChannelRanker.totalCost(editCosts[index], winner.frequency, maxFrequency, weights.frequencyWeight)
+        if (guardStem != null) {
+            val stemFrequency = dictionary.get()[guardStem] ?: 0
+            val keepCost = weights.inflectionCost +
+                weights.frequencyWeight * ChannelRanker.rankSteps(stemFrequency, maxFrequency)
+            if (keepCost <= winnerCost) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT skip (inflection of '$guardStem', " +
+                    "keep=${"%.3f".format(keepCost)} <= ${winner.word}=${"%.3f".format(winnerCost)}): '$typedWord'")
+                return typedWord
+            }
+        }
+        if (winner.frequency < frequencyFloor && winner.word !in customAndUserWords) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT (channel): '$typedWord' " +
+                "[best='${winner.word}' freq=${winner.frequency} < floor=$frequencyFloor]")
+            return typedWord
+        }
+        val corrected = finalizeCorrection(typedWord, winner.word)
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (channel): '$typedWord' → '$corrected' " +
+            "(edit=${"%.3f".format(editCosts[index])} total=${"%.3f".format(winnerCost)} freq=${winner.frequency})")
+        return corrected
     }
 
     /** Step-5 commit test: clears the frequency floor, or is the user's own word (AC-2). */

@@ -13,6 +13,7 @@ import tribixbite.cleverkeys.ml.PlaygroundTraceRecorder
 import tribixbite.cleverkeys.ml.SwipeMLData
 import tribixbite.cleverkeys.autocorrect.AutocorrectContextGuard
 import tribixbite.cleverkeys.autocorrect.AutocorrectMemo
+import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 import tribixbite.cleverkeys.autocorrect.BarHighlightPlanner
 import tribixbite.cleverkeys.autocorrect.SpaceCommit
 import tribixbite.cleverkeys.autocorrect.SpaceCommitResolver
@@ -592,6 +593,8 @@ class SuggestionHandler(
         val maxLengthDiff: Int,
         val minFrequency: Int,
         val prefixLength: Int,
+        /** Every ranking weight and step switch (2026-10-18); an immutable data class. */
+        val tuning: AutocorrectTuning,
     )
 
     private fun autocorrectSettings() = AutocorrectSettings(
@@ -601,6 +604,7 @@ class SuggestionHandler(
         config.autocorrect_max_length_diff,
         config.autocorrect_confidence_min_frequency,
         config.autocorrect_prefix_length,
+        AutocorrectTuning.of(config),
     )
 
     /**

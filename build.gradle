@@ -719,6 +719,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.autocorrect.KeyAdjacencyTest',
     // 2026-09-26: keyboard-weighted fuzzy PREFIX matcher behind the typo-tolerant bar.
     'tribixbite.cleverkeys.autocorrect.FuzzyPrefixMatcherTest',
+    // 2026-10-18: noisy-channel autocorrect ranking (edit cost DP, ranker ties, tuning keys).
+    'tribixbite.cleverkeys.autocorrect.ChannelRankingTest',
     'tribixbite.cleverkeys.autocorrect.MorphologyTest',
     'tribixbite.cleverkeys.autocorrect.FrequencyFloorTest',
     'tribixbite.cleverkeys.autocorrect.AutocorrectContextGuardTest',

@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
+import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 import tribixbite.cleverkeys.prefs.ConfigSnapshot
 import tribixbite.cleverkeys.prefs.CustomExtraKeysPreference
 import tribixbite.cleverkeys.prefs.ExtraKeysPreference
@@ -199,6 +200,33 @@ object Defaults {
     const val AUTOCORRECT_PREFIX_LENGTH = 0
     const val AUTOCORRECT_MAX_BEAM_CANDIDATES = 3
     const val SWIPE_FINAL_AUTOCORRECT_ENABLED = true
+
+    // Autocorrect tuning (2026-10-18; `autocorrect/AutocorrectTuning.kt`, eval
+    // docs/eval/2026-10-18-channel-autocorrect-ranking.md). Each band default is the constant
+    // that shipped before it was a setting; their calibration notes live on the WordPredictor
+    // constants they name.
+    /** `band` (score band, then frequency) or `channel` (edit cost + λ · rank). */
+    const val AUTOCORRECT_RANKING = "band"
+    const val AUTOCORRECT_BAND_GAP = WordPredictor.SCORE_TIEBREAK_GAP
+    const val AUTOCORRECT_TRANSPOSITION_PENALTY = WordPredictor.TRANSPOSITION_PENALTY
+    const val AUTOCORRECT_MIN_EXACT_RATIO = WordPredictor.MIN_SAME_LENGTH_EXACT_RATIO
+    const val AUTOCORRECT_MAX_SUBSTITUTIONS = WordPredictor.MAX_SAME_LENGTH_SUBSTITUTIONS
+    const val AUTOCORRECT_LENGTH_EDIT_BUDGET = WordPredictor.LENGTH_DIFF_ED_BUDGET
+    /** `off`, `n1` or `na` — see `WordPredictor.NeighbourTiebreak`. */
+    const val AUTOCORRECT_NEIGHBOUR_TIEBREAK = "off"
+    const val AUTOCORRECT_DROPPED_DOUBLE_ENABLED = true
+    const val AUTOCORRECT_DROPPED_DOUBLE_MARGIN = WordPredictor.DROPPED_DOUBLE_MARGIN_STEPS
+    const val AUTOCORRECT_ELONGATION_COLLAPSE_ENABLED = true
+    const val AUTOCORRECT_INFLECTION_GUARD_ENABLED = true
+    const val AUTOCORRECT_INFLECTION_GUARD_MIN_STEM = 4
+    // Channel weights: the pre-registered grid centre (eval doc §1.5) until a DEV choice exists.
+    const val AUTOCORRECT_CHANNEL_DISTANCE_COST = 1.0f
+    const val AUTOCORRECT_CHANNEL_INDEL_COST = 1.0f
+    const val AUTOCORRECT_CHANNEL_DOUBLE_COST = 0.6f
+    const val AUTOCORRECT_CHANNEL_TRANSPOSITION_COST = 0.9f
+    const val AUTOCORRECT_CHANNEL_FREQUENCY_WEIGHT = 0.02f
+    /** γ; 10 (the slider's top) means "always keep" (= the band ranking's guard). */
+    const val AUTOCORRECT_CHANNEL_INFLECTION_COST = 10f
 
     // Issue #72: Auto-capitalize "I" and its contractions
     // When enabled, automatically capitalizes "i", "i'm", "i'll", "i'd", "i've"
@@ -746,6 +774,13 @@ class Config private constructor(
 
     // Swipe scoring weights
 
+    /**
+     * Every autocorrect weight and switch beyond the basic settings above, built in [refresh]
+     * from prefs. Null (an Objenesis test Config) means `AutocorrectTuning.DEFAULT`; read it
+     * through `AutocorrectTuning.of(config)`.
+     */
+    @JvmField var autocorrect_tuning: AutocorrectTuning? = null
+
     // Swipe autocorrect configuration
     @JvmField var swipe_final_autocorrect_enabled = false
 
@@ -1066,6 +1101,7 @@ class Config private constructor(
 
         autocorrect_max_length_diff = safeGetInt(_prefs, "autocorrect_max_length_diff", Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
         autocorrect_prefix_length = safeGetInt(_prefs, "autocorrect_prefix_length", Defaults.AUTOCORRECT_PREFIX_LENGTH)
+        autocorrect_tuning = AutocorrectTuning.fromPrefs(_prefs)
 
         swipe_final_autocorrect_enabled = _prefs.getBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
 
