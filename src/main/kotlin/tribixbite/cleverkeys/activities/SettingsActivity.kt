@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 import tribixbite.cleverkeys.theme.KeyboardTheme
 import tribixbite.cleverkeys.langpack.LanguagePackManifest
 import tribixbite.cleverkeys.ui.settings.SearchableSetting
@@ -409,6 +410,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var swipeFinalAutocorrectEnabled by mutableStateOf(true)
     internal var autocorrectMaxLengthDiff by mutableIntStateOf(2)
     internal var autocorrectPrefixLength by mutableIntStateOf(1)
+    // Auto-Correction "Ranking & Tuning" group: the same immutable snapshot the predictor reads
+    // (AutocorrectTuning.fromPrefs clamps every key into its AutocorrectTuning.Keys range), so the
+    // screen can never show a value the keyboard does not use.
+    internal var autocorrectTuning by mutableStateOf(AutocorrectTuning.DEFAULT)
     // swipeFuzzyMatchMode / autocorrectMaxBeamCandidates / swipePredictionSource /
     // swipeCommonWordsBoost / swipeTop5000Boost / swipeRareWordsPenalty are GONE (ARC-051),
     // and swipeCorrectionPreset ("Correction Style") with them since ARC-085 (2026-08-29).

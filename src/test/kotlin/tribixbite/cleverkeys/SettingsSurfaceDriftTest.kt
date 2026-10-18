@@ -160,9 +160,25 @@ class SettingsSurfaceDriftTest {
                 }
             }
         }
+        // The autocorrect tuning keys (2026-10-18) are declared once as typed key objects,
+        // `val BAND_GAP = FloatKey("autocorrect_band_gap", …)` in AutocorrectTuning.Keys, and the
+        // settings controls write them as `saveSetting(Keys.BAND_GAP.key, …)`. Resolve those
+        // declarations the same way as the const names above.
+        val typedKeyNames: Map<String, List<String>> = buildMap<String, MutableList<String>> {
+            for (t in texts) {
+                Regex("""val (\w+)\s*=\s*(?:Float|Int|Bool|String)Key\(\s*"([a-z_0-9]+)"""").findAll(t).forEach { m ->
+                    getOrPut(m.groupValues[2]) { mutableListOf() }.add(m.groupValues[1])
+                }
+            }
+        }
+        check(typedKeyNames.isNotEmpty()) {
+            "Resolved zero AutocorrectTuning.Keys declarations — the typed-key scan is broken."
+        }
         fun hasWriter(key: String): Boolean {
             val constRefs = constNames[key].orEmpty()
+            val typedRefs = typedKeyNames[key].orEmpty()
             return texts.any { t ->
+                typedRefs.any { n -> Regex("""saveSetting\((?:\w+\.)*$n\.key[,)]""").containsMatchIn(t) } ||
                 t.contains("saveSetting(\"$key\"") ||
                     Regex("""\.put(?:Boolean|Int|Float|Long|String)\(\s*"$key"""").containsMatchIn(t) ||
                     constRefs.any { c ->

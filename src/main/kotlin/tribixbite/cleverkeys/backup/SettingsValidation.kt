@@ -2,6 +2,7 @@ package tribixbite.cleverkeys.backup
 
 import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.TerminalUtils
+import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 
 /**
  * Single source of truth for SharedPreferences-backup validation rules.
@@ -16,6 +17,16 @@ import tribixbite.cleverkeys.TerminalUtils
  * BackupRestoreManager.kt as of v1.4.0.
  */
 object SettingsValidation {
+
+    // Autocorrect "Ranking & Tuning" keys (2026-10-18), by type. Their ranges and allowed values
+    // come from AutocorrectTuning.Keys — the definition the runtime reader clamps with and the
+    // settings sliders use — so the import validator cannot drift from either.
+    private val TUNING_FLOATS: Map<String, AutocorrectTuning.FloatKey> =
+        AutocorrectTuning.Keys.FLOATS.associateBy { it.key }
+    private val TUNING_INTS: Map<String, AutocorrectTuning.IntKey> =
+        AutocorrectTuning.Keys.INTS.associateBy { it.key }
+    private val TUNING_STRINGS: Map<String, AutocorrectTuning.StringKey> =
+        AutocorrectTuning.Keys.STRINGS.associateBy { it.key }
 
     /**
      * Service-managed state that should never be imported or exported.
@@ -237,6 +248,8 @@ object SettingsValidation {
             // Swipe trail appearance
             "swipe_trail_width", "swipe_trail_glow_radius",
             -> true
+            // Autocorrect tuning floats: a JSON `10` for the inflection cost must stay a Float.
+            in TUNING_FLOATS -> true
             else -> false
         }
     }
@@ -372,6 +385,9 @@ object SettingsValidation {
 
         // Circle sensitivity
         put("circle_sensitivity", 1..5)
+
+        // Autocorrect tuning ints (max substitutions, dropped-double margin, minimum stem).
+        for (k in TUNING_INTS.values) put(k.key, k.range)
     }
 
     /**
@@ -397,6 +413,9 @@ object SettingsValidation {
      */
     private fun validateFloat(key: String, value: Float): String? {
         val ok = when (key) {
+            // Autocorrect tuning weights: the key's own range (NaN is never in range).
+            in TUNING_FLOATS -> value in TUNING_FLOATS.getValue(key).range
+
             // Character size — F-4: shared with the slider (0.5-2.0; was 0.75-1.5)
             "character_size" -> value in SettingsRanges.CHARACTER_SIZE
 
@@ -446,6 +465,9 @@ object SettingsValidation {
         }
 
         val ok = when (key) {
+            // Autocorrect ranking / neighbour tiebreak: one of the key's stored values exactly.
+            in TUNING_STRINGS -> value in TUNING_STRINGS.getValue(key).values
+
             // Theme values - relaxed validation for forward compatibility
             "theme" -> value.isNotEmpty()
 
@@ -514,6 +536,7 @@ object SettingsValidation {
         "swipe_smoothing_window",
         "autocorrect_min_word_length", "autocorrect_confidence_min_frequency",
         "clipboard_max_media_size_mb" -> true  // F-8: stored as Int (safeGetInt read site)
+        in TUNING_INTS -> true                 // autocorrect tuning ints (safeGetInt read site)
         // `clipboard_history_limit` and `circle_sensitivity` were here, but
         // both are stored as String (`Defaults.CIRCLE_SENSITIVITY = "2"`,
         // `Defaults.CLIPBOARD_HISTORY_LIMIT = "50"`) — the read sites use
@@ -530,6 +553,7 @@ object SettingsValidation {
         "theme", "number_row", "show_numpad", "numpad_layout",
         "number_entry_layout", "circle_sensitivity", "slider_sensitivity",
         "swipe_dist", "clipboard_history_limit", "custom_terminal_packages" -> true
+        in TUNING_STRINGS -> true
         else -> false
     }
 }

@@ -682,6 +682,9 @@ tasks.register('runPureTests', JavaExec) {
     // F-1/F-2 — the reset policy (remove only settings keys; markers/dictionary
     // survive) + the repo-wide ban on whole-file prefs clears (ratchet #7).
     'tribixbite.cleverkeys.ui.settings.SettingsResetPolicyTest',
+    // Auto-Correction "Ranking & Tuning" settings (2026-10-18): slider grid, λ display,
+    // γ always-keep position, group reset key set, backup typing/validation from Keys.
+    'tribixbite.cleverkeys.ui.settings.AutocorrectTuningSlidersTest',
     // F-3/F-4/F-10/G-5 — SettingsRanges is the one source of truth per drifted
     // key; validator behavior at the previously-lost values + consumer-site pins.
     'tribixbite.cleverkeys.SettingsRangeDriftTest',

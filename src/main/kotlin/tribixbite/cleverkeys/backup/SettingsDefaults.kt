@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.backup
 
 import tribixbite.cleverkeys.Defaults
+import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 
 /**
  * Effective compile-time defaults for every preference key the app reads.
@@ -164,6 +165,9 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "autocorrect_prefix_length" to PrefValue.IntV(Defaults.AUTOCORRECT_PREFIX_LENGTH),
     "swipe_final_autocorrect_enabled" to PrefValue.Bool(Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED),
     "autocapitalize_i_words" to PrefValue.Bool(Defaults.AUTOCAPITALIZE_I_WORDS),
+    // Ranking & Tuning (2026-10-18): the 18 AutocorrectTuning.Keys, typed from their single
+    // definition (floats/ints/bools/strings), so a new tuning key is classified by adding it there.
+    *autocorrectTuningDefaults(),
 
     // ── Multi-language ──────────────────────────────────────────────
     "pref_enable_multilang" to PrefValue.Bool(Defaults.ENABLE_MULTILANG),
@@ -291,3 +295,17 @@ internal fun lookupDefault(key: String): PrefValue? = SETTINGS_DEFAULTS[key]
 internal val NON_DEFAULTED_KEYS: Set<String> = setOf(
     "clipboard_custom_rules_uri",      // SAF URI for user-supplied URL rules
 )
+
+/**
+ * `SETTINGS_DEFAULTS` entries for every [AutocorrectTuning.Keys] preference, with the PrefValue
+ * type its reader (`AutocorrectTuning.fromPrefs`) uses. A function rather than a property so the
+ * map initializer above can call it regardless of declaration order.
+ */
+private fun autocorrectTuningDefaults(): Array<Pair<String, PrefValue>> = with(AutocorrectTuning.Keys) {
+    buildList<Pair<String, PrefValue>> {
+        FLOATS.forEach { add(it.key to PrefValue.FloatV(it.default)) }
+        INTS.forEach { add(it.key to PrefValue.IntV(it.default)) }
+        BOOLS.forEach { add(it.key to PrefValue.Bool(it.default)) }
+        STRINGS.forEach { add(it.key to PrefValue.Str(it.default)) }
+    }.toTypedArray()
+}

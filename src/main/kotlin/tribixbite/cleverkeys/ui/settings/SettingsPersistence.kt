@@ -13,6 +13,7 @@ import tribixbite.cleverkeys.PrivateCopyProcessTextActivity
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SettingsRanges
+import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 import tribixbite.cleverkeys.ui.settings.sections.setPrivateCopyToolbarComponentEnabled
 import tribixbite.cleverkeys.ui.settings.io.detectAvailableV2Dictionaries
 import tribixbite.cleverkeys.ui.settings.io.recomputeCustomRulesStatus
@@ -189,6 +190,11 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "autocorrect_prefix_length" -> {
                 autocorrectPrefixLength = Config.safeGetInt(prefs, key, Defaults.AUTOCORRECT_PREFIX_LENGTH)
             }
+            // Ranking & Tuning group: any of its keys (a slider, a backup import, the group's
+            // reset) re-reads the whole snapshot through the predictor's own clamped reader.
+            in AutocorrectTuning.Keys.ALL_KEYS -> {
+                autocorrectTuning = AutocorrectTuning.fromPrefs(prefs)
+            }
             // ARC-051: no branches for swipe_fuzzy_match_mode, autocorrect_max_beam_candidates,
             // swipe_prediction_source, swipe_common_words_boost, swipe_top5000_boost or
             // swipe_rare_words_penalty. All six are in SettingsValidation.DEPRECATED_KEYS and
@@ -362,6 +368,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         swipeFinalAutocorrectEnabled = prefs.getSafeBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
         autocorrectMaxLengthDiff = Config.safeGetInt(prefs, "autocorrect_max_length_diff", Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
         autocorrectPrefixLength = Config.safeGetInt(prefs, "autocorrect_prefix_length", Defaults.AUTOCORRECT_PREFIX_LENGTH)
+        autocorrectTuning = AutocorrectTuning.fromPrefs(prefs)
         // ARC-051 (six keys) + ARC-085 (swipe_correction_preset): the DEPRECATED_KEYS that used
         // to be read here are not loaded at all — see the note on the removed SettingsActivity
         // fields.
@@ -487,6 +494,7 @@ internal fun SettingsActivity.updateConfigFromSettings() {
             swipe_final_autocorrect_enabled = swipeFinalAutocorrectEnabled
             autocorrect_max_length_diff = autocorrectMaxLengthDiff
             autocorrect_prefix_length = autocorrectPrefixLength
+            autocorrect_tuning = autocorrectTuning
             // swipe_fuzzy_match_mode, autocorrect_max_beam_candidates and the three word-scoring
             // multipliers were pushed here too. Their Config fields are gone: every consumer
             // died with OptimizedVocabulary, so the fields were being written on every settings
