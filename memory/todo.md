@@ -51,12 +51,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    auto-space OFF and interrupted phrases, "." tapped right after lift, templates in
    password/inline editors and media-only clipboard, enlarged text + narrow split-screen
    clipboard pane, fa/hu pane arrows + settings-search scroll.
-5. [ ] device: inline clipboard editor and undo/redo (`d599f84a`, not device-checked) — Pixel:
-   type two words in the entry editor, Ctrl+Z ×2, Ctrl+Y, select + Ctrl+C then paste in an app
-   (the copy lands in history; a private entry asks first); the undo/redo keys in Chrome, a
-   Compose field and Termux ("Action unavailable"). Done: Pixel 2026-10-13/14 (release
-   `3439fff0`, `build/oct14-pixel/33–78`): Ctrl+V pastes into the editor, not the app behind it
-   PASS; Ctrl+Z did nothing there → fixed in `d599f84a`.
+5. [ ] device: undo/redo leftovers. DONE on the Pixel 2026-10-17 (release `d8be659b`,
+   `build/oct17-pixel/`): clipboard entry editor Ctrl+Z ×2 removes one word per step, Ctrl+Y
+   restores, select + Ctrl+C adds a history entry; Chrome textarea Ctrl+Z / Ctrl+Y undo and
+   redo PASS (earlier: Ctrl+V pastes into the editor, not the app behind it, `3439fff0`).
+   STILL OPEN: undo/redo keys in a Compose field; Termux shows "Action unavailable" for undo;
+   Ctrl+C on a PRIVATE entry asks before copying.
 6. [ ] device + maintainer: blind-field checks with RustDesk installed on a Saga (F-Droid/GitHub
    APK `com.carriez.flutter_hbb`) controlling any reachable desktop — typed text, `teh`+space
    stays `teh`, a tapped suggestion appends (never deletes), Backspace after a swipe removes
