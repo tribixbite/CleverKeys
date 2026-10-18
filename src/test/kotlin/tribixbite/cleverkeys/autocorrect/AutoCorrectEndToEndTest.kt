@@ -460,4 +460,52 @@ class AutoCorrectEndToEndTest {
             setField("disabledWords", mutableSetOf<String>())
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 2026-10-18 report: `devixe` → decide, `shated` uncorrected
+    // (docs/eval/2026-10-18-channel-autocorrect-ranking.md)
+    // ─────────────────────────────────────────────────────────────────────
+
+    private val band = AutocorrectTuning.DEFAULT.copy(ranking = AutocorrectRanking.BAND)
+    private val channel = AutocorrectTuning.DEFAULT.copy(ranking = AutocorrectRanking.CHANNEL)
+
+    @Test
+    fun bandRanking_devixe_staysDecide_documentedBaseline() {
+        // The shipped default: device (1 neighbour sub, rank 115) and decide (2 subs, rank 111)
+        // fall inside the 0.10 band, so frequency picks decide. Pinned so a change to the
+        // default ranking is a deliberate, visible decision.
+        assertEquals("decide", predictor.autoCorrect("devixe", band))
+        assertEquals("shated", predictor.autoCorrect("shated", band))
+    }
+
+    @Test
+    fun channelRanking_devixe_prefersTheSingleWrongKey() {
+        assertEquals("device", predictor.autoCorrect("devixe", channel))
+    }
+
+    @Test
+    fun channelRanking_alwaysKeepGuard_leavesShated() {
+        // γ = ∞ (the default) keeps `shat` + -ed exactly like the band guard.
+        assertEquals("shated", predictor.autoCorrect("shated", channel))
+    }
+
+    @Test
+    fun channelRanking_finiteInflectionCost_correctsShated() {
+        val tuning = channel.copy(channel = channel.channel.copy(inflectionCost = 1f))
+        assertEquals("shared", predictor.autoCorrect("shated", tuning))
+        // A real unlisted inflection of a long stem is still kept at the same γ.
+        assertEquals("immunizations", predictor.autoCorrect("immunizations", tuning))
+    }
+
+    @Test
+    fun liveTuningComesFromConfig_nullMeansDefault() {
+        config.autocorrect_tuning = null
+        try {
+            assertEquals("decide", predictor.autoCorrect("devixe"))
+            config.autocorrect_tuning = channel
+            assertEquals("device", predictor.autoCorrect("devixe"))
+        } finally {
+            config.autocorrect_tuning = null
+        }
+    }
 }

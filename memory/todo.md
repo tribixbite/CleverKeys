@@ -121,6 +121,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     substitution. Maintainer decision first: may the S-adj gate become a breaks-to-fixes ratio
     for a ranker replacement? Then the agent pre-registers round 2 (guard-order fix, an alias
     term, joint γ), re-runs DEV in a separate worktree, and runs TEST once. TEST is untouched.
+    Device: the "Ranking & Tuning" group was checked on the second Saga, 2026-10-18 (release built
+    from `7b99c119`, source = `74c808e1`, installed SHA `d47c01bb…`; `build/oct18-saga/01–10`).
+    Search scrolls to it, band ↔ channel switch the visible weights, defaults show correctly,
+    γ shows "Always keep", and Reset restores band. Typing was not checked on a device; the JVM
+    end-to-end tests pin `devixe` and `shated` per ranking.
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 15. [ ] agent: deferred review items — suffix receipt readback at command time (3 editor reads
