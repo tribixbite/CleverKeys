@@ -180,3 +180,96 @@ pass, rule C with the chosen weights becomes the default ranking; otherwise the 
 the default and rule C is an opt-in mode carrying the DEV-chosen weights (or, when nothing was
 admissible on DEV, the grid centre `s₁ = 1, g = 1, g₂ = 0.6, τ = 0.9, λ = 0.02`). These
 thresholds are fixed now.
+
+## 2. DEV (run 2026-10-18, harness at 685fc567, in a separate worktree)
+
+Command: `CK_CH_PHASE=dev GRADLE_GUARD_XMX=1536m GRADLE_GUARD_METASPACE=384m
+scripts/gradle-guard.sh runMockTests -PtestClass=autocorrect.ChannelRankingEval`. The test phase
+took 93 minutes (GTC-DEV prepare 320 s, S-adj-DEV prepare 5,152 s, grid 82 s).
+
+Sets: GTC-DEV 16,358 pairs (5,845 targets, 16,095 distinct typos), S-adj-DEV 137,871 pairs (4,925
+base words), C-oov-DEV 36,241 words. These match the NB and DD-M docs exactly. Band baseline named
+cases: everything holds except **`devixe` → `decide`** and **`shated` → `shated`** (the report).
+
+**Harness changes after the pre-registration (neither changes an outcome).**
+
+- *Contender pre-filter.* The sweep gates pass far more words than expected: GTC-DEV averages
+  **204** gated candidates per input, mostly length-changing ones (`autocorrect_max_length_diff`
+  = 2). The first attempt, which extracted 17 alignments for every gated candidate, was stopped
+  after 11 minutes. Every alignment's cost is non-decreasing in each edit weight, so a
+  candidate's edit cost under any grid weights lies between its cost at the grid's minimum
+  weights and at its maximum. A candidate is dropped when, at every grid λ, its lower bound plus
+  `λ · rank` exceeds the best upper bound by more than the tie tolerance. Such a candidate cannot
+  win under any configuration. That leaves 6.8 (GTC) and 5.6 (S-adj) contenders per input.
+- *Alignment pricing.* A grid configuration prices each contender as the minimum, over its
+  optimal alignments at the 16 grid corners and the centre, of the linear cost of that alignment
+  (`ChannelEditCost.alignmentFeatures` / `priced`). The pre-registered soundness check against
+  full production would have measured this, but it never ran, because no configuration was
+  admissible (it runs only at the chosen configuration). The diagnostic below uses full
+  production throughout.
+
+### 2.1 Grid (γ = ∞; distinct target / base words)
+
+**No configuration is admissible.** C1 (GTC) holds in 1,151 of 1,440 configurations. C2 fails
+everywhere on its distinct-word ceiling (0.8 % = 39 base words; the minimum over the grid is 73).
+C3 fails everywhere (the minimum is 1 failing named case).
+
+| configuration (s₁, g, g₂, τ, λ) | GTC-DEV fixes / breaks / net | S-adj-DEV fixes / breaks (raw) | named failing |
+|---|---|---|---|
+| 1, 1, 0.6, 0.6, 0.005 (most GTC net) | 2,818 / 293 / **+2,525** | 2,826 / 1,981 (5,983) | 12 |
+| 1, 1.5, 1.0, 1.2, 0.005 (fewest S-adj breaks) | 2,281 / 73 net **+2,208** | 3,070 / **73 (100)** | 2 |
+| 2, 1.5, 1.0, 1.2, 0.005 (1 named failure) | 2,646 / 254 / **+2,392** | 3,101 / 144 (204) | 1 |
+| 1, 1, 0.6, 0.9, 0.02 (grid centre) | 2,476 / 449 / +2,027 | 2,574 / 1,739 (6,303) | 7 |
+
+GTC prefers the smallest λ in the grid (frequency matters little once edits are priced).
+S-adj breaks fall as g and τ rise and λ falls. The full grid is in
+`build/eval/channel-ranking/grid-dev.tsv` (local only).
+
+**Decision (§1.4): nothing ships as the default, and TEST was not run.**
+
+### 2.2 Diagnosis (full production, DEV only; `CK_CH_PHASE=inspect`, seeded 3,000-pair samples)
+
+Band baseline accuracy on the samples: GTC-DEV **1,637 / 3,000 (54.6 %)**, S-adj-DEV **2,087 /
+3,000 (69.6 %)**. The band ranking is "the most frequent word within 0.10 of the best score".
+Among about 200 gated candidates that is often a common unrelated word: `reponses` → exposed,
+`exeption` → election, `desig` → feel, `djano` → thanks. Rule C fixes those.
+
+| configuration | GTC-DEV sample accuracy | S-adj-DEV sample accuracy (breaks) | named failing |
+|---|---|---|---|
+| band baseline | 54.6 % | 69.6 % | `devixe`, `shated` |
+| 1, 1.5, 1.0, 1.2, 0.005, γ = ∞ | 76.0 % | 94.4 % (1) | `helo`, `donr`, `shated` |
+| 1, 1.5, 1.0, 1.2, 0.005, γ = 1 | 76.6 % | 95.1 % (1) | `helo`, `donr` |
+| 1, 1, 0.6, 0.6, 0.005, γ = ∞ | 81.3 % | 84.8 % (128) | 13, incl. 7 Hebrew |
+| grid centre, γ = ∞ | 76.0 % | 82.2 % (132) | 8 |
+
+Three mechanisms explain every gate failure. All of them come from the rule's specification,
+not from noise:
+
+1. **Guard order (a specification error in §1.1).** In the band path, DD-M (step 1.45) runs
+   *before* the inflection guard, so `spaming`, `formating`, `refering`, `wraped`, `grabed`,
+   `defered`, `instals` and `proces` were re-doubled before the guard could read them as
+   `spam` + `-ing` and so on. Rule C skips DD-M, so at γ = ∞ the guard keeps them as typed.
+   About 15 of the 64 GTC breaks at the S-adj-best point are this one class. §1.1's sentence
+   "γ = ∞ is today's guard" is therefore false for dropped-double inflections.
+2. **Alias privilege.** The band ranking let a contraction key win at equal-or-better raw score
+   regardless of frequency. Rule C's alias rule only breaks exact total-cost ties, so `donr`
+   gives `done`, not `don't`.
+3. **Doubled-letter cost and Hebrew.** `helo` → `help` fails whenever g₂ is not well below one
+   neighbour substitution. The configurations that fail the Hebrew named cases (short words:
+   `החא`, `אתכ`, `ךמה`) are the low-g ones, where a deletion is cheaper than the intended
+   neighbour substitution.
+
+The S-adj distinct-word ceiling (0.8 %) was inherited from DD-M and NB. For those rules S-adj
+was a control set with almost no possible fixes. Rule C fixes about 3,000 of its 4,925 base
+words, and its best points break 73–144. Whether a breaks-to-fixes ratio should replace the
+absolute ceiling is a gate change, so it is the maintainer's decision. It is recorded here and
+not applied.
+
+### 2.3 What ships from this round
+
+As pre-registered (§1.5): the band ranking stays the default. Rule C ships as an opt-in
+ranking mode with the grid-centre weights (s₁ = 1, g = 1, g₂ = 0.6, τ = 0.9, λ = 0.02,
+γ = ∞), and every weight is a setting. The DEV numbers above are the evidence for anyone who
+switches it on and moves the sliders. A second round needs a new pre-registration (a guard-order
+fix, an alias term, joint γ, and any gate change), DEV re-run, and then the first TEST
+evaluation. TEST has not been touched.

@@ -506,7 +506,8 @@ class ChannelRankingEval {
         when (phase) {
             "dev" -> devPhase(::say)
             "test" -> testPhase(::say)
-            else -> error("CK_CH_PHASE must be dev or test")
+            "inspect" -> inspectPhase(::say)
+            else -> error("CK_CH_PHASE must be dev, test or inspect")
         }
     }
 
@@ -633,6 +634,43 @@ class ChannelRankingEval {
         say("\nDEV choice (doc §1.4): $final")
         say("CK_CH_CONFIG=${final.s1},${final.g},${final.g2},${final.tau},${final.lambda}," +
             (bestGamma?.toString() ?: "inf"))
+    }
+
+    /**
+     * Diagnostic (DEV data only, never TEST): for each configuration in `CK_CH_CONFIGS`
+     * (`;`-separated `s1,g,g2,tau,lambda,gamma`), the named-case failures through production and
+     * production outcomes on a seeded 3,000-pair sample of GTC-DEV and of S-adj-DEV, with every
+     * break listed. Used to explain a DEV result; it selects nothing.
+     */
+    private fun inspectPhase(say: (String) -> Unit) {
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val cfgs = (System.getenv("CK_CH_CONFIGS") ?: error("CK_CH_CONFIGS required")).split(';').map { c ->
+            val v = c.split(',')
+            Cfg(v[0].toFloat(), v[1].toFloat(), v[2].toFloat(), v[3].toFloat(), v[4].toFloat(),
+                if (v[5] == "inf") Float.POSITIVE_INFINITY else v[5].toFloat())
+        }
+        val rnd = java.util.Random(20261018)
+        val gtc = readGtc("DEV").shuffled(rnd).take(3_000)
+        val adj = sAdj(dev = true).shuffled(rnd).take(3_000)
+        val base = ConcurrentHashMap<String, String>()
+        (gtc + adj).map { it.typed }.distinct().parallelStream().forEach { base[it] = en.base(it) }
+        say("baseline accuracy: GTC-DEV sample ${gtc.count { en.ok(base.getValue(it.typed), it.target) }}/${gtc.size}, " +
+            "S-adj-DEV sample ${adj.count { en.ok(base.getValue(it.typed), it.target) }}/${adj.size}")
+        for (cfg in cfgs) {
+            val tuning = prodTuning(cfg)
+            val cand = ConcurrentHashMap<String, String>()
+            (gtc + adj).map { it.typed }.distinct().parallelStream().forEach { cand[it] = en.predictor.autoCorrect(it, tuning) }
+            say("\n=== $cfg ===")
+            say("named failures (with shated): ${namedFailures(cfg, includeShated = true)}")
+            for ((name, pairs) in listOf("GTC-DEV sample" to gtc, "S-adj-DEV sample" to adj)) {
+                val t = tally(en, pairs, base, cand, null, name, "")
+                say(t.line(name, pairs.size, pairs.map { it.target }.toSet().size))
+                say("  breaks (typed → baseline | channel): " + t.breaks.joinToString(", ") {
+                    "${it.typed}→${base.getValue(it.typed)}|${cand.getValue(it.typed)}" })
+                say("  fixes (first 40): " + t.fixes.take(40).joinToString(", ") {
+                    "${it.typed}→${base.getValue(it.typed)}|${cand.getValue(it.typed)}" })
+            }
+        }
     }
 
     private fun testPhase(say: (String) -> Unit) {
