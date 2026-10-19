@@ -442,3 +442,54 @@ maintainer decision against a failed pre-registered criterion, not a gate pass. 
   with a length-aware deletion cost needs fresh Hebrew data, because HE-adj has been seen.
 - **Users keep the old behaviour one tap away:** Settings → Auto-Correction → Ranking & Tuning →
   "Score band, then frequency".
+
+## 7. Round 3 pre-registration: short-word deletion cost δ (written before any round-3 outcome)
+
+Motivation: the §5.1 Hebrew break class. A short typo is corrected by deleting a letter (often a
+mistyped one-letter prefix) onto a very common word of two letters or fewer. No round-3 output
+had been computed on any set when this section was committed.
+
+### 7.1 Rule C3
+
+Rule C2 at the shipped weights (§4), plus one term. When the candidate is **shorter** than the
+typed word **and has at most 2 letters**, its edit cost gains **δ**
+(`ChannelWeights.shortWordDeletionCost`). The term is structural, applies to every language, and
+δ = 0 is the shipped rule C2. Grid: `δ ∈ {0.25, 0.5, 0.75, 1.0, 1.5}`. Every other weight stays
+fixed at the shipped values, so there is no re-tuning on data seen in rounds 1–2.
+
+### 7.2 Data
+
+- **HE-adj2 (fresh, never evaluated)**: every single `hebr_1_il`-neighbour substitution of the
+  shipped Hebrew pack words ranked **501–2,500** by frequency (letters all on the grid, length
+  ≥ 2), minus typos that are pack words. Split by the FNV-1a hash of the base word: even → DEV,
+  odd → TEST. HE-adj (top 500) is disjoint by construction and is reported, not gated, because
+  it has been seen.
+- English: GTC, S-adj and C-oov with the §1.2 / §3 splits. **The English TEST sets are used a
+  second time** (round 2 used them once). They act here only as no-harm checks. δ is chosen on
+  DEV.
+
+Baseline = shipped rule C2 (the current default). Outcomes (fix, break, swap) are measured
+against that baseline.
+
+### 7.3 Choice on DEV
+
+δ is **admissible** when:
+
+1. **H1.** HE-adj2-DEV distinct net fixes > 0, and distinct breaks ≤ 0.25 × distinct fixes.
+2. **E1.** GTC-DEV and S-adj-DEV distinct net ≥ 0, and C-oov-DEV new changes ≤ 0.1 % of
+   C-oov-DEV words.
+3. **N.** Every §1.5 T5 named case holds, including `shated` and the 12 Hebrew cases.
+
+Choice: the admissible δ with the most HE-adj2-DEV distinct net; ties go to the smaller δ. If
+none is admissible, δ stays 0 and nothing ships. Soundness: on 2,000 seeded DEV inputs the
+harness output must equal full production at the chosen δ.
+
+### 7.4 Ship gate on TEST (one evaluation of the chosen δ)
+
+- **R1.** HE-adj2-TEST distinct net > 0, and distinct breaks ≤ 0.25 × distinct fixes.
+- **R2.** GTC-TEST and S-adj-TEST distinct net ≥ 0.
+- **R3.** C-oov-TEST new changes ≤ 0.1 %.
+- **R4.** Named cases hold.
+
+All four must hold for the chosen δ to become the shipped default. Reported, not gated:
+HE-adj (seen) and Birkbeck. These thresholds are fixed now.
