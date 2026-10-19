@@ -1181,6 +1181,8 @@
     <string name="autocorrect_channel_frequency_weight_desc">Quanto custa uma palavra mais rara por posição na classificação de frequência. Um valor maior favorece mais as palavras comuns.</string>
     <string name="autocorrect_channel_alias_bonus_title">Preferência por contrações</string>
     <string name="autocorrect_channel_alias_bonus_desc">Desconto de custo para uma contração como don\'t em relação a uma palavra comum igualmente próxima (donr → don\'t em vez de done). 0 = sem preferência.</string>
+    <string name="autocorrect_channel_short_deletion_cost_title">Custo de apagar até palavra curta</string>
+    <string name="autocorrect_channel_short_deletion_cost_desc">Custo extra quando uma correção remove letras para chegar a uma palavra de uma ou duas letras, para que uma primeira letra digitada errada não seja simplesmente removida. 0 = sem custo extra.</string>
     <string name="autocorrect_frequency_ignored">A frequência é ignorada; só as edições decidem.</string>
     <string name="autocorrect_channel_inflection_cost_title">Custo para manter formas</string>
     <string name="autocorrect_channel_inflection_cost_desc">Quanto melhor uma correção precisa ser para substituir uma palavra conhecida com terminação. No máximo, essas palavras são sempre mantidas.</string>

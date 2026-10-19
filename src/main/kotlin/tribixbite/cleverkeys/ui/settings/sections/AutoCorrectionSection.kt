@@ -560,6 +560,20 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         },
         displayValue = sliders.CHANNEL_ALIAS_BONUS.format(weights.aliasBonus)
     )
+
+    SettingsSlider(
+        title = stringResource(R.string.autocorrect_channel_short_deletion_cost_title),
+        description = stringResource(R.string.autocorrect_channel_short_deletion_cost_desc),
+        value = weights.shortWordDeletionCost,
+        valueRange = Keys.CHANNEL_SHORT_DELETION_COST.range,
+        steps = sliders.CHANNEL_SHORT_DELETION_COST.steps,
+        onValueChange = {
+            val v = sliders.CHANNEL_SHORT_DELETION_COST.snap(it)
+            autocorrectTuning = tuning.copy(channel = weights.copy(shortWordDeletionCost = v))
+            saveSetting(Keys.CHANNEL_SHORT_DELETION_COST.key, v)
+        },
+        displayValue = sliders.CHANNEL_SHORT_DELETION_COST.format(weights.shortWordDeletionCost)
+    )
 }
 
 /**

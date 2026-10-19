@@ -77,20 +77,31 @@ class ChannelRankingEval {
     private data class Cfg(
         val s1: Float, val g: Float, val g2: Float, val tau: Float, val lambda: Float,
         val beta: Float, val gamma: Float,
+        /** δ, the short-word deletion cost (round 3, §7.1); 0 = rule C2. */
+        val delta: Float = 0f,
     ) {
-        val weights get() = ChannelWeights(s1, g, g2, tau, lambda, aliasBonus = beta, inflectionCost = gamma)
+        val weights get() = ChannelWeights(s1, g, g2, tau, lambda, aliasBonus = beta,
+            shortWordDeletionCost = delta, inflectionCost = gamma)
         override fun toString() = "s1=$s1 g=$g g2=$g2 tau=$tau lambda=$lambda beta=$beta gamma=" +
-            if (gamma == Float.POSITIVE_INFINITY) "inf" else "$gamma"
-        /** The `CK_CH_CONFIG` spelling: `s1,g,g2,tau,lambda,beta,gamma`. */
-        val spec get() = "$s1,$g,$g2,$tau,$lambda,$beta," + if (gamma == Float.POSITIVE_INFINITY) "inf" else "$gamma"
+            (if (gamma == Float.POSITIVE_INFINITY) "inf" else "$gamma") + " delta=$delta"
+        /** The `CK_CH_CONFIG` spelling: `s1,g,g2,tau,lambda,beta,gamma[,delta]`. */
+        val spec get() = "$s1,$g,$g2,$tau,$lambda,$beta," +
+            (if (gamma == Float.POSITIVE_INFINITY) "inf" else "$gamma") + ",$delta"
 
         companion object {
-            /** Parses [spec] (7 fields; `gamma` may be `inf`). */
+            /** Parses [spec] (7 or 8 fields; `gamma` may be `inf`; a missing δ is 0). */
             fun parse(spec: String): Cfg {
                 val v = spec.split(',')
-                require(v.size == 7) { "config needs s1,g,g2,tau,lambda,beta,gamma: $spec" }
+                require(v.size == 7 || v.size == 8) { "config needs s1,g,g2,tau,lambda,beta,gamma[,delta]: $spec" }
                 return Cfg(v[0].toFloat(), v[1].toFloat(), v[2].toFloat(), v[3].toFloat(), v[4].toFloat(),
-                    v[5].toFloat(), if (v[6] == "inf") Float.POSITIVE_INFINITY else v[6].toFloat())
+                    v[5].toFloat(), if (v[6] == "inf") Float.POSITIVE_INFINITY else v[6].toFloat(),
+                    if (v.size == 8) v[7].toFloat() else 0f)
+            }
+
+            /** The shipped rule C2 (Defaults), i.e. the round-3 baseline. */
+            val SHIPPED: Cfg get() = AutocorrectTuning.DEFAULT.channel.let {
+                Cfg(it.distanceCost, it.indelCost, it.doubleCost, it.transpositionCost, it.frequencyWeight,
+                    it.aliasBonus, it.inflectionCost, 0f)
             }
         }
     }
@@ -99,6 +110,7 @@ class ChannelRankingEval {
     private class Grid(
         val s1: FloatArray, val g: FloatArray, val g2: FloatArray, val tau: FloatArray,
         val lambda: FloatArray, val beta: FloatArray, val gamma: FloatArray,
+        val delta: FloatArray = floatArrayOf(0f),
     )
 
     /** Outcome tallies in raw pairs, distinct target words and commit occurrences. */
@@ -152,7 +164,7 @@ class ChannelRankingEval {
         /** Probe tuning: channel, finite γ (so guard G defers and reports its stem). */
         val PROBE_TUNING = AutocorrectTuning.DEFAULT.copy(
             ranking = AutocorrectRanking.CHANNEL,
-            channel = ChannelWeights(inflectionCost = 1f),
+            channel = AutocorrectTuning.DEFAULT.channel.copy(inflectionCost = 1f, shortWordDeletionCost = 0f),
         )
 
         /** Round 1 grid (doc §1.4): γ is chosen in a second stage, β is always 0. */
@@ -172,9 +184,16 @@ class ChannelRankingEval {
             gamma = floatArrayOf(0.5f, 1f, 1.5f, 2f, 3f, Float.POSITIVE_INFINITY),
         )
 
+        /** Round 3 (§7.1): every weight at its shipped value, only δ varies (0 = the baseline). */
+        private val ROUND3: Grid = Cfg.SHIPPED.let { c ->
+            Grid(floatArrayOf(c.s1), floatArrayOf(c.g), floatArrayOf(c.g2), floatArrayOf(c.tau),
+                floatArrayOf(c.lambda), floatArrayOf(c.beta), floatArrayOf(c.gamma),
+                delta = floatArrayOf(0f, 0.25f, 0.5f, 0.75f, 1.0f, 1.5f))
+        }
+
         /** `CK_CH_ROUND` (default 2) selects the grid the DEV phase searches and the pre-filter covers. */
         private val ROUND: Int = System.getenv("CK_CH_ROUND")?.toInt() ?: 2
-        private val GRID: Grid = if (ROUND == 1) ROUND1 else ROUND2
+        private val GRID: Grid = when (ROUND) { 1 -> ROUND1; 3 -> ROUND3; else -> ROUND2 }
         private val LAMBDA get() = GRID.lambda
 
         /** The 16 corners of the edit-weight grid plus its centre: the alignment references. */
@@ -186,8 +205,10 @@ class ChannelRankingEval {
         }
 
         /** The grid's cheapest and dearest edit weights (every feature is non-negative). */
-        private val W_MIN = ChannelWeights(GRID.s1.min(), GRID.g.min(), GRID.g2.min(), GRID.tau.min())
-        private val W_MAX = ChannelWeights(GRID.s1.max(), GRID.g.max(), GRID.g2.max(), GRID.tau.max())
+        private val W_MIN = ChannelWeights(GRID.s1.min(), GRID.g.min(), GRID.g2.min(), GRID.tau.min(),
+            shortWordDeletionCost = GRID.delta.min())
+        private val W_MAX = ChannelWeights(GRID.s1.max(), GRID.g.max(), GRID.g2.max(), GRID.tau.max(),
+            shortWordDeletionCost = GRID.delta.max())
         private val BETA_MAX = GRID.beta.max()
 
         /**
@@ -347,7 +368,8 @@ class ChannelRankingEval {
                 // Inline ChannelEditCost.priced over one stored alignment (no copy per call).
                 val v = f[o + ChannelEditCost.F_SUBSTITUTIONS] + w.distanceCost * f[o + ChannelEditCost.F_KEY_DISTANCE] +
                     w.indelCost * f[o + ChannelEditCost.F_INDELS] + w.doubleCost * f[o + ChannelEditCost.F_DOUBLES] +
-                    w.transpositionCost * f[o + ChannelEditCost.F_SWAPS]
+                    w.transpositionCost * f[o + ChannelEditCost.F_SWAPS] +
+                    w.shortWordDeletionCost * f[o + ChannelEditCost.F_SHORT_DELETION]
                 if (v < best) best = v
                 o += ChannelEditCost.FEATURE_COUNT
             }
@@ -547,8 +569,8 @@ class ChannelRankingEval {
         val report = StringBuilder()
         fun say(s: String) { println(s); report.appendLine(s); File(outDir, "summary-$phase.txt").writeText(report.toString()) }
         when (phase) {
-            "dev" -> if (ROUND == 1) devPhase(::say) else devPhase2(::say)
-            "test" -> testPhase(::say)
+            "dev" -> when (ROUND) { 1 -> devPhase(::say); 3 -> devPhase3(::say); else -> devPhase2(::say) }
+            "test" -> if (ROUND == 3) testPhase3(::say) else testPhase(::say)
             "inspect" -> inspectPhase(::say)
             else -> error("CK_CH_PHASE must be dev, test or inspect")
         }
@@ -790,6 +812,171 @@ class ChannelRankingEval {
         say("  C-oov-DEV new changes=${to.breaks.size} (${"%.3f".format(100.0 * to.breaks.size / oov.size)}%)")
         File(outDir, "rows2-dev.tsv").writeText(rows.joinToString("\n") + "\n")
         say("CK_CH_CONFIG=${chosen.cfg.spec}")
+    }
+
+    /** HE-adj2 (§7.2): neighbour slips of pack words ranked 501–2,500, split by base-word hash. */
+    private fun heAdj2(dev: Boolean): List<P> {
+        val ranked = he.dict.entries.filter { it.key.length >= 2 && it.key.all { c -> c in heGrid } }
+            .sortedByDescending { it.value }.map { it.key }
+        val out = LinkedHashSet<P>()
+        for (w in ranked.subList(500, minOf(2_500, ranked.size))) {
+            if (isDevWord(w) != dev) continue
+            for (i in w.indices) for (c in heGrid.keys) {
+                if (c == w[i] || !KeyAdjacency.areNeighbors(c, w[i])) continue
+                val typo = w.substring(0, i) + c + w.substring(i + 1)
+                if (!he.dict.containsKey(typo)) out += P(typo, w)
+            }
+        }
+        return out.toList()
+    }
+
+    /** Distinct (fixes, breaks, raw breaks) of [cfg] against the δ = 0 baseline over [pairs]. */
+    private fun counts3(lang: Lang, pairs: List<P>, probe: Map<String, Probed>, cfg: Cfg): IntArray {
+        val scratch = FloatArray(4096)
+        val base = Cfg.SHIPPED
+        val fix = HashSet<String>(); val brk = HashSet<String>(); var brkRaw = 0
+        val memo = HashMap<String, Pair<String, String>>()
+        for (p in pairs) {
+            val (b, c) = memo.getOrPut(p.typed) {
+                val pr = probe.getValue(p.typed)
+                decide(lang, pr, base, scratch) to decide(lang, pr, cfg, scratch)
+            }
+            val bOk = lang.ok(b, p.target)
+            val cOk = lang.ok(c, p.target)
+            if (!bOk && cOk) fix += p.target
+            if (bOk && !cOk) { brk += p.target; brkRaw++ }
+        }
+        return intArrayOf(fix.size, brk.size, brkRaw)
+    }
+
+    /** Probes [pairs] (one production sweep each); the δ = 0 decision is the shipped baseline. */
+    private fun probeAll(lang: Lang, pairs: List<P>, label: String, say: (String) -> Unit): Map<String, Probed> {
+        val typed = pairs.map { it.typed }.distinct()
+        val out = ConcurrentHashMap<String, Probed>()
+        val start = System.nanoTime()
+        typed.parallelStream().forEach { out[it] = lang.probe(it) }
+        say("$label: ${typed.size} distinct inputs probed in ${(System.nanoTime() - start) / 1_000_000_000}s")
+        return out
+    }
+
+    /** Round 3 DEV (§7.3): δ against the shipped rule C2 on fresh HE-adj2-DEV plus English no-harm sets. */
+    private fun devPhase3(say: (String) -> Unit) {
+        KeyAdjacency.setLayoutLetters(heGrid)
+        val he2 = heAdj2(dev = true)
+        val heProbe = probeAll(he, he2, "HE-adj2-DEV", say)
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val gtc = readGtc("DEV")
+        val adj = sAdj(dev = true)
+        val oov = cOov(dev = true)
+        say("ROUND 3. HE-adj2-DEV pairs=${he2.size} words=${he2.map { it.target }.toSet().size}; " +
+            "GTC-DEV ${gtc.size}; S-adj-DEV ${adj.size}; C-oov-DEV ${oov.size}")
+        val gProbe = probeAll(en, gtc, "GTC-DEV", say)
+        val aProbe = probeAll(en, adj, "S-adj-DEV", say)
+        val oProbe = probeAll(en, oov, "C-oov-DEV", say)
+        val enNamed = (NAMED_EN.keys + SHATED).associateWith { en.probe(it) }
+        KeyAdjacency.setLayoutLetters(heGrid)
+        val heNamed = NAMED_HE.keys.associateWith { he.probe(it) }
+        KeyAdjacency.setLayoutLetters(emptyMap())
+
+        var chosen: Cfg? = null
+        var bestNet = Int.MIN_VALUE
+        for (delta in GRID.delta.filter { it > 0f }) {
+            val cfg = Cfg.SHIPPED.copy(delta = delta)
+            val h = counts3(he, he2, heProbe, cfg)
+            val g = counts3(en, gtc, gProbe, cfg)
+            val a = counts3(en, adj, aProbe, cfg)
+            val o = counts3(en, oov, oProbe, cfg)
+            val named = namedFailuresReplica(cfg, enNamed, heNamed, includeShated = true)
+            val h1 = h[0] - h[1] > 0 && h[1] <= 0.25 * h[0]
+            val e1 = g[0] - g[1] >= 0 && a[0] - a[1] >= 0 && o[2] <= 0.001 * oov.size
+            val adm = h1 && e1 && named == 0
+            say("  δ=$delta: HE-adj2-DEV fixes=${h[0]} breaks=${h[1]} (raw ${h[2]}) net=${h[0] - h[1]}; " +
+                "GTC net=${g[0] - g[1]} (${g[0]}/${g[1]}); S-adj net=${a[0] - a[1]} (${a[0]}/${a[1]}); " +
+                "C-oov new=${o[2]}; named fail=$named; H1=$h1 E1=$e1 → ${if (adm) "admissible" else "-"}")
+            if (adm && h[0] - h[1] > bestNet) { chosen = cfg; bestNet = h[0] - h[1] }   // ties → smaller δ (ascending)
+        }
+        val c = chosen
+        if (c == null) {
+            say("\nDEV choice (§7.3): NONE — δ stays 0, nothing ships, TEST not run")
+            return
+        }
+        say("\nDEV choice (§7.3): δ=${c.delta}")
+        say("  production named failures: ${namedFailures(c, includeShated = true)}")
+        val sample = (heProbe.keys + gProbe.keys + aProbe.keys + oProbe.keys).sorted()
+            .shuffled(java.util.Random(20261019)).take(2_000)
+        val scratch = FloatArray(4096)
+        val mismatches = sample.filter { t ->
+            val inHe = t in heProbe
+            if (inHe) KeyAdjacency.setLayoutLetters(heGrid) else KeyAdjacency.setLayoutLetters(emptyMap())
+            try {
+                val lang = if (inHe) he else en
+                val probe = heProbe[t] ?: gProbe[t] ?: aProbe[t] ?: oProbe.getValue(t)
+                decide(lang, probe, c, scratch) != lang.predictor.autoCorrect(t, prodTuning(c)) ||
+                    decide(lang, probe, Cfg.SHIPPED, scratch) != lang.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+            } finally {
+                KeyAdjacency.setLayoutLetters(emptyMap())
+            }
+        }
+        say("  soundness: ${sample.size} inputs (chosen δ and the δ = 0 baseline), mismatches=${mismatches.size} ${mismatches.take(20)}")
+        check(mismatches.isEmpty()) { "replica disagrees with production: run void" }
+        val rows = mutableListOf("set\tconfig\ttyped\ttarget\tocc\tbaseline\tcandidate\tkind\tclass")
+        val heBase = heProbe.mapValues { decide(he, it.value, Cfg.SHIPPED, scratch) }
+        val heCand = heProbe.mapValues { decide(he, it.value, c, scratch) }
+        val th = tally(he, he2, heBase, heCand, rows, "HE-adj2-DEV", c.toString())
+        say("  ${th.line("HE-adj2-DEV", he2.size, he2.map { it.target }.toSet().size)}")
+        say("  HE-adj2-DEV breaks: " + th.breaks.joinToString(", ") { "${it.typed}→${heBase[it.typed]}|${heCand[it.typed]} (want ${it.target})" })
+        File(outDir, "rows3-dev.tsv").writeText(rows.joinToString("\n") + "\n")
+        say("CK_CH_CONFIG=${c.spec}")
+    }
+
+    /** Round 3 TEST (§7.4): production baseline (shipped C2) against production with the chosen δ. */
+    private fun testPhase3(say: (String) -> Unit) {
+        val cfg = Cfg.parse(System.getenv("CK_CH_CONFIG") ?: error("CK_CH_CONFIG required"))
+        val tuning = prodTuning(cfg)
+        val rows = mutableListOf("set\tconfig\ttyped\ttarget\tocc\tbaseline\tcandidate\tkind\tclass")
+        say("ROUND 3 TEST, $cfg")
+        fun run(lang: Lang, pairs: List<P>, set: String): Tally {
+            val inputs = pairs.map { it.typed }.distinct()
+            val base = ConcurrentHashMap<String, String>()
+            val cand = ConcurrentHashMap<String, String>()
+            val checkpoint = File(outDir, "test3-$set.tsv")
+            val header = "# ${cfg.spec}"
+            if (checkpoint.isFile && checkpoint.useLines { it.firstOrNull() } == header) {
+                checkpoint.useLines { lines -> lines.drop(1).forEach { l -> val c = l.split('\t'); base[c[0]] = c[1]; cand[c[0]] = c[2] } }
+                check(base.keys.containsAll(inputs)) { "checkpoint $checkpoint is incomplete" }
+            } else {
+                inputs.parallelStream().forEach { t ->
+                    base[t] = lang.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+                    cand[t] = lang.predictor.autoCorrect(t, tuning)
+                }
+                checkpoint.writeText(header + "\n" + inputs.joinToString("\n") { "$it\t${base[it]}\t${cand[it]}" } + "\n")
+            }
+            val t = tally(lang, pairs, base, cand, rows, set, cfg.toString())
+            say("  ${t.line(set, pairs.size, pairs.map { it.target }.toSet().size)}")
+            return t
+        }
+        KeyAdjacency.setLayoutLetters(heGrid)
+        val he2 = heAdj2(dev = false)
+        val h2 = run(he, he2, "HE-adj2-TEST")
+        val hePairs = heAdj()
+        val h1 = run(he, hePairs, "HE-adj")
+        say("  HE-adj2-TEST breaks: " + h2.breaks.joinToString(", ") { "${it.typed} (want ${it.target})" })
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val gtc = readGtc("TEST")
+        val adj = sAdj(dev = false)
+        val oov = cOov(dev = false)
+        val tg = run(en, gtc, "GTC-TEST")
+        val ta = run(en, adj, "S-adj-TEST")
+        val to = run(en, oov, "C-oov-TEST")
+        val tt = run(en, readDat("wikipedia.dat") + readDat("aspell.dat"), "R-typed")
+        val named = namedFailures(cfg, includeShated = true)
+        val r1 = h2.netDistinct > 0 && h2.d(h2.breaks) <= 0.25 * h2.d(h2.fixes)
+        val r2 = tg.netDistinct >= 0 && ta.netDistinct >= 0
+        val r3 = to.breaks.size <= 0.001 * oov.size
+        val r4 = named.isEmpty()
+        say("named failures: $named; HE-adj (seen) net=${h1.netDistinct}; R-typed net=${tt.netDistinct}")
+        say("GATE: R1=$r1 R2=$r2 R3=$r3 R4=$r4 → " + if (r1 && r2 && r3 && r4) "PASS" else "FAIL")
+        File(outDir, "rows3-test.tsv").writeText(rows.joinToString("\n") + "\n")
     }
 
     /**

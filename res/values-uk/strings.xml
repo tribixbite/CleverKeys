@@ -1195,6 +1195,8 @@
     <string name="autocorrect_channel_frequency_weight_desc">Скільки коштує рідше слово за кожен щабель у рейтингу частоти. Більше значення сильніше надає перевагу частим словам.</string>
     <string name="autocorrect_channel_alias_bonus_title">Перевага скорочених форм</string>
     <string name="autocorrect_channel_alias_bonus_desc">Знижка вартості для скороченої форми на кшталт don\'t перед так само близьким звичайним словом (donr → don\'t замість done). 0 = без переваги.</string>
+    <string name="autocorrect_channel_short_deletion_cost_title">Ціна видалення до короткого слова</string>
+    <string name="autocorrect_channel_short_deletion_cost_desc">Доплата, коли виправлення прибирає літери й виходить слово з однієї-двох літер, щоб помилкова перша літера не просто видалялася. 0 = без доплати.</string>
     <string name="autocorrect_frequency_ignored">Частота не враховується; вирішують лише правки.</string>
     <string name="autocorrect_channel_inflection_cost_title">Вартість збереження форми слова</string>
     <string name="autocorrect_channel_inflection_cost_desc">Наскільки кращим має бути виправлення, щоб замінити відоме слово із закінченням. У крайньому верхньому положенні такі слова зберігаються завжди.</string>

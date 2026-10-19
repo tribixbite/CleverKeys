@@ -128,6 +128,20 @@ class ChannelRankingTest {
     }
 
     @Test
+    fun shortWordDeletionCostAppliesOnlyWhenDeletingOntoAWordOfAtMostTwoLetters() {
+        val d = w.copy(shortWordDeletionCost = 0.75f)
+        // 3 → 2 letters: the term applies once.
+        assertEquals(ChannelEditCost.cost("thr", "th", w) + 0.75f, ChannelEditCost.cost("thr", "th", d), eps)
+        // Same length, longer target, or a 3-letter target: no term.
+        assertEquals(ChannelEditCost.cost("thw", "the", w), ChannelEditCost.cost("thw", "the", d), eps)
+        assertEquals(ChannelEditCost.cost("helo", "hello", w), ChannelEditCost.cost("helo", "hello", d), eps)
+        assertEquals(ChannelEditCost.cost("thee", "the", w), ChannelEditCost.cost("thee", "the", d), eps)
+        // The alignment features carry the indicator, so priced() stays equal to cost().
+        assertEquals(ChannelEditCost.cost("thr", "th", d),
+            ChannelEditCost.priced(ChannelEditCost.alignmentFeatures("thr", "th", d), d), eps)
+    }
+
+    @Test
     fun aliasBonusTipsAnEqualEditTowardTheContraction() {
         // donr: dont (alias) and done are both one r→t / r→e neighbour slip.
         val max = 1_000_000

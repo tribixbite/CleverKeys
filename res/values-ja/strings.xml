@@ -1174,6 +1174,8 @@
     <string name="autocorrect_channel_frequency_weight_desc">頻度順位が1段下がるごとの、まれな単語のコスト。大きいほど一般的な単語を優先します。</string>
     <string name="autocorrect_channel_alias_bonus_title">短縮形の優先</string>
     <string name="autocorrect_channel_alias_bonus_desc">don\'t のような短縮形を、同じくらい近い通常の単語より優先するためのコスト割引(donr → done ではなく don\'t)。0 = 優先しません。</string>
+    <string name="autocorrect_channel_short_deletion_cost_title">短い単語への削除コスト</string>
+    <string name="autocorrect_channel_short_deletion_cost_desc">修正で文字を削って1〜2文字の単語にする場合の追加コストです。打ち間違えた先頭の文字が単に消されないようにします。0 = 追加コストなし。</string>
     <string name="autocorrect_frequency_ignored">頻度は無視され、編集だけで決まります。</string>
     <string name="autocorrect_channel_inflection_cost_title">語形を残すコスト</string>
     <string name="autocorrect_channel_inflection_cost_desc">語尾付きの既知の単語を置き換えるには、修正がどれだけ優れている必要があるか。最大にすると、そのような単語は常に残ります。</string>

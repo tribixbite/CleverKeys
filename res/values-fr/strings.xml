@@ -1191,6 +1191,8 @@
     <string name="autocorrect_channel_frequency_weight_desc">Coût d\'un mot plus rare par rang dans le classement de fréquence. Plus élevé favorise davantage les mots courants.</string>
     <string name="autocorrect_channel_alias_bonus_title">Préférence pour les contractions</string>
     <string name="autocorrect_channel_alias_bonus_desc">Réduction de coût pour une contraction comme don\'t face à un mot ordinaire aussi proche (donr → don\'t au lieu de done). 0 = aucune préférence.</string>
+    <string name="autocorrect_channel_short_deletion_cost_title">Coût de suppression vers un mot court</string>
+    <string name="autocorrect_channel_short_deletion_cost_desc">Coût supplémentaire quand une correction supprime des lettres pour obtenir un mot d\'une ou deux lettres, afin qu\'une première lettre mal tapée ne soit pas simplement retirée. 0 = aucun coût supplémentaire.</string>
     <string name="autocorrect_frequency_ignored">La fréquence est ignorée ; seules les modifications décident.</string>
     <string name="autocorrect_channel_inflection_cost_title">Coût de conservation des formes</string>
     <string name="autocorrect_channel_inflection_cost_desc">De combien une correction doit être meilleure pour remplacer un mot connu suivi d\'une terminaison. Tout en haut, ces mots sont toujours conservés.</string>

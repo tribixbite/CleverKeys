@@ -10,13 +10,26 @@ package tribixbite.cleverkeys.autocorrect
  *   for non-Latin scripts);
  * - an extra letter in `t` or a missing letter of `c`: `indelCost`, or `doubleCost` when that
  *   letter repeats an adjacent identical letter (`helo` → `hello`, `gamees` → `games`);
- * - two adjacent letters swapped: `transpositionCost`.
+ * - two adjacent letters swapped: `transpositionCost`;
+ * - plus `shortWordDeletionCost` once when the candidate is shorter than the typed word and has
+ *   at most [SHORT_WORD_MAX_LENGTH] letters (round 3, eval doc §7).
  *
  * Both words are compared as given; callers pass lowercase.
  */
 object ChannelEditCost {
 
-    fun cost(typed: String, candidate: String, w: ChannelWeights): Float {
+    /** Longest candidate the short-word deletion term ([ChannelWeights.shortWordDeletionCost]) covers. */
+    const val SHORT_WORD_MAX_LENGTH = 2
+
+    /** 1 when the short-word deletion term applies to [typed] → [candidate], else 0. */
+    fun shortDeletion(typed: String, candidate: String): Float =
+        if (candidate.length < typed.length && candidate.length <= SHORT_WORD_MAX_LENGTH) 1f else 0f
+
+    fun cost(typed: String, candidate: String, w: ChannelWeights): Float =
+        alignmentCost(typed, candidate, w) + w.shortWordDeletionCost * shortDeletion(typed, candidate)
+
+    /** The optimal-string-alignment part of [cost]. */
+    private fun alignmentCost(typed: String, candidate: String, w: ChannelWeights): Float {
         val n = typed.length
         val m = candidate.length
         // Three rolling rows: transposition reads two rows back.
@@ -52,11 +65,13 @@ object ChannelEditCost {
     const val F_INDELS = 2
     const val F_DOUBLES = 3
     const val F_SWAPS = 4
-    const val FEATURE_COUNT = 5
+    const val F_SHORT_DELETION = 5
+    const val FEATURE_COUNT = 6
 
     /**
      * The edit counts of one optimal alignment under [w]: substitutions, their summed key
-     * distance, plain insertions/deletions, doubled-letter insertions/deletions and swaps.
+     * distance, plain insertions/deletions, doubled-letter insertions/deletions, swaps, and the
+     * 0/1 short-word deletion indicator ([shortDeletion]).
      * `cost(t, c, w)` equals [priced] of this vector under the same [w]. Used by
      * `ChannelRankingEval` to price the same alignment under many weight vectors without
      * re-running the DP; shares the recurrence with [cost] (same order of the min terms).
@@ -106,13 +121,15 @@ object ChannelEditCost {
                 else -> error("alignment back-pointer missing at ($i, $j)")
             }
         }
+        f[F_SHORT_DELETION] = shortDeletion(typed, candidate)
         return f
     }
 
     /** The edit cost of an [alignmentFeatures] vector under [w]. */
     fun priced(f: FloatArray, w: ChannelWeights): Float =
         f[F_SUBSTITUTIONS] + w.distanceCost * f[F_KEY_DISTANCE] + w.indelCost * f[F_INDELS] +
-            w.doubleCost * f[F_DOUBLES] + w.transpositionCost * f[F_SWAPS]
+            w.doubleCost * f[F_DOUBLES] + w.transpositionCost * f[F_SWAPS] +
+            w.shortWordDeletionCost * f[F_SHORT_DELETION]
 
     private fun isDoubled(s: String, k: Int): Boolean {
         val c = s[k]

@@ -1221,6 +1221,8 @@
     <string name="autocorrect_channel_frequency_weight_desc">Quanto costa una parola più rara per ogni posizione nella classifica di frequenza. Un valore più alto favorisce di più le parole comuni.</string>
     <string name="autocorrect_channel_alias_bonus_title">Preferenza per le contrazioni</string>
     <string name="autocorrect_channel_alias_bonus_desc">Sconto di costo per una contrazione come don\'t rispetto a una parola normale altrettanto vicina (donr → don\'t invece di done). 0 = nessuna preferenza.</string>
+    <string name="autocorrect_channel_short_deletion_cost_title">Costo di cancellazione verso parole brevi</string>
+    <string name="autocorrect_channel_short_deletion_cost_desc">Costo extra quando una correzione toglie lettere per arrivare a una parola di una o due lettere, così una prima lettera sbagliata non viene semplicemente rimossa. 0 = nessun costo extra.</string>
     <string name="autocorrect_frequency_ignored">La frequenza viene ignorata; decidono solo le modifiche.</string>
     <string name="autocorrect_channel_inflection_cost_title">Costo per mantenere le forme</string>
     <string name="autocorrect_channel_inflection_cost_desc">Quanto deve essere migliore una correzione per sostituire una parola nota con desinenza. Al massimo, queste parole vengono sempre mantenute.</string>

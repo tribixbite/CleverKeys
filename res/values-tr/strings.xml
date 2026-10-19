@@ -1189,6 +1189,8 @@
     <string name="autocorrect_channel_frequency_weight_desc">Daha nadir bir kelimenin sıklık sıralamasındaki her basamak için maliyeti. Daha yüksek değer yaygın kelimeleri daha çok tercih eder.</string>
     <string name="autocorrect_channel_alias_bonus_title">Kısaltma Tercihi</string>
     <string name="autocorrect_channel_alias_bonus_desc">don\'t gibi bir kısaltmaya, aynı derecede yakın sıradan bir kelimeye karşı maliyet indirimi (donr → done yerine don\'t). 0 = tercih yok.</string>
+    <string name="autocorrect_channel_short_deletion_cost_title">Kısa Kelimeye Silme Maliyeti</string>
+    <string name="autocorrect_channel_short_deletion_cost_desc">Düzeltme harf atarak bir veya iki harfli bir kelimeye ulaştığında eklenen maliyet; yanlış yazılan ilk harf öylece silinmez. 0 = ek maliyet yok.</string>
     <string name="autocorrect_frequency_ignored">Sıklık yok sayılır; yalnızca düzenlemeler karar verir.</string>
     <string name="autocorrect_channel_inflection_cost_title">Kelime biçimini koruma maliyeti</string>
     <string name="autocorrect_channel_inflection_cost_desc">Ekli bilinen bir kelimenin yerine geçmesi için bir düzeltmenin ne kadar daha iyi olması gerektiği. En üstte bu tür kelimeler her zaman korunur.</string>

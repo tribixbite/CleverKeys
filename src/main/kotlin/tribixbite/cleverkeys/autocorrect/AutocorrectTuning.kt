@@ -44,6 +44,9 @@ fun neighbourTiebreakFromPref(value: String?): NeighbourTiebreak =
  * @property transpositionCost τ — two adjacent letters swapped (`teh` → `the`).
  * @property frequencyWeight λ — cost per rank step of rarity; `1/λ` rank steps equal one
  *   wrong key.
+ * @property shortWordDeletionCost δ — added when the candidate is shorter than the typed word
+ *   and has at most [ChannelEditCost.SHORT_WORD_MAX_LENGTH] letters, so a mistyped one-letter
+ *   prefix is not simply deleted onto a common short word (`לןא` → `לא`, round 3, eval doc §7).
  * @property aliasBonus β — subtracted from a contraction alias key's total cost, so `donr`
  *   prefers `don't` over an equally close `done` (round 2, eval doc §3.1).
  * @property inflectionCost γ — guard G: the cost of believing a typed word is an unlisted
@@ -57,6 +60,7 @@ data class ChannelWeights(
     val transpositionCost: Float = Defaults.AUTOCORRECT_CHANNEL_TRANSPOSITION_COST,
     val frequencyWeight: Float = Defaults.AUTOCORRECT_CHANNEL_FREQUENCY_WEIGHT,
     val aliasBonus: Float = Defaults.AUTOCORRECT_CHANNEL_ALIAS_BONUS,
+    val shortWordDeletionCost: Float = Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_COST,
     val inflectionCost: Float = inflectionCostFromPref(Defaults.AUTOCORRECT_CHANNEL_INFLECTION_COST),
 ) {
     companion object {
@@ -161,6 +165,8 @@ data class AutocorrectTuning(
             Defaults.AUTOCORRECT_CHANNEL_TRANSPOSITION_COST, 0.3f..2f)
         val CHANNEL_FREQUENCY_WEIGHT = FloatKey("autocorrect_channel_frequency_weight",
             Defaults.AUTOCORRECT_CHANNEL_FREQUENCY_WEIGHT, 0f..0.1f)
+        val CHANNEL_SHORT_DELETION_COST = FloatKey("autocorrect_channel_short_deletion_cost",
+            Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_COST, 0f..2f)
         val CHANNEL_ALIAS_BONUS = FloatKey("autocorrect_channel_alias_bonus",
             Defaults.AUTOCORRECT_CHANNEL_ALIAS_BONUS, 0f..1f)
         val CHANNEL_INFLECTION_COST = FloatKey("autocorrect_channel_inflection_cost",
@@ -168,7 +174,7 @@ data class AutocorrectTuning(
 
         val FLOATS = listOf(BAND_GAP, TRANSPOSITION_PENALTY, MIN_EXACT_RATIO, LENGTH_EDIT_BUDGET,
             CHANNEL_DISTANCE_COST, CHANNEL_INDEL_COST, CHANNEL_DOUBLE_COST, CHANNEL_TRANSPOSITION_COST,
-            CHANNEL_FREQUENCY_WEIGHT, CHANNEL_ALIAS_BONUS, CHANNEL_INFLECTION_COST)
+            CHANNEL_FREQUENCY_WEIGHT, CHANNEL_ALIAS_BONUS, CHANNEL_SHORT_DELETION_COST, CHANNEL_INFLECTION_COST)
         val INTS = listOf(MAX_SUBSTITUTIONS, DROPPED_DOUBLE_MARGIN, INFLECTION_GUARD_MIN_STEM)
         val BOOLS = listOf(DROPPED_DOUBLE_ENABLED, ELONGATION_COLLAPSE_ENABLED, INFLECTION_GUARD_ENABLED)
         val STRINGS = listOf(RANKING, NEIGHBOUR_TIEBREAK)
@@ -217,6 +223,7 @@ data class AutocorrectTuning(
                     transpositionCost = f(Keys.CHANNEL_TRANSPOSITION_COST),
                     frequencyWeight = f(Keys.CHANNEL_FREQUENCY_WEIGHT),
                     aliasBonus = f(Keys.CHANNEL_ALIAS_BONUS),
+                    shortWordDeletionCost = f(Keys.CHANNEL_SHORT_DELETION_COST),
                     inflectionCost = ChannelWeights.inflectionCostFromPref(f(Keys.CHANNEL_INFLECTION_COST)),
                 ),
             )
