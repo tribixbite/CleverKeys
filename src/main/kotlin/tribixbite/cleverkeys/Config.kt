@@ -205,8 +205,13 @@ object Defaults {
     // docs/eval/2026-10-18-channel-autocorrect-ranking.md). Each band default is the constant
     // that shipped before it was a setting; their calibration notes live on the WordPredictor
     // constants they name.
-    /** `band` (score band, then frequency) or `channel` (edit cost + λ · rank). */
-    const val AUTOCORRECT_RANKING = "band"
+    /**
+     * `band` (score band, then frequency) or `channel` (edit cost + λ · rank). `channel` since
+     * 2026-10-19: round-2 TEST passed T1–T5 and failed only T6 (Hebrew HE-adj, 42 distinct breaks
+     * against an inherited absolute ceiling, net +270); the maintainer overrode T6
+     * (eval doc §6).
+     */
+    const val AUTOCORRECT_RANKING = "channel"
     const val AUTOCORRECT_BAND_GAP = WordPredictor.SCORE_TIEBREAK_GAP
     const val AUTOCORRECT_TRANSPOSITION_PENALTY = WordPredictor.TRANSPOSITION_PENALTY
     const val AUTOCORRECT_MIN_EXACT_RATIO = WordPredictor.MIN_SAME_LENGTH_EXACT_RATIO

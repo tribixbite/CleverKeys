@@ -425,3 +425,20 @@ band ranking leaves only 9,449 of 36,491 (26 %) as typed, and 16,902 are changed
 to different words. `words_alpha.txt` is full of rare words, but the space-bar autocorrect
 replacing three in four unlisted valid words is a property of the shared candidate gates and
 the frequency floor (0 at the default slider), not of either ranking.
+
+## 6. Maintainer override (2026-10-19)
+
+The maintainer read §5 and decided: **"override T6, make channel the default."** The channel
+ranking (rule C2, the round-2 weights) is now `Defaults.AUTOCORRECT_RANKING`. This is a
+maintainer decision against a failed pre-registered criterion, not a gate pass. The record:
+
+- **What was overridden:** T6's absolute ceiling, at most 1 % of HE-adj base words broken
+  (4.9 words). Rule C2 broke 42 (63 raw pairs) and fixed 312 (1,566 raw), with distinct net
+  +270 and accuracy 67.3 % → 90.3 %. The breaks are one mechanism (§5.1): prefix-letter
+  deletions onto common short words.
+- **What still holds:** T1–T5 all passed on TEST, and every named case holds, including the 12
+  Hebrew ones.
+- **Known cost accepted:** Hebrew short typos of the `לןא` → `לא` (want `ללא`) class. A round 3
+  with a length-aware deletion cost needs fresh Hebrew data, because HE-adj has been seen.
+- **Users keep the old behaviour one tap away:** Settings → Auto-Correction → Ranking & Tuning →
+  "Score band, then frequency".

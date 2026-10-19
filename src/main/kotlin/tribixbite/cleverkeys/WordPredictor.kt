@@ -3659,17 +3659,33 @@ class WordPredictor : Predictor {
         frequencyFloor: Int,
         maxFrequency: Int,
     ): String {
-        val index = ChannelRanker.pick(candidates, editCosts, maxFrequency, weights.frequencyWeight, weights.aliasBonus)
+        var index = ChannelRanker.pick(candidates, editCosts, maxFrequency, weights.frequencyWeight, weights.aliasBonus)
         if (index < 0) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT (channel): '$typedWord' [no candidate]")
             return typedWord
+        }
+        // The user's own word outranks a re-doubling guess — the band path's DD-M rule ("a W the
+        // user added by hand keeps it"): with `help` added by hand, `helo` stays `help` rather
+        // than becoming `hello`. When the winner only re-doubles letters and the best candidate
+        // that does not is a custom/user word, that word wins. The eval corpora carry no user
+        // words, so no measured outcome depends on this (eval doc §6).
+        val lowerTyped = typedWord.lowercase()
+        if (customAndUserWords.isNotEmpty() && candidates[index].word !in customAndUserWords &&
+            isDoubleReduction(lowerTyped, candidates[index].word)
+        ) {
+            val others = candidates.indices.filter { !isDoubleReduction(lowerTyped, candidates[it].word) }
+            val best = ChannelRanker.pick(
+                others.map { candidates[it] }, FloatArray(others.size) { editCosts[others[it]] },
+                maxFrequency, weights.frequencyWeight, weights.aliasBonus,
+            )
+            if (best >= 0 && candidates[others[best]].word in customAndUserWords) index = others[best]
         }
         val winner = candidates[index]
         val winnerCost = ChannelRanker.totalCost(editCosts[index], winner.frequency, maxFrequency,
             weights.frequencyWeight, winner.isAlias, weights.aliasBonus)
         // Rule C2 (eval doc §3.1): a re-doubling ("spaming" → "spamming") bypasses guard G, as
         // DD-M ran before the guard in the band path.
-        if (guardStem != null && !isDoubleReduction(typedWord.lowercase(), winner.word)) {
+        if (guardStem != null && !isDoubleReduction(lowerTyped, winner.word)) {
             val stemFrequency = dictionary.get()[guardStem] ?: 0
             val keepCost = weights.inflectionCost +
                 weights.frequencyWeight * ChannelRanker.rankSteps(stemFrequency, maxFrequency)

@@ -511,11 +511,12 @@ class AutoCorrectEndToEndTest {
 
     @Test
     fun liveTuningComesFromConfig_nullMeansDefault() {
+        // Null tuning = DEFAULT, which is the channel ranking since 2026-10-19 (eval doc §6).
         config.autocorrect_tuning = null
         try {
-            assertEquals("decide", predictor.autoCorrect("devixe"))
-            config.autocorrect_tuning = channel
             assertEquals("device", predictor.autoCorrect("devixe"))
+            config.autocorrect_tuning = band
+            assertEquals("decide", predictor.autoCorrect("devixe"))
         } finally {
             config.autocorrect_tuning = null
         }
