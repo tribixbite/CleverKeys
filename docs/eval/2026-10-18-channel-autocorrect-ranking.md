@@ -368,3 +368,60 @@ Full DEV outcomes at the choice (production-equivalent):
 
 The opt-in fallback (§3.4) is the same configuration. TEST is next and runs once:
 `CK_CH_CONFIG=2.0,1.5,1.0,1.2,0.005,0.25,1.0`.
+
+## 5. Round 2 TEST (run 2026-10-18/19, harness at 11141a41, production code at 47f4bbc2)
+
+Command: `JAVA_TOOL_OPTIONS=-Xmx1200m CK_CH_ROUND=2 CK_CH_PHASE=test
+CK_CH_CONFIG=2.0,1.5,1.0,1.2,0.005,0.25,1.0 … runMockTests -PtestClass=autocorrect.ChannelRankingEval`.
+
+**One evaluation, run twice for a technical reason.** The first run (at 47f4bbc2) was SIGKILLed
+(exit 137, Android low-memory pressure on the dev phone) after it had computed all five English
+sets and before it printed or saved any outcome. No TEST number was seen. The harness then gained
+per-set checkpoints (11141a41, outputs unchanged), the test JVM heap was capped at 1.2 GB, and
+the identical configuration was evaluated again. That second run is the only TEST result.
+
+| set | band → rule C2 accuracy | fixes (distinct) | breaks (distinct) | net distinct |
+|---|---|---|---|---|
+| GTC-TEST (16,210 pairs, 5,845 targets) | 8,772 → 12,805 (54.1 % → 79.0 %) | 4,235 (2,643; 6,873 occ) | 202 (187; 334 occ) | **+2,456** |
+| R-typed (2,780) | 1,609 → 2,104 (57.9 % → 75.7 %) | 551 (510) | 56 (53) | +457 |
+| R-hand (30,545) | 8,284 → 10,760 (27.1 % → 35.2 %) | 3,306 (1,729) | 830 (462) | +1,267 |
+| S-adj-TEST (140,971; 5,075 words) | 95,499 → 134,273 (67.7 % → 95.2 %) | 39,001 (3,455) | 227 (144) | +3,311 |
+| C-oov-TEST (36,491 valid words) | unchanged 9,449 → 9,365 | 1 | **85 new changes (0.23 %)** | — |
+| HE-adj (6,536; 490 base words) | 4,401 → 5,904 (67.3 % → 90.3 %) | 1,566 (312) | **63 (42)** | +270 |
+
+GTC-TEST class breakdown: fixes are length change 3,512, 1-sub distant 340, 1-sub adjacent 271,
+transposition 81, multi-sub 31. Breaks are length change 78, 1-sub distant 78, multi-sub 33,
+transposition 10, 1-sub adjacent 3. R-union distinct: fixes 2,119, breaks 503, net +1,616. Named
+cases: none fail. 5,493 GTC-TEST pairs share a typo string with DEV, through different commits.
+
+### 5.1 Gate (§3.4)
+
+| | criterion | result |
+|---|---|---|
+| T1 | GTC net > 0, breaks ≤ 0.5 × fixes | +2,456; 187 ≤ 1,321 — **pass** |
+| T2 | R-union net ≥ 0 | +1,616 — **pass** |
+| T3 | S-adj net > 0, breaks ≤ 0.05 × fixes, raw ≤ 1 % | +3,311; 144 ≤ 172; 227 = 0.16 % — **pass** |
+| T4 | C-oov new changes ≤ 0.5 % | 0.23 % — **pass** |
+| T5 | named cases | all hold — **pass** |
+| T6 | HE-adj distinct breaks ≤ 1 % of base words, net ≥ 0 | **42 > 4.9**; net +270 — **FAIL** |
+
+**Decision: FAIL. The band ranking stays the default.** Rule C2 ships as the opt-in ranking with
+the round-2 weights (§3.4 fallback = the chosen configuration). T6 kept round 1's absolute
+distinct-word ceiling, the same inherited form that §3.3 replaced for S-adj. It was fixed before
+TEST and is not changed after seeing TEST. Overriding it is the maintainer's decision.
+
+**The Hebrew breaks share one mechanism.** A short typo whose slipped letter is a one-letter
+Hebrew prefix is corrected by deleting that letter to reach a very common shorter word
+(`לןא`/`לחא`/`לצא` → `לא`, want `ללא`; `טאת`/`יאת` → `את`, want `ואת`; `סעל`/`געל` → `על`, want
+`בעל`; `אןת`/`אצת` → `את`, want `אחת`). At these weights a deletion (g = 1.5) plus the common
+word's small rank cost undercuts a neighbour substitution (≈ 1 + 2 · 0.14) plus the rarer
+target's rank cost. The English sets do not exercise this, because English has no one-letter
+prefixes. A length-aware deletion cost (a deletion that leaves a word of two or fewer letters
+costs more) is the obvious round-3 candidate. It needs its own pre-registration and fresh
+Hebrew data, because HE-adj has now been seen.
+
+**A finding outside the gate.** On C-oov-TEST both rankings change most valid unlisted words: the
+band ranking leaves only 9,449 of 36,491 (26 %) as typed, and 16,902 are changed by both rankings
+to different words. `words_alpha.txt` is full of rare words, but the space-bar autocorrect
+replacing three in four unlisted valid words is a property of the shared candidate gates and
+the frequency floor (0 at the default slider), not of either ranking.
