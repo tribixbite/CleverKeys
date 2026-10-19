@@ -219,16 +219,17 @@ object Defaults {
     const val AUTOCORRECT_ELONGATION_COLLAPSE_ENABLED = true
     const val AUTOCORRECT_INFLECTION_GUARD_ENABLED = true
     const val AUTOCORRECT_INFLECTION_GUARD_MIN_STEM = 4
-    // Channel weights: the pre-registered grid centre (eval doc §1.5) until a DEV choice exists.
-    const val AUTOCORRECT_CHANNEL_DISTANCE_COST = 1.0f
-    const val AUTOCORRECT_CHANNEL_INDEL_COST = 1.0f
-    const val AUTOCORRECT_CHANNEL_DOUBLE_COST = 0.6f
-    const val AUTOCORRECT_CHANNEL_TRANSPOSITION_COST = 0.9f
-    const val AUTOCORRECT_CHANNEL_FREQUENCY_WEIGHT = 0.02f
+    // Channel weights: the round-2 DEV choice (eval doc §4; soundness check 0 mismatches). It is
+    // also the §3.4 opt-in fallback, so these hold whichever ranking is the default.
+    const val AUTOCORRECT_CHANNEL_DISTANCE_COST = 2.0f
+    const val AUTOCORRECT_CHANNEL_INDEL_COST = 1.5f
+    const val AUTOCORRECT_CHANNEL_DOUBLE_COST = 1.0f
+    const val AUTOCORRECT_CHANNEL_TRANSPOSITION_COST = 1.2f
+    const val AUTOCORRECT_CHANNEL_FREQUENCY_WEIGHT = 0.005f
     /** β: cost discount of a contraction alias key (round 2, eval doc §3.1). */
-    const val AUTOCORRECT_CHANNEL_ALIAS_BONUS = 0f
-    /** γ; 10 (the slider's top) means "always keep" (= the band ranking's guard). */
-    const val AUTOCORRECT_CHANNEL_INFLECTION_COST = 10f
+    const val AUTOCORRECT_CHANNEL_ALIAS_BONUS = 0.25f
+    /** γ (round 2 choice 1.0); 10, the slider's top, means "always keep", the band ranking's guard. */
+    const val AUTOCORRECT_CHANNEL_INFLECTION_COST = 1.0f
 
     // Issue #72: Auto-capitalize "I" and its contractions
     // When enabled, automatically capitalizes "i", "i'm", "i'll", "i'd", "i've"

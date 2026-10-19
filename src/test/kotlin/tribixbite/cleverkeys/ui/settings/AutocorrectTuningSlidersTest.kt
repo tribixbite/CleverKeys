@@ -116,8 +116,10 @@ class AutocorrectTuningSlidersTest {
             .isEqualTo(Float.POSITIVE_INFINITY)
         assertThat(sliders.inflectionCostSliderValue(Float.POSITIVE_INFINITY))
             .isEqualTo(ChannelWeights.INFLECTION_ALWAYS_KEEP)
+        // The shipped γ is the round-2 choice 1.0 (eval doc §4), an ordinary slider position.
+        assertThat(sliders.inflectionCostSliderValue(AutocorrectTuning.DEFAULT.channel.inflectionCost)).isEqualTo(1f)
         assertThat(sliders.isAlwaysKeep(sliders.inflectionCostSliderValue(AutocorrectTuning.DEFAULT.channel.inflectionCost)))
-            .isTrue()
+            .isFalse()
         assertThat(sliders.inflectionCostSliderValue(2.5f)).isEqualTo(2.5f)
         assertThat(sliders.isAlwaysKeep(9.75f)).isFalse()
         assertThat(Keys.CHANNEL_INFLECTION_COST.range.endInclusive).isEqualTo(ChannelWeights.INFLECTION_ALWAYS_KEEP)

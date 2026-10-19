@@ -485,8 +485,20 @@ class AutoCorrectEndToEndTest {
 
     @Test
     fun channelRanking_alwaysKeepGuard_leavesShated() {
-        // γ = ∞ (the default) keeps `shat` + -ed exactly like the band guard.
-        assertEquals("shated", predictor.autoCorrect("shated", channel))
+        // γ = ∞ ("Always keep") keeps `shat` + -ed exactly like the band guard.
+        val alwaysKeep = channel.copy(channel = channel.channel.copy(inflectionCost = Float.POSITIVE_INFINITY))
+        assertEquals("shated", predictor.autoCorrect("shated", alwaysKeep))
+    }
+
+    @Test
+    fun channelRanking_shippedWeights_coverTheReportAndTheRound2Fixes() {
+        // Round-2 DEV choice (eval doc §4) as shipped in Defaults.
+        assertEquals("device", predictor.autoCorrect("devixe", channel))
+        assertEquals("shared", predictor.autoCorrect("shated", channel))
+        assertEquals("spamming", predictor.autoCorrect("spaming", channel))   // re-doubling bypass
+        assertEquals("don't", predictor.autoCorrect("donr", channel))         // alias bonus
+        assertEquals("hello", predictor.autoCorrect("helo", channel))
+        assertEquals("immunizations", predictor.autoCorrect("immunizations", channel))
     }
 
     @Test
