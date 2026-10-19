@@ -116,10 +116,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     selectable. Verified at `353003c6`: pure 3,040/3,040, mock 1,317/1,317, full instrumented
     suite 1,606/1,606 on emulator.wtf Pixel7 API 34 (`~/ew-output/oct19-channel/`, run e5fd3755).
     STILL OPEN: (1) type `devixe`, `shated`, `helo`, `donr` and a Hebrew prefix typo
-    on a phone with a release ≥ `353003c6`; (2) round 3 for the Hebrew prefix-deletion class
-    (length-aware deletion cost; needs fresh Hebrew data, HE-adj has been seen); (3) both
-    rankings change about 74 % of valid unlisted words (C-oov), a property of the shared gates
-    and floor that deserves its own eval. The settings group was device-checked on the second
+    on a phone with a release ≥ `353003c6`; (2) Hebrew prefix-deletion class: round 3
+    (short-word deletion cost δ, fresh HE-adj2 data, eval doc §7/§9) fixed 38 Hebrew words with 0
+    breaks, 0 S-adj breaks and 0 C-oov changes, but failed E1 on GTC-DEV net −1 (8 fixes / 9
+    breaks). Not shipped, δ = 0, TEST not run. Maintainer decision: override E1 (then run the
+    round-3 TEST once at δ = 0.5) or leave it; (3) both rankings change about 74 % of valid
+    unlisted words (C-oov). Exploratory §8: typo fixes cost about 1 edit (median 1.50) and
+    valid-word changes about 3 (median 3.00). A maximum-correction-cost κ is the candidate rule
+    for its own pre-registered round, chosen on DEV, with §8 disclosed. The settings group was device-checked on the second
     Saga, 2026-10-18 (`build/oct18-saga/01–10`; before the "Contraction Preference" slider).
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).

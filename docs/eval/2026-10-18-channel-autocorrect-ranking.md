@@ -522,3 +522,23 @@ whether the best correction is close enough to be worth making. A **maximum corr
 (commit only when the winner's edit cost ≤ κ) is the candidate rule. It would be its own
 pre-registered round: κ chosen on GTC-DEV / S-adj-DEV / C-oov-DEV, with this section disclosed in
 the TEST result. Not built yet.
+
+## 9. Round 3 DEV (run 2026-10-19, harness at 7cb04c98, separate worktree)
+
+HE-adj2-DEV: 16,788 pairs over 936 base words (fresh). Probing took 416 s (HE), 269 s (GTC),
+2,558 s (S-adj) and 612 s (C-oov). The baseline is the shipped rule C2 (δ = 0).
+
+| δ | HE-adj2-DEV fixes / breaks / net | GTC-DEV fixes / breaks / net | S-adj-DEV net (breaks) | C-oov-DEV new | named |
+|---|---|---|---|---|---|
+| 0.25 | 38 / 0 / +38 | 6 / 7 / **−1** | +56 (0) | 0 | all hold |
+| 0.5 | 38 / 0 / +38 | 8 / 9 / **−1** | +68 (0) | 0 | all hold |
+| 0.75 | 38 / 0 / +38 | 8 / 9 / **−1** | +68 (0) | 0 | all hold |
+| 1.0 | 38 / 0 / +38 | 8 / 9 / **−1** | +68 (0) | 0 | all hold |
+| 1.5 | 38 / 0 / +38 | 8 / 9 / **−1** | +68 (0) | 0 | all hold |
+
+**Decision (§7.3): no δ is admissible.** H1 holds everywhere (Hebrew fixes 38, breaks 0). E1 fails
+only on GTC-DEV distinct net −1, against the required ≥ 0: one more English GitHub-typo target is
+broken than fixed, out of 5,845. δ stays 0, nothing ships, and TEST was not run. The result is
+otherwise one-sided: no Hebrew, S-adj or C-oov breaks at any δ, and the effect saturates at
+δ = 0.5. Overriding E1 (it is a one-word no-harm check) is the maintainer's decision, as for T6.
+The seam and its "Short-Word Deletion Cost" setting stay (default 0), so a user can already set it.
