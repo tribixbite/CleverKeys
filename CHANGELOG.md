@@ -29,16 +29,17 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Added
 
-- **Autocorrect Ranking & Tuning** (Settings → Auto-Correction): every autocorrect weight and
-  step is now a setting, with a one-tap reset. That covers the score band and transposition
-  penalty, the candidate gates, the dropped-double margin, the neighbour tiebreak, the
-  doubled-letter and inflection steps, and a new opt-in **edit-cost ranking**. The new ranking
-  prices each candidate as edit cost plus a frequency term instead of "most frequent word
-  within a score band", so one wrong key is never outweighed by a tiny frequency difference
-  (`devixe` → device, not decide; `shated` → shared). Its weights are the ones tuned on the
-  real-typo corpora: on held-out GitHub typos it is right 79 % of the time against 54 % for
-  the default. It stays opt-in because Hebrew neighbour-slip breaks exceeded one
-  pre-registered limit (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`).
+- **Autocorrect Ranking & Tuning** (Settings → Auto-Correction): autocorrect now ranks
+  candidates by **edit cost plus a frequency term** instead of "most frequent word within a
+  score band". One wrong key is never outweighed by a tiny frequency difference (`devixe` →
+  device, not decide), unlisted inflections no longer block obvious fixes (`shated` → shared),
+  and re-doubled letters and contractions are handled (`spaming` → spamming, `donr` → don't).
+  On held-out GitHub typos it is right 79 % of the time against 54 % for the old ranking, and
+  95 % against 68 % on one-key slips (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`).
+  Hebrew short words with a mistyped one-letter prefix can now lose that letter (`לןא` → `לא`);
+  this was a known cost when the new ranking was made the default. Every weight and step is a
+  setting with a one-tap reset, and the old ranking stays selectable ("Score band, then
+  frequency").
 - **Familiar-style layouts**: QWERTY (iOS-style), QWERTY (Gboard-style) and QWERTY
   (SwiftKey-style) copy the default US-English letter pane of those keyboards: rows, number
   row, letter hints, key widths and the bottom row (123 / emoji / space / return; ?123 / comma /

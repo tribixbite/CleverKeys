@@ -108,22 +108,17 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     the `tfe`→the calibration case) while gaining +848 S-adj words on synthetic neighbour slips.
     Open: a narrower pre-registered rule, or a phone-typing corpus to weigh the two error
     populations. Seam `NeighbourTiebreak` stays OFF.
-13b. [ ] maintainer: noisy-channel autocorrect ranking — default-ranking decision
-    (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`, from the maintainer's `devixe`→decide /
-    `shated` report). Round 1 had no admissible configuration. Round 2 (rule C2: re-doubling
-    bypasses the inflection guard, alias bonus β, joint γ; S-adj gate as a breaks-to-fixes ratio,
-    maintainer go-ahead) chose s₁=2, g=1.5, g₂=1.0, τ=1.2, λ=0.005, β=0.25, γ=1 on DEV (soundness
-    0/2,000 mismatches), and TEST passed T1–T5: GTC 54.1 → 79.0 %, S-adj 67.7 → 95.2 %, Birkbeck
-    net +1,616, C-oov 0.23 %, all named cases. It **FAILED T6**: HE-adj had 42 distinct breaks
-    against the inherited 1 % absolute ceiling (4.9), with net +270 (67.3 → 90.3 %). So the band
-    ranking stays the default and rule C2 ships opt-in with those weights ("Ranking & Tuning").
-    Hebrew mechanism: deleting a one-letter prefix to reach a common short word (`לןא`→`לא`, want
-    `ללא`). Options: (a) the maintainer overrides T6 and makes channel the default; (b) round 3
-    with a length-aware deletion cost, a fresh pre-registration and fresh Hebrew data (HE-adj has
-    been seen). Also found: both rankings change about 74 % of valid unlisted words
-    (C-oov-TEST), a property of the shared gates and floor.
-    Device: the settings group was checked on the second Saga, 2026-10-18 (`build/oct18-saga/01–10`;
-    band ↔ channel switching, defaults, "Always keep", Reset). Typing not checked on a device.
+13b. [ ] agent → device: noisy-channel autocorrect ranking is the DEFAULT since 2026-10-19
+    (`353003c6`; `docs/eval/2026-10-18-channel-autocorrect-ranking.md` §6). The maintainer overrode
+    the one failed TEST criterion, T6 (Hebrew HE-adj: 42 distinct breaks, net +270). Round-2 TEST:
+    GTC 54.1 → 79.0 %, S-adj 67.7 → 95.2 %, Birkbeck +1,616 net, C-oov 0.23 %, all named cases.
+    Shipped weights: s₁ 2, g 1.5, g₂ 1.0, τ 1.2, λ 0.005, β 0.25, γ 1. The band ranking stays
+    selectable. STILL OPEN: (1) type `devixe`, `shated`, `helo`, `donr` and a Hebrew prefix typo
+    on a phone with a release ≥ `353003c6`; (2) round 3 for the Hebrew prefix-deletion class
+    (length-aware deletion cost; needs fresh Hebrew data, HE-adj has been seen); (3) both
+    rankings change about 74 % of valid unlisted words (C-oov), a property of the shared gates
+    and floor that deserves its own eval. The settings group was device-checked on the second
+    Saga, 2026-10-18 (`build/oct18-saga/01–10`; before the "Contraction Preference" slider).
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 15. [ ] agent: deferred review items — suffix receipt readback at command time (3 editor reads
