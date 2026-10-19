@@ -35,8 +35,10 @@ editor that used to be listed here already ship in 2.0.)
   doubled-letter and inflection steps, and a new opt-in **edit-cost ranking**. The new ranking
   prices each candidate as edit cost plus a frequency term instead of "most frequent word
   within a score band", so one wrong key is never outweighed by a tiny frequency difference
-  (`devixe` → device, not decide). The default ranking is unchanged until a second
-  evaluation round (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`).
+  (`devixe` → device, not decide; `shated` → shared). Its weights are the ones tuned on the
+  real-typo corpora: on held-out GitHub typos it is right 79 % of the time against 54 % for
+  the default. It stays opt-in because Hebrew neighbour-slip breaks exceeded one
+  pre-registered limit (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`).
 - **Familiar-style layouts**: QWERTY (iOS-style), QWERTY (Gboard-style) and QWERTY
   (SwiftKey-style) copy the default US-English letter pane of those keyboards: rows, number
   row, letter hints, key widths and the bottom row (123 / emoji / space / return; ?123 / comma /

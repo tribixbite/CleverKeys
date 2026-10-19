@@ -108,24 +108,22 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     the `tfe`→the calibration case) while gaining +848 S-adj words on synthetic neighbour slips.
     Open: a narrower pre-registered rule, or a phone-typing corpus to weigh the two error
     populations. Seam `NeighbourTiebreak` stays OFF.
-13b. [ ] maintainer → agent: noisy-channel autocorrect ranking, round 2
-    (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`). Round 1 (2026-10-18, from the
-    maintainer's `devixe`→decide / `shated` report) shipped rule C as an OPT-IN ranking
-    ("Ranking & Tuning" in Auto-Correction, every weight a setting) but NOT as the default: no
-    configuration was admissible on DEV. It lifts the GTC-DEV sample 54.6 % → 76–81 % and
-    S-adj-DEV 69.6 % → up to 95 %, and fails only the inherited absolute S-adj distinct-word
-    ceiling (39 words; best points break 73–144 against ~3,000 fixes) and the named cases.
-    Diagnosed causes, all in the rule's specification: the inflection guard ran after DD-M in
-    the band path but before any doubled-letter repair in rule C (`spaming`, `refering`…),
-    the band's alias privilege is lost (`donr`→done), and `helo` needs g₂ well below one
-    substitution. Maintainer decision first: may the S-adj gate become a breaks-to-fixes ratio
-    for a ranker replacement? Then the agent pre-registers round 2 (guard-order fix, an alias
-    term, joint γ), re-runs DEV in a separate worktree, and runs TEST once. TEST is untouched.
-    Device: the "Ranking & Tuning" group was checked on the second Saga, 2026-10-18 (release built
-    from `7b99c119`, source = `74c808e1`, installed SHA `d47c01bb…`; `build/oct18-saga/01–10`).
-    Search scrolls to it, band ↔ channel switch the visible weights, defaults show correctly,
-    γ shows "Always keep", and Reset restores band. Typing was not checked on a device; the JVM
-    end-to-end tests pin `devixe` and `shated` per ranking.
+13b. [ ] maintainer: noisy-channel autocorrect ranking — default-ranking decision
+    (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`, from the maintainer's `devixe`→decide /
+    `shated` report). Round 1 had no admissible configuration. Round 2 (rule C2: re-doubling
+    bypasses the inflection guard, alias bonus β, joint γ; S-adj gate as a breaks-to-fixes ratio,
+    maintainer go-ahead) chose s₁=2, g=1.5, g₂=1.0, τ=1.2, λ=0.005, β=0.25, γ=1 on DEV (soundness
+    0/2,000 mismatches), and TEST passed T1–T5: GTC 54.1 → 79.0 %, S-adj 67.7 → 95.2 %, Birkbeck
+    net +1,616, C-oov 0.23 %, all named cases. It **FAILED T6**: HE-adj had 42 distinct breaks
+    against the inherited 1 % absolute ceiling (4.9), with net +270 (67.3 → 90.3 %). So the band
+    ranking stays the default and rule C2 ships opt-in with those weights ("Ranking & Tuning").
+    Hebrew mechanism: deleting a one-letter prefix to reach a common short word (`לןא`→`לא`, want
+    `ללא`). Options: (a) the maintainer overrides T6 and makes channel the default; (b) round 3
+    with a length-aware deletion cost, a fresh pre-registration and fresh Hebrew data (HE-adj has
+    been seen). Also found: both rankings change about 74 % of valid unlisted words
+    (C-oov-TEST), a property of the shared gates and floor.
+    Device: the settings group was checked on the second Saga, 2026-10-18 (`build/oct18-saga/01–10`;
+    band ↔ channel switching, defaults, "Always keep", Reset). Typing not checked on a device.
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 15. [ ] agent: deferred review items — suffix receipt readback at command time (3 editor reads
