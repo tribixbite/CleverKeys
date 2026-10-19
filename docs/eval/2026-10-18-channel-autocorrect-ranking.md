@@ -493,3 +493,32 @@ harness output must equal full production at the chosen δ.
 
 All four must hold for the chosen δ to become the shipped default. Reported, not gated:
 HE-adj (seen) and Birkbeck. These thresholds are fixed now.
+
+## 8. Exploratory: why most valid unlisted words get changed (2026-10-19; selects nothing)
+
+On C-oov-TEST both rankings change about 74 % of `words_alpha.txt` words that are not in the
+dictionary (§5). The round-2 TEST rows (`rows2-test.tsv`, already-seen data) were inspected to
+explain this. **They were looked at, so any later rule that uses this finding must be chosen
+on DEV, and its TEST result must disclose that this inspection happened.**
+
+- The changed words are mostly obscure (`keelsons`, `tyrannicide`, `octoroons`, `semeiotic`),
+  6–10 letters long, and 70 % of them become a shorter word with letters dropped
+  (`unsteps` → steps, `agreat` → great, `asslike` → alike). Rule C2 picks closer words than the
+  band ranking did (`missuppose`: band `missiles`, C2 `misspoke`), but it still changes them.
+- Edit cost at the shipped weights, recomputed from the rows: **real-typo fixes (GTC-TEST, 4,235)
+  have median 1.50 and 90th percentile 1.80. Valid-word changes (16,987) have median 3.00,
+  25th percentile 2.20 and 90th percentile 4.80.**
+
+| cap on the winner's edit cost | GTC fixes kept | C-oov changes still made |
+|---|---|---|
+| 1.5 | 89.0 % | 20.7 % |
+| 2.0 | 91.1 % | 24.0 % |
+| 2.5 | 94.1 % | 29.8 % |
+| 3.0 | 99.8 % | 62.7 % |
+
+The cause is that the shared candidate gates accept long words up to two edits away (match
+score ≥ 0.65 and edit budget = length difference + 0.5), and nothing in either ranking asks
+whether the best correction is close enough to be worth making. A **maximum correction cost κ**
+(commit only when the winner's edit cost ≤ κ) is the candidate rule. It would be its own
+pre-registered round: κ chosen on GTC-DEV / S-adj-DEV / C-oov-DEV, with this section disclosed in
+the TEST result. Not built yet.
