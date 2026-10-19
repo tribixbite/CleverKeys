@@ -169,10 +169,13 @@ Calibrated thresholds — don't change without re-running `AutocorrectTest`
 | `autocorrect_max_length_diff` | 2 | 0-5 | Allow ±N length candidates |
 | `autocorrect_confidence_min_frequency` | 100 | 0+ | Winner must clear this dict frequency |
 
-Selection has four hardcoded tiers in `WordPredictor.kt:~1900` —
-`SCORE_TIEBREAK_GAP=0.10f`, `ALIAS_SCORE_BONUS=0.15f`,
-`MIN_SAME_LENGTH_EXACT_RATIO=0.50f`, `LENGTH_DIFF_ED_BUDGET=0.5f`. See
-`docs/wiki/specs/typing/autocorrect-spec.md` for the calibration rationale.
+Ranking and every selection constant are settings since 2026-10-18: `autocorrect/AutocorrectTuning.kt`
+`Keys` is the single definition (key, default, range) used by `Config.refresh()` →
+`Config.autocorrect_tuning` (null on an Objenesis test Config = DEFAULT), `SettingsValidation`,
+`SettingsDefaults` and the "Ranking & Tuning" group. Adding a tuning key there classifies it
+everywhere; add its slider in `AutocorrectTuningSliders` + `AutoCorrectionSection` and its two
+strings in all 22 string files. Default ranking is `channel` (edit cost + λ·rank); weights and
+evidence: `docs/wiki/specs/typing/autocorrect-spec.md` "Channel Ranking".
 
 ## Backup/Restore + Spec Site Integration
 

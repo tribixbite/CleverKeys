@@ -274,9 +274,56 @@ Weighted Levenshtein DP: substitution cost = `keyDistance` (0.0 to 1.0), inserti
 - `wuestion → season` (lenDiff=2, ed≈2.95) → 2.95 > 2.5 ✗ rejected
 - `wuestion → wuthering` (lenDiff=1, ed≈2.79) → 2.79 > 1.5 ✗ rejected
 
-## Rule-Based Candidate Selection
+## Channel Ranking (default since 2026-10-19)
 
-Each candidate passing the score threshold competes through a rule-based comparator. Raw score dominates beyond a ±0.10 band; inside the band, structural rules apply before frequency:
+The candidates that pass the gates above are ranked by **rule C2**
+(`autocorrect/ChannelRanking.kt`, `WordPredictor.channelDecide`;
+eval `docs/eval/2026-10-18-channel-autocorrect-ranking.md`):
+
+```
+total(c) = E(t, c) + λ · rank(c) − (alias ? β : 0)          lowest total wins
+E        = optimal-string-alignment edit cost:
+           substitution a→b   1 + s₁ · keyDistance(a, b)     (layout-aware)
+           missing/extra      g,  or g₂ when the letter repeats its neighbour
+           swapped pair       τ
+rank(c)  = (F_max − f(c)) · 255 / F_max                      (rank steps, 0 = most common)
+```
+
+Ties go to an alias key, then the higher frequency, then the lexicographically smaller word.
+That is a total order, so the result never depends on dictionary iteration order.
+
+| Weight | Setting key | Shipped | Meaning |
+|---|---|---|---|
+| s₁ | `autocorrect_channel_distance_cost` | 2.0 | extra cost per unit of key distance |
+| g | `autocorrect_channel_indel_cost` | 1.5 | missing or extra letter |
+| g₂ | `autocorrect_channel_double_cost` | 1.0 | missing or extra doubled letter |
+| τ | `autocorrect_channel_transposition_cost` | 1.2 | swapped neighbours |
+| λ | `autocorrect_channel_frequency_weight` | 0.005 | cost per rank step (1 wrong key ≈ 200 ranks) |
+| β | `autocorrect_channel_alias_bonus` | 0.25 | contraction preference (`donr` → don't) |
+| γ | `autocorrect_channel_inflection_cost` | 1.0 | inflection guard; 10 = always keep |
+
+Steps that differ from the band ranking:
+
+- **Guard G.** When the typed word is a regular inflection of a known stem (`shated` = `shat` +
+  -ed), it is kept only if `γ + λ·rank(stem)` is no worse than the best correction's total.
+  A winner that only **re-doubles letters** (`spaming` → spamming) bypasses the guard, which
+  matches the band path's DD-M-before-guard order.
+- **DD-M (step 1.45) is skipped.** g₂ models the dropped doubled letter. The user's own word
+  still beats a re-doubling guess: with `help` added by hand, `helo` stays `help`.
+- The elongation collapse (1.4), contractions (0), the possessive guard (1.6), the floor and
+  finalization are shared with the band ranking.
+
+Measured (round-2 TEST, held out): GTC 54.1 % → 79.0 %, S-adj one-key slips 67.7 % → 95.2 %,
+Birkbeck net +1,616 words, valid unlisted words newly changed 0.23 %. Hebrew one-key slips
+improved 67.3 % → 90.3 % but broke 42 words, mostly prefix-letter deletions onto common short
+words (`לןא` → `לא`, want `ללא`). That failed the pre-registered T6 ceiling, and the maintainer
+overrode it (eval doc §6).
+
+## Band Ranking (selectable: "Score band, then frequency")
+
+The pre-2026-10-19 default, kept as `autocorrect_ranking = band`, with every constant below a
+setting (`AutocorrectTuning.Keys`). Each candidate passing the score threshold competes through
+a rule-based comparator. Raw score dominates beyond a ±0.10 band; inside the band, structural rules apply before frequency:
 
 ```kotlin
 // WordPredictor.kt:2163-2185
@@ -551,6 +598,7 @@ All `Config` fields below are read in `autoCorrect`. Defaults at v1.5.0 (`Config
 | **Max length diff** | `autocorrect_max_length_diff` | `2` | 0–5 | Allow ±N length candidates |
 | **Min freq floor** | `autocorrect_confidence_min_frequency` | `100` | 100–2000 | Slider mapped onto the dictionary's frequency scale via `FrequencyFloor.effective()`; 100 = no floor. Custom/user words exempt |
 | **Diagnostic logging** | `swipe_debug_detailed_logging` | `false` | bool | Gates rejection-reason logs |
+| **Ranking & tuning** | `autocorrect_ranking` + 18 more | `channel` | — | Every ranking weight, gate and step switch: `autocorrect/AutocorrectTuning.kt` `Keys` (single definition of key, default and range, shared by prefs, backup validation and the Settings group) |
 
 ## User Freq Control & Beam Search Interaction
 
