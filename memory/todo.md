@@ -113,7 +113,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     the one failed TEST criterion, T6 (Hebrew HE-adj: 42 distinct breaks, net +270). Round-2 TEST:
     GTC 54.1 → 79.0 %, S-adj 67.7 → 95.2 %, Birkbeck +1,616 net, C-oov 0.23 %, all named cases.
     Shipped weights: s₁ 2, g 1.5, g₂ 1.0, τ 1.2, λ 0.005, β 0.25, γ 1. The band ranking stays
-    selectable. STILL OPEN: (1) type `devixe`, `shated`, `helo`, `donr` and a Hebrew prefix typo
+    selectable. Verified at `353003c6`: pure 3,040/3,040, mock 1,317/1,317, full instrumented
+    suite 1,606/1,606 on emulator.wtf Pixel7 API 34 (`~/ew-output/oct19-channel/`, run e5fd3755).
+    STILL OPEN: (1) type `devixe`, `shated`, `helo`, `donr` and a Hebrew prefix typo
     on a phone with a release ≥ `353003c6`; (2) round 3 for the Hebrew prefix-deletion class
     (length-aware deletion cost; needs fresh Hebrew data, HE-adj has been seen); (3) both
     rankings change about 74 % of valid unlisted words (C-oov), a property of the shared gates
