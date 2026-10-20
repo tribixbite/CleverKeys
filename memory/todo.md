@@ -132,10 +132,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     stays 0 and was not overridden again. Round 4 (§11–§12) scoped δ to Hebrew script and ran
     on fresh HE-adj3 (ranks 2,501–6,000): +86 distinct, 0 breaks, English identical on 35,825
     inputs. PASS, so δ 0.5 + scope `hebrew` SHIPPED. Hebrew device check still open (needs the
-    Hebrew pack on a phone). Arabic prefixes: TODO pending an Arabic eval; (3) both rankings change about 74 % of valid
-    unlisted words (C-oov). Exploratory §8: typo fixes cost about 1 edit (median 1.50) and
-    valid-word changes about 3 (median 3.00). A maximum-correction-cost κ is the candidate rule
-    for its own pre-registered round, chosen on DEV, with §8 disclosed. The settings group was device-checked on the second
+    Hebrew pack on a phone). Arabic prefixes: TODO pending an Arabic eval; (3) valid unlisted words: round 5 (§13–§15)
+    shipped a maximum correction cost κ = 3.0. TEST: 43.8 % of the valid words the default
+    changed are now protected (C-oov accuracy 26 % → 58 %), GTC −48 distinct (0.98 %), S-adj 0.
+    PASS, DONE. The settings group was device-checked on the second
     Saga, 2026-10-18 (`build/oct18-saga/01–10`; before the "Contraction Preference" slider).
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).

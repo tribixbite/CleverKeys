@@ -301,6 +301,7 @@ That is a total order, so the result never depends on dictionary iteration order
 | λ | `autocorrect_channel_frequency_weight` | 0.005 | cost per rank step (1 wrong key ≈ 200 ranks) |
 | β | `autocorrect_channel_alias_bonus` | 0.25 | contraction preference (`donr` → don't) |
 | δ | `autocorrect_channel_short_deletion_cost` | 0.5 | extra cost of deleting onto a word of ≤ 2 letters |
+| κ | `autocorrect_channel_max_correction_cost` | 3.0 | no correction with edit cost above κ (10 = off); protects valid unlisted words (eval §13–§15) |
 | δ scope | `autocorrect_channel_short_deletion_scope` | `hebrew` | `hebrew` (Hebrew-script words only) or `all`; English extra-letter slips around `in`/`to` are real typos (eval §10) |
 | γ | `autocorrect_channel_inflection_cost` | 1.0 | inflection guard; 10 = always keep |
 

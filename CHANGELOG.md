@@ -38,7 +38,10 @@ editor that used to be listed here already ship in 2.0.)
   95 % against 68 % on one-key slips (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`).
   Hebrew short words with a mistyped one-letter prefix are no longer corrected by dropping that
   prefix (`לןא` → `ללא`, not `לא`): a short-word deletion cost applies to Hebrew script only,
-  with zero breaks on four Hebrew test sets and English provably unchanged. Every weight and step is a
+  with zero breaks on four Hebrew test sets and English provably unchanged. Valid words missing
+  from the dictionary are left alone far more often: a correction more than about two edits away
+  is not made, which keeps 58 % of such words as typed, against 26 % before, at a cost of 1 % of
+  far-off typo fixes. Every weight and step is a
   setting with a one-tap reset, and the old ranking stays selectable ("Score band, then
   frequency").
 - **Familiar-style layouts**: QWERTY (iOS-style), QWERTY (Gboard-style) and QWERTY

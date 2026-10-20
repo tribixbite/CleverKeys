@@ -685,3 +685,16 @@ Named cases hold at every κ. **Chosen: κ = 3.0** (most protection among admiss
 Soundness: 2,000 inputs, 0 mismatches. §8's exploratory table, at the round-2 weights on TEST
 rows, had suggested a lower knee (2.5). With the shipped weights the GTC losses below 3.0 are
 several times the limit, which is why the DEV choice differs. TEST runs once at κ = 3.0.
+
+## 15. Round 5 TEST (run 2026-10-20, κ = 3.0; one evaluation; disclosed per §13)
+
+| set | shipped → κ = 3.0 accuracy | fixes | breaks (distinct) | gate |
+|---|---|---|---|---|
+| GTC-TEST | 12,805 → 12,755 | 0 | 50 (48) | L1: 48 ≤ 1.5 % of 4,891 right (73.4) ✓ |
+| S-adj-TEST | 134,273 → 134,273 | 0 | 0 | L2 ✓ |
+| C-oov-TEST | 9,365 → **21,238** | **11,873 protected** | 0 | L3: 43.8 % of 27,126 changed ≥ 25 % ✓ |
+
+Named cases hold (L4 ✓). **PASS. Shipped: κ = 3.0** (`Defaults.AUTOCORRECT_CHANNEL_MAX_CORRECTION_COST`).
+Across the shipped stack the space bar now leaves 58 % of valid unlisted words alone (21,238 /
+36,491), against 26 % before. It gives up 48 of 5,845 distinct GitHub-typo targets, the
+corrections that needed an edit cost above 3, and loses nothing on one-key slips.
