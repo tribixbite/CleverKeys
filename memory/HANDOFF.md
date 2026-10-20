@@ -1,6 +1,6 @@
 # HANDOFF — updated 2026-10-20 (body last reconciled 2026-09-01)
 
-**2026-10-20 pointer.** Local `main` is ~45 commits ahead of origin/main (`a40ce7d0`), NOT
+**2026-10-20 pointer.** Local `main` is 76 commits ahead of origin/main (`a40ce7d0`), NOT
 pushed (pushes need the maintainer's word this round). New since 10-18, all on local main:
 - **Autocorrect ranking is now the noisy-channel rule** (default since `353003c6`; weights from
   pre-registered rounds 1–5, `docs/eval/2026-10-18-channel-autocorrect-ranking.md`): shipped
@@ -19,13 +19,19 @@ pushed (pushes need the maintainer's word this round). New since 10-18, all on l
   QS tile show/minimize (`f47d5f3f` + `4f70eb7e`; a third round fixes the home-screen state),
   code-quality fixes (todo 13c). Device passes on the first Saga: inline-field swipe, #147,
   #190, foldable sliders, tile in a native field.
-- **Formerly in flight on agent branches** (worktrees under `.claude/worktrees/`, to be merged into
-  main by the coordinating session): #154 system-haptics option + #139 Enter-always-newline,
-  #190 follow-finger backspace swipe, #187 below-accent dead keys, #147/#87 short-swipes-only
-  mode, swipe typing inside the clipboard editor / inline fields, QS tile toggles
-  show/minimize. A read-only code-quality audit (duplication, divergent defaults) reports to
-  the scratchpad. If a session ends mid-merge: `git worktree list`, merge each
-  `worktree-agent-*` branch that has commits (`git log main..<branch>`), run the full suites.
+- **Agent branches: all merged** (worktrees under `.claude/worktrees/`). They went in by
+  cherry-pick, so `git log main..<branch>` still lists commits; `git cherry -v main <branch>`
+  marks each one already on main except two whose picks resolved conflicts (#187 `30f205d9`, the
+  #147 docs row `2f67a7b0`; `git range-diff` shows only test-list context differing).
+- **Evening 2026-10-20** (todo 13c has the evidence): device passes on the Saga for the tile
+  (home-screen picker), #139, #154 and #187. The #139 check found that the Enter key kept the
+  FIRST field's action label everywhere (LayoutModifier cache keyed on Config.version, which a
+  field start never bumps) — fixed `ea88d975`. H2 (two theme maps; Monet (Auto) magnifier dark
+  in light mode) fixed `ddac0605`, and the magnifier's white direction names `22b35f71`.
+  Suites: 3,135 pure / 1,368 mock green at `22b35f71` (`build/suite-oct20g/suite3.log`); the
+  instrumented suite was last run at `4f70eb7e` (1,607/1,607) and not since these fixes.
+  Pixel: no Hebrew layout enabled any more, so the `לןא`→`ללא` device check waits on the
+  maintainer re-adding one.
 - GitHub reconciliation (read-only audit of all 64 issues + 6 PRs, 2026-10-20) is summarised in
   `docs/audit/gh-issue-resolution.md` "2026-10-20 reconciliation".
 - Devices: home Wi-Fi only (the phone was on Android Auto Wi-Fi mid-day 10-20). Maintainer:

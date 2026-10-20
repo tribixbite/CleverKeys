@@ -199,9 +199,15 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     restored, M6 Layout Manager import/export errors surfaced, M7 continuous-swipe ownership from
     the snapshot, L1 dead plumbing (`b0ffc613`…`f3d5e4c9`); M3/M4/M5/M10/L12 one definition per
     default and M8/M9/M11 ranges in SettingsRanges only (`604ce902`, `ce79c881`), pinned by
-    `DefaultsSingleDefinitionDriftTest` + `SettingsRangeDriftTest`. OPEN: **H2** two theme-name→
-    style maps disagree on `monet` (uiMode-aware vs MonetDark) — verify on a device in LIGHT mode
-    with Material You, then unify `Config.getThemeId` / `getThemeStyleId`; leftovers: the
+    `DefaultsSingleDefinitionDriftTest` + `SettingsRangeDriftTest`. **H2 FIXED** (`ddac0605`): one
+    map `Config.builtInThemeStyleId` for the keyboard view and ThemeProvider; reproduced on the
+    Saga first (light mode + Monet (Auto): light keyboard, DARK Customize-key magnifier,
+    `build/oct20g-saga/35.png`), light after the fix (`37.png`); the dialog's hard-coded white
+    direction names then vanished and now take the theme sublabel colour (`22b35f71`,
+    `38.png` light / `39.png` dark); theme, night mode restored. `ThemeStyleMapTest` 5 cases.
+    Full suites at `22b35f71`: 3,135 pure / 1,368 mock green; instrumented not re-run.
+    Not changed: `ThemeProvider.getBuiltInColorScheme("monet")` (the Theme Creator's seed
+    palette) is still the dark approximation. Leftovers: the
     `custom_border_radius` slider says "dp" but Theme treats it as % of key width; private-copy
     prefs still use literal defaults; side-margin slider `steps` off by one; the remaining LOW
     rows in the report.
