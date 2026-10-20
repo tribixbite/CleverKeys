@@ -473,6 +473,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Distance minimale de glissé pour déclencher (% de la diagonale de touche)</string>
     <string name="gesture_max_distance_title">Distance maximale</string>
     <string name="gesture_max_distance_desc" formatted="false">La limite court/long (% de la diagonale de touche) : en dessous = glissé court, au-delà = mot par glissé. Les valeurs basses transforment les légères dépassements en mots ; les valeurs élevées exigent des glissés plus longs avant que la saisie de mots commence.</string>
+    <string name="gesture_short_swipes_only_title">Glissés courts uniquement</string>
+    <string name="gesture_short_swipes_only_desc">Chaque glissé d\'au moins la distance minimale saisit la sous-touche de sa direction, quelle que soit sa longueur ; un glissé vers une direction sans sous-touche ne saisit rien. La saisie par glissé est désactivée tant que cette option est active. Nécessite les gestes courts.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Désactivé tant que « Glissés courts uniquement » est actif (Réglage des gestes).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Non utilisé tant que « Glissés courts uniquement » est actif : tout glissé à partir de la distance minimale est un glissé court.</string>
     <string name="gesture_vertical_threshold_title">Seuil vertical</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% de la hauteur de touche que le doigt doit parcourir pour déclencher la sélection de ligne. Plus élevé = plus difficile de sélectionner accidentellement des lignes.</string>
     <string name="gesture_vertical_speed_title">Vitesse verticale</string>

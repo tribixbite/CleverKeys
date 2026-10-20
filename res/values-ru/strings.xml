@@ -470,6 +470,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Минимальное расстояние свайпа для срабатывания (% от диагонали клавиши)</string>
     <string name="gesture_max_distance_title">Максимальное расстояние</string>
     <string name="gesture_max_distance_desc" formatted="false">Граница короткого/длинного свайпа (% от диагонали клавиши): ниже или равно = короткий свайп, выше = слово по свайпу. Малые значения делают небольшие выходы за границу словами; большие требуют более длинного свайпа.</string>
+    <string name="gesture_short_swipes_only_title">Только короткие свайпы</string>
+    <string name="gesture_short_swipes_only_desc">Каждый свайп не короче минимального расстояния вводит подклавишу своего направления независимо от длины; свайп в направлении без подклавиши ничего не вводит. Пока опция включена, свайп-ввод выключен. Требуются короткие жесты.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Выключено, пока включено «Только короткие свайпы» (Настройка жестов).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Не используется, пока включено «Только короткие свайпы»: любой свайп от минимального расстояния — короткий свайп.</string>
     <string name="gesture_vertical_threshold_title">Вертикальный порог</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% высоты клавиши, на который нужно сдвинуть палец для выбора строки. Выше = сложнее случайно выбрать строку.</string>
     <string name="gesture_vertical_speed_title">Вертикальная скорость</string>

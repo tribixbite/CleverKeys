@@ -464,6 +464,10 @@
     <string name="gesture_min_distance_desc" formatted="false">트리거에 필요한 최소 스와이프 거리（키 대각선의 %）</string>
     <string name="gesture_max_distance_title">최대 거리</string>
     <string name="gesture_max_distance_desc" formatted="false">짧은/긴 스와이프 경계（키 대각선의 %）: 이하=짧은 스와이프, 초과=스와이프 입력 단어. 낮은 값은 약간의 오버슈트를 단어로 변환하고, 높은 값은 더 긴 스와이프가 필요합니다.</string>
+    <string name="gesture_short_swipes_only_title">짧은 스와이프만</string>
+    <string name="gesture_short_swipes_only_desc">최소 거리 이상의 스와이프는 길이에 관계없이 해당 방향의 하위 키를 입력합니다. 하위 키가 없는 방향으로 스와이프하면 아무것도 입력되지 않습니다. 켜져 있는 동안 스와이프 입력은 꺼집니다. 짧은 제스처가 필요합니다.</string>
+    <string name="swipe_enable_desc_short_swipes_only">짧은 스와이프만이 켜져 있는 동안 꺼져 있습니다(제스처 조정).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">짧은 스와이프만이 켜져 있는 동안 사용되지 않습니다. 최소 거리 이상의 스와이프는 모두 짧은 스와이프입니다.</string>
     <string name="gesture_vertical_threshold_title">세로 임계값</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">줄 선택을 트리거하기 위해 손가락이 움직여야 하는 키 높이의 %. 높을수록 실수로 줄 선택하기 어렵습니다.</string>
     <string name="gesture_vertical_speed_title">세로 속도</string>

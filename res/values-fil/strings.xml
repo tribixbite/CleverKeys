@@ -475,6 +475,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Minimum na distansya ng swipe para mag-trigger (% ng diagonal ng key)</string>
     <string name="gesture_max_distance_title">Maximum na Distansya</string>
     <string name="gesture_max_distance_desc" formatted="false">Hangganan ng maikli/mahaba (% ng diagonal ng key): sa o mas mababa = maikling swipe, higit pa = salitang na-swipe. Ang mababang halaga ay nagpapalit ng maliit na labis sa mga salita; ang mataas na halaga ay nangangailangan ng mas mahabang swipe.</string>
+    <string name="gesture_short_swipes_only_title">Maikling Swipe Lang</string>
+    <string name="gesture_short_swipes_only_desc">Ang bawat swipe na hindi bababa sa minimum na distansya ay nagta-type ng subkey sa direksyon nito, gaano man kahaba; walang tina-type ang swipe papunta sa direksyong walang subkey. Naka-off ang swipe typing habang naka-on ito. Kailangan ang mga maikling gesture.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Naka-off habang naka-on ang Maikling Swipe Lang (Gesture Tuning).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Hindi ginagamit habang naka-on ang Maikling Swipe Lang: maikling swipe ang bawat swipe mula sa minimum na distansya.</string>
     <string name="gesture_vertical_threshold_title">Vertical na Threshold</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% ng taas ng key na dapat galaw ng daliri para mag-trigger ng line selection. Mas mataas = mas mahirap na aksidenteng pumili ng linya.</string>
     <string name="gesture_vertical_speed_title">Vertical na Bilis</string>

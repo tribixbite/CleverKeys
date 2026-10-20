@@ -470,6 +470,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Minimální vzdálenost tahu pro aktivaci (% úhlopříčky klávesy)</string>
     <string name="gesture_max_distance_title">Maximální vzdálenost</string>
     <string name="gesture_max_distance_desc" formatted="false">Hranice krátký/dlouhý (% úhlopříčky klávesy): na této hodnotě nebo pod ní = krátký tah, nad ní = tažené slovo. Nízké hodnoty změní mírné přesahy na slova; vysoké hodnoty vyžadují delší tahy před zahájením psaní slov.</string>
+    <string name="gesture_short_swipes_only_title">Pouze krátké tahy</string>
+    <string name="gesture_short_swipes_only_desc">Každý tah dlouhý alespoň minimální vzdálenost napíše podklávesu ve svém směru bez ohledu na délku; tah směrem bez podklávesy nenapíše nic. Psaní tahem je po dobu zapnutí vypnuté. Vyžaduje krátká gesta.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Vypnuto, dokud je zapnuta volba Pouze krátké tahy (Nastavení gest).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Nepoužívá se, dokud je zapnuta volba Pouze krátké tahy: každý tah od minimální vzdálenosti výše je krátký tah.</string>
     <string name="gesture_vertical_threshold_title">Svislý práh</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% výšky klávesy, o které musí prst pohybovat, aby se aktivoval výběr řádku. Vyšší = obtížnější náhodné vybrání řádků.</string>
     <string name="gesture_vertical_speed_title">Svislá rychlost</string>

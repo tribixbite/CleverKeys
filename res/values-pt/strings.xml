@@ -467,6 +467,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Distância mínima de deslize para ativar (% da diagonal da tecla)</string>
     <string name="gesture_max_distance_title">Distância máxima</string>
     <string name="gesture_max_distance_desc" formatted="false">O limite curto/longo (% da diagonal da tecla): igual ou abaixo = deslize curto, acima = palavra por deslize. Valores baixos transformam leves excessos em palavras; valores altos requerem deslizes mais longos antes de iniciar a digitação por deslize.</string>
+    <string name="gesture_short_swipes_only_title">Somente deslizes curtos</string>
+    <string name="gesture_short_swipes_only_desc">Todo deslize de pelo menos a distância mínima digita a subtecla da sua direção, seja qual for o comprimento; um deslize para uma direção sem subtecla não digita nada. A digitação por deslize fica desativada enquanto esta opção estiver ativa. Requer gestos curtos.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Desativado enquanto Somente deslizes curtos estiver ativo (Ajuste de gestos).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Não usado enquanto Somente deslizes curtos estiver ativo: todo deslize a partir da distância mínima é um deslize curto.</string>
     <string name="gesture_vertical_threshold_title">Limiar vertical</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% da altura da tecla que o dedo deve mover para ativar a seleção de linha. Maior = mais difícil selecionar linhas acidentalmente.</string>
     <string name="gesture_vertical_speed_title">Velocidade vertical</string>

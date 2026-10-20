@@ -55,11 +55,19 @@ internal fun SettingsActivity.SwipeTypingSection() {
                 expanded = swipeTypingSectionExpanded,
                 onExpandChange = { swipeTypingSectionExpanded = it }
             ) {
-                // Master switch for swipe typing
+                // Master switch for swipe typing. GH #147/#87: "short swipes only" (Gesture
+                // Tuning; effective only with short gestures on, as in Config.refresh) turns
+                // word swipes off without touching this preference, so the switch keeps the
+                // stored value but is disabled and says why.
+                val forcedOffByShortSwipesOnly = shortSwipesOnly && shortGesturesEnabled
                 SettingsSwitch(
                     title = stringResource(R.string.swipe_enable_title),
-                    description = stringResource(R.string.swipe_enable_desc),
+                    description = stringResource(
+                        if (forcedOffByShortSwipesOnly) R.string.swipe_enable_desc_short_swipes_only
+                        else R.string.swipe_enable_desc
+                    ),
                     checked = swipeTypingEnabled,
+                    enabled = !forcedOffByShortSwipesOnly,
                     onCheckedChange = {
                         swipeTypingEnabled = it
                         saveSetting("swipe_typing_enabled", it)

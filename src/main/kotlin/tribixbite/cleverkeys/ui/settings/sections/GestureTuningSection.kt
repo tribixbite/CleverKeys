@@ -59,6 +59,20 @@ internal fun SettingsActivity.GestureTuningSection() {
                     highlightId = "short_gestures"
                 )
 
+                // GH #147/#87: every swipe past the minimum resolves to its direction's subkey
+                // and word swipes are off. Visible-but-disabled while short gestures are off
+                // (Config ignores the stored value then), never hidden.
+                SettingsSwitch(
+                    title = stringResource(R.string.gesture_short_swipes_only_title),
+                    description = stringResource(R.string.gesture_short_swipes_only_desc),
+                    checked = shortSwipesOnly,
+                    enabled = shortGesturesEnabled,
+                    onCheckedChange = {
+                        shortSwipesOnly = it
+                        saveSetting("short_swipes_only", it)
+                    }
+                )
+
                 if (shortGesturesEnabled) {
                     SettingsSlider(
                         title = stringResource(R.string.gesture_min_distance_title),
@@ -75,7 +89,12 @@ internal fun SettingsActivity.GestureTuningSection() {
 
                     SettingsSlider(
                         title = stringResource(R.string.gesture_max_distance_title),
-                        description = stringResource(R.string.gesture_max_distance_desc),
+                        // With short swipes only there is no long swipe, so the boundary is
+                        // unused: keep the slider visible but disabled, and say why.
+                        description = stringResource(
+                            if (shortSwipesOnly) R.string.gesture_max_distance_desc_short_swipes_only
+                            else R.string.gesture_max_distance_desc
+                        ),
                         value = shortGestureMaxDistance.toFloat(),
                         valueRange = 50f..200f,
                         steps = 30,
@@ -83,7 +102,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                             shortGestureMaxDistance = it.toInt()
                             saveSetting("short_gesture_max_distance", shortGestureMaxDistance)
                         },
-                        displayValue = "${shortGestureMaxDistance}%"
+                        displayValue = "${shortGestureMaxDistance}%",
+                        enabled = !shortSwipesOnly
                     )
 
                     // Calibration Activity Button

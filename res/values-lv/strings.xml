@@ -479,6 +479,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Minimālais vilkuma attālums aktivizēšanai (% no taustiņa diagonāles)</string>
     <string name="gesture_max_distance_title">Maksimālais attālums</string>
     <string name="gesture_max_distance_desc" formatted="false">Īsā/garā vilkuma robeža (% no taustiņa diagonāles): zemāk vai vienāds = īss vilkums, augstāk = vārds ar vilkumu.</string>
+    <string name="gesture_short_swipes_only_title">Tikai īsie vilkumi</string>
+    <string name="gesture_short_swipes_only_desc">Katrs vismaz minimālā attāluma vilkums neatkarīgi no garuma ievada apakštaustiņu tā virzienā; vilkums virzienā bez apakštaustiņa neievada neko. Kamēr šī opcija ir ieslēgta, vilkuma rakstīšana ir izslēgta. Nepieciešami īsie žesti.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Izslēgts, kamēr ieslēgts “Tikai īsie vilkumi” (Žestu iestatīšana).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Netiek izmantots, kamēr ieslēgts “Tikai īsie vilkumi”: katrs vilkums no minimālā attāluma ir īss vilkums.</string>
     <string name="gesture_vertical_threshold_title">Vertikālais slieksnis</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% no taustiņa augstuma, par kuru pirkstam jāpārvietojas, lai aktivizētu rindas atlasi. Augstāk = grūtāk nejauši atlasīt rindu.</string>
     <string name="gesture_vertical_speed_title">Vertikālais ātrums</string>

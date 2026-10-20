@@ -466,6 +466,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Minimale veegafstand om te activeren (% van toetsdiagonaal)</string>
     <string name="gesture_max_distance_title">Maximumafstand</string>
     <string name="gesture_max_distance_desc" formatted="false">De grens kort/lang (% van toetsdiagonaal): hieronder of gelijk = korte veeg, daarboven = veeggetypt woord. Lage waarden maken kleine overschrijdingen woorden; hoge waarden vereisen langere vegen voordat het woord typen begint.</string>
+    <string name="gesture_short_swipes_only_title">Alleen korte vegen</string>
+    <string name="gesture_short_swipes_only_desc">Elke veeg van minstens de minimumafstand typt de subtoets in zijn richting, hoe lang hij ook is; een veeg naar een richting zonder subtoets typt niets. Vegen staat uit zolang dit aan staat. Vereist korte gebaren.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Uit zolang Alleen korte vegen aan staat (Gebaarstemming).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Niet gebruikt zolang Alleen korte vegen aan staat: elke veeg vanaf de minimumafstand is een korte veeg.</string>
     <string name="gesture_vertical_threshold_title">Verticale drempelwaarde</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% van toetshoogte die de vinger moet bewegen om regelselectie te activeren. Hoger = moeilijker om per ongeluk regels te selecteren.</string>
     <string name="gesture_vertical_speed_title">Verticale snelheid</string>

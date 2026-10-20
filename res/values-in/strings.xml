@@ -475,6 +475,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Jarak geser minimum untuk memicu (% diagonal tombol)</string>
     <string name="gesture_max_distance_title">Jarak Maksimum</string>
     <string name="gesture_max_distance_desc" formatted="false">Batas pendek/panjang (% diagonal tombol): di bawah atau sama dengan = geser pendek, melewati = kata geser. Nilai rendah mengubah sedikit gerakan menjadi kata; nilai tinggi membutuhkan geser lebih panjang.</string>
+    <string name="gesture_short_swipes_only_title">Hanya Geser Pendek</string>
+    <string name="gesture_short_swipes_only_desc">Setiap geser sejauh minimal jarak minimum mengetik subtombol di arahnya, berapa pun panjangnya; geser ke arah tanpa subtombol tidak mengetik apa pun. Ketik geser nonaktif selama opsi ini aktif. Memerlukan gestur pendek.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Nonaktif selama Hanya Geser Pendek aktif (Penyetelan Gestur).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Tidak digunakan selama Hanya Geser Pendek aktif: setiap geser mulai dari jarak minimum adalah geser pendek.</string>
     <string name="gesture_vertical_threshold_title">Ambang Vertikal</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% tinggi tombol yang harus digerakkan jari untuk memicu pemilihan baris. Lebih tinggi = lebih sulit memilih baris secara tidak sengaja.</string>
     <string name="gesture_vertical_speed_title">Kecepatan Vertikal</string>

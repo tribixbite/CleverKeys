@@ -485,6 +485,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Mindest-Wischwegstrecke zum Auslösen (% der Tastendiagonale)</string>
     <string name="gesture_max_distance_title">Maximalabstand</string>
     <string name="gesture_max_distance_desc" formatted="false">Die Kurz-/Lang-Grenze (% der Tastendiagonale): darunter = kurze Wischgeste, darüber = Wischeingabewort. Niedrige Werte lassen leichte Übersteuerungen zu Wörtern werden; hohe Werte erfordern längere Wischgesten, bevor die Worteingabe beginnt.</string>
+    <string name="gesture_short_swipes_only_title">Nur kurze Wischgesten</string>
+    <string name="gesture_short_swipes_only_desc">Jede Wischgeste ab dem Mindestabstand gibt unabhängig von ihrer Länge die Untertaste in ihrer Richtung ein; eine Wischgeste in eine Richtung ohne Untertaste gibt nichts ein. Die Wischeingabe ist währenddessen aus. Erfordert kurze Gesten.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Aus, solange „Nur kurze Wischgesten“ aktiv ist (Gesteneinstellungen).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Wird nicht verwendet, solange „Nur kurze Wischgesten“ aktiv ist: Jede Wischgeste ab dem Mindestabstand ist eine kurze Wischgeste.</string>
     <string name="gesture_vertical_threshold_title">Vertikale Schwelle</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% der Tastenhöhe, die der Finger bewegen muss, um die Zeilenauswahl auszulösen. Höher = schwieriger, Zeilen versehentlich auszuwählen.</string>
     <string name="gesture_vertical_speed_title">Vertikale Geschwindigkeit</string>

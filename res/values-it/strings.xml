@@ -506,6 +506,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Distanza minima di scorrimento per attivare (% della diagonale del tasto)</string>
     <string name="gesture_max_distance_title">Distanza massima</string>
     <string name="gesture_max_distance_desc" formatted="false">Il confine corto/lungo (% della diagonale del tasto): uguale o inferiore = scorrimento breve, superiore = parola digitata a scorrimento. Valori bassi trasformano lievi eccedenze in parole; valori alti richiedono scorrimenti più lunghi prima che inizi la digitazione a scorrimento.</string>
+    <string name="gesture_short_swipes_only_title">Solo scorrimenti brevi</string>
+    <string name="gesture_short_swipes_only_desc">Ogni scorrimento di almeno la distanza minima digita il sottotasto nella sua direzione, qualunque sia la lunghezza; uno scorrimento verso una direzione senza sottotasto non digita nulla. La digitazione a scorrimento è disattivata finché questa opzione è attiva. Richiede i gesti brevi.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Disattivata finché «Solo scorrimenti brevi» è attivo (Ottimizzazione gesti).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Non usata finché «Solo scorrimenti brevi» è attivo: ogni scorrimento dalla distanza minima in su è uno scorrimento breve.</string>
     <string name="gesture_vertical_threshold_title">Soglia verticale</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% dell\'altezza del tasto che il dito deve muovere per selezionare una riga. Più alto = più difficile selezionare righe accidentalmente.</string>
     <string name="gesture_vertical_speed_title">Velocità verticale</string>

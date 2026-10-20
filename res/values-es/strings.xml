@@ -485,6 +485,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Distancia mínima de deslizamiento para activar (% de la diagonal de tecla)</string>
     <string name="gesture_max_distance_title">Distancia máxima</string>
     <string name="gesture_max_distance_desc" formatted="false">El límite corto/largo (% de la diagonal de tecla): por debajo = deslizamiento corto, más allá = palabra por deslizamiento. Los valores bajos convierten ligeros excesos en palabras; los valores altos requieren deslizamientos más largos antes de que comience la escritura por palabras.</string>
+    <string name="gesture_short_swipes_only_title">Solo deslizamientos cortos</string>
+    <string name="gesture_short_swipes_only_desc">Cada deslizamiento de al menos la distancia mínima escribe la subtecla de su dirección, sea cual sea su longitud; un deslizamiento hacia una dirección sin subtecla no escribe nada. La escritura por deslizamiento queda desactivada mientras esté activo. Requiere gestos cortos.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Desactivado mientras «Solo deslizamientos cortos» esté activo (Ajuste de gestos).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">No se usa mientras «Solo deslizamientos cortos» esté activo: todo deslizamiento a partir de la distancia mínima es un deslizamiento corto.</string>
     <string name="gesture_vertical_threshold_title">Umbral vertical</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% de la altura de tecla que el dedo debe mover para activar la selección de línea. Mayor = más difícil seleccionar líneas accidentalmente.</string>
     <string name="gesture_vertical_speed_title">Velocidad vertical</string>

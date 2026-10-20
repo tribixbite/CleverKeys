@@ -480,6 +480,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Minimalna odległość gestu do aktywacji (% przekątnej klawisza)</string>
     <string name="gesture_max_distance_title">Maksymalna odległość</string>
     <string name="gesture_max_distance_desc" formatted="false">Granica krótki/długi (% przekątnej klawisza): poniżej lub równo = krótki gest, powyżej = słowo wpisane gestem. Niskie wartości zamieniają lekkie przesuniecia w słowa; wysokie wymagają dłuższych gestów przed rozpoczęciem pisania słów.</string>
+    <string name="gesture_short_swipes_only_title">Tylko krótkie gesty</string>
+    <string name="gesture_short_swipes_only_desc">Każdy gest o długości co najmniej minimalnej odległości wpisuje podklawisz w swoim kierunku, niezależnie od długości; gest w kierunku bez podklawisza nic nie wpisuje. Pisanie gestem jest wyłączone, dopóki ta opcja jest włączona. Wymaga krótkich gestów.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Wyłączone, dopóki włączona jest opcja Tylko krótkie gesty (Dostrajanie gestów).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Nieużywane, dopóki włączona jest opcja Tylko krótkie gesty: każdy gest od minimalnej odległości jest krótkim gestem.</string>
     <string name="gesture_vertical_threshold_title">Próg pionowy</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% wysokości klawisza, jaki palec musi pokonać, aby aktywować wybór wiersza. Wyższe = trudniejsze przypadkowe zaznaczenie wierszy.</string>
     <string name="gesture_vertical_speed_title">Prędkość pionowa</string>

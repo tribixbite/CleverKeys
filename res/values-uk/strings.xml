@@ -481,6 +481,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Мінімальна відстань свайпу для спрацювання (% від діагоналі клавіші)</string>
     <string name="gesture_max_distance_title">Максимальна відстань</string>
     <string name="gesture_max_distance_desc" formatted="false">Межа короткого/довгого свайпу (% від діагоналі клавіші): нижче або рівно = короткий свайп, вище = слово за свайпом.</string>
+    <string name="gesture_short_swipes_only_title">Лише короткі свайпи</string>
+    <string name="gesture_short_swipes_only_desc">Кожен свайп щонайменше мінімальної відстані вводить підклавішу свого напрямку незалежно від довжини; свайп у напрямку без підклавіші нічого не вводить. Поки опцію ввімкнено, свайп-введення вимкнено. Потрібні короткі жести.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Вимкнено, поки ввімкнено «Лише короткі свайпи» (Налаштування жестів).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Не використовується, поки ввімкнено «Лише короткі свайпи»: будь-який свайп від мінімальної відстані — короткий свайп.</string>
     <string name="gesture_vertical_threshold_title">Вертикальний поріг</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% висоти клавіші, на який потрібно зсунути палець для вибору рядка. Вище = складніше випадково вибрати рядок.</string>
     <string name="gesture_vertical_speed_title">Вертикальна швидкість</string>

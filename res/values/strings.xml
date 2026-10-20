@@ -692,6 +692,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Minimum swipe distance to trigger (% of key diagonal)</string>
     <string name="gesture_max_distance_title">Max Distance</string>
     <string name="gesture_max_distance_desc" formatted="false">The short/long boundary (% of key diagonal): at or below = short swipe, beyond = swipe-typed word. Low values turn slight overshoots into words; high values require longer swipes before word typing starts.</string>
+    <string name="gesture_short_swipes_only_title">Short Swipes Only</string>
+    <string name="gesture_short_swipes_only_desc">Every swipe of at least the minimum distance types the subkey in its direction, however long it is; a swipe toward a direction with no subkey types nothing. Swipe typing is off while this is on. Needs short gestures.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Off while Short Swipes Only is on (Gesture Tuning).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Not used while Short Swipes Only is on: every swipe from the minimum distance up is a short swipe.</string>
     <string name="gesture_vertical_threshold_title">Vertical Threshold</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% of key height finger must move to trigger line selection. Higher = harder to accidentally select lines.</string>
     <string name="gesture_vertical_speed_title">Vertical Speed</string>

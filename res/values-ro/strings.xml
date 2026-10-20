@@ -490,6 +490,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Distanța minimă de glisare pentru a se declanșa (% din diagonala tastei)</string>
     <string name="gesture_max_distance_title">Distanță maximă</string>
     <string name="gesture_max_distance_desc" formatted="false">Granița scurt/lung (% din diagonala tastei): egal sau mai mic = glisare scurtă, mai mare = cuvânt scris prin glisare. Valorile mici transformă ușoarele depășiri în cuvinte; valorile mari necesită glisări mai lungi înainte de a începe scrierea prin glisare.</string>
+    <string name="gesture_short_swipes_only_title">Doar glisări scurte</string>
+    <string name="gesture_short_swipes_only_desc">Fiecare glisare de cel puțin distanța minimă scrie subtasta din direcția sa, indiferent de lungime; o glisare spre o direcție fără subtastă nu scrie nimic. Scrierea prin glisare este dezactivată cât timp această opțiune este activă. Necesită gesturi scurte.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Dezactivată cât timp Doar glisări scurte este activă (Reglare gesturi).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Nu se folosește cât timp Doar glisări scurte este activă: orice glisare de la distanța minimă este o glisare scurtă.</string>
     <string name="gesture_vertical_threshold_title">Prag vertical</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% din înălțimea tastei pe care degetul trebuie să o parcurgă pentru a activa selecția de linie. Mai mare = mai greu de selectat linii accidental.</string>
     <string name="gesture_vertical_speed_title">Viteză verticală</string>

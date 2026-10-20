@@ -474,6 +474,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Tetiklemek için minimum kaydırma mesafesi (tuş çapraz çizgisinin %\'si)</string>
     <string name="gesture_max_distance_title">Maks. Mesafe</string>
     <string name="gesture_max_distance_desc" formatted="false">Kısa/uzun sınırı (tuş çapraz çizgisinin %\'si): bu değerde veya altında = kısa kaydırma, üzerinde = kaydırmayla yazılan sözcük. Düşük değerler hafif taşmaları sözcüğe dönüştürür; yüksek değerler sözcük yazmaya başlamadan önce daha uzun kaydırma gerektirir.</string>
+    <string name="gesture_short_swipes_only_title">Yalnızca Kısa Kaydırmalar</string>
+    <string name="gesture_short_swipes_only_desc">En az minimum mesafe kadar olan her kaydırma, uzunluğu ne olursa olsun kendi yönündeki alt tuşu yazar; alt tuşu olmayan bir yöne kaydırma hiçbir şey yazmaz. Bu seçenek açıkken kaydırarak yazma kapalıdır. Kısa hareketler gerektirir.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Yalnızca Kısa Kaydırmalar açıkken kapalı (Hareket Ayarı).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Yalnızca Kısa Kaydırmalar açıkken kullanılmaz: minimum mesafeden itibaren her kaydırma kısa kaydırmadır.</string>
     <string name="gesture_vertical_threshold_title">Dikey Eşik</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">Satır seçimini tetiklemek için parmağın hareket etmesi gereken tuş yüksekliğinin %\'si. Yüksek değer = yanlışlıkla satır seçimi daha zor.</string>
     <string name="gesture_vertical_speed_title">Dikey Hız</string>

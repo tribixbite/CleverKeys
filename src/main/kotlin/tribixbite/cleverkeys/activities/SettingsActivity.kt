@@ -497,6 +497,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var shortGesturesEnabled by mutableStateOf(true)
     internal var shortGestureMinDistance by mutableIntStateOf(37)
     internal var shortGestureMaxDistance by mutableIntStateOf(141)
+    /** GH #147/#87 "short swipes only" — the STORED preference (Config folds in short gestures). */
+    internal var shortSwipesOnly by mutableStateOf(Defaults.SHORT_SWIPES_ONLY)
 
     // Subkey popover (hold-then-select) settings
     internal var subkeyPopoverEnabled by mutableStateOf(Defaults.SUBKEY_POPOVER_ENABLED)

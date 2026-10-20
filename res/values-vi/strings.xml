@@ -492,6 +492,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Khoảng cách vuốt tối thiểu để kích hoạt (% đường chéo phím)</string>
     <string name="gesture_max_distance_title">Khoảng cách tối đa</string>
     <string name="gesture_max_distance_desc" formatted="false">Ranh giới ngắn/dài (% đường chéo phím): bằng hoặc nhỏ hơn = vuốt ngắn, lớn hơn = từ được gõ vuốt. Giá trị thấp biến những lần trượt nhẹ thành từ; giá trị cao yêu cầu vuốt dài hơn trước khi bắt đầu gõ từ.</string>
+    <string name="gesture_short_swipes_only_title">Chỉ vuốt ngắn</string>
+    <string name="gesture_short_swipes_only_desc">Mọi lần vuốt dài ít nhất bằng khoảng cách tối thiểu sẽ nhập phím phụ theo hướng của nó, bất kể dài bao nhiêu; vuốt về hướng không có phím phụ sẽ không nhập gì. Gõ vuốt tắt khi tùy chọn này bật. Cần bật cử chỉ ngắn.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Tắt khi Chỉ vuốt ngắn đang bật (Điều chỉnh cử chỉ).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Không dùng khi Chỉ vuốt ngắn đang bật: mọi lần vuốt từ khoảng cách tối thiểu trở lên đều là vuốt ngắn.</string>
     <string name="gesture_vertical_threshold_title">Ngưỡng dọc</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">% chiều cao phím ngón tay phải di chuyển để kích hoạt chọn dòng. Cao hơn = khó chọn dòng vô tình hơn.</string>
     <string name="gesture_vertical_speed_title">Tốc độ dọc</string>

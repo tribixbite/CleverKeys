@@ -115,6 +115,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "short_gestures_enabled" to PrefValue.Bool(Defaults.SHORT_GESTURES_ENABLED),
     "short_gesture_min_distance" to PrefValue.IntV(Defaults.SHORT_GESTURE_MIN_DISTANCE),
     "short_gesture_max_distance" to PrefValue.IntV(Defaults.SHORT_GESTURE_MAX_DISTANCE),
+    "short_swipes_only" to PrefValue.Bool(Defaults.SHORT_SWIPES_ONLY),
 
     // ── Subkey popover (hold-then-select) ────────────────────────────
     "subkey_popover_enabled" to PrefValue.Bool(Defaults.SUBKEY_POPOVER_ENABLED),

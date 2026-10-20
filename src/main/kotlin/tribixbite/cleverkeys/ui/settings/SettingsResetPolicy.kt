@@ -90,6 +90,7 @@ object SettingsResetPolicy {
         put("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
         put("short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE)
         put("short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE)
+        put("short_swipes_only", Defaults.SHORT_SWIPES_ONLY)
 
         // Subkey popover
         put("subkey_popover_enabled", Defaults.SUBKEY_POPOVER_ENABLED)

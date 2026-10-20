@@ -501,6 +501,10 @@
     <string name="gesture_min_distance_desc" formatted="false">حداقل فاصله کشیدن برای فعال‌سازی (٪ قطر کلید)</string>
     <string name="gesture_max_distance_title">حداکثر فاصله</string>
     <string name="gesture_max_distance_desc" formatted="false">مرز کوتاه/بلند (٪ قطر کلید): در این مقدار یا زیر آن = کشیدن کوتاه، بیشتر از آن = واژه تایپ‌شده با کشیدن. مقادیر پایین انحرافات جزئی را به واژه تبدیل می‌کنند؛ مقادیر بالا نیاز به کشیدن طولانی‌تر دارند.</string>
+    <string name="gesture_short_swipes_only_title">فقط کشیدن‌های کوتاه</string>
+    <string name="gesture_short_swipes_only_desc">هر کشیدن با دست‌کم حداقل فاصله، صرف‌نظر از طولش، زیرکلید جهت خود را تایپ می‌کند؛ کشیدن به سمتی بدون زیرکلید چیزی تایپ نمی‌کند. تا وقتی این گزینه روشن است، تایپ کشیدنی خاموش است. به اشاره‌های کوتاه نیاز دارد.</string>
+    <string name="swipe_enable_desc_short_swipes_only">تا وقتی «فقط کشیدن‌های کوتاه» روشن است خاموش است (تنظیم اشاره).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">تا وقتی «فقط کشیدن‌های کوتاه» روشن است استفاده نمی‌شود: هر کشیدن از حداقل فاصله به بالا یک کشیدن کوتاه است.</string>
     <string name="gesture_vertical_threshold_title">آستانه عمودی</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">٪ ارتفاع کلید که انگشت باید برای انتخاب خط حرکت کند. بالاتر = انتخاب تصادفی سخت‌تر.</string>
     <string name="gesture_vertical_speed_title">سرعت عمودی</string>

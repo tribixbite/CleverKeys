@@ -462,6 +462,10 @@
     <string name="gesture_min_distance_desc" formatted="false">触发所需的最小滑动距离（按键对角线的百分比）。</string>
     <string name="gesture_max_distance_title">最大距离</string>
     <string name="gesture_max_distance_desc" formatted="false">短/长滑动分界线（按键对角线的百分比）：不超过=短滑动，超过=滑动输入单词。低值使轻微超出变为单词；高值需要更长滑动才能开始单词输入。</string>
+    <string name="gesture_short_swipes_only_title">仅短滑动</string>
+    <string name="gesture_short_swipes_only_desc">每次达到最小距离的滑动都会输入其方向上的子键，无论滑动多长；朝没有子键的方向滑动不会输入任何内容。开启期间滑动输入关闭。需要启用短手势。</string>
+    <string name="swipe_enable_desc_short_swipes_only">“仅短滑动”开启期间关闭（手势调节）。</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">“仅短滑动”开启期间不使用：从最小距离起的每次滑动都是短滑动。</string>
     <string name="gesture_vertical_threshold_title">垂直阈值</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">触发行选择所需手指移动的按键高度百分比。值越高，越不容易误触行选择。</string>
     <string name="gesture_vertical_speed_title">垂直速度</string>

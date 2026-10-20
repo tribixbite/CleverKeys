@@ -463,6 +463,10 @@
     <string name="gesture_min_distance_desc" formatted="false">トリガーに必要な最小スワイプ距離（キー対角線の%）</string>
     <string name="gesture_max_distance_title">最大距離</string>
     <string name="gesture_max_distance_desc" formatted="false">ショート/ロングの境界（キー対角線の%）：この値以下=ショートスワイプ、超過=スワイプ入力。低い値は少しのオーバーシュートを単語に変え、高い値はより長いスワイプが必要になります。</string>
+    <string name="gesture_short_swipes_only_title">ショートスワイプのみ</string>
+    <string name="gesture_short_swipes_only_desc">最小距離以上のスワイプは、長さに関係なくその方向のサブキーを入力します。サブキーのない方向へのスワイプでは何も入力されません。オンの間はスワイプ入力がオフになります。ショートジェスチャーが必要です。</string>
+    <string name="swipe_enable_desc_short_swipes_only">「ショートスワイプのみ」がオンの間はオフです（ジェスチャー調整）。</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">「ショートスワイプのみ」がオンの間は使用されません。最小距離以上のスワイプはすべてショートスワイプになります。</string>
     <string name="gesture_vertical_threshold_title">縦方向の閾値</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">行選択をトリガーするために指が移動する必要があるキー高さの%。高いほど誤って行を選択しにくくなります。</string>
     <string name="gesture_vertical_speed_title">縦方向のスピード</string>

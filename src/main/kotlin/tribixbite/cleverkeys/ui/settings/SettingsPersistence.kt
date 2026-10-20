@@ -33,6 +33,11 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "swipe_typing_enabled" -> {
                 swipeTypingEnabled = prefs.getBoolean(key, Defaults.SWIPE_TYPING_ENABLED)
             }
+            // GH #147/#87: a backup import or reset changes this outside the switch; the Swipe
+            // Typing master switch's disabled state reads it, so keep the state in step.
+            "short_swipes_only" -> {
+                shortSwipesOnly = prefs.getSafeBoolean(key, Defaults.SHORT_SWIPES_ONLY)
+            }
             "swipe_engine_mode" -> {
                 // L1: case-canonical at read, matching Config.refresh — an imported "CTC"
                 // must select the same dropdown row/knob visibility as "ctc".
@@ -441,6 +446,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         shortGesturesEnabled = prefs.getSafeBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
         shortGestureMinDistance = Config.safeGetInt(prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE)
         shortGestureMaxDistance = Config.safeGetInt(prefs, "short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE)
+        shortSwipesOnly = prefs.getSafeBoolean("short_swipes_only", Defaults.SHORT_SWIPES_ONLY)
 
         // Subkey popover settings
         subkeyPopoverEnabled = prefs.getSafeBoolean("subkey_popover_enabled", Defaults.SUBKEY_POPOVER_ENABLED)

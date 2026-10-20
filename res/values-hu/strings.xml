@@ -471,6 +471,10 @@
     <string name="gesture_min_distance_desc" formatted="false">Minimális csúsztatási távolság a kiváltáshoz (billentyű átlójának %-a)</string>
     <string name="gesture_max_distance_title">Maximális távolság</string>
     <string name="gesture_max_distance_desc" formatted="false">A rövid/hosszú határ (billentyű átlójának %-a): ennél kisebb vagy egyenlő = rövid csúsztatás, felette = csúsztatott szó. Az alacsony értékek az enyhe túlcsúszásokat szóvá változtatják; a magas értékek hosszabb csúsztatást igényelnek a szóírás megkezdéséhez.</string>
+    <string name="gesture_short_swipes_only_title">Csak rövid csúsztatások</string>
+    <string name="gesture_short_swipes_only_desc">Minden legalább a minimális távolságú csúsztatás a hosszától függetlenül az irányába eső albillentyűt írja be; albillentyű nélküli irányba csúsztatva semmi sem íródik be. Bekapcsolt állapotban a csúsztatásos gépelés ki van kapcsolva. Rövid gesztusokat igényel.</string>
+    <string name="swipe_enable_desc_short_swipes_only">Ki van kapcsolva, amíg a Csak rövid csúsztatások be van kapcsolva (Gesztus hangolás).</string>
+    <string name="gesture_max_distance_desc_short_swipes_only">Nem használatos, amíg a Csak rövid csúsztatások be van kapcsolva: a minimális távolságtól kezdve minden csúsztatás rövid csúsztatás.</string>
     <string name="gesture_vertical_threshold_title">Függőleges küszöb</string>
     <string name="gesture_vertical_threshold_desc" formatted="false">A billentyű magasságának %-a, amennyit az ujjnak mozognia kell a sorválasztás kiváltásához. Magasabb = nehezebb véletlenül sort kiválasztani.</string>
     <string name="gesture_vertical_speed_title">Függőleges sebesség</string>
