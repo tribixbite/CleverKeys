@@ -14,7 +14,12 @@ pushed (pushes need the maintainer's word this round). New since 10-18, all on l
   an unset inner-screen height follows the outer one; two new Appearance sliders. Not yet
   device-checked (no foldable test phone; disabled-state rendering pending).
 - `#99` CSV word lists (`b5772e87`).
-- **In flight on agent branches** (worktrees under `.claude/worktrees/`, to be merged into
+- **Merged 2026-10-20 afternoon** (all on local main, suites green, instrumented 1,607/1,607 at
+  `4f70eb7e`): #154, #139, #190, #187, #147/#87, swipe typing into inline fields (`c4152999`),
+  QS tile show/minimize (`f47d5f3f` + `4f70eb7e`; a third round fixes the home-screen state),
+  code-quality fixes (todo 13c). Device passes on the first Saga: inline-field swipe, #147,
+  #190, foldable sliders, tile in a native field.
+- **Formerly in flight on agent branches** (worktrees under `.claude/worktrees/`, to be merged into
   main by the coordinating session): #154 system-haptics option + #139 Enter-always-newline,
   #190 follow-finger backspace swipe, #187 below-accent dead keys, #147/#87 short-swipes-only
   mode, swipe typing inside the clipboard editor / inline fields, QS tile toggles

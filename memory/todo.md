@@ -170,6 +170,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (κ 3 + Hebrew δ): 1,606/1,606 on emulator.wtf Pixel7 API 34 (`~/ew-output/oct20-kappa/`, run
     f1aff4e2); pure 3,042/3,042 and mock 1,317/1,317. The settings group was device-checked on the second
     Saga, 2026-10-18 (`build/oct18-saga/01–10`; before the "Contraction Preference" slider).
+13c. [ ] agent → device: code-quality audit 2026-10-20 (read-only report: session scratchpad
+    `quality-audit.md`, 29 rows: 2 HIGH, 11 MED, 16 LOW). FIXED on local main: H1 inner-screen
+    margins + M1 one height range (`35034af6`); M2 corrupt learned-data no longer reported as
+    restored, M6 Layout Manager import/export errors surfaced, M7 continuous-swipe ownership from
+    the snapshot, L1 dead plumbing (`b0ffc613`…`f3d5e4c9`); M3/M4/M5/M10/L12 one definition per
+    default and M8/M9/M11 ranges in SettingsRanges only (`604ce902`, `ce79c881`), pinned by
+    `DefaultsSingleDefinitionDriftTest` + `SettingsRangeDriftTest`. OPEN: **H2** two theme-name→
+    style maps disagree on `monet` (uiMode-aware vs MonetDark) — verify on a device in LIGHT mode
+    with Material You, then unify `Config.getThemeId` / `getThemeStyleId`; leftovers: the
+    `custom_border_radius` slider says "dp" but Theme treats it as % of key width; private-copy
+    prefs still use literal defaults; side-margin slider `steps` off by one; the remaining LOW
+    rows in the report.
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 15. [ ] agent: deferred review items — suffix receipt readback at command time (3 editor reads
