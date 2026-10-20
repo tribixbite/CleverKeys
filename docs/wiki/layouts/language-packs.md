@@ -143,7 +143,9 @@ python build_langpack.py --lang sv --name "Swedish" --input sv_words.txt --use-w
 # Option 2: Build from pre-existing binary dictionary (.bin file)
 python build_langpack.py --lang sv --name "Swedish" --dict ../src/main/assets/dictionaries/sv_enhanced.bin --output langpack-sv.zip
 
-# Option 3: Build from custom word list CSV (format: word,frequency per line)
+# Option 3: Build from your own word list: one entry per line, either "word",
+# "word,frequency", "word<TAB>frequency" or "word frequency" (integer or decimal).
+# The --input of build_langpack.py is the same kind of word list; raw prose is not tokenized.
 python build_dictionary.py --input my_words.csv --output custom.bin
 python build_langpack.py --lang xx --name "MyLang" --dict custom.bin --output langpack-xx.zip
 ```
@@ -153,7 +155,7 @@ python build_langpack.py --lang xx --name "MyLang" --dict custom.bin --output la
 | Script | Purpose |
 |--------|---------|
 | `build_langpack.py` | Create .zip language pack (with licence metadata + `NOTICE.txt`) |
-| `build_dictionary.py` | Build binary dictionary from CSV |
+| `build_dictionary.py` | Build binary dictionary from a word list (word / CSV / tab / space formats) |
 | `build_all_languages.py` | Batch build all supported languages |
 | `get_wordlist.py` | Extract top N words from wordfreq |
 

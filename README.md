@@ -372,11 +372,14 @@ python build_wordlist.py --lang fr          # report mode: classification + revi
 python build_wordlist.py --lang fr --write  # regenerate fr_words.txt + CKDT binary
 python build_all_languages.py --lang fr     # + unigrams + prefix boosts + langpack zip
 
-# Option 2: Raw wordfreq build for a language without a LANG_CONFIG entry
+# Option 2: Raw wordfreq build for a language without a LANG_CONFIG entry.
+# --input is a WORD LIST, one entry per line (optionally "word<TAB|SPACE|,>frequency");
+# raw prose (e.g. a Wikipedia dump) is not tokenized — make a word list first.
 python get_wordlist.py --lang xx --output xx_words.txt --count 50000
 python build_langpack.py --lang xx --name "MyLang" --input xx_words.txt --use-wordfreq --output langpack-xx.zip
 
-# Option 3: Build from custom word frequency CSV (format: word,frequency per line)
+# Option 3: Build from your own word list: one entry per line, either "word",
+# "word,frequency", "word<TAB>frequency" or "word frequency" (integer or decimal)
 python build_dictionary.py --lang xx --input my_words.csv --output my_lang.bin
 python build_langpack.py --lang xx --name "MyLang" --dict my_lang.bin --output langpack-xx.zip \
     --license CC-BY-4.0 --attribution "My corpus, (c) Me, CC BY 4.0" --source https://example.org

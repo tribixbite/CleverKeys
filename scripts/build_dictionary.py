@@ -103,6 +103,9 @@ def load_word_list(input_path: Path) -> List[Tuple[str, Optional[float]]]:
     - word (frequency will be looked up or defaulted)
     - word<tab>frequency   (integer OR float frequency)
     - word<space>frequency (integer OR float frequency)
+    - word,frequency       (CSV, as the README documents; GH #99). A comma is a
+      separator only when the text after the LAST comma parses as a frequency,
+      so an entry that merely contains a comma is kept whole.
 
     A line whose final whitespace-delimited token is NOT a number is treated
     as a single multi-token entry with no explicit frequency (freq=None) rather
@@ -131,6 +134,9 @@ def load_word_list(input_path: Path) -> List[Tuple[str, Optional[float]]]:
             # format); fall back to the final space-delimited token.
             if '\t' in line:
                 head, _, tail = line.rpartition('\t')
+            elif ',' in line and _parse_frequency(line.rpartition(',')[2].strip()) is not None:
+                head, _, tail = line.rpartition(',')
+                tail = tail.strip()
             elif ' ' in line:
                 head, _, tail = line.rpartition(' ')
             else:
