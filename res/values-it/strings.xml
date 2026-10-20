@@ -376,8 +376,10 @@
     <string name="settings_section_multilang">🌐 Multilingua</string>
     <string name="settings_section_privacy">🔒 Privacy e dati</string>
     <string name="settings_section_swipe_trail">✨ Scia di scorrimento</string>
+    <string name="accessibility_system_vibration_title">Usa la vibrazione di sistema</string>
+    <string name="accessibility_system_vibration_desc">Usa il pattern aptico integrato del telefono (latenza minima). Disattivala per impostare una durata personalizzata.</string>
     <string name="accessibility_custom_duration_title">Durata personalizzata (facoltativa)</string>
-    <string name="accessibility_custom_duration_desc">Imposta una lunghezza personalizzata della vibrazione. Lascia il valore predefinito per usare il pattern aptico di sistema (latenza minima, ottimizzato dal produttore).</string>
+    <string name="accessibility_custom_duration_desc">Durata della vibrazione usata quando la vibrazione di sistema è disattivata.</string>
     <string name="accessibility_key_press_title">Pressione tasto</string>
     <string name="accessibility_key_press_desc">Vibra alla pressione di un tasto</string>
     <string name="accessibility_suggestion_tap_title">Tocco suggerimento</string>
@@ -579,6 +581,8 @@
     <string name="input_double_tap_shift_desc">Blocca il tasto Maiusc toccandolo due volte rapidamente</string>
     <string name="input_immediate_switching_title">Cambio tastiera immediato</string>
     <string name="input_immediate_switching_desc">Cambia tastiera immediatamente invece di mostrare un menu</string>
+    <string name="input_enter_always_newline_title">Invio inserisce sempre una nuova riga</string>
+    <string name="input_enter_always_newline_desc">Nei campi su più righe, Invio aggiunge una nuova riga anche quando l\'app mostra Invia o Cerca; scorri Invio verso l\'alto a destra per l\'azione dell\'app. I campi su una sola riga, come le ricerche, mantengono la loro azione.</string>
     <string name="input_number_row_title">Riga numeri</string>
     <string name="input_number_row_desc">Mostra la riga dei numeri in cima alla tastiera</string>
     <string name="input_show_numpad_title">Mostra tastierino numerico</string>

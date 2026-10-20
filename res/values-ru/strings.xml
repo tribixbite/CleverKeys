@@ -340,8 +340,10 @@
     <string name="settings_section_multilang">🌐 Мультиязычность</string>
     <string name="settings_section_privacy">🔒 Конфиденциальность и данные</string>
     <string name="settings_section_swipe_trail">✨ След свайпа</string>
+    <string name="accessibility_system_vibration_title">Системная вибрация</string>
+    <string name="accessibility_system_vibration_desc">Используется встроенный тактильный паттерн телефона (минимальная задержка). Отключите, чтобы задать свою длительность.</string>
     <string name="accessibility_custom_duration_title">Длительность (дополнительно)</string>
-    <string name="accessibility_custom_duration_desc">Задайте пользовательскую длительность вибрации. Оставьте значение по умолчанию для использования системного паттерна (минимальная задержка, настройки производителя).</string>
+    <string name="accessibility_custom_duration_desc">Длительность вибрации, когда системная вибрация отключена.</string>
     <string name="accessibility_key_press_title">Нажатие клавиши</string>
     <string name="accessibility_key_press_desc">Вибрировать при нажатии клавиши</string>
     <string name="accessibility_suggestion_tap_title">Выбор подсказки</string>
@@ -543,6 +545,8 @@
     <string name="input_double_tap_shift_desc">Фиксировать Shift двойным быстрым нажатием</string>
     <string name="input_immediate_switching_title">Мгновенное переключение клавиатуры</string>
     <string name="input_immediate_switching_desc">Переключать клавиатуры немедленно, без меню</string>
+    <string name="input_enter_always_newline_title">Enter всегда вставляет новую строку</string>
+    <string name="input_enter_always_newline_desc">В многострочных полях Enter добавляет новую строку, даже если приложение показывает «Отправить» или «Поиск»; для действия приложения сделайте свайп по Enter вверх вправо. Однострочные поля, например поиск, сохраняют своё действие.</string>
     <string name="input_number_row_title">Цифровой ряд</string>
     <string name="input_number_row_desc">Показывать цифровой ряд вверху клавиатуры</string>
     <string name="input_show_numpad_title">Показывать цифровую клавиатуру</string>

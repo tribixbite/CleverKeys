@@ -355,8 +355,10 @@
     <string name="settings_section_multilang">🌐 Mehrsprachigkeit</string>
     <string name="settings_section_privacy">🔒 Datenschutz &amp; Daten</string>
     <string name="settings_section_swipe_trail">✨ Wischspur</string>
+    <string name="accessibility_system_vibration_title">Systemvibration verwenden</string>
+    <string name="accessibility_system_vibration_desc">Verwendet das integrierte Haptikmuster des Telefons (niedrigste Latenz). Deaktivieren Sie die Option, um eine eigene Dauer festzulegen.</string>
     <string name="accessibility_custom_duration_title">Benutzerdefinierte Dauer (optional)</string>
-    <string name="accessibility_custom_duration_desc">Legen Sie eine benutzerdefinierte Vibrationsdauer fest. Lassen Sie den Standardwert, um das Systemhaptikmuster zu verwenden (niedrigste Latenz, OEM-optimiert).</string>
+    <string name="accessibility_custom_duration_desc">Vibrationsdauer, wenn die Systemvibration deaktiviert ist.</string>
     <string name="accessibility_key_press_title">Tastendruck</string>
     <string name="accessibility_key_press_desc">Beim Tastendruck vibrieren</string>
     <string name="accessibility_suggestion_tap_title">Vorschlag antippen</string>
@@ -558,6 +560,8 @@
     <string name="input_double_tap_shift_desc">Umschalttaste durch zweimaliges schnelles Tippen sperren</string>
     <string name="input_immediate_switching_title">Sofortiges Tastaturwechseln</string>
     <string name="input_immediate_switching_desc">Tastatur sofort wechseln, anstatt ein Menü anzuzeigen</string>
+    <string name="input_enter_always_newline_title">Eingabetaste fügt immer eine neue Zeile ein</string>
+    <string name="input_enter_always_newline_desc">In mehrzeiligen Feldern fügt die Eingabetaste eine neue Zeile ein, auch wenn die App Senden oder Suchen anzeigt; wischen Sie auf der Eingabetaste nach rechts oben, um die Aktion der App auszuführen. Einzeilige Felder wie Suchfelder behalten ihre Aktion.</string>
     <string name="input_number_row_title">Zahlenreihe</string>
     <string name="input_number_row_desc">Zahlenreihe oben auf der Tastatur anzeigen</string>
     <string name="input_show_numpad_title">Nummernblock anzeigen</string>

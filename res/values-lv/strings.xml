@@ -349,8 +349,10 @@
     <string name="settings_section_multilang">🌐 Daudzvalodība</string>
     <string name="settings_section_privacy">🔒 Privātums un dati</string>
     <string name="settings_section_swipe_trail">✨ Vilkuma pēda</string>
+    <string name="accessibility_system_vibration_title">Izmantot sistēmas vibrāciju</string>
+    <string name="accessibility_system_vibration_desc">Tiek izmantots tālruņa iebūvētais haptikas modelis (mazākais latentums). Izslēdziet, lai iestatītu pielāgotu ilgumu.</string>
     <string name="accessibility_custom_duration_title">Pielāgots ilgums (neobligāts)</string>
-    <string name="accessibility_custom_duration_desc">Iestatiet pielāgotu vibrācijas ilgumu. Atstājiet noklusējumu, lai izmantotu sistēmas haptikas modeli (mazākā latentums, ražotāja pielāgojums).</string>
+    <string name="accessibility_custom_duration_desc">Vibrācijas ilgums, kad sistēmas vibrācija ir izslēgta.</string>
     <string name="accessibility_key_press_title">Taustiņa nospiešana</string>
     <string name="accessibility_key_press_desc">Vibrēt, nospiežot taustiņu</string>
     <string name="accessibility_suggestion_tap_title">Ieteikuma pieskaršanās</string>
@@ -552,6 +554,8 @@
     <string name="input_double_tap_shift_desc">Fiksēt Shift, ātri nospiežot divreiz</string>
     <string name="input_immediate_switching_title">Tūlītēja tastatūras pārslēgšana</string>
     <string name="input_immediate_switching_desc">Pārslēgt tastatūras nekavējoties, bez izvēlnes</string>
+    <string name="input_enter_always_newline_title">Enter vienmēr ievieto jaunu rindu</string>
+    <string name="input_enter_always_newline_desc">Vairākrindu laukos Enter pievieno jaunu rindu arī tad, ja lietotne rāda Sūtīt vai Meklēt; lai izpildītu lietotnes darbību, velciet Enter uz augšu pa labi. Vienrindas lauki, piemēram, meklēšana, saglabā savu darbību.</string>
     <string name="input_number_row_title">Ciparu rinda</string>
     <string name="input_number_row_desc">Rādīt ciparu rindu tastatūras augšdaļā</string>
     <string name="input_show_numpad_title">Rādīt ciparu tastatūru</string>

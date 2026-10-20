@@ -350,8 +350,10 @@
     <string name="settings_section_multilang">🌐 Wiele języków</string>
     <string name="settings_section_privacy">🔒 Prywatność &amp; dane</string>
     <string name="settings_section_swipe_trail">✨ Ślad gestu</string>
+    <string name="accessibility_system_vibration_title">Używaj wibracji systemowych</string>
+    <string name="accessibility_system_vibration_desc">Używa wbudowanego wzorca haptycznego telefonu (najniższe opóźnienie). Wyłącz, aby ustawić własny czas trwania.</string>
     <string name="accessibility_custom_duration_title">Własny czas trwania (opcjonalnie)</string>
-    <string name="accessibility_custom_duration_desc">Ustaw własny czas trwania wibracji. Pozostaw domyślny, aby używać systemowego wzorca haptycznego (najniższe opóźnienie, dostrojony przez producenta).</string>
+    <string name="accessibility_custom_duration_desc">Czas trwania wibracji, gdy wibracje systemowe są wyłączone.</string>
     <string name="accessibility_key_press_title">Naciśnięcie klawisza</string>
     <string name="accessibility_key_press_desc">Wibruj przy naciśnięciu klawisza</string>
     <string name="accessibility_suggestion_tap_title">Dotknięcie podpowiedzi</string>
@@ -553,6 +555,8 @@
     <string name="input_double_tap_shift_desc">Zablokuj Shift dwukrotnym szybkim naciśnięciem</string>
     <string name="input_immediate_switching_title">Natychmiastowe przełączanie klawiatury</string>
     <string name="input_immediate_switching_desc">Przełączaj klawiaturę natychmiast bez wyświetlania menu</string>
+    <string name="input_enter_always_newline_title">Enter zawsze wstawia nowy wiersz</string>
+    <string name="input_enter_always_newline_desc">W polach wielowierszowych Enter dodaje nowy wiersz, nawet gdy aplikacja pokazuje Wyślij lub Szukaj; aby wykonać akcję aplikacji, przeciągnij Enter w górę w prawo. Pola jednowierszowe, takie jak wyszukiwanie, zachowują swoją akcję.</string>
     <string name="input_number_row_title">Rząd cyfr</string>
     <string name="input_number_row_desc">Pokaż rząd cyfr na górze klawiatury</string>
     <string name="input_show_numpad_title">Pokaż klawiaturę numeryczną</string>

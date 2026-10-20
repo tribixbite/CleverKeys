@@ -251,6 +251,12 @@ class ConfigDefaultsTest {
         assertThat(Defaults.SWITCH_INPUT_IMMEDIATE).isFalse()
     }
 
+    @Test
+    fun `enter always newline disabled by default so the editor action swap is unchanged`() {
+        // #139: OFF preserves today's behaviour (Send/Search on the Enter key when asked).
+        assertThat(Defaults.ENTER_ALWAYS_NEWLINE).isFalse()
+    }
+
     // =========================================================================
     // Smart Punctuation (wiki: typing/smart-punctuation.md)
     // =========================================================================

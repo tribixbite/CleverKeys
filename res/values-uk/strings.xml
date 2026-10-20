@@ -351,8 +351,10 @@
     <string name="settings_section_multilang">🌐 Багатомовність</string>
     <string name="settings_section_privacy">🔒 Конфіденційність і дані</string>
     <string name="settings_section_swipe_trail">✨ Слід свайпу</string>
+    <string name="accessibility_system_vibration_title">Системна вібрація</string>
+    <string name="accessibility_system_vibration_desc">Використовується вбудований тактильний паттерн телефону (мінімальна затримка). Вимкніть, щоб задати власну тривалість.</string>
     <string name="accessibility_custom_duration_title">Тривалість (додатково)</string>
-    <string name="accessibility_custom_duration_desc">Задайте власну тривалість вібрації. Залиште за замовчуванням для системного паттерну (мінімальна затримка, налаштування виробника).</string>
+    <string name="accessibility_custom_duration_desc">Тривалість вібрації, коли системну вібрацію вимкнено.</string>
     <string name="accessibility_key_press_title">Натискання клавіші</string>
     <string name="accessibility_key_press_desc">Вібрувати під час натискання клавіші</string>
     <string name="accessibility_suggestion_tap_title">Вибір підказки</string>
@@ -554,6 +556,8 @@
     <string name="input_double_tap_shift_desc">Фіксувати Shift подвійним швидким натисканням</string>
     <string name="input_immediate_switching_title">Миттєве перемикання клавіатури</string>
     <string name="input_immediate_switching_desc">Перемикати клавіатури негайно без меню</string>
+    <string name="input_enter_always_newline_title">Enter завжди вставляє новий рядок</string>
+    <string name="input_enter_always_newline_desc">У багаторядкових полях Enter додає новий рядок, навіть якщо застосунок показує «Надіслати» або «Пошук»; для дії застосунку зробіть свайп по Enter угору праворуч. Однорядкові поля, наприклад пошук, зберігають свою дію.</string>
     <string name="input_number_row_title">Цифровий рядок</string>
     <string name="input_number_row_desc">Показувати цифровий рядок вгорі клавіатури</string>
     <string name="input_show_numpad_title">Показувати цифрову клавіатуру</string>

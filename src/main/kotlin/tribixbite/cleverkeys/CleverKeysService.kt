@@ -596,7 +596,11 @@ class CleverKeysService : InputMethodService(),
      * Extracts action label, action ID, and Enter/Action key swap behavior.
      */
     private fun refresh_action_label(info: EditorInfo) {
-        val actionInfo = EditorInfoHelper.extractActionInfo(info, resources)
+        // #139: the "Enter always inserts a new line" preference keeps Enter a newline key
+        // in multi-line fields. Read per field start, so a change applies from the next field.
+        val actionInfo = EditorInfoHelper.extractActionInfo(
+            info, resources, _config?.enter_always_newline ?: Defaults.ENTER_ALWAYS_NEWLINE
+        )
 
         _config?.actionLabel = actionInfo.actionLabel
         actionId = actionInfo.actionId

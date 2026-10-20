@@ -340,8 +340,10 @@
     <string name="settings_section_multilang">🌐 Více jazyků</string>
     <string name="settings_section_privacy">🔒 Soukromí &amp; data</string>
     <string name="settings_section_swipe_trail">✨ Stopa tahu</string>
+    <string name="accessibility_system_vibration_title">Použít systémové vibrace</string>
+    <string name="accessibility_system_vibration_desc">Použije vestavěný haptický vzor telefonu (nejnižší latence). Vypněte, chcete-li nastavit vlastní délku.</string>
     <string name="accessibility_custom_duration_title">Vlastní délka (volitelné)</string>
-    <string name="accessibility_custom_duration_desc">Nastavte vlastní délku vibrací. Ponechte výchozí, abyste použili systémový haptický vzor (nejnižší latence, laděno výrobcem).</string>
+    <string name="accessibility_custom_duration_desc">Délka vibrací použitá, když jsou systémové vibrace vypnuté.</string>
     <string name="accessibility_key_press_title">Stisk klávesy</string>
     <string name="accessibility_key_press_desc">Vibrovat při stisku klávesy</string>
     <string name="accessibility_suggestion_tap_title">Klepnutí na návrh</string>
@@ -543,6 +545,8 @@
     <string name="input_double_tap_shift_desc">Zamknout klávesu Shift rychlým dvojitým stiskem</string>
     <string name="input_immediate_switching_title">Okamžité přepínání klávesnic</string>
     <string name="input_immediate_switching_desc">Přepínat klávesnice okamžitě bez zobrazení nabídky</string>
+    <string name="input_enter_always_newline_title">Enter vždy vloží nový řádek</string>
+    <string name="input_enter_always_newline_desc">Ve víceřádkových polích vloží Enter nový řádek, i když aplikace nabízí Odeslat nebo Hledat; akci aplikace provedete tahem z Enteru vpravo nahoru. Jednořádková pole, například vyhledávání, si svou akci ponechají.</string>
     <string name="input_number_row_title">Číselná řada</string>
     <string name="input_number_row_desc">Zobrazit číselnou řadu v horní části klávesnice</string>
     <string name="input_show_numpad_title">Zobrazit numerický panel</string>

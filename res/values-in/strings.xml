@@ -345,8 +345,10 @@
     <string name="settings_section_multilang">🌐 Multi-Bahasa</string>
     <string name="settings_section_privacy">🔒 Privasi &amp; Data</string>
     <string name="settings_section_swipe_trail">✨ Jejak Geser</string>
+    <string name="accessibility_system_vibration_title">Gunakan Getaran Sistem</string>
+    <string name="accessibility_system_vibration_desc">Menggunakan pola haptic bawaan ponsel Anda (latensi terendah). Matikan untuk mengatur durasi kustom.</string>
     <string name="accessibility_custom_duration_title">Durasi Kustom (opsional)</string>
-    <string name="accessibility_custom_duration_desc">Atur panjang getaran kustom. Biarkan di default untuk menggunakan pola haptic sistem (latensi terendah, disetel OEM).</string>
+    <string name="accessibility_custom_duration_desc">Panjang getaran yang digunakan saat Getaran Sistem nonaktif.</string>
     <string name="accessibility_key_press_title">Tekan Tombol</string>
     <string name="accessibility_key_press_desc">Bergetar saat tombol ditekan</string>
     <string name="accessibility_suggestion_tap_title">Ketuk Saran</string>
@@ -548,6 +550,8 @@
     <string name="input_double_tap_shift_desc">Kunci tombol shift dengan dua ketukan cepat</string>
     <string name="input_immediate_switching_title">Peralihan Keyboard Segera</string>
     <string name="input_immediate_switching_desc">Beralih keyboard langsung alih-alih menampilkan menu</string>
+    <string name="input_enter_always_newline_title">Enter Selalu Menyisipkan Baris Baru</string>
+    <string name="input_enter_always_newline_desc">Di kolom multibaris, Enter menambahkan baris baru meskipun aplikasi menampilkan Kirim atau Cari; geser Enter ke kanan atas untuk tindakan aplikasi. Kolom satu baris seperti pencarian tetap menggunakan tindakannya.</string>
     <string name="input_number_row_title">Baris Angka</string>
     <string name="input_number_row_desc">Tampilkan baris angka di bagian atas keyboard</string>
     <string name="input_show_numpad_title">Tampilkan Numpad</string>

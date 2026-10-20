@@ -343,8 +343,10 @@
     <string name="settings_section_multilang">🌐 Multilangue</string>
     <string name="settings_section_privacy">🔒 Confidentialité &amp; Données</string>
     <string name="settings_section_swipe_trail">✨ Traînée de glissé</string>
+    <string name="accessibility_system_vibration_title">Utiliser la vibration du système</string>
+    <string name="accessibility_system_vibration_desc">Le schéma haptique intégré du téléphone est appliqué (latence minimale). Désactivez cette option pour définir une durée personnalisée.</string>
     <string name="accessibility_custom_duration_title">Durée personnalisée (optionnel)</string>
-    <string name="accessibility_custom_duration_desc">Définissez une durée de vibration personnalisée. Laissez la valeur par défaut pour utiliser le schéma haptique du système (latence minimale, optimisé par le fabricant).</string>
+    <string name="accessibility_custom_duration_desc">Durée de vibration utilisée lorsque la vibration du système est désactivée.</string>
     <string name="accessibility_key_press_title">Appui sur touche</string>
     <string name="accessibility_key_press_desc">Vibrer lors de l\'appui sur une touche</string>
     <string name="accessibility_suggestion_tap_title">Appui sur suggestion</string>
@@ -546,6 +548,8 @@
     <string name="input_double_tap_shift_desc">Verrouiller la touche Maj en appuyant deux fois rapidement</string>
     <string name="input_immediate_switching_title">Changement de clavier immédiat</string>
     <string name="input_immediate_switching_desc">Changer de clavier immédiatement plutôt qu\'afficher un menu</string>
+    <string name="input_enter_always_newline_title">Entrée insère toujours une nouvelle ligne</string>
+    <string name="input_enter_always_newline_desc">Dans les champs multilignes, Entrée ajoute une nouvelle ligne même si l\'application affiche Envoyer ou Rechercher ; glissez Entrée vers le haut à droite pour l\'action de l\'application. Les champs d\'une seule ligne, comme la recherche, conservent leur action.</string>
     <string name="input_number_row_title">Rangée de chiffres</string>
     <string name="input_number_row_desc">Afficher la rangée de chiffres en haut du clavier</string>
     <string name="input_show_numpad_title">Afficher le pavé numérique</string>

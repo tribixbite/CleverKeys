@@ -148,6 +148,9 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "switch_input_immediate" -> {
                 switchInputImmediate = prefs.getBoolean(key, Defaults.SWITCH_INPUT_IMMEDIATE)
             }
+            "enter_always_newline" -> {
+                enterAlwaysNewline = prefs.getSafeBoolean(key, Defaults.ENTER_ALWAYS_NEWLINE)
+            }
             // Number row and numpad settings
             "number_row" -> {
                 numberRowMode = prefs.getSafeString(key, Defaults.NUMBER_ROW)
@@ -179,6 +182,9 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             }
             "vibrate_duration" -> {
                 vibrationDuration = prefs.getInt(key, Defaults.VIBRATE_DURATION)
+            }
+            "vibrate_custom" -> {
+                vibrateCustom = prefs.getSafeBoolean(key, Defaults.VIBRATE_CUSTOM)
             }
             "swipe_show_debug_scores" -> {
                 swipeDebugEnabled = prefs.getBoolean(key, Defaults.SWIPE_SHOW_DEBUG_SCORES)
@@ -327,6 +333,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Behavior settings
         doubleTapLockShift = prefs.getSafeBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
         switchInputImmediate = prefs.getSafeBoolean("switch_input_immediate", Defaults.SWITCH_INPUT_IMMEDIATE)
+        enterAlwaysNewline = prefs.getSafeBoolean("enter_always_newline", Defaults.ENTER_ALWAYS_NEWLINE)
         smartPunctuationEnabled = prefs.getSafeBoolean("smart_punctuation", Defaults.SMART_PUNCTUATION)
 
         // Gesture tuning settings
@@ -363,6 +370,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         customTerminalPackages = prefs.getSafeString("custom_terminal_packages", Defaults.CUSTOM_TERMINAL_PACKAGES)
         imeDefaultPromptEnabled = prefs.getSafeBoolean("ime_default_prompt_enabled", Defaults.IME_DEFAULT_PROMPT_ENABLED)
         vibrationDuration = prefs.getSafeInt("vibrate_duration", Defaults.VIBRATE_DURATION)
+        vibrateCustom = prefs.getSafeBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)
         // Per-event haptic feedback
         hapticKeyPress = prefs.getSafeBoolean("haptic_key_press", Defaults.HAPTIC_KEY_PRESS)
         hapticPredictionTap = prefs.getSafeBoolean("haptic_prediction_tap", Defaults.HAPTIC_PREDICTION_TAP)

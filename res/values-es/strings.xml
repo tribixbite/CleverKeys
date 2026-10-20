@@ -355,8 +355,10 @@
     <string name="settings_section_multilang">🌐 Multiidioma</string>
     <string name="settings_section_privacy">🔒 Privacidad y datos</string>
     <string name="settings_section_swipe_trail">✨ Trazo de deslizamiento</string>
+    <string name="accessibility_system_vibration_title">Usar vibración del sistema</string>
+    <string name="accessibility_system_vibration_desc">Usa el patrón háptico integrado del teléfono (menor latencia). Desactívalo para configurar una duración personalizada.</string>
     <string name="accessibility_custom_duration_title">Duración personalizada (opcional)</string>
-    <string name="accessibility_custom_duration_desc">Configura una duración de vibración personalizada. Deja el valor predeterminado para usar el patrón háptico del sistema (menor latencia, optimizado por el fabricante).</string>
+    <string name="accessibility_custom_duration_desc">Duración de la vibración cuando la vibración del sistema está desactivada.</string>
     <string name="accessibility_key_press_title">Pulsación de tecla</string>
     <string name="accessibility_key_press_desc">Vibrar al pulsar una tecla</string>
     <string name="accessibility_suggestion_tap_title">Toque de sugerencia</string>
@@ -558,6 +560,8 @@
     <string name="input_double_tap_shift_desc">Bloquea la tecla Mayús tocando dos veces rápidamente</string>
     <string name="input_immediate_switching_title">Cambio de teclado inmediato</string>
     <string name="input_immediate_switching_desc">Cambia el teclado inmediatamente en lugar de mostrar un menú</string>
+    <string name="input_enter_always_newline_title">Intro siempre inserta una nueva línea</string>
+    <string name="input_enter_always_newline_desc">En campos de varias líneas, Intro añade una nueva línea aunque la app muestre Enviar o Buscar; desliza Intro hacia arriba a la derecha para la acción de la app. Los campos de una sola línea, como las búsquedas, mantienen su acción.</string>
     <string name="input_number_row_title">Fila de números</string>
     <string name="input_number_row_desc">Muestra la fila de números en la parte superior del teclado</string>
     <string name="input_show_numpad_title">Mostrar teclado numérico</string>

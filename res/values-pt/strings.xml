@@ -337,8 +337,10 @@
     <string name="settings_section_multilang">🌐 Múltiplos idiomas</string>
     <string name="settings_section_privacy">🔒 Privacidade e dados</string>
     <string name="settings_section_swipe_trail">✨ Rastro de deslize</string>
+    <string name="accessibility_system_vibration_title">Usar vibração do sistema</string>
+    <string name="accessibility_system_vibration_desc">Usa o padrão háptico integrado do seu telefone (menor latência). Desative para definir uma duração personalizada.</string>
     <string name="accessibility_custom_duration_title">Duração personalizada (opcional)</string>
-    <string name="accessibility_custom_duration_desc">Defina um comprimento de vibração personalizado. Deixe no padrão para usar o padrão háptico do sistema (menor latência, ajustado pelo fabricante).</string>
+    <string name="accessibility_custom_duration_desc">Duração da vibração usada quando a vibração do sistema está desativada.</string>
     <string name="accessibility_key_press_title">Pressão de tecla</string>
     <string name="accessibility_key_press_desc">Vibrar ao pressionar uma tecla</string>
     <string name="accessibility_suggestion_tap_title">Toque em sugestão</string>
@@ -540,6 +542,8 @@
     <string name="input_double_tap_shift_desc">Travar a tecla Shift tocando-a duas vezes rapidamente</string>
     <string name="input_immediate_switching_title">Troca de teclado imediata</string>
     <string name="input_immediate_switching_desc">Trocar de teclado imediatamente em vez de mostrar menu</string>
+    <string name="input_enter_always_newline_title">Enter sempre insere uma nova linha</string>
+    <string name="input_enter_always_newline_desc">Em campos com várias linhas, o Enter adiciona uma nova linha mesmo quando o app mostra Enviar ou Buscar; deslize o Enter para cima e para a direita para a ação do app. Campos de uma linha, como buscas, mantêm sua ação.</string>
     <string name="input_number_row_title">Linha de números</string>
     <string name="input_number_row_desc">Mostrar linha de números no topo do teclado</string>
     <string name="input_show_numpad_title">Mostrar teclado numérico</string>

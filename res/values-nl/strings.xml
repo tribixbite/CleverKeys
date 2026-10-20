@@ -336,8 +336,10 @@
     <string name="settings_section_multilang">🌐 Meertalig</string>
     <string name="settings_section_privacy">🔒 Privacy &amp; gegevens</string>
     <string name="settings_section_swipe_trail">✨ Veegsleep</string>
+    <string name="accessibility_system_vibration_title">Systeemtrilling gebruiken</string>
+    <string name="accessibility_system_vibration_desc">Gebruikt het ingebouwde haptische patroon van je telefoon (laagste latentie). Zet dit uit om een aangepaste duur in te stellen.</string>
     <string name="accessibility_custom_duration_title">Aangepaste duur (optioneel)</string>
-    <string name="accessibility_custom_duration_desc">Stel een aangepaste trillingslengte in. Laat op standaard staan om het systeem-haptisch patroon te gebruiken (laagste latentie, OEM-afgesteld).</string>
+    <string name="accessibility_custom_duration_desc">Trillingslengte die wordt gebruikt als systeemtrilling uit staat.</string>
     <string name="accessibility_key_press_title">Toetsaanslag</string>
     <string name="accessibility_key_press_desc">Trillen bij toetsaanslag</string>
     <string name="accessibility_suggestion_tap_title">Tikken op suggestie</string>
@@ -539,6 +541,8 @@
     <string name="input_double_tap_shift_desc">Shift-toets vergrendelen door tweemaal snel te tikken</string>
     <string name="input_immediate_switching_title">Direct wisselen van toetsenbord</string>
     <string name="input_immediate_switching_desc">Direct wisselen van toetsenbord zonder menu te tonen</string>
+    <string name="input_enter_always_newline_title">Enter voegt altijd een nieuwe regel in</string>
+    <string name="input_enter_always_newline_desc">In velden met meerdere regels voegt Enter een nieuwe regel toe, ook als de app Stuur of Zoek toont; veeg Enter naar rechtsboven voor de actie van de app. Velden met één regel, zoals zoekvelden, houden hun actie.</string>
     <string name="input_number_row_title">Cijferrij</string>
     <string name="input_number_row_desc">Cijferrij bovenaan het toetsenbord tonen</string>
     <string name="input_show_numpad_title">Numeriek toetsenblok tonen</string>

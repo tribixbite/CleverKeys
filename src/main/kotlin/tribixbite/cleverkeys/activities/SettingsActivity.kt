@@ -343,6 +343,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var customTerminalPackages by mutableStateOf(Defaults.CUSTOM_TERMINAL_PACKAGES)
     internal var imeDefaultPromptEnabled by mutableStateOf(Defaults.IME_DEFAULT_PROMPT_ENABLED)  // I-7: default-IME reminder
     internal var vibrationDuration by mutableIntStateOf(20)
+    // #154: false = system haptic pattern (performHapticFeedback), true = custom duration.
+    internal var vibrateCustom by mutableStateOf(Defaults.VIBRATE_CUSTOM)
     // Per-event haptic feedback toggles
     internal var hapticKeyPress by mutableStateOf(Defaults.HAPTIC_KEY_PRESS)
     internal var hapticPredictionTap by mutableStateOf(Defaults.HAPTIC_PREDICTION_TAP)
@@ -391,6 +393,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var doubleTapLockShift by mutableStateOf(false)
     internal var switchInputImmediate by mutableStateOf(false)
     internal var smartPunctuationEnabled by mutableStateOf(true) // Attach punctuation to end of last word
+    // #139: Enter inserts a newline in multi-line fields instead of the editor action.
+    internal var enterAlwaysNewline by mutableStateOf(Defaults.ENTER_ALWAYS_NEWLINE)
 
     // Gesture tuning settings
     internal var tapDurationThreshold by mutableIntStateOf(150) // ms

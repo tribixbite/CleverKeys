@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import java.io.File
@@ -210,5 +211,88 @@ class HapticsBehaviorDriftTest {
             "migrateForcedVibrateCustom must unconditionally persist the marker " +
             "(putBoolean(\"vibrate_custom_migration_v1\", true)) whether or not it cleared the flag."
         ).that(fnBody.contains("putBoolean(\"vibrate_custom_migration_v1\", true)")).isTrue()
+    }
+
+    // =========================================================================
+    // #154 follow-up: an explicit way BACK to the system haptic. Before the
+    // "Use system vibration" switch, touching the slider stored vibrate_custom=true and no
+    // UI path could return to performHapticFeedback short of a full settings reset.
+    // =========================================================================
+
+    /** The block of the "Use system vibration" switch, from its title to the slider after it. */
+    private fun systemVibrationSwitchBlock(): String {
+        val src = read("ui/settings/sections/AccessibilitySection.kt")
+        val start = src.indexOf("R.string.accessibility_system_vibration_title")
+        assertWithMessage(
+            "AccessibilitySection must offer the \"Use system vibration\" switch " +
+                "(accessibility_system_vibration_title) so users can return to the system haptic (#154)."
+        ).that(start).isGreaterThan(-1)
+        val end = src.indexOf("R.string.accessibility_custom_duration_title", start)
+        assertWithMessage("The system-vibration switch must precede the duration slider")
+            .that(end).isGreaterThan(start)
+        return src.substring(start, end)
+    }
+
+    /**
+     * The switch is the inverse view of vibrate_custom (ON = system pattern = false) and it
+     * must write BOTH the pref and the live Config, so the IME switches path without a reload.
+     */
+    @Test
+    fun systemVibrationSwitch_writesInverseOfVibrateCustom_toPrefAndLiveConfig() {
+        val block = systemVibrationSwitchBlock()
+        assertWithMessage("Switch must show checked = !vibrateCustom (ON = system pattern)")
+            .that(block).contains("checked = !vibrateCustom")
+        assertWithMessage("Switch must persist vibrate_custom = !useSystem")
+            .that(block).contains("saveSetting(\"vibrate_custom\", !useSystem)")
+        assertWithMessage("Switch must update the live Config so VibratorCompat changes path at once")
+            .that(block).contains("Config.globalConfig().vibrate_custom = !useSystem")
+    }
+
+    /**
+     * Dependent controls are visible-but-disabled, never hidden: the duration slider is
+     * composed whenever vibration is on and is disabled while the system pattern is in use.
+     */
+    @Test
+    fun durationSlider_isDisabledWhileSystemVibrationIsOn() {
+        val src = read("ui/settings/sections/AccessibilitySection.kt")
+        val sliderTitle = src.indexOf("R.string.accessibility_custom_duration_title")
+        val sliderSave = src.indexOf("saveSetting(\"vibrate_duration\"", sliderTitle)
+        assertWithMessage("Duration slider must exist after its title").that(sliderSave).isGreaterThan(sliderTitle)
+        val sliderParams = src.substring(sliderTitle, sliderSave)
+        assertWithMessage("Duration slider must be enabled only in custom mode (enabled = vibrateCustom)")
+            .that(sliderParams).contains("enabled = vibrateCustom")
+        // Not gated by an if on vibrateCustom: the slider stays visible.
+        val switchToSlider = systemVibrationSwitchBlock()
+        assertWithMessage("The slider must not be hidden behind `if (vibrateCustom)`")
+            .that(switchToSlider.contains("if (vibrateCustom)")).isFalse()
+    }
+
+    /**
+     * Settings state follows the stored flag: initialised at load and refreshed on change
+     * (a backup import or reset rewrites vibrate_custom behind the screen).
+     */
+    @Test
+    fun settingsPersistence_tracksVibrateCustom() {
+        val src = read("ui/settings/SettingsPersistence.kt")
+        assertWithMessage("SettingsPersistence must refresh vibrateCustom on a vibrate_custom change")
+            .that(src).contains("\"vibrate_custom\" -> {\n                vibrateCustom = prefs.getSafeBoolean(key, Defaults.VIBRATE_CUSTOM)")
+        assertWithMessage("SettingsPersistence must initialise vibrateCustom from the pref")
+            .that(src).contains("vibrateCustom = prefs.getSafeBoolean(\"vibrate_custom\", Defaults.VIBRATE_CUSTOM)")
+    }
+
+    /** VibratorCompat's path choice is exactly vibrate_custom && duration > 0 (what the switch controls). */
+    @Test
+    fun vibratorCompat_customPath_isGatedOnVibrateCustom() {
+        val src = read("VibratorCompat.kt")
+        assertThat(src).contains("if (config.vibrate_custom && config.vibrate_duration > 0)")
+    }
+
+    /** The slider description no longer promises a "leave at default" path that never existed. */
+    @Test
+    fun durationDescription_doesNotPromiseLeaveAtDefault() {
+        val strings = File("res/values/strings.xml").readText()
+        val line = strings.lineSequence().first { "name=\"accessibility_custom_duration_desc\"" in it }
+        assertWithMessage("accessibility_custom_duration_desc must not tell users to 'leave at default' (#154)")
+            .that(line.contains("Leave at default", ignoreCase = true)).isFalse()
     }
 }

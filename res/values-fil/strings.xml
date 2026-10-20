@@ -345,8 +345,10 @@
     <string name="settings_section_multilang">🌐 Multi-Wika</string>
     <string name="settings_section_privacy">🔒 Privacy at Data</string>
     <string name="settings_section_swipe_trail">✨ Swipe Trail</string>
+    <string name="accessibility_system_vibration_title">Gamitin ang Vibration ng System</string>
+    <string name="accessibility_system_vibration_desc">Ginagamit ang built-in na haptic pattern ng iyong phone (pinakamababang latency). I-off para magtakda ng custom na tagal.</string>
     <string name="accessibility_custom_duration_title">Custom na Tagal (opsyonal)</string>
-    <string name="accessibility_custom_duration_desc">Itakda ang custom na haba ng vibration. Iwan sa default para gamitin ang pattern ng haptic ng system (pinakamababang latency, na-tune ng OEM).</string>
+    <string name="accessibility_custom_duration_desc">Haba ng vibration kapag naka-off ang Vibration ng System.</string>
     <string name="accessibility_key_press_title">Pindutin ang Key</string>
     <string name="accessibility_key_press_desc">Mag-vibrate kapag pinindot ang key</string>
     <string name="accessibility_suggestion_tap_title">Tapikin ang Suhestiyon</string>
@@ -548,6 +550,8 @@
     <string name="input_double_tap_shift_desc">I-lock ang shift key sa pamamagitan ng mabilis na pag-double tap</string>
     <string name="input_immediate_switching_title">Agad na Pagpapalit ng Keyboard</string>
     <string name="input_immediate_switching_desc">Palitan ang keyboard kaagad sa halip na magpakita ng menu</string>
+    <string name="input_enter_always_newline_title">Laging Nagdaragdag ng Bagong Linya ang Enter</string>
+    <string name="input_enter_always_newline_desc">Sa mga field na maraming linya, nagdaragdag ang Enter ng bagong linya kahit Send o Maghanap ang ipinapakita ng app; i-swipe ang Enter pataas-pakanan para sa aksyon ng app. Pinapanatili ng mga field na isang linya, gaya ng paghahanap, ang kanilang aksyon.</string>
     <string name="input_number_row_title">Number Row</string>
     <string name="input_number_row_desc">Ipakita ang number row sa itaas ng keyboard</string>
     <string name="input_show_numpad_title">Ipakita ang Numpad</string>

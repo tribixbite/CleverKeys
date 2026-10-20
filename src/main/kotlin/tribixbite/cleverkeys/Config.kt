@@ -94,6 +94,9 @@ object Defaults {
     const val DOUBLE_TAP_LOCK_SHIFT = true
     const val AUTOCAPITALISATION = true
     const val SWITCH_INPUT_IMMEDIATE = false
+    // #139: OFF keeps the editor-driven Enter/action swap (Send/Search on the Enter key).
+    // ON makes Enter insert a newline in multi-line fields; see EditorInfoHelper.shouldSwapEnterActionKey.
+    const val ENTER_ALWAYS_NEWLINE = false
     const val SMART_PUNCTUATION = true
 
     // Gesture settings
@@ -696,6 +699,8 @@ class Config private constructor(
     @JvmField var layout_missing_theme: String? = null
     @JvmField var autocapitalisation = false
     @JvmField var switch_input_immediate = false
+    /** #139: Enter inserts a newline in multi-line fields even when the app asks for an action. */
+    @JvmField var enter_always_newline = Defaults.ENTER_ALWAYS_NEWLINE
     @JvmField var selected_number_layout: NumberLayout? = null
     @JvmField var borderConfig = false
     @JvmField var circle_sensitivity = 0
@@ -1022,6 +1027,7 @@ class Config private constructor(
         user_theme_name = safeGetString(_prefs, "theme", Defaults.THEME)
         autocapitalisation = _prefs.getBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)
         switch_input_immediate = _prefs.getBoolean("switch_input_immediate", Defaults.SWITCH_INPUT_IMMEDIATE)
+        enter_always_newline = safeGetBoolean(_prefs, "enter_always_newline", Defaults.ENTER_ALWAYS_NEWLINE)
         extra_keys_param = ExtraKeysPreference.get_extra_keys(_prefs) ?: emptyMap()
         extra_keys_custom = CustomExtraKeysPreference.get(_prefs) ?: emptyMap()
         selected_number_layout = NumberLayout.of_string(safeGetString(_prefs, "number_entry_layout", Defaults.NUMBER_ENTRY_LAYOUT))

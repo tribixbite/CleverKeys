@@ -360,8 +360,10 @@
     <string name="settings_section_multilang">🌐 Multilingv</string>
     <string name="settings_section_privacy">🔒 Confidențialitate și date</string>
     <string name="settings_section_swipe_trail">✨ Urmă de glisare</string>
+    <string name="accessibility_system_vibration_title">Folosiți vibrația sistemului</string>
+    <string name="accessibility_system_vibration_desc">Se aplică modelul haptic integrat al telefonului (latență minimă). Dezactivați pentru a seta o durată personalizată.</string>
     <string name="accessibility_custom_duration_title">Durată personalizată (opțional)</string>
-    <string name="accessibility_custom_duration_desc">Setați o durată de vibrație personalizată. Lăsați valoarea implicită pentru a utiliza modelul haptic al sistemului (latență minimă, reglat de producător).</string>
+    <string name="accessibility_custom_duration_desc">Durata vibrației folosită când vibrația sistemului este dezactivată.</string>
     <string name="accessibility_key_press_title">Apăsare tastă</string>
     <string name="accessibility_key_press_desc">Vibrează la apăsarea unei taste</string>
     <string name="accessibility_suggestion_tap_title">Atingere sugestie</string>
@@ -563,6 +565,8 @@
     <string name="input_double_tap_shift_desc">Blochează tasta Shift atingând-o de două ori rapid</string>
     <string name="input_immediate_switching_title">Comutare imediată tastatură</string>
     <string name="input_immediate_switching_desc">Comută tastatura imediat în loc să afișeze un meniu</string>
+    <string name="input_enter_always_newline_title">Enter inserează întotdeauna un rând nou</string>
+    <string name="input_enter_always_newline_desc">În câmpurile cu mai multe rânduri, Enter adaugă un rând nou chiar dacă aplicația afișează Trimite sau Caută; glisați Enter în sus spre dreapta pentru acțiunea aplicației. Câmpurile cu un singur rând, cum ar fi căutarea, își păstrează acțiunea.</string>
     <string name="input_number_row_title">Rând de cifre</string>
     <string name="input_number_row_desc">Afișează rândul de cifre în partea de sus a tastaturii</string>
     <string name="input_show_numpad_title">Afișează tastatura numerică</string>

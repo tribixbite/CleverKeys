@@ -740,6 +740,9 @@ tasks.register('runPureTests', JavaExec) {
     // contentDescription resolving to a string present in all 22 locale files.
     'tribixbite.cleverkeys.clipboard.ClipboardEntryButtonA11yDriftTest',
     'tribixbite.cleverkeys.HapticsBehaviorDriftTest',
+    // #139 option A (2026-10-20): "Enter always inserts a new line" — the pure Enter/action
+    // swap decision (multi-line fields only; single-line and blind fields keep their action).
+    'tribixbite.cleverkeys.EditorInfoHelperEnterSwapTest',
     // #161 (2026-09-03): oriented keyboard height — the settings-side portrait stomp of
     // Config.keyboardHeightPercent (same shape as the #154 vibrate_custom stomp above).
     'tribixbite.cleverkeys.KeyboardHeightOrientationDriftTest',

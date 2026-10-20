@@ -333,8 +333,10 @@
     <string name="settings_section_multilang">🌐 多言語</string>
     <string name="settings_section_privacy">🔒 プライバシーとデータ</string>
     <string name="settings_section_swipe_trail">✨ スワイプの軌跡</string>
+    <string name="accessibility_system_vibration_title">システムの振動を使用</string>
+    <string name="accessibility_system_vibration_desc">端末内蔵の触覚パターンを使用します（最低レイテンシー）。オフにするとカスタムの振動時間を設定できます。</string>
     <string name="accessibility_custom_duration_title">カスタム振動時間（任意）</string>
-    <string name="accessibility_custom_duration_desc">カスタムの振動時間を設定します。デフォルトのままにするとシステムの触覚パターンが使用されます（最低レイテンシー、OEM調整済み）。</string>
+    <string name="accessibility_custom_duration_desc">システムの振動がオフのときに使用される振動時間です。</string>
     <string name="accessibility_key_press_title">キー押下</string>
     <string name="accessibility_key_press_desc">キータップ時に振動します</string>
     <string name="accessibility_suggestion_tap_title">候補タップ</string>
@@ -536,6 +538,8 @@
     <string name="input_double_tap_shift_desc">シフトキーを素早く2回タップしてロックします</string>
     <string name="input_immediate_switching_title">即時キーボード切り替え</string>
     <string name="input_immediate_switching_desc">メニューを表示せずにキーボードを即座に切り替えます</string>
+    <string name="input_enter_always_newline_title">Enter で常に改行する</string>
+    <string name="input_enter_always_newline_desc">複数行の入力欄では、アプリが送信や検索を表示していても Enter で改行します。アプリの操作を実行するには Enter を右上にスワイプします。検索欄などの単一行の入力欄では操作がそのまま使われます。</string>
     <string name="input_number_row_title">数字列</string>
     <string name="input_number_row_desc">キーボード上部に数字列を表示します</string>
     <string name="input_show_numpad_title">テンキーを表示</string>

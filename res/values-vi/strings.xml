@@ -362,8 +362,10 @@
     <string name="settings_section_multilang">🌐 Đa ngôn ngữ</string>
     <string name="settings_section_privacy">🔒 Quyền riêng tư &amp; Dữ liệu</string>
     <string name="settings_section_swipe_trail">✨ Vệt vuốt</string>
+    <string name="accessibility_system_vibration_title">Dùng rung hệ thống</string>
+    <string name="accessibility_system_vibration_desc">Dùng kiểu rung tích hợp của điện thoại (độ trễ thấp nhất). Tắt để đặt thời lượng tùy chỉnh.</string>
     <string name="accessibility_custom_duration_title">Thời lượng tùy chỉnh (tùy chọn)</string>
-    <string name="accessibility_custom_duration_desc">Đặt thời lượng rung tùy chỉnh. Để mặc định để dùng kiểu rung hệ thống (độ trễ thấp nhất, được nhà sản xuất tinh chỉnh).</string>
+    <string name="accessibility_custom_duration_desc">Thời lượng rung được dùng khi rung hệ thống tắt.</string>
     <string name="accessibility_key_press_title">Nhấn phím</string>
     <string name="accessibility_key_press_desc">Rung khi nhấn phím</string>
     <string name="accessibility_suggestion_tap_title">Chọn gợi ý</string>
@@ -565,6 +567,8 @@
     <string name="input_double_tap_shift_desc">Khóa phím shift bằng cách nhấn nhanh hai lần</string>
     <string name="input_immediate_switching_title">Chuyển đổi bàn phím ngay lập tức</string>
     <string name="input_immediate_switching_desc">Chuyển đổi bàn phím ngay thay vì hiển thị menu</string>
+    <string name="input_enter_always_newline_title">Enter luôn chèn dòng mới</string>
+    <string name="input_enter_always_newline_desc">Trong các trường nhiều dòng, Enter thêm dòng mới ngay cả khi ứng dụng hiển thị Gửi hoặc Tìm; vuốt Enter lên phía trên bên phải để thực hiện thao tác của ứng dụng. Các trường một dòng như ô tìm kiếm vẫn giữ thao tác của chúng.</string>
     <string name="input_number_row_title">Hàng số</string>
     <string name="input_number_row_desc">Hiển thị hàng số ở đầu bàn phím</string>
     <string name="input_show_numpad_title">Hiển thị bàn phím số</string>

@@ -93,6 +93,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "lock_double_tap" to PrefValue.Bool(Defaults.DOUBLE_TAP_LOCK_SHIFT),
     "autocapitalisation" to PrefValue.Bool(Defaults.AUTOCAPITALISATION),
     "switch_input_immediate" to PrefValue.Bool(Defaults.SWITCH_INPUT_IMMEDIATE),
+    "enter_always_newline" to PrefValue.Bool(Defaults.ENTER_ALWAYS_NEWLINE),
     "smart_punctuation" to PrefValue.Bool(Defaults.SMART_PUNCTUATION),
     "tap_duration_threshold" to PrefValue.IntV(Defaults.TAP_DURATION_THRESHOLD),
 

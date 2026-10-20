@@ -332,8 +332,10 @@
     <string name="settings_section_multilang">🌐 多语言</string>
     <string name="settings_section_privacy">🔒 隐私与数据</string>
     <string name="settings_section_swipe_trail">✨ 滑动轨迹</string>
+    <string name="accessibility_system_vibration_title">使用系统振动</string>
+    <string name="accessibility_system_vibration_desc">使用手机内置的触觉模式（最低延迟）。关闭后可设置自定义振动时长。</string>
     <string name="accessibility_custom_duration_title">自定义振动时长（可选）</string>
-    <string name="accessibility_custom_duration_desc">设置自定义振动时长。保持默认则使用系统触觉模式（最低延迟，OEM 调校）。</string>
+    <string name="accessibility_custom_duration_desc">系统振动关闭时使用的振动时长。</string>
     <string name="accessibility_key_press_title">按键触感</string>
     <string name="accessibility_key_press_desc">点击按键时振动</string>
     <string name="accessibility_suggestion_tap_title">候选词触感</string>
@@ -535,6 +537,8 @@
     <string name="input_double_tap_shift_desc">快速连续双击 Shift 键以锁定。</string>
     <string name="input_immediate_switching_title">立即切换键盘</string>
     <string name="input_immediate_switching_desc">不显示菜单，立即切换键盘。</string>
+    <string name="input_enter_always_newline_title">回车始终换行</string>
+    <string name="input_enter_always_newline_desc">在多行输入框中，即使应用显示“发送”或“搜索”，回车也会插入新行；向右上方滑动回车键可执行应用的操作。搜索框等单行输入框保留其操作。</string>
     <string name="input_number_row_title">数字行</string>
     <string name="input_number_row_desc">在键盘顶部显示数字行。</string>
     <string name="input_show_numpad_title">显示数字键盘</string>

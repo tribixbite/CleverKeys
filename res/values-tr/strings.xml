@@ -344,8 +344,10 @@
     <string name="settings_section_multilang">🌐 Çoklu Dil</string>
     <string name="settings_section_privacy">🔒 Gizlilik &amp; Veri</string>
     <string name="settings_section_swipe_trail">✨ Kaydırma İzi</string>
+    <string name="accessibility_system_vibration_title">Sistem Titreşimini Kullan</string>
+    <string name="accessibility_system_vibration_desc">Telefonunuzun yerleşik haptic düzenini kullanır (en düşük gecikme). Özel bir süre ayarlamak için kapatın.</string>
     <string name="accessibility_custom_duration_title">Özel Süre (isteğe bağlı)</string>
-    <string name="accessibility_custom_duration_desc">Özel bir titreşim süresi ayarlayın. Sistem haptic düzenini kullanmak için (en düşük gecikme, üretici ayarlı) varsayılana bırakın.</string>
+    <string name="accessibility_custom_duration_desc">Sistem titreşimi kapalıyken kullanılan titreşim süresi.</string>
     <string name="accessibility_key_press_title">Tuşa Basma</string>
     <string name="accessibility_key_press_desc">Tuşa dokunulduğunda titreşim</string>
     <string name="accessibility_suggestion_tap_title">Öneri Seçimi</string>
@@ -547,6 +549,8 @@
     <string name="input_double_tap_shift_desc">Shift tuşunu hızlıca iki kez dokunarak kilitle</string>
     <string name="input_immediate_switching_title">Anında Klavye Geçişi</string>
     <string name="input_immediate_switching_desc">Menü göstermek yerine klavyeleri hemen değiştir</string>
+    <string name="input_enter_always_newline_title">Enter Her Zaman Yeni Satır Ekler</string>
+    <string name="input_enter_always_newline_desc">Çok satırlı alanlarda Enter, uygulama Gönder veya Ara gösterse bile yeni satır ekler; uygulamanın eylemi için Enter tuşunu sağ üste kaydırın. Arama gibi tek satırlı alanlar eylemlerini korur.</string>
     <string name="input_number_row_title">Sayı Satırı</string>
     <string name="input_number_row_desc">Klavyenin üstünde sayı satırını göster</string>
     <string name="input_show_numpad_title">Sayısal Tuş Takımını Göster</string>

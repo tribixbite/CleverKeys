@@ -455,6 +455,19 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     }
                 )
 
+                // #139: keep Enter a newline key in multi-line fields whose app asks for an
+                // action (WhatsApp Send). Single-line fields keep their action; the decision
+                // lives in EditorInfoHelper.shouldSwapEnterActionKey and is read per field.
+                SettingsSwitch(
+                    title = stringResource(R.string.input_enter_always_newline_title),
+                    description = stringResource(R.string.input_enter_always_newline_desc),
+                    checked = enterAlwaysNewline,
+                    onCheckedChange = {
+                        enterAlwaysNewline = it
+                        saveSetting("enter_always_newline", it)
+                    }
+                )
+
                 SettingsDropdown(
                     title = stringResource(R.string.input_number_row_title),
                     description = stringResource(R.string.input_number_row_desc),

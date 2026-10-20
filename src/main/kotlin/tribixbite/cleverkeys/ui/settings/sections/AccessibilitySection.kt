@@ -63,18 +63,38 @@ internal fun SettingsActivity.AccessibilitySection() {
                 )
 
                 if (vibrationEnabled) {
+                    // #154: the explicit way back to the system haptic. ON = vibrate_custom
+                    // false = VibratorCompat's low-latency performHapticFeedback path (the
+                    // default); OFF = the Vibrator one-shot of the duration below. Before
+                    // this switch existed, touching the slider stored vibrate_custom=true and
+                    // no UI path could undo it short of a full settings reset.
+                    SettingsSwitch(
+                        title = stringResource(R.string.accessibility_system_vibration_title),
+                        description = stringResource(R.string.accessibility_system_vibration_desc),
+                        checked = !vibrateCustom,
+                        onCheckedChange = { useSystem ->
+                            vibrateCustom = !useSystem
+                            saveSetting("vibrate_custom", !useSystem)
+                            Config.globalConfig().vibrate_custom = !useSystem
+                        }
+                    )
+
+                    // Visible-but-disabled while the system pattern is in use: the stored
+                    // duration is kept and applies again as soon as the switch is turned off.
                     SettingsSlider(
                         title = stringResource(R.string.accessibility_custom_duration_title),
                         description = stringResource(R.string.accessibility_custom_duration_desc),
                         value = vibrationDuration.toFloat(),
                         valueRange = 5f..100f,
                         steps = 19,
+                        enabled = vibrateCustom,
                         onValueChange = {
                             vibrationDuration = it.toInt()
                             saveSetting("vibrate_duration", vibrationDuration)
-                            // Only enable custom mode when user explicitly drags the slider.
-                            // This preserves the low-latency performHapticFeedback path for
-                            // users who don't need a custom duration (fixes #154).
+                            // The slider is only enabled in custom mode, so this re-asserts the
+                            // user's explicit choice; the "Use system vibration" switch above
+                            // is the way back to the system pattern (#154).
+                            vibrateCustom = true
                             saveSetting("vibrate_custom", true)
                             Config.globalConfig().vibrate_custom = true
                             Config.globalConfig().vibrate_duration = vibrationDuration.toLong()

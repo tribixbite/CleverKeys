@@ -371,8 +371,10 @@
     <string name="settings_section_multilang">🌐 چندزبانه</string>
     <string name="settings_section_privacy">🔒 حریم خصوصی و داده‌ها</string>
     <string name="settings_section_swipe_trail">✨ ردپای کشیدن</string>
+    <string name="accessibility_system_vibration_title">استفاده از لرزش سامانه</string>
+    <string name="accessibility_system_vibration_desc">از الگوی لمسی داخلی گوشی استفاده می‌شود (کمترین تأخیر). برای تنظیم مدت سفارشی آن را خاموش کنید.</string>
     <string name="accessibility_custom_duration_title">مدت سفارشی (اختیاری)</string>
-    <string name="accessibility_custom_duration_desc">یک طول لرزش سفارشی تنظیم کنید. با پیش‌فرض بگذارید تا از الگوی لمسی سامانه استفاده شود (کمترین تأخیر، بهینه‌شده توسط سازنده).</string>
+    <string name="accessibility_custom_duration_desc">طول لرزش هنگامی که لرزش سامانه خاموش است.</string>
     <string name="accessibility_key_press_title">فشردن کلید</string>
     <string name="accessibility_key_press_desc">هنگام فشردن کلید لرزش ایجاد شود</string>
     <string name="accessibility_suggestion_tap_title">ضربه به پیشنهاد</string>
@@ -574,6 +576,8 @@
     <string name="input_double_tap_shift_desc">کلید Shift را با دو بار ضربه سریع قفل کنید</string>
     <string name="input_immediate_switching_title">تعویض فوری صفحه‌کلید</string>
     <string name="input_immediate_switching_desc">به جای نمایش منو، فوری صفحه‌کلید را تعویض کنید</string>
+    <string name="input_enter_always_newline_title">Enter همیشه خط جدید درج می‌کند</string>
+    <string name="input_enter_always_newline_desc">در فیلدهای چندخطی، Enter حتی وقتی برنامه «ارسال» یا «جستجو» را نشان می‌دهد خط جدید اضافه می‌کند؛ برای انجام عمل برنامه، Enter را به بالا و راست بکشید. فیلدهای تک‌خطی مانند جستجو عمل خود را حفظ می‌کنند.</string>
     <string name="input_number_row_title">ردیف اعداد</string>
     <string name="input_number_row_desc">ردیف اعداد را در بالای صفحه‌کلید نمایش دهید</string>
     <string name="input_show_numpad_title">نمایش صفحه اعداد</string>

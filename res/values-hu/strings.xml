@@ -341,8 +341,10 @@
     <string name="settings_section_multilang">🌐 Többnyelvű</string>
     <string name="settings_section_privacy">🔒 Adatvédelem &amp; Adatok</string>
     <string name="settings_section_swipe_trail">✨ Csúsztatási nyom</string>
+    <string name="accessibility_system_vibration_title">Rendszerrezgés használata</string>
+    <string name="accessibility_system_vibration_desc">A telefon beépített haptikus mintáját használja (legkisebb késleltetés). Kapcsolja ki egyéni időtartam beállításához.</string>
     <string name="accessibility_custom_duration_title">Egyéni időtartam (opcionális)</string>
-    <string name="accessibility_custom_duration_desc">Egyéni rezgési hossz beállítása. Hagyja alapértelmezetten a rendszer haptikus mintájának használatához (legkisebb késleltetés, gyártó által hangolt).</string>
+    <string name="accessibility_custom_duration_desc">A rezgés hossza, amikor a rendszerrezgés ki van kapcsolva.</string>
     <string name="accessibility_key_press_title">Billentyűlenyomás</string>
     <string name="accessibility_key_press_desc">Rezgés billentyűérintéskor</string>
     <string name="accessibility_suggestion_tap_title">Javaslat érintése</string>
@@ -544,6 +546,8 @@
     <string name="input_double_tap_shift_desc">Shift billentyű zárolása kétszeri gyors érintéssel</string>
     <string name="input_immediate_switching_title">Azonnali billentyűzetváltás</string>
     <string name="input_immediate_switching_desc">Billentyűzetek azonnali váltása menü megjelenítése helyett</string>
+    <string name="input_enter_always_newline_title">Az Enter mindig új sort szúr be</string>
+    <string name="input_enter_always_newline_desc">Többsoros mezőkben az Enter új sort szúr be akkor is, ha az alkalmazás Küldés vagy Keresés gombot mutat; az alkalmazás műveletéhez csúsztassa az Entert jobbra fel. Az egysoros mezők, például a keresés, megtartják a műveletüket.</string>
     <string name="input_number_row_title">Számsor</string>
     <string name="input_number_row_desc">Számsor megjelenítése a billentyűzet tetején</string>
     <string name="input_show_numpad_title">Numerikus billentyűzet megjelenítése</string>

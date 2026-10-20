@@ -334,8 +334,10 @@
     <string name="settings_section_multilang">🌐 다국어</string>
     <string name="settings_section_privacy">🔒 개인정보 및 데이터</string>
     <string name="settings_section_swipe_trail">✨ 스와이프 궤적</string>
+    <string name="accessibility_system_vibration_title">시스템 진동 사용</string>
+    <string name="accessibility_system_vibration_desc">휴대폰에 내장된 햅틱 패턴을 사용합니다(최저 지연). 사용자 정의 진동 시간을 설정하려면 끄세요.</string>
     <string name="accessibility_custom_duration_title">사용자 정의 진동 시간（선택 사항）</string>
-    <string name="accessibility_custom_duration_desc">사용자 정의 진동 길이를 설정합니다. 기본값으로 두면 시스템 햅틱 패턴이 사용됩니다（최저 지연, OEM 조정）.</string>
+    <string name="accessibility_custom_duration_desc">시스템 진동이 꺼져 있을 때 사용되는 진동 길이입니다.</string>
     <string name="accessibility_key_press_title">키 누름</string>
     <string name="accessibility_key_press_desc">키 탭 시 진동합니다</string>
     <string name="accessibility_suggestion_tap_title">추천어 탭</string>
@@ -537,6 +539,8 @@
     <string name="input_double_tap_shift_desc">Shift 키를 빠르게 두 번 탭하여 잠금합니다</string>
     <string name="input_immediate_switching_title">즉시 키보드 전환</string>
     <string name="input_immediate_switching_desc">메뉴를 표시하지 않고 키보드를 즉시 전환합니다</string>
+    <string name="input_enter_always_newline_title">엔터로 항상 줄 바꿈</string>
+    <string name="input_enter_always_newline_desc">여러 줄 입력란에서는 앱이 보내기나 검색을 표시해도 엔터가 새 줄을 추가합니다. 앱의 동작을 실행하려면 엔터를 오른쪽 위로 스와이프하세요. 검색창 같은 한 줄 입력란은 동작이 그대로 유지됩니다.</string>
     <string name="input_number_row_title">숫자 행</string>
     <string name="input_number_row_desc">키보드 상단에 숫자 행을 표시합니다</string>
     <string name="input_show_numpad_title">숫자 패드 표시</string>

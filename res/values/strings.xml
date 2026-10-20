@@ -481,8 +481,10 @@
     <string name="settings_section_swipe_trail">✨ Swipe Trail</string>
 
     <!-- AccessibilitySection -->
+    <string name="accessibility_system_vibration_title">Use System Vibration</string>
+    <string name="accessibility_system_vibration_desc">Use your phone\'s built-in haptic pattern (lowest latency). Turn off to set a custom duration.</string>
     <string name="accessibility_custom_duration_title">Custom Duration (optional)</string>
-    <string name="accessibility_custom_duration_desc">Set a custom vibration length. Leave at default to use the system haptic pattern (lowest latency, OEM-tuned).</string>
+    <string name="accessibility_custom_duration_desc">Vibration length used when System Vibration is off.</string>
     <string name="accessibility_key_press_title">Key Press</string>
     <string name="accessibility_key_press_desc">Vibrate on key tap</string>
     <string name="accessibility_suggestion_tap_title">Suggestion Tap</string>
@@ -778,6 +780,8 @@
     <string name="input_double_tap_shift_desc">Lock shift key by tapping twice quickly</string>
     <string name="input_immediate_switching_title">Immediate Keyboard Switching</string>
     <string name="input_immediate_switching_desc">Switch keyboards immediately instead of showing menu</string>
+    <string name="input_enter_always_newline_title">Enter Always Inserts a New Line</string>
+    <string name="input_enter_always_newline_desc">In multi-line fields, Enter adds a new line even when the app shows Send or Search; swipe Enter up-right for the app\'s action. Single-line fields such as search boxes keep their action.</string>
     <string name="input_number_row_title">Number Row</string>
     <string name="input_number_row_desc">Show number row at top of keyboard</string>
     <string name="input_show_numpad_title">Show Numpad</string>

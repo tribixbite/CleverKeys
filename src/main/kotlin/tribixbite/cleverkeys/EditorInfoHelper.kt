@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import android.content.res.Resources
+import android.text.InputType
 import android.view.inputmethod.EditorInfo
 
 /**
@@ -51,10 +52,17 @@ object EditorInfoHelper {
      *
      * @param info The EditorInfo from the input field
      * @param resources Android Resources for string lookup
+     * @param enterAlwaysNewline The #139 "Enter always inserts a new line" preference; see
+     *   [shouldSwapEnterActionKey] for exactly which fields it affects.
      * @return EditorActionInfo containing action label, ID, and swap flag
      */
     @JvmStatic
-    fun extractActionInfo(info: EditorInfo, resources: Resources): EditorActionInfo {
+    @JvmOverloads
+    fun extractActionInfo(
+        info: EditorInfo,
+        resources: Resources,
+        enterAlwaysNewline: Boolean = false
+    ): EditorActionInfo {
         // First try to look at 'info.actionLabel', if it isn't set, look at 'imeOptions'
         if (info.actionLabel != null) {
             return EditorActionInfo(
@@ -66,7 +74,7 @@ object EditorInfoHelper {
             val action = info.imeOptions and EditorInfo.IME_MASK_ACTION
             val actionLabel = actionLabelFor(action, resources)
             val swapEnterActionKey =
-                (info.imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION) == 0
+                shouldSwapEnterActionKey(info.imeOptions, info.inputType, enterAlwaysNewline)
 
             return EditorActionInfo(
                 actionLabel = actionLabel,
@@ -75,6 +83,50 @@ object EditorInfoHelper {
             )
         }
     }
+
+    /**
+     * Decide whether the Enter key shows the editor action (Send, Search, Go, ...) instead of
+     * Enter. When it does, LayoutModifier puts the action on the Enter position and Enter on
+     * the `action` subkey; when it does not, Enter stays a newline key and the action stays
+     * reachable on the Enter key's `action` swipe.
+     *
+     * - The editor opts out with `IME_FLAG_NO_ENTER_ACTION`: never swap (unchanged behaviour).
+     * - [enterAlwaysNewline] (#139) is ON and the field is multi-line ([acceptsNewlines]):
+     *   do not swap, so Enter inserts a newline in chat composers such as WhatsApp's that ask
+     *   for Send. The action is one swipe away.
+     * - [enterAlwaysNewline] is ON but the field is single-line (a search box, a URL bar, a
+     *   login field): still swap. Such a field cannot hold a newline — TextView turns an Enter
+     *   key event in a single-line field into its editor action anyway, or drops it — so
+     *   forcing Enter there would only remove the visible Search/Go label and make the key's
+     *   result less predictable, not produce a newline. Blind fields (`TYPE_NULL`, e.g.
+     *   terminals) are not TYPE_CLASS_TEXT and are likewise unaffected by the preference.
+     *
+     * Pure function of the EditorInfo bits so it is unit-testable without Android
+     * (`EditorInfoHelperEnterSwapTest`).
+     *
+     * @param imeOptions `EditorInfo.imeOptions` of the focused field
+     * @param inputType `EditorInfo.inputType` of the focused field
+     * @param enterAlwaysNewline the user's #139 preference
+     * @return true to show the editor action on the Enter key
+     */
+    @JvmStatic
+    fun shouldSwapEnterActionKey(imeOptions: Int, inputType: Int, enterAlwaysNewline: Boolean): Boolean {
+        val editorWantsAction = (imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION) == 0
+        if (!editorWantsAction) return false
+        if (enterAlwaysNewline && acceptsNewlines(inputType)) return false
+        return true
+    }
+
+    /**
+     * True when the field itself accepts newline characters: a text-class field with
+     * `TYPE_TEXT_FLAG_MULTI_LINE`. `TYPE_TEXT_FLAG_IME_MULTI_LINE` alone does NOT count — per
+     * the platform contract it marks a single-line field whose full-screen extract editor
+     * may wrap, so the field still rejects a newline.
+     */
+    @JvmStatic
+    fun acceptsNewlines(inputType: Int): Boolean =
+        (inputType and InputType.TYPE_MASK_CLASS) == InputType.TYPE_CLASS_TEXT &&
+            (inputType and InputType.TYPE_TEXT_FLAG_MULTI_LINE) != 0
 
     /**
      * Get the action label string for an IME action constant.
