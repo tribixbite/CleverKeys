@@ -364,7 +364,11 @@ class Pointers(
         // Word swipes START on a letter key (Seeker 2026-10-07: a swipe from Backspace across
         // m/n/b typed "mb"), or are promoted from a sloppy space/digit/punctuation start — see
         // mayBeWordSwipe. isCharKey alone is not the rule.
-        val canSwipeType = snap.swipe_typing_enabled && isCharKey && mayBeWordSwipe(ptr)
+        // GH #147/#87: "short swipes only" excludes word swipes outright. Config.refresh already
+        // folds the mode into swipe_typing_enabled; the explicit guard keeps this route closed
+        // for any snapshot built without that fold.
+        val canSwipeType = snap.swipe_typing_enabled && !snap.short_swipes_only && isCharKey &&
+            mayBeWordSwipe(ptr)
         val canShortGesture = snap.short_gestures_enabled && ptr_value != null
         // Entry into the classification block keeps its historical Char-key rule so a
         // Space/punctuation gesture with short gestures OFF still reaches the TAP branch
@@ -477,7 +481,11 @@ class Pointers(
                 // UPDATED v1.32.926: Check custom mappings BEFORE blocking check
                 // Custom user-defined mappings should ALWAYS work, even with shift active
                 // Only built-in sublabel gestures are blocked when modifiers are active on char keys
-                if (snap.short_gestures_enabled && (!ptr.hasLeftStartingKey || allowLeftKey) &&
+                // GH #147/#87 "short swipes only": leaving the starting key no longer disqualifies
+                // a short swipe, so every gesture of at least the minimum distance gets here.
+                val shortSwipesOnly = snap.short_swipes_only
+                if (snap.short_gestures_enabled &&
+                    (!ptr.hasLeftStartingKey || allowLeftKey || shortSwipesOnly) &&
                     distance > 0 // Basic check that we moved
                 ) {
                     
@@ -501,7 +509,9 @@ class Pointers(
                             "hasLeftKey=${ptr.hasLeftStartingKey}"
                     }
 
-                    if (distance >= minDistance && distance <= maxDistance) {
+                    // The max boundary only separates short from long swipes; with short swipes
+                    // only there is no long swipe, so any length at or past the minimum counts.
+                    if (distance >= minDistance && (shortSwipesOnly || distance <= maxDistance)) {
                         // Trigger short gesture - calculate direction (same as original repo)
                         val a = atan2(dy, dx) + Math.PI
                         // a is between 0 and 2pi, 0 is pointing to the left
@@ -595,6 +605,18 @@ class Pointers(
                                 clearLatched()
                                 _swipeRecognizer.reset()
                                 removePtr(ptr)
+                                return
+                            }
+                            // GH #147/#87: with short swipes only, a deliberate swipe toward an
+                            // empty direction of a key that HAS short swipes types nothing —
+                            // typing the starting key there is exactly the "long swipe becomes
+                            // a tap" complaint. A key with no short swipe at all keeps its tap,
+                            // so a sloppy press on Enter or Shift is not dropped.
+                            if (shortSwipesOnly && keyHasAnyShortSwipe(ptr, keyCode)) {
+                                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_SWIPES_ONLY: no subkey near direction $direction, gesture ignored")
+                                _swipeRecognizer.reset()
+                                removePtr(ptr)
+                                _handler.onPointerFlagsChanged(null)
                                 return
                             }
                             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE FAILED: getNearestKeyAtDirection returned null for direction $direction")
@@ -856,6 +878,20 @@ class Pointers(
     }
 
     /**
+     * Whether [ptr]'s key has a short swipe in ANY direction: a layout subkey in one of the
+     * eight direction slots (after [IPointerEventHandler.modifyKey], so a subkey the handler
+     * removes does not count) or a user custom mapping for [keyCode]. Used only by the
+     * "short swipes only" mode (GH #147/#87) to decide between ignoring a swipe toward an
+     * empty direction and keeping the tap of a key that has no short swipes at all.
+     */
+    private fun keyHasAnyShortSwipe(ptr: Pointer, keyCode: String): Boolean {
+        for (i in 1 until ptr.key.keys.size) {
+            if (_handler.modifyKey(ptr.key.keys[i], ptr.modifiers) != null) return true
+        }
+        return keyCode.isNotEmpty() && _customSwipeManager.getMappingsForKey(keyCode).isNotEmpty()
+    }
+
+    /**
      * Result of the fuzzed short-swipe resolution ([resolveNearestShortSwipe]): either a
      * user-defined custom mapping or a layout default subkey, whichever is nearest.
      */
@@ -1092,8 +1128,8 @@ class Pointers(
             // short-gesture key such as Backspace also collects its path here, and the
             // recognizer reports isSwipeTyping() once the finger has crossed two letters —
             // without this check a swipe-left from Backspace over m/n/b typed "mb".
-            if (isSwipeTypingKey && _swipeRecognizer.isSwipeTyping() && ptr.hasLeftStartingKey &&
-                mayBeWordSwipe(ptr)
+            if (isSwipeTypingKey && !snap.short_swipes_only && _swipeRecognizer.isSwipeTyping() &&
+                ptr.hasLeftStartingKey && mayBeWordSwipe(ptr)
             ) {
                 ptr.flags = ptr.flags or FLAG_P_SWIPE_TYPING
                 stopLongPress(ptr)
@@ -1579,6 +1615,13 @@ class Pointers(
                 // (Backspace is handled above - either selection mode or key repeat)
                 return
             }
+        }
+
+        // GH #147/#87: with short swipes only, a finger that has travelled a short-swipe
+        // distance is a short swipe in progress, resolved at release — holding it must not
+        // lock, remap or key-repeat the starting key meanwhile.
+        if (snap.short_swipes_only && movementDist >= shortGestureMinDistancePx(ptr.key, snap)) {
+            return
         }
 
         // Hold-then-select subkey popover: replaces key repeat on the keys it applies to.

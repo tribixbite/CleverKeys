@@ -74,6 +74,13 @@ data class ConfigSnapshot(
     val short_gestures_enabled: Boolean,
     val short_gesture_min_distance: PercentOfKey,
     val short_gesture_max_distance: PercentOfKey,
+    /**
+     * GH #147/#87: every gesture of at least [shortGestureMinDistancePx] resolves to its
+     * direction's subkey regardless of [short_gesture_max_distance]. Already folded into
+     * [swipe_typing_enabled] (false while this is true) and into [short_gestures_enabled]
+     * (never true without it) by `Config.refresh`.
+     */
+    val short_swipes_only: Boolean,
     /** Hold-then-select subkey popover (docs/specs/subkey-popover.md). */
     val subkey_popover_enabled: Boolean,
     /** Popover neutral zone, % of the key's width / height. */

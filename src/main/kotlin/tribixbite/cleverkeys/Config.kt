@@ -122,6 +122,12 @@ object Defaults {
     const val SHORT_GESTURES_ENABLED = true
     const val SHORT_GESTURE_MIN_DISTANCE = 28
     const val SHORT_GESTURE_MAX_DISTANCE = 141
+    /**
+     * GH #147/#87 "short swipes only": every gesture past the short-gesture MINIMUM resolves
+     * to its direction's subkey, whatever its length; word swipes are off while it is on.
+     * OFF by default, so the short/long boundary behaves exactly as before.
+     */
+    const val SHORT_SWIPES_ONLY = false
 
     // Hold-then-select subkey popover (docs/specs/subkey-popover.md). ON for fresh installs;
     // existing installs are seeded OFF once by SubkeyPopoverMigration (config v5).
@@ -842,6 +848,14 @@ class Config private constructor(
     // the codebase is pure Kotlin, so nothing needed the Java field exposure.)
     var short_gesture_min_distance = PercentOfKey(Defaults.SHORT_GESTURE_MIN_DISTANCE)
     var short_gesture_max_distance = PercentOfKey(Defaults.SHORT_GESTURE_MAX_DISTANCE) // The short/long boundary (50-200): at/below = short swipe, beyond = word swipe. ("200=disabled" was a UI label that was never implemented; retired.)
+    /**
+     * EFFECTIVE "short swipes only" mode (GH #147/#87): the `short_swipes_only` preference AND
+     * [short_gestures_enabled] (the mode is a variant of short swipes, so it means nothing with
+     * them off). While true, [refresh] also forces [swipe_typing_enabled] false — a gesture
+     * cannot be both "always a short swipe" and "a word swipe past the boundary". The stored
+     * `swipe_typing_enabled` preference is untouched, so turning the mode off restores it.
+     */
+    @JvmField var short_swipes_only = Defaults.SHORT_SWIPES_ONLY
 
     // Hold-then-select subkey popover
     @JvmField var subkey_popover_enabled = Defaults.SUBKEY_POPOVER_ENABLED
@@ -1170,6 +1184,12 @@ class Config private constructor(
         short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
         short_gesture_min_distance = PercentOfKey(safeGetInt(_prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE))
         short_gesture_max_distance = PercentOfKey(safeGetInt(_prefs, "short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE))
+        // GH #147/#87: read after BOTH inputs above. The mode overrides word swipes rather
+        // than coexisting with them (see the field KDoc), so the live swipe_typing_enabled —
+        // which every swipe consumer reads — is the preference minus this mode.
+        short_swipes_only = short_gestures_enabled &&
+            safeGetBoolean(_prefs, "short_swipes_only", Defaults.SHORT_SWIPES_ONLY)
+        if (short_swipes_only) swipe_typing_enabled = false
 
         subkey_popover_enabled = _prefs.getBoolean("subkey_popover_enabled", Defaults.SUBKEY_POPOVER_ENABLED)
         subkey_popover_neutral_width = safeGetInt(_prefs, "subkey_popover_neutral_width", Defaults.SUBKEY_POPOVER_NEUTRAL_WIDTH)
@@ -1311,6 +1331,7 @@ class Config private constructor(
         short_gestures_enabled = short_gestures_enabled,
         short_gesture_min_distance = short_gesture_min_distance,
         short_gesture_max_distance = short_gesture_max_distance,
+        short_swipes_only = short_swipes_only,
         subkey_popover_enabled = subkey_popover_enabled,
         subkey_popover_neutral_width = subkey_popover_neutral_width,
         subkey_popover_neutral_height = subkey_popover_neutral_height,
