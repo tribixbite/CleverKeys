@@ -69,10 +69,10 @@ settled from source alone).
 
 | Bucket | Count | Issues |
 |---|---|---|
-| DONE/FIXED but still open (close candidates) | 38 | bugs: #188 #186 #184 #90 #179 #171 #169 #161 #160 #154 #152 #151 #149 #148 #146 #145 #141 #134 #130 #99 #96 #77 #75 #71 #67 #35 · features: #168 #135 #111 #94 #93 #70 #68 #61 #58 #49 #31 #26 |
+| DONE/FIXED but still open (close candidates) | 40 | bugs: #188 #186 #184 #90 #179 #171 #169 #161 #160 #154 #152 #151 #149 #148 #146 #145 #141 #134 #130 #99 #96 #77 #75 #71 #67 #35 · features: #147 #87 #168 #135 #111 #94 #93 #70 #68 #61 #58 #49 #31 #26 |
 | Close with explanation (NOT-REPRO / BY-DESIGN) | 2 | #162 #83 |
 | PARTIAL | 9 | #181 #175 #167 #156 #101 #97 #88 #80 #72 |
-| Still open | 14 | bugs: #79 · features: #187 #177 #165 #163 #147 #139 #121 #120 #115 #87 #84 #69 #52 |
+| Still open | 12 | bugs: #79 · features: #187 #177 #165 #163 #139 #121 #120 #115 #84 #69 #52 |
 
 What changed since 2026-09-05:
 - The maintainer reopened nine bot-closed but resolved issues on 2026-09-21 (#67 #99 #130 #134
@@ -137,7 +137,7 @@ What changed since 2026-09-05:
 | 165 | Standard Korean behavior | **OPEN** | Only the upstream-inherited `hang_dubeolsik_kr.xml` with modifier-based Hangul composition (`KeyModifier` `Hangul_initial`/`Hangul_medial`). No standard automaton and no ko pack | L; needs a Korean-typing spec |
 | 163 | Background image | **OPEN** | No background-image support (`git grep` finds no hits). Theme Creator fields all wired (`c9939571`) | M |
 | 156 | Encrypted clipboard | **PARTIAL** | Ask 1 (OS clipboard never sees plaintext) **shipped, unreleased**: private copy/paste `4719feff`, short-swipe wiring `fde5e604`, leak fixes `cc91d127`, no system-clipboard fallback for private media `21a320ba` (ARC-001), provenance line `05db07eb`, schema V5 `is_private`. Ask 2 (at-rest encryption of the history DB) is **design-only**: `docs/plans/156-at-rest-clipboard-encryption.md` (PROPOSED, migration V6) | comment: ask 1 ships in 2.0; keep open for at-rest |
-| 147 | Option to remove long swipe gestures | **OPEN** | Three users. No toggle exists, and the "200=disabled" label was never implemented (retired, `Config.kt:712`). With swipe typing off, a beyond-boundary gesture taps the start key (`5e7fdcb7`). Partial relief: the hold-then-select subkey popover (`fde558cd`, default ON for fresh installs only) gives a precision path to subkeys. Same mechanism as #87 | S-M; build with #87 |
+| 147 | Option to remove long swipe gestures | **FIXED** (unreleased) | `e5e9aef8` + `c30ad450`: Gesture Tuning → **Short Swipes Only** (`short_swipes_only`, default OFF). While on, every gesture past the short-gesture minimum resolves to its direction's subkey (custom mapping first, ±1-bin fuzz) at any length; it never becomes a word swipe or a tap of the start key. A swipe toward an empty direction of a key with short swipes types nothing; a key with no short swipe keeps its tap. The mode overrides swipe typing: `Config.refresh` forces the live `swipe_typing_enabled` off (stored pref kept; the Swipe Typing switch and the max-distance slider show disabled with the reason). Captured in `ConfigSnapshot` at pointer-down. `PointersShortSwipesOnlyTest` (10). Same change closes #87 | comment + close on v2.0.0; device check of long flicks on a MessagEase-style layout |
 | 139 | Change the bottom row | **PARTIAL — Enter sub-ask FIXED (unreleased, `4e835b6b`)** | Thread sub-ask (two users: Enter shows Search/Send, a stray tap sends): `4e835b6b` adds Input → "Enter Always Inserts a New Line" (`enter_always_newline`, default OFF = unchanged). When ON, a multi-line text field (`TYPE_TEXT_FLAG_MULTI_LINE`) keeps Enter as newline even when the app asks for an action; the action stays on Enter's up-right swipe. Single-line fields (search boxes, URL bars), `IME_MULTI_LINE`-only, non-text and `TYPE_NULL` blind fields keep the editor-driven swap, since they cannot hold a newline. Decision: `EditorInfoHelper.shouldSwapEnterActionKey`, test `EditorInfoHelperEnterSwapTest`; applies from the next field focus. An app that itself turns the Enter key event into Send (WhatsApp's in-app "Enter is send") is outside the keyboard's control. Still open: no bottom-row editor UI (option B); workaround is the Gboard-style layout (`51d2a38d`) or a custom layout with `bottom_row="false"` (#90 fixed `ba5bbee6`). Host tests only; not yet checked on a device | after the tag, point the commenters at the new switch; keep open for the bottom-row editor |
 | 135 | `clear` action | **DONE** (v1.5.0) | `c4778d9d`: `clear` key value (`KeyValue.kt:737`, `Editing.CLEAR`), handler `KeyEventHandler.kt:725/764`, command palette entry (`CommandRegistry.kt:125`), a11y label | close as completed |
 | 121 | Custom fonts | **OPEN** | Only the bundled `special_font.ttf` (`Theme.kt:461`). No user font import | M |
@@ -149,7 +149,7 @@ What changed since 2026-09-05:
 | 94 | Copy version info on long-press | **DONE** (v1.5.0) | `7558313b` + pins `1c27a10a` | close as completed |
 | 93 | Hex color input in theme editor | **DONE** (v1.5.0) | `1015087e` editable hex input in `ColorPickerDialog` | close as completed |
 | 88 | Arabic | **PARTIAL** (path open) | CTC stays blocked (guide §4), but imported non-Latin packs already work for tap + geometric swipe (the #186 reporter types Persian from a pack; `9ae7005c` letter gate accepts every script). The missing piece is a pack: contributor **PR #182** adds a 50k-word Arabic pack (binary, +0/−0). Needs provenance/licence review against the data-licensing audit (`638d492b`) and an attribution NOTICE | review PR #182; ship as a langpack, then close |
-| 87 | Long swipe → short swipe when swipe typing is off | **OPEN** | With swipe typing off a long gesture taps the start key (`5e7fdcb7`, by design per #83). The request is a mode where, with swipe typing off, every displacement resolves to the nearest direction's subkey. Two users (one with a Thumb-Key-style layout at 250 px). Same mechanism as #147 | S-M |
+| 87 | Long swipe → short swipe when swipe typing is off | **FIXED** (unreleased) | `e5e9aef8` + `c30ad450`: the Short Swipes Only mode (see #147) maps every displacement past the minimum to the direction's subkey instead of a tap of the start key. Opt-in toggle rather than automatic with swipe typing off, so existing behaviour is unchanged by default (the #83 boundary pin still holds with the mode off). `PointersShortSwipesOnlyTest#on_longDisplacement_typesTheDirectionsSubkey_notATapOfTheStartKey` | comment + close on v2.0.0 |
 | 84 | Smart punctuation time threshold | **OPEN** | `smart_punctuation` is a plain boolean (`Config.kt:727`), with no interval | S |
 | 80 | Clipboard suggestion strip + nav | **PARTIAL** | Part 2 (close buttons) shipped v1.2.8, pinned `6fd2bfbe`. Part 1 (offer the latest clip in the suggestion strip) and part 3 (toolbar) are not built. Part 3 is the same as #175(3) | comment; keep open for part 1 |
 | 72 | Capitalize I + proper nouns | **PARTIAL** (close-able) | I-words pinned (`0b31edc0`). User-dictionary original case for tap + swipe (`49b8a970`, incremental-add case `d94affc1`). Sentence-start caps `40ad59cf`. Base-dictionary proper-noun casing is deliberately not built (adding "Boston" to the user dictionary is the remedy) | comment + close, stating the proper-noun scope |
@@ -395,8 +395,8 @@ Ordered by value ÷ cost. Sizes: S ≤ 1 day, M ≈ 2-5 days, L > 1 week.
 7. **#184 big-pack guard — implemented locally.** Verify a refused oversized update keeps
    the existing pack and typing operational on Seeker. Full format validation and broader
    bilingual heap measurements remain separate follow-up work.
-8. **#147 + #87: "short swipes only" mode when swipe typing is off.** S-M. Five users across
-   three issues (#147, #87, #83). Resolve any displacement to the nearest direction's subkey.
+8. **#147 + #87: "short swipes only" mode — implemented (`c30ad450`, unreleased).** Five users
+   across three issues (#147, #87, #83). Device check of long flicks still owed.
 9. **#167(2) password-manager inline chip unresponsive.** M. A security-relevant regression whose
    window is narrowed to the v1.3.0 autofill commits (`83c547df`/`b990f7f7`/`f13d5174`). Needs
    Bitwarden or KeePassDX on an API 30+ test phone.
