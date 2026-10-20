@@ -1339,6 +1339,7 @@
     <string name="backup_result_full_settings_applied">• Uygulanan ayar: %1$d</string>
     <string name="backup_result_full_custom_words">• Özel kelimeler: %1$d</string>
     <string name="backup_result_full_disabled_words">• Devre dışı kelimeler: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Öğrenilen dil verileri: bazı girdiler okunamadı ve atlandı</string>
     <string name="backup_result_full_clipboard_imported">• İçe aktarılan pano kaydı: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Atlanan pano kaydı: %1$d (yinelenen)</string>
     <string name="backup_result_media_restored">• Geri yüklenen medya dosyası: %1$d</string>

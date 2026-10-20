@@ -1354,6 +1354,7 @@
     <string name="backup_result_full_settings_applied">• Použitá nastavení: %1$d</string>
     <string name="backup_result_full_custom_words">• Vlastní slova: %1$d</string>
     <string name="backup_result_full_disabled_words">• Zakázaná slova: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Naučená jazyková data: některé položky nebylo možné přečíst a byly přeskočeny</string>
     <string name="backup_result_full_clipboard_imported">• Importováno ze schránky: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Přeskočeno ze schránky: %1$d (duplikáty)</string>
     <string name="backup_result_media_restored">• Obnovené mediální soubory: %1$d</string>

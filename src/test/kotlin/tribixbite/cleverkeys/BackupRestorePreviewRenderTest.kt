@@ -345,8 +345,9 @@ class BackupRestorePreviewRenderTest {
             .substringBefore("private fun readCurrentCustomWordsByLang")
         assertThat(applyBlock).contains("plan.learnedData.rawJson")
         assertThat(applyBlock).contains("let(::importLearnedDataFromJson)")
-        assertThat(applyBlock).contains("learnedBigramsImported = learned.first")
-        assertThat(applyBlock).contains("learnedTrigramsImported = learned.second")
-        assertThat(applyBlock).contains("learnedVocabularyImported = learned.third")
+        assertThat(applyBlock).contains("learnedBigramsImported = learned.bigrams")
+        assertThat(applyBlock).contains("learnedTrigramsImported = learned.trigrams")
+        assertThat(applyBlock).contains("learnedVocabularyImported = learned.vocabulary")
+        assertThat(applyBlock).contains("learnedDataIncomplete = learned.incomplete")
     }
 }

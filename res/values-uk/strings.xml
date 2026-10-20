@@ -1365,6 +1365,7 @@
     <string name="backup_result_full_settings_applied">• Застосовано налаштувань: %1$d</string>
     <string name="backup_result_full_custom_words">• Власних слів: %1$d</string>
     <string name="backup_result_full_disabled_words">• Вимкнених слів: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Вивчені мовні дані: деякі записи не вдалося прочитати, їх пропущено</string>
     <string name="backup_result_full_clipboard_imported">• Імпортовано з буфера обміну: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Пропущено з буфера обміну: %1$d (дублікати)</string>
     <string name="backup_result_media_restored">• Відновлено медіафайлів: %1$d</string>

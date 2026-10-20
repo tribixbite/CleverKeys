@@ -1315,6 +1315,7 @@
     <string name="backup_result_full_settings_applied">• 적용된 설정: %1$d</string>
     <string name="backup_result_full_custom_words">• 사용자 지정 단어: %1$d</string>
     <string name="backup_result_full_disabled_words">• 비활성화된 단어: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• 학습된 언어 데이터: 일부 항목을 읽을 수 없어 건너뛰었습니다</string>
     <string name="backup_result_full_clipboard_imported">• 가져온 클립보드 항목: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• 건너뛴 클립보드 항목: %1$d(중복)</string>
     <string name="backup_result_media_restored">• 복원된 미디어 파일: %1$d</string>

@@ -1328,6 +1328,7 @@
     <string name="backup_result_full_settings_applied">• Instellingen toegepast: %1$d</string>
     <string name="backup_result_full_custom_words">• Aangepaste woorden: %1$d</string>
     <string name="backup_result_full_disabled_words">• Uitgeschakelde woorden: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Geleerde taalgegevens: sommige items konden niet worden gelezen en zijn overgeslagen</string>
     <string name="backup_result_full_clipboard_imported">• Klembord geïmporteerd: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Klembord overgeslagen: %1$d (duplicaten)</string>
     <string name="backup_result_media_restored">• Mediabestanden hersteld: %1$d</string>

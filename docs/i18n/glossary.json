@@ -59,7 +59,8 @@
         "input_next_word_desc",
         "privacy_forget_learned_title",
         "privacy_learned_forget_body",
-        "privacy_forget_learned_body"
+        "privacy_forget_learned_body",
+        "backup_result_learned_data_incomplete"
       ]
     },
     "clipboard": {

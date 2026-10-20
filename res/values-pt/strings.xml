@@ -1341,6 +1341,7 @@
     <string name="backup_result_full_settings_applied">• Configurações aplicadas: %1$d</string>
     <string name="backup_result_full_custom_words">• Palavras personalizadas: %1$d</string>
     <string name="backup_result_full_disabled_words">• Palavras desativadas: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Dados de idioma aprendidos: algumas entradas não puderam ser lidas e foram ignoradas</string>
     <string name="backup_result_full_clipboard_imported">• Área de transferência importada: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Área de transferência ignorada: %1$d (duplicados)</string>
     <string name="backup_result_media_restored">• Arquivos de mídia restaurados: %1$d</string>

@@ -1366,6 +1366,7 @@
     <string name="backup_result_full_settings_applied">• تنظیمات اعمال‌شده: %1$d</string>
     <string name="backup_result_full_custom_words">• واژه‌های سفارشی: %1$d</string>
     <string name="backup_result_full_disabled_words">• واژه‌های غیرفعال: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• داده‌های زبانی آموخته‌شده: برخی موارد خوانده نشدند و نادیده گرفته شدند</string>
     <string name="backup_result_full_clipboard_imported">• موارد بریده‌دانِ واردشده: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• موارد بریده‌دانِ ردشده: %1$d (تکراری)</string>
     <string name="backup_result_media_restored">• فایل‌های رسانهٔ بازیابی‌شده: %1$d</string>

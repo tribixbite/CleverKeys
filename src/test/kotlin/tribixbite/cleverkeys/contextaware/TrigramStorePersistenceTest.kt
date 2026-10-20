@@ -357,10 +357,37 @@ class TrigramStorePersistenceTest {
     fun `import of invalid JSON is a no-op, not a wipe`() {
         record(3, "en", "i", "want", "to")
 
-        store.importFromJson("en", "{not json[")
+        assertEquals(0, store.importFromJson("en", "{not json["))
 
         assertEquals(1, store.getTotalTrigramCount("en"))
         assertEquals(1.0f, store.getProbability("en", "i", "want", "to"), 1e-6f)
+    }
+
+    /**
+     * M2 (2026-10-20): one malformed entry costs only itself. The old loop aborted at the
+     * first throw — later entries lost, earlier ones merged with stale probabilities and
+     * never persisted.
+     */
+    @Test
+    fun `import skips a malformed entry and still applies and persists the valid ones`() {
+        val payload = """
+            [
+              {"word1":"i","word2":"want","word3":"to","frequency":3,"probability":1.0},
+              "not an object",
+              {"word1":"i","word2":"want","frequency":1,"probability":1.0},
+              {"word1":"see","word2":"you","word3":"soon","frequency":"lots","probability":1.0},
+              {"word1":"see","word2":"you","word3":"soon","frequency":2,"probability":1.0}
+            ]
+        """.trimIndent()
+
+        // The return value is what the backup restore reports as restored: valid entries only.
+        assertEquals(2, store.importFromJson("en", payload))
+
+        assertEquals(2, store.getTotalTrigramCount("en"))
+        assertEquals(1.0f, store.getProbability("en", "i", "want", "to"), 1e-6f)
+        assertEquals(1.0f, store.getProbability("en", "see", "you", "soon"), 1e-6f)
+        val revived = TrigramStore(storage, 60_000, 120_000, scheduler)
+        assertEquals(2, revived.getTotalTrigramCount("en"))
     }
 
     @Test

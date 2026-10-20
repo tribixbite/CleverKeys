@@ -994,66 +994,88 @@ class BigramStore internal constructor(
      * Import bigram data for one language from a JSON string.
      * Merges with existing data via DIRECT frequency merge (O(entries), not
      * O(total frequency) replay) and recomputes conditional probabilities.
+     *
+     * Entries are validated one at a time BEFORE any mutation: a malformed entry (not an
+     * object, a missing word, a non-numeric frequency) and an entry the learn path would never
+     * produce (empty word, non-positive frequency, self-pair) are skipped individually, and
+     * every valid entry is merged, re-normalized and checkpointed. A payload that is not a
+     * JSON array at all changes nothing.
+     *
+     * @return the number of entries merged; the caller compares it with the section size to
+     *   report entries that were not restored (audit M2, 2026-10-20 — this used to return
+     *   nothing, so a corrupt section was reported as restored).
      */
-    fun importFromJson(language: String, jsonString: String) {
+    fun importFromJson(language: String, jsonString: String): Int {
         val lang = normalizeLanguage(language)
-        try {
-            val json = JSONArray(jsonString)
-            val data = forLanguage(lang)
+        val json = try {
+            JSONArray(jsonString)
+        } catch (e: JSONException) {
+            return 0
+        }
+        val accepted = ArrayList<Triple<String, String, Int>>(json.length())
+        for (i in 0 until json.length()) {
+            val obj = json.optJSONObject(i) ?: continue
+            val parsed = try {
+                Triple(
+                    BigramEntry.normalizeWord(obj.getString("word1")),
+                    BigramEntry.normalizeWord(obj.getString("word2")),
+                    obj.getInt("frequency"),
+                )
+            } catch (e: JSONException) {
+                continue
+            }
+            val (word1, word2, frequency) = parsed
+            if (word1.isEmpty() || word2.isEmpty() || frequency <= 0) continue
+            if (word1 == word2) continue
+            accepted += parsed
+        }
+        if (accepted.isEmpty()) return 0
+        val data = forLanguage(lang)
 
-            synchronized(this) {
-                mutationVersion++
-                for (i in 0 until json.length()) {
-                    val obj = json.getJSONObject(i)
-                    val word1 = BigramEntry.normalizeWord(obj.getString("word1"))
-                    val word2 = BigramEntry.normalizeWord(obj.getString("word2"))
-                    val frequency = obj.getInt("frequency")
-                    if (word1.isEmpty() || word2.isEmpty() || frequency <= 0) continue
-                    if (word1 == word2) continue
+        synchronized(this) {
+            mutationVersion++
+            for ((word1, word2, frequency) in accepted) {
+                data.word1Frequencies[word1] = (data.word1Frequencies[word1] ?: 0) + frequency
 
-                    data.word1Frequencies[word1] = (data.word1Frequencies[word1] ?: 0) + frequency
-
-                    val entries = data.bigramMap.getOrPut(word1) { mutableListOf() }
-                    val existing = entries.find { it.word2 == word2 }
-                    // Imported entries count as seen NOW (the merged context total, and the
-                    // language clock's current tick) — the backup payload carries no recency.
-                    val seen = data.word1Frequencies[word1] ?: 0
-                    if (existing != null) {
-                        entries.remove(existing)
-                        entries.add(
-                            existing.copy(
-                                frequency = existing.frequency + frequency, lastSeen = seen, globalSeen = data.clock
-                            )
+                val entries = data.bigramMap.getOrPut(word1) { mutableListOf() }
+                val existing = entries.find { it.word2 == word2 }
+                // Imported entries count as seen NOW (the merged context total, and the
+                // language clock's current tick) — the backup payload carries no recency.
+                val seen = data.word1Frequencies[word1] ?: 0
+                if (existing != null) {
+                    entries.remove(existing)
+                    entries.add(
+                        existing.copy(
+                            frequency = existing.frequency + frequency, lastSeen = seen, globalSeen = data.clock
                         )
-                    } else {
-                        entries.add(BigramEntry(word1, word2, frequency, 0f, lastSeen = seen, globalSeen = data.clock))
-                    }
-                }
-
-                // Enforce the per-context budget, then recompute probabilities against the
-                // merged word1 totals.
-                for ((word1, entries) in data.bigramMap) {
-                    val total = data.word1Frequencies[word1] ?: continue
-                    ContinuationBudget.enforce(
-                        entries, null, total, CONTINUATION_LIMITS,
-                        frequencyOf = { it.frequency }, lastSeenOf = { it.lastSeen }
                     )
-                    val recomputed = entries.map {
-                        it.copy(probability = BigramEntry.calculateProbability(it.frequency, total))
-                    }
-                    entries.clear()
-                    entries.addAll(recomputed)
-                    entries.sortByDescending { it.probability }
+                } else {
+                    entries.add(BigramEntry(word1, word2, frequency, 0f, lastSeen = seen, globalSeen = data.clock))
                 }
-                pruneIfNeeded(data)
             }
 
-            dirtyLanguages.add(lang)
-            persister.markDirty()
-            persister.flush()
-        } catch (e: Exception) {
-            // Invalid JSON, ignore
+            // Enforce the per-context budget, then recompute probabilities against the
+            // merged word1 totals.
+            for ((word1, entries) in data.bigramMap) {
+                val total = data.word1Frequencies[word1] ?: continue
+                ContinuationBudget.enforce(
+                    entries, null, total, CONTINUATION_LIMITS,
+                    frequencyOf = { it.frequency }, lastSeenOf = { it.lastSeen }
+                )
+                val recomputed = entries.map {
+                    it.copy(probability = BigramEntry.calculateProbability(it.frequency, total))
+                }
+                entries.clear()
+                entries.addAll(recomputed)
+                entries.sortByDescending { it.probability }
+            }
+            pruneIfNeeded(data)
         }
+
+        dirtyLanguages.add(lang)
+        persister.markDirty()
+        persister.flush()
+        return accepted.size
     }
 
     /**

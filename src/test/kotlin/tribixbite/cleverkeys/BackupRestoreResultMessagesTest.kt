@@ -205,4 +205,24 @@ class BackupRestoreResultMessagesTest {
 
         assertFalse(msg.contains("Source version"))
     }
+
+    /** Audit M2: learned data that was not restored is said so, not hidden behind success. */
+    @Test
+    fun dict_learnedDataIncomplete_rendersNotRestoredLine() {
+        val result = BackupRestoreManager.DictionaryImportResult().apply {
+            userWordsImported = 5
+            learnedDataIncomplete = true
+        }
+
+        val msg = buildDictResultMessage(result, EnglishResourceText)
+
+        assertTrue(msg.contains("• Learned language data: some entries could not be read and were skipped"))
+    }
+
+    @Test
+    fun dict_learnedDataComplete_omitsNotRestoredLine() {
+        val msg = buildDictResultMessage(BackupRestoreManager.DictionaryImportResult(), EnglishResourceText)
+
+        assertFalse(msg.contains("Learned language data"))
+    }
 }

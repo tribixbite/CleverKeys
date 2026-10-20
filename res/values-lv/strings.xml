@@ -1352,6 +1352,7 @@
     <string name="backup_result_full_settings_applied">• Lietoti iestatījumi: %1$d</string>
     <string name="backup_result_full_custom_words">• Pielāgotie vārdi: %1$d</string>
     <string name="backup_result_full_disabled_words">• Atspējotie vārdi: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Apgūtie valodas dati: dažus ierakstus nevarēja nolasīt, tāpēc tie tika izlaisti</string>
     <string name="backup_result_full_clipboard_imported">• Importēti starpliktuves ieraksti: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Izlaisti starpliktuves ieraksti: %1$d (dublikāti)</string>
     <string name="backup_result_media_restored">• Atjaunoti multivides faili: %1$d</string>

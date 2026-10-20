@@ -1313,6 +1313,7 @@
     <string name="backup_result_full_settings_applied">• 已应用设置：%1$d</string>
     <string name="backup_result_full_custom_words">• 自定义词：%1$d</string>
     <string name="backup_result_full_disabled_words">• 禁用词：%1$d</string>
+    <string name="backup_result_learned_data_incomplete">• 已学习的语言数据：部分条目无法读取，已跳过</string>
     <string name="backup_result_full_clipboard_imported">• 已导入剪贴板：%1$d</string>
     <string name="backup_result_full_clipboard_skipped">• 已跳过剪贴板：%1$d（重复）</string>
     <string name="backup_result_media_restored">• 已恢复媒体文件：%1$d</string>

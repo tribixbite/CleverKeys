@@ -1351,6 +1351,7 @@
     <string name="backup_result_full_settings_applied">• Paramètres appliqués : %1$d</string>
     <string name="backup_result_full_custom_words">• Mots personnalisés : %1$d</string>
     <string name="backup_result_full_disabled_words">• Mots désactivés : %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Données linguistiques apprises : certaines entrées n\'ont pas pu être lues et ont été ignorées</string>
     <string name="backup_result_full_clipboard_imported">• Presse-papiers importé : %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Presse-papiers ignoré : %1$d (doublons)</string>
     <string name="backup_result_media_restored">• Fichiers multimédias restaurés : %1$d</string>

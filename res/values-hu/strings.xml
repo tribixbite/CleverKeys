@@ -1334,6 +1334,7 @@
     <string name="backup_result_full_settings_applied">• Alkalmazott beállítások: %1$d</string>
     <string name="backup_result_full_custom_words">• Egyéni szavak: %1$d</string>
     <string name="backup_result_full_disabled_words">• Letiltott szavak: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Megtanult nyelvi adatok: néhány bejegyzés nem volt olvasható, ezért kimaradt</string>
     <string name="backup_result_full_clipboard_imported">• Importált vágólap-bejegyzések: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Kihagyott vágólap-bejegyzések: %1$d (duplikátumok)</string>
     <string name="backup_result_media_restored">• Visszaállított médiafájlok: %1$d</string>

@@ -1348,6 +1348,7 @@
     <string name="backup_result_full_settings_applied">• Einstellungen übernommen: %1$d</string>
     <string name="backup_result_full_custom_words">• Eigene Wörter: %1$d</string>
     <string name="backup_result_full_disabled_words">• Deaktivierte Wörter: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Gelernte Sprachdaten: Einige Einträge waren nicht lesbar und wurden übersprungen</string>
     <string name="backup_result_full_clipboard_imported">• Zwischenablage importiert: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Zwischenablage übersprungen: %1$d (Duplikate)</string>
     <string name="backup_result_media_restored">• Mediendateien wiederhergestellt: %1$d</string>

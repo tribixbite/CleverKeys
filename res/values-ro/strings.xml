@@ -1368,6 +1368,7 @@
     <string name="backup_result_full_settings_applied">• Setări aplicate: %1$d</string>
     <string name="backup_result_full_custom_words">• Cuvinte personalizate: %1$d</string>
     <string name="backup_result_full_disabled_words">• Cuvinte dezactivate: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Date lingvistice învățate: unele intrări nu au putut fi citite și au fost omise</string>
     <string name="backup_result_full_clipboard_imported">• Clipboard importat: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Clipboard omis: %1$d (duplicate)</string>
     <string name="backup_result_media_restored">• Fișiere media restaurate: %1$d</string>

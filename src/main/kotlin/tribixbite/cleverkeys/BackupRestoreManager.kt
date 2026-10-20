@@ -31,6 +31,7 @@ import tribixbite.cleverkeys.backup.DictImportApplier
 import tribixbite.cleverkeys.backup.DictImportPlan
 import tribixbite.cleverkeys.backup.DictImportPlanBuilder
 import tribixbite.cleverkeys.backup.LangWord
+import tribixbite.cleverkeys.backup.LearnedDataImport
 import tribixbite.cleverkeys.backup.RealShortSwipeImporter
 import tribixbite.cleverkeys.backup.ScreenMetrics
 import tribixbite.cleverkeys.backup.SettingsImportApplier
@@ -1246,57 +1247,34 @@ open class BackupRestoreManager(
      * REPLACED (the documented semantics of `UserVocabulary.importFromJson`).
      *
      * Absent keys (older backups, which carry no `learned_trigrams_by_language`) are a
-     * silent no-op — that is the backward-compatibility contract for ARC-022.
-     *
-     * @return (bigram entry count, trigram entry count, vocabulary word count) imported
+     * silent no-op — that is the backward-compatibility contract for ARC-022. Each section
+     * is applied independently and the counts are what the stores actually merged; entries
+     * or sections that could not be restored are logged and flagged
+     * ([LearnedDataImport.Counts.incomplete]) so the result dialog can say so (audit M2).
      */
-    private fun importLearnedDataFromJson(jsonString: String): Triple<Int, Int, Int> {
-        var bigramEntries = 0
-        var trigramEntries = 0
-        var vocabularyWords = 0
-        try {
-            val root = JsonParser.parseString(jsonString).asJsonObject
-
-            if (root.has("learned_bigrams_by_language")) {
-                val byLang = root.getAsJsonObject("learned_bigrams_by_language")
-                val store = tribixbite.cleverkeys.contextaware.BigramStore.getInstance(context)
-                for ((lang, element) in byLang.entrySet()) {
-                    if (!element.isJsonArray) continue
-                    store.importFromJson(lang, element.toString())
-                    bigramEntries += element.asJsonArray.size()
-                }
-            }
-
-            // ARC-022. Own runCatching so a malformed trigram section can neither cost the
-            // caller their bigrams (already applied above) nor skip the vocabulary below.
-            runCatching {
-                if (root.has("learned_trigrams_by_language")) {
-                    val byLang = root.getAsJsonObject("learned_trigrams_by_language")
-                    val store = tribixbite.cleverkeys.contextaware.TrigramStore.getInstance(context)
-                    for ((lang, element) in byLang.entrySet()) {
-                        if (!element.isJsonArray) continue
-                        store.importFromJson(lang, element.toString())
-                        trigramEntries += element.asJsonArray.size()
-                    }
-                }
-            }.onFailure { Log.w(TAG, "Learned-trigram import skipped (invalid section)", it) }
-
-            if (root.has("user_vocabulary") && root.get("user_vocabulary").isJsonArray) {
-                vocabularyWords = tribixbite.cleverkeys.personalization.UserVocabulary
-                    .getInstance(context)
-                    .importFromJson(root.getAsJsonArray("user_vocabulary").toString())
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Learned-data import skipped (invalid or absent sections)", e)
-        }
-        if (bigramEntries > 0 || trigramEntries > 0 || vocabularyWords > 0) {
+    private fun importLearnedDataFromJson(jsonString: String): LearnedDataImport.Counts {
+        val counts = LearnedDataImport.apply(
+            jsonString,
+            importBigrams = { lang, entries ->
+                tribixbite.cleverkeys.contextaware.BigramStore.getInstance(context).importFromJson(lang, entries)
+            },
+            importTrigrams = { lang, entries ->
+                tribixbite.cleverkeys.contextaware.TrigramStore.getInstance(context).importFromJson(lang, entries)
+            },
+            importVocabulary = { entries ->
+                tribixbite.cleverkeys.personalization.UserVocabulary.getInstance(context).importFromJson(entries)
+            },
+            warn = { message, cause -> Log.w(TAG, message, cause) },
+        )
+        if (counts.bigrams > 0 || counts.trigrams > 0 || counts.vocabulary > 0 || counts.incomplete) {
             Log.i(
                 TAG,
-                "Imported learned data: $bigramEntries bigram entries, " +
-                    "$trigramEntries trigram entries, $vocabularyWords vocabulary words"
+                "Imported learned data: ${counts.bigrams} bigram entries, " +
+                    "${counts.trigrams} trigram entries, ${counts.vocabulary} vocabulary words; " +
+                    "${counts.skippedEntries} entries not restored, failed sections ${counts.failedSections}"
             )
         }
-        return Triple(bigramEntries, trigramEntries, vocabularyWords)
+        return counts
     }
 
     /**
@@ -1333,14 +1311,15 @@ open class BackupRestoreManager(
         )
         val learned = plan.learnedData.rawJson
             ?.let(::importLearnedDataFromJson)
-            ?: Triple(0, 0, 0)
+            ?: LearnedDataImport.Counts()
         return DictionaryImportResult().apply {
             sourceVersion = plan.sourceVersion
             userWordsImported = customApplied
             disabledWordsImported = disabledApplied
-            learnedBigramsImported = learned.first
-            learnedTrigramsImported = learned.second
-            learnedVocabularyImported = learned.third
+            learnedBigramsImported = learned.bigrams
+            learnedTrigramsImported = learned.trigrams
+            learnedVocabularyImported = learned.vocabulary
+            learnedDataIncomplete = learned.incomplete
             excludedByUserCount = excludedCustom.size + excludedDisabled.size
         }
     }
@@ -1738,6 +1717,8 @@ open class BackupRestoreManager(
         @JvmField var learnedBigramsImported: Int = 0,     // context-LM entries (2026-08-06)
         @JvmField var learnedTrigramsImported: Int = 0,    // context-LM entries (ARC-022, 2026-08-28)
         @JvmField var learnedVocabularyImported: Int = 0,  // personalization words (2026-08-06)
+        /** Some learned data in the payload could not be restored (audit M2, 2026-10-20). */
+        @JvmField var learnedDataIncomplete: Boolean = false,
     )
 
     /**
@@ -1808,6 +1789,8 @@ open class BackupRestoreManager(
         @JvmField val errorMessage: String? = null,
         /** Localizable category of [errorMessage] (which is English, for the log). */
         @JvmField val errorReason: IoFailureReason? = null,
+        /** Some learned data in dictionaries.json could not be restored (audit M2). */
+        @JvmField val learnedDataIncomplete: Boolean = false,
     )
 
     /**
@@ -1996,6 +1979,7 @@ open class BackupRestoreManager(
         var clipboardEntriesImported = 0
         var clipboardEntriesSkipped = 0
         var mediaFilesRestored = 0
+        var learnedDataIncomplete = false
         var sourceAppVersion: String? = null
 
         // Transparently decrypt a CKENC1 container to a verified temp file first
@@ -2164,7 +2148,7 @@ open class BackupRestoreManager(
                     // added by ARC-022).
                     // TODO(CK-150-020): learned n-grams/vocabulary land outside `prefs`, so the
                     // snapshot restore below cannot undo them; they need their own reversal.
-                    importLearnedDataFromJson(dictString)
+                    learnedDataIncomplete = importLearnedDataFromJson(dictString).incomplete
                 }
 
                 // Apply clipboard_history.json. CK-150-019: importFromJSON now throws on a DB
@@ -2242,6 +2226,7 @@ open class BackupRestoreManager(
                 clipboardEntriesSkipped = clipboardEntriesSkipped,
                 mediaFilesRestored = mediaFilesRestored,
                 sourceAppVersion = sourceAppVersion,
+                learnedDataIncomplete = learnedDataIncomplete,
             )
         } catch (e: BackupDecryptException) {
             // Surface decrypt failures distinctly so the UI can prompt for a passphrase

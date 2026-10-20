@@ -1314,6 +1314,7 @@
     <string name="backup_result_full_settings_applied">• 適用した設定: %1$d</string>
     <string name="backup_result_full_custom_words">• カスタム単語: %1$d</string>
     <string name="backup_result_full_disabled_words">• 無効化単語: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• 学習済み言語データ: 一部の項目を読み取れなかったため、スキップしました</string>
     <string name="backup_result_full_clipboard_imported">• インポートしたクリップボード項目: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• スキップしたクリップボード項目: %1$d(重複)</string>
     <string name="backup_result_media_restored">• 復元したメディアファイル: %1$d</string>

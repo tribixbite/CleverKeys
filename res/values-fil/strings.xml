@@ -1340,6 +1340,7 @@
     <string name="backup_result_full_settings_applied">• Nailapat na setting: %1$d</string>
     <string name="backup_result_full_custom_words">• Mga custom na salita: %1$d</string>
     <string name="backup_result_full_disabled_words">• Mga disabled na salita: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Natutunang datos ng wika: may mga entry na hindi nabasa at nilaktawan</string>
     <string name="backup_result_full_clipboard_imported">• Na-import na clipboard: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Nilaktawang clipboard: %1$d (duplicate)</string>
     <string name="backup_result_media_restored">• Na-restore na media file: %1$d</string>

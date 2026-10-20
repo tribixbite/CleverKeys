@@ -1359,6 +1359,7 @@
     <string name="backup_result_full_settings_applied">• Применено настроек: %1$d</string>
     <string name="backup_result_full_custom_words">• Пользовательских слов: %1$d</string>
     <string name="backup_result_full_disabled_words">• Отключённых слов: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Выученные языковые данные: некоторые записи не удалось прочитать, они пропущены</string>
     <string name="backup_result_full_clipboard_imported">• Импортировано из буфера обмена: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Пропущено из буфера обмена: %1$d (дубликаты)</string>
     <string name="backup_result_media_restored">• Восстановлено медиафайлов: %1$d</string>

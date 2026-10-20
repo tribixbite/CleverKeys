@@ -1359,6 +1359,7 @@
     <string name="backup_result_full_settings_applied">• Ajustes aplicados: %1$d</string>
     <string name="backup_result_full_custom_words">• Palabras personalizadas: %1$d</string>
     <string name="backup_result_full_disabled_words">• Palabras desactivadas: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Datos de idioma aprendidos: algunas entradas no se pudieron leer y se omitieron</string>
     <string name="backup_result_full_clipboard_imported">• Portapapeles importado: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Portapapeles omitido: %1$d (duplicados)</string>
     <string name="backup_result_media_restored">• Archivos multimedia restaurados: %1$d</string>

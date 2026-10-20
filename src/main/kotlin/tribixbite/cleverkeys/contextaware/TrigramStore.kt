@@ -830,71 +830,89 @@ class TrigramStore internal constructor(
      * dropped, non-positive frequencies are dropped, and `word2 == word3` self-references
      * are dropped.
      *
-     * Invalid JSON is ignored (no partial mutation beyond whatever parsed before the throw,
-     * which the outer try covers) — an absent/garbage section must never fail an import.
+     * Entries are validated one at a time BEFORE any mutation: a malformed entry (not an
+     * object, a missing word, a non-numeric frequency) is skipped like a guard-rejected one,
+     * and every valid entry is merged, re-normalized and checkpointed. A payload that is not a
+     * JSON array at all changes nothing — an absent/garbage section must never fail an import.
+     *
+     * @return the number of entries merged, so the backup restore can report entries it did
+     *   not restore (audit M2, 2026-10-20; this used to return nothing).
      */
-    fun importFromJson(language: String, jsonString: String) {
+    fun importFromJson(language: String, jsonString: String): Int {
         val lang = BigramStore.normalizeLanguage(language)
-        try {
-            val json = JSONArray(jsonString)
-            val data = forLanguage(lang)
+        val json = try {
+            JSONArray(jsonString)
+        } catch (e: JSONException) {
+            return 0
+        }
+        val accepted = ArrayList<Pair<Triple<String, String, String>, Int>>(json.length())
+        for (i in 0 until json.length()) {
+            val obj = json.optJSONObject(i) ?: continue
+            val parsed = try {
+                Triple(
+                    TrigramEntry.normalizeWord(obj.getString("word1")),
+                    TrigramEntry.normalizeWord(obj.getString("word2")),
+                    TrigramEntry.normalizeWord(obj.getString("word3")),
+                ) to obj.getInt("frequency")
+            } catch (e: JSONException) {
+                continue
+            }
+            val (words, frequency) = parsed
+            val (w1, w2, w3) = words
+            if (w1.isEmpty() || w2.isEmpty() || w3.isEmpty() || frequency <= 0) continue
+            if (w2 == w3) continue // Same guard recordTrigram applies
+            accepted += parsed
+        }
+        if (accepted.isEmpty()) return 0
+        val data = forLanguage(lang)
 
-            synchronized(this) {
-                mutationVersion++
-                for (i in 0 until json.length()) {
-                    val obj = json.getJSONObject(i)
-                    val w1 = TrigramEntry.normalizeWord(obj.getString("word1"))
-                    val w2 = TrigramEntry.normalizeWord(obj.getString("word2"))
-                    val w3 = TrigramEntry.normalizeWord(obj.getString("word3"))
-                    val frequency = obj.getInt("frequency")
-                    if (w1.isEmpty() || w2.isEmpty() || w3.isEmpty() || frequency <= 0) continue
-                    if (w2 == w3) continue // Same guard recordTrigram applies
+        synchronized(this) {
+            mutationVersion++
+            for ((words, frequency) in accepted) {
+                val (w1, w2, w3) = words
+                val key = prefixKey(w1, w2)
+                data.prefixFrequencies[key] = (data.prefixFrequencies[key] ?: 0) + frequency
 
-                    val key = prefixKey(w1, w2)
-                    data.prefixFrequencies[key] = (data.prefixFrequencies[key] ?: 0) + frequency
-
-                    val entries = data.trigramMap.getOrPut(key) { mutableListOf() }
-                    val existing = entries.find { it.word3 == w3 }
-                    // Imported entries count as seen NOW (backup payload has no recency):
-                    // the merged prefix total, and the language clock's current tick.
-                    val seen = data.prefixFrequencies[key] ?: 0
-                    if (existing != null) {
-                        entries.remove(existing)
-                        entries.add(
-                            existing.copy(
-                                frequency = existing.frequency + frequency, lastSeen = seen, globalSeen = data.clock
-                            )
+                val entries = data.trigramMap.getOrPut(key) { mutableListOf() }
+                val existing = entries.find { it.word3 == w3 }
+                // Imported entries count as seen NOW (backup payload has no recency):
+                // the merged prefix total, and the language clock's current tick.
+                val seen = data.prefixFrequencies[key] ?: 0
+                if (existing != null) {
+                    entries.remove(existing)
+                    entries.add(
+                        existing.copy(
+                            frequency = existing.frequency + frequency, lastSeen = seen, globalSeen = data.clock
                         )
-                    } else {
-                        entries.add(TrigramEntry(w1, w2, w3, frequency, 0f, lastSeen = seen, globalSeen = data.clock))
-                    }
-                }
-
-                // Enforce the per-prefix budget, then recompute probabilities against the
-                // merged prefix totals.
-                for ((key, entries) in data.trigramMap) {
-                    val total = data.prefixFrequencies[key] ?: continue
-                    ContinuationBudget.enforce(
-                        entries, null, total, CONTINUATION_LIMITS,
-                        frequencyOf = { it.frequency }, lastSeenOf = { it.lastSeen }
                     )
-                    val recomputed = entries.map {
-                        it.copy(probability = TrigramEntry.calculateProbability(it.frequency, total))
-                    }
-                    entries.clear()
-                    entries.addAll(recomputed)
-                    entries.sortByDescending { it.probability }
+                } else {
+                    entries.add(TrigramEntry(w1, w2, w3, frequency, 0f, lastSeen = seen, globalSeen = data.clock))
                 }
-                pruneIfNeeded(data)
             }
 
-            dirtyLanguages.add(lang)
-            persister.markDirty()
-            // Synchronous checkpoint: an import is a user-initiated bulk write that must
-            // survive process death immediately (same rationale as BigramStore.importFromJson).
-            persister.flush()
-        } catch (e: Exception) {
-            // Invalid JSON, ignore
+            // Enforce the per-prefix budget, then recompute probabilities against the
+            // merged prefix totals.
+            for ((key, entries) in data.trigramMap) {
+                val total = data.prefixFrequencies[key] ?: continue
+                ContinuationBudget.enforce(
+                    entries, null, total, CONTINUATION_LIMITS,
+                    frequencyOf = { it.frequency }, lastSeenOf = { it.lastSeen }
+                )
+                val recomputed = entries.map {
+                    it.copy(probability = TrigramEntry.calculateProbability(it.frequency, total))
+                }
+                entries.clear()
+                entries.addAll(recomputed)
+                entries.sortByDescending { it.probability }
+            }
+            pruneIfNeeded(data)
         }
+
+        dirtyLanguages.add(lang)
+        persister.markDirty()
+        // Synchronous checkpoint: an import is a user-initiated bulk write that must
+        // survive process death immediately (same rationale as BigramStore.importFromJson).
+        persister.flush()
+        return accepted.size
     }
 }

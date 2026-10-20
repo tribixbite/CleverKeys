@@ -1327,6 +1327,7 @@
     <string name="backup_result_full_settings_applied">• Pengaturan diterapkan: %1$d</string>
     <string name="backup_result_full_custom_words">• Kata kustom: %1$d</string>
     <string name="backup_result_full_disabled_words">• Kata dinonaktifkan: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Data bahasa yang dipelajari: beberapa entri tidak dapat dibaca dan dilewati</string>
     <string name="backup_result_full_clipboard_imported">• Clipboard diimpor: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Clipboard dilewati: %1$d (duplikat)</string>
     <string name="backup_result_media_restored">• File media dipulihkan: %1$d</string>

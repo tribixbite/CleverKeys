@@ -83,6 +83,10 @@ internal fun buildDictResultMessage(
     if (result.excludedByUserCount > 0) {
         appendLine(text.string(R.string.backup_result_excluded_by_you, result.excludedByUserCount))
     }
+    // Audit M2: a corrupt learned-data section is no longer reported as restored.
+    if (result.learnedDataIncomplete) {
+        appendLine(text.string(R.string.backup_result_learned_data_incomplete))
+    }
     if (result.sourceVersion != "unknown") {
         appendLine(text.string(R.string.backup_result_source_version, result.sourceVersion))
     }

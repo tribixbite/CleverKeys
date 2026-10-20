@@ -384,6 +384,9 @@ internal fun SettingsActivity.performFullBackupImport(uri: Uri, retryPassphrase:
                     appendLine(getString(R.string.backup_result_full_settings_applied, result.configKeysApplied))
                     appendLine(getString(R.string.backup_result_full_custom_words, result.customWordsImported))
                     appendLine(getString(R.string.backup_result_full_disabled_words, result.disabledWordsImported))
+                    if (result.learnedDataIncomplete) {
+                        appendLine(getString(R.string.backup_result_learned_data_incomplete))
+                    }
                     appendLine(
                         getString(R.string.backup_result_full_clipboard_imported, result.clipboardEntriesImported)
                     )

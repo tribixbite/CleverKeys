@@ -315,6 +315,38 @@ class BigramStorePersistenceTest {
         assertEquals(1, fr.totalBigrams)
     }
 
+    // ------------------------------------------------- backup import (M2, 2026-10-20)
+
+    /**
+     * A malformed entry in the middle of a backup section must cost only that entry. Before
+     * 2026-10-20 the first throw aborted the loop mid-merge: entries before it stayed in
+     * memory with stale probabilities, entries after it were lost, nothing was persisted,
+     * and the caller still counted the whole section as restored.
+     */
+    @Test
+    fun `import skips a malformed entry and still applies and persists the valid ones`() {
+        val storage = InMemoryLearnedStorage()
+        val store = newStore(storage)
+        val payload = """
+            [
+              {"word1":"i","word2":"want","frequency":3,"probability":1.0},
+              42,
+              {"word1":"no","frequency":1,"probability":1.0},
+              {"word1":"see","word2":"you","frequency":"many","probability":1.0},
+              {"word1":"see","word2":"you","frequency":2,"probability":1.0}
+            ]
+        """.trimIndent()
+
+        // The return value is what the backup restore reports as restored: valid entries only.
+        assertEquals(2, store.importFromJson("en", payload))
+
+        assertEquals(2, store.getTotalBigramCount("en"))
+        assertEquals(1.0f, store.getProbability("en", "i", "want"), 1e-6f)
+        assertEquals(1.0f, store.getProbability("en", "see", "you"), 1e-6f)
+        // Persisted by the import's own checkpoint, without an explicit flush.
+        assertEquals(2, newStore(storage).getTotalBigramCount("en"))
+    }
+
     // ------------------------------------------------- concurrent first touch
 
     /**

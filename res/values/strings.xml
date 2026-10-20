@@ -1728,6 +1728,7 @@
     <string name="backup_result_full_settings_applied">• Settings applied: %1$d</string>
     <string name="backup_result_full_custom_words">• Custom words: %1$d</string>
     <string name="backup_result_full_disabled_words">• Disabled words: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Learned language data: some entries could not be read and were skipped</string>
     <string name="backup_result_full_clipboard_imported">• Clipboard imported: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Clipboard skipped: %1$d (duplicates)</string>
     <string name="backup_result_media_restored">• Media files restored: %1$d</string>

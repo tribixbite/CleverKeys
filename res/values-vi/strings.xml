@@ -1343,6 +1343,7 @@
     <string name="backup_result_full_settings_applied">• Cài đặt đã áp dụng: %1$d</string>
     <string name="backup_result_full_custom_words">• Từ tùy chỉnh: %1$d</string>
     <string name="backup_result_full_disabled_words">• Từ bị tắt: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Dữ liệu ngôn ngữ đã học: một số mục không đọc được nên đã bị bỏ qua</string>
     <string name="backup_result_full_clipboard_imported">• Bộ nhớ tạm đã nhập: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Bộ nhớ tạm đã bỏ qua: %1$d (trùng lặp)</string>
     <string name="backup_result_media_restored">• Tệp phương tiện đã khôi phục: %1$d</string>

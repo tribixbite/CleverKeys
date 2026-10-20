@@ -1381,6 +1381,7 @@
     <string name="backup_result_full_settings_applied">• Impostazioni applicate: %1$d</string>
     <string name="backup_result_full_custom_words">• Parole personalizzate: %1$d</string>
     <string name="backup_result_full_disabled_words">• Parole disabilitate: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Dati linguistici appresi: alcune voci non erano leggibili e sono state ignorate</string>
     <string name="backup_result_full_clipboard_imported">• Appunti importati: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Appunti saltati: %1$d (duplicati)</string>
     <string name="backup_result_media_restored">• File multimediali ripristinati: %1$d</string>

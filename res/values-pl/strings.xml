@@ -1364,6 +1364,7 @@
     <string name="backup_result_full_settings_applied">• Zastosowane ustawienia: %1$d</string>
     <string name="backup_result_full_custom_words">• Własne słowa: %1$d</string>
     <string name="backup_result_full_disabled_words">• Wyłączone słowa: %1$d</string>
+    <string name="backup_result_learned_data_incomplete">• Wyuczone dane językowe: niektórych wpisów nie udało się odczytać i zostały pominięte</string>
     <string name="backup_result_full_clipboard_imported">• Zaimportowane ze schowka: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Pominięte ze schowka: %1$d (duplikaty)</string>
     <string name="backup_result_media_restored">• Przywrócone pliki multimedialne: %1$d</string>
