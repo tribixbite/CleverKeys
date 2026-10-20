@@ -144,7 +144,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `4f70eb7e`: 1,607/1,607 (`~/ew-output/oct20-merged/`). **#147 Short Swipes Only PASS** on the
     Saga (15:44): with the setting on, a long up-right swipe from `w` (far past Max Distance)
     typed "2" and a long east swipe (no subkey there) typed nothing; Max Distance showed
-    disabled; the setting was turned back OFF afterwards. STILL OPEN: (1) a Hebrew prefix typo
+    disabled; the setting was turned back OFF afterwards. **#190 follow-finger PASS** (15:45):
+    with Selection Movement = Follow finger, backspace short-swipe + hold, then a 128 px drag
+    selected 4 characters, moving back 64 px shrank it to 2, release deleted exactly those 2;
+    the mode was restored to Speed by distance. (Harness note: separate `input motionevent`
+    calls take ~70 ms each, so a short swipe must be ONE big MOVE right after DOWN, or the
+    backspace long-press repeat fires first.) STILL OPEN: (1) a Hebrew prefix typo
     (`לןא` → `ללא`) on a phone with the Hebrew pack;
     (2) Hebrew prefix-deletion class: round 3
     (short-word deletion cost δ, fresh HE-adj2 data, eval doc §7/§9) fixed 38 Hebrew words with 0
