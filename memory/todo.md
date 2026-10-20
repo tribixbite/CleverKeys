@@ -205,12 +205,17 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `build/oct20g-saga/35.png`), light after the fix (`37.png`); the dialog's hard-coded white
     direction names then vanished and now take the theme sublabel colour (`22b35f71`,
     `38.png` light / `39.png` dark); theme, night mode restored. `ThemeStyleMapTest` 5 cases.
-    Full suites at `22b35f71`: 3,135 pure / 1,368 mock green; instrumented not re-run.
+    Full suites at `22b35f71`: 3,135 pure / 1,368 mock green. Instrumented 1,607/1,607 (0 fail,
+    0 skip) on the debug build of `bf4fbde4` (`~/ew-output/oct20-final/`, Pixel7 API 34).
+    **Leftovers FIXED**: the slider off-by-one was systemic — about 40 settings sliders passed
+    Compose the interval count as `steps` (stops between values; opacity moved in 0.99s);
+    `SettingsSlider` now takes an `increment` and derives steps via `sliderSteps` (`e7c94474`,
+    plus the two calibration sliders), border radius reads % in all 22 locales; private-copy
+    defaults in `Defaults` (`cf395b12`). Pure 3,141 / mock 1,368 green; Saga release
+    `ba230070…`: Long Press Timeout taps landed on 450 / 750 ms, restored 600. Not re-run on
+    instrumented after these two; border-radius readout not device-checked (needs Borders on).
     Not changed: `ThemeProvider.getBuiltInColorScheme("monet")` (the Theme Creator's seed
-    palette) is still the dark approximation. Leftovers: the
-    `custom_border_radius` slider says "dp" but Theme treats it as % of key width; private-copy
-    prefs still use literal defaults; side-margin slider `steps` off by one; the remaining LOW
-    rows in the report.
+    palette) is still the dark approximation. Leftover: the remaining LOW rows in the report.
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 15. [ ] agent: deferred review items — suffix receipt readback at command time (3 editor reads

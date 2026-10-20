@@ -164,6 +164,12 @@ difference 2), so a weight grid needs a bound-based pre-filter (`ChannelRankingE
 multi-hour eval from a separate `git worktree`: another session's half-finished edits in the
 shared tree broke the eval's compile.
 
+## Compose slider steps (2026-10-20)
+
+`Slider(steps = n)` means n stops BETWEEN the ends, so a 0..100 slider in 1s needs 99. About 40
+settings sliders passed the interval count and every stop fell between two values. Settings
+sliders take `increment` (`SettingsSlider`); raw `Slider`s must use `sliderSteps(range, inc)`.
+
 ## PAL model preference
 
 Use Gemini 3.8 (`gemini-3.8-flash`) for PAL consultation; never use Gemini 3.1.

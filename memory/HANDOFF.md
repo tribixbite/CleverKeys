@@ -1,6 +1,6 @@
 # HANDOFF — updated 2026-10-20 (body last reconciled 2026-09-01)
 
-**2026-10-20 pointer.** Local `main` is 76 commits ahead of origin/main (`a40ce7d0`), NOT
+**2026-10-20 pointer.** Local `main` is 80 commits ahead of origin/main (`a40ce7d0`), NOT
 pushed (pushes need the maintainer's word this round). New since 10-18, all on local main:
 - **Autocorrect ranking is now the noisy-channel rule** (default since `353003c6`; weights from
   pre-registered rounds 1–5, `docs/eval/2026-10-18-channel-autocorrect-ranking.md`): shipped
@@ -28,8 +28,10 @@ pushed (pushes need the maintainer's word this round). New since 10-18, all on l
   FIRST field's action label everywhere (LayoutModifier cache keyed on Config.version, which a
   field start never bumps) — fixed `ea88d975`. H2 (two theme maps; Monet (Auto) magnifier dark
   in light mode) fixed `ddac0605`, and the magnifier's white direction names `22b35f71`.
-  Suites: 3,135 pure / 1,368 mock green at `22b35f71` (`build/suite-oct20g/suite3.log`); the
-  instrumented suite was last run at `4f70eb7e` (1,607/1,607) and not since these fixes.
+  Then the settings-slider off-by-one (about 40 sliders; `SettingsSlider` takes an increment,
+  `e7c94474`) and the private-copy defaults (`cf395b12`). Suites: 3,141 pure / 1,368 mock green
+  at `e7c94474`; instrumented 1,607/1,607 on `bf4fbde4` (`~/ew-output/oct20-final/`), not
+  re-run for the last two commits.
   Pixel: no Hebrew layout enabled any more, so the `לןא`→`ללא` device check waits on the
   maintainer re-adding one.
 - GitHub reconciliation (read-only audit of all 64 issues + 6 PRs, 2026-10-20) is summarised in

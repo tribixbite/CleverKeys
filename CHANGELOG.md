@@ -312,6 +312,10 @@ editor that used to be listed here already ship in 2.0.)
 - With Monet (Auto) in light mode, the per-key customization magnifier drew a dark key under a
   light keyboard: two theme lookups disagreed. There is now one, and the direction names over
   the magnifier follow the theme instead of being white.
+- Settings sliders stop on whole values. About 40 of them were off by one step (opacity moved in
+  0.99 % steps and skipped values, key margins in 4.95s), so the value shown did not match where
+  the slider stopped. The border radius is labelled as a percentage of key width, which is what
+  it is, instead of dp.
 - The highlighted suggestion is now exactly what space will commit. Typing `Helo` highlighted
   `Hello` while space committed `Help`: the bar and the space key used different rankers, which
   disagreed on 2,053 of 2,780 real misspellings. One resolver now decides both, and a completion
