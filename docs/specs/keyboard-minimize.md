@@ -32,18 +32,23 @@ window had when it was last hidden (`_formAtFinishView`, captured in `onFinishIn
 the minimizer reset, recorded in `onWindowHidden`) and the hide time, and a tap acts on that
 form when the hide is recent.
 
+"Visible" needs both `onWindowShown`/`onWindowHidden` and `isInputViewShown()`: on the home
+screen the Saga reported `mIsInputViewShown=true` with `mDecorViewVisible=false`. A "real
+editor" is a typed field (`inputType` class ≠ `TYPE_NULL`), or a `TYPE_NULL` field (terminal,
+remote desktop) only when it is the field the keyboard was last shown over (same package and
+`fieldId`): Android 14 binds a `TYPE_NULL` fallback connection for windows without an editor,
+such as the launcher, and the EditorInfo cannot tell the two apart. A hide is the user's when
+Back was pressed while the keyboard showed, or the `hide_keyboard` key was used.
+
 | CleverKeys selected? | window | tap | subtitle (API 29+) |
 |---|---|---|---|
 | no, or service not running | any | input-method picker | Switch keyboard |
 | yes | visible, full | minimize, to `KeyboardMinimizer.lastStyle` (FAB until a minimize command picks a style) | Minimize |
 | yes | visible, minimized | `expand()` | Restore |
-| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), was full | deferred show, landing minimized | Minimize |
-| yes | hidden ≤ 10 s ago, was minimized | deferred show, landing full | Restore |
-| yes | hidden longer, editor bound | deferred show, landing full | Show |
-| yes | hidden longer, no editor | input-method picker | Switch keyboard |
-
-The recent-hide rows do not require the editor binding: whether the shade unbinds the app's
-editor varies by device, and the show is retried until the app has focus again.
+| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), not by the user, input still in that app, unbound, or SystemUI; was full | deferred show, landing minimized | Minimize |
+| yes | same, was minimized | deferred show, landing full | Restore |
+| yes | otherwise, real editor bound | deferred show, landing full | Show |
+| yes | otherwise (e.g. home screen fallback connection) | input-method picker | Switch keyboard |
 
 **Deferred show** (`TileShowSession`, pure; driven by the service on its main `Handler`):
 - the tap arms a target (full / minimized + style) bound to the editor's package, and the
@@ -65,6 +70,14 @@ editor varies by device, and the show is retried until the app has focus again.
   re-reads its state 300 ms and 1 s after a tap.
 - **Lifecycle:** the tile reaches the service through `CleverKeysService.getInstance()`, set in
   `onCreate` and cleared in `onDestroy`; the tile keeps no reference between callbacks.
+- **Web editors (known limitation):** a page's textarea in Chrome loses editor focus when the
+  shade opens (Chrome hides the IME itself, `ORIGIN_CLIENT_HIDE_SOFT_INPUT`). The deferred show
+  lands (`SHOW_SOFT_INPUT_FROM_IME`, onShown) but the system hides it about 0.3 s later with
+  `HIDE_SAME_WINDOW_FOCUSED_WITHOUT_EDITOR`. That is outside the IME's control: such fields
+  need a tap after the shade closes. Native editors, including Chrome's address bar, pass.
+- **Diagnostics:** verbose builds (`LOCAL_BUILD=true`) log every tile decision with all its
+  inputs, each retry and its outcome, and the window callbacks under the tag `CleverKeys/Tile`
+  (`adb logcat -s CleverKeys/Tile`).
 - Tests: `KeyboardTileActionTest` (pure: every decision branch, the session state machine,
   strings in all locales), `KeyboardTileServiceTest` (mock, source-level `onClick` routing),
   `KeyboardMinimizerTest` (`lastStyle`).

@@ -13,22 +13,45 @@ sealed class VisibleForm {
 }
 
 /**
+ * Identity of the editor input is bound to, taken from the service's last `onStartInput`
+ * EditorInfo. Only the fields the tile's decision needs, so the decision stays pure.
+ *
+ * @property typeNull `inputType == TYPE_NULL`: a terminal or remote-desktop view (blind
+ *   fields), OR the platform's fallback connection for a window with no editor at all (Android
+ *   14 binds one for the launcher; device report 2026-10-20). The two cannot be told apart from
+ *   the EditorInfo, so a TYPE_NULL binding counts as an editor only when the keyboard was last
+ *   shown over that same field ([isSameField]).
+ */
+data class EditorRef(val packageName: String?, val fieldId: Int, val typeNull: Boolean) {
+    /** Same app and same view id: the field the keyboard was shown over. */
+    fun isSameField(other: EditorRef?): Boolean =
+        other != null && packageName == other.packageName && fieldId == other.fieldId
+}
+
+/**
  * The input window as the Quick Settings tile sees it, read from the live service
  * ([CleverKeysService.tileSnapshot]); `null` wherever this type is optional means the service is
  * not running in this process.
  *
- * @property windowVisible The IME window is on screen (from onWindowShown / onWindowHidden).
+ * @property windowVisible The IME window is on screen: the onWindowShown / onWindowHidden pair
+ *   AND `isInputViewShown()`, so a stale flag on either side reads as hidden.
  * @property minimized The visible window shows the minimized view.
- * @property bound Input has started with a live connection: the IME may ask to show itself.
+ * @property current The editor input is bound to now, or null when input has not started or
+ *   has no live connection.
  * @property lastVisible The form the window had when it was last hidden; null before any hide.
+ * @property lastEditor The editor the window was shown over when it was last hidden.
  * @property hiddenAgeMs How long ago the window was hidden; null while visible or never shown.
+ * @property dismissedByUser The last hide was the user's own (Back, or the hide_keyboard key),
+ *   not the shade's.
  */
 data class TileWindowSnapshot(
     val windowVisible: Boolean,
     val minimized: Boolean,
-    val bound: Boolean,
+    val current: EditorRef?,
     val lastVisible: VisibleForm?,
+    val lastEditor: EditorRef?,
     val hiddenAgeMs: Long?,
+    val dismissedByUser: Boolean,
 )
 
 /** What a tap on the Quick Settings tile does. */
@@ -71,6 +94,13 @@ sealed class ShowTarget {
  * the shade collapses. So by the time the user taps the tile the keyboard is already hidden. A
  * hide less than [RECENT_HIDE_MS] before the tap is read as the shade's, and the tap acts on the
  * form the keyboard had just before it (device report, 2026-10-20).
+ *
+ * Known limitation, web editors: a page's textarea in Chrome loses editor focus when the shade
+ * opens (Chrome hides the IME itself, ORIGIN_CLIENT_HIDE_SOFT_INPUT). The deferred show does
+ * land (SHOW_SOFT_INPUT_FROM_IME, onShown), but the system hides it ~0.3 s later with
+ * HIDE_SAME_WINDOW_FOCUSED_WITHOUT_EDITOR because the page no longer has a focused editor.
+ * That is outside the IME's control: such fields need a tap after the shade closes. Native
+ * editors (including Chrome's address bar) are unaffected (Saga, 2026-10-20).
  */
 object KeyboardTileDecision {
 
@@ -81,17 +111,39 @@ object KeyboardTileDecision {
      */
     const val RECENT_HIDE_MS = 10_000L
 
+    /** Package of the notification shade's own windows (SystemUI). */
+    const val SYSTEM_UI_PACKAGE = "com.android.systemui"
+
+    /**
+     * Whether [current] is an editor the keyboard can be shown for: any typed field, or a
+     * TYPE_NULL binding only when it is the very field the keyboard was last shown over
+     * ([lastEditor]); the launcher's fallback connection has neither.
+     */
+    fun isRealEditor(current: EditorRef?, lastEditor: EditorRef?): Boolean =
+        current != null && (!current.typeNull || current.isSameField(lastEditor))
+
+    /**
+     * Whether the input bound now still belongs to the app the keyboard was hidden over: the
+     * same package, nothing bound (the shade may unbind it), or the shade itself (SystemUI). Any
+     * other package means the user went elsewhere (e.g. home), and a show would land there.
+     */
+    fun isSameAppOrShade(current: EditorRef?, lastEditor: EditorRef?): Boolean =
+        current == null || current.packageName == SYSTEM_UI_PACKAGE ||
+            (lastEditor != null && current.packageName == lastEditor.packageName)
+
     /**
      * The action for a tap.
      *
      * - Another keyboard is selected, or the service is not running: the picker, which is how
      *   users switch to CleverKeys.
      * - The window is on screen: minimize it, or restore it when minimized.
-     * - Hidden less than [RECENT_HIDE_MS] ago: the opposite of the form it had (full →
-     *   [KeyboardTileAction.SHOW_MINIMIZED], minimized → [KeyboardTileAction.SHOW_RESTORED]).
-     *   The editor binding is not required here: whether the shade unbinds the app's editor
-     *   varies by device, and the show is retried until the app has focus again.
-     * - Hidden longer ago over a bound editor: show it full size.
+     * - Hidden less than [RECENT_HIDE_MS] ago by something other than the user, over an editor,
+     *   with input still in that app or the shade ([isSameAppOrShade]): the opposite of the form
+     *   it had (full → [KeyboardTileAction.SHOW_MINIMIZED], minimized →
+     *   [KeyboardTileAction.SHOW_RESTORED]). The current binding need not be that editor:
+     *   whether the shade unbinds it varies by device, and the show is retried until the app
+     *   has focus again.
+     * - Otherwise, over a real editor ([isRealEditor]): show it full size.
      * - Otherwise there is nothing to show (an IME can only show itself for a focused editor):
      *   the picker, which is still useful, and the subtitle says so before the tap.
      */
@@ -101,14 +153,20 @@ object KeyboardTileDecision {
             return if (window.minimized) KeyboardTileAction.RESTORE else KeyboardTileAction.MINIMIZE
         }
         val age = window.hiddenAgeMs
-        if (age != null && age in 0..RECENT_HIDE_MS) {
+        val shadeHide = age != null && age in 0..RECENT_HIDE_MS && !window.dismissedByUser &&
+            window.lastEditor != null && isSameAppOrShade(window.current, window.lastEditor)
+        if (shadeHide) {
             when (window.lastVisible) {
                 VisibleForm.Full -> return KeyboardTileAction.SHOW_MINIMIZED
                 is VisibleForm.Minimized -> return KeyboardTileAction.SHOW_RESTORED
                 null -> Unit
             }
         }
-        return if (window.bound) KeyboardTileAction.SHOW else KeyboardTileAction.PICK_KEYBOARD
+        return if (isRealEditor(window.current, window.lastEditor)) {
+            KeyboardTileAction.SHOW
+        } else {
+            KeyboardTileAction.PICK_KEYBOARD
+        }
     }
 
     /**
@@ -191,18 +249,38 @@ class TileShowSession {
 
     private var hiddenAtMs: Long? = null
 
+    /** The editor the window was shown over when it was last hidden. */
+    var lastEditor: EditorRef? = null
+        private set
+
+    /** The last hide was the user's own; see [noteUserDismiss]. */
+    var dismissedByUser: Boolean = false
+        private set
+
+    /** Set just before a user-initiated hide; consumed by the next [onWindowHidden]. */
+    private var userDismissPending = false
+
+    /** The user is dismissing the keyboard (Back while shown, or the hide_keyboard key). */
+    fun noteUserDismiss() {
+        userDismissPending = true
+    }
+
     /** Whether a deferred show is armed. */
     val hasPending: Boolean get() = pending != null
 
     /** The window is on screen; it is no longer "recently hidden". */
     fun onWindowVisible() {
         hiddenAtMs = null
+        userDismissPending = false
     }
 
-    /** The window was hidden at [nowMs] while showing [form]. */
-    fun onWindowHidden(form: VisibleForm, nowMs: Long) {
+    /** The window was hidden at [nowMs] while showing [form] over [editor]. */
+    fun onWindowHidden(form: VisibleForm, editor: EditorRef?, nowMs: Long) {
         lastVisible = form
+        lastEditor = editor
         hiddenAtMs = nowMs
+        dismissedByUser = userDismissPending
+        userDismissPending = false
     }
 
     /** Milliseconds since the window was hidden, or null while visible / never hidden. */

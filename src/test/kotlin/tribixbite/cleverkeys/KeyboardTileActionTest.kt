@@ -17,13 +17,27 @@ class KeyboardTileActionTest {
     private fun snapshot(
         visible: Boolean = false,
         minimized: Boolean = false,
-        bound: Boolean = false,
+        current: EditorRef? = null,
         last: VisibleForm? = null,
+        lastEditor: EditorRef? = null,
         ageMs: Long? = null,
-    ) = TileWindowSnapshot(visible, minimized, bound, last, ageMs)
+        byUser: Boolean = false,
+    ) = TileWindowSnapshot(visible, minimized, current, last, lastEditor, ageMs, byUser)
 
     private val recent = KeyboardTileDecision.RECENT_HIDE_MS
     private val fab = VisibleForm.Minimized(MinimizedStyle.FAB)
+
+    /** A typed text field in a chat app. */
+    private val chat = EditorRef("com.example.chat", fieldId = 42, typeNull = false)
+
+    /** The launcher's fallback connection on Android 14: TYPE_NULL, the decor view's id. */
+    private val launcherFallback = EditorRef("com.android.launcher3", fieldId = -1, typeNull = true)
+
+    /** A terminal view (TYPE_NULL by design), e.g. Termux. */
+    private val terminal = EditorRef("com.termux", fieldId = 7, typeNull = true)
+
+    /** The shade's own fallback binding, if the shade takes input focus. */
+    private val shade = EditorRef(KeyboardTileDecision.SYSTEM_UI_PACKAGE, fieldId = -1, typeNull = true)
 
     // =========================================================================
     // actionFor
@@ -35,8 +49,8 @@ class KeyboardTileActionTest {
             null,
             snapshot(visible = true),
             snapshot(visible = true, minimized = true),
-            snapshot(bound = true, last = VisibleForm.Full, ageMs = 100),
-            snapshot(bound = true),
+            snapshot(current = chat, last = VisibleForm.Full, lastEditor = chat, ageMs = 100),
+            snapshot(current = chat),
         )
         for (window in windows) {
             assertWithMessage("not the current IME, window=$window")
@@ -48,62 +62,122 @@ class KeyboardTileActionTest {
     @Test
     fun aVisibleKeyboard_isMinimizedOrRestoredInPlace() {
         assertWithMessage("visible full -> minimize")
-            .that(KeyboardTileDecision.actionFor(true, snapshot(visible = true, bound = true)))
+            .that(KeyboardTileDecision.actionFor(true, snapshot(visible = true, current = chat)))
             .isEqualTo(KeyboardTileAction.MINIMIZE)
         assertWithMessage("visible minimized -> restore")
-            .that(KeyboardTileDecision.actionFor(true, snapshot(visible = true, minimized = true, bound = true)))
+            .that(KeyboardTileDecision.actionFor(true, snapshot(visible = true, minimized = true, current = chat)))
             .isEqualTo(KeyboardTileAction.RESTORE)
-        // Visibility wins over any hide history.
         assertWithMessage("visible wins over a recent hide")
-            .that(KeyboardTileDecision.actionFor(true, snapshot(visible = true, last = fab, ageMs = 10)))
+            .that(KeyboardTileDecision.actionFor(true, snapshot(visible = true, last = fab, lastEditor = chat, ageMs = 10)))
             .isEqualTo(KeyboardTileAction.MINIMIZE)
     }
 
     /** The Saga case: the shade hid the keyboard just before the tap. */
     @Test
-    fun aRecentHide_actsOnTheFormTheKeyboardHadBeforeIt() {
-        for (bound in listOf(true, false)) {
-            assertWithMessage("full, hidden 2 s ago, bound=$bound -> show minimized")
-                .that(KeyboardTileDecision.actionFor(true, snapshot(bound = bound, last = VisibleForm.Full, ageMs = 2_000)))
+    fun aRecentShadeHide_actsOnTheFormTheKeyboardHadBeforeIt() {
+        // Still bound to the app, unbound, or bound to the shade itself: all count.
+        for (current in listOf(chat, null, shade)) {
+            assertWithMessage("full, hidden 2 s ago, current=$current -> show minimized")
+                .that(KeyboardTileDecision.actionFor(true, snapshot(current = current, last = VisibleForm.Full, lastEditor = chat, ageMs = 2_000)))
                 .isEqualTo(KeyboardTileAction.SHOW_MINIMIZED)
-            assertWithMessage("minimized, hidden 2 s ago, bound=$bound -> show full")
-                .that(KeyboardTileDecision.actionFor(true, snapshot(bound = bound, last = fab, ageMs = 2_000)))
+            assertWithMessage("minimized, hidden 2 s ago, current=$current -> show full")
+                .that(KeyboardTileDecision.actionFor(true, snapshot(current = current, last = fab, lastEditor = chat, ageMs = 2_000)))
                 .isEqualTo(KeyboardTileAction.SHOW_RESTORED)
         }
         assertWithMessage("the boundary itself still counts as recent")
-            .that(KeyboardTileDecision.actionFor(true, snapshot(last = VisibleForm.Full, ageMs = recent)))
+            .that(KeyboardTileDecision.actionFor(true, snapshot(last = VisibleForm.Full, lastEditor = chat, ageMs = recent)))
             .isEqualTo(KeyboardTileAction.SHOW_MINIMIZED)
-        assertWithMessage("a bar-minimized keyboard restores too")
-            .that(KeyboardTileDecision.actionFor(true, snapshot(last = VisibleForm.Minimized(MinimizedStyle.BAR), ageMs = 0)))
-            .isEqualTo(KeyboardTileAction.SHOW_RESTORED)
+        assertWithMessage("a terminal the keyboard was shown over counts too")
+            .that(KeyboardTileDecision.actionFor(true, snapshot(current = terminal, last = VisibleForm.Full, lastEditor = terminal, ageMs = 1_000)))
+            .isEqualTo(KeyboardTileAction.SHOW_MINIMIZED)
+    }
+
+    /** A Back press (or hide_keyboard) is the user's dismissal, never read as the shade's. */
+    @Test
+    fun aRecentUserDismissal_showsTheFullKeyboard() {
+        assertWithMessage("Back 2 s ago over a bound field -> plain show")
+            .that(KeyboardTileDecision.actionFor(true, snapshot(current = chat, last = VisibleForm.Full, lastEditor = chat, ageMs = 2_000, byUser = true)))
+            .isEqualTo(KeyboardTileAction.SHOW)
+        assertWithMessage("Back 2 s ago, nothing bound -> picker")
+            .that(KeyboardTileDecision.actionFor(true, snapshot(last = VisibleForm.Full, lastEditor = chat, ageMs = 2_000, byUser = true)))
+            .isEqualTo(KeyboardTileAction.PICK_KEYBOARD)
+    }
+
+    /**
+     * Device step E (Saga, 2026-10-20): home screen, launcher fallback connection bound,
+     * shortly after a hide in another app. Must open the picker, never show over the launcher.
+     */
+    @Test
+    fun theLauncherFallbackConnection_isNotAnEditor() {
+        for (age in listOf(2_000L, 12_000L)) {
+            for (byUser in listOf(true, false)) {
+                assertWithMessage("home, age=$age byUser=$byUser")
+                    .that(KeyboardTileDecision.actionFor(true, snapshot(current = launcherFallback, last = VisibleForm.Full, lastEditor = chat, ageMs = age, byUser = byUser)))
+                    .isEqualTo(KeyboardTileAction.PICK_KEYBOARD)
+            }
+        }
+        assertWithMessage("never shown anywhere, launcher fallback")
+            .that(KeyboardTileDecision.actionFor(true, snapshot(current = launcherFallback)))
+            .isEqualTo(KeyboardTileAction.PICK_KEYBOARD)
+        assertWithMessage("a recent hide with no editor recorded is not a shade hide")
+            .that(KeyboardTileDecision.actionFor(true, snapshot(last = VisibleForm.Full, ageMs = 1_000)))
+            .isEqualTo(KeyboardTileAction.PICK_KEYBOARD)
     }
 
     @Test
-    fun anOlderHide_showsTheFullKeyboard_whenAnEditorIsBound() {
+    fun anOlderHide_showsTheFullKeyboard_overARealEditor() {
         for (last in listOf(VisibleForm.Full, fab, null)) {
-            assertWithMessage("hidden long ago, last=$last, bound -> show full")
-                .that(KeyboardTileDecision.actionFor(true, snapshot(bound = true, last = last, ageMs = recent + 1)))
+            assertWithMessage("hidden long ago, last=$last, typed field bound -> show full")
+                .that(KeyboardTileDecision.actionFor(true, snapshot(current = chat, last = last, lastEditor = chat, ageMs = recent + 1)))
                 .isEqualTo(KeyboardTileAction.SHOW)
         }
-        assertWithMessage("never shown, bound -> show")
-            .that(KeyboardTileDecision.actionFor(true, snapshot(bound = true)))
+        assertWithMessage("never shown, typed field bound -> show")
+            .that(KeyboardTileDecision.actionFor(true, snapshot(current = chat)))
             .isEqualTo(KeyboardTileAction.SHOW)
+        assertWithMessage("terminal the keyboard was last shown over -> show")
+            .that(KeyboardTileDecision.actionFor(true, snapshot(current = terminal, last = VisibleForm.Full, lastEditor = terminal, ageMs = 60_000)))
+            .isEqualTo(KeyboardTileAction.SHOW)
+        assertWithMessage("a TYPE_NULL binding never shown over -> picker")
+            .that(KeyboardTileDecision.actionFor(true, snapshot(current = terminal, last = VisibleForm.Full, lastEditor = chat, ageMs = 60_000)))
+            .isEqualTo(KeyboardTileAction.PICK_KEYBOARD)
         assertWithMessage("a negative age (clock oddity) is not recent")
-            .that(KeyboardTileDecision.actionFor(true, snapshot(bound = true, last = VisibleForm.Full, ageMs = -5)))
+            .that(KeyboardTileDecision.actionFor(true, snapshot(current = chat, last = VisibleForm.Full, lastEditor = chat, ageMs = -5)))
+            .isEqualTo(KeyboardTileAction.SHOW)
+    }
+
+    @Test
+    fun aRecentHide_thenAnotherApp_doesNotShowThere() {
+        val browser = EditorRef("com.example.browser", fieldId = 3, typeNull = false)
+        assertWithMessage("hidden in chat 2 s ago, now a typed field in another app -> plain show there")
+            .that(KeyboardTileDecision.actionFor(true, snapshot(current = browser, last = VisibleForm.Full, lastEditor = chat, ageMs = 2_000)))
             .isEqualTo(KeyboardTileAction.SHOW)
     }
 
     @Test
     fun nothingToShow_fallsBackToThePicker() {
-        assertWithMessage("hidden long ago, no editor")
-            .that(KeyboardTileDecision.actionFor(true, snapshot(last = VisibleForm.Full, ageMs = recent + 1)))
+        assertWithMessage("hidden long ago, nothing bound")
+            .that(KeyboardTileDecision.actionFor(true, snapshot(last = VisibleForm.Full, lastEditor = chat, ageMs = recent + 1)))
             .isEqualTo(KeyboardTileAction.PICK_KEYBOARD)
-        assertWithMessage("never shown, no editor")
+        assertWithMessage("never shown, nothing bound")
             .that(KeyboardTileDecision.actionFor(true, snapshot()))
             .isEqualTo(KeyboardTileAction.PICK_KEYBOARD)
         assertWithMessage("service not running in this process")
             .that(KeyboardTileDecision.actionFor(true, null))
             .isEqualTo(KeyboardTileAction.PICK_KEYBOARD)
+    }
+
+    @Test
+    fun editorHelpers() {
+        assertThat(KeyboardTileDecision.isRealEditor(chat, null)).isTrue()
+        assertThat(KeyboardTileDecision.isRealEditor(null, chat)).isFalse()
+        assertThat(KeyboardTileDecision.isRealEditor(launcherFallback, chat)).isFalse()
+        assertThat(KeyboardTileDecision.isRealEditor(terminal, terminal)).isTrue()
+        assertThat(KeyboardTileDecision.isRealEditor(terminal, terminal.copy(fieldId = 8))).isFalse()
+        assertThat(KeyboardTileDecision.isSameAppOrShade(null, chat)).isTrue()
+        assertThat(KeyboardTileDecision.isSameAppOrShade(shade, chat)).isTrue()
+        assertThat(KeyboardTileDecision.isSameAppOrShade(chat.copy(fieldId = 9), chat)).isTrue()
+        assertThat(KeyboardTileDecision.isSameAppOrShade(launcherFallback, chat)).isFalse()
+        assertThat(KeyboardTileDecision.isSameAppOrShade(chat, null)).isFalse()
     }
 
     @Test
@@ -130,14 +204,33 @@ class KeyboardTileActionTest {
         assertThat(s.lastVisible).isNull()
         assertThat(s.hiddenAgeMs(1_000)).isNull()
 
-        s.onWindowHidden(fab, nowMs = 1_000)
+        s.onWindowHidden(fab, chat, nowMs = 1_000)
         assertThat(s.lastVisible).isEqualTo(fab)
+        assertThat(s.lastEditor).isEqualTo(chat)
+        assertThat(s.dismissedByUser).isFalse()
         assertThat(s.hiddenAgeMs(3_500)).isEqualTo(2_500)
 
         s.onWindowVisible()
         assertThat(s.hiddenAgeMs(4_000)).isNull()
         assertWithMessage("the form is kept for the next hide's history")
             .that(s.lastVisible).isEqualTo(fab)
+    }
+
+    @Test
+    fun session_userDismissal_marksOnlyTheNextHide() {
+        val s = TileShowSession()
+        s.noteUserDismiss()
+        s.onWindowHidden(VisibleForm.Full, chat, nowMs = 0)
+        assertThat(s.dismissedByUser).isTrue()
+
+        s.onWindowShown()
+        s.onWindowHidden(VisibleForm.Full, chat, nowMs = 10)
+        assertWithMessage("the next hide (e.g. the shade) is not the user's").that(s.dismissedByUser).isFalse()
+
+        s.noteUserDismiss()
+        s.onWindowVisible()
+        s.onWindowHidden(VisibleForm.Full, chat, nowMs = 20)
+        assertWithMessage("a mark that never led to a hide expires on the next show").that(s.dismissedByUser).isFalse()
     }
 
     @Test

@@ -172,6 +172,9 @@ class CleverKeysService : InputMethodService(),
         /** Broadcast action sent when theme changes in ThemeSettingsActivity */
         const val ACTION_THEME_CHANGED = "tribixbite.cleverkeys.ACTION_THEME_CHANGED"
 
+        /** Logcat tag for the Quick Settings tile diagnostics (verbose builds only). */
+        const val TILE_TAG = "CleverKeys/Tile"
+
         /** How long a returned process-text result waits for an editor to restart input. */
         private const val PROCESS_TEXT_SETTLE_MS = 3_000L
 
@@ -721,6 +724,7 @@ class CleverKeysService : InputMethodService(),
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
         // Tile: a deferred show armed for another app's editor must not land here.
+        if (_tileShow.hasPending) tileLog { "onStartInput ${attribute?.packageName} while a deferred show is armed" }
         _tileShow.onStartInput(attribute?.packageName)
         if (ProcessTextReturn.hasResult() && attribute != null && attribute.packageName != packageName) {
             _handler.post { if (::_keyeventhandler.isInitialized) _keyeventhandler.deliverProcessTextResult() }
@@ -729,6 +733,7 @@ class CleverKeysService : InputMethodService(),
 
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {
         _formAtFinishView = null
+        _viewEditor = editorRefOf(info)
         _keyboardView.cancelContinuousSwipe()
         _suggestionHandler.onEditorSessionChanged()
         // Record a copy the clipboard listener could not see (Saga 2026-10-07): one bounded
@@ -888,8 +893,17 @@ class CleverKeysService : InputMethodService(),
     /** Tile bookkeeping: the last visible form, the hide time and a deferred show. */
     private val _tileShow = TileShowSession()
 
-    /** Whether the IME window is on screen, from onWindowShown / onWindowHidden. */
+    /**
+     * Whether the IME window is on screen, from onWindowShown / onWindowHidden. Read through
+     * [isTileWindowVisible], which also requires `isInputViewShown()`.
+     */
     private var _windowVisible = false
+
+    /** The editor the input view was last started for (onStartInputView). */
+    private var _viewEditor: EditorRef? = null
+
+    /** Deferred-show requests sent since the tile armed the current one (for the log). */
+    private var _tileShowAttempts = 0
 
     /**
      * The form the window had at the last onFinishInputView, captured before the minimizer
@@ -908,27 +922,75 @@ class CleverKeysService : InputMethodService(),
     private fun hiddenForm(): VisibleForm =
         _minimizer.style?.let { VisibleForm.Minimized(it) } ?: _formAtFinishView ?: VisibleForm.Full
 
+    /**
+     * Both visibility signals must agree: on the Saga the platform's own flags disagreed
+     * (`mIsInputViewShown=true` with `mDecorViewVisible=false` on the home screen, 2026-10-20),
+     * so one stale signal must never read as "the keyboard is showing".
+     */
+    private fun isTileWindowVisible(): Boolean = _windowVisible && isInputViewShown
+
+    /** The editor input is bound to now, or null when input has not started / no connection. */
+    private fun currentEditorRef(): EditorRef? {
+        if (!currentInputStarted || currentInputConnection == null) return null
+        return editorRefOf(currentInputEditorInfo)
+    }
+
+    private fun editorRefOf(info: EditorInfo?): EditorRef? = info?.let {
+        EditorRef(
+            packageName = it.packageName,
+            fieldId = it.fieldId,
+            typeNull = (it.inputType and android.text.InputType.TYPE_MASK_CLASS) == android.text.InputType.TYPE_NULL,
+        )
+    }
+
+    /** Verbose-build-only tile diagnostics (logcat tag [TILE_TAG]). */
+    private fun tileLog(message: () -> String) {
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TILE_TAG, message())
+    }
+
     /** The deferred-show retry loop; posted on [_handler], removed in onDestroy. */
     private val _tileShowTick = object : Runnable {
         override fun run() {
-            when (_tileShow.tick(android.os.SystemClock.uptimeMillis(), _windowVisible)) {
+            val visible = isTileWindowVisible()
+            when (_tileShow.tick(android.os.SystemClock.uptimeMillis(), visible)) {
                 TileShowSession.Tick.REQUEST_SHOW -> {
+                    _tileShowAttempts++
                     requestShowFromTile()
+                    tileLog {
+                        "retry #$_tileShowAttempts: requestShowSelf sent " +
+                            "(started=$currentInputStarted editor=${currentEditorRef()})"
+                    }
                     _handler.postDelayed(this, TileShowSession.RETRY_INTERVAL_MS)
                 }
-                TileShowSession.Tick.IDLE, TileShowSession.Tick.EXPIRED -> Unit
+                TileShowSession.Tick.EXPIRED ->
+                    tileLog { "deferred show expired after $_tileShowAttempts attempts, never shown" }
+                TileShowSession.Tick.IDLE ->
+                    tileLog { "retry loop stopped (visible=$visible pending=${_tileShow.hasPending})" }
             }
         }
     }
 
     /** The input window as the Quick Settings tile sees it. Main thread. */
     fun tileSnapshot(): TileWindowSnapshot = TileWindowSnapshot(
-        windowVisible = _windowVisible,
+        windowVisible = isTileWindowVisible(),
         minimized = _minimizer.style != null,
-        bound = currentInputStarted && currentInputConnection != null,
+        current = currentEditorRef(),
         lastVisible = _tileShow.lastVisible,
+        lastEditor = _tileShow.lastEditor,
         hiddenAgeMs = _tileShow.hiddenAgeMs(android.os.SystemClock.uptimeMillis()),
+        dismissedByUser = _tileShow.dismissedByUser,
     )
+
+    /**
+     * Logs one tile decision with every input (verbose builds), so a device run can be read
+     * from logcat alone. [source] is "tap" or "label".
+     */
+    fun logTileDecision(source: String, isCurrentIme: Boolean, snapshot: TileWindowSnapshot, action: KeyboardTileAction) {
+        tileLog {
+            "$source: currentIme=$isCurrentIme $snapshot " +
+                "flags(windowShownCb=$_windowVisible isInputViewShown=$isInputViewShown) -> $action"
+        }
+    }
 
     /**
      * Tile tap while the keyboard shows: minimize to the style last used by a minimize
@@ -952,12 +1014,14 @@ class CleverKeysService : InputMethodService(),
      * out at once (it works when the shade does not hold focus, e.g. `cmd statusbar
      * click-tile`); while the shade is open the system ignores it, and the loop keeps asking
      * until the app is focused again after the shade collapses. [onWindowShown] then applies
-     * the requested form.
+     * the requested form. The request is bound to the app the keyboard was last shown in.
      */
     fun showFromTile(action: KeyboardTileAction) {
         val target = KeyboardTileDecision.showTargetFor(action, _minimizer.lastStyle) ?: return
-        val editorPackage = if (currentInputStarted) currentInputEditorInfo?.packageName else null
+        val editorPackage = _tileShow.lastEditor?.packageName ?: currentEditorRef()?.packageName
         _tileShow.request(target, editorPackage, android.os.SystemClock.uptimeMillis())
+        _tileShowAttempts = 0
+        tileLog { "deferred show armed: $target for $editorPackage" }
         _handler.removeCallbacks(_tileShowTick)
         _tileShowTick.run()
     }
@@ -977,11 +1041,22 @@ class CleverKeysService : InputMethodService(),
         }
     }
 
+    /**
+     * The user's own hide_keyboard key: marks the hide as a dismissal (so the tile does not
+     * read it as the shade's) before asking the system to hide the window.
+     */
+    fun hideKeyboardByUser() {
+        _tileShow.noteUserDismiss()
+        requestHideSelf(0)
+    }
+
     override fun onWindowShown() {
         super.onWindowShown()
         _windowVisible = true
         _handler.removeCallbacks(_tileShowTick)
-        when (val target = _tileShow.onWindowShown()) {
+        val target = _tileShow.onWindowShown()
+        tileLog { "onWindowShown: editor=$_viewEditor apply=$target after $_tileShowAttempts attempts" }
+        when (target) {
             is ShowTarget.Minimized -> minimizeKeyboard(target.style)
             ShowTarget.Full -> _minimizer.expand()
             null -> Unit
@@ -991,11 +1066,18 @@ class CleverKeysService : InputMethodService(),
     override fun onWindowHidden() {
         super.onWindowHidden()
         _windowVisible = false
-        _tileShow.onWindowHidden(hiddenForm(), android.os.SystemClock.uptimeMillis())
+        val form = hiddenForm()
+        _tileShow.onWindowHidden(form, _viewEditor, android.os.SystemClock.uptimeMillis())
+        tileLog { "onWindowHidden: form=$form editor=$_viewEditor byUser=${_tileShow.dismissedByUser}" }
     }
 
-    /** A hardware key while a deferred show is armed means the user is typing: drop it. */
+    /**
+     * Back while the keyboard shows is the user dismissing it (marked for the tile); any
+     * hardware key while a deferred show is armed means the user is typing: drop the show.
+     */
     override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
+        if (keyCode == android.view.KeyEvent.KEYCODE_BACK && isTileWindowVisible()) _tileShow.noteUserDismiss()
+        if (_tileShow.hasPending) tileLog { "deferred show cancelled by key $keyCode" }
         _tileShow.onUserInput()
         return super.onKeyDown(keyCode, event)
     }

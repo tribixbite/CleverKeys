@@ -65,6 +65,9 @@ class KeyboardTileService : TileService() {
         super.onStartListening()
         listening = true
         updateTileState()
+        // Opening the shade can itself hide the keyboard a moment after this callback (Saga,
+        // Android 14), so re-read the label once that hide has landed.
+        scheduleTileRefresh()
     }
 
     override fun onStopListening() {
@@ -80,7 +83,11 @@ class KeyboardTileService : TileService() {
         super.onClick()
 
         val service = CleverKeysService.getInstance()
-        when (val action = KeyboardTileDecision.actionFor(isCleverKeysCurrent(), service?.tileSnapshot())) {
+        val isCurrent = isCleverKeysCurrent()
+        val snapshot = service?.tileSnapshot()
+        val action = KeyboardTileDecision.actionFor(isCurrent, snapshot)
+        logDecision("tap", service, isCurrent, snapshot, action)
+        when (action) {
             KeyboardTileAction.MINIMIZE -> service?.minimizeFromTile()
             KeyboardTileAction.RESTORE -> service?.restoreFromTile()
             KeyboardTileAction.SHOW_MINIMIZED,
@@ -124,11 +131,28 @@ class KeyboardTileService : TileService() {
 
     /**
      * Minimize and restore swap the input view at once, but showing goes through the system
-     * and lands a frame or more later, so the tile is re-read twice rather than guessed.
+     * and lands a frame or more later, and the shade's own hide of the keyboard lands after
+     * onStartListening, so the tile is re-read twice rather than guessed.
      */
     private fun scheduleTileRefresh() {
         refreshHandler.removeCallbacks(refreshTile)
         for (delay in TILE_REFRESH_DELAYS_MS) refreshHandler.postDelayed(refreshTile, delay)
+    }
+
+    /** Verbose builds: log the decision with all its inputs (see [CleverKeysService.logTileDecision]). */
+    private fun logDecision(
+        source: String,
+        service: CleverKeysService?,
+        isCurrent: Boolean,
+        snapshot: TileWindowSnapshot?,
+        action: KeyboardTileAction,
+    ) {
+        if (!BuildConfig.ENABLE_VERBOSE_LOGGING) return
+        if (service != null && snapshot != null) {
+            service.logTileDecision(source, isCurrent, snapshot, action)
+        } else {
+            android.util.Log.d(CleverKeysService.TILE_TAG, "$source: currentIme=$isCurrent service=none -> $action")
+        }
     }
 
     /** Whether the system's selected IME is CleverKeys; see [tileStateFor]. */
@@ -144,10 +168,10 @@ class KeyboardTileService : TileService() {
         val tile = qsTile ?: return
 
         val isCurrent = isCleverKeysCurrent()
-        val action = KeyboardTileDecision.actionFor(
-            isCurrent,
-            CleverKeysService.getInstance()?.tileSnapshot()
-        )
+        val service = CleverKeysService.getInstance()
+        val snapshot = service?.tileSnapshot()
+        val action = KeyboardTileDecision.actionFor(isCurrent, snapshot)
+        logDecision("label", service, isCurrent, snapshot, action)
         val appName = getString(R.string.app_name)
 
         tile.state = if (isCurrent) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
