@@ -131,7 +131,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     return), so a real shade tap lands on a hidden keyboard and does nothing; the tile is being
     reworked (remember the last visible state, apply on focus return). Pixel skipped: a pending
     Chrome "download CleverKeys APK" dialog and a screen-record indicator (not ours; untouched).
-    STILL OPEN: (1) a Hebrew prefix typo (`לןא` → `ללא`) on a phone with the Hebrew pack;
+    Device 2026-10-20 15:36–15:41 (same Saga, release built from `4f70eb7e`, SHA `ee0cd58f…`,
+    `build/oct20e-saga/`): **swipe into inline fields PASS**: a synthetic "the" swipe landed in
+    clipboard SEARCH ("the", app textarea empty) and in the clipboard ENTRY EDITOR ("ck test
+    entry" → "ck test entry the", leading space, app untouched), and one backspace removed
+    " the". **QS tile rework**: PASS in a native field (Chrome omnibox) through the real shade,
+    full → minimized → full; in a WEB textarea Chrome drops the page editor's focus, so our
+    retried show is shown then hidden by the server (HIDE_SAME_WINDOW_FOCUSED_WITHOUT_EDITOR),
+    a platform/web limitation; FAIL on the home screen (tile says "Minimize" and does nothing
+    because the IME stays bound to the launcher's fallback connection and the visible flag is
+    stale), and the tile agent is fixing it with decision logging. Full instrumented suite on
+    `4f70eb7e`: 1,607/1,607 (`~/ew-output/oct20-merged/`). STILL OPEN: (1) a Hebrew prefix typo
+    (`לןא` → `ללא`) on a phone with the Hebrew pack;
     (2) Hebrew prefix-deletion class: round 3
     (short-word deletion cost δ, fresh HE-adj2 data, eval doc §7/§9) fixed 38 Hebrew words with 0
     breaks, 0 S-adj breaks and 0 C-oov changes, but failed E1 on GTC-DEV net −1 (8 fixes / 9
