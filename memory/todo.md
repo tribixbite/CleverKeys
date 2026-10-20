@@ -141,7 +141,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     a platform/web limitation; FAIL on the home screen (tile says "Minimize" and does nothing
     because the IME stays bound to the launcher's fallback connection and the visible flag is
     stale), and the tile agent is fixing it with decision logging. Full instrumented suite on
-    `4f70eb7e`: 1,607/1,607 (`~/ew-output/oct20-merged/`). STILL OPEN: (1) a Hebrew prefix typo
+    `4f70eb7e`: 1,607/1,607 (`~/ew-output/oct20-merged/`). **#147 Short Swipes Only PASS** on the
+    Saga (15:44): with the setting on, a long up-right swipe from `w` (far past Max Distance)
+    typed "2" and a long east swipe (no subkey there) typed nothing; Max Distance showed
+    disabled; the setting was turned back OFF afterwards. STILL OPEN: (1) a Hebrew prefix typo
     (`לןא` → `ללא`) on a phone with the Hebrew pack;
     (2) Hebrew prefix-deletion class: round 3
     (short-word deletion cost δ, fresh HE-adj2 data, eval doc §7/§9) fixed 38 Hebrew words with 0
