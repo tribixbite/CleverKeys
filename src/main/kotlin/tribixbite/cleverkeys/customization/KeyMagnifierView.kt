@@ -64,6 +64,27 @@ class KeyMagnifierView @JvmOverloads constructor(
 
         /** Reverse mapping from SwipeDirection to index */
         val DIRECTION_TO_INDEX = DIRECTION_POSITIONS.entries.associate { it.value to it.key }
+
+        /** Sublabel colour of [setDefaultColors], the dark fallback palette. */
+        private const val DEFAULT_SUB_LABEL_COLOR = 0xFFBBBBBB.toInt()
+
+        /** The keyboard theme the magnifier draws with: the active one, or the default theme. */
+        private fun activeTheme(context: Context): Theme =
+            ThemeProvider.getInstance(context).getTheme(Config.globalConfig()?.themeName ?: "cleverkeysdark")
+
+        /**
+         * Colour for text drawn OVER the magnifier (the customization dialog's direction
+         * names): the active theme's sublabel colour, so it stays readable on a light key.
+         * It was hard-coded white, which vanished on light themes.
+         */
+        @JvmStatic
+        fun overlayLabelColor(context: Context): Int =
+            try {
+                activeTheme(context).subLabelColor
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load theme for the overlay labels", e)
+                DEFAULT_SUB_LABEL_COLOR
+            }
     }
 
     // Key and mapping data
@@ -137,8 +158,7 @@ class KeyMagnifierView @JvmOverloads constructor(
     private fun loadTheme() {
         try {
             config = Config.globalConfig()
-            val themeName = config?.themeName ?: "cleverkeysdark"
-            theme = ThemeProvider.getInstance(context).getTheme(themeName)
+            theme = activeTheme(context)
             updateColors()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load theme", e)
@@ -172,7 +192,7 @@ class KeyMagnifierView @JvmOverloads constructor(
         keyBackgroundPaint.color = Color.parseColor("#2D2D2D")
         keyBorderPaint.color = Color.parseColor("#9B59B6")
         mainLabelPaint.color = Color.WHITE
-        subLabelPaint.color = Color.parseColor("#BBBBBB")
+        subLabelPaint.color = DEFAULT_SUB_LABEL_COLOR
         mappedIndicatorPaint.color = Color.parseColor("#9B59B6")
         unmappedIndicatorPaint.color = Color.parseColor("#666666")
         directionZonePaint.color = Color.argb(30, 255, 255, 255)
@@ -538,7 +558,7 @@ class KeyMagnifierView @JvmOverloads constructor(
             SubLabelSizing.maxWidth(keyRect.width(), padding, direction.subLabelIndex, mainLabelWidth))
 
         // Use same color as default sublabels for visual consistency
-        paint.color = theme?.subLabelColor ?: Color.parseColor("#BBBBBB")
+        paint.color = theme?.subLabelColor ?: DEFAULT_SUB_LABEL_COLOR
 
         // Set text alignment based on position
         when (direction) {

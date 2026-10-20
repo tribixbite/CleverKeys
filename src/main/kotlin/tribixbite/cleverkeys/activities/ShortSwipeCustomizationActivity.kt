@@ -474,11 +474,14 @@ fun KeyCustomizationDialog(
 
                     // Compose-based touch overlay for reliable direction detection
                     // This overlays the AndroidView and handles all touch events
+                    val overlayContext = LocalContext.current
+                    val overlayLabelColor = remember { Color(KeyMagnifierView.overlayLabelColor(overlayContext)) }
                     DirectionTouchOverlay(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(keyAspectRatio)
                             .padding(16.dp),
+                        labelColor = overlayLabelColor,
                         onDirectionTapped = { direction ->
                             selectedDirection = direction
                             onDirectionTapped(direction)
@@ -637,6 +640,8 @@ private fun MappingListItem(
 @Composable
 private fun DirectionTouchOverlay(
     modifier: Modifier = Modifier,
+    /** Colour of the direction names: the magnifier theme's sublabel colour, readable on light keys. */
+    labelColor: Color,
     onDirectionTapped: (SwipeDirection) -> Unit
 ) {
     Box(modifier = modifier) {
@@ -644,22 +649,22 @@ private fun DirectionTouchOverlay(
         Column(modifier = Modifier.fillMaxSize()) {
             // Top row: NW, N, NE
             Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                DirectionZone(SwipeDirection.NW, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
-                DirectionZone(SwipeDirection.N, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
-                DirectionZone(SwipeDirection.NE, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+                DirectionZone(SwipeDirection.NW, Modifier.weight(1f).fillMaxHeight(), labelColor, onDirectionTapped)
+                DirectionZone(SwipeDirection.N, Modifier.weight(1f).fillMaxHeight(), labelColor, onDirectionTapped)
+                DirectionZone(SwipeDirection.NE, Modifier.weight(1f).fillMaxHeight(), labelColor, onDirectionTapped)
             }
             // Middle row: W, Center (no action), E
             Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                DirectionZone(SwipeDirection.W, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+                DirectionZone(SwipeDirection.W, Modifier.weight(1f).fillMaxHeight(), labelColor, onDirectionTapped)
                 // Center zone - no action, just transparent
                 Box(modifier = Modifier.weight(1f).fillMaxHeight())
-                DirectionZone(SwipeDirection.E, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+                DirectionZone(SwipeDirection.E, Modifier.weight(1f).fillMaxHeight(), labelColor, onDirectionTapped)
             }
             // Bottom row: SW, S, SE
             Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                DirectionZone(SwipeDirection.SW, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
-                DirectionZone(SwipeDirection.S, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
-                DirectionZone(SwipeDirection.SE, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+                DirectionZone(SwipeDirection.SW, Modifier.weight(1f).fillMaxHeight(), labelColor, onDirectionTapped)
+                DirectionZone(SwipeDirection.S, Modifier.weight(1f).fillMaxHeight(), labelColor, onDirectionTapped)
+                DirectionZone(SwipeDirection.SE, Modifier.weight(1f).fillMaxHeight(), labelColor, onDirectionTapped)
             }
         }
     }
@@ -673,6 +678,7 @@ private fun DirectionTouchOverlay(
 private fun DirectionZone(
     direction: SwipeDirection,
     modifier: Modifier = Modifier,
+    labelColor: Color,
     onTapped: (SwipeDirection) -> Unit
 ) {
     // Assign distinct colors to each direction for visual identification
@@ -705,7 +711,7 @@ private fun DirectionZone(
             text = stringResource(swipeDirectionShortRes(direction)),
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White.copy(alpha = 0.8f)
+            color = labelColor
         )
     }
 }
