@@ -135,7 +135,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Hebrew pack on a phone). Arabic prefixes: TODO pending an Arabic eval; (3) valid unlisted words: round 5 (§13–§15)
     shipped a maximum correction cost κ = 3.0. TEST: 43.8 % of the valid words the default
     changed are now protected (C-oov accuracy 26 % → 58 %), GTC −48 distinct (0.98 %), S-adj 0.
-    PASS, DONE. The settings group was device-checked on the second
+    PASS, DONE. Device 2026-10-20, first Saga (release from `4d1e8c10`, SHA `7ed139aa…`,
+    `build/oct20b-saga/`): the field read "Device shared spamming don't hello nelsons
+    tyrannicide". `tyrannicide` was kept (logcat: edit 5.497 > max 3.0); `keelsons` → nelsons
+    (edit 2.40) was still changed, as expected at κ 3. The settings group was device-checked on the second
     Saga, 2026-10-18 (`build/oct18-saga/01–10`; before the "Contraction Preference" slider).
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
