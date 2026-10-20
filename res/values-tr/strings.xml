@@ -1550,6 +1550,8 @@
     <string name="layout_manager_unknown_layout_name">Bilinmeyen Düzen</string>
     <string name="layout_manager_badge_custom_xml">Özel XML</string>
     <string name="layout_manager_xml_empty_error">Düzen XML\'i boş olamaz</string>
+    <string name="layout_manager_import_failed">Düzen dosyası içe aktarılamadı:\n%1$s</string>
+    <string name="layout_manager_export_failed">Düzen dosyası dışa aktarılamadı:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Düzen Değiştirme</string>
     <string name="extra_keys_group_system">Sistem</string>
     <string name="extra_keys_group_navigation">Gezinme</string>

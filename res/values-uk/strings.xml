@@ -1622,6 +1622,8 @@
     <string name="layout_manager_unknown_layout_name">Невідомий макет</string>
     <string name="layout_manager_badge_custom_xml">Власний XML</string>
     <string name="layout_manager_xml_empty_error">XML макета не може бути порожнім</string>
+    <string name="layout_manager_import_failed">Не вдалося імпортувати файл макета:\n%1$s</string>
+    <string name="layout_manager_export_failed">Не вдалося експортувати файл макета:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Перемикання макетів</string>
     <string name="extra_keys_group_system">Системні</string>
     <string name="extra_keys_group_navigation">Навігація</string>

@@ -1577,6 +1577,8 @@
     <string name="layout_manager_unknown_layout_name">چیدمان ناشناخته</string>
     <string name="layout_manager_badge_custom_xml">XML سفارشی</string>
     <string name="layout_manager_xml_empty_error">XML چیدمان نمی‌تواند خالی باشد</string>
+    <string name="layout_manager_import_failed">وارد کردن فایل چیدمان ناموفق بود:\n%1$s</string>
+    <string name="layout_manager_export_failed">صادر کردن فایل چیدمان ناموفق بود:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">تغییر چیدمان</string>
     <string name="extra_keys_group_system">سامانه</string>
     <string name="extra_keys_group_navigation">ناوبری</string>

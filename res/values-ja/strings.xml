@@ -1502,6 +1502,8 @@
     <string name="layout_manager_unknown_layout_name">不明なレイアウト</string>
     <string name="layout_manager_badge_custom_xml">カスタム XML</string>
     <string name="layout_manager_xml_empty_error">レイアウト XML を空にすることはできません</string>
+    <string name="layout_manager_import_failed">レイアウトファイルをインポートできませんでした:\n%1$s</string>
+    <string name="layout_manager_export_failed">レイアウトファイルをエクスポートできませんでした:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">レイアウト切替</string>
     <string name="extra_keys_group_system">システム</string>
     <string name="extra_keys_group_navigation">ナビゲーション</string>

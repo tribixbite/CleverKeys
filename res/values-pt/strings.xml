@@ -1575,6 +1575,8 @@
     <string name="layout_manager_unknown_layout_name">Layout desconhecido</string>
     <string name="layout_manager_badge_custom_xml">XML personalizado</string>
     <string name="layout_manager_xml_empty_error">O XML do layout não pode estar vazio</string>
+    <string name="layout_manager_import_failed">Falha ao importar o arquivo de layout:\n%1$s</string>
+    <string name="layout_manager_export_failed">Falha ao exportar o arquivo de layout:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Troca de layout</string>
     <string name="extra_keys_group_system">Sistema</string>
     <string name="extra_keys_group_navigation">Navegação</string>

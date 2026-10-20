@@ -1621,6 +1621,8 @@
     <string name="layout_manager_unknown_layout_name">Nieznany układ</string>
     <string name="layout_manager_badge_custom_xml">Własny XML</string>
     <string name="layout_manager_xml_empty_error">XML układu nie może być pusty</string>
+    <string name="layout_manager_import_failed">Nie udało się zaimportować pliku układu:\n%1$s</string>
+    <string name="layout_manager_export_failed">Nie udało się wyeksportować pliku układu:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Przełączanie układów</string>
     <string name="extra_keys_group_system">System</string>
     <string name="extra_keys_group_navigation">Nawigacja</string>

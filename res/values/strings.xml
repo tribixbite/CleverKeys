@@ -1939,6 +1939,8 @@
     <string name="layout_manager_unknown_layout_name">Unknown Layout</string>
     <string name="layout_manager_badge_custom_xml">Custom XML</string>
     <string name="layout_manager_xml_empty_error">Layout XML cannot be empty</string>
+    <string name="layout_manager_import_failed">Could not import the layout file:\n%1$s</string>
+    <string name="layout_manager_export_failed">Could not export the layout file:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Layout Switching</string>
     <string name="extra_keys_group_system">System</string>
     <string name="extra_keys_group_navigation">Navigation</string>

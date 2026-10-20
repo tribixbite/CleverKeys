@@ -1515,6 +1515,8 @@
     <string name="layout_manager_unknown_layout_name">Tata Letak Tidak Dikenal</string>
     <string name="layout_manager_badge_custom_xml">XML Kustom</string>
     <string name="layout_manager_xml_empty_error">XML tata letak tidak boleh kosong</string>
+    <string name="layout_manager_import_failed">Gagal mengimpor file tata letak:\n%1$s</string>
+    <string name="layout_manager_export_failed">Gagal mengekspor file tata letak:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Pengalih Tata Letak</string>
     <string name="extra_keys_group_system">Sistem</string>
     <string name="extra_keys_group_navigation">Navigasi</string>

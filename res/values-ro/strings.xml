@@ -1602,6 +1602,8 @@
     <string name="layout_manager_unknown_layout_name">Aranjament necunoscut</string>
     <string name="layout_manager_badge_custom_xml">XML personalizat</string>
     <string name="layout_manager_xml_empty_error">XML-ul aranjamentului nu poate fi gol</string>
+    <string name="layout_manager_import_failed">Importul fișierului de aranjament a eșuat:\n%1$s</string>
+    <string name="layout_manager_export_failed">Exportul fișierului de aranjament a eșuat:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Comutare aranjament</string>
     <string name="extra_keys_group_system">Sistem</string>
     <string name="extra_keys_group_navigation">Navigare</string>

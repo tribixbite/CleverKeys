@@ -78,7 +78,9 @@
         "activities_layout_title",
         "pref_custom_layout_title",
         "layout_manager_remove_title",
-        "layout_manager_editor_title"
+        "layout_manager_editor_title",
+        "layout_manager_import_failed",
+        "layout_manager_export_failed"
       ]
     },
     "gesture": {

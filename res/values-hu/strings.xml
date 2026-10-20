@@ -1545,6 +1545,8 @@
     <string name="layout_manager_unknown_layout_name">Ismeretlen kiosztás</string>
     <string name="layout_manager_badge_custom_xml">Egyéni XML</string>
     <string name="layout_manager_xml_empty_error">A kiosztás XML-je nem lehet üres</string>
+    <string name="layout_manager_import_failed">Nem sikerült importálni a kiosztásfájlt:\n%1$s</string>
+    <string name="layout_manager_export_failed">Nem sikerült exportálni a kiosztásfájlt:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Kiosztásváltás</string>
     <string name="extra_keys_group_system">Rendszer</string>
     <string name="extra_keys_group_navigation">Navigáció</string>

@@ -1551,6 +1551,8 @@
     <string name="layout_manager_unknown_layout_name">Hindi Kilalang Layout</string>
     <string name="layout_manager_badge_custom_xml">Custom na XML</string>
     <string name="layout_manager_xml_empty_error">Hindi puwedeng walang laman ang layout XML</string>
+    <string name="layout_manager_import_failed">Nabigong i-import ang layout file:\n%1$s</string>
+    <string name="layout_manager_export_failed">Nabigong i-export ang layout file:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Pagpapalit ng Layout</string>
     <string name="extra_keys_group_system">System</string>
     <string name="extra_keys_group_navigation">Nabigasyon</string>

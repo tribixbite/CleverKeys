@@ -1615,6 +1615,8 @@
     <string name="layout_manager_unknown_layout_name">Layout sconosciuto</string>
     <string name="layout_manager_badge_custom_xml">XML personalizzato</string>
     <string name="layout_manager_xml_empty_error">L\'XML del layout non può essere vuoto</string>
+    <string name="layout_manager_import_failed">Impossibile importare il file del layout:\n%1$s</string>
+    <string name="layout_manager_export_failed">Impossibile esportare il file del layout:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Cambio layout</string>
     <string name="extra_keys_group_system">Sistema</string>
     <string name="extra_keys_group_navigation">Navigazione</string>

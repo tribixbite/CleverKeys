@@ -716,6 +716,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.BackupRestoreResultMessagesTest',
     // Audit M2 (2026-10-20): learned-data restore counts what the stores merged.
     'tribixbite.cleverkeys.backup.LearnedDataImportTest',
+    // Audit M6 (2026-10-20): Layout Manager XML import/export failures are surfaced.
+    'tribixbite.cleverkeys.LayoutXmlTransferTest',
     'tribixbite.cleverkeys.BackupRestorePreviewRenderTest',
     // ARC-035 (2026-08-28): the `.ckenc` export-naming rule + its picker-MIME invariants.
     'tribixbite.cleverkeys.backup.BackupExportNamingTest',

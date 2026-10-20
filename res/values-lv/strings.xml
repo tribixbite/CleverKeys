@@ -1586,6 +1586,8 @@
     <string name="layout_manager_unknown_layout_name">Nezināms izkārtojums</string>
     <string name="layout_manager_badge_custom_xml">Pielāgots XML</string>
     <string name="layout_manager_xml_empty_error">Izkārtojuma XML nevar būt tukšs</string>
+    <string name="layout_manager_import_failed">Neizdevās importēt izkārtojuma failu:\n%1$s</string>
+    <string name="layout_manager_export_failed">Neizdevās eksportēt izkārtojuma failu:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Izkārtojuma pārslēgšana</string>
     <string name="extra_keys_group_system">Sistēma</string>
     <string name="extra_keys_group_navigation">Navigācija</string>

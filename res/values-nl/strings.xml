@@ -1539,6 +1539,8 @@
     <string name="layout_manager_unknown_layout_name">Onbekende lay-out</string>
     <string name="layout_manager_badge_custom_xml">Aangepaste XML</string>
     <string name="layout_manager_xml_empty_error">Lay-out-XML mag niet leeg zijn</string>
+    <string name="layout_manager_import_failed">Kon lay-outbestand niet importeren:\n%1$s</string>
+    <string name="layout_manager_export_failed">Kon lay-outbestand niet exporteren:\n%1$s</string>
     <string name="extra_keys_group_layout_switching">Lay-out wisselen</string>
     <string name="extra_keys_group_system">Systeem</string>
     <string name="extra_keys_group_navigation">Navigatie</string>

@@ -817,11 +817,17 @@ fun CustomLayoutEditorDialog(
     ) { uri ->
         uri?.let {
             try {
-                context.contentResolver.openInputStream(it)?.use { stream ->
-                    xmlText = Utils.read_all_utf8(stream)
-                }
+                xmlText = LayoutXmlTransfer.read { context.contentResolver.openInputStream(it) }
             } catch (e: Exception) {
-                // Handle error
+                // Audit M6: a failed import used to leave the editor unchanged with no message.
+                android.util.Log.w(LayoutXmlTransfer.TAG, "Layout XML import failed", e)
+                android.widget.Toast.makeText(
+                    context,
+                    LayoutXmlTransfer.failureMessage(
+                        R.string.layout_manager_import_failed, e, ResourcesResultText(context.resources)
+                    ),
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
             }
         }
     }
@@ -834,12 +840,18 @@ fun CustomLayoutEditorDialog(
         uri?.let {
             try {
                 pendingExportContent?.let { content ->
-                    context.contentResolver.openOutputStream(it)?.use { stream ->
-                        stream.write(content.toByteArray())
-                    }
+                    LayoutXmlTransfer.write({ context.contentResolver.openOutputStream(it) }, content)
                 }
             } catch (e: Exception) {
-                // Handle error
+                // Audit M6: a failed export (SAF denial, disk full) used to look like success.
+                android.util.Log.w(LayoutXmlTransfer.TAG, "Layout XML export failed", e)
+                android.widget.Toast.makeText(
+                    context,
+                    LayoutXmlTransfer.failureMessage(
+                        R.string.layout_manager_export_failed, e, ResourcesResultText(context.resources)
+                    ),
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
             }
         }
     }
@@ -987,4 +999,35 @@ private fun readInitialCustomLayout(context: android.content.Context): String {
     } catch (e: Exception) {
         ""
     }
+}
+
+/**
+ * Reading and writing a layout XML document picked through the Storage Access Framework, and
+ * the user-visible message for a failure (audit M6, 2026-10-20: both used to be swallowed).
+ *
+ * Android-free so `runPureTests` covers it: the stream openers are passed in. A provider that
+ * returns no stream is a failure, never an empty layout or a silent no-op export.
+ */
+internal object LayoutXmlTransfer {
+    const val TAG = "LayoutXmlTransfer"
+
+    /** Read the whole document as UTF-8. @throws ClassifiedIoException when no stream opens */
+    fun read(open: () -> java.io.InputStream?): String {
+        val stream = open() ?: throw ClassifiedIoException(
+            IoFailureReason.FILE_NOT_FOUND, "Content provider returned no input stream"
+        )
+        return stream.use { it.bufferedReader(Charsets.UTF_8).readText() }
+    }
+
+    /** Write [content] as UTF-8. @throws ClassifiedIoException when no stream opens */
+    fun write(open: () -> java.io.OutputStream?, content: String) {
+        val stream = open() ?: throw ClassifiedIoException(
+            IoFailureReason.READ_WRITE, "Content provider returned no output stream"
+        )
+        stream.use { it.write(content.toByteArray(Charsets.UTF_8)) }
+    }
+
+    /** "[bodyRes] text: <localized reason>" for [error], resolved through [text]. */
+    fun failureMessage(@androidx.annotation.StringRes bodyRes: Int, error: Throwable, text: ResultText): String =
+        text.string(bodyRes, text.string(IoFailureClassifier.classify(error).messageRes))
 }
