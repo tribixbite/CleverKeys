@@ -33,9 +33,13 @@ Work done since then (local main, unreleased; rows below updated as each branch 
   complaints.
 - **#187** — macron-below / ring-below dead keys and combining keys (`30f205d9`). Close-ready
   once v2.0.0 ships; no device check yet.
-- **In progress on agent branches:** #154 (system-haptics option), #139 (Enter always newline),
-  #190 (follow-finger backspace swipe), #187 (below-accent dead keys), #147/#87 (short-swipes
-  only).
+- **Merged to local main 2026-10-20 (unreleased):** #154 system-vibration switch + #139
+  Enter-always-newline (`2a6c43fc`), #190 follow-finger backspace selection (`c5c598b5`),
+  #147/#87 Short Swipes Only (`918dc322`), #187 macron-below / ring-below dead keys
+  (`30f205d9`), audit H1/M1 inner-screen margins + one height range (`35034af6`), and a Quick
+  Settings tile that toggles show/minimize (`f47d5f3f`; being reworked: on the Saga, opening the
+  shade itself hides the keyboard). Rows below carry the details. Only the tile and the foldable
+  sliders have been device-checked.
 
 Corrections to this document found by the audit (apply when closing):
 - **#154** was listed DONE, but the reporter's "system default" option did not exist and a

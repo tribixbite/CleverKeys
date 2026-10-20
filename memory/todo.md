@@ -122,7 +122,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     for each. The new sliders render (Contraction Preference 0.25, Short-Word Deletion Cost
     0.00). The tab was closed, Gboard restored and the phone left on its home screen. Seeker
     skipped (secure lock screen), the Pixel skipped (in use), `192.168.0.81` skipped (same model
-    as the Termux host). STILL OPEN: (1) a Hebrew prefix typo (`לןא` → `ללא`) on a phone with the Hebrew pack;
+    as the Termux host). Device 2026-10-20 13:29–13:52 (first Saga `192.168.0.202`, now and
+    henceforth CleverKeys as DEFAULT keyboard per the maintainer): foldable inner-screen sliders
+    render disabled with the effective values and the "no fold" note (`build/oct20c-saga/`); QS
+    tile on release `f47d5f3f` (`build/oct20d-saga/`): with the shade CLOSED (`cmd statusbar
+    click-tile`) all five states work, but **opening the shade alone hides the IME on this
+    Android 14 Saga** (control test: mInputShown=false after collapse, keyboard does not
+    return), so a real shade tap lands on a hidden keyboard and does nothing; the tile is being
+    reworked (remember the last visible state, apply on focus return). Pixel skipped: a pending
+    Chrome "download CleverKeys APK" dialog and a screen-record indicator (not ours; untouched).
+    STILL OPEN: (1) a Hebrew prefix typo (`לןא` → `ללא`) on a phone with the Hebrew pack;
     (2) Hebrew prefix-deletion class: round 3
     (short-word deletion cost δ, fresh HE-adj2 data, eval doc §7/§9) fixed 38 Hebrew words with 0
     breaks, 0 S-adj breaks and 0 C-oov changes, but failed E1 on GTC-DEV net −1 (8 fixes / 9
