@@ -664,3 +664,24 @@ conservative). If none is admissible, κ stays ∞. Soundness check as before (2
 - **L4.** Named cases hold.
 
 All four must hold to ship κ as the default. These thresholds are fixed now.
+
+## 14. Round 5 DEV (run 2026-10-20, harness at 1fc5942c)
+
+Baseline (shipped C2 + Hebrew δ): GTC-DEV distinct targets right = 4,971; C-oov-DEV words changed
+= 27,060 of 36,241. Probing took 157 s (GTC), 1,669 s (S-adj) and 585 s (C-oov).
+
+| κ | GTC-DEV distinct breaks (limit 74.6) | S-adj-DEV breaks (limit 24.6) | C-oov-DEV protected | admissible |
+|---|---|---|---|---|
+| 1.5 | 935 | 0 | 22,241 (82.2 %) | no |
+| 1.75 | 862 | 0 | 21,689 (80.2 %) | no |
+| 2.0 | 765 | 0 | 21,334 (78.8 %) | no |
+| 2.25 | 625 | 0 | 20,864 (77.1 %) | no |
+| 2.5 | 462 | 0 | 19,879 (73.5 %) | no |
+| **3.0** | **46** | **0** | **11,738 (43.4 %)** | **yes (chosen)** |
+| 3.5 | 37 | 0 | 10,173 (37.6 %) | yes |
+| 4.0 | 25 | 0 | 8,723 (32.2 %) | yes |
+
+Named cases hold at every κ. **Chosen: κ = 3.0** (most protection among admissible values).
+Soundness: 2,000 inputs, 0 mismatches. §8's exploratory table, at the round-2 weights on TEST
+rows, had suggested a lower knee (2.5). With the shipped weights the GTC losses below 3.0 are
+several times the limit, which is why the DEV choice differs. TEST runs once at κ = 3.0.
