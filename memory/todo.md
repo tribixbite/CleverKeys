@@ -126,8 +126,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (2) Hebrew prefix-deletion class: round 3
     (short-word deletion cost δ, fresh HE-adj2 data, eval doc §7/§9) fixed 38 Hebrew words with 0
     breaks, 0 S-adj breaks and 0 C-oov changes, but failed E1 on GTC-DEV net −1 (8 fixes / 9
-    breaks). Not shipped, δ = 0, TEST not run. Maintainer decision: override E1 (then run the
-    round-3 TEST once at δ = 0.5) or leave it; (3) both rankings change about 74 % of valid
+    breaks). The maintainer delegated the decision: E1 was overridden (§9.1) and TEST was run once
+    at δ = 0.5 (§10). Result: Hebrew +51 / 0 breaks, S-adj +76 / 0, C-oov 0, but GTC-TEST −3
+    (genuine English extra-letter typos `tpo`→to, `xit`→it pushed to 3-letter words). FAIL; δ
+    stays 0 and was not overridden again. Next design: a language-scoped δ (Hebrew-script packs
+    only), its own round with fresh Hebrew data; (3) both rankings change about 74 % of valid
     unlisted words (C-oov). Exploratory §8: typo fixes cost about 1 edit (median 1.50) and
     valid-word changes about 3 (median 3.00). A maximum-correction-cost κ is the candidate rule
     for its own pre-registered round, chosen on DEV, with §8 disclosed. The settings group was device-checked on the second

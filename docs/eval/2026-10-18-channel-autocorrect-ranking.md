@@ -552,3 +552,32 @@ HE-adj2 +38 / 0 breaks, S-adj +68 / 0, C-oov 0, all named cases. δ = 0.5 is the
 with the full effect, since 0.5–1.5 are identical. §7.4's TEST gate applies unchanged, except
 that R2's "GTC-TEST net ≥ 0" is read with the same override, as **GTC-TEST net ≥ −2** (no more
 than the DEV-scale noise just accepted), fixed before TEST. All other criteria are as written.
+
+## 10. Round 3 TEST (run 2026-10-20, harness at 54d5b3fa, δ = 0.5; one evaluation)
+
+| set | shipped C2 → δ = 0.5 accuracy | fixes (distinct) | breaks (distinct) | net |
+|---|---|---|---|---|
+| HE-adj2-TEST (fresh; 18,605 pairs, 1,060 words) | 16,444 → 16,523 | 79 (51) | **0** | **+51** |
+| HE-adj (seen; reported) | 5,904 → 5,977 | 73 (36) | 0 | +36 |
+| GTC-TEST | 12,805 → 12,798 | 8 (7) | 15 (10) | **−3** |
+| S-adj-TEST | 134,273 → 134,401 | 128 (76) | 0 | +76 |
+| C-oov-TEST | 9,365 → 9,365 | 0 | 0 | 0 |
+| R-typed (reported) | 2,104 → 2,105 | 1 | 0 | +1 |
+
+Named cases: none fail.
+
+**Gate (§7.4 with §9.1): R1 pass, R2 FAIL, R3 pass, R4 pass.** GTC-TEST distinct net is −3, below
+both the original ≥ 0 and the relaxed ≥ −2 fixed in §9.1 before TEST. (The harness printed R2
+against ≥ 0, because §9.1's −2 was never coded. Both readings give FAIL.) **δ stays 0 and nothing
+ships.** The delegated override was spent on the DEV criterion E1. Overriding a TEST failure too
+would make the TEST meaningless, so the agent declined to.
+
+**Why English breaks.** All ten GTC breaks are genuine English typos with an *extra* letter
+around a two-letter word: `ain`/`ath`/`bse`/`ebe`/`iby`/`ify`/`onj`/`tpo`/`tro`/`xit` (want
+in/at/be/be/by/if/on/to/to/it). δ pushes them to a three-letter neighbour (`win`, `path`, `use`,
+`eve`, `ivy`, `iffy`, `obj`, `too`, `two`, `sit`). The seven fixes are the opposite case, a
+missing letter (`onl` → only, `bdy` → body, `ith` → with). Deleting onto a two-letter word is
+**wrong for Hebrew** (one-letter prefixes) and **right for English** (extra-key slips around
+`in`/`to`/`it`). A language-scoped δ (on for Hebrew-script packs, 0 elsewhere) is the evident
+next design. It would be its own pre-registration, and HE-adj2-TEST has now been seen. The
+setting remains available (default 0).
