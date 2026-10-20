@@ -269,37 +269,37 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     /** Signed percent of one key row; see Defaults.FINGER_OCCLUSION_OFFSET. */
     internal var fingerOcclusionOffset by mutableIntStateOf(Defaults.FINGER_OCCLUSION_OFFSET)
-    internal var keyboardHeight by mutableIntStateOf(28)
-    internal var keyboardHeightLandscape by mutableIntStateOf(50)
+    internal var keyboardHeight by mutableIntStateOf(Defaults.KEYBOARD_HEIGHT_PORTRAIT)
+    internal var keyboardHeightLandscape by mutableIntStateOf(Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
     // Inner (unfolded) screen heights as the keyboard will use them: an unset key follows the
     // outer-screen value (KeyboardHeightPrefs), so these show the effective height.
-    internal var keyboardHeightUnfolded by mutableIntStateOf(28)
-    internal var keyboardHeightLandscapeUnfolded by mutableIntStateOf(50)
+    internal var keyboardHeightUnfolded by mutableIntStateOf(Defaults.KEYBOARD_HEIGHT_PORTRAIT)
+    internal var keyboardHeightLandscapeUnfolded by mutableIntStateOf(Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
     internal var scaleNumpadHeight by mutableStateOf(Defaults.SCALE_NUMPAD_HEIGHT)  // F-8 / #58: numpad row scaling
-    internal var vibrationEnabled by mutableStateOf(false)
-    internal var debugEnabled by mutableStateOf(false)
-    internal var clipboardHistoryEnabled by mutableStateOf(true)
+    internal var vibrationEnabled by mutableStateOf(Defaults.HAPTIC_ENABLED)
+    internal var debugEnabled by mutableStateOf(Defaults.DEBUG_ENABLED)
+    internal var clipboardHistoryEnabled by mutableStateOf(Defaults.CLIPBOARD_HISTORY_ENABLED)
     internal var clipboardHistoryLimit by mutableIntStateOf(Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
-    internal var clipboardHistoryDuration by mutableIntStateOf(-1)  // Minutes; -1 = never expire
-    internal var clipboardPaneHeightPercent by mutableIntStateOf(30)
-    internal var clipboardMaxItemSizeKb by mutableIntStateOf(500)
-    internal var clipboardLimitType by mutableStateOf("count") // "count" or "size"
-    internal var clipboardSizeLimitMb by mutableIntStateOf(10)
-    internal var clipboardExcludePasswordManagers by mutableStateOf(true)  // Privacy: skip password managers
-    internal var clipboardRespectSensitiveFlag by mutableStateOf(true)  // #86: Respect IS_SENSITIVE flag
-    internal var clipboardTextOnly by mutableStateOf(false)  // v4: Hide media entries
+    internal var clipboardHistoryDuration by mutableIntStateOf(Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK)  // Minutes; -1 = never expire
+    internal var clipboardPaneHeightPercent by mutableIntStateOf(Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
+    internal var clipboardMaxItemSizeKb by mutableIntStateOf(Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
+    internal var clipboardLimitType by mutableStateOf(Defaults.CLIPBOARD_LIMIT_TYPE) // "count" or "size"
+    internal var clipboardSizeLimitMb by mutableIntStateOf(Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK)
+    internal var clipboardExcludePasswordManagers by mutableStateOf(Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)  // Privacy: skip password managers
+    internal var clipboardRespectSensitiveFlag by mutableStateOf(Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)  // #86: Respect IS_SENSITIVE flag
+    internal var clipboardTextOnly by mutableStateOf(Defaults.CLIPBOARD_TEXT_ONLY)  // v4: Hide media entries
     internal var clipboardMediaEnabled by mutableStateOf(Defaults.CLIPBOARD_MEDIA_ENABLED)  // F-8: media capture toggle
     internal var clipboardMaxMediaSizeMb by mutableIntStateOf(Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB)  // F-8: media size cap
-    internal var clipboardPinnedEnabled by mutableStateOf(true)  // v4: Show/hide pinned tab
-    internal var clipboardTodoEnabled by mutableStateOf(true)  // v4: Show/hide todo tab
+    internal var clipboardPinnedEnabled by mutableStateOf(Defaults.CLIPBOARD_PINNED_ENABLED)  // v4: Show/hide pinned tab
+    internal var clipboardTodoEnabled by mutableStateOf(Defaults.CLIPBOARD_TODO_ENABLED)  // v4: Show/hide todo tab
     internal var clipboardPrivateCopyToolbarEnabled by mutableStateOf(false)  // #156: PROCESS_TEXT opt-in
     internal var clipboardPrivateCopyToastEnabled by mutableStateOf(true)  // ARC-037: suppressible confirmation
 
     // URL sanitization (Chunk 4): three independent toggles + custom-rules import
-    internal var clipboardSanitizeLinksEnabled by mutableStateOf(false)
-    internal var clipboardEmbedEnrichEnabled by mutableStateOf(false)
-    internal var clipboardCustomRulesEnabled by mutableStateOf(false)
-    internal var clipboardSanitizeSystemClipboard by mutableStateOf(true)
+    internal var clipboardSanitizeLinksEnabled by mutableStateOf(Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED)
+    internal var clipboardEmbedEnrichEnabled by mutableStateOf(Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED)
+    internal var clipboardCustomRulesEnabled by mutableStateOf(Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED)
+    internal var clipboardSanitizeSystemClipboard by mutableStateOf(Defaults.CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD)
     internal var clipboardCustomRulesUri by mutableStateOf<String?>(null)
     // Status text for the custom-rules row — examples:
     //  "" / "12 providers loaded." / "Saved file is malformed: ..." / "URI persisted but no copy on disk yet."
@@ -325,24 +325,24 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         set(value) { settingsViewModel.showGifRemovePackDialog = value }
     internal var gifStorageUsed by mutableLongStateOf(0L)
 
-    internal var autoCapitalizationEnabled by mutableStateOf(true)
-    internal var capitalizeIWords by mutableStateOf(true)  // #72: Auto-capitalize I, I'm, I'll, etc.
+    internal var autoCapitalizationEnabled by mutableStateOf(Defaults.AUTOCAPITALISATION)
+    internal var capitalizeIWords by mutableStateOf(Defaults.AUTOCAPITALIZE_I_WORDS)  // #72: Auto-capitalize I, I'm, I'll, etc.
 
     // Phase 1: Expose existing Config.kt settings
     internal var continuousSwipeEnabled by mutableStateOf(Defaults.CONTINUOUS_SWIPE_ENABLED)
-    internal var swipeTypingEnabled by mutableStateOf(true)  // Master switch for swipe typing (default ON for CleverKeys)
-    internal var swipeOnPasswordFields by mutableStateOf(false)  // #39: Allow swipe on password fields
-    internal var wordPredictionEnabled by mutableStateOf(true)  // Match Config.kt default
-    internal var autoSpaceAfterSuggestion by mutableStateOf(true)  // #82: Add trailing space after selecting suggestion
-    internal var autoSpaceBeforeSuggestion by mutableStateOf(true)  // Add leading space before tapped suggestion
+    internal var swipeTypingEnabled by mutableStateOf(Defaults.SWIPE_TYPING_ENABLED)
+    internal var swipeOnPasswordFields by mutableStateOf(Defaults.SWIPE_ON_PASSWORD_FIELDS)  // #39: Allow swipe on password fields
+    internal var wordPredictionEnabled by mutableStateOf(Defaults.WORD_PREDICTION_ENABLED)
+    internal var autoSpaceAfterSuggestion by mutableStateOf(Defaults.AUTO_SPACE_AFTER_SUGGESTION)  // #82: Add trailing space after selecting suggestion
+    internal var autoSpaceBeforeSuggestion by mutableStateOf(Defaults.AUTO_SPACE_BEFORE_SUGGESTION)  // Add leading space before tapped suggestion
     internal var showExactTypedWord by mutableStateOf(Defaults.SHOW_EXACT_TYPED_WORD)  // F-8 / #42: exact-typed-word suggestion
-    internal var backspaceUndoSwipe by mutableStateOf(true)  // #110: Backspace after swipe deletes entire swiped word
-    internal var backspaceUndoAutocorrect by mutableStateOf(true)  // #110: Backspace after autocorrect reverts to original word
-    internal var suggestionBarOpacity by mutableIntStateOf(90)
-    internal var autoCorrectEnabled by mutableStateOf(true)
+    internal var backspaceUndoSwipe by mutableStateOf(Defaults.BACKSPACE_UNDO_SWIPE)  // #110: Backspace after swipe deletes entire swiped word
+    internal var backspaceUndoAutocorrect by mutableStateOf(Defaults.BACKSPACE_UNDO_AUTOCORRECT)  // #110: Backspace after autocorrect reverts to original word
+    internal var suggestionBarOpacity by mutableIntStateOf(Defaults.SUGGESTION_BAR_OPACITY)
+    internal var autoCorrectEnabled by mutableStateOf(Defaults.AUTOCORRECT_ENABLED)
     internal var customTerminalPackages by mutableStateOf(Defaults.CUSTOM_TERMINAL_PACKAGES)
     internal var imeDefaultPromptEnabled by mutableStateOf(Defaults.IME_DEFAULT_PROMPT_ENABLED)  // I-7: default-IME reminder
-    internal var vibrationDuration by mutableIntStateOf(20)
+    internal var vibrationDuration by mutableIntStateOf(Defaults.VIBRATE_DURATION)
     // #154: false = system haptic pattern (performHapticFeedback), true = custom duration.
     internal var vibrateCustom by mutableStateOf(Defaults.VIBRATE_CUSTOM)
     // Per-event haptic feedback toggles
@@ -351,7 +351,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var hapticTrackpointActivate by mutableStateOf(Defaults.HAPTIC_TRACKPOINT_ACTIVATE)
     internal var hapticLongPress by mutableStateOf(Defaults.HAPTIC_LONG_PRESS)
     internal var hapticSwipeComplete by mutableStateOf(Defaults.HAPTIC_SWIPE_COMPLETE)
-    internal var swipeDebugEnabled by mutableStateOf(false)
+    internal var swipeDebugEnabled by mutableStateOf(Defaults.SWIPE_SHOW_DEBUG_SCORES)
 
     // Adaptive layout settings (percentages of screen dimensions)
     internal var marginBottomPortrait by mutableIntStateOf(Defaults.MARGIN_BOTTOM_PORTRAIT)
@@ -362,62 +362,62 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var marginRightLandscape by mutableIntStateOf(Defaults.MARGIN_RIGHT_LANDSCAPE)
 
     // Gesture sensitivity settings
-    internal var swipeDistance by mutableIntStateOf(23)
-    internal var circleSensitivity by mutableIntStateOf(2)
-    internal var sliderSensitivity by mutableIntStateOf(30) // Phase 5: Space bar slider (0-100%)
+    internal var swipeDistance by mutableIntStateOf(Defaults.SWIPE_DIST_FALLBACK.toInt())
+    internal var circleSensitivity by mutableIntStateOf(Defaults.CIRCLE_SENSITIVITY_FALLBACK)
+    internal var sliderSensitivity by mutableIntStateOf(Defaults.SLIDER_SENSITIVITY_FALLBACK.toInt())
 
     // Long press settings
-    internal var longPressTimeout by mutableIntStateOf(600)
-    internal var longPressInterval by mutableIntStateOf(65)
-    internal var keyRepeatEnabled by mutableStateOf(true)
-    internal var keyRepeatBackspaceOnly by mutableStateOf(false)  // #81: Only repeat backspace/nav
+    internal var longPressTimeout by mutableIntStateOf(Defaults.LONGPRESS_TIMEOUT)
+    internal var longPressInterval by mutableIntStateOf(Defaults.LONGPRESS_INTERVAL)
+    internal var keyRepeatEnabled by mutableStateOf(Defaults.KEYREPEAT_ENABLED)
+    internal var keyRepeatBackspaceOnly by mutableStateOf(Defaults.KEYREPEAT_BACKSPACE_ONLY)  // #81: Only repeat backspace/nav
 
     // Visual customization settings
-    internal var labelBrightness by mutableIntStateOf(100)
-    internal var keyboardOpacity by mutableIntStateOf(100)
-    internal var keyOpacity by mutableIntStateOf(100)
-    internal var keyActivatedOpacity by mutableIntStateOf(100)
+    internal var labelBrightness by mutableIntStateOf(Defaults.LABEL_BRIGHTNESS)
+    internal var keyboardOpacity by mutableIntStateOf(Defaults.KEYBOARD_OPACITY)
+    internal var keyOpacity by mutableIntStateOf(Defaults.KEY_OPACITY)
+    internal var keyActivatedOpacity by mutableIntStateOf(Defaults.KEY_ACTIVATED_OPACITY)
 
     // Spacing and sizing settings
-    internal var characterSize by mutableIntStateOf(115)
-    internal var secondaryLabelSizeScale by mutableIntStateOf(100) // #133: percent; 100 = unchanged
-    internal var keyVerticalMargin by mutableIntStateOf(150)
-    internal var keyHorizontalMargin by mutableIntStateOf(200)
+    internal var characterSize by mutableIntStateOf((Defaults.CHARACTER_SIZE * 100).toInt())
+    internal var secondaryLabelSizeScale by mutableIntStateOf((Defaults.SECONDARY_LABEL_SIZE_SCALE * 100).toInt()) // #133: percent; 100 = unchanged
+    internal var keyVerticalMargin by mutableIntStateOf((Defaults.KEY_VERTICAL_MARGIN * 100).toInt())
+    internal var keyHorizontalMargin by mutableIntStateOf((Defaults.KEY_HORIZONTAL_MARGIN * 100).toInt())
 
     // Border customization settings
-    internal var borderConfigEnabled by mutableStateOf(false)
-    internal var customBorderRadius by mutableIntStateOf(0)
-    internal var customBorderLineWidth by mutableIntStateOf(0)
+    internal var borderConfigEnabled by mutableStateOf(Defaults.BORDER_CONFIG)
+    internal var customBorderRadius by mutableIntStateOf(Defaults.CUSTOM_BORDER_RADIUS)
+    internal var customBorderLineWidth by mutableIntStateOf(Defaults.CUSTOM_BORDER_LINE_WIDTH)
 
     // Behavior settings
-    internal var doubleTapLockShift by mutableStateOf(false)
-    internal var switchInputImmediate by mutableStateOf(false)
-    internal var smartPunctuationEnabled by mutableStateOf(true) // Attach punctuation to end of last word
+    internal var doubleTapLockShift by mutableStateOf(Defaults.DOUBLE_TAP_LOCK_SHIFT)
+    internal var switchInputImmediate by mutableStateOf(Defaults.SWITCH_INPUT_IMMEDIATE)
+    internal var smartPunctuationEnabled by mutableStateOf(Defaults.SMART_PUNCTUATION) // Attach punctuation to end of last word
     // #139: Enter inserts a newline in multi-line fields instead of the editor action.
     internal var enterAlwaysNewline by mutableStateOf(Defaults.ENTER_ALWAYS_NEWLINE)
 
     // Gesture tuning settings
-    internal var tapDurationThreshold by mutableIntStateOf(150) // ms
-    internal var doubleSpaceToPeriod by mutableStateOf(true) // Enable double-space-to-period
-    internal var doubleSpaceThreshold by mutableIntStateOf(500) // ms
-    internal var swipeMinDistance by mutableFloatStateOf(72f) // pixels
-    internal var swipeMinKeyDistance by mutableFloatStateOf(38f) // pixels
-    internal var swipeMinDwellTime by mutableIntStateOf(10) // ms
-    internal var swipeNoiseThreshold by mutableFloatStateOf(2.0f) // pixels
-    internal var swipeHighVelocityThreshold by mutableFloatStateOf(1000f) // px/sec
-    internal var sliderSpeedSmoothing by mutableFloatStateOf(0.7f) // 0.0-1.0
-    internal var sliderSpeedMax by mutableFloatStateOf(4.0f) // multiplier
+    internal var tapDurationThreshold by mutableIntStateOf(Defaults.TAP_DURATION_THRESHOLD) // ms
+    internal var doubleSpaceToPeriod by mutableStateOf(Defaults.DOUBLE_SPACE_TO_PERIOD) // Enable double-space-to-period
+    internal var doubleSpaceThreshold by mutableIntStateOf(Defaults.DOUBLE_SPACE_THRESHOLD) // ms
+    internal var swipeMinDistance by mutableFloatStateOf(Defaults.SWIPE_MIN_DISTANCE) // pixels
+    internal var swipeMinKeyDistance by mutableFloatStateOf(Defaults.SWIPE_MIN_KEY_DISTANCE) // pixels
+    internal var swipeMinDwellTime by mutableIntStateOf(Defaults.SWIPE_MIN_DWELL_TIME) // ms
+    internal var swipeNoiseThreshold by mutableFloatStateOf(Defaults.SWIPE_NOISE_THRESHOLD) // pixels
+    internal var swipeHighVelocityThreshold by mutableFloatStateOf(Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD) // px/sec
+    internal var sliderSpeedSmoothing by mutableFloatStateOf(Defaults.SLIDER_SPEED_SMOOTHING) // 0.0-1.0
+    internal var sliderSpeedMax by mutableFloatStateOf(Defaults.SLIDER_SPEED_MAX) // multiplier
 
     // Number row and numpad settings
-    internal var numberRowMode by mutableStateOf("no_number_row") // "no_number_row", "no_symbols", "symbols"
-    internal var showNumpadMode by mutableStateOf("never") // "never", "landscape", "always"
-    internal var numpadLayout by mutableStateOf("default") // "default", "low_first"
-    internal var pinEntryEnabled by mutableStateOf(false)
+    internal var numberRowMode by mutableStateOf(Defaults.NUMBER_ROW) // "no_number_row", "no_symbols", "symbols"
+    internal var showNumpadMode by mutableStateOf(Defaults.SHOW_NUMPAD) // "never", "landscape", "always"
+    internal var numpadLayout by mutableStateOf(Defaults.NUMPAD_LAYOUT) // "default", "low_first"
+    internal var pinEntryEnabled by mutableStateOf(Defaults.NUMBER_ENTRY_LAYOUT == "pin")
 
     // Swipe Corrections settings (migrated from XML)
-    internal var swipeFinalAutocorrectEnabled by mutableStateOf(true)
-    internal var autocorrectMaxLengthDiff by mutableIntStateOf(2)
-    internal var autocorrectPrefixLength by mutableIntStateOf(1)
+    internal var swipeFinalAutocorrectEnabled by mutableStateOf(Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
+    internal var autocorrectMaxLengthDiff by mutableIntStateOf(Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
+    internal var autocorrectPrefixLength by mutableIntStateOf(Defaults.AUTOCORRECT_PREFIX_LENGTH)
     // Auto-Correction "Ranking & Tuning" group: the same immutable snapshot the predictor reads
     // (AutocorrectTuning.fromPrefs clamps every key into its AutocorrectTuning.Keys range), so the
     // screen can never show a value the keyboard does not use.
@@ -432,37 +432,37 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Do not re-add them — a backing field here is what makes a dead key look alive.
 
     // Swipe trail appearance settings
-    internal var swipeTrailEnabled by mutableStateOf(true)
-    internal var swipeTrailEffect by mutableStateOf("glow")
-    internal var swipeTrailColor by mutableIntStateOf(0xFF9B59B6.toInt()) // Jewel purple
-    internal var swipeTrailWidth by mutableFloatStateOf(8.0f)
-    internal var swipeTrailGlowRadius by mutableFloatStateOf(12.0f)
+    internal var swipeTrailEnabled by mutableStateOf(Defaults.SWIPE_TRAIL_ENABLED)
+    internal var swipeTrailEffect by mutableStateOf(Defaults.SWIPE_TRAIL_EFFECT)
+    internal var swipeTrailColor by mutableIntStateOf(Defaults.SWIPE_TRAIL_COLOR)
+    internal var swipeTrailWidth by mutableFloatStateOf(Defaults.SWIPE_TRAIL_WIDTH)
+    internal var swipeTrailGlowRadius by mutableFloatStateOf(Defaults.SWIPE_TRAIL_GLOW_RADIUS)
 
     // Word Prediction Advanced settings
-    internal var contextAwarePredictionsEnabled by mutableStateOf(true)
+    internal var contextAwarePredictionsEnabled by mutableStateOf(Defaults.CONTEXT_AWARE_PREDICTIONS_ENABLED)
     internal var nextWordPredictionEnabled by mutableStateOf(Defaults.NEXT_WORD_PREDICTION_ENABLED) // default ON since 2026-09-26
-    internal var contextSource by mutableStateOf("both") // both | learned_only | static_only
-    internal var personalizedLearningEnabled by mutableStateOf(true)
-    internal var personalizationWeight by mutableFloatStateOf(1.0f) // 0=off … 2=double
+    internal var contextSource by mutableStateOf(Defaults.CONTEXT_SOURCE) // both | learned_only | static_only
+    internal var personalizedLearningEnabled by mutableStateOf(Defaults.PERSONALIZED_LEARNING_ENABLED)
+    internal var personalizationWeight by mutableFloatStateOf(Defaults.PERSONALIZATION_WEIGHT) // 0=off … 2=double
     internal var personalizationMaxWords by mutableIntStateOf(Defaults.PERSONALIZATION_MAX_WORDS) // learned-vocab cap
-    internal var learningAggression by mutableStateOf("BALANCED")
-    internal var predictionContextBoost by mutableFloatStateOf(2.0f)
-    internal var predictionFrequencyScale by mutableFloatStateOf(1000f)
+    internal var learningAggression by mutableStateOf(Defaults.LEARNING_AGGRESSION)
+    internal var predictionContextBoost by mutableFloatStateOf(Defaults.PREDICTION_CONTEXT_BOOST)
+    internal var predictionFrequencyScale by mutableFloatStateOf(Defaults.PREDICTION_FREQUENCY_SCALE)
 
     // Auto-correction advanced settings
-    internal var autocorrectMinWordLength by mutableIntStateOf(3)
-    internal var autocorrectCharMatchThreshold by mutableFloatStateOf(0.67f)
-    internal var autocorrectMinFrequency by mutableIntStateOf(500)
+    internal var autocorrectMinWordLength by mutableIntStateOf(Defaults.AUTOCORRECT_MIN_WORD_LENGTH)
+    internal var autocorrectCharMatchThreshold by mutableFloatStateOf(Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
+    internal var autocorrectMinFrequency by mutableIntStateOf(Defaults.AUTOCORRECT_MIN_FREQUENCY)
 
     // Multi-language settings
-    internal var multiLangEnabled by mutableStateOf(false)
-    internal var primaryLanguage by mutableStateOf("en")
-    internal var secondaryLanguage by mutableStateOf("none") // "none", "es", "fr", etc.
-    internal var autoDetectLanguage by mutableStateOf(true)
-    internal var languageDetectionSensitivity by mutableFloatStateOf(0.6f)
-    internal var secondaryPredictionWeight by mutableFloatStateOf(0.9f) // v1.1.94: Secondary dictionary weight
-    internal var primaryLanguageAlt by mutableStateOf("es") // v1.2.0: Alternate primary for quick toggle
-    internal var secondaryLanguageAlt by mutableStateOf("none") // v1.2.0: Alternate secondary for quick toggle
+    internal var multiLangEnabled by mutableStateOf(Defaults.ENABLE_MULTILANG)
+    internal var primaryLanguage by mutableStateOf(Defaults.PRIMARY_LANGUAGE)
+    internal var secondaryLanguage by mutableStateOf(Defaults.SECONDARY_LANGUAGE) // "none", "es", "fr", etc.
+    internal var autoDetectLanguage by mutableStateOf(Defaults.AUTO_DETECT_LANGUAGE)
+    internal var languageDetectionSensitivity by mutableFloatStateOf(Defaults.LANGUAGE_DETECTION_SENSITIVITY)
+    internal var secondaryPredictionWeight by mutableFloatStateOf(Defaults.SECONDARY_PREDICTION_WEIGHT) // v1.1.94: Secondary dictionary weight
+    internal var primaryLanguageAlt by mutableStateOf(Defaults.PRIMARY_LANGUAGE_ALT) // v1.2.0: Alternate primary for quick toggle
+    internal var secondaryLanguageAlt by mutableStateOf(Defaults.SECONDARY_LANGUAGE_ALT) // v1.2.0: Alternate secondary for quick toggle
     internal var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
     /** Distinct languages bound to a layout in Layout Manager (GH #186/#61), refreshed on resume. */
     internal var boundLayoutLanguages by mutableStateOf(listOf<String>())
@@ -489,14 +489,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Privacy settings - all OFF by default (CleverKeys is fully offline)
     // MASTER on-device learning gate (Task A 2026-08-06): opt-out for ALL
     // typing-behavior learning (context LM, personalization, adaptation, swipe-ML)
-    internal var onDeviceLearningEnabled by mutableStateOf(true)
-    internal var privacyCollectSwipe by mutableStateOf(false)
-    internal var privacyCollectPerformance by mutableStateOf(false)
+    internal var onDeviceLearningEnabled by mutableStateOf(Defaults.ON_DEVICE_LEARNING_ENABLED)
+    internal var privacyCollectSwipe by mutableStateOf(Defaults.PRIVACY_COLLECT_SWIPE)
+    internal var privacyCollectPerformance by mutableStateOf(Defaults.PRIVACY_COLLECT_PERFORMANCE)
 
     // Short gesture settings
-    internal var shortGesturesEnabled by mutableStateOf(true)
-    internal var shortGestureMinDistance by mutableIntStateOf(37)
-    internal var shortGestureMaxDistance by mutableIntStateOf(141)
+    internal var shortGesturesEnabled by mutableStateOf(Defaults.SHORT_GESTURES_ENABLED)
+    internal var shortGestureMinDistance by mutableIntStateOf(Defaults.SHORT_GESTURE_MIN_DISTANCE)
+    internal var shortGestureMaxDistance by mutableIntStateOf(Defaults.SHORT_GESTURE_MAX_DISTANCE)
     /** GH #147/#87 "short swipes only" — the STORED preference (Config folds in short gestures). */
     internal var shortSwipesOnly by mutableStateOf(Defaults.SHORT_SWIPES_ONLY)
 
@@ -506,17 +506,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var subkeyPopoverNeutralHeight by mutableIntStateOf(Defaults.SUBKEY_POPOVER_NEUTRAL_HEIGHT)
 
     // Selection-delete mode settings (backspace swipe+hold)
-    internal var selectionDeleteVerticalThreshold by mutableIntStateOf(40)
-    internal var selectionDeleteVerticalSpeed by mutableFloatStateOf(0.4f)
+    internal var selectionDeleteVerticalThreshold by mutableIntStateOf(Defaults.SELECTION_DELETE_VERTICAL_THRESHOLD)
+    internal var selectionDeleteVerticalSpeed by mutableFloatStateOf(Defaults.SELECTION_DELETE_VERTICAL_SPEED)
     /** GH #190: "speed" (speed by distance) or "follow" (follow finger). */
     internal var selectionDeleteMode by mutableStateOf(Defaults.SELECTION_DELETE_MODE)
     /** GH #190: follow-finger travel per character, dp. */
     internal var selectionDeleteStepDp by mutableIntStateOf(Defaults.SELECTION_DELETE_STEP_DP)
 
     // Swipe debug advanced settings
-    internal var swipeDebugDetailedLogging by mutableStateOf(false)
+    internal var swipeDebugDetailedLogging by mutableStateOf(Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
     // Task B Tier 2: opt-in per-suggestion origin markers (pipeline transparency)
-    internal var suggestionProvenanceMarkers by mutableStateOf(false)
+    internal var suggestionProvenanceMarkers by mutableStateOf(Defaults.SUGGESTION_PROVENANCE_MARKERS)
 
     // Section expanded states — delegated to settingsViewModel (survive rotation)
     // v1.2.6: dictionarySectionExpanded removed - Dictionary Manager moved to Activities

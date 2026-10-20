@@ -138,11 +138,11 @@ class DictionaryManagerActivity : AppCompatActivity() {
      */
     private fun loadLanguagePreferences() {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        primaryLanguage = prefs.getString("pref_primary_language", "en") ?: "en"
-        multiLangEnabled = prefs.getBoolean("pref_enable_multilang", false)
+        primaryLanguage = prefs.getString("pref_primary_language", Defaults.PRIMARY_LANGUAGE) ?: Defaults.PRIMARY_LANGUAGE
+        multiLangEnabled = prefs.getBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
         secondaryLanguage = if (multiLangEnabled) {
-            val secondary = prefs.getString("pref_secondary_language", "none") ?: "none"
-            if (secondary != "none") secondary else null
+            val secondary = prefs.getString("pref_secondary_language", Defaults.SECONDARY_LANGUAGE) ?: Defaults.SECONDARY_LANGUAGE
+            if (secondary != LanguageDisplayNames.NONE) secondary else null
         } else {
             null
         }
@@ -535,11 +535,11 @@ class DictionaryManagerActivity : AppCompatActivity() {
 
         // Check if languages changed while we were paused
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        val currentPrimary = prefs.getString("pref_primary_language", "en") ?: "en"
-        val multiLang = prefs.getBoolean("pref_enable_multilang", false)
+        val currentPrimary = prefs.getString("pref_primary_language", Defaults.PRIMARY_LANGUAGE) ?: Defaults.PRIMARY_LANGUAGE
+        val multiLang = prefs.getBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
         val currentSecondary = if (multiLang) {
-            val sec = prefs.getString("pref_secondary_language", "none") ?: "none"
-            if (sec != "none") sec else null
+            val sec = prefs.getString("pref_secondary_language", Defaults.SECONDARY_LANGUAGE) ?: Defaults.SECONDARY_LANGUAGE
+            if (sec != LanguageDisplayNames.NONE) sec else null
         } else null
 
         if (currentPrimary != primaryLanguage || currentSecondary != secondaryLanguage) {

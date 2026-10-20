@@ -199,7 +199,7 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             }
             // Phase 5: Gesture settings listeners
             "slider_sensitivity" -> {
-                sliderSensitivity = prefs.getSafeString(key, Defaults.SLIDER_SENSITIVITY).toIntOrNull() ?: 30
+                sliderSensitivity = prefs.getSafeString(key, Defaults.SLIDER_SENSITIVITY).toIntOrNull() ?: Defaults.SLIDER_SENSITIVITY_FALLBACK.toInt()
             }
             "swipe_final_autocorrect_enabled" -> {
                 swipeFinalAutocorrectEnabled = prefs.getBoolean(key, Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
@@ -294,14 +294,14 @@ internal fun SettingsActivity.loadCurrentSettings() {
         clipboardSizeLimitMb = prefs.getSafeString("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
         clipboardExcludePasswordManagers = prefs.getSafeBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
         clipboardRespectSensitiveFlag = prefs.getSafeBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
-        clipboardTextOnly = prefs.getSafeBoolean("clipboard_text_only", false)
+        clipboardTextOnly = prefs.getSafeBoolean("clipboard_text_only", Defaults.CLIPBOARD_TEXT_ONLY)
         // F-8: media capture toggle + size cap (clamped through the shared range,
         // same value Config.refresh enforces at the read site).
         clipboardMediaEnabled = prefs.getSafeBoolean("clipboard_media_enabled", Defaults.CLIPBOARD_MEDIA_ENABLED)
         clipboardMaxMediaSizeMb = prefs.getSafeInt("clipboard_max_media_size_mb", Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB)
             .coerceIn(SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.first, SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.last)
-        clipboardPinnedEnabled = prefs.getSafeBoolean("clipboard_pinned_enabled", true)
-        clipboardTodoEnabled = prefs.getSafeBoolean("clipboard_todo_enabled", true)
+        clipboardPinnedEnabled = prefs.getSafeBoolean("clipboard_pinned_enabled", Defaults.CLIPBOARD_PINNED_ENABLED)
+        clipboardTodoEnabled = prefs.getSafeBoolean("clipboard_todo_enabled", Defaults.CLIPBOARD_TODO_ENABLED)
         // #156: PROCESS_TEXT selection-toolbar entry point — opt-in, default false (design §6.6).
         clipboardPrivateCopyToolbarEnabled = prefs.getSafeBoolean(PrivateCopyProcessTextActivity.PREF_TOOLBAR_ENABLED, false)
         // ARC-037: the PROCESS_TEXT confirmation toast — opt-OUT, default true.
@@ -310,11 +310,11 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // reinstall the manifest default is disabled, but the pref may say the user opted in).
         setPrivateCopyToolbarComponentEnabled(clipboardPrivateCopyToolbarEnabled)
 
-        // URL sanitization toggles (Chunk 4) — defaults match Config.kt (all off)
-        clipboardSanitizeLinksEnabled = prefs.getSafeBoolean("clipboard_sanitize_links_enabled", false)
-        clipboardEmbedEnrichEnabled = prefs.getSafeBoolean("clipboard_embed_enrich_enabled", false)
-        clipboardCustomRulesEnabled = prefs.getSafeBoolean("clipboard_custom_rules_enabled", false)
-        clipboardSanitizeSystemClipboard = prefs.getSafeBoolean("clipboard_sanitize_system_clipboard", true)
+        // URL sanitization toggles (Chunk 4) — the same Defaults constants Config reads
+        clipboardSanitizeLinksEnabled = prefs.getSafeBoolean("clipboard_sanitize_links_enabled", Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED)
+        clipboardEmbedEnrichEnabled = prefs.getSafeBoolean("clipboard_embed_enrich_enabled", Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED)
+        clipboardCustomRulesEnabled = prefs.getSafeBoolean("clipboard_custom_rules_enabled", Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED)
+        clipboardSanitizeSystemClipboard = prefs.getSafeBoolean("clipboard_sanitize_system_clipboard", Defaults.CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD)
         clipboardCustomRulesUri = prefs.getString("clipboard_custom_rules_uri", null)
         // Status text reflects the on-disk copy of custom.substitutions.json (computed lazily).
         recomputeCustomRulesStatus()
@@ -330,7 +330,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Gesture sensitivity settings
         swipeDistance = prefs.getSafeString("swipe_dist", Defaults.SWIPE_DIST).toIntOrNull() ?: Defaults.SWIPE_DIST_FALLBACK.toInt()
         circleSensitivity = prefs.getSafeString("circle_sensitivity", Defaults.CIRCLE_SENSITIVITY).toIntOrNull() ?: Defaults.CIRCLE_SENSITIVITY_FALLBACK
-        sliderSensitivity = prefs.getSafeString("slider_sensitivity", Defaults.SLIDER_SENSITIVITY).toIntOrNull() ?: 30
+        sliderSensitivity = prefs.getSafeString("slider_sensitivity", Defaults.SLIDER_SENSITIVITY).toIntOrNull() ?: Defaults.SLIDER_SENSITIVITY_FALLBACK.toInt()
 
         // Long press settings
         longPressTimeout = prefs.getSafeInt("longpress_timeout", Defaults.LONGPRESS_TIMEOUT)
@@ -422,12 +422,12 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Multi-language settings
         multiLangEnabled = prefs.getSafeBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
         primaryLanguage = prefs.getSafeString("pref_primary_language", Defaults.PRIMARY_LANGUAGE)
-        secondaryLanguage = prefs.getSafeString("pref_secondary_language", "none")
+        secondaryLanguage = prefs.getSafeString("pref_secondary_language", Defaults.SECONDARY_LANGUAGE)
         autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
         secondaryPredictionWeight = Config.safeGetFloat(prefs, "pref_secondary_prediction_weight", Defaults.SECONDARY_PREDICTION_WEIGHT)
-        primaryLanguageAlt = prefs.getSafeString("pref_primary_language_alt", "es")
-        secondaryLanguageAlt = prefs.getSafeString("pref_secondary_language_alt", "none")
+        primaryLanguageAlt = prefs.getSafeString("pref_primary_language_alt", Defaults.PRIMARY_LANGUAGE_ALT)
+        secondaryLanguageAlt = prefs.getSafeString("pref_secondary_language_alt", Defaults.SECONDARY_LANGUAGE_ALT)
 
         // Detect available V2 dictionaries for secondary language options
         availableSecondaryLanguages = detectAvailableV2Dictionaries()

@@ -1318,8 +1318,8 @@ class Keyboard2View @JvmOverloads constructor(
         if (explainLayoutLanguageBinding()) return
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            val currentPrimary = prefs.getString("pref_primary_language", "en") ?: "en"
-            val alternatePrimary = prefs.getString("pref_primary_language_alt", "es") ?: "es"
+            val currentPrimary = prefs.getString("pref_primary_language", Defaults.PRIMARY_LANGUAGE) ?: Defaults.PRIMARY_LANGUAGE
+            val alternatePrimary = prefs.getString("pref_primary_language_alt", Defaults.PRIMARY_LANGUAGE_ALT) ?: Defaults.PRIMARY_LANGUAGE_ALT
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Toggle primary: $currentPrimary -> $alternatePrimary")
 
             // Swap the languages
@@ -1352,8 +1352,8 @@ class Keyboard2View @JvmOverloads constructor(
         if (explainLayoutLanguageBinding()) return
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            val currentSecondary = prefs.getString("pref_secondary_language", "none") ?: "none"
-            val alternateSecondary = prefs.getString("pref_secondary_language_alt", "none") ?: "none"
+            val currentSecondary = prefs.getString("pref_secondary_language", Defaults.SECONDARY_LANGUAGE) ?: Defaults.SECONDARY_LANGUAGE
+            val alternateSecondary = prefs.getString("pref_secondary_language_alt", Defaults.SECONDARY_LANGUAGE_ALT) ?: Defaults.SECONDARY_LANGUAGE_ALT
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Toggle secondary: $currentSecondary -> $alternateSecondary")
 
             // Swap the languages

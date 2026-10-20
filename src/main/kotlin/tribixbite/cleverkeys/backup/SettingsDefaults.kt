@@ -177,10 +177,10 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // ── Multi-language ──────────────────────────────────────────────
     "pref_enable_multilang" to PrefValue.Bool(Defaults.ENABLE_MULTILANG),
     "pref_primary_language" to PrefValue.Str(Defaults.PRIMARY_LANGUAGE),
-    // Literal read-site defaults; ARC-100 reclassified these after preview-behavior tests.
-    "pref_primary_language_alt" to PrefValue.Str("es"),
-    "pref_secondary_language" to PrefValue.Str("none"),
-    "pref_secondary_language_alt" to PrefValue.Str("none"),
+    // ARC-100 reclassified these after preview-behavior tests; constants since audit M10.
+    "pref_primary_language_alt" to PrefValue.Str(Defaults.PRIMARY_LANGUAGE_ALT),
+    "pref_secondary_language" to PrefValue.Str(Defaults.SECONDARY_LANGUAGE),
+    "pref_secondary_language_alt" to PrefValue.Str(Defaults.SECONDARY_LANGUAGE_ALT),
     "pref_auto_detect_language" to PrefValue.Bool(Defaults.AUTO_DETECT_LANGUAGE),
     "pref_language_detection_sensitivity" to PrefValue.FloatV(Defaults.LANGUAGE_DETECTION_SENSITIVITY),
     "pref_secondary_prediction_weight" to PrefValue.FloatV(Defaults.SECONDARY_PREDICTION_WEIGHT),
@@ -208,17 +208,16 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // deleted as dead legacy (D-9). Old backups carrying it hit DEPRECATED_KEYS.
     "clipboard_exclude_password_managers" to PrefValue.Bool(Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS),
     "clipboard_respect_sensitive_flag" to PrefValue.Bool(Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG),
-    // URL-sanitization (Chunk 4) — defaults are literal `false` at the read sites in SettingsActivity.
-    "clipboard_sanitize_links_enabled" to PrefValue.Bool(false),
-    "clipboard_embed_enrich_enabled" to PrefValue.Bool(false),
-    "clipboard_custom_rules_enabled" to PrefValue.Bool(false),
-    // Default literal `true` at the read site — rewrite the system clipboard with the
-    // cleaned URL so pastes from any app are sanitized (acts only when a sanitize toggle is on).
-    "clipboard_sanitize_system_clipboard" to PrefValue.Bool(true),
-    // Clipboard tab visibility — defaults literal `true` per SettingsActivity reads.
-    "clipboard_text_only" to PrefValue.Bool(false),
-    "clipboard_pinned_enabled" to PrefValue.Bool(true),
-    "clipboard_todo_enabled" to PrefValue.Bool(true),
+    // URL-sanitization (Chunk 4): transforms OFF; the system-clipboard write-back ON (it acts
+    // only when a transform is on and changed a URL). One definition each in Defaults (M3).
+    "clipboard_sanitize_links_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED),
+    "clipboard_embed_enrich_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED),
+    "clipboard_custom_rules_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED),
+    "clipboard_sanitize_system_clipboard" to PrefValue.Bool(Defaults.CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD),
+    // Clipboard tab visibility / text-only display.
+    "clipboard_text_only" to PrefValue.Bool(Defaults.CLIPBOARD_TEXT_ONLY),
+    "clipboard_pinned_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_PINNED_ENABLED),
+    "clipboard_todo_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_TODO_ENABLED),
     "clipboard_media_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_MEDIA_ENABLED),
     "clipboard_max_media_size_mb" to PrefValue.IntV(Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB),
     // #156: PROCESS_TEXT selection-toolbar entry point — opt-in, default false (design §6.6).

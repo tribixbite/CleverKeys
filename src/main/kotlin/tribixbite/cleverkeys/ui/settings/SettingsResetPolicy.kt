@@ -144,9 +144,9 @@ object SettingsResetPolicy {
         put("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB)
         put("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
         put("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
-        put("clipboard_text_only", false)
-        put("clipboard_pinned_enabled", true)
-        put("clipboard_todo_enabled", true)
+        put("clipboard_text_only", Defaults.CLIPBOARD_TEXT_ONLY)
+        put("clipboard_pinned_enabled", Defaults.CLIPBOARD_PINNED_ENABLED)
+        put("clipboard_todo_enabled", Defaults.CLIPBOARD_TODO_ENABLED)
 
         // Debug (off by default)
         put("debug_enabled", Defaults.DEBUG_ENABLED)

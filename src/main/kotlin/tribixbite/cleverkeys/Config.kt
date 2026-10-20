@@ -39,6 +39,8 @@ object Defaults {
     // (keeps the historic SUBLABEL_TEXT_SIZE_FACTOR ratio). Lets users shrink
     // crowded flick labels or enlarge them independently of the primary label.
     const val SECONDARY_LABEL_SIZE_SCALE = 1.0f
+    /** Primary label size as a fraction of key height (not a preference; L12 names it). */
+    const val LABEL_TEXT_SIZE_FACTOR = 0.33f
     const val KEY_VERTICAL_MARGIN = 1.5f
     const val KEY_HORIZONTAL_MARGIN = 2.0f
     const val BORDER_CONFIG = false
@@ -103,6 +105,8 @@ object Defaults {
     const val SWIPE_DIST = "23"
     const val SWIPE_DIST_FALLBACK = 23f
     const val SLIDER_SENSITIVITY = "30"
+    /** Numeric fallback when the stored `slider_sensitivity` string does not parse (L12). */
+    const val SLIDER_SENSITIVITY_FALLBACK = 30f
     const val CIRCLE_SENSITIVITY = "2"
     const val CIRCLE_SENSITIVITY_FALLBACK = 2
     const val TAP_DURATION_THRESHOLD = 150
@@ -312,6 +316,17 @@ object Defaults {
     // F-8 (surfaced 2026-09-08): media capture toggle + size cap, historic v4 defaults
     const val CLIPBOARD_MEDIA_ENABLED = true
     const val CLIPBOARD_MAX_MEDIA_SIZE_MB = 10
+    // v4 clipboard tab/display toggles (audit M3, 2026-10-20: these were literal `false`/`true`
+    // in Config, SettingsPersistence, SettingsDefaults and SettingsResetPolicy).
+    const val CLIPBOARD_TEXT_ONLY = false      // Hide media entries from all tabs
+    const val CLIPBOARD_PINNED_ENABLED = true  // Show the pinned tab
+    const val CLIPBOARD_TODO_ENABLED = true    // Show the todo tab
+    // URL sanitization (Chunk 3). All three transforms default OFF; the system-clipboard
+    // write-back defaults ON because it only acts when a transform is on AND changed a URL.
+    const val CLIPBOARD_SANITIZE_LINKS_ENABLED = false
+    const val CLIPBOARD_EMBED_ENRICH_ENABLED = false
+    const val CLIPBOARD_CUSTOM_RULES_ENABLED = false
+    const val CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD = true
 
     // I-7 (2026-09-08): the default-IME reminder is on by default (honest default —
     // prompting enabled); the Settings "reminder" switch is the don't-ask-again affordance.
@@ -376,6 +391,11 @@ object Defaults {
     // Multi-language
     const val ENABLE_MULTILANG = false
     const val PRIMARY_LANGUAGE = "en"
+    /** `pref_secondary_language`; [LanguageDisplayNames.NONE] = no secondary language (M10). */
+    const val SECONDARY_LANGUAGE = LanguageDisplayNames.NONE
+    /** v1.2.0 quick-toggle alternates (`pref_primary_language_alt` / `pref_secondary_language_alt`). */
+    const val PRIMARY_LANGUAGE_ALT = "es"
+    const val SECONDARY_LANGUAGE_ALT = LanguageDisplayNames.NONE
     const val AUTO_DETECT_LANGUAGE = true
     const val LANGUAGE_DETECTION_SENSITIVITY = 0.6f
     const val SECONDARY_PREDICTION_WEIGHT = 0.9f  // v1.1.94: Multiplier for secondary dictionary predictions
@@ -659,12 +679,17 @@ class Config private constructor(
     // From resources
     @JvmField val marginTop: Float = res.getDimension(R.dimen.margin_top)
     @JvmField val keyPadding: Float = res.getDimension(R.dimen.key_padding)
-    @JvmField val labelTextSize: Float = 0.33f
+    @JvmField val labelTextSize: Float = Defaults.LABEL_TEXT_SIZE_FACTOR
     @JvmField val sublabelTextSize: Float = Defaults.SUBLABEL_TEXT_SIZE_FACTOR
     // #133: user multiplier applied to the secondary (flick) label size only.
-    @JvmField var secondary_label_size_scale = 0f
+    @JvmField var secondary_label_size_scale = Defaults.SECONDARY_LABEL_SIZE_SCALE
 
-    // From preferences
+    // From preferences.
+    // A field that refresh() reads straight from ONE preference is initialised to that
+    // preference's Defaults constant, so the pre-refresh value (the seed snapshot below) is the
+    // shipped default rather than a second, drifting copy (audit M4, 2026-10-20; pinned by
+    // DefaultsSingleDefinitionDriftTest). Derived fields — pixels, scaled opacities, resolved
+    // themes — start at 0/false/empty until refresh() computes them.
     // Nullable list preserves indices - null entries represent SystemLayout (use localeTextLayout)
     @JvmField var layouts: List<KeyboardData?> = emptyList()
     @JvmField var show_numpad = false
@@ -674,8 +699,8 @@ class Config private constructor(
     @JvmField var number_row_symbols = false
     @JvmField var swipe_dist_px = 0f
     @JvmField var slide_step_px = 0f
-    @JvmField var vibrate_custom = false
-    @JvmField var vibrate_duration = 0L
+    @JvmField var vibrate_custom = Defaults.VIBRATE_CUSTOM
+    @JvmField var vibrate_duration = Defaults.VIBRATE_DURATION.toLong()
     // Master haptic toggle - disables ALL vibration when false
     @JvmField var haptic_enabled = Defaults.HAPTIC_ENABLED
     // Per-event haptic feedback toggles (only checked if haptic_enabled is true)
@@ -684,10 +709,10 @@ class Config private constructor(
     @JvmField var haptic_trackpoint_activate = Defaults.HAPTIC_TRACKPOINT_ACTIVATE
     @JvmField var haptic_long_press = Defaults.HAPTIC_LONG_PRESS
     @JvmField var haptic_swipe_complete = Defaults.HAPTIC_SWIPE_COMPLETE
-    @JvmField var longPressTimeout = 0L
-    @JvmField var longPressInterval = 0L
-    @JvmField var keyrepeat_enabled = false
-    @JvmField var keyrepeat_backspace_only = false  // #81: Only repeat backspace/nav keys
+    @JvmField var longPressTimeout = Defaults.LONGPRESS_TIMEOUT.toLong()
+    @JvmField var longPressInterval = Defaults.LONGPRESS_INTERVAL.toLong()
+    @JvmField var keyrepeat_enabled = Defaults.KEYREPEAT_ENABLED
+    @JvmField var keyrepeat_backspace_only = Defaults.KEYREPEAT_BACKSPACE_ONLY  // #81: Only repeat backspace/nav keys
     @JvmField var margin_bottom = 0f  // In pixels (calculated from % of screen height)
     @JvmField var margin_left = 0f    // In pixels (calculated from % of screen width)
     @JvmField var margin_right = 0f   // In pixels (calculated from % of screen width)
@@ -704,7 +729,7 @@ class Config private constructor(
     @JvmField var customBorderLineWidth = 0f
     @JvmField var keyOpacity = 0
     @JvmField var keyActivatedOpacity = 0
-    @JvmField var double_tap_lock_shift = false
+    @JvmField var double_tap_lock_shift = Defaults.DOUBLE_TAP_LOCK_SHIFT
     @JvmField var characterSize = 0f
     /** Android style id of the EFFECTIVE theme ([themeName]); what the keyboard view inflates with. */
     @JvmField var theme = 0
@@ -728,73 +753,73 @@ class Config private constructor(
      * theme is rendered instead. Shown by Layout Manager; never written back to the binding.
      */
     @JvmField var layout_missing_theme: String? = null
-    @JvmField var autocapitalisation = false
-    @JvmField var switch_input_immediate = false
+    @JvmField var autocapitalisation = Defaults.AUTOCAPITALISATION
+    @JvmField var switch_input_immediate = Defaults.SWITCH_INPUT_IMMEDIATE
     /** #139: Enter inserts a newline in multi-line fields even when the app asks for an action. */
     @JvmField var enter_always_newline = Defaults.ENTER_ALWAYS_NEWLINE
     @JvmField var selected_number_layout: NumberLayout? = null
-    @JvmField var borderConfig = false
-    @JvmField var circle_sensitivity = 0
-    @JvmField var clipboard_history_enabled = false
-    @JvmField var clipboard_history_limit = 0
-    @JvmField var clipboard_pane_height_percent = 0
-    @JvmField var clipboard_max_item_size_kb = 0
-    @JvmField var clipboard_limit_type: String? = null
-    @JvmField var clipboard_size_limit_mb = 0
-    @JvmField var clipboard_exclude_password_managers = true  // Skip clipboard from password managers
-    @JvmField var clipboard_respect_sensitive_flag = true  // #86: Respect Android 13+ IS_SENSITIVE flag
-    @JvmField var clipboard_history_duration = -1  // Minutes; -1 = never expire. Was 10080 (7 days)
-    @JvmField var clipboard_text_only = false  // v4: Hide media entries from all tabs (text-only display)
-    @JvmField var clipboard_pinned_enabled = true  // v4: Show/hide pinned tab
-    @JvmField var clipboard_todo_enabled = true  // v4: Show/hide todo tab
+    @JvmField var borderConfig = Defaults.BORDER_CONFIG
+    @JvmField var circle_sensitivity = Defaults.CIRCLE_SENSITIVITY_FALLBACK
+    @JvmField var clipboard_history_enabled = Defaults.CLIPBOARD_HISTORY_ENABLED
+    @JvmField var clipboard_history_limit = Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
+    @JvmField var clipboard_pane_height_percent = Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT
+    @JvmField var clipboard_max_item_size_kb = Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK
+    @JvmField var clipboard_limit_type: String? = Defaults.CLIPBOARD_LIMIT_TYPE
+    @JvmField var clipboard_size_limit_mb = Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
+    @JvmField var clipboard_exclude_password_managers = Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS  // Skip clipboard from password managers
+    @JvmField var clipboard_respect_sensitive_flag = Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG  // #86: Respect Android 13+ IS_SENSITIVE flag
+    @JvmField var clipboard_history_duration = Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK  // Minutes; -1 = never expire
+    @JvmField var clipboard_text_only = Defaults.CLIPBOARD_TEXT_ONLY  // v4: Hide media entries from all tabs (text-only display)
+    @JvmField var clipboard_pinned_enabled = Defaults.CLIPBOARD_PINNED_ENABLED  // v4: Show/hide pinned tab
+    @JvmField var clipboard_todo_enabled = Defaults.CLIPBOARD_TODO_ENABLED  // v4: Show/hide todo tab
     @JvmField var clipboard_media_enabled = Defaults.CLIPBOARD_MEDIA_ENABLED  // v4: Enable media clipboard (images, videos, PDFs)
     @JvmField var clipboard_max_media_size_mb = Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB  // v4: Max media file size in MB
 
     // URL sanitization toggles (Chunk 3 — applies to clipboard text inserts only)
-    @JvmField var clipboard_sanitize_links_enabled = false
-    @JvmField var clipboard_embed_enrich_enabled = false
-    @JvmField var clipboard_custom_rules_enabled = false
+    @JvmField var clipboard_sanitize_links_enabled = Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED
+    @JvmField var clipboard_embed_enrich_enabled = Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED
+    @JvmField var clipboard_custom_rules_enabled = Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED
     @JvmField var clipboard_custom_rules_uri: String? = null   // SAF persisted URI as String, null = no file picked
     // When sanitization actually cleans a copied URL, also overwrite the Android system
     // clipboard with the cleaned form so pastes from ANY app deliver the sanitized URL
     // (not just CleverKeys' own clipboard panel). Default ON — only acts when a sanitize
     // toggle is enabled AND a URL was actually changed, so it's a no-op otherwise.
-    @JvmField var clipboard_sanitize_system_clipboard = true
+    @JvmField var clipboard_sanitize_system_clipboard = Defaults.CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD
 
     // GIF Panel
     @JvmField var gif_enabled = Defaults.GIF_ENABLED
     @JvmField var gif_thumbnail_columns = Defaults.GIF_THUMBNAIL_COLUMNS
 
     @JvmField var continuous_swipe_enabled = Defaults.CONTINUOUS_SWIPE_ENABLED
-    @JvmField var swipe_typing_enabled = true  // Default to enabled for CleverKeys
-    @JvmField var swipe_on_password_fields = false  // #39: Reenable swipe typing on password fields
-    @JvmField var swipe_show_debug_scores = false
-    @JvmField var suggestion_provenance_markers = false // Opt-in origin markers in the suggestion bar (audit §2.3 Tier 2)
-    @JvmField var show_exact_typed_word = true  // #42: Tap-to-add exact typed word to dictionary
-    @JvmField var word_prediction_enabled = false
-    @JvmField var suggestion_bar_opacity = 0
+    @JvmField var swipe_typing_enabled = Defaults.SWIPE_TYPING_ENABLED
+    @JvmField var swipe_on_password_fields = Defaults.SWIPE_ON_PASSWORD_FIELDS  // #39: Reenable swipe typing on password fields
+    @JvmField var swipe_show_debug_scores = Defaults.SWIPE_SHOW_DEBUG_SCORES
+    @JvmField var suggestion_provenance_markers = Defaults.SUGGESTION_PROVENANCE_MARKERS // Opt-in origin markers in the suggestion bar (audit §2.3 Tier 2)
+    @JvmField var show_exact_typed_word = Defaults.SHOW_EXACT_TYPED_WORD  // #42: Tap-to-add exact typed word to dictionary
+    @JvmField var word_prediction_enabled = Defaults.WORD_PREDICTION_ENABLED
+    @JvmField var suggestion_bar_opacity = Defaults.SUGGESTION_BAR_OPACITY
 
     // Word prediction scoring weights
-    @JvmField var prediction_context_boost = 0f
-    @JvmField var prediction_frequency_scale = 0f
-    @JvmField var context_aware_predictions_enabled = false // Phase 7.1: Dynamic N-gram learning
-    @JvmField var personalized_learning_enabled = false // Phase 7.2: Personalized word frequency learning
+    @JvmField var prediction_context_boost = Defaults.PREDICTION_CONTEXT_BOOST
+    @JvmField var prediction_frequency_scale = Defaults.PREDICTION_FREQUENCY_SCALE
+    @JvmField var context_aware_predictions_enabled = Defaults.CONTEXT_AWARE_PREDICTIONS_ENABLED // Phase 7.1: Dynamic N-gram learning
+    @JvmField var personalized_learning_enabled = Defaults.PERSONALIZED_LEARNING_ENABLED // Phase 7.2: Personalized word frequency learning
     @JvmField var on_device_learning_enabled = Defaults.ON_DEVICE_LEARNING_ENABLED // MASTER privacy gate over ALL typing-behavior learning (Task A 2026-08-06; opt-in on fresh installs since v2.0, upgrades seeded ON by the v4 migration)
     @JvmField var next_word_prediction_enabled = Defaults.NEXT_WORD_PREDICTION_ENABLED // Gboard-style next-word: shipped LM, plus learned context when learning is on
-    @JvmField var context_source = "both" // which context LM feeds scoring: both | learned_only | static_only
-    @JvmField var personalization_weight = 1.0f // continuous personalization strength (0=off … 2=double)
+    @JvmField var context_source = Defaults.CONTEXT_SOURCE // which context LM feeds scoring: both | learned_only | static_only
+    @JvmField var personalization_weight = Defaults.PERSONALIZATION_WEIGHT // continuous personalization strength (0=off … 2=double)
     @JvmField var personalization_max_words = Defaults.PERSONALIZATION_MAX_WORDS // learned-vocabulary size cap
-    @JvmField var learning_aggression = "BALANCED" // Phase 7.2: Learning aggression level
+    @JvmField var learning_aggression = Defaults.LEARNING_AGGRESSION // Phase 7.2: Learning aggression level
 
     // Multi-language support (Phase 8.3 & 8.4)
-    @JvmField var enable_multilang = false // Phase 8.3: Enable multi-language support
+    @JvmField var enable_multilang = Defaults.ENABLE_MULTILANG // Phase 8.3: Enable multi-language support
     /**
      * The ACTIVE primary language — what prediction, autocorrect, learning, the n-gram/static LM,
      * contractions and swipe routing serve. Equals `pref_primary_language` unless the current
      * layout carries a language binding (GH #186/#61), in which case it is the bound language.
      * Settings and the language toggles read/write the PREFERENCE, never this field.
      */
-    @JvmField var primary_language = "en"
+    @JvmField var primary_language = Defaults.PRIMARY_LANGUAGE
     /**
      * GH #186/#61: each layout's EFFECTIVE language binding (null = unbound), index-aligned with
      * [layouts]. Resolved by [LayoutLanguageBinding.effective] when the layouts are loaded.
@@ -803,7 +828,7 @@ class Config private constructor(
     /** `pref_primary_language` — the user's choice for unbound layouts. */
     private var user_primary_language = Defaults.PRIMARY_LANGUAGE
     /** `pref_secondary_language` ("none" = no secondary). */
-    private var user_secondary_language = LanguageDisplayNames.NONE
+    private var user_secondary_language = Defaults.SECONDARY_LANGUAGE
     /**
      * The ACTIVE secondary language, or null for single-language typing: the preference
      * secondary while Multi-Language is on and the current layout is unbound; always null on a
@@ -813,21 +838,21 @@ class Config private constructor(
     @JvmField var active_secondary_language: String? = null
     /** Non-null while the current layout is bound to a language (then == [primary_language]). */
     @JvmField var layout_bound_language: String? = null
-    @JvmField var auto_detect_language = true // Phase 8.3: Auto-detect language from context
-    @JvmField var language_detection_sensitivity = 0.6f // Phase 8.3: Detection sensitivity (0.0-1.0)
+    @JvmField var auto_detect_language = Defaults.AUTO_DETECT_LANGUAGE // Phase 8.3: Auto-detect language from context
+    @JvmField var language_detection_sensitivity = Defaults.LANGUAGE_DETECTION_SENSITIVITY // Phase 8.3: Detection sensitivity (0.0-1.0)
     @JvmField var secondary_prediction_weight = Defaults.SECONDARY_PREDICTION_WEIGHT // v1.1.94: Weight for secondary predictions
 
     // Auto-correction settings
-    @JvmField var autocorrect_enabled = false
-    @JvmField var autocorrect_min_word_length = 0
-    @JvmField var autocorrect_char_match_threshold = 0f
-    @JvmField var autocorrect_confidence_min_frequency = 0
+    @JvmField var autocorrect_enabled = Defaults.AUTOCORRECT_ENABLED
+    @JvmField var autocorrect_min_word_length = Defaults.AUTOCORRECT_MIN_WORD_LENGTH
+    @JvmField var autocorrect_char_match_threshold = Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD
+    @JvmField var autocorrect_confidence_min_frequency = Defaults.AUTOCORRECT_MIN_FREQUENCY
     /** Issue #72: Auto-capitalize "I" and contractions (i'm → I'm, i'll → I'll) */
-    @JvmField var autocapitalize_i_words = true
+    @JvmField var autocapitalize_i_words = Defaults.AUTOCAPITALIZE_I_WORDS
 
     // Fuzzy matching configuration
-    @JvmField var autocorrect_max_length_diff = 0
-    @JvmField var autocorrect_prefix_length = 0
+    @JvmField var autocorrect_max_length_diff = Defaults.AUTOCORRECT_MAX_LENGTH_DIFF
+    @JvmField var autocorrect_prefix_length = Defaults.AUTOCORRECT_PREFIX_LENGTH
 
     // Swipe scoring weights
 
@@ -839,10 +864,10 @@ class Config private constructor(
     @JvmField var autocorrect_tuning: AutocorrectTuning? = null
 
     // Swipe autocorrect configuration
-    @JvmField var swipe_final_autocorrect_enabled = false
+    @JvmField var swipe_final_autocorrect_enabled = Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED
 
     // Short gesture configuration
-    @JvmField var short_gestures_enabled = false
+    @JvmField var short_gestures_enabled = Defaults.SHORT_GESTURES_ENABLED
     // Unit-typed (PercentOfKey): consumers must convert via .toPx(keyDiagonal) — raw
     // px-vs-percent comparisons no longer compile. (Value classes can't be @JvmField;
     // the codebase is pure Kotlin, so nothing needed the Java field exposure.)
@@ -863,37 +888,37 @@ class Config private constructor(
     @JvmField var subkey_popover_neutral_height = Defaults.SUBKEY_POPOVER_NEUTRAL_HEIGHT
 
     // Selection-delete mode configuration (backspace swipe+hold)
-    @JvmField var selection_delete_vertical_threshold = 40  // % of key height to trigger vertical selection
-    @JvmField var selection_delete_vertical_speed = 0.4f    // Speed multiplier for vertical (0.1-1.0)
+    @JvmField var selection_delete_vertical_threshold = Defaults.SELECTION_DELETE_VERTICAL_THRESHOLD  // % of key height to trigger vertical selection
+    @JvmField var selection_delete_vertical_speed = Defaults.SELECTION_DELETE_VERTICAL_SPEED    // Speed multiplier for vertical (0.1-1.0)
     /** GH #190: true = follow-finger (position-proportional) selection, false = speed by distance. */
-    @JvmField var selection_delete_follow_finger = false
+    @JvmField var selection_delete_follow_finger = Defaults.SELECTION_DELETE_MODE == Defaults.SELECTION_DELETE_MODE_FOLLOW
     /** GH #190: follow-finger step, px per character (from `selection_delete_step_dp`). */
     @JvmField var selection_delete_step_px = 0f
 
     // Gesture timing configuration (exposed hardcoded constants)
-    @JvmField var tap_duration_threshold = 150L // Max duration for a tap gesture (ms)
-    @JvmField var double_space_to_period = true // Enable double-space-to-period feature
-    @JvmField var double_space_threshold = 500L // Max time between spaces for period replacement (ms)
-    @JvmField var smart_punctuation = true // Attach punctuation to end of last word (no space before)
-    @JvmField var swipe_min_dwell_time = 10L // Min time to register a key during swipe (ms)
-    @JvmField var swipe_noise_threshold = 2.0f // Min distance to register movement (pixels)
-    @JvmField var swipe_high_velocity_threshold = 1000.0f // Velocity threshold for fast swipes (px/sec)
-    @JvmField var swipe_min_distance = 50.0f // Minimum total distance to recognize a swipe (pixels)
-    @JvmField var swipe_min_key_distance = 40.0f // Minimum distance between keys during swipe (pixels)
+    @JvmField var tap_duration_threshold = Defaults.TAP_DURATION_THRESHOLD.toLong() // Max duration for a tap gesture (ms)
+    @JvmField var double_space_to_period = Defaults.DOUBLE_SPACE_TO_PERIOD // Enable double-space-to-period feature
+    @JvmField var double_space_threshold = Defaults.DOUBLE_SPACE_THRESHOLD.toLong() // Max time between spaces for period replacement (ms)
+    @JvmField var smart_punctuation = Defaults.SMART_PUNCTUATION // Attach punctuation to end of last word (no space before)
+    @JvmField var swipe_min_dwell_time = Defaults.SWIPE_MIN_DWELL_TIME.toLong() // Min time to register a key during swipe (ms)
+    @JvmField var swipe_noise_threshold = Defaults.SWIPE_NOISE_THRESHOLD // Min distance to register movement (pixels)
+    @JvmField var swipe_high_velocity_threshold = Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD // Velocity threshold for fast swipes (px/sec)
+    @JvmField var swipe_min_distance = Defaults.SWIPE_MIN_DISTANCE // Minimum total distance to recognize a swipe (pixels)
+    @JvmField var swipe_min_key_distance = Defaults.SWIPE_MIN_KEY_DISTANCE // Minimum distance between keys during swipe (pixels)
 
     // Slider speed configuration
-    @JvmField var slider_speed_smoothing = 0.7f // Smoothing factor for slider speed (0.0-1.0)
-    @JvmField var slider_speed_max = 4.0f // Maximum slider speed multiplier
+    @JvmField var slider_speed_smoothing = Defaults.SLIDER_SPEED_SMOOTHING // Smoothing factor for slider speed (0.0-1.0)
+    @JvmField var slider_speed_max = Defaults.SLIDER_SPEED_MAX // Maximum slider speed multiplier
 
     // Swipe trail appearance
-    @JvmField var swipe_trail_enabled = true // Show swipe trail during gesture
-    @JvmField var swipe_trail_effect = "glow" // Trail effect: none, solid, glow, rainbow, fade
-    @JvmField var swipe_trail_color = 0xFF9B59B6.toInt() // Trail color (default: jewel purple)
-    @JvmField var swipe_trail_width = 8.0f // Trail stroke width in dp
-    @JvmField var swipe_trail_glow_radius = 6.0f // Glow effect radius in dp (smaller = crisper)
+    @JvmField var swipe_trail_enabled = Defaults.SWIPE_TRAIL_ENABLED // Show swipe trail during gesture
+    @JvmField var swipe_trail_effect = Defaults.SWIPE_TRAIL_EFFECT // Trail effect: none, solid, glow, rainbow, fade
+    @JvmField var swipe_trail_color = Defaults.SWIPE_TRAIL_COLOR // Trail color
+    @JvmField var swipe_trail_width = Defaults.SWIPE_TRAIL_WIDTH // Trail stroke width in dp
+    @JvmField var swipe_trail_glow_radius = Defaults.SWIPE_TRAIL_GLOW_RADIUS // Glow effect radius in dp (smaller = crisper)
 
     // Swipe prediction configuration
-    @JvmField var swipe_debug_detailed_logging = false
+    @JvmField var swipe_debug_detailed_logging = Defaults.SWIPE_DEBUG_DETAILED_LOGGING
     // WP9 R-1 step 7 (v1.2): swipe engine mode — "ctc" | "geometric".
     // G5 adds "ctc".
     @JvmField var swipe_engine_mode = Defaults.SWIPE_ENGINE_MODE
@@ -905,16 +930,16 @@ class Config private constructor(
     @JvmField var ctc_beam_width = Defaults.CTC_BEAM_WIDTH
     @JvmField var swipe_context_rescoring = Defaults.SWIPE_CONTEXT_RESCORING
     @Volatile @JvmField var custom_terminal_packages: Set<String> = emptySet()
-    @JvmField var auto_space_after_suggestion = true  // Add trailing space after selecting suggestion
-    @JvmField var auto_space_before_suggestion = true  // Add leading space before tapped suggestion
-    @JvmField var backspace_undo_swipe = true  // Backspace after swipe deletes entire swiped word
-    @JvmField var backspace_undo_autocorrect = true  // #110: Backspace after autocorrect reverts to original word
+    @JvmField var auto_space_after_suggestion = Defaults.AUTO_SPACE_AFTER_SUGGESTION  // Add trailing space after selecting suggestion
+    @JvmField var auto_space_before_suggestion = Defaults.AUTO_SPACE_BEFORE_SUGGESTION  // Add leading space before tapped suggestion
+    @JvmField var backspace_undo_swipe = Defaults.BACKSPACE_UNDO_SWIPE  // Backspace after swipe deletes entire swiped word
+    @JvmField var backspace_undo_autocorrect = Defaults.BACKSPACE_UNDO_AUTOCORRECT  // #110: Backspace after autocorrect reverts to original word
 
     // Beam search tuning
-    @JvmField var swipe_smoothing_window = 0
+    @JvmField var swipe_smoothing_window = Defaults.SWIPE_SMOOTHING_WINDOW
 
     /** Signed percent of one key row to shift raw touch Y by. 0 = off. See refresh(). */
-    @JvmField var finger_occlusion_offset = 0
+    @JvmField var finger_occlusion_offset = Defaults.FINGER_OCCLUSION_OFFSET
 
     // Swipe trajectory resampling
     // NOTE: Custom encoder/decoder paths removed - feature not implemented
@@ -1003,7 +1028,7 @@ class Config private constructor(
 
         // F-3: floor at 1% (SettingsRanges) — 0 makes slide_step_px 0 and
         // Pointers.Sliding divides by it (right-swipe emits repeat −1).
-        val slider_sensitivity = (safeGetString(_prefs, "slider_sensitivity", Defaults.SLIDER_SENSITIVITY).toFloatOrNull() ?: 30f)
+        val slider_sensitivity = (safeGetString(_prefs, "slider_sensitivity", Defaults.SLIDER_SENSITIVITY).toFloatOrNull() ?: Defaults.SLIDER_SENSITIVITY_FALLBACK)
             .coerceIn(
                 SettingsRanges.SLIDER_SENSITIVITY_PERCENT.first.toFloat(),
                 SettingsRanges.SLIDER_SENSITIVITY_PERCENT.last.toFloat()
@@ -1103,20 +1128,17 @@ class Config private constructor(
         clipboard_respect_sensitive_flag = _prefs.getBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
 
         // v4: Clipboard feature toggles
-        clipboard_text_only = _prefs.getBoolean("clipboard_text_only", false)
-        clipboard_pinned_enabled = _prefs.getBoolean("clipboard_pinned_enabled", true)
-        clipboard_todo_enabled = _prefs.getBoolean("clipboard_todo_enabled", true)
+        clipboard_text_only = _prefs.getBoolean("clipboard_text_only", Defaults.CLIPBOARD_TEXT_ONLY)
+        clipboard_pinned_enabled = _prefs.getBoolean("clipboard_pinned_enabled", Defaults.CLIPBOARD_PINNED_ENABLED)
+        clipboard_todo_enabled = _prefs.getBoolean("clipboard_todo_enabled", Defaults.CLIPBOARD_TODO_ENABLED)
         clipboard_media_enabled = _prefs.getBoolean("clipboard_media_enabled", Defaults.CLIPBOARD_MEDIA_ENABLED)
         // F-8: clamp through the shared range (slider + validator + this read site agree)
         clipboard_max_media_size_mb = safeGetInt(_prefs, "clipboard_max_media_size_mb", Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB)
             .coerceIn(SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.first, SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.last)
 
-        // URL sanitization toggles (Chunk 3)
-        clipboard_sanitize_links_enabled = _prefs.getBoolean("clipboard_sanitize_links_enabled", false)
-        clipboard_embed_enrich_enabled = _prefs.getBoolean("clipboard_embed_enrich_enabled", false)
-        clipboard_custom_rules_enabled = _prefs.getBoolean("clipboard_custom_rules_enabled", false)
-        clipboard_custom_rules_uri = _prefs.getString("clipboard_custom_rules_uri", null)
-        clipboard_sanitize_system_clipboard = _prefs.getBoolean("clipboard_sanitize_system_clipboard", true)
+        // URL sanitization toggles (Chunk 3): ONE read implementation, shared with the
+        // mid-session reload the clipboard service triggers (audit M3).
+        reloadSanitizationSettings()
 
         // GIF Panel
         gif_enabled = _prefs.getBoolean("gif_enabled", Defaults.GIF_ENABLED)
@@ -1147,7 +1169,7 @@ class Config private constructor(
         // The user's language choices; the ACTIVE languages are resolved against the current
         // layout's binding at the end of refresh (recomputeActiveLanguages).
         user_primary_language = safeGetString(_prefs, "pref_primary_language", Defaults.PRIMARY_LANGUAGE)
-        user_secondary_language = safeGetString(_prefs, "pref_secondary_language", LanguageDisplayNames.NONE)
+        user_secondary_language = safeGetString(_prefs, "pref_secondary_language", Defaults.SECONDARY_LANGUAGE)
         auto_detect_language = _prefs.getBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         // SlideBarPreference stores as Float (0.4-0.9), not Int
         language_detection_sensitivity = safeGetFloat(_prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
@@ -1250,6 +1272,8 @@ class Config private constructor(
             "swipe_context_rescoring", Defaults.SWIPE_CONTEXT_RESCORING
         )
 
+        // Clamped here (audit M8) as well as in the recognizer, so the value Settings shows is
+        // the value the touch path uses.
         swipe_smoothing_window = safeGetInt(_prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
 
 
@@ -1455,13 +1479,13 @@ class Config private constructor(
      *  user flips a "URL handling" toggle in settings. The settings UI persists the toggle
      *  but does NOT push it into the live Config, so without this the cached sanitizer would
      *  rebuild from the stale startup value and appear to do nothing until a keyboard restart.
-     *  Keys MUST stay in sync with the Chunk-3 reads in refresh(). */
+     *  [refresh] calls this too, so the Chunk-3 keys and defaults have one read site. */
     fun reloadSanitizationSettings() {
-        clipboard_sanitize_links_enabled = _prefs.getBoolean("clipboard_sanitize_links_enabled", false)
-        clipboard_embed_enrich_enabled = _prefs.getBoolean("clipboard_embed_enrich_enabled", false)
-        clipboard_custom_rules_enabled = _prefs.getBoolean("clipboard_custom_rules_enabled", false)
+        clipboard_sanitize_links_enabled = _prefs.getBoolean("clipboard_sanitize_links_enabled", Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED)
+        clipboard_embed_enrich_enabled = _prefs.getBoolean("clipboard_embed_enrich_enabled", Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED)
+        clipboard_custom_rules_enabled = _prefs.getBoolean("clipboard_custom_rules_enabled", Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED)
         clipboard_custom_rules_uri = _prefs.getString("clipboard_custom_rules_uri", null)
-        clipboard_sanitize_system_clipboard = _prefs.getBoolean("clipboard_sanitize_system_clipboard", true)
+        clipboard_sanitize_system_clipboard = _prefs.getBoolean("clipboard_sanitize_system_clipboard", Defaults.CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD)
     }
 
     fun set_gif_enabled(enabled: Boolean) {
