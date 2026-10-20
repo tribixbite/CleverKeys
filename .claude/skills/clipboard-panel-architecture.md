@@ -350,3 +350,12 @@ fields. Ctrl+V and the paste key also paste the clip into the search and tag fie
 detail: `ime-key-routing.md` "Shortcuts and paste inside inline fields". Device: Pixel
 2026-10-13/14 Ctrl+V in the editor PASS (`build/oct14-pixel/65–67`); Ctrl+Z/Ctrl+Y/Ctrl+C in
 the editor not yet device-checked (`memory/todo.md` "Open now").
+
+## Swipe typing in the entry editor, tag entry and search (2026-10-20)
+
+Swiped words go into the active inline field instead of the app behind the panel:
+`SuggestionHandler` asks `KeyEventHandler.activeInlineTarget()` and writes through
+`ClipboardManager.replaceInInlineField` → `ClipboardHistoryView.replaceEditRange` (editor, one
+`InlineEditHistory` step each) or the tag/search setText paths (`setSearchText` is the one
+writer of the search query). Bar taps replace the swiped word there; backspace removes it.
+Nothing is learned. Full route and rules: `ime-key-routing.md` "Swipe typing into inline fields".

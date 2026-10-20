@@ -105,7 +105,10 @@ class SuggestionBridge(
         // password and are never captured, regardless of collection consent.
         val inPasswordField = suggestionHandler?.isInPasswordMode() == true ||
             SuggestionBar.isPasswordField(keyboard2.currentInputEditorInfo)
-        if (isSwipeAutoInsert && currentSwipeData != null && !inPasswordField &&
+        // A tap while an inline panel field owns typing commits into that field: nothing about
+        // it is captured (the inline routes learn nothing — see InlineSwipeInput.kt).
+        val inlineFieldActive = suggestionHandler?.hasActiveInlineField() == true
+        if (isSwipeAutoInsert && currentSwipeData != null && !inPasswordField && !inlineFieldActive &&
             predictionCoordinator?.getMlDataStore() != null) {
             mlDataCollector.collectAndStoreSwipeData(
                 word,

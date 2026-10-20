@@ -286,6 +286,32 @@ class EmojiSearchManager {
     }
 
     /**
+     * The search field's text for swipe typing (an append-only field: caret at the end), or
+     * null without a field. The session is the view's identity.
+     */
+    fun searchFieldState(): InlineFieldState? {
+        val input = searchInput ?: return null
+        return InlineFieldState.appendOnly(
+            input.text?.toString() ?: "", System.identityHashCode(input).toLong()
+        )
+    }
+
+    /**
+     * Replace [start, end) of the query with [text] (the range must end at the query's end —
+     * the field only ever edits there). setText + setSelection like [appendToSearch], so the
+     * text watcher re-runs the search. False when there is no field or the range is invalid.
+     */
+    fun replaceSearchText(start: Int, end: Int, text: String): Boolean {
+        val input = searchInput ?: return false
+        val newText = InlineFieldState.appendOnlyReplace(
+            input.text?.toString() ?: "", start, end, text
+        ) ?: return false
+        input.setText(newText)
+        input.setSelection(newText.length)
+        return true
+    }
+
+    /**
      * Request focus on search input.
      */
     fun focusSearch() {

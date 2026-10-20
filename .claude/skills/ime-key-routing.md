@@ -458,3 +458,55 @@ From docs/research/2026-10-15-ime-editor-actions.md §4.2, all in `handleEditing
   and `SuggestionSpanCommit` (flags 0, LatinIME pattern). Never in password, terminal-style or
   blind fields. The commit guard compares characters, so spans do not affect readback.
 - `textAssistMenu` removed 2026-10-17 (see "Editor-menu text actions").
+
+## Swipe typing into inline fields (2026-10-20)
+
+Maintainer report: swipes with the clipboard entry editor open landed in the app behind the
+panel. Tap typing goes through `sendText`'s chain, but a swiped word is committed by
+`SuggestionHandler` — the ONE swipe pipeline — so the inline check lives there:
+
+```
+swipe end → InputCoordinator → SuggestionHandler.handleSwipePredictionResults
+    inlineTargetProvider() (= KeyEventHandler.activeInlineTarget, wired in KeyboardComponentGraph)
+      non-null → handleInlineSwipeResults: bar shows the slate, top word →
+                 InlineSwipeSession.insert(target) → IReceiver.replaceInInlineField
+                 → KeyEventReceiverBridge → KeyboardReceiver → ClipboardManager /
+                   ClipboardHistoryView.replaceEditRange / EmojiSearchManager / GIF input
+      null     → the app path, unchanged
+bar tap  → SuggestionBridge → onSuggestionSelected(isManualSelection) → same provider check →
+           commitInlineSuggestionTap: replaces the owned word, else inserts a new one
+backspace → key_up: inline field active && LearningHooks.undoInlineSwipe() → removes the
+           whole insertion (spaces included, a replaced selection restored); else the field's
+           ordinary backspace
+```
+
+- `activeInlineField()` uses the SAME priority as `sendText` (tag > edit > search > emoji > GIF).
+  New IReceiver methods `inlineFieldState(field)` / `replaceInInlineField(field, start, end, text)`
+  are delegated by the bridge (`KeyEventReceiverBridgeDelegationTest` ratchet + a behavioural
+  check in `InlineSwipeRoutingTest`).
+- **Spacing** (`InlineWordPlanner`, pure): read from the FIELD's text, never the app's. Leading
+  space unless at the start or after whitespace; trailing space only when the next character
+  is a letter/digit (a swipe into the middle of text); no trailing auto-space at the end (the
+  inline fields have no smart-punctuation swallow, and a query keeps no stray space). A
+  selection is replaced.
+- **Ownership** (`InlineSwipeSession`, pure): valid only while field, session (editor:
+  `editingSession`, bumped per `edit_entry`; others: the view's identity), whole text and
+  collapsed caret are exactly what the swipe/tap left. Any typed char, backspace, caret move,
+  paste or undo voids it — the next tap then inserts instead of rewriting.
+- **Undo history**: `replaceEditRange` records each swipe insert, bar replacement and
+  backspace undo as its own `InlineEditHistory` step (`EditKind.OTHER`).
+- **Learning: none.** Tap typing in inline fields returns from `sendText` before
+  `handle_text_typed`, so it is never learned; swipes match. The inline branch skips app
+  autocap (only the shift latch at swipe start cases the word), rescoring, possessives, final
+  autocorrect, next-word appends, ML capture (`SuggestionBridge` also skips capture while an
+  inline field is active), swipe-correction records and every learn funnel, and clears
+  `wasLastInputSwipe`.
+- **The app's InputConnection is never touched** while an inline field is active (no reads,
+  composing, commits or deletes) — pinned by `InlineSwipeRoutingTest.assertAppUntouched`.
+- Continuous (multi-word) swipe already refuses to start while an inline field is active
+  (`Keyboard2View` checks `canUseEditorActions()`), so it never reaches these fields.
+- Limitations: special bar chips (add to dictionary, `+word`, swipe-preference offers) are
+  refused while an inline field owns typing — they act on the APP's typed word. Append-only
+  fields (tag, clipboard/emoji/GIF search) always append at their end, like their tap typing.
+  The field is resolved when the decode RESULT arrives: a swipe whose result lands after the
+  editor closed goes to the app.

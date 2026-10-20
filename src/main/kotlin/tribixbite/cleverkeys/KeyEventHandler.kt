@@ -121,8 +121,13 @@ class KeyEventHandler(
                 if (key.getKeyevent() == KeyEvent.KEYCODE_DEL) {
                     lastTypedChar = '\u0000'
                 }
+                // Backspace right after a swipe into an inline field removes that word there
+                // (the inline twin of #110's swipe undo; never touches the app behind the panel).
+                if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && isInlineFieldActive() &&
+                    learningHooks?.undoInlineSwipe() == true) {
+                    // Consumed by the inline swipe undo.
                 // Tag dialog mode — highest priority modal overlay
-                if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardTagMode()) {
+                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardTagMode()) {
                     recv.backspaceClipboardTag()
                 // Bug #1 fix: check edit mode BEFORE search mode for backspace too
                 } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardEditMode()) {
@@ -788,6 +793,32 @@ class KeyEventHandler(
 
     /** True while one of the IME's own inline fields owns typing (the five modal input modes). */
     private fun isInlineFieldActive(): Boolean = !canUseEditorActions()
+
+    /**
+     * The inline field that owns typing now, in [sendText]'s priority order (tag > edit >
+     * search > emoji > GIF), or null when typing goes to the app. The swipe pipeline
+     * (SuggestionHandler) commits swiped words and bar taps through it instead of the app's
+     * InputConnection.
+     */
+    fun activeInlineField(): InlineField? = when {
+        recv.isClipboardTagMode() -> InlineField.CLIPBOARD_TAG
+        recv.isClipboardEditMode() -> InlineField.CLIPBOARD_EDIT
+        recv.isClipboardSearchMode() -> InlineField.CLIPBOARD_SEARCH
+        recv.isEmojiPaneOpen() -> InlineField.EMOJI_SEARCH
+        recv.isGifPaneOpen() -> InlineField.GIF_SEARCH
+        else -> null
+    }
+
+    /** [activeInlineField] as a writable target, or null when no inline field is active. */
+    fun activeInlineTarget(): InlineTextTarget? {
+        val active = activeInlineField() ?: return null
+        return object : InlineTextTarget {
+            override val field: InlineField = active
+            override fun state(): InlineFieldState? = recv.inlineFieldState(active)
+            override fun replace(start: Int, end: Int, text: String): Boolean =
+                recv.replaceInInlineField(active, start, end, text)
+        }
+    }
 
     /**
      * A Ctrl/Alt/Meta shortcut pressed while an inline field is active. In the clipboard entry
@@ -1579,6 +1610,12 @@ class KeyEventHandler(
         fun appendSuffix(suffix: String): Boolean = false
         /** True means consumed, including a refused/uncertain suffix undo. */
         fun undoSuffix(): Boolean = false
+        /**
+         * Backspace while an inline field owns typing: true when it removed the word just
+         * swiped into that field ([InlineSwipeSession.undo]); false falls through to the
+         * field's ordinary backspace.
+         */
+        fun undoInlineSwipe(): Boolean = false
         /** Enter or the IME action is about to be sent; [ic] still ends with the typed word. */
         fun onEditorWordBoundary(ic: InputConnection?)
 
@@ -1645,6 +1682,13 @@ class KeyEventHandler(
         fun isGifPaneOpen(): Boolean = false
         fun appendToGifSearch(text: String) {}
         fun backspaceGifSearch() {}
+        /**
+         * Swipe typing into inline fields ([InlineSwipeSession]): [field]'s text and selection,
+         * or null when that field is not active or has no view.
+         */
+        fun inlineFieldState(field: InlineField): InlineFieldState? = null
+        /** Replace [start, end) of [field] with [text], caret after it; false when refused. */
+        fun replaceInInlineField(field: InlineField, start: Int, end: Int, text: String): Boolean = false
         // v1.2.7: Smart punctuation - track if last space was auto-inserted
         fun wasLastSpaceAutoInserted(): Boolean = false
         fun setLastSpaceAutoInserted(value: Boolean) {}

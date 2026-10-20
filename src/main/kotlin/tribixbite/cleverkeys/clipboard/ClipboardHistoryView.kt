@@ -361,6 +361,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // Exists only while a session is active (created in edit_entry, dropped in cancelEdit), so a
     // private entry's text never outlives its edit and no memory is held between sessions.
     private var editingHistory: InlineEditHistory? = null
+    // Identifies the edit session for swipe ownership (InlineSwipeSession): a word swiped in
+    // one session is never rewritten in a later one that happens to hold the same text.
+    private var editingSession = 0L
 
     // Dynamic lookup for the editing EditText — resilient to stale references from
     // ListView scrap view measurement passes. When Enter inserts a newline, the EditText
@@ -786,6 +789,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingInProgressText = entry.content
         editingCursorPosition = entry.content.length
         editingHistory = InlineEditHistory()
+        editingSession++
         // #156: remember the entry's privacy so cutFromEditText() can gate the OS-clipboard write.
         editingIsPrivate = entry.isPrivate
         // Re-render to show EditText + save/cancel buttons for this entry
@@ -883,6 +887,39 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             editingInProgressText = newText
             editingHistory?.record(before, InlineEditHistory.Snapshot(newText, newCursorPos, newCursorPos), kind)
         }
+    }
+
+    /**
+     * The edit field's text and selection for swipe typing (InlineSwipeSession), or null when
+     * no entry is being edited or no field is attached.
+     */
+    fun editFieldState(): InlineFieldState? {
+        val et = activeEditingEditText ?: return null
+        val snapshot = editSnapshotOf(et)
+        return InlineFieldState(
+            snapshot.text, snapshot.selectionStart, snapshot.selectionEnd, editingSession
+        )
+    }
+
+    /**
+     * Replace [start, end) of the edit field with [text] and put the caret after it — a swiped
+     * word, its bar replacement or its backspace undo. Recorded as its own step in the editor's
+     * undo history (a swiped word is one deliberate edit, unlike merged per-letter typing).
+     * False when no field is attached or the range is outside the text.
+     */
+    fun replaceEditRange(start: Int, end: Int, text: String): Boolean {
+        val et = activeEditingEditText ?: return false
+        val before = editSnapshotOf(et)
+        if (start < 0 || start > end || end > before.text.length) return false
+        val newText = before.text.substring(0, start) + text + before.text.substring(end)
+        val caret = start + text.length
+        et.setText(newText)
+        et.setSelection(caret)
+        editingCursorPosition = caret
+        // Direct sync — resilient to missing TextWatcher (see replaceEditSelection)
+        editingInProgressText = newText
+        editingHistory?.record(before, InlineEditHistory.Snapshot(newText, caret, caret), InlineEditHistory.EditKind.OTHER)
+        return true
     }
 
     /** Handle backspace in the active edit field (called by key routing).

@@ -484,6 +484,26 @@ class SuggestionHandler(
     // Non-final - updated after creation
     private var suggestionBar: SuggestionBar? = null
 
+    /**
+     * The IME's inline field that owns typing now (clipboard entry editor, tag entry, clipboard
+     * search, emoji / GIF search), or null when typing goes to the app. Wired by
+     * KeyboardComponentGraph to [KeyEventHandler.activeInlineTarget]; null (tests, early
+     * startup) keeps every swipe on the app path.
+     */
+    private var inlineTargetProvider: (() -> InlineTextTarget?)? = null
+
+    /** The word last swiped into an inline field (bar replacement + backspace undo there). */
+    private var inlineSwipeSession: InlineSwipeSession? = null
+    private val inlineSwipe: InlineSwipeSession
+        get() = inlineSwipeSession ?: InlineSwipeSession().also { inlineSwipeSession = it }
+
+    fun setInlineTargetProvider(provider: (() -> InlineTextTarget?)?) {
+        inlineTargetProvider = provider
+    }
+
+    /** True while one of the IME's inline fields owns typing (see [inlineTargetProvider]). */
+    fun hasActiveInlineField(): Boolean = inlineTargetProvider?.invoke() != null
+
     // Debug mode for logging
     private var debugMode = false
     private var debugLogger: DebugLogger? = null
@@ -945,6 +965,16 @@ class SuggestionHandler(
         nextWordSuggestionsActive = false
         suggestionBar?.dismissUndoableMessage()
 
+        // An inline field (clipboard entry editor, tag entry, clipboard / emoji / GIF search)
+        // owns typing: the swiped word goes THERE and nothing below — app reads, app commits,
+        // learning, ML capture — may run (maintainer report 2026-10-20: swipes landed in the app
+        // behind the clipboard editor). Checked before the password guard: that guard protects
+        // the app's field, which this swipe never reaches.
+        inlineTargetProvider?.invoke()?.let { target ->
+            handleInlineSwipeResults(target, predictions, scores, shiftActive, shiftLocked, inputCoordinator, origin)
+            return
+        }
+
         // D2: password-field guard. Detect from the tracked mode OR the live editor (the latter holds
         // in tests / before onStartInputView sets the mode). Suppress the swipe unless the user opted in.
         val passwordField = isPasswordMode || SuggestionBar.isPasswordField(editorInfo)
@@ -1225,6 +1255,72 @@ class SuggestionHandler(
     }
 
     /**
+     * A swipe made while an inline field owns typing ([handleSwipePredictionResults]). Shows the
+     * engine slate on the bar and inserts the top word into the field through [inlineSwipe]
+     * (spacing read from the FIELD, see [InlineWordPlanner]); a bar tap then replaces it there
+     * and backspace removes it ([undoInlineSwipe]).
+     *
+     * Deliberately NOT run: autocap from the app's cursor (only the shift latch at swipe start
+     * cases the word), context rescoring, possessive augmentation, final autocorrect, next-word
+     * appends, ML capture, swipe-correction records, and every learn funnel — tap typing into
+     * these fields learns nothing either (KeyEventHandler.sendText returns before
+     * handle_text_typed), so neither does a swipe. The app's InputConnection is never touched.
+     */
+    private fun handleInlineSwipeResults(
+        target: InlineTextTarget,
+        predictions: List<String>?,
+        scores: List<Int>?,
+        shiftActive: Boolean,
+        shiftLocked: Boolean,
+        inputCoordinator: InputCoordinator,
+        origin: SuggestionOrigin?,
+    ) {
+        // The swipe is not an app swipe: no app undo ownership, no ML row for a later bar tap.
+        contextTracker.setWasLastInputSwipe(false)
+        inputCoordinator.resetSwipeData()
+        if (predictions.isNullOrEmpty()) {
+            inlineSwipe.clear()
+            suggestionBar?.clearSuggestions()
+            return
+        }
+        val cased = predictionCoordinator.getWordPredictor()?.applyUserWordCaseToList(predictions) ?: predictions
+        val words = cased.map { capitalizeIWord(applyShiftTransformation(it, shiftActive, shiftLocked)) }
+        val swipeOrigin = origin ?: SuggestionOrigin.forSwipeEngineMode(config.swipe_engine_mode)
+        val metas = List(words.size) { SuggestionMeta(swipeOrigin) }
+        val bar = suggestionBar
+        bar?.setShowDebugScores(config.swipe_show_debug_scores)
+        bar?.setShowOriginMarkers(config.suggestion_provenance_markers)
+        bar?.setSuggestionsWithScores(words, scores?.takeIf { it.size == words.size }, metas)
+        // The engine's top word, not the bar's: the bar refuses updates in some states (an app
+        // password field, a temporary message) and would answer with stale content.
+        val top = words.first().takeIf { it.isNotEmpty() } ?: return
+        if (!inlineSwipe.insert(target, top)) return
+        inputCoordinator.triggerSwipeCompleteHaptic()
+        // Same latch rule as the app path: a latched shift is spent by the word; caps lock stays.
+        if (shiftActive && !shiftLocked) inputCoordinator.clearLatchedShiftAfterSwipe()
+    }
+
+    /**
+     * A bar tap while an inline field owns typing ([onSuggestionSelected]): replaces the word
+     * just swiped into that field when it is untouched, else inserts [word] as a new word.
+     * Special chips (add to dictionary, exact add, swipe-preference offers) act on the APP's
+     * typed word, so they are refused here. Returns the committed word, or null.
+     */
+    private fun commitInlineSuggestionTap(target: InlineTextTarget, word: String): String? {
+        nextWordSuggestionsActive = false
+        if (routeSuggestionSelection(word) !is SelectionRoute.CommitWord) return null
+        val committed = capitalizeIWord(word.removePrefix("raw:"))
+        return committed.takeIf { inlineSwipe.commitTap(target, it) }
+    }
+
+    /** [KeyEventHandler.LearningHooks.undoInlineSwipe]: #110's swipe undo, in the inline field. */
+    override fun undoInlineSwipe(): Boolean {
+        if (!config.backspace_undo_swipe) return false
+        val target = inlineTargetProvider?.invoke() ?: return false
+        return inlineSwipe.undo(target)
+    }
+
+    /**
      * Next-word call-site 3 (audit §4.4 recommended composition): after a swipe
      * auto-insert, append up to [NextWordPredictor.MAX_SWIPE_APPEND] next-word
      * candidates (learned tier when open, shipped tier always) AFTER the swipe alternates. The alternates are kept
@@ -1369,6 +1465,12 @@ class SuggestionHandler(
         // A suggestion tap supersedes an undoable "Added …" confirmation (none can be on screen
         // while a chip is tappable, but a programmatic selection must not leave one armed).
         suggestionBar?.dismissUndoableMessage()
+
+        // A deliberate bar tap while an inline field owns typing goes to that field, never to
+        // the app behind the panel (the swipe auto-insert reaches the field before this method).
+        if (isManualSelection) {
+            inlineTargetProvider?.invoke()?.let { target -> return commitInlineSuggestionTap(target, word) }
+        }
 
         // Next-word tap (audit §4.4): a whole-bar next-word display OR (call-site
         // 3) a per-suggestion NEXT_WORD meta on a mixed swipe-alternates bar —

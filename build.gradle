@@ -604,6 +604,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.DictionaryLoadRequestsTest',
     // 2026-10-15 Pixel: Ctrl+Z did nothing in the inline clipboard editor; its own undo history.
     'tribixbite.cleverkeys.InlineEditHistoryTest',
+    // 2026-10-20: swipe typing into inline fields — spacing, bar replacement, backspace undo.
+    'tribixbite.cleverkeys.InlineSwipeSessionTest',
     // 2026-10-17: word/line boundaries of the word_left … select_line and case-cycle commands.
     'tribixbite.cleverkeys.EditorTextNavigationTest',
     'tribixbite.cleverkeys.CaseCycleTest',
@@ -1468,6 +1470,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.EditingCommandParityTest',
     // 2026-10-13 Saga: Ctrl+V with the clipboard editor open pasted into the app behind it.
     'tribixbite.cleverkeys.InlineFieldShortcutTest',
+    // 2026-10-20: swipes with the clipboard editor open landed in the app behind the panel.
+    'tribixbite.cleverkeys.InlineSwipeRoutingTest',
     // 2026-10-17: new editor commands against a fake editor (readback, refusals, inline routing).
     'tribixbite.cleverkeys.EditorTextCommandsTest',
     // 2026-10-17: swipe/autocorrect commits carry their alternatives as a SuggestionSpan.

@@ -144,6 +144,8 @@ class KeyboardComponentGraph(
         // and the cursor-sync prediction+post phase (guarded pipeline, R-7). Bookkeeping
         // (debounce, cursor sync, swipe gesture/ML capture) stays in InputCoordinator.
         inputCoordinator.setSwipeResultDelegate(suggestionHandler)
+        // Swipes and bar taps while an inline panel field owns typing go to that field.
+        suggestionHandler.setInlineTargetProvider(keyEventHandler::activeInlineTarget)
         inputCoordinator.setCursorSyncDelegate(suggestionHandler)
 
         // Keyboard-dimensions helper (v1.32.362)

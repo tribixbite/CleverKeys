@@ -198,6 +198,14 @@ class KeyEventReceiverBridge(
         receiver?.backspaceGifSearch()
     }
 
+    // Swipe typing into inline fields (InlineSwipeSession) — must delegate, or swiped words
+    // silently go nowhere while a panel field is open.
+    override fun inlineFieldState(field: InlineField): InlineFieldState? =
+        receiver?.inlineFieldState(field)
+
+    override fun replaceInInlineField(field: InlineField, start: Int, end: Int, text: String): Boolean =
+        receiver?.replaceInInlineField(field, start, end, text) ?: false
+
     // #110: Backspace undo swipe — delegate to receiver
     override fun wasLastInputSwipe(): Boolean {
         return receiver?.wasLastInputSwipe() ?: false

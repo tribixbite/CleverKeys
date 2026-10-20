@@ -472,47 +472,35 @@ class ClipboardManager(
      * @param text Text to append
      */
     fun appendToSearch(text: String) {
-        clipboardSearchBox?.let { searchBox ->
-            clipboardHistoryView?.let { historyView ->
-                // Append to current search text
-                val current = searchBox.text
-                val newText = current.toString() + text
-                searchBox.text = newText
-
-                // Update history view filter
-                historyView.setSearchFilter(newText)
-
-                // Show clear button when there's text
-                updateSearchClearVisibility(newText)
-                // Update error state for regex mode
-                updateSearchBoxErrorState(historyView.hasRegexError())
-            }
-        }
+        val current = clipboardSearchBox?.text?.toString() ?: return
+        setSearchText(current + text)
     }
 
     /**
      * Deletes last character from clipboard search box and updates filter.
      */
     fun deleteFromSearch() {
-        clipboardSearchBox?.let { searchBox ->
-            clipboardHistoryView?.let { historyView ->
-                val current = searchBox.text
+        val current = clipboardSearchBox?.text?.toString() ?: return
+        // Delete last character
+        if (current.isNotEmpty()) setSearchText(current.dropLast(1))
+    }
 
-                // Delete last character
-                if (current.isNotEmpty()) {
-                    val newText = current.subSequence(0, current.length - 1).toString()
-                    searchBox.text = newText
-
-                    // Update history view filter
-                    historyView.setSearchFilter(newText)
-
-                    // Hide clear button when search is empty
-                    updateSearchClearVisibility(newText)
-                    // Update error state for regex mode
-                    updateSearchBoxErrorState(historyView.hasRegexError())
-                }
-            }
-        }
+    /**
+     * Puts [newText] in the search box and re-applies everything that follows a query change:
+     * the history filter, the clear (X) button and the regex error tint. The ONE writer of the
+     * search text (typing, backspace, swiped words). False without a search box / history view.
+     */
+    private fun setSearchText(newText: String): Boolean {
+        val searchBox = clipboardSearchBox ?: return false
+        val historyView = clipboardHistoryView ?: return false
+        searchBox.text = newText
+        // Update history view filter
+        historyView.setSearchFilter(newText)
+        // Show clear button when there's text
+        updateSearchClearVisibility(newText)
+        // Update error state for regex mode
+        updateSearchBoxErrorState(historyView.hasRegexError())
+        return true
     }
 
     /**
@@ -606,6 +594,45 @@ class ClipboardManager(
     }
 
     // ─── Tag panel mode (highest priority — inline panel replaces entry list) ───
+
+    /**
+     * Swipe typing into the clipboard pane's inline fields (InlineSwipeSession): the active
+     * field's text and selection, or null when [field] is not the active one. Tag entry and
+     * search are append-only (their typing routes only append/delete at the end); the entry
+     * editor has a real caret.
+     */
+    fun inlineFieldState(field: InlineField): InlineFieldState? = when (field) {
+        InlineField.CLIPBOARD_TAG -> tagEditText?.takeIf { tagMode }?.let {
+            InlineFieldState.appendOnly(it.text?.toString() ?: "", System.identityHashCode(it).toLong())
+        }
+        InlineField.CLIPBOARD_EDIT -> clipboardHistoryView?.editFieldState()
+        InlineField.CLIPBOARD_SEARCH -> clipboardSearchBox?.takeIf { searchMode }?.let {
+            InlineFieldState.appendOnly(it.text?.toString() ?: "", System.identityHashCode(it).toLong())
+        }
+        else -> null
+    }
+
+    /** Replace [start, end) of the active [field] with [text]; false when refused. */
+    fun replaceInInlineField(field: InlineField, start: Int, end: Int, text: String): Boolean = when (field) {
+        InlineField.CLIPBOARD_TAG -> {
+            val et = tagEditText?.takeIf { tagMode }
+            val newText = et?.let { InlineFieldState.appendOnlyReplace(it.text?.toString() ?: "", start, end, text) }
+            if (et != null && newText != null) {
+                et.setText(newText)
+                et.setSelection(newText.length)
+                true
+            } else {
+                false
+            }
+        }
+        InlineField.CLIPBOARD_EDIT -> clipboardHistoryView?.replaceEditRange(start, end, text) ?: false
+        InlineField.CLIPBOARD_SEARCH -> {
+            val current = clipboardSearchBox?.takeIf { searchMode }?.text?.toString()
+            val newText = current?.let { InlineFieldState.appendOnlyReplace(it, start, end, text) }
+            newText != null && setSearchText(newText)
+        }
+        else -> false
+    }
 
     /** Whether the inline tag panel is open and accepting key input */
     fun isInTagMode(): Boolean = tagMode

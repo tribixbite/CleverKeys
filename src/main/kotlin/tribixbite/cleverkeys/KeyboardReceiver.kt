@@ -1033,6 +1033,38 @@ class KeyboardReceiver(
         }
     }
 
+    // Swipe typing into inline fields: each field's state / range replacement, read from and
+    // written to the SAME views the tap-typing routes above use (setText + setSelection).
+    override fun inlineFieldState(field: InlineField): InlineFieldState? = when (field) {
+        InlineField.CLIPBOARD_TAG, InlineField.CLIPBOARD_EDIT, InlineField.CLIPBOARD_SEARCH ->
+            clipboardManager.inlineFieldState(field)
+        InlineField.EMOJI_SEARCH -> emojiSearchManager?.takeIf { it.isEmojiPaneOpen() }?.searchFieldState()
+        InlineField.GIF_SEARCH -> gifSearchInput?.takeIf { gifSearchActive }?.let {
+            InlineFieldState.appendOnly(it.text?.toString() ?: "", System.identityHashCode(it).toLong())
+        }
+    }
+
+    override fun replaceInInlineField(field: InlineField, start: Int, end: Int, text: String): Boolean =
+        when (field) {
+            InlineField.CLIPBOARD_TAG, InlineField.CLIPBOARD_EDIT, InlineField.CLIPBOARD_SEARCH ->
+                clipboardManager.replaceInInlineField(field, start, end, text)
+            InlineField.EMOJI_SEARCH ->
+                emojiSearchManager?.takeIf { it.isEmojiPaneOpen() }?.replaceSearchText(start, end, text) ?: false
+            InlineField.GIF_SEARCH -> {
+                val input = gifSearchInput?.takeIf { gifSearchActive }
+                val newText = input?.let {
+                    InlineFieldState.appendOnlyReplace(it.text?.toString() ?: "", start, end, text)
+                }
+                if (input != null && newText != null) {
+                    input.setText(newText)
+                    input.setSelection(newText.length)
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+
     // #110: Backspace undo swipe — expose swipe state to KeyEventHandler
     override fun wasLastInputSwipe(): Boolean = contextTracker.wasLastInputSwipe()
     override fun getLastAutoInsertedWord(): String? = contextTracker.getLastAutoInsertedWord()
