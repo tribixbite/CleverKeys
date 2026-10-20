@@ -115,8 +115,15 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Shipped weights: s₁ 2, g 1.5, g₂ 1.0, τ 1.2, λ 0.005, β 0.25, γ 1. The band ranking stays
     selectable. Verified at `353003c6`: pure 3,040/3,040, mock 1,317/1,317, full instrumented
     suite 1,606/1,606 on emulator.wtf Pixel7 API 34 (`~/ew-output/oct19-channel/`, run e5fd3755).
-    STILL OPEN: (1) type `devixe`, `shated`, `helo`, `donr` and a Hebrew prefix typo
-    on a phone with a release ≥ `353003c6`; (2) Hebrew prefix-deletion class: round 3
+    DEVICE PASS 2026-10-20, first Saga `192.168.0.202` (release from `54d5b3fa`, installed SHA
+    `696a647a…`, `build/oct20-saga/`). CleverKeys was set as the keyboard temporarily, a Chrome
+    textarea was used, and real key taps typed `devixe shated spaming donr helo` + space. The
+    field read "Device shared spamming don't hello", and logcat showed `AUTO-CORRECT (channel)`
+    for each. The new sliders render (Contraction Preference 0.25, Short-Word Deletion Cost
+    0.00). The tab was closed, Gboard restored and the phone left on its home screen. Seeker
+    skipped (secure lock screen), the Pixel skipped (in use), `192.168.0.81` skipped (same model
+    as the Termux host). STILL OPEN: (1) a Hebrew prefix typo on a phone with the Hebrew pack;
+    (2) Hebrew prefix-deletion class: round 3
     (short-word deletion cost δ, fresh HE-adj2 data, eval doc §7/§9) fixed 38 Hebrew words with 0
     breaks, 0 S-adj breaks and 0 C-oov changes, but failed E1 on GTC-DEV net −1 (8 fixes / 9
     breaks). Not shipped, δ = 0, TEST not run. Maintainer decision: override E1 (then run the
