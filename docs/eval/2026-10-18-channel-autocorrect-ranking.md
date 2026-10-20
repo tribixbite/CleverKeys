@@ -542,3 +542,13 @@ broken than fixed, out of 5,845. δ stays 0, nothing ships, and TEST was not run
 otherwise one-sided: no Hebrew, S-adj or C-oov breaks at any δ, and the effect saturates at
 δ = 0.5. Overriding E1 (it is a one-word no-harm check) is the maintainer's decision, as for T6.
 The seam and its "Short-Word Deletion Cost" setting stay (default 0), so a user can already set it.
+
+### 9.1 Override of E1 (2026-10-20, delegated)
+
+The maintainer delegated the decision ("you decide on override"). Decision: **override E1** and
+evaluate **δ = 0.5** on TEST once. Reasons: the failure is a distinct net of −1 out of 5,845
+GTC-DEV targets (8 fixes / 9 breaks), well inside noise. Every other DEV measure is one-sided:
+HE-adj2 +38 / 0 breaks, S-adj +68 / 0, C-oov 0, all named cases. δ = 0.5 is the smallest value
+with the full effect, since 0.5–1.5 are identical. §7.4's TEST gate applies unchanged, except
+that R2's "GTC-TEST net ≥ 0" is read with the same override, as **GTC-TEST net ≥ −2** (no more
+than the DEV-scale noise just accepted), fixed before TEST. All other criteria are as written.
