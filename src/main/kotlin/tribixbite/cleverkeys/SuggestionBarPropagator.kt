@@ -11,8 +11,6 @@ import android.widget.HorizontalScrollView
  * to managers that need them:
  * - InputCoordinator: Needs SuggestionBar for prediction display
  * - SuggestionHandler: Needs SuggestionBar for suggestion management
- * - KeyboardDimensionsHelper: Needs SuggestionBar for the legacy swipe-prediction
- *   display methods (its CGR consumers were deleted in ARC-084)
  * - KeyboardReceiver: Needs emoji/clipboard pane references
  *
  * @since v1.32.394
@@ -20,7 +18,6 @@ import android.widget.HorizontalScrollView
 class SuggestionBarPropagator(
     private val inputCoordinator: InputCoordinator?,
     private val suggestionHandler: SuggestionHandler?,
-    private val keyboardDimensionsHelper: KeyboardDimensionsHelper?,
     private val receiver: KeyboardReceiver?
 ) {
     /**
@@ -29,7 +26,6 @@ class SuggestionBarPropagator(
     fun propagateSuggestionBar(suggestionBar: SuggestionBar) {
         inputCoordinator?.setSuggestionBar(suggestionBar)
         suggestionHandler?.setSuggestionBar(suggestionBar)
-        keyboardDimensionsHelper?.setSuggestionBar(suggestionBar)
     }
 
     /**
@@ -88,13 +84,11 @@ class SuggestionBarPropagator(
         fun create(
             inputCoordinator: InputCoordinator?,
             suggestionHandler: SuggestionHandler?,
-            keyboardDimensionsHelper: KeyboardDimensionsHelper?,
             receiver: KeyboardReceiver?
         ): SuggestionBarPropagator {
             return SuggestionBarPropagator(
                 inputCoordinator,
                 suggestionHandler,
-                keyboardDimensionsHelper,
                 receiver
             )
         }

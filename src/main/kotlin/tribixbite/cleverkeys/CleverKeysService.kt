@@ -822,7 +822,6 @@ class CleverKeysService : InputMethodService(),
             predCoordinator,
             _inputCoordinator,
             _suggestionHandler,
-            _keyboardDimensionsHelper,
             _receiver,
             _emojiPane
         ).setupPredictionViews(_suggestionBar, _inputViewContainer, _contentPaneContainer, _topPane, _scrollView)

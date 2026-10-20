@@ -29,7 +29,6 @@ class PredictionViewSetup(
     private val predictionCoordinator: PredictionCoordinator?,
     private val inputCoordinator: InputCoordinator?,
     private val suggestionHandler: SuggestionHandler?,
-    private val keyboardDimensionsHelper: KeyboardDimensionsHelper?,
     private val receiver: KeyboardReceiver?,
     private val emojiPane: ViewGroup?
 ) {
@@ -143,7 +142,6 @@ class PredictionViewSetup(
                 val suggestionBarPropagator = SuggestionBarPropagator.create(
                     inputCoordinator,
                     suggestionHandler,
-                    keyboardDimensionsHelper,
                     receiver
                 )
                 suggestionBarPropagator.propagateAll(
@@ -188,7 +186,6 @@ class PredictionViewSetup(
                 val suggestionBarPropagator = SuggestionBarPropagator.create(
                     inputCoordinator,
                     suggestionHandler,
-                    keyboardDimensionsHelper,
                     receiver
                 )
                 suggestionBarPropagator.propagateAll(
@@ -268,7 +265,6 @@ class PredictionViewSetup(
             SuggestionBarPropagator.create(
                 inputCoordinator,
                 suggestionHandler,
-                keyboardDimensionsHelper,
                 receiver
             ).propagateAll(
                 suggestionBar,
@@ -312,7 +308,6 @@ class PredictionViewSetup(
          * @param predictionCoordinator The prediction coordinator
          * @param inputCoordinator The input coordinator (nullable)
          * @param suggestionHandler The suggestion handler (nullable)
-         * @param keyboardDimensionsHelper The keyboard-dimensions helper (nullable)
          * @param receiver The keyboard receiver (nullable)
          * @param emojiPane The emoji pane (nullable)
          * @return A new PredictionViewSetup instance
@@ -325,7 +320,6 @@ class PredictionViewSetup(
             predictionCoordinator: PredictionCoordinator?,
             inputCoordinator: InputCoordinator?,
             suggestionHandler: SuggestionHandler?,
-            keyboardDimensionsHelper: KeyboardDimensionsHelper?,
             receiver: KeyboardReceiver?,
             emojiPane: ViewGroup?
         ): PredictionViewSetup {
@@ -336,7 +330,6 @@ class PredictionViewSetup(
                 predictionCoordinator,
                 inputCoordinator,
                 suggestionHandler,
-                keyboardDimensionsHelper,
                 receiver,
                 emojiPane
             )

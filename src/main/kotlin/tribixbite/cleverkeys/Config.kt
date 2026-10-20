@@ -1464,11 +1464,6 @@ class Config private constructor(
         clipboard_sanitize_system_clipboard = _prefs.getBoolean("clipboard_sanitize_system_clipboard", true)
     }
 
-    fun set_clipboard_pane_height_percent(percent: Int) {
-        clipboard_pane_height_percent = percent.coerceIn(10, 50)
-        _prefs.edit().putInt("clipboard_pane_height_percent", clipboard_pane_height_percent).apply()
-    }
-
     fun set_gif_enabled(enabled: Boolean) {
         gif_enabled = enabled
         _prefs.edit().putBoolean("gif_enabled", enabled).apply()

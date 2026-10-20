@@ -2,19 +2,13 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.res.Configuration
-import android.util.Log
 import android.view.WindowManager
 
 /**
  * Helper class for keyboard dimension calculation.
  *
- * This class centralizes logic for:
- * - Calculating dynamic keyboard dimensions based on user preferences
- * - Updating suggestion bar with swipe predictions (legacy methods)
- *
- * Responsibilities:
- * - Dynamic keyboard height calculation (orientation/foldable-aware)
- * - Legacy swipe prediction display methods
+ * Responsibility: dynamic keyboard height calculation (orientation/foldable-aware) from
+ * the user's height preferences.
  *
  * The CGR (Continuous Gesture Recognition) prediction-display half was deleted on
  * 2026-08-29 (ARC-084): its producer in Keyboard2View had never had a caller, so the two
@@ -41,19 +35,6 @@ class KeyboardDimensionsHelper(
     private val foldStateTracker: FoldStateTracker
 ) {
     private var _keyboardView: Keyboard2View? = null // Updated when view changes
-    private var _suggestionBar: SuggestionBar? = null // Updated when suggestion bar changes
-
-    // Debug mode
-    private var _debugMode = false
-    private var _debugLogger: DebugLogger? = null
-
-    /**
-     * Interface for sending debug logs.
-     * Implemented by CleverKeysService to bridge to its sendDebugLog method.
-     */
-    fun interface DebugLogger {
-        fun sendDebugLog(message: String)
-    }
 
     /**
      * Updates configuration.
@@ -71,35 +52,6 @@ class KeyboardDimensionsHelper(
      */
     fun setKeyboardView(keyboardView: Keyboard2View?) {
         _keyboardView = keyboardView
-    }
-
-    /**
-     * Sets the suggestion bar reference.
-     *
-     * @param suggestionBar Suggestion bar for displaying predictions
-     */
-    fun setSuggestionBar(suggestionBar: SuggestionBar?) {
-        _suggestionBar = suggestionBar
-    }
-
-    /**
-     * Sets debug mode and logger.
-     *
-     * @param enabled Whether debug mode is enabled
-     * @param logger Debug logger implementation
-     */
-    fun setDebugMode(enabled: Boolean, logger: DebugLogger?) {
-        _debugMode = enabled
-        _debugLogger = logger
-    }
-
-    /**
-     * Sends a debug log message if debug mode is enabled.
-     */
-    private fun sendDebugLog(message: String) {
-        if (_debugMode) {
-            _debugLogger?.sendDebugLog(message)
-        }
     }
 
     /**
@@ -167,11 +119,8 @@ class KeyboardDimensionsHelper(
     // chain, and invisible to the build for the same reason: proguard-rules.pro keeps this
     // class with a blanket `{ *; }`. Deleted; pinned by DeadPlumbingDriftTest.
     //
-    // Residual: with these gone, `_suggestionBar` and its `setSuggestionBar` setter are
-    // write-only here (sole writer: SuggestionBarPropagator). Left in place because that
-    // file is outside this change's scope; recorded as a follow-on.
-
-    companion object {
-        private const val TAG = "KbdDimensionsHelper"
-    }
+    // Residual cleanup (audit L1, 2026-10-20): the write-only `_suggestionBar` /
+    // `setSuggestionBar` left by ARC-099, and the debug-mode plumbing (`setDebugMode`,
+    // `DebugLogger`, `sendDebugLog`) that had no caller inside this class, were deleted with
+    // their SuggestionBarPropagator / DebugModePropagator edges. Pinned by DeadPlumbingDriftTest.
 }

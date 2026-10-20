@@ -5,7 +5,6 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.provider.Settings
 import android.view.HapticFeedbackConstants
 import android.view.View
 
@@ -43,11 +42,6 @@ enum class HapticEvent {
  */
 object VibratorCompat {
     private var vibratorService: Vibrator? = null
-
-    // Cache system haptic setting to avoid IPC on every keypress
-    private var cachedSystemHapticEnabled: Boolean? = null
-    private var lastSettingCheck: Long = 0
-    private const val SETTING_CACHE_MS = 5000L  // Re-check every 5 seconds
 
     /**
      * Trigger haptic feedback for a specific event type.
@@ -173,37 +167,6 @@ object VibratorCompat {
             HapticEvent.LONG_PRESS -> 40L
             HapticEvent.SWIPE_COMPLETE -> 20L
         }
-    }
-
-    /**
-     * Check if system haptic feedback is enabled.
-     * Cached to avoid IPC overhead on every keypress.
-     */
-    @Suppress("unused")
-    private fun isSystemHapticEnabled(context: Context): Boolean {
-        val now = System.currentTimeMillis()
-        if (cachedSystemHapticEnabled == null || now - lastSettingCheck > SETTING_CACHE_MS) {
-            cachedSystemHapticEnabled = try {
-                Settings.System.getInt(
-                    context.contentResolver,
-                    Settings.System.HAPTIC_FEEDBACK_ENABLED,
-                    1  // Default to enabled
-                ) != 0
-            } catch (e: Exception) {
-                true  // Default to enabled if we can't read
-            }
-            lastSettingCheck = now
-        }
-        return cachedSystemHapticEnabled ?: true
-    }
-
-    /**
-     * Invalidate cached system setting. Call this from onResume or onStartInput
-     * to ensure fresh value after user might have changed system settings.
-     */
-    @JvmStatic
-    fun invalidateSettingsCache() {
-        cachedSystemHapticEnabled = null
     }
 
     /**

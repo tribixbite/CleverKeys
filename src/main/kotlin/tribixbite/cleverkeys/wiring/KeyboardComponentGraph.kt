@@ -300,7 +300,6 @@ class KeyboardComponentGraph(
         // Create debug mode propagator and register it with the debug logging manager
         val debugModePropagator = DebugModePropagator.create(
             suggestionHandler,
-            keyboardDimensionsHelper,
             predictionCoordinator,
             debugLoggerImpl,
             debugLoggingManager

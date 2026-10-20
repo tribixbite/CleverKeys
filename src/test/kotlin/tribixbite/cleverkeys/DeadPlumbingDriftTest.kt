@@ -380,4 +380,33 @@ class DeadPlumbingDriftTest {
         assertWithMessage("the playground's File-based JSON export is live and must survive")
             .that(dataStore).contains("fun exportToJSON(): File")
     }
+
+    // ------------------------------------------------- audit L1 (2026-10-20)
+
+    @Test
+    fun `audit L1 - KeyboardDimensionsHelper holds no suggestion bar and no debug logger`() {
+        // ARC-099 left `_suggestionBar`/`setSuggestionBar` write-only, and the debug-mode
+        // plumbing (`setDebugMode`, `DebugLogger`, `sendDebugLog`) had no reader inside the
+        // class either; both were fed only by SuggestionBarPropagator / DebugModePropagator.
+        // Like the chains above, the blanket proguard keep hid them from every build signal.
+        val helper = source("tribixbite/cleverkeys/KeyboardDimensionsHelper.kt")
+        for (member in listOf("_suggestionBar", "setSuggestionBar", "setDebugMode", "DebugLogger", "sendDebugLog")) {
+            assertWithMessage("KeyboardDimensionsHelper must not reintroduce dead member $member")
+                .that(helper.lines().filterNot(::isCommentOnly).joinToString("\n")).doesNotContain(member)
+        }
+        val hits = occurrences(Regex("""keyboardDimensionsHelper\??\.(setSuggestionBar|setDebugMode)\b"""))
+        assertWithMessage("no propagator may feed the deleted helper setters.\nFound:\n" + hits.joinToString("\n"))
+            .that(hits).isEmpty()
+    }
+
+    @Test
+    fun `audit L1 - VibratorCompat has no system-haptic cache`() {
+        // isSystemHapticEnabled was @Suppress("unused") with its 5 s cache and
+        // invalidateSettingsCache; performHapticFeedback already honours the system setting.
+        val vibrator = source("tribixbite/cleverkeys/VibratorCompat.kt")
+        assertWithMessage("VibratorCompat's dead system-haptic cache must stay deleted")
+            .that(vibrator).doesNotContain("isSystemHapticEnabled")
+        assertWithMessage("its invalidateSettingsCache hook must stay deleted")
+            .that(vibrator).doesNotContain("invalidateSettingsCache")
+    }
 }

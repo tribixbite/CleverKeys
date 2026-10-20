@@ -63,7 +63,6 @@ class VibratorCompatTest {
 
         // Reset VibratorCompat internal state between tests
         resetVibratorService()
-        VibratorCompat.invalidateSettingsCache()
     }
 
     @After
@@ -236,20 +235,6 @@ class VibratorCompatTest {
             "LONG_PRESS",
             "SWIPE_COMPLETE"
         )
-    }
-
-    // =========================================================================
-    // invalidateSettingsCache test
-    // =========================================================================
-
-    @Test
-    fun `invalidateSettingsCache resets cached setting without error`() {
-        // Just verify it doesn't throw — the field is private, but we can verify
-        // the method runs cleanly
-        VibratorCompat.invalidateSettingsCache()
-        // Call again to verify idempotency
-        VibratorCompat.invalidateSettingsCache()
-        // No assertion needed — no crash = pass
     }
 
     // =========================================================================

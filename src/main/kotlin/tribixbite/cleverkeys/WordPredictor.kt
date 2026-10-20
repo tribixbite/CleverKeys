@@ -498,7 +498,7 @@ class WordPredictor : Predictor {
         if (enableMultiLang) {
             if (multiLanguageManager == null) {
                 val primaryLang = config?.primary_language ?: "en"
-                multiLanguageManager = MultiLanguageManager(context, primaryLang)
+                multiLanguageManager = MultiLanguageManager(primaryLang)
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "MultiLanguageManager initialized (primary: $primaryLang)")
             }
         }

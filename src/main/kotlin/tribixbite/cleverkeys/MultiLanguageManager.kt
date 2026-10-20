@@ -1,6 +1,5 @@
 package tribixbite.cleverkeys
 
-import android.content.Context
 import android.util.Log
 
 /**
@@ -26,7 +25,6 @@ import android.util.Log
  * and were never routed through here.
  */
 class MultiLanguageManager(
-    @Suppress("unused") private val context: Context,
     private val defaultLanguage: String = "en"
 ) {
     companion object {
