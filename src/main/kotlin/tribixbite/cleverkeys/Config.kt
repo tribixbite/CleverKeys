@@ -321,6 +321,10 @@ object Defaults {
     const val CLIPBOARD_TEXT_ONLY = false      // Hide media entries from all tabs
     const val CLIPBOARD_PINNED_ENABLED = true  // Show the pinned tab
     const val CLIPBOARD_TODO_ENABLED = true    // Show the todo tab
+    // #156 PROCESS_TEXT "Private copy" entry: the selection-toolbar item is opt-in, its
+    // confirmation toast opt-out (were literals in six readers, audit 2026-10-20 leftover).
+    const val CLIPBOARD_PRIVATE_COPY_TOOLBAR_ENABLED = false
+    const val CLIPBOARD_PRIVATE_COPY_TOAST_ENABLED = true
     // URL sanitization (Chunk 3). All three transforms default OFF; the system-clipboard
     // write-back defaults ON because it only acts when a transform is on AND changed a URL.
     const val CLIPBOARD_SANITIZE_LINKS_ENABLED = false

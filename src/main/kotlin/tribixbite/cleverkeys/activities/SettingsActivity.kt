@@ -292,8 +292,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var clipboardMaxMediaSizeMb by mutableIntStateOf(Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB)  // F-8: media size cap
     internal var clipboardPinnedEnabled by mutableStateOf(Defaults.CLIPBOARD_PINNED_ENABLED)  // v4: Show/hide pinned tab
     internal var clipboardTodoEnabled by mutableStateOf(Defaults.CLIPBOARD_TODO_ENABLED)  // v4: Show/hide todo tab
-    internal var clipboardPrivateCopyToolbarEnabled by mutableStateOf(false)  // #156: PROCESS_TEXT opt-in
-    internal var clipboardPrivateCopyToastEnabled by mutableStateOf(true)  // ARC-037: suppressible confirmation
+    internal var clipboardPrivateCopyToolbarEnabled by mutableStateOf(Defaults.CLIPBOARD_PRIVATE_COPY_TOOLBAR_ENABLED)  // #156: PROCESS_TEXT opt-in
+    internal var clipboardPrivateCopyToastEnabled by mutableStateOf(Defaults.CLIPBOARD_PRIVATE_COPY_TOAST_ENABLED)  // ARC-037: suppressible confirmation
 
     // URL sanitization (Chunk 4): three independent toggles + custom-rules import
     internal var clipboardSanitizeLinksEnabled by mutableStateOf(Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED)

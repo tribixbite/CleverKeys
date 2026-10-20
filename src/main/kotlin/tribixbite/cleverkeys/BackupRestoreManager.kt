@@ -960,7 +960,7 @@ open class BackupRestoreManager(
      */
     private fun reconcilePrivateCopyToolbarFromPrefs(prefs: SharedPreferences) {
         try {
-            val enabled = prefs.getBoolean(PrivateCopyProcessTextActivity.PREF_TOOLBAR_ENABLED, false)
+            val enabled = prefs.getBoolean(PrivateCopyProcessTextActivity.PREF_TOOLBAR_ENABLED, Defaults.CLIPBOARD_PRIVATE_COPY_TOOLBAR_ENABLED)
             reconcilePrivateCopyToolbarComponent(context, enabled)
         } catch (e: Exception) {
             Log.w(TAG, "Private-copy toolbar reconcile after import failed: ${e.message}")

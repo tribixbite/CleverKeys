@@ -306,9 +306,9 @@ internal fun SettingsActivity.loadCurrentSettings() {
         clipboardPinnedEnabled = prefs.getSafeBoolean("clipboard_pinned_enabled", Defaults.CLIPBOARD_PINNED_ENABLED)
         clipboardTodoEnabled = prefs.getSafeBoolean("clipboard_todo_enabled", Defaults.CLIPBOARD_TODO_ENABLED)
         // #156: PROCESS_TEXT selection-toolbar entry point — opt-in, default false (design §6.6).
-        clipboardPrivateCopyToolbarEnabled = prefs.getSafeBoolean(PrivateCopyProcessTextActivity.PREF_TOOLBAR_ENABLED, false)
+        clipboardPrivateCopyToolbarEnabled = prefs.getSafeBoolean(PrivateCopyProcessTextActivity.PREF_TOOLBAR_ENABLED, Defaults.CLIPBOARD_PRIVATE_COPY_TOOLBAR_ENABLED)
         // ARC-037: the PROCESS_TEXT confirmation toast — opt-OUT, default true.
-        clipboardPrivateCopyToastEnabled = prefs.getSafeBoolean(PrivateCopyProcessTextActivity.PREF_TOAST_ENABLED, true)
+        clipboardPrivateCopyToastEnabled = prefs.getSafeBoolean(PrivateCopyProcessTextActivity.PREF_TOAST_ENABLED, Defaults.CLIPBOARD_PRIVATE_COPY_TOAST_ENABLED)
         // Reconcile the OS component-enabled state with the persisted pref (e.g. after a restore or
         // reinstall the manifest default is disabled, but the pref may say the user opted in).
         setPrivateCopyToolbarComponentEnabled(clipboardPrivateCopyToolbarEnabled)

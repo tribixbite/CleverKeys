@@ -110,7 +110,7 @@ class PrivateCopyProcessTextActivity : Activity() {
         // Guard 2: feature pref enabled. The component-disable is the real gate (design §6.6); this
         // defensive double-check ensures a stale resolver cache can't bypass the user's opt-out.
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        if (!prefs.getBoolean(PREF_TOOLBAR_ENABLED, false)) {
+        if (!prefs.getBoolean(PREF_TOOLBAR_ENABLED, Defaults.CLIPBOARD_PRIVATE_COPY_TOOLBAR_ENABLED)) {
             Log.w(TAG, "Private copy ignored: feature disabled by pref")
             return
         }
@@ -168,7 +168,7 @@ class PrivateCopyProcessTextActivity : Activity() {
             //
             // FAILURE toasts are deliberately NOT gated — see the OVER_CAP branch above. This
             // pref suppresses a "worked as expected" acknowledgement, never a report of data loss.
-            if (prefs.getBoolean(PREF_TOAST_ENABLED, true)) {
+            if (prefs.getBoolean(PREF_TOAST_ENABLED, Defaults.CLIPBOARD_PRIVATE_COPY_TOAST_ENABLED)) {
                 // Activities may toast (the Android-13 IME toast suppression does not apply here).
                 Toast.makeText(applicationContext, R.string.private_copy_toast, Toast.LENGTH_SHORT).show()
             }
