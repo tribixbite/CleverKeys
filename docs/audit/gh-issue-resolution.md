@@ -32,7 +32,7 @@ Work done since then (local main, unreleased; rows below updated as each branch 
   κ `4d1e8c10`): GitHub-typo accuracy 54 % → 79 % on held-out data; relevant to #101's
   complaints.
 - **#187** — macron-below / ring-below dead keys and combining keys (`30f205d9`). Close-ready
-  once v2.0.0 ships; no device check yet.
+  once v2.0.0 ships; device-checked on the Saga 2026-10-20 (ṯ, y̥).
 - **Merged to local main 2026-10-20 (unreleased):** #154 system-vibration switch + #139
   Enter-always-newline (`2a6c43fc`), #190 follow-finger backspace selection (`c5c598b5`),
   #147/#87 Short Swipes Only (`918dc322`), #187 macron-below / ring-below dead keys
@@ -40,7 +40,7 @@ Work done since then (local main, unreleased; rows below updated as each branch 
   Settings tile that toggles show/minimize (`f47d5f3f`, reworked in `4f70eb7e` and `f2ce7c88`).
   Rows below carry the details. Device-checked on the Saga 2026-10-20 (`memory/todo.md` 13c):
   the tile (native field, after Back, home-screen picker), the foldable sliders, #147, #190 and
-  swipe into inline fields, and #139 (after `ea88d975` fixed a stale Enter-label cache the
+  swipe into inline fields, #154, #187, and #139 (after `ea88d975` fixed a stale Enter-label cache the
   #139 check exposed: a Send textarea showed "Go" and the switch had no effect).
 
 Corrections to this document found by the audit (apply when closing):

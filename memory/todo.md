@@ -165,7 +165,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     textarea shows ↵ with Send on the corner and Enter typed a newline (`abc`/`xy`); switch turned
     back OFF, test tab closed, CleverKeys default. Full suites on `5df28cc5` (before the fix):
     3,135 pure / 1,361 mock green (`build/suite-oct20g/`); not re-run after `ea88d975` (one-file
-    change, its class green). (Harness note: separate `input motionevent`
+    change, its class green). **#154 PASS** (17:06, same release): Accessibility shows "Use
+    System Vibration" ON with the Custom Duration slider visible but disabled; OFF enables it,
+    ON disables it again (left ON, as found). **#187 PASS** (17:07): with Macron Below and Ring
+    Below enabled in Extra Keys (19 → 21 of 121) their text labels ◌̱ / ◌̥ render on the a / s
+    corners; macron-below then `t` typed `ṯ` (compose table) and ring-below then `y` typed
+    `y̥` (combining fallback); both keys unticked again (19 of 121). (Harness note: separate `input motionevent`
     calls take ~70 ms each, so a short swipe must be ONE big MOVE right after DOWN, or the
     backspace long-press repeat fires first.) STILL OPEN: (1) a Hebrew prefix typo
     (`לןא` → `ללא`) on a phone with the Hebrew pack;
