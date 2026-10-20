@@ -14,7 +14,36 @@ object LayoutModifier {
     private lateinit var num_pad: KeyboardData
     // Lazy so loading the object off-device (mock-tier JVM tests exercising the pure
     // predicates below) does not hit the android.jar LruCache stub constructor.
-    private val layoutCache by lazy { LruCache<String, KeyboardData>(10) }
+    private val layoutCache by lazy { LruCache<LayoutCacheKey, KeyboardData>(10) }
+
+    /**
+     * Everything [modify_layout] reads that can change while [Config.version] stays the same.
+     *
+     * [Config.version] covers preference refreshes, but three writers bypass it on purpose
+     * (they run per field or per subtype, and a version bump would also drop the view's
+     * render and theme caches): `CleverKeysService.refresh_action_label` sets [actionLabel]
+     * and [swapEnterActionKey] at every field start, and `SubtypeManager.refreshSubtype` sets
+     * [offerVoiceTyping] and the subtype's extra keys. A key without them served the first
+     * field's Enter key to every later field (Saga 2026-10-20: "Go" in a Send textarea, and the
+     * #139 newline switch never took effect).
+     */
+    private data class LayoutCacheKey(
+        // Audit H-5: the layout's IDENTITY, not just its nullable `name` — two enabled layouts
+        // can share a name (two unnamed custom layouts both keyed "", and the new-custom-layout
+        // dialog is seeded with latn_qwerty_us.xml, which ships name="QWERTY (US)" —
+        // duplicating the stock layout's name). Identity is stable per config epoch
+        // (Config.layouts holds the instances), so re-modifying the same board still hits.
+        val layoutIdentity: Int,
+        val layoutName: String?,
+        val configVersion: Int,
+        // So the switch keys update when layouts are added or removed.
+        val layoutCount: Int,
+        val actionLabel: String?,
+        val swapEnterActionKey: Boolean,
+        val offerVoiceTyping: Boolean,
+        // A fresh ExtraKeys per subtype refresh, so identity is enough.
+        val subtypeExtraKeysIdentity: Int,
+    )
 
     /**
      * Update the layout according to the configuration.
@@ -27,17 +56,16 @@ object LayoutModifier {
      */
     @JvmStatic
     fun modify_layout(kw: KeyboardData): KeyboardData {
-        // Include layout count in cache key so switch keys update when layouts added/removed.
-        //
-        // Audit H-5: the key MUST include the layout's IDENTITY, not just its nullable
-        // `name` — two enabled layouts can share a name (two unnamed custom layouts both
-        // keyed "", and the new-custom-layout dialog is seeded with latn_qwerty_us.xml,
-        // which ships name="QWERTY (US)" — duplicating the stock layout's name). A
-        // name-only key served the OTHER layout's modified board on switch, and the
-        // asynchronous version bump only re-laid-out the same stale keyboard. Identity is
-        // stable per config epoch (Config.layouts holds the instances), so caching still
-        // hits for repeated modifications of the same board.
-        val cacheKey = "${System.identityHashCode(kw)}_${kw.name ?: ""}_${globalConfig.version}_${globalConfig.layouts.size}"
+        val cacheKey = LayoutCacheKey(
+            layoutIdentity = System.identityHashCode(kw),
+            layoutName = kw.name,
+            configVersion = globalConfig.version,
+            layoutCount = globalConfig.layouts.size,
+            actionLabel = globalConfig.actionLabel,
+            swapEnterActionKey = globalConfig.swapEnterActionKey,
+            offerVoiceTyping = globalConfig.shouldOfferVoiceTyping,
+            subtypeExtraKeysIdentity = System.identityHashCode(globalConfig.extra_keys_subtype),
+        )
         layoutCache.get(cacheKey)?.let { return it }
 
         // Extra keys are removed from the set as they are encountered during the

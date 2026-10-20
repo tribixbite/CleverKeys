@@ -47,9 +47,12 @@ class LayoutModifierCacheKeyTest {
     // ------------------------------------------------------------------ fixtures
 
     /** A minimal one-key layout; [name] mirrors the custom-layout XML `name` attribute. */
-    private fun layoutOf(name: String?, c: Char): KeyboardData {
+    private fun layoutOf(name: String?, c: Char): KeyboardData = layoutOf(name, KeyValue.makeCharKey(c))
+
+    /** A minimal one-key layout whose only key is [value]. */
+    private fun layoutOf(name: String?, value: KeyValue): KeyboardData {
         val key = KeyboardData.Key(
-            listOf(KeyValue.makeCharKey(c), null, null, null, null, null, null, null, null),
+            listOf(value, null, null, null, null, null, null, null, null),
             null, 0, 1f, 0f, null
         )
         val row = KeyboardData.Row(listOf(key), 1f, 0f)
@@ -129,6 +132,43 @@ class LayoutModifierCacheKeyTest {
 
         assertWithMessage("same-named custom layout must not be served the stock board")
             .that(modCustom.hasChar('b')).isTrue()
+    }
+
+    // ------------------------------------------------------------------ per-field inputs
+
+    /**
+     * Saga 2026-10-20: `refresh_action_label` sets [Config.actionLabel] and
+     * [Config.swapEnterActionKey] at EVERY field start without bumping [Config.version], so a
+     * version-only key served the first field's Enter key to every later field — "Go" in a
+     * Chrome textarea that asked for Send, and the #139 newline switch never took effect.
+     */
+    @Test
+    fun actionLabelChange_underOneConfigVersion_relabelsTheEnterKey() {
+        val kw = layoutOf(name = null, value = KeyValue.getKeyByName("enter"))
+        val config = configWith().apply { swapEnterActionKey = true; actionLabel = "Go" }
+        setModifierConfig(config)
+        assertThat(LayoutModifier.modify_layout(kw).getKeys().keys).contains(KeyValue.makeActionKey("Go"))
+
+        config.actionLabel = "Send"
+        val next = LayoutModifier.modify_layout(kw).getKeys().keys
+        assertWithMessage("a new field's action label must reach the Enter key without a config bump")
+            .that(next).contains(KeyValue.makeActionKey("Send"))
+        assertThat(next).doesNotContain(KeyValue.makeActionKey("Go"))
+    }
+
+    @Test
+    fun swapChange_underOneConfigVersion_restoresTheNewlineEnterKey() {
+        // #139: the same Send field with "Enter always inserts a new line" ON stops swapping.
+        val kw = layoutOf(name = null, value = KeyValue.getKeyByName("enter"))
+        val config = configWith().apply { swapEnterActionKey = true; actionLabel = "Send" }
+        setModifierConfig(config)
+        assertThat(LayoutModifier.modify_layout(kw).getKeys().keys).contains(KeyValue.makeActionKey("Send"))
+
+        config.swapEnterActionKey = false
+        val next = LayoutModifier.modify_layout(kw).getKeys().keys
+        assertWithMessage("a field that does not swap must get the newline Enter key back")
+            .that(next).contains(KeyValue.getKeyByName("enter"))
+        assertThat(next).doesNotContain(KeyValue.makeActionKey("Send"))
     }
 
     // ------------------------------------------------------------------ caching still works
