@@ -155,7 +155,17 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     TYPE_NULL fallback connection is no longer read as an editor, so the tap chose
     PICK_KEYBOARD and the "Choose input method" picker opened. It opens beneath the shade and
     shows once the shade closes, the same as the pre-rework tile. The test tile was removed and
-    CleverKeys left as the default. (Harness note: separate `input motionevent`
+    CleverKeys left as the default. **#139 Enter always newline PASS after a fix** (16:37–17:05,
+    `build/oct20g-saga/`): in a Chrome `<textarea enterkeyhint=send>` (inputType 0x2c0a1
+    multi-line, imeOptions …04 SEND) the Enter key read "Go" — the modified-layout cache was
+    keyed on Config.version, which a field start never bumps, so every field got the first
+    field's label and swap. Fixed in `ea88d975` (cache key covers the per-field Enter state;
+    `LayoutModifierCacheKeyTest` 2 new cases red → green). Release SHA `8b296e57…` on the Saga:
+    textarea → "Send", omnibox (…02 GO) → "Go", settings search → "Done"; with the switch ON the
+    textarea shows ↵ with Send on the corner and Enter typed a newline (`abc`/`xy`); switch turned
+    back OFF, test tab closed, CleverKeys default. Full suites on `5df28cc5` (before the fix):
+    3,135 pure / 1,361 mock green (`build/suite-oct20g/`); not re-run after `ea88d975` (one-file
+    change, its class green). (Harness note: separate `input motionevent`
     calls take ~70 ms each, so a short swipe must be ONE big MOVE right after DOWN, or the
     backspace long-press repeat fires first.) STILL OPEN: (1) a Hebrew prefix typo
     (`לןא` → `ללא`) on a phone with the Hebrew pack;

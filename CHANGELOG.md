@@ -308,6 +308,7 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- The Enter key shows the current field's action. It kept the first field's label and Enter/action swap until a setting or orientation changed, so a Send field could show "Go" and "Enter Always Inserts a New Line" (#139) had no effect.
 - The highlighted suggestion is now exactly what space will commit. Typing `Helo` highlighted
   `Hello` while space committed `Help`: the bar and the space key used different rankers, which
   disagreed on 2,053 of 2,780 real misspellings. One resolver now decides both, and a completion
