@@ -570,7 +570,7 @@ class ChannelRankingEval {
         fun say(s: String) { println(s); report.appendLine(s); File(outDir, "summary-$phase.txt").writeText(report.toString()) }
         when (phase) {
             "dev" -> when (ROUND) { 1 -> devPhase(::say); 3 -> devPhase3(::say); else -> devPhase2(::say) }
-            "test" -> if (ROUND == 3) testPhase3(::say) else testPhase(::say)
+            "test" -> when (ROUND) { 3 -> testPhase3(::say); 4 -> testPhase4(::say); else -> testPhase(::say) }
             "inspect" -> inspectPhase(::say)
             else -> error("CK_CH_PHASE must be dev, test or inspect")
         }
@@ -815,12 +815,18 @@ class ChannelRankingEval {
     }
 
     /** HE-adj2 (§7.2): neighbour slips of pack words ranked 501–2,500, split by base-word hash. */
-    private fun heAdj2(dev: Boolean): List<P> {
+    private fun heAdj2(dev: Boolean): List<P> = heAdjRanks(500, 2_500) { isDevWord(it) == dev }
+
+    /** HE-adj3 (§11): neighbour slips of pack words ranked 2,501–6,000 (fresh; no split). */
+    private fun heAdj3(): List<P> = heAdjRanks(2_500, 6_000) { true }
+
+    /** Neighbour slips of Hebrew pack words in frequency ranks (from, to] whose base passes [keep]. */
+    private fun heAdjRanks(from: Int, to: Int, keep: (String) -> Boolean): List<P> {
         val ranked = he.dict.entries.filter { it.key.length >= 2 && it.key.all { c -> c in heGrid } }
             .sortedByDescending { it.value }.map { it.key }
         val out = LinkedHashSet<P>()
-        for (w in ranked.subList(500, minOf(2_500, ranked.size))) {
-            if (isDevWord(w) != dev) continue
+        for (w in ranked.subList(from, minOf(to, ranked.size))) {
+            if (!keep(w)) continue
             for (i in w.indices) for (c in heGrid.keys) {
                 if (c == w[i] || !KeyAdjacency.areNeighbors(c, w[i])) continue
                 val typo = w.substring(0, i) + c + w.substring(i + 1)
@@ -977,6 +983,47 @@ class ChannelRankingEval {
         say("named failures: $named; HE-adj (seen) net=${h1.netDistinct}; R-typed net=${tt.netDistinct}")
         say("GATE: R1=$r1 R2=$r2 R3=$r3 R4=$r4 → " + if (r1 && r2 && r3 && r4) "PASS" else "FAIL")
         File(outDir, "rows3-test.tsv").writeText(rows.joinToString("\n") + "\n")
+    }
+
+    /**
+     * Round 4 TEST (§11): δ = 0.5 scoped to Hebrew script against the shipped C2, production for
+     * both arms. Q1 fresh HE-adj3, Q2 named cases, Q3 exact English invariance.
+     */
+    private fun testPhase4(say: (String) -> Unit) {
+        val cfg = Cfg.SHIPPED.copy(delta = 0.5f)   // default scope: Hebrew script
+        val tuning = prodTuning(cfg)
+        check(tuning.channel.shortDeletionScope == ShortDeletionScope.HEBREW)
+        say("ROUND 4 TEST, $cfg scope=${tuning.channel.shortDeletionScope}")
+        val rows = mutableListOf("set\tconfig\ttyped\ttarget\tocc\tbaseline\tcandidate\tkind\tclass")
+        KeyAdjacency.setLayoutLetters(heGrid)
+        val he3 = heAdj3()
+        val inputs = he3.map { it.typed }.distinct()
+        val base = ConcurrentHashMap<String, String>()
+        val cand = ConcurrentHashMap<String, String>()
+        val start = System.nanoTime()
+        inputs.parallelStream().forEach { t ->
+            base[t] = he.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+            cand[t] = he.predictor.autoCorrect(t, tuning)
+        }
+        say("  HE-adj3: ${inputs.size} inputs in ${(System.nanoTime() - start) / 1_000_000_000}s")
+        val th = tally(he, he3, base, cand, rows, "HE-adj3", cfg.toString())
+        say("  ${th.line("HE-adj3", he3.size, he3.map { it.target }.toSet().size)}")
+        say("  HE-adj3 breaks: " + th.breaks.joinToString(", ") { "${it.typed}→${base[it.typed]}|${cand[it.typed]} (want ${it.target})" })
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val named = namedFailures(cfg, includeShated = true)
+        // Q3: English outputs identical under C4 and the shipped C2.
+        val english = (readGtc("TEST").map { it.typed }.distinct() +
+            sAdj(dev = false).map { it.typed }.distinct().shuffled(java.util.Random(20261020)).take(20_000)).distinct()
+        val diffs = english.parallelStream().filter { t ->
+            en.predictor.autoCorrect(t, tuning) != en.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+        }.collect(java.util.stream.Collectors.toList())
+        say("  English invariance: ${english.size} inputs, differences=${diffs.size} ${diffs.take(20)}")
+        val q1 = th.netDistinct > 0 && th.d(th.breaks) <= 0.25 * th.d(th.fixes)
+        val q2 = named.isEmpty()
+        val q3 = diffs.isEmpty()
+        say("named failures: $named")
+        say("GATE: Q1=$q1 Q2=$q2 Q3=$q3 → " + if (q1 && q2 && q3) "PASS" else "FAIL")
+        File(outDir, "rows4-test.tsv").writeText(rows.joinToString("\n") + "\n")
     }
 
     /**

@@ -1192,6 +1192,10 @@
     <string name="autocorrect_channel_alias_bonus_desc">Bawas sa gastos para sa contraction gaya ng don\'t kumpara sa karaniwang salitang kasinglapit (donr → don\'t sa halip na done). 0 = walang kagustuhan.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">Gastos sa Pagbura Tungo sa Maikling Salita</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Dagdag na gastos kapag nag-aalis ng mga titik ang pagwawasto para maging salitang may isa o dalawang titik, para hindi basta maalis ang maling unang titik. 0 = walang dagdag na gastos.</string>
+    <string name="autocorrect_short_deletion_scope_title">Saan Gagamitin ang Gastos sa Pagbura</string>
+    <string name="autocorrect_short_deletion_scope_desc">Dahil sa mga isang-titik na unlapi ng Hebreo, kapaki-pakinabang ang gastos na ito roon; sa Ingles, ang sobrang titik sa tabi ng salitang may dalawang titik (tpo → to) ay tunay na typo, kaya nakapatay ito bilang default sa ibang sulat.</string>
+    <string name="autocorrect_short_deletion_scope_hebrew">Hebreong sulat lamang</string>
+    <string name="autocorrect_short_deletion_scope_all">Lahat ng wika</string>
     <string name="autocorrect_frequency_ignored">Hindi pinapansin ang dalas; ang mga edit lang ang nagpapasya.</string>
     <string name="autocorrect_channel_inflection_cost_title">Gastos ng pagpapanatili ng anyo</string>
     <string name="autocorrect_channel_inflection_cost_desc">Gaano dapat kahusay ang pagwawasto para palitan ang kilalang salitang may hulapi. Sa pinakataas, laging pinapanatili ang ganitong salita.</string>

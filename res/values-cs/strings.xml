@@ -1186,6 +1186,10 @@
     <string name="autocorrect_channel_alias_bonus_desc">Sleva z ceny pro stažený tvar jako don\'t oproti stejně blízkému běžnému slovu (donr → don\'t místo done). 0 = žádné upřednostnění.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">Cena smazání na krátké slovo</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Příplatek, když oprava vypustí písmena a vznikne slovo o jednom nebo dvou písmenech, aby se chybně napsané první písmeno jen neodstranilo. 0 = bez příplatku.</string>
+    <string name="autocorrect_short_deletion_scope_title">Cena smazání platí pro</string>
+    <string name="autocorrect_short_deletion_scope_desc">Hebrejské jednopísmenné předpony ji tam činí užitečnou; v angličtině je písmeno navíc u dvoupísmenného slova (tpo → to) skutečný překlep, proto je pro ostatní písma ve výchozím stavu vypnutá.</string>
+    <string name="autocorrect_short_deletion_scope_hebrew">Jen hebrejské písmo</string>
+    <string name="autocorrect_short_deletion_scope_all">Všechny jazyky</string>
     <string name="autocorrect_frequency_ignored">Četnost se nebere v úvahu; rozhodují jen úpravy.</string>
     <string name="autocorrect_channel_inflection_cost_title">Cena zachování tvaru slova</string>
     <string name="autocorrect_channel_inflection_cost_desc">O kolik lepší musí oprava být, aby nahradila známé slovo s koncovkou. Na maximu se taková slova zachovají vždy.</string>

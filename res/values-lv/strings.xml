@@ -1194,6 +1194,10 @@
     <string name="autocorrect_channel_alias_bonus_desc">Izmaksu atlaide saīsinātai formai, piemēram, don\'t, salīdzinot ar tikpat tuvu parastu vārdu (donr → don\'t, nevis done). 0 = bez priekšrokas.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">Dzēšanas izmaksas līdz īsam vārdam</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Papildu izmaksas, ja labojums izmet burtus un iegūst viena vai divu burtu vārdu, lai kļūdaini ierakstīts pirmais burts netiktu vienkārši izdzēsts. 0 = bez papildu izmaksām.</string>
+    <string name="autocorrect_short_deletion_scope_title">Dzēšanas izmaksas attiecas uz</string>
+    <string name="autocorrect_short_deletion_scope_desc">Ivrita viena burta priedēkļi padara šīs izmaksas tur noderīgas; angļu valodā lieks burts blakus divu burtu vārdam (tpo → to) ir īsta drukas kļūda, tāpēc citām rakstībām tās pēc noklusējuma ir izslēgtas.</string>
+    <string name="autocorrect_short_deletion_scope_hebrew">Tikai ivrita rakstība</string>
+    <string name="autocorrect_short_deletion_scope_all">Visas valodas</string>
     <string name="autocorrect_frequency_ignored">Biežums netiek ņemts vērā; izšķir tikai labojumi.</string>
     <string name="autocorrect_channel_inflection_cost_title">Vārda formas saglabāšanas izmaksas</string>
     <string name="autocorrect_channel_inflection_cost_desc">Cik daudz labākam jābūt labojumam, lai aizstātu zināmu vārdu ar galotni. Augšējā pozīcijā šādi vārdi vienmēr tiek saglabāti.</string>

@@ -1177,6 +1177,10 @@
     <string name="autocorrect_channel_alias_bonus_desc">don\'t 같은 축약형을 똑같이 가까운 일반 단어보다 우선하도록 비용을 깎아 줍니다(donr → done 대신 don\'t). 0 = 우선하지 않음.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">짧은 단어로의 삭제 비용</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">교정이 글자를 빼서 한두 글자 단어가 될 때 더하는 비용입니다. 잘못 입력한 첫 글자가 그냥 지워지지 않도록 합니다. 0 = 추가 비용 없음.</string>
+    <string name="autocorrect_short_deletion_scope_title">삭제 비용 적용 범위</string>
+    <string name="autocorrect_short_deletion_scope_desc">히브리어의 한 글자 접두사 때문에 이 비용이 유용합니다. 영어에서는 두 글자 단어 옆의 여분 글자(tpo → to)가 실제 오타이므로 다른 문자에서는 기본적으로 꺼져 있습니다.</string>
+    <string name="autocorrect_short_deletion_scope_hebrew">히브리 문자만</string>
+    <string name="autocorrect_short_deletion_scope_all">모든 언어</string>
     <string name="autocorrect_frequency_ignored">빈도는 무시하고 편집만으로 결정합니다.</string>
     <string name="autocorrect_channel_inflection_cost_title">단어 형태 유지 비용</string>
     <string name="autocorrect_channel_inflection_cost_desc">어미가 붙은 아는 단어를 바꾸려면 수정이 얼마나 더 나아야 하는지입니다. 최대값에서는 이런 단어를 항상 유지합니다.</string>

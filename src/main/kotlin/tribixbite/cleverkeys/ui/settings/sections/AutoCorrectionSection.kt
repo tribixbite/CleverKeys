@@ -22,6 +22,7 @@ import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.WordPredictor.NeighbourTiebreak
 import tribixbite.cleverkeys.autocorrect.AutocorrectRanking
+import tribixbite.cleverkeys.autocorrect.ShortDeletionScope
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning.Keys
 import tribixbite.cleverkeys.autocorrect.ChannelWeights
@@ -573,6 +574,25 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
             saveSetting(Keys.CHANNEL_SHORT_DELETION_COST.key, v)
         },
         displayValue = sliders.CHANNEL_SHORT_DELETION_COST.format(weights.shortWordDeletionCost)
+    )
+
+    // Option order = ShortDeletionScope.entries order (HEBREW, ALL).
+    val scopeLabels = ShortDeletionScope.entries.map { scope ->
+        when (scope) {
+            ShortDeletionScope.HEBREW -> stringResource(R.string.autocorrect_short_deletion_scope_hebrew)
+            ShortDeletionScope.ALL -> stringResource(R.string.autocorrect_short_deletion_scope_all)
+        }
+    }
+    SettingsDropdown(
+        title = stringResource(R.string.autocorrect_short_deletion_scope_title),
+        description = stringResource(R.string.autocorrect_short_deletion_scope_desc),
+        options = scopeLabels,
+        selectedIndex = ShortDeletionScope.entries.indexOf(weights.shortDeletionScope),
+        onSelectionChange = { index ->
+            val scope = ShortDeletionScope.entries[index]
+            autocorrectTuning = tuning.copy(channel = weights.copy(shortDeletionScope = scope))
+            saveSetting(Keys.CHANNEL_SHORT_DELETION_SCOPE.key, scope.prefValue)
+        }
     )
 }
 

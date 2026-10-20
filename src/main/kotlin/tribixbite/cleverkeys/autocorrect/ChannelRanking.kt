@@ -21,12 +21,23 @@ object ChannelEditCost {
     /** Longest candidate the short-word deletion term ([ChannelWeights.shortWordDeletionCost]) covers. */
     const val SHORT_WORD_MAX_LENGTH = 2
 
-    /** 1 when the short-word deletion term applies to [typed] → [candidate], else 0. */
-    fun shortDeletion(typed: String, candidate: String): Float =
-        if (candidate.length < typed.length && candidate.length <= SHORT_WORD_MAX_LENGTH) 1f else 0f
+    /**
+     * 1 when the short-word deletion term applies to [typed] → [candidate] under [scope], else 0.
+     * [ShortDeletionScope.HEBREW] limits it to typed words written in Hebrew script.
+     * TODO: Arabic has the same attached one-letter prefixes (و ب ل ف); extend the scope only
+     *  after an Arabic evaluation exists (eval doc §11).
+     */
+    fun shortDeletion(typed: String, candidate: String, scope: ShortDeletionScope = ShortDeletionScope.ALL): Float =
+        if (candidate.length < typed.length && candidate.length <= SHORT_WORD_MAX_LENGTH &&
+            (scope == ShortDeletionScope.ALL || isHebrewScript(typed))
+        ) 1f else 0f
+
+    /** Every letter is a Hebrew letter (U+05D0–U+05EA, final forms included). */
+    fun isHebrewScript(word: String): Boolean = word.isNotEmpty() && word.all { it in '\u05D0'..'\u05EA' }
 
     fun cost(typed: String, candidate: String, w: ChannelWeights): Float =
-        alignmentCost(typed, candidate, w) + w.shortWordDeletionCost * shortDeletion(typed, candidate)
+        alignmentCost(typed, candidate, w) +
+            w.shortWordDeletionCost * shortDeletion(typed, candidate, w.shortDeletionScope)
 
     /** The optimal-string-alignment part of [cost]. */
     private fun alignmentCost(typed: String, candidate: String, w: ChannelWeights): Float {
@@ -121,7 +132,7 @@ object ChannelEditCost {
                 else -> error("alignment back-pointer missing at ($i, $j)")
             }
         }
-        f[F_SHORT_DELETION] = shortDeletion(typed, candidate)
+        f[F_SHORT_DELETION] = shortDeletion(typed, candidate, w.shortDeletionScope)
         return f
     }
 

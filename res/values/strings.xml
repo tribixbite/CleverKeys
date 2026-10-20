@@ -1580,6 +1580,10 @@
     <string name="autocorrect_channel_alias_bonus_desc">Cost discount for a contraction such as don\'t over an equally close plain word (donr → don\'t instead of done). 0 = no preference.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">Short-Word Deletion Cost</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Extra cost when a correction drops letters to reach a word of one or two letters, so a mistyped first letter is not simply removed. 0 = no extra cost.</string>
+    <string name="autocorrect_short_deletion_scope_title">Short-Word Deletion Applies To</string>
+    <string name="autocorrect_short_deletion_scope_desc">Hebrew one-letter prefixes make this cost useful there; in English an extra letter next to a two-letter word (tpo → to) is a real typo, so it stays off for other scripts by default.</string>
+    <string name="autocorrect_short_deletion_scope_hebrew">Hebrew script only</string>
+    <string name="autocorrect_short_deletion_scope_all">All languages</string>
     <string name="autocorrect_frequency_ignored">Frequency is ignored; only the edits decide.</string>
     <string name="autocorrect_channel_inflection_cost_title">Word-Form Keep Cost</string>
     <string name="autocorrect_channel_inflection_cost_desc">How much better a correction must be to replace a known word plus an ending. At the top, such words are always kept.</string>

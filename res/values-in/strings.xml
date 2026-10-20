@@ -1189,6 +1189,10 @@
     <string name="autocorrect_channel_alias_bonus_desc">Potongan biaya untuk kontraksi seperti don\'t dibanding kata biasa yang sama dekatnya (donr → don\'t, bukan done). 0 = tanpa preferensi.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">Biaya Hapus ke Kata Pendek</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Biaya tambahan saat koreksi membuang huruf hingga menjadi kata satu atau dua huruf, agar huruf pertama yang salah ketik tidak sekadar dihapus. 0 = tanpa biaya tambahan.</string>
+    <string name="autocorrect_short_deletion_scope_title">Biaya Hapus Berlaku Untuk</string>
+    <string name="autocorrect_short_deletion_scope_desc">Awalan satu huruf dalam bahasa Ibrani membuat biaya ini berguna di sana; dalam bahasa Inggris, huruf ekstra di samping kata dua huruf (tpo → to) adalah salah ketik sungguhan, jadi biaya ini mati secara bawaan untuk aksara lain.</string>
+    <string name="autocorrect_short_deletion_scope_hebrew">Hanya aksara Ibrani</string>
+    <string name="autocorrect_short_deletion_scope_all">Semua bahasa</string>
     <string name="autocorrect_frequency_ignored">Frekuensi diabaikan; hanya edit yang menentukan.</string>
     <string name="autocorrect_channel_inflection_cost_title">Biaya mempertahankan bentuk kata</string>
     <string name="autocorrect_channel_inflection_cost_desc">Seberapa jauh lebih baik koreksi harus untuk mengganti kata dikenal berakhiran. Di posisi teratas, kata seperti itu selalu dipertahankan.</string>

@@ -1210,6 +1210,10 @@
     <string name="autocorrect_channel_alias_bonus_desc">Reducere de cost pentru o contracție precum don\'t față de un cuvânt obișnuit la fel de apropiat (donr → don\'t în loc de done). 0 = fără preferință.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">Cost de ștergere până la un cuvânt scurt</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Cost suplimentar când o corectare elimină litere pentru a ajunge la un cuvânt de una sau două litere, ca o primă literă greșită să nu fie pur și simplu ștearsă. 0 = fără cost suplimentar.</string>
+    <string name="autocorrect_short_deletion_scope_title">Costul de ștergere se aplică la</string>
+    <string name="autocorrect_short_deletion_scope_desc">Prefixele ebraice de o literă fac acest cost util acolo; în engleză, o literă în plus lângă un cuvânt de două litere (tpo → to) este o greșeală reală de tastare, așa că pentru alte scrieri este dezactivat implicit.</string>
+    <string name="autocorrect_short_deletion_scope_hebrew">Doar scrierea ebraică</string>
+    <string name="autocorrect_short_deletion_scope_all">Toate limbile</string>
     <string name="autocorrect_frequency_ignored">Frecvența este ignorată; decid doar editările.</string>
     <string name="autocorrect_channel_inflection_cost_title">Costul păstrării formelor</string>
     <string name="autocorrect_channel_inflection_cost_desc">Cu cât trebuie să fie mai bună o corectură pentru a înlocui un cuvânt cunoscut cu terminație. La maximum, astfel de cuvinte sunt mereu păstrate.</string>

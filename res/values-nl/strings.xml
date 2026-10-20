@@ -1180,6 +1180,10 @@
     <string name="autocorrect_channel_alias_bonus_desc">Kostenkorting voor een samentrekking zoals don\'t boven een even dichtbij gewoon woord (donr → don\'t in plaats van done). 0 = geen voorkeur.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">Kosten van inkorten tot kort woord</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Extra kosten wanneer een correctie letters weglaat om een woord van één of twee letters te krijgen, zodat een verkeerd getypte eerste letter niet zomaar verdwijnt. 0 = geen extra kosten.</string>
+    <string name="autocorrect_short_deletion_scope_title">Inkortkosten gelden voor</string>
+    <string name="autocorrect_short_deletion_scope_desc">Hebreeuwse voorvoegsels van één letter maken deze kosten daar nuttig; in het Engels is een extra letter naast een woord van twee letters (tpo → to) een echte tikfout, dus voor andere schriften staat het standaard uit.</string>
+    <string name="autocorrect_short_deletion_scope_hebrew">Alleen Hebreeuws schrift</string>
+    <string name="autocorrect_short_deletion_scope_all">Alle talen</string>
     <string name="autocorrect_frequency_ignored">Frequentie wordt genegeerd; alleen de bewerkingen beslissen.</string>
     <string name="autocorrect_channel_inflection_cost_title">Kosten om woordvormen te behouden</string>
     <string name="autocorrect_channel_inflection_cost_desc">Hoeveel beter een correctie moet zijn om een bekend woord met uitgang te vervangen. Helemaal bovenaan worden zulke woorden altijd behouden.</string>

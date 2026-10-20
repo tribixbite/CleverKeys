@@ -129,7 +129,7 @@ class ChannelRankingTest {
 
     @Test
     fun shortWordDeletionCostAppliesOnlyWhenDeletingOntoAWordOfAtMostTwoLetters() {
-        val d = w.copy(shortWordDeletionCost = 0.75f)
+        val d = w.copy(shortWordDeletionCost = 0.75f, shortDeletionScope = ShortDeletionScope.ALL)
         // 3 → 2 letters: the term applies once.
         assertEquals(ChannelEditCost.cost("thr", "th", w) + 0.75f, ChannelEditCost.cost("thr", "th", d), eps)
         // Same length, longer target, or a 3-letter target: no term.
@@ -139,6 +139,21 @@ class ChannelRankingTest {
         // The alignment features carry the indicator, so priced() stays equal to cost().
         assertEquals(ChannelEditCost.cost("thr", "th", d),
             ChannelEditCost.priced(ChannelEditCost.alignmentFeatures("thr", "th", d), d), eps)
+    }
+
+    @Test
+    fun hebrewScopeAppliesTheTermOnlyToHebrewScriptWords() {
+        val d = w.copy(shortWordDeletionCost = 0.5f, shortDeletionScope = ShortDeletionScope.HEBREW)
+        // English: no term under the Hebrew scope (round 3: tpo → to is a real typo).
+        assertEquals(ChannelEditCost.cost("tpo", "to", w), ChannelEditCost.cost("tpo", "to", d), eps)
+        // Hebrew: לןא → לא carries it (round 3: want ללא).
+        assertEquals(ChannelEditCost.cost("לןא", "לא", w) + 0.5f, ChannelEditCost.cost("לןא", "לא", d), eps)
+        assertTrue(ChannelEditCost.isHebrewScript("שלום"))
+        assertTrue(ChannelEditCost.isHebrewScript("ךםןףץ"))              // final forms
+        assertTrue(!ChannelEditCost.isHebrewScript("shalom"))
+        assertTrue(!ChannelEditCost.isHebrewScript("שלוםx"))
+        assertTrue(!ChannelEditCost.isHebrewScript(""))
+        for (s in ShortDeletionScope.entries) assertEquals(s, ShortDeletionScope.fromPref(s.prefValue))
     }
 
     @Test

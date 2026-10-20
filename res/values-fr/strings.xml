@@ -1193,6 +1193,10 @@
     <string name="autocorrect_channel_alias_bonus_desc">Réduction de coût pour une contraction comme don\'t face à un mot ordinaire aussi proche (donr → don\'t au lieu de done). 0 = aucune préférence.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">Coût de suppression vers un mot court</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Coût supplémentaire quand une correction supprime des lettres pour obtenir un mot d\'une ou deux lettres, afin qu\'une première lettre mal tapée ne soit pas simplement retirée. 0 = aucun coût supplémentaire.</string>
+    <string name="autocorrect_short_deletion_scope_title">Coût de suppression appliqué à</string>
+    <string name="autocorrect_short_deletion_scope_desc">Les préfixes hébreux d\'une lettre rendent ce coût utile en hébreu ; en anglais, une lettre en trop à côté d\'un mot de deux lettres (tpo → to) est une vraie faute de frappe, donc il est désactivé par défaut pour les autres écritures.</string>
+    <string name="autocorrect_short_deletion_scope_hebrew">Écriture hébraïque seulement</string>
+    <string name="autocorrect_short_deletion_scope_all">Toutes les langues</string>
     <string name="autocorrect_frequency_ignored">La fréquence est ignorée ; seules les modifications décident.</string>
     <string name="autocorrect_channel_inflection_cost_title">Coût de conservation des formes</string>
     <string name="autocorrect_channel_inflection_cost_desc">De combien une correction doit être meilleure pour remplacer un mot connu suivi d\'une terminaison. Tout en haut, ces mots sont toujours conservés.</string>

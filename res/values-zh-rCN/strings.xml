@@ -1175,6 +1175,10 @@
     <string name="autocorrect_channel_alias_bonus_desc">让 don\'t 这类缩约形式比同样接近的普通单词更优先的代价折扣(donr → don\'t 而不是 done)。0 = 不优先。</string>
     <string name="autocorrect_channel_short_deletion_cost_title">删成短词的代价</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">当纠错删去字母、得到只有一两个字母的单词时额外增加的代价,避免把打错的首字母直接删掉。0 = 不额外增加。</string>
+    <string name="autocorrect_short_deletion_scope_title">删除代价的适用范围</string>
+    <string name="autocorrect_short_deletion_scope_desc">希伯来语的单字母前缀让这项代价在那里有用;在英语中,两字母单词旁多出的字母(tpo → to)是真正的打字错误,所以其他文字默认关闭。</string>
+    <string name="autocorrect_short_deletion_scope_hebrew">仅希伯来文</string>
+    <string name="autocorrect_short_deletion_scope_all">所有语言</string>
     <string name="autocorrect_frequency_ignored">忽略词频，只由编辑决定。</string>
     <string name="autocorrect_channel_inflection_cost_title">保留词形代价</string>
     <string name="autocorrect_channel_inflection_cost_desc">纠正结果要好多少，才能替换带词尾的已知词。调到最高时，这类词总会保留。</string>

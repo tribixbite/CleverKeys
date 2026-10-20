@@ -133,7 +133,7 @@ class AutocorrectTuningSlidersTest {
     fun groupResetRemovesExactlyTheTuningKeys() {
         assertThat(sliders.RESET_KEYS).containsExactlyElementsIn(Keys.ALL_KEYS)
         assertThat(sliders.RESET_KEYS).containsNoDuplicates()
-        assertThat(sliders.RESET_KEYS).hasSize(20)
+        assertThat(sliders.RESET_KEYS).hasSize(21)
         // None of the basic settings above the group.
         assertThat(sliders.RESET_KEYS).containsNoneOf(
             "autocorrect_enabled", "autocorrect_min_word_length", "autocorrect_char_match_threshold",

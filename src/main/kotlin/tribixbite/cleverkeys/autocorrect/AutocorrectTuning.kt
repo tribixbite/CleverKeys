@@ -26,6 +26,24 @@ enum class AutocorrectRanking(val prefValue: String) {
     }
 }
 
+/**
+ * Where the short-word deletion cost δ applies (round 4, eval doc §11). It is right for Hebrew,
+ * whose one-letter prefixes make "delete onto a two-letter word" a wrong correction, and wrong
+ * for English, where an extra letter around `in`/`to`/`it` is a real typo (round 3, §10).
+ */
+enum class ShortDeletionScope(val prefValue: String) {
+    /** Only typed words written in Hebrew script. */
+    HEBREW("hebrew"),
+    /** Every language. */
+    ALL("all");
+
+    companion object {
+        fun fromPref(value: String?): ShortDeletionScope =
+            entries.firstOrNull { it.prefValue == value }
+                ?: entries.first { it.prefValue == Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_SCOPE }
+    }
+}
+
 /** Pref string ↔ [NeighbourTiebreak] (`off` / `n1` / `na`); unknown values mean the default. */
 fun neighbourTiebreakFromPref(value: String?): NeighbourTiebreak =
     NeighbourTiebreak.entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
@@ -47,6 +65,7 @@ fun neighbourTiebreakFromPref(value: String?): NeighbourTiebreak =
  * @property shortWordDeletionCost δ — added when the candidate is shorter than the typed word
  *   and has at most [ChannelEditCost.SHORT_WORD_MAX_LENGTH] letters, so a mistyped one-letter
  *   prefix is not simply deleted onto a common short word (`לןא` → `לא`, round 3, eval doc §7).
+ * @property shortDeletionScope where δ applies ([ShortDeletionScope]).
  * @property aliasBonus β — subtracted from a contraction alias key's total cost, so `donr`
  *   prefers `don't` over an equally close `done` (round 2, eval doc §3.1).
  * @property inflectionCost γ — guard G: the cost of believing a typed word is an unlisted
@@ -61,6 +80,7 @@ data class ChannelWeights(
     val frequencyWeight: Float = Defaults.AUTOCORRECT_CHANNEL_FREQUENCY_WEIGHT,
     val aliasBonus: Float = Defaults.AUTOCORRECT_CHANNEL_ALIAS_BONUS,
     val shortWordDeletionCost: Float = Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_COST,
+    val shortDeletionScope: ShortDeletionScope = ShortDeletionScope.fromPref(Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_SCOPE),
     val inflectionCost: Float = inflectionCostFromPref(Defaults.AUTOCORRECT_CHANNEL_INFLECTION_COST),
 ) {
     companion object {
@@ -143,6 +163,8 @@ data class AutocorrectTuning(
         val MAX_SUBSTITUTIONS = IntKey("autocorrect_max_substitutions", Defaults.AUTOCORRECT_MAX_SUBSTITUTIONS, 1..3)
         val LENGTH_EDIT_BUDGET = FloatKey("autocorrect_length_edit_budget",
             Defaults.AUTOCORRECT_LENGTH_EDIT_BUDGET, 0f..1.5f)
+        val CHANNEL_SHORT_DELETION_SCOPE = StringKey("autocorrect_channel_short_deletion_scope",
+            Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_SCOPE, ShortDeletionScope.entries.map { it.prefValue })
         val NEIGHBOUR_TIEBREAK = StringKey("autocorrect_neighbour_tiebreak",
             Defaults.AUTOCORRECT_NEIGHBOUR_TIEBREAK, NeighbourTiebreak.entries.map { it.name.lowercase() })
         val DROPPED_DOUBLE_ENABLED = BoolKey("autocorrect_dropped_double_enabled",
@@ -177,7 +199,7 @@ data class AutocorrectTuning(
             CHANNEL_FREQUENCY_WEIGHT, CHANNEL_ALIAS_BONUS, CHANNEL_SHORT_DELETION_COST, CHANNEL_INFLECTION_COST)
         val INTS = listOf(MAX_SUBSTITUTIONS, DROPPED_DOUBLE_MARGIN, INFLECTION_GUARD_MIN_STEM)
         val BOOLS = listOf(DROPPED_DOUBLE_ENABLED, ELONGATION_COLLAPSE_ENABLED, INFLECTION_GUARD_ENABLED)
-        val STRINGS = listOf(RANKING, NEIGHBOUR_TIEBREAK)
+        val STRINGS = listOf(RANKING, NEIGHBOUR_TIEBREAK, CHANNEL_SHORT_DELETION_SCOPE)
 
         /** Every key above, for "reset to defaults" and backup classification. */
         val ALL_KEYS: List<String> =
@@ -224,6 +246,7 @@ data class AutocorrectTuning(
                     frequencyWeight = f(Keys.CHANNEL_FREQUENCY_WEIGHT),
                     aliasBonus = f(Keys.CHANNEL_ALIAS_BONUS),
                     shortWordDeletionCost = f(Keys.CHANNEL_SHORT_DELETION_COST),
+                    shortDeletionScope = ShortDeletionScope.fromPref(s(Keys.CHANNEL_SHORT_DELETION_SCOPE)),
                     inflectionCost = ChannelWeights.inflectionCostFromPref(f(Keys.CHANNEL_INFLECTION_COST)),
                 ),
             )
