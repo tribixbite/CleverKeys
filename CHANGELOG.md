@@ -50,6 +50,23 @@ editor that used to be listed here already ship in 2.0.)
   space / period / enter; 123 / emoji / comma / space / period / enter). All three are complete
   a–z Latin layouts, so both swipe engines serve them. Layout only; not affiliated with Apple,
   Google or Microsoft.
+- **Swipe typing inside the keyboard's own fields**: swiped words now go into the clipboard
+  entry editor (and tag, clipboard-search, emoji-search and GIF-search fields) instead of the
+  app behind the panel. Bar alternatives replace the swiped word in the field, backspace right
+  after a swipe removes it, and the editor's undo covers it; nothing typed there is learned.
+- **Foldable inner screen**: separate keyboard heights for the unfolded inner screen
+  (Appearance → "Keyboard Height (Inner Screen)" / "Landscape Height (Inner Screen)"). Until
+  set, the inner screen now uses the outer-screen height and margins instead of the built-in
+  defaults (user report: the height reset to default on the inner screen).
+- **Use System Vibration** (#154): an explicit switch back to the system haptic pattern after
+  the vibration-length slider has been touched.
+- **Enter Always Inserts a New Line** (#139): in multi-line text fields Enter types a newline
+  even when the app asks for Send or Search (the action moves to Enter's swipe). Off by default.
+- **Follow-finger backspace selection** (#190): Gesture Tuning → Selection Movement → "Follow
+  finger" selects one character per step of horizontal travel and shrinks when moving back,
+  instead of the speed-by-distance joystick.
+- **Short Swipes Only** (#147, #87): every gesture past the short-swipe minimum types the
+  subkey in its direction at any length and never becomes a word swipe or a tap.
 - **Macron-below and ring-below accents** (#187), for ISO 15919 transliteration: Settings →
   Extra Keys → Accents has two new dead keys (ṯ ḏ ḵ ḻ ṉ ṟ ẕ ḇ ẖ, ḁ), and any other letter
   takes the combining mark, so the vocalic r̥ and l̥ type directly. The matching combining
