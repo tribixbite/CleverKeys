@@ -252,7 +252,9 @@ class ThemeProvider(
     // --- Private loaders ---
 
     private fun loadBuiltInTheme(themeId: String): Theme {
-        val styleResId = Config.getThemeStyleId(themeId)
+        // The same map and the same system light/dark cue as the keyboard view's own theme,
+        // so "Monet (Auto)" previews match the keyboard in light mode (audit H2).
+        val styleResId = Config.builtInThemeStyleId(themeId, Config.isSystemLight(context.resources))
         val themedContext = ContextThemeWrapper(context, styleResId)
         return Theme(themedContext, null)
     }

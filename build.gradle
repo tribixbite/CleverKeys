@@ -1493,6 +1493,7 @@ tasks.register('runMockTests', JavaExec) {
     // the nullable name — two same-named/unnamed custom layouts can no longer be served
     // each other's modified boards. Runs on the android.util.LruCache test-source shadow.
     'tribixbite.cleverkeys.LayoutModifierCacheKeyTest',
+    'tribixbite.cleverkeys.ThemeStyleMapTest',
     // Audit 2026-09-06 W7 (H-6): the key border paint honours keyOpacity — setColor runs
     // BEFORE the alpha assignment (setColor writes the full ARGB). Runs on the functional
     // android.graphics.Paint test-source shadow, which models real colour semantics.

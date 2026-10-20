@@ -1643,69 +1643,8 @@ class Config private constructor(
     ): Float = screenHeightPixels * orientedPercent(pref_base_name, def_port, def_land)
         .coerceIn(SettingsRanges.MARGIN_BOTTOM_PERCENT) / 100f
 
-    private fun getThemeId(res: Resources, theme_name: String): Int {
-        val night_mode = res.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        return when {
-            // Runtime themes (decorative/custom) use base theme for ContextThemeWrapper
-            // The actual colors come from KeyboardColorScheme via ThemeProvider
-            theme_name.startsWith("decorative_") -> R.style.CleverKeysDark
-            theme_name.startsWith("custom_") -> R.style.CleverKeysDark
-
-            // Built-in XML themes
-            theme_name == "light" -> R.style.Light
-            theme_name == "black" -> R.style.Black
-            theme_name == "altblack" -> R.style.AltBlack
-            theme_name == "dark" -> R.style.Dark
-            theme_name == "white" -> R.style.White
-            theme_name == "epaper" -> R.style.ePaper
-            theme_name == "desert" -> R.style.Desert
-            theme_name == "jungle" -> R.style.Jungle
-            // Monet (Material You) requires Android 12+ (API 31)
-            theme_name == "monetlight" -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.MonetLight
-                else R.style.Light  // Fallback for older Android
-            }
-            theme_name == "monetdark" -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.MonetDark
-                else R.style.Dark  // Fallback for older Android
-            }
-            theme_name == "monet" -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
-                        R.style.MonetLight
-                    else
-                        R.style.MonetDark
-                } else {
-                    // Fallback for older Android
-                    if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
-                        R.style.Light
-                    else
-                        R.style.Dark
-                }
-            }
-            theme_name == "rosepine" -> R.style.RosePine
-            theme_name == "everforestlight" -> R.style.EverforestLight
-            theme_name == "cobalt" -> R.style.Cobalt
-            theme_name == "pine" -> R.style.Pine
-            theme_name == "epaperblack" -> R.style.ePaperBlack
-            theme_name == "jewel" -> R.style.Jewel
-            theme_name == "cleverkeysdark" -> R.style.CleverKeysDark
-            theme_name == "cleverkeyslight" -> R.style.CleverKeysLight
-            else -> {
-                // ARC-111: an unset theme follows the system uiMode like every other
-                // fallback branch; users who explicitly chose a theme are unaffected.
-                if (theme_name.isEmpty()) {
-                    if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
-                        R.style.CleverKeysLight
-                    else
-                        R.style.CleverKeysDark
-                } else if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
-                    R.style.Light
-                else
-                    R.style.Dark
-            }
-        }
-    }
+    private fun getThemeId(res: Resources, theme_name: String): Int =
+        builtInThemeStyleId(theme_name, isSystemLight(res))
 
     /**
      * Check if current theme is a runtime theme (decorative or custom).
@@ -1988,37 +1927,59 @@ class Config private constructor(
             }
         }
 
+        /** True when the system is in light mode (`uiMode` night bit NO), the cue every "follow the system" theme reads. */
+        @JvmStatic
+        fun isSystemLight(res: Resources): Boolean =
+            (res.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO
+
         /**
-         * Get the Android style resource ID for a theme name.
-         * Used by ThemeProvider to load built-in XML themes.
+         * THE theme-name → `R.style` map, for the keyboard view's context theme
+         * ([getThemeId]) and for [tribixbite.cleverkeys.theme.ThemeProvider]'s built-in
+         * themes (magnifier, Short Swipes preview) alike. There used to be two maps, and they
+         * disagreed: "Monet (Auto)" followed [systemLight] for the keyboard but was always
+         * MonetDark in the previews, and an unset or unknown name fell back differently
+         * (code-quality audit 2026-10-20, H2).
          *
-         * @param themeName Theme name string (e.g., "dark", "rosepine", "cobalt")
-         * @return The R.style.* resource ID
+         * Runtime themes (`decorative_*`, `custom_*`) take the base style; their colours come
+         * from a KeyboardColorScheme. Monet needs Android 12 (API 31, [sdk]); older systems
+         * get the plain light/dark style.
          */
         @JvmStatic
-        fun getThemeStyleId(themeName: String): Int {
-            return when (themeName) {
-                "light" -> R.style.Light
-                "black" -> R.style.Black
-                "altblack" -> R.style.AltBlack
-                "dark" -> R.style.Dark
-                "white" -> R.style.White
-                "epaper" -> R.style.ePaper
-                "desert" -> R.style.Desert
-                "jungle" -> R.style.Jungle
-                // Monet (Material You) requires Android 12+ (API 31)
-                "monetlight" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.MonetLight else R.style.Light
-                "monetdark" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.MonetDark else R.style.Dark
-                "monet" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.MonetDark else R.style.Dark
-                "rosepine" -> R.style.RosePine
-                "everforestlight" -> R.style.EverforestLight
-                "cobalt" -> R.style.Cobalt
-                "pine" -> R.style.Pine
-                "epaperblack" -> R.style.ePaperBlack
-                "jewel" -> R.style.Jewel
-                "cleverkeysdark" -> R.style.CleverKeysDark
-                "cleverkeyslight" -> R.style.CleverKeysLight
-                else -> R.style.CleverKeysDark // Default theme
+        @JvmOverloads
+        fun builtInThemeStyleId(themeName: String, systemLight: Boolean, sdk: Int = Build.VERSION.SDK_INT): Int {
+            val monet = sdk >= Build.VERSION_CODES.S
+            return when {
+                themeName.startsWith("decorative_") || themeName.startsWith("custom_") -> R.style.CleverKeysDark
+                else -> when (themeName) {
+                    "light" -> R.style.Light
+                    "black" -> R.style.Black
+                    "altblack" -> R.style.AltBlack
+                    "dark" -> R.style.Dark
+                    "white" -> R.style.White
+                    "epaper" -> R.style.ePaper
+                    "desert" -> R.style.Desert
+                    "jungle" -> R.style.Jungle
+                    "monetlight" -> if (monet) R.style.MonetLight else R.style.Light
+                    "monetdark" -> if (monet) R.style.MonetDark else R.style.Dark
+                    "monet" -> when {
+                        monet && systemLight -> R.style.MonetLight
+                        monet -> R.style.MonetDark
+                        systemLight -> R.style.Light
+                        else -> R.style.Dark
+                    }
+                    "rosepine" -> R.style.RosePine
+                    "everforestlight" -> R.style.EverforestLight
+                    "cobalt" -> R.style.Cobalt
+                    "pine" -> R.style.Pine
+                    "epaperblack" -> R.style.ePaperBlack
+                    "jewel" -> R.style.Jewel
+                    "cleverkeysdark" -> R.style.CleverKeysDark
+                    "cleverkeyslight" -> R.style.CleverKeysLight
+                    // ARC-111: an unset theme follows the system like every other fallback;
+                    // users who explicitly chose a theme are unaffected.
+                    "" -> if (systemLight) R.style.CleverKeysLight else R.style.CleverKeysDark
+                    else -> if (systemLight) R.style.Light else R.style.Dark
+                }
             }
         }
 
