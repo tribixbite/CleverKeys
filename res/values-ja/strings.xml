@@ -467,6 +467,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">行選択をトリガーするために指が移動する必要があるキー高さの%。高いほど誤って行を選択しにくくなります。</string>
     <string name="gesture_vertical_speed_title">縦方向のスピード</string>
     <string name="gesture_vertical_speed_desc">行選択の速度倍率（低いほど遅い）。文字選択は常に最大速度です。</string>
+    <string name="gesture_selection_delete_mode_title">選択の動き</string>
+    <string name="gesture_selection_delete_mode_desc">指の動きで選択範囲がどう変わるかを設定します。「指に追従」では移動量に応じて1文字ずつ選択され、指を戻すと選択範囲が縮みます。</string>
+    <string name="gesture_selection_delete_mode_speed">距離に応じた速度</string>
+    <string name="gesture_selection_delete_mode_follow">指に追従</string>
+    <string name="gesture_selection_delete_step_title">ステップ幅</string>
+    <string name="gesture_selection_delete_step_desc">「指に追従」モードで1文字多く選択するのに必要な指の移動量です。小さいほど速く、大きいほど正確になります。</string>
     <string name="gesture_tap_duration_title">タップ時間の閾値</string>
     <string name="gesture_tap_duration_desc">タップジェスチャーの最大時間（ミリ秒）。高いほどタップしやすくなりますが、スワイプと干渉する場合があります。</string>
     <string name="gesture_double_space_period_title">スペースを2回タップでピリオド</string>

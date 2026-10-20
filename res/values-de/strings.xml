@@ -489,6 +489,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% der Tastenhöhe, die der Finger bewegen muss, um die Zeilenauswahl auszulösen. Höher = schwieriger, Zeilen versehentlich auszuwählen.</string>
     <string name="gesture_vertical_speed_title">Vertikale Geschwindigkeit</string>
     <string name="gesture_vertical_speed_desc">Geschwindigkeitsmultiplikator für die Zeilenauswahl (niedriger = langsamer). Die Zeichenauswahl bleibt bei voller Geschwindigkeit.</string>
+    <string name="gesture_selection_delete_mode_title">Auswahlbewegung</string>
+    <string name="gesture_selection_delete_mode_desc">Wie die Fingerbewegung die Auswahl verändert. „Finger folgen“ wählt pro Bewegungsschritt ein Zeichen; eine Rückbewegung verkleinert die Auswahl.</string>
+    <string name="gesture_selection_delete_mode_speed">Geschwindigkeit nach Abstand</string>
+    <string name="gesture_selection_delete_mode_follow">Finger folgen</string>
+    <string name="gesture_selection_delete_step_title">Schrittweite</string>
+    <string name="gesture_selection_delete_step_desc">Fingerweg für ein weiteres ausgewähltes Zeichen im Modus „Finger folgen“. Kleiner = schneller, größer = genauer.</string>
     <string name="gesture_tap_duration_title">Tippdauer-Schwelle</string>
     <string name="gesture_tap_duration_desc">Maximale Dauer einer Tippgeste (ms). Höher = einfacheres Tippen, kann aber Wischgesten beeinträchtigen.</string>
     <string name="gesture_double_space_period_title">Doppeltes Leerzeichen als Punkt</string>

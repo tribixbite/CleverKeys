@@ -483,6 +483,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% no taustiņa augstuma, par kuru pirkstam jāpārvietojas, lai aktivizētu rindas atlasi. Augstāk = grūtāk nejauši atlasīt rindu.</string>
     <string name="gesture_vertical_speed_title">Vertikālais ātrums</string>
     <string name="gesture_vertical_speed_desc">Rindas atlases ātruma reizinātājs (zemāks = lēnāks). Rakstzīmju atlase paliek pilnā ātrumā.</string>
+    <string name="gesture_selection_delete_mode_title">Atlases kustība</string>
+    <string name="gesture_selection_delete_mode_desc">Kā pirksta kustība maina atlasi. “Sekot pirkstam” atlasa vienu rakstzīmi par katru kustības soli; kustība atpakaļ atlasi samazina.</string>
+    <string name="gesture_selection_delete_mode_speed">Ātrums pēc attāluma</string>
+    <string name="gesture_selection_delete_mode_follow">Sekot pirkstam</string>
+    <string name="gesture_selection_delete_step_title">Soļa lielums</string>
+    <string name="gesture_selection_delete_step_desc">Pirksta pārvietojums, kas vajadzīgs vēl vienas rakstzīmes atlasei režīmā “Sekot pirkstam”. Mazāks = ātrāk, lielāks = precīzāk.</string>
     <string name="gesture_tap_duration_title">Pieskaršanās ilguma slieksnis</string>
     <string name="gesture_tap_duration_desc">Maksimālais pieskaršanās žesta ilgums (ms). Augstāk = vieglāka pieskaršanās, bet var traucēt vilkumiem.</string>
     <string name="gesture_double_space_period_title">Dubultā atstarpe → punkts</string>

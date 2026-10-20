@@ -474,6 +474,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% výšky klávesy, o které musí prst pohybovat, aby se aktivoval výběr řádku. Vyšší = obtížnější náhodné vybrání řádků.</string>
     <string name="gesture_vertical_speed_title">Svislá rychlost</string>
     <string name="gesture_vertical_speed_desc">Násobitel rychlosti pro výběr řádku (nižší = pomalejší). Výběr znaků zůstává na plné rychlosti.</string>
+    <string name="gesture_selection_delete_mode_title">Pohyb výběru</string>
+    <string name="gesture_selection_delete_mode_desc">Jak pohyb prstu mění výběr. Režim Sledovat prst vybere jeden znak za každý krok pohybu; pohyb zpět výběr zmenší.</string>
+    <string name="gesture_selection_delete_mode_speed">Rychlost podle vzdálenosti</string>
+    <string name="gesture_selection_delete_mode_follow">Sledovat prst</string>
+    <string name="gesture_selection_delete_step_title">Velikost kroku</string>
+    <string name="gesture_selection_delete_step_desc">Pohyb prstu potřebný k výběru dalšího znaku v režimu Sledovat prst. Menší = rychlejší, větší = přesnější.</string>
     <string name="gesture_tap_duration_title">Práh doby klepnutí</string>
     <string name="gesture_tap_duration_desc">Maximální doba trvání gesta klepnutí (ms). Vyšší = snadnější klepnutí, ale může rušit tahy.</string>
     <string name="gesture_double_space_period_title">Dvojitá mezera pro tečku</string>

@@ -475,6 +475,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">A billentyű magasságának %-a, amennyit az ujjnak mozognia kell a sorválasztás kiváltásához. Magasabb = nehezebb véletlenül sort kiválasztani.</string>
     <string name="gesture_vertical_speed_title">Függőleges sebesség</string>
     <string name="gesture_vertical_speed_desc">Sebességszorzó sorválasztáshoz (alacsonyabb = lassabb). A karakterválasztás teljes sebességen marad.</string>
+    <string name="gesture_selection_delete_mode_title">Kijelölés mozgása</string>
+    <string name="gesture_selection_delete_mode_desc">Hogyan változtatja az ujj mozgása a kijelölést. Az „Ujj követése” mód mozgási lépésenként egy karaktert jelöl ki; visszafelé mozgatva a kijelölés csökken.</string>
+    <string name="gesture_selection_delete_mode_speed">Sebesség a távolság szerint</string>
+    <string name="gesture_selection_delete_mode_follow">Ujj követése</string>
+    <string name="gesture_selection_delete_step_title">Lépésköz</string>
+    <string name="gesture_selection_delete_step_desc">Az ujj elmozdulása, amely egy további karakter kijelöléséhez szükséges „Ujj követése” módban. Kisebb = gyorsabb, nagyobb = pontosabb.</string>
     <string name="gesture_tap_duration_title">Érintési időtartam küszöb</string>
     <string name="gesture_tap_duration_desc">Érintési gesztus maximális időtartama (ms). Magasabb = könnyebb érintés, de zavarhatja a csúsztatást.</string>
     <string name="gesture_double_space_period_title">Kettős szóköz ponthoz</string>

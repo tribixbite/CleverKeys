@@ -75,13 +75,31 @@ Moving up/down selects by lines:
 
 Configure in Settings > Gesture Tuning > Selection-Delete Mode.
 
-## Speed Control
+## Selection Movement
+
+Settings > Gesture Tuning > Selection-Delete Mode > **Selection Movement** chooses how
+your finger drives the selection:
+
+| Mode | Behaviour |
+|------|-----------|
+| **Speed by distance** (default) | Joystick: the selection keeps growing while you hold, faster the further your finger is from where selection began |
+| **Follow finger** | The selection length matches how far your finger has moved: one character per **Step Size** of horizontal travel. Moving back shrinks the selection by the same amount |
+
+### Speed by distance
 
 Like TrackPoint, speed depends on distance:
 
 - **Near center**: Slow selection (precise)
 - **Far from center**: Fast selection
 - **Vertical**: Slower than horizontal (configurable)
+
+### Follow finger
+
+- Each **Step Size** (default 12 dp, range 4–40 dp) of horizontal travel selects one more character
+- Holding still selects nothing more; the selection only changes when your finger moves
+- Moving past the starting point selects on the other side
+- Vertical travel past the Vertical Threshold selects one line, then one more per key height
+- Vertical Speed has no effect in this mode and is hidden
 
 ## Tips and Tricks
 
@@ -107,11 +125,15 @@ Like TrackPoint, speed depends on distance:
 | Setting | Location | Description |
 |---------|----------|-------------|
 | **Vertical Threshold** | Gesture Tuning | % of key height for vertical activation |
-| **Vertical Speed** | Gesture Tuning | Speed multiplier for line selection |
+| **Vertical Speed** | Gesture Tuning | Speed multiplier for line selection (Speed by distance only) |
+| **Selection Movement** | Gesture Tuning | Speed by distance or Follow finger |
+| **Step Size** | Gesture Tuning | Finger travel per character (Follow finger only) |
 
 Default values:
 - Vertical Threshold: 40%
 - Vertical Speed: 0.4x (slower than horizontal)
+- Selection Movement: Speed by distance
+- Step Size: 12 dp
 
 ## Related Features
 

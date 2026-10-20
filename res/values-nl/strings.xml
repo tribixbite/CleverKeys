@@ -470,6 +470,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% van toetshoogte die de vinger moet bewegen om regelselectie te activeren. Hoger = moeilijker om per ongeluk regels te selecteren.</string>
     <string name="gesture_vertical_speed_title">Verticale snelheid</string>
     <string name="gesture_vertical_speed_desc">Snelheidsvermenigvuldiger voor regelselectie (lager = langzamer). Tekenselectie blijft op volle snelheid.</string>
+    <string name="gesture_selection_delete_mode_title">Selectiebeweging</string>
+    <string name="gesture_selection_delete_mode_desc">Hoe de vingerbeweging de selectie verandert. ‘Vinger volgen’ selecteert één teken per bewegingsstap; terugbewegen verkleint de selectie.</string>
+    <string name="gesture_selection_delete_mode_speed">Snelheid op afstand</string>
+    <string name="gesture_selection_delete_mode_follow">Vinger volgen</string>
+    <string name="gesture_selection_delete_step_title">Stapgrootte</string>
+    <string name="gesture_selection_delete_step_desc">Vingerbeweging die nodig is om één teken meer te selecteren in de modus ‘Vinger volgen’. Kleiner = sneller, groter = nauwkeuriger.</string>
     <string name="gesture_tap_duration_title">Tikduurdrempelwaarde</string>
     <string name="gesture_tap_duration_desc">Maximale duur voor een tikgebaar (ms). Hoger = eenvoudigere tikken maar kan storen met vegen.</string>
     <string name="gesture_double_space_period_title">Dubbele spatie voor punt</string>

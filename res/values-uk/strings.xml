@@ -485,6 +485,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% висоти клавіші, на який потрібно зсунути палець для вибору рядка. Вище = складніше випадково вибрати рядок.</string>
     <string name="gesture_vertical_speed_title">Вертикальна швидкість</string>
     <string name="gesture_vertical_speed_desc">Множник швидкості вибору рядка (нижче = повільніше). Вибір символу залишається на повній швидкості.</string>
+    <string name="gesture_selection_delete_mode_title">Рух виділення</string>
+    <string name="gesture_selection_delete_mode_desc">Як рух пальця змінює виділення. «Стежити за пальцем» виділяє по одному символу на кожен крок переміщення; рух назад зменшує виділення.</string>
+    <string name="gesture_selection_delete_mode_speed">Швидкість за відстанню</string>
+    <string name="gesture_selection_delete_mode_follow">Стежити за пальцем</string>
+    <string name="gesture_selection_delete_step_title">Розмір кроку</string>
+    <string name="gesture_selection_delete_step_desc">Переміщення пальця, потрібне для виділення ще одного символу в режимі «Стежити за пальцем». Менше = швидше, більше = точніше.</string>
     <string name="gesture_tap_duration_title">Поріг тривалості дотику</string>
     <string name="gesture_tap_duration_desc">Максимальна тривалість жесту дотику (мс). Вище = легше натискати, але може заважати свайпам.</string>
     <string name="gesture_double_space_period_title">Подвійний пробіл → крапка</string>

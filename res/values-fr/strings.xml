@@ -477,6 +477,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% de la hauteur de touche que le doigt doit parcourir pour déclencher la sélection de ligne. Plus élevé = plus difficile de sélectionner accidentellement des lignes.</string>
     <string name="gesture_vertical_speed_title">Vitesse verticale</string>
     <string name="gesture_vertical_speed_desc">Multiplicateur de vitesse pour la sélection de ligne (plus bas = plus lent). La sélection de caractères reste à pleine vitesse.</string>
+    <string name="gesture_selection_delete_mode_title">Mouvement de sélection</string>
+    <string name="gesture_selection_delete_mode_desc">Façon dont le mouvement du doigt modifie la sélection. « Suivre le doigt » sélectionne un caractère par pas de déplacement ; revenir en arrière réduit la sélection.</string>
+    <string name="gesture_selection_delete_mode_speed">Vitesse selon la distance</string>
+    <string name="gesture_selection_delete_mode_follow">Suivre le doigt</string>
+    <string name="gesture_selection_delete_step_title">Taille du pas</string>
+    <string name="gesture_selection_delete_step_desc">Déplacement du doigt nécessaire pour sélectionner un caractère de plus en mode « Suivre le doigt ». Plus petit = plus rapide, plus grand = plus précis.</string>
     <string name="gesture_tap_duration_title">Seuil de durée d\'appui</string>
     <string name="gesture_tap_duration_desc">Durée maximale d\'un geste d\'appui (ms). Plus élevé = appuis plus faciles mais peut interférer avec les glissés.</string>
     <string name="gesture_double_space_period_title">Double espace pour point</string>

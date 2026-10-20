@@ -696,6 +696,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% of key height finger must move to trigger line selection. Higher = harder to accidentally select lines.</string>
     <string name="gesture_vertical_speed_title">Vertical Speed</string>
     <string name="gesture_vertical_speed_desc">Speed multiplier for line selection (lower = slower). Character selection stays at full speed.</string>
+    <string name="gesture_selection_delete_mode_title">Selection Movement</string>
+    <string name="gesture_selection_delete_mode_desc">How finger movement changes the selection. Follow finger selects one character per step of travel; moving back shrinks the selection.</string>
+    <string name="gesture_selection_delete_mode_speed">Speed by distance</string>
+    <string name="gesture_selection_delete_mode_follow">Follow finger</string>
+    <string name="gesture_selection_delete_step_title">Step Size</string>
+    <string name="gesture_selection_delete_step_desc">Finger travel needed to select one more character in Follow finger mode. Smaller = faster, larger = more precise.</string>
     <string name="gesture_tap_duration_title">Tap Duration Threshold</string>
     <string name="gesture_tap_duration_desc">Maximum duration for a tap gesture (ms). Higher = easier taps but may interfere with swipes.</string>
     <string name="gesture_double_space_period_title">Double-Space to Period</string>

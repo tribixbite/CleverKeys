@@ -484,6 +484,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% wysokości klawisza, jaki palec musi pokonać, aby aktywować wybór wiersza. Wyższe = trudniejsze przypadkowe zaznaczenie wierszy.</string>
     <string name="gesture_vertical_speed_title">Prędkość pionowa</string>
     <string name="gesture_vertical_speed_desc">Mnożnik prędkości wyboru wiersza (niższy = wolniej). Wybór znaków pozostaje z pełną prędkością.</string>
+    <string name="gesture_selection_delete_mode_title">Ruch zaznaczania</string>
+    <string name="gesture_selection_delete_mode_desc">Sposób, w jaki ruch palca zmienia zaznaczenie. „Podążaj za palcem” zaznacza jeden znak na każdy krok ruchu; ruch wstecz zmniejsza zaznaczenie.</string>
+    <string name="gesture_selection_delete_mode_speed">Prędkość zależna od odległości</string>
+    <string name="gesture_selection_delete_mode_follow">Podążaj za palcem</string>
+    <string name="gesture_selection_delete_step_title">Wielkość kroku</string>
+    <string name="gesture_selection_delete_step_desc">Ruch palca potrzebny do zaznaczenia kolejnego znaku w trybie „Podążaj za palcem”. Mniejszy = szybciej, większy = dokładniej.</string>
     <string name="gesture_tap_duration_title">Próg czasu dotknięcia</string>
     <string name="gesture_tap_duration_desc">Maksymalny czas trwania gestu dotknięcia (ms). Wyższy = łatwiejsze dotknięcia, ale może kolidować z gestami.</string>
     <string name="gesture_double_space_period_title">Podwójna spacja na kropkę</string>

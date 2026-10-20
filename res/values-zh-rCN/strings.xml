@@ -466,6 +466,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">触发行选择所需手指移动的按键高度百分比。值越高，越不容易误触行选择。</string>
     <string name="gesture_vertical_speed_title">垂直速度</string>
     <string name="gesture_vertical_speed_desc">行选择的速度倍率（越低越慢）。字符选择始终保持全速。</string>
+    <string name="gesture_selection_delete_mode_title">选择移动方式</string>
+    <string name="gesture_selection_delete_mode_desc">手指移动如何改变选区。“跟随手指”按移动距离逐字选择，向回移动会缩小选区。</string>
+    <string name="gesture_selection_delete_mode_speed">按距离调速</string>
+    <string name="gesture_selection_delete_mode_follow">跟随手指</string>
+    <string name="gesture_selection_delete_step_title">步长</string>
+    <string name="gesture_selection_delete_step_desc">“跟随手指”模式下多选一个字符所需的手指移动距离。越小越快，越大越精确。</string>
     <string name="gesture_tap_duration_title">点击时长阈值</string>
     <string name="gesture_tap_duration_desc">点击手势的最大持续时间（毫秒）。值越高，点击越容易，但可能干扰滑动。</string>
     <string name="gesture_double_space_period_title">双击空格输入句号</string>

@@ -505,6 +505,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">٪ ارتفاع کلید که انگشت باید برای انتخاب خط حرکت کند. بالاتر = انتخاب تصادفی سخت‌تر.</string>
     <string name="gesture_vertical_speed_title">سرعت عمودی</string>
     <string name="gesture_vertical_speed_desc">ضریب سرعت برای انتخاب خط (پایین‌تر = کندتر). انتخاب نویسه با سرعت کامل باقی می‌ماند.</string>
+    <string name="gesture_selection_delete_mode_title">حرکت انتخاب</string>
+    <string name="gesture_selection_delete_mode_desc">نحوه تغییر انتخاب با حرکت انگشت. «دنبال کردن انگشت» به ازای هر گام حرکت یک نویسه انتخاب می‌کند؛ حرکت به عقب انتخاب را کوچک می‌کند.</string>
+    <string name="gesture_selection_delete_mode_speed">سرعت بر اساس فاصله</string>
+    <string name="gesture_selection_delete_mode_follow">دنبال کردن انگشت</string>
+    <string name="gesture_selection_delete_step_title">اندازه گام</string>
+    <string name="gesture_selection_delete_step_desc">مسافت حرکت انگشت برای انتخاب یک نویسه بیشتر در حالت «دنبال کردن انگشت». کمتر = سریع‌تر، بیشتر = دقیق‌تر.</string>
     <string name="gesture_tap_duration_title">آستانه مدت ضربه</string>
     <string name="gesture_tap_duration_desc">حداکثر مدت برای یک اشاره ضربه (میلی‌ثانیه). بالاتر = ضربه‌های آسان‌تر اما ممکن است با کشیدن تداخل داشته باشد.</string>
     <string name="gesture_double_space_period_title">دوبار فاصله به نقطه</string>

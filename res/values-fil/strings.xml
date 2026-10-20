@@ -479,6 +479,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% ng taas ng key na dapat galaw ng daliri para mag-trigger ng line selection. Mas mataas = mas mahirap na aksidenteng pumili ng linya.</string>
     <string name="gesture_vertical_speed_title">Vertical na Bilis</string>
     <string name="gesture_vertical_speed_desc">Speed multiplier para sa line selection (mas mababa = mas mabagal). Ang character selection ay nananatili sa buong bilis.</string>
+    <string name="gesture_selection_delete_mode_title">Galaw ng Pagpili</string>
+    <string name="gesture_selection_delete_mode_desc">Kung paano binabago ng galaw ng daliri ang pagpili. Ang “Sundan ang daliri” ay pumipili ng isang character bawat hakbang ng galaw; ang pagbalik ay nagpapaliit sa pagpili.</string>
+    <string name="gesture_selection_delete_mode_speed">Bilis ayon sa layo</string>
+    <string name="gesture_selection_delete_mode_follow">Sundan ang daliri</string>
+    <string name="gesture_selection_delete_step_title">Laki ng Hakbang</string>
+    <string name="gesture_selection_delete_step_desc">Layo ng galaw ng daliri para pumili ng isa pang character sa mode na “Sundan ang daliri”. Mas maliit = mas mabilis, mas malaki = mas tumpak.</string>
     <string name="gesture_tap_duration_title">Threshold ng Tagal ng Tap</string>
     <string name="gesture_tap_duration_desc">Maximum na tagal para sa isang tap gesture (ms). Mas mataas = mas madaling tap ngunit maaaring makagambala sa swipe.</string>
     <string name="gesture_double_space_period_title">Double-Space para sa Tuldok</string>

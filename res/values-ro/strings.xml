@@ -494,6 +494,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% din înălțimea tastei pe care degetul trebuie să o parcurgă pentru a activa selecția de linie. Mai mare = mai greu de selectat linii accidental.</string>
     <string name="gesture_vertical_speed_title">Viteză verticală</string>
     <string name="gesture_vertical_speed_desc">Multiplicator de viteză pentru selecția liniei (mai mic = mai lent). Selecția caracterelor rămâne la viteză normală.</string>
+    <string name="gesture_selection_delete_mode_title">Mișcarea selecției</string>
+    <string name="gesture_selection_delete_mode_desc">Modul în care mișcarea degetului modifică selecția. „Urmărește degetul” selectează câte un caracter pentru fiecare pas de deplasare; revenirea micșorează selecția.</string>
+    <string name="gesture_selection_delete_mode_speed">Viteză după distanță</string>
+    <string name="gesture_selection_delete_mode_follow">Urmărește degetul</string>
+    <string name="gesture_selection_delete_step_title">Mărimea pasului</string>
+    <string name="gesture_selection_delete_step_desc">Deplasarea degetului necesară pentru a selecta încă un caracter în modul „Urmărește degetul”. Mai mic = mai rapid, mai mare = mai precis.</string>
     <string name="gesture_tap_duration_title">Prag durată atingere</string>
     <string name="gesture_tap_duration_desc">Durata maximă pentru un gest de atingere (ms). Mai mare = atingeri mai ușoare, dar poate interfera cu glisările.</string>
     <string name="gesture_double_space_period_title">Dublu spațiu pentru punct</string>

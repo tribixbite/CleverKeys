@@ -496,6 +496,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% chiều cao phím ngón tay phải di chuyển để kích hoạt chọn dòng. Cao hơn = khó chọn dòng vô tình hơn.</string>
     <string name="gesture_vertical_speed_title">Tốc độ dọc</string>
     <string name="gesture_vertical_speed_desc">Hệ số tốc độ cho việc chọn dòng (thấp hơn = chậm hơn). Chọn ký tự vẫn ở tốc độ đầy đủ.</string>
+    <string name="gesture_selection_delete_mode_title">Cách di chuyển vùng chọn</string>
+    <string name="gesture_selection_delete_mode_desc">Cách chuyển động của ngón tay thay đổi vùng chọn. “Theo ngón tay” chọn một ký tự cho mỗi bước di chuyển; di chuyển ngược lại sẽ thu nhỏ vùng chọn.</string>
+    <string name="gesture_selection_delete_mode_speed">Tốc độ theo khoảng cách</string>
+    <string name="gesture_selection_delete_mode_follow">Theo ngón tay</string>
+    <string name="gesture_selection_delete_step_title">Kích thước bước</string>
+    <string name="gesture_selection_delete_step_desc">Quãng đường ngón tay cần di chuyển để chọn thêm một ký tự ở chế độ “Theo ngón tay”. Nhỏ hơn = nhanh hơn, lớn hơn = chính xác hơn.</string>
     <string name="gesture_tap_duration_title">Ngưỡng thời lượng chạm</string>
     <string name="gesture_tap_duration_desc">Thời lượng tối đa cho cử chỉ chạm (ms). Cao hơn = dễ chạm hơn nhưng có thể ảnh hưởng đến vuốt.</string>
     <string name="gesture_double_space_period_title">Nhấn kép Space thành dấu chấm</string>

@@ -479,6 +479,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% tinggi tombol yang harus digerakkan jari untuk memicu pemilihan baris. Lebih tinggi = lebih sulit memilih baris secara tidak sengaja.</string>
     <string name="gesture_vertical_speed_title">Kecepatan Vertikal</string>
     <string name="gesture_vertical_speed_desc">Pengganda kecepatan untuk pemilihan baris (lebih rendah = lebih lambat). Pemilihan karakter tetap pada kecepatan penuh.</string>
+    <string name="gesture_selection_delete_mode_title">Gerakan Pilihan</string>
+    <string name="gesture_selection_delete_mode_desc">Cara gerakan jari mengubah pilihan. “Ikuti jari” memilih satu karakter per langkah gerakan; gerakan mundur memperkecil pilihan.</string>
+    <string name="gesture_selection_delete_mode_speed">Kecepatan menurut jarak</string>
+    <string name="gesture_selection_delete_mode_follow">Ikuti jari</string>
+    <string name="gesture_selection_delete_step_title">Ukuran Langkah</string>
+    <string name="gesture_selection_delete_step_desc">Jarak gerakan jari untuk memilih satu karakter lagi dalam mode “Ikuti jari”. Lebih kecil = lebih cepat, lebih besar = lebih presisi.</string>
     <string name="gesture_tap_duration_title">Ambang Durasi Ketuk</string>
     <string name="gesture_tap_duration_desc">Durasi maksimum untuk gestur ketuk (ms). Lebih tinggi = ketukan lebih mudah tetapi mungkin mengganggu geser.</string>
     <string name="gesture_double_space_period_title">Spasi Dua Kali ke Titik</string>

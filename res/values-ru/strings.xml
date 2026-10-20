@@ -474,6 +474,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% высоты клавиши, на который нужно сдвинуть палец для выбора строки. Выше = сложнее случайно выбрать строку.</string>
     <string name="gesture_vertical_speed_title">Вертикальная скорость</string>
     <string name="gesture_vertical_speed_desc">Множитель скорости выбора строки (ниже = медленнее). Выбор символа остаётся на полной скорости.</string>
+    <string name="gesture_selection_delete_mode_title">Движение выделения</string>
+    <string name="gesture_selection_delete_mode_desc">Как движение пальца меняет выделение. «Следовать за пальцем» выделяет по одному символу на каждый шаг перемещения; движение назад уменьшает выделение.</string>
+    <string name="gesture_selection_delete_mode_speed">Скорость по расстоянию</string>
+    <string name="gesture_selection_delete_mode_follow">Следовать за пальцем</string>
+    <string name="gesture_selection_delete_step_title">Размер шага</string>
+    <string name="gesture_selection_delete_step_desc">Перемещение пальца, нужное для выделения ещё одного символа в режиме «Следовать за пальцем». Меньше = быстрее, больше = точнее.</string>
     <string name="gesture_tap_duration_title">Порог длительности нажатия</string>
     <string name="gesture_tap_duration_desc">Максимальная длительность жеста нажатия (мс). Выше = легче нажимать, но может мешать свайпам.</string>
     <string name="gesture_double_space_period_title">Двойной пробел → точка</string>

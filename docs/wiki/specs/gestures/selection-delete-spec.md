@@ -229,7 +229,22 @@ val repeatDelay = when {
 | Setting | Key | Default | Range | Description |
 |---------|-----|---------|-------|-------------|
 | **Vertical Threshold** | `selection_delete_vertical_threshold` | 40 | 20-80 | % of key height required for vertical selection |
-| **Vertical Speed** | `selection_delete_vertical_speed` | 0.4 | 0.1-1.0 | Speed multiplier for vertical selection |
+| **Vertical Speed** | `selection_delete_vertical_speed` | 0.4 | 0.1-1.0 | Speed multiplier for vertical selection (speed mode only) |
+| **Selection Movement** | `selection_delete_mode` | `speed` | `speed`, `follow` | GH #190: speed-by-distance joystick, or follow-finger |
+| **Step Size** | `selection_delete_step_dp` | 12 | 4-40 dp | GH #190: follow-finger travel per character |
+
+### Follow-finger mode (GH #190)
+
+With `selection_delete_mode = follow`, entering selection mode arms no repeat timer. Every
+`onTouchMove` calls `Pointers.updateFollowFingerSelection`, which computes a target from the
+finger's offset to the activation point: `trunc(dx / step)` characters (signed, right
+positive; `Pointers.followFingerSteps`) and, past the vertical dead zone, one line plus one per
+further key height (`Pointers.followFingerLines`). The pointer stores the net Shift+arrow
+presses already sent (`selectionStepsX`/`selectionStepsY`) and sends only the difference, so
+moving back sends the opposite Shift+arrow and shrinks the selection. Release is identical in
+both modes: one DEL. Both values are captured in `ConfigSnapshot` at pointer-down
+(`selection_delete_follow_finger`, `selection_delete_step_px` = dp × density). Tests:
+`PointersFollowFingerSelectionTest`.
 
 Defaults are declared in `Config.kt:526-527`:
 

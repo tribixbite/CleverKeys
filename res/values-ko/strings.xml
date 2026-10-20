@@ -468,6 +468,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">줄 선택을 트리거하기 위해 손가락이 움직여야 하는 키 높이의 %. 높을수록 실수로 줄 선택하기 어렵습니다.</string>
     <string name="gesture_vertical_speed_title">세로 속도</string>
     <string name="gesture_vertical_speed_desc">줄 선택 속도 배율（낮을수록 느림）. 문자 선택은 항상 최대 속도입니다.</string>
+    <string name="gesture_selection_delete_mode_title">선택 이동 방식</string>
+    <string name="gesture_selection_delete_mode_desc">손가락 움직임에 따라 선택 영역이 바뀌는 방식입니다. “손가락 따라가기”는 이동한 거리만큼 한 글자씩 선택하며, 되돌아가면 선택 영역이 줄어듭니다.</string>
+    <string name="gesture_selection_delete_mode_speed">거리에 따른 속도</string>
+    <string name="gesture_selection_delete_mode_follow">손가락 따라가기</string>
+    <string name="gesture_selection_delete_step_title">단계 크기</string>
+    <string name="gesture_selection_delete_step_desc">“손가락 따라가기” 모드에서 한 글자를 더 선택하는 데 필요한 손가락 이동 거리입니다. 작을수록 빠르고, 클수록 정밀합니다.</string>
     <string name="gesture_tap_duration_title">탭 시간 임계값</string>
     <string name="gesture_tap_duration_desc">탭 제스처의 최대 지속 시간（ms）. 높을수록 탭이 쉬워지지만 스와이프와 간섭할 수 있습니다.</string>
     <string name="gesture_double_space_period_title">스페이스 두 번으로 마침표</string>

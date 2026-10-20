@@ -356,6 +356,20 @@ class ConfigDefaultsTest {
         assertThat(Defaults.SELECTION_DELETE_VERTICAL_SPEED).isWithin(0.01f).of(0.4f)
     }
 
+    @Test
+    fun `selection delete mode defaults to the historical speed-by-distance joystick`() {
+        // GH #190: Follow finger is opt-in; existing users keep today's behaviour.
+        assertThat(Defaults.SELECTION_DELETE_MODE).isEqualTo(Defaults.SELECTION_DELETE_MODE_SPEED)
+        assertThat(Defaults.SELECTION_DELETE_MODE_SPEED).isEqualTo("speed")
+        assertThat(Defaults.SELECTION_DELETE_MODE_FOLLOW).isEqualTo("follow")
+    }
+
+    @Test
+    fun `selection delete follow-finger step default lies inside its shared range`() {
+        assertThat(Defaults.SELECTION_DELETE_STEP_DP).isEqualTo(12)
+        assertThat(Defaults.SELECTION_DELETE_STEP_DP in SettingsRanges.SELECTION_DELETE_STEP_DP).isTrue()
+    }
+
     // =========================================================================
     // Swipe Trail (wiki: typing/swipe-typing.md)
     // =========================================================================

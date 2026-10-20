@@ -1225,6 +1225,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.InputCoordinatorEngineInputTest',
     // Release-record burn-down (2026-09-03): claims pinned by waves UA-UD
     'tribixbite.cleverkeys.ReleaseClaimGestureModesTest',
+    // GH #190 (2026-10-20): backspace swipe+hold "Follow finger" selection — proportional
+    // growth, shrink on moving back, unchanged speed-by-distance default, same release DEL.
+    'tribixbite.cleverkeys.PointersFollowFingerSelectionTest',
     // #171/#145/#83 (2026-09-03): custom short-swipe dispatch — a custom mapping shadows
     // the default at every fuzzed direction bin; cold-load independence from swipe typing;
     // the short/long boundary is authoritative (BY-DESIGN pin for #83).

@@ -510,6 +510,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">% dell\'altezza del tasto che il dito deve muovere per selezionare una riga. Più alto = più difficile selezionare righe accidentalmente.</string>
     <string name="gesture_vertical_speed_title">Velocità verticale</string>
     <string name="gesture_vertical_speed_desc">Moltiplicatore di velocità per la selezione delle righe (più basso = più lento). La selezione dei caratteri rimane alla velocità normale.</string>
+    <string name="gesture_selection_delete_mode_title">Movimento della selezione</string>
+    <string name="gesture_selection_delete_mode_desc">Come il movimento del dito modifica la selezione. «Segui il dito» seleziona un carattere per ogni passo di spostamento; tornando indietro la selezione si riduce.</string>
+    <string name="gesture_selection_delete_mode_speed">Velocità in base alla distanza</string>
+    <string name="gesture_selection_delete_mode_follow">Segui il dito</string>
+    <string name="gesture_selection_delete_step_title">Dimensione del passo</string>
+    <string name="gesture_selection_delete_step_desc">Spostamento del dito necessario per selezionare un carattere in più in modalità «Segui il dito». Più piccolo = più veloce, più grande = più preciso.</string>
     <string name="gesture_tap_duration_title">Soglia durata tocco</string>
     <string name="gesture_tap_duration_desc">Durata massima per un gesto di tocco (ms). Più alto = tocchi più facili, ma può interferire con i gesti.</string>
     <string name="gesture_double_space_period_title">Doppio spazio per il punto</string>

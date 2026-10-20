@@ -478,6 +478,12 @@
     <string name="gesture_vertical_threshold_desc" formatted="false">Satır seçimini tetiklemek için parmağın hareket etmesi gereken tuş yüksekliğinin %\'si. Yüksek değer = yanlışlıkla satır seçimi daha zor.</string>
     <string name="gesture_vertical_speed_title">Dikey Hız</string>
     <string name="gesture_vertical_speed_desc">Satır seçimi için hız çarpanı (düşük = yavaş). Karakter seçimi tam hızda kalır.</string>
+    <string name="gesture_selection_delete_mode_title">Seçim Hareketi</string>
+    <string name="gesture_selection_delete_mode_desc">Parmak hareketinin seçimi nasıl değiştirdiği. “Parmağı takip et” her hareket adımında bir karakter seçer; geri hareket seçimi küçültür.</string>
+    <string name="gesture_selection_delete_mode_speed">Mesafeye göre hız</string>
+    <string name="gesture_selection_delete_mode_follow">Parmağı takip et</string>
+    <string name="gesture_selection_delete_step_title">Adım Boyutu</string>
+    <string name="gesture_selection_delete_step_desc">“Parmağı takip et” modunda bir karakter daha seçmek için gereken parmak hareketi. Küçük = daha hızlı, büyük = daha hassas.</string>
     <string name="gesture_tap_duration_title">Dokunma Süresi Eşiği</string>
     <string name="gesture_tap_duration_desc">Dokunma hareketi için maksimum süre (ms). Yüksek değer = daha kolay dokunma ama kaydırmayı etkileyebilir.</string>
     <string name="gesture_double_space_period_title">Çift Boşluk Nokta Ekle</string>
