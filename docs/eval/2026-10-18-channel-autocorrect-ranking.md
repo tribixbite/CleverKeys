@@ -622,3 +622,45 @@ These thresholds are fixed now.
 `…_SCOPE`). Across rounds 3–4, δ = 0.5 on Hebrew-script words fixed 38 (HE-adj2-DEV), 51
 (HE-adj2-TEST), 36 (HE-adj, seen) and 86 (HE-adj3) distinct words, with **0 breaks on any Hebrew
 set**. English is unchanged by construction and by check.
+
+## 13. Round 5 pre-registration: maximum correction cost κ (written before any round-5 outcome)
+
+**Disclosure.** §8 inspected round-2 TEST rows (GTC-TEST fixes and C-oov-TEST changes) and
+tabulated edit costs at the then-shipped weights. That inspection motivated this rule. κ is
+chosen on DEV only, and the TEST result below carries this disclosure.
+
+### 13.1 Rule C5
+
+Shipped rule C2 + Hebrew-scoped δ (§12), plus one step. After the winner is picked and guard G has
+run, the correction is committed only if the **winner's edit cost** (the `E` of §1.1 including
+δ, without the frequency term) is **≤ κ**. Otherwise the typed word is kept. κ = ∞ is the
+shipped behaviour. Setting: `autocorrect_channel_max_correction_cost` (slider top = off).
+Grid: `κ ∈ {1.5, 1.75, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0}`.
+
+### 13.2 Data and baseline
+
+GTC, S-adj and C-oov with the §1.2 / §3 splits. The baseline is the shipped default at the time of
+this section (rule C2 + Hebrew δ). κ can only remove corrections. So against the baseline, GTC and
+S-adj can only lose (breaks = correct corrections no longer made), and C-oov can only gain
+("protected" = valid words the baseline changed that κ leaves alone).
+
+### 13.3 Choice on DEV
+
+κ is admissible when:
+
+1. **K1.** GTC-DEV distinct breaks ≤ **1.5 %** of the distinct GTC-DEV targets the baseline gets
+   right.
+2. **K2.** S-adj-DEV distinct breaks ≤ **0.5 %** of S-adj-DEV base words.
+3. **K3.** Every named case holds.
+
+Choice: the admissible κ that protects the most C-oov-DEV words; ties go to the larger κ (more
+conservative). If none is admissible, κ stays ∞. Soundness check as before (2,000 inputs).
+
+### 13.4 Ship gate on TEST (one evaluation; disclosed per §13)
+
+- **L1.** GTC-TEST distinct breaks ≤ 1.5 % of the distinct targets the baseline gets right.
+- **L2.** S-adj-TEST distinct breaks ≤ 0.5 % of base words.
+- **L3.** C-oov-TEST protected words ≥ 25 % of the C-oov-TEST words the baseline changes.
+- **L4.** Named cases hold.
+
+All four must hold to ship κ as the default. These thresholds are fixed now.
