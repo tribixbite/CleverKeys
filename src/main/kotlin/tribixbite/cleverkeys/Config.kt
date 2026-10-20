@@ -484,6 +484,13 @@ object GeoKnobRanges {
  * pins every consumer site.
  */
 object SettingsRanges {
+    /**
+     * Keyboard height percent, every orientation and screen (`keyboard_height*`). The sliders
+     * have offered exactly this since 2025-09; the reader and backup validation use it too, so an
+     * imported out-of-range value cannot produce a height the UI cannot show (audit M1, 2026-10-20).
+     */
+    val KEYBOARD_HEIGHT: IntRange = 20..60
+
     /** Key-repeat interval in ms (`longpress_interval`). Matches the slider. */
     val LONGPRESS_INTERVAL: IntRange = 25..200
 
@@ -1433,22 +1440,6 @@ class Config private constructor(
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, dm)
     }
 
-    private fun get_dip_pref_oriented(
-        dm: DisplayMetrics,
-        pref_base_name: String,
-        def_port: Float,
-        def_land: Float
-    ): Float {
-        val suffix = when {
-            foldable_unfolded && orientation_landscape -> "_landscape_unfolded"
-            foldable_unfolded -> "_portrait_unfolded"
-            orientation_landscape -> "_landscape"
-            else -> "_portrait"
-        }
-        val def = if (orientation_landscape) def_land else def_port
-        return get_dip_pref(dm, pref_base_name + suffix, def)
-    }
-
     /**
      * Get a percentage preference and convert to pixels based on screen width.
      * Used for horizontal margins (left/right).
@@ -1457,17 +1448,22 @@ class Config private constructor(
         pref_base_name: String,
         def_port: Int,
         def_land: Int
-    ): Float {
-        val suffix = when {
-            foldable_unfolded && orientation_landscape -> "_landscape_unfolded"
-            foldable_unfolded -> "_portrait_unfolded"
-            orientation_landscape -> "_landscape"
-            else -> "_portrait"
-        }
-        val def = if (orientation_landscape) def_land else def_port
-        val percent = safeGetInt(_prefs, pref_base_name + suffix, def).coerceIn(0, 45)
-        return screenWidthPixels * percent / 100f
-    }
+    ): Float = screenWidthPixels * orientedPercent(pref_base_name, def_port, def_land).coerceIn(0, 45) / 100f
+
+    /**
+     * The orientation/fold-scoped percent stored under `<base>_portrait` / `<base>_landscape`
+     * (outer screen) or `<base>_portrait_unfolded` / `<base>_landscape_unfolded` (a foldable's
+     * inner screen). An inner-screen key that was never set follows the outer-screen value —
+     * the same rule as [KeyboardHeightPrefs.followOuter]. Before 2026-10-20 nothing wrote the
+     * `_unfolded` margin keys, so every margin reverted to its default on an inner screen (audit H1).
+     */
+    private fun orientedPercent(base: String, defPort: Int, defLand: Int): Int =
+        KeyboardHeightPrefs.followOuter(
+            outerKey = base + if (orientation_landscape) "_landscape" else "_portrait",
+            unfolded = foldable_unfolded,
+            default = if (orientation_landscape) defLand else defPort,
+            contains = _prefs::contains,
+        ) { key, def -> safeGetInt(_prefs, key, def) }
 
     /**
      * Get a percentage preference and convert to pixels based on screen height.
@@ -1477,17 +1473,7 @@ class Config private constructor(
         pref_base_name: String,
         def_port: Int,
         def_land: Int
-    ): Float {
-        val suffix = when {
-            foldable_unfolded && orientation_landscape -> "_landscape_unfolded"
-            foldable_unfolded -> "_portrait_unfolded"
-            orientation_landscape -> "_landscape"
-            else -> "_portrait"
-        }
-        val def = if (orientation_landscape) def_land else def_port
-        val percent = safeGetInt(_prefs, pref_base_name + suffix, def).coerceIn(0, 30)
-        return screenHeightPixels * percent / 100f
-    }
+    ): Float = screenHeightPixels * orientedPercent(pref_base_name, def_port, def_land).coerceIn(0, 30) / 100f
 
     private fun getThemeId(res: Resources, theme_name: String): Int {
         val night_mode = res.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK

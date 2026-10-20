@@ -942,7 +942,9 @@ class SettingsImportPlanBuilderTest {
         assertThat(SettingsValidation.intRangeFor("finger_occlusion_offset")).isEqualTo(-25..25)
         assertThat(SettingsValidation.intRangeFor("ctc_beam_width")).isEqualTo(10..300)
         assertThat(SettingsValidation.intRangeFor("longpress_timeout")).isEqualTo(50..2000)
-        assertThat(SettingsValidation.intRangeFor("keyboard_height_landscape")).isEqualTo(20..65)
+        // All four heights share the sliders' range since 2026-10-20 (audit M1; was 20..65 / 10..100).
+        assertThat(SettingsValidation.intRangeFor("keyboard_height_landscape")).isEqualTo(tribixbite.cleverkeys.SettingsRanges.KEYBOARD_HEIGHT)
+        assertThat(SettingsValidation.intRangeFor("keyboard_height_unfolded")).isEqualTo(tribixbite.cleverkeys.SettingsRanges.KEYBOARD_HEIGHT)
         assertThat(SettingsValidation.intRangeFor("margin_left_portrait")).isEqualTo(0..45)
         assertThat(SettingsValidation.intRangeFor("horizontal_margin_portrait")).isEqualTo(0..200)
         assertThat(SettingsValidation.intRangeFor("autocorrect_confidence_min_frequency"))

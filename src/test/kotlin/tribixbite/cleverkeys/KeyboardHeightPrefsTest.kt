@@ -56,4 +56,27 @@ class KeyboardHeightPrefsTest {
         assertEquals("keyboard_height_unfolded", KeyboardHeightPrefs.keyFor(landscape = false, unfolded = true))
         assertEquals("keyboard_height_landscape_unfolded", KeyboardHeightPrefs.keyFor(landscape = true, unfolded = true))
     }
+
+    @Test
+    fun outOfRangeStoredHeightsAreClampedToTheSliderRange_auditM1() {
+        val imported = mapOf(KeyboardHeightPrefs.PORTRAIT to 100, KeyboardHeightPrefs.LANDSCAPE to 5)
+        assertEquals(SettingsRanges.KEYBOARD_HEIGHT.last, resolve(imported, landscape = false, unfolded = false))
+        assertEquals(SettingsRanges.KEYBOARD_HEIGHT.first, resolve(imported, landscape = true, unfolded = false))
+        // Defaults are inside the range, so clamping never moves a fresh install.
+        assertEquals(true, Defaults.KEYBOARD_HEIGHT_PORTRAIT in SettingsRanges.KEYBOARD_HEIGHT)
+        assertEquals(true, Defaults.KEYBOARD_HEIGHT_LANDSCAPE in SettingsRanges.KEYBOARD_HEIGHT)
+    }
+
+    @Test
+    fun marginsUseTheSameFollowOuterRule_auditH1() {
+        // margin_left_portrait set, its _unfolded twin never written (nothing in the UI writes it).
+        val stored = mapOf("margin_left_portrait" to 7)
+        fun follow(unfolded: Boolean) = KeyboardHeightPrefs.followOuter(
+            "margin_left_portrait", unfolded, 1, stored::containsKey) { k, d -> stored[k] ?: d }
+        assertEquals(7, follow(unfolded = false))
+        assertEquals(7, follow(unfolded = true))   // was: the default (1) on every inner screen
+        val withInner = stored + ("margin_left_portrait_unfolded" to 3)
+        assertEquals(3, KeyboardHeightPrefs.followOuter(
+            "margin_left_portrait", true, 1, withInner::containsKey) { k, d -> withInner[k] ?: d })
+    }
 }

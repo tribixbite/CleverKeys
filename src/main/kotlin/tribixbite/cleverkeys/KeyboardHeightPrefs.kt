@@ -44,19 +44,38 @@ object KeyboardHeightPrefs {
 
     /**
      * Height percent for [landscape] / [unfolded], read through [contains] and [getInt]
-     * (Android-free, so the rule is unit-testable on the pure JVM runner).
+     * (Android-free, so the rule is unit-testable on the pure JVM runner), clamped to
+     * [SettingsRanges.KEYBOARD_HEIGHT] — the range the sliders offer.
      */
     fun percent(
         landscape: Boolean,
         unfolded: Boolean,
         contains: (String) -> Boolean,
         getInt: (String, Int) -> Int,
+    ): Int = followOuter(outerKey(landscape), unfolded, default(landscape), contains, getInt)
+        .coerceIn(SettingsRanges.KEYBOARD_HEIGHT)
+
+    /**
+     * THE fold rule for every orientation-scoped preference stored as `<outerKey>` (outer screen)
+     * and `<outerKey>_unfolded` (a foldable's inner screen): the outer value, or on the inner screen
+     * the inner value when it was ever set and the outer value otherwise. Shared by the keyboard
+     * height ([percent]) and the bottom/left/right margins (`Config.orientedPercent`).
+     */
+    fun followOuter(
+        outerKey: String,
+        unfolded: Boolean,
+        default: Int,
+        contains: (String) -> Boolean,
+        getInt: (String, Int) -> Int,
     ): Int {
-        val outer = getInt(outerKey(landscape), default(landscape))
+        val outer = getInt(outerKey, default)
         if (!unfolded) return outer
-        val inner = innerKey(landscape)
+        val inner = outerKey + UNFOLDED_SUFFIX
         return if (contains(inner)) getInt(inner, outer) else outer
     }
+
+    /** Suffix of every inner-screen key. */
+    const val UNFOLDED_SUFFIX = "_unfolded"
 
     /** [percent] over [prefs], recovering from type-corrupted values like the rest of Config. */
     fun percent(prefs: SharedPreferences, landscape: Boolean, unfolded: Boolean): Int =

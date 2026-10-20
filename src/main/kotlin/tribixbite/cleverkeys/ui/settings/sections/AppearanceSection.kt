@@ -25,8 +25,8 @@ internal fun SettingsActivity.AppearanceSection() {
                     title = stringResource(R.string.appearance_height_portrait_title),
                     description = stringResource(R.string.appearance_height_portrait_desc),
                     value = keyboardHeight.toFloat(),
-                    valueRange = 20f..60f,
-                    steps = 40,
+                    valueRange = SettingsRanges.KEYBOARD_HEIGHT.first.toFloat()..SettingsRanges.KEYBOARD_HEIGHT.last.toFloat(),
+                    steps = SettingsRanges.KEYBOARD_HEIGHT.last - SettingsRanges.KEYBOARD_HEIGHT.first - 1,
                     onValueChange = {
                         keyboardHeight = it.toInt()
                         saveSetting("keyboard_height", keyboardHeight)
@@ -38,8 +38,8 @@ internal fun SettingsActivity.AppearanceSection() {
                     title = stringResource(R.string.appearance_height_landscape_title),
                     description = stringResource(R.string.appearance_height_landscape_desc),
                     value = keyboardHeightLandscape.toFloat(),
-                    valueRange = 20f..60f,
-                    steps = 40,
+                    valueRange = SettingsRanges.KEYBOARD_HEIGHT.first.toFloat()..SettingsRanges.KEYBOARD_HEIGHT.last.toFloat(),
+                    steps = SettingsRanges.KEYBOARD_HEIGHT.last - SettingsRanges.KEYBOARD_HEIGHT.first - 1,
                     onValueChange = {
                         keyboardHeightLandscape = it.toInt()
                         saveSetting("keyboard_height_landscape", keyboardHeightLandscape)
@@ -56,8 +56,8 @@ internal fun SettingsActivity.AppearanceSection() {
                     title = stringResource(R.string.appearance_height_unfolded_title),
                     description = stringResource(R.string.appearance_height_unfolded_desc) + innerNote,
                     value = keyboardHeightUnfolded.toFloat(),
-                    valueRange = 20f..60f,
-                    steps = 40,
+                    valueRange = SettingsRanges.KEYBOARD_HEIGHT.first.toFloat()..SettingsRanges.KEYBOARD_HEIGHT.last.toFloat(),
+                    steps = SettingsRanges.KEYBOARD_HEIGHT.last - SettingsRanges.KEYBOARD_HEIGHT.first - 1,
                     onValueChange = {
                         keyboardHeightUnfolded = it.toInt()
                         saveSetting(KeyboardHeightPrefs.PORTRAIT_UNFOLDED, keyboardHeightUnfolded)
@@ -70,8 +70,8 @@ internal fun SettingsActivity.AppearanceSection() {
                     title = stringResource(R.string.appearance_height_landscape_unfolded_title),
                     description = stringResource(R.string.appearance_height_landscape_unfolded_desc) + innerNote,
                     value = keyboardHeightLandscapeUnfolded.toFloat(),
-                    valueRange = 20f..60f,
-                    steps = 40,
+                    valueRange = SettingsRanges.KEYBOARD_HEIGHT.first.toFloat()..SettingsRanges.KEYBOARD_HEIGHT.last.toFloat(),
+                    steps = SettingsRanges.KEYBOARD_HEIGHT.last - SettingsRanges.KEYBOARD_HEIGHT.first - 1,
                     onValueChange = {
                         keyboardHeightLandscapeUnfolded = it.toInt()
                         saveSetting(KeyboardHeightPrefs.LANDSCAPE_UNFOLDED, keyboardHeightLandscapeUnfolded)

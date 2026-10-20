@@ -329,10 +329,8 @@ object SettingsValidation {
         )) put(k, 0..100)
 
         // Keyboard height percentages
-        for (k in listOf("keyboard_height", "keyboard_height_unfolded")) put(k, 10..100)
-        for (k in listOf(
-            "keyboard_height_landscape", "keyboard_height_landscape_unfolded",
-        )) put(k, 20..65)
+        // One range for all four heights: the sliders' (SettingsRanges.KEYBOARD_HEIGHT).
+        for (k in tribixbite.cleverkeys.KeyboardHeightPrefs.ALL_KEYS) put(k, tribixbite.cleverkeys.SettingsRanges.KEYBOARD_HEIGHT)
 
         // Bottom margins (0-30% of screen height)
         for (k in listOf(
