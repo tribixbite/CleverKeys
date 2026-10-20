@@ -25,6 +25,7 @@ import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.io.notifySanitizationRulesChanged
 import tribixbite.cleverkeys.ui.settings.saveSetting
+import kotlin.math.roundToInt
 
 @Composable
 internal fun SettingsActivity.ClipboardSection() {
@@ -72,9 +73,9 @@ internal fun SettingsActivity.ClipboardSection() {
                         // G-5: shared with the import validator + Config clamp (SettingsRanges).
                         valueRange = SettingsRanges.CLIPBOARD_HISTORY_LIMIT.first.toFloat()..
                             SettingsRanges.CLIPBOARD_HISTORY_LIMIT.last.toFloat(),
-                        steps = 50,  // 50 steps = increments of 10
+                        increment = 10f,
                         onValueChange = {
-                            clipboardHistoryLimit = it.toInt()
+                            clipboardHistoryLimit = it.roundToInt()
                             saveSetting("clipboard_history_limit", clipboardHistoryLimit)
                         },
                         displayValue = if (clipboardHistoryLimit == 0) {
@@ -110,9 +111,9 @@ internal fun SettingsActivity.ClipboardSection() {
                         description = durationDesc,
                         value = currentIndex.toFloat(),
                         valueRange = 0f..(durationPresets.size - 1).toFloat(),
-                        steps = durationPresets.size - 2,
+                        increment = 1f,
                         onValueChange = {
-                            val idx = it.toInt().coerceIn(0, durationPresets.size - 1)
+                            val idx = it.roundToInt().coerceIn(0, durationPresets.size - 1)
                             clipboardHistoryDuration = durationPresets[idx]
                             saveSetting("clipboard_history_duration", clipboardHistoryDuration.toString())
                             // Auto-link: "Never expire" + capped count → set count to unlimited too
@@ -147,9 +148,9 @@ internal fun SettingsActivity.ClipboardSection() {
                         description = stringResource(R.string.clipboard_size_limit_desc),
                         value = clipboardSizeLimitMb.toFloat(),
                         valueRange = 1f..100f,
-                        steps = 99,
+                        increment = 1f,
                         onValueChange = {
-                            clipboardSizeLimitMb = it.toInt()
+                            clipboardSizeLimitMb = it.roundToInt()
                             saveSetting("clipboard_size_limit_mb", clipboardSizeLimitMb)
                         },
                         displayValue = "$clipboardSizeLimitMb MB"
@@ -162,9 +163,9 @@ internal fun SettingsActivity.ClipboardSection() {
                     description = stringResource(R.string.clipboard_pane_height_desc),
                     value = clipboardPaneHeightPercent.toFloat(),
                     valueRange = SettingsRanges.CLIPBOARD_PANE_HEIGHT_PERCENT.toSliderRange(),
-                    steps = 40,
+                    increment = 1f,
                     onValueChange = {
-                        clipboardPaneHeightPercent = it.toInt()
+                        clipboardPaneHeightPercent = it.roundToInt()
                         saveSetting("clipboard_pane_height_percent", clipboardPaneHeightPercent)
                     },
                     displayValue = "$clipboardPaneHeightPercent%"
@@ -178,9 +179,9 @@ internal fun SettingsActivity.ClipboardSection() {
                     // F-10: shared floor/ceiling with SettingsPersistence + Config (SettingsRanges).
                     valueRange = SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.first.toFloat()..
                         SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.last.toFloat(),
-                    steps = 14,  // 64, 128, 192, 256, ... 1024
+                    increment = 64f,
                     onValueChange = {
-                        clipboardMaxItemSizeKb = it.toInt()
+                        clipboardMaxItemSizeKb = it.roundToInt()
                         saveSetting("clipboard_max_item_size_kb", clipboardMaxItemSizeKb)
                     },
                     displayValue = "${clipboardMaxItemSizeKb}KB"
@@ -247,10 +248,10 @@ internal fun SettingsActivity.ClipboardSection() {
                     // F-8: shared with the import validator + Config clamp (SettingsRanges).
                     valueRange = SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.first.toFloat()..
                         SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.last.toFloat(),
-                    steps = 48,  // 1..50 in 1 MB increments
+                    increment = 1f,
                     enabled = clipboardMediaEnabled && !clipboardTextOnly,
                     onValueChange = {
-                        clipboardMaxMediaSizeMb = it.toInt()
+                        clipboardMaxMediaSizeMb = it.roundToInt()
                         saveSetting("clipboard_max_media_size_mb", clipboardMaxMediaSizeMb)
                     },
                     displayValue = "$clipboardMaxMediaSizeMb MB"

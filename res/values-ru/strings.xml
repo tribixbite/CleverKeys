@@ -403,7 +403,7 @@
     <string name="appearance_custom_border_title">Настраиваемая рамка</string>
     <string name="appearance_custom_border_desc">Включить пользовательский стиль рамки клавиш</string>
     <string name="appearance_border_radius_title">Радиус скругления рамки</string>
-    <string name="appearance_border_radius_desc">Радиус углов клавиш (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Радиус углов клавиш, в % от ширины клавиши</string>
     <string name="appearance_border_line_width_title">Толщина рамки</string>
     <string name="appearance_border_line_width_desc">Ширина рамки клавиш (dp)</string>
     <string name="autocorrect_enable_title">Включить автокоррекцию</string>

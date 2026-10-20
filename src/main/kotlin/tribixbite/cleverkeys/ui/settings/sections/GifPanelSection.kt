@@ -30,6 +30,7 @@ import tribixbite.cleverkeys.ui.settings.io.GifImportStatus
 import tribixbite.cleverkeys.ui.settings.io.performGifRemoveAll
 import tribixbite.cleverkeys.ui.settings.io.performGifRemovePack
 import tribixbite.cleverkeys.ui.settings.saveSetting
+import kotlin.math.roundToInt
 
 /** Per-pack remove affordance. A glyph, not English copy — deliberately not a resource. */
 private const val REMOVE_PACK_GLYPH = "X"
@@ -180,9 +181,9 @@ internal fun SettingsActivity.GifPanelSection() {
                         description = stringResource(R.string.gif_grid_columns_desc),
                         value = gifThumbnailColumns.toFloat(),
                         valueRange = SettingsRanges.GIF_THUMBNAIL_COLUMNS.toSliderRange(),
-                        steps = 3,
+                        increment = 1f,
                         onValueChange = {
-                            gifThumbnailColumns = it.toInt()
+                            gifThumbnailColumns = it.roundToInt()
                             saveSetting("gif_thumbnail_columns", gifThumbnailColumns)
                         },
                         displayValue = pluralStringResource(

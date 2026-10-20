@@ -27,6 +27,7 @@ import tribixbite.cleverkeys.ui.settings.applySwipeSensitivityPreset
 import tribixbite.cleverkeys.ui.settings.getSwipeSensitivityPreset
 import tribixbite.cleverkeys.ui.settings.saveSetting
 import androidx.compose.material3.MaterialTheme
+import kotlin.math.roundToInt
 
 @Composable
 internal fun SettingsActivity.GestureTuningSection() {
@@ -80,9 +81,9 @@ internal fun SettingsActivity.GestureTuningSection() {
                         description = stringResource(R.string.gesture_min_distance_desc),
                         value = shortGestureMinDistance.toFloat(),
                         valueRange = SettingsRanges.SHORT_GESTURE_MIN_DISTANCE.toSliderRange(),
-                        steps = 10,
+                        increment = 1f,
                         onValueChange = {
-                            shortGestureMinDistance = it.toInt()
+                            shortGestureMinDistance = it.roundToInt()
                             saveSetting("short_gesture_min_distance", shortGestureMinDistance)
                         },
                         displayValue = "${shortGestureMinDistance}%"
@@ -98,9 +99,9 @@ internal fun SettingsActivity.GestureTuningSection() {
                         ),
                         value = shortGestureMaxDistance.toFloat(),
                         valueRange = SettingsRanges.SHORT_GESTURE_MAX_DISTANCE.toSliderRange(),
-                        steps = 30,
+                        increment = 1f,
                         onValueChange = {
-                            shortGestureMaxDistance = it.toInt()
+                            shortGestureMaxDistance = it.roundToInt()
                             saveSetting("short_gesture_max_distance", shortGestureMaxDistance)
                         },
                         displayValue = "${shortGestureMaxDistance}%",
@@ -141,15 +142,14 @@ internal fun SettingsActivity.GestureTuningSection() {
                 if (subkeyPopoverEnabled) {
                     val neutralRange = Defaults.SUBKEY_POPOVER_NEUTRAL_MIN.toFloat()..Defaults.SUBKEY_POPOVER_NEUTRAL_MAX.toFloat()
                     // 5% steps across the range: (max - min) / 5 - 1 intermediate stops.
-                    val neutralSteps = (Defaults.SUBKEY_POPOVER_NEUTRAL_MAX - Defaults.SUBKEY_POPOVER_NEUTRAL_MIN) / 5 - 1
                     SettingsSlider(
                         title = stringResource(R.string.gesture_popover_neutral_width_title),
                         description = stringResource(R.string.gesture_popover_neutral_width_desc),
                         value = subkeyPopoverNeutralWidth.toFloat(),
                         valueRange = neutralRange,
-                        steps = neutralSteps,
+                        increment = 5f,
                         onValueChange = {
-                            subkeyPopoverNeutralWidth = it.toInt()
+                            subkeyPopoverNeutralWidth = it.roundToInt()
                             saveSetting("subkey_popover_neutral_width", subkeyPopoverNeutralWidth)
                         },
                         displayValue = "${subkeyPopoverNeutralWidth}%"
@@ -159,9 +159,9 @@ internal fun SettingsActivity.GestureTuningSection() {
                         description = stringResource(R.string.gesture_popover_neutral_height_desc),
                         value = subkeyPopoverNeutralHeight.toFloat(),
                         valueRange = neutralRange,
-                        steps = neutralSteps,
+                        increment = 5f,
                         onValueChange = {
-                            subkeyPopoverNeutralHeight = it.toInt()
+                            subkeyPopoverNeutralHeight = it.roundToInt()
                             saveSetting("subkey_popover_neutral_height", subkeyPopoverNeutralHeight)
                         },
                         displayValue = "${subkeyPopoverNeutralHeight}%"
@@ -186,9 +186,9 @@ internal fun SettingsActivity.GestureTuningSection() {
                     description = stringResource(R.string.gesture_vertical_threshold_desc),
                     value = selectionDeleteVerticalThreshold.toFloat(),
                     valueRange = 20f..80f,
-                    steps = 12,
+                    increment = 5f,
                     onValueChange = {
-                        selectionDeleteVerticalThreshold = it.toInt()
+                        selectionDeleteVerticalThreshold = it.roundToInt()
                         saveSetting("selection_delete_vertical_threshold", selectionDeleteVerticalThreshold)
                     },
                     displayValue = "${selectionDeleteVerticalThreshold}%"
@@ -222,9 +222,9 @@ internal fun SettingsActivity.GestureTuningSection() {
                         description = stringResource(R.string.gesture_selection_delete_step_desc),
                         value = selectionDeleteStepDp.toFloat(),
                         valueRange = stepRange.first.toFloat()..stepRange.last.toFloat(),
-                        steps = stepRange.last - stepRange.first - 1,
+                        increment = 1f,
                         onValueChange = {
-                            selectionDeleteStepDp = it.toInt().coerceIn(stepRange)
+                            selectionDeleteStepDp = it.roundToInt().coerceIn(stepRange)
                             saveSetting("selection_delete_step_dp", selectionDeleteStepDp)
                         },
                         displayValue = "$selectionDeleteStepDp dp"
@@ -237,7 +237,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                         description = stringResource(R.string.gesture_vertical_speed_desc),
                         value = selectionDeleteVerticalSpeed,
                         valueRange = 0.1f..1.0f,
-                        steps = 18,
+                        increment = 0.05f,
                         onValueChange = {
                             selectionDeleteVerticalSpeed = it
                             saveSetting("selection_delete_vertical_speed", selectionDeleteVerticalSpeed)
@@ -258,9 +258,9 @@ internal fun SettingsActivity.GestureTuningSection() {
                     description = stringResource(R.string.gesture_tap_duration_desc),
                     value = tapDurationThreshold.toFloat(),
                     valueRange = 50f..500f,
-                    steps = 45,
+                    increment = 10f,
                     onValueChange = {
-                        tapDurationThreshold = it.toInt()
+                        tapDurationThreshold = it.roundToInt()
                         saveSetting("tap_duration_threshold", tapDurationThreshold)
                     },
                     displayValue = "${tapDurationThreshold}ms"
@@ -282,9 +282,9 @@ internal fun SettingsActivity.GestureTuningSection() {
                         description = stringResource(R.string.gesture_double_space_timing_desc),
                         value = doubleSpaceThreshold.toFloat(),
                         valueRange = 200f..800f,
-                        steps = 12,
+                        increment = 50f,
                         onValueChange = {
-                            doubleSpaceThreshold = it.toInt()
+                            doubleSpaceThreshold = it.roundToInt()
                             saveSetting("double_space_threshold", doubleSpaceThreshold)
                         },
                         displayValue = "${doubleSpaceThreshold}ms"
@@ -316,7 +316,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                     description = stringResource(R.string.gesture_min_swipe_distance_desc),
                     value = swipeMinDistance,
                     valueRange = 20f..100f,
-                    steps = 16,
+                    increment = 1f,
                     onValueChange = {
                         swipeMinDistance = it
                         saveSetting("swipe_min_distance", swipeMinDistance)
@@ -329,7 +329,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                     description = stringResource(R.string.gesture_min_key_distance_desc),
                     value = swipeMinKeyDistance,
                     valueRange = 15f..80f,
-                    steps = 13,
+                    increment = 5f,
                     onValueChange = {
                         swipeMinKeyDistance = it
                         saveSetting("swipe_min_key_distance", swipeMinKeyDistance)
@@ -342,9 +342,9 @@ internal fun SettingsActivity.GestureTuningSection() {
                     description = stringResource(R.string.gesture_min_key_dwell_desc),
                     value = swipeMinDwellTime.toFloat(),
                     valueRange = 0f..50f,
-                    steps = 10,
+                    increment = 1f,
                     onValueChange = {
-                        swipeMinDwellTime = it.toInt()
+                        swipeMinDwellTime = it.roundToInt()
                         saveSetting("swipe_min_dwell_time", swipeMinDwellTime)
                     },
                     displayValue = "${swipeMinDwellTime}ms"
@@ -355,7 +355,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                     description = stringResource(R.string.gesture_noise_filter_desc),
                     value = swipeNoiseThreshold,
                     valueRange = 0.5f..10f,
-                    steps = 19,
+                    increment = 0.5f,
                     onValueChange = {
                         swipeNoiseThreshold = it
                         saveSetting("swipe_noise_threshold", swipeNoiseThreshold)
@@ -368,7 +368,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                     description = stringResource(R.string.gesture_high_velocity_desc),
                     value = swipeHighVelocityThreshold,
                     valueRange = 200f..2000f,
-                    steps = 18,
+                    increment = 100f,
                     onValueChange = {
                         swipeHighVelocityThreshold = it
                         saveSetting("swipe_high_velocity_threshold", swipeHighVelocityThreshold)
@@ -388,7 +388,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                     description = stringResource(R.string.gesture_speed_smoothing_desc),
                     value = sliderSpeedSmoothing,
                     valueRange = 0.1f..0.95f,
-                    steps = 17,
+                    increment = 0.05f,
                     onValueChange = {
                         sliderSpeedSmoothing = it
                         saveSetting("slider_speed_smoothing", sliderSpeedSmoothing)
@@ -401,7 +401,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                     description = stringResource(R.string.gesture_max_speed_multiplier_desc),
                     value = sliderSpeedMax,
                     valueRange = 1.0f..10f,
-                    steps = 18,
+                    increment = 0.5f,
                     onValueChange = {
                         sliderSpeedMax = it
                         saveSetting("slider_speed_max", sliderSpeedMax)
@@ -419,9 +419,9 @@ internal fun SettingsActivity.GestureTuningSection() {
                     description = stringResource(R.string.gesture_touch_smoothing_desc),
                     value = swipeSmoothingWindow.toFloat(),
                     valueRange = SettingsRanges.SWIPE_SMOOTHING_WINDOW.toSliderRange(),
-                    steps = 5,
+                    increment = 1f,
                     onValueChange = {
-                        swipeSmoothingWindow = it.toInt()
+                        swipeSmoothingWindow = it.roundToInt()
                         saveSetting("swipe_smoothing_window", swipeSmoothingWindow)
                     },
                     displayValue = "$swipeSmoothingWindow"
@@ -437,9 +437,9 @@ internal fun SettingsActivity.GestureTuningSection() {
                     description = stringResource(R.string.gesture_finger_occlusion_desc),
                     value = fingerOcclusionOffset.toFloat(),
                     valueRange = SettingsRanges.FINGER_OCCLUSION_OFFSET.toSliderRange(),
-                    steps = 49,
+                    increment = 1f,
                     onValueChange = {
-                        fingerOcclusionOffset = it.toInt()
+                        fingerOcclusionOffset = it.roundToInt()
                         saveSetting("finger_occlusion_offset", fingerOcclusionOffset)
                     },
                     displayValue = if (fingerOcclusionOffset == 0) stringResource(R.string.common_off)

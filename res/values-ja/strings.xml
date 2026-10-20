@@ -396,7 +396,7 @@
     <string name="appearance_custom_border_title">カスタム枠線設定</string>
     <string name="appearance_custom_border_desc">キーのカスタム枠線スタイルを有効にします</string>
     <string name="appearance_border_radius_title">枠線の角丸</string>
-    <string name="appearance_border_radius_desc">キーの角丸半径（dp）</string>
+    <string name="appearance_border_radius_desc" formatted="false">キーの角丸半径（キー幅に対する%）</string>
     <string name="appearance_border_line_width_title">枠線の太さ</string>
     <string name="appearance_border_line_width_desc">キー枠線の幅（dp）</string>
     <string name="autocorrect_enable_title">自動修正を有効にする</string>

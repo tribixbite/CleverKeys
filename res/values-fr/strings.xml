@@ -406,7 +406,7 @@
     <string name="appearance_custom_border_title">Configuration de bordure personnalisée</string>
     <string name="appearance_custom_border_desc">Activer le style de bordure de touche personnalisé</string>
     <string name="appearance_border_radius_title">Rayon de bordure</string>
-    <string name="appearance_border_radius_desc">Rayon des coins des touches (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Rayon des coins des touches, en % de la largeur de la touche</string>
     <string name="appearance_border_line_width_title">Largeur de ligne de bordure</string>
     <string name="appearance_border_line_width_desc">Largeur des bordures de touches (dp)</string>
     <string name="autocorrect_enable_title">Activer la correction automatique</string>

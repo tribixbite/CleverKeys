@@ -12,6 +12,7 @@ import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.saveSetting
+import kotlin.math.roundToInt
 
 @Composable
 internal fun SettingsActivity.AppearanceSection() {
@@ -27,9 +28,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_height_portrait_desc),
                     value = keyboardHeight.toFloat(),
                     valueRange = SettingsRanges.KEYBOARD_HEIGHT.first.toFloat()..SettingsRanges.KEYBOARD_HEIGHT.last.toFloat(),
-                    steps = SettingsRanges.KEYBOARD_HEIGHT.last - SettingsRanges.KEYBOARD_HEIGHT.first - 1,
+                    increment = 1f,
                     onValueChange = {
-                        keyboardHeight = it.toInt()
+                        keyboardHeight = it.roundToInt()
                         saveSetting("keyboard_height", keyboardHeight)
                     },
                     displayValue = "$keyboardHeight%"
@@ -40,9 +41,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_height_landscape_desc),
                     value = keyboardHeightLandscape.toFloat(),
                     valueRange = SettingsRanges.KEYBOARD_HEIGHT.first.toFloat()..SettingsRanges.KEYBOARD_HEIGHT.last.toFloat(),
-                    steps = SettingsRanges.KEYBOARD_HEIGHT.last - SettingsRanges.KEYBOARD_HEIGHT.first - 1,
+                    increment = 1f,
                     onValueChange = {
-                        keyboardHeightLandscape = it.toInt()
+                        keyboardHeightLandscape = it.roundToInt()
                         saveSetting("keyboard_height_landscape", keyboardHeightLandscape)
                     },
                     displayValue = "$keyboardHeightLandscape%"
@@ -58,9 +59,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_height_unfolded_desc) + innerNote,
                     value = keyboardHeightUnfolded.toFloat(),
                     valueRange = SettingsRanges.KEYBOARD_HEIGHT.first.toFloat()..SettingsRanges.KEYBOARD_HEIGHT.last.toFloat(),
-                    steps = SettingsRanges.KEYBOARD_HEIGHT.last - SettingsRanges.KEYBOARD_HEIGHT.first - 1,
+                    increment = 1f,
                     onValueChange = {
-                        keyboardHeightUnfolded = it.toInt()
+                        keyboardHeightUnfolded = it.roundToInt()
                         saveSetting(KeyboardHeightPrefs.PORTRAIT_UNFOLDED, keyboardHeightUnfolded)
                     },
                     displayValue = "$keyboardHeightUnfolded%",
@@ -72,9 +73,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_height_landscape_unfolded_desc) + innerNote,
                     value = keyboardHeightLandscapeUnfolded.toFloat(),
                     valueRange = SettingsRanges.KEYBOARD_HEIGHT.first.toFloat()..SettingsRanges.KEYBOARD_HEIGHT.last.toFloat(),
-                    steps = SettingsRanges.KEYBOARD_HEIGHT.last - SettingsRanges.KEYBOARD_HEIGHT.first - 1,
+                    increment = 1f,
                     onValueChange = {
-                        keyboardHeightLandscapeUnfolded = it.toInt()
+                        keyboardHeightLandscapeUnfolded = it.roundToInt()
                         saveSetting(KeyboardHeightPrefs.LANDSCAPE_UNFOLDED, keyboardHeightLandscapeUnfolded)
                     },
                     displayValue = "$keyboardHeightLandscapeUnfolded%",
@@ -99,9 +100,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_bottom_margin_portrait_desc),
                     value = marginBottomPortrait.toFloat(),
                     valueRange = SettingsRanges.MARGIN_BOTTOM_PERCENT.toSliderRange(),
-                    steps = 30,
+                    increment = 1f,
                     onValueChange = {
-                        marginBottomPortrait = it.toInt()
+                        marginBottomPortrait = it.roundToInt()
                         saveSetting("margin_bottom_portrait", marginBottomPortrait)
                     },
                     displayValue = "$marginBottomPortrait%"
@@ -112,9 +113,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_bottom_margin_landscape_desc),
                     value = marginBottomLandscape.toFloat(),
                     valueRange = SettingsRanges.MARGIN_BOTTOM_PERCENT.toSliderRange(),
-                    steps = 30,
+                    increment = 1f,
                     onValueChange = {
-                        marginBottomLandscape = it.toInt()
+                        marginBottomLandscape = it.roundToInt()
                         saveSetting("margin_bottom_landscape", marginBottomLandscape)
                     },
                     displayValue = "$marginBottomLandscape%"
@@ -127,9 +128,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_left_margin_portrait_desc),
                     value = marginLeftPortrait.toFloat(),
                     valueRange = 0f..maxLeftPortrait.toFloat(),
-                    steps = maxLeftPortrait.coerceAtLeast(1),
+                    increment = 1f,
                     onValueChange = {
-                        marginLeftPortrait = it.toInt()
+                        marginLeftPortrait = it.roundToInt()
                         saveSetting("margin_left_portrait", marginLeftPortrait)
                     },
                     displayValue = "$marginLeftPortrait%"
@@ -141,9 +142,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_right_margin_portrait_desc),
                     value = marginRightPortrait.toFloat(),
                     valueRange = 0f..maxRightPortrait.toFloat(),
-                    steps = maxRightPortrait.coerceAtLeast(1),
+                    increment = 1f,
                     onValueChange = {
-                        marginRightPortrait = it.toInt()
+                        marginRightPortrait = it.roundToInt()
                         saveSetting("margin_right_portrait", marginRightPortrait)
                     },
                     displayValue = "$marginRightPortrait%"
@@ -156,9 +157,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_left_margin_landscape_desc),
                     value = marginLeftLandscape.toFloat(),
                     valueRange = 0f..maxLeftLandscape.toFloat(),
-                    steps = maxLeftLandscape.coerceAtLeast(1),
+                    increment = 1f,
                     onValueChange = {
-                        marginLeftLandscape = it.toInt()
+                        marginLeftLandscape = it.roundToInt()
                         saveSetting("margin_left_landscape", marginLeftLandscape)
                     },
                     displayValue = "$marginLeftLandscape%"
@@ -170,9 +171,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_right_margin_landscape_desc),
                     value = marginRightLandscape.toFloat(),
                     valueRange = 0f..maxRightLandscape.toFloat(),
-                    steps = maxRightLandscape.coerceAtLeast(1),
+                    increment = 1f,
                     onValueChange = {
-                        marginRightLandscape = it.toInt()
+                        marginRightLandscape = it.roundToInt()
                         saveSetting("margin_right_landscape", marginRightLandscape)
                     },
                     displayValue = "$marginRightLandscape%"
@@ -183,9 +184,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_label_brightness_desc),
                     value = labelBrightness.toFloat(),
                     valueRange = SettingsRanges.OPACITY_PERCENT.toSliderRange(),
-                    steps = 100,
+                    increment = 1f,
                     onValueChange = {
-                        labelBrightness = it.toInt()
+                        labelBrightness = it.roundToInt()
                         saveSetting("label_brightness", labelBrightness)
                     },
                     displayValue = "$labelBrightness%"
@@ -196,9 +197,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_keyboard_opacity_desc),
                     value = keyboardOpacity.toFloat(),
                     valueRange = SettingsRanges.OPACITY_PERCENT.toSliderRange(),
-                    steps = 100,
+                    increment = 1f,
                     onValueChange = {
-                        keyboardOpacity = it.toInt()
+                        keyboardOpacity = it.roundToInt()
                         saveSetting("keyboard_opacity", keyboardOpacity)
                     },
                     displayValue = "$keyboardOpacity%"
@@ -209,9 +210,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_key_opacity_desc),
                     value = keyOpacity.toFloat(),
                     valueRange = SettingsRanges.OPACITY_PERCENT.toSliderRange(),
-                    steps = 100,
+                    increment = 1f,
                     onValueChange = {
-                        keyOpacity = it.toInt()
+                        keyOpacity = it.roundToInt()
                         saveSetting("key_opacity", keyOpacity)
                     },
                     displayValue = "$keyOpacity%"
@@ -222,9 +223,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_activated_key_opacity_desc),
                     value = keyActivatedOpacity.toFloat(),
                     valueRange = SettingsRanges.OPACITY_PERCENT.toSliderRange(),
-                    steps = 100,
+                    increment = 1f,
                     onValueChange = {
-                        keyActivatedOpacity = it.toInt()
+                        keyActivatedOpacity = it.roundToInt()
                         saveSetting("key_activated_opacity", keyActivatedOpacity)
                     },
                     displayValue = "$keyActivatedOpacity%"
@@ -238,9 +239,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     // (shared with the import validator + Config clamp).
                     valueRange = SettingsRanges.CHARACTER_SIZE.start * 100f..
                         SettingsRanges.CHARACTER_SIZE.endInclusive * 100f,
-                    steps = 150,
+                    increment = 1f,
                     onValueChange = {
-                        characterSize = it.toInt()
+                        characterSize = it.roundToInt()
                         saveSetting("character_size", characterSize / 100f)
                     },
                     displayValue = "${characterSize}%"
@@ -253,9 +254,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_secondary_label_size_desc),
                     value = secondaryLabelSizeScale.toFloat(),
                     valueRange = 50f..200f,
-                    steps = 150,
+                    increment = 1f,
                     onValueChange = {
-                        secondaryLabelSizeScale = it.toInt()
+                        secondaryLabelSizeScale = it.roundToInt()
                         saveSetting("secondary_label_size_scale", secondaryLabelSizeScale / 100f)
                     },
                     displayValue = "${secondaryLabelSizeScale}%"
@@ -266,9 +267,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_key_vertical_margin_desc),
                     value = keyVerticalMargin.toFloat(),
                     valueRange = 0f..500f,
-                    steps = 100,
+                    increment = 5f,
                     onValueChange = {
-                        keyVerticalMargin = it.toInt()
+                        keyVerticalMargin = it.roundToInt()
                         saveSetting("key_vertical_margin", keyVerticalMargin / 100f)
                     },
                     displayValue = "${keyVerticalMargin / 100f}%"
@@ -279,9 +280,9 @@ internal fun SettingsActivity.AppearanceSection() {
                     description = stringResource(R.string.appearance_key_horizontal_margin_desc),
                     value = keyHorizontalMargin.toFloat(),
                     valueRange = 0f..500f,
-                    steps = 100,
+                    increment = 5f,
                     onValueChange = {
-                        keyHorizontalMargin = it.toInt()
+                        keyHorizontalMargin = it.roundToInt()
                         saveSetting("key_horizontal_margin", keyHorizontalMargin / 100f)
                     },
                     displayValue = "${keyHorizontalMargin / 100f}%"
@@ -303,12 +304,12 @@ internal fun SettingsActivity.AppearanceSection() {
                         description = stringResource(R.string.appearance_border_radius_desc),
                         value = customBorderRadius.toFloat(),
                         valueRange = SettingsRanges.CUSTOM_BORDER_RADIUS.toSliderRange(),
-                        steps = 20,
+                        increment = 1f,
                         onValueChange = {
-                            customBorderRadius = it.toInt()
+                            customBorderRadius = it.roundToInt()
                             saveSetting("custom_border_radius", customBorderRadius)
                         },
-                        displayValue = "${customBorderRadius}dp"
+                        displayValue = "${customBorderRadius}%"
                     )
 
                     SettingsSlider(
@@ -318,9 +319,9 @@ internal fun SettingsActivity.AppearanceSection() {
                         // F-4: shared with the import validator (SettingsRanges).
                         valueRange = SettingsRanges.CUSTOM_BORDER_LINE_WIDTH.start..
                             SettingsRanges.CUSTOM_BORDER_LINE_WIDTH.endInclusive,
-                        steps = 10,
+                        increment = 1f,
                         onValueChange = {
-                            customBorderLineWidth = it.toInt()
+                            customBorderLineWidth = it.roundToInt()
                             saveSetting("custom_border_line_width", customBorderLineWidth)
                         },
                         displayValue = "${customBorderLineWidth}dp"

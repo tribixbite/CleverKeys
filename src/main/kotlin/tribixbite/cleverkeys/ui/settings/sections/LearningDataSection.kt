@@ -182,7 +182,7 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
             description = stringResource(R.string.input_personalization_max_words_desc),
             value = personalizationMaxWords.toFloat(),
             valueRange = 1000f..20000f,
-            steps = 37, // 500-word increments
+            increment = 500f,
             onValueChange = {
                 val snapped = ((it / 500f).roundToInt() * 500).coerceIn(1000, 20000)
                 if (snapped != personalizationMaxWords) {

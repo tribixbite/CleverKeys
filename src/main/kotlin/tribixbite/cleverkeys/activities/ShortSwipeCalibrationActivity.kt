@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.theme.KeyboardTheme
 import kotlin.math.sqrt
+import kotlin.math.roundToInt
 
 /**
  * Short Swipe Calibration Activity
@@ -134,7 +135,7 @@ private fun ShortSwipeCalibrationScreen(
                     IconButton(onClick = {
                         minDistance = Defaults.SHORT_GESTURE_MIN_DISTANCE.toFloat()
                         maxDistance = Defaults.SHORT_GESTURE_MAX_DISTANCE.toFloat()
-                        onSave(minDistance.toInt(), maxDistance.toInt())
+                        onSave(minDistance.roundToInt(), maxDistance.roundToInt())
                     }) {
                         Icon(Icons.Default.Refresh, stringResource(R.string.calibration_reset_defaults_desc))
                     }
@@ -166,12 +167,12 @@ private fun ShortSwipeCalibrationScreen(
                 onMinChange = {
                     minDistance = it
                     if (minDistance > maxDistance) maxDistance = minDistance
-                    onSave(minDistance.toInt(), maxDistance.toInt())
+                    onSave(minDistance.roundToInt(), maxDistance.roundToInt())
                 },
                 onMaxChange = {
                     maxDistance = it
                     if (maxDistance < minDistance) minDistance = maxDistance
-                    onSave(minDistance.toInt(), maxDistance.toInt())
+                    onSave(minDistance.roundToInt(), maxDistance.roundToInt())
                 }
             )
 
@@ -427,11 +428,11 @@ private fun ConfigurationSection(
                     onValueChange = onMinChange,
                     // Same range/granularity as the Settings "Min Distance" slider
                     valueRange = SettingsRanges.SHORT_GESTURE_MIN_DISTANCE.toSliderRange(),
-                    steps = 10,
+                    steps = sliderSteps(SettingsRanges.SHORT_GESTURE_MIN_DISTANCE.toSliderRange(), 1f),
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = stringResource(R.string.calibration_percent_value, minDistance.toInt()),
+                    text = stringResource(R.string.calibration_percent_value, minDistance.roundToInt()),
                     modifier = Modifier.width(60.dp),
                     textAlign = TextAlign.End,
                     fontWeight = FontWeight.Medium
@@ -460,11 +461,11 @@ private fun ConfigurationSection(
                     onValueChange = onMaxChange,
                     // Same range/granularity as the Settings "Max Distance" slider
                     valueRange = SettingsRanges.SHORT_GESTURE_MAX_DISTANCE.toSliderRange(),
-                    steps = 30,
+                    steps = sliderSteps(SettingsRanges.SHORT_GESTURE_MAX_DISTANCE.toSliderRange(), 1f),
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = stringResource(R.string.calibration_percent_value, maxDistance.toInt()),
+                    text = stringResource(R.string.calibration_percent_value, maxDistance.roundToInt()),
                     modifier = Modifier.width(60.dp),
                     textAlign = TextAlign.End,
                     fontWeight = FontWeight.Medium
@@ -683,12 +684,12 @@ private fun PracticeSection(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = stringResource(R.string.calibration_min_readout, minDistance.toInt()),
+                    text = stringResource(R.string.calibration_min_readout, minDistance.roundToInt()),
                     fontSize = 12.sp,
                     color = Color.White.copy(alpha = 0.7f)
                 )
                 Text(
-                    text = stringResource(R.string.calibration_max_readout, maxDistance.toInt()),
+                    text = stringResource(R.string.calibration_max_readout, maxDistance.roundToInt()),
                     fontSize = 12.sp,
                     color = Color(0xFF4CAF50).copy(alpha = 0.7f)
                 )

@@ -400,7 +400,7 @@
     <string name="appearance_custom_border_title">Borda personalizada</string>
     <string name="appearance_custom_border_desc">Ativar estilo de borda personalizada para teclas</string>
     <string name="appearance_border_radius_title">Raio de borda</string>
-    <string name="appearance_border_radius_desc">Raio dos cantos para teclas (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Raio dos cantos para teclas, em % da largura da tecla</string>
     <string name="appearance_border_line_width_title">Largura da linha de borda</string>
     <string name="appearance_border_line_width_desc">Largura das bordas das teclas (dp)</string>
     <string name="autocorrect_enable_title">Ativar correção automática</string>

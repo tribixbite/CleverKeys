@@ -404,7 +404,7 @@
     <string name="appearance_custom_border_title">Egyéni szegélykonfiguráció</string>
     <string name="appearance_custom_border_desc">Egyéni billentyűszegély stílus engedélyezése</string>
     <string name="appearance_border_radius_title">Szegély sugara</string>
-    <string name="appearance_border_radius_desc">Saroklekerekítés a billentyűknél (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Saroklekerekítés a billentyűknél, a billentyűszélesség %-ában</string>
     <string name="appearance_border_line_width_title">Szegélyvonal szélessége</string>
     <string name="appearance_border_line_width_desc">A billentyűszegélyek szélessége (dp)</string>
     <string name="autocorrect_enable_title">Automatikus javítás engedélyezése</string>

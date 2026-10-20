@@ -423,7 +423,7 @@
     <string name="appearance_custom_border_title">Chenar personalizat</string>
     <string name="appearance_custom_border_desc">Activează stilul de chenar personalizat pentru taste</string>
     <string name="appearance_border_radius_title">Raza bordei</string>
-    <string name="appearance_border_radius_desc">Raza colțurilor pentru taste (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Raza colțurilor pentru taste, ca % din lățimea tastei</string>
     <string name="appearance_border_line_width_title">Grosime linie chenar</string>
     <string name="appearance_border_line_width_desc">Lățimea chenarelor tastelor (dp)</string>
     <string name="autocorrect_enable_title">Activează corectarea automată</string>

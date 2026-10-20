@@ -12,6 +12,7 @@ import tribixbite.cleverkeys.prefs.ConfigSnapshot
 import tribixbite.cleverkeys.prefs.CustomExtraKeysPreference
 import tribixbite.cleverkeys.prefs.ExtraKeysPreference
 import tribixbite.cleverkeys.prefs.LayoutsPreference
+import kotlin.math.roundToInt
 
 /**
  * Single source of truth for all app default values.
@@ -671,6 +672,19 @@ object SettingsRanges {
 
 /** A slider's `valueRange` for an int setting range. */
 fun IntRange.toSliderRange(): ClosedFloatingPointRange<Float> = first.toFloat()..last.toFloat()
+
+/**
+ * Compose `Slider.steps` for a slider over [range] that moves by [increment]: the number of
+ * positions strictly BETWEEN the two ends, i.e. intervals − 1. Passing the interval count
+ * itself (`steps = 100` on 0..100) gives 101 intervals of 0.99, so an integer setting skipped
+ * values and the stops never matched the readout; about 40 settings sliders did this
+ * (audit 2026-10-20 leftover). `SettingsSlider` takes an increment and calls this, so a
+ * caller cannot pass the raw count. Never negative (a one-position range has no steps).
+ */
+fun sliderSteps(range: ClosedFloatingPointRange<Float>, increment: Float): Int {
+    require(increment > 0f) { "slider increment must be positive: $increment" }
+    return (((range.endInclusive - range.start) / increment).roundToInt() - 1).coerceAtLeast(0)
+}
 
 /**
  * One-time cleanup for the stale `vibrate_custom=true` written by the #154 bug.

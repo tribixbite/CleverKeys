@@ -425,7 +425,7 @@
     <string name="appearance_custom_border_title">Cấu hình viền tùy chỉnh</string>
     <string name="appearance_custom_border_desc">Bật kiểu viền phím tùy chỉnh</string>
     <string name="appearance_border_radius_title">Bán kính viền</string>
-    <string name="appearance_border_radius_desc">Bán kính góc cho các phím (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Bán kính góc cho các phím, tính theo % chiều rộng phím</string>
     <string name="appearance_border_line_width_title">Độ rộng đường viền</string>
     <string name="appearance_border_line_width_desc">Độ rộng của viền phím (dp)</string>
     <string name="autocorrect_enable_title">Bật tự động sửa lỗi</string>

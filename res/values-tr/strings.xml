@@ -407,7 +407,7 @@
     <string name="appearance_custom_border_title">Özel Kenarlık Yapılandırması</string>
     <string name="appearance_custom_border_desc">Özel tuş kenarlığı stilini etkinleştir</string>
     <string name="appearance_border_radius_title">Kenarlık Yarıçapı</string>
-    <string name="appearance_border_radius_desc">Tuşlar için köşe yarıçapı (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Tuşlar için köşe yarıçapı, tuş genişliğinin yüzdesi olarak</string>
     <string name="appearance_border_line_width_title">Kenarlık Çizgi Genişliği</string>
     <string name="appearance_border_line_width_desc">Tuş kenarlıklarının genişliği (dp)</string>
     <string name="autocorrect_enable_title">Otomatik Düzeltmeyi Etkinleştir</string>

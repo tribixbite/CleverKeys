@@ -31,6 +31,7 @@ import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.openExtraKeysConfig
 import tribixbite.cleverkeys.ui.settings.openLayoutManager
 import tribixbite.cleverkeys.ui.settings.saveSetting
+import kotlin.math.roundToInt
 
 @Composable
 internal fun SettingsActivity.InputBehaviorSection() {
@@ -72,9 +73,9 @@ internal fun SettingsActivity.InputBehaviorSection() {
                         description = stringResource(R.string.input_suggestion_bar_opacity_desc),
                         value = suggestionBarOpacity.toFloat(),
                         valueRange = SettingsRanges.OPACITY_PERCENT.toSliderRange(),
-                        steps = 100,
+                        increment = 1f,
                         onValueChange = {
-                            suggestionBarOpacity = it.toInt()
+                            suggestionBarOpacity = it.roundToInt()
                             saveSetting("suggestion_bar_opacity", suggestionBarOpacity)
                         },
                         displayValue = "$suggestionBarOpacity%"
@@ -225,7 +226,7 @@ internal fun SettingsActivity.InputBehaviorSection() {
                                 description = stringResource(R.string.input_personalization_weight_desc),
                                 value = personalizationWeight,
                                 valueRange = 0f..2f,
-                                steps = 19,
+                                increment = 0.1f,
                                 enabled = personalizedLearningEnabled,
                                 onValueChange = {
                                     personalizationWeight = it
@@ -268,7 +269,7 @@ internal fun SettingsActivity.InputBehaviorSection() {
                                 description = stringResource(R.string.input_context_boost_desc),
                                 value = predictionContextBoost,
                                 valueRange = 0.5f..5.0f,
-                                steps = 45,
+                                increment = 0.1f,
                                 onValueChange = {
                                     predictionContextBoost = it
                                     saveSetting("prediction_context_boost", predictionContextBoost)
@@ -281,7 +282,7 @@ internal fun SettingsActivity.InputBehaviorSection() {
                                 description = stringResource(R.string.input_frequency_scale_desc),
                                 value = predictionFrequencyScale,
                                 valueRange = 100f..5000f,
-                                steps = 49,
+                                increment = 100f,
                                 onValueChange = {
                                     predictionFrequencyScale = it
                                     saveSetting("prediction_frequency_scale", predictionFrequencyScale)
@@ -340,9 +341,9 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     description = stringResource(R.string.input_swipe_distance_threshold_desc),
                     value = swipeDistance.toFloat(),
                     valueRange = 5f..30f,
-                    steps = 25,
+                    increment = 1f,
                     onValueChange = {
-                        swipeDistance = it.toInt()
+                        swipeDistance = it.roundToInt()
                         saveSetting("swipe_dist", swipeDistance.toString())
                     },
                     displayValue = "$swipeDistance"
@@ -353,9 +354,9 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     description = stringResource(R.string.input_circle_gesture_desc),
                     value = circleSensitivity.toFloat(),
                     valueRange = SettingsRanges.CIRCLE_SENSITIVITY.toSliderRange(),
-                    steps = 4,
+                    increment = 1f,
                     onValueChange = {
-                        circleSensitivity = it.toInt()
+                        circleSensitivity = it.roundToInt()
                         saveSetting("circle_sensitivity", circleSensitivity.toString())
                     },
                     displayValue = "$circleSensitivity"
@@ -369,9 +370,9 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     // space slider divided by it (rightward slide moved the cursor left).
                     valueRange = SettingsRanges.SLIDER_SENSITIVITY_PERCENT.first.toFloat()..
                         SettingsRanges.SLIDER_SENSITIVITY_PERCENT.last.toFloat(),
-                    steps = 98,
+                    increment = 1f,
                     onValueChange = {
-                        sliderSensitivity = it.toInt()
+                        sliderSensitivity = it.roundToInt()
                         saveSetting("slider_sensitivity", sliderSensitivity.toString())
                     },
                     displayValue = "$sliderSensitivity%"
@@ -382,9 +383,9 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     description = stringResource(R.string.input_long_press_timeout_desc),
                     value = longPressTimeout.toFloat(),
                     valueRange = SettingsRanges.LONGPRESS_TIMEOUT.toSliderRange(),
-                    steps = 16,
+                    increment = 50f,
                     onValueChange = {
-                        longPressTimeout = it.toInt()
+                        longPressTimeout = it.roundToInt()
                         saveSetting("longpress_timeout", longPressTimeout)
                     },
                     displayValue = "${longPressTimeout}ms"
@@ -397,9 +398,9 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     // F-4: shared with the import validator + Config clamp (SettingsRanges).
                     valueRange = SettingsRanges.LONGPRESS_INTERVAL.first.toFloat()..
                         SettingsRanges.LONGPRESS_INTERVAL.last.toFloat(),
-                    steps = 35,
+                    increment = 5f,
                     onValueChange = {
-                        longPressInterval = it.toInt()
+                        longPressInterval = it.roundToInt()
                         saveSetting("longpress_interval", longPressInterval)
                     },
                     displayValue = "${longPressInterval}ms"

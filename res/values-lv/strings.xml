@@ -412,7 +412,7 @@
     <string name="appearance_custom_border_title">Pielāgota apmale</string>
     <string name="appearance_custom_border_desc">Iespējot pielāgotu taustiņu apmales stilu</string>
     <string name="appearance_border_radius_title">Apmales rādiuss</string>
-    <string name="appearance_border_radius_desc">Taustiņu stūru rādiuss (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Taustiņu stūru rādiuss, % no taustiņa platuma</string>
     <string name="appearance_border_line_width_title">Apmales līnijas platums</string>
     <string name="appearance_border_line_width_desc">Taustiņu apmales platums (dp)</string>
     <string name="autocorrect_enable_title">Iespējot autokorektūru</string>

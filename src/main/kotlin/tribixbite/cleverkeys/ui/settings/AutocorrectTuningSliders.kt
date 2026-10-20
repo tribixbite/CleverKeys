@@ -3,6 +3,8 @@ package tribixbite.cleverkeys.ui.settings
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning.Keys
 import tribixbite.cleverkeys.autocorrect.ChannelWeights
+import tribixbite.cleverkeys.sliderSteps
+import tribixbite.cleverkeys.toSliderRange
 import kotlin.math.roundToInt
 
 /**
@@ -21,7 +23,7 @@ internal object AutocorrectTuningSliders {
     /** One float slider: its preference key, the distance between positions, and display decimals. */
     class FloatSpec(val key: AutocorrectTuning.FloatKey, val increment: Float, val decimals: Int) {
         /** Compose `Slider.steps`: the positions strictly between the two range ends. */
-        val steps: Int get() = stepsFor(key.range.endInclusive - key.range.start, increment)
+        val steps: Int get() = sliderSteps(key.range, increment)
 
         /** [value] rounded to the nearest slider position inside the key's range. */
         fun snap(value: Float): Float {
@@ -42,7 +44,7 @@ internal object AutocorrectTuningSliders {
             key.range.first.toFloat()..key.range.last.toFloat()
 
         /** Compose `Slider.steps`. */
-        val steps: Int get() = stepsFor((key.range.last - key.range.first).toFloat(), increment.toFloat())
+        val steps: Int get() = sliderSteps(key.range.toSliderRange(), increment.toFloat())
 
         /** Slider position → stored integer, on the increment grid and inside the range. */
         fun snap(value: Float): Int {
@@ -53,7 +55,6 @@ internal object AutocorrectTuningSliders {
 
     private const val ROUNDING = 10_000f
 
-    private fun stepsFor(width: Float, increment: Float): Int = (width / increment).roundToInt() - 1
 
     // ── Band ranking ──
     val BAND_GAP = FloatSpec(Keys.BAND_GAP, 0.01f, 2)

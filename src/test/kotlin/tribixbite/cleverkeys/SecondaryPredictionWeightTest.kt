@@ -84,9 +84,9 @@ class SecondaryPredictionWeightTest {
     fun slider_exposesTheAnnouncedZeroPointFiveToOnePointFiveRange() {
         val src = SECTION.readText()
         assertThat(src).contains("valueRange = 0.5f..1.5f")
-        // 20 steps over a 1.0-wide range == 0.05x granularity, which is what the "%.2f"
-        // read-out displays.
-        assertThat(src).contains("steps = 20")
+        // 0.05x granularity, which is what the "%.2f" read-out displays. The slider takes the
+        // increment; `steps = 20` used to stand here and gave 21 stops of 0.0476 (sliderSteps).
+        assertThat(src).contains("increment = 0.05f")
         assertThat(src).contains("saveSetting(\"$PREF_KEY\", secondaryPredictionWeight)")
     }
 

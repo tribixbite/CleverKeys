@@ -418,7 +418,7 @@
     <string name="appearance_custom_border_title">Configuración de borde personalizada</string>
     <string name="appearance_custom_border_desc">Activar estilo de borde de tecla personalizado</string>
     <string name="appearance_border_radius_title">Radio de borde</string>
-    <string name="appearance_border_radius_desc">Radio de esquinas de teclas (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Radio de esquinas de teclas, en % del ancho de la tecla</string>
     <string name="appearance_border_line_width_title">Ancho de línea de borde</string>
     <string name="appearance_border_line_width_desc">Ancho de los bordes de teclas (dp)</string>
     <string name="autocorrect_enable_title">Activar corrección automática</string>

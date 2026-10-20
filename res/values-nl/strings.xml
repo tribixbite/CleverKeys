@@ -399,7 +399,7 @@
     <string name="appearance_custom_border_title">Aangepaste randconfiguratie</string>
     <string name="appearance_custom_border_desc">Aangepaste toetsrandstijl inschakelen</string>
     <string name="appearance_border_radius_title">Randradius</string>
-    <string name="appearance_border_radius_desc">Hoekradius voor toetsen (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Hoekradius voor toetsen, als % van de toetsbreedte</string>
     <string name="appearance_border_line_width_title">Randbreedte</string>
     <string name="appearance_border_line_width_desc">Breedte van toetsranden (dp)</string>
     <string name="autocorrect_enable_title">Autocorrectie inschakelen</string>

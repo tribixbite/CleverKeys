@@ -439,7 +439,7 @@
     <string name="appearance_custom_border_title">Bordo personalizzato</string>
     <string name="appearance_custom_border_desc">Abilita lo stile bordo personalizzato per i tasti</string>
     <string name="appearance_border_radius_title">Raggio bordo</string>
-    <string name="appearance_border_radius_desc">Raggio degli angoli per i tasti (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Raggio degli angoli per i tasti, in % della larghezza del tasto</string>
     <string name="appearance_border_line_width_title">Spessore bordo</string>
     <string name="appearance_border_line_width_desc">Spessore dei bordi dei tasti (dp)</string>
     <string name="autocorrect_enable_title">Abilita correzione automatica</string>

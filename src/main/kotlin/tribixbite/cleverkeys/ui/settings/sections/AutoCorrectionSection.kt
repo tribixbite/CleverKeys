@@ -35,6 +35,7 @@ import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.saveSetting
 import tribixbite.cleverkeys.ui.settings.updateConfigFromSettings
+import kotlin.math.roundToInt
 
 @Composable
 internal fun SettingsActivity.AutoCorrectionSection() {
@@ -80,9 +81,9 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                         description = stringResource(R.string.autocorrect_min_word_length_desc),
                         value = autocorrectMinWordLength.toFloat(),
                         valueRange = SettingsRanges.AUTOCORRECT_MIN_WORD_LENGTH.toSliderRange(),
-                        steps = 3,
+                        increment = 1f,
                         onValueChange = {
-                            autocorrectMinWordLength = it.toInt()
+                            autocorrectMinWordLength = it.roundToInt()
                             saveSetting("autocorrect_min_word_length", autocorrectMinWordLength)
                         },
                         displayValue = pluralStringResource(R.plurals.settings_value_letters, autocorrectMinWordLength, autocorrectMinWordLength)
@@ -93,7 +94,7 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                         description = stringResource(R.string.autocorrect_char_match_threshold_desc),
                         value = autocorrectCharMatchThreshold,
                         valueRange = 0.5f..0.9f,
-                        steps = 8,
+                        increment = 0.05f,
                         onValueChange = {
                             autocorrectCharMatchThreshold = it
                             saveSetting("autocorrect_char_match_threshold", autocorrectCharMatchThreshold)
@@ -106,9 +107,9 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                         description = stringResource(R.string.autocorrect_min_word_frequency_desc),
                         value = autocorrectMinFrequency.toFloat(),
                         valueRange = 100f..2000f,
-                        steps = 49,
+                        increment = 50f,
                         onValueChange = {
-                            autocorrectMinFrequency = it.toInt()
+                            autocorrectMinFrequency = it.roundToInt()
                             saveSetting("autocorrect_confidence_min_frequency", autocorrectMinFrequency)
                         },
                         displayValue = "$autocorrectMinFrequency"
@@ -157,9 +158,9 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                         description = stringResource(R.string.autocorrect_typo_forgiveness_desc),
                         value = autocorrectMaxLengthDiff.toFloat(),
                         valueRange = 0f..5f,
-                        steps = 5,
+                        increment = 1f,
                         onValueChange = {
-                            autocorrectMaxLengthDiff = it.toInt()
+                            autocorrectMaxLengthDiff = it.roundToInt()
                             saveSetting("autocorrect_max_length_diff", autocorrectMaxLengthDiff)
                         },
                         displayValue = pluralStringResource(R.plurals.settings_value_chars, autocorrectMaxLengthDiff, autocorrectMaxLengthDiff)
@@ -170,9 +171,9 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                         description = stringResource(R.string.autocorrect_starting_letter_desc),
                         value = autocorrectPrefixLength.toFloat(),
                         valueRange = 0f..4f,
-                        steps = 4,
+                        increment = 1f,
                         onValueChange = {
-                            autocorrectPrefixLength = it.toInt()
+                            autocorrectPrefixLength = it.roundToInt()
                             saveSetting("autocorrect_prefix_length", autocorrectPrefixLength)
                         },
                         displayValue = pluralStringResource(R.plurals.settings_value_letters, autocorrectPrefixLength, autocorrectPrefixLength)
@@ -258,7 +259,7 @@ private fun SettingsActivity.AutocorrectRankingAndTuning() {
         description = stringResource(R.string.autocorrect_min_exact_ratio_desc),
         value = tuning.minExactRatio,
         valueRange = Keys.MIN_EXACT_RATIO.range,
-        steps = sliders.MIN_EXACT_RATIO.steps,
+        increment = sliders.MIN_EXACT_RATIO.increment,
         onValueChange = {
             val v = sliders.MIN_EXACT_RATIO.snap(it)
             autocorrectTuning = tuning.copy(minExactRatio = v)
@@ -272,7 +273,7 @@ private fun SettingsActivity.AutocorrectRankingAndTuning() {
         description = stringResource(R.string.autocorrect_max_substitutions_desc),
         value = tuning.maxSubstitutions.toFloat(),
         valueRange = sliders.MAX_SUBSTITUTIONS.valueRange,
-        steps = sliders.MAX_SUBSTITUTIONS.steps,
+        increment = sliders.MAX_SUBSTITUTIONS.increment.toFloat(),
         onValueChange = {
             val v = sliders.MAX_SUBSTITUTIONS.snap(it)
             autocorrectTuning = tuning.copy(maxSubstitutions = v)
@@ -286,7 +287,7 @@ private fun SettingsActivity.AutocorrectRankingAndTuning() {
         description = stringResource(R.string.autocorrect_length_edit_budget_desc),
         value = tuning.lengthEditBudget,
         valueRange = Keys.LENGTH_EDIT_BUDGET.range,
-        steps = sliders.LENGTH_EDIT_BUDGET.steps,
+        increment = sliders.LENGTH_EDIT_BUDGET.increment,
         onValueChange = {
             val v = sliders.LENGTH_EDIT_BUDGET.snap(it)
             autocorrectTuning = tuning.copy(lengthEditBudget = v)
@@ -320,7 +321,7 @@ private fun SettingsActivity.AutocorrectRankingAndTuning() {
         description = stringResource(R.string.autocorrect_inflection_guard_min_stem_desc),
         value = tuning.inflectionGuardMinStem.toFloat(),
         valueRange = sliders.INFLECTION_GUARD_MIN_STEM.valueRange,
-        steps = sliders.INFLECTION_GUARD_MIN_STEM.steps,
+        increment = sliders.INFLECTION_GUARD_MIN_STEM.increment.toFloat(),
         onValueChange = {
             val v = sliders.INFLECTION_GUARD_MIN_STEM.snap(it)
             autocorrectTuning = tuning.copy(inflectionGuardMinStem = v)
@@ -339,7 +340,7 @@ private fun SettingsActivity.AutocorrectRankingAndTuning() {
             description = stringResource(R.string.autocorrect_channel_inflection_cost_desc),
             value = gammaPosition,
             valueRange = Keys.CHANNEL_INFLECTION_COST.range,
-            steps = sliders.CHANNEL_INFLECTION_COST.steps,
+            increment = sliders.CHANNEL_INFLECTION_COST.increment,
             onValueChange = {
                 val v = sliders.CHANNEL_INFLECTION_COST.snap(it)
                 autocorrectTuning = tuning.copy(
@@ -396,7 +397,7 @@ private fun SettingsActivity.BandRankingControls(tuning: AutocorrectTuning) {
         description = stringResource(R.string.autocorrect_band_gap_desc),
         value = tuning.bandGap,
         valueRange = Keys.BAND_GAP.range,
-        steps = sliders.BAND_GAP.steps,
+        increment = sliders.BAND_GAP.increment,
         onValueChange = {
             val v = sliders.BAND_GAP.snap(it)
             autocorrectTuning = tuning.copy(bandGap = v)
@@ -410,7 +411,7 @@ private fun SettingsActivity.BandRankingControls(tuning: AutocorrectTuning) {
         description = stringResource(R.string.autocorrect_transposition_penalty_desc),
         value = tuning.transpositionPenalty,
         valueRange = Keys.TRANSPOSITION_PENALTY.range,
-        steps = sliders.TRANSPOSITION_PENALTY.steps,
+        increment = sliders.TRANSPOSITION_PENALTY.increment,
         onValueChange = {
             val v = sliders.TRANSPOSITION_PENALTY.snap(it)
             autocorrectTuning = tuning.copy(transpositionPenalty = v)
@@ -454,7 +455,7 @@ private fun SettingsActivity.BandRankingControls(tuning: AutocorrectTuning) {
         description = stringResource(R.string.autocorrect_dropped_double_margin_desc),
         value = tuning.droppedDoubleMarginSteps.toFloat(),
         valueRange = sliders.DROPPED_DOUBLE_MARGIN.valueRange,
-        steps = sliders.DROPPED_DOUBLE_MARGIN.steps,
+        increment = sliders.DROPPED_DOUBLE_MARGIN.increment.toFloat(),
         onValueChange = {
             val v = sliders.DROPPED_DOUBLE_MARGIN.snap(it)
             autocorrectTuning = tuning.copy(droppedDoubleMarginSteps = v)
@@ -478,7 +479,7 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         description = stringResource(R.string.autocorrect_channel_distance_cost_desc),
         value = weights.distanceCost,
         valueRange = Keys.CHANNEL_DISTANCE_COST.range,
-        steps = sliders.CHANNEL_DISTANCE_COST.steps,
+        increment = sliders.CHANNEL_DISTANCE_COST.increment,
         onValueChange = {
             val v = sliders.CHANNEL_DISTANCE_COST.snap(it)
             autocorrectTuning = tuning.copy(channel = weights.copy(distanceCost = v))
@@ -492,7 +493,7 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         description = stringResource(R.string.autocorrect_channel_indel_cost_desc),
         value = weights.indelCost,
         valueRange = Keys.CHANNEL_INDEL_COST.range,
-        steps = sliders.CHANNEL_INDEL_COST.steps,
+        increment = sliders.CHANNEL_INDEL_COST.increment,
         onValueChange = {
             val v = sliders.CHANNEL_INDEL_COST.snap(it)
             autocorrectTuning = tuning.copy(channel = weights.copy(indelCost = v))
@@ -506,7 +507,7 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         description = stringResource(R.string.autocorrect_channel_double_cost_desc),
         value = weights.doubleCost,
         valueRange = Keys.CHANNEL_DOUBLE_COST.range,
-        steps = sliders.CHANNEL_DOUBLE_COST.steps,
+        increment = sliders.CHANNEL_DOUBLE_COST.increment,
         onValueChange = {
             val v = sliders.CHANNEL_DOUBLE_COST.snap(it)
             autocorrectTuning = tuning.copy(channel = weights.copy(doubleCost = v))
@@ -520,7 +521,7 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         description = stringResource(R.string.autocorrect_channel_transposition_cost_desc),
         value = weights.transpositionCost,
         valueRange = Keys.CHANNEL_TRANSPOSITION_COST.range,
-        steps = sliders.CHANNEL_TRANSPOSITION_COST.steps,
+        increment = sliders.CHANNEL_TRANSPOSITION_COST.increment,
         onValueChange = {
             val v = sliders.CHANNEL_TRANSPOSITION_COST.snap(it)
             autocorrectTuning = tuning.copy(channel = weights.copy(transpositionCost = v))
@@ -541,7 +542,7 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         description = stringResource(R.string.autocorrect_channel_frequency_weight_desc) + "\n" + equivalence,
         value = weights.frequencyWeight,
         valueRange = Keys.CHANNEL_FREQUENCY_WEIGHT.range,
-        steps = sliders.CHANNEL_FREQUENCY_WEIGHT.steps,
+        increment = sliders.CHANNEL_FREQUENCY_WEIGHT.increment,
         onValueChange = {
             val v = sliders.CHANNEL_FREQUENCY_WEIGHT.snap(it)
             autocorrectTuning = tuning.copy(channel = weights.copy(frequencyWeight = v))
@@ -555,7 +556,7 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         description = stringResource(R.string.autocorrect_channel_alias_bonus_desc),
         value = weights.aliasBonus,
         valueRange = Keys.CHANNEL_ALIAS_BONUS.range,
-        steps = sliders.CHANNEL_ALIAS_BONUS.steps,
+        increment = sliders.CHANNEL_ALIAS_BONUS.increment,
         onValueChange = {
             val v = sliders.CHANNEL_ALIAS_BONUS.snap(it)
             autocorrectTuning = tuning.copy(channel = weights.copy(aliasBonus = v))
@@ -569,7 +570,7 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         description = stringResource(R.string.autocorrect_channel_short_deletion_cost_desc),
         value = weights.shortWordDeletionCost,
         valueRange = Keys.CHANNEL_SHORT_DELETION_COST.range,
-        steps = sliders.CHANNEL_SHORT_DELETION_COST.steps,
+        increment = sliders.CHANNEL_SHORT_DELETION_COST.increment,
         onValueChange = {
             val v = sliders.CHANNEL_SHORT_DELETION_COST.snap(it)
             autocorrectTuning = tuning.copy(channel = weights.copy(shortWordDeletionCost = v))
@@ -584,7 +585,7 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         description = stringResource(R.string.autocorrect_channel_max_correction_cost_desc),
         value = kappaSlider,
         valueRange = Keys.CHANNEL_MAX_CORRECTION_COST.range,
-        steps = sliders.CHANNEL_MAX_CORRECTION_COST.steps,
+        increment = sliders.CHANNEL_MAX_CORRECTION_COST.increment,
         onValueChange = {
             val v = sliders.CHANNEL_MAX_CORRECTION_COST.snap(it)
             autocorrectTuning = tuning.copy(channel = weights.copy(

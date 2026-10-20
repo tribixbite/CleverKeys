@@ -20,6 +20,7 @@ import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.saveSetting
+import kotlin.math.roundToInt
 
 @Composable
 internal fun SettingsActivity.AccessibilitySection() {
@@ -88,10 +89,10 @@ internal fun SettingsActivity.AccessibilitySection() {
                         description = stringResource(R.string.accessibility_custom_duration_desc),
                         value = vibrationDuration.toFloat(),
                         valueRange = SettingsRanges.VIBRATE_DURATION.toSliderRange(),
-                        steps = 19,
+                        increment = 5f,
                         enabled = vibrateCustom,
                         onValueChange = {
-                            vibrationDuration = it.toInt()
+                            vibrationDuration = it.roundToInt()
                             saveSetting("vibrate_duration", vibrationDuration)
                             // The slider is only enabled in custom mode, so this re-asserts the
                             // user's explicit choice; the "Use system vibration" switch above

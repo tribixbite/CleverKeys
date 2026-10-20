@@ -174,7 +174,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                             description = stringResource(R.string.multilang_secondary_weight_desc),
                             value = secondaryPredictionWeight,
                             valueRange = 0.5f..1.5f,
-                            steps = 20,
+                            increment = 0.05f,
                             onValueChange = {
                                 secondaryPredictionWeight = it
                                 saveSetting("pref_secondary_prediction_weight", secondaryPredictionWeight)
@@ -199,7 +199,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                             description = stringResource(R.string.multilang_detection_sensitivity_desc),
                             value = languageDetectionSensitivity,
                             valueRange = 0.4f..0.9f,
-                            steps = 10,
+                            increment = 0.05f,
                             onValueChange = {
                                 languageDetectionSensitivity = it
                                 saveSetting("pref_language_detection_sensitivity", languageDetectionSensitivity)

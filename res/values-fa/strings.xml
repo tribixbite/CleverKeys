@@ -434,7 +434,7 @@
     <string name="appearance_custom_border_title">پیکربندی حاشیه سفارشی</string>
     <string name="appearance_custom_border_desc">استایل‌دهی سفارشی حاشیه کلید را فعال کنید</string>
     <string name="appearance_border_radius_title">شعاع گوشه</string>
-    <string name="appearance_border_radius_desc">شعاع گوشه برای کلیدها (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">شعاع گوشه برای کلیدها، به‌صورت ٪ از عرض کلید</string>
     <string name="appearance_border_line_width_title">عرض خط حاشیه</string>
     <string name="appearance_border_line_width_desc">عرض حاشیه‌های کلید (dp)</string>
     <string name="autocorrect_enable_title">فعال‌سازی تصحیح خودکار</string>

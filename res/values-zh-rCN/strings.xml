@@ -395,7 +395,7 @@
     <string name="appearance_custom_border_title">自定义边框配置</string>
     <string name="appearance_custom_border_desc">启用自定义按键边框样式。</string>
     <string name="appearance_border_radius_title">边框圆角</string>
-    <string name="appearance_border_radius_desc">按键的圆角半径（dp）。</string>
+    <string name="appearance_border_radius_desc" formatted="false">按键的圆角半径（以按键宽度的 % 表示）。</string>
     <string name="appearance_border_line_width_title">边框线宽</string>
     <string name="appearance_border_line_width_desc">按键边框的宽度（dp）。</string>
     <string name="autocorrect_enable_title">启用自动纠错</string>

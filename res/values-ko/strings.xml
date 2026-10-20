@@ -397,7 +397,7 @@
     <string name="appearance_custom_border_title">사용자 정의 테두리 설정</string>
     <string name="appearance_custom_border_desc">키의 사용자 정의 테두리 스타일을 활성화합니다</string>
     <string name="appearance_border_radius_title">테두리 둥글기</string>
-    <string name="appearance_border_radius_desc">키의 모서리 반경（dp）</string>
+    <string name="appearance_border_radius_desc" formatted="false">키의 모서리 반경（키 너비 대비 %）</string>
     <string name="appearance_border_line_width_title">테두리 두께</string>
     <string name="appearance_border_line_width_desc">키 테두리의 너비（dp）</string>
     <string name="autocorrect_enable_title">자동 수정 활성화</string>

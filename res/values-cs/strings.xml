@@ -403,7 +403,7 @@
     <string name="appearance_custom_border_title">Vlastní konfigurace ohraničení</string>
     <string name="appearance_custom_border_desc">Povolit vlastní styl ohraničení kláves</string>
     <string name="appearance_border_radius_title">Poloměr rohů</string>
-    <string name="appearance_border_radius_desc">Poloměr rohů kláves (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Poloměr rohů kláves, v % šířky klávesy</string>
     <string name="appearance_border_line_width_title">Šířka ohraničení</string>
     <string name="appearance_border_line_width_desc">Šířka ohraničení kláves (dp)</string>
     <string name="autocorrect_enable_title">Povolit automatické opravy</string>

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.sliderSteps
 
 // Composable helper components
 @Composable
@@ -226,7 +227,8 @@ internal fun SettingsActivity.SettingsSlider(
     description: String,
     value: Float,
     valueRange: ClosedFloatingPointRange<Float>,
-    steps: Int,
+    /** Distance between two stops, in [value]'s unit; the Compose step count is derived from it. */
+    increment: Float,
     onValueChange: (Float) -> Unit,
     displayValue: String,
     /** False = visible but inert and dimmed; see [SettingsSwitch]'s `enabled` for the rationale. */
@@ -285,7 +287,7 @@ internal fun SettingsActivity.SettingsSlider(
             value = value,
             onValueChange = onValueChange,
             valueRange = valueRange,
-            steps = steps,
+            steps = sliderSteps(valueRange, increment),
             enabled = enabled,
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,

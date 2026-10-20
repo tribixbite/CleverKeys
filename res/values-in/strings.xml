@@ -408,7 +408,7 @@
     <string name="appearance_custom_border_title">Konfigurasi Batas Kustom</string>
     <string name="appearance_custom_border_desc">Aktifkan gaya batas tombol kustom</string>
     <string name="appearance_border_radius_title">Radius Batas</string>
-    <string name="appearance_border_radius_desc">Radius sudut untuk tombol (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Radius sudut untuk tombol, dalam % lebar tombol</string>
     <string name="appearance_border_line_width_title">Lebar Garis Batas</string>
     <string name="appearance_border_line_width_desc">Lebar batas tombol (dp)</string>
     <string name="autocorrect_enable_title">Aktifkan Koreksi Otomatis</string>

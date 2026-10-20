@@ -408,7 +408,7 @@
     <string name="appearance_custom_border_title">Custom na Config ng Border</string>
     <string name="appearance_custom_border_desc">I-enable ang custom na styling ng border ng key</string>
     <string name="appearance_border_radius_title">Radius ng Border</string>
-    <string name="appearance_border_radius_desc">Corner radius para sa mga key (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Corner radius para sa mga key, bilang % ng lapad ng key</string>
     <string name="appearance_border_line_width_title">Lapad ng Linya ng Border</string>
     <string name="appearance_border_line_width_desc">Lapad ng mga border ng key (dp)</string>
     <string name="autocorrect_enable_title">I-enable ang Auto-Correction</string>

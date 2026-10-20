@@ -413,7 +413,7 @@
     <string name="appearance_custom_border_title">Własna konfiguracja obramowania</string>
     <string name="appearance_custom_border_desc">Włącz własny styl obramowania klawiszy</string>
     <string name="appearance_border_radius_title">Promień narożników</string>
-    <string name="appearance_border_radius_desc">Promień zaokrąglenia narożników klawiszy (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Promień zaokrąglenia narożników klawiszy, jako % szerokości klawisza</string>
     <string name="appearance_border_line_width_title">Grubość obramowania</string>
     <string name="appearance_border_line_width_desc">Grubość obramowania klawiszy (dp)</string>
     <string name="autocorrect_enable_title">Włącz autokorektę</string>

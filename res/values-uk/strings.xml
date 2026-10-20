@@ -414,7 +414,7 @@
     <string name="appearance_custom_border_title">Власна рамка</string>
     <string name="appearance_custom_border_desc">Увімкнути власний стиль рамки клавіш</string>
     <string name="appearance_border_radius_title">Радіус скруглення рамки</string>
-    <string name="appearance_border_radius_desc">Радіус кутів клавіш (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Радіус кутів клавіш, у % від ширини клавіші</string>
     <string name="appearance_border_line_width_title">Товщина рамки</string>
     <string name="appearance_border_line_width_desc">Ширина рамки клавіш (dp)</string>
     <string name="autocorrect_enable_title">Увімкнути автовиправлення</string>

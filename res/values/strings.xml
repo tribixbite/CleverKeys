@@ -600,7 +600,7 @@
     <string name="appearance_custom_border_title">Custom Border Config</string>
     <string name="appearance_custom_border_desc">Enable custom key border styling</string>
     <string name="appearance_border_radius_title">Border Radius</string>
-    <string name="appearance_border_radius_desc">Corner radius for keys (dp)</string>
+    <string name="appearance_border_radius_desc" formatted="false">Corner radius for keys, as % of the key width</string>
     <string name="appearance_border_line_width_title">Border Line Width</string>
     <string name="appearance_border_line_width_desc">Width of key borders (dp)</string>
 

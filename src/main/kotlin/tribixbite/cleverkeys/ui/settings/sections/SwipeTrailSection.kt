@@ -77,7 +77,7 @@ internal fun SettingsActivity.SwipeTrailSection() {
                         description = stringResource(R.string.swipe_trail_width_desc),
                         value = swipeTrailWidth,
                         valueRange = 2f..20f,
-                        steps = 18,
+                        increment = 1f,
                         onValueChange = {
                             swipeTrailWidth = it
                             saveSetting("swipe_trail_width", swipeTrailWidth)
@@ -93,7 +93,7 @@ internal fun SettingsActivity.SwipeTrailSection() {
                             description = stringResource(R.string.swipe_trail_glow_radius_desc),
                             value = swipeTrailGlowRadius,
                             valueRange = 4f..30f,
-                            steps = 26,
+                            increment = 1f,
                             onValueChange = {
                                 swipeTrailGlowRadius = it
                                 saveSetting("swipe_trail_glow_radius", swipeTrailGlowRadius)
