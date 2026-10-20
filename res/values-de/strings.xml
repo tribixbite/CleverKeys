@@ -1785,6 +1785,8 @@
     <string name="extra_key_accent_slash">Schrägstrich</string>
     <string name="extra_key_accent_bar">Querstrich</string>
     <string name="extra_key_accent_dot_below">Unterpunkt</string>
+    <string name="extra_key_accent_macron_below">Makron unten</string>
+    <string name="extra_key_accent_ring_below">Unterring</string>
     <string name="extra_key_accent_hook_above">Haken oben</string>
     <string name="extra_key_accent_horn">Horn</string>
     <string name="extra_key_accent_double_grave">Doppelgravis</string>
@@ -2117,6 +2119,10 @@
     <string name="cmd_accent_dot_above_desc">Tote Taste für Überpunkt (ż)</string>
     <string name="cmd_accent_dot_below">Unterpunkt</string>
     <string name="cmd_accent_dot_below_desc">Tote Taste für Unterpunkt (ḍ)</string>
+    <string name="cmd_accent_macron_below">Makron unten</string>
+    <string name="cmd_accent_macron_below_desc">Tote Taste für Makron unten (ṯ)</string>
+    <string name="cmd_accent_ring_below">Unterring</string>
+    <string name="cmd_accent_ring_below_desc">Tote Taste für Unterring (ḁ)</string>
     <string name="cmd_accent_double_aigu">Doppelakut</string>
     <string name="cmd_accent_double_aigu_desc">Tote Taste für Doppelakut (ő)</string>
     <string name="cmd_accent_breve">Breve</string>
@@ -2167,6 +2173,10 @@
     <string name="cmd_combining_dot_above_desc">Überpunkt zum vorherigen Zeichen hinzufügen</string>
     <string name="cmd_combining_dot_below">Kombinierender Unterpunkt</string>
     <string name="cmd_combining_dot_below_desc">Unterpunkt zum vorherigen Zeichen hinzufügen</string>
+    <string name="cmd_combining_macron_below">Kombinierendes Makron unten</string>
+    <string name="cmd_combining_macron_below_desc">Makron unten zum vorherigen Zeichen hinzufügen</string>
+    <string name="cmd_combining_ring_below">Kombinierender Unterring</string>
+    <string name="cmd_combining_ring_below_desc">Unterring zum vorherigen Zeichen hinzufügen</string>
     <string name="cmd_combining_double_aigu">Kombinierender Doppelakut</string>
     <string name="cmd_combining_double_aigu_desc">Doppelakut zum vorherigen Zeichen hinzufügen</string>
     <string name="cmd_combining_breve">Kombinierende Breve</string>

@@ -1,0 +1,15 @@
+{
+  // gh #187: ISO 15919 / Semitic transliteration (ṯ ḏ ḵ ḻ ṉ ṟ). Unicode names these
+  // "LINE BELOW"; the combining mark is U+0331 COMBINING MACRON BELOW. Letters without a
+  // precomposed form fall back to letter + U+0331 in KeyModifier.
+  // latin
+  "b": "ḇ",
+  "d": "ḏ",
+  "h": "ẖ", // no uppercase, shift.json maps it to H + U+0331
+  "k": "ḵ",
+  "l": "ḻ",
+  "n": "ṉ",
+  "r": "ṟ",
+  "t": "ṯ",
+  "z": "ẕ"
+}

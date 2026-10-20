@@ -171,6 +171,11 @@ object KeyModifier {
             KeyValue.Modifier.HORN -> applyCompose(k, ComposeKeyData.ACCENT_HORN)
             KeyValue.Modifier.HOOK_ABOVE -> applyCompose(k, ComposeKeyData.ACCENT_HOOK_ABOVE)
             KeyValue.Modifier.DOUBLE_GRAVE -> applyCompose(k, ComposeKeyData.ACCENT_DOUBLE_GRAVE)
+            // gh #187: precomposed where Unicode has one (ṯ, ḁ), else the combining mark (r̥).
+            KeyValue.Modifier.MACRON_BELOW ->
+                applyComposeOrCombiningOnLetter(k, ComposeKeyData.ACCENT_MACRON_BELOW, "\u0331")
+            KeyValue.Modifier.RING_BELOW ->
+                applyComposeOrCombiningOnLetter(k, ComposeKeyData.ACCENT_RING_BELOW, "\u0325")
             KeyValue.Modifier.ARROW_RIGHT -> applyCombiningChar(k, "\u20D7")
             KeyValue.Modifier.SELECTION_MODE -> applySelectionMode(k)
             else -> k
@@ -245,6 +250,21 @@ object KeyModifier {
     private fun applyComposeOrDeadChar(k: KeyValue, state: Int, deadChar: Char): KeyValue {
         val r = ComposeKey.apply(state, k)
         return r ?: applyDeadChar(k, deadChar)
+    }
+
+    /**
+     * Apply the given compose state, or append [combining] to a letter the state has no
+     * precomposed form for. Unicode encodes only a few letters with a mark below (ḁ but no
+     * r with ring below), so the combining mark is the only way to type the rest. Non-letter
+     * keys are left unchanged, like [applyCompose] does, instead of gaining a stray mark.
+     */
+    private fun applyComposeOrCombiningOnLetter(k: KeyValue, state: Int, combining: String): KeyValue {
+        val r = ComposeKey.apply(state, k)
+        if (r != null) return r
+        if (k.getKind() == KeyValue.Kind.Char && Character.isLetter(k.getChar())) {
+            return applyCombiningChar(k, combining)
+        }
+        return k
     }
 
     private fun applyCompose(k: KeyValue, state: Int): KeyValue {

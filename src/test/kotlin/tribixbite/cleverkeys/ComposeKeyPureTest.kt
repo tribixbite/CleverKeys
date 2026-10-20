@@ -28,18 +28,18 @@ class ComposeKeyPureTest {
     }
 
     @Test
-    fun `compose constant is 1270`() {
-        assertThat(ComposeKeyData.compose).isEqualTo(1270)
+    fun `compose constant is 1292`() {
+        assertThat(ComposeKeyData.compose).isEqualTo(1292)
     }
 
     @Test
-    fun `fn constant is 7683`() {
-        assertThat(ComposeKeyData.fn).isEqualTo(7683)
+    fun `fn constant is 7705`() {
+        assertThat(ComposeKeyData.fn).isEqualTo(7705)
     }
 
     @Test
-    fun `shift constant is 8421`() {
-        assertThat(ComposeKeyData.shift).isEqualTo(8421)
+    fun `shift constant is 8443`() {
+        assertThat(ComposeKeyData.shift).isEqualTo(8443)
     }
 
     // =========================================================================
@@ -64,9 +64,11 @@ class ComposeKeyPureTest {
         assertThat(ComposeKeyData.ACCENT_HOOK_ABOVE).isAtLeast(0)
         assertThat(ComposeKeyData.ACCENT_HORN).isAtLeast(0)
         assertThat(ComposeKeyData.ACCENT_MACRON).isAtLeast(0)
+        assertThat(ComposeKeyData.ACCENT_MACRON_BELOW).isAtLeast(0)
         assertThat(ComposeKeyData.ACCENT_OGONEK).isAtLeast(0)
         assertThat(ComposeKeyData.ACCENT_ORDINAL).isAtLeast(0)
         assertThat(ComposeKeyData.ACCENT_RING).isAtLeast(0)
+        assertThat(ComposeKeyData.ACCENT_RING_BELOW).isAtLeast(0)
         assertThat(ComposeKeyData.ACCENT_SLASH).isAtLeast(0)
         assertThat(ComposeKeyData.ACCENT_SUBSCRIPT).isAtLeast(0)
         assertThat(ComposeKeyData.ACCENT_SUPERSCRIPT).isAtLeast(0)
@@ -98,9 +100,11 @@ class ComposeKeyPureTest {
             ComposeKeyData.ACCENT_HOOK_ABOVE,
             ComposeKeyData.ACCENT_HORN,
             ComposeKeyData.ACCENT_MACRON,
+            ComposeKeyData.ACCENT_MACRON_BELOW,
             ComposeKeyData.ACCENT_OGONEK,
             ComposeKeyData.ACCENT_ORDINAL,
             ComposeKeyData.ACCENT_RING,
+            ComposeKeyData.ACCENT_RING_BELOW,
             ComposeKeyData.ACCENT_SLASH,
             ComposeKeyData.ACCENT_SUBSCRIPT,
             ComposeKeyData.ACCENT_SUPERSCRIPT,
@@ -134,9 +138,11 @@ class ComposeKeyPureTest {
             ComposeKeyData.ACCENT_HOOK_ABOVE,
             ComposeKeyData.ACCENT_HORN,
             ComposeKeyData.ACCENT_MACRON,
+            ComposeKeyData.ACCENT_MACRON_BELOW,
             ComposeKeyData.ACCENT_OGONEK,
             ComposeKeyData.ACCENT_ORDINAL,
             ComposeKeyData.ACCENT_RING,
+            ComposeKeyData.ACCENT_RING_BELOW,
             ComposeKeyData.ACCENT_SLASH,
             ComposeKeyData.ACCENT_SUBSCRIPT,
             ComposeKeyData.ACCENT_SUPERSCRIPT,

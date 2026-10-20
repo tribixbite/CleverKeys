@@ -1803,6 +1803,8 @@
     <string name="extra_key_accent_slash">خط مورب</string>
     <string name="extra_key_accent_bar">خط میانی</string>
     <string name="extra_key_accent_dot_below">نقطهٔ پایین</string>
+    <string name="extra_key_accent_macron_below">ماکرون پایین</string>
+    <string name="extra_key_accent_ring_below">حلقهٔ پایین</string>
     <string name="extra_key_accent_hook_above">قلاب بالا</string>
     <string name="extra_key_accent_horn">شاخک</string>
     <string name="extra_key_accent_double_grave">تکیهٔ بم دوتایی</string>
@@ -2135,6 +2137,10 @@
     <string name="cmd_accent_dot_above_desc">کلید مرده برای نقطهٔ بالا (ż)</string>
     <string name="cmd_accent_dot_below">نقطهٔ پایین</string>
     <string name="cmd_accent_dot_below_desc">کلید مرده برای نقطهٔ پایین (ḍ)</string>
+    <string name="cmd_accent_macron_below">ماکرون پایین</string>
+    <string name="cmd_accent_macron_below_desc">کلید مرده برای ماکرون پایین (ṯ)</string>
+    <string name="cmd_accent_ring_below">حلقهٔ پایین</string>
+    <string name="cmd_accent_ring_below_desc">کلید مرده برای حلقهٔ پایین (ḁ)</string>
     <string name="cmd_accent_double_aigu">تکیهٔ تیز دوتایی</string>
     <string name="cmd_accent_double_aigu_desc">کلید مرده برای تکیهٔ تیز دوتایی (ő)</string>
     <string name="cmd_accent_breve">هلالک</string>
@@ -2185,6 +2191,10 @@
     <string name="cmd_combining_dot_above_desc">افزودن نقطهٔ بالا به نویسهٔ قبلی</string>
     <string name="cmd_combining_dot_below">نقطهٔ پایین ترکیبی</string>
     <string name="cmd_combining_dot_below_desc">افزودن نقطهٔ پایین به نویسهٔ قبلی</string>
+    <string name="cmd_combining_macron_below">ماکرون پایین ترکیبی</string>
+    <string name="cmd_combining_macron_below_desc">افزودن ماکرون پایین به نویسهٔ قبلی</string>
+    <string name="cmd_combining_ring_below">حلقهٔ پایین ترکیبی</string>
+    <string name="cmd_combining_ring_below_desc">افزودن حلقهٔ پایین به نویسهٔ قبلی</string>
     <string name="cmd_combining_double_aigu">تکیهٔ تیز دوتایی ترکیبی</string>
     <string name="cmd_combining_double_aigu_desc">افزودن تکیهٔ تیز دوتایی به نویسهٔ قبلی</string>
     <string name="cmd_combining_breve">هلالک ترکیبی</string>

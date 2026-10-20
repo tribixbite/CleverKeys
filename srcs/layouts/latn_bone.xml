@@ -42,7 +42,7 @@
 			accent_ring
 			accent_trema
 			accent_rough_breathing (not implemented yet)
-			accent_macron/accent_macron_below (not implemented yet)
+			accent_macron/accent_macron_below
 	-->
 	<row>
 		<!--left side-->
@@ -53,7 +53,7 @@
 		<key key0="4" ne="›" se="♀" nw="loc accent_hook_above" n="loc accent_horn"/>
 		<key key0="5" ne="‹" se="♂" nw="loc accent_dot_below"/>
 		<!--right side-->
-		<key key0="6" nw="¢" sw="⚥" ne="loc accent_macron"/>
+		<key key0="6" nw="¢" sw="⚥" ne="loc accent_macron" n="loc accent_macron_below"/>
 		<key key0="7" nw="¥" sw="ϰ"/>
 		<key key0="8" nw="‚" sw="⟨" ne="loc accent_trema"/>
 		<key key0="9" nw="‘" sw="⟩" ne="loc accent_ring"/>

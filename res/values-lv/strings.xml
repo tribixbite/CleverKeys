@@ -1814,6 +1814,8 @@
     <string name="extra_key_accent_slash">Slīpsvītra</string>
     <string name="extra_key_accent_bar">Svītra</string>
     <string name="extra_key_accent_dot_below">Punkts apakšā</string>
+    <string name="extra_key_accent_macron_below">Garumzīme apakšā</string>
+    <string name="extra_key_accent_ring_below">Aplītis apakšā</string>
     <string name="extra_key_accent_hook_above">Āķis augšā</string>
     <string name="extra_key_accent_horn">Radziņš</string>
     <string name="extra_key_accent_double_grave">Dubultgravis</string>
@@ -2153,6 +2155,10 @@
     <string name="cmd_accent_dot_above_desc">Klusais taustiņš punktam augšā (ż)</string>
     <string name="cmd_accent_dot_below">Punkts apakšā</string>
     <string name="cmd_accent_dot_below_desc">Klusais taustiņš punktam apakšā (ḍ)</string>
+    <string name="cmd_accent_macron_below">Garumzīme apakšā</string>
+    <string name="cmd_accent_macron_below_desc">Klusais taustiņš garumzīmei apakšā (ṯ)</string>
+    <string name="cmd_accent_ring_below">Aplītis apakšā</string>
+    <string name="cmd_accent_ring_below_desc">Klusais taustiņš aplītim apakšā (ḁ)</string>
     <string name="cmd_accent_double_aigu">Dubultakūts</string>
     <string name="cmd_accent_double_aigu_desc">Klusais taustiņš dubultakūtam (ő)</string>
     <string name="cmd_accent_breve">Breve</string>
@@ -2203,6 +2209,10 @@
     <string name="cmd_combining_dot_above_desc">Pievienot punktu augšā iepriekšējai rakstzīmei</string>
     <string name="cmd_combining_dot_below">Apvienojošs punkts apakšā</string>
     <string name="cmd_combining_dot_below_desc">Pievienot punktu apakšā iepriekšējai rakstzīmei</string>
+    <string name="cmd_combining_macron_below">Apvienojoša garumzīme apakšā</string>
+    <string name="cmd_combining_macron_below_desc">Pievienot garumzīmi apakšā iepriekšējai rakstzīmei</string>
+    <string name="cmd_combining_ring_below">Apvienojošs aplītis apakšā</string>
+    <string name="cmd_combining_ring_below_desc">Pievienot aplīti apakšā iepriekšējai rakstzīmei</string>
     <string name="cmd_combining_double_aigu">Apvienojošs dubultakūts</string>
     <string name="cmd_combining_double_aigu_desc">Pievienot dubultakūtu iepriekšējai rakstzīmei</string>
     <string name="cmd_combining_breve">Apvienojoša breve</string>

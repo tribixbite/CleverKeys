@@ -1841,6 +1841,8 @@
     <string name="extra_key_accent_slash">Přeškrtnutí</string>
     <string name="extra_key_accent_bar">Vodorovné přeškrtnutí</string>
     <string name="extra_key_accent_dot_below">Tečka pod</string>
+    <string name="extra_key_accent_macron_below">Vodorovná čárka pod</string>
+    <string name="extra_key_accent_ring_below">Kroužek pod</string>
     <string name="extra_key_accent_hook_above">Háček nad</string>
     <string name="extra_key_accent_horn">Růžek</string>
     <string name="extra_key_accent_double_grave">Dvojitá obrácená čárka</string>
@@ -2187,6 +2189,10 @@
     <string name="cmd_accent_dot_above_desc">Mrtvá klávesa pro tečku nad (ż)</string>
     <string name="cmd_accent_dot_below">Tečka pod</string>
     <string name="cmd_accent_dot_below_desc">Mrtvá klávesa pro tečku pod (ḍ)</string>
+    <string name="cmd_accent_macron_below">Vodorovná čárka pod</string>
+    <string name="cmd_accent_macron_below_desc">Mrtvá klávesa pro vodorovnou čárku pod (ṯ)</string>
+    <string name="cmd_accent_ring_below">Kroužek pod</string>
+    <string name="cmd_accent_ring_below_desc">Mrtvá klávesa pro kroužek pod (ḁ)</string>
     <string name="cmd_accent_double_aigu">Dvojitá čárka</string>
     <string name="cmd_accent_double_aigu_desc">Mrtvá klávesa pro dvojitou čárku (ő)</string>
     <string name="cmd_accent_breve">Oblouček</string>
@@ -2237,6 +2243,10 @@
     <string name="cmd_combining_dot_above_desc">Přidat tečku nad předchozí znak</string>
     <string name="cmd_combining_dot_below">Kombinující tečka pod</string>
     <string name="cmd_combining_dot_below_desc">Přidat tečku pod předchozí znak</string>
+    <string name="cmd_combining_macron_below">Kombinující vodorovná čárka pod</string>
+    <string name="cmd_combining_macron_below_desc">Přidat vodorovnou čárku pod předchozí znak</string>
+    <string name="cmd_combining_ring_below">Kombinující kroužek pod</string>
+    <string name="cmd_combining_ring_below_desc">Přidat kroužek pod předchozí znak</string>
     <string name="cmd_combining_double_aigu">Kombinující dvojitá čárka</string>
     <string name="cmd_combining_double_aigu_desc">Přidat dvojitou čárku k předchozímu znaku</string>
     <string name="cmd_combining_breve">Kombinující oblouček</string>

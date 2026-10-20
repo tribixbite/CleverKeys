@@ -1739,6 +1739,8 @@
     <string name="extra_key_accent_slash">Garis Miring</string>
     <string name="extra_key_accent_bar">Garis</string>
     <string name="extra_key_accent_dot_below">Titik Bawah</string>
+    <string name="extra_key_accent_macron_below">Makron Bawah</string>
+    <string name="extra_key_accent_ring_below">Cincin Bawah</string>
     <string name="extra_key_accent_hook_above">Kait Atas</string>
     <string name="extra_key_accent_horn">Tanduk</string>
     <string name="extra_key_accent_double_grave">Grave Ganda</string>
@@ -2064,6 +2066,10 @@
     <string name="cmd_accent_dot_above_desc">Tombol mati untuk titik atas (ż)</string>
     <string name="cmd_accent_dot_below">Titik bawah</string>
     <string name="cmd_accent_dot_below_desc">Tombol mati untuk titik bawah (ḍ)</string>
+    <string name="cmd_accent_macron_below">Makron bawah</string>
+    <string name="cmd_accent_macron_below_desc">Tombol mati untuk makron bawah (ṯ)</string>
+    <string name="cmd_accent_ring_below">Cincin bawah</string>
+    <string name="cmd_accent_ring_below_desc">Tombol mati untuk cincin bawah (ḁ)</string>
     <string name="cmd_accent_double_aigu">Akut ganda</string>
     <string name="cmd_accent_double_aigu_desc">Tombol mati untuk akut ganda (ő)</string>
     <string name="cmd_accent_breve">Breve</string>
@@ -2114,6 +2120,10 @@
     <string name="cmd_combining_dot_above_desc">Tambahkan titik atas ke karakter sebelumnya</string>
     <string name="cmd_combining_dot_below">Titik bawah kombinasi</string>
     <string name="cmd_combining_dot_below_desc">Tambahkan titik bawah ke karakter sebelumnya</string>
+    <string name="cmd_combining_macron_below">Makron bawah kombinasi</string>
+    <string name="cmd_combining_macron_below_desc">Tambahkan makron bawah ke karakter sebelumnya</string>
+    <string name="cmd_combining_ring_below">Cincin bawah kombinasi</string>
+    <string name="cmd_combining_ring_below_desc">Tambahkan cincin bawah ke karakter sebelumnya</string>
     <string name="cmd_combining_double_aigu">Akut ganda kombinasi</string>
     <string name="cmd_combining_double_aigu_desc">Tambahkan akut ganda ke karakter sebelumnya</string>
     <string name="cmd_combining_breve">Breve kombinasi</string>

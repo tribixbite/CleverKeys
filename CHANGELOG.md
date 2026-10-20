@@ -50,6 +50,11 @@ editor that used to be listed here already ship in 2.0.)
   space / period / enter; 123 / emoji / comma / space / period / enter). All three are complete
   a–z Latin layouts, so both swipe engines serve them. Layout only; not affiliated with Apple,
   Google or Microsoft.
+- **Macron-below and ring-below accents** (#187), for ISO 15919 transliteration: Settings →
+  Extra Keys → Accents has two new dead keys (ṯ ḏ ḵ ḻ ṉ ṟ ẕ ḇ ẖ, ḁ), and any other letter
+  takes the combining mark, so the vocalic r̥ and l̥ type directly. The matching combining
+  marks are Extra Keys and command-palette commands too, and the Bone layout's 6 key gains
+  the macron-below accent when it is enabled.
 - **Russian swipe** (validation-tested) — the first non-Latin CTC script — plus early Greek and
   provisional Ukrainian, Bulgarian, Macedonian and Hebrew support, each via its language pack.
   Imported Latin-script language packs are served by CTC when the pack is typeable.

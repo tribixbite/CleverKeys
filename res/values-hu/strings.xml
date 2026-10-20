@@ -1771,6 +1771,8 @@
     <string name="extra_key_accent_slash">Ferde vonal</string>
     <string name="extra_key_accent_bar">Vízszintes vonal</string>
     <string name="extra_key_accent_dot_below">Alsó pont</string>
+    <string name="extra_key_accent_macron_below">Alsó makron</string>
+    <string name="extra_key_accent_ring_below">Alsó karika</string>
     <string name="extra_key_accent_hook_above">Felső horog</string>
     <string name="extra_key_accent_horn">Szarv</string>
     <string name="extra_key_accent_double_grave">Kettős tompa ékezet</string>
@@ -2103,6 +2105,10 @@
     <string name="cmd_accent_dot_above_desc">Holt billentyű felső ponthoz (ż)</string>
     <string name="cmd_accent_dot_below">Alsó pont</string>
     <string name="cmd_accent_dot_below_desc">Holt billentyű alsó ponthoz (ḍ)</string>
+    <string name="cmd_accent_macron_below">Alsó makron</string>
+    <string name="cmd_accent_macron_below_desc">Holt billentyű alsó makronhoz (ṯ)</string>
+    <string name="cmd_accent_ring_below">Alsó karika</string>
+    <string name="cmd_accent_ring_below_desc">Holt billentyű alsó karikához (ḁ)</string>
     <string name="cmd_accent_double_aigu">Kettős éles ékezet</string>
     <string name="cmd_accent_double_aigu_desc">Holt billentyű kettős éles ékezethez (ő)</string>
     <string name="cmd_accent_breve">Breve</string>
@@ -2153,6 +2159,10 @@
     <string name="cmd_combining_dot_above_desc">Felső pont az előző karakterre</string>
     <string name="cmd_combining_dot_below">Kombináló alsó pont</string>
     <string name="cmd_combining_dot_below_desc">Alsó pont az előző karakter alá</string>
+    <string name="cmd_combining_macron_below">Kombináló alsó makron</string>
+    <string name="cmd_combining_macron_below_desc">Alsó makron az előző karakter alá</string>
+    <string name="cmd_combining_ring_below">Kombináló alsó karika</string>
+    <string name="cmd_combining_ring_below_desc">Alsó karika az előző karakter alá</string>
     <string name="cmd_combining_double_aigu">Kombináló kettős éles ékezet</string>
     <string name="cmd_combining_double_aigu_desc">Kettős éles ékezet az előző karakterre</string>
     <string name="cmd_combining_breve">Kombináló breve</string>

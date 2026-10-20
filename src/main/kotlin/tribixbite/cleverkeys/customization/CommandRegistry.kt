@@ -353,6 +353,11 @@ object CommandRegistry {
             keywords = listOf("accent", "hook", "above", "vietnamese", "diacritic")),
         Command("accent_double_grave", R.string.cmd_accent_double_grave, R.string.cmd_accent_double_grave_desc, Category.DIACRITICS,
             keywords = listOf("accent", "double", "grave", "diacritic")),
+        // gh #187: ISO 15919 transliteration of Dravidian/Indic scripts.
+        Command("accent_macron_below", R.string.cmd_accent_macron_below, R.string.cmd_accent_macron_below_desc, Category.DIACRITICS,
+            keywords = listOf("accent", "macron", "line", "below", "underline", "iso 15919", "transliteration", "diacritic")),
+        Command("accent_ring_below", R.string.cmd_accent_ring_below, R.string.cmd_accent_ring_below_desc, Category.DIACRITICS,
+            keywords = listOf("accent", "ring", "circle", "below", "vocalic", "iso 15919", "transliteration", "diacritic")),
         Command("accent_arrow_right", R.string.cmd_accent_arrow_right, R.string.cmd_accent_arrow_right_desc, Category.DIACRITICS,
             keywords = listOf("accent", "arrow", "vector", "diacritic")),
         Command("superscript", R.string.cmd_superscript, R.string.cmd_superscript_desc, Category.DIACRITICS,
@@ -403,6 +408,10 @@ object CommandRegistry {
             keywords = listOf("combining", "horn", "vietnamese")),
         Command("combining_hook_above", R.string.cmd_combining_hook_above, R.string.cmd_combining_hook_above_desc, Category.DIACRITICS,
             keywords = listOf("combining", "hook", "vietnamese")),
+        Command("combining_macron_below", R.string.cmd_combining_macron_below, R.string.cmd_combining_macron_below_desc, Category.DIACRITICS,
+            keywords = listOf("combining", "macron", "line", "below", "underline", "iso 15919")),
+        Command("combining_ring_below", R.string.cmd_combining_ring_below, R.string.cmd_combining_ring_below_desc, Category.DIACRITICS,
+            keywords = listOf("combining", "ring", "circle", "below", "vocalic", "iso 15919")),
         Command("combining_arrow_right", R.string.cmd_combining_arrow_right, R.string.cmd_combining_arrow_right_desc, Category.DIACRITICS,
             keywords = listOf("combining", "arrow", "vector")),
 

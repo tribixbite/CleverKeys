@@ -1725,6 +1725,8 @@
     <string name="extra_key_accent_slash">斜线</string>
     <string name="extra_key_accent_bar">横线</string>
     <string name="extra_key_accent_dot_below">下点</string>
+    <string name="extra_key_accent_macron_below">下长音符</string>
+    <string name="extra_key_accent_ring_below">下圆圈</string>
     <string name="extra_key_accent_hook_above">上钩符</string>
     <string name="extra_key_accent_horn">角符</string>
     <string name="extra_key_accent_double_grave">双抑音符</string>
@@ -2050,6 +2052,10 @@
     <string name="cmd_accent_dot_above_desc">上点前置组合键（ż）</string>
     <string name="cmd_accent_dot_below">下点</string>
     <string name="cmd_accent_dot_below_desc">下点前置组合键（ḍ）</string>
+    <string name="cmd_accent_macron_below">下长音符</string>
+    <string name="cmd_accent_macron_below_desc">下长音符前置组合键（ṯ）</string>
+    <string name="cmd_accent_ring_below">下圆圈</string>
+    <string name="cmd_accent_ring_below_desc">下圆圈前置组合键（ḁ）</string>
     <string name="cmd_accent_double_aigu">双尖音符</string>
     <string name="cmd_accent_double_aigu_desc">双尖音符前置组合键（ő）</string>
     <string name="cmd_accent_breve">短音符</string>
@@ -2100,6 +2106,10 @@
     <string name="cmd_combining_dot_above_desc">为前一个字符添加上点</string>
     <string name="cmd_combining_dot_below">组合用下点</string>
     <string name="cmd_combining_dot_below_desc">为前一个字符添加下点</string>
+    <string name="cmd_combining_macron_below">组合用下长音符</string>
+    <string name="cmd_combining_macron_below_desc">为前一个字符添加下长音符</string>
+    <string name="cmd_combining_ring_below">组合用下圆圈</string>
+    <string name="cmd_combining_ring_below_desc">为前一个字符添加下圆圈</string>
     <string name="cmd_combining_double_aigu">组合用双尖音符</string>
     <string name="cmd_combining_double_aigu_desc">为前一个字符添加双尖音符</string>
     <string name="cmd_combining_breve">组合用短音符</string>

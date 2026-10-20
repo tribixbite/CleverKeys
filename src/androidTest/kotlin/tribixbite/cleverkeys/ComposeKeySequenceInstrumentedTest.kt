@@ -72,6 +72,21 @@ class ComposeKeySequenceInstrumentedTest {
         assertEquals(KeyValue.getKeyByName("combining_aigu"), apply("ач"))
     }
 
+    @Test
+    fun marksBelowTablesResolve() {
+        // gh #187: accent_macron_below.json / accent_ring_below.json in the shipped asset.
+        assertEquals(KeyValue.makeStringKey("ṯ"), apply("t", ComposeKeyData.ACCENT_MACRON_BELOW))
+        assertEquals(KeyValue.makeStringKey("ḻ"), apply("l", ComposeKeyData.ACCENT_MACRON_BELOW))
+        assertEquals(KeyValue.makeStringKey("ḁ"), apply("a", ComposeKeyData.ACCENT_RING_BELOW))
+        // No precomposed r with ring below: the table misses and KeyModifier appends U+0325.
+        assertNull(apply("r", ComposeKeyData.ACCENT_RING_BELOW))
+        assertEquals(
+            KeyValue.makeStringKey("r̥"),
+            KeyModifier.modify(KeyValue.makeCharKey('r'), KeyValue.Modifier.RING_BELOW)
+        )
+        assertEquals(KeyValue.makeStringKey("H̱"), apply("ẖ", ComposeKeyData.shift))
+    }
+
     // ── Fn and Shift state tables ──────────────────────────────────────────
 
     @Test

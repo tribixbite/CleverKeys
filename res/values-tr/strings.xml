@@ -1776,6 +1776,8 @@
     <string name="extra_key_accent_slash">Eğik Çizgi</string>
     <string name="extra_key_accent_bar">Çizgi</string>
     <string name="extra_key_accent_dot_below">Alt Nokta</string>
+    <string name="extra_key_accent_macron_below">Alt Makron</string>
+    <string name="extra_key_accent_ring_below">Alt Halka</string>
     <string name="extra_key_accent_hook_above">Üst Kanca</string>
     <string name="extra_key_accent_horn">Boynuz</string>
     <string name="extra_key_accent_double_grave">Çift Grav</string>
@@ -2108,6 +2110,10 @@
     <string name="cmd_accent_dot_above_desc">Üst nokta için ölü tuş (ż)</string>
     <string name="cmd_accent_dot_below">Alt Nokta</string>
     <string name="cmd_accent_dot_below_desc">Alt nokta için ölü tuş (ḍ)</string>
+    <string name="cmd_accent_macron_below">Alt Makron</string>
+    <string name="cmd_accent_macron_below_desc">Alt makron (alt çizgi) için ölü tuş (ṯ)</string>
+    <string name="cmd_accent_ring_below">Alt Halka</string>
+    <string name="cmd_accent_ring_below_desc">Alt halka için ölü tuş (ḁ)</string>
     <string name="cmd_accent_double_aigu">Çift Akut</string>
     <string name="cmd_accent_double_aigu_desc">Çift akut için ölü tuş (ő)</string>
     <string name="cmd_accent_breve">Breve</string>
@@ -2158,6 +2164,10 @@
     <string name="cmd_combining_dot_above_desc">Önceki karaktere üst nokta ekle</string>
     <string name="cmd_combining_dot_below">Birleştirici Alt Nokta</string>
     <string name="cmd_combining_dot_below_desc">Önceki karaktere alt nokta ekle</string>
+    <string name="cmd_combining_macron_below">Birleştirici Alt Makron</string>
+    <string name="cmd_combining_macron_below_desc">Önceki karaktere alt makron ekle</string>
+    <string name="cmd_combining_ring_below">Birleştirici Alt Halka</string>
+    <string name="cmd_combining_ring_below_desc">Önceki karaktere alt halka ekle</string>
     <string name="cmd_combining_double_aigu">Birleştirici Çift Akut</string>
     <string name="cmd_combining_double_aigu_desc">Önceki karaktere çift akut ekle</string>
     <string name="cmd_combining_breve">Birleştirici Breve</string>

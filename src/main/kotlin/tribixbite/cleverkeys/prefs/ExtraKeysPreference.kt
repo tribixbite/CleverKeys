@@ -83,6 +83,8 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "accent_hook_above",
             "accent_horn",
             "accent_double_grave",
+            "accent_macron_below", // gh #187: ISO 15919 ṯ ḻ ṉ ṟ
+            "accent_ring_below", // gh #187: ISO 15919 r̥ l̥
             "€",
             "ß",
             "£",
@@ -152,6 +154,8 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "combining_dot_below",
             "combining_horn",
             "combining_hook_above",
+            "combining_macron_below", // gh #187
+            "combining_ring_below", // gh #187
             "combining_vertical_tilde",
             "combining_inverted_breve",
             "combining_pokrytie",
@@ -293,7 +297,8 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "accent_circonflexe", "accent_tilde", "accent_cedille", "accent_trema",
                 "accent_ring", "accent_caron", "accent_macron", "accent_ogonek",
                 "accent_breve", "accent_slash", "accent_bar", "accent_dot_below",
-                "accent_hook_above", "accent_horn", "accent_double_grave" ->
+                "accent_hook_above", "accent_horn", "accent_double_grave",
+                "accent_macron_below", "accent_ring_below" ->
                     id = R.string.key_descr_dead_key
                 "combining_dot_above", "combining_double_aigu", "combining_slash",
                 "combining_arrow_right", "combining_breve", "combining_bar",
@@ -301,7 +306,8 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "combining_circonflexe", "combining_grave", "combining_macron",
                 "combining_ring", "combining_tilde", "combining_trema",
                 "combining_ogonek", "combining_dot_below", "combining_horn",
-                "combining_hook_above", "combining_vertical_tilde", "combining_inverted_breve",
+                "combining_hook_above", "combining_macron_below", "combining_ring_below",
+                "combining_vertical_tilde", "combining_inverted_breve",
                 "combining_pokrytie", "combining_slavonic_psili", "combining_slavonic_dasia",
                 "combining_payerok", "combining_titlo", "combining_vzmet",
                 "combining_arabic_v", "combining_arabic_inverted_v", "combining_shaddah",
@@ -431,7 +437,11 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "accent_dot_below" to ("." to R.string.extra_key_accent_dot_below),
             "accent_hook_above" to (null to R.string.extra_key_accent_hook_above),
             "accent_horn" to (null to R.string.extra_key_accent_horn),
-            "accent_double_grave" to (null to R.string.extra_key_accent_double_grave)
+            "accent_double_grave" to (null to R.string.extra_key_accent_double_grave),
+            // gh #187: no standalone spacing glyph exists for either mark below (U+02CD
+            // MODIFIER LETTER LOW MACRON is a letter, not this accent), so name only.
+            "accent_macron_below" to (null to R.string.extra_key_accent_macron_below),
+            "accent_ring_below" to (null to R.string.extra_key_accent_ring_below)
         )
 
         /** Format a key combination ("Fn + Right arrow") using localized key names. */

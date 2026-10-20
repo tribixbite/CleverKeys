@@ -81,6 +81,10 @@ class KeyValue private constructor(
         ARROW_RIGHT,
         BREVE,
         BAR,
+        // gh #187: ISO 15919 transliteration (ṯ ḻ ṉ ṟ, r̥). Inserted before FN/SELECTION_MODE
+        // like BREVE/BAR were: the ordinal only lives in the in-memory KeyValue code.
+        MACRON_BELOW,
+        RING_BELOW,
         FN,
         SELECTION_MODE,
     }
@@ -381,6 +385,17 @@ class KeyValue private constructor(
             FLAG_LATCH or FLAG_SPECIAL or FLAG_KEY_FONT
         )
 
+        /**
+         * A dead key whose label is ordinary text rather than a special_font.ttf glyph. Same
+         * flags as [diacritic] minus FLAG_KEY_FONT, so it renders with the system font.
+         */
+        private fun textDiacritic(symbol: String, m: Modifier): KeyValue = KeyValue(
+            symbol,
+            Kind.Modifier,
+            m.ordinal,
+            FLAG_LATCH or FLAG_SPECIAL
+        )
+
         private fun eventKey(symbol: String, e: Event, flags: Int): KeyValue =
             KeyValue(symbol, Kind.Event, e.ordinal, flags or FLAG_SPECIAL or FLAG_SECONDARY)
 
@@ -561,6 +576,11 @@ class KeyValue private constructor(
             "accent_horn" -> diacritic(0xE061, Modifier.HORN)
             "accent_hook_above" -> diacritic(0xE062, Modifier.HOOK_ABOVE)
             "accent_double_grave" -> diacritic(0xE063, Modifier.DOUBLE_GRAVE)
+            /* gh #187. Text labels (dotted circle + the combining mark) rather than
+               special_font.ttf glyphs: the committed font has no U+E064/U+E065 and this
+               build box cannot run fontforge (`buildKeyboardFont`). */
+            "accent_macron_below" -> textDiacritic("\u25CC\u0331", Modifier.MACRON_BELOW)
+            "accent_ring_below" -> textDiacritic("\u25CC\u0325", Modifier.RING_BELOW)
             "superscript" -> modifierKey("Sup", Modifier.SUPERSCRIPT, 0)
             "subscript" -> modifierKey("Sub", Modifier.SUBSCRIPT, 0)
             "ordinal" -> modifierKey("Ord", Modifier.ORDINAL, 0)
@@ -590,6 +610,9 @@ class KeyValue private constructor(
             "combining_dot_below" -> makeCharKey(0xE160, '\u0323', 0)
             "combining_horn" -> makeCharKey(0xE161, '\u031B', 0)
             "combining_hook_above" -> makeCharKey(0xE162, '\u0309', 0)
+            /* gh #187: text labels, no key-font glyph (see accent_macron_below). */
+            "combining_macron_below" -> makeCharKey('\u0331', "\u25CC\u0331", 0)
+            "combining_ring_below" -> makeCharKey('\u0325', "\u25CC\u0325", 0)
             /* Combining diacritics that do not have a corresponding dead keys start
                at 0xE200. */
             "combining_vertical_tilde" -> makeCharKey(0xE200, '\u033E', 0)

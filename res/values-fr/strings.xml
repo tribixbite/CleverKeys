@@ -1813,6 +1813,8 @@
     <string name="extra_key_accent_slash">Barre oblique</string>
     <string name="extra_key_accent_bar">Barre</string>
     <string name="extra_key_accent_dot_below">Point souscrit</string>
+    <string name="extra_key_accent_macron_below">Macron souscrit</string>
+    <string name="extra_key_accent_ring_below">Rond souscrit</string>
     <string name="extra_key_accent_hook_above">Crochet en chef</string>
     <string name="extra_key_accent_horn">Cornu</string>
     <string name="extra_key_accent_double_grave">Double grave</string>
@@ -2152,6 +2154,10 @@
     <string name="cmd_accent_dot_above_desc">Touche morte point suscrit (ż)</string>
     <string name="cmd_accent_dot_below">Point souscrit</string>
     <string name="cmd_accent_dot_below_desc">Touche morte point souscrit (ḍ)</string>
+    <string name="cmd_accent_macron_below">Macron souscrit</string>
+    <string name="cmd_accent_macron_below_desc">Touche morte macron souscrit (ṯ)</string>
+    <string name="cmd_accent_ring_below">Rond souscrit</string>
+    <string name="cmd_accent_ring_below_desc">Touche morte rond souscrit (ḁ)</string>
     <string name="cmd_accent_double_aigu">Double aigu</string>
     <string name="cmd_accent_double_aigu_desc">Touche morte double accent aigu (ő)</string>
     <string name="cmd_accent_breve">Brève</string>
@@ -2202,6 +2208,10 @@
     <string name="cmd_combining_dot_above_desc">Ajouter un point suscrit au caractère précédent</string>
     <string name="cmd_combining_dot_below">Point souscrit combinant</string>
     <string name="cmd_combining_dot_below_desc">Ajouter un point souscrit au caractère précédent</string>
+    <string name="cmd_combining_macron_below">Macron souscrit combinant</string>
+    <string name="cmd_combining_macron_below_desc">Ajouter un macron souscrit au caractère précédent</string>
+    <string name="cmd_combining_ring_below">Rond souscrit combinant</string>
+    <string name="cmd_combining_ring_below_desc">Ajouter un rond souscrit au caractère précédent</string>
     <string name="cmd_combining_double_aigu">Double aigu combinant</string>
     <string name="cmd_combining_double_aigu_desc">Ajouter un double aigu au caractère précédent</string>
     <string name="cmd_combining_breve">Brève combinante</string>

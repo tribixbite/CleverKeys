@@ -1727,6 +1727,8 @@
     <string name="extra_key_accent_slash">사선</string>
     <string name="extra_key_accent_bar">가로줄</string>
     <string name="extra_key_accent_dot_below">아랫점</string>
+    <string name="extra_key_accent_macron_below">아래 장음 부호</string>
+    <string name="extra_key_accent_ring_below">아랫고리</string>
     <string name="extra_key_accent_hook_above">윗갈고리</string>
     <string name="extra_key_accent_horn">뿔</string>
     <string name="extra_key_accent_double_grave">이중 억음 부호</string>
@@ -2052,6 +2054,10 @@
     <string name="cmd_accent_dot_above_desc">윗점 데드 키(ż)</string>
     <string name="cmd_accent_dot_below">아랫점</string>
     <string name="cmd_accent_dot_below_desc">아랫점 데드 키(ḍ)</string>
+    <string name="cmd_accent_macron_below">아래 장음 부호</string>
+    <string name="cmd_accent_macron_below_desc">아래 장음 부호(매크론) 데드 키(ṯ)</string>
+    <string name="cmd_accent_ring_below">아랫고리</string>
+    <string name="cmd_accent_ring_below_desc">아랫고리 데드 키(ḁ)</string>
     <string name="cmd_accent_double_aigu">이중 양음 부호</string>
     <string name="cmd_accent_double_aigu_desc">이중 양음 부호 데드 키(ő)</string>
     <string name="cmd_accent_breve">단음 부호</string>
@@ -2102,6 +2108,10 @@
     <string name="cmd_combining_dot_above_desc">앞 글자에 윗점 추가</string>
     <string name="cmd_combining_dot_below">조합용 아랫점</string>
     <string name="cmd_combining_dot_below_desc">앞 글자에 아랫점 추가</string>
+    <string name="cmd_combining_macron_below">조합용 아래 장음 부호</string>
+    <string name="cmd_combining_macron_below_desc">앞 글자 아래에 장음 부호 추가</string>
+    <string name="cmd_combining_ring_below">조합용 아랫고리</string>
+    <string name="cmd_combining_ring_below_desc">앞 글자 아래에 고리 추가</string>
     <string name="cmd_combining_double_aigu">조합용 이중 양음 부호</string>
     <string name="cmd_combining_double_aigu_desc">앞 글자에 이중 양음 부호 추가</string>
     <string name="cmd_combining_breve">조합용 단음 부호</string>

@@ -1765,6 +1765,8 @@
     <string name="extra_key_accent_slash">Schuine streep</string>
     <string name="extra_key_accent_bar">Dwarsstreep</string>
     <string name="extra_key_accent_dot_below">Punt onder</string>
+    <string name="extra_key_accent_macron_below">Macron onder</string>
+    <string name="extra_key_accent_ring_below">Ringetje onder</string>
     <string name="extra_key_accent_hook_above">Haakje boven</string>
     <string name="extra_key_accent_horn">Hoorn</string>
     <string name="extra_key_accent_double_grave">Dubbel accent grave</string>
@@ -2097,6 +2099,10 @@
     <string name="cmd_accent_dot_above_desc">Dode toets voor punt boven (ż)</string>
     <string name="cmd_accent_dot_below">Punt onder</string>
     <string name="cmd_accent_dot_below_desc">Dode toets voor punt onder (ḍ)</string>
+    <string name="cmd_accent_macron_below">Macron onder</string>
+    <string name="cmd_accent_macron_below_desc">Dode toets voor macron onder (ṯ)</string>
+    <string name="cmd_accent_ring_below">Ringetje onder</string>
+    <string name="cmd_accent_ring_below_desc">Dode toets voor ringetje onder (ḁ)</string>
     <string name="cmd_accent_double_aigu">Dubbel accent aigu</string>
     <string name="cmd_accent_double_aigu_desc">Dode toets voor dubbel accent aigu (ő)</string>
     <string name="cmd_accent_breve">Breve</string>
@@ -2147,6 +2153,10 @@
     <string name="cmd_combining_dot_above_desc">Punt boven vorig teken toevoegen</string>
     <string name="cmd_combining_dot_below">Punt onder (combinerend)</string>
     <string name="cmd_combining_dot_below_desc">Punt onder vorig teken toevoegen</string>
+    <string name="cmd_combining_macron_below">Macron onder (combinerend)</string>
+    <string name="cmd_combining_macron_below_desc">Macron onder vorig teken toevoegen</string>
+    <string name="cmd_combining_ring_below">Ringetje onder (combinerend)</string>
+    <string name="cmd_combining_ring_below_desc">Ringetje onder vorig teken toevoegen</string>
     <string name="cmd_combining_double_aigu">Dubbel aigu (combinerend)</string>
     <string name="cmd_combining_double_aigu_desc">Dubbel accent aigu aan vorig teken toevoegen</string>
     <string name="cmd_combining_breve">Breve (combinerend)</string>

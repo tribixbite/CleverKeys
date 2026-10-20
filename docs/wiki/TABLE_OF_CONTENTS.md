@@ -53,7 +53,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [Per-Key Actions](./customization/per-key-actions.md) | Customize actions, dynamic templates and explicit apostrophe suffixes |
 | [Extra Keys](./customization/extra-keys.md) | Add function keys, arrows, Tab, Ctrl |
 | [Themes](./customization/themes.md) | Color schemes and appearance |
-| [Command Palette](./customization/command-palette.md) | Searchable list of 236 assignable commands, plus minimize and hide |
+| [Command Palette](./customization/command-palette.md) | Searchable list of 240 assignable commands, plus minimize and hide |
 | [Timestamp Keys](./customization/timestamp-keys.md) | Insert formatted date/time |
 
 ### 5. Layouts and Languages (P1)

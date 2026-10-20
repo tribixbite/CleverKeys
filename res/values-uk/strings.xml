@@ -1852,6 +1852,8 @@
     <string name="extra_key_accent_slash">Скісна риска</string>
     <string name="extra_key_accent_bar">Риска</string>
     <string name="extra_key_accent_dot_below">Крапка знизу</string>
+    <string name="extra_key_accent_macron_below">Макрон знизу</string>
+    <string name="extra_key_accent_ring_below">Кружечок знизу</string>
     <string name="extra_key_accent_hook_above">Гачок зверху</string>
     <string name="extra_key_accent_horn">Ріжок</string>
     <string name="extra_key_accent_double_grave">Подвійний гравіс</string>
@@ -2198,6 +2200,10 @@
     <string name="cmd_accent_dot_above_desc">Мертва клавіша для крапки зверху (ż)</string>
     <string name="cmd_accent_dot_below">Крапка знизу</string>
     <string name="cmd_accent_dot_below_desc">Мертва клавіша для крапки знизу (ḍ)</string>
+    <string name="cmd_accent_macron_below">Макрон знизу</string>
+    <string name="cmd_accent_macron_below_desc">Мертва клавіша для макрона знизу (ṯ)</string>
+    <string name="cmd_accent_ring_below">Кружечок знизу</string>
+    <string name="cmd_accent_ring_below_desc">Мертва клавіша для кружечка знизу (ḁ)</string>
     <string name="cmd_accent_double_aigu">Подвійний акут</string>
     <string name="cmd_accent_double_aigu_desc">Мертва клавіша для подвійного акута (ő)</string>
     <string name="cmd_accent_breve">Бреве</string>
@@ -2248,6 +2254,10 @@
     <string name="cmd_combining_dot_above_desc">Додати крапку зверху до попереднього символу</string>
     <string name="cmd_combining_dot_below">Комбінована крапка знизу</string>
     <string name="cmd_combining_dot_below_desc">Додати крапку знизу до попереднього символу</string>
+    <string name="cmd_combining_macron_below">Комбінований макрон знизу</string>
+    <string name="cmd_combining_macron_below_desc">Додати макрон знизу до попереднього символу</string>
+    <string name="cmd_combining_ring_below">Комбінований кружечок знизу</string>
+    <string name="cmd_combining_ring_below_desc">Додати кружечок знизу до попереднього символу</string>
     <string name="cmd_combining_double_aigu">Комбінований подвійний акут</string>
     <string name="cmd_combining_double_aigu_desc">Додати подвійний акут до попереднього символу</string>
     <string name="cmd_combining_breve">Комбіноване бреве</string>

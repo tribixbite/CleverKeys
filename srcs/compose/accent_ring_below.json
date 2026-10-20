@@ -1,0 +1,6 @@
+{
+  // gh #187: ISO 15919 vocalic r̥/l̥. Unicode precomposes only ḁ/Ḁ with U+0325 COMBINING
+  // RING BELOW; every other letter falls back to letter + U+0325 in KeyModifier.
+  // latin
+  "a": "ḁ"
+}

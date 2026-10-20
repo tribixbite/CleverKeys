@@ -1851,6 +1851,8 @@
     <string name="extra_key_accent_slash">Ukośnik</string>
     <string name="extra_key_accent_bar">Kreska</string>
     <string name="extra_key_accent_dot_below">Kropka pod</string>
+    <string name="extra_key_accent_macron_below">Makron pod</string>
+    <string name="extra_key_accent_ring_below">Kółko pod</string>
     <string name="extra_key_accent_hook_above">Haczyk nad</string>
     <string name="extra_key_accent_horn">Róg</string>
     <string name="extra_key_accent_double_grave">Podwójny słaby</string>
@@ -2197,6 +2199,10 @@
     <string name="cmd_accent_dot_above_desc">Martwy klawisz kropki nad literą (ż)</string>
     <string name="cmd_accent_dot_below">Kropka pod</string>
     <string name="cmd_accent_dot_below_desc">Martwy klawisz kropki pod literą (ḍ)</string>
+    <string name="cmd_accent_macron_below">Makron pod</string>
+    <string name="cmd_accent_macron_below_desc">Martwy klawisz makronu pod literą (ṯ)</string>
+    <string name="cmd_accent_ring_below">Kółko pod</string>
+    <string name="cmd_accent_ring_below_desc">Martwy klawisz kółka pod literą (ḁ)</string>
     <string name="cmd_accent_double_aigu">Podwójny ostry</string>
     <string name="cmd_accent_double_aigu_desc">Martwy klawisz podwójnego akcentu ostrego (ő)</string>
     <string name="cmd_accent_breve">Brewis</string>
@@ -2247,6 +2253,10 @@
     <string name="cmd_combining_dot_above_desc">Dodaj kropkę nad poprzednim znakiem</string>
     <string name="cmd_combining_dot_below">Łącząca kropka pod</string>
     <string name="cmd_combining_dot_below_desc">Dodaj kropkę pod poprzednim znakiem</string>
+    <string name="cmd_combining_macron_below">Łączący makron pod</string>
+    <string name="cmd_combining_macron_below_desc">Dodaj makron pod poprzednim znakiem</string>
+    <string name="cmd_combining_ring_below">Łączące kółko pod</string>
+    <string name="cmd_combining_ring_below_desc">Dodaj kółko pod poprzednim znakiem</string>
     <string name="cmd_combining_double_aigu">Łączący podwójny ostry</string>
     <string name="cmd_combining_double_aigu_desc">Dodaj podwójny akcent ostry do poprzedniego znaku</string>
     <string name="cmd_combining_breve">Łączący brewis</string>

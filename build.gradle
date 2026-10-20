@@ -1239,6 +1239,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.PointersShortSwipesOnlyTest',
     'tribixbite.cleverkeys.PointersSwipeStartKeyTest',
     'tribixbite.cleverkeys.ReleaseClaimKeyModifierTest',
+    // gh #187: macron-below / ring-below dead keys through the real compose data.
+    'tribixbite.cleverkeys.DeadKeyMarksBelowTest',
     'tribixbite.cleverkeys.WindowLayoutUtilsTest',
     'tribixbite.cleverkeys.MarginPercentPolicyTest',
     'tribixbite.cleverkeys.theme.MonetDynamicColorGateTest',
@@ -1672,7 +1674,15 @@ tasks.register('generateComposeData') {
     def composeDir = file("srcs/compose")
     def outputBin = file("src/main/assets/compose_data.bin")
     def outputKt = file("src/main/kotlin/tribixbite/cleverkeys/ComposeKeyData.kt")
-    if (outputBin.exists() && outputKt.exists()) return
+    def script = file("scripts/generate_compose_bin.py")
+    // compose_data.bin is git-ignored, ComposeKeyData.kt (its state offsets) is tracked. A
+    // bin that merely EXISTS can be stale: after a new accent file (gh #187) the pulled .kt
+    // carries the new offsets while an old local bin keeps the old ones, which silently
+    // breaks every compose/fn/shift state after the insertion point. Regenerate whenever any
+    // source is newer than the bin. No outputs are declared on purpose: the .kt is a tracked
+    // source that the Kotlin compile reads.
+    def newestInput = (fileTree(composeDir).files + [script]).collect { it.lastModified() }.max()
+    if (outputBin.exists() && outputKt.exists() && outputBin.lastModified() >= newestInput) return
     def jsonFiles = fileTree("srcs/compose").matching { include "*.json" }.files.collect { it.absolutePath }
     exec { workingDir = projectDir; commandLine(["python3", "scripts/generate_compose_bin.py"] + jsonFiles + [file("srcs/compose/compose").absolutePath]) }
   }

@@ -1726,6 +1726,8 @@
     <string name="extra_key_accent_slash">スラッシュ</string>
     <string name="extra_key_accent_bar">バー</string>
     <string name="extra_key_accent_dot_below">下点</string>
+    <string name="extra_key_accent_macron_below">下マクロン</string>
+    <string name="extra_key_accent_ring_below">下リング</string>
     <string name="extra_key_accent_hook_above">上フック</string>
     <string name="extra_key_accent_horn">ホーン</string>
     <string name="extra_key_accent_double_grave">ダブルグレーブ</string>
@@ -2051,6 +2053,10 @@
     <string name="cmd_accent_dot_above_desc">上ドットのデッドキー(ż)</string>
     <string name="cmd_accent_dot_below">下ドット</string>
     <string name="cmd_accent_dot_below_desc">下ドットのデッドキー(ḍ)</string>
+    <string name="cmd_accent_macron_below">下マクロン</string>
+    <string name="cmd_accent_macron_below_desc">下マクロンのデッドキー(ṯ)</string>
+    <string name="cmd_accent_ring_below">下リング</string>
+    <string name="cmd_accent_ring_below_desc">下リングのデッドキー(ḁ)</string>
     <string name="cmd_accent_double_aigu">ダブルアキュート</string>
     <string name="cmd_accent_double_aigu_desc">ダブルアキュートのデッドキー(ő)</string>
     <string name="cmd_accent_breve">ブレーヴェ</string>
@@ -2101,6 +2107,10 @@
     <string name="cmd_combining_dot_above_desc">直前の文字に上ドットを付加</string>
     <string name="cmd_combining_dot_below">合成用下ドット</string>
     <string name="cmd_combining_dot_below_desc">直前の文字に下ドットを付加</string>
+    <string name="cmd_combining_macron_below">合成用下マクロン</string>
+    <string name="cmd_combining_macron_below_desc">直前の文字に下マクロンを付加</string>
+    <string name="cmd_combining_ring_below">合成用下リング</string>
+    <string name="cmd_combining_ring_below_desc">直前の文字に下リングを付加</string>
     <string name="cmd_combining_double_aigu">合成用ダブルアキュート</string>
     <string name="cmd_combining_double_aigu_desc">直前の文字にダブルアキュートを付加</string>
     <string name="cmd_combining_breve">合成用ブレーヴェ</string>

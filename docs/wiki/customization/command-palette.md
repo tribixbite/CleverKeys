@@ -15,7 +15,7 @@ The command palette is a searchable dialog that appears when you assign an actio
 |------|-------------|
 | **Purpose** | Browse and search all assignable key actions |
 | **Access** | Per-Key Customization, or the [Subkey Popover](../gestures/subkey-popover.md) assign/edit screen |
-| **Features** | Search, 21 categories, 236 commands, four quick actions |
+| **Features** | Search, 21 categories, 240 commands, four quick actions |
 
 ## Where It Appears
 
@@ -59,7 +59,7 @@ The row scrolls away with the list. While you search, only tiles whose name matc
 
 ### Browse Categories
 
-The 236 commands are grouped into these categories, in this order. Category headers stay
+The 240 commands are grouped into these categories, in this order. Category headers stay
 at the top while their commands scroll.
 
 | Category | Commands | Examples |
@@ -77,7 +77,7 @@ at the top while their commands scroll.
 | **Media Controls** | 12 | `media_play_pause`, `media_next`, `volume_up`, `volume_mute` |
 | **System & Apps** | 10 | `brightness_up`, `zoom_in`, `search`, `calculator`, `calendar`, `contacts` |
 | **Spaces & Formatting** | 10 | `space`, `nbsp`, `zwj`, `zwnj`, `lrm`, `rlm` |
-| **Diacritics** | 44 | `accent_aigu`, `accent_grave`, `accent_circonflexe`, `accent_tilde` |
+| **Diacritics** | 48 | `accent_aigu`, `accent_grave`, `accent_circonflexe`, `accent_tilde` |
 | **Slavonic Diacritics** | 10 | combining marks such as `combining_pokrytie` |
 | **Arabic Diacritics** | 14 | combining marks such as `combining_shaddah`, `combining_sukun` |
 | **Hebrew Marks** | 20 | `qamats`, `patah`, `sheva`, `dagesh` |
@@ -174,7 +174,7 @@ description or keyword.
 - **Power user**: `selection_mode`, `doc_home`/`doc_end` and the function keys help in editors and terminals
 
 > [!TIP]
-> The palette lists 236 commands. Use search to find one quickly.
+> The palette lists 240 commands. Use search to find one quickly.
 
 ## Common Questions
 

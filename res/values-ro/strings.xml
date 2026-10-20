@@ -1830,6 +1830,8 @@
     <string name="extra_key_accent_slash">Bară oblică</string>
     <string name="extra_key_accent_bar">Bară</string>
     <string name="extra_key_accent_dot_below">Punct dedesubt</string>
+    <string name="extra_key_accent_macron_below">Macron dedesubt</string>
+    <string name="extra_key_accent_ring_below">Inel dedesubt</string>
     <string name="extra_key_accent_hook_above">Cârlig deasupra</string>
     <string name="extra_key_accent_horn">Corn</string>
     <string name="extra_key_accent_double_grave">Grav dublu</string>
@@ -2169,6 +2171,10 @@
     <string name="cmd_accent_dot_above_desc">Tastă moartă pentru punct deasupra (ż)</string>
     <string name="cmd_accent_dot_below">Punct dedesubt</string>
     <string name="cmd_accent_dot_below_desc">Tastă moartă pentru punct dedesubt (ḍ)</string>
+    <string name="cmd_accent_macron_below">Macron dedesubt</string>
+    <string name="cmd_accent_macron_below_desc">Tastă moartă pentru macron dedesubt (ṯ)</string>
+    <string name="cmd_accent_ring_below">Inel dedesubt</string>
+    <string name="cmd_accent_ring_below_desc">Tastă moartă pentru inel dedesubt (ḁ)</string>
     <string name="cmd_accent_double_aigu">Accent ascuțit dublu</string>
     <string name="cmd_accent_double_aigu_desc">Tastă moartă pentru accent ascuțit dublu (ő)</string>
     <string name="cmd_accent_breve">Breve</string>
@@ -2219,6 +2225,10 @@
     <string name="cmd_combining_dot_above_desc">Adaugă punct deasupra caracterului anterior</string>
     <string name="cmd_combining_dot_below">Punct dedesubt combinat</string>
     <string name="cmd_combining_dot_below_desc">Adaugă punct dedesubt caracterului anterior</string>
+    <string name="cmd_combining_macron_below">Macron dedesubt combinat</string>
+    <string name="cmd_combining_macron_below_desc">Adaugă macron dedesubt caracterului anterior</string>
+    <string name="cmd_combining_ring_below">Inel dedesubt combinat</string>
+    <string name="cmd_combining_ring_below_desc">Adaugă inel dedesubt caracterului anterior</string>
     <string name="cmd_combining_double_aigu">Accent ascuțit dublu combinat</string>
     <string name="cmd_combining_double_aigu_desc">Adaugă accent ascuțit dublu caracterului anterior</string>
     <string name="cmd_combining_breve">Breve combinat</string>

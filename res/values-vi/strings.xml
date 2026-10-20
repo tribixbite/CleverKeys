@@ -1755,6 +1755,8 @@
     <string name="extra_key_accent_slash">Gạch chéo</string>
     <string name="extra_key_accent_bar">Gạch ngang</string>
     <string name="extra_key_accent_dot_below">Dấu nặng</string>
+    <string name="extra_key_accent_macron_below">Dấu gạch dưới</string>
+    <string name="extra_key_accent_ring_below">Dấu vòng dưới</string>
     <string name="extra_key_accent_hook_above">Dấu hỏi</string>
     <string name="extra_key_accent_horn">Dấu râu</string>
     <string name="extra_key_accent_double_grave">Dấu huyền kép</string>
@@ -2080,6 +2082,10 @@
     <string name="cmd_accent_dot_above_desc">Phím chết cho dấu chấm trên (ż)</string>
     <string name="cmd_accent_dot_below">Dấu chấm dưới</string>
     <string name="cmd_accent_dot_below_desc">Phím chết cho dấu chấm dưới (ḍ)</string>
+    <string name="cmd_accent_macron_below">Dấu gạch dưới</string>
+    <string name="cmd_accent_macron_below_desc">Phím chết cho dấu gạch dưới (ṯ)</string>
+    <string name="cmd_accent_ring_below">Dấu vòng dưới</string>
+    <string name="cmd_accent_ring_below_desc">Phím chết cho dấu vòng dưới (ḁ)</string>
     <string name="cmd_accent_double_aigu">Dấu sắc kép</string>
     <string name="cmd_accent_double_aigu_desc">Phím chết cho dấu sắc kép (ő)</string>
     <string name="cmd_accent_breve">Dấu trăng</string>
@@ -2130,6 +2136,10 @@
     <string name="cmd_combining_dot_above_desc">Thêm dấu chấm trên vào ký tự trước</string>
     <string name="cmd_combining_dot_below">Dấu chấm dưới kết hợp</string>
     <string name="cmd_combining_dot_below_desc">Thêm dấu chấm dưới vào ký tự trước</string>
+    <string name="cmd_combining_macron_below">Dấu gạch dưới kết hợp</string>
+    <string name="cmd_combining_macron_below_desc">Thêm dấu gạch dưới vào ký tự trước</string>
+    <string name="cmd_combining_ring_below">Dấu vòng dưới kết hợp</string>
+    <string name="cmd_combining_ring_below_desc">Thêm dấu vòng dưới vào ký tự trước</string>
     <string name="cmd_combining_double_aigu">Dấu sắc kép kết hợp</string>
     <string name="cmd_combining_double_aigu_desc">Thêm dấu sắc kép vào ký tự trước</string>
     <string name="cmd_combining_breve">Dấu trăng kết hợp</string>

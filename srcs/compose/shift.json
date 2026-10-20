@@ -59,6 +59,7 @@
   "ẙ": "Y\u030A",
   "ǰ": "J\u030C",
   "ȷ": "J\u0307",
+  "ẖ": "H\u0331", // gh #187: macron-below dead key on h
 
   // In Turkish, upper case of 'iı' is 'İI' but Java's toUpperCase will
   // return 'II'. To make 'İ' accessible, make it the shift of 'ı'. This

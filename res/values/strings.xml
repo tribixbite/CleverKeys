@@ -2165,6 +2165,8 @@
     <string name="extra_key_accent_slash">Slash</string>
     <string name="extra_key_accent_bar">Bar</string>
     <string name="extra_key_accent_dot_below">Dot Below</string>
+    <string name="extra_key_accent_macron_below">Macron Below</string>
+    <string name="extra_key_accent_ring_below">Ring Below</string>
     <string name="extra_key_accent_hook_above">Hook Above</string>
     <string name="extra_key_accent_horn">Horn</string>
     <string name="extra_key_accent_double_grave">Double Grave</string>
@@ -2497,6 +2499,10 @@
     <string name="cmd_accent_dot_above_desc">Dead key for dot above (ż)</string>
     <string name="cmd_accent_dot_below">Dot Below</string>
     <string name="cmd_accent_dot_below_desc">Dead key for dot below (ḍ)</string>
+    <string name="cmd_accent_macron_below">Macron Below</string>
+    <string name="cmd_accent_macron_below_desc">Dead key for macron below (ṯ)</string>
+    <string name="cmd_accent_ring_below">Ring Below</string>
+    <string name="cmd_accent_ring_below_desc">Dead key for ring below (ḁ)</string>
     <string name="cmd_accent_double_aigu">Double Acute</string>
     <string name="cmd_accent_double_aigu_desc">Dead key for double acute (ő)</string>
     <string name="cmd_accent_breve">Breve</string>
@@ -2547,6 +2553,10 @@
     <string name="cmd_combining_dot_above_desc">Add dot above to previous char</string>
     <string name="cmd_combining_dot_below">Combining Dot Below</string>
     <string name="cmd_combining_dot_below_desc">Add dot below to previous char</string>
+    <string name="cmd_combining_macron_below">Combining Macron Below</string>
+    <string name="cmd_combining_macron_below_desc">Add macron below to previous char</string>
+    <string name="cmd_combining_ring_below">Combining Ring Below</string>
+    <string name="cmd_combining_ring_below_desc">Add ring below to previous char</string>
     <string name="cmd_combining_double_aigu">Combining Double Acute</string>
     <string name="cmd_combining_double_aigu_desc">Add double acute to previous char</string>
     <string name="cmd_combining_breve">Combining Breve</string>

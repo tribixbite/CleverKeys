@@ -1777,6 +1777,8 @@
     <string name="extra_key_accent_slash">Slash</string>
     <string name="extra_key_accent_bar">Guhit</string>
     <string name="extra_key_accent_dot_below">Tuldok sa Ibaba</string>
+    <string name="extra_key_accent_macron_below">Macron sa Ibaba</string>
+    <string name="extra_key_accent_ring_below">Singsing sa Ibaba</string>
     <string name="extra_key_accent_hook_above">Kawit sa Itaas</string>
     <string name="extra_key_accent_horn">Sungay</string>
     <string name="extra_key_accent_double_grave">Dobleng Paiwa</string>
@@ -2109,6 +2111,10 @@
     <string name="cmd_accent_dot_above_desc">Dead key para sa tuldok sa itaas (ż)</string>
     <string name="cmd_accent_dot_below">Tuldok sa Ibaba</string>
     <string name="cmd_accent_dot_below_desc">Dead key para sa tuldok sa ibaba (ḍ)</string>
+    <string name="cmd_accent_macron_below">Macron sa Ibaba</string>
+    <string name="cmd_accent_macron_below_desc">Dead key para sa macron sa ibaba (ṯ)</string>
+    <string name="cmd_accent_ring_below">Singsing sa Ibaba</string>
+    <string name="cmd_accent_ring_below_desc">Dead key para sa singsing sa ibaba (ḁ)</string>
     <string name="cmd_accent_double_aigu">Dobleng Pahilis</string>
     <string name="cmd_accent_double_aigu_desc">Dead key para sa dobleng pahilis (ő)</string>
     <string name="cmd_accent_breve">Breve</string>
@@ -2159,6 +2165,10 @@
     <string name="cmd_combining_dot_above_desc">Magdagdag ng tuldok sa itaas ng naunang character</string>
     <string name="cmd_combining_dot_below">Combining Tuldok sa Ibaba</string>
     <string name="cmd_combining_dot_below_desc">Magdagdag ng tuldok sa ibaba ng naunang character</string>
+    <string name="cmd_combining_macron_below">Combining Macron sa Ibaba</string>
+    <string name="cmd_combining_macron_below_desc">Magdagdag ng macron sa ibaba ng naunang character</string>
+    <string name="cmd_combining_ring_below">Combining Singsing sa Ibaba</string>
+    <string name="cmd_combining_ring_below_desc">Magdagdag ng singsing sa ibaba ng naunang character</string>
     <string name="cmd_combining_double_aigu">Combining Dobleng Pahilis</string>
     <string name="cmd_combining_double_aigu_desc">Magdagdag ng dobleng pahilis sa naunang character</string>
     <string name="cmd_combining_breve">Combining Breve</string>
