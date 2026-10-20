@@ -188,6 +188,28 @@ class Keyboard2ViewContinuousLifecycleTest {
     }
 
     /**
+     * Audit M7 (2026-10-20): session identity comes from the config snapshot alone. The
+     * secondary language used to be re-read from SharedPreferences at touch-down and on every
+     * ownership check (each read builds a device-protected Context), and the preference is not
+     * even the language the decoder uses — `Config.active_secondary_language` is (null on a
+     * bound layout or with Multi-Language off).
+     */
+    @Test
+    fun sessionOwnershipReadsNoPreferences() {
+        val (letter, recognizer) = armContinuousStart()
+        view.onSwipeStart(10f, 50f, letter, testConfigSnapshot(continuous_swipe_enabled = true), recognizer)
+        @Suppress("UNCHECKED_CAST")
+        val segmenter = Keyboard2View::class.java.getDeclaredField("continuousSegmenter")
+            .apply { isAccessible = true }.get(view) as ContinuousSwipe<KeyboardData.Key>
+        segmenter.sample(20f, 50f, 2_000, 1_000, letter, false)
+        segmenter.sample(150f, 50f, 2_010, 1_010, null, true)
+        segmenter.dwell(1_010 + ContinuousSwipe.DWELL_MS)
+        // The segment was dispatched, so ownsSession()/valid() ran at least once.
+        verify(exactly = 1) { service.handleSwipeTyping(any(), any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { DirectBootAwarePreferences.get_shared_preferences(any()) }
+    }
+
+    /**
      * Seeker 2026-10-07: a gesture that STARTS on a non-letter key (backspace, space, enter,
      * shift) must never open a continuous phrase session — its spacebar dwell would otherwise
      * dispatch letter segments straight to the word decoder, bypassing Pointers' start-key rule.

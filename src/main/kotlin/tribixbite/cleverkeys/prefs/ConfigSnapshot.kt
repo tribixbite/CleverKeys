@@ -129,7 +129,12 @@ data class ConfigSnapshot(
     val continuous_swipe_enabled: Boolean,
     val primary_language: String,
     /** One of the `swipe_engine_mode` preference values (routing for each phrase segment). */
-    val swipe_engine_mode: String
+    val swipe_engine_mode: String,
+    /**
+     * `Config.active_secondary_language`: the secondary the decoders actually use (null on a
+     * bound layout or with Multi-Language off) — never the raw preference (audit M7).
+     */
+    val active_secondary_language: String?
 ) {
     /**
      * Runtime themes (decorative/custom) resolve their colours through `KeyboardColorScheme`

@@ -775,7 +775,9 @@ class Keyboard2View @JvmOverloads constructor(
         val epoch = continuousEpoch
         val language = snapshot.primary_language
         val mode = snapshot.swipe_engine_mode
-        val secondary = DirectBootAwarePreferences.get_shared_preferences(context).getString("pref_secondary_language", "none")
+        // Audit M7: the session's language identity is the snapshot's ACTIVE secondary (what the
+        // decoders use), not a SharedPreferences read per ownership check.
+        val secondary = snapshot.active_secondary_language
         continuousSpaceBounds = spaceBounds
         var first = true
         val shiftAtStart = recognizer.wasShiftActiveAtStart()
@@ -784,7 +786,7 @@ class Keyboard2View @JvmOverloads constructor(
             val current = _config.snapshot
             return continuousEpoch == epoch && _keyboard === layout && current.version == snapshot.version &&
                 current.primary_language == language && current.swipe_engine_mode == mode &&
-                DirectBootAwarePreferences.get_shared_preferences(context).getString("pref_secondary_language", "none") == secondary &&
+                current.active_secondary_language == secondary &&
                 current.continuous_swipe_enabled && current.swipe_typing_enabled && _config.handler?.canUseEditorActions() == true &&
                 service.currentInputConnection === ic && service.currentInputEditorInfo === editor
         }

@@ -101,6 +101,24 @@ class LayoutLanguageBindingConfigTest {
         assertThat(config.snapshot.primary_language).isEqualTo("en")
     }
 
+    /**
+     * Audit M7: the continuous-swipe session identity reads the ACTIVE secondary from the
+     * snapshot, so the snapshot must follow the binding exactly like primary_language does.
+     */
+    @Test
+    fun theSnapshotCarriesTheActiveSecondaryAcrossALayoutSwitch() {
+        val config = config(bindings = listOf(null, "fa"))
+        config.set_current_layout(0)
+        assertThat(config.snapshot.active_secondary_language).isEqualTo("fa")
+
+        config.set_current_layout(1)
+        assertWithMessage("a bound layout has no secondary; the snapshot must not lag the switch")
+            .that(config.snapshot.active_secondary_language).isNull()
+
+        config.set_current_layout(0)
+        assertThat(config.snapshot.active_secondary_language).isEqualTo("fa")
+    }
+
     @Test
     fun unboundLayoutsKeepTheCurrentLanguages() {
         val config = config(bindings = listOf(null, null), multilang = false)

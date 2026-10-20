@@ -1340,6 +1340,7 @@ class Config private constructor(
         continuous_swipe_enabled = continuous_swipe_enabled,
         primary_language = primary_language,
         swipe_engine_mode = swipe_engine_mode,
+        active_secondary_language = active_secondary_language,
         swipe_typing_enabled = swipe_typing_enabled,
         slider_speed_smoothing = slider_speed_smoothing,
         slider_speed_max = slider_speed_max,

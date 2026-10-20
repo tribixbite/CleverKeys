@@ -58,7 +58,8 @@ internal fun testConfigSnapshot(
     version: Int = 1,
     continuous_swipe_enabled: Boolean = false,
     primary_language: String = "en",
-    swipe_engine_mode: String = "ctc"
+    swipe_engine_mode: String = "ctc",
+    active_secondary_language: String? = null
 ): ConfigSnapshot = ConfigSnapshot(
     circle_sensitivity = circle_sensitivity,
     tap_duration_threshold = tap_duration_threshold,
@@ -102,5 +103,6 @@ internal fun testConfigSnapshot(
     version = version,
     continuous_swipe_enabled = continuous_swipe_enabled,
     primary_language = primary_language,
-    swipe_engine_mode = swipe_engine_mode
+    swipe_engine_mode = swipe_engine_mode,
+    active_secondary_language = active_secondary_language
 )
