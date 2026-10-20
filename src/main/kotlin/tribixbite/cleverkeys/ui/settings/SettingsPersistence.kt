@@ -46,6 +46,9 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             KeyboardHeightPrefs.PORTRAIT_UNFOLDED, KeyboardHeightPrefs.LANDSCAPE_UNFOLDED -> {
                 refreshUnfoldedHeights()
             }
+            // GH #190: a backup import or reset must move the dropdown/slider too.
+            "selection_delete_mode" -> { selectionDeleteMode = readSelectionDeleteMode() }
+            "selection_delete_step_dp" -> { selectionDeleteStepDp = readSelectionDeleteStepDp() }
             "vibration_enabled" -> {
                 vibrationEnabled = prefs.getBoolean(key, Defaults.HAPTIC_ENABLED)
             }
@@ -447,11 +450,27 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Selection-delete mode settings
         selectionDeleteVerticalThreshold = Config.safeGetInt(prefs, "selection_delete_vertical_threshold", Defaults.SELECTION_DELETE_VERTICAL_THRESHOLD)
         selectionDeleteVerticalSpeed = Config.safeGetFloat(prefs, "selection_delete_vertical_speed", Defaults.SELECTION_DELETE_VERTICAL_SPEED)
+        selectionDeleteMode = readSelectionDeleteMode()
+        selectionDeleteStepDp = readSelectionDeleteStepDp()
 
         // Swipe debug advanced settings
         swipeDebugDetailedLogging = prefs.getSafeBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
         suggestionProvenanceMarkers = prefs.getSafeBoolean("suggestion_provenance_markers", Defaults.SUGGESTION_PROVENANCE_MARKERS)
 }
+
+/**
+ * GH #190: the stored backspace-swipe mode, canonicalised exactly as `Config.refresh` reads
+ * it — anything other than "follow" is the speed-by-distance default.
+ */
+private fun SettingsActivity.readSelectionDeleteMode(): String =
+    if (prefs.getSafeString("selection_delete_mode", Defaults.SELECTION_DELETE_MODE)
+            .lowercase(java.util.Locale.ROOT) == Defaults.SELECTION_DELETE_MODE_FOLLOW
+    ) Defaults.SELECTION_DELETE_MODE_FOLLOW else Defaults.SELECTION_DELETE_MODE_SPEED
+
+/** GH #190: the stored follow-finger step, clamped like `Config.refresh` clamps it. */
+private fun SettingsActivity.readSelectionDeleteStepDp(): Int =
+    Config.safeGetInt(prefs, "selection_delete_step_dp", Defaults.SELECTION_DELETE_STEP_DP)
+        .coerceIn(SettingsRanges.SELECTION_DELETE_STEP_DP)
 
 internal fun SettingsActivity.saveSetting(key: String, value: Any) {
         val _self = this  // capture extension receiver for use inside non-inline lambdas

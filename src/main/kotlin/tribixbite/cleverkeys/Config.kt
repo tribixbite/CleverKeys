@@ -135,6 +135,17 @@ object Defaults {
     // Selection-delete mode (backspace swipe+hold)
     const val SELECTION_DELETE_VERTICAL_THRESHOLD = 40  // % of key height - must exceed to trigger vertical
     const val SELECTION_DELETE_VERTICAL_SPEED = 0.4f    // Speed multiplier for vertical (slower than horizontal)
+    /**
+     * GH #190: how finger movement drives the selection. [SELECTION_DELETE_MODE_SPEED] (the
+     * historical behaviour) is a rate-controlled joystick; [SELECTION_DELETE_MODE_FOLLOW]
+     * makes the selection length proportional to the finger's travel from the activation
+     * point, so moving back shrinks it (HeliBoard/FlorisBoard style).
+     */
+    const val SELECTION_DELETE_MODE_SPEED = "speed"
+    const val SELECTION_DELETE_MODE_FOLLOW = "follow"
+    const val SELECTION_DELETE_MODE = SELECTION_DELETE_MODE_SPEED
+    /** GH #190: finger travel (dp) per selected character in follow-finger mode. */
+    const val SELECTION_DELETE_STEP_DP = 12
 
     // Swipe trail
     const val SWIPE_TRAIL_ENABLED = true
@@ -513,6 +524,13 @@ object SettingsRanges {
      */
     val SLIDER_SENSITIVITY_PERCENT: IntRange = 1..100
 
+    /**
+     * GH #190: follow-finger selection step in dp (`selection_delete_step_dp`). Shared by
+     * the slider, the backup validator and the Config clamp; the floor keeps the step
+     * well above touch jitter.
+     */
+    val SELECTION_DELETE_STEP_DP: IntRange = 4..40
+
     /** Clipboard history entry cap (`clipboard_history_limit`; 0 = unlimited). */
     val CLIPBOARD_HISTORY_LIMIT: IntRange = 0..500
 
@@ -833,6 +851,10 @@ class Config private constructor(
     // Selection-delete mode configuration (backspace swipe+hold)
     @JvmField var selection_delete_vertical_threshold = 40  // % of key height to trigger vertical selection
     @JvmField var selection_delete_vertical_speed = 0.4f    // Speed multiplier for vertical (0.1-1.0)
+    /** GH #190: true = follow-finger (position-proportional) selection, false = speed by distance. */
+    @JvmField var selection_delete_follow_finger = false
+    /** GH #190: follow-finger step, px per character (from `selection_delete_step_dp`). */
+    @JvmField var selection_delete_step_px = 0f
 
     // Gesture timing configuration (exposed hardcoded constants)
     @JvmField var tap_duration_threshold = 150L // Max duration for a tap gesture (ms)
@@ -1158,6 +1180,12 @@ class Config private constructor(
         // Selection-delete mode configuration
         selection_delete_vertical_threshold = safeGetInt(_prefs, "selection_delete_vertical_threshold", Defaults.SELECTION_DELETE_VERTICAL_THRESHOLD)
         selection_delete_vertical_speed = safeGetFloat(_prefs, "selection_delete_vertical_speed", Defaults.SELECTION_DELETE_VERTICAL_SPEED)
+        // GH #190: any value other than "follow" (including a corrupt one) keeps the
+        // historical speed-by-distance joystick.
+        selection_delete_follow_finger = safeGetString(_prefs, "selection_delete_mode", Defaults.SELECTION_DELETE_MODE)
+            .lowercase(java.util.Locale.ROOT) == Defaults.SELECTION_DELETE_MODE_FOLLOW
+        selection_delete_step_px = safeGetInt(_prefs, "selection_delete_step_dp", Defaults.SELECTION_DELETE_STEP_DP)
+            .coerceIn(SettingsRanges.SELECTION_DELETE_STEP_DP) * dm.density
 
         // Gesture timing configuration
         tap_duration_threshold = safeGetInt(_prefs, "tap_duration_threshold", Defaults.TAP_DURATION_THRESHOLD).toLong()
@@ -1278,6 +1306,8 @@ class Config private constructor(
         longPressInterval = longPressInterval,
         selection_delete_vertical_speed = selection_delete_vertical_speed,
         selection_delete_vertical_threshold = selection_delete_vertical_threshold,
+        selection_delete_follow_finger = selection_delete_follow_finger,
+        selection_delete_step_px = selection_delete_step_px,
         short_gestures_enabled = short_gestures_enabled,
         short_gesture_min_distance = short_gesture_min_distance,
         short_gesture_max_distance = short_gesture_max_distance,

@@ -67,6 +67,10 @@ data class ConfigSnapshot(
     val longPressInterval: Long,
     val selection_delete_vertical_speed: Float,
     val selection_delete_vertical_threshold: Int,
+    /** GH #190: backspace swipe+hold selection follows the finger (true) or runs by speed. */
+    val selection_delete_follow_finger: Boolean,
+    /** GH #190: follow-finger travel per selected character, in px. */
+    val selection_delete_step_px: Float,
     val short_gestures_enabled: Boolean,
     val short_gesture_min_distance: PercentOfKey,
     val short_gesture_max_distance: PercentOfKey,

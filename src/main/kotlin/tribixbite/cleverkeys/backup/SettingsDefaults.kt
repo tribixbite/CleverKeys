@@ -124,6 +124,8 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // ── Selection-delete ─────────────────────────────────────────────
     "selection_delete_vertical_threshold" to PrefValue.IntV(Defaults.SELECTION_DELETE_VERTICAL_THRESHOLD),
     "selection_delete_vertical_speed" to PrefValue.FloatV(Defaults.SELECTION_DELETE_VERTICAL_SPEED),
+    "selection_delete_mode" to PrefValue.Str(Defaults.SELECTION_DELETE_MODE),
+    "selection_delete_step_dp" to PrefValue.IntV(Defaults.SELECTION_DELETE_STEP_DP),
 
     // ── Swipe trail ──────────────────────────────────────────────────
     "swipe_trail_enabled" to PrefValue.Bool(Defaults.SWIPE_TRAIL_ENABLED),

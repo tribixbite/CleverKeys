@@ -386,6 +386,9 @@ object SettingsValidation {
 
         // Autocorrect tuning ints (max substitutions, dropped-double margin, minimum stem).
         for (k in TUNING_INTS.values) put(k.key, k.range)
+
+        // GH #190: follow-finger backspace selection step (dp). Shared with slider + Config clamp.
+        put("selection_delete_step_dp", SettingsRanges.SELECTION_DELETE_STEP_DP)
     }
 
     /**
@@ -505,6 +508,9 @@ object SettingsValidation {
             // is a corrupt write rather than a legacy value.
             "swipe_engine_mode" -> value.isNotEmpty()
 
+            // GH #190: backspace swipe+hold selection mode
+            "selection_delete_mode" -> value.matches(Regex("speed|follow"))
+
             // Unknown string preference - allow it (version-tolerant)
             else -> true
         }
@@ -533,6 +539,7 @@ object SettingsValidation {
         "short_gesture_min_distance", "short_gesture_max_distance",
         "swipe_smoothing_window",
         "autocorrect_min_word_length", "autocorrect_confidence_min_frequency",
+        "selection_delete_step_dp",
         "clipboard_max_media_size_mb" -> true  // F-8: stored as Int (safeGetInt read site)
         in TUNING_INTS -> true                 // autocorrect tuning ints (safeGetInt read site)
         // `clipboard_history_limit` and `circle_sensitivity` were here, but
@@ -550,7 +557,8 @@ object SettingsValidation {
     private fun isStringValidatedKey(key: String): Boolean = when (key) {
         "theme", "number_row", "show_numpad", "numpad_layout",
         "number_entry_layout", "circle_sensitivity", "slider_sensitivity",
-        "swipe_dist", "clipboard_history_limit", "custom_terminal_packages" -> true
+        "swipe_dist", "clipboard_history_limit", "custom_terminal_packages",
+        "selection_delete_mode" -> true
         in TUNING_STRINGS -> true
         else -> false
     }

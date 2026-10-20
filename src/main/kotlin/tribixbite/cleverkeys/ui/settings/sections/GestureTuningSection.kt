@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.ShortSwipeCalibrationActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
@@ -172,18 +173,57 @@ internal fun SettingsActivity.GestureTuningSection() {
                     displayValue = "${selectionDeleteVerticalThreshold}%"
                 )
 
-                SettingsSlider(
-                    title = stringResource(R.string.gesture_vertical_speed_title),
-                    description = stringResource(R.string.gesture_vertical_speed_desc),
-                    value = selectionDeleteVerticalSpeed,
-                    valueRange = 0.1f..1.0f,
-                    steps = 18,
-                    onValueChange = {
-                        selectionDeleteVerticalSpeed = it
-                        saveSetting("selection_delete_vertical_speed", selectionDeleteVerticalSpeed)
-                    },
-                    displayValue = String.format(java.util.Locale.getDefault(), "%.1fx", selectionDeleteVerticalSpeed)
+                // GH #190: speed-by-distance joystick (default) vs follow-finger selection.
+                val followFinger = selectionDeleteMode == Defaults.SELECTION_DELETE_MODE_FOLLOW
+                SettingsDropdown(
+                    title = stringResource(R.string.gesture_selection_delete_mode_title),
+                    description = stringResource(R.string.gesture_selection_delete_mode_desc),
+                    // Index 0 = "speed", 1 = "follow"; the stored value is the id, never the label.
+                    options = listOf(
+                        stringResource(R.string.gesture_selection_delete_mode_speed),
+                        stringResource(R.string.gesture_selection_delete_mode_follow)
+                    ),
+                    selectedIndex = if (followFinger) 1 else 0,
+                    onSelectionChange = { index ->
+                        selectionDeleteMode = if (index == 1) {
+                            Defaults.SELECTION_DELETE_MODE_FOLLOW
+                        } else {
+                            Defaults.SELECTION_DELETE_MODE_SPEED
+                        }
+                        saveSetting("selection_delete_mode", selectionDeleteMode)
+                    }
                 )
+
+                if (followFinger) {
+                    val stepRange = SettingsRanges.SELECTION_DELETE_STEP_DP
+                    SettingsSlider(
+                        title = stringResource(R.string.gesture_selection_delete_step_title),
+                        description = stringResource(R.string.gesture_selection_delete_step_desc),
+                        value = selectionDeleteStepDp.toFloat(),
+                        valueRange = stepRange.first.toFloat()..stepRange.last.toFloat(),
+                        steps = stepRange.last - stepRange.first - 1,
+                        onValueChange = {
+                            selectionDeleteStepDp = it.toInt().coerceIn(stepRange)
+                            saveSetting("selection_delete_step_dp", selectionDeleteStepDp)
+                        },
+                        displayValue = "$selectionDeleteStepDp dp"
+                    )
+                } else {
+                    // Vertical speed only scales the joystick's repeat rate; follow-finger
+                    // selects one line per key height, so the slider would do nothing there.
+                    SettingsSlider(
+                        title = stringResource(R.string.gesture_vertical_speed_title),
+                        description = stringResource(R.string.gesture_vertical_speed_desc),
+                        value = selectionDeleteVerticalSpeed,
+                        valueRange = 0.1f..1.0f,
+                        steps = 18,
+                        onValueChange = {
+                            selectionDeleteVerticalSpeed = it
+                            saveSetting("selection_delete_vertical_speed", selectionDeleteVerticalSpeed)
+                        },
+                        displayValue = String.format(java.util.Locale.getDefault(), "%.1fx", selectionDeleteVerticalSpeed)
+                    )
+                }
 
                 // Tap and Typing subsection
                 Text(

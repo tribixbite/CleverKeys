@@ -973,6 +973,14 @@ class Pointers(
             return // Don't process other gesture logic in TrackPoint mode
         }
 
+        // GH #190: follow-finger selection-delete — the selection is a function of where the
+        // finger is, so it is recomputed here on every move. The speed-by-distance mode keeps
+        // its historical path (its repeat timer reads lastX/lastY; the move falls through).
+        if (ptr.hasFlagsAny(FLAG_P_SELECTION_DELETE_MODE) && snap.selection_delete_follow_finger) {
+            updateFollowFingerSelection(ptr)
+            return
+        }
+
         // Track if pointer has left the starting key (for short gesture detection on UP)
         // Use short_gesture_max_distance to define the boundary (as % of key diagonal)
         // Higher values = more lenient, allows swipes further from key center
@@ -1349,6 +1357,69 @@ class Pointers(
         _longpress_handler.sendEmptyMessageDelayed(what, repeatDelay)
     }
 
+    /**
+     * GH #190: follow-finger (position-proportional) selection for backspace swipe+hold.
+     *
+     * The selection's extent is a pure function of the finger's offset from the activation
+     * point ([Pointer.keyCenterX]/[Pointer.keyCenterY], set when selection mode began):
+     *  - horizontal: `trunc(dx / step)` characters, signed (right positive), where `step` is
+     *    [ConfigSnapshot.selection_delete_step_px];
+     *  - vertical: zero inside the vertical dead zone (the same
+     *    `selection_delete_vertical_threshold` % of key height the speed mode uses), then one
+     *    line as soon as the finger leaves it and one more per further key height.
+     *
+     * The pointer remembers how many Shift+arrow steps it has already sent on each axis, so
+     * only the difference to the new target is sent: moving further extends the selection,
+     * moving back sends the opposite Shift+arrow and shrinks it. Release is unchanged from
+     * the speed mode — [onTouchUp] sends one DEL, which deletes the selection.
+     */
+    private fun updateFollowFingerSelection(ptr: Pointer) {
+        val snap = ptr.snap
+        val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
+        // Same key-height approximation as handleSelectionDeleteRepeat.
+        val keyHeight = keyHypotenuse * 0.7f
+        val verticalDeadZone = keyHeight * (snap.selection_delete_vertical_threshold / 100.0f)
+
+        val targetX = followFingerSteps(ptr.lastX - ptr.keyCenterX, snap.selection_delete_step_px)
+        val dy = ptr.lastY - ptr.keyCenterY
+        val targetY = followFingerLines(dy, verticalDeadZone, keyHeight)
+
+        val shiftedMods = ptr.modifiers.with_extra_mod(
+            KeyValue.makeInternalModifier(KeyValue.Modifier.SHIFT)
+        )
+        // Horizontal first: within one line the character steps are what the user watches.
+        ptr.selectionStepsX = sendSelectionSteps(
+            ptr.selectionStepsX, targetX, shiftedMods,
+            positive = SELECTION_ARROW_RIGHT, negative = SELECTION_ARROW_LEFT
+        )
+        ptr.selectionStepsY = sendSelectionSteps(
+            ptr.selectionStepsY, targetY, shiftedMods,
+            positive = SELECTION_ARROW_DOWN, negative = SELECTION_ARROW_UP
+        )
+    }
+
+    /**
+     * Send `target - current` Shift+arrow presses (the [positive] arrow when the difference is
+     * positive, [negative] otherwise) and return the new sent-step count, i.e. [target].
+     */
+    private fun sendSelectionSteps(
+        current: Int,
+        target: Int,
+        shiftedMods: Modifiers,
+        positive: KeyValue,
+        negative: KeyValue
+    ): Int {
+        val delta = target - current
+        if (delta == 0) return current
+        val arrow = if (delta > 0) positive else negative
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SELECTION_DELETE follow-finger: ${abs(delta)}x ${arrow.getKeyevent()} ($current -> $target)")
+        repeat(abs(delta)) {
+            _handler.onPointerDown(arrow, false)
+            _handler.onPointerUp(arrow, shiftedMods)
+        }
+        return target
+    }
+
     /** Handle TrackPoint joystick repeat - send nav keys based on X and Y distance from key center independently.
      *  Supports diagonal movement: if finger is in NE, both up AND right keys fire.
      *  Speed on each axis is proportional to distance on that axis.
@@ -1488,8 +1559,15 @@ class Pointers(
                     ptr.keyCenterY = ptr.lastY
                     // Vibrate to indicate selection mode activation
                     _handler.onPointerFlagsChanged(HapticEvent.TRACKPOINT_ACTIVATE)
-                    // Start selection repeat timer
-                    startSelectionDeleteRepeat(ptr)
+                    if (snap.selection_delete_follow_finger) {
+                        // GH #190: follow-finger mode has no timer — every MOVE recomputes the
+                        // selection from the finger's travel ([updateFollowFingerSelection]).
+                        ptr.selectionStepsX = 0
+                        ptr.selectionStepsY = 0
+                    } else {
+                        // Start selection repeat timer (speed-by-distance joystick)
+                        startSelectionDeleteRepeat(ptr)
+                    }
                     return
                 }
                 // No significant movement - fall through to normal key repeat handling below
@@ -1919,6 +1997,15 @@ class Pointers(
         /** Timeout identifier for selection-delete repeat messages. */
         var selectionDeleteWhat: Int = -1
 
+        /**
+         * GH #190 follow-finger mode: net Shift+Right (positive) / Shift+Left (negative) presses
+         * sent so far, i.e. the horizontal selection extent the editor currently holds.
+         */
+        var selectionStepsX: Int = 0
+
+        /** GH #190 follow-finger mode: net Shift+Down (positive) / Shift+Up (negative) presses. */
+        var selectionStepsY: Int = 0
+
         /** [null] when not in sliding mode. */
         var sliding: Sliding? = null
 
@@ -2266,6 +2353,37 @@ class Pointers(
 
         /** Maximum repeat delay (ms) when finger just outside dead zone (slowest movement). */
         const val TRACKPOINT_MAX_DELAY = 200L
+
+        // GH #190: Shift+arrow keys used by follow-finger selection (symbol codes from KeyValue.kt,
+        // identical to the ones handleSelectionDeleteRepeat builds per repeat).
+        private val SELECTION_ARROW_LEFT = KeyValue.keyeventKey(0xE008, android.view.KeyEvent.KEYCODE_DPAD_LEFT, 0)
+        private val SELECTION_ARROW_RIGHT = KeyValue.keyeventKey(0xE006, android.view.KeyEvent.KEYCODE_DPAD_RIGHT, 0)
+        private val SELECTION_ARROW_UP = KeyValue.keyeventKey(0xE005, android.view.KeyEvent.KEYCODE_DPAD_UP, 0)
+        private val SELECTION_ARROW_DOWN = KeyValue.keyeventKey(0xE007, android.view.KeyEvent.KEYCODE_DPAD_DOWN, 0)
+
+        /**
+         * GH #190: characters selected for a horizontal finger offset [dx] at [stepPx] per
+         * character. Truncates toward zero, so the selection is symmetric about the activation
+         * point and any return to within one step of it selects nothing. A non-positive or
+         * non-finite step selects nothing rather than dividing by it.
+         */
+        @JvmStatic
+        fun followFingerSteps(dx: Float, stepPx: Float): Int {
+            if (!(stepPx > 0f) || !dx.isFinite()) return 0
+            return (dx / stepPx).toInt()
+        }
+
+        /**
+         * GH #190: lines selected for a vertical finger offset [dy]: 0 within [deadZonePx],
+         * then 1 on leaving it plus one per further [linePx]. Signed like [dy] (down positive).
+         */
+        @JvmStatic
+        fun followFingerLines(dy: Float, deadZonePx: Float, linePx: Float): Int {
+            val absDy = abs(dy)
+            if (!dy.isFinite() || absDy <= deadZonePx || !(linePx > 0f)) return 0
+            val lines = 1 + ((absDy - deadZonePx) / linePx).toInt()
+            return if (dy > 0) lines else -lines
+        }
 
         private var uniqueTimeoutWhat = 0
 

@@ -506,6 +506,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Selection-delete mode settings (backspace swipe+hold)
     internal var selectionDeleteVerticalThreshold by mutableIntStateOf(40)
     internal var selectionDeleteVerticalSpeed by mutableFloatStateOf(0.4f)
+    /** GH #190: "speed" (speed by distance) or "follow" (follow finger). */
+    internal var selectionDeleteMode by mutableStateOf(Defaults.SELECTION_DELETE_MODE)
+    /** GH #190: follow-finger travel per character, dp. */
+    internal var selectionDeleteStepDp by mutableIntStateOf(Defaults.SELECTION_DELETE_STEP_DP)
 
     // Swipe debug advanced settings
     internal var swipeDebugDetailedLogging by mutableStateOf(false)
