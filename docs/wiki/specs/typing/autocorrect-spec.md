@@ -300,6 +300,8 @@ That is a total order, so the result never depends on dictionary iteration order
 | τ | `autocorrect_channel_transposition_cost` | 1.2 | swapped neighbours |
 | λ | `autocorrect_channel_frequency_weight` | 0.005 | cost per rank step (1 wrong key ≈ 200 ranks) |
 | β | `autocorrect_channel_alias_bonus` | 0.25 | contraction preference (`donr` → don't) |
+| δ | `autocorrect_channel_short_deletion_cost` | 0.5 | extra cost of deleting onto a word of ≤ 2 letters |
+| δ scope | `autocorrect_channel_short_deletion_scope` | `hebrew` | `hebrew` (Hebrew-script words only) or `all`; English extra-letter slips around `in`/`to` are real typos (eval §10) |
 | γ | `autocorrect_channel_inflection_cost` | 1.0 | inflection guard; 10 = always keep |
 
 Steps that differ from the band ranking:
@@ -317,7 +319,8 @@ Measured (round-2 TEST, held out): GTC 54.1 % → 79.0 %, S-adj one-key slips 67
 Birkbeck net +1,616 words, valid unlisted words newly changed 0.23 %. Hebrew one-key slips
 improved 67.3 % → 90.3 % but broke 42 words, mostly prefix-letter deletions onto common short
 words (`לןא` → `לא`, want `ללא`). That failed the pre-registered T6 ceiling, and the maintainer
-overrode it (eval doc §6).
+overrode it (eval doc §6). The Hebrew-scoped δ (rounds 3–4, §7–§12) then removed that class: 0
+Hebrew breaks on four sets, English outputs identical.
 
 ## Band Ranking (selectable: "Score band, then frequency")
 

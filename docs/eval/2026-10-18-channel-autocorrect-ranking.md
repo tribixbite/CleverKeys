@@ -609,3 +609,16 @@ Gate (all must hold):
 
 If all three hold, scope `hebrew` with δ 0.5 becomes the shipped default. Otherwise δ stays 0.
 These thresholds are fixed now.
+
+## 12. Round 4 TEST (run 2026-10-20, harness at the round-4 commit; one evaluation)
+
+| check | result |
+|---|---|
+| Q1 HE-adj3 (fresh; 69,128 pairs, 3,494 words) | accuracy 59,623 → 59,774; fixes 151 (86 distinct), **breaks 0**, net **+86** |
+| Q2 named cases | none fail |
+| Q3 English invariance | 35,825 inputs (every distinct GTC-TEST typo + 20,000 seeded S-adj-TEST), **0 differences** |
+
+**PASS. Shipped:** δ = 0.5 with scope `hebrew` (`Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_COST`,
+`…_SCOPE`). Across rounds 3–4, δ = 0.5 on Hebrew-script words fixed 38 (HE-adj2-DEV), 51
+(HE-adj2-TEST), 36 (HE-adj, seen) and 86 (HE-adj3) distinct words, with **0 breaks on any Hebrew
+set**. English is unchanged by construction and by check.

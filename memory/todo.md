@@ -122,15 +122,17 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     for each. The new sliders render (Contraction Preference 0.25, Short-Word Deletion Cost
     0.00). The tab was closed, Gboard restored and the phone left on its home screen. Seeker
     skipped (secure lock screen), the Pixel skipped (in use), `192.168.0.81` skipped (same model
-    as the Termux host). STILL OPEN: (1) a Hebrew prefix typo on a phone with the Hebrew pack;
+    as the Termux host). STILL OPEN: (1) a Hebrew prefix typo (`לןא` → `ללא`) on a phone with the Hebrew pack;
     (2) Hebrew prefix-deletion class: round 3
     (short-word deletion cost δ, fresh HE-adj2 data, eval doc §7/§9) fixed 38 Hebrew words with 0
     breaks, 0 S-adj breaks and 0 C-oov changes, but failed E1 on GTC-DEV net −1 (8 fixes / 9
     breaks). The maintainer delegated the decision: E1 was overridden (§9.1) and TEST was run once
     at δ = 0.5 (§10). Result: Hebrew +51 / 0 breaks, S-adj +76 / 0, C-oov 0, but GTC-TEST −3
     (genuine English extra-letter typos `tpo`→to, `xit`→it pushed to 3-letter words). FAIL; δ
-    stays 0 and was not overridden again. Next design: a language-scoped δ (Hebrew-script packs
-    only), its own round with fresh Hebrew data; (3) both rankings change about 74 % of valid
+    stays 0 and was not overridden again. Round 4 (§11–§12) scoped δ to Hebrew script and ran
+    on fresh HE-adj3 (ranks 2,501–6,000): +86 distinct, 0 breaks, English identical on 35,825
+    inputs. PASS, so δ 0.5 + scope `hebrew` SHIPPED. Hebrew device check still open (needs the
+    Hebrew pack on a phone). Arabic prefixes: TODO pending an Arabic eval; (3) both rankings change about 74 % of valid
     unlisted words (C-oov). Exploratory §8: typo fixes cost about 1 edit (median 1.50) and
     valid-word changes about 3 (median 3.00). A maximum-correction-cost κ is the candidate rule
     for its own pre-registered round, chosen on DEV, with §8 disclosed. The settings group was device-checked on the second

@@ -14,7 +14,9 @@ import tribixbite.cleverkeys.Defaults
  */
 class ChannelRankingTest {
 
-    private val w = ChannelWeights(distanceCost = 1f, indelCost = 1f, doubleCost = 0.6f, transpositionCost = 0.9f)
+    /** Fixed test weights; δ pinned to 0 so the term is only present where a test adds it. */
+    private val w = ChannelWeights(distanceCost = 1f, indelCost = 1f, doubleCost = 0.6f, transpositionCost = 0.9f,
+        shortWordDeletionCost = 0f)
     private val eps = 1e-4f
 
     @Before

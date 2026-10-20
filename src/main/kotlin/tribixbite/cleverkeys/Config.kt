@@ -231,8 +231,12 @@ object Defaults {
     const val AUTOCORRECT_CHANNEL_DOUBLE_COST = 1.0f
     const val AUTOCORRECT_CHANNEL_TRANSPOSITION_COST = 1.2f
     const val AUTOCORRECT_CHANNEL_FREQUENCY_WEIGHT = 0.005f
-    /** δ: extra cost of deleting onto a word of ≤ 2 letters (round 3, eval doc §7); 0 = rule C2. */
-    const val AUTOCORRECT_CHANNEL_SHORT_DELETION_COST = 0f
+    /**
+     * δ: extra cost of deleting onto a word of ≤ 2 letters, applied within
+     * [AUTOCORRECT_CHANNEL_SHORT_DELETION_SCOPE]. 0.5 since round 4 (eval doc §11–§12: fresh HE-adj3
+     * +86 distinct, 0 breaks; English outputs identical on 35,825 inputs).
+     */
+    const val AUTOCORRECT_CHANNEL_SHORT_DELETION_COST = 0.5f
     /** Where δ applies: `hebrew` (Hebrew-script words only) or `all` (round 4, eval doc §11). */
     const val AUTOCORRECT_CHANNEL_SHORT_DELETION_SCOPE = "hebrew"
     /** β: cost discount of a contraction alias key (round 2, eval doc §3.1). */

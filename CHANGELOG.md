@@ -36,8 +36,9 @@ editor that used to be listed here already ship in 2.0.)
   and re-doubled letters and contractions are handled (`spaming` → spamming, `donr` → don't).
   On held-out GitHub typos it is right 79 % of the time against 54 % for the old ranking, and
   95 % against 68 % on one-key slips (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`).
-  Hebrew short words with a mistyped one-letter prefix can now lose that letter (`לןא` → `לא`);
-  this was a known cost when the new ranking was made the default. Every weight and step is a
+  Hebrew short words with a mistyped one-letter prefix are no longer corrected by dropping that
+  prefix (`לןא` → `ללא`, not `לא`): a short-word deletion cost applies to Hebrew script only,
+  with zero breaks on four Hebrew test sets and English provably unchanged. Every weight and step is a
   setting with a one-tap reset, and the old ranking stays selectable ("Score band, then
   frequency").
 - **Familiar-style layouts**: QWERTY (iOS-style), QWERTY (Gboard-style) and QWERTY
