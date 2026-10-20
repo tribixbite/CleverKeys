@@ -1824,6 +1824,13 @@
     <string name="ime_default_prompt_toast">Legen Sie %1$s unter Einstellungen → System → Sprachen und Eingabe → Bildschirmtastatur als Standard fest (die Erinnerung lässt sich in den %1$s-Einstellungen abschalten)</string>
     <string name="tile_descr_active">%1$s ist aktiv. Zum Wechseln der Tastatur tippen.</string>
     <string name="tile_descr_inactive">Tippen, um zur %1$s-Tastatur zu wechseln.</string>
+    <string name="tile_subtitle_switch">Tastatur wechseln</string>
+    <string name="tile_subtitle_minimize">Minimieren</string>
+    <string name="tile_subtitle_restore">Wiederherstellen</string>
+    <string name="tile_subtitle_show">Anzeigen</string>
+    <string name="tile_descr_minimize">%1$s ist geöffnet. Zum Minimieren tippen.</string>
+    <string name="tile_descr_restore">%1$s ist minimiert. Zum Wiederherstellen tippen.</string>
+    <string name="tile_descr_show">%1$s ist ausgeblendet. Zum Anzeigen tippen.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Unbenanntes Layout</string>
     <string name="key_descr_keycode">Taste %1$d</string>
     <string name="clipboard_search_hint_tap">Zum Suchen tippen…</string>

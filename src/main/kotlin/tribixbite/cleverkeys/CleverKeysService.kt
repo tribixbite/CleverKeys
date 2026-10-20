@@ -874,6 +874,47 @@ class CleverKeysService : InputMethodService(),
         }
     }
 
+    // =========================================================================
+    // Quick Settings tile (KeyboardTileService). The tile runs in this process on the main
+    // thread and reaches this service through [getInstance], which is set in onCreate and
+    // cleared in onDestroy, so the tile never holds the service past its lifetime.
+    // =========================================================================
+
+    /** The input window as the Quick Settings tile sees it. Main thread. */
+    fun tileWindowState(): ImeWindowState = KeyboardTileDecision.windowStateFor(
+        inputViewShown = isInputViewShown,
+        minimized = _minimizer.style != null,
+        inputStarted = currentInputStarted,
+        hasConnection = currentInputConnection != null,
+    )
+
+    /**
+     * Tile tap while the keyboard shows: minimize to the style last used by a minimize
+     * command ([KeyboardMinimizer.lastStyle], the floating button before any), the same path
+     * the `minimize_bar` / `minimize_fab` commands take.
+     */
+    fun minimizeFromTile() = minimizeKeyboard(_minimizer.lastStyle)
+
+    /** Tile tap while minimized: the same expand the bar or button itself performs. */
+    fun restoreFromTile() = _minimizer.expand()
+
+    /**
+     * Tile tap while hidden with a bound editor: ask the system to show this IME. API 28+ has
+     * [requestShowSelf]; older releases take the IME window token. The system ignores either
+     * when no client is focused, so this can never show a keyboard with nothing to type into
+     * ([tileWindowState] already routed that case to the picker).
+     */
+    fun showFromTile() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            requestShowSelf(0)
+        } else {
+            val token = window?.window?.attributes?.token ?: return
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager ?: return
+            @Suppress("DEPRECATION")
+            imm.showSoftInputFromInputMethod(token, 0)
+        }
+    }
+
     /**
      * The floating button leaves the app the whole screen (content insets at the window's
      * bottom) and takes touches only on the button itself, so the rest of the strip it sits in

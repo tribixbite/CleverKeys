@@ -1815,6 +1815,13 @@
     <string name="ime_default_prompt_toast">%1$s uygulamasını Ayarlar → Sistem → Diller ve giriş → Ekran klavyesi bölümünden varsayılan yapın (hatırlatıcı %1$s ayarlarından kapatılabilir)</string>
     <string name="tile_descr_active">%1$s etkin. Klavyeyi değiştirmek için dokunun.</string>
     <string name="tile_descr_inactive">%1$s klavyesine geçmek için dokunun.</string>
+    <string name="tile_subtitle_switch">Klavye değiştir</string>
+    <string name="tile_subtitle_minimize">Küçült</string>
+    <string name="tile_subtitle_restore">Geri yükle</string>
+    <string name="tile_subtitle_show">Göster</string>
+    <string name="tile_descr_minimize">%1$s açık. Küçültmek için dokunun.</string>
+    <string name="tile_descr_restore">%1$s küçültüldü. Geri yüklemek için dokunun.</string>
+    <string name="tile_descr_show">%1$s gizli. Göstermek için dokunun.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Adsız düzen</string>
     <string name="key_descr_keycode">Tuş %1$d</string>
     <string name="clipboard_search_hint_tap">Aramak için dokunun…</string>

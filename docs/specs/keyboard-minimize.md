@@ -19,6 +19,35 @@ Two catalogue commands (Events category), assignable to any short swipe, popover
 - The talkback label is "Show keyboard" (`short_swipe_show_keyboard`).
 - Out of scope: summoning a keyboard the system has already hidden. That needs an overlay outside the input window (`SYSTEM_ALERT_WINDOW`); this feature keeps the input window and only shrinks it.
 
+## Quick Settings tile (2026-10-20)
+
+`KeyboardTileService` toggles the keyboard instead of always opening the picker. The decision
+is the pure `KeyboardTileDecision.actionFor(isCurrentIme, windowState)`:
+
+| CleverKeys selected? | window (`CleverKeysService.tileWindowState`) | tap | subtitle (API 29+) |
+|---|---|---|---|
+| no | any | input-method picker | Switch keyboard |
+| yes | full keyboard shown | minimize, to `KeyboardMinimizer.lastStyle` (FAB until a minimize command picks a style) | Minimize |
+| yes | minimized | `expand()` | Restore |
+| yes | hidden, input started with a live connection | `requestShowSelf(0)` (API 28+) / `showSoftInputFromInputMethod(token, 0)` | Show |
+| yes | hidden, no editor; or service not running | input-method picker | Switch keyboard |
+
+- **No editor:** an IME can only show itself for a focused client; the system ignores the
+  request otherwise. The picker is kept as the useful fallback; a Toast would sit under the
+  open shade. The subtitle names the picker before the tap.
+- **Shade stays open.** `startActivityAndCollapse` and `showDialog` collapse it but take window
+  focus from the app, so its editor loses the keyboard. `StatusBarManager.collapsePanels` is
+  hidden API with `EXPAND_STATUS_BAR` and is blocked for apps targeting Android 12+. The tile
+  re-reads its state 300 ms and 1 s after a tap, so the subtitle confirms the change.
+- **Lifecycle:** the tile reaches the service through `CleverKeysService.getInstance()`, set in
+  `onCreate` and cleared in `onDestroy`; the tile keeps no reference between callbacks.
+- Tests: `KeyboardTileActionTest` (pure, every branch, strings in all locales),
+  `KeyboardTileServiceTest` (mock, source-level `onClick` routing), `KeyboardMinimizerTest`
+  (`lastStyle`).
+- Device check owed: whether the IME window stays shown while the shade is expanded on each
+  test phone (the shade window can take focus), and that Show works from a field whose keyboard
+  was dismissed with Back.
+
 ## Architecture
 
 - `minimize/KeyboardMinimizer<V>` (pure, generic over the view type):

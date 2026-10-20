@@ -1899,6 +1899,13 @@
     <string name="ime_default_prompt_toast">Зробіть %1$s типовою клавіатурою: Налаштування → Система → Мови та введення → Екранна клавіатура (нагадування можна вимкнути в налаштуваннях %1$s)</string>
     <string name="tile_descr_active">%1$s активна. Торкніться, щоб змінити клавіатуру.</string>
     <string name="tile_descr_inactive">Торкніться, щоб перейти на клавіатуру %1$s.</string>
+    <string name="tile_subtitle_switch">Змінити клавіатуру</string>
+    <string name="tile_subtitle_minimize">Згорнути</string>
+    <string name="tile_subtitle_restore">Розгорнути</string>
+    <string name="tile_subtitle_show">Показати</string>
+    <string name="tile_descr_minimize">%1$s відкрита. Торкніться, щоб згорнути її.</string>
+    <string name="tile_descr_restore">%1$s згорнута. Торкніться, щоб розгорнути її.</string>
+    <string name="tile_descr_show">%1$s прихована. Торкніться, щоб показати її.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Макет без назви</string>
     <string name="key_descr_keycode">Клавіша %1$d</string>
     <string name="clipboard_search_hint_tap">Торкніться для пошуку…</string>

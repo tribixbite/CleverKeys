@@ -1873,6 +1873,13 @@
     <string name="ime_default_prompt_toast">Setați %1$s ca implicită în Setări → Sistem → Limbi și introducere → Tastatură pe ecran (mementoul poate fi dezactivat în setările %1$s)</string>
     <string name="tile_descr_active">%1$s este activă. Atingeți pentru a schimba tastatura.</string>
     <string name="tile_descr_inactive">Atingeți pentru a comuta la tastatura %1$s.</string>
+    <string name="tile_subtitle_switch">Schimbare tastatură</string>
+    <string name="tile_subtitle_minimize">Minimizare</string>
+    <string name="tile_subtitle_restore">Restaurare</string>
+    <string name="tile_subtitle_show">Afișare</string>
+    <string name="tile_descr_minimize">%1$s este deschisă. Atingeți pentru a o minimiza.</string>
+    <string name="tile_descr_restore">%1$s este minimizată. Atingeți pentru a o restaura.</string>
+    <string name="tile_descr_show">%1$s este ascunsă. Atingeți pentru a o afișa.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Aranjament fără nume</string>
     <string name="key_descr_keycode">Tasta %1$d</string>
     <string name="clipboard_search_hint_tap">Atingeți pentru căutare…</string>

@@ -1774,6 +1774,13 @@
     <string name="ime_default_prompt_toast">Setel %1$s sebagai default di Setelan → Sistem → Bahasa &amp; input → Keyboard layar (pengingat dapat dinonaktifkan di pengaturan %1$s)</string>
     <string name="tile_descr_active">%1$s aktif. Ketuk untuk mengganti keyboard.</string>
     <string name="tile_descr_inactive">Ketuk untuk beralih ke keyboard %1$s.</string>
+    <string name="tile_subtitle_switch">Ganti keyboard</string>
+    <string name="tile_subtitle_minimize">Perkecil</string>
+    <string name="tile_subtitle_restore">Pulihkan</string>
+    <string name="tile_subtitle_show">Tampilkan</string>
+    <string name="tile_descr_minimize">%1$s terbuka. Ketuk untuk memperkecil.</string>
+    <string name="tile_descr_restore">%1$s diperkecil. Ketuk untuk memulihkan.</string>
+    <string name="tile_descr_show">%1$s tersembunyi. Ketuk untuk menampilkan.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Tata letak tanpa nama</string>
     <string name="key_descr_keycode">Tombol %1$d</string>
     <string name="clipboard_search_hint_tap">Ketuk untuk mencari…</string>

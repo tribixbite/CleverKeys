@@ -1810,6 +1810,13 @@
     <string name="ime_default_prompt_toast">Állítsa be a(z) %1$s billentyűzetet alapértelmezettként: Beállítások → Rendszer → Nyelvek és bevitel → Képernyő-billentyűzet (az emlékeztető a(z) %1$s beállításaiban kikapcsolható)</string>
     <string name="tile_descr_active">A(z) %1$s aktív. Koppintson a billentyűzetváltáshoz.</string>
     <string name="tile_descr_inactive">Koppintson a(z) %1$s billentyűzetre váltáshoz.</string>
+    <string name="tile_subtitle_switch">Billentyűzetváltás</string>
+    <string name="tile_subtitle_minimize">Kicsinyítés</string>
+    <string name="tile_subtitle_restore">Visszaállítás</string>
+    <string name="tile_subtitle_show">Megjelenítés</string>
+    <string name="tile_descr_minimize">A(z) %1$s nyitva van. Koppintson a kicsinyítéshez.</string>
+    <string name="tile_descr_restore">A(z) %1$s kicsinyítve van. Koppintson a visszaállításhoz.</string>
+    <string name="tile_descr_show">A(z) %1$s rejtve van. Koppintson a megjelenítéshez.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Névtelen kiosztás</string>
     <string name="key_descr_keycode">%1$d. billentyű</string>
     <string name="clipboard_search_hint_tap">Koppintson a kereséshez…</string>

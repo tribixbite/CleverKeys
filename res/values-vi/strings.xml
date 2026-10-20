@@ -1790,6 +1790,13 @@
     <string name="ime_default_prompt_toast">Đặt %1$s làm mặc định trong Cài đặt → Hệ thống → Ngôn ngữ và phương thức nhập → Bàn phím ảo (có thể tắt lời nhắc này trong cài đặt %1$s)</string>
     <string name="tile_descr_active">%1$s đang hoạt động. Chạm để chuyển bàn phím.</string>
     <string name="tile_descr_inactive">Chạm để chuyển sang bàn phím %1$s.</string>
+    <string name="tile_subtitle_switch">Chuyển bàn phím</string>
+    <string name="tile_subtitle_minimize">Thu nhỏ</string>
+    <string name="tile_subtitle_restore">Khôi phục</string>
+    <string name="tile_subtitle_show">Hiển thị</string>
+    <string name="tile_descr_minimize">%1$s đang mở. Chạm để thu nhỏ.</string>
+    <string name="tile_descr_restore">%1$s đang thu nhỏ. Chạm để khôi phục.</string>
+    <string name="tile_descr_show">%1$s đang ẩn. Chạm để hiển thị.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Bố cục chưa đặt tên</string>
     <string name="key_descr_keycode">Phím %1$d</string>
     <string name="clipboard_search_hint_tap">Chạm để tìm kiếm…</string>

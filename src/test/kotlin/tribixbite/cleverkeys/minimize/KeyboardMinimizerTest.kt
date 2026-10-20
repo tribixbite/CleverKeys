@@ -157,4 +157,26 @@ class KeyboardMinimizerTest {
         assertThat(CommandRegistry.getByName("hide_keyboard")).isNotNull()
         assertThat(KeyValue.getKeyByName("hide_keyboard").getEvent()).isEqualTo(KeyValue.Event.HIDE_KEYBOARD)
     }
+
+    /**
+     * The Quick Settings tile minimizes to the style last used: FAB before any minimize, then
+     * whatever the user's command chose, kept across expand and reset. A minimize that is
+     * ignored (nothing shown yet) must not change it.
+     */
+    @Test
+    fun lastStyle_defaultsToTheButton_andFollowsTheMostRecentMinimize() {
+        assertThat(minimizer.lastStyle).isEqualTo(MinimizedStyle.FAB)
+
+        minimizer.minimize(MinimizedStyle.BAR) {}
+        assertThat(minimizer.lastStyle).isEqualTo(MinimizedStyle.FAB)
+
+        minimizer.resolve("full")
+        minimizer.minimize(MinimizedStyle.BAR) {}
+        minimizer.expand()
+        minimizer.reset()
+        assertThat(minimizer.lastStyle).isEqualTo(MinimizedStyle.BAR)
+
+        minimizer.minimize(MinimizedStyle.FAB) {}
+        assertThat(minimizer.lastStyle).isEqualTo(MinimizedStyle.FAB)
+    }
 }

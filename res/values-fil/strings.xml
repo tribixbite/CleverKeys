@@ -1816,6 +1816,13 @@
     <string name="ime_default_prompt_toast">Itakda ang %1$s bilang default sa Settings → System → Mga wika at input → On-screen na keyboard (maaaring i-off ang paalalang ito sa mga setting ng %1$s)</string>
     <string name="tile_descr_active">Aktibo ang %1$s. I-tap para magpalit ng keyboard.</string>
     <string name="tile_descr_inactive">I-tap para lumipat sa %1$s keyboard.</string>
+    <string name="tile_subtitle_switch">Magpalit ng keyboard</string>
+    <string name="tile_subtitle_minimize">I-minimize</string>
+    <string name="tile_subtitle_restore">Ibalik</string>
+    <string name="tile_subtitle_show">Ipakita</string>
+    <string name="tile_descr_minimize">Bukas ang %1$s. I-tap para i-minimize ito.</string>
+    <string name="tile_descr_restore">Naka-minimize ang %1$s. I-tap para ibalik ito.</string>
+    <string name="tile_descr_show">Nakatago ang %1$s. I-tap para ipakita ito.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Layout na walang pangalan</string>
     <string name="key_descr_keycode">Key %1$d</string>
     <string name="clipboard_search_hint_tap">I-tap para maghanap…</string>

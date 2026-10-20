@@ -226,6 +226,12 @@ editor that used to be listed here already ship in 2.0.)
 
 - **Android 7.0+ (API 24) is now required** (was 5.0): ONNX Runtime 1.21.1 for 16 KB memory-page
   alignment declares minSdk 24. Devices on Android 5.0–6.0 remain on v1.5.0.
+- **Quick Settings tile toggles the keyboard**: when CleverKeys is the current keyboard, a tap
+  minimizes it (to the style the minimize commands last used, the floating button by default),
+  restores it when minimized, or shows it when hidden over a focused text field. With another
+  keyboard selected, or no text field to type into, it opens the keyboard picker as before. The
+  tile's subtitle (Android 10+) names the next action. The shade stays open: collapsing it would
+  take focus from the app. See `docs/specs/keyboard-minimize.md`.
 - Release builds are R8-minified with resource shrinking — a smaller APK on top of the neural
   asset removal.
 - Backup merge imports are import-wins, with collisions surfaced in the preview.

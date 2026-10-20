@@ -24,6 +24,15 @@ class KeyboardMinimizer<V : Any>(
     var style: MinimizedStyle? = null
         private set
 
+    /**
+     * The style of the most recent [minimize] in this process, [MinimizedStyle.FAB] before any.
+     * The Quick Settings tile minimizes to it, so the tile matches the command the user
+     * assigned (bar or button) without a separate setting; the floating button is the default
+     * because it leaves the app the whole screen.
+     */
+    var lastStyle: MinimizedStyle = MinimizedStyle.FAB
+        private set
+
     private var fullView: V? = null
     private var minimizedView: V? = null
 
@@ -45,6 +54,7 @@ class KeyboardMinimizer<V : Any>(
         if (fullView == null) return
         val view = minimizedView ?: createMinimized().also { minimizedView = it }
         style = newStyle
+        lastStyle = newStyle
         prepare(view)
         show(view)
     }

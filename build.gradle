@@ -1042,6 +1042,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.customization.CommandRoutingTest',
     // gh #175 minimize-to-bar/FAB view state (2026-10-01).
     'tribixbite.cleverkeys.minimize.KeyboardMinimizerTest',
+    // Quick Settings tile toggles show/minimize/restore instead of only the picker (2026-10-20).
+    'tribixbite.cleverkeys.KeyboardTileActionTest',
     // Subkey popover assign request <-> intent extras round trip (audit 2026-10-08).
     'tribixbite.cleverkeys.popover.SubkeyAssignExtrasTest',
     'tribixbite.cleverkeys.ReleaseClaimTextActionsTest',

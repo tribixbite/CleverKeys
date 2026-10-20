@@ -1886,6 +1886,13 @@
     <string name="ime_default_prompt_toast">Imposta %1$s come predefinita in Impostazioni → Sistema → Lingue e immissione → Tastiera sullo schermo (il promemoria può essere disattivato nelle impostazioni di %1$s)</string>
     <string name="tile_descr_active">%1$s è attiva. Tocca per cambiare tastiera.</string>
     <string name="tile_descr_inactive">Tocca per passare alla tastiera %1$s.</string>
+    <string name="tile_subtitle_switch">Cambia tastiera</string>
+    <string name="tile_subtitle_minimize">Riduci</string>
+    <string name="tile_subtitle_restore">Ripristina</string>
+    <string name="tile_subtitle_show">Mostra</string>
+    <string name="tile_descr_minimize">%1$s è aperta. Tocca per ridurla.</string>
+    <string name="tile_descr_restore">%1$s è ridotta. Tocca per ripristinarla.</string>
+    <string name="tile_descr_show">%1$s è nascosta. Tocca per mostrarla.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Layout senza nome</string>
     <string name="key_descr_keycode">Tasto %1$d</string>
     <string name="clipboard_search_hint_tap">Tocca per cercare…</string>

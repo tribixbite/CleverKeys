@@ -1804,6 +1804,13 @@
     <string name="ime_default_prompt_toast">Stel %1$s in als standaard via Instellingen → Systeem → Talen en invoer → Schermtoetsenbord (de herinnering kun je uitzetten in de instellingen van %1$s)</string>
     <string name="tile_descr_active">%1$s is actief. Tik om van toetsenbord te wisselen.</string>
     <string name="tile_descr_inactive">Tik om over te schakelen naar het %1$s-toetsenbord.</string>
+    <string name="tile_subtitle_switch">Toetsenbord wisselen</string>
+    <string name="tile_subtitle_minimize">Minimaliseren</string>
+    <string name="tile_subtitle_restore">Herstellen</string>
+    <string name="tile_subtitle_show">Tonen</string>
+    <string name="tile_descr_minimize">%1$s is open. Tik om het te minimaliseren.</string>
+    <string name="tile_descr_restore">%1$s is geminimaliseerd. Tik om het te herstellen.</string>
+    <string name="tile_descr_show">%1$s is verborgen. Tik om het te tonen.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Naamloze lay-out</string>
     <string name="key_descr_keycode">Toets %1$d</string>
     <string name="clipboard_search_hint_tap">Tik om te zoeken…</string>

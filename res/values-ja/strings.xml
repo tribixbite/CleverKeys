@@ -1761,6 +1761,13 @@
     <string name="ime_default_prompt_toast">設定 → システム → 言語と入力 → 画面キーボード で %1$s を既定に設定してください(このリマインダーは %1$s の設定でオフにできます)</string>
     <string name="tile_descr_active">%1$s が有効です。タップするとキーボードを切り替えます。</string>
     <string name="tile_descr_inactive">タップすると %1$s キーボードに切り替えます。</string>
+    <string name="tile_subtitle_switch">キーボードを切り替え</string>
+    <string name="tile_subtitle_minimize">最小化</string>
+    <string name="tile_subtitle_restore">元に戻す</string>
+    <string name="tile_subtitle_show">表示</string>
+    <string name="tile_descr_minimize">%1$s が開いています。タップすると最小化します。</string>
+    <string name="tile_descr_restore">%1$s は最小化されています。タップすると元に戻します。</string>
+    <string name="tile_descr_show">%1$s は非表示です。タップすると表示します。</string>
     <string name="swipe_engine_fallback_unnamed_layout">名前のないレイアウト</string>
     <string name="key_descr_keycode">キー %1$d</string>
     <string name="clipboard_search_hint_tap">タップして検索…</string>

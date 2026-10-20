@@ -1888,6 +1888,13 @@
     <string name="ime_default_prompt_toast">Nastavte %1$s jako výchozí v Nastavení → Systém → Jazyky a zadávání → Softwarová klávesnice (připomínku lze vypnout v nastavení %1$s)</string>
     <string name="tile_descr_active">%1$s je aktivní. Klepnutím přepnete klávesnici.</string>
     <string name="tile_descr_inactive">Klepnutím přepnete na klávesnici %1$s.</string>
+    <string name="tile_subtitle_switch">Přepnout klávesnici</string>
+    <string name="tile_subtitle_minimize">Minimalizovat</string>
+    <string name="tile_subtitle_restore">Obnovit</string>
+    <string name="tile_subtitle_show">Zobrazit</string>
+    <string name="tile_descr_minimize">%1$s je otevřená. Klepnutím ji minimalizujete.</string>
+    <string name="tile_descr_restore">%1$s je minimalizovaná. Klepnutím ji obnovíte.</string>
+    <string name="tile_descr_show">%1$s je skrytá. Klepnutím ji zobrazíte.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Nepojmenované rozložení</string>
     <string name="key_descr_keycode">Klávesa %1$d</string>
     <string name="clipboard_search_hint_tap">Klepnutím vyhledáte…</string>

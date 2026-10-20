@@ -1856,6 +1856,13 @@
     <string name="ime_default_prompt_toast">Définissez %1$s par défaut dans Paramètres → Système → Langues et saisie → Clavier à l\'écran (le rappel peut être désactivé dans les paramètres de %1$s)</string>
     <string name="tile_descr_active">%1$s est actif. Appuyez pour changer de clavier.</string>
     <string name="tile_descr_inactive">Appuyez pour passer au clavier %1$s.</string>
+    <string name="tile_subtitle_switch">Changer de clavier</string>
+    <string name="tile_subtitle_minimize">Réduire</string>
+    <string name="tile_subtitle_restore">Restaurer</string>
+    <string name="tile_subtitle_show">Afficher</string>
+    <string name="tile_descr_minimize">%1$s est ouvert. Appuyez pour le réduire.</string>
+    <string name="tile_descr_restore">%1$s est réduit. Appuyez pour le restaurer.</string>
+    <string name="tile_descr_show">%1$s est masqué. Appuyez pour l\'afficher.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Disposition sans nom</string>
     <string name="key_descr_keycode">Touche %1$d</string>
     <string name="clipboard_search_hint_tap">Appuyez pour rechercher…</string>

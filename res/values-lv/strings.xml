@@ -1857,6 +1857,13 @@
     <string name="ime_default_prompt_toast">Iestatiet %1$s kā noklusējuma tastatūru sadaļā Iestatījumi → Sistēma → Valodas un ievade → Ekrāna tastatūra (atgādinājumu var izslēgt %1$s iestatījumos)</string>
     <string name="tile_descr_active">%1$s ir aktīva. Pieskarieties, lai mainītu tastatūru.</string>
     <string name="tile_descr_inactive">Pieskarieties, lai pārslēgtos uz %1$s tastatūru.</string>
+    <string name="tile_subtitle_switch">Mainīt tastatūru</string>
+    <string name="tile_subtitle_minimize">Minimizēt</string>
+    <string name="tile_subtitle_restore">Atjaunot</string>
+    <string name="tile_subtitle_show">Rādīt</string>
+    <string name="tile_descr_minimize">%1$s ir atvērta. Pieskarieties, lai to minimizētu.</string>
+    <string name="tile_descr_restore">%1$s ir minimizēta. Pieskarieties, lai to atjaunotu.</string>
+    <string name="tile_descr_show">%1$s ir paslēpta. Pieskarieties, lai to parādītu.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Nenosaukts izkārtojums</string>
     <string name="key_descr_keycode">Taustiņš %1$d</string>
     <string name="clipboard_search_hint_tap">Pieskarieties, lai meklētu…</string>
