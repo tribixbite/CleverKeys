@@ -1,6 +1,6 @@
 # HANDOFF — updated 2026-10-20 (body last reconciled 2026-09-01)
 
-**2026-10-20 pointer.** Local `main` is 80 commits ahead of origin/main (`a40ce7d0`), NOT
+**2026-10-20 pointer.** Local `main` is 79 commits ahead (at `3e863819`) of origin/main (`a40ce7d0`), NOT
 pushed (pushes need the maintainer's word this round). New since 10-18, all on local main:
 - **Autocorrect ranking is now the noisy-channel rule** (default since `353003c6`; weights from
   pre-registered rounds 1–5, `docs/eval/2026-10-18-channel-autocorrect-ranking.md`): shipped
