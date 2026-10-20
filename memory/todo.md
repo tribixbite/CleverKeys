@@ -138,7 +138,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     PASS, DONE. Device 2026-10-20, first Saga (release from `4d1e8c10`, SHA `7ed139aa…`,
     `build/oct20b-saga/`): the field read "Device shared spamming don't hello nelsons
     tyrannicide". `tyrannicide` was kept (logcat: edit 5.497 > max 3.0); `keelsons` → nelsons
-    (edit 2.40) was still changed, as expected at κ 3. The settings group was device-checked on the second
+    (edit 2.40) was still changed, as expected at κ 3. Full instrumented suite at `4d1e8c10`
+    (κ 3 + Hebrew δ): 1,606/1,606 on emulator.wtf Pixel7 API 34 (`~/ew-output/oct20-kappa/`, run
+    f1aff4e2); pure 3,042/3,042 and mock 1,317/1,317. The settings group was device-checked on the second
     Saga, 2026-10-18 (`build/oct18-saga/01–10`; before the "Contraction Preference" slider).
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
