@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.ui.settings
 
+import tribixbite.cleverkeys.KeyboardHeightPrefs
 import android.content.Intent
 import android.content.SharedPreferences
 import android.widget.Toast
@@ -40,6 +41,10 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             }
             "keyboard_height" -> {
                 keyboardHeight = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
+                refreshUnfoldedHeights()   // an unset inner height follows this one
+            }
+            KeyboardHeightPrefs.PORTRAIT_UNFOLDED, KeyboardHeightPrefs.LANDSCAPE_UNFOLDED -> {
+                refreshUnfoldedHeights()
             }
             "vibration_enabled" -> {
                 vibrationEnabled = prefs.getBoolean(key, Defaults.HAPTIC_ENABLED)
@@ -63,6 +68,7 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             // Adaptive layout settings
             "keyboard_height_landscape" -> {
                 keyboardHeightLandscape = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
+                refreshUnfoldedHeights()
             }
             "margin_bottom_portrait" -> {
                 marginBottomPortrait = prefs.getInt(key, Defaults.MARGIN_BOTTOM_PORTRAIT)
@@ -225,6 +231,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Appearance settings
         keyboardHeight = prefs.getSafeInt("keyboard_height", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
         keyboardHeightLandscape = prefs.getSafeInt("keyboard_height_landscape", Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
+        refreshUnfoldedHeights()
         scaleNumpadHeight = prefs.getSafeBoolean("scale_numpad_height", Defaults.SCALE_NUMPAD_HEIGHT)
 
         // Adaptive layout settings (percentages)
@@ -470,6 +477,12 @@ internal fun SettingsActivity.saveSetting(key: String, value: Any) {
                     Toast.LENGTH_SHORT).show()
             }
         }
+}
+
+/** Re-reads the effective inner-screen heights (following the outer value while unset). */
+internal fun SettingsActivity.refreshUnfoldedHeights() {
+    keyboardHeightUnfolded = KeyboardHeightPrefs.percent(prefs, landscape = false, unfolded = true)
+    keyboardHeightLandscapeUnfolded = KeyboardHeightPrefs.percent(prefs, landscape = true, unfolded = true)
 }
 
 internal fun SettingsActivity.updateConfigFromSettings() {

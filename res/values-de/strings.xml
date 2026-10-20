@@ -378,6 +378,11 @@
     <string name="appearance_height_portrait_desc">Tastaturhöhe im Hochformat anpassen</string>
     <string name="appearance_height_landscape_title">Tastaturhöhe (Querformat)</string>
     <string name="appearance_height_landscape_desc">Tastaturhöhe im Querformat anpassen</string>
+    <string name="appearance_height_unfolded_title">Tastaturhöhe (innerer Bildschirm)</string>
+    <string name="appearance_height_unfolded_desc">Tastaturhöhe auf dem aufgeklappten inneren Bildschirm eines faltbaren Telefons. Solange Sie sie nicht ändern, entspricht sie der Hochformat-Höhe oben.</string>
+    <string name="appearance_height_landscape_unfolded_title">Querformat-Höhe (innerer Bildschirm)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Tastaturhöhe im Querformat auf dem aufgeklappten inneren Bildschirm. Solange Sie sie nicht ändern, entspricht sie der Querformat-Höhe oben.</string>
+    <string name="appearance_height_no_fold_detected">Auf diesem Gerät wurde kein faltbarer Bildschirm erkannt.</string>
     <string name="appearance_scale_numpad_title">Numpad-Höhe skalieren</string>
     <string name="appearance_scale_numpad_desc">PIN- und Numpad-Zeilen auf die volle Tastaturhöhe strecken</string>
     <string name="appearance_bottom_margin_portrait_title">Unterer Rand (Hochformat)</string>

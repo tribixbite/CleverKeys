@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.backup
 
 import tribixbite.cleverkeys.Defaults
+import tribixbite.cleverkeys.KeyboardHeightPrefs
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 
 /**
@@ -294,6 +295,10 @@ internal fun lookupDefault(key: String): PrefValue? = SETTINGS_DEFAULTS[key]
  */
 internal val NON_DEFAULTED_KEYS: Set<String> = setOf(
     "clipboard_custom_rules_uri",      // SAF URI for user-supplied URL rules
+    // Inner-screen (unfolded) keyboard heights: "unset" means "follow the outer-screen height"
+    // (KeyboardHeightPrefs), so Reset removes them and never seeds a value.
+    KeyboardHeightPrefs.PORTRAIT_UNFOLDED,
+    KeyboardHeightPrefs.LANDSCAPE_UNFOLDED,
 )
 
 /**

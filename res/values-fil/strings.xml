@@ -368,6 +368,11 @@
     <string name="appearance_height_portrait_desc">Ayusin ang taas ng keyboard sa portrait mode</string>
     <string name="appearance_height_landscape_title">Taas ng Keyboard (Landscape)</string>
     <string name="appearance_height_landscape_desc">Ayusin ang taas ng keyboard sa landscape mode</string>
+    <string name="appearance_height_unfolded_title">Taas ng Keyboard (Panloob na Screen)</string>
+    <string name="appearance_height_unfolded_desc">Taas ng keyboard sa nakabukas na panloob na screen ng foldable na telepono. Hangga\'t hindi mo binabago, kapareho ito ng portrait na taas sa itaas.</string>
+    <string name="appearance_height_landscape_unfolded_title">Taas sa Landscape (Panloob na Screen)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Taas ng keyboard sa landscape sa nakabukas na panloob na screen. Hangga\'t hindi mo binabago, kapareho ito ng landscape na taas sa itaas.</string>
+    <string name="appearance_height_no_fold_detected">Walang natukoy na foldable na screen sa device na ito.</string>
     <string name="appearance_scale_numpad_title">I-scale ang taas ng numpad</string>
     <string name="appearance_scale_numpad_desc">Ibanat ang mga hilera ng PIN at numpad sa buong taas ng keyboard</string>
     <string name="appearance_bottom_margin_portrait_title">Margin sa Ibaba (Portrait)</string>

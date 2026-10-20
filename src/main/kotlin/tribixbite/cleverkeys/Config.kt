@@ -928,18 +928,10 @@ class Config private constructor(
 
         if (orientation_landscape) {
             if ("landscape" == show_numpad_s) show_numpad = true
-            keyboardHeightPercent = safeGetInt(
-                _prefs,
-                if (this.foldable_unfolded) "keyboard_height_landscape_unfolded" else "keyboard_height_landscape",
-                Defaults.KEYBOARD_HEIGHT_LANDSCAPE
-            )
+            keyboardHeightPercent = KeyboardHeightPrefs.percent(_prefs, landscape = true, unfolded = this.foldable_unfolded)
             characterSizeScale = 1.25f
         } else {
-            keyboardHeightPercent = safeGetInt(
-                _prefs,
-                if (this.foldable_unfolded) "keyboard_height_unfolded" else "keyboard_height",
-                Defaults.KEYBOARD_HEIGHT_PORTRAIT
-            )
+            keyboardHeightPercent = KeyboardHeightPrefs.percent(_prefs, landscape = false, unfolded = this.foldable_unfolded)
         }
 
         // Keep nulls - they represent SystemLayout entries (resolved to localeTextLayout at runtime).

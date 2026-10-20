@@ -743,6 +743,8 @@ tasks.register('runPureTests', JavaExec) {
     // #161 (2026-09-03): oriented keyboard height — the settings-side portrait stomp of
     // Config.keyboardHeightPercent (same shape as the #154 vibrate_custom stomp above).
     'tribixbite.cleverkeys.KeyboardHeightOrientationDriftTest',
+    // 2026-10-20: foldable inner-screen height follows the outer screen until set.
+    'tribixbite.cleverkeys.KeyboardHeightPrefsTest',
     // Audit remediation (2026-07-17) — new pure JVM tests
     'tribixbite.cleverkeys.ClipboardSearchRegexTest',
     'tribixbite.cleverkeys.ConfigNullSafetyTest',

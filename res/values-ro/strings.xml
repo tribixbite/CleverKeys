@@ -383,6 +383,11 @@
     <string name="appearance_height_portrait_desc">Reglează înălțimea tastaturii în modul portret</string>
     <string name="appearance_height_landscape_title">Înălțimea tastaturii (peisaj)</string>
     <string name="appearance_height_landscape_desc">Reglează înălțimea tastaturii în modul peisaj</string>
+    <string name="appearance_height_unfolded_title">Înălțimea tastaturii (ecran interior)</string>
+    <string name="appearance_height_unfolded_desc">Înălțimea tastaturii pe ecranul interior deschis al unui telefon pliabil. Până o modificați, este egală cu înălțimea pe verticală de mai sus.</string>
+    <string name="appearance_height_landscape_unfolded_title">Înălțime peisaj (ecran interior)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Înălțimea tastaturii în modul peisaj pe ecranul interior deschis. Până o modificați, este egală cu înălțimea peisaj de mai sus.</string>
+    <string name="appearance_height_no_fold_detected">Pe acest dispozitiv nu a fost detectat un ecran pliabil.</string>
     <string name="appearance_scale_numpad_title">Scalează înălțimea tastaturii numerice</string>
     <string name="appearance_scale_numpad_desc">Întinde rândurile PIN și ale tastaturii numerice pe toată înălțimea tastaturii</string>
     <string name="appearance_bottom_margin_portrait_title">Margine inferioară (portret)</string>

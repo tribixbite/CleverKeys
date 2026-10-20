@@ -271,6 +271,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var fingerOcclusionOffset by mutableIntStateOf(Defaults.FINGER_OCCLUSION_OFFSET)
     internal var keyboardHeight by mutableIntStateOf(28)
     internal var keyboardHeightLandscape by mutableIntStateOf(50)
+    // Inner (unfolded) screen heights as the keyboard will use them: an unset key follows the
+    // outer-screen value (KeyboardHeightPrefs), so these show the effective height.
+    internal var keyboardHeightUnfolded by mutableIntStateOf(28)
+    internal var keyboardHeightLandscapeUnfolded by mutableIntStateOf(50)
     internal var scaleNumpadHeight by mutableStateOf(Defaults.SCALE_NUMPAD_HEIGHT)  // F-8 / #58: numpad row scaling
     internal var vibrationEnabled by mutableStateOf(false)
     internal var debugEnabled by mutableStateOf(false)

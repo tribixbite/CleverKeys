@@ -394,6 +394,11 @@
     <string name="appearance_height_portrait_desc">ارتفاع صفحه‌کلید در حالت عمودی را تنظیم کنید</string>
     <string name="appearance_height_landscape_title">ارتفاع صفحه‌کلید (افقی)</string>
     <string name="appearance_height_landscape_desc">ارتفاع صفحه‌کلید در حالت افقی را تنظیم کنید</string>
+    <string name="appearance_height_unfolded_title">ارتفاع صفحه‌کلید (صفحهٔ داخلی)</string>
+    <string name="appearance_height_unfolded_desc">ارتفاع صفحه‌کلید روی صفحهٔ داخلیِ بازشدهٔ گوشی تاشو. تا وقتی آن را تغییر ندهید، با ارتفاع حالت عمودی بالا برابر است.</string>
+    <string name="appearance_height_landscape_unfolded_title">ارتفاع افقی (صفحهٔ داخلی)</string>
+    <string name="appearance_height_landscape_unfolded_desc">ارتفاع صفحه‌کلید در حالت افقی روی صفحهٔ داخلیِ بازشده. تا وقتی آن را تغییر ندهید، با ارتفاع افقی بالا برابر است.</string>
+    <string name="appearance_height_no_fold_detected">صفحهٔ تاشو روی این دستگاه شناسایی نشد.</string>
     <string name="appearance_scale_numpad_title">مقیاس ارتفاع صفحهٔ عددی</string>
     <string name="appearance_scale_numpad_desc">کشیدن ردیف‌های PIN و صفحهٔ عددی تا ارتفاع کامل صفحه‌کلید</string>
     <string name="appearance_bottom_margin_portrait_title">حاشیه پایین (عمودی)</string>

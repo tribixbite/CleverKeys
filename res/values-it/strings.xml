@@ -399,6 +399,11 @@
     <string name="appearance_height_portrait_desc">Regola l\'altezza della tastiera in modalità verticale</string>
     <string name="appearance_height_landscape_title">Altezza tastiera (orizzontale)</string>
     <string name="appearance_height_landscape_desc">Regola l\'altezza della tastiera in modalità orizzontale</string>
+    <string name="appearance_height_unfolded_title">Altezza tastiera (schermo interno)</string>
+    <string name="appearance_height_unfolded_desc">Altezza della tastiera sullo schermo interno aperto di un telefono pieghevole. Finché non la modifichi, corrisponde all\'altezza verticale qui sopra.</string>
+    <string name="appearance_height_landscape_unfolded_title">Altezza orizzontale (schermo interno)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Altezza della tastiera in orizzontale sullo schermo interno aperto. Finché non la modifichi, corrisponde all\'altezza orizzontale qui sopra.</string>
+    <string name="appearance_height_no_fold_detected">Nessuno schermo pieghevole rilevato su questo dispositivo.</string>
     <string name="appearance_scale_numpad_title">Adatta altezza tastierino</string>
     <string name="appearance_scale_numpad_desc">Estende le righe di PIN e tastierino numerico a tutta l\'altezza della tastiera</string>
     <string name="appearance_bottom_margin_portrait_title">Margine inferiore (verticale)</string>

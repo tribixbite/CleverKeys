@@ -355,6 +355,11 @@
     <string name="appearance_height_portrait_desc">调整竖屏模式下的键盘高度。</string>
     <string name="appearance_height_landscape_title">键盘高度（横屏）</string>
     <string name="appearance_height_landscape_desc">调整横屏模式下的键盘高度。</string>
+    <string name="appearance_height_unfolded_title">键盘高度(内屏)</string>
+    <string name="appearance_height_unfolded_desc">折叠屏手机展开后内屏上的键盘高度。未修改时与上方的竖屏高度相同。</string>
+    <string name="appearance_height_landscape_unfolded_title">横屏高度(内屏)</string>
+    <string name="appearance_height_landscape_unfolded_desc">展开后内屏上的横屏键盘高度。未修改时与上方的横屏高度相同。</string>
+    <string name="appearance_height_no_fold_detected">此设备上未检测到折叠屏。</string>
     <string name="appearance_scale_numpad_title">缩放数字键盘高度</string>
     <string name="appearance_scale_numpad_desc">将 PIN 和数字键盘的行拉伸至键盘全高</string>
     <string name="appearance_bottom_margin_portrait_title">底部边距（竖屏）</string>

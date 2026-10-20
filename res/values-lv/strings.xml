@@ -372,6 +372,11 @@
     <string name="appearance_height_portrait_desc">Pielāgot tastatūras augstumu portreta režīmā</string>
     <string name="appearance_height_landscape_title">Tastatūras augstums (ainava)</string>
     <string name="appearance_height_landscape_desc">Pielāgot tastatūras augstumu ainavas režīmā</string>
+    <string name="appearance_height_unfolded_title">Tastatūras augstums (iekšējais ekrāns)</string>
+    <string name="appearance_height_unfolded_desc">Tastatūras augstums salokāma tālruņa atvērtajā iekšējā ekrānā. Kamēr to nemaināt, tas sakrīt ar portreta augstumu augstāk.</string>
+    <string name="appearance_height_landscape_unfolded_title">Ainavas augstums (iekšējais ekrāns)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Tastatūras ainavas augstums atvērtajā iekšējā ekrānā. Kamēr to nemaināt, tas sakrīt ar ainavas augstumu augstāk.</string>
+    <string name="appearance_height_no_fold_detected">Šajā ierīcē salokāms ekrāns netika noteikts.</string>
     <string name="appearance_scale_numpad_title">Mērogot ciparu tastatūras augstumu</string>
     <string name="appearance_scale_numpad_desc">Izstiept PIN un ciparu tastatūras rindas visā tastatūras augstumā</string>
     <string name="appearance_bottom_margin_portrait_title">Apakšējā mala (portrets)</string>

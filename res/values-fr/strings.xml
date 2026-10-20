@@ -366,6 +366,11 @@
     <string name="appearance_height_portrait_desc">Ajuster la hauteur du clavier en mode portrait</string>
     <string name="appearance_height_landscape_title">Hauteur du clavier (paysage)</string>
     <string name="appearance_height_landscape_desc">Ajuster la hauteur du clavier en mode paysage</string>
+    <string name="appearance_height_unfolded_title">Hauteur du clavier (écran intérieur)</string>
+    <string name="appearance_height_unfolded_desc">Hauteur du clavier sur l\'écran intérieur déplié d\'un téléphone pliable. Tant que vous ne la modifiez pas, elle reprend la hauteur portrait ci-dessus.</string>
+    <string name="appearance_height_landscape_unfolded_title">Hauteur paysage (écran intérieur)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Hauteur du clavier en paysage sur l\'écran intérieur déplié. Tant que vous ne la modifiez pas, elle reprend la hauteur paysage ci-dessus.</string>
+    <string name="appearance_height_no_fold_detected">Aucun écran pliable détecté sur cet appareil.</string>
     <string name="appearance_scale_numpad_title">Adapter la hauteur du pavé numérique</string>
     <string name="appearance_scale_numpad_desc">Étirer les rangées PIN et pavé numérique sur toute la hauteur du clavier</string>
     <string name="appearance_bottom_margin_portrait_title">Marge inférieure (portrait)</string>

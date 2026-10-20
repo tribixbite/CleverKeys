@@ -560,6 +560,11 @@
     <string name="appearance_height_portrait_desc">Adjust keyboard height in portrait mode</string>
     <string name="appearance_height_landscape_title">Keyboard Height (Landscape)</string>
     <string name="appearance_height_landscape_desc">Adjust keyboard height in landscape mode</string>
+    <string name="appearance_height_unfolded_title">Keyboard Height (Inner Screen)</string>
+    <string name="appearance_height_unfolded_desc">Keyboard height on the unfolded inner screen of a foldable phone. Until you change it, it matches the portrait height above.</string>
+    <string name="appearance_height_landscape_unfolded_title">Landscape Height (Inner Screen)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Landscape keyboard height on the unfolded inner screen. Until you change it, it matches the landscape height above.</string>
+    <string name="appearance_height_no_fold_detected">No foldable screen detected on this device.</string>
     <string name="appearance_scale_numpad_title">Scale numpad height</string>
     <string name="appearance_scale_numpad_desc">Stretch PIN and numpad rows to fill the full keyboard height</string>
     <string name="appearance_bottom_margin_portrait_title">Bottom Margin (Portrait)</string>

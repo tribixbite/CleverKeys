@@ -357,6 +357,11 @@
     <string name="appearance_height_portrait_desc">세로 모드에서 키보드 높이를 조정합니다</string>
     <string name="appearance_height_landscape_title">키보드 높이（가로 모드）</string>
     <string name="appearance_height_landscape_desc">가로 모드에서 키보드 높이를 조정합니다</string>
+    <string name="appearance_height_unfolded_title">키보드 높이 (내부 화면)</string>
+    <string name="appearance_height_unfolded_desc">폴더블 휴대전화를 펼친 내부 화면의 키보드 높이입니다. 변경하기 전까지는 위의 세로 높이와 같습니다.</string>
+    <string name="appearance_height_landscape_unfolded_title">가로 높이 (내부 화면)</string>
+    <string name="appearance_height_landscape_unfolded_desc">펼친 내부 화면에서 가로 방향 키보드 높이입니다. 변경하기 전까지는 위의 가로 높이와 같습니다.</string>
+    <string name="appearance_height_no_fold_detected">이 기기에서 폴더블 화면이 감지되지 않았습니다.</string>
     <string name="appearance_scale_numpad_title">숫자 패드 높이 조정</string>
     <string name="appearance_scale_numpad_desc">PIN 및 숫자 패드 행을 키보드 전체 높이로 늘립니다</string>
     <string name="appearance_bottom_margin_portrait_title">하단 여백（세로 모드）</string>

@@ -359,6 +359,11 @@
     <string name="appearance_height_portrait_desc">Pas de toetsenbordhoogte aan in de staande modus</string>
     <string name="appearance_height_landscape_title">Toetsenbordhoogte (liggend)</string>
     <string name="appearance_height_landscape_desc">Pas de toetsenbordhoogte aan in de liggende modus</string>
+    <string name="appearance_height_unfolded_title">Toetsenbordhoogte (binnenscherm)</string>
+    <string name="appearance_height_unfolded_desc">Toetsenbordhoogte op het opengevouwen binnenscherm van een vouwbare telefoon. Zolang je die niet wijzigt, gelijk aan de staande hoogte hierboven.</string>
+    <string name="appearance_height_landscape_unfolded_title">Liggende hoogte (binnenscherm)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Liggende toetsenbordhoogte op het opengevouwen binnenscherm. Zolang je die niet wijzigt, gelijk aan de liggende hoogte hierboven.</string>
+    <string name="appearance_height_no_fold_detected">Geen vouwbaar scherm gevonden op dit apparaat.</string>
     <string name="appearance_scale_numpad_title">Numpad-hoogte schalen</string>
     <string name="appearance_scale_numpad_desc">PIN- en numpad-rijen uitrekken tot de volledige toetsenbordhoogte</string>
     <string name="appearance_bottom_margin_portrait_title">Onderste marge (staand)</string>

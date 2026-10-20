@@ -122,14 +122,9 @@ class KeyboardDimensionsHelper(
             // Check orientation
             val isLandscape = _context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-            // Get user height preference (same logic as calibration)
+            // Get user height preference (the one rule shared with Config.refresh)
             val prefs = DirectBootAwarePreferences.get_shared_preferences(_context)
-            val key = if (isLandscape) {
-                if (foldableUnfolded) "keyboard_height_landscape_unfolded" else "keyboard_height_landscape"
-            } else {
-                if (foldableUnfolded) "keyboard_height_unfolded" else "keyboard_height"
-            }
-            val keyboardHeightPref = prefs.getInt(key, if (isLandscape) 50 else 35)
+            val keyboardHeightPref = KeyboardHeightPrefs.percent(prefs, isLandscape, foldableUnfolded)
 
             // Calculate dynamic height
             val keyboardHeightPercent = keyboardHeightPref / 100.0f
@@ -152,15 +147,9 @@ class KeyboardDimensionsHelper(
             val isLandscape = _context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
             val prefs = DirectBootAwarePreferences.get_shared_preferences(_context)
-
-            val key = if (isLandscape) {
-                if (foldableUnfolded) "keyboard_height_landscape_unfolded" else "keyboard_height_landscape"
-            } else {
-                if (foldableUnfolded) "keyboard_height_unfolded" else "keyboard_height"
-            }
-            prefs.getInt(key, if (isLandscape) 50 else 35)
+            KeyboardHeightPrefs.percent(prefs, isLandscape, foldableUnfolded)
         } catch (e: Exception) {
-            35 // Default
+            Defaults.KEYBOARD_HEIGHT_PORTRAIT
         }
     }
 

@@ -374,6 +374,11 @@
     <string name="appearance_height_portrait_desc">Налаштування висоти клавіатури в портретному режимі</string>
     <string name="appearance_height_landscape_title">Висота клавіатури (пейзаж)</string>
     <string name="appearance_height_landscape_desc">Налаштування висоти клавіатури в альбомному режимі</string>
+    <string name="appearance_height_unfolded_title">Висота клавіатури (внутрішній екран)</string>
+    <string name="appearance_height_unfolded_desc">Висота клавіатури на розкритому внутрішньому екрані складаного телефона. Доки ви її не зміните, вона збігається з висотою в портретному режимі вище.</string>
+    <string name="appearance_height_landscape_unfolded_title">Висота в альбомному режимі (внутрішній екран)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Висота клавіатури в альбомному режимі на розкритому внутрішньому екрані. Доки ви її не зміните, вона збігається з альбомною висотою вище.</string>
+    <string name="appearance_height_no_fold_detected">На цьому пристрої складаний екран не виявлено.</string>
     <string name="appearance_scale_numpad_title">Масштабувати висоту цифрової клавіатури</string>
     <string name="appearance_scale_numpad_desc">Розтягувати ряди PIN та цифрової клавіатури на всю висоту клавіатури</string>
     <string name="appearance_bottom_margin_portrait_title">Нижній відступ (портрет)</string>

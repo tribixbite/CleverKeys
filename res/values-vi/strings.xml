@@ -385,6 +385,11 @@
     <string name="appearance_height_portrait_desc">Điều chỉnh chiều cao bàn phím ở chế độ dọc</string>
     <string name="appearance_height_landscape_title">Chiều cao bàn phím (Ngang)</string>
     <string name="appearance_height_landscape_desc">Điều chỉnh chiều cao bàn phím ở chế độ ngang</string>
+    <string name="appearance_height_unfolded_title">Chiều cao bàn phím (màn hình trong)</string>
+    <string name="appearance_height_unfolded_desc">Chiều cao bàn phím trên màn hình trong khi mở của điện thoại gập. Cho đến khi bạn thay đổi, giá trị này bằng chiều cao dọc ở trên.</string>
+    <string name="appearance_height_landscape_unfolded_title">Chiều cao ngang (màn hình trong)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Chiều cao bàn phím ngang trên màn hình trong khi mở. Cho đến khi bạn thay đổi, giá trị này bằng chiều cao ngang ở trên.</string>
+    <string name="appearance_height_no_fold_detected">Không phát hiện màn hình gập trên thiết bị này.</string>
     <string name="appearance_scale_numpad_title">Co giãn chiều cao bàn phím số</string>
     <string name="appearance_scale_numpad_desc">Kéo giãn các hàng PIN và bàn phím số theo toàn bộ chiều cao bàn phím</string>
     <string name="appearance_bottom_margin_portrait_title">Lề dưới (Dọc)</string>

@@ -356,6 +356,11 @@
     <string name="appearance_height_portrait_desc">縦向きモードのキーボード高さを調整します</string>
     <string name="appearance_height_landscape_title">キーボードの高さ（横向き）</string>
     <string name="appearance_height_landscape_desc">横向きモードのキーボード高さを調整します</string>
+    <string name="appearance_height_unfolded_title">キーボードの高さ(内側画面)</string>
+    <string name="appearance_height_unfolded_desc">折りたたみ端末を開いたときの内側画面でのキーボードの高さです。変更するまでは上の縦向きの高さと同じです。</string>
+    <string name="appearance_height_landscape_unfolded_title">横向きの高さ(内側画面)</string>
+    <string name="appearance_height_landscape_unfolded_desc">開いた内側画面での横向きキーボードの高さです。変更するまでは上の横向きの高さと同じです。</string>
+    <string name="appearance_height_no_fold_detected">この端末では折りたたみ画面が検出されませんでした。</string>
     <string name="appearance_scale_numpad_title">テンキーの高さを調整</string>
     <string name="appearance_scale_numpad_desc">PIN・テンキーの行をキーボードの高さいっぱいに広げます</string>
     <string name="appearance_bottom_margin_portrait_title">下余白（縦向き）</string>

@@ -364,6 +364,11 @@
     <string name="appearance_height_portrait_desc">Billentyűzet magasságának beállítása álló módban</string>
     <string name="appearance_height_landscape_title">Billentyűzet magassága (Fekvő)</string>
     <string name="appearance_height_landscape_desc">Billentyűzet magasságának beállítása fekvő módban</string>
+    <string name="appearance_height_unfolded_title">Billentyűzet magassága (belső kijelző)</string>
+    <string name="appearance_height_unfolded_desc">A billentyűzet magassága egy összecsukható telefon kinyitott belső kijelzőjén. Amíg nem módosítja, megegyezik a fenti álló magassággal.</string>
+    <string name="appearance_height_landscape_unfolded_title">Fekvő magasság (belső kijelző)</string>
+    <string name="appearance_height_landscape_unfolded_desc">A billentyűzet fekvő magassága a kinyitott belső kijelzőn. Amíg nem módosítja, megegyezik a fenti fekvő magassággal.</string>
+    <string name="appearance_height_no_fold_detected">Ezen az eszközön nem található összecsukható kijelző.</string>
     <string name="appearance_scale_numpad_title">Számbillentyűzet magasságának nyújtása</string>
     <string name="appearance_scale_numpad_desc">A PIN- és numerikus sorok nyújtása a billentyűzet teljes magasságára</string>
     <string name="appearance_bottom_margin_portrait_title">Alsó margó (Álló)</string>

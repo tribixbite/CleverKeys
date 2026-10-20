@@ -363,6 +363,11 @@
     <string name="appearance_height_portrait_desc">Настройка высоты клавиатуры в портретном режиме</string>
     <string name="appearance_height_landscape_title">Высота клавиатуры (пейзаж)</string>
     <string name="appearance_height_landscape_desc">Настройка высоты клавиатуры в альбомном режиме</string>
+    <string name="appearance_height_unfolded_title">Высота клавиатуры (внутренний экран)</string>
+    <string name="appearance_height_unfolded_desc">Высота клавиатуры на раскрытом внутреннем экране складного телефона. Пока вы её не измените, она совпадает с высотой в портретном режиме выше.</string>
+    <string name="appearance_height_landscape_unfolded_title">Высота в альбомном режиме (внутренний экран)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Высота клавиатуры в альбомном режиме на раскрытом внутреннем экране. Пока вы её не измените, она совпадает с альбомной высотой выше.</string>
+    <string name="appearance_height_no_fold_detected">На этом устройстве складной экран не обнаружен.</string>
     <string name="appearance_scale_numpad_title">Масштаб высоты цифровой клавиатуры</string>
     <string name="appearance_scale_numpad_desc">Растягивать ряды PIN и цифровой клавиатуры на всю высоту клавиатуры</string>
     <string name="appearance_bottom_margin_portrait_title">Нижний отступ (портрет)</string>

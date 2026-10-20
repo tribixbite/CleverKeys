@@ -367,6 +367,11 @@
     <string name="appearance_height_portrait_desc">Dikey modda klavye yüksekliğini ayarla</string>
     <string name="appearance_height_landscape_title">Klavye Yüksekliği (Yatay)</string>
     <string name="appearance_height_landscape_desc">Yatay modda klavye yüksekliğini ayarla</string>
+    <string name="appearance_height_unfolded_title">Klavye Yüksekliği (İç Ekran)</string>
+    <string name="appearance_height_unfolded_desc">Katlanabilir telefonun açık iç ekranındaki klavye yüksekliği. Siz değiştirene kadar yukarıdaki dikey yükseklikle aynıdır.</string>
+    <string name="appearance_height_landscape_unfolded_title">Yatay Yükseklik (İç Ekran)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Açık iç ekranda yatay klavye yüksekliği. Siz değiştirene kadar yukarıdaki yatay yükseklikle aynıdır.</string>
+    <string name="appearance_height_no_fold_detected">Bu cihazda katlanabilir ekran algılanmadı.</string>
     <string name="appearance_scale_numpad_title">Sayısal tuş takımı yüksekliğini ölçekle</string>
     <string name="appearance_scale_numpad_desc">PIN ve sayısal tuş takımı satırlarını klavyenin tam yüksekliğine uzat</string>
     <string name="appearance_bottom_margin_portrait_title">Alt Kenar Boşluğu (Dikey)</string>

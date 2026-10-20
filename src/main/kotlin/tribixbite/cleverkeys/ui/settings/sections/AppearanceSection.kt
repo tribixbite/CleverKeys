@@ -2,6 +2,8 @@ package tribixbite.cleverkeys.ui.settings.sections
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import tribixbite.cleverkeys.FoldStateTracker
+import tribixbite.cleverkeys.KeyboardHeightPrefs
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SettingsRanges
@@ -43,6 +45,39 @@ internal fun SettingsActivity.AppearanceSection() {
                         saveSetting("keyboard_height_landscape", keyboardHeightLandscape)
                     },
                     displayValue = "$keyboardHeightLandscape%"
+                )
+
+                // Foldables (2026-10-20 user report): the inner (unfolded) screen has its own
+                // heights. Until set they follow the two sliders above (KeyboardHeightPrefs).
+                // Visible but inert on phones without a fold, so the option is discoverable.
+                val foldable = FoldStateTracker.isFoldableDevice(this@AppearanceSection)
+                val innerNote = if (foldable) "" else "\n" + stringResource(R.string.appearance_height_no_fold_detected)
+                SettingsSlider(
+                    title = stringResource(R.string.appearance_height_unfolded_title),
+                    description = stringResource(R.string.appearance_height_unfolded_desc) + innerNote,
+                    value = keyboardHeightUnfolded.toFloat(),
+                    valueRange = 20f..60f,
+                    steps = 40,
+                    onValueChange = {
+                        keyboardHeightUnfolded = it.toInt()
+                        saveSetting(KeyboardHeightPrefs.PORTRAIT_UNFOLDED, keyboardHeightUnfolded)
+                    },
+                    displayValue = "$keyboardHeightUnfolded%",
+                    enabled = foldable
+                )
+
+                SettingsSlider(
+                    title = stringResource(R.string.appearance_height_landscape_unfolded_title),
+                    description = stringResource(R.string.appearance_height_landscape_unfolded_desc) + innerNote,
+                    value = keyboardHeightLandscapeUnfolded.toFloat(),
+                    valueRange = 20f..60f,
+                    steps = 40,
+                    onValueChange = {
+                        keyboardHeightLandscapeUnfolded = it.toInt()
+                        saveSetting(KeyboardHeightPrefs.LANDSCAPE_UNFOLDED, keyboardHeightLandscapeUnfolded)
+                    },
+                    displayValue = "$keyboardHeightLandscapeUnfolded%",
+                    enabled = foldable
                 )
 
                 // F-8 / #58 (maintainer decision 2026-09-08): scale_numpad_height had a

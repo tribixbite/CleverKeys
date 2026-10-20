@@ -363,6 +363,11 @@
     <string name="appearance_height_portrait_desc">Upravte výšku klávesnice v režimu na výšku</string>
     <string name="appearance_height_landscape_title">Výška klávesnice (na šířku)</string>
     <string name="appearance_height_landscape_desc">Upravte výšku klávesnice v režimu na šířku</string>
+    <string name="appearance_height_unfolded_title">Výška klávesnice (vnitřní displej)</string>
+    <string name="appearance_height_unfolded_desc">Výška klávesnice na rozloženém vnitřním displeji skládacího telefonu. Dokud ji nezměníte, odpovídá výšce na výšku uvedené výše.</string>
+    <string name="appearance_height_landscape_unfolded_title">Výška na šířku (vnitřní displej)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Výška klávesnice na šířku na rozloženém vnitřním displeji. Dokud ji nezměníte, odpovídá výšce na šířku uvedené výše.</string>
+    <string name="appearance_height_no_fold_detected">Na tomto zařízení nebyl zjištěn skládací displej.</string>
     <string name="appearance_scale_numpad_title">Škálovat výšku numerické klávesnice</string>
     <string name="appearance_scale_numpad_desc">Roztáhnout řádky PIN a numerické klávesnice na plnou výšku klávesnice</string>
     <string name="appearance_bottom_margin_portrait_title">Spodní okraj (na výšku)</string>

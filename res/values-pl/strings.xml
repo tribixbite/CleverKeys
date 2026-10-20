@@ -373,6 +373,11 @@
     <string name="appearance_height_portrait_desc">Dostosuj wysokość klawiatury w trybie pionowym</string>
     <string name="appearance_height_landscape_title">Wysokość klawiatury (pozioma)</string>
     <string name="appearance_height_landscape_desc">Dostosuj wysokość klawiatury w trybie poziomym</string>
+    <string name="appearance_height_unfolded_title">Wysokość klawiatury (ekran wewnętrzny)</string>
+    <string name="appearance_height_unfolded_desc">Wysokość klawiatury na rozłożonym ekranie wewnętrznym składanego telefonu. Dopóki jej nie zmienisz, odpowiada wysokości pionowej powyżej.</string>
+    <string name="appearance_height_landscape_unfolded_title">Wysokość poziomo (ekran wewnętrzny)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Wysokość klawiatury w poziomie na rozłożonym ekranie wewnętrznym. Dopóki jej nie zmienisz, odpowiada wysokości poziomej powyżej.</string>
+    <string name="appearance_height_no_fold_detected">Na tym urządzeniu nie wykryto składanego ekranu.</string>
     <string name="appearance_scale_numpad_title">Skaluj wysokość klawiatury numerycznej</string>
     <string name="appearance_scale_numpad_desc">Rozciągnij wiersze PIN i klawiatury numerycznej na pełną wysokość klawiatury</string>
     <string name="appearance_bottom_margin_portrait_title">Dolny margines (pionowa)</string>

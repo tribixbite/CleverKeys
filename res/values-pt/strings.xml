@@ -360,6 +360,11 @@
     <string name="appearance_height_portrait_desc">Ajustar a altura do teclado no modo retrato</string>
     <string name="appearance_height_landscape_title">Altura do teclado (paisagem)</string>
     <string name="appearance_height_landscape_desc">Ajustar a altura do teclado no modo paisagem</string>
+    <string name="appearance_height_unfolded_title">Altura do teclado (tela interna)</string>
+    <string name="appearance_height_unfolded_desc">Altura do teclado na tela interna aberta de um celular dobrável. Enquanto não for alterada, é igual à altura em retrato acima.</string>
+    <string name="appearance_height_landscape_unfolded_title">Altura em paisagem (tela interna)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Altura do teclado em paisagem na tela interna aberta. Enquanto não for alterada, é igual à altura em paisagem acima.</string>
+    <string name="appearance_height_no_fold_detected">Nenhuma tela dobrável detectada neste dispositivo.</string>
     <string name="appearance_scale_numpad_title">Ajustar altura do teclado numérico</string>
     <string name="appearance_scale_numpad_desc">Esticar as linhas de PIN e teclado numérico até à altura total do teclado</string>
     <string name="appearance_bottom_margin_portrait_title">Margem inferior (retrato)</string>

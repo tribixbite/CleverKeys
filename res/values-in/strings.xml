@@ -368,6 +368,11 @@
     <string name="appearance_height_portrait_desc">Sesuaikan tinggi keyboard dalam mode potret</string>
     <string name="appearance_height_landscape_title">Tinggi Keyboard (Lanskap)</string>
     <string name="appearance_height_landscape_desc">Sesuaikan tinggi keyboard dalam mode lanskap</string>
+    <string name="appearance_height_unfolded_title">Tinggi Keyboard (Layar Dalam)</string>
+    <string name="appearance_height_unfolded_desc">Tinggi keyboard di layar dalam yang dibuka pada ponsel lipat. Selama tidak diubah, nilainya sama dengan tinggi potret di atas.</string>
+    <string name="appearance_height_landscape_unfolded_title">Tinggi Lanskap (Layar Dalam)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Tinggi keyboard lanskap di layar dalam yang dibuka. Selama tidak diubah, nilainya sama dengan tinggi lanskap di atas.</string>
+    <string name="appearance_height_no_fold_detected">Tidak ada layar lipat yang terdeteksi di perangkat ini.</string>
     <string name="appearance_scale_numpad_title">Skalakan tinggi numpad</string>
     <string name="appearance_scale_numpad_desc">Regangkan baris PIN dan numpad hingga tinggi keyboard penuh</string>
     <string name="appearance_bottom_margin_portrait_title">Margin Bawah (Potret)</string>

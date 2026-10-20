@@ -378,6 +378,11 @@
     <string name="appearance_height_portrait_desc">Ajusta la altura del teclado en modo vertical</string>
     <string name="appearance_height_landscape_title">Altura del teclado (horizontal)</string>
     <string name="appearance_height_landscape_desc">Ajusta la altura del teclado en modo horizontal</string>
+    <string name="appearance_height_unfolded_title">Altura del teclado (pantalla interior)</string>
+    <string name="appearance_height_unfolded_desc">Altura del teclado en la pantalla interior desplegada de un teléfono plegable. Mientras no la cambie, coincide con la altura vertical de arriba.</string>
+    <string name="appearance_height_landscape_unfolded_title">Altura horizontal (pantalla interior)</string>
+    <string name="appearance_height_landscape_unfolded_desc">Altura del teclado en horizontal en la pantalla interior desplegada. Mientras no la cambie, coincide con la altura horizontal de arriba.</string>
+    <string name="appearance_height_no_fold_detected">No se detectó una pantalla plegable en este dispositivo.</string>
     <string name="appearance_scale_numpad_title">Escalar altura del teclado numérico</string>
     <string name="appearance_scale_numpad_desc">Estirar las filas de PIN y teclado numérico hasta la altura completa del teclado</string>
     <string name="appearance_bottom_margin_portrait_title">Margen inferior (vertical)</string>

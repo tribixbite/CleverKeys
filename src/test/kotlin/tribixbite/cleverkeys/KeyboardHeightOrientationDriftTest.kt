@@ -60,29 +60,28 @@ class KeyboardHeightOrientationDriftTest {
     }
 
     /**
-     * Green pin: Config.refresh()'s landscape branch must read the landscape pref keys and
-     * the portrait branch the portrait keys — the two orientations are independent stores.
+     * Green pin: Config.refresh()'s landscape branch resolves the landscape height and the
+     * portrait branch the portrait height, through the one shared rule
+     * ([KeyboardHeightPrefs.percent], whose key mapping `KeyboardHeightPrefsTest` pins) with the
+     * live fold state — the two orientations stay independent stores (#161), and an unset
+     * inner-screen key follows the outer screen (foldable report, 2026-10-20).
      */
     @Test
-    fun configRefresh_readsOrientationScopedHeightKeys() {
+    fun configRefresh_resolvesOrientationScopedHeightThroughTheSharedRule() {
         val src = read("Config.kt")
 
         val landscapeBranch = src.indexOf("if (orientation_landscape) {")
         assertWithMessage("Config.refresh must branch on orientation_landscape")
             .that(landscapeBranch).isGreaterThan(-1)
-
-        // Landscape branch (first ~600 chars after the branch open) reads the landscape keys.
-        val landscapeSection = src.substring(landscapeBranch, minOf(landscapeBranch + 600, src.length))
-        assertWithMessage("landscape branch must read keyboard_height_landscape / _landscape_unfolded")
-            .that(
-                landscapeSection.contains("\"keyboard_height_landscape_unfolded\" else \"keyboard_height_landscape\"")
-            ).isTrue()
-
-        // Portrait branch reads the portrait keys.
-        assertWithMessage("portrait branch must read keyboard_height / keyboard_height_unfolded")
-            .that(
-                landscapeSection.contains("\"keyboard_height_unfolded\" else \"keyboard_height\"")
-            ).isTrue()
+        val section = src.substring(landscapeBranch, minOf(landscapeBranch + 600, src.length))
+        assertWithMessage("landscape branch must resolve landscape = true with the fold state")
+            .that(section.contains("KeyboardHeightPrefs.percent(_prefs, landscape = true, unfolded = this.foldable_unfolded)"))
+            .isTrue()
+        assertWithMessage("portrait branch must resolve landscape = false with the fold state")
+            .that(section.contains("KeyboardHeightPrefs.percent(_prefs, landscape = false, unfolded = this.foldable_unfolded)"))
+            .isTrue()
+        assertWithMessage("KeyboardDimensionsHelper must use the shared rule, not its own key literals")
+            .that(read("KeyboardDimensionsHelper.kt").contains("\"keyboard_height")).isFalse()
     }
 
     /**
@@ -97,5 +96,9 @@ class KeyboardHeightOrientationDriftTest {
             .that(src.contains("saveSetting(\"keyboard_height\", keyboardHeight)")).isTrue()
         assertWithMessage("landscape slider must save \"keyboard_height_landscape\"")
             .that(src.contains("saveSetting(\"keyboard_height_landscape\", keyboardHeightLandscape)")).isTrue()
+        assertWithMessage("inner-screen portrait slider must save keyboard_height_unfolded")
+            .that(src.contains("saveSetting(KeyboardHeightPrefs.PORTRAIT_UNFOLDED, keyboardHeightUnfolded)")).isTrue()
+        assertWithMessage("inner-screen landscape slider must save keyboard_height_landscape_unfolded")
+            .that(src.contains("saveSetting(KeyboardHeightPrefs.LANDSCAPE_UNFOLDED, keyboardHeightLandscapeUnfolded)")).isTrue()
     }
 }
