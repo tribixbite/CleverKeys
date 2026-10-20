@@ -237,8 +237,10 @@ internal fun SettingsActivity.loadCurrentSettings() {
             .lowercase(java.util.Locale.ROOT)
         swipeSmoothingWindow =
             Config.safeGetInt(prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
+                .coerceIn(SettingsRanges.SWIPE_SMOOTHING_WINDOW)
         fingerOcclusionOffset =
             Config.safeGetInt(prefs, "finger_occlusion_offset", Defaults.FINGER_OCCLUSION_OFFSET)
+                .coerceIn(SettingsRanges.FINGER_OCCLUSION_OFFSET)
         swipeContextRescoring =
             prefs.getBoolean("swipe_context_rescoring", Defaults.SWIPE_CONTEXT_RESCORING)
 
@@ -278,7 +280,8 @@ internal fun SettingsActivity.loadCurrentSettings() {
         clipboardHistoryEnabled = prefs.getSafeBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
         clipboardHistoryLimit = prefs.getSafeString("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
         clipboardHistoryDuration = prefs.getSafeString("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
-        clipboardPaneHeightPercent = Config.safeGetInt(prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT).coerceIn(10, 50)
+        clipboardPaneHeightPercent = Config.safeGetInt(prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
+            .coerceIn(SettingsRanges.CLIPBOARD_PANE_HEIGHT_PERCENT)
         clipboardMaxItemSizeKb = (prefs.getSafeString("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
             .coerceIn(SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.first, SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.last)
         // F-10: BIDIRECTIONAL write-back of any out-of-range stored value. The old
@@ -321,7 +324,8 @@ internal fun SettingsActivity.loadCurrentSettings() {
 
         // GIF Panel
         gifEnabled = prefs.getSafeBoolean("gif_enabled", Defaults.GIF_ENABLED)
-        gifThumbnailColumns = Config.safeGetInt(prefs, "gif_thumbnail_columns", Defaults.GIF_THUMBNAIL_COLUMNS).coerceIn(2, 5)
+        gifThumbnailColumns = Config.safeGetInt(prefs, "gif_thumbnail_columns", Defaults.GIF_THUMBNAIL_COLUMNS)
+            .coerceIn(SettingsRanges.GIF_THUMBNAIL_COLUMNS)
         refreshInstalledGifPacks()
 
         autoCapitalizationEnabled = prefs.getSafeBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)

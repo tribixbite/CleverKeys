@@ -20,12 +20,14 @@ import java.util.Locale
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.WordPredictor.NeighbourTiebreak
 import tribixbite.cleverkeys.autocorrect.AutocorrectRanking
 import tribixbite.cleverkeys.autocorrect.ShortDeletionScope
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning.Keys
 import tribixbite.cleverkeys.autocorrect.ChannelWeights
+import tribixbite.cleverkeys.toSliderRange
 import tribixbite.cleverkeys.ui.settings.AutocorrectTuningSliders
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
@@ -77,7 +79,7 @@ internal fun SettingsActivity.AutoCorrectionSection() {
                         title = stringResource(R.string.autocorrect_min_word_length_title),
                         description = stringResource(R.string.autocorrect_min_word_length_desc),
                         value = autocorrectMinWordLength.toFloat(),
-                        valueRange = 2f..5f,
+                        valueRange = SettingsRanges.AUTOCORRECT_MIN_WORD_LENGTH.toSliderRange(),
                         steps = 3,
                         onValueChange = {
                             autocorrectMinWordLength = it.toInt()

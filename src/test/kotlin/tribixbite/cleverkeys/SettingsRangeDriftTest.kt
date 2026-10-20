@@ -192,4 +192,198 @@ class SettingsRangeDriftTest {
             .that(SettingsValidation.intRangeFor("clipboard_max_media_size_mb"))
             .isEqualTo(1..50)
     }
+
+    // ── Audit M8/M9/M11 (2026-10-20): every slider-backed int key's validator range is the
+    //    slider's own SettingsRanges constant, or a documented ImportEnvelope that contains it ──
+
+    /** Slider-backed int keys → the SettingsRanges constant the slider uses. */
+    private val sliderRanges: Map<String, IntRange> = buildMap {
+        put("clipboard_pane_height_percent", SettingsRanges.CLIPBOARD_PANE_HEIGHT_PERCENT)
+        put("gif_thumbnail_columns", SettingsRanges.GIF_THUMBNAIL_COLUMNS)
+        put("ctc_beam_width", SettingsRanges.CTC_BEAM_WIDTH)
+        put("onnx_xnnpack_threads", SettingsRanges.ONNX_XNNPACK_THREADS)
+        put("finger_occlusion_offset", SettingsRanges.FINGER_OCCLUSION_OFFSET)
+        put("swipe_smoothing_window", SettingsRanges.SWIPE_SMOOTHING_WINDOW)
+        put("longpress_timeout", SettingsRanges.LONGPRESS_TIMEOUT)
+        put("longpress_interval", SettingsRanges.LONGPRESS_INTERVAL)
+        put("short_gesture_min_distance", SettingsRanges.SHORT_GESTURE_MIN_DISTANCE)
+        put("short_gesture_max_distance", SettingsRanges.SHORT_GESTURE_MAX_DISTANCE)
+        put("custom_border_radius", SettingsRanges.CUSTOM_BORDER_RADIUS)
+        put("vibrate_duration", SettingsRanges.VIBRATE_DURATION)
+        put("selection_delete_step_dp", SettingsRanges.SELECTION_DELETE_STEP_DP)
+        put("clipboard_max_media_size_mb", SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB)
+        put("clipboard_history_limit", SettingsRanges.CLIPBOARD_HISTORY_LIMIT)
+        put("circle_sensitivity", SettingsRanges.CIRCLE_SENSITIVITY)
+        put("autocorrect_min_word_length", SettingsRanges.AUTOCORRECT_MIN_WORD_LENGTH)
+        for (k in KeyboardHeightPrefs.ALL_KEYS) put(k, SettingsRanges.KEYBOARD_HEIGHT)
+        for (k in listOf("label_brightness", "keyboard_opacity", "key_opacity", "key_activated_opacity", "suggestion_bar_opacity")) {
+            put(k, SettingsRanges.OPACITY_PERCENT)
+        }
+        for (o in listOf("portrait", "landscape", "portrait_unfolded", "landscape_unfolded")) {
+            put("margin_bottom_$o", SettingsRanges.MARGIN_BOTTOM_PERCENT)
+            put("margin_left_$o", SettingsRanges.MARGIN_SIDE_PERCENT)
+            put("margin_right_$o", SettingsRanges.MARGIN_SIDE_PERCENT)
+        }
+    }
+
+    /**
+     * Keys whose import range is deliberately wider than the slider (M9). Each is the range of
+     * the XML settings screen shipped until 2025-12-04 — see [SettingsRanges.ImportEnvelope].
+     * Adding a key here is a decision that needs that kind of reason, not a way to pass.
+     */
+    private val importEnvelopes: Map<String, IntRange> = mapOf(
+        "longpress_timeout" to SettingsRanges.ImportEnvelope.LONGPRESS_TIMEOUT,
+        "short_gesture_min_distance" to SettingsRanges.ImportEnvelope.SHORT_GESTURE_MIN_DISTANCE,
+        "custom_border_radius" to SettingsRanges.ImportEnvelope.CUSTOM_BORDER_RADIUS,
+        "vibrate_duration" to SettingsRanges.ImportEnvelope.VIBRATE_DURATION,
+    )
+
+    @Test
+    fun validatorRange_isTheSliderRange_orADocumentedWiderEnvelope() {
+        for ((key, slider) in sliderRanges) {
+            val validated = SettingsValidation.intRangeFor(key)
+            val envelope = importEnvelopes[key]
+            if (envelope == null) {
+                assertWithMessage("$key: backup validation must accept exactly the slider's range")
+                    .that(validated).isEqualTo(slider)
+            } else {
+                assertWithMessage("$key: validation must use its ImportEnvelope").that(validated).isEqualTo(envelope)
+                assertWithMessage("$key: the envelope must contain every slider value (else F-4: own export rejected)")
+                    .that(envelope.first <= slider.first && envelope.last >= slider.last).isTrue()
+                assertWithMessage("$key: an envelope equal to the slider is not an envelope — drop it")
+                    .that(envelope).isNotEqualTo(slider)
+            }
+        }
+    }
+
+    @Test
+    fun importEnvelopes_carryTheHistoricXmlSliderRanges() {
+        // Literal on purpose: these are the ranges older builds' users could store
+        // (res/xml/settings.xml at ae0ffb00^). Narrowing one would reject their restores.
+        assertThat(SettingsRanges.ImportEnvelope.LONGPRESS_TIMEOUT).isEqualTo(50..2000)
+        assertThat(SettingsRanges.ImportEnvelope.SHORT_GESTURE_MIN_DISTANCE).isEqualTo(10..95)
+        assertThat(SettingsRanges.ImportEnvelope.CUSTOM_BORDER_RADIUS).isEqualTo(0..100)
+        assertThat(SettingsRanges.ImportEnvelope.VIBRATE_DURATION).isEqualTo(0..100)
+    }
+
+    @Test
+    fun movedRanges_keepTheValuesProductionClampedTo() {
+        // M8 moved these out of literals; the values must be exactly what shipped.
+        assertThat(SettingsRanges.CLIPBOARD_PANE_HEIGHT_PERCENT).isEqualTo(10..50)
+        assertThat(SettingsRanges.GIF_THUMBNAIL_COLUMNS).isEqualTo(2..5)
+        assertThat(SettingsRanges.CTC_BEAM_WIDTH).isEqualTo(10..300)
+        assertThat(SettingsRanges.ONNX_XNNPACK_THREADS).isEqualTo(1..8)
+        assertThat(SettingsRanges.FINGER_OCCLUSION_OFFSET).isEqualTo(-25..25)
+        assertThat(SettingsRanges.SWIPE_SMOOTHING_WINDOW).isEqualTo(1..7)
+        assertThat(SettingsRanges.MARGIN_BOTTOM_PERCENT).isEqualTo(0..30)
+        assertThat(SettingsRanges.MARGIN_SIDE_PERCENT).isEqualTo(0..45)
+        assertThat(SettingsRanges.LONGPRESS_TIMEOUT).isEqualTo(200..1000)
+        assertThat(SettingsRanges.SHORT_GESTURE_MIN_DISTANCE).isEqualTo(10..60)
+        assertThat(SettingsRanges.SHORT_GESTURE_MAX_DISTANCE).isEqualTo(50..200)
+        assertThat(SettingsRanges.CUSTOM_BORDER_RADIUS).isEqualTo(0..20)
+        assertThat(SettingsRanges.VIBRATE_DURATION).isEqualTo(5..100)
+    }
+
+    @Test
+    fun movedRanges_everyConsumerReadsTheConstant() {
+        val sites = mapOf(
+            "CLIPBOARD_PANE_HEIGHT_PERCENT" to listOf(
+                "Config.kt", "ui/settings/SettingsPersistence.kt", "ui/settings/sections/ClipboardSection.kt",
+                "backup/SettingsValidation.kt",
+            ),
+            "GIF_THUMBNAIL_COLUMNS" to listOf(
+                "Config.kt", "ui/settings/SettingsPersistence.kt", "ui/settings/sections/GifPanelSection.kt",
+                "backup/SettingsValidation.kt",
+            ),
+            "CTC_BEAM_WIDTH" to listOf(
+                "Config.kt", "activities/CtcSettingsActivity.kt", "swipe/CtcEngineAdapter.kt",
+                "backup/SettingsValidation.kt",
+            ),
+            "ONNX_XNNPACK_THREADS" to listOf(
+                "Config.kt", "activities/CtcSettingsActivity.kt", "swipe/CtcEngineAdapter.kt",
+                "onnx/ModelLoader.kt", "backup/SettingsValidation.kt",
+            ),
+            "FINGER_OCCLUSION_OFFSET" to listOf(
+                "Config.kt", "ui/settings/SettingsPersistence.kt", "ui/settings/sections/GestureTuningSection.kt",
+                "backup/SettingsValidation.kt",
+            ),
+            "SWIPE_SMOOTHING_WINDOW" to listOf(
+                "Config.kt", "ui/settings/SettingsPersistence.kt", "ui/settings/sections/GestureTuningSection.kt",
+                "gesture/ImprovedSwipeGestureRecognizer.kt", "backup/SettingsValidation.kt",
+            ),
+            "MARGIN_BOTTOM_PERCENT" to listOf(
+                "Config.kt", "ui/settings/sections/AppearanceSection.kt", "backup/SettingsImportPlanBuilder.kt",
+                "backup/SettingsValidation.kt",
+            ),
+            "MARGIN_SIDE_PERCENT" to listOf(
+                "Config.kt", "ui/settings/sections/AppearanceSection.kt", "backup/SettingsImportPlanBuilder.kt",
+                "backup/SettingsValidation.kt",
+            ),
+            "OPACITY_PERCENT" to listOf(
+                "ui/settings/sections/AppearanceSection.kt", "ui/settings/sections/InputBehaviorSection.kt",
+                "backup/SettingsValidation.kt",
+            ),
+            "LONGPRESS_TIMEOUT" to listOf("ui/settings/sections/InputBehaviorSection.kt"),
+            "SHORT_GESTURE_MIN_DISTANCE" to listOf(
+                "ui/settings/sections/GestureTuningSection.kt", "activities/ShortSwipeCalibrationActivity.kt",
+            ),
+            "SHORT_GESTURE_MAX_DISTANCE" to listOf(
+                "ui/settings/sections/GestureTuningSection.kt", "activities/ShortSwipeCalibrationActivity.kt",
+                "backup/SettingsValidation.kt",
+            ),
+            "CUSTOM_BORDER_RADIUS" to listOf("ui/settings/sections/AppearanceSection.kt"),
+            "VIBRATE_DURATION" to listOf("ui/settings/sections/AccessibilitySection.kt"),
+        )
+        for ((constant, files) in sites) for (f in files) assertSiteReferences(f, constant)
+    }
+
+    @Test
+    fun movedRanges_haveNoLiteralCopyLeft() {
+        // The literal clamps/slider ranges M8 replaced. Any reappearance is a second definition.
+        val literal = Regex(
+            """coerceIn\((10, 50|2, 5|10, 300|1, 8|-25, 25|1, 7|0, 45|0, 30|0, 80)\)|""" +
+                """valueRange = (10f\.\.50f|2f\.\.5f|10f\.\.300f|1f\.\.8f|-25f\.\.25f|1f\.\.7f|0f\.\.30f|""" +
+                """10f\.\.60f|200f\.\.1000f|5f\.\.100f|0f\.\.20f|0f\.\.100f),"""
+        )
+        val files = listOf(
+            "Config.kt", "ui/settings/SettingsPersistence.kt", "backup/SettingsImportPlanBuilder.kt",
+            "ui/settings/sections/ClipboardSection.kt", "ui/settings/sections/GifPanelSection.kt",
+            "ui/settings/sections/GestureTuningSection.kt", "ui/settings/sections/AppearanceSection.kt",
+            "ui/settings/sections/InputBehaviorSection.kt", "ui/settings/sections/AccessibilitySection.kt",
+            "activities/CtcSettingsActivity.kt", "activities/ShortSwipeCalibrationActivity.kt",
+            "swipe/CtcEngineAdapter.kt", "gesture/ImprovedSwipeGestureRecognizer.kt", "onnx/ModelLoader.kt",
+        )
+        val offenders = files.flatMap { f ->
+            read(f).lines().mapIndexedNotNull { i, line -> if (literal.containsMatchIn(line)) "$f:${i + 1}: ${line.trim()}" else null }
+        }
+        assertWithMessage("literal range restated instead of SettingsRanges (audit M8)").that(offenders).isEmpty()
+        val validation = read("backup/SettingsValidation.kt")
+        assertWithMessage("SettingsValidation must not restate an int range as a literal")
+            .that(Regex("""put\("[a-z_]+", -?\d+\.\.\d+\)""").findAll(validation).map { it.value }.toList())
+            .isEmpty()
+    }
+
+    @Test
+    fun keysMissingFromValidation_areNowValidated() {
+        // M8: these three were accepted unvalidated (any int), then clamped at read.
+        assertThat(SettingsValidation.validate("clipboard_pane_height_percent", PrefValue.IntV(80))).isNotNull()
+        assertThat(SettingsValidation.validate("clipboard_pane_height_percent", PrefValue.IntV(30))).isNull()
+        assertThat(SettingsValidation.validate("gif_thumbnail_columns", PrefValue.IntV(9))).isNotNull()
+        assertThat(SettingsValidation.validate("gif_thumbnail_columns", PrefValue.IntV(3))).isNull()
+        assertThat(SettingsValidation.validate("onnx_xnnpack_threads", PrefValue.IntV(0))).isNotNull()
+        assertThat(SettingsValidation.validate("onnx_xnnpack_threads", PrefValue.IntV(2))).isNull()
+    }
+
+    @Test
+    fun intKeyTypeCheck_coversEveryIntRangedKey() {
+        // M11: isIntKey was a hand-copied list that had lost ctc_beam_width and
+        // finger_occlusion_offset, so a Bool or String for them passed type checking.
+        for (key in listOf("ctc_beam_width", "finger_occlusion_offset", "onnx_xnnpack_threads", "gif_thumbnail_columns")) {
+            assertWithMessage("$key: Bool must be rejected").that(SettingsValidation.validate(key, PrefValue.Bool(true))).isNotNull()
+            assertWithMessage("$key: String must be rejected").that(SettingsValidation.validate(key, PrefValue.Str("100"))).isNotNull()
+        }
+        // The two STRING-stored numeric keys keep their canonical string form.
+        assertThat(SettingsValidation.validate("clipboard_history_limit", PrefValue.Str("50"))).isNull()
+        assertThat(SettingsValidation.validate("circle_sensitivity", PrefValue.Str("3"))).isNull()
+    }
 }

@@ -17,6 +17,7 @@ import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.ShortSwipeCalibrationActivity
+import tribixbite.cleverkeys.toSliderRange
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
@@ -78,7 +79,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                         title = stringResource(R.string.gesture_min_distance_title),
                         description = stringResource(R.string.gesture_min_distance_desc),
                         value = shortGestureMinDistance.toFloat(),
-                        valueRange = 10f..60f,
+                        valueRange = SettingsRanges.SHORT_GESTURE_MIN_DISTANCE.toSliderRange(),
                         steps = 10,
                         onValueChange = {
                             shortGestureMinDistance = it.toInt()
@@ -96,7 +97,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                             else R.string.gesture_max_distance_desc
                         ),
                         value = shortGestureMaxDistance.toFloat(),
-                        valueRange = 50f..200f,
+                        valueRange = SettingsRanges.SHORT_GESTURE_MAX_DISTANCE.toSliderRange(),
                         steps = 30,
                         onValueChange = {
                             shortGestureMaxDistance = it.toInt()
@@ -417,7 +418,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                     title = stringResource(R.string.gesture_touch_smoothing_title),
                     description = stringResource(R.string.gesture_touch_smoothing_desc),
                     value = swipeSmoothingWindow.toFloat(),
-                    valueRange = 1f..7f,
+                    valueRange = SettingsRanges.SWIPE_SMOOTHING_WINDOW.toSliderRange(),
                     steps = 5,
                     onValueChange = {
                         swipeSmoothingWindow = it.toInt()
@@ -435,7 +436,7 @@ internal fun SettingsActivity.GestureTuningSection() {
                     title = stringResource(R.string.gesture_finger_occlusion_title),
                     description = stringResource(R.string.gesture_finger_occlusion_desc),
                     value = fingerOcclusionOffset.toFloat(),
-                    valueRange = -25f..25f,
+                    valueRange = SettingsRanges.FINGER_OCCLUSION_OFFSET.toSliderRange(),
                     steps = 49,
                     onValueChange = {
                         fingerOcclusionOffset = it.toInt()

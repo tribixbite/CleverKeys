@@ -23,6 +23,7 @@ import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SettingsRanges
+import tribixbite.cleverkeys.toSliderRange
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
@@ -70,7 +71,7 @@ internal fun SettingsActivity.InputBehaviorSection() {
                         title = stringResource(R.string.input_suggestion_bar_opacity_title),
                         description = stringResource(R.string.input_suggestion_bar_opacity_desc),
                         value = suggestionBarOpacity.toFloat(),
-                        valueRange = 0f..100f,
+                        valueRange = SettingsRanges.OPACITY_PERCENT.toSliderRange(),
                         steps = 100,
                         onValueChange = {
                             suggestionBarOpacity = it.toInt()
@@ -351,7 +352,7 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     title = stringResource(R.string.input_circle_gesture_title),
                     description = stringResource(R.string.input_circle_gesture_desc),
                     value = circleSensitivity.toFloat(),
-                    valueRange = 1f..5f,
+                    valueRange = SettingsRanges.CIRCLE_SENSITIVITY.toSliderRange(),
                     steps = 4,
                     onValueChange = {
                         circleSensitivity = it.toInt()
@@ -380,7 +381,7 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     title = stringResource(R.string.input_long_press_timeout_title),
                     description = stringResource(R.string.input_long_press_timeout_desc),
                     value = longPressTimeout.toFloat(),
-                    valueRange = 200f..1000f,
+                    valueRange = SettingsRanges.LONGPRESS_TIMEOUT.toSliderRange(),
                     steps = 16,
                     onValueChange = {
                         longPressTimeout = it.toInt()

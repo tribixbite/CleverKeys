@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.backup
 import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.TerminalUtils
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
+import tribixbite.cleverkeys.autocorrect.FrequencyFloor
 
 /**
  * Single source of truth for SharedPreferences-backup validation rules.
@@ -311,22 +312,28 @@ object SettingsValidation {
      * accepted unchanged, matching the legacy validator's `else -> true`.
      */
     private val INT_RANGES: Map<String, IntRange> = buildMap {
-        // CTC beam width. Bounds mirror CtcEngineAdapter's own coerceIn(10, 300) at read
-        // time, so a hostile or hand-edited backup cannot smuggle a value the engine will
-        // silently clamp anyway — the import preview should reject it visibly instead. This
-        // key previously fell through to `else -> true` while the DELETED engine's
-        // neural_beam_width was still the one named in this file: validation was pointed at
-        // the engine that no longer exists and not at the one that ships.
-        put("ctc_beam_width", 10..300)
+        // Ranges come from SettingsRanges — the same constant the slider and the Config read
+        // clamp use (audit M8, 2026-10-20). A key whose import range is deliberately WIDER than
+        // its slider reads SettingsRanges.ImportEnvelope instead, which says why.
+
+        // CTC beam width — the same bounds CtcEngineAdapter and Config clamp to, so a hostile
+        // or hand-edited backup cannot smuggle a value the engine would silently clamp anyway:
+        // the import preview rejects it visibly instead. This key previously fell through to
+        // `else -> true` while the DELETED engine's neural_beam_width was still the one named
+        // in this file.
+        put("ctc_beam_width", SettingsRanges.CTC_BEAM_WIDTH)
+
+        // ONNX Runtime threads (M8: was accepted unvalidated, then clamped at read).
+        put("onnx_xnnpack_threads", SettingsRanges.ONNX_XNNPACK_THREADS)
 
         // Finger-occlusion offset: SIGNED percent of one key row, 0 = off.
-        put("finger_occlusion_offset", -25..25)
+        put("finger_occlusion_offset", SettingsRanges.FINGER_OCCLUSION_OFFSET)
 
         // Opacity values (0-100)
         for (k in listOf(
             "label_brightness", "keyboard_opacity", "key_opacity",
             "key_activated_opacity", "suggestion_bar_opacity",
-        )) put(k, 0..100)
+        )) put(k, SettingsRanges.OPACITY_PERCENT)
 
         // Keyboard height percentages
         // One range for all four heights: the sliders' (SettingsRanges.KEYBOARD_HEIGHT).
@@ -336,15 +343,15 @@ object SettingsValidation {
         for (k in listOf(
             "margin_bottom_portrait", "margin_bottom_landscape",
             "margin_bottom_portrait_unfolded", "margin_bottom_landscape_unfolded",
-        )) put(k, 0..30)
+        )) put(k, SettingsRanges.MARGIN_BOTTOM_PERCENT)
 
-        // Left/right margins (0-45% of screen width each, capped at 90% total)
+        // Left/right margins (0-45% of screen width each; the 90% total cap is the sliders')
         for (k in listOf(
             "margin_left_portrait", "margin_left_landscape",
             "margin_left_portrait_unfolded", "margin_left_landscape_unfolded",
             "margin_right_portrait", "margin_right_landscape",
             "margin_right_portrait_unfolded", "margin_right_landscape_unfolded",
-        )) put(k, 0..45)
+        )) put(k, SettingsRanges.MARGIN_SIDE_PERCENT)
 
         // Legacy horizontal_margin (kept for backward compatibility, 0-200 dp)
         for (k in listOf(
@@ -352,26 +359,36 @@ object SettingsValidation {
             "horizontal_margin_portrait_unfolded", "horizontal_margin_landscape_unfolded",
         )) put(k, 0..200)
 
-        // Border radius (0-100%)
-        put("custom_border_radius", 0..100)
+        // Border radius, percent of key width. Import envelope 0-100 (the pre-2025-12 slider);
+        // today's slider offers 0-20 (audit M9).
+        put("custom_border_radius", SettingsRanges.ImportEnvelope.CUSTOM_BORDER_RADIUS)
 
-        // Timing values (milliseconds)
-        put("vibrate_duration", 0..100)
-        put("longpress_timeout", 50..2000)
+        // Timing values (milliseconds). Import envelopes, wider than the sliders (audit M9).
+        put("vibrate_duration", SettingsRanges.ImportEnvelope.VIBRATE_DURATION)
+        put("longpress_timeout", SettingsRanges.ImportEnvelope.LONGPRESS_TIMEOUT)
         // F-4: shared with the slider + Config clamp (was 5..100 while the UI
         // offered 25..200 — a user's own exported 150 came back "out of range").
         put("longpress_interval", SettingsRanges.LONGPRESS_INTERVAL)
 
-        // Short gesture distance (10-95% min, 50-200% max)
-        put("short_gesture_min_distance", 10..95)
-        put("short_gesture_max_distance", 50..200)
+        // Short gesture distance: min accepts the pre-2025-12 slider's 10-95% (audit M9),
+        // max is the slider's 50-200%.
+        put("short_gesture_min_distance", SettingsRanges.ImportEnvelope.SHORT_GESTURE_MIN_DISTANCE)
+        put("short_gesture_max_distance", SettingsRanges.SHORT_GESTURE_MAX_DISTANCE)
 
         // Gesture resampling window
-        put("swipe_smoothing_window", 1..7)
+        put("swipe_smoothing_window", SettingsRanges.SWIPE_SMOOTHING_WINDOW)
+
+        // Clipboard pane height and GIF grid columns (M8: both were accepted unvalidated).
+        put("clipboard_pane_height_percent", SettingsRanges.CLIPBOARD_PANE_HEIGHT_PERCENT)
+        put("gif_thumbnail_columns", SettingsRanges.GIF_THUMBNAIL_COLUMNS)
 
         // Auto-correction parameters
-        put("autocorrect_min_word_length", 2..5)
-        put("autocorrect_confidence_min_frequency", 100..2000)
+        put("autocorrect_min_word_length", SettingsRanges.AUTOCORRECT_MIN_WORD_LENGTH)
+        // The domain FrequencyFloor maps the slider over (AC-1: values above it clamp away).
+        put(
+            "autocorrect_confidence_min_frequency",
+            FrequencyFloor.SLIDER_MIN..FrequencyFloor.SLIDER_MAX,
+        )
 
         // Clipboard history limit (0 = unlimited). Shared with the slider,
         // validateString's canonical string form (G-5) and the Config clamp.
@@ -382,7 +399,7 @@ object SettingsValidation {
         put("clipboard_max_media_size_mb", SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB)
 
         // Circle sensitivity
-        put("circle_sensitivity", 1..5)
+        put("circle_sensitivity", SettingsRanges.CIRCLE_SENSITIVITY)
 
         // Autocorrect tuning ints (max substitutions, dropped-double margin, minimum stem).
         for (k in TUNING_INTS.values) put(k.key, k.range)
@@ -518,37 +535,20 @@ object SettingsValidation {
     }
 
     /**
-     * Helper: `true` if the key is in the int-validated allowlist (used for
-     * type-mismatch detection when a Bool is passed for an int-allowlisted key).
+     * Keys with an [INT_RANGES] bound whose value is STORED as a String (`Defaults.CIRCLE_SENSITIVITY
+     * = "2"`, `Defaults.CLIPBOARD_HISTORY_LIMIT = "0"`; their read sites use `safeGetString`). Their
+     * imports carry the string form, which [validateString] range-checks; treating them as Int
+     * keys would reject every real export as "expected Int, got String".
      */
-    private fun isIntKey(key: String): Boolean = when (key) {
-        "label_brightness", "keyboard_opacity", "key_opacity",
-        "key_activated_opacity", "suggestion_bar_opacity",
-        "keyboard_height", "keyboard_height_unfolded",
-        "keyboard_height_landscape", "keyboard_height_landscape_unfolded",
-        "margin_bottom_portrait", "margin_bottom_landscape",
-        "margin_bottom_portrait_unfolded", "margin_bottom_landscape_unfolded",
-        "margin_left_portrait", "margin_left_landscape",
-        "margin_left_portrait_unfolded", "margin_left_landscape_unfolded",
-        "margin_right_portrait", "margin_right_landscape",
-        "margin_right_portrait_unfolded", "margin_right_landscape_unfolded",
-        "horizontal_margin_portrait", "horizontal_margin_landscape",
-        "horizontal_margin_portrait_unfolded", "horizontal_margin_landscape_unfolded",
-        "custom_border_radius",
-        "vibrate_duration", "longpress_timeout", "longpress_interval",
-        "short_gesture_min_distance", "short_gesture_max_distance",
-        "swipe_smoothing_window",
-        "autocorrect_min_word_length", "autocorrect_confidence_min_frequency",
-        "selection_delete_step_dp",
-        "clipboard_max_media_size_mb" -> true  // F-8: stored as Int (safeGetInt read site)
-        in TUNING_INTS -> true                 // autocorrect tuning ints (safeGetInt read site)
-        // `clipboard_history_limit` and `circle_sensitivity` were here, but
-        // both are stored as String (`Defaults.CIRCLE_SENSITIVITY = "2"`,
-        // `Defaults.CLIPBOARD_HISTORY_LIMIT = "50"`) — the read sites use
-        // `safeGetString(...)`. Listing them as Int caused `validateString`
-        // to reject their import values as "expected Int, got String".
-        else -> false
-    }
+    private val STRING_STORED_NUMERIC: Set<String> = setOf("clipboard_history_limit", "circle_sensitivity")
+
+    /**
+     * `true` if the key is stored as an Int — used for type-mismatch detection when a Bool or a
+     * String arrives for it. Derived from [INT_RANGES] (audit M11, 2026-10-20): the hand-copied
+     * key list this replaced had already lost `ctc_beam_width` and `finger_occlusion_offset`,
+     * so a Bool or String import for either passed type checking.
+     */
+    private fun isIntKey(key: String): Boolean = key in INT_RANGES && key !in STRING_STORED_NUMERIC
 
     /**
      * Helper: `true` if the key is in the string-validated allowlist (used for

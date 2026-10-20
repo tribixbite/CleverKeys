@@ -18,6 +18,7 @@ import tribixbite.cleverkeys.PrivateCopyProcessTextActivity
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SettingsRanges
+import tribixbite.cleverkeys.toSliderRange
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
@@ -160,7 +161,7 @@ internal fun SettingsActivity.ClipboardSection() {
                     title = stringResource(R.string.clipboard_pane_height_title),
                     description = stringResource(R.string.clipboard_pane_height_desc),
                     value = clipboardPaneHeightPercent.toFloat(),
-                    valueRange = 10f..50f,
+                    valueRange = SettingsRanges.CLIPBOARD_PANE_HEIGHT_PERCENT.toSliderRange(),
                     steps = 40,
                     onValueChange = {
                         clipboardPaneHeightPercent = it.toInt()

@@ -426,7 +426,7 @@ private fun ConfigurationSection(
                     value = minDistance,
                     onValueChange = onMinChange,
                     // Same range/granularity as the Settings "Min Distance" slider
-                    valueRange = 10f..60f,
+                    valueRange = SettingsRanges.SHORT_GESTURE_MIN_DISTANCE.toSliderRange(),
                     steps = 10,
                     modifier = Modifier.weight(1f)
                 )
@@ -459,7 +459,7 @@ private fun ConfigurationSection(
                     value = maxDistance,
                     onValueChange = onMaxChange,
                     // Same range/granularity as the Settings "Max Distance" slider
-                    valueRange = 50f..200f,
+                    valueRange = SettingsRanges.SHORT_GESTURE_MAX_DISTANCE.toSliderRange(),
                     steps = 30,
                     modifier = Modifier.weight(1f)
                 )

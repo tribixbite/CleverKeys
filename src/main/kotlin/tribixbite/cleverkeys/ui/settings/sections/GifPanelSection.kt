@@ -21,6 +21,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.SettingsRanges
+import tribixbite.cleverkeys.toSliderRange
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
@@ -177,7 +179,7 @@ internal fun SettingsActivity.GifPanelSection() {
                         title = stringResource(R.string.gif_grid_columns_title),
                         description = stringResource(R.string.gif_grid_columns_desc),
                         value = gifThumbnailColumns.toFloat(),
-                        valueRange = 2f..5f,
+                        valueRange = SettingsRanges.GIF_THUMBNAIL_COLUMNS.toSliderRange(),
                         steps = 3,
                         onValueChange = {
                             gifThumbnailColumns = it.toInt()

@@ -4,6 +4,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlin.math.roundToInt
+import tribixbite.cleverkeys.SettingsRanges
 
 /**
  * Pure JSON → `SettingsImportPlan` builder. No Android deps — all
@@ -203,7 +204,7 @@ object SettingsImportPlanBuilder {
                 try {
                     val dpValue = out.get(oldKey).asInt
                     val pixelValue = dpValue * screen.density
-                    val percentValue = ((pixelValue / screen.width) * 100).toInt().coerceIn(0, 45)
+                    val percentValue = ((pixelValue / screen.width) * 100).toInt().coerceIn(SettingsRanges.MARGIN_SIDE_PERCENT)
                     for (newKey in newKeys) out.addProperty(newKey, percentValue)
                     out.remove(oldKey)
                     removes += oldKey
@@ -225,9 +226,9 @@ object SettingsImportPlanBuilder {
             if (out.has(key)) {
                 try {
                     val value = out.get(key).asInt
-                    if (value > 30) {
+                    if (value > SettingsRanges.MARGIN_BOTTOM_PERCENT.last) {  // above the % range: legacy dp
                         val pixelValue = value * screen.density
-                        val percentValue = ((pixelValue / screen.height) * 100).toInt().coerceIn(0, 30)
+                        val percentValue = ((pixelValue / screen.height) * 100).toInt().coerceIn(SettingsRanges.MARGIN_BOTTOM_PERCENT)
                         out.addProperty(key, percentValue)
                         // Same key — rewritten in-place; not a SkippedKey entry.
                     }

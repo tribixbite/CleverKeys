@@ -574,7 +574,99 @@ object SettingsRanges {
      * the read site so they cannot drift apart.
      */
     val CLIPBOARD_MAX_MEDIA_SIZE_MB: IntRange = 1..50
+
+    /**
+     * Clipboard pane height, percent of the keyboard area (`clipboard_pane_height_percent`).
+     * Slider, Config read + setter, settings state and backup validation (audit M8; the key
+     * was missing from validation, so any imported int was accepted and then clamped).
+     */
+    val CLIPBOARD_PANE_HEIGHT_PERCENT: IntRange = 10..50
+
+    /** GIF picker grid columns (`gif_thumbnail_columns`). Missing from validation before M8. */
+    val GIF_THUMBNAIL_COLUMNS: IntRange = 2..5
+
+    /**
+     * CTC commit-phase beam width (`ctc_beam_width`): settings slider, CTC settings loader,
+     * Config clamp, the engine's own defensive clamp and backup validation (audit M8).
+     */
+    val CTC_BEAM_WIDTH: IntRange = 10..300
+
+    /** ONNX Runtime XNNPACK threads (`onnx_xnnpack_threads`). Missing from validation before M8. */
+    val ONNX_XNNPACK_THREADS: IntRange = 1..8
+
+    /** Signed finger-occlusion shift, percent of one key row (`finger_occlusion_offset`). */
+    val FINGER_OCCLUSION_OFFSET: IntRange = -25..25
+
+    /**
+     * Raw-path moving-average window (`swipe_smoothing_window`; 1 = off). Config now clamps at
+     * read too; before M8 only the recognizer did, so Settings could show a value it never used.
+     */
+    val SWIPE_SMOOTHING_WINDOW: IntRange = 1..7
+
+    /** Bottom margin, percent of screen height (`margin_bottom_*`). */
+    val MARGIN_BOTTOM_PERCENT: IntRange = 0..30
+
+    /**
+     * Left or right margin, percent of screen width (`margin_left_*` / `margin_right_*`). Each
+     * side is capped here; together they never exceed [MARGIN_SIDES_TOTAL_PERCENT].
+     */
+    val MARGIN_SIDE_PERCENT: IntRange = 0..45
+
+    /** v1.1.74 "90% total horizontal cap": the two side margins together. */
+    const val MARGIN_SIDES_TOTAL_PERCENT: Int = 90
+
+    /** Opacity / brightness percent (`label_brightness`, `*_opacity`). */
+    val OPACITY_PERCENT: IntRange = 0..100
+
+    /** Circle-gesture sensitivity (`circle_sensitivity`, stored as a String "1".."5"). */
+    val CIRCLE_SENSITIVITY: IntRange = 1..5
+
+    /** Shortest word autocorrect touches (`autocorrect_min_word_length`). */
+    val AUTOCORRECT_MIN_WORD_LENGTH: IntRange = 2..5
+
+    /** Long-press delay in ms (`longpress_timeout`): the slider since 2025-11. See [ImportEnvelope]. */
+    val LONGPRESS_TIMEOUT: IntRange = 200..1000
+
+    /** Short-swipe minimum, percent of key diagonal (`short_gesture_min_distance`). See [ImportEnvelope]. */
+    val SHORT_GESTURE_MIN_DISTANCE: IntRange = 10..60
+
+    /** Short/long swipe boundary, percent of key diagonal (`short_gesture_max_distance`). */
+    val SHORT_GESTURE_MAX_DISTANCE: IntRange = 50..200
+
+    /** Custom key corner radius, percent of key width (`custom_border_radius`). See [ImportEnvelope]. */
+    val CUSTOM_BORDER_RADIUS: IntRange = 0..20
+
+    /** Custom vibration duration in ms (`vibrate_duration`). See [ImportEnvelope]. */
+    val VIBRATE_DURATION: IntRange = 5..100
+
+    /**
+     * Ranges the backup import ACCEPTS that are wider than today's slider (audit M9,
+     * 2026-10-20). Each one is the range of the XML settings screen CleverKeys shipped until
+     * ae0ffb00 (2025-12-04), so backups and stored values from those builds can hold them, and
+     * every value inside works at runtime. Narrowing would turn those restores into "skipped:
+     * out of range" rows, so they stay wide; nothing clamps them on read either, so the stored
+     * value IS the effective value (the slider only snaps it if the user drags it).
+     */
+    object ImportEnvelope {
+        /** XML `longpress_timeout` slider, 50–2000 ms; any of it is a usable long-press delay. */
+        val LONGPRESS_TIMEOUT: IntRange = 50..2000
+
+        /** XML `short_gesture_min_distance` slider, 10–95 % of the key diagonal. */
+        val SHORT_GESTURE_MIN_DISTANCE: IntRange = 10..95
+
+        /**
+         * XML `custom_border_radius` slider, 0–100 %. Theme.kt multiplies the fraction by the
+         * key width, so 21–100 % are real, rounder corners — not a stale unit.
+         */
+        val CUSTOM_BORDER_RADIUS: IntRange = 0..100
+
+        /** XML `vibrate_duration` slider, 0–100 ms; 0 makes VibratorCompat skip the custom pulse. */
+        val VIBRATE_DURATION: IntRange = 0..100
+    }
 }
+
+/** A slider's `valueRange` for an int setting range. */
+fun IntRange.toSliderRange(): ClosedFloatingPointRange<Float> = first.toFloat()..last.toFloat()
 
 /**
  * One-time cleanup for the stale `vibrate_custom=true` written by the #154 bug.
@@ -1109,7 +1201,8 @@ class Config private constructor(
         clipboard_history_limit = (safeGetString(_prefs, "clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
             .coerceIn(SettingsRanges.CLIPBOARD_HISTORY_LIMIT.first, SettingsRanges.CLIPBOARD_HISTORY_LIMIT.last)
 
-        clipboard_pane_height_percent = safeGetInt(_prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT).coerceIn(10, 50)
+        clipboard_pane_height_percent = safeGetInt(_prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
+            .coerceIn(SettingsRanges.CLIPBOARD_PANE_HEIGHT_PERCENT)
 
         // F-10: same 64..1024 clamp as the Settings UI/state side (SettingsRanges) —
         // the old floor of 1 let an imported sub-64 value display as "64KB" while
@@ -1142,7 +1235,8 @@ class Config private constructor(
 
         // GIF Panel
         gif_enabled = _prefs.getBoolean("gif_enabled", Defaults.GIF_ENABLED)
-        gif_thumbnail_columns = safeGetInt(_prefs, "gif_thumbnail_columns", Defaults.GIF_THUMBNAIL_COLUMNS).coerceIn(2, 5)
+        gif_thumbnail_columns = safeGetInt(_prefs, "gif_thumbnail_columns", Defaults.GIF_THUMBNAIL_COLUMNS)
+            .coerceIn(SettingsRanges.GIF_THUMBNAIL_COLUMNS)
 
         continuous_swipe_enabled = safeGetBoolean(_prefs, "continuous_swipe_enabled", Defaults.CONTINUOUS_SWIPE_ENABLED)
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
@@ -1201,7 +1295,7 @@ class Config private constructor(
         // trained on. Signed, because the correction runs both ways: users who overshoot need
         // the opposite sign to users who undershoot.
         finger_occlusion_offset = safeGetInt(_prefs, "finger_occlusion_offset", Defaults.FINGER_OCCLUSION_OFFSET)
-            .coerceIn(-25, 25)
+            .coerceIn(SettingsRanges.FINGER_OCCLUSION_OFFSET)
 
         short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
         short_gesture_min_distance = PercentOfKey(safeGetInt(_prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE))
@@ -1267,7 +1361,7 @@ class Config private constructor(
         geo_frequency_weight = safeGetFloat(_prefs, "geo_frequency_weight", Defaults.GEO_FREQUENCY_WEIGHT)
         geo_endpoint_inset_kw = safeGetFloat(_prefs, "geo_endpoint_inset_kw", Defaults.GEO_ENDPOINT_INSET_KW)
         ctc_beam_width = safeGetInt(_prefs, "ctc_beam_width", Defaults.CTC_BEAM_WIDTH)
-            .coerceIn(10, 300)  // clamp mirrors onnx_xnnpack_threads' defensive pattern
+            .coerceIn(SettingsRanges.CTC_BEAM_WIDTH)
         swipe_context_rescoring = _prefs.getBoolean(
             "swipe_context_rescoring", Defaults.SWIPE_CONTEXT_RESCORING
         )
@@ -1275,6 +1369,7 @@ class Config private constructor(
         // Clamped here (audit M8) as well as in the recognizer, so the value Settings shows is
         // the value the touch path uses.
         swipe_smoothing_window = safeGetInt(_prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
+            .coerceIn(SettingsRanges.SWIPE_SMOOTHING_WINDOW)
 
 
         // Language-specific prefix boost settings (per-language keys)
@@ -1282,7 +1377,7 @@ class Config private constructor(
 
         // ONNX Runtime settings (requires app restart to take effect)
         onnx_xnnpack_threads = safeGetInt(_prefs, "onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
-            .coerceIn(1, 8)  // Clamp to valid range
+            .coerceIn(SettingsRanges.ONNX_XNNPACK_THREADS)
 
         val screen_width_dp = dm.widthPixels / dm.density
         wide_screen = screen_width_dp >= WIDE_DEVICE_THRESHOLD
@@ -1519,7 +1614,8 @@ class Config private constructor(
         pref_base_name: String,
         def_port: Int,
         def_land: Int
-    ): Float = screenWidthPixels * orientedPercent(pref_base_name, def_port, def_land).coerceIn(0, 45) / 100f
+    ): Float = screenWidthPixels * orientedPercent(pref_base_name, def_port, def_land)
+        .coerceIn(SettingsRanges.MARGIN_SIDE_PERCENT) / 100f
 
     /**
      * The orientation/fold-scoped percent stored under `<base>_portrait` / `<base>_landscape`
@@ -1544,7 +1640,8 @@ class Config private constructor(
         pref_base_name: String,
         def_port: Int,
         def_land: Int
-    ): Float = screenHeightPixels * orientedPercent(pref_base_name, def_port, def_land).coerceIn(0, 30) / 100f
+    ): Float = screenHeightPixels * orientedPercent(pref_base_name, def_port, def_land)
+        .coerceIn(SettingsRanges.MARGIN_BOTTOM_PERCENT) / 100f
 
     private fun getThemeId(res: Resources, theme_name: String): Int {
         val night_mode = res.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
@@ -2068,7 +2165,7 @@ class Config private constructor(
                     try {
                         val dpValue = safeGetInt(prefs, oldKey, 0)
                         val pixelValue = dpValue * density
-                        val percentValue = ((pixelValue / screenWidth) * 100).toInt().coerceIn(0, 45)
+                        val percentValue = ((pixelValue / screenWidth) * 100).toInt().coerceIn(SettingsRanges.MARGIN_SIDE_PERCENT)
                         for (newKey in newKeys) {
                             editor.putInt(newKey, percentValue)
                         }
@@ -2095,7 +2192,7 @@ class Config private constructor(
                         val oldValue = safeGetInt(prefs, key, defaultPercent)
                         // Convert dp to percentage of screen height
                         val pixelValue = oldValue * density
-                        val percentValue = ((pixelValue / screenHeight) * 100).toInt().coerceIn(0, 80)
+                        val percentValue = ((pixelValue / screenHeight) * 100).toInt().coerceIn(SettingsRanges.MARGIN_BOTTOM_PERCENT)
                         editor.putInt(key, percentValue)
                         Log.i("Config", "Migrated $key: ${oldValue}dp → $percentValue%")
                     } catch (e: Exception) {
@@ -2122,7 +2219,7 @@ class Config private constructor(
                         val oldValue = safeGetInt(prefs, key, defaultPercent)
                         // Convert dp to percentage of screen width
                         val pixelValue = oldValue * density
-                        val percentValue = ((pixelValue / screenWidth) * 100).toInt().coerceIn(0, 45)
+                        val percentValue = ((pixelValue / screenWidth) * 100).toInt().coerceIn(SettingsRanges.MARGIN_SIDE_PERCENT)
                         editor.putInt(key, percentValue)
                         Log.i("Config", "Migrated $key: ${oldValue}dp → $percentValue%")
                     } catch (e: Exception) {

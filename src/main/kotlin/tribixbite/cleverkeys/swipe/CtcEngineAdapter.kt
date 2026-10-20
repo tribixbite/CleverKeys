@@ -19,6 +19,7 @@ import tribixbite.cleverkeys.MemoryProbe
 import tribixbite.cleverkeys.LanguagePreferenceKeys
 import tribixbite.cleverkeys.PredictionResult
 import tribixbite.cleverkeys.PredictionTaskRunner
+import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.SwipePriority
 import tribixbite.cleverkeys.UserDictionaryWords
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
@@ -387,7 +388,7 @@ class CtcEngineAdapter(
                 Config.globalConfig().onnx_xnnpack_threads
             } catch (e: Exception) {
                 Defaults.ONNX_XNNPACK_THREADS
-            }.coerceIn(1, 8)
+            }.coerceIn(SettingsRanges.ONNX_XNNPACK_THREADS)
             // Resolution order: the language pack's own hash-verified encoder first, the APK
             // asset second. The six script graphs are pack-delivered and have no asset to fall
             // back to; the Latin encoder is an asset and pins nothing, so it never takes the
@@ -1189,7 +1190,7 @@ class CtcEngineAdapter(
                         ((rawY[it] + yShift - mapped.originY) * mapped.invH).toDouble()
                     }
                     val pt = DoubleArray(n) { rawT[it].toDouble() }
-                    val beamWidth = Config.globalConfig().ctc_beam_width.coerceIn(10, 300)
+                    val beamWidth = Config.globalConfig().ctc_beam_width.coerceIn(SettingsRanges.CTC_BEAM_WIDTH)
                     // Run the encoder ONCE, then decode each active language against its own
                     // trie/preset. Raw final scores use different frequency scales and are never
                     // compared; CtcRankMerger combines the displayed slates by rank.

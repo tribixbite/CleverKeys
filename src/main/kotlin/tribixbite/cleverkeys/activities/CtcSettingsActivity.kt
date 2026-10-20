@@ -98,7 +98,7 @@ class CtcSettingsActivity : ComponentActivity() {
                     title = stringResource(R.string.ctc_settings_beam_width_title),
                     description = stringResource(R.string.ctc_settings_beam_width_desc),
                     value = beamWidth.toFloat(),
-                    valueRange = 10f..300f,
+                    valueRange = SettingsRanges.CTC_BEAM_WIDTH.toSliderRange(),
                     steps = 28,
                     onValueChange = {
                         beamWidth = it.toInt()
@@ -113,7 +113,7 @@ class CtcSettingsActivity : ComponentActivity() {
                     title = stringResource(R.string.ctc_settings_threads_title),
                     description = stringResource(R.string.ctc_settings_threads_desc),
                     value = onnxThreads.toFloat(),
-                    valueRange = 1f..8f,
+                    valueRange = SettingsRanges.ONNX_XNNPACK_THREADS.toSliderRange(),
                     steps = 6,
                     onValueChange = {
                         onnxThreads = it.toInt()
@@ -233,8 +233,8 @@ class CtcSettingsActivity : ComponentActivity() {
     private fun loadSavedParameters() {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         beamWidth = Config.safeGetInt(prefs, "ctc_beam_width", Defaults.CTC_BEAM_WIDTH)
-            .coerceIn(10, 300)
+            .coerceIn(SettingsRanges.CTC_BEAM_WIDTH)
         onnxThreads = Config.safeGetInt(prefs, "onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
-            .coerceIn(1, 8)
+            .coerceIn(SettingsRanges.ONNX_XNNPACK_THREADS)
     }
 }

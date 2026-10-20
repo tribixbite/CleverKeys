@@ -7,6 +7,7 @@ import tribixbite.cleverkeys.KeyboardHeightPrefs
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SettingsRanges
+import tribixbite.cleverkeys.toSliderRange
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
@@ -97,7 +98,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     title = stringResource(R.string.appearance_bottom_margin_portrait_title),
                     description = stringResource(R.string.appearance_bottom_margin_portrait_desc),
                     value = marginBottomPortrait.toFloat(),
-                    valueRange = 0f..30f,
+                    valueRange = SettingsRanges.MARGIN_BOTTOM_PERCENT.toSliderRange(),
                     steps = 30,
                     onValueChange = {
                         marginBottomPortrait = it.toInt()
@@ -110,7 +111,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     title = stringResource(R.string.appearance_bottom_margin_landscape_title),
                     description = stringResource(R.string.appearance_bottom_margin_landscape_desc),
                     value = marginBottomLandscape.toFloat(),
-                    valueRange = 0f..30f,
+                    valueRange = SettingsRanges.MARGIN_BOTTOM_PERCENT.toSliderRange(),
                     steps = 30,
                     onValueChange = {
                         marginBottomLandscape = it.toInt()
@@ -119,8 +120,8 @@ internal fun SettingsActivity.AppearanceSection() {
                     displayValue = "$marginBottomLandscape%"
                 )
 
-                // Portrait left/right margins with 90% total cap
-                val maxLeftPortrait = (90 - marginRightPortrait).coerceAtLeast(0)
+                // Portrait left/right margins: each side 0-45% (SettingsRanges), 90% total cap
+                val maxLeftPortrait = sideMarginCeiling(marginRightPortrait)
                 SettingsSlider(
                     title = stringResource(R.string.appearance_left_margin_portrait_title),
                     description = stringResource(R.string.appearance_left_margin_portrait_desc),
@@ -134,7 +135,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     displayValue = "$marginLeftPortrait%"
                 )
 
-                val maxRightPortrait = (90 - marginLeftPortrait).coerceAtLeast(0)
+                val maxRightPortrait = sideMarginCeiling(marginLeftPortrait)
                 SettingsSlider(
                     title = stringResource(R.string.appearance_right_margin_portrait_title),
                     description = stringResource(R.string.appearance_right_margin_portrait_desc),
@@ -148,8 +149,8 @@ internal fun SettingsActivity.AppearanceSection() {
                     displayValue = "$marginRightPortrait%"
                 )
 
-                // Landscape left/right margins with 90% total cap
-                val maxLeftLandscape = (90 - marginRightLandscape).coerceAtLeast(0)
+                // Landscape left/right margins: each side 0-45% (SettingsRanges), 90% total cap
+                val maxLeftLandscape = sideMarginCeiling(marginRightLandscape)
                 SettingsSlider(
                     title = stringResource(R.string.appearance_left_margin_landscape_title),
                     description = stringResource(R.string.appearance_left_margin_landscape_desc),
@@ -163,7 +164,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     displayValue = "$marginLeftLandscape%"
                 )
 
-                val maxRightLandscape = (90 - marginLeftLandscape).coerceAtLeast(0)
+                val maxRightLandscape = sideMarginCeiling(marginLeftLandscape)
                 SettingsSlider(
                     title = stringResource(R.string.appearance_right_margin_landscape_title),
                     description = stringResource(R.string.appearance_right_margin_landscape_desc),
@@ -181,7 +182,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     title = stringResource(R.string.appearance_label_brightness_title),
                     description = stringResource(R.string.appearance_label_brightness_desc),
                     value = labelBrightness.toFloat(),
-                    valueRange = 0f..100f,
+                    valueRange = SettingsRanges.OPACITY_PERCENT.toSliderRange(),
                     steps = 100,
                     onValueChange = {
                         labelBrightness = it.toInt()
@@ -194,7 +195,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     title = stringResource(R.string.appearance_keyboard_opacity_title),
                     description = stringResource(R.string.appearance_keyboard_opacity_desc),
                     value = keyboardOpacity.toFloat(),
-                    valueRange = 0f..100f,
+                    valueRange = SettingsRanges.OPACITY_PERCENT.toSliderRange(),
                     steps = 100,
                     onValueChange = {
                         keyboardOpacity = it.toInt()
@@ -207,7 +208,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     title = stringResource(R.string.appearance_key_opacity_title),
                     description = stringResource(R.string.appearance_key_opacity_desc),
                     value = keyOpacity.toFloat(),
-                    valueRange = 0f..100f,
+                    valueRange = SettingsRanges.OPACITY_PERCENT.toSliderRange(),
                     steps = 100,
                     onValueChange = {
                         keyOpacity = it.toInt()
@@ -220,7 +221,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     title = stringResource(R.string.appearance_activated_key_opacity_title),
                     description = stringResource(R.string.appearance_activated_key_opacity_desc),
                     value = keyActivatedOpacity.toFloat(),
-                    valueRange = 0f..100f,
+                    valueRange = SettingsRanges.OPACITY_PERCENT.toSliderRange(),
                     steps = 100,
                     onValueChange = {
                         keyActivatedOpacity = it.toInt()
@@ -301,7 +302,7 @@ internal fun SettingsActivity.AppearanceSection() {
                         title = stringResource(R.string.appearance_border_radius_title),
                         description = stringResource(R.string.appearance_border_radius_desc),
                         value = customBorderRadius.toFloat(),
-                        valueRange = 0f..20f,
+                        valueRange = SettingsRanges.CUSTOM_BORDER_RADIUS.toSliderRange(),
                         steps = 20,
                         onValueChange = {
                             customBorderRadius = it.toInt()
@@ -327,3 +328,14 @@ internal fun SettingsActivity.AppearanceSection() {
                 }
             }
 }
+
+/**
+ * One side margin's slider ceiling: the per-side cap ([SettingsRanges.MARGIN_SIDE_PERCENT], which
+ * Config clamps at read and backup validation enforces), lowered further when the other side
+ * would push the total past [SettingsRanges.MARGIN_SIDES_TOTAL_PERCENT]. Before audit M8 the
+ * slider offered `90 - other` alone — up to 90% for one side, which Config silently clamped to
+ * 45% and a backup import rejected as out of range.
+ */
+internal fun sideMarginCeiling(otherSide: Int): Int =
+    minOf(SettingsRanges.MARGIN_SIDE_PERCENT.last, SettingsRanges.MARGIN_SIDES_TOTAL_PERCENT - otherSide)
+        .coerceAtLeast(0)

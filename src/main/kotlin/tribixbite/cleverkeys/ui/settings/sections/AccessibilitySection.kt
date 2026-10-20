@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.SettingsRanges
+import tribixbite.cleverkeys.toSliderRange
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
@@ -85,7 +87,7 @@ internal fun SettingsActivity.AccessibilitySection() {
                         title = stringResource(R.string.accessibility_custom_duration_title),
                         description = stringResource(R.string.accessibility_custom_duration_desc),
                         value = vibrationDuration.toFloat(),
-                        valueRange = 5f..100f,
+                        valueRange = SettingsRanges.VIBRATE_DURATION.toSliderRange(),
                         steps = 19,
                         enabled = vibrateCustom,
                         onValueChange = {

@@ -10,6 +10,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
+import tribixbite.cleverkeys.SettingsRanges
 
 /**
  * Minimum plausible size (bytes) for a valid ONNX model stream. Any real
@@ -354,7 +355,7 @@ class ModelLoader(
     ): Boolean {
         return try {
             // Configure XNNPACK with user-specified thread count
-            val threads = threadCount.coerceIn(1, 8)
+            val threads = threadCount.coerceIn(SettingsRanges.ONNX_XNNPACK_THREADS)
             val options = mapOf("intra_op_num_threads" to threads.toString())
             sessionOptions.addXnnpack(options)
             sessionOptions.setIntraOpNumThreads(threads)
