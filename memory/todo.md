@@ -147,7 +147,15 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     disabled; the setting was turned back OFF afterwards. **#190 follow-finger PASS** (15:45):
     with Selection Movement = Follow finger, backspace short-swipe + hold, then a 128 px drag
     selected 4 characters, moving back 64 px shrank it to 2, release deleted exactly those 2;
-    the mode was restored to Speed by distance. (Harness note: separate `input motionevent`
+    the mode was restored to Speed by distance. **QS tile home-screen fix PASS** (16:20–16:36,
+    release from `f2ce7c88`, SHA `58089fa1…`, `build/oct20f-saga/`, tile log under
+    `CleverKeys/Tile`): in a native field through the real shade, full → minimized → full;
+    after Back dismissed the keyboard, a shade tap armed the deferred show, and retry #1's
+    `requestShowSelf` brought it back (mInputShown=true); on the home screen the launcher's
+    TYPE_NULL fallback connection is no longer read as an editor, so the tap chose
+    PICK_KEYBOARD and the "Choose input method" picker opened. It opens beneath the shade and
+    shows once the shade closes, the same as the pre-rework tile. The test tile was removed and
+    CleverKeys left as the default. (Harness note: separate `input motionevent`
     calls take ~70 ms each, so a short swipe must be ONE big MOVE right after DOWN, or the
     backspace long-press repeat fires first.) STILL OPEN: (1) a Hebrew prefix typo
     (`לןא` → `ללא`) on a phone with the Hebrew pack;
