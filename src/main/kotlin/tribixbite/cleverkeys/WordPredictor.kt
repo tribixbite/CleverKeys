@@ -3695,6 +3695,12 @@ class WordPredictor : Predictor {
                 return typedWord
             }
         }
+        // κ (round 5, eval doc §13): a correction farther than the maximum cost is not made.
+        if (editCosts[index] > weights.maxCorrectionCost) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT (channel): '$typedWord' " +
+                "[best='${winner.word}' edit=${"%.3f".format(editCosts[index])} > max=${weights.maxCorrectionCost}]")
+            return typedWord
+        }
         if (winner.frequency < frequencyFloor && winner.word !in customAndUserWords) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT (channel): '$typedWord' " +
                 "[best='${winner.word}' freq=${winner.frequency} < floor=$frequencyFloor]")

@@ -1196,6 +1196,9 @@
     <string name="autocorrect_channel_alias_bonus_desc">Obniżka kosztu dla formy ściągniętej, np. don\'t, wobec równie bliskiego zwykłego słowa (donr → don\'t zamiast done). 0 = brak preferencji.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">Koszt usunięcia do krótkiego słowa</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Dodatkowy koszt, gdy poprawka usuwa litery, by uzyskać słowo jedno- lub dwuliterowe, tak aby źle wpisana pierwsza litera nie była po prostu usuwana. 0 = bez dodatkowego kosztu.</string>
+    <string name="autocorrect_channel_max_correction_cost_title">Maksymalna odległość poprawki</string>
+    <string name="autocorrect_channel_max_correction_cost_desc">Poprawki o wyższym koszcie edycji nie są wykonywane, więc poprawne słowo spoza słownika nie zostaje zamienione na inne. Jeden błędny sąsiedni klawisz kosztuje około 1,3.</string>
+    <string name="autocorrect_max_correction_cost_off">Wyłączone</string>
     <string name="autocorrect_short_deletion_scope_title">Koszt usunięcia dotyczy</string>
     <string name="autocorrect_short_deletion_scope_desc">Hebrajskie jednoliterowe przedrostki sprawiają, że ten koszt jest tam przydatny; w angielskim dodatkowa litera przy słowie dwuliterowym (tpo → to) to prawdziwa literówka, dlatego dla innych pism jest domyślnie wyłączony.</string>
     <string name="autocorrect_short_deletion_scope_hebrew">Tylko pismo hebrajskie</string>

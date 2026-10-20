@@ -1205,6 +1205,9 @@
     <string name="autocorrect_channel_alias_bonus_desc">Giảm chi phí cho dạng rút gọn như don\'t so với một từ thường gần như nhau (donr → don\'t thay vì done). 0 = không ưu tiên.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">Chi phí xóa thành từ ngắn</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Chi phí thêm khi sửa lỗi bỏ bớt chữ để thành một từ một hoặc hai chữ cái, để chữ cái đầu gõ sai không bị xóa đi một cách đơn giản. 0 = không thêm chi phí.</string>
+    <string name="autocorrect_channel_max_correction_cost_title">Khoảng cách sửa tối đa</string>
+    <string name="autocorrect_channel_max_correction_cost_desc">Không sửa khi chi phí chỉnh sửa lớn hơn mức này, để một từ đúng không có trong từ điển không bị viết lại thành từ khác. Một phím kề sai tốn khoảng 1,3.</string>
+    <string name="autocorrect_max_correction_cost_off">Tắt</string>
     <string name="autocorrect_short_deletion_scope_title">Phạm vi chi phí xóa</string>
     <string name="autocorrect_short_deletion_scope_desc">Các tiền tố một chữ cái của tiếng Do Thái khiến chi phí này hữu ích ở đó; trong tiếng Anh, một chữ cái thừa cạnh một từ hai chữ cái (tpo → to) là lỗi gõ thật, nên mặc định tắt cho các hệ chữ khác.</string>
     <string name="autocorrect_short_deletion_scope_hebrew">Chỉ chữ Do Thái</string>

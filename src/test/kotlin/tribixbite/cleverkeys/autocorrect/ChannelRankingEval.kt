@@ -79,11 +79,13 @@ class ChannelRankingEval {
         val beta: Float, val gamma: Float,
         /** δ, the short-word deletion cost (round 3, §7.1); 0 = rule C2. */
         val delta: Float = 0f,
+        /** κ, the maximum correction cost (round 5, §13.1); ∞ = off. */
+        val kappa: Float = Float.POSITIVE_INFINITY,
     ) {
         val weights get() = ChannelWeights(s1, g, g2, tau, lambda, aliasBonus = beta,
-            shortWordDeletionCost = delta, inflectionCost = gamma)
+            shortWordDeletionCost = delta, maxCorrectionCost = kappa, inflectionCost = gamma)
         override fun toString() = "s1=$s1 g=$g g2=$g2 tau=$tau lambda=$lambda beta=$beta gamma=" +
-            (if (gamma == Float.POSITIVE_INFINITY) "inf" else "$gamma") + " delta=$delta"
+            (if (gamma == Float.POSITIVE_INFINITY) "inf" else "$gamma") + " delta=$delta kappa=$kappa"
         /** The `CK_CH_CONFIG` spelling: `s1,g,g2,tau,lambda,beta,gamma[,delta]`. */
         val spec get() = "$s1,$g,$g2,$tau,$lambda,$beta," +
             (if (gamma == Float.POSITIVE_INFINITY) "inf" else "$gamma") + ",$delta"
@@ -98,10 +100,19 @@ class ChannelRankingEval {
                     if (v.size == 8) v[7].toFloat() else 0f)
             }
 
-            /** The shipped rule C2 (Defaults), i.e. the round-3 baseline. */
+            /**
+             * The round-3 baseline: shipped weights with δ = 0 (rule C2). Rounds 3–4 measured
+             * against this; it is no longer the shipped default.
+             */
             val SHIPPED: Cfg get() = AutocorrectTuning.DEFAULT.channel.let {
                 Cfg(it.distanceCost, it.indelCost, it.doubleCost, it.transpositionCost, it.frequencyWeight,
                     it.aliasBonus, it.inflectionCost, 0f)
+            }
+
+            /** The shipped default at round 5 (rule C2 + Hebrew-scoped δ, κ off): its baseline. */
+            val SHIPPED5: Cfg get() = AutocorrectTuning.DEFAULT.channel.let {
+                Cfg(it.distanceCost, it.indelCost, it.doubleCost, it.transpositionCost, it.frequencyWeight,
+                    it.aliasBonus, it.inflectionCost, it.shortWordDeletionCost, it.maxCorrectionCost)
             }
         }
     }
@@ -111,6 +122,7 @@ class ChannelRankingEval {
         val s1: FloatArray, val g: FloatArray, val g2: FloatArray, val tau: FloatArray,
         val lambda: FloatArray, val beta: FloatArray, val gamma: FloatArray,
         val delta: FloatArray = floatArrayOf(0f),
+        val kappa: FloatArray = floatArrayOf(Float.POSITIVE_INFINITY),
     )
 
     /** Outcome tallies in raw pairs, distinct target words and commit occurrences. */
@@ -193,7 +205,14 @@ class ChannelRankingEval {
 
         /** `CK_CH_ROUND` (default 2) selects the grid the DEV phase searches and the pre-filter covers. */
         private val ROUND: Int = System.getenv("CK_CH_ROUND")?.toInt() ?: 2
-        private val GRID: Grid = when (ROUND) { 1 -> ROUND1; 3 -> ROUND3; else -> ROUND2 }
+        /** Round 5 (§13.1): every weight shipped (incl. Hebrew δ), only κ varies. */
+        private val ROUND5: Grid = Cfg.SHIPPED5.let { c ->
+            Grid(floatArrayOf(c.s1), floatArrayOf(c.g), floatArrayOf(c.g2), floatArrayOf(c.tau),
+                floatArrayOf(c.lambda), floatArrayOf(c.beta), floatArrayOf(c.gamma),
+                delta = floatArrayOf(c.delta),
+                kappa = floatArrayOf(1.5f, 1.75f, 2.0f, 2.25f, 2.5f, 3.0f, 3.5f, 4.0f))
+        }
+        private val GRID: Grid = when (ROUND) { 1 -> ROUND1; 3 -> ROUND3; 5 -> ROUND5; else -> ROUND2 }
         private val LAMBDA get() = GRID.lambda
 
         /** The 16 corners of the edit-weight grid plus its centre: the alignment references. */
@@ -383,6 +402,7 @@ class ChannelRankingEval {
         if (p.guardStemRank != null && !isDoubleReduction(p.typed, winner.word) &&
             cfg.gamma + cfg.lambda * p.guardStemRank <= winnerCost
         ) return p.typed
+        if (costs[i] > cfg.kappa) return p.typed
         if (winner.frequency < p.floor) return p.typed
         val alias = lang.aliases[winner.word] ?: return winner.word
         return if (alias.startsWith("i'")) alias.replaceFirstChar { it.uppercase() } else alias
@@ -569,8 +589,8 @@ class ChannelRankingEval {
         val report = StringBuilder()
         fun say(s: String) { println(s); report.appendLine(s); File(outDir, "summary-$phase.txt").writeText(report.toString()) }
         when (phase) {
-            "dev" -> when (ROUND) { 1 -> devPhase(::say); 3 -> devPhase3(::say); else -> devPhase2(::say) }
-            "test" -> when (ROUND) { 3 -> testPhase3(::say); 4 -> testPhase4(::say); else -> testPhase(::say) }
+            "dev" -> when (ROUND) { 1 -> devPhase(::say); 3 -> devPhase3(::say); 5 -> devPhase5(::say); else -> devPhase2(::say) }
+            "test" -> when (ROUND) { 3 -> testPhase3(::say); 4 -> testPhase4(::say); 5 -> testPhase5(::say); else -> testPhase(::say) }
             "inspect" -> inspectPhase(::say)
             else -> error("CK_CH_PHASE must be dev, test or inspect")
         }
@@ -1024,6 +1044,131 @@ class ChannelRankingEval {
         say("named failures: $named")
         say("GATE: Q1=$q1 Q2=$q2 Q3=$q3 → " + if (q1 && q2 && q3) "PASS" else "FAIL")
         File(outDir, "rows4-test.tsv").writeText(rows.joinToString("\n") + "\n")
+    }
+
+    /** Distinct targets of [pairs] whose output under [cfg] is right. */
+    private fun correctTargets(lang: Lang, pairs: List<P>, probe: Map<String, Probed>, cfg: Cfg): Set<String> {
+        val scratch = FloatArray(4096)
+        val memo = HashMap<String, String>()
+        return pairs.filter { p -> lang.ok(memo.getOrPut(p.typed) { decide(lang, probe.getValue(p.typed), cfg, scratch) }, p.target) }
+            .mapTo(HashSet()) { it.target }
+    }
+
+    /** Round 5 DEV (§13.3): κ against the shipped default (rule C2 + Hebrew δ). */
+    private fun devPhase5(say: (String) -> Unit) {
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val gtc = readGtc("DEV")
+        val adj = sAdj(dev = true)
+        val oov = cOov(dev = true)
+        val adjWords = adj.map { it.target }.toSet().size
+        say("ROUND 5. GTC-DEV ${gtc.size}; S-adj-DEV ${adj.size} ($adjWords words); C-oov-DEV ${oov.size}")
+        val gProbe = probeAll(en, gtc, "GTC-DEV", say)
+        val aProbe = probeAll(en, adj, "S-adj-DEV", say)
+        val oProbe = probeAll(en, oov, "C-oov-DEV", say)
+        val enNamed = (NAMED_EN.keys + SHATED).associateWith { en.probe(it) }
+        KeyAdjacency.setLayoutLetters(heGrid)
+        val heNamed = NAMED_HE.keys.associateWith { he.probe(it) }
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val base = Cfg.SHIPPED5
+        val gRight = correctTargets(en, gtc, gProbe, base).size
+        val scratch = FloatArray(4096)
+        val oChanged = oov.count { decide(en, oProbe.getValue(it.typed), base, scratch) != it.typed }
+        say("baseline: GTC-DEV distinct targets right=$gRight; C-oov-DEV changed by baseline=$oChanged")
+        var chosen: Cfg? = null
+        var bestProtected = -1
+        for (kappa in GRID.kappa) {
+            val cfg = base.copy(kappa = kappa)
+            // counts3 measures against Cfg.SHIPPED (δ = 0); round 5 needs its own baseline.
+            fun vs(lang: Lang, pairs: List<P>, probe: Map<String, Probed>): IntArray {
+                val fix = HashSet<String>(); val brk = HashSet<String>(); var brkRaw = 0
+                val memo = HashMap<String, Pair<String, String>>()
+                for (p in pairs) {
+                    val (b, c) = memo.getOrPut(p.typed) {
+                        val pr = probe.getValue(p.typed); decide(lang, pr, base, scratch) to decide(lang, pr, cfg, scratch)
+                    }
+                    val bOk = lang.ok(b, p.target); val cOk = lang.ok(c, p.target)
+                    if (!bOk && cOk) fix += p.target
+                    if (bOk && !cOk) { brk += p.target; brkRaw++ }
+                }
+                return intArrayOf(fix.size, brk.size, brkRaw)
+            }
+            val g = vs(en, gtc, gProbe)
+            val a = vs(en, adj, aProbe)
+            val o = vs(en, oov, oProbe)
+            val named = namedFailuresReplica(cfg, enNamed, heNamed, includeShated = true)
+            val k1 = g[1] <= 0.015 * gRight
+            val k2 = a[1] <= 0.005 * adjWords
+            val adm = k1 && k2 && named == 0
+            say("  κ=$kappa: GTC-DEV breaks=${g[1]} (limit ${"%.1f".format(0.015 * gRight)}) fixes=${g[0]}; " +
+                "S-adj-DEV breaks=${a[1]} (limit ${"%.1f".format(0.005 * adjWords)}); C-oov-DEV protected=${o[0]} " +
+                "of $oChanged (${"%.1f".format(100.0 * o[0] / oChanged)}%); named fail=$named → ${if (adm) "admissible" else "-"}")
+            // GRID.kappa ascends; ties go to the larger κ, so an equal later count replaces.
+            if (adm && o[0] >= bestProtected) { chosen = cfg; bestProtected = o[0] }
+        }
+        val c = chosen
+        if (c == null) {
+            say("\nDEV choice (§13.3): NONE — κ stays off, TEST not run")
+            return
+        }
+        say("\nDEV choice (§13.3): κ=${c.kappa}")
+        say("  production named failures: ${namedFailures(c, includeShated = true)}")
+        val sample = (gProbe.keys + aProbe.keys + oProbe.keys).sorted().shuffled(java.util.Random(20261020)).take(2_000)
+        val mismatches = sample.filter { t ->
+            val probe = gProbe[t] ?: aProbe[t] ?: oProbe.getValue(t)
+            decide(en, probe, c, scratch) != en.predictor.autoCorrect(t, prodTuning(c)) ||
+                decide(en, probe, base, scratch) != en.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+        }
+        say("  soundness: ${sample.size} inputs, mismatches=${mismatches.size} ${mismatches.take(20)}")
+        check(mismatches.isEmpty()) { "replica disagrees with production: run void" }
+        say("CK_CH_CONFIG=${c.spec},${c.kappa}")
+    }
+
+    /** Round 5 TEST (§13.4): production shipped default against production with κ. */
+    private fun testPhase5(say: (String) -> Unit) {
+        val kappa = (System.getenv("CK_CH_KAPPA") ?: error("CK_CH_KAPPA required")).toFloat()
+        val cfg = Cfg.SHIPPED5.copy(kappa = kappa)
+        val tuning = prodTuning(cfg)
+        say("ROUND 5 TEST, $cfg")
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val gtc = readGtc("TEST")
+        val adj = sAdj(dev = false)
+        val oov = cOov(dev = false)
+        val adjWords = adj.map { it.target }.toSet().size
+        val rows = mutableListOf("set\tconfig\ttyped\ttarget\tocc\tbaseline\tcandidate\tkind\tclass")
+        fun run(pairs: List<P>, set: String): Triple<Tally, Map<String, String>, Map<String, String>> {
+            val inputs = pairs.map { it.typed }.distinct()
+            val base = ConcurrentHashMap<String, String>()
+            val cand = ConcurrentHashMap<String, String>()
+            val checkpoint = File(outDir, "test5-$set.tsv")
+            val header = "# kappa=$kappa"
+            if (checkpoint.isFile && checkpoint.useLines { it.firstOrNull() } == header) {
+                checkpoint.useLines { l -> l.drop(1).forEach { x -> val c = x.split('\t'); base[c[0]] = c[1]; cand[c[0]] = c[2] } }
+                check(base.keys.containsAll(inputs)) { "checkpoint $checkpoint is incomplete" }
+            } else {
+                inputs.parallelStream().forEach { t ->
+                    base[t] = en.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+                    cand[t] = en.predictor.autoCorrect(t, tuning)
+                }
+                checkpoint.writeText(header + "\n" + inputs.joinToString("\n") { "$it\t${base[it]}\t${cand[it]}" } + "\n")
+            }
+            val t = tally(en, pairs, base, cand, rows, set, cfg.toString())
+            say("  ${t.line(set, pairs.size, pairs.map { it.target }.toSet().size)}")
+            return Triple(t, base, cand)
+        }
+        val (tg, gBase, _) = run(gtc, "GTC-TEST")
+        val (ta, _, _) = run(adj, "S-adj-TEST")
+        val (to, oBase, _) = run(oov, "C-oov-TEST")
+        val gRight = gtc.filter { en.ok(gBase.getValue(it.typed), it.target) }.mapTo(HashSet()) { it.target }.size
+        val oChanged = oov.count { oBase.getValue(it.typed) != it.typed }
+        val named = namedFailures(cfg, includeShated = true)
+        val l1 = tg.d(tg.breaks) <= 0.015 * gRight
+        val l2 = ta.d(ta.breaks) <= 0.005 * adjWords
+        val l3 = to.d(to.fixes) >= 0.25 * oChanged
+        val l4 = named.isEmpty()
+        say("GTC-TEST distinct breaks=${tg.d(tg.breaks)} of $gRight right; S-adj-TEST distinct breaks=${ta.d(ta.breaks)} of $adjWords; " +
+            "C-oov-TEST protected=${to.d(to.fixes)} of $oChanged changed (${"%.1f".format(100.0 * to.d(to.fixes) / oChanged)}%); named=$named")
+        say("GATE: L1=$l1 L2=$l2 L3=$l3 L4=$l4 → " + if (l1 && l2 && l3 && l4) "PASS" else "FAIL")
+        File(outDir, "rows5-test.tsv").writeText(rows.joinToString("\n") + "\n")
     }
 
     /**

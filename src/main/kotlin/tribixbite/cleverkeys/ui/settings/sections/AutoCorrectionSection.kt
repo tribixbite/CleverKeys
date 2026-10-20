@@ -576,6 +576,26 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         displayValue = sliders.CHANNEL_SHORT_DELETION_COST.format(weights.shortWordDeletionCost)
     )
 
+    val kappaSlider = sliders.maxCorrectionCostSliderValue(weights.maxCorrectionCost)
+    SettingsSlider(
+        title = stringResource(R.string.autocorrect_channel_max_correction_cost_title),
+        description = stringResource(R.string.autocorrect_channel_max_correction_cost_desc),
+        value = kappaSlider,
+        valueRange = Keys.CHANNEL_MAX_CORRECTION_COST.range,
+        steps = sliders.CHANNEL_MAX_CORRECTION_COST.steps,
+        onValueChange = {
+            val v = sliders.CHANNEL_MAX_CORRECTION_COST.snap(it)
+            autocorrectTuning = tuning.copy(channel = weights.copy(
+                maxCorrectionCost = ChannelWeights.maxCorrectionCostFromPref(v)))
+            saveSetting(Keys.CHANNEL_MAX_CORRECTION_COST.key, v)
+        },
+        displayValue = if (sliders.isMaxCorrectionOff(kappaSlider)) {
+            stringResource(R.string.autocorrect_max_correction_cost_off)
+        } else {
+            sliders.CHANNEL_MAX_CORRECTION_COST.format(kappaSlider)
+        }
+    )
+
     // Option order = ShortDeletionScope.entries order (HEBREW, ALL).
     val scopeLabels = ShortDeletionScope.entries.map { scope ->
         when (scope) {

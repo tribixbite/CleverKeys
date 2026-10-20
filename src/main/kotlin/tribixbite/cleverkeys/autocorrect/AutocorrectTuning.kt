@@ -66,6 +66,9 @@ fun neighbourTiebreakFromPref(value: String?): NeighbourTiebreak =
  *   and has at most [ChannelEditCost.SHORT_WORD_MAX_LENGTH] letters, so a mistyped one-letter
  *   prefix is not simply deleted onto a common short word (`לןא` → `לא`, round 3, eval doc §7).
  * @property shortDeletionScope where δ applies ([ShortDeletionScope]).
+ * @property maxCorrectionCost κ — a correction whose edit cost exceeds this is not made, so a
+ *   valid word the dictionary lacks is not rewritten into a distant one (round 5, eval doc §13).
+ *   [Float.POSITIVE_INFINITY] = off.
  * @property aliasBonus β — subtracted from a contraction alias key's total cost, so `donr`
  *   prefers `don't` over an equally close `done` (round 2, eval doc §3.1).
  * @property inflectionCost γ — guard G: the cost of believing a typed word is an unlisted
@@ -81,6 +84,7 @@ data class ChannelWeights(
     val aliasBonus: Float = Defaults.AUTOCORRECT_CHANNEL_ALIAS_BONUS,
     val shortWordDeletionCost: Float = Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_COST,
     val shortDeletionScope: ShortDeletionScope = ShortDeletionScope.fromPref(Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_SCOPE),
+    val maxCorrectionCost: Float = maxCorrectionCostFromPref(Defaults.AUTOCORRECT_CHANNEL_MAX_CORRECTION_COST),
     val inflectionCost: Float = inflectionCostFromPref(Defaults.AUTOCORRECT_CHANNEL_INFLECTION_COST),
 ) {
     companion object {
@@ -90,6 +94,14 @@ data class ChannelWeights(
          * position writes exactly this value.
          */
         const val INFLECTION_ALWAYS_KEEP = 10f
+
+        /** Stored κ at or above this value means "off" (∞); the top of its slider. */
+        const val MAX_CORRECTION_OFF = 10f
+
+        /** Pref value → κ, mapping the "off" position to [Float.POSITIVE_INFINITY]. */
+        fun maxCorrectionCostFromPref(stored: Float): Float =
+            if (stored.isNaN() || stored >= MAX_CORRECTION_OFF) Float.POSITIVE_INFINITY
+            else stored.coerceAtLeast(0f)
 
         /** Pref value → γ, mapping the "always keep" position to [Float.POSITIVE_INFINITY]. */
         fun inflectionCostFromPref(stored: Float): Float =
@@ -189,6 +201,8 @@ data class AutocorrectTuning(
             Defaults.AUTOCORRECT_CHANNEL_FREQUENCY_WEIGHT, 0f..0.1f)
         val CHANNEL_SHORT_DELETION_COST = FloatKey("autocorrect_channel_short_deletion_cost",
             Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_COST, 0f..2f)
+        val CHANNEL_MAX_CORRECTION_COST = FloatKey("autocorrect_channel_max_correction_cost",
+            Defaults.AUTOCORRECT_CHANNEL_MAX_CORRECTION_COST, 1f..ChannelWeights.MAX_CORRECTION_OFF)
         val CHANNEL_ALIAS_BONUS = FloatKey("autocorrect_channel_alias_bonus",
             Defaults.AUTOCORRECT_CHANNEL_ALIAS_BONUS, 0f..1f)
         val CHANNEL_INFLECTION_COST = FloatKey("autocorrect_channel_inflection_cost",
@@ -196,7 +210,8 @@ data class AutocorrectTuning(
 
         val FLOATS = listOf(BAND_GAP, TRANSPOSITION_PENALTY, MIN_EXACT_RATIO, LENGTH_EDIT_BUDGET,
             CHANNEL_DISTANCE_COST, CHANNEL_INDEL_COST, CHANNEL_DOUBLE_COST, CHANNEL_TRANSPOSITION_COST,
-            CHANNEL_FREQUENCY_WEIGHT, CHANNEL_ALIAS_BONUS, CHANNEL_SHORT_DELETION_COST, CHANNEL_INFLECTION_COST)
+            CHANNEL_FREQUENCY_WEIGHT, CHANNEL_ALIAS_BONUS, CHANNEL_SHORT_DELETION_COST, CHANNEL_MAX_CORRECTION_COST,
+            CHANNEL_INFLECTION_COST)
         val INTS = listOf(MAX_SUBSTITUTIONS, DROPPED_DOUBLE_MARGIN, INFLECTION_GUARD_MIN_STEM)
         val BOOLS = listOf(DROPPED_DOUBLE_ENABLED, ELONGATION_COLLAPSE_ENABLED, INFLECTION_GUARD_ENABLED)
         val STRINGS = listOf(RANKING, NEIGHBOUR_TIEBREAK, CHANNEL_SHORT_DELETION_SCOPE)
@@ -247,6 +262,7 @@ data class AutocorrectTuning(
                     aliasBonus = f(Keys.CHANNEL_ALIAS_BONUS),
                     shortWordDeletionCost = f(Keys.CHANNEL_SHORT_DELETION_COST),
                     shortDeletionScope = ShortDeletionScope.fromPref(s(Keys.CHANNEL_SHORT_DELETION_SCOPE)),
+                    maxCorrectionCost = ChannelWeights.maxCorrectionCostFromPref(f(Keys.CHANNEL_MAX_CORRECTION_COST)),
                     inflectionCost = ChannelWeights.inflectionCostFromPref(f(Keys.CHANNEL_INFLECTION_COST)),
                 ),
             )

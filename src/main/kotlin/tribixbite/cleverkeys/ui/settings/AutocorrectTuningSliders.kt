@@ -79,13 +79,16 @@ internal object AutocorrectTuningSliders {
     val CHANNEL_ALIAS_BONUS = FloatSpec(Keys.CHANNEL_ALIAS_BONUS, 0.05f, 2)
     /** δ: 0.05 per position covers the round-3 grid (0.25 … 1.5). */
     val CHANNEL_SHORT_DELETION_COST = FloatSpec(Keys.CHANNEL_SHORT_DELETION_COST, 0.05f, 2)
+    /** κ: 0.25 per position covers the round-5 grid (1.5 … 4.0); the last position (10) is off. */
+    val CHANNEL_MAX_CORRECTION_COST = FloatSpec(Keys.CHANNEL_MAX_CORRECTION_COST, 0.25f, 2)
     /** The last position (10) is [ChannelWeights.INFLECTION_ALWAYS_KEEP]. */
     val CHANNEL_INFLECTION_COST = FloatSpec(Keys.CHANNEL_INFLECTION_COST, 0.25f, 2)
 
     val FLOATS: List<FloatSpec> = listOf(
         BAND_GAP, TRANSPOSITION_PENALTY, MIN_EXACT_RATIO, LENGTH_EDIT_BUDGET,
         CHANNEL_DISTANCE_COST, CHANNEL_INDEL_COST, CHANNEL_DOUBLE_COST, CHANNEL_TRANSPOSITION_COST,
-        CHANNEL_FREQUENCY_WEIGHT, CHANNEL_ALIAS_BONUS, CHANNEL_SHORT_DELETION_COST, CHANNEL_INFLECTION_COST,
+        CHANNEL_FREQUENCY_WEIGHT, CHANNEL_ALIAS_BONUS, CHANNEL_SHORT_DELETION_COST, CHANNEL_MAX_CORRECTION_COST,
+        CHANNEL_INFLECTION_COST,
     )
     val INTS: List<IntSpec> = listOf(DROPPED_DOUBLE_MARGIN, MAX_SUBSTITUTIONS, INFLECTION_GUARD_MIN_STEM)
 
@@ -104,6 +107,17 @@ internal object AutocorrectTuningSliders {
         } else {
             inflectionCost
         }
+
+    /** κ as a slider position: "off" (∞) sits on the last position. */
+    fun maxCorrectionCostSliderValue(maxCorrectionCost: Float): Float =
+        if (maxCorrectionCost.isInfinite() || maxCorrectionCost >= ChannelWeights.MAX_CORRECTION_OFF) {
+            ChannelWeights.MAX_CORRECTION_OFF
+        } else {
+            maxCorrectionCost
+        }
+
+    /** True when the κ slider value means "no maximum". */
+    fun isMaxCorrectionOff(sliderValue: Float): Boolean = sliderValue >= ChannelWeights.MAX_CORRECTION_OFF
 
     /** True when the γ slider value means "always keep the word form". */
     fun isAlwaysKeep(sliderValue: Float): Boolean = sliderValue >= ChannelWeights.INFLECTION_ALWAYS_KEEP

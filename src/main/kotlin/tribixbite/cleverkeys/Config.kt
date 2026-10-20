@@ -239,6 +239,8 @@ object Defaults {
     const val AUTOCORRECT_CHANNEL_SHORT_DELETION_COST = 0.5f
     /** Where δ applies: `hebrew` (Hebrew-script words only) or `all` (round 4, eval doc §11). */
     const val AUTOCORRECT_CHANNEL_SHORT_DELETION_SCOPE = "hebrew"
+    /** κ: largest edit cost a correction may have (round 5, eval doc §13); 10 = off. */
+    const val AUTOCORRECT_CHANNEL_MAX_CORRECTION_COST = 10f
     /** β: cost discount of a contraction alias key (round 2, eval doc §3.1). */
     const val AUTOCORRECT_CHANNEL_ALIAS_BONUS = 0.25f
     /** γ (round 2 choice 1.0); 10, the slider's top, means "always keep", the band ranking's guard. */
