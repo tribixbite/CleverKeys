@@ -19,12 +19,16 @@ import androidx.annotation.StringRes
  * A tap acts on the keyboard ([KeyboardTileDecision.actionFor] holds the table):
  * - another keyboard is selected: opens the input-method picker (how users switch to
  *   CleverKeys; the tile's original behaviour);
- * - CleverKeys shows: minimizes it, to the style last used by a minimize command
+ * - the keyboard is on screen (possible where the shade does not take focus, or with
+ *   `cmd statusbar click-tile`): minimizes it, to the style last used by a minimize command
  *   ([tribixbite.cleverkeys.minimize.KeyboardMinimizer.lastStyle], the floating button
- *   before any);
- * - minimized: restores the full keyboard;
- * - hidden, with an editor still bound: asks the system to show the keyboard
- *   ([CleverKeysService.showFromTile]);
+ *   before any), or restores it when minimized;
+ * - the keyboard was hidden a moment ago: on the Saga (Android 14) opening the shade itself
+ *   hides the keyboard, so this is the usual case. The tap acts on the form it had just
+ *   before: a full keyboard comes back minimized, a minimized one full size. The show is
+ *   deferred ([CleverKeysService.showFromTile]): the system ignores it while the shade holds
+ *   focus, so the service retries until the app is focused again after the shade closes;
+ * - hidden for longer over a bound editor: shows the full keyboard the same way;
  * - hidden with no editor: opens the picker. An IME can only show itself for a focused
  *   editor, so nothing could appear; a Toast would sit under the open shade, and the subtitle
  *   ("Switch keyboard") already says what the tap will do.
@@ -38,8 +42,7 @@ import androidx.annotation.StringRes
  * whose editor then loses the keyboard the tap was meant to act on. [showDialog] collapses the
  * panel too, and also takes focus. `StatusBarManager.collapsePanels` is hidden API, needs the
  * `EXPAND_STATUS_BAR` permission and is blocked for apps targeting Android 12+. So the change
- * happens behind the shade and is visible as soon as the user closes it; the tile's subtitle
- * updates in place to confirm it. The picker path is unchanged: the picker is a system dialog
+ * happens behind the shade (or, for a deferred show, right after it closes). The picker path is unchanged: the picker is a system dialog
  * shown over the shade, as before.
  *
  * Requires Android 7.0 (API 24) or higher; the subtitle needs Android 10 (API 29).
@@ -77,10 +80,12 @@ class KeyboardTileService : TileService() {
         super.onClick()
 
         val service = CleverKeysService.getInstance()
-        when (KeyboardTileDecision.actionFor(isCleverKeysCurrent(), service?.tileWindowState())) {
+        when (val action = KeyboardTileDecision.actionFor(isCleverKeysCurrent(), service?.tileSnapshot())) {
             KeyboardTileAction.MINIMIZE -> service?.minimizeFromTile()
             KeyboardTileAction.RESTORE -> service?.restoreFromTile()
-            KeyboardTileAction.SHOW -> service?.showFromTile()
+            KeyboardTileAction.SHOW_MINIMIZED,
+            KeyboardTileAction.SHOW_RESTORED,
+            KeyboardTileAction.SHOW -> service?.showFromTile(action)
             KeyboardTileAction.PICK_KEYBOARD -> {
                 // Show input method picker dialog
                 val imm = getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
@@ -141,7 +146,7 @@ class KeyboardTileService : TileService() {
         val isCurrent = isCleverKeysCurrent()
         val action = KeyboardTileDecision.actionFor(
             isCurrent,
-            CleverKeysService.getInstance()?.tileWindowState()
+            CleverKeysService.getInstance()?.tileSnapshot()
         )
         val appName = getString(R.string.app_name)
 

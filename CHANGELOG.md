@@ -252,8 +252,10 @@ editor that used to be listed here already ship in 2.0.)
   minimizes it (to the style the minimize commands last used, the floating button by default),
   restores it when minimized, or shows it when hidden over a focused text field. With another
   keyboard selected, or no text field to type into, it opens the keyboard picker as before. The
-  tile's subtitle (Android 10+) names the next action. The shade stays open: collapsing it would
-  take focus from the app. See `docs/specs/keyboard-minimize.md`.
+  tile's subtitle (Android 10+) names the next action. Where opening the shade hides the keyboard
+  (seen on Android 14), the tap acts on how the keyboard looked just before, and the keyboard
+  reappears in that form when the shade closes. The shade stays open: collapsing it would take
+  focus from the app. See `docs/specs/keyboard-minimize.md`.
 - Release builds are R8-minified with resource shrinking — a smaller APK on top of the neural
   asset removal.
 - Backup merge imports are import-wins, with collisions surfaced in the preview.

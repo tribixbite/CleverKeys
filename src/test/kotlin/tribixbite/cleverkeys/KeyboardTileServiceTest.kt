@@ -148,12 +148,18 @@ class KeyboardTileServiceTest {
         for ((action, call) in listOf(
             "MINIMIZE" to "minimizeFromTile()",
             "RESTORE" to "restoreFromTile()",
-            "SHOW" to "showFromTile()",
+            "SHOW" to "showFromTile(action)",
         )) {
             assertWithMessage("$action must reach the running service")
                 .that(Regex("""KeyboardTileAction\.$action -> service\?\.${Regex.escape(call)}""").containsMatchIn(onClick))
                 .isTrue()
         }
+        // The two shade-recovery shows share the deferred show with SHOW (device report
+        // 2026-10-20: the shade hides the keyboard before the tap).
+        assertWithMessage("SHOW_MINIMIZED and SHOW_RESTORED take the deferred show path")
+            .that(Regex("""KeyboardTileAction\.SHOW_MINIMIZED,\s*KeyboardTileAction\.SHOW_RESTORED,\s*KeyboardTileAction\.SHOW -> """)
+                .containsMatchIn(onClick))
+            .isTrue()
         assertWithMessage("the service is reached through its lifecycle-cleared instance, never cached")
             .that(onClick).contains("CleverKeysService.getInstance()")
         assertWithMessage("a keyboard action must never start an activity: that steals the editor's focus")

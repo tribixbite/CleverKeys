@@ -22,31 +22,54 @@ Two catalogue commands (Events category), assignable to any short swipe, popover
 ## Quick Settings tile (2026-10-20)
 
 `KeyboardTileService` toggles the keyboard instead of always opening the picker. The decision
-is the pure `KeyboardTileDecision.actionFor(isCurrentIme, windowState)`:
+is the pure `KeyboardTileDecision.actionFor(isCurrentIme, CleverKeysService.tileSnapshot())`.
 
-| CleverKeys selected? | window (`CleverKeysService.tileWindowState`) | tap | subtitle (API 29+) |
+**The shade hides the keyboard first.** On the Saga (Android 14) expanding the shade alone hides
+the IME (`mInputShown=false`, `mWindowVisible=false`) and it does not come back after the shade
+collapses, so a real tap always finds the keyboard hidden; `requestShowSelf` is ignored while the
+shade holds focus (device report, 2026-10-20). The service therefore remembers the form the
+window had when it was last hidden (`_formAtFinishView`, captured in `onFinishInputView` before
+the minimizer reset, recorded in `onWindowHidden`) and the hide time, and a tap acts on that
+form when the hide is recent.
+
+| CleverKeys selected? | window | tap | subtitle (API 29+) |
 |---|---|---|---|
-| no | any | input-method picker | Switch keyboard |
-| yes | full keyboard shown | minimize, to `KeyboardMinimizer.lastStyle` (FAB until a minimize command picks a style) | Minimize |
-| yes | minimized | `expand()` | Restore |
-| yes | hidden, input started with a live connection | `requestShowSelf(0)` (API 28+) / `showSoftInputFromInputMethod(token, 0)` | Show |
-| yes | hidden, no editor; or service not running | input-method picker | Switch keyboard |
+| no, or service not running | any | input-method picker | Switch keyboard |
+| yes | visible, full | minimize, to `KeyboardMinimizer.lastStyle` (FAB until a minimize command picks a style) | Minimize |
+| yes | visible, minimized | `expand()` | Restore |
+| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), was full | deferred show, landing minimized | Minimize |
+| yes | hidden ≤ 10 s ago, was minimized | deferred show, landing full | Restore |
+| yes | hidden longer, editor bound | deferred show, landing full | Show |
+| yes | hidden longer, no editor | input-method picker | Switch keyboard |
 
-- **No editor:** an IME can only show itself for a focused client; the system ignores the
-  request otherwise. The picker is kept as the useful fallback; a Toast would sit under the
-  open shade. The subtitle names the picker before the tap.
+The recent-hide rows do not require the editor binding: whether the shade unbinds the app's
+editor varies by device, and the show is retried until the app has focus again.
+
+**Deferred show** (`TileShowSession`, pure; driven by the service on its main `Handler`):
+- the tap arms a target (full / minimized + style) bound to the editor's package, and the
+  service calls `requestShowSelf(0)` (API 28+; `showSoftInputFromInputMethod(token, 0)` below)
+  at once and then every 250 ms for up to 8 s;
+- `onWindowShown` stops the loop and applies the target once (`minimizeKeyboard(style)` or
+  `expand()`), so the user lands in the requested form after the shade collapses;
+- cancelled by `onStartInput` for another package, a hardware key (`onKeyDown`), a tile tap
+  acting on a visible keyboard, the deadline, and `onDestroy` (which also removes the callback).
+  The first show inside the window counts as the requested one: `requestShowSelf` is
+  asynchronous with no token, so a show the user triggers by tapping the same app's field in
+  those seconds lands in the form the tile asked for.
+
+- **No editor:** an IME can only show itself for a focused client. The picker is kept as the
+  useful fallback; a Toast would sit under the open shade. The subtitle names it before the tap.
 - **Shade stays open.** `startActivityAndCollapse` and `showDialog` collapse it but take window
   focus from the app, so its editor loses the keyboard. `StatusBarManager.collapsePanels` is
   hidden API with `EXPAND_STATUS_BAR` and is blocked for apps targeting Android 12+. The tile
-  re-reads its state 300 ms and 1 s after a tap, so the subtitle confirms the change.
+  re-reads its state 300 ms and 1 s after a tap.
 - **Lifecycle:** the tile reaches the service through `CleverKeysService.getInstance()`, set in
   `onCreate` and cleared in `onDestroy`; the tile keeps no reference between callbacks.
-- Tests: `KeyboardTileActionTest` (pure, every branch, strings in all locales),
-  `KeyboardTileServiceTest` (mock, source-level `onClick` routing), `KeyboardMinimizerTest`
-  (`lastStyle`).
-- Device check owed: whether the IME window stays shown while the shade is expanded on each
-  test phone (the shade window can take focus), and that Show works from a field whose keyboard
-  was dismissed with Back.
+- Tests: `KeyboardTileActionTest` (pure: every decision branch, the session state machine,
+  strings in all locales), `KeyboardTileServiceTest` (mock, source-level `onClick` routing),
+  `KeyboardMinimizerTest` (`lastStyle`).
+- Device check owed: the shade flow (`cmd statusbar expand-settings` → `click-tile` →
+  `collapse`) for full, minimized and Back-dismissed keyboards.
 
 ## Architecture
 
