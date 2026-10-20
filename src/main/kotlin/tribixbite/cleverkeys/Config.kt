@@ -577,7 +577,7 @@ object SettingsRanges {
 
     /**
      * Clipboard pane height, percent of the keyboard area (`clipboard_pane_height_percent`).
-     * Slider, Config read + setter, settings state and backup validation (audit M8; the key
+     * Slider, Config read clamp, settings state and backup validation (audit M8; the key
      * was missing from validation, so any imported int was accepted and then clamped).
      */
     val CLIPBOARD_PANE_HEIGHT_PERCENT: IntRange = 10..50
