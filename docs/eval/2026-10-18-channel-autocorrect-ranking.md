@@ -581,3 +581,31 @@ missing letter (`onl` → only, `bdy` → body, `ith` → with). Deleting onto a
 `in`/`to`/`it`). A language-scoped δ (on for Hebrew-script packs, 0 elsewhere) is the evident
 next design. It would be its own pre-registration, and HE-adj2-TEST has now been seen. The
 setting remains available (default 0).
+
+## 11. Round 4 pre-registration: δ scoped to Hebrew script (written before any round-4 outcome)
+
+Motivation: §10. δ is right for Hebrew (one-letter prefixes) and wrong for English (extra-letter
+slips around two-letter words). Rule C4 applies δ **only when the typed word is in Hebrew script**
+(every letter in U+05D0–U+05EA, final forms included). Everything else stays at the shipped C2.
+The value is **δ = 0.5**, carried from round 3 (the smallest value with the full effect on
+HE-adj2-DEV). Nothing is tuned in this round, so there is no DEV phase. Scope is a new setting
+(`autocorrect_channel_short_deletion_scope`: `hebrew` | `all`). Shipping default if this passes:
+scope `hebrew`, δ 0.5.
+
+Arabic has the same attached one-letter prefixes (و، ب، ل، ف). It is **not** in scope, because no
+Arabic evaluation exists. It is noted as a TODO in the code.
+
+Data: **HE-adj3 (fresh)**: every single `hebr_1_il`-neighbour substitution of Hebrew pack words
+ranked **2,501–6,000**, under the same construction as HE-adj2. It is disjoint from HE-adj
+(1–500) and HE-adj2 (501–2,500), and has never been evaluated. Baseline = shipped C2.
+
+Gate (all must hold):
+
+- **Q1.** HE-adj3 distinct net > 0, and distinct breaks ≤ 0.25 × distinct fixes.
+- **Q2.** The 12 Hebrew named cases and all English named cases hold.
+- **Q3. English invariance.** On every distinct GTC-TEST input and 20,000 seeded S-adj-TEST
+  inputs, the output under rule C4 equals the shipped C2 output exactly (0 differences). This
+  holds by construction, and the check proves the wiring.
+
+If all three hold, scope `hebrew` with δ 0.5 becomes the shipped default. Otherwise δ stays 0.
+These thresholds are fixed now.
