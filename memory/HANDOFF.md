@@ -1,4 +1,30 @@
-# HANDOFF — updated 2026-10-18 (body last reconciled 2026-09-01)
+# HANDOFF — updated 2026-10-20 (body last reconciled 2026-09-01)
+
+**2026-10-20 pointer.** Local `main` is ~45 commits ahead of origin/main (`a40ce7d0`), NOT
+pushed (pushes need the maintainer's word this round). New since 10-18, all on local main:
+- **Autocorrect ranking is now the noisy-channel rule** (default since `353003c6`; weights from
+  pre-registered rounds 1–5, `docs/eval/2026-10-18-channel-autocorrect-ranking.md`): shipped
+  s₁ 2 · g 1.5 · g₂ 1.0 · τ 1.2 · λ 0.005 · β 0.25 · γ 1 · Hebrew-scoped δ 0.5 · κ 3.0. Every
+  weight is a setting (Auto-Correction → Ranking & Tuning; `autocorrect/AutocorrectTuning.kt`
+  `Keys` is the single key/default/range definition). The band ranking stays selectable. All
+  four corpora's DEV/TEST halves and the three Hebrew rank bands are now SEEN; any further
+  round needs fresh data. Verified: pure/mock/full instrumented (1,606, API 34) green at
+  `4d1e8c10`; Saga device typing pass `build/oct20b-saga/`.
+- **Foldable inner-screen height** (`a6f870d6`, spec `docs/specs/foldable-keyboard-height.md`):
+  an unset inner-screen height follows the outer one; two new Appearance sliders. Not yet
+  device-checked (no foldable test phone; disabled-state rendering pending).
+- `#99` CSV word lists (`b5772e87`).
+- **In flight on agent branches** (worktrees under `.claude/worktrees/`, to be merged into
+  main by the coordinating session): #154 system-haptics option + #139 Enter-always-newline,
+  #190 follow-finger backspace swipe, #187 below-accent dead keys, #147/#87 short-swipes-only
+  mode, swipe typing inside the clipboard editor / inline fields, QS tile toggles
+  show/minimize. A read-only code-quality audit (duplication, divergent defaults) reports to
+  the scratchpad. If a session ends mid-merge: `git worktree list`, merge each
+  `worktree-agent-*` branch that has commits (`git log main..<branch>`), run the full suites.
+- GitHub reconciliation (read-only audit of all 64 issues + 6 PRs, 2026-10-20) is summarised in
+  `docs/audit/gh-issue-resolution.md` "2026-10-20 reconciliation".
+- Devices: home Wi-Fi only (the phone was on Android Auto Wi-Fi mid-day 10-20). Maintainer:
+  leave CleverKeys as the DEFAULT keyboard on test phones; any phone but the Seeker (PIN lock).
 
 **2026-10-18 pointer.** HEAD `05a36547` plus the docs commit that follows it is pushed and equals
 origin/main; pushes are authorized (2026-10-07), tag/version bump/release/GitHub posts are not.

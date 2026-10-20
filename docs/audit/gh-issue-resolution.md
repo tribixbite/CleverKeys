@@ -11,6 +11,53 @@ authorized 2026-10-07), still untagged; device results of 2026-10-07/08 are fold
 #186/#61, #181 and #175 rows. **Nothing has been posted to GitHub.** Closing and
 commenting are the maintainer's job. The "GH action" column is only a recommendation.
 
+## 2026-10-20 reconciliation (read-only audit of all 64 open issues + 6 PRs at `0cd1d1cd`)
+
+An independent read-only pass checked every open issue and PR against the code, not against
+this document (no GitHub action taken; nothing posted). Classification:
+**close-ready 35** (#26 #31 #35 #49 #58 #61 #67 #68 #71 #75 #77 #90 #93 #94 #96 #111 #130 #134
+#135 #141 #145 #146 #148 #149 #151 #152 #160 #161 #168 #169 #171 #179 #186 #188, PR #164) ·
+**by-design / not-repro 2** (#83 #162) · **maintainer decision 10** (#52 #70 #72 #101 #184,
+PRs #189 #185 #183 #182 #173) · **needs reporter 1** (#79) · **partial 10** (#80 #88 #97 #99
+#139 #154 #156 #167 #175 #181) · **not done 12** (#69 #84 #87 #115 #120 #121 #147 #163 #165
+#177 #187 #190).
+
+Work done since then (local main, unreleased; rows below updated as each branch merges):
+- **#99** — `build_dictionary.py` now parses `word,frequency`; README/wiki state every
+  word-list format and that `--input` is a word list, not prose (`b5772e87`). Close-ready.
+- **#115** — partial: foldable inner-screen keyboard height (`a6f870d6`), which also fixes the
+  emailed "height resets to default on the inner screen" report. Floating/split keyboard is
+  still not built.
+- **Autocorrect (#101 commenters)** — the noisy-channel ranking is the default (`353003c6`,
+  κ `4d1e8c10`): GitHub-typo accuracy 54 % → 79 % on held-out data; relevant to #101's
+  complaints.
+- **In progress on agent branches:** #154 (system-haptics option), #139 (Enter always newline),
+  #190 (follow-finger backspace swipe), #187 (below-accent dead keys), #147/#87 (short-swipes
+  only).
+
+Corrections to this document found by the audit (apply when closing):
+- **#154** was listed DONE, but the reporter's "system default" option did not exist and a
+  touched duration slider could not be undone → PARTIAL until the branch above merges.
+- **#99** was RESOLVED while README promised a CSV format the loader rejected → fixed now.
+- **#175**: batch selection IS built (Select mode, select all matching, Delete selected); still
+  missing: summon-after-hide, swipe-to-delete, toolbar, edit pane. The reporter's function-key
+  swipe follow-up was fixed in `9c3fb179`.
+- **#184** is a maintainer scope call (oversized packs refused by design), not a fixed bug.
+- **#151**: the partial-word fix `736e4eee` IS in v1.5.0; only the trailing-space fix
+  `9c8f5827` is unreleased.
+- **#152**: `093b6d54` / `ea889ac5` are ew-cli run ids, not commits.
+- **#58**: the on-thread comment cites non-existent `be23db40` / `74580c22`; the real commits are
+  `bd8cbafe` / `0f711855`.
+- **#162**: the earlier on-thread advice ("lower = higher, set 100") contradicts the current
+  1..255 higher-is-stronger frequency (`UserWordFrequency.kt`); correct it when closing.
+- **#167**: the autofill-chip-does-nothing half was never investigated; it needs a device with
+  a password manager (Bitwarden/KeePassDX, API 30+).
+- **#164**: superseded AND no longer compiles (`NeuralLayoutBridge` deleted).
+- **#185** is 14 major action bumps, not routine.
+- **#190** had no row; **#188**'s fix `97d6c25f` does not mention #188 in its message.
+- Persian: `arab_pc_ir.xml` (Persian PC) exists; only the `fa` language pack is missing.
+- Full per-item evidence: the audit report (session scratchpad `gh/audit.md`), summarised here.
+
 Statuses: **DONE** (the ask is shipped on main; close candidate) · **FIXED** (bug fixed on main,
 fail-first-tested) · **PINNED** (was already fixed; regression test added) · **PARTIAL** (part
 of the ask is shipped; the residual is named) · **IN PROGRESS** (being built now) ·
