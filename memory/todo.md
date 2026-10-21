@@ -38,8 +38,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    only `ecx`, no `except`, nothing deleted PASS; `hel` + tap `help` → `help ` PASS. STILL TO
    RUN with a release ≥ `fd3eec40`: D2 again — after toolbar CTRL + `c` and `bar`, no
    `+foocbar` chip and no add prompt on space, nothing deleted.
-2. [ ] agent → device: Persian half of #186/#61. No `fa` language pack and no Persian layout
-   exist (checked 2026-10-12), so the device check cannot run: build the pack first
+2. [ ] agent → device: Persian half of #186/#61. No `fa` language pack exists. (Correction
+   2026-10-21: a Persian layout DOES exist, `srcs/layouts/arab_pc_ir.xml` "Persian PC", but it
+   has no ZWNJ/half-space key.) Findings 2026-10-21 for the pack: `wordfreq` has `fa` (31,317
+   words), 2,395 of them ZWNJ compounds (`می‌شود`, `آن‌ها`) beside informal unspaced forms
+   (`میکنم`, `میخوام`), plus a bare-ZWNJ token to drop. NEEDS MAINTAINER DECISIONS before
+   building: keep ZWNJ compounds as single words (needs a script gate that allows U+200C
+   inside a word, and a ZWNJ key on the layout to type them) or fold them; whether unspaced
+   `میشود` should autocorrect to `می‌شود`; Arabic ي/ك → Persian ی/ک normalisation. Then build
    (`build_wordlist.py` LANG_CONFIG entry + layout XML + `build_langpack.py`;
    `docs/guides/adding-a-new-language.md`, `.claude/skills/dictionary-pipeline.md`), then on a
    phone: a custom layout bound to `fa` with the pack imported ("Language: Persian" bar, a
