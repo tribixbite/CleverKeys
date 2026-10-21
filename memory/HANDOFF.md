@@ -1,5 +1,13 @@
 # HANDOFF — updated 2026-10-20 (body last reconciled 2026-09-01)
 
+**2026-10-21 pointer.** Everything through `a05ce50f` is PUSHED (maintainer authorized pushes
+2026-10-21); CI green at `fd7a4155` including the Security Scan (vite CVE fixed in `5bdf60ad`).
+New: #175 clipboard swipe-to-delete with a 5 s Undo (`2787468d`, History tab device-checked);
+Short-Swipe Reset-all label redraw (`9c909048`); prefix-length eval (todo 16, default 0 stays);
+Termux D2 / Termux undo / Compose-field editor commands device-checked (todo 1, 5, 7). Lesson:
+IME-side InputConnection results are IPC success, never the editor's answer (CLAUDE.md).
+Waiting on the maintainer: Persian pack decisions (todo 2), prefix setting wording (todo 16).
+
 **2026-10-20 pointer.** Local `main` is 79 commits ahead (at `3e863819`) of origin/main (`a40ce7d0`), NOT
 pushed (pushes need the maintainer's word this round). New since 10-18, all on local main:
 - **Autocorrect ranking is now the noisy-channel rule** (default since `353003c6`; weights from
