@@ -66,8 +66,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    Compose field DONE 2026-10-21 (Saga 202, CleverKeys settings search, temporary `g` mappings
    reset afterwards, `build/oct21-saga/`): undo/redo reach Compose's own history (its steps merge
    edits made within a few seconds, so one undo can span several edits — Compose behaviour).
-   STILL OPEN: Termux shows "Action unavailable" for undo; Ctrl+C on a PRIVATE entry asks
-   before copying.
+   Termux undo PASS 2026-10-21 (second Saga, default `undo` extra key on `z` SE): the bar shows
+   "Action unavailable in this editor or panel" and no Ctrl+Z reaches the shell
+   (`build/oct21-saga144/09.png`). STILL OPEN: Ctrl+C on a PRIVATE entry asks before copying.
 6. [ ] device + maintainer: blind-field checks with RustDesk installed on a Saga (F-Droid/GitHub
    APK `com.carriez.flutter_hbb`) controlling any reachable desktop — typed text, `teh`+space
    stays `teh`, a tapped suggestion appends (never deletes), Backspace after a swipe removes
