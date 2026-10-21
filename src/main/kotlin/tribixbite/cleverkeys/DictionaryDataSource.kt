@@ -67,10 +67,11 @@ class MainDictionarySource(
     override suspend fun getAllWords(): List<DictionaryWord> = withContext(Dispatchers.IO) {
         Log.d(TAG, "getAllWords() called for language: $languageCode")
 
-        // Return cached if available (instance-level fast path)
-        if (cachedWords != null) {
-            Log.d(TAG, "Returning ${cachedWords!!.size} cached words for $languageCode")
-            return@withContext cachedWords!!
+        // Return cached if available (instance-level fast path). Read once: `cachedWords` is a
+        // plain var that a concurrent load on another IO thread may replace.
+        cachedWords?.let { cached ->
+            Log.d(TAG, "Returning ${cached.size} cached words for $languageCode")
+            return@withContext cached
         }
 
         // Double-check shared cache: another fragment for this language may have
@@ -103,9 +104,10 @@ class MainDictionarySource(
                         val loaded = loadBinaryDictionaryFromFile(packPath, words, disabled)
                         if (loaded) {
                             Log.d(TAG, "Loaded ${words.size} words from language pack: $languageCode")
-                            cachedWords = words.sorted()
-                            buildPrefixIndex(cachedWords!!)
-                            return@withContext cachedWords!!
+                            val sorted = words.sorted()
+                            cachedWords = sorted
+                            buildPrefixIndex(sorted)
+                            return@withContext sorted
                         }
                     }
                 } catch (e: Exception) {
@@ -118,9 +120,10 @@ class MainDictionarySource(
                     val loaded = loadBinaryDictionary(binFilename, words, disabled)
                     if (loaded) {
                         Log.d(TAG, "Loaded ${words.size} words from bundled binary dictionary: $binFilename")
-                        cachedWords = words.sorted()
-                        buildPrefixIndex(cachedWords!!)
-                        return@withContext cachedWords!!
+                        val sorted = words.sorted()
+                        cachedWords = sorted
+                        buildPrefixIndex(sorted)
+                        return@withContext sorted
                     }
                 } catch (e: Exception) {
                     Log.w(TAG, "Binary dictionary not found for $languageCode, trying JSON/TXT fallback")
@@ -159,12 +162,13 @@ class MainDictionarySource(
                 return@withContext emptyList()
             }
 
-            cachedWords = words.sorted()
+            val sorted = words.sorted()
+            cachedWords = sorted
 
             // Build prefix index for fast search
-            buildPrefixIndex(cachedWords!!)
+            buildPrefixIndex(sorted)
 
-            cachedWords!!
+            sorted
         } catch (e: Exception) {
             Log.e(TAG, "Error loading main dictionary", e)
             emptyList()

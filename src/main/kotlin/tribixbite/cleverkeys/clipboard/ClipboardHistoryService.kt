@@ -1249,15 +1249,16 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         @JvmStatic
         fun set_history_enabled(e: Boolean) {
             Config.globalConfig().set_clipboard_history_enabled(e)
-            if (_service == null) return
+            // Read the @Volatile singleton once: the check and every use see the same instance.
+            val service = _service ?: return
 
             if (e) {
                 // Re-enable: rescue stale entries if "never expire" is set, then re-register
                 if (getHistoryTtlMs() == Long.MAX_VALUE) {
-                    _service!!._database.rescueExpiredEntries()
+                    service._database.rescueExpiredEntries()
                 }
-                _service!!.addCurrentClip()
-                _service!!.registerClipboardListener()
+                service.addCurrentClip()
+                service.registerClipboardListener()
             }
             // NOTE: When disabling, we DO NOT clear history data
             // This preserves user data and allows re-enabling without data loss
@@ -1267,8 +1268,10 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         /** Send the given string to the editor (text entries). */
         @JvmStatic
         fun paste(clip: String) {
-            if (_service != null && _service!!._pasteCallback != null)
-                _service!!._pasteCallback!!.paste_from_clipboard_pane(clip)
+            // Same read-once idiom as pasteMedia: the callback is replaced on every IME re-init.
+            val cb = _service?._pasteCallback
+            if (cb != null)
+                cb.paste_from_clipboard_pane(clip)
             else
                 android.util.Log.w("ClipboardHistory", "Cannot paste - callback not initialized")
         }
@@ -1292,12 +1295,12 @@ class ClipboardHistoryService private constructor(ctx: Context) {
          */
         @JvmStatic
         fun onDurationSettingChanged() {
-            if (_service == null) return
+            val service = _service ?: return
             // Re-read fresh config from SharedPreferences
             Config.globalConfig().reloadClipboardDuration()
             val ttlMs = getHistoryTtlMs()
             if (ttlMs == Long.MAX_VALUE) {
-                _service!!._database.rescueExpiredEntries()
+                service._database.rescueExpiredEntries()
             }
         }
 

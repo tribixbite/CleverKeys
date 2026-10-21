@@ -227,7 +227,11 @@ fun CommandPaletteDialog(
     // before the palette it opened UNDER it — invisible, so picking another command looked
     // like it did nothing (Saga, 2026-10-07).
     // Show label confirmation dialog when pending selection exists
-    if (pendingCommand != null || pendingText != null || pendingIntentDef != null || pendingTimestampPattern != null) {
+    // Read the two `by mutableStateOf` selections once into locals: delegated state cannot be
+    // smart-cast, and every branch below must see the same value its null check saw (audit L9).
+    val textSelection = pendingText
+    val timestampSelection = pendingTimestampPattern
+    if (pendingCommand != null || textSelection != null || pendingIntentDef != null || timestampSelection != null) {
         // Get display info for commands (includes icon and font flag)
         val commandDisplayInfo = pendingCommand?.let {
             CommandRegistry.getDisplayInfo(it.name)
@@ -244,29 +248,32 @@ fun CommandPaletteDialog(
             }.getOrNull()
         }
 
+        // The label a selection gets unless the user types one (null: nothing selected).
+        val defaultLabel: String? = when {
+            pendingCommand != null -> commandDisplayInfo?.displayText ?: commandText.string(pendingCommand.nameRes).take(4)
+            textSelection != null -> textSelection.take(4)
+            pendingIntentDef != null -> pendingIntentDef.name.take(4)
+            timestampSelection != null -> (timestampPreview ?: timestampSelection).take(4)
+            else -> null
+        }
+
         LabelConfirmationDialog(
-            defaultLabel = when {
-                pendingCommand != null -> commandDisplayInfo?.displayText ?: commandText.string(pendingCommand!!.nameRes).take(4)
-                pendingText != null -> pendingText!!.take(4)
-                pendingIntentDef != null -> pendingIntentDef!!.name.take(4)
-                pendingTimestampPattern != null -> (timestampPreview ?: pendingTimestampPattern!!).take(4)
-                else -> ""
-            },
+            defaultLabel = defaultLabel ?: "",
             actionDescription = when {
                 pendingCommand != null -> stringResource(
-                    R.string.command_palette_action_command, stringResource(pendingCommand!!.nameRes)
+                    R.string.command_palette_action_command, stringResource(pendingCommand.nameRes)
                 )
-                pendingText != null -> stringResource(
+                textSelection != null -> stringResource(
                     R.string.command_palette_action_text,
-                    pendingText!!.take(TEXT_PREVIEW_CHARS) +
-                        if (pendingText!!.length > TEXT_PREVIEW_CHARS) "..." else ""
+                    textSelection.take(TEXT_PREVIEW_CHARS) +
+                        if (textSelection.length > TEXT_PREVIEW_CHARS) "..." else ""
                 )
                 pendingIntentDef != null -> stringResource(
-                    R.string.command_palette_action_intent, pendingIntentDef!!.name
+                    R.string.command_palette_action_intent, pendingIntentDef.name
                 )
-                pendingTimestampPattern != null -> stringResource(
+                timestampSelection != null -> stringResource(
                     R.string.command_palette_action_timestamp,
-                    pendingTimestampPattern!!,
+                    timestampSelection,
                     timestampPreview ?: UNKNOWN_PREVIEW
                 )
                 else -> ""
@@ -276,15 +283,7 @@ fun CommandPaletteDialog(
             iconPreviewText = if (isIconMode) pendingCommand?.let { stringResource(it.nameRes) } else null,
             onLabelChange = { customLabel = it },
             onConfirm = {
-                val label = customLabel.ifBlank {
-                    when {
-                        pendingCommand != null -> commandDisplayInfo?.displayText ?: commandText.string(pendingCommand!!.nameRes).take(4)
-                        pendingText != null -> pendingText!!.take(4)
-                        pendingIntentDef != null -> pendingIntentDef!!.name.take(4)
-                        pendingTimestampPattern != null -> (timestampPreview ?: pendingTimestampPattern!!).take(4)
-                        else -> "?"
-                    }
-                }
+                val label = customLabel.ifBlank { defaultLabel ?: "?" }
 
                 // Determine if we should use the icon font:
                 // - If user customized the label, don't use icon font (they typed text)
@@ -295,13 +294,13 @@ fun CommandPaletteDialog(
                     pendingCommand != null -> MappingSelection(
                         displayLabel = label,
                         actionType = ActionType.COMMAND,
-                        actionValue = pendingCommand!!.name,
+                        actionValue = pendingCommand.name,
                         useKeyFont = useIconFont
                     )
-                    pendingText != null -> MappingSelection(
+                    textSelection != null -> MappingSelection(
                         displayLabel = label,
                         actionType = if (templateMode) ActionType.TEMPLATE else ActionType.TEXT,
-                        actionValue = pendingText!!,
+                        actionValue = textSelection,
                         useKeyFont = false  // Text input never uses icon font
                     )
                     pendingIntentDef != null -> MappingSelection(
@@ -310,10 +309,10 @@ fun CommandPaletteDialog(
                         actionValue = intentJson.toJson(pendingIntentDef),
                         useKeyFont = false
                     )
-                    pendingTimestampPattern != null -> MappingSelection(
+                    timestampSelection != null -> MappingSelection(
                         displayLabel = label,
                         actionType = ActionType.TIMESTAMP,
-                        actionValue = pendingTimestampPattern!!,
+                        actionValue = timestampSelection,
                         useKeyFont = false
                     )
                     else -> null
