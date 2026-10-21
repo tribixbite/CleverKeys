@@ -1422,9 +1422,7 @@ class WordPredictor : Predictor {
         // No config yet: fall back to the preferences the active value is resolved from.
         val ctx = context ?: return null
         return try {
-            val prefs = DirectBootAwarePreferences.get_shared_preferences(ctx)
-            if (!prefs.getBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)) return null
-            prefs.getString("pref_secondary_language", Defaults.SECONDARY_LANGUAGE)?.takeIf { it.isNotEmpty() && it != LanguageDisplayNames.NONE }
+            LanguagePrefs.userLanguages(DirectBootAwarePreferences.get_shared_preferences(ctx)).secondary
         } catch (e: Exception) {
             // Unreadable prefs: cannot rule out a secondary language — report one so the
             // scheduler defers rather than judging a possibly-bilingual store monolingually.

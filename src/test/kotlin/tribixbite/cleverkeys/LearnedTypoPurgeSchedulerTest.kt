@@ -200,6 +200,7 @@ class LearnedTypoPurgeSchedulerTest {
         assertTrue(src.contains("typoPurgeScheduler().onPrimaryPublished("))
         // Both secondary publication paths (async + blocking) and the unload re-evaluate.
         assertEquals(3, Regex("""notifySecondaryLexiconChanged\(\)""").findAll(src).count() - 1)
-        assertTrue(src.contains("\"pref_enable_multilang\""))
+        // The configured-secondary fallback reads the shared resolver (audit L6), not raw keys.
+        assertTrue(src.contains("LanguagePrefs.userLanguages("))
     }
 }

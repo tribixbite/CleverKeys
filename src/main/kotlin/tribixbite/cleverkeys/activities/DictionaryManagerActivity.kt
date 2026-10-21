@@ -138,14 +138,15 @@ class DictionaryManagerActivity : AppCompatActivity() {
      */
     private fun loadLanguagePreferences() {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        primaryLanguage = prefs.getString("pref_primary_language", Defaults.PRIMARY_LANGUAGE) ?: Defaults.PRIMARY_LANGUAGE
-        multiLangEnabled = prefs.getBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
-        secondaryLanguage = if (multiLangEnabled) {
-            val secondary = prefs.getString("pref_secondary_language", Defaults.SECONDARY_LANGUAGE) ?: Defaults.SECONDARY_LANGUAGE
-            if (secondary != LanguageDisplayNames.NONE) secondary else null
-        } else {
-            null
-        }
+        // The user's choice, as Settings shows it (the shared rule, audit L6).
+        // TODO: a layout bound to a language (GH #186/#61) gets no tab of its own here, so its
+        //  personal dictionary is reachable only by choosing that language in Multi-Language. The
+        //  bindings live in the IME's Config, which this Settings-process activity may not have;
+        //  surfacing them needs LayoutLanguageBinding read from the `layouts` preference here.
+        val languages = LanguagePrefs.userLanguages(prefs)
+        primaryLanguage = languages.primary
+        multiLangEnabled = Config.safeGetBoolean(prefs, LanguagePrefs.MULTILANG, Defaults.ENABLE_MULTILANG)
+        secondaryLanguage = languages.secondary
 
         android.util.Log.d(TAG, "Language prefs: primary=$primaryLanguage, secondary=$secondaryLanguage, multilang=$multiLangEnabled")
     }
@@ -534,15 +535,8 @@ class DictionaryManagerActivity : AppCompatActivity() {
         )
 
         // Check if languages changed while we were paused
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        val currentPrimary = prefs.getString("pref_primary_language", Defaults.PRIMARY_LANGUAGE) ?: Defaults.PRIMARY_LANGUAGE
-        val multiLang = prefs.getBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
-        val currentSecondary = if (multiLang) {
-            val sec = prefs.getString("pref_secondary_language", Defaults.SECONDARY_LANGUAGE) ?: Defaults.SECONDARY_LANGUAGE
-            if (sec != LanguageDisplayNames.NONE) sec else null
-        } else null
-
-        if (currentPrimary != primaryLanguage || currentSecondary != secondaryLanguage) {
+        val current = LanguagePrefs.userLanguages(DirectBootAwarePreferences.get_shared_preferences(this))
+        if (current.primary != primaryLanguage || current.secondary != secondaryLanguage) {
             rebuildTabsForLanguageChange()
         }
     }
