@@ -598,10 +598,26 @@ class KeyEventHandler(
         conn.endBatchEdit()
     }
 
-    /** See {!InputConnection.performContextMenuAction}. */
-    private fun sendContextMenuAction(id: Int) {
-        val conn = recv.getCurrentInputConnection() ?: return
-        conn.performContextMenuAction(id)
+    /**
+     * See {!InputConnection.performContextMenuAction}. True when the editor took the action;
+     * false when there is no connection or the editor refused it.
+     */
+    private fun sendContextMenuAction(id: Int): Boolean {
+        val conn = recv.getCurrentInputConnection() ?: return false
+        return conn.performContextMenuAction(id)
+    }
+
+    /**
+     * For a command whose ONLY effect is the editor's own menu action (Replace popup, Autofill):
+     * report a refusal instead of doing nothing. Compose's StatelessInputConnection and
+     * Chrome's ImeAdapterImpl return false for a context-menu id they do not implement; on the
+     * Saga the Replace command was a silent no-op in a Compose field (2026-10-21).
+     */
+    private fun sendEditorMenuAction(id: Int) {
+        if (recv.getCurrentInputConnection() == null) return
+        if (!sendContextMenuAction(id)) {
+            recv.getContext()?.let { recv.showPrivateCopyFeedback(it.getString(R.string.dynamic_action_unavailable)) }
+        }
     }
 
     /**
@@ -937,8 +953,8 @@ class KeyEventHandler(
             // The editor's own replace action, no chooser and no selection precondition: stock
             // EditText shows its suggestion popup (spelling fixes, our SuggestionSpan swipe
             // alternatives) for the word at the cursor (maintainer decision 2026-10-13).
-            KeyValue.Editing.REPLACE_MENU -> sendContextMenuAction(android.R.id.replaceText)
-            KeyValue.Editing.AUTOFILL -> sendContextMenuAction(android.R.id.autofill)
+            KeyValue.Editing.REPLACE_MENU -> sendEditorMenuAction(android.R.id.replaceText)
+            KeyValue.Editing.AUTOFILL -> sendEditorMenuAction(android.R.id.autofill)
             KeyValue.Editing.DELETE_WORD -> send_key_down_up(
                 KeyEvent.KEYCODE_DEL,
                 KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
