@@ -233,7 +233,25 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `ba230070…`: Long Press Timeout taps landed on 450 / 750 ms, restored 600. Not re-run on
     instrumented after these two; border-radius readout not device-checked (needs Borders on).
     Not changed: `ThemeProvider.getBuiltInColorScheme("monet")` (the Theme Creator's seed
-    palette) is still the dark approximation. Leftover: the remaining LOW rows in the report.
+    palette) is still the dark approximation. **Remaining LOW rows FIXED 2026-10-21** (worktree
+    branch, not yet on main): L3 one recovery chain behind the four `safeGet*`, L4 sequential
+    `migrate` steps, L5 one dp→% margin table, L8 `get_dip_pref` logs, L10 comments, L11
+    parameter dropped, L13 `MarginPrefKeys` / `LanguagePrefs` / `SwipeEngineRouter.Mode.PREF_KEY`
+    (`39fea185`); L6 `LanguagePrefs.userLanguages` for Dictionary Manager and WordPredictor
+    (`6be16f9d`); L7 `swipe/UserLexiconInputs.read` (`90fa1685`); L2/L6/L7/L13 pinned by
+    `PrefKeySingleDefinitionDriftTest` (`76b7e242`); L9 read-once locals, `NullAssertionDriftTest`
+    (`6983eef0`); L14/L15 reader and ML cursors closed on failure (`94e96e05`); L16 device-protected
+    prefs cached per Context (`aec68f92`); L8 rest, helper/preview logs (`0b3bb5ac`). Fail-first:
+    `get_dip_pref` 0→2 warnings, ResourceClosingTest 7/7 red→green, DirectBootPrefsCacheTest
+    51→1 protected-context creations, NullAssertionDriftTest 3/3 red→green; L3/L4/L5
+    characterisation tests green before and after. Moot: L2 (the suffix `when` copies went with
+    H1's `KeyboardHeightPrefs.followOuter`), L5's 0..80 clamp (aligned in `ce79c881`), L10's
+    `SettingsValidation` "50" / `SettingsDefaults` "SettingsActivity" / KeyboardDimensionsHelper
+    KDoc items (already fixed). Found: KeyboardDimensionsHelper's two height methods have no
+    production caller (TODO in the class: delete like ARC-084/099); KeyboardPreviewView's
+    "jewel" fallback is unreachable while `globalConfig()` throws (TODO; changing it changes
+    the preview colours). Dictionary Manager shows no tab for a layout-bound language (TODO).
+    Pure 3,178 / mock 1,426 green at `0b3bb5ac`; not run on instrumented or a device.
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 15. [ ] maintainer: deferred review items — summon after system hide needs the overlay permission
