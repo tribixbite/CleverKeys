@@ -6,7 +6,13 @@ New: #175 clipboard swipe-to-delete with a 5 s Undo (`2787468d`, History tab dev
 Short-Swipe Reset-all label redraw (`9c909048`); prefix-length eval (todo 16, default 0 stays);
 Termux D2 / Termux undo / Compose-field editor commands device-checked (todo 1, 5, 7). Lesson:
 IME-side InputConnection results are IPC success, never the editor's answer (CLAUDE.md).
-Waiting on the maintainer: Persian pack decisions (todo 2), prefix setting wording (todo 16).
+Later on 10-21: audit LOW rows L2–L16 merged (`39fea185`…`e998f35d`, upgrade-install smoke on the
+Saga); Starting Letter wording shipped (`63b1731a`). The scheduled UI-test run hung on API 24
+(emulator, 1 h 42 min); cancelled, a 30-min job timeout added (`4c3673da`), manual re-run
+39607105887 green (API 24 in 2.5 min). That workflow runs on PRs, a 06:00 schedule and manual
+dispatch only — a push does not re-run it.
+Waiting on the maintainer: Persian half-space plan (todo 2, `docs/research/2026-10-21-persian-zwnj.md`),
+overlay-permission summon (todo 15), the string review (todo 10).
 
 **2026-10-20 pointer.** Local `main` is 79 commits ahead (at `3e863819`) of origin/main (`a40ce7d0`), NOT
 pushed (pushes need the maintainer's word this round). New since 10-18, all on local main:
