@@ -451,6 +451,10 @@
     <string name="clipboard_pinned_tab_desc">Mostrar aba fixada para salvar clipes importantes</string>
     <string name="clipboard_todo_tab_title">Aba To-do</string>
     <string name="clipboard_todo_tab_desc">Mostrar aba de tarefas para marcar clipes como tarefas</string>
+    <string name="clipboard_swipe_delete_title">Deslizar para excluir entradas da área de transferência</string>
+    <string name="clipboard_swipe_delete_desc">Deslize uma entrada para a esquerda ou para a direita para excluí-la da aba atual. É possível desfazer por %1$d segundos.</string>
+    <string name="clipboard_swipe_deleted">Excluído</string>
+    <string name="clipboard_swipe_undo">Desfazer</string>
     <string name="clipboard_private_copy_other_apps_title">Cópia privada em outros aplicativos</string>
     <string name="clipboard_private_copy_other_apps_desc">Adicionar "Cópia privada" aos menus de seleção de texto de outros aplicativos. Copia o texto selecionado apenas para o CleverKeys — nunca para a área de transferência do sistema. Ativar adiciona uma entrada de aplicativo que outros apps podem ver.</string>
     <string name="clipboard_sanitize_links_title">Sanitizar parâmetros de rastreamento</string>

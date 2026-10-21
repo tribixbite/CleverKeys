@@ -448,6 +448,10 @@
     <string name="clipboard_pinned_tab_desc">중요한 클립을 저장하기 위한 고정 탭을 표시합니다</string>
     <string name="clipboard_todo_tab_title">할 일 탭</string>
     <string name="clipboard_todo_tab_desc">클립을 작업으로 표시하기 위한 할 일 탭을 표시합니다</string>
+    <string name="clipboard_swipe_delete_title">스와이프하여 클립보드 항목 삭제</string>
+    <string name="clipboard_swipe_delete_desc">항목을 왼쪽이나 오른쪽으로 스와이프하면 현재 탭에서 삭제됩니다. %1$d초 동안 실행 취소할 수 있습니다.</string>
+    <string name="clipboard_swipe_deleted">삭제됨</string>
+    <string name="clipboard_swipe_undo">실행 취소</string>
     <string name="clipboard_private_copy_other_apps_title">다른 앱에서 개인 복사</string>
     <string name="clipboard_private_copy_other_apps_desc">다른 앱의 텍스트 선택 메뉴에 \"개인 복사\"를 추가합니다. 선택한 텍스트를 CleverKeys에만 복사하고 시스템 클립보드에는 저장하지 않습니다. 활성화하면 다른 앱에서 볼 수 있는 앱 항목이 추가됩니다.</string>
     <string name="clipboard_sanitize_links_title">추적 매개변수 제거</string>

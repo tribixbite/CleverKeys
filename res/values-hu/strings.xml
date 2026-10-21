@@ -455,6 +455,10 @@
     <string name="clipboard_pinned_tab_desc">Rögzített lap megjelenítése fontos kivágások mentéséhez</string>
     <string name="clipboard_todo_tab_title">Teendők lap</string>
     <string name="clipboard_todo_tab_desc">Teendők lap megjelenítése kivágások feladatként való megjelöléséhez</string>
+    <string name="clipboard_swipe_delete_title">Vágólap-bejegyzések törlése húzással</string>
+    <string name="clipboard_swipe_delete_desc">Húzzon el egy bejegyzést balra vagy jobbra, hogy törölje az aktuális lapról. %1$d másodpercig visszavonható.</string>
+    <string name="clipboard_swipe_deleted">Törölve</string>
+    <string name="clipboard_swipe_undo">Visszavonás</string>
     <string name="clipboard_private_copy_other_apps_title">Privát másolás más alkalmazásokban</string>
     <string name="clipboard_private_copy_other_apps_desc">\"Privát másolás\" hozzáadása más alkalmazások szövegkijelölési menüjéhez. A kijelölt szöveget csak a CleverKeys-be másolja — soha nem a rendszer vágólapjára. Az engedélyezés egy alkalmazásbejegyzést ad hozzá, amelyet más alkalmazások is láthatnak.</string>
     <string name="clipboard_sanitize_links_title">Nyomkövetési paraméterek eltávolítása</string>

@@ -674,6 +674,10 @@
     <string name="clipboard_pinned_tab_desc">Show pinned tab for saving important clips</string>
     <string name="clipboard_todo_tab_title">Todo Tab</string>
     <string name="clipboard_todo_tab_desc">Show todo tab for marking clips as tasks</string>
+    <string name="clipboard_swipe_delete_title">Swipe to delete clipboard entries</string>
+    <string name="clipboard_swipe_delete_desc">Swipe an entry left or right to delete it from the current tab. Undo is offered for %1$d seconds.</string>
+    <string name="clipboard_swipe_deleted">Deleted</string>
+    <string name="clipboard_swipe_undo">Undo</string>
     <string name="clipboard_private_copy_other_apps_title">Private copy in other apps</string>
     <string name="clipboard_private_copy_other_apps_desc">Add \"Private copy\" to other apps\' text-selection menus. Copies selected text into CleverKeys only — never the system clipboard. Enabling adds an app entry other apps can see.</string>
     <string name="clipboard_sanitize_links_title">Sanitize tracking parameters</string>

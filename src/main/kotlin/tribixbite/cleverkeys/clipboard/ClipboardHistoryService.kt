@@ -1342,3 +1342,21 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         fun setHistoryEnabled(e: Boolean) = set_history_enabled(e)
     }
 }
+
+/**
+ * Delete [clip] from [tab]'s own table only — what a row's delete does on that tab (the
+ * edit-mode / media delete button and GH #175(2) swipe-to-delete). Pinned and Todos are
+ * independent COPY tables, so the same text elsewhere stays; each path removes the media
+ * file once no table references it, and notifies the listener.
+ *
+ * An extension rather than a member on purpose: it is pure dispatch onto the three per-tab
+ * members, and as a static call it still reaches them on a mocked service, so tests keep
+ * verifying the real per-tab delete instead of a stubbed wrapper.
+ */
+fun ClipboardHistoryService.removeFromTab(tab: ClipboardTab, clip: String) {
+    when (tab) {
+        ClipboardTab.HISTORY -> removeHistoryEntry(clip)
+        ClipboardTab.PINNED -> unpinEntry(clip)
+        ClipboardTab.TODOS -> removeFromTodo(clip)
+    }
+}

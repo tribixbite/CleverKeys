@@ -464,6 +464,10 @@
     <string name="clipboard_pinned_tab_desc">Pokaż kartę przypiętych do zapisywania ważnych klipów</string>
     <string name="clipboard_todo_tab_title">Karta zadań</string>
     <string name="clipboard_todo_tab_desc">Pokaż kartę zadań do oznaczania klipów jako zadań</string>
+    <string name="clipboard_swipe_delete_title">Usuwanie wpisów schowka przesunięciem</string>
+    <string name="clipboard_swipe_delete_desc">Przesuń wpis w lewo lub w prawo, aby usunąć go z bieżącej karty. Cofnięcie jest możliwe przez %1$d sekund.</string>
+    <string name="clipboard_swipe_deleted">Usunięto</string>
+    <string name="clipboard_swipe_undo">Cofnij</string>
     <string name="clipboard_private_copy_other_apps_title">Prywatne kopiowanie w innych aplikacjach</string>
     <string name="clipboard_private_copy_other_apps_desc">Dodaj "Prywatna kopia" do menu zaznaczania tekstu w innych aplikacjach. Kopiuje zaznaczony tekst tylko do CleverKeys — nigdy do systemowego schowka. Włączenie dodaje wpis aplikacji widoczny dla innych aplikacji.</string>
     <string name="clipboard_sanitize_links_title">Usuń parametry śledzenia</string>

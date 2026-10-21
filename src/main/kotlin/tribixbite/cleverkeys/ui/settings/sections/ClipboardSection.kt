@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.ClipboardHistoryService
+import tribixbite.cleverkeys.clipboard.ClipboardPendingDeletion
 import tribixbite.cleverkeys.PrivateCopyProcessTextActivity
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
@@ -274,6 +275,20 @@ internal fun SettingsActivity.ClipboardSection() {
                     onCheckedChange = {
                         clipboardTodoEnabled = it
                         saveSetting("clipboard_todo_enabled", it)
+                    }
+                )
+
+                // GH #175(2): swipe a row left or right to delete it from its tab (5 s Undo).
+                SettingsSwitch(
+                    title = stringResource(R.string.clipboard_swipe_delete_title),
+                    description = stringResource(
+                        R.string.clipboard_swipe_delete_desc,
+                        (ClipboardPendingDeletion.UNDO_WINDOW_MS / 1000L).toInt()
+                    ),
+                    checked = clipboardSwipeDeleteEnabled,
+                    onCheckedChange = {
+                        clipboardSwipeDeleteEnabled = it
+                        saveSetting("clipboard_swipe_delete_enabled", it)
                     }
                 )
 

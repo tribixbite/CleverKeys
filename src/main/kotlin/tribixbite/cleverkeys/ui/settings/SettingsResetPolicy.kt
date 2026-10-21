@@ -147,6 +147,7 @@ object SettingsResetPolicy {
         put("clipboard_text_only", Defaults.CLIPBOARD_TEXT_ONLY)
         put("clipboard_pinned_enabled", Defaults.CLIPBOARD_PINNED_ENABLED)
         put("clipboard_todo_enabled", Defaults.CLIPBOARD_TODO_ENABLED)
+        put("clipboard_swipe_delete_enabled", Defaults.CLIPBOARD_SWIPE_DELETE_ENABLED)
 
         // Debug (off by default)
         put("debug_enabled", Defaults.DEBUG_ENABLED)

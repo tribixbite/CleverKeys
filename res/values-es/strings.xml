@@ -469,6 +469,10 @@
     <string name="clipboard_pinned_tab_desc">Muestra la pestaña anclada para guardar clips importantes</string>
     <string name="clipboard_todo_tab_title">Pestaña de tareas</string>
     <string name="clipboard_todo_tab_desc">Muestra la pestaña de tareas para marcar clips como tareas</string>
+    <string name="clipboard_swipe_delete_title">Deslizar para eliminar entradas del portapapeles</string>
+    <string name="clipboard_swipe_delete_desc">Desliza una entrada hacia la izquierda o la derecha para eliminarla de la pestaña actual. Se puede deshacer durante %1$d segundos.</string>
+    <string name="clipboard_swipe_deleted">Eliminado</string>
+    <string name="clipboard_swipe_undo">Deshacer</string>
     <string name="clipboard_private_copy_other_apps_title">Copia privada en otras apps</string>
     <string name="clipboard_private_copy_other_apps_desc">Añade \"Copia privada\" a los menús de selección de texto de otras apps. Copia el texto seleccionado solo en CleverKeys, nunca en el portapapeles del sistema. Al activarlo se añade una entrada de app que otras apps pueden ver.</string>
     <string name="clipboard_sanitize_links_title">Limpiar parámetros de seguimiento</string>

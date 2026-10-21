@@ -447,6 +447,10 @@
     <string name="clipboard_pinned_tab_desc">重要なクリップを保存するための固定タブを表示します</string>
     <string name="clipboard_todo_tab_title">Todoタブ</string>
     <string name="clipboard_todo_tab_desc">クリップをタスクとしてマークするためのTodoタブを表示します</string>
+    <string name="clipboard_swipe_delete_title">スワイプでクリップボードの項目を削除</string>
+    <string name="clipboard_swipe_delete_desc">項目を左右にスワイプすると、現在のタブから削除されます。%1$d 秒間は元に戻せます。</string>
+    <string name="clipboard_swipe_deleted">削除しました</string>
+    <string name="clipboard_swipe_undo">元に戻す</string>
     <string name="clipboard_private_copy_other_apps_title">他のアプリでプライベートコピー</string>
     <string name="clipboard_private_copy_other_apps_desc">他のアプリのテキスト選択メニューに「プライベートコピー」を追加します。選択したテキストをCleverKeysのみにコピーし、システムのクリップボードには保存しません。有効にすると、他のアプリから見えるアプリエントリーが追加されます。</string>
     <string name="clipboard_sanitize_links_title">トラッキングパラメーターを除去</string>

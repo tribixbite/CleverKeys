@@ -450,6 +450,10 @@
     <string name="clipboard_pinned_tab_desc">Vastgezet tabblad tonen voor het opslaan van belangrijke clips</string>
     <string name="clipboard_todo_tab_title">Takenlijst-tabblad</string>
     <string name="clipboard_todo_tab_desc">Takenlijst-tabblad tonen voor het markeren van clips als taken</string>
+    <string name="clipboard_swipe_delete_title">Vegen om klembordinvoeren te verwijderen</string>
+    <string name="clipboard_swipe_delete_desc">Veeg een invoer naar links of rechts om deze uit het huidige tabblad te verwijderen. Ongedaan maken kan gedurende %1$d seconden.</string>
+    <string name="clipboard_swipe_deleted">Verwijderd</string>
+    <string name="clipboard_swipe_undo">Ongedaan maken</string>
     <string name="clipboard_private_copy_other_apps_title">Privé kopiëren in andere apps</string>
     <string name="clipboard_private_copy_other_apps_desc">Voeg "Privé kopie" toe aan tekstselectiemenu\'s van andere apps. Kopieert geselecteerde tekst alleen naar CleverKeys — nooit naar het systeemklembord. Inschakelen voegt een app-vermelding toe die andere apps kunnen zien.</string>
     <string name="clipboard_sanitize_links_title">Trackingparameters verwijderen</string>

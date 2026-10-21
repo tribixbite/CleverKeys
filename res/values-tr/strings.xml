@@ -458,6 +458,10 @@
     <string name="clipboard_pinned_tab_desc">Önemli klipleri kaydetmek için sabitlenmiş sekmeyi göster</string>
     <string name="clipboard_todo_tab_title">Yapılacaklar Sekmesi</string>
     <string name="clipboard_todo_tab_desc">Klipleri görev olarak işaretlemek için yapılacaklar sekmesini göster</string>
+    <string name="clipboard_swipe_delete_title">Pano girişlerini kaydırarak sil</string>
+    <string name="clipboard_swipe_delete_desc">Bir girişi geçerli sekmeden silmek için sola veya sağa kaydırın. %1$d saniye boyunca geri alınabilir.</string>
+    <string name="clipboard_swipe_deleted">Silindi</string>
+    <string name="clipboard_swipe_undo">Geri al</string>
     <string name="clipboard_private_copy_other_apps_title">Diğer uygulamalarda özel kopyalama</string>
     <string name="clipboard_private_copy_other_apps_desc">Diğer uygulamaların metin seçim menülerine \"Özel kopyala\" ekle. Seçili metni yalnızca CleverKeys\'e kopyalar — sistem panosuna asla. Etkinleştirmek diğer uygulamaların görebileceği bir uygulama girişi ekler.</string>
     <string name="clipboard_sanitize_links_title">İzleme parametrelerini temizle</string>

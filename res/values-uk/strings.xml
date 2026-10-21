@@ -465,6 +465,10 @@
     <string name="clipboard_pinned_tab_desc">Показувати вкладку для збереження важливих записів</string>
     <string name="clipboard_todo_tab_title">Вкладка «Завдання»</string>
     <string name="clipboard_todo_tab_desc">Показувати вкладку для позначення записів як завдань</string>
+    <string name="clipboard_swipe_delete_title">Видалення записів буфера обміну змахуванням</string>
+    <string name="clipboard_swipe_delete_desc">Змахніть запис ліворуч або праворуч, щоб видалити його з поточної вкладки. Скасувати можна протягом %1$d секунд.</string>
+    <string name="clipboard_swipe_deleted">Видалено</string>
+    <string name="clipboard_swipe_undo">Скасувати</string>
     <string name="clipboard_private_copy_other_apps_title">Приватне копіювання в інших застосунках</string>
     <string name="clipboard_private_copy_other_apps_desc">Додати «Приватне копіювання» до меню виділення тексту інших застосунків. Копіює виділений текст лише в CleverKeys — не в системний буфер обміну.</string>
     <string name="clipboard_sanitize_links_title">Очищення параметрів відстеження</string>

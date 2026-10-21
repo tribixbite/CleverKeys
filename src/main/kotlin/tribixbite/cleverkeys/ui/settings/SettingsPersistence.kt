@@ -305,6 +305,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
             .coerceIn(SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.first, SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.last)
         clipboardPinnedEnabled = prefs.getSafeBoolean("clipboard_pinned_enabled", Defaults.CLIPBOARD_PINNED_ENABLED)
         clipboardTodoEnabled = prefs.getSafeBoolean("clipboard_todo_enabled", Defaults.CLIPBOARD_TODO_ENABLED)
+        clipboardSwipeDeleteEnabled = prefs.getSafeBoolean("clipboard_swipe_delete_enabled", Defaults.CLIPBOARD_SWIPE_DELETE_ENABLED)
         // #156: PROCESS_TEXT selection-toolbar entry point — opt-in, default false (design §6.6).
         clipboardPrivateCopyToolbarEnabled = prefs.getSafeBoolean(PrivateCopyProcessTextActivity.PREF_TOOLBAR_ENABLED, Defaults.CLIPBOARD_PRIVATE_COPY_TOOLBAR_ENABLED)
         // ARC-037: the PROCESS_TEXT confirmation toast — opt-OUT, default true.

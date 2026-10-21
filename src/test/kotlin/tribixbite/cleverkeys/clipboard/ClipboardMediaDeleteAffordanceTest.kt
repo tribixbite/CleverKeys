@@ -147,6 +147,8 @@ class ClipboardMediaDeleteAffordanceTest {
         view.setField("editingOriginalContent", editingContent)
         // D-6: play-badge animation memo (Objenesis skips the field initializer)
         view.setField("animatedCache", mutableMapOf<Long, Boolean>())
+        // GH #175(2): the rows' TalkBack "Delete" delegate; the android.jar stub constructor throws.
+        view.setField("deleteActionDelegate", mockk<View.AccessibilityDelegate>(relaxed = true))
 
         val adapterClass = Class.forName(
             "tribixbite.cleverkeys.ClipboardHistoryView\$ClipboardEntriesAdapter"

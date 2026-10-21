@@ -218,6 +218,8 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "clipboard_text_only" to PrefValue.Bool(Defaults.CLIPBOARD_TEXT_ONLY),
     "clipboard_pinned_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_PINNED_ENABLED),
     "clipboard_todo_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_TODO_ENABLED),
+    // GH #175(2): swipe-to-delete on clipboard rows; an ordinary exportable UI toggle.
+    "clipboard_swipe_delete_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_SWIPE_DELETE_ENABLED),
     "clipboard_media_enabled" to PrefValue.Bool(Defaults.CLIPBOARD_MEDIA_ENABLED),
     "clipboard_max_media_size_mb" to PrefValue.IntV(Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB),
     // #156: PROCESS_TEXT selection-toolbar entry point — opt-in, default false (design §6.6).

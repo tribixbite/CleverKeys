@@ -829,6 +829,10 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-10-07: the selection's Clean action — trailing whitespace and inserted line
     // breaks removed; lists, blank lines, short lines, URLs and code keep their breaks.
     'tribixbite.cleverkeys.clipboard.ClipboardTextCleanerTest',
+    // GH #175(2), 2026-10-21: swipe-to-delete on clipboard rows — the gesture policy
+    // (slop, 2:1 ratio, 35 % / fling commit) and the deferred-delete state machine.
+    'tribixbite.cleverkeys.clipboard.ClipboardSwipePolicyTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardPendingDeletionTest',
     'tribixbite.cleverkeys.customization.PrivateCopyCommandTest',
     // TalkBack accessibility (a11y) — pure geometry + labeller
     'tribixbite.cleverkeys.a11y.KeyboardGeometryTest',
@@ -1325,6 +1329,10 @@ tasks.register('runMockTests', JavaExec) {
     // #130 residual (2026-09-05): setConfig drops the cached pane when the theme
     // signature changes (switch OR color edit), preserving close callback + tab choice.
     'tribixbite.cleverkeys.clipboard.ClipboardPaneThemeInvalidationTest',
+    // GH #175(2), 2026-10-21: swipe-to-delete wiring — hidden rows, Undo, the per-tab
+    // service delete and every view/manager commit trigger.
+    'tribixbite.cleverkeys.clipboard.ClipboardSwipeDeleteViewTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardSwipeDeleteManagerTest',
     'tribixbite.cleverkeys.prefs.AndroidXPreferenceMigrationTest',
     // #169 (2026-09-03): the layout-switch keys were baked non-loc into the bottom row, so
     // unticking their extra-key checkboxes removed nothing. Mock-tier: loads

@@ -469,6 +469,10 @@
     <string name="clipboard_pinned_tab_desc">Angehefteten Tab zum Speichern wichtiger Clips anzeigen</string>
     <string name="clipboard_todo_tab_title">Aufgaben-Tab</string>
     <string name="clipboard_todo_tab_desc">Aufgaben-Tab zum Markieren von Clips als Aufgaben anzeigen</string>
+    <string name="clipboard_swipe_delete_title">Zwischenablage-Einträge durch Wischen löschen</string>
+    <string name="clipboard_swipe_delete_desc">Eintrag nach links oder rechts wischen, um ihn aus dem aktuellen Tab zu löschen. „Rückgängig“ ist %1$d Sekunden lang verfügbar.</string>
+    <string name="clipboard_swipe_deleted">Gelöscht</string>
+    <string name="clipboard_swipe_undo">Rückgängig</string>
     <string name="clipboard_private_copy_other_apps_title">Private Kopie in anderen Apps</string>
     <string name="clipboard_private_copy_other_apps_desc">\"Private Kopie\" zu Textauswahlmenüs anderer Apps hinzufügen. Kopiert ausgewählten Text nur in CleverKeys – niemals in die Systemzwischenablage. Durch Aktivieren wird ein App-Eintrag hinzugefügt, den andere Apps sehen können.</string>
     <string name="clipboard_sanitize_links_title">Tracking-Parameter bereinigen</string>

@@ -11,7 +11,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.AttributeSet
 import android.util.LruCache
+import android.view.MotionEvent
+import android.view.VelocityTracker
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.CheckBox
@@ -31,6 +34,9 @@ import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
 import tribixbite.cleverkeys.clipboard.ClipboardCleanResult
 import tribixbite.cleverkeys.clipboard.ClipboardCopyResult
+import tribixbite.cleverkeys.clipboard.ClipboardPendingDeletion
+import tribixbite.cleverkeys.clipboard.ClipboardSwipePolicy
+import tribixbite.cleverkeys.clipboard.ClipboardSwipeTracker
 import tribixbite.cleverkeys.clipboard.ClipboardProvenance
 import tribixbite.cleverkeys.clipboard.ClipboardSelection
 import tribixbite.cleverkeys.clipboard.ClipboardSelectionHolder
@@ -220,6 +226,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      */
     fun startSelection(): Boolean {
         if (isEditing() || bulkRunning) return false
+        commitPendingDeletion(ClipboardPendingDeletion.CommitReason.SELECTION)
         if (selection?.tab != currentTab) {
             selectionHolder.start(currentTab)
             expandedStates.clear()
@@ -300,6 +307,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      */
     private fun <T> runBulk(work: () -> Result<T>, completed: (Result<T>) -> Unit) {
         if (bulkRunning || isEditing()) return
+        commitPendingDeletion(ClipboardPendingDeletion.CommitReason.BULK_ACTION)
         if (selectionHolder.runConfirmed(work, completed)) onResultsChanged?.invoke()
     }
 
@@ -327,6 +335,68 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun cleanSelection(tab: ClipboardTab, plan: ClipboardBulkPlans.CleanPlan, completed: (Result<ClipboardCleanResult>) -> Unit) {
         val svc = service
         runBulk({ svc?.applyClean(tab, plan) ?: unavailable() }, completed)
+    }
+
+    // ─── Swipe to delete (GH #175 part 2, 2026-10-21) ───
+    // A swiped row is hidden at once and deleted when the undo window ends or something changes
+    // what the user is looking at. The pending row lives in the service-scoped ClipboardManager
+    // (ClipboardPendingDeletion), which attaches it here like the selection holder; this view
+    // only hides the row, commits it on its own triggers (tab switch, search/filter change,
+    // selection, edit, bulk action) and renders the gesture. Nullable: Objenesis-built test
+    // views and a standalone view have none, and then rows are deleted at once (no undo).
+    private var pendingDeletion: ClipboardPendingDeletion? = null
+
+    /** Share the manager's pending deletion. Called right after the pane is inflated. */
+    fun attachPendingDeletion(newPending: ClipboardPendingDeletion) {
+        pendingDeletion = newPending
+    }
+
+    /** Whether [entry] of the current tab is hidden by a pending deletion. */
+    private fun isPendingDeletion(entry: ClipboardEntry): Boolean =
+        pendingDeletion?.hides(currentTab, entry.content) == true
+
+    /** Delete the pending row now because of [reason]; a no-op when nothing is pending. */
+    private fun commitPendingDeletion(reason: ClipboardPendingDeletion.CommitReason) {
+        pendingDeletion?.commitNow(reason)
+    }
+
+    /**
+     * Swipe-to-delete and the accessibility "Delete" action: hide [entry] from the current tab
+     * and offer Undo, deleting it for real later (ClipboardPendingDeletion). Refused in
+     * selection mode, during an edit and while a bulk action runs. Without an attached pending
+     * deletion the row is deleted at once through the same path. Returns whether it was taken.
+     */
+    fun deferDelete(entry: ClipboardEntry): Boolean {
+        if (!ClipboardSwipePolicy.deleteActionAllowed(
+                selecting = selection != null,
+                editing = isEditing(),
+                // The tag panel replaces this list (content scroll GONE), so no row is reachable.
+                tagMode = false,
+                bulkRunning = bulkRunning,
+            )
+        ) return false
+        val pending = pendingDeletion
+        if (pending == null) {
+            service?.removeFromTab(currentTab, entry.content)
+            expandedStates.remove(entry.timestamp)
+            loadDataAsync()
+        } else {
+            expandedStates.remove(entry.timestamp)
+            pending.begin(currentTab, entry.content)
+        }
+        return true
+    }
+
+    /**
+     * The manager forwards every pending-deletion change here. Hidden or restored rows only
+     * need a refilter (page and expand state kept). A committed row is also dropped from the
+     * loaded rows at once, so it does not flash back before the reload the delete triggers.
+     */
+    fun onPendingDeletionChanged(change: ClipboardPendingDeletion.Change, pending: ClipboardPendingDeletion.Pending) {
+        if (change == ClipboardPendingDeletion.Change.COMMITTED && pending.tab == currentTab) {
+            history = history.filterNot { it.content == pending.content }
+        }
+        applyFilter(resetView = false)
     }
 
     // Pagination state
@@ -421,6 +491,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         /** Alpha of the label-colour tint behind a selected row (0x33 ≈ 20%). */
         private const val SELECTED_ROW_ALPHA = 0x33
 
+        /** VelocityTracker units: pixels per second. */
+        private const val VELOCITY_UNITS_PER_SECOND = 1000
+
+        /** Duration of the spring-back of a swipe that did not commit. */
+        private const val SPRING_BACK_MS = 150L
+
         /** #130: every clipboardEntryButton in clipboard_history_entry.xml (tinted via colorLabel). */
         private val ENTRY_BUTTON_IDS = intArrayOf(
             R.id.clipboard_entry_expand, R.id.clipboard_entry_edit, R.id.clipboard_entry_paste,
@@ -462,6 +538,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     }
 
     override fun onDetachedFromWindow() {
+        // A gesture cannot survive the window; the pending row itself lives in the manager.
+        abandonRowSwipe(springBack = false)
         // Unregister to break singleton→view reference and stop receiving callbacks
         service?.setOnClipboardHistoryChange(null)
         holder?.let { if (it.observer === holderObserver) it.observer = null }
@@ -476,6 +554,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      * Switch to a different tab and update the displayed content.
      */
     fun setTab(tab: ClipboardTab) {
+        // A row swiped on the tab being left is deleted now: its undo offer belongs to that tab.
+        commitPendingDeletion(ClipboardPendingDeletion.CommitReason.TAB_SWITCH)
         // Cancel any in-progress edit before switching tabs (safety — tab clicks
         // are guarded in ClipboardManager, but direct callers like resetSearchOnShow need this)
         cancelEdit()
@@ -520,6 +600,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun hasRegexError(): Boolean = searchRegexError
 
     private fun applyFilter(resetView: Boolean = true) {
+        // resetView=true means the search or filter criteria changed: the results the undo
+        // offer described are gone, so a swiped row is deleted now (reloads pass false).
+        if (resetView) commitPendingDeletion(ClipboardPendingDeletion.CommitReason.FILTER_CHANGE)
+        // A row awaiting its deferred delete is hidden from every result and count.
+        val source = if (pendingDeletion?.pending?.tab == currentTab) history.filterNot(::isPendingDeletion) else history
+
         // Pre-compile regex once per filter pass (not per entry)
         val compiledRegex: Regex? = if (regexMode && searchFilter.isNotEmpty()) {
             try {
@@ -536,7 +622,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         }
 
         // Apply both search and date filters (searches ALL items)
-        val filtered = history.filter { entry ->
+        val filtered = source.filter { entry ->
             if (!ClipboardSizePolicy.matches(entry.sizeBytes, sizeMinimum, sizeMaximum)) return@filter false
             // Apply search filter
             if (searchFilter.isNotEmpty()) {
@@ -609,7 +695,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             !(statusFilterActive && statusFilterPlanned && statusFilterCompleted)
         filteredHistory = if (searchFilter.isEmpty() && !dateFilterEnabled &&
             tagFilterSelected.isEmpty() && !hasStatusFilter && !privateOnlyFilter && sizeMinimum == 0L && sizeMaximum == null) {
-            history
+            source
         } else {
             filtered
         }
@@ -761,11 +847,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         if (isEditing()) {
             cancelEdit()
         }
-        when (currentTab) {
-            ClipboardTab.HISTORY -> service?.removeHistoryEntry(entry.content)
-            ClipboardTab.PINNED -> service?.unpinEntry(entry.content)
-            ClipboardTab.TODOS -> service?.removeFromTodo(entry.content)
-        }
+        // Same per-tab service path as the swipe's deferred delete (media files cleaned up there).
+        service?.removeFromTab(currentTab, entry.content)
         expandedStates.remove(entry.timestamp)
         loadDataAsync()
     }
@@ -781,6 +864,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         val entry = paginatedHistory[pos]
         // Media entries cannot be edited inline
         if (entry.isMedia) return
+        // Edit mode locks the pane; a swiped row is deleted before it starts.
+        commitPendingDeletion(ClipboardPendingDeletion.CommitReason.EDIT)
 
         // Bug #1 fix: clear search mode before entering edit (mutual exclusion)
         onEditModeEntered?.invoke()
@@ -1426,6 +1511,170 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         loadDataAsync()
     }
 
+    // ─── Swipe-to-delete gesture (GH #175 part 2) ───
+    // Observed in dispatchTouchEvent, so it sees every event whether a row's text/button or the
+    // list itself took the DOWN. Nothing changes until ClipboardSwipePolicy classifies the drag
+    // as horizontal past the touch slop: taps, long-presses and vertical scrolling are exactly
+    // as before. Once horizontal, the children get a CANCEL (no click or long-press fires), the
+    // parent ScrollView is told not to intercept, and the row follows the finger.
+    private var swipeTracker: ClipboardSwipeTracker? = null
+    private var swipeVelocity: VelocityTracker? = null
+    private var swipeRow: View? = null
+    private var swipeEntry: ClipboardEntry? = null
+    private var swipeClaimed = false
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> beginRowSwipe(ev)
+            MotionEvent.ACTION_POINTER_DOWN ->
+                // A second finger is a pinch or a mistake: a claimed swipe springs back.
+                if (swipeTracker?.active == true) {
+                    val claimed = swipeClaimed
+                    abandonRowSwipe(springBack = true)
+                    if (claimed) return true
+                }
+            MotionEvent.ACTION_MOVE -> if (moveRowSwipe(ev)) return true
+            MotionEvent.ACTION_UP -> if (swipeClaimed) {
+                finishRowSwipe(ev)
+                return true
+            }
+            MotionEvent.ACTION_CANCEL -> if (swipeClaimed) {
+                abandonRowSwipe(springBack = true)
+                return true
+            }
+        }
+        val handled = super.dispatchTouchEvent(ev)
+        val action = ev.actionMasked
+        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+            abandonRowSwipe(springBack = false)
+        }
+        return handled
+    }
+
+    /** Start tracking a possible swipe on the row under the finger, if a swipe may start now. */
+    private fun beginRowSwipe(ev: MotionEvent) {
+        abandonRowSwipe(springBack = false)
+        val allowed = ClipboardSwipePolicy.swipeAllowed(
+            settingEnabled = Config.globalConfig().clipboard_swipe_delete_enabled,
+            selecting = selection != null,
+            editing = isEditing(),
+            tagMode = false,  // the tag panel replaces this list; no row is reachable
+            bulkRunning = bulkRunning,
+        )
+        if (!allowed) return
+        val pos = pointToPosition(ev.x.toInt(), ev.y.toInt())
+        if (pos == INVALID_POSITION) return
+        val entry = paginatedHistory.getOrNull(pos) ?: return
+        val row = getChildAt(pos - firstVisiblePosition) ?: return
+        val tracker = swipeTracker ?: ClipboardSwipeTracker(
+            touchSlop = ViewConfiguration.get(context).scaledTouchSlop.toFloat(),
+            flingVelocity = ClipboardSwipePolicy.flingVelocityPx(resources.displayMetrics.density),
+        ).also { swipeTracker = it }
+        tracker.down(ev.rawX, ev.rawY)
+        swipeRow = row
+        swipeEntry = entry
+        swipeVelocity = (swipeVelocity ?: VelocityTracker.obtain()).also {
+            it.clear()
+            it.addMovement(ev)
+        }
+    }
+
+    /** Feed a move; returns true when the move belongs to a claimed swipe (consumed here). */
+    private fun moveRowSwipe(ev: MotionEvent): Boolean {
+        val tracker = swipeTracker?.takeIf { it.active } ?: return false
+        val row = swipeRow ?: return false
+        swipeVelocity?.addMovement(ev)
+        if (tracker.move(ev.rawX, ev.rawY)) {
+            swipeClaimed = true
+            // From now on neither the ScrollView nor any ancestor may steal the gesture.
+            parent?.requestDisallowInterceptTouchEvent(true)
+            // Cancel the children's pending click / long-press / pressed state.
+            val cancel = MotionEvent.obtain(ev).apply { action = MotionEvent.ACTION_CANCEL }
+            super.dispatchTouchEvent(cancel)
+            cancel.recycle()
+        }
+        if (swipeClaimed) {
+            row.translationX = tracker.dx
+            row.alpha = ClipboardSwipePolicy.alpha(tracker.dx, row.width.toFloat())
+            return true
+        }
+        // Classified vertical: stop watching so the scroll proceeds untouched.
+        if (tracker.axis == ClipboardSwipePolicy.Axis.VERTICAL) abandonRowSwipe(springBack = false)
+        return false
+    }
+
+    /** Release of a claimed swipe: commit past the threshold or on a fling, else spring back. */
+    private fun finishRowSwipe(ev: MotionEvent) {
+        val tracker = swipeTracker
+        val row = swipeRow
+        val entry = swipeEntry
+        val velocity = swipeVelocity
+        var velocityX = 0f
+        if (velocity != null) {
+            velocity.addMovement(ev)
+            velocity.computeCurrentVelocity(VELOCITY_UNITS_PER_SECOND)
+            velocityX = velocity.xVelocity
+        }
+        val commit = tracker != null && row != null &&
+            tracker.release(velocityX, row.width.toFloat())
+        // The row is hidden by the refilter; getView resets the recycled row's offset.
+        if (commit && entry != null && deferDelete(entry)) {
+            resetRowSwipeState()
+        } else {
+            abandonRowSwipe(springBack = true)
+        }
+    }
+
+    /** Drop the gesture; a claimed row animates back into place when [springBack]. */
+    private fun abandonRowSwipe(springBack: Boolean) {
+        val row = swipeRow
+        if (springBack && swipeClaimed && row != null) {
+            row.animate().translationX(0f).alpha(1f).setDuration(SPRING_BACK_MS).start()
+        }
+        swipeTracker?.cancel()
+        resetRowSwipeState()
+    }
+
+    private fun resetRowSwipeState() {
+        swipeRow = null
+        swipeEntry = null
+        swipeClaimed = false
+        swipeVelocity?.recycle()
+        swipeVelocity = null
+    }
+
+    /**
+     * TalkBack equivalent of the swipe: a "Delete" custom action on the row's text, which is the
+     * row's focus stop, through the same deferred path (Undo appears in the result row). Not
+     * gated by the swipe setting: that setting prevents accidental swipes, and a custom action
+     * is always deliberate. One delegate per list, shared by every row; the row's entry rides in
+     * the text view's tag, rebound on every getView, so a recycled row never acts on another
+     * entry. [entry] null removes the action (edit and selection rows have their own deletes).
+     */
+    private fun bindDeleteAccessibilityAction(textView: TextView, entry: ClipboardEntry?) {
+        textView.setTag(R.id.clipboard_entry_delete, entry)
+        textView.accessibilityDelegate = if (entry == null) null
+            else deleteActionDelegate ?: DeleteActionDelegate().also { deleteActionDelegate = it }
+    }
+
+    // Created on first bind (Objenesis-built test views inject their own).
+    private var deleteActionDelegate: View.AccessibilityDelegate? = null
+
+    /** Adds the "Delete" custom action and runs [deferDelete] for the host row's entry. */
+    private inner class DeleteActionDelegate : View.AccessibilityDelegate() {
+        override fun onInitializeAccessibilityNodeInfo(host: View, info: android.view.accessibility.AccessibilityNodeInfo) {
+            super.onInitializeAccessibilityNodeInfo(host, info)
+            info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction(
+                R.id.clipboard_entry_delete, context.getString(R.string.common_delete)))
+        }
+
+        override fun performAccessibilityAction(host: View, action: Int, args: android.os.Bundle?): Boolean {
+            val entry = host.getTag(R.id.clipboard_entry_delete) as? ClipboardEntry
+            return if (action == R.id.clipboard_entry_delete && entry != null) deferDelete(entry)
+            else super.performAccessibilityAction(host, action, args)
+        }
+    }
+
     /**
      * #130: paints one entry row with the active runtime theme's colors. Rows inflate
      * under the base XML style (wrong ?attr values for runtime themes), so the label
@@ -1513,6 +1762,13 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
         override fun getView(pos: Int, v: View?, parent: ViewGroup): View {
             val view = v ?: View.inflate(context, R.layout.clipboard_history_entry, null)
+            // A recycled row may carry a swipe offset or a running spring-back: rebind upright,
+            // except the row the finger is dragging right now (its next move re-applies it).
+            if (view !== swipeRow || !swipeClaimed) {
+                view.animate().cancel()
+                view.translationX = 0f
+                view.alpha = 1f
+            }
 
             val entry = paginatedHistory[pos]
             val text = entry.content
@@ -1569,6 +1825,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 provenanceView.visibility = GONE  // ARC-011: hidden during edit
                 // Edit and selection are mutually exclusive; reset recycled selection rows.
                 resetSelectionRow(view, textView, selectBox)
+                bindDeleteAccessibilityAction(textView, null)  // edit mode has its own delete
 
                 // D-7: render any pending save failure inline; cleared when the user types.
                 val errRes = editingErrorRes
@@ -1744,6 +2001,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             // ── Selection mode: checkbox + whole-row toggle, no per-entry actions ──
             if (selection != null) {
                 bindSelectionRow(view, entry, textView, selectBox, thumbnailContainer)
+                bindDeleteAccessibilityAction(textView, null)  // bulk delete only in selection mode
                 primaryButtons.visibility = GONE
                 secondaryButtons.visibility = GONE
                 deleteRow.visibility = GONE
@@ -1751,6 +2009,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 return view
             }
             resetSelectionRow(view, textView, selectBox)
+            // ── Swipe-to-delete's accessibility equivalent (GH #175 part 2) ──
+            bindDeleteAccessibilityAction(textView, entry)
 
             // ── Expand state: single tap toggles text expansion + secondary row ──
             val isMultiLine = text.contains("\n")

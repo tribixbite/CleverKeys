@@ -457,6 +457,10 @@
     <string name="clipboard_pinned_tab_desc">Afficher l\'onglet épinglé pour sauvegarder les extraits importants</string>
     <string name="clipboard_todo_tab_title">Onglet À faire</string>
     <string name="clipboard_todo_tab_desc">Afficher l\'onglet À faire pour marquer les extraits comme tâches</string>
+    <string name="clipboard_swipe_delete_title">Balayer pour supprimer les entrées du presse-papiers</string>
+    <string name="clipboard_swipe_delete_desc">Balayez une entrée vers la gauche ou la droite pour la supprimer de l\'onglet actuel. L\'annulation reste possible pendant %1$d secondes.</string>
+    <string name="clipboard_swipe_deleted">Supprimé</string>
+    <string name="clipboard_swipe_undo">Annuler</string>
     <string name="clipboard_private_copy_other_apps_title">Copie privée dans d\'autres applis</string>
     <string name="clipboard_private_copy_other_apps_desc">Ajouter « Copie privée » aux menus de sélection de texte d\'autres applis. Copie le texte sélectionné uniquement dans CleverKeys — jamais dans le presse-papiers système. L\'activation ajoute une entrée d\'appli visible par d\'autres applications.</string>
     <string name="clipboard_sanitize_links_title">Nettoyer les paramètres de suivi</string>

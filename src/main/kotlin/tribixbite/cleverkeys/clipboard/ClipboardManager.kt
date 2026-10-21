@@ -29,6 +29,7 @@ import android.widget.RadioButton
 import android.widget.Switch
 import android.widget.TextView
 import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
+import tribixbite.cleverkeys.clipboard.ClipboardPendingDeletion
 import tribixbite.cleverkeys.clipboard.ClipboardSelection
 import tribixbite.cleverkeys.clipboard.ClipboardSelectionAction
 import tribixbite.cleverkeys.clipboard.ClipboardSelectionHolder
@@ -96,6 +97,21 @@ class ClipboardPaneLayout @JvmOverloads constructor(
 }
 
 /**
+ * The undo window's timer on the main looper (the keyboard's UI thread), so the deferred
+ * delete and its feedback run where every other pane change runs. The Handler is created on
+ * first use; nothing is scheduled until a row is swiped.
+ */
+private class MainLooperScheduler : ClipboardPendingDeletion.Scheduler {
+    private val handler by lazy { android.os.Handler(android.os.Looper.getMainLooper()) }
+
+    override fun schedule(delayMs: Long, action: () -> Unit): ClipboardPendingDeletion.Cancellable {
+        val runnable = Runnable { action() }
+        handler.postDelayed(runnable, delayMs)
+        return ClipboardPendingDeletion.Cancellable { handler.removeCallbacks(runnable) }
+    }
+}
+
+/**
  * Manages clipboard pane and clipboard history search functionality.
  *
  * This class centralizes the management of:
@@ -159,6 +175,23 @@ class ClipboardManager(
     // inflated ClipboardHistoryView attaches to it. The views below only render it: the live
     // count, and the select/deselect-all-matching, clear, more-actions, delete and exit actions.
     private val selectionHolder = ClipboardSelectionHolder()
+    // Swipe to delete (GH #175 part 2, 2026-10-21). The one row a swipe (or TalkBack's "Delete"
+    // action) has hidden but not yet deleted lives HERE, service-scoped like the selection, never
+    // on a view (views are rebuilt on theme change). Created on first use: Objenesis-built test
+    // managers and a keyboard that never swipes allocate nothing. The Undo button sits in the
+    // result row next to Select; the "Deleted" line reuses the bulk-feedback text view.
+    private var pendingDeletionField: ClipboardPendingDeletion? = null
+    private val pendingDeletion: ClipboardPendingDeletion
+        get() = pendingDeletionField ?: ClipboardPendingDeletion(
+            scheduler = MainLooperScheduler(),
+            // The same per-tab service delete the edit-mode delete uses (media cleanup included).
+            commitAction = { p -> ClipboardHistoryService.get_service(context)?.removeFromTab(p.tab, p.content) },
+        ).also {
+            pendingDeletionField = it
+            wirePendingDeletion(it)
+        }
+    private var swipeUndoButton: Button? = null
+
     private var selectionBar: View? = null
     private var selectionCount: TextView? = null
     private var selectMatchingButton: ImageButton? = null
@@ -229,6 +262,8 @@ class ClipboardManager(
             clipboardHistoryView = clipboardPane?.findViewById(R.id.clipboard_history_view)
             // A re-inflated pane (theme change) resumes the selection the user built.
             clipboardHistoryView?.attachSelectionHolder(selectionHolder)
+            // Swipe-to-delete hides rows through the service-scoped pending deletion.
+            clipboardHistoryView?.attachPendingDeletion(pendingDeletion)
 
             // Set up search box click listener
             clipboardSearchBox?.setOnClickListener {
@@ -295,6 +330,8 @@ class ClipboardManager(
             bulkFeedback = clipboardPane?.findViewById(R.id.clipboard_bulk_feedback)
             // A result that arrived while no pane existed (or before this one was built).
             lastBulkFeedback?.let { renderBulkFeedback(it) }
+            swipeUndoButton = clipboardPane?.findViewById(R.id.clipboard_swipe_undo)
+            bindSwipeUndoButton()
             selectionBar = clipboardPane?.findViewById(R.id.clipboard_selection_bar)
             selectionCount = clipboardPane?.findViewById(R.id.clipboard_selection_count)
             selectMatchingButton = clipboardPane?.findViewById(R.id.clipboard_select_matching)
@@ -390,6 +427,7 @@ class ClipboardManager(
      */
     private fun switchToTab(tab: ClipboardTab) {
         if (currentTab == tab) return
+        commitPendingDeletion(ClipboardPendingDeletion.CommitReason.TAB_SWITCH)
         // Deletion feedback belongs to the previous tab's confirmed snapshot.
         clearBulkFeedback()
 
@@ -568,6 +606,8 @@ class ClipboardManager(
         // pane it belongs to. IME dialogs never take window focus (ImeDialogWindowPolicy), so
         // showing or tapping one does not itself reach this path.
         dismissPendingDialog()
+        // A swiped row is deleted now: its undo offer cannot outlive the pane that showed it.
+        commitPendingDeletion(ClipboardPendingDeletion.CommitReason.PANE_HIDDEN)
         searchMode = false
         clipboardSearchBox?.apply {
             text = ""
@@ -670,6 +710,8 @@ class ClipboardManager(
      * anyway, but keeping state machine clean avoids confusion).
      */
     private fun showTagPanel(entry: ClipboardEntry, tab: ClipboardTab) {
+        // The tag panel replaces the list; a swiped row is deleted before it opens.
+        commitPendingDeletion(ClipboardPendingDeletion.CommitReason.TAG_PANEL)
         // Ensure mutual exclusion with other modes before activating tag panel
         exitEditMode()
         clearSearch()
@@ -862,6 +904,7 @@ class ClipboardManager(
 
     private fun enterSelectionMode() {
         if (tagMode || isInEditMode()) return
+        commitPendingDeletion(ClipboardPendingDeletion.CommitReason.SELECTION)
         // Feedback from a previous deletion describes a finished batch, not the new one.
         clearBulkFeedback()
         clipboardHistoryView?.startSelection()
@@ -960,6 +1003,55 @@ class ClipboardManager(
 
     /** The result line currently kept for re-rendering (tests). */
     internal fun bulkFeedbackText(): CharSequence? = lastBulkFeedback
+
+    // ─── Swipe to delete: feedback, Undo, commit (GH #175 part 2) ───
+
+    /** Route every pending-deletion change to the result row and the attached list. */
+    private fun wirePendingDeletion(pending: ClipboardPendingDeletion) {
+        pending.listener = { change, row -> onPendingDeletionChanged(change, row) }
+    }
+
+    /**
+     * "Deleted" in the result row's feedback line plus the Undo button while a row is hidden;
+     * both go when it is restored or deleted. The line is a polite live region, so TalkBack
+     * announces the deletion. An older bulk result describes a finished batch and is dropped.
+     */
+    private fun onPendingDeletionChanged(change: ClipboardPendingDeletion.Change, row: ClipboardPendingDeletion.Pending) {
+        if (change == ClipboardPendingDeletion.Change.HIDDEN) {
+            clearBulkFeedback()
+            bulkFeedback?.apply {
+                text = this@ClipboardManager.context.getString(R.string.clipboard_swipe_deleted)
+                visibility = View.VISIBLE
+            }
+            swipeUndoButton?.visibility = View.VISIBLE
+        } else {
+            swipeUndoButton?.visibility = View.GONE
+            bulkFeedback?.visibility = View.GONE
+            pendingDeletionField?.lastError?.takeIf { change == ClipboardPendingDeletion.Change.RESTORED }?.let {
+                Log.w(TAG, "Deferred clipboard delete failed; the entry is kept", it)
+            }
+        }
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(TAG, "Swipe delete $change on ${row.tab} (${pendingDeletionField?.lastCommitReason})")
+        }
+        clipboardHistoryView?.onPendingDeletionChanged(change, row)
+    }
+
+    /** Wire the result row's Undo button (GONE until a row is swiped away). */
+    private fun bindSwipeUndoButton() {
+        swipeUndoButton?.setOnClickListener { undoSwipeDelete() }
+        swipeUndoButton?.visibility = if (pendingDeletionField?.pending != null) View.VISIBLE else View.GONE
+    }
+
+    /** Undo: show the swiped row again; nothing was written to the database. */
+    internal fun undoSwipeDelete() {
+        pendingDeletionField?.undo()
+    }
+
+    /** Delete a swiped row now because of [reason]; nothing happens when none is pending. */
+    private fun commitPendingDeletion(reason: ClipboardPendingDeletion.CommitReason) {
+        pendingDeletionField?.commitNow(reason)
+    }
 
     private fun plural(id: Int, count: Int): String = context.resources.getQuantityString(id, count, count)
 
@@ -1458,6 +1550,8 @@ class ClipboardManager(
             pane.findViewById<View?>(R.id.clipboard_pagination_bar)?.setBackgroundColor(key)
             pane.findViewById<View?>(R.id.clipboard_select)?.backgroundTintList =
                 android.content.res.ColorStateList.valueOf(key)
+            pane.findViewById<View?>(R.id.clipboard_swipe_undo)?.backgroundTintList =
+                android.content.res.ColorStateList.valueOf(key)
         }
         if (label != 0) {
             intArrayOf(
@@ -1472,6 +1566,7 @@ class ClipboardManager(
             }
             (pane.findViewById<TextView?>(R.id.clipboard_search))?.setTextColor(label)
             (pane.findViewById<TextView?>(R.id.clipboard_select))?.setTextColor(label)
+            (pane.findViewById<TextView?>(R.id.clipboard_swipe_undo))?.setTextColor(label)
             (pane.findViewById<TextView?>(R.id.clipboard_selection_count))?.setTextColor(label)
             (pane.findViewById<TextView?>(R.id.clipboard_result_summary))?.setTextColor(theme.subLabelColor)
             (pane.findViewById<TextView?>(R.id.clipboard_bulk_feedback))?.setTextColor(label)
@@ -1546,6 +1641,8 @@ class ClipboardManager(
      * [currentTab] (the user's tab choice survives a theme change).
      */
     private fun invalidatePane() {
+        // Before the views go: the commit's change notification still reaches this pane's list.
+        commitPendingDeletion(ClipboardPendingDeletion.CommitReason.PANE_INVALIDATED)
         exitEditMode()
         hideTagPanelSilent()
         // The pane is rebuilt under the new theme; the selection (service-scoped) is kept.
@@ -1553,6 +1650,7 @@ class ClipboardManager(
         selectButton = null
         resultSummary = null
         bulkFeedback = null
+        swipeUndoButton = null
         selectionBar = null
         selectionCount = null
         selectMatchingButton = null
@@ -1617,6 +1715,8 @@ class ClipboardManager(
      * Should be called during keyboard shutdown.
      */
     fun cleanup() {
+        // Theme change and keyboard shutdown: delete a swiped row now, while views still exist.
+        commitPendingDeletion(ClipboardPendingDeletion.CommitReason.PANE_INVALIDATED)
         exitEditMode()
         hideTagPanelSilent()
         clipboardPane = null
@@ -1628,6 +1728,7 @@ class ClipboardManager(
         selectButton = null
         resultSummary = null
         bulkFeedback = null
+        swipeUndoButton = null
         selectionBar = null
         selectionCount = null
         selectMatchingButton = null

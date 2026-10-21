@@ -490,6 +490,10 @@
     <string name="clipboard_pinned_tab_desc">Mostra la scheda fissata per salvare clip importanti</string>
     <string name="clipboard_todo_tab_title">Scheda To-do</string>
     <string name="clipboard_todo_tab_desc">Mostra la scheda todo per contrassegnare clip come attività</string>
+    <string name="clipboard_swipe_delete_title">Scorri per eliminare le voci degli appunti</string>
+    <string name="clipboard_swipe_delete_desc">Scorri una voce a sinistra o a destra per eliminarla dalla scheda corrente. Puoi annullare entro %1$d secondi.</string>
+    <string name="clipboard_swipe_deleted">Eliminato</string>
+    <string name="clipboard_swipe_undo">Annulla</string>
     <string name="clipboard_private_copy_other_apps_title">Copia privata in altre app</string>
     <string name="clipboard_private_copy_other_apps_desc">Aggiunge "Copia privata" ai menu di selezione testo delle altre app. Copia il testo selezionato solo in CleverKeys, mai negli appunti di sistema. L\'abilitazione aggiunge una voce app visibile alle altre app.</string>
     <string name="clipboard_sanitize_links_title">Sanifica parametri di tracciamento</string>

@@ -446,6 +446,10 @@
     <string name="clipboard_pinned_tab_desc">显示用于保存重要剪辑的固定标签页。</string>
     <string name="clipboard_todo_tab_title">待办标签页</string>
     <string name="clipboard_todo_tab_desc">显示用于将剪辑标记为任务的待办标签页。</string>
+    <string name="clipboard_swipe_delete_title">滑动删除剪贴板条目</string>
+    <string name="clipboard_swipe_delete_desc">向左或向右滑动条目即可将其从当前标签页删除。%1$d 秒内可撤销。</string>
+    <string name="clipboard_swipe_deleted">已删除</string>
+    <string name="clipboard_swipe_undo">撤销</string>
     <string name="clipboard_private_copy_other_apps_title">在其他应用中私密复制</string>
     <string name="clipboard_private_copy_other_apps_desc">在其他应用的文本选择菜单中添加「私密复制」。将所选文本仅复制到 CleverKeys，而不存入系统剪贴板。启用后，其他应用可看到一个应用条目。</string>
     <string name="clipboard_sanitize_links_title">清除追踪参数</string>

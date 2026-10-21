@@ -227,6 +227,12 @@
             android:background="?android:attr/selectableItemBackground"/>
 
       </LinearLayout>
+      <!-- GH #175(2): Undo for a swiped-away row, GONE except during the 5 s window. The
+           "Deleted" line beside it is clipboard_bulk_feedback (a polite live region). -->
+      <Button android:id="@+id/clipboard_swipe_undo" android:layout_width="wrap_content"
+          android:layout_height="48dp" android:minWidth="48dp" android:text="@string/clipboard_swipe_undo"
+          android:backgroundTint="?attr/colorKey" android:textColor="?attr/colorLabel"
+          android:visibility="gone"/>
       <!-- Enters selection mode; batch deletion of results goes through the selection. -->
       <Button android:id="@+id/clipboard_select" android:layout_width="wrap_content"
           android:layout_height="48dp" android:minWidth="48dp" android:text="@string/clipboard_select"

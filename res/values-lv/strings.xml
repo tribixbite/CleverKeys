@@ -463,6 +463,10 @@
     <string name="clipboard_pinned_tab_desc">Rādīt cilni svarīgu starpliktuvju saglabāšanai</string>
     <string name="clipboard_todo_tab_title">Uzdevumu cilne</string>
     <string name="clipboard_todo_tab_desc">Rādīt cilni starpliktuvju atzīmēšanai kā uzdevumiem</string>
+    <string name="clipboard_swipe_delete_title">Starpliktuves ierakstu dzēšana ar vilkšanu</string>
+    <string name="clipboard_swipe_delete_desc">Velciet ierakstu pa kreisi vai pa labi, lai to dzēstu no pašreizējās cilnes. Atsaukt var %1$d sekunžu laikā.</string>
+    <string name="clipboard_swipe_deleted">Dzēsts</string>
+    <string name="clipboard_swipe_undo">Atsaukt</string>
     <string name="clipboard_private_copy_other_apps_title">Privāta kopēšana citās lietotnēs</string>
     <string name="clipboard_private_copy_other_apps_desc">Pievienot "Privātā kopēšana" citu lietotņu teksta atlases izvēlnēm. Kopē atlasīto tekstu tikai CleverKeys — nekad sistēmas starpliktuvē.</string>
     <string name="clipboard_sanitize_links_title">Attīrīt izsekošanas parametrus</string>

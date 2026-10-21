@@ -322,6 +322,8 @@ object Defaults {
     const val CLIPBOARD_TEXT_ONLY = false      // Hide media entries from all tabs
     const val CLIPBOARD_PINNED_ENABLED = true  // Show the pinned tab
     const val CLIPBOARD_TODO_ENABLED = true    // Show the todo tab
+    // GH #175(2): a horizontal swipe on a clipboard row deletes it from that tab (5 s Undo).
+    const val CLIPBOARD_SWIPE_DELETE_ENABLED = true
     // #156 PROCESS_TEXT "Private copy" entry: the selection-toolbar item is opt-in, its
     // confirmation toast opt-out (were literals in six readers, audit 2026-10-20 leftover).
     const val CLIPBOARD_PRIVATE_COPY_TOOLBAR_ENABLED = false
@@ -882,6 +884,7 @@ class Config private constructor(
     @JvmField var clipboard_text_only = Defaults.CLIPBOARD_TEXT_ONLY  // v4: Hide media entries from all tabs (text-only display)
     @JvmField var clipboard_pinned_enabled = Defaults.CLIPBOARD_PINNED_ENABLED  // v4: Show/hide pinned tab
     @JvmField var clipboard_todo_enabled = Defaults.CLIPBOARD_TODO_ENABLED  // v4: Show/hide todo tab
+    @JvmField var clipboard_swipe_delete_enabled = Defaults.CLIPBOARD_SWIPE_DELETE_ENABLED  // GH #175(2): swipe a row to delete it
     @JvmField var clipboard_media_enabled = Defaults.CLIPBOARD_MEDIA_ENABLED  // v4: Enable media clipboard (images, videos, PDFs)
     @JvmField var clipboard_max_media_size_mb = Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB  // v4: Max media file size in MB
 
@@ -1242,6 +1245,7 @@ class Config private constructor(
         clipboard_text_only = _prefs.getBoolean("clipboard_text_only", Defaults.CLIPBOARD_TEXT_ONLY)
         clipboard_pinned_enabled = _prefs.getBoolean("clipboard_pinned_enabled", Defaults.CLIPBOARD_PINNED_ENABLED)
         clipboard_todo_enabled = _prefs.getBoolean("clipboard_todo_enabled", Defaults.CLIPBOARD_TODO_ENABLED)
+        clipboard_swipe_delete_enabled = _prefs.getBoolean("clipboard_swipe_delete_enabled", Defaults.CLIPBOARD_SWIPE_DELETE_ENABLED)
         clipboard_media_enabled = _prefs.getBoolean("clipboard_media_enabled", Defaults.CLIPBOARD_MEDIA_ENABLED)
         // F-8: clamp through the shared range (slider + validator + this read site agree)
         clipboard_max_media_size_mb = safeGetInt(_prefs, "clipboard_max_media_size_mb", Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB)

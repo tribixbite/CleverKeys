@@ -175,6 +175,7 @@ class DefaultsSingleDefinitionDriftTest {
     fun clipboardAndLanguageReadSites_useTheDefaultsConstants() {
         val keys = listOf(
             "clipboard_text_only", "clipboard_pinned_enabled", "clipboard_todo_enabled",
+            "clipboard_swipe_delete_enabled",
             "clipboard_sanitize_links_enabled", "clipboard_embed_enrich_enabled",
             "clipboard_custom_rules_enabled", "clipboard_sanitize_system_clipboard",
             "pref_primary_language", "pref_secondary_language",
