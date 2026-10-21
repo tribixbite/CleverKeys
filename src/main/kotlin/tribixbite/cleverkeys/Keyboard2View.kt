@@ -135,6 +135,14 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
+     * Redraws the custom short-swipe labels after the mappings change while this view stays on
+     * screen ("Reset all" in the customization screen left the deleted labels drawn, Saga
+     * 2026-10-21). The manager calls it on its saving thread; [post] hops to the UI thread.
+     */
+    private val _shortSwipeMappingsChanged: () -> Unit = { post { invalidate() } }
+    private var _shortSwipeListenerRegistered = false
+
+    /**
      * Per-key cache of the main key's lowercased identifier, keyed by identity of the laid-out
      * [KeyboardData.Key] instance. Rebuilt once in [setKeyboard]; read (never mutated) in
      * [drawCustomMappings] to avoid a `mainKey.getString().lowercase()` String allocation per key
@@ -254,6 +262,10 @@ class Keyboard2View @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        if (!_shortSwipeListenerRegistered) {
+            _shortSwipeManager.addChangeListener(_shortSwipeMappingsChanged)
+            _shortSwipeListenerRegistered = true
+        }
         // Request insets callback
         requestApplyInsets()
 
@@ -1938,6 +1950,10 @@ class Keyboard2View @JvmOverloads constructor(
     override fun onDetachedFromWindow() {
         cancelContinuousSwipe()
         super.onDetachedFromWindow()
+        if (_shortSwipeListenerRegistered) {
+            _shortSwipeManager.removeChangeListener(_shortSwipeMappingsChanged)
+            _shortSwipeListenerRegistered = false
+        }
         // R-6: cancel the Pointers-owned coroutine scope so the one-shot short-swipe
         // startup load doesn't leak an uncancelled scope when this view is detached or
         // replaced (theme change re-creates the whole Keyboard2View via

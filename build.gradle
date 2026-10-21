@@ -1348,6 +1348,7 @@ tasks.register('runMockTests', JavaExec) {
     // W6 G-2: short-swipe preview/apply agreement through the REAL manager — flat-section
     // normalization end-to-end + the 0-mapping-REPLACE-must-not-clear guard.
     'tribixbite.cleverkeys.customization.ShortSwipeImportSemanticsTest',
+    'tribixbite.cleverkeys.customization.ShortSwipeChangeListenerTest',
     'tribixbite.cleverkeys.TestKeyboardSectionTest',
     // B-2 (2026-09-06 audit): SwipePrunerTest deleted with the ADR-011-orphan SwipePruner.
     'tribixbite.cleverkeys.PrivacyManagerTest',

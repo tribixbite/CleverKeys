@@ -17,6 +17,7 @@ import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArraySet
 
 /**
  * Manages custom short swipe mappings with JSON persistence.
@@ -66,6 +67,22 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
     /** Observable state for UI updates */
     private val _mappingsFlow = MutableStateFlow<List<ShortSwipeMapping>>(emptyList())
     val mappingsFlow: StateFlow<List<ShortSwipeMapping>> = _mappingsFlow.asStateFlow()
+
+    /**
+     * Called after every persisted change, on the saving (IO) thread. For Views that draw the
+     * mappings and have no coroutine scope (Keyboard2View): without it, "Reset all" left the
+     * customization screen's keyboard drawing the deleted labels until it was rebuilt
+     * (Saga 2026-10-21). Listeners must hop to their own thread themselves.
+     */
+    private val changeListeners = CopyOnWriteArraySet<() -> Unit>()
+
+    fun addChangeListener(listener: () -> Unit) {
+        changeListeners += listener
+    }
+
+    fun removeChangeListener(listener: () -> Unit) {
+        changeListeners -= listener
+    }
 
     /** Whether data has been loaded */
     private var isLoaded = false
@@ -148,6 +165,7 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
                 }
 
                 _mappingsFlow.value = mappingList
+                changeListeners.forEach { it() }
                 Log.i(TAG, "Saved ${mappingList.size} custom short swipe mappings")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to save custom mappings", e)
