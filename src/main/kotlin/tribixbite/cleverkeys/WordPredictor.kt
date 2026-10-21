@@ -3182,8 +3182,8 @@ class WordPredictor : Predictor {
         // keeps that guarantee. The collapsed word must still meet the
         // min-word-length bar (typed length must exceed it by the removed char).
         if (tuning.elongationCollapseEnabled &&
-            lowerTypedWord.length > (config?.autocorrect_min_word_length ?: 3) &&
-            (config?.autocorrect_max_length_diff ?: 0) >= 1
+            lowerTypedWord.length > (config?.autocorrect_min_word_length ?: Defaults.AUTOCORRECT_MIN_WORD_LENGTH) &&
+            (config?.autocorrect_max_length_diff ?: Defaults.AUTOCORRECT_MAX_LENGTH_DIFF) >= 1
         ) {
             var collapseBest: String? = null
             var collapseBestFreq = -1
@@ -3338,7 +3338,7 @@ class WordPredictor : Predictor {
         }
 
         // 2. Enforce minimum word length for correction
-        if (lowerTypedWord.length < (config?.autocorrect_min_word_length ?: 3)) {
+        if (lowerTypedWord.length < (config?.autocorrect_min_word_length ?: Defaults.AUTOCORRECT_MIN_WORD_LENGTH)) {
             return typedWord
         }
 
@@ -3387,7 +3387,7 @@ class WordPredictor : Predictor {
                 .joinToString(", ") { "${it.first}=${"%.3f".format(it.second)}" }
             val reason = when {
                 bestCandidate == null ->
-                    "no candidate above threshold ${config?.autocorrect_char_match_threshold ?: 0.66f}"
+                    "no candidate above threshold ${config?.autocorrect_char_match_threshold ?: Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD}"
                 bestCandidate.frequency < frequencyFloor ->
                     "best='${bestCandidate.word}' freq=${bestCandidate.frequency} < floor=$frequencyFloor"
                 else -> "?"
@@ -3439,15 +3439,15 @@ class WordPredictor : Predictor {
         //         so the candidate sweep also covers off-by-one-on-first-char.
         // Clamped to typed-word length so a misconfigured huge prefix doesn't
         // short-circuit. Was previously hard-coded to 2, ignoring config.
-        val configPrefixLength = (config?.autocorrect_prefix_length ?: 1).coerceAtLeast(0)
+        val configPrefixLength = (config?.autocorrect_prefix_length ?: Defaults.AUTOCORRECT_PREFIX_LENGTH).coerceAtLeast(0)
         val effectivePrefixLength = minOf(configPrefixLength, lowerTypedWord.length)
         val prefix: String? =
             if (effectivePrefixLength > 0) lowerTypedWord.substring(0, effectivePrefixLength)
             else null
 
         val wordLength = lowerTypedWord.length
-        val charMatchThreshold = config?.autocorrect_char_match_threshold ?: 0.66f
-        val maxLengthDiff = (config?.autocorrect_max_length_diff ?: 0).coerceAtLeast(0)
+        val charMatchThreshold = config?.autocorrect_char_match_threshold ?: Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD
+        val maxLengthDiff = (config?.autocorrect_max_length_diff ?: Defaults.AUTOCORRECT_MAX_LENGTH_DIFF).coerceAtLeast(0)
 
         val gated = ArrayList<AutocorrectCandidate>()
 
@@ -3739,8 +3739,8 @@ class WordPredictor : Predictor {
      * never offered; the frequency floor applies except to the user's own words.
      */
     private fun droppedDoubleTarget(lowerTypedWord: String, dict: Map<String, Int>, frequencyFloor: Int): String? {
-        if (lowerTypedWord.length <= (config?.autocorrect_min_word_length ?: 3) ||
-            (config?.autocorrect_max_length_diff ?: 0) < 1 ||
+        if (lowerTypedWord.length <= (config?.autocorrect_min_word_length ?: Defaults.AUTOCORRECT_MIN_WORD_LENGTH) ||
+            (config?.autocorrect_max_length_diff ?: Defaults.AUTOCORRECT_MAX_LENGTH_DIFF) < 1 ||
             !lowerTypedWord.all { it.isLetter() }
         ) return null
         var best: String? = null
