@@ -1267,6 +1267,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.ConfigMigrationStepsTest',
     // Audit 2026-10-20 L14/L15: streams and cursors closed when reading fails.
     'tribixbite.cleverkeys.ResourceClosingTest',
+    // Audit 2026-10-20 L16: device-protected prefs cached, migration still runs once.
+    'tribixbite.cleverkeys.DirectBootPrefsCacheTest',
     'tribixbite.cleverkeys.theme.MonetDynamicColorGateTest',
     'tribixbite.cleverkeys.langpack.LanguagePackImportTest',
     // 2026-10-08 audit: per-process dictionary-availability cache, invalidated by pack import/delete.

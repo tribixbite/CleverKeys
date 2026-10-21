@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
 import androidx.preference.PreferenceManager
+import java.lang.ref.WeakReference
 
 object DirectBootAwarePreferences {
     /**
@@ -19,10 +20,38 @@ object DirectBootAwarePreferences {
         if (Build.VERSION.SDK_INT < 24) {
             return PreferenceManager.getDefaultSharedPreferences(context)
         }
+        cached?.let { entry ->
+            if (entry.context.get() === context) {
+                if (!entry.migrated) entry.migrated = checkNeedMigration(context, entry.prefs)
+                return entry.prefs
+            }
+        }
         val prefs = getProtectedPrefs(context)
-        checkNeedMigration(context, prefs)
+        cached = CacheEntry(WeakReference(context), prefs, migrated = checkNeedMigration(context, prefs))
         return prefs
     }
+
+    /**
+     * The last resolution (audit L16, 2026-10-20). `get_shared_preferences` used to create a
+     * device-protected-storage Context and re-check the migration on every call, and it is
+     * called per swipe decode by both engines (CTC lexiconFor, geometric dictionaryFor). The hot
+     * callers pass the same Context every time (the IME service), so one entry keyed by that
+     * Context's IDENTITY serves them; a different Context — an activity, a test's isolated
+     * ContextWrapper whose storage may differ — is resolved afresh and replaces the entry.
+     * The Context is held weakly so an activity is never leaked by the cache.
+     *
+     * [migrated] stays false while the credential store is unreadable (device locked), so the
+     * migration is retried on the next call until it has run once.
+     */
+    private class CacheEntry(
+        val context: WeakReference<Context>,
+        val prefs: SharedPreferences,
+        @Volatile var migrated: Boolean,
+    )
+
+    /** See [CacheEntry]. A race between two threads only costs one extra resolution. */
+    @Volatile
+    private var cached: CacheEntry? = null
 
     /**
      * Copy shared preferences to device protected storage. Not using
@@ -50,18 +79,25 @@ object DirectBootAwarePreferences {
             .getSharedPreferences(prefName, Context.MODE_PRIVATE)
     }
 
-    private fun checkNeedMigration(appContext: Context, protectedPrefs: SharedPreferences) {
+    /**
+     * Copy the credential-encrypted preferences into [protectedPrefs] once.
+     *
+     * @return true when no migration is (any longer) needed; false when it could not run yet
+     *   because the device is locked, so the caller must ask again later.
+     */
+    private fun checkNeedMigration(appContext: Context, protectedPrefs: SharedPreferences): Boolean {
         if (!protectedPrefs.getBoolean("need_migration", true)) {
-            return
+            return true
         }
         val prefs = try {
             PreferenceManager.getDefaultSharedPreferences(appContext)
         } catch (e: Exception) {
             // Device is locked, migrate later
-            return
+            return false
         }
         prefs.edit().putBoolean("need_migration", false).apply()
         copySharedPreferences(prefs, protectedPrefs)
+        return true
     }
 
     private fun copySharedPreferences(src: SharedPreferences, dst: SharedPreferences) {
