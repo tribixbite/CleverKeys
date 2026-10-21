@@ -11,7 +11,6 @@ import tribixbite.cleverkeys.ContractionManager
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
-import tribixbite.cleverkeys.LanguagePreferenceKeys
 import tribixbite.cleverkeys.PredictionResult
 import tribixbite.cleverkeys.PredictionTaskRunner
 import tribixbite.cleverkeys.SwipePriority
@@ -629,12 +628,10 @@ class GeometricEngineAdapter(
         // stores what it is given without normalizing. Fix by normalizing here too if a
         // region-bearing tag ever becomes reachable — do not add a fourth copy.
         val lang = language.lowercase(Locale.ROOT)
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-        val customJson = prefs.getString(LanguagePreferenceKeys.customWordsKey(lang), "{}") ?: "{}"
-        val disabled = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(lang), emptySet())
-            ?: emptySet()
-        // User swipe priority (2026-10-08) — part of the version, like the words themselves.
-        val priorityJson = prefs.getString(LanguagePreferenceKeys.swipePriorityKey(lang), "") ?: ""
+        // The same three personal-dictionary reads the CTC lexicon makes (audit L7); swipe
+        // priority (2026-10-08) is part of the version, like the words themselves.
+        val (customJson, disabled, priorityJson) =
+            UserLexiconInputs.read(DirectBootAwarePreferences.get_shared_preferences(context), lang)
 
         // ARC-081: the platform user dictionary is the SECOND user-word store, and it is
         // mutable outside this app entirely, so it has to be read here (not cached across

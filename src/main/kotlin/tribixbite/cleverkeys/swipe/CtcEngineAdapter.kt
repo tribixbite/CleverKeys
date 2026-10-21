@@ -2,7 +2,6 @@ package tribixbite.cleverkeys.swipe
 
 import ai.onnxruntime.OrtEnvironment
 import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.PointF
 import android.os.Handler
 import android.os.Looper
@@ -179,30 +178,6 @@ class CtcEngineAdapter(
          * (audit M1: ctc mode must never offer less coverage than geometric).
          */
         fun supportsLanguage(language: String?): Boolean = CtcLanguageSupport.isSupported(language)
-
-        /**
-         * The personal-dictionary preference values one language's merged lexicon is derived
-         * from, read raw so [LexiconContentVersion] hashes exactly what the build consumes.
-         * [customJson] carries each word's stored FREQUENCY as well as its membership, so an Edit
-         * that only changes a frequency changes the version and the very next decode rebuilds
-         * (pinned with the Dictionary Manager's own writer by `CustomWordEditLexiconInputTest`,
-         * 2026-10-10 device report). [priorityJson] is user swipe priority (2026-10-08): raising
-         * or lowering a word rebuilds exactly like adding one.
-         */
-        internal data class UserLexiconInputs(
-            val customJson: String,
-            val disabled: Set<String>,
-            val priorityJson: String,
-        )
-
-        /** Read [UserLexiconInputs] for [lang] from [prefs] — the only read [lexiconFor] does. */
-        internal fun userLexiconInputs(prefs: SharedPreferences, lang: String): UserLexiconInputs =
-            UserLexiconInputs(
-                customJson = prefs.getString(LanguagePreferenceKeys.customWordsKey(lang), "{}") ?: "{}",
-                disabled = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(lang), emptySet())
-                    ?: emptySet(),
-                priorityJson = prefs.getString(LanguagePreferenceKeys.swipePriorityKey(lang), "") ?: "",
-            )
 
         /**
          * `custom_words_<lang>` JSON → (word, stored frequency) pairs in file order. A non-integer
@@ -703,7 +678,7 @@ class CtcEngineAdapter(
             }
             return null
         }
-        val inputs = userLexiconInputs(DirectBootAwarePreferences.get_shared_preferences(context), lang)
+        val inputs = UserLexiconInputs.read(DirectBootAwarePreferences.get_shared_preferences(context), lang)
         val customJson = inputs.customJson
         val disabled = inputs.disabled
         val priorityJson = inputs.priorityJson

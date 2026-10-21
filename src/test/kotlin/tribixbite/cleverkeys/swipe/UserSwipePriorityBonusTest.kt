@@ -101,15 +101,18 @@ class UserSwipePriorityBonusTest {
 
     @Test
     fun bothAdaptersFoldThePriorityStoreIntoTheVersionAndTheDecode() {
+        // Both adapters read the priority store through the one shared reader (audit L7).
+        assertThat(source("tribixbite/cleverkeys/swipe/UserLexiconInputs.kt"))
+            .contains("LanguagePreferenceKeys.swipePriorityKey(lang)")
         val ctc = source("tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt")
-        assertThat(ctc).contains("LanguagePreferenceKeys.swipePriorityKey(lang)")
+        assertThat(ctc).contains("UserLexiconInputs.read(")
         assertThat(ctc).contains("userDictionary.fingerprint, priorityJson")
         assertWithMessage("both CTC source branches build the surface table")
             .that(Regex("UserSwipePriorityBonus\\.ctcBySurface\\(").findAll(ctc).count()).isEqualTo(2)
         assertThat(ctc).contains("priority = lexicon.priority")
 
         val geo = source("tribixbite/cleverkeys/swipe/GeometricEngineAdapter.kt")
-        assertThat(geo).contains("LanguagePreferenceKeys.swipePriorityKey(lang)")
+        assertThat(geo).contains("UserLexiconInputs.read(")
         assertThat(geo).contains("userDictionary.fingerprint, priorityJson")
         assertThat(geo).contains("UserSwipePriorityBonus.geometricBonusByWord(")
 
