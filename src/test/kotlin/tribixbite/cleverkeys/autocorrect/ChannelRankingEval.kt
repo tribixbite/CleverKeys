@@ -161,6 +161,8 @@ class ChannelRankingEval {
 
     companion object {
         private lateinit var en: Lang
+        /** The shipped English tap dictionary [en] was built from, for extra predictors (prefix phase). */
+        private lateinit var enLoaded: ShippedTapDictionary.Loaded
         private lateinit var he: Lang
         private lateinit var heGrid: Map<Char, Pair<Float, Float>>
 
@@ -298,6 +300,7 @@ class ChannelRankingEval {
             dict: HashMap<String, Int>,
             index: HashMap<String, MutableSet<String>>,
             aliases: Map<String, String>,
+            config: Config = shippedConfig(),
         ): WordPredictor {
             val p = org.objenesis.ObjenesisStd().newInstance(WordPredictor::class.java)
             fun set(name: String, value: Any?) {
@@ -311,7 +314,7 @@ class ChannelRankingEval {
             set("customAndUserWords", emptySet<String>())
             set("disabledWords", mutableSetOf<String>())
             set("userWordOriginalCase", ConcurrentHashMap<String, String>())
-            set("config", shippedConfig())
+            set("config", config)
             set("cachedMaxFreqForSize", -1)
             set("secondaryIndex", null)
             set("secondaryLanguageCode", "none")
@@ -335,6 +338,7 @@ class ChannelRankingEval {
             KeyAdjacency.resetLayout()
 
             val loaded = ShippedTapDictionary.withContractionAliases()
+            enLoaded = loaded
             en = Lang(newPredictor(loaded.dictionary, loaded.prefixIndex, loaded.aliases), loaded.dictionary, loaded.aliases)
 
             val bin = File.createTempFile("langpack-he-dictionary", ".bin").apply { deleteOnExit() }
@@ -592,6 +596,7 @@ class ChannelRankingEval {
             "dev" -> when (ROUND) { 1 -> devPhase(::say); 3 -> devPhase3(::say); 5 -> devPhase5(::say); else -> devPhase2(::say) }
             "test" -> when (ROUND) { 3 -> testPhase3(::say); 4 -> testPhase4(::say); 5 -> testPhase5(::say); else -> testPhase(::say) }
             "inspect" -> inspectPhase(::say)
+            "prefix" -> prefixPhase(::say)
             else -> error("CK_CH_PHASE must be dev, test or inspect")
         }
     }
@@ -1169,6 +1174,48 @@ class ChannelRankingEval {
             "C-oov-TEST protected=${to.d(to.fixes)} of $oChanged changed (${"%.1f".format(100.0 * to.d(to.fixes) / oChanged)}%); named=$named")
         say("GATE: L1=$l1 L2=$l2 L3=$l3 L4=$l4 → " + if (l1 && l2 && l3 && l4) "PASS" else "FAIL")
         File(outDir, "rows5-test.tsv").writeText(rows.joinToString("\n") + "\n")
+    }
+
+    /**
+     * todo item 16 (descriptive, decides nothing): what `autocorrect_prefix_length` 1 and 2 cost
+     * against the shipped 0 under the shipped ranking (channel). Every set here is already SEEN,
+     * so this tunes nothing and moves no default; it informs the setting's description. Baseline
+     * = [en] (prefix 0); fixes/breaks are the prefix run against it, on GTC DEV+TEST, S-adj and
+     * C-oov (each DEV+TEST). Checkpointed per set and prefix like the TEST phases.
+     */
+    private fun prefixPhase(say: (String) -> Unit) {
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val sets = linkedMapOf(
+            "GTC" to readGtc("DEV") + readGtc("TEST"),
+            "S-adj" to sAdj(dev = true) + sAdj(dev = false),
+            "C-oov" to cOov(dev = true) + cOov(dev = false),
+        )
+        val rows = mutableListOf("set\tconfig\ttyped\ttarget\tocc\tbaseline\tcandidate\tkind\tclass")
+        say("PREFIX-LENGTH (todo 16), shipped tuning, baseline prefix ${Defaults.AUTOCORRECT_PREFIX_LENGTH}")
+        for (prefix in listOf(1, 2)) {
+            val predictor = newPredictor(enLoaded.dictionary, enLoaded.prefixIndex, enLoaded.aliases,
+                shippedConfig().apply { autocorrect_prefix_length = prefix })
+            for ((name, pairs) in sets) {
+                val inputs = pairs.map { it.typed }.distinct()
+                val base = ConcurrentHashMap<String, String>()
+                val cand = ConcurrentHashMap<String, String>()
+                val checkpoint = File(outDir, "prefix$prefix-$name.tsv")
+                val header = "# prefix=$prefix"
+                if (checkpoint.isFile && checkpoint.useLines { it.firstOrNull() } == header) {
+                    checkpoint.useLines { l -> l.drop(1).forEach { x -> val c = x.split('\t'); base[c[0]] = c[1]; cand[c[0]] = c[2] } }
+                    check(base.keys.containsAll(inputs)) { "checkpoint $checkpoint is incomplete" }
+                } else {
+                    inputs.parallelStream().forEach { t ->
+                        base[t] = en.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+                        cand[t] = predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+                    }
+                    checkpoint.writeText(header + "\n" + inputs.joinToString("\n") { "$it\t${base[it]}\t${cand[it]}" } + "\n")
+                }
+                val t = tally(en, pairs, base, cand, rows, name, "prefix=$prefix")
+                say("  prefix=$prefix ${t.line(name, pairs.size, pairs.map { it.target }.toSet().size)}")
+            }
+        }
+        File(outDir, "rows-prefix.tsv").writeText(rows.joinToString("\n") + "\n")
     }
 
     /**
