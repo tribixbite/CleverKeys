@@ -236,9 +236,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     palette) is still the dark approximation. Leftover: the remaining LOW rows in the report.
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
-15. [ ] agent: deferred review items — suffix receipt readback at command time (3 editor reads
-    per committed word, # TODO in `rememberVerifiedWord`); summon after system hide (overlay
-    permission). #175 clipboard swipe-to-delete is BUILT and merged (`2787468d`, 2026-10-21; Saga 202 release
+15. [ ] maintainer: deferred review items — summon after system hide needs the overlay permission
+    (SYSTEM_ALERT_WINDOW): a maintainer decision. The suffix receipt readback (3 editor reads per
+    committed word) is KEPT BY DESIGN (2026-10-21): the # TODO in `rememberVerifiedWord` records
+    why deferring it breaks the cursor-location proof; reopen only with a profile showing jank. #175 clipboard swipe-to-delete is BUILT and merged (`2787468d`, 2026-10-21; Saga 202 release
     `fe91c783…` PASS: left swipe hides the row with "Deleted" + Undo, Undo at 1.2 s restores it,
     a slow 20 % swipe springs back, swipe then keyboard hide commits at once (log PANE_HIDDEN;
     reopened pane empty), an unattended row commits on TIMEOUT; NOT yet checked on device:
