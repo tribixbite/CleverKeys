@@ -87,6 +87,9 @@ jobs:
     name: UI Tests (API ${{ matrix.api-level }})
     runs-on: ubuntu-latest
     needs: build
+    # A healthy run takes ~3 min per API level; a hung emulator used to hold the job for the
+    # 6 h default (API 24, 2026-10-21).
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
