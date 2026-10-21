@@ -170,6 +170,12 @@ shared tree broke the eval's compile.
 settings sliders passed the interval count and every stop fell between two values. Settings
 sliders take `increment` (`SettingsSlider`); raw `Slider`s must use `sliderSteps(range, inc)`.
 
+## IME-side InputConnection results (2026-10-21)
+
+Mutating calls (`performContextMenuAction`, `performEditorAction`, `commitText`, …) on the IME's
+connection return the IPC's success (AOSP `IRemoteInputConnectionInvoker`), never the editor's
+answer. A mock IC that returns false models nothing real; feedback built on it never fired.
+
 ## PAL model preference
 
 Use Gemini 3.8 (`gemini-3.8-flash`) for PAL consultation; never use Gemini 3.1.

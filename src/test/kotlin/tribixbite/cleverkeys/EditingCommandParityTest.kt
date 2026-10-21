@@ -52,7 +52,7 @@ class EditingCommandParityTest {
 
     private var selection: CharSequence? = null
     private var editMode = false
-    /** What the editor answers to performContextMenuAction (Compose and Chrome refuse ids they lack). */
+    /** What the connection answers to performContextMenuAction (on a device: IPC success, always true). */
     private var contextMenuAccepted = true
     // An ordinary text field unless a test says otherwise: objenesis leaves inputType 0, which
     // is TYPE_NULL — a blind-field signal since 2026-10-13 (TerminalUtils.editorKind).
@@ -283,22 +283,23 @@ class EditingCommandParityTest {
     }
 
     /**
-     * Saga 2026-10-21: in a Compose field (CleverKeys' own settings search) the Replace popup
-     * command did nothing at all — Compose's StatelessInputConnection, like Chrome's, returns
-     * false for a context-menu id it does not implement. The editor's own menu action is the
-     * command's only effect, so a refusal is reported like every other unavailable action.
+     * 2026-10-21: an IME cannot tell whether the editor took a context-menu action. The
+     * IME-side connection returns true whenever the IPC call succeeded (AOSP
+     * IRemoteInputConnectionInvoker), so a "refused → unavailable" message added on its result
+     * passed this suite yet never fired on the Saga's Compose field. Pin the honest behaviour:
+     * the same effects whatever the connection answers, and no message.
      */
     @Test
-    fun editorMenuActionsTheEditorRefusesAreReportedAsUnavailable() {
-        val unavailable = "feedback(str#${R.string.dynamic_action_unavailable})"
+    fun editorMenuActionsDoNotInferAnythingFromTheConnectionsAnswer() {
         for ((name, id) in listOf("replaceTextMenu" to android.R.id.replaceText, "autofill" to android.R.id.autofill)) {
-            contextMenuAccepted = false
-            val sent = "performContextMenuAction($id)"
-            assertEquals("$name key refused", listOf("handle_non_text_input()", sent, unavailable), layoutEffects(name))
-            assertEquals("$name mapping refused", listOf("handle_non_text_input()", sent, unavailable), mappingEffects(name))
-            contextMenuAccepted = true
-            assertEquals("$name accepted", listOf("handle_non_text_input()", sent), layoutEffects(name))
+            val expected = listOf("handle_non_text_input()", "performContextMenuAction($id)")
+            for (answer in listOf(true, false)) {
+                contextMenuAccepted = answer
+                assertEquals("$name key answer=$answer", expected, layoutEffects(name))
+                assertEquals("$name mapping answer=$answer", expected, mappingEffects(name))
+            }
         }
+        contextMenuAccepted = true
     }
 
     /**
