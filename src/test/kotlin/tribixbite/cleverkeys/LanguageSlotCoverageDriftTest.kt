@@ -50,6 +50,22 @@ class LanguageSlotCoverageDriftTest {
         return f.readText()
     }
 
+    /**
+     * How source refers to a slot key: since audit L13 (2026-10-21) the keys are defined once in
+     * `LanguagePrefs` and every reader names the constant, so a key discovered as a literal there
+     * maps to `LanguagePrefs.<NAME>`. A slot key defined anywhere else is still matched literally.
+     */
+    private fun referenceTo(key: String): String {
+        val owner = mainSource("tribixbite/cleverkeys/LanguagePrefs.kt")
+        val name = Regex("""const val (\w+) = "${Regex.escape(key)}"""").find(owner)?.groupValues?.get(1)
+        return if (name != null) "LanguagePrefs.$name" else "\"$key\""
+    }
+
+    /** True when [source] names [key] either way (constant or literal). */
+    private fun names(source: String, key: String): Boolean =
+        Regex("""\b${Regex.escape(referenceTo(key))}\b""").containsMatchIn(source) ||
+            source.contains("\"$key\"")
+
     private fun slotKeysInUse(): Set<String> {
         val mainDir = File(System.getProperty("user.dir") ?: ".", "src/main/kotlin")
         assertThat(mainDir.exists()).isTrue()
@@ -86,7 +102,7 @@ class LanguageSlotCoverageDriftTest {
                     "resolution — that is what ActiveLanguageSync reloads the predictor's " +
                     "dictionary and re-warms the swipe engine from. A slot read nowhere there " +
                     "changes the pref and nothing else."
-            ).that(config).contains("\"$key\"")
+            ).that(names(config, key)).isTrue()
         }
     }
 
@@ -99,11 +115,11 @@ class LanguageSlotCoverageDriftTest {
             assertWithMessage(
                 "'$key' exists only so a keyboard toggle can swap it into '$live'. Without a " +
                     "swap site in Keyboard2View it is storage nothing ever reads back."
-            ).that(view).contains("\"$key\"")
+            ).that(names(view, key)).isTrue()
             assertWithMessage(
                 "the swap for '$key' must also WRITE '$live' — swapping into a slot nobody " +
                     "serves from would leave the keyboard on the old language."
-            ).that(view).contains("\"$live\"")
+            ).that(names(view, live)).isTrue()
         }
     }
 

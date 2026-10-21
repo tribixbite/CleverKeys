@@ -87,6 +87,9 @@ object SwipeEngineRouter {
         CTC;
 
         companion object {
+            /** The preference this mode is stored under (audit L13: once, not in 7 files). */
+            const val PREF_KEY = "swipe_engine_mode"
+
             /**
              * Parse the pref string. Unknown/legacy values — including the removed
              * `"neural"` and `"hybrid"` modes and anything a backup import supplies —

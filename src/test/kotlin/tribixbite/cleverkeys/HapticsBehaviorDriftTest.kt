@@ -124,7 +124,7 @@ class HapticsBehaviorDriftTest {
             "was bug-forced (#154), not user-chosen — migration must clear it."
         ).that(
             HapticsMigration.shouldClearForcedVibrateCustom(
-                vibrateCustom = true, alreadyMigrated = false, paramsAtDefaults = true
+                vibrateCustom = true, paramsAtDefaults = true
             )
         ).isTrue()
     }
@@ -137,26 +137,27 @@ class HapticsBehaviorDriftTest {
             "migration must NOT clear vibrate_custom."
         ).that(
             HapticsMigration.shouldClearForcedVibrateCustom(
-                vibrateCustom = true, alreadyMigrated = false, paramsAtDefaults = false
+                vibrateCustom = true, paramsAtDefaults = false
             )
         ).isFalse()
     }
 
-    /** Already migrated → never touch the flag again, regardless of state. */
+    /**
+     * Already migrated → never touch the flag again, regardless of state. The guard lives at the
+     * call site (the decision function used to take an `alreadyMigrated` flag that its only caller
+     * always passed as false — audit L11), so pin that the call site returns before deciding.
+     */
     @Test
     fun migration_noops_whenAlreadyMigrated() {
-        assertWithMessage("Migration must run exactly once (marker set → no-op).")
-            .that(
-                HapticsMigration.shouldClearForcedVibrateCustom(
-                    vibrateCustom = true, alreadyMigrated = true, paramsAtDefaults = true
-                )
-            ).isFalse()
-        assertWithMessage("Migration must run exactly once (marker set → no-op).")
-            .that(
-                HapticsMigration.shouldClearForcedVibrateCustom(
-                    vibrateCustom = true, alreadyMigrated = true, paramsAtDefaults = false
-                )
-            ).isFalse()
+        val src = read("Config.kt")
+        val fnIdx = src.indexOf("fun migrateForcedVibrateCustom(")
+        assertWithMessage("migrateForcedVibrateCustom must exist in Config.kt").that(fnIdx).isGreaterThan(-1)
+        val body = src.substring(fnIdx, minOf(fnIdx + 1500, src.length))
+        val guard = body.indexOf("if (prefs.getBoolean(HapticsMigration.MIGRATION_MARKER_KEY, false)) return")
+        assertWithMessage("Migration must run exactly once (marker set → return before deciding).")
+            .that(guard).isGreaterThan(-1)
+        assertWithMessage("The marker guard must precede the decision.")
+            .that(guard).isLessThan(body.indexOf("shouldClearForcedVibrateCustom("))
     }
 
     /** vibrate_custom already false → nothing to clear (call site still marks migrated). */
@@ -165,13 +166,13 @@ class HapticsBehaviorDriftTest {
         assertWithMessage("vibrate_custom=false has nothing to clear.")
             .that(
                 HapticsMigration.shouldClearForcedVibrateCustom(
-                    vibrateCustom = false, alreadyMigrated = false, paramsAtDefaults = true
+                    vibrateCustom = false, paramsAtDefaults = true
                 )
             ).isFalse()
         assertWithMessage("vibrate_custom=false has nothing to clear.")
             .that(
                 HapticsMigration.shouldClearForcedVibrateCustom(
-                    vibrateCustom = false, alreadyMigrated = false, paramsAtDefaults = false
+                    vibrateCustom = false, paramsAtDefaults = false
                 )
             ).isFalse()
     }

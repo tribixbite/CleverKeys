@@ -1,5 +1,8 @@
 package tribixbite.cleverkeys.backup
 
+import tribixbite.cleverkeys.swipe.SwipeEngineRouter
+import tribixbite.cleverkeys.LanguagePrefs
+import tribixbite.cleverkeys.MarginPrefKeys
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.KeyboardHeightPrefs
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
@@ -63,12 +66,12 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "custom_border_line_width" to PrefValue.FloatV(Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat()),
 
     // ── Margins (percent of screen dimension) ─────────────────────────
-    "margin_bottom_portrait" to PrefValue.IntV(Defaults.MARGIN_BOTTOM_PORTRAIT),
-    "margin_bottom_landscape" to PrefValue.IntV(Defaults.MARGIN_BOTTOM_LANDSCAPE),
-    "margin_left_portrait" to PrefValue.IntV(Defaults.MARGIN_LEFT_PORTRAIT),
-    "margin_left_landscape" to PrefValue.IntV(Defaults.MARGIN_LEFT_LANDSCAPE),
-    "margin_right_portrait" to PrefValue.IntV(Defaults.MARGIN_RIGHT_PORTRAIT),
-    "margin_right_landscape" to PrefValue.IntV(Defaults.MARGIN_RIGHT_LANDSCAPE),
+    MarginPrefKeys.BOTTOM_PORTRAIT to PrefValue.IntV(Defaults.MARGIN_BOTTOM_PORTRAIT),
+    MarginPrefKeys.BOTTOM_LANDSCAPE to PrefValue.IntV(Defaults.MARGIN_BOTTOM_LANDSCAPE),
+    MarginPrefKeys.LEFT_PORTRAIT to PrefValue.IntV(Defaults.MARGIN_LEFT_PORTRAIT),
+    MarginPrefKeys.LEFT_LANDSCAPE to PrefValue.IntV(Defaults.MARGIN_LEFT_LANDSCAPE),
+    MarginPrefKeys.RIGHT_PORTRAIT to PrefValue.IntV(Defaults.MARGIN_RIGHT_PORTRAIT),
+    MarginPrefKeys.RIGHT_LANDSCAPE to PrefValue.IntV(Defaults.MARGIN_RIGHT_LANDSCAPE),
 
     // ── Layout ────────────────────────────────────────────────────────
     "show_numpad" to PrefValue.Str(Defaults.SHOW_NUMPAD),
@@ -175,12 +178,12 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     *autocorrectTuningDefaults(),
 
     // ── Multi-language ──────────────────────────────────────────────
-    "pref_enable_multilang" to PrefValue.Bool(Defaults.ENABLE_MULTILANG),
-    "pref_primary_language" to PrefValue.Str(Defaults.PRIMARY_LANGUAGE),
+    LanguagePrefs.MULTILANG to PrefValue.Bool(Defaults.ENABLE_MULTILANG),
+    LanguagePrefs.PRIMARY to PrefValue.Str(Defaults.PRIMARY_LANGUAGE),
     // ARC-100 reclassified these after preview-behavior tests; constants since audit M10.
-    "pref_primary_language_alt" to PrefValue.Str(Defaults.PRIMARY_LANGUAGE_ALT),
-    "pref_secondary_language" to PrefValue.Str(Defaults.SECONDARY_LANGUAGE),
-    "pref_secondary_language_alt" to PrefValue.Str(Defaults.SECONDARY_LANGUAGE_ALT),
+    LanguagePrefs.PRIMARY_ALT to PrefValue.Str(Defaults.PRIMARY_LANGUAGE_ALT),
+    LanguagePrefs.SECONDARY to PrefValue.Str(Defaults.SECONDARY_LANGUAGE),
+    LanguagePrefs.SECONDARY_ALT to PrefValue.Str(Defaults.SECONDARY_LANGUAGE_ALT),
     "pref_auto_detect_language" to PrefValue.Bool(Defaults.AUTO_DETECT_LANGUAGE),
     "pref_language_detection_sensitivity" to PrefValue.FloatV(Defaults.LANGUAGE_DETECTION_SENSITIVITY),
     "pref_secondary_prediction_weight" to PrefValue.FloatV(Defaults.SECONDARY_PREDICTION_WEIGHT),
@@ -262,7 +265,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     // now in SettingsValidation.DEPRECATED_KEYS (no reader).
     // WP9 R-1 step 7 (v1.2): swipe engine mode selector ("ctc" | "geometric").
     // Supersedes the short-lived (never-released) geometric_swipe_engine Boolean.
-    "swipe_engine_mode" to PrefValue.Str(Defaults.SWIPE_ENGINE_MODE),
+    SwipeEngineRouter.Mode.PREF_KEY to PrefValue.Str(Defaults.SWIPE_ENGINE_MODE),
     // Full Geometric Settings (GeometricSettingsActivity) — user-tunable geo engine knobs.
     "geo_max_results" to PrefValue.IntV(Defaults.GEO_MAX_RESULTS),
     "geo_frequency_weight" to PrefValue.FloatV(Defaults.GEO_FREQUENCY_WEIGHT),

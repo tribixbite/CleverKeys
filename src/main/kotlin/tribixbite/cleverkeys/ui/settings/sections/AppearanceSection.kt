@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
+import tribixbite.cleverkeys.MarginPrefKeys
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import tribixbite.cleverkeys.FoldStateTracker
@@ -103,7 +104,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     increment = 1f,
                     onValueChange = {
                         marginBottomPortrait = it.roundToInt()
-                        saveSetting("margin_bottom_portrait", marginBottomPortrait)
+                        saveSetting(MarginPrefKeys.BOTTOM_PORTRAIT, marginBottomPortrait)
                     },
                     displayValue = "$marginBottomPortrait%"
                 )
@@ -116,7 +117,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     increment = 1f,
                     onValueChange = {
                         marginBottomLandscape = it.roundToInt()
-                        saveSetting("margin_bottom_landscape", marginBottomLandscape)
+                        saveSetting(MarginPrefKeys.BOTTOM_LANDSCAPE, marginBottomLandscape)
                     },
                     displayValue = "$marginBottomLandscape%"
                 )
@@ -131,7 +132,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     increment = 1f,
                     onValueChange = {
                         marginLeftPortrait = it.roundToInt()
-                        saveSetting("margin_left_portrait", marginLeftPortrait)
+                        saveSetting(MarginPrefKeys.LEFT_PORTRAIT, marginLeftPortrait)
                     },
                     displayValue = "$marginLeftPortrait%"
                 )
@@ -145,7 +146,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     increment = 1f,
                     onValueChange = {
                         marginRightPortrait = it.roundToInt()
-                        saveSetting("margin_right_portrait", marginRightPortrait)
+                        saveSetting(MarginPrefKeys.RIGHT_PORTRAIT, marginRightPortrait)
                     },
                     displayValue = "$marginRightPortrait%"
                 )
@@ -160,7 +161,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     increment = 1f,
                     onValueChange = {
                         marginLeftLandscape = it.roundToInt()
-                        saveSetting("margin_left_landscape", marginLeftLandscape)
+                        saveSetting(MarginPrefKeys.LEFT_LANDSCAPE, marginLeftLandscape)
                     },
                     displayValue = "$marginLeftLandscape%"
                 )
@@ -174,7 +175,7 @@ internal fun SettingsActivity.AppearanceSection() {
                     increment = 1f,
                     onValueChange = {
                         marginRightLandscape = it.roundToInt()
-                        saveSetting("margin_right_landscape", marginRightLandscape)
+                        saveSetting(MarginPrefKeys.RIGHT_LANDSCAPE, marginRightLandscape)
                     },
                     displayValue = "$marginRightLandscape%"
                 )

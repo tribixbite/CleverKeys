@@ -1330,14 +1330,14 @@ class Keyboard2View @JvmOverloads constructor(
         if (explainLayoutLanguageBinding()) return
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            val currentPrimary = prefs.getString("pref_primary_language", Defaults.PRIMARY_LANGUAGE) ?: Defaults.PRIMARY_LANGUAGE
-            val alternatePrimary = prefs.getString("pref_primary_language_alt", Defaults.PRIMARY_LANGUAGE_ALT) ?: Defaults.PRIMARY_LANGUAGE_ALT
+            val currentPrimary = prefs.getString(LanguagePrefs.PRIMARY, Defaults.PRIMARY_LANGUAGE) ?: Defaults.PRIMARY_LANGUAGE
+            val alternatePrimary = prefs.getString(LanguagePrefs.PRIMARY_ALT, Defaults.PRIMARY_LANGUAGE_ALT) ?: Defaults.PRIMARY_LANGUAGE_ALT
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Toggle primary: $currentPrimary -> $alternatePrimary")
 
             // Swap the languages
             prefs.edit()
-                .putString("pref_primary_language", alternatePrimary)
-                .putString("pref_primary_language_alt", currentPrimary)
+                .putString(LanguagePrefs.PRIMARY, alternatePrimary)
+                .putString(LanguagePrefs.PRIMARY_ALT, currentPrimary)
                 // apply() is sufficient: the result isn't inspected and the
                 // language switch is driven by the OnSharedPreferenceChangeListener
                 // in CleverKeysService, which fires for apply() writes too. apply()
@@ -1364,14 +1364,14 @@ class Keyboard2View @JvmOverloads constructor(
         if (explainLayoutLanguageBinding()) return
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            val currentSecondary = prefs.getString("pref_secondary_language", Defaults.SECONDARY_LANGUAGE) ?: Defaults.SECONDARY_LANGUAGE
-            val alternateSecondary = prefs.getString("pref_secondary_language_alt", Defaults.SECONDARY_LANGUAGE_ALT) ?: Defaults.SECONDARY_LANGUAGE_ALT
+            val currentSecondary = prefs.getString(LanguagePrefs.SECONDARY, Defaults.SECONDARY_LANGUAGE) ?: Defaults.SECONDARY_LANGUAGE
+            val alternateSecondary = prefs.getString(LanguagePrefs.SECONDARY_ALT, Defaults.SECONDARY_LANGUAGE_ALT) ?: Defaults.SECONDARY_LANGUAGE_ALT
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Keyboard2View", "Toggle secondary: $currentSecondary -> $alternateSecondary")
 
             // Swap the languages
             prefs.edit()
-                .putString("pref_secondary_language", alternateSecondary)
-                .putString("pref_secondary_language_alt", currentSecondary)
+                .putString(LanguagePrefs.SECONDARY, alternateSecondary)
+                .putString(LanguagePrefs.SECONDARY_ALT, currentSecondary)
                 .apply()
 
             // Show feedback in suggestion bar (Toast suppressed on Android 13+ IME)

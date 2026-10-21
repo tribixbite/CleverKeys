@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.ui.settings
 
+import tribixbite.cleverkeys.swipe.SwipeEngineRouter
+import tribixbite.cleverkeys.MarginPrefKeys
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.backup.NON_DEFAULTED_KEYS
 import tribixbite.cleverkeys.backup.SETTINGS_DEFAULTS
@@ -32,7 +34,7 @@ object SettingsResetPolicy {
      * the geo_* precedent. Remove a key from this set if that decision changes.
      */
     val PRESERVED_SETTINGS_KEYS: Set<String> = setOf(
-        "swipe_engine_mode",
+        SwipeEngineRouter.Mode.PREF_KEY,
         "ctc_beam_width",
         "geo_max_results",
         "geo_frequency_weight",
@@ -79,12 +81,12 @@ object SettingsResetPolicy {
         put("character_size", Defaults.CHARACTER_SIZE)
 
         // Margins (0% bottom, 1% sides)
-        put("margin_bottom_portrait", Defaults.MARGIN_BOTTOM_PORTRAIT)
-        put("margin_bottom_landscape", Defaults.MARGIN_BOTTOM_LANDSCAPE)
-        put("margin_left_portrait", Defaults.MARGIN_LEFT_PORTRAIT)
-        put("margin_left_landscape", Defaults.MARGIN_LEFT_LANDSCAPE)
-        put("margin_right_portrait", Defaults.MARGIN_RIGHT_PORTRAIT)
-        put("margin_right_landscape", Defaults.MARGIN_RIGHT_LANDSCAPE)
+        put(MarginPrefKeys.BOTTOM_PORTRAIT, Defaults.MARGIN_BOTTOM_PORTRAIT)
+        put(MarginPrefKeys.BOTTOM_LANDSCAPE, Defaults.MARGIN_BOTTOM_LANDSCAPE)
+        put(MarginPrefKeys.LEFT_PORTRAIT, Defaults.MARGIN_LEFT_PORTRAIT)
+        put(MarginPrefKeys.LEFT_LANDSCAPE, Defaults.MARGIN_LEFT_LANDSCAPE)
+        put(MarginPrefKeys.RIGHT_PORTRAIT, Defaults.MARGIN_RIGHT_PORTRAIT)
+        put(MarginPrefKeys.RIGHT_LANDSCAPE, Defaults.MARGIN_RIGHT_LANDSCAPE)
 
         // Short gestures
         put("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)

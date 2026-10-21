@@ -1,5 +1,8 @@
 package tribixbite.cleverkeys.ui.settings
 
+import tribixbite.cleverkeys.swipe.SwipeEngineRouter
+import tribixbite.cleverkeys.LanguagePrefs
+import tribixbite.cleverkeys.MarginPrefKeys
 import tribixbite.cleverkeys.KeyboardHeightPrefs
 import android.content.Intent
 import android.content.SharedPreferences
@@ -38,7 +41,7 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "short_swipes_only" -> {
                 shortSwipesOnly = prefs.getSafeBoolean(key, Defaults.SHORT_SWIPES_ONLY)
             }
-            "swipe_engine_mode" -> {
+            SwipeEngineRouter.Mode.PREF_KEY -> {
                 // L1: case-canonical at read, matching Config.refresh — an imported "CTC"
                 // must select the same dropdown row/knob visibility as "ctc".
                 swipeEngineMode = prefs.getSafeString(key, Defaults.SWIPE_ENGINE_MODE)
@@ -78,22 +81,22 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
                 keyboardHeightLandscape = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
                 refreshUnfoldedHeights()
             }
-            "margin_bottom_portrait" -> {
+            MarginPrefKeys.BOTTOM_PORTRAIT -> {
                 marginBottomPortrait = prefs.getInt(key, Defaults.MARGIN_BOTTOM_PORTRAIT)
             }
-            "margin_bottom_landscape" -> {
+            MarginPrefKeys.BOTTOM_LANDSCAPE -> {
                 marginBottomLandscape = prefs.getInt(key, Defaults.MARGIN_BOTTOM_LANDSCAPE)
             }
-            "margin_left_portrait" -> {
+            MarginPrefKeys.LEFT_PORTRAIT -> {
                 marginLeftPortrait = prefs.getInt(key, Defaults.MARGIN_LEFT_PORTRAIT)
             }
-            "margin_left_landscape" -> {
+            MarginPrefKeys.LEFT_LANDSCAPE -> {
                 marginLeftLandscape = prefs.getInt(key, Defaults.MARGIN_LEFT_LANDSCAPE)
             }
-            "margin_right_portrait" -> {
+            MarginPrefKeys.RIGHT_PORTRAIT -> {
                 marginRightPortrait = prefs.getInt(key, Defaults.MARGIN_RIGHT_PORTRAIT)
             }
-            "margin_right_landscape" -> {
+            MarginPrefKeys.RIGHT_LANDSCAPE -> {
                 marginRightLandscape = prefs.getInt(key, Defaults.MARGIN_RIGHT_LANDSCAPE)
             }
             // Gesture sensitivity settings
@@ -233,7 +236,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Swipe engine settings (swipe_engine_mode case-canonicalized — L1, see
         // handlePreferenceChanged). The #9 "does this layout support swipe" state was
         // removed with the neural engine (2026-08-18): every layout swipes now.
-        swipeEngineMode = prefs.getSafeString("swipe_engine_mode", Defaults.SWIPE_ENGINE_MODE)
+        swipeEngineMode = prefs.getSafeString(SwipeEngineRouter.Mode.PREF_KEY, Defaults.SWIPE_ENGINE_MODE)
             .lowercase(java.util.Locale.ROOT)
         swipeSmoothingWindow =
             Config.safeGetInt(prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
@@ -251,12 +254,12 @@ internal fun SettingsActivity.loadCurrentSettings() {
         scaleNumpadHeight = prefs.getSafeBoolean("scale_numpad_height", Defaults.SCALE_NUMPAD_HEIGHT)
 
         // Adaptive layout settings (percentages)
-        marginBottomPortrait = prefs.getSafeInt("margin_bottom_portrait", Defaults.MARGIN_BOTTOM_PORTRAIT)
-        marginBottomLandscape = prefs.getSafeInt("margin_bottom_landscape", Defaults.MARGIN_BOTTOM_LANDSCAPE)
-        marginLeftPortrait = prefs.getSafeInt("margin_left_portrait", Defaults.MARGIN_LEFT_PORTRAIT)
-        marginLeftLandscape = prefs.getSafeInt("margin_left_landscape", Defaults.MARGIN_LEFT_LANDSCAPE)
-        marginRightPortrait = prefs.getSafeInt("margin_right_portrait", Defaults.MARGIN_RIGHT_PORTRAIT)
-        marginRightLandscape = prefs.getSafeInt("margin_right_landscape", Defaults.MARGIN_RIGHT_LANDSCAPE)
+        marginBottomPortrait = prefs.getSafeInt(MarginPrefKeys.BOTTOM_PORTRAIT, Defaults.MARGIN_BOTTOM_PORTRAIT)
+        marginBottomLandscape = prefs.getSafeInt(MarginPrefKeys.BOTTOM_LANDSCAPE, Defaults.MARGIN_BOTTOM_LANDSCAPE)
+        marginLeftPortrait = prefs.getSafeInt(MarginPrefKeys.LEFT_PORTRAIT, Defaults.MARGIN_LEFT_PORTRAIT)
+        marginLeftLandscape = prefs.getSafeInt(MarginPrefKeys.LEFT_LANDSCAPE, Defaults.MARGIN_LEFT_LANDSCAPE)
+        marginRightPortrait = prefs.getSafeInt(MarginPrefKeys.RIGHT_PORTRAIT, Defaults.MARGIN_RIGHT_PORTRAIT)
+        marginRightLandscape = prefs.getSafeInt(MarginPrefKeys.RIGHT_LANDSCAPE, Defaults.MARGIN_RIGHT_LANDSCAPE)
 
         // Visual customization settings
         labelBrightness = prefs.getSafeInt("label_brightness", Defaults.LABEL_BRIGHTNESS)
@@ -425,14 +428,14 @@ internal fun SettingsActivity.loadCurrentSettings() {
         autocorrectMinFrequency = Config.safeGetInt(prefs, "autocorrect_confidence_min_frequency", Defaults.AUTOCORRECT_MIN_FREQUENCY)
 
         // Multi-language settings
-        multiLangEnabled = prefs.getSafeBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
-        primaryLanguage = prefs.getSafeString("pref_primary_language", Defaults.PRIMARY_LANGUAGE)
-        secondaryLanguage = prefs.getSafeString("pref_secondary_language", Defaults.SECONDARY_LANGUAGE)
+        multiLangEnabled = prefs.getSafeBoolean(LanguagePrefs.MULTILANG, Defaults.ENABLE_MULTILANG)
+        primaryLanguage = prefs.getSafeString(LanguagePrefs.PRIMARY, Defaults.PRIMARY_LANGUAGE)
+        secondaryLanguage = prefs.getSafeString(LanguagePrefs.SECONDARY, Defaults.SECONDARY_LANGUAGE)
         autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
         secondaryPredictionWeight = Config.safeGetFloat(prefs, "pref_secondary_prediction_weight", Defaults.SECONDARY_PREDICTION_WEIGHT)
-        primaryLanguageAlt = prefs.getSafeString("pref_primary_language_alt", Defaults.PRIMARY_LANGUAGE_ALT)
-        secondaryLanguageAlt = prefs.getSafeString("pref_secondary_language_alt", Defaults.SECONDARY_LANGUAGE_ALT)
+        primaryLanguageAlt = prefs.getSafeString(LanguagePrefs.PRIMARY_ALT, Defaults.PRIMARY_LANGUAGE_ALT)
+        secondaryLanguageAlt = prefs.getSafeString(LanguagePrefs.SECONDARY_ALT, Defaults.SECONDARY_LANGUAGE_ALT)
 
         // Detect available V2 dictionaries for secondary language options
         availableSecondaryLanguages = detectAvailableV2Dictionaries()
@@ -501,7 +504,7 @@ internal fun SettingsActivity.saveSetting(key: String, value: Any) {
                 _self.updateConfigFromSettings()
 
                 // Broadcast language changes so other activities can refresh
-                if (key in listOf("pref_primary_language", "pref_secondary_language", "pref_enable_multilang")) {
+                if (key in LanguagePrefs.SERVING_KEYS) {
                     LocalBroadcastManager.getInstance(_self)
                         .sendBroadcast(Intent("tribixbite.cleverkeys.LANGUAGE_CHANGED"))
                 }

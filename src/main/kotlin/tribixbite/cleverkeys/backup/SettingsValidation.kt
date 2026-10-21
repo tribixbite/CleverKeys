@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.backup
 
+import tribixbite.cleverkeys.swipe.SwipeEngineRouter
+import tribixbite.cleverkeys.MarginPrefKeys
 import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.TerminalUtils
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
@@ -340,18 +342,10 @@ object SettingsValidation {
         for (k in tribixbite.cleverkeys.KeyboardHeightPrefs.ALL_KEYS) put(k, tribixbite.cleverkeys.SettingsRanges.KEYBOARD_HEIGHT)
 
         // Bottom margins (0-30% of screen height)
-        for (k in listOf(
-            "margin_bottom_portrait", "margin_bottom_landscape",
-            "margin_bottom_portrait_unfolded", "margin_bottom_landscape_unfolded",
-        )) put(k, SettingsRanges.MARGIN_BOTTOM_PERCENT)
+        for (k in MarginPrefKeys.BOTTOM_KEYS) put(k, SettingsRanges.MARGIN_BOTTOM_PERCENT)
 
         // Left/right margins (0-45% of screen width each; the 90% total cap is the sliders')
-        for (k in listOf(
-            "margin_left_portrait", "margin_left_landscape",
-            "margin_left_portrait_unfolded", "margin_left_landscape_unfolded",
-            "margin_right_portrait", "margin_right_landscape",
-            "margin_right_portrait_unfolded", "margin_right_landscape_unfolded",
-        )) put(k, SettingsRanges.MARGIN_SIDE_PERCENT)
+        for (k in MarginPrefKeys.SIDE_KEYS) put(k, SettingsRanges.MARGIN_SIDE_PERCENT)
 
         // Legacy horizontal_margin (kept for backward compatibility, 0-200 dp)
         for (k in listOf(
@@ -523,7 +517,7 @@ object SettingsValidation {
             // rather than crashing, so rejecting an old value here would block importing an
             // otherwise-valid v1.5.x backup. Assert only that it is non-empty — an empty string
             // is a corrupt write rather than a legacy value.
-            "swipe_engine_mode" -> value.isNotEmpty()
+            SwipeEngineRouter.Mode.PREF_KEY -> value.isNotEmpty()
 
             // GH #190: backspace swipe+hold selection mode
             "selection_delete_mode" -> value.matches(Regex("speed|follow"))

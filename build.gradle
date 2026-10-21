@@ -1257,6 +1257,10 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.DeadKeyMarksBelowTest',
     'tribixbite.cleverkeys.WindowLayoutUtilsTest',
     'tribixbite.cleverkeys.MarginPercentPolicyTest',
+    // Audit 2026-10-20 L3/L8: the type-recovering pref readers and get_dip_pref.
+    'tribixbite.cleverkeys.SafePrefReadersTest',
+    // Audit 2026-10-20 L4/L5: Config.migrate steps and the dp→% margin migration.
+    'tribixbite.cleverkeys.ConfigMigrationStepsTest',
     'tribixbite.cleverkeys.theme.MonetDynamicColorGateTest',
     'tribixbite.cleverkeys.langpack.LanguagePackImportTest',
     // 2026-10-08 audit: per-process dictionary-availability cache, invalidated by pack import/delete.

@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import tribixbite.cleverkeys.swipe.SwipeEngineRouter
 import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.content.res.Resources
@@ -15,8 +16,10 @@ import tribixbite.cleverkeys.prefs.LayoutsPreference
 import kotlin.math.roundToInt
 
 /**
- * Single source of truth for all app default values.
- * Both Config.kt and SettingsActivity.kt should reference these constants.
+ * Single source of truth for all app default values. Every reader and writer — Config,
+ * the Settings state and its loaders (SettingsActivity / SettingsPersistence), the backup
+ * defaults table — references these constants rather than restating a literal; pinned by
+ * DefaultsSingleDefinitionDriftTest.
  */
 object Defaults {
     // Appearance
@@ -689,18 +692,6 @@ fun sliderSteps(range: ClosedFloatingPointRange<Float>, increment: Float): Int {
 }
 
 /**
- * One-time cleanup for the stale `vibrate_custom=true` written by the #154 bug.
- *
- * Before the fix (fa00cb0ae / 538122f1d-era), the settings layer force-set
- * `vibrate_custom = true` whenever the master vibration toggle was saved,
- * pushing users onto the slow `VibrationEffect.createOneShot` path instead of
- * the low-latency `performHapticFeedback` default. The forcing code is gone,
- * but existing installs still carry the bug-written flag.
- *
- * Decision logic is a pure function (JVM-testable, no Android deps); the
- * pref wiring lives in [Config.Companion.migrateForcedVibrateCustom].
- */
-/**
  * Pure decision logic for the v4 learning-consent migration (2026-09-24). Same
  * extraction pattern as [HapticsMigration]: [Config.migrate] supplies the facts,
  * this object owns the (unit-tested) rules.
@@ -760,6 +751,18 @@ object SubkeyPopoverMigration {
     ): Boolean = !isFreshInstall && savedVersion < INTRODUCED_IN_VERSION && !hasExplicitChoice
 }
 
+/**
+ * One-time cleanup for the stale `vibrate_custom=true` written by the #154 bug.
+ *
+ * Before the fix (fa00cb0ae / 538122f1d-era), the settings layer force-set
+ * `vibrate_custom = true` whenever the master vibration toggle was saved,
+ * pushing users onto the slow `VibrationEffect.createOneShot` path instead of
+ * the low-latency `performHapticFeedback` default. The forcing code is gone,
+ * but existing installs still carry the bug-written flag.
+ *
+ * Decision logic is a pure function (JVM-testable, no Android deps); the
+ * pref wiring lives in [Config.Companion.migrateForcedVibrateCustom].
+ */
 object HapticsMigration {
     /** Persisted on user devices once the migration has run — never rename. */
     const val MIGRATION_MARKER_KEY = "vibrate_custom_migration_v1"
@@ -767,19 +770,20 @@ object HapticsMigration {
     /**
      * Decide whether the stale `vibrate_custom` flag should be cleared.
      *
-     * Clears ONLY when the flag was bug-forced: it is set, the migration has
-     * never run, and every custom-path parameter (currently just
-     * `vibrate_duration`) is still at its compile-time default — i.e. the
-     * user never actually customized anything. If the user changed a
-     * parameter, they plausibly chose the custom path; leave it alone.
-     * The call site must persist [MIGRATION_MARKER_KEY] unconditionally so
-     * this runs exactly once.
+     * Clears ONLY when the flag was bug-forced: it is set and every custom-path
+     * parameter (currently just `vibrate_duration`) is still at its compile-time
+     * default — i.e. the user never actually customized anything. If the user
+     * changed a parameter, they plausibly chose the custom path; leave it alone.
+     *
+     * Asked only when the migration has never run: the call site returns early
+     * when [MIGRATION_MARKER_KEY] is set and persists the marker unconditionally,
+     * so this runs exactly once. (An `alreadyMigrated` parameter used to restate
+     * that guard; its only caller always passed false — audit L11.)
      */
     fun shouldClearForcedVibrateCustom(
         vibrateCustom: Boolean,
-        alreadyMigrated: Boolean,
         paramsAtDefaults: Boolean
-    ): Boolean = !alreadyMigrated && vibrateCustom && paramsAtDefaults
+    ): Boolean = vibrateCustom && paramsAtDefaults
 }
 
 class Config private constructor(
@@ -1025,7 +1029,7 @@ class Config private constructor(
 
     // Swipe trail appearance
     @JvmField var swipe_trail_enabled = Defaults.SWIPE_TRAIL_ENABLED // Show swipe trail during gesture
-    @JvmField var swipe_trail_effect = Defaults.SWIPE_TRAIL_EFFECT // Trail effect: none, solid, glow, rainbow, fade
+    @JvmField var swipe_trail_effect = Defaults.SWIPE_TRAIL_EFFECT // Trail effect: none, solid, glow, rainbow, fade, sparkle (default)
     @JvmField var swipe_trail_color = Defaults.SWIPE_TRAIL_COLOR // Trail color
     @JvmField var swipe_trail_width = Defaults.SWIPE_TRAIL_WIDTH // Trail stroke width in dp
     @JvmField var swipe_trail_glow_radius = Defaults.SWIPE_TRAIL_GLOW_RADIUS // Glow effect radius in dp (smaller = crisper)
@@ -1170,17 +1174,17 @@ class Config private constructor(
 
         // Margin settings (percentage of screen dimensions)
         margin_bottom = get_percent_pref_oriented_height(
-            "margin_bottom",
+            MarginPrefKeys.BOTTOM,
             Defaults.MARGIN_BOTTOM_PORTRAIT,
             Defaults.MARGIN_BOTTOM_LANDSCAPE
         )
         margin_left = get_percent_pref_oriented_width(
-            "margin_left",
+            MarginPrefKeys.LEFT,
             Defaults.MARGIN_LEFT_PORTRAIT,
             Defaults.MARGIN_LEFT_LANDSCAPE
         )
         margin_right = get_percent_pref_oriented_width(
-            "margin_right",
+            MarginPrefKeys.RIGHT,
             Defaults.MARGIN_RIGHT_PORTRAIT,
             Defaults.MARGIN_RIGHT_LANDSCAPE
         )
@@ -1281,11 +1285,11 @@ class Config private constructor(
         learning_aggression = safeGetString(_prefs, "learning_aggression", Defaults.LEARNING_AGGRESSION)
 
         // Multi-language settings (Phase 8.3 & 8.4)
-        enable_multilang = _prefs.getBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
+        enable_multilang = _prefs.getBoolean(LanguagePrefs.MULTILANG, Defaults.ENABLE_MULTILANG)
         // The user's language choices; the ACTIVE languages are resolved against the current
         // layout's binding at the end of refresh (recomputeActiveLanguages).
-        user_primary_language = safeGetString(_prefs, "pref_primary_language", Defaults.PRIMARY_LANGUAGE)
-        user_secondary_language = safeGetString(_prefs, "pref_secondary_language", Defaults.SECONDARY_LANGUAGE)
+        user_primary_language = safeGetString(_prefs, LanguagePrefs.PRIMARY, Defaults.PRIMARY_LANGUAGE)
+        user_secondary_language = safeGetString(_prefs, LanguagePrefs.SECONDARY, Defaults.SECONDARY_LANGUAGE)
         auto_detect_language = _prefs.getBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         // SlideBarPreference stores as Float (0.4-0.9), not Int
         language_detection_sensitivity = safeGetFloat(_prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
@@ -1377,7 +1381,7 @@ class Config private constructor(
         swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
         // L1: canonicalize case at read — an imported/hand-edited "CTC" must drive the
         // router, provenance tagging, and the settings UI exactly like "ctc".
-        swipe_engine_mode = safeGetString(_prefs, "swipe_engine_mode", Defaults.SWIPE_ENGINE_MODE)
+        swipe_engine_mode = safeGetString(_prefs, SwipeEngineRouter.Mode.PREF_KEY, Defaults.SWIPE_ENGINE_MODE)
             .lowercase(java.util.Locale.ROOT)
         geo_max_results = safeGetInt(_prefs, "geo_max_results", Defaults.GEO_MAX_RESULTS)
         geo_frequency_weight = safeGetFloat(_prefs, "geo_frequency_weight", Defaults.GEO_FREQUENCY_WEIGHT)
@@ -1610,22 +1614,10 @@ class Config private constructor(
         _prefs.edit().putBoolean("gif_enabled", enabled).apply()
     }
 
+    /** A dp preference ([dipPrefValue]; [def] when absent or unreadable) converted to pixels. */
     private fun get_dip_pref(dm: DisplayMetrics, pref_name: String, def: Float): Float {
-        var value = try {
-            _prefs.getInt(pref_name, -1).toFloat()
-        } catch (e: Exception) {
-            try {
-                _prefs.getFloat(pref_name, -1f)
-            } catch (e2: Exception) {
-                try {
-                    _prefs.getString(pref_name, def.toString())?.toFloat() ?: -1f
-                } catch (e3: Exception) {
-                    -1f
-                }
-            }
-        }
-        if (value < 0f) value = def
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, dm)
+        val stored = dipPrefValue(_prefs, pref_name)
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, if (stored < 0f) def else stored, dm)
     }
 
     /**
@@ -1648,7 +1640,7 @@ class Config private constructor(
      */
     private fun orientedPercent(base: String, defPort: Int, defLand: Int): Int =
         KeyboardHeightPrefs.followOuter(
-            outerKey = base + if (orientation_landscape) "_landscape" else "_portrait",
+            outerKey = MarginPrefKeys.key(base, orientation_landscape),
             unfolded = foldable_unfolded,
             default = if (orientation_landscape) defLand else defPort,
             contains = _prefs::contains,
@@ -1746,27 +1738,62 @@ class Config private constructor(
         @JvmStatic
         fun globalPrefs(): SharedPreferences = globalConfig()._prefs
 
-        @JvmStatic
-        fun safeGetInt(prefs: SharedPreferences, key: String, defaultValue: Int): Int {
-            return try {
-                prefs.getInt(key, defaultValue)
-            } catch (e: ClassCastException) {
-                // Value might be stored as Float (from JSON import) or String
+        /**
+         * THE recovery chain behind [safeGetInt], [safeGetFloat], [safeGetBoolean], [safeGetString]
+         * and [dipPrefValue] (audit L3: four ~35-line nested try/catch towers that differed only in
+         * their parsers). Called once the typed getter has thrown [ClassCastException], i.e. the
+         * value is stored as another type (a JSON import stores numbers as Float, older builds wrote
+         * some numbers as String). Each of [fallbacks] reads the value as one other type; a
+         * [ClassCastException] moves on to the next. Any other failure, or every type rejected, is
+         * logged and answers [defaultValue].
+         *
+         * @param typeName the expected type, for the log line ("int", "float", …).
+         */
+        private fun <T> recoverMistyped(key: String, defaultValue: T, typeName: String, vararg fallbacks: () -> T): T {
+            for (read in fallbacks) {
                 try {
-                    // Try Float first - JSON numbers are often stored as Float
-                    val floatValue = prefs.getFloat(key, Float.MIN_VALUE)
-                    if (floatValue == Float.MIN_VALUE) defaultValue else floatValue.toInt()
-                } catch (e2: ClassCastException) {
-                    // Try String
-                    try {
-                        val stringValue = prefs.getString(key, null)
-                        stringValue?.toIntOrNull() ?: defaultValue
-                    } catch (e3: Exception) {
-                        Log.w("Config", "Corrupted int preference $key, using default: $defaultValue")
-                        defaultValue
-                    }
+                    return read()
+                } catch (e: ClassCastException) {
+                    // Stored as yet another type: try the next reader.
+                } catch (e: Exception) {
+                    Log.w("Config", "Error reading $typeName preference $key, using default: $defaultValue")
+                    return defaultValue
                 }
             }
+            Log.w("Config", "Corrupted $typeName preference $key, using default: $defaultValue")
+            return defaultValue
+        }
+
+        @JvmStatic
+        fun safeGetInt(prefs: SharedPreferences, key: String, defaultValue: Int): Int = try {
+            prefs.getInt(key, defaultValue)
+        } catch (e: ClassCastException) {
+            recoverMistyped(key, defaultValue, "int",
+                // JSON imports usually store numbers as Float.
+                { prefs.getFloat(key, Float.MIN_VALUE).let { if (it == Float.MIN_VALUE) defaultValue else it.toInt() } },
+                { prefs.getString(key, null)?.toIntOrNull() ?: defaultValue },
+            )
+        }
+
+        /**
+         * A dimension preference in dp as stored (Int from the sliders, Float from an import, or a
+         * numeric String), or -1 when it is absent, negative-by-convention, or unreadable — the
+         * caller then uses its default. An unreadable value is logged (audit L8: it used to be
+         * swallowed by three silent catches in `get_dip_pref`).
+         */
+        internal fun dipPrefValue(prefs: SharedPreferences, key: String): Float = try {
+            prefs.getInt(key, -1).toFloat()
+        } catch (e: ClassCastException) {
+            recoverMistyped(key, -1f, "dimension",
+                { prefs.getFloat(key, -1f) },
+                {
+                    val raw = prefs.getString(key, null)
+                    raw?.toFloatOrNull() ?: run {
+                        if (raw != null) Log.w("Config", "Unparseable dimension preference $key=\"$raw\", using default")
+                        -1f
+                    }
+                },
+            )
         }
 
         @JvmStatic
@@ -1830,37 +1857,24 @@ class Config private constructor(
         }
 
         @JvmStatic
-        fun safeGetFloat(prefs: SharedPreferences, key: String, defaultValue: Float): Float {
-            return try {
-                prefs.getFloat(key, defaultValue)
-            } catch (e: ClassCastException) {
-                // Value might be stored as Int, String, or Boolean
-                try {
+        fun safeGetFloat(prefs: SharedPreferences, key: String, defaultValue: Float): Float = try {
+            prefs.getFloat(key, defaultValue)
+        } catch (e: ClassCastException) {
+            recoverMistyped(key, defaultValue, "float",
+                {
                     val intValue = prefs.getInt(key, Int.MIN_VALUE)
                     if (intValue == Int.MIN_VALUE) defaultValue else {
                         Log.w("Config", "Float preference $key was stored as int: $intValue")
                         intValue.toFloat()
                     }
-                } catch (e2: ClassCastException) {
-                    try {
-                        val stringValue = prefs.getString(key, null)
-                        if (stringValue == null) {
-                            defaultValue
-                        } else {
-                            val parsed = stringValue.toFloatOrNull()
-                            if (parsed != null) {
-                                Log.w("Config", "Float preference $key was stored as string: $stringValue")
-                                parsed
-                            } else {
-                                defaultValue
-                            }
-                        }
-                    } catch (e3: Exception) {
-                        Log.w("Config", "Corrupted float preference $key, using default: $defaultValue")
-                        defaultValue
-                    }
-                }
-            }
+                },
+                {
+                    val stringValue = prefs.getString(key, null)
+                    val parsed = stringValue?.toFloatOrNull()
+                    if (parsed != null) Log.w("Config", "Float preference $key was stored as string: $stringValue")
+                    parsed ?: defaultValue
+                },
+            )
         }
 
         /**
@@ -1868,36 +1882,25 @@ class Config private constructor(
          * This is critical for config import where types may be mismatched.
          */
         @JvmStatic
-        fun safeGetBoolean(prefs: SharedPreferences, key: String, defaultValue: Boolean): Boolean {
-            return try {
-                prefs.getBoolean(key, defaultValue)
-            } catch (e: ClassCastException) {
-                // Value might be stored as String or Int
-                try {
-                    val stringVal = prefs.getString(key, null)
-                    when (stringVal?.lowercase()) {
+        fun safeGetBoolean(prefs: SharedPreferences, key: String, defaultValue: Boolean): Boolean = try {
+            prefs.getBoolean(key, defaultValue)
+        } catch (e: ClassCastException) {
+            recoverMistyped(key, defaultValue, "boolean",
+                {
+                    when (prefs.getString(key, null)?.lowercase()) {
                         "true", "1", "yes" -> true
                         "false", "0", "no" -> false
                         else -> defaultValue
                     }
-                } catch (e2: ClassCastException) {
-                    try {
-                        prefs.getInt(key, -1).let {
-                            when (it) {
-                                1 -> true
-                                0 -> false
-                                else -> defaultValue
-                            }
-                        }
-                    } catch (e3: Exception) {
-                        Log.w("Config", "Corrupted boolean preference $key, using default: $defaultValue")
-                        defaultValue
+                },
+                {
+                    when (prefs.getInt(key, -1)) {
+                        1 -> true
+                        0 -> false
+                        else -> defaultValue
                     }
-                } catch (e2: Exception) {
-                    Log.w("Config", "Error reading boolean preference $key, using default: $defaultValue")
-                    defaultValue
-                }
-            }
+                },
+            )
         }
 
         /**
@@ -1905,48 +1908,31 @@ class Config private constructor(
          * This is critical for config import where numeric strings may be stored as integers.
          */
         @JvmStatic
-        fun safeGetString(prefs: SharedPreferences, key: String, defaultValue: String): String {
-            return try {
-                prefs.getString(key, defaultValue) ?: defaultValue
-            } catch (e: ClassCastException) {
-                // Value might be stored as Int, Float, or Boolean (e.g., from config import)
-                try {
+        fun safeGetString(prefs: SharedPreferences, key: String, defaultValue: String): String = try {
+            prefs.getString(key, defaultValue) ?: defaultValue
+        } catch (e: ClassCastException) {
+            // Value might be stored as Int, Float, or Boolean (e.g., from config import)
+            recoverMistyped(key, defaultValue, "string",
+                {
                     val intValue = prefs.getInt(key, Int.MIN_VALUE)
-                    if (intValue == Int.MIN_VALUE) {
-                        defaultValue
-                    } else {
+                    if (intValue == Int.MIN_VALUE) defaultValue else {
                         Log.w("Config", "String preference $key was stored as int: $intValue")
                         intValue.toString()
                     }
-                } catch (e2: ClassCastException) {
-                    // Try Float
-                    try {
-                        val floatValue = prefs.getFloat(key, Float.MIN_VALUE)
-                        if (floatValue == Float.MIN_VALUE) {
-                            defaultValue
-                        } else {
-                            Log.w("Config", "String preference $key was stored as float: $floatValue")
-                            floatValue.toString()
-                        }
-                    } catch (e3: ClassCastException) {
-                        // Try Boolean
-                        try {
-                            val boolValue = prefs.getBoolean(key, false)
-                            Log.w("Config", "String preference $key was stored as boolean: $boolValue")
-                            boolValue.toString()
-                        } catch (e4: Exception) {
-                            Log.w("Config", "Corrupted string preference $key, using default: $defaultValue")
-                            defaultValue
-                        }
-                    } catch (e3: Exception) {
-                        Log.w("Config", "Error reading string preference $key, using default: $defaultValue")
-                        defaultValue
+                },
+                {
+                    val floatValue = prefs.getFloat(key, Float.MIN_VALUE)
+                    if (floatValue == Float.MIN_VALUE) defaultValue else {
+                        Log.w("Config", "String preference $key was stored as float: $floatValue")
+                        floatValue.toString()
                     }
-                } catch (e2: Exception) {
-                    Log.w("Config", "Error reading preference $key, using default: $defaultValue")
-                    defaultValue
-                }
-            }
+                },
+                {
+                    val boolValue = prefs.getBoolean(key, false)
+                    Log.w("Config", "String preference $key was stored as boolean: $boolValue")
+                    boolValue.toString()
+                },
+            )
         }
 
         /** True when the system is in light mode (`uiMode` night bit NO), the cue every "follow the system" theme reads. */
@@ -2037,38 +2023,29 @@ class Config private constructor(
                 e.putBoolean(SubkeyPopoverMigration.PREF_KEY, false)
             }
 
-            when (saved_version) {
-                0 -> {
-                    val l = mutableListOf<LayoutsPreference.Layout>()
-                    l.add(migrate_layout(safeGetString(prefs, "layout", "system")))
-                    val snd_layout = safeGetString(prefs, "second_layout", "none")
-                    if (snd_layout != "none")
-                        l.add(migrate_layout(snd_layout))
-                    val custom_layout = safeGetString(prefs, "custom_layout", "")
-                    if (custom_layout.isNotEmpty())
-                        l.add(LayoutsPreference.CustomLayout.parse(custom_layout))
-                    LayoutsPreference.save_to_preferences(e, l)
-                    // Fallthrough to case 1
-                    val add_number_row = prefs.getBoolean("number_row", false)
-                    e.putString("number_row", if (add_number_row) "no_symbols" else "no_number_row")
-                    // Fallthrough to case 2
-                    if (!prefs.contains("number_entry_layout")) {
-                        e.putString("number_entry_layout", if (prefs.getBoolean("pin_entry_enabled", true)) "pin" else "number")
-                    }
-                }
-                1 -> {
-                    val add_number_row = prefs.getBoolean("number_row", false)
-                    e.putString("number_row", if (add_number_row) "no_symbols" else "no_number_row")
-                    // Fallthrough to case 2
-                    if (!prefs.contains("number_entry_layout")) {
-                        e.putString("number_entry_layout", if (prefs.getBoolean("pin_entry_enabled", true)) "pin" else "number")
-                    }
-                }
-                2 -> {
-                    if (!prefs.contains("number_entry_layout")) {
-                        e.putString("number_entry_layout", if (prefs.getBoolean("pin_entry_enabled", true)) "pin" else "number")
-                    }
-                }
+            // The three legacy steps, each run once for every version below the one that
+            // introduced it (audit L4: they were pasted into each `when` branch to emulate the
+            // Java switch fallthrough of the original).
+            if (saved_version < 1) {
+                // v1: the layout list replaces the layout / second_layout / custom_layout trio.
+                val l = mutableListOf<LayoutsPreference.Layout>()
+                l.add(migrate_layout(safeGetString(prefs, "layout", "system")))
+                val snd_layout = safeGetString(prefs, "second_layout", "none")
+                if (snd_layout != "none")
+                    l.add(migrate_layout(snd_layout))
+                val custom_layout = safeGetString(prefs, "custom_layout", "")
+                if (custom_layout.isNotEmpty())
+                    l.add(LayoutsPreference.CustomLayout.parse(custom_layout))
+                LayoutsPreference.saveToPreferences(e, l)
+            }
+            if (saved_version < 2) {
+                // v2: the number_row boolean becomes a choice.
+                val add_number_row = prefs.getBoolean("number_row", false)
+                e.putString("number_row", if (add_number_row) "no_symbols" else "no_number_row")
+            }
+            if (saved_version < 3 && !prefs.contains("number_entry_layout")) {
+                // v3: number_entry_layout replaces pin_entry_enabled.
+                e.putString("number_entry_layout", if (prefs.getBoolean("pin_entry_enabled", true)) "pin" else "number")
             }
             e.apply()
         }
@@ -2083,7 +2060,7 @@ class Config private constructor(
          */
         @JvmStatic
         fun migrateForcedVibrateCustom(prefs: SharedPreferences) {
-            if (prefs.getBoolean("vibrate_custom_migration_v1", false)) return
+            if (prefs.getBoolean(HapticsMigration.MIGRATION_MARKER_KEY, false)) return
 
             val vibrateCustom = prefs.getBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)
             // The custom vibration path (VibratorCompat) reads exactly one
@@ -2094,7 +2071,6 @@ class Config private constructor(
             val e = prefs.edit()
             if (HapticsMigration.shouldClearForcedVibrateCustom(
                     vibrateCustom = vibrateCustom,
-                    alreadyMigrated = false, // marker checked above
                     paramsAtDefaults = paramsAtDefaults
                 )
             ) {
@@ -2117,7 +2093,10 @@ class Config private constructor(
          * Migrate margin preferences from old dp-based values to percentage-based.
          * This runs on every startup but only performs migration once (tracked by margin_prefs_version).
          *
-         * Old system: values in dp (e.g., 14dp for bottom margin)
+         * Old system: values in dp (e.g., 14dp for bottom margin), with one symmetric
+         * `horizontal_margin_portrait` / `horizontal_margin_landscape` (and `_unfolded`) per
+         * orientation instead of separate left and right margins
+         * ([MarginPrefKeys.LEGACY_HORIZONTAL] lists the four and their left/right pairs).
          * New system: values as % of screen dimension (e.g., 2% for bottom margin)
          *
          * Without this, Android Auto-Backup restores old dp values which get
@@ -2135,79 +2114,36 @@ class Config private constructor(
             val screenWidth = dm.widthPixels
             val screenHeight = dm.heightPixels
 
-            // Migrate horizontal margins (old: horizontal_margin_*, new: margin_left_* + margin_right_*)
-            val horizontalKeys = listOf(
-                "horizontal_margin_portrait" to listOf("margin_left_portrait", "margin_right_portrait"),
-                "horizontal_margin_landscape" to listOf("margin_left_landscape", "margin_right_landscape"),
-                "horizontal_margin_portrait_unfolded" to listOf("margin_left_portrait_unfolded", "margin_right_portrait_unfolded"),
-                "horizontal_margin_landscape_unfolded" to listOf("margin_left_landscape_unfolded", "margin_right_landscape_unfolded")
+            // One table for every conversion (audit L5: three near-identical loops, one of which
+            // clamped the bottom margin to 0..80 while the read site clamps 0..30). Each row is
+            // (stored dp key, keys that receive the percent, screen dimension, the slider range).
+            // Row order matters and is unchanged: an existing margin_left/right key is converted
+            // after the horizontal split, so its own value wins over the split one.
+            // An unreadable stored value converts its key's default (0 for the legacy keys).
+            data class Conversion(
+                val oldKey: String, val newKeys: List<String>, val dimensionPx: Int, val range: IntRange, val fallbackDp: Int,
             )
+            fun inPlace(key: String, dimensionPx: Int, range: IntRange) =
+                Conversion(key, listOf(key), dimensionPx, range, MarginPrefKeys.defaultPercentOf(key))
+            val conversions =
+                MarginPrefKeys.LEGACY_HORIZONTAL.map { (old, sides) ->
+                    Conversion(old, sides, screenWidth, SettingsRanges.MARGIN_SIDE_PERCENT, 0)
+                } +
+                    // Bottom margins: ALL existing values are dp (margin_prefs_version says
+                    // whether the migration already ran, so no threshold check).
+                    MarginPrefKeys.BOTTOM_KEYS.map { inPlace(it, screenHeight, SettingsRanges.MARGIN_BOTTOM_PERCENT) } +
+                    MarginPrefKeys.SIDE_KEYS.map { inPlace(it, screenWidth, SettingsRanges.MARGIN_SIDE_PERCENT) }
 
-            for ((oldKey, newKeys) in horizontalKeys) {
-                if (prefs.contains(oldKey)) {
-                    try {
-                        val dpValue = safeGetInt(prefs, oldKey, 0)
-                        val pixelValue = dpValue * density
-                        val percentValue = ((pixelValue / screenWidth) * 100).toInt().coerceIn(SettingsRanges.MARGIN_SIDE_PERCENT)
-                        for (newKey in newKeys) {
-                            editor.putInt(newKey, percentValue)
-                        }
-                        editor.remove(oldKey)
-                        Log.i("Config", "Migrated $oldKey: ${dpValue}dp → $percentValue%")
-                    } catch (e: Exception) {
-                        Log.w("Config", "Failed to migrate $oldKey", e)
-                    }
-                }
-            }
-
-            // Migrate bottom margins - ALL existing values are assumed to be dp
-            // (no threshold check - prefs_version flag tells us if migration happened)
-            val bottomKeys = listOf(
-                "margin_bottom_portrait" to Defaults.MARGIN_BOTTOM_PORTRAIT,
-                "margin_bottom_landscape" to Defaults.MARGIN_BOTTOM_LANDSCAPE,
-                "margin_bottom_portrait_unfolded" to Defaults.MARGIN_BOTTOM_PORTRAIT,
-                "margin_bottom_landscape_unfolded" to Defaults.MARGIN_BOTTOM_LANDSCAPE
-            )
-
-            for ((key, defaultPercent) in bottomKeys) {
-                if (prefs.contains(key)) {
-                    try {
-                        val oldValue = safeGetInt(prefs, key, defaultPercent)
-                        // Convert dp to percentage of screen height
-                        val pixelValue = oldValue * density
-                        val percentValue = ((pixelValue / screenHeight) * 100).toInt().coerceIn(SettingsRanges.MARGIN_BOTTOM_PERCENT)
-                        editor.putInt(key, percentValue)
-                        Log.i("Config", "Migrated $key: ${oldValue}dp → $percentValue%")
-                    } catch (e: Exception) {
-                        Log.w("Config", "Failed to migrate $key", e)
-                    }
-                }
-            }
-
-            // Migrate left/right margins if they exist with dp values
-            val leftRightKeys = listOf(
-                "margin_left_portrait" to Defaults.MARGIN_LEFT_PORTRAIT,
-                "margin_left_landscape" to Defaults.MARGIN_LEFT_LANDSCAPE,
-                "margin_left_portrait_unfolded" to Defaults.MARGIN_LEFT_PORTRAIT,
-                "margin_left_landscape_unfolded" to Defaults.MARGIN_LEFT_LANDSCAPE,
-                "margin_right_portrait" to Defaults.MARGIN_RIGHT_PORTRAIT,
-                "margin_right_landscape" to Defaults.MARGIN_RIGHT_LANDSCAPE,
-                "margin_right_portrait_unfolded" to Defaults.MARGIN_RIGHT_PORTRAIT,
-                "margin_right_landscape_unfolded" to Defaults.MARGIN_RIGHT_LANDSCAPE
-            )
-
-            for ((key, defaultPercent) in leftRightKeys) {
-                if (prefs.contains(key)) {
-                    try {
-                        val oldValue = safeGetInt(prefs, key, defaultPercent)
-                        // Convert dp to percentage of screen width
-                        val pixelValue = oldValue * density
-                        val percentValue = ((pixelValue / screenWidth) * 100).toInt().coerceIn(SettingsRanges.MARGIN_SIDE_PERCENT)
-                        editor.putInt(key, percentValue)
-                        Log.i("Config", "Migrated $key: ${oldValue}dp → $percentValue%")
-                    } catch (e: Exception) {
-                        Log.w("Config", "Failed to migrate $key", e)
-                    }
+            for ((oldKey, newKeys, dimensionPx, range, fallbackDp) in conversions) {
+                if (!prefs.contains(oldKey)) continue
+                try {
+                    val dpValue = safeGetInt(prefs, oldKey, fallbackDp)
+                    val percentValue = ((dpValue * density / dimensionPx) * 100).toInt().coerceIn(range)
+                    for (newKey in newKeys) editor.putInt(newKey, percentValue)
+                    if (oldKey !in newKeys) editor.remove(oldKey)
+                    Log.i("Config", "Migrated $oldKey: ${dpValue}dp → $percentValue%")
+                } catch (e: Exception) {
+                    Log.w("Config", "Failed to migrate $oldKey", e)
                 }
             }
 

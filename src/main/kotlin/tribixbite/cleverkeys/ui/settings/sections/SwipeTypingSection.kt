@@ -105,7 +105,7 @@ internal fun SettingsActivity.SwipeTypingSection() {
                                 1 -> "geometric"
                                 else -> "ctc"
                             }
-                            saveSetting("swipe_engine_mode", swipeEngineMode)
+                            saveSetting(SwipeEngineRouter.Mode.PREF_KEY, swipeEngineMode)
                         }
                     )
 

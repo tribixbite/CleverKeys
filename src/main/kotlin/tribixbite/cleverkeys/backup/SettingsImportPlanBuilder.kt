@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.backup
 
+import tribixbite.cleverkeys.swipe.SwipeEngineRouter
+import tribixbite.cleverkeys.MarginPrefKeys
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -193,13 +195,7 @@ object SettingsImportPlanBuilder {
         val skipped = mutableListOf<SkippedKey>()
 
         // 1. Horizontal-margin pairs — symmetric dp→% conversion.
-        val horizontalKeys = listOf(
-            "horizontal_margin_portrait" to listOf("margin_left_portrait", "margin_right_portrait"),
-            "horizontal_margin_landscape" to listOf("margin_left_landscape", "margin_right_landscape"),
-            "horizontal_margin_portrait_unfolded" to listOf("margin_left_portrait_unfolded", "margin_right_portrait_unfolded"),
-            "horizontal_margin_landscape_unfolded" to listOf("margin_left_landscape_unfolded", "margin_right_landscape_unfolded"),
-        )
-        for ((oldKey, newKeys) in horizontalKeys) {
+        for ((oldKey, newKeys) in MarginPrefKeys.LEGACY_HORIZONTAL) {
             if (out.has(oldKey) && !out.has(newKeys[0])) {
                 try {
                     val dpValue = out.get(oldKey).asInt
@@ -216,13 +212,7 @@ object SettingsImportPlanBuilder {
         }
 
         // 2. Bottom-margin dp→% conversion (only when value > 30, matching legacy guard).
-        val bottomKeys = listOf(
-            "margin_bottom_portrait",
-            "margin_bottom_landscape",
-            "margin_bottom_portrait_unfolded",
-            "margin_bottom_landscape_unfolded",
-        )
-        for (key in bottomKeys) {
+        for (key in MarginPrefKeys.BOTTOM_KEYS) {
             if (out.has(key)) {
                 try {
                     val value = out.get(key).asInt
@@ -368,7 +358,7 @@ object SettingsImportPlanBuilder {
      * unchanged AND applies in the canonical form every reader expects.
      */
     private val CASE_CANONICAL_STRING_KEYS = setOf(
-        "swipe_engine_mode",
+        SwipeEngineRouter.Mode.PREF_KEY,
     )
 
     private fun canonicalize(key: String, v: PrefValue): PrefValue {

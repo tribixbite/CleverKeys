@@ -1179,17 +1179,23 @@ class CoreImeHygieneDriftTest {
             .that(section.isFile).isTrue()
         val source = section.readText()
 
+        // The selectors save through the LanguagePrefs constants (audit L13, 2026-10-21); the
+        // constants' values are pinned so the scan still names the real preference keys.
+        assertThat(LanguagePrefs.PRIMARY).isEqualTo("pref_primary_language")
+        assertThat(LanguagePrefs.SECONDARY).isEqualTo("pref_secondary_language")
+        assertThat(LanguagePrefs.PRIMARY_ALT).isEqualTo("pref_primary_language_alt")
+        assertThat(LanguagePrefs.SECONDARY_ALT).isEqualTo("pref_secondary_language_alt")
         val selectors = listOf(
-            "pref_primary_language",
-            "pref_secondary_language",
-            "pref_primary_language_alt",
-            "pref_secondary_language_alt",
+            "LanguagePrefs.PRIMARY",
+            "LanguagePrefs.SECONDARY",
+            "LanguagePrefs.PRIMARY_ALT",
+            "LanguagePrefs.SECONDARY_ALT",
         )
         for (pref in selectors) {
-            // `saveSetting("<pref>", …)` must be followed by the rescan before the lambda closes.
-            val save = Regex("""saveSetting\("$pref",[^)]*\)""").find(source)
+            // `saveSetting(<pref>, …)` must be followed by the rescan before the lambda closes.
+            val save = Regex("""saveSetting\(${Regex.escape(pref)},[^)]*\)""").find(source)
             assertWithMessage(
-                "no `saveSetting(\"$pref\", …)` in MultiLanguageSection — if the selector moved, " +
+                "no `saveSetting($pref, …)` in MultiLanguageSection — if the selector moved, " +
                     "move this pin with it rather than deleting it"
             ).that(save).isNotNull()
 
@@ -1364,13 +1370,16 @@ class CoreImeHygieneDriftTest {
         // these preferences (and the current layout's binding) on every refresh, and the
         // service hands them to the sync after every refresh.
         val config = source("tribixbite/cleverkeys/Config.kt")
-        for (pref in listOf(
-            "pref_primary_language", "pref_secondary_language", "pref_enable_multilang",
+        // Config reads them through the LanguagePrefs constants (audit L13).
+        for ((pref, ref) in listOf(
+            LanguagePrefs.PRIMARY to "LanguagePrefs.PRIMARY",
+            LanguagePrefs.SECONDARY to "LanguagePrefs.SECONDARY",
+            LanguagePrefs.MULTILANG to "LanguagePrefs.MULTILANG",
         )) {
             assertWithMessage(
                 "Config must read '$pref' into the active-language resolution — it changes " +
                     "which (layout, language) pair the next swipe decodes against."
-            ).that(config).contains("\"$pref\"")
+            ).that(Regex("""\b${Regex.escape(ref)}\b""").containsMatchIn(config)).isTrue()
         }
 
         val service = source("tribixbite/cleverkeys/CleverKeysService.kt")

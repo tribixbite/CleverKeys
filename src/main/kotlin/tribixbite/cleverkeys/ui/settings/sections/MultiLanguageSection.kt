@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
+import tribixbite.cleverkeys.LanguagePrefs
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -91,7 +92,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                     checked = multiLangEnabled,
                     onCheckedChange = {
                         multiLangEnabled = it
-                        saveSetting("pref_enable_multilang", it)
+                        saveSetting(LanguagePrefs.MULTILANG, it)
                     },
                     highlightId = "multilang"
                 )
@@ -133,7 +134,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         selectedIndex = primarySelectedIndex,
                         onSelectionChange = { index ->
                             primaryLanguage = primaryOptions.getOrElse(index) { "en" }
-                            saveSetting("pref_primary_language", primaryLanguage)
+                            saveSetting(LanguagePrefs.PRIMARY, primaryLanguage)
                         rescanContractionCollisions()
                             // Reload per-language prefix boost settings
                         }
@@ -154,7 +155,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         selectedIndex = secondarySelectedIndex,
                         onSelectionChange = { index ->
                             secondaryLanguage = secondaryOptions.getOrElse(index) { "none" }
-                            saveSetting("pref_secondary_language", secondaryLanguage)
+                            saveSetting(LanguagePrefs.SECONDARY, secondaryLanguage)
                         rescanContractionCollisions()
                             // Dictionary reload: Config refresh -> ActiveLanguageSync (GH #186/#61)
                         }
@@ -245,7 +246,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                             selectedIndex = altPrimarySelectedIndex,
                             onSelectionChange = { index ->
                                 primaryLanguageAlt = altPrimaryOptions.getOrElse(index) { "es" }
-                                saveSetting("pref_primary_language_alt", primaryLanguageAlt)
+                                saveSetting(LanguagePrefs.PRIMARY_ALT, primaryLanguageAlt)
                                 rescanContractionCollisions()
                             }
                         )
@@ -265,7 +266,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         selectedIndex = altSecondarySelectedIndex,
                         onSelectionChange = { index ->
                             secondaryLanguageAlt = altSecondaryOptions.getOrElse(index) { "none" }
-                            saveSetting("pref_secondary_language_alt", secondaryLanguageAlt)
+                            saveSetting(LanguagePrefs.SECONDARY_ALT, secondaryLanguageAlt)
                             rescanContractionCollisions()
                         }
                     )
