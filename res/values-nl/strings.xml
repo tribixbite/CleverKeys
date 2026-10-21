@@ -417,7 +417,7 @@
     <string name="autocorrect_typo_forgiveness_title">Typvergevingsgezindheid</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximaal toegestaan tekenverschil (0–5)</string>
     <string name="autocorrect_starting_letter_title">Nauwkeurigheid beginletter</string>
-    <string name="autocorrect_starting_letter_desc">Vereiste overeenkomende prefixlengte (0–4)</string>
+    <string name="autocorrect_starting_letter_desc">Letters aan het begin van een woord die autocorrectie laat staan. Bij 0 wordt ook een verkeerde eerste letter verbeterd; vanaf 1 nooit.</string>
     <string name="backup_protection_state_keystore">Ingesteld — beschermd door Android Keystore; exports zijn versleuteld</string>
     <string name="backup_protection_state_legacy">Ingesteld — verouderde app-privébeveiliging (Android 5); exports zijn versleuteld</string>
     <string name="backup_protection_state_not_set">Niet ingesteld</string>

@@ -430,7 +430,7 @@
     <string name="autocorrect_typo_forgiveness_title">Drukas kļūdu piedošana</string>
     <string name="autocorrect_typo_forgiveness_desc">Maksimālā atļautā rakstzīmju starpība (0–5)</string>
     <string name="autocorrect_starting_letter_title">Sākuma burta precizitāte</string>
-    <string name="autocorrect_starting_letter_desc">Nepieciešamais atbilstošā prefiksa garums (0–4)</string>
+    <string name="autocorrect_starting_letter_desc">Burti vārda sākumā, ko autokorektūra nemaina. Ar 0 tiek labots arī nepareizs pirmais burts; ar 1 vai vairāk nekad.</string>
     <string name="backup_protection_state_keystore">Iestatīta — aizsargā Android Keystore; eksporti tiek šifrēti</string>
     <string name="backup_protection_state_legacy">Iestatīta — mantotā lietotnes privātā aizsardzība (Android 5); eksporti tiek šifrēti</string>
     <string name="backup_protection_state_not_set">Nav iestatīta</string>

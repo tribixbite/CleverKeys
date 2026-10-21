@@ -426,7 +426,7 @@
     <string name="autocorrect_typo_forgiveness_title">Toleransi Typo</string>
     <string name="autocorrect_typo_forgiveness_desc">Perbedaan karakter maksimum yang diizinkan (0–5)</string>
     <string name="autocorrect_starting_letter_title">Akurasi Huruf Awal</string>
-    <string name="autocorrect_starting_letter_desc">Panjang awalan yang diperlukan (0–4)</string>
+    <string name="autocorrect_starting_letter_desc">Huruf di awal kata yang dipertahankan Koreksi Otomatis. 0 juga memperbaiki huruf pertama yang salah; 1 atau lebih tidak pernah.</string>
     <string name="backup_protection_state_keystore">Tersetel — dilindungi Android Keystore; ekspor dienkripsi</string>
     <string name="backup_protection_state_legacy">Tersetel — perlindungan lama khusus aplikasi (Android 5); ekspor dienkripsi</string>
     <string name="backup_protection_state_not_set">Belum disetel</string>

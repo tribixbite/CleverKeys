@@ -414,7 +414,7 @@
     <string name="autocorrect_typo_forgiveness_title">誤字許容範囲</string>
     <string name="autocorrect_typo_forgiveness_desc">許容する最大文字差（0〜5）</string>
     <string name="autocorrect_starting_letter_title">先頭文字の精度</string>
-    <string name="autocorrect_starting_letter_desc">必要な一致プレフィックス長（0〜4）</string>
+    <string name="autocorrect_starting_letter_desc">自動修正が変更しない単語の先頭の文字数です。0 では先頭の文字の誤りも修正し、1 以上では修正しません。</string>
     <string name="backup_protection_state_keystore">設定済み。Android Keystore で保護され、エクスポートは暗号化されます</string>
     <string name="backup_protection_state_legacy">設定済み。旧方式のアプリ専用領域で保護され（Android 5）、エクスポートは暗号化されます</string>
     <string name="backup_protection_state_not_set">未設定</string>

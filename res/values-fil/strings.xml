@@ -426,7 +426,7 @@
     <string name="autocorrect_typo_forgiveness_title">Pagpapalampas sa Typo</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximum na pinapayagang pagkakaiba ng karakter (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kawastuhan ng Unang Titik</string>
-    <string name="autocorrect_starting_letter_desc">Kinakailangang haba ng prefix na tumutugma (0–4)</string>
+    <string name="autocorrect_starting_letter_desc">Mga titik sa simula ng salita na hindi binabago ng Auto-Correction. Sa 0, naitatama rin ang maling unang titik; sa 1 o higit pa, hindi kailanman.</string>
     <string name="backup_protection_state_keystore">Nakatakda — protektado ng Android Keystore; naka-encrypt ang mga export</string>
     <string name="backup_protection_state_legacy">Nakatakda — lumang app-private na proteksyon (Android 5); naka-encrypt ang mga export</string>
     <string name="backup_protection_state_not_set">Hindi nakatakda</string>

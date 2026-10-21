@@ -253,8 +253,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 16. [x] agent: `autocorrect_prefix_length` — measured 2026-10-21 (descriptive,
     `docs/eval/2026-10-21-autocorrect-prefix-length.md`): prefix 1 vs the shipped 0 under channel
     ranking costs GTC 79.0 % → 77.8 % (553 targets broken, 305 fixed) and S-adj 95.4 % → 82.7 %
-    (first-letter slips can no longer be corrected). Default 0 stays. OPEN for the maintainer:
-    reword the setting's description (proposal in the doc; goes with the string review, item 10);
+    (first-letter slips can no longer be corrected). Default 0 stays. Description reworded in all
+    22 locales (maintainer approved 2026-10-21; translations mine → string review, item 10);
     C-oov and prefix 2 not run (stopped: held the Gradle lock 3 h).
 17. [ ] RTX: short-word CTC — word-balanced fine-tune on the raw-path input contract so
     dwell-less `ad`/`wet` decode, gated on fresh writer/session-separated human traces

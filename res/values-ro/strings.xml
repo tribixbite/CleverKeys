@@ -441,7 +441,7 @@
     <string name="autocorrect_typo_forgiveness_title">Toleranță erori de scriere</string>
     <string name="autocorrect_typo_forgiveness_desc">Diferența maximă de caractere permisă (0–5)</string>
     <string name="autocorrect_starting_letter_title">Acuratețe literă inițială</string>
-    <string name="autocorrect_starting_letter_desc">Lungimea prefixului potrivit necesar (0–4)</string>
+    <string name="autocorrect_starting_letter_desc">Literele de la începutul cuvântului pe care corectarea automată le păstrează. La 0 corectează și o primă literă greșită; de la 1 în sus, niciodată.</string>
     <string name="backup_protection_state_keystore">Setată — protejată de Android Keystore; exporturile sunt criptate</string>
     <string name="backup_protection_state_legacy">Setată — protecție veche în spațiul privat al aplicației (Android 5); exporturile sunt criptate</string>
     <string name="backup_protection_state_not_set">Nesetată</string>

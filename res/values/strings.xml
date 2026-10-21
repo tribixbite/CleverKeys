@@ -620,7 +620,7 @@
     <string name="autocorrect_typo_forgiveness_title">Typo Forgiveness</string>
     <string name="autocorrect_typo_forgiveness_desc">Max character difference allowed (0–5)</string>
     <string name="autocorrect_starting_letter_title">Starting Letter Accuracy</string>
-    <string name="autocorrect_starting_letter_desc">Required matching prefix length (0–4)</string>
+    <string name="autocorrect_starting_letter_desc">Letters at the start of a word that autocorrect keeps. 0 also fixes a wrong first letter; 1 or more never does.</string>
 
     <!-- BackupPasswordBlock (Backup &amp; Restore) — backup-passphrase protection state.
          The three backup_protection_state_* labels are shown in the settings block and are

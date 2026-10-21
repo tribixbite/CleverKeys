@@ -432,7 +432,7 @@
     <string name="autocorrect_typo_forgiveness_title">Допуск помилок</string>
     <string name="autocorrect_typo_forgiveness_desc">Максимальна різниця символів (0–5)</string>
     <string name="autocorrect_starting_letter_title">Точність початкової літери</string>
-    <string name="autocorrect_starting_letter_desc">Потрібна довжина збігного префікса (0–4)</string>
+    <string name="autocorrect_starting_letter_desc">Літери на початку слова, які автовиправлення не змінює. При 0 виправляється й хибна перша літера; при 1 і більше — ніколи.</string>
     <string name="backup_protection_state_keystore">Задано — захищено Android Keystore; експорти шифруються</string>
     <string name="backup_protection_state_legacy">Задано — застарілий захист у приватному сховищі застосунку (Android 5); експорти шифруються</string>
     <string name="backup_protection_state_not_set">Не задано</string>

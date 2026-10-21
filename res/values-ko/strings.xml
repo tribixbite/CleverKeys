@@ -415,7 +415,7 @@
     <string name="autocorrect_typo_forgiveness_title">오타 허용 범위</string>
     <string name="autocorrect_typo_forgiveness_desc">허용하는 최대 문자 차이（0~5）</string>
     <string name="autocorrect_starting_letter_title">시작 문자 정확도</string>
-    <string name="autocorrect_starting_letter_desc">필요한 일치 접두사 길이（0~4）</string>
+    <string name="autocorrect_starting_letter_desc">자동 수정이 바꾸지 않는 단어 앞부분의 글자 수입니다. 0이면 잘못된 첫 글자도 고치고, 1 이상이면 고치지 않습니다.</string>
     <string name="backup_protection_state_keystore">설정됨. Android Keystore로 보호되며 내보내기가 암호화됩니다</string>
     <string name="backup_protection_state_legacy">설정됨. 이전 방식의 앱 전용 저장소로 보호되며(Android 5) 내보내기가 암호화됩니다</string>
     <string name="backup_protection_state_not_set">설정되지 않음</string>

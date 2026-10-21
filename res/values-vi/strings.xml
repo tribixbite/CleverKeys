@@ -443,7 +443,7 @@
     <string name="autocorrect_typo_forgiveness_title">Độ khoan dung lỗi gõ</string>
     <string name="autocorrect_typo_forgiveness_desc">Cho phép chênh lệch ký tự tối đa (0–5)</string>
     <string name="autocorrect_starting_letter_title">Độ chính xác chữ cái đầu</string>
-    <string name="autocorrect_starting_letter_desc">Độ dài tiền tố khớp bắt buộc (0–4)</string>
+    <string name="autocorrect_starting_letter_desc">Số chữ cái đầu từ mà tự động sửa lỗi giữ nguyên. Với 0, chữ cái đầu sai cũng được sửa; từ 1 trở lên thì không bao giờ.</string>
     <string name="backup_protection_state_keystore">Đã đặt — được Android Keystore bảo vệ; các bản xuất được mã hóa</string>
     <string name="backup_protection_state_legacy">Đã đặt — bảo vệ kiểu cũ trong bộ nhớ riêng của ứng dụng (Android 5); các bản xuất được mã hóa</string>
     <string name="backup_protection_state_not_set">Chưa đặt</string>

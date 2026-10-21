@@ -431,7 +431,7 @@
     <string name="autocorrect_typo_forgiveness_title">Tolerancja literówek</string>
     <string name="autocorrect_typo_forgiveness_desc">Maksymalna dozwolona różnica znaków (0–5)</string>
     <string name="autocorrect_starting_letter_title">Dokładność pierwszej litery</string>
-    <string name="autocorrect_starting_letter_desc">Wymagana długość pasującego prefiksu (0–4)</string>
+    <string name="autocorrect_starting_letter_desc">Litery na początku słowa, których autokorekta nie zmienia. Przy 0 poprawia też błędną pierwszą literę; od 1 w górę nigdy.</string>
     <string name="backup_protection_state_keystore">Ustawione — chronione przez Android Keystore; eksporty są szyfrowane</string>
     <string name="backup_protection_state_legacy">Ustawione — starsza ochrona w pamięci prywatnej aplikacji (Android 5); eksporty są szyfrowane</string>
     <string name="backup_protection_state_not_set">Nieustawione</string>

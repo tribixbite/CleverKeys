@@ -446,7 +446,9 @@ enforces this.
 **Prefix length.** With `autocorrect_prefix_length` > 0, the sweep only considers words that
 share the typed prefix. For example, `bery` cannot reach `very` with prefix length 1. Its W is
 then a b- word, and the insertion `berry` can win. That is what a Pixel with prefix length 1
-showed. The shipped default is 0, and no evaluation covers prefix lengths above 0.
+showed. The shipped default is 0. Measured 2026-10-21 under channel ranking, prefix length 1
+costs GTC accuracy 79.0 % → 77.8 % and adjacent-slip accuracy 95.4 % → 82.7 %, because a wrong
+first letter can no longer be corrected (`docs/eval/2026-10-21-autocorrect-prefix-length.md`).
 
 M was tuned once on DEV commits of the GitHub Typo Corpus plus half of a synthetic
 adjacent-slip control, then gated on the held-out half, both on the device dictionary.

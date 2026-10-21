@@ -422,7 +422,7 @@
     <string name="autocorrect_typo_forgiveness_title">Elgépelési tolerancia</string>
     <string name="autocorrect_typo_forgiveness_desc">Maximálisan megengedett karaktereltérés (0–5)</string>
     <string name="autocorrect_starting_letter_title">Kezdőbetű pontossága</string>
-    <string name="autocorrect_starting_letter_desc">Szükséges egyező előtaghossz (0–4)</string>
+    <string name="autocorrect_starting_letter_desc">A szó elején lévő betűk, amelyeket az automatikus javítás megtart. 0 esetén a hibás első betűt is javítja, 1-től soha.</string>
     <string name="backup_protection_state_keystore">Beállítva — az Android Keystore védi; az exportok titkosítottak</string>
     <string name="backup_protection_state_legacy">Beállítva — régi, alkalmazásprivát védelem (Android 5); az exportok titkosítottak</string>
     <string name="backup_protection_state_not_set">Nincs beállítva</string>

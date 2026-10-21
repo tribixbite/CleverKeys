@@ -418,7 +418,7 @@
     <string name="autocorrect_typo_forgiveness_title">Tolerância a erros de digitação</string>
     <string name="autocorrect_typo_forgiveness_desc">Diferença máxima de caracteres permitida (0–5)</string>
     <string name="autocorrect_starting_letter_title">Precisão da letra inicial</string>
-    <string name="autocorrect_starting_letter_desc">Comprimento do prefixo correspondente necessário (0–4)</string>
+    <string name="autocorrect_starting_letter_desc">Letras do início da palavra que a correção automática mantém. Com 0 também corrige uma primeira letra errada; com 1 ou mais, nunca.</string>
     <string name="backup_protection_state_keystore">Definida — protegida pelo Android Keystore; as exportações são criptografadas</string>
     <string name="backup_protection_state_legacy">Definida — proteção legada no armazenamento privado do app (Android 5); as exportações são criptografadas</string>
     <string name="backup_protection_state_not_set">Não definida</string>

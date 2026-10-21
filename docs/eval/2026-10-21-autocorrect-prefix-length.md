@@ -41,7 +41,7 @@ candidate. The fixes are cases where a rarer same-first-letter word was the righ
 
 ## Consequence
 
-The shipped 0 stands. The setting's description ("Required matching prefix length (0–4)") does
-not say what it costs. A proposed wording, for the maintainer and the native-speaker string
-review: "Letters at the start of a word that autocorrect keeps. 0 also fixes a wrong first
-letter; 1 or more never does."
+The shipped 0 stands. The setting's description ("Required matching prefix length (0–4)") did
+not say what it costs. The maintainer approved (2026-10-21) and all
+22 locales now read: "Letters at the start of a word that autocorrect keeps. 0 also fixes a
+wrong first letter; 1 or more never does."
