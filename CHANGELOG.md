@@ -176,6 +176,13 @@ editor that used to be listed here already ship in 2.0.)
   one per line; originals stay) and **Clean** (removes trailing spaces and line breaks that
   were inserted inside paragraphs; lists, blank lines, short lines, links and code keep
   theirs). Merge and Clean ask first and show a preview.
+- **Swipe to delete clipboard entries (#175)**: swipe an entry left or right to delete it from
+  the current tab (History, Pinned or Todos; copies on other tabs stay). The entry disappears at
+  once and the results row offers **Undo** for 5 seconds; the delete happens when that ends, or
+  straight away when the panel or keyboard closes, the tab, search or filters change, selection
+  or editing starts, or another entry is swiped. Vertical scrolling, taps and long-presses are
+  unchanged. TalkBack users get the same through a **Delete** action on each entry. On by
+  default; **Settings > Clipboard > Swipe to delete clipboard entries** turns it off.
 - **Clear system clipboard command (#168)**: clears only Android's current clip. Saved
   history, pinned and todo entries are kept; Android 7.0–8.1 leave an empty clip item.
 - **Custom terminal apps** (Settings → Advanced): add terminal package IDs; they match

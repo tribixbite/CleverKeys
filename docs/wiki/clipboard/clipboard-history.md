@@ -57,6 +57,22 @@ You can assign clipboard access to any key's short swipe:
 
 Deleting from the Pinned or Todos tab removes the item from that tab only (the copies are independent).
 
+### Swipe to Delete
+
+Swipe an item **left or right** to delete it from the current tab. The item disappears at once and
+the results row shows **Deleted** with an **Undo** button for 5 seconds; tap **Undo** to bring it
+back. A short, quick flick also deletes; a swipe that goes less than about a third of the way and
+is released slowly springs back. Up-and-down drags still scroll the list, and taps and long-presses
+work as before.
+
+- Works on all three tabs and removes the item from that tab only, exactly like the delete button.
+- Not available in selection mode, while an item is being edited, or in the tag panel.
+- The delete happens for real when the 5 seconds end, or straight away when you close the panel
+  or the keyboard, switch tabs, change the search or filters, start selecting or editing, or swipe
+  another item.
+- TalkBack: each item offers a **Delete** action (in the actions menu) that works the same way.
+- Turn it off with **Settings > Clipboard > Swipe to delete clipboard entries**.
+
 ### Long-Press to Copy
 
 Copy an item to the system clipboard without pasting it into the current field:
@@ -186,10 +202,11 @@ The clipboard pane organizes items into three tabs:
 | **Pin button** | Pins item | Unpins item | Pins item |
 | **Todo button** | Adds to todos | Adds to todos | Removes from todos |
 | **Delete** | Removes from history | Removes from Pinned | Removes from Todos |
+| **Swipe left/right** | Removes from history (Undo 5 s) | Removes from Pinned (Undo 5 s) | Removes from Todos (Undo 5 s) |
 | **Paste** | Pastes to editor | Pastes to editor | Pastes to editor |
 | **Long-press** | Copies to system clipboard | Copies to system clipboard | Copies to system clipboard |
 
-Pin, todo, and tag buttons appear when an entry is expanded (tap the entry or its chevron). Delete lives behind the ✏️ edit button for text entries and behind expansion for media entries (see [Delete Item](#delete-item)).
+Pin, todo, and tag buttons appear when an entry is expanded (tap the entry or its chevron). Delete lives behind the ✏️ edit button for text entries and behind expansion for media entries (see [Delete Item](#delete-item)). Any entry can also be swiped away (see [Swipe to Delete](#swipe-to-delete)).
 
 ## Filter by Clipping Size and Work with a Batch
 

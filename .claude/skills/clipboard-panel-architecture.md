@@ -359,3 +359,56 @@ Swiped words go into the active inline field instead of the app behind the panel
 `InlineEditHistory` step each) or the tag/search setText paths (`setSearchText` is the one
 writer of the search query). Bar taps replace the swiped word there; backspace removes it.
 Nothing is learned. Full route and rules: `ime-key-routing.md` "Swipe typing into inline fields".
+
+## Swipe to delete a row (GH #175 part 2, 2026-10-21)
+
+A horizontal swipe (either direction) on a row in NORMAL mode deletes it from the current tab
+only — the same per-tab path as the edit-mode/media delete button,
+`ClipboardHistoryService.removeFromTab(tab, content)` (an extension, so mocked services still
+record the per-tab member; history remove / unpin / un-todo; media
+file removed once no table references it). Pinned and Todos are COPY tables, so the same text
+on another tab stays. Private entries included. Setting `clipboard_swipe_delete_enabled`
+(default ON, Clipboard section); off = rows ignore horizontal swipes.
+
+- **Gesture** (`ClipboardSwipePolicy` + `ClipboardSwipeTracker`, pure, in
+  `clipboard/ClipboardSwipePolicy.kt`): observed in `ClipboardHistoryView.dispatchTouchEvent`
+  (sees every event whichever child took DOWN). Nothing happens inside the touch slop. Past it
+  the drag is classified ONCE: horizontal only if |dx| > 2·|dy|. Only then does the view send
+  the children a CANCEL (no click / long-press fires), call
+  `parent.requestDisallowInterceptTouchEvent(true)` and move the row (`translationX`, alpha
+  down to 0.2). Vertical drags are never claimed, so the ScrollView scrolls as before. Release
+  past 35 % of the row width, or a fling ≥ 800 dp/s in the travel direction, commits;
+  otherwise the row springs back (150 ms). A second pointer springs it back. Swipes start only
+  when `swipeAllowed`: setting on, not selecting, no row in edit mode, no bulk action running
+  (the tag panel hides the list, so no row is reachable there).
+- **Pending deletion** (`ClipboardPendingDeletion`, pure state machine, owned by the
+  service-scoped `ClipboardManager` and attached to each inflated view via
+  `attachPendingDeletion` — never view state, views are rebuilt on theme change). One row at a
+  time, identity = tab + content (the per-table delete key). `begin` hides it (applyFilter
+  excludes it from results, count and pages; reloads keep it hidden); "Deleted" shows in
+  `clipboard_bulk_feedback` (polite live region) with the `clipboard_swipe_undo` button beside
+  Select for `UNDO_WINDOW_MS` = 5 s. Undo un-hides; NOTHING is written, so there is no restore
+  path. A failed delete reports RESTORED (the entry is still in the database).
+- **Commit triggers** (`CommitReason`): TIMEOUT (main-looper timer), NEXT_SWIPE (another row
+  swiped: the first commits first), PANE_HIDDEN (`resetSearchOnHide`: pane close, pane switch,
+  keyboard hide, rotation's onFinishInputView), PANE_INVALIDATED (`invalidatePane`, `cleanup`),
+  TAB_SWITCH (`switchToTab` and `ClipboardHistoryView.setTab`), FILTER_CHANGE
+  (`applyFilter(resetView = true)` — search, regex, size/date/private/tag/status filters, clear
+  filters), SELECTION (`enterSelectionMode`/`startSelection`), EDIT (`edit_entry`), TAG_PANEL
+  (`showTagPanel`), BULK_ACTION (`runBulk`). A page change does NOT commit (the hidden row stays
+  hidden). On COMMITTED the view drops the row from its loaded list at once so it cannot flash
+  back before the reload the service's change notification triggers.
+- **Process death** inside the window loses only the hide: nothing was deleted, the entry stays.
+- **Accessibility**: each normal-mode row's text carries a "Delete" custom action (a platform
+  `View.AccessibilityDelegate` shared by the list, action id `R.id.clipboard_entry_delete`,
+  label `common_delete`; the row's entry is in the text view's tag of the same id, rebound on
+  every getView, so recycled rows never act on another entry; host tests inject a mock
+  delegate into `deleteActionDelegate` because the stub constructor throws) that runs the
+  same deferred path (`deferDelete`). Not `ViewCompat.addAccessibilityAction`: it keeps its
+  list in a view tag, which relaxed-mock rows in the host tests return as a bare Object. It is NOT gated by the swipe setting (the setting prevents accidental
+  swipes; a custom action is deliberate); removed in selection and edit mode.
+- **Recycled rows**: `getView` cancels any animation and resets `translationX`/alpha on every
+  row except the one being dragged.
+- Tests: `ClipboardSwipePolicyTest`, `ClipboardPendingDeletionTest` (pure),
+  `ClipboardSwipeDeleteViewTest`, `ClipboardSwipeDeleteManagerTest` (mock). The touch path
+  itself (MotionEvent dispatch, VelocityTracker) has no host test; it needs a device check.

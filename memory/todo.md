@@ -97,7 +97,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     binding 10 (`e237fa95`), Oct 17 editor commands 16 new + 2 reworded (`d86f6606`), Oct 17
     `textAssistMenu` removal notice + "Replacement Suggestions (Editor)" name and description 3
     (`932207b0`), Oct 18 autocorrect "Ranking & Tuning" 46 + 2 plurals (`74c808e1`; written by
-    an agent in all 21 locales, the English typo examples kept verbatim). Counts are the
+    an agent in all 21 locales, the English typo examples kept verbatim), Oct 21 clipboard
+    swipe-to-delete 4 (#175; written by an agent in all 21 locales). Counts are the
     `<string` lines added to `res/values/strings.xml` per commit.
 11. [ ] maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`
     needs a fresh pre-registration; nonzero `finger_occlusion_offset` only from device-trace
@@ -235,8 +236,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 15. [ ] agent: deferred review items — suffix receipt readback at command time (3 editor reads
-    per committed word, # TODO in `rememberVerifiedWord`); #175 clipboard swipe-to-delete;
-    summon after system hide (overlay permission).
+    per committed word, # TODO in `rememberVerifiedWord`); summon after system hide (overlay
+    permission). #175 clipboard swipe-to-delete is BUILT (2026-10-21, worktree branch, not yet
+    merged to main): horizontal swipe on a normal-mode row of any tab → row hidden, "Deleted" +
+    Undo for 5 s, real delete through `removeFromTab` on timeout or any commit trigger;
+    setting `clipboard_swipe_delete_enabled` (default on); TalkBack "Delete" action; pure
+    `ClipboardSwipePolicyTest`/`ClipboardPendingDeletionTest`, mock
+    `ClipboardSwipeDeleteViewTest`/`ClipboardSwipeDeleteManagerTest`. → device: swipe left and
+    right on each tab, Undo, short slow swipe springs back, vertical scroll unaffected, taps and
+    long-press unchanged, window expiry, the commit triggers (close pane, switch tab, type a
+    search), setting off, TalkBack action; strings in 21 locales join item 10's review.
 16. [x] agent: `autocorrect_prefix_length` — measured 2026-10-21 (descriptive,
     `docs/eval/2026-10-21-autocorrect-prefix-length.md`): prefix 1 vs the shipped 0 under channel
     ranking costs GTC 79.0 % → 77.8 % (553 targets broken, 305 fixed) and S-adj 95.4 % → 82.7 %

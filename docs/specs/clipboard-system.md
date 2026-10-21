@@ -382,7 +382,8 @@ Manual follow-through remains for everyday media/filter combinations, native-lan
 review, enlarged text/accessibility and very short narrow split-screen panes.
 
 SQLite transaction coverage runs only on an isolated
-emulator, never the maintainer's database. Row swipe-to-delete remains an independent open feature (#175).
+emulator, never the maintainer's database. Row swipe-to-delete was built later (2026-10-21, see
+"Swipe to delete a row" below).
 
 ## Persistent selection, batch deletion and bulk actions (2026-10-07)
 
@@ -720,3 +721,51 @@ decision; an unchanged clip is never re-fetched; API 25 catch-up reads nothing a
 password-manager copy is never recorded; a restarted service / IME switch-back does not
 re-record an observed clip on API 34 or 25; the persisted identity is never content;
 encode/decode). Device check: see `memory/todo.md` (October 7 afternoon).
+
+## Swipe to delete a row (#175 part 2, 2026-10-21)
+
+**Request.** GH #175(2): "Fcitx supports swipe-to-delete (left/right) on clipboard items, which
+is sometimes faster and more satisfying than tapping each one individually." Before this a row
+could be deleted only from its edit mode (Row 4 delete button), behind expansion for media, or
+in bulk through Select.
+
+**Behaviour.** In NORMAL mode — not in selection mode, not while any row is edited, not in the
+tag panel, not while a bulk action runs — a horizontal swipe in either direction on a row of
+any tab (History, Pinned, Todos; private entries included) removes it from THAT tab only, the
+same as the row's own delete (`ClipboardHistoryService.removeFromTab`; Pinned and Todos are
+independent COPY tables). Setting: **Swipe to delete clipboard entries**
+(`clipboard_swipe_delete_enabled`, Boolean, default ON, Clipboard section; exported in
+backups). Off: rows ignore horizontal swipes.
+
+**Classification** (`ClipboardSwipePolicy`, pure). Undecided inside the platform touch slop
+(taps and long-presses unchanged). Past it, horizontal only if |dx| > 2·|dy|, decided once;
+a vertical drag is never claimed, so the pane's ScrollView scrolls as before. Once horizontal
+the list cancels the row's children (no click or long-press), calls
+`requestDisallowInterceptTouchEvent(true)` on its parent and the row follows the finger
+(`translationX`, alpha 1 → 0.2 over a row width). Release beyond 35 % of the row width, or a
+fling of at least 800 dp/s in the travel direction, commits; anything else springs back. A
+second pointer springs it back.
+
+**Deferred delete with Undo** (`ClipboardPendingDeletion`, pure). Committing hides the row
+immediately (results, count and pages exclude it; reloads keep it hidden) and shows
+"Deleted" in the result row's feedback line with an **Undo** button for 5 s. Undo un-hides it;
+nothing was written, so there is no database restore path. The real delete runs when the
+window ends, or at once when: the pane closes, switches or is rebuilt, the keyboard hides, the
+tab switches, the search or any filter changes, selection mode, edit mode, the tag panel or a
+bulk action starts, or another row is swiped (the earlier one commits first). One row is
+pending at a time. The state is held by the service-scoped `ClipboardManager` (never by a view,
+which a theme change rebuilds). If Android kills the keyboard process inside the window, only
+the hide is lost: the entry was not deleted and stays. A delete that throws restores the row.
+
+**Accessibility.** Each normal-mode row carries a TalkBack custom action "Delete" that takes
+the same deferred path; the "Deleted" line is a polite live region and Undo is an ordinary
+focusable button. The action is not gated by the swipe setting (the setting exists for
+accidental swipes; a custom action is deliberate).
+
+**Tests.** `ClipboardSwipePolicyTest` (slop, strict 2:1 ratio, 35 % threshold, same-direction
+fling, fade, start gating, tracker), `ClipboardPendingDeletionTest` (timeout, every trigger,
+undo, second swipe, failure) — pure; `ClipboardSwipeDeleteViewTest` (hide/undo/reload,
+per-tab commit without a flash-back, view triggers, refusals, edit-mode delete shares the
+path) and `ClipboardSwipeDeleteManagerTest` (feedback/Undo button, pane-level triggers,
+per-tab service routing, ownership) — mock. The MotionEvent path itself is device-checked
+only (`memory/todo.md`).

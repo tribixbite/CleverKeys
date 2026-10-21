@@ -69,6 +69,22 @@ joined) through the inline-edit path. A failed action keeps the selection. Repor
 payload bytes are not a disk-reclamation estimate. The `clear_clipboard` command clears
 only Android’s system clipboard; it does not invoke database deletion.
 
+### Swipe to delete a row (#175 part 2, 2026-10-21)
+
+In normal mode (not selecting, not editing, not in the tag panel, no bulk action running) a
+horizontal swipe on a row deletes it from the current tab only, through the same per-tab path
+as the row's delete button (`removeFromTab`: history remove / unpin / un-todo, media removed
+when unreferenced). Classification (`ClipboardSwipePolicy`): nothing inside the touch slop;
+past it horizontal only if |dx| > 2·|dy|, else the ScrollView keeps the drag. A claimed row
+follows the finger; release beyond 35 % of its width or a ≥ 800 dp/s same-direction fling
+commits, otherwise it springs back. The row is hidden at once and "Deleted" + **Undo** show in
+the result row for 5 s (`ClipboardPendingDeletion`, held by the service-scoped
+`ClipboardManager`); Undo writes nothing. The delete runs at the end of the window, or at once
+on pane close/rebuild, keyboard hide, tab switch, search or filter change, selection, edit,
+tag panel, a bulk action, or the next swipe. Process death in the window keeps the entry.
+TalkBack: a "Delete" custom action per row takes the same path. Setting
+`clipboard_swipe_delete_enabled` (default on) turns the gesture off.
+
 **Keyboard dialogs.** Confirmation, filter and size-chooser dialogs shown from the keyboard
 are non-focusable (`ImeDialogWindowPolicy`: `FLAG_NOT_FOCUSABLE` plus
 `FLAG_WATCH_OUTSIDE_TOUCH`), so the app's editor keeps focus and the host app does not hide
@@ -477,6 +493,7 @@ Clipboard data is also included in the new one-click **Full Backup** ZIP (`cleve
 | Max Media Size | `clipboard_max_media_size_mb` | 10 | 1-50 MB |
 | Pinned Tab | `clipboard_pinned_enabled` | true | bool — show/hide tab |
 | Todo Tab | `clipboard_todo_enabled` | true | bool — show/hide tab |
+| Swipe to Delete | `clipboard_swipe_delete_enabled` | true | bool — swipe a row to delete it (5 s Undo) |
 | Exclude PWMs | `clipboard_exclude_password_managers` | true | bool |
 | Sensitive Flag | `clipboard_respect_sensitive_flag` | true | bool (Android 13+) |
 | Pane Height | `clipboard_pane_height_percent` | 45 | 20-80% |
