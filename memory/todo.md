@@ -237,12 +237,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 15. [ ] agent: deferred review items — suffix receipt readback at command time (3 editor reads
     per committed word, # TODO in `rememberVerifiedWord`); #175 clipboard swipe-to-delete;
     summon after system hide (overlay permission).
-16. [ ] agent: `autocorrect_prefix_length` > 0 vs the dropped-double rule DD-M — unmeasured
-    (noted 2026-10-12): with prefix length 1 (the Pixel's setting) `bery`→`berry` and
-    `grom`→`groom` get through because `very`/`from` fail the prefix check and the sweep then
-    commits nothing. Pre-register and measure on the typo corpora at prefix 1 and 2 before
-    changing either the rule or the setting's reach
-    (`docs/eval/2026-10-11-dropped-double-margin.md`).
+16. [x] agent: `autocorrect_prefix_length` — measured 2026-10-21 (descriptive,
+    `docs/eval/2026-10-21-autocorrect-prefix-length.md`): prefix 1 vs the shipped 0 under channel
+    ranking costs GTC 79.0 % → 77.8 % (553 targets broken, 305 fixed) and S-adj 95.4 % → 82.7 %
+    (first-letter slips can no longer be corrected). Default 0 stays. OPEN for the maintainer:
+    reword the setting's description (proposal in the doc; goes with the string review, item 10);
+    C-oov and prefix 2 not run (stopped: held the Gradle lock 3 h).
 17. [ ] RTX: short-word CTC — word-balanced fine-tune on the raw-path input contract so
     dwell-less `ad`/`wet` decode, gated on fresh writer/session-separated human traces
     (`docs/eval/2026-10-07-short-word-ctc.md`, `…final-letter-drops.md` §6).
