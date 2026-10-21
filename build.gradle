@@ -694,6 +694,8 @@ tasks.register('runPureTests', JavaExec) {
     // Audit M3/M4/M5/M10/L12 (2026-10-20): Config field initialisers and SettingsActivity
     // initial states reference the Defaults constant their refresh/loader reads.
     'tribixbite.cleverkeys.DefaultsSingleDefinitionDriftTest',
+    // Audit L2/L6/L7/L13 (2026-10-20): margin, language and engine-mode keys and rules defined once.
+    'tribixbite.cleverkeys.PrefKeySingleDefinitionDriftTest',
     // F-5..F-9 — settings-surface drift: trail-effect dropdown coverage,
     // pin-entry wiring, SETTINGS_DEFAULTS reader/writer scans, nav-helper callers.
     'tribixbite.cleverkeys.SettingsSurfaceDriftTest',
