@@ -48,7 +48,7 @@ Corrections to this document found by the audit (apply when closing):
   touched duration slider could not be undone → PARTIAL until the branch above merges.
 - **#99** was RESOLVED while README promised a CSV format the loader rejected → fixed now.
 - **#175**: batch selection IS built (Select mode, select all matching, Delete selected) and
-  row swipe-to-delete with a 5 s Undo is built (2026-10-21, device check pending); still
+  row swipe-to-delete with a 5 s Undo is built (`2787468d`, 2026-10-21; History-tab device check PASS on the Saga); still
   missing: summon-after-hide, toolbar, edit pane. The reporter's function-key
   swipe follow-up was fixed in `9c3fb179`.
 - **#184** is a maintainer scope call (oversized packs refused by design), not a fixed bug.
@@ -392,7 +392,7 @@ Ordered by value ÷ cost. Sizes: S ≤ 1 day, M ≈ 2-5 days, L > 1 week.
    confirmation covers every matching page in the current tab; tests and device status
    are recorded in `memory/todo.md`. **#168 is implemented locally (2026-10-06)**:
    `clear_clipboard` clears Android’s current clipboard and preserves saved tabs.
-   Swipe-to-delete rows were built 2026-10-21 (deferred delete, 5 s Undo; device check pending).
+   Swipe-to-delete rows were built 2026-10-21 (deferred delete, 5 s Undo; History tab device-checked on the Saga).
 5. **#188 compose key — fixed locally (`97d6c25f`).** Device repro and fail-first
    pointer coverage confirmed the navigation tap cancels pending state. Fresh minified
    APK was installed with matching hash; both sequence orders, cancel and arrows pass.

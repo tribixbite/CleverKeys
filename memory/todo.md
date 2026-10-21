@@ -237,8 +237,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 15. [ ] agent: deferred review items — suffix receipt readback at command time (3 editor reads
     per committed word, # TODO in `rememberVerifiedWord`); summon after system hide (overlay
-    permission). #175 clipboard swipe-to-delete is BUILT (2026-10-21, worktree branch, not yet
-    merged to main): horizontal swipe on a normal-mode row of any tab → row hidden, "Deleted" +
+    permission). #175 clipboard swipe-to-delete is BUILT and merged (`2787468d`, 2026-10-21; Saga 202 release
+    `fe91c783…` PASS: left swipe hides the row with "Deleted" + Undo, Undo at 1.2 s restores it,
+    a slow 20 % swipe springs back, swipe then keyboard hide commits at once (log PANE_HIDDEN;
+    reopened pane empty), an unattended row commits on TIMEOUT; NOT yet checked on device:
+    Pinned/Todos tabs, right swipe, vertical-scroll/tap/long-press regressions, the setting OFF,
+    TalkBack; the debug log line prints the LAST commit reason even for HIDDEN/RESTORED): horizontal swipe on a normal-mode row of any tab → row hidden, "Deleted" +
     Undo for 5 s, real delete through `removeFromTab` on timeout or any commit trigger;
     setting `clipboard_swipe_delete_enabled` (default on); TalkBack "Delete" action; pure
     `ClipboardSwipePolicyTest`/`ClipboardPendingDeletionTest`, mock
