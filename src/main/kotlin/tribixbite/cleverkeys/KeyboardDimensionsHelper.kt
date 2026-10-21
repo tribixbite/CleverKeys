@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.res.Configuration
+import android.util.Log
 import android.view.WindowManager
 
 /**
@@ -29,6 +30,11 @@ import android.view.WindowManager
  * neural half was deleted; the `NeuralLayoutBridge` that used to sit between it and
  * CleverKeysService went at the same time (pure delegation, no logic).
  */
+// TODO: calculateDynamicKeyboardHeight and getUserKeyboardHeightPercent have no production
+//  caller — CleverKeysService's private wrappers of the same names are themselves never called
+//  (found 2026-10-21 while fixing audit L8). The keyboard height the user sees comes from
+//  Config.refresh (KeyboardHeightPrefs.percent → Theme). Delete this class and its graph/propagator
+//  edges (KeyboardComponentGraph, ConfigPropagator) the way ARC-084/ARC-099 removed its other halves.
 class KeyboardDimensionsHelper(
     private val _context: Context,
     private var _config: Config,
@@ -83,6 +89,7 @@ class KeyboardDimensionsHelper(
             metrics.heightPixels * keyboardHeightPercent
         } catch (e: Exception) {
             // Fallback to view height if available
+            Log.w(TAG, "Keyboard height calculation failed; using the view height", e)
             _keyboardView?.height?.toFloat() ?: 0f
         }
     }
@@ -93,16 +100,22 @@ class KeyboardDimensionsHelper(
      * @return User's keyboard height preference as percentage
      */
     fun getUserKeyboardHeightPercent(): Int {
+        val isLandscape = _context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         return try {
             // Reuse the service-owned listener, which CleanupHandler closes on teardown.
             val foldableUnfolded = foldStateTracker.isUnfolded()
-            val isLandscape = _context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
             val prefs = DirectBootAwarePreferences.get_shared_preferences(_context)
             KeyboardHeightPrefs.percent(prefs, isLandscape, foldableUnfolded)
         } catch (e: Exception) {
-            Defaults.KEYBOARD_HEIGHT_PORTRAIT
+            // The default of the CURRENT orientation (it used to be the portrait default even in
+            // landscape — audit L8).
+            Log.w(TAG, "Keyboard height preference unreadable; using the default", e)
+            KeyboardHeightPrefs.default(isLandscape)
         }
+    }
+
+    private companion object {
+        const val TAG = "KeyboardDimensionsHelper"
     }
 
     // ARC-084 (2026-08-29): updateCGRPredictions/checkCGRPredictions polled

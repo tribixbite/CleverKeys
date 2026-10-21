@@ -88,6 +88,10 @@ class KeyboardPreviewView @JvmOverloads constructor(
 
     private fun loadThemeColors() {
         try {
+            // TODO: globalConfig() throws while the IME has not initialised Config (a Settings
+            //  process with the keyboard never shown), so this "jewel" fallback is unreachable and
+            //  the preview keeps its built-in colours instead. globalConfigOrNull() would make it
+            //  live; that changes the preview's colours, so it is a deliberate choice, not done here.
             val config = Config.globalConfig()
             val themeName = config?.themeName ?: "jewel"
             val themeProvider = ThemeProvider.getInstance(context)
@@ -98,7 +102,8 @@ class KeyboardPreviewView @JvmOverloads constructor(
             _keyLabelColor = theme.labelColor and 0xFFFFFFFF.toInt()
             _mappedCornerColor = theme.subLabelColor and 0xFFFFFFFF.toInt()
         } catch (e: Exception) {
-            // Use defaults if theme loading fails
+            // Use defaults if theme loading fails — but say so (audit L8).
+            Log.w("KeyboardPreviewView", "Theme colours unavailable; using the built-in preview colours", e)
         }
     }
 
@@ -107,7 +112,8 @@ class KeyboardPreviewView @JvmOverloads constructor(
             // Try to load the main QWERTY layout (static name → direct R reference).
             _keyboard = KeyboardData.load(resources, R.raw.latn_qwerty_us)
         } catch (e: Exception) {
-            // Will fall back to QWERTY_ROWS
+            // Will fall back to QWERTY_ROWS — logged, since the preview then differs (audit L8).
+            Log.w("KeyboardPreviewView", "QWERTY layout unavailable; drawing the fallback rows", e)
         }
     }
 
