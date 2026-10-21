@@ -35,9 +35,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    nothing, but the bar offered `+foocbar` and the tap added it to the dictionary (removed
    again, `build/oct17b-saga/09–12`) → `fd3eec40`: terminal/blind fields never offer the
    exact-add chip or the space-time "Add to dictionary?" prompt; D4 (toolbar ⇥ then `x`) showed
-   only `ecx`, no `except`, nothing deleted PASS; `hel` + tap `help` → `help ` PASS. STILL TO
-   RUN with a release ≥ `fd3eec40`: D2 again — after toolbar CTRL + `c` and `bar`, no
-   `+foocbar` chip and no add prompt on space, nothing deleted.
+   only `ecx`, no `except`, nothing deleted PASS; `hel` + tap `help` → `help ` PASS. **D2 PASS
+   2026-10-21** (second Saga `192.168.0.144`, release `ba230070…`, `build/oct21-saga144/`):
+   `foo`, Termux toolbar CTRL + `c`, `bar` → the bar stays empty (no `+foocbar` chip), space gives
+   `bar ` with no add prompt, `foo^C` untouched. That Saga now has CleverKeys enabled and as its
+   DEFAULT keyboard (maintainer: keep CleverKeys default on test phones). Item can close.
 2. [ ] agent → device: Persian half of #186/#61. No `fa` language pack exists. (Correction
    2026-10-21: a Persian layout DOES exist, `srcs/layouts/arab_pc_ir.xml` "Persian PC", but it
    has no ZWNJ/half-space key.) Findings 2026-10-21 for the pack: `wordfreq` has `fa` (31,317
@@ -61,8 +63,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    `build/oct17-pixel/`): clipboard entry editor Ctrl+Z ×2 removes one word per step, Ctrl+Y
    restores, select + Ctrl+C adds a history entry; Chrome textarea Ctrl+Z / Ctrl+Y undo and
    redo PASS (earlier: Ctrl+V pastes into the editor, not the app behind it, `3439fff0`).
-   STILL OPEN: undo/redo keys in a Compose field; Termux shows "Action unavailable" for undo;
-   Ctrl+C on a PRIVATE entry asks before copying.
+   Compose field DONE 2026-10-21 (Saga 202, CleverKeys settings search, temporary `g` mappings
+   reset afterwards, `build/oct21-saga/`): undo/redo reach Compose's own history (its steps merge
+   edits made within a few seconds, so one undo can span several edits — Compose behaviour).
+   STILL OPEN: Termux shows "Action unavailable" for undo; Ctrl+C on a PRIVATE entry asks
+   before copying.
 6. [ ] device + maintainer: blind-field checks with RustDesk installed on a Saga (F-Droid/GitHub
    APK `com.carriez.flutter_hbb`) controlling any reachable desktop — typed text, `teh`+space
    stays `teh`, a tapped suggestion appends (never deletes), Backspace after a swipe removes
@@ -72,8 +77,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 7. [ ] device: editor-command leftovers (everything else PASS 2026-10-17 → history): one real
    rewriting/translating app that RETURNS text on a phone (Gemini closed without a result,
    Google Translate's TapToTranslate has no replace action; the result path is proven only on
-   emulator.wtf API 33/34 by `ProcessTextResultInstrumentedTest`), and Compose-field checks
-   (case cycle, share, word moves/selection, undo/redo, Replace popup).
+   emulator.wtf API 33/34 by `ProcessTextResultInstrumentedTest`). Compose field DONE
+   2026-10-21 (Saga 202, settings search): case cycle hello→Hello→HELLO→hello, select word left,
+   Share (one sheet with the selection) PASS; the Replace popup command is a silent no-op there —
+   Compose 1.6.8 does not implement android.R.id.replaceText and the IME cannot detect the
+   refusal (the connection returns IPC success; a check added in `68e779ef` never fired and was
+   removed in `34dbb8e9`). Found on the way: Reset all left stale labels → fixed `9c909048`.
 8. [ ] maintainer: ARC-053 daily-use soak of the minified release
    (`docs/plans/v2.0.0-manual-test-checklist.md` carries uncommitted maintainer edits — never
    edit or stage it) → ARC-063 narrow the blanket R8 keeps → tag decision.
