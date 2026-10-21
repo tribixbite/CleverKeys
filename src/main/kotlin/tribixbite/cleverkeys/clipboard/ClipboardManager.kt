@@ -1032,7 +1032,9 @@ class ClipboardManager(
             }
         }
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            Log.d(TAG, "Swipe delete $change on ${row.tab} (${pendingDeletionField?.lastCommitReason})")
+            // The reason belongs to a commit only; HIDDEN/RESTORED would print the previous one.
+            val reason = if (change == ClipboardPendingDeletion.Change.COMMITTED) " (${pendingDeletionField?.lastCommitReason})" else ""
+            Log.d(TAG, "Swipe delete $change on ${row.tab}$reason")
         }
         clipboardHistoryView?.onPendingDeletionChanged(change, row)
     }
