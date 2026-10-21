@@ -98,7 +98,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `textAssistMenu` removal notice + "Replacement Suggestions (Editor)" name and description 3
     (`932207b0`), Oct 18 autocorrect "Ranking & Tuning" 46 + 2 plurals (`74c808e1`; written by
     an agent in all 21 locales, the English typo examples kept verbatim), Oct 21 clipboard
-    swipe-to-delete 4 (#175; written by an agent in all 21 locales). Counts are the
+    swipe-to-delete 4 (#175; written by an agent in all 21 locales), Oct 21 Starting Letter
+    Accuracy description reworded 1 (`63b1731a`, all 21 locales). Counts are the
     `<string` lines added to `res/values/strings.xml` per commit.
 11. [ ] maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`
     needs a fresh pre-registration; nonzero `finger_occlusion_offset` only from device-trace
@@ -241,8 +242,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `fe91c783…` PASS: left swipe hides the row with "Deleted" + Undo, Undo at 1.2 s restores it,
     a slow 20 % swipe springs back, swipe then keyboard hide commits at once (log PANE_HIDDEN;
     reopened pane empty), an unattended row commits on TIMEOUT; NOT yet checked on device:
-    Pinned/Todos tabs, right swipe, vertical-scroll/tap/long-press regressions, the setting OFF,
-    TalkBack; the debug log line prints the LAST commit reason even for HIDDEN/RESTORED): horizontal swipe on a normal-mode row of any tab → row hidden, "Deleted" +
+    TalkBack and the Todos tab only. Later the same day PASS too: a mostly vertical drag scrolls
+    with no swipe; right swipe + Undo; tap still expands; long-press still copies; a Pinned-tab
+    swipe removes only the pinned copy (History keeps it, commit on tab switch); with the setting
+    OFF a swipe is ignored; test clips removed, setting back ON): horizontal swipe on a normal-mode row of any tab → row hidden, "Deleted" +
     Undo for 5 s, real delete through `removeFromTab` on timeout or any commit trigger;
     setting `clipboard_swipe_delete_enabled` (default on); TalkBack "Delete" action; pure
     `ClipboardSwipePolicyTest`/`ClipboardPendingDeletionTest`, mock

@@ -48,7 +48,7 @@ Corrections to this document found by the audit (apply when closing):
   touched duration slider could not be undone → PARTIAL until the branch above merges.
 - **#99** was RESOLVED while README promised a CSV format the loader rejected → fixed now.
 - **#175**: batch selection IS built (Select mode, select all matching, Delete selected) and
-  row swipe-to-delete with a 5 s Undo is built (`2787468d`, 2026-10-21; History-tab device check PASS on the Saga); still
+  row swipe-to-delete with a 5 s Undo is built (`2787468d`, 2026-10-21; History and Pinned tabs, Undo, scroll/tap/long-press and the setting device-checked on the Saga); still
   missing: summon-after-hide, toolbar, edit pane. The reporter's function-key
   swipe follow-up was fixed in `9c3fb179`.
 - **#184** is a maintainer scope call (oversized packs refused by design), not a fixed bug.
