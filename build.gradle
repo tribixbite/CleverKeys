@@ -1265,6 +1265,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.SafePrefReadersTest',
     // Audit 2026-10-20 L4/L5: Config.migrate steps and the dp→% margin migration.
     'tribixbite.cleverkeys.ConfigMigrationStepsTest',
+    // Audit 2026-10-20 L14/L15: streams and cursors closed when reading fails.
+    'tribixbite.cleverkeys.ResourceClosingTest',
     'tribixbite.cleverkeys.theme.MonetDynamicColorGateTest',
     'tribixbite.cleverkeys.langpack.LanguagePackImportTest',
     // 2026-10-08 audit: per-process dictionary-availability cache, invalidated by pack import/delete.

@@ -36,17 +36,14 @@ object Utils {
         dialog.show()
     }
 
+    /**
+     * The whole of [inp] decoded as UTF-8. Closes [inp] (through its reader) on success and on
+     * failure — audit L14: the reader was never closed, and `LayoutsPreference` passed it a raw
+     * resource stream without `use {}`, leaking one stream per custom-layout dialog. Callers that
+     * also wrap the stream in `use {}` are harmless (closing twice is a no-op).
+     */
     @JvmStatic
     @Throws(Exception::class)
-    fun read_all_utf8(inp: InputStream): String {
-        val reader = InputStreamReader(inp, "UTF-8")
-        val out = StringBuilder()
-        val buffLength = 8000
-        val buff = CharArray(buffLength)
-        var l: Int
-        while (reader.read(buff, 0, buffLength).also { l = it } != -1) {
-            out.append(buff, 0, l)
-        }
-        return out.toString()
-    }
+    fun read_all_utf8(inp: InputStream): String =
+        InputStreamReader(inp, Charsets.UTF_8).use { it.readText() }
 }

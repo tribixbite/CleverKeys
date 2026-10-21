@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.ml
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
@@ -73,20 +74,18 @@ class SwipeMLDataStore private constructor(context: Context) :
                 val db = writableDatabase
 
                 // Check if trace_id already exists
-                val cursor = db.query(
+                val exists = db.query(
                     TABLE_SWIPES, arrayOf(COL_ID),
                     "$COL_TRACE_ID=?", arrayOf(data.traceId),
                     null, null, null
-                )
+                ).use { it.count > 0 }
 
-                if (cursor.count > 0) {
-                    cursor.close()
+                if (exists) {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                         Log.w(TAG, "Trace ID already exists: ${data.traceId}")
                     }
                     return@execute
                 }
-                cursor.close()
 
                 // Store the data
                 val values = ContentValues().apply {
@@ -152,24 +151,12 @@ class SwipeMLDataStore private constructor(context: Context) :
      * Load all swipe data (for export or training)
      */
     fun loadAllData(): List<SwipeMLData> {
-        val dataList = mutableListOf<SwipeMLData>()
         val db = readableDatabase
 
-        val cursor = db.query(
+        val dataList = readRecords(db.query(
             TABLE_SWIPES, arrayOf(COL_JSON_DATA),
             null, null, null, null, "$COL_TIMESTAMP ASC"
-        )
-
-        while (cursor.moveToNext()) {
-            try {
-                val jsonStr = cursor.getString(0)
-                val json = JSONObject(jsonStr)
-                dataList.add(SwipeMLData(json))
-            } catch (e: Exception) {
-                Log.e(TAG, "Error parsing stored JSON", e)
-            }
-        }
-        cursor.close()
+        ))
 
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
             Log.d(TAG, "Loaded ${dataList.size} swipe entries")
@@ -181,25 +168,13 @@ class SwipeMLDataStore private constructor(context: Context) :
      * Load data by collection source
      */
     fun loadDataBySource(source: String): List<SwipeMLData> {
-        val dataList = mutableListOf<SwipeMLData>()
         val db = readableDatabase
 
-        val cursor = db.query(
+        val dataList = readRecords(db.query(
             TABLE_SWIPES, arrayOf(COL_JSON_DATA),
             "$COL_SOURCE=?", arrayOf(source),
             null, null, "$COL_TIMESTAMP ASC"
-        )
-
-        while (cursor.moveToNext()) {
-            try {
-                val jsonStr = cursor.getString(0)
-                val json = JSONObject(jsonStr)
-                dataList.add(SwipeMLData(json))
-            } catch (e: Exception) {
-                Log.e(TAG, "Error parsing stored JSON", e)
-            }
-        }
-        cursor.close()
+        ))
 
         return dataList
     }
@@ -208,25 +183,13 @@ class SwipeMLDataStore private constructor(context: Context) :
      * Load recent data for incremental training
      */
     fun loadRecentData(limit: Int): List<SwipeMLData> {
-        val dataList = mutableListOf<SwipeMLData>()
         val db = readableDatabase
 
-        val cursor = db.query(
+        val dataList = readRecords(db.query(
             TABLE_SWIPES, arrayOf(COL_JSON_DATA),
             null, null, null, null,
             "$COL_TIMESTAMP DESC", limit.toString()
-        )
-
-        while (cursor.moveToNext()) {
-            try {
-                val jsonStr = cursor.getString(0)
-                val json = JSONObject(jsonStr)
-                dataList.add(SwipeMLData(json))
-            } catch (e: Exception) {
-                Log.e(TAG, "Error parsing stored JSON", e)
-            }
-        }
-        cursor.close()
+        ))
 
         return dataList
     }
@@ -239,26 +202,14 @@ class SwipeMLDataStore private constructor(context: Context) :
      * @return List of matching SwipeMLData
      */
     fun searchByWord(query: String, limit: Int, offset: Int): List<SwipeMLData> {
-        val dataList = mutableListOf<SwipeMLData>()
         val db = readableDatabase
 
-        val cursor = db.query(
+        val dataList = readRecords(db.query(
             TABLE_SWIPES, arrayOf(COL_JSON_DATA),
             "$COL_TARGET_WORD LIKE ?", arrayOf("%$query%"),
             null, null,
             "$COL_TIMESTAMP DESC", "$offset, $limit"
-        )
-
-        while (cursor.moveToNext()) {
-            try {
-                val jsonStr = cursor.getString(0)
-                val json = JSONObject(jsonStr)
-                dataList.add(SwipeMLData(json))
-            } catch (e: Exception) {
-                Log.e(TAG, "Error parsing stored JSON", e)
-            }
-        }
-        cursor.close()
+        ))
 
         return dataList
     }
@@ -274,37 +225,20 @@ class SwipeMLDataStore private constructor(context: Context) :
             db.rawQuery("SELECT COUNT(*) FROM $TABLE_SWIPES WHERE $COL_TARGET_WORD LIKE ?", arrayOf("%$query%"))
         }
 
-        var count = 0
-        if (cursor.moveToFirst()) {
-            count = cursor.getInt(0)
-        }
-        cursor.close()
-        return count
+        return cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
     }
 
     /**
      * Load paginated data (no search filter)
      */
     fun loadPaginatedData(limit: Int, offset: Int): List<SwipeMLData> {
-        val dataList = mutableListOf<SwipeMLData>()
         val db = readableDatabase
 
-        val cursor = db.query(
+        val dataList = readRecords(db.query(
             TABLE_SWIPES, arrayOf(COL_JSON_DATA),
             null, null, null, null,
             "$COL_TIMESTAMP DESC", "$offset, $limit"
-        )
-
-        while (cursor.moveToNext()) {
-            try {
-                val jsonStr = cursor.getString(0)
-                val json = JSONObject(jsonStr)
-                dataList.add(SwipeMLData(json))
-            } catch (e: Exception) {
-                Log.e(TAG, "Error parsing stored JSON", e)
-            }
-        }
-        cursor.close()
+        ))
 
         return dataList
     }
@@ -656,6 +590,24 @@ class SwipeMLDataStore private constructor(context: Context) :
 
     companion object {
         private const val TAG = "SwipeMLDataStore"
+
+        /**
+         * Every row of a single-column `json_data` [cursor] as [SwipeMLData], in cursor order; a row
+         * whose JSON does not parse is logged and skipped. Closes [cursor] whether or not iteration
+         * succeeds (audit L15: the five read methods closed it only after a clean loop, so an
+         * SQLiteException from `moveToNext()` leaked it).
+         */
+        internal fun readRecords(cursor: Cursor): List<SwipeMLData> = cursor.use {
+            val dataList = mutableListOf<SwipeMLData>()
+            while (it.moveToNext()) {
+                try {
+                    dataList.add(SwipeMLData(JSONObject(it.getString(0))))
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing stored JSON", e)
+                }
+            }
+            dataList
+        }
 
         // Database configuration
         // VERSION 1 deliberately unchanged by the 2026-09-03 playground enrichment
