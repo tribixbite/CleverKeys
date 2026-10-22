@@ -495,7 +495,7 @@
     <string name="clipboard_swipe_deleted">Eliminato</string>
     <string name="clipboard_swipe_undo">Annulla</string>
     <string name="clipboard_private_copy_other_apps_title">Copia privata in altre app</string>
-    <string name="clipboard_private_copy_other_apps_desc">Aggiunge "Copia privata" ai menu di selezione testo delle altre app. Copia il testo selezionato solo in CleverKeys, mai negli appunti di sistema. L\'abilitazione aggiunge una voce app visibile alle altre app.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Aggiunge \"Copia privata\" ai menu di selezione testo delle altre app. Copia il testo selezionato solo in CleverKeys, mai negli appunti di sistema. L\'abilitazione aggiunge una voce app visibile alle altre app.</string>
     <string name="clipboard_sanitize_links_title">Sanifica parametri di tracciamento</string>
     <string name="clipboard_sanitize_links_desc">Rimuovi utm_*, fbclid, ecc. dagli URL copiati. Basato su ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Pulisci anche gli appunti di sistema</string>
@@ -531,7 +531,7 @@
     <string name="gesture_double_space_timing_title">Tempistica doppio spazio</string>
     <string name="gesture_double_space_timing_desc">Tempo massimo tra i due spazi per attivare il punto (ms)</string>
     <string name="gesture_sensitivity_preset_title">Preset sensibilità</string>
-    <string name="gesture_sensitivity_preset_desc">Preset rapidi per il riconoscimento dello scorrimento. "Personalizzato" viene mostrato quando i valori differiscono dai preset.</string>
+    <string name="gesture_sensitivity_preset_desc">Preset rapidi per il riconoscimento dello scorrimento. \"Personalizzato\" viene mostrato quando i valori differiscono dai preset.</string>
     <string name="gesture_min_swipe_distance_title">Distanza minima scorrimento</string>
     <string name="gesture_min_swipe_distance_desc">Percorso minimo tracciato (px) affinché un gesto possa qualificarsi come parola digitata a scorrimento. Valori inferiori aiutano le parole molto brevi a essere registrate; aumenta se i tocchi casuali vengono scambiati per parole. (Il confine corto/lungo è determinato dalla Distanza massima sopra.)</string>
     <string name="gesture_min_key_distance_title">Distanza minima tra tasti</string>
@@ -573,8 +573,8 @@
     <string name="input_context_boost_desc">Quanto il contesto influenza le previsioni (0,5–5,0)</string>
     <string name="input_frequency_scale_title">Scala frequenza</string>
     <string name="input_frequency_scale_desc">Bilancia parole comuni e poco comuni (100–5000)</string>
-    <string name="input_capitalize_i_title">Maiuscola per "I"</string>
-    <string name="input_capitalize_i_desc">Metti automaticamente la maiuscola a "I" e alle contrazioni (I\'m, I\'ll, I\'d, I\'ve)</string>
+    <string name="input_capitalize_i_title">Maiuscola per \"I\"</string>
+    <string name="input_capitalize_i_desc">Metti automaticamente la maiuscola a \"I\" e alle contrazioni (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Punteggiatura intelligente</string>
     <string name="input_smart_punctuation_desc">Attacca la punteggiatura alla fine delle parole (rimuove lo spazio prima di . , ! ? ecc.)</string>
     <string name="input_swipe_distance_threshold_title">Soglia distanza scorrimento</string>
@@ -676,7 +676,7 @@
     <string name="privacy_on_device_learning_desc">Crea sul dispositivo modelli privati di frasi e di utilizzo delle parole a partire da ciò che digiti. Disattiva per interrompere ogni registrazione automatica del comportamento di digitazione: mentre è disattivato non viene memorizzato nulla di nuovo. I dati che crei esplicitamente restano separati: le statistiche sulle prestazioni delle previsioni e i dati appresi ripristinati da un backup.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Aggiunta, ma troppo lunga per lo scorrimento</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">"%1$s" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item><item quantity="many">"%1$s" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item><item quantity="other">"%1$s" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item><item quantity="many">\"%1$s\" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item><item quantity="other">\"%1$s\" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item></plurals>
     <string name="gesture_finger_occlusion_title">Correzione offset tocco</string>
     <string name="gesture_finger_occlusion_desc">Sposta la lettura del gesto rispetto al polpastrello. Positivo se i gesti risultano sopra i tasti, negativo se sotto. Disattivato per impostazione predefinita.</string>
     <string name="gesture_touch_smoothing_title">Smussamento del tocco</string>
@@ -1058,9 +1058,9 @@
     <string name="calibration_how_body">Gli scorrimenti brevi attivano fino a 8 azioni di sottotasto per tasto in base alla direzione. Muovi il dito di poco per attivarli.</string>
     <string name="calibration_thresholds_title">Soglie di distanza</string>
     <string name="calibration_tap_swipe_title">Soglia tocco / scorrimento</string>
-    <string name="calibration_tap_swipe_desc">I gesti più corti di questo valore (% della diagonale del tasto) sono tocchi</string>
+    <string name="calibration_tap_swipe_desc" formatted="false">I gesti più corti di questo valore (% della diagonale del tasto) sono tocchi</string>
     <string name="calibration_boundary_title">Confine scorrimento breve / lungo</string>
-    <string name="calibration_boundary_desc">Uguale o inferiore = scorrimento breve (sottotasto); oltre = parola digitata a scorrimento (% della diagonale del tasto)</string>
+    <string name="calibration_boundary_desc" formatted="false">Uguale o inferiore = scorrimento breve (sottotasto); oltre = parola digitata a scorrimento (% della diagonale del tasto)</string>
     <string name="calibration_customize_title">Personalizza azioni per tasto</string>
     <string name="calibration_customize_desc">Scorrimenti brevi, comandi personalizzati per direzione del tasto</string>
     <string name="calibration_practice_title">Area di pratica</string>

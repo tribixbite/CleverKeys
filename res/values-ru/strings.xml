@@ -437,7 +437,7 @@
     <string name="clipboard_size_limit_title">Лимит размера</string>
     <string name="clipboard_size_limit_desc">Максимальный общий объём хранилища буфера обмена</string>
     <string name="clipboard_pane_height_title">Высота панели</string>
-    <string name="clipboard_pane_height_desc">Высота панели буфера обмена в % от высоты клавиатуры</string>
+    <string name="clipboard_pane_height_desc" formatted="false">Высота панели буфера обмена в % от высоты клавиатуры</string>
     <string name="clipboard_max_item_size_title">Макс. размер элемента</string>
     <string name="clipboard_max_item_size_desc">Максимальный размер одной записи буфера обмена (ограничение Android Binder: ~1 МБ)</string>
     <string name="clipboard_exclude_password_managers_title">Исключить менеджеры паролей</string>

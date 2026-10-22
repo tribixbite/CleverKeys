@@ -455,7 +455,7 @@
     <string name="clipboard_swipe_deleted">Verwijderd</string>
     <string name="clipboard_swipe_undo">Ongedaan maken</string>
     <string name="clipboard_private_copy_other_apps_title">Privé kopiëren in andere apps</string>
-    <string name="clipboard_private_copy_other_apps_desc">Voeg "Privé kopie" toe aan tekstselectiemenu\'s van andere apps. Kopieert geselecteerde tekst alleen naar CleverKeys — nooit naar het systeemklembord. Inschakelen voegt een app-vermelding toe die andere apps kunnen zien.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Voeg \"Privé kopie\" toe aan tekstselectiemenu\'s van andere apps. Kopieert geselecteerde tekst alleen naar CleverKeys — nooit naar het systeemklembord. Inschakelen voegt een app-vermelding toe die andere apps kunnen zien.</string>
     <string name="clipboard_sanitize_links_title">Trackingparameters verwijderen</string>
     <string name="clipboard_sanitize_links_desc">utm_*, fbclid enz. verwijderen uit gekopieerde URL\'s. Mogelijk gemaakt door ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Ook systeemklembord opschonen</string>
@@ -534,7 +534,7 @@
     <string name="input_frequency_scale_title">Frequentieschaal</string>
     <string name="input_frequency_scale_desc">Balans tussen veelgebruikte en ongebruikelijke woorden (100–5000)</string>
     <string name="input_capitalize_i_title">Ik-woorden met hoofdletter</string>
-    <string name="input_capitalize_i_desc">"Ik" en samentrekkingen automatisch met hoofdletter schrijven (ik ben, ik zal enz.)</string>
+    <string name="input_capitalize_i_desc">\"Ik\" en samentrekkingen automatisch met hoofdletter schrijven (ik ben, ik zal enz.)</string>
     <string name="input_smart_punctuation_title">Slimme interpunctie</string>
     <string name="input_smart_punctuation_desc">Interpunctie aan het einde van woorden plaatsen (spatie vóór . , ! ? enz. verwijderen)</string>
     <string name="input_swipe_distance_threshold_title">Veegafstandsdrempelwaarde</string>
@@ -616,7 +616,7 @@
     <string name="theme_color_keyboard_surface">Toetsenbordoppervlak</string>
     <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d aangepaste toewijzing • %2$d opdrachten beschikbaar</item><item quantity="other">%1$d aangepaste toewijzingen • %2$d opdrachten beschikbaar</item></plurals>
     <string name="short_swipe_last_key">Laatste toets: %1$s</string>
-    <string name="short_swipe_customize_key">Toets "%1$s" aanpassen</string>
+    <string name="short_swipe_customize_key">Toets \"%1$s\" aanpassen</string>
     <string name="extra_keys_enabled_count">%1$d van %2$d extra toetsen ingeschakeld</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Voorspellingsengine</string>
@@ -635,7 +635,7 @@
     <string name="privacy_on_device_learning_desc">Bouwt op het apparaat privémodellen van uitdrukkingen en woordgebruik op basis van wat er wordt getypt. Uitschakelen stopt elke automatische registratie van typgedrag — zolang het uit staat wordt er niets nieuws opgeslagen. Gegevens die je zelf uitdrukkelijk maakt staan hier los van: statistieken over de voorspellingsprestaties en geleerde gegevens die uit een back-up zijn hersteld.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Toegevoegd, maar te lang om te vegen</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">"%1$s" is toegevoegd voor tiktypen, maar CTC heeft %2$d stappen nodig en kan slechts %3$d stap decoderen.</item><item quantity="other">"%1$s" is toegevoegd voor tiktypen, maar CTC heeft %2$d stappen nodig en kan slechts %3$d stappen decoderen.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" is toegevoegd voor tiktypen, maar CTC heeft %2$d stappen nodig en kan slechts %3$d stap decoderen.</item><item quantity="other">\"%1$s\" is toegevoegd voor tiktypen, maar CTC heeft %2$d stappen nodig en kan slechts %3$d stappen decoderen.</item></plurals>
     <string name="gesture_finger_occlusion_title">Correctie aanraakoffset</string>
     <string name="gesture_finger_occlusion_desc">Verschuift waar veeggebaren worden gelezen ten opzichte van de vingertop. Positief bij te hoge en negatief bij te lage sporen. Standaard uit.</string>
     <string name="gesture_touch_smoothing_title">Aanraking vloeiender maken</string>

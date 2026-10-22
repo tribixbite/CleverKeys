@@ -1013,9 +1013,9 @@
     <string name="calibration_how_body">ショートスワイプは方向に応じてキーごとに最大 8 つのサブキーアクションをトリガーします。指を少し動かすと発動します。</string>
     <string name="calibration_thresholds_title">距離の閾値</string>
     <string name="calibration_tap_swipe_title">タップ/スワイプ閾値</string>
-    <string name="calibration_tap_swipe_desc">これより短いジェスチャー(キー対角線の%)はタップになります</string>
+    <string name="calibration_tap_swipe_desc" formatted="false">これより短いジェスチャー(キー対角線の%)はタップになります</string>
     <string name="calibration_boundary_title">ショート/ロングスワイプ境界</string>
-    <string name="calibration_boundary_desc">以下=ショートスワイプ(サブキー)、超過=スワイプ入力の単語(キー対角線の%)</string>
+    <string name="calibration_boundary_desc" formatted="false">以下=ショートスワイプ(サブキー)、超過=スワイプ入力の単語(キー対角線の%)</string>
     <string name="calibration_customize_title">キーごとのアクションをカスタマイズ</string>
     <string name="calibration_customize_desc">キーの方向ごとのショートスワイプとカスタムコマンド</string>
     <string name="calibration_practice_title">練習エリア</string>

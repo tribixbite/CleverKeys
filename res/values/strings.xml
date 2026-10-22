@@ -130,8 +130,8 @@
          %2$s the served list. -->
     <string name="dict_word_too_long_for_swipe_title">Added — but too long to swipe</string>
     <plurals name="dict_word_too_long_for_swipe_msg">
-        <item quantity="one">"%1$s" has been added for tap typing, but CTC needs %2$d steps and can decode only %3$d step. Swiping will not offer it.</item>
-        <item quantity="other">"%1$s" has been added for tap typing, but CTC needs %2$d steps and can decode only %3$d steps. Swiping will not offer it.</item>
+        <item quantity="one">\"%1$s\" has been added for tap typing, but CTC needs %2$d steps and can decode only %3$d step. Swiping will not offer it.</item>
+        <item quantity="other">\"%1$s\" has been added for tap typing, but CTC needs %2$d steps and can decode only %3$d steps. Swiping will not offer it.</item>
     </plurals>
     <string name="gesture_finger_occlusion_title">Touch Offset Correction</string>
     <string name="gesture_finger_occlusion_desc">Shifts where swipes are read relative to your fingertip, as a percent of one key row. Positive if your swipes land above the keys you aim for, negative if below. Off by default.</string>

@@ -655,7 +655,7 @@
     <string name="privacy_on_device_learning_desc">Private Modelle für Wendungen und Wortnutzung direkt auf dem Gerät aus den eigenen Eingaben aufbauen. Ausschalten stoppt jede automatische Aufzeichnung des Tippverhaltens — im ausgeschalteten Zustand wird nichts Neues gespeichert. Ausdrücklich selbst erzeugte Daten sind davon getrennt: Statistiken zur Vorhersageleistung und aus einer Sicherung wiederhergestellte Lerndaten.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Hinzugefügt — aber zu lang zum Wischen</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">"%1$s" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritt dekodieren.</item><item quantity="other">"%1$s" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritte dekodieren.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritt dekodieren.</item><item quantity="other">\"%1$s\" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritte dekodieren.</item></plurals>
     <string name="gesture_finger_occlusion_title">Berührungsversatz korrigieren</string>
     <string name="gesture_finger_occlusion_desc">Verschiebt die erfasste Wischposition relativ zur Fingerspitze. Positiv bei zu hohen, negativ bei zu niedrigen Spuren. Standardmäßig aus.</string>
     <string name="gesture_touch_smoothing_title">Berührungen glätten</string>
@@ -1036,9 +1036,9 @@
     <string name="calibration_how_body">Kurze Wischgesten lösen je nach Richtung bis zu 8 Untertasten-Aktionen pro Taste aus. Bewegen Sie den Finger eine kleine Strecke, um sie auszulösen.</string>
     <string name="calibration_thresholds_title">Distanzschwellen</string>
     <string name="calibration_tap_swipe_title">Schwelle Tippen/Wischen</string>
-    <string name="calibration_tap_swipe_desc">Gesten kürzer als dieser Wert (% der Tastendiagonale) sind Tipper</string>
+    <string name="calibration_tap_swipe_desc" formatted="false">Gesten kürzer als dieser Wert (% der Tastendiagonale) sind Tipper</string>
     <string name="calibration_boundary_title">Grenze kurzes/langes Wischen</string>
-    <string name="calibration_boundary_desc">Bis einschließlich = kurzes Wischen (Untertaste); darüber = gewischtes Wort (% der Tastendiagonale)</string>
+    <string name="calibration_boundary_desc" formatted="false">Bis einschließlich = kurzes Wischen (Untertaste); darüber = gewischtes Wort (% der Tastendiagonale)</string>
     <string name="calibration_customize_title">Aktionen pro Taste anpassen</string>
     <string name="calibration_customize_desc">Kurze Wischgesten, eigene Befehle pro Tastenrichtung</string>
     <string name="calibration_practice_title">Übungsbereich</string>

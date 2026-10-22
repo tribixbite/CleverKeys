@@ -469,7 +469,7 @@
     <string name="clipboard_swipe_deleted">Usunięto</string>
     <string name="clipboard_swipe_undo">Cofnij</string>
     <string name="clipboard_private_copy_other_apps_title">Prywatne kopiowanie w innych aplikacjach</string>
-    <string name="clipboard_private_copy_other_apps_desc">Dodaj "Prywatna kopia" do menu zaznaczania tekstu w innych aplikacjach. Kopiuje zaznaczony tekst tylko do CleverKeys — nigdy do systemowego schowka. Włączenie dodaje wpis aplikacji widoczny dla innych aplikacji.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Dodaj \"Prywatna kopia\" do menu zaznaczania tekstu w innych aplikacjach. Kopiuje zaznaczony tekst tylko do CleverKeys — nigdy do systemowego schowka. Włączenie dodaje wpis aplikacji widoczny dla innych aplikacji.</string>
     <string name="clipboard_sanitize_links_title">Usuń parametry śledzenia</string>
     <string name="clipboard_sanitize_links_desc">Usuń utm_*, fbclid itp. z kopiowanych adresów URL. Obsługiwane przez ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Czyść też systemowy schowek</string>
@@ -630,7 +630,7 @@
     <string name="theme_color_keyboard_surface">Powierzchnia klawiatury</string>
     <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d własne mapowanie • %2$d dostępnych poleceń</item><item quantity="few">%1$d własne mapowania • %2$d dostępnych poleceń</item><item quantity="many">%1$d własnych mapowań • %2$d dostępnych poleceń</item><item quantity="other">%1$d własnych mapowań • %2$d dostępnych poleceń</item></plurals>
     <string name="short_swipe_last_key">Ostatni klawisz: %1$s</string>
-    <string name="short_swipe_customize_key">Dostosuj klawisz "%1$s"</string>
+    <string name="short_swipe_customize_key">Dostosuj klawisz \"%1$s\"</string>
     <string name="extra_keys_enabled_count">%1$d z %2$d dodatkowych klawiszy włączonych</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Silnik przewidywania</string>

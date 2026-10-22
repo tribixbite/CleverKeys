@@ -795,6 +795,9 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-09-29 translation verification: glossary terminology + constrained-length checks.
     'tribixbite.cleverkeys.TranslationGlossaryTest',
     'tribixbite.cleverkeys.TranslationLengthTest',
+    // 2026-10-22 translation audit: every resource's coverage, format arguments, literal-%
+    // formatted="false" rule and quote escaping vs the default locale (fixture fail-first).
+    'tribixbite.cleverkeys.TranslationFormatParityTest',
     // 2026-09-29 device findings (fa/hu): no hardcoded user-visible literals in Kotlin UI
     // or manifest labels.
     'tribixbite.cleverkeys.HardcodedUiStringTest',

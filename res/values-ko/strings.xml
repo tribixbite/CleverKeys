@@ -1014,9 +1014,9 @@
     <string name="calibration_how_body">짧은 스와이프는 방향에 따라 키당 최대 8개의 하위 키 동작을 트리거합니다. 손가락을 조금만 움직여 활성화하세요.</string>
     <string name="calibration_thresholds_title">거리 임계값</string>
     <string name="calibration_tap_swipe_title">탭/스와이프 임계값</string>
-    <string name="calibration_tap_swipe_desc">이보다 짧은 제스처(키 대각선의 %)는 탭입니다</string>
+    <string name="calibration_tap_swipe_desc" formatted="false">이보다 짧은 제스처(키 대각선의 %)는 탭입니다</string>
     <string name="calibration_boundary_title">짧은/긴 스와이프 경계</string>
-    <string name="calibration_boundary_desc">이하 = 짧은 스와이프(하위 키), 초과 = 스와이프 입력 단어(키 대각선의 %)</string>
+    <string name="calibration_boundary_desc" formatted="false">이하 = 짧은 스와이프(하위 키), 초과 = 스와이프 입력 단어(키 대각선의 %)</string>
     <string name="calibration_customize_title">키별 동작 사용자 지정</string>
     <string name="calibration_customize_desc">키 방향별 짧은 스와이프와 사용자 정의 명령</string>
     <string name="calibration_practice_title">연습 영역</string>

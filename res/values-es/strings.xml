@@ -655,7 +655,7 @@
     <string name="privacy_on_device_learning_desc">Crea en el dispositivo modelos privados de frases y de uso de palabras a partir de lo que escribes. Desactívalo para detener todo registro automático del comportamiento de escritura: mientras está desactivado no se almacena nada nuevo. Los datos que creas expresamente son aparte: las estadísticas de rendimiento de las predicciones y los datos aprendidos restaurados desde una copia de seguridad.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Añadida, pero demasiado larga para deslizar</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">"%1$s" se añadió para escribir por toque, pero CTC necesita %2$d pasos y solo admite %3$d paso.</item><item quantity="many">"%1$s" se añadió para escribir por toque, pero CTC necesita %2$d pasos y solo admite %3$d pasos.</item><item quantity="other">"%1$s" se añadió para escribir por toque, pero CTC necesita %2$d pasos y solo admite %3$d pasos.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" se añadió para escribir por toque, pero CTC necesita %2$d pasos y solo admite %3$d paso.</item><item quantity="many">\"%1$s\" se añadió para escribir por toque, pero CTC necesita %2$d pasos y solo admite %3$d pasos.</item><item quantity="other">\"%1$s\" se añadió para escribir por toque, pero CTC necesita %2$d pasos y solo admite %3$d pasos.</item></plurals>
     <string name="gesture_finger_occlusion_title">Corrección del desplazamiento táctil</string>
     <string name="gesture_finger_occlusion_desc">Desplaza la lectura del gesto respecto a la yema del dedo. Usa un valor positivo si el trazo queda por encima de las teclas y negativo si queda por debajo. Desactivado de forma predeterminada.</string>
     <string name="gesture_touch_smoothing_title">Suavizado táctil</string>
@@ -1036,9 +1036,9 @@
     <string name="calibration_how_body">Los deslizamientos cortos activan hasta 8 acciones de subtecla por tecla según la dirección. Mueve el dedo una distancia pequeña para activarlos.</string>
     <string name="calibration_thresholds_title">Umbrales de distancia</string>
     <string name="calibration_tap_swipe_title">Umbral toque / deslizamiento</string>
-    <string name="calibration_tap_swipe_desc">Los gestos más cortos que esto (% de la diagonal de la tecla) son toques</string>
+    <string name="calibration_tap_swipe_desc" formatted="false">Los gestos más cortos que esto (% de la diagonal de la tecla) son toques</string>
     <string name="calibration_boundary_title">Límite entre deslizamiento corto y largo</string>
-    <string name="calibration_boundary_desc">Igual o inferior = deslizamiento corto (subtecla); superior = palabra deslizada (% de la diagonal de la tecla)</string>
+    <string name="calibration_boundary_desc" formatted="false">Igual o inferior = deslizamiento corto (subtecla); superior = palabra deslizada (% de la diagonal de la tecla)</string>
     <string name="calibration_customize_title">Personalizar acciones por tecla</string>
     <string name="calibration_customize_desc">Deslizamientos cortos, comandos personalizados por dirección de tecla</string>
     <string name="calibration_practice_title">Zona de práctica</string>

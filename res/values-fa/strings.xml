@@ -651,7 +651,7 @@
     <string name="theme_color_keyboard_surface">سطح صفحه‌کلید</string>
     <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d نگاشت سفارشی • %2$d دستور در دسترس</item><item quantity="other">%1$d نگاشت سفارشی • %2$d دستور در دسترس</item></plurals>
     <string name="short_swipe_last_key">آخرین کلید: %1$s</string>
-    <string name="short_swipe_customize_key">سفارشی‌سازی کلید "%1$s"</string>
+    <string name="short_swipe_customize_key">سفارشی‌سازی کلید \"%1$s\"</string>
     <string name="extra_keys_enabled_count">%1$d از %2$d کلید اضافی فعال</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">موتور پیش‌بینی</string>

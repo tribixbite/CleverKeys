@@ -1022,9 +1022,9 @@
     <string name="calibration_how_body">A rövid csúsztatások billentyűnként akár 8 albillentyű-műveletet indítanak az iránytól függően. Az aktiváláshoz mozdítsa el kissé az ujját.</string>
     <string name="calibration_thresholds_title">Távolsági küszöbök</string>
     <string name="calibration_tap_swipe_title">Érintés/csúsztatás küszöb</string>
-    <string name="calibration_tap_swipe_desc">Az ennél rövidebb gesztusok (a billentyűátló %-ában) érintésnek számítanak</string>
+    <string name="calibration_tap_swipe_desc" formatted="false">Az ennél rövidebb gesztusok (a billentyűátló %-ában) érintésnek számítanak</string>
     <string name="calibration_boundary_title">Rövid/hosszú csúsztatás határa</string>
-    <string name="calibration_boundary_desc">Ennél kisebb vagy egyenlő = rövid csúsztatás (albillentyű); felette = csúsztatott szó (a billentyűátló %-ában)</string>
+    <string name="calibration_boundary_desc" formatted="false">Ennél kisebb vagy egyenlő = rövid csúsztatás (albillentyű); felette = csúsztatott szó (a billentyűátló %-ában)</string>
     <string name="calibration_customize_title">Billentyűnkénti műveletek testreszabása</string>
     <string name="calibration_customize_desc">Rövid csúsztatások, egyéni parancsok billentyűirányonként</string>
     <string name="calibration_practice_title">Gyakorlóterület</string>

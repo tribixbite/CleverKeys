@@ -456,7 +456,7 @@
     <string name="clipboard_swipe_deleted">Excluído</string>
     <string name="clipboard_swipe_undo">Desfazer</string>
     <string name="clipboard_private_copy_other_apps_title">Cópia privada em outros aplicativos</string>
-    <string name="clipboard_private_copy_other_apps_desc">Adicionar "Cópia privada" aos menus de seleção de texto de outros aplicativos. Copia o texto selecionado apenas para o CleverKeys — nunca para a área de transferência do sistema. Ativar adiciona uma entrada de aplicativo que outros apps podem ver.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Adicionar \"Cópia privada\" aos menus de seleção de texto de outros aplicativos. Copia o texto selecionado apenas para o CleverKeys — nunca para a área de transferência do sistema. Ativar adiciona uma entrada de aplicativo que outros apps podem ver.</string>
     <string name="clipboard_sanitize_links_title">Sanitizar parâmetros de rastreamento</string>
     <string name="clipboard_sanitize_links_desc">Remover utm_*, fbclid, etc. de URLs copiados. Desenvolvido por ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Também limpar a área de transferência do sistema</string>
@@ -534,8 +534,8 @@
     <string name="input_context_boost_desc">Quanto o contexto influencia as previsões (0,5–5,0)</string>
     <string name="input_frequency_scale_title">Escala de frequência</string>
     <string name="input_frequency_scale_desc">Equilibrar palavras comuns e incomuns (100–5000)</string>
-    <string name="input_capitalize_i_title">Capitalizar "I"</string>
-    <string name="input_capitalize_i_desc">Colocar automaticamente maiúscula em "I" e contrações (I\'m, I\'ll, I\'d, I\'ve)</string>
+    <string name="input_capitalize_i_title">Capitalizar \"I\"</string>
+    <string name="input_capitalize_i_desc">Colocar automaticamente maiúscula em \"I\" e contrações (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Pontuação inteligente</string>
     <string name="input_smart_punctuation_desc">Anexar pontuação ao final das palavras (remove espaço antes de . , ! ? etc.)</string>
     <string name="input_swipe_distance_threshold_title">Limiar de distância de deslize</string>
@@ -637,7 +637,7 @@
     <string name="privacy_on_device_learning_desc">Criar no dispositivo modelos privados de frases e de uso de palavras a partir do que você digita. Desative para interromper todo o registo automático do comportamento de digitação — nada de novo é armazenado enquanto estiver desativado. Os dados que você cria explicitamente são separados: as estatísticas de desempenho das previsões e os dados aprendidos restaurados de uma cópia de segurança.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Adicionada, mas demasiado longa para deslizar</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">"%1$s" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue descodificar %3$d passo.</item><item quantity="many">"%1$s" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue descodificar %3$d passos.</item><item quantity="other">"%1$s" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue descodificar %3$d passos.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue descodificar %3$d passo.</item><item quantity="many">\"%1$s\" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue descodificar %3$d passos.</item><item quantity="other">\"%1$s\" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue descodificar %3$d passos.</item></plurals>
     <string name="gesture_finger_occlusion_title">Correção do desvio do toque</string>
     <string name="gesture_finger_occlusion_desc">Desloca a leitura do gesto em relação à ponta do dedo. Use positivo se os gestos ficam acima das teclas e negativo se ficam abaixo. Desativado por predefinição.</string>
     <string name="gesture_touch_smoothing_title">Suavização do toque</string>

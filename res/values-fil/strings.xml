@@ -464,7 +464,7 @@
     <string name="clipboard_swipe_deleted">Na-delete</string>
     <string name="clipboard_swipe_undo">I-undo</string>
     <string name="clipboard_private_copy_other_apps_title">Private na copy sa ibang app</string>
-    <string name="clipboard_private_copy_other_apps_desc">Magdagdag ng "Private na copy" sa mga text-selection menu ng ibang app. Kino-copy ang napiling teksto sa CleverKeys lamang — hindi sa system clipboard. Ang pag-enable ay nagdadagdag ng app entry na maaaring makita ng ibang app.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Magdagdag ng \"Private na copy\" sa mga text-selection menu ng ibang app. Kino-copy ang napiling teksto sa CleverKeys lamang — hindi sa system clipboard. Ang pag-enable ay nagdadagdag ng app entry na maaaring makita ng ibang app.</string>
     <string name="clipboard_sanitize_links_title">Linisin ang mga tracking parameter</string>
     <string name="clipboard_sanitize_links_desc">Alisin ang utm_*, fbclid, atbp. mula sa mga URL na iyong kino-copy. Pinapagana ng ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Linisin din ang system clipboard</string>
@@ -543,7 +543,7 @@
     <string name="input_frequency_scale_title">Scale ng Frequency</string>
     <string name="input_frequency_scale_desc">Balansein ang mga karaniwang kumpara sa mga hindi karaniwang salita (100–5000)</string>
     <string name="input_capitalize_i_title">I-capitalize ang mga Salitang I</string>
-    <string name="input_capitalize_i_desc">Auto-capitalize ang "I" at mga contraction (I\'m, I\'ll, I\'d, I\'ve)</string>
+    <string name="input_capitalize_i_desc">Auto-capitalize ang \"I\" at mga contraction (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Matalinong Bantas</string>
     <string name="input_smart_punctuation_desc">Ilakip ang mga punctuation sa dulo ng mga salita (tinatanggal ang space bago ang . , ! ? atbp.)</string>
     <string name="input_swipe_distance_threshold_title">Threshold ng Distansya ng Swipe</string>
@@ -625,7 +625,7 @@
     <string name="theme_color_keyboard_surface">Surface ng Keyboard</string>
     <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d custom na mapping • %2$d command na available</item><item quantity="other">%1$d custom na mapping • %2$d command na available</item></plurals>
     <string name="short_swipe_last_key">Huling key: %1$s</string>
-    <string name="short_swipe_customize_key">I-customize ang "%1$s" Key</string>
+    <string name="short_swipe_customize_key">I-customize ang \"%1$s\" Key</string>
     <string name="extra_keys_enabled_count">%1$d ng %2$d extra key ang naka-enable</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Makina ng hula</string>

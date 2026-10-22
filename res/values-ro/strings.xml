@@ -479,7 +479,7 @@
     <string name="clipboard_swipe_deleted">Șters</string>
     <string name="clipboard_swipe_undo">Anulează</string>
     <string name="clipboard_private_copy_other_apps_title">Copiere privată în alte aplicații</string>
-    <string name="clipboard_private_copy_other_apps_desc">Adaugă "Copiere privată" la meniurile de selecție a textului ale altor aplicații. Copiază textul selectat doar în CleverKeys — niciodată în clipboard-ul sistemului. Activarea adaugă o intrare de aplicație pe care alte aplicații o pot vedea.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Adaugă \"Copiere privată\" la meniurile de selecție a textului ale altor aplicații. Copiază textul selectat doar în CleverKeys — niciodată în clipboard-ul sistemului. Activarea adaugă o intrare de aplicație pe care alte aplicații o pot vedea.</string>
     <string name="clipboard_sanitize_links_title">Sanitizează parametrii de urmărire</string>
     <string name="clipboard_sanitize_links_desc">Elimină utm_*, fbclid, etc. din URL-urile copiate. Alimentat de ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Curăță și clipboard-ul sistemului</string>
@@ -557,8 +557,8 @@
     <string name="input_context_boost_desc">Cât de mult influențează contextul predicțiile (0,5–5,0)</string>
     <string name="input_frequency_scale_title">Scală frecvență</string>
     <string name="input_frequency_scale_desc">Echilibrează cuvintele comune față de cele neobișnuite (100–5000)</string>
-    <string name="input_capitalize_i_title">Majusculă pentru "I"</string>
-    <string name="input_capitalize_i_desc">Majusculizează automat "I" și contracțiile (I\'m, I\'ll, I\'d, I\'ve)</string>
+    <string name="input_capitalize_i_title">Majusculă pentru \"I\"</string>
+    <string name="input_capitalize_i_desc">Majusculizează automat \"I\" și contracțiile (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Punctuație inteligentă</string>
     <string name="input_smart_punctuation_desc">Atașează punctuația la sfârșitul cuvintelor (elimină spațiul înainte de . , ! ? etc.)</string>
     <string name="input_swipe_distance_threshold_title">Prag distanță glisare</string>

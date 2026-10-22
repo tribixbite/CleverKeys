@@ -468,7 +468,7 @@
     <string name="clipboard_swipe_deleted">Dzēsts</string>
     <string name="clipboard_swipe_undo">Atsaukt</string>
     <string name="clipboard_private_copy_other_apps_title">Privāta kopēšana citās lietotnēs</string>
-    <string name="clipboard_private_copy_other_apps_desc">Pievienot "Privātā kopēšana" citu lietotņu teksta atlases izvēlnēm. Kopē atlasīto tekstu tikai CleverKeys — nekad sistēmas starpliktuvē.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Pievienot \"Privātā kopēšana\" citu lietotņu teksta atlases izvēlnēm. Kopē atlasīto tekstu tikai CleverKeys — nekad sistēmas starpliktuvē.</string>
     <string name="clipboard_sanitize_links_title">Attīrīt izsekošanas parametrus</string>
     <string name="clipboard_sanitize_links_desc">Noņemt utm_*, fbclid u.c. no kopētajiem URL. Izmanto ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Attīrīt arī sistēmas starpliktuvi</string>
@@ -504,7 +504,7 @@
     <string name="gesture_double_space_timing_title">Dubultās atstarpes laiks</string>
     <string name="gesture_double_space_timing_desc">Maksimālais laiks starp atstarpēm, lai aktivizētu punktu (ms)</string>
     <string name="gesture_sensitivity_preset_title">Jutīguma priekšiestatījums</string>
-    <string name="gesture_sensitivity_preset_desc">Ātrie vilkuma atpazīšanas priekšiestatījumi. "Pielāgots" tiek rādīts, kad vērtības atšķiras no priekšiestatījumiem.</string>
+    <string name="gesture_sensitivity_preset_desc">Ātrie vilkuma atpazīšanas priekšiestatījumi. \"Pielāgots\" tiek rādīts, kad vērtības atšķiras no priekšiestatījumiem.</string>
     <string name="gesture_min_swipe_distance_title">Minimālais vilkuma attālums</string>
     <string name="gesture_min_swipe_distance_desc">Minimālais izsektais ceļš (px), lai žests varētu kvalificēties kā vārds ar vilkumu. Zemāk palīdz īsiem vārdiem; augstāk samazina nejaušas aktivizācijas.</string>
     <string name="gesture_min_key_distance_title">Minimālais attālums starp taustiņiem</string>
@@ -546,8 +546,8 @@
     <string name="input_context_boost_desc">Cik stipri konteksts ietekmē prognozes (0.5–5.0)</string>
     <string name="input_frequency_scale_title">Biežuma skala</string>
     <string name="input_frequency_scale_desc">Līdzsvars starp izplatītiem un retiem vārdiem (100–5000)</string>
-    <string name="input_capitalize_i_title">Lielais burts "I"</string>
-    <string name="input_capitalize_i_desc">Automātiski lietot lielo burtu "I" un saīsinājumos (I\'m, I\'ll, I\'d, I\'ve)</string>
+    <string name="input_capitalize_i_title">Lielais burts \"I\"</string>
+    <string name="input_capitalize_i_desc">Automātiski lietot lielo burtu \"I\" un saīsinājumos (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Viedā pieturzīmju lietošana</string>
     <string name="input_smart_punctuation_desc">Pievienot pieturzīmes pie vārdiem (noņemt atstarpi pirms . , ! ? u.c.)</string>
     <string name="input_swipe_distance_threshold_title">Vilkuma attāluma slieksnis</string>
@@ -629,7 +629,7 @@
     <string name="theme_color_keyboard_surface">Tastatūras virsma</string>
     <plurals name="short_swipe_mappings_summary"><item quantity="zero">%1$d pielāgotu piešķīrumu • %2$d pieejamās komandas</item><item quantity="one">%1$d pielāgots piešķīrums • %2$d pieejamās komandas</item><item quantity="other">%1$d pielāgoti piešķīrumi • %2$d pieejamās komandas</item></plurals>
     <string name="short_swipe_last_key">Pēdējais taustiņš: %1$s</string>
-    <string name="short_swipe_customize_key">Pielāgot taustiņu "%1$s"</string>
+    <string name="short_swipe_customize_key">Pielāgot taustiņu \"%1$s\"</string>
     <string name="extra_keys_enabled_count">%1$d no %2$d papildu taustiņiem iespējoti</string>
     <!-- Context-LM / next-word / swipe-engine settings -->
     <string name="swipe_engine_mode_title">Prognozēšanas dzinis</string>
@@ -1029,9 +1029,9 @@
     <string name="calibration_how_body">Īsie vilkumi aktivizē līdz 8 apakštaustiņu darbībām katram taustiņam atkarībā no virziena. Pārvietojiet pirkstu nelielu attālumu, lai aktivizētu.</string>
     <string name="calibration_thresholds_title">Attāluma sliekšņi</string>
     <string name="calibration_tap_swipe_title">Pieskāriena/vilkuma slieksnis</string>
-    <string name="calibration_tap_swipe_desc">Žesti, kas īsāki par šo (% no taustiņa diagonāles), ir pieskārieni</string>
+    <string name="calibration_tap_swipe_desc" formatted="false">Žesti, kas īsāki par šo (% no taustiņa diagonāles), ir pieskārieni</string>
     <string name="calibration_boundary_title">Īsā/garā vilkuma robeža</string>
-    <string name="calibration_boundary_desc">Vienāds vai mazāks = īss vilkums (apakštaustiņš); lielāks = vārds ar vilkumu (% no taustiņa diagonāles)</string>
+    <string name="calibration_boundary_desc" formatted="false">Vienāds vai mazāks = īss vilkums (apakštaustiņš); lielāks = vārds ar vilkumu (% no taustiņa diagonāles)</string>
     <string name="calibration_customize_title">Pielāgot darbības katram taustiņam</string>
     <string name="calibration_customize_desc">Īsie vilkumi, pielāgotas komandas katram taustiņa virzienam</string>
     <string name="calibration_practice_title">Prakses zona</string>
