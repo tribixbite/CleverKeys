@@ -390,8 +390,9 @@ editor that used to be listed here already ship in 2.0.)
   pack: the old pack is kept as a backup until the new one is in place, and leftovers are
   repaired at the next start.
 - Dictionary Manager's Custom tab counted the "+ Add" row as a word ("(1)" with no words).
-- Text Assist says "Action unavailable" when no app can take the text, instead of doing
-  nothing; a Text Assist or Replace Text chooser left open with the Home key no longer blocks
+- Text Assist says "Action unavailable" instead of doing nothing when it cannot run: in a
+  terminal-style field, when the selection cannot be read back, or when its chooser cannot
+  start (with no app installed for the text, Android shows its own empty chooser); a Text Assist or Replace Text chooser left open with the Home key no longer blocks
   the next request on Android 14.
 - The undo and redo keys now work in Chrome, WebView and Compose text fields (they send
   Ctrl+Z / Ctrl+Shift+Z, which those editors honour; the old editor menu action was ignored
