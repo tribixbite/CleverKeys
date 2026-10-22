@@ -188,6 +188,13 @@ fluency.
   default-only ones are `translatable="false"`. Literal percentages in
   `formatted="false"` strings and Hungarian `%-a` are not formatter arguments. Android lint
   remains the formatting-syntax gate.
+- **`TranslationFormatParityTest`** (2026-10-22) checks every resource, not a pinned set. It covers
+  coverage and element kind, argument parity (each `<string>`, and each plural `other` item),
+  the literal-`%` rule (`formatted="false"` when there are no arguments, `%%` otherwise, and
+  the default's `formatted="false"` kept in every locale), and unescaped `"`/`'`, which aapt2
+  strips or rejects. An inline fixture with one defect per rule keeps each rule honest.
+  Fail-first: 44 quoting and 20 literal-% defects, all fixed in `0a8fc939`. Audit and tool
+  matrix: `docs/audit/2026-10-22-translation-audit.md`.
 - **`TranslationGlossaryTest`** checks terminology. `docs/i18n/glossary.json` maps each
   product concept (swipe, dictionary, suggestion, learn, clipboard, layout, gesture;
   correction for zh/vi; "word" for tr) to the keys that express it. For each locale it lists
