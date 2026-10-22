@@ -286,7 +286,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 19. [ ] RTX: Bangla spelling-preserving dictionary + mark/conjunct geometry, then a validated
     model/pack (`docs/guides/adding-a-new-language.md`); ARC-061 `ctc_golden` fixture fix.
 20. [ ] unowned roadmap: 1.3 at-rest clipboard encryption, 2.3 dwell picker (measure first),
-    4.2 spline swipe trail (benchmark first), #187 below-accents, #175(3)/#80(3) toolbar.
+    4.2 spline swipe trail (benchmark first), #187 below-accents, #175(3)/#80(3) toolbar,
+    4.3 opt-in floating quick-action button (future release; overlay permission requested only
+    on opt-in; maintainer 2026-10-22).
     (4.1 live theme preview shipped 2026-10-08, `70b94c11`.)
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)

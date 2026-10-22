@@ -385,6 +385,27 @@ CleverKeys' custom Canvas rendering is one of its greatest assets. It should be 
 * **Solution**: Replace linear line segments with a Catmull-Rom spline interpolator. Dynamically modulate trail thickness based on fingertip velocity (thick on slow pivots, thin on fast transits) with a decaying alpha gradient. Reuse Canvas rendering and measure frame latency/allocations on devices before claiming a refresh rate or overhead improvement.
 * **Effort**: Low (1–2 days).
 
+### 4.3 Floating Quick-Action Button (opt-in, future release)
+* **Requested**: maintainer, 2026-10-22. Docketed for a release after 2.0.0; not started.
+* **Feature**: a persistent, translucent, draggable circle shown over other apps. A tap opens a radial
+  menu, like a circle launcher. Default actions: show the keyboard, copy, paste, open the
+  clipboard pane. The actions and their order can be customised.
+* **Permission rule**: it needs "Display over other apps" (`SYSTEM_ALERT_WINDOW`). The setting is
+  OFF by default, and the app asks for the permission ONLY when the user turns the setting on. No
+  other feature may depend on it. If the permission is revoked, the setting turns itself off and
+  says why.
+* **Relation to the Quick Settings tile**: todo item 15 (bring the keyboard back after the system
+  hides it) records whether the tile can do that without this permission. The button is wanted
+  either way, so it does not depend on that answer.
+* **Open design points**:
+  - edge snapping and a remembered position for each orientation;
+  - hide while the keyboard is visible, or while a full-screen app or video is in front;
+  - how far the button is translucent at rest;
+  - TalkBack labels for each action;
+  - copy and paste need an editor with focus, so say what happens when none has it;
+  - include the button and its action list in backup and restore.
+* **Effort**: Medium (overlay service, radial menu, actions editor, permission flow).
+
 ---
 
 ## 6. What NOT to Do: Traps & Anti-Patterns to Avoid
