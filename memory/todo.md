@@ -190,8 +190,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     corners; macron-below then `t` typed `ṯ` (compose table) and ring-below then `y` typed
     `y̥` (combining fallback); both keys unticked again (19 of 121). (Harness note: separate `input motionevent`
     calls take ~70 ms each, so a short swipe must be ONE big MOVE right after DOWN, or the
-    backspace long-press repeat fires first.) STILL OPEN: (1) a Hebrew prefix typo
-    (`לןא` → `ללא`) on a phone with the Hebrew pack;
+    backspace long-press repeat fires first.) (1) Hebrew prefix typo DEVICE PASS 2026-10-22
+    on the Pixel (installed release 2026-10-20 17:08, contains `208457a0`; `langpack-he.zip`
+    imported, a temporary Hebrew 1 layout bound to Hebrew): `לןא`+space → `ללא` (log `channel
+    edit=1.254`, bar offered `לןא` to revert) and `טאת` → `ואת` (edit 1.222). Restored after: layout
+    deleted, pack deleted, Multi-Language off again, pushed zip removed, 3 layouts as before;
     (2) Hebrew prefix-deletion class: round 3
     (short-word deletion cost δ, fresh HE-adj2 data, eval doc §7/§9) fixed 38 Hebrew words with 0
     breaks, 0 S-adj breaks and 0 C-oov changes, but failed E1 on GTC-DEV net −1 (8 fixes / 9
@@ -200,8 +203,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (genuine English extra-letter typos `tpo`→to, `xit`→it pushed to 3-letter words). FAIL; δ
     stays 0 and was not overridden again. Round 4 (§11–§12) scoped δ to Hebrew script and ran
     on fresh HE-adj3 (ranks 2,501–6,000): +86 distinct, 0 breaks, English identical on 35,825
-    inputs. PASS, so δ 0.5 + scope `hebrew` SHIPPED. Hebrew device check still open (needs the
-    Hebrew pack on a phone). Arabic prefixes: TODO pending an Arabic eval; (3) valid unlisted words: round 5 (§13–§15)
+    inputs. PASS, so δ 0.5 + scope `hebrew` SHIPPED. Hebrew device check PASS 2026-10-22 (see (1)). Arabic prefixes: TODO pending an Arabic eval; (3) valid unlisted words: round 5 (§13–§15)
     shipped a maximum correction cost κ = 3.0. TEST: 43.8 % of the valid words the default
     changed are now protected (C-oov accuracy 26 % → 58 %), GTC −48 distinct (0.98 %), S-adj 0.
     PASS, DONE. Device 2026-10-20, first Saga (release from `4d1e8c10`, SHA `7ed139aa…`,
@@ -254,8 +256,17 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Pure 3,178 / mock 1,426 green at `0b3bb5ac`; not run on instrumented or a device.
 14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
-15. [ ] maintainer: deferred review items — summon after system hide needs the overlay permission
-    (SYSTEM_ALERT_WINDOW): a maintainer decision. The suffix receipt readback (3 editor reads per
+15. [ ] maintainer: deferred review items — summon after a system hide does NOT need the overlay
+    permission (checked 2026-10-22, AOSP 9–16 sources + Saga runs; no code changed):
+    `requestShowSelf` → IMMS `showMySoftInput` checks only the IME token and WM shows the IME for
+    the last IME-target window; `SYSTEM_ALERT_WINDOW` gates `TYPE_APPLICATION_OVERLAY` only. The
+    shade (`FLAG_ALT_FOCUSABLE_IM`, layer 17 over IME 13) never reaches IMMS: over CleverKeys'
+    own Settings field it did not hide the keyboard at all, and on 10-20 a tile tap under the
+    open shade reshowed a Back-dismissed Chrome keyboard in 7 ms; the 10-20 "shade hide" was
+    Chrome hiding its own keyboard. The shipped deferred-show tile is the cheapest approach
+    (API 24+). Only a #175 button that outlives the IME window needs the overlay (plan 4.3).
+    Details and KDoc/spec wording follow-ups: `docs/specs/keyboard-minimize.md` "Overlay
+    permission check". The suffix receipt readback (3 editor reads per
     committed word) is KEPT BY DESIGN (2026-10-21): the # TODO in `rememberVerifiedWord` records
     why deferring it breaks the cursor-location proof; reopen only with a profile showing jank. #175 clipboard swipe-to-delete is BUILT and merged (`2787468d`, 2026-10-21; Saga 202 release
     `fe91c783…` PASS: left swipe hides the row with "Deleted" + Undo, Undo at 1.2 s restores it,

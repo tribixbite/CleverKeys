@@ -212,9 +212,11 @@ object KeyboardTileDecision {
  * deferred show requested by the tile. Pure and single-threaded (the service drives it from the
  * main thread with `SystemClock.uptimeMillis()`), so the whole state machine is unit-tested.
  *
- * Deferred show: a tap with the keyboard hidden cannot show it at once, because the shade still
- * holds window focus and the system ignores `requestShowSelf` until the app is focused again.
- * [request] arms a show; the service then calls [tick] every [RETRY_INTERVAL_MS], asking the
+ * Deferred show: a tap with the keyboard hidden may not show it at once. The shade never takes
+ * IME focus and `requestShowSelf` works under it (Saga 2026-10-20: shown 7 ms after the request),
+ * but some apps hide their own keyboard while the shade is open or as it closes (Chrome:
+ * `ORIGIN_CLIENT_HIDE_SOFT_INPUT`), so one request can be undone. No overlay permission is
+ * involved (`docs/specs/keyboard-minimize.md`, "Overlay permission check"). [request] arms a show; the service then calls [tick] every [RETRY_INTERVAL_MS], asking the
  * system to show the keyboard each time [tick] returns [Tick.REQUEST_SHOW], until the window is
  * shown ([onWindowShown] returns the form to apply) or [RETRY_WINDOW_MS] passes.
  *

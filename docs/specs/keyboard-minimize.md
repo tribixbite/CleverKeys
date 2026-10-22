@@ -17,17 +17,20 @@ Two catalogue commands (Events category), assignable to any short swipe, popover
 - Minimizing lasts while the keyboard stays shown. When the keyboard is hidden (`onFinishInputView`), the full view is put back in the input window at once, so its next appearance is full size. (Until 2026-10-08 `reset()` only cleared the style: the bar or button stayed the live view with nothing to expand, and a tap on it did nothing until the next `onStartInputView`.)
 - Both pad themselves for the navigation bar under edge-to-edge.
 - The talkback label is "Show keyboard" (`short_swipe_show_keyboard`).
-- Out of scope: summoning a keyboard the system has already hidden. That needs an overlay outside the input window (`SYSTEM_ALERT_WINDOW`); this feature keeps the input window and only shrinks it.
+- Out of scope for the minimized button: it lives in the input window, so it is gone once the keyboard is hidden. The Quick Settings tile below brings a hidden keyboard back with `requestShowSelf`, which needs no extra permission (checked 2026-10-22, "Overlay permission check"). Only a button that stays on screen after the input window is hidden needs an overlay (`SYSTEM_ALERT_WINDOW`; roadmap 4.3).
 
 ## Quick Settings tile (2026-10-20)
 
 `KeyboardTileService` toggles the keyboard instead of always opening the picker. The decision
 is the pure `KeyboardTileDecision.actionFor(isCurrentIme, CleverKeysService.tileSnapshot())`.
 
-**The shade hides the keyboard first.** On the Saga (Android 14) expanding the shade alone hides
-the IME (`mInputShown=false`, `mWindowVisible=false`) and it does not come back after the shade
-collapses, so a real tap always finds the keyboard hidden; `requestShowSelf` is ignored while the
-shade holds focus (device report, 2026-10-20). The service therefore remembers the form the
+**Some apps hide the keyboard when the shade opens.** On the Saga (Android 14) with Chrome,
+expanding the shade hid the IME (`mInputShown=false`, `mWindowVisible=false`) and it did not come
+back after the shade collapsed (device report, 2026-10-20). The 2026-10-22 check found that hide
+was Chrome's own (`ORIGIN_CLIENT_HIDE_SOFT_INPUT` from `com.android.chrome`): the shade itself
+does not take IME focus, did not hide the keyboard over CleverKeys' Settings field, and
+`requestShowSelf` sent under the open shade showed the keyboard in 7 ms ("Overlay permission
+check" below). The retry loop covers apps that hide the keyboard themselves. The service remembers the form the
 window had when it was last hidden (`_formAtFinishView`, captured in `onFinishInputView` before
 the minimizer reset, recorded in `onWindowHidden`) and the hide time, and a tap acts on that
 form when the hide is recent.
@@ -83,6 +86,70 @@ Back was pressed while the keyboard showed, or the `hide_keyboard` key was used.
   `KeyboardMinimizerTest` (`lastStyle`).
 - Device check owed: the shade flow (`cmd statusbar expand-settings` → `click-tile` →
   `collapse`) for full, minimized and Back-dismissed keyboards.
+
+### Overlay permission check (2026-10-22)
+
+Question (`memory/todo.md` item 15): does bringing the keyboard back from the tile after the
+system hid it need `SYSTEM_ALERT_WINDOW`? **No.** Research only; no code changed. Sources: the
+LineageOS mirrors of AOSP (`lineage-16.0` = Android 9, `18.1` = 11, `21.0` = 14, `22.2` = 15,
+`23.0` = 16), the 2026-10-20 Saga logs (`build/oct20f-saga/tile.log`, `build/oct20e-saga/log*.txt`)
+and a Saga (Android 14) run on 2026-10-22 (CleverKeys 2.0.0 verbose build, tile added with
+`cmd statusbar add-tile` and removed afterwards, `sysui_qs_tiles` byte-identical before and after).
+
+- **Mechanism (source).** `InputMethodService.requestShowSelf` → `mPrivOps.showMySoftInput`
+  (API 28+; below 28 `InputMethodManager.showSoftInputFromInputMethod(token, flags)` reaches the
+  same binder call and is deprecated in favour of the IMS method). IMMS `showMySoftInput` checks
+  only `calledWithValidTokenLocked` (the caller is the current IME) and calls
+  `showCurrentInputLocked`: Android 9 takes no window and shows for the current client; 14 and 15
+  pass `mLastImeTargetWindow`, the window input was last started for (`reportStartInput`); 15 also
+  requires `mCurClient.mCurSession` when `deferShowSoftInputUntilSessionCreation` is on. Then
+  `DefaultImeVisibilityApplier.performShowIme` → IME `showWindow` → `applyImeVisibilityAsync` → WMS
+  `showImePostLayout(window)` → `ImeInsetsSourceProvider.scheduleShowImePostLayout`, which runs
+  once the requesting window is the IME layering, input or control target. `SYSTEM_ALERT_WINDOW`
+  appears only in `PhoneWindowManager.checkAddPermission` for alert-window types;
+  `TYPE_INPUT_METHOD` is in its "window manager will check these" list and needs the IME token
+  (`WindowManagerService.addWindow`), not the overlay op. Android 16 keeps `requestShowSelf`; with
+  `refactor_insets_controller` on, `showMySoftInputLocked` goes through `mCurClient` and the focused
+  window's client (`setImeVisibilityOnFocusedWindowClient`) instead, so a bound client is still the
+  only condition. The flag's value is not readable from the mirror.
+- **What the shade does (device + source).** The expanded shade is `TYPE_NOTIFICATION_SHADE` with
+  `FLAG_ALT_FOCUSABLE_IM` (Saga `dumpsys window windows`; SystemUI `applyFocusableFlag` on 14 and
+  15). `mayUseInputMethod` is false for it, so `ImeFocusController` never reports its focus to IMMS:
+  with the shade open IMMS still listed the app as `mCurFocusedWindow`/`mCurClient`, and WM's IME
+  layering, input and control targets stayed the app window. The shade is layer 17 and the IME
+  layer 13 (`WindowManagerPolicy.getWindowLayerFromTypeLw`), so a shown IME is only covered. Over
+  CleverKeys' own Settings search field, `expand-notifications` did NOT hide the keyboard
+  (`mInputShown=true` throughout, no ImeTracker hide between 04:55:18 and 04:55:25); `click-tile`
+  with the shade open took the MINIMIZE branch at once; after `collapse` the minimized keyboard
+  was on screen. The 2026-10-20 "the shade hides the keyboard" came from Chrome: the only hide in
+  those logs at shade time is `ORIGIN_CLIENT_HIDE_SOFT_INPUT reason HIDE_SOFT_INPUT` from
+  `com.android.chrome`, and in `tile.log` the tap under the open shade on a Back-dismissed Chrome
+  keyboard logged `requestShowSelf sent` at 16:32:50.364 and `onWindowShown` at .371 (7 ms,
+  attempt 1). The system does not ignore `requestShowSelf` while the shade is open; the retry loop
+  only covers apps that hide the keyboard themselves on focus loss.
+- **Why the keyboard does not return by itself after such a hide.** `computeState` restores only
+  when `WindowManagerService.shouldRestoreImeVisibility` agrees (`ActivityRecord.mLastImeShown`,
+  recorded when the activity becomes invisible or relaunches, or a task snapshot with an IME
+  surface); the shade causes neither, and an app-initiated hide is simply a hide.
+- **Alternatives, and why they are not needed.** `TileService.startActivityAndCollapse` (Intent
+  below 34; `PendingIntent` from 34, the Intent form throws `UnsupportedOperationException`) and
+  `showDialog` move focus away from the editor. A transparent trampoline activity becomes the IME
+  target with no editor (`HIDE_UNSPECIFIED_WINDOW`) unless it sets `FLAG_ALT_FOCUSABLE_IM`, and
+  then it changes nothing the shade has not already left in place; reasoned from source, not run.
+  An overlay window (`TYPE_APPLICATION_OVERLAY`, layer 11) sits below both the IME and the shade
+  and cannot request a show for another app: only the IME (its token) or the served view's own
+  process can (`InputMethodManager.showSoftInput` requires `hasServedByInputMethodLocked(view)`).
+- **Other keyboards.** Hacker's Keyboard's "show keyboard" notification calls
+  `imm.showSoftInputFromInputMethod(mIME.mToken, SHOW_FORCED)` and its manifest requests no overlay
+  permission (klausw/hackerskeyboard, master). Gboard on the Saga requests no
+  `SYSTEM_ALERT_WINDOW` (`dumpsys package`); its floating mode is the IME window with a touchable
+  region, the `TOUCHABLE_INSETS_REGION` mechanism our FAB uses, and LeanType documents the same
+  ("zero `SYSTEM_ALERT_WINDOW` permission overhead"). Apps that do need "Display over other apps"
+  are non-IME helpers drawing their own button (e.g. the "No Keyboard: Hideable keyboard" popup
+  remote, Play listing), which is the roadmap 4.3 floating button, not the tile.
+- **Follow-ups.** Done the same day: the `TileShowSession` KDoc and the "Out of scope" and
+  shade paragraphs above now say Chrome hides its own keyboard and only a button that outlives
+  the IME window needs the overlay.
 
 ## Architecture
 

@@ -394,9 +394,11 @@ CleverKeys' custom Canvas rendering is one of its greatest assets. It should be 
   OFF by default, and the app asks for the permission ONLY when the user turns the setting on. No
   other feature may depend on it. If the permission is revoked, the setting turns itself off and
   says why.
-* **Relation to the Quick Settings tile**: todo item 15 (bring the keyboard back after the system
-  hides it) records whether the tile can do that without this permission. The button is wanted
-  either way, so it does not depend on that answer.
+* **Relation to the Quick Settings tile**: the tile already brings a hidden keyboard back with
+  no extra permission (`requestShowSelf`; checked 2026-10-22, `docs/specs/keyboard-minimize.md`
+  "Overlay permission check"). The button needs the overlay only because it stays on screen
+  after the keyboard's own window is gone. Gboard's floating keyboard needs no overlay either:
+  it is the IME window itself.
 * **Open design points**:
   - edge snapping and a remembered position for each orientation;
   - hide while the keyboard is visible, or while a full-screen app or video is in front;
