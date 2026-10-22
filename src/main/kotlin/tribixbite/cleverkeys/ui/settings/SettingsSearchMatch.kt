@@ -49,4 +49,33 @@ internal object SettingsSearchMatch {
      */
     fun idsByTitle(entries: List<Pair<String, String>>): Map<String, List<String>> =
         entries.groupBy({ it.first }, { it.second }).mapValues { (_, ids) -> ids.distinct() }
+
+    /**
+     * One poll of a search result's scroll wait: the id to scroll to, or null to keep waiting.
+     * [previous] and [current] are the registered positions of the last two polls (absent = the
+     * control is not composed).
+     *
+     * The [target] wins once its position is registered and unchanged across two polls (the
+     * expand animation reports in-flight offsets until then). A control whose revealing state is
+     * off is never composed, so while the target is absent the first REGISTERED of [gates] (the
+     * controls that reveal it, innermost first) is chosen once it too is settled. The gates
+     * compose in the same frame as the target would, so a settled gate with no target means
+     * the target is hidden.
+     */
+    fun settledScrollTarget(
+        target: String,
+        gates: List<String>,
+        previous: Map<String, Int>,
+        current: Map<String, Int>,
+    ): String? {
+        val position = current[target]
+        if (position != null) return target.takeIf { previous[target] == position }
+        val gate = gates.firstOrNull { current[it] != null } ?: return null
+        return gate.takeIf { previous[gate] == current[gate] }
+    }
+
+    /** Where to scroll when the wait times out: the target if registered, else its first
+     *  registered gate, else the target (scrolling to an unregistered id does nothing). */
+    fun timedOutScrollTarget(target: String, gates: List<String>, current: Map<String, Int>): String =
+        if (current[target] != null) target else gates.firstOrNull { current[it] != null } ?: target
 }

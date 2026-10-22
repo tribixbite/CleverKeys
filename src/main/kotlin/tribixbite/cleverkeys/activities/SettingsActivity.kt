@@ -687,6 +687,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         expanderFor(e.sectionKey)
                     },
                     settingId = e.settingId,
+                    gateIds = e.gateIds,
                 )
             }.toTypedArray(),
             // ===== Hand-maintained NON-control entries (activity navigation, FAQ) =====

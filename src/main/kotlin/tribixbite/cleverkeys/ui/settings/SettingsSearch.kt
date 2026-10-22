@@ -38,29 +38,45 @@ internal fun SettingsActivity.contentYOf(coords: LayoutCoordinates): Int =
  * -931 px 50 ms in, so the scroll clamped to the top; Vibration read 8000 and overshot). The fixed
  * 200 ms delay this replaces read those in-flight values. Settled = registered and unchanged
  * across two polls, capped at [SCROLL_TARGET_WAIT_MS].
+ *
+ * [gates] are the controls that reveal [settingId] (generated `gateIds`, innermost first). When
+ * the target sits behind a state that is off it is never composed, so the result lands on the
+ * first gate on screen instead, e.g. "Primary Language" with Multi-Language off lands on the
+ * Multi-Language switch (Pixel 2026-10-22: before, it scrolled nowhere). The choice is
+ * [SettingsSearchMatch.settledScrollTarget].
  */
-internal fun SettingsActivity.expandAndScrollTo(settingId: String, expand: () -> Unit) {
+internal fun SettingsActivity.expandAndScrollTo(
+    settingId: String,
+    gates: List<String> = emptyList(),
+    expand: () -> Unit,
+) {
     val self = this
-    settingPositions.remove(settingId)
+    val watched = listOf(settingId) + gates
+    watched.forEach { settingPositions.remove(it) }
     expand()
     lifecycleScope.launch {
         var waited = 0L
-        var previous: Int? = null
+        var previous = emptyMap<String, Int>()
+        var chosen: String? = null
         while (waited < SCROLL_TARGET_WAIT_MS) {
             kotlinx.coroutines.delay(SCROLL_TARGET_POLL_MS)
             waited += SCROLL_TARGET_POLL_MS
-            val current = settingPositions[settingId]
-            if (current != null && current == previous) break
+            val current = watched.mapNotNull { id -> settingPositions[id]?.let { id to it } }.toMap()
+            chosen = SettingsSearchMatch.settledScrollTarget(settingId, gates, previous, current)
+            if (chosen != null) break
             previous = current
         }
+        val target = chosen ?: SettingsSearchMatch.timedOutScrollTarget(
+            settingId, gates, watched.mapNotNull { id -> settingPositions[id]?.let { id to it } }.toMap()
+        )
         if (tribixbite.cleverkeys.BuildConfig.ENABLE_VERBOSE_LOGGING) android.util.Log.d(
             "SettingsSearch",
-            "scroll target $settingId: waited=${waited}ms pos=${settingPositions[settingId]} " +
-                "viewportTop=$scrollViewportTop scroll=${mainScrollState?.value} max=${mainScrollState?.maxValue} " +
-                "scope=${composeScope != null}"
+            "scroll target $settingId -> $target: waited=${waited}ms pos=${settingPositions[target]} " +
+                "gates=$gates viewportTop=$scrollViewportTop scroll=${mainScrollState?.value} " +
+                "max=${mainScrollState?.maxValue} scope=${composeScope != null}"
         )
-        self.scrollToSetting(settingId)
-        self.highlightedSettingId = settingId
+        self.scrollToSetting(target)
+        self.highlightedSettingId = target
         kotlinx.coroutines.delay(2000)
         self.highlightedSettingId = null
     }
@@ -111,6 +127,8 @@ internal fun SettingsActivity.collapseAllSections() {
  * expandSection: if activityClass is null, clicking expands this section
  * gatedBy: if set, this setting requires another toggle to be enabled first
  * settingId: locale-independent ID for scrolling and highlighting (see [settingIdsFor])
+ * gateIds: setting ids of the controls whose state reveals this one, innermost first (generated
+ *   entries; see [expandAndScrollTo])
  */
 internal data class SearchableSetting(
     val title: String,
@@ -120,7 +138,8 @@ internal data class SearchableSetting(
     val activityClass: Class<*>? = null,
     val expandSection: () -> Unit = {},
     val gatedBy: String? = null,  // e.g., "swipe_typing" means needs swipe typing enabled
-    val settingId: String = ""    // For highlighting
+    val settingId: String = "",   // For highlighting
+    val gateIds: List<String> = emptyList(),
 )
 
 /** Compiled once. [settingSlug] runs in the composition body of every switch, slider and
@@ -230,7 +249,7 @@ internal fun SettingsActivity.executeSearchAction(setting: SearchableSetting) {
         // Special handling for What's New - opens external URL
         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tribixbite/CleverKeys/releases/latest")))
     } else if (setting.settingId.isNotEmpty()) {
-        expandAndScrollTo(setting.settingId) {
+        expandAndScrollTo(setting.settingId, setting.gateIds) {
             collapseAllSections()
             setting.expandSection()
         }

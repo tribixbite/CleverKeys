@@ -145,9 +145,85 @@ def section_for(pos, sections):
     return cur
 
 
+IF_RE = re.compile(r"\bif\s*\(")
+# Identifiers (dotted paths such as `tuning.ranking` included) in an `if` condition.
+IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*")
+# Condition tokens that never name the state a control sets.
+NON_STATE_IDENTS = {"true", "false", "null", "it", "is", "in", "isNotEmpty", "isEmpty"}
+
+
+def matching_close(text, open_idx, open_ch, close_ch):
+    """Index just past the bracket that closes the one at [open_idx] (string contents ignored:
+    the settings sections keep no unbalanced brackets inside literals)."""
+    depth = 0
+    for i in range(open_idx, len(text)):
+        c = text[i]
+        if c == open_ch:
+            depth += 1
+        elif c == close_ch:
+            depth -= 1
+            if depth == 0:
+                return i + 1
+    return len(text)
+
+
+def if_blocks(text):
+    """(body_start, body_end, condition) for every `if (cond) { ... }` in [text]."""
+    blocks = []
+    for m in IF_RE.finditer(text):
+        paren = m.end() - 1
+        cond_end = matching_close(text, paren, "(", ")")
+        j = cond_end
+        while j < len(text) and text[j] in " \t\r\n":
+            j += 1
+        if j >= len(text) or text[j] != "{":
+            continue
+        blocks.append((j, matching_close(text, j, "{", "}"), text[paren + 1:cond_end - 1]))
+    return blocks
+
+
+def gate_ids_for(text, ctrl_start, ctrl_sid, blocks, controls):
+    """Setting ids of the controls that reveal the control at [ctrl_start] of [text], innermost
+    first.
+
+    A control inside `if (multiLangEnabled) { ... }` is not composed while that state is false,
+    so its search result has nothing to scroll to (device finding 2026-10-22: "Primary Language"
+    with Multi-Language off scrolled nowhere). For each enclosing block, every state identifier
+    in the condition is matched to the nearest control BEFORE the block whose own call text
+    mentions it: the switch whose `checked = multiLangEnabled`, the dropdown whose
+    `selectedIndex` reads `clipboardLimitType`. The app scrolls to the first of these that is on
+    screen when the target itself is not.
+
+    # TODO: gates are resolved within one source file. A condition naming state whose control
+    # lives in another section file (`swipeTypingEnabled` around "Backspace Undo Swipe" in
+    # InputBehaviorSection) gets no gate for that part, so with only that state off the result
+    # still lands nowhere.
+    """
+    gates = []
+    enclosing = sorted((b for b in blocks if b[0] < ctrl_start < b[1]), key=lambda b: -b[0])
+    for body_start, _end, cond in enclosing:
+        found = []
+        for ident in dict.fromkeys(IDENT_RE.findall(cond)):
+            if ident in NON_STATE_IDENTS or ident[0].isupper():
+                continue  # keywords, and constants such as AutocorrectRanking.CHANNEL
+            pat = re.compile(r"(?<![\w.])" + re.escape(ident) + r"(?![\w])")
+            best = None
+            for c_start, c_end, sid in controls:
+                if c_start < body_start and sid != ctrl_sid and pat.search(text[c_start:c_end]):
+                    if best is None or c_start > best[0]:
+                        best = (c_start, sid)
+            if best:
+                found.append(best)
+        for _start, sid in sorted(found, key=lambda f: -f[0]):
+            if sid not in gates:
+                gates.append(sid)
+    return gates
+
+
 def scan_file(text, strings, entries, seen, default_key="advanced"):
     """Scan a single Kotlin source text for controls, appending to entries."""
     sections = find_sections(text)
+    found = []  # (start, call_end, title, res_name, sid)
     for m in CONTROL_RE.finditer(text):
         window = text[m.start():m.start() + 500]
         tm = TITLE_RE.search(window)
@@ -161,20 +237,26 @@ def scan_file(text, strings, entries, seen, default_key="advanced"):
             title = strings.get(res_name)
         if not title:
             continue
-        var = section_for(m.start(), sections)
+        call_end = matching_close(text, m.end() - 1, "(", ")")
+        found.append((m.start(), call_end, title, res_name, res_name if res_name else slugify(title)))
+
+    blocks = if_blocks(text)
+    controls = [(start, end, sid) for start, end, _t, _r, sid in found]
+    for start, _end, title, res_name, sid in found:
+        var = section_for(start, sections)
         key = section_key(var) if var else default_key
         dedup = (title, key)
         if dedup in seen:
             continue
         seen.add(dedup)
-        entries.append((title, keywords_for(title), key, res_name))
+        entries.append((title, keywords_for(title), key, res_name, gate_ids_for(text, start, sid, blocks, controls)))
 
 
 def main():
     out_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
     strings = load_strings(STRINGS)
 
-    entries = []  # (title, keywords, sectionKey, titleResName or None)
+    entries = []  # (title, keywords, sectionKey, titleResName or None, gateIds)
     seen = set()
 
     # Scan SettingsActivity.kt (retains any controls defined inline there)
@@ -203,6 +285,9 @@ def main():
         " * [title] is the ENGLISH title (res/values) and [keywords] are English; [titleRes] is the",
         " * title resource shown and matched in the UI language (0 for a literal title); [settingId]",
         " * is the locale-independent scroll/highlight key (the resource name, or a slug of a literal).",
+        " * [gateIds] are the setting ids of the controls whose state reveals this one (it sits in",
+        " * their `if` block), innermost first: the search scrolls to the first of them on screen",
+        " * when this control is not composed.",
         " */",
         "internal data class GeneratedSearchEntry(",
         "    val title: String,",
@@ -210,16 +295,18 @@ def main():
         "    val sectionKey: String,",
         "    val titleRes: Int,",
         "    val settingId: String,",
+        "    val gateIds: List<String> = emptyList(),",
         ")",
         "",
         "internal val GENERATED_SEARCH_ENTRIES: List<GeneratedSearchEntry> = listOf(",
     ]
-    for title, kws, key, res_name in entries:
+    for title, kws, key, res_name, gates in entries:
         kw_lit = ", ".join('"' + k.replace('"', '\\"') + '"' for k in kws)
         t_lit = title.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$")
         res_lit = f"R.string.{res_name}" if res_name else "0"
         sid = res_name if res_name else slugify(title)
-        lines.append(f'    GeneratedSearchEntry("{t_lit}", listOf({kw_lit}), "{key}", {res_lit}, "{sid}"),')
+        gate_lit = ", ".join(f'"{g}"' for g in gates)
+        lines.append(f'    GeneratedSearchEntry("{t_lit}", listOf({kw_lit}), "{key}", {res_lit}, "{sid}", listOf({gate_lit})),')
     lines.append(")")
     lines.append("")
 

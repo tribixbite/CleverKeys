@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import tribixbite.cleverkeys.ui.settings.SettingsSearchMatch
 import java.io.File
 
 /**
@@ -247,5 +248,69 @@ class SettingsSearchCoverageTest {
             .joinToString("\n") { it.readText() }
         val unregistered = inPageIds.filterNot { "\"$it\"" in uiSources }
         assertThat(unregistered).isEmpty()
+    }
+
+    /**
+     * A control inside `if (state) { … }` is not composed while the state is off, so its search
+     * result had nothing to scroll to (Pixel 2026-10-22: "Primary Language" with Multi-Language
+     * off scrolled nowhere, log `pos=null`). The generator records the controls that reveal it
+     * (`gateIds`, innermost first) and the search lands on the first one on screen.
+     */
+    @Test
+    fun hiddenControlsCarryTheControlsThatRevealThem() {
+        val gates = GENERATED_SEARCH_ENTRIES.associate { it.settingId to it.gateIds }
+        assertThat(gates["multilang_primary_title"]).containsExactly("multilang_enable_title")
+        // Nested blocks: the inner dropdown first, then the outer switch.
+        assertThat(gates["multilang_secondary_weight_title"])
+            .containsExactly("multilang_secondary_title", "multilang_enable_title").inOrder()
+        assertThat(gates["swipe_trail_glow_radius_title"])
+            .containsExactly("swipe_trail_effect_title", "swipe_trail_enable_title").inOrder()
+        // A dropdown gate: the condition reads the dropdown's state, not a boolean switch.
+        assertThat(gates["clipboard_size_limit_title"]).containsExactly("clipboard_limit_type_title")
+        assertThat(gates["autocorrect_starting_letter_title"]).containsExactly("autocorrect_enable_title")
+        // Always-composed controls have none.
+        assertThat(gates["multilang_enable_title"]).isEmpty()
+
+        // 56 conditional controls on 2026-10-22; far fewer means the block parser broke.
+        val gated = GENERATED_SEARCH_ENTRIES.filter { it.gateIds.isNotEmpty() }
+        assertThat(gated.size).isAtLeast(50)
+        // Every gate is itself an indexed control, so it registers a scroll position; and no
+        // control gates itself.
+        val ids = GENERATED_SEARCH_ENTRIES.map { it.settingId }.toSet()
+        for (e in gated) {
+            assertThat(ids).containsAtLeastElementsIn(e.gateIds)
+            assertThat(e.gateIds).doesNotContain(e.settingId)
+        }
+    }
+
+    @Test
+    fun scrollTargetWaitsForTheTargetToSettle() {
+        val gates = listOf("inner", "outer")
+        // Registered but still moving (expand animation): keep waiting.
+        assertThat(SettingsSearchMatch.settledScrollTarget("t", gates, mapOf("t" to 10), mapOf("t" to 40))).isNull()
+        // Unchanged across two polls: the target.
+        assertThat(SettingsSearchMatch.settledScrollTarget("t", gates, mapOf("t" to 40), mapOf("t" to 40, "outer" to 5)))
+            .isEqualTo("t")
+        // Nothing registered yet.
+        assertThat(SettingsSearchMatch.settledScrollTarget("t", gates, emptyMap(), emptyMap())).isNull()
+    }
+
+    @Test
+    fun scrollTargetFallsBackToTheFirstGateOnScreen() {
+        val gates = listOf("inner", "outer")
+        // Target hidden, inner gate hidden too (it sits inside the outer block): the outer one.
+        assertThat(SettingsSearchMatch.settledScrollTarget("t", gates, mapOf("outer" to 7), mapOf("outer" to 7)))
+            .isEqualTo("outer")
+        // Inner gate on screen but still moving: wait for IT, never jump to the outer one.
+        assertThat(
+            SettingsSearchMatch.settledScrollTarget("t", gates, mapOf("inner" to 1, "outer" to 7), mapOf("inner" to 9, "outer" to 7))
+        ).isNull()
+        assertThat(
+            SettingsSearchMatch.settledScrollTarget("t", gates, mapOf("inner" to 9, "outer" to 7), mapOf("inner" to 9, "outer" to 7))
+        ).isEqualTo("inner")
+        // Time-out: target, else first registered gate, else the target.
+        assertThat(SettingsSearchMatch.timedOutScrollTarget("t", gates, mapOf("t" to 3, "inner" to 1))).isEqualTo("t")
+        assertThat(SettingsSearchMatch.timedOutScrollTarget("t", gates, mapOf("outer" to 1))).isEqualTo("outer")
+        assertThat(SettingsSearchMatch.timedOutScrollTarget("t", gates, emptyMap())).isEqualTo("t")
     }
 }
