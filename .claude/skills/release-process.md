@@ -22,6 +22,39 @@ CleverKeys ships **two separate changelog channels** plus a third human-readable
 
 **Common pitfall**: `CHANGELOG.md` may be missing the most recent release entry while fastlane + GitHub bodies are present. The fastlane channel and GitHub release body are the load-bearing changelogs; `CHANGELOG.md` is a secondary record that's been intermittently maintained.
 
+## Release Record (`docs/RELEASE_RECORD.md`) — the fourth file, and it is enforced
+
+Every release also gets a section in `docs/RELEASE_RECORD.md`, the append-only book that maps
+each user-facing claim of a release note to the code that implements it (`path#Symbol`) and the
+test that pins it (`File.kt#method`, never line numbers). Two pure-tier tests guard it, both in
+`build.gradle`'s `pureTestClasses`:
+
+- `src/test/kotlin/tribixbite/cleverkeys/ReleaseRecordDriftTest.kt` fails when a fastlane
+  changelog exists without a record section (`everyPublishedReleaseHasASection`), when an anchor
+  no longer resolves (`everyAnchorResolvesInTheCurrentTree`), or when a released section's bytes
+  change (`historyIsImmutable`, SHA-256 pinned in `versionBlockSha256`).
+- `ReleaseMetadataDriftTest.releaseChannelsAgreeWithRuntimeCtcPolicy` pins `RELEASE_NOTES.md`
+  and the three fastlane files (byte-identical, paths derived from `build.gradle`'s version)
+  against `CtcLanguageSupport`.
+
+**Before tagging** (the pending section is editable only until the tag exists):
+1. Append or complete the `## vX.Y.Z (versionCode N, unreleased)` section: one row per claim in
+   the fastlane note plus the CHANGELOG-only fixes it summarises. `GUARDED` rows need a code AND
+   a test anchor, `PRESENT-UNTESTED` rows a code anchor only. Never edit an older section — add a
+   superseding row in the current one.
+2. Run both guards (`-PtestClass` takes ONE class, relative to `tribixbite.cleverkeys`):
+   `scripts/gradle-guard.sh runPureTests -PtestClass=ReleaseRecordDriftTest` and
+   `scripts/gradle-guard.sh runPureTests -PtestClass=ReleaseMetadataDriftTest`.
+3. Fold the same claims into `CHANGELOG.md`'s section (Keep-A-Changelog, plain and factual).
+
+**At tag time**, in `ReleaseRecordDriftTest`: replace the section's `unreleased` date with the
+publish date, remove the version from `PENDING_RELEASES`, and add its block hash to
+`versionBlockSha256` (run the test once; `historyIsImmutable`'s failure message prints the actual
+hash). From then on the section is history.
+
+Pitfall (CLAUDE.md "Test-rename and mock-test traps"): renaming a test method that a record row
+anchors breaks the anchor — `rg -n '<method>' docs/RELEASE_RECORD.md` before renaming any test.
+
 ## Pre-Release Checklist
 
 Before starting a release:
@@ -29,6 +62,9 @@ Before starting a release:
 - [ ] Tests pass: `./scripts/gradle-guard.sh runPureTests runMockTests` (run locally on Termux)
 - [ ] Build succeeds: `./scripts/gradle-guard.sh compileDebugKotlin`
 - [ ] Manual testing completed
+- [ ] `docs/RELEASE_RECORD.md` has the new version's section (see "Release Record" above) and
+      `ReleaseRecordDriftTest` + `ReleaseMetadataDriftTest` are green
+- [ ] `CHANGELOG.md` section folds in every user-visible change since the last tag
 - [ ] `memory/todo.md` updated with completed items
 - [ ] No `0words.py`-style stray scratch files in `git status`
 - [ ] Last `release.yml` run on previous tag was green (`gh run list --workflow=release.yml --limit 1`)
@@ -249,11 +285,19 @@ FIXES:
 • Flag emoji names now show country (Japan vs Regional Indicator)
 ```
 
+### 4b. Append the Release Record Section
+
+Add (or finish) the `## vX.Y.Z (versionCode N, unreleased)` section at the BOTTOM of
+`docs/RELEASE_RECORD.md`, one row per claim in the fastlane note (see "Release Record" above),
+and make sure `ReleaseRecordDriftTest.PENDING_RELEASES` names the version. Run the two drift
+tests. The `unreleased` date, the `PENDING_RELEASES` entry and the hash pin are updated at tag
+time, not here.
+
 ### 5. Commit Version Bump
 
 ```bash
 # Stage changes
-git add build.gradle fastlane/
+git add build.gradle fastlane/ RELEASE_NOTES.md docs/RELEASE_RECORD.md CHANGELOG.md
 
 # Commit with version in message
 git commit -m "chore: bump version to v1.2.6
@@ -334,6 +378,8 @@ done
 |------|---------|
 | `build.gradle` | `ext.VERSION_MAJOR/MINOR/PATCH` (near line 140 as of 2026-10-07; `rg -n 'ext.VERSION_' build.gradle`) |
 | `fastlane/metadata/android/en-US/changelogs/` | F-Droid/Fastlane changelogs |
+| `docs/RELEASE_RECORD.md` | Append-only record of every published claim → code + test anchor; pinned by `ReleaseRecordDriftTest` |
+| `src/test/kotlin/tribixbite/cleverkeys/ReleaseRecordDriftTest.kt` | `PENDING_RELEASES` and `versionBlockSha256` to update at tag time |
 | `.github/workflows/release.yml` | GitHub Actions release workflow |
 | `memory/todo.md` | Track completed work for changelog |
 

@@ -22,7 +22,7 @@ editor that used to be listed here already ship in 2.0.)
 ## [2.0.0] - unreleased
 
 > Not tagged yet. The section was first drafted 2026-09-09; items merged up to
-> 2026-10-17 are folded in.
+> 2026-10-22 are folded in.
 
 > Note: this file has gaps — v1.2.1, v1.2.2, v1.2.5 and v1.2.6 were tagged and shipped
 > but never given entries here. They are not backfilled by this release.
@@ -125,8 +125,9 @@ editor that used to be listed here already ship in 2.0.)
   adjustable learned-word cap (default 5,000; range 1,000–20,000). Learned data is
   included in Backup & Restore.
 - **Next-word prediction, on by default**: after you finish a word, the bar offers likely
-  next words from the built-in phrase data (the English context model; curated phrase lists
-  for German, Spanish, French, Italian and Portuguese). This works when "Learn from my
+  next words from the built-in phrase data (static context models for English, German, French,
+  Italian, Portuguese and Swedish, each shipped only after passing its own held-out gate;
+  Spanish keeps the older curated phrase list). This works when "Learn from my
   typing" is off (the v2.0 default), when Context-Aware Predictions is off, and in incognito
   fields. Your own learned phrases are added only when on-device learning and Context-Aware
   Predictions are on and the field allows learning; with learning off they are neither read
@@ -205,6 +206,16 @@ editor that used to be listed here already ship in 2.0.)
   exactly as before; three or more languages work by binding three or more layouts.
   Bindings travel with the layout in Backup & Restore; a binding to a language without an
   installed dictionary is allowed and flagged.
+- **"Prefer ‘word’ when swiping?"**: when the same swiped word is corrected twice (a bar tap over
+  the auto-inserted word, or backspace and retyping it), the bar offers to add it to your
+  dictionary so it wins next time; "Don't ask" declines it per word. Offered only with on-device
+  learning on, and never in password or incognito fields. A personal word spelled with an
+  apostrophe or hyphen (`she'd`, `co-op`) is then shown in that form when its letters are swiped;
+  the plain word stays one slot behind when it is a real word.
+- **Undoable dictionary adds**: every "Added … to dictionary" confirmation (the add prompt, the
+  `+word` chip, the autocorrect undo, the Prefer offer) is tappable — tap again within 3 s to
+  remove the word again. Only a genuinely new word is undoable; the text in the field is never
+  touched.
 - **Swipe priority for your own words**: in Dictionary Manager → Custom, each word has a Swipe
   priority (Normal / High / Highest) beside its frequency. Frequency 255, the default, is already
   the top of the scale. A raised word gets a fixed extra boost in both swipe engines, but only
@@ -250,6 +261,30 @@ editor that used to be listed here already ship in 2.0.)
   alternative: `helo` → `hello`, while `bery`, `grom` and `sed` still become `very`, `from` and
   `see`. The margin was tuned and gated on the shipped dictionary
   (`docs/eval/2026-10-11-dropped-double-margin.md`).
+- **Typo-tolerant suggestions while tapping**: when the letters typed so far match little or
+  nothing (`pka` for `play`, `pkay`), the bar offers words one neighbour-key slip, swap or accent
+  away, using the active layout's key geometry; strong exact matches are never diluted.
+- **Android personal-dictionary words swipe too** (Settings → System → Languages → Personal
+  dictionary): both swipe engines read them with the same frequency treatment as the keyboard's
+  own custom words; a change to either list re-warms the engines.
+- Dictionary Manager warns when a custom word is longer than the CTC engine can ever produce on
+  a swipe (32 letters, fewer with doubled letters); the word still works for tap typing.
+- Choosing a primary, secondary or quick-toggle language scans the pair's contraction data and
+  warns in Settings when one language's contraction would rewrite a real word of the other.
+- A swipe whose top candidate is clear puts that word's possessive one tap away (`team's` beside
+  `teams`); a possessive never moves ahead of its base.
+- Privacy & Data shows the learned phrase pairs, triples and vocabulary words with a **Forget
+  Learned** button — the same action the master switch's prompt runs.
+- The private-copy confirmation toast (shown over the host app when copying from the
+  text-selection toolbar) can be turned off in Clipboard settings.
+- Media clipboard entries can be deleted: expanding a media row shows its Delete row (text
+  entries keep delete behind edit mode).
+- **Use context to rank swipes** (Settings → Swipe Typing, off by default): reorders near-tie
+  swipe candidates using word pairs learned on this device; a clearly decoded swipe is never
+  overridden, and nothing changes until on-device learning has recorded something.
+- Custom layout XML accepts `escape` as an alias of the `esc` key name.
+- Web demo (site): the shipped CTC engine is selectable beside the transformer engines, with a
+  parity gate against the app's golden fixtures.
 
 ### Changed
 
@@ -283,6 +318,11 @@ editor that used to be listed here already ship in 2.0.)
   recent-emoji preferences leave the device. Learned data, clipboard history, the
   dictionary and all settings stay local.
 
+- Deleting an installed language pack asks for confirmation and says what is removed (the pack's
+  dictionary and swipe files) and what is kept (added words, learned data).
+- Import, export and backup failures name a translated reason (file not found, permission
+  denied, out of space, wrong password, invalid pack member, …) instead of an English exception
+  message.
 - Language packs now carry their data attribution (NOTICE.txt + manifest licence keys); the
   English Norvig variant was withdrawn (no redistribution licence).
 
@@ -303,15 +343,20 @@ editor that used to be listed here already ship in 2.0.)
 
   If you had the Prediction Engine set to Neural or Hybrid, it now behaves as CTC.
 
-  What you lose with it: the old engine's fuzzy "rescue" of very sloppy swipes against the
-  main dictionary, and secondary-language blending on the swipe path (tap typing is
-  unaffected). Italian, Portuguese and Swedish swipes on QWERTY move from the transformer to
-  the geometric engine and may be slightly less accurate until CTC is validated for them.
+  What you lose with it: secondary-language blending on the swipe path (tap typing is
+  unaffected), and the old engine's fuzzy "rescue" of very sloppy swipes is narrower: CTC looks
+  up dictionary words near its raw decode and appends them below the beam's own candidates,
+  never above them. Italian, Portuguese and Swedish swipes move from the transformer to CTC
+  provisionally, without language-specific benchmarks yet.
   The full comparison, including what was given up, is
   `docs/history/audits/2026-08-17-neural-vs-ctc-parity.md`.
-- The ~25 `neural_*` preferences, the "Beam Autocorrect" and raw-beam debug toggles, and the
-  Finger Occlusion Compensation slider — every one of them was read only by the removed
-  engine.
+- The ~25 `neural_*` preferences and the "Beam Autocorrect" and raw-beam debug toggles, which
+  only the removed engine read, plus the Word Scoring group (prediction-source balance,
+  common-words boost, top-5000 boost, rare-words penalty) and the fuzzy-algorithm dropdown,
+  which moved and persisted but drove nothing. Two controls first removed with them act on the
+  raw touch path, not on an engine, and are back under Gesture Tuning: **Touch Smoothing**
+  (unchanged; both engines decode the smoothed path) and **Touch Offset Correction** (the former
+  Finger Occlusion Compensation, now signed and off by default).
 
 ### Fixed
 
@@ -370,8 +415,9 @@ editor that used to be listed here already ship in 2.0.)
   traversal, playground recording scope, delete-active-theme crash loop).
 - Custom words were hard to swipe: stored frequencies now calibrate onto each engine's scale,
   membership merges against fresh prefs, and original case survives both load paths.
-- GIF panel: search pagination, tap inserts media instead of a dead link, partial thumbnail
-  imports roll back, "Replace pack?" offered on reinstall, category-bar touch handling.
+- GIF panel (#148, #149): search pagination, tap inserts media instead of a dead link, partial
+  thumbnail imports roll back and a pack with no thumbnails is refused, "Replace pack?" offered
+  on reinstall, category-bar touch handling.
 - Settings sliders share one range with their validator and clamp; the shipped Sparkle trail is
   selectable; landscape keyboard height no longer stomped by the portrait slider (#161).
 - A language switch changes the visible layout (#160); next/previous-layout extra keys honor
@@ -472,6 +518,54 @@ editor that used to be listed here already ship in 2.0.)
   clipboard pane is rebuilt while the action runs.
 - Settings → Multi-Language names the languages bound to layouts in Layout Manager, which
   replace these settings while their layout is active.
+- Opening the per-key customization screen no longer hides the keyboard it is meant to show
+  (#134): the entry path toggled the keyboard, which hid an already-visible one.
+- The clipboard pane repaints when the theme changes or the active custom theme's colours are
+  edited, and its entry rows take the runtime colours (#130); the keyboard view is swapped after
+  a theme change, so Monet (Auto) follows system dark mode without a restart.
+- With no theme chosen, the keyboard and the launcher follow the system light/dark mode instead
+  of always rendering dark.
+- The numeric pane's Greek/Math key honours its Extra Keys checkbox (#77), so a custom layout
+  with `bottom_row="false"` can remove it.
+- Dictionary Manager keeps its search text, sort and scroll position across rotation and
+  split-screen (#96).
+- The bottom key row no longer melds into or floats above the navigation bar after a rotation or
+  a switch between 3-button and gesture navigation (#167); edge-to-edge attributes are written
+  back to an already-showing window.
+- Editors that drop the space after a tapped suggestion (Chrome's omnibox and similar fields) get
+  it put back, so the next word does not run into the previous one (#151).
+- Searching a very large GIF pack (130k entries) no longer takes seconds per keystroke (#152).
+- Settings search: results scroll to their control in every UI language (matching was
+  English-only and scrolled by an English slug), wait for the section's expand animation, and
+  the Help & FAQ, Privacy and GIF import entries scroll to their target.
+- Reassigning an occupied popover slot from the command palette looked like a no-op: the label
+  step opened under the palette.
+- "Reset all" in Short Swipe Customization redraws the keyboard's custom labels at once instead
+  of after reopening the screen.
+- Possessives of words ending in s take the bare apostrophe (`parents'`, `James'`), and an
+  already-possessive word is never augmented again (`Book's's`).
+- A swipe at the start of a sentence is capitalised by the same rule as typed words; the shift
+  state captured when the gesture started no longer decides alone.
+- The import summary no longer calls deliberately skipped settings (internal, deprecated,
+  derived) "Invalid".
+- Layout Manager reports a failed XML import or export (permission denied, disk full, no stream)
+  instead of silently doing nothing.
+- A corrupt learned-data section in a backup is reported as incomplete: valid entries are merged
+  and the count shown is what was restored, not the section size.
+- Bundled and pack dictionaries are read to the end; a short read could leave a dictionary partly
+  loaded with no error.
+- The keyboard process no longer runs out of memory at startup with several languages active
+  (the CTC trie, duplicate predictors per language and an unbounded model cache held ~190 MB),
+  and dictionaries kept alive by a destroyed keyboard instance are released.
+- On high-report-rate screens a slow two-key swipe registered only its first key and decoded
+  nothing; key registration now measures travel from the last registered key.
+- The Privacy & Data swipe-collection toggle stored nothing on the main swipe path (a developer
+  flag was also required); it now governs that capture.
+- Language packs for Russian, Greek, Ukrainian, Bulgarian, Macedonian and Hebrew carry their CTC
+  encoder (3 MB off every APK); a pack downloaded before September 2026 has none and swipes with
+  the geometric engine until the current pack is imported.
+- A failed clipboard import is reported and rolled back (staged media deleted) instead of being
+  reported as success.
 
 ---
 
