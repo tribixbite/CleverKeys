@@ -42,7 +42,17 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    DEFAULT keyboard (maintainer: keep CleverKeys default on test phones). Item can close.
 2. [ ] agent → device: Persian half of #186/#61. No `fa` language pack exists. (Correction
    2026-10-21: a Persian layout DOES exist, `srcs/layouts/arab_pc_ir.xml` "Persian PC", but it
-   has no ZWNJ/half-space key.) Findings 2026-10-21 for the pack: `wordfreq` has `fa` (31,317
+   has no dedicated ZWNJ key; 2026-10-22: a `halfspace` corner gesture on ت exists, as upstream.)
+   RESEARCH DONE 2026-10-22 (`docs/research/2026-10-21-persian-zwnj.md` §1–§7): AOSP, HeliBoard,
+   FUTO, AnySoftKeyboard put a dedicated half-space key beside the space bar; ISIRI 9147 uses
+   Shift+Space. Recommended: (a) add that key (layout XML only), keep the gesture; (b) ZWNJ a
+   word character ONLY between two Arabic-script letters, through one shared predicate (today
+   `PredictionContextTracker` treats it as one and `Keyboard2View`/`EditorTextNavigation` do
+   not); (c) fold ي/ك→ی/ک and ۀ/ة/ە→ه for the pack and lookup only, never آ→ا (note:
+   `normalizeForPrediction` turns ۀ into Kurdish ە today); (d) no silent rewrite in either
+   direction (`بهروز` name vs `به‌روز` "up to date"; joined `نامهای` is ambiguous between
+   نامه‌ای and نام‌های); offer the half-space spelling as a candidate. HeliBoard's `fa`
+   dictionary (CC BY 4.0, 1.5 M entries, 667 k with ZWNJ) is a usable source. Findings 2026-10-21 for the pack: `wordfreq` has `fa` (31,317
    words), 2,395 of them ZWNJ compounds (`می‌شود`, `آن‌ها`) beside informal unspaced forms
    (`میکنم`, `میخوام`), plus a bare-ZWNJ token to drop. NEEDS MAINTAINER DECISIONS before
    building: keep ZWNJ compounds as single words (needs a script gate that allows U+200C
@@ -90,6 +100,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 9. [ ] maintainer: pre-tag checks — #90 numpad-height cases, #168 `clear_clipboard` on a
    disposable clip, #145 cold start, both minimize styles, suffix/template/continuous feel.
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21
+    (2026-10-22 audit `docs/audit/2026-10-22-translation-audit.md`: 64 mechanical defects fixed
+    in `0a8fc939`, now blocked by `TranslationFormatParityTest`; back-translation found no
+    meaning reversal. Review leads in its "native review" list: `cmd_clear_clipboard_desc`
+    names pins/todos with words that do not match the tabs, es/hu `clipboard_selection_clear`
+    reads as "delete the selection", fa example arrows reversed in RTL (device check), ru
+    plural adjective case, tr/pl Backspace rendered as "undo".)
     locales — command catalogue 465, popover 18, clipboard selection/bulk 25, clear-clipboard 4,
     #184 refusal, terminal packages, language binding, Oct 7 dialog strings, Oct 8 swipe
     priority 7 (`b2031f90`), Oct 10 legacy-frequency offer + lift 7 (`051dca51`), Oct 12

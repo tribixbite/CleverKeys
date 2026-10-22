@@ -1,5 +1,20 @@
 # HANDOFF — updated 2026-10-20 (body last reconciled 2026-09-01)
 
+**2026-10-22 pointer.** New: settings search lands on the revealing switch for a hidden
+setting (`fb3695b8`, 56 gated controls; device PASS on the Pixel); the tile needs NO overlay
+permission to summon a hidden keyboard (`be586c84`, todo 15 — only roadmap 4.3's floating
+button, docketed for a later release in `7e010989`, needs it); Hebrew prefix typo device PASS
+(todo item on line "(1) Hebrew prefix typo"); Persian research for todo 2 (`9ed56564`);
+translation audit + `TranslationFormatParityTest` (`0a8fc939`, `4b99f15d`); release record and
+CHANGELOG caught up and the release skill documents the record (`40e4014f`, `643cd3bb`).
+Waiting on the maintainer: the Persian decisions (todo 2), the string review (todo 10, with the
+audit's leads), and whether to add this release-docs line to the manual checklist's Sign-off
+(the checklist is the maintainer's file, so it was not edited):
+`- [ ] Release docs: docs/RELEASE_RECORD.md v2.0.0 covers every claim in fastlane 200002.txt and
+CHANGELOG 2.0.0; ReleaseRecordDriftTest and ReleaseMetadataDriftTest green. At tag time: publish
+date in the header, v2.0.0 out of PENDING_RELEASES, hash into versionBlockSha256
+(.claude/skills/release-process.md § Release Record).`
+
 **2026-10-21 pointer.** Everything through `a05ce50f` is PUSHED (maintainer authorized pushes
 2026-10-21); CI green at `fd7a4155` including the Security Scan (vite CVE fixed in `5bdf60ad`).
 New: #175 clipboard swipe-to-delete with a 5 s Undo (`2787468d`, History tab device-checked);
