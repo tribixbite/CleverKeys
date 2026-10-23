@@ -11,7 +11,7 @@
 </br>
 
 <p align="center">
-  <img alt="API" src="https://img.shields.io/badge/Api%2021+-50f270?logo=android&logoColor=black&style=for-the-badge"/></a>
+  <img alt="API" src="https://img.shields.io/badge/Api%2024+-50f270?logo=android&logoColor=black&style=for-the-badge"/></a>
   <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-a503fc?logo=kotlin&logoColor=white&style=for-the-badge"/></a>
   <img alt="ONNX Runtime" src="https://img.shields.io/badge/ONNX-005CED?logo=onnx&logoColor=white&style=for-the-badge"/></a>
   <img alt="Material 3" src="https://custom-icon-badges.demolab.com/badge/material%20you-lightblue?style=for-the-badge&logoColor=333&logo=material-you"/></a>
@@ -60,11 +60,11 @@ CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe t
 |---------|:----------:|:---------:|:----:|:-----------:|:---------------:|:----:|
 | **Gesture Typing in Termux** | ✅ | ⚠️ Corrupted⁴ | ❌ Broken | ⚠️ Disabled | ⚠️ Experimental | ❓ |
 | **Gesture/Swipe Typing** | ✅ Stable | ✅ Stable | ⚠️ Alpha | ⚠️ Disabled⁵ | ⚠️ Experimental | ✅ Geometric¹⁰ |
-| **Multi-Language Swipe**⁹ | ✅ 19 languages | ⚠️ Single | ⚠️ English only | ❌ | ❌ | ✅ Simultaneous |
+| **Multi-Language Swipe**⁹ | ✅ 20 languages | ⚠️ Single | ⚠️ English only | ❌ | ❌ | ✅ Simultaneous |
 | **Gesture Engine Open Source** | ✅ | ❌¹ | ✅² | ✅ | ✅ | ✅ |
 | **ML Training Code Public** | ✅ | N/A | ✅⁶ | N/A³ | N/A³ | N/A¹⁰ |
 | **Model Size** | 2.9MB | Proprietary | 62MB | N/A | N/A | N/A |
-| **APK Size** | ~32MB | ~45MB | ~200MB | ~15MB | ~25MB | ~40MB |
+| **APK Size** | ~25MB¹² | ~45MB | ~200MB | ~15MB | ~25MB | ~40MB |
 | **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20-100 items | ❌ 15s hint only | ✅ Encrypted |
 | **Short-Swipe Actions**⁸ | ✅ 208 gestures | ⚠️ Limited | ❌ | ⚠️ Limited | ⚠️ Limited | ⚠️ Space/Del only¹¹ |
 | **Per-Key Customization** | ✅ 240 commands | ❌ | ❌ | ❌ | ❌ | ✅ |
@@ -93,11 +93,13 @@ CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe t
 
 ⁸ Short-swipe actions: 8 directions × 26 keys = 208 one-touch gestures for navigation (arrows, home/end), editing (select all, undo, cut/copy/paste), function keys (F1-F12), and more — no long-press menus needed
 
-⁹ Multi-language swipe typing: CleverKeys uses one layout-agnostic CTC model for the languages it serves — dictionaries provide word candidates, not language-specific models. 7 languages bundled (en, es, fr, pt, it, de, sv), 12 downloadable (nl, ru, el, tr, id, ms, tl, sw, uk, bg, mk, he). Primary + secondary language support with automatic best-match selection.
+⁹ Multi-language swipe typing: CleverKeys uses one layout-agnostic CTC model for the languages it serves — dictionaries provide word candidates, not language-specific models. 7 languages bundled (en, es, fr, pt, it, de, sv), 13 downloadable (nl, ru, el, tr, id, ms, tl, sw, uk, bg, mk, he, fa). Primary + secondary language support with automatic best-match selection.
 
 ¹⁰ Urik uses a geometric/template path matcher (no ML model, no training code applicable) — German-friendly QWERTZ-native with simultaneous multilingual spell-check. CleverKeys ships a complementary geometric decoder for the languages and scripts its CTC model does not serve, selectable via the Prediction Engine setting — see [ROADMAP.md](./ROADMAP.md#-swipe-prediction).
 
 ¹¹ Urik short-swipe is limited to Space (cursor movement) and Backspace (delete word) — no general short-swipe action mapping system.
+
+¹² CleverKeys-v2.0.0-arm64-v8a.apk measured 25,286,923 bytes (25.3 MB) on the 2026-10-22 local release build; the armeabi-v7a and x86_64 splits are 24.7 MB and 26.5 MB.
 
 </details>
 
@@ -135,7 +137,7 @@ CleverKeys features one of the most powerful keyboard theme engines available:
 ### Built-in Themes (18+)
 - **CleverKeys Dark** — Deep purple with silver accents (default)
 - **CleverKeys Light** — Silver keys with purple accents
-- **Neon Cyan/Magenta** — Vibrant cyberpunk aesthetic
+- **Neon Electric Blue / Hot Pink / Cyberpunk** — Vibrant neon aesthetic
 - **ePaper / ePaper Black** — High contrast e-ink styles
 - **Jungle** — Tropical teal theme
 - **Everforest Light** — Soft green nature theme
@@ -180,7 +182,7 @@ pending words stop when editor/session ownership changes. See the
 [assignment guide](docs/wiki/customization/per-key-actions.md) for behavior and limits.
 
 ### 🌍 Multi-Language with Hot-Swap
-- **19 swipe languages** — 7 bundled, 12 downloadable packs
+- **20 swipe languages** — 7 bundled, 13 downloadable packs
 - **Primary + secondary language** — both dictionaries are evaluated per swipe
 - **Instant language switch** — toggle between languages without reloading
 - **Per-language custom dictionaries** — add words, adjust frequency weights, disable entries
@@ -207,7 +209,7 @@ As an IME, CleverKeys has legitimate clipboard access that other apps don't:
 
 ### 🎯 208 Short Swipe Actions
 Assign custom actions to any key's 8 swipe directions:
-- **227 built-in commands** — navigation, editing, clipboard, function keys, special chars
+- **240 built-in commands** — navigation, editing, clipboard, function keys, special chars
 - **Custom text macros** — email addresses, signatures, code snippets, emoji sequences
 - **Explicit dynamic templates** — clipboard, selection, UUID and cursor tokens in per-key or popover assignments; ordinary text stays literal
 - **Verified apostrophe suffix commands** — append exact `'s` or `'` to the last verified word, with suffix-only undo and owned learning replacement
@@ -249,7 +251,7 @@ Assign custom actions to any key's 8 swipe directions:
 
 </div>
 
-CleverKeys supports swipe typing in **19 languages** with intelligent multi-language features:
+CleverKeys supports swipe typing in **20 languages** with intelligent multi-language features:
 
 > ℹ️ **Current swipe-typing scope** — The default **CTC** engine covers three
 > groups:
@@ -266,7 +268,9 @@ CleverKeys supports swipe typing in **19 languages** with intelligent multi-lang
 > **Turkish is the deliberate exception**: dotless `ı` has no a–z spelling, so a
 > quarter of the vocabulary — and a sixth of its thousand most frequent words —
 > would be unswipeable under CTC. Turkish is served by the **geometric** engine
-> instead, which decodes over the board's real keys. Geometric remains the
+> instead, which decodes over the board's real keys. **Persian** (Arabic script,
+> no per-script CTC encoder) is served by the geometric engine the same way on
+> the Persian PC layout once `langpack-fa.zip` is imported. Geometric remains the
 > automatic fallback when CTC prerequisites are unavailable. Successful decoding
 > still requires a usable dictionary, supported letter geometry and a valid trace.
 > The **Prediction Engine** setting chooses whether CTC is used. Tap typing
@@ -301,7 +305,7 @@ oracles with typo/foreign-word negative filters (see the oracle-tier notes).
 | German | de | 40,000 words | A (aspell + pyspell + AOSP) |
 | Swedish | sv | 40,000 words | C (AOSP only) |
 
-### Downloadable Language Packs (23 packs, 19 languages)
+### Downloadable Language Packs (23 packs, 20 languages)
 Import via **Settings → 🌐 Multi-Language → Import Pack**; download prebuilt
 zips from the [langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks)
 (the same files live in [`scripts/dictionaries/`](./scripts/dictionaries/)):
@@ -371,7 +375,7 @@ pip install wordfreq
 # Option 1: Evidence-classifier build for a configured language (recommended)
 python build_wordlist.py --lang fr          # report mode: classification + review files
 python build_wordlist.py --lang fr --write  # regenerate fr_words.txt + CKDT binary
-python build_all_languages.py --lang fr     # + unigrams + prefix boosts + langpack zip
+python build_all_languages.py --lang fr     # + unigrams + langpack zip
 
 # Option 2: Raw wordfreq build for a language without a LANG_CONFIG entry.
 # --input is a WORD LIST, one entry per line (optionally "word<TAB|SPACE|,>frequency");
@@ -393,19 +397,20 @@ python build_all_languages.py
 
 **Script Details:**
 - `build_wordlist.py` — One-pass evidence classifier (all configured languages; per-language oracles/bands in its `LANG_CONFIG`)
-- `build_all_languages.py` — Orchestrates classifier → unigrams → prefix boosts → langpack per language
+- `build_all_languages.py` — Orchestrates classifier → unigrams → langpack per language
 - `build_langpack.py` — Creates deterministic .zip language packs, with licence metadata + `NOTICE.txt` (`--repack` adds them to an existing pack without touching its payload)
 - `build_dictionary.py` — Builds the CKDT V2 binary dictionary from word lists
 - `get_wordlist.py` — Extracts top N words from wordfreq for a language
 
 Language packs are simple .zip files containing:
 - `dictionary.bin` — CKDT V2 binary dictionary (accent-normalization map + frequency ranks)
-- `manifest.json` — Metadata (language code, name, version, word count, prefix-boost flag, the model block below, and `license` / `attribution` / `source`)
+- `manifest.json` — Metadata (language code, name, version, word count, the model block below, and `license` / `attribution` / `source`)
 - `NOTICE.txt` — Attribution, licence and change note for the pack's third-party word data
 - `unigrams.txt` — Top-5k word list for automatic language detection
 - `contractions.json` — Apostrophe/elision mappings (languages that use them)
-- `prefix_boost.bin` — Aho-Corasick prefix-boost trie (Latin-script languages)
 - `model.onnx` — CTC swipe encoder, for the non-Latin scripts only (ru, el, uk, bg, mk, he)
+
+(Older packs may also contain a `prefix_boost.bin`; the importer still accepts it, but nothing has read it since the neural engine was removed in v1.6.0, and new packs do not include one.)
 
 The six script packs carry their own swipe model. Those languages can only swipe-decode with
 their pack installed anyway, so shipping the graph in the APK cost every other user ~3 MB they
@@ -492,7 +497,7 @@ CleverKeys decodes swipes on-device with a CTC model:
 | Input | Swipe trajectory (x, y, velocity, acceleration) plus the live key geometry — the model is layout-agnostic |
 | Decoding | Pure-JVM Viterbi trie beam over the merged per-language lexicon |
 | Format | ONNX (cross-platform, optimized inference) |
-| Runtime | ONNX Runtime 1.20.0 with XNNPACK acceleration |
+| Runtime | ONNX Runtime 1.21.1 with XNNPACK acceleration |
 | Total Size | 2.91 MB (encoder only — decoding is on the CPU, in Kotlin) |
 
 A layout-agnostic geometric (SHARK2-style) decoder requires no ML model and is used
