@@ -196,6 +196,40 @@ Swwiki -- Kevin Donnelly
   CC BY-SA 3.0 itself is NOT GPL-compatible; the chain runs through 4.0.
 """,
     ),
+    "leipzig": DataSource(
+        key="leipzig",
+        credit=("Word counts: Leipzig Corpora Collection, Universitaet Leipzig (CC BY 4.0; "
+                "Goldhahn, Eckart & Quasthoff, LREC 2012)"),
+        url="https://wortschatz.uni-leipzig.de/en/download",
+        notice="""\
+Leipzig Corpora Collection -- Universitaet Leipzig
+  https://wortschatz.uni-leipzig.de/en/download
+  Terms: https://wortschatz.uni-leipzig.de/en/usage
+  Licence: Creative Commons Attribution 4.0 (CC BY 4.0)
+  https://creativecommons.org/licenses/by/4.0/
+  Word counts over the sentence files of the corpora named in
+  scripts/corpus_blend.py (sha256-pinned there); no sentence text is included.
+
+  D. Goldhahn, T. Eckart & U. Quasthoff: Building Large Monolingual
+  Dictionaries at the Leipzig Corpora Collection: From 100 to 200 Languages.
+  In: Proceedings of the 8th International Language Resources and Evaluation
+  Conference (LREC'12), 2012.
+""",
+    ),
+    "lilak": DataSource(
+        key="lilak",
+        credit=("inclusion oracle: Lilak Persian spell-checking lexicon and affix rules by "
+                "Mostafa Sedaghat Joo (Apache-2.0)"),
+        url="https://github.com/b00f/lilak",
+        notice="""\
+Lilak, Persian Spell Checking Dictionary -- Mostafa Sedaghat Joo
+  https://github.com/b00f/lilak
+  Licence: Apache License 2.0, https://www.apache.org/licenses/LICENSE-2.0
+  Used at build time as an inclusion oracle (built into a hunspell
+  dictionary): a word's acceptance helped decide whether it was kept. No Lilak
+  lexicon file is included in this pack.
+""",
+    ),
 }
 
 # Which sources each PUBLISHED pack (scripts/dictionaries/langpack-<id>.zip) was built from.
@@ -211,6 +245,8 @@ Swwiki -- Kevin Donnelly
 #     ("wordfreq", "aosp-latinime") in the same commit as that rebuild.
 #   - sw: wordfreq has no Swahili; the list comes from Swwiki (parse_swahili_ods.py).
 #   - en-opensubtitles*: hermitdave/FrequencyWords 2018 en lists.
+#   - fa: Leipzig sentence-corpus counts blended with wordfreq (scripts/corpus_blend.py),
+#     filtered with the Lilak hunspell oracle.
 # langpack-en-norvig-50k.zip was REMOVED (no redistribution grant: Google Web 1T / LDC2006T13).
 _WORDFREQ_AOSP = ("wordfreq", "aosp-latinime")
 PACK_SOURCES: dict[str, tuple[str, ...]] = {
@@ -222,6 +258,8 @@ PACK_SOURCES: dict[str, tuple[str, ...]] = {
        ("es", "fr", "de", "it", "nl", "pt", "sv", "ru", "el", "tr", "he")},
     **{code: ("wordfreq",) for code in ("uk", "bg", "mk", "id", "ms", "tl")},
     "sw": ("swwiki",),
+    # fa (2026-10-23): build_wordlist.py corpus blend (Leipzig + wordfreq), Lilak oracle.
+    "fa": ("wordfreq", "leipzig", "lilak"),
 }
 
 
@@ -317,6 +355,13 @@ def render_notice(code: str, name: str, pack_file: str, attr: Attribution,
             "therefore distributed under GPL-3.0-only, with the attribution, licence",
             "notices, links and change note above preserved as those licences require.",
         ]
+        if any("(CC BY 4.0)" in b for b in attr.notice_blocks):
+            # Only packs with a CC BY 4.0 source (fa: Leipzig) carry this line, so the
+            # NOTICE.txt of every other pack stays byte-identical.
+            parts += [
+                "CC BY 4.0 material (attribution only, no ShareAlike) may likewise be",
+                "redistributed under GPLv3 with its attribution kept, as done here.",
+            ]
     parts += [
         "",
         "contractions.json (where present) and manifest.json are CleverKeys work,",

@@ -1,0 +1,5 @@
+# CleverKeys fa force-keep allowlist (curated, delete-to-exclude).
+# One word per line; "#" starts a comment.
+# و ("and") is the one real one-letter Persian word; the classifier keeps one-letter words only
+# from the allowlist or a shipped carryover, and a first build has no carryover.
+و

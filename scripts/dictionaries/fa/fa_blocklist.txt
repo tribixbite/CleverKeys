@@ -1,0 +1,49 @@
+# CleverKeys fa force-drop blocklist (overrides everything, incl. the allowlist).
+# One word per line; "#" starts a comment.
+#
+# Profanity and slurs, so the bar never offers them. Source: the Persian list of "List of Dirty,
+# Naughty, Obscene, and Otherwise Bad Words" (LDNOOBW, github.com/LDNOOBW, file `fa` at commit
+# 64fc2514, CC BY 4.0), reviewed 2026-10-23 and cut to the single words that are vulgar or a slur
+# in every sense. Kept OUT of this list on purpose, because their main sense is ordinary
+# vocabulary: کس (person: هیچ‌کس), حشر (resurrection), تجاوز (aggression), منی, لخت, برهنه,
+# سوپر, شهوت, هرزه, لش, داف, سکس, سکسی, پورن, پورنو, ارگاسم. LDNOOBW's multi-word entries
+# (آب کیر, کس دادن, …) are not dictionary words. The last group is additions from the same review
+# (vulgar insults and ethnic/homophobic slurs absent from LDNOOBW).
+
+# LDNOOBW fa (vulgar in every sense)
+آبکیر
+تخمی
+جق
+جقی
+جلق
+جنده
+چوچول
+حشری
+دودول
+شونبول
+کسکش
+کس‌کش
+کوس
+کون
+کونکش
+کونی
+کیر
+کیری
+لاپا
+لاپایی
+لاشی
+
+# Additions (2026-10-23 review)
+قحبه
+جاکش
+مادرجنده
+مادرقحبه
+کونده
+ابنه‌ای
+اوبنه‌ای
+کسخل
+کس‌خل
+کسشعر
+کس‌شعر
+کاکاسیاه
+سوسمارخور

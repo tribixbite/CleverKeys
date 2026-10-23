@@ -89,6 +89,28 @@ def generate_unigrams(lang: str, output_path: Path, top_n: int = 5000, min_lengt
         print(f"  {i}. {word}")
 
 
+def generate_unigrams_from_words(words_path: Path, output_path: Path, top_n: int = 5000,
+                                 min_length: int = 2):
+    """Unigrams from a built `word<TAB>frequency` list (build_wordlist.py corpus-blend output).
+
+    For languages whose wordfreq list is not the dictionary's source (fa): wordfreq `fa` carries
+    Arabic-letter duplicates and edge half-spaces, and `isalpha()` rejects every half-space
+    compound, so the detector would learn words the dictionary does not contain. Ranking the
+    dictionary's own frequencies keeps the two consistent. Ties break on the word.
+    """
+    rows = []
+    for line in words_path.read_text(encoding='utf-8').splitlines():
+        if not line.strip() or line.startswith('#'):
+            continue
+        word, _, freq = line.partition('\t')
+        if len(word) >= min_length:
+            rows.append((-float(freq or 0), word))
+    rows.sort()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(''.join(w + '\n' for _, w in rows[:top_n]), encoding='utf-8')
+    print(f"Wrote {min(top_n, len(rows))} unigrams to {output_path} (from {words_path})")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Generate unigram frequency lists for language detection',
@@ -99,10 +121,15 @@ def main():
     parser.add_argument('--output', required=True, type=Path, help='Output file path')
     parser.add_argument('--top-n', type=int, default=5000, help='Number of top words (default: 5000)')
     parser.add_argument('--min-length', type=int, default=2, help='Minimum word length (default: 2)')
+    parser.add_argument('--from-words', type=Path,
+                        help='Rank a built word<TAB>frequency list instead of wordfreq (fa)')
 
     args = parser.parse_args()
 
-    generate_unigrams(args.lang, args.output, args.top_n, args.min_length)
+    if args.from_words:
+        generate_unigrams_from_words(args.from_words, args.output, args.top_n, args.min_length)
+    else:
+        generate_unigrams(args.lang, args.output, args.top_n, args.min_length)
 
 
 if __name__ == '__main__':
