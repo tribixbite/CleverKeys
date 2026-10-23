@@ -2334,18 +2334,32 @@ internal object TextActionPolicy {
      * The word touching the cursor, given the text on either side of it.
      *
      * A word character is a letter, a digit, or an apostrophe — the apostrophe is included so
-     * `don't` and `qu'est` select whole rather than splitting at the elision mark.
+     * `don't` and `qu'est` select whole rather than splitting at the elision mark — or a Persian
+     * half-space between Arabic-script letters ([WordChars]; `می‌شود` selects whole, and a
+     * half-space just typed before the cursor stays with its word).
      */
     fun wordAtCursor(textBefore: String, textAfter: String): WordSpan {
         var startOffset = textBefore.length
         for (i in textBefore.lastIndex downTo 0) {
-            if (!isWordChar(textBefore[i])) break
+            val c = textBefore[i]
+            val inWord = if (c == WordChars.ZWNJ) {
+                WordChars.isZwnjWordCharBeforeCursor(textBefore, i, textAfter)
+            } else {
+                isWordChar(c)
+            }
+            if (!inWord) break
             startOffset = i
         }
 
         var endOffset = 0
         for (i in textAfter.indices) {
-            if (!isWordChar(textAfter[i])) break
+            val c = textAfter[i]
+            val inWord = if (c == WordChars.ZWNJ) {
+                WordChars.isZwnjWordCharAfterCursor(textAfter, i, textBefore)
+            } else {
+                isWordChar(c)
+            }
+            if (!inWord) break
             endOffset = i + 1
         }
 

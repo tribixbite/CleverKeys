@@ -427,7 +427,10 @@ class KeyEventHandler(
             val textBefore = conn.getTextBeforeCursor(2, 0)
             val spacePrecedesCursor = textBefore?.length == 2 && textBefore[1] == ' '
             val charBeforeSpace = textBefore?.getOrNull(0)
-            if (spacePrecedesCursor && charBeforeSpace != null && charBeforeSpace.isLetterOrDigit()) {
+            // Shared word-character rule (WordChars): a letter/digit, or a Persian half-space
+            // joining Arabic letters — which cannot sit right before a space, so this is the
+            // letter/digit check it always was.
+            if (spacePrecedesCursor && charBeforeSpace != null && WordChars.isWordCharAt(textBefore, 0)) {
                 // Delete the previous space and insert ". "
                 deleteBeforeCursor(conn, 1)
                 textToCommit = ". "

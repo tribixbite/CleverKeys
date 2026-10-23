@@ -20,7 +20,20 @@ import android.util.Log
  *
  * @since v1.2.0 - Multilanguage support
  */
-class NormalizedPrefixIndex {
+class NormalizedPrefixIndex(
+    /**
+     * Language of the indexed words. Selects the Arabic-script lookup fold ([ArabicScriptFold]:
+     * `fa`, `ckb`) applied BEFORE accent stripping, on insert and on every lookup through
+     * [normalizeKey]; null (and any language without a table) = accent stripping only.
+     */
+    private val language: String? = null,
+) {
+
+    /**
+     * The key this index files [word] under, and the key every caller must look up with:
+     * the language's Arabic-script fold, then [AccentNormalizer.normalize].
+     */
+    fun normalizeKey(word: String): String = AccentNormalizer.normalize(ArabicScriptFold.fold(word, language))
 
     companion object {
         private const val TAG = "NormalizedPrefixIndex"
@@ -69,7 +82,7 @@ class NormalizedPrefixIndex {
      * @param frequencyRank Frequency rank 0-255 (0 = most common)
      */
     fun addWord(canonical: String, frequencyRank: Int) {
-        val normalized = AccentNormalizer.normalize(canonical)
+        val normalized = normalizeKey(canonical)
         if (normalized.isEmpty()) return
 
         // Add to canonical map
@@ -118,7 +131,7 @@ class NormalizedPrefixIndex {
      * @return List of LookupResults for matching words
      */
     fun getWordsWithPrefix(prefix: String): List<LookupResult> {
-        val normalizedPrefix = AccentNormalizer.normalize(prefix)
+        val normalizedPrefix = normalizeKey(prefix)
         if (normalizedPrefix.isEmpty()) return emptyList()
 
         // Use prefix index for O(1) lookup when prefix is short
@@ -236,7 +249,7 @@ class NormalizedPrefixIndex {
      * @param canonical The canonical form to remove
      */
     fun removeWord(canonical: String) {
-        val normalized = AccentNormalizer.normalize(canonical)
+        val normalized = normalizeKey(canonical)
         val entries = canonicalMap[normalized] ?: return
 
         // Remove the specific canonical entry.

@@ -83,8 +83,13 @@ class SuggestionHandler(
             else -> stem + word
         }
 
-        /** W7: a leading/trailing joiner is punctuation, not part of the word (`kids'` → `kids`). */
-        internal fun trimJoiners(token: String): String = token.trim { isIntraWordJoiner(it) }
+        /**
+         * W7: a leading/trailing joiner is punctuation, not part of the word (`kids'` → `kids`).
+         * A dangling Persian half-space is trimmed too (`می‌` + space learns `می`): at a word edge
+         * U+200C never joins anything ([WordChars]).
+         */
+        internal fun trimJoiners(token: String): String =
+            token.trim { isIntraWordJoiner(it) || it == WordChars.ZWNJ }
 
         /**
          * The Termux package retained for test/editor fixtures; live detection is shared
@@ -1790,9 +1795,16 @@ class SuggestionHandler(
                         try {
                             val before = inputConnection.getTextBeforeCursor(64, 0)?.toString() ?: ""
                             if (before.isNotEmpty()) {
-                                val wordStart = before.indexOfLast {
-                                    !it.isLetterOrDigit() && it != '\'' && it != '-'
-                                } + 1
+                                // A Persian half-space is part of the partial between Arabic
+                                // letters and at the cursor edge (WordChars).
+                                var wordStart = before.length
+                                while (wordStart > 0) {
+                                    val c = before[wordStart - 1]
+                                    val inWord = c.isLetterOrDigit() || c == '\'' || c == '-' ||
+                                        WordChars.isZwnjWordCharBeforeCursor(before, wordStart - 1, null)
+                                    if (!inWord) break
+                                    wordStart--
+                                }
                                 val partialLen = before.length - wordStart
                                 if (partialLen in 1..64) {
                                     prefixDelete = partialLen
@@ -3035,8 +3047,11 @@ class SuggestionHandler(
         }
         if (before.isNullOrEmpty()) return true
         if (!before.endsWith(expected)) return false
-        val charBefore = before.getOrNull(before.length - expected.length - 1) ?: return true
-        return !charBefore.isLetterOrDigit() && !isIntraWordJoiner(charBefore)
+        val charIndex = before.length - expected.length - 1
+        val charBefore = before.getOrNull(charIndex) ?: return true
+        // A half-space joining an Arabic letter to the token means the token is a word's tail.
+        return !charBefore.isLetterOrDigit() && !isIntraWordJoiner(charBefore) &&
+            !WordChars.isJoiningZwnjAt(before, charIndex)
     }
 
     /**
@@ -3189,6 +3204,21 @@ class SuggestionHandler(
                     swipePreferenceOffer = null
                 }
                 // W5: this word is now typed-but-unlearned until something completes it.
+                pendingTypedWord = contextTracker.getCurrentWord()
+                updatePredictionsForCurrentWord(ic, editorInfo)
+            }
+            // Persian half-space (decision (b), 2026-10-23): U+200C typed after an Arabic-script
+            // letter CONTINUES the word — `می‌شود` is one dictionary word, so the tracker, the bar
+            // (`می‌ش` → `می‌شود`) and the learn funnel keep composing it. Unlike the apostrophe
+            // below, nothing resets. After any other character it falls to the non-letter branch
+            // and ends the word, as before.
+            text.length == 1 && text[0] == WordChars.ZWNJ &&
+                WordChars.isComposingZwnj(
+                    WordChars.baseCharBefore(contextTracker.getCurrentWord(), contextTracker.getCurrentWordLength()),
+                    null
+                ) -> {
+                nextWordSuggestionsActive = false
+                contextTracker.appendToCurrentWord(text)
                 pendingTypedWord = contextTracker.getCurrentWord()
                 updatePredictionsForCurrentWord(ic, editorInfo)
             }

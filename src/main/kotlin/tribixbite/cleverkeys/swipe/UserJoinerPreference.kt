@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.swipe
 
+import tribixbite.cleverkeys.WordChars
 import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import java.util.Locale
 
@@ -53,7 +54,11 @@ import java.util.Locale
  */
 object UserJoinerPreference {
 
-    /** The joiners a user word may carry: ASCII apostrophe, typographic apostrophe, hyphen. */
+    /**
+     * The joiners a user word may carry: ASCII apostrophe, typographic apostrophe, hyphen —
+     * plus the Persian half-space, which is a joiner only between Arabic-script letters and is
+     * therefore checked by position ([WordChars.isJoiningZwnjAt]) rather than listed here.
+     */
     private val JOINERS = charArrayOf('\'', '’', '-')
 
     /**
@@ -64,9 +69,17 @@ object UserJoinerPreference {
      */
     data class Preference(val form: String, val replacesSurface: Boolean)
 
-    /** True for a word holding at least one joiner AND at least one letter. */
+    /**
+     * True for a word holding at least one joiner AND at least one letter. A Persian half-space
+     * (U+200C between Arabic-script letters, [WordChars]) counts as a joiner: no engine spells
+     * it either, so `می‌شود` decodes as the surface `میشود` exactly like `she'd` as `shed`.
+     * Any other U+200C is not a joiner (a Sinhala or Latin ZWNJ word stays as it was).
+     */
     fun isJoinerWord(word: String): Boolean =
-        word.any { it in JOINERS } && word.any { it.isLetter() }
+        (word.any { it in JOINERS } || hasJoiningHalfSpace(word)) && word.any { it.isLetter() }
+
+    private fun hasJoiningHalfSpace(word: String): Boolean =
+        word.indices.any { WordChars.isJoiningZwnjAt(word, it) }
 
     /**
      * [word] minus its joiners, lowercased ([Locale.ROOT]; accents kept), or null when anything
@@ -76,8 +89,10 @@ object UserJoinerPreference {
      */
     fun joinerFree(word: String): String? {
         val sb = StringBuilder(word.length)
-        for (ch in word.lowercase(Locale.ROOT)) {
-            if (ch in JOINERS) continue
+        val lower = word.lowercase(Locale.ROOT)
+        for (i in lower.indices) {
+            val ch = lower[i]
+            if (ch in JOINERS || WordChars.isJoiningZwnjAt(lower, i)) continue
             if (!ch.isLetter()) return null
             sb.append(ch)
         }

@@ -38,12 +38,22 @@ class VerifiedSuffixEdit private constructor(
             // Accepted text can be transformed by the editor. Do not own "cat"
             // inside "bobcat", including when the boundary is outside the guard.
             return cursor == tail.length || (cursor > tail.length && before.length > tail.length &&
-                !isWordContinuation(before[before.length - tail.length - 1]))
+                !isWordContinuationAt(before, before.length - tail.length - 1))
         }
-        private fun isWordContinuation(c: Char): Boolean = c.isLetterOrDigit() ||
-            Character.getType(c) in setOf(Character.NON_SPACING_MARK.toInt(),
-                Character.COMBINING_SPACING_MARK.toInt(), Character.ENCLOSING_MARK.toInt()) ||
-            c in "'’ʼ-‐‑" || Character.isSurrogate(c)
+
+        /**
+         * Whether [text]`[i]`, the character just before an owned tail that starts at `i + 1`,
+         * continues the word the tail would belong to.
+         */
+        internal fun isWordContinuationAt(text: CharSequence, i: Int): Boolean {
+            val c = text[i]
+            // A Persian half-space continues the word only between Arabic-script letters.
+            if (c == WordChars.ZWNJ) return WordChars.isJoiningZwnjAt(text, i)
+            return c.isLetterOrDigit() ||
+                Character.getType(c) in setOf(Character.NON_SPACING_MARK.toInt(),
+                    Character.COMBINING_SPACING_MARK.toInt(), Character.ENCLOSING_MARK.toInt()) ||
+                c in "'’ʼ-‐‑" || Character.isSurrogate(c)
+        }
     }
     /** One readback: exact editor state, then the whole-word tail from its guard text. */
     fun matches(ic: InputConnection): Boolean {

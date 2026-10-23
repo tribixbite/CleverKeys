@@ -339,7 +339,8 @@ class EmojiSearchManager {
 
         // Find the start of the last word
         var wordStart = text.length - 1
-        while (wordStart > 0 && text[wordStart - 1].isLetterOrDigit()) {
+        // A Persian half-space between Arabic letters is inside the word (WordChars).
+        while (wordStart > 0 && WordChars.isWordCharAt(text, wordStart - 1)) {
             wordStart--
         }
 

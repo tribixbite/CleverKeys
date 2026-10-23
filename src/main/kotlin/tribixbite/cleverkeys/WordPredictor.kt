@@ -309,6 +309,13 @@ class WordPredictor : Predictor {
     // size-keyed cache is sufficient.
     @Volatile private var cachedMaxFreq: Int = 0
     @Volatile private var cachedMaxFreqForSize: Int = -1
+
+    // Persian half-space spellings of the CURRENT dictionary (decision (d), 2026-10-23), rebuilt
+    // when the dictionary map or its size changes — see [halfSpaceVariantsFor]. Nullable so an
+    // Objenesis-built test instance starts empty.
+    @Volatile private var halfSpaceVariants: HalfSpaceVariants? = null
+    @Volatile private var halfSpaceVariantsDict: Map<String, Int>? = null
+    @Volatile private var halfSpaceVariantsForSize: Int = -1
     private var bigramModel: BigramModel? = BigramModel.getInstance(null)
     private var contextModel: ContextModel? = null // Phase 7.1: Dynamic N-gram model
     private var personalizationEngine: PersonalizationEngine? = null // Phase 7.2: Personalized learning
@@ -595,7 +602,7 @@ class WordPredictor : Predictor {
         if (removed.isNotEmpty()) {
             val droppedOutright = mutableSetOf<String>()
             for (word in removed) {
-                val lower = word.lowercase()
+                val lower = lookupKey(word)
                 val shadowedBase = shadowedBaseFrequencies.remove(lower)
                 if (shadowedBase != null) {
                     dict[lower] = shadowedBase // stays prefix-reachable
@@ -608,7 +615,7 @@ class WordPredictor : Predictor {
             if (droppedOutright.isNotEmpty()) {
                 removeFromPrefixIndex(droppedOutright)
             }
-            customAndUserWords = customAndUserWords - removed.map { it.lowercase() }.toSet()
+            customAndUserWords = customAndUserWords - removed.map { lookupKey(it) }.toSet()
             hasChanges = true
         }
 
@@ -622,7 +629,7 @@ class WordPredictor : Predictor {
             val (scaleFloor, scaleCeil) = baseFrequencySpanOf(dict)
             val calibrated = HashMap<String, Int>(addedOrModified.size * 2)
             for ((word, storedFreq) in addedOrModified) {
-                val lower = word.lowercase()
+                val lower = lookupKey(word)
                 val existing = dict[lower]
                 if (existing != null && lower !in customAndUserWords) {
                     shadowedBaseFrequencies.putIfAbsent(lower, existing)
@@ -877,7 +884,7 @@ class WordPredictor : Predictor {
      */
     override fun isInDictionary(word: String, fieldAllowsPersonalizedLearning: Boolean): Boolean {
         if (word.isEmpty()) return false
-        val lowerWord = word.lowercase()
+        val lowerWord = lookupKey(word)
         // Check main dictionary
         if (dictionary.get().containsKey(lowerWord)) {
             return true
@@ -1353,7 +1360,7 @@ class WordPredictor : Predictor {
         secondary: NormalizedPrefixIndex?
     ): Boolean =
         lexicon.containsKey(word) || word in userWords ||
-            (secondary?.contains(AccentNormalizer.normalize(word)) == true)
+            (secondary?.let { it.contains(it.normalizeKey(word)) } == true)
 
     /**
      * Typo-hygiene purge trigger (see [ContextModel.purgeUnlearnable]): called when a
@@ -1404,7 +1411,7 @@ class WordPredictor : Predictor {
             userWords = customAndUserWords,
             configuredSecondary = configuredSecondaryLanguage(),
             publishedSecondary = if (secondary != null) secondaryLanguageCode else null,
-            secondaryContains = secondary?.let { idx -> { w: String -> idx.contains(AccentNormalizer.normalize(w)) } },
+            secondaryContains = secondary?.let { idx -> { w: String -> idx.contains(idx.normalizeKey(w)) } },
             observationCount = { w -> engine?.getWordUsage(w)?.usageCount ?: 0 }
         )
     }
@@ -1594,6 +1601,10 @@ class WordPredictor : Predictor {
             Log.i(TAG, "Added $contractionKeysAdded contraction keys to primary prefix index for '$language'")
         }
 
+        // Persian/Kurdish lookup fold (decision (c)): keys are stored folded, like queries.
+        foldLoadedKeys(dictionary.get(), prefixIndex.get(), language)
+        customAndUserWords = customAndUserWords.mapTo(HashSet()) { ArabicScriptFold.fold(it, language) }
+
         // Set the N-gram model language to match the dictionary
         setLanguage(language)
 
@@ -1658,7 +1669,12 @@ class WordPredictor : Predictor {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added $contractionKeys contraction keys during async load for '$language'")
                 }
 
-                return customWords
+                // Persian/Kurdish lookup fold (decision (c)), before publication.
+                foldLoadedKeys(dictionary, prefixIndex, language)
+                val foldedCustomWords = customWords.mapTo(HashSet()) { ArabicScriptFold.fold(it, language) }
+                loadedCustomWords = foldedCustomWords
+
+                return foldedCustomWords
             }
 
             override fun onLoadComplete(
@@ -1807,7 +1823,7 @@ class WordPredictor : Predictor {
             val packManager = LanguagePackManager.getInstance(ctx)
             val packPath: java.io.File? = packManager.getDictionaryPath(language)
 
-            val index = NormalizedPrefixIndex()
+            val index = NormalizedPrefixIndex(language)
             val loaded = if (packPath != null) {
                 BinaryDictionaryLoader.loadIntoNormalizedIndexFromFile(packPath, index)
             } else {
@@ -2115,7 +2131,7 @@ class WordPredictor : Predictor {
                 //     real word — and would have buried genuine Italian suggestions under
                 //     pseudo-words. Findable, never preferred: the same call the swipe side
                 //     makes in [CtcContractionKeys].
-                val normalized = AccentNormalizer.normalize(withoutApostrophe)
+                val normalized = index.normalizeKey(withoutApostrophe)
                 if (normalized.isNotEmpty() && !index.contains(normalized)) {
                     index.addWord(withoutApostrophe, CONTRACTION_ALIAS_RANK)
                 }
@@ -2436,6 +2452,56 @@ class WordPredictor : Predictor {
     }
 
     /**
+     * The dictionary key for [word] in the current language: lowercase, then the Arabic-script
+     * lookup fold ([ArabicScriptFold]: `fa` folds ي ك ى → ی ک ی and ۀ ة ە → ه, `ckb` only ي ك,
+     * every other language nothing). Keys are folded the same way at load ([foldLoadedKeys]).
+     */
+    private fun lookupKey(word: String): String = ArabicScriptFold.fold(word.lowercase(), currentLanguage)
+
+    /** [ArabicScriptFold.foldDictionaryKeys] over a freshly loaded primary dictionary. */
+    private fun foldLoadedKeys(
+        dict: MutableMap<String, Int>,
+        index: MutableMap<String, MutableSet<String>>,
+        language: String,
+    ) {
+        val folded = ArabicScriptFold.foldDictionaryKeys(dict, index, PREFIX_INDEX_MAX_LENGTH, language)
+        if (folded > 0) Log.i(TAG, "Lookup fold for '$language': $folded keys re-keyed")
+    }
+
+    /**
+     * The half-space spelling index of [dict], cached until the map instance or its size
+     * changes (the same invalidation [dictMaxFrequency] uses). O(n) on a change, O(1) otherwise;
+     * empty — and therefore free at lookup — for a dictionary without Persian half-spaces.
+     */
+    private fun halfSpaceVariantsFor(dict: Map<String, Int>): HalfSpaceVariants {
+        val cached = halfSpaceVariants
+        if (cached != null && halfSpaceVariantsDict === dict && halfSpaceVariantsForSize == dict.size) return cached
+        val built = HalfSpaceVariants.build(dict.keys)
+        halfSpaceVariants = built
+        halfSpaceVariantsDict = dict
+        halfSpaceVariantsForSize = dict.size
+        return built
+    }
+
+    /**
+     * Decision (d): add the dictionary's other half-space spellings of [seq] as whole-word
+     * candidates (direct-match prefix score, same unified scorer), skipping disabled words and
+     * words already present.
+     */
+    private fun addHalfSpaceVariants(seq: String, context: List<String>, candidates: MutableList<WordCandidate>) {
+        val dict = dictionary.get()
+        val variants = halfSpaceVariantsFor(dict).variantsOf(seq) { dict.containsKey(it) }
+        if (variants.isEmpty()) return
+        val present = candidates.mapTo(HashSet()) { it.word }
+        for (variant in variants) {
+            if (variant in present || isWordDisabled(variant)) continue
+            val frequency = dict[variant] ?: continue
+            val score = resolveScoreBreakdown(variant, seq, frequency, context, DIRECT_MATCH_PREFIX_SCORE)?.finalScore ?: 0
+            if (score > 0) candidates.add(WordCandidate(variant, score, prefixScoreOverride = DIRECT_MATCH_PREFIX_SCORE))
+        }
+    }
+
+    /**
      * Get candidate words from prefix index
      * Returns all words starting with the given prefix
      * Performance: O(1) lookup instead of O(n) iteration
@@ -2509,7 +2575,7 @@ class WordPredictor : Predictor {
             // UNIFIED SCORING with EARLY FUSION
             // Context is applied to ALL candidates BEFORE selecting top N
             val candidates = mutableListOf<WordCandidate>()
-            val lowerSequence = keySequence.lowercase()
+            val lowerSequence = lookupKey(keySequence)
 
             // OPTIMIZATION: Verbose logging disabled in release builds for performance
             // v1.2.0: Always log prediction language for debugging language toggle issues
@@ -2553,6 +2619,12 @@ class WordPredictor : Predictor {
                     if (frequency > bestExactFrequency) bestExactFrequency = frequency
                 }
             }
+
+            // Persian half-space (decision (d), 2026-10-23): the other spellings of the typed word
+            // — `می‌شود` for typed `میشود`, `میشود` for typed `می‌شود` — are offered as whole-word
+            // matches. Autocorrect never commits them (see [gatedCandidates]); space keeps the
+            // typed word, so these are bar candidates only.
+            addHalfSpaceVariants(lowerSequence, context, candidates)
 
             // v1.1.93: SECONDARY DICTIONARY LOOKUP for bilingual touch typing
             val secIndex = secondaryIndex
@@ -2636,7 +2708,7 @@ class WordPredictor : Predictor {
                     SuggestionMeta(
                         origin = SuggestionOrigin.DICTIONARY_PREFIX,
                         breakdown = dictionary.get()[lower]?.let { freq ->
-                            resolveScoreBreakdown(lower, lowerSequence, freq, context)
+                            resolveScoreBreakdown(lower, lowerSequence, freq, context, candidate.prefixScoreOverride)
                         }
                     )
                 }
@@ -2915,7 +2987,7 @@ class WordPredictor : Predictor {
         // Secondary dictionary (bilingual typing) — matched on the accent-normalized forms,
         // scored exactly like secondary prefix hits (rank → frequency, × secondary weight).
         val secIndex = secondaryIndex ?: return
-        val normalizedSeq = AccentNormalizer.normalize(seq)
+        val normalizedSeq = secIndex.normalizeKey(seq)
         val secondaryBudget = FuzzyPrefixMatcher.budgetFor(normalizedSeq.length)
         if (secondaryBudget <= 0f) return
         val secondaryMatches = FuzzyPrefixMatcher.findMatches(normalizedSeq, SecondaryFuzzySource(secIndex), secondaryBudget)
@@ -3122,7 +3194,13 @@ class WordPredictor : Predictor {
         // The dictionary variable contains words from config.primary_language (loaded in PredictionCoordinator)
         // No need to skip autocorrect for non-English - it will match against the loaded dictionary
 
-        val lowerTypedWord = typedWord.lowercase()
+        // A dangling Persian half-space (`می‌` + space) is never part of a word: nothing to correct.
+        if (WordChars.hasEdgeZwnj(typedWord)) return typedWord
+
+        // Lowercase + the language's Arabic-script lookup fold (fa/ckb; identity elsewhere). The
+        // fold is length-preserving, so typedWord indices stay valid; a word whose folded key is
+        // a dictionary word is returned AS TYPED below (the fold never rewrites the user's text).
+        val lowerTypedWord = lookupKey(typedWord)
 
         // 0. Check for contraction aliases FIRST (e.g., "im" → "I'm", "dont" → "don't")
         // These are in the dictionary for prediction purposes but should still be autocorrected.
@@ -3473,6 +3551,12 @@ class WordPredictor : Predictor {
             // Prefix match (when required by config).
             if (prefix != null && !dictWord.startsWith(prefix)) continue
 
+            // Never across the Persian half-space (decision (d), 2026-10-23): a candidate that
+            // adds, removes or moves a U+200C is a different spelling, not a typo fix — the
+            // joined forms are real words and `نامهای` cannot say where its split belongs. The
+            // bar offers those spellings instead (predictInternal). No-op without a U+200C.
+            if (WordChars.crossesHalfSpace(lowerTypedWord, dictWord)) continue
+
             // Never offer a user-disabled word as a CORRECTION TARGET.
             // `autoCorrect` previously consulted `isWordDisabled` nowhere, so
             // disabling "boston" still let "bostom → boston", and bundled
@@ -3802,7 +3886,9 @@ class WordPredictor : Predictor {
         /** Penalized prefix score when this is a typo-tolerant candidate; null for exact matches. */
         val fuzzyPrefixScore: Int? = null,
         /** Came from the secondary-language dictionary (scored outside the unified breakdown). */
-        val fromSecondary: Boolean = false
+        val fromSecondary: Boolean = false,
+        /** Prefix score used instead of the prefix match (half-space spelling variants). */
+        val prefixScoreOverride: Int? = null,
     )
 
     /**

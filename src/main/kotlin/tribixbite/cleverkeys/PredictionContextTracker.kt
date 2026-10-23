@@ -690,8 +690,8 @@ class PredictionContextTracker {
         // Extract word prefix (before cursor) and suffix (after cursor)
         // v1.2.6: Pass afterText to prefix extraction and beforeText to suffix extraction
         // to properly handle apostrophes at cursor boundary (e.g., "don'|t")
-        val (normalizedPrefix, rawPrefix) = extractWordPrefix(beforeText, afterText)
-        val (normalizedSuffix, rawSuffix) = extractWordSuffix(afterText, beforeText)
+        val (normalizedPrefix, rawPrefix) = extractWordPrefix(beforeText, afterText, language)
+        val (normalizedSuffix, rawSuffix) = extractWordSuffix(afterText, beforeText, language)
 
         // Update state
         // Issue #72: Use rawPrefix/rawSuffix to preserve original case for add-to-dictionary prompts
@@ -733,7 +733,7 @@ class PredictionContextTracker {
      * @param afterText Text after cursor (for apostrophe boundary check)
      * @return Pair of (normalizedPrefix, rawPrefix) - normalized for lookup, raw for deletion
      */
-    private fun extractWordPrefix(beforeText: String, afterText: String = ""): Pair<String, String> {
+    private fun extractWordPrefix(beforeText: String, afterText: String = "", language: String? = null): Pair<String, String> {
         if (beforeText.isEmpty()) return Pair("", "")
 
         var startIndex = beforeText.length
@@ -751,6 +751,16 @@ class PredictionContextTracker {
                     break
                 }
             }
+            // Persian half-space (2026-10-23): inside the word only between Arabic-script
+            // letters; a half-space just typed before the cursor stays with its word
+            // (WordChars cursor-edge rule, the twin of the apostrophe case above).
+            if (char == WordChars.ZWNJ) {
+                if (WordChars.isZwnjWordCharBeforeCursor(beforeText, i, afterText)) {
+                    startIndex = i
+                    continue
+                }
+                break
+            }
             if (isWordChar(char, beforeText, i)) {
                 startIndex = i
             } else {
@@ -759,7 +769,7 @@ class PredictionContextTracker {
         }
 
         val rawPrefix = beforeText.substring(startIndex)
-        val normalizedPrefix = normalizeForPrediction(rawPrefix)
+        val normalizedPrefix = normalizeForPrediction(rawPrefix, language)
         return Pair(normalizedPrefix, rawPrefix)
     }
 
@@ -771,7 +781,7 @@ class PredictionContextTracker {
      * @param beforeText Text before cursor (for apostrophe boundary check)
      * @return Pair of (normalizedSuffix, rawSuffix) - normalized for lookup, raw for deletion
      */
-    private fun extractWordSuffix(afterText: String, beforeText: String = ""): Pair<String, String> {
+    private fun extractWordSuffix(afterText: String, beforeText: String = "", language: String? = null): Pair<String, String> {
         if (afterText.isEmpty()) return Pair("", "")
 
         var endIndex = 0
@@ -789,6 +799,13 @@ class PredictionContextTracker {
                     break
                 }
             }
+            if (char == WordChars.ZWNJ) {
+                if (WordChars.isZwnjWordCharAfterCursor(afterText, i, beforeText)) {
+                    endIndex = i + 1
+                    continue
+                }
+                break
+            }
             if (isWordChar(char, afterText, i)) {
                 endIndex = i + 1
             } else {
@@ -797,7 +814,7 @@ class PredictionContextTracker {
         }
 
         val rawSuffix = afterText.substring(0, endIndex)
-        val normalizedSuffix = normalizeForPrediction(rawSuffix)
+        val normalizedSuffix = normalizeForPrediction(rawSuffix, language)
         return Pair(normalizedSuffix, rawSuffix)
     }
 
@@ -821,6 +838,11 @@ class PredictionContextTracker {
         // Letters are always word characters
         if (char.isLetter()) return true
 
+        // Persian half-space: a word character only between Arabic-script letters (WordChars).
+        // It used to fall through to `true` below for EVERY script, so the composing word kept
+        // a Latin or Sinhala ZWNJ that selection, navigation and the tokeniser all split at.
+        if (char == WordChars.ZWNJ) return WordChars.isJoiningZwnjAt(text, pos)
+
         // Digits break words (test|123 → prefix="test", suffix="")
         if (char.isDigit()) return false
 
@@ -841,15 +863,41 @@ class PredictionContextTracker {
      * Normalizes text for prediction lookup.
      * Removes diacritics/accents so "café" matches "cafe" in dictionary.
      *
+     * Arabic-script characters never go through NFD (2026-10-23): it decomposes `ۀ` into the
+     * KURDISH letter `ە` + hamza and the hamza carriers `أ ؤ ئ` / `آ` into bare letters, and then
+     * strips the hamza or madda — folding letters the dictionary keeps apart. They get the
+     * language's lookup fold instead ([ArabicScriptFold]: `fa` maps ي ك ى → ی ک ی and ۀ ة ە → ه)
+     * and only their harakat (U+064B–U+0652, superscript alef U+0670) are dropped. Every other
+     * character is decomposed and stripped of its combining marks exactly as before.
+     *
      * @param text Text to normalize
+     * @param language Language whose lookup fold applies (null = none)
      * @return Normalized text (lowercase, no diacritics)
      */
-    private fun normalizeForPrediction(text: String): String {
-        // NFD decomposition separates base chars from combining diacritics
-        val normalized = Normalizer.normalize(text, Normalizer.Form.NFD)
-        // Remove combining diacritical marks (Unicode category Mn)
-        return normalized.replace(Regex("\\p{Mn}"), "").lowercase()
+    private fun normalizeForPrediction(text: String, language: String? = null): String {
+        if (text.none { isArabicScript(it) }) {
+            // NFD decomposition separates base chars from combining diacritics
+            val normalized = Normalizer.normalize(text, Normalizer.Form.NFD)
+            // Remove combining diacritical marks (Unicode category Mn)
+            return normalized.replace(Regex("\\p{Mn}"), "").lowercase()
+        }
+        val folded = ArabicScriptFold.fold(text, language)
+        val out = StringBuilder(folded.length)
+        for (c in folded) {
+            when {
+                c in '\u064B'..'\u0652' || c == '\u0670' -> Unit // harakat: optional vowel marks
+                isArabicScript(c) -> out.append(c)
+                else -> out.append(
+                    Normalizer.normalize(c.toString(), Normalizer.Form.NFD).replace(Regex("\\p{Mn}"), "")
+                )
+            }
+        }
+        return out.toString().lowercase()
     }
+
+    /** True for any code unit of the Arabic script (letters, marks, Arabic-only punctuation). */
+    private fun isArabicScript(c: Char): Boolean =
+        Character.UnicodeScript.of(c.code) == Character.UnicodeScript.ARABIC
 
     /**
      * Checks if sync should be skipped for this input type.

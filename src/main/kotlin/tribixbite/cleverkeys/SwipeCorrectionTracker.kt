@@ -222,7 +222,9 @@ class SwipeCorrectionTracker(private val clock: () -> Long = System::currentTime
             if (!before.endsWith(expected)) return false
             if (anchor.length < ANCHOR_WINDOW && before.length != expected.length) return false
             // "fix" + "git" with nothing between is a different word ("fixgit"), not a replacement.
-            val joinsPreviousWord = expected.isNotEmpty() && expected.last().isLetterOrDigit()
+            // A trailing Persian half-space joins too when it sits between Arabic letters.
+            val joinsPreviousWord = expected.isNotEmpty() &&
+                WordChars.isWordCharAt(expected + word, expected.length - 1)
             return separated || !joinsPreviousWord
         }
     }

@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.swipe.ctc
 
+import tribixbite.cleverkeys.WordChars
 import java.text.Normalizer
 import java.util.Locale
 
@@ -15,7 +16,8 @@ import java.util.Locale
  * `CleverKeys-ML/ctc/PHASE_O.md` §3.4 (from `script_registry.py`), mirrored exactly — the
  * projection is applied to the lexicon **and** to anything compared against a decode:
  *
- *  * **all scripts** — lowercase; strip `-`, `'`, `’`, `ʼ`, `‘`, `` ` ``.
+ *  * **all scripts** — lowercase; strip `-`, `'`, `’`, `ʼ`, `‘`, `` ` ``, and U+200C when it
+ *    sits between two Arabic-script letters (the Persian half-space, [WordChars]).
  *  * **el, he** — NFD → drop combining marks (`Mn`) → NFC. Safe *here* because no letter's
  *    identity depends on a mark: Greek accents/diaeresis and Hebrew niqqud are not keys, and the
  *    el model's 25 slots contain no accented vowel, so an unprojected `λόγος` carries `ό`, a
@@ -114,10 +116,16 @@ object CtcScriptProjection {
             )
         }
         val sb = StringBuilder(text.length)
-        for (raw in text) {
+        for (idx in text.indices) {
+            val raw = text[idx]
             if (raw in rejectChars) return null
             val ch = folds[raw] ?: raw
             if (ch in JOINERS) continue
+            // A Persian half-space between Arabic-script letters is stripped like a joiner, so
+            // `می‌شود` is reached by the path `میشود` and committed in its dictionary form. Any
+            // other U+200C (word edge, Indic/Sinhala, mixed script) still makes the word
+            // untypeable, as before (WordChars, decision (b) 2026-10-23).
+            if (WordChars.isJoiningZwnjAt(text, idx)) continue
             if (ch !in alphabet) return null
             sb.append(ch)
         }

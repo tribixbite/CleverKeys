@@ -7,7 +7,8 @@ This product includes third-party data and components:
 ================================================================================
 Word frequencies — overview
 ================================================================================
-CleverKeys' word lists come from three CC BY-SA sources, selected per list:
+CleverKeys' word lists come from three CC BY-SA sources, selected per list,
+plus Leipzig Corpora Collection counts (CC BY 4.0) for Persian:
 
   List                                              Source
   ------------------------------------------------  -----------------------------
@@ -18,6 +19,8 @@ CleverKeys' word lists come from three CC BY-SA sources, selected per list:
   langpack-en-opensubtitles.zip,                    FrequencyWords (OpenSubtitles)
     langpack-en-opensubtitles-50k.zip
   langpack-sw.zip                                   Swwiki (Swahili Wikipedia)
+  langpack-fa.zip                                   Leipzig Corpora Collection +
+                                                      wordfreq (Lilak inclusion oracle)
 
 Every list is modified: words were selected, filtered and ranked, and their
 frequencies quantised into CleverKeys' binary dictionary format ("converted to
@@ -111,6 +114,45 @@ langpack-en-wordfreq.zip predate the oracle and do not use it.)
 Apache-2.0 is one-way compatible with GPLv3; the derived word selections
 distributed with CleverKeys are redistributed under GPL-3.0, with attribution
 preserved here.
+
+================================================================================
+Word frequencies — Leipzig Corpora Collection (Persian)
+================================================================================
+langpack-fa.zip (scripts/build_wordlist.py --lang fa, candidates and
+frequencies from scripts/corpus_blend.py) counts words in these Leipzig
+Corpora Collection sentence files, blended with wordfreq `fa` (credited above):
+
+  fas_news_2016_300K, fas_news_2017_300K, fas_news_2018_300K,
+  fas_newscrawl_2019_1M, fas_wikipedia_2014_1M   (sha256-pinned in
+  scripts/corpus_blend.py)
+
+Only word frequencies are distributed; no sentence text is shipped.
+
+  Leipzig Corpora Collection — Universität Leipzig
+  https://wortschatz.uni-leipzig.de/en/download
+  Terms: https://wortschatz.uni-leipzig.de/en/usage
+  License: Creative Commons Attribution 4.0 (CC BY 4.0)
+
+  D. Goldhahn, T. Eckart & U. Quasthoff: Building Large Monolingual
+  Dictionaries at the Leipzig Corpora Collection: From 100 to 200 Languages.
+  In: Proceedings of the 8th International Language Resources and Evaluation
+  Conference (LREC'12), 2012.
+
+================================================================================
+Lilak Persian lexicon (inclusion oracle)
+================================================================================
+The same build uses Lilak, a Persian spell-checking lexicon with Hunspell affix
+rules, built into a hunspell dictionary as a build-time inclusion oracle. It
+only decides which words are kept; no Lilak file is distributed.
+
+  Lilak — Mostafa Sedaghat Joo
+  https://github.com/b00f/lilak (commit 4f1f426113e7)
+  License: Apache License 2.0, https://www.apache.org/licenses/LICENSE-2.0
+
+The Persian profanity blocklist (scripts/dictionaries/fa/fa_blocklist.txt) is
+reviewed from the LDNOOBW Persian list ("List of Dirty, Naughty, Obscene, and
+Otherwise Bad Words", https://github.com/LDNOOBW, CC BY 4.0); it removes words
+from the pack and is not itself distributed in it.
 
 ================================================================================
 FUTO swipe gesture corpus (swipe.futo.org)

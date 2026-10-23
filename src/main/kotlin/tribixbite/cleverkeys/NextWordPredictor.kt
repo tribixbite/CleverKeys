@@ -417,7 +417,13 @@ object NextWordPredictor {
         }
         for (i in segmentStart until textBeforeCursor.length) {
             val c = textBeforeCursor[i]
-            if (c.isLetter() || c == '\'' || c == '-') current.append(c) else flushToken()
+            // A Persian half-space between Arabic-script letters stays inside the token
+            // (`کتاب‌ها` is one word, WordChars); any other U+200C splits as before.
+            if (c.isLetter() || c == '\'' || c == '-' || WordChars.isJoiningZwnjAt(textBeforeCursor, i)) {
+                current.append(c)
+            } else {
+                flushToken()
+            }
         }
         flushToken()
 
