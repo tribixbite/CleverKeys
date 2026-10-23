@@ -24,7 +24,8 @@ committed coordination over working-tree edits.
 **HISTORICAL (2026-07-17) — closed, kept for provenance only:**
 - The 2026-07-17 code-quality audit (`docs/history/audits/2026-07-17-code-quality-audit.md`)
   and its Tier-1/Tier-2 remediation are DONE; do not treat that list as an open queue.
-  Open work lives in `memory/HANDOFF.md` and `docs/audit/2026-08-28-archive-verification.md`.
+  Open work lives in `memory/todo.md` "Open now"; `docs/audit/2026-08-28-archive-verification.md`
+  is the closed ARC ledger.
 
 **SPEC-DRIVEN DEVELOPMENT WORKFLOW:**
 1. **Check Spec**: Is there a spec in `docs/specs/` for this feature?
@@ -49,24 +50,34 @@ committed coordination over working-tree edits.
 | "settings", "SharedPreferences" | `.claude/skills/settings-preferences.md` |
 | "wiki", "Astro", "site docs" | `.claude/skills/wiki-documentation.md` |
 | "emoji panel" | `.claude/skills/emoji-panel.md` |
-| "content pane layout" | `.claude/skills/content-pane-layout.md` |
+| "content pane layout", "GIF pane", "topPane" | `.claude/skills/content-pane-layout.md` |
+| "theme", "Monet", "Material You", "DIY theme", "Theme Manager", "per-layout theme", "magnifier colours" | `.claude/skills/theme-system.md` |
+| "Quick Settings tile", "minimize", "floating button", "FAB", "summon", "hide_keyboard", "overlay permission" | `.claude/skills/keyboard-tile-and-minimize.md` |
+| "autocorrect ranking", "channel ranking", "κ"/"kappa", "δ"/"delta", "Ranking & Tuning", "AutocorrectTuning" | `.claude/skills/settings-preferences.md` § Autocorrect Knobs + `autocorrect/AutocorrectTuning.kt` + `docs/eval/2026-10-18-channel-autocorrect-ranking.md` |
+| "editor commands", "RustDesk", "blind field", "terminal", "TYPE_NULL", "process-text", "inline field" | `.claude/skills/ime-key-routing.md` |
+| "swipe-to-delete", "Undo" (clipboard rows) | `.claude/skills/clipboard-panel-architecture.md` § Swipe to delete a row |
+| "Persian", "half-space", "ZWNJ", "U+200C", "ArabicScriptFold", "WordChars" | `.claude/skills/dictionary-pipeline.md` § Arabic-script lookup fold, `ime-key-routing.md`, `contraction-system.md`; spec `docs/specs/dictionary-and-language-system.md` |
+| "translations", "strings audit", "locale", `formatted="false"`, escaped quotes | this file § "String resources and translations" + `docs/audit/2026-10-22-translation-audit.md` (tool matrix) + `TranslationFormatParityTest` |
 
 **Release-specific reminder**: When user says any release-related word, READ `.claude/skills/release-process.md` FIRST. It documents the fastlane changelog model (`fastlane/metadata/android/en-US/changelogs/{baseCode}{abi}.txt`), the F-Droid API queries for current state, and the version-code math. Do NOT confuse `metadata/fdroid/tribixbite.cleverkeys.yml` (build recipe) with the fastlane changelogs (release notes).
 
 ---
 
-## Active handoff (2026-10-18)
+## Active handoff (2026-10-23)
 
-HEAD `05a36547` plus the docs commit that follows it is pushed and equals origin/main. Pushes to
-origin/main are authorized (maintainer, 2026-10-07); tag, version bump, release and GitHub
-posts still are not. The only authoritative task list is the "Open now" section at the top of
-`memory/todo.md` (20 items on 2026-10-18; owners: device / maintainer / agent / RTX, with the
-test phones' current addresses); everything below it there is dated history, including "Done
-2026-10-10 → 10-17" with the evidence pointers for the October work. `memory/HANDOFF.md` holds
-reference state and rules, `docs/audit/gh-issue-resolution.md` the per-issue status, the plan
-doc's "Current execution status" table the roadmap state, and CHANGELOG.md's 2.0.0 section the
-user-visible summary. `docs/plans/v2.0.0-manual-test-checklist.md` carries uncommitted
-maintainer edits — never edit or stage it. Read those before editing or launching Gradle.
+origin/main is `8039c6be`; everything through it is pushed. Local HEAD is ahead by the Persian
+work (`9aac669d` half-space key, `479a7277` fa pack, `e8f1d3ae`/`4aa4f756`/`c87e2bfb`
+WordChars + ArabicScriptFold, `ffed91ad` docs) plus the 2026-10-23 doc-freshness commits — all
+local and NOT yet pushed. Pushes to origin/main are authorized (maintainer, 2026-10-07/10-21);
+tag, version bump, release and GitHub posts still are not. The only authoritative task list is
+the "Open now" section at the top of `memory/todo.md` (20 items on 2026-10-23, two closed;
+owners: device / maintainer / agent / RTX, with the test phones' current addresses); everything
+below it there is dated history with the evidence pointers for the October work.
+`memory/HANDOFF.md` holds reference state, dated pointers and rules,
+`docs/audit/gh-issue-resolution.md` the per-issue status, the plan doc's "Current execution
+status" table the roadmap state, and CHANGELOG.md's 2.0.0 section the user-visible summary.
+`docs/plans/v2.0.0-manual-test-checklist.md` carries uncommitted maintainer edits — never edit
+or stage it. Read those before editing or launching Gradle.
 
 ## Shared git INDEX between sessions (2026-10-23)
 
@@ -279,42 +290,44 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 
 ```
 src/main/kotlin/tribixbite/cleverkeys/       # package tribixbite.cleverkeys
-├── *.kt                            # 117 files flat at the package root
+├── *.kt                            # 138 files flat at the package root
 │                                   #   (IME service, keyboard views, Config,
-│                                   #    predictors, gesture recognisers, etc.)
-├── activities/                     # 14 *Activity.kt (Settings, Launcher, managers)
-├── clipboard/                      # Clipboard history/db/views (16 files) + the
+│                                   #    predictors, tile, WordChars, etc.)
+├── activities/                     # 15 files: 14 *Activity.kt + LayoutThemePicker.kt
+├── clipboard/                      # Clipboard history/db/views (23 files) + the
 │   └── sanitize/                   #   private-copy plumbing and PII sanitizers (4)
 ├── emoji/                          # Emoji panel: grid, search, keyword index (6 files)
 ├── onnx/                           # ONNX session loader (ModelLoader.kt — CTC only)
-├── ui/                             # UI (41 files; 2 at ui/ root)
-│   └── settings/                   #   Settings screens (39 incl. subdirs)
+├── ui/                             # UI (44 files; 2 at ui/ root)
+│   └── settings/                   #   Settings screens (42 incl. subdirs)
 │       ├── sections/               #     Per-section composables (20 files)
 │       └── io/                     #     Import/export UI (9 files)
-├── backup/                         # Backup & restore, import-plan diff (20 files)
-├── swipe/                          # Engine routing + CTC (SwipeEngineRouter,
-│   ├── ctc/                        #   CtcEngineAdapter, pure-JVM CTC beam decode)
-│   └── geometric/                  # Geometric decoder (pure JVM) — WIRED since
+├── backup/                         # Backup & restore, import-plan diff (22 files)
+├── swipe/                          # Engine routing + shared swipe code (18 files)
+│   ├── ctc/                        #   CtcEngineAdapter, pure-JVM CTC beam decode (22)
+│   └── geometric/                  # Geometric decoder (pure JVM, 21) — WIRED since
 │                                   #   2026-07-21 (WP9 steps 7-9): the fallback for
 │                                   #   non-Latin/incomplete layouts + user-selectable
 │                                   #   mode; spec: docs/specs/geometric-swipe-engine.md
-├── customization/                  # Short Swipes, Profiles (14 files)
-├── theme/                          # Theming (9 files)
-├── gif/                            # GIF panel (7 files)
+├── gesture/                        # Swipe recognisers, classifier, ContinuousSwipe (7)
+├── wiring/                         # KeyboardComponentGraph + bridges (4)
+├── popover/                        # Subkey popover (5)
+├── minimize/                       # KeyboardMinimizer, MinimizedKeyboardView (2)
+├── customization/                  # Short Swipes, commands, KeyMagnifierView (17 files)
+├── theme/                          # Theming (12 files)
+├── gif/                            # GIF panel (9 files)
+├── autocorrect/                    # Autocorrect + AutocorrectTuning (9 files)
 ├── prefs/                          # Preference helpers (7 files)
-├── personalization/               # Personalization
-├── contextaware/                  # Context-aware prediction
-├── autocorrect/                    # Autocorrect
-├── ml/                             # ML helpers
-├── langpack/                       # Language-pack import
-└── autofill/                       # Autofill integration
+├── contextaware/                   # Context-aware prediction (6)
+├── ml/, langpack/                  # ML helpers (4), language-pack import (4)
+├── personalization/, persist/, a11y/  # 3 each
+└── autofill/                       # Autofill integration (1)
 ```
 
-> Counts re-derived 2026-09-01 from `git ls-tree -r HEAD` (334 total .kt under
-> `src/main/kotlin`, 117 flat at the package root; post-ADR-011, post-ARC-048 R4).
-> Re-derive from HEAD, never from the working tree — concurrent sessions leave
-> uncommitted moves in this shared checkout and a tree scan reports false drift.
-> Subdirs not shown: `a11y/` (TalkBack), `persist/` (DebouncedPersister). The old
+> Counts re-derived 2026-10-23 from `git ls-tree -r HEAD --name-only` (410 total .kt under
+> `src/main/kotlin`, 138 flat at the package root; post-ADR-011, post-ARC-048 R4, after the
+> Persian work). Re-derive from HEAD, never from the working tree — concurrent sessions leave
+> uncommitted moves in this shared checkout and a tree scan reports false drift. The old
 > `tribixbite/keyboard2/` tree with `core/swipe/data/config/…` never existed —
 > the package is `tribixbite.cleverkeys` with a large flat root plus the
 > subpackages above.
@@ -403,15 +416,18 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 - `cd site && bun run build:termux` keeps Astro 7 and its native bindings under Bun; the entry is `astro/bin/astro.mjs`, not the removed `astro/astro.js`. Verified 84 pages. Legacy wiki HTML paths are generated redirects in deployment, not copies of their old bodies.
 
 ### Static LM language guard (2026-09-27)
-- `build_static_lm.py --lang` accepts only languages with a `LangConfig` in `CONFIGS` (en es de fr it pt sv). A config is NOT a ship decision: each language ships only if it passes ITS OWN pre-registered S1 gate (maintainer rule, 2026-09-29). Shipped: en, de, fr, it; failed and unshipped: es, pt, sv (`docs/eval/2026-09-29-static-lm-multilingual.md`). Build candidates with `--out-dir` outside `src/main/assets/lm` and evaluate with `STATIC_LM_MODEL_DIR=<dir>`, so no unevaluated model is ever packaged from the shared tree; a shipped language also needs its `scripts/data/tatoeba-contributors-<lang>.txt` (or Tatoeba weight 0) and a NOTICE line naming its Leipzig corpus — `StaticLmAssetDriftTest` enforces both. The `en` config keeps `nfc=False`/`exclude_eval_overlap=False` only to stay byte-identical — verify `en.cklm` sha256 after any builder change.
+- `build_static_lm.py --lang` accepts only languages with a `LangConfig` in `CONFIGS` (en es de fr it pt sv). A config is NOT a ship decision: each language ships only if it passes ITS OWN pre-registered S1 gate (maintainer rule, 2026-09-29). Shipped: en, de, fr, it (`4775300e`) and, after a pre-registered retry with new corpora, pt and sv (`807c56bd`; `src/main/assets/lm/{en,de,fr,it,pt,sv}.cklm` at HEAD); es failed twice (+4.96 vs +5) — do not retry without a new stated reason (`docs/eval/2026-09-29-static-lm-multilingual.md`). Build candidates with `--out-dir` outside `src/main/assets/lm` and evaluate with `STATIC_LM_MODEL_DIR=<dir>`, so no unevaluated model is ever packaged from the shared tree; a shipped language also needs its `scripts/data/tatoeba-contributors-<lang>.txt` (or Tatoeba weight 0) and a NOTICE line naming its Leipzig corpus — `StaticLmAssetDriftTest` enforces both. The `en` config keeps `nfc=False`/`exclude_eval_overlap=False` only to stay byte-identical — verify `en.cklm` sha256 after any builder change.
 - The model names contractions by DISPLAY form (`don't`, `c'est`) while tap candidates are apostrophe-free keys: every lookup must go through a model built with `withReplaceAliases(<REPLACE bucket>)` (BigramModel does this at load; tests use `StaticLmLanguageData.replaceAliases`). A raw `StaticContextLm.parse` scores `dont` by backoff — the 2026-09-29 bug.
 
 ### Test-rename and mock-test traps (2026-09-30)
 - `docs/RELEASE_RECORD.md` anchors TEST METHOD NAMES (`File.kt#method`) and released sections are hash-pinned (`ReleaseRecordDriftTest.historyIsImmutable`): renaming an anchored test breaks the anchor, and editing the old row breaks the hash. Keep the old method name (note why in its KDoc) or add a superseding row in the current release. `rg -n '<method>' docs/RELEASE_RECORD.md` before renaming any test.
 - Adding `android.util.Log` to a handler path breaks `runMockTests` classes that drive it (`RuntimeException: Stub!`): mock it next to Toast (`mockkStatic(android.util.Log::class)`).
 
-### String-resource and settings-search traps (2026-09-30)
-- A translation containing a literal `%` (e.g. "as % of the key width") must carry `formatted="false"` in EVERY locale: CI `lintDebug` fails `StringFormatInvalid` when the following characters read as a conversion (vi "% chiều"). The pure/mock suites do not catch it; run `scripts/gradle-guard.sh lintDebug` (≈45 min on Termux) or rely on CI.
+### String resources and translations (2026-09-30, extended 2026-10-22)
+- A translation containing a literal `%` (e.g. "as % of the key width") must carry `formatted="false"` in EVERY locale — the attribute is not inherited from the default file: CI `lintDebug` fails `StringFormatInvalid` when the following characters read as a conversion (vi "% chiều"). A string WITH arguments writes a literal percent as `%%`.
+- aapt2 silently REMOVES an unescaped `"` inside a value (`"%1$s" wurde hinzugefügt` rendered without its quotes in 16 locales, `0a8fc939`): write `\"` or typographic quotes; an unescaped `'` outside a quoted region is a compile error.
+- `TranslationFormatParityTest` (pure, `runPureTests`, 2026-10-22) now pins all four mechanical rules for every resource in the 21 locales — coverage and element kind, format-argument multiset (plural `other` items too), the literal-`%` rule and quote escaping — and runs each rule on an inline fixture with one deliberate defect, so a dead rule fails loudly. `lintDebug` (≈45 min on Termux) is still the only check for MissingTranslation wording-class lint; CI runs it.
+- Tool matrix, commands and the native-review leads: `docs/audit/2026-10-22-translation-audit.md`; review sheets `scripts/export_translation_review.py`; glossary `docs/i18n/glossary.json` (`TranslationGlossaryTest`).
 - Settings search scroll targets are recorded by `onGloballyPositioned`, which also fires mid expand-animation with in-flight offsets. Scroll only once a position is registered AND unchanged across polls (`expandAndScrollTo`), and record positions relative to the scroll viewport (`contentYOf`), never raw `positionInRoot`.
 
 ### Release APK raw-layout verification (2026-10-02)
